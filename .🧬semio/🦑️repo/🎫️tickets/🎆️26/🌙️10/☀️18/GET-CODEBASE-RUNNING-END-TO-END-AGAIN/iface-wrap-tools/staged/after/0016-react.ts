@@ -1,130 +1,260 @@
-/** 👥️ Text editor session, presence and caret: the session epoch and sync effect, the canvas appearance sync, the local and peer caret presence, the selection emission and the caret cadence effects. */
-import { useCallback, useEffect, useRef, useState } from "../../⚛️react-port/🟦️.ts";
-import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { useCanvasAppearanceSync, useShellScopeOptional } from "@semio-tech/ui-react";
-import { TEXT_EDITOR_TYPING_HOST_SIGNALS } from "@semio-tech/framework";
-import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../👕️canvas-presence/🟦️.ts";
-import { installTextEditorCaretCadenceV1, type TextEditorCaretCadenceV1 } from "../⏱️caret-cadence/🟦️.ts";
-import type { EditorCore1 } from "../🧰️surface-state-and-delivery/🟦️.ts";
+import type { InteractionTarget } from "@semio-tech/framework";
+/** 🏗️ World3dHost brush meshes and menus: the brush mesh queue and registration, the mesh re-upload, the frame and zoom handlers, the context menu dispatch and the suggestion rows and submenu search. */
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
+import { Box3, Vector3 } from "@semio-tech/ui-react";
+import {
+  createCoalescingActionDispatcher,
+  type Puzzle3dBrushMeshPage,
+  puzzle3dAnnounceableBrushMeshUrls,
+  puzzle3dBrushMeshDigest,
+  puzzle3dBrushMeshPages,
+  drainPuzzle3dBrushMeshQueue,
+  PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES,
+  puzzle3dBrushMeshRegistry
+} from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
+import { suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";
+import { world3dBoundsRadius, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances } from "../🔭️scene-schema/🟦️.ts";
+import { world3dRetainLocalVortexHover } from "../🔗️instance-selection/🟦️.ts";
+import { suggestionMenuItems } from "../🎯️marquee-and-bridges/🟦️.tsx";
+import { useShellContextMenuFallback, useMapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import type { WorldCore2 } from "../🧭️fit-and-presence/🟦️.ts";
 
-// #region WasmEditorSurface
-/**
- * 👥️ Syncs the session, publishes the local caret and projects peer carets.
- *
- * ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the
- * idle bound is never lost to a closed tab), and when the editor unmounts.
- */
-export function useEditorSessionPresence(core: EditorCore1) {
-  const { deliver, readOnlyRef, sessionRef, surfaceId, syncSession, typingRef , presenceRuntimeKey } = core;
-  const [sessionEpoch, setSessionEpoch] = useState(0);
-
-  useEffect(() => {
-    syncSession();
-  }, [syncSession, sessionEpoch]);
-
-  const wasmEditorSurfaceShellScope = useShellScopeOptional();
-  useCanvasAppearanceSync(
-    () => {
-      syncSessionCanvasTheme(sessionRef.current);
-    },
-    true,
-    wasmEditorSurfaceShellScope?.rootRef.current ?? undefined,
+// #region World3dHost
+/** 🏗️ Runs the brush mesh queue and builds the world context menu and suggestion rows. */
+export function useWorldBrushMeshAndMenus(core: WorldCore2) {
+  const { adoptViewportCamera, autoFitBounds, brushMode, cameraState, contextMenu, dispatch, dispatchSettled, hostRef, instances, instancesGroupRef, interaction, meshes, node, noteUserMovedCamera, onAction, selection, setConnectDragHoverPosition, setConnectDragSource, setSuggestionFocus, setVortexPointerArm, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow, windowInstanceId } = core;
+  const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
+  const brushMeshRunsRef = useRef(new Map<string, string>());
+  const brushMeshDrainingRef = useRef(false);
+  const brushMeshLiveRef = useRef(true);
+  const [brushMeshRevisions, setBrushMeshRevisions] = useState<{ readonly generation: number; readonly urls: Readonly<Record<string, number>> }>({ generation: 0, urls: {} });
+  /** 🥽️ `dispatch`'s awaitable twin for the one lane that needs back pressure — same envelope, but the
+   * caller can wait for the page to be IN before it queues the next one. */
+  const dispatchBrushMesh = useCallback(
+    (args: Record<string, unknown>): Promise<unknown> =>
+      Promise.resolve(
+        onAction({
+          controllerId: node.controllerId,
+          action: "registerBrushMesh",
+          args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
+        }),
+      ),
+    [node.controllerId, node.surfaceId, onAction, windowInstanceId],
   );
-
-  const presenceWindowId = surfaceId || "text";
-  const surfaceRef = useRef<HTMLDivElement>(null);
-  const [presenceFrame, setPresenceFrame] = useState(0);
-  /** ✏️ Publishes this text window's caret in the editor's WORLD coordinates (plus its camera and size) for the next
-   * presence beat, so every peer paints it at the same text position through its own camera. */
-  const publishCaretPresence = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
+  const drainBrushMeshQueue = useCallback(async () => {
+    if (brushMeshDrainingRef.current) return;
+    brushMeshDrainingRef.current = true;
     try {
-      const world = JSON.parse(session.caretWorldJson()) as { readonly x?: number; readonly y?: number } | null;
-      const camera = JSON.parse(session.cameraJson()) as { readonly x?: number; readonly y?: number; readonly zoom?: number };
-      const rect = surfaceRef.current?.getBoundingClientRect();
-      if (!presenceRuntimeKey) return;
-      publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
-        windowId: presenceWindowId,
-        space: "text",
-        kind: { kind: "canvas", x: camera.x ?? 0, y: camera.y ?? 0, zoom: camera.zoom ?? 1 },
-        size: [rect?.width ?? 0, rect?.height ?? 0],
-        ...(world?.x == null || world?.y == null ? {} : { pointer: [world.x, world.y, 0] as const }),
-      });
-      publishLocalActiveToolV1(presenceRuntimeKey, "edit");
-    } catch {
+      await drainPuzzle3dBrushMeshQueue(
+        brushMeshQueueRef.current,
+        {
+          holdsDigest: (digest) => puzzle3dBrushMeshRegistry.holdsDigest(digest),
+          mayAlias: (url) => puzzle3dBrushMeshRegistry.mayAlias(url),
+          alias: (url, digest) => {
+            brushMeshRunsRef.current.delete(url);
+            puzzle3dBrushMeshRegistry.alias(url, digest);
+          },
+          confirm: (url, digest) => {
+            brushMeshRunsRef.current.delete(url);
+            puzzle3dBrushMeshRegistry.confirm(url, digest);
+          },
+        },
+        dispatchBrushMesh,
+        () => brushMeshLiveRef.current,
+      );
+    } finally {
+      brushMeshDrainingRef.current = false;
+    }
+  }, [dispatchBrushMesh]);
+  const handleRegisterBrushMesh = useCallback(
+    (url: string, positions: number[], indices: number[]) => {
+      const digest = puzzle3dBrushMeshDigest(positions, indices);
+      if (puzzle3dBrushMeshRegistry.holds(url, digest)) {
+        void dispatchBrushMesh({ url, digest });
+        return;
+      }
+      if (puzzle3dBrushMeshRegistry.mayAlias(url) && puzzle3dBrushMeshRegistry.holdsDigest(digest)) {
+        puzzle3dBrushMeshRegistry.alias(url, digest);
+        void dispatchBrushMesh({ url, digest });
+        return;
+      }
+      if (brushMeshRunsRef.current.get(url) === digest) return;
+      const pages = puzzle3dBrushMeshPages(url, node.surfaceId, positions, indices);
+      if (pages.length === 0 || brushMeshQueueRef.current.length + pages.length > PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES) return;
+      brushMeshRunsRef.current.set(url, digest);
+      brushMeshQueueRef.current.push(...pages);
+      void drainBrushMeshQueue();
+    },
+    [dispatchBrushMesh, drainBrushMeshQueue, node.surfaceId],
+  );
+  useEffect(
+    () => () => {
+      brushMeshLiveRef.current = false;
+      for (const page of brushMeshQueueRef.current.splice(0)) {
+        brushMeshRunsRef.current.delete(page.url);
+        puzzle3dBrushMeshRegistry.forget(page.url);
+      }
+    },
+    [],
+  );
+  const meshResidency = interaction.meshResidency;
+  const meshReuploadUrls = interaction.meshReuploadUrls;
+  useEffect(() => {
+    if (meshResidency === undefined) return;
+    const restarted = puzzle3dBrushMeshRegistry.observeResidency(meshResidency);
+    const claimed = (meshReuploadUrls ?? []).filter((url) => puzzle3dBrushMeshRegistry.claimReupload(url));
+    if (!restarted && claimed.length === 0) return;
+    setBrushMeshRevisions((previous) => {
+      const urls: Record<string, number> = { ...previous.urls };
+      for (const url of claimed) urls[url] = (previous.urls[url] ?? 0) + 1;
+      return { generation: previous.generation + (restarted ? 1 : 0), urls };
+    });
+  }, [meshResidency, meshReuploadUrls]);
+
+  const brushMeshUrls = useMemo(() => puzzle3dAnnounceableBrushMeshUrls(meshResidency, meshes), [meshResidency, meshes]);
+
+  const handleFrameVisibleInstances = useCallback(() => {
+    noteUserMovedCamera();
+    const aspect = hostRef.current ? Math.max(hostRef.current.clientWidth, 1) / Math.max(hostRef.current.clientHeight, 1) : 1;
+    if (autoFitBounds) {
+      const [minimum, maximum] = autoFitBounds;
+      const center: [number, number, number] = [((minimum[0] ?? 0) + (maximum[0] ?? 0)) * 0.5, ((minimum[1] ?? 0) + (maximum[1] ?? 0)) * 0.5, ((minimum[2] ?? 0) + (maximum[2] ?? 0)) * 0.5];
+      adoptViewportCamera(world3dFrameCameraFromBounds(center, world3dBoundsRadius(minimum, maximum), cameraState, undefined, aspect), true);
       return;
     }
-  }, [presenceWindowId, presenceRuntimeKey]);
-  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
-  const projectPeerCaret = useCallback((world: readonly [number, number]): { readonly x: number; readonly y: number } | null => {
-    const session = sessionRef.current;
-    if (!session) return null;
-    try {
-      const screen = JSON.parse(session.worldToScreenJson(world[0], world[1])) as { readonly x?: number; readonly y?: number } | null;
-      return screen?.x == null || screen?.y == null ? null : { x: screen.x, y: screen.y };
-    } catch {
-      return null;
+    const group = instancesGroupRef.current;
+    if (group) {
+      const box = new Box3().setFromObject(group);
+      if (!box.isEmpty()) {
+        const center = box.getCenter(new Vector3());
+        const radius = world3dBoundsRadius([box.min.x, box.min.y, box.min.z], [box.max.x, box.max.y, box.max.z]);
+        if (radius > 1e-6) {
+          adoptViewportCamera(world3dFrameCameraFromBounds([center.x, center.y, center.z], radius, cameraState, undefined, aspect), true);
+          return;
+        }
+      }
     }
-  }, []);
+    adoptViewportCamera(world3dFrameCameraFromInstances(instances, cameraState), true);
+  }, [adoptViewportCamera, autoFitBounds, noteUserMovedCamera, cameraState, instances]);
 
-  const emitSelection = useCallback(() => {
-    deliver();
-    publishCaretPresence();
-  }, [deliver, publishCaretPresence]);
+  const handleZoomToSelection = useCallback(() => {
+    const selectedIds = new Set(selection.ids ?? []);
+    if (selectedIds.size === 0) {
+      handleFrameVisibleInstances();
+      return;
+    }
+    const selected = instances.filter((instance) => selectedIds.has(instance.id));
+    if (selected.length === 0) {
+      handleFrameVisibleInstances();
+      return;
+    }
+    let centerX = 0;
+    let centerY = 0;
+    let centerZ = 0;
+    for (const instance of selected) {
+      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+      centerX += position[0];
+      centerY += position[1];
+      centerZ += position[2];
+    }
+    const count = selected.length;
+    centerX /= count;
+    centerY /= count;
+    centerZ /= count;
+    let maxDistance = 1;
+    for (const instance of selected) {
+      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+      const dx = position[0] - centerX;
+      const dy = position[1] - centerY;
+      const dz = position[2] - centerZ;
+      maxDistance = Math.max(maxDistance, Math.hypot(dx, dy, dz));
+    }
+    const distance = maxDistance * 3 + 2;
+    adoptViewportCamera(
+      {
+        position: [centerX + distance * 0.6, centerY - distance * 0.6, centerZ + distance * 0.5],
+        target: [centerX, centerY, centerZ],
+        zoom: cameraState.zoom,
+        up: cameraState.up,
+        projection: cameraState.projection,
+      },
+      true,
+    );
+  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, handleFrameVisibleInstances, instances, selection.ids]);
 
-  const sinkRef = useRef<HTMLTextAreaElement>(null);
-  const caretCadenceRef = useRef<TextEditorCaretCadenceV1 | null>(null);
+  const handleWorldMenuDispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      if (action === "zoomToSelection") {
+        handleZoomToSelection();
+        return;
+      }
+      dispatch(action, args);
+    },
+    [dispatch, handleZoomToSelection],
+  );
+
+  const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
+  const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
+    if (action === "acceptSuggestion") {
+      setVortexPointerArm(null);
+      setConnectDragSource(null);
+      setConnectDragHoverPosition(null);
+    }
+    dispatch(action, args);
+  });
+  useSuggestionSubmenuSearch(contextMenu?.suggestTarget ?? null, { x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 }, windowInstanceId ?? undefined, dispatch, () => setSuggestionFocus(null));
   useEffect(() => {
-    const sink = sinkRef.current;
-    if (!sink) return;
-    const cadence = installTextEditorCaretCadenceV1(sink, (visible) => {
-      const session = sessionRef.current;
-      if (!session) return;
-      session.setCaretVisible(visible);
+    if (!suggestionMenuOwnsThisWindow) setSuggestionFocus(null);
+  }, [suggestionMenuOwnsThisWindow]);
+  /** 📂️ The candidate rows one suggestion menu lists — the context menu's "suggest" submenu and the floating
+   * popup share them. A submenu whose search has not echoed back yet lists the pending row. */
+  const suggestionRows = useMemo(() => {
+    const menu = interaction.suggestionMenu?.open && suggestionMenuOwnsThisWindow ? interaction.suggestionMenu : null;
+    const listed = menu ?? { pending: true, candidates: [] };
+    const rows = mapSuggestionContextMenuSpecs(
+      suggestionMenuItems(listed, interaction.brushCandidateIndex ?? 0, { checkingPlacement: suggestionMenuCheckingPlacementLabel, noPlacement: suggestionMenuNoPlacementLabel }),
+    );
+    return suggestionRowsWithFocus(rows, listed, setSuggestionFocus);
+  }, [interaction.brushCandidateIndex, interaction.suggestionMenu, mapSuggestionContextMenuSpecs, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow]);
+
+  const hoveredVortexFullIdRef = useRef<string | null>(null);
+  /** 🎯️ The interaction target this pane's OWN raycast last resolved under the pointer — see
+   * {@link hoveredInteractionTargetV1}. Null whenever the pointer left every instance. */
+  const hoveredInstanceInteractionTargetRef = useRef<InteractionTarget | null>(null);
+  const altHeldRef = useRef(false);
+  useEffect(() => {
+    hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
+  }, [interaction.hoveredVortexFullId]);
+  /** 🎣️ The armed brush points the read-only brush suggestions run at the vortex under the pointer, and at
+   * nothing once it leaves every vortex or the brush is disarmed. Only a CHANGE travels, through one
+   * single-flight lane (at most one `targetBrushSuggestions` outstanding plus the latest follow-up), so a hover
+   * storm never queues guest turns; the command only writes the target, and the run's own trace lane paints
+   * every candidate it tests. */
+  const brushSuggestionsTarget = brushMode ? interaction.hoveredVortexFullId ?? null : null;
+  const brushSuggestionsTargetSentRef = useRef<string | null>(null);
+  const sendBrushSuggestionsTarget = useMemo(() => createCoalescingActionDispatcher<string | null>((fullId) => dispatchSettled("targetBrushSuggestions", fullId ? { fullId } : {})), [dispatchSettled]);
+  useEffect(() => {
+    if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;
+    brushSuggestionsTargetSentRef.current = brushSuggestionsTarget;
+    sendBrushSuggestionsTarget(brushSuggestionsTarget);
+  }, [brushSuggestionsTarget, sendBrushSuggestionsTarget]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Alt" || event.key === "AltGraph") altHeldRef.current = event.type === "keydown";
+    };
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", onKey, true);
+    window.addEventListener("blur", () => {
+      altHeldRef.current = false;
     });
-    caretCadenceRef.current = cadence;
     return () => {
-      cadence.dispose();
-      if (caretCadenceRef.current === cadence) caretCadenceRef.current = null;
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("keyup", onKey, true);
     };
   }, []);
-  useEffect(() => {
-    const sink = sinkRef.current;
-    if (!sink) return;
-    const document = sink.ownerDocument;
-    const blur = () => typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.blur);
-    const hidden = () => typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.hidden);
-    const visibility = () => {
-      if (document.visibilityState === "hidden") hidden();
-    };
-    sink.addEventListener("blur", blur);
-    document.defaultView?.addEventListener("pagehide", hidden);
-    document.addEventListener("visibilitychange", visibility);
-    return () => {
-      sink.removeEventListener("blur", blur);
-      document.defaultView?.removeEventListener("pagehide", hidden);
-      document.removeEventListener("visibilitychange", visibility);
-      typingRef.current?.dispose();
-    };
-  }, []);
-  useEffect(() => {
-    const sink = sinkRef.current;
-    if (!sink) return;
-    const onBeforeInput = (event: InputEvent) => {
-      if (event.inputType !== "insertText" && event.inputType !== "insertFromDrop") return;
-      const data = event.data ?? event.dataTransfer?.getData("text/plain") ?? "";
-      event.preventDefault();
-      const session = sessionRef.current;
-      if (!session || readOnlyRef.current || data.length === 0) return;
-      session.insertText(data);
-      emitSelection();
-    };
-    sink.addEventListener("beforeinput", onBeforeInput);
-    return () => sink.removeEventListener("beforeinput", onBeforeInput);
-  }, [emitSelection]);
-  return { caretCadenceRef, emitSelection, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, sessionEpoch, setPresenceFrame, setSessionEpoch, sinkRef, surfaceRef };
+  return { altHeldRef, brushMeshRevisions, brushMeshUrls, handleRegisterBrushMesh, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, mapWorldContextMenuSpecs, shellContextMenuFallback, suggestionRows };
 }
 
-export type EditorCore2 = EditorCore1 & ReturnType<typeof useEditorSessionPresence>;
-// #endregion WasmEditorSurface
+export type WorldCore3 = WorldCore2 & ReturnType<typeof useWorldBrushMeshAndMenus>;
+// #endregion World3dHost

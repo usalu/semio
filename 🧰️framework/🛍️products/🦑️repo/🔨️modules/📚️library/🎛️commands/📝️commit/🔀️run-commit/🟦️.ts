@@ -1,13 +1,13 @@
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+
 import { branchValidationError, type Contributor, currentBranch, findContributor } from "../👤️contributor/🟦️.ts";
 import type { CommitBundleSection } from "../🧾️bundle-model/🟦️.ts";
-import type { MetricsRunner, UlocRunner } from "../📊️metrics/🏷️types/🟦️.ts";
+import type { MetricsRunner } from "../📊️metrics/🏷️types/🟦️.ts";
 import { git, gitDir, gitEmail, gitRepoRoot } from "../🌳️git/🟦️.ts";
 import { assignChangedPathsToBundles, buildBundlePathPrefixSets } from "../🧭️path-prefixes/🟦️.ts";
 import { buildBundleDateDeltasMap, buildBundleDateSizeDeltasMap, formatBundleHeaderLine, formatGitDeltaSumBrief, partitionRangeDeltasByBundle, partitionRangeSizeDeltasByBundle, rangeGitDeltaTotal, sortCommitBundlesByEditTotal, validateBundleCommitAttribution } from "../📈️attribution/🟦️.ts";
-import { metricsRunnerFromUloc } from "../📊️metrics/💾️scan/🟦️.ts";
+import { createDefaultMetricsRunner } from "../📊️metrics/💾️scan/🟦️.ts";
 import { buildCommitMetricsForRange, countBytesUnderPathPrefixes, countUnifiedLocUnderPathPrefixes, formatCommitMetricsLines } from "../📊️metrics/🧮️summary/🟦️.ts";
 import { findLastBundleWipCommit, formatBundleSubject, formatBundleTagName } from "../🔖️tags/🟦️.ts";
 import { formatBundleDateLine } from "../📅️dates/🟦️.ts";
@@ -15,13 +15,15 @@ import { emitCommitAnalysis, emitCommitDiff, emitCommitLog, validateBundleBullet
 import { commitBundleBodyError, parseCommitBundleBody } from "../📜️body/🟦️.ts";
 import { isCommitPrepareOnly, loadCommitSteps } from "../🪜️steps/🟦️.ts";
 import { formatCommitPrepareAgentReply } from "../📋️prepare-commands/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {sayCommitV1,reportCommitErrorV1} from "../📖️texts/🟦️.ts";
 
-export function buildCommitMessage(root: string, contributor: Contributor, bundles: CommitBundleSection[], wipSha: string, head = "HEAD", metricsRunner?: MetricsRunner | UlocRunner, now = new Date()): string {
+export function buildCommitMessage(root: string, contributor: Contributor, bundles: CommitBundleSection[], wipSha: string, head = "HEAD", metricsRunner?: MetricsRunner, now = new Date()): string {
   root = gitRepoRoot(root);
   const pathAssignments = assignChangedPathsToBundles(root, wipSha, head, bundles);
   const sorted = sortCommitBundlesByEditTotal(root, wipSha, head, bundles, pathAssignments);
   bundles = sorted.bundles;
-  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner ?? createDefaultMetricsRunner();
   validateBundleCommitAttribution(root, wipSha, head, bundles, runner);
   const prefixSets = buildBundlePathPrefixSets(root, wipSha, head, bundles);
   const { bundleTotals: ulocBundleTotals } = partitionRangeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
@@ -65,7 +67,7 @@ function assertCleanWorktree(root: string): void {
   const st = git(root, ["status", "--porcelain"]);
   if (!st.ok) return;
   if (st.out.trim()) {
-    console.error("commit: working tree must be clean before tag/squash/push");
+    sayCommitV1("run.working-tree-must-be-clean",{},"error");
     process.exit(1);
   }
 }
@@ -84,7 +86,7 @@ export function runCommit(root: string, segments: string[]): void {
   }
   const contributor = findContributor(root);
   if (!contributor) {
-    console.error(`commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    sayCommitV1("run.no-contributor-for-git-user",{email:String(gitEmail(root) || "(unset)")},"error");
     process.exit(1);
   }
 
@@ -108,7 +110,7 @@ export function runCommit(root: string, segments: string[]): void {
     const bodyFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
     const body = readBodyInput(root, bodyFile);
     if (!body.trim()) {
-      console.error("commit check: pass bundle body on stdin or after -- body.txt");
+      sayCommitV1("run.check-pass-bundle-body-on",{},"error");
       process.exit(1);
     }
     const bodyErr = commitBundleBodyError(body);
@@ -118,12 +120,12 @@ export function runCommit(root: string, segments: string[]): void {
     }
     const wip = findLastBundleWipCommit(root);
     if (!wip) {
-      console.error("commit: no prior bundle WIP commit (subject …🔀️) found");
+      sayCommitV1("run.no-prior-bundle-wip-found",{},"error");
       process.exit(1);
     }
     const ahead = git(root, ["rev-list", "--count", `${wip.sha}..HEAD`]);
     if (!ahead.ok || Number(ahead.out) === 0) {
-      console.error("commit: no commits after last bundle WIP — nothing to check");
+      sayCommitV1("run.no-commits-after-last-bundle",{},"error");
       process.exit(1);
     }
     try {
@@ -131,17 +133,17 @@ export function runCommit(root: string, segments: string[]): void {
       validateBundleBulletsFresh(root, wip.sha, "HEAD", bundles);
       validateBundleCommitAttribution(root, wip.sha, "HEAD", bundles);
     } catch (e) {
-      console.error(e instanceof Error ? e.message : String(e));
+      reportCommitErrorV1(e);
       process.exit(1);
     }
     const range = rangeGitDeltaTotal(root, wip.sha, "HEAD");
-    console.error(`commit check: OK — ${formatGitDeltaSumBrief(range)}`);
-    console.error("commit check: per-bundle days → bundle headers → WIP range total; per-language footer → same total");
+    sayCommitV1("run.check-ok",{range:String(formatGitDeltaSumBrief(range))},"error");
+    sayCommitV1("run.check-per-bundle-days-bundle",{},"error");
     process.exit(0);
   }
 
   if (cmd !== "prepare") {
-    console.error("[commit] usage: bun ./📜️script.ts commit <log|diff|analyze|check|prepare> [ct|cs|cp|…] [-- body.txt]");
+    console.error("[commit] usage: repo ./📜️script.ts commit <log|diff|analyze|check|prepare> [ct|cs|cp|…] [-- body.txt]");
     process.exit(1);
   }
 
@@ -154,13 +156,13 @@ export function runCommit(root: string, segments: string[]): void {
 
   const wip = findLastBundleWipCommit(root);
   if (!wip) {
-    console.error("commit: no prior bundle WIP commit (subject …🔀️) found");
+    sayCommitV1("run.no-prior-bundle-wip-found",{},"error");
     process.exit(1);
   }
 
   const ahead = git(root, ["rev-list", "--count", `${wip.sha}..HEAD`]);
   if (!ahead.ok || Number(ahead.out) === 0) {
-    console.error("commit: no commits after last bundle WIP — nothing to bundle");
+    sayCommitV1("run.no-commits-after-last-bundle-2",{},"error");
     process.exit(1);
   }
 
@@ -177,20 +179,20 @@ export function runCommit(root: string, segments: string[]): void {
       bundles = parseCommitBundleBody(body);
       validateBundleBulletsFresh(root, wip.sha, "HEAD", bundles);
     } catch (e) {
-      console.error(e instanceof Error ? e.message : String(e));
+      reportCommitErrorV1(e);
       process.exit(1);
     }
     try {
       message = buildCommitMessage(root, contributor, bundles, wip.sha);
     } catch (e) {
-      console.error(e instanceof Error ? e.message : String(e));
+      reportCommitErrorV1(e);
       process.exit(1);
     }
     writeFileSync(messagePath, message);
   } else if (existsSync(messagePath)) {
     message = readFileSync(messagePath, "utf8");
     if (!message.trim()) {
-      console.error("commit: compose-commit-message is empty — run prepare with bundle body first");
+      sayCommitV1("run.compose-message-is-empty-prepare",{},"error");
       process.exit(1);
     }
   } else {
@@ -219,7 +221,7 @@ export function runCommit(root: string, segments: string[]): void {
 
   if (steps.tag) {
     const tagName = formatBundleTagName(contributor);
-    const tag = spawnSync("git", ["tag", "-s", "-m", tagName, tagName, "HEAD"], { cwd: root, encoding: "utf8" });
+    const tag = runToolSyncV1("git", ["tag", "-s", "-m", tagName, tagName, "HEAD"], { cwd: root, encoding: "utf8" });
     if (tag.status !== 0) {
       console.error((tag.stderr ?? tag.stdout ?? "git tag failed").trim());
       process.exit(tag.status ?? 1);
@@ -227,13 +229,13 @@ export function runCommit(root: string, segments: string[]): void {
   }
 
   if (steps.squash) {
-    const reset = spawnSync("git", ["reset", "--soft", wip.sha], { cwd: root, encoding: "utf8" });
+    const reset = runToolSyncV1("git", ["reset", "--soft", wip.sha], { cwd: root, encoding: "utf8" });
     if (reset.status !== 0) {
       console.error((reset.stderr ?? reset.stdout ?? "git reset --soft failed").trim());
       process.exit(reset.status ?? 1);
     }
     writeFileSync(join(gitDir(root), "COMMIT_EDITMSG"), message);
-    const commit = spawnSync("git", ["commit", "-S", "-F", join(gitDir(root), "COMMIT_EDITMSG")], {
+    const commit = runToolSyncV1("git", ["commit", "-S", "-F", join(gitDir(root), "COMMIT_EDITMSG")], {
       cwd: root,
       encoding: "utf8",
     });
@@ -244,7 +246,7 @@ export function runCommit(root: string, segments: string[]): void {
   }
 
   if (steps.push) {
-    const push = spawnSync("git", ["push", "--follow-tags"], { cwd: root, encoding: "utf8" });
+    const push = runToolSyncV1("git", ["push", "--follow-tags"], { cwd: root, encoding: "utf8" });
     if (push.status !== 0) {
       console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
       process.exit(push.status ?? 1);

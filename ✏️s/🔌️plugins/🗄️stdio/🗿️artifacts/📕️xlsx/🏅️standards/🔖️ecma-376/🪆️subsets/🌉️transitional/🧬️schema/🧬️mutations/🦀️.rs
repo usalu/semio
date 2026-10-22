@@ -71,7 +71,7 @@ pub mod set_worksheet_content_type;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxTransitionalMutation")]
+#[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxTransitionalMutation", reference = XlsxSnapshot, reference_diff = XlsxDiff)]
 pub enum XlsxTransitionalMutation {
     SetMainNamespace(set_main_namespace::SetMainNamespace),
     SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace),
@@ -94,7 +94,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace"
 #[cfg(test)]
 pub fn apply_xlsx_transitional_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxTransitionalMutation) -> protocol::MutationOutcome<XlsxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

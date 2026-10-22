@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Independent oracle of the concurrent dependency generation contract: pointer evolution, retention decisions, wait scheduling and message language.
+"""Independent oracle of the concurrent dependency generation contract: pointer evolution, retention decisions and wait scheduling.
 
-usage: concurrent.oracle.py <pointer|collect|wait|language|admission|budget|stale> < cases.json > result.json
+usage: concurrent.oracle.py <pointer|collect|wait|admission|budget|stale> < cases.json > result.json
 It reads only the schema constants and the cases; it shares no code with the TypeScript implementation.
 """
 import hashlib
@@ -120,23 +120,9 @@ def wait(cases):
     return [{"name": case["name"], "expired": case["elapsedMs"] >= case["maximumMs"], "recheck": bool(case["canRecheck"]) and case["sinceRecheckMs"] >= spec["recheckMilliseconds"], "progress": case["sinceProgressMs"] >= spec["progressMilliseconds"]} for case in cases]
 
 
-def language(cases):
-    out = []
-    for case in cases:
-        picked = PROTOCOL["languages"][0]
-        for key in ("SEMIO_LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"):
-            value = case["environment"].get(key)
-            tag = re.split(r"[._@-]", value.lower())[0] if value else None
-            if tag and tag in PROTOCOL["languages"]:
-                picked = tag
-                break
-        out.append({"name": case["name"], "language": picked})
-    return out
-
-
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
-    handlers = {"pointer": pointer, "collect": collect, "wait": wait, "language": language, "admission": admission, "budget": budget, "stale": stale}
+    handlers = {"pointer": pointer, "collect": collect, "wait": wait, "admission": admission, "budget": budget, "stale": stale}
     if command not in handlers:
         raise SystemExit(__doc__)
     json.dump(handlers[command](json.load(sys.stdin)), sys.stdout, ensure_ascii=False)

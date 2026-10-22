@@ -1,7 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🧭️ `repo-languages-go` router: `bun ./📜️script.ts test`. */
+/** 🧭️ `repo-languages-go` router: `repo ./📜️script.ts test`. */
 import { goCoverageArgs, goLevelTestArgs, runCanonicalGoTests } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -9,10 +9,10 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runCanonicalGoTests(import.meta.dir, [...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dir), ...rest]);
+    await runCanonicalGoTests(import.meta.dirname, [...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dirname), ...rest], this.invocation);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

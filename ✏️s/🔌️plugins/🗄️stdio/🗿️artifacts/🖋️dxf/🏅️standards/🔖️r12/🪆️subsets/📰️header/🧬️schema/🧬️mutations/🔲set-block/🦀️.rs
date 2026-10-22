@@ -14,7 +14,16 @@ pub struct SetBlock {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "block", kind: "set-block", record: "SetBlock" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set block", "Block setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetBlock {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { index, block } = self;
         protocol::MutationOutcome::new(match base.blocks.get(*index) {
             Some(old) => diff_set_block(*index, block_field_changes(old, block)),
@@ -29,12 +38,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
                 None => vec![DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: *index })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set block", "Block setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

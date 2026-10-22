@@ -1,0 +1,2332 @@
+{
+ "version": 1,
+ "lanes": [
+  "laneA",
+  "laneB"
+ ],
+ "scenarios": [
+  {
+   "name": "a compilation published in one lane is restored in another with its paths rewritten",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "restore",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": {
+      "files": {
+       "libx.rlib": {
+        "text": "RLIB built in {laneA}\n",
+        "executable": true
+       },
+       "libx.rmeta": {
+        "text": "META\n",
+        "executable": false
+       },
+       "x.d": {
+        "text": "{outB}/libx.rlib: {laneB}/pkg/src/lib.rs {laneB}/pkg/src/util.rs\n\n{laneB}/pkg/src/lib.rs:\n{laneB}/pkg/src/util.rs:\n# env-dep:FOO=bar\n",
+        "executable": false
+       }
+      },
+      "stdout": "compiling {laneB}/pkg/src/lib.rs into {outB}\n",
+      "stderr": "warning at {laneB}/pkg/src/util.rs\n"
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 5,
+      "entries": 1,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "the lane that published also hits and a different key misses",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "2222222222222222222222222222222222222222222222222222222222222222",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "abababababababababababababababababababababababababababababababab",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "a changed dependency misses in its lane only and the original content hits again",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/src/util.rs",
+     "content": "fn u() { changed }\n"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/src/util.rs",
+     "content": "fn u() {}\n"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    }
+   ]
+  },
+  {
+   "name": "a missing dependency file is a miss",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "remove",
+     "lane": "B",
+     "file": "pkg/src/lib.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    }
+   ]
+  },
+  {
+   "name": "an observed environment variable decides the hit",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "baz"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": ""
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar",
+      "OTHER": "x"
+     },
+     "expect": "hit"
+    }
+   ]
+  },
+  {
+   "name": "an environment variable observed as unset must stay unset",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs\n# env-dep:GONE\n# env-dep:EMPTY=\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs"
+      ],
+      "environment": [
+       {
+        "name": "GONE",
+        "value": null
+       },
+       {
+        "name": "EMPTY",
+        "value": ""
+       }
+      ],
+      "stdout": false,
+      "stderr": false
+     }
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "EMPTY": ""
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "EMPTY": "",
+      "GONE": ""
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "an environment value that contains the lane is stored lane neutral",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs\n# env-dep:ROOT={lane}/pkg\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs"
+      ],
+      "environment": [
+       {
+        "name": "ROOT",
+        "value": "@@semio-lane@@/pkg"
+       }
+      ],
+      "stdout": false,
+      "stderr": false
+     }
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "ROOT": "{laneB}/pkg"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "lookup",
+     "lane": "B",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "ROOT": "{laneA}/pkg"
+     },
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "a removed object turns the entry into a miss and pruning drops the entry but not the other objects",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "removeObject",
+     "output": "libx.rmeta",
+     "expect": 1
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "prune",
+     "expect": {
+      "entries": 1,
+      "temporary": 0
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 4,
+      "entries": 0,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "only the newest eight variants of a key are kept and the newest matching one is used",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v0() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R0\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v1() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R1\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v2() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R2\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v3() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R3\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v4() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R4\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v5() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R5\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v6() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R6\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v7() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R7\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v8() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R8\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "mutate",
+     "lane": "A",
+     "file": "pkg/src/util.rs",
+     "content": "fn v9() {}\n"
+    },
+    {
+     "op": "sleep",
+     "milliseconds": 3
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R9\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/util.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": ""
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "miss",
+     "content": "fn v0() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "miss",
+     "content": "fn v1() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v2() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v3() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v4() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v5() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v6() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v7() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v8() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {},
+     "expect": "hit",
+     "content": "fn v9() {}\n",
+     "file": "pkg/src/util.rs"
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 11,
+      "entries": 8,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 8
+     }
+    }
+   ]
+  },
+  {
+   "name": "a compilation without a dependency file or with a missing one is not published",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": "",
+     "expect": {
+      "published": false
+     }
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "R\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs\n"
+     },
+     "executable": [],
+     "stdout": "",
+     "stderr": "",
+     "skipWrite": [
+      "x.d"
+     ],
+     "expect": {
+      "published": false
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 0,
+      "entries": 0,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "two keys keep their own entries",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "2222222222222222222222222222222222222222222222222222222222222222",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 5,
+      "entries": 2,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 1
+     }
+    },
+    {
+     "op": "removeObject",
+     "output": "libx.rmeta",
+     "expect": 1
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "2222222222222222222222222222222222222222222222222222222222222222",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "pruning removes broken entries, empty entry directories and stale temporary files",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "plant",
+     "path": "e/zz/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz/000000000000001-bad.json",
+     "content": "not json"
+    },
+    {
+     "op": "plant",
+     "path": "e/yy/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy/000000000000002-empty.json",
+     "content": "{\"outputs\":[{\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+    },
+    {
+     "op": "plant",
+     "path": "w/stale",
+     "content": "x",
+     "ageMilliseconds": 7200000
+    },
+    {
+     "op": "plant",
+     "path": "w/fresh",
+     "content": "x",
+     "ageMilliseconds": 1000
+    },
+    {
+     "op": "prune",
+     "expect": {
+      "entries": 2,
+      "temporary": 1
+     }
+    },
+    {
+     "op": "exists",
+     "path": "e/zz",
+     "expect": true
+    },
+    {
+     "op": "exists",
+     "path": "w/stale",
+     "expect": false
+    },
+    {
+     "op": "exists",
+     "path": "w/fresh",
+     "expect": true
+    },
+    {
+     "op": "exists",
+     "path": "e/zz/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+     "expect": false
+    },
+    {
+     "op": "lookup",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "env": {
+      "FOO": "bar"
+     },
+     "expect": "hit"
+    }
+   ]
+  },
+  {
+   "name": "objects are listed with size and use and removed by digest",
+   "tree": {
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/src/util.rs": "fn u() {}\n"
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "lane": "A",
+     "key": "1111111111111111111111111111111111111111111111111111111111111111",
+     "crate": "x",
+     "outputs": {
+      "libx.rlib": "RLIB built in {lane}\n",
+      "libx.rmeta": "META\n",
+      "x.d": "{out}/libx.rlib: {lane}/pkg/src/lib.rs {lane}/pkg/src/util.rs\n\n{lane}/pkg/src/lib.rs:\n{lane}/pkg/src/util.rs:\n# env-dep:FOO=bar\n"
+     },
+     "executable": [
+      "libx.rlib"
+     ],
+     "stdout": "compiling {lane}/pkg/src/lib.rs into {out}\n",
+     "stderr": "warning at {lane}/pkg/src/util.rs\n",
+     "expect": {
+      "published": true,
+      "crate": "x",
+      "outputs": [
+       {
+        "name": "libx.rlib",
+        "template": false,
+        "executable": true
+       },
+       {
+        "name": "libx.rmeta",
+        "template": false,
+        "executable": false
+       },
+       {
+        "name": "x.d",
+        "template": true,
+        "executable": false
+       }
+      ],
+      "dependencies": [
+       "@@semio-lane@@/pkg/src/lib.rs",
+       "@@semio-lane@@/pkg/src/util.rs"
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "bar"
+       }
+      ],
+      "stdout": true,
+      "stderr": true
+     }
+    },
+    {
+     "op": "objects",
+     "expect": {
+      "count": 5
+     }
+    },
+    {
+     "op": "removeDigests",
+     "digests": [
+      "nothex",
+      "../escape",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "{object:libx.rmeta}"
+     ],
+     "expect": 1
+    },
+    {
+     "op": "objects",
+     "expect": {
+      "count": 4
+     }
+    },
+    {
+     "op": "removeDigests",
+     "digests": [
+      "{object:libx.rmeta}"
+     ],
+     "expect": 0
+    }
+   ]
+  }
+ ],
+ "runs": [
+  {
+   "name": "a build script run published in one lane is restored in another with its text rewritten and its binary untouched",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [
+       "data/in.txt"
+      ],
+      "variables": [
+       "FOO"
+      ]
+     },
+     "env": {
+      "FOO": "1"
+     },
+     "out": {
+      "gen.rs": {
+       "text": "const P: &str = \"{lane}/pkg\";\n"
+      },
+      "blob.bin": {
+       "hex": "00ff10"
+      },
+      "sub/x.txt": {
+       "text": "plain\n"
+      },
+      "tool.sh": {
+       "text": "#!/bin/sh\n",
+       "executable": true
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": "data/in.txt",
+        "kind": "file"
+       },
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "1"
+       }
+      ],
+      "outputs": [
+       {
+        "path": "blob.bin",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "gen.rs",
+        "template": true,
+        "executable": false
+       },
+       {
+        "path": "sub/x.txt",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "tool.sh",
+        "template": false,
+        "executable": true
+       }
+      ]
+     }
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "runRestore",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": {
+      "files": {
+       "gen.rs": {
+        "text": "const P: &str = \"{laneB}/pkg\";\n"
+       },
+       "blob.bin": {
+        "hex": "00ff10"
+       },
+       "sub/x.txt": {
+        "text": "plain\n"
+       },
+       "tool.sh": {
+        "text": "#!/bin/sh\n",
+        "executable": true
+       }
+      },
+      "stdout": "cargo:rerun-if-changed=data/in.txt in {laneB}/pkg\n",
+      "stderr": ""
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 5,
+      "entries": 0,
+      "runs": 1,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "a changed declared file or variable is a miss, a changed Rust source is not when inputs were declared and any changed package file is",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [
+       "data/in.txt"
+      ],
+      "variables": [
+       "FOO"
+      ]
+     },
+     "env": {
+      "FOO": "1"
+     },
+     "out": {
+      "gen.rs": {
+       "text": "const P: &str = \"{lane}/pkg\";\n"
+      },
+      "blob.bin": {
+       "hex": "00ff10"
+      },
+      "sub/x.txt": {
+       "text": "plain\n"
+      },
+      "tool.sh": {
+       "text": "#!/bin/sh\n",
+       "executable": true
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": "data/in.txt",
+        "kind": "file"
+       },
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [
+       {
+        "name": "FOO",
+        "value": "1"
+       }
+      ],
+      "outputs": [
+       {
+        "path": "blob.bin",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "gen.rs",
+        "template": true,
+        "executable": false
+       },
+       {
+        "path": "sub/x.txt",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "tool.sh",
+        "template": false,
+        "executable": true
+       }
+      ]
+     }
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/in.txt",
+     "content": "other\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/in.txt",
+     "content": "input\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "2"
+     },
+     "expect": "miss"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {},
+     "expect": "miss"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1",
+      "UNRELATED": "x"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/src/lib.rs",
+     "content": "fn changed() {}\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/target/skip.bin",
+     "content": "changed"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/node_modules/m.js",
+     "content": "changed"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/more.txt",
+     "content": "changed\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {
+      "FOO": "1"
+     },
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "without declared inputs every package file counts, Rust sources included",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "directives": {
+      "files": [],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "out.txt": {
+       "text": "x\n"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [],
+      "outputs": [
+       {
+        "path": "out.txt",
+        "template": false,
+        "executable": false
+       }
+      ]
+     }
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/src/lib.rs",
+     "content": "fn changed() {}\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": "miss"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/src/lib.rs",
+     "content": "fn a() {}\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/build.rs",
+     "content": "fn main() { changed }\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": "miss"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/build.rs",
+     "content": "fn main() {}\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/in.txt",
+     "content": "changed\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "a declared directory is a tree fact",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "5555555555555555555555555555555555555555555555555555555555555555",
+     "directives": {
+      "files": [
+       "data"
+      ],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "o": {
+       "text": "1"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": "data",
+        "kind": "tree"
+       },
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [],
+      "outputs": [
+       {
+        "path": "o",
+        "template": false,
+        "executable": false
+       }
+      ]
+     }
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "5555555555555555555555555555555555555555555555555555555555555555",
+     "env": {},
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/more.txt",
+     "content": "changed\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "5555555555555555555555555555555555555555555555555555555555555555",
+     "env": {},
+     "expect": "miss"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/more.txt",
+     "content": "more\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "5555555555555555555555555555555555555555555555555555555555555555",
+     "env": {},
+     "expect": "hit"
+    },
+    {
+     "op": "mutate",
+     "lane": "B",
+     "file": "pkg/data/new.txt",
+     "content": "new\n"
+    },
+    {
+     "op": "runLookup",
+     "lane": "B",
+     "key": "5555555555555555555555555555555555555555555555555555555555555555",
+     "env": {},
+     "expect": "miss"
+    }
+   ]
+  },
+  {
+   "name": "a run that cannot be replayed is not published",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [
+       "data/missing.txt"
+      ],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "o": {
+       "text": "1"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": false
+     }
+    },
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "bin": {
+       "hex": "00",
+       "embeds": "{lane}"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": false
+     }
+    },
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "o": {
+       "text": "1"
+      },
+      "link": {
+       "symlink": "o"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": false
+     },
+     "onlyPosix": true
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 0,
+      "entries": 0,
+      "runs": 0,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "a binary output that does not contain the lane is kept as it is and a text output that does is a template",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/data/in.txt": "input\n",
+    "pkg/data/more.txt": "more\n",
+    "pkg/src/lib.rs": "fn a() {}\n",
+    "pkg/target/skip.bin": "x",
+    "pkg/node_modules/m.js": "m"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "directives": {
+      "files": [],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "b.bin": {
+       "hex": "00010203"
+      },
+      "t.txt": {
+       "text": "plain\n"
+      },
+      "u.txt": {
+       "text": "in {lane}/pkg\n"
+      }
+     },
+     "stdout": "cargo:rerun-if-changed=data/in.txt in {lane}/pkg\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [],
+      "outputs": [
+       {
+        "path": "b.bin",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "t.txt",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "u.txt",
+        "template": true,
+        "executable": false
+       }
+      ]
+     }
+    },
+    {
+     "op": "runRestore",
+     "lane": "B",
+     "key": "3333333333333333333333333333333333333333333333333333333333333333",
+     "env": {},
+     "expect": {
+      "files": {
+       "b.bin": {
+        "hex": "00010203"
+       },
+       "t.txt": {
+        "text": "plain\n"
+       },
+       "u.txt": {
+        "text": "in {laneB}/pkg\n"
+       }
+      },
+      "stdout": "cargo:rerun-if-changed=data/in.txt in {laneB}/pkg\n",
+      "stderr": ""
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 4,
+      "entries": 0,
+      "runs": 1,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 1
+     }
+    }
+   ]
+  }
+ ],
+ "tree": [
+  {
+   "name": "files sorted by name inside each directory, depth first",
+   "files": {
+    "b": "2",
+    "a/z": "3",
+    "a/y": "4",
+    "a.txt": "5",
+    "C": "6"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 100
+   }
+  },
+  {
+   "name": "an empty tree digests like no rows",
+   "files": {},
+   "directories": [
+    "d"
+   ],
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 100
+   }
+  },
+  {
+   "name": "ignored directories and extensions are skipped at any depth",
+   "files": {
+    "src/a.rs": "1",
+    "src/b.txt": "2",
+    "target/x": "3",
+    "src/target/y": "4",
+    "node_modules/m": "5",
+    "k.rs": "6"
+   },
+   "options": {
+    "ignoredDirectories": [
+     "target",
+     "node_modules"
+    ],
+    "ignoredExtensions": [
+     ".rs"
+    ],
+    "maximumFiles": 100
+   }
+  },
+  {
+   "name": "exactly the maximum number of files is digested",
+   "files": {
+    "a": "1",
+    "b": "2",
+    "c": "3"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 3
+   }
+  },
+  {
+   "name": "one file beyond the maximum has no digest",
+   "files": {
+    "a": "1",
+    "b": "2",
+    "c": "3",
+    "d": "4"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 3
+   },
+   "overflow": true
+  },
+  {
+   "name": "ignored files do not count against the maximum",
+   "files": {
+    "a": "1",
+    "x.rs": "2",
+    "y.rs": "3",
+    "b": "4"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [
+     ".rs"
+    ],
+    "maximumFiles": 2
+   }
+  },
+  {
+   "name": "symbolic links are digested by their target text",
+   "files": {
+    "a": "1"
+   },
+   "links": {
+    "l": "a",
+    "dir/l2": "../elsewhere"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 100
+   }
+  },
+  {
+   "name": "unicode names sort by code unit",
+   "files": {
+    "é": "1",
+    "z": "2",
+    "日": "3",
+    "a": "4"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 100
+   }
+  },
+  {
+   "name": "content decides, not the time",
+   "files": {
+    "a": "1"
+   },
+   "options": {
+    "ignoredDirectories": [],
+    "ignoredExtensions": [],
+    "maximumFiles": 100
+   },
+   "touch": true
+  }
+ ]
+}

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { createContext, useState } from "react";
+import { createContext, useState } from "../../⚛️react-port/🟦️.ts";
 import type { ThreeCamera } from "@semio-tech/ui-react";
 // #region 🔌️Adapters
 import {

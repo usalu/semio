@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️DeferredReprojection
     /// 🐢️ Steps the Report replay a remote history change needs — a supersession, undo or redo another replica authored —

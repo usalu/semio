@@ -102,7 +102,7 @@ fn moving_an_anchored_wall_changes_the_printed_value_through_inference() {
     let mut session = ModelInferenceSession::new();
     session.refresh(&before);
     let moved = ModelDiff::walls("w-south", Entry::Patched(WallPatch { axis: Some(line((0.0, 0.0), (9.0, 0.0))), ..Default::default() }));
-    let after = protocol::apply_diff(&moved, &before).expect("applies");
+    let after = protocol::apply_diff_cold(&moved, &before).expect("applies");
     let incremental = session.update(&after, &moved).clone();
     let set = &incremental.annotations["st-ground"];
     assert!(close(set.dimensions["dim-south"].total, 9.0) && set.dimensions["dim-south"].segments[0].text == "9.00", "the dimension of the wall prints the new length");
@@ -118,7 +118,7 @@ fn an_edit_that_none_of_the_annotations_read_does_not_recompute_them() {
     let mut session = ModelInferenceSession::new();
     session.refresh(&before);
     let raised = ModelDiff::storeys("st-first", Entry::Patched(StoreyPatch { height: Some(3.2), ..Default::default() }));
-    let after = protocol::apply_diff(&raised, &before).expect("applies");
+    let after = protocol::apply_diff_cold(&raised, &before).expect("applies");
     let incremental = session.update(&after, &raised).clone();
     assert_eq!(session.report().computed_by_kind.get("annotation"), None, "raising the storey above recomputes no annotation: {:?}", session.report());
     assert_eq!(incremental, ModelInference::infer(&after).expect("infers"));
@@ -130,7 +130,7 @@ fn a_style_edit_recomputes_the_annotations_of_the_storey_and_no_wall_layout() {
     let mut session = ModelInferenceSession::new();
     session.refresh(&before);
     let restyled = ModelDiff::annotation_styles("as-plan", Entry::Patched(AnnotationStylePatch { precision: Some(0), ..Default::default() }));
-    let after = protocol::apply_diff(&restyled, &before).expect("applies");
+    let after = protocol::apply_diff_cold(&restyled, &before).expect("applies");
     let incremental = session.update(&after, &restyled).clone();
     assert_eq!(incremental.annotations["st-ground"].dimensions["dim-south"].segments[0].text, "8");
     assert_eq!(session.report().computed_by_kind.get("annotation"), Some(&1));
@@ -148,7 +148,7 @@ fn tags_read_their_element_and_follow_it() {
     assert_eq!(set.tags["tag-column"].text, "0.30 \u{d7} 0.30");
     assert!(close(set.tags["tag-column"].at.at.x, 4.5) && close(set.tags["tag-column"].at.at.y, 3.5), "the tag sits at its offset from the column position");
     let moved = ModelDiff::columns("col-1", Entry::Patched(ColumnPatch { position: Some(Point2 { x: 5.0, y: 2.0 }), ..Default::default() }));
-    let after = protocol::apply_diff(&moved, &before).expect("applies");
+    let after = protocol::apply_diff_cold(&moved, &before).expect("applies");
     let next = annotations(&after);
     assert!(close(next.tags["tag-column"].at.at.x, 5.5) && close(next.tags["tag-column"].at.at.y, 2.5), "moving the column moves its tag by inference");
     assert_eq!(next.tags["tag-column"].text, set.tags["tag-column"].text);

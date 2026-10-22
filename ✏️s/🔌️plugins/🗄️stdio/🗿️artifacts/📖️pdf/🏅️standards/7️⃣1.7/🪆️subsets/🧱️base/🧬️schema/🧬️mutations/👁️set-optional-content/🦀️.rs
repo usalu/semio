@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "optional-content", kind: "set-optional-content", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_optional_content(base, self.content.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        vec![Op::from(SetOptionalContent { content: base.optional_content.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set optional-content", "Optionalen Inhalt setzen")
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetOptionalContent
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetOptionalContent>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_optional_content(base, self.content.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        vec![Op::from(SetOptionalContent { content: base.optional_content.clone() })]
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

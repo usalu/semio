@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "change-load-case-self-weight/switches-self-abbff2: exactly the named case may be patched");
     assert!(outcome.diff().analysis.is_none(), "change-load-case-self-weight/switches-self-abbff2: self-weight is a load-case flag, not an analysis setting");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

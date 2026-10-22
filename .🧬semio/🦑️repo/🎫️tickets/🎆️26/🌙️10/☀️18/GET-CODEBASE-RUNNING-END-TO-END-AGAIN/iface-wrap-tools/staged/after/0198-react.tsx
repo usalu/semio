@@ -1,137 +1,144 @@
-/** 🖼️ The retained surface views: carrier epoch, paged surface, accessibility shell and the surface view.
- *
- * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
- */
+/// <reference types="vitest/importMeta" />
+// #region 🧲️Header
+// 🎨️ framework/products/os/modules/renderer/engine/elements/🟦️Interpreter/component.tsx
+/** 🌳️ `🟦️Interpreter` — turns the semantic UI contract (`semio-framework-ui-contract`'s
+ * `UiNodeRecord`/`Component`/`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`) retained by a
+ * `📃️UiDocumentStore` into `@semio-tech/ui-react` components. `InterpretedUiNode` is the entry point;
+ * `UiNodeView` is the atomic per-node unit — each one subscribes to exactly its own record via
+ * `useUiNode`, so a `SetComponent` on one node re-renders exactly that node's component, never its
+ * ancestors or siblings (the whole payoff of the flat id-keyed table, see `📃️UiDocumentStore`'s header
+ * doc). The scene hosts behind `Component::Surface` are resolved through the element-host registry
+ * (`🗺️element-host-registry`); the concrete hosts are registered by the composition root `🪢️ElementHosts` and are
+ * never imported here. This entry module owns `InterpretedUiNode` and `interpretUiNode`; everything else lives in
+ * its children, which importers import directly: `👥️presence-overlay`, `🌲️tree-panel-boundary`, `🧷️interpreter-context`, `🔌️surface-bridge`, `🚚️surface-scene-lanes`, `🗄️virtual-file-system`, `📐️layout-accessibility`, `⚡️action-dispatch`, `🎛️declarative-controls`, `🔤️display-views`, `✍️input-views`, `🌳️tree-walk`, `🪪️stable-dom-ids`, `🪟️tree-windows`, `🧾️row-actions`, `🖼️surface-views`, `📊️table-window`, `🧱️node-tree`. */
+// #endregion 🧲️Header
 
-import { useCallback, useSyncExternalStore, type ReactNode } from "../../⚛️react-port/🟦️.ts";
-import { type SceneLaneRef, sceneFromLanes } from "@semio-tech/framework";
-import { UiDocumentStore, useUiDocumentRevision } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type Component, type UiNodeRecord } from "@semio-tech/framework";
-import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
-import { renderComponentSceneHost, surfaceKindSceneLanes } from "../🔌️surface-bridge/🟦️.tsx";
-import { surfaceLaneTexts } from "../🚚️surface-scene-lanes/🟦️.ts";
-import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";
-import { dispatchTrigger } from "../⚡️action-dispatch/🟦️.tsx";
+// #region 🔌️Adapters
+import { memo, Profiler, useCallback, type ReactNode } from "../⚛️react-port/🟦️.ts";
+import { LocalDocumentOwnerContext, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "./🧭️local-document-owner/🟦️.ts";
+import { inputActionWithWindowV1, type ShellInputActionV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import {
+  type ActionDispatchLifecycleV1,
+  type SceneLaneRef,
+  BOARD2D_SCENE_LANES,
+  CANVAS2D_SCENE_LANES,
+  PAINT2D_SCENE_LANES,
+  WORLD3D_SCENE_LANES,
+  NODE_GRAPH_SCENE_LANES,
+  nodeGraphSceneFromLanes,
+  WORLD3D_SCENE_LANE_KEY_PREFIX,
+  board2dSceneFromLanes,
+  canvas2dSceneFromLanes,
+  paint2dSceneFromLanes,
+  world3dSceneFromLanes,
+  world3dSceneLaneForBodyKey
+} from "@semio-tech/framework";
+import { DEFAULT_UI_DOCUMENT_LIMITS, UiDocumentStore, useUiDocumentRoot, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
+import { type UiIntent, type UiNodeRecord } from "@semio-tech/framework";
+import { type UiInterpreterContext, usePluginSurfaceActions } from "./🧷️interpreter-context/🟦️.ts";
+import { surfaceKindSceneLanes } from "./🔌️surface-bridge/🟦️.tsx";
+import { surfaceLaneTexts, surfaceSceneLaneCache, surfaceSceneLaneText, utf8ByteLength } from "./🚚️surface-scene-lanes/🟦️.ts";
+import { accessibilityAriaProps, layoutSpecStyle } from "./📐️layout-accessibility/🟦️.tsx";
+import { uiChildReactKeys, uiSiblingReactKeys } from "./🪪️stable-dom-ids/🟦️.ts";
+import {
+  tableColumnWindowRequestV1,
+  treePickIntentInputV1,
+  treePickTargetsV1,
+  treeWindowBodyRequestsV1,
+  treeWindowContainersUnder,
+  TreeWindowContext,
+  treeWindowRowHeightPx,
+  treeWindowScrollViewport,
+  treeWindowServedRequestsV1,
+  treeWindowViewportMetrics
+} from "./🪟️tree-windows/🟦️.ts";
+import {
+  tableWindowNextColumnV1,
+  tableWindowNextRowV1,
+  tableWindowScrollLeftForColumnV1,
+  tableWindowScrollTopForRowV1,
+  tableWindowViewportCapRowsV1
+} from "./📊️table-window/🟦️.ts";
+import { treeItemToTreeData, UiNodeView } from "./🧱️node-tree/🟦️.tsx";
+// #endregion 🔌️Adapters
 
 //#region 🔖️UiInterpreter
-//#region ComponentRenderers
-/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`, `board-2d`). Its `doc.bytes` carry only
- * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
- * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
- * this node's own record, and a tree larger than one reconcile page arrives across several patches. */
-function surfaceCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
-  const state = store.getState();
-  const stack = [...(record.children ?? [])];
-  const parts: string[] = [];
-  while (stack.length > 0) {
-    const id = stack.pop()!;
-    const child = state.nodes.get(id);
-    if (!child) continue;
-    parts.push(`${id}:${String(child.key)}:${child.component.type === "text" && typeof child.component.value === "string" ? child.component.value.length : 0}`);
-    for (const nested of child.children ?? []) stack.push(nested);
-  }
-  return parts.join("|");
-}
-
-function useSurfaceCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
-  const childKey = (record.children ?? []).join(",");
-  return useSyncExternalStore(
-    (onChange) => {
-      const state = store.getState();
-      const ids: number[] = [];
-      const stack = [...(record.children ?? [])];
-      while (stack.length > 0) {
-        const id = stack.pop()!;
-        ids.push(id);
-        const child = state.nodes.get(id);
-        for (const nested of child?.children ?? []) stack.push(nested);
-      }
-      const unsubs = ids.map((id) => store.subscribeNode(id)(onChange));
-      return () => {
-        for (const unsub of unsubs) unsub();
-      };
-    },
-    () => surfaceCarrierEpoch(store, record),
-    () => surfaceCarrierEpoch(store, record),
-  );
-}
-
-function PagedSurfaceView({ record, component, context }: { readonly record: UiNodeRecord; readonly component: Extract<Component, { type: "surface" }>; readonly context: UiInterpreterContext }) {
-  const store = context.store;
-  const revision = useUiDocumentRevision(store);
-  const carrierEpoch = useSurfaceCarrierEpoch(store, record);
-  const lanes = surfaceKindSceneLanes(component.kind) ?? [];
-  const assemble = useCallback(
-    (spine: Record<string, unknown>): Record<string, unknown> => {
-      void revision;
-      void carrierEpoch;
-      const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly SceneLaneRef[]) : [];
-      return sceneFromLanes(spine, surfaceLaneTexts(record, store.getState(), declared, lanes), lanes);
-    },
-    [record, store, revision, carrierEpoch, lanes],
-  );
-  return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble)}</>;
+/** 🌳️ Entry point — resolves `store`'s current root and renders it. */
+export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterContext): ReactNode {
+  const root = store.getState().root;
+  if (root === null) return null;
+  return <UiNodeView store={store} id={root} context={context} />;
 }
 
 /**
- * ♿️ The accessible door to a canvas.
- *
- * Every other component view reaches its ARIA for free, because it renders a real HTML element that
- * already carries the role and takes focus. A surface renders a scene host that paints into a
- * `<canvas>` — an opaque texture with no accessible children at all — so without this wrapper the
- * node-graph and World3d surfaces were unnamed, unfocusable and silent: the `AccessibilitySpec` the
- * contract carries on the record was simply dropped on the floor (`renderComponentSceneHost` never
- * received it), which an accessibility-tree probe on 6018 confirmed — three canvases, no `role`, no
- * `aria-label`, no `tabindex`.
- *
- * `role="application"` is the ARIA contract for "this widget handles its own arrow/Enter keys", which
- * is exactly what a scene host does, and it is the role `accessibility_role` already implies for
- * `Component::Surface` on every renderer. `tabIndex` puts the canvas in the Tab order, matching the
- * contract's own `accessibility_is_focusable`, so React and the wgpu `EventRouter` agree about who is
- * reachable. The layout classes mirror what every scene host's own root already sets
- * (`relative h-full min-h-0 w-full`), so inserting this element changes no geometry.
- *
- * @see ../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
+ * 🐢️ `React.memo`'d entry point — `store` is a stable per-surface identity, so only the root id
+ * changing (a `SetRoot`/full `loadSnapshot`) causes this to re-subscribe; ordinary node mutations are
+ * handled entirely by `UiNodeView`'s own per-id subscription several levels down, never by
+ * re-rendering from here.
  */
-function SurfaceAccessibilityShell({ record, context, children }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext; readonly children: ReactNode }) {
-  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
-  const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
-  return (
-    <div
-      data-ui-node-id={record.id}
-      data-ui-node-key={record.key}
-      data-ui-surface-shell=""
-      data-window-content-layout={record.component.type === "surface" && record.component.kind === "canvas-2d" ? "edgeless" : undefined}
-      role="application"
-      tabIndex={record.disabled ? -1 : 0}
-      aria-disabled={record.disabled || undefined}
-      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
-      className="focus-visible:ring-primary relative h-full min-h-0 w-full min-w-0 outline-none focus-visible:ring-2"
-      onKeyDown={
-        activateBinding && !record.disabled
-          ? (event) => {
-              if (event.key !== "Enter" && event.key !== " ") return;
-              event.preventDefault();
-              dispatchTrigger(context, record, "activate");
-            }
-          : undefined
-      }
-      {...aria}
-    >
-      {describedBy}
-      {children}
-    </div>
-  );
-}
-
-export function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
-  const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = surfaceKindSceneLanes(component.kind) ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
-  return (
-    <SurfaceAccessibilityShell record={record} context={context}>
-      {body}
-    </SurfaceAccessibilityShell>
-  );
-}
-//#endregion ComponentRenderers
+export const InterpretedUiNode = memo(function InterpretedUiNode({ store, windowId, localDocumentOwner = null, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore; readonly windowId?: string; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
+  const surfaceActions = usePluginSurfaceActions();
+  const root = useUiDocumentRoot(store);
+  const ownedAction = useCallback((action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => onAction(windowId === undefined ? action : inputActionWithWindowV1(action, windowId), lifecycle), [onAction, windowId]);
+  const ownedIntent = useCallback((intent: UiIntent) => onIntent(intent, windowId), [onIntent, windowId]);
+  if (root === null) return null;
+  return <LocalDocumentOwnerContext.Provider value={localDocumentOwner}><LocalDocumentWindowContext.Provider value={windowId ?? null}><UiNodeView store={store} id={root} context={{ store, localDocumentOwner, onAction: ownedAction, onIntent: ownedIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} /></LocalDocumentWindowContext.Provider></LocalDocumentOwnerContext.Provider>;
+});
 //#endregion 🔖️UiInterpreter
+
+//#region 🧪️Tests
+if (import.meta.vitest) {
+  const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
+  await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests1: registerContinuousPressTests } = await import("./🧪️tests/🧪️continuous-presses/🟦️.tsx");
+  await registerContinuousPressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerNumberKeyboardLawTests } = await import("./🧪️tests/🧪️number-keyboard-law/🟦️.tsx");
+  await registerNumberKeyboardLawTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerTextKeyboardLawTests } = await import("./🧪️tests/🧪️text-keyboard-law/🟦️.tsx");
+  await registerTextKeyboardLawTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
+  await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
+  const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");
+  await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowServedRequestsV1, treeWindowViewportMetrics }, { url: import.meta.url });
+  const { registerTests1: registerTableWindowTests } = await import("./🧪️tests/📊️table/🟦️.tsx");
+  await registerTableWindowTests(
+    import.meta.vitest,
+    { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx },
+    { url: import.meta.url },
+  );
+  const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
+  await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerOverlayFlowTests } = await import("./🧪️tests/📐️overlay-flow/🟦️.tsx");
+  await registerOverlayFlowTests(import.meta.vitest, { UiDocumentStore, UiNodeView, layoutSpecStyle }, { url: import.meta.url });
+  const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
+  await registerSurfaceSceneLaneTests(
+    import.meta.vitest,
+    {
+      UiDocumentStore,
+      UiNodeView,
+      surfaceSceneLaneText,
+      surfaceSceneLaneCache,
+      utf8ByteLength,
+      nodeGraphSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, NODE_GRAPH_SCENE_LANES),
+      nodeGraphSceneFromLanes,
+      world3dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, WORLD3D_SCENE_LANES),
+      canvas2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, CANVAS2D_SCENE_LANES),
+      board2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, BOARD2D_SCENE_LANES),
+      paint2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, PAINT2D_SCENE_LANES),
+      world3dSceneFromLanes,
+      canvas2dSceneFromLanes,
+      board2dSceneFromLanes,
+      paint2dSceneFromLanes,
+      surfaceKindSceneLanes,
+      NODE_GRAPH_SCENE_LANES,
+      WORLD3D_SCENE_LANES,
+      CANVAS2D_SCENE_LANES,
+      BOARD2D_SCENE_LANES,
+      PAINT2D_SCENE_LANES,
+      WORLD3D_SCENE_LANE_KEY_PREFIX,
+      world3dSceneLaneForBodyKey,
+    },
+    { url: import.meta.url },
+  );
+}
+//#endregion 🧪️Tests

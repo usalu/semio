@@ -72,7 +72,7 @@ fn declared_outcome_holds() {
         .and_then(serde_json::Value::as_array)
         .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
         .unwrap_or_default();
-    let raised = <Grid2dMutation as protocol::Mutation<Grid2dSnapshot>>::diff(&mutation(), &before());
+    let raised = <Grid2dMutation as protocol::ColdMutation<Grid2dSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -99,7 +99,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let raised = <Grid2dMutation as protocol::Mutation<Grid2dSnapshot>>::diff(&mutation(), &base);
+    let raised = <Grid2dMutation as protocol::ColdMutation<Grid2dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-tile-weight/⚖️biases: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -118,7 +118,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: Grid2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-tile-weight/⚖️biases: committed diff did not carry before to after");
 }
 

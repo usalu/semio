@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧪️ResidentOracle
 import { strict as assert } from "node:assert";
 import { runInThisContext } from "node:vm";

@@ -111,7 +111,7 @@ impl WorldPlaceholderKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum WorldPlaceholderMeshPhase {
+pub enum WorldPlaceholderMeshPhase {
     Allocate,
     Positions,
     Normals,
@@ -683,7 +683,7 @@ pub fn placeholder_triangle(kind: WorldPlaceholderKind, triangle: u32) -> [[f32;
 //#region WorldMeshBuffers
 pub type WorldMeshBuffers=semio_framework::MeshData;
 
-trait WorldMeshSurface {
+pub trait WorldMeshSurface {
     fn position(&self,vertex:u32)->[f32;3];
     fn normal(&self,vertex:u32)->[f32;3];
 }

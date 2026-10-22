@@ -1,0 +1,969 @@
+{
+  "version": 1,
+  "languages": ["en", "de"],
+  "labels": {
+    "tagline": {
+      "en": "Tool-neutral build entry with two implementations: Nx with Bun (default) and Bazel.",
+      "de": "Werkzeugneutraler Build-Einstieg mit zwei Implementierungen: Nx mit Bun (Standard) und Bazel."
+    },
+    "usage": { "en": "Usage", "de": "Verwendung" },
+    "commands": { "en": "Commands", "de": "Befehle" },
+    "options": { "en": "Options", "de": "Optionen" },
+    "globalOptions": { "en": "Global options", "de": "Globale Optionen" },
+    "subcommands": { "en": "Subcommands", "de": "Unterbefehle" },
+    "examples": { "en": "Examples", "de": "Beispiele" },
+    "usedBy": { "en": "used by", "de": "verwendet von" },
+    "notes": { "en": "Notes", "de": "Hinweise" }
+  },
+  "flags": [
+    {
+      "name": "--tool",
+      "value": "required",
+      "valueName": "nx|bazel",
+      "description": {
+        "en": "Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).",
+        "de": "Wählt die Build-Implementierung; sonst SEMIO_BUILD_TOOL, dann der Standard der Policy (nx)."
+      }
+    },
+    {
+      "name": "--workers",
+      "value": "required",
+      "valueName": "on|off",
+      "description": {
+        "en": "Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.",
+        "de": "Führt Aktionen in persistenten Workern (on) oder je in einem eigenen Prozess (off) aus; sonst SEMIO_BUILD_WORKERS, dann die Worker-Policy der Build-Policy."
+      }
+    },
+    { "name": "--help", "aliases": ["-h"], "value": "none", "description": { "en": "Print the usage of the command and stop.", "de": "Gibt die Verwendung des Befehls aus und endet." } },
+    {
+      "name": "--lang",
+      "value": "required",
+      "valueName": "en|de",
+      "description": {
+        "en": "Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.",
+        "de": "Sprache der Texte; sonst SEMIO_LANGUAGE, dann LANGUAGE und die Locale-Variablen (LC_ALL, LC_MESSAGES, LANG), dann die Sprache des Betriebssystems. Es wird keine Sprache angenommen: Der Befehl verweigert sich, wenn keine bestimmt werden kann."
+      }
+    },
+    {
+      "name": "--projects",
+      "aliases": ["-p"],
+      "value": "required",
+      "valueName": "projects",
+      "operations": ["run-many", "exec", "watch"],
+      "description": {
+        "en": "Comma list of project names with * wildcards, tag:<tag>, name:<name>, directory:<root> and !<pattern> negation.",
+        "de": "Kommaliste von Projektnamen mit *-Platzhaltern, tag:<tag>, name:<name>, directory:<root> und !<Muster> als Verneinung."
+      }
+    },
+    {
+      "name": "--exclude",
+      "value": "required",
+      "valueName": "projects",
+      "operations": ["run-many", "affected", "exec", "watch"],
+      "description": { "en": "Comma list of projects to leave out (same patterns as --projects).", "de": "Kommaliste auszuschließender Projekte (gleiche Muster wie --projects)." }
+    },
+    {
+      "name": "--targets",
+      "aliases": ["--target", "-t"],
+      "value": "required",
+      "valueName": "targets",
+      "operations": ["run-many", "affected"],
+      "description": { "en": "Comma list of target names or * patterns.", "de": "Kommaliste von Target-Namen oder *-Mustern." }
+    },
+    {
+      "name": "--configuration",
+      "aliases": ["-c"],
+      "value": "required",
+      "valueName": "prototype|release",
+      "operations": ["run", "run-many", "affected", "cargo"],
+      "description": {
+        "en": "Compiler configuration; disagreeing values (also a :<configuration> suffix or SEMIO_BUILD_MODE) are refused; cargo takes the full name only.",
+        "de": "Compiler-Konfiguration; widersprüchliche Werte (auch ein :<Konfiguration>-Suffix oder SEMIO_BUILD_MODE) werden abgelehnt; cargo nimmt nur den vollen Namen."
+      }
+    },
+    {
+      "name": "--parallel",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["run", "run-many", "affected"],
+      "description": { "en": "Maximum number of concurrent tasks.", "de": "Höchstzahl gleichzeitiger Tasks." }
+    },
+    {
+      "name": "--bail",
+      "value": "none",
+      "operations": ["run", "run-many", "affected"],
+      "description": { "en": "Stop at the first failing task.", "de": "Stoppt bei der ersten fehlschlagenden Task." }
+    },
+    { "name": "--verbose", "value": "none", "operations": ["run", "run-many", "affected"], "description": { "en": "Print more detail.", "de": "Gibt mehr Details aus." } },
+    {
+      "name": "--output",
+      "aliases": ["--output-style"],
+      "value": "required",
+      "valueName": "stream|stream-without-prefixes|static",
+      "operations": ["run", "run-many", "affected"],
+      "description": { "en": "Output style of the task logs.", "de": "Ausgabestil der Task-Logs." }
+    },
+    { "name": "--skip-cache", "value": "none", "operations": ["run", "run-many", "affected"], "description": { "en": "Ignore the task cache.", "de": "Ignoriert den Task-Cache." } },
+    { "name": "--skip-remote-cache", "value": "none", "operations": ["run", "run-many", "affected"], "description": { "en": "Ignore the remote cache.", "de": "Ignoriert den Remote-Cache." } },
+    {
+      "name": "--exclude-dependencies",
+      "aliases": ["--exclude-task-dependencies"],
+      "value": "none",
+      "operations": ["run", "run-many", "affected"],
+      "description": { "en": "Run only the named tasks, not the tasks they depend on.", "de": "Führt nur die benannten Tasks aus, nicht die Tasks, von denen sie abhängen." }
+    },
+    {
+      "name": "--dry-run",
+      "value": "none",
+      "operations": ["run", "run-many", "affected", "exec", "cache"],
+      "description": {
+        "en": "Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc: list what would be removed and remove nothing.",
+        "de": "Gibt den Task-Graphen als DryRunPlan auf stdout aus und führt nichts aus; für jedes Werkzeug gleich. Mit cache gc: listet auf, was entfernt würde, und entfernt nichts."
+      }
+    },
+    {
+      "name": "--graph",
+      "value": "optional",
+      "valueName": "file",
+      "operations": ["run", "run-many", "affected", "exec"],
+      "description": {
+        "en": "Same as --dry-run; with a file the plan is written there (Nx: the file as given, Bazel: a report whose path is printed).",
+        "de": "Wie --dry-run; mit einer Datei wird der Plan dorthin geschrieben (Nx: die Datei wie angegeben, Bazel: ein Bericht, dessen Pfad ausgegeben wird)."
+      }
+    },
+    {
+      "name": "--all",
+      "value": "none",
+      "operations": ["affected", "watch", "dependencies", "leases"],
+      "description": { "en": "Select every project (affected, watch), every dependency owner (dependencies) or every lease directory with registered processes (leases).", "de": "Wählt jedes Projekt (affected, watch), jeden Abhängigkeits-Eigentümer (dependencies) oder jedes Lease-Verzeichnis mit registrierten Prozessen (leases)." }
+    },
+    {
+      "name": "--base",
+      "value": "required",
+      "valueName": "ref",
+      "operations": ["affected"],
+      "description": { "en": "Compare against this revision instead of HEAD.", "de": "Vergleicht mit dieser Revision statt mit HEAD." }
+    },
+    { "name": "--head", "value": "required", "valueName": "ref", "operations": ["affected"], "description": { "en": "End revision of the comparison.", "de": "Endrevision des Vergleichs." } },
+    {
+      "name": "--files",
+      "value": "required",
+      "valueName": "files",
+      "operations": ["affected"],
+      "description": { "en": "Comma list of changed files instead of the git comparison.", "de": "Kommaliste geänderter Dateien statt des Git-Vergleichs." }
+    },
+    { "name": "--uncommitted", "value": "none", "operations": ["affected"], "description": { "en": "Only uncommitted changes.", "de": "Nur nicht committete Änderungen." } },
+    { "name": "--untracked", "value": "none", "operations": ["affected"], "description": { "en": "Only untracked files.", "de": "Nur unverfolgte Dateien." } },
+    {
+      "name": "--include-global-files",
+      "value": "none",
+      "operations": ["watch"],
+      "description": { "en": "Also react to files outside any project.", "de": "Reagiert auch auf Dateien außerhalb jedes Projekts." }
+    },
+    {
+      "name": "--file",
+      "value": "required",
+      "valueName": "path",
+      "operations": ["graph", "show", "incremental", "concurrency"],
+      "description": { "en": "Write the result as a report file and print its path.", "de": "Schreibt das Ergebnis als Berichtsdatei und gibt deren Pfad aus." }
+    },
+    {
+      "name": "--json",
+      "value": "none",
+      "operations": ["graph", "show", "incremental", "concurrency", "capacity", "leases", "cache", "tools"],
+      "description": { "en": "Print lists as JSON instead of one entry per line.", "de": "Gibt Listen als JSON statt eines Eintrags je Zeile aus." }
+    },
+    {
+      "name": "--area",
+      "value": "required",
+      "valueName": "id[,id]",
+      "operations": ["cache"],
+      "description": { "en": "cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared).", "de": "cache status|gc: beschränkt Bericht oder Einsammeln auf diese Bereiche des Verzeichnisses (oder retired, undeclared)." }
+    },
+    {
+      "name": "--tasks",
+      "value": "none",
+      "operations": ["cache"],
+      "description": { "en": "cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger.", "de": "cache status: gibt den Task-Cache des gewählten Werkzeugs (einen CacheStatus) statt der Cache-Bilanz aus." }
+    },
+    {
+      "name": "--graph-policy",
+      "value": "required",
+      "valueName": "fresh|current",
+      "operations": ["graph", "show"],
+      "description": {
+        "en": "fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY.",
+        "de": "fresh (Standard) prüft den Graphen und wartet bei geänderten Projekten auf den Neuaufbau; current liefert sofort den neuesten versiegelten Graphen und wartet nie; sonst SEMIO_BUILD_GRAPH_POLICY."
+      }
+    },
+    {
+      "name": "--scenario",
+      "value": "required",
+      "valueName": "ids|all",
+      "operations": ["incremental"],
+      "description": { "en": "incremental plan|run: comma list of scenario ids, or all.", "de": "incremental plan|run: Kommaliste von Szenario-IDs oder all." }
+    },
+    {
+      "name": "--implementations",
+      "value": "required",
+      "valueName": "nx,bazel",
+      "operations": ["incremental", "concurrency"],
+      "description": { "en": "incremental and concurrency plan|run: implementations to judge (default: both).", "de": "incremental und concurrency plan|run: zu prüfende Implementierungen (Standard: beide)." }
+    },
+    {
+      "name": "--root",
+      "value": "required",
+      "valueName": "path",
+      "operations": ["incremental", "concurrency"],
+      "description": { "en": "incremental, concurrency: the disposable repository copy (default: the folder sinc in the temporary directory of the process); it must not lie inside or contain the checkout, and its path stays short because absolute paths are limited to 256 characters.", "de": "incremental, concurrency: die Wegwerf-Kopie des Repositorys (Standard: der Ordner sinc im temporären Verzeichnis des Prozesses); sie darf weder im Checkout liegen noch ihn enthalten, und ihr Pfad bleibt kurz, weil absolute Pfade auf 256 Zeichen begrenzt sind." }
+    },
+    {
+      "name": "--phases",
+      "value": "required",
+      "valueName": "warm,edit,revert",
+      "operations": ["incremental"],
+      "description": { "en": "incremental run: phases to judge (default: all three).", "de": "incremental run: zu prüfende Phasen (Standard: alle drei)." }
+    },
+    {
+      "name": "--fresh",
+      "value": "none",
+      "operations": ["incremental"],
+      "description": { "en": "incremental prepare: discard the copy and clone it again.", "de": "incremental prepare: verwirft die Kopie und klont sie neu." }
+    },
+    {
+      "name": "--workloads",
+      "value": "required",
+      "valueName": "ids|all",
+      "operations": ["concurrency"],
+      "description": { "en": "concurrency plan|run: comma list of workload ids, or all.", "de": "concurrency plan|run: Kommaliste von Arbeitslast-IDs oder all." }
+    },
+    {
+      "name": "--sessions",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["concurrency"],
+      "description": { "en": "concurrency plan|run: simulated agents per workload, the first n of its sessions (default: 3, at most 8).", "de": "concurrency plan|run: simulierte Agenten je Arbeitslast, die ersten n ihrer Sitzungen (Standard: 3, höchstens 8)." }
+    },
+    {
+      "name": "--criteria",
+      "value": "required",
+      "valueName": "id",
+      "operations": ["concurrency"],
+      "description": { "en": "concurrency run: judge every workload with this set of pass criteria instead of its own.", "de": "concurrency run: beurteilt jede Arbeitslast mit diesen Abnahmekriterien statt mit ihren eigenen." }
+    },
+    {
+      "name": "--scope",
+      "value": "separate",
+      "valueName": "owner",
+      "operations": ["dependencies"],
+      "description": { "en": "Restrict the operation to one dependency owner.", "de": "Beschränkt die Operation auf einen Abhängigkeits-Eigentümer." }
+    },
+    {
+      "name": "--store",
+      "value": "required",
+      "valueName": "shared|isolated",
+      "operations": ["cargo"],
+      "description": { "en": "Cargo target store; never create a private target directory.", "de": "Cargo-Zielspeicher; niemals ein privates Zielverzeichnis anlegen." }
+    },
+    {
+      "name": "--parallelism",
+      "value": "required",
+      "valueName": "cores",
+      "operations": ["cargo"],
+      "description": { "en": "Positive number of cores for Cargo.", "de": "Positive Anzahl von Kernen für Cargo." }
+    },
+    {
+      "name": "--port",
+      "value": "separate",
+      "valueName": "port",
+      "operations": ["cache", "remote-execution"],
+      "description": { "en": "cache serve: port to listen on; 0 picks a free port (default from the build policy). remote-execution: loopback port of the cluster frontend (default 8980).", "de": "cache serve: Port, auf dem gelauscht wird; 0 wählt einen freien Port (Standard aus der Build-Policy). remote-execution: Loopback-Port des Cluster-Frontends (Standard 8980)." }
+    },
+    {
+      "name": "--host",
+      "value": "separate",
+      "valueName": "address",
+      "operations": ["cache"],
+      "description": { "en": "cache serve: address to listen on; beyond loopback a token is required.", "de": "cache serve: Adresse, auf der gelauscht wird; außerhalb von Loopback ist ein Token nötig." }
+    },
+    {
+      "name": "--directory",
+      "value": "separate",
+      "valueName": "path",
+      "operations": ["cache"],
+      "description": { "en": "cache serve: store directory, relative to the workspace root.", "de": "cache serve: Speicherverzeichnis, relativ zum Workspace-Wurzelverzeichnis." }
+    },
+    {
+      "name": "--max-bytes",
+      "value": "separate",
+      "valueName": "bytes",
+      "operations": ["cache"],
+      "description": { "en": "cache serve: upper bound of the store; the least recently used entries are evicted beyond it.", "de": "cache serve: Obergrenze des Speichers; darüber werden die am längsten ungenutzten Einträge entfernt." }
+    },
+    {
+      "name": "--platform",
+      "value": "separate",
+      "valueName": "linux-arm64|linux-x64",
+      "operations": ["remote-execution"],
+      "description": { "en": "remote-execution: execution platform of the workers; otherwise the one that matches this machine's CPU.", "de": "remote-execution: Ausführungsplattform der Worker; sonst die zur CPU dieses Rechners passende." }
+    },
+    {
+      "name": "--diagnostics-port",
+      "value": "separate",
+      "valueName": "port",
+      "operations": ["remote-execution"],
+      "description": { "en": "remote-execution: loopback port of the health route of the frontend (default 8981).", "de": "remote-execution: Loopback-Port der Gesundheitsroute des Frontends (Standard 8981)." }
+    },
+    {
+      "name": "--operation",
+      "value": "required",
+      "valueName": "name",
+      "operations": ["capacity"],
+      "description": { "en": "capacity run: the catalogue operation whose estimate is reserved (default: command).", "de": "capacity run: die Operation des Katalogs, deren Schätzung reserviert wird (Standard: command)." }
+    },
+    {
+      "name": "--memory",
+      "value": "required",
+      "valueName": "megabytes",
+      "operations": ["capacity"],
+      "description": { "en": "capacity run: reserve exactly this many megabytes instead of an operation's estimate.", "de": "capacity run: reserviert genau so viele Megabyte statt der Schätzung einer Operation." }
+    },
+    {
+      "name": "--cpu",
+      "value": "required",
+      "valueName": "cores",
+      "operations": ["capacity"],
+      "description": { "en": "capacity run: cores the command keeps busy, counted against the load ceiling (default: 1).", "de": "capacity run: Kerne, die der Befehl auslastet und die gegen die Lastobergrenze zählen (Standard: 1)." }
+    },
+    {
+      "name": "--jobs",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["capacity"],
+      "description": { "en": "capacity run: jobs of a task operation to reserve (default: 1).", "de": "capacity run: Jobs einer Task-Operation, die reserviert werden (Standard: 1)." }
+    },
+    {
+      "name": "--only",
+      "value": "required",
+      "valueName": "ids",
+      "operations": ["tools"],
+      "description": { "en": "tools verify: the comma-separated tool ids to check (default: all).", "de": "tools verify: die kommagetrennten Werkzeug-Ids, die geprüft werden (Standard: alle)." }
+    },
+    {
+      "name": "--cwd",
+      "value": "required",
+      "valueName": "path",
+      "operations": ["tools"],
+      "description": { "en": "tools exec: the directory the tool runs in (default: the current directory).", "de": "tools exec: das Verzeichnis, in dem das Werkzeug läuft (Standard: das aktuelle Verzeichnis)." }
+    },
+    {
+      "name": "--light",
+      "value": "none",
+      "operations": ["tools"],
+      "description": { "en": "tools exec: run without waiting for machine capacity, for short queries.", "de": "tools exec: läuft ohne Warten auf Rechnerkapazität, für kurze Abfragen." }
+    },
+    {
+      "name": "--lease-directory",
+      "value": "required",
+      "valueName": "path",
+      "operations": ["leases"],
+      "description": { "en": "leases status: the lease directory to inspect (default: the checkout's lease store).", "de": "leases status: das zu untersuchende Lease-Verzeichnis (Standard: der Lease-Speicher dieses Checkouts)." }
+    },
+    {
+      "name": "--violations",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["leases"],
+      "description": { "en": "leases status: how many recent lock order violations to list (default: 10).", "de": "leases status: wie viele jüngste Verletzungen der Sperrreihenfolge aufgelistet werden (Standard: 10)." }
+    }
+  ],
+  "operations": [
+    {
+      "name": "run",
+      "requires": "dependencies",
+      "synopsis": "run <project:target[:configuration]>",
+      "summary": { "en": "Run one task of one project.", "de": "Führt eine Task eines Projekts aus." },
+      "implementations": { "nx": "native", "bazel": "adapter" },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--configuration", "--parallel", "--bail", "--verbose", "--output", "--skip-cache", "--skip-remote-cache", "--exclude-dependencies", "--dry-run", "--graph"],
+      "examples": [
+        {
+          "command": "repo run @semio-tech/semio-tech-play:serve",
+          "description": { "en": "Run the serve task with the default implementation.", "de": "Führt die Serve-Task mit der Standardimplementierung aus." }
+        },
+        { "command": "repo run @semio-tech/semio-tech-play:serve --tool=bazel", "description": { "en": "Run the same task with Bazel.", "de": "Führt dieselbe Task mit Bazel aus." } },
+        {
+          "command": "repo run @semio-tech/semio-tech-play:serve --dry-run",
+          "description": { "en": "Print the task graph and run nothing.", "de": "Gibt den Task-Graphen aus und führt nichts aus." }
+        }
+      ],
+      "notes": [
+        {"en": "--dry-run prints a DryRunPlan on stdout and executes nothing; --graph is the same flag for every tool and takes an optional file.", "de": "--dry-run gibt einen DryRunPlan auf stdout aus und führt nichts aus; --graph ist für jedes Werkzeug dasselbe Flag und nimmt optional eine Datei."},
+        {"en": "Bazel: a selection builds exactly the transitive closure of its tasks in one generated workspace; a cached test-family task without declared outputs and without dependents runs as a Bazel test (cached test results; only tests are built when only tests are selected; --skip-cache switches the cached test results off), every other task as a cacheable build action. Test sharding is not offered because the neutral contract defines no shard protocol.", "de": "Bazel: Eine Auswahl baut genau den transitiven Abschluss ihrer Tasks in einem erzeugten Workspace; eine gecachte Test-Task ohne deklarierte Ausgaben und ohne Abhängige läuft als Bazel-Test (gecachte Testergebnisse; sind nur Tests ausgewählt, werden nur Tests gebaut; --skip-cache schaltet die gecachten Testergebnisse ab), jede andere Task als cachebare Build-Aktion. Test-Sharding wird nicht angeboten, weil der neutrale Vertrag kein Shard-Protokoll definiert."}
+      ]
+    },
+    {
+      "name": "run-many",
+      "requires": "dependencies",
+      "synopsis": "run-many --targets=<targets> [--projects=<projects>]",
+      "summary": { "en": "Run the same targets in many projects.", "de": "Führt dieselben Targets in mehreren Projekten aus." },
+      "implementations": { "nx": "native", "bazel": "adapter" },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": [
+        "--targets",
+        "--projects",
+        "--exclude",
+        "--configuration",
+        "--parallel",
+        "--bail",
+        "--verbose",
+        "--output",
+        "--skip-cache",
+        "--skip-remote-cache",
+        "--exclude-dependencies",
+        "--dry-run",
+        "--graph"
+      ],
+      "examples": [
+        {
+          "command": "repo run-many --targets=test --projects=tag:rust",
+          "description": { "en": "Run the test target in every project tagged rust.", "de": "Führt das Test-Target in jedem Projekt mit dem Tag rust aus." }
+        },
+        { "command": "repo run-many --targets=build,test --dry-run", "description": { "en": "Plan two targets in every project.", "de": "Plant zwei Targets in jedem Projekt." } }
+      ]
+    },
+    {
+      "name": "affected",
+      "requires": "dependencies",
+      "synopsis": "affected --targets=<targets>",
+      "summary": { "en": "Run targets in the projects changed against HEAD and their dependents.", "de": "Führt Targets in den gegenüber HEAD geänderten Projekten und deren Abhängigen aus." },
+      "implementations": { "nx": "native", "bazel": "adapter" },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": [
+        "--targets",
+        "--exclude",
+        "--configuration",
+        "--all",
+        "--base",
+        "--head",
+        "--files",
+        "--uncommitted",
+        "--untracked",
+        "--parallel",
+        "--bail",
+        "--verbose",
+        "--output",
+        "--skip-cache",
+        "--skip-remote-cache",
+        "--exclude-dependencies",
+        "--dry-run",
+        "--graph"
+      ],
+      "examples": [
+        {
+          "command": "repo affected --targets=test",
+          "description": { "en": "Test what changed against HEAD plus untracked files.", "de": "Testet, was sich gegenüber HEAD geändert hat, plus unverfolgte Dateien." }
+        },
+        {
+          "command": "repo affected --targets=build --base=main --head=HEAD",
+          "description": { "en": "Build what differs between two revisions.", "de": "Baut, was sich zwischen zwei Revisionen unterscheidet." }
+        }
+      ],
+      "notes": [
+        {"en": "Changed files: tracked changes against HEAD plus untracked files by default; --base/--head, --files, --uncommitted and --untracked narrow them; --all selects every project.", "de": "Geänderte Dateien: standardmäßig verfolgte Änderungen gegen HEAD plus unverfolgte Dateien; --base/--head, --files, --uncommitted und --untracked schränken sie ein; --all wählt jedes Projekt."},
+        {"en": "Nx translation: no selector adds --base=HEAD, --uncommitted with --untracked becomes --base=HEAD, --all becomes run-many. The project closure stays tool-native (the Nx project graph; for Bazel a reverse-dependency query over a generated package of project and changed-file nodes, which asserts the same answer).", "de": "Nx-Übersetzung: ohne Selektor wird --base=HEAD ergänzt, --uncommitted mit --untracked wird zu --base=HEAD, --all wird zu run-many. Der Projektabschluss bleibt werkzeugeigen (der Nx-Projektgraph; bei Bazel eine Rückwärtsabhängigkeits-Abfrage über ein erzeugtes Paket aus Projekt- und Dateiknoten, die dieselbe Antwort zusichert)."},
+        {"en": "Affected projects (identical for every tool, asserted against Nx's own locators): the deepest project root that owns a changed file, projects whose target inputs name a changed {workspaceRoot}/ file, every project when nx.json changes, then all dependents. Package manager manifest and lock semantics (Nx diffs package.json) are Nx-only.", "de": "Betroffene Projekte (für jedes Werkzeug gleich, gegen die Locator von Nx geprüft): die tiefste Projektwurzel, der eine geänderte Datei gehört, Projekte, deren Target-Eingaben eine geänderte {workspaceRoot}/-Datei nennen, jedes Projekt bei einer Änderung von nx.json, danach alle Abhängigen. Die Semantik von Paketmanager-Manifest und Lock (Nx vergleicht package.json) gibt es nur bei Nx."},
+        {"en": "--projects is refused for every tool; use run-many to narrow.", "de": "--projects wird für jedes Werkzeug abgelehnt; zum Eingrenzen run-many verwenden."}
+      ]
+    },
+    {
+      "name": "exec",
+      "requires": "dependencies",
+      "synopsis": "exec --projects=<projects> -- <command>",
+      "summary": { "en": "Run a command once per selected project, in the project root.", "de": "Führt einen Befehl einmal je gewähltem Projekt im Projektstamm aus." },
+      "implementations": { "nx": "native", "bazel": "adapter" },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--projects", "--exclude", "--dry-run", "--graph"],
+      "examples": [
+        {
+          "command": "repo exec --projects=@semio-tech/repo-client -- bun test",
+          "description": { "en": "Run one command inside one project root.", "de": "Führt einen Befehl im Stamm eines Projekts aus." }
+        },
+        { "command": "repo exec --projects=tag:rust --dry-run", "description": { "en": "List the repo-exec tasks and run nothing.", "de": "Listet die repo-exec-Tasks auf und führt nichts aus." } }
+      ],
+      "notes": [
+        {"en": "Runs the command once per selected project with the project root as working directory and SEMIO_PROJECT_NAME and SEMIO_PROJECT_ROOT exported (the root relative to the workspace); Bazel runs the repo-exec task of each project, uncached; the Nx implementation maps the names its own exec exports.", "de": "Führt den Befehl einmal je ausgewähltem Projekt mit der Projektwurzel als Arbeitsverzeichnis aus und exportiert SEMIO_PROJECT_NAME und SEMIO_PROJECT_ROOT (die Wurzel relativ zum Workspace); Bazel führt die repo-exec-Task jedes Projekts ohne Cache aus; die Nx-Implementierung bildet die Namen ab, die ihr eigenes exec exportiert."},
+        {"en": "--dry-run prints the ExecPlan tasks (project:repo-exec) and runs nothing for every tool.", "de": "--dry-run gibt die Tasks des ExecPlan (project:repo-exec) aus und führt für jedes Werkzeug nichts aus."}
+      ]
+    },
+    {
+      "name": "watch",
+      "requires": "dependencies",
+      "synopsis": "watch --projects=<projects> -- <command>",
+      "summary": { "en": "Rerun a command when selected source files change.", "de": "Führt einen Befehl erneut aus, wenn gewählte Quelldateien sich ändern." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--projects", "--exclude", "--all", "--include-global-files"],
+      "examples": [
+        {
+          "command": "repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build",
+          "description": { "en": "Rebuild one project on every source change.", "de": "Baut ein Projekt bei jeder Quelländerung neu." }
+        }
+      ]
+    },
+    {
+      "name": "graph",
+      "requires": "dependencies",
+      "synopsis": "graph",
+      "summary": { "en": "Print the tool-neutral build graph.", "de": "Gibt den werkzeugneutralen Build-Graphen aus." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": false,
+      "cancellable": true,
+      "flags": ["--file", "--json", "--graph-policy"],
+      "examples": [{ "command": "repo graph --file=graph.json", "description": { "en": "Write the graph as a report file.", "de": "Schreibt den Graphen als Berichtsdatei." } }]
+    },
+    {
+      "name": "show",
+      "requires": "dependencies",
+      "synopsis": "show projects|project <name>|targets",
+      "summary": { "en": "Print projects, one project or all targets of the neutral graph.", "de": "Gibt Projekte, ein Projekt oder alle Targets des neutralen Graphen aus." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": false,
+      "cancellable": true,
+      "subcommands": [
+        { "name": "projects", "synopsis": "show projects", "summary": { "en": "List every project name.", "de": "Listet alle Projektnamen auf." } },
+        { "name": "project", "synopsis": "show project <name>", "summary": { "en": "Print one project with its targets.", "de": "Gibt ein Projekt mit seinen Targets aus." } },
+        { "name": "targets", "synopsis": "show targets", "examples": [{"command": "repo show targets --json", "description": {"en": "Print every target of the neutral graph as JSON.", "de": "Gibt jedes Target des neutralen Graphen als JSON aus."}}], "summary": { "en": "List every target name.", "de": "Listet alle Target-Namen auf." } }
+      ],
+      "flags": ["--file", "--json", "--graph-policy"],
+      "examples": [
+        { "command": "repo show projects", "description": { "en": "List all projects.", "de": "Listet alle Projekte auf." } },
+        { "command": "repo show project @semio-tech/repo-client", "description": { "en": "Inspect one project.", "de": "Untersucht ein Projekt." } }
+      ]
+    },
+    {
+      "name": "inputs",
+      "requires": "dependencies",
+      "synopsis": "inputs <project:target[:configuration]>",
+      "summary": { "en": "Print what the selected implementation hashes for one task: files, environment, runtime values and external packages.", "de": "Gibt aus, was die gewählte Implementierung für eine Task hasht: Dateien, Umgebung, Laufzeitwerte und externe Pakete." },
+      "implementations": { "nx": "adapter", "bazel": "missing" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "flags": [],
+      "examples": [{ "command": "repo --tool=nx inputs @teaching/architecture-course:test", "description": { "en": "List the inputs Nx hashes for the course tests.", "de": "Listet die Eingaben auf, die Nx für die Kurstests hasht." } }],
+      "notes": [
+        {"en": "Prints JSON with files, environment, runtime, depOutputs and external. Bazel does not implement this operation: it records the inputs and environment of its spawns in the evidence directory of repo verify build-parity instead.", "de": "Gibt JSON mit files, environment, runtime, depOutputs und external aus. Bazel implementiert diese Operation nicht: Es zeichnet die Eingaben und die Umgebung seiner Prozessstarts stattdessen im Beweisverzeichnis von repo verify build-parity auf."}
+      ]
+    },
+    {
+      "name": "reset",
+      "requires": "none",
+      "synopsis": "reset",
+      "summary": { "en": "Invalidate the graph and reset the selected tool's local state.", "de": "Verwirft den Graphen und setzt den lokalen Zustand des gewählten Werkzeugs zurück." },
+      "implementations": { "nx": "adapter", "bazel": "adapter" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "flags": [],
+      "examples": [{ "command": "repo reset --tool=bazel", "description": { "en": "Reset the Bazel state.", "de": "Setzt den Bazel-Zustand zurück." } }]
+    },
+    {
+      "name": "tools",
+      "requires": "none",
+      "synopsis": "tools setup [nx|bazel|all] | list | verify | exec <tool> -- <arguments>",
+      "summary": { "en": "Provision the pinned build tools for this host, and run every other external tool through the tool registry.", "de": "Richtet die gepinnten Build-Werkzeuge für diesen Rechner ein und führt jedes andere externe Werkzeug über die Werkzeugregistratur aus." },
+      "implementations": { "nx": "adapter", "bazel": "adapter" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "setup",
+          "synopsis": "tools setup [nx|bazel|all]",
+          "summary": { "en": "Install and verify the pinned tools of the selected implementation, or of all.", "de": "Installiert und prüft die gepinnten Werkzeuge der gewählten Implementierung oder aller." }
+        },
+        {
+          "name": "list",
+          "synopsis": "tools list [--json]", "flags": ["--json"],
+          "summary": { "en": "Print every registered external tool with its pin, where it was found on this host and the command that runs it.", "de": "Gibt jedes registrierte externe Werkzeug mit seinem Pin, dem Fundort auf diesem Rechner und dem Befehl, der es startet, aus." }
+        },
+        {
+          "name": "verify",
+          "synopsis": "tools verify [--only=<ids>]", "flags": ["--only"],
+          "summary": { "en": "Resolve the registered tools on this host, ask each for its version and report a tool that is missing or differs from its pin.", "de": "Löst die registrierten Werkzeuge auf diesem Rechner auf, fragt jedes nach seiner Version und meldet ein fehlendes oder vom Pin abweichendes Werkzeug." }
+        },
+        {
+          "name": "exec",
+          "synopsis": "tools exec [--cwd=<path>] [--light] <tool> -- <arguments>", "flags": ["--cwd", "--light"],
+          "summary": { "en": "Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation.", "de": "Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch." }
+        }
+      ],
+      "flags": ["--json", "--only", "--cwd", "--light"],
+      "examples": [
+        { "command": "repo tools setup all", "description": { "en": "Provision Nx and Bazel.", "de": "Richtet Nx und Bazel ein." } },
+        { "command": "repo tools list", "description": { "en": "See which external tools exist, how they are pinned and where this host has them.", "de": "Zeigt, welche externen Werkzeuge es gibt, wie sie gepinnt sind und wo dieser Rechner sie hat." } },
+        { "command": "repo tools exec cargo -- check -p semio-framework-value", "description": { "en": "Run Cargo through the registry instead of calling it directly.", "de": "Führt Cargo über die Registratur aus, statt es direkt aufzurufen." } }
+      ],
+      "notes": [
+        { "en": "Code never starts a registered program itself: it asks the tool registry (runToolV1), and repo verify tool-spawns refuses the spawns that bypass it.", "de": "Code startet kein registriertes Programm selbst: Er fragt die Werkzeugregistratur (runToolV1), und repo verify tool-spawns verweigert die Starts, die sie umgehen." }
+      ]
+    },
+    {
+      "name": "preflight",
+      "requires": "none",
+      "synopsis": "preflight",
+      "summary": { "en": "Check the host against the finite requirements before any store is provisioned.", "de": "Prüft den Rechner gegen die endlichen Anforderungen, bevor ein Speicher bereitgestellt wird." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "flags": [],
+      "examples": [
+        {
+          "command": "repo preflight",
+          "description": { "en": "Check architecture, free space, tools and directory exchange.", "de": "Prüft Architektur, freien Platz, Werkzeuge und Verzeichnisaustausch." }
+        }
+      ]
+    },
+    {
+      "name": "incremental",
+      "requires": "none",
+      "synopsis": "incremental list|plan|prepare|run|discard",
+      "summary": { "en": "Prove in a disposable copy that Nx and Bazel rebuild exactly what an edit affects, no more and no less.", "de": "Beweist in einer Wegwerf-Kopie, dass Nx und Bazel nach einer Änderung genau das Betroffene neu bauen, nicht mehr und nicht weniger." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        { "name": "list", "synopsis": "incremental list", "flags": [], "summary": { "en": "List the authored scenarios.", "de": "Listet die verfassten Szenarien auf." } },
+        { "name": "plan", "synopsis": "incremental plan [--scenario=<ids|all>]", "flags": ["--scenario", "--implementations", "--root", "--json"], "examples": [{"command": "repo incremental plan --scenario=fw-ts-comment", "description": {"en": "Print the tasks one scenario must and may re-execute.", "de": "Gibt die Tasks aus, die ein Szenario neu ausführen muss und darf."}}], "summary": { "en": "Print the tasks each scenario must and may re-execute, per implementation.", "de": "Gibt je Implementierung aus, welche Tasks ein Szenario neu ausführen muss und darf." } },
+        { "name": "prepare", "synopsis": "incremental prepare [--fresh]", "flags": ["--root", "--fresh"], "examples": [{"command": "repo incremental prepare --fresh", "description": {"en": "Clone the checkout into the disposable root and bootstrap it.", "de": "Klont den Checkout in das Wegwerf-Verzeichnis und richtet es ein."}}], "summary": { "en": "Clone the checkout into the disposable root and provision it.", "de": "Klont den Checkout in das Wegwerf-Verzeichnis und richtet es ein." } },
+        { "name": "run", "synopsis": "incremental run [--scenario=<ids|all>]", "flags": ["--scenario", "--implementations", "--root", "--phases", "--file", "--json"], "summary": { "en": "Run the scenarios warm, edited and reverted with every implementation and judge the executed tasks.", "de": "Führt die Szenarien warm, geändert und zurückgenommen mit jeder Implementierung aus und beurteilt die ausgeführten Tasks." } },
+        { "name": "discard", "synopsis": "incremental discard", "flags": ["--root"], "examples": [{"command": "repo incremental discard", "description": {"en": "Remove the disposable root.", "de": "Entfernt das Wegwerf-Verzeichnis."}}], "summary": { "en": "Remove the disposable root.", "de": "Entfernt das Wegwerf-Verzeichnis." } }
+      ],
+      "flags": ["--scenario", "--implementations", "--root", "--phases", "--fresh", "--file", "--json"],
+      "examples": [
+        { "command": "repo incremental list", "description": { "en": "List the incremental build scenarios.", "de": "Listet die Szenarien inkrementeller Builds auf." } },
+        { "command": "repo incremental run --scenario=fw-ts-comment", "description": { "en": "Judge one scenario with Nx and Bazel.", "de": "Beurteilt ein Szenario mit Nx und Bazel." } }
+      ]
+    },
+    {
+      "name": "concurrency",
+      "requires": "none",
+      "synopsis": "concurrency list|plan|run",
+      "summary": { "en": "Prove that simulated agents working in one checkout copy at the same time never wait for unrelated projects, share cached work and get the results of a serial run, with Nx and Bazel.", "de": "Beweist, dass simulierte Agenten, die gleichzeitig in einer Checkout-Kopie arbeiten, nie auf fremde Projekte warten, Zwischengespeichertes gemeinsam nutzen und die Ergebnisse eines seriellen Laufs erhalten, mit Nx und Bazel." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "notes": [
+        {"en": "Prepare the disposable copy first with `repo incremental prepare`.", "de": "Zuerst die Wegwerf-Kopie mit `repo incremental prepare` vorbereiten."},
+        {"en": "Waits are measured from the lease trace named by SEMIO_LEASE_TRACE; without it the progress rows only give lower bounds and the criteria stay unproven.", "de": "Wartezeiten werden aus der Lease-Spur gemessen, die SEMIO_LEASE_TRACE nennt; ohne sie liefern die Fortschrittszeilen nur Untergrenzen, und die Kriterien bleiben unbewiesen."}
+      ],
+      "subcommands": [
+        { "name": "list", "synopsis": "concurrency list", "flags": [], "summary": { "en": "List the authored workloads with their simulated agents.", "de": "Listet die verfassten Arbeitslasten mit ihren simulierten Agenten auf." } },
+        { "name": "plan", "synopsis": "concurrency plan [--workloads=<ids|all>] [--sessions=<n>]", "flags": ["--workloads", "--sessions", "--implementations", "--root", "--json"], "summary": { "en": "Print the closure of every target, the tasks that always execute and whether the agents are independent.", "de": "Gibt die Hülle jedes Ziels, die immer ausgeführten Tasks und die Unabhängigkeit der Agenten aus." } },
+        { "name": "run", "synopsis": "concurrency run [--workloads=<ids|all>] [--sessions=<n>] [--criteria=<id>]", "summary": { "en": "Run the agents at the same time and once more in a row, measure waits per lock, cache hits and correctness, and judge the pass criteria.", "de": "Führt die Agenten gleichzeitig und danach nacheinander aus, misst Wartezeiten je Sperre, Cache-Treffer und Korrektheit und beurteilt die Abnahmekriterien." } }
+      ],
+      "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"],
+      "examples": [
+        { "command": "repo concurrency list", "description": { "en": "List the concurrent workloads.", "de": "Listet die gleichzeitigen Arbeitslasten auf." } },
+        { "command": "repo concurrency run --workloads=disjoint-projects --sessions=3", "description": { "en": "Let three agents edit and build disjoint projects at once with Nx and Bazel.", "de": "Lässt drei Agenten gleichzeitig getrennte Projekte ändern und bauen, mit Nx und Bazel." } }
+      ]
+    },
+    {
+      "name": "dependencies",
+      "requires": "none",
+      "synopsis": "dependencies sync|lock --all|--scope <owner> | ensure",
+      "summary": { "en": "Install, lock or ensure the workspace dependencies.", "de": "Installiert, sperrt oder stellt die Abhängigkeiten des Workspace sicher." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "sync",
+          "synopsis": "dependencies sync --all|--scope <owner>", "flags": ["--all", "--scope"],
+          "summary": { "en": "Install the locked dependencies into the dependencies partition.", "de": "Installiert die gesperrten Abhängigkeiten in die Abhängigkeits-Partition." }
+        },
+        {
+          "name": "lock",
+          "synopsis": "dependencies lock --all|--scope <owner>", "flags": ["--all", "--scope"],
+          "summary": { "en": "Regenerate bun.lock after a manifest edit.", "de": "Erzeugt bun.lock nach einer Manifest-Änderung neu." }
+        },
+        {
+          "name": "ensure",
+          "synopsis": "dependencies ensure", "flags": [],
+          "summary": { "en": "Install the locked dependencies only when they are missing or changed; commands that need them run this first.", "de": "Installiert die gesperrten Abhängigkeiten nur, wenn sie fehlen oder geändert sind; Befehle, die sie brauchen, führen dies zuerst aus." }
+        }
+      ],
+      "flags": ["--all", "--scope"],
+      "examples": [
+        {
+          "command": "repo dependencies lock --all",
+          "description": { "en": "Regenerate the lock after editing a package.json.", "de": "Erzeugt die Sperre nach der Änderung einer package.json neu." }
+        },
+        { "command": "repo dependencies sync --all", "description": { "en": "Install every owner's dependencies.", "de": "Installiert die Abhängigkeiten jedes Eigentümers." } },
+        { "command": "repo dependencies ensure", "description": { "en": "Install the locked dependencies only if they are missing or changed.", "de": "Installiert die gesperrten Abhängigkeiten nur, wenn sie fehlen oder geändert sind." } }
+      ]
+    },
+    {
+      "name": "cargo",
+      "requires": "none",
+      "synopsis": "cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>",
+      "summary": { "en": "Compile through the repository's Cargo ingress gate.", "de": "Kompiliert über das Cargo-Eingangstor des Repositorys." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--store", "--configuration", "--parallelism"],
+      "examples": [
+        {
+          "command": "repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib",
+          "description": { "en": "Type-check one crate in the shared store.", "de": "Prüft eine Crate im gemeinsamen Speicher." }
+        }
+      ]
+    },
+    {
+      "name": "cache",
+      "requires": "none",
+      "synopsis": "cache status|gc|clear|remote status|serve",
+      "summary": {
+        "en": "Show and collect every declared cache home with its budget, clear the selected tool's local task cache, show the remote cache contract, or serve a remote cache.",
+        "de": "Zeigt und sammelt jede deklarierte Cache-Heimat mit ihrem Budget, leert den lokalen Task-Cache des gewählten Werkzeugs, zeigt den Remote-Cache-Vertrag oder stellt einen Remote-Cache bereit."
+      },
+      "implementations": { "nx": "adapter", "bazel": "adapter" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "status",
+          "synopsis": "cache status [--tasks]", "flags": ["--area", "--json", "--tasks"],
+          "summary": {
+            "en": "Print the cache ledger: every partition and area with its use against its budget, the retired roots and undeclared entries still on disk; with --tasks, a CacheStatus of the selected tool instead.",
+            "de": "Gibt die Cache-Bilanz aus: jede Partition und jeden Bereich mit Nutzung gegen Budget, die noch vorhandenen stillgelegten Wurzeln und nicht deklarierten Einträge; mit --tasks stattdessen einen CacheStatus des gewählten Werkzeugs."
+          }
+        },
+        {
+          "name": "gc",
+          "synopsis": "cache gc [--dry-run] [--area=<id>]",
+          "summary": {
+            "en": "Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently.",
+            "de": "Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt."
+          }
+        },
+        { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } },
+        {
+          "name": "remote",
+          "synopsis": "cache remote status", "flags": [],
+          "summary": {
+            "en": "Print a RemoteCacheStatus: the remote cache contract from the build policy and the environment, how the selected tool renders it, and whether the endpoint answers.",
+            "de": "Gibt einen RemoteCacheStatus aus: den Remote-Cache-Vertrag aus Build-Policy und Umgebung, wie das gewählte Werkzeug ihn umsetzt und ob der Endpunkt antwortet."
+          }
+        },
+        {
+          "name": "serve",
+          "synopsis": "cache serve", "flags": ["--port", "--host", "--directory", "--max-bytes"],
+          "summary": {
+            "en": "Serve a bounded remote cache for Bazel and Nx from this machine until stopped.",
+            "de": "Stellt von diesem Rechner aus einen begrenzten Remote-Cache für Bazel und Nx bereit, bis er gestoppt wird."
+          }
+        }
+      ],
+      "flags": ["--port", "--host", "--directory", "--max-bytes", "--json", "--dry-run", "--area", "--tasks"],
+      "examples": [
+        { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
+        { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Einsammler entfernen würde." } },
+        { "command": "repo cache status --tasks --tool=bazel", "description": { "en": "Show the Bazel disk cache and build activity.", "de": "Zeigt den Bazel-Disk-Cache und die Build-Aktivität." } },
+        { "command": "repo cache clear", "description": { "en": "Empty the Nx task cache.", "de": "Leert den Nx-Task-Cache." } },
+        { "command": "repo cache serve", "description": { "en": "Serve a local remote cache on 127.0.0.1:6090.", "de": "Stellt einen lokalen Remote-Cache auf 127.0.0.1:6090 bereit." } },
+        {
+          "command": "repo cache remote status --tool=bazel",
+          "description": { "en": "Show how Bazel uses the remote cache and whether it answers.", "de": "Zeigt, wie Bazel den Remote-Cache nutzt und ob er antwortet." }
+        }
+      ],
+      "notes": [
+        "status prints the cache ledger of schema cache-ledger: every fixed partition, every area inside a partition, every area of the repository and native cache roots with its declared budget, and what is retired or undeclared; gc collects it. Both publish progress, stop at the next checkpoint when the caller cancels, and take no lease for the report; gc takes an area's lease exclusively without waiting and never removes a unit whose SQLite lease file is locked, whose queue ticket belongs to a living process or that was used within the quiet time of its area. Areas kept by an owner (Nx at maxCacheSize, Cargo, Bazel, test evidence, the dashboard) are reported, not collected here.",
+        "status --tasks prints a CacheStatus, clear prints a CacheClear; both stop at the next checkpoint when the caller cancels and publish progress while walking or removing entries.",
+        {"en": "Nx: status walks the artifacts directory of the Nx cache partition, clear resets only the Nx task cache inside the bounded Nx namespace.", "de": "Nx: status durchläuft das Artefaktverzeichnis der Nx-Cache-Partition, clear setzt nur den Nx-Task-Cache innerhalb des begrenzten Nx-Namensraums zurück."},
+        {"en": "Bazel: status counts the files of the disk cache entry folders (action cache and content-addressed store) of the products partition and adds the recorded build activity (builds, actions, executed, cacheHits) read from the build event stream; clear stops the persistent servers, removes their output bases (the local action cache) and empties the disk cache, so the next build is a miss; toolchains and modules stay.", "de": "Bazel: status zählt die Dateien der Ordner des Festplatten-Caches (Aktions-Cache und inhaltsadressierter Speicher) der Produkt-Partition und ergänzt die aufgezeichnete Build-Aktivität (builds, actions, executed, cacheHits) aus dem Build-Ereignisstrom; clear stoppt die dauerhaften Server, entfernt deren Ausgabebasen (den lokalen Aktions-Cache) und leert den Festplatten-Cache, sodass der nächste Build ein Fehltreffer ist; Toolchains und Module bleiben."},
+        {"en": "The remote cache is off until SEMIO_REMOTE_CACHE_ENDPOINT names an http or https origin. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS and _RETRIES override the defaults of the build policy; the access token is read from the variable named by SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT (default SEMIO_REMOTE_CACHE_TOKEN) and is never written to disk.", "de": "Der Remote-Cache ist aus, bis SEMIO_REMOTE_CACHE_ENDPOINT einen http- oder https-Ursprung nennt. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS und _RETRIES überschreiben die Standardwerte der Build-Policy; das Zugriffstoken wird aus der Variablen gelesen, die SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT nennt (Standard SEMIO_REMOTE_CACHE_TOKEN), und nie auf die Festplatte geschrieben."},
+        {"en": "Bazel renders the contract into its remote cache settings (endpoint, instance name, upload, compression, download mode, timeout, retries) and passes the token through a credential helper. Nx renders it into its self-hosted remote cache variables (server and access token); it cannot honour compression, download mode, timeouts or retries and leaves read-only to the scope of the server's token. remote status prints both facts.", "de": "Bazel setzt den Vertrag in seine Remote-Cache-Einstellungen um (Endpunkt, Instanzname, Upload, Kompression, Download-Modus, Zeitlimit, Wiederholungen) und reicht das Token über einen Credential-Helper weiter. Nx setzt ihn in seine Variablen für den selbst gehosteten Remote-Cache um (Server und Zugriffstoken); es kann Kompression, Download-Modus, Zeitlimits und Wiederholungen nicht einhalten und überlässt read-only dem Geltungsbereich des Server-Tokens. remote status gibt beide Tatsachen aus."},
+        {"en": "serve speaks the HTTP cache protocol of Bazel (GET, HEAD and PUT on /ac/<sha256> and /cas/<sha256>, blobs verified against their digest) and the self-hosted cache API of Nx (GET and PUT on /v1/cache/<hash>, 409 when an entry exists), each under an optional /<instance> prefix. Bearer tokens come from SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN and SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; without a token it refuses to listen beyond loopback. The store is bounded and evicts the least recently used entries; serve publishes progress while it scans the store and stops at the next checkpoint when the caller cancels.", "de": "serve spricht das HTTP-Cache-Protokoll von Bazel (GET, HEAD und PUT auf /ac/<sha256> und /cas/<sha256>, Blobs gegen ihren Digest geprüft) und die API des selbst gehosteten Caches von Nx (GET und PUT auf /v1/cache/<hash>, 409 bei vorhandenem Eintrag), jeweils unter einem optionalen Präfix /<instance>. Bearer-Tokens stammen aus SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN und SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; ohne Token verweigert serve das Lauschen außerhalb von Loopback. Der Speicher ist begrenzt und verdrängt die am längsten ungenutzten Einträge; serve meldet Fortschritt beim Durchsuchen des Speichers und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht."}
+      ]
+    },
+    {
+      "name": "capacity",
+      "requires": "none",
+      "synopsis": "capacity status|run",
+      "summary": {
+        "en": "Show the machine's free memory, floor, load and the running and waiting grants, or run any command under a machine-wide capacity grant.",
+        "de": "Zeigt freien Speicher, Untergrenze, Last sowie laufende und wartende Zusagen des Rechners oder führt einen beliebigen Befehl unter einer rechnerweiten Kapazitätszusage aus."
+      },
+      "implementations": {
+        "nx": "neutral",
+        "bazel": "neutral"
+      },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "status",
+          "synopsis": "capacity status [--json]", "flags": ["--json"],
+          "summary": {
+            "en": "Print the host sample, the free-memory floor, every running grant with what it reserved and what it holds, and every waiting request.",
+            "de": "Gibt die Messung des Rechners, die Untergrenze des freien Speichers, jede laufende Zusage mit Reservierung und Verbrauch und jede wartende Anfrage aus."
+          }
+        },
+        {
+          "name": "run",
+          "synopsis": "capacity run [--operation=<name>|--memory=<megabytes> [--cpu=<cores>]] [--jobs=<n>] -- <command> <args>", "flags": ["--operation", "--memory", "--cpu", "--jobs"],
+          "summary": {
+            "en": "Wait in the machine-wide queue until the host can carry the command, run it with the grant in its environment and give the grant back when it ends.",
+            "de": "Wartet in der rechnerweiten Warteschlange, bis der Rechner den Befehl tragen kann, führt ihn mit der Zusage in seiner Umgebung aus und gibt sie am Ende zurück."
+          }
+        }
+      ],
+      "flags": [
+        "--json",
+        "--operation",
+        "--memory",
+        "--cpu",
+        "--jobs"
+      ],
+      "examples": [
+        {
+          "command": "repo capacity status",
+          "description": { "en": "See how much memory the machine has left above its floor and who holds it.", "de": "Zeigt, wie viel Speicher dem Rechner oberhalb der Untergrenze bleibt und wer ihn hält." }
+        },
+        {
+          "command": "repo capacity run --memory=6144 -- bun test ./some.test.ts",
+          "description": { "en": "Run an ad-hoc test runner only when 6 GB can be reserved.", "de": "Führt einen Test-Runner nur aus, wenn 6 GB reserviert werden können." }
+        },
+        {
+          "command": "repo capacity run --operation=dependencies -- bun install",
+          "description": { "en": "Reserve what a dependency sync is estimated to need.", "de": "Reserviert, was ein Abhängigkeitsabgleich voraussichtlich braucht." }
+        }
+      ],
+      "notes": [
+        {"en": "Every heavy repo command (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) is admitted the same way before it starts; capacity run does it for everything else.", "de": "Jeder schwere repo-Befehl (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) wird vor dem Start auf dieselbe Weise zugelassen; capacity run tut dies für alles andere."},
+        {"en": "A request is admitted while the free memory stays above the floor (a share of the host memory between 4 and 8 GB), the swap stays below its ceiling and the load below its ceiling per core, the machine-wide open file table stays below its ceiling share and fewer disk images are attached than the maximum (the last three are waited out and overridden only when nothing of ours runs); memory pressure at the critical level admits nobody. Requests are served first come first served, interactive before batch.", "de": "Eine Anfrage wird zugelassen, solange der freie Speicher über der Untergrenze bleibt (ein Anteil des Host-Speichers zwischen 4 und 8 GB), der Swap unter seiner Obergrenze und die Last unter ihrer Obergrenze je Kern, die systemweite Tabelle offener Dateien unter ihrem Anteil der Obergrenze und weniger Disk-Images angehängt sind als das Maximum (die letzten drei werden abgewartet und nur übergangen, wenn nichts von uns läuft); Speicherdruck auf kritischer Stufe lässt niemanden zu. Anfragen werden in der Reihenfolge des Eintreffens bedient, interaktive vor Stapelläufen."},
+        {"en": "The grant sets the parallelism of the selected tool through that tool's own limits: the task parallelism for Nx, the job and local-resource limits for Bazel, the core count for Cargo. SEMIO_HOST_CAPACITY=off switches the governor off explicitly.", "de": "Die Zuteilung setzt die Parallelität des gewählten Werkzeugs über dessen eigene Grenzen: die Task-Parallelität bei Nx, die Job- und lokalen Ressourcengrenzen bei Bazel, die Kernzahl bei Cargo. SEMIO_HOST_CAPACITY=off schaltet die Steuerung ausdrücklich ab."},
+        {"en": "Waiting prints a progress line in the chosen language and stops at the next checkpoint when the caller cancels; the grant of a process that dies is reclaimed automatically.", "de": "Das Warten gibt eine Fortschrittszeile in der gewählten Sprache aus und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht; die Zuteilung eines beendeten Prozesses wird automatisch zurückgefordert."}
+      ]
+    },
+    {
+      "name": "leases",
+      "requires": "none",
+      "synopsis": "leases status",
+      "summary": {
+        "en": "Show which processes hold and wait for resource leases, how long, who blocks whom, deadlock cycles, lock order violations and the machine's admission queue.",
+        "de": "Zeigt, welche Prozesse Ressourcen-Leases halten und erwarten, wie lange, wer wen blockiert, Verklemmungszyklen, Verletzungen der Sperrreihenfolge und die Zulassungswarteschlange des Rechners."
+      },
+      "implementations": {
+        "nx": "neutral",
+        "bazel": "neutral"
+      },
+      "dryRun": false,
+      "progress": false,
+      "cancellable": false,
+      "subcommands": [
+        {
+          "name": "status",
+          "synopsis": "leases status [--json] [--all] [--lease-directory=<path>] [--violations=<n>]",
+          "summary": {
+            "en": "Print every held and awaited lease with mode, class, holder, hold duration, queue position and blockers, the wait-for graph, deadlock cycles, recent order violations and the admission queue.",
+            "de": "Gibt jedes gehaltene und erwartete Lease mit Modus, Klasse, Halter, Haltedauer, Warteschlangenposition und Blockierern aus, dazu den Wartegraphen, Verklemmungszyklen, jüngste Reihenfolgeverletzungen und die Zulassungswarteschlange."
+          }
+        }
+      ],
+      "flags": [
+        "--json",
+        "--all",
+        "--lease-directory",
+        "--violations"
+      ],
+      "examples": [
+        {
+          "command": "repo leases status",
+          "description": { "en": "See who holds the repository's leases, who waits behind whom and for how long.", "de": "Zeigt, wer die Leases des Repositorys hält, wer hinter wem wartet und wie lange." }
+        },
+        {
+          "command": "repo leases status --all --json",
+          "description": { "en": "Machine-readable state of every lease directory that registered a process.", "de": "Maschinenlesbarer Zustand jedes Lease-Verzeichnisses, in dem sich ein Prozess registriert hat." }
+        }
+      ],
+      "notes": [
+        "Leases are declared in lock classes with a rank (SEMIO_LEASE_ORDER=off|observe|enforce overrides the declared rules). A request that breaks the order, closes a deadlock cycle, or waits beyond the grace period while its task holds another lease exclusively fails fast with a diagnostic naming the blocking process.",
+        "Processes register what they hold and await in the per-user lease registry (SEMIO_LEASE_REGISTRY_DIRECTORY overrides its location); entries of dead processes are ignored and removed."
+      ]
+    },
+    {
+      "name": "remote-execution",
+      "requires": "none",
+      "synopsis": "remote-execution serve|status|env",
+      "summary": { "en": "Run, inspect or describe the optional local remote execution cluster that hermetic Bazel actions can run on.", "de": "Startet, prüft oder beschreibt den optionalen lokalen Remote-Execution-Cluster, auf dem hermetische Bazel-Actions laufen können." },
+      "implementations": { "nx": "neutral", "bazel": "neutral" },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "serve",
+          "synopsis": "remote-execution serve",
+          "summary": { "en": "Run the local cluster (storage, frontend, scheduler, worker, runner) in containers until stopped, then remove containers and volumes.", "de": "Betreibt den lokalen Cluster (Speicher, Frontend, Scheduler, Worker, Runner) in Containern bis zum Stopp und entfernt danach Container und Volumes." }
+        },
+        {
+          "name": "status",
+          "synopsis": "remote-execution status",
+          "summary": { "en": "Print a RemoteExecutionServiceStatus: whether the container runtime answers, the containers of the cluster and whether the frontend answers.", "de": "Gibt einen RemoteExecutionServiceStatus aus: ob die Container-Laufzeit antwortet, die Container des Clusters und ob das Frontend antwortet." }
+        },
+        {
+          "name": "env",
+          "synopsis": "remote-execution env",
+          "summary": { "en": "Print the contract variables a client sets to use the cluster, one NAME=value per line.", "de": "Gibt die Vertragsvariablen aus, die ein Client für den Cluster setzt, je Zeile NAME=Wert." }
+        }
+      ],
+      "flags": [
+        "--platform",
+        "--port",
+        "--diagnostics-port"
+      ],
+      "examples": [
+        {
+          "command": "repo remote-execution serve",
+          "description": { "en": "Run the local cluster on 127.0.0.1:8980 with workers that match this machine's CPU.", "de": "Betreibt den lokalen Cluster auf 127.0.0.1:8980 mit Workern passend zur CPU dieses Rechners." }
+        },
+        {
+          "command": "repo remote-execution env --platform=linux-x64",
+          "description": { "en": "Print the variables that route hermetic actions to x64 Linux workers.", "de": "Gibt die Variablen aus, die hermetische Actions an x64-Linux-Worker leiten." }
+        },
+        {
+          "command": "repo remote-execution status",
+          "description": { "en": "Show the runtime, the containers and whether the frontend answers.", "de": "Zeigt Laufzeit, Container und ob das Frontend antwortet." }
+        }
+      ],
+      "notes": [
+        {"en": "Optional developer service, never a dependency: with SEMIO_REMOTE_EXECUTION_ENDPOINT unset every action stays local. The service description, schema and pinned container images live in the build module; every image is an official one and is pinned by digest.", "de": "Optionaler Entwicklerdienst, nie eine Abhängigkeit: Ist SEMIO_REMOTE_EXECUTION_ENDPOINT nicht gesetzt, bleibt jede Aktion lokal. Dienstbeschreibung, Schema und festgelegte Container-Images liegen im Build-Modul; jedes Image ist ein offizielles und per Digest festgelegt."},
+        {"en": "serve needs a running container runtime (Docker Desktop or the docker service) and the compose plugin. It copies the packaged stack to an ASCII-only runtime directory below the workspace, starts the cluster on loopback only (the cluster has no authentication), prints the client variables once the frontend answers and, when the caller cancels, removes containers and volumes: its state is ephemeral and local to this machine.", "de": "serve braucht eine laufende Container-Runtime (Docker Desktop oder der docker-Dienst) und das Compose-Plugin. Es kopiert den paketierten Stack in ein ASCII-only Laufzeitverzeichnis unterhalb des Workspace, startet den Cluster nur auf Loopback (der Cluster hat keine Authentifizierung), gibt die Client-Variablen aus, sobald das Frontend antwortet, und entfernt bei Abbruch Container und Volumes: Sein Zustand ist flüchtig und lokal auf dieser Maschine."},
+        {"en": "The workers advertise the properties of their execution platform (linux-arm64 or linux-x64) and the instance name main; set the printed variables, then run hermetic targets with the Bazel implementation.", "de": "Die Worker melden die Eigenschaften ihrer Ausführungsplattform (linux-arm64 oder linux-x64) und den Instanznamen main; die ausgegebenen Variablen setzen, danach hermetische Targets mit der Bazel-Implementierung ausführen."},
+        {"en": "serve publishes progress while it checks the runtime, renders the stack, starts the cluster and tears it down; status and env change nothing.", "de": "serve meldet Fortschritt beim Prüfen der Runtime, Erzeugen des Stacks, Starten des Clusters und Abbauen; status und env ändern nichts."}
+      ]
+    }
+  ]
+}

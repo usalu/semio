@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn text_edits_preserve_content_size_and_history_payload() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json")).unwrap();
     let layer = semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
@@ -15,7 +15,7 @@ fn text_edits_preserve_content_size_and_history_payload() {
         let outcome = mutation.diff(&before);
         assert!(outcome.messages().is_empty());
         if let Some(delta)=&outcome.diff().layers{let patch=&delta.modified[0].patch;assert_eq!(patch.text_content.as_deref(),fixture["patches"][index]["textContent"].as_str());assert_eq!(patch.text_size,fixture["patches"][index]["textSize"].as_f64());assert_eq!(patch.font_family.map(|family|family.as_str()),fixture["patches"][index]["fontFamily"].as_str());}else{assert_eq!(fixture["patches"][index],serde_json::json!({}));}
-        let mut after = protocol::apply_diff(outcome.diff(), &before).unwrap();
+        let mut after = protocol::apply_diff_cold(outcome.diff(), &before).unwrap();
         let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Text(text) = &after.layers[0] else { panic!("Text kind changed") };
         assert_eq!(text.content, edit["content"].as_str().unwrap());
         assert_eq!(text.size, edit["size"].as_f64().unwrap(),semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
@@ -25,20 +25,20 @@ fn text_edits_preserve_content_size_and_history_payload() {
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {
         let rejected = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id.clone().into(), "changed".into(), size,semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta).diff(&before);
         assert!(!rejected.messages().is_empty());
-        assert_eq!(protocol::apply_diff(rejected.diff(), &before).unwrap(), before);
+        assert_eq!(protocol::apply_diff_cold(rejected.diff(), &before).unwrap(), before);
     }
 }
 
 #[test]
 fn canonical_text_scenario_matches_diff_apply_and_inverse() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let before: semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after: semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json")).unwrap();
     let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json")).unwrap();
     let expected: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🔺️diff/🔣️.json")).unwrap();
     let inverse: Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation> = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/↩️inverse/🔣️.json")).unwrap();
     assert_eq!(*mutation.diff(&before).diff(), expected);
-    assert_eq!(protocol::apply_diff(&expected, &before).unwrap(), after);
+    assert_eq!(protocol::apply_diff_cold(&expected, &before).unwrap(), after);
     assert_eq!(mutation.inverse(&before).expect("valid retained mutation inverse fixture"), inverse);
 }
 

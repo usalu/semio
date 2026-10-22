@@ -16,7 +16,13 @@ pub struct RemoveBeam {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveBeam where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_beam::InsertBeam> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "beam", kind: "remove-beam", record: "RemovedBeam" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove composite beam", "Verbundträger entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for RemoveBeam where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_beam::InsertBeam> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::remove_beam::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,9 +31,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveBeam where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove composite beam", "Verbundträger entfernen")
-    }
 }
 //#endregion 🔖️Payload
 

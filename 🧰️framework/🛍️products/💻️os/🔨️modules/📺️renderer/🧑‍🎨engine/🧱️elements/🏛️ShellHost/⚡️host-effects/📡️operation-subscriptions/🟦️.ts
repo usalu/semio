@@ -1,7 +1,7 @@
 /** 📡️ The operation completion, diagnostic and progress subscriptions of the host effects hook.
  *
  * 🧱️ Child hook module of {@link ../🟦️.ts | useApplyHostEffects}: runs the original `useEffect` statements in order. */
-import { useEffect } from "react";
+import { useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";

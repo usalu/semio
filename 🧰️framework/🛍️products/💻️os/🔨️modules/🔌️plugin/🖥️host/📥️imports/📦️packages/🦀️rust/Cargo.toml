@@ -25,6 +25,7 @@ doctest = false
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
@@ -43,15 +44,6 @@ semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-job = { workspace = true }
 semio-framework-os-services = { workspace = true }
-# 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `component-model-async` is
-# declared EXPLICITLY rather than left to feature unification through `wasmtime-wasi` —
-# `Config::wasm_component_model_async`, `Store::run_concurrent`, `Accessor`, `StreamReader` and the
-# `*_async`/concurrent call shapes of every `bindgen!` export are all `#[cfg(feature = ...)]`-gated
-# on it, and the collapsed `world actor` cannot be linked or called without them.
-wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
-wasmtime-wasi = "47.0.3"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
 semio-framework-plugin-host-effects = { path = "../../../⚡️effects/📦️packages/🦀️rust" }
 semio-framework-plugin-host-engine = { path = "../../../🔧️engine/📦️packages/🦀️rust" }
 semio-framework-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦️packages/🦀️rust" }

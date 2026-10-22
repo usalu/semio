@@ -16,7 +16,16 @@ pub struct RemovePartNumberInput {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RemovePartNumberInput where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_part_number_input::mutation::ChangePartNumberInput> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part-number-input", kind: "remove-part-number-input", record: "RemovedPartNumberInput" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for RemovePartNumberInput where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_part_number_input::mutation::ChangePartNumberInput> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::remove_part_number_input::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,11 +34,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RemovePartNumberInput 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.key.clone()]
-    }
 }
 //#endregion 🔖️Payload

@@ -13,7 +13,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test build-freshness"
+        "command": "repo ./📜️script.ts test build-freshness"
       },
       "outputs": [],
       "cache": true
@@ -33,7 +33,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -44,7 +44,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -89,7 +89,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts two-client-e2e",
+        "command": "repo ./📜️script.ts two-client-e2e",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -134,7 +134,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts document-growth-e2e",
+        "command": "repo ./📜️script.ts document-growth-e2e",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -179,7 +179,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts backend up",
+        "command": "repo ./📜️script.ts backend up",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -224,7 +224,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts backend down",
+        "command": "repo ./📜️script.ts backend down",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -269,7 +269,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts backend status",
+        "command": "repo ./📜️script.ts backend status",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -308,7 +308,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts backend run",
+        "command": "repo ./📜️script.ts backend run",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -319,7 +319,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts backup-restore-drill",
+        "command": "repo ./📜️script.ts backup-restore-drill",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -354,7 +354,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts residency-watch",
+        "command": "repo ./📜️script.ts residency-watch",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -366,7 +366,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts boot-watch",
+        "command": "repo ./📜️script.ts boot-watch",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -402,7 +402,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts hub-freshness",
+        "command": "repo ./📜️script.ts hub-freshness",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -451,7 +451,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts agent-ceiling-check",
+        "command": "repo ./📜️script.ts agent-ceiling-check",
         "forwardAllArgs": true
       }
     },
@@ -460,7 +460,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts shutdown-drill",
+        "command": "repo ./📜️script.ts shutdown-drill",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -477,7 +477,7 @@
       ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts docker-image-build",
+        "command": "repo ./📜️script.ts docker-image-build",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -491,7 +491,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts docker-image-check",
+        "command": "repo ./📜️script.ts docker-image-check",
         "forwardAllArgs": true
       },
       "metadata": {

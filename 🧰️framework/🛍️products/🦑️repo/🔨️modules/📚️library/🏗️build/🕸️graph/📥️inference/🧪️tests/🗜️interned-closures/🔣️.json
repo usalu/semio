@@ -1,0 +1,13 @@
+{
+  "component": "project-assembly",
+  "sink": "policy.inputs.push",
+  "producers": ["relativeScriptInputs", "targetScriptClosure", "nativeTargetCommandInputs", "genericTargetCommandInputs"],
+  "wrapper": "internCommandSources",
+  "cases": [
+    { "id": "literal closure pushed into every target", "source": "async function f(){ policy.inputs.push(...await relativeScriptInputs([owner], root, scripts), schema); }", "violations": 1 },
+    { "id": "closure under the interner", "source": "async function f(){ policy.inputs.push(...internCommandSources([...await relativeScriptInputs([owner], root, scripts), schema]), lock); }", "violations": 0 },
+    { "id": "wrapper does not excuse a sibling producer", "source": "async function f(){ policy.inputs.push(...internCommandSources(a), ...await targetScriptClosure(p, root, scripts)); }", "violations": 1 },
+    { "id": "other sinks are not the law", "source": "async function f(){ other.push(...await relativeScriptInputs([owner], root, scripts)); }", "violations": 0 },
+    { "id": "plain declarations push freely", "source": "function f(){ policy.inputs.push(`{workspaceRoot}/x`, {env:'A'}); }", "violations": 0 }
+  ]
+}

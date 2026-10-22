@@ -1,6 +1,8 @@
 import { dirname, posix, relative, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { RustModuleNode } from "../🌳️module-tree/🟦️.ts";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧭️ Repo-relative path between two absolute paths, always with forward slashes. */
 export function relativePosix(from: string, to: string): string {
@@ -233,7 +235,7 @@ export function hidingExcludePattern(member: string, patterns: readonly string[]
   const segments = member.split("/");
   for (let depth = 1; depth <= segments.length; depth++) {
     const directory = segments.slice(0, depth).join("/");
-    const hit = patterns.find((pattern) => new Bun.Glob(pattern).match(directory) || new Bun.Glob(pattern).match(`${directory}/`) || (pattern.endsWith("/**") && new Bun.Glob(pattern.slice(0, -3)).match(directory)));
+    const hit = patterns.find((pattern) => new GlobV1(pattern).match(directory) || new GlobV1(pattern).match(`${directory}/`) || (pattern.endsWith("/**") && new GlobV1(pattern.slice(0, -3)).match(directory)));
     if (hit !== undefined) return hit;
   }
   return undefined;
@@ -247,7 +249,7 @@ function admittedExclusions(workspace: { exclude?: string[]; metadata?: { semio?
 
 /** 🚪️ Lists workspace members that the repository's native discovery cannot see because an `exclude-patterns` entry hides them; an empty list means Cargo and the launcher agree on the member set. */
 export function workspaceAdmissionProblems(manifestText: string): string[] {
-  const workspace = (Bun.TOML.parse(manifestText) as { workspace?: { members?: string[]; exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
+  const workspace = (runtimeParseTomlV1(manifestText) as { workspace?: { members?: string[]; exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
   if (!workspace) return ["manifest has no [workspace] table"];
   const patterns = admittedExclusions(workspace);
   return (workspace.members ?? []).flatMap((member) => { const hit = hidingExcludePattern(member, patterns); return hit === undefined ? [] : [`member ${member} is hidden from repository discovery by exclude pattern ${hit}`]; });
@@ -275,7 +277,7 @@ export function addWorkspaceMembers(manifestText: string, additions: readonly st
   const all = [...new Set([...existing, ...additions])].sort(compareBytes);
   const rendered = `[\n${all.map((entry) => `  "${entry}",`).join("\n")}\n]`;
   const widened = manifestText.slice(0, match.index) + match[1] + rendered + manifestText.slice(match.index + match[0].length);
-  const workspace = (Bun.TOML.parse(widened) as { workspace: { exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
+  const workspace = (runtimeParseTomlV1(widened) as { workspace: { exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
   const hides = (pattern: string): boolean => additions.some((member) => hidingExcludePattern(member, [pattern]) !== undefined);
   const lifted = [...new Set([...(workspace.exclude ?? []), ...admittedExclusions(workspace)])].filter(hides);
   if (!lifted.length) return widened;

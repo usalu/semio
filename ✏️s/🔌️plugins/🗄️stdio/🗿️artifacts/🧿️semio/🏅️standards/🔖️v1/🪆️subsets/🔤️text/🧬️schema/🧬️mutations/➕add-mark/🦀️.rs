@@ -18,7 +18,16 @@ pub struct AddMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "mark", kind: "add-mark", record: "AddedMarkToRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add mark to run #{} at #{}", self.run_index, self.index), &format!("Auszeichnung zu Textlauf #{} an #{} hinzufügen", self.run_index, self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.run_index.to_string(), self.index.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
@@ -27,11 +36,5 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add mark to run #{} at #{}", self.run_index, self.index), &format!("Auszeichnung zu Textlauf #{} an #{} hinzufügen", self.run_index, self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.run_index.to_string(), self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

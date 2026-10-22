@@ -19,15 +19,7 @@ pub struct ChangePrintTarget {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePrintTarget where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_print_target::ChangePrintTarget> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "print-target", kind: "change-print-target", record: "ChangedPrintTarget" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-        diff_change_print_target(self, base)
-    }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        inverse_change_print_target(self, base)?
-    
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_print_target {
@@ -41,6 +33,18 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePrintTarget where Op: protoc
         }
         })
     }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for ChangePrintTarget where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_print_target::ChangePrintTarget> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_change_print_target(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_print_target(self, base)?
+    
+    })
+}
 }
 //#endregion 🖨️ChangePrintTarget
 

@@ -1,0 +1,59 @@
+== generate
+[generate config] {path} geschrieben
+[generate config] {problem}
+[generate config] Die abgeleitete Konfiguration ist aktuell
+[generate taxonomy {operation}] {records} Komponenten, {problems} Befunde -> {value}
+[generate plugin-glue] {plugin} übersprungen: glue.rs fehlt
+[generate plugin-glue] Trockenlauf {plugin}: {owned} Subsets
+[generate plugin-glue] {inventory} geschrieben ¦ inventory
+[generate plugin-glue] Trockenlauf-Inventar für {emitted} Subset-Verweise
+[generate plugin-glue] Inventar für {emitted} Subset-Verweise geschrieben
+== examples
+[examples] Unbekannter Unterbefehl {sub}
+[examples.list] {roots} Beispieleinheit(en) ¦ roots
+== setup
+[native] {ps1} fehlt; erwartet wird repo/native/bootstrap/🔵️.ps1.
+[native] {sh} fehlt; erwartet wird repo/native/bootstrap/🐚️.sh.
+[native] Nicht unterstützte Plattform {platform}
+[prepare] Build-Voraussetzungen abgeschlossen
+[setup] Lange Pfade sind unter Windows deaktiviert: Eingecheckte Fixtures und Build-Ausgaben überschreiten 260 Zeichen. Einmal in einer PowerShell mit erhöhten Rechten ausführen und danach ein neues Terminal öffnen: New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force
+[setup] Die gesperrten Abhängigkeitsumgebungen sind über den Repository-Build-Graphen bereit
+[setup] semio-os-mcp wird bereitgestellt, damit das Initialisieren von `.mcp.json` nie auf einen kalten Build wartet
+== dependency-lint
+[canonical-architecture] Abhängigkeiten der vorhandenen Eigentümer in TypeScript/JavaScript werden aufgelöst; scope={scope}; inventoriedSources={inventoriedSources}; strictRules={strictRules}; ownershipPatterns={ownershipPatterns} ¦ scope,inventoriedSources,strictRules,ownershipPatterns
+[canonical-architecture] scope={scope} Abhängigkeitsrichtung der vorhandenen Eigentümer in TypeScript/JavaScript bestanden ¦ scope
+[artifact-io-ownership] Alle Eigentumsgrenzen von Artefakt-Schema und nativem Codec bestanden
+[workspace-styling] {kind}: Aktuelle Quellen-Eigentümerschaft bestanden
+== release
+[publish] Unbekannter Slice {slice} ¦ slice
+== dev
+[dev] Unbekannte Route {segments}: erwartet wird storybook, storybook-static oder mcp. Playgrounds sind Dashboard-Befehle: `repo dashboard run playground:<variant> --param renderer=react` (auflisten mit `repo dashboard commands playground`).
+[dev] Unbekannte MCP-Route {segments}: erwartet wird stdio, repo oder nichts (der Inspector).
+[dev] `dev mcp stdio` akzeptiert ein Repo-Client-Profil.
+== os
+[os.run] Fehlende gebaute Plugin-Artefakte: {missing}
+[os.run]   Zum Bauen: repo run workspace:components describe {pluginId}
+[os] Unbekannter Unterbefehl {sub}
+== test
+[test] {level} Build-Voraussetzungen abgeschlossen
+== schema
+[schema generate] {rel} ist veraltet; führe repo ./📜️script.ts schema generate aus.
+[schema generate] {rel} ist aktuell ({scopes} Bereiche).
+[schema generate] {rel}: {scopes} Bereiche, {diagnostics} Diagnosen.
+[schema parsers] {seen} Module, bei {module}
+[schema check] {sorted} Befunde nach {target} geschrieben
+[schema check] modules={modules} scopes={scopes} findings={sorted}
+[schema check] {code}={count}
+[schema check] shared-code-table={size} unshared-codes={unshared}{unshared2}
+[schema verify] Veraltete generierte Ausgabe: {stale}. Führe repo ./📜️script.ts schema generate && repo ./📜️script.ts schema docs aus.
+[schema verify] Katalog und Index sind aktuell ({scopes} Bereiche, Generator {generator}).
+[schema verify] rust entries={entries} scopes={size} von {scopes} katalogisiert, findings={findings}
+[schema verify] {code}={count}
+[schema compile] cargo test -p {schemaRustCrate} --test {test} bestanden; Bericht unter {value}
+[schema test] harness exit={harness}, draft-07 oracle exit={oracle}
+[schema audit] {modules} Module, {findings} Befunde -> {target}
+[schema docs] {rel}: {scopes} Bereiche.
+== fixture-ownership
+fixture-ownership: {assertions} exakte native Gesetze bestanden
+== code-style
+[lint] Der Lint-Graph des Repositorys ist abgeschlossen.

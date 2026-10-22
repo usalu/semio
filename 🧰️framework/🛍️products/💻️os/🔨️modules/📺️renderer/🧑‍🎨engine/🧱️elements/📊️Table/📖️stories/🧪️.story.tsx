@@ -12,7 +12,7 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 
 import { TableHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework";

@@ -17,7 +17,7 @@ import {createScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope} 
 
 const ajv=new Ajv({strict:false,allErrors:true});
 const compile=(name:string)=>ajv.compile({...(schema.definitions as Record<string,object>)[name],definitions:schema.definitions});
-const base=mkdtempSync(join(tmpdir(),"svc-core-")),shortBase=mkdtempSync("/tmp/sc-");
+const base=mkdtempSync(join(tmpdir(),"svc-core-")),shortBase=mkdtempSync(join(process.platform==="win32"||tmpdir().length<=40?tmpdir():"/tmp","sc-"));
 const root=realpathSync((mkdirSync(join(base,"w1/pkgs/a"),{recursive:true}),join(base,"w1")));
 const rootTwo=realpathSync((mkdirSync(join(base,"w2/pkgs/a"),{recursive:true}),join(base,"w2")));
 mkdirSync(join(base,"outside"),{recursive:true});

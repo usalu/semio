@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🎫️Ticket Aggregate
 
-/// 🧷️ An IDE-native plan or spec file archived into the ticket folder on close.
+/// 🧷️ A client-native plan or spec file archived into the ticket folder on close.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct TicketPlan {
     #[serde(rename = "client", default, skip_serializing_if = "String::is_empty")]
@@ -102,7 +102,7 @@ pub struct Ticket {
     pub management: Option<TicketManagementData>,
     #[serde(rename = "goal", default, skip_serializing_if = "String::is_empty")]
     pub goal: String,
-    #[serde(skip)]
+    #[serde(rename = "parent", default, skip_serializing_if = "String::is_empty")]
     pub parent: String,
     #[serde(rename = "plan", default, skip_serializing_if = "Option::is_none")]
     pub plan: Option<TicketPlan>,
@@ -110,7 +110,7 @@ pub struct Ticket {
     pub sessions: Vec<String>,
     #[serde(rename = "interactions", default, skip_serializing_if = "Vec::is_empty")]
     pub interactions: Vec<Interaction>,
-    #[serde(skip)]
+    #[serde(rename = "agents", default, skip_serializing_if = "Vec::is_empty")]
     pub agents: Vec<TicketAgent>,
     #[serde(skip)]
     pub folder_path: String,

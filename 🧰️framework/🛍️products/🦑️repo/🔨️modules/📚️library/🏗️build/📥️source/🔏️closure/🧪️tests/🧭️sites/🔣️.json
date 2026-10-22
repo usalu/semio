@@ -1,0 +1,142 @@
+{
+ "version": 1,
+ "entry": "entry.ts",
+ "roots": {
+  "entry.ts": [
+   "computed/a.mjs"
+  ]
+ },
+ "files": {
+  "package.json": "{\"name\":\"root\",\"private\":true,\"workspaces\":[]}",
+  "node_modules/fake-pkg/package.json": "{\"name\":\"fake-pkg\",\"version\":\"1.2.3\",\"main\":\"index.js\"}",
+  "node_modules/fake-pkg/index.js": "module.exports={value:'fake-1.2.3'};",
+  "node_modules/@scoped/lib/package.json": "{\"name\":\"@scoped/lib\",\"version\":\"0.0.1\"}",
+  "node_modules/@scoped/lib/main.js": "module.exports={value:'scoped'};",
+  "computed/a.mjs": "export const value='computed-root';",
+  "computed/b.mjs": "export const value='unlisted';",
+  "other/🧬️schema/y.json": "{\"analysis\":true}",
+  "outside.js": "module.exports={};",
+  "helper.ts": "export default {kind:'helper'};",
+  "other/🧬️schema/package.json": "{\"name\":\"member\"}"
+ },
+ "late": {
+  "🧬️schema/hidden.json": "{\"hidden\":true}"
+ },
+ "cases": [
+  {
+   "name": "helper",
+   "expression": "helper",
+   "outcome": "ok",
+   "value": {
+    "kind": "helper"
+   }
+  },
+  {
+   "name": "installed-static",
+   "expression": "fakeStatic.value",
+   "outcome": "ok",
+   "value": "fake-1.2.3"
+  },
+  {
+   "name": "installed-load",
+   "expression": "req(\"fake-pkg\").value",
+   "outcome": "ok",
+   "value": "fake-1.2.3"
+  },
+  {
+   "name": "installed-scoped-subpath",
+   "expression": "req(\"@scoped/lib/main.js\").value",
+   "outcome": "ok",
+   "value": "scoped"
+  },
+  {
+   "name": "installed-resolve",
+   "expression": "req.resolve(\"fake-pkg/package.json\").includes(\"node_modules/fake-pkg\")",
+   "outcome": "ok",
+   "value": true
+  },
+  {
+   "name": "undeclared-require",
+   "expression": "req([\"oth\",\"er-pkg\"].join(\"\"))",
+   "outcome": "refused",
+   "code": "require"
+  },
+  {
+   "name": "outside-base-resolve",
+   "expression": "createRequire(join(root,\"outside.js\")).resolve(\"fake-pkg\").includes(\"node_modules/fake-pkg\")",
+   "outcome": "ok",
+   "value": true
+  },
+  {
+   "name": "outside-base-load",
+   "expression": "createRequire(join(root,\"outside.js\"))(\"fake-pkg\")",
+   "outcome": "refused",
+   "code": "declaring-module"
+  },
+  {
+   "name": "declared-root-import",
+   "expression": "(await import(join(root,\"computed\",\"a.mjs\"))).value",
+   "outcome": "ok",
+   "value": "computed-root"
+  },
+  {
+   "name": "undeclared-root-import",
+   "expression": "(await import(join(root,\"computed\",\"b.mjs\"))).value",
+   "outcome": "refused",
+   "code": "import"
+  },
+  {
+   "name": "owned-schema-not-captured",
+   "expression": "readFileSync(join(root,\"🧬️schema\",\"hidden.json\"),\"utf8\")",
+   "outcome": "refused",
+   "code": "schema-read"
+  },
+  {
+   "name": "analysis-schema-of-uncaptured-owner",
+   "expression": "readFileSync(join(root,\"other\",\"🧬️schema\",\"y.json\"),\"utf8\")",
+   "outcome": "ok",
+   "value": "{\"analysis\":true}"
+  },
+  {
+   "name": "resolve-captured-absolute",
+   "expression": "req.resolve(join(root,\"helper.ts\")).endsWith(\"helper.ts\")",
+   "outcome": "ok",
+   "value": true
+  },
+  {
+   "name": "resolve-undeclared-is-data-only",
+   "expression": "req.resolve([\"./comp\",\"uted/b.mjs\"].join(\"\")).endsWith(\"b.mjs\")",
+   "outcome": "ok",
+   "value": true
+  },
+  {
+   "name": "package-json-under-schema-dir",
+   "expression": "readFileSync(join(root,\"other\",\"🧬️schema\",\"package.json\"),\"utf8\")",
+   "outcome": "ok",
+   "value": "{\"name\":\"member\"}"
+  },
+  {
+   "name": "computed-import-of-captured-image",
+   "expression": "(await import(join(root,\"helper.ts\"))).default.kind",
+   "outcome": "ok",
+   "value": "helper"
+  },
+  {
+   "name": "meta-filename-is-the-physical-path",
+   "expression": "import.meta.filename===root+'/entry.ts'&&import.meta.filename===import.meta.path",
+   "outcome": "ok",
+   "value": true
+  },
+  {
+   "name": "meta-dirname-is-the-physical-directory",
+   "expression": "import.meta.dirname===root&&import.meta.dirname===import.meta.dir",
+   "outcome": "ok",
+   "value": true
+  }
+ ],
+ "drift": {
+  "file": "node_modules/fake-pkg/package.json",
+  "text": "{\"name\":\"fake-pkg\",\"version\":\"9.9.9\",\"main\":\"index.js\"}",
+  "code": "installed-drift"
+ }
+}

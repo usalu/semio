@@ -1,12 +1,22 @@
+import { requireIssuedScriptInvocationV1, requireIssuedResourceControlInvocationV1, advanceScriptInvocation, createRequestedIssuedResourceControlV1, scriptResourceProcessEnvironmentV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { withRepositoryTestArtifactsV1, repositoryTestArtifactRootV1, repositoryTestArtifactPathV1, repositoryTestArtifactEnvironmentV1 } from "../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import overlaySchema from "./💾️overlay/🧬️schema/🔣️.json" with {type:"json"};
+const GO_OVERLAY_PROTOCOL=overlaySchema.definitions.Protocol.const;
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
-import { tmpdir } from "node:os";
 import { canonicalGoLanguageDirectoryV1, readCanonicalGoLayoutV1 as canonicalGoLayout, type CanonicalGoLayout } from "../../🔍️discovery/🐹️go-layout/🟦️.ts";
-import { runRepositoryTestCommand } from "../🎛️repository-command/🟦️.ts";
+import { runOwnedCommand, OwnedCommandFailure } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { prepareTestCommandV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🚦️protocol/🟦️.ts";
 import { type CompilerAdmissionControl, requestedCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { pinnedGoEnvironmentV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
+import { systemNativeToolPortV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import { repositoryCachePartitionRootV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
 
@@ -201,31 +211,33 @@ export function writeCanonicalGoWorkspaceOverlay(file: string, moduleRoots: read
   return file;
 }
 
-/** 🧪️Runs canonical Go cases through the standard toolchain without authored legacy filenames. */
-export async function runCanonicalGoTests(moduleRoot: string, args: string[], opts: { env?: NodeJS.ProcessEnv; budgetMs?: number; packages?: readonly string[]; signal?: AbortSignal } = {}): Promise<void> {
-  const plan = canonicalGoPlan(moduleRoot);
-  const packages = opts.packages ?? plan.packages;
-  if (packages.length === 0) throw new Error(`No canonical Go inputs found below ${realpathSync(moduleRoot)}`);
-  for (const selected of packages) if (!plan.packages.includes(selected)) throw new Error(`Go compiler package is outside the canonical plan: ${selected}`);
-  const inheritedOwner = opts.env?.SEMIO_GO_OVERLAY_OWNER;
-  const owner = inheritedOwner ? realpathSync(inheritedOwner) : mkdtempSync(join(tmpdir(), "semio-go-tests-"));
-  const temporary = mkdtempSync(join(owner, "run-"));
-  const overlay = join(temporary, "overlay.json");
-  const cleanup = (): void => rmSync(inheritedOwner ? temporary : owner, { recursive: true, force: true });
-  writeFileSync(overlay, `${JSON.stringify({ Replace: plan.replacements }, null, 2)}\n`);
-  process.once("exit", cleanup);
-  try {
-    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, signal: opts.signal, throwOnFailure: true });
-  } finally {
-    process.off("exit", cleanup);
-    cleanup();
-  }
+/** 📂️ Validates the complete future overlay extent and existing no-follow ancestry before creation. */
+function canonicalGoOverlayParentV1(root:string,inherited:string|undefined):string{
+ const owner=inherited??root;if(!isAbsolute(root)||resolve(root)!==root||!isAbsolute(owner)||resolve(owner)!==owner)throw Error("Canonical issued Go overlay paths required");const coordinate=relative(root,owner);if(isAbsolute(coordinate)||coordinate===".."||coordinate.startsWith(".."+sep))throw Error("Go overlay owner must remain under issued artifacts");const longest=join(owner,...(inherited===undefined?[GO_OVERLAY_PROTOCOL.ownerPrefix+"x".repeat(GO_OVERLAY_PROTOCOL.randomSuffixUnits)]:[]),GO_OVERLAY_PROTOCOL.runPrefix+"x".repeat(GO_OVERLAY_PROTOCOL.randomSuffixUnits),GO_OVERLAY_PROTOCOL.overlayFile);if(longest.length>GO_OVERLAY_PROTOCOL.maximumPathUnits)throw Error("Bounded Go overlay paths required");for(let path=owner;;){const row=lstatSync(path);if(!row.isDirectory()||row.isSymbolicLink())throw Error("No-follow Go overlay directory required");const parent=dirname(path);if(parent===path)break;path=parent;}return owner;
+}
+
+/** 🎛️ Retains issued Go scratch and test reporting through one settled owned command. */
+async function runCanonicalGoCommandV1(invocation:ScriptInvocation,control:ResourceLeaseControl,workspace:string,moduleRoot:string,args:string[],environment:NodeJS.ProcessEnv):Promise<void>{
+ requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);const temporary=repositoryTestArtifactPathV1(workspace,"tmp");repositoryTestArtifactPathV1(workspace,"tmp","junit-"+process.pid+"-"+Number.MAX_SAFE_INTEGER+".xml");for(const [key,parts]of[["TMPDIR",["tmp"]],["TMP",["tmp"]],["TEMP",["tmp"]],["GOCACHE",["cache","go"]],["GOMODCACHE",["cache","gomod"]]]as const){const target=repositoryTestArtifactPathV1(workspace,...parts);if(environment[key]!==target)throw Error("Issued Go scratch environment required");for(let directory=dirname(target);;){const row=lstatSync(directory);if(!row.isDirectory()||row.isSymbolicLink())throw Error("No-follow Go scratch directory required");const parent=dirname(directory);if(parent===directory)break;directory=parent;}mkdirSync(target,{recursive:true});const row=lstatSync(target);if(!row.isDirectory()||row.isSymbolicLink())throw Error("No-follow Go scratch directory required");}
+ const prepared=prepareTestCommandV1("go",args,environment,temporary),started=performance.now();let failed=false,primary:unknown,code:number|null=null,signal:string|null=null,reason:string|undefined;
+ try{checkResourceLeaseControl(control);await runOwnedCommand("go",[...prepared.args],moduleRoot,"go:test",compilerAdmissionBudgetV1(control),{control,signal:control.signal,env:{...environment,...prepared.environment},onProgress:async()=>{checkResourceLeaseControl(control);await advanceScriptInvocation(invocation,"go:test","running");checkResourceLeaseControl(control);}});code=0;checkResourceLeaseControl(control);}catch(error){failed=true;primary=error;if(error instanceof OwnedCommandFailure){code=error.outcome.status;signal=error.outcome.signal;}else reason="Go command did not complete";}
+ try{prepared.finish({code,signal,durationMs:performance.now()-started,...(reason===undefined?{}:{reason})});}catch(error){if(!failed){failed=true;primary=error;}}if(failed)throw primary;
+}
+
+/** 🧪️ Runs canonical Go cases under the caller's actual Original and issued artifact lifetime. */
+export async function runCanonicalGoTests(moduleRoot:string,args:string[],invocation:ScriptInvocation,opts:{env?:NodeJS.ProcessEnv;budgetMs?:number;packages?:readonly string[];signal?:AbortSignal}={}):Promise<void>{
+ requireIssuedScriptInvocationV1(invocation);const environment=Object.freeze({...opts.env??process.env}),options=Object.freeze({budgetMs:opts.budgetMs,packages:opts.packages?[...opts.packages]:undefined,signal:opts.signal}),arguments_=[...args];if(options.signal?.aborted)throw Error("go cancelled");const workspace=getWorkspaceRoot(),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(invocation,"go:test",options.budgetMs??testLevelBudgetMs()),0,options.signal);
+ await withRepositoryTestArtifactsV1(workspace,invocation,phase,async actual=>{
+  checkResourceLeaseControl(actual);const pinned=await pinnedGoEnvironmentV1(environment,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,environment.CARGO_NET_OFFLINE==="true"),actual.signal),plan=canonicalGoPlan(moduleRoot),packages=options.packages??plan.packages;if(!packages.length)throw Error("No canonical Go inputs found below "+moduleRoot);for(const selected of packages)if(!plan.packages.includes(selected))throw Error("Go compiler package is outside the canonical plan: "+selected);const root=repositoryTestArtifactRootV1(workspace),inherited=environment.SEMIO_GO_OVERLAY_OWNER,parent=canonicalGoOverlayParentV1(root,inherited),issued=repositoryTestArtifactEnvironmentV1(workspace,pinned);let owner:string|undefined,temporary:string|undefined,registered=false,failed=false;
+  const cleanup=()=>{const path=inherited===undefined?owner:temporary;if(path)rmSync(path,{recursive:true,force:true});},exitCleanup=()=>{try{cleanup();}catch{}};
+  try{checkResourceLeaseControl(actual);owner=inherited===undefined?mkdtempSync(join(parent,GO_OVERLAY_PROTOCOL.ownerPrefix)):parent;temporary=mkdtempSync(join(owner,GO_OVERLAY_PROTOCOL.runPrefix));const overlay=join(temporary,GO_OVERLAY_PROTOCOL.overlayFile);process.once("exit",exitCleanup);registered=true;writeFileSync(overlay,JSON.stringify({Replace:plan.replacements})+"\n");checkResourceLeaseControl(actual);await runCanonicalGoCommandV1(invocation,actual,workspace,moduleRoot,["test","-overlay="+overlay,...arguments_,...packages],scriptResourceProcessEnvironmentV1(actual,{...issued,SEMIO_GO_OVERLAY_OWNER:undefined}));checkResourceLeaseControl(actual);}catch(error){failed=true;throw error;}finally{if(registered)process.off("exit",exitCleanup);try{cleanup();}catch(error){if(!failed)throw error;}}
+ });
 }
 
 /** 🏗️Builds domain-owned Go sources through the same standard-toolchain projection used by tests. */
 export async function runCanonicalGoBuild(moduleRoot: string, args: string[], opts: { control: CompilerAdmissionControl; env?: NodeJS.ProcessEnv; budgetMs?: number }): Promise<void> {
   const control = requestedCompilerAdmissionControlV1(opts.control, opts.budgetMs ?? buildBudgetMs());
-  const mode = readBuildMode((opts.env ?? process.env).SEMIO_BUILD_MODE), root = getWorkspaceRoot(), environment = repoToolCacheEnv(root, opts.env ?? process.env), plan = canonicalGoPlan(moduleRoot);
+  const mode = readBuildMode((opts.env ?? process.env).SEMIO_BUILD_MODE), root = getWorkspaceRoot(), environment = await pinnedGoEnvironmentV1(repoToolCacheEnv(root, opts.env ?? process.env), repositoryCachePartitionRootV1(root, "tools"), systemNativeToolPortV1(root, (opts.env ?? process.env).CARGO_NET_OFFLINE === "true"), control.signal), plan = canonicalGoPlan(moduleRoot);
   const captureDirectory = environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(moduleRoot,"dist");
   mkdirSync(captureDirectory,{recursive:true});
   const temporary = mkdtempSync(join(captureDirectory,"go-overlay-")), overlay = join(temporary,"overlay.json");

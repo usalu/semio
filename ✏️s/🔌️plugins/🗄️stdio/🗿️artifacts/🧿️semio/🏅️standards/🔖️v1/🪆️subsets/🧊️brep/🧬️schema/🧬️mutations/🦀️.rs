@@ -77,7 +77,7 @@ use crate::schema::mutations::replace_surface;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
+#[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep", reference = SemioBrepSnapshot, reference_diff = SemioBrepDiff)]
 pub enum SemioBrepMutation {
     CreateVertex(create_vertex::CreateVertex),
     DeleteVertex(delete_vertex::DeleteVertex),
@@ -106,7 +106,7 @@ pub const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "d
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
-    <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::diff(mutation, base)
+    <SemioBrepMutation as protocol::ColdMutation<SemioBrepSnapshot>>::diff(mutation, base)
 }
 
 
@@ -118,8 +118,8 @@ pub fn diff_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioBrepMutation as ColdMutation<SemioBrepSnapshot>>::inverse(mutation, base)?
 
     })
 }

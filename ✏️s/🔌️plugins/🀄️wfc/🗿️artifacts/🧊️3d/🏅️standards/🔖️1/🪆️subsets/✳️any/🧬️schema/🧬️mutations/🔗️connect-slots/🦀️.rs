@@ -28,6 +28,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Slots \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.edge.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc3dSnapshot, Op> for ConnectSlots
+where
+    Op: protocol::ColdMutation<Wfc3dSnapshot, ReferenceDiff = Wfc3dDiff> + From<ConnectSlots> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_slots::DisconnectSlots>,
+{
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
@@ -37,11 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Slots \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.edge.id.clone()]
-    }
 }
 //#endregion 🔖️ConnectSlots

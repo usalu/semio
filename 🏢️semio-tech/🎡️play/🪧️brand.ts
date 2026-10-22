@@ -43,7 +43,7 @@ const PLAY_INTRODUCTION_EN: IntroductionDefinition = {
     {
       id: "navigate",
       title: "Find an app",
-      body: "Move the mouse to glide across the grid. Hover a card to reveal its app, click it to open the app full screen, and press Escape or Overview to come back.",
+      body: "Move the mouse to glide across the grid. Hover Open to reveal its app, click the card to open the app full screen, and press Escape or Overview to come back.",
       introduce: null,
       show: [],
       placement: "center",

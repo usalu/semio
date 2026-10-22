@@ -21,7 +21,7 @@ async fn change_title_inverse_law() {
 async fn change_title_diff_absorb_law() {
     let base = titled(None);
     let first = ChangeTitle { new_title: Some("Draft".into()) }.diff(&base).into_parts().0;
-    let middle = protocol::apply_diff(&first, &base).expect("valid mutation diff");
+    let middle = protocol::apply_diff_cold(&first, &base).expect("valid mutation diff");
     let second = ChangeTitle { new_title: Some("Recipe".into()) }.diff(&middle).into_parts().0;
     assert_mutation_diff_absorb_law(&base, first, second).await;
 }

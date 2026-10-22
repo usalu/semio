@@ -40,19 +40,20 @@ impl InsertSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sheet", kind: "insert-sheet", record: "InsertSheet" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::insert_sheet_plan(base, &self.sheet, self.index, self.slot.as_ref()))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::insert_sheet_plan(base, &self.sheet, self.index, self.slot.as_ref())))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert sheet", "Arbeitsblatt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::insert_sheet_plan(base, &self.sheet, self.index, self.slot.as_ref()))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+        Ok(plan_inverse(canonical_edit::insert_sheet_plan(base, &self.sheet, self.index, self.slot.as_ref())))
     }
 }
 //#endregion 🔖️Payload

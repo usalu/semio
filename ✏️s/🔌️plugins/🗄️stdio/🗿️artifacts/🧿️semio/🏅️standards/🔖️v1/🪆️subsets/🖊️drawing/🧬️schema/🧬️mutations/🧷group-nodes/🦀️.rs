@@ -25,15 +25,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "group", entity: "nodes", kind: "group-nodes", record: "GroupedNodes" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.indices.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native(&format!("Group 1 node in layer #{}", self.parent.layer), &format!("1 Knoten in Ebene #{} gruppieren", self.parent.layer)),
@@ -43,6 +34,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for GroupNodes
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<GroupNodes> + From<crate::schema::mutations::ungroup_node::UngroupNode>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Payload
 

@@ -1,7 +1,9 @@
 //! 🔮️ Complete portable binary64 corpus runs through the original neutral geometry algorithms.
 
 use super::*;
-use super::*;
+use semio_s_fem_mesh::MeshOpts;
+use semio_s_fem_mesh::PlanarDomain;
+use semio_s_fem_mesh::triangulate;
 use serde_json::json;
 use serde_json::Value;
 use std::time::Duration;

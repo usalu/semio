@@ -22,13 +22,17 @@ pub struct SetFrameLayer {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_layer::SetFrameLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "frame-layer", kind: "set-frame-layer", record: "SetFrameLayer" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Move frame \"{}\" to layer \"{}\"", self.frame_id, self.layer_id), &format!("Rahmen \"{}\" auf Ebene \"{}\" legen", self.frame_id, self.layer_id)) }
+    fn target(&self) -> Vec<String> { vec![self.frame_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for SetFrameLayer where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_layer::SetFrameLayer> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_frame_layer(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_frame_layer(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Move frame \"{}\" to layer \"{}\"", self.frame_id, self.layer_id), &format!("Rahmen \"{}\" auf Ebene \"{}\" legen", self.frame_id, self.layer_id)) }
-    fn target(&self) -> Vec<String> { vec![self.frame_id.clone()] }
 }
 
 pub fn diff_set_frame_layer(payload: &SetFrameLayer, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

@@ -1,10 +1,11 @@
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 interface LineV1 { readonly indent: number; readonly text: string; readonly raw: string; readonly number: number }
 
 const NULLS = new Set(["", "~", "null", "Null", "NULL"]);
 const TRUES = new Set(["true", "True", "TRUE"]);
 const FALSES = new Set(["false", "False", "FALSE"]);
 
-function fail(line: LineV1 | undefined, message: string): never { throw new SyntaxError(`YAML ${message}${line === undefined ? "" : ` at line ${line.number}`}`); }
+function fail(line: LineV1 | undefined, id: string, parameters: Readonly<Record<string, string | number>> = {}): never { throw new SyntaxError(runtimeMessageV1("syntax", { format: "YAML", detail: id, position: line === undefined ? "-" : String(line.number), ...parameters })); }
 
 function stripComment(text: string): string {
   let quote = "";
@@ -39,7 +40,7 @@ function unquoteDouble(text: string, line: LineV1 | undefined): string {
     const simple: Record<string, string> = { n: "\n", t: "\t", r: "\r", "0": "\0", '"': '"', "\\": "\\", "/": "/", b: "\b", f: "\f", " ": " ", e: "\u001b", a: "\u0007", v: "\v", N: "\u0085", _: " " };
     if (code in simple) output += simple[code]!;
     else if (code === "x" || code === "u" || code === "U") { const width = code === "x" ? 2 : code === "u" ? 4 : 8; output += String.fromCodePoint(Number.parseInt(text.slice(index + 1, index + 1 + width), 16)); index += width; }
-    else fail(line, "invalid escape");
+    else fail(line, "yaml.invalidEscape");
   }
   return output;
 }
@@ -50,7 +51,7 @@ class FlowReaderV1 {
   private readonly line: LineV1 | undefined;
   constructor(text: string, line: LineV1 | undefined) { this.text = text; this.line = line; }
   private blank(): void { while (/\s/u.test(this.text[this.index] ?? "x")) this.index++; }
-  parse(): unknown { const value = this.value(); this.blank(); if (this.index < this.text.length) fail(this.line, "unexpected flow content"); return value; }
+  parse(): unknown { const value = this.value(); this.blank(); if (this.index < this.text.length) fail(this.line, "yaml.unexpectedFlow"); return value; }
   private value(): unknown {
     this.blank();
     const character = this.text[this.index];
@@ -79,7 +80,7 @@ class FlowReaderV1 {
       this.blank();
       if (this.text[this.index] === "]") { this.index++; return items; }
       items.push(this.value()); this.blank();
-      if (this.text[this.index] === ",") this.index++; else if (this.text[this.index] !== "]") fail(this.line, "expected , or ] in flow sequence");
+      if (this.text[this.index] === ",") this.index++; else if (this.text[this.index] !== "]") fail(this.line, "yaml.expectedFlowSequence");
     }
   }
   private mapping(): Record<string, unknown> {
@@ -92,7 +93,7 @@ class FlowReaderV1 {
       if (this.text[this.index] === ":") { this.index++; Object.defineProperty(result, key, { value: this.value(), enumerable: true, writable: true, configurable: true }); }
       else Object.defineProperty(result, key, { value: null, enumerable: true, writable: true, configurable: true });
       this.blank();
-      if (this.text[this.index] === ",") this.index++; else if (this.text[this.index] !== "}") fail(this.line, "expected , or } in flow mapping");
+      if (this.text[this.index] === ",") this.index++; else if (this.text[this.index] !== "}") fail(this.line, "yaml.expectedFlowMapping");
     }
   }
 }
@@ -115,7 +116,7 @@ class YamlParserV1 {
     if (this.position >= this.lines.length || this.lines[this.position]!.text === "...") return null;
     const value = this.block(this.lines[this.position]!.indent);
     this.skipBlank();
-    if (this.position < this.lines.length && this.lines[this.position]!.text !== "..." && this.lines[this.position]!.text !== "---") fail(this.lines[this.position], "unexpected content");
+    if (this.position < this.lines.length && this.lines[this.position]!.text !== "..." && this.lines[this.position]!.text !== "---") fail(this.lines[this.position], "yaml.unexpectedContent");
     return value;
   }
   private block(indent: number): unknown {
@@ -143,7 +144,7 @@ class YamlParserV1 {
     for (;;) {
       this.skipBlank();
       const line = this.lines[this.position];
-      if (line === undefined || line.indent !== indent) { if (line !== undefined && line.indent > indent) fail(line, "bad indentation"); return items; }
+      if (line === undefined || line.indent !== indent) { if (line !== undefined && line.indent > indent) fail(line, "yaml.badIndentation"); return items; }
       const body = stripComment(line.text);
       if (body !== "-" && !body.startsWith("- ")) return items;
       const rest = body.slice(1).trimStart(), offset = line.indent + (line.text.length - line.text.slice(1).trimStart().length);
@@ -164,12 +165,12 @@ class YamlParserV1 {
     for (;;) {
       this.skipBlank();
       const line = this.lines[this.position];
-      if (line === undefined || line.indent !== indent) { if (line !== undefined && line.indent > indent) fail(line, "bad indentation"); return result; }
+      if (line === undefined || line.indent !== indent) { if (line !== undefined && line.indent > indent) fail(line, "yaml.badIndentation"); return result; }
       const body = stripComment(line.text), colon = this.findKey(body);
       if (colon < 0 || body === "---" || body === "...") return result;
       const rawKey = body.slice(0, colon).trim(), key = rawKey.startsWith('"') ? unquoteDouble(rawKey, line) : rawKey.startsWith("'") ? rawKey.slice(1, -1).replaceAll("''", "'") : String(plainScalar(rawKey));
       const rest = body.slice(colon + 1).trim();
-      if (Object.hasOwn(result, key)) fail(line, `duplicate key ${key}`);
+      if (Object.hasOwn(result, key)) fail(line, "yaml.duplicateKey", { key });
       this.position++;
       let value: unknown;
       if (rest === "") {
@@ -182,10 +183,10 @@ class YamlParserV1 {
   }
   private inline(rest: string, line: LineV1, indent: number): unknown {
     if (/^[|>][+-]?[0-9]?[+-]?$/u.test(rest)) return this.blockScalar(rest, indent);
-    if (rest.startsWith("!")) fail(line, "tags are not supported");
+    if (rest.startsWith("!")) fail(line, "yaml.tags");
     const anchored = /^&(\S+)(?:\s+(.*))?$/u.exec(rest);
     if (anchored !== null) { const value = (anchored[2] ?? "") === "" ? this.nested(indent) : this.inline(anchored[2]!, line, indent); this.anchors.set(anchored[1]!, value); return value; }
-    if (rest.startsWith("*")) { const name = rest.slice(1).trim(); if (!this.anchors.has(name)) fail(line, `unknown alias ${name}`); return structuredClone(this.anchors.get(name)); }
+    if (rest.startsWith("*")) { const name = rest.slice(1).trim(); if (!this.anchors.has(name)) fail(line, "yaml.unknownAlias", { name }); return structuredClone(this.anchors.get(name)); }
     if (rest.startsWith("[") || rest.startsWith("{")) {
       let text = rest;
       while (!this.balanced(text) && this.position < this.lines.length) { text += " " + stripComment(this.lines[this.position]!.text); this.position++; }

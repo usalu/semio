@@ -5,6 +5,7 @@
 use semio_framework_os_store_testing_prelude::*;
 use semio_framework_os_store_testing_fixtures::*;
 use crate::*;
+use semio_framework_os_spr::ColdMutation as _;
 use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
 use semio_framework_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
 use semio_framework_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};

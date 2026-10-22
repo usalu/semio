@@ -19,7 +19,7 @@ use semio_framework_test_fixtures::fixture_text;
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::*;
 use crate::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece, SemioKitType};
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioKitSnapshot {
@@ -49,11 +49,11 @@ fn assert_create_rejected(base: &SemioKitSnapshot, mutation: &SemioKitMutation) 
 /// (📌️important.md Trap #1).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in backwards.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     let mut restored_objects = restored.objects.clone();
     let mut base_objects = base.objects.clone();
@@ -93,7 +93,7 @@ async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioKitMutation::DeleteObject(delete_object::DeleteObject { child_id: "does-not-exist".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -158,7 +158,7 @@ async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::UnbindRepresentation { index: 99 });
     assert!(unbind.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(unbind.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(unbind.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]

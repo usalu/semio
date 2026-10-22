@@ -34,15 +34,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "blocks", kind: "drag-blocks", record: "DraggedBlocks" };
 
-    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (note_label_number(self.dx), note_label_number(self.dy));
         let (en, de) = match self.ids.len() {
@@ -54,6 +45,21 @@ where
     fn target(&self) -> Vec<String> {
         self.ids.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for DragBlocks
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<DragBlocks>,
+{
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation
 

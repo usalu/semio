@@ -4,7 +4,7 @@ use crate::apply_mutation;
 use crate::standards::v_utf_8::subsets::any::schema::mutations::{TxtMutation};
 use crate::standards::v_utf_8::subsets::any::schema::mutations::splice_text::*;
 use crate::schema::snapshot::LineEnding;
-use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -29,8 +29,8 @@ fn semantic_identity_matches_descriptor() {
 fn a_range_set_rewrites_only_the_lines_it_touches_and_its_inverse_restores_the_text() {
     let base = TxtSnapshot::from_body("alpha\nbeta\ngamma\n");
     let mutation = TxtMutation::SpliceText(SpliceTextMutation { splices: vec![TextSplice { offset: 6, delete: 4, insert: "BETA".into() }, TextSplice { offset: 17, delete: 0, insert: "delta".into() }] });
-    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(&mutation, &base);
+    let inverse = <TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let outcome = <TxtMutation as ColdMutation<TxtSnapshot>>::diff(&mutation, &base);
     assert!(outcome.messages().is_empty());
     let diff = outcome.diff();
     assert_eq!(diff.trailing_newline, Some(false));
@@ -52,7 +52,7 @@ fn a_change_that_touches_nothing_answers_an_empty_diff_and_no_inverse() {
     let base = TxtSnapshot::from_body("a\nb\n");
     let mutation = SpliceTextMutation { splices: vec![TextSplice { offset: 0, delete: 1, insert: "a".into() }] };
     assert_eq!(<SpliceTextMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).diff(), &crate::schema::diff::TxtDiff::default());
-    assert!(<TxtMutation as Mutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
+    assert!(<TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
 }
 
 #[test]
@@ -65,7 +65,7 @@ fn refuses_ranges_that_leave_the_text_overlap_or_leave_the_native_shape() {
     ] {
         let mutation = SpliceTextMutation { splices };
         assert!(!<SpliceTextMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-        assert!(<TxtMutation as Mutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
+        assert!(<TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&TxtMutation::SpliceText(mutation), &base).unwrap().is_empty());
     }
     assert!(semio_framework_pack_json::from_json_str::<SpliceTextMutation>(r#"{"splices":[],"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     assert!(semio_framework_pack_json::from_json_str::<SpliceTextMutation>(r#"{"splices":[{"offset":0,"delete":0,"insert":"x","unknown":1}]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
@@ -82,7 +82,7 @@ fn the_corpus_rows_mean_the_corpus_text() {
         let splices: Vec<TextSplice> = row["splices"].as_array().unwrap().iter().map(|splice| TextSplice { offset: splice["offset"].as_u64().unwrap() as u32, delete: splice["delete"].as_u64().unwrap() as u32, insert: splice["insert"].as_str().unwrap().to_string() }).collect();
         let base = TxtSnapshot::from_body(before);
         let mutation = TxtMutation::SpliceText(SpliceTextMutation { splices: splices.clone() });
-        let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(&mutation, &base);
+        let outcome = <TxtMutation as ColdMutation<TxtSnapshot>>::diff(&mutation, &base);
         match row["after"].as_str() {
             None => assert!(!outcome.messages().is_empty(), "{id}"),
             Some(after) => {
@@ -91,7 +91,7 @@ fn the_corpus_rows_mean_the_corpus_text() {
                 let mut state = base.clone();
                 assert!(apply_mutation(&mut state, &mutation).messages().is_empty(), "{id}");
                 assert_eq!(state.to_body(), after, "{id}");
-                let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).unwrap();
+                let inverse = <TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&mutation, &base).unwrap();
                 for step in inverse.iter().rev() {
                     assert!(apply_mutation(&mut state, step).messages().is_empty(), "{id}");
                 }

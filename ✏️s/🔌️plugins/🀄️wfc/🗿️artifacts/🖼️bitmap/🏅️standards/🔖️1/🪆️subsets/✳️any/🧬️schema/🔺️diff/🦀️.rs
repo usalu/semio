@@ -328,8 +328,29 @@ pub struct BitmapDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
-impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
-    fn apply(&self, base: &BitmapSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapSnapshot> {
+impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {}
+
+impl protocol::ColdMutationDiff<BitmapSnapshot> for BitmapDiff {
+    fn absorb(&mut self, later: Self) {
+        if later.schema.is_some() {
+            self.schema = later.schema;
+        }
+        if later.seed.is_some() {
+            self.seed = later.seed;
+        }
+        self.input = composed_input(&self.input, later.input);
+        self.palette = self.palette.composed(&later.palette);
+        if later.output.is_some() {
+            self.output = later.output;
+        }
+        if later.model.is_some() {
+            self.model = later.model;
+        }
+        self.pinned.absorb(later.pinned);
+    }
+
+    fn apply(&self, unpublished: &mut BitmapSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let applied = (|base: &BitmapSnapshot| -> protocol::MutationApplyResult<BitmapSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -373,28 +394,20 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
         }
         next.pinned = self.pinned.commit_onto(&base.pinned, capability).map_err(|error| error.under(["pinned"]))?;
         Ok(next)
-    }
-
-    fn absorb(&mut self, later: Self) {
-        if later.schema.is_some() {
-            self.schema = later.schema;
-        }
-        if later.seed.is_some() {
-            self.seed = later.seed;
-        }
-        self.input = composed_input(&self.input, later.input);
-        self.palette = self.palette.composed(&later.palette);
-        if later.output.is_some() {
-            self.output = later.output;
-        }
-        if later.model.is_some() {
-            self.model = later.model;
-        }
-        self.pinned.absorb(later.pinned);
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<BitmapSnapshot> for BitmapDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.seed.is_none() && self.input.size.is_none() && self.input.writes.is_empty() && self.palette.is_empty() && self.output.is_none() && self.model.is_none() && self.pinned.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BitmapSnapshot> for BitmapDiff {
     fn inverse(&self, base: &BitmapSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -405,10 +418,6 @@ impl protocol::DiffAlgebra<BitmapSnapshot> for BitmapDiff {
             model: self.model.map(|_| base.model),
             pinned: self.pinned.inverse(&base.pinned),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.seed.is_none() && self.input.size.is_none() && self.input.writes.is_empty() && self.palette.is_empty() && self.output.is_none() && self.model.is_none() && self.pinned.is_empty()
     }
 }
 //#endregion 🔖️Apply

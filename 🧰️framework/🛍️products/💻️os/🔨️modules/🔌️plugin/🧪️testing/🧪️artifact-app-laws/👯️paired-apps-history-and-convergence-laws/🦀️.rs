@@ -29,7 +29,7 @@ where
 pub async fn paired_registered_apps_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A, M>, VcsArtifactApp<A, M>)
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     Manifest: std::future::Future<Output = App>,
     Build: Fn() -> Manifest,
 {
@@ -55,7 +55,7 @@ where
 pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let admitted = dispatch_fixture_action(app,action,None,&meta("local"),identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
     semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
@@ -75,7 +75,7 @@ pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
 {
     let receiver = meta("local").instance_id;
@@ -188,7 +188,7 @@ pub async fn assert_two_registered_instances_converge_with_members<A, M, P, Mani
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
     Manifest: std::future::Future<Output = App>,
     Build: Fn() -> Manifest,
@@ -221,7 +221,7 @@ where
 async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
 {
     instance_a.tick_backbone(identity,cx).await.expect("a folds b's events");
@@ -294,7 +294,7 @@ pub async fn assert_registered_ingest_idempotent_with_members<A, M, P, Manifest,
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
     Manifest: std::future::Future<Output = App>,
     Build: Fn() -> Manifest,

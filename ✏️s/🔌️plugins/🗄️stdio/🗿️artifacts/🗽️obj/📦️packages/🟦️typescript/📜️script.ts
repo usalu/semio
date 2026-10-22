@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ obj TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-obj", {

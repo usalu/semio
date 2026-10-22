@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -51,7 +53,7 @@ function platformId(): string {
 
 /** 🦀️ Shells out to the standalone `png-codec` binary — the ONLY place this file touches it. */
 function codecBuild(id: string, outDir: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`png-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -83,7 +85,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (png)", attribution: "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
@@ -156,9 +158,9 @@ print(kind + ': written')
       if (command === "chunks") {
         const failures: string[] = [];
         for (const { kind, directory } of KINDS) {
-          const written = spawnSync("python3", ["-c", WRITER, join(outDir, directory), kind], { stdio: "inherit" });
+          const written = runToolSyncV1("python", ["-c", WRITER, join(outDir, directory), kind], { stdio: "inherit" });
           if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
-          const cmp = spawnSync("bun", [probes, "png-chunk-compare", "--input", join(outDir, directory, "⬅️before.png"), "--input", join(outDir, directory, "➡️after.png")], { encoding: "utf8" });
+          const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "png-chunk-compare", "--input", join(outDir, directory, "⬅️before.png"), "--input", join(outDir, directory, "➡️after.png")], { encoding: "utf8" });
           if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
           if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind}: not observable in the chunk projection`);
         }
@@ -179,7 +181,7 @@ print(kind + ': written')
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "pillow-png-1-2-chunk-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks", platform: currentPlatform() },
+          generator: { oracle: "pillow-png-1-2-chunk-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks", platform: currentPlatform() },
           comparisonProfile: "semantic-png-chunk-v1",
           reproducible: true,
           family: "mechanical",

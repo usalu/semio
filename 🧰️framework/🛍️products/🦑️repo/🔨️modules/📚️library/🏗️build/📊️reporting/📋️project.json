@@ -14,7 +14,7 @@
       "cache": true,
       "inputs": ["default", "^default", "testEnv"],
       "outputs": [],
-      "options": {"command": "bun ./📜️script.ts test", "forwardAllArgs": false},
+      "options": {"command": "repo ./📜️script.ts test", "forwardAllArgs": false},
       "defaultConfiguration": "prototype",
       "configurations": {"prototype": {"env": {"SEMIO_BUILD_MODE": "prototype"}}, "release": {"env": {"SEMIO_BUILD_MODE": "release"}}}
     }

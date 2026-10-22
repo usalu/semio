@@ -6240,21 +6240,21 @@
             "check": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts check",
+                "command": "repo ./📜️script.ts check",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "generate": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts generate",
+                "command": "repo ./📜️script.ts generate",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "preview-generated": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts preview-generated",
+                "command": "repo ./📜️script.ts preview-generated",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             }
@@ -6330,21 +6330,21 @@
             "check": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts check",
+                "command": "repo ./📜️script.ts check",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "generate": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts generate",
+                "command": "repo ./📜️script.ts generate",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "preview-generated": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts preview-generated",
+                "command": "repo ./📜️script.ts preview-generated",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             }
@@ -6617,21 +6617,21 @@
             "check": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts check",
+                "command": "repo ./📜️script.ts check",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "generate": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts generate",
+                "command": "repo ./📜️script.ts generate",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             },
             "preview-generated": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "bun ./📜️script.ts preview-generated",
+                "command": "repo ./📜️script.ts preview-generated",
                 "cwd": "🧪️tests/🧪️fixture/🧪️generator"
               }
             }

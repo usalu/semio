@@ -14,19 +14,22 @@ pub struct SetEntryData {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetEntryData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entry-data", kind: "set-entry-data", record: "SetEntryData" };
 
-    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ZipSnapshot, ZipIso21320Mutation> for SetEntryData {
+    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::ColdMutation<ZipSnapshot>>::ReferenceDiff> {
         let Self { name, data } = self;
         protocol::MutationOutcome::new(diff::diff_set_entry_data(name, data.clone()))
     }
     fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
         let Self { name, .. } = self;
         Ok(base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::SetEntryData(SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

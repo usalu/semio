@@ -1,89 +1,280 @@
-import { describe, expect, test } from "bun:test";
-import { findToolV1, readToolDigestsV1, readToolSourceV1, resolveToolV1, toolDigestForHostV1, toolEnvironmentNameMatchesV1, toolEnvironmentV1, toolPointerV1, type ToolHostV1 } from "../../🟦️.ts";
-
-const files = (table: Record<string, string>) => ({ read: (path: string) => table[path] });
-const host = (overrides: Partial<Omit<ToolHostV1, "pins">> & { present?: string[]; pins?: Record<string, string> } = {}): ToolHostV1 => {
-  const { present: names, pins: table, ...rest } = overrides, present = new Set(names ?? []);
-  return { platform: "darwin", architecture: "arm64", environment: { PATH: "/bin:/usr/bin" }, root: "/repo", home: "/home/u", execPath: "/runtime/bun", bun: false, isExecutable: path => present.has(path), exists: path => present.has(path), list: () => [], pins: files(table ?? {}), ...rest };
-};
-const BOOT = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json";
-const bootstrap = JSON.stringify({ definitions: { Pins: { const: { assets: [
-  { tool: "go", version: "1.26.9", platform: "darwin", arch: "arm64", url: "u", sha256: "a".repeat(64) },
-  { tool: "go", version: "1.26.9", platform: "linux", arch: "x64", url: "u", sha256: "b".repeat(64) },
-  { tool: "uv", version: "0.11.6", platform: "darwin", arch: "arm64", url: "u", sha256: "c".repeat(64) },
-] } } } });
-
-describe("tool pins", () => {
-  test("follows JSON pointers with escapes and reads TOML keys, text files and filtered rows", () => {
-    expect(toolPointerV1({ "a/b": { "c~d": [10, 20] } }, "/a~1b/c~0d/1")).toBe(20);
-    const go = findToolV1("go")!, cargo = findToolV1("cargo")!;
-    expect(readToolSourceV1(go.pin.version, "/repo", files({ ["/repo/" + BOOT]: bootstrap }))).toBe("1.26.9");
-    expect(readToolSourceV1(cargo.pin.version, "/repo", files({ "/repo/rust-toolchain.toml": "[toolchain]\nprofile = \"minimal\"\nchannel = \"nightly-2026-07-20\"\n" }))).toBe("nightly-2026-07-20");
-    expect(readToolSourceV1({ file: ".bazelversion", format: "text" }, "/repo", files({ "/repo/.bazelversion": "8.4.2\n" }))).toBe("8.4.2");
-    expect(readToolSourceV1(go.pin.version, "/repo", files({}))).toBeNull();
-  });
-  test("joins a CMake version object and keeps only the rows of the filter", () => {
-    expect(readToolSourceV1({ file: "p.json", format: "json", pointer: "/v" }, "/r", files({ "/r/p.json": JSON.stringify({ v: { major: 3, minor: 28, patch: 0 } }) }))).toBe("3.28.0");
-    const rows = readToolDigestsV1(findToolV1("go")!.pin.digests, "/repo", files({ ["/repo/" + BOOT]: bootstrap }));
-    expect(rows.map(row => row.platform + "-" + row.architecture)).toEqual(["darwin-arm64", "linux-x64"]);
-    expect(toolDigestForHostV1({ state: "pinned", version: "1", minimum: null, digests: rows }, "linux", "x64")?.sha256).toBe("b".repeat(64));
-    expect(toolDigestForHostV1({ state: "pinned", version: "1", minimum: null, digests: rows }, "win32", "x64")).toBeUndefined();
-  });
-  test("reads one host field such as darwin-arm64", () => {
-    const rows = readToolDigestsV1({ file: "d.json", pointer: "/d", where: {}, host: "host", sha256: "sha", name: "archive" }, "/r", files({ "/r/d.json": JSON.stringify({ d: [{ host: "darwin-arm64", sha: "x", archive: "a" }, { host: "win32-x64", sha: "y", archive: "b" }] }) }));
-    expect(rows.map(row => [row.platform, row.architecture])).toEqual([["darwin", "arm64"], ["win32", "x64"]]);
-  });
-});
-
-describe("tool resolution", () => {
-  const git = findToolV1("git")!, bun = findToolV1("bun")!, tsc = findToolV1("tsc")!, go = findToolV1("go")!, hdiutil = findToolV1("hdiutil")!;
-  test("tries the environment override first, then PATH, then the extra directories", () => {
-    expect(resolveToolV1(git, host({ present: ["/over/git"], environment: { PATH: "/bin", SEMIO_TOOL_GIT: "/over/git" } })).command).toBe("/over/git");
-    expect(resolveToolV1(git, host({ present: ["/bin/git"] })).source).toBe("path");
-    expect(resolveToolV1(git, host({ present: ["/opt/homebrew/bin/git"], environment: { PATH: "/bin" } })).command).toBe("/opt/homebrew/bin/git");
-    const missing = resolveToolV1(git, host());
-    expect(missing.command).toBeNull();
-    expect(missing.source).toBe("missing");
-    expect(missing.tried.length).toBeGreaterThan(1);
-  });
-  test("uses the running Bun as bun and the provisioned digest directory otherwise", () => {
-    expect(resolveToolV1(bun, host({ bun: true, execPath: "/x/bun" })).command).toBe("/x/bun");
-    const digest = "d".repeat(64), pins = { ["/repo/" + bun.pin.digests!.file]: JSON.stringify({ definitions: { Release: { const: { version: "1.4.2", distributions: [{ platform: "darwin", arch: "arm64", musl: false, archive: "a", bytes: 1, sha256: digest }] } } } }) };
-    const found = resolveToolV1(bun, host({ pins, execPath: "/runtime/node", present: [`/repo/.cache/b/t/m/bun/${digest}/bun`] }));
-    expect(found.source).toBe("provisioned");
-    expect(found.pin.version).toBe("1.4.2");
-  });
-  test("builds the host and 16-digit placeholders of a provisioned Go", () => {
-    const sha = "a".repeat(64), found = resolveToolV1(go, host({ pins: { ["/repo/" + BOOT]: bootstrap }, present: [`/repo/.cache/b/t/m/native/go/1.26.9/darwin-arm64-${sha.slice(0, 16)}/bin/go`] }));
-    expect(found.source).toBe("provisioned");
-  });
-  test("runs a package script through its interpreter and refuses a platform the tool lacks", () => {
-    const found = resolveToolV1(tsc, host({ bun: true, execPath: "/x/bun", present: ["/repo/node_modules/typescript/bin/tsc"] }));
-    expect(found.command).toBe("/x/bun");
-    expect(found.prefix).toEqual(["/repo/node_modules/typescript/bin/tsc"]);
-    expect(resolveToolV1(hdiutil, host({ platform: "linux", present: ["/usr/bin/hdiutil"] })).command).toBeNull();
-  });
-});
-
-describe("tool environment", () => {
-  const context = { root: "/repo", platform: "linux" as const };
-  test("always drops IDE and debugger injections and lets the caller win", () => {
-    const env = toolEnvironmentV1(findToolV1("bun")!, { PATH: "/bin", NODE_OPTIONS: "--inspect", VSCODE_INSPECTOR_OPTIONS: "x", CURSOR_TRACE_ID: "t", BUN_INSPECT: "1", BUN_JSC_x: "1", KEEP: "1" }, { EXTRA: "2", PATH: undefined }, context);
-    expect(env).toEqual({ BUN_JSC_x: "1", KEEP: "1", EXTRA: "2", SEMIO_TOOL_RUN: "bun" });
-  });
-  test("lets an allowlist tool keep only the base and its own variables", () => {
-    const env = toolEnvironmentV1(findToolV1("hdiutil")!, { PATH: "/bin", HOME: "/h", SEMIO_X: "1", BAZEL_FOO: "1", SECRET: "s", LC_ALL: "C" }, {}, context);
-    expect(Object.keys(env).sort()).toEqual(["HOME", "LC_ALL", "PATH", "SEMIO_TOOL_RUN", "SEMIO_X"]);
-  });
-  test("sets fixed values and cache directories without overriding what the environment already has", () => {
-    expect(toolEnvironmentV1(findToolV1("uv")!, {}, {}, context).UV_PYTHON_DOWNLOADS).toBe("never");
-    expect(toolEnvironmentV1(findToolV1("go")!, {}, {}, context).GOCACHE).toBe("/repo/.🧬semio/🦑️repo/⚡️cache/go");
-    expect(toolEnvironmentV1(findToolV1("go")!, { GOCACHE: "/mine" }, {}, context).GOCACHE).toBe("/mine");
-    expect(toolEnvironmentV1(findToolV1("go")!, {}, {}, { ...context, cacheDirectory: (...parts) => "/c/" + parts.join("/") }).GOCACHE).toBe("/c/go");
-  });
-  test("matches names with wildcards and ignores case on Windows only", () => {
-    expect(toolEnvironmentNameMatchesV1("LC_*", "LC_ALL", "linux")).toBe(true);
-    expect(toolEnvironmentNameMatchesV1("path", "PATH", "win32")).toBe(true);
-    expect(toolEnvironmentNameMatchesV1("path", "PATH", "linux")).toBe(false);
-  });
-});
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process/tools/registry",
+  "title": "External tool registry",
+  "description": "Every external program the repository may run, the one pin, provisioning recipe, adapter and caller set of each. Code never names a registered program; it asks `runToolV1(toolId, args, options)`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "languages", "partitions", "packageRoots", "environment", "scan", "messages", "tools"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1},
+    "languages": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"enum": ["en", "de"]}},
+    "partitions": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}},
+    "packageRoots": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "testCallers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "funnels": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "marker"], "properties": {"path": {"type": "string", "minLength": 1}, "marker": {"type": "string", "minLength": 1}}}},
+    "environment": {"$ref": "#/definitions/GlobalEnvironment"},
+    "scan": {"$ref": "#/definitions/Scan"},
+    "messages": {"$ref": "#/definitions/Messages"},
+    "tools": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Tool"}}
+  },
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "Id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "Glob": {"type": "string", "minLength": 1},
+    "Platform": {"enum": ["win32", "darwin", "linux"]},
+    "GlobalEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base", "deny"],
+      "properties": {
+        "base": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "deny": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "Scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["callees", "shellWrappers", "selfExpressions", "testSegments", "ignoredSegments", "extensions", "declaredNames"],
+      "properties": {
+        "callees": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "language", "shape"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "language": {"enum": ["ts", "rust", "go", "python"]},
+              "shape": {"enum": ["command", "array", "shell-string", "template", "optionsCmd"]}
+            }
+          }
+        },
+        "shellWrappers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "selfExpressions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "testSegments": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "ignoredSegments": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "extensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ts", "rust", "go", "python", "shell"],
+          "properties": {
+            "ts": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}},
+            "rust": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}},
+            "go": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}},
+            "python": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}},
+            "shell": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}}
+          }
+        },
+        "declaredNames": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknownTool", "toolMissing", "callerRefused", "versionMismatch", "cancelled", "failed", "execUsage", "listHeader", "verifyOk", "verifyProblem", "admitting", "running", "finished"],
+      "properties": {
+        "unknownTool": {"$ref": "#/definitions/Text"},
+        "toolMissing": {"$ref": "#/definitions/Text"},
+        "callerRefused": {"$ref": "#/definitions/Text"},
+        "versionMismatch": {"$ref": "#/definitions/Text"},
+        "cancelled": {"$ref": "#/definitions/Text"},
+        "failed": {"$ref": "#/definitions/Text"},
+        "execUsage": {"$ref": "#/definitions/Text"},
+        "listHeader": {"$ref": "#/definitions/Text"},
+        "verifyOk": {"$ref": "#/definitions/Text"},
+        "verifyProblem": {"$ref": "#/definitions/Text"},
+        "admitting": {"$ref": "#/definitions/Text"},
+        "running": {"$ref": "#/definitions/Text"},
+        "finished": {"$ref": "#/definitions/Text"}
+      }
+    },
+    "RowFilter": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}},
+    "Source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "format", "pointer"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "format": {"const": "json"}, "pointer": {"type": "string"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "format", "table", "key"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "format": {"const": "toml"}, "table": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "format"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "format": {"const": "text"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "format", "pointer", "where", "field"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "format": {"const": "rows"}, "pointer": {"type": "string"}, "where": {"$ref": "#/definitions/RowFilter"}, "field": {"type": "string", "minLength": 1}}
+        }
+      ]
+    },
+    "Digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "pointer", "where", "sha256", "name"],
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "pointer": {"type": "string"},
+        "where": {"$ref": "#/definitions/RowFilter"},
+        "platform": {"type": "string", "minLength": 1},
+        "architecture": {"type": "string", "minLength": 1},
+        "host": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "bytes": {"type": "string", "minLength": 1},
+        "extras": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "hostExtras": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}}
+      }
+    },
+    "Pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["pinned", "constrained", "floating", "system", "internal"]},
+        "version": {"$ref": "#/definitions/Source"},
+        "minimum": {"$ref": "#/definitions/Source"},
+        "digests": {"$ref": "#/definitions/Digests"},
+        "gap": {"$ref": "#/definitions/Text"}
+      }
+    },
+    "Provision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "command"],
+      "properties": {
+        "kind": {"enum": ["internal", "bootstrap-asset", "release-archive", "package", "toolchain-file", "system"]},
+        "installer": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "hints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {"darwin": {"type": "string"}, "linux": {"type": "string"}, "win32": {"type": "string"}}
+        }
+      }
+    },
+    "Locator": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": {"kind": {"const": "environment"}, "name": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {"kind": {"const": "runtime"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "partition", "segments", "executable"],
+          "properties": {
+            "kind": {"const": "provisioned"},
+            "partition": {"type": "string", "minLength": 1},
+            "segments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "executable": {"type": "string", "minLength": 1}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "package", "script", "via"],
+          "properties": {
+            "kind": {"const": "package-script"},
+            "package": {"type": "string", "minLength": 1},
+            "script": {"type": "string", "minLength": 1},
+            "via": {"$ref": "#/definitions/Id"},
+            "prefix": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "via"],
+          "properties": {
+            "kind": {"const": "script"},
+            "path": {"type": "string", "minLength": 1},
+            "via": {"$ref": "#/definitions/Id"},
+            "prefix": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "directories"],
+          "properties": {"kind": {"const": "path"}, "directories": {"type": "array", "items": {"type": "string", "minLength": 1}}, "names": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}
+        }
+      ]
+    },
+    "Probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arguments", "pattern"],
+      "properties": {"arguments": {"type": "array", "items": {"type": "string"}}, "pattern": {"type": "string", "minLength": 1}}
+    },
+    "Environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "pass", "deny", "set"],
+      "properties": {
+        "mode": {"enum": ["inherit", "allowlist"]},
+        "pass": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "deny": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "set": {"type": "object", "additionalProperties": {"type": "string"}},
+        "cacheDirectories": {"type": "object", "additionalProperties": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "Capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"enum": ["none", "inherit", "admit"]},
+        "operation": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "kind": {"enum": ["test", "check", "generate", "build", "script", "service"]}
+      }
+    },
+    "Tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "summary", "capabilities", "commands", "platforms", "pin", "provision", "locate", "adapter", "adapterScope", "allowedCallers", "environment", "capacity"],
+      "properties": {
+        "id": {"$ref": "#/definitions/Id"},
+        "kind": {"enum": ["entry", "runtime", "build-system", "compiler", "package-manager", "test-runner", "typesetter", "optimizer", "vcs", "container", "disk-image", "bundler"]},
+        "summary": {"$ref": "#/definitions/Text"},
+        "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/Id"}},
+        "commands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/Platform"}},
+        "pin": {"$ref": "#/definitions/Pin"},
+        "provision": {"$ref": "#/definitions/Provision"},
+        "locate": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Locator"}},
+        "probe": {"$ref": "#/definitions/Probe"},
+        "adapter": {"type": "string", "minLength": 1},
+        "adapterScope": {"type": "array", "items": {"$ref": "#/definitions/Glob"}},
+        "allowedCallers": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Glob"}},
+        "environment": {"$ref": "#/definitions/Environment"},
+        "capacity": {"$ref": "#/definitions/Capacity"}
+      }
+    }
+  }
+}

@@ -1,0 +1,250 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "subject",
+  "body",
+  "commit",
+  "normalize",
+  "format",
+  "bundleModel"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "subject": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "subject",
+     "expected"
+    ],
+    "properties": {
+     "subject": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "body": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "body",
+     "expected"
+    ],
+    "properties": {
+     "body": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "commit": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "subject",
+     "body",
+     "expected"
+    ],
+    "properties": {
+     "subject": {
+      "type": "string"
+     },
+     "body": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "normalize": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "format": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "ulocDelta",
+     "sizeDelta",
+     "ulocBloc",
+     "sizeBloc",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "ulocDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "removed",
+       "edited"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       }
+      }
+     },
+     "sizeDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "removed",
+       "edited"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       }
+      }
+     },
+     "ulocBloc": {
+      "type": "integer"
+     },
+     "sizeBloc": {
+      "type": "integer"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "bundleModel": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "wip",
+    "date"
+   ],
+   "properties": {
+    "wip": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "subject",
+       "expected"
+      ],
+      "properties": {
+       "subject": {
+        "type": "string"
+       },
+       "expected": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "date": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "line",
+       "expected"
+      ],
+      "properties": {
+       "line": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

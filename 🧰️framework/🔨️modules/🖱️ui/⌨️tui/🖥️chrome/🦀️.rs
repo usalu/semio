@@ -356,7 +356,7 @@ pub enum TabKind {
 }
 
 /// 🔖 One corner chip with absolute glyph columns for hit-testing.
-pub(crate) struct WindowCornerTab {
+pub struct WindowCornerTab {
     pub x: u16,
     pub interior: String,
     pub interior_width: u16,
@@ -366,7 +366,7 @@ pub(crate) struct WindowCornerTab {
     pub maximize_x: Option<u16>,
     pub new_x: Option<u16>,
     pub close_x: Option<u16>,
-    pub(crate) drag_x: Option<u16>,
+    pub drag_x: Option<u16>,
 }
 
 impl WindowCornerTab {
@@ -389,7 +389,7 @@ pub enum ChromeMode {
     Compact,
 }
 
-/// 🔗 `pub(crate)`: shared with `crate::tui::window`'s `paint_window`.
+/// 🧭️ Canonical window geometry returned by [window_chip_layout].
 pub struct WindowChipLayout {
     pub mode: ChromeMode,
     pub groups: Vec<WindowCornerChipGroup>,
@@ -403,7 +403,7 @@ impl WindowChipLayout {
     }
 
     /// 🪧 The row that carries a corner group's text.
-    pub(crate) fn text_y(&self, corner: WindowStackCorner, rect: Rect) -> u16 {
+    pub fn text_y(&self, corner: WindowStackCorner, rect: Rect) -> u16 {
         match (self.mode, corner.is_top()) {
             (ChromeMode::Compact, _) => rect.y,
             (_, true) => rect.y + 1,

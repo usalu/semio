@@ -1,8 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BoundedPreparationScript, BoundedSynchronizeScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 
-const router = new ScriptRouter(import.meta.dir).register("prepare", BoundedPreparationScript).register("synchronize", BoundedSynchronizeScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => router.run(process.argv.slice(2), original));
+const router = new ScriptRouter(import.meta.dirname).register("prepare", BoundedPreparationScript).register("synchronize", BoundedSynchronizeScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => router.run(process.argv.slice(2), original));

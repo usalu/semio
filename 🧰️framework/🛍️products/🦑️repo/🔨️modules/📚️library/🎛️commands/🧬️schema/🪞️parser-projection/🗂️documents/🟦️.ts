@@ -1,13 +1,14 @@
 /** 🗂️ Finds the schema modules under a scope, their normative documents and exports, and reads and writes the leaf sources the projection edits.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
-import { spawnSync } from "node:child_process";
+
 import { existsSync, readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { EXPORT_NAME, asDict, codePointOrder, isDict, type Dict } from "../🔡️json-text/🟦️.ts";
 import { listModuleTree } from "../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { PARSER_DIRECTORY } from "../📍️parser-files/🟦️.ts";
 import { Owner, type SourceReader } from "../🧾️parser-render/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🔖️Leaves
 /** 🍃️ The leaf file name of every projected format. */
@@ -119,7 +120,7 @@ const entriesOf = (directory: string): Dirent[] => {
 
 /** 🔎️ The tracked and untracked-but-not-ignored files under `scopes`, or `undefined` when `root` is no git work tree. A tree of its own that git ignores is walked instead. */
 function versionedFiles(root: string, scopes: readonly string[]): string[] | undefined {
-  const listed = spawnSync("git", ["-c", "core.fsmonitor=false", "-c", "core.quotepath=false", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...scopes], { cwd: root, encoding: "utf8", maxBuffer: 1 << 29 });
+  const listed = runToolSyncV1("git", ["-c", "core.fsmonitor=false", "-c", "core.quotepath=false", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...scopes], { cwd: root, encoding: "utf8", maxBuffer: 1 << 29 });
   return listed.status === 0 ? listed.stdout.split("\0").filter((path) => path !== "") : undefined;
 }
 

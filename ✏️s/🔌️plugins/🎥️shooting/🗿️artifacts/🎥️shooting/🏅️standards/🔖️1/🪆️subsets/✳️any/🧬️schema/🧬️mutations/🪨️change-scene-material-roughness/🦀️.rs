@@ -19,6 +19,16 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeSceneMaterialRoughness>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-material-roughness", kind: "change-scene-material-roughness", record: "ChangedSceneMaterialRoughness" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change material roughness to {}", self.new_roughness), &format!("Materialrauigkeit auf {} ändern", self.new_roughness))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for ChangeSceneMaterialRoughness
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<ChangeSceneMaterialRoughness>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -28,7 +38,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change material roughness to {}", self.new_roughness), &format!("Materialrauigkeit auf {} ändern", self.new_roughness))
-    }
 }

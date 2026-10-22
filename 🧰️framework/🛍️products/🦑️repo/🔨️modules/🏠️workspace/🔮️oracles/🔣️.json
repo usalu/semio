@@ -8,9 +8,17 @@
       "ecosystem": "javascript",
       "package": "micromatch",
       "version": "4.0.8",
-      "engine": { "family": "none", "implementation": "picomatch", "version": "4.0.8" },
-      "capabilities": ["repo-workspace-glob-match"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "engine": {
+        "family": "none",
+        "implementation": "picomatch",
+        "version": "4.0.8"
+      },
+      "capabilities": [
+        "repo-workspace-glob-match"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "productionReachable": false,
@@ -23,9 +31,17 @@
       "ecosystem": "javascript",
       "package": "ignore",
       "version": "7.0.5",
-      "engine": { "family": "none", "implementation": "kael-ignore", "version": "7.0.5" },
-      "capabilities": ["repo-workspace-ignore-match"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "engine": {
+        "family": "none",
+        "implementation": "kael-ignore",
+        "version": "7.0.5"
+      },
+      "capabilities": [
+        "repo-workspace-ignore-match"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "productionReachable": false,
@@ -36,28 +52,53 @@
   "noOracleDecisions": [
     {
       "id": "repo-workspace-root-discovery",
-      "capabilities": ["repo-workspace-root-discovery", "repo-workspace-layout", "repo-workspace-config"],
-      "rationale": "Repository-root discovery, the `.🧬semio` layout vocabulary and the `📋️config.toml` reader are this repository's own conventions. Nothing third party knows that a semio monorepo root is recognised by a legacy CLI entry point, then a git checkout, then a Go module, or that `[logging] detail` has three levels. Confidence comes from specification vectors materialised into a work-directory tree plus two independently written implementations.",
-      "substitutes": ["specification-vectors", "independent-implementations"],
+      "capabilities": [
+        "repo-workspace-root-discovery",
+        "repo-workspace-layout",
+        "repo-workspace-config"
+      ],
+      "rationale": "Repository discovery selects the nearest actual Git checkout or the canonical starting directory; explicit roots select their validated directory itself. Layout and logging conventions are checked by shared vectors and independent implementations. Installed MCP resources additionally use the official SDK, JSON Schema and independent filesystem inventory as test-only references.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
       "coversMutations": false
     },
     {
       "id": "repo-workspace-glob-divergence",
-      "capabilities": ["repo-workspace-glob-divergence"],
+      "capabilities": [
+        "repo-workspace-glob-divergence"
+      ],
       "rationale": "The owned matcher accepts the POSIX `[!…]` character-class negation spelling, which picomatch — and therefore micromatch — reads as a literal class containing an exclamation mark. Inside a negated class every member is literal, so `[!a-c]` excludes the three characters and the hyphen rather than a range. A picomatch-based oracle disagrees by construction, so this spelling is held by the two subjects agreeing with the recorded expectation instead.",
-      "substitutes": ["specification-vectors", "independent-implementations"],
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
       "coversMutations": false
     },
     {
       "id": "repo-workspace-ignore-divergence",
-      "capabilities": ["repo-workspace-ignore-divergence"],
+      "capabilities": [
+        "repo-workspace-ignore-divergence"
+      ],
       "rationale": "Two rule shapes are deliberately NOT git-compatible: a leading slash is not treated as a root anchor, and a negation can re-include a file underneath an excluded directory. A gitignore-conformant oracle disagrees by construction, so these two vectors are held by the two subjects agreeing with each other and with the recorded expectation instead.",
-      "substitutes": ["specification-vectors", "independent-implementations"],
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
       "coversMutations": false
     }
   ],
   "oracleHostPackages": [
-    { "implementation": "typescript", "package": "micromatch", "version": "4.0.8" },
-    { "implementation": "typescript", "package": "ignore", "version": "7.0.5" }
+    {
+      "implementation": "typescript",
+      "package": "micromatch",
+      "version": "4.0.8"
+    },
+    {
+      "implementation": "typescript",
+      "package": "ignore",
+      "version": "7.0.5"
+    }
   ]
 }

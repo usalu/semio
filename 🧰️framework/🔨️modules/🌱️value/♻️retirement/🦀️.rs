@@ -10,6 +10,10 @@ pub mod original_vector;
 #[path="⚖️result/🦀️.rs"]
 mod original_result;
 
+#[path="🌀️support/🦀️.rs"]
+mod support;
+pub use support::conjunctive_retirement_support;
+
 pub trait RetireOwned: Send + 'static {
     fn retirement(self) -> Box<dyn RetirementCursor>;
     fn retirement_birth_bytes(&self) -> Option<usize> { None }

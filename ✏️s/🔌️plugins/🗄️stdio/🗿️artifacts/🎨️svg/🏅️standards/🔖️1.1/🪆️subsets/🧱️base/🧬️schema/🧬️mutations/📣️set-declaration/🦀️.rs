@@ -17,6 +17,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Declaration", "Deklaration setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-declaration".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetDeclarationPayload
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetDeclarationPayload>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { declaration } = self;
         if *declaration == base.doc.declaration {
@@ -24,16 +36,8 @@ where
         }
         protocol::MutationOutcome::new(SvgDiff { declaration: Some(declaration.clone()), ..Default::default() })
     }
-
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(vec![Op::from(Self { declaration: base.doc.declaration.clone() })])
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Declaration", "Deklaration setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-declaration".to_string()]
     }
 }
 

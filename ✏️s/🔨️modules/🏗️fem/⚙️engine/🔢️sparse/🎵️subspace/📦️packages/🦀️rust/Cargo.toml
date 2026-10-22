@@ -25,5 +25,6 @@ semio-s-fem-sparse = { workspace = true }
 semio-s-fem-sparse-ldlt = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-fem-test-support = { workspace = true }
 serde_json = { workspace = true }

@@ -62,6 +62,6 @@
   ],
   "execution": {
     "target": "test-cargo-discovery-exclusions",
-    "command": "bun ./📜️script.ts test cargo-discovery-exclusions"
+    "command": "repo ./📜️script.ts test cargo-discovery-exclusions"
   }
 }

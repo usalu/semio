@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().supports.is_some(), "create-support/adds-a-vertical-6161a1: the new roller must surface in the supports delta");
     assert!(outcome.diff().nodes.is_none(), "create-support/adds-a-vertical-6161a1: the node the support validates against is read-only");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

@@ -15,7 +15,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type ReactElement, useEffect, useRef, useState } from "react";
+import { type ReactElement, useEffect, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
 import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";

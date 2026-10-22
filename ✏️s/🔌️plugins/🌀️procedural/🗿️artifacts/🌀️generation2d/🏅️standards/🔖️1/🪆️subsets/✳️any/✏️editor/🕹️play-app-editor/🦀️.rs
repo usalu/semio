@@ -225,19 +225,10 @@ impl ArtifactEditor for Generation2dPlayApp {
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
         let pointer_samples = || {
-            let parsed = args
-                .get("samples")
+            args.get("samples")
                 .and_then(semio_framework_value::DslValue::as_array)
                 .map(|items| items.iter().filter_map(|item| { let pair = item.as_array()?; Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?]) }).collect::<Vec<[f64; 2]>>())
-                .unwrap_or_default();
-            if parsed.is_empty() {
-                match (args.get("x").and_then(semio_framework_value::DslValue::as_f64), args.get("y").and_then(semio_framework_value::DslValue::as_f64)) {
-                    (Some(x), Some(y)) => vec![[x, y]],
-                    _ => Vec::new(),
-                }
-            } else {
-                parsed
-            }
+                .unwrap_or_default()
         };
         let pointer_cancelled = || args.get("cancelled").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false);
         fn original_reply_valid(args:&semio_framework_value::DslValue,tessellate:bool,cancel:bool)->bool{

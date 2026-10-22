@@ -1,5 +1,5 @@
 use crate::Puzzle5dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 #[allow(unused_imports)]

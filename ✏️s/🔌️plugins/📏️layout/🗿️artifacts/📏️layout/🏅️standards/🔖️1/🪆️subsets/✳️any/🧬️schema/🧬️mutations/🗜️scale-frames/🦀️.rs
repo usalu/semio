@@ -41,12 +41,7 @@ impl ScaleFrames {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ScaleFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> + From<crate::resize_frame::ResizeFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "frames", kind: "scale-frames", record: "ScaledFrames" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-        diff_scale_frames(self, base)
-    }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        inverse_scale_frames(self, base)
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((sx_en, sx_de), (sy_en, sy_de)) = (layout_label_number(self.sx), layout_label_number(self.sy));
         let (en, de) = layout_label_frames(self.targets.len());
@@ -54,6 +49,15 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ScaleFrames where Op: protocol::Mu
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for ScaleFrames where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> + From<crate::resize_frame::ResizeFrame> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_scale_frames(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        inverse_scale_frames(self, base)
     }
 }
 //#endregion 🗜️ScaleFrames

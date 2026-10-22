@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 use crate::standards::v1::subsets::any::schema::diff::*;
-use protocol::DiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
 
 fn curated(delta: CurationCuratedDelta) -> CurationDiff {
     CurationDiff { curated: Some(delta), ..Default::default() }
@@ -39,9 +39,9 @@ fn parent_diff_preserves_child_identity_and_inverts_curated_lanes() {
     delta.absorb(CurationCuratedDelta::insertion(1, item("slab-1", 1)));
     let diff = curated(delta);
     assert!(diff.catalog.is_none() && diff.stock_extra.is_none());
-    let applied = protocol::apply_diff(&diff, &base).expect("parent diff");
+    let applied = protocol::apply_diff_cold(&diff, &base).expect("parent diff");
     assert_eq!(applied, next);
-    assert_eq!(protocol::apply_diff(&diff.inverse(&base), &applied).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base), &applied).expect("inverse"), base);
     let native = semio_framework_pack_json::to_json_string(&applied.curated);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&native).expect("independent JSON witness"), vector["final"]);
 }
@@ -57,7 +57,7 @@ fn parent_diff_composition_matches_the_neutral_intermediate_state() {
     second.absorb(CurationCuratedDelta::insertion(0, item("beam-1", 5)));
     second.absorb(CurationCuratedDelta::insertion(1, item("slab-1", 1)));
     composed.absorb(curated(second));
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("composed parent delta"), last);
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("composed parent delta"), last);
     assert!(composed.catalog.is_none() && composed.stock_extra.is_none());
 }
 
@@ -69,17 +69,17 @@ fn positional_curated_delta_inserts_removes_and_moves_at_middle_rows() {
     let diff = |delta: CurationCuratedDelta| CurationDiff { curated: Some(delta), ..Default::default() };
     let base = snapshot(&[("a", 1), ("b", 2), ("c", 3)]);
     let insert = diff(CurationCuratedDelta::insertion(1, item("x", 9)));
-    let inserted = protocol::apply_diff(&insert, &base).expect("valid insertion");
+    let inserted = protocol::apply_diff_cold(&insert, &base).expect("valid insertion");
     assert_eq!(order(&inserted), ["a", "x", "b", "c"]);
     let remove = diff(CurationCuratedDelta::removal(&inserted.curated, 2));
-    let removed = protocol::apply_diff(&remove, &inserted).expect("valid removal");
+    let removed = protocol::apply_diff_cold(&remove, &inserted).expect("valid removal");
     assert_eq!(order(&removed), ["a", "x", "c"]);
     let relocate = diff(CurationCuratedDelta::relocation(&removed.curated, 2, 0));
-    let moved = protocol::apply_diff(&relocate, &removed).expect("valid relocation");
+    let moved = protocol::apply_diff_cold(&relocate, &removed).expect("valid relocation");
     assert_eq!(order(&moved), ["c", "a", "x"]);
     let mut sum = insert;
     sum.absorb(remove);
     sum.absorb(relocate);
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("valid sum"), moved);
-    assert_eq!(protocol::apply_diff(&sum.inverse(&base), &moved).expect("valid inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("valid sum"), moved);
+    assert_eq!(protocol::apply_diff_cold(&sum.inverse(&base), &moved).expect("valid inverse"), base);
 }

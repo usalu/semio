@@ -197,8 +197,31 @@ pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 //#endregion 🔖️DiffAtPath
 
 //#region 🔖️Apply
-impl MutationDiff<XmlSnapshot> for XmlDiff {
-    fn apply(&self, base: &XmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<XmlSnapshot> {
+impl MutationDiff<XmlSnapshot> for XmlDiff {}
+
+impl protocol::ColdMutationDiff<XmlSnapshot> for XmlDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.prolog.is_some() {
+            self.prolog = other.prolog;
+        }
+        if other.epilog.is_some() {
+            self.epilog = other.epilog;
+        }
+        if other.declaration.is_some() {
+            self.declaration = other.declaration;
+        }
+        if other.doctype.is_some() {
+            self.doctype = other.doctype;
+        }
+        self.root = match (self.root.take(), other.root) {
+            (None, b) => b,
+            (a, None) => a,
+            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
+        };
+    }
+
+    fn apply(&self, unpublished: &mut XmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(root) = &self.root {
             validate_xml_node(base.doc.root.as_ref(), root)?;
         }
@@ -219,27 +242,8 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
             next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
         validate_xml_document_boundaries(&next.doc).map_err(|detail| MutationApplyError::new("mutation.apply.invalid-document-boundary", detail))?;
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.prolog.is_some() {
-            self.prolog = other.prolog;
-        }
-        if other.epilog.is_some() {
-            self.epilog = other.epilog;
-        }
-        if other.declaration.is_some() {
-            self.declaration = other.declaration;
-        }
-        if other.doctype.is_some() {
-            self.doctype = other.doctype;
-        }
-        self.root = match (self.root.take(), other.root) {
-            (None, b) => b,
-            (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
-        };
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -416,6 +420,12 @@ fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlN
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<XmlSnapshot> for XmlDiff {
+    fn is_empty(&self) -> bool {
+        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<XmlSnapshot> for XmlDiff {
     fn inverse(&self, base: &XmlSnapshot) -> Self {
         XmlDiff {
             prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
@@ -424,10 +434,6 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 

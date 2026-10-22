@@ -203,5 +203,52 @@
       "accepted": false,
       "id": "underfloor-request-refuses"
     }
+  ],
+  "groupFailures": [
+    {
+      "id": "false-primary",
+      "failure": "false",
+      "effects": 0
+    },
+    {
+      "id": "undefined-primary",
+      "failure": "undefined",
+      "effects": 0
+    },
+    {
+      "id": "cancel-primary",
+      "failure": "cancel",
+      "effects": 0
+    },
+    {
+      "id": "permission-primary",
+      "failure": "permission",
+      "effects": 0
+    },
+    {
+      "id": "identity-primary",
+      "failure": "identity",
+      "effects": 0
+    },
+    {
+      "id": "busy-before-effect",
+      "failure": "busy",
+      "effects": 0
+    },
+    {
+      "id": "busy-after-effect",
+      "failure": "busy",
+      "effects": 1
+    },
+    {
+      "id": "close-primary",
+      "failure": "close",
+      "effects": 1
+    },
+    {
+      "id": "release-primary",
+      "failure": "release",
+      "effects": 1
+    }
   ]
 }

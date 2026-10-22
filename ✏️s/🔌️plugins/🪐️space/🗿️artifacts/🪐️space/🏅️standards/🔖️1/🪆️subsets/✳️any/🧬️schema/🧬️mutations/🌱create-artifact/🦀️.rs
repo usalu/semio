@@ -31,6 +31,15 @@ pub fn create_artifact_at(artifact: SpaceArtifactRow, index: u32) -> SSpaceMutat
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "artifact", kind: "create-artifact", record: "CreatedArtifact" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create artifact \"{}\"", self.artifact.id), &format!("Artefakt \"{}\" erstellen", self.artifact.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.artifact.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +49,5 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create artifact \"{}\"", self.artifact.id), &format!("Artefakt \"{}\" erstellen", self.artifact.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.artifact.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

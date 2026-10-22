@@ -1,0 +1,7 @@
+#!/bin/bash
+# copies the authored files of ov2 into the staged set and rebuilds the verification overlay ov3 from base + perf-slo + staged apply
+C="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN"; S="$C/boot-fast-tools/staged/files"; cd /private/tmp/boot-fast/ov2; B="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"
+cp "$B/🚪️door/README.md" "$S/door-readme.md"; cp "$B/🚪️door/🟦️.ts" "$S/door.ts"; cp "$B/🚪️door/📜️script.ts" "$S/door-script.ts"; cp "$B/🚪️door/🔣️.json" "$S/door-policy.json"; cp "$B/🚪️door/🧬️schema/🔣️.json" "$S/door-schema.json"; cp "$B/🚪️door/🧪️tests/🟦️.ts" "$S/door-test.ts"; cp "$B/🚪️door/🧪️tests/🧫️fixtures/🔣️.json" "$S/door-fixture.json"; cp "$B/🚪️door/🧪️tests/🚦️startup/🟦️.ts" "$S/startup-law.ts"; cp "$B/🚪️door/🧪️tests/🚦️startup/🔣️.json" "$S/startup-law.json"; cp "$B/🧭️invocation/🧪️tests/🧊️taxonomy/🟦️.ts" "$S/taxonomy-test.ts"; cp "$B/📥️caller/🧪️tests/🌐️globals/🟦️.ts" "$S/caller-globals-test.ts"
+cd /private/tmp/boot-fast; rm -rf ov3; cp -cR base ov3; ln -sfn /Users/ueli/Documents/semio/node_modules ov3/node_modules
+python3 "$C/perf-slo-tools/apply.py" --root /private/tmp/boot-fast/ov3 --group core --write >/dev/null 2>&1; python3 "$C/perf-slo-tools/apply.py" --root /private/tmp/boot-fast/ov3 --group help --write >/dev/null 2>&1
+python3 "$C/boot-fast-tools/staged/apply.py" --root /private/tmp/boot-fast/ov3 --write | tail -2

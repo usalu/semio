@@ -102,8 +102,8 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       }
       const changed = retirements.length > 0 || canonicalJson(preOutputs) !== canonicalJson(outputs) || preview.manifest.staleRemovals.length > 0;
       if (inputMutation || outputMutation || changed) {
-        const command = ["bun", "repo", "run", contract.target!] as const;
-        const verifyCommand = contract.checkTarget ? (["bun", "repo", "run", contract.checkTarget] as const) : undefined;
+        const command = ["repo", "run", contract.target!] as const;
+        const verifyCommand = contract.checkTarget ? (["repo", "run", contract.checkTarget] as const) : undefined;
         const provisional = { contractId: id, cwd: contract.ownerPath!, command, verifyCommand, outputRoots: roots, inputs: freshInputs, preOutputs, outputs, preview: preview.manifest, previewManifestDigest: preview.digest, staleRemovals: preview.manifest.staleRemovals };
         regenerations.push({ id: sha256(canonicalJson(provisional)).slice(0, 24), ...provisional });
       }

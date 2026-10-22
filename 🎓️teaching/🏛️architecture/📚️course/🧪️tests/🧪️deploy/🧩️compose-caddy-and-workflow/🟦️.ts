@@ -62,10 +62,10 @@ export function registerComposeCaddyAndWorkflowTests(): void {
     for (const name of names) {
       const steps = workflow.jobs[name]!.steps as (Job["steps"][number] & { id?: string; shell?: string })[];
       const setup = steps.findIndex(step => step.id === contract.stepId);
-      const bun = steps.findIndex(step => step.uses?.startsWith("oven-sh/setup-bun@"));
+      const launcher = steps.findIndex(step => step.uses === "./.github/actions/repo-launcher");
       expect(setup, `${name} has no native frontend provisioning`).toBeGreaterThanOrEqual(0);
-      expect(bun, `${name} has no pinned recovery runtime`).toBeGreaterThanOrEqual(0);
-      expect(setup).toBeGreaterThan(bun);
+      expect(launcher, `${name} has no repo launcher provisioning`).toBeGreaterThanOrEqual(0);
+      expect(setup).toBeGreaterThan(launcher);
       expect(steps[setup]!.shell).toBe(contract.shell);
       expect(steps[setup]!.run?.trim().split("\n").map(line => line.trimEnd())).toEqual(contract.recipe);
       expect(steps.slice(0, setup).filter(step => step.run)).toEqual([]);
@@ -100,7 +100,7 @@ export function registerComposeCaddyAndWorkflowTests(): void {
     for(const job of[siteJob,proctor])expect(job["runs-on"]).toBe(readiness.release.consumerRunner);
     for (const job of [configuration, check, siteJob, pages, proctor]) {
       expect(job["timeout-minutes"]).toBeGreaterThan(0);
-      for (const step of job.steps) if (step.uses) expect(step.uses).toMatch(/^[\w-]+\/[\w-]+@[0-9a-f]{40}$/u);
+      for (const step of job.steps) if (step.uses) expect(step.uses).toMatch(/^(?:\.\/\.github\/actions\/repo-launcher|[\w-]+\/[\w-]+@[0-9a-f]{40})$/u);
       for (const step of job.steps) if (step.uses?.startsWith("actions/checkout@")) expect(step.with).toEqual({ "persist-credentials": false });
     }
     expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(readiness.release.siteCommands);

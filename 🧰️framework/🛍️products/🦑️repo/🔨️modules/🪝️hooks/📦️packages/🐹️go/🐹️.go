@@ -84,7 +84,7 @@ func (c HookContext) AtSecond(second string) HookContext {
 	return c
 }
 
-// 🧰️WithTool sets the tool name and raw argument string the IDE reported.
+// 🧰️WithTool sets the tool name and raw argument string the agent client reported.
 func (c HookContext) WithTool(toolName string, toolArgs string) HookContext {
 	c.ToolName = toolName
 	c.ToolArgs = toolArgs
@@ -97,7 +97,7 @@ func (c HookContext) WithParent(parentInfo string) HookContext {
 	return c
 }
 
-// 📨️WithInput attaches the native payload the IDE wrote to stdin.
+// 📨️WithInput attaches the native payload the agent client wrote to stdin.
 func (c HookContext) WithInput(input json.RawMessage) HookContext {
 	c.Input = input
 	return c
@@ -147,7 +147,9 @@ func (InertEnvironment) FormatFile(path string) {}
 type SystemEnvironment struct{}
 
 // 🔖️CurrentCheckpoint answers the version control checkpoint the working tree is on.
-func (SystemEnvironment) CurrentCheckpoint() string { return workspace.GetGitCheckpoint() }
+func (SystemEnvironment) CurrentCheckpoint() string {
+	return workspace.GetGitCheckpoint(workspace.GetRootDir())
+}
 
 // 📝️CheckpointMessage answers the checkpoint message being prepared under repoRoot.
 func (SystemEnvironment) CheckpointMessage(repoRoot string) string {

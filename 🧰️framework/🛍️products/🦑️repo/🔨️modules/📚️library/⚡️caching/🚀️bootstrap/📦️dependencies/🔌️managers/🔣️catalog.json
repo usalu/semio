@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "adapters": {
+    "bun": "🍞️bun",
+    "npm": "📦️npm",
+    "cargo": "🦀️cargo",
+    "go": "🐹️go",
+    "uv": "🐍️uv",
+    "dotnet": "🔷️dotnet"
+  }
+}

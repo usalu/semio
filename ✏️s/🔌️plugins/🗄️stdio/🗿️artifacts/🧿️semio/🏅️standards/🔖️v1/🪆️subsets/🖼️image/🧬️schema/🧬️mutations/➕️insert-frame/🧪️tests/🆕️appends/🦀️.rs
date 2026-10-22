@@ -9,7 +9,7 @@ use crate::schema::diff::SemioImageDiff;
 use crate::schema::mutations::remove_frame;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/⬅️before/🔣️.json"));
@@ -28,14 +28,14 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The second frame lands at index 1, keeping its own delay and pixel buffer.
 #[semio_framework_async_macros::async_test]
 async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
     let base = before();
-    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("insert-frame applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(leaf_outcome().diff(), &base).expect("insert-frame applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames.len(), base.frames.len() + 1, "insert-frame lengthens the frame sequence by exactly one");
     assert_eq!(produced.frames[0], base.frames[0], "the pre-existing frame must be byte-identical and keep index 0");
@@ -52,7 +52,7 @@ async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
     let base = before();
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
     let mut current = before();
     current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
@@ -108,6 +108,6 @@ async fn committed_diff_is_canonical_and_touches_only_frames() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-frame diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed insert-frame diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: committed diff did not carry before to after");
 }

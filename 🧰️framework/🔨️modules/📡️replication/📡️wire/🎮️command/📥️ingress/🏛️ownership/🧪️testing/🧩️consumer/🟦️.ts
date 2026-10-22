@@ -3,6 +3,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { parse as parseToml } from "@iarna/toml";
 import Parser from "web-tree-sitter";
+import { runtimeParseTomlV1 } from "../../../../../../../⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../⚙️runtime/🚀️process/🟦️.ts";
 
 type Names = { file: string; names: string[] };
 export type ConsumerProbe =
@@ -16,13 +18,13 @@ export type ConsumerFixture = { version: 1; owner: string; cases: ConsumerProbe[
 export async function inspectCommandIngressConsumer(repository: string, fixture: ConsumerFixture, read: (path: string) => string = path => readFileSync(join(repository, path), "utf8")): Promise<{ owner: string; cases: number }> {
  await Parser.init();
  const parser = new Parser(), trees: Parser.Tree[] = [];
- parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", repository)), "out/tree-sitter-rust.wasm")));
+ parser.setLanguage(await Parser.Language.load(join(dirname(runtimeResolveV1("tree-sitter-wasms/package.json", repository)), "out/tree-sitter-rust.wasm")));
  const nodes = (node: Parser.SyntaxNode): Parser.SyntaxNode[] => [node, ...node.children.flatMap(nodes)], ast = (path: string, complete: boolean) => { const tree = parser.parse(read(path)); trees.push(tree); if (complete) assert.equal(tree.rootNode.hasError(), false, `Rust parser refused ${path}`); return tree.rootNode; }, publicNode = (node: Parser.SyntaxNode) => node.namedChildren.some(child => child.type === "visibility_modifier" && child.text === "pub");
  const tokens = (node: Parser.SyntaxNode): string[] => ["line_comment", "block_comment"].includes(node.type) ? [] : node.children.length ? node.children.flatMap(tokens) : [node.text];
  try {
   for (const probe of fixture.cases) {
    if (probe.kind === "normal-dependency") {
-    const source = read(probe.file), first = parseToml(source), second = Bun.TOML.parse(source); assert.deepEqual(first, second);
+    const source = read(probe.file), first = parseToml(source), second = runtimeParseTomlV1(source); assert.deepEqual(first, second);
     const dependencies = first.dependencies as Record<string, { package?: string; path?: string }>, edge = dependencies[probe.key]; assert.ok(edge); assert.equal(edge.package, probe.package); assert.equal(typeof edge.path, "string"); assert.equal(relative(repository, resolve(repository, dirname(probe.file), edge.path!, "Cargo.toml")).split("\\").join("/"), probe.manifest);
     continue;
    }

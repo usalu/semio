@@ -17,20 +17,9 @@ pub struct ShootingConfigDiff {
     pub camera: Option<ShootingCamera>,
 }
 
-impl MutationDiff<ShootingConfig> for ShootingConfigDiff {
-    fn apply(&self, base: &ShootingConfig, _capability: ApplyCapability) -> MutationApplyResult<ShootingConfig> {
-        let mut next = base.clone();
-        macro_rules! write {
-            ($($field:ident),+) => {
-                $(if let Some(value) = &self.$field {
-                    next.$field = value.clone();
-                })+
-            };
-        }
-        write!(default_shot_format, default_shot_shape, default_asset_format, selected_shot_ids, center_model, fit_revision, camera);
-        Ok(next)
-    }
+impl MutationDiff<ShootingConfig> for ShootingConfigDiff {}
 
+impl protocol::ColdMutationDiff<ShootingConfig> for ShootingConfigDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($($field:ident),+) => {
@@ -41,9 +30,30 @@ impl MutationDiff<ShootingConfig> for ShootingConfigDiff {
         }
         take!(default_shot_format, default_shot_shape, default_asset_format, selected_shot_ids, center_model, fit_revision, camera);
     }
+
+    fn apply(&self, unpublished: &mut ShootingConfig, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        macro_rules! write {
+            ($($field:ident),+) => {
+                $(if let Some(value) = &self.$field {
+                    next.$field = value.clone();
+                })+
+            };
+        }
+        write!(default_shot_format, default_shot_shape, default_asset_format, selected_shot_ids, center_model, fit_revision, camera);
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<ShootingConfig> for ShootingConfigDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ShootingConfig> for ShootingConfigDiff {
     fn inverse(&self, base: &ShootingConfig) -> Self {
         Self {
             default_shot_format: self.default_shot_format.as_ref().map(|_| base.default_shot_format.clone()),
@@ -54,9 +64,5 @@ impl DiffAlgebra<ShootingConfig> for ShootingConfigDiff {
             fit_revision: self.fit_revision.as_ref().map(|_| base.fit_revision),
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }

@@ -1,6 +1,6 @@
 //! 🗂️ Composable persisted collection artifact.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;

@@ -65,8 +65,8 @@ export function nativeStorageMountedAtV1(directory:string):boolean{return native
 /** 🌍️ Tells whether any declared backend with kernel-mounted volumes exists on this host, whatever is selected. */
 export function nativeStorageHostMountsVolumesV1(platform:string=nativeStorageSelectionV1().platform!):boolean{return nativeStorageBackendsV1.some(row=>row.platforms.includes(platform)&&row.capabilities.includes("mounted-volume"));}
 
-/** 🔎️ Finds the backend whose backing file lies beside a mount root or directory, the selected one when none does. */
-export function nativeStorageBackendOfDirectoryV1(directory:string):NativeStorageBackendDeclarationV1{return nativeStorageBackendsV1.find(row=>existsSync(join(directory,row.backingFilename)))??selectedNativeStorageDeclarationV1();}
+/** 🔎️ Finds the backend whose backing file lies in a directory, else the one the given selection (default: the effective one) chooses. */
+export function nativeStorageBackendOfDirectoryV1(directory:string,selection:NativeStorageSelectionV1={}):NativeStorageBackendDeclarationV1{return nativeStorageBackendsV1.find(row=>existsSync(join(directory,row.backingFilename)))??selectedNativeStorageDeclarationV1(selection);}
 
 const geometry=(id:string)=>{declaration(id);const value=geometries.get(id);if(!value)throw Error(refusals.unbound+": "+id);return value;};
 const ofImage=(image:string)=>nativeStorageBackendsV1.find(row=>row.backingFilename===image.split(/[\\/]/u).pop())??selectedNativeStorageDeclarationV1();

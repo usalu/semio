@@ -77,19 +77,26 @@ impl store::ConfigRecord for VcsDemoConfig {}
 #[value(rename_all = "camelCase", default)]
 pub struct VcsDemoConfigDiff {}
 
-impl protocol::MutationDiff<VcsDemoConfig> for VcsDemoConfigDiff {
-    fn apply(&self, base: &VcsDemoConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<VcsDemoConfig> {
-        Ok(base.clone())
-    }
+impl protocol::MutationDiff<VcsDemoConfig> for VcsDemoConfigDiff {}
+
+impl protocol::ColdMutationDiff<VcsDemoConfig> for VcsDemoConfigDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut VcsDemoConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
-    fn inverse(&self, _base: &VcsDemoConfig) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl protocol::ColdDiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
+    fn inverse(&self, _base: &VcsDemoConfig) -> Self {
+        Self {}
     }
 }
 //#endregion 🔖️Config
@@ -187,11 +194,13 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
             Self::Noop => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<VcsDemoConfig> for VcsDemoConfigMutation {
+    type ReferenceDiff = VcsDemoConfigDiff;
     fn diff(&self, _base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfigDiff> {
         protocol::MutationOutcome::empty().warning("mutation.no-op", "The VCS demo config carries no field.")
     }
-
     fn inverse(&self, _base: &VcsDemoConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::Noop])
     }

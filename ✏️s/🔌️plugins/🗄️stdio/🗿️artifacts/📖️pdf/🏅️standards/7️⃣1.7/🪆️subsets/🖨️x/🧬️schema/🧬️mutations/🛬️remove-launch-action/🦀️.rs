@@ -21,23 +21,27 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "launch-action", kind: "remove-launch-action", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let rows = support::action_with(base, "Launch", "F", &self.target).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::action_with(base, "Launch", "F", &self.target).map(|id| Op::from(InsertLaunchAction { target: self.target.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.target.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveLaunchAction
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveLaunchAction> + From<crate::standards::v1_7::subsets::x::schema::mutations::insert_launch_action::InsertLaunchAction>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let rows = support::action_with(base, "Launch", "F", &self.target).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::action_with(base, "Launch", "F", &self.target).map(|id| Op::from(InsertLaunchAction { target: self.target.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

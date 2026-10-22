@@ -117,7 +117,7 @@
         "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test source",
+          "command": "repo ./📜️script.ts test source",
           "forwardAllArgs": true
         },
         "outputs": []
@@ -127,7 +127,7 @@
         "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test",
+          "command": "repo ./📜️script.ts test",
           "forwardAllArgs": true
         },
         "outputs": []
@@ -137,7 +137,7 @@
         "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts check",
+          "command": "repo ./📜️script.ts check",
           "forwardAllArgs": true
         },
         "outputs": []
@@ -147,7 +147,7 @@
         "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts check-wasm",
+          "command": "repo ./📜️script.ts check-wasm",
           "forwardAllArgs": true
         },
         "outputs": []

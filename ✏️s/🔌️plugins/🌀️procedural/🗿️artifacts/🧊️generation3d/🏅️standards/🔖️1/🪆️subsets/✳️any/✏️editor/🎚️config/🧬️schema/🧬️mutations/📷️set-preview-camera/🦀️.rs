@@ -15,20 +15,6 @@ pub struct SetPreviewCamera {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetPreviewCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
-        if base.preview_camera == self.camera {
-            return protocol::MutationOutcome::new(Generation3dConfigPatch::default()).warning("mutation.no-op", "Preview camera is already in the requested state.");
-        }
-        protocol::MutationOutcome::new(Generation3dConfigPatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { camera: base.preview_camera.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
     }
@@ -36,4 +22,19 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     fn target(&self) -> Vec<String> {
         vec!["previewCamera".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dConfig, Generation3dConfigMutation> for SetPreviewCamera {
+    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+        if base.preview_camera == self.camera {
+            return protocol::MutationOutcome::new(Generation3dConfigPatch::default()).warning("mutation.no-op", "Preview camera is already in the requested state.");
+        }
+        protocol::MutationOutcome::new(Generation3dConfigPatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { camera: base.preview_camera.clone() }.into()]
+    
+    })())
+}
 }

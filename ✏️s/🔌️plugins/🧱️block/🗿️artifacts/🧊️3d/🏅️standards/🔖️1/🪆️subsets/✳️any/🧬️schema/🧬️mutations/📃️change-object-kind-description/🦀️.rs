@@ -24,6 +24,12 @@ pub fn change_object_kind_description<Op: From<crate::change_object_kind_descrip
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindDescription where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_description::ChangeObjectKindDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object-kind", kind: "change-object-kind-description", record: "ChangedObjectKindDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change object kind description", "Objektartbeschreibung ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for ChangeObjectKindDescription where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_description::ChangeObjectKindDescription> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::change_object_kind_description::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindDescrip
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change object kind description", "Objektartbeschreibung ändern")
-    }
 }
 //#endregion 🔖️Mutation
 

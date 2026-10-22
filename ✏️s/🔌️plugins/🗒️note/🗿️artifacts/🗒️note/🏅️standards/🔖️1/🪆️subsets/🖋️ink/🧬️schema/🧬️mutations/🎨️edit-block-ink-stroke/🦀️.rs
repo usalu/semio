@@ -36,6 +36,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-ink-stroke", kind: "edit-block-ink-stroke", record: "EditedBlockInkStroke" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit block \"{}\" ink stroke", self.id), &format!("Tintenstrich von Block \"{}\" bearbeiten", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for EditBlockInkStroke
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<EditBlockInkStroke>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -45,11 +57,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit block \"{}\" ink stroke", self.id), &format!("Tintenstrich von Block \"{}\" bearbeiten", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

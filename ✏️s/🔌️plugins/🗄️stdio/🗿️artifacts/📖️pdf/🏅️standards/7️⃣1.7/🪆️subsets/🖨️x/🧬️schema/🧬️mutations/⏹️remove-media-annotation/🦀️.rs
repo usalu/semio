@@ -22,23 +22,27 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "media-annotation", kind: "remove-media-annotation", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let rows = support::media_annotation(base, &self.subtype, &self.title).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::media_annotation(base, &self.subtype, &self.title).map(|id| Op::from(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} media annotation", self.subtype), &format!("{} Medienanmerkung entfernen", self.subtype))
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.subtype.clone(), self.title.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveMediaAnnotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveMediaAnnotation> + From<crate::standards::v1_7::subsets::x::schema::mutations::insert_media_annotation::InsertMediaAnnotation>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let rows = support::media_annotation(base, &self.subtype, &self.title).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::media_annotation(base, &self.subtype, &self.title).map(|id| Op::from(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

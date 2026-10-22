@@ -60,10 +60,6 @@
       "packageName": "@semio-tech/flow-core"
     },
     {
-      "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
-      "packageName": "@semio-tech/trinity-jack-lsp"
-    },
-    {
       "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
       "packageName": "@semio-tech/s-cad-geometry-browser"
     },

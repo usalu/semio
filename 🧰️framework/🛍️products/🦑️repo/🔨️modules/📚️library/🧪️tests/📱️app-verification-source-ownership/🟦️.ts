@@ -133,9 +133,9 @@ describe("app verification source ownership", () => {
   test("registers the portable gate through package and Nx", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
-    expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test app-verification-source-ownership");
+    expect(project.targets[fixture.registration.target]?.options?.command).toBe("repo ./📜️script.ts test app-verification-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "app-verification-source-ownership"');
   });

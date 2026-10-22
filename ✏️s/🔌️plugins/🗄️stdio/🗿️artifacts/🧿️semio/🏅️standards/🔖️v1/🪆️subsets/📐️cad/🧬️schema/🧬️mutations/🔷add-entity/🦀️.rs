@@ -27,7 +27,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entity", kind: "add-entity", record: "AddEntity" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioCadSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add entity", "Entität hinzufügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioCadSnapshot, Op> for AddEntity
+where
+    Op: protocol::ColdMutation<SemioCadSnapshot, ReferenceDiff = crate::schema::diff::SemioCadDiff> + From<AddEntity> + From<crate::schema::mutations::remove_entity::RemoveEntity>,
+{
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioCadSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -36,12 +48,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add entity", "Entität hinzufügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

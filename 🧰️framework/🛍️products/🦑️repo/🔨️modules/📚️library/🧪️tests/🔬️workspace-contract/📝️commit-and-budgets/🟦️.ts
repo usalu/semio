@@ -262,7 +262,7 @@ describe("commit", () => {
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "fixture"], { cwd: root });
       const head = fixtureGitHead(root);
-      const msg = buildCommitMessage(root, contributor, bundles, head, head, { countRepoByLanguage: () => ({ TypeScript: 1000 }) });
+      const msg = buildCommitMessage(root, contributor, bundles, head, head, { countRepoUlocByLanguage: () => ({ TypeScript: 1000 }), countRepoSizeByLanguage: () => ({}) });
       const lines = msg.trimEnd().split("\n");
       expect(lines[0]).toMatch(/🔀️$/);
       expect(lines.some((l) => l.includes("📊️metric"))).toBe(true);

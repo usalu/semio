@@ -22,7 +22,7 @@ fn an_insertion_lands_each_object_at_the_next_free_number_and_the_end_of_the_lis
     let first = insertion.push(PdfObject::Int(3));
     let second = insertion.push(PdfObject::Int(4));
     assert_eq!((first, second), (id(3), id(4)));
-    let next = protocol::apply_diff(&insertion.rows(), &base).expect("the insertion applies");
+    let next = protocol::apply_diff_cold(&insertion.rows(), &base).expect("the insertion applies");
     assert_eq!(next.objects.iter().map(|object| object.id).collect::<Vec<_>>(), vec![id(1), id(2), id(3), id(4)]);
     assert_eq!(Insertion::after(&base, &[]).rows(), PdfDiff::default(), "nothing pushed is no change");
 }
@@ -58,7 +58,7 @@ fn an_insertion_honours_the_placements_it_is_given_in_final_position_order() {
     let base = document_of(vec![PdfObject::Int(1), PdfObject::Int(2)]);
     let mut insertion = Insertion::after(&base, &[placed(4, 2), placed(3, 1)]);
     assert_eq!((insertion.push(PdfObject::Int(4)), insertion.push(PdfObject::Int(3))), (id(4), id(3)));
-    let next = protocol::apply_diff(&insertion.rows(), &base).expect("the insertion applies");
+    let next = protocol::apply_diff_cold(&insertion.rows(), &base).expect("the insertion applies");
     assert_eq!(next.objects.iter().map(|object| object.id.num).collect::<Vec<_>>(), vec![1, 3, 4, 2]);
 }
 

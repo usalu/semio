@@ -1,0 +1,265 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "a unit directory directly below the units directory",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "a unit named like a parent is still a child",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "release",
+    "directory": "/owned/b/r/units/..sibling",
+    "temporary": "/owned/b/r/units/..sibling.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "a dotted unit name",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u.nit",
+    "temporary": "/owned/b/p/units/u.nit.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "the units directory itself is not a unit",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units",
+    "temporary": "/owned/b/p/units.tmp",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "the parent of the units directory is not a unit",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p",
+    "temporary": "/owned/b/p.tmp",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "a sibling of the units directory is not a unit",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/other/u",
+    "temporary": "/owned/b/p/other/u.tmp",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "the other mode's tree is not this mode's",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/r/units/u",
+    "temporary": "/owned/b/r/units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "a directory that only normalizes into the units directory is accepted",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/x/../units/u",
+    "temporary": "/owned/b/p/x/../units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "a temporary directory that is the unit itself is refused",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "a temporary directory beside another unit is refused",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/v.tmp",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "a temporary suffix with a different case is refused",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u.TMP",
+    "platform": "posix"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "windows ignores the case of the root",
+   "request": {
+    "version": 1,
+    "root": "C:\\owned",
+    "mode": "prototype",
+    "directory": "C:\\OWNED\\b\\p\\units\\u",
+    "temporary": "C:\\OWNED\\b\\p\\units\\u.tmp",
+    "platform": "win32"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "windows accepts forward slashes",
+   "request": {
+    "version": 1,
+    "root": "C:\\owned",
+    "mode": "release",
+    "directory": "C:/owned/b/r/units/u",
+    "temporary": "C:/owned/b/r/units/u.tmp",
+    "platform": "win32"
+   },
+   "expected": true,
+   "error": ""
+  },
+  {
+   "name": "windows on another drive is refused",
+   "request": {
+    "version": 1,
+    "root": "C:\\owned",
+    "mode": "prototype",
+    "directory": "D:\\owned\\b\\p\\units\\u",
+    "temporary": "D:\\owned\\b\\p\\units\\u.tmp",
+    "platform": "win32"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "windows nested units are refused",
+   "request": {
+    "version": 1,
+    "root": "C:\\owned",
+    "mode": "prototype",
+    "directory": "C:\\owned\\b\\p\\units\\u\\n",
+    "temporary": "C:\\owned\\b\\p\\units\\u\\n.tmp",
+    "platform": "win32"
+   },
+   "expected": false,
+   "error": ""
+  },
+  {
+   "name": "a relative root cannot make a layout",
+   "request": {
+    "version": 1,
+    "root": "owned",
+    "mode": "prototype",
+    "directory": "owned/b/p/units/u",
+    "temporary": "owned/b/p/units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": "Canonical compiler layout root and policy required"
+  },
+  {
+   "name": "another request version is not closed",
+   "request": {
+    "version": 2,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": "Closed funded compiler workspace path required"
+  },
+  {
+   "name": "an unknown platform is not closed",
+   "request": {
+    "version": 1,
+    "root": "C:\\owned",
+    "mode": "prototype",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u.tmp",
+    "platform": "darwin"
+   },
+   "expected": true,
+   "error": "Closed funded compiler workspace path required"
+  },
+  {
+   "name": "an empty directory is not closed",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "prototype",
+    "directory": "",
+    "temporary": ".tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": "Closed funded compiler workspace path required"
+  },
+  {
+   "name": "an unknown mode is not closed",
+   "request": {
+    "version": 1,
+    "root": "/owned",
+    "mode": "debug",
+    "directory": "/owned/b/p/units/u",
+    "temporary": "/owned/b/p/units/u.tmp",
+    "platform": "posix"
+   },
+   "expected": true,
+   "error": "Closed funded compiler workspace path required"
+  }
+ ]
+}

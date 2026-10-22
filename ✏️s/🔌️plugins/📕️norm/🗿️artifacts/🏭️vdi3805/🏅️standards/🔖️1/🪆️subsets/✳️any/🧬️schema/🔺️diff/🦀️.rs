@@ -613,42 +613,9 @@ pub struct Vdi3805Diff {
     pub limits: Option<Vdi3805LimitsPatch>,
 }
 
-impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
-    fn apply(&self, base: &Vdi3805Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
-        let mut next = base.clone();
-        if let Some(patch) = &self.manufacturer_file {
-            patch.apply_to_row(&mut next.catalog.file).map_err(|error| error.under(["manufacturer_file"]))?;
-        }
-        if let Some(rows) = &self.products {
-            next.catalog.products = rows.commit_onto(&base.catalog.products, capability).map_err(|error| error.under(["products"]))?;
-        }
-        if let Some(value) = &self.catalog_extensions {
-            next.catalog.extensions = value.clone();
-        }
-        if let Some(rows) = &self.edition_profile {
-            next.edition_profile = rows.apply_rows(&base.edition_profile).map_err(|error| error.under(["edition_profile"]))?;
-        }
-        if let Some(value) = &self.correction_as_of {
-            next.correction_as_of = value.clone();
-        }
-        if let Some(value) = &self.strict_mode {
-            next.strict_mode = value.clone();
-        }
-        if let Some(rows) = &self.geometry {
-            next.geometry = rows.apply_rows(&base.geometry, capability).map_err(|error| error.under(["geometry"]))?;
-        }
-        if let Some(rows) = &self.curves {
-            next.curves = rows.apply_rows(&base.curves).map_err(|error| error.under(["curves"]))?;
-        }
-        if let Some(patch) = &self.limits {
-            patch.apply_to_row(&mut next.limits).map_err(|error| error.under(["limits"]))?;
-        }
-        if self.products.is_some() {
-            next.index = semio_s_artifact_norm_vdi3805_model::CatalogIndex::from_catalog(&next.catalog);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {}
 
+impl protocol::ColdMutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
     fn absorb(&mut self, other: Self) {
         if let Some(theirs) = other.manufacturer_file {
             match self.manufacturer_file.as_mut() {
@@ -700,9 +667,52 @@ impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             }
         }
     }
+
+    fn apply(&self, unpublished: &mut Vdi3805Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(patch) = &self.manufacturer_file {
+            patch.apply_to_row(&mut next.catalog.file).map_err(|error| error.under(["manufacturer_file"]))?;
+        }
+        if let Some(rows) = &self.products {
+            next.catalog.products = rows.commit_onto(&base.catalog.products, capability).map_err(|error| error.under(["products"]))?;
+        }
+        if let Some(value) = &self.catalog_extensions {
+            next.catalog.extensions = value.clone();
+        }
+        if let Some(rows) = &self.edition_profile {
+            next.edition_profile = rows.apply_rows(&base.edition_profile).map_err(|error| error.under(["edition_profile"]))?;
+        }
+        if let Some(value) = &self.correction_as_of {
+            next.correction_as_of = value.clone();
+        }
+        if let Some(value) = &self.strict_mode {
+            next.strict_mode = value.clone();
+        }
+        if let Some(rows) = &self.geometry {
+            next.geometry = rows.apply_rows(&base.geometry, capability).map_err(|error| error.under(["geometry"]))?;
+        }
+        if let Some(rows) = &self.curves {
+            next.curves = rows.apply_rows(&base.curves).map_err(|error| error.under(["curves"]))?;
+        }
+        if let Some(patch) = &self.limits {
+            patch.apply_to_row(&mut next.limits).map_err(|error| error.under(["limits"]))?;
+        }
+        if self.products.is_some() {
+            next.index = semio_s_artifact_norm_vdi3805_model::CatalogIndex::from_catalog(&next.catalog);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
+    fn is_empty(&self) -> bool {
+        self.manufacturer_file.is_none() && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.catalog_extensions.is_none() && self.edition_profile.as_ref().map_or(true, |rows| rows.is_empty()) && self.correction_as_of.is_none() && self.strict_mode.is_none() && self.geometry.as_ref().map_or(true, |rows| rows.is_empty()) && self.curves.as_ref().map_or(true, |rows| rows.is_empty()) && self.limits.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
     fn inverse(&self, base: &Vdi3805Snapshot) -> Self {
         Self {
             manufacturer_file: self.manufacturer_file.as_ref().map(|patch| patch.inverse_from_row(&base.catalog.file)),
@@ -715,10 +725,6 @@ impl protocol::DiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
             curves: self.curves.as_ref().map(|rows| rows.inverse_rows(&base.curves)).filter(|rows| !rows.is_empty()),
             limits: self.limits.as_ref().map(|patch| patch.inverse_from_row(&base.limits)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.manufacturer_file.is_none() && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.catalog_extensions.is_none() && self.edition_profile.as_ref().map_or(true, |rows| rows.is_empty()) && self.correction_as_of.is_none() && self.strict_mode.is_none() && self.geometry.as_ref().map_or(true, |rows| rows.is_empty()) && self.curves.as_ref().map_or(true, |rows| rows.is_empty()) && self.limits.is_none()
     }
 }
 

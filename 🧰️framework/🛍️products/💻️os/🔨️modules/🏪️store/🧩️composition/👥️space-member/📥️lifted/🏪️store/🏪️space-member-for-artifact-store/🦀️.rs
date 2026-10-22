@@ -1,7 +1,7 @@
 //! 🏪️ Space member for artifact store: the space member implementation of the artifact store over its one item publication, snapshot reads, checkpoints, undo, redo, wire dispatch and pack operations. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_framework_os_store_engine_member_group::ApplyBatchGroup as _;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -20,8 +20,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️BlobStore
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn local_actor_id(&self) -> &ActorId {
         ArtifactStore::local_actor_id(self)
@@ -53,18 +53,6 @@ where
 
     fn one_item_wire_publication_supported(&self) -> bool {
         self.owners.one_item_wire_preparation_factory.is_some() && self.owners.snapshot_retirement_factory.is_some() && self.owners.mutation_retirement_factory.is_some() && self.wire.backbone.is_none() && !self.owners.owned_disposer_terminal
-    }
-
-    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
-        let Some(factory) = self.owners.one_item_wire_preparation_factory.as_ref().filter(|_| self.one_item_wire_publication_supported()) else {
-            return Err(ArtifactStoreBatchAdmissionRejected { reason: "member requires its exact retained wire preparation and retirement authority".into(), mutations: vec![request.wire] });
-        };
-        if request.wire.schema.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || request.wire.bytes.len() > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
-            return Err(ArtifactStoreBatchAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutations: vec![request.wire] });
-        }
-        let source = ArtifactStoreBatchSourceOf::new(Arc::clone(factory), vec![request.wire], None, self.log.operation_wire);
-        let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source, false, None)?;
-        Ok(Box::new(MemberStoreOneItemPublication { member: Some(SnapshotReadRegistryAliasRetirement::new(self.owners.snapshot_read_leases.clone())), publication, group_history: None, group_displaced: None }))
     }
 
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> {
@@ -106,7 +94,7 @@ where
         }
     }
 
-    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
         let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member publication concrete owner type does not match".to_string())?;
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
             return Err("member publication belongs to a different exact store authority".into());
@@ -114,10 +102,10 @@ where
         if publication.group_history.is_some() || publication.group_displaced.is_some() {
             return Err("group-reserved member candidate requires an atomic group visibility authority".into());
         }
-        self.advance_apply_batch(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant }).map_err(|error| error.to_string())
+        self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant }, receiving).map_err(|error| error.to_string())
     }
 
-    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group preparation concrete owner type does not match".to_string())?;
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
             return Err("member group preparation belongs to a different exact store authority".into());
@@ -146,7 +134,7 @@ where
         if matches!(publication.publication.phase(), ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Fault) {
             return Err("member group preparation is no longer in a prepublication phase".into());
         }
-        match self.advance_apply_batch(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant }).map_err(|error| error.to_string())? {
+        match self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant }, receiving).map_err(|error| error.to_string())? {
             ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint,ownership) => Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint,ownership)),
             ArtifactStoreOneItemAdvance::Progress(_) => Err("member preparation returned an unmeasured publication turn".into()),
             ArtifactStoreOneItemAdvance::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
@@ -164,13 +152,13 @@ where
             publication.publication.group_preparation=Some(semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(visibility,publication.group_history.take(),publication.group_displaced.take()));
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
         }
-        self.stage_apply_batch_group(&mut publication.publication, visibility, grant)
+        self.parts().stage_apply_batch_group(&mut publication.publication, visibility, grant)
     }
 
     fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group adoption concrete owner type does not match".to_string())?;
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) { return Err("member group adoption belongs to a different exact store authority".into()); }
-        self.adopt_apply_batch_group(&mut publication.publication, visibility, grant)
+        self.parts().adopt_apply_batch_group(&mut publication.publication, visibility, grant)
     }
 
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -185,7 +173,7 @@ where
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
         }
         if publication.publication.group_preparation.is_some() {
-            return self.abort_apply_batch_group(&mut publication.publication, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return self.parts().abort_apply_batch_group(&mut publication.publication, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         publication.publication.begin_close();
         if grant.maximum_items == 0 {
@@ -300,34 +288,12 @@ where
         !uncommitted_edit_ids(&self.log.envelope, self.applied_edit_ids()).await.is_empty()
     }
 
-    /// 🏁️ `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
-    /// trait method — Rust prefers inherent methods over trait methods of the same name.
-    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
-        self.dispatch(ArtifactCommand::CommitCheckpoint { message: Some(message), authors }, identity).await?;
-        self.current_checkpoint_id().map(|id| id.to_string()).ok_or(VcsError::NoCheckpoint)
-    }
-
     async fn current_checkpoint_id(&self) -> Option<String> {
         self.current_checkpoint_id().map(|id| id.to_string())
     }
 
     async fn current_alternative_id(&self) -> Option<String> {
         self.envelope().active_alternative_id.clone()
-    }
-
-    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        if !alternative_id.is_empty() {
-            let is_alternative_tip = self.envelope().vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).is_some_and(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id));
-            if is_alternative_tip {
-                return self.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }, identity).await.map(|_| ());
-            }
-        }
-        self.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }, identity).await.map(|_| ())
-    }
-
-    async fn create_alternative(&mut self, name: String, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
-        self.dispatch(ArtifactCommand::CreateAlternative { name }, identity).await?;
-        self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
     /// 🌀️ `edit_is_local`/`envelope` are async; `find_map`'s closure is sync (R10 shape 1), so both
@@ -358,109 +324,8 @@ where
         None
     }
 
-    async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
-
-        let mut candidates = Vec::new();
-        for (document_id, member) in self.members.iter() {
-            if let Some(timestamp) = member.last_local_edit_timestamp().await {
-                candidates.push((timestamp.cmp_key(), document_id.clone()));
-            }
-        }
-        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
-        let document_id = target.ok_or(VcsError::NothingToUndo)?;
-        self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo( identity).await
-    }
-
-    async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
-
-        let mut candidates = Vec::new();
-        for (document_id, member) in self.members.iter() {
-            if let Some(timestamp) = member.last_undone_local_edit_timestamp().await {
-                candidates.push((timestamp.cmp_key(), document_id.clone()));
-            }
-        }
-        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
-        let document_id = target.ok_or(VcsError::NothingToRedo)?;
-        self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo( identity).await
-    }
-
     async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
-    }
-
-    /// 🌀️ `MutationMessage::at_op` is async (📡️replication); `Iterator::map`'s closure is
-    /// sync (R10 shape 1), so it's hoisted into an explicit loop.
-    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
-        let mut running = match self.snapshot() {
-            Ok(snapshot) => snapshot,
-            Err(error) => return vec![semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.to_string())],
-        };
-        let mut all_messages = Vec::new();
-        for (index, op) in ops.iter().enumerate() {
-            let mutation = match <Mutation as OpBinary>::decode_op(op) {
-                Ok(mutation) => mutation,
-                Err(error) => {
-                    all_messages.push(semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.to_string()).at_op(index as u32));
-                    break;
-                }
-            };
-            let (next, messages) = match apply_mutation(&running, &mutation) {
-                Ok(applied) => applied,
-                Err(error) => {
-                    all_messages.push(semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.message).at(error.target).at_op(index as u32));
-                    break;
-                }
-            };
-            for message in messages {
-                all_messages.push(message.at_op(index as u32));
-            }
-            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut running, next));
-        }
-        all_messages
-    }
-
-    async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
-        self.dispatch_binary(cmd_bytes, identity).await
-    }
-
-    /// 🌀️ The unawaited future holds `&mut self`, so `self.merge_policy` cannot be reassigned
-    /// while it's still live (E0506) — awaited immediately instead of deferred, matching the
-    /// original synchronous "restore after dispatch completes" intent.
-    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
-        let local_policy = self.log.merge_policy;
-        self.log.merge_policy = policy;
-        let result = self.dispatch_binary(cmd_bytes, identity).await;
-        self.log.merge_policy = local_policy;
-        result
-    }
-
-    async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
-        Ok(semio_framework_os_spr::encode_envelopes(&self.event_log()?))
-    }
-
-    async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
-        let Some(edit) = self.envelope.vcs.edits.last().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) else { return Ok(Vec::new()) };
-        let document_id = ArtifactId(self.envelope.id.clone());
-        let schema = SchemaId(self.envelope.schema.clone());
-        let op_envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
-        for op_envelope in &op_envelopes {
-            match self.dag.seed_applied(op_envelope.mutation_id.clone()) {
-                Ok(()) => {}
-                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
-                Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
-            }
-        }
-        Ok(semio_framework_os_spr::encode_envelopes(&op_envelopes))
-    }
-
-    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError>  where P: Clone, Mutation: ColdMutation<P> {
-        let envelopes = semio_framework_os_spr::decode_envelopes( envelopes).map_err(|error|  VcsError::Deserialize(error.to_string())
-    )?;
-        let mut reports = Vec::with_capacity(envelopes.len());
-        for envelope in envelopes {
-            reports.push(self.ingest_remote(envelope).await?);
-        }
-        Ok(reports)
     }
 
     async fn tail_group_id(&self) -> Option<String> {
@@ -476,51 +341,6 @@ where
         let edit_id = self.redo_edit_ids().last()?.clone();
         let group_id = self.envelope().vcs.edits.find_near(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.last()).and_then(|meta| meta.group_id.clone());
         Some((edit_id, group_id))
-    }
-
-    async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
-        let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
-        let edit = self.log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-        for meta in edit.mutation_meta.iter_mut() {
-            meta.group_id = Some(group_id.to_string());
-        }
-        self.restamp_applied_tail();
-        Ok(())
-    }
-
-    async fn stamp_tail_origin(&mut self, origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError> {
-        let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
-        let edit = self.log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-        for meta in edit.mutation_meta.iter_mut() {
-            meta.origin = origin.clone();
-        }
-        self.restamp_applied_tail();
-        Ok(())
-    }
-
-    async fn set_owner(&mut self, owner: Option<OwnerRef>) {
-        self.log.envelope.owner = owner;
-    }
-
-    async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-        Ok(self.snapshot()?.encode_pack())
-    }
-
-    async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-        let files = print_document_pack(self.envelope()).await?;
-        Ok(encode_document_pack_bytes(&files.pack, &files.spr).await)
-    }
-
-    async fn merge_persisted_envelope(&mut self, envelope_pack: &[u8]) -> Result<PairMerge, VcsError> {
-        let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
-        self.merge_persisted_pair(&pack, &spr).await
-    }
-
-    async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
-        let envelope = self.envelope();
-        let checkpoint = envelope.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
-        let edit_ids = edit_ids_for_changes(envelope, &checkpoint.change_ids).await;
-        Ok(materialize_document_snapshot(envelope, &edit_ids).await?.encode_pack())
     }
 
     /// 🎯️ Overrides the trait default (`MergePolicy::default()`) now that lane 1-A's real

@@ -19,7 +19,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePhiInfinity where 
         kind: "change-phi-infinity",
         record: "ChangedPhiInfinity",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change final creep coefficient φ∞", "Endkriechzahl φ∞ ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangePhiInfinity where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_phi_infinity::ChangePhiInfinity> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_phi_infinity::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePhiInfinity where 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change final creep coefficient φ∞", "Endkriechzahl φ∞ ändern")
-    }
 }
 
 //#region 🪢️Mounts

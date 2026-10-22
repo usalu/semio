@@ -20,17 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-crop-box", kind: "set-page-crop-box", record: "Set" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_crop_box(self.index, self.crop_box))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.pages.get(self.index).map(|page| Op::from(SetPageCropBox { index: self.index, crop_box: page.crop_box })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} crop box", self.index), &format!("CropBox von Seite {} setzen", self.index))
     }
@@ -38,6 +27,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageCropBox
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageCropBox>,
+{
+    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::diff_set_page_crop_box(self.index, self.crop_box))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.pages.get(self.index).map(|page| Op::from(SetPageCropBox { index: self.index, crop_box: page.crop_box })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

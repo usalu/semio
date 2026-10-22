@@ -21,7 +21,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::diff::NodePath;
 use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioDrawingSnapshot {
@@ -50,11 +50,11 @@ fn fixture() -> SemioDrawingSnapshot {
 /// here (this ticket's binding instruction).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in backwards.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture for {operation:?}");
     forward
@@ -87,7 +87,7 @@ async fn delete_layer_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "missing".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,7 +118,7 @@ async fn move_and_drag_nodes_round_trip() {
     let path_path = NodePath { layer: 0, path: vec![1] };
     let no_op_move = SemioDrawingMutation::MoveNode(move_node::MoveNode { at: path_path, new_origin: SemioPoint2 { x: 1.0, y: 1.0 } });
     assert!(no_op_move.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "Path has no origin field; move must be a no-op");
-    assert_eq!(protocol::apply_diff(no_op_move.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(no_op_move.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 
     let drag = SemioDrawingMutation::DragNodes(drag_nodes::DragNodes { ats: vec![text_path], offset: SemioPoint2 { x: 3.0, y: -2.0 } });
     let _ = round_trip(&base, &drag);
@@ -166,7 +166,7 @@ async fn group_refuses_non_contiguous_indices() {
     let root_path = NodePath { layer: 0, path: vec![] };
     let m = SemioDrawingMutation::GroupNodes(group_nodes::GroupNodes { parent: root_path, indices: vec![0, 2], transform: SemioTransform::identity() });
     assert!(m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -189,7 +189,7 @@ async fn flatten_refuses_a_non_identity_descendant_group() {
     let root_path = NodePath { layer: 0, path: vec![] };
     let m = SemioDrawingMutation::FlattenNode(flatten_node::FlattenNode { at: root_path });
     assert!(m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -219,7 +219,7 @@ async fn replace_fill_and_change_stroke_round_trip() {
 
     let absent_m = SemioDrawingMutation::ChangeStrokeWidth(change_stroke_width::ChangeStrokeWidth { style_name: "missing".into(), new_width: Some(1.0) });
     assert!(absent_m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(absent_m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(absent_m.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]

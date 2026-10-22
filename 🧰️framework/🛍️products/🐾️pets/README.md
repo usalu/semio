@@ -57,21 +57,21 @@ effect with `--pet-shiny-filter`; the quiz host derives the list from badge awar
 
 ## Commands
 
-Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`) and search `pets`
+Start `repo dashboard`, choose **New Task** (`Ctrl+B n`) and search `pets`
 plus the action. Each owner target routes to its `📜️script.ts` through Nx.
 Choose a test level in the command form or pass it after `--` below.
 
 ```bash
-bun run dashboard run @semio-tech/pets:test -- quick
-bun run dashboard run @semio-tech/pets:test -- exhaustive
-bun run dashboard run @semio-tech/pets:typecheck
-bun run dashboard run @semio-tech/pets-rs:test
-bun run dashboard run @semio-tech/pets-react:test
-bun run dashboard run @semio-tech/pets-react:typecheck
-bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready
-bun run dashboard run @semio-tech/repo-test-domain:test-contract -- --owner "🧰️framework/🛍️products/🐾️pets"
-bun run dashboard run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets"
-bun run dashboard run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets" --case "🧬️schema-conformance"
+repo run @semio-tech/pets:test -- quick
+repo run @semio-tech/pets:test -- exhaustive
+repo run @semio-tech/pets:typecheck
+repo run @semio-tech/pets-rs:test
+repo run @semio-tech/pets-react:test
+repo run @semio-tech/pets-react:typecheck
+repo run @semio-tech/pets-react:dev --detach --wait-ready
+repo run @semio-tech/repo-test-domain:test-contract -- --owner "🧰️framework/🛍️products/🐾️pets"
+repo run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets"
+repo run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets" --case "🧬️schema-conformance"
 ```
 
 The gallery's task offers **Open ready address** (`Ctrl+B u`). Its task menu and

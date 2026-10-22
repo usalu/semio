@@ -25,7 +25,7 @@ export function bazelRemoteCacheV1(contract:RemoteCacheContractV1,environment:Re
  return Object.freeze({flags:Object.freeze(flags),environment:Object.freeze(token===undefined?{}:{[contract.auth.tokenEnvironment]:token}),...(helper?{helper}:{}),rendering});
 }
 
-/** 🔌️ Bazel's side of `cache remote status`: it speaks the HTTP cache protocol and proves reachability on the action cache route. */
+/** 🔌️ Bazel's side of `remote-cache status`: it speaks the HTTP cache protocol and proves reachability on the action cache route. */
 export function bazelRemoteCacheToolV1():RemoteCacheToolV1{
  return Object.freeze<RemoteCacheToolV1>({tool:"bazel",protocol:"bazel-http",probePath:"/ac/"+"0".repeat(64),render:(contract,environment)=>bazelRemoteCacheV1(contract,environment,{helperDirectory:"<tmp>"}).rendering});
 }

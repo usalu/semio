@@ -24,7 +24,11 @@
   "gate": {
     "releaseWhileWaiting": true,
     "pollInitialMilliseconds": 20,
-    "pollMaximumMilliseconds": 250
+    "pollMaximumMilliseconds": 250,
+    "admissionPatienceMilliseconds": 5000,
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.2,
+    "claimSweepPressureIntervalMilliseconds": 1000
   },
   "media": [
     {
@@ -33,8 +37,28 @@
   ],
   "classes": [
     {
-      "id": "compiler-capacity",
+      "id": "toolchain",
       "rank": 1,
+      "scope": "checkout",
+      "owner": "build-tools",
+      "title": {
+        "en": "Rust toolchain home, generation and Cargo configuration view, held by readers around a whole build and by provisioners",
+        "de": "Rust-Toolchain-Home, -Generation und Cargo-Konfigurationssicht, gehalten von Lesern um einen ganzen Build und von Bereitstellern"
+      },
+      "match": [
+        {
+          "kind": "prefix",
+          "value": "rustup:"
+        },
+        {
+          "kind": "prefix",
+          "value": "cargo:configuration-view:"
+        }
+      ]
+    },
+    {
+      "id": "compiler-capacity",
+      "rank": 3,
       "scope": "machine",
       "owner": "compiler-capacity",
       "title": {
@@ -84,6 +108,14 @@
         },
         {
           "kind": "prefix",
+          "value": "nx:daemon-startup:"
+        },
+        {
+          "kind": "prefix",
+          "value": "nx:daemon-slot:"
+        },
+        {
+          "kind": "prefix",
           "value": "nx-authorizer-"
         },
         {
@@ -105,10 +137,6 @@
         {
           "kind": "prefix",
           "value": "bun-"
-        },
-        {
-          "kind": "prefix",
-          "value": "rustup:"
         },
         {
           "kind": "exact",
@@ -153,12 +181,16 @@
         {
           "kind": "prefix",
           "value": "[\"semio.cargo."
+        },
+        {
+          "kind": "prefix",
+          "value": "[\"cargo-target-recipe-v1\""
         }
       ]
     },
     {
       "id": "graph",
-      "rank": 3,
+      "rank": 4,
       "scope": "checkout",
       "owner": "graph",
       "title": {
@@ -194,7 +226,7 @@
     },
     {
       "id": "namespace",
-      "rank": 4,
+      "rank": 5,
       "scope": "project",
       "owner": "namespaces",
       "title": {
@@ -246,7 +278,7 @@
     },
     {
       "id": "artifact",
-      "rank": 5,
+      "rank": 6,
       "scope": "path",
       "owner": "artifacts",
       "title": {
@@ -269,8 +301,24 @@
       ]
     },
     {
-      "id": "image",
+      "id": "native-whole-retirement",
       "rank": 6,
+      "scope": "generation",
+      "owner": "storage",
+      "title": {
+        "en": "Whole Native image retirement coordinator",
+        "de": "Koordinator zur vollständigen Stilllegung nativer Images"
+      },
+      "match": [
+        {
+          "kind": "prefix",
+          "value": "native-whole-retirement:"
+        }
+      ]
+    },
+    {
+      "id": "image",
+      "rank": 7,
       "scope": "generation",
       "owner": "storage",
       "title": {
@@ -301,11 +349,23 @@
         {
           "kind": "prefix",
           "value": "repo:compiler-charge:"
+        },
+        {
+          "kind": "prefix",
+          "value": "repo:compiler-writer:"
         }
       ]
     }
   ],
   "allowed": [
+    {
+      "from": "tool-singleton",
+      "to": "toolchain",
+      "reason": {
+        "en": "Provisioning an absent Rust generation takes the managed-tooling provision lease after the toolchain home it already holds exclusively, then publishes its generation custody; every toolchain lease other than the home is requested only while the home is held.",
+        "de": "Das Bereitstellen einer fehlenden Rust-Generation nimmt die Provision-Lease der verwalteten Werkzeuge, nachdem es das Toolchain-Home bereits exklusiv hält, und veröffentlicht danach seine Generationssperre; jede Toolchain-Lease außer dem Home wird nur bei gehaltenem Home angefordert."
+      }
+    },
     {
       "from": "compiler-capacity",
       "to": "tool-singleton",
@@ -320,6 +380,35 @@
       "reason": {
         "en": "Capacity is taken before the graph is asked.",
         "de": "Kapazität wird vor der Anfrage an den Graphen genommen."
+      }
+    },
+    {
+      "from": "cargo-coordination",
+      "to": "compiler-capacity",
+      "reason": {
+        "en": "A cargo build lease and a registry fetch are taken first, then the whole-host capacity gate; every compiling process takes them in this order, so no capacity holder waits for the lease of a target whose builder waits for capacity.",
+        "de": "Eine Cargo-Build-Lease und ein Registry-Abruf werden zuerst genommen, danach das Gesamt-Host-Kapazitätstor; jeder kompilierende Prozess nimmt sie in dieser Reihenfolge, daher wartet kein Kapazitätsinhaber auf die Lease eines Ziels, dessen Bauer auf Kapazität wartet."
+      }
+    },
+    {
+      "from": "cargo-coordination",
+      "to": "image",
+      "reason": {
+        "en": "A registry fetch holds its fetch lease while it takes the compiler workspace writer custody of the image; no writer holder waits for a fetch lease.",
+        "de": "Ein Registry-Abruf hält seine Abruf-Lease, während er die Schreiber-Obhut des Compiler-Arbeitsbereichs im Image nimmt; kein Schreiberinhaber wartet auf eine Abruf-Lease."
+      }
+    },
+    {
+      "from": "native-whole-retirement",
+      "to": "image",
+      "binding": {
+        "kind": "same-directory-suffix",
+        "fromPrefix": "native-whole-retirement:",
+        "toPrefix": "native-fixed-image:"
+      },
+      "reason": {
+        "en": "A whole retirement retains its per-image coordinator while the same canonical image closes, reopens through its Native factory, verifies its journal, and reacquires image custody.",
+        "de": "Eine vollständige Stilllegung behält ihren Image-Koordinator, während dasselbe kanonische Image geschlossen, über seine native Fabrik geöffnet, im Journal geprüft und erneut gesperrt wird."
       }
     }
   ]

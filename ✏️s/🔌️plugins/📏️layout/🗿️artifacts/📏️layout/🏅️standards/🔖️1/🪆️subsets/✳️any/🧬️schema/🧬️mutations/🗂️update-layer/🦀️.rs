@@ -24,6 +24,16 @@ pub struct UpdateLayer {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_layer::UpdateLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer", record: "UpdatedLayer" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\"", self.name), &format!("Ebene \"{}\" aktualisieren", self.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.layer_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdateLayer where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_layer::UpdateLayer> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_layer(self, base)
     }
@@ -33,12 +43,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateLayer where Op: protocol::Mu
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\"", self.name), &format!("Ebene \"{}\" aktualisieren", self.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.layer_id.clone()]
-    }
 }
 
 pub fn diff_update_layer(payload: &UpdateLayer, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

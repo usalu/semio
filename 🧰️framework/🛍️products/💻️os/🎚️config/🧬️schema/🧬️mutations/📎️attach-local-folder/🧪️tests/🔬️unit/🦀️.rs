@@ -4,7 +4,7 @@ use semio_framework_os_kernel::ColdDiffAlgebra;
 use crate::io::text::snapshot::{decode_local_folder_bindings_json, encode_local_folder_bindings_json};
 use super::*;
 use super::super::{apply_local_folders_config_mutation, apply_local_folders_config_mutation_reporting};
-use protocol::Mutation;
+use protocol::{Mutation};
 
 fn binding(document_id: &str, path: &str) -> LocalFolderBinding {
     LocalFolderBinding { document_id: document_id.to_string(), plugin_id: "puzzle2d".to_string(), app_id: "s.puzzle.puzzle2d@1/*#editor".to_string(), folder: LocalFolderRef::Path { path: path.to_string() } }

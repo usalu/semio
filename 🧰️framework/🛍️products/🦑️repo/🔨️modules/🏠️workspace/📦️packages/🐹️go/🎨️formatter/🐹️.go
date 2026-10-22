@@ -35,22 +35,22 @@ func runFormatterCommand(binary string, args []string, workDir string) error {
 	if strings.Contains(binary, "/") || strings.Contains(binary, "\\") {
 		commandPath = filepath.Join(workDir, binary)
 	}
-	cmd := exec.Command(commandPath, args...)
+	cmd := ToolCommand(commandPath, args...)
 	cmd.Dir = workDir
 	return cmd.Run()
 }
 
-// 🛡️ IsIdeConfigurationPath identifies editor-owned configuration from dashboard authority.
+// 🛡️ IsIdeConfigurationPath identifies IDE-owned configuration from dashboard authority; the `.cursor` directory has no authority at all, not even for plans.
 func IsIdeConfigurationPath(path string) bool {
 	parts := strings.Split(strings.ToLower(NormalizePath(path)), "/")
-	for index, part := range parts {
-		if part == ".cursor" && index+1 < len(parts) && parts[index+1] != "plans" {
-			return true
-		}
+	for _, part := range parts {
 		switch part {
-		case ".vscode", ".vscode-insiders", ".idea", ".fleet", ".zed", ".vs", ".run", ".nova", ".settings", ".metadata", ".windsurf", ".kiro", ".atom", ".brackets":
+		case ".cursor", ".vscode", ".vscode-insiders", ".idea", ".fleet", ".zed", ".vs", ".run", ".nova", ".settings", ".metadata", ".windsurf", ".kiro", ".atom", ".brackets":
 			return true
 		}
+	}
+	if strings.Contains("/"+strings.Join(parts, "/")+"/", "/.github/hooks/") {
+		return true
 	}
 	name := parts[len(parts)-1]
 	for _, file := range []string{".project", ".classpath", ".vsconfig", ".cursorrules", ".windsurfrules", "cmakesettings.json"} {

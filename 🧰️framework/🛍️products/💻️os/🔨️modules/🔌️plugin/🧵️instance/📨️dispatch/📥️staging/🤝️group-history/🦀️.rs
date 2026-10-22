@@ -12,14 +12,14 @@ use crate::dispatch_bundle::DispatchCtx;
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_framework_ui_contract::*;
 use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// ↩️ Task 4: group-aware undo/redo. Routes through
     /// `store::os_store::composition_coordinator::CompositionCoordinator::undo_group`/`redo_group` across `self.store` (the parent)
     /// plus every LIVE child in `self.children` — the coordinator itself filters to members whose

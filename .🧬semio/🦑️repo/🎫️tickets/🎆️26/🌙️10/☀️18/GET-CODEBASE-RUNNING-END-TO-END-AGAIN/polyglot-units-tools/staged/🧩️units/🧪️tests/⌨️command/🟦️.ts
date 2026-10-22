@@ -1,6 +1,6 @@
 import {describe, expect, test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname, join} from "node:path";
 import {applyGoOverlayV1, planGoPackagesV1, readUnitsPolicyV1, runUnitsCommandV1, sha256V1, unitsArgumentsV1, unitsOptionNamesV1, unitsSchemaFailuresV1, type UnitsCommandPortsV1} from "../../🟦️.ts";
@@ -149,7 +149,7 @@ describe("go compiler overlay", () => {
   const modulePath = "example.com/m";
   test("member directories merge into their parent package, unmapped cases are not packages, go list agrees", () => {
     if (!have("go")) return;
-    const directory = temporary();
+    const directory = realpathSync(temporary());
     try {
       const real: Record<string, string> = {
         "m/go.mod": `module ${modulePath}\n\ngo 1.25\n`,

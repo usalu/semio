@@ -19,7 +19,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeUnitHeight where O
         kind: "change-unit-height",
         record: "ChangedUnitHeight",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change unit height", "Steinhöhe ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeUnitHeight where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_unit_height::ChangeUnitHeight> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_unit_height::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeUnitHeight where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change unit height", "Steinhöhe ändern")
-    }
 }
 
 //#region 🪢️Mounts

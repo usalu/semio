@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:bun-release-corpus:v1",
+  "title": "Pinned Bun Release Corpus",
+  "description": "Language-agnostic cases for the pinned Bun release: ZIP executable extraction over generated and mutated archives, and the platform to distribution selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "archives", "distributions", "unsupported"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "archives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "members", "mutations", "select", "error", "sha256", "bytes"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/member" } },
+          "mutations": { "type": "array", "items": { "$ref": "#/definitions/mutation" } },
+          "select": { "type": "string", "minLength": 1 },
+          "error": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^([a-f0-9]{64})?$" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "distributions": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "arch", "musl", "archive"],
+        "properties": { "platform": { "enum": ["win32", "darwin", "linux"] }, "arch": { "enum": ["x64", "arm64"] }, "musl": { "type": "boolean" }, "archive": { "type": "string", "pattern": "^bun-(windows|darwin|linux)-(x64|aarch64)(-musl)?(-baseline)?\\.zip$" } }
+      }
+    },
+    "unsupported": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "versionOffset", "platform", "arch", "musl"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "versionOffset": { "type": "integer", "minimum": 0, "maximum": 1 }, "platform": { "type": "string" }, "arch": { "type": "string" }, "musl": { "type": "boolean" } }
+      }
+    }
+  },
+  "definitions": {
+    "content": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["repeat", "times"], "properties": { "repeat": { "type": "string", "minLength": 1 }, "times": { "type": "integer", "minimum": 1, "maximum": 100000 } } }
+      ]
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "method", "content"],
+      "properties": { "name": { "type": "string", "minLength": 1 }, "method": { "enum": ["stored", "deflated"] }, "content": { "$ref": "#/definitions/content" } }
+    },
+    "mutation": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["op", "entry", "field", "value"], "properties": { "op": { "const": "central" }, "entry": { "type": "string" }, "field": { "enum": ["signature", "flags", "method", "compressedSize", "expandedSize"] }, "value": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "entry", "field", "value"], "properties": { "op": { "const": "local" }, "entry": { "type": "string" }, "field": { "enum": ["signature"] }, "value": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "bytes"], "properties": { "op": { "enum": ["truncate", "trail"] }, "bytes": { "type": "integer", "minimum": 1 } } }
+      ]
+    }
+  }
+}

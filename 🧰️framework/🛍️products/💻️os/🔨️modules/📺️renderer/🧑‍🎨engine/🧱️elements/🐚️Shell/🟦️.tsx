@@ -11,7 +11,7 @@ import { resolveFrameworkOsCatalogConfigurationV1 } from "./🧩️catalog/🟦�
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createRoot } from "react-dom/client";
+import { createRoot } from "../⚛️react-port/🟦️.ts";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, createMemoryStoragePort, type AppRole, type ShellBrand } from "@semio-tech/framework";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
@@ -24,7 +24,7 @@ import { clearDurableShellStorage, type FrameworkOsDefaults, type FrameworkOsLoc
 /** 🎬️ Owns host service and worker construction capabilities for one React mount. */
 export type FrameworkOsBootExecution = {
   readonly backboneWorkerFactory?: () => Worker;
-  readonly documentServices?: readonly import("@semio-tech/framework/inference/service").InstalledServicePresentationV1<import("react").ReactNode>[];
+  readonly documentServices?: readonly import("@semio-tech/framework/inference/service").InstalledServicePresentationV1<import("../⚛️react-port/🟦️.ts").ReactNode>[];
   readonly hostPorts?: import("../🏛️ShellHost/🪝️host-ports/🟦️.ts").ShellHostPortsV1;
 };
 

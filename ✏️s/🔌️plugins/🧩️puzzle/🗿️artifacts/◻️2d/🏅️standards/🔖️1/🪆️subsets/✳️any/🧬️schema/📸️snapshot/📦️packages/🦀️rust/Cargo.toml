@@ -54,7 +54,7 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../../../
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-2d-board-host = { path = "../../../../✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-engine = { path = "../../../../✏️editor/⚙️engine/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../🤖️generated/📇️registry/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../🛂️manifest/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../../../✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../../../✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust" }

@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "cell", kind: "mask-cell", record: "Removed" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Mask cell {}", cell_key(self.cell.x, self.cell.y, self.cell.z)), &format!("Zelle {} maskieren", cell_key(self.cell.x, self.cell.y, self.cell.z)))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![cell_key(self.cell.x, self.cell.y, self.cell.z)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid3dSnapshot, Op> for MaskCell
+where
+    Op: protocol::ColdMutation<Grid3dSnapshot, ReferenceDiff = Grid3dDiff> + From<MaskCell> + From<crate::standards::v1::subsets::any::schema::mutations::unmask_cell::UnmaskCell>,
+{
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Mask cell {}", cell_key(self.cell.x, self.cell.y, self.cell.z)), &format!("Zelle {} maskieren", cell_key(self.cell.x, self.cell.y, self.cell.z)))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![cell_key(self.cell.x, self.cell.y, self.cell.z)]
-    }
 }
 //#endregion 🔖️MaskCell

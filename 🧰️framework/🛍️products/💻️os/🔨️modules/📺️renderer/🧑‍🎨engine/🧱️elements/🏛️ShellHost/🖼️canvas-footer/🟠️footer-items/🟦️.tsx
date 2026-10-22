@@ -1,6 +1,6 @@
 /** 🟠️ The footer items phase of useCanvasAndFooter. */
 import { shellFooterNavbarItem } from "../../../🏛️ShellFooter/🟦️.tsx";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_ARTIFACT_ID } from "@semio-tech/framework";
 import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
 import { type Anchor, navbarFillItem, type NavbarItem, PanelChromeTabBar, PresenceBar } from "@semio-tech/ui-react";

@@ -98,7 +98,7 @@ fn every_dispatched_mutation_either_moves_the_boot_example_or_says_why_not() {
     let base = <BitmapEditor as ArtifactEditor>::initial_snapshot();
     for (command, kind) in commands() {
         let Some(mutation) = BitmapEditor::command_mutation(&command) else { continue };
-        let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &base);
+        let outcome = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation, &base);
         let mut snapshot = base.clone();
         vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).unwrap_or_else(|error| panic!("'{kind}' applies to the boot example: {error}"));
         if snapshot == base {

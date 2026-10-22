@@ -3,24 +3,7 @@
 import json, os, re, subprocess, sys, time
 tree, out = sys.argv[1], sys.argv[2]
 P = "🧰️framework/🔨️modules/🏃️process"; L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
-SUITES = {
- "lease-physical": P + "/🔒️leases/📁️physical/🧪️tests/🟦️.ts",
- "lease-baseline": P + "/🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts",
- "directory-storage": P + "/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🧪️tests/🟦️.ts",
- "remote-cache": L + "/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts",
- "cache-gc": L + "/🏗️build/🧹️cache-gc/🧪️tests/🟦️.ts",
- "cargo-workspaces": L + "/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
- "zero-touch": L + "/🏗️build/📥️source/🛗️zero-touch/🧪️tests/🟦️.ts",
- "selection": L + "/🏗️build/🧭️selection/🧪️tests/🟦️.ts",
- "lease-descriptors": P + "/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts",
- "ledger": L + "/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts",
- "registry-import-language": L + "/🧪️tests/🌐️registry-import-language/🟦️.ts",
- "registry-and-cargo-providers": L + "/🧪️tests/🔬️workspace-contract/🔗️registry-and-cargo-providers/🟦️.ts",
- "cargo-toml": L + "/🗂️workspaces/🦀️cargo/📖️toml/🧪️tests/🟦️.ts",
- "descriptor-publication": L + "/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📤️publication/🧪️tests/🟦️.ts",
- "cargo-preparation-storage": L + "/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧪️tests/🟦️.ts",
- "cargo-command": L + "/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts",
-}
+SUITES = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "suites.json"), encoding="utf8"))
 only = sys.argv[4:] if len(sys.argv) > 3 and sys.argv[3] == "--only" else list(SUITES)
 result = {}
 for name in only:

@@ -85,7 +85,7 @@ fn test_config_original_record_receiving_preserves_nullable_selection() {
         while !receiver.terminal_is_empty() {
             let demand = receiver.close_demands(grant.maximum_copy_bytes).unwrap();
             native.charge(demand.capacity_bytes).unwrap();
-            assert!(receiver.close_step(grant).unwrap().fits(grant));
+            assert!(receiver.close_step(grant).unwrap().progress().fits(grant));
             turns += 1;
             assert!(turns < 8192);
         }

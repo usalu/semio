@@ -1,5 +1,5 @@
 use crate::schema::snapshot::SemioModelSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::mutations::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
@@ -33,15 +33,15 @@ fn kinds_match_the_enum_and_the_catalog() {
 /// own `inverse()` must restore `base` exactly.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
-    let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(&mutation, base);
+    let diff = <SemioModelMutation as ColdMutation<SemioModelSnapshot>>::diff(&mutation, base);
     let mut applied = base.clone();
     let (__next, produced) = semio_s_artifact_stdio_semio_base::applied(&applied, &mutation);
     applied = __next;
     assert_eq!(produced, diff, "diff() must match what apply_semio_model_mutation actually applied for {mutation:?}");
-    let expected = protocol::apply_diff(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+    let expected = protocol::apply_diff_cold(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(applied, expected, "applying the mutation must equal applying its own diff for {mutation:?}");
 
-    let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioModelMutation as ColdMutation<SemioModelSnapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = applied.clone();
     for m in inv.iter().rev() {
         let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, m);
@@ -124,7 +124,7 @@ async fn relative_placement_leaves_derive_from_the_base_and_undo_exactly() {
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&moved, &drag);
     moved = __next;
     assert_eq!((moved.elements[1].placement.translation.x, moved.elements[1].placement.translation.y, moved.elements[1].placement.translation.z), (6.5, 4.0, 7.25));
-    let level = |mutation: &SemioModelMutation| <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, &base).messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>();
+    let level = |mutation: &SemioModelMutation| <SemioModelMutation as ColdMutation<SemioModelSnapshot>>::diff(mutation, &base).messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>();
     assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into(), "ghost".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.partial".to_string()]);
     assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["ghost".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.target-missing".to_string()]);
     assert_eq!(level(&SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: both(), factors: [1.0; 3] })), vec!["mutation.no-op".to_string()]);

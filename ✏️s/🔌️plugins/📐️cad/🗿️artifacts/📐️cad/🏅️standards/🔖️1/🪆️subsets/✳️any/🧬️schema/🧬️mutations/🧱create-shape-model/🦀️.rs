@@ -23,17 +23,23 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "shape-model", kind: "create-shape-model", record: "CreatedShapeModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create shape-model child {}", self.child_id), &format!("Formmodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["shape_model".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<CadSnapshot, Op> for CreateShapeModel
+where
+    Op: protocol::ColdMutation<CadSnapshot, ReferenceDiff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_shape_model::CreateShapeModel> + From<crate::delete_shape_model::DeleteShapeModel>,
+{
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

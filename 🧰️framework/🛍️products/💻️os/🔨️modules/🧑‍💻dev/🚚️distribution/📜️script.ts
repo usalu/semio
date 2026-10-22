@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {writeOwnedCommandOutputV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {frameworkOsViteArtifactInputsV1} from "../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
@@ -12,12 +12,13 @@ import { join, resolve } from "node:path";
 import { checkScriptInvocation, Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { productionBrowserInputHash } from "./⚙️inputs/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔏️ Supplies the build tool with output-affecting environment and ignored configuration bytes. */
 class InputsScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Production browser input hashing accepts no arguments");
-    console.log(await productionBrowserInputHash(resolve(import.meta.dir, "..")));
+    console.log(await productionBrowserInputHash(resolve(import.meta.dirname, "..")));
   }
 }
 
@@ -36,7 +37,7 @@ class BuildScript extends Script {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args;
     if (args.length !== 3 || !variant || renderer !== "react" || (profile !== "prototype" && profile !== "release") || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("build <variant> react <prototype|release>");
-    const workspace = findWorkspaceRoot(), root = resolve(import.meta.dir, "..");
+    const workspace = findWorkspaceRoot(), root = resolve(import.meta.dirname, "..");
     const catalog = JSON.parse(readFileSync(join(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw new Error("Distribution requires a supplied catalog root");})(), "🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
     const playground = catalog.find((row) => row.variant === variant);
     const contribution = playground ? loadDevContribution(workspace, playground) : undefined;
@@ -63,4 +64,4 @@ class CompileScript extends Script {
  }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("compile", CompileScript).register("build", BuildScript).register("inputs", InputsScript).register("complete", CompleteScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("compile", CompileScript).register("build", BuildScript).register("inputs", InputsScript).register("complete", CompleteScript)).run(process.argv.slice(2), original));

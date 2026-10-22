@@ -42,7 +42,7 @@ def default_schema(t):
     return t[:old.start()]+BUILD_POLICY_NEW+t[old.end():]
 def default_portable_test(t):
     if "buildPolicy.defaultTool" not in t:return t
-    t=head(t,f'import {{buildBackendDefaultIdV1}} from "../../../../{BK}/{TS}";')
+    t=head(t,f'import {{buildBackendDefaultIdV1}} from "../../../{BK}/{TS}";')
     return t.replace("buildPolicy.defaultTool","buildBackendDefaultIdV1()")
 RUST_OLD_TOOL='''pub fn is_build_tool(value: &str) -> bool {
     build_policy_contract()["$defs"]["BuildTool"]["enum"].as_array().is_some_and(|tools| tools.iter().any(|tool| tool.as_str() == Some(value)))
@@ -77,6 +77,49 @@ def probe(t):
     if a<0 or b<0 or 'if (selected === "nx") {' not in t[a:b]:raise Drift("cache verify: probeTool not found")
     return t[:a]+PROBE_NEW+t[b:]
 
+# ---- the cache ledger declares, sizes and collects the engine's area
+def _object_end(text,start):
+    depth=0;inside=False;escaped=False
+    for i in range(start,len(text)):
+        c=text[i]
+        if inside:
+            if escaped:escaped=False
+            elif c=="\\":escaped=True
+            elif c=='"':inside=False
+            continue
+        if c=='"':inside=True
+        elif c=="{":depth+=1
+        elif c=="}":
+            depth-=1
+            if depth==0:return i+1
+    raise Drift("unbalanced object")
+SEMIO_AREA='''{
+      "id": "semio-actions",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "semio/actions",
+      "partition": "products",
+      "budget": { "basisPoints": 2000 },
+      "managed": { "owner": "semio" },
+      "writers": ["%s/%s/%s/%s/%s"],
+      "purpose": { "en": "Action cache of the in-house build engine: outputs by digest and entries by action key.", "de": "Aktions-Cache der hauseigenen Build-Engine: Ausgaben nach Digest und Einträge nach Aktionsschlüssel." }
+    }'''%(names.B,T["TOOLS"],T["SEMIO"],T["STORE"],TS)
+def ledger_area(t):
+    if '"semio-actions"' in t:return t
+    i=t.find('"id": "bazel-actions"')
+    if i<0:raise Drift("ledger: bazel-actions area not found")
+    start=t.rfind("{",0,i);end=_object_end(t,start)
+    return t[:end]+",\n    "+SEMIO_AREA+t[end:]
+def ledger_schema(t):
+    m=re.search(r'"owner": \{ "enum": \[([^\]]*)\] \}',t)
+    if not m or '"bazel"' not in m.group(1):raise Drift("ledger owner enum: not found")
+    if '"semio"' in m.group(1):return t
+    return t[:m.start(1)]+m.group(1).replace('"bazel", ','"bazel", "semio", ',1)+t[m.end(1):]
+GC_OLD='if(owner!=="test-evidence")return Promise.resolve(undefined);'
+GC_NEW='if(owner!=="test-evidence")return import("../../%s/%s").then(async registry=>registry.buildBackendIdsV1().includes(owner)?(await registry.loadBuildBackendV1(owner)).collectCache?.({root,invocation,phase:phaseControl,dryRun,signal:phaseControl.signal}):undefined);'%(BK,TS)
+def gc_delegate(t):
+    return t if ".collectCache?." in t else sub(t,GC_OLD,GC_NEW,"cache gc delegate")
+
 EDITS=[
  (p(B,T["INVOCATION"],TS),default_invocation),
  (p(B,"🔣️policy.json"),default_policy),
@@ -84,4 +127,7 @@ EDITS=[
  (p(B,"🧪️tests","🕸️graph","🧭️portable-cli",TS),default_portable_test),
  (p(B,"🕸️graph","🦀️rust","🦀️.rs"),default_rust),
  (p(names.L,"⚡️caching","🔁️verification","📋️orchestration",TS),probe),
+ (p(names.L,"⚡️caching","💾️storage","🧾️ledger","🔣️policy.json"),ledger_area),
+ (p(names.L,"⚡️caching","💾️storage","🧾️ledger",SC,JSON),ledger_schema),
+ (p(B,"🧹️cache-gc",T["COMMAND"],TS),gc_delegate),
 ]

@@ -31,6 +31,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "periodicity", kind: "change-periodicity", record: "ChangedPeriodicity" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid3dSnapshot, Op> for ChangePeriodicity
+where
+    Op: protocol::ColdMutation<Grid3dSnapshot, ReferenceDiff = Grid3dDiff> + From<ChangePeriodicity>,
+{
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
@@ -40,8 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
-    }
 }
 //#endregion 🔖️ChangePeriodicity

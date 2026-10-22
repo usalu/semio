@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::editor::animate::config::*;
 
 #[test]

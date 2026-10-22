@@ -75,7 +75,7 @@
           "generate": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts generate"
+              "command": "repo ./📜️script.ts generate"
             },
             "outputs": [
               "{projectRoot}/gen"
@@ -108,7 +108,7 @@
           "build": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts build"
+              "command": "repo ./📜️script.ts build"
             },
             "dependsOn": [
               "prepare"
@@ -143,7 +143,7 @@
           "test": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             },
             "dependsOn": [
               "all"
@@ -161,7 +161,7 @@
           "serve": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts serve"
+              "command": "repo ./📜️script.ts serve"
             },
             "dependsOn": [
               "build"
@@ -172,7 +172,7 @@
           "publish": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts publish"
+              "command": "repo ./📜️script.ts publish"
             },
             "dependsOn": [
               "build"

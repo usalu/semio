@@ -14,17 +14,6 @@ pub struct SetShowMode {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetShowMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "show-mode", kind: "set-show-mode", record: "SetShowMode" };
 
-    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
-        protocol::MutationOutcome::new(Generation3dViewConfigPatch { show_mode: Some(self.value.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { value: base.show_mode.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
     }
@@ -32,4 +21,16 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
     fn target(&self) -> Vec<String> {
         vec!["showMode".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetShowMode {
+    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { show_mode: Some(self.value.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { value: base.show_mode.clone() }.into()]
+    
+    })())
+}
 }

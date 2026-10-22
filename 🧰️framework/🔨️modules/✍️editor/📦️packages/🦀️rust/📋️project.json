@@ -28,7 +28,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-owned-error",
+        "command": "repo ./📜️script.ts test-owned-error",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -45,7 +45,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts wasm"
+        "command": "repo ./📜️script.ts wasm"
       },
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "cache": true,
@@ -71,7 +71,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

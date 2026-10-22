@@ -8,7 +8,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⏸️keeps-unit-factors/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⏸️keeps-unit-factors/📸️snapshot/➡️after/🔣️.json"));
@@ -30,7 +30,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("scale-frames/keeps-unit-factors: the diff applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("scale-frames/keeps-unit-factors: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-frames` raises on the committed base.
@@ -96,7 +96,7 @@ fn committed_diff_is_canonical_and_complete() {
     let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(*DIFF).expect("committed diff reparses"), "scale-frames/keeps-unit-factors: committed diff JSON is not canonical");
-    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "scale-frames/keeps-unit-factors: committed diff did not carry before to after");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies"), expected_after(), "scale-frames/keeps-unit-factors: committed diff did not carry before to after");
 }
 
 /// 🧾️ A vector that moves nothing leaves the committed `after` equal to `before` and has nothing to undo.

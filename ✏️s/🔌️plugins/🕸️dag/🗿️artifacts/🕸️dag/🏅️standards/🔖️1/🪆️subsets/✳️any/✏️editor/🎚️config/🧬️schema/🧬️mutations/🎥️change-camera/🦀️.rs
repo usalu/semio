@@ -17,6 +17,16 @@ pub struct ChangeCamera {
 
 impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "camera", kind: "change-camera", record: "ChangeCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfigDiff> {
         protocol::MutationOutcome::new(DagConfigDiff {
             camera_x: (base.camera_x != self.x).then_some(self.x),
@@ -30,12 +40,6 @@ impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["camera".into()]
-    }
 }
 
 #[cfg(test)]

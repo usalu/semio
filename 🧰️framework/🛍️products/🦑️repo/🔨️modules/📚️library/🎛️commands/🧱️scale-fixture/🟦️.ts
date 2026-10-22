@@ -5,6 +5,6 @@ export class ScaleFixtureScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] !== "check") throw new Error(`unknown scale-fixture subcommand: ${segments[0]} (expected check)`);
     const { runCmd } = await import("../../🏃️process/🟦️.ts");
-    runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:scale-fixture-check"], { cwd: this.root });
+    runCmd("repo", ["run", "@semio-tech/framework-os-dev:scale-fixture-check"], { cwd: this.root });
   }
 }

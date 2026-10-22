@@ -26,12 +26,12 @@ use semio_framework_ui_contract::*;
 use semio_framework_plugin_tool_run::*;
 use std::sync::Arc;
 use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     /// 🧵️ Builds the run's job for `purpose`: the app's retargetable job when it builds one, else its plain job.
-    pub fn build_tool_run_job_slot<M: SpaceMember + MemberFactory + 'static>(&self, stores: &InstanceStores<A>, child_composition: &ChildComposition<M>, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
+    pub fn build_tool_run_job_slot<M: ReferenceSpaceMember + MemberFactory + 'static>(&self, stores: &InstanceStores<A>, child_composition: &ChildComposition<M>, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
         let request = || ToolRunJobRequest::<A> {
             receiving: &entry.definition.receiving,
             tool_id: &entry.tool_id,

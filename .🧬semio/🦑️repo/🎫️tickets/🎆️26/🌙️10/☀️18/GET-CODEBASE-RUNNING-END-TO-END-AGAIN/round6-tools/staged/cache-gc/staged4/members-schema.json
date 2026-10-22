@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph-member-index:v1",
+  "title": "Graph Group Member Index",
+  "description": "Each isolated optional graph group, the shared canonical namespace and the generation documents keep one append-only index of their leaves: name, size, kind, a stamp that changes when the leaf is replaced, and the sha256 of its bytes, written once when the leaf is published or by the background collector. A closure proof reads these indexes and an lstat of every member, never a leaf byte.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "file": "members.jsonl",
+        "header": "semio-member-index",
+        "checkHexDigits": 16,
+        "maximumNameUnits": 240,
+        "maximumFileBytes": 536870912,
+        "maximumReferencesPerRow": 8192,
+        "maximumLinksPerRow": 8192,
+        "maximumAppendBytes": 1048576,
+        "groupProtectedIdleMilliseconds": 600000,
+        "kinds": [
+          "inference",
+          "precision",
+          "cargo-receipt",
+          "observation",
+          "pack",
+          "index",
+          "receipt",
+          "publication",
+          "generation-fragment",
+          "generation-index",
+          "generation-frontier",
+          "generation-manifest",
+          "member-index"
+        ],
+        "compactionSlackRows": 64
+      }
+    },
+    "Hex64": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "semio",
+        "version"
+      ],
+      "properties": {
+        "group": {
+          "type": "string",
+          "pattern": "^(?:canonical|generations|(?:selections|contexts)/[a-f0-9]{64})$"
+        },
+        "semio": {
+          "const": "semio-member-index"
+        },
+        "version": {
+          "const": 1
+        }
+      }
+    },
+    "LightRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "b",
+        "c",
+        "h",
+        "k",
+        "n",
+        "s"
+      ],
+      "properties": {
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536870912
+        },
+        "c": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "h": {
+          "$ref": "#/definitions/Hex64"
+        },
+        "k": {
+          "enum": [
+            "inference",
+            "precision",
+            "cargo-receipt",
+            "observation",
+            "pack",
+            "index",
+            "receipt",
+            "publication",
+            "generation-fragment",
+            "generation-index",
+            "generation-frontier",
+            "generation-manifest",
+            "member-index"
+          ]
+        },
+        "n": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "s": {
+          "type": "string",
+          "pattern": "^[0-9]+:[0-9]+:[0-9]+$"
+        }
+      }
+    },
+    "FullRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "b",
+        "c",
+        "g",
+        "h",
+        "k",
+        "l",
+        "n",
+        "r",
+        "s",
+        "x"
+      ],
+      "properties": {
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536870912
+        },
+        "c": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "g": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Hex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "h": {
+          "$ref": "#/definitions/Hex64"
+        },
+        "k": {
+          "enum": [
+            "inference",
+            "precision",
+            "cargo-receipt",
+            "observation",
+            "pack",
+            "index",
+            "receipt",
+            "publication",
+            "generation-fragment",
+            "generation-index",
+            "generation-frontier",
+            "generation-manifest",
+            "member-index"
+          ]
+        },
+        "l": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "p"
+            ],
+            "properties": {
+              "p": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              },
+              "m": {
+                "const": "block"
+              }
+            }
+          }
+        },
+        "n": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "r": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:source|lock):[a-f0-9]{64}$"
+          }
+        },
+        "s": {
+          "type": "string",
+          "pattern": "^[0-9]+:[0-9]+:[0-9]+$"
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

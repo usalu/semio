@@ -40,7 +40,7 @@ fn fault_inline_layout_stays_within_the_language_neutral_budget() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
     let maximum = fixture["maximumInlineBytes"].as_u64().unwrap() as usize;
     let actual = size_of::<Fault>();
-    assert!(actual <= maximum);
+    assert!(actual <= maximum, "Fault inline size {actual} exceeds the {maximum} byte budget");
 }
 
 #[test]

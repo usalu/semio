@@ -178,7 +178,7 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 		if !result.IsAllowed() {
 			t.Fatal("expected allowed")
 		}
-		out := providers.FormatVSCodeHookOutput("PreToolUse", result)
+		out := providers.FormatCopilotHookOutput("PreToolUse", result)
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON: %v", err)
@@ -203,7 +203,7 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 			t.Fatal("expected blocked")
 		}
 		hookEventName := extractHookEventNameFromStdin(payload)
-		out := providers.FormatVSCodeHookOutput(hookEventName, result)
+		out := providers.FormatCopilotHookOutput(hookEventName, result)
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON: %v", err)

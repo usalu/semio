@@ -13,7 +13,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/📄️documents/📜️script.ts complete",
+        "command": "repo ../../🔨️modules/📄️documents/📜️script.ts complete",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -38,7 +38,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -71,10 +71,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📋️zwischenbericht/**/*",
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/**/*",
@@ -98,7 +98,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/📄️documents/📜️script.ts build zwischenbericht",
+        "command": "repo ../../🔨️modules/📄️documents/📜️script.ts build zwischenbericht",
         "forwardAllArgs": false
       }
     },
@@ -131,10 +131,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📑️forschungsbericht/**/*",
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/**/*",
@@ -158,7 +158,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/📄️documents/📜️script.ts build forschungsbericht",
+        "command": "repo ../../🔨️modules/📄️documents/📜️script.ts build forschungsbericht",
         "forwardAllArgs": false
       }
     },
@@ -191,10 +191,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📝️kompaktbericht/**/*",
         "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*",
@@ -214,7 +214,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/📄️documents/📜️script.ts build kompaktbericht",
+        "command": "repo ../../🔨️modules/📄️documents/📜️script.ts build kompaktbericht",
         "forwardAllArgs": false
       }
     },
@@ -223,7 +223,7 @@
       "cache": true,
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz validate",
+        "command": "repo ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz validate",
         "forwardAllArgs": false
       },
       "inputs": [
@@ -233,7 +233,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/bun.lock",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/🕸️akteursnetz-figuren.tex",
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/📊️akteursnetz-tabellen.tex",
@@ -241,7 +241,7 @@
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/👥️akteursnetz.tex",
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📑️forschungsbericht/🖼️asset/**/*",
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         }
       ],
       "outputs": []
@@ -251,7 +251,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -283,10 +283,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
         "{workspaceRoot}/bun.lock",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📝️kompaktbericht/**/*",
         "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*"
@@ -302,7 +302,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -316,7 +316,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -330,7 +330,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -343,10 +343,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/bunfig.toml",
         {
@@ -363,7 +363,7 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz render",
+        "command": "repo ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz render",
         "forwardAllArgs": false
       }
     },
@@ -377,17 +377,17 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/bun.lock",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/*.tex",
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         }
       ],
       "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated",
+        "command": "repo ./📜️script.ts preview-generated",
         "forwardAllArgs": false
       }
     },
@@ -401,17 +401,17 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         "{workspaceRoot}/bun.lock",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/📎️anhang/*.tex",
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         }
       ],
       "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz check",
+        "command": "repo ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz check",
         "forwardAllArgs": false
       }
     }

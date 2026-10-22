@@ -26,6 +26,16 @@ impl ReplaceSamples {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplaceSamples {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "samples", kind: "replace-samples", record: "ReplaceSamples" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("region:{},{},{},{}", self.region.x, self.region.y, self.region.width, self.region.height)]
+    }
+}
+
+impl protocol::ColdMutationKind<BmpSnapshot, BmpMutation> for ReplaceSamples {
     fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let rect = self.rect();
         match base.image.validate_rect(&rect) {
@@ -33,17 +43,8 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplaceSamples {
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["sample-region"]),
         }
     }
-
     fn inverse(&self, base: &BmpSnapshot) -> Result<Vec<BmpMutation>, semio_framework_value::ValueError> {
         let rect = self.rect();
         Ok(base.image.region_rect(self.region).filter(|current| *current != rect).map(|current| BmpMutation::ReplaceSamples(ReplaceSamples { region: current.region, indices: current.indices, samples: current.samples })).into_iter().collect())
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("region:{},{},{},{}", self.region.x, self.region.y, self.region.width, self.region.height)]
     }
 }

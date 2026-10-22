@@ -56,7 +56,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts viewport-presence-check"
+        "command": "repo ./📜️script.ts viewport-presence-check"
       },
       "metadata": {
         "semio": {
@@ -71,7 +71,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing"
       },
       "inputs": [
@@ -98,7 +98,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts causal-input-publication-check",
+        "command": "repo ./📜️script.ts causal-input-publication-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -112,7 +112,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts row-action-admission-check",
+        "command": "repo ./📜️script.ts row-action-admission-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -126,7 +126,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts scoped-presence-check",
+        "command": "repo ./📜️script.ts scoped-presence-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -140,7 +140,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-invite-capability-check",
+        "command": "repo ./📜️script.ts directory-invite-capability-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -154,7 +154,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts hub-sign-in-spaces-check",
+        "command": "repo ./📜️script.ts hub-sign-in-spaces-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -168,7 +168,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-home-bootstrap-check",
+        "command": "repo ./📜️script.ts directory-home-bootstrap-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -178,7 +178,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -207,7 +207,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts lint",
+        "command": "repo ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       }
     },
@@ -221,7 +221,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       }
     },
@@ -234,7 +234,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts tutorial-interaction-check",
+        "command": "repo ./📜️script.ts tutorial-interaction-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -248,7 +248,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts flow-browser-runtime-check",
+        "command": "repo ./📜️script.ts flow-browser-runtime-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -262,7 +262,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts artifact-creation-progress-check",
+        "command": "repo ./📜️script.ts artifact-creation-progress-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -276,7 +276,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-opening-scope-check",
+        "command": "repo ./📜️script.ts document-opening-scope-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -290,7 +290,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts view-state-carriage-check",
+        "command": "repo ./📜️script.ts view-state-carriage-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -304,7 +304,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts surface-switch-check",
+        "command": "repo ./📜️script.ts surface-switch-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -318,7 +318,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts window-scope-check",
+        "command": "repo ./📜️script.ts window-scope-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -332,7 +332,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts surface-retention-check",
+        "command": "repo ./📜️script.ts surface-retention-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -346,7 +346,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts world3d-interaction-check",
+        "command": "repo ./📜️script.ts world3d-interaction-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -360,7 +360,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts world3d-modelling-check",
+        "command": "repo ./📜️script.ts world3d-modelling-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -374,7 +374,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts agent-bridge-check",
+        "command": "repo ./📜️script.ts agent-bridge-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -396,7 +396,7 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts scene-shading-pixel-check",
+        "command": "repo ./📜️script.ts scene-shading-pixel-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading"
       },
       "outputs": []
@@ -413,7 +413,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts operation-diagnostic-host-check"
+        "command": "repo ./📜️script.ts operation-diagnostic-host-check"
       },
       "metadata": {
         "semio": {

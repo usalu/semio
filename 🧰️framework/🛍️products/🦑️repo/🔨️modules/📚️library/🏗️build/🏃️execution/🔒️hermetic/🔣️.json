@@ -52,11 +52,68 @@
       "isolated-root"
     ]
   },
+  "toolchains": [
+    {
+      "id": "bun",
+      "identity": "bun",
+      "provisioned": true,
+      "covered": []
+    },
+    {
+      "id": "go",
+      "identity": "go",
+      "provisioned": false,
+      "covered": [
+        "^repo \"[^\"]*🧰️native/📜️script\\.ts\" fingerprint go$"
+      ],
+      "pending": {
+        "en": "The pinned Go distribution and the module cache are not yet declared as content-addressed trees of the action.",
+        "de": "Die gepinnte Go-Distribution und der Modul-Cache sind noch nicht als inhaltsadressierte Bäume der Aktion deklariert."
+      }
+    },
+    {
+      "id": "python",
+      "identity": "python",
+      "provisioned": false,
+      "covered": [
+        "^repo \"[^\"]*🧰️native/📜️script\\.ts\" fingerprint python \".*\"$"
+      ],
+      "pending": {
+        "en": "The managed interpreter and the locked environment are not yet declared as content-addressed trees of the action.",
+        "de": "Der verwaltete Interpreter und die gesperrte Umgebung sind noch nicht als inhaltsadressierte Bäume der Aktion deklariert."
+      }
+    },
+    {
+      "id": "dotnet",
+      "identity": "dotnet",
+      "provisioned": false,
+      "covered": [
+        "^repo \"[^\"]*🧰️native/📜️script\\.ts\" fingerprint dotnet$"
+      ],
+      "pending": {
+        "en": "The pinned .NET SDK and the restored packages are not yet declared as content-addressed trees of the action.",
+        "de": "Das gepinnte .NET SDK und die wiederhergestellten Pakete sind noch nicht als inhaltsadressierte Bäume der Aktion deklariert."
+      }
+    },
+    {
+      "id": "cmake",
+      "identity": "cmake",
+      "provisioned": false,
+      "covered": [
+        "^repo \"[^\"]*🧰️native/📜️script\\.ts\" fingerprint cmake$"
+      ],
+      "pending": {
+        "en": "The pinned CMake, Ninja and the compiler are not yet declared as content-addressed trees of the action.",
+        "de": "Das gepinnte CMake, Ninja und der Compiler sind noch nicht als inhaltsadressierte Bäume der Aktion deklariert."
+      }
+    }
+  ],
   "classes": [
     {
       "id": "ts-typecheck",
       "description": "TypeScript project type checks: the repository script runs `tsc --noEmit` through the typescript-check port; the hermetic provider runs the compiler from the declared dependency tree without store authority or compiler state.",
       "evidence": "assumed",
+      "toolchain": "bun",
       "select": {
         "targets": [
           "typecheck",
@@ -84,6 +141,7 @@
       "id": "ts-test",
       "description": "Bun and vitest test targets of TypeScript projects: the repository script runs the declared test files, which read only the declared sources, fixtures and dependency tree.",
       "evidence": "assumed",
+      "toolchain": "bun",
       "select": {
         "targets": [
           "test",
@@ -108,6 +166,7 @@
       "id": "ts-generate",
       "description": "Schema and code generators of TypeScript projects: a pure function of the declared sources writing only declared outputs.",
       "evidence": "assumed",
+      "toolchain": "bun",
       "select": {
         "targets": [
           "generate",
@@ -133,6 +192,7 @@
       "id": "ts-build",
       "description": "Bundling and site builds of TypeScript projects: bundlers read the declared sources and dependency tree and write only declared outputs.",
       "evidence": "assumed",
+      "toolchain": "bun",
       "select": {
         "targets": [
           "build",
@@ -156,6 +216,7 @@
       "id": "ts-check",
       "description": "Read-only verification of TypeScript projects: check, verify and lint targets that declare no outputs.",
       "evidence": "assumed",
+      "toolchain": "bun",
       "select": {
         "targets": [
           "check",
@@ -176,6 +237,138 @@
         ]
       },
       "dependencies": "packages",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "go-test",
+      "description": "Go test targets of the Go modules: the repository script runs the declared module tests, which read only the declared sources and the module cache the toolchain provides.",
+      "evidence": "assumed",
+      "toolchain": "go",
+      "select": {
+        "targets": [
+          "test",
+          "test-*"
+        ],
+        "projects": [
+          "@semio-tech/*-go"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "go-build",
+      "description": "Go build targets of the Go modules: the compiler reads the declared sources and writes only the declared outputs.",
+      "evidence": "assumed",
+      "toolchain": "go",
+      "select": {
+        "targets": [
+          "build",
+          "build-*"
+        ],
+        "projects": [
+          "@semio-tech/*-go"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "python-test",
+      "description": "Python test targets of the uv projects: the managed interpreter runs the declared tests inside the locked environment of the project.",
+      "evidence": "assumed",
+      "toolchain": "python",
+      "select": {
+        "targets": [
+          "test",
+          "test-*"
+        ],
+        "projects": [
+          "@semio-tech/*-py"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "python-build",
+      "description": "Python build targets of the uv projects: the build backend reads the declared sources and the locked environment and writes only the declared outputs.",
+      "evidence": "assumed",
+      "toolchain": "python",
+      "select": {
+        "targets": [
+          "build",
+          "build-*"
+        ],
+        "projects": [
+          "@semio-tech/*-py"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "dotnet-build",
+      "description": "Build targets of the .NET projects: the pinned SDK compiles the declared sources into an artifacts path outside the package.",
+      "evidence": "assumed",
+      "toolchain": "dotnet",
+      "select": {
+        "targets": [
+          "build",
+          "build-*"
+        ],
+        "projects": [
+          "@semio-tech/*-dotnet"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
+      "packages": [],
+      "providers": {}
+    },
+    {
+      "id": "cmake-check",
+      "description": "Pure laws of the CMake driver: a function of the CMake root files, the native sources and the pinned CMake and Ninja.",
+      "evidence": "assumed",
+      "toolchain": "cmake",
+      "select": {
+        "targets": [
+          "cpp-custody",
+          "cpp-test-toolchain"
+        ],
+        "projects": [
+          "workspace"
+        ],
+        "excludeRoots": [
+          "**/🦀️*",
+          "**/🦀️*/**"
+        ]
+      },
+      "dependencies": "toolchain",
       "packages": [],
       "providers": {}
     }

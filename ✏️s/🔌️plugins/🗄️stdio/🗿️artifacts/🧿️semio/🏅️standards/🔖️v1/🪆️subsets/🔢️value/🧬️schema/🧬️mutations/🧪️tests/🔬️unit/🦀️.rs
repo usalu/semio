@@ -1,5 +1,5 @@
 use semio_framework_test_fixtures::fixture_text;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::*;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 #[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
@@ -50,7 +50,7 @@ fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (
     via_apply = __next;
     let expected_diff = mutation.diff(base);
     assert_eq!(returned, expected_diff, "apply_semio_value_mutation must return mutation.diff(base)");
-    let via_diff_apply = protocol::apply_diff(expected_diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+    let via_diff_apply = protocol::apply_diff_cold(expected_diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_semio_value_mutation's result");
     (via_apply, returned)
 }
@@ -119,7 +119,7 @@ async fn inverse_law_mutation_level_round_trips() {
     for mutation in mutations {
         let mut state = base.clone();
         state = semio_s_artifact_stdio_semio_base::applied(&state, &mutation).0;
-        for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        for undo in <SemioValueMutation as ColdMutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             state = semio_s_artifact_stdio_semio_base::applied(&state, &undo).0;
         }
         assert_eq!(state, base, "mutation {mutation:?} did not round-trip via its inverse");
@@ -131,9 +131,9 @@ async fn inverse_law_diff_level_matches_mutation_diff() {
     let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
     let mutation = SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2"), at: None });
     let diff = mutation.diff(&base);
-    let mid = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+    let mid = protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
     let inv = diff.diff().inverse(&base);
-    assert_eq!(protocol::apply_diff(&inv, &mid).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(&inv, &mid).expect("apply must succeed for a well-formed fixture"), base);
 }
 //#endregion inverse_law
 

@@ -1,6 +1,6 @@
 //! 🧩️ Shared ephemeral preparation lifecycle around domain-owned construction tasks.
 
-use semio_framework_os_store_ephemeral::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared};
+use crate::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;

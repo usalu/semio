@@ -469,3 +469,43 @@ export function layeredCardTinted(id: string, revealedId: string | null, source:
   return source === "pointer" && revealedId === id;
 }
 // #endregion 🫥LayeredCardConcealment
+
+// #region 🔍LayeredZoomHold
+/** 🖱️ A fresh level ignores an explore control the pointer was already on until the pointer has moved this far and left it. */
+export const LAYERED_ZOOM_MOVE_PX = 8;
+
+/** 🖱️ Moving at least this far after a fresh level makes the explore control under the pointer zoom, even without leaving it. */
+export const LAYERED_ZOOM_MUCH_PX = 48;
+
+/** 🔍 The hover a level change is still holding: where the pointer was, and whether it has since moved enough to count. */
+export interface LayeredZoomHold {
+  readonly originX: number;
+  readonly originY: number;
+  readonly drifted: boolean;
+}
+
+/** 🔍 Holds the hover that is already under the pointer when a level becomes active.
+ * @see ../../🧱️elements/🥞️LayeredOverview/🟠️pane-styles/🟦️.tsx — arms this when an overview becomes interactive */
+export function layeredZoomArm(x: number, y: number): LayeredZoomHold {
+  return { originX: x, originY: y, drifted: false };
+}
+
+/** 🖱️ Pointer over an explore control zooms unless a fresh level is still holding that hover. */
+export function layeredZoomOver(hold: LayeredZoomHold | null): { readonly hold: LayeredZoomHold | null; readonly reveal: boolean } {
+  return hold === null ? { hold: null, reveal: true } : { hold, reveal: false };
+}
+
+/** 🖱️ Leaving an explore control conceals its zoom. A held hover that has drifted ends instead, so the next entry zooms. */
+export function layeredZoomOut(hold: LayeredZoomHold | null): { readonly hold: LayeredZoomHold | null; readonly conceal: boolean } {
+  if (hold === null) return { hold: null, conceal: true };
+  return hold.drifted ? { hold: null, conceal: false } : { hold, conceal: false };
+}
+
+/** 🖱️ A move during a fresh level. A long move releases the hold and zooms when the pointer is on an explore control; a short move only marks the hold as drifted. */
+export function layeredZoomMove(hold: LayeredZoomHold, x: number, y: number, overTrigger: boolean): { readonly hold: LayeredZoomHold | null; readonly reveal: boolean } {
+  const distance = Math.hypot(x - hold.originX, y - hold.originY);
+  if (distance >= LAYERED_ZOOM_MUCH_PX) return { hold: null, reveal: overTrigger };
+  if (distance >= LAYERED_ZOOM_MOVE_PX) return { hold: { ...hold, drifted: true }, reveal: false };
+  return { hold, reveal: false };
+}
+// #endregion 🔍LayeredZoomHold

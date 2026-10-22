@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // #region 📈️Progress
@@ -291,7 +293,7 @@ func (ExecRunner) Run(ctx context.Context, spec ProcessSpec, emit func(ProcessEv
 		emit(event)
 	}
 	sink := &stderrSink{capture: stderr, emit: safeEmit, events: &events}
-	command := exec.Command(spec.Binary, append(append([]string(nil), spec.Prefix...), spec.Argv...)...)
+	command := workspace.ToolCommand(spec.Binary, append(append([]string(nil), spec.Prefix...), spec.Argv...)...)
 	command.Dir, command.Env = spec.Dir, spec.Env
 	command.Stdin = nil
 	command.Stdout, command.Stderr = stdout, sink

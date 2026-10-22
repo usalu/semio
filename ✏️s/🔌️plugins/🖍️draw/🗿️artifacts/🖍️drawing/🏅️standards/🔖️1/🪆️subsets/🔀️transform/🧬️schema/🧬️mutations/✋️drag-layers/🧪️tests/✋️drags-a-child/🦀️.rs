@@ -6,7 +6,7 @@ use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
 use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json"));
@@ -40,7 +40,7 @@ fn produces_committed_diff() {
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
     assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(*DIFF).unwrap());
     let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).unwrap();
-    assert_eq!(protocol::apply_diff(&decoded, &before()).unwrap(), serde_json::from_str::<DrawingSnapshot>(*AFTER).unwrap(), "the committed diff alone carries before to after");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).unwrap(), serde_json::from_str::<DrawingSnapshot>(*AFTER).unwrap(), "the committed diff alone carries before to after");
 }
 
 /// ↩️ The inverse restores every moved transform exactly.

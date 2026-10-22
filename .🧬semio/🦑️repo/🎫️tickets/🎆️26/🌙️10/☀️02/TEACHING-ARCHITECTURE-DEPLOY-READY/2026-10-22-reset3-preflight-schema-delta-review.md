@@ -1,0 +1,3 @@
+# Reset3 Preflight Schema Delta Review
+
+Before any Native invocation or logcreation, Root preflight refused currentwhole-retirement schema5197/bc8b24a656f8757620d8b76ff4f1f8fd5143682151425a6393b6f85a019b24c8 againstheld4264/7989c0a6. All37otherSourcecontentpins match. Removing onlynewdefinitions.CoordinatorLeaseCase andserializing canonicalJSON exactlyreconstructs old4264B/SHA7989c0a65108d0a26e66ccbd0000a6cdf892a54a53f773205521fdc6756e3564. Thus onlyadditivelanguage-neutraltestschema changed; runtimeProtocol/Allocation/Intent/physicalcustody unchanged. Entirecurrentschema compiles strictAjv. NoSourcefilesedited, oldSourcebodiesnotcopied, noNativeattemptoccurred. Rootaccepts newJSONpin for freshfullpreflight.

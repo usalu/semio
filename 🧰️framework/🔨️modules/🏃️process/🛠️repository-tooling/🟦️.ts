@@ -2,6 +2,7 @@ import { defineScriptProviderV1, loadScriptProviderSyncV1, loadScriptProviderV1 
 import type { OwnedCommandOptions } from "../🎛️owned-execution/🟦️.ts";
 import type { CompilerAdmissionControl } from "../🏗️build/🎟️capacity/🟦️.ts";
 import type { ScriptInvocation } from "../🧭️routing/📥️invocation/🟦️.ts";
+import { runtimeResolveV1 } from "../../⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏃️ Declares one subprocess run: working directory, environment, wall-clock budget and shell resolution. */
 export interface RunCmdOpts {
@@ -59,7 +60,7 @@ const sync = (): RepositoryToolingProviderV1 => loadScriptProviderSyncV1(REPOSIT
 const provider = (): Promise<RepositoryToolingProviderV1> => loadScriptProviderV1(REPOSITORY_TOOLING_PROVIDER_V1);
 
 /** 🧮️ Resolves the TypeScript compiler entry installed for the given directory. */
-export function resolveTypescriptCompilerV1(from: string): string { return Bun.resolveSync("typescript/bin/tsc", from); }
+export function resolveTypescriptCompilerV1(from: string): string { return runtimeResolveV1("typescript/bin/tsc", from); }
 /** 🏃️ Runs a subprocess with inherited stdio and a wall-clock budget; throws on a nonzero exit, a signal or an exceeded budget. */
 export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void { sync().runCmd(cmd, args, opts); }
 /** 🔍️ Runs a subprocess and captures its outcome without throwing on a nonzero exit. */

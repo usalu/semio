@@ -18,7 +18,7 @@ const repoRoot = findWorkspaceRoot();
 //#endregion 🔖️ScaleFixture
 
 //#region 🔖️Bench
-/** ⚖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `bun ./📜️script.ts bench plugins
+/** ⚖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `repo ./📜️script.ts bench plugins
  * [--renderer native|react|wgpu] [--count 50] [--extensions 50] [--shards 8] [--out <path>]` — the
  * dev-side harness the root `bench` verb (`/📜️script.ts` `//#region 🔖️BenchScript`) routes into.
  * Budget 1 (registry parse) is measured HERE, directly, in JS — no wasm/kernel involved, so it never

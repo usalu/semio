@@ -49,23 +49,9 @@ pub struct Process3dPresenceDiff {
     pub camera_fov: Option<f64>,
 }
 
-impl protocol::MutationDiff<Process3dPresence> for Process3dPresenceDiff {
-    fn apply(&self, base: &Process3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Process3dPresence> {
-        let mut next = base.clone();
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = &self.camera_position {
-            next.camera_position = value.clone();
-        }
-        if let Some(value) = &self.camera_target {
-            next.camera_target = value.clone();
-        }
-        if let Some(value) = &self.camera_fov {
-            next.camera_fov = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Process3dPresence> for Process3dPresenceDiff {}
+
+impl protocol::ColdMutationDiff<Process3dPresence> for Process3dPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.engagement_input.is_some() {
             self.engagement_input = other.engagement_input;
@@ -80,9 +66,34 @@ impl protocol::MutationDiff<Process3dPresence> for Process3dPresenceDiff {
             self.camera_fov = other.camera_fov;
         }
     }
+
+    fn apply(&self, unpublished: &mut Process3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.camera_position {
+            next.camera_position = value.clone();
+        }
+        if let Some(value) = &self.camera_target {
+            next.camera_target = value.clone();
+        }
+        if let Some(value) = &self.camera_fov {
+            next.camera_fov = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
     fn inverse(&self, base: &Process3dPresence) -> Self {
         Self {
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
@@ -90,9 +101,6 @@ impl protocol::DiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
             camera_target: self.camera_target.as_ref().map(|_| base.camera_target.clone()),
             camera_fov: self.camera_fov.as_ref().map(|_| base.camera_fov.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none()
     }
 }
 
@@ -211,14 +219,16 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
             Self::SetCamera { .. } => &Self::DESCRIPTORS[1],
         }
     }
+}
 
+impl protocol::ColdMutation<Process3dPresence> for Process3dPresenceMutation {
+    type ReferenceDiff = Process3dPresenceDiff;
     fn diff(&self, base: &Process3dPresence) -> protocol::MutationOutcome<Process3dPresenceDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetEngagementInput { value } => Process3dPresenceDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
             Self::SetCamera { position, target, fov } => Process3dPresenceDiff { camera_position: (base.camera_position != *position).then_some(*position), camera_target: (base.camera_target != *target).then_some(*target), camera_fov: (base.camera_fov != *fov).then_some(*fov), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &Process3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetEngagementInput { .. } => Self::SetEngagementInput { value: base.engagement_input.clone() },

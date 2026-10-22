@@ -22,6 +22,7 @@ type ResourceLeaseChild = { process: Bun.Subprocess<"pipe", "pipe", "pipe">; out
 
 /** 🔒️ Compares resource ownership against independent Node, Bun and Python SQLite processes. */
 export async function testResourceLeases(generated:string,control:import("../../🟦️.ts").ResourceLeaseControl,original:import("../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void> {
+  await (await import("../🚪️admission/🟦️.ts")).testResourceLeaseAdmissionTimeoutV1(generated,control);
   await testResourceLeaseConcurrencyV1(generated,original,control);
   await (await import("../♻️retirement/🟦️.ts")).testResourceLeaseRetirementV1(generated,control);
   await testResourceLeaseReadCustodyV1(generated,control);

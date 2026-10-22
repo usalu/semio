@@ -3,14 +3,15 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import React, {
+import * as React from "../../⚛️react-port/🟦️.ts";
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useSyncExternalStore
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import type { ThreeCamera } from "@semio-tech/ui-react";
 // #region 🔌️Adapters
 import {

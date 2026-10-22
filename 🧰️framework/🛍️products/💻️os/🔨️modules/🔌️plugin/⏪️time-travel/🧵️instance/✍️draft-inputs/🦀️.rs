@@ -4,7 +4,7 @@ use super::*;
 use semio_framework::Effect;
 use semio_framework::Fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 🎚️ Drafts one input: the host value coerced to the shape of the input `path` addresses in the variant the draft is
     /// in, set at `path` in the draft payload (a union's selector switches the variant: [`time_travel_switch_variant`]) —
     /// or, with a list `edit`, one item inserted at `path` (`<list>/<index>` or `<list>/-`; the host value coerced to the

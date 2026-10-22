@@ -1,6 +1,6 @@
 import { parseGeneratorPreviewProgressPolicyV1 } from "../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { exactOwnerPath, parseCurrentJcoPackageDestination } from "../📦️package-projection-contracts/🟦️.ts";
-import { generatorPreviewResourceLimits, generatorPreviewScriptArguments } from "../🛠️generator-commands/🟦️.ts";
+import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, generatorPreviewScriptPath } from "../🛠️generator-commands/🟦️.ts";
 import { parseSemanticPackageBrowserProfile } from "../🎁️package-projection/🟦️.ts";
 import type { TaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";
 
@@ -31,7 +31,7 @@ export function auditGeneratorContracts(audit: TaxonomyAudit): void {
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewProgress", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewScript", "previewProgress", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -53,7 +53,7 @@ export function auditGeneratorContracts(audit: TaxonomyAudit): void {
       if (runnable) {
         if (contract.previewTarget === undefined) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget is required for owned contracts.`);
         else if (nxTarget(contract.previewTarget, `generatorContracts[${JSON.stringify(id)}].previewTarget`) && typeof contract.target === "string") {
-          try { generatorPreviewScriptArguments(contract); }
+          try { generatorPreviewScriptArguments(contract); generatorPreviewScriptPath(contract); }
           catch (error) { problems.push(`generatorContracts[${JSON.stringify(id)}]: ${error instanceof Error ? error.message : String(error)}`); }
           const prior = targets.get(contract.previewTarget);
           if (prior) problems.push(`generatorContracts ${JSON.stringify(prior)} and ${JSON.stringify(id)} duplicate target ${JSON.stringify(contract.previewTarget)}.`);

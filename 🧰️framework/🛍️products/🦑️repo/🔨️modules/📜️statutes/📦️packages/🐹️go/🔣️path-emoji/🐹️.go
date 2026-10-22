@@ -3,7 +3,6 @@ package statutes
 import (
 	json "encoding/json"
 	os "os"
-	exec "os/exec"
 	filepath "path/filepath"
 	sort "sort"
 	strings "strings"
@@ -219,7 +218,7 @@ func pathEmojiInventory(ctx *PolicyContext) ([]pathEmojiEntry, []string, error) 
 	if err := json.Unmarshal(data, &taxonomy); err != nil {
 		return nil, nil, err
 	}
-	output, err := exec.Command("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
+	output, err := workspace.ToolCommand("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
 	if err != nil {
 		return nil, nil, err
 	}

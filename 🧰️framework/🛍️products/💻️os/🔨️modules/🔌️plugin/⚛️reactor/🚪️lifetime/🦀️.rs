@@ -94,7 +94,8 @@ pub enum Phase {
 }
 
 /// 🪪️ Lives in the runtime registry before callbacks; an unwind never removes its owner.
-pub(crate) struct GuestLifecycleCell<O: GuestLifetimeOwner> {
+#[doc(hidden)]
+pub struct GuestLifecycleCell<O: GuestLifetimeOwner> {
     pub open: ActorInstanceOpenRequest,
     pub lifetime: ActorInstanceLifetime,
     pub owner: ManuallyDrop<Option<O>>,
@@ -424,7 +425,9 @@ impl<PA: semio_framework_plugin_reactor_app::PluginApp> GuestLifetimeOwner for N
     }
 }
 
-pub(crate) struct NativeLifetimeSlot<PA: semio_framework_plugin_reactor_app::PluginApp> {
+#[doc(hidden)]
+
+pub struct NativeLifetimeSlot<PA: semio_framework_plugin_reactor_app::PluginApp> {
     pub cell: NativeCell<PA>,
     pub native_created: bool,
     pub pending_creation: ManuallyDrop<Option<crate::life_cleanup_pumps::PendingNativeCreation<PA>>>,
@@ -432,7 +435,8 @@ pub(crate) struct NativeLifetimeSlot<PA: semio_framework_plugin_reactor_app::Plu
 }
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
-pub(crate) struct NativeLifecycleRegistry<PA: semio_framework_plugin_reactor_app::PluginApp> {
+#[doc(hidden)]
+pub struct NativeLifecycleRegistry<PA: semio_framework_plugin_reactor_app::PluginApp> {
     pub slots: semio_framework_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<NativeLifetimeSlot<PA>>,
     pub serial: GuestLifecycleSerial,
     pub cursor: usize,

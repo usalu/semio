@@ -17,17 +17,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget-position", kind: "delete-widget-position", record: "DeletedWidgetPosition" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::delete_widget_position::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::delete_widget_position::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete widget position \"{}\"", self.id), &format!("Widget-Position \"{}\" löschen", self.id))
     }
@@ -35,5 +24,20 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for DeleteWidgetPosition
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<crate::move_widget::MoveWidget>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::delete_widget_position::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::delete_widget_position::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️DeleteWidgetPosition

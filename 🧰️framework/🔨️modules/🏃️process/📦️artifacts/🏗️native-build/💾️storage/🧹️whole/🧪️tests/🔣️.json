@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "one-committed-recomputable",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "artifact-publication",
+          "bytes": 1048576,
+          "phase": "committed"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "name": "persistent-refused",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "persistent-state",
+          "bytes": 1048576,
+          "phase": "committed"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "foreign-charge-refused",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "artifact-publication",
+          "bytes": 1048576,
+          "phase": "committed"
+        },
+        {
+          "id": "foreign",
+          "owner": "other",
+          "kind": "artifact-restore",
+          "bytes": 1,
+          "phase": "committed"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "reserved-refused",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "artifact-publication",
+          "bytes": 1,
+          "phase": "reserved"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "namespace-refused",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "artifact-publication",
+          "bytes": 1,
+          "phase": "committed",
+          "namespace": {}
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "child-refused",
+      "allocations": [
+        {
+          "id": "whole",
+          "owner": "owner",
+          "kind": "compiler-state",
+          "bytes": 1048576,
+          "phase": "committed",
+          "child": {}
+        }
+      ],
+      "accepted": false
+    }
+  ],
+  "continuation": [
+    {
+      "name": "exact-remaining-subset",
+      "expected": [
+        [
+          "",
+          "1:2:448"
+        ],
+        [
+          "data",
+          "1:3:384:12"
+        ]
+      ],
+      "remaining": [
+        [
+          "",
+          "1:2:448"
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "name": "replacement-refused",
+      "expected": [
+        [
+          "",
+          "1:2:448"
+        ]
+      ],
+      "remaining": [
+        [
+          "",
+          "1:9:448"
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "name": "unknown-descendant-refused",
+      "expected": [
+        [
+          "",
+          "1:2:448"
+        ]
+      ],
+      "remaining": [
+        [
+          "",
+          "1:2:448"
+        ],
+        [
+          "unknown",
+          "1:7:384:1"
+        ]
+      ],
+      "accepted": false
+    }
+  ],
+  "bindings": [
+    {
+      "name": "restart-device-rebind",
+      "recordedDevice": "1",
+      "currentDevice": "9",
+      "recordedInode": "3",
+      "currentInode": "3",
+      "accepted": true
+    },
+    {
+      "name": "replacement-inode",
+      "recordedDevice": "1",
+      "currentDevice": "9",
+      "recordedInode": "3",
+      "currentInode": "7",
+      "accepted": false
+    }
+  ],
+  "evidence": [
+    {
+      "name": "native-macos-evidence",
+      "platform": "darwin",
+      "rows": [
+        [
+          "",
+          "directory"
+        ],
+        [
+          "image.json",
+          "file"
+        ],
+        [
+          "fixed.dmg",
+          "file"
+        ],
+        [
+          "m",
+          "directory"
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "name": "native-directory-journal-evidence",
+      "platform": "linux",
+      "rows": [
+        [
+          "",
+          "directory"
+        ],
+        [
+          "image.json",
+          "file"
+        ],
+        [
+          "fixed.dir",
+          "file"
+        ],
+        [
+          "v",
+          "directory"
+        ],
+        [
+          "v/storage-events.jsonl",
+          "file"
+        ],
+        [
+          "m",
+          "directory"
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "name": "arbitrary-payload-is-not-evidence",
+      "platform": "darwin",
+      "rows": [
+        [
+          "",
+          "directory"
+        ],
+        [
+          "payload",
+          "file"
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "name": "foreign-backing-is-not-evidence",
+      "platform": "darwin",
+      "rows": [
+        [
+          "",
+          "directory"
+        ],
+        [
+          "fixed.dir",
+          "file"
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "name": "evidence-directory-kind-required",
+      "platform": "win32",
+      "rows": [
+        [
+          "",
+          "directory"
+        ],
+        [
+          "v",
+          "file"
+        ]
+      ],
+      "accepted": false
+    }
+  ],
+  "projections": [
+    {
+      "name": "projected-boundary",
+      "directoryUnits": 230,
+      "suffixUnits": 17,
+      "accepted": true
+    },
+    {
+      "name": "quarantine-overflow",
+      "directoryUnits": 230,
+      "suffixUnits": 18,
+      "accepted": false
+    }
+  ],
+  "coordinatorOrder": [
+    {
+      "id": "same-image-after-grace",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-fixed-image:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": false
+    },
+    {
+      "id": "same-image-windows",
+      "heldDirectory": "C:\\w\\l",
+      "heldResource": "native-whole-retirement:C:\\w\\g",
+      "requestedDirectory": "C:\\w\\l",
+      "requestedResource": "native-fixed-image:C:\\w\\g",
+      "waitedMilliseconds": 15000,
+      "refused": false
+    },
+    {
+      "id": "foreign-image",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-fixed-image:/w/.cache/b/n",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "foreign-catalog",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/other",
+      "requestedResource": "native-fixed-image:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "journal-is-not-image",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-storage:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "persistent-is-not-image",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "persistent-state:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "unclassified-stays-guarded",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "future:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "reverse-image-coordinator",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-fixed-image:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-whole-retirement:/w/.cache/b/g",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "empty-suffix-refused",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-fixed-image:",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "unrelated-graph-refused",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "repository-graph-facts:/w",
+      "waitedMilliseconds": 15000,
+      "refused": true
+    },
+    {
+      "id": "unchanged-grace",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "native-whole-retirement:/w/.cache/b/g",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "native-fixed-image:/w/.cache/b/n",
+      "waitedMilliseconds": 14999,
+      "refused": false
+    },
+    {
+      "id": "prior-capacity-graph-edge",
+      "heldDirectory": "/w/.cache/b/l",
+      "heldResource": "semio.compiler.host-capacity/v1",
+      "requestedDirectory": "/w/.cache/b/l",
+      "requestedResource": "repository-graph-facts:/w",
+      "waitedMilliseconds": 15000,
+      "refused": false
+    }
+  ]
+}

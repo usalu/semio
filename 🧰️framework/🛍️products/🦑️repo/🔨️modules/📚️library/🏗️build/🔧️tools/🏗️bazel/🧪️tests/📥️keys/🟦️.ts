@@ -1,6 +1,7 @@
 /** 🔑️ Contract: no per-invocation value (caller envelope, deadline, cwd, ambient environment) reaches a generated Bazel action input, and generator snapshots restore byte-identically, repair edits and refuse a missing declared output. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
@@ -26,7 +27,7 @@ async function generate(variant:typeof corpus.variants[number],cwd:string){
  const previousCwd=process.cwd(),previousEnv={...process.env};Object.assign(process.env,variant.ambient);process.chdir(cwd);
  try{
   const graph=corpus.graph as any,request=corpus.request as any,plan=api.planBazelTasksV1(graph,request),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run",request.tasks[0]],"bazel",{});
-  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:keys-contract",maximumElapsedMilliseconds:variant.maximumElapsedMilliseconds},capabilities,Date.now()),async original=>{
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:keys-contract",maximumElapsedMilliseconds:variant.maximumElapsedMilliseconds},capabilities,Date.now()),async (original:ScriptInvocation)=>{
    process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=scriptInvocationEnvironment(original,{}).SEMIO_SCRIPT_PROCESS_INVOCATION;
    await api.generateBazelWorkspaceV1(root,graph,request,plan,workspace,original,createIssuedResourceControlV1(original,"bazel:keys-contract",0),implementation,()=>{});
   });
@@ -36,7 +37,7 @@ async function generate(variant:typeof corpus.variants[number],cwd:string){
 
 test("Bazel key fixtures are closed",()=>{expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);});
 
-test.skipIf(!python)("the caller envelope, deadline, cwd and ambient environment never reach a generated Bazel action input; only runtime.json carries them",async()=>{
+test.skipIf(!python)("the caller envelope, deadline, cwd and ambient environment never reach a generated Bazel action input; only runtime.json carries them and snapshot.json records host file identities that no action reads",async()=>{
  const first=await generate(corpus.variants[0]!,repo),second=await generate(corpus.variants[1]!,realpathSync(tmpdir()));
  try{
   const differing=oracleDifferences(first.workspace,second.workspace);expect(differing).toEqual(corpus.onlyRuntimeMayDiffer);
@@ -44,6 +45,7 @@ test.skipIf(!python)("the caller envelope, deadline, cwd and ambient environment
   const runtime=[first,second].map(row=>JSON.parse(readFileSync(join(row.workspace,"runtime.json"),"utf8")).environment.SEMIO_SCRIPT_PROCESS_INVOCATION as string);
   expect(typeof runtime[0]).toBe("string");expect(runtime[0]).not.toEqual(runtime[1]);
   for(const name of["BUILD.bazel","tasks.bzl"]){const text=readFileSync(join(first.workspace,name),"utf8");expect(text).not.toMatch(/SEMIO_SCRIPT_PROCESS_INVOCATION|deadlineEpochMilliseconds/u);}
+  const attributeKeys=[...readFileSync(join(first.workspace,"BUILD.bazel"),"utf8").matchAll(/^    ([^\s=]+) = /gmu)].map(row=>row[1]!);expect(attributeKeys.length).toBeGreaterThan(0);expect(attributeKeys.filter(key=>!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(key)),"every generated rule attribute is a Starlark identifier").toEqual([]);
   const environments=[...readFileSync(join(first.workspace,"tasks.bzl"),"utf8").matchAll(/env = (\{[^}]*\})/gu)].map(row=>row[1]);expect(new Set(environments)).toEqual(new Set(['{"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"}']));
  }finally{rmSync(first.base,{recursive:true,force:true});rmSync(second.base,{recursive:true,force:true});}
 },120000);
@@ -53,7 +55,7 @@ test.skipIf(!python)("a generator snapshot restore leaves identical files untouc
  const task=(outputs:string[],cache=true,metadata?:unknown)=>({id:"gen:generate",project:"gen",target:"generate",label:"t_"+"a".repeat(16),root:"gen",args:[],dependencies:[],definition:{execution:{kind:"command",command:"true"},outputs,cache,...(metadata?{metadata}:{})}}) as any;
  const facts=()=>Object.fromEntries(Object.keys(corpus.snapshot.files).map(path=>{const stat=statSync(join(root,path),{bigint:true});return[path,[String(stat.ino),String(stat.mtimeNs)]];})),bytes=(path:string)=>readFileSync(join(root,path),"utf8");
  try{
-  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:snapshot-contract",maximumElapsedMilliseconds:120000},createNativeBuildCallerCapabilitiesV1(root,["run","gen:generate"],"bazel",{}),Date.now()),async original=>{
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:snapshot-contract",maximumElapsedMilliseconds:120000},createNativeBuildCallerCapabilitiesV1(root,["run","gen:generate"],"bazel",{}),Date.now()),async (original:ScriptInvocation)=>{
    const control=()=>createIssuedResourceControlV1(original,"bazel:snapshot-contract",0);
    await api.captureBazelSnapshotV1({workspace:root,task:task(corpus.snapshot.outputs)},snapshot,original);
    const before=facts();await new Promise(accept=>setTimeout(accept,25));await api.restoreBazelSnapshotV1(root,snapshot,original,control());

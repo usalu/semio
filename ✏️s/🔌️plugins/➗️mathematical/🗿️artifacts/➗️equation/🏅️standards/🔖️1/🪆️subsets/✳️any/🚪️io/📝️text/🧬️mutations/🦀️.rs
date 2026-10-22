@@ -268,16 +268,16 @@ pub fn equation_mutation_report_json(base_json: &str, mutation_json: &str, after
     let expected = decode_snapshot(after_json)?;
     let mutation: EquationMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
-    let forward = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation, &base);
-    if let Ok(next) = protocol::apply_diff(forward.diff(), &applied) {
+    let forward = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation, &base);
+    if let Ok(next) = protocol::apply_diff_cold(forward.diff(), &applied) {
         applied = next;
     }
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &undone);
-        if let Ok(next) = protocol::apply_diff(outcome.diff(), &undone) {
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &undone);
+        if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), &undone) {
             undone = next;
         }
         inverse_messages.extend(outcome.messages().iter().cloned());

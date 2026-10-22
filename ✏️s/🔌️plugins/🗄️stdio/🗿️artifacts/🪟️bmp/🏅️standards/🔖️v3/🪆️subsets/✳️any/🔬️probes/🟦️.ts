@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -40,7 +41,7 @@ function digestHex(hex: string): { size: number; digest: string } {
 /** 📥️ Runs the standalone codec's `project` subcommand and turns its raw hex payload into the
  *  profile's own size+digest projection — never raw bytes past this function. */
 function readBmp(path: string): BmpDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`image-bmp-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   const raw = JSON.parse(result.stdout) as RawDoc;
   return {
@@ -100,7 +101,6 @@ from PIL import Image
 
 def project(path):
     raw = open(path, 'rb').read()
-    # 📐️BITMAPINFOHEADER begins at byte 14; these ten fields are its whole fixed layout.
     width, height, planes, bpp, compression, image_size, xppm, yppm, used, important = struct.unpack('<iihhIIiiII', raw[18:54])
     im = Image.open(path)
     return {
@@ -120,7 +120,7 @@ else:
 `;
 
 function headerRun(paths: readonly string[]): Record<string, unknown> {
-  const result = spawnSync("python3", ["-c", HEADER_READER, ...paths], { encoding: "utf8" });
+  const result = runToolSyncV1("python", ["-c", HEADER_READER, ...paths], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`pillow bmp header reader failed: ${result.stderr}`);
   return JSON.parse(result.stdout) as Record<string, unknown>;
 }

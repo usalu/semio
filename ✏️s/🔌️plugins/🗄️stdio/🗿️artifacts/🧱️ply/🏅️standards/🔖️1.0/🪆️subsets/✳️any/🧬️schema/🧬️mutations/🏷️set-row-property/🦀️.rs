@@ -17,7 +17,16 @@ pub struct SetRowProperty {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "row-property", kind: "set-row-property", record: "SetRowProperty" };
 
-    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set row property", "Zeileneigenschaft setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::ColdMutation<PlySnapshot>>::ReferenceDiff> {
         let Self { element_name, row_index, property_name, value } = self;
         protocol::MutationOutcome::new(diff_set_row_property(element_name, *row_index, property_name, value.clone()))
     }
@@ -35,12 +44,6 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
                 }
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set row property", "Zeileneigenschaft setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "viewer-preferences", kind: "set-viewer-preferences", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_viewer_preferences(base, self.preferences.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        vec![Op::from(SetViewerPreferences { preferences: base.viewer_preferences.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set viewer-preferences", "Betrachtereinstellungen setzen")
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetViewerPreferences
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetViewerPreferences>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_viewer_preferences(base, self.preferences.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        vec![Op::from(SetViewerPreferences { preferences: base.viewer_preferences.clone() })]
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

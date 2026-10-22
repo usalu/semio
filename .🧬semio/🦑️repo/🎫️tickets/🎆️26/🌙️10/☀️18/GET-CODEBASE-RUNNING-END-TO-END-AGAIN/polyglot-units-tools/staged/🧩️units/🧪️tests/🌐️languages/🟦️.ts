@@ -124,7 +124,9 @@ describe("C and C++ adapter", () => {
   });
   for (const row of cpp.includes as any[]) test(`include scan ${row.name}`, () => expect(scanCppIncludesV1(row.source).map(item => [item.path, item.system])).toEqual(row.expect));
   test("normalization keeps literals, raw strings and macro lines", () => {
-    expect(normalizeCppV1('const char *a = "//not";  // comment\nconst char c = \'"\'; /* x */\nauto r = R"x(/* kept */)x";\n#define M(a,b)   ((a) + (b))\n')).toBe('const char *a = "//not";\nconst char c = \'"\';\nauto r = R"x(/* kept */)x";\n#define M(a,b) ((a) + (b))');
+    expect(normalizeCppV1('const char *a = "//not";  // comment\nconst char c = \'"\'; /* x */\nauto r = R"x(/* kept */)x";\n#define M(a,b)   ((a) + (b))\n')).toBe('const char * a = "//not" ;\nconst char c = \'"\' ;\nauto r = R"x(/* kept */)x" ;\n#define M( a , b ) ( ( a ) + ( b ) )');
+    expect(normalizeCppV1("#define F(x) x")).not.toBe(normalizeCppV1("#define F (x) x"));
+    expect(normalizeCppV1("int  f( int x );")).toBe(normalizeCppV1("int f(int x);"));
   });
   const configured = async (directory: string) => {write(directory, cpp.workspace); return cmakeProjectV1(directory, portsFor(Object.keys(cpp.workspace)));};
   test("CMake's file API (cmake, Ninja) feeds the planner: libraries own sources and public headers, private headers are inputs, executables compile the library closure", async () => {

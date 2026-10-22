@@ -12,22 +12,25 @@ pub struct SetEditorSelection {
 
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetEditorSelection {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-editor-selection", kind: "set-editor-selection", record: "SetEditorSelection" };
-    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransientDiff> {
-        protocol::MutationOutcome::new(WriterMainWindowTransientDiff { editor_selection: (base.editor_selection != self.selection).then(|| WriterOptionalSelection { value: self.selection.clone() }), ..Default::default() })
-    }
 
-    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { selection: base.editor_selection.clone() }.into()]
-    
-    })())
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Editor Selection", "Editorauswahl des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["editor_selection".into()]
     }
+}
+
+impl protocol::ColdMutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetEditorSelection {
+    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransientDiff> {
+        protocol::MutationOutcome::new(WriterMainWindowTransientDiff { editor_selection: (base.editor_selection != self.selection).then(|| WriterOptionalSelection { value: self.selection.clone() }), ..Default::default() })
+    }
+    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { selection: base.editor_selection.clone() }.into()]
+    
+    })())
+}
 }
 
 #[cfg(test)]

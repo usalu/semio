@@ -4,6 +4,7 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct CopyOwners{output:Option<Tree>,neuron:Option<Neuron>,synapse:Option<Synapse>,buffer:Vec<u8>,child:Option<Box<BudgetedTreeCopy>>,nested:Option<Tree>}
 /// 📋️ Copies only execution strings and retains the same original immutable parameter leases.
 pub struct BudgetedTreeCopy{owners:ManuallyDrop<Option<CopyOwners>>,retirement:Option<ControlledRetirement<CopyOwners>>,source:usize,node:usize,edge:usize,phase:u8,closing:bool,progress:RetainedCloneProgress}

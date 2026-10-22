@@ -20,12 +20,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "node", kind: "resize-node", record: "ResizedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let number = |value: f64| {
             let en = format!("{}", (value * 100.0).round() / 100.0);
@@ -37,6 +31,18 @@ where
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for ResizeNode
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<ResizeNode>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
     }
 }
 //#endregion 🔖️Payload

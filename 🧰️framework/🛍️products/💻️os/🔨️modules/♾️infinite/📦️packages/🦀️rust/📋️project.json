@@ -17,7 +17,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -31,7 +31,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -45,7 +45,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -68,7 +68,7 @@
         "{projectRoot}/.🧾️store/fonts.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts fonts"
+        "command": "repo ./📜️script.ts fonts"
       },
       "metadata": {
         "semio": {
@@ -89,7 +89,7 @@
         "^default"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-wgpu-world-terrain",
+        "command": "repo ./📜️script.ts test-wgpu-world-terrain",
         "forwardAllArgs": true
       }
     },
@@ -106,7 +106,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-board-fill-source",
+        "command": "repo ./📜️script.ts test-original-board-fill-source",
         "forwardAllArgs": true
       }
     }

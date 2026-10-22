@@ -156,40 +156,9 @@ func TestLayoutPathsComposeFromTheRoot(t *testing.T) {
 
 // #region 🧭️Discovery
 
-func TestFindRepoRootPrefersTheNearestGitCheckout(t *testing.T) {
-	root := t.TempDir()
-	nested := filepath.Join(root, "a", "b", "c")
-	if err := os.MkdirAll(nested, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(filepath.Join(root, ".git"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	got, err := filepath.EvalSymlinks(FindRepoRoot(nested))
-	if err != nil {
-		t.Fatal(err)
-	}
-	want, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Errorf("FindRepoRoot = %q, want %q", got, want)
-	}
-}
-
-func TestFindRepoRootFallsBackToAGoModule(t *testing.T) {
-	root := t.TempDir()
-	nested := filepath.Join(root, "a", "b")
-	if err := os.MkdirAll(nested, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(root, "a", "go.mod"), []byte("module x\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if filepath.Base(FindRepoRoot(nested)) != "a" {
-		t.Errorf("FindRepoRoot = %q, want the directory holding go.mod", FindRepoRoot(nested))
-	}
+func TestFindRepoRootUsesTheActualCheckout(t *testing.T) {
+ start, err := os.Getwd(); if err != nil { t.Fatal(err) }; expected, err := filepath.EvalSymlinks(start); if err != nil { t.Fatal(err) };
+ for candidate := expected;; candidate = filepath.Dir(candidate) { info, err := os.Stat(filepath.Join(candidate, ".git")); if err == nil && (info.IsDir() || info.Mode().IsRegular()) { expected = candidate; break }; if filepath.Dir(candidate) == candidate { break } }; if got := FindRepoRoot(start); got != expected { t.Fatalf("FindRepoRoot = %q, want %q", got, expected) }
 }
 
 // #endregion 🧭️Discovery

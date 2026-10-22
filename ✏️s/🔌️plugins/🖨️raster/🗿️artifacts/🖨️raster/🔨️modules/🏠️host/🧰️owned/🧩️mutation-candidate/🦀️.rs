@@ -437,7 +437,7 @@ impl RasterMutationCandidateAuthority {
                 let outcome = Mutation::diff(operation, &*snapshot);
                 let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
                 let (diff, _) = outcome.into_parts();
-                let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
+                let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff_cold(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
                 protocol::MutationDiff::retire_cold(diff);
                 let previous = std::mem::replace(snapshot, painted?);
                 self.retirement.put(RasterDisplaced::Snapshot(previous));

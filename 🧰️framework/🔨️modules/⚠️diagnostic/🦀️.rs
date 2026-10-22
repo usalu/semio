@@ -423,7 +423,7 @@ pub struct Fault {
     pub scope: Box<FaultScope>,
     pub span: Option<TextSpan>,
     pub source: Option<FaultSource>,
-    pub domain:Option<DslValue>,
+    pub domain:Option<Box<DslValue>>,
     pub causes: Vec<FaultCause>,
     /// 🔣️ The placeholder values of this fault's localized notice; absent when it names none.
     pub params: Option<Box<FaultParams>>,
@@ -564,7 +564,7 @@ impl ToValue for Fault {
             entries.push(("span".to_string(), span.to_value()));
         }
         if let Some(source) = &self.source { entries.push(("source".into(), source.to_value())); }
-        if let Some(domain)=&self.domain{entries.push(("domain".into(),domain.clone()));}
+        if let Some(domain)=&self.domain{entries.push(("domain".into(),(**domain).clone()));}
         if !self.causes.is_empty() {
             entries.push(("causes".to_string(), DslValue::Array(self.causes.iter().map(ToValue::to_value).collect())));
         }
@@ -629,7 +629,7 @@ impl FromValue for Fault {
                 Some(slot) => Some(TextSpan::from_value(slot)?),
             },
             source: match find("source") { None | Some(DslValue::Null)=>None, Some(value)=>Some(FaultSource::from_value(value)?) },
-            domain:match find("domain"){None=>None,Some(value@DslValue::Object(_))=>Some(value),_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.domain requires an original object projection"))},
+            domain:match find("domain"){None=>None,Some(value@DslValue::Object(_))=>Some(Box::new(value)),_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.domain requires an original object projection"))},
             causes: match find("causes") {
                 None | Some(DslValue::Null) => Vec::new(),
                 Some(DslValue::Array(items)) => items.into_iter().map(FaultCause::from_value).collect::<Result<_, _>>()?,
@@ -668,7 +668,7 @@ impl Fault {
     /// 🫴️ Attaches the same original receipt before crossing a diagnostic boundary.
     pub fn with_retained_progress(mut self,progress:semio_framework_value::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
     /// 🧳️ Owns the complete first-party domain projection without a JSON-text owner.
-    pub fn with_domain(mut self,domain:DslValue)->Result<Self,ValueError>{if !matches!(domain,DslValue::Object(_)){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.domain requires an original object projection"))}self.domain=Some(domain);Ok(self)}
+    pub fn with_domain(mut self,domain:DslValue)->Result<Self,ValueError>{if !matches!(domain,DslValue::Object(_)){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.domain requires an original object projection"))}self.domain=Some(Box::new(domain));Ok(self)}
     pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
         Self { retained_progress:Default::default(),origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, source:None, domain:None, causes: Vec::new(), params: None, retryable: false }
     }

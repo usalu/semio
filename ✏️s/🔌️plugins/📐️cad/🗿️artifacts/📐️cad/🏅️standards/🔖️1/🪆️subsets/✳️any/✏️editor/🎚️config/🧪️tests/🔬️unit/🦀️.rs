@@ -44,7 +44,7 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     let next = CadConfig { selected_node_ids: serde_json::from_value(fixture["selectedNodeIds"].clone()).expect("neutral selection"), ..CadConfig::default() };
     let operation = CadConfigMutation::Set(SetEdit { config: Box::new(next.clone()) });
     let forward = operation.diff(&base).diff().clone();
-    assert_eq!(protocol::apply_diff(&forward, &base).unwrap(), next);
+    assert_eq!(protocol::apply_diff_cold(&forward, &base).unwrap(), next);
     assert_eq!(forward, CadConfigDiff { selected_node_ids: Some(next.selected_node_ids.clone()), ..Default::default() });
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![CadConfigMutation::Set(SetEdit { config: Box::new(base.clone()) })]);
@@ -53,7 +53,7 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     assert_eq!(<CadConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("config mutation binary round trip"), operation);
     let inline_bytes = size_of::<CadConfigMutation>();
     assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "CAD config mutation exceeds its neutral inline budget");
-    let restored = protocol::apply_diff(backwards[0].diff(&next).diff(), &next).unwrap();
+    let restored = protocol::apply_diff_cold(backwards[0].diff(&next).diff(), &next).unwrap();
     assert_eq!(restored, base);
     store::os_store::test_support::assert_op_line_round_trip(&operation);
 }
@@ -63,7 +63,7 @@ async fn cad_config_set_contributions_round_trips() {
     let base = CadConfig::default();
     let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
     let operation = CadConfigMutation::SetContributions(SetContributionsEdit { json: json.into() });
-    let next = protocol::apply_diff(operation.diff(&base).diff(), &base).unwrap();
+    let next = protocol::apply_diff_cold(operation.diff(&base).diff(), &base).unwrap();
     assert_eq!(next.contributions_json, json);
     store::os_store::test_support::assert_op_line_round_trip(&operation);
 }

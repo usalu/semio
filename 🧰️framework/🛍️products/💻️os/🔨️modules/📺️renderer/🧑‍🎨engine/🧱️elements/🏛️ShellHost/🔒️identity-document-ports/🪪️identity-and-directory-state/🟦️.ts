@@ -4,7 +4,7 @@ import { type DirectorySessionRefreshV1 } from "@semio-tech/framework/directory/
 import { HubSessionPortClientV1 } from "@semio-tech/framework/directory/session-refresh/session-port";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, parseLocalHubSessionAnswerV1 } from "@semio-tech/framework/directory/local-session";
 import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubSessionCapabilityV1 } from "@semio-tech/framework/directory/sign-in";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, type ArtifactDialect, type Conflict, type MergeReport, type Severity } from "@semio-tech/framework";
 import { type BackboneWorkerResponse, encodeBackboneWorkerRequest, type PersistenceBinding, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
 import { type DirectorySessionAuthorityV1 } from "@semio-tech/framework/directory/schema/session-authority-v1";

@@ -1,0 +1,36 @@
+{
+  "title": "Fix Detail Panel Line Alignment Using Playwright",
+  "status": "closed",
+  "description": "Fix the sketchpad detail panel lines so they align with tree elements like in the storybook. Use Playwright to verify the fix.",
+  "summary": "Fixed tree indentation lines 0.5px misalignment by subtracting half the line width from positioning. Playwright measurements confirm perfect 0.0px alignment across all tree rows. 13/13 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/751"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T10:58:40.443481275Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix the sketchpad detail panel lines so they align with tree elements like in the storybook. Use Playwright to verify the fix.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02T13:43:55.416243126Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Fixed tree indentation lines 0.5px misalignment by subtracting half the line width from positioning. Playwright measurements confirm perfect 0.0px alignment across all tree rows. 13/13 unit tests pass.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/elements.tsx"
+        }
+      ]
+    }
+  ]
+}

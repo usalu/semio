@@ -2,10 +2,10 @@ import {lstatSync,readFileSync,readdirSync,readlinkSync,unlinkSync} from "node:f
 import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {javascriptDependencySourceOwnerRuntimeV1,selectObsoleteJavascriptDependencyGenerationsV1,type JavascriptDependencyReadContextV1} from "../../💾️storage/🟦️.ts";
-import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+import {javascriptDependencyGenerationDirectoryV1,javascriptDependencySourceOwnerRuntimeV1,selectObsoleteJavascriptDependencyGenerationsV1,type JavascriptDependencyReadContextV1} from "../../💾️storage/🟦️.ts";
+import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {verifyJavascriptDependencyGenerationReceiptV1,writeJavascriptDependencyGenerationFilesV1} from "../../🧾️generation/💾️storage/🟦️.ts";
-import {generationSha256V1} from "../../🧾️generation/🟦️.ts";
+import {generationCauseV1,generationSha256V1} from "../../🧾️generation/🟦️.ts";
 import {decodeInstalledLedgerV1,decodeOwnershipIndexV1,encodeInstalledLedgerV1,encodeOwnershipIndexV1,incrementalProtocolV1 as protocol,installedCountsV1,installedRowV1,installedStampV1,installedThresholdNsV1,lockConvergedV1,parseInstalledReceiptV1,parseLockReceiptV1,parseOwnershipReceiptV1,parseSyncReceiptV1,replayExecutionObservationsV1,sealInstalledReceiptV1,sealLockReceiptV1,sealOwnershipReceiptV1,sealSyncReceiptV1,verifyInstalledLedgerV1,type ExecutionObservationV1,type ExecutionReplayResultV1,type IncrementalControlV1,type InstalledChildV1,type InstalledPortsV1,type InstalledRowV1,type InstalledShapeV1,type LockReceiptV1,type OwnershipRecordV1,type StampSourceV1,type SyncReceiptV1} from "../🟦️.ts";
 
 const directory=(storeRoot:string)=>join(storeRoot,protocol.directory),keyOf=(label:string)=>generationSha256V1(label).slice(0,16);
@@ -81,18 +81,19 @@ export async function publishJavascriptDependencySyncReceiptV1(storeRoot:string,
  return receipt.sha256;
 }
 /** 🚪️ Answers whether the last complete synchronization still holds: every sealed scope read matches its generation receipt, every installed ledger matches its directories and no obsolete generation remains. */
-export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl):Promise<Readonly<{status:"current";scopes:number}>|Readonly<{status:"stale";reason:string}>>{
- const stale=(reason:string)=>Object.freeze({status:"stale"as const,reason}),root=context.root;let sync:SyncReceiptV1|undefined;
+export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl):Promise<Readonly<{status:"current";scopes:number}>|Readonly<{status:"stale";reason:string;cause?:Readonly<{class:string;path?:string;detail?:string}>}>>{
+ const stale=(reason:string,cause?:Readonly<{class:string;path?:string;detail?:string}>)=>Object.freeze({status:"stale"as const,reason,...(cause===undefined?{}:{cause})}),root=context.root;let sync:SyncReceiptV1|undefined;
  for(const name of names(root,keyOf(protocol.sync.keyLabel)+".",protocol.sync.receiptSuffix))try{sync=parseSyncReceiptV1(bounded(join(directory(root),name),protocol.sync.maximumReceiptBytes));break;}catch{}
  if(!sync)return stale("absent");
  if(sync.runtimeSha256!==javascriptDependencySourceOwnerRuntimeV1())return stale("runtime");
- let present:string[];try{present=readdirSync(join(root,"j"));}catch{return stale("generations");}
+ let present:string[];try{present=readdirSync(join(root,javascriptDependencyGenerationDirectoryV1));}catch{return stale("generations");}
  if(selectObsoleteJavascriptDependencyGenerationsV1(present,sync.scopes.map(row=>row.generation.slice(0,20)),[]).length)return stale("obsolete-generations");
  const incremental=controlOf(context,control,"sync-gate");
  for(const row of sync.scopes){
   const read=await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,row.scope);
-  if(read.status!=="match"||read.sha256!==row.read||read.receipts.find(receipt=>receipt.scope===row.scope)?.generation!==row.generation)return stale("generation:"+row.scope);
-  const installed=await verifyJavascriptDependencyInstalledReceiptV1(root,requireNativeStoragePathV1(root,join(root,"j",row.generation.slice(0,20))),row.generation,incremental);
+  if(read.status!=="match")return stale("generation:"+row.scope,generationCauseV1(read,row.scope));
+  if(read.sha256!==row.read||read.receipts.find(receipt=>receipt.scope===row.scope)?.generation!==row.generation)return stale("generation:"+row.scope,{class:"sha-changed"});
+  const installed=await verifyJavascriptDependencyInstalledReceiptV1(root,requireNativeStoragePathV1(root,join(root,javascriptDependencyGenerationDirectoryV1,row.generation.slice(0,20))),row.generation,incremental);
   if(!installed||installed.sha256!==row.installed)return stale("installed:"+row.scope);
  }
  return Object.freeze({status:"current",scopes:sync.scopes.length});
@@ -115,7 +116,7 @@ export async function publishJavascriptDependencySyncFromReadsV1(storeRoot:strin
 /** 🔂️ Replays the recorded physical observations of an earlier provider walk against the live tree under the caller's custody, bracketing one custody recheck exactly like the walk itself. */
 export async function replayJavascriptDependencyExecutionV1(context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,observations:readonly ExecutionObservationV1[],startedAtMs:number):Promise<ExecutionReplayResultV1>{
  const policy=installSchema.$defs.SourceOwnerExecutionProtocol.const,ports=Object.freeze({control:controlOf(context,control,"execution-replay"),
-  stat:(path:string)=>{const facts=lstatSync(path,{bigint:true,throwIfNoEntry:false});return facts?Object.freeze({stamp:JSON.stringify(policy.selectedFields.map(name=>String(facts[name as keyof typeof facts]))),anchor:JSON.stringify(policy.ancestorFields.map(name=>String(facts[name as keyof typeof facts])))}):undefined;},
+  stat:(path:string)=>{const facts=lstatSync(path,{bigint:true,throwIfNoEntry:false});return facts?Object.freeze({stamp:JSON.stringify(policy.selectedFields.map((name:string)=>String(facts[name as keyof typeof facts]))),anchor:JSON.stringify(policy.ancestorFields.map((name:string)=>String(facts[name as keyof typeof facts])))}):undefined;},
   readlink:(path:string)=>readlinkSync(path)});
  const first=await replayExecutionObservationsV1(observations,startedAtMs,ports);if(first.status!=="match")return first;
  await context.recheck(control);return replayExecutionObservationsV1(observations,startedAtMs,ports);

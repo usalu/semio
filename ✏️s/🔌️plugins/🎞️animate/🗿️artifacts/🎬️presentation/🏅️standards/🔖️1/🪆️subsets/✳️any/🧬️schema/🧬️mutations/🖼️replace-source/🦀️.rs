@@ -26,17 +26,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "source", kind: "replace-source", record: "ReplacedSource" };
 
-    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle durch \"{}\" ersetzen", self.new_source.src))
     }
@@ -44,5 +33,20 @@ where
     fn target(&self) -> Vec<String> {
         vec!["source".into()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PresentationSnapshot, Op> for ReplaceSource
+where
+    Op: protocol::ColdMutation<PresentationSnapshot, ReferenceDiff = PresentationDiff> + From<ReplaceSource>,
+{
+    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔹Payload

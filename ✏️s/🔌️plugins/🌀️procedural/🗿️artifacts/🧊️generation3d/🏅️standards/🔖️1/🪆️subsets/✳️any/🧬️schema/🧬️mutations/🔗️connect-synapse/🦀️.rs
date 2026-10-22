@@ -21,17 +21,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::connect_synapse::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::connect_synapse::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" verbinden", self.synapse.id))
     }
@@ -39,5 +28,20 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.synapse.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for ConnectSynapse
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<crate::disconnect_synapse::DisconnectSynapse>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::connect_synapse::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::connect_synapse::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️ConnectSynapse

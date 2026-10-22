@@ -10,7 +10,7 @@ package client
 
 import (
 	"fmt"
-	"os/exec"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"strings"
 	"time"
 )
@@ -23,7 +23,7 @@ func (p *GitVersionControlProvider) Kind() string { return "git" }
 
 // 🌐️RepoURL holds the data fields for a RepoURL record.
 func (p *GitVersionControlProvider) RepoURL() (string, error) {
-	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	out, err := workspace.ToolCommand("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
 		return "", err
 	}
@@ -176,23 +176,23 @@ func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
 // ⚙️Configure holds the data fields for a Configure record.
 func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
 
-// 🔌️AllEditorProviders returns all registered editor providers.
-func AllEditorProviders() []EditorProvider {
-	return []EditorProvider{
-		&CopilotEditorProvider{},
-		&CursorEditorProvider{},
-		&WindsurfEditorProvider{},
-		&ClaudeCodeEditorProvider{},
-		&DroidEditorProvider{},
-		&CodexEditorProvider{},
-		&AntigravityEditorProvider{},
-		&KiroEditorProvider{},
+// 🔌️AllAgentClientProviders returns all registered agent-client providers.
+func AllAgentClientProviders() []AgentClientProvider {
+	return []AgentClientProvider{
+		&CopilotAgentClientProvider{},
+		&CursorAgentClientProvider{},
+		&WindsurfAgentClientProvider{},
+		&ClaudeCodeAgentClientProvider{},
+		&DroidAgentClientProvider{},
+		&CodexAgentClientProvider{},
+		&AntigravityAgentClientProvider{},
+		&KiroAgentClientProvider{},
 	}
 }
 
-// 💻️GetEditorProvider returns the editor provider for the given client slug.
-func GetEditorProvider(client string) EditorProvider {
-	for _, p := range AllEditorProviders() {
+// 💻️GetAgentClientProvider returns the agent-client provider for the given client slug.
+func GetAgentClientProvider(client string) AgentClientProvider {
+	for _, p := range AllAgentClientProviders() {
 		if p.Kind() == client {
 			return p
 		}

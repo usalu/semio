@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "directory": "/w/.cache/b/l/m/data",
+  "sequences": [
+    {
+      "id": "cargo-check-reader",
+      "note": "A compile holds the sealed toolchain generation and the Cargo configuration view as readers, then the Cargo registry and build leases of its ingress, and only inside them its host capacity and CPU slots.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "rustup:generation-shard:24",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:configuration-view:41",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/cargo/home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/b/r/b\"]",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu-picker/v1",
+          "mode": "exclusive"
+        },
+        {
+          "op": "release",
+          "resource": "semio.compiler.cpu-picker/v1"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/3",
+          "mode": "exclusive"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "toolchain-provision",
+      "note": "Provisioning an absent generation holds the home exclusively and then takes tool singletons.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "nx-tooling-provision",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "rustup:generation-shard:24",
+          "mode": "exclusive"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "capacity-then-tool-activation",
+      "note": "A capacity slot taken for a command that then activates tools is a declared edge.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "nx-tooling-activation",
+          "mode": "exclusive"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "reader-then-graph",
+      "note": "A compile that needs the graph asks for it after its capacity.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "repository-graph-facts:/w",
+          "mode": "shared"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "capacity-then-toolchain-is-refused",
+      "note": "Holding capacity while waiting for the toolchain would deadlock against a reader that waits for that capacity, so no edge exists.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        }
+      ],
+      "violations": [
+        {
+          "held": "semio.compiler.host-capacity/v1",
+          "requested": "rustup:home"
+        }
+      ]
+    },
+    {
+      "id": "graph-then-toolchain-is-refused",
+      "note": "The graph is ordered after the toolchain.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "repository-graph-facts:/w",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        }
+      ],
+      "violations": [
+        {
+          "held": "repository-graph-facts:/w",
+          "requested": "rustup:home"
+        }
+      ]
+    },
+    {
+      "id": "configuration-view-after-capacity-is-refused",
+      "note": "The Cargo configuration view wraps the whole build, so taking it while a capacity slot is held would invert the order.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:configuration-view:41",
+          "mode": "shared"
+        }
+      ],
+      "violations": [
+        {
+          "held": "semio.compiler.host-capacity/v1",
+          "requested": "cargo:configuration-view:41"
+        }
+      ]
+    },
+    {
+      "id": "capacity-then-build-lease-is-refused",
+      "note": "Waiting for a build lease while holding a capacity slot would idle the slot and can deadlock against a build that holds the lease and waits for capacity; the ingress takes the lease first.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/b/r/b\"]",
+          "mode": "exclusive"
+        }
+      ],
+      "violations": [
+        {
+          "held": "semio.compiler.host-capacity/v1",
+          "requested": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/b/r/b\"]"
+        }
+      ]
+    },
+    {
+      "id": "capacity-then-registry-is-refused",
+      "note": "The registry reader wraps the build, so it precedes capacity.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/cargo/home",
+          "mode": "shared"
+        }
+      ],
+      "violations": [
+        {
+          "held": "semio.compiler.host-capacity/v1",
+          "requested": "cargo:registry:/w/.cache/cargo/home"
+        }
+      ]
+    }
+  ]
+}

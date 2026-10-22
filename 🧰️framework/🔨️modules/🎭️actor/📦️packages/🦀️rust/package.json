@@ -28,10 +28,10 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-original-receiving-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor-rs:test-original-receiving-source",
-    "test-original-receiving-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor-rs:test-original-receiving-native",
-    "test-original-owned-async-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor-rs:test-original-owned-async-source",
-    "test-original-owned-async-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor-rs:test-original-owned-async-native"
+    "test-original-receiving-source": "repo run @semio-tech/framework-actor-rs:test-original-receiving-source",
+    "test-original-receiving-native": "repo run @semio-tech/framework-actor-rs:test-original-receiving-native",
+    "test-original-owned-async-source": "repo run @semio-tech/framework-actor-rs:test-original-owned-async-source",
+    "test-original-owned-async-native": "repo run @semio-tech/framework-actor-rs:test-original-owned-async-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

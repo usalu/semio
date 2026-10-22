@@ -33,6 +33,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "block", kind: "resize-block", record: "ResizedBlock" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Größe von Block \"{}\" ändern", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for ResizeBlock
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<ResizeBlock>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -42,11 +54,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Größe von Block \"{}\" ändern", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

@@ -62,6 +62,35 @@ pub trait ArtifactCanonicalJson: Sync {
     }
 }
 
+/// 🌲️ Views one original mutation as its path-addressed canonical JSON without copying it: the wire of a mutation IS its canonical tree.
+#[repr(transparent)]
+pub struct ArtifactCanonicalTreeSource<M>(M);
+
+impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalTreeSource<M> {
+    /// 🔗️ Reborrows the original mutation in place as its canonical wire role.
+    pub const fn view(mutation: &M) -> &Self {
+        unsafe { &*(mutation as *const M).cast::<Self>() }
+    }
+
+    fn descend<'a>(&'a self, path: &[usize]) -> Result<&'a dyn ArtifactCanonicalJsonTree, ValueError> {
+        let mut node: &dyn ArtifactCanonicalJsonTree = &self.0;
+        for ordinal in path {
+            node = node.canonical_tree_child(*ordinal)?;
+        }
+        Ok(node)
+    }
+}
+
+impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalJson for ArtifactCanonicalTreeSource<M> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        self.descend(path)?.canonical_tree_node()
+    }
+
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
+        self.descend(object_path)?.canonical_tree_key(index)
+    }
+}
+
 pub fn invalid_path() -> ValueError {
     ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"canonical-edit.invalid-typed-path")
 }
@@ -420,3 +449,7 @@ impl ArtifactCanonicalJsonCursor {
 //#region 🧪️CanonicalLaws
 
 //#endregion 🧪️CanonicalLaws
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

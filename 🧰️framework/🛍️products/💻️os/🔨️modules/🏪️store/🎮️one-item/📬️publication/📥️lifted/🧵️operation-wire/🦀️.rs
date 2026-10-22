@@ -1,6 +1,6 @@
 //! 📥️ Items of `prepared_operation_wire` that belong to `os-store-one-item-publication` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧵️operation-wire/🦀️.rs`.
 use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
-use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_os_pack::record::BorrowedProjectedPackFailure;
@@ -30,34 +30,7 @@ impl From<BorrowedProjectedPackFailure> for ArtifactPreparedOperationError {
     fn from(failure: BorrowedProjectedPackFailure) -> Self { Self { written_bytes: failure.written_bytes, reason: failure.reason } }
 }
 
-/// 🌲️ Views one original mutation as its path-addressed canonical JSON without copying it: the wire of a mutation IS its canonical tree.
-#[repr(transparent)]
-pub struct ArtifactCanonicalTreeSource<M>(M);
-
-impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalTreeSource<M> {
-    /// 🔗️ Reborrows the original mutation in place as its canonical wire role.
-    pub const fn view(mutation: &M) -> &Self {
-        unsafe { &*(mutation as *const M).cast::<Self>() }
-    }
-
-    fn descend<'a>(&'a self, path: &[usize]) -> Result<&'a dyn ArtifactCanonicalJsonTree, ValueError> {
-        let mut node: &dyn ArtifactCanonicalJsonTree = &self.0;
-        for ordinal in path {
-            node = node.canonical_tree_child(*ordinal)?;
-        }
-        Ok(node)
-    }
-}
-
-impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalJson for ArtifactCanonicalTreeSource<M> {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
-        self.descend(path)?.canonical_tree_node()
-    }
-
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
-        self.descend(object_path)?.canonical_tree_key(index)
-    }
-}
+pub use semio_framework_os_store_canonical_json::ArtifactCanonicalTreeSource;
 
 /// 🪪️ The canonical operation wire of one mutation vocabulary, installed exactly once on every Store that authors it.
 ///
@@ -117,4 +90,12 @@ impl<M> ArtifactOperationWire<M> {
 
     /// 📛️ Borrows the `(entity, kind)` schema pair of one original mutation, when its lane has a semantic vocabulary.
     pub fn schema<'a>(&self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
+}
+
+impl<M:ArtifactCanonicalJsonTree+semio_framework_value_native_owned::native_decoding::NativeReceive<semio_framework_value::DslValue>+Sync> ArtifactOperationWire<M>{
+    /// 📏️ Quotes original canonical operation ingress before any bytes are parsed or typed owners are created.
+    pub fn original_receiving_birth_demand(&self)->semio_framework_value::RetirementDemand{semio_framework_pack_json::OriginalJsonReceiving::<M>::constructor_demand()}
+    /// 🧳️ Receives this installed canonical vocabulary through its original wire projection and mutation issuer.
+    pub fn begin_original_receiving(&self,wire:semio_framework_value::RetainedOwnedProjection<Vec<u8>>,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>,control:&semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<(semio_framework_pack_json::OriginalJsonReceiving<M>,semio_framework_value::RetainedCloneProgress),(ValueError,semio_framework_value::RetainedOwnedProjection<Vec<u8>>)>{semio_framework_pack_json::OriginalJsonReceiving::admit(wire,factory,b"op",|mutation|mutation,control,grant)}
+
 }

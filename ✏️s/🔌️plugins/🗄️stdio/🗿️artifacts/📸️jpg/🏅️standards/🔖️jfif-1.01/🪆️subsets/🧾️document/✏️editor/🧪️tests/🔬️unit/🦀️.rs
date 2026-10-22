@@ -38,17 +38,17 @@ fn large_raster_density_edit_uses_compact_owned_event() {
     let [JpgMutation::ChangeJfifHeader(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its typed JFIF header intent") };
     
     assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
+    let next = protocol::apply_diff_cold(<JpgMutation as protocol::ColdMutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
     assert_eq!(next.image.jfif_x_density, 75);
     assert_eq!(next.image.pixels, snapshot.image.pixels);
-    let inverse = <JpgMutation as protocol::Mutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
+    let inverse = <JpgMutation as protocol::ColdMutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
     assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
-    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
+    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff_cold(<JpgMutation as protocol::ColdMutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
     assert_eq!(restored, snapshot);
 
     let native_base = crate::schema::snapshot::demo_jpg_snapshot();
     let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native density edit emits");
-    let native_edited = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
+    let native_edited = protocol::apply_diff_cold(<JpgMutation as protocol::ColdMutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
     let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("base JPEG encodes");
     let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("edited JPEG encodes");
     assert_ne!(edited_bytes, base_bytes, "the density edit must affect the native JPEG export");
@@ -73,7 +73,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
         let emitted = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff_cold(<JpgMutation as protocol::ColdMutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
         *expected.pointer_mut("/image/pixels").unwrap() = row["expected"].clone();

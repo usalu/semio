@@ -31,7 +31,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
+        "command": "repo ./📜️script.ts artifact-directory-wiring generate jpg"
       },
       "cache": false,
       "metadata": {
@@ -44,7 +44,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
+        "command": "repo ./📜️script.ts artifact-directory-wiring check jpg"
       },
       "outputs": [],
       "inputs": [
@@ -56,7 +56,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
+        "command": "repo ./📜️script.ts subset-directory-wiring generate semio mesh"
       },
       "cache": false,
       "metadata": {
@@ -69,7 +69,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
+        "command": "repo ./📜️script.ts subset-directory-wiring check semio mesh"
       },
       "outputs": [],
       "inputs": [
@@ -81,7 +81,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts flow-retained-decode-check",
+        "command": "repo ./📜️script.ts flow-retained-decode-check",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -96,7 +96,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -112,7 +112,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-projection",
+        "command": "repo ./📜️script.ts native-codec-projection",
         "forwardAllArgs": true
       },
       "outputs": [
@@ -130,7 +130,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts catalog-root",
+        "command": "repo ./📜️script.ts catalog-root",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -144,7 +144,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts home-io-surface source"
+        "command": "repo ./📜️script.ts home-io-surface source"
       },
       "inputs": [
         "default",
@@ -164,7 +164,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts home-io-surface native"
+        "command": "repo ./📜️script.ts home-io-surface native"
       },
       "inputs": [
         "default",
@@ -179,7 +179,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts editor-component-check",
+        "command": "repo ./📜️script.ts editor-component-check",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -193,7 +193,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite census all",
+        "command": "repo ./📜️script.ts snapshot-sqlite census all",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -208,7 +208,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite census check",
+        "command": "repo ./📜️script.ts snapshot-sqlite census check",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -223,7 +223,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite census source",
+        "command": "repo ./📜️script.ts snapshot-sqlite census source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -238,7 +238,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite census",
+        "command": "repo ./📜️script.ts snapshot-sqlite census",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -253,7 +253,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite catalog-contract",
+        "command": "repo ./📜️script.ts snapshot-sqlite catalog-contract",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -268,7 +268,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite catalog",
+        "command": "repo ./📜️script.ts snapshot-sqlite catalog",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -283,7 +283,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite foundation",
+        "command": "repo ./📜️script.ts snapshot-sqlite foundation",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -298,7 +298,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite geometry",
+        "command": "repo ./📜️script.ts snapshot-sqlite geometry",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -313,7 +313,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite archives",
+        "command": "repo ./📜️script.ts snapshot-sqlite archives",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -328,7 +328,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite archives source",
+        "command": "repo ./📜️script.ts snapshot-sqlite archives source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -343,7 +343,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite gif",
+        "command": "repo ./📜️script.ts snapshot-sqlite gif",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -358,7 +358,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite gif source",
+        "command": "repo ./📜️script.ts snapshot-sqlite gif source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -373,7 +373,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite wav",
+        "command": "repo ./📜️script.ts snapshot-sqlite wav",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -388,7 +388,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite wav source",
+        "command": "repo ./📜️script.ts snapshot-sqlite wav source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -403,7 +403,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite jpg",
+        "command": "repo ./📜️script.ts snapshot-sqlite jpg",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -418,7 +418,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite jpg source",
+        "command": "repo ./📜️script.ts snapshot-sqlite jpg source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -433,7 +433,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite md",
+        "command": "repo ./📜️script.ts snapshot-sqlite md",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -448,7 +448,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite md source",
+        "command": "repo ./📜️script.ts snapshot-sqlite md source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -463,7 +463,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite mp3",
+        "command": "repo ./📜️script.ts snapshot-sqlite mp3",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -478,7 +478,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite mp3 native",
+        "command": "repo ./📜️script.ts snapshot-sqlite mp3 native",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -493,7 +493,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite mp3 source",
+        "command": "repo ./📜️script.ts snapshot-sqlite mp3 source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -508,7 +508,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite semio",
+        "command": "repo ./📜️script.ts snapshot-sqlite semio",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -523,7 +523,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite semio source",
+        "command": "repo ./📜️script.ts snapshot-sqlite semio source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -538,7 +538,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite tiff",
+        "command": "repo ./📜️script.ts snapshot-sqlite tiff",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -553,7 +553,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite tiff source",
+        "command": "repo ./📜️script.ts snapshot-sqlite tiff source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -568,7 +568,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite images",
+        "command": "repo ./📜️script.ts snapshot-sqlite images",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -583,7 +583,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts snapshot-sqlite images source",
+        "command": "repo ./📜️script.ts snapshot-sqlite images source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -599,7 +599,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition prepare",
+        "command": "repo ./📜️script.ts composition prepare",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -613,7 +613,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition contribution-check",
+        "command": "repo ./📜️script.ts composition contribution-check",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -628,7 +628,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition removal-test-check",
+        "command": "repo ./📜️script.ts composition removal-test-check",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -642,7 +642,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition removal-check",
+        "command": "repo ./📜️script.ts composition removal-check",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -656,7 +656,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts mutation-inventory list-mutations s.stdio.binary raw any",
+        "command": "repo ./📜️script.ts mutation-inventory list-mutations s.stdio.binary raw any",
         "forwardAllArgs": true
       },
       "outputs": [],

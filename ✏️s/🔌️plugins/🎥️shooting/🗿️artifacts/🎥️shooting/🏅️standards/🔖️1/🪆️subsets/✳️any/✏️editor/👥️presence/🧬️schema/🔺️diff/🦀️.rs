@@ -12,18 +12,9 @@ pub struct ShootingPresenceDiff {
     pub camera: Option<ShootingCamera>,
 }
 
-impl MutationDiff<ShootingPresence> for ShootingPresenceDiff {
-    fn apply(&self, base: &ShootingPresence, _capability: ApplyCapability) -> MutationApplyResult<ShootingPresence> {
-        let mut next = base.clone();
-        if let Some(selected_shot_ids) = &self.selected_shot_ids {
-            next.selected_shot_ids = selected_shot_ids.clone();
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<ShootingPresence> for ShootingPresenceDiff {}
 
+impl protocol::ColdMutationDiff<ShootingPresence> for ShootingPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.selected_shot_ids.is_some() {
             self.selected_shot_ids = other.selected_shot_ids;
@@ -32,14 +23,29 @@ impl MutationDiff<ShootingPresence> for ShootingPresenceDiff {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut ShootingPresence, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(selected_shot_ids) = &self.selected_shot_ids {
+            next.selected_shot_ids = selected_shot_ids.clone();
+        }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<ShootingPresence> for ShootingPresenceDiff {
-    fn inverse(&self, base: &ShootingPresence) -> Self {
-        Self { selected_shot_ids: self.selected_shot_ids.as_ref().map(|_| base.selected_shot_ids.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ShootingPresence> for ShootingPresenceDiff {
+    fn inverse(&self, base: &ShootingPresence) -> Self {
+        Self { selected_shot_ids: self.selected_shot_ids.as_ref().map(|_| base.selected_shot_ids.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }

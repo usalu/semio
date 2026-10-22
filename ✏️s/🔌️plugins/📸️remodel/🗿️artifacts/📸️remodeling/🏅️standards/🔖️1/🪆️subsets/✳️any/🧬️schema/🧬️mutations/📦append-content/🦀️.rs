@@ -39,6 +39,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "content", kind: "append-content", record: "AppendedContent" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltsblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.content_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RemodelingSnapshot, Op> for AppendContent
+where
+    Op: protocol::ColdMutation<RemodelingSnapshot, ReferenceDiff = RemodelingDiff> + From<RemoveContent>,
+{
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
@@ -48,11 +60,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltsblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.content_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

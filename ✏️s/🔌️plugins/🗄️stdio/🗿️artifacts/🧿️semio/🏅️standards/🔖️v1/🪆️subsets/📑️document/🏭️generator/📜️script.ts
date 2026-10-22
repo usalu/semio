@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -39,6 +39,7 @@ import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import type { Run, Block, Doc, Recipe } from "./📇️document-model/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -356,7 +357,7 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
         packageVersion: spec.packageVersion,
         engineFamily: spec.engineFamily,
         engineVersion: spec.engineVersion,
-        command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+        command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
         seed: SEED,
         platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
       },
@@ -433,7 +434,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
-    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const fixturesDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     if (command === "carrier") {
@@ -459,7 +460,7 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "unitless", angle: "radian" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "json-rust-semio-document-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
+        generator: { oracle: "json-rust-semio-document-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
         comparisonProfile: "semantic-semio-document-carrier-v1",
         reproducible: true,
         family: "mechanical",

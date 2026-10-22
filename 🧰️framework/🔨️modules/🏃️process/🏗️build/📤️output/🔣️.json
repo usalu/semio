@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "machineFlag": "--json",
+  "separator": "--",
+  "result": "stdout",
+  "diagnostic": "stderr",
+  "divertedConsole": ["log", "info", "debug", "table", "dir", "dirxml"],
+  "contractKey": "semio.output.contract.v1"
+}

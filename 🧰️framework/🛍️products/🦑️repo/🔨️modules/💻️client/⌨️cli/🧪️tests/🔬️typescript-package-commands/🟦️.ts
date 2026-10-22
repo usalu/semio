@@ -31,7 +31,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   const oracle = await import("../🃏️glob/🟦️.ts");
   oracle.verifyFixtureGlobOracle();
   oracle.verifyTicketRetentionOracle();
-  await runCanonicalGoTests(join(context.repoRoot, REPO_CLI_GO), [...goLevelTestArgs(level), ...rest], {
+  await runCanonicalGoTests(join(context.repoRoot, REPO_CLI_GO), [...goLevelTestArgs(level), ...rest], context.invocation, {
     env: { ...process.env, GOWORK: join(context.repoRoot, "go.work") },
   });
 }

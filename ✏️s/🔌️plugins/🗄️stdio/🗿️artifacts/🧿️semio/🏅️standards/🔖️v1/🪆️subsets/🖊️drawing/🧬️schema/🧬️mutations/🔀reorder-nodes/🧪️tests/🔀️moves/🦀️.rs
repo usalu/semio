@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_the_leading_child_past_the_other_two() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("reorder-nodes applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("reorder-nodes applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
@@ -51,9 +51,9 @@ async fn the_undo_reorder_moves_the_node_back_to_the_head() {
     assert_eq!(undo.len(), 1, "reorder-nodes undoes as exactly one reorder-nodes");
     let SemioDrawingMutation::ReorderNodes(back) = &undo[0] else { panic!("reorder-nodes must undo as reorder-nodes") };
     assert_eq!((back.from, back.to), (2, 0), "the undo addresses the landed index and sends it back to the original one");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-nodes applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward reorder-nodes applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-nodes applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo reorder-nodes applies");
     }
     assert_eq!(current, base, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: the undo did not restore the before-snapshot");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -119,6 +119,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-nodes diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-nodes diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed reorder-nodes diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed diff did not carry before to after");
 }

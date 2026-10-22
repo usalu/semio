@@ -13,19 +13,20 @@ pub struct SetRelationshipBase {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetRelationshipBase {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationship-base", kind: "set-relationship-base", record: "SetRelationshipBase" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, &self.base))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(relationship_base_inverse(base))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxStrictMutation> for SetRelationshipBase {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, &self.base))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(relationship_base_inverse(base))
     }
 }
 //#endregion 🔖️Payload

@@ -24,6 +24,10 @@ impl protocol::Mutation<ProcedureSnapshot> for ProcedureMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
+
+impl protocol::ColdMutation<ProcedureSnapshot> for ProcedureMutation {
+    type ReferenceDiff = ProcedureDiff;
     fn diff(&self, _base: &ProcedureSnapshot) -> protocol::MutationOutcome<ProcedureDiff> {
         match *self {}
     }

@@ -63,7 +63,7 @@
       }
     },
     "command": {
-      "const": "bun ./🔨️modules/🧪️e2e/📜️script.ts test"
+      "const": "repo ./🔨️modules/🧪️e2e/📜️script.ts test"
     },
     "dataReads": {
       "type": "array",

@@ -11,7 +11,7 @@ use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
@@ -57,7 +57,7 @@ fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_de
     Ok(step)
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🎟️ One granted returned field-decoder turn; `Complete` means no returned decoder is left to hand off.
     pub fn drive_envelope_field_decoder_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
@@ -240,7 +240,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 📏️ Quotes the next returned field-decoder turn: the cursor owner's step, else one registry hand-off.
     pub(crate) fn envelope_field_decoder_returns_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let cursor = if closing { self.close.close_envelope_field_decoder_cursor } else { self.maintenance.maintenance_envelope_field_decoder_cursor };

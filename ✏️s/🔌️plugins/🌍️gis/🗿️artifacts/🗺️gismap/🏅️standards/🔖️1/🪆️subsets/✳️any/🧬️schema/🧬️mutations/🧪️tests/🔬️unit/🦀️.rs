@@ -1,6 +1,6 @@
 use crate::{mutations::create_position, mutations::delete_position, mutations::delete_route, mutations::reorder_positions, mutations::reorder_routes, mutations::replace_position_data, mutations::replace_region_data, mutations::replace_route_data};
 use crate::GisMapSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use crate::diff::GisMapDiff;
 #[allow(unused_imports)]

@@ -7,7 +7,7 @@ use store::snapshot_clone_preparation::RetainedCloneEditStep;
 use std::sync::Arc;
 use crate::editor::bmp::publication::*;
 use semio_framework_value::{FromValue,retained_clone::RetainedCloneSource};
-use semio_framework_value::retirement::SharedValueRetirementFactory;
+use semio_framework_value::SharedValueRetirementFactory;
 use crate::schema::mutations::{PaintIndexedRegion,PaintDirectRegion};
 fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
@@ -98,7 +98,7 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
 
 #[test]
 fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
@@ -117,7 +117,7 @@ fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owne
             if matches!(step,RetainedCloneEditStep::Complete(_)){break;}
         }
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
-        let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
+        let restored=protocol::apply_diff_cold(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
         retire_owned_value(inverse);
     }
 }

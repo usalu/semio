@@ -49,23 +49,9 @@ pub struct LowpolyPresenceDiff {
     pub paint_utility: Option<String>,
 }
 
-impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresenceDiff {
-    fn apply(&self, base: &LowpolyPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LowpolyPresence> {
-        let mut next = base.clone();
-        if let Some(value) = &self.world_camera_position {
-            next.world_camera_position = value.clone();
-        }
-        if let Some(value) = &self.world_camera_target {
-            next.world_camera_target = value.clone();
-        }
-        if let Some(value) = &self.world_camera_fov {
-            next.world_camera_fov = value.clone();
-        }
-        if let Some(value) = &self.paint_utility {
-            next.paint_utility = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresenceDiff {}
+
+impl protocol::ColdMutationDiff<LowpolyPresence> for LowpolyPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.world_camera_position.is_some() {
             self.world_camera_position = other.world_camera_position;
@@ -80,9 +66,34 @@ impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresenceDiff {
             self.paint_utility = other.paint_utility;
         }
     }
+
+    fn apply(&self, unpublished: &mut LowpolyPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.world_camera_position {
+            next.world_camera_position = value.clone();
+        }
+        if let Some(value) = &self.world_camera_target {
+            next.world_camera_target = value.clone();
+        }
+        if let Some(value) = &self.world_camera_fov {
+            next.world_camera_fov = value.clone();
+        }
+        if let Some(value) = &self.paint_utility {
+            next.paint_utility = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<LowpolyPresence> for LowpolyPresenceDiff {
+    fn is_empty(&self) -> bool {
+        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none() && self.paint_utility.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LowpolyPresence> for LowpolyPresenceDiff {
     fn inverse(&self, base: &LowpolyPresence) -> Self {
         Self {
             world_camera_position: self.world_camera_position.as_ref().map(|_| base.world_camera_position.clone()),
@@ -90,9 +101,6 @@ impl protocol::DiffAlgebra<LowpolyPresence> for LowpolyPresenceDiff {
             world_camera_fov: self.world_camera_fov.as_ref().map(|_| base.world_camera_fov.clone()),
             paint_utility: self.paint_utility.as_ref().map(|_| base.paint_utility.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none() && self.paint_utility.is_none()
     }
 }
 
@@ -207,14 +215,16 @@ impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
             Self::SetPaintUtility { .. } => &Self::DESCRIPTORS[1],
         }
     }
+}
 
+impl protocol::ColdMutation<LowpolyPresence> for LowpolyPresenceMutation {
+    type ReferenceDiff = LowpolyPresenceDiff;
     fn diff(&self, base: &LowpolyPresence) -> protocol::MutationOutcome<LowpolyPresenceDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetWorldCamera { position, target, fov } => LowpolyPresenceDiff { world_camera_position: (base.world_camera_position != *position).then_some(*position), world_camera_target: (base.world_camera_target != *target).then_some(*target), world_camera_fov: (base.world_camera_fov != *fov).then_some(*fov), ..Default::default() },
             Self::SetPaintUtility { value } => LowpolyPresenceDiff { paint_utility: (base.paint_utility != *value).then(|| value.clone()), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &LowpolyPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetWorldCamera { .. } => Self::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },

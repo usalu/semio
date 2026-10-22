@@ -19,16 +19,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetColumnTilt>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "column", kind: "set-column-tilt", record: "SetColumnTilt" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the tilt of column \"{}\"", self.id), &format!("Neigung von Stütze \"{}\" setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for SetColumnTilt
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<SetColumnTilt>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::inverse::inverse(self, base))
     }
 }

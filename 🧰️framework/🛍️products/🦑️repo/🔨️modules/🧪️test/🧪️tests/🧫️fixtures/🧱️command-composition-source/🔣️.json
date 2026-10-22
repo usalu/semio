@@ -327,7 +327,7 @@
   },
   "route": {
     "target": "test-command-composition-source",
-    "command": "bun ./📜️script.ts test command-composition-source",
+    "command": "repo ./📜️script.ts test command-composition-source",
     "namedInput": "commandCompositionSources"
   }
 }

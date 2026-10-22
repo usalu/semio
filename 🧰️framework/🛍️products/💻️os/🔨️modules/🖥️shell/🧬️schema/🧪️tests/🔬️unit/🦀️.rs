@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_test_fixtures::fixture_path;
 
 /// 🧬️ The gate of this module: `🔣️.json`'s `$defs` key set and the Rust registry's exported
-/// type set are the SAME set. `bun repo run @semio-tech/framework-os-shell-rs:schema-check` runs
+/// type set are the SAME set. `repo run @semio-tech/framework-os-shell-rs:schema-check` runs
 /// this test; the TypeScript side of that target cross-checks the rendered mirror.
 #[test]
 fn owned_json_schema_defs_match_registry() {

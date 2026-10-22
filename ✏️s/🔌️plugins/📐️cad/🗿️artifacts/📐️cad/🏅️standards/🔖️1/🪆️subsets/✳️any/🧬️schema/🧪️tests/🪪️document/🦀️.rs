@@ -53,7 +53,7 @@ fn cad_document_contract_round_trips_exact_child_identities() {
 
 #[test]
 fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
-    use protocol::{Mutation, OpBinary, OpText};
+    use protocol::{ColdMutation, Mutation, OpBinary, OpText};
     let cases = [
         (
             std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
@@ -79,9 +79,9 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
         assert_eq!(semio_s_artifact_cad_cad_mutations::CadMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         let outcome = mutation.diff(&before);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).unwrap(), serde_json::from_str::<serde_json::Value>(diff).unwrap());
-        assert_eq!(protocol::apply_diff(outcome.diff(), &before).unwrap(), after);
+        assert_eq!(protocol::apply_diff_cold(outcome.diff(), &before).unwrap(), after);
         let mut restored = after;
-        for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
+        for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored, before);
     }
 }

@@ -41,7 +41,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-layer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-layer-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -84,7 +84,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-layer-rejected-duplicate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-layer-rejected-duplicate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -134,7 +134,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-layer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-layer-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -177,7 +177,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-layer-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-layer-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -227,7 +227,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-layer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-layer-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -270,7 +270,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-layer-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-layer-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -320,7 +320,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-style-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-style-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -363,7 +363,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-style-rejected-duplicate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-style-rejected-duplicate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -413,7 +413,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-style-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-style-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -456,7 +456,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-style-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-style-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -506,7 +506,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-style-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-style-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -549,7 +549,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-style-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-style-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -599,7 +599,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-linetype-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-linetype-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -642,7 +642,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-linetype-rejected-duplicate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-linetype-rejected-duplicate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -692,7 +692,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-linetype-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-linetype-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -735,7 +735,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-linetype-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-linetype-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -785,7 +785,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-linetype-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-linetype-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -828,7 +828,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-linetype-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-linetype-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {

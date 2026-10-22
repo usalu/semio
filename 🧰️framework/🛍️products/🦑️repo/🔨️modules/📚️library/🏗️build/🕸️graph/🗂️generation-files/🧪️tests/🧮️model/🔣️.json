@@ -1,0 +1,1467 @@
+{
+ "version": 1,
+ "defaultWindow": 64,
+ "sequences": [
+  {
+   "name": "a window of one rechecks before every operation",
+   "window": 1,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "a window of two rechecks every second operation",
+   "window": 2,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "a window of three over nine operations",
+   "window": 3,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p7"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p8"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "fewer operations than the window never recheck",
+   "window": 64,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p7"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p8"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p9"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p10"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p11"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p12"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p13"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p14"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p15"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p16"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p17"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p18"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p19"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p20"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p21"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p22"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p23"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p24"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p25"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p26"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p27"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p28"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p29"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p30"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p31"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p32"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p33"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p34"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p35"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p36"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p37"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p38"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p39"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p40"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p41"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p42"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p43"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p44"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p45"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p46"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p47"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p48"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p49"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p50"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p51"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p52"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p53"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p54"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p55"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p56"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p57"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p58"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p59"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p60"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p61"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p62"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "the operation that fills the window rechecks",
+   "window": 64,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p7"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p8"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p9"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p10"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p11"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p12"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p13"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p14"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p15"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p16"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p17"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p18"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p19"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p20"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p21"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p22"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p23"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p24"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p25"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p26"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p27"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p28"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p29"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p30"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p31"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p32"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p33"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p34"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p35"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p36"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p37"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p38"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p39"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p40"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p41"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p42"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p43"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p44"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p45"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p46"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p47"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p48"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p49"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p50"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p51"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p52"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p53"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p54"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p55"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p56"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p57"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p58"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p59"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p60"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p61"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p62"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p63"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "two windows and a half",
+   "window": 64,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p7"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p8"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p9"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p10"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p11"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p12"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p13"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p14"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p15"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p16"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p17"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p18"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p19"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p20"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p21"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p22"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p23"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p24"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p25"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p26"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p27"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p28"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p29"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p30"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p31"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p32"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p33"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p34"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p35"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p36"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p37"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p38"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p39"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p40"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p41"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p42"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p43"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p44"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p45"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p46"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p47"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p48"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p49"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p50"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p51"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p52"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p53"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p54"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p55"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p56"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p57"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p58"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p59"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p60"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p61"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p62"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p63"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p64"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p65"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p66"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p67"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p68"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p69"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p70"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p71"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p72"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p73"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p74"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p75"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p76"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p77"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p78"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p79"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p80"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p81"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p82"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p83"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p84"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p85"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p86"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p87"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p88"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p89"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p90"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p91"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p92"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p93"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p94"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p95"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p96"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p97"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p98"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p99"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p100"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p101"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p102"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p103"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p104"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p105"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p106"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p107"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p108"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p109"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p110"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p111"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p112"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p113"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p114"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p115"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p116"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p117"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p118"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p119"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p120"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p121"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p122"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p123"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p124"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p125"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p126"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p127"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p128"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p129"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p130"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p131"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p132"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p133"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p134"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p135"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p136"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p137"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p138"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p139"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p140"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p141"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p142"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p143"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p144"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p145"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p146"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p147"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p148"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p149"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p150"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p151"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p152"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p153"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p154"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p155"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p156"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p157"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p158"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p159"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "no operations no rechecks",
+   "window": 5,
+   "operations": [],
+   "failRechecks": []
+  },
+  {
+   "name": "a refused first recheck refuses only the operation of its window",
+   "window": 2,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    }
+   ],
+   "failRechecks": [
+    1
+   ]
+  },
+  {
+   "name": "every refused recheck refuses its window and the next window checks again",
+   "window": 2,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "list",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "write",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "names",
+     "path": "/store/p7"
+    }
+   ],
+   "failRechecks": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "name": "only reads cross the window",
+   "window": 2,
+   "operations": [
+    {
+     "kind": "read",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "read",
+     "path": "/store/p5"
+    }
+   ],
+   "failRechecks": []
+  },
+  {
+   "name": "only removals cross the window",
+   "window": 3,
+   "operations": [
+    {
+     "kind": "remove",
+     "path": "/store/p0"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p1"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p2"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p3"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p4"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p5"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p6"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p7"
+    },
+    {
+     "kind": "remove",
+     "path": "/store/p8"
+    }
+   ],
+   "failRechecks": []
+  }
+ ],
+ "concurrent": [
+  {
+   "name": "many readers on a slow recheck",
+   "workers": 8,
+   "each": 20,
+   "window": 16,
+   "sleepMs": 15
+  },
+  {
+   "name": "a window of one with concurrent operations",
+   "workers": 4,
+   "each": 5,
+   "window": 1,
+   "sleepMs": 5
+  },
+  {
+   "name": "a window larger than the whole workload",
+   "workers": 4,
+   "each": 5,
+   "window": 1000,
+   "sleepMs": 1
+  }
+ ]
+}

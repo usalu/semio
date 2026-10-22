@@ -155,7 +155,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
 #[test]
 #[ignore]
 fn debug_emit_mutation_fixtures() {
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
     let root = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations");
     let base = fixture_base();
     for (kind, case, mutation) in fixture_vectors() {
@@ -167,7 +167,7 @@ fn debug_emit_mutation_fixtures() {
         std::fs::create_dir_all(directory.join("🔺️diff")).expect("fixture directory");
         let mut after = base.clone();
         vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).expect("the vector applies");
-        let outcome = <crate::Grid3dMutation as Mutation<crate::Grid3dSnapshot>>::diff(&mutation, &base);
+        let outcome = <crate::Grid3dMutation as ColdMutation<crate::Grid3dSnapshot>>::diff(&mutation, &base);
         std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&base))).expect("write before");
         std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&after))).expect("write after");
         std::fs::write(directory.join("🦠️mutation/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&mutation))).expect("write mutation");

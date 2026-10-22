@@ -30,7 +30,8 @@ test("a path below the root of a directory partition resolves to the partition a
   const directory=partition(base,"p",true),inside=join(directory,"m","deep","er");mkdirSync(inside,{recursive:true});
   const found=nativePartitionOfV1(inside,"linux")!;
   expect(found.directory).toBe(directory);expect(found.root).toBe(join(directory,"m"));expect(found.attached).toBe(true);expect(found.filesystemBytes).toBe(fixture.envelope.filesystemBytes);expect(found.maximumPhysicalBytes).toBe(fixture.envelope.maximumPhysicalBytes);
-  for(const row of fixture.hostPlatforms)expect(nativePartitionOfV1(inside,row.platform),row.platform).toBeUndefined();
+  for(const row of fixture.directoryPlatforms)expect(nativePartitionOfV1(inside,row.platform)?.directory,row.platform).toBe(directory);
+  for(const row of fixture.foreignPlatforms)expect(nativePartitionOfV1(inside,row.platform),row.platform).toBeUndefined();
   expect(nativePartitionOfV1(join(base,"elsewhere"),"linux")).toBeUndefined();expect(nativePartitionOfV1(directory,"linux")).toBeUndefined();
   deactivateNativeDirectoryV1(directory);expect(nativePartitionOfV1(join(directory,"m"),"linux")!.root).toBe(join(directory,protocol.volume));expect(nativePartitionOfV1(join(directory,"m"),"linux")!.attached).toBe(false);
  }finally{rmSync(base,{recursive:true,force:true});}

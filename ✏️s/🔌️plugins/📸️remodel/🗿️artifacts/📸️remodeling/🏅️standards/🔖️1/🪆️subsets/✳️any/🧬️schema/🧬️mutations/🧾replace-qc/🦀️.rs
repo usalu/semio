@@ -33,6 +33,15 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "qc", kind: "replace-qc", record: "ReplacedQc" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace qc", "Qualitätsprüfung ersetzen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RemodelingSnapshot, Op> for ReplaceQc
+where
+    Op: protocol::ColdMutation<RemodelingSnapshot, ReferenceDiff = RemodelingDiff> + From<ReplaceQc>,
+{
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
@@ -42,8 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace qc", "Qualitätsprüfung ersetzen")
-    }
 }
 //#endregion 🔖️Mutation

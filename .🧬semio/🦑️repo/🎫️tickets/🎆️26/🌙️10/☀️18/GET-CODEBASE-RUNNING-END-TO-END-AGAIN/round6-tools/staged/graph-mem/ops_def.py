@@ -34,14 +34,14 @@ edit(OBS_D,"export function sourceObservationStatsV1():Readonly<{loadObservation
 # ── project nodes: memory governed dispatch ──────────────────────────────────────────────────────────────────────────
 edit(NODES,'import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";',
 'import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";\nimport { createMemoryGovernorV1, graphMemoryBudgetBytesV1 } from "../../../🧠️memory/🟨️.mjs";')
-edit(NODES,'  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){await inferProject(jobs[cursor++]);await phases?.advance("inference",++finished);}});',
-'  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\\n"),environment:process.env}):undefined;\n  const workers=Array.from({length:limit},async()=>{while(!stopped&&cursor<jobs.length){const job=jobs[cursor++];await governor.run(()=>inferProject(job));await phases?.advance("inference",++finished);}});')
+edit(NODES,'  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);}await phases?.advance("inference",++finished);}});',
+'  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\\n"),environment:process.env}):undefined;\n  const workers=Array.from({length:limit},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];await governor.run(async()=>{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);});}await phases?.advance("inference",++finished);}});')
 edit(NODES,'  await phases?.end("inference",{projects:jobs.length});','  await phases?.end("inference",{projects:jobs.length,...(governor?{memory:governor.stats()}:{})});')
 
 # ── graph: authority list, shared strings of expanded input lists ────────────────────────────────────────────────────
 edit(GRAPH,'import{deriveEnvironmentV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";','import{deriveEnvironmentV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";\nimport{graphStringInternerV1}from"../🧠️memory/🟨️.mjs";')
-edit(GRAPH,'new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1])',
-'new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1])')
+edit(GRAPH,'new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1];',
+'new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1];')
 edit(GRAPH,'captureSourceInputInventoryV1(file.value,root).value.files.map(file=>"{workspaceRoot}/"+file)','captureSourceInputInventoryV1(file.value,root).value.files.map(file=>graphStringInternerV1.share("{workspaceRoot}/"+file))')
 
 # ── generations: owner row claims by sorted path ranges, shared strings of stored documents ─────────────────────────
@@ -62,7 +62,7 @@ for op in edits:
 newFiles=[
  {"file":f"{MEMORY}/🟨️.mjs","from":"staged/new/memory/module/memory.mjs"},
  {"file":f"{MEMORY}/🟨️.d.mts","from":"staged/new/memory/module/memory.d.mts"},
- {"file":f"{MEMORY}/🧬️schema/🔣️.json","from":"staged/new/memory/module/schema.json"},
+ {"file":f"{MEMORY}/🧬️schema/🔣️.json","from":"staged/new/memory/module/🧬️schema/🔣️.json"},
  {"file":f"{MEMORY}/🧪️tests/🟦️.ts","from":"staged/new/memory/tests/test.ts"},
  {"file":f"{MEMORY}/🧪️tests/🔣️.json","from":"staged/new/memory/tests/fixture.json"},
  {"file":f"{MEMORY}/🧪️tests/🧬️schema/🔣️.json","from":"staged/new/memory/tests/schema.json"},

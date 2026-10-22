@@ -30,7 +30,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -40,7 +40,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts native-check",
+        "command": "repo ./📜️script.ts native-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -52,7 +52,7 @@
         "{projectRoot}/.🧾️store/native-build.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build native",
+        "command": "repo ./📜️script.ts build native",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true,
         "args": [
@@ -83,7 +83,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native",
+        "command": "repo ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -100,7 +100,7 @@
         "{projectRoot}/.🧾️store/mcp-build.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build mcp",
+        "command": "repo ./📜️script.ts build mcp",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true,
         "args": [
@@ -137,7 +137,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
+        "command": "repo ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -187,7 +187,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts live-agent-loop-check"
+        "command": "repo ./📜️script.ts live-agent-loop-check"
       },
       "outputs": []
     },
@@ -204,7 +204,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-agent-participant-check"
+        "command": "repo ./📜️script.ts hub-agent-participant-check"
       },
       "outputs": [],
       "metadata": {
@@ -226,7 +226,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts plugin-coverage-check"
+        "command": "repo ./📜️script.ts plugin-coverage-check"
       },
       "outputs": [],
       "metadata": {
@@ -291,7 +291,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts user-path-check"
+        "command": "repo ./📜️script.ts user-path-check"
       },
       "outputs": []
     },
@@ -326,7 +326,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-quartet-check"
+        "command": "repo ./📜️script.ts inference-quartet-check"
       },
       "outputs": []
     },
@@ -367,7 +367,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts security-check"
+        "command": "repo ./📜️script.ts security-check"
       },
       "outputs": []
     },
@@ -384,7 +384,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts agent-reply-check"
+        "command": "repo ./📜️script.ts agent-reply-check"
       },
       "outputs": [],
       "metadata": {
@@ -411,7 +411,7 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts untrusted-content-check",
+        "command": "repo ./📜️script.ts untrusted-content-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -427,7 +427,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts mcp-composition-source-check",
+        "command": "repo ./📜️script.ts mcp-composition-source-check",
         "forwardAllArgs": true
       }
     },
@@ -436,7 +436,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts fixture-ownership-check",
+        "command": "repo ./📜️script.ts fixture-ownership-check",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -450,7 +450,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-pair-composition-check",
+        "command": "repo ./📜️script.ts canonical-pair-composition-check",
         "forwardAllArgs": true
       },
       "metadata": {

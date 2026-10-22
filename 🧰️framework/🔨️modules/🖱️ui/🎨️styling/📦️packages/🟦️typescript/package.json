@@ -71,6 +71,6 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-geometry": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-styling:test-geometry"
+    "test-geometry": "repo run @semio-tech/ui-styling:test-geometry"
   }
 }

@@ -42,9 +42,9 @@
       "coversMutations": false
     },
     {
-      "id": "repo-editor-hook-output",
-      "capabilities": ["repo.providers.editor-hook-output"],
-      "rationale": "The hook output format is this repository's own contract with eight editors: seven of them receive the marshalled hook result verbatim and VS Code receives it wrapped in a `hookSpecificOutput` member whose shape is dictated by VS Code's hook API but whose CONTENT rule — allow versus deny, reason versus additional context — is ours. Nothing third party produces it, so there is no reference to compare against. Confidence comes from two independently written implementations, Rust and Go, formatting the same frozen fixture events for all eight editors and projecting the same parsed records. This decision covers no runtime mutation capability.",
+      "id": "repo-agent-client-hook-output",
+      "capabilities": ["repo.providers.agent-client-hook-output"],
+      "rationale": "The hook output format is this repository's own contract with eight agent clients: seven of them receive the marshalled hook result verbatim and VS Code receives it wrapped in a `hookSpecificOutput` member whose shape is dictated by VS Code's hook API but whose CONTENT rule — allow versus deny, reason versus additional context — is ours. Nothing third party produces it, so there is no reference to compare against. Confidence comes from two independently written implementations, Rust and Go, formatting the same frozen fixture events for all eight agent clients and projecting the same parsed records. This decision covers no runtime mutation capability.",
       "substitutes": ["independent-implementations"],
       "coversMutations": false
     },

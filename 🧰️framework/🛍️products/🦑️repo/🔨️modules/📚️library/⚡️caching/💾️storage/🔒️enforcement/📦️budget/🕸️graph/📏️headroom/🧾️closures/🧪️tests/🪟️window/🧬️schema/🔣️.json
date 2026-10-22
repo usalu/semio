@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "windowMilliseconds",
+    "window",
+    "budget",
+    "primary",
+    "boundary"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "windowMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60000
+    },
+    "window": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "startedMs",
+          "nowMs",
+          "iterations",
+          "due"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "startedMs": {
+            "type": "integer",
+            "minimum": -17179869184,
+            "maximum": 34359738368
+          },
+          "nowMs": {
+            "type": "integer",
+            "minimum": -17179869184,
+            "maximum": 34359738368
+          },
+          "iterations": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "due": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumProofBytes",
+        "captures"
+      ],
+      "properties": {
+        "maximumProofBytes": {
+          "const": 17179869184
+        },
+        "captures": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "bytes",
+              "cumulativeFails",
+              "perCaptureFails"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "bytes": {
+                "type": "array",
+                "maxItems": 128,
+                "items": {
+                  "type": "integer",
+                  "minimum": -17179869184,
+                  "maximum": 34359738368
+                }
+              },
+              "cumulativeFails": {
+                "type": "boolean"
+              },
+              "perCaptureFails": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "primary": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "attached"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "error",
+              "frozen",
+              "sealed",
+              "getter",
+              "proxy",
+              "existing",
+              "undefined",
+              "false",
+              "null",
+              "zero",
+              "empty"
+            ]
+          },
+          "attached": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "boundary": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "liveControl",
+          "partial"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "error",
+              "frozen",
+              "sealed",
+              "getter",
+              "proxy",
+              "existing",
+              "undefined",
+              "false",
+              "null",
+              "zero",
+              "empty"
+            ]
+          },
+          "liveControl": {
+            "type": "boolean"
+          },
+          "partial": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

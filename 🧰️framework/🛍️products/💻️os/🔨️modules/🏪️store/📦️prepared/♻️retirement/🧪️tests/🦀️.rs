@@ -5,7 +5,7 @@ use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuth
 use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_value::retirement::{OwnedValueRetirementFactory,SharedValueRetirementFactory};
+use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 #[test]
 fn prepared_candidate_original_owners_retire_with_actual_allocator_receipts(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;

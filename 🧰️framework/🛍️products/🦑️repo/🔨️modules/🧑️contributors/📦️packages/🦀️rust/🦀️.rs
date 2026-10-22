@@ -620,7 +620,7 @@ impl CheckpointSource for GitCheckpoints {
     fn log(&self, limit: Option<usize>) -> String {
         let count = format!("-n{}", limit.unwrap_or(DEFAULT_CHECKPOINT_LIMIT));
         let format = format!("--pretty=format:{CHECKPOINT_LOG_FORMAT}");
-        match std::process::Command::new("git").args(["log", &count, &format, "--date=iso-strict"]).current_dir(&self.root).output() {
+        match semio_framework_repo_workspace::spawn_command("git").args(["log", &count, &format, "--date=iso-strict"]).current_dir(&self.root).output() {
             Ok(outcome) => String::from_utf8_lossy(&outcome.stdout).to_string(),
             Err(_) => String::new(),
         }
@@ -861,7 +861,7 @@ fn write_contributor_document(dir: &Path, contributor: &Contributor) -> Result<(
 /// Twin of `GetGitAuthorAlias`: `user.name <user.email>` looked up in the registry.
 pub fn git_author_alias(repo_root: &Path) -> String {
     let read = |key: &str| -> String {
-        std::process::Command::new("git")
+        semio_framework_repo_workspace::spawn_command("git")
             .args(["config", "--get", key])
             .current_dir(repo_root)
             .output()

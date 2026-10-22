@@ -22,17 +22,23 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "reference", kind: "change-reference-hidden", record: "ChangedReferenceHidden" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change visibility of reference \"{}\"", self.reference_id), &format!("Sichtbarkeit von Referenz \"{}\" ändern", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<CadSnapshot, Op> for ChangeReferenceHidden
+where
+    Op: protocol::ColdMutation<CadSnapshot, ReferenceDiff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::change_reference_hidden::ChangeReferenceHidden>,
+{
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

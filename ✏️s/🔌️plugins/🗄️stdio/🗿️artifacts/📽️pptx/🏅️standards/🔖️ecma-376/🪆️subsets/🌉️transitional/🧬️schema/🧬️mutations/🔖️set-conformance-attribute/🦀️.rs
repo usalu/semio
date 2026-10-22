@@ -13,19 +13,20 @@ pub struct SetConformanceAttribute {
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "conformance-attribute", kind: "set-conformance-attribute", record: "SetConformanceAttribute" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(diff_conformance_attribute(base, Some(&self.value)))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
-        Ok(conformance_attribute_inverse(base, true))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxTransitionalMutation> for SetConformanceAttribute {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_conformance_attribute(base, Some(&self.value)))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
+        Ok(conformance_attribute_inverse(base, true))
     }
 }
 //#endregion 🔖️Payload

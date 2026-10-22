@@ -19,7 +19,16 @@ pub struct SetStreamMeta {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStreamMeta {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-meta", kind: "set-stream-meta", record: "SetStreamMeta" };
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set stream meta", "Datenstrom-Metadaten setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStreamMeta {
+    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as protocol::ColdMutation<SemioVideoSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
@@ -28,12 +37,6 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStrea
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set stream meta", "Datenstrom-Metadaten setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

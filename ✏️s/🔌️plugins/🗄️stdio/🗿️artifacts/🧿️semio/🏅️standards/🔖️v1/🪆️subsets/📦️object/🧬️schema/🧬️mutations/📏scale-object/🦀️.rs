@@ -18,7 +18,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z), &format!("Objekt auf ({}, {}, {}) skalieren", self.scale.x, self.scale.y, self.scale.z))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["transform".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioObjectSnapshot, Op> for ScaleObject
+where
+    Op: protocol::ColdMutation<SemioObjectSnapshot, ReferenceDiff = crate::schema::diff::SemioObjectDiff> + From<ScaleObject>,
+{
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioObjectSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,11 +39,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z), &format!("Objekt auf ({}, {}, {}) skalieren", self.scale.x, self.scale.y, self.scale.z))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["transform".to_string()]
-    }
 }
 //#endregion 🔖️Payload

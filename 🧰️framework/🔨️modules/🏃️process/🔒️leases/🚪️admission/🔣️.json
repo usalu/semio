@@ -1,0 +1,203 @@
+{
+ "version": 1,
+ "sweep": [
+  {
+   "id": "first-call-sweeps-then-skips-inside-the-interval",
+   "intervalMilliseconds": 1000,
+   "calls": [
+    {
+     "atMs": 0,
+     "timeoutMs": null,
+     "expect": true
+    },
+    {
+     "atMs": 999,
+     "timeoutMs": null,
+     "expect": false
+    },
+    {
+     "atMs": 1000,
+     "timeoutMs": null,
+     "expect": true
+    }
+   ]
+  },
+  {
+   "id": "a-caller-that-must-not-wait-never-sweeps-and-never-moves-the-clock",
+   "intervalMilliseconds": 1000,
+   "calls": [
+    {
+     "atMs": 0,
+     "timeoutMs": 0,
+     "expect": false
+    },
+    {
+     "atMs": 1,
+     "timeoutMs": null,
+     "expect": true
+    },
+    {
+     "atMs": 2,
+     "timeoutMs": 0,
+     "expect": false
+    },
+    {
+     "atMs": 500,
+     "timeoutMs": null,
+     "expect": false
+    },
+    {
+     "atMs": 1001,
+     "timeoutMs": null,
+     "expect": true
+    }
+   ]
+  },
+  {
+   "id": "interval-zero-sweeps-every-time-a-caller-may-wait",
+   "intervalMilliseconds": 0,
+   "calls": [
+    {
+     "atMs": 0,
+     "timeoutMs": null,
+     "expect": true
+    },
+    {
+     "atMs": 0,
+     "timeoutMs": null,
+     "expect": true
+    },
+    {
+     "atMs": 0,
+     "timeoutMs": 0,
+     "expect": false
+    }
+   ]
+  },
+  {
+   "id": "a-finite-timeout-may-sweep",
+   "intervalMilliseconds": 1000,
+   "calls": [
+    {
+     "atMs": 0,
+     "timeoutMs": 5000,
+     "expect": true
+    },
+    {
+     "atMs": 10,
+     "timeoutMs": 5000,
+     "expect": false
+    }
+   ]
+  }
+ ],
+ "pressure": [
+  {
+   "id": "plenty-of-space-keeps-the-ordinary-interval",
+   "freeRatio": 0.6,
+   "gate": {
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.2,
+    "claimSweepPressureIntervalMilliseconds": 1000
+   },
+   "expectIntervalMilliseconds": 30000
+  },
+  {
+   "id": "below-the-ratio-uses-the-pressure-interval",
+   "freeRatio": 0.1,
+   "gate": {
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.2,
+    "claimSweepPressureIntervalMilliseconds": 1000
+   },
+   "expectIntervalMilliseconds": 1000
+  },
+  {
+   "id": "exactly-at-the-ratio-keeps-the-ordinary-interval",
+   "freeRatio": 0.2,
+   "gate": {
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.2,
+    "claimSweepPressureIntervalMilliseconds": 1000
+   },
+   "expectIntervalMilliseconds": 30000
+  },
+  {
+   "id": "ratio-zero-never-applies-pressure",
+   "freeRatio": 0.0,
+   "gate": {
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.0,
+    "claimSweepPressureIntervalMilliseconds": 1000
+   },
+   "expectIntervalMilliseconds": 30000
+  },
+  {
+   "id": "pressure-interval-never-exceeds-the-ordinary-one",
+   "freeRatio": 0.05,
+   "gate": {
+    "claimSweepIntervalMilliseconds": 30000,
+    "claimSweepPressureFreeRatio": 0.2,
+    "claimSweepPressureIntervalMilliseconds": 60000
+   },
+   "expectIntervalMilliseconds": 30000
+  }
+ ],
+ "gate": [
+  {
+   "id": "raw-try-lock-is-not-stalled-by-a-busy-gate",
+   "api": "raw",
+   "patienceMilliseconds": 3000,
+   "gateHeldMilliseconds": 1200,
+   "expect": {
+    "outcome": "timed-out",
+    "minElapsedMilliseconds": 0,
+    "maxElapsedMilliseconds": 900
+   }
+  },
+  {
+   "id": "raw-try-lock-with-patience-zero-is-the-same",
+   "api": "raw",
+   "patienceMilliseconds": 0,
+   "gateHeldMilliseconds": 1200,
+   "expect": {
+    "outcome": "timed-out",
+    "minElapsedMilliseconds": 0,
+    "maxElapsedMilliseconds": 900
+   }
+  },
+  {
+   "id": "queued-try-lock-waits-for-the-gate-within-the-patience",
+   "api": "queued",
+   "patienceMilliseconds": 3000,
+   "gateHeldMilliseconds": 700,
+   "expect": {
+    "outcome": "granted",
+    "minElapsedMilliseconds": 600,
+    "maxElapsedMilliseconds": 2500
+   }
+  },
+  {
+   "id": "queued-try-lock-admission-wait-is-bounded-at-the-patience",
+   "api": "queued",
+   "patienceMilliseconds": 600,
+   "gateHeldMilliseconds": 3500,
+   "expect": {
+    "outcome": "timed-out",
+    "minElapsedMilliseconds": 500,
+    "maxElapsedMilliseconds": 2500
+   }
+  },
+  {
+   "id": "queued-try-lock-with-patience-zero-is-a-single-attempt",
+   "api": "queued",
+   "patienceMilliseconds": 0,
+   "gateHeldMilliseconds": 1200,
+   "expect": {
+    "outcome": "timed-out",
+    "minElapsedMilliseconds": 0,
+    "maxElapsedMilliseconds": 900
+   }
+  }
+ ]
+}

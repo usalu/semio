@@ -9,6 +9,10 @@ import { join } from "node:path";
 import { runTypescriptVerification } from "./🔷️typescript-project/🟦️.ts";
 import { runAgnosticGate, runDebugTagCensusGate, runDocstringCensusGate, runDocstringEmojiGate, runInterfaceImportGate, runMutationCapGate, runSourceCensusGate } from "./🚦️gates/🟦️.ts";
 import { VerifyGateLanes } from "./🏁️gate-lanes/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {sayVerifyV1,refuseVerifyV1} from "./📖️texts/🟦️.ts";
 
 /** 🧾️ Parses each viewport GraphQL schema with the reference parser and refuses the first syntax error. */
 async function parseViewportGraphqlSchemasV1(paths: readonly string[]): Promise<void> {
@@ -29,7 +33,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
   async run(segments: string[]): Promise<void> {
     if (await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", ...segments])) return;
     if (segments[0] === "canonical-architecture") {
-      if (segments.length !== 1) throw new Error("Expected verify canonical-architecture");
+      if (segments.length !== 1) throw refuseVerifyV1("usage","run.expected-canonical-architecture");
       this.runCanonicalArchitecture();
       return;
     }
@@ -63,6 +67,16 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     if (segments[0] === "zero-touch") {
       this.runZeroTouch(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "tool-declarations") {
+      const { runDirectToolDeclarationLawV1 } = await import("../../⚖️laws/🧰️direct-tool-declarations/⌨️command/🟦️.ts");
+      process.exitCode = runDirectToolDeclarationLawV1(this.root, segments.slice(1));
+      return;
+    }
+    if (segments[0] === "tool-spawns") {
+      const { runToolSpawnLawsV1 } = await import("../../⚖️laws/🚷️raw-process-spawn/⌨️command/🟦️.ts");
+      process.exitCode = runToolSpawnLawsV1(this.root, segments.slice(1));
       return;
     }
     if (segments[0] === "generated-corruption") {
@@ -164,8 +178,8 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     if (segments[0] === "browser-actor-host-context") {
       if (segments[1] === "worker") {
-        const result = Bun.spawn(["bun", join(this.root, "node_modules/vitest/vitest.mjs"), "run", "--config", join(this.root, "🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"), "-t", "browser document actor transfers one verified cold pair", "--maxWorkers=1", "--testTimeout=300000", "--silent=false", "--disableConsoleIntercept"], { cwd: this.root, stdout: "inherit", stderr: "inherit" });
-        if (await result.exited !== 0) throw new Error("Browser actor host context worker test failed");
+        const result = startToolV1("vitest", ["run", "--config", join(this.root, "🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"), "-t", "browser document actor transfers one verified cold pair", "--maxWorkers=1", "--testTimeout=300000", "--silent=false", "--disableConsoleIntercept"], { cwd: this.root, stdio: ["ignore", "inherit", "inherit"] });
+        if (await toolExitV1(result) !== 0) throw refuseVerifyV1("failed","run.browser-actor-host-context-worker");
         return;
       }
       const { testBrowserActorHostContext } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🪟️view-context/🧪️testing/🪟️host-opening-context/🟦️.ts");
@@ -228,7 +242,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     if (segments[0] === "snapshot-read-retirement") {
       const { testSnapshotReadRetirement } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🧪️testing/♻️snapshot-read-retirement/🟦️.ts");
       testSnapshotReadRetirement();
-      runCmd("bun", [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts"], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts"], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "snapshot_read_", "--", "--nocapture"], this.root);
@@ -241,7 +255,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const ownerRoot = this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio";
       const { testSemioEnvelopeIdentity } = await import(ownerRoot + "/🧪️tests/🪪️envelope-identity/🟦️.ts");
       testSemioEnvelopeIdentity();
-      runCmd("bun", [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ownerRoot + "/🧪️tests/🪪️envelope-identity/🟦️.ts"], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ownerRoot + "/🧪️tests/🪪️envelope-identity/🟦️.ts"], { cwd: this.root });
       if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "semio_envelope_identity", "--", "--nocapture"], this.root);
       return;
     }
@@ -287,19 +301,19 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
       const packages = [...new Set(fixture.artifactSchemas.map((path) => {
         const [owner] = path.split("/🏅️standards/");
-        if (owner === undefined) throw new Error("Artifact schema owner required");
-        const manifest = Bun.TOML.parse(readFileSync(join(this.root, owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
+        if (owner === undefined) throw refuseVerifyV1("missing","run.artifact-schema-owner-required");
+        const manifest = runtimeParseTomlV1(readFileSync(join(this.root, owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
         return manifest.package.name;
       }))];
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       const packageArgs = packages.flatMap((name) => ["-p", name]);
       if (segments[1] === "test") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "--no-fail-fast", ...packageArgs, "committed_diff", "--", "--nocapture"], this.root);
-        console.log(`artifact-contract-ownership: committed diff generation, canonical encoding and application checks completed for ${packages.length} selected artifact crates.`);
+        sayVerifyV1("run.artifact-contract-ownership-committed-diff",{packages:packages.length});
         return;
       }
       await runCargo(["check", "--manifest-path", "Cargo.toml", "--tests", ...packageArgs], this.root);
-      console.log(`[verify artifact-contract-ownership] ${packages.length} artifact crates and their tests compile.`);
+      sayVerifyV1("run.artifact-contract-ownership-artifact-crates",{packages:packages.length});
       return;
     }
     
@@ -311,19 +325,19 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "window-config-provisioning-lifecycle") {
-      if (segments.length !== 1) throw new Error("window-config-provisioning-lifecycle accepts no arguments");
+      if (segments.length !== 1) throw refuseVerifyV1("invalid","run.window-config-provisioning-lifecycle-accepts");
       const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🚪️provisioning-lifecycle/🟦️.ts");
       const { testWindowConfigProvisioningLifecycleOracle } = await import(testPath);
       testWindowConfigProvisioningLifecycleOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       return;
     }
     if (segments[0] === "window-config-retained-pack-load") {
-      if (segments.length !== 2 || segments[1] !== "native") throw new Error("window-config-retained-pack-load requires native");
+      if (segments.length !== 2 || segments[1] !== "native") throw refuseVerifyV1("failed","run.window-config-retained-pack-load");
       const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🟦️.ts");
       const { testWindowConfigRetainedPackLoadFixture } = await import(testPath);
       testWindowConfigRetainedPackLoadFixture();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_retained_pack_load_", "--", "--nocapture", "--test-threads=1"], this.root);
       return;
@@ -352,7 +366,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     if (segments[0] === "owned-document-closure") {
       const { testOwnedDocumentClosureOracle } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️testing/🔬️unit/🟦️.ts");
       testOwnedDocumentClosureOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "owned_document_closure", "--", "--nocapture"], this.root);
@@ -369,7 +383,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const { testViewportOwnership } = await import(`${testRoot}/🟦️.ts`);
       testViewportOwnership();
       await parseViewportGraphqlSchemasV1([...["◻️2d", "🧊️3d"].map((dimension) => this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/" + dimension + "/🧬️schema/🔗️.graphql")]);
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_ownership_", "--", "--nocapture"], this.root);
@@ -378,12 +392,12 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "framework-viewport-projection") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-viewport-projection accepts only the optional native phase");
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw refuseVerifyV1("invalid","run.framework-viewport-projection-accepts-only");
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection");
       const { testViewport3dProjectionValues } = await import(`${testRoot}/🟦️.ts`);
       testViewport3dProjectionValues();
       await parseViewportGraphqlSchemasV1([this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔗️.graphql"]);
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_projection_", "--", "--nocapture"], this.root);
@@ -394,18 +408,18 @@ export abstract class VerifyScript extends VerifyGateLanes {
     if (segments[0] === "node-graph-viewport-ownership") {
       const nativePhase = segments[2];
       if (segments.length > 3 || (segments[1] !== undefined && segments[1] !== "native") || (nativePhase !== undefined && nativePhase !== "renderer-host" && nativePhase !== "consumers")) {
-        throw new Error("node-graph-viewport-ownership accepts native with the optional renderer-host or consumers phase");
+        throw refuseVerifyV1("invalid","run.node-graph-viewport-ownership-accepts");
       }
       const flowRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust");
       const reactRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript");
       const surfaceRoot = join(this.root, "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust");
-      runCmd("bun", [join(flowRoot, "📜️script.ts"), "declarations"], { cwd: flowRoot });
+      runCmd(runtimeExecutableV1(), [join(flowRoot, "📜️script.ts"), "declarations"], { cwd: flowRoot });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts"), { runVitest } = await import("../../🧪️testing/🧪️vitest/🟦️.ts");
       process.env.SEMIO_TEST_LEVEL = "long";
       await runVitest(reactRoot, ["--silent=false", "--reporter=verbose", "-t", "uses the live session viewport|matches the shared neutral viewport schema"], "../../🧪️tests/🎚️config/🟦️.ts");
       if (segments[1] === "native") {
         if (nativePhase === undefined || nativePhase === "renderer-host") {
-          runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, SEMIO_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
+          runCmd(runtimeExecutableV1(), [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, SEMIO_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
           for (const [packageName, filters] of [
             ["semio-framework-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
             ["semio-framework-surface-node-graph", ["scene_retained_tests::"]],
@@ -437,7 +451,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close");
       const { testJobPayloadPhysicalClose } = await import(`${testRoot}/🟦️.ts`);
       testJobPayloadPhysicalClose();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-job", "--lib", "--", "--nocapture", "--test-threads=1"], this.root);
       return;
@@ -446,7 +460,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws");
       const { testRetainedPackPhysicalOwnership } = await import(`${testRoot}/🟦️.ts`);
       testRetainedPackPhysicalOwnership();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "outer-native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-host", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
@@ -513,7 +527,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list");
       const { testPagedListOwnership } = await import(`${testRoot}/🟦️.ts`);
       testPagedListOwnership();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], this.root);
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-contract", "--lib", "fixed_list_", "--", "--nocapture"], this.root);
@@ -528,7 +542,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const testRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🚫️empty-state");
       const { testFrameworkEmptyStateContract } = await import(`${testRoot}/🟦️.ts`);
       testFrameworkEmptyStateContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], this.root);
@@ -536,11 +550,11 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "window-config-pack-identity") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("window-config-pack-identity accepts only optional native");
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw refuseVerifyV1("invalid","run.window-config-pack-identity-accepts");
       const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🟦️.ts");
       const { testWindowConfigPackIdentityContract } = await import(testPath);
       testWindowConfigPackIdentityContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
@@ -558,7 +572,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     if (segments[0] === "media-export-encoding") {
       const { testMediaExportEncodingContract } = await import("../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/⬇️media-export-encoding/🟦️.ts");
       testMediaExportEncodingContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🚪️io/🔤️base64")}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🚪️io/🔤️base64")}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-io-base64", "--", "--nocapture"], this.root);
@@ -575,7 +589,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testVideoRenderJobContract();
       testRasterVideoAvcPcmContract();
       await testVideoRenderHostContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🖌️raster/🎥️video")}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🖌️raster/🎥️video")}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "video_render", "--", "--nocapture"], this.root);
@@ -588,7 +602,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     if (segments[0] === "file-open-import") {
       const { testFileOpenImportContract } = await import("../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/📤️file-open-import/🟦️.ts");
       testFileOpenImportContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io")}/🟦️.ts`], { cwd: this.root });
+      runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io")}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "file_open_import", "--", "--nocapture"], this.root);
@@ -641,7 +655,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "view_context_integer_carrier", "--", "--nocapture"], this.root);
       if (segments[1] === "native") return;
-      runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-react:view-state-carriage-check"], { cwd: this.root });
+      runCmd("repo", ["run", "@semio-tech/framework-renderer-react:view-state-carriage-check"], { cwd: this.root });
       return;
     }
     if (segments[0] === "window-view-context") {
@@ -659,18 +673,18 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testArtifactFieldParityOracle();
       if (segments[1] === "test") return;
       const breaches = policyArtifactOwnershipFieldParity(this.root);
-      for (const breach of breaches) console.log(`[verify artifact-field-parity] ${breach.path}: missing=${breach.missing.join(",")} extra=${breach.extra.join(",")}`);
-      console.log(`[verify artifact-field-parity] ${breaches.length} schema representations disagree with the canonical document field sets.`);
-      if (breaches.length && segments[1] !== "report") throw new Error("Artifact schema representations disagree on document fields.");
+      for (const breach of breaches) sayVerifyV1("run.artifact-field-parity-missing-extra",{path:String(breach.path),missing:breach.missing.join(","),extra:breach.extra.join(",")});
+      sayVerifyV1("run.artifact-field-parity-schema-representations",{breaches:breaches.length});
+      if (breaches.length && segments[1] !== "report") throw refuseVerifyV1("breach","run.artifact-schema-representations-disagree-on");
       return;
     }
     if (segments[0] === "abstraction-ownership") {
       abstractionOwnershipChecks(this.root);
       if (segments[1] === "test") return;
       const breaches = policyAbstractionOwnershipBreaches(this.root);
-      for (const breach of breaches) console.log(`[verify abstraction-ownership] ${breach.scope}: ${breach.summary}`);
-      console.log(`[verify abstraction-ownership] ${breaches.length} misplaced declarations.`);
-      if (breaches.length && segments[1] !== "report") throw new Error("OS-owned preferences or host controls are declared by plugin surfaces.");
+      for (const breach of breaches) sayVerifyV1("run.abstraction-ownership",{scope:String(breach.scope),summary:String(breach.summary)});
+      sayVerifyV1("run.abstraction-ownership-misplaced-declarations",{breaches:breaches.length});
+      if (breaches.length && segments[1] !== "report") throw refuseVerifyV1("failed","run.os-owned-preferences-or-host");
       return;
     }
     if (segments[0] === "policy-breach") {
@@ -679,7 +693,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     await this.runGate();
     if (segments[0] === "gate") return;
-    runCmd("bun", ["repo", "run-many", "-t", "test", "--all", "--exclude", "workspace", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run-many", "-t", "test", "--all", "--exclude", "workspace", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 //#endregion 🔖️VerifyScript

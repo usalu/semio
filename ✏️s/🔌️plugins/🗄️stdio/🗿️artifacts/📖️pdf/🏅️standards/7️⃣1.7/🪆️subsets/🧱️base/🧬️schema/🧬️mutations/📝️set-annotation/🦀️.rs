@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "annotation", kind: "set-annotation", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_annotation(self.index, self.at, self.annotation.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| Op::from(SetAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set annotation {} on page {}", self.at, self.index), &format!("Anmerkung {} auf Seite {} setzen", self.at, self.index))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string(), self.at.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetAnnotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetAnnotation>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_annotation(self.index, self.at, self.annotation.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| Op::from(SetAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

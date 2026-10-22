@@ -7,7 +7,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::gis3d::modes::view::windows::terrain::config::mutations::set_camera::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[test]
 fn direct_leaf_neutral_schema_codec_and_outcome_laws() {
     crate::editor::gis3d::modes::view::windows::terrain::config::direct_leaf_contracts::assert_leaf_contract::<SetCamera>("camera", fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🔣️.json"));
@@ -16,8 +16,8 @@ fn direct_leaf_neutral_schema_codec_and_outcome_laws() {
 fn sparse_camera_inverse_and_codecs_restore_the_base() {
     let base = GisTerrainWindowConfig { camera_json: "default".into() };
     let mutation = GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: "next".into() });
-    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("apply");
+    let next = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.camera_json, "next");
-    assert_eq!(protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse"), base);
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
 }

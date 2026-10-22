@@ -92,7 +92,8 @@ export function registerSafegitenvReplacesUnusableConfiguredTests(): void {
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       const msg = buildMicroCommitMessage(root, contributor, ["🎆️LLM-authored change summary"], {
-        countRepoByLanguage: () => ({ TypeScript: 1000, Rust: 500 }),
+        countRepoUlocByLanguage: () => ({ TypeScript: 1000, Rust: 500 }),
+        countRepoSizeByLanguage: () => ({}),
       });
       const lines = msg.trimEnd().split("\n");
       expect(lines[0]).toMatch(/🚩️\d{3}$/);
@@ -100,7 +101,7 @@ export function registerSafegitenvReplacesUnusableConfiguredTests(): void {
       expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
       expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
       expect(lines.at(-2)).toBe("");
-      const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("../../../../🎛️commands/📝️commit/📊️metrics/🧮️summary/🟦️.ts");
+      const { COMMIT_METRIC_HEADER: ulocHeader } = await import("../../../../🎛️commands/📝️commit/📊️metrics/🎨️format/🟦️.ts");
       const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
       expect(metricsIdx).toBeGreaterThan(2);
       expect(lines[metricsIdx - 1]).toBe("");
@@ -120,7 +121,8 @@ export function registerSafegitenvReplacesUnusableConfiguredTests(): void {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       expect(() =>
         buildMicroCommitMessage(root, contributor, ["🐛️Reject incomplete commit messages"], {
-          countRepoByLanguage: () => ({}),
+          countRepoUlocByLanguage: () => ({}),
+          countRepoSizeByLanguage: () => ({}),
         }),
       ).toThrow("required 📊️metric footer");
     } finally {

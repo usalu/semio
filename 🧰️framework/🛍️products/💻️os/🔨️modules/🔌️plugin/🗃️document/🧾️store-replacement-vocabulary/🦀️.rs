@@ -170,7 +170,7 @@ impl ArtifactStoreReplacementRefusal {
 pub struct ActiveArtifactStoreReplacement<P, Mutation, M>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
     pub operation: semio_framework_job::OperationId,

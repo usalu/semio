@@ -11,7 +11,7 @@ use directory::os_directory::{ArtifactFrontier, ArtifactHash, DocumentCheckInPha
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use futures::{SinkExt, StreamExt};
 use protocol::{MutationEnvelope, ServerFrame};
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::{TraceLevel, TraceOutcome, TraceRecord};
 use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage};

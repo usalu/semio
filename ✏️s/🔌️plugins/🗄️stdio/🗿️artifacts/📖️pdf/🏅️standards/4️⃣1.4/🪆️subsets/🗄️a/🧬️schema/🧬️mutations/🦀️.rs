@@ -15,7 +15,7 @@ pub use set_page_text::CONFORMANT_TEXT;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
-#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.a")]
+#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.a", reference = PdfSnapshot, reference_diff = PdfDiff)]
 pub enum PdfA1Mutation {
     SetPageText(SetPageText),
     ClearPageText(ClearPageText),

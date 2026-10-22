@@ -1,0 +1,592 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "argsOk",
+  "argsErr",
+  "roots",
+  "apps",
+  "appSelect",
+  "document",
+  "log",
+  "rootList",
+  "git",
+  "e2e"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "argsOk": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "args",
+     "expected"
+    ],
+    "properties": {
+     "args": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "selection",
+       "out",
+       "filesFrom",
+       "heapMegabytes",
+       "timeoutMinutes",
+       "maximumDiagnostics",
+       "list"
+      ],
+      "properties": {
+       "selection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "scopes",
+         "changedOnly"
+        ],
+        "properties": {
+         "scopes": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "changedOnly": {
+          "type": "boolean"
+         }
+        }
+       },
+       "out": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "filesFrom": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "heapMegabytes": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "timeoutMinutes": {
+        "type": "integer"
+       },
+       "maximumDiagnostics": {
+        "type": "integer"
+       },
+       "list": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "argsErr": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "args",
+     "message"
+    ],
+    "properties": {
+     "args": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "roots": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "sources",
+     "excludes",
+     "selection",
+     "changed",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "sources": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "excludes": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "scopes",
+       "changedOnly"
+      ],
+      "properties": {
+       "scopes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "changedOnly": {
+        "type": "boolean"
+       },
+       "listed": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "changed": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "apps": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "cases"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "sources",
+       "excludes",
+       "expected",
+       "message"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "sources": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "excludes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "expected": {
+        "anyOf": [
+         {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "folder",
+            "project"
+           ],
+           "properties": {
+            "folder": {
+             "type": "string"
+            },
+            "project": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "message": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "appSelect": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "app",
+     "selection",
+     "changed",
+     "expected"
+    ],
+    "properties": {
+     "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "folder",
+       "project"
+      ],
+      "properties": {
+       "folder": {
+        "type": "string"
+       },
+       "project": {
+        "type": "string"
+       }
+      }
+     },
+     "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "scopes",
+       "changedOnly"
+      ],
+      "properties": {
+       "scopes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "changedOnly": {
+        "type": "boolean"
+       },
+       "listed": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "changed": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "document": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "roots",
+     "toRoot",
+     "existing",
+     "expected"
+    ],
+    "properties": {
+     "roots": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "toRoot": {
+      "type": "string"
+     },
+     "existing": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {}
+    }
+   },
+   "minItems": 1
+  },
+  "log": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "summary",
+    "syntax"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "summary": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "total",
+      "files",
+      "byCode"
+     ],
+     "properties": {
+      "total": {
+       "type": "integer"
+      },
+      "files": {
+       "type": "integer"
+      },
+      "byCode": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "syntax": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "file",
+       "count",
+       "first"
+      ],
+      "properties": {
+       "file": {
+        "type": "string"
+       },
+       "count": {
+        "type": "integer"
+       },
+       "first": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "rootList": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "expected"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "git": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "commit",
+    "later",
+    "removeTracked",
+    "sources",
+    "changed",
+    "excludes",
+    "roots",
+    "scopedRoots",
+    "listedRoots",
+    "outRoots"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "commit": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "later": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "removeTracked": {
+     "type": "string"
+    },
+    "sources": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "changed": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "excludes": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "roots": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "scopedRoots": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "listedRoots": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "outRoots": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "e2e": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "expectedCodes",
+    "syntaxCodePrefix",
+    "syntaxFile",
+    "semanticFile",
+    "cleanFiles"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "expectedCodes": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "syntaxCodePrefix": {
+     "type": "string"
+    },
+    "syntaxFile": {
+     "type": "string"
+    },
+    "semanticFile": {
+     "type": "string"
+    },
+    "cleanFiles": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

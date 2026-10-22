@@ -13,5 +13,5 @@ class LogicalOwnerScript extends BundleScript {
     await runLogicalOwnerScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("logical-owner", LogicalOwnerScript).register("emit-grammar", NativeGrammarEmissionScript);
-await runArtifactRustPackageMain(import.meta.dir,"semio-framework-print",{testPackages:["semio-framework-print-tests"],commands: router,snapshotSqliteTests:["../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+const router = new ScriptRouter(import.meta.dirname).register("logical-owner", LogicalOwnerScript).register("emit-grammar", NativeGrammarEmissionScript);
+await runArtifactRustPackageMain(import.meta.dirname,"semio-framework-print",{testPackages:["semio-framework-print-tests"],commands: router,snapshotSqliteTests:["../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

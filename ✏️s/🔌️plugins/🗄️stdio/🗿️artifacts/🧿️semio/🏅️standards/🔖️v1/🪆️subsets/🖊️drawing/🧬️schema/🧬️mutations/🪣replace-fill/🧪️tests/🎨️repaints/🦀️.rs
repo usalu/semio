@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn repaints_the_fill_and_leaves_the_rest_of_the_style_alone() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-fill applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("replace-fill applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: applied state differs from the committed after-snapshot");
     let fill = produced.styles[0].fill.expect("the style still has a fill");
     assert_eq!((fill.r, fill.b), (0.0, 1.0), "the fill takes the payload's own colour");
@@ -51,9 +51,9 @@ async fn the_undo_replace_fill_restores_the_red() {
     assert_eq!(undo.len(), 1, "replace-fill of an existing style undoes as exactly one replace-fill");
     let SemioDrawingMutation::ReplaceFill(restore) = &undo[0] else { panic!("replace-fill must undo as replace-fill") };
     assert_eq!(restore.new_fill, base.styles[0].fill, "the undo must recapture BASE's own fill, Option and all");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-fill applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward replace-fill applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-fill applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo replace-fill applies");
     }
     assert_eq!(current, base, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: the undo did not restore the before-snapshot");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -114,6 +114,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-fill diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed replace-fill diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed diff did not carry before to after");
 }

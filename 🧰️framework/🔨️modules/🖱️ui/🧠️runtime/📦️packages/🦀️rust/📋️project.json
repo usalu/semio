@@ -30,7 +30,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts tree-retirement-check",
+        "command": "repo ./📜️script.ts tree-retirement-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -48,7 +48,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -64,7 +64,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-wasm"
+        "command": "repo ./📜️script.ts check-wasm"
       }
     },
     "test-native-resource-custody": {
@@ -79,7 +79,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native-resource-custody",
+        "command": "repo ./📜️script.ts test-native-resource-custody",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -97,7 +97,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native-mesh-receiving-source"
+        "command": "repo ./📜️script.ts test-native-mesh-receiving-source"
       }
     }
   }

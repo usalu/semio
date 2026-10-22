@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds manual-edits.json: anchored text edits for the Bun sites the AST codemod does not own. Run read-only against the live tree."""
 import json, os, re, sys
-ROOT = "/Users/ueli/Documents/semio"
+ROOT = os.environ.get("RUNTIME_SEAM_ROOT", "/Users/ueli/Documents/semio")
 L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
 P = "🧰️framework/🔨️modules/🏃️process"
 NB = P + "/📦️artifacts/🏗️native-build/💾️storage"
@@ -115,7 +115,7 @@ sub(store, "protocol.ambientFallback,process.versions.bun,process.versions.node"
 gen = L + "/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts"
 sub(gen, 'bun:String(process.versions.bun),revision:String((globalThis as {Bun?:{revision?:string}}).Bun?.revision??"")', 'bun:String(runtimeIdentityV1().version),revision:String(runtimeIdentityV1().revision)'); need(gen, "runtimeIdentityV1")
 code = L + "/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts"
-sub(code, 'compiler={name:"Bun",version:Bun.version,revision:Bun.revision,target:"bun",format:"esm",minify:true}', 'compiler={name:runtimeIdentityV1().id,version:runtimeIdentityV1().version,revision:runtimeIdentityV1().revision,target:"runtime",format:"esm",minify:true}'); need(code, "runtimeIdentityV1")
+sub(code, 'compiler={name:"Bun",version:Bun.version,revision:Bun.revision,target:"bun",format:"esm",minify:true}', 'compiler={name:runtimeIdentityV1().product,version:runtimeIdentityV1().version,revision:runtimeIdentityV1().revision,target:runtimeIdentityV1().id,format:"esm",minify:true}'); need(code, "runtimeIdentityV1")
 wgpu = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/"
 bb = wgpu + "⚙️browser-build/🟦️.ts"
 sub(bb, "actualVersion: string = Bun.version", "actualVersion: string = runtimeIdentityV1().version")
@@ -200,6 +200,7 @@ sub(pr, 'if (tokens[0] !== "bun") return undefined;', 'if (!isRuntimeExecutableV
 nxm = L + "/🟨️.mjs"
 sub(nxm, '!specifier.includes(":")&&specifier!=="bun"', '!specifier.includes(":")&&!isRuntimeBuiltinSpecifierV1(specifier)'); need(nxm, "isRuntimeBuiltinSpecifierV1")
 
+exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "manual-gen2.py"), encoding="utf8").read())
 files[vsc]["before"] = True
-json.dump({"files": list(files.values())}, open("manual-edits.json", "w", encoding="utf8"), ensure_ascii=False, indent=1)
+json.dump({"files": list(files.values()), "moves": MOVES, "deletes": DELETES}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "manual-edits.json"), "w", encoding="utf8"), ensure_ascii=False, indent=1)
 print({k.split("/")[-2]: len(v["edits"]) for k, v in files.items()})

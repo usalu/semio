@@ -40,7 +40,7 @@ pub mod set_stream_header;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = AviSnapshot, diff = AviDiff, schema = "AviMutation")]
+#[mutations(snapshot = AviSnapshot, diff = AviDiff, schema = "AviMutation", reference = AviSnapshot, reference_diff = AviDiff)]
 pub enum AviMutation {
     SetMainHeader(set_main_header::SetMainHeader),
     SetIdx1Present(set_idx1_present::SetIdx1Present),

@@ -1,4 +1,6 @@
-/** 🔌️ Platform strategy of the native storage retirement checks: the persistent backend binds for darwin and the fixed backend for every other platform. The storage core and the creator claim dispatch through it, so neither depends on a backend and each backend depends on both. */
+import { nativeStorageMountedVolumeV1 } from "../🔌️backends/📋️contract/🟦️.ts";
+
+/** 🔌️ Strategy of the native storage retirement checks: the persistent backend binds when the selected storage backend is a kernel-mounted image and the fixed backend otherwise. The storage core and the creator claim dispatch through it, so neither depends on a backend and each backend depends on both. */
 export interface NativeRetirementBackendV1 {
   requireSuccessfulChildRetirement(custody: unknown, cleanup: unknown, enrollment: unknown, request: unknown): void;
   requireFailedBirthRetirement(owner: unknown, enrollment: unknown, request: unknown): void;
@@ -16,7 +18,7 @@ export function bindNativeRetirementBackendV1(kind: NativeRetirementBackendKindV
 
 /** 🪪️ The backend of this platform; an unbound backend is a wiring fault. */
 export function nativeRetirementBackendV1(): NativeRetirementBackendV1 {
-  const kind: NativeRetirementBackendKindV1 = process.platform === "darwin" ? "persistent" : "fixed";
+  const kind: NativeRetirementBackendKindV1 = nativeStorageMountedVolumeV1() ? "persistent" : "fixed";
   const backend = bound.get(kind);
   if (!backend) throw new Error("Native storage retirement backend is unbound: " + kind);
   return backend;

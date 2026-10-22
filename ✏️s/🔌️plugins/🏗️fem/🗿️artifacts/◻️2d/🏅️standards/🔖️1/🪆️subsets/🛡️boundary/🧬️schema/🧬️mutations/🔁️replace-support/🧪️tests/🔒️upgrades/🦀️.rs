@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().supports.as_ref().expect("supports delta").modified.len(), 1, "replace-support/upgrades-the-834e4a: exactly one support may be patched");
     assert!(outcome.diff().supports.as_ref().expect("supports delta").inserted.is_empty(), "replace-support/upgrades-the-834e4a: a replacement is never an addition");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

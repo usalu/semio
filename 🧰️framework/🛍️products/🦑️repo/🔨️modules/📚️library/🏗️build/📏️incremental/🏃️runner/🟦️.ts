@@ -2,6 +2,7 @@ import {constants} from "node:fs";
 import {copyFile,lstat,mkdir,readFile,readlink,readdir,realpath,rm,symlink,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
 import {incrementalExpectedV1,incrementalMutateV1,incrementalQuiescentV1,incrementalSliceV1,incrementalVerdictV1,type IncrementalExpectedV1,type IncrementalFamilyV1,type IncrementalObservationV1,type IncrementalPhaseV1,type IncrementalRowV1,type IncrementalScenarioSetV1,type IncrementalScenarioV1,type IncrementalSliceV1,type IncrementalSliceTaskV1,type IncrementalToolV1} from "../🟦️.ts";
 
@@ -61,11 +62,11 @@ export async function incrementalRunV1(set:IncrementalScenarioSetV1,scenarios:re
  return rows;
 }
 
-/** 🧹️ Builds the environment of a child CLI: the parent's environment without any inherited invocation, capability, build or Nx state, plus the explicit additions. */
+/** 🧹️ Builds the environment of a child CLI: the parent's environment without any inherited invocation, capability, build or Nx state, plus Bun's transpiler cache switched off (it is keyed by file content and keeps the absolute import paths of the first location it saw, so a disposable copy would load the live checkout) and the explicit additions. */
 export function incrementalChildEnvironmentV1(parent:Readonly<Record<string,string|undefined>>,extra:Readonly<Record<string,string>>):Record<string,string>{
  const kept:Record<string,string>={};
  for(const[key,value]of Object.entries(parent))if(value!==undefined&&(key==="SEMIO_LANGUAGE"||!/^(SEMIO_|NX_)/u.test(key)))kept[key]=value;
- return {...kept,...extra};
+ return {...kept,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",...extra};
 }
 
 /** 🧭️ The command line of one `repo` invocation inside the disposable root: its own copy of the build CLI, never the live one. */
@@ -89,7 +90,7 @@ export function incrementalInsideV1(root:string,path:string):string{
  return resolved;
 }
 
-/** 🪞️ Copies tracked files into an empty disposable root with copy-on-write where the filesystem offers it, keeping symbolic links as links; progress every thousand files, cancellation between batches. */
+/** 🪞️ Copies tracked files that still exist into an empty disposable root with copy-on-write where the filesystem offers it, keeping symbolic links as links except the absolute ones that point back into the live checkout, which a copy must never reach; progress every thousand files, cancellation between batches. */
 export async function incrementalCloneV1(source:string,destination:string,files:readonly string[],hooks:Readonly<{signal:AbortSignal;progress(done:number,total:number):Promise<void>}>):Promise<number>{
  await incrementalDisposableV1(source,destination);
  try{if((await readdir(destination)).length)throw Error(`The disposable root must be empty: ${destination}\nDas Wegwerf-Verzeichnis muss leer sein: ${destination}`);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
@@ -100,9 +101,10 @@ export async function incrementalCloneV1(source:string,destination:string,files:
  for(let start=0;start<files.length;start+=policy.copyConcurrency){
   if(hooks.signal.aborted)throw Error("Cancelled\nAbgebrochen");
   await Promise.all(files.slice(start,start+policy.copyConcurrency).map(async file=>{
-   const from=join(source,file),to=join(destination,file),meta=await lstat(from);
+   const from=join(source,file),to=join(destination,file),meta=await lstat(from).catch(error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;});
+   if(!meta)return;
    await ensure(dirname(to));
-   if(meta.isSymbolicLink())await symlink(await readlink(from),to);
+   if(meta.isSymbolicLink()){const target=await readlink(from);if(isAbsolute(target)&&(resolve(target)===resolve(source)||resolve(target).startsWith(resolve(source)+sep)))return;await symlink(target,to);}
    else if(meta.isFile())await copyFile(from,to,constants.COPYFILE_FICLONE);
   }));
   const before=done;done=Math.min(files.length,start+policy.copyConcurrency);
@@ -112,8 +114,52 @@ export async function incrementalCloneV1(source:string,destination:string,files:
  return files.length;
 }
 
-/** 🗑️ Removes a disposable root after a run unless it is kept; it refuses the live checkout. */
-export async function incrementalDiscardV1(live:string,disposable:string):Promise<void>{await incrementalDisposableV1(live,disposable);await rm(disposable,{recursive:true,force:true});}
+/** 🔄️ Brings a prepared disposable root up to date with the live checkout: adds the files it lacks and replaces the ones whose content differs (size and time first, bytes when they disagree), keeping everything else the bootstrap built; files deleted from the checkout stay until the root is discarded. */
+export async function incrementalRefreshV1(source:string,destination:string,files:readonly string[],hooks:Readonly<{signal:AbortSignal;progress(done:number,total:number):Promise<void>}>):Promise<Readonly<{added:number;updated:number}>>{
+ await incrementalDisposableV1(source,destination);
+ for(const file of files)incrementalInsideV1(destination,file);
+ const made=new Set<string>(),ensure=async(directory:string)=>{if(!made.has(directory)){await mkdir(directory,{recursive:true});made.add(directory);}},absent=(error:unknown)=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;};
+ let added=0,updated=0,done=0;
+ for(let start=0;start<files.length;start+=policy.copyConcurrency){
+  if(hooks.signal.aborted)throw Error("Cancelled\nAbgebrochen");
+  await Promise.all(files.slice(start,start+policy.copyConcurrency).map(async file=>{
+   const from=join(source,file),to=join(destination,file),meta=await lstat(from).catch(absent);
+   if(!meta)return;
+   const present=await lstat(to).catch(absent);
+   if(meta.isSymbolicLink()){const target=await readlink(from);if(isAbsolute(target)&&(resolve(target)===resolve(source)||resolve(target).startsWith(resolve(source)+sep)))return;if(present?.isSymbolicLink()&&await readlink(to)===target)return;await ensure(dirname(to));if(present)await rm(to,{force:true});await symlink(target,to);present?updated++:added++;return;}
+   if(!meta.isFile())return;
+   if(present?.isFile()&&present.size===meta.size&&(present.mtimeMs===meta.mtimeMs||(await readFile(from)).equals(await readFile(to))))return;
+   await ensure(dirname(to));
+   if(present&&!present.isFile())await rm(to,{recursive:true,force:true});
+   await copyFile(from,to,constants.COPYFILE_FICLONE);present?updated++:added++;
+  }));
+  const before=done;done=Math.min(files.length,start+policy.copyConcurrency);
+  if(Math.floor(done/1000)!==Math.floor(before/1000))await hooks.progress(done,files.length);
+ }
+ await hooks.progress(files.length,files.length);
+ return Object.freeze({added,updated});
+}
+
+/** 🔎️ Reads the mounts that lie inside a root from the mount table of `mount` (macOS `dev on path (apfs, …)`, Linux `dev on path type ext4 (…)`), deepest first. */
+export function incrementalMountsInsideV1(listing:string,root:string):readonly Readonly<{device:string;path:string}>[]{
+ const inside=(path:string)=>path===root||path.startsWith(root.endsWith(sep)?root:root+sep),rows:{device:string;path:string}[]=[];
+ for(const line of listing.split("\n")){const match=/^(\S+) on (.+?) (?:\(|type )/u.exec(line);if(match&&inside(match[2]!))rows.push({device:match[1]!,path:match[2]!});}
+ return rows.sort((left,right)=>right.path.length-left.path.length);
+}
+
+/** 💽️ Detaches the cache images a disposable copy mounted below its root, which otherwise keep the root busy: `hdiutil detach` on macOS, `umount` on Linux; Windows mounts nothing below the root. */
+export async function incrementalDetachMountsV1(root:string,signal:AbortSignal,platform:string=process.platform):Promise<number>{
+ if(platform!=="darwin"&&platform!=="linux")return 0;
+ const run=(program:string,args:readonly string[])=>captureOwnedCommandV1(program,args,root,{signal,output:{maximumBytes:policy.maximumLogBytes,maximumLines:policy.maximumLogEntries}});
+ const real=await realpath(root).catch(()=>undefined);
+ if(!real)return 0;
+ const rows=incrementalMountsInsideV1(await run("mount",[]),real);
+ for(const row of rows){if(signal.aborted)throw Error("Cancelled\nAbgebrochen");if(platform==="darwin")await run("hdiutil",["detach","-force",row.device.replace(/s\d+$/u,"")]);else await run("umount",[row.path]);}
+ return rows.length;
+}
+
+/** 🗑️ Removes a disposable root after a run unless it is kept, after it detached the images mounted below it; it refuses the live checkout. */
+export async function incrementalDiscardV1(live:string,disposable:string,signal:AbortSignal=new AbortController().signal):Promise<void>{await incrementalDisposableV1(live,disposable);await incrementalDetachMountsV1(disposable,signal);await rm(disposable,{recursive:true,force:true});}
 
 type AdapterTaskV1=Readonly<{id:string;dependencies:readonly string[];definition:Readonly<{inputs?:readonly unknown[];outputs?:unknown}>}>;
 /** 🧩️ The part of the Bazel adapter the slice builder reads: the planner, the cache decision, the coverage classifier, the source index and the input expansion. */

@@ -15,7 +15,7 @@ pub(crate) mod testing_fixtures_unit_1 {
     pub mod tests {
         use super::*;
         use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-        use protocol::{Mutation, ColdMutationDiff,MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
+        use protocol::{ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
     
         /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
         #[doc(hidden)]

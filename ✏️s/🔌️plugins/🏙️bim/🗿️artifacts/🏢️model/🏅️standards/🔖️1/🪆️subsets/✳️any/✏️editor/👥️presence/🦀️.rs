@@ -40,15 +40,9 @@ pub struct BimPresenceDiff {
     pub owned_worksets: Option<Vec<String>>,
 }
 
-impl protocol::MutationDiff<BimPresence> for BimPresenceDiff {
-    fn apply(&self, base: &BimPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BimPresence> {
-        Ok(BimPresence {
-            engagement_input: self.engagement_input.clone().unwrap_or_else(|| base.engagement_input.clone()),
-            storey: self.storey.clone().unwrap_or_else(|| base.storey.clone()),
-            camera: self.camera.unwrap_or(base.camera),
-            owned_worksets: self.owned_worksets.clone().unwrap_or_else(|| base.owned_worksets.clone()),
-        })
-    }
+impl protocol::MutationDiff<BimPresence> for BimPresenceDiff {}
+
+impl protocol::ColdMutationDiff<BimPresence> for BimPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.owned_worksets.is_some() { self.owned_worksets = other.owned_worksets.clone(); }
         if other.engagement_input.is_some() {
@@ -61,14 +55,28 @@ impl protocol::MutationDiff<BimPresence> for BimPresenceDiff {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut BimPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = BimPresence {
+            engagement_input: self.engagement_input.clone().unwrap_or_else(|| base.engagement_input.clone()),
+            storey: self.storey.clone().unwrap_or_else(|| base.storey.clone()),
+            camera: self.camera.unwrap_or(base.camera),
+            owned_worksets: self.owned_worksets.clone().unwrap_or_else(|| base.owned_worksets.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<BimPresence> for BimPresenceDiff {
-    fn inverse(&self, base: &BimPresence) -> Self {
-        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), storey: self.storey.as_ref().map(|_| base.storey.clone()), camera: self.camera.map(|_| base.camera), owned_worksets: self.owned_worksets.as_ref().map(|_| base.owned_worksets.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.storey.is_none() && self.camera.is_none() && self.owned_worksets.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BimPresence> for BimPresenceDiff {
+    fn inverse(&self, base: &BimPresence) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), storey: self.storey.as_ref().map(|_| base.storey.clone()), camera: self.camera.map(|_| base.camera), owned_worksets: self.owned_worksets.as_ref().map(|_| base.owned_worksets.clone()) }
     }
 }
 
@@ -159,7 +167,10 @@ impl Mutation<BimPresence> for BimPresenceMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
+}
 
+impl protocol::ColdMutation<BimPresence> for BimPresenceMutation {
+    type ReferenceDiff = BimPresenceDiff;
     fn diff(&self, base: &BimPresence) -> protocol::MutationOutcome<BimPresenceDiff> {
         match self {
             Self::Set { engagement_input, storey, owned_worksets, camera } => protocol::MutationOutcome::new(BimPresenceDiff {
@@ -170,7 +181,6 @@ impl Mutation<BimPresence> for BimPresenceMutation {
             }),
         }
     }
-
     fn inverse(&self, base: &BimPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::Set { engagement_input: base.engagement_input.clone(), storey: base.storey.clone(), owned_worksets: base.owned_worksets.clone(), camera: base.camera }])
     }

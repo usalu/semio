@@ -22,7 +22,7 @@ fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse()
     let mutation = BmpMutation::ReplaceImage(ReplaceImage { image: edited.image.clone() });
     let factory = <BmpEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the BMP document lane declares a preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
     assert_eq!(*law.post, expected);
@@ -55,7 +55,7 @@ fn publication_preparation_turns_are_bounded_by_pages_and_paged_paints_restore()
         let base = direct_bitmap(width, height);
         let mutation = BmpMutation::PaintDirectRegion(PaintDirectRegion { revision: bmp_revision(&base), x: region.0, y: region.1, width: region.2, height: region.3, red: 255, green: 0, blue: 0, alpha: 255 });
         let factory = <BmpEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the BMP document lane declares a preparation factory");
-        let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+        let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
         let mut expected = base.clone();
         apply_mutation(&mut expected, &mutation);
         assert_eq!(*law.post, expected);

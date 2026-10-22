@@ -6,6 +6,7 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 
 use super::launcher::Start;
+use dashboard_feedback::{Failure,Operation};
 use super::windows::{Body, Dashboard, Kind, LinkState, Place};
 use dashboard_inventory::Update;
 use dashboard_wire::client::{Connection, Message};
@@ -86,11 +87,11 @@ impl Dashboard {
 
     pub fn send(&mut self, message: &ClientMsg) -> std::io::Result<()> {
         if !self.link.enabled {
-            if self.link.fails() { return Err(std::io::Error::other("dashboard daemon connection unavailable")); }
+            if self.link.fails() { return Err(std::io::Error::from(std::io::ErrorKind::NotConnected)); }
             self.link.outbox.push(message.clone());
             return Ok(());
         }
-        self.link.connection.as_mut().ok_or_else(|| std::io::Error::other("dashboard daemon disconnected"))?.send(message)
+        self.link.connection.as_mut().ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotConnected))?.send(message)
     }
 
     /// 🚀️ Resolves a launcher request through the registry and starts it: the launcher window becomes the
@@ -118,7 +119,8 @@ impl Dashboard {
         if let Body::Output { session, sent } = &mut self.windows[index].body { *session = Some(Box::new(info)); *sent = size; }
         let message = group.message();
         if self.online() {
-            if self.send(&message).is_err() {
+            if let Err(error)=self.send(&message) {
+                self.record_io(Operation::Start,error);
                 self.link.pending.push_back(message);
                 self.notice = Some(self.text().start_requeued.as_str().to_string());
             }
@@ -160,7 +162,7 @@ impl Dashboard {
         let Some(session_id) = self.windows.get(index).and_then(|window| window.session()).map(|session| session.session_id.clone()) else { return };
         if action != "restart-task" && self.cancel_pending_start(tui, &session_id) { return; }
         let message = match action { "restart-task" => ClientMsg::Restart { session_id }, "stop-task" => ClientMsg::Stop { session_id }, _ => ClientMsg::Kill { session_id } };
-        if let Err(error) = self.send(&message) { self.notice = Some(error.to_string()); }
+        if let Err(error) = self.send(&message) { self.record_io(match action{"restart-task"=>Operation::Restart,"stop-task"=>Operation::Stop,_=>Operation::Kill},error); }
     }
 
     /// 🎯️ The task selected by an output window or an overview row.
@@ -207,15 +209,15 @@ impl Dashboard {
     /// ⌨️ Sends terminal input of a window to its session.
     pub fn send_input(&mut self, session_id: &str, data: Vec<u8>) {
         if !self.link.enabled { self.link.outbox.push(ClientMsg::Input { session_id: session_id.to_string(), data }); return; }
-        let result = match self.link.connection.as_mut() { Some(connection) => connection.input(session_id, &data), None => Err(std::io::Error::other(self.text().state_reconnecting.as_str())) };
-        if let Err(error) = result { self.notice = Some(error.to_string()); }
+        let result = match self.link.connection.as_mut() { Some(connection) => connection.input(session_id, &data), None => Err(std::io::Error::from(std::io::ErrorKind::NotConnected)) };
+        if let Err(error) = result { self.record_io(Operation::Input,error); }
     }
 
     /// 🛑️ Asks the daemon to stop; the view leaves when it confirms, never earlier.
     pub fn begin_shutdown(&mut self) {
         match self.send(&ClientMsg::Shutdown {}) {
             Ok(()) => self.shutdown_since = Some(Instant::now()),
-            Err(error) => self.notice = Some(error.to_string()),
+            Err(error) => self.record_io(Operation::Shutdown,error),
         }
     }
 }
@@ -226,7 +228,7 @@ impl Dashboard {
     /// 🔁️ Re-attaches so the daemon replays every session's screen.
     pub fn restore_sessions(&mut self) {
         self.link.restoring = true;
-        if let Err(error) = self.send(&ClientMsg::Attach { client_id: format!("dashboard-{}", std::process::id()) }) { self.notice = Some(error.to_string()); }
+        if let Err(error) = self.send(&ClientMsg::Attach { client_id: format!("dashboard-{}", std::process::id()) }) { self.record_io(Operation::Attach,error); }
     }
 
     /// 🔝️ Focuses the most recently started visible task after the requested snapshot completes.
@@ -294,10 +296,11 @@ impl Dashboard {
                 self.link.connection = None;
                 self.link.schedule_reconnect(false, Instant::now());
                 self.state = LinkState::Failed(text.clone());
+                self.diagnostics.push(Failure::text(Operation::Attach,text.clone()));
                 self.notice = Some(text);
             }
-            Message::Control(ServerMsg::Error { message, code, .. }) => self.notice = Some(self.text().error(code, &message)),
-            Message::Disconnected(message) => { self.link.connection = None; self.link.schedule_reconnect(false, Instant::now()); self.state = if self.shutdown_since.is_some() { LinkState::Stopped } else { LinkState::Failed(message) }; return self.shutdown_since.is_some(); }
+            Message::Control(ServerMsg::Error { message, code, .. }) => {let detail=self.text().error(code,&message);self.diagnostics.push(Failure::text(Operation::Start,detail.clone()));self.notice=Some(detail);},
+            Message::Disconnected(message) => { if self.shutdown_since.is_none(){self.diagnostics.push(Failure::text(Operation::Attach,message.clone()));}self.link.connection = None; self.link.schedule_reconnect(false, Instant::now()); self.state = if self.shutdown_since.is_some() { LinkState::Stopped } else { LinkState::Failed(message) }; return self.shutdown_since.is_some(); }
             Message::Control(ServerMsg::Shutdown {}) => { self.link.connection = None; self.state = LinkState::Stopped; return self.shutdown_since.is_some(); }
             Message::Control(_) => {}
         }
@@ -344,26 +347,28 @@ impl Dashboard {
                     }
                     if let Some(skew) = skew { self.notice = Some(self.text().skew(&skew)); }
                     if let Some(waker) = self.waker.clone() { connection.set_notifier(std::sync::Arc::new(move || waker.wake())); }
-                    let _ = connection.send(&ClientMsg::Attach { client_id: format!("dashboard-{}", std::process::id()) });
+                    if let Err(error)=connection.send(&ClientMsg::Attach { client_id: format!("dashboard-{}", std::process::id()) }){self.record_io(Operation::Attach,error);}
                     self.link.connection = Some(connection);
                     self.link.schedule_reconnect(false, Instant::now());
                     self.link.restoring = true;
                     self.state = LinkState::Connected;
                 }
-                Err(error) => { self.state = LinkState::Failed(error.to_string()); self.link.schedule_reconnect(true, Instant::now()); }
+                Err(error) => { let detail=error.to_string();self.record_io(Operation::Attach,error);self.state = LinkState::Failed(detail); self.link.schedule_reconnect(true, Instant::now()); }
             }
             polled.changed = true;
         }
         let Some(connection) = self.link.connection.as_mut() else { return polled };
+        let mut pending_error=None;
         while let Some(request) = self.link.pending.front() {
-            if let Err(error) = connection.send(request) { self.notice = Some(error.to_string()); break; }
+            if let Err(error) = connection.send(request) { pending_error=Some(error); break; }
             self.link.pending.pop_front();
             polled.changed = true;
         }
         let messages = match connection.receive(Duration::ZERO) {
             Ok(messages) => messages,
-            Err(_) => { self.link.connection = None; self.link.schedule_reconnect(false, Instant::now()); self.state = LinkState::Reconnecting; polled.changed = true; return polled; }
+            Err(error) => { self.link.connection = None; if let Some(error)=pending_error{self.record_io(Operation::Start,error);}self.record_io(Operation::Attach,error); self.link.schedule_reconnect(false, Instant::now()); self.state = LinkState::Reconnecting; polled.changed = true; return polled; }
         };
+        if let Some(error)=pending_error{self.record_io(Operation::Start,error);polled.changed=true;}
         polled.changed |= !messages.is_empty();
         for message in messages { polled.quit |= self.apply(tui, message); }
         polled
@@ -403,9 +408,9 @@ impl Dashboard {
             self.refresh_panes(tui);
             changed = true;
         }
-        if let Some((change, result)) = self.saving_preferences.as_ref().and_then(|receiver| receiver.try_recv().ok()) {
+        if let Some((change, result)) = self.saving_preferences.as_ref().and_then(|job| match job.receiver.try_recv(){Ok(result)=>Some(result),Err(std::sync::mpsc::TryRecvError::Disconnected)=>Some((Default::default(),Err(std::io::Error::from(std::io::ErrorKind::BrokenPipe)))),Err(std::sync::mpsc::TryRecvError::Empty)=>None}) {
             self.saving_preferences = None;
-            match result { Ok(_) => self.adopt_preference(tui, &change), Err(error) => self.notice = Some(error.to_string()) }
+            match result { Ok(_) => self.adopt_preference(tui, &change), Err(error) if error.kind()==std::io::ErrorKind::Interrupted=>self.notice=Some(self.text().prefs_cancelled.as_str().into()), Err(error)=>self.record_io(Operation::Preferences,error) }
             changed = true;
         }
         let updates: Vec<Update> = self.inventory.as_ref().map(|job| job.receiver.try_iter().collect()).unwrap_or_default();
@@ -413,7 +418,7 @@ impl Dashboard {
             match update {
                 Update::Ready(..) => { if let Some(registry) = self.inventory.as_ref().and_then(dashboard_inventory::Job::registry) { self.set_registry(tui, registry); } }
                 Update::Finished => self.inventory = None,
-                Update::Failed(error) => self.notice = Some(error),
+                Update::Failed(error) => self.record_failure(Failure::text(Operation::Discovery,error)),
             }
             changed = true;
         }

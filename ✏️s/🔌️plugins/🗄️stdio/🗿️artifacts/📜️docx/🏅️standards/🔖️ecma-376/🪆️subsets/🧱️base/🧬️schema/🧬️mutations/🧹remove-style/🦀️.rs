@@ -13,19 +13,20 @@ pub struct RemoveStyle {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        plan_outcome(remove_style_plan(base, &self.id))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-        Ok(plan_inverse(remove_style_plan(base, &self.id)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Formatvorlage entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        plan_outcome(remove_style_plan(base, &self.id))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        Ok(plan_inverse(remove_style_plan(base, &self.id)))
     }
 }
 //#endregion 🔖️Payload

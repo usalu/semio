@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "purpose": "Audited direct library behavior portion of registered window acceptance; preserve canonical Dashboard coldcondition",
+  "command": [
+    "repo",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "🧰️framework/Cargo.toml",
+    "--locked",
+    "--lib",
+    "-p",
+    "semio-framework-ui-tui-core",
+    "-p",
+    "semio-framework-ui-tui-vt",
+    "-p",
+    "semio-framework-ui-tui-terminal",
+    "-p",
+    "semio-framework-ui-tui-widgets",
+    "-p",
+    "semio-framework-ui-tui-frame",
+    "-p",
+    "semio-framework-ui-tui-engine",
+    "-p",
+    "semio-framework-ui-tui-host",
+    "-p",
+    "semio-framework-ui-tui-unit-laws",
+    "-p",
+    "semio-framework-ui-tui-vt-laws",
+    "-p",
+    "semio-framework-ui-tui-laws",
+    "--features",
+    "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "requestedEnvironment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000",
+    "RUST_MIN_STACK": "134217728",
+    "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/t10d"
+  },
+  "environmentQualification": "Command-envelope requests only; no separate child stack receipt asserted.",
+  "audit": {
+    "owner": "Low",
+    "literalInputs": 107,
+    "manifests": 10,
+    "scope": "No actual receipt/bin/install/build-script read or write in selected library tests; Source controls/terminal filter remain outside this proof."
+  },
+  "current": {
+    "session": 72467,
+    "status": "whole",
+    "whole": 0,
+    "log": "🗑️generated/e2e-tui-window-libraries-direct-t10d.log",
+    "projection": "🗑️generated/e2e-tui-direct-72467-projection.json",
+    "passed": 395
+  },
+  "acceptance": {
+    "requiredPackages": [
+      "semio-framework-ui-tui-core",
+      "semio-framework-ui-tui-vt",
+      "semio-framework-ui-tui-terminal",
+      "semio-framework-ui-tui-widgets",
+      "semio-framework-ui-tui-frame",
+      "semio-framework-ui-tui-engine",
+      "semio-framework-ui-tui-host",
+      "semio-framework-ui-tui-unit-laws",
+      "semio-framework-ui-tui-vt-laws",
+      "semio-framework-ui-tui-laws"
+    ],
+    "filters": 0,
+    "registeredTestWindowsWhole": false,
+    "coldFirstPreserved": true
+  },
+  "next": "At actual terminal, return Native lane to High for cold-FIRST; no Source or installed producer from Controls.",
+  "nativeHandoff": {
+    "owner": "Controls",
+    "status": "live-exact-retry",
+    "nextOwner": "High-cold-FIRST"
+  },
+  "history": [
+    {
+      "session": 37476,
+      "whole": 101,
+      "status": "compiler-refusal",
+      "log": "🗑️generated/e2e-tui-window-libraries-direct-t10a.log",
+      "artifacts": "🗑️generated/t10a",
+      "ownersWithBodies": 0,
+      "bodies": 0,
+      "errors": [
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:165:16\n    |\n165 |     let tab0 = group.tabs.first().expect(\"first tab geometry\");\n    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:166:16"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:166:16\n    |\n166 |     let tab1 = group.tabs.get(1).expect(\"second tab geometry\");\n    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:167:49"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:167:49\n    |\n167 |     assert_eq!(window.window_hit(rect, Pos { x: tab0.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(0)));\n    |                                                 ^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:168:49"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:168:49\n    |\n168 |     assert_eq!(window.window_hit(rect, Pos { x: tab1.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(1)));\n    |                                                 ^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:169:18"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:169:18\n    |\n169 |     let close0 = tab0.close_x.expect(\"first tab close geometry\");\n    |                  ^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:170:18"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:170:18\n    |\n170 |     let close1 = tab1.close_x.expect(\"second tab close geometry\");\n    |                  ^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:173:20"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:173:20\n    |\n173 | ... = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == semio_framework_ui_tui_frame::chrome::TabKind::Controls).expect(\"controls chip\");\n    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:174:17"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🪟️tui-layout-and-window-laws/🦀️.rs:174:17\n    |\n174 |     let new_x = controls.new_x.expect(\"new-tab glyph geometry\");\n    |                 ^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:157:20"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:157:20\n    |\n157 |         for tab in &group.tabs {\n    |                    ^^^^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:209:13"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:209:13\n    |\n209 |     assert!(group.tabs.len() >= 2, \"two bottom tabs\");\n    |             ^^^^^^^^^^^^^^^^ private type\n\nerror: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private\n   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:210:16"
+        },
+        {
+          "message": "error: type `semio_framework_ui_tui_frame::chrome::WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/../../🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs:210:16\n    |\n210 |     for tab in &group.tabs {\n    |                ^^^^^^^^^^^ private type\n\n[cargo:test] running elapsedMs=110028\nerror: could not compile `semio-framework-ui-tui-unit-laws` (lib test) due to 11 previous errors"
+        },
+        {
+          "message": "error: could not compile `semio-framework-ui-tui-unit-laws` (lib test) due to 11 previous errors",
+          "context": "[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+        }
+      ],
+      "qualification": "No direct TUI library body accepted; registered test-windows Source controls and terminal filter remain unrun. No Dashboard receipt/bin/install/cold route invoked.",
+      "requestedEnvironment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_BUILD_BUDGET_MS": "21600000",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/t10a"
+      },
+      "compilerDiagnostics": 11
+    },
+    {
+      "session": 68127,
+      "status": "compiler-refusal",
+      "whole": 101,
+      "log": "🗑️generated/e2e-tui-window-libraries-direct-t10b.log",
+      "artifacts": "🗑️generated/t10b",
+      "repair": {
+        "source": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs",
+        "change": "Canonical WindowCornerTab type public; status/drag_x/as_window_tab remain crate-private",
+        "sourceAcceptedBy": "Low",
+        "schemaBehaviorChanged": false
+      },
+      "ownersWithBodies": 0,
+      "bodies": 0,
+      "compilerDiagnostics": 3,
+      "errors": [
+        {
+          "message": "error[E0433]: cannot find `tui` in `crate`",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/../../../🔬️chrome/🦀️.rs:176:76\n    |\n176 |         assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));\n    |                                                                            ^^^ could not find `tui` in the crate root\n    |"
+        },
+        {
+          "message": "error[E0433]: cannot find `tui` in `crate`",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/../../../🔬️chrome/🦀️.rs:442:99\n    |\n442 |     assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));\n    |                                                                                                   ^^^ could not find `tui` in the crate root\n    |"
+        },
+        {
+          "message": "error[E0616]: field `drag_x` of struct `WindowCornerTab` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/../../../🔬️pointer-routing/🦀️.rs:179:26\n    |\n179 |         assert_eq!(found.drag_x.map(u64::from), field(chip, \"drag\").as_u64(), \"stable grip column of {chip:?}\");\n    |                          ^^^^^^ private field\n"
+        },
+        {
+          "message": "error: could not compile `semio-framework-ui-tui-laws` (lib test) due to 3 previous errors",
+          "context": "[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+        }
+      ],
+      "qualification": "Prior11 private-type diagnostics resolved;2 stale Surface owner refs and1 private drag-coordinate observation now block companion law compilation. No body or registered test-windows acceptance.",
+      "requestedEnvironment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_BUILD_BUDGET_MS": "21600000",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/t10b"
+      }
+    },
+    {
+      "session": 90181,
+      "status": "compiler-refusal",
+      "whole": 101,
+      "log": "🗑️generated/e2e-tui-window-libraries-direct-t10c.log",
+      "artifacts": "🗑️generated/t10c",
+      "repair": {
+        "sources": [
+          "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs",
+          "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️chrome/🦀️.rs"
+        ],
+        "change": "Canonical geometry type and drag_x public;2 Surface paths use actual core owner. status/as_window_tab remain internal.",
+        "sourceAcceptedBy": "Low",
+        "schemaBehaviorChanged": false,
+        "assertionsChanged": false
+      },
+      "ownersWithBodies": 0,
+      "bodies": 0,
+      "compilerDiagnostics": 1,
+      "errors": [
+        {
+          "message": "error[E0624]: method `text_y` is private",
+          "context": "   --> 🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust/../../../🧪️tests/🪟️drag-preview/🦀️.rs:70:137\n    |\n 70 | ...act { 1 } else { 3 }), Pos { x: tab.x + 1, y: layout.text_y(group.corner, rect) })\n    |                                                         ^^^^^^ private method\n    |"
+        },
+        {
+          "message": "error: could not compile `semio-framework-ui-tui-engine` (lib test) due to 1 previous error",
+          "context": "[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}\n[script] {\"owner\":\"repository:build\",\"command\":\"cargo:build-entry\",\"stage\":\"running\",\"activity\":{\"resource\":\"cargo:workspace-selection\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+        }
+      ],
+      "qualification": "Prior3 companiondiagnostics resolved; private text_y geometry observer blocks engine drag-preview compilation.",
+      "requestedEnvironment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_BUILD_BUDGET_MS": "21600000",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/t10c"
+      }
+    }
+  ]
+}

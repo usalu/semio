@@ -12,8 +12,8 @@ use semio_s_artifact_puzzle_3d_model::Puzzle3dArtifact;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::DiffAlgebra;
-use protocol::ColdDiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
+
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;

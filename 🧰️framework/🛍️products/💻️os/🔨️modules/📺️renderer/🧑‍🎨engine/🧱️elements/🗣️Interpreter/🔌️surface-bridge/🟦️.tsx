@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { type ReactNode } from "react";
+import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import {
   type ActionDescriptor,
   type ComponentKind,

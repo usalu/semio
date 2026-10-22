@@ -16,7 +16,16 @@ pub struct SetComment {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comment", kind: "set-comment", record: "SetComment" };
 
-    fn diff(&self, _base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
+    fn diff(&self, _base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::ColdMutation<HtmlSnapshot>>::ReferenceDiff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }))
     }
@@ -29,12 +38,6 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
             };
             vec![HtmlMutation::SetComment(SetComment { path: path.clone(), text: old })]
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

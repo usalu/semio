@@ -12,7 +12,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔬️probes",
-        "command": "bun ./📜️script.ts carrier-reproduce",
+        "command": "repo ./📜️script.ts carrier-reproduce",
         "forwardAllArgs": true
       },
       "outputs": []

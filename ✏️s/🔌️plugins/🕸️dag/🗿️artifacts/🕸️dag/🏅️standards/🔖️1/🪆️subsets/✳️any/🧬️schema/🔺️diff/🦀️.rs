@@ -72,18 +72,9 @@ pub struct DagStringList {
 
 
 //#region 🔖️Apply
-impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DagSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<DagSnapshot> for DagDiff {}
+
+impl protocol::ColdMutationDiff<DagSnapshot> for DagDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -95,14 +86,31 @@ impl MutationDiff<DagSnapshot> for DagDiff {
         take!(schema);
         take!(content);
     }
+
+    fn apply(&self, unpublished: &mut DagSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(content) = &self.content {
+            next.content = content.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<DagSnapshot> for DagDiff {
-    fn inverse(&self, base: &DagSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.content.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DagSnapshot> for DagDiff {
+    fn inverse(&self, base: &DagSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
     }
 }
 //#endregion 🔖️Apply

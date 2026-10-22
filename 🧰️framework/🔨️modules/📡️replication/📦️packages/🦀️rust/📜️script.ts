@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -8,7 +8,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🖥️ `semio-framework-replication` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
+/** 🖥️ `semio-framework-replication` task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -27,6 +27,9 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 import { blake3Hex } from "@semio-tech/framework-hash";
 
 import { resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../⚙️runtime/🗃️sqlite/🟦️.ts";
 /** 📡️ The replication packages bottom up: leaf contracts, wire core, format and mutation, edit and causal, history and frames, the message ledgers, then the façade every consumer links. */
 const REPLICATION_PACKAGES = ["semio-framework-replication-codec","semio-framework-replication-command-ingress","semio-framework-replication-history-index","semio-framework-replication-ids","semio-framework-replication-interaction","semio-framework-replication-local-interaction","semio-framework-replication-wire-core","semio-framework-replication-format","semio-framework-replication-mutation","semio-framework-replication-presence","semio-framework-replication-edit","semio-framework-replication-causal","semio-framework-replication-conflict","semio-framework-replication-frames","semio-framework-replication-history","semio-framework-replication-mutation-messages","semio-framework-replication"];
 
@@ -67,7 +70,7 @@ class RetainedFieldChangeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-field-change requires source or native");
   const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   const{testFieldChangeOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts");testFieldChangeOracle();
   if(segments[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
@@ -81,7 +84,7 @@ class RetainedRecordChangeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-record-change requires source or native");
   const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   const{testRecordFieldChangeOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts");testRecordFieldChangeOracle();
   if(segments[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
@@ -95,7 +98,7 @@ class RetainedIndexedReplacementScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-indexed-replacement requires source or native");
   const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   const{testIndexedReplacementOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts");testIndexedReplacementOracle();
   if(segments[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
@@ -459,7 +462,7 @@ class CommandIngressOwnershipScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-command-ingress-ownership accepts no arguments");
   const source=resolve(this.root,"../../📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
@@ -486,7 +489,7 @@ class CratePartitionLawScript extends BundleScript {
 class PreparedFieldsScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--native")) throw new Error("prepared-fields-check accepts only --native");
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const { default: Ajv } = await import("ajv/dist/2020");
     const owner = join(this.root, "../../🎮️mutation");
     const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📦️prepared-fields/🔣️.json"), "utf8"));
@@ -524,7 +527,7 @@ class HistoryInvariantsScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("history-invariants-check", HistoryInvariantsScript).register("prepared-fields-check", PreparedFieldsScript).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript)
+const router = new ScriptRouter(import.meta.dirname).register("history-invariants-check", HistoryInvariantsScript).register("prepared-fields-check", PreparedFieldsScript).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript)
   .register("test-retained-indexed-replacement",RetainedIndexedReplacementScript).register("test-retained-record-change",RetainedRecordChangeScript).register("test-retained-field-change",RetainedFieldChangeScript).register("test-retained-diagnostic",RetainedDiagnosticScript).register("test-original-conflict-source",OriginalConflictSourceScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript).register("test-crate-partition", CratePartitionLawScript);
 
 /** 🎯️ Checks ordered set selection and bounded topology traversal in both implementations. */
@@ -547,7 +550,7 @@ class ScopedIdentityScript extends BundleScript {
     if (segments.some(segment => segment !== "--native")) throw new Error("scoped-identity-check accepts only --native");
     const { runOwnedCommand } = await import("../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     const { scriptInvocationBudget } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
-    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", resolve(this.root, "../../🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts")], this.repoRoot, "scoped-identity:source-typecheck", scriptInvocationBudget(this.invocation, 120000), { signal: this.invocation.control.signal, output: { maximumBytes: 8388608, maximumLines: 65536 } });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), resolve(this.root, "../../🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts")], this.repoRoot, "scoped-identity:source-typecheck", scriptInvocationBudget(this.invocation, 120000), { signal: this.invocation.control.signal, output: { maximumBytes: 8388608, maximumLines: 65536 } });
     const { testScopedIdentities } = await import("../../🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts");
     testScopedIdentities();
     if (!segments.includes("--native")) return;
@@ -581,7 +584,7 @@ class RetainedRowPatchApplyScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-patch-apply requires source or native");
   const source=resolve(this.root,"../../🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
   const {verifyRetainedRowPatchOracle}=await import("../../🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts");verifyRetainedRowPatchOracle();
   if(segments[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
@@ -597,7 +600,7 @@ class RetainedDiffSequenceScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-retained-diff-sequence requires source or native");
   const source=resolve(this.root,"../../🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:retained-diff-sequence:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,"replication:retained-diff-sequence:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"replication:retained-diff-sequence:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs},cwd:this.repoRoot,manifestPaths:{"semio-framework-replication":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-replication",target:{kind:"test",name:"retained_diff_sequence"},laws:["retained_diff_sequence_matches_original_intermediate_sqlite_values_and_refusal","retained_diff_sequence_cancellation_closes_original_sources_diagnostics_and_candidates","retained_diff_sequence_wide_original_projection_and_every_custody_cut_are_genuine"]}]});}
  }
@@ -617,7 +620,7 @@ class NativeDiffContractScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&['source','native'].includes(args[0]!), 'test-native-diff-contract requires source or native');
   const source=resolve(this.root,'../../🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts');
-  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),'--noEmit','--strict','--noUncheckedIndexedAccess','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',source],this.repoRoot,'replication:native-diff-contract:types',scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),'--noEmit','--strict','--noUncheckedIndexedAccess','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types',runtimeTypeEnvironmentV1(),source],this.repoRoot,'replication:native-diff-contract:types',scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal});
   const{verifyNativeDiffContractOracle}=await import('../../🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts');verifyNativeDiffContractOracle();if(args[0]==='source')return;
   const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,manifestPath:resolve(this.root,'Cargo.toml'),groups:[{package:'semio-framework-replication',target:{kind:'lib',name:'protocol'},laws:['mutation::native_diff_contract_tests::native_delta_vocabulary_does_not_require_cold_coalescing_or_receiving']}]});
   assert.equal(receipts[0]!.assertions,1);
@@ -629,7 +632,7 @@ class HistoryBackingBirthScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-history-backing-birth requires source or native");
   const source=resolve(this.root,"../../🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:fold-backing-birth:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,"replication:fold-backing-birth:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"replication:fold-backing-birth:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
   if(args[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
@@ -643,7 +646,7 @@ class RetainedLogicalBodyScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-retained-logical-body requires source or native");
   const source=resolve(this.root,"../../🎮️mutation/🧳️retained/📏️body/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
-  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:retained-logical-body:types",budget,{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,"replication:retained-logical-body:types",budget,{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],this.repoRoot,"replication:retained-logical-body:source",scriptInvocationBudget(this.invocation,budget),{signal:this.invocation.control.signal});
   if(args[0]==="source")return;
   const policy=readCargoTestPolicyV1(process.env);
@@ -651,4 +654,4 @@ class RetainedLogicalBodyScript extends BundleScript{
  }
 }
 router.register("test-retained-logical-body",RetainedLogicalBodyScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

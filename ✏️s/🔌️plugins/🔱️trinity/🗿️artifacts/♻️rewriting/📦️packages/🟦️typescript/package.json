@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting:test"
+    "build": "repo run @semio-tech/trinity-rewriting:build",
+    "check": "repo run @semio-tech/trinity-rewriting:check",
+    "test": "repo run @semio-tech/trinity-rewriting:test"
   },
   "exports": {
     ".": {

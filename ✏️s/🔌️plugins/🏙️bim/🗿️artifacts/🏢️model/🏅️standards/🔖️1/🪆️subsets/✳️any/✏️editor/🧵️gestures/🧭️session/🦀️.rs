@@ -138,7 +138,7 @@ impl<'a> ToolContext<'a> {
 
     /// 🛡️ Whether the model accepts `mutation` as it stands: the tools propose only what applies.
     pub fn accepts(&self, mutation: &ModelMutation) -> bool {
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
         let (_diff, messages) = mutation.diff(self.snapshot).into_parts();
         !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
     }

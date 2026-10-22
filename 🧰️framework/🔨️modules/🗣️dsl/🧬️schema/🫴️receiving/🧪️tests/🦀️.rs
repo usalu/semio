@@ -1,5 +1,6 @@
 //! 🧫️ Neutral original typed receiving laws compare the independent JSON binding.
-use super::*;
+use semio_framework_dsl_record::{FieldValue,RecordValue,receiving::{self,owned,OwnedSlot}};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueRefusalKind,retirement::RetireOwned};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cell::Cell;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫴️receiving/🔣️.json")).unwrap()}
@@ -81,3 +82,7 @@ fn original_typed_receiving_owned_declared_records_refuse_unknown_and_missing_fi
 fn original_owned_slot_first_close_defers_its_real_retirement_birth(){
  let mut owner=OwnedSlot::<String>::default();*owner.value=Some("original retained source".repeat(4));let pointer=owner.value.as_ref().unwrap().as_ptr();let demand=owner.close_demands(4096).unwrap();assert_eq!(demand.capacity_bytes,0);let initial=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:demand.depth};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(initial));let progress=result.unwrap();assert!(progress.fits(initial));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!owner.terminal_is_empty());let birth=owner.close_demands(4096).unwrap();assert!(birth.capacity_bytes>0);let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:birth.copy_bytes,maximum_capacity_bytes:birth.capacity_bytes-1,maximum_release_bytes:birth.release_bytes,maximum_depth:birth.depth};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(result.unwrap(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!pointer.is_null());close_owned(&mut owner);println!("[DEBUG] ownedSlot firstCloseZeroHeap=true cursorBirthSeparatelyQuoted=true refusedBirthRetainsOriginal=true");
 }
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

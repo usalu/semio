@@ -1,0 +1,92 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "banned-stub-markers-in-framework-and-plugin-codecs",
+   "rule": "policyCodecFidelityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/x.rs": [
+     "let a = \"SRAS\";"
+    ],
+    "🧰️framework/🔨️modules/🔺️mesh/m.rs": [
+     "const B: &[u8] = b\"minimal\";",
+     "// IFCCARTOONMESH"
+    ],
+    "🧰️framework/🛍️products/💻️os/h/🖥️host/y.rs": [
+     "a minimal stub codec lives here"
+    ],
+    "other/z.rs": [
+     "SRAS"
+    ],
+    "✏️s/🔌️plugins/🔭️p/notes.txt": [
+     "SRAS"
+    ],
+    "✏️s/🔌️plugins/🔭️p/clean.rs": [
+     "fn ok() {}"
+    ]
+   },
+   "expect": [
+    [
+     "stdio-codec-ban-✏️s/🔌️plugins/🔭️p/x.rs-SRAS",
+     "stdio-artifacts/codec-fidelity",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-ban-🧰️framework/🔨️modules/🔺️mesh/m.rs-IFCCARTOONMESH",
+     "stdio-artifacts/codec-fidelity",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-ban-🧰️framework/🔨️modules/🔺️mesh/m.rs-b\"minimal\"",
+     "stdio-artifacts/codec-fidelity",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-ban-🧰️framework/🛍️products/💻️os/h/🖥️host/y.rs-minimal stub codec",
+     "stdio-artifacts/codec-fidelity",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-ban-🧰️framework/🛍️products/💻️os/h/🖥️host/y.rs-stub codec",
+     "stdio-artifacts/codec-fidelity",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "without-a-stdio-ledger-policyIoMatrixMigratedBreaches",
+   "rule": "policyIoMatrixMigratedBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "without-a-stdio-ledger-policyIoSerializerMatrixBreaches",
+   "rule": "policyIoSerializerMatrixBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "without-a-stdio-ledger-policyIoTerminalityBreaches",
+   "rule": "policyIoTerminalityBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": []
+  }
+ ]
+}

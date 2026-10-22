@@ -32,6 +32,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "pixel", kind: "pin-pixel", record: "Fixed" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![crate::schema::snapshot::pin_key(self.x, self.y)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for PinPixel
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<PinPixel> + From<crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::UnpinPixel>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -41,11 +53,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![crate::schema::snapshot::pin_key(self.x, self.y)]
-    }
 }
 //#endregion 🔖️PinPixel

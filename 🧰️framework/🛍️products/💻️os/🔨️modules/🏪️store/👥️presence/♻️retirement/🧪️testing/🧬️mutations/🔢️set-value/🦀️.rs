@@ -2,7 +2,7 @@ use super::{Value, ValueMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -33,12 +33,6 @@ impl semio_framework_os_spr::ColdMutationKind<Value, ValueMutation> for SetValue
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Value", "Wert setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["value".into()]
-    }
 }
 
 #[cfg(test)]

@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for MoveWidget
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<crate::clear_widget_layout::ClearWidgetLayout> + From<MoveWidget>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::move_widget::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️MoveWidget

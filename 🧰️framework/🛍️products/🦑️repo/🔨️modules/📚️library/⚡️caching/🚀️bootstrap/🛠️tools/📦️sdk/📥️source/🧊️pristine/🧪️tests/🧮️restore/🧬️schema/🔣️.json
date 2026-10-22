@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:pristine-restore-corpus:v1",
+  "title": "Pristine Restore Corpus",
+  "description": "Language-agnostic cases for restoring the registry package over a snapshot clone: the clone's tree (files, directories, links, hardlinks to shared binaries), the registry archive, the shared binary receipt and the authored refusal. Paths are relative to node_modules/nx.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumEntries", "maximumPathBytes", "recheckEvery", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "maximumEntries": { "type": "integer", "minimum": 1 },
+    "maximumPathBytes": { "type": "integer", "minimum": 1 },
+    "recheckEvery": { "type": "integer", "minimum": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "clone", "archive", "shared", "error", "generate"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "clone": { "type": "array", "items": { "$ref": "#/definitions/node" } },
+          "archive": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["path", "kind", "text", "mode"], "properties": { "path": { "type": "string", "minLength": 1 }, "kind": { "enum": ["file", "directory"] }, "text": { "type": "string" }, "mode": { "type": "integer", "minimum": 0 } } } },
+          "shared": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "text"], "properties": { "path": { "type": "string", "minLength": 1 }, "text": { "type": "string" } } } },
+          "error": { "anyOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }] },
+          "generate": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": false, "required": ["prefix", "count"], "properties": { "prefix": { "type": "string" }, "count": { "type": "integer", "minimum": 1 } } }] }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "node": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path", "text"], "properties": { "kind": { "const": "file" }, "path": { "type": "string", "minLength": 1 }, "text": { "type": "string" }, "shared": { "type": "boolean" }, "extraLinks": { "type": "integer", "minimum": 1 }, "exec": { "type": "boolean" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": { "kind": { "const": "dir" }, "path": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path", "to"], "properties": { "kind": { "const": "symlink" }, "path": { "type": "string", "minLength": 1 }, "to": { "type": "string" } } }
+      ]
+    }
+  }
+}

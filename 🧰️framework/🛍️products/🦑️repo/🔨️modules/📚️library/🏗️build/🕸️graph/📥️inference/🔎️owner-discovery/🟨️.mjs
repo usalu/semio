@@ -3,7 +3,7 @@ import { checkResourceLeaseControl } from "../../../../../../../../🔨️module
 import { pinnedAuthorityReadV1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
@@ -214,7 +214,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   for(const input of modules.length?await relativeScriptInputs(modules,workspaceRoot,scripts):[])if(typeof input==="string"&&input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));
  }
  const generatedDependencies={},roles=ownerAdmissionSchema.$defs.sourceDemand.const,generated=(producer,path,phase,name)=>{addFile(producer.manifest);if(producer.project!==json.name)dependencies.add(producer.project);if(name!==undefined){if(producer.target===json.name+":"+name)throw Error("Generated task cannot consume its own output: "+JSON.stringify({target:producer.target.slice(0,256),importer:buildPath(relative(workspaceRoot,path)).slice(0,256),output:producer.output.slice(0,256),phase}));addInput(producer.project,"default");const rows=generatedDependencies[name]??=[];if(!rows.includes(producer.target))rows.push(producer.target);}};
- const compiler=createRequire(import.meta.url)("typescript"),host=observedTypeScriptHost(compiler.sys),pending=[],demands=new Map(),visited=new Map(),enqueue=(target,file,role)=>{const rows=demands.get(target)??new Map(),next=buildSourceDemandV1(rows.get(file),role);if(next!==rows.get(file)){rows.set(file,next);demands.set(target,rows);pending.push({target,file});}};let index=0;
+ const compiler=parserTypescriptV1(),host=observedTypeScriptHost(compiler.sys),pending=[],demands=new Map(),visited=new Map(),enqueue=(target,file,role)=>{const rows=demands.get(target)??new Map(),next=buildSourceDemandV1(rows.get(file),role);if(next!==rows.get(file)){rows.set(file,next);demands.set(target,rows);pending.push({target,file});}};let index=0;
  for(const [target,files] of compileModules)for(const file of files)enqueue(target,file,roles.compileInput);for(const [target,files] of declaredCompileEntries)for(const file of files)enqueue(target,file,roles.declaredEntry);for(const [target,files] of commandModules)for(const file of files)enqueue(target,file,roles.command);
  await stage("compile-closure");
  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));readPhysicalSource(absolute);const facts=observedSourceAnalysisV1(prepareSourceAnalysesV1().module,absolute),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;

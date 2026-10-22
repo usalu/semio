@@ -20,10 +20,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "page", kind: "move-page", record: "Move" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.from.to_string(), self.to.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for MovePage
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<MovePage>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::diff_move_page(base, self.from, self.to))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.pages.get(self.from).is_none() {
@@ -34,14 +46,6 @@ where
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.from.to_string(), self.to.to_string()]
-    }
 }
 
 //#endregion 🔖️Mutation

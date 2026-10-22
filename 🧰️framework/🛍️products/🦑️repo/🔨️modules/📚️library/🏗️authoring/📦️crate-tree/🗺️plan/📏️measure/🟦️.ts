@@ -1,9 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { CrateMeasure } from "../🧾️model/🟦️.ts";
 import { readRustSourceClosureV1, type RustSourceInputV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 import type { CrateBudget } from "../💰️budget/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 const HOST_CFG: { value: string[] | null } = { value: null };
 
@@ -12,16 +12,14 @@ const WASM_CFG: { value: string[] | null } = { value: null };
 /** 🖥️ Host cfg snapshot used by the census and the gate. */
 export function crateTreeHostCfg(): readonly string[] {
   if (HOST_CFG.value) return HOST_CFG.value;
-  const rustc = execFileSync("rustup", ["which", "rustc"], { encoding: "utf8" }).trim();
-  const cfg = execFileSync(rustc, ["--print", "cfg"], { encoding: "utf8" }).trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
+  const cfg = runToolSyncV1("cargo", ["--print", "cfg"], { command: "rustc", check: true, encoding: "utf8" }).stdout.trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
   return (HOST_CFG.value = [...cfg, "debug_assertions"]);
 }
 
 /** 🌉️ The cfg of a `wasm32-unknown-unknown` build, used to scan the code that only the guest target compiles. */
 export function crateTreeWasmCfg(): readonly string[] {
   if (WASM_CFG.value) return WASM_CFG.value;
-  const rustc = execFileSync("rustup", ["which", "rustc"], { encoding: "utf8" }).trim();
-  const cfg = execFileSync(rustc, ["--print", "cfg", "--target", "wasm32-unknown-unknown"], { encoding: "utf8" }).trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
+  const cfg = runToolSyncV1("cargo", ["--print", "cfg", "--target", "wasm32-unknown-unknown"], { command: "rustc", check: true, encoding: "utf8" }).stdout.trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
   return (WASM_CFG.value = [...cfg, "debug_assertions"]);
 }
 

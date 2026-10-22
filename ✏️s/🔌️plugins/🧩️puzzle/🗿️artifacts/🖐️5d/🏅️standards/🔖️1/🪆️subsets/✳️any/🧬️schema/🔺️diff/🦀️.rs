@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompa
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::DiffAlgebra;
-use protocol::ColdDiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
+
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;

@@ -200,7 +200,7 @@ pub(super) fn turn_fault_host(fault: TurnFault) -> PluginHostError {
 }
 
 /// 🧯️ A core interpreter error, as the trap a guest call reports.
-fn core_fault(error: CoreError) -> TurnFault {
+pub(super) fn core_fault(error: CoreError) -> TurnFault {
     TurnFault::Trapped(error.to_string())
 }
 //#endregion 🧠️OwnedRuntime

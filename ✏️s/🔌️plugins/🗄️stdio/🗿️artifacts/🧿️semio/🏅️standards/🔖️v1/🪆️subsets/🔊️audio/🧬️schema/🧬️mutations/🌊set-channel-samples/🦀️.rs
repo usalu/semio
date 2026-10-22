@@ -15,6 +15,15 @@ pub struct SetChannelSamples {
 impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetChannelSamples {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "channel-samples", kind: "set-channel-samples", record: "SetChannelSamples" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set channel samples", "Stützwerte des Kanals setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op: SemioAudioOp> protocol::ColdMutationKind<SemioAudioSnapshot, Op> for SetChannelSamples {
     fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
@@ -24,12 +33,6 @@ impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetCha
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set channel samples", "Stützwerte des Kanals setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

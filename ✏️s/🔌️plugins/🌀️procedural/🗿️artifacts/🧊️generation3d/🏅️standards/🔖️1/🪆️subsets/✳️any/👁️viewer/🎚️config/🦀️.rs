@@ -223,17 +223,9 @@ pub struct Generation3dActiveExampleChange {
     pub id: Option<String>,
 }
 
-impl protocol::MutationDiff<Generation3dViewConfig> for Generation3dViewConfigPatch {
-    fn apply(&self, base: &Generation3dViewConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dViewConfig> {
-        Ok(Generation3dViewConfig {
-            lod_mode: self.lod_mode.clone().unwrap_or_else(|| base.lod_mode.clone()),
-            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
-            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
-            sun_json: self.sun_json.clone().unwrap_or_else(|| base.sun_json.clone()),
-            active_example_id: self.active_example_id.clone().map_or_else(|| base.active_example_id.clone(), |change| change.id),
-            ..base.clone()
-        })
-    }
+impl protocol::MutationDiff<Generation3dViewConfig> for Generation3dViewConfigPatch {}
+
+impl protocol::ColdMutationDiff<Generation3dViewConfig> for Generation3dViewConfigPatch {
     fn absorb(&mut self, other: Self) {
         self.lod_mode = other.lod_mode.or_else(|| self.lod_mode.take());
         self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
@@ -241,9 +233,28 @@ impl protocol::MutationDiff<Generation3dViewConfig> for Generation3dViewConfigPa
         self.sun_json = other.sun_json.or_else(|| self.sun_json.take());
         self.active_example_id = other.active_example_id.or_else(|| self.active_example_id.take());
     }
+
+    fn apply(&self, unpublished: &mut Generation3dViewConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = Generation3dViewConfig {
+            lod_mode: self.lod_mode.clone().unwrap_or_else(|| base.lod_mode.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
+            sun_json: self.sun_json.clone().unwrap_or_else(|| base.sun_json.clone()),
+            active_example_id: self.active_example_id.clone().map_or_else(|| base.active_example_id.clone(), |change| change.id),
+            ..base.clone()
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Generation3dViewConfig> for Generation3dViewConfigPatch {
+    fn is_empty(&self) -> bool {
+        self.lod_mode.is_none() && self.show_mode.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.active_example_id.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dViewConfig> for Generation3dViewConfigPatch {
     fn inverse(&self, base: &Generation3dViewConfig) -> Self {
         Self {
             lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()),
@@ -252,9 +263,6 @@ impl protocol::DiffAlgebra<Generation3dViewConfig> for Generation3dViewConfigPat
             sun_json: self.sun_json.as_ref().map(|_| base.sun_json.clone()),
             active_example_id: self.active_example_id.as_ref().map(|_| Generation3dActiveExampleChange { id: base.active_example_id.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.lod_mode.is_none() && self.show_mode.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.active_example_id.is_none()
     }
 }
 

@@ -21,7 +21,7 @@ pub struct StoreAuthoringLaw {
 fn close_store<P, M>(store: &mut ArtifactStore<P, M>)
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
+    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::ColdMutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     if store.close_owned_terminal_is_empty() { return; }
     if store.close_owned_phase_witness().contains("started=false") { drop(store.detach_backbone().expect("a closing law store releases its backbone handle")); }

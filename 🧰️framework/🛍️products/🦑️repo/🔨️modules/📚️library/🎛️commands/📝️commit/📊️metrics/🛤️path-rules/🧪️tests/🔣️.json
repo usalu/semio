@@ -1,0 +1,530 @@
+{
+ "version": 1,
+ "normalize": [
+  {
+   "path": "a\\b\\c",
+   "expected": "a/b/c"
+  },
+  {
+   "path": "./a/b",
+   "expected": "a/b"
+  },
+  {
+   "path": ".\\a",
+   "expected": "a"
+  },
+  {
+   "path": "a",
+   "expected": "a"
+  },
+  {
+   "path": "././a",
+   "expected": "./a"
+  },
+  {
+   "path": "",
+   "expected": ""
+  }
+ ],
+ "skip": [
+  {
+   "path": "",
+   "expected": true
+  },
+  {
+   "path": ".🧬semio",
+   "expected": true
+  },
+  {
+   "path": ".🧬semio/x/y",
+   "expected": true
+  },
+  {
+   "path": "src/.hidden/a.ts",
+   "expected": true
+  },
+  {
+   "path": "src/a.ts",
+   "expected": false
+  },
+  {
+   "path": "../x/a.ts",
+   "expected": false
+  },
+  {
+   "path": "a/./b.ts",
+   "expected": false
+  },
+  {
+   "path": ".github/x.yml",
+   "expected": true
+  },
+  {
+   "path": "LICENSE",
+   "expected": true
+  },
+  {
+   "path": "docs/LICENSE.md",
+   "expected": true
+  },
+  {
+   "path": "LICENSE.foo",
+   "expected": true
+  },
+  {
+   "path": "a/COPYING",
+   "expected": true
+  },
+  {
+   "path": "NOTICE.md",
+   "expected": true
+  },
+  {
+   "path": "UNLICENSE",
+   "expected": true
+  },
+  {
+   "path": "src/license.ts",
+   "expected": false
+  },
+  {
+   "path": "LICENSES/x.ts",
+   "expected": false
+  },
+  {
+   "path": "package-lock.json",
+   "expected": true
+  },
+  {
+   "path": "a/yarn.lock",
+   "expected": true
+  },
+  {
+   "path": "go.sum",
+   "expected": true
+  },
+  {
+   "path": "uv.lock",
+   "expected": true
+  },
+  {
+   "path": "bun.lockb",
+   "expected": true
+  },
+  {
+   "path": "pnpm-lock.yaml",
+   "expected": true
+  },
+  {
+   "path": "x.generated.go",
+   "expected": true
+  },
+  {
+   "path": "y.pb.go",
+   "expected": true
+  },
+  {
+   "path": "y.pb.ts",
+   "expected": false
+  },
+  {
+   "path": "node_modules/a.js",
+   "expected": true
+  },
+  {
+   "path": "dist/a.js",
+   "expected": true
+  },
+  {
+   "path": "distro/a.js",
+   "expected": false
+  },
+  {
+   "path": "target",
+   "expected": true
+  },
+  {
+   "path": "third_party/x",
+   "expected": true
+  },
+  {
+   "path": "src/dist/a.js",
+   "expected": false
+  },
+  {
+   "path": "Carthage/x",
+   "expected": true
+  },
+  {
+   "path": "out/x",
+   "expected": true
+  },
+  {
+   "path": "vendor",
+   "expected": true
+  },
+  {
+   "path": "build/x.ts",
+   "expected": true
+  },
+  {
+   "path": "node_modules\\a.js",
+   "expected": true
+  },
+  {
+   "path": ".\\dist\\a.js",
+   "expected": true
+  },
+  {
+   "path": "coverage/lcov.ts",
+   "expected": true
+  }
+ ],
+ "skipDefects": [
+  {
+   "path": "Cargo.lock",
+   "expected": true,
+   "defect": "📊️metrics/🛤️path-rules/🟦️.ts:2 lists `cargo.lock` but the base name is compared case-sensitively, so the real `Cargo.lock` is never skipped (classification of `.lock` is empty, so the effect is latent)"
+  }
+ ],
+ "classify": [
+  {
+   "path": "a.ts",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "a.tsx",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "a.cts",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "a.mts",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "a.mtsx",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "A.TS",
+   "expected": "TypeScript"
+  },
+  {
+   "path": "a.js",
+   "expected": "JavaScript"
+  },
+  {
+   "path": "a.mjs",
+   "expected": "JavaScript"
+  },
+  {
+   "path": "a.cjs",
+   "expected": "JavaScript"
+  },
+  {
+   "path": "a.go",
+   "expected": "Go"
+  },
+  {
+   "path": "a.cs",
+   "expected": "C#"
+  },
+  {
+   "path": "a.py",
+   "expected": "Python"
+  },
+  {
+   "path": "a.rs",
+   "expected": "Rust"
+  },
+  {
+   "path": "a.sh",
+   "expected": "Shell"
+  },
+  {
+   "path": "a.bash",
+   "expected": "Shell"
+  },
+  {
+   "path": "a.zsh",
+   "expected": "Shell"
+  },
+  {
+   "path": "a.ps1",
+   "expected": "PowerShell"
+  },
+  {
+   "path": "a.css",
+   "expected": "CSS"
+  },
+  {
+   "path": "a.scss",
+   "expected": "CSS"
+  },
+  {
+   "path": "a.sass",
+   "expected": "CSS"
+  },
+  {
+   "path": "a.sql",
+   "expected": "SQL"
+  },
+  {
+   "path": "a.html",
+   "expected": "HTML"
+  },
+  {
+   "path": "a.htm",
+   "expected": "HTML"
+  },
+  {
+   "path": "a.xhtml",
+   "expected": "HTML"
+  },
+  {
+   "path": "a.md",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.markdown",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.mdown",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.mkd",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.mdx",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.mdc",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.svx",
+   "expected": "Markdown"
+  },
+  {
+   "path": "a.tex",
+   "expected": "TeX"
+  },
+  {
+   "path": "a.sty",
+   "expected": "TeX"
+  },
+  {
+   "path": "a.cls",
+   "expected": "TeX"
+  },
+  {
+   "path": "a.ltx",
+   "expected": "TeX"
+  },
+  {
+   "path": "a.bib",
+   "expected": "TeX"
+  },
+  {
+   "path": "a.json",
+   "expected": "JSON"
+  },
+  {
+   "path": "a.jsonc",
+   "expected": "JSON"
+  },
+  {
+   "path": "X.JSON",
+   "expected": "JSON"
+  },
+  {
+   "path": "a.yaml",
+   "expected": "YAML"
+  },
+  {
+   "path": "a.yml",
+   "expected": "YAML"
+  },
+  {
+   "path": "a.toml",
+   "expected": "TOML"
+  },
+  {
+   "path": "a.csv",
+   "expected": "CSV"
+  },
+  {
+   "path": "a.xml",
+   "expected": "XML"
+  },
+  {
+   "path": "Dockerfile",
+   "expected": "Dockerfile"
+  },
+  {
+   "path": "x/dockerfile.dev",
+   "expected": "Dockerfile"
+  },
+  {
+   "path": "Dockerfile.prod",
+   "expected": "Dockerfile"
+  },
+  {
+   "path": "Makefile",
+   "expected": "Makefile"
+  },
+  {
+   "path": "x/makefile",
+   "expected": "Makefile"
+  },
+  {
+   "path": "justfile",
+   "expected": "Makefile"
+  },
+  {
+   "path": "a.unknown",
+   "expected": ""
+  },
+  {
+   "path": "noext",
+   "expected": ""
+  },
+  {
+   "path": "a.tar.gz",
+   "expected": ""
+  },
+  {
+   "path": "dir.d/file",
+   "expected": ""
+  },
+  {
+   "path": ".gitignore",
+   "expected": ""
+  },
+  {
+   "path": "a.c",
+   "expected": ""
+  },
+  {
+   "path": "a.lock",
+   "expected": ""
+  },
+  {
+   "path": "a\\b\\c.rs",
+   "expected": "Rust"
+  },
+  {
+   "path": "./x.py",
+   "expected": "Python"
+  }
+ ],
+ "emoji": [
+  {
+   "lang": "TypeScript",
+   "expected": "🟦️"
+  },
+  {
+   "lang": "JavaScript",
+   "expected": "🟨️"
+  },
+  {
+   "lang": "Go",
+   "expected": "🔵️"
+  },
+  {
+   "lang": "C#",
+   "expected": "🟣️"
+  },
+  {
+   "lang": "Python",
+   "expected": "🐍️"
+  },
+  {
+   "lang": "Rust",
+   "expected": "🦀️"
+  },
+  {
+   "lang": "Shell",
+   "expected": "🐚️"
+  },
+  {
+   "lang": "Dockerfile",
+   "expected": "🐳️"
+  },
+  {
+   "lang": "Makefile",
+   "expected": "🔧️"
+  },
+  {
+   "lang": "CSS",
+   "expected": "🎨️"
+  },
+  {
+   "lang": "SQL",
+   "expected": "🛢️"
+  },
+  {
+   "lang": "HTML",
+   "expected": "🌐️"
+  },
+  {
+   "lang": "Markdown",
+   "expected": "📝️"
+  },
+  {
+   "lang": "TeX",
+   "expected": "📐️"
+  },
+  {
+   "lang": "JSON",
+   "expected": "🧾️"
+  },
+  {
+   "lang": "YAML",
+   "expected": "📋️"
+  },
+  {
+   "lang": "TOML",
+   "expected": "⚙️"
+  },
+  {
+   "lang": "XML",
+   "expected": "📄️"
+  },
+  {
+   "lang": "CSV",
+   "expected": "📑️"
+  },
+  {
+   "lang": "Bourne Shell",
+   "expected": "🐚️"
+  },
+  {
+   "lang": "Bourne Again Shell",
+   "expected": "🐚️"
+  },
+  {
+   "lang": "PowerShell",
+   "expected": "💠️"
+  },
+  {
+   "lang": "Docker",
+   "expected": "🐳️"
+  },
+  {
+   "lang": "Brainfuck",
+   "expected": "📎️"
+  },
+  {
+   "lang": "",
+   "expected": "📎️"
+  }
+ ]
+}

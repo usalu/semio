@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-layout", kind: "set-page-layout", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_page_layout(base, self.layout.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        vec![Op::from(SetPageLayout { layout: base.page_layout.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageLayout
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageLayout>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_page_layout(base, self.layout.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        vec![Op::from(SetPageLayout { layout: base.page_layout.clone() })]
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

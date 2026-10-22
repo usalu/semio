@@ -14,18 +14,22 @@ pub struct SetMovie {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetMovie {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "movie", kind: "set-movie", record: "SetMovie" };
-    fn diff(&self, _base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        let Self { movie } = self;
-        protocol::MutationOutcome::new(Mp4Diff { ftyp: None, movie: Some(movie.clone()), tracks: None })
-    }
-    fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-        Ok(vec![Mp4Mutation::SetMovie(SetMovie { movie: base.movie.clone() })])
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set movie header", "Film-Header setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Mp4Snapshot, Mp4Mutation> for SetMovie {
+    fn diff(&self, _base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::ColdMutation<Mp4Snapshot>>::ReferenceDiff> {
+        let Self { movie } = self;
+        protocol::MutationOutcome::new(Mp4Diff { ftyp: None, movie: Some(movie.clone()), tracks: None })
+    }
+    fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
+        Ok(vec![Mp4Mutation::SetMovie(SetMovie { movie: base.movie.clone() })])
     }
 }
 //#endregion 🔖️Payload

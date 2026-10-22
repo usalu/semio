@@ -15,7 +15,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
-        "command": "bun ./📜️script.ts verify source"
+        "command": "repo ./📜️script.ts verify source"
       },
       "metadata": {
         "semio": {
@@ -36,7 +36,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
-        "command": "bun ./📜️script.ts verify native"
+        "command": "repo ./📜️script.ts verify native"
       }
     }
   }

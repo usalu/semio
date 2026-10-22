@@ -17,7 +17,7 @@
       "const": "@semio-tech/repo-cli-go"
     },
     "command": {
-      "const": "bun ./📜️script.ts build"
+      "const": "repo ./📜️script.ts build"
     },
     "entryPoint": {
       "const": "."

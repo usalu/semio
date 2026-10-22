@@ -5,11 +5,11 @@ fn array(law:&serde_json::Value,key:&str)->Vec<usize>{law[key].as_array().unwrap
 fn close(plan:&mut IndexedEditPlan)->(usize,usize){
  plan.begin_close();let mut born=0;let mut released=0;let mut turns=0;let shape=plan.shape();let limit=64+12*(shape.removed+shape.modified+shape.added);
  while !plan.terminal_is_empty(){
-  let d=plan.close_demand(grant().maximum_copy_bytes).unwrap();
-  let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant()}];if d.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..grant()});}if d.depth>0{denied.push(RetainedCloneGrant{maximum_depth:d.depth-1,..grant()});}if d.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..grant()});}
-  for denied in denied{let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-  if d.release_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(RetainedCloneGrant{maximum_release_bytes:0,..grant()}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-  let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(grant()).unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<limit);
+  let d=plan.close_demand(grant().maximum_copy_bytes).unwrap();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(plan.close_demand(funded.maximum_copy_bytes).unwrap(),d);
+  let custody=plan.orders.each_ref().map(|order|order.as_ref().map(|value|(value.as_ptr(),value.len(),value.capacity())));
+  let mut denied=vec![RetainedCloneGrant{maximum_items:0,..funded}];if d.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..funded});}if d.depth>0{denied.push(RetainedCloneGrant{maximum_depth:d.depth-1,..funded});}if d.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..funded});}if d.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..funded});}
+  for denied in denied{let selected=plan.close_demand(denied.maximum_copy_bytes).unwrap();assert!(!retained_clone_grant_admits(denied,selected));let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(plan.close_demand(funded.maximum_copy_bytes).unwrap(),d);assert_eq!(plan.orders.each_ref().map(|order|order.as_ref().map(|value|(value.as_ptr(),value.len(),value.capacity()))),custody);}
+  let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(funded).unwrap());let p=step.progress();assert!(p.fits(funded));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<limit);
  }
  (born,released)
 }

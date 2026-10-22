@@ -1,0 +1,13 @@
+import { bindCatalogV1, type TextValuesV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+import { sayV1, type ProgressLevelV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts";
+import catalog from "./🔣️.json" with { type: "json" };
+
+/** 📖️ The texts of the repo commands generate, setup, examples, dev, os, dependency-lint and the schema projection in English and German. */
+export const COMMANDS_TEXTS_V1 = bindCatalogV1("commands", catalog);
+
+/** 🔑️ Every message key of this catalog. */
+export type CommandsTextKeyV1 = keyof typeof catalog.messages;
+
+/** 📢️ Says one line of this catalog as data; the CLI boundary renders it in the resolved language. */
+export const sayCommandsV1 = (key: CommandsTextKeyV1, values: TextValuesV1 = {}, level: ProgressLevelV1 = "info"): void => sayV1(COMMANDS_TEXTS_V1, key, values, level);
+

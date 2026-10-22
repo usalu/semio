@@ -1,0 +1,35 @@
+== ports
+[dev] Im Bereich {preferredPort}-{maxAttempts} wurde kein freier Port gefunden.
+== example-argv
+[play] Unbekanntes Beispiel {segments}
+== abstraction
+[verify abstraction-ownership] {cases} Eigentümerschaftsvektoren stimmen mit Ajv überein.
+[verify abstraction-ownership] {schemaCases} Vektoren zur verschachtelten Schema-Eigentümerschaft stimmen mit Ajv überein.
+[verify abstraction-ownership] {sourceCases} Vektoren zur Befehlsquellen-Eigentümerschaft stimmen mit Ajv überein.
+[verify abstraction-ownership] {artifactSchemas} Artefaktverträge legen nur den Dokumentzustand über fünf Schema-Formate offen.
+== transactions shard
+[TRACE] Transaktion v2, Shard {ordinal} in {seconds} s beendet ¦ ordinal,seconds
+== transactions run
+[TRACE] Transaktion v2, Lauf-Eigentümer {runRoot}
+== runtime
+[runtime graph] Physische Datei {phase} {bytes}/{totalBytes}
+[runtime graph] Physisches Cargo {phase} {bytes}/{totalBytes}
+[runtime graph] Aktuelle exakte Gast-Compiler-/Ressourcen-Zeugen werden über {command} beschafft
+[runtime graph] Die tatsächliche native Browser-Einbindung wird über {nativeBrowserProject}:wasm:{completedProfile} beschafft
+[runtime graph] Die aktuelle Browser-Einbindung wird über {nativeBrowserProject}:generate-frame-worker beschafft
+[runtime graph] Tatsächliche Cargo-Metadaten {index}/{checks} {target}: {packages}
+[runtime graph] graphs={graphs} sources/resources={size} findings={findings} report={value}
+== ui
+framework/ui/js/react: keine Verstöße gegen UI-Primitive ({files} Dateien auf der Allowlist) ¦ files
+framework/ui/js/react: {failures} Verstoß/Verstöße gegen UI-Primitive gefunden:
+  … und {failures} weitere
+framework/ui/js/react: keine i18n-Verstöße im Chrome ({files} Dateien auf der Allowlist) ¦ files
+== policy
+policy: keine Verstöße mit hoher Priorität ({total} insgesamt, erfasst in {cachePath}) ¦ total,cachePath
+== agent-clients
+[agents check] {path} ({client}) ist {state}; ausführen: repo ./📜️script.ts agents write ¦ path,client,state
+[agents check] Jede Client-Datei entspricht der Wurzeldeklaration
+== coverage
+[coverage] {pct} % < {thresholdPct} % — das erschöpfende Gate ist fehlgeschlagen.
+== workspace-exports
+[test-resolution] {stage}: {completedOperations} Quelloperationen

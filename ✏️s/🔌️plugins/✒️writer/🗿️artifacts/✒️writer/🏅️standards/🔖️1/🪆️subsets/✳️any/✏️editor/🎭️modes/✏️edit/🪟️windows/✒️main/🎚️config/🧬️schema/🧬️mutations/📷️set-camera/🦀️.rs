@@ -13,23 +13,24 @@ pub struct SetCamera {
 impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &WriterMainWindowConfig) -> protocol::MutationOutcome<WriterMainWindowConfigDiff> {
-        protocol::MutationOutcome::new(WriterMainWindowConfigDiff { camera: (base.camera != self.camera).then(|| self.camera.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &WriterMainWindowConfig) -> Result<Vec<WriterMainWindowConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { camera: base.camera.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]
     }
+}
+
+impl protocol::ColdMutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutation> for SetCamera {
+    fn diff(&self, base: &WriterMainWindowConfig) -> protocol::MutationOutcome<WriterMainWindowConfigDiff> {
+        protocol::MutationOutcome::new(WriterMainWindowConfigDiff { camera: (base.camera != self.camera).then(|| self.camera.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &WriterMainWindowConfig) -> Result<Vec<WriterMainWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { camera: base.camera.clone() }.into()]
+    
+    })())
+}
 }
 
 #[cfg(test)]

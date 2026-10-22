@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
@@ -7,7 +7,7 @@ import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️p
 import { resolve } from "node:path";
 import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
+/** 🦀️ `@semio-tech/framework-editor-rs` router: `repo ./📜️script.ts wasm`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -46,6 +46,6 @@ class OwnedErrorScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "wasm" }));

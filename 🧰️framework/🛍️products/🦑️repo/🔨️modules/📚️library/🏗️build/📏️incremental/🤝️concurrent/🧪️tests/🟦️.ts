@@ -1,3 +1,4 @@
+import {buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
 /** 🤹️ Concurrent session conformance: the wait derivation, attribution, criteria, edits, digests and workload admission are checked against language-agnostic fixtures, an independent Python oracle and Bazel's own elapsed time; the runner is exercised with real processes that contend for real leases of the lease module; the command through its ports. */
 import {test,expect} from "bun:test";
 import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -389,7 +390,7 @@ const stubAdapter={
  bazelSourceIndexV1:(inventory:readonly string[])=>({files:[...inventory].sort(),selectAll:(inputs:readonly unknown[])=>({marks:Uint8Array.from([...inventory].sort().map(file=>inputs.includes(file)?1:0))})}),bazelTaskInputsV1:()=>[]
 };
 const commandPorts=(base:string,copy:string,out:string[],stages:string[],reports:unknown[],over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({
- write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",PATH:process.env.PATH??"/usr/bin",HOME:process.env.HOME??tmpdir()},platform:"linux",tmpdir:()=>"/tmp/t",now:()=>Date.now(),
+ write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",PATH:process.env.PATH??"/usr/bin",HOME:process.env.HOME??tmpdir()},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),
  run:async(_command,args)=>{const rest=args.slice(args.indexOf("repo")+1).filter(argument=>!argument.startsWith("--tool="));if(rest[0]==="graph"){const file=rest[1]!.slice(7);writeFileSync(file,"{}");return file+"\n";}return JSON.stringify({tasks:{roots:[],tasks:{"lib:gen":{id:"lib:gen"}},dependencies:{"lib:gen":[]}}},null,2);},
  report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script],adapter:async()=>stubAdapter as never,nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>{const directory=join(base,"scratch-run");mkdirSync(directory,{recursive:true});return directory;},...over});
 
@@ -423,7 +424,7 @@ test("the command lists, plans and runs the authored workloads through its ports
 },180000);
 
 test("the command arguments are closed, bilingual in their errors and default to both implementations, every workload and three sessions",()=>{
- expect(concurrencyArgumentsV1(["list"])).toMatchObject({operation:"list",workloads:"all",sessions:undefined,criteria:undefined,tools:["nx","bazel"],json:false});
+ expect(concurrencyArgumentsV1(["list"])).toMatchObject({operation:"list",workloads:"all",sessions:undefined,criteria:undefined,tools:buildBackendIdsV1(),json:false});
  expect(concurrencyArgumentsV1(["run","--workloads=a,b","--sessions=4","--criteria=smoke","--implementations","bazel","--json","--root=/tmp/x","--file=r.json","--lang=de"])).toMatchObject({operation:"run",workloads:["a","b"],sessions:4,criteria:"smoke",tools:["bazel"],json:true,root:"/tmp/x",file:"r.json",language:"de"});
  expect(concurrencyArgumentsV1(["plan","--workloads=all"]).workloads).toBe("all");
  for(const[bad,message]of [[[],"Expected repo concurrency"],[["go"],"Expected repo concurrency"],[["run","extra"],"Expected repo concurrency"],[["run","--wat"],"Unknown concurrency option"],[["run","--json","--json"],"Repeated option"],[["run","--workloads"],"needs a value"],[["run","--sessions=0"],"Sessions must be a whole number"],[["run","--sessions=9"],"Sessions must be a whole number"],[["run","--sessions=1.5"],"Sessions must be a whole number"],[["run","--implementations=make"],"Unknown implementation"],[["run","--lang=fr"],"Unknown language"],[["run","--json=1"],"Unknown concurrency option"]] as const)
@@ -433,7 +434,7 @@ test("the command arguments are closed, bilingual in their errors and default to
 
 test("the catalogue declares the concurrency operation with its subcommands, flags, bilingual texts and no dependency requirement, matching the parser",()=>{
  const row=catalog.operations.find(entry=>entry.name==="concurrency") as unknown as {name:string;requires:string;implementations:Record<string,string>;progress:boolean;cancellable:boolean;subcommands:{name:string;summary:{en:string;de:string}}[];flags:string[];summary:{en:string;de:string};examples:{command:string;description:{en:string;de:string}}[]};
- expect(row).toBeDefined();expect(row.requires).toBe("none");expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});expect(row.progress&&row.cancellable).toBe(true);
+ expect(row).toBeDefined();expect(row.requires).toBe("none");expect((row as {implementations?:unknown}).implementations).toBeUndefined();expect(row.progress&&row.cancellable).toBe(true);
  expect(row.subcommands.map(sub=>sub.name)).toEqual(["list","plan","run"]);
  const names=concurrencyOptionNamesV1(),accepted=new Set([...names.valued,...names.plain].filter(name=>name!=="--lang"));
  expect(new Set(row.flags)).toEqual(accepted);

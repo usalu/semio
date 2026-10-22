@@ -1,5 +1,6 @@
 /** 🔸️ The handle pointer move phase of useInkPointer. */
-import React, { useCallback } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { applyPinchToOffsetCamera, inkCanvasActions } from "@semio-tech/framework";
 import { screenRectFromPoints } from "@semio-tech/ui-react";
 import { type InkCanvasEvent, type InkItem } from "../../🧾️ink-model/🟦️.ts";

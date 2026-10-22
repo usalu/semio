@@ -20,7 +20,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceSubject where
 
         protocol::SemanticDescriptor { verb: "insert", entity: "subject", kind: "introduce-subject", record: "IntroducedSubject" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text), &format!("Wörterbuchthema \"{}\" erstellen", self.subject.names.preferred.text))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.subject.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for IntroduceSubject where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_subject::mutation::RetireSubject> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::introduce_subject::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,11 +38,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceSubject where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text), &format!("Wörterbuchthema \"{}\" erstellen", self.subject.names.preferred.text))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.subject.id.clone()]
-    }
 }
 //#endregion 🔖️Payload

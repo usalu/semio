@@ -35,7 +35,7 @@ fn recolor(id: &str, url: &str) -> ShootingDiff {
 async fn empty_diff_is_a_no_operation() {
     let base = crate::empty_shooting_snapshot();
     let diff = ShootingDiff::default();
-    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff"), base);
     assert!(DiffAlgebra::<ShootingSnapshot>::is_empty(&diff));
 }
 
@@ -46,7 +46,7 @@ async fn edits_run_in_order() {
     let mut diff = ShootingDiff::asset_edit(ShootingEdit::Add { index: 1, item: asset("x") });
     diff.absorb(ShootingDiff::asset_edit(ShootingEdit::Move { id: "c".into(), from: 3, to: 0 }));
     diff.absorb(ShootingDiff::asset_edit(ShootingEdit::Remove { id: "b".into(), index: 3 }));
-    assert_eq!(ids(&protocol::apply_diff(&diff, &base).expect("diff applies")), vec!["c", "a", "x"]);
+    assert_eq!(ids(&protocol::apply_diff_cold(&diff, &base).expect("diff applies")), vec!["c", "a", "x"]);
 }
 
 /// 🚫️ Malformed edits are rejected with a typed error: a duplicate insert, an out-of-range insert, a missing move or remove, a repeated patch.
@@ -64,7 +64,7 @@ async fn malformed_edits_are_rejected() {
         ShootingDiff { assets: Some(ShootingAssetsDelta { edits: Vec::new(), patched: vec![ShootingPatchEntry { id: "a".into(), patch: ShootingAssetPatch::default() }, ShootingPatchEntry { id: "a".into(), patch: ShootingAssetPatch::default() }] }), ..Default::default() },
         rename("ghost", "x"),
     ] {
-        assert!(protocol::apply_diff(&diff, &base).is_err(), "{diff:?} must be rejected");
+        assert!(protocol::apply_diff_cold(&diff, &base).is_err(), "{diff:?} must be rejected");
     }
 }
 
@@ -118,10 +118,10 @@ async fn absorb_equals_sequential_application() {
         rows(|d| d.absorb(ShootingDiff::asset_edit(ShootingEdit::Add { index: 1, item: asset("x") }))),
     ];
     for d1 in &first {
-        let mid = protocol::apply_diff(d1, &base).expect("first diff applies");
+        let mid = protocol::apply_diff_cold(d1, &base).expect("first diff applies");
         let seconds = [rename("a", "Again"), recolor("c", "/mesh/c2.glb"), ShootingDiff::asset_edit(ShootingEdit::Move { id: "a".into(), from: 0, to: 1 }), ShootingDiff::asset_edit(ShootingEdit::Remove { id: "a".into(), index: 0 })];
         for d2 in seconds {
-            if protocol::apply_diff(&d2, &mid).is_ok() {
+            if protocol::apply_diff_cold(&d2, &mid).is_ok() {
                 assert_mutation_diff_absorb_law(&base, d1.clone(), d2).await;
             }
         }

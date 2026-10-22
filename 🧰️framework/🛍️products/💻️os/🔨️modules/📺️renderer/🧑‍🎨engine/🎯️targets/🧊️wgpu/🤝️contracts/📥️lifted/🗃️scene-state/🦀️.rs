@@ -52,7 +52,7 @@ pub struct AdmittedSurfaceMap<T> {
 
 impl<T> Default for AdmittedSurfaceMap<T> {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; SCENE_SURFACE_CAPACITY], order: [None; SCENE_SURFACE_CAPACITY], order_len: 0, external_reservations: 0, fault: None, rejected: None, retired: None, closing: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; SCENE_SURFACE_CAPACITY], order: [None; SCENE_SURFACE_CAPACITY], order_len: 0, external_reservations: 0, fault: None, rejected: None, retired: None, closing: false }
     }
 }
 

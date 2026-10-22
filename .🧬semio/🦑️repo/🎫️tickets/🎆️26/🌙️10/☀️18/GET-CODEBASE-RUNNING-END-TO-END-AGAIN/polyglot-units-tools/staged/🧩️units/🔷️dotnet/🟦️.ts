@@ -88,7 +88,7 @@ export function planDotnetUnitsV1(snapshot: DotnetWorkspaceSnapshotV1, options: 
       dependencies: [...dependencies.values()].sort((a, b) => compareCodePointsV1(a.unit, b.unit)), externals: sortedCodePointsV1(project.packageReferences.map(row => "nuget:" + row)),
       interface: library ? {kind: "dotnet-reference-assembly"} : null, outputs: [`${project.assemblyName}.dll`], toolchain: {id: options.toolchain, parts: [`frameworks=${project.frameworks.join(";")}`, `configuration=${configuration}`, `nullable=${project.facts.properties.Nullable ?? ""}`, `lang=${project.facts.properties.LangVersion ?? ""}`]},
       action: {
-        argv: ["dotnet", project.test ? "test" : "build", project.csproj, "-c", configuration, "--nologo", "-p:ProduceReferenceAssembly=true", "-p:Deterministic=true", "-p:ContinuousIntegrationBuild=true", "-p:UseSharedCompilation=false", "-p:BaseIntermediateOutputPath={out}/obj/", "-p:OutDir={out}/bin/"],
+        argv: ["dotnet", project.test ? "test" : "build", project.csproj, "-c", configuration, "--nologo", "-p:ProduceReferenceAssembly=true", "-p:Deterministic=true", "-p:DeterministicSourcePaths=false", "-p:DebugType=none", "-p:UseSharedCompilation=false", "-p:BaseIntermediateOutputPath={out}/obj/", "-p:OutDir={out}/bin/"],
         env: {DOTNET_CLI_TELEMETRY_OPTOUT: "1", DOTNET_NOLOGO: "1", MSBUILDDISABLENODEREUSE: "1", SEMIO_DOTNET_ASSEMBLY: project.assemblyName, SEMIO_BAZEL_INPUTS: "sources"},
       },
     };
@@ -109,7 +109,7 @@ export function dotnetUnitExecutorV1(options: {readonly workspace: string; reado
   return async request => {
     const {unit} = request, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24));
     rmSync(out, {recursive: true, force: true}); mkdirSync(out, {recursive: true});
-    const started = performance.now(), argv = unit.action.argv.map(part => part.split("{out}").join(out)), result = await options.run(argv, {cwd: options.workspace, env: {...unit.action.env, DOTNET_CLI_HOME: join(out, "home")}, signal: request.signal}), milliseconds = Math.round(performance.now() - started);
+    const started = performance.now(), argv = [...unit.action.argv.map(part => part.split("{out}").join(out)), `-p:PathMap=${options.workspace}=/src`], result = await options.run(argv, {cwd: options.workspace, env: {...unit.action.env, DOTNET_CLI_HOME: join(out, "home")}, signal: request.signal}), milliseconds = Math.round(performance.now() - started);
     if (unit.kind === "test") return {ok: result.code === 0, diagnostics: result.code === 0 ? "" : result.output.trim(), outputs: sha256V1(result.code === 0 ? "ok" : "fail"), interface: null, milliseconds};
     if (result.code !== 0) return {ok: false, diagnostics: result.output.trim(), outputs: sha256V1("failed:" + result.output), interface: null, milliseconds};
     const assembly = unit.action.env.SEMIO_DOTNET_ASSEMBLY ?? "", implementation = findFiles(join(out, "bin"), new RegExp(`/${assembly.replace(/[.+^${}()|[\]\\]/g, "\\$&")}\\.dll$`, "u"))[0], reference = findFiles(join(out, "obj"), new RegExp(`/ref/${assembly.replace(/[.+^${}()|[\]\\]/g, "\\$&")}\\.dll$`, "u"))[0];

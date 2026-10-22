@@ -23,7 +23,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.parent.layer.to_string(), self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for CreateNode
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<CreateNode> + From<crate::schema::mutations::delete_node::DeleteNode>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -32,11 +44,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.parent.layer.to_string(), self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

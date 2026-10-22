@@ -79,7 +79,7 @@
     "Messages": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["unknownTool", "toolMissing", "callerRefused", "versionMismatch", "cancelled", "failed", "execUsage", "listHeader", "verifyOk", "verifyProblem", "admitting", "running", "finished", "guardRefused", "guardWarned"],
+      "required": ["unknownTool", "toolMissing", "callerRefused", "versionMismatch", "cancelled", "failed", "execUsage", "listHeader", "verifyOk", "verifyProblem", "admitting", "running", "finished"],
       "properties": {
         "unknownTool": {"$ref": "#/definitions/Text"},
         "toolMissing": {"$ref": "#/definitions/Text"},
@@ -93,9 +93,7 @@
         "verifyProblem": {"$ref": "#/definitions/Text"},
         "admitting": {"$ref": "#/definitions/Text"},
         "running": {"$ref": "#/definitions/Text"},
-        "finished": {"$ref": "#/definitions/Text"},
-        "guardRefused": {"$ref": "#/definitions/Text"},
-        "guardWarned": {"$ref": "#/definitions/Text"}
+        "finished": {"$ref": "#/definitions/Text"}
       }
     },
     "RowFilter": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}},
@@ -141,7 +139,8 @@
         "sha256": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
         "bytes": {"type": "string", "minLength": 1},
-        "extras": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        "extras": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "hostExtras": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}}
       }
     },
     "Pin": {

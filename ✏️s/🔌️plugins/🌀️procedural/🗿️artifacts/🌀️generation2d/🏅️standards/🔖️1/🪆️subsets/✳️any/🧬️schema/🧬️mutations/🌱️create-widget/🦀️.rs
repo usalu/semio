@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create widget \"{}\"", widget_id(&self.widget)), &format!("Widget \"{}\" erstellen", widget_id(&self.widget)))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![widget_id(&self.widget).to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for CreateWidget
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<crate::delete_widget::DeleteWidget>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::create_widget::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create widget \"{}\"", widget_id(&self.widget)), &format!("Widget \"{}\" erstellen", widget_id(&self.widget)))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![widget_id(&self.widget).to_string()]
-    }
 }
 //#endregion 🔖️CreateWidget

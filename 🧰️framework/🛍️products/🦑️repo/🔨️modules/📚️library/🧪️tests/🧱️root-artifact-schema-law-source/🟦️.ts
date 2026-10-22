@@ -326,5 +326,5 @@ test("registers one Bun and Nx route", () => {
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   for (const input of fixture.route.inputs) expect(project.targets[fixture.route.target]?.inputs).toContain(input);
-  expect(packageJson.scripts[fixture.route.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.route.target}`);
+  expect(packageJson.scripts[fixture.route.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.route.target}`);
 });

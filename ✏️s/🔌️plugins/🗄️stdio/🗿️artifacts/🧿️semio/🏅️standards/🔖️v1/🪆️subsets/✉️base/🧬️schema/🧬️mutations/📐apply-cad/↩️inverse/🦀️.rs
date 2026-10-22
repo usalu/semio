@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyCad`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_cad::ApplyCad>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Cad(b) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyCad { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Cad(b) => <SemioCadMutation as ColdMutation<SemioCadSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyCad { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

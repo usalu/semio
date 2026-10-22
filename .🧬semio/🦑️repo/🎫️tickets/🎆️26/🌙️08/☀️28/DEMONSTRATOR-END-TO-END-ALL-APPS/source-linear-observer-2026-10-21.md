@@ -1,0 +1,9 @@
+# Source Linear Verification Observer
+
+2026-10-21T13:40:06.128Z — observation restricted to bounded reads of `🗑️generated/source-linear-work.log`. Initial47,931-byte log still shows Source waiting shared fixed-image custody behind process41162, queue position4/4. Earlier dependency-generation receipt is explicitly deferred for implementation-unsettled closure Source. No backend/test header, actual retirement result or terminal refusal observed at initialization. No dispatch, code/payload read or process action.
+
+2026-10-21T13:42:48Z — log57,797bytes advanced from shared image wait into repeated `repository:graph-closure-proof` exclusive progress, with node child activity. This establishes genuine closure-proof execution only. No actual retired count, backend/test header, assertion or terminal refusal observed.
+
+2026-10-21T13:58:43Z — log278,697bytes now additionally reports resource-retirement-inventory:128 (shared) and claim-retirement-scan:128 (exclusive,292ms). These are actual retirement inventory/claim-scan progress records, not proof of deleted files, completed funding, backend admission or passing tests.
+
+2026-10-21T14:05:08Z — log376,464bytes contains actual closure child refusal: status1/signalnull, kind generation-index, path `generations/x/6f6bc85cf178f778d641c34b247e5d6716aa9e8fbac6a8c479b28a8a042de7b5.json.br`, packedSha256 `6f6bc85cf178f778d641c34b247e5d6716aa9e8fbac6a8c479b28a8a042de7b5`, packedBytes9,685,390, expandedBytes null, maximumOutputBytes134,217,728, check inflation. Node ERR_BUFFER_TOO_LARGE reports decompression exceeds the existing128MiB output bound. No backend/test header or assertions were observed. This is exact logged refusal evidence, not a payload inspection or corruption finding. Observer ends on this concrete refusal; parent coordinates next work.

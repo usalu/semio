@@ -1,10 +1,10 @@
 /** 🧠️ The declared limits of the graph memory governor. */
-export interface GraphMemoryPolicyV1{readonly version:1;readonly defaultBudgetMegabytes:number;readonly minimumBudgetMegabytes:number;readonly grantShare:number;readonly resumeRatio:number;readonly pollMilliseconds:number;readonly sampleMilliseconds:number;readonly admitMinimumMilliseconds:number;readonly collectMinimumMilliseconds:number;readonly retainedMilliseconds:number;readonly progressMilliseconds:number;readonly retainedImageBytes:number;readonly minimumInternedLength:number;readonly maximumInternedCharacters:number;readonly budgetEnvironment:string;readonly planEnvironment:string}
+export interface GraphMemoryPolicyV1{readonly version:1;readonly languages:readonly ("en"|"de")[];readonly languageEnvironment:readonly string[];readonly defaultBudgetMegabytes:number;readonly minimumBudgetMegabytes:number;readonly grantShare:number;readonly resumeRatio:number;readonly pollMilliseconds:number;readonly sampleMilliseconds:number;readonly admitMinimumMilliseconds:number;readonly collectMinimumMilliseconds:number;readonly retainedMilliseconds:number;readonly progressMilliseconds:number;readonly retainedImageBytes:number;readonly minimumInternedLength:number;readonly maximumInternedCharacters:number;readonly budgetEnvironment:string;readonly planEnvironment:string}
 export declare const GRAPH_MEMORY_POLICY_V1:GraphMemoryPolicyV1;
 export type GraphMemoryMessageKeyV1="waiting"|"serial"|"resumed";
 export declare const GRAPH_MEMORY_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<GraphMemoryMessageKeyV1,string>>>>;
-export function selectGraphMemoryLanguageV1(environment:Readonly<Record<string,string|undefined>>):"en"|"de";
-export function renderGraphMemoryMessageV1(key:GraphMemoryMessageKeyV1,fields:Readonly<Record<string,string|number>>,environment:Readonly<Record<string,string|undefined>>):string;
+export function selectGraphMemoryLanguagesV1(environment:Readonly<Record<string,string|undefined>>):("en"|"de")[];
+export function renderGraphMemoryMessagesV1(key:GraphMemoryMessageKeyV1,fields:Readonly<Record<string,string|number>>,environment:Readonly<Record<string,string|undefined>>):string[];
 export function graphMemoryBudgetBytesV1(environment:Readonly<Record<string,string|undefined>>,policy?:GraphMemoryPolicyV1):number;
 export interface MemoryAdmissionStateV1{used:number;budget:number;running:number;workers:number;blocked:boolean;collected:boolean}
 export interface MemoryAdmissionVerdictV1{admit:boolean;collect:boolean;reason:"workers"|"within"|"collect"|"over"|"forced"}

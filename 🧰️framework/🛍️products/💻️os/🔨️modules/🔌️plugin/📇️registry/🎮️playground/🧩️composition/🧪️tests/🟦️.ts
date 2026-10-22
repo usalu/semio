@@ -27,7 +27,7 @@ export async function provePlaygroundCompositionV1(root:string,output:string,rec
   const {cacheInternals}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await cacheInternals.playgroundSessionTargets([],workspace);
   const targets=cacheInternals.playgroundPreparationTargets(["future/owner/Cargo.toml"],workspace,owner);
   for(const profile of ["prototype","release"])for(const operation of ["serve","dev"]){
-   const target=targets[operation+"-future-wgpu-"+profile];assert.equal(target.options.command,'bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve future '+profile+' --port 6161');assert.deepEqual(target.options.env,{SEMIO_WGPU_COMPOSITION_PATH:path});
+   const target=targets[operation+"-future-wgpu-"+profile];assert.equal(target.options.command,'repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve future '+profile+' --port 6161');assert.deepEqual(target.options.env,{SEMIO_WGPU_COMPOSITION_PATH:path});
    assert.deepEqual(target.dependsOn,["activate-future-wgpu-"+profile]);assert.equal(target.cache,false);assert.equal(target.continuous,true);
   }
  }

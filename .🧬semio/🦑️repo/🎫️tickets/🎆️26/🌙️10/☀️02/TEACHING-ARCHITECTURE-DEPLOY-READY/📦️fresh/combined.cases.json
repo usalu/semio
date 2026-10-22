@@ -241,12 +241,386 @@
       "titles": [
         "closed source and native execution declarations match the independent schema oracle"
       ]
+    },
+    {
+      "id": "native-maintenance-failures",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🧪️tests/🟦️.ts",
+      "milliseconds": 660000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "Native queued maintenance withdraws only its own settled claim",
+        "both Native backends privately bracket queued free-space DATA",
+        "Native maintenance preserves first failure across expired genuine child loans",
+        "both Native maintenance backends close local state without replacing acquisition failure",
+        "lease continuations drain before acquisition releases its database after a genuine child stop"
+      ]
+    },
+    {
+      "id": "portable-failure",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/📤️portable/🟦️.ts",
+      "milliseconds": 420000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "portable graph expansion preserves fixed batching against an independent SQLite oracle",
+        "portable graph expansion never replays a caught consumer failure",
+        "graph slice preserves every generation failure without fallback or replay"
+      ]
+    },
+    {
+      "id": "generation-retirement",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧹️retire/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "generation retirement refuses unproved manifests before any physical removal"
+      ]
+    },
+    {
+      "id": "storage-primary",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛑️primary/🟦️.ts",
+      "milliseconds": 540000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "optional graph recovery preserves worker primary and partial retirement evidence",
+        "graph namespace writer defers only a live exact timeout without masking its primary",
+        "Graph diagnostic fixture authority stays inside its genuine private constructor",
+        "optional graph preparation defers partial recovery after one consumed image"
+      ]
+    },
+    {
+      "id": "graph-receipt-formats",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts",
+      "milliseconds": 300000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "optional receipt roles use each current producer format",
+        "group invalidation admits only current schema member roles",
+        "group discovery skips only its empty root sentinel",
+        "snapshot closures authenticate current gzip records and v2 manifest links"
+      ]
+    },
+    {
+      "id": "graph-retirement-window",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🪟️window/🟦️.ts",
+      "milliseconds": 300000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "the retirement window is a required, finite policy key and the corpus uses the declared value",
+        "the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation",
+        "every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement",
+        "retirement windows preserve current control and exact primary failures"
+      ]
+    },
+    {
+      "id": "graph-inference-refusals",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📥️inference/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "inference closure refusal context is closed and preserves the exact primary value",
+        "all compressed closure roles retain real inflation refusal and bounded transport context"
+      ]
+    },
+    {
+      "id": "graph-generation-stream",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🕰️generation/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "generation wire proof streams producer-sized indices with complete references"
+      ]
+    },
+    {
+      "id": "closure-read-session",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🟦️.ts",
+      "milliseconds": 730000,
+      "timeoutMilliseconds": 150000,
+      "source": true,
+      "titles": [
+        "closure worker cohorts reserve exact finite wire authority against SQLite",
+        "worker failure DATA preserves first semantic facts with explicit bounded redaction",
+        "actual reply credit and deferred read debit match closed schema and SQLite",
+        "actual cohort controller joins terminal defer before debit and exact retry",
+        "real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals",
+        "captured Source bootstrap reserves credit request and terminal through the actual policy",
+        "closure input frames preserve exact bytes within existing own-data authority",
+        "closure startup observations retain bounded semantic stderr against SQLite",
+        "actual owned startup stderr survives disposal without replacing readiness primary",
+        "closed worker semantic failures retain bounded context and the first primary against SQLite"
+      ]
+    },
+    {
+      "id": "owned-interactive-channel",
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/🟦️.ts",
+      "milliseconds": 150000,
+      "timeoutMilliseconds": 90000,
+      "source": true,
+      "titles": [
+        "neutral owned interactive channel agrees with Ajv SQLite and real process exchanges"
+      ]
+    },
+    {
+      "id": "captured-command-control",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "captured command projects only its genuine issued control and preserves finite funding"
+      ]
+    },
+    {
+      "id": "owned-auxiliary-input",
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🟦️.ts",
+      "milliseconds": 310000,
+      "timeoutMilliseconds": 25000,
+      "source": true,
+      "titles": [
+        "owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract",
+        "actual owned auxiliary pipe: inherit",
+        "actual owned auxiliary pipe: large",
+        "actual owned auxiliary pipe: early-close",
+        "actual owned auxiliary pipe: cancel",
+        "actual owned auxiliary pipe: deadline",
+        "actual owned auxiliary pipe: consumer-primary",
+        "actual owned auxiliary pipe: status",
+        "actual owned auxiliary pipe: large-stream",
+        "auxiliary publication preserves callback event and undefined primary failures"
+      ]
+    },
+    {
+      "id": "bootstrap-captured-publishers",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "bootstrap publishers remain executable captured Source with closed DATA"
+      ]
+    },
+    {
+      "id": "captured-cjs-facades",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts",
+      "milliseconds": 220000,
+      "timeoutMilliseconds": 90000,
+      "source": true,
+      "titles": [
+        "workspace CommonJS facades consume the canonical default object against SQLite",
+        "actual immutable child invokes both CommonJS default-object factories",
+        "actual captured workspace CommonJS facades preserve public value behavior"
+      ]
+    },
+    {
+      "id": "bootstrap-parser-resolution",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/📥️resolution/🟦️.ts",
+      "milliseconds": 160000,
+      "timeoutMilliseconds": 75000,
+      "source": true,
+      "titles": [
+        "closed installed parser entries match SQLite without executable resolution",
+        "actual captured parser witness uses closed entries matching native resolution"
+      ]
+    },
+    {
+      "id": "captured-source-diagnostics",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧾️diagnostics/🧪️tests/🟦️.ts",
+      "milliseconds": 110000,
+      "timeoutMilliseconds": 25000,
+      "source": true,
+      "titles": [
+        "captured Source refusal diagnostics retain bounded actual context against SQLite",
+        "actual immutable loaders preserve their refusal guards while reporting declaring context"
+      ]
+    },
+    {
+      "id": "captured-subclosure-resolution",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🕸️resolution/🟦️.ts",
+      "source": true,
+      "titles": [
+        "admitted subclosure resolution uses exact declaring images against SQLite",
+        "actual admitted child captures a nested Source query without directory resolution",
+        "actual Node immutable images expose only their validated resolution projection"
+      ],
+      "timeoutMilliseconds": 120000,
+      "milliseconds": 295000
+    },
+    {
+      "id": "schema-tuple-contract",
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/📇️tuple/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "first-party tuple schemas match portable cases and Ajv"
+      ]
+    },
+    {
+      "id": "graph-store-format",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧪️tests/🟦️.ts",
+      "milliseconds": 240000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "Graph format identity refuses unmarked populated stores against SQLite",
+        "Graph format discovery bounds entries and preserves the first close failure",
+        "Graph format markers retain a closed scanned worker role"
+      ]
+    },
+    {
+      "id": "native-recovery-capacity",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "native recovery uses the authored owner and independent SQLite route oracle",
+        "capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission"
+      ]
+    },
+    {
+      "id": "graph-closure-recovery",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts",
+      "milliseconds": 4620000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "shared graph closure reachability matches the closed schema and independent SQLite oracle",
+        "shared graph closure maintenance orphan",
+        "shared graph closure maintenance referenced",
+        "shared graph closure maintenance key-reference",
+        "shared graph closure maintenance generation",
+        "shared graph closure maintenance inference",
+        "shared graph closure maintenance publication-fallback",
+        "shared graph closure maintenance pack",
+        "shared graph closure maintenance unknown",
+        "shared graph closure maintenance corrupt",
+        "shared graph closure maintenance symlink",
+        "shared graph closure maintenance hardlink",
+        "shared graph closure maintenance leaf-replaced",
+        "shared graph closure maintenance ancestor-replaced",
+        "shared graph closure maintenance reference-replaced",
+        "shared graph closure maintenance new-reference",
+        "shared graph closure maintenance cancel",
+        "shared graph closure maintenance busy-reader",
+        "shared graph closure maintenance busy-writer",
+        "shared graph closure maintenance exact-task-missing",
+        "shared graph closure maintenance optional-release",
+        "shared graph closure maintenance optional-new-reference",
+        "shared graph closure reader remains an executable derived Source entry",
+        "shared graph closure reader uses bounded owned stdin across platform command limits",
+        "graph retirement intent states match the independent SQLite transition oracle",
+        "graph optional group retirement complete",
+        "graph optional group retirement new-generation",
+        "graph optional group retirement known-missing-pack",
+        "graph optional group retirement unindexed-pack",
+        "graph optional group retirement manifest-changed",
+        "graph optional group retirement member-changed",
+        "graph optional group retirement ancestor-changed",
+        "graph optional group retirement new-member",
+        "graph optional group retirement cancel-after-commit",
+        "complete census has one unchanged entry bound and bounded metadata allocation",
+        "closure census delegates root service ownership before application path access",
+        "Native service classification is explicitly exported through its public contract",
+        "authenticated group windows preserve physical identities with bounded whole-proof work",
+        "worker wire packets obey the actual separated capture contract"
+      ]
+    },
+    {
+      "id": "reuse-presence",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/🟦️.ts",
+      "milliseconds": 540000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "inference reuse revalidates physical inventories inside the prior ten minute window",
+        "inference reuse refuses every nonleaf absence and unsafe inventory under managed custody",
+        "fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries",
+        "inference reuse preserves issued cancellation and deadlines after warm validation"
+      ]
+    },
+    {
+      "id": "observation-blocks",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/🟦️.ts",
+      "milliseconds": 420000,
+      "timeoutMilliseconds": 120000,
+      "source": true,
+      "titles": [
+        "observation block publisher rebuilds retired shared bytes before publishing a fresh header",
+        "observation block readers refuse stale physical memos without recomputing or deleting evidence",
+        "observation block path custody classifies actual issued images and ordinary fixtures"
+      ]
+    },
+    {
+      "id": "optional-global-adapter",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "deferred optional retirement retries inside the acquired original writer"
+      ]
+    },
+    {
+      "id": "optional-retirement-adapter",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️retirement/🟦️.ts",
+      "milliseconds": 180000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "quiescent retirement delegates exact kernel custody and validates closed pressure DATA",
+        "optional preparation consumes its Native receiver exactly once"
+      ]
+    },
+    {
+      "id": "optional-scoped-adapter",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts",
+      "milliseconds": 540000,
+      "timeoutMilliseconds": 185000,
+      "source": true,
+      "titles": [
+        "scoped optional recovery returns only consumed Native custody DATA",
+        "scoped retirement preserves exact group failures and joins Native close",
+        "optional bridge admits only factory custody and captures request before enrollment",
+        "scoped optional helper detaches its own asynchronous floor request",
+        "scoped optional maintenance refuses its own accepted reader"
+      ]
+    },
+    {
+      "id": "optional-pressure-adapter",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/💧️headroom/🟦️.ts",
+      "milliseconds": 300000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation",
+        "opportunistic refusal remains in its wrapper while accepted queued writer returns pressure",
+        "queued reclamation requests retain the existing recovery floor range and closed shape",
+        "expected pressure refuses after fulfilled maintenance while real failures stay rejected"
+      ]
+    },
+    {
+      "id": "optional-atomic-window-adapter",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🪟️retirement-window/🟦️.ts",
+      "milliseconds": 120000,
+      "timeoutMilliseconds": 60000,
+      "source": true,
+      "titles": [
+        "atomic retirement completes its group within one owned exclusive callback"
+      ]
     }
   ],
   "budget": {
-    "parentMilliseconds": 2730000,
-    "phaseMilliseconds": 2640000,
-    "reserveMilliseconds": 90000
+    "phaseMilliseconds": 14995000,
+    "reserveMilliseconds": 90000,
+    "parentMilliseconds": 15085000
   },
   "collections": [
     {
@@ -429,6 +803,986 @@
       "phase": "execution-contracts",
       "stdout": "",
       "stderr": "(pass) closed source and native execution declarations match the independent schema oracle [1.00ms]\n\n 2 pass\n 0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-maintenance-failures-exact",
+      "phase": "native-maintenance-failures",
+      "stdout": "",
+      "stderr": "(pass) Native queued maintenance withdraws only its own settled claim [1.00ms]\n(pass) both Native backends privately bracket queued free-space DATA [1.00ms]\n(pass) Native maintenance preserves first failure across expired genuine child loans [1.00ms]\n(pass) both Native maintenance backends close local state without replacing acquisition failure [1.00ms]\n(pass) lease continuations drain before acquisition releases its database after a genuine child stop [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "native-maintenance-failures-missing-first",
+      "phase": "native-maintenance-failures",
+      "stdout": "",
+      "stderr": "(pass) both Native backends privately bracket queued free-space DATA [1.00ms]\n(pass) Native maintenance preserves first failure across expired genuine child loans [1.00ms]\n(pass) both Native maintenance backends close local state without replacing acquisition failure [1.00ms]\n(pass) lease continuations drain before acquisition releases its database after a genuine child stop [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-maintenance-failures-missing-last",
+      "phase": "native-maintenance-failures",
+      "stdout": "",
+      "stderr": "(pass) Native queued maintenance withdraws only its own settled claim [1.00ms]\n(pass) both Native backends privately bracket queued free-space DATA [1.00ms]\n(pass) Native maintenance preserves first failure across expired genuine child loans [1.00ms]\n(pass) both Native maintenance backends close local state without replacing acquisition failure [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-maintenance-failures-wrong-count",
+      "phase": "native-maintenance-failures",
+      "stdout": "",
+      "stderr": "(pass) Native queued maintenance withdraws only its own settled claim [1.00ms]\n(pass) both Native backends privately bracket queued free-space DATA [1.00ms]\n(pass) Native maintenance preserves first failure across expired genuine child loans [1.00ms]\n(pass) both Native maintenance backends close local state without replacing acquisition failure [1.00ms]\n(pass) lease continuations drain before acquisition releases its database after a genuine child stop [1.00ms]\n6 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-maintenance-failures-duplicate-last",
+      "phase": "native-maintenance-failures",
+      "stdout": "",
+      "stderr": "(pass) Native queued maintenance withdraws only its own settled claim [1.00ms]\n(pass) both Native backends privately bracket queued free-space DATA [1.00ms]\n(pass) Native maintenance preserves first failure across expired genuine child loans [1.00ms]\n(pass) both Native maintenance backends close local state without replacing acquisition failure [1.00ms]\n(pass) lease continuations drain before acquisition releases its database after a genuine child stop [1.00ms]\n(pass) lease continuations drain before acquisition releases its database after a genuine child stop [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "portable-failure-exact",
+      "phase": "portable-failure",
+      "stdout": "",
+      "stderr": "(pass) portable graph expansion preserves fixed batching against an independent SQLite oracle [1.00ms]\n(pass) portable graph expansion never replays a caught consumer failure [1.00ms]\n(pass) graph slice preserves every generation failure without fallback or replay [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "portable-failure-missing-first",
+      "phase": "portable-failure",
+      "stdout": "",
+      "stderr": "(pass) portable graph expansion never replays a caught consumer failure [1.00ms]\n(pass) graph slice preserves every generation failure without fallback or replay [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "portable-failure-missing-last",
+      "phase": "portable-failure",
+      "stdout": "",
+      "stderr": "(pass) portable graph expansion preserves fixed batching against an independent SQLite oracle [1.00ms]\n(pass) portable graph expansion never replays a caught consumer failure [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "portable-failure-wrong-count",
+      "phase": "portable-failure",
+      "stdout": "",
+      "stderr": "(pass) portable graph expansion preserves fixed batching against an independent SQLite oracle [1.00ms]\n(pass) portable graph expansion never replays a caught consumer failure [1.00ms]\n(pass) graph slice preserves every generation failure without fallback or replay [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "portable-failure-duplicate-last",
+      "phase": "portable-failure",
+      "stdout": "",
+      "stderr": "(pass) portable graph expansion preserves fixed batching against an independent SQLite oracle [1.00ms]\n(pass) portable graph expansion never replays a caught consumer failure [1.00ms]\n(pass) graph slice preserves every generation failure without fallback or replay [1.00ms]\n(pass) graph slice preserves every generation failure without fallback or replay [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "generation-retirement-exact",
+      "phase": "generation-retirement",
+      "stdout": "",
+      "stderr": "(pass) generation retirement refuses unproved manifests before any physical removal [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "generation-retirement-missing-first",
+      "phase": "generation-retirement",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "generation-retirement-missing-last",
+      "phase": "generation-retirement",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "generation-retirement-wrong-count",
+      "phase": "generation-retirement",
+      "stdout": "",
+      "stderr": "(pass) generation retirement refuses unproved manifests before any physical removal [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "generation-retirement-duplicate-last",
+      "phase": "generation-retirement",
+      "stdout": "",
+      "stderr": "(pass) generation retirement refuses unproved manifests before any physical removal [1.00ms]\n(pass) generation retirement refuses unproved manifests before any physical removal [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "storage-primary-exact",
+      "phase": "storage-primary",
+      "stdout": "",
+      "stderr": "(pass) optional graph recovery preserves worker primary and partial retirement evidence [1.00ms]\n(pass) graph namespace writer defers only a live exact timeout without masking its primary [1.00ms]\n(pass) Graph diagnostic fixture authority stays inside its genuine private constructor [1.00ms]\n(pass) optional graph preparation defers partial recovery after one consumed image [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "storage-primary-missing-first",
+      "phase": "storage-primary",
+      "stdout": "",
+      "stderr": "(pass) graph namespace writer defers only a live exact timeout without masking its primary [1.00ms]\n(pass) Graph diagnostic fixture authority stays inside its genuine private constructor [1.00ms]\n(pass) optional graph preparation defers partial recovery after one consumed image [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "storage-primary-missing-last",
+      "phase": "storage-primary",
+      "stdout": "",
+      "stderr": "(pass) optional graph recovery preserves worker primary and partial retirement evidence [1.00ms]\n(pass) graph namespace writer defers only a live exact timeout without masking its primary [1.00ms]\n(pass) Graph diagnostic fixture authority stays inside its genuine private constructor [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "storage-primary-wrong-count",
+      "phase": "storage-primary",
+      "stdout": "",
+      "stderr": "(pass) optional graph recovery preserves worker primary and partial retirement evidence [1.00ms]\n(pass) graph namespace writer defers only a live exact timeout without masking its primary [1.00ms]\n(pass) Graph diagnostic fixture authority stays inside its genuine private constructor [1.00ms]\n(pass) optional graph preparation defers partial recovery after one consumed image [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "storage-primary-duplicate-last",
+      "phase": "storage-primary",
+      "stdout": "",
+      "stderr": "(pass) optional graph recovery preserves worker primary and partial retirement evidence [1.00ms]\n(pass) graph namespace writer defers only a live exact timeout without masking its primary [1.00ms]\n(pass) Graph diagnostic fixture authority stays inside its genuine private constructor [1.00ms]\n(pass) optional graph preparation defers partial recovery after one consumed image [1.00ms]\n(pass) optional graph preparation defers partial recovery after one consumed image [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-receipt-formats-exact",
+      "phase": "graph-receipt-formats",
+      "stdout": "",
+      "stderr": "(pass) optional receipt roles use each current producer format [1.00ms]\n(pass) group invalidation admits only current schema member roles [1.00ms]\n(pass) group discovery skips only its empty root sentinel [1.00ms]\n(pass) snapshot closures authenticate current gzip records and v2 manifest links [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-receipt-formats-missing-first",
+      "phase": "graph-receipt-formats",
+      "stdout": "",
+      "stderr": "(pass) group invalidation admits only current schema member roles [1.00ms]\n(pass) group discovery skips only its empty root sentinel [1.00ms]\n(pass) snapshot closures authenticate current gzip records and v2 manifest links [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-receipt-formats-missing-last",
+      "phase": "graph-receipt-formats",
+      "stdout": "",
+      "stderr": "(pass) optional receipt roles use each current producer format [1.00ms]\n(pass) group invalidation admits only current schema member roles [1.00ms]\n(pass) group discovery skips only its empty root sentinel [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-receipt-formats-wrong-count",
+      "phase": "graph-receipt-formats",
+      "stdout": "",
+      "stderr": "(pass) optional receipt roles use each current producer format [1.00ms]\n(pass) group invalidation admits only current schema member roles [1.00ms]\n(pass) group discovery skips only its empty root sentinel [1.00ms]\n(pass) snapshot closures authenticate current gzip records and v2 manifest links [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-receipt-formats-duplicate-last",
+      "phase": "graph-receipt-formats",
+      "stdout": "",
+      "stderr": "(pass) optional receipt roles use each current producer format [1.00ms]\n(pass) group invalidation admits only current schema member roles [1.00ms]\n(pass) group discovery skips only its empty root sentinel [1.00ms]\n(pass) snapshot closures authenticate current gzip records and v2 manifest links [1.00ms]\n(pass) snapshot closures authenticate current gzip records and v2 manifest links [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-retirement-window-exact",
+      "phase": "graph-retirement-window",
+      "stdout": "",
+      "stderr": "(pass) the retirement window is a required, finite policy key and the corpus uses the declared value [1.00ms]\n(pass) the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation [1.00ms]\n(pass) every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement [1.00ms]\n(pass) retirement windows preserve current control and exact primary failures [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-retirement-window-missing-first",
+      "phase": "graph-retirement-window",
+      "stdout": "",
+      "stderr": "(pass) the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation [1.00ms]\n(pass) every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement [1.00ms]\n(pass) retirement windows preserve current control and exact primary failures [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-retirement-window-missing-last",
+      "phase": "graph-retirement-window",
+      "stdout": "",
+      "stderr": "(pass) the retirement window is a required, finite policy key and the corpus uses the declared value [1.00ms]\n(pass) the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation [1.00ms]\n(pass) every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-retirement-window-wrong-count",
+      "phase": "graph-retirement-window",
+      "stdout": "",
+      "stderr": "(pass) the retirement window is a required, finite policy key and the corpus uses the declared value [1.00ms]\n(pass) the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation [1.00ms]\n(pass) every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement [1.00ms]\n(pass) retirement windows preserve current control and exact primary failures [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-retirement-window-duplicate-last",
+      "phase": "graph-retirement-window",
+      "stdout": "",
+      "stderr": "(pass) the retirement window is a required, finite policy key and the corpus uses the declared value [1.00ms]\n(pass) the window is due after at least one step once the declared time elapsed, equal to an independent SQLite computation [1.00ms]\n(pass) every capture is charged against the proof cap on its own, where the old cumulative budget would fail a long retirement [1.00ms]\n(pass) retirement windows preserve current control and exact primary failures [1.00ms]\n(pass) retirement windows preserve current control and exact primary failures [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-inference-refusals-exact",
+      "phase": "graph-inference-refusals",
+      "stdout": "",
+      "stderr": "(pass) inference closure refusal context is closed and preserves the exact primary value [1.00ms]\n(pass) all compressed closure roles retain real inflation refusal and bounded transport context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-inference-refusals-missing-first",
+      "phase": "graph-inference-refusals",
+      "stdout": "",
+      "stderr": "(pass) all compressed closure roles retain real inflation refusal and bounded transport context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-inference-refusals-missing-last",
+      "phase": "graph-inference-refusals",
+      "stdout": "",
+      "stderr": "(pass) inference closure refusal context is closed and preserves the exact primary value [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-inference-refusals-wrong-count",
+      "phase": "graph-inference-refusals",
+      "stdout": "",
+      "stderr": "(pass) inference closure refusal context is closed and preserves the exact primary value [1.00ms]\n(pass) all compressed closure roles retain real inflation refusal and bounded transport context [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-inference-refusals-duplicate-last",
+      "phase": "graph-inference-refusals",
+      "stdout": "",
+      "stderr": "(pass) inference closure refusal context is closed and preserves the exact primary value [1.00ms]\n(pass) all compressed closure roles retain real inflation refusal and bounded transport context [1.00ms]\n(pass) all compressed closure roles retain real inflation refusal and bounded transport context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-generation-stream-exact",
+      "phase": "graph-generation-stream",
+      "stdout": "",
+      "stderr": "(pass) generation wire proof streams producer-sized indices with complete references [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-generation-stream-missing-first",
+      "phase": "graph-generation-stream",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-generation-stream-missing-last",
+      "phase": "graph-generation-stream",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-generation-stream-wrong-count",
+      "phase": "graph-generation-stream",
+      "stdout": "",
+      "stderr": "(pass) generation wire proof streams producer-sized indices with complete references [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-generation-stream-duplicate-last",
+      "phase": "graph-generation-stream",
+      "stdout": "",
+      "stderr": "(pass) generation wire proof streams producer-sized indices with complete references [1.00ms]\n(pass) generation wire proof streams producer-sized indices with complete references [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "closure-read-session-exact",
+      "phase": "closure-read-session",
+      "stdout": "",
+      "stderr": "(pass) closure worker cohorts reserve exact finite wire authority against SQLite [1.00ms]\n(pass) worker failure DATA preserves first semantic facts with explicit bounded redaction [1.00ms]\n(pass) actual reply credit and deferred read debit match closed schema and SQLite [1.00ms]\n(pass) actual cohort controller joins terminal defer before debit and exact retry [1.00ms]\n(pass) real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals [1.00ms]\n(pass) captured Source bootstrap reserves credit request and terminal through the actual policy [1.00ms]\n(pass) closure input frames preserve exact bytes within existing own-data authority [1.00ms]\n(pass) closure startup observations retain bounded semantic stderr against SQLite [1.00ms]\n(pass) actual owned startup stderr survives disposal without replacing readiness primary [1.00ms]\n(pass) closed worker semantic failures retain bounded context and the first primary against SQLite [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "closure-read-session-missing-first",
+      "phase": "closure-read-session",
+      "stdout": "",
+      "stderr": "(pass) worker failure DATA preserves first semantic facts with explicit bounded redaction [1.00ms]\n(pass) actual reply credit and deferred read debit match closed schema and SQLite [1.00ms]\n(pass) actual cohort controller joins terminal defer before debit and exact retry [1.00ms]\n(pass) real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals [1.00ms]\n(pass) captured Source bootstrap reserves credit request and terminal through the actual policy [1.00ms]\n(pass) closure input frames preserve exact bytes within existing own-data authority [1.00ms]\n(pass) closure startup observations retain bounded semantic stderr against SQLite [1.00ms]\n(pass) actual owned startup stderr survives disposal without replacing readiness primary [1.00ms]\n(pass) closed worker semantic failures retain bounded context and the first primary against SQLite [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "closure-read-session-missing-last",
+      "phase": "closure-read-session",
+      "stdout": "",
+      "stderr": "(pass) closure worker cohorts reserve exact finite wire authority against SQLite [1.00ms]\n(pass) worker failure DATA preserves first semantic facts with explicit bounded redaction [1.00ms]\n(pass) actual reply credit and deferred read debit match closed schema and SQLite [1.00ms]\n(pass) actual cohort controller joins terminal defer before debit and exact retry [1.00ms]\n(pass) real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals [1.00ms]\n(pass) captured Source bootstrap reserves credit request and terminal through the actual policy [1.00ms]\n(pass) closure input frames preserve exact bytes within existing own-data authority [1.00ms]\n(pass) closure startup observations retain bounded semantic stderr against SQLite [1.00ms]\n(pass) actual owned startup stderr survives disposal without replacing readiness primary [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "closure-read-session-wrong-count",
+      "phase": "closure-read-session",
+      "stdout": "",
+      "stderr": "(pass) closure worker cohorts reserve exact finite wire authority against SQLite [1.00ms]\n(pass) worker failure DATA preserves first semantic facts with explicit bounded redaction [1.00ms]\n(pass) actual reply credit and deferred read debit match closed schema and SQLite [1.00ms]\n(pass) actual cohort controller joins terminal defer before debit and exact retry [1.00ms]\n(pass) real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals [1.00ms]\n(pass) captured Source bootstrap reserves credit request and terminal through the actual policy [1.00ms]\n(pass) closure input frames preserve exact bytes within existing own-data authority [1.00ms]\n(pass) closure startup observations retain bounded semantic stderr against SQLite [1.00ms]\n(pass) actual owned startup stderr survives disposal without replacing readiness primary [1.00ms]\n(pass) closed worker semantic failures retain bounded context and the first primary against SQLite [1.00ms]\n11 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "closure-read-session-duplicate-last",
+      "phase": "closure-read-session",
+      "stdout": "",
+      "stderr": "(pass) closure worker cohorts reserve exact finite wire authority against SQLite [1.00ms]\n(pass) worker failure DATA preserves first semantic facts with explicit bounded redaction [1.00ms]\n(pass) actual reply credit and deferred read debit match closed schema and SQLite [1.00ms]\n(pass) actual cohort controller joins terminal defer before debit and exact retry [1.00ms]\n(pass) real closure worker cancellation deadline overflow and malformed frames settle in isolated Originals [1.00ms]\n(pass) captured Source bootstrap reserves credit request and terminal through the actual policy [1.00ms]\n(pass) closure input frames preserve exact bytes within existing own-data authority [1.00ms]\n(pass) closure startup observations retain bounded semantic stderr against SQLite [1.00ms]\n(pass) actual owned startup stderr survives disposal without replacing readiness primary [1.00ms]\n(pass) closed worker semantic failures retain bounded context and the first primary against SQLite [1.00ms]\n(pass) closed worker semantic failures retain bounded context and the first primary against SQLite [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-interactive-channel-exact",
+      "phase": "owned-interactive-channel",
+      "stdout": "",
+      "stderr": "(pass) neutral owned interactive channel agrees with Ajv SQLite and real process exchanges [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "owned-interactive-channel-missing-first",
+      "phase": "owned-interactive-channel",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-interactive-channel-missing-last",
+      "phase": "owned-interactive-channel",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-interactive-channel-wrong-count",
+      "phase": "owned-interactive-channel",
+      "stdout": "",
+      "stderr": "(pass) neutral owned interactive channel agrees with Ajv SQLite and real process exchanges [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-interactive-channel-duplicate-last",
+      "phase": "owned-interactive-channel",
+      "stdout": "",
+      "stderr": "(pass) neutral owned interactive channel agrees with Ajv SQLite and real process exchanges [1.00ms]\n(pass) neutral owned interactive channel agrees with Ajv SQLite and real process exchanges [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-command-control-exact",
+      "phase": "captured-command-control",
+      "stdout": "",
+      "stderr": "(pass) captured command projects only its genuine issued control and preserves finite funding [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "captured-command-control-missing-first",
+      "phase": "captured-command-control",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-command-control-missing-last",
+      "phase": "captured-command-control",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-command-control-wrong-count",
+      "phase": "captured-command-control",
+      "stdout": "",
+      "stderr": "(pass) captured command projects only its genuine issued control and preserves finite funding [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-command-control-duplicate-last",
+      "phase": "captured-command-control",
+      "stdout": "",
+      "stderr": "(pass) captured command projects only its genuine issued control and preserves finite funding [1.00ms]\n(pass) captured command projects only its genuine issued control and preserves finite funding [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-auxiliary-input-exact",
+      "phase": "owned-auxiliary-input",
+      "stdout": "",
+      "stderr": "(pass) owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract [1.00ms]\n(pass) actual owned auxiliary pipe: inherit [1.00ms]\n(pass) actual owned auxiliary pipe: large [1.00ms]\n(pass) actual owned auxiliary pipe: early-close [1.00ms]\n(pass) actual owned auxiliary pipe: cancel [1.00ms]\n(pass) actual owned auxiliary pipe: deadline [1.00ms]\n(pass) actual owned auxiliary pipe: consumer-primary [1.00ms]\n(pass) actual owned auxiliary pipe: status [1.00ms]\n(pass) actual owned auxiliary pipe: large-stream [1.00ms]\n(pass) auxiliary publication preserves callback event and undefined primary failures [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "owned-auxiliary-input-missing-first",
+      "phase": "owned-auxiliary-input",
+      "stdout": "",
+      "stderr": "(pass) actual owned auxiliary pipe: inherit [1.00ms]\n(pass) actual owned auxiliary pipe: large [1.00ms]\n(pass) actual owned auxiliary pipe: early-close [1.00ms]\n(pass) actual owned auxiliary pipe: cancel [1.00ms]\n(pass) actual owned auxiliary pipe: deadline [1.00ms]\n(pass) actual owned auxiliary pipe: consumer-primary [1.00ms]\n(pass) actual owned auxiliary pipe: status [1.00ms]\n(pass) actual owned auxiliary pipe: large-stream [1.00ms]\n(pass) auxiliary publication preserves callback event and undefined primary failures [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-auxiliary-input-missing-last",
+      "phase": "owned-auxiliary-input",
+      "stdout": "",
+      "stderr": "(pass) owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract [1.00ms]\n(pass) actual owned auxiliary pipe: inherit [1.00ms]\n(pass) actual owned auxiliary pipe: large [1.00ms]\n(pass) actual owned auxiliary pipe: early-close [1.00ms]\n(pass) actual owned auxiliary pipe: cancel [1.00ms]\n(pass) actual owned auxiliary pipe: deadline [1.00ms]\n(pass) actual owned auxiliary pipe: consumer-primary [1.00ms]\n(pass) actual owned auxiliary pipe: status [1.00ms]\n(pass) actual owned auxiliary pipe: large-stream [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-auxiliary-input-wrong-count",
+      "phase": "owned-auxiliary-input",
+      "stdout": "",
+      "stderr": "(pass) owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract [1.00ms]\n(pass) actual owned auxiliary pipe: inherit [1.00ms]\n(pass) actual owned auxiliary pipe: large [1.00ms]\n(pass) actual owned auxiliary pipe: early-close [1.00ms]\n(pass) actual owned auxiliary pipe: cancel [1.00ms]\n(pass) actual owned auxiliary pipe: deadline [1.00ms]\n(pass) actual owned auxiliary pipe: consumer-primary [1.00ms]\n(pass) actual owned auxiliary pipe: status [1.00ms]\n(pass) actual owned auxiliary pipe: large-stream [1.00ms]\n(pass) auxiliary publication preserves callback event and undefined primary failures [1.00ms]\n11 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "owned-auxiliary-input-duplicate-last",
+      "phase": "owned-auxiliary-input",
+      "stdout": "",
+      "stderr": "(pass) owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract [1.00ms]\n(pass) actual owned auxiliary pipe: inherit [1.00ms]\n(pass) actual owned auxiliary pipe: large [1.00ms]\n(pass) actual owned auxiliary pipe: early-close [1.00ms]\n(pass) actual owned auxiliary pipe: cancel [1.00ms]\n(pass) actual owned auxiliary pipe: deadline [1.00ms]\n(pass) actual owned auxiliary pipe: consumer-primary [1.00ms]\n(pass) actual owned auxiliary pipe: status [1.00ms]\n(pass) actual owned auxiliary pipe: large-stream [1.00ms]\n(pass) auxiliary publication preserves callback event and undefined primary failures [1.00ms]\n(pass) auxiliary publication preserves callback event and undefined primary failures [1.00ms]\n10 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-captured-publishers-exact",
+      "phase": "bootstrap-captured-publishers",
+      "stdout": "",
+      "stderr": "(pass) bootstrap publishers remain executable captured Source with closed DATA [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "bootstrap-captured-publishers-missing-first",
+      "phase": "bootstrap-captured-publishers",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-captured-publishers-missing-last",
+      "phase": "bootstrap-captured-publishers",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-captured-publishers-wrong-count",
+      "phase": "bootstrap-captured-publishers",
+      "stdout": "",
+      "stderr": "(pass) bootstrap publishers remain executable captured Source with closed DATA [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-captured-publishers-duplicate-last",
+      "phase": "bootstrap-captured-publishers",
+      "stdout": "",
+      "stderr": "(pass) bootstrap publishers remain executable captured Source with closed DATA [1.00ms]\n(pass) bootstrap publishers remain executable captured Source with closed DATA [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-cjs-facades-exact",
+      "phase": "captured-cjs-facades",
+      "stdout": "",
+      "stderr": "(pass) workspace CommonJS facades consume the canonical default object against SQLite [1.00ms]\n(pass) actual immutable child invokes both CommonJS default-object factories [1.00ms]\n(pass) actual captured workspace CommonJS facades preserve public value behavior [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "captured-cjs-facades-missing-first",
+      "phase": "captured-cjs-facades",
+      "stdout": "",
+      "stderr": "(pass) actual immutable child invokes both CommonJS default-object factories [1.00ms]\n(pass) actual captured workspace CommonJS facades preserve public value behavior [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-cjs-facades-missing-last",
+      "phase": "captured-cjs-facades",
+      "stdout": "",
+      "stderr": "(pass) workspace CommonJS facades consume the canonical default object against SQLite [1.00ms]\n(pass) actual immutable child invokes both CommonJS default-object factories [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-cjs-facades-wrong-count",
+      "phase": "captured-cjs-facades",
+      "stdout": "",
+      "stderr": "(pass) workspace CommonJS facades consume the canonical default object against SQLite [1.00ms]\n(pass) actual immutable child invokes both CommonJS default-object factories [1.00ms]\n(pass) actual captured workspace CommonJS facades preserve public value behavior [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-cjs-facades-duplicate-last",
+      "phase": "captured-cjs-facades",
+      "stdout": "",
+      "stderr": "(pass) workspace CommonJS facades consume the canonical default object against SQLite [1.00ms]\n(pass) actual immutable child invokes both CommonJS default-object factories [1.00ms]\n(pass) actual captured workspace CommonJS facades preserve public value behavior [1.00ms]\n(pass) actual captured workspace CommonJS facades preserve public value behavior [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-parser-resolution-exact",
+      "phase": "bootstrap-parser-resolution",
+      "stdout": "",
+      "stderr": "(pass) closed installed parser entries match SQLite without executable resolution [1.00ms]\n(pass) actual captured parser witness uses closed entries matching native resolution [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "bootstrap-parser-resolution-missing-first",
+      "phase": "bootstrap-parser-resolution",
+      "stdout": "",
+      "stderr": "(pass) actual captured parser witness uses closed entries matching native resolution [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-parser-resolution-missing-last",
+      "phase": "bootstrap-parser-resolution",
+      "stdout": "",
+      "stderr": "(pass) closed installed parser entries match SQLite without executable resolution [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-parser-resolution-wrong-count",
+      "phase": "bootstrap-parser-resolution",
+      "stdout": "",
+      "stderr": "(pass) closed installed parser entries match SQLite without executable resolution [1.00ms]\n(pass) actual captured parser witness uses closed entries matching native resolution [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "bootstrap-parser-resolution-duplicate-last",
+      "phase": "bootstrap-parser-resolution",
+      "stdout": "",
+      "stderr": "(pass) closed installed parser entries match SQLite without executable resolution [1.00ms]\n(pass) actual captured parser witness uses closed entries matching native resolution [1.00ms]\n(pass) actual captured parser witness uses closed entries matching native resolution [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-source-diagnostics-exact",
+      "phase": "captured-source-diagnostics",
+      "stdout": "",
+      "stderr": "(pass) captured Source refusal diagnostics retain bounded actual context against SQLite [1.00ms]\n(pass) actual immutable loaders preserve their refusal guards while reporting declaring context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "captured-source-diagnostics-missing-first",
+      "phase": "captured-source-diagnostics",
+      "stdout": "",
+      "stderr": "(pass) actual immutable loaders preserve their refusal guards while reporting declaring context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-source-diagnostics-missing-last",
+      "phase": "captured-source-diagnostics",
+      "stdout": "",
+      "stderr": "(pass) captured Source refusal diagnostics retain bounded actual context against SQLite [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-source-diagnostics-wrong-count",
+      "phase": "captured-source-diagnostics",
+      "stdout": "",
+      "stderr": "(pass) captured Source refusal diagnostics retain bounded actual context against SQLite [1.00ms]\n(pass) actual immutable loaders preserve their refusal guards while reporting declaring context [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-source-diagnostics-duplicate-last",
+      "phase": "captured-source-diagnostics",
+      "stdout": "",
+      "stderr": "(pass) captured Source refusal diagnostics retain bounded actual context against SQLite [1.00ms]\n(pass) actual immutable loaders preserve their refusal guards while reporting declaring context [1.00ms]\n(pass) actual immutable loaders preserve their refusal guards while reporting declaring context [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-subclosure-resolution-exact",
+      "phase": "captured-subclosure-resolution",
+      "stdout": "",
+      "stderr": "(pass) admitted subclosure resolution uses exact declaring images against SQLite [1.00ms]\n(pass) actual admitted child captures a nested Source query without directory resolution [1.00ms]\n(pass) actual Node immutable images expose only their validated resolution projection [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "captured-subclosure-resolution-missing-first",
+      "phase": "captured-subclosure-resolution",
+      "stdout": "",
+      "stderr": "(pass) actual admitted child captures a nested Source query without directory resolution [1.00ms]\n(pass) actual Node immutable images expose only their validated resolution projection [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-subclosure-resolution-missing-last",
+      "phase": "captured-subclosure-resolution",
+      "stdout": "",
+      "stderr": "(pass) admitted subclosure resolution uses exact declaring images against SQLite [1.00ms]\n(pass) actual admitted child captures a nested Source query without directory resolution [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-subclosure-resolution-wrong-count",
+      "phase": "captured-subclosure-resolution",
+      "stdout": "",
+      "stderr": "(pass) admitted subclosure resolution uses exact declaring images against SQLite [1.00ms]\n(pass) actual admitted child captures a nested Source query without directory resolution [1.00ms]\n(pass) actual Node immutable images expose only their validated resolution projection [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "captured-subclosure-resolution-duplicate-last",
+      "phase": "captured-subclosure-resolution",
+      "stdout": "",
+      "stderr": "(pass) admitted subclosure resolution uses exact declaring images against SQLite [1.00ms]\n(pass) actual admitted child captures a nested Source query without directory resolution [1.00ms]\n(pass) actual Node immutable images expose only their validated resolution projection [1.00ms]\n(pass) actual Node immutable images expose only their validated resolution projection [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "schema-tuple-contract-exact",
+      "phase": "schema-tuple-contract",
+      "stdout": "",
+      "stderr": "(pass) first-party tuple schemas match portable cases and Ajv [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "schema-tuple-contract-missing-first",
+      "phase": "schema-tuple-contract",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "schema-tuple-contract-missing-last",
+      "phase": "schema-tuple-contract",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "schema-tuple-contract-wrong-count",
+      "phase": "schema-tuple-contract",
+      "stdout": "",
+      "stderr": "(pass) first-party tuple schemas match portable cases and Ajv [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "schema-tuple-contract-duplicate-last",
+      "phase": "schema-tuple-contract",
+      "stdout": "",
+      "stderr": "(pass) first-party tuple schemas match portable cases and Ajv [1.00ms]\n(pass) first-party tuple schemas match portable cases and Ajv [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-store-format-exact",
+      "phase": "graph-store-format",
+      "stdout": "",
+      "stderr": "(pass) Graph format identity refuses unmarked populated stores against SQLite [1.00ms]\n(pass) Graph format discovery bounds entries and preserves the first close failure [1.00ms]\n(pass) Graph format markers retain a closed scanned worker role [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-store-format-missing-first",
+      "phase": "graph-store-format",
+      "stdout": "",
+      "stderr": "(pass) Graph format discovery bounds entries and preserves the first close failure [1.00ms]\n(pass) Graph format markers retain a closed scanned worker role [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-store-format-missing-last",
+      "phase": "graph-store-format",
+      "stdout": "",
+      "stderr": "(pass) Graph format identity refuses unmarked populated stores against SQLite [1.00ms]\n(pass) Graph format discovery bounds entries and preserves the first close failure [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-store-format-wrong-count",
+      "phase": "graph-store-format",
+      "stdout": "",
+      "stderr": "(pass) Graph format identity refuses unmarked populated stores against SQLite [1.00ms]\n(pass) Graph format discovery bounds entries and preserves the first close failure [1.00ms]\n(pass) Graph format markers retain a closed scanned worker role [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-store-format-duplicate-last",
+      "phase": "graph-store-format",
+      "stdout": "",
+      "stderr": "(pass) Graph format identity refuses unmarked populated stores against SQLite [1.00ms]\n(pass) Graph format discovery bounds entries and preserves the first close failure [1.00ms]\n(pass) Graph format markers retain a closed scanned worker role [1.00ms]\n(pass) Graph format markers retain a closed scanned worker role [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-recovery-capacity-exact",
+      "phase": "native-recovery-capacity",
+      "stdout": "",
+      "stderr": "(pass) native recovery uses the authored owner and independent SQLite route oracle [1.00ms]\n(pass) capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "native-recovery-capacity-missing-first",
+      "phase": "native-recovery-capacity",
+      "stdout": "",
+      "stderr": "(pass) capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-recovery-capacity-missing-last",
+      "phase": "native-recovery-capacity",
+      "stdout": "",
+      "stderr": "(pass) native recovery uses the authored owner and independent SQLite route oracle [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-recovery-capacity-wrong-count",
+      "phase": "native-recovery-capacity",
+      "stdout": "",
+      "stderr": "(pass) native recovery uses the authored owner and independent SQLite route oracle [1.00ms]\n(pass) capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "native-recovery-capacity-duplicate-last",
+      "phase": "native-recovery-capacity",
+      "stdout": "",
+      "stderr": "(pass) native recovery uses the authored owner and independent SQLite route oracle [1.00ms]\n(pass) capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission [1.00ms]\n(pass) capacity-admitted recovery retains the actual captured dispatcher and bypasses Graph admission [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-closure-recovery-exact",
+      "phase": "graph-closure-recovery",
+      "stdout": "",
+      "stderr": "(pass) shared graph closure reachability matches the closed schema and independent SQLite oracle [1.00ms]\n(pass) shared graph closure maintenance orphan [1.00ms]\n(pass) shared graph closure maintenance referenced [1.00ms]\n(pass) shared graph closure maintenance key-reference [1.00ms]\n(pass) shared graph closure maintenance generation [1.00ms]\n(pass) shared graph closure maintenance inference [1.00ms]\n(pass) shared graph closure maintenance publication-fallback [1.00ms]\n(pass) shared graph closure maintenance pack [1.00ms]\n(pass) shared graph closure maintenance unknown [1.00ms]\n(pass) shared graph closure maintenance corrupt [1.00ms]\n(pass) shared graph closure maintenance symlink [1.00ms]\n(pass) shared graph closure maintenance hardlink [1.00ms]\n(pass) shared graph closure maintenance leaf-replaced [1.00ms]\n(pass) shared graph closure maintenance ancestor-replaced [1.00ms]\n(pass) shared graph closure maintenance reference-replaced [1.00ms]\n(pass) shared graph closure maintenance new-reference [1.00ms]\n(pass) shared graph closure maintenance cancel [1.00ms]\n(pass) shared graph closure maintenance busy-reader [1.00ms]\n(pass) shared graph closure maintenance busy-writer [1.00ms]\n(pass) shared graph closure maintenance exact-task-missing [1.00ms]\n(pass) shared graph closure maintenance optional-release [1.00ms]\n(pass) shared graph closure maintenance optional-new-reference [1.00ms]\n(pass) shared graph closure reader remains an executable derived Source entry [1.00ms]\n(pass) shared graph closure reader uses bounded owned stdin across platform command limits [1.00ms]\n(pass) graph retirement intent states match the independent SQLite transition oracle [1.00ms]\n(pass) graph optional group retirement complete [1.00ms]\n(pass) graph optional group retirement new-generation [1.00ms]\n(pass) graph optional group retirement known-missing-pack [1.00ms]\n(pass) graph optional group retirement unindexed-pack [1.00ms]\n(pass) graph optional group retirement manifest-changed [1.00ms]\n(pass) graph optional group retirement member-changed [1.00ms]\n(pass) graph optional group retirement ancestor-changed [1.00ms]\n(pass) graph optional group retirement new-member [1.00ms]\n(pass) graph optional group retirement cancel-after-commit [1.00ms]\n(pass) complete census has one unchanged entry bound and bounded metadata allocation [1.00ms]\n(pass) closure census delegates root service ownership before application path access [1.00ms]\n(pass) Native service classification is explicitly exported through its public contract [1.00ms]\n(pass) authenticated group windows preserve physical identities with bounded whole-proof work [1.00ms]\n(pass) worker wire packets obey the actual separated capture contract [1.00ms]\n39 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "graph-closure-recovery-missing-first",
+      "phase": "graph-closure-recovery",
+      "stdout": "",
+      "stderr": "(pass) shared graph closure maintenance orphan [1.00ms]\n(pass) shared graph closure maintenance referenced [1.00ms]\n(pass) shared graph closure maintenance key-reference [1.00ms]\n(pass) shared graph closure maintenance generation [1.00ms]\n(pass) shared graph closure maintenance inference [1.00ms]\n(pass) shared graph closure maintenance publication-fallback [1.00ms]\n(pass) shared graph closure maintenance pack [1.00ms]\n(pass) shared graph closure maintenance unknown [1.00ms]\n(pass) shared graph closure maintenance corrupt [1.00ms]\n(pass) shared graph closure maintenance symlink [1.00ms]\n(pass) shared graph closure maintenance hardlink [1.00ms]\n(pass) shared graph closure maintenance leaf-replaced [1.00ms]\n(pass) shared graph closure maintenance ancestor-replaced [1.00ms]\n(pass) shared graph closure maintenance reference-replaced [1.00ms]\n(pass) shared graph closure maintenance new-reference [1.00ms]\n(pass) shared graph closure maintenance cancel [1.00ms]\n(pass) shared graph closure maintenance busy-reader [1.00ms]\n(pass) shared graph closure maintenance busy-writer [1.00ms]\n(pass) shared graph closure maintenance exact-task-missing [1.00ms]\n(pass) shared graph closure maintenance optional-release [1.00ms]\n(pass) shared graph closure maintenance optional-new-reference [1.00ms]\n(pass) shared graph closure reader remains an executable derived Source entry [1.00ms]\n(pass) shared graph closure reader uses bounded owned stdin across platform command limits [1.00ms]\n(pass) graph retirement intent states match the independent SQLite transition oracle [1.00ms]\n(pass) graph optional group retirement complete [1.00ms]\n(pass) graph optional group retirement new-generation [1.00ms]\n(pass) graph optional group retirement known-missing-pack [1.00ms]\n(pass) graph optional group retirement unindexed-pack [1.00ms]\n(pass) graph optional group retirement manifest-changed [1.00ms]\n(pass) graph optional group retirement member-changed [1.00ms]\n(pass) graph optional group retirement ancestor-changed [1.00ms]\n(pass) graph optional group retirement new-member [1.00ms]\n(pass) graph optional group retirement cancel-after-commit [1.00ms]\n(pass) complete census has one unchanged entry bound and bounded metadata allocation [1.00ms]\n(pass) closure census delegates root service ownership before application path access [1.00ms]\n(pass) Native service classification is explicitly exported through its public contract [1.00ms]\n(pass) authenticated group windows preserve physical identities with bounded whole-proof work [1.00ms]\n(pass) worker wire packets obey the actual separated capture contract [1.00ms]\n39 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-closure-recovery-missing-last",
+      "phase": "graph-closure-recovery",
+      "stdout": "",
+      "stderr": "(pass) shared graph closure reachability matches the closed schema and independent SQLite oracle [1.00ms]\n(pass) shared graph closure maintenance orphan [1.00ms]\n(pass) shared graph closure maintenance referenced [1.00ms]\n(pass) shared graph closure maintenance key-reference [1.00ms]\n(pass) shared graph closure maintenance generation [1.00ms]\n(pass) shared graph closure maintenance inference [1.00ms]\n(pass) shared graph closure maintenance publication-fallback [1.00ms]\n(pass) shared graph closure maintenance pack [1.00ms]\n(pass) shared graph closure maintenance unknown [1.00ms]\n(pass) shared graph closure maintenance corrupt [1.00ms]\n(pass) shared graph closure maintenance symlink [1.00ms]\n(pass) shared graph closure maintenance hardlink [1.00ms]\n(pass) shared graph closure maintenance leaf-replaced [1.00ms]\n(pass) shared graph closure maintenance ancestor-replaced [1.00ms]\n(pass) shared graph closure maintenance reference-replaced [1.00ms]\n(pass) shared graph closure maintenance new-reference [1.00ms]\n(pass) shared graph closure maintenance cancel [1.00ms]\n(pass) shared graph closure maintenance busy-reader [1.00ms]\n(pass) shared graph closure maintenance busy-writer [1.00ms]\n(pass) shared graph closure maintenance exact-task-missing [1.00ms]\n(pass) shared graph closure maintenance optional-release [1.00ms]\n(pass) shared graph closure maintenance optional-new-reference [1.00ms]\n(pass) shared graph closure reader remains an executable derived Source entry [1.00ms]\n(pass) shared graph closure reader uses bounded owned stdin across platform command limits [1.00ms]\n(pass) graph retirement intent states match the independent SQLite transition oracle [1.00ms]\n(pass) graph optional group retirement complete [1.00ms]\n(pass) graph optional group retirement new-generation [1.00ms]\n(pass) graph optional group retirement known-missing-pack [1.00ms]\n(pass) graph optional group retirement unindexed-pack [1.00ms]\n(pass) graph optional group retirement manifest-changed [1.00ms]\n(pass) graph optional group retirement member-changed [1.00ms]\n(pass) graph optional group retirement ancestor-changed [1.00ms]\n(pass) graph optional group retirement new-member [1.00ms]\n(pass) graph optional group retirement cancel-after-commit [1.00ms]\n(pass) complete census has one unchanged entry bound and bounded metadata allocation [1.00ms]\n(pass) closure census delegates root service ownership before application path access [1.00ms]\n(pass) Native service classification is explicitly exported through its public contract [1.00ms]\n(pass) authenticated group windows preserve physical identities with bounded whole-proof work [1.00ms]\n39 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-closure-recovery-wrong-count",
+      "phase": "graph-closure-recovery",
+      "stdout": "",
+      "stderr": "(pass) shared graph closure reachability matches the closed schema and independent SQLite oracle [1.00ms]\n(pass) shared graph closure maintenance orphan [1.00ms]\n(pass) shared graph closure maintenance referenced [1.00ms]\n(pass) shared graph closure maintenance key-reference [1.00ms]\n(pass) shared graph closure maintenance generation [1.00ms]\n(pass) shared graph closure maintenance inference [1.00ms]\n(pass) shared graph closure maintenance publication-fallback [1.00ms]\n(pass) shared graph closure maintenance pack [1.00ms]\n(pass) shared graph closure maintenance unknown [1.00ms]\n(pass) shared graph closure maintenance corrupt [1.00ms]\n(pass) shared graph closure maintenance symlink [1.00ms]\n(pass) shared graph closure maintenance hardlink [1.00ms]\n(pass) shared graph closure maintenance leaf-replaced [1.00ms]\n(pass) shared graph closure maintenance ancestor-replaced [1.00ms]\n(pass) shared graph closure maintenance reference-replaced [1.00ms]\n(pass) shared graph closure maintenance new-reference [1.00ms]\n(pass) shared graph closure maintenance cancel [1.00ms]\n(pass) shared graph closure maintenance busy-reader [1.00ms]\n(pass) shared graph closure maintenance busy-writer [1.00ms]\n(pass) shared graph closure maintenance exact-task-missing [1.00ms]\n(pass) shared graph closure maintenance optional-release [1.00ms]\n(pass) shared graph closure maintenance optional-new-reference [1.00ms]\n(pass) shared graph closure reader remains an executable derived Source entry [1.00ms]\n(pass) shared graph closure reader uses bounded owned stdin across platform command limits [1.00ms]\n(pass) graph retirement intent states match the independent SQLite transition oracle [1.00ms]\n(pass) graph optional group retirement complete [1.00ms]\n(pass) graph optional group retirement new-generation [1.00ms]\n(pass) graph optional group retirement known-missing-pack [1.00ms]\n(pass) graph optional group retirement unindexed-pack [1.00ms]\n(pass) graph optional group retirement manifest-changed [1.00ms]\n(pass) graph optional group retirement member-changed [1.00ms]\n(pass) graph optional group retirement ancestor-changed [1.00ms]\n(pass) graph optional group retirement new-member [1.00ms]\n(pass) graph optional group retirement cancel-after-commit [1.00ms]\n(pass) complete census has one unchanged entry bound and bounded metadata allocation [1.00ms]\n(pass) closure census delegates root service ownership before application path access [1.00ms]\n(pass) Native service classification is explicitly exported through its public contract [1.00ms]\n(pass) authenticated group windows preserve physical identities with bounded whole-proof work [1.00ms]\n(pass) worker wire packets obey the actual separated capture contract [1.00ms]\n40 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "graph-closure-recovery-duplicate-last",
+      "phase": "graph-closure-recovery",
+      "stdout": "",
+      "stderr": "(pass) shared graph closure reachability matches the closed schema and independent SQLite oracle [1.00ms]\n(pass) shared graph closure maintenance orphan [1.00ms]\n(pass) shared graph closure maintenance referenced [1.00ms]\n(pass) shared graph closure maintenance key-reference [1.00ms]\n(pass) shared graph closure maintenance generation [1.00ms]\n(pass) shared graph closure maintenance inference [1.00ms]\n(pass) shared graph closure maintenance publication-fallback [1.00ms]\n(pass) shared graph closure maintenance pack [1.00ms]\n(pass) shared graph closure maintenance unknown [1.00ms]\n(pass) shared graph closure maintenance corrupt [1.00ms]\n(pass) shared graph closure maintenance symlink [1.00ms]\n(pass) shared graph closure maintenance hardlink [1.00ms]\n(pass) shared graph closure maintenance leaf-replaced [1.00ms]\n(pass) shared graph closure maintenance ancestor-replaced [1.00ms]\n(pass) shared graph closure maintenance reference-replaced [1.00ms]\n(pass) shared graph closure maintenance new-reference [1.00ms]\n(pass) shared graph closure maintenance cancel [1.00ms]\n(pass) shared graph closure maintenance busy-reader [1.00ms]\n(pass) shared graph closure maintenance busy-writer [1.00ms]\n(pass) shared graph closure maintenance exact-task-missing [1.00ms]\n(pass) shared graph closure maintenance optional-release [1.00ms]\n(pass) shared graph closure maintenance optional-new-reference [1.00ms]\n(pass) shared graph closure reader remains an executable derived Source entry [1.00ms]\n(pass) shared graph closure reader uses bounded owned stdin across platform command limits [1.00ms]\n(pass) graph retirement intent states match the independent SQLite transition oracle [1.00ms]\n(pass) graph optional group retirement complete [1.00ms]\n(pass) graph optional group retirement new-generation [1.00ms]\n(pass) graph optional group retirement known-missing-pack [1.00ms]\n(pass) graph optional group retirement unindexed-pack [1.00ms]\n(pass) graph optional group retirement manifest-changed [1.00ms]\n(pass) graph optional group retirement member-changed [1.00ms]\n(pass) graph optional group retirement ancestor-changed [1.00ms]\n(pass) graph optional group retirement new-member [1.00ms]\n(pass) graph optional group retirement cancel-after-commit [1.00ms]\n(pass) complete census has one unchanged entry bound and bounded metadata allocation [1.00ms]\n(pass) closure census delegates root service ownership before application path access [1.00ms]\n(pass) Native service classification is explicitly exported through its public contract [1.00ms]\n(pass) authenticated group windows preserve physical identities with bounded whole-proof work [1.00ms]\n(pass) worker wire packets obey the actual separated capture contract [1.00ms]\n(pass) worker wire packets obey the actual separated capture contract [1.00ms]\n39 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "reuse-presence-exact",
+      "phase": "reuse-presence",
+      "stdout": "",
+      "stderr": "(pass) inference reuse revalidates physical inventories inside the prior ten minute window [1.00ms]\n(pass) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody [1.00ms]\n(pass) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries [1.00ms]\n(pass) inference reuse preserves issued cancellation and deadlines after warm validation [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "reuse-presence-missing-first",
+      "phase": "reuse-presence",
+      "stdout": "",
+      "stderr": "(pass) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody [1.00ms]\n(pass) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries [1.00ms]\n(pass) inference reuse preserves issued cancellation and deadlines after warm validation [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "reuse-presence-missing-last",
+      "phase": "reuse-presence",
+      "stdout": "",
+      "stderr": "(pass) inference reuse revalidates physical inventories inside the prior ten minute window [1.00ms]\n(pass) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody [1.00ms]\n(pass) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "reuse-presence-wrong-count",
+      "phase": "reuse-presence",
+      "stdout": "",
+      "stderr": "(pass) inference reuse revalidates physical inventories inside the prior ten minute window [1.00ms]\n(pass) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody [1.00ms]\n(pass) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries [1.00ms]\n(pass) inference reuse preserves issued cancellation and deadlines after warm validation [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "reuse-presence-duplicate-last",
+      "phase": "reuse-presence",
+      "stdout": "",
+      "stderr": "(pass) inference reuse revalidates physical inventories inside the prior ten minute window [1.00ms]\n(pass) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody [1.00ms]\n(pass) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries [1.00ms]\n(pass) inference reuse preserves issued cancellation and deadlines after warm validation [1.00ms]\n(pass) inference reuse preserves issued cancellation and deadlines after warm validation [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "observation-blocks-exact",
+      "phase": "observation-blocks",
+      "stdout": "",
+      "stderr": "(pass) observation block publisher rebuilds retired shared bytes before publishing a fresh header [1.00ms]\n(pass) observation block readers refuse stale physical memos without recomputing or deleting evidence [1.00ms]\n(pass) observation block path custody classifies actual issued images and ordinary fixtures [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "observation-blocks-missing-first",
+      "phase": "observation-blocks",
+      "stdout": "",
+      "stderr": "(pass) observation block readers refuse stale physical memos without recomputing or deleting evidence [1.00ms]\n(pass) observation block path custody classifies actual issued images and ordinary fixtures [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "observation-blocks-missing-last",
+      "phase": "observation-blocks",
+      "stdout": "",
+      "stderr": "(pass) observation block publisher rebuilds retired shared bytes before publishing a fresh header [1.00ms]\n(pass) observation block readers refuse stale physical memos without recomputing or deleting evidence [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "observation-blocks-wrong-count",
+      "phase": "observation-blocks",
+      "stdout": "",
+      "stderr": "(pass) observation block publisher rebuilds retired shared bytes before publishing a fresh header [1.00ms]\n(pass) observation block readers refuse stale physical memos without recomputing or deleting evidence [1.00ms]\n(pass) observation block path custody classifies actual issued images and ordinary fixtures [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "observation-blocks-duplicate-last",
+      "phase": "observation-blocks",
+      "stdout": "",
+      "stderr": "(pass) observation block publisher rebuilds retired shared bytes before publishing a fresh header [1.00ms]\n(pass) observation block readers refuse stale physical memos without recomputing or deleting evidence [1.00ms]\n(pass) observation block path custody classifies actual issued images and ordinary fixtures [1.00ms]\n(pass) observation block path custody classifies actual issued images and ordinary fixtures [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-global-adapter-exact",
+      "phase": "optional-global-adapter",
+      "stdout": "",
+      "stderr": "(pass) deferred optional retirement retries inside the acquired original writer [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "optional-global-adapter-missing-first",
+      "phase": "optional-global-adapter",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-global-adapter-missing-last",
+      "phase": "optional-global-adapter",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-global-adapter-wrong-count",
+      "phase": "optional-global-adapter",
+      "stdout": "",
+      "stderr": "(pass) deferred optional retirement retries inside the acquired original writer [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-global-adapter-duplicate-last",
+      "phase": "optional-global-adapter",
+      "stdout": "",
+      "stderr": "(pass) deferred optional retirement retries inside the acquired original writer [1.00ms]\n(pass) deferred optional retirement retries inside the acquired original writer [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-retirement-adapter-exact",
+      "phase": "optional-retirement-adapter",
+      "stdout": "",
+      "stderr": "(pass) quiescent retirement delegates exact kernel custody and validates closed pressure DATA [1.00ms]\n(pass) optional preparation consumes its Native receiver exactly once [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "optional-retirement-adapter-missing-first",
+      "phase": "optional-retirement-adapter",
+      "stdout": "",
+      "stderr": "(pass) optional preparation consumes its Native receiver exactly once [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-retirement-adapter-missing-last",
+      "phase": "optional-retirement-adapter",
+      "stdout": "",
+      "stderr": "(pass) quiescent retirement delegates exact kernel custody and validates closed pressure DATA [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-retirement-adapter-wrong-count",
+      "phase": "optional-retirement-adapter",
+      "stdout": "",
+      "stderr": "(pass) quiescent retirement delegates exact kernel custody and validates closed pressure DATA [1.00ms]\n(pass) optional preparation consumes its Native receiver exactly once [1.00ms]\n3 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-retirement-adapter-duplicate-last",
+      "phase": "optional-retirement-adapter",
+      "stdout": "",
+      "stderr": "(pass) quiescent retirement delegates exact kernel custody and validates closed pressure DATA [1.00ms]\n(pass) optional preparation consumes its Native receiver exactly once [1.00ms]\n(pass) optional preparation consumes its Native receiver exactly once [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-scoped-adapter-exact",
+      "phase": "optional-scoped-adapter",
+      "stdout": "",
+      "stderr": "(pass) scoped optional recovery returns only consumed Native custody DATA [1.00ms]\n(pass) scoped retirement preserves exact group failures and joins Native close [1.00ms]\n(pass) optional bridge admits only factory custody and captures request before enrollment [1.00ms]\n(pass) scoped optional helper detaches its own asynchronous floor request [1.00ms]\n(pass) scoped optional maintenance refuses its own accepted reader [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "optional-scoped-adapter-missing-first",
+      "phase": "optional-scoped-adapter",
+      "stdout": "",
+      "stderr": "(pass) scoped retirement preserves exact group failures and joins Native close [1.00ms]\n(pass) optional bridge admits only factory custody and captures request before enrollment [1.00ms]\n(pass) scoped optional helper detaches its own asynchronous floor request [1.00ms]\n(pass) scoped optional maintenance refuses its own accepted reader [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-scoped-adapter-missing-last",
+      "phase": "optional-scoped-adapter",
+      "stdout": "",
+      "stderr": "(pass) scoped optional recovery returns only consumed Native custody DATA [1.00ms]\n(pass) scoped retirement preserves exact group failures and joins Native close [1.00ms]\n(pass) optional bridge admits only factory custody and captures request before enrollment [1.00ms]\n(pass) scoped optional helper detaches its own asynchronous floor request [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-scoped-adapter-wrong-count",
+      "phase": "optional-scoped-adapter",
+      "stdout": "",
+      "stderr": "(pass) scoped optional recovery returns only consumed Native custody DATA [1.00ms]\n(pass) scoped retirement preserves exact group failures and joins Native close [1.00ms]\n(pass) optional bridge admits only factory custody and captures request before enrollment [1.00ms]\n(pass) scoped optional helper detaches its own asynchronous floor request [1.00ms]\n(pass) scoped optional maintenance refuses its own accepted reader [1.00ms]\n6 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-scoped-adapter-duplicate-last",
+      "phase": "optional-scoped-adapter",
+      "stdout": "",
+      "stderr": "(pass) scoped optional recovery returns only consumed Native custody DATA [1.00ms]\n(pass) scoped retirement preserves exact group failures and joins Native close [1.00ms]\n(pass) optional bridge admits only factory custody and captures request before enrollment [1.00ms]\n(pass) scoped optional helper detaches its own asynchronous floor request [1.00ms]\n(pass) scoped optional maintenance refuses its own accepted reader [1.00ms]\n(pass) scoped optional maintenance refuses its own accepted reader [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-pressure-adapter-exact",
+      "phase": "optional-pressure-adapter",
+      "stdout": "",
+      "stderr": "(pass) optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation [1.00ms]\n(pass) opportunistic refusal remains in its wrapper while accepted queued writer returns pressure [1.00ms]\n(pass) queued reclamation requests retain the existing recovery floor range and closed shape [1.00ms]\n(pass) expected pressure refuses after fulfilled maintenance while real failures stay rejected [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "optional-pressure-adapter-missing-first",
+      "phase": "optional-pressure-adapter",
+      "stdout": "",
+      "stderr": "(pass) opportunistic refusal remains in its wrapper while accepted queued writer returns pressure [1.00ms]\n(pass) queued reclamation requests retain the existing recovery floor range and closed shape [1.00ms]\n(pass) expected pressure refuses after fulfilled maintenance while real failures stay rejected [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-pressure-adapter-missing-last",
+      "phase": "optional-pressure-adapter",
+      "stdout": "",
+      "stderr": "(pass) optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation [1.00ms]\n(pass) opportunistic refusal remains in its wrapper while accepted queued writer returns pressure [1.00ms]\n(pass) queued reclamation requests retain the existing recovery floor range and closed shape [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-pressure-adapter-wrong-count",
+      "phase": "optional-pressure-adapter",
+      "stdout": "",
+      "stderr": "(pass) optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation [1.00ms]\n(pass) opportunistic refusal remains in its wrapper while accepted queued writer returns pressure [1.00ms]\n(pass) queued reclamation requests retain the existing recovery floor range and closed shape [1.00ms]\n(pass) expected pressure refuses after fulfilled maintenance while real failures stay rejected [1.00ms]\n5 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-pressure-adapter-duplicate-last",
+      "phase": "optional-pressure-adapter",
+      "stdout": "",
+      "stderr": "(pass) optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation [1.00ms]\n(pass) opportunistic refusal remains in its wrapper while accepted queued writer returns pressure [1.00ms]\n(pass) queued reclamation requests retain the existing recovery floor range and closed shape [1.00ms]\n(pass) expected pressure refuses after fulfilled maintenance while real failures stay rejected [1.00ms]\n(pass) expected pressure refuses after fulfilled maintenance while real failures stay rejected [1.00ms]\n4 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-atomic-window-adapter-exact",
+      "phase": "optional-atomic-window-adapter",
+      "stdout": "",
+      "stderr": "(pass) atomic retirement completes its group within one owned exclusive callback [1.00ms]\n1 pass\n0 fail\n",
+      "accepted": true
+    },
+    {
+      "id": "optional-atomic-window-adapter-missing-first",
+      "phase": "optional-atomic-window-adapter",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-atomic-window-adapter-missing-last",
+      "phase": "optional-atomic-window-adapter",
+      "stdout": "",
+      "stderr": "1 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-atomic-window-adapter-wrong-count",
+      "phase": "optional-atomic-window-adapter",
+      "stdout": "",
+      "stderr": "(pass) atomic retirement completes its group within one owned exclusive callback [1.00ms]\n2 pass\n0 fail\n",
+      "accepted": false
+    },
+    {
+      "id": "optional-atomic-window-adapter-duplicate-last",
+      "phase": "optional-atomic-window-adapter",
+      "stdout": "",
+      "stderr": "(pass) atomic retirement completes its group within one owned exclusive callback [1.00ms]\n(pass) atomic retirement completes its group within one owned exclusive callback [1.00ms]\n1 pass\n0 fail\n",
       "accepted": false
     }
   ],

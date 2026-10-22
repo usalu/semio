@@ -31,6 +31,15 @@ pub fn create_grip_at<Op: From<crate::create_grip::CreateGrip>>(grip: Block5dGri
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateGrip where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_grip::DeleteGrip> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "grip", kind: "create-grip", record: "CreatedGrip" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create grip \"{}\"", self.grip.id), &format!("Griff \"{}\" erstellen", self.grip.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.grip.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for CreateGrip where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_grip::DeleteGrip> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::create_grip::diff::diff(self, base)
     }
@@ -40,12 +49,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateGrip where Op: pr
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create grip \"{}\"", self.grip.id), &format!("Griff \"{}\" erstellen", self.grip.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.grip.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

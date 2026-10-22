@@ -479,8 +479,17 @@ pub struct TiffDiff {
     pub ifds: Option<TiffIfdsDiff>,
 }
 
-impl MutationDiff<TiffSnapshot> for TiffDiff {
-    fn apply(&self, base: &TiffSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TiffSnapshot> {
+impl MutationDiff<TiffSnapshot> for TiffDiff {}
+
+impl protocol::ColdMutationDiff<TiffSnapshot> for TiffDiff {
+    /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract).
+    /// `ifds` uses an index-transported merge with nested tag-id-keyed entries and owned sample-block replacement.
+    fn absorb(&mut self, other: Self) {
+        absorb_ifds_opt(&mut self.ifds, other.ifds);
+    }
+
+    fn apply(&self, unpublished: &mut TiffSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(ifds) = &self.ifds {
             validate_tiff_ifds(&base.ifds, ifds)?;
         }
@@ -489,13 +498,8 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
             next.ifds = apply_ifds(&next.ifds, d);
         }
         next.validate().map_err(|message| MutationApplyError::new("mutation.apply.invalid-samples", message).at(["ifds"]))?;
-        Ok(next)
-    }
-
-    /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract).
-    /// `ifds` uses an index-transported merge with nested tag-id-keyed entries and owned sample-block replacement.
-    fn absorb(&mut self, other: Self) {
-        absorb_ifds_opt(&mut self.ifds, other.ifds);
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -556,14 +560,16 @@ fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyRes
 }
 
 impl DiffAlgebra<TiffSnapshot> for TiffDiff {
+    fn is_empty(&self) -> bool {
+        self.ifds.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🔁️ Concrete diff-level undo: removed directories come back at their base index, added directories go away again, and every
     /// modified directory restores the tags, block list and sample words `base` carries.
     fn inverse(&self, base: &TiffSnapshot) -> Self {
         Self { ifds: self.ifds.as_ref().map(|diff| inverse_ifds(diff, &base.ifds)).filter(|diff| !diff.removed.is_empty() || !diff.modified.is_empty() || !diff.added.is_empty()) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.ifds.is_none()
     }
 }
 

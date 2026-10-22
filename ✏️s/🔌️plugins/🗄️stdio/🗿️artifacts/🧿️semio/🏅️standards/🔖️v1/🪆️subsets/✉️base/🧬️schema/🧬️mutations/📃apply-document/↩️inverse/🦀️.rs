@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyDocument`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_document::ApplyDocument>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Document(b) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyDocument { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Document(b) => <SemioDocumentMutation as ColdMutation<SemioDocumentSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyDocument { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

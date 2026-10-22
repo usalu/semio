@@ -1,0 +1,230 @@
+{
+  "removed": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌛️queries/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌨️commands/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚙️data-models/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🌪️entity-emoji-registry/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🌳️tree-providers/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎞️constants/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎩️globals/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎵️path-navigation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎼️utilities/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/👁️watch/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/👷️worker/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/👷️worker/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/📡️data/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/📥️source/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏬️uri-resolution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscodeignore",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/LICENSE.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/tsconfig.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🏗️builder/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🔣️compose_codeicon.svg",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧩️repo.vsix",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️testing/📦️package/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️testing/🧩️host-build/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔎️code-lens/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/🏃️execution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📋️plan/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📖️parse/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📥️source/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📽️projection/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🗺️file-analysis/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🤖️generated/🔗️graphql-types/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🌈️cli-tree-helper-suites/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🌊️view-and-provider-suites/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎛️dashboard-only/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/👷️child/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/👷️child/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏗️custody/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🏷️entity-and-codelens-suites/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📮️uri-and-event-suites/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🔎️repo-diagnostics-suites/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🔗️graphql-types/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧫️fixtures/📦️package/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧫️fixtures/🧩️host-build/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧰️extension-test-kit/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧫️fixtures/🎛️dashboard-only/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧬️schema/🎛️dashboard-only/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧾️kit-validation/🟦️.ts"
+  ],
+  "moved": [
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/🏃️execution/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🏃️execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📋️plan/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📋️plan/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📖️parse/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📖️parse/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📥️source/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📽️projection/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📽️projection/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌛️queries/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/⌛️queries/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🤖️generated/🔗️graphql-types/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🤖️generated/🔗️graphql-types/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🔗️graphql-types/🟦️.ts",
+      "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🟦️.ts"
+    }
+  ],
+  "modified": [
+    "package.json",
+    "📋️build-owners.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/.profiled-script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🧫️cases.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🦑️repo-source-ownership/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+    "🧰️framework/🛍️products/🦑️repo/README.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/README.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📋️project.json"
+  ],
+  "created": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️targets/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️targets/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️targets/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️targets/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🔒️producer/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🔒️producer/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🔒️producer/🧫️fixtures/🔣️.json"
+  ],
+  "status": "source-frozen-final-review",
+  "requiredCommands": [
+    "repo dependencies lock --all",
+    "repo dependencies sync --all",
+    "repo run @semio-tech/repo-graphql-rs:test-types-source",
+    "repo run workspace:verify -- build-owners",
+    "existing build Source0 and dashboard authority owners"
+  ],
+  "selfOutput": {
+    "plainOperationCount": 9,
+    "typeBindingRemoved": true,
+    "producerContract": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/🔣️.json",
+    "generatedExclusions": [],
+    "independentOracle": "TypeScript preProcessFile includes type-only imports",
+    "source0Mount": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+    "consumerOutputInputs": [
+      "check-types",
+      "test-types-source"
+    ],
+    "producerOutputExcluded": [
+      "generate-types",
+      "preview-types"
+    ]
+  },
+  "unusedToolDeclarations": {
+    "state": "source-frozen-genuine-lock-required",
+    "removedDeclarations": [
+      {
+        "section": "devDependencies",
+        "name": "@types/vscode",
+        "version": "^1.104.0"
+      },
+      {
+        "section": "devDependencies",
+        "name": "@vscode/test-cli",
+        "version": "^0.0.10"
+      },
+      {
+        "section": "devDependencies",
+        "name": "@vscode/vsce",
+        "version": "^3.5.0"
+      }
+    ],
+    "census": {
+      "repoSources": 5895,
+      "explicitWorkspaceManifests": 133,
+      "rosterSha256": "1cda5f056a92f32b26283a90b55041a7e6db287e118036c58e61a4f188d4e671",
+      "matchingPackageConsumers": 0
+    },
+    "sourceHashes": [
+      {
+        "path": "package.json",
+        "bytes": 21867,
+        "sha256": "665899cc82f8245dd5c87c1d67bd0d63e913bf7c208f480a49b0328473edf60c",
+        "absoluteUtf16": 40
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧬️schema/🔣️.json",
+        "bytes": 1110,
+        "sha256": "e5a0918aa401ac14466bf9d7c8c6c24c30667a7029778583e94bfabbe21e7fb3",
+        "absoluteUtf16": 133
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧪️tests/🧫️fixtures/🔣️.json",
+        "bytes": 1154,
+        "sha256": "efebb8ddda01b78589c5f107a12d4569134f068fc1f57660114bb911f8ef5101",
+        "absoluteUtf16": 144
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧪️tests/🟦️.ts",
+        "bytes": 2772,
+        "sha256": "d7a2b812d046ee9835efce03c37dff6c093847ba035b4abe8714606baca05d62",
+        "absoluteUtf16": 130
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+        "bytes": 6812,
+        "sha256": "d12d7ffcd3e5a096cd0356cd576049f15107aab7085a3324fb1c7e04562f4837",
+        "absoluteUtf16": 107
+      },
+      {
+        "path": "📋️project.json",
+        "bytes": 166576,
+        "sha256": "9c40d8f31d2c2d9fa74cc765ae2c0917dfcac7d7dd7cf61c216508e1d694abba",
+        "absoluteUtf16": 43
+      }
+    ],
+    "requiredCommands": [
+      "repo dependencies lock --all",
+      "repo dependencies sync --all"
+    ],
+    "runtime": "unrun"
+  }
+}

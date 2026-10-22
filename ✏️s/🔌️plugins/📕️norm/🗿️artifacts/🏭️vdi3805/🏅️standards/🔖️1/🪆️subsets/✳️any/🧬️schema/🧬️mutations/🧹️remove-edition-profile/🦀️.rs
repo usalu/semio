@@ -17,7 +17,16 @@ pub struct RemoveEditionProfile {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveEditionProfile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edition-profile", kind: "remove-edition-profile", record: "RemovedEditionProfile" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove edition profile override for sheet {}", self.sheet), &format!("Ausgabeprofil-Überschreibung für Blatt {} entfernen", self.sheet))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.sheet.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for RemoveEditionProfile where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::remove_edition_profile::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,12 +35,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveEditionProfile wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove edition profile override for sheet {}", self.sheet), &format!("Ausgabeprofil-Überschreibung für Blatt {} entfernen", self.sheet))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.sheet.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📷️replace-shot-camera/📷️rewrites/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("replace-shot-camera diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("replace-shot-camera diff applies")
 }
 
 /// ▶️ `replace-shot-camera` is addressed by SHOT id but writes through to the `savedCameras` entry
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
     let skipped = unbound.diff(&before());
     assert_eq!(skipped.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
     assert_eq!(skipped.messages()[0].code.0, "mutation.no-op", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the dereference guard's frozen code");
-    let unchanged = protocol::apply_diff(&skipped.into_parts().0, &before()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff_cold(&skipped.into_parts().0, &before()).expect("a no-op outcome still applies");
     assert_eq!(unchanged.saved_cameras, before().saved_cameras, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot must not mint a saved camera");
 }
 
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed diff did not carry before to after");
 }
 

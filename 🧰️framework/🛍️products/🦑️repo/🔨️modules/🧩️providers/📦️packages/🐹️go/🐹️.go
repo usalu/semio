@@ -3,7 +3,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🗜️Package providers holds the composable provider integrations of the semio repository domain:
-// issue/milestone management, version control, sandbox and the editor providers. Every external
+// issue/milestone management, version control, sandbox and the agent-client providers. Every external
 // process goes through ProcessRunner, so a provider is exercised without gh or git on the machine.
 package providers
 
@@ -11,7 +11,9 @@ import (
 	bufio "bufio"
 	json "encoding/json"
 	fmt "fmt"
+	workspace "github.com/usalu/semio/repo/workspace"
 	strings "strings"
+	sync "sync"
 
 	model "github.com/usalu/semio/repo/model"
 )
@@ -166,8 +168,8 @@ type SandboxProvider interface {
 	Kind() string
 }
 
-// 📝️EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
-type EditorProvider interface {
+// 📝️AgentClientProvider defines the interface for agent-client operations (VS Code/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
+type AgentClientProvider interface {
 	Kind() string
 	ResolveNativeEvent(nativeEvent string, toolKind model.ToolKind) (model.HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result model.HookResult) string
@@ -183,23 +185,23 @@ func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
 // ⚙️Configure holds the data fields for a Configure record.
 func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
 
-// 🔌️AllEditorProviders returns all registered editor providers.
-func AllEditorProviders() []EditorProvider {
-	return []EditorProvider{
-		&CopilotEditorProvider{},
-		&CursorEditorProvider{},
-		&WindsurfEditorProvider{},
-		&ClaudeCodeEditorProvider{},
-		&DroidEditorProvider{},
-		&CodexEditorProvider{},
-		&AntigravityEditorProvider{},
-		&KiroEditorProvider{},
+// 🔌️AllAgentClientProviders returns all registered agent-client providers.
+func AllAgentClientProviders() []AgentClientProvider {
+	return []AgentClientProvider{
+		&CopilotAgentClientProvider{},
+		&CursorAgentClientProvider{},
+		&WindsurfAgentClientProvider{},
+		&ClaudeCodeAgentClientProvider{},
+		&DroidAgentClientProvider{},
+		&CodexAgentClientProvider{},
+		&AntigravityAgentClientProvider{},
+		&KiroAgentClientProvider{},
 	}
 }
 
-// 💻️GetEditorProvider returns the editor provider for the given client slug.
-func GetEditorProvider(client string) EditorProvider {
-	for _, p := range AllEditorProviders() {
+// 💻️GetAgentClientProvider returns the agent-client provider for the given client slug.
+func GetAgentClientProvider(client string) AgentClientProvider {
+	for _, p := range AllAgentClientProviders() {
 		if p.Kind() == client {
 			return p
 		}
@@ -208,8 +210,8 @@ func GetEditorProvider(client string) EditorProvider {
 }
 
 // 🐙️DefaultManagementProvider returns the default management provider (GitHub).
-func DefaultManagementProvider() ManagementProvider {
-	return NewGitHubManagementProvider(NewSystemProcessRunner())
+func DefaultManagementProvider(rootDir string) ManagementProvider {
+	return NewGitHubManagementProvider(rootDir, NewSystemProcessRunner())
 }
 
 // 📌️DefaultVersionControlProvider returns the default version control provider (Git).
@@ -222,11 +224,20 @@ func DefaultSandboxProvider() SandboxProvider {
 	return &DevcontainerSandboxProvider{}
 }
 
-// 💿️mgmtProvider holds the data fields for a mgmtProvider record.
-var MgmtProvider ManagementProvider = DefaultManagementProvider()
+// 💿️MgmtProvider holds the management provider once a command asked for it; the repository root is only read then, never at package initialisation.
+var MgmtProvider ManagementProvider
 
-// 🔷️GetManagementProvider holds the data fields for a GetManagementProvider record.
-func GetManagementProvider() ManagementProvider { return MgmtProvider }
+var mgmtProviderMutex sync.Mutex
+
+// 🔷️GetManagementProvider binds the default management provider to the bound repository root on first use.
+func GetManagementProvider() ManagementProvider {
+	mgmtProviderMutex.Lock()
+	defer mgmtProviderMutex.Unlock()
+	if MgmtProvider == nil {
+		MgmtProvider = DefaultManagementProvider(workspace.GetRootDir())
+	}
+	return MgmtProvider
+}
 
 type McpClientKind string
 

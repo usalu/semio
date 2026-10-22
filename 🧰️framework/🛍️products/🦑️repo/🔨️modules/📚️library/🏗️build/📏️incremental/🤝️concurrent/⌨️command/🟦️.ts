@@ -1,3 +1,4 @@
+import {buildBackendAlternationV1,buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
 import {rm} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -8,7 +9,7 @@ import {incrementalCommandPortsV1,incrementalDefaultRootV1,incrementalLanguageV1
 import {concurrentEvaluateV1,concurrentReportV1,concurrentSelectV1,concurrentWorkloadIssuesV1,renderConcurrentReportV1,renderConcurrentWorkloadsV1,type ConcurrentRunV1,type ConcurrentWorkloadSetV1,type ConcurrentWorkloadV1} from "../🟦️.ts";
 import {concurrentCliPortsV1,concurrentPlanV1,concurrentRunWorkloadV1,type ConcurrentPlanV1} from "../🏃️runner/🟦️.ts";
 
-const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=["nx","bazel"],operations=["list","plan","run"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=buildBackendIdsV1(),operations=["list","plan","run"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
 
 /** 🗨️ The closed arguments of `repo concurrency`. */
 export type ConcurrencyArgumentsV1=Readonly<{operation:typeof operations[number];workloads:readonly string[]|"all";sessions:number|undefined;criteria:string|undefined;tools:readonly IncrementalToolV1[];root:string|undefined;file:string|undefined;json:boolean;language:"en"|"de"|undefined}>;
@@ -32,7 +33,7 @@ export function concurrencyArgumentsV1(args:readonly string[]):ConcurrencyArgume
   else throw Error(both(`Unknown concurrency option: ${argument}`,`Unbekannte Option für concurrency: ${argument}`));
  }
  const list=(name:string)=>values[name]?.split(",").filter(Boolean),chosen=list("--implementations")??[...tools],language=values["--lang"],picked=list("--workloads");
- for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
+ for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (${buildBackendAlternationV1()})`,`Unbekannte Implementierung: ${tool} (${buildBackendAlternationV1()})`));
  if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
  const count=values["--sessions"]===undefined?undefined:Number(values["--sessions"]);
  if(count!==undefined&&(!/^[1-9][0-9]*$/u.test(values["--sessions"]!)||count>policy.maximumSessions))throw Error(both(`Sessions must be a whole number from 1 to ${policy.maximumSessions}`,`Sitzungen müssen eine ganze Zahl von 1 bis ${policy.maximumSessions} sein`));
@@ -58,7 +59,7 @@ export function renderConcurrentPlanV1(set:ConcurrentWorkloadSetV1,rows:readonly
 export async function runConcurrencyCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
  const parsed=concurrencyArgumentsV1(args.slice(args[0]==="concurrency"?1:0)),set=workloads as unknown as ConcurrentWorkloadSetV1,issues=concurrentWorkloadIssuesV1(set);
  if(issues.length)throw Error(`Closed concurrent workloads required: ${issues.join("; ")}`);
- const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir());
+ const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir(),ports.home());
  if(parsed.operation==="list"){ports.write(parsed.json?JSON.stringify(set.workloads.map(row=>({id:row.id,criteria:row.criteria,sessions:row.sessions.map(session=>({id:session.id,group:session.group}))})),null,2):renderConcurrentWorkloadsV1(set,lang));return;}
  if(!await ports.exists(join(root,script)))throw Error(both(`Prepare the disposable root first: repo incremental prepare --root=${root}`,`Bereite zuerst das Wegwerf-Verzeichnis vor: repo incremental prepare --root=${root}`));
  const selected=concurrentSelectV1(set,parsed.workloads,parsed.sessions),override=parsed.criteria;

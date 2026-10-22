@@ -5,7 +5,7 @@ import type { EntityCatalogSource } from "@semio-tech/schema-ts/entity-kinds/sou
 /** 🐹️ The Repo CLI Go package that owns the projection, relative to the repository root. */
 export const REPO_CLI_GO = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "⌨️cli");
 export const GENERATOR_ID = "repo-entity-kinds";
-export const REFRESH_COMMAND = "bun repo run @semio-tech/repo-client:generate-entity-kinds";
+export const REFRESH_COMMAND = "repo run @semio-tech/repo-client:generate-entity-kinds";
 
 /** 📋️ Plans only the Go projection owned by this Repo CLI. */
 export function repoEntityKindTarget(repoRoot: string, source: EntityCatalogSource): { readonly path: string; readonly content: string } {

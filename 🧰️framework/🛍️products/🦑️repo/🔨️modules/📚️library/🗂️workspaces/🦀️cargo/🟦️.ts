@@ -12,8 +12,13 @@ import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurr
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import {workspaceTestingCollectionRoot as collectionRoot} from "../🟨️.cjs";
+import workspaceModule from "../🟨️.cjs";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+const{workspaceTestingCollectionRoot:collectionRoot}=workspaceModule;
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { GlobV1 } from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export type CargoWorkspaceContributionV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; exclude: readonly string[] }>;
 export type CargoWorkspaceScope = Readonly<{ directory: string; manifest: string; lock: string; contribution: CargoWorkspaceContributionV1; memberManifests: readonly string[] }>;
@@ -41,7 +46,7 @@ function directory(root:string,path:string):void {
 function recipeCurrent(step:Extract<CargoPhysicalOperationV1,{operation:"recipe"}>):void {directory(step.root,step.cwd);if(createHash("sha256").update(readFileSync(physical(step.root,step.path))).digest("hex")!==step.sourceSha256)throw Error("Cargo recipe source changed before acquisition");}
 const operate=(step:CargoPhysicalOperationV1):any=>{
  if(step.operation==="program"||step.operation==="current")throw Error("Controlled asynchronous Cargo custody required");
- if(step.operation==="recipe"){recipeCurrent(step);const result=Bun.spawnSync([process.execPath,step.path,...step.args],{cwd:step.cwd,env:step.environment,stdout:"pipe",stderr:"inherit",timeout:30_000});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw Error(`Cargo owner preparation failed: ${step.path} (${result.exitCode})`);return;}
+ if(step.operation==="recipe"){recipeCurrent(step);const result=runToolSyncV1(runtimeCommandNameV1(),[step.path,...step.args],{cwd:step.cwd,env:step.environment,stdio:["ignore","pipe","inherit"],timeout:30_000});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.status!==0)throw Error(`Cargo owner preparation failed: ${step.path} (${result.status})`);return;}
  if(step.operation==="list"){directory(step.root,step.path);return readdirSync(step.path,{withFileTypes:true});}
  directory(step.root,step.path===resolve(step.root)?step.root:dirname(step.path));
  if(step.operation==="state")return lstatSync(step.path);
@@ -66,7 +71,7 @@ function* physicalPlan(root:string,path:string):CargoPhysicalPlanV1<string> {
 }
 const physical=(root:string,path:string):string=>drain(physicalPlan(root,path));
 function* readPlan(root:string,path:string):CargoPhysicalPlanV1<Record<string,any>> {
- const full=yield* physicalPlan(root,path);return object(Bun.TOML.parse(yield {operation:"text",path:full,root}));
+ const full=yield* physicalPlan(root,path);return object(runtimeParseTomlV1(yield {operation:"text",path:full,root}));
 }
 const read=(root:string,path:string):Record<string,any>=>drain(readPlan(root,path));
 const scope = (directory: string, workspace: Record<string, any>): CargoWorkspaceScope => {
@@ -86,7 +91,7 @@ function* discoverPlan(root:string):CargoPhysicalPlanV1<readonly CargoWorkspaceS
   const rootDocument = yield* readPlan(root, "Cargo.toml");
   const patterns = rootDocument.workspace?.metadata?.semio?.repository?.["owner-manifests"] ?? [];
   if (!Array.isArray(patterns) || patterns.some(p => !pathPattern(p) || !p.endsWith("Cargo.toml")) || new Set(patterns).size !== patterns.length) throw new Error("Invalid repository workspace owner patterns");
-  const files = ["Cargo.toml"], matchers=patterns.map(pattern=>new Bun.Glob(pattern)), opaque=new Set(["node_modules","target","dist","build","🤖️generated","🗑️generated","coverage","temp","compose"]);
+  const files = ["Cargo.toml"], matchers=patterns.map(pattern=>new GlobV1(pattern)), opaque=new Set(["node_modules","target","dist","build","🤖️generated","🗑️generated","coverage","temp","compose"]);
   const prefixes=patterns.map(pattern=>pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u,""));
   const walk=function*(directory:string):CargoPhysicalPlanV1<void>{
     if(collectionRoot(root,join(root,directory)))return;
@@ -119,11 +124,11 @@ function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1
   const documents = new Map<string, Record<string, any>>(), scopes = new Map<string, CargoWorkspaceScope>();
   const readDocument=function*(path:string):CargoPhysicalPlanV1<Record<string,any>>{const current=documents.get(path);if(current)return current;const document=yield* readPlan(root,path);documents.set(path,document);return document;};
   const cwd = resolve(root, owner.directory), paths = new Set<string>();
-  const patterns = owner.memberManifests.map(pattern => new Bun.Glob(pattern));
-  const leaves = owner.memberManifests.map(pattern => new Bun.Glob(pattern.slice(0, -"/Cargo.toml".length)));
+  const patterns = owner.memberManifests.map(pattern => new GlobV1(pattern));
+  const leaves = owner.memberManifests.map(pattern => new GlobV1(pattern.slice(0, -"/Cargo.toml".length)));
   const prefixes = owner.memberManifests.map(pattern => pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u, ""));
-  const excluded = owner.contribution.exclude.map(pattern => new Bun.Glob(pattern));
-  const excludedRoots = owner.contribution.exclude.map(pattern => pattern.endsWith("/**") ? new Bun.Glob(pattern.slice(0, -3)) : undefined);
+  const excluded = owner.contribution.exclude.map(pattern => new GlobV1(pattern));
+  const excludedRoots = owner.contribution.exclude.map(pattern => pattern.endsWith("/**") ? new GlobV1(pattern.slice(0, -3)) : undefined);
   const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
   const walk=function*(directory:string):CargoPhysicalPlanV1<void>{
     if(collectionRoot(root,join(cwd,directory)))return;
@@ -228,9 +233,9 @@ export function cargoRepositoryPackage(root: string, name: string): CargoWorkspa
 
 /** 📐️ Checks declared native member patterns independently of physical package discovery. */
 export function cargoWorkspaceDeclaresMemberV1(source: string, directory: string): boolean {
-  const workspace = object(object(Bun.TOML.parse(source)).workspace);
+  const workspace = object(object(runtimeParseTomlV1(source)).workspace);
   const contribution = parseCargoWorkspaceContribution({ schemaVersion: 1, members: workspace.members, exclude: workspace.exclude ?? [] });
-  return contribution.members.some(pattern => new Bun.Glob(pattern).match(directory)) && !contribution.exclude.some(pattern => new Bun.Glob(pattern).match(directory));
+  return contribution.members.some(pattern => new GlobV1(pattern).match(directory)) && !contribution.exclude.some(pattern => new GlobV1(pattern).match(directory));
 }
 
 /** 🎛️ Binds package selectors to one current physical workspace and preserves explicit Cargo manifest control. */
@@ -264,7 +269,7 @@ export function publishCargoWorkspaceMemberships(root: string, mode: "check" | "
 /** 📣️ Publishes selected member authority while retaining unrelated authored native exclusions. */
 export function publishSelectedCargoWorkspaceMembershipV1(root:string,owner:CargoWorkspaceScope,mode:"check"|"write",owners:readonly CargoWorkspaceScope[]):boolean {return publishMembership(root,owner,mode,owners,true);}
 function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "check" | "write", owners: readonly CargoWorkspaceScope[], retainExclusions=false): boolean {
-  const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(Bun.TOML.parse(source));
+  const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(runtimeParseTomlV1(source));
   const members=cargoWorkspaceMembers(root,owner).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))) || ".");
   const children=owners.filter(row=>row.directory!==owner.directory && (owner.directory==="." || row.directory.startsWith(owner.directory+"/"))).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))));
   const known=new Map(owners.map(scope=>[scope.directory,scope]));
@@ -406,13 +411,13 @@ const selectionLimits=Object.freeze({...selectionSchema.definitions.Protocol.con
 /** 🧭️ Reuses actual workspace selection with bounded original Source reads and retained callback observations. */
 export async function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlV1(control);root=requireMaterializedPathV1(root);requireMaterializedPathV1(resolve(root,manifest));if(typeof body!=="function")throw Error("Actual bounded workspace selection body required");
- const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
- const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:[String(value.dev),String(value.ino),String(value.mode),value.isDirectory()?"directory":value.isFile()?"file":value.isSymbolicLink()?"symlink":"other",...(value.isDirectory()?[]:[String(value.nlink),String(value.size),String(value.mtimeMs),String(value.ctimeMs),String(value.birthtimeMs)])]);},advance=async(phase:ResourceLeaseControl)=>{await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});await phase.yieldContinuation();guard(phase);};
+ const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,published=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
+ const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:[String(value.dev),String(value.ino),String(value.mode),value.isDirectory()?"directory":value.isFile()?"file":value.isSymbolicLink()?"symlink":"other",...(value.isDirectory()?[]:[String(value.nlink),String(value.size),String(value.mtimeMs),String(value.ctimeMs),String(value.birthtimeMs)])]);},advance=async(phase:ResourceLeaseControl)=>{const now=Date.now();if(now-published>=250){published=now;await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});}await phase.yieldContinuation();guard(phase);};
  const read=async(path:string,phase:ResourceLeaseControl)=>{guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase);guard(phase);if(!value)throw Error("Original Cargo workspace Source disappeared");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw Error("Original Cargo workspace Source changed: "+path);if(!previous){texts.set(path,result);bytes+=result.length;}return result;};
  const observe=(step:CargoPhysicalOperationV1)=>{if(step.operation!=="state"&&step.operation!=="presence")throw Error("Closed Cargo workspace selection observation required");requireMaterializedPathV1(step.path);const value=operate(step),key=step.operation+":"+step.path,identity=stamp(value),previous=observations.get(key);if(previous&&previous.value!==identity)throw Error("Original Cargo workspace topology changed: "+step.path);if(!previous){if(observations.size>=selectionLimits.maximumObservations)throw Error("Cargo workspace Source observation capacity exceeded");observations.set(key,{operation:step.operation,path:step.path,value:identity});}return value;};
  const recheck=async(phase:ResourceLeaseControl)=>{guard(phase);for(const row of observations.values()){guard(phase);observe({...row,root});await advance(phase);}for(const path of texts.keys()){await read(path,phase);await advance(phase);}};
  try{const result=await withRequestedIssuedResourceControlV1(control,0,async phase=>{
-  const plan=selectPlan(root,manifest,function*(path){const full=yield* physicalPlan(root,path);return object(Bun.TOML.parse(yield{operation:"text",path:full,root}));},new Map());let step=plan.next();let selected:CargoWorkspaceScope;
+  const plan=selectPlan(root,manifest,function*(path){const full=yield* physicalPlan(root,path);return object(runtimeParseTomlV1(yield{operation:"text",path:full,root}));},new Map());let step=plan.next();let selected:CargoWorkspaceScope;
   try{while(!step.done){guard(phase);const operation=step.value,value=operation.operation==="text"?new TextDecoder("utf-8",{fatal:true}).decode(await read(operation.path,phase)):observe(operation);await advance(phase);step=plan.next(value);}selected=step.value;}finally{plan.return(undefined as never);}
   const scope=Object.freeze({...selected,contribution:Object.freeze({...selected.contribution,members:Object.freeze([...selected.contribution.members]),exclude:Object.freeze([...selected.contribution.exclude])}),memberManifests:Object.freeze([...selected.memberManifests])}),inputs=Object.freeze([...texts].map(([path,value])=>Object.freeze({path:slash(relative(root,path)),digest:createHash("sha256").update(value).digest("hex"),bytes:value.length}))),replay=()=>{if(!live||!accepting)return Promise.reject(Error("Original Cargo workspace selection released"));if(pending>=selectionLimits.maximumPending){refusal??=withIssuedResourceOperationV1(phase,async()=>{throw Error("Cargo workspace pending Source recheck capacity exceeded");});return refusal;}pending++;let task:Promise<void>;try{task=withIssuedResourceOperationV1(phase,()=>recheck(phase));}catch(error){pending--;return Promise.reject(error);}void task.then(()=>{pending--;},()=>{pending--;});return task;};
   try{return await body(Object.freeze({scope,control:phase,inputs,recheck:replay}));}finally{accepting=false;}

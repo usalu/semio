@@ -1,10 +1,12 @@
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {spawnSync} from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {mkdtempSync,writeFileSync,existsSync,readFileSync,rmSync} from "node:fs";
 import {join,dirname} from "node:path";
 import {tmpdir} from "node:os";
 import {defaultBudgetMs,budgetTimeoutHint} from "../🟦️.ts";
 import type {RunCmdOpts,RunProbeResult} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 type CapturedSpawnOptions = Readonly<{
   cwd?: string;
@@ -48,7 +50,7 @@ export function spawnCapturedSync(cmd: string, args: readonly string[], opts: Ca
     JSON.stringify({ cmd, args, cwd: opts.cwd, env, input: opts.input === undefined ? undefined : Buffer.from(opts.input).toString("base64"), timeout: opts.timeout, killSignal: opts.killSignal, stdoutPath, stderrPath, metaPath }),
   );
   try {
-    const launcher = spawnSync(process.execPath, ["-e", CAPTURE_WRAPPER_SOURCE], {
+    const launcher = runToolSyncV1(runtimeCommandNameV1(), ["-e", CAPTURE_WRAPPER_SOURCE], {
       env: { ...process.env, SEMIO_PROCESS_CAPTURE_SPEC: specPath },
       timeout: opts.timeout ? opts.timeout + 5_000 : undefined,
       killSignal: opts.killSignal,

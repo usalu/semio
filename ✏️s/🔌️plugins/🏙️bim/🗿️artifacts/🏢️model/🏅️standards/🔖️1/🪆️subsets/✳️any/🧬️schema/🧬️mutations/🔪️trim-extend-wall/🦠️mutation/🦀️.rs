@@ -18,16 +18,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<TrimExtendWall> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "wall", kind: "trim-extend-wall", record: "TrimExtendWall" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Trim or extend the {:?} of wall \"{}\" to wall \"{}\"", self.end, self.id, self.target), &format!("{:?} der Wand \"{}\" auf Wand \"{}\" kürzen oder verlängern", self.end, self.id, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for TrimExtendWall
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<TrimExtendWall> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::inverse::inverse(self, base))
     }
 }

@@ -127,7 +127,7 @@ pub struct WorldNativeMeshAdmission {
 pub enum WorldNativeMeshFailure { Binding, Registry(WorldDynamicFault), Mesh(ui_scene::math::Mesh3dFault), Gpu(&'static str), Close(semio_framework_value::ValueError) }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct WorldDynamicInsertPlan {
+pub struct WorldDynamicInsertPlan {
     pub slot: u16,
     pub epoch: u64,
     pub occupied: bool,
@@ -135,7 +135,7 @@ struct WorldDynamicInsertPlan {
 
 impl<T, const N: usize> Default for WorldDynamicRegistry<T, N> {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; N], len: 0, closing: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; N], len: 0, closing: false }
     }
 }
 
@@ -286,7 +286,7 @@ pub struct WorldDrawRegistry {
 
 impl Default for WorldDrawRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; WORLD_DYNAMIC_DRAW_CAPACITY], len: 0, closing: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; WORLD_DYNAMIC_DRAW_CAPACITY], len: 0, closing: false }
     }
 }
 
@@ -407,7 +407,7 @@ pub enum WorldDrawRebuildStep {
     Fault,
 }
 
-struct WorldDrawDraft {
+pub struct WorldDrawDraft {
     pub mesh_key: String,
     pub mesh_version: u64,
     pub slots: Box<[MaybeUninit<Instance3d>]>,
@@ -479,7 +479,7 @@ impl WorldDrawRebuildCursor {
         }
         Ok(Self {
             descriptor,
-            drafts: semio_framework_async::boxed_fixed_slots(|| None),
+            drafts: semio_framework_async_slots::boxed_fixed_slots(|| None),
             admitted_draws: 0,
             admitted_instances: 0,
             admitted_bytes: 0,
@@ -713,7 +713,7 @@ pub struct WorldOpaqueQuarantine<const N: usize> {
 
 impl<const N: usize> Default for WorldOpaqueQuarantine<N> {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0, saturated: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), len: 0, saturated: 0 }
     }
 }
 

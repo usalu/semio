@@ -40,7 +40,7 @@ use semio_s_artifact_norm_en1999_mut_members::change_bolt_count;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1999Snapshot, diff = En1999Diff, schema = "norm.en1999")]
+#[mutations(snapshot = En1999Snapshot, diff = En1999Diff, schema = "norm.en1999", reference = En1999Snapshot, reference_diff = En1999Diff)]
 pub enum En1999Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeMaterials(change_materials::ChangeMaterials),
@@ -104,15 +104,15 @@ pub mod mutation_bridge {
 
     /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
     pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
-        let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(mutation, base);
+        let raised = <En1999Mutation as protocol::ColdMutation<En1999Snapshot>>::diff(mutation, base);
         let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
         Ok((applied, messages))
     }
 
     /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
     pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
-        <En1999Mutation as protocol::Mutation<En1999Snapshot>>::inverse(mutation, base)
+        <En1999Mutation as protocol::ColdMutation<En1999Snapshot>>::inverse(mutation, base)
     }
 }
 pub use crate::mutation_bridge::*;

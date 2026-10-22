@@ -64,7 +64,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
     assert_eq!(appearance.primitives().len(),2);assert_eq!(appearance.texture_count(),2);
     let reference=image::load_from_memory(&mesh.textures["pixel"].bytes).unwrap().to_rgba8();
     let pool=world_scene_raster_pool();
-    for(key,raster)in &appearance.textures{assert_eq!((raster.identity.descriptor().width,raster.identity.descriptor().height),(reference.width(),reference.height()));appearance.texture_upload(key,&pool).unwrap().with_rows(0,8,|pixels,rows|{assert_eq!(rows,reference.height() as usize);assert_eq!(pixels,reference.as_raw());}).unwrap();}
+    for(key,raster)in &appearance.textures{assert_eq!((raster.identity.descriptor().width,raster.identity.descriptor().height),(reference.width(),reference.height()));appearance.texture_upload(key,&pool).unwrap().with_rows(0,8,|pixels,rows|{assert_eq!(rows,reference.height());assert_eq!(pixels,reference.as_raw());}).unwrap();}
     assert!(cursor.texture_job.is_none()&&cursor.texture_retirement.is_none());
     let material=&appearance.primitives()[0].material;
     assert_eq!(SceneMaterialKind3d::Authored(material.clone()).texture_keys().count(),5);

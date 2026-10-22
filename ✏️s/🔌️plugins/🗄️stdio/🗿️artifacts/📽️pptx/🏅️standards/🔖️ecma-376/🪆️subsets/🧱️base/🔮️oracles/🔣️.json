@@ -423,7 +423,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -473,7 +473,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -523,7 +523,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -573,7 +573,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -623,7 +623,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -673,7 +673,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -723,7 +723,7 @@
         "packageVersion": "1.0.2",
         "engineFamily": "python-pptx",
         "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "command": "repo tools exec uv -- run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -773,7 +773,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-inserts-an-external-hyperlink-first",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-inserts-an-external-hyperlink-first",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -823,7 +823,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-appends-an-external-hyperlink",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-appends-an-external-hyperlink",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -873,7 +873,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-retypes-the-last-root-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-retypes-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -923,7 +923,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-no-op-identical-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-relationship-no-op-identical-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -973,7 +973,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-the-last-root-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1023,7 +1023,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-an-added-hyperlink",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-drops-an-added-hyperlink",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1066,7 +1066,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-rejected-missing-id",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-relationship-rejected-missing-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1116,7 +1116,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-inserts-a-default-first",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-inserts-a-default-first",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1166,7 +1166,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-retypes-an-existing-default",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-retypes-an-existing-default",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1216,7 +1216,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-no-op-identical-entry",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-no-op-identical-entry",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1259,7 +1259,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-rejected-default-in-another-case",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only set-content-type-rejected-default-in-another-case",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1309,7 +1309,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-drops-an-added-default",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-drops-an-added-default",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1352,7 +1352,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-rejected-missing-entry",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact pptx --only remove-content-type-rejected-missing-entry",
         "platform": "darwin-arm64"
       },
       "provenance": {

@@ -85,7 +85,9 @@ type Executor struct {
 
 /** 🔷️ Binds the repo schema to a filesystem-backed context rooted at one directory. */
 func NewExecutor(rootDir string) (*Executor, error) {
-	return NewExecutorWithContext(rootDir, NewRepoContext(rootDir))
+	resolved, err := workspace.SelectRepoRoot(".", &rootDir)
+	if err != nil { return nil, err }
+	return NewExecutorWithContext(resolved, NewRepoContext(resolved))
 }
 
 /** 🔷️ Binds the repo schema to a context. */
@@ -100,6 +102,9 @@ func NewExecutorWithContext(rootDir string, ctx model.RepoContext) (*Executor, e
 
 /** 🗺️ The schema this executor serves. */
 func (e *Executor) Schema() Schema { return e.schema }
+
+// 🧭️Repository returns this executor's bound repository port.
+func (e *Executor) Repository() model.RepoContext { return e.resolver.context() }
 
 /** ⚡️ Parses and executes one request, returning the `data` payload. */
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {

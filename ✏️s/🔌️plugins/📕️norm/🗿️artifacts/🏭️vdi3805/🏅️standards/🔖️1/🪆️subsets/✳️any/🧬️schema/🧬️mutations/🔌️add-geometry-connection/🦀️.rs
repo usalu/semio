@@ -19,7 +19,16 @@ pub struct AddGeometryConnection {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddGeometryConnection where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> + From<crate::remove_geometry_connection::RemoveGeometryConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "geometry-connection", kind: "add-geometry-connection", record: "AddedGeometryConnection" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id), &format!("Verbindung \"{}\" zu Geometrie \"{}\" hinzufügen", self.connection.id, self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone(), self.connection.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for AddGeometryConnection where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> + From<crate::remove_geometry_connection::RemoveGeometryConnection> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::add_geometry_connection::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,12 +37,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddGeometryConnection w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id), &format!("Verbindung \"{}\" zu Geometrie \"{}\" hinzufügen", self.connection.id, self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone(), self.connection.id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

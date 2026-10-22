@@ -86,7 +86,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: a no-op is its own outcome class, not a rejection");
-    let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let produced = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: an unchanged body is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: exactly one diagnostic is raised");
     assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: raised diagnostic code differs from the declared one");
@@ -95,13 +95,13 @@ async fn declared_outcome_holds() {
 /// 🔺️ The committed diff is `WriterDiff`'s all-null default, and it is what the oracle produces.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let outcome = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced splice-text diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: WriterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed splice-text diff decodes");
     assert_eq!(decoded, WriterDiff::default(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: a no-op's committed diff must be the type's own default");
-    let applied = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let applied = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(applied, expected_after(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: committed diff did not carry before to after");
 }
 

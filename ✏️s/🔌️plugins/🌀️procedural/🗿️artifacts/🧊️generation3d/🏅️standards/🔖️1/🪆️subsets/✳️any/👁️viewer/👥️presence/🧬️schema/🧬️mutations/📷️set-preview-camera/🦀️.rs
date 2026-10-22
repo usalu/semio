@@ -15,17 +15,6 @@ pub struct SetPreviewCamera {
 impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMutation> for SetPreviewCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
-    fn diff(&self, _base: &Generation3dViewPresence) -> protocol::MutationOutcome<Generation3dViewPresencePatch> {
-        protocol::MutationOutcome::new(Generation3dViewPresencePatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dViewPresence) -> Result<Vec<Generation3dViewPresenceMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { camera: base.preview_camera.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
     }
@@ -33,4 +22,16 @@ impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMu
     fn target(&self) -> Vec<String> {
         vec!["previewCamera".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dViewPresence, Generation3dViewPresenceMutation> for SetPreviewCamera {
+    fn diff(&self, _base: &Generation3dViewPresence) -> protocol::MutationOutcome<Generation3dViewPresencePatch> {
+        protocol::MutationOutcome::new(Generation3dViewPresencePatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dViewPresence) -> Result<Vec<Generation3dViewPresenceMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { camera: base.preview_camera.clone() }.into()]
+    
+    })())
+}
 }

@@ -15,7 +15,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_block_2d_diff::Block2dDiff;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::RenameNodeKind;
 use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_label::ChangeNodeKindLabel;
 use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_variant::ChangeNodeKindVariant;
@@ -60,7 +60,7 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Block2dSnapshot, diff = Block2dDiff, schema = "block.block2d")]
+#[mutations(snapshot = Block2dSnapshot, diff = Block2dDiff, schema = "block.block2d", reference = Block2dSnapshot, reference_diff = Block2dDiff)]
 pub enum Block2dMutation {
     RenameNodeKind(RenameNodeKind),
     ChangeNodeKindLabel(ChangeNodeKindLabel),

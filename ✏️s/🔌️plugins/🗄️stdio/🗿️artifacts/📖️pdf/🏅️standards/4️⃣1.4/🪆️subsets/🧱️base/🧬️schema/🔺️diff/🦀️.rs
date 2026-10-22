@@ -317,16 +317,9 @@ pub struct PdfDiff {
     pub pages: Option<PdfPagesDiff>,
 }
 
-impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<PdfSnapshot> {
-        let mut next = base.clone();
-        if let Some(pages) = &self.pages {
-            validate_pages_diff(pages, base.pages.len())?;
-            next.pages = apply_pages_diff(pages, &base.pages);
-        }
-        Ok(next)
-    }
+impl MutationDiff<PdfSnapshot> for PdfDiff {}
 
+impl protocol::ColdMutationDiff<PdfSnapshot> for PdfDiff {
     /// ➕️ Structural, total, base-free, sequential-coalesce (`## Absorb` contract) — the page
     /// triple composes through [`absorb_pages_diff`]'s index-transported simulation.
     fn absorb(&mut self, other: Self) {
@@ -339,17 +332,30 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             }
         };
     }
+
+    fn apply(&self, unpublished: &mut PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(pages) = &self.pages {
+            validate_pages_diff(pages, base.pages.len())?;
+            next.pages = apply_pages_diff(pages, &base.pages);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
+    fn is_empty(&self) -> bool {
+        self.pages.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, built from `base`: the page triple that removes what this one added, restores what it modified
     /// and re-adds what it removed.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
         PdfDiff { pages: self.pages.as_ref().map(|pages| inverse_pages_diff(pages, &base.pages)) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.pages.is_none()
     }
 }
 

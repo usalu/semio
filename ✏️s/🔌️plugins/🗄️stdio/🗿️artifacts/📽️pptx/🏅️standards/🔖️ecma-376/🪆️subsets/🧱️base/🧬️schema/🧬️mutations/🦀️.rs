@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
 #[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
 
@@ -52,7 +52,7 @@ pub mod replace_xml_node;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxMutation")]
+#[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxMutation", reference = PptxSnapshot, reference_diff = PptxDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
     /// ➕️ Inserts `🎞️slide` at `index` (FINAL state).
@@ -119,7 +119,7 @@ pub fn kind_of(mutation: &PptxMutation) -> &'static str {
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

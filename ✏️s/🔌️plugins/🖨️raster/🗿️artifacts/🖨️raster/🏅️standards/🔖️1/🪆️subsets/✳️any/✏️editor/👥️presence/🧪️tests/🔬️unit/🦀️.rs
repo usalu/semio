@@ -2,7 +2,7 @@
 use super::{RasterPresence, RasterPresenceDiff, RasterPresenceMutation, SetPresenceEdit};
 use semio_s_artifact_raster_raster_model::RasterCamera;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn peer() -> RasterPresence {
     RasterPresence { brush_size: 48.0, brush_opacity: 0.5, camera: RasterCamera { x: 1.0, y: 2.0, zoom: 2.0 } }

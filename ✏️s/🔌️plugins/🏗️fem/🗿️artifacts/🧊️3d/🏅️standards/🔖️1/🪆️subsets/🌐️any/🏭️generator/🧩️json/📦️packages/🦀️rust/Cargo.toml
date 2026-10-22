@@ -1,3 +1,4 @@
+cargo-features = [ "trim-paths" ]
 # 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
 # contended file.
 #

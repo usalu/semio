@@ -127,7 +127,7 @@ where
                     Ok(inverse) => inverse,
                     Err(error) => { *self.mutation = Some(mutation); return Err(error); }
                 };
-        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+        let post = match protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()) {
                     Ok(post) => post,
                     Err(error) => {
                         *self.mutation = Some(mutation);

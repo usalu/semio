@@ -1,0 +1,258 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "complete-standard-is-covered",
+   "rule": "policyStandardsCoverageBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🔨️modules/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/x": []
+   },
+   "expect": []
+  },
+  {
+   "id": "standard-slugs-are-lowercase-kebab",
+   "rule": "policyStandardsCoverageBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🔨️modules/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🪆️subsets/✳️any/🚪️io/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🪆️subsets/✳️any/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🪆️subsets/✳️any/👁️viewer/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug/🪆️subsets/✳️any/✏️editor/x": []
+   },
+   "expect": [
+    [
+     "standards-slug-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️Bad_Slug",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "subset-directories-need-the-subset-prefix",
+   "rule": "policyStandardsCoverageBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🔨️modules/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/🚪️io/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/👁️viewer/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/✏️editor/x": []
+   },
+   "expect": [
+    [
+     "standards-subset-prefix-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "missing-standard-and-subset-children",
+   "rule": "policyStandardsCoverageBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": []
+   },
+   "expect": [
+    [
+     "standards-standard-child-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-🔨️modules",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-child-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any-✏️editor",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-child-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any-👁️viewer",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-child-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any-📚️examples",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-child-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any-🚪️io",
+     "stdio-artifacts/standards-coverage",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "manifest-matching-the-directories-is-clean",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{\"artifact\": \"a\", \"standard\": \"1\", \"subsets\": {\"*\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/x": []
+   },
+   "expect": []
+  },
+  {
+   "id": "missing-manifest",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/x": []
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "unparseable-manifest",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{not json"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/x": []
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-invalid-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "standard-and-any-are-declared",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{\"standard\": \"2\", \"subsets\": {\"x\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️x/y": []
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-domain-real-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-missing-any-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-standard-mismatch-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "subset-ids-need-a-slug",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{\"standard\": \"1\", \"subsets\": {\"*\": {}, \"Bad_Id\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/x": []
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-bad-id-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-Bad_Id",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-domain-real-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-unmapped-id-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-Bad_Id",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "declared-and-actual-subset-directories-agree",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{\"standard\": \"1\", \"subsets\": {\"*\": {}, \"x\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/a": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️y/a": []
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-domain-real-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-missing-dir-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-✳️x",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "standards-subset-vocabulary-undeclared-dir-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-✳️y",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "stdio-subsets-need-a-registered-validator",
+   "rule": "policyStandardSubsetVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/🔣️.json": [
+     "{\"standard\": \"1\", \"subsets\": {\"*\": {}, \"x\": {}, \"w\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/a": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️x/🚪️io/🦀️.rs": [
+     "impl SubsetValidator for V {}",
+     "fn init() { register_subset_validator(v); }"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️w/🚪️io/🦀️.rs": [
+     "impl SubsetValidator for V {}",
+     "// register_subset_validator(v);"
+    ]
+   },
+   "expect": [
+    [
+     "standards-subset-vocabulary-validator-missing-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️w",
+     "stdio-artifacts/standards-subset-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  }
+ ]
+}

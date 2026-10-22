@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json"));
@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_only_the_addressed_node() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("move-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/moves-the-sink-node-to-a-new-canvas-position: applied state differs from the committed after-snapshot");
     assert_eq!((produced.nodes[1].position.x, produced.nodes[1].position.y), (6.0, -2.5), "the node's position must become the payload's absolute coordinates");
     assert_eq!(produced.nodes[1].label, base.nodes[1].label, "move-node must not touch the node's label");
@@ -46,9 +46,9 @@ async fn the_undo_move_node_restores_the_original_position() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "move-node of an existing node undoes as exactly one move-node");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward move-node applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward move-node applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo move-node applies to the moved graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo move-node applies to the moved graph");
     }
     assert_eq!(current, base, "move-node/moves-the-sink-node-to-a-new-canvas-position: the undo did not restore the before-snapshot");
 }
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-node/moves-the-sink-node-to-a-new-canvas-position: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed move-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/moves-the-sink-node-to-a-new-canvas-position: committed diff did not carry before to after");
 }

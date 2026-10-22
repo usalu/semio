@@ -26,7 +26,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

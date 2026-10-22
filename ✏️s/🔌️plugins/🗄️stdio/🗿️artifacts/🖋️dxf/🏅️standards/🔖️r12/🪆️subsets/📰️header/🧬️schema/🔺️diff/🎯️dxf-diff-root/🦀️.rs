@@ -196,12 +196,9 @@ fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnapshot {
     }
 }
 
-impl MutationDiff<DxfSnapshot> for DxfDiff {
-    fn apply(&self, base: &DxfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<DxfSnapshot> {
-        validate_dxf_diff(self, base)?;
-        Ok(apply_dxf_diff_unchecked(self, base))
-    }
+impl MutationDiff<DxfSnapshot> for DxfDiff {}
 
+impl protocol::ColdMutationDiff<DxfSnapshot> for DxfDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract): every
     /// collection uses its own generic absorb-pair transport; `tables` recurses into its own
     /// three sub-collections.
@@ -234,9 +231,26 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
             self.other_tables = other.other_tables;
         }
     }
+
+    fn apply(&self, unpublished: &mut DxfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_dxf_diff(self, base)?;
+        *unpublished = apply_dxf_diff_unchecked(self, base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<DxfSnapshot> for DxfDiff {
+    fn is_empty(&self) -> bool {
+        self.header_vars.as_ref().is_none_or(DxfHeaderVarsDiff::is_empty)
+            && self.tables.as_ref().is_none_or(DxfTablesDiff::is_empty)
+            && self.blocks.as_ref().is_none_or(DxfBlocksDiff::is_empty)
+            && self.entities.as_ref().is_none_or(DxfEntitiesDiff::is_empty)
+            && self.other_tables.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DxfSnapshot> for DxfDiff {
     /// ↩️ Concrete diff-level undo: every keyed collection turns into its negative rows against the base (removed rows return at
     /// their base index) and the nested table diffs do the same one level down.
     fn inverse(&self, base: &DxfSnapshot) -> Self {
@@ -247,14 +261,6 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
             entities: self.entities.as_ref().and_then(|entities| entities.inverse(&base.entities)),
             other_tables: self.other_tables.as_ref().filter(|tables| **tables != base.other_tables).map(|_| base.other_tables.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.header_vars.as_ref().is_none_or(DxfHeaderVarsDiff::is_empty)
-            && self.tables.as_ref().is_none_or(DxfTablesDiff::is_empty)
-            && self.blocks.as_ref().is_none_or(DxfBlocksDiff::is_empty)
-            && self.entities.as_ref().is_none_or(DxfEntitiesDiff::is_empty)
-            && self.other_tables.is_none()
     }
 }
 //#endregion 🔖️Diff

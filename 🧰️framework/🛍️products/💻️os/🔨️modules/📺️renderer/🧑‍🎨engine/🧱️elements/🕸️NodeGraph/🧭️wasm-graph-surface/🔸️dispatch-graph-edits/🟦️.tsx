@@ -1,5 +1,6 @@
 /** 🔸️ The dispatch graph edits phase of WasmGraphSurface. */
-import React, { useCallback, useEffect } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { useCanvasPickInteraction, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { nodeGraphActions } from "@semio-tech/framework";
 import { type GraphKeyboardPort, nodeGraphEditRows, nodeGraphPickChannel, publishNodeGraphHover } from "../../🧰️graph-core/🟦️.ts";

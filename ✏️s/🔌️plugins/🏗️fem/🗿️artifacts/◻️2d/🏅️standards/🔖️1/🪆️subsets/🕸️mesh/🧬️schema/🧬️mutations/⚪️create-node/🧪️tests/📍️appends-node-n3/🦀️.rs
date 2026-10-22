@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().nodes.is_some(), "create-node/appends-node-n3: the created node must surface in the nodes delta");
     assert!(outcome.diff().elements.is_none() && outcome.diff().supports.is_none(), "create-node/appends-node-n3: creating a node must open no other collection delta");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

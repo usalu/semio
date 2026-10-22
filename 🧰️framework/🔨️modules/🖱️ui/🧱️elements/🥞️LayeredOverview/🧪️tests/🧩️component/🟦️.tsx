@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { centeredLastRowCells, followFactor, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { centeredLastRowCells, followFactor, layeredZoomArm, layeredZoomMove, layeredZoomOut, layeredZoomOver, LAYERED_ZOOM_MUCH_PX, LAYERED_ZOOM_MOVE_PX, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import { OverviewCard, OverviewCardAction } from "../../../🃏️OverviewCard/🟦️.tsx";
 import { LayeredOverview } from "../../🟦️.tsx";
 import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts";
@@ -24,6 +24,20 @@ function pages(ids: readonly string[], rendered: string[] = [], extra: Partial<R
 }
 
 /** 🃏️ A quiz-like card: a region named by a heading link, with a real Open button. */
+function zoomControl(card: HTMLElement): HTMLElement {
+  const control = card.querySelector<HTMLElement>("[data-layered-zoom]");
+  if (control === null) throw new Error("missing explore control");
+  return control;
+}
+
+function hoverZoom(card: HTMLElement, init: { readonly pointerType?: string } = {}): void {
+  fireEvent.pointerOver(zoomControl(card), { pointerType: "mouse", ...init });
+}
+
+function leaveZoom(card: HTMLElement, init: { readonly pointerType?: string } = {}): void {
+  fireEvent.pointerOut(zoomControl(card), { pointerType: "mouse", relatedTarget: document.body, ...init });
+}
+
 function card(pane: LayeredPane, state: LayeredCardState): React.ReactNode {
   return (
     <OverviewCard as="section" slot="test-card" headingId={`card-${pane.id}`} icon={null} title={<a href={`#${pane.id}`}>{pane.label}</a>} className="pointer-events-auto" footerRight={<OverviewCardAction primary onClick={state.open}>{`Open ${pane.label}`}</OverviewCardAction>}>
@@ -61,6 +75,20 @@ afterEach(() => {
 });
 
 describe("LayeredOverview", () => {
+  it("holds a fresh explore hover until the pointer moves off it, and releases a long move at once", () => {
+    const armed = layeredZoomArm(10, 20);
+    expect(layeredZoomOver(armed)).toEqual({ hold: armed, reveal: false });
+    expect(layeredZoomOver(null)).toEqual({ hold: null, reveal: true });
+    const drifted = layeredZoomMove(armed, 10 + LAYERED_ZOOM_MOVE_PX, 20, true);
+    expect(drifted).toEqual({ hold: { ...armed, drifted: true }, reveal: false });
+    expect(layeredZoomOut(drifted.hold)).toEqual({ hold: null, conceal: false });
+    expect(layeredZoomMove(armed, 10 + LAYERED_ZOOM_MOVE_PX - 1, 20, true)).toEqual({ hold: armed, reveal: false });
+    expect(layeredZoomMove(armed, 10 + LAYERED_ZOOM_MUCH_PX, 20, true)).toEqual({ hold: null, reveal: true });
+    expect(layeredZoomMove(armed, 10 + LAYERED_ZOOM_MUCH_PX, 20, false)).toEqual({ hold: null, reveal: false });
+    expect(layeredZoomOut(null)).toEqual({ hold: null, conceal: true });
+    expect(layeredZoomOut(armed)).toEqual({ hold: armed, conceal: false });
+  });
+
   it("paints a controlled camera and reveal in an inactive observation without emitting input", () => {
     const camera = vi.fn();
     const revealed = vi.fn();
@@ -90,7 +118,7 @@ describe("LayeredOverview", () => {
     sized(root);
     moveMouse(1800, -90);
     expect(camera).toHaveBeenLastCalledWith({ x: 1, y: 0 });
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
     expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
   });
@@ -99,7 +127,7 @@ describe("LayeredOverview", () => {
     const props = { panes: pages(HOME), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, reducedMotion: "always" as const };
     const result = render(<LayeredOverview {...props} />);
     const host = result.container.querySelector<HTMLElement>('[data-layered-card="board"]')!;
-    fireEvent.pointerEnter(host, { pointerType: "mouse" });
+    hoverZoom(host, { pointerType: "mouse" });
     expect(host.hasAttribute("data-revealed")).toBe(true);
     result.rerender(<LayeredOverview {...props} interactive={false} />);
     expect(host.hasAttribute("data-revealed")).toBe(false);
@@ -114,7 +142,7 @@ describe("LayeredOverview", () => {
     const { root, strip, cardOf } = renderHome({ interactive: false, reducedMotion: "always", onOpenedIdChange: opened, onRevealedIdChange: revealed });
     expect(root.dataset.pan).toBe("none");
     expect(root.querySelector("[data-layered-overlay]")?.hasAttribute("inert")).toBe(true);
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     fireEvent.focus(cardOf("board").querySelector("a")!);
     fireEvent.click(within(cardOf("board")).getByRole("button", { name: "Open Board" }));
     expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
@@ -159,11 +187,44 @@ describe("LayeredOverview", () => {
     expect(regions.map((region) => region.textContent?.replace(/\s+/gu, ""))).toEqual(HOME.map((id) => `${LABEL(id)}restingOpen${LABEL(id)}`));
   });
 
-  it("reveals a page on mouse hover (glass hidden, card lifted, chrome told) and restores the glass on leave", () => {
+  it("zooms only while the pointer is over the explore control", () => {
+    const { cardOf } = renderHome({ reducedMotion: "always" });
+    const host = cardOf("board").closest<HTMLElement>("[data-layered-card]")!;
+    fireEvent.pointerOver(cardOf("board"), { pointerType: "mouse" });
+    expect(host.hasAttribute("data-revealed")).toBe(false);
+    hoverZoom(cardOf("board"));
+    expect(host.hasAttribute("data-revealed")).toBe(true);
+    fireEvent.pointerOut(zoomControl(cardOf("board")), { pointerType: "mouse", relatedTarget: cardOf("board") });
+    expect(host.hasAttribute("data-revealed")).toBe(false);
+  });
+
+  it("does not zoom an explore control the pointer was already on when a level becomes active", () => {
+    const view = (interactive: boolean) => <LayeredOverview panes={pages(HOME)} cells={GRID} renderCard={card} labels={LABELS} lifecycle={LATER} reducedMotion="always" interactive={interactive} />;
+    const result = render(view(false));
+    const board = () => result.container.querySelector<HTMLElement>('[data-layered-card="board"] section')!;
+    fireEvent.pointerMove(window, { pointerType: "mouse", clientX: 120, clientY: 80 });
+    result.rerender(view(true));
+    hoverZoom(board());
+    expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
+    fireEvent.pointerMove(zoomControl(board()), { pointerType: "mouse", clientX: 120 + LAYERED_ZOOM_MOVE_PX, clientY: 80 });
+    expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
+    leaveZoom(board());
+    hoverZoom(board());
+    expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
+    result.rerender(view(false));
+    fireEvent.pointerMove(window, { pointerType: "mouse", clientX: 400, clientY: 80 });
+    result.rerender(view(true));
+    hoverZoom(board());
+    expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
+    fireEvent.pointerMove(zoomControl(board()), { pointerType: "mouse", clientX: 400 + LAYERED_ZOOM_MUCH_PX, clientY: 80 });
+    expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
+  });
+
+  it("reveals a page when the pointer is over its explore control (glass hidden, card lifted, chrome told) and restores the glass on leave", () => {
     const chrome = vi.fn(() => null);
     const revealed = vi.fn();
     const { strip, veil, cardOf } = renderHome({ reducedMotion: "always", renderChrome: chrome, onRevealedIdChange: revealed });
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     expect(veil()!.dataset.veil).toBe("clear");
     expect(veil()!.style.visibility).toBe("hidden");
@@ -171,7 +232,7 @@ describe("LayeredOverview", () => {
     expect(within(cardOf("board")).getByText("revealed")).toBeTruthy();
     expect(chrome).toHaveBeenLastCalledWith({ revealed: true, opened: false });
     expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
-    fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
+    leaveZoom(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
     expect(veil()!.style.visibility).toBe("visible");
     expect(chrome).toHaveBeenLastCalledWith({ revealed: false, opened: false });
@@ -183,16 +244,16 @@ describe("LayeredOverview", () => {
     const counting = (pane: LayeredPane, state: LayeredCardState) => (rendered.push(pane.id), card(pane, state));
     const { cardOf } = renderHome({ reducedMotion: "always", renderCard: counting });
     rendered.length = 0;
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     expect(rendered).toEqual(["board"]);
     rendered.length = 0;
-    fireEvent.pointerEnter(cardOf("cooling"), { pointerType: "mouse" });
+    hoverZoom(cardOf("cooling"), { pointerType: "mouse" });
     expect(rendered.sort()).toEqual(["board", "cooling"]);
   });
 
   it("never reveals on a touch pointer", () => {
     const { veil, cardOf } = renderHome({ reducedMotion: "always" });
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "touch" });
+    hoverZoom(cardOf("board"), { pointerType: "touch" });
     expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
     expect(veil()!.dataset.veil).toBe("whole");
   });
@@ -200,7 +261,7 @@ describe("LayeredOverview", () => {
   it("hides every other card while the pointer hovers one and restores them on leave", () => {
     const { cardOf } = renderHome({ reducedMotion: "always" });
     const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     const opacity = (id: string) => host(id).querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "";
     expect(host("board").dataset.reveal).toBe("pointer");
     expect(opacity("board")).toBe("");
@@ -213,7 +274,7 @@ describe("LayeredOverview", () => {
       expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
       expect(host(id).hasAttribute("aria-hidden"), id).toBe(false);
     }
-    fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
+    leaveZoom(cardOf("board"), { pointerType: "mouse" });
     for (const id of HOME) {
       expect(opacity(id), id).toBe("");
       expect(host(id).hasAttribute("data-concealed"), id).toBe(false);
@@ -236,7 +297,7 @@ describe("LayeredOverview", () => {
   it("hides the other cards of a swipe grid while the pointer hovers one", () => {
     const { cardOf } = renderHome({ mode: "swipe", reducedMotion: "always" });
     const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
-    fireEvent.pointerEnter(cardOf("cooling"), { pointerType: "mouse" });
+    hoverZoom(cardOf("cooling"), { pointerType: "mouse" });
     expect(host("cooling").dataset.reveal).toBe("pointer");
     expect(host("cooling").hasAttribute("data-tinted")).toBe(true);
     expect(host("learner").hasAttribute("data-tinted")).toBe(false);
@@ -247,7 +308,7 @@ describe("LayeredOverview", () => {
   it("glides 500 ms from the CURRENT offset and cuts the hole from it every frame", () => {
     fakeClock();
     const { strip, veil, cardOf } = renderHome({ reducedMotion: "never" });
-    fireEvent.pointerEnter(cardOf("cooling"), { pointerType: "mouse" });
+    hoverZoom(cardOf("cooling"), { pointerType: "mouse" });
     expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
     expect(veil()!.dataset.veil).toBe("whole");
     frames(400);
@@ -276,7 +337,7 @@ describe("LayeredOverview", () => {
       rerender(view());
     }
     expect(container.querySelectorAll("[data-page]").length).toBeGreaterThan(0);
-    fireEvent.pointerEnter(container.querySelector<HTMLElement>('[data-layered-card="cooling"] section')!, { pointerType: "mouse" });
+    hoverZoom(container.querySelector<HTMLElement>('[data-layered-card="cooling"] section')!, { pointerType: "mouse" });
     frames(100);
     rerender(view());
     frames(100);
@@ -332,7 +393,7 @@ describe("LayeredOverview", () => {
     moveMouse(900, 900);
     frames(3000);
     expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
-    fireEvent.pointerEnter(moving.cardOf("learner"), { pointerType: "mouse" });
+    hoverZoom(moving.cardOf("learner"), { pointerType: "mouse" });
     expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
     frames(250);
     const middle = offsetOf(moving.strip().style.transform, 3, 3);
@@ -347,7 +408,7 @@ describe("LayeredOverview", () => {
     moveMouse(900, 900);
     frames(3000);
     expect(still.strip().style.transform).toBe("translate3d(0%, 0%, 0)");
-    fireEvent.pointerEnter(still.cardOf("prefs"), { pointerType: "mouse" });
+    hoverZoom(still.cardOf("prefs"), { pointerType: "mouse" });
     expect(still.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
   });
 
@@ -473,8 +534,8 @@ describe("LayeredOverview", () => {
     const { root, cardOf } = renderHome({ reducedMotion: "always", lifecycle: { ...LATER, budget: 2 }, windowing: { radius: 9 } });
     const mounted = () => [...root.querySelectorAll<HTMLElement>("[data-page]")].map((element) => element.dataset.page).sort();
     for (const id of ["learner", "physics", "intro"]) {
-      fireEvent.pointerEnter(cardOf(id), { pointerType: "mouse" });
-      fireEvent.pointerLeave(cardOf(id), { pointerType: "mouse" });
+      hoverZoom(cardOf(id), { pointerType: "mouse" });
+      leaveZoom(cardOf(id), { pointerType: "mouse" });
       expect(mounted().length).toBeLessThanOrEqual(2);
     }
     expect(mounted()).toEqual(["intro", "physics"]);
@@ -518,11 +579,11 @@ describe("LayeredOverview", () => {
     const root = container.querySelector<HTMLElement>("[data-layered-overview]")!;
     const cardOf = (id: string) => root.querySelector<HTMLElement>(`[data-layered-card="${id}"] section`)!;
     for (const id of ["dom", "canvas", "dom"]) {
-      fireEvent.pointerEnter(cardOf(id), { pointerType: "mouse" });
-      fireEvent.pointerLeave(cardOf(id), { pointerType: "mouse" });
+      hoverZoom(cardOf(id), { pointerType: "mouse" });
+      leaveZoom(cardOf(id), { pointerType: "mouse" });
     }
     expect(pane(root, "canvas").querySelector("img")!.getAttribute("src")).toBe(poster);
-    fireEvent.pointerEnter(cardOf("canvas"), { pointerType: "mouse" });
+    hoverZoom(cardOf("canvas"), { pointerType: "mouse" });
     expect(pane(root, "dom").querySelector("img")).toBeNull();
     expect(within(pane(root, "dom")).getByRole("status", { name: "Dom is waiting to start", hidden: true })).toBeTruthy();
   });
@@ -535,8 +596,8 @@ describe("LayeredOverview", () => {
       },
     };
     render(<LayeredOverview panes={pages(HOME, [], { board: broken })} cells={GRID} renderCard={card} labels={LABELS} lifecycle={LATER} reducedMotion="always" />);
-    fireEvent.pointerEnter(document.querySelector<HTMLElement>('[data-layered-card="board"] section')!, { pointerType: "mouse" });
-    fireEvent.pointerEnter(document.querySelector<HTMLElement>('[data-layered-card="cooling"] section')!, { pointerType: "mouse" });
+    hoverZoom(document.querySelector<HTMLElement>('[data-layered-card="board"] section')!, { pointerType: "mouse" });
+    hoverZoom(document.querySelector<HTMLElement>('[data-layered-card="cooling"] section')!, { pointerType: "mouse" });
     expect(document.querySelector('[data-layered-pane="board"] [role="alert"]')!.textContent).toBe("Board could not be loaded.");
     expect(document.querySelector('[data-layered-pane="cooling"] [data-page]')!.textContent).toBe("Cooling page");
   });
@@ -567,14 +628,14 @@ describe("LayeredOverview", () => {
     fakeClock();
     const { root, strip, veil, cardOf } = renderHome({ reducedMotion: "never" });
     sized(root);
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     frames(600);
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     expect(veil()!.dataset.veil).toBe("clear");
     moveMouse(900, 900);
     frames(600);
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
-    fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
+    leaveZoom(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     moveMouse(0, 900);
@@ -588,7 +649,7 @@ describe("LayeredOverview", () => {
     const camera = vi.fn();
     const { root, strip, cardOf } = renderHome({ reducedMotion: "never", onCameraChange: camera });
     sized(root);
-    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
     frames(600);
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     camera.mockClear();

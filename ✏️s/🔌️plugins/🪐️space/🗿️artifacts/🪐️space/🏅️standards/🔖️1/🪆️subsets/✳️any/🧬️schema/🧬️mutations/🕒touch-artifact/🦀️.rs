@@ -24,6 +24,15 @@ pub fn touch_artifact(id: String, updated_at_ms: u64, updated_by: String) -> SSp
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "artifact", kind: "touch-artifact", record: "TouchedArtifact" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Touch artifact \"{}\"", self.id), &format!("Artefakt \"{}\" als geändert markieren", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
@@ -33,11 +42,5 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Touch artifact \"{}\"", self.id), &format!("Artefakt \"{}\" als geändert markieren", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

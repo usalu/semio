@@ -2,7 +2,10 @@
 use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework_value::shared_issuance::{SealedShared, SharedIssuer};
 use semio_framework_value_persistent::list::persistent::PersistentList;
+use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneRef,retained_clone_grant_admits}};
+use semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection;
 use serde::{Serialize,Deserialize};
+use std::mem::size_of;
 
 #[derive(Clone,Debug,PartialEq,Serialize,Deserialize,semio_framework_value::RetireOwned)]
 pub(super) struct PlainNode{pub(super) id:String,pub(super) text:String}
@@ -11,8 +14,23 @@ pub(super) struct PlainDocument{pub(super) title:String,pub(super) nodes:Vec<Pla
 
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection)]
 pub(super) struct Node{pub(super) id:SealedShared<String>,pub(super) text:SealedShared<String>}
-#[derive(semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection)]
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Document{pub(super) title:SealedShared<String>,pub(super) nodes:PersistentList<Node>}
+
+/// 🌳️ The fixture root projects its two sealed authorities into one independent candidate root without traversing a row.
+impl ImmutableRootProjection for Document{
+    fn root_projection_demand(_original:RetainedCloneRef<'_,Self>)->Result<RetirementDemand,ValueError>{
+        Ok(RetirementDemand{copy_bytes:size_of::<Self>()*2+size_of::<SealedShared<String>>()+PersistentList::<Node>::projection_demand().copy_bytes,depth:1,..Default::default()})
+    }
+    fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+        let demand=Self::root_projection_demand(original)?;
+        if !retained_clone_grant_admits(grant,demand){return Ok(None);}
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Self>()*2,..grant};
+        let Some((nodes,_))=PersistentList::project(original.project(0,|document|&document.nodes),child)?else{return Ok(None);};
+        let(title,_)=original.get().title.try_duplicate(child)?;
+        Ok(Some((Self{title,nodes},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+    }
+}
 
 pub(super) fn fixture_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
 pub(super) fn seal_text(value:String)->SealedShared<String>{SealedShared::admit(value,SharedIssuer::owned(),fixture_grant()).unwrap_or_else(|_|panic!("paid fixture string birth")).0}

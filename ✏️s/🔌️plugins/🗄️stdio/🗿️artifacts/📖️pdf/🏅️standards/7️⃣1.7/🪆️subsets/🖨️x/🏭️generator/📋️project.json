@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
-        "command": "bun ./📜️script.ts manifests",
+        "command": "repo ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
-        "command": "bun ./📜️script.ts encryption",
+        "command": "repo ./📜️script.ts encryption",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -51,7 +51,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator",
-        "command": "bun ./📜️script.ts encryption-manifests",
+        "command": "repo ./📜️script.ts encryption-manifests",
         "forwardAllArgs": true
       },
       "metadata": {

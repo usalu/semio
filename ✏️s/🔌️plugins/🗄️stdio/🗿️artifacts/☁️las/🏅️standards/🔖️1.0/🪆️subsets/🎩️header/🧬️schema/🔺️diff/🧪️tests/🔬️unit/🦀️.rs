@@ -5,7 +5,7 @@ use crate::standards::v1_0::subsets::any::schema::diff::*;
 async fn invalid_collection_targets_are_rejected_before_mutation() {
     let base = LasSnapshot::default();
     let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
-    let error = protocol::apply_diff(&diff, &base).expect_err("missing VLR target must be rejected");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing VLR target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-index");
     assert_eq!(error.target, vec!["vlrs", "0"]);
     assert_eq!(base, LasSnapshot::default());

@@ -2,8 +2,8 @@ use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema:
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcEntitiesDiff;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader;
-use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutationDiff, MutationDiff};
 #[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 #[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue;
 
@@ -11,7 +11,7 @@ use protocol::MutationDiff;
 fn missing_entity_target_is_rejected_before_mutation() {
     let base = IfcSnapshot::default();
     let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-    let error = protocol::apply_diff(&diff, &base).expect_err("missing entity target must be rejected");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing entity target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, IfcSnapshot::default());
@@ -41,7 +41,7 @@ fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_ifc_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "protocol::apply_diff(diff.diff(), base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff_cold(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "protocol::apply_diff_cold(diff.diff(), base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[test]
@@ -83,9 +83,9 @@ fn inverse_law() {
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
         let d = m.diff(&base);
-        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
+        let mutated = protocol::apply_diff_cold(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -93,13 +93,13 @@ fn inverse_law() {
 //#region 🔖️absorb_law
 fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
     let d1 = m1.diff(base);
-    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let sequential = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff_cold(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[test]
@@ -137,9 +137,9 @@ fn absorb_law() {
 fn absorb_law_associativity() {
     let base = base_snapshot();
     let d1 = IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("one".into())] }).diff(&base);
-    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid1 = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![]) }).diff(&mid1);
-    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).expect("valid second diff");
     let d3 = IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: 100, name: "IFCBUILDING".into() }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -151,8 +151,8 @@ fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), protocol::apply_diff_cold(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid associated diff"), protocol::apply_diff_cold(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️between_roundtrip_law
 

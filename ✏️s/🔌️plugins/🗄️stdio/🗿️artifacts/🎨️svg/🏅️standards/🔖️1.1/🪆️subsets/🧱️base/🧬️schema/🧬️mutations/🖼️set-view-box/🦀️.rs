@@ -21,22 +21,26 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-box", kind: "set-view-box", record: "SetViewBox" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
-        let Self { path, view_box, index } = self;
-        protocol::MutationOutcome::new(attribute_diff_at_path(base, path, "viewBox", view_box.map(SvgAttributeValue::ViewBox), *index))
-    }
-
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        let Self { path, .. } = self;
-        let (value, index) = prior_attribute(base, path, "viewBox");
-        Ok(vec![Op::from(Self { path: path.clone(), view_box: value.and_then(|value| if let SvgAttributeValue::ViewBox(view_box) = value { Some(view_box) } else { None }), index })])
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set View Box", "ViewBox setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-view-box".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetViewBoxPayload
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetViewBoxPayload>,
+{
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+        let Self { path, view_box, index } = self;
+        protocol::MutationOutcome::new(attribute_diff_at_path(base, path, "viewBox", view_box.map(SvgAttributeValue::ViewBox), *index))
+    }
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        let Self { path, .. } = self;
+        let (value, index) = prior_attribute(base, path, "viewBox");
+        Ok(vec![Op::from(Self { path: path.clone(), view_box: value.and_then(|value| if let SvgAttributeValue::ViewBox(view_box) = value { Some(view_box) } else { None }), index })])
     }
 }
 

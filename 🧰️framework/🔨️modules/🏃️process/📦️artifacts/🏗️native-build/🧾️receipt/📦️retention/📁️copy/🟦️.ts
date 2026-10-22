@@ -7,7 +7,7 @@ import {withArtifactDescriptorSlotV1} from "../../../../📤️publication/📥�
 import {requireIssuedResourceControlV1,withIssuedResourceOperationV1} from "../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
-const maximumBytes=sourceSchema.properties.maximumBytes.const,chunkBytes=sourceSchema.properties.chunkBytes.const;
+const maximumBytes=sourceSchema.properties.maximumRetainedCompilationBytes.const,chunkBytes=sourceSchema.properties.chunkBytes.const;
 type Identity=Readonly<{dev:bigint;ino:bigint;size:bigint;mode:bigint;mtimeNs:bigint;ctimeNs:bigint;nlink:bigint}>;
 export interface RetainedCompilationFileV1{readonly path:string;readonly sha256:string;readonly byteLength:number;readonly mode:number}
 const same=(a:Identity,b:Identity)=>a.dev===b.dev&&a.ino===b.ino&&a.size===b.size&&a.mode===b.mode&&a.mtimeNs===b.mtimeNs&&a.ctimeNs===b.ctimeNs&&a.nlink===b.nlink;

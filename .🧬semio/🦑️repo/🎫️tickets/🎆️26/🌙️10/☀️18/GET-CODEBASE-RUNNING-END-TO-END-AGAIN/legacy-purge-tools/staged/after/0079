@@ -1,0 +1,54 @@
+{
+  "title": "Detail Panel Tree Layout System",
+  "status": "closed",
+  "description": "Implement TreeRow and HelperRow convenience components, add vertical spacing to tree containers, and migrate all TreeItem+TreeContent patterns to TreeRow across Design.tsx, Kit.tsx, Quality.tsx, Type.tsx, Home.tsx, and Docs.tsx",
+  "summary": "Implemented TreeRow/HelperRow components in elements.tsx, migrated 100+ TreeItem+TreeContent patterns to TreeRow across 6 files, added vertical spacing (gap-y-[2px]) to tree containers, updated TreeRow to support id/onClick/onDoubleClick/actions props. TypeScript compiles (only pre-existing errors). All 13 JS tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/728"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-27T13:39:01.002905354Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Implement TreeRow and HelperRow convenience components, add vertical spacing to tree containers, and migrate all TreeItem+TreeContent patterns to TreeRow across Design.tsx, Kit.tsx, Quality.tsx, Type.tsx, Home.tsx, and Docs.tsx",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-27T13:42:00.182599586Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Implemented TreeRow/HelperRow components in elements.tsx, migrated 100+ TreeItem+TreeContent patterns to TreeRow across 6 files, added vertical spacing (gap-y-[2px]) to tree containers, updated TreeRow to support id/onClick/onDoubleClick/actions props. TypeScript compiles (only pre-existing errors). All 13 JS tests pass.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Docs.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Home.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Quality.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/elements.tsx"
+        }
+      ]
+    }
+  ]
+}

@@ -20,6 +20,7 @@ import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { type SpawnDaemonHandle } from "@semio-tech/repo-lib/process";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runtimeSleepV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 
 
@@ -62,7 +63,7 @@ async function awaitTcpReady(
 ): Promise<PollOutcome> {
   const mode = opts.mode ?? "open";
   const probe = opts.probe ?? isDevPortInUse;
-  const sleep = opts.sleep ?? ((ms: number) => Bun.sleep(ms));
+  const sleep = opts.sleep ?? ((ms: number) => runtimeSleepV1(ms));
   const now = opts.now ?? Date.now;
   const deadline = now() + opts.deadlineMs;
   while (now() < deadline) {
@@ -93,7 +94,7 @@ async function awaitHttpOk(
   },
 ): Promise<PollOutcome> {
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const sleep = opts.sleep ?? ((ms: number) => Bun.sleep(ms));
+  const sleep = opts.sleep ?? ((ms: number) => runtimeSleepV1(ms));
   const now = opts.now ?? Date.now;
   const deadline = now() + opts.deadlineMs;
   while (now() < deadline) {
@@ -147,7 +148,7 @@ class ColdBootCheckScript extends BundleScript {
     const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
     await withPlaygroundSessionV1(this.repoRoot,this.invocation,variant,async session=>{
     const receiptRoot = join(developmentRuntimeRoot(this.repoRoot, variant, profile, renderer), "activation");
-    if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+    if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
     const activated = new Set(readActivationReceipt(receiptRoot).plugins.map((row) => row.pluginId));
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
     const healthy = healthyPreparedComponents(verdicts, playground.pluginId);

@@ -24,20 +24,21 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePlateThickness whe
         record: "ChangedPlateThickness",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change plate thickness", "Blechdicke ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for ChangePlateThickness where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_plate_thickness::ChangePlateThickness> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::change_plate_thickness::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_plate_thickness::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change plate thickness", "Blechdicke ändern")
-    }
 }
 
 //#region 🪢️Mounts

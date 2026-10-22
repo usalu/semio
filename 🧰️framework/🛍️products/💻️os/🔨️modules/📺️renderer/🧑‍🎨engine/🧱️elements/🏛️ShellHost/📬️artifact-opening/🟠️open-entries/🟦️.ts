@@ -1,5 +1,5 @@
 /** 🟠️ The open entries phase of useArtifactOpening. */
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, AppRouter, type AppRouterManifest, SemioFaultError, SURFACE_FAULT_CODES, type Conflict, type Fault, type MergeReport, type Severity } from "@semio-tech/framework";
 import { programPluginIdV1, sessionProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";

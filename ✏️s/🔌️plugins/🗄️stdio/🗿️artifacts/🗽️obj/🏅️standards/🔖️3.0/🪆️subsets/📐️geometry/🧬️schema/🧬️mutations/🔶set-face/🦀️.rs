@@ -22,7 +22,16 @@ pub struct SetFace {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "face", kind: "set-face", record: "SetFace" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set face", "Fläche setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetFace {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { index, face } = self;
         protocol::MutationOutcome::new({
             let old = base.faces.get(*index).cloned().unwrap_or_default();
@@ -37,12 +46,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetFace {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set face", "Fläche setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

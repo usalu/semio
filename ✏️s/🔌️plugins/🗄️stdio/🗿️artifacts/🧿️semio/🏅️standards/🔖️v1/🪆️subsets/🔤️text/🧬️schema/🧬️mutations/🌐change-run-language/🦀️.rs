@@ -15,7 +15,16 @@ pub struct ChangeRunLanguage {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunLanguage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run-language", kind: "change-run-language", record: "ChangedRunLanguage" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Sprache von Textlauf #{} auf {} ändern", self.index, self.new_language))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunLanguage {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
@@ -24,11 +33,5 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunL
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Sprache von Textlauf #{} auf {} ändern", self.index, self.new_language))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

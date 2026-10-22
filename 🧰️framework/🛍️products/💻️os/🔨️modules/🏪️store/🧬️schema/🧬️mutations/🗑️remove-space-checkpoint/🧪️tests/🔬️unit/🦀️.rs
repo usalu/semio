@@ -10,8 +10,8 @@ fn metadata_and_target_subregion_are_leaf_owned() {
     assert_eq!(payload.target(), vec!["checkpoints", "cp"]);
 }
 
-fn checkpoint(id: &str) -> super::super::super::SpaceCheckpoint {
-    super::super::super::SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
+fn checkpoint(id: &str) -> crate::space_history_document::SpaceCheckpoint {
+    crate::space_history_document::SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
 }
 
 /// ➕️ L3: removing the first, a middle and the last of three checkpoints inverts to the same position and sums to the negative diff.

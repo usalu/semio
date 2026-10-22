@@ -58,8 +58,8 @@
     "./tree/equal": "./🌳️tree/🟰️equal/🟦️.ts"
   },
   "scripts": {
-    "test-numeric-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-numeric-api",
-    "test-scalars-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-scalars-api"
+    "test-numeric-api": "repo run @semio-tech/value-ts:test-numeric-api",
+    "test-scalars-api": "repo run @semio-tech/value-ts:test-scalars-api"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*",

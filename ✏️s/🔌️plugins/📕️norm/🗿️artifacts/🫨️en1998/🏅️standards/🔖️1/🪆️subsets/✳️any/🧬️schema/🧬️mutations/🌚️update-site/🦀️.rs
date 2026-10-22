@@ -20,7 +20,16 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for UpdateSite where Op: pro
         record: "UpdateSite",
     };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1998Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update site seismicity", "Standortseismizität aktualisieren")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["update-site".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1998Snapshot, Op> for UpdateSite where Op: protocol::ColdMutation<En1998Snapshot, ReferenceDiff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::update_site::UpdateSite> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1998Snapshot>>::ReferenceDiff> {
         crate::update_site::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,12 +38,6 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for UpdateSite where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update site seismicity", "Standortseismizität aktualisieren")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["update-site".into()]
-    }
 }
 
 //#region 🪢️Mounts

@@ -1,0 +1,318 @@
+{
+ "wiring": [
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": [
+       "dep:tempfile"
+      ]
+     }
+    ],
+    "optionalDependencies": [
+     "tempfile"
+    ],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   },
+   "b": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": [
+       "a/testkit"
+      ]
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {
+     "a": [
+      "testkit"
+     ]
+    },
+    "gatedNames": {
+     "testkit": [
+      "run"
+     ]
+    }
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {
+     "a": [
+      "testkit"
+     ]
+    },
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": [
+       "serde_json/preserve_order"
+      ]
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   }
+  },
+  {
+   "a": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "peek"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {
+     "a": [
+      "testkit"
+     ]
+    },
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "peek"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "Helper",
+      "probe"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {
+     "a": [
+      "testkit"
+     ]
+    },
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "shared"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "shared"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": [
+       "dep:tempfile"
+      ]
+     }
+    ],
+    "optionalDependencies": [
+     "tempfile"
+    ],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": [
+       "dep:tempfile"
+      ]
+     }
+    ],
+    "optionalDependencies": [
+     "tempfile"
+    ],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   }
+  },
+  {
+   "a": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {}
+   }
+  },
+  {
+   "a": {
+    "features": [
+     {
+      "name": "testkit",
+      "entries": []
+     }
+    ],
+    "optionalDependencies": [],
+    "consumed": {},
+    "gatedNames": {
+     "testkit": [
+      "make"
+     ]
+    }
+   },
+   "b": {
+    "features": [],
+    "optionalDependencies": [],
+    "consumed": {
+     "a": [
+      "testkit"
+     ]
+    },
+    "gatedNames": {}
+   }
+  }
+ ]
+}

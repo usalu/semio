@@ -17,16 +17,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateTextNote> + From<semio_s_artifact_bim_model_mut_any_97::standards::v1::subsets::any::schema::mutations::delete_text_note::DeleteTextNote>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "text-note", kind: "create-text-note", record: "CreateTextNote" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::create_text_note::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::create_text_note::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create text note \"{}\"", self.id), &format!("Textnotiz \"{}\" anlegen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for CreateTextNote
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<CreateTextNote> + From<semio_s_artifact_bim_model_mut_any_97::standards::v1::subsets::any::schema::mutations::delete_text_note::DeleteTextNote>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::create_text_note::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_text_note::inverse::inverse(self, base))
     }
 }

@@ -38,7 +38,7 @@ import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framewor
 import { Validator } from "jsonschema";
 import { unwrap, call } from "./📇️recipe-contract/🟦️.ts";
 import type { Recipe, Kernel } from "./📇️recipe-contract/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -702,7 +702,7 @@ function validateToleranceContract(): number {
 //#region 🧩️Carrier
 /** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
 function carrier(): number {
-  const build = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
   return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }

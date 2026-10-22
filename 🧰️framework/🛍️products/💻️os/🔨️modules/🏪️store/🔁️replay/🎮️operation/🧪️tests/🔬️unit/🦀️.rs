@@ -163,6 +163,7 @@ fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(v
 
 #[test]
 fn cooperative_history_operation_obeys_the_neutral_law() {
+    let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral operation law");
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
     for case in law["cases"].as_array().unwrap() {
@@ -173,12 +174,12 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
             let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone(),Arc::clone(&input)));
             let mut task = ArtifactReplayPreparationTask::new(context, cursor);
             let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: 0, maximum_depth: 64 };
-            assert_eq!(task.step(7, [9; 32], grant,&mut control, &mut || true).unwrap(), ArtifactReplayPreparationStep::Blocked);
+            assert_eq!(task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || true).unwrap(), ArtifactReplayPreparationStep::Blocked);
             assert_eq!(calls.load(Ordering::SeqCst), 0);
-            assert!(task.step(8, [9; 32], grant,&mut control, &mut || false).is_err());
+            assert!(task.step(8, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).is_err());
             assert_eq!(calls.load(Ordering::SeqCst), 0);
             for _ in 0..1024 {
-                if matches!(task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Prepared(_)) { break; }
+                if matches!(task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Prepared(_)) { break; }
             }
             assert!(calls.load(Ordering::SeqCst) > 20);
             let mut prepared = task.take_prepared().expect("granted preparation exposed owners");
@@ -201,10 +202,10 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
                 let calls = Arc::new(AtomicUsize::new(0));
                 let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone(),Arc::clone(&input)));
                 let mut task = ArtifactReplayPreparationTask::new(context, cursor);
-                for _ in 0..cancel_at { task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(); }
+                for _ in 0..cancel_at { task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap(); }
                 task.cancel();
                 let count = calls.load(Ordering::SeqCst);
-                assert_eq!(task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Blocked);
+                assert_eq!(task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Blocked);
                 assert_eq!(calls.load(Ordering::SeqCst), count);
                 close(task.into_retirement(),&mut control);
             }
@@ -231,6 +232,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
 
 #[test]
 fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
+    let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in law["turnReceipts"]["cases"].as_array().unwrap() {
         let amount = |key: &str| row[key].as_u64().unwrap() as usize;
@@ -250,7 +252,7 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
     let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
     assert!(task.demands(8,[9;32],4096).is_err());
     assert_eq!(calls.load(Ordering::SeqCst), 0);
-    let step = task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap();
+    let step = task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap();
     assert_eq!(step.progress().retained_capacity_bytes, grant.maximum_capacity_bytes);
     assert_eq!(step.progress().copied_bytes, 0);
     task.cancel();
@@ -272,8 +274,8 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert_eq!(owner.next_depth_demand().unwrap(), 1);
     let full = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
     for short in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }] {
-        let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(short,|receiving|owner.close_step(short,receiving)).unwrap());
-        assert_eq!(step.progress(), Default::default());
+        let (result, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(short,|receiving|owner.close_step(short,receiving)));
+        if short.maximum_items == 0 || short.maximum_depth == 0 { assert!(result.is_err(), "an unpaid original turn is refused before any cleanup"); } else { assert_eq!(result.unwrap().progress(), Default::default()); }
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!owner.terminal_is_empty());
     }

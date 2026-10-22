@@ -214,7 +214,7 @@ async fn a_storey_diff_re_infers_the_stairs_on_it_and_a_material_diff_does_not()
     assert_eq!(first, untouched, "a material edit leaves the stair runs alone");
     assert_eq!(session.report().computed_by_kind.get("stair-run"), None, "and recomputes no run");
     let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).stair_runs.clone();
     assert_eq!((first["s-1"].riser_count, recomputed["s-1"].riser_count), (16, 19), "a storey height edit re-infers the riser count");
 }

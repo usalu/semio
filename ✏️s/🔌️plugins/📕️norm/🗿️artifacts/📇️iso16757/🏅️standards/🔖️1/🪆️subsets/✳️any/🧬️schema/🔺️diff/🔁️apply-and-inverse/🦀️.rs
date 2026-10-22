@@ -65,63 +65,9 @@ pub struct Iso16757SubjectsPatchParentIdValue {
     pub value: Option<String>,
 }
 
-impl protocol::MutationDiff<Iso16757Snapshot> for Iso16757Diff {
-    fn apply(&self, base: &Iso16757Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Iso16757Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.catalogue_name {
-            next.catalogue.metadata.names.preferred.text = value.clone();
-        }
-        if let Some(value) = &self.manufacturer_name {
-            next.catalogue.manufacturer.names.preferred.text = value.clone();
-        }
-        if let Some(rows) = &self.product_groups {
-            next.catalogue.product_groups = rows.commit_onto(&base.catalogue.product_groups, capability).map_err(|error| error.under(["product_groups"]))?;
-        }
-        if let Some(rows) = &self.product_classes {
-            next.catalogue.product_classes = rows.commit_onto(&base.catalogue.product_classes, capability).map_err(|error| error.under(["product_classes"]))?;
-        }
-        if let Some(rows) = &self.product_series {
-            next.catalogue.product_series = rows.commit_onto(&base.catalogue.product_series, capability).map_err(|error| error.under(["product_series"]))?;
-        }
-        if let Some(rows) = &self.products {
-            next.catalogue.products = rows.commit_onto(&base.catalogue.products, capability).map_err(|error| error.under(["products"]))?;
-        }
-        if let Some(rows) = &self.product_indexes {
-            next.catalogue.product_indexes = rows.commit_onto(&base.catalogue.product_indexes, capability).map_err(|error| error.under(["product_indexes"]))?;
-        }
-        if let Some(rows) = &self.property_definitions {
-            next.catalogue.property_definitions = rows.commit_onto(&base.catalogue.property_definitions, capability).map_err(|error| error.under(["property_definitions"]))?;
-        }
-        if let Some(rows) = &self.subjects {
-            next.dictionary.subjects = rows.commit_onto(&base.dictionary.subjects, capability).map_err(|error| error.under(["subjects"]))?;
-        }
-        if let Some(rows) = &self.geometry_objects {
-            next.geometry.objects = rows.apply_rows(&base.geometry.objects).map_err(|error| error.under(["geometry_objects"]))?;
-        }
-        if let Some(value) = &self.selection_class_id {
-            next.selection.class_id = value.clone();
-        }
-        if let Some(value) = &self.selection_series_id {
-            next.selection.series_id = value.value.clone();
-        }
-        if let Some(rows) = &self.selection_constraints {
-            next.selection.constraints = rows.apply_rows(&base.selection.constraints).map_err(|error| error.under(["selection_constraints"]))?;
-        }
-        if let Some(value) = &self.part_number_rule {
-            next.part_number_rule = value.clone();
-        }
-        if let Some(rows) = &self.part_number_inputs {
-            next.part_number_inputs = rows.apply_rows(&base.part_number_inputs).map_err(|error| error.under(["part_number_inputs"]))?;
-        }
-        if let Some(patch) = &self.script_limits {
-            patch.apply_to_row(&mut next.script_limits).map_err(|error| error.under(["script_limits"]))?;
-        }
-        if let Some(value) = &self.exchange_process {
-            next.exchange_process = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Iso16757Snapshot> for Iso16757Diff {}
 
+impl protocol::ColdMutationDiff<Iso16757Snapshot> for Iso16757Diff {
     fn absorb(&mut self, other: Self) {
         if other.catalogue_name.is_some() {
             self.catalogue_name = other.catalogue_name;
@@ -218,9 +164,73 @@ impl protocol::MutationDiff<Iso16757Snapshot> for Iso16757Diff {
             self.exchange_process = other.exchange_process;
         }
     }
+
+    fn apply(&self, unpublished: &mut Iso16757Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.catalogue_name {
+            next.catalogue.metadata.names.preferred.text = value.clone();
+        }
+        if let Some(value) = &self.manufacturer_name {
+            next.catalogue.manufacturer.names.preferred.text = value.clone();
+        }
+        if let Some(rows) = &self.product_groups {
+            next.catalogue.product_groups = rows.commit_onto(&base.catalogue.product_groups, capability).map_err(|error| error.under(["product_groups"]))?;
+        }
+        if let Some(rows) = &self.product_classes {
+            next.catalogue.product_classes = rows.commit_onto(&base.catalogue.product_classes, capability).map_err(|error| error.under(["product_classes"]))?;
+        }
+        if let Some(rows) = &self.product_series {
+            next.catalogue.product_series = rows.commit_onto(&base.catalogue.product_series, capability).map_err(|error| error.under(["product_series"]))?;
+        }
+        if let Some(rows) = &self.products {
+            next.catalogue.products = rows.commit_onto(&base.catalogue.products, capability).map_err(|error| error.under(["products"]))?;
+        }
+        if let Some(rows) = &self.product_indexes {
+            next.catalogue.product_indexes = rows.commit_onto(&base.catalogue.product_indexes, capability).map_err(|error| error.under(["product_indexes"]))?;
+        }
+        if let Some(rows) = &self.property_definitions {
+            next.catalogue.property_definitions = rows.commit_onto(&base.catalogue.property_definitions, capability).map_err(|error| error.under(["property_definitions"]))?;
+        }
+        if let Some(rows) = &self.subjects {
+            next.dictionary.subjects = rows.commit_onto(&base.dictionary.subjects, capability).map_err(|error| error.under(["subjects"]))?;
+        }
+        if let Some(rows) = &self.geometry_objects {
+            next.geometry.objects = rows.apply_rows(&base.geometry.objects).map_err(|error| error.under(["geometry_objects"]))?;
+        }
+        if let Some(value) = &self.selection_class_id {
+            next.selection.class_id = value.clone();
+        }
+        if let Some(value) = &self.selection_series_id {
+            next.selection.series_id = value.value.clone();
+        }
+        if let Some(rows) = &self.selection_constraints {
+            next.selection.constraints = rows.apply_rows(&base.selection.constraints).map_err(|error| error.under(["selection_constraints"]))?;
+        }
+        if let Some(value) = &self.part_number_rule {
+            next.part_number_rule = value.clone();
+        }
+        if let Some(rows) = &self.part_number_inputs {
+            next.part_number_inputs = rows.apply_rows(&base.part_number_inputs).map_err(|error| error.under(["part_number_inputs"]))?;
+        }
+        if let Some(patch) = &self.script_limits {
+            patch.apply_to_row(&mut next.script_limits).map_err(|error| error.under(["script_limits"]))?;
+        }
+        if let Some(value) = &self.exchange_process {
+            next.exchange_process = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Iso16757Snapshot> for Iso16757Diff {
+    fn is_empty(&self) -> bool {
+        self.catalogue_name.is_none() && self.manufacturer_name.is_none() && self.product_groups.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_classes.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_series.as_ref().map_or(true, |rows| rows.is_empty()) && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_indexes.as_ref().map_or(true, |rows| rows.is_empty()) && self.property_definitions.as_ref().map_or(true, |rows| rows.is_empty()) && self.subjects.as_ref().map_or(true, |rows| rows.is_empty()) && self.geometry_objects.as_ref().map_or(true, |rows| rows.is_empty()) && self.selection_class_id.is_none() && self.selection_series_id.is_none() && self.selection_constraints.as_ref().map_or(true, |rows| rows.is_empty()) && self.part_number_rule.is_none() && self.part_number_inputs.as_ref().map_or(true, |rows| rows.is_empty()) && self.script_limits.is_none() && self.exchange_process.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Iso16757Snapshot> for Iso16757Diff {
     fn inverse(&self, base: &Iso16757Snapshot) -> Self {
         Self {
             catalogue_name: self.catalogue_name.as_ref().map(|_| base.catalogue.metadata.names.preferred.text.clone()),
@@ -241,9 +251,5 @@ impl protocol::DiffAlgebra<Iso16757Snapshot> for Iso16757Diff {
             script_limits: self.script_limits.as_ref().map(|patch| patch.inverse_from_row(&base.script_limits)),
             exchange_process: self.exchange_process.as_ref().map(|_| base.exchange_process.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.catalogue_name.is_none() && self.manufacturer_name.is_none() && self.product_groups.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_classes.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_series.as_ref().map_or(true, |rows| rows.is_empty()) && self.products.as_ref().map_or(true, |rows| rows.is_empty()) && self.product_indexes.as_ref().map_or(true, |rows| rows.is_empty()) && self.property_definitions.as_ref().map_or(true, |rows| rows.is_empty()) && self.subjects.as_ref().map_or(true, |rows| rows.is_empty()) && self.geometry_objects.as_ref().map_or(true, |rows| rows.is_empty()) && self.selection_class_id.is_none() && self.selection_series_id.is_none() && self.selection_constraints.as_ref().map_or(true, |rows| rows.is_empty()) && self.part_number_rule.is_none() && self.part_number_inputs.as_ref().map_or(true, |rows| rows.is_empty()) && self.script_limits.is_none() && self.exchange_process.is_none()
     }
 }

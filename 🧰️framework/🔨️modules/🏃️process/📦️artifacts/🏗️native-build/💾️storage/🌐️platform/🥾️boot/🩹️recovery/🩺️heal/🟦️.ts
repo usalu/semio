@@ -1,3 +1,5 @@
+import{nativeImageHdiutilProgramV1}from"../../../../🍎️image/🛠️hdiutil/🟦️.ts";
+import{nativeStorageHostMountsVolumesV1}from"../../../../🔌️backends/📋️contract/🟦️.ts";
 import{createHash}from"node:crypto";
 import{existsSync,lstatSync,mkdirSync,realpathSync,writeFileSync}from"node:fs";
 import{dirname,join}from"node:path";
@@ -53,7 +55,7 @@ export async function healNativeToolStateBootV1(input:Readonly<{leaseDirectory:s
 /** 🛰️ Reads the kernel image roster through the shared per-process roster; one attach or detach by any process never yields a torn view. */
 export function nativeBootImageRosterV1(control:ResourceLeaseControl,host:NativeBootHostV1,cwd:string):()=>Promise<readonly NativeBootRosterImageV1[]>{
  const policy=Object.freeze({attempts:image.informationAttempts,backoffMilliseconds:image.informationBackoffMilliseconds,signal:control.signal});
- return()=>observeSharedNativeImageInventoryV1(()=>host.capture("/usr/bin/hdiutil",["info","-plist"],cwd,{maximumBytes:cleanup.maximumOutputBytes,maximumLines:cleanup.maximumOutputLines}),information=>{
+ return()=>observeSharedNativeImageInventoryV1(()=>host.capture(nativeImageHdiutilProgramV1,["info","-plist"],cwd,{maximumBytes:cleanup.maximumOutputBytes,maximumLines:cleanup.maximumOutputLines}),information=>{
   const rows=information.images;if(!Array.isArray(rows)||rows.length>cleanup.maximumObservedImages)throw Error("Complete bounded Native kernel inventory required");
   return Object.freeze(rows.flatMap((row:unknown)=>{
    const entry=row as Record<string,unknown>|null;if(!entry||typeof entry!=="object"||Array.isArray(entry)||typeof entry["image-path"]!=="string")return[];
@@ -85,7 +87,7 @@ function detacher(control:ResourceLeaseControl,host:NativeBootHostV1,roster:()=>
   const held=leaseOf(row.imagePath);let lease;
   if(held&&existsSync(row.imagePath)){try{lease=await acquireResourceLease({...held,mode:"exclusive",signal:control.signal,control,timeoutMs:0});}catch(error){checkResourceLeaseControl(control);if(timedOut(error))return"skipped";throw error;}}
   try{
-   try{await host.capture("/usr/bin/hdiutil",[...leaks.detach.arguments,row.device],cwd,{maximumBytes:leaks.detach.maximumBytes,maximumLines:64});}
+   try{await host.capture(nativeImageHdiutilProgramV1,[...leaks.detach.arguments,row.device],cwd,{maximumBytes:leaks.detach.maximumBytes,maximumLines:64});}
    catch(error){checkResourceLeaseControl(control);}
    return await find()?"skipped":"done";
   }finally{lease?.release();}
@@ -115,7 +117,7 @@ export function healNativeProcessBootV1(input:Readonly<{leaseDirectory:string;co
    checkResourceLeaseControl(control);
    const host=input.host??nativeBootHostV1(control,leaseDirectory);
    await healNativeToolStateBootV1({leaseDirectory,control,host,servers:input.servers??[],...(input.onProgress?{onProgress:input.onProgress}:{})});
-   const roster=input.roster??(process.platform==="darwin"?nativeBootImageRosterV1(control,host,dirname(dirname(dirname(leaseDirectory)))):undefined);
+   const roster=input.roster??(nativeStorageHostMountsVolumesV1()?nativeBootImageRosterV1(control,host,dirname(dirname(dirname(leaseDirectory)))):undefined);
    if(roster)await healNativeLeakedImagesV1({leaseDirectory,control,host,roster,...(input.onProgress?{onProgress:input.onProgress}:{})});
   }catch(error){
    if(control.signal.aborted)throw error;

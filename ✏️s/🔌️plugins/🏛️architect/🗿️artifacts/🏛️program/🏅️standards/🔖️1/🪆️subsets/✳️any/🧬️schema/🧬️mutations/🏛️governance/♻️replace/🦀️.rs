@@ -22,6 +22,16 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceGovernance>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "governance", kind: "replace-governance", record: "ReplacedGovernance" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace governance \"{}\"", self.new_governance.framework), &format!("Governance \"{}\" ersetzen", self.new_governance.framework))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for ReplaceGovernance
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<ReplaceGovernance>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -31,7 +41,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace governance \"{}\"", self.new_governance.framework), &format!("Governance \"{}\" ersetzen", self.new_governance.framework))
-    }
 }

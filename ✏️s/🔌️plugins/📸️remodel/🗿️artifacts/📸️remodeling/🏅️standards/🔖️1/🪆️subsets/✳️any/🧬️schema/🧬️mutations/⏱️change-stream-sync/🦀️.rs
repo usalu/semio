@@ -29,6 +29,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stream", kind: "change-stream-sync", record: "ChangedStreamSync" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stream \"{}\" sync offset to {}ms", self.id, self.new_sync_offset_ms), &format!("Synchronisationsversatz von Datenstrom \"{}\" auf {}ms ändern", self.id, self.new_sync_offset_ms))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RemodelingSnapshot, Op> for ChangeStreamSync
+where
+    Op: protocol::ColdMutation<RemodelingSnapshot, ReferenceDiff = RemodelingDiff> + From<ChangeStreamSync>,
+{
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
@@ -38,11 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stream \"{}\" sync offset to {}ms", self.id, self.new_sync_offset_ms), &format!("Synchronisationsversatz von Datenstrom \"{}\" auf {}ms ändern", self.id, self.new_sync_offset_ms))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

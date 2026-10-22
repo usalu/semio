@@ -23,6 +23,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLayerStrokeScale>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-stroke-scale", kind: "set-layer-stroke-scale", record: "SetLayerStrokeScale" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["layerStrokeScale".into(), self.layer_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetLayerStrokeScale
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetLayerStrokeScale>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if self.value.is_some_and(|value| !value.is_finite()) {
             return MutationOutcome::fatal("mutation.invariant", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]);
@@ -38,12 +51,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["layerStrokeScale".into(), self.layer_id.clone()]
-    }
 }
 //#endregion ⚙️Behavior
 

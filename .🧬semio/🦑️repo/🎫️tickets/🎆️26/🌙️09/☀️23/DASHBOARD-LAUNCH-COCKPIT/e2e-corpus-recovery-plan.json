@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "executable": "repo",
+  "args": [
+    "exec",
+    "--projects=workspace",
+    "--",
+    "git",
+    "show",
+    "HEAD:🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json",
+    "HEAD:🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🧫️fixtures/🔣️.json"
+  ],
+  "environment": {
+    "GIT_PAGER": "cat",
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000"
+  },
+  "output": {
+    "stdout": "tool memory only",
+    "sourcePayloadFiles": false,
+    "evidence": "authored digest/provenance Markdown only"
+  },
+  "observations": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️selection.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️owners.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📣️publication.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️options/🟦️.ts"
+  ],
+  "preconditions": [
+    "Framework and Root genuine allocator dependency resolution settle with independent exact tuple acceptance",
+    "High material lifetime correction remains source-frozen and reviewed",
+    "No competing fresh Source producer",
+    "Ordinary current-source, physical receipt and resource custody guards remain active"
+  ],
+  "restore": {
+    "requiredOriginalCaseCount": 6,
+    "validate": [
+      "HEAD provenance matches actual existing Source and native consumers",
+      "preserve possible peer fields",
+      "closed original schema plus outputHandoff extension",
+      "exact checksums",
+      "no approximated original cases"
+    ],
+    "dependentGates": "retained sequence Source/native and full affected consumer libraries remain pending until restoration"
+  },
+  "history": [
+    {
+      "session": 29712,
+      "exit": 1,
+      "gitBody": false,
+      "primary": "Native persistent receiver operation is not ready",
+      "followUp": "material lifetime correction accepted; new attempt not launched yet"
+    }
+  ],
+  "status": "natural-refusal-before-Git-body-no-corpus-restoration",
+  "current": {
+    "session": 29672,
+    "before": "🗑️generated/e2e-corpus-lifetime-before.json",
+    "beforeAt": "2026-10-21T10:49:03.759Z",
+    "phase": "terminal: Original resource loan deadline exhausted",
+    "whole": 1,
+    "gitBody": false,
+    "qualified": "Actual exact PTY terminal; no Git body, blobs, restore or unchanged retry",
+    "after": "🗑️generated/e2e-corpus-lifetime-after-whole.json",
+    "afterAt": "2026-10-21T11:23:53.361Z"
+  },
+  "currentActual": {
+    "session": 29672,
+    "exit": 1,
+    "status": "natural-failure-before-Git-body",
+    "primary": "Original resource loan deadline exhausted",
+    "chain": [
+      "process invocation routing TS214:643",
+      "resource lease control TS18:29",
+      "native-build storage cleanup command TS142:5706"
+    ],
+    "lastPhase": "native-fixed-image EX queue position4/8, about1790 seconds",
+    "gitBodies": 0,
+    "blobsRecovered": 0,
+    "before": "🗑️generated/e2e-corpus-lifetime-before.json",
+    "after": "🗑️generated/e2e-corpus-lifetime-after-whole.json",
+    "diagnosticPoints": 26,
+    "stable": 26,
+    "metadataErrors": 0,
+    "changedHashes": 0,
+    "qualification": "Bounded diagnostic roster only; actual loaded-byte guards remain authoritative. No restoration or repeat without material change."
+  },
+  "recoveredHistoricalSource": {
+    "revision": "fd14da55f18997fe8d7d6437818696353d2d7b8d",
+    "interface": [
+      "repo",
+      "--tool=nx",
+      "--lang=en",
+      "capacity",
+      "run",
+      "--memory=128",
+      "--cpu=1",
+      "--",
+      "git"
+    ],
+    "wholeExit": 0,
+    "exactGitBlobHashes": true,
+    "blobs": [
+      {
+        "kind": "schema",
+        "bytes": 2491,
+        "gitBlob": "34028308f0c1a053fa5f524ec63f93ef5c88dec4",
+        "expectedGitBlob": "34028308f0c1a053fa5f524ec63f93ef5c88dec4",
+        "exact": true,
+        "sha256": "c248d2ffe0e30ff3c190e8c624b2313cc17f295c1dce827c9ec4f6b8155094ff",
+        "canonicalSha256": "56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611"
+      },
+      {
+        "kind": "fixture",
+        "bytes": 2363,
+        "gitBlob": "4dddd69af26342828ebde72fcc62ddafa2601539",
+        "expectedGitBlob": "4dddd69af26342828ebde72fcc62ddafa2601539",
+        "exact": true,
+        "sha256": "df98580e5f205111c3f4acd2df6c8a6bb84b7409450fd7145d83292fbb936bea",
+        "canonicalSha256": "f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820"
+      }
+    ],
+    "originalCaseCount": 6,
+    "sourceBodiesSavedToTicket": false,
+    "status": "restored-in-place-independently-source-accepted-runtime-gates-pending",
+    "report": "oct21-sequence-corpus-recovery.md",
+    "originalProjectionHashes": {
+      "schema": "56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611",
+      "fixture": "f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820"
+    },
+    "extensionPreserved": true,
+    "independentSourceReview": true
+  }
+}

@@ -6,7 +6,7 @@ pub(crate) use crate::testing_laws_unit_1::mutation_fixture::dummy::mutations::s
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = crate::testing_laws_unit_1::mutation_fixture::dummy::DummySnapshot, diff = crate::testing_laws_unit_1::mutation_fixture::dummy::DummyDiff, schema = "plugin.testkit.dummy")]
+#[mutations(snapshot = crate::testing_laws_unit_1::mutation_fixture::dummy::DummySnapshot, diff = crate::testing_laws_unit_1::mutation_fixture::dummy::DummyDiff, schema = "plugin.testkit.dummy", reference = crate::testing_laws_unit_1::mutation_fixture::dummy::DummySnapshot, reference_diff = crate::testing_laws_unit_1::mutation_fixture::dummy::DummyDiff)]
 pub(crate) enum DummyMutation {
     SetDummyCount(SetDummyCount),
 }

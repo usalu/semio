@@ -1,0 +1,54 @@
+{
+  "title": "Fix Play Storybook Double Launch",
+  "status": "closed",
+  "description": "Fix duplicated Storybook startup so the play storybook command only starts one Storybook server on one port.",
+  "summary": "Refactored the JS Storybook launcher to reuse an existing listener on port 6006 instead of failing with a silent exact-port exit, and added launcher coverage in the existing JS unit tests.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T13:02:37.396104953Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Fix duplicated Storybook startup so the play storybook command only starts one Storybook server on one port.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02 13:07:11",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-03-02 17:49:14",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Investigate the current dev:storybook crash when launched under VS Code debug with NODE_OPTIONS hooks and fix the root cause.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02T17:57:17.884150808Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Refactored the JS Storybook launcher to reuse an existing listener on port 6006 instead of failing with a silent exact-port exit, and added launcher coverage in the existing JS unit tests.",
+      "files": [
+        {
+          "path": "💻️compose/js/dev.ts"
+        },
+        {
+          "path": "🧪️compose/js/compose.test.ts"
+        }
+      ]
+    }
+  ]
+}

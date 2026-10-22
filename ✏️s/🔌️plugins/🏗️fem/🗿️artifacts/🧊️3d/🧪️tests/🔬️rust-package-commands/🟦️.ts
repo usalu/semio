@@ -115,6 +115,8 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
     await verifyRetainedIndexSortOracle();
     const { verifyPositiveSpectrumOracle } = await import("../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎯️positive-spectrum/🟦️.ts");
     verifyPositiveSpectrumOracle();
+    const { verifyShiftOperatorOracle } = await import("../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔄️shift-operator/🟦️.ts");
+    verifyShiftOperatorOracle();
     await runOwnedCommand(process.execPath, ["test", resolve(context.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/🧪️tests/❄️cold/🟦️.ts")], context.repoRoot, "fem3d:numerical-mathematical-source", scriptInvocationBudget(context.invocation, 120000), { signal: context.invocation.control.signal, output: { maximumBytes: 8388608, maximumLines: 65536 } });
     const { verifyTripletCsrOracle } = await import("../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🧮️triplet-csr/🟦️.ts");
     verifyTripletCsrOracle();

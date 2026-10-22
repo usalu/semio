@@ -12,7 +12,7 @@ pub(crate) use crate::testing_laws_unit_1::mutation_fixture::transaction::mutati
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnSnapshot, diff = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnDiff, schema = "plugin.testkit.transaction")]
+#[mutations(snapshot = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnSnapshot, diff = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnDiff, schema = "plugin.testkit.transaction", reference = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnSnapshot, reference_diff = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnDiff)]
 pub(crate) enum TxnMutation {
     SetTransactionCount(SetTransactionCount),
     SetTransactionCountWithoutPreflight(SetTransactionCountWithoutPreflight),

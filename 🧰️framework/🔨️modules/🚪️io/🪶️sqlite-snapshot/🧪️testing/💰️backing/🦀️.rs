@@ -107,14 +107,14 @@ pub fn active_request_bytes() -> usize {
 }
 
 use semio_framework_os_kernel::{
+    os_store::serialization::ArtifactSqliteSnapshotHost,
     sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
-    os_store::serialization::ArtifactSqliteSnapshot,
 };
-enum Owned<T: ArtifactSqliteSnapshot> {
+enum Owned<T: ArtifactSqliteSnapshotHost> {
     Database(SqliteDatabase),
     Snapshot(T),
 }
-impl<T: ArtifactSqliteSnapshot> Owned<T> {
+impl<T: ArtifactSqliteSnapshotHost> Owned<T> {
     fn verify(self, snapshot: &T, database: &SqliteDatabase, verify: &impl Fn(&T, &T)) {
         match self {
             Self::Database(value) => assert_eq!(&value, database),
@@ -125,7 +125,7 @@ impl<T: ArtifactSqliteSnapshot> Owned<T> {
         }
     }
 }
-fn construct<T: ArtifactSqliteSnapshot>(snapshot: &T, database: &SqliteDatabase, phase: SqliteSnapshotPhase, control: &mut SqliteSnapshotControl<'_>) -> Result<Owned<T>, ValueError> {
+fn construct<T: ArtifactSqliteSnapshotHost>(snapshot: &T, database: &SqliteDatabase, phase: SqliteSnapshotPhase, control: &mut SqliteSnapshotControl<'_>) -> Result<Owned<T>, ValueError> {
     match phase {
         SqliteSnapshotPhase::ProjectSnapshot => snapshot.to_sqlite_database(control).map(Owned::Database),
         SqliteSnapshotPhase::ReconstructSnapshot => T::from_sqlite_database(database, control).map(Owned::Snapshot),
@@ -133,11 +133,11 @@ fn construct<T: ArtifactSqliteSnapshot>(snapshot: &T, database: &SqliteDatabase,
     }
 }
 /// 💰️ Direct typed SQL producers settle the concrete allocator requests and retain cumulative admission.
-pub fn verify_snapshot_backing<T: ArtifactSqliteSnapshot + PartialEq + std::fmt::Debug>(snapshot: &T, database: &SqliteDatabase) {
+pub fn verify_snapshot_backing<T: ArtifactSqliteSnapshotHost + PartialEq + std::fmt::Debug>(snapshot: &T, database: &SqliteDatabase) {
     verify_snapshot_backing_by(snapshot, database, |actual, expected| assert_eq!(actual, expected));
 }
 /// 🔬️ Observes unchanged physical requests with explicit domain literal equality outside observation.
-pub fn verify_snapshot_backing_by<T: ArtifactSqliteSnapshot>(snapshot: &T, database: &SqliteDatabase, verify: impl Fn(&T, &T)) {
+pub fn verify_snapshot_backing_by<T: ArtifactSqliteSnapshotHost>(snapshot: &T, database: &SqliteDatabase, verify: impl Fn(&T, &T)) {
     let defaults = SqliteDatabaseLimits::default();
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {
         let mut callback = |_| true;
@@ -186,7 +186,7 @@ pub fn verify_snapshot_backing_by<T: ArtifactSqliteSnapshot>(snapshot: &T, datab
 }
 
 /// 🧯️ Observes the complete direct producer's retained failure and cancellation owners.
-pub fn verify_snapshot_failure_backing<T: ArtifactSqliteSnapshot>(snapshot: &T, database: &SqliteDatabase, cancel_at: usize) {
+pub fn verify_snapshot_failure_backing<T: ArtifactSqliteSnapshotHost>(snapshot: &T, database: &SqliteDatabase, cancel_at: usize) {
     let defaults = SqliteDatabaseLimits::default();
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {
         let mut callback = |_| true;

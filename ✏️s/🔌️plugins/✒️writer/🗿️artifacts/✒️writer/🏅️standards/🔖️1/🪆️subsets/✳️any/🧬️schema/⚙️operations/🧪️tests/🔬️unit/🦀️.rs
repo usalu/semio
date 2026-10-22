@@ -2,7 +2,7 @@ use crate::schema::mutations::WriterMutation;
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 use crate::WriterSnapshot;
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::schema;
 

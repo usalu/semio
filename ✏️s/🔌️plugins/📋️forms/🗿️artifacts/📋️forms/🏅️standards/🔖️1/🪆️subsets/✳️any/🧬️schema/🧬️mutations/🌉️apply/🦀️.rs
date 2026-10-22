@@ -3,12 +3,12 @@
 
 use crate::schema::mutations::FormMutation;
 use crate::{FormsDiff, FormsSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// ⚖️ Whole-document apply — a thin delegation to the derive-generated `Mutation::diff`+`apply`
 /// (see file-level doc for why the free function itself stays, not its old hand-rolled match body).
 pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> protocol::MutationApplyResult<FormsSnapshot> {
-    protocol::apply_diff(mutation.diff(spec).diff(), spec)
+    protocol::apply_diff_cold(mutation.diff(spec).diff(), spec)
 }
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
@@ -17,8 +17,8 @@ pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -
 /// beside this one answers `Result<_, _>` and drops the messages.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &FormMutation) -> protocol::MutationOutcome<FormsDiff> {
-    let outcome = <FormMutation as Mutation<FormsSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
+    let outcome = <FormMutation as ColdMutation<FormsSnapshot>>::diff(mutation, snapshot);
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), &*snapshot) {
         *snapshot = next;
     }
     outcome

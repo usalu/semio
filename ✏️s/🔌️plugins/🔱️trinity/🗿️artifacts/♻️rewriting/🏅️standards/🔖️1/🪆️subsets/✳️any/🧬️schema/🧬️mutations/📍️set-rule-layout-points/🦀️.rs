@@ -49,15 +49,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "rule-layout-points", kind: "set-rule-layout-points", record: "SetRuleLayoutPoints" };
 
-    fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.points.len() + self.cleared.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),
@@ -67,6 +58,21 @@ where
     fn target(&self) -> Vec<String> {
         self.points.iter().map(|point| point.key.clone()).chain(self.cleared.iter().cloned()).collect()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<RewritingSnapshot, Op> for SetRuleLayoutPoints
+where
+    Op: protocol::ColdMutation<RewritingSnapshot, ReferenceDiff = RewritingDiff> + From<SetRuleLayoutPoints>,
+{
+    fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation
 

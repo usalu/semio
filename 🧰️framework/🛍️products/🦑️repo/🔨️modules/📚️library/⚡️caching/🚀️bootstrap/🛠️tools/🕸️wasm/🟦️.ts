@@ -13,6 +13,7 @@ import { withRepositoryToolingStoreV1, type RepositoryToolingStoreV1 } from "../
 import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { requireNativeStorageReservationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import { requireNativeStoragePathV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 
 const binaryenManifest=binaryenSchema.definitions.Release.const;
@@ -143,7 +144,7 @@ export class FingerprintScript extends Script {
         controller.signal.throwIfAborted();
         const override = tool === "wasm-bindgen" ? process.env.SEMIO_WASM_BINDGEN_BIN : tool === "wasm-opt" ? process.env.SEMIO_WASM_OPT_BIN : undefined;
         if (tool === "wasm-opt" && !override) { versions[tool] = binaryenIdentity(); continue; }
-        const path = override ? resolve(getWorkspaceRoot(), override) : Bun.which(tool, { PATH: process.env.PATH });
+        const path = override ? resolve(getWorkspaceRoot(), override) : runtimeWhichV1(tool, { PATH: process.env.PATH });
         if (!path) { versions[tool] = "unavailable"; continue; }
         const version = (await runTool(path,["--version"],getWorkspaceRoot(),AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]),true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim();
         if (!version) throw new Error(`Cannot fingerprint ${tool}`);

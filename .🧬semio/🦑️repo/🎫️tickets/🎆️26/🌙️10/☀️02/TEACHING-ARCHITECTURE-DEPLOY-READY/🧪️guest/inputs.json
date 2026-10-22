@@ -3,8 +3,8 @@
   "kind": "captured-neutral-interface-inputs",
   "files": {
     "schema.json": {
-      "bytes": 20930,
-      "sha256": "84e5360e82955fa29d6d995dbb3bc53ca7dd7cb7cdc445082fdf6f3c04eb19ec"
+      "bytes": 51161,
+      "sha256": "840c9c2a40f0d86449770cae9b45774ac021de5a1a931f7d7225c6f93ee9da1d"
     },
     "cases.json": {
       "bytes": 7297,

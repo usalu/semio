@@ -1,0 +1,88 @@
+{
+  "title": "Implement Copy Design Json Clipboard For Selection",
+  "status": "closed",
+  "description": "Implement copy-to-clipboard feature that copies kit JSON for selected elements (nodes, connections, ports, types) when Cmd/Ctrl+C is pressed. If nothing is selected, copy the entire kit JSON. The JSON structure must match kit_metabolism.json format with all related types, ports, designs, connections, etc.",
+  "summary": "Verified Design diagram Cmd/Ctrl+C handler copies Design JSON ({pieces, connections}) matching design.json structure. No selection copies all pieces+connections. Selection copies selected pieces+connections between them. Build passes with 0 TS errors, 15/15 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/840"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-11T13:14:50.590197084Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Implement copy-to-clipboard feature that copies kit JSON for selected elements (nodes, connections, ports, types) when Cmd/Ctrl+C is pressed. If nothing is selected, copy the entire kit JSON. The JSON structure must match kit_metabolism.json format with all related types, ports, designs, connections, etc.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-11 13:31:16",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-03-11 13:46:19",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Change clipboard copy to output Design JSON (pieces + connections) matching design.json structure. No selection = all pieces + connections. Selected = only selected pieces + their connections.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-11 13:54:31",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-03-11 14:00:53",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "User wants to verify that Design diagram Cmd/Ctrl+C handler copies Design JSON with { pieces, connections } matching design.json structure. No selection = all pieces + connections. Selection = only selected pieces + connections between them.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-11T14:04:57.069710787Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "summary": "Verified Design diagram Cmd/Ctrl+C handler copies Design JSON ({pieces, connections}) matching design.json structure. No selection copies all pieces+connections. Selection copies selected pieces+connections between them. Build passes with 0 TS errors, 15/15 unit tests pass.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    }
+  ]
+}

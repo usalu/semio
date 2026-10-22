@@ -19,15 +19,7 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<SetActiveAsset>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "active-asset", kind: "set-active-asset", record: "SetActiveAsset" };
-    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.asset_id {
@@ -41,4 +33,19 @@ where
         }
         })
     }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for SetActiveAsset
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<SetActiveAsset>,
+{
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }

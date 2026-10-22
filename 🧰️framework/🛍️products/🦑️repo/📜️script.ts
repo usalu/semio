@@ -1,5 +1,5 @@
-#!/usr/bin/env bun
-/** 🧭️ `@repo` technology policy router: `bun ./📜️script.ts policy`. */
+#!/usr/bin/env repo
+/** 🧭️ `@repo` technology policy router: `repo ./📜️script.ts policy`. */
 import { defineLint, type TechnologyLinter } from "./🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
 import { runPolicyOnlyMain } from "./🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
 

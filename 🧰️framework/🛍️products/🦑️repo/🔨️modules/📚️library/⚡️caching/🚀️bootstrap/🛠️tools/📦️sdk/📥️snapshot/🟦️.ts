@@ -1,4 +1,6 @@
 import{verifyNxSdkSharedSourcesV1}from"../📥️source/🔗️derivative/🔏️index/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import {constants,type BigIntStats} from "node:fs";
 import {createHash} from "node:crypto";
 import {copyFile,lstat,mkdir,readdir,readlink,realpath,symlink} from "node:fs/promises";
@@ -16,8 +18,8 @@ export interface NxSdkSnapshotReceiptV1 {readonly version:1;readonly digest:stri
 /** 🧮️ Only pinned installation inputs participate in reusable SDK identity. */
 export function nxSdkSnapshotIdentityV1(environment:Readonly<{platform:string;architecture:string;libc:string}>,files:ReadonlyMap<string,Uint8Array>):string{
  const hash=createHash("sha256").update("nx-sdk-snapshot-v1\0immutable-binaries-v1\0"+environment.platform+"\0"+environment.architecture+"\0"+environment.libc+"\0");
- if(!files.has("package.json")||!files.has("bun.lock"))throw Error("Pinned SDK manifest and lock required");
- for(const[path,bytes]of [...files].sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b)))){if(path!=="package.json"&&path!=="bun.lock"&&!/^patches\/[a-f0-9]{64}\.patch$/u.test(path))throw Error("Closed pinned SDK input required");hash.update(path+"\0").update(bytes).update("\0");}
+ if(!files.has("package.json")||!files.has(javascriptLockV1))throw Error("Pinned SDK manifest and lock required");
+ for(const[path,bytes]of [...files].sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b)))){if(path!=="package.json"&&path!==javascriptLockV1&&!/^patches\/[a-f0-9]{64}\.patch$/u.test(path))throw Error("Closed pinned SDK input required");hash.update(path+"\0").update(bytes).update("\0");}
  return hash.digest("hex");
 }
 /** ✅️ Rejects incomplete or differently owned SDK snapshot markers. */

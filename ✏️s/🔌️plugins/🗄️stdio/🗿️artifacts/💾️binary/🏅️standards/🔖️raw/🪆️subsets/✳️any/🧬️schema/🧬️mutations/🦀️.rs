@@ -28,7 +28,7 @@ pub mod truncate_at;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = BinarySnapshot, diff = BinaryDiff, schema = "BinaryMutation")]
+#[mutations(snapshot = BinarySnapshot, diff = BinaryDiff, schema = "BinaryMutation", reference = BinarySnapshot, reference_diff = BinaryDiff)]
 pub enum BinaryMutation {
     /// ✂️ Replaces `[offset, offset+remove_len)` with `insert`.
     ReplaceByteRange(replace_byte_range::ReplaceByteRange),

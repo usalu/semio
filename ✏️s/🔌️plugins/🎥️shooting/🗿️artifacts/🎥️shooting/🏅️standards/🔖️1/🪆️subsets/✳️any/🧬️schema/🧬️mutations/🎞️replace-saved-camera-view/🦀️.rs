@@ -20,6 +20,19 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ReplaceSavedCameraView>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "saved-camera-view", kind: "replace-saved-camera-view", record: "ReplacedSavedCameraView" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace saved camera \"{}\" view", self.id), &format!("Ansicht von gespeicherter Kamera \"{}\" ersetzen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for ReplaceSavedCameraView
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<ReplaceSavedCameraView>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -29,10 +42,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace saved camera \"{}\" view", self.id), &format!("Ansicht von gespeicherter Kamera \"{}\" ersetzen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }

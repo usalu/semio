@@ -21,7 +21,6 @@ impl DurableUnboundPlanningV1 {
             _=>Err(DurableOwnedGroupDecisionError::InvalidOutcome),
         }
     }
-    #[cfg(test)]
     pub fn frontier(&self)->(u8,RetirementDemand,Result<RetirementDemand,ValueError>,Result<RetirementDemand,ValueError>){(self.phase,self.json.next_demand(),self.snapshot.next_demand(),self.encoded.next_demand())}
     pub fn terminal_is_empty(&self)->bool{self.phase==12&&self.wire.is_none()&&self.pack.is_none()&&self.closing_wire.is_none()&&self.closing_pack.is_none()&&self.json.terminal_is_empty()&&self.snapshot.terminal_is_empty()&&self.encoded.terminal_is_empty()}
     pub fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{

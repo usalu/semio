@@ -32,6 +32,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "asset", kind: "delete-asset", record: "DeletedAsset" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete asset \"{}\"", self.key), &format!("Asset \"{}\" löschen", self.key))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RemodelingSnapshot, Op> for DeleteAsset
+where
+    Op: protocol::ColdMutation<RemodelingSnapshot, ReferenceDiff = RemodelingDiff> + From<AppendContent> + From<CommitReconstruction>,
+{
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
@@ -41,11 +53,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete asset \"{}\"", self.key), &format!("Asset \"{}\" löschen", self.key))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.key.clone()]
-    }
 }
 //#endregion 🔖️Mutation

@@ -1,5 +1,5 @@
 /** 🔸️ The search items phase of usePanelHosting. */
-import { useMemo } from "react";
+import { useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel, panelTabKindId } from "@semio-tech/framework";
 import { Icon } from "@semio-tech/ui-react";
 import { FRAMEWORK_CATEGORY_COMMAND_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";

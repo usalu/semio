@@ -1,5 +1,5 @@
 /** 💡️ Board2dHost suggestions and events: the suggestion menu and its rows, the hover paint and dispatch and the buffered board event drain, flush, snapshot and selection application with the peer gesture end and camera interaction settle. */
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
 import { type Board2dScene } from "@semio-tech/framework";
 import { createCoalescingActionDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";

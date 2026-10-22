@@ -16,7 +16,7 @@ export function readComponentRoster(manifest) {
   if (manifest?.version !== 1 || !Array.isArray(manifest.components) || !manifest.components.length) throw Error("Component roster version 1 with components required");
   const order = new Map();
   const roster = manifest.components.map((entry, index) => {
-    if (!entry || typeof entry !== "object" || !NAME.test(entry.name) || typeof entry.path !== "string" || !PATH.test(entry.path) || !Array.isArray(entry.needs)) throw Error(`Invalid component roster entry ${index}`);
+    if (!entry || typeof entry !== "object" || typeof entry.name !== "string" || !NAME.test(entry.name) || typeof entry.path !== "string" || !PATH.test(entry.path) || !Array.isArray(entry.needs)) throw Error(`Invalid component roster entry ${index}`);
     if (order.has(entry.name)) throw Error(`Duplicate component ${entry.name}`);
     if (new Set(entry.needs).size !== entry.needs.length) throw Error(`Component ${entry.name} repeats a need`);
     for (const need of entry.needs) if (!order.has(need)) throw Error(`Component ${entry.name} needs ${need}, which is not an earlier component`);

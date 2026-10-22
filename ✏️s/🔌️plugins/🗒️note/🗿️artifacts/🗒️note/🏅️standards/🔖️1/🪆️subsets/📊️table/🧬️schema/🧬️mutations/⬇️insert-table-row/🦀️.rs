@@ -35,6 +35,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertedTableRow" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert row into table \"{}\"", self.id), &format!("Zeile in Tabelle \"{}\" einfügen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for InsertTableRow
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<InsertTableRow> + From<crate::standards::v1::subsets::table::schema::mutations::remove_table_row::RemoveTableRow>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -44,11 +56,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert row into table \"{}\"", self.id), &format!("Zeile in Tabelle \"{}\" einfügen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

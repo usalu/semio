@@ -72,19 +72,26 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 pub struct Block5dPresenceDiff {}
 
 impl protocol::DiffAlgebra<Block5dPresence> for Block5dPresenceDiff {
-    fn inverse(&self, _base: &Block5dPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl protocol::MutationDiff<Block5dPresence> for Block5dPresenceDiff {
-    fn apply(&self, base: &Block5dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dPresence> {
-        Ok(base.clone())
+impl protocol::ColdDiffAlgebra<Block5dPresence> for Block5dPresenceDiff {
+    fn inverse(&self, _base: &Block5dPresence) -> Self {
+        Self {}
     }
+}
+
+impl protocol::MutationDiff<Block5dPresence> for Block5dPresenceDiff {}
+
+impl protocol::ColdMutationDiff<Block5dPresence> for Block5dPresenceDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut Block5dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 /// 🧮️ An empty presence has no mutation: the enum is uninhabited, so no diff can be raised against it.
@@ -100,11 +107,13 @@ impl protocol::Mutation<Block5dPresence> for Block5dPresenceMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
 
+impl protocol::ColdMutation<Block5dPresence> for Block5dPresenceMutation {
+    type ReferenceDiff = Block5dPresenceDiff;
     fn diff(&self, _base: &Block5dPresence) -> protocol::MutationOutcome<Block5dPresenceDiff> {
         match *self {}
     }
-
     fn inverse(&self, _base: &Block5dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         match *self {}
     }

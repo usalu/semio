@@ -11,7 +11,7 @@
     "./testing/document-contract": "./🧪️testing/🪪️document-contract/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/norm-js:test"
+    "test": "repo run @semio-tech/norm-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

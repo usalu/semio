@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:cache-gc-runner-corpus:v1",
+  "title": "Cache Runner Corpus",
+  "description": "Language-agnostic cases for the cache runner: bounded tree measurement, hold probes, link-safe removal, undeclared-entry discovery and the age/budget/custody collection plan. A tree is described as entries; `@outside` names a sibling directory the tree's links point at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "measure", "held", "remove", "ledger", "undeclared", "collect"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "measure": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/measureCase" } },
+    "held": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/heldCase" } },
+    "remove": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/removeCase" } },
+    "ledger": { "type": "object" },
+    "undeclared": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/undeclaredCase" } },
+    "collect": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/collectCase" } }
+  },
+  "definitions": {
+    "relativePath": { "type": "string", "pattern": "^(n:)?[^/\\\\:*?\"<>|\\u0000-\\u001f]*([/][^/\\\\:*?\"<>|\\u0000-\\u001f]+)*$" },
+    "entry": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path", "size", "ageHours"], "properties": { "kind": { "const": "file" }, "path": { "$ref": "#/definitions/relativePath" }, "size": { "type": "integer", "minimum": 0 }, "ageHours": { "type": "number", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": { "kind": { "const": "dir" }, "path": { "type": "string" }, "ageHours": { "type": "number", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path", "to"], "properties": { "kind": { "const": "symlink" }, "path": { "$ref": "#/definitions/relativePath" }, "to": { "type": "string", "pattern": "^@outside(/.+)?$" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "path", "of"], "properties": { "kind": { "const": "hardlink" }, "path": { "$ref": "#/definitions/relativePath" }, "of": { "$ref": "#/definitions/relativePath" } } }
+      ]
+    },
+    "entries": { "type": "array", "items": { "$ref": "#/definitions/entry" } },
+    "nameList": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "reasonMap": { "type": "object", "additionalProperties": { "enum": ["age", "budget", "retired", "undeclared", "held", "quiet"] } },
+    "measureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "limit", "entries", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "limit": { "type": "integer", "minimum": 1 },
+        "entries": { "$ref": "#/definitions/entries" },
+        "outside": { "$ref": "#/definitions/entries" },
+        "missing": { "const": true },
+        "singleFile": { "type": "string" },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "countedGroups", "entries", "partial", "sqlite", "queues", "recencyAgeHours"],
+          "properties": {
+            "present": { "type": "boolean" },
+            "countedGroups": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "array", "minItems": 1, "items": { "type": "string" } } }] },
+            "entries": { "type": "integer", "minimum": 0 },
+            "partial": { "type": "boolean" },
+            "sqlite": { "$ref": "#/definitions/nameList" },
+            "queues": { "$ref": "#/definitions/nameList" },
+            "recencyAgeHours": { "anyOf": [{ "type": "null" }, { "type": "number", "minimum": 0 }] }
+          }
+        }
+      }
+    },
+    "heldCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries", "alive", "heldSqlite", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "entries": { "$ref": "#/definitions/entries" },
+        "alive": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "heldSqlite": { "$ref": "#/definitions/nameList" },
+        "expected": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^(pid:[0-9]+|sqlite:.+)$" }] }
+      }
+    },
+    "removeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries", "target"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "entries": { "$ref": "#/definitions/entries" },
+        "outside": { "$ref": "#/definitions/entries" },
+        "missing": { "const": true },
+        "target": { "type": "string", "pattern": "^t(/.+)?$" }
+      }
+    },
+    "undeclaredCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "entries": { "$ref": "#/definitions/entries" },
+        "error": { "type": "object", "additionalProperties": false, "required": ["root", "path"], "properties": { "root": { "enum": ["repository", "native"] }, "path": { "type": "string", "minLength": 1 } } },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "native"],
+          "properties": { "repository": { "type": "array", "items": { "type": "string" } }, "native": { "type": "array", "items": { "type": "string" } } }
+        }
+      }
+    },
+    "collectCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries", "alive", "heldSqlite", "removed", "kept", "absentAfterApply", "presentAfterApply", "only"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "entries": { "$ref": "#/definitions/entries" },
+        "alive": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "heldSqlite": { "$ref": "#/definitions/nameList" },
+        "removed": { "$ref": "#/definitions/reasonMap" },
+        "kept": { "$ref": "#/definitions/reasonMap" },
+        "absentAfterApply": { "$ref": "#/definitions/nameList" },
+        "presentAfterApply": { "$ref": "#/definitions/nameList" },
+        "only": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["only", "removed", "kept"],
+            "properties": { "only": { "$ref": "#/definitions/nameList" }, "removed": { "$ref": "#/definitions/reasonMap" }, "kept": { "$ref": "#/definitions/reasonMap" } }
+          }
+        }
+      }
+    }
+  }
+}

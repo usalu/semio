@@ -56,7 +56,16 @@ export const cppHeadersDigestV1 = (headers: Readonly<Record<string, string>>): s
 /** 🛠️ The `#include` directives of a source or header (comments ignored; conditional compilation is not evaluated, so the result is a superset of what a preprocessor reads). */
 export function scanCppIncludesV1(text: string): readonly {readonly path: string; readonly system: boolean}[] {
   const found: {path: string; system: boolean}[] = [];
-  for (const line of normalizeCppV1(text).split("\n")) {const match = /^#\s*(?:include|import)\s*([<"])([^>"]+)[>"]/.exec(line); if (match) found.push({path: match[2]!, system: match[1] === "<"});}
+  let clean = "", index = 0;
+  const n = text.length;
+  while (index < n) {
+    const c = text[index]!, next = text[index + 1];
+    if (c === "/" && next === "/") {while (index < n && text[index] !== "\n") index++; continue;}
+    if (c === "/" && next === "*") {const end = text.indexOf("*/", index + 2); const stop = end < 0 ? n : end + 2; clean += text.slice(index, stop).replace(/[^\n]/g, " "); index = stop; continue;}
+    if (c === '"' && /#\s*(?:include|import)\s*$/.test(clean.slice(clean.lastIndexOf("\n") + 1))) {const end = text.indexOf('"', index + 1); const stop = end < 0 ? n : end + 1; clean += text.slice(index, stop); index = stop; continue;}
+    clean += c; index++;
+  }
+  for (const line of clean.split("\n")) {const match = /^\s*#\s*(?:include|import)\s*([<"])([^>"]+)[>"]/.exec(line); if (match) found.push({path: match[2]!, system: match[1] === "<"});}
   return found;
 }
 /** 🛠️ The workspace files a source includes, transitively: quoted includes against the including file's directory then the include directories, angle includes against the include directories only; files outside the workspace are not followed. */
@@ -118,13 +127,23 @@ export function planCppUnitsV1(project: CppProjectV1, snapshot: CppWorkspaceSnap
   const ownerOfHeader = new Map<string, string>();
   for (const [name, headers] of publicHeaders) for (const header of headers) if (!ownerOfHeader.has(header)) ownerOfHeader.set(header, name);
   const closure = (name: string, seen = new Set<string>()): string[] => {if (seen.has(name)) return []; seen.add(name); const target = targets.get(name)!; return [name, ...target.dependencies.flatMap(dep => targets.has(dep) ? closure(dep, seen) : [])];};
+  const includeDirsOf = (target: CppTargetV1): string[] => sortedCodePointsV1(new Set([...target.includeDirectories, ...target.dependencies.flatMap(dep => targets.get(dep)?.publicIncludeDirectories ?? [])]));
+  const privateMemo = new Map<string, Set<string>>();
+  const privateOf = (target: CppTargetV1): Set<string> => {
+    let found = privateMemo.get(target.name);
+    if (!found) {
+      found = new Set<string>();
+      const own = publicHeaders.get(target.name)!;
+      for (const source of target.sources) for (const header of resolveCppIncludesV1(source, snapshot, includeDirsOf(target))) if (HEADER.test(header) && !own.includes(header) && !(ownerOfHeader.has(header) && ownerOfHeader.get(header) !== target.name)) found.add(header);
+      privateMemo.set(target.name, found);
+    }
+    return found;
+  };
   const units: UnitV1[] = [];
   const toolchain = {id: project.compiler.version, parts: [] as string[]};
   for (const target of project.targets) {
     const library = target.type !== "executable", own = publicHeaders.get(target.name)!;
-    const includeDirs = sortedCodePointsV1(new Set([...target.includeDirectories, ...target.dependencies.flatMap(dep => targets.get(dep)?.publicIncludeDirectories ?? [])]));
-    const privateHeaders = new Set<string>();
-    for (const source of target.sources) for (const header of resolveCppIncludesV1(source, snapshot, includeDirs)) if (HEADER.test(header) && !own.includes(header) && !(ownerOfHeader.has(header) && ownerOfHeader.get(header) !== target.name)) privateHeaders.add(header);
+    const includeDirs = includeDirsOf(target), privateHeaders = privateOf(target);
     const dependencies = new Map<string, UnitDependencyV1>();
     for (const dep of target.dependencies) if (targets.has(dep)) dependencies.set("cpp:" + dep, {unit: "cpp:" + dep, use: library ? "interface" : "both"});
     const transitive = target.type === "executable" ? closure(target.name).filter(name => name !== target.name).map(name => targets.get(name)!) : [];
@@ -137,7 +156,7 @@ export function planCppUnitsV1(project: CppProjectV1, snapshot: CppWorkspaceSnap
     };
     const exec = target.type === "executable";
     units.push({
-      id: "cpp:" + target.name, language: "cpp", kind: exec ? "binary" : "library", label: target.name, sources, inputs: sortedCodePointsV1(new Set([...(exec ? dependencySources : []), ...(library ? [...privateHeaders] : []), ...(files.has("CMakeLists.txt") ? ["CMakeLists.txt"] : [])])).filter(path => !sources.includes(path)),
+      id: "cpp:" + target.name, language: "cpp", kind: exec ? "binary" : "library", label: target.name, sources, inputs: sortedCodePointsV1(new Set([...(exec ? [...dependencySources, ...transitive.flatMap(row => [...privateOf(row)])] : []), ...(library ? [...privateHeaders] : []), ...(files.has("CMakeLists.txt") ? ["CMakeLists.txt"] : [])])).filter(path => !sources.includes(path)),
       dependencies: [...dependencies.values()].sort((a, b) => compareCodePointsV1(a.unit, b.unit)), externals: [], interface: library ? {kind: "cpp-public-headers"} : null,
       outputs: [exec ? target.name : `lib${target.name}.a`], toolchain,
       action: {argv: [project.compiler.cxx, "-c", ...target.sources], env: {SEMIO_CPP_PLAN: JSON.stringify(plan), ...(exec ? {SEMIO_BAZEL_INPUTS: "sources"} : {})}},

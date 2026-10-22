@@ -3,7 +3,7 @@ use crate::apply_mutation;
 use crate::standards::v_utf_8::subsets::any::schema::mutations::{TxtMutation};
 use crate::standards::v_utf_8::subsets::any::schema::mutations::set_line::*;
 use crate::schema::snapshot::LineEnding;
-use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -28,7 +28,7 @@ fn semantic_identity_matches_descriptor() {
 fn crlf_bare_lf_content_inverse_and_root_codecs_restore_the_native_snapshot() {
     let base = TxtSnapshot { lines: vec!["a\nb".into(), "c".into()], line_ending: LineEnding::CrLf, ..Default::default() };
     let mutation = TxtMutation::SetLine(SetLineMutation { index: 0, text: "x\ny".into() });
-    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut after = base.clone();
     assert!(apply_mutation(&mut after, &mutation).messages().is_empty());
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);

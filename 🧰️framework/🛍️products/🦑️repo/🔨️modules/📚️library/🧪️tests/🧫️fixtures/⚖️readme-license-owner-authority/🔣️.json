@@ -7,13 +7,13 @@
     "temp-compose/"
   ],
   "sourceCensus": {
-    "total": 40,
-    "readme": 32,
-    "license": 8,
-    "fixed": 4,
-    "configurable": 36,
-    "ordinaryOwnerDocumentation": 28,
-    "thirdPartyAttribution": 4,
+    "total": 37,
+    "readme": 31,
+    "license": 6,
+    "fixed": 3,
+    "configurable": 34,
+    "ordinaryOwnerDocumentation": 27,
+    "thirdPartyAttribution": 3,
     "configurableOwnerLicense": 1,
     "ticketScratchOrEvidence": 3
   },
@@ -123,13 +123,6 @@
       "evidencePaths": [],
       "note": "adjacent or ancestor exact Nx project manifest identifies the owner but does not require README.md"
     },
-    "vscode-extension-owner-documentation": {
-      "kind": "ordinary-owner-doc",
-      "evidencePaths": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json"
-      ],
-      "note": "README is outside the VS Code package root and excluded from its publisher input"
-    },
     "schema-owner-documentation": {
       "kind": "ordinary-owner-doc",
       "evidencePaths": [],
@@ -171,15 +164,6 @@
       "expectedPackageName": "@semio-tech/ui-react",
       "private": false
     },
-    "bun-public-package-repo-vscode": {
-      "kind": "package-publication",
-      "evidencePaths": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscodeignore"
-      ],
-      "expectedPackageName": "repo-vscode",
-      "private": false
-    },
     "bun-public-package-repo-coordinator": {
       "kind": "package-publication",
       "evidencePaths": [
@@ -206,10 +190,6 @@
       "kind": "unconfigurable-consumer",
       "ownerPath": "bun pm pack"
     },
-    "vscode-package-ignore": {
-      "kind": "package-selection",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscodeignore"
-    },
     "asset-distribution-owner": {
       "kind": "configurable-consumer",
       "ownerPath": "exact asset subtree distribution owner"
@@ -224,37 +204,7 @@
     }
   },
   "knownPublisherBlockers": [],
-  "publisherVerifications": [
-    {
-      "ownerEvidenceId": "bun-public-package-repo-vscode",
-      "publisher": "@vscode/vsce",
-      "manifestName": "repo-vscode",
-      "extensionId": "usalu.repo-vscode",
-      "result": "pass",
-      "verification": "vsce ls --no-dependencies",
-      "selectedFiles": [
-        "LICENSE.md",
-        "out/extension.js",
-        "package.json",
-        "🖼️icon/🔣️.svg"
-      ]
-    },
-    {
-      "ownerEvidenceId": "bun-public-package-repo-vscode",
-      "publisher": "@vscode/vsce",
-      "manifestName": "repo-vscode",
-      "extensionId": "usalu.repo-vscode",
-      "result": "pass",
-      "verification": "vsce package --no-dependencies",
-      "artifact": "🧩️repo.vsix",
-      "selectedFiles": [
-        "LICENSE.md",
-        "out/extension.js",
-        "package.json",
-        "🖼️icon/🔣️.svg"
-      ]
-    }
-  ],
+  "publisherVerifications": [],
   "cases": [
     {
       "sourcePath": ".devcontainer/README.md",
@@ -1049,37 +999,6 @@
       }
     },
     {
-      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/README.md",
-      "ownerEvidenceId": "vscode-extension-owner-documentation",
-      "disposition": "owner-documentation-relocate",
-      "destinationPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📃️readme/📝️.md",
-      "fixedContractId": null,
-      "projectionContractId": "exact-owner-readme-projection",
-      "referenceOwnerIds": [
-        "markdown-relative-reference-adapter"
-      ],
-      "generatorOwnerId": null,
-      "preimage": {
-        "sha256": "42d45fbdf6a83ec7f77fdcafe5b57b78c8f32078cb16ffebe16ea4dd54df4b62",
-        "mode": "0644",
-        "size": 7050
-      },
-      "pathBudget": {
-        "destinationUtf8Bytes": 112,
-        "maxUtf8Bytes": 240,
-        "result": "pass"
-      },
-      "collision": {
-        "destinationPresentAtObservation": false,
-        "byte": "clear",
-        "nfc": "clear",
-        "caseFold": "clear",
-        "vs16Fold": "clear",
-        "sameKind": "clear",
-        "result": "clear"
-      }
-    },
-    {
       "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/README.md",
       "ownerEvidenceId": "schema-owner-documentation",
       "disposition": "owner-documentation-relocate",
@@ -1347,70 +1266,6 @@
       },
       "pathBudget": {
         "destinationUtf8Bytes": 70,
-        "maxUtf8Bytes": 240,
-        "result": "pass"
-      },
-      "collision": {
-        "destinationPresentAtObservation": false,
-        "byte": "clear",
-        "nfc": "clear",
-        "caseFold": "clear",
-        "vs16Fold": "clear",
-        "sameKind": "clear",
-        "result": "clear"
-      }
-    },
-    {
-      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/LICENSE.md",
-      "ownerEvidenceId": "bun-public-package-repo-vscode",
-      "disposition": "fixed",
-      "destinationPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/LICENSE.md",
-      "fixedContractId": "bun-package-license",
-      "projectionContractId": null,
-      "referenceOwnerIds": [
-        "bun-package-publisher",
-        "vscode-package-ignore"
-      ],
-      "generatorOwnerId": null,
-      "preimage": {
-        "sha256": "40edde47d31a21b2995b888a0b259f55b80d7a872a9b228820e96e09b6dc5829",
-        "mode": "0644",
-        "size": 34119
-      },
-      "pathBudget": {
-        "destinationUtf8Bytes": 132,
-        "maxUtf8Bytes": 240,
-        "result": "pass"
-      },
-      "collision": {
-        "destinationPresentAtObservation": true,
-        "byte": "clear",
-        "nfc": "clear",
-        "caseFold": "clear",
-        "vs16Fold": "clear",
-        "sameKind": "clear",
-        "result": "preserved"
-      }
-    },
-    {
-      "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🖼️assets/LICENSE.md",
-      "ownerEvidenceId": "asset-third-party-attribution",
-      "disposition": "attribution-relocate",
-      "destinationPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🖼️assets/⚖️license/📝️.md",
-      "fixedContractId": null,
-      "projectionContractId": "exact-owner-license-projection",
-      "referenceOwnerIds": [
-        "markdown-relative-reference-adapter",
-        "asset-distribution-owner"
-      ],
-      "generatorOwnerId": null,
-      "preimage": {
-        "sha256": "59758d79ed2a449a88f98d276d8ac7ee7a8eb60ce0a036dce6f6f87a95d3fff6",
-        "mode": "0644",
-        "size": 17930
-      },
-      "pathBudget": {
-        "destinationUtf8Bytes": 126,
         "maxUtf8Bytes": 240,
         "result": "pass"
       },

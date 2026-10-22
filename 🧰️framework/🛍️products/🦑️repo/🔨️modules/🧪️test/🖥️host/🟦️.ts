@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -21,6 +21,7 @@ import { receiveScriptProcessInvocation,withIssuedResourceControlV1,withRequeste
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ResultArtifact, type TestResult, contentDigestOf, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎛️Arguments
@@ -135,7 +136,7 @@ export async function main(argv: readonly string[], invocation: ScriptInvocation
   return results.every((result) => result.status === "passed") ? 0 : 1;
 }
 
-if (import.meta.main) {
+if (isMainModuleV1(import.meta.url)) {
   process.exitCode=await receiveScriptProcessInvocation(process.env,invocation=>withIssuedResourceControlV1(invocation,"test:host-entry",0,control=>main(process.argv.slice(2),invocation,control)));
 }
 //#endregion 🚪️Entry

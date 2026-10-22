@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "partition": "graph",
+        "file": "format.json",
+        "format": "graph-records-v2",
+        "snapshotVersion": 2,
+        "recordEncoding": "gzip",
+        "maximumBytes": 2048,
+        "maximumEntries": 32,
+        "freshFiles": [
+          "storage-events.jsonl",
+          "storage-checkpoint.jsonl"
+        ],
+        "freshDirectories": [
+          ".fseventsd"
+        ],
+        "freshServices": [
+          ".metadata_never_index"
+        ]
+      }
+    },
+    "Marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "partition",
+        "format",
+        "snapshotVersion",
+        "recordEncoding",
+        "backing"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partition": {
+          "const": "graph"
+        },
+        "format": {
+          "const": "graph-records-v2"
+        },
+        "snapshotVersion": {
+          "const": 2
+        },
+        "recordEncoding": {
+          "const": "gzip"
+        },
+        "backing": {
+          "type": "string",
+          "maxLength": 96,
+          "pattern": "^[0-9]+:[0-9]+$"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "physicalCases",
+    "workerCases",
+    "lifetimeCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "marker",
+          "allocationCount",
+          "entries",
+          "accepted",
+          "initialize"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "marker": {
+            "enum": [
+              "missing",
+              "current",
+              "old",
+              "foreign-format",
+              "foreign-backing",
+              "extra",
+              "reboot"
+            ]
+          },
+          "allocationCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "entries": {
+            "type": "array",
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "initialize": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "physicalCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "scenario",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "scenario": {
+            "enum": [
+              "ordinary",
+              "wrong-kind",
+              "symlink",
+              "hardlink",
+              "foreign-device",
+              "long-name",
+              "overflow",
+              "close-mutation",
+              "first-undefined"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "workerCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "extra-reference",
+              "version",
+              "oversize"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "lifetimeCases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "accepted",
+          "opens",
+          "closes"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "current",
+              "initialize",
+              "second-consumed",
+              "first-refusal",
+              "second-refusal",
+              "close-refusal"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "opens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "closes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          }
+        }
+      }
+    }
+  }
+}

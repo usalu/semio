@@ -1,24 +1,24 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isMainModuleV1, runtimeSpawnSyncV1 } from "../🟦️.ts";
+import { isMainModuleV1 } from "../🏁️main/🟦️.ts";
+import { runtimeMessageV1 } from "../🗣️messages/🟦️.ts";
+import { runtimeSpawnSyncV1 } from "../🚀️process/🟦️.ts";
 import { maskSourceV1 } from "../🪶️portable/🔬️source/🟦️.ts";
 
-/** ⚖️ Names the rule a finding breaks: the global `Bun`, a `bun` module specifier, `process.versions.bun`, a Bun-only `import.meta` member, or the same inside an embedded template payload. */
+/** ⚖️ Names the rule a finding breaks: the global `Bun`, a `bun` module specifier or program word, the string `Bun` (as in `"Bun" in globalThis`), `process.versions.bun`, a Bun-only `import.meta` member, or the same inside an embedded template payload. */
 export type RuntimeLawRuleV1 = "Bun" | "specifier" | "process.versions.bun" | "import.meta" | "embedded";
 /** 🔍️ One place where code names a specific runtime. */
 export interface RuntimeLawFindingV1 { readonly line: number; readonly column: number; readonly rule: RuntimeLawRuleV1; readonly text: string }
-/** 📒️ One ledgered file: a finding class tolerated for a stated reason until its owner removes it. */
-export interface RuntimeLawLedgerRowV1 { readonly path: string; readonly rule: RuntimeLawRuleV1; readonly count: number; readonly class: string; readonly owner: string; readonly reason: string }
 /** 📋️ The outcome of one law run. */
-export interface RuntimeLawReportV1 { readonly scanned: number; readonly findings: number; readonly violations: string[]; readonly stale: string[] }
+export interface RuntimeLawReportV1 { readonly scanned: number; readonly findings: number; readonly violations: string[] }
 
-const SPECIFIER = /^bun(?::[a-z]*)?$/u;
+const SPECIFIER = /^(?:bun(?::[a-z]*)?|Bun)$/u;
 const CODE_RULES: readonly (readonly [RuntimeLawRuleV1, RegExp])[] = [
   ["Bun", /(?<![\w$])Bun(?![\w$])/gu],
-  ["process.versions.bun", /process\s*\.\s*versions\s*\.\s*bun(?![\w$])/gu],
+  ["process.versions.bun", /(?<![\w$])versions\s*\??\.\s*bun(?![\w$])/gu],
   ["import.meta", /import\s*\.\s*meta\s*\.\s*(?:dir|path|main)(?![\w$])/gu],
 ];
-const EMBEDDED_RULES: readonly RegExp[] = [/(?<![\w$])Bun\.[A-Za-z_$]/gu, /process\s*\.\s*versions\s*\.\s*bun/gu, /import\s*\.\s*meta\s*\.\s*(?:dir|path|main)(?![\w$])/gu, /["'`]bun:[a-z]+["'`]/gu];
+const EMBEDDED_RULES: readonly RegExp[] = [/(?<![\w$])Bun\.[A-Za-z_$]/gu, /(?<![\w$])versions\s*\??\.\s*bun(?![\w$])/gu, /import\s*\.\s*meta\s*\.\s*(?:dir|path|main)(?![\w$])/gu, /["'`]bun:[a-z]+["'`]/gu];
 /** 🔍️ Finds every place one source names a specific runtime. */
 export function scanRuntimeLawSourceV1(source: string): RuntimeLawFindingV1[] {
   const masked = maskSourceV1(source), code = masked.code, specifiers = masked.strings.filter(row => SPECIFIER.test(row.value)).map(row => ({ index: row.start, value: row.value })), templates = masked.templates.map(row => ({ index: row.start, body: row.body })), starts: number[] = [0];
@@ -34,8 +34,8 @@ export function scanRuntimeLawSourceV1(source: string): RuntimeLawFindingV1[] {
   return findings.sort((a, b) => a.line - b.line || a.column - b.column);
 }
 
-/** 🏠️ Tells whether a path is inside the one Bun adapter directory, the only place any rule may be broken. */
-export function isRuntimeAdapterPathV1(path: string): boolean { return path.includes("/⚙️runtime/🍞️bun/") || path.startsWith("🧰️framework/🔨️modules/⚙️runtime/🍞️bun/"); }
+/** 🏠️ Tells whether a path is inside a runtime adapter directory: a directory named `🍞️bun` holds code written for that runtime and is the only place the rules may be broken. */
+export function isRuntimeAdapterPathV1(path: string): boolean { return path.split("/").includes("🍞️bun"); }
 /** 🧩️ Tells whether a path belongs to the runtime seam itself, where only the registry's runtime names may appear as strings. */
 export function isRuntimeSeamPathV1(path: string): boolean { return path.includes("/⚙️runtime/") || path.startsWith("🧰️framework/🔨️modules/⚙️runtime/"); }
 /** 🧪️ Tells whether a path is test code, which the law does not cover. */
@@ -46,15 +46,13 @@ const SOURCE_FILE = /\.(?:[cm]?[jt]sx?)$/u;
 /** 📋️ Lists the git-visible source files below one root. */
 export function listRuntimeLawFilesV1(repositoryRoot: string, area: string): string[] {
   const result = runtimeSpawnSyncV1(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", area], { cwd: repositoryRoot });
-  if (result.exitCode !== 0) throw new Error(`git ls-files failed: ${result.stderr.toString()}`);
+  if (result.exitCode !== 0) throw new Error(runtimeMessageV1("lawListFailed", { detail: result.stderr.toString() }));
   return result.stdout.toString().split("\0").filter(path => path !== "" && SOURCE_FILE.test(path) && !isRuntimeLawExemptPathV1(path));
 }
 
-/** ⚖️ Checks files against the law and the ledger: unledgered findings are violations, ledger rows without findings are stale. */
-export function checkRuntimeLawV1(files: readonly { readonly path: string; readonly source: string }[], ledger: readonly RuntimeLawLedgerRowV1[]): RuntimeLawReportV1 {
-  const violations: string[] = [], stale: string[] = [], tolerated = new Map<string, RuntimeLawLedgerRowV1>();
-  for (const row of ledger) tolerated.set(`${row.path}\0${row.rule}`, row);
-  const actual = new Map<string, number>();
+/** ⚖️ Checks files against the law: every finding outside the Bun adapter is a violation, and there is no list of tolerated exceptions. */
+export function checkRuntimeLawV1(files: readonly { readonly path: string; readonly source: string }[]): RuntimeLawReportV1 {
+  const violations: string[] = [];
   let total = 0;
   for (const file of files) {
     if (isRuntimeAdapterPathV1(file.path)) continue;
@@ -62,35 +60,17 @@ export function checkRuntimeLawV1(files: readonly { readonly path: string; reado
     for (const finding of scanRuntimeLawSourceV1(file.source)) {
       if (seam && finding.rule === "specifier") continue;
       total++;
-      const key = `${file.path}\0${finding.rule}`, count = (actual.get(key) ?? 0) + 1;
-      actual.set(key, count);
-      const row = tolerated.get(key);
-      if (row === undefined || count > row.count) violations.push(`${file.path}:${finding.line}:${finding.column} ${finding.rule} ${finding.text}`);
+      violations.push(`${file.path}:${finding.line}:${finding.column} ${finding.rule} ${finding.text}`);
     }
   }
-  for (const [key, row] of tolerated) if ((actual.get(key) ?? 0) < row.count) stale.push(`${row.path} ${row.rule} ledger ${row.count} actual ${actual.get(key) ?? 0}`);
-  return { scanned: files.length, findings: total, violations, stale };
-}
-
-/** 📒️ Builds ledger rows from current findings so a reviewer can classify them; classes default to `pending`. */
-export function draftRuntimeLawLedgerV1(files: readonly { readonly path: string; readonly source: string }[]): RuntimeLawLedgerRowV1[] {
-  const rows = new Map<string, { path: string; rule: RuntimeLawRuleV1; count: number }>();
-  for (const file of files) {
-    if (isRuntimeAdapterPathV1(file.path)) continue;
-    const seam = isRuntimeSeamPathV1(file.path);
-    for (const finding of scanRuntimeLawSourceV1(file.source)) { if (seam && finding.rule === "specifier") continue; const key = `${file.path}\0${finding.rule}`, row = rows.get(key) ?? { path: file.path, rule: finding.rule, count: 0 }; row.count++; rows.set(key, row); }
-  }
-  return [...rows.values()].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : a.rule < b.rule ? -1 : 1)).map(row => ({ ...row, class: "pending", owner: "runtime-seam", reason: "unclassified" }));
+  return { scanned: files.length, findings: total, violations };
 }
 
 if (isMainModuleV1(import.meta.url)) {
   const root = process.argv[2] ?? process.cwd(), area = process.argv[3] ?? "🧰️framework";
   const files = listRuntimeLawFilesV1(root, area).map(path => ({ path, source: readFileSync(join(root, path), "utf8") }));
-  const ledgerPath = process.argv[4];
-  const ledger = ledgerPath === undefined ? [] : (JSON.parse(readFileSync(ledgerPath, "utf8")).rows as RuntimeLawLedgerRowV1[]);
-  const report = checkRuntimeLawV1(files, ledger);
-  console.log(JSON.stringify({ scanned: report.scanned, findings: report.findings, violations: report.violations.length, stale: report.stale.length }));
+  const report = checkRuntimeLawV1(files);
+  console.log(JSON.stringify({ scanned: report.scanned, findings: report.findings, violations: report.violations.length }));
   for (const row of report.violations.slice(0, 50)) console.log("VIOLATION", row);
-  for (const row of report.stale.slice(0, 50)) console.log("STALE", row);
-  process.exitCode = report.violations.length + report.stale.length === 0 ? 0 : 1;
+  process.exitCode = report.violations.length === 0 ? 0 : 1;
 }

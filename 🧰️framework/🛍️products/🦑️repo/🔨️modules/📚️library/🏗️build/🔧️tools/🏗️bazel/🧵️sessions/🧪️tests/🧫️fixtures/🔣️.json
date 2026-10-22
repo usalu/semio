@@ -1262,11 +1262,11 @@
     "LC_ALL": "C",
     "LANG": "de_DE.UTF-8"
    },
-   "expected": "en"
+   "expected": null
   },
   {
    "environment": {},
-   "expected": "en"
+   "expected": null
   }
  ],
  "overrides": [

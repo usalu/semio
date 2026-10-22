@@ -13,7 +13,16 @@ pub struct SetParts {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetParts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "parts", kind: "set-parts", record: "SetParts" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set package parts", "Paketdateien setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for SetParts {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         match base.parts == self.parts {
             true => protocol::MutationOutcome::new(BcfDiff::default()),
             false => protocol::MutationOutcome::new(BcfDiff { version: None, topics: None, parts: Some(BcfPartsDiff { removed: (0..base.parts.len()).collect(), modified: Vec::new(), added: self.parts.iter().enumerate().map(|(index, item)| IndexedAdded { index, item: item.clone() }).collect() }) }),
@@ -21,12 +30,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetParts {
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         Ok((base.parts != self.parts).then(|| BcfMutation::SetParts(SetParts { parts: base.parts.clone() })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set package parts", "Paketdateien setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

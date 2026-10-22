@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
@@ -11,7 +11,7 @@ fn preview_state_matches_language_neutral_json_oracle() {
         let preview_text = serde_json::from_value::<Option<String>>(step["previewText"].clone()).expect("preview text");
         let mutation = Generation2dTransientMutation::from(SetGenerationPreview { preview_text });
         let outcome = mutation.diff(&typed);
-        typed = protocol::apply_diff(outcome.diff(), &typed).expect("typed mutation");
+        typed = protocol::apply_diff_cold(outcome.diff(), &typed).expect("typed mutation");
         oracle.insert("generationPreviewText".into(), step["previewText"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     }

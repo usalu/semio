@@ -281,13 +281,15 @@ describe("emitters for Nx and Bazel", () => {
       }
       expect(block.includes("has_interface = True")).toBe(unit.interface !== null);
     }
-    const goText = text, pythonGraph: UnitGraphV1 = {version: 1, units: plan.graph.units.map(unit => ({...unit, language: "python" as const, id: unit.id.replace("go:", "python:"), interface: unit.interface ? {kind: "python-api"} : null, dependencies: unit.dependencies.map(dependency => ({...dependency, unit: dependency.unit.replace("go:", "python:")}))}))};
-    const pythonText = bazelUnitsV1(planUnitsV1(pythonGraph), {runner: "//:repo", load: "//:units.bzl", specRoot: "specs", policy});
-    expect(goText.includes("dep_srcs")).toBe(true);
-    expect(pythonText.includes("dep_srcs")).toBe(false);
-    const blockOf = (id: string): string => goText.split("\nrepo_unit(").find(block => block.includes(`unit = "${id}"`))!;
-    expect(blockOf("go:b")).toContain('"a.src"');
-    expect(blockOf("go:a")).not.toContain("dep_srcs");
+    const marked: UnitGraphV1 = {version: 1, units: plan.graph.units.map(unit => unit.id === "go:b" ? {...unit, action: {...unit.action, env: {...unit.action.env, SEMIO_BAZEL_INPUTS: "sources"}}} : unit)};
+    const markedText = bazelUnitsV1(planUnitsV1(marked), {runner: "//:repo", load: "//:units.bzl", specRoot: "specs", policy});
+    const blockOf = (source: string, id: string): string => source.split("\nrepo_unit(").find(block => block.includes(`unit = "${id}"`))!;
+    expect(text.includes("dep_srcs")).toBe(false);
+    expect(blockOf(markedText, "go:b")).toContain('"a.src"');
+    expect(blockOf(markedText, "go:a")).not.toContain("dep_srcs");
+    expect(blockOf(markedText, "go:c")).not.toContain("dep_srcs");
+    const dotnet: UnitGraphV1 = {version: 1, units: plan.graph.units.slice(0, 2).map(unit => ({...unit, language: "dotnet" as const, id: unit.id.replace("go:", "dotnet:"), interface: unit.interface ? {kind: "dotnet-reference-assembly"} : null, dependencies: unit.dependencies.map(dependency => ({...dependency, unit: dependency.unit.replace("go:", "dotnet:")}))}))};
+    expect(bazelUnitsV1(planUnitsV1(dotnet), {runner: "//:repo", load: "//:units.bzl", specRoot: "specs", policy}).includes("dep_srcs")).toBe(true);
     expect(UNITS_BZL_V1).toContain("repo_unit = rule(");
     expect(UNITS_BZL_V1).toContain("use_default_shell_env = True");
     expect(UNITS_BZL_V1.split("(").length).toBe(UNITS_BZL_V1.split(")").length);

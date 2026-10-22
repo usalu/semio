@@ -35,7 +35,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []model.CodebaseFolder {
 		}
 		folderSet[folder] = struct{}{}
 		fileCounts[folder]++
-		absPath := filepath.Join(workspace.GetRootDir(), file)
+		absPath := filepath.Join(ctx.RootDir, file)
 		if content, err := workspace.ReadTextFile(absPath); err == nil {
 			lineCounts[folder] += strings.Count(content, "\n") + 1
 		}
@@ -57,7 +57,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []model.CodebaseFolder {
 		result = append(result, model.CodebaseFolder{
 			ID:       id,
 			Path:     folder,
-			URI:      ctx.FileURI(folder),
+			URI:      ctx.FolderURI(folder),
 			Name:     filepath.Base(folder),
 			ParentID: ctx.ParentFolderID(folder),
 			BundleID: ctx.OwningBundleID(folder),
@@ -96,7 +96,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []model.CodebaseFile {
 		id := ctx.GetFileID(file)
 
 		var metrics *model.FileMetricsInternal
-		absPath := filepath.Join(workspace.GetRootDir(), file)
+		absPath := filepath.Join(ctx.RootDir, file)
 		if content, err := workspace.ReadTextFile(absPath); err == nil {
 			sections := languages.ParseSections(content, file)
 			sectionCount := countSections(sections)

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -38,6 +38,7 @@ import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framewor
 import { Validator } from "jsonschema";
 import { unwrap, call } from "./📇️recipe-contract/🟦️.ts";
 import type { Recipe, Kernel } from "./📇️recipe-contract/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -377,7 +378,7 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
       packageVersion: PACKAGE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       seed: SEED,
       platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
     },
@@ -701,7 +702,7 @@ function validateToleranceContract(): number {
 //#region 🧩️Carrier
 /** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
 function carrier(): number {
-  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
   return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }

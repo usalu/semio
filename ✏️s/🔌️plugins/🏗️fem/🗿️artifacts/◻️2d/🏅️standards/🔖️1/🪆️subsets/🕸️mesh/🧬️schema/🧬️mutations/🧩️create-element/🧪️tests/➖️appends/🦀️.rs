@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().elements.is_some(), "create-element/appends-bar-e2-between-fc1c09: the created bar must surface in the elements delta");
     assert!(outcome.diff().nodes.is_none() && outcome.diff().materials.is_none() && outcome.diff().sections.is_none(), "create-element/appends-bar-e2-between-fc1c09: the referenced node/material/section rows are read-only for this mutation");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

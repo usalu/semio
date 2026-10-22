@@ -23,10 +23,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "mark-info", kind: "set-mark-info", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["MarkInfo.Marked".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetMarkInfo
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetMarkInfo> + From<crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "MarkInfo", support::single_entry_dict("Marked", PdfObject::Bool(self.marked)), self.entry_index)))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_flag(base, "MarkInfo", "Marked") {
@@ -34,14 +46,6 @@ where
                 None => vec![Op::from(RemoveMarkInfo {})],
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["MarkInfo.Marked".to_string()]
     }
 }
 //#endregion 🔖️Mutation

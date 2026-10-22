@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
   type ActionDescriptor,

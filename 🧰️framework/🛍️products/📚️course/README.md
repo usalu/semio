@@ -37,14 +37,14 @@ Everything runs through each package's `📜️script.ts`; `📋️project.json`
 targets.
 
 ```bash
-bun run dashboard run @semio-tech/course:test -- quick
-bun run dashboard run @semio-tech/course-rs:test
-bun run dashboard run @semio-tech/course-react:test
+repo run @semio-tech/course:test -- quick
+repo run @semio-tech/course-rs:test
+repo run @semio-tech/course-react:test
 ```
 
-bun repo run @semio-tech/course:test           # the same through the build CLI
-bun repo run @semio-tech/course-rs:test        # the Rust core
-bun repo run @semio-tech/course-react:test     # the renderer
+repo run @semio-tech/course:test           # the same through the build CLI
+repo run @semio-tech/course-rs:test        # the Rust core
+repo run @semio-tech/course-react:test     # the renderer
 ```
 
 ## Domain model

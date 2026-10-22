@@ -1,0 +1,121 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "normalize",
+  "skip",
+  "skipDefects",
+  "classify",
+  "emoji"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "normalize": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "skip": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "skipDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "classify": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "emoji": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "lang",
+     "expected"
+    ],
+    "properties": {
+     "lang": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

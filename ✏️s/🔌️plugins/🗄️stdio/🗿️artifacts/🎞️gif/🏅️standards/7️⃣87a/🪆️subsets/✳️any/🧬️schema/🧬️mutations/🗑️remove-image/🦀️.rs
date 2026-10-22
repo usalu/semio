@@ -15,6 +15,15 @@ pub struct RemoveImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "image", kind: "remove-image", record: "RemoveImage" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove image", "Bild entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for RemoveImage {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(GifDiff { images: Some(GifImagesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
@@ -25,12 +34,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveImage {
             Some(image) => vec![GifMutation::InsertImage(insert_image::InsertImage { index: *index, image: image.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove image", "Bild entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

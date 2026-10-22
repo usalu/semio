@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "maximumEvents": 64,
+  "maximumDetailBytes": 8192,
+  "terminalCases": [
+    {
+      "name": "clean",
+      "fail": null,
+      "leaveFails": false,
+      "expected": {
+        "primary": null,
+        "cleanup": [],
+        "exit": 0
+      },
+      "detachFails": false
+    },
+    {
+      "name": "enter",
+      "fail": "enter",
+      "leaveFails": false,
+      "expected": {
+        "primary": "enter",
+        "cleanup": [],
+        "exit": 1
+      },
+      "detachFails": false
+    },
+    {
+      "name": "present",
+      "fail": "present",
+      "leaveFails": false,
+      "expected": {
+        "primary": "present",
+        "cleanup": [],
+        "exit": 1
+      },
+      "detachFails": false
+    },
+    {
+      "name": "wait",
+      "fail": "wait",
+      "leaveFails": false,
+      "expected": {
+        "primary": "wait",
+        "cleanup": [],
+        "exit": 1
+      },
+      "detachFails": false
+    },
+    {
+      "name": "present-and-cleanup",
+      "fail": "present",
+      "leaveFails": true,
+      "expected": {
+        "primary": "present",
+        "cleanup": [
+          "leave"
+        ],
+        "exit": 1
+      },
+      "detachFails": false
+    },
+    {
+      "name": "cleanup",
+      "fail": null,
+      "leaveFails": true,
+      "expected": {
+        "primary": "leave",
+        "cleanup": [],
+        "exit": 1
+      },
+      "detachFails": false
+    },
+    {
+      "name": "detach",
+      "fail": null,
+      "detachFails": true,
+      "leaveFails": false,
+      "expected": {
+        "primary": "detach",
+        "cleanup": [],
+        "exit": 1
+      }
+    },
+    {
+      "name": "present-detach-cleanup",
+      "fail": "present",
+      "detachFails": true,
+      "leaveFails": true,
+      "expected": {
+        "primary": "present",
+        "cleanup": [
+          "detach",
+          "leave"
+        ],
+        "exit": 1
+      }
+    }
+  ],
+  "history": {
+    "count": 70,
+    "retained": 64,
+    "first": 6
+  },
+  "locales": [
+    {
+      "language": "en",
+      "stop": "Stop task",
+      "diagnostics": "Local diagnostics"
+    },
+    {
+      "language": "de",
+      "stop": "Aufgabe stoppen",
+      "diagnostics": "Lokale Diagnose"
+    }
+  ]
+}

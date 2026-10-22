@@ -3,7 +3,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioGraphSnapshot {
@@ -32,11 +32,11 @@ fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in backwards.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(sorted_by_id(restored), sorted_by_id(base.clone()), "inverse must exactly restore the pre-operation fixture (order-insensitive over the id-keyed node/edge sets)");
     forward
@@ -69,7 +69,7 @@ async fn create_delete_node_round_trips() {
     assert!(after_delete.edges.is_empty(), "delete-node must cascade-remove every severed edge");
     let mut restored = after_delete;
     for back in delete.inverse(&base).expect("delete-node inverse") {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("the restore applies");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("the restore applies");
     }
     assert_eq!(restored, base, "deleting the FIRST node and undoing it restores the exact sequence, not only the set");
 }
@@ -84,9 +84,9 @@ async fn delete_then_undo_restores_byte_identical_snapshot_bytes() {
     let edge = |id: &str, source: &str, target: &str| SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flow".into(), label: String::new(), source_port: Some("out".into()), target_port: None, properties: Vec::new() };
     let base = SemioGraphSnapshot { nodes: vec![node("a", 0.0), node("b", 1.5), node("c", 3.0)], edges: vec![edge("e1", "a", "c"), edge("e2", "a", "b"), edge("e3", "c", "a"), edge("e4", "b", "c")], ..Default::default() };
     for (mutation, label) in [(SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("b") }), "delete-node b"), (SemioGraphMutation::DeleteEdge(delete_edge::DeleteEdge { id: GraphEdgeId::new("e2") }), "delete-edge e2")] {
-        let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("the delete applies");
+        let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("the delete applies");
         for back in mutation.inverse(&base).expect("delete inverse") {
-            current = protocol::apply_diff(back.diff(&current).diff(), &current).expect("the undo applies");
+            current = protocol::apply_diff_cold(back.diff(&current).diff(), &current).expect("the undo applies");
         }
         let (before, after) = (SemioGraphSnapshot::encode_pack(&base), SemioGraphSnapshot::encode_pack(&current));
         assert_eq!(after, before, "{label}: undo must restore byte-identical pack bytes");
@@ -99,7 +99,7 @@ async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("absent") });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent node has nothing to undo");
-    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
+    assert_eq!(protocol::apply_diff_cold(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
 }
 
 /// 🧱️ LAW (audit F3): `delete-node` severs at most the edges its schema-declared inverse rows cover. AT the bound the delete
@@ -126,10 +126,10 @@ async fn delete_node_refuses_one_edge_above_its_declared_cascade_bound() {
     assert_eq!(applied.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.cascade"], "at the bound the delete applies with its cascade note only");
     let undo = delete.inverse(&at_bound).expect("delete-node inverse at the bound");
     assert_eq!(undo.len(), declared, "at the bound the undo is exactly the declared rows");
-    let mut restored = protocol::apply_diff(applied.diff(), &at_bound).expect("the delete at the bound applies");
+    let mut restored = protocol::apply_diff_cold(applied.diff(), &at_bound).expect("the delete at the bound applies");
     assert_eq!((restored.nodes.len(), restored.edges.len()), (1, 0), "the hub and every incident edge are gone");
     for back in undo.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("each undo row applies");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("each undo row applies");
     }
     assert_eq!(restored, at_bound, "the undo at the bound restores the exact snapshot");
 
@@ -138,7 +138,7 @@ async fn delete_node_refuses_one_edge_above_its_declared_cascade_bound() {
     let messages = refused.messages();
     assert_eq!(messages.len(), 1, "one edge above the bound is exactly one refusal");
     assert_eq!((messages[0].code.0.as_str(), messages[0].level, messages[0].target.clone()), ("mutation.target-referenced", semio_framework_diagnostic::Severity::Error, vec!["hub".to_string()]), "the refusal names the node with the frozen outcome code");
-    assert_eq!(protocol::apply_diff(refused.diff(), &above).expect("a refused delete carries the empty diff"), above, "a refused delete changes nothing");
+    assert_eq!(protocol::apply_diff_cold(refused.diff(), &above).expect("a refused delete carries the empty diff"), above, "a refused delete changes nothing");
     assert!(delete.inverse(&above).expect("delete-node inverse above the bound").is_empty(), "a refused delete has nothing to undo");
 }
 
@@ -214,7 +214,7 @@ async fn add_remove_node_property_round_trips() {
 
     let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), key: "weight".into() });
     assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]

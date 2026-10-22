@@ -1,18 +1,18 @@
 use super::*;
 use crate::create_layer::CreateLayer;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 #[test]
 fn set_frame_layer_moves_a_frame_and_inverse_restores_it() {
     let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
+    let created = protocol::apply_diff_cold(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
     let mutation = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() });
-    let next = protocol::apply_diff(mutation.diff(&created).diff(), &created).expect("move");
+    let next = protocol::apply_diff_cold(mutation.diff(&created).diff(), &created).expect("move");
     let frame = next.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap();
     assert_eq!(frame.layer_id(), "layer-2");
     assert!(next.pages[0].layers.iter().find(|layer| layer.id == "layer-2").unwrap().object_ids.iter().any(|id| id == "frame-1"));
     assert!(next.pages[0].layers.iter().find(|layer| layer.id == "layer-1").unwrap().object_ids.iter().all(|id| id != "frame-1"));
-    let restored = protocol::apply_diff(mutation.inverse(&created).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
+    let restored = protocol::apply_diff_cold(mutation.inverse(&created).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
     assert_eq!(restored.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap().layer_id(), "layer-1");
 }

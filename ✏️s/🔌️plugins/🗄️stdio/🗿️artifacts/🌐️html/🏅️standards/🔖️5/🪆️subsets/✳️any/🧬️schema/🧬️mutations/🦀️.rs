@@ -52,7 +52,7 @@ pub mod set_text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = HtmlSnapshot, diff = HtmlDiff, schema = "HtmlMutation")]
+#[mutations(snapshot = HtmlSnapshot, diff = HtmlDiff, schema = "HtmlMutation", reference = HtmlSnapshot, reference_diff = HtmlDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum HtmlMutation {
     /// 📜️ Sets (or, if `None`, clears) the document's raw `<!DOCTYPE ...>` declaration content.

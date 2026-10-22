@@ -111,16 +111,16 @@ fn a_shot_keeps_every_law_on_generated_stages() {
         }
         assert_eq!(shot.muzzle, point(feet.x + shot.facing.sign() * MUZZLE_FORWARD * size.width, feet.y - MUZZLE_HEIGHT * size.height), "stage {stage}");
         assert_eq!(shot.facing, if shot.hook.x < feet.x { Facing::Left } else { Facing::Right }, "stage {stage}");
-        assert_eq!(shot.reel, if (shot.hook.x - shot.muzzle.x).abs() <= ZIP_SLANT * (shot.muzzle.y - shot.hook.y) || dropped { Reeling::Zip } else { Reeling::Swing }, "stage {stage}");
-        assert!((shot.length - distance(shot.hook, shot.muzzle)).abs() < 1e-9, "stage {stage}");
-        assert!(shot.length >= ROPE_SHORT * size.height && shot.length <= ROPE_LONG * size.height && shot.muzzle.y - shot.hook.y >= ROPE_ELEVATION * shot.length, "stage {stage}");
         let mut dropped = false;
         for blocker in &keepouts {
             if !holding(blocker, point(shot.hook.x, target.y)) {
                 assert!(!segment_hits(shot.muzzle, shot.hook, blocker, ROPE_MARGIN), "stage {stage}");
-                            dropped = dropped || segment_hits(shot.hook, point(shot.hook.x, shot.hook.y + shot.length), blocker, ROPE_MARGIN);
-}
+                dropped = dropped || segment_hits(shot.hook, point(shot.hook.x, shot.hook.y + shot.length), blocker, ROPE_MARGIN);
+            }
         }
+        assert_eq!(shot.reel, if (shot.hook.x - shot.muzzle.x).abs() <= ZIP_SLANT * (shot.muzzle.y - shot.hook.y) || dropped { Reeling::Zip } else { Reeling::Swing }, "stage {stage}");
+        assert!((shot.length - distance(shot.hook, shot.muzzle)).abs() < 1e-9, "stage {stage}");
+        assert!(shot.length >= ROPE_SHORT * size.height && shot.length <= ROPE_LONG * size.height && shot.muzzle.y - shot.hook.y >= ROPE_ELEVATION * shot.length, "stage {stage}");
         assert_eq!(shot_holds(&shot, &perches, &keepouts).as_ref(), Some(&shot), "stage {stage}");
     }
     assert!(granted > STAGES / 12 && swings > STAGES / 60 && refused > STAGES / 4, "{granted} granted, {swings} swings, {refused} refused");

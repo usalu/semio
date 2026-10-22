@@ -19,7 +19,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node", kind: "move-node", record: "MovedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node \"{}\" to ({}, {})", self.id.value, self.new_position.x, self.new_position.y), &format!("Knoten \"{}\" nach ({}, {}) verschieben", self.id.value, self.new_position.x, self.new_position.y))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for MoveNode
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<MoveNode>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,11 +40,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node \"{}\" to ({}, {})", self.id.value, self.new_position.x, self.new_position.y), &format!("Knoten \"{}\" nach ({}, {}) verschieben", self.id.value, self.new_position.x, self.new_position.y))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.value.clone()]
-    }
 }
 //#endregion 🔖️Payload

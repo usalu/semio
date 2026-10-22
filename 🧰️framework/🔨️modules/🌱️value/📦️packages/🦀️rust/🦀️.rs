@@ -28,8 +28,13 @@ pub mod testing;
 pub use semio_framework_value_retirement::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
 
 pub use semio_framework_value_factory as factory;
-pub use semio_framework_value_factory::{SnapshotRetirementFactory,ArtifactOwnedValueRetirementFactory,FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
+pub use semio_framework_value_factory::{SnapshotRetirementFactory,ArtifactOwnedValueRetirementFactory,OwnedValueRetirementFactory,SharedValueRetirementFactory,FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
 pub use semio_framework_value_shared_issuance as shared_issuance;
+/// 🔒️ Producer paths emitted by the derive macros; never a consumer API.
+#[doc(hidden)]
+pub mod __private {
+    pub use semio_framework_value_snapshot_projection::snapshot_projection;
+}
 
 
 

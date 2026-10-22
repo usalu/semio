@@ -91,13 +91,13 @@ fn a_board_window_paints_its_tool_run_trace_lane_and_echoes_the_cursor() {
 #[test]
 fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
-    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+    let declared: Vec<semio_framework_async_slots::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "renderer::engine_canvas")
         .map(|table| {
-            semio_framework_async::FixedSlotTableBudget::new(
+            semio_framework_async_slots::FixedSlotTableBudget::new(
                 table["owner"].as_str().expect("owner"),
                 table["capacity"].as_u64().expect("capacity") as usize,
                 table["elementSizeBytes"].as_u64().expect("element bytes") as usize,
@@ -106,11 +106,11 @@ fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
         })
         .collect();
     let measured = vec![
-        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::EngineSurfaceRegistry", ENGINE_SURFACE_CAPACITY, size_of::<EngineSurfaceSlot>(), size_of::<EngineSurfaceRegistry>()),
-        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::StagedEngineScenes", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<StagedEngineScene>>(), size_of::<StagedEngineScenes>()),
-        semio_framework_async::FixedSlotTableBudget::new("engine_canvas::EngineCanvasBuildContext", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<EngineCanvasPacket>>(), size_of::<EngineCanvasBuildContext>()),
+        semio_framework_async_slots::FixedSlotTableBudget::new("engine_canvas::EngineSurfaceRegistry", ENGINE_SURFACE_CAPACITY, size_of::<EngineSurfaceSlot>(), size_of::<EngineSurfaceRegistry>()),
+        semio_framework_async_slots::FixedSlotTableBudget::new("engine_canvas::StagedEngineScenes", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<StagedEngineScene>>(), size_of::<StagedEngineScenes>()),
+        semio_framework_async_slots::FixedSlotTableBudget::new("engine_canvas::EngineCanvasBuildContext", ENGINE_CANVAS_FRAME_PACKET_CAPACITY, size_of::<Option<EngineCanvasPacket>>(), size_of::<EngineCanvasBuildContext>()),
     ];
-    semio_framework_async::assert_fixed_slot_tables(
+    semio_framework_async_slots::assert_fixed_slot_tables(
         "renderer::engine_canvas",
         fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
         fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,

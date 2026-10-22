@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "retention",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "retention": {
+      "const": {
+        "generations": 4,
+        "graceMilliseconds": 600000,
+        "unprovedReferences": "refuse-before-remove"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "current",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "error",
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "listed-missing",
+              "pointer-missing",
+              "hash",
+              "json",
+              "shape",
+              "old-hash"
+            ]
+          },
+          "current": {
+            "enum": [
+              "latest",
+              "oldest"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "retire",
+              "primary",
+              "refuse"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

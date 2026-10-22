@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-type/📇️appends/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn appends_the_slab_type_at_the_end_of_the_catalogue() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("add-type applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("add-type applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "add-type/appends-a-slab-type-to-the-catalogue: applied state differs from the committed after-snapshot");
     assert_eq!(produced.types.len(), base.types.len() + 1, "add-type adds exactly one type");
     assert_eq!(produced.types.last().expect("the new type is pushed at the end").id, "t3", "the type keeps the id the payload named");
@@ -48,9 +48,9 @@ async fn the_undo_remove_type_takes_the_slab_type_back_out() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "add-type undoes as exactly one remove-type");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-type applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward add-type applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-type applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo remove-type applies");
     }
     assert_eq!(current, base, "add-type/appends-a-slab-type-to-the-catalogue: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-type/appends-a-slab-type-to-the-catalogue: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-type diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed add-type diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed add-type diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-type/appends-a-slab-type-to-the-catalogue: committed diff did not carry before to after");
 }

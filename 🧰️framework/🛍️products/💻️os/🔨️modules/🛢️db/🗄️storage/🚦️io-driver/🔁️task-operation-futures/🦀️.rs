@@ -317,7 +317,7 @@ pub fn db_io_test_pool() -> Arc<WorkerPool> {
 
 /// ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every future
 /// this crate's own backends (`MemoryStorage`, and `FsStorage`/`DbBackend` driven by
-/// `semio_framework_async::testkit::ManualRuntime`, whose `run_blocking` executes synchronously)
+/// `semio_framework_async_testkit::ManualRuntime`, whose `run_blocking` executes synchronously)
 /// hand back is already `Ready` the instant it's first polled — there is no real async wait
 /// anywhere in a unit test. This drives one to completion without needing a real executor,
 /// mirroring `semio_framework_async`'s own `ManualRuntime` test helper. The crate's single such

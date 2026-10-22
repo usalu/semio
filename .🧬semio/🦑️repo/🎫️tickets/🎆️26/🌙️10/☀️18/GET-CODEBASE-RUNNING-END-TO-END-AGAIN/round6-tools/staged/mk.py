@@ -62,3 +62,33 @@ def patch_ops_json(path, edits_key, file_suffix, old_anchor_prefix, fn):
         raise SystemExit("maker: %s: %d ops match %r" % (os.path.relpath(path, C), len(hits), old_anchor_prefix[:60]))
     hits[0]["anchor"], hits[0]["replacement"] = fn(hits[0]["anchor"], hits[0]["replacement"])
     json.dump(spec, open(path, "w", encoding="utf8"), ensure_ascii=False, indent=1)
+
+
+def repo_root():
+    """The checkout (or overlay) the maker works for: SEMIO_ROOT, else seven levels above the ticket folder."""
+    return os.environ.get("SEMIO_ROOT") or os.path.abspath(os.path.join(C, *[".."] * 7))
+
+
+def patch_if(path, old, new):
+    """Like patch() but a no-op when the owner has already re-based the anchor away (returns whether it applied)."""
+    text = open(path, encoding="utf8").read()
+    if text.count(old) != 1:
+        return False
+    open(path, "w", encoding="utf8").write(text.replace(old, new))
+    return True
+
+
+def drop_named_tuples(path, names):
+    """Removes the elements of a module-level list of tuples whose first element is one of `names` (source-level, multi-line safe)."""
+    import ast
+    text = open(path, encoding="utf8").read()
+    spans = []
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.Tuple) and node.elts and isinstance(node.elts[0], ast.Constant) and node.elts[0].value in names:
+            spans.append((node.lineno, node.end_lineno, node.col_offset, node.end_col_offset))
+    lines = text.split("\n")
+    for a, b, c0, c1 in sorted(spans, reverse=True):
+        head, tail = lines[a - 1][:c0], lines[b - 1][c1:]
+        lines[a - 1:b] = [head + tail.lstrip(",") if (head + tail).strip(", ") else ""]
+    open(path, "w", encoding="utf8").write("\n".join(lines))
+    return len(spans)

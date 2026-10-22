@@ -228,8 +228,8 @@ fn scoped_identity_admission_refuses_unaddressable_entities_and_duplicate_load_o
     use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
     use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-    use protocol::Mutation;
-    use protocol::ColdMutation;
+    use protocol::{ColdMutation, Mutation};
+
     let (fixture, before) = identity_fixture();
     let mut invalid = before.clone();
     invalid.nodes[0].id.clear();

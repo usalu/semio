@@ -1,6 +1,6 @@
 /** 🕰️ One observation row: what a computation read and the fact it saw. */
-export interface GenerationRowV1{readonly kind:string;readonly path:string;readonly fact:unknown}
-export interface GenerationPolicyV1{readonly version:1;readonly implementation:{readonly none:readonly string[];readonly projects:readonly string[]};readonly pointer:string;readonly manifests:string;readonly fragments:string;readonly indexes:string;readonly frontiers:string;readonly envOwner:string;readonly policies:readonly ["fresh","current"];readonly retainGenerations:number;readonly graceMilliseconds:number;readonly verifyChunkRows:number;readonly verifyParallelChunks:number;readonly bisectBudgetCalls:number;readonly racyMilliseconds:number;readonly readConcurrency:number;readonly publishWaitMilliseconds:number;readonly pollMaximumMilliseconds:number;readonly maximumOwners:number;readonly maximumManifestBytes:number;readonly maximumFragmentBytes:number;readonly maximumIndexBytes:number;readonly compactionFactor:number;readonly compactionFloor:number;readonly brotliQuality:number;readonly brotliWindow:number}
+export interface GenerationRowV1{readonly kind:string;readonly path:string;readonly fact:unknown;readonly scope?:"project"|"native"|"environment"|"all"}
+export interface GenerationPolicyV1{readonly version:1;readonly reasonRows:number;readonly pointer:string;readonly manifests:string;readonly fragments:string;readonly indexes:string;readonly frontiers:string;readonly envOwner:string;readonly policies:readonly ["fresh","current"];readonly retainGenerations:number;readonly graceMilliseconds:number;readonly verifyChunkRows:number;readonly verifyParallelChunks:number;readonly bisectBudgetCalls:number;readonly racyMilliseconds:number;readonly readConcurrency:number;readonly publishWaitMilliseconds:number;readonly pollMaximumMilliseconds:number;readonly maximumOwners:number;readonly maximumManifestBytes:number;readonly maximumFragmentBytes:number;readonly maximumIndexBytes:number;readonly compactionFactor:number;readonly compactionFloor:number;readonly brotliQuality:number;readonly brotliWindow:number}
 export const GENERATION_POLICY_V1:GenerationPolicyV1;
 export type GenerationGraphPolicyV1="fresh"|"current";
 export interface GenerationPointerV1{readonly version:1;readonly generation:number;readonly manifest:string|null;readonly parent:string|null;readonly reason?:string}
@@ -12,24 +12,28 @@ export interface FactIndexV1{version:1;owners:string[];rows:GenerationRowV1[];cl
 export interface FrontierV1{version:1;capturedAt:number;directories:[string,number,number][];members:[string,number][]}
 export interface MembershipChangeV1{path:string;kind:"added"|"removed"|"changed";directory?:boolean;config?:boolean}
 export interface GenerationMembershipV1{digest:string;frontier:FrontierV1;changes:MembershipChangeV1[]}
-export interface GenerationPlanV1{kind:"cold"|"clean"|"delta";reason?:string;dirty:Set<string>;added:string[];removed:string[];envStale:boolean;checked:number}
+export interface GenerationStaleReasonV1{row?:GenerationRowV1;change?:{path:string;kind:"added"|"removed"|"changed"};owners:string[]}
+export interface GenerationPlanV1{kind:"cold"|"clean"|"delta";reason?:string;dirty:Set<string>;added:string[];removed:string[];envStale:boolean;checked:number;stale?:number;reasons?:GenerationStaleReasonV1[]}
 export interface GenerationProgressV1{phase:"facts"|"assembly";done:number;total:number}
-export interface GenerationComputeSpecV1{cold:boolean;owners:string[];discover:string[];removed:string[];previousEnv:string|null;envStale:boolean;stubs:Record<string,{root:string;kind:"project"|"unavailable";targets:readonly string[];nativeRoot?:string;config?:string;tag?:string}>}
+export interface GenerationComputeSpecV1{cold:boolean;owners:string[];discover:string[];removed:string[];previousEnv:string|null;envStale:boolean;generation:number;coldReason?:string;reasons:GenerationStaleReasonV1[];staleRows:number;stubs:Record<string,{root:string;kind:"project"|"unavailable";targets:readonly string[];nativeRoot?:string;config?:string;tag?:string}>}
 export interface GenerationComputedOwnerV1{name:string;partial?:"edges";root?:string;kind?:"project"|"unavailable";node?:unknown;edges:unknown[];targets?:string[];config?:string;nativeRoot?:string;tag?:string;rows?:GenerationRowV1[]}
 export interface GenerationComputeResultV1{owners:GenerationComputedOwnerV1[];env:{digest:string;rows:GenerationRowV1[]};global?:unknown;replaceTags?:string[]}
 export interface GenerationFilePortV1{read(path:string):Promise<Uint8Array|undefined>;write(path:string,bytes:Uint8Array,options?:{ifAbsent?:boolean}):Promise<boolean>;names(directory:string):Promise<string[]>;list(directory:string):Promise<{name:string;modifiedMs:number}[]>;remove(path:string):Promise<void>}
 export interface GenerationLeasePortV1{exclusive<T>(resource:string,body:()=>Promise<T>,options?:{signal?:AbortSignal;timeoutMs?:number}):Promise<T>}
 export interface GenerationStoreOptionsV1{root:string;fs?:GenerationFilePortV1;lease?:GenerationLeasePortV1;holds:(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>Promise<boolean>;resources:{facts:string;builder?:string};now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>}
-export interface GenerationRefreshOptionsV1{identity:string;implementation:string;policy?:GenerationGraphPolicyV1;only?:ReadonlySet<string>;membership:(previous:{manifest:GenerationManifestV1;frontier:FrontierV1}|undefined,signal?:AbortSignal)=>Promise<GenerationMembershipV1>;compute:(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>Promise<GenerationComputeResultV1>;signal?:AbortSignal;progress?:(event:GenerationProgressV1)=>void|Promise<void>;builder?:<T>(body:()=>Promise<T>)=>Promise<T>}
+export interface GenerationRefreshOptionsV1{closure?:(current:GenerationSealedV1,control:{signal?:AbortSignal})=>Promise<ReadonlySet<string>>;identity:string;implementation:string;policy?:GenerationGraphPolicyV1;only?:ReadonlySet<string>;membership:(previous:{manifest:GenerationManifestV1;frontier:FrontierV1}|undefined,signal?:AbortSignal)=>Promise<GenerationMembershipV1>;compute:(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>Promise<GenerationComputeResultV1>;signal?:AbortSignal;progress?:(event:GenerationProgressV1)=>void|Promise<void>;builder?:<T>(body:()=>Promise<T>)=>Promise<T>}
 export interface GenerationRefreshResultV1{current:GenerationSealedV1;served:"current"|"verified"|"built";built:boolean;published:boolean;computed:number;plan?:GenerationPlanV1}
 export interface GenerationAssembledV1{projects:Record<string,unknown>;dependencies:unknown[];externalNodes:Record<string,unknown>;unavailable:{root:string;[key:string]:unknown}[];generation:number;membership:string}
 export interface GenerationStoreV1{
  read(signal?:AbortSignal):Promise<GenerationSealedV1|undefined>;readIndex(digest:string):Promise<FactIndexV1|undefined>;readFrontier(digest:string|null):Promise<FrontierV1|undefined>;readFragment(row:GenerationOwnerRowV1):Promise<GenerationFragmentV1|undefined>;
+ readGlobal(manifest:GenerationManifestV1):Promise<{readonly externalNodes?:Record<string,unknown>;readonly unavailable?:readonly {readonly root:string}[]}>;
+ catalog(current:GenerationSealedV1,options?:{signal?:AbortSignal}):Promise<{projects:{name:string;root:string;targets:readonly string[]}[];unavailable:{root:string}[]}>;
  plan(options:{current:GenerationSealedV1|undefined;identity:string;changes?:MembershipChangeV1[];only?:ReadonlySet<string>;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationPlanV1>;
  build(options:Omit<GenerationRefreshOptionsV1,"policy"|"only"|"builder">):Promise<{current:GenerationSealedV1;built:boolean;published:boolean;computed:number;plan:GenerationPlanV1}>;
  refresh(options:GenerationRefreshOptionsV1):Promise<GenerationRefreshResultV1>;
  refreshClosure(options:Omit<GenerationRefreshOptionsV1,"only"|"policy">&{roots:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];policy?:GenerationGraphPolicyV1}):Promise<GenerationRefreshResultV1&{names:Set<string>}>;
  closureOf(current:GenerationSealedV1|undefined,roots:readonly string[],options?:{neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];signal?:AbortSignal}):Promise<Set<string>>;
+ assembleStream(current:GenerationSealedV1,options?:{names?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):{nodes():AsyncGenerator<[string,unknown],void,undefined>;finish():Promise<Omit<GenerationAssembledV1,"projects">>};
  assemble(current:GenerationSealedV1,options?:{names?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationAssembledV1>;
  snapshot(options?:{roots?:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<{current:GenerationSealedV1;graph:GenerationAssembledV1}>;
  retire(options?:{signal?:AbortSignal}):Promise<void>;invalidate(options?:{reason?:string;signal?:AbortSignal}):Promise<boolean>;
@@ -43,6 +47,8 @@ export function readGenerationPointerV1(bytes:Uint8Array):GenerationPointerV1;
 export function readGenerationManifestV1(bytes:Uint8Array):GenerationManifestV1;
 export function readGenerationFragmentV1(value:unknown):GenerationFragmentV1;
 export function canonicalJsonV1(value:unknown):string;
+/** 📦️ Encodes one canonical document within the expanded and packed reader byte ceiling. */
+export function packGenerationDocumentV1(value:unknown,maximumBytes:number):Uint8Array;
 export function compareCodePointsV1(a:string,b:string):number;
 export function rowKeyV1(row:GenerationRowV1):string;
 export function createFactIndexV1(ownerRows:ReadonlyMap<string,readonly GenerationRowV1[]>):FactIndexV1;

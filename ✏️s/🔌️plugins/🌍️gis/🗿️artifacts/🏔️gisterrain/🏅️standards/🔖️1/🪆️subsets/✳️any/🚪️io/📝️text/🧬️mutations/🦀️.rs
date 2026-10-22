@@ -39,7 +39,7 @@ use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use semio_framework_value::ToValue;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use store::os_store::store_schema::ArtifactEnvelope;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
@@ -67,15 +67,15 @@ pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, af
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: GisTerrainMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let forward = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(&mutation, &base);
-    let applied = protocol::apply_diff(forward.diff(), &base).map_err(|error| error.to_string())?;
-    let inverse = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let forward = <GisTerrainMutation as ColdMutation<GisTerrainSnapshot>>::diff(&mutation, &base);
+    let applied = protocol::apply_diff_cold(forward.diff(), &base).map_err(|error| error.to_string())?;
+    let inverse = <GisTerrainMutation as ColdMutation<GisTerrainSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in inverse.iter().rev() {
-        let outcome = <GisTerrainMutation as Mutation<GisTerrainSnapshot>>::diff(step, &undone);
+        let outcome = <GisTerrainMutation as ColdMutation<GisTerrainSnapshot>>::diff(step, &undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
-        undone = protocol::apply_diff(outcome.diff(), &undone).map_err(|error| error.to_string())?;
+        undone = protocol::apply_diff_cold(outcome.diff(), &undone).map_err(|error| error.to_string())?;
     }
     let report = semio_framework_pack_json::object([
         ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),

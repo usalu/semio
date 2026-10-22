@@ -1,6 +1,7 @@
 import{lstatSync,statfsSync,type BigIntStatsFs,type StatsFs}from"node:fs";
 import{statfs}from"node:fs/promises";
 import{basename,dirname,join,resolve}from"node:path";
+import{nativeStorageBackendsV1}from"../../../🔌️backends/🧭️selection/🟦️.ts";
 import{measureNativeDirectoryUsageV1,nativeDirectoryEntryBoundV1,nativeDirectoryHostAvailableBytesV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1}from"../../../📁️directory/🟦️.ts";
 
 const protocol=nativeDirectoryProtocolV1();
@@ -8,9 +9,9 @@ const protocol=nativeDirectoryProtocolV1();
 export type NativePartitionV1=Readonly<{directory:string;root:string;attached:boolean;filesystemBytes:number;maximumPhysicalBytes:number}>;
 type RowV1={bsize:number;blocks:number;bfree:number;bavail:number};
 
-/** 🔎️ Finds the directory partition that holds a path (the path lies in or at its root `m`, and `fixed.dir` sits beside it); undefined for every host path and on hosts that keep partitions as mounted images. */
+/** 🔎️ Finds the directory partition that holds a path (the path lies in or at its root `m`, and `fixed.dir` sits beside it); undefined for every host path and for partitions kept as mounted images. */
 export function nativePartitionOfV1(path:string,platform:string=process.platform):NativePartitionV1|undefined{
- if(platform!=="linux"&&platform!=="win32")return undefined;
+ if(!nativeStorageBackendsV1.some(row=>row.capabilities.includes("declared-envelope")&&row.platforms.includes(platform)))return undefined;
  let current=resolve(path);
  for(let depth=0;depth<=protocol.maximumDepth;depth++){
   if(basename(current)===protocol.root){

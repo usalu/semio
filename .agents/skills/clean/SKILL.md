@@ -15,13 +15,13 @@ description: >-
 ## Execute
 
 ```bash
-bun ./📜️script.ts clean
+repo ./📜️script.ts clean
 ```
 
 Dry-run only when the user explicitly asks:
 
 ```bash
-bun ./📜️script.ts clean --dry
+repo ./📜️script.ts clean --dry
 ```
 
 ## What it removes
@@ -29,7 +29,7 @@ bun ./📜️script.ts clean --dry
 1. **Misplaced emoji mounts** under `.🧬semio/` (corrupted `*repo` / `*tickets` names such as `🧑‍🦑️repo`, `🧑️repo`, `🪷tickets`) and a root-level `🦑️repo/`.
 2. **Gitignored paths inside ticket trees** (`**/🎫️tickets/**`), including generated `🧾️runs/` output at any nesting depth.
 3. **Oversized paths inside ticket folders only** (`…/🎆️YY/🌙️MM/☀️DD/TICKETSLUG/…`): files > 5MB, subfolders > 10MB. The ticket slug folder itself and year/month/day parents are never size-deleted.
-4. **Empty directories** — `bun ./📜️script.ts clean empty-folders` (and `clean marker-only-folders` for trees that contain only taxonomy marker files).
+4. **Empty directories** — `repo ./📜️script.ts clean empty-folders` (and `clean marker-only-folders` for trees that contain only taxonomy marker files).
 5. **Build artifacts** named `target`, `🎯️target*`, `dist`, `build`, `out` larger than **10GB**.
 6. **Rust incremental caches** — a directory named `incremental` under the shared Cargo cache (including `canonical-architecture`) or another configured Cargo build/target directory inside the workspace, when that directory is larger than **1 GiB**. Crates with a `-working` session stay. Dependency units and uplifted artifacts stay.
 Process lifecycle belongs to each actual execution or service owner. Workspace cleanup does not signal processes discovered by name, command text, parent links or a process-table census.
@@ -45,4 +45,4 @@ Process lifecycle belongs to each actual execution or service owner. Workspace c
 
 ## Reply
 
-Paste the `bun ./📜️script.ts clean` stdout (or stderr on failure) in one fenced block. No extra commentary.
+Paste the `repo ./📜️script.ts clean` stdout (or stderr on failure) in one fenced block. No extra commentary.

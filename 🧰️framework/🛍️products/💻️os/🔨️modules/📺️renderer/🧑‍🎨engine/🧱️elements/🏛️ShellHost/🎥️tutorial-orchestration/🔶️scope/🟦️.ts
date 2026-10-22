@@ -1,6 +1,6 @@
 /** 🔶️ The scope phase of useTutorialOrchestration. */
 import { OwnedTutorialRunV1, type TutorialInverseV1 } from "../../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalInteractionState } from "@semio-tech/framework/replication";
 import { createTutorialClock, getTutorialCameraDriver, type TutorialClock } from "@semio-tech/ui-react";
 import { applyTutorialUiSnapshotToShell, type TutorialUiBridgeContext } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";

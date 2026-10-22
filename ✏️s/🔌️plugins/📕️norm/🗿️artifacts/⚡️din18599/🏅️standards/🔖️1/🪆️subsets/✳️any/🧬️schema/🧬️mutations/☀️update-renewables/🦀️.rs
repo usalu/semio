@@ -22,20 +22,21 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateRenewables where
         record: "UpdatedRenewables",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update renewable energy systems", "Anlagen für erneuerbare Energien aktualisieren")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din18599Snapshot, Op> for UpdateRenewables where Op: protocol::ColdMutation<Din18599Snapshot, ReferenceDiff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::update_renewables::UpdateRenewables> {
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::update_renewables::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::update_renewables::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update renewable energy systems", "Anlagen für erneuerbare Energien aktualisieren")
-    }
 }
 
 //#region 🪢️Mounts

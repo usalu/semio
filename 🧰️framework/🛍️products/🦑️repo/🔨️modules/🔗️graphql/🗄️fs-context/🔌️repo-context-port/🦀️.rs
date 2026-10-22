@@ -215,6 +215,7 @@ impl RepoContext for FsRepoContext {
             session: String::new(),
             plan_id: input.plan_id,
             spec_id: input.spec_id,
+            draft: input.draft,
         };
         let outcome = self.with_tickets(kind, |service| service.open(&request)).map_err(|error| ContextError::new(error.message))?;
         for warning in &outcome.warnings {
@@ -261,8 +262,10 @@ impl RepoContext for FsRepoContext {
     }
 
     fn ticket_reopen(&self, input: TicketReopenInput) -> Result<Ticket, ContextError> {
-        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
         let client = semio_framework_repo_model::resolve_allowed_client(&input.client).map_err(|error| ContextError::new(error.to_string()))?;
+        if !input.llm.trim().is_empty() { semio_framework_repo_model::resolve_allowed_llm(&input.llm).map_err(|error| ContextError::new(error.to_string()))?; }
+        if !input.effort.trim().is_empty() { semio_framework_repo_model::resolve_allowed_effort(&input.effort).map_err(|error| ContextError::new(error.to_string()))?; }
+        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
         let kind = semio_framework_repo_providers::mcp_kind_from_resolved_client(&client);
         let request = TicketReopenRequest {
             id: id.id(),
@@ -276,6 +279,7 @@ impl RepoContext for FsRepoContext {
             session: String::new(),
             plan_id: input.plan_id,
             spec_id: input.spec_id,
+            draft: input.draft,
         };
         let outcome = self.with_tickets(kind, |service| service.reopen(&request)).map_err(|error| ContextError::new(error.message))?;
         for warning in &outcome.warnings {
@@ -285,58 +289,15 @@ impl RepoContext for FsRepoContext {
     }
 
     fn ticket_change(&self, input: TicketChangeInput) -> Result<Ticket, ContextError> {
-        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
-        let mut ticket = self.ticket(id.year, id.month, id.day, &id.slug)?;
-        let mut changed = false;
-        if let Some(prompt) = &input.prompt {
-            ticket.description = prompt.clone();
-            if let Some(last) = ticket.interactions.last_mut() {
-                last.prompt = prompt.clone();
-            }
-            changed = true;
-        }
-        if let Some(last) = ticket.interactions.last_mut() {
-            if let Some(llm) = &input.llm {
-                last.llm = semio_framework_repo_model::resolve_allowed_llm(llm).map_err(|error| ContextError::new(error.to_string()))?;
-                changed = true;
-            }
-            if let Some(effort) = &input.effort {
-                last.effort = semio_framework_repo_model::resolve_allowed_effort(effort).map_err(|error| ContextError::new(error.to_string()))?;
-                changed = true;
-            }
-            if let Some(client) = &input.client {
-                last.client = semio_framework_repo_model::resolve_allowed_client(client).map_err(|error| ContextError::new(error.to_string()))?;
-                changed = true;
-            }
-        }
-        if let Some(goal) = &input.goal {
-            ticket.goal = goal.clone();
-            changed = true;
-        }
-        if let Some(parent) = &input.parent {
-            ticket.parent = parent.clone();
-            changed = true;
-        }
-        if changed {
-            self.with_tickets(McpClientKind::Generic, |service| service.save(&ticket)).map_err(|error| ContextError::new(error.message))?;
-            semio_framework_repo_events::emit(
-                semio_framework_repo_events::TICKET_CHANGE_ENDED,
-                "repo-cli",
-                &json!({ "id": id.id(), "year": id.year, "month": id.month, "day": id.day, "slug": id.slug, "title": input.title, "prompt": input.prompt, "llm": input.llm, "effort": input.effort, "goal": input.goal, "parent": input.parent, "author": self.author() }),
-            );
-        }
-        Ok(ticket)
+        let request = TicketChangeRequest { id: TicketId::new(input.year, input.month, input.day, input.slug).id(), title: input.title, description: input.prompt, llm: input.llm, effort: input.effort, client: input.client, goal: input.goal, parent: input.parent, no_management: input.no_management };
+        let outcome = self.with_tickets(McpClientKind::Generic, |service| service.change(&request)).map_err(|error| ContextError::new(error.message))?;
+        for warning in &outcome.warnings { eprintln!("Warning: {warning}"); }
+        self.ticket_by_id(&outcome.id)
     }
 
     fn ticket_delete(&self, input: TicketDeleteInput) -> Result<bool, ContextError> {
-        let ticket = self.ticket(input.year, input.month, input.day, &input.slug)?;
-        if !input.no_management {
-            if let Some(issue) = ticket.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty()) {
-                let number = issue.rsplit('/').next().unwrap_or_default().to_string();
-                ManagementProvider::delete_issue(&semio_framework_repo_providers::system_management_provider(), &number).map_err(|error| ContextError::new(error.message))?;
-            }
-        }
-        std::fs::remove_dir_all(&ticket.folder_path).map_err(|error| ContextError::new(format!("{}: {error}", ticket.folder_path)))?;
+        let id = TicketId::new(input.year, input.month, input.day, input.slug);
+        self.with_tickets(McpClientKind::Generic, |service| service.delete(&id, input.no_management)).map_err(|error| ContextError::new(error.message))?;
         Ok(true)
     }
     fn contributor_add(&self, input: ContributorAddInput) -> Result<Contributor, ContextError> {

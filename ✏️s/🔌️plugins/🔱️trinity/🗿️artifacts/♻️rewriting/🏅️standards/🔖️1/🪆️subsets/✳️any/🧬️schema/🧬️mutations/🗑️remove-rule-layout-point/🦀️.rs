@@ -27,6 +27,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "rule-layout-point", kind: "remove-rule-layout-point", record: "RemovedRuleLayoutPoint" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" entfernen", self.key))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RewritingSnapshot, Op> for RemoveRuleLayoutPoint
+where
+    Op: protocol::ColdMutation<RewritingSnapshot, ReferenceDiff = RewritingDiff> + From<RemoveRuleLayoutPoint> + From<crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::ChangeRuleLayoutPoint>,
+{
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
@@ -36,11 +48,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" entfernen", self.key))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.key.clone()]
-    }
 }
 //#endregion 🔖️Mutation

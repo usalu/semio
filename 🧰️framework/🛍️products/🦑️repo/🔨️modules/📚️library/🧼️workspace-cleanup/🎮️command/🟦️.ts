@@ -11,6 +11,7 @@ import { cleanCollectEmptyFolderRemovals } from "../🔍️empty-folders/🟦️
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts, and rustc
@@ -76,7 +77,7 @@ export class CleanScript extends Script {
       // into `compose/`, never follows a symlink, never deletes an unmarked directory.
       const domain = String((loadCatalogTaxonomy() as unknown as Readonly<{ testDomainPath?: string }>).testDomainPath ?? "");
       if (domain === "") throw new Error("🔣️taxonomy.json declares no testDomainPath — `clean test` has no owner to delegate to.");
-      runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
+      runCmd(runtimeExecutableV1(), [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "coverage") {
@@ -119,7 +120,7 @@ export class CleanScript extends Script {
       return;
     }
     const cachingScript = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts");
-    const status = runCmdStatus("bun", [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
+    const status = runCmdStatus(runtimeExecutableV1(), [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
   }
 }

@@ -107,11 +107,10 @@ func (catalogue Catalogue) flag(name string) (CatalogueFlag, bool) {
 // #region 🏗️PolicyModel
 
 type PolicyIdentity struct {
-	Argument          string           `json:"argument"`
-	Pattern           string           `json:"pattern"`
-	Description       Text             `json:"description"`
-	Environment       AgentEnvironment `json:"environment"`
-	ConnectionSources []string         `json:"connectionSources"`
+	Argument    string           `json:"argument"`
+	Pattern     string           `json:"pattern"`
+	Description Text             `json:"description"`
+	Environment AgentEnvironment `json:"environment"`
 }
 
 type PolicyGlobal struct {

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -66,7 +67,7 @@ function projectStrf(strf: StreamFormat): ProjectedStream["strf"] {
 /** 📥️ Runs the standalone codec's `project` subcommand and turns its raw hex payloads into the
  *  profile's own size+digest projection — never raw bytes past this function. */
 function readAvi(path: string): AviDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`riff-avi-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   const raw = JSON.parse(result.stdout) as RawDoc;
   return {

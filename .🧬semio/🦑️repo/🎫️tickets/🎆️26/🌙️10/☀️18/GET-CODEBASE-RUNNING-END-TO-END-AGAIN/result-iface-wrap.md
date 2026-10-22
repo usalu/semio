@@ -43,3 +43,6 @@ AGENTS.md: external libraries only behind an interface; no exported API that req
 
 ## Files (C = ticket folder)
 `C/iface-wrap-tools/`: `apply.py`, `lock-sync.py`, `build.mjs` + `g1-tokio.mjs g2-json.mjs g3-wasm.mjs g4-react.mjs`, `lib.mjs`, `react-port.mjs`, `src/` (authored new files), `staged/` (manifest + 250 after-files), `oracle.py`, `parse-rs.py`, `mkovl.py`, `mk-tsc.py`, `verify-react.sh`, `mk-tokio-mini.sh`, `mk-json-mini.py`, `mk-wasm-mini.sh`. Delete `/private/tmp/iface-wrap/` (3.6 GB of build output) when done.
+
+## Update (10-21): APPLIED
+Rust groups applied by cargo-fix (+ lock-sync). React group rebuilt on the live files (230 files after the fnsplit/agents-fix drifts), tsc 0 errors, React-lane suites in overlay equal to the live tree (spawned-program-session 20/54 fails identically live, source-text assertions broken by fnsplit; Chromium-only failure in MediaTransportHost), applied live 10:15, check: 230 applied, 0 drift.

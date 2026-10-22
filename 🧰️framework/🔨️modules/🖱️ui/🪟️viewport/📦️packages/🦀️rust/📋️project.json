@@ -29,7 +29,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-binding": {
@@ -44,7 +44,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-binding"
+        "command": "repo ./📜️script.ts test-binding"
       }
     }
   }

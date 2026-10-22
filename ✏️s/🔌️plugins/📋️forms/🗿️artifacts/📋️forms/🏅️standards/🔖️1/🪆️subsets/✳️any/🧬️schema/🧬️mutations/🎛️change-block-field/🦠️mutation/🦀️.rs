@@ -176,6 +176,19 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-field", kind: "change-block-field", record: "ChangedBlockField" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (en, de) = self.change.labels();
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.block_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for ChangeBlockField
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<ChangeBlockField>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         crate::standards::v1::subsets::any::schema::mutations::change_block_field::diff::diff_change_block_field(self, base)
     }
@@ -185,12 +198,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let (en, de) = self.change.labels();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.block_id.clone()]
-    }
 }
 //#endregion 🎛️ChangeBlockField

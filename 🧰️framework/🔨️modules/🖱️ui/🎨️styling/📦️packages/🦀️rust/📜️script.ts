@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
@@ -10,6 +10,7 @@ import { writeGeneratedFileIfChanged } from "../../../../🏃️process/📦️p
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts } from "../../📽️projection/🟦️.ts";
 import { runPreviewGeneratedScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
@@ -70,7 +71,7 @@ class ColorPrimitivesContractScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("generate", GenerateScript)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript)
@@ -80,4 +81,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-relative-sizing", RelativeSizingContractScript)
   .register("test-color-primitives", ColorPrimitivesContractScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

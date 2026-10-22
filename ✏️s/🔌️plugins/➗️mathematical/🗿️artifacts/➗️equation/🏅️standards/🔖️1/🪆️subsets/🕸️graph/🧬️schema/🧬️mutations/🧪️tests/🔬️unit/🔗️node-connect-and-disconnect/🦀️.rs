@@ -31,7 +31,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `connect-nodes` leaves the document byte-identical to the committed `after`.
@@ -39,7 +39,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.nodes.is_empty() && base.graph.edges.is_empty(), "rejects-an-edge-between-two-absent-endpoints' before-snapshot must hold a empty graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "connect-nodes/rejects-an-edge-between-two-absent-endpoints: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected connect must not mint a fresh notation/results/computed triple");
 }
@@ -68,7 +68,7 @@ async fn the_missing_endpoints_are_named_not_the_new_edge_id() {
 /// it was asked to create, even though the connect itself was refused.
 #[semio_framework_async_macros::async_test]
 async fn inverse_is_a_disconnect_of_the_requested_edge_id() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::DisconnectNodes(DisconnectNodes { id: "e-alpha-beta".to_string() })], "connect-nodes undoes with exactly one disconnect of the requested edge id, got {inverse:?}");
 }
 
@@ -143,7 +143,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `disconnect-nodes` leaves the document byte-identical to the committed `after`.
@@ -151,7 +151,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.edges.is_empty(), "rejects-severing-an-edge-that-is-not-in-the-graph's before-snapshot must hold a edge-less graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "disconnect-nodes/rejects-severing-an-edge-that-is-not-in-the-graph: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected disconnect must not mint a fresh notation/results/computed triple");
 }
@@ -177,7 +177,7 @@ async fn a_missing_edge_is_reported_by_its_edge_id() {
 /// `connect-nodes` twin, whose inverse is payload-derived and therefore never empty.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_edge_to_reconnect() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "disconnect-nodes/rejects-severing-an-edge-that-is-not-in-the-graph: a rejected disconnect must have no inverse steps, got {inverse:?}");
 }
 

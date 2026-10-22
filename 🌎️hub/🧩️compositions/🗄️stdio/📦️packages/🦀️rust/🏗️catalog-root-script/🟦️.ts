@@ -63,7 +63,7 @@ export class CatalogRootScript extends BundleScript {
       const packageId = componentPackageId(join(this.root, COMPONENT_MANIFEST));
       const target = componentStageTargetV1(this.repoRoot, join(this.root, COMPONENT_MANIFEST));
       const deliverable = componentDeliverableV1(target.crateRoot, target.packageName, SHIPPED_COMPONENT_PROFILE);
-      const fix = "run bun repo run workspace:release, then bun repo run workspace:components describe stdio";
+      const fix = "run repo run workspace:release, then repo run workspace:components describe stdio";
       if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) throw new Error(`stdio catalog-root stages the shipped component and its receipt from ${relative(this.repoRoot, deliverable.directory)}; ${fix}`);
       const committedPack = join(target.ownerRoot, DESCRIPTOR_PACK);
       const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: PLUGIN_ID, packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), readFileSync(committedPack));

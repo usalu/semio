@@ -18,7 +18,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeStoreys where Op: 
         kind: "change-storeys",
         record: "ChangedStoreys",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change number of storeys", "Geschossanzahl ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeStoreys where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_storeys::ChangeStoreys> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_storeys::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeStoreys where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change number of storeys", "Geschossanzahl ändern")
-    }
 }
 
 //#region 🪢️Mounts

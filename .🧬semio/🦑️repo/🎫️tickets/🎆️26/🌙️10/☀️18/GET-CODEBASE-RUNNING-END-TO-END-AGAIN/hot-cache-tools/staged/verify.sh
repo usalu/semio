@@ -4,7 +4,7 @@
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=${1:-$(pwd)}
-OUT=${2:-/private/tmp/hot-cache-verify}
+OUT=${2:-${TMPDIR:-/tmp}/hot-cache-verify}
 TICKET=$(cd "$HERE/../.." && pwd)
 rm -rf "$OUT" && mkdir -p "$OUT/bin" "$OUT/root"
 echo "== natives"

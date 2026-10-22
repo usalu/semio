@@ -33,6 +33,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-box", kind: "set-view-box", record: "SetViewBox" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set view box", "ViewBox setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetViewBox
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetViewBox>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, view_box, index } = self;
         protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("viewBox", view_box.clone().map(SvgAttributeValue::ViewBox), *index)]))
@@ -41,12 +53,6 @@ where
         let Self { path, .. } = self;
         let (value, index) = prior_attribute(base, path, "viewBox");
         Ok(vec![Op::from(SetViewBox { path: path.clone(), view_box: value.and_then(|value| if let SvgAttributeValue::ViewBox(view_box) = value { Some(view_box) } else { None }), index })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set view box", "ViewBox setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

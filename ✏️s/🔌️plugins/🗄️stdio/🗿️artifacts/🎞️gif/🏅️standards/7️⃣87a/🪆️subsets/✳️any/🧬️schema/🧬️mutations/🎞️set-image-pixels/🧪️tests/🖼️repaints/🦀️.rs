@@ -60,7 +60,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <GifMutation as protocol::Mutation<GifSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <GifMutation as protocol::ColdMutation<GifSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "set-image-pixels/repaints-the-right-pixel-of-the-single-image: undoing a pixel repaint is exactly one step");
     assert_eq!(inverse[0], GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: 0, indices: base.images[0].indices.clone() }), "set-image-pixels/repaints-the-right-pixel-of-the-single-image: the undo step must itself be a SetImagePixels carrying the pre-state indices");
     let mut snapshot = base.clone();
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
-    let raised = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(&mutation(), &before());
+    let raised = <GifMutation as protocol::ColdMutation<GifSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -118,7 +118,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let raised = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(&mutation(), &base);
+    let raised = <GifMutation as protocol::ColdMutation<GifSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-image-pixels/repaints-the-right-pixel-of-the-single-image: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -147,7 +147,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GifDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-image-pixels/repaints-the-right-pixel-of-the-single-image: committed diff did not carry before to after");
 }
 

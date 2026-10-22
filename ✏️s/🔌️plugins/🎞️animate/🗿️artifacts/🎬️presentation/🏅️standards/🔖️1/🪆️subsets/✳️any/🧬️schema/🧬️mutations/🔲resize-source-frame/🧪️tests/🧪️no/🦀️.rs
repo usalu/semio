@@ -58,7 +58,7 @@ fn applies_to_committed_after() {
 /// accepted as valid and then recognised as unchanged, not rejected.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    let outcome = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "resize-source-frame/no-ops-when-the-frame-is-already-identical: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -80,7 +80,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a frame-identity resize must leave the composed deck slot unset");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff did not carry before to after");
 }
 
@@ -111,7 +111,7 @@ fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "resize-source-frame/no-ops-when-the-frame-is-already-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
-    let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    let produced = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     assert_eq!(messages.len(), declared.len(), "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");

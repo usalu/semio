@@ -28,6 +28,15 @@ fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
     Ok(serde_json::Value::from(value))
 }
 
+/// 🗝️ The named arguments an action's JSON input carries, as the framework's own values: the members of an object, none for a null input, a named refusal for anything else. The one place a channel implementation meets the JSON type of [`AppCommand::PureCommand`].
+pub fn action_input_arguments(input: &serde_json::Value) -> Result<std::collections::BTreeMap<String, DslValue>, String> {
+    match input {
+        serde_json::Value::Object(map) => Ok(map.iter().map(|(key, value)| (key.clone(), json_value_to_dsl(value))).collect()),
+        serde_json::Value::Null => Ok(std::collections::BTreeMap::new()),
+        other => Err(format!("an action's input is a named argument object; this call carried {other}")),
+    }
+}
+
 //#region 🔖️Port
 
 /// 📦️ One op payload set, split by store lane — matches `📓️luna-channel-audit.md` §4's recommended
@@ -759,7 +768,7 @@ pub struct HubInferenceApprovalUndoMemberV1 {
     pub space_id: String,
     pub document_id: String,
     pub idempotency_key: String,
-    #[serde(with="crate::inference::dsl_json")]
+    #[serde(with="dsl_json")]
     pub payload:semio_framework_value::DslValue,
 }
 

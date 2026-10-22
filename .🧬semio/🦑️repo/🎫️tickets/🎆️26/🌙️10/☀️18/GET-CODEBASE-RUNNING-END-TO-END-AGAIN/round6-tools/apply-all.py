@@ -32,10 +32,12 @@ def sh(argv, timeout=3600, env=None):
     return run.returncode, run.stdout + run.stderr
 
 
-def run_all(cmds, env):
+def run_all(cmds, env, prepared=0):
     out, rc = "", 0
-    for cmd in cmds:
+    for i, cmd in enumerate(cmds):
         rc, text = sh(cmd, env=env)
+        if i < prepared and rc:
+            return 99, out + text
         out += "$ " + " ".join(cmd)[:200] + "\n" + text
         if rc not in (0, 1) or (rc == 1 and cmd is cmds[-1] and False):
             break
@@ -131,13 +133,34 @@ def syntax(rels):
     return bad
 
 
+def view(step, mode):
+    if step.get("view"):
+        sh([PY, HERE + "/view.py", mode, LIVE])
+
+
 def prepare_and_check(step):
+    view(step, "in")
+    try:
+        return _prepare_and_check(step)
+    finally:
+        view(step, "out")
+
+
+def _prepare_and_check(step):
     cmds = [*step.get("prepare", []), *step["check"]]
-    rc, out = run_all(cmds, step.get("env"))
+    rc, out = run_all(cmds, step.get("env"), len(step.get("prepare", [])))
     return classify(step, rc, out), out
 
 
 def apply_step(step, ledger):
+    view(step, "in")
+    try:
+        return _apply_step(step, ledger)
+    finally:
+        view(step, "out")
+
+
+def _apply_step(step, ledger):
     rels = touched(step)
     rows = backup(step, rels)
     for cmd in step.get("prepare", []):
@@ -149,6 +172,8 @@ def apply_step(step, ledger):
     for cmd in step["write"]:
         rc, text = sh(cmd, env=step.get("env"))
         out += text
+        if rc in step.get("ok", (0,)) and step.get("refuse_if") and re.search(step["refuse_if"], text):
+            rc = 97
         if rc not in step.get("ok", (0,)):
             print("   apply rc=%d FAILED\n   %s" % (rc, text.strip()[-1500:].replace("\n", "\n   ")))
             return False
@@ -158,6 +183,11 @@ def apply_step(step, ledger):
     ledger[step["id"]] = {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "files": changed, "listed": len(rels)}
     save_ledger(ledger)
     print("   applied: %d of %d listed files changed" % (len(changed), len(rels)))
+    law = re.findall(r"(?m)^LAW-VIOLATION .*", out)
+    if law:
+        print("   WARNING: %d runtime-law violation(s) remain (written, open item for the owners):" % len(law))
+        for row in law[:20]:
+            print("      " + row[:200])
     return True
 
 

@@ -1,0 +1,164 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "runtime-source-production-rust-leaf",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "✏️s/x/🦀️.rs"
+   ],
+   "expect": true
+  },
+  {
+   "id": "runtime-source-root-itself",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🧰️framework"
+   ],
+   "expect": true
+  },
+  {
+   "id": "runtime-source-tests-directory",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "✏️s/x/🧪️tests/a.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-plain-tests-directory",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🧰️framework/a/tests/t.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-benches",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🧰️framework/a/benches/b.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-examples",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🧰️framework/a/examples/e.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-build-script",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🌎️hub/a/build.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-fixtures",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🧰️framework/🧫️fixtures/x.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-outside-production-roots",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "other/x.rs"
+   ],
+   "expect": false
+  },
+  {
+   "id": "runtime-source-hub-source",
+   "rule": "interactivityIsRuntimeSource",
+   "args": [
+    "🌎️hub/🏗️bootstrap/🦀️.rs"
+   ],
+   "expect": true
+  },
+  {
+   "id": "interactive-sources-are-scanned-by-scope",
+   "rule": "interactivityAuditScan",
+   "files": {
+    "🧰️framework/🔨️modules/🖱️ui/🔸️x/🦀️.rs": [
+     "fn a() { block_on(f); }",
+     "// std::fs::read in a comment",
+     "/* std::net::x",
+     "   still comment std::fs::y */ let t = std::fs::z;",
+     "let s = \"std::fs::in_string\";",
+     "thread::spawn(|| {});",
+     "#[cfg(test)]",
+     "mod tests {",
+     "    fn t() { block_on(f); }",
+     "}",
+     "#[cfg(test)]",
+     "fn only_test() { block_on(f); }",
+     "use rayon::prelude::*;"
+    ],
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs": [
+     "block_on(f);"
+    ],
+    "🌎️hub/x/🦀️.rs": [
+     "std::fs::read();",
+     "thread::spawn(f);"
+    ],
+    "🧰️framework/🔨️modules/⏳️async/🦀️.rs": [
+     "thread::spawn(f);",
+     "block_on(f);"
+    ],
+    "🧰️framework/🔨️modules/🖱️ui/🔸️x/🧪️tests/t.rs": [
+     "block_on(f);"
+    ],
+    "🧰️framework/🔨️modules/🖱️ui/🔸️x/notes.txt": [
+     "block_on(f);"
+    ],
+    "other/x.rs": [
+     "block_on(f);"
+    ]
+   },
+   "expect": [
+    [
+     "blocking-bridge",
+     "🧰️framework/🔨️modules/🖱️ui/🔸️x/🦀️.rs",
+     1,
+     "fn a() { block_on(f); }"
+    ],
+    [
+     "blocking-bridge",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs",
+     1,
+     "block_on(f);"
+    ],
+    [
+     "sync-fs",
+     "🧰️framework/🔨️modules/🖱️ui/🔸️x/🦀️.rs",
+     4,
+     "still comment std::fs::y */ let t = std::fs::z;"
+    ],
+    [
+     "thread-pool",
+     "🌎️hub/x/🦀️.rs",
+     2,
+     "thread::spawn(f);"
+    ],
+    [
+     "thread-pool",
+     "🧰️framework/🔨️modules/🖱️ui/🔸️x/🦀️.rs",
+     13,
+     "use rayon::prelude::*;"
+    ],
+    [
+     "thread-pool",
+     "🧰️framework/🔨️modules/🖱️ui/🔸️x/🦀️.rs",
+     6,
+     "thread::spawn(|| {});"
+    ]
+   ]
+  }
+ ]
+}

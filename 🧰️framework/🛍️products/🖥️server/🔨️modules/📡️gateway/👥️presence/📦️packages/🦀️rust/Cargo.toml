@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework-server-contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-server-throttle = { path = "../../../../🚦️throttle/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

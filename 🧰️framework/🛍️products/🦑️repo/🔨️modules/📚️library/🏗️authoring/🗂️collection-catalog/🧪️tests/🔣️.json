@@ -1,0 +1,603 @@
+{
+ "version": 1,
+ "document": {
+  "x-semio-collection-catalog": {
+   "keyType": "ShapeKey",
+   "rowType": "ShapeRow",
+   "labelType": "ShapeLabel",
+   "tag": "kind",
+   "content": "row",
+   "headerField": "header",
+   "rust": {
+    "snapshot": "crate::model::Snapshot",
+    "diff": "crate::model::SnapshotDiff",
+    "deltas": "crate::deltas",
+    "rows": "crate::rows",
+    "header": "crate::model::Header",
+    "id": "crate::model::Id",
+    "canonicalJsonOwner": "Snapshot"
+   },
+   "typescript": {
+    "rows": "../rows/index.ts"
+   },
+   "output": {
+    "rust": "../out/catalog/🦀️.rs",
+    "typescript": "../out/🟦️.ts"
+   },
+   "collections": [
+    {
+     "key": "nodes",
+     "variant": "Nodes",
+     "entity": "node",
+     "row": "NodeRow",
+     "patch": "NodePatch",
+     "delta": "NodeDelta",
+     "rowsField": "nodes",
+     "diffField": "nodeDeltas",
+     "label": {
+      "article": "a",
+      "en": "node",
+      "de": "Knoten"
+     }
+    },
+    {
+     "key": "edges",
+     "variant": "Edges",
+     "entity": "edge",
+     "row": "EdgeRow",
+     "patch": "EdgePatch",
+     "delta": "EdgeDelta",
+     "rowsField": "edges",
+     "diffField": "edgeDeltas",
+     "label": {
+      "article": "an",
+      "en": "edge",
+      "de": "Kante"
+     }
+    }
+   ]
+  },
+  "$defs": {
+   "ShapeKey": {
+    "enum": [
+     "nodes",
+     "edges"
+    ]
+   },
+   "ShapeRow": {
+    "oneOf": [
+     {
+      "properties": {
+       "kind": {
+        "const": "nodes"
+       },
+       "row": {
+        "$ref": "#/$defs/NodeRow"
+       }
+      }
+     },
+     {
+      "properties": {
+       "kind": {
+        "const": "edges"
+       },
+       "row": {
+        "$ref": "#/$defs/EdgeRow"
+       }
+      }
+     }
+    ]
+   }
+  }
+ },
+ "parsed": {
+  "keyType": "ShapeKey",
+  "rowType": "ShapeRow",
+  "labelType": "ShapeLabel",
+  "tag": "kind",
+  "content": "row",
+  "headerField": "header",
+  "rust": {
+   "snapshot": "crate::model::Snapshot",
+   "diff": "crate::model::SnapshotDiff",
+   "deltas": "crate::deltas",
+   "rows": "crate::rows",
+   "header": "crate::model::Header",
+   "id": "crate::model::Id",
+   "canonicalJsonOwner": "Snapshot"
+  },
+  "typescript": {
+   "rows": "../rows/index.ts"
+  },
+  "output": {
+   "rust": "../out/catalog/🦀️.rs",
+   "typescript": "../out/🟦️.ts"
+  },
+  "collections": [
+   {
+    "key": "nodes",
+    "variant": "Nodes",
+    "entity": "node",
+    "row": "NodeRow",
+    "patch": "NodePatch",
+    "delta": "NodeDelta",
+    "rowsField": "nodes",
+    "diffField": "nodeDeltas",
+    "label": {
+     "article": "a",
+     "en": "node",
+     "de": "Knoten"
+    }
+   },
+   {
+    "key": "edges",
+    "variant": "Edges",
+    "entity": "edge",
+    "row": "EdgeRow",
+    "patch": "EdgePatch",
+    "delta": "EdgeDelta",
+    "rowsField": "edges",
+    "diffField": "edgeDeltas",
+    "label": {
+     "article": "an",
+     "en": "edge",
+     "de": "Kante"
+    }
+   }
+  ]
+ },
+ "invalid": [
+  {
+   "name": "a key that is not camelCase",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.key",
+    "value": "Nodes",
+    "message": ""
+   },
+   "message": "collection catalog key is invalid"
+  },
+  {
+   "name": "a variant that is not PascalCase",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.variant",
+    "value": "nodes",
+    "message": ""
+   },
+   "message": "collection catalog variant is invalid"
+  },
+  {
+   "name": "an entity that is not kebab-case",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.entity",
+    "value": "Node",
+    "message": ""
+   },
+   "message": "collection catalog entity is invalid"
+  },
+  {
+   "name": "a row type with an underscore",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.row",
+    "value": "Node_Row",
+    "message": ""
+   },
+   "message": "collection catalog row is invalid"
+  },
+  {
+   "name": "a rows field that is not an identifier",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.rowsField",
+    "value": "1nodes",
+    "message": ""
+   },
+   "message": "collection catalog rowsField is invalid"
+  },
+  {
+   "name": "an article other than a or an",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.label.article",
+    "value": "the",
+    "message": ""
+   },
+   "message": "article must be a or an"
+  },
+  {
+   "name": "an empty English label",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0.label.en",
+    "value": "",
+    "message": ""
+   },
+   "message": "needs English and German labels"
+  },
+  {
+   "name": "a missing German label",
+   "patch": {
+    "op": "delete",
+    "path": "x-semio-collection-catalog.collections.0.label.de",
+    "value": null,
+    "message": ""
+   },
+   "message": "needs English and German labels"
+  },
+  {
+   "name": "duplicate keys",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.1.key",
+    "value": "nodes",
+    "message": ""
+   },
+   "message": "key values must be unique"
+  },
+  {
+   "name": "duplicate diff fields",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.1.diffField",
+    "value": "nodeDeltas",
+    "message": ""
+   },
+   "message": "diffField values must be unique"
+  },
+  {
+   "name": "no collections",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections",
+    "value": [],
+    "message": ""
+   },
+   "message": "declares no collections"
+  },
+  {
+   "name": "a key type that is not PascalCase",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.keyType",
+    "value": "shapeKey",
+    "message": ""
+   },
+   "message": "keyType is invalid"
+  },
+  {
+   "name": "a tag that is not camelCase",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.tag",
+    "value": "Kind",
+    "message": ""
+   },
+   "message": "tag is invalid"
+  },
+  {
+   "name": "a Rust path with a capitalised crate",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.rust.snapshot",
+    "value": "Crate::model::Snapshot",
+    "message": ""
+   },
+   "message": "snapshot is invalid"
+  },
+  {
+   "name": "a Rust path with a trailing separator",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.rust.diff",
+    "value": "crate::",
+    "message": ""
+   },
+   "message": "diff is invalid"
+  },
+  {
+   "name": "a canonical JSON owner that is a path",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.rust.canonicalJsonOwner",
+    "value": "a::B",
+    "message": ""
+   },
+   "message": "canonicalJsonOwner is invalid"
+  },
+  {
+   "name": "a TypeScript rows entry that is not a relative ts file",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.typescript.rows",
+    "value": "rows.ts",
+    "message": ""
+   },
+   "message": "rows is invalid"
+  },
+  {
+   "name": "an absolute Rust output",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.output.rust",
+    "value": "/abs/out.rs",
+    "message": ""
+   },
+   "message": "rust is invalid"
+  },
+  {
+   "name": "a hidden TypeScript output segment",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.output.typescript",
+    "value": "../.hidden/x.ts",
+    "message": ""
+   },
+   "message": "typescript is invalid"
+  },
+  {
+   "name": "a key enum in the wrong order",
+   "patch": {
+    "op": "set",
+    "path": "$defs.ShapeKey.enum",
+    "value": [
+     "edges",
+     "nodes"
+    ],
+    "message": ""
+   },
+   "message": "enum must list the catalog keys in order"
+  },
+  {
+   "name": "a row union with a missing alternative",
+   "patch": {
+    "op": "set",
+    "path": "$defs.ShapeRow.oneOf",
+    "value": [
+     {
+      "properties": {
+       "kind": {
+        "const": "nodes"
+       },
+       "row": {
+        "$ref": "#/$defs/NodeRow"
+       }
+      }
+     }
+    ],
+    "message": ""
+   },
+   "message": "oneOf must hold one alternative per collection"
+  },
+  {
+   "name": "a row union tagging the wrong key",
+   "patch": {
+    "op": "set",
+    "path": "$defs.ShapeRow.oneOf.1.properties.kind.const",
+    "value": "nodes",
+    "message": ""
+   },
+   "message": "must tag edges"
+  },
+  {
+   "name": "a row union referencing the wrong row",
+   "patch": {
+    "op": "set",
+    "path": "$defs.ShapeRow.oneOf.0.properties.row.$ref",
+    "value": "#/$defs/Other",
+    "message": ""
+   },
+   "message": "must reference the NodeRow row"
+  },
+  {
+   "name": "a row union reference that is not a string",
+   "patch": {
+    "op": "set",
+    "path": "$defs.ShapeRow.oneOf.0.properties.row.$ref",
+    "value": 7,
+    "message": ""
+   },
+   "message": "must reference the NodeRow row"
+  },
+  {
+   "name": "a missing extension",
+   "patch": {
+    "op": "delete",
+    "path": "x-semio-collection-catalog",
+    "value": null,
+    "message": ""
+   },
+   "message": "x-semio-collection-catalog must be an object"
+  },
+  {
+   "name": "a missing definitions table",
+   "patch": {
+    "op": "delete",
+    "path": "$defs",
+    "value": null,
+    "message": ""
+   },
+   "message": "$defs must be an object"
+  },
+  {
+   "name": "a missing rust table",
+   "patch": {
+    "op": "delete",
+    "path": "x-semio-collection-catalog.rust",
+    "value": null,
+    "message": ""
+   },
+   "message": "rust must be an object"
+  },
+  {
+   "name": "a collection that is not an object",
+   "patch": {
+    "op": "set",
+    "path": "x-semio-collection-catalog.collections.0",
+    "value": 7,
+    "message": ""
+   },
+   "message": "collection 0 must be an object"
+  }
+ ],
+ "notDocuments": [
+  null,
+  [],
+  "text",
+  3
+ ],
+ "renderTs": "/** 🤖️ Generated by the collection-catalog generator (`📚️library/🏗️authoring/🗂️collection-catalog`) from the `x-semio-collection-catalog` extension of its snapshot schema. Edit the schema and regenerate. */\nimport type { EdgeRow } from \"../rows/edge.ts\";\nimport type { NodeRow } from \"../rows/node.ts\";\n\n/** 🗂️ Key of one id-keyed collection. */\nexport type ShapeKey = \"nodes\" | \"edges\";\n\n/** 🗂️ One typed row of one collection, adjacently tagged by its key. */\nexport type ShapeRow =\n  | { kind: \"nodes\"; row: NodeRow }\n  | { kind: \"edges\"; row: EdgeRow };\n\n/** 🗂️ One collection: its key, entity, snapshot and diff fields, and row labels. */\nexport interface ShapeKeyEntry { readonly key: ShapeKey; readonly entity: string; readonly rowsField: string; readonly diffField: string; readonly label: { readonly article: \"a\" | \"an\"; readonly en: string; readonly de: string } }\n\n/** 🗂️ Every collection, in declaration order. */\nexport const SHAPES: readonly ShapeKeyEntry[] = [\n  { key: \"nodes\", entity: \"node\", rowsField: \"nodes\", diffField: \"nodeDeltas\", label: {article: \"a\",en: \"node\",de: \"Knoten\"} },\n  { key: \"edges\", entity: \"edge\", rowsField: \"edges\", diffField: \"edgeDeltas\", label: {article: \"an\",en: \"edge\",de: \"Kante\"} },\n];\n",
+ "renderTsOwners": {
+  "NodeRow": "../rows/node.ts",
+  "EdgeRow": "../rows/edge.ts"
+ },
+ "renderTsSameModule": "/** 🤖️ Generated by the collection-catalog generator (`📚️library/🏗️authoring/🗂️collection-catalog`) from the `x-semio-collection-catalog` extension of its snapshot schema. Edit the schema and regenerate. */\nimport type { EdgeRow, NodeRow } from \"../rows/index.ts\";\n\n/** 🗂️ Key of one id-keyed collection. */\nexport type ShapeKey = \"nodes\" | \"edges\";\n\n/** 🗂️ One typed row of one collection, adjacently tagged by its key. */\nexport type ShapeRow =\n  | { kind: \"nodes\"; row: NodeRow }\n  | { kind: \"edges\"; row: EdgeRow };\n\n/** 🗂️ One collection: its key, entity, snapshot and diff fields, and row labels. */\nexport interface ShapeKeyEntry { readonly key: ShapeKey; readonly entity: string; readonly rowsField: string; readonly diffField: string; readonly label: { readonly article: \"a\" | \"an\"; readonly en: string; readonly de: string } }\n\n/** 🗂️ Every collection, in declaration order. */\nexport const SHAPES: readonly ShapeKeyEntry[] = [\n  { key: \"nodes\", entity: \"node\", rowsField: \"nodes\", diffField: \"nodeDeltas\", label: {article: \"a\",en: \"node\",de: \"Knoten\"} },\n  { key: \"edges\", entity: \"edge\", rowsField: \"edges\", diffField: \"edgeDeltas\", label: {article: \"an\",en: \"edge\",de: \"Kante\"} },\n];\n",
+ "rust": {
+  "root": [
+   "use crate::model::Snapshot;",
+   "use crate::model::SnapshotDiff;",
+   "use crate::model::Header;",
+   "use crate::model::Id;",
+   "use crate::deltas::{EdgeDelta, NodeDelta};",
+   "use crate::rows::{EdgePatch, EdgeRow, NodePatch, NodeRow};",
+   "#[canonical_json(owner = Snapshot)]",
+   "#[value(tag = \"kind\", content = \"row\", rename_all = \"camelCase\")]",
+   "pub enum ShapeKey {\n    Nodes,\n    Edges,\n}",
+   "pub enum ShapeRow {\n    Nodes(NodeRow),\n    Edges(EdgeRow),\n}",
+   "pub struct ShapeLabel {",
+   "pub const ALL: [ShapeKey; 2] = [ShapeKey::Nodes, ShapeKey::Edges];",
+   "#[path = \"🪪️key-descriptors/🦀️.rs\"]\nmod key_descriptors;",
+   "#[path = \"🔎️key-base-access/🦀️.rs\"]\nmod key_base_access;",
+   "#[path = \"🧾️row-operations/🦀️.rs\"]\nmod row_operations;",
+   "#[path = \"🔁️row-conversions/🦀️.rs\"]\nmod row_conversions;"
+  ],
+  "🪪️key-descriptors": [
+   "            Self::Nodes => \"node\",",
+   "            Self::Edges => \"edge\",",
+   "Self::Nodes => ShapeLabel { article: \"a\", en: \"node\", de: \"Knoten\" },",
+   "Self::Edges => ShapeLabel { article: \"an\", en: \"edge\", de: \"Kante\" },",
+   "            Self::Nodes => \"nodeDeltas\",",
+   "            \"edgeDeltas\" => Some(Self::Edges),",
+   "            _ => None,"
+  ],
+  "🔎️key-base-access": [
+   "pub fn position(self, base: &Snapshot, id: &Id) -> Option<usize> {",
+   "Self::Nodes => base.nodes.iter().position(|row| row.header.id == *id),",
+   "Self::Edges => base.edges.len(),",
+   "Self::Nodes => base.nodes.get(index).cloned().map(ShapeRow::Nodes),",
+   "Self::Edges => SnapshotDiff { edgeDeltas: Some(EdgeDelta::removal(&base.edges, index)), ..Default::default() },",
+   "Self::Nodes => SnapshotDiff { nodeDeltas: Some(NodeDelta::modification(id.0.clone(), NodePatch { name: Some(name), ..Default::default() })), ..Default::default() },"
+  ],
+  "🧾️row-operations": [
+   "Self::Nodes(_) => ShapeKey::Nodes,",
+   "Self::Edges(row) => &row.header,",
+   "Self::Edges(row) => SnapshotDiff { edgeDeltas: Some(EdgeDelta::insertion(index, row.clone())), ..Default::default() },",
+   "let mut delta = NodeDelta::removal(&base.nodes, index);",
+   "delta.absorb(NodeDelta::insertion(index, row.clone()));",
+   "Self::Nodes(row) => base.nodes.get(index) == Some(row),"
+  ],
+  "🔁️row-conversions": [
+   "impl From<NodeRow> for ShapeRow {",
+   "        Self::Nodes(row)",
+   "impl From<EdgeRow> for ShapeRow {",
+   "        Self::Edges(row)"
+  ]
+ },
+ "ownerCases": [
+  {
+   "name": "each row type is imported from the module that declares it",
+   "output": "out/x.ts",
+   "rows": "../rows/index.ts",
+   "files": {
+    "rows/index.ts": "export type { NodeRow } from \"./node.ts\";\nexport * from \"./edge.ts\";\n",
+    "rows/node.ts": "export interface NodeRow { id: string }\n",
+    "rows/edge.ts": "export type EdgeRow = { id: string };\n"
+   },
+   "expected": {
+    "EdgeRow": "../rows/edge.ts",
+    "NodeRow": "../rows/node.ts"
+   }
+  },
+  {
+   "name": "a module in the output directory is imported with a dot prefix",
+   "output": "out/x.ts",
+   "rows": "./rows.ts",
+   "files": {
+    "out/rows.ts": "export interface NodeRow {}\nexport declare class EdgeRow {}\n"
+   },
+   "expected": {
+    "EdgeRow": "./rows.ts",
+    "NodeRow": "./rows.ts"
+   }
+  },
+  {
+   "name": "the generated catalog itself is left out of the tree",
+   "output": "out/x.ts",
+   "rows": "./rows.ts",
+   "files": {
+    "out/rows.ts": "export interface NodeRow {}\nexport enum EdgeRow { A }\n",
+    "out/x.ts": "export interface NodeRow {}\nexport interface EdgeRow {}\n"
+   },
+   "expected": {
+    "EdgeRow": "./rows.ts",
+    "NodeRow": "./rows.ts"
+   }
+  }
+ ],
+ "ownerErrors": [
+  {
+   "name": "a row type declared twice",
+   "output": "out/x.ts",
+   "rows": "../rows/index.ts",
+   "files": {
+    "rows/index.ts": "export * from \"./a.ts\";\nexport * from \"./b.ts\";\n",
+    "rows/a.ts": "export interface NodeRow {}\nexport interface EdgeRow {}\n",
+    "rows/b.ts": "export type NodeRow = {};\n"
+   },
+   "message": "must be declared by exactly one module below ../rows/index.ts, found 2"
+  },
+  {
+   "name": "a row type declared nowhere",
+   "output": "out/x.ts",
+   "rows": "../rows/index.ts",
+   "files": {
+    "rows/index.ts": "export interface NodeRow {}\n"
+   },
+   "message": "row type EdgeRow must be declared by exactly one module below ../rows/index.ts, found 0"
+  },
+  {
+   "name": "a missing rows module",
+   "output": "out/x.ts",
+   "rows": "../rows/index.ts",
+   "files": {},
+   "message": "does not name a TypeScript module"
+  },
+  {
+   "name": "a row module that imports the catalog closes a cycle",
+   "output": "out/x.ts",
+   "rows": "../rows/index.ts",
+   "files": {
+    "rows/index.ts": "export * from \"./a.ts\";\n",
+    "rows/a.ts": "import type { Z } from \"../out/x.ts\";\nexport interface NodeRow {}\nexport interface EdgeRow {}\n"
+   },
+   "message": "would close a cycle"
+  }
+ ],
+ "generation": {
+  "schemaPath": "schema/🔣️.json",
+  "files": {
+   "rows/index.ts": "export interface NodeRow { id: string }\nexport interface EdgeRow { id: string }\n"
+  },
+  "expectedStaleCount": 6,
+  "tsPath": "out/🟦️.ts",
+  "rustPaths": [
+   "out/catalog/🦀️.rs",
+   "out/catalog/🪪️key-descriptors/🦀️.rs",
+   "out/catalog/🔎️key-base-access/🦀️.rs",
+   "out/catalog/🧾️row-operations/🦀️.rs",
+   "out/catalog/🔁️row-conversions/🦀️.rs"
+  ]
+ }
+}

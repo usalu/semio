@@ -71,7 +71,7 @@ use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757")]
+#[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757", reference = Iso16757Snapshot, reference_diff = Iso16757Diff)]
 pub enum Iso16757Mutation {
     ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess),
     ChangeScriptLimits(change_script_limits::mutation::ChangeScriptLimits),
@@ -173,15 +173,15 @@ pub mod mutation_bridge {
 
     /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
     pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutation) -> Result<(Iso16757Snapshot, Vec<String>), String> {
-        let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
+        let raised = <Iso16757Mutation as protocol::ColdMutation<Iso16757Snapshot>>::diff(mutation, base);
         let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
         Ok((applied, messages))
     }
 
     /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
     pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
-        <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)
+        <Iso16757Mutation as protocol::ColdMutation<Iso16757Snapshot>>::inverse(mutation, base)
     }
 }
 pub use crate::mutation_bridge::*;

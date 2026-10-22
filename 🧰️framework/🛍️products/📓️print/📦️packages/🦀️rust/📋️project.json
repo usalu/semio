@@ -36,7 +36,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "build": {
@@ -50,7 +50,7 @@
       "outputs": ["{projectRoot}/.🧾️store/build.json"],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       }
     },
     "test-snapshot-sqlite": {
@@ -66,7 +66,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": false
       }
     },
@@ -83,7 +83,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": false
       }
     },
@@ -100,7 +100,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": false
       }
     },
@@ -109,7 +109,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts logical-owner produce",
+        "command": "repo ./📜️script.ts logical-owner produce",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -131,7 +131,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts logical-owner check",
+        "command": "repo ./📜️script.ts logical-owner check",
         "forwardAllArgs": false
       }
     },
@@ -148,7 +148,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts emit-grammar",
+        "command": "repo ./📜️script.ts emit-grammar",
         "forwardAllArgs": false
       },
       "configurations": {

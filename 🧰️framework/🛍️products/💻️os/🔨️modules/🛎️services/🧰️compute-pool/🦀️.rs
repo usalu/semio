@@ -1,6 +1,7 @@
 //! 🧰️ The bounded compute pool: job admission, deadline and cancellation and the retained completion custody.
 
-use semio_framework_async::{Either, HostAsyncRuntime, Lane, OperationContext, OwnedPermit, ScopeHandle, Semaphore, WorkerPool, WorkerSubmitErrorKind, oneshot, select2};
+use semio_framework_async::{Either, HostAsyncRuntime, Lane, OperationContext, ScopeHandle, WorkerPool, WorkerSubmitErrorKind, select2};
+use semio_framework_async_sync::{OwnedPermit, Semaphore, oneshot};
 use semio_framework_job::{
     BACKGROUND_LANE_FUEL,
     BACKGROUND_LANE_WALL_US,

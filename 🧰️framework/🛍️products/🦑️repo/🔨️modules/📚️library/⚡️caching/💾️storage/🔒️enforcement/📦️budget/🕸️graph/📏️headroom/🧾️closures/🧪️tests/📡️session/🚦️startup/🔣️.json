@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "eof-error",
+      "ready": null,
+      "before": "TypeError: missing export\n",
+      "after": "TypeError: missing export\n",
+      "root": "/workspace",
+      "expectedBefore": "TypeError: missing export\n",
+      "expectedAfter": "TypeError: missing export\n"
+    },
+    {
+      "id": "late-stderr",
+      "ready": "wrong",
+      "before": "",
+      "after": "Error: late failure\n",
+      "root": "/workspace",
+      "expectedBefore": "",
+      "expectedAfter": "Error: late failure\n"
+    },
+    {
+      "id": "source-excerpt-redacted",
+      "ready": "payload",
+      "before": "const secret = 123;\n   ^\nSyntaxError: invalid import\n",
+      "after": null,
+      "root": "/workspace",
+      "expectedBefore": "const secret = 123;\n   ^\nSyntaxError: invalid import\n",
+      "expectedAfter": ""
+    },
+    {
+      "id": "root-path-redacted",
+      "ready": null,
+      "before": "Error: failed /workspace/private/file.ts\n",
+      "after": "Node.js v24.15.0\n",
+      "root": "/workspace",
+      "expectedBefore": "Error: failed /workspace/private/file.ts\n",
+      "expectedAfter": "Node.js v24.15.0\n"
+    },
+    {
+      "id": "foreign-path-redacted",
+      "ready": null,
+      "before": "Error: failed C:\\private\\x.ts\n",
+      "after": null,
+      "root": "/workspace",
+      "expectedBefore": "Error: failed C:\\private\\x.ts\n",
+      "expectedAfter": ""
+    },
+    {
+      "id": "unavailable",
+      "ready": null,
+      "before": null,
+      "after": null,
+      "root": "/workspace",
+      "expectedBefore": "",
+      "expectedAfter": ""
+    }
+  ]
+}

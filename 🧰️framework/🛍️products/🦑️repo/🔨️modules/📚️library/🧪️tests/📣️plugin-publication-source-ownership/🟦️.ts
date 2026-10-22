@@ -184,9 +184,9 @@ describe("plugin publication source ownership", () => {
   test("registers the gate in package and Nx authorities", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
-    expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test plugin-publication-source-ownership");
+    expect(project.targets[fixture.registration.target]?.options?.command).toBe("repo ./📜️script.ts test plugin-publication-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(libraryRoot, "🧪️tests/🔬️typescript-package-commands/🟦️.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "plugin-publication-source-ownership"');
   });

@@ -44,7 +44,7 @@ import {
   type UiLabel,
   type UiTranslationKey
 } from "@semio-tech/ui-react";
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
 //#region ShellHelpers

@@ -13,18 +13,21 @@ pub struct SetTopLevel {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "top-level", kind: "set-top-level", record: "SetTopLevel" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
-        let Self { root } = self;
-        delegated(Ok(JsonMutation::SetScalar(SetScalarPayload { path: Vec::new(), value: root.to_value() })), base)
-    }
-    fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
-        Ok(JsonIJsonRoot::from_value(&base.value).map(|root| vec![JsonIJsonMutation::SetTopLevel(Self { root })]).unwrap_or_default())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
+        let Self { root } = self;
+        delegated(Ok(JsonMutation::SetScalar(SetScalarPayload { path: Vec::new(), value: root.to_value() })), base)
+    }
+    fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
+        Ok(JsonIJsonRoot::from_value(&base.value).map(|root| vec![JsonIJsonMutation::SetTopLevel(Self { root })]).unwrap_or_default())
     }
 }
 //#endregion 🔖️Payload

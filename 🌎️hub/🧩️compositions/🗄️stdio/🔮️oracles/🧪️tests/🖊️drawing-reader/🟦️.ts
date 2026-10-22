@@ -89,7 +89,7 @@ test("additive complete lower native cohort preserves the original full oracle r
   expect(route).toContain('runRepositoryCargoCommandV1(context.invocation,createIssuedResourceControlV1(context.invocation,"cargo:native-oracle",0)');
   expect(route).not.toContain('"--features"');
   const project = JSON.parse(read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📋️project.json"));
-  expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("bun 📜️script.ts test-native-drawing-reader");
+  expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("repo 📜️script.ts test-native-drawing-reader");
   const command = library.match(/export async function runNativeDrawingReaderTestScript[\s\S]*?\n\}/u)?.[0];
   expect(command).toContain("contract.families.find(({ module }) => module === \"drawing\")");
   expect(command).toContain("if (rest.length) throw new Error");

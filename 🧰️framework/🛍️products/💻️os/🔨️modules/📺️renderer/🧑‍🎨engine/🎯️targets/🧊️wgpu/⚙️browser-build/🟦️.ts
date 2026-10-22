@@ -2,11 +2,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 import { join, resolve } from "node:path";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { runtimeIdentityV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();
 
 /** 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */
-export function assertPinnedBunVersion(actualVersion: string = Bun.version): string {
+export function assertPinnedBunVersion(actualVersion: string = runtimeIdentityV1().version): string {
   const packageManager = (JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { readonly packageManager?: string }).packageManager ?? "";
   const expectedVersion = /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1];
   if (!expectedVersion) throw new Error(`wgpu-frame-worker requires an exact root packageManager bun@x.y.z pin; received ${JSON.stringify(packageManager)}`);
@@ -49,13 +51,10 @@ export async function renderBrowserEntry(entryPath: string): Promise<string> {
 }
 
 async function bundleAtWorkspaceRoot(entryPath: string): Promise<string> {
-  const runtime = globalThis as typeof globalThis & {
-    Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm"; define: Record<string, string> }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> };
-  };
   const callerCwd = process.cwd();
   process.chdir(repoRoot);
   try {
-    const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" } });
+    const result = await runtimeBundleV1({ entrypoints: [entryPath], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" } });
     if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
     return decodeAstralEscapes(await result.outputs[0]!.text());
   } finally {

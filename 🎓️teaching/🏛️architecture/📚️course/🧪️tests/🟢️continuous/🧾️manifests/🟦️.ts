@@ -18,7 +18,7 @@ const declared = (id: string): Target => {
   const [name, target] = id.split(":") as [string, string];
   return projects.find(project => project.name === name)!.targets[target]!;
 };
-const derive = (target: Target, choices: Record<string, string>): Record<string, string> => {
+const derive = (target: Target, choices: Readonly<Record<string, string | undefined>>): Record<string, string> => {
   const environment: Record<string, string> = {};
   for (const parameter of target.metadata?.semio?.dashboard?.parameters ?? []) {
     const chosen = choices[parameter.id];

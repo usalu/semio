@@ -21,6 +21,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetVectorStyle>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "vector-style", kind: "set-vector-style", record: "SetVectorStyle" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set vector style", "Vektorstil setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["vectorStyle".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetVectorStyle
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetVectorStyle>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.vector_style == self.value {
             return MutationOutcome::empty().warning("mutation.no-op", format!("Vector style is already \"{}\".", self.value));
@@ -33,12 +46,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set vector style", "Vektorstil setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["vectorStyle".into()]
-    }
 }
 //#endregion ⚙️Behavior
 

@@ -3,7 +3,8 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import React, { useCallback, useEffect, useRef } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 import { currentStylingAppearanceName, resolveColorHex } from "@semio-tech/ui-styling";
 import {
   cn,

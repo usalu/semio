@@ -47,27 +47,35 @@ impl LayoutWindowConfigPatch {
     }
 }
 
-impl protocol::MutationDiff<LayoutWindowConfig> for LayoutWindowConfigPatch {
-    fn apply(&self, base: &LayoutWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LayoutWindowConfig> {
-        Ok(LayoutWindowConfig {
-            active_page_id: self.active_page_id.clone().unwrap_or_else(|| base.active_page_id.clone()),
-            active_utility: self.active_utility.clone().unwrap_or_else(|| base.active_utility.clone()),
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-        })
-    }
+impl protocol::MutationDiff<LayoutWindowConfig> for LayoutWindowConfigPatch {}
+
+impl protocol::ColdMutationDiff<LayoutWindowConfig> for LayoutWindowConfigPatch {
     fn absorb(&mut self, other: Self) {
         self.active_page_id = other.active_page_id.or_else(|| self.active_page_id.take());
         self.active_utility = other.active_utility.or_else(|| self.active_utility.take());
         self.camera = other.camera.or_else(|| self.camera.take());
     }
+
+    fn apply(&self, unpublished: &mut LayoutWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = LayoutWindowConfig {
+            active_page_id: self.active_page_id.clone().unwrap_or_else(|| base.active_page_id.clone()),
+            active_utility: self.active_utility.clone().unwrap_or_else(|| base.active_utility.clone()),
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<LayoutWindowConfig> for LayoutWindowConfigPatch {
-    fn inverse(&self, base: &LayoutWindowConfig) -> Self {
-        Self { active_page_id: self.active_page_id.as_ref().map(|_| base.active_page_id.clone()), active_utility: self.active_utility.as_ref().map(|_| base.active_utility.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.active_page_id.is_none() && self.active_utility.is_none() && self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LayoutWindowConfig> for LayoutWindowConfigPatch {
+    fn inverse(&self, base: &LayoutWindowConfig) -> Self {
+        Self { active_page_id: self.active_page_id.as_ref().map(|_| base.active_page_id.clone()), active_utility: self.active_utility.as_ref().map(|_| base.active_utility.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }
 
@@ -98,7 +106,11 @@ impl protocol::Mutation<LayoutWindowConfig> for LayoutWindowConfigMutation {
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &LayoutWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<LayoutWindowConfig> for LayoutWindowConfigMutation {
+    type ReferenceDiff = LayoutWindowConfigPatch;
+    fn diff(&self, base: &LayoutWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::Update { patch } = self;
         protocol::MutationOutcome::new(patch.against(base))
     }

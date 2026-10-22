@@ -14,7 +14,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-source": {
@@ -30,7 +30,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source"
+        "command": "repo ./📜️script.ts test-source"
       }
     },
     "wasm": {
@@ -38,7 +38,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts wasm"
+        "command": "repo ./📜️script.ts wasm"
       },
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "metadata": {

@@ -182,17 +182,9 @@ pub struct CadConfigDiff {
     pub contributions_json: Option<String>,
 }
 
-impl protocol::MutationDiff<CadConfig> for CadConfigDiff {
-    fn apply(&self, base: &CadConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadConfig> {
-        Ok(CadConfig {
-            selected_node_ids: self.selected_node_ids.clone().unwrap_or_else(|| base.selected_node_ids.clone()),
-            hovered_reference_id: self.hovered_reference_id.as_ref().map_or_else(|| base.hovered_reference_id.clone(), |set| set.value.clone()),
-            active_example_id: self.active_example_id.as_ref().map_or_else(|| base.active_example_id.clone(), |set| set.value.clone()),
-            selected_reference_model_definition_id: self.selected_reference_model_definition_id.as_ref().map_or_else(|| base.selected_reference_model_definition_id.clone(), |set| set.value.clone()),
-            selected_reference_id: self.selected_reference_id.as_ref().map_or_else(|| base.selected_reference_id.clone(), |set| set.value.clone()),
-            contributions_json: self.contributions_json.clone().unwrap_or_else(|| base.contributions_json.clone()),
-        })
-    }
+impl protocol::MutationDiff<CadConfig> for CadConfigDiff {}
+
+impl protocol::ColdMutationDiff<CadConfig> for CadConfigDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -208,9 +200,28 @@ impl protocol::MutationDiff<CadConfig> for CadConfigDiff {
         take!(selected_reference_id);
         take!(contributions_json);
     }
+
+    fn apply(&self, unpublished: &mut CadConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = CadConfig {
+            selected_node_ids: self.selected_node_ids.clone().unwrap_or_else(|| base.selected_node_ids.clone()),
+            hovered_reference_id: self.hovered_reference_id.as_ref().map_or_else(|| base.hovered_reference_id.clone(), |set| set.value.clone()),
+            active_example_id: self.active_example_id.as_ref().map_or_else(|| base.active_example_id.clone(), |set| set.value.clone()),
+            selected_reference_model_definition_id: self.selected_reference_model_definition_id.as_ref().map_or_else(|| base.selected_reference_model_definition_id.clone(), |set| set.value.clone()),
+            selected_reference_id: self.selected_reference_id.as_ref().map_or_else(|| base.selected_reference_id.clone(), |set| set.value.clone()),
+            contributions_json: self.contributions_json.clone().unwrap_or_else(|| base.contributions_json.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CadConfig> for CadConfigDiff {
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CadConfig> for CadConfigDiff {
     fn inverse(&self, base: &CadConfig) -> Self {
         Self {
             selected_node_ids: self.selected_node_ids.as_ref().map(|_| base.selected_node_ids.clone()),
@@ -220,9 +231,6 @@ impl protocol::DiffAlgebra<CadConfig> for CadConfigDiff {
             selected_reference_id: self.selected_reference_id.as_ref().map(|_| CadTextSet { value: base.selected_reference_id.clone() }),
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
     }
 }
 //#endregion 🔖️Config
@@ -354,7 +362,10 @@ impl Mutation<CadConfig> for CadConfigMutation {
             CadConfigMutation::SetContributions(_) => &Self::DESCRIPTORS[1],
         }
     }
+}
 
+impl protocol::ColdMutation<CadConfig> for CadConfigMutation {
+    type ReferenceDiff = CadConfigDiff;
     fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfigDiff> {
         match self {
             CadConfigMutation::Set(SetEdit { config }) => {
@@ -381,7 +392,6 @@ impl Mutation<CadConfig> for CadConfigMutation {
             }
         }
     }
-
     fn inverse(&self, base: &CadConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             CadConfigMutation::Set(_) => CadConfigMutation::Set(SetEdit { config: Box::new(base.clone()) }),

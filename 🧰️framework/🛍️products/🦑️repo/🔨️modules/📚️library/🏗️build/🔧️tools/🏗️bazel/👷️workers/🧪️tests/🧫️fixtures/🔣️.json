@@ -123,42 +123,42 @@
      "test-unit": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts test"
+       "command": "repo ./x.ts test"
       },
       "cache": true
      },
      "typecheck": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts typecheck"
+       "command": "repo ./x.ts typecheck"
       },
       "cache": true
      },
      "generate-docs": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts generate"
+       "command": "repo ./x.ts generate"
       },
       "cache": true
      },
      "build": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts build"
+       "command": "repo ./x.ts build"
       },
       "cache": true
      },
      "session": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts session"
+       "command": "repo ./x.ts session"
       },
       "cache": false
      },
      "serve": {
       "execution": {
        "kind": "command",
-       "command": "bun ./x.ts serve"
+       "command": "repo ./x.ts serve"
       },
       "continuous": true,
       "cache": false

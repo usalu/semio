@@ -43,7 +43,7 @@ use semio_s_artifact_raster_raster_mutations_pixels::write_pixel_region;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster", retire_cold = retire_raster_mutation)]
+#[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster", retire_cold = retire_raster_mutation, reference = RasterSnapshot, reference_diff = RasterDiff)]
 pub enum RasterMutation {
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),

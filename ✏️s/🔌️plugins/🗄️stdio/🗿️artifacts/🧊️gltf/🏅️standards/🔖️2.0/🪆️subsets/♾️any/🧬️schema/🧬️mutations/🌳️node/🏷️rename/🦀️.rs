@@ -89,6 +89,20 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Node Name", "Knotenname ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        match self {
+            Self::Apply(payload) => vec![node_path(payload.node)],
+        }
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for ChangeNodeNameMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<ChangeNodeNameMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -97,19 +111,9 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
-        }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Node Name", "Knotenname ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        match self {
-            Self::Apply(payload) => vec![node_path(payload.node)],
         }
     }
 }

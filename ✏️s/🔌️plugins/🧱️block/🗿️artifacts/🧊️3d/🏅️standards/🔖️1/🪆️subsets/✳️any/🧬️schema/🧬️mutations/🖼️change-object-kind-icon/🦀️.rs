@@ -24,6 +24,12 @@ pub fn change_object_kind_icon<Op: From<crate::change_object_kind_icon::ChangeOb
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindIcon where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_icon::ChangeObjectKindIcon> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object-kind", kind: "change-object-kind-icon", record: "ChangedObjectKindIcon" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change object kind icon to {:?}", self.new_icon), &format!("Objektartsymbol auf {:?} ändern", self.new_icon))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for ChangeObjectKindIcon where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_icon::ChangeObjectKindIcon> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::change_object_kind_icon::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindIcon wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change object kind icon to {:?}", self.new_icon), &format!("Objektartsymbol auf {:?} ändern", self.new_icon))
-    }
 }
 //#endregion 🔖️Mutation
 

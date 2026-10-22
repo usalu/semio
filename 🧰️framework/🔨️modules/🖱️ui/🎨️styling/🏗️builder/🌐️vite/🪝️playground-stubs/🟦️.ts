@@ -79,7 +79,6 @@ export class RasterSession {}
 export class MapSession {}
 export class Puzzle3dPrecomputeSession {}
 export class TrinitySession {}
-export class JackLspSession {}
 export const render_drawing_scene = wasmMissing;
 export const export_drawing_svg = wasmMissing;
 export const export_drawing_pdf = wasmMissing;

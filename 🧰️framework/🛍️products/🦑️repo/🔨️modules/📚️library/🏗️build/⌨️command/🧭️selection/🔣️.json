@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "kernels": {
+    "preflight": "🩺️preflight/🟦️.ts",
+    "dependencies": "📦️dependencies/🟦️.ts",
+    "runtime": "⚙️runtime/🟦️.ts",
+    "cache": "💾️cache/🟦️.ts",
+    "cache-ledger": "💾️cache/📋️ledger/🟦️.ts"
+  },
+  "cases": [
+    {
+      "args": [
+        "preflight"
+      ],
+      "kind": "preflight"
+    },
+    {
+      "args": [
+        "--tool",
+        "bazel",
+        "dependencies",
+        "sync",
+        "--all"
+      ],
+      "kind": "dependencies"
+    },
+    {
+      "args": [
+        "--tool=nx",
+        "dependencies",
+        "lock",
+        "--all"
+      ],
+      "kind": "dependencies"
+    },
+    {
+      "args": [
+        "run",
+        "workspace:test-workspace-build"
+      ],
+      "kind": "runtime"
+    },
+    {
+      "args": [
+        "exec",
+        "--",
+        "preflight"
+      ],
+      "kind": "runtime"
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "kind": "preflight"
+    },
+    {
+      "args": [
+        "exec",
+        "--",
+        "--help"
+      ],
+      "kind": "runtime"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--help"
+      ],
+      "kind": "runtime"
+    },
+    {
+      "args": [
+        "cache",
+        "status"
+      ],
+      "kind": "cache-ledger"
+    },
+    {
+      "args": [
+        "cache",
+        "gc",
+        "--tasks"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "cache",
+        "serve"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "cache",
+        "remote"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "cache",
+        "--help"
+      ],
+      "kind": "preflight"
+    },
+    {
+      "args": [
+        "exec",
+        "--",
+        "cache",
+        "status"
+      ],
+      "kind": "runtime"
+    },
+    {
+      "args": [
+        "cache",
+        "gc"
+      ],
+      "kind": "cache-ledger"
+    },
+    {
+      "args": [
+        "cache",
+        "status",
+        "--tasks"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "cache",
+        "gc",
+        "--",
+        "--tasks"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "cache",
+        "gc",
+        "--tasks=true"
+      ],
+      "kind": "cache-ledger"
+    },
+    {
+      "args": [
+        "cache",
+        "verify"
+      ],
+      "kind": "cache-ledger"
+    },
+    {
+      "args": [
+        "cache",
+        "verify",
+        "--tasks"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "remote-cache",
+        "status"
+      ],
+      "kind": "cache"
+    },
+    {
+      "args": [
+        "remote-cache",
+        "gc"
+      ],
+      "kind": "cache"
+    }
+  ]
+}

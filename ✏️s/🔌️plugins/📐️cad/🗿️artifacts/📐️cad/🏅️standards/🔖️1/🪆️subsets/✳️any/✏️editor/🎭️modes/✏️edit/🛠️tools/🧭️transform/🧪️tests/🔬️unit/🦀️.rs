@@ -27,7 +27,7 @@ use semio_s_artifact_cad_cad_kit::{start_interaction_session, try_commit_session
 use semio_s_artifact_cad_cad_editor::CadCommand;
 use semio_s_artifact_cad_cad_testing::sample_object;
 use semio_s_artifact_cad_cad_model::{geometry::objects_from_model_snapshot, geometry::semio_model_snapshot_from_objects};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_plugin::app::ChildEmitPreparationStep;
 use semio_framework_plugin::{AppOperationContext, HistoryView, PluginApp};
 
@@ -46,7 +46,7 @@ fn ids(values: &[&str]) -> Vec<String> {
 
 /// 🧮️ `model` after `leaves`, folded the way the child store folds them.
 fn apply(model: &SemioModelSnapshot, leaves: &[SemioModelMutation]) -> SemioModelSnapshot {
-    leaves.iter().fold(model.clone(), |state, leaf| protocol::apply_diff(leaf.diff(&state).diff(), &state).expect("leaf applies"))
+    leaves.iter().fold(model.clone(), |state, leaf| protocol::apply_diff_cold(leaf.diff(&state).diff(), &state).expect("leaf applies"))
 }
 
 fn origin(model: &SemioModelSnapshot, id: &str) -> [f64; 3] {

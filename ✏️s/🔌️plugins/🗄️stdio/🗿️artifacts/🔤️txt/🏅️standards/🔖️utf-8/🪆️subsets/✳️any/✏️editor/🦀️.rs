@@ -251,7 +251,7 @@ pub fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_re
     let mutation = TxtMutation::SpliceText(SpliceTextMutation {
         splices: ranges.iter().map(|range| Ok(TextSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
     });
-    let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(&mutation, snapshot);
+    let outcome = <TxtMutation as protocol::ColdMutation<TxtSnapshot>>::diff(&mutation, snapshot);
     if let Some(message) = outcome.messages().first() {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.splice-unrepresentable"), message.message.to_string()));
     }

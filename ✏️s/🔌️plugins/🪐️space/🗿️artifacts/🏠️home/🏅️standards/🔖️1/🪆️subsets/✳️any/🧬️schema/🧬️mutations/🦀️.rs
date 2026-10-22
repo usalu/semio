@@ -10,7 +10,7 @@ pub use crate::standards::v1::subsets::any::schema::operations::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = SHomeSnapshot, diff = SHomeDiff, schema = "s.space.home")]
+#[mutations(snapshot = SHomeSnapshot, diff = SHomeDiff, schema = "s.space.home", reference = SHomeSnapshot, reference_diff = SHomeDiff)]
 pub enum SHomeMutation {
     ChangeCatalogGeneration(ChangeCatalogGeneration),
 }

@@ -10,6 +10,7 @@ pub enum PluginLifecyclePrimary{Fault(Fault),Value(ValueError),Domain(semio_fram
 
 /// 🧯️ The complete original cause and an independent refusal to debit its physical effects.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct PluginLifecycleFailure{pub effects:RetainedCloneProgress,pub primary:PluginLifecyclePrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
 impl PluginLifecycleFailure{
  /// 🧾️ Borrows the actual failed producer effects carried by its complete original cause.

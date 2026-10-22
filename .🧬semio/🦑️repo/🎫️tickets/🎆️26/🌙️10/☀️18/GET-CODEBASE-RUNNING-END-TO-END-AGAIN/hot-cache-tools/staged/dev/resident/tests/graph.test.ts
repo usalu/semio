@@ -1,4 +1,5 @@
 import {afterAll,describe,expect,test} from "bun:test";
+import {dirname,join} from "node:path";
 import {appendFileSync,existsSync,mkdirSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {POLICY_V1} from "../protocol/policy.mjs";
 import {createFilterV1,createWorkspaceStateV1} from "../state/index.mjs";
@@ -7,7 +8,8 @@ import {stateConfigurationFromBuildGraphV1} from "../ports/graph.mjs";
 import {residentGraphSeamsV1} from "../graph-hooks/host/index.mjs";
 import {cleanup,pick,rng,snapshot,tempRoot,writeTree} from "./common.ts";
 
-const GENERATIONS=process.env.SEMIO_GENERATIONS_MODULE??"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs";
+const workspaceRoot=()=>{for(let at=import.meta.dir;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"nx.json")))return at;if(dirname(at)===at)throw Error("Workspace root not found");}};
+const GENERATIONS=process.env.SEMIO_GENERATIONS_MODULE??join(workspaceRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs");
 const roots:string[]=[];afterAll(()=>roots.forEach(cleanup));
 
 describe("neutral build graph to owners and tasks",()=>{

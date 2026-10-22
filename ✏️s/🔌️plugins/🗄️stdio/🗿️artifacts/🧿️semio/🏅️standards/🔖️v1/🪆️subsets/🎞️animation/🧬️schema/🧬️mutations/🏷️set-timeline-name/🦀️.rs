@@ -23,7 +23,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "timeline-name", kind: "set-timeline-name", record: "SetTimelineName" };
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioAnimationSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set timeline name", "Zeitleistenname setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioAnimationSnapshot, Op> for SetTimelineName
+where
+    Op: protocol::ColdMutation<SemioAnimationSnapshot, ReferenceDiff = crate::schema::diff::SemioAnimationDiff> + From<SetTimelineName>,
+{
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioAnimationSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -32,12 +44,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set timeline name", "Zeitleistenname setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

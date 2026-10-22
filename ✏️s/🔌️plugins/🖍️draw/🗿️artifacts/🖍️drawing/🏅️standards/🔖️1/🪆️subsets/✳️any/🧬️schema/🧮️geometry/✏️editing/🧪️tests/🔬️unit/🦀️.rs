@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn path_algorithms_shared_cases_and_semantic_undo() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let source:Vec<PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();

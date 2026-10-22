@@ -6,6 +6,7 @@
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { currentAgentSessionV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔐️Lease
@@ -33,9 +34,9 @@ export type RunLease = Readonly<{
   testId?: string;
 }>;
 
-/** 🏷️ This process's agent identity, from `SEMIO_AGENT_ID`. Never inferred from a username or a hostname. */
+/** 🏷️ This process's agent identity: the agent of its agent session. Never inferred from a username or a hostname. */
 export function agentId(): string {
-  return (process.env.SEMIO_AGENT_ID ?? "local").replace(/[^A-Za-z0-9._-]+/g, "_");
+  return currentAgentSessionV1().agent.id.replace(/[^A-Za-z0-9._-]+/g, "_");
 }
 
 /** 🔐️ How long an `active` lease may go without a heartbeat before it is even a CANDIDATE for reclaim. */

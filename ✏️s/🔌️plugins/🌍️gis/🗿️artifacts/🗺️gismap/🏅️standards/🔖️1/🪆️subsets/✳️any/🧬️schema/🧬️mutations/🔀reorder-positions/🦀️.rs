@@ -29,16 +29,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "positions", kind: "reorder-positions", record: "ReorderedPositions" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder position \"{}\" to {}", self.id, self.to_index), &format!("Position \"{}\" an Stelle {} verschieben", self.id, self.to_index))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for ReorderPositions
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<ReorderPositions>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder position \"{}\" to {}", self.id, self.to_index), &format!("Position \"{}\" an Stelle {} verschieben", self.id, self.to_index))
     }
 }
 //#endregion 🔹Payload

@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-opacity", kind: "change-grid-opacity", record: "ChangedGridOpacity" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::note_setting_label(("grid opacity", "Rasterdeckkraft"), self.new_opacity.map(|opacity| { let (en, de) = crate::schema::note_label_number(opacity * 100.0); (format!("{en}%"), format!("{de} %")) }))
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for ChangeGridOpacity
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<ChangeGridOpacity>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        crate::schema::note_setting_label(("grid opacity", "Rasterdeckkraft"), self.new_opacity.map(|opacity| { let (en, de) = crate::schema::note_label_number(opacity * 100.0); (format!("{en}%"), format!("{de} %")) }))
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Mutation

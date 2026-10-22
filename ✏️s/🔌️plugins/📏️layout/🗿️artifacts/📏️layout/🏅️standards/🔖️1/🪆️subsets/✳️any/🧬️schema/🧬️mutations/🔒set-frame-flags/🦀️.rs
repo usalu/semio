@@ -23,6 +23,16 @@ pub struct SetFrameFlags {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameFlags where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_flags::SetFrameFlags> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "frame-flags", kind: "set-frame-flags", record: "SetFrameFlags" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for SetFrameFlags where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_flags::SetFrameFlags> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_set_frame_flags(self, base)
     }
@@ -32,12 +42,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameFlags where Op: protocol::
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.frame_id.clone()]
-    }
 }
 
 pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

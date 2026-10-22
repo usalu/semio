@@ -9,7 +9,7 @@ use semio_framework::FaultCode;
 use std::collections::BTreeSet;
 use semio_framework::InvocationResult;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// ⏯️ Host-driven routing of the §2.5 actions: applied to the ledger now, never queued behind the run.
     ///
     /// 🧯️ A rejection REPAINTS the panel. The panel's buttons carry the run identity captured when

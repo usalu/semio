@@ -137,17 +137,9 @@ fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
     next
 }
 
-impl MutationDiff<PlySnapshot> for PlyDiff {
-    fn apply(&self, base: &PlySnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PlySnapshot> {
-        if let Some(diff) = &self.comments {
-            validate_indexed(&base.comments, diff, |_, _| Ok(()))?;
-        }
-        if let Some(diff) = &self.elements {
-            validate_elements_diff(&base.elements, diff)?;
-        }
-        Ok(apply_ply_diff_unchecked(self, base))
-    }
+impl MutationDiff<PlySnapshot> for PlyDiff {}
 
+impl protocol::ColdMutationDiff<PlySnapshot> for PlyDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `elements`: name-keyed transport (no renames — `AddElement`/`RemoveElement` only), one
     /// nested `rows` absorb per surviving modified element.
@@ -161,6 +153,18 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
             _ => {}
         }
         self.elements = absorb_elements(self.elements.take(), other.elements);
+    }
+
+    fn apply(&self, unpublished: &mut PlySnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.comments {
+            validate_indexed(&base.comments, diff, |_, _| Ok(()))?;
+        }
+        if let Some(diff) = &self.elements {
+            validate_elements_diff(&base.elements, diff)?;
+        }
+        *unpublished = apply_ply_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -207,6 +211,12 @@ fn inverse_elements(diff: &PlyElementsDiff, base: &[PlyElement]) -> PlyElementsD
 }
 
 impl DiffAlgebra<PlySnapshot> for PlyDiff {
+    fn is_empty(&self) -> bool {
+        self.format.is_none() && self.comments.is_none() && self.elements.as_ref().is_none_or(PlyElementsDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PlySnapshot> for PlyDiff {
     /// ↩️ Concrete diff-level undo: the format and comments return to their base values, and the elements triple turns into its
     /// negative rows (added elements become removals, removed elements return at their base index, modified elements restore
     /// their base declaration and rows).
@@ -216,10 +226,6 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
             comments: self.comments.as_ref().map(|comments| inverse_indexed(comments, &base.comments, |_, text: &String| text.clone())).filter(|comments| !comments.is_empty()),
             elements: self.elements.as_ref().map(|elements| inverse_elements(elements, &base.elements)).filter(|elements| !elements.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.format.is_none() && self.comments.is_none() && self.elements.as_ref().is_none_or(PlyElementsDiff::is_empty)
     }
 }
 //#endregion 🔖️Diff

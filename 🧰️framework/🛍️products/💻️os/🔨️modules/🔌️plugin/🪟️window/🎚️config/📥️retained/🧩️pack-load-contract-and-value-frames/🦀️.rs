@@ -60,7 +60,7 @@ pub enum WindowConfigPackLoadStep {
     Complete,
 }
 
-pub(in super::super) trait ErasedWindowConfigPackLoad: Send {
+pub trait ErasedWindowConfigPackLoad: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn window_kind_id(&self) -> &str;
     fn registry_lifetime(&self) -> u64;

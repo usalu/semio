@@ -399,6 +399,7 @@ pub struct NumericalOwnerRestoreCursor {
     pub page_owner: usize,
     pub page_values: usize,
     pub page_open: bool,
+    pub growth: bool,
 }
 
 impl NumericalOwnerRestoreCursor {
@@ -482,6 +483,7 @@ impl NumericalRestoreScalar for (u32, f64) {
 
 pub trait NumericalRestoreOwner<T> {
     fn restored_len(&self) -> usize;
+    fn restore_capacity(&self, length: usize, growth: bool) -> usize;
     fn reserve_restore_demand(&self, capacity: usize) -> Result<Option<RetirementDemand>, NumericalCheckpointFault>;
     fn reserve_restore(&mut self, capacity: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, NumericalCheckpointFault>;
     fn append_restore_depth(&self) -> Result<usize, NumericalCheckpointFault>;
@@ -490,6 +492,7 @@ pub trait NumericalRestoreOwner<T> {
 
 impl<T> NumericalRestoreOwner<T> for Vec<T> {
     fn restored_len(&self) -> usize { self.len() }
+    fn restore_capacity(&self, length: usize, _growth: bool) -> usize { length }
     fn reserve_restore_demand(&self, capacity: usize) -> Result<Option<RetirementDemand>, NumericalCheckpointFault> {
         let bytes = capacity.checked_mul(size_of::<T>()).ok_or(NumericalCheckpointFault::Envelope)?;
         if bytes > NUMERICAL_OWNER_PAGE_BYTES { return Err(NumericalCheckpointFault::Envelope); }
@@ -514,6 +517,7 @@ impl<T> NumericalRestoreOwner<T> for Vec<T> {
 
 impl<T, const N: usize> NumericalRestoreOwner<T> for PagedList<T, N> {
     fn restored_len(&self) -> usize { self.len() }
+    fn restore_capacity(&self, length: usize, growth: bool) -> usize { if growth { self.whole_page_capacity(length) } else { length } }
     fn reserve_restore_demand(&self, capacity: usize) -> Result<Option<RetirementDemand>, NumericalCheckpointFault> {
         let Some(capacity_bytes) = self.next_capacity_allocation_bytes(capacity).map_err(|_| NumericalCheckpointFault::Admission)? else { return Ok(None); };
         Ok(Some(RetirementDemand { capacity_bytes, copy_bytes: self.next_capacity_copy_byte_demand(capacity).map_err(|_| NumericalCheckpointFault::Admission)?, depth: self.next_capacity_depth_demand(capacity).map_err(|_| NumericalCheckpointFault::Admission)?, ..Default::default() }))
@@ -525,14 +529,14 @@ impl<T, const N: usize> NumericalRestoreOwner<T> for PagedList<T, N> {
     fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault> { self.push_reserved(value).map_err(|_| NumericalCheckpointFault::Admission) }
 }
 
-fn numerical_restore_owner_demand<T: NumericalRestoreScalar>(owner: &impl NumericalRestoreOwner<T>, page: &NumericalPageView<'_>, cursor: &NumericalOwnerRestoreCursor, entry: usize, matrix: bool) -> Result<RetirementDemand, NumericalCheckpointFault> {
+pub(super) fn numerical_restore_owner_demand<T: NumericalRestoreScalar>(owner: &impl NumericalRestoreOwner<T>, page: &NumericalPageView<'_>, cursor: &NumericalOwnerRestoreCursor, entry: usize, matrix: bool) -> Result<RetirementDemand, NumericalCheckpointFault> {
     if !cursor.page_open {
         let prefix = if page.owner == 0 { if matrix { 24 } else { 8 } } else { 0 };
         return Ok(RetirementDemand { copy_bytes: NUMERICAL_CHECKPOINT_HEADER_BYTES + prefix + size_of::<NumericalOwnerRestoreCursor>() + if matrix && page.owner == 0 { 2 * size_of::<usize>() } else { 0 }, depth: 1, ..Default::default() });
     }
     let shape = cursor.shape.ok_or(NumericalCheckpointFault::Field)?;
     if entry == 0 {
-        return Ok(owner.reserve_restore_demand(shape.capacity)?.unwrap_or(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() }));
+        return Ok(owner.reserve_restore_demand(owner.restore_capacity(shape.capacity, cursor.growth))?.unwrap_or(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() }));
     }
     let item = entry.checked_sub(1).ok_or(NumericalCheckpointFault::Field)?;
     if item < cursor.page_values {
@@ -575,8 +579,9 @@ pub fn restore_numerical_owner<T: NumericalRestoreScalar>(
     if page.item != cursor.page_item || page.owner != cursor.page_owner { return Err(NumericalCheckpointFault::Field); }
     if owner.restored_len() != cursor.next_item { return Err(NumericalCheckpointFault::Field); }
     if *entry == 0 {
-        if owner.reserve_restore_demand(shape.capacity)?.is_some() {
-            let progress = owner.reserve_restore(shape.capacity, context.retained_grant())?;
+        let capacity = owner.restore_capacity(shape.capacity, cursor.growth);
+        if owner.reserve_restore_demand(capacity)?.is_some() {
+            let progress = owner.reserve_restore(capacity, context.retained_grant())?;
             context.consume_retained(progress).map_err(|_| NumericalCheckpointFault::Admission)?;
             return Ok(false);
         }

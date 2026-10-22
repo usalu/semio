@@ -2,7 +2,7 @@
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::transient::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn busy() -> BimWindowTransient {

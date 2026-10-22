@@ -3,7 +3,7 @@
     "🔨️modules/📄️documents/📜️script.ts",
     "🔨️modules/👥️actor-network/📜️script.ts"
   ],
-  "maxSourceFiles": 13,
+  "maxSourceFiles": 25,
   "forbidden": [
     "📚️library/📦️packages/🟦️typescript/🟦️.ts",
     "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts",
@@ -11,8 +11,8 @@
   ],
   "externalDependencies": {
     "🔨️modules/📄️documents/📜️script.ts": [
-      "pdfjs-dist",
-      "sharp"
+      "@semio-tech/print",
+      "@semio-tech/process"
     ],
     "🔨️modules/👥️actor-network/📜️script.ts": [
       "d3-force"

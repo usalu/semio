@@ -38,7 +38,7 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗂️Recipes
@@ -70,7 +70,7 @@ const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧪️tests/🧫️fixt
 //#region 🧩️Carrier
 /** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
 function carrier(): number {
-  const build = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
   return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
@@ -94,7 +94,7 @@ function main(argv: readonly string[]): number {
   }
   const out = process.env.SEMIO_FIXTURE_OUT ?? COMMITTED_FIXTURES;
   const args = ["run", "--quiet", "--offline", "--bin", "semio-cad-oracle-probe", "--", "generate", "--out", out, ...only.flatMap((recipe) => ["--only", recipe])];
-  const run = spawnToolSyncV1("cargo", args, { cwd: CRATE_DIR, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
+  const run = runToolSyncV1("cargo", args, { cwd: CRATE_DIR, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
   if (run.status !== 0) {
     console.error(`[generator] cargo exited ${run.status}: ${(run.stderr ?? "").trim().split("\n").slice(-8).join("\n")}`);
     return 1;

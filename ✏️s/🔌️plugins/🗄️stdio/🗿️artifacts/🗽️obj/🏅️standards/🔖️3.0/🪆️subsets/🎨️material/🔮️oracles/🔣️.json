@@ -45,7 +45,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -93,7 +93,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",

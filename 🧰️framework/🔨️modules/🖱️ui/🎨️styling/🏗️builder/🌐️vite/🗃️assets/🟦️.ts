@@ -1,5 +1,5 @@
-import { resolve, join, dirname } from "node:path";
-import { existsSync, statSync, mkdirSync, cpSync, readdirSync, readFileSync, copyFileSync } from "node:fs";
+import { resolve, join, dirname, basename } from "node:path";
+import { existsSync, statSync, lstatSync, mkdirSync, cpSync, readdirSync, readFileSync, copyFileSync } from "node:fs";
 import type { OwnedBuildPlugin } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE, assetPathFromRequest } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🌐️delivery/🟦️.ts";
 import { createUiAssetsMiddleware } from "../🗺️mesh-collection/🟦️.ts";
@@ -47,7 +47,7 @@ function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
         }
         const dest = resolve(outDir, SEMIO_ASSET_DIRECTORY);
         mkdirSync(outDir, { recursive: true });
-        cpSync(assetsRoot, dest, { recursive: true });
+        cpSync(assetsRoot, dest, { recursive: true, filter: (source) => basename(source) !== "node_modules" && !lstatSync(source).isSymbolicLink() });
       },
     },
   ];

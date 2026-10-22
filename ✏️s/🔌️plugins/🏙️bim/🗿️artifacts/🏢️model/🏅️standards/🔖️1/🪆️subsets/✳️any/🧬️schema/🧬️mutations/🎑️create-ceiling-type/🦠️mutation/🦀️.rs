@@ -17,16 +17,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCeilingType> + From<crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "ceiling-type", kind: "create-ceiling-type", record: "CreateCeilingType" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create ceiling type \"{}\"", self.ceiling_type.name), &format!("Unterdeckentyp \"{}\" anlegen", self.ceiling_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for CreateCeilingType
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<CreateCeilingType> + From<crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::inverse::inverse(self, base))
     }
 }

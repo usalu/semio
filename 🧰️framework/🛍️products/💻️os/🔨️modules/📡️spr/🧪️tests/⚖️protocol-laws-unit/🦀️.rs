@@ -217,7 +217,7 @@ async fn op_text_round_trip_holds_and_rejects_a_broken_impl() {
 
 #[semio_framework_async_macros::async_test]
 async fn operation_diff_apply_matches_backwards_inverse() {
-    use semio_framework_os_spr::{Mutation, MutationDiff};
+    use semio_framework_os_spr::{ColdMutation, Mutation, MutationDiff};
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
     let forward = protocol::apply_diff_cold(op.diff(&base).diff(), &base).expect("valid forward diff");
@@ -492,7 +492,7 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
         assert_eq!(ProbeConfigSet::decode_op(&bytes).unwrap(),mutation);
     }
 
-    use semio_framework_os_spr::{DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
+    use semio_framework_os_spr::{ColdDiffAlgebra, DiffAlgebra, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     use protocol::apply_diff_cold;
     let base = probe_config();
     let set = ProbeConfigSet::SetCount(9);
@@ -524,7 +524,7 @@ semio_framework_os_kernel::sparse_record_diff! { record: ProbeConfig, diff: Prob
 /// its algebra, absorb, apply and wire hold.
 #[test]
 fn the_whole_diff_replaces_an_indivisible_record() {
-    use semio_framework_os_spr::{DiffAlgebra, MutationDiff};
+    use semio_framework_os_spr::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
     use protocol::apply_diff_cold;
     let base = probe_config();
     let other = ProbeConfig { count: 7, ..base.clone() };
@@ -554,7 +554,7 @@ semio_framework_os_kernel::sparse_record_diff! { record: KeyedProbe, diff: Keyed
 /// per key (insert then remove cancels, remove then insert is a replace), and the wire round trips.
 #[semio_framework_async_macros::async_test]
 async fn keyed_rows_replace_the_whole_map_slot() {
-    use semio_framework_os_spr::{DiffAlgebra, MutationDiff};
+    use semio_framework_os_spr::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
     use protocol::apply_diff_cold;
     use semio_framework_mutation_diff::KeyedRow;
     let base = KeyedProbe { name: "n".into(), cameras: [("a".to_string(), 1), ("b".to_string(), 2)].into() };

@@ -13,7 +13,16 @@ pub struct RemoveTopic {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveTopic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "topic", kind: "remove-topic", record: "RemoveTopic" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove topic", "Thema entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for RemoveTopic {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         let Self { guid } = self;
         protocol::MutationOutcome::new(BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: vec![topic_index(base, guid)], modified: Vec::new(), added: Vec::new() }), parts: None })
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveTopic {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove topic", "Thema entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

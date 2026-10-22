@@ -1,0 +1,5753 @@
+{
+ "version": 1,
+ "policy": {
+  "version": 1,
+  "languages": [
+   "en",
+   "de"
+  ],
+  "languageEnvironment": [
+   "SEMIO_LANGUAGE",
+   "SEMIO_DASHBOARD_LOCALE",
+   "LC_ALL",
+   "LC_MESSAGES",
+   "LANG"
+  ],
+  "minimumBudgetMegabytes": 1024,
+  "maximumBudgetMegabytes": 16384,
+  "hostShare": 0.25,
+  "grantShare": 0.5,
+  "resumeRatio": 0.85,
+  "pollMilliseconds": 50,
+  "sampleMilliseconds": 25,
+  "admitMinimumMilliseconds": 100,
+  "collectMinimumMilliseconds": 2000,
+  "retainedMilliseconds": 30000,
+  "progressMilliseconds": 5000,
+  "retainedImageBytes": 33554432,
+  "minimumInternedLength": 24,
+  "maximumInternedCharacters": 67108864,
+  "maximumCachedClosureEntries": 4194304,
+  "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
+  "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN"
+ },
+ "messages": {
+  "en": {
+   "waiting": "graph: waiting for memory ({used} of {budget} MB in use, {running} projects running)",
+   "serial": "graph: memory above the budget of {budget} MB ({used} MB in use), inferring one project at a time",
+   "resumed": "graph: memory below the budget again ({used} of {budget} MB), resuming"
+  },
+  "de": {
+   "waiting": "Graph: wartet auf Speicher ({used} von {budget} MB belegt, {running} Projekte laufen)",
+   "serial": "Graph: Speicher über dem Budget von {budget} MB ({used} MB belegt), Projekte werden einzeln abgeleitet",
+   "resumed": "Graph: Speicher wieder unter dem Budget ({used} von {budget} MB), es geht weiter"
+  }
+ },
+ "admission": [
+  {
+   "name": "workers-full-ignores-memory",
+   "state": {
+    "used": 1,
+    "budget": 1000,
+    "running": 4,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "nothing-running-and-within-the-budget",
+   "state": {
+    "used": 900,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "nothing-running-above-the-budget-collects-first",
+   "state": {
+    "used": 9000,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "nothing-running-above-after-a-collection-is-forced",
+   "state": {
+    "used": 9000,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "within-the-budget",
+   "state": {
+    "used": 900,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "exactly-the-budget-is-within",
+   "state": {
+    "used": 1000,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "above-collects-first",
+   "state": {
+    "used": 1100,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "above-after-a-collection-waits",
+   "state": {
+    "used": 1100,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "blocked-needs-the-resume-ratio",
+   "state": {
+    "used": 900,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "blocked-resumes-below-the-ratio",
+   "state": {
+    "used": 800,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "blocked-exactly-at-the-ratio-resumes",
+   "state": {
+    "used": 850,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-000",
+   "state": {
+    "used": 100,
+    "budget": 1000,
+    "running": 3,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-001",
+   "state": {
+    "used": 2462,
+    "budget": 1000,
+    "running": 2,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-002",
+   "state": {
+    "used": 1677,
+    "budget": 500,
+    "running": 3,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-003",
+   "state": {
+    "used": 754,
+    "budget": 1000,
+    "running": 9,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-004",
+   "state": {
+    "used": 3199,
+    "budget": 1000,
+    "running": 8,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-005",
+   "state": {
+    "used": 1626,
+    "budget": 500,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-006",
+   "state": {
+    "used": 3318,
+    "budget": 500,
+    "running": 2,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-007",
+   "state": {
+    "used": 2227,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-008",
+   "state": {
+    "used": 2447,
+    "budget": 1000,
+    "running": 1,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-009",
+   "state": {
+    "used": 3684,
+    "budget": 2000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-010",
+   "state": {
+    "used": 643,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-011",
+   "state": {
+    "used": 827,
+    "budget": 500,
+    "running": 1,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-012",
+   "state": {
+    "used": 2863,
+    "budget": 1000,
+    "running": 2,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-013",
+   "state": {
+    "used": 2055,
+    "budget": 500,
+    "running": 2,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-014",
+   "state": {
+    "used": 3595,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-015",
+   "state": {
+    "used": 1495,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-016",
+   "state": {
+    "used": 375,
+    "budget": 2000,
+    "running": 6,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-017",
+   "state": {
+    "used": 1027,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-018",
+   "state": {
+    "used": 1993,
+    "budget": 1000,
+    "running": 0,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-019",
+   "state": {
+    "used": 837,
+    "budget": 2000,
+    "running": 6,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-020",
+   "state": {
+    "used": 61,
+    "budget": 500,
+    "running": 4,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-021",
+   "state": {
+    "used": 1168,
+    "budget": 2000,
+    "running": 7,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-022",
+   "state": {
+    "used": 2460,
+    "budget": 500,
+    "running": 3,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-023",
+   "state": {
+    "used": 2997,
+    "budget": 500,
+    "running": 5,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-024",
+   "state": {
+    "used": 2663,
+    "budget": 2000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-025",
+   "state": {
+    "used": 465,
+    "budget": 500,
+    "running": 8,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-026",
+   "state": {
+    "used": 1587,
+    "budget": 2000,
+    "running": 0,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-027",
+   "state": {
+    "used": 1382,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-028",
+   "state": {
+    "used": 1589,
+    "budget": 500,
+    "running": 5,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-029",
+   "state": {
+    "used": 2793,
+    "budget": 2000,
+    "running": 3,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-030",
+   "state": {
+    "used": 1782,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-031",
+   "state": {
+    "used": 3746,
+    "budget": 1000,
+    "running": 0,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-032",
+   "state": {
+    "used": 2972,
+    "budget": 1000,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-033",
+   "state": {
+    "used": 1122,
+    "budget": 2000,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-034",
+   "state": {
+    "used": 1244,
+    "budget": 500,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-035",
+   "state": {
+    "used": 2697,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-036",
+   "state": {
+    "used": 744,
+    "budget": 1000,
+    "running": 1,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-037",
+   "state": {
+    "used": 1450,
+    "budget": 1000,
+    "running": 4,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-038",
+   "state": {
+    "used": 549,
+    "budget": 1000,
+    "running": 2,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-039",
+   "state": {
+    "used": 3951,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-040",
+   "state": {
+    "used": 1073,
+    "budget": 500,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-041",
+   "state": {
+    "used": 923,
+    "budget": 2000,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-042",
+   "state": {
+    "used": 1687,
+    "budget": 500,
+    "running": 1,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-043",
+   "state": {
+    "used": 800,
+    "budget": 1000,
+    "running": 1,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-044",
+   "state": {
+    "used": 1156,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-045",
+   "state": {
+    "used": 3932,
+    "budget": 1000,
+    "running": 0,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-046",
+   "state": {
+    "used": 2940,
+    "budget": 2000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-047",
+   "state": {
+    "used": 2688,
+    "budget": 500,
+    "running": 0,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-048",
+   "state": {
+    "used": 2900,
+    "budget": 1000,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-049",
+   "state": {
+    "used": 1022,
+    "budget": 1000,
+    "running": 0,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-050",
+   "state": {
+    "used": 2190,
+    "budget": 1000,
+    "running": 0,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-051",
+   "state": {
+    "used": 2473,
+    "budget": 500,
+    "running": 4,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-052",
+   "state": {
+    "used": 3903,
+    "budget": 2000,
+    "running": 0,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-053",
+   "state": {
+    "used": 966,
+    "budget": 2000,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-054",
+   "state": {
+    "used": 1561,
+    "budget": 2000,
+    "running": 2,
+    "workers": 3,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-055",
+   "state": {
+    "used": 3331,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-056",
+   "state": {
+    "used": 2068,
+    "budget": 2000,
+    "running": 0,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-057",
+   "state": {
+    "used": 3016,
+    "budget": 1000,
+    "running": 7,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-058",
+   "state": {
+    "used": 1689,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-059",
+   "state": {
+    "used": 370,
+    "budget": 500,
+    "running": 0,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-060",
+   "state": {
+    "used": 582,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-061",
+   "state": {
+    "used": 978,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-062",
+   "state": {
+    "used": 1949,
+    "budget": 500,
+    "running": 1,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-063",
+   "state": {
+    "used": 2086,
+    "budget": 2000,
+    "running": 1,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-064",
+   "state": {
+    "used": 1515,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-065",
+   "state": {
+    "used": 1526,
+    "budget": 500,
+    "running": 4,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-066",
+   "state": {
+    "used": 2910,
+    "budget": 1000,
+    "running": 0,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-067",
+   "state": {
+    "used": 2525,
+    "budget": 2000,
+    "running": 4,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-068",
+   "state": {
+    "used": 3714,
+    "budget": 500,
+    "running": 3,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-069",
+   "state": {
+    "used": 2930,
+    "budget": 500,
+    "running": 3,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-070",
+   "state": {
+    "used": 329,
+    "budget": 2000,
+    "running": 3,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-071",
+   "state": {
+    "used": 865,
+    "budget": 500,
+    "running": 6,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-072",
+   "state": {
+    "used": 2564,
+    "budget": 2000,
+    "running": 3,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-073",
+   "state": {
+    "used": 3790,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-074",
+   "state": {
+    "used": 1396,
+    "budget": 2000,
+    "running": 5,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-075",
+   "state": {
+    "used": 2801,
+    "budget": 2000,
+    "running": 8,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-076",
+   "state": {
+    "used": 2439,
+    "budget": 500,
+    "running": 1,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-077",
+   "state": {
+    "used": 13,
+    "budget": 1000,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-078",
+   "state": {
+    "used": 2066,
+    "budget": 2000,
+    "running": 9,
+    "workers": 8,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-079",
+   "state": {
+    "used": 1439,
+    "budget": 1000,
+    "running": 8,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-080",
+   "state": {
+    "used": 320,
+    "budget": 2000,
+    "running": 1,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-081",
+   "state": {
+    "used": 196,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-082",
+   "state": {
+    "used": 2685,
+    "budget": 1000,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-083",
+   "state": {
+    "used": 908,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-084",
+   "state": {
+    "used": 3375,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-085",
+   "state": {
+    "used": 16,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-086",
+   "state": {
+    "used": 2533,
+    "budget": 2000,
+    "running": 0,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-087",
+   "state": {
+    "used": 3150,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-088",
+   "state": {
+    "used": 478,
+    "budget": 1000,
+    "running": 7,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-089",
+   "state": {
+    "used": 1893,
+    "budget": 1000,
+    "running": 8,
+    "workers": 8,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-090",
+   "state": {
+    "used": 3674,
+    "budget": 500,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-091",
+   "state": {
+    "used": 539,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-092",
+   "state": {
+    "used": 2488,
+    "budget": 2000,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-093",
+   "state": {
+    "used": 2824,
+    "budget": 2000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-094",
+   "state": {
+    "used": 3278,
+    "budget": 500,
+    "running": 4,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-095",
+   "state": {
+    "used": 1427,
+    "budget": 500,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-096",
+   "state": {
+    "used": 2194,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-097",
+   "state": {
+    "used": 2777,
+    "budget": 2000,
+    "running": 1,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-098",
+   "state": {
+    "used": 279,
+    "budget": 1000,
+    "running": 3,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-099",
+   "state": {
+    "used": 1489,
+    "budget": 500,
+    "running": 3,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-100",
+   "state": {
+    "used": 58,
+    "budget": 2000,
+    "running": 2,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-101",
+   "state": {
+    "used": 1387,
+    "budget": 500,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-102",
+   "state": {
+    "used": 2965,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-103",
+   "state": {
+    "used": 1370,
+    "budget": 500,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-104",
+   "state": {
+    "used": 971,
+    "budget": 2000,
+    "running": 2,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-105",
+   "state": {
+    "used": 2516,
+    "budget": 500,
+    "running": 6,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-106",
+   "state": {
+    "used": 2719,
+    "budget": 2000,
+    "running": 3,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-107",
+   "state": {
+    "used": 3768,
+    "budget": 1000,
+    "running": 0,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-108",
+   "state": {
+    "used": 739,
+    "budget": 500,
+    "running": 2,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-109",
+   "state": {
+    "used": 685,
+    "budget": 500,
+    "running": 1,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-110",
+   "state": {
+    "used": 3850,
+    "budget": 2000,
+    "running": 1,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-111",
+   "state": {
+    "used": 3171,
+    "budget": 1000,
+    "running": 3,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-112",
+   "state": {
+    "used": 3566,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-113",
+   "state": {
+    "used": 1919,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-114",
+   "state": {
+    "used": 940,
+    "budget": 1000,
+    "running": 6,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-115",
+   "state": {
+    "used": 3660,
+    "budget": 1000,
+    "running": 0,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-116",
+   "state": {
+    "used": 3243,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-117",
+   "state": {
+    "used": 1223,
+    "budget": 1000,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-118",
+   "state": {
+    "used": 1415,
+    "budget": 2000,
+    "running": 4,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-119",
+   "state": {
+    "used": 2696,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-120",
+   "state": {
+    "used": 3913,
+    "budget": 500,
+    "running": 8,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-121",
+   "state": {
+    "used": 2634,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-122",
+   "state": {
+    "used": 1069,
+    "budget": 2000,
+    "running": 1,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-123",
+   "state": {
+    "used": 812,
+    "budget": 1000,
+    "running": 6,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-124",
+   "state": {
+    "used": 1847,
+    "budget": 2000,
+    "running": 6,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-125",
+   "state": {
+    "used": 3627,
+    "budget": 1000,
+    "running": 1,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-126",
+   "state": {
+    "used": 1705,
+    "budget": 500,
+    "running": 6,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-127",
+   "state": {
+    "used": 2106,
+    "budget": 1000,
+    "running": 0,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-128",
+   "state": {
+    "used": 25,
+    "budget": 1000,
+    "running": 4,
+    "workers": 3,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-129",
+   "state": {
+    "used": 1153,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-130",
+   "state": {
+    "used": 1804,
+    "budget": 500,
+    "running": 2,
+    "workers": 3,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-131",
+   "state": {
+    "used": 1847,
+    "budget": 1000,
+    "running": 3,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-132",
+   "state": {
+    "used": 3017,
+    "budget": 500,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-133",
+   "state": {
+    "used": 495,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-134",
+   "state": {
+    "used": 3034,
+    "budget": 2000,
+    "running": 3,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-135",
+   "state": {
+    "used": 732,
+    "budget": 1000,
+    "running": 3,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-136",
+   "state": {
+    "used": 3319,
+    "budget": 1000,
+    "running": 1,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-137",
+   "state": {
+    "used": 3823,
+    "budget": 2000,
+    "running": 2,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-138",
+   "state": {
+    "used": 3173,
+    "budget": 500,
+    "running": 6,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-139",
+   "state": {
+    "used": 553,
+    "budget": 1000,
+    "running": 5,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-140",
+   "state": {
+    "used": 2212,
+    "budget": 500,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-141",
+   "state": {
+    "used": 3718,
+    "budget": 1000,
+    "running": 3,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-142",
+   "state": {
+    "used": 205,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-143",
+   "state": {
+    "used": 765,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-144",
+   "state": {
+    "used": 3540,
+    "budget": 2000,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-145",
+   "state": {
+    "used": 284,
+    "budget": 500,
+    "running": 6,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-146",
+   "state": {
+    "used": 3411,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-147",
+   "state": {
+    "used": 2133,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-148",
+   "state": {
+    "used": 2484,
+    "budget": 2000,
+    "running": 0,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-149",
+   "state": {
+    "used": 2229,
+    "budget": 2000,
+    "running": 1,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-150",
+   "state": {
+    "used": 3309,
+    "budget": 2000,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-151",
+   "state": {
+    "used": 1665,
+    "budget": 2000,
+    "running": 9,
+    "workers": 8,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-152",
+   "state": {
+    "used": 2489,
+    "budget": 500,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-153",
+   "state": {
+    "used": 2101,
+    "budget": 1000,
+    "running": 3,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-154",
+   "state": {
+    "used": 2643,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-155",
+   "state": {
+    "used": 2794,
+    "budget": 2000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-156",
+   "state": {
+    "used": 1108,
+    "budget": 1000,
+    "running": 5,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-157",
+   "state": {
+    "used": 680,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-158",
+   "state": {
+    "used": 1429,
+    "budget": 500,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-159",
+   "state": {
+    "used": 1883,
+    "budget": 1000,
+    "running": 0,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-160",
+   "state": {
+    "used": 850,
+    "budget": 2000,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-161",
+   "state": {
+    "used": 3342,
+    "budget": 1000,
+    "running": 7,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-162",
+   "state": {
+    "used": 2596,
+    "budget": 1000,
+    "running": 5,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-163",
+   "state": {
+    "used": 1033,
+    "budget": 2000,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-164",
+   "state": {
+    "used": 1822,
+    "budget": 2000,
+    "running": 3,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-165",
+   "state": {
+    "used": 2596,
+    "budget": 1000,
+    "running": 2,
+    "workers": 7,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-166",
+   "state": {
+    "used": 3671,
+    "budget": 1000,
+    "running": 0,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-167",
+   "state": {
+    "used": 2861,
+    "budget": 500,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-168",
+   "state": {
+    "used": 854,
+    "budget": 1000,
+    "running": 6,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-169",
+   "state": {
+    "used": 1057,
+    "budget": 1000,
+    "running": 3,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-170",
+   "state": {
+    "used": 1428,
+    "budget": 500,
+    "running": 3,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-171",
+   "state": {
+    "used": 3524,
+    "budget": 1000,
+    "running": 1,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-172",
+   "state": {
+    "used": 1057,
+    "budget": 500,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-173",
+   "state": {
+    "used": 134,
+    "budget": 1000,
+    "running": 6,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-174",
+   "state": {
+    "used": 3324,
+    "budget": 2000,
+    "running": 3,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-175",
+   "state": {
+    "used": 3110,
+    "budget": 500,
+    "running": 3,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-176",
+   "state": {
+    "used": 2657,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-177",
+   "state": {
+    "used": 5,
+    "budget": 500,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-178",
+   "state": {
+    "used": 1254,
+    "budget": 500,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-179",
+   "state": {
+    "used": 3179,
+    "budget": 1000,
+    "running": 1,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-180",
+   "state": {
+    "used": 154,
+    "budget": 1000,
+    "running": 1,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-181",
+   "state": {
+    "used": 1052,
+    "budget": 500,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-182",
+   "state": {
+    "used": 1123,
+    "budget": 2000,
+    "running": 0,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-183",
+   "state": {
+    "used": 115,
+    "budget": 1000,
+    "running": 8,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-184",
+   "state": {
+    "used": 2372,
+    "budget": 500,
+    "running": 3,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-185",
+   "state": {
+    "used": 3201,
+    "budget": 500,
+    "running": 2,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-186",
+   "state": {
+    "used": 545,
+    "budget": 500,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-187",
+   "state": {
+    "used": 1470,
+    "budget": 2000,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-188",
+   "state": {
+    "used": 1739,
+    "budget": 500,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-189",
+   "state": {
+    "used": 1500,
+    "budget": 2000,
+    "running": 3,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-190",
+   "state": {
+    "used": 3437,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-191",
+   "state": {
+    "used": 1707,
+    "budget": 1000,
+    "running": 3,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-192",
+   "state": {
+    "used": 3630,
+    "budget": 500,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-193",
+   "state": {
+    "used": 2069,
+    "budget": 1000,
+    "running": 4,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-194",
+   "state": {
+    "used": 2114,
+    "budget": 500,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-195",
+   "state": {
+    "used": 3918,
+    "budget": 2000,
+    "running": 5,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-196",
+   "state": {
+    "used": 2797,
+    "budget": 500,
+    "running": 7,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-197",
+   "state": {
+    "used": 3025,
+    "budget": 1000,
+    "running": 6,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-198",
+   "state": {
+    "used": 2800,
+    "budget": 1000,
+    "running": 6,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-199",
+   "state": {
+    "used": 2032,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-200",
+   "state": {
+    "used": 1504,
+    "budget": 1000,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-201",
+   "state": {
+    "used": 1666,
+    "budget": 2000,
+    "running": 0,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-202",
+   "state": {
+    "used": 417,
+    "budget": 2000,
+    "running": 4,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-203",
+   "state": {
+    "used": 1002,
+    "budget": 2000,
+    "running": 5,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-204",
+   "state": {
+    "used": 3046,
+    "budget": 1000,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-205",
+   "state": {
+    "used": 2152,
+    "budget": 2000,
+    "running": 6,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-206",
+   "state": {
+    "used": 1134,
+    "budget": 1000,
+    "running": 2,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-207",
+   "state": {
+    "used": 218,
+    "budget": 2000,
+    "running": 1,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-208",
+   "state": {
+    "used": 1287,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-209",
+   "state": {
+    "used": 1523,
+    "budget": 500,
+    "running": 4,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-210",
+   "state": {
+    "used": 3454,
+    "budget": 1000,
+    "running": 3,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-211",
+   "state": {
+    "used": 678,
+    "budget": 1000,
+    "running": 2,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-212",
+   "state": {
+    "used": 968,
+    "budget": 500,
+    "running": 3,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-213",
+   "state": {
+    "used": 1142,
+    "budget": 2000,
+    "running": 3,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-214",
+   "state": {
+    "used": 3976,
+    "budget": 500,
+    "running": 1,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-215",
+   "state": {
+    "used": 877,
+    "budget": 1000,
+    "running": 3,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-216",
+   "state": {
+    "used": 3079,
+    "budget": 500,
+    "running": 7,
+    "workers": 7,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-217",
+   "state": {
+    "used": 793,
+    "budget": 500,
+    "running": 5,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-218",
+   "state": {
+    "used": 2012,
+    "budget": 500,
+    "running": 6,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-219",
+   "state": {
+    "used": 671,
+    "budget": 500,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-220",
+   "state": {
+    "used": 2080,
+    "budget": 1000,
+    "running": 1,
+    "workers": 4,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-221",
+   "state": {
+    "used": 2859,
+    "budget": 1000,
+    "running": 4,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-222",
+   "state": {
+    "used": 2918,
+    "budget": 1000,
+    "running": 8,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-223",
+   "state": {
+    "used": 1610,
+    "budget": 2000,
+    "running": 0,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-224",
+   "state": {
+    "used": 2603,
+    "budget": 1000,
+    "running": 1,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-225",
+   "state": {
+    "used": 684,
+    "budget": 2000,
+    "running": 2,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-226",
+   "state": {
+    "used": 825,
+    "budget": 2000,
+    "running": 6,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-227",
+   "state": {
+    "used": 1460,
+    "budget": 2000,
+    "running": 0,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-228",
+   "state": {
+    "used": 566,
+    "budget": 1000,
+    "running": 2,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-229",
+   "state": {
+    "used": 3382,
+    "budget": 1000,
+    "running": 1,
+    "workers": 7,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-230",
+   "state": {
+    "used": 3719,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-231",
+   "state": {
+    "used": 3687,
+    "budget": 1000,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-232",
+   "state": {
+    "used": 3039,
+    "budget": 1000,
+    "running": 5,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-233",
+   "state": {
+    "used": 929,
+    "budget": 2000,
+    "running": 3,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-234",
+   "state": {
+    "used": 692,
+    "budget": 500,
+    "running": 0,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-235",
+   "state": {
+    "used": 1728,
+    "budget": 2000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-236",
+   "state": {
+    "used": 1742,
+    "budget": 1000,
+    "running": 1,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-237",
+   "state": {
+    "used": 3326,
+    "budget": 1000,
+    "running": 1,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-238",
+   "state": {
+    "used": 2545,
+    "budget": 500,
+    "running": 1,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-239",
+   "state": {
+    "used": 406,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-240",
+   "state": {
+    "used": 3996,
+    "budget": 1000,
+    "running": 1,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-241",
+   "state": {
+    "used": 3468,
+    "budget": 500,
+    "running": 1,
+    "workers": 7,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-242",
+   "state": {
+    "used": 125,
+    "budget": 2000,
+    "running": 4,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-243",
+   "state": {
+    "used": 2008,
+    "budget": 1000,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-244",
+   "state": {
+    "used": 2889,
+    "budget": 2000,
+    "running": 1,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-245",
+   "state": {
+    "used": 3267,
+    "budget": 2000,
+    "running": 0,
+    "workers": 2,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-246",
+   "state": {
+    "used": 2003,
+    "budget": 1000,
+    "running": 0,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-247",
+   "state": {
+    "used": 3621,
+    "budget": 500,
+    "running": 5,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-248",
+   "state": {
+    "used": 2249,
+    "budget": 1000,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-249",
+   "state": {
+    "used": 3745,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-250",
+   "state": {
+    "used": 100,
+    "budget": 1000,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-251",
+   "state": {
+    "used": 543,
+    "budget": 2000,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-252",
+   "state": {
+    "used": 1596,
+    "budget": 2000,
+    "running": 0,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-253",
+   "state": {
+    "used": 491,
+    "budget": 500,
+    "running": 1,
+    "workers": 1,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-254",
+   "state": {
+    "used": 2188,
+    "budget": 1000,
+    "running": 0,
+    "workers": 2,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-255",
+   "state": {
+    "used": 186,
+    "budget": 1000,
+    "running": 0,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-256",
+   "state": {
+    "used": 3373,
+    "budget": 500,
+    "running": 8,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-257",
+   "state": {
+    "used": 2016,
+    "budget": 1000,
+    "running": 4,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-258",
+   "state": {
+    "used": 1424,
+    "budget": 500,
+    "running": 0,
+    "workers": 2,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-259",
+   "state": {
+    "used": 2178,
+    "budget": 500,
+    "running": 2,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-260",
+   "state": {
+    "used": 1934,
+    "budget": 2000,
+    "running": 3,
+    "workers": 4,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-261",
+   "state": {
+    "used": 3694,
+    "budget": 2000,
+    "running": 7,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-262",
+   "state": {
+    "used": 3084,
+    "budget": 500,
+    "running": 0,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-263",
+   "state": {
+    "used": 2833,
+    "budget": 2000,
+    "running": 4,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-264",
+   "state": {
+    "used": 1810,
+    "budget": 2000,
+    "running": 2,
+    "workers": 2,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-265",
+   "state": {
+    "used": 75,
+    "budget": 1000,
+    "running": 2,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-266",
+   "state": {
+    "used": 1973,
+    "budget": 1000,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-267",
+   "state": {
+    "used": 2361,
+    "budget": 2000,
+    "running": 0,
+    "workers": 8,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-268",
+   "state": {
+    "used": 2026,
+    "budget": 1000,
+    "running": 3,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-269",
+   "state": {
+    "used": 1085,
+    "budget": 2000,
+    "running": 0,
+    "workers": 7,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-270",
+   "state": {
+    "used": 1591,
+    "budget": 2000,
+    "running": 2,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-271",
+   "state": {
+    "used": 2110,
+    "budget": 2000,
+    "running": 0,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-272",
+   "state": {
+    "used": 442,
+    "budget": 2000,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-273",
+   "state": {
+    "used": 1197,
+    "budget": 2000,
+    "running": 1,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-274",
+   "state": {
+    "used": 3486,
+    "budget": 2000,
+    "running": 2,
+    "workers": 7,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-275",
+   "state": {
+    "used": 610,
+    "budget": 2000,
+    "running": 7,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-276",
+   "state": {
+    "used": 944,
+    "budget": 500,
+    "running": 4,
+    "workers": 3,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-277",
+   "state": {
+    "used": 2271,
+    "budget": 2000,
+    "running": 3,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-278",
+   "state": {
+    "used": 2349,
+    "budget": 1000,
+    "running": 0,
+    "workers": 8,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-279",
+   "state": {
+    "used": 1740,
+    "budget": 1000,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-280",
+   "state": {
+    "used": 1842,
+    "budget": 500,
+    "running": 4,
+    "workers": 4,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-281",
+   "state": {
+    "used": 3193,
+    "budget": 500,
+    "running": 5,
+    "workers": 4,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-282",
+   "state": {
+    "used": 3291,
+    "budget": 2000,
+    "running": 1,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-283",
+   "state": {
+    "used": 362,
+    "budget": 500,
+    "running": 6,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-284",
+   "state": {
+    "used": 2824,
+    "budget": 500,
+    "running": 2,
+    "workers": 6,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-285",
+   "state": {
+    "used": 1361,
+    "budget": 2000,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-286",
+   "state": {
+    "used": 894,
+    "budget": 500,
+    "running": 6,
+    "workers": 5,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-287",
+   "state": {
+    "used": 1097,
+    "budget": 1000,
+    "running": 1,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-288",
+   "state": {
+    "used": 2025,
+    "budget": 1000,
+    "running": 3,
+    "workers": 5,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-289",
+   "state": {
+    "used": 2856,
+    "budget": 500,
+    "running": 7,
+    "workers": 6,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-290",
+   "state": {
+    "used": 3157,
+    "budget": 1000,
+    "running": 0,
+    "workers": 8,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-291",
+   "state": {
+    "used": 2859,
+    "budget": 2000,
+    "running": 2,
+    "workers": 6,
+    "blocked": true,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-292",
+   "state": {
+    "used": 2257,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  },
+  {
+   "name": "seeded-293",
+   "state": {
+    "used": 2953,
+    "budget": 1000,
+    "running": 2,
+    "workers": 5,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "over"
+   }
+  },
+  {
+   "name": "seeded-294",
+   "state": {
+    "used": 1875,
+    "budget": 2000,
+    "running": 2,
+    "workers": 1,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-295",
+   "state": {
+    "used": 1442,
+    "budget": 1000,
+    "running": 2,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-296",
+   "state": {
+    "used": 2916,
+    "budget": 2000,
+    "running": 2,
+    "workers": 7,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": true,
+    "reason": "collect"
+   }
+  },
+  {
+   "name": "seeded-297",
+   "state": {
+    "used": 998,
+    "budget": 1000,
+    "running": 4,
+    "workers": 3,
+    "blocked": false,
+    "collected": false
+   },
+   "expect": {
+    "admit": false,
+    "collect": false,
+    "reason": "workers"
+   }
+  },
+  {
+   "name": "seeded-298",
+   "state": {
+    "used": 1293,
+    "budget": 2000,
+    "running": 5,
+    "workers": 6,
+    "blocked": true,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "within"
+   }
+  },
+  {
+   "name": "seeded-299",
+   "state": {
+    "used": 1860,
+    "budget": 1000,
+    "running": 0,
+    "workers": 1,
+    "blocked": false,
+    "collected": true
+   },
+   "expect": {
+    "admit": true,
+    "collect": false,
+    "reason": "forced"
+   }
+  }
+ ],
+ "budgets": [
+  {
+   "name": "host-share-of-a-large-host",
+   "environment": {},
+   "hostMegabytes": 32768,
+   "expect": {
+    "bytes": 8589934592
+   }
+  },
+  {
+   "name": "host-share-of-a-small-host",
+   "environment": {},
+   "hostMegabytes": 8192,
+   "expect": {
+    "bytes": 2147483648
+   }
+  },
+  {
+   "name": "grant-share-wins-on-a-small-host",
+   "environment": {
+    "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 1, \"fixedMegabytes\": 5120, \"memoryMegabytes\": 0}"
+   },
+   "hostMegabytes": 8192,
+   "expect": {
+    "bytes": 2684354560
+   }
+  },
+  {
+   "name": "grant-adds-fixed-and-per-job-megabytes",
+   "environment": {
+    "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 2, \"fixedMegabytes\": 3072, \"memoryMegabytes\": 3072}"
+   },
+   "hostMegabytes": 8192,
+   "expect": {
+    "bytes": 3221225472
+   }
+  },
+  {
+   "name": "host-share-beats-the-small-show-grant",
+   "environment": {
+    "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 1, \"fixedMegabytes\": 5120, \"memoryMegabytes\": 0}"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "bytes": 8589934592
+   }
+  },
+  {
+   "name": "never-below-the-minimum",
+   "environment": {},
+   "hostMegabytes": 2048,
+   "expect": {
+    "bytes": 1073741824
+   }
+  },
+  {
+   "name": "never-above-the-maximum",
+   "environment": {},
+   "hostMegabytes": 262144,
+   "expect": {
+    "bytes": 17179869184
+   }
+  },
+  {
+   "name": "unknown-host-without-grant-is-the-minimum",
+   "environment": {},
+   "hostMegabytes": 0,
+   "expect": {
+    "bytes": 1073741824
+   }
+  },
+  {
+   "name": "grant-not-json-uses-the-host",
+   "environment": {
+    "SEMIO_HOST_CAPACITY_PLAN": "{"
+   },
+   "hostMegabytes": 16384,
+   "expect": {
+    "bytes": 4294967296
+   }
+  },
+  {
+   "name": "grant-with-negative-and-text-megabytes-is-ignored",
+   "environment": {
+    "SEMIO_HOST_CAPACITY_PLAN": "{\"fixedMegabytes\": -5, \"memoryMegabytes\": \"lots\"}"
+   },
+   "hostMegabytes": 16384,
+   "expect": {
+    "bytes": 4294967296
+   }
+  },
+  {
+   "name": "explicit-megabytes",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": "2048"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "bytes": 2147483648
+   }
+  },
+  {
+   "name": "explicit-minimum",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": "1024"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "bytes": 1073741824
+   }
+  },
+  {
+   "name": "explicit-below-minimum-refused",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": "512"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "error": true
+   }
+  },
+  {
+   "name": "explicit-not-a-number-refused",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": "plenty"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "error": true
+   }
+  },
+  {
+   "name": "explicit-empty-refused",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": ""
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "error": true
+   }
+  },
+  {
+   "name": "explicit-beats-the-grant-and-the-host",
+   "environment": {
+    "SEMIO_GRAPH_MEMORY_MB": "4096",
+    "SEMIO_HOST_CAPACITY_PLAN": "{\"memoryMegabytes\": 2048}"
+   },
+   "hostMegabytes": 32768,
+   "expect": {
+    "bytes": 4294967296
+   }
+  }
+ ],
+ "languages": [
+  {
+   "name": "explicit-language-wins",
+   "environment": {
+    "SEMIO_LANGUAGE": "de",
+    "SEMIO_DASHBOARD_LOCALE": "en",
+    "LANG": "en_US.UTF-8"
+   },
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "dashboard-locale-before-system-locale",
+   "environment": {
+    "SEMIO_DASHBOARD_LOCALE": "de",
+    "LANG": "en_US.UTF-8"
+   },
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "system-locale-german",
+   "environment": {
+    "LANG": "de_DE.UTF-8"
+   },
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "system-locale-english",
+   "environment": {
+    "LANG": "en_GB.UTF-8"
+   },
+   "expect": [
+    "en"
+   ]
+  },
+  {
+   "name": "unsupported-locale-falls-through",
+   "environment": {
+    "LC_ALL": "fr_FR.UTF-8",
+    "LANG": "de_AT"
+   },
+   "expect": [
+    "de"
+   ]
+  },
+  {
+   "name": "lc-all-beats-lang",
+   "environment": {
+    "LC_ALL": "en_GB",
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "en"
+   ]
+  },
+  {
+   "name": "nothing-set-prints-both-languages",
+   "environment": {},
+   "expect": [
+    "en",
+    "de"
+   ]
+  },
+  {
+   "name": "unsupported-only-prints-both-languages",
+   "environment": {
+    "LANG": "fr_FR"
+   },
+   "expect": [
+    "en",
+    "de"
+   ]
+  }
+ ],
+ "governor": [
+  {
+   "name": "unconstrained",
+   "workers": 3,
+   "budgetMegabytes": 3000,
+   "baseMegabytes": 100,
+   "garbageShare": 0.5,
+   "expectParallel": 3,
+   "expectWaits": false,
+   "tasks": [
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 100,
+     "durationMilliseconds": 1000
+    }
+   ]
+  },
+  {
+   "name": "waits-for-memory",
+   "workers": 4,
+   "budgetMegabytes": 500,
+   "baseMegabytes": 100,
+   "garbageShare": 0.5,
+   "expectWaits": true,
+   "tasks": [
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 600
+    }
+   ]
+  },
+  {
+   "name": "collection-frees-garbage",
+   "workers": 4,
+   "budgetMegabytes": 400,
+   "baseMegabytes": 100,
+   "garbageShare": 1.0,
+   "tasks": [
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 50,
+     "durationMilliseconds": 300
+    }
+   ]
+  },
+  {
+   "name": "retained-memory-runs-one-project-at-a-time",
+   "workers": 4,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 400,
+   "garbageShare": 0.0,
+   "expectSerial": true,
+   "expectWaits": true,
+   "tasks": [
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 200
+    },
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 200
+    },
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 200
+    },
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 200
+    },
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 200
+    }
+   ]
+  },
+  {
+   "name": "abort-rejects-waiting-projects",
+   "workers": 2,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 100,
+   "garbageShare": 0.0,
+   "abortAtMilliseconds": 1000,
+   "tasks": [
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 5000
+    }
+   ]
+  },
+  {
+   "name": "arrival-order-under-pressure",
+   "workers": 3,
+   "budgetMegabytes": 250,
+   "baseMegabytes": 100,
+   "garbageShare": 0.0,
+   "expectWaits": true,
+   "tasks": [
+    {
+     "memoryMegabytes": 120,
+     "durationMilliseconds": 400
+    },
+    {
+     "memoryMegabytes": 30,
+     "durationMilliseconds": 900
+    },
+    {
+     "memoryMegabytes": 200,
+     "durationMilliseconds": 300
+    },
+    {
+     "memoryMegabytes": 10,
+     "durationMilliseconds": 100
+    },
+    {
+     "memoryMegabytes": 90,
+     "durationMilliseconds": 700
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 250
+    },
+    {
+     "memoryMegabytes": 140,
+     "durationMilliseconds": 500
+    }
+   ]
+  },
+  {
+   "name": "progress-lines-are-spaced",
+   "workers": 3,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 100,
+   "garbageShare": 0.0,
+   "expectWaits": true,
+   "language": "de",
+   "tasks": [
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 20000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 20000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 20000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 20000
+    }
+   ]
+  },
+  {
+   "name": "unresolved-language-prints-both",
+   "workers": 3,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 100,
+   "garbageShare": 0.0,
+   "expectWaits": true,
+   "language": "none",
+   "tasks": [
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    },
+    {
+     "memoryMegabytes": 150,
+     "durationMilliseconds": 8000
+    }
+   ]
+  },
+  {
+   "name": "baseline-is-not-charged",
+   "workers": 4,
+   "budgetMegabytes": 300,
+   "baseMegabytes": 4000,
+   "baselineMegabytes": 4000,
+   "garbageShare": 0.0,
+   "expectParallel": 4,
+   "expectWaits": false,
+   "tasks": [
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 20,
+     "durationMilliseconds": 1000
+    }
+   ]
+  },
+  {
+   "name": "growth-over-baseline-is-charged",
+   "workers": 4,
+   "budgetMegabytes": 100,
+   "baseMegabytes": 4000,
+   "baselineMegabytes": 4000,
+   "garbageShare": 0.0,
+   "expectWaits": true,
+   "tasks": [
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    },
+    {
+     "memoryMegabytes": 60,
+     "durationMilliseconds": 1000
+    }
+   ]
+  }
+ ],
+ "messageCases": [
+  {
+   "key": "waiting",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: waiting for memory (1234 of 3072 MB in use, 5 projects running)"
+   ]
+  },
+  {
+   "key": "waiting",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: wartet auf Speicher (1234 von 3072 MB belegt, 5 Projekte laufen)"
+   ]
+  },
+  {
+   "key": "waiting",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: waiting for memory (1234 of 3072 MB in use, 5 projects running)",
+    "Graph: wartet auf Speicher (1234 von 3072 MB belegt, 5 Projekte laufen)"
+   ]
+  },
+  {
+   "key": "serial",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: memory above the budget of 3072 MB (1234 MB in use), inferring one project at a time"
+   ]
+  },
+  {
+   "key": "serial",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: Speicher über dem Budget von 3072 MB (1234 MB belegt), Projekte werden einzeln abgeleitet"
+   ]
+  },
+  {
+   "key": "serial",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: memory above the budget of 3072 MB (1234 MB in use), inferring one project at a time",
+    "Graph: Speicher über dem Budget von 3072 MB (1234 MB belegt), Projekte werden einzeln abgeleitet"
+   ]
+  },
+  {
+   "key": "resumed",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: memory below the budget again (1234 of 3072 MB), resuming"
+   ]
+  },
+  {
+   "key": "resumed",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: Speicher wieder unter dem Budget (1234 von 3072 MB), es geht weiter"
+   ]
+  },
+  {
+   "key": "resumed",
+   "fields": {
+    "used": 1234,
+    "budget": 3072,
+    "running": 5
+   },
+   "environment": {},
+   "expect": [
+    "graph: memory below the budget again (1234 of 3072 MB), resuming",
+    "Graph: Speicher wieder unter dem Budget (1234 von 3072 MB), es geht weiter"
+   ]
+  }
+ ]
+}

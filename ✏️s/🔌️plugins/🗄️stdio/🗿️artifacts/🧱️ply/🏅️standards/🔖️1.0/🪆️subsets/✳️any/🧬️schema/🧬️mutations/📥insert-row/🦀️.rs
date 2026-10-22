@@ -16,7 +16,16 @@ pub struct InsertRow {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "row", kind: "insert-row", record: "InsertRow" };
 
-    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert row", "Zeile einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PlySnapshot, PlyMutation> for InsertRow {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::ColdMutation<PlySnapshot>>::ReferenceDiff> {
         let Self { element_name, index, row } = self;
         protocol::MutationOutcome::new(diff_insert_row(element_name, *index, row.clone()))
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertRow {
                 vec![PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: element_name.clone(), index: at })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert row", "Zeile einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

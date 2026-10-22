@@ -24,7 +24,7 @@ use std::sync::Mutex;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use semio_framework_os_mcp_hub_remote::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
+use crate::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
 use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
 use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairTransport, HUB_PAIR_CACHE_MAX_ENTRIES, HUB_PAIR_MAX_VERIFIED_BYTES, HUB_PAIR_MEDIA_TYPE, PairBegin, PairCompletion, canonical_etag, checkpoint, maximum_wire_bytes, wait_for_published_receipt};
 use semio_framework_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;

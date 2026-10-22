@@ -313,7 +313,7 @@ export function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string,
   const result = spawnSync(execution.command, execution.args, { cwd: absolutePath(inventory.repoRoot, execution.cwd), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: duration, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW_PROGRESS: contract.previewProgress ? JSON.stringify(contract.previewProgress) : "", SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
   checkCancellation(inventory.repoRoot, cancelFile);
   const stdout = result.stdout ?? "", stderr = result.stderr ?? "";
-  if (result.error || result.status !== 0 || result.signal !== null) throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`);
+  if (result.error || result.status !== 0 || result.signal !== null) throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}${result.error ? `, reason=${result.error.message}` : ""}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`, { cause: result.error });
   receiveGeneratorPreviewProgressV1(stderr, contract.previewProgress, { cancelled: () => { try { checkCancellation(inventory.repoRoot, cancelFile); return false; } catch { return true; } }, remainingMs: () => duration - (performance.now() - started) });
   const roots = contract.outputRoots.map((root) => root.path).sort(generatorPathCompare);
   const manifest = parseGeneratorPreviewManifest(stdout, id, roots, taxonomy.exclusions.map((entry) => entry.path));

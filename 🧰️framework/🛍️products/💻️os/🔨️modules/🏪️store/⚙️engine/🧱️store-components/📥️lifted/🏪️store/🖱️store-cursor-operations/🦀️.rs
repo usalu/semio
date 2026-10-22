@@ -87,22 +87,24 @@ where
     }
 
     /// 🧩️ Derives a provisional member projection through this Store's own operation vocabulary and merge policy.
-    pub fn derive_provisional_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> {
+    pub fn derive_provisional_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError>
+    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P>, {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
-        let outcome = <Mutation as super::Mutation<P>>::diff(op, source.snapshot());
+        let outcome = <Mutation as semio_framework_os_spr::ColdMutation<P>>::diff(op, source.snapshot());
         let applicable = outcome.is_applicable(protocol::MergePolicy::default());
         let (diff, _) = outcome.into_parts();
         let next = applicable.then(|| semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot()).ok()).flatten();
-        <<Mutation as super::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as semio_framework_os_spr::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         Ok(next.map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))))
     }
 
     /// ✏️ Derives one history preview input with the replay's keep-and-record application rule.
-    pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> {
+    pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError>
+    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P>, {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
-        let (diff, mut messages) = <Mutation as super::Mutation<P>>::diff(op, source.snapshot()).into_parts();
+        let (diff, mut messages) = <Mutation as semio_framework_os_spr::ColdMutation<P>>::diff(op, source.snapshot()).into_parts();
         let applied = semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot());
-        <<Mutation as super::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as semio_framework_os_spr::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         let next = match applied {
             Ok(owner) => Some(self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))),
             Err(error) => {
@@ -127,7 +129,8 @@ where
     
 
     /// 🏁️ Returns a finished replay and its genuine complete projection for preview and subsequent publication.
-    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> {
+    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError>
+    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> + OpBinary, {
         let replay = owner.as_ref().ok_or_else(|| VcsError::ValidationFailed("derived replay owner is absent".into()))?;
         self.admit_derived_source(store_owners, store_wire, &replay.registry, replay.generation, replay.revision)?;
         if !replay.replay.as_ref().is_some_and(|replay|replay.is_finished()) { return Err(VcsError::ValidationFailed("derived replay has not finished".into())); }
@@ -260,7 +263,7 @@ where
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
         let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire);
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, None, stamped_edit_id));
-        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(self.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
+        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
@@ -326,7 +329,7 @@ where
         };
         let Some(retirement) = store_owners.mutation_retirement_factory.as_ref() else { return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched inputs require their original mutation retirement authority".into(), mutations }); };
         let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(retirement) }, mutations, None, store_log.operation_wire);
-        self.begin_apply_batch_owned(store_log, store_wire, operation, expected_generation, expected_revision, actor, lane, None, source, outbound, transaction).map_err(|rejected| {
+        self.begin_apply_batch_owned(store_log, store_owners, store_wire, operation, expected_generation, expected_revision, actor, lane, None, source, outbound, transaction).map_err(|rejected| {
             let (reason, mutations) = rejected.into_owners();
             ArtifactStoreBatchAdmissionRejected { reason, mutations }
         })
@@ -374,7 +377,7 @@ where
     /// other Store identity answers to.
     #[allow(clippy::too_many_arguments)]
     pub fn begin_apply_batch_owned<A>(
-        &self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>,
+        &self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>,
         operation: semio_framework_job::OperationId,
         expected_generation: u64,
         expected_revision: [u8; 32],
@@ -454,7 +457,7 @@ where
         ));
         Ok(ArtifactStoreBatchPublication {
             
-            original_registry:std::mem::ManuallyDrop::new(Some(self.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,
+            original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,
 operation,
             expected_generation,
             expected_revision,
@@ -488,7 +491,7 @@ operation,
             announce_items: 0,
             transaction_open: false,
         
-            lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document,
+            lane_insert:None,lane_close:None,
 })
     }
 

@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
     ///
     /// 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -72,23 +72,23 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
         let Some(node) = ({
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-            let Some((_, snapshot, config, history)) = cache.as_ref() else {
+            let VcsArtifactApp { app: _, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
+            let Some((_, snapshot, config, history)) = command_history.cache.as_ref() else {
                 return Err(plugin_sdk_fault("render cache unavailable after refresh").into());
             };
             let doc = ArtifactView::with_render_context(
                 time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
                 history.as_ref(),
-                ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
+                ChildContentView::clone(time_travel.render_children_or(tool_runs, &child_composition.child_content_root)),
                 render_operation,
-                parent_document_id,
+                &parent_document_id,
                 None,
             )
             .await
             .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
             .with_instance(self.tools.instance_operation_owner.clone())
             .with_operations(&operation_progress);
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
+            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| self.stores.window_config_store.preview_or(&authority.snapshot)) };
             let transient = self.stores.transient_store.current_root();
             let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
             A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
@@ -116,14 +116,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+        let VcsArtifactApp { stores, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
+        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
         let doc = ArtifactView::with_render_context(
             time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
             history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
+            ChildContentView::clone(time_travel.render_children_or(tool_runs, &child_composition.child_content_root)),
             render_operation,
-            parent_document_id,
+            &parent_document_id,
             None,
         )
         .await
@@ -132,16 +132,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let mut engagements = HashMap::new();
         for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
             let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
-            let window_config = match window_config_store.capture(Some(&window_view_state)).await {
+            let window_config = match stores.window_config_store.capture(Some(&window_view_state)).await {
                 Ok(snapshot) => snapshot,
                 Err(_) => continue,
             };
-            let window_transient = match window_transient_store.capture(Some(&window_view_state)) {
+            let window_transient = match stores.window_transient_store.capture(Some(&window_view_state)) {
                 Ok(snapshot) => snapshot,
                 Err(_) => continue,
             };
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
-            let transient_root = transient_store.current_root();
+            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| stores.window_config_store.preview_or(&authority.snapshot)) };
+            let transient_root = stores.transient_store.current_root();
             let transient = TransientView { snapshot: transient_root.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
             let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient, &interaction).await;
             if let Some(engagement) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
@@ -162,14 +162,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+        let VcsArtifactApp { stores, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
+        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
         let doc = ArtifactView::with_render_context(
             time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
             history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
+            ChildContentView::clone(time_travel.render_children_or(tool_runs, &child_composition.child_content_root)),
             render_operation,
-            parent_document_id,
+            &parent_document_id,
             None,
         )
         .await
@@ -178,11 +178,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let mut measures = HashMap::new();
         for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
             let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
-            let window_config = match window_config_store.capture(Some(&window_view_state)).await {
+            let window_config = match stores.window_config_store.capture(Some(&window_view_state)).await {
                 Ok(snapshot) => snapshot,
                 Err(_) => continue,
             };
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
+            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| stores.window_config_store.preview_or(&authority.snapshot)) };
             let mut projected = A::window_measures_with_request_context(&doc, &cfg, &window_view_state, &interaction).await;
             if let Some(window_measures) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
                 measures.insert(window.id.clone(), window_measures);
@@ -201,20 +201,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+        let VcsArtifactApp { app: _, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
+        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
         let doc = ArtifactView::with_render_context(
             time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
             history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
+            ChildContentView::clone(time_travel.render_children_or(tool_runs, &child_composition.child_content_root)),
             render_operation,
-            parent_document_id,
+            &parent_document_id,
             None,
         )
         .await
         .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
         .with_instance(self.tools.instance_operation_owner.clone());
-        let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
+        let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| self.stores.window_config_store.preview_or(&authority.snapshot)) };
         A::tool_measures(&doc, &cfg, view_state).await
     }
 
@@ -238,14 +238,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if cx.should_yield(){return Ok(Vec::new())}
         self.render_ctx().refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;if A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref()){Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
+        let Some(grant)=semio_framework_plugin_decl_views::MountedSnapshotReadPreparation::grant(self.mounted_policy.preparation,cx)else{return Ok(Vec::new())};
+        let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;let preparation=A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref(),&self.stores.window_config_store,view,grant);if preparation.record(grant,cx)?{Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
         let effects={
             let(_,snapshot,config,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;
             let doc=semio_framework_plugin_decl_views::ArtifactPendingView::new(snapshot.as_ref(),&self.child_composition.child_content_root,render_operation,&self.stores.store.envelope().id,snapshot_read,self.tool_runs.poll_view_for(view.and_then(|view|view.window_id.as_deref())),self.tool_machines.provisional_generation(),&self.tools.instance_operation_owner);
             let cfg=ConfigView{snapshot:config.as_ref(),window:None};
-            ArtifactApp::pending_effects(&self.tools.instance_operation_owner,&doc,&cfg,view).await
+            A::pending_effects(&self.tools.instance_operation_owner,&doc,&cfg,view).await
         };
-        Ok(self.stamp_polled_load_document_effects(effects))
+        Ok(self.stores.stamp_polled_load_document_effects(effects))
     }
 
     /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
@@ -266,11 +267,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         };
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, cache, registry, child_content_root, instance_operation_owner, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await.with_instance(instance_operation_owner.clone());
+        let VcsArtifactApp { app: _, history: command_history, child_composition, tools, .. } = self;
+        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
+        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&child_composition.child_content_root), render_operation, &parent_document_id, None).await.with_instance(tools.instance_operation_owner.clone());
         let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
-        let items = A::context_menu_with_request_context(request, &doc, &cfg, view_state, &interaction, registry).await;
-        semio_framework_ui_layout::layout::organize_context_menu(items, &|id| registry.category_of(id))
+        let items = A::context_menu_with_request_context(request, &doc, &cfg, view_state, &interaction, &tools.registry).await;
+        semio_framework_ui_layout::layout::organize_context_menu(items, &|id| tools.registry.category_of(id))
     }
 }

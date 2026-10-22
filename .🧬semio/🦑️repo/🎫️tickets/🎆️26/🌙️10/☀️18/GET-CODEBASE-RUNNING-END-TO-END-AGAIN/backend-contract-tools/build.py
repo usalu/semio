@@ -40,6 +40,7 @@ for src,dst in dest.items():
     tokens["UP"]=up;tokens["PROC"]=fw+"🔨️modules/🏃️process/📦️packages/🟦️typescript".replace("🔨️","🔨"+V).replace("🏃️","🏃"+V).replace("📦️","📦"+V).replace("🟦️","🟦"+V)
     tokens["VALID"]=fw+f"{T['MODULES'] if False else names.n(0x1F528,'modules')}/{names.n(0x1F9EC,'schema')}/{names.n(0x2705,'validator')}/{names.n(0x1F4E6,'packages')}/{names.n(0x1F7E6,'typescript')}/{TS}"
     tokens["PROC"]=fw+f"{names.n(0x1F528,'modules')}/{names.n(0x1F3C3,'process')}/{names.n(0x1F4E6,'packages')}/{names.n(0x1F7E6,'typescript')}"
+    tokens["RUNTIME"]=fw+f"{names.n(0x1F528,'modules')}/{names.n(0x2699,'runtime')}"
     tokens["PROCROOT"]=fw+f"{names.n(0x1F528,'modules')}/{names.n(0x1F3C3,'process')}"
     t=re.sub(r"@@([A-Z0-9_]+)@@",lambda m:tokens[m.group(1)] if m.group(1) in tokens else m.group(0),t)
     if re.search(r"@@[A-Z]",t): raise SystemExit(f"{src}: unresolved token {re.search(r'@@[A-Z0-9_]+@@',t).group(0)}")

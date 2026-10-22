@@ -18,7 +18,16 @@ pub struct RenameProduct {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RenameProduct where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::rename_product::RenameProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "product", kind: "rename-product", record: "RenamedProduct" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for RenameProduct where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::rename_product::RenameProduct> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::rename_product::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,12 +36,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RenameProduct where Op:
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

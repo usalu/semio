@@ -152,7 +152,16 @@ impl SpliceSource {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SpliceSource {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "source", kind: "splice-source", record: "SpliceSource" };
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit source", "Quelltext bearbeiten")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<MdSnapshot, MdMutation> for SpliceSource {
+    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::ColdMutation<MdSnapshot>>::ReferenceDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
             Ok(rows) if rows.is_empty() => protocol::MutationOutcome::new(MdDiff::default()),
@@ -165,7 +174,6 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SpliceSource {
             }),
         }
     }
-
     /// ↩️ The blocks the ranges rewrote, put back as absolute block setters read from `base`: the added blocks go (last first), the removed
     /// blocks return at their base index (first first), the replaced blocks take their base value. Listed so the last row replays first.
     fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
@@ -176,13 +184,6 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SpliceSource {
         undo.extend(rows.modified.iter().map(|(index, _)| MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: Vec::new(), index: *index, block: base.blocks[*index].clone() })));
         undo.reverse();
         Ok(undo)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit source", "Quelltext bearbeiten")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion ⚙️Semantics

@@ -1,8 +1,10 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {realpathSync,statSync} from "node:fs";
 import {isAbsolute,resolve,sep} from "node:path";
+import {format as formatText} from "node:util";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import { runtimeStdinStreamV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 const protocol=schema.definitions.Protocol.const;
 
@@ -43,7 +45,7 @@ export function encodeWorkResponseV1(response:WorkResponseV1,maximumOutputBytes:
 }
 
 /** 📥️ Reads a byte stream chunk by chunk; the default is the process's standard input. */
-export async function* readWorkerInputV1(stream:ReadableStream<Uint8Array>=Bun.stdin.stream()):AsyncGenerator<Uint8Array>{
+export async function* readWorkerInputV1(stream:ReadableStream<Uint8Array>=runtimeStdinStreamV1()):AsyncGenerator<Uint8Array>{
  const reader=stream.getReader();
  try{for(;;){const row=await reader.read();if(row.done)return;yield row.value;}}finally{reader.releaseLock();}
 }
@@ -97,6 +99,8 @@ export async function serveWorkerV1(options:{input:AsyncIterable<Uint8Array|stri
  return Object.freeze({requests:served,cancelled});
 }
 
+/** 🧾️ Formats console arguments the way the console would, so a captured line equals the line it replaces. */
+const formatWorkerLineV1=(values:readonly unknown[]):string=>formatText(...(values as [unknown,...unknown[]]));
 /** 🎙️ Routes the standard output and error writes of the code a request runs into that request's output, so the protocol stream carries nothing but responses. */
 export function installWorkerOutputCaptureV1(stdout:NodeJS.WriteStream=process.stdout,stderr:NodeJS.WriteStream=process.stderr):{run<T>(body:()=>Promise<T>):Promise<{value:T;output:string}>;writeProtocol(text:string):Promise<void>;restore():void}{
  const store=new AsyncLocalStorage<{chunks:string[]}>(),savedOut=stdout.write,savedErr=stderr.write,originalOut=savedOut.bind(stdout),originalErr=savedErr.bind(stderr);
@@ -106,10 +110,12 @@ export function installWorkerOutputCaptureV1(stdout:NodeJS.WriteStream=process.s
   if(done)queueMicrotask(()=>(done as ()=>void)());return true;
  };
  stdout.write=capture(originalErr) as never;stderr.write=capture(originalErr) as never;
+ const savedConsole={log:console.log,info:console.info,debug:console.debug,warn:console.warn,error:console.error};
+ console.log=console.info=console.debug=(...values:unknown[])=>{stdout.write(`${formatWorkerLineV1(values)}\n`);};console.warn=console.error=(...values:unknown[])=>{stderr.write(`${formatWorkerLineV1(values)}\n`);};
  return{
   async run(body){const row={chunks:[] as string[]};const value=await store.run(row,body);return{value,output:row.chunks.join("")};},
   writeProtocol:text=>new Promise<void>((accept,refuse)=>{originalOut(text,error=>error?refuse(error):accept());}),
-  restore(){stdout.write=savedOut;stderr.write=savedErr;}
+  restore(){stdout.write=savedOut;stderr.write=savedErr;Object.assign(console,savedConsole);}
  };
 }
 

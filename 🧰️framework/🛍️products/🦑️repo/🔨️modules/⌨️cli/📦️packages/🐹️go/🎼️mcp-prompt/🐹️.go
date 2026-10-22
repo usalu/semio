@@ -25,8 +25,8 @@ import (
 
 // 🌐️Request handler functions for CLI and MCP operations.
 // ⏹️renderPromptTemplate holds the data fields for a renderPromptTemplate record.
-func renderPromptTemplate(name string, data map[string]string) (string, error) {
-	path := workspace.GetRepoMetaPath(filepath.Join("💬️prompts", name+".tpl"))
+func (repository *mcpRepository) renderPromptTemplate(name string, data map[string]string) (string, error) {
+	path := workspace.RepoMetaPathForRoot(repository.root,filepath.Join("💬️prompts", name+".tpl"))
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -43,9 +43,9 @@ func renderPromptTemplate(name string, data map[string]string) (string, error) {
 }
 
 // 💿️handleEnhancePrompt holds the data fields for a handleEnhancePrompt record.
-func handleEnhancePrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
+func (repository *mcpRepository) handleEnhancePrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
-	content, err := renderPromptTemplate("enhance", map[string]string{"prompt": prompt})
+	content, err := repository.renderPromptTemplate("enhance", map[string]string{"prompt": prompt})
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,9 @@ func handleEnhancePrompt(ctx context.Context, request GetPromptRequest) (*GetPro
 	), nil
 }
 
-func handleRefactorPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
+func (repository *mcpRepository) handleRefactorPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
-	content, err := renderPromptTemplate("refactor", map[string]string{"prompt": prompt})
+	content, err := repository.renderPromptTemplate("refactor", map[string]string{"prompt": prompt})
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +72,9 @@ func handleRefactorPrompt(ctx context.Context, request GetPromptRequest) (*GetPr
 }
 
 // 🧪️handleTestPrompt holds the data fields for a handleTestPrompt record.
-func handleTestPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
+func (repository *mcpRepository) handleTestPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
-	content, err := renderPromptTemplate("test", map[string]string{"prompt": prompt})
+	content, err := repository.renderPromptTemplate("test", map[string]string{"prompt": prompt})
 	if err != nil {
 		return nil, err
 	}
@@ -87,9 +87,9 @@ func handleTestPrompt(ctx context.Context, request GetPromptRequest) (*GetPrompt
 }
 
 // 🔷️handleComplyPrompt holds the data fields for a handleComplyPrompt record.
-func handleComplyPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
+func (repository *mcpRepository) handleComplyPrompt(ctx context.Context, request GetPromptRequest) (*GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
-	content, err := renderPromptTemplate("comply", map[string]string{"prompt": prompt})
+	content, err := repository.renderPromptTemplate("comply", map[string]string{"prompt": prompt})
 	if err != nil {
 		return nil, err
 	}

@@ -1,292 +1,229 @@
-import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
-/** 🧩️ Semantic parity execution owner. */
+//! 📊️ Code metric verbs: the mermaid charts, `loc`, technologies, bundles and `benchmark`.
 
-import { repoCacheDirectory } from "@semio-tech/process/execution";
+use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_graphql::RepoContext;
+use semio_framework_repo_cli_event_stream::{format_markdown_result, Format};
+use semio_framework_repo_cli_tree_source_and_search::{status_filter, StreamOptions};
+use semio_framework_repo_codebase::{Codebase, Scope as CodebaseScope};
+use semio_framework_repo_model::{TicketStatus};
+use semio_framework_repo_model_entity::entity;
+use serde_json::{json, Value as Json};
+use std::collections::{BTreeMap, BTreeSet};
 
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-
-
-
-const repoRoot = findWorkspaceRoot();
-
-import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
-import { loadPlaywrightV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-
-import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer } from "../🌐️server-pool/🟦️.ts";
-
-import type { ParityPlaygroundReport } from "../📋️playground-report/🟦️.ts";
-import { BootStatus, ParityRenderer, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure } from "../🏗️structure/🟦️.ts";
-
-import { parityOutDir, writeParityReport } from "../📊️report/🟦️.ts";
-import { parityVerdict } from "../✅️verdict/🟦️.ts";
-
-import { PARITY_PROBE_CATALOG, PARITY_STATE_PROBE_SUITE, ProbeRunResult, runParityProbe, runParityProbeSuite } from "../🔬️probe/🟦️.ts";
-
-import { PARITY_PIXEL_REGION_KINDS, compareParityRegion, decodeParityScreenshot } from "../🖼️pixels/🟦️.ts";
-
-
-
-//#endregion 🔖️PixelCompare
-
-//#region 🔖️Triage
-const PARITY_BOOT_TIMEOUT_MS = Number(process.env.PARITY_RUNTIME_BOOT_TIMEOUT_MS ?? 180_000);
-
-/** 🧬️terra-parity-rebaseline: the exact TypeError `🟦️.ts`'s `loadActor` throws —
- * `const api = await bridge.createActorApi(actorId);` on a module whose export is `undefined` — once it
- * crosses `ShardClient.activate`'s reject (`🧵️shard-client.ts` `entry.reject(graftWorkerStack(...))`) and
- * surfaces as an unhandled rejection on the page. Matched on BOTH the property-access phrasing V8 uses
- * (`bridge.createActorApi is not a function` / `undefined is not an object (evaluating
- * 'bridge.createActorApi')`) and the bare symbol, so a wording change in one engine doesn't silently stop
- * matching in the other. Deliberately narrow — this must not catch unrelated "X is not a function" defects,
- * which are real regressions, not stale fixtures. */
-const PARITY_STALE_BRIDGE_RE = /createActorApi/;
-
-/** 🪜️Boot-triage ladder — each rung is a distinct terminal status, never conflated with a structural/pixel mismatch. */
-async function triageParityBoot(page: import("playwright").Page, renderer: ParityRenderer, url: string): Promise<{ readonly status: BootStatus; readonly detail?: string }> {
-  const pageErrors: string[] = [];
-  page.on("pageerror", (e) => pageErrors.push(String(e)));
-  page.on("console", (m) => {
-    if (m.type() === "error") pageErrors.push(m.text());
-  });
-  const staleBridgeHit = (): string | undefined => pageErrors.find((e) => PARITY_STALE_BRIDGE_RE.test(e));
-  try {
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  } catch (e) {
-    return { status: "SERVER-FAIL", detail: String(e) };
-  }
-  if (renderer === "react") {
-    try {
-      await page.waitForFunction(() => document.querySelectorAll("#root *").length > 20, { timeout: PARITY_BOOT_TIMEOUT_MS });
-    } catch {
-      const stale = staleBridgeHit();
-      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "react #root never populated" };
-    }
-    const nodeCount = await page.evaluate(() => document.querySelectorAll("[data-ui-path]").length);
-    if (nodeCount === 0) {
-      const stale = staleBridgeHit();
-      return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" };
-    }
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
-  }
-  try {
-    await page.waitForFunction(() => document.querySelector("#semio-wgpu-canvas") != null, { timeout: PARITY_BOOT_TIMEOUT_MS });
-  } catch {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu canvas never mounted" };
-  }
-  if (pageErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: pageErrors.join(" | ") };
-  try {
-    await page.waitForFunction(() => typeof (window as unknown as { semioWgpuIntrospection?: { dumpStructure?: unknown } }).semioWgpuIntrospection?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
-  } catch {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
-  }
-  const dump = await dumpWgpuStructure(page);
-  if (dump.nodes.length === 0) {
-    const stale = staleBridgeHit();
-    return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "wgpu structural dump empty (plugin-bridge/kernel wiring)" };
-  }
-  const stats = await dumpWgpuFrameStats(page);
-  if (stats && stats.drawCalls === 0) return { status: "BLANK-PAINT", detail: "zero draw calls (paint pipeline)" };
-  const stale = staleBridgeHit();
-  return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
+/// 📄️ Every considered source file with its physical line count, the treemaps' input.
+fn counted_files(root: &std::path::Path) -> Vec<(String, i64)> {
+    let codebase = Codebase::new(root);
+    codebase
+        .scope_to_files(&CodebaseScope::Repo)
+        .into_iter()
+        .filter_map(|path| {
+            let content = std::fs::read_to_string(root.join(&path)).ok()?;
+            let lines = if content.is_empty() { 0 } else { content.matches('\n').count() as i64 + 1 };
+            Some((path, lines))
+        })
+        .filter(|(_, lines)| *lines > 0)
+        .collect()
 }
 
-//#endregion 🔖️Report
-
-//#region 🔖️Sweep
-/** 🎭️ Points playwright at the shared cache root's `tools/ms-playwright` that `📜️script.ts setup`
- * actually populates (`bunx playwright install --with-deps chromium`). Without this, `chromium.launch()`
- * falls back to the user-global `~/Library/Caches/ms-playwright`, which holds whatever an unrelated
- * project installed — here a stale `chromium_headless_shell-1223` against the required `-1234` — and
- * every parity run dies with "Executable doesn't exist" suggesting `npx playwright install`, i.e. a
- * download, for a browser the repo had already installed. The storybook runner (root `📜️script.ts`,
- * `🔖️TestScript`) already sets this.
- *
- * terra-parity-rebaseline: hoisted out of `verifyParityVariant` (the only call site that set this
- * before today) into a shared helper, and now ALSO called from `ParityTriageScript`/`ParityProbeScript`
- * — both launch `chromium` directly without going through `verifyParityVariant` and were dying on the
- * exact same stale-global-cache error, which is what made even a single `parity triage <variant>`
- * unrunnable (measured: `Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1234/...`,
- * exit 1) before this fix — never mind a 58-variant sweep. */
-function ensureParityPlaywrightBrowsersPath(): void {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
+pub fn mermaid_technologies(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let root = invocation.root();
+    let codebase = Codebase::new(&root);
+    let technologies = codebase.technologies();
+    let files: Vec<semio_framework_repo_tree::MermaidLocFile> = counted_files(&root)
+        .into_iter()
+        .filter_map(|(path, loc)| {
+            let bundle = codebase.bundle_by_path(&path)?;
+            let root_path = bundle.root.trim_end_matches('/').to_string();
+            let relative = path.strip_prefix(&format!("{root_path}/")).unwrap_or(&path).to_string();
+            let folder = relative.rsplit_once('/').map(|(folder, _)| folder.to_string()).unwrap_or_default();
+            let name = relative.rsplit('/').next().unwrap_or(&relative).to_string();
+            Some(semio_framework_repo_tree::MermaidLocFile { bundle_name: bundle.name, folder, kind: semio_framework_repo_model::derive_file_kind(&name), name, loc })
+        })
+        .collect();
+    invocation.print(&semio_framework_repo_tree::mermaid_loc_by_technologies_bundles_folders_files(&technologies, &files));
+    Ok(())
 }
 
-async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
-  const start = Date.now();
-  ensureParityPlaywrightBrowsersPath();
-  const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-  let reactServer: ParityServerHandle | undefined;
-  let wgpuServer: ParityServerHandle | undefined;
-  try {
-    if (!opts.skipDev) {
-      await prebuildParityPlugin(variant);
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
+pub fn mermaid_contributors(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let root = invocation.root();
+    let mut authors: BTreeMap<String, i64> = BTreeMap::new();
+    for (path, _) in counted_files(&root) {
+        let Ok(output) = semio_framework_repo_workspace::spawn_command("git").args(["blame", "--line-porcelain"]).arg(root.join(&path)).current_dir(&root).output() else { continue };
+        if !output.status.success() {
+            continue;
+        }
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            if let Some(author) = line.strip_prefix("author ") {
+                *authors.entry(author.to_string()).or_default() += 1;
+            }
+        }
     }
-    const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-    const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-    const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-    const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-    if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
-      return { variant, boot: { react: reactBoot.status, wgpu: wgpuBoot.status, detail: reactBoot.detail ?? wgpuBoot.detail }, durationMs: Date.now() - start };
+    invocation.print(&semio_framework_repo_tree::mermaid_loc_flat(semio_framework_repo_tree::MERMAID_TITLE_BY_CONTRIBUTORS, &authors));
+    Ok(())
+}
+
+pub fn mermaid_languages(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let root = invocation.root();
+    let mut languages: BTreeMap<String, i64> = BTreeMap::new();
+    for (path, loc) in counted_files(&root) {
+        if let Some(language) = semio_framework_repo_languages::language_for_path(&path) {
+            *languages.entry(language.name.clone()).or_default() += loc;
+        }
     }
-    await reactPage.waitForTimeout(400);
-    await wgpuPage.waitForTimeout(400);
-    const reactDump = await dumpReactStructure(reactPage);
-    const wgpuDump = await dumpWgpuStructure(wgpuPage);
-    const structural = compareParityStructural(reactDump, wgpuDump);
-    const outDir = parityOutDir();
-    const reactPng = await decodeParityScreenshot(reactPage, await reactPage.screenshot());
-    const wgpuPng = await decodeParityScreenshot(wgpuPage, await wgpuPage.screenshot());
-    const wgpuPaths = new Set(wgpuDump.nodes.map((n) => n.path));
-    const regionNodes = reactDump.nodes.filter((n) => PARITY_PIXEL_REGION_KINDS.has(n.kind) && wgpuPaths.has(n.path));
-    const regions = await Promise.all(regionNodes.map((n) => compareParityRegion(reactPage, reactPng, wgpuPng, n, outDir, variant)));
-    const failingRegions = regions.filter((r) => r.ratio > r.threshold);
-    let behavioral: ProbeRunResult | undefined;
-    try {
-      behavioral = await runParityProbe(reactPage, wgpuPage, PARITY_STATE_PROBE_SUITE.steps);
-    } catch (e) {
-      behavioral = { status: "FAIL", steps: [{ index: 0, step: { kind: "settle", ms: 0 }, status: "FAIL", detail: `probe runner threw: ${String(e)}` }] };
+    invocation.print(&semio_framework_repo_tree::mermaid_loc_flat(semio_framework_repo_tree::MERMAID_TITLE_BY_LANGUAGE, &languages));
+    Ok(())
+}
+
+pub fn loc(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let root = invocation.root();
+    let mut languages = invocation.texts("languages");
+    if languages.is_empty() {
+        languages = semio_framework_repo_metrics::DEFAULT_CODE_LANGUAGES.iter().map(|language| (*language).to_string()).collect();
     }
-    return {
-      variant,
-      boot: { react: reactBoot.status, wgpu: wgpuBoot.status },
-      structural,
-      pixel: { status: failingRegions.length === 0 ? "PASS" : "FAIL", comparedRegions: regions.length, regions: failingRegions },
-      behavioral,
-      durationMs: Date.now() - start,
+    let history = invocation.flag("history");
+    let by_contributors = invocation.flag("by-contributors");
+    let branch = if history { Some(invocation.text("branch")).filter(|branch| !branch.trim().is_empty()).unwrap_or_else(|| semio_framework_repo_metrics::DEFAULT_BRANCH.to_string()) } else { String::new() };
+    let options = semio_framework_repo_metrics::LocOptions { languages, history, by_contributors, branch, contributor: invocation.text("by-contributor") };
+    let ignore = semio_framework_repo_workspace::GitIgnore::compile_file(&root.join(".gitignore")).ok();
+    let store = semio_framework_repo_contributors::FsContributorStore::new(&root);
+    let alias = |name: &str, email: &str| {
+        let author = if email.trim().is_empty() { name.trim().to_string() } else { format!("{} <{}>", name.trim(), email.trim()) };
+        if author.is_empty() {
+            return "unknown".to_string();
+        }
+        semio_framework_repo_contributors::find_contributor(&store, &author)
     };
-  } finally {
-    await browser.close();
-    if (reactServer) stopParityDevServer(reactServer);
-    if (wgpuServer) stopParityDevServer(wgpuServer);
-  }
+    let report = semio_framework_repo_metrics::build_loc_report(&semio_framework_repo_metrics::SystemGit::new(&root), &options, ignore.as_ref(), &alias).map_err(CliError::Message)?;
+    let text = match invocation.config.format {
+        Format::Json => format!("{}\n", serde_json::to_string_pretty(&json!({ "loc": report })).map_err(|error| error.to_string())?),
+        Format::Markdown => semio_framework_repo_metrics::render_markdown(&report, history, by_contributors),
+        Format::Text => semio_framework_repo_metrics::render_text(&report, history, by_contributors),
+    };
+    invocation.print(&text);
+    Ok(())
 }
 
-class ParitySmokeScript extends BundleScript {
-  async run(): Promise<void> {
-    const variant = requirePlaygroundVariant(process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const report = await verifyParityVariant(variant, findFreeParityPortPair());
-    console.log(JSON.stringify(report, null, 2));
-    if (parityVerdict(report) !== "PASS") {
-      throw new Error(`parity smoke ${parityVerdict(report)}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "missing"} pixel=${report.pixel?.status ?? "missing"} behavioral=${report.behavioral?.status ?? "missing"}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
+pub fn technology(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    if invocation.args().len() == 3 && invocation.arg(1) == "generate" {
+        return match invocation.arg(2).as_str() {
+            kind @ ("requirements" | "docs" | "todos") => Err(CliError::Message(format!("technology {} generate {kind}: the 🏃️test-runner Rust twin carries no technology document generator", invocation.arg(0)))),
+            kind => Err(CliError::Message(format!("unknown generate kind {kind:?} (use requirements, docs, or todos)"))),
+        };
     }
-    console.log(`parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} behavioral=${report.behavioral?.status} (${report.durationMs}ms)`);
-  }
+    let help = invocation.parsed.selected().help();
+    invocation.print(&help);
+    Ok(())
 }
 
-class ParityTriageScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
-    const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    let reactServer: ParityServerHandle | undefined;
-    let wgpuServer: ParityServerHandle | undefined;
-    try {
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
-      const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-      const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-      console.log(`triage ${variant}: react=${reactBoot.status}${reactBoot.detail ? ` (${reactBoot.detail})` : ""}`);
-      console.log(`triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
-    } finally {
-      await browser.close();
-      if (reactServer) stopParityDevServer(reactServer);
-      if (wgpuServer) stopParityDevServer(wgpuServer);
+/// 📜️ Every technology the stream options keep.
+fn filtered_technologies(invocation: &Invocation<'_>) -> Vec<semio_framework_repo_model::Technology> {
+    let options = StreamOptions::of(invocation);
+    Codebase::new(&invocation.root()).technologies().into_iter().filter(|technology| options.matches_filter(&technology.name) && options.matches_query(&format!("{} {}", technology.name, technology.kind.as_str()))).collect()
+}
+
+pub fn technology_list(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let results = filtered_technologies(invocation).into_iter().map(|technology| json!({ "technology": technology })).collect();
+    invocation.stream("technology list", results, Vec::new())
+}
+
+pub fn technology_tree(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let mut results: Vec<Json> = filtered_technologies(invocation).into_iter().map(|technology| json!({ "technology": technology })).collect();
+    results.sort_by_key(|data| format_markdown_result("technology tree", data));
+    invocation.stream("technology tree", results, Vec::new())
+}
+
+/// 🔵️ Every bundle the stream and status options keep, twin of `StreamBundles`.
+fn filtered_bundles(invocation: &Invocation<'_>) -> Vec<semio_framework_repo_model::Bundle> {
+    let options = StreamOptions::of(invocation);
+    let root = invocation.root();
+    let codebase = Codebase::new(&root);
+    let status = status_filter(invocation);
+    let open_bundles: BTreeSet<String> = match &status {
+        Some(_) => invocation
+            .context()
+            .tickets(None, None, None, Some(TicketStatus::Open))
+            .unwrap_or_default()
+            .iter()
+            .flat_map(|ticket| ticket.interactions.iter().flat_map(|interaction| interaction.files.iter()))
+            .filter_map(|file| {
+                let parts: Vec<&str> = file.path.split('/').collect();
+                (parts.len() >= 2 && parts[0].starts_with('@')).then(|| format!("{}/{}", parts[0], parts[1]))
+            })
+            .collect(),
+        None => BTreeSet::new(),
+    };
+    codebase
+        .bundles()
+        .into_iter()
+        .filter(|bundle| options.matches_filter(&bundle.name) && options.matches_query(&format!("{} {}", bundle.name, bundle.kind.as_str())) && options.includes_bundle_kind(bundle.kind.as_str()))
+        .filter(|bundle| {
+            if options.include_kinds.is_empty() && options.exclude_kinds.is_empty() {
+                return true;
+            }
+            let kinds: BTreeSet<String> = codebase.glob_by_extension(&format!("{}/**/*", bundle.root), &[], &[], true).iter().map(|path| semio_framework_repo_model::derive_file_kind(&semio_framework_repo_identity::base_of(path)).as_str().to_string()).collect();
+            (options.include_kinds.is_empty() || options.include_kinds.iter().any(|kind| kinds.contains(kind))) && !options.exclude_kinds.iter().any(|kind| kinds.contains(kind))
+        })
+        .filter(|bundle| match status.as_deref() {
+            Some("open") => open_bundles.contains(&bundle.name),
+            Some("closed") => !open_bundles.contains(&bundle.name),
+            _ => true,
+        })
+        .collect()
+}
+
+pub fn bundle_list(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let results = filtered_bundles(invocation).into_iter().map(|bundle| json!({ "bundle": bundle })).collect();
+    invocation.stream("bundle list", results, Vec::new())
+}
+
+pub fn bundle_tree(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    let mut bundles = filtered_bundles(invocation);
+    bundles.sort_by(|left, right| left.name.cmp(&right.name));
+    if invocation.config.format == Format::Markdown {
+        let markdown: String = bundles.iter().filter_map(|bundle| serde_json::to_value(bundle).ok()).filter_map(|value| value.as_object().cloned()).map(|data| format!("{}\n", entity::render_markdown("bundle", &data))).collect();
+        return invocation.stream("bundle tree", vec![json!({ "markdown": markdown })], Vec::new());
     }
-  }
+    let last = bundles.len().saturating_sub(1);
+    let mut lines = vec![".".to_string()];
+    lines.extend(bundles.iter().enumerate().map(|(index, bundle)| format!("{}{}", if index == last { "└️─️─️ " } else { "├️─️─️ " }, bundle.name)));
+    invocation.stream("bundle tree", Vec::new(), lines)
 }
 
-/** 🎬️Standalone entry point for JUST the behavioral probe suite — boots both dev servers, triages
- * boot, then runs `PARITY_PROBE_CATALOG[suiteName]` (default `"shell"`) without paying for the
- * structural/pixel comparison `verifyParityVariant` also does. Useful for iterating on a probe suite
- * itself without re-running the (slower) full `verify`. */
-class ParityProbeScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
-    const suiteName = segments[1] || "state";
-    const suite = PARITY_PROBE_CATALOG[suiteName];
-    if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
-    const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
-    const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    let reactServer: ParityServerHandle | undefined;
-    let wgpuServer: ParityServerHandle | undefined;
-    try {
-      reactServer = await startParityDevServer("react", variant, ports.react);
-      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
-      const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
-      const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-      if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
-        throw new Error(`parity probe FAILED: boot react=${reactBoot.status} wgpu=${wgpuBoot.status}${(reactBoot.detail ?? wgpuBoot.detail) ? ` (${reactBoot.detail ?? wgpuBoot.detail})` : ""}`);
-      }
-      const result = await runParityProbeSuite(reactPage, wgpuPage, suite);
-      console.log(JSON.stringify(result, null, 2));
-      console.log(`probe ${variant}/${suiteName}: ${result.status} (${result.steps.length} step(s))`);
-      if (result.status !== "PASS") throw new Error(`parity probe ${variant}/${suiteName} FAILED`);
-    } finally {
-      await browser.close();
-      if (reactServer) stopParityDevServer(reactServer);
-      if (wgpuServer) stopParityDevServer(wgpuServer);
+pub fn benchmark(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
+    if invocation.flag("dry-run") {
+        return Ok(());
     }
-  }
-}
-
-class ParityVerifyScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const variants = segments.filter((s) => !s.startsWith("--"));
-    if (variants.length === 0) throw new Error("usage: parity verify <variant…>");
-    const skipDev = process.env.SKIP_DEV === "1";
-    const ports = skipDev ? parityPortsForShard(0) : findFreeParityPortPair();
-    const reports: ParityPlaygroundReport[] = [];
-    for (const variant of variants) {
-      const report = await verifyParityVariant(variant, ports, { skipDev });
-      reports.push(report);
-      console.log(`${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
+    let root = invocation.root();
+    let tasks: [(&str, &str, &[&str], &str); 5] = [
+        ("Typescript", "npx", &["tsx", "compose.benchmark.ts"], "js/compose"),
+        ("Python", "uv", &["run", "compose.benchmark.py"], "py/compose"),
+        ("Go", "go", &["run", "compose_benchmark.go"], "go/compose"),
+        ("C#", "dotnet", &["run", "--technology", "Compose.Benchmark/Compose.Benchmark.csproj", "--configuration", "Release"], "net"),
+        ("Rust", "cargo", &["run", "--release", "--bin", "compose-benchmark"], "rs/compose"),
+    ];
+    invocation.println("Running benchmarks...");
+    let mut results = Vec::new();
+    for (name, program, args, directory) in tasks {
+        invocation.println(&format!("Running {name}..."));
+        let directory = root.join(directory);
+        if !directory.is_dir() {
+            invocation.println(&format!("Skipping {name}: directory {} not found", directory.display()));
+            continue;
+        }
+        match semio_framework_repo_workspace::spawn_command(program).args(args).current_dir(&directory).output() {
+            Ok(output) if output.status.success() => results.extend(semio_framework_repo_metrics::parse_benchmark_output(name, &String::from_utf8_lossy(&output.stdout))),
+            Ok(output) => invocation.println(&format!("{name} failed: {}\n{}", output.status, String::from_utf8_lossy(&output.stderr))),
+            Err(error) => invocation.println(&format!("{name} failed: {error}")),
+        }
     }
-    writeParityReport(reports);
-    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
-    if (unresolved.length > 0) throw new Error(`parity verify: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
-  }
-}
-
-class ParitySweepScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const shardArg = segments.find((s) => s.startsWith("--shard="))?.slice("--shard=".length);
-    const [shardIndex, shardCount] = shardArg ? shardArg.split("/").map(Number) : [0, 1];
-    const variants = playgroundCatalog().map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
-    const reports: ParityPlaygroundReport[] = [];
-    for (const variant of variants) {
-      let report: ParityPlaygroundReport;
-      try {
-        report = await verifyParityVariant(variant, parityPortsForShard(shardIndex ?? 0));
-      } catch (error) {
-        report = { variant, boot: { react: "SERVER-FAIL", wgpu: "SERVER-FAIL", detail: String(error) }, durationMs: 0 };
-      }
-      reports.push(report);
-      console.log(`sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
+    if results.is_empty() {
+        return Ok(());
     }
-    writeParityReport(reports);
-    const unresolved = reports.filter(report => parityVerdict(report) !== "PASS");
-    console.log(`parity sweep complete: ${reports.length - unresolved.length}/${reports.length} PASS`);
-    if (unresolved.length > 0) throw new Error(`parity sweep: ${unresolved.map(report => `${report.variant}=${parityVerdict(report)}`).join(", ")}`);
-  }
+    let report = semio_framework_repo_workspace::repo_meta_path_for_root(&root, "📊️metrics/benchmark.csv");
+    if let Some(parent) = report.parent() {
+        std::fs::create_dir_all(parent).map_err(|error| CliError::Message(error.to_string()))?;
+    }
+    std::fs::write(&report, semio_framework_repo_metrics::benchmark_csv(&results)).map_err(|error| CliError::Message(error.to_string()))?;
+    invocation.println(&format!("Benchmark report written to {}", report.display()));
+    Ok(())
 }
-
-export { PARITY_BOOT_TIMEOUT_MS, PARITY_STALE_BRIDGE_RE, ParityProbeScript, ParitySmokeScript, ParitySweepScript, ParityTriageScript, ParityVerifyScript, ensureParityPlaywrightBrowsersPath, triageParityBoot, verifyParityVariant };

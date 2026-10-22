@@ -1,0 +1,197 @@
+{
+ "version": 1,
+ "tree": {
+  "apps/web/package.json": "{\"name\": \"web\"}",
+  "apps/web/dist/package.json": "{\"name\": \"web-dist\"}",
+  "libs/a/package.json": "{\"name\": \"a\", \"exports\": \"./payload/web/index.js\"}",
+  "libs/a/payload/web/package.json": "{\"name\": \"a\"}",
+  "libs/b/package.json": "{\"name\": \"b\"}",
+  "libs/b/nested/package.json": "{\"name\": \"nested\"}",
+  "node_modules/x/package.json": "{\"name\": \"x\"}",
+  ".hidden/package.json": "{\"name\": \"hidden\"}",
+  "temp/package.json": "{\"name\": \"temp\"}",
+  "compose/p/package.json": "{\"name\": \"composed\"}",
+  "🗑️generated/g/package.json": "{\"name\": \"gen\"}",
+  "🤖️generated/g/package.json": "{\"name\": \"gen2\"}",
+  "target/t/package.json": "{\"name\": \"t\"}",
+  "no-name/package.json": "{}",
+  "libs/b/readme.md": "x",
+  "plain/file.txt": "x",
+  "coverage/c/package.json": "{\"name\": \"cov\"}",
+  "storybook-static/s/package.json": "{\"name\": \"sb\"}",
+  "🔌️plugin-modules/m/package.json": "{\"name\": \"pm\"}",
+  "build/b/package.json": "{\"name\": \"bb\"}",
+  "numeric/package.json": "{\"name\": 5}"
+ },
+ "expected": [
+  "apps/web",
+  "libs/a",
+  "libs/b",
+  "libs/b/nested",
+  "no-name",
+  "numeric"
+ ],
+ "errors": [
+  {
+   "name": "two packages with the same name",
+   "extra": {
+    "dup1/package.json": "{\"name\": \"dup\"}",
+    "dup2/package.json": "{\"name\": \"dup\"}"
+   },
+   "message": "duplicate package name \"dup\" at both \"dup1\" and \"dup2\""
+  },
+  {
+   "name": "a malformed manifest",
+   "extra": {
+    "bad/package.json": "{"
+   },
+   "message": "Workspace manifest is malformed: "
+  },
+  {
+   "name": "a manifest that is an array",
+   "extra": {
+    "arr/package.json": "[]"
+   },
+   "message": "Workspace manifest must contain an object"
+  },
+  {
+   "name": "a manifest that is a directory",
+   "extra": {
+    "dirm/package.json/inner.txt": "x"
+   },
+   "message": "must be a regular file"
+  }
+ ],
+ "membership": [
+  {
+   "name": "a fresh membership",
+   "current": [
+    "apps/web",
+    "libs/a",
+    "libs/b",
+    "libs/b/nested",
+    "no-name",
+    "numeric"
+   ],
+   "missing": [],
+   "stale": [],
+   "fresh": true,
+   "orderChanged": false
+  },
+  {
+   "name": "a reordered membership",
+   "current": [
+    "libs/a",
+    "apps/web",
+    "libs/b",
+    "libs/b/nested",
+    "no-name",
+    "numeric"
+   ],
+   "missing": [],
+   "stale": [],
+   "fresh": false,
+   "orderChanged": true
+  },
+  {
+   "name": "missing and stale entries",
+   "current": [
+    "apps/web",
+    "gone/pkg",
+    "libs/a"
+   ],
+   "missing": [
+    "libs/b",
+    "libs/b/nested",
+    "no-name",
+    "numeric"
+   ],
+   "stale": [
+    "gone/pkg"
+   ],
+   "fresh": false,
+   "orderChanged": false
+  },
+  {
+   "name": "an empty membership",
+   "current": [],
+   "missing": [
+    "apps/web",
+    "libs/a",
+    "libs/b",
+    "libs/b/nested",
+    "no-name",
+    "numeric"
+   ],
+   "stale": [],
+   "fresh": false,
+   "orderChanged": false
+  },
+  {
+   "name": "a duplicate entry makes it stale-free but not fresh",
+   "current": [
+    "apps/web",
+    "libs/a",
+    "libs/b",
+    "libs/b/nested",
+    "no-name",
+    "numeric",
+    "apps/web"
+   ],
+   "missing": [],
+   "stale": [],
+   "fresh": false,
+   "orderChanged": true
+  }
+ ],
+ "env": [
+  {
+   "name": "the execution workspace wins and is trimmed",
+   "env": {
+    "SEMIO_WORKSPACE_ROOT": "  /exec/root  ",
+    "REPO_ROOT": "/other"
+   },
+   "expected": "/exec/root"
+  },
+  {
+   "name": "REPO_ROOT is next",
+   "env": {
+    "REPO_ROOT": " /repo/root "
+   },
+   "expected": "/repo/root"
+  },
+  {
+   "name": "blank values are ignored",
+   "env": {
+    "SEMIO_WORKSPACE_ROOT": "   ",
+    "REPO_ROOT": ""
+   },
+   "expected": null
+  },
+  {
+   "name": "a relative value is resolved",
+   "env": {
+    "REPO_ROOT": "rel/root"
+   },
+   "expected": "REL"
+  }
+ ],
+ "progressDirs": [
+  "",
+  "apps",
+  "apps/web",
+  "libs",
+  "libs/a",
+  "libs/a/payload",
+  "libs/a/payload/web",
+  "libs/b",
+  "libs/b/nested",
+  "no-name",
+  "numeric",
+  "plain"
+ ],
+ "workspaceMarker": {
+  "name": "workspace",
+  "nested": "a/b/c"
+ }
+}

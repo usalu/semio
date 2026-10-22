@@ -25,17 +25,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "source-frame", kind: "resize-source-frame", record: "ResizedSourceFrame" };
 
-    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height), &format!("Größe des Quellrahmens auf {:.2}×{:.2} ändern", self.new_frame.width, self.new_frame.height))
     }
@@ -43,5 +32,20 @@ where
     fn target(&self) -> Vec<String> {
         vec!["source".into(), "frame".into()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PresentationSnapshot, Op> for ResizeSourceFrame
+where
+    Op: protocol::ColdMutation<PresentationSnapshot, ReferenceDiff = PresentationDiff> + From<ResizeSourceFrame>,
+{
+    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔹Payload

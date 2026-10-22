@@ -16,7 +16,7 @@ pub(super) async fn arm_load_config<PA: PluginApp>(
     });
     match applied.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -35,7 +35,7 @@ pub(super) async fn arm_read_config<PA: PluginApp>(
     });
     match read.await {
         Ok(files) => frames.push(protocol::AppFrame::Config { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -60,10 +60,10 @@ pub(super) async fn arm_load_window_config<PA: PluginApp>(
             });
             match loaded.await {
                 Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                Err(fault) => push_app_fault(frames, Some(seq), fault).await,
             }
         }
-        Err(error) => push_app_fault(&mut frames, Some(seq), error.into_fault()).await,
+        Err(error) => push_app_fault(frames, Some(seq), error.into_fault()).await,
     }
     Ok(())
 }
@@ -88,7 +88,7 @@ pub(super) async fn arm_read_window_configs<PA: PluginApp>(
             }
             frames.push(protocol::AppFrame::WindowConfigs { in_reply_to: seq, entries });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

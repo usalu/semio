@@ -1,0 +1,25 @@
+text = text.replace(' let mut index = 0;\n while index < argv.len() { if argv[index] == "--tool"', ' if script_index(argv).is_some() { return NativeEntrypointPlan { kind: "script", arguments: argv.to_vec() }; }\n let mut index = 0;\n while index < argv.len() { if argv[index] == "--tool"')
+text = re.sub(r' let build = index > 0 \|\| argv\.get\(index\)\.is_some_and\(\|value\| matches!\(value\.as_str\(\), [^;]*\);', ' let build = index > 0 || argv.get(index).is_some_and(|value| verbs.iter().any(|verb| verb == value));', text)
+text = text.replace("pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan {", "pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan { plan_native_entrypoint_with(&build_verbs(), argv) }\n\n/// 🎯️ Plans with explicit build verbs.\npub fn plan_native_entrypoint_with(verbs: &[String], argv: &[String]) -> NativeEntrypointPlan {")
+RUST_VERBS = """/// 🏗️ The build verbs are the operation names of the neutral operations catalogue that the launcher registry names; none outside a repository.
+const LAUNCHER_REGISTRY: &str = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json";
+
+fn read_build_verbs(root: &std::path::Path, registry: &std::path::Path) -> Option<Vec<String>> {
+ let document: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(registry).ok()?).ok()?;
+ let catalogue: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(root.join(document["routing"]["catalogue"].as_str()?)).ok()?).ok()?;
+ Some(catalogue["operations"].as_array()?.iter().filter_map(|operation| operation["name"].as_str().map(String::from)).collect())
+}
+
+/// 🏗️ Reads the build verbs of the repository around the working directory.
+pub fn build_verbs() -> Vec<String> {
+ let mut directory = std::env::current_dir().ok();
+ while let Some(path) = directory {
+  let registry = path.join(LAUNCHER_REGISTRY);
+  if registry.is_file() { return read_build_verbs(&path, &registry).unwrap_or_default(); }
+  directory = path.parent().map(std::path::Path::to_path_buf);
+ }
+ Vec::new()
+}
+
+/// 📜️ The script file extensions"""
+text = text.replace("/// 📜️ The script file extensions", RUST_VERBS, 1)

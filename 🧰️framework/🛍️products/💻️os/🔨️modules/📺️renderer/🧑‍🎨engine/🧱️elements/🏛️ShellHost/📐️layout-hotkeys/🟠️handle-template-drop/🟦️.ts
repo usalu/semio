@@ -1,5 +1,5 @@
 /** 🟠️ The handle template drop phase of useDirectoryLaneAndLayout. */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel, createNamedLayout } from "@semio-tech/framework";
 import { setNamedLayout } from "@semio-tech/framework/config/mutations";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel } from "@semio-tech/framework/infinite/world/r3f";

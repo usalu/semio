@@ -14,7 +14,7 @@
 //! own asset ids — while a loader materialises it by dispatching one `import-frame-payload` per
 //! `FRAMES` row, the same path a file-picker drop takes (that command mints its own stream-scoped
 //! asset ids; the ids below are the fixture's, and are what the ground truth is keyed by).
-//! Regenerate everything with `bun ./📜️script.ts regenerate-example` (the `#[test] #[ignore]` in
+//! Regenerate everything with `repo ./📜️script.ts regenerate-example` (the `#[test] #[ignore]` in
 //! `🧪️tests/🧩️example/🦀️.rs`).
 
 use semio_framework_plugin::ExampleSource;

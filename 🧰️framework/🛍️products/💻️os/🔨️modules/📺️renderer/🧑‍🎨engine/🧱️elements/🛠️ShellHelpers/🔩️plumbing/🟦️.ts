@@ -6,7 +6,7 @@
 import { type HistoryEntry, historyEntryKey, historyEntryLabelText, type HistoryPatch, type HistoryReprojection, type HistoryTimeTravel, type LocalizedLabel, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import { type Anchor } from "@semio-tech/ui-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "../../⚛️react-port/🟦️.ts";
 import { type UIHistory } from "../../🐚️Shell/👥️peer-interaction/🟦️.ts";
 
 //#region ShellHelpers

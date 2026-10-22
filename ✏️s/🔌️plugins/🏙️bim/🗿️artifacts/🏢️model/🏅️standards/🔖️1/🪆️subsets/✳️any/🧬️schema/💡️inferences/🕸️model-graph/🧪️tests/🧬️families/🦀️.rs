@@ -136,7 +136,7 @@ fn the_solid_follows_the_parameters_of_its_family_and_only_the_users_of_that_fam
     let mut session = ModelInferenceSession::new();
     settle(&mut session, &snapshot);
     let edit = ModelDiff::family_parameters("fam-hea.b", Entry::Patched(FamilyParameterPatch { value: Some("300 mm".into()), ..Default::default() }));
-    let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
     let incremental = session.update(&after, &edit).clone();
     let report = session.report().clone();
     assert!(!report.gated, "{report:?}");
@@ -153,7 +153,7 @@ fn an_edit_of_a_family_nothing_uses_recomputes_that_family_and_no_solid() {
     let mut session = ModelInferenceSession::new();
     settle(&mut session, &snapshot);
     let edit = ModelDiff::family_parameters("fam-table.width", Entry::Patched(FamilyParameterPatch { value: Some("2 m".into()), ..Default::default() }));
-    let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
     let incremental = session.update(&after, &edit).clone();
     let report = session.report().clone();
     assert_eq!(report.computed_by_kind.get("family"), Some(&1), "{report:?}");
@@ -168,7 +168,7 @@ fn a_diff_the_graph_does_not_read_is_gated_and_computes_no_family() {
     settle(&mut session, &snapshot);
     let before = session.inference().clone();
     let renamed = ModelDiff { project: Some(ProjectPatch { name: Some("Renamed".into()), ..Default::default() }), ..Default::default() };
-    let after = protocol::apply_diff(&renamed, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
     let served = session.update(&after, &renamed).clone();
     assert!(session.report().gated && session.report().computed == 0 && session.report().computed_by_kind.get("family").is_none(), "{:?}", session.report());
     assert_eq!(served, before);

@@ -1,323 +1,98 @@
-/** 👕️ In-canvas remote presence overlays — peer cursors, viewport rects, selection chips.
- * Domain-neutral; Board2d / World3d / TextEditor hosts mount this over their surface.
- */
-import { useCallback, useContext, useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { LocalDocumentOwnerContext } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
-import {
-  canvasPeerViewportRect,
-  canvasPointToScreen,
-  orbitPointToScreen,
-  peerOverlayLabels,
-  peerOverlayPath,
-  peersForWindow,
-  presenceColorCss,
-  type PresencePeerInput
-} from "@semio-tech/framework/replication";
-import {
-  artifactPresenceRosterV1,
-  localPresenceActorV1,
-  subscribeArtifactPresenceRosterV1,
-  subscribeLocalPresenceActorV1,
-} from "./🟦️.ts";
+// #region 🧲️Header
+// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/📖️stories/🧪️.story.tsx
+// Specs: Host the framework renderer's `Canvas2dHost` with zero WASM engine — its `sessionFactory` builds a
+// `JsonLayersCanvasSession`, a pure-`CanvasRenderingContext2D` implementation of `WasmCanvasSession`
+// (`@semio-tech/canvas-react-renderer`'s generic canvas host), so no `cdylib` session is involved.
+// Summary: `layersJson` drives real drawing (bounds-based node boxes, a dashed "wire" line) with zero fixture
+// setup; wheel-zoom/middle-drag-pan already round-trip for real inside `JsonLayersCanvasSession` itself, so the
+// story-local reducer only needs to fold the debounced `setCamera` dispatch back into `cameraX`/`cameraY`/`zoom`.
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// #endregion 🧲️Header
 
-export type CanvasPresenceSurfaceV1 = {
-  readonly runtimeKey: string | null | undefined;
-  readonly windowId: string;
-  readonly space: "canvas" | "world" | "geo" | string;
-  readonly myActor: string;
-  readonly mySurface?: string;
-  readonly localColor?: number;
-  readonly locale?: string;
-  readonly scenePath?: string;
-  readonly localCanvas?: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly localOrbit?: {
-    readonly position: readonly [number, number, number];
-    readonly target: readonly [number, number, number];
-    readonly up: readonly [number, number, number];
-    readonly fov: number;
-  };
-  readonly localSizePx?: readonly [number, number];
-  readonly objectWorldPositions?: Readonly<Record<string, readonly [number, number, number]>>;
-  readonly selectedIds?: readonly string[];
-  readonly domain?: string;
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
+
+import { Canvas2dHost } from "@semio-tech/framework-renderer-react";
+import type { ActionDescriptor, Canvas2dScene, UiComponentSceneNode } from "@semio-tech/framework";
+
+//#region StoryTypes
+type StoryCamera = { readonly x: number; readonly y: number; readonly zoom: number };
+type StoryLayer = Record<string, unknown>;
+type StoryCanvas2dState = { readonly camera: StoryCamera; readonly layers: readonly StoryLayer[] };
+//#endregion StoryTypes
+
+//#region Fixtures
+/** 🟦️🟠️ Two bounds-based node boxes (rect + circle) plus a dashed "wire" line — exercises `drawBoundsLayer`'s rect/circle branches and the `x0`/`y0`/`x1`/`y1` line branch in `JsonLayersCanvasSession.renderFrame`. */
+const STORY_LAYERS: readonly StoryLayer[] = [
+  { id: "node-alpha", kind: "box", role: "node", name: "Alpha", x: -140, y: -50, width: 140, height: 70, color: "#38bdf8", selected: false },
+  { id: "node-beta", kind: "circle", role: "node", name: "Beta", x: 40, y: 30, width: 96, height: 96, color: "#f97316", selected: true },
+  { id: "wire-alpha-beta", role: "wire", x0: 0, y0: -15, x1: 88, y1: 78, color: "#94a3b8" },
+];
+//#endregion Fixtures
+
+//#region Reducer
+/** 🎥️ Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/os/renderer/js/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
+function reduceStoryCanvas2dAction(state: StoryCanvas2dState, descriptor: ActionDescriptor): StoryCanvas2dState {
+  if (descriptor.action !== "setCamera") return state;
+  const camera = (descriptor.args as { readonly camera?: StoryCamera } | undefined)?.camera;
+  return camera ? { ...state, camera } : state;
+}
+//#endregion Reducer
+
+//#region SceneNode
+const STORY_CANVAS_2D_CONTROLLER_ID = "canvas-2d-story";
+
+function buildStoryCanvas2dScene(state: StoryCanvas2dState): Canvas2dScene {
+  return { cameraX: state.camera.x, cameraY: state.camera.y, zoom: state.camera.zoom, layersJson: JSON.stringify(state.layers) };
+}
+//#endregion SceneNode
+
+//#region StoryHost
+function Canvas2dStoryHost({ initialLayers }: { readonly initialLayers: readonly StoryLayer[] }): ReactElement {
+  const [state, setState] = useState<StoryCanvas2dState>({ camera: { x: 0, y: 0, zoom: 1 }, layers: initialLayers });
+  const [lastAction, setLastAction] = useState<ActionDescriptor | null>(null);
+
+  const onAction = useCallback((descriptor: ActionDescriptor): void => {
+    setLastAction(descriptor);
+    setState((current) => reduceStoryCanvas2dAction(current, descriptor));
+  }, []);
+
+  const node: UiComponentSceneNode = useMemo(
+    () => ({ type: "componentScene", surfaceId: "canvas-2d.story.overview", controllerId: STORY_CANVAS_2D_CONTROLLER_ID, componentKind: "canvas-2d", canvas2d: buildStoryCanvas2dScene(state) }),
+    [state],
+  );
+  const debug = useMemo(() => JSON.stringify({ camera: state.camera, layerCount: state.layers.length, lastAction }), [state, lastAction]);
+
+  return (
+    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+        <Canvas2dHost node={node} onAction={onAction} />
+      </div>
+      <pre data-testid="canvas-2d-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
+        {debug}
+      </pre>
+    </div>
+  );
+}
+//#endregion StoryHost
+
+const meta = {
+  title: "🛠️framework🔌️hosts/Canvas2dHost",
+  component: Canvas2dStoryHost,
+  parameters: { layout: "fullscreen" },
+  tags: ["autodocs"],
+} satisfies Meta<typeof Canvas2dStoryHost>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** 🖼️ Two node boxes and a wire — mouse-wheel to zoom, middle-drag (or `transformMove` utility) to pan; the camera round-trips back through `setCamera` into the debug readout. */
+export const Scene: Story = {
+  args: { initialLayers: STORY_LAYERS },
 };
 
-/** 🪪️ Binds every host publication and peer overlay to its actual live document owner. */
-export function usePresenceRuntimeKeyV1(): string | null {
-  const owner = useContext(LocalDocumentOwnerContext);
-  const subscribe = useCallback((listener: () => void) => owner?.subscribeRetirement(listener) ?? (() => {}), [owner]);
-  return useSyncExternalStore(subscribe, () => owner?.active ? owner.identity.runtimeKey : null, () => null);
-}
-
-function useArtifactRoster(runtimeKey: string | null | undefined): readonly PresencePeerInput[] {
-  return useSyncExternalStore(
-    subscribeArtifactPresenceRosterV1,
-    () => artifactPresenceRosterV1(runtimeKey) as readonly PresencePeerInput[],
-    () => [],
-  );
-}
-
-function admittedActorId(candidate: string | null | undefined): string | null {
-  if (!candidate || candidate === "__local__") return null;
-  return candidate;
-}
-
-function useLocalPresenceActor(runtimeKey: string | null | undefined, fallback: string): string | null {
-  return useSyncExternalStore(
-    subscribeLocalPresenceActorV1,
-    () => admittedActorId(localPresenceActorV1(runtimeKey)) ?? admittedActorId(fallback),
-    () => admittedActorId(fallback),
-  );
-}
-
-/** 🏠️ Hub-admitted local actor id for host self-exclusion (null until socket-actor). */
-export function useLocalPresenceActorIdV1(runtimeKey: string | null | undefined): string | null {
-  return useSyncExternalStore(subscribeLocalPresenceActorV1, () => admittedActorId(localPresenceActorV1(runtimeKey)), () => null);
-}
-
-/** 👕️ Renders foreign cursors / viewport rects / selection marks for one host surface. */
-export function CanvasPresenceOverlayV1(props: CanvasPresenceSurfaceV1): ReactElement | null {
-  const roster = useArtifactRoster(props.runtimeKey);
-  const myActor = useLocalPresenceActor(props.runtimeKey, props.myActor);
-  const labels = peerOverlayLabels(props.locale);
-  const spec = useMemo(
-    () => (myActor ? peersForWindow(roster, props.windowId, props.space, props.mySurface, myActor, props.localColor ?? 0) : { windowId: props.windowId, localColor: props.localColor ?? 0, artifactPeers: [], marks: {} }),
-    [roster, props.windowId, props.space, props.mySurface, myActor, props.localColor],
-  );
-  const scenePath = props.scenePath ?? "scene";
-  if (!myActor) return null;
-  if (spec.artifactPeers.length === 0 && Object.keys(spec.marks).length === 0) return null;
-
-  const localCanvas = props.localCanvas;
-  const localSize = props.localSizePx;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[15] overflow-hidden" data-slot="canvas-presence-overlay" data-testid="canvas-presence-overlay" aria-hidden={false}>
-      {spec.artifactPeers.map((peer, index) => {
-        const color = presenceColorCss(peer.color);
-        const nodes: ReactElement[] = [];
-        if (peer.view.kind === "canvas" && localCanvas && localSize && peer.pointer) {
-          const screen = canvasPointToScreen(localCanvas, localSize, [peer.pointer[0], peer.pointer[1]]);
-          const rect = canvasPeerViewportRect(peer.view, peer.size, localCanvas, localSize);
-          nodes.push(
-            <div
-              key={`vp-${peer.actor}-${peer.windowId}`}
-              data-ui-path={peerOverlayPath(scenePath, "Camera", index, peer.actor)}
-              data-peer-actor={peer.actor}
-              data-peer-color={peer.color ?? 0}
-              data-peer-viewport=""
-              aria-label={labels.viewport(peer.label)}
-              style={{
-                position: "absolute",
-                left: rect[0],
-                top: rect[1],
-                width: rect[2],
-                height: rect[3],
-                border: `1.5px solid ${color}`,
-                borderRadius: 2,
-                opacity: 0.55,
-                boxSizing: "border-box",
-              }}
-            />,
-          );
-          nodes.push(
-            <div
-              key={`cur-${peer.actor}-${peer.windowId}`}
-              data-ui-path={peerOverlayPath(scenePath, "Cursor", index, peer.actor)}
-              data-peer-actor={peer.actor}
-              data-peer-color={peer.color ?? 0}
-              data-peer-cursor="" data-testid="peer-cursor"
-              aria-label={labels.cursor(peer.label)}
-              style={{
-                position: "absolute",
-                left: screen[0],
-                top: screen[1],
-                transform: "translate(-2px, -2px)",
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                background: color,
-                boxShadow: `0 0 0 2px color-mix(in srgb, ${color} 35%, transparent)`,
-              } as CSSProperties}
-              title={peer.activeTool ? labels.tool(peer.label, peer.activeTool) : peer.label}
-              data-peer-active-tool={peer.activeTool ?? ""}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  left: 12,
-                  top: -2,
-                  fontSize: 10,
-                  lineHeight: 1.2,
-                  padding: "1px 4px",
-                  borderRadius: 3,
-                  background: color,
-                  color: "white",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {peer.activeTool ? labels.tool(peer.label, peer.activeTool) : peer.label}
-              </span>
-            </div>,
-          );
-        } else if (peer.pointer && localSize && props.localOrbit && peer.view.kind === "orbit") {
-          const screen = orbitPointToScreen(props.localOrbit, localSize, peer.pointer);
-          if (screen) {
-            nodes.push(
-              <div
-                key={`cur3-${peer.actor}-${peer.windowId}`}
-                data-ui-path={peerOverlayPath(scenePath, "Cursor", index, peer.actor)}
-                data-peer-actor={peer.actor}
-                data-peer-color={peer.color ?? 0}
-                data-peer-cursor="" data-testid="peer-cursor"
-                data-peer-cursor-world=""
-                data-peer-hit={`${peer.pointer[0]},${peer.pointer[1]},${peer.pointer[2]}`}
-                data-peer-ray-origin={peer.rayOrigin ? `${peer.rayOrigin[0]},${peer.rayOrigin[1]},${peer.rayOrigin[2]}` : ""}
-                aria-label={labels.cursor(peer.label)}
-                style={{
-                  position: "absolute",
-                  left: screen[0],
-                  top: screen[1],
-                  transform: "translate(-50%, -50%)",
-                  width: 12,
-                  height: 12,
-                  borderRadius: 999,
-                  background: color,
-                  boxShadow: `0 0 0 2px color-mix(in srgb, ${color} 35%, transparent)`,
-                } as CSSProperties}
-                title={peer.activeTool ? labels.tool(peer.label, peer.activeTool) : peer.label}
-                data-peer-active-tool={peer.activeTool ?? ""}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 14,
-                    top: -2,
-                    fontSize: 10,
-                    padding: "1px 4px",
-                    borderRadius: 3,
-                    background: color,
-                    color: "white",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {peer.activeTool ? labels.tool(peer.label, peer.activeTool) : peer.label}
-                </span>
-              </div>,
-            );
-          }
-        }
-        return nodes;
-      })}
-      {props.domain &&
-        Object.entries(spec.marks[props.domain] ?? {}).flatMap(([id, marks], index) =>
-          marks.map((mark) => {
-            const world = props.objectWorldPositions?.[id];
-            const projected =
-              world && props.localOrbit && localSize ? orbitPointToScreen(props.localOrbit, localSize, world) : null;
-            if (props.localOrbit && !projected) return null;
-            return (
-              <div
-                key={`mark-${mark.actor}-${id}`}
-                data-ui-path={peerOverlayPath(scenePath, "Marks", index, `${props.domain}:${id}`)}
-                data-peer-actor={mark.actor}
-                data-peer-color={mark.color ?? 0}
-                data-peer-marks=""
-                data-peer-mark={mark.selected ? "selection" : "hover"}
-                data-testid={mark.selected ? "peer-selection" : "peer-hover"}
-                data-peer-selection-id={mark.selected ? id : undefined}
-                aria-label={mark.selected ? labels.selection(mark.label) : labels.hover(mark.label)}
-                style={
-                  projected
-                    ? {
-                        position: "absolute",
-                        left: projected[0],
-                        top: projected[1],
-                        transform: "translate(-50%, -50%)",
-                        width: 18,
-                        height: 18,
-                        borderRadius: 4,
-                        border: `2px solid ${presenceColorCss(mark.color)}`,
-                        boxSizing: "border-box",
-                        background: "transparent",
-                      }
-                    : {
-                        position: "absolute",
-                        right: 8,
-                        top: 8 + index * 18,
-                        fontSize: 10,
-                        padding: "1px 6px",
-                        borderRadius: 999,
-                        background: presenceColorCss(mark.color),
-                        color: "white",
-                      }
-                }
-              >
-                {projected ? null : mark.label.slice(0, 2).toUpperCase()}
-              </div>
-            );
-          }),
-        )}
-    </div>
-  );
-}
-
-/** ✏️ Peer carets on a text surface: every other actor's `space: "text"` view of this window carries its caret in the
- * editor's WORLD coordinates (the same text lays out identically for every peer), projected through the viewer's own
- * editor camera by `project`; `frame` re-projects after the viewer's own scroll or relayout. */
-export function TextPeerCaretsOverlayV1(props: {
-  readonly windowId: string;
-  readonly project: (world: readonly [number, number]) => { readonly x: number; readonly y: number } | null;
-  readonly frame: number;
-  readonly lineHeightPx: number;
-  readonly locale?: string;
-}): ReactElement | null {
-  const runtimeKey = usePresenceRuntimeKeyV1();
-  const roster = useArtifactRoster(runtimeKey);
-  const myActor = useLocalPresenceActor(runtimeKey, "");
-  const labels = peerOverlayLabels(props.locale);
-  const { project, frame } = props;
-  const carets = useMemo(
-    () =>
-      myActor
-        ? peersForWindow(roster, props.windowId, "text", undefined, myActor, 0).artifactPeers.flatMap((peer) => {
-            const screen = peer.pointer ? project([peer.pointer[0], peer.pointer[1]]) : null;
-            const typing = roster.find((candidate) => candidate.actor === peer.actor)?.typing?.find((run) => run.windowId === props.windowId);
-            return screen === null || frame < 0 ? [] : [{ peer, screen, typing }];
-          })
-        : [],
-    [roster, myActor, props.windowId, project, frame],
-  );
-  if (carets.length === 0) return null;
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[15] overflow-hidden" data-slot="canvas-presence-overlay" data-testid="text-presence-overlay">
-      {carets.map(({ peer, screen, typing }, index) => {
-        const color = presenceColorCss(peer.color);
-        return (
-          <div
-            key={`caret-${peer.actor}`}
-            data-ui-path={peerOverlayPath(`text/${props.windowId}`, "Caret", index, peer.actor)}
-            data-peer-actor={peer.actor}
-            data-peer-color={peer.color ?? 0}
-            data-peer-cursor="" data-peer-caret="" data-testid="peer-caret"
-            aria-label={labels.caret(peer.label)}
-            style={{ position: "absolute", left: screen.x, top: screen.y, width: 2, height: props.lineHeightPx, background: color } as CSSProperties}
-          >
-            <span style={{ position: "absolute", left: 3, top: -props.lineHeightPx * 0.75, fontSize: 10, lineHeight: 1.2, padding: "1px 4px", borderRadius: 3, background: color, color: "white", whiteSpace: "nowrap" }}>{peer.label}</span>
-            {typing && (typing.insert !== "" || typing.deleted !== "") ? (
-              <span
-                data-testid="peer-typing"
-                data-peer-typing=""
-                aria-label={labels.typing(peer.label, typing.insert, typing.deleted)}
-                style={{ position: "absolute", left: 3, top: props.lineHeightPx * 0.15, maxWidth: "24rem", overflow: "hidden", textOverflow: "ellipsis", fontSize: 11, lineHeight: 1.3, padding: "0 3px", borderRadius: 3, border: `1px dashed ${color}`, background: "var(--background, white)", color, whiteSpace: "pre", opacity: 0.85 }}
-              >
-                {typing.deleted !== "" ? <s>{typing.deleted}</s> : null}
-                {typing.insert}
-              </span>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+/** 🕳️ `layersJson: "[]"` — `JsonLayersCanvasSession.renderFrame` draws its own "Empty canvas" placeholder text. */
+export const EmptyCanvas: Story = {
+  args: { initialLayers: [] },
+};

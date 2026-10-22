@@ -10,7 +10,7 @@
 //!
 //! [`schema_mirror_document`] projects the whole registry into the committed draft-07 document
 //! `🧬️schema/🔣️.json`, from which `🧬️schema/🟦️.ts` is generated
-//! (`bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, whose emitter is `semio-os-mcp
+//! (`repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, whose emitter is `semio-os-mcp
 //! schemas`). `GatewayError` is re-exported from `crate::errors` rather than redefined here — one
 //! type, one owning facet.
 

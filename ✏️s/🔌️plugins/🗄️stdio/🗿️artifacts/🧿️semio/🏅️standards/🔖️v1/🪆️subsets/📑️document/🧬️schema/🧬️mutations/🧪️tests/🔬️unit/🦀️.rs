@@ -1,6 +1,6 @@
 use crate::{schema::diff::BlocksDiff, schema::diff::SemioDocumentDiff};
 use crate::{schema::snapshot::DocBlock, schema::snapshot::DocImage, schema::snapshot::DocRun, schema::snapshot::DocStyle, schema::snapshot::RunStyle, schema::snapshot::SemioDocumentSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::io::binary::mutations::wire_tag;
 use crate::io::text::mutations::print_document_mutation;
 use crate::schema::mutations::*;
@@ -189,7 +189,7 @@ fn sample_mutations() -> Vec<SemioDocumentMutation> {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_valid(diff: &SemioDocumentDiff, base: &SemioDocumentSnapshot) -> SemioDocumentSnapshot {
-    protocol::apply_diff(diff, base).expect("valid Semio document diff fixture")
+    protocol::apply_diff_cold(diff, base).expect("valid Semio document diff fixture")
 }
 
 /// 🖼️ Supplies the existing image required by the removal law's starting document.
@@ -226,7 +226,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
-        for inverse_mutation in <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        for inverse_mutation in <SemioDocumentMutation as ColdMutation<SemioDocumentSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

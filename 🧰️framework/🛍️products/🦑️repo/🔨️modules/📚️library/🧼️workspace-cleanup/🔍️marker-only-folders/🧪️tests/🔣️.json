@@ -1,0 +1,224 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "path": "a/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "b/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "b/real.txt",
+   "kind": "file",
+   "text": "x"
+  },
+  {
+   "path": "c/inner/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "c/inner/deep/🚫️.absent",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "d/🔺️diff/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "🔺️diff/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "e",
+   "kind": "directory"
+  },
+  {
+   "path": "e2/e3",
+   "kind": "directory"
+  },
+  {
+   "path": "f/📌️.empty.md",
+   "kind": "file",
+   "text": "1"
+  },
+  {
+   "path": "g/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "node_modules/h/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "target/i/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "j/📝️.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "k/other.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "l/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "l/empty-sub",
+   "kind": "directory"
+  },
+  {
+   "path": "m/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "m/n/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "m/n/o/not-marker.txt",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "p/q/r",
+   "kind": "directory"
+  }
+ ],
+ "marker": {
+  "expectedNames": [
+   "📌️.empty.md",
+   "📝️.md",
+   "🚫️.absent"
+  ],
+  "files": [
+   {
+    "path": "a/📌️.empty.md",
+    "expected": true
+   },
+   {
+    "path": "f/📌️.empty.md",
+    "expected": false
+   },
+   {
+    "path": "k/other.md",
+    "expected": false
+   },
+   {
+    "path": "nothing/📌️.empty.md",
+    "expected": false
+   },
+   {
+    "path": "j/📝️.md",
+    "expected": true
+   },
+   {
+    "path": "c/inner/deep/🚫️.absent",
+    "expected": true
+   }
+  ],
+  "trees": [
+   {
+    "path": "a",
+    "expected": true
+   },
+   {
+    "path": "b",
+    "expected": false
+   },
+   {
+    "path": "c",
+    "expected": true
+   },
+   {
+    "path": "c/inner",
+    "expected": true
+   },
+   {
+    "path": "d",
+    "expected": false
+   },
+   {
+    "path": "🔺️diff",
+    "expected": false
+   },
+   {
+    "path": "e",
+    "expected": false
+   },
+   {
+    "path": "f",
+    "expected": false
+   },
+   {
+    "path": "j",
+    "expected": true
+   },
+   {
+    "path": "l",
+    "expected": true
+   },
+   {
+    "path": "m",
+    "expected": false
+   },
+   {
+    "path": "m/n",
+    "expected": false
+   }
+  ],
+  "collect": [
+   {
+    "prefixes": [],
+    "expected": [
+     "a",
+     "c",
+     "g",
+     "j",
+     "l"
+    ]
+   },
+   {
+    "prefixes": [
+     "g"
+    ],
+    "expected": [
+     "a",
+     "c",
+     "j",
+     "l"
+    ]
+   },
+   {
+    "prefixes": [
+     "a",
+     "c/inner"
+    ],
+    "expected": [
+     "c",
+     "g",
+     "j",
+     "l"
+    ]
+   }
+  ]
+ }
+}

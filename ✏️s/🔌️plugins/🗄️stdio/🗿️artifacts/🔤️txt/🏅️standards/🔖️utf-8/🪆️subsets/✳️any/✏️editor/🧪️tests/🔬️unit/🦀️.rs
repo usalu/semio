@@ -92,9 +92,9 @@ async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
     assert!(matches!(emit.artifact_mutations.as_slice(), [TxtMutation::SpliceText(splice)] if splice.splices == vec![TextSplice { offset: 0, delete: 1, insert: "x".into() }]));
     let mut next = snapshot.clone();
     for mutation in &emit.artifact_mutations {
-        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+        let outcome = <TxtMutation as protocol::ColdMutation<TxtSnapshot>>::diff(mutation, &next);
         assert!(outcome.messages().is_empty(), "native mutation {mutation:?} refused: {:?}", outcome.messages());
-        next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
+        next = protocol::apply_diff_cold(outcome.diff(), &next).expect("native mutation applies");
     }
     assert_eq!(next.to_body(), "x\r\r\nb\r\n");
 }
@@ -120,9 +120,9 @@ fn every_range_edit_lands_on_native_documents_only() {
                 Ok(emit) => {
                     let mut next = snapshot.clone();
                     for mutation in &emit.artifact_mutations {
-                        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+                        let outcome = <TxtMutation as protocol::ColdMutation<TxtSnapshot>>::diff(mutation, &next);
                         assert!(outcome.messages().is_empty(), "{old_body:?} → {new_body:?}: {mutation:?} refused: {:?}", outcome.messages());
-                        next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
+                        next = protocol::apply_diff_cold(outcome.diff(), &next).expect("native mutation applies");
                     }
                     assert_eq!(next.to_body(), new_body, "{old_body:?} → {new_body:?}");
                     assert!(emit.artifact_mutations.len() <= 1, "{old_body:?} → {new_body:?}: one edit is one mutation");
@@ -154,7 +154,7 @@ fn an_applied_change_set_is_one_splice_text() {
 #[test]
 fn invariant_refusals_are_fatal() {
     let terminated = TxtSnapshot::from_body("only\n");
-    let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(&TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }), &terminated);
+    let outcome = <TxtMutation as protocol::ColdMutation<TxtSnapshot>>::diff(&TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }), &terminated);
     assert_eq!(outcome.messages().iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), vec![("mutation.invariant", semio_framework_diagnostic::Severity::Fatal)]);
     assert_eq!(outcome.diff(), &Default::default());
 }

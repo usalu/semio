@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 use crate::editor::gis3d::modes::view::windows::terrain::config::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[test]
 fn gis3d_config_serde_is_strict_and_requires_the_camera_field() {
@@ -34,11 +34,11 @@ async fn gis3d_config_dsl_round_trips_default_and_populated() {
 async fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
     let base = GisTerrainWindowConfig::default();
     let operation = GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
-    let next = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("apply");
+    let next = protocol::apply_diff_cold(operation.diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.camera_json, r#"{"position":[1.0,2.0,3.0]}"#);
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: base.camera_json.clone() })]);
-    assert_eq!(protocol::apply_diff(backwards[0].diff(&next).diff(), &next).expect("restore"), base);
+    assert_eq!(protocol::apply_diff_cold(backwards[0].diff(&next).diff(), &next).expect("restore"), base);
 }
 
 #[semio_framework_async_macros::async_test]

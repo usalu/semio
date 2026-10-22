@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -32,8 +32,10 @@
 //#endregion 🧲️Header
 
 //#region 🚪️Entry
-import { spawnSync } from "node:child_process";
+
 import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 const FAMILY = "step-line-circle";
 const ROUTER = join(import.meta.dir, "..", "📜️script.ts");
@@ -48,7 +50,7 @@ function main(argv: readonly string[]): number {
     console.log(`[${FAMILY}] nothing to do`);
     return 0;
   }
-  const run = spawnSync("bun", [ROUTER, "generate", ...mine.flatMap((recipe) => ["--only", recipe])], { encoding: "utf8", stdio: ["ignore", "inherit", "inherit"] });
+  const run = runToolSyncV1(runtimeCommandNameV1(), [ROUTER, "generate", ...mine.flatMap((recipe) => ["--only", recipe])], { encoding: "utf8", stdio: ["ignore", "inherit", "inherit"] });
   return run.status ?? 1;
 }
 

@@ -360,6 +360,6 @@
   },
   "route": {
     "target": "test-root-clean-scaffold-source",
-    "command": "bun ./📜️script.ts test root-clean-scaffold-source"
+    "command": "repo ./📜️script.ts test root-clean-scaffold-source"
   }
 }

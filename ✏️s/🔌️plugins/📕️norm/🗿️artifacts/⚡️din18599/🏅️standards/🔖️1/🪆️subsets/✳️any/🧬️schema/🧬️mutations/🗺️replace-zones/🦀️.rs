@@ -22,20 +22,21 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ReplaceZones where Op:
         record: "ReplacedZones",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace zones", "Zonen ersetzen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din18599Snapshot, Op> for ReplaceZones where Op: protocol::ColdMutation<Din18599Snapshot, ReferenceDiff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::replace_zones::ReplaceZones> {
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::replace_zones::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::replace_zones::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace zones", "Zonen ersetzen")
-    }
 }
 
 //#region 🪢️Mounts

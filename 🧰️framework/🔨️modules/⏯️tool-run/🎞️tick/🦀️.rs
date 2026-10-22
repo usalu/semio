@@ -40,3 +40,7 @@ pub mod testkit {
 #[cfg(test)]
 #[path = "../📨️payload/🌊️stream/📡️wire/🧪️tests/🦀️.rs"]
 mod payload_stream_wire_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

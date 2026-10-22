@@ -54,7 +54,7 @@ async fn a_quantity_edit_reaches_the_schedule_through_the_gate_and_spares_the_sc
     let before = session.update(&snapshot, &ModelDiff::default()).clone();
     assert_eq!(height_of(&before.schedules["sch-wall"], "South"), 3.0, "the wall reaches the top of the storey");
     let edit = ModelDiff::walls("w-south", Entry::Patched(WallPatch { top: Some(TopConstraint::Unconnected { height: 2.5 }), ..Default::default() }));
-    let edited = protocol::apply_diff(&edit, &snapshot).expect("the edit applies");
+    let edited = protocol::apply_diff_cold(&edit, &snapshot).expect("the edit applies");
     let after = session.update(&edited, &edit).clone();
     let report = session.report().clone();
     assert!(!report.gated, "the schedules read the walls");
@@ -72,7 +72,7 @@ async fn a_rename_recomputes_only_the_schedules_that_list_the_renamed_element() 
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let edit = ModelDiff::openings("o-door-1", Entry::Patched(OpeningPatch { name: Some("Entrance".into()), ..Default::default() }));
-    let edited = protocol::apply_diff(&edit, &snapshot).expect("the edit applies");
+    let edited = protocol::apply_diff_cold(&edit, &snapshot).expect("the edit applies");
     let after = session.update(&edited, &edit).clone();
     let recomputed = session.report().computed_by_kind.get("schedule").copied().unwrap_or(0);
     assert_eq!(recomputed, 2, "the door schedule and the material take-off list the door: {:?}", session.report().computed_by_kind);
@@ -86,7 +86,7 @@ async fn a_definition_edit_recomputes_its_own_schedule_alone() {
     let mut session = ModelInferenceSession::new();
     let before = session.update(&snapshot, &ModelDiff::default()).clone();
     let edit = ModelDiff::schedules("sch-wall", Entry::Patched(SchedulePatch { itemize: Some(false), ..Default::default() }));
-    let edited = protocol::apply_diff(&edit, &snapshot).expect("the edit applies");
+    let edited = protocol::apply_diff_cold(&edit, &snapshot).expect("the edit applies");
     let after = session.update(&edited, &edit).clone();
     assert_eq!(session.report().computed_by_kind.get("schedule"), Some(&1), "{:?}", session.report().computed_by_kind);
     assert_ne!(before.schedules["sch-wall"], after.schedules["sch-wall"]);
@@ -112,7 +112,7 @@ async fn a_schedule_over_a_deleted_storey_is_removed_with_it_and_comes_back_with
     let removal = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::closure(&snapshot, &["st-first".to_string()]).unwrap_or_else(|refusal| panic!("{}", refusal.message));
     assert!(removal.schedules.contains("sch-door") && !removal.schedules.contains("sch-wall"), "only the schedule scoped to the storey leaves");
     let diff = removal.diff();
-    let after = protocol::apply_diff(&diff, &snapshot).expect("the removal applies");
+    let after = protocol::apply_diff_cold(&diff, &snapshot).expect("the removal applies");
     assert!(!after.schedules.contains_key("sch-door") && after.schedules.contains_key("sch-wall"));
     let mut session = ModelInferenceSession::new();
     let table = session.refresh(&after).clone();

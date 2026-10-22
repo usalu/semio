@@ -5,6 +5,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { runtimeSleepV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();
 
@@ -99,7 +100,7 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
   while (Date.now() < deadline) {
     const lease = readPluginBuildLease(path);
     if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return true;
-    await Bun.sleep(500);
+    await runtimeSleepV1(500);
   }
   return false;
 }

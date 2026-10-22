@@ -62,7 +62,7 @@ impl Drop for OwnedRewriteRuleStore {
 /// ▶️ Applies one mutation to a snapshot through the central applier (`protocol::apply_diff`): the step of the editor's node-graph fold and of the mutation tests.
 pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
-    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
+    let next = protocol::apply_diff_cold(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }

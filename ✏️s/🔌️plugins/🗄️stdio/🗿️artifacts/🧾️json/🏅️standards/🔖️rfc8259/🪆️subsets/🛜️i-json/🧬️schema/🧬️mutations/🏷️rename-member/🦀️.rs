@@ -15,7 +15,16 @@ pub struct RenameMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "member", kind: "rename-member", record: "RenameMember" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, from, to } = self;
         let Some(JsonValue::Object { members }) = resolve(&base.value, path) else {
             return protocol::MutationOutcome::error(CODE_TARGET_MISSING, format!("rename-member: no object at the addressed path, so member {from:?} cannot be renamed"), target_of(path));
@@ -39,12 +48,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
     fn inverse(&self, _base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
         let Self { path, from, to } = self;
         Ok(vec![JsonIJsonMutation::RenameMember(Self { path: path.clone(), from: to.clone(), to: from.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

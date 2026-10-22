@@ -1,12 +1,14 @@
 import {join} from "node:path";
 import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {nxOperationArgumentsV1} from "../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts";
+import {buildOperationHasNeutralBootstrapV1} from "../../../⚙️operations/🟦️.ts";
 import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
 
 /** 🔌️ nx behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
 export const backend:BuildBackendV1=Object.freeze({
  id:"nx",
- bootstrapArguments(args:readonly string[]){const command=args[0];if(command==="tools")return ["--version"];if(command==="reset")return ["reset"];return ["dependencies","cargo","watch","preflight","incremental","concurrency","conformance"].includes(command??"")?undefined:nxOperationArgumentsV1(args);},
+ bootstrapArguments(args:readonly string[]){const command=args[0];if(command==="tools")return ["--version"];if(command==="reset")return ["reset"];return command==="watch"||buildOperationHasNeutralBootstrapV1(command??"")?undefined:nxOperationArgumentsV1(args);},
  async setup(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
   const adapter=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts");await adapter.runOwnedNxInvocationV1(root,["--version"],invocation,phaseControl);
  },
@@ -17,6 +19,7 @@ export const backend:BuildBackendV1=Object.freeze({
   const {prepareNxGraphCacheStorageV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(root,invocation,phaseControl,snapshotBytes);
  },
  async cache(){return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts")).nxBuildCacheToolV1();},
+ async cacheProbe(context:Readonly<{root:string;invocation:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation}>){const {root,invocation}=context;await (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts")).prepareNxToolingStorageV1(root,invocation,createIssuedResourceControlV1(invocation,"cache-verify:nx",0));return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts")).nxCacheProbeV1(root);},
  async remoteCache(){return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1();},
  async execute(context:BackendExecutionContextV1){const {root,invocation,graph}=context,resolved={args:[...context.args],watch:context.watch},artifactPhase=context.phase,command=context.args[0]!;
     if(command==="exec"&&resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="))){

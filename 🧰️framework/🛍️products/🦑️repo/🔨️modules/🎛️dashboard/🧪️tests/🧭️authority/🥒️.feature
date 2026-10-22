@@ -5,7 +5,7 @@ Feature: Developer surfaces share neutral command authority
   Scenario: Preserve canonical bootstraps and neutral task aliases
     Given the repository root package manifest
     Then repo, dashboard and dashboard:install retain their canonical commands
-    And additional aliases select literal targets through bun repo run
+    And additional aliases select literal targets through repo run
     And direct backend commands and shell composition are refused
     And an independent JSON Schema validator reaches the same decision
 

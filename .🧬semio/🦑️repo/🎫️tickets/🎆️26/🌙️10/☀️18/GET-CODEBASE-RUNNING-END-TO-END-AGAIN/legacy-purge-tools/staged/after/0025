@@ -1,0 +1,42 @@
+{
+  "title": "Extend Design App Filters to Piece Connection Port",
+  "status": "closed",
+  "description": "Extend the DesignToolbarFilters to include piece, connection, and port toggles. Currently the filters are non-functional (pressed=true, onPressedChange=noop). Replace with URL state persistence following the Type app pattern",
+  "summary": "Extended Design app toolbar filters with piece, connection, and port toggles using URL state persistence. Filters control rendering visibility in diagram (nodes/edges hidden) and 3D scene. Added PieceIcon, i18n entries, filter context/provider/hook. Fixed pre-existing merge conflicts in Sketchpad.tsx. All 12 unit tests pass, zero TS errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/590"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-16T15:03:19.224028895Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Extend the DesignToolbarFilters to include piece, connection, and port toggles. Currently the filters are non-functional (pressed=true, onPressedChange=noop). Replace with URL state persistence following the Type app pattern",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-16T15:23:31.848130259Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "summary": "Extended Design app toolbar filters with piece, connection, and port toggles using URL state persistence. Filters control rendering visibility in diagram (nodes/edges hidden) and 3D scene. Added PieceIcon, i18n entries, filter context/provider/hook. Fixed pre-existing merge conflicts in Sketchpad.tsx. All 12 unit tests pass, zero TS errors.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        },
+        {
+          "path": "💻️assets/icons.ts"
+        }
+      ]
+    }
+  ]
+}

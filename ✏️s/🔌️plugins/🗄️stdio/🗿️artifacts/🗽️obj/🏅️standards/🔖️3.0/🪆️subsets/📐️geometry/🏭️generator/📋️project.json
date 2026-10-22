@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
-        "command": "bun ./📜️script.ts manifests",
+        "command": "repo ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
-        "command": "bun ./📜️script.ts list-recipes",
+        "command": "repo ./📜️script.ts list-recipes",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -51,7 +51,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
-        "command": "bun ./📜️script.ts document",
+        "command": "repo ./📜️script.ts document",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -66,7 +66,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
-        "command": "bun ./📜️script.ts document-manifests",
+        "command": "repo ./📜️script.ts document-manifests",
         "forwardAllArgs": true
       },
       "metadata": {

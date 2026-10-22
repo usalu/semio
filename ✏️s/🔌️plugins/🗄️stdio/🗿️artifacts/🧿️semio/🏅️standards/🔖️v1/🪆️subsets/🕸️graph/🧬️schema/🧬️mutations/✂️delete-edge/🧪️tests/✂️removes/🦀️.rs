@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/✂️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -31,7 +31,7 @@ fn mutation() -> SemioGraphMutation {
 async fn removes_only_the_addressed_edge() {
     let base = before();
     assert_eq!(base.edges.len(), 2, "the fixture needs a sibling edge for the no-cascade claim to mean anything");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-edge applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-edge applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: applied state differs from the committed after-snapshot");
     assert!(!produced.edges.iter().any(|edge| edge.id.value == "e2"), "the addressed edge must be gone");
     assert_eq!(produced.edges, vec![base.edges[0].clone()], "the sibling edge must survive byte-identical");
@@ -49,9 +49,9 @@ async fn the_undo_create_edge_restores_the_full_captured_edge_in_place() {
     assert_eq!(recreate.label, "B back to A", "the undo must recapture the deleted edge's own label from base");
     assert_eq!(recreate.kind, "feedback", "the undo must recapture the deleted edge's own kind from base");
     assert_eq!(recreate.at, base.edges.iter().position(|edge| edge.id == recreate.id), "the undo names the edge's base index");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-edge applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-edge applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-edge applies to the disconnected graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo create-edge applies to the disconnected graph");
     }
     assert_eq!(current, base, "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: the undo did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -105,6 +105,6 @@ async fn committed_diff_is_canonical_and_omits_nodes_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-edge diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-edge diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: committed diff did not carry before to after");
 }

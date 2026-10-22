@@ -1,37 +1,37 @@
 {
  "backends.schema.json": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🧬️schema/🔣️.json",
-  "sha256": "1d6d30aa62369ebb3a0815474e8ec36f3b73d4e22443b0d4da91200ac2164f49",
+  "sha256": "b487fbdb974c63dc09fecbb1a44cf41f8b37d4d452b4d8af26b8b1b03fad0d2d",
   "length": 113
  },
  "backends.registry.json": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/📋️registry/🔣️.json",
-  "sha256": "e3d029bcfd862505aa0a9345c7b21797c4a9c80791ee0bcac56a82106fddbbc4",
+  "sha256": "21926ab6b532a9acac1676a8ca179893d14aff95b577c85b56bee20d3b358af1",
   "length": 115
  },
  "backends.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🟦️.ts",
-  "sha256": "a81cbfe0c35441e12ba3223980745a38bc1aa675255b1393ba543477c8877883",
+  "sha256": "9e9b00149b17da426050fed7ff4711bbf97d344a79fce48c9c4a8cc0b43c899e",
   "length": 102
  },
  "taskmodel.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧮️task-model/🟦️.ts",
-  "sha256": "e3fb42d676393d8aafb55596a53f5a72dba372d1f7dd0f04b3407bda82f38f37",
+  "sha256": "dcd888c12787fa43e1168c55778b8110aa0627feaae0d71d9fb4f21458bb1fa8",
   "length": 104
  },
  "semio.schema.json": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🧬️schema/🔣️.json",
-  "sha256": "0e39087fed2e3f48df265c97d89daf33b0768c987ede13b92192477f3ab21537",
+  "sha256": "d7b2b7742a51c116560e58690ae8a93a4ec707f67a598cd5fbe24891c6a0c4fe",
   "length": 118
  },
  "semio.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🟦️.ts",
-  "sha256": "0a1bb1212408a896e6c4d4acf274bbb7aac8685575d8ac8da0185f474107a9cf",
+  "sha256": "3a6be63ccb18d61d1abc634c03fc96c9cc148362148d9bc357727930fd5e8ccd",
   "length": 107
  },
  "semio_store.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts",
-  "sha256": "0c321336ca35346b3cde3c694c5acba48d174cc1164777febf51ca1492d7b8bf",
+  "sha256": "373f52843cde0ccec233c08e70bf9b6ecdf06d7549b5f5b71a277abd9359fe7e",
   "length": 115
  },
  "semio_remote.ts": {
@@ -41,12 +41,12 @@
  },
  "semio_exec.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🚀️exec/🟦️.ts",
-  "sha256": "842b70cbd24662a5820df6f647758a09285d322b60bcbfa8f5500566e88cab9c",
+  "sha256": "f7cb190152c6fa7cdd80b79f982eafea5cf7fac3c518e7b82822dc4f7d4750b3",
   "length": 114
  },
  "semio_scheduler.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🏁️scheduler/🟦️.ts",
-  "sha256": "8f2eeff1420ae5118509ffbf8119bff69796609649c145ce9f630b07e838bd81",
+  "sha256": "5a8c633efc964d110c05b31ed08ca6a0f761dad674903acccb0d6b5ba56e516c",
   "length": 119
  },
  "semio_driver.ts": {
@@ -66,12 +66,12 @@
  },
  "stub.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🎭️stub/🟦️.ts",
-  "sha256": "733f518a0b9ca758cbff9e97428bc9a5f532e3a7bc4a4e6cf1cb0b6853f23431",
+  "sha256": "a0ca800dbcd604caf7c6eb66d0c70944f3de031a5c0b0b0990a99f4786274c68",
   "length": 112
  },
  "conformance.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🟦️.ts",
-  "sha256": "3322a299e4e0d9c643753605b439c1fa446a61c79b8ee1772e48ae370de65293",
+  "sha256": "e2d2b2a55e464d9778f23c101e51cbb6de3992d79266ef3f9ed48341eb43cdf0",
   "length": 105
  },
  "conformance_runner.ts": {
@@ -81,7 +81,7 @@
  },
  "nx_backend.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
-  "sha256": "64b4d109e73537ee72c3d88e0c0f288767f9ead3a40d1dbb2fbb0c27f4f61c25",
+  "sha256": "638b37a50ed0eccaa6b370d375e47002237cdee429f1bbbaf4de56fc0e5ea492",
   "length": 114
  },
  "nx_driver.ts": {
@@ -91,7 +91,7 @@
  },
  "bazel_backend.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
-  "sha256": "ff96d7c729101ee49e49ef7efc8dfb4b1de46538c3f28081dc93c5d089c76f38",
+  "sha256": "0c5880105872aedff23b1858e7615da79301bf863bccbcc213cd8adf727e3b6e",
   "length": 117
  },
  "bazel_driver.ts": {
@@ -101,12 +101,12 @@
  },
  "semio_backend.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
-  "sha256": "ad9a14ac6a63a64b6d4b36eba935cc2f2aad187f5157ed6b9e1f7402572835bd",
+  "sha256": "ae41773799b0ab9b0e6ab1431a9cccae068d357ffbb11908f7364567d54ba913",
   "length": 117
  },
  "conformance_command.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/⌨️command/🟦️.ts",
-  "sha256": "6689b81700de05731e4b1b9964a0e5c49aba4ffce76f83d723b73b9c0cbaeb12",
+  "sha256": "9b84ae357f18792f583887140a95426b8eb121c36bbcd62271d9ae30582f3e03",
   "length": 115
  },
  "conformance_oracle.py": {
@@ -116,17 +116,22 @@
  },
  "conformance_test.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🧪️tests/🟦️.ts",
-  "sha256": "1e1913299189b7869fade6b43fff4fdb1a382229e5573ce503c0e432256e6acb",
+  "sha256": "b481e38c5fc351cd62f22b658644027332fea1da3cd8e5ec3a38b74bc36ae54f",
   "length": 113
  },
  "semio_test.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🧪️tests/🟦️.ts",
-  "sha256": "ec503ac50c5902b183159c27167c7772c57f10c27728dac01d3c44b19c20ed0f",
+  "sha256": "f77376fc0672f03e0abf8f684ca75fa4ae71f8def79a6bf5c1868c4cde98f159",
   "length": 115
  },
  "backends_test.ts": {
   "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🧪️tests/🟦️.ts",
-  "sha256": "af198d0f9ff85b0b77e6d638460bb1f9859f486fe2a7adc8ad2af8ce8307d834",
+  "sha256": "9281f3dde83a27a743265121f72053a24b1ce79b7e565487bade7c121466af2e",
   "length": 110
+ },
+ "nx_envelope.ts": {
+  "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts",
+  "sha256": "da6171e4cb12bccc416ce041a68d416dcaec5eed05d5a6fe5e7a612b3749b65b",
+  "length": 115
  }
 }

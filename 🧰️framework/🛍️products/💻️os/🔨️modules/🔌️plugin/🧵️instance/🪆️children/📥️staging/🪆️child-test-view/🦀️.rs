@@ -9,12 +9,12 @@ use semio_framework_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
  #[cfg(any(test,feature="artifact-app-testing"))]
  pub fn test_child_content_view(&self)->ChildContentView{ChildContentView::clone(&self.child_content_root)}
 

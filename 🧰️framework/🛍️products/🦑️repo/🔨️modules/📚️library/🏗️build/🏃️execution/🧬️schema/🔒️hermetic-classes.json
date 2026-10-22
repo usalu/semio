@@ -9,6 +9,7 @@
     "runtime",
     "environment",
     "strategies",
+    "toolchains",
     "classes",
     "exceptions"
   ],
@@ -27,6 +28,14 @@
     },
     "strategies": {
       "$ref": "#/definitions/Strategies"
+    },
+    "toolchains": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/Toolchain"
+      }
     },
     "classes": {
       "type": "array",
@@ -155,11 +164,67 @@
       }
     },
     "Dependencies": {
-      "description": "`links` links the workspace packages the script imports by name; `packages` adds the third-party packages the project and the class name, as one content-addressed tree.",
+      "description": "`links` links the workspace packages the script imports by name; `packages` adds the third-party packages the project and the class name, as one content-addressed tree; `toolchain` leaves the dependencies to the toolchain of the class, which provides them as its own tree.",
       "enum": [
         "links",
-        "packages"
+        "packages",
+        "toolchain"
       ]
+    },
+    "Toolchain": {
+      "description": "A toolchain a class runs on. A provisioned toolchain is a declared input of the action; an unprovisioned one keeps its members on host state under the reason `toolchain`, keyed by the pin of the toolchain, until it is provisioned. `covered` lists the runtime commands the toolchain already determines, so a member may drop them from its inputs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "identity",
+        "provisioned",
+        "covered"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "identity": {
+          "enum": [
+            "bun",
+            "go",
+            "python",
+            "dotnet",
+            "cmake"
+          ]
+        },
+        "provisioned": {
+          "type": "boolean"
+        },
+        "covered": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "pending": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
     },
     "Providers": {
       "description": "Framework port name to the hermetic implementation module that replaces its host-authority provider inside the action; every other port keeps the repository designation.",
@@ -175,6 +240,7 @@
         "id",
         "description",
         "evidence",
+        "toolchain",
         "select",
         "dependencies",
         "packages",
@@ -196,6 +262,9 @@
             "derived",
             "assumed"
           ]
+        },
+        "toolchain": {
+          "$ref": "#/definitions/Id"
         },
         "select": {
           "$ref": "#/definitions/Select"

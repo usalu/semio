@@ -9,7 +9,7 @@ pub use set_solve::SetSolve;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Wfc3dTransient, diff = Wfc3dTransientDiff, schema = "wfc.wfc3d.transient")]
+#[mutations(snapshot = Wfc3dTransient, diff = Wfc3dTransientDiff, schema = "wfc.wfc3d.transient", reference = Wfc3dTransient, reference_diff = Wfc3dTransientDiff)]
 pub enum Wfc3dTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
@@ -29,28 +29,23 @@ pub struct Wfc3dTransientDiff {
 }
 
 impl protocol::DiffAlgebra<Wfc3dTransient> for Wfc3dTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.assignments.is_none() && self.contradiction.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Wfc3dTransient> for Wfc3dTransientDiff {
     fn inverse(&self, base: &Wfc3dTransient) -> Self {
         Self {
             assignments: self.assignments.as_ref().map(|_| base.assignments.clone()),
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.assignments.is_none() && self.contradiction.is_none()
-    }
 }
 
-impl protocol::MutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {
-    fn apply(&self, base: &Wfc3dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc3dTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.assignments {
-            next.assignments.clone_from(value);
-        }
-        if let Some(value) = &self.contradiction {
-            next.contradiction.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {}
+
+impl protocol::ColdMutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {
     fn absorb(&mut self, later: Self) {
         if later.assignments.is_some() {
             self.assignments = later.assignments;
@@ -58,6 +53,19 @@ impl protocol::MutationDiff<Wfc3dTransient> for Wfc3dTransientDiff {
         if later.contradiction.is_some() {
             self.contradiction = later.contradiction;
         }
+    }
+
+    fn apply(&self, unpublished: &mut Wfc3dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.assignments {
+            next.assignments.clone_from(value);
+        }
+        if let Some(value) = &self.contradiction {
+            next.contradiction.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 //#region 🌉️TestBridge

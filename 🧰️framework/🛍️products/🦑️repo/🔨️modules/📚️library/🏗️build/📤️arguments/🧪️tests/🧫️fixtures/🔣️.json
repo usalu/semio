@@ -3,17 +3,31 @@
   "commands": [
     {
       "name": "direct outer script",
-      "command": "bun ./📜️script.ts test",
+      "command": "repo ./📜️script.ts test",
       "cwd": "owner",
       "arguments": [],
       "entry": "owner/📜️script.ts"
     },
     {
       "name": "nested script token retains outer owner",
-      "command": "bun ./📜️script.ts command --cwd child -- bun ./📜️script.ts test",
+      "command": "repo ./📜️script.ts command --cwd child -- repo ./📜️script.ts test",
       "cwd": "owner",
       "arguments": [],
       "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "launcher script options precede the outer script",
+      "command": "repo --watch --cwd child ./📜️script.ts test",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "launcher build verb is no script",
+      "command": "repo run owner:test",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": null
     },
     {
       "name": "Bun run outer script",
@@ -64,13 +78,13 @@
   "refusals": [
     {
       "name": "source escapes repository",
-      "command": "bun ../../📜️script.ts",
+      "command": "repo ../../📜️script.ts",
       "cwd": "owner",
       "arguments": []
     },
     {
       "name": "shell operator",
-      "command": "bun ./📜️script.ts; echo unsafe",
+      "command": "repo ./📜️script.ts; echo unsafe",
       "cwd": "owner",
       "arguments": []
     }
@@ -115,20 +129,20 @@
       "owner/leaf.ts": "export const leaf=true;",
       "owner/Cargo.toml": "[package]\nname=\"fixture\"\nversion=\"0.1.0\"\n[package.metadata.semio]\ncargo-execution=\"execution.json\"\n"
     },
-    "command": "bun ./wrapper/📜️script.ts command -- bun ./📜️script.ts test",
+    "command": "repo ./wrapper/📜️script.ts command -- repo ./📜️script.ts test",
     "cwd": ".",
     "declaration": {
       "version": 1,
       "operations": [
         {
           "command": {
-            "program": "bun",
+            "program": "repo",
             "cwd": ".",
             "arguments": [
               "{workspaceRoot}/wrapper/📜️script.ts",
               "command",
               "--",
-              "bun",
+              "repo",
               "./📜️script.ts",
               "test"
             ],
@@ -145,7 +159,7 @@
             "arguments": []
           },
           "continuation": {
-            "program": "bun",
+            "program": "repo",
             "cwd": "owner",
             "arguments": [
               "./📜️script.ts",

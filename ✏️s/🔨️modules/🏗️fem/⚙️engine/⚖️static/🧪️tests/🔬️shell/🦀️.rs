@@ -1,3 +1,5 @@
+use super::*;
+use semio_s_fem_formulation::d_matrix_plane_stress;
 use crate::solve_linear_static;
 use crate::Model;
 use semio_s_fem_algebra::*;

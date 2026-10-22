@@ -40,11 +40,12 @@
       "current",
       "phaseControl",
       "reuse",
-      "read"
+      "read",
+      "graphPolicy"
     ],
     "runOwnedBuildInvocationV1": [
       "root",
-      "args",
+      "typed",
       "parent",
       "phaseControl"
     ]

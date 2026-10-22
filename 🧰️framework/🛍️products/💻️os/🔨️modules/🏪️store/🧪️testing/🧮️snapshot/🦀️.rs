@@ -3,6 +3,7 @@
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
 use crate::prelude::*;
+use semio_framework_os_spr::ColdMutationDiff;
 use crate::*;
 use crate::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
 use crate::lossy::{LossyMutation, SetN as LossySetN};

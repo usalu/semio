@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value",
+          "valid",
+          "input"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "tuple-exact",
+              "tuple-wrong-first",
+              "tuple-wrong-second",
+              "tuple-empty-prefix",
+              "tuple-short-prefix",
+              "tuple-extra-default",
+              "tuple-extra-true",
+              "tuple-extra-false",
+              "tuple-extra-schema-valid",
+              "tuple-extra-schema-invalid",
+              "tuple-boolean-schema-pass",
+              "tuple-boolean-schema-refuse",
+              "tuple-reference-valid",
+              "tuple-reference-invalid",
+              "homogeneous-extra-false-ignored",
+              "homogeneous-still-validates",
+              "homogeneous-boolean-false",
+              "absent-items-extra-false-ignored",
+              "tuple-scalar-keywords-ignored",
+              "tuple-minimum-retained",
+              "tuple-nested-valid",
+              "tuple-nested-invalid"
+            ]
+          },
+          "value": {},
+          "valid": {
+            "type": "boolean"
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema"
+            ],
+            "properties": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "documents": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

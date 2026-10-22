@@ -24,18 +24,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "encryption-dictionary", kind: "insert-encryption-dictionary", record: "Insert" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let (_, rows) = support::insert_object_rows(base, support::encryption_dictionary(self.version, self.revision), &self.placements);
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(RemoveEncryptionDictionary { version: self.version, revision: self.revision })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuch V{} R{} einfügen", self.version, self.revision))
     }
@@ -43,6 +31,22 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.version.to_string(), self.revision.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertEncryptionDictionary
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertEncryptionDictionary> + From<crate::standards::v1_7::subsets::a::schema::mutations::remove_encryption_dictionary::RemoveEncryptionDictionary>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let (_, rows) = support::insert_object_rows(base, support::encryption_dictionary(self.version, self.revision), &self.placements);
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(RemoveEncryptionDictionary { version: self.version, revision: self.revision })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

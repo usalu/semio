@@ -284,7 +284,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -334,7 +334,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -384,7 +384,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -434,7 +434,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -484,7 +484,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -534,7 +534,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -584,7 +584,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -634,7 +634,7 @@
         "packageVersion": "n/a",
         "engineFamily": "cpython",
         "engineVersion": "3",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {

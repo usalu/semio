@@ -23,6 +23,16 @@ pub struct ReorderPages {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderPages where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_pages::ReorderPages> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "pages", kind: "reorder-pages", record: "ReorderedPages" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder page \"{}\"", self.id), &format!("Reihenfolge von Seite \"{}\" ändern", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for ReorderPages where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_pages::ReorderPages> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_reorder_pages(self, base)
     }
@@ -32,12 +42,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderPages where Op: protocol::M
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder page \"{}\"", self.id), &format!("Reihenfolge von Seite \"{}\" ändern", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔀ReorderPages
 

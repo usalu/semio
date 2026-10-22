@@ -2064,7 +2064,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-hairline-height",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-hairline-height",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2130,7 +2130,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-sliver-outline",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-sliver-outline",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2196,7 +2196,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-l-shape",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-l-shape",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2262,7 +2262,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-triangle",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-triangle",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2328,7 +2328,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-roof-slab",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-roof-slab",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2394,7 +2394,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-thin-plate",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-thin-plate",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2460,7 +2460,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-unit-cube",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-unit-cube",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2526,7 +2526,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e-3",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e-3",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2592,7 +2592,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e3",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e3",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2658,7 +2658,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e6",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e6",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2724,7 +2724,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2790,7 +2790,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-high",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-high",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2856,7 +2856,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-low",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-low",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2922,7 +2922,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-negative",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-negative",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2988,7 +2988,7 @@
           "implementation": "three.js exporters + loaders",
           "version": "0.182.0"
         },
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-two-holes",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-two-holes",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -3044,7 +3044,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3092,7 +3092,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3140,7 +3140,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3188,7 +3188,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3236,7 +3236,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3284,7 +3284,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3332,7 +3332,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3380,7 +3380,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3428,7 +3428,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3476,7 +3476,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3524,7 +3524,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3572,7 +3572,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3620,7 +3620,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3668,7 +3668,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3716,7 +3716,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3764,7 +3764,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3812,7 +3812,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3860,7 +3860,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3908,7 +3908,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -3956,7 +3956,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4004,7 +4004,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4052,7 +4052,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4090,7 +4090,7 @@
         "packageVersion": "3.0.0",
         "engineFamily": "pynite",
         "engineVersion": "3.0.0",
-        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE/🔨️run-fem3d-oracle.py",
+        "command": "repo tools exec uv -- run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE/🔨️run-fem3d-oracle.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4134,7 +4134,7 @@
         "packageVersion": "1.18.0",
         "engineFamily": "lapack",
         "engineVersion": "1.18.0",
-        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "command": "repo tools exec uv -- run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4178,7 +4178,7 @@
         "packageVersion": "12.0.2",
         "engineFamily": "scikit-fem",
         "engineVersion": "12.0.2",
-        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "command": "repo tools exec uv -- run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4232,7 +4232,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4279,7 +4279,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4326,7 +4326,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",
@@ -4373,7 +4373,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-fem3d-carrier-v1",

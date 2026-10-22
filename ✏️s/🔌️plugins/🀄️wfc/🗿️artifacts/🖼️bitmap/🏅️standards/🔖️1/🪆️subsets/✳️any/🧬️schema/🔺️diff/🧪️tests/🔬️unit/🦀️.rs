@@ -26,9 +26,9 @@ fn absorbed(first: BitmapDiff, second: BitmapDiff) -> BitmapDiff {
 
 fn assert_absorb_law(base: &BitmapSnapshot, first: &BitmapDiff, second: &BitmapDiff) -> BitmapDiff {
     let sigma = absorbed(first.clone(), second.clone());
-    let mid = protocol::apply_diff(first, base).expect("first applies");
-    let sequential = protocol::apply_diff(second, &mid).expect("second applies");
-    assert_eq!(protocol::apply_diff(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
+    let mid = protocol::apply_diff_cold(first, base).expect("first applies");
+    let sequential = protocol::apply_diff_cold(second, &mid).expect("second applies");
+    assert_eq!(protocol::apply_diff_cold(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
     sigma
 }
 
@@ -52,7 +52,7 @@ fn palette(delta: BitmapPaletteDelta) -> BitmapDiff {
 #[test]
 fn an_empty_diff_is_the_identity() {
     let base = scene();
-    assert_eq!(protocol::apply_diff(&BitmapDiff::default(), &base).expect("the empty diff applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&BitmapDiff::default(), &base).expect("the empty diff applies"), base);
     assert!(DiffAlgebra::<BitmapSnapshot>::is_empty(&BitmapDiff::default()));
 }
 
@@ -60,7 +60,7 @@ fn an_empty_diff_is_the_identity() {
 #[test]
 fn a_resize_pads_before_a_region_write_lands() {
     let diff = resized(4, 3, vec![region(3, 2, 1, 1, vec![1])]);
-    let next = protocol::apply_diff(&diff, &scene()).expect("resize then write");
+    let next = protocol::apply_diff_cold(&diff, &scene()).expect("resize then write");
     assert_eq!((next.input.width, next.input.height), (4, 3));
     assert_eq!(next.input.pixels.len(), 12);
     assert_eq!((next.input.pixels[11], next.input.pixels[0]), (1, 0));
@@ -69,11 +69,11 @@ fn a_resize_pads_before_a_region_write_lands() {
 /// 🚫️ A region outside the extent is a refusal, not a clip; so is an emptied palette or an out-of-range palette edit.
 #[test]
 fn invalid_edits_are_refused() {
-    assert!(protocol::apply_diff(&writing(vec![region(2, 0, 2, 1, vec![1, 1])]), &scene()).is_err());
+    assert!(protocol::apply_diff_cold(&writing(vec![region(2, 0, 2, 1, vec![1, 1])]), &scene()).is_err());
     let emptied = palette(BitmapPaletteDelta { removed: vec![0, 1], ..Default::default() });
-    assert!(protocol::apply_diff(&emptied, &scene()).is_err());
+    assert!(protocol::apply_diff_cold(&emptied, &scene()).is_err());
     let past_the_end = palette(BitmapPaletteDelta::recoloring(5, BitmapColor::opaque(1, 2, 3)));
-    assert!(protocol::apply_diff(&past_the_end, &scene()).is_err());
+    assert!(protocol::apply_diff_cold(&past_the_end, &scene()).is_err());
 }
 
 /// 🔀 A palette entry inserted and removed again cancels; recolours of one entry coalesce; a removed entry drops its recolour.
@@ -135,9 +135,9 @@ fn inverse_restores_the_base() {
         pinned: BitmapPinnedDelta::insertion(0, pin(0, 0, 0)),
         ..Default::default()
     };
-    let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
     let inverse = DiffAlgebra::<BitmapSnapshot>::inverse(&diff, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
 /// 🎯️ Removing, inserting and recolouring a MIDDLE palette entry are each undone at the entry's original position.
@@ -153,9 +153,9 @@ fn inverse_restores_middle_palette_entries() {
         BitmapPaletteDelta { removed: vec![0], inserted: vec![BitmapPaletteInsertion { index: 2, color: BitmapColor::opaque(8, 8, 8) }], recolored: vec![BitmapPaletteRecolor { index: 2, color: BitmapColor::opaque(7, 7, 7) }] },
     ] {
         let diff = palette(delta);
-        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
         let inverse = DiffAlgebra::<BitmapSnapshot>::inverse(&diff, &base);
-        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+        assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }
 
@@ -163,5 +163,5 @@ fn inverse_restores_middle_palette_entries() {
 #[test]
 fn the_pin_rows_refuse_a_missing_removal() {
     let diff = BitmapDiff { pinned: BitmapPinnedDelta { removed: vec![BitmapPinnedRemoval { id: pin_key(3, 3), index: 0 }], ..Default::default() }, ..Default::default() };
-    assert!(protocol::apply_diff(&diff, &scene()).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &scene()).is_err());
 }

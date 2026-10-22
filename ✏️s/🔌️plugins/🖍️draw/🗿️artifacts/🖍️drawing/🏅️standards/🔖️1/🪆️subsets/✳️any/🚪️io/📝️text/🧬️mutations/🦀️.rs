@@ -86,10 +86,10 @@ pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> 
 
 /// ↩️ Encodes the result of one mutation followed by every domain inverse step.
 pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+    for undo in <DrawingMutation as ColdMutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
@@ -106,9 +106,9 @@ pub mod field_input;
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`drawing_op_for_layer_field` is the undoable/command-facing entry point).
 pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     match drawing_op_for_layer_field(doc, layer_id, field, value) {
-        Some(operation) => protocol::apply_diff(operation.diff(doc).diff(), doc).map_err(|error| error.under(["layers", layer_id])),
+        Some(operation) => protocol::apply_diff_cold(operation.diff(doc).diff(), doc).map_err(|error| error.under(["layers", layer_id])),
         None => Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "layer field cannot be patched").at(["layers", layer_id, field])),
     }
 }
@@ -117,7 +117,7 @@ pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, val
 /// diff carries an empty `DrawingDiff`, so the snapshot is left untouched and `Ok(())` is still
 /// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
 pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &DrawingMutation) -> protocol::MutationApplyResult<()> {
-    *snapshot = protocol::apply_diff(<DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(<DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -125,10 +125,10 @@ pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &Drawing
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
-    use protocol::Mutation;
-    let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, snapshot);
+    use protocol::{ColdMutation, Mutation};
+    let outcome = <DrawingMutation as ColdMutation<DrawingSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }

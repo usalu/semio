@@ -55,7 +55,7 @@
     "executionVersion": 1,
     "executionKind": "source",
     "observation": "freshness",
-    "command": "bun ./📜️script.ts runtime-catalog-test",
+    "command": "repo ./📜️script.ts runtime-catalog-test",
     "route": "runtime-catalog-test",
     "runtimeSourceEntries": [
       "{projectRoot}/🔨️modules/🧩️runtime/🧪️tests/🟦️.ts"

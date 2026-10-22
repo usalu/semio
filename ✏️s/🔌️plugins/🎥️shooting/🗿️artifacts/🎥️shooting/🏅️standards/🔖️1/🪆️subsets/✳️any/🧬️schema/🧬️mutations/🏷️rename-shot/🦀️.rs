@@ -20,6 +20,19 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<RenameShot>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "shot", kind: "rename-shot", record: "RenamedShot" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename shot to \"{}\"", self.new_label), &format!("Aufnahme in \"{}\" umbenennen", self.new_label))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for RenameShot
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<RenameShot>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -29,10 +42,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename shot to \"{}\"", self.new_label), &format!("Aufnahme in \"{}\" umbenennen", self.new_label))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }

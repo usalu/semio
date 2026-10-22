@@ -1,429 +1,436 @@
-// #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/Table/component.tsx
-/** 📊️ `Table` — the tabular data scene host: column/row/selection/sort parsing, stepper and
- * row-action-button cell renderers, row drag source wiring, row drop targets, and the per-row
- * context menu (program-supplied items merged with row-scoped button-placement actions). */
-// #endregion 🧲️Header
+// #region 🧭️Canvas2dGumballOverlay
+/** 🧭️ Screen-space 2D transform gumball driven by the plugin `meta:gumball` layer (`🧬️schema/🔣️gumball-meta`). The
+ * handle geometry, the hit test and the gesture algebra below are pure and shared with the wgpu twin
+ * (`🎯️targets/🧊️wgpu`) through the corpus `🧫️fixtures/🧫️gumball-dispatch`: a live gumball streams its gesture
+ * (`phase` stream/commit/abort) into the app's ONE open tool transaction, a non-live one previews locally and dispatches
+ * ONE one-shot pose delta on release (design §5, decision 2026-09-30 21:36). */
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "../../⚛️react-port/🟦️.ts";
+import { SPATIAL_AXIS_COLOR_REFS } from "@semio-tech/ui-styling";
+import type { CanvasCamera } from "../📷️camera-math/🟦️.ts";
 
-// #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
-import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
-import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
-import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-// #endregion 🔌️Adapters
+/** 📏️ Screen pixels from the pivot to the move knobs; the scale knobs sit at three quarters of it on the diagonals. */
+export const CANVAS2D_GUMBALL_HANDLE_LENGTH = 56;
+/** ⭕️ Screen radius of the turn ring; the uniform-scale knob sits on it at 0.7 of the radius per axis. */
+export const CANVAS2D_GUMBALL_ROTATE_RADIUS = 44;
+/** 🎯️ Screen radius a knob is pressed within. */
+export const CANVAS2D_GUMBALL_HIT_RADIUS = 10;
+/** 💍️ Screen half-width of the turn ring's press band. */
+export const CANVAS2D_GUMBALL_RING_HIT_BAND = 4;
+const MOVE_EPSILON = 1e-9;
+const TURN_EPSILON = 1e-6;
 
-//#region 🔖️TableHost
-//#region TableHost
-//#region Types
-type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };
-type TableCellButton = { readonly iconId: IconName; readonly label?: string; readonly action: ActionDescriptor; readonly placement?: "row" | "menu" };
-export type TableCellRecord =
-  | { readonly kind: "text"; readonly value: string }
-  | { readonly kind: "number"; readonly value: number }
-  | { readonly kind: "editableText"; readonly value: string; readonly action: ActionDescriptor }
-  | { readonly kind: "stepper"; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly action: ActionDescriptor }
-  | { readonly kind: "buttons"; readonly buttons: readonly TableCellButton[] };
-type TableRowRecord = Record<string, unknown> & { readonly id?: string; readonly _drag?: Record<string, unknown> };
+export type Canvas2dGumballConfig = {
+  readonly moveAxes: boolean;
+  readonly rotate: boolean;
+  readonly scaleAxes: boolean;
+  readonly scaleUniform: boolean;
+};
 
-/** 📐️ How many steps one PageUp/PageDown moves a stepper cell. */
-const TABLE_STEPPER_PAGE = 10;
-//#endregion Types
+/** 🗺️ The affine map from model to layer units per axis (`layer = model × scale + offset`); absent = identity. */
+export type Canvas2dGumballModelToLayer = {
+  readonly scale: readonly [number, number];
+  readonly offset: readonly [number, number];
+};
 
-//#region Helpers
-function isTableCellRecord(value: unknown): value is TableCellRecord {
-  return typeof value === "object" && value !== null && "kind" in value;
-}
+export type Canvas2dGumballMeta = {
+  readonly active: boolean;
+  readonly liveDispatch?: boolean;
+  readonly pivotLayer: readonly [number, number];
+  readonly modelToLayer?: Canvas2dGumballModelToLayer;
+  readonly selectionIds: readonly string[];
+  readonly config: Canvas2dGumballConfig;
+};
 
-function dispatchCellAction(onAction: (action: ActionDescriptor) => void, descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
-  onAction({
-    ...descriptor,
-    args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch },
-  });
-}
+export type Canvas2dGumballHandleKind = "moveX" | "moveY" | "rotate" | "scaleX" | "scaleY" | "scaleUniform";
 
-function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: ActionDescriptor) => void): ContextMenuItem[] {
-  const items: ContextMenuItem[] = [];
-  for (const value of Object.values(row)) {
-    if (!isTableCellRecord(value) || value.kind !== "buttons") continue;
-    for (const [index, button] of value.buttons.entries()) {
-      if ((button.placement ?? "row") !== "menu") continue;
-      items.push({
-        id: `table-row-action-${button.iconId}-${index}`,
-        label: button.label === undefined ? undefined : uiDataLabel(button.label),
-        icon: button.iconId,
-        onSelect: () => dispatchCellAction(onAction, button.action, {}),
-      });
-    }
-  }
-  return items;
-}
+/** 🔭️ The host view the gumball is painted and measured in: its camera and logical viewport size. */
+export type Canvas2dGumballView = {
+  readonly camera: CanvasCamera;
+  readonly viewportWidth: number;
+  readonly viewportHeight: number;
+};
 
-/** ⌨️ How far one key moves a stepper cell: arrows step once, Page keys step ten, Home/End jump to a bound. */
-export function tableStepperKeyDelta(key: string, cell: { readonly value: number; readonly min: number; readonly max: number; readonly step: number }): number {
-  switch (key) {
-    case "ArrowUp":
-    case "ArrowRight":
-      return cell.step;
-    case "ArrowDown":
-    case "ArrowLeft":
-      return -cell.step;
-    case "PageUp":
-      return cell.step * TABLE_STEPPER_PAGE;
-    case "PageDown":
-      return -cell.step * TABLE_STEPPER_PAGE;
-    case "Home":
-      return cell.min - cell.value;
-    case "End":
-      return cell.max - cell.value;
-    default:
-      return 0;
-  }
-}
+export type Canvas2dGumballTransformPayload = {
+  readonly action: string;
+  readonly args: Record<string, unknown>;
+};
 
-/** 🧮️ The delta actually dispatched: never past `min`/`max`, and `0` when the cell already sits on that bound. */
-export function tableStepperClampedDelta(delta: number, cell: { readonly value: number; readonly min: number; readonly max: number }): number {
-  return Math.min(cell.max, Math.max(cell.min, cell.value + delta)) - cell.value;
-}
+/** ❓️ Why a host cancels the gesture in flight — the tool-machine abort reasons a canvas overlay observes. */
+export type Canvas2dGumballCancelReason = "blur" | "captureLost";
 
-export type TableEditableTextState = Readonly<{ base: string; draft: string; dirty: boolean; conflicted: boolean; submitted: readonly string[] }>;
+/** ✋️ One gumball gesture in flight: the handle, the press point, the pivot, the pinned ids, whether it streams, the last
+ * cumulative pose delta (`null` until it moved) and whether a stream tick went out. */
+export type Canvas2dGumballGesture = {
+  readonly kind: Canvas2dGumballHandleKind;
+  readonly start: { readonly x: number; readonly y: number };
+  readonly pivotLayer: readonly [number, number];
+  readonly modelToLayer: Canvas2dGumballModelToLayer;
+  readonly ids: readonly string[];
+  readonly live: boolean;
+  readonly total: Canvas2dGumballTransformPayload | null;
+  readonly streamed: boolean;
+};
 
-/** 🔄️ Preserves a dirty cell draft and marks an external persisted change as a conflict. */
-export function reconcileTableEditableText(state: TableEditableTextState, value: string): TableEditableTextState {
-  const accepted = state.submitted.lastIndexOf(value);
-  if (accepted >= 0) return { base: value, draft: state.dirty ? state.draft : value, dirty: state.dirty && state.draft !== value, conflicted: false, submitted: state.submitted.slice(accepted + 1) };
-  if (!state.dirty || state.draft === value) return { base: value, draft: value, dirty: false, conflicted: false, submitted: state.submitted };
-  return { ...state, conflicted: value !== state.base };
-}
+/** 🪜️ A pointer move's outcome: the gesture after it and the dispatch it sends (`null`: none). */
+export type Canvas2dGumballDragStep = {
+  readonly gesture: Canvas2dGumballGesture;
+  readonly dispatch: Canvas2dGumballTransformPayload | null;
+};
 
-/** 📦️ Merges a committed text draft into its artifact-owned cell action. */
-export function tableEditableTextAction(cell: Extract<TableCellRecord, { kind: "editableText" }>, draft: string): ActionDescriptor {
-  return { ...cell.action, args: { ...(typeof cell.action.args === "object" && cell.action.args != null ? cell.action.args : {}), value: draft } };
-}
+const IDENTITY_MAP: Canvas2dGumballModelToLayer = { scale: [1, 1], offset: [0, 0] };
 
-/** ✏️ One locally buffered table cell; Enter or blur commits, Shift+Enter inserts a newline, Escape cancels. */
-export function TableEditableTextCell({ cell, id, columnLabel, onAction }: { readonly cell: Extract<TableCellRecord, { kind: "editableText" }>; readonly id: string; readonly columnLabel: string | undefined; readonly onAction: (action: ActionDescriptor) => void }): React.ReactElement {
-  const [state, setState] = useState<TableEditableTextState>(() => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false, submitted: [] }));
-  const committed = useRef<string | undefined>(undefined);
-  useEffect(() => setState((current) => reconcileTableEditableText(current, cell.value)), [cell.value]);
-  const commit = (): void => {
-    if (!state.dirty || state.conflicted || committed.current === state.draft) return;
-    committed.current = state.draft;
-    setState((current) => ({ ...current, submitted: [...current.submitted, state.draft] }));
-    onAction(tableEditableTextAction(cell, state.draft));
-  };
-  const cancel = (): void => {
-    setState((current) => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false, submitted: current.submitted }));
-  };
-  return (
-    <Textarea
-      aria-invalid={state.conflicted || undefined}
-      aria-label={columnLabel}
-      className="min-h-8 w-full min-w-0 resize-y whitespace-pre-wrap font-mono text-xs"
-      data-conflict={state.conflicted ? "true" : undefined}
-      data-dirty={state.dirty ? "true" : undefined}
-      id={id}
-      rows={1}
-      value={state.draft}
-      onBlur={commit}
-      onFocus={() => { committed.current = undefined; }}
-      onChange={(event) => {
-        committed.current = undefined;
-        setState((current) => ({ ...current, draft: event.target.value, dirty: event.target.value !== current.base }));
-      }}
-      onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => {
-        event.stopPropagation();
-        if (event.key === "Escape") { event.preventDefault(); cancel(); return; }
-        if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); commit(); }
-      }}
-    />
-  );
-}
-
-/**
- * 🪜️ One `TableCell::Stepper` cell: decrement · value · increment, driving the SAME contract the
- * wgpu table widget drives — the cell's own `ActionDescriptor` with `{ delta }` merged into its args,
- * suppressed at the bounds. The readout carries `role="spinbutton"` with the live `aria-value*`
- * triple, so the whole control is one keyboard stop (arrows, PageUp/PageDown, Home/End). The
- * buttons keep their `button-group`/`button-group-item` slots, which is what the touch stylesheet
- * grows to `--layout-touch-min` at phone width.
- */
-function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: Extract<TableCellRecord, { kind: "stepper" }>; readonly id: string; readonly columnLabel: string | undefined; readonly onAction: (action: ActionDescriptor) => void }): React.ReactElement {
-  const decrementLabel = useLabel("ui.tableStepper.decrement");
-  const incrementLabel = useLabel("ui.tableStepper.increment");
-  const valueLabel = useLabel("ui.tableStepper.value");
-  const readoutLabel = columnLabel?.trim() ? columnLabel : valueLabel;
-  const step = (delta: number): void => {
-    const clamped = tableStepperClampedDelta(delta, cell);
-    if (clamped === 0) return;
-    dispatchCellAction(onAction, cell.action, { delta: clamped });
-  };
-  return (
-    <div className="flex min-w-0 items-center gap-1" data-slot="table-stepper" data-stepper-for={id} onClick={(event) => event.stopPropagation()}>
-      <Button
-        aria-label={`${decrementLabel} ${readoutLabel}`}
-        className="h-medium shrink-0 px-2"
-        data-stepper-control="decrement"
-        data-stepper-for={id}
-        disabled={cell.value <= cell.min}
-        icon="minus"
-        onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })}
-        tabIndex={-1}
-        title={decrementLabel}
-        type="button"
-        variant="outline"
-      />
-      <Input
-        aria-label={readoutLabel}
-        aria-valuemax={cell.max}
-        aria-valuemin={cell.min}
-        aria-valuenow={cell.value}
-        aria-valuetext={String(cell.value)}
-        className="h-medium w-14 min-w-0 text-center font-mono text-xs"
-        data-stepper-control="value"
-        id={id}
-        onKeyDown={(event) => {
-          const delta = tableStepperKeyDelta(event.key, cell);
-          if (delta === 0) return;
-          event.preventDefault();
-          step(delta);
-        }}
-        readOnly
-        role="spinbutton"
-        value={String(cell.value)}
-      />
-      <Button
-        aria-label={`${incrementLabel} ${readoutLabel}`}
-        className="h-medium shrink-0 px-2"
-        data-stepper-control="increment"
-        data-stepper-for={id}
-        disabled={cell.value >= cell.max}
-        icon="plus"
-        onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })}
-        tabIndex={-1}
-        title={incrementLabel}
-        type="button"
-        variant="outline"
-      />
-    </div>
-  );
-}
-
-function renderTableCell(cell: TableCellRecord, id: string, columnLabel: string | undefined, onAction: (action: ActionDescriptor) => void): React.ReactNode {
-  switch (cell.kind) {
-    case "text":
-      return cell.value;
-    case "number":
-      return String(cell.value);
-    case "editableText":
-      return <TableEditableTextCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
-    case "stepper":
-      return <TableStepperCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
-    case "buttons":
-      return (
-        <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          {cell.buttons
-            .filter((button) => (button.placement ?? "row") === "row")
-            .map((button, index) => (
-            <Button icon={button.iconId} key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
-              <Icon icon={button.iconId} size="small" />
-            </Button>
-          ))}
-        </div>
-      );
+/** 🧩️ The active `meta:gumball` layer of a scene's `layersJson`, or `null`. */
+export function parseCanvas2dGumballMeta(layersJson: string | undefined): Canvas2dGumballMeta | null {
+  if (!layersJson) return null;
+  try {
+    const layers = JSON.parse(layersJson) as readonly { readonly role?: string; readonly gumball?: Canvas2dGumballMeta }[];
+    if (!Array.isArray(layers)) return null;
+    return layers.find((layer) => layer.role === "meta" && layer.gumball?.active)?.gumball ?? null;
+  } catch {
+    return null;
   }
 }
-//#endregion Helpers
 
-//#region Component
-export function TableHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
-  const scene = node.table;
-  const shellScope = useShellScopeOptional();
-  const windowInstanceId = useContext(WindowInstanceIdContext);
-  const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
-  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.row");
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+/** 📷️ The host camera of `Canvas2dHost` (`worldToScreenLogical`): screen = (world − camera) · zoom + viewport / 2 —
+ * restated here so the gumball algebra stays free of the host module. */
+function worldToScreen(x: number, y: number, view: Canvas2dGumballView): { readonly x: number; readonly y: number } {
+  const zoom = view.camera.zoom || 1;
+  return { x: (x - view.camera.x) * zoom + view.viewportWidth * 0.5, y: (y - view.camera.y) * zoom + view.viewportHeight * 0.5 };
+}
+
+/** 🪞️ The inverse of `worldToScreen` (`screenToWorldLogical`). */
+function screenToWorld(x: number, y: number, view: Canvas2dGumballView): { readonly x: number; readonly y: number } {
+  const zoom = view.camera.zoom || 1;
+  return { x: (x - view.viewportWidth * 0.5) / zoom + view.camera.x, y: (y - view.viewportHeight * 0.5) / zoom + view.camera.y };
+}
+
+/** 📍️ The pivot in screen-logical pixels under `view`. */
+export function canvas2dGumballPivotScreen(pivotLayer: readonly [number, number], view: Canvas2dGumballView): { readonly x: number; readonly y: number } {
+  return worldToScreen(pivotLayer[0], pivotLayer[1], view);
+}
+
+/** 🔘️ Every knob's screen centre about `pivot`, topmost first — the order a press resolves them in. */
+export function canvas2dGumballKnobs(pivot: { readonly x: number; readonly y: number }): readonly { readonly kind: Exclude<Canvas2dGumballHandleKind, "rotate">; readonly x: number; readonly y: number }[] {
+  const diagonal = CANVAS2D_GUMBALL_HANDLE_LENGTH * 0.75;
+  const uniform = CANVAS2D_GUMBALL_ROTATE_RADIUS * 0.7;
+  return [
+    { kind: "scaleUniform", x: pivot.x + uniform, y: pivot.y - uniform },
+    { kind: "scaleY", x: pivot.x - diagonal, y: pivot.y + diagonal },
+    { kind: "scaleX", x: pivot.x + diagonal, y: pivot.y + diagonal },
+    { kind: "moveY", x: pivot.x, y: pivot.y - CANVAS2D_GUMBALL_HANDLE_LENGTH },
+    { kind: "moveX", x: pivot.x + CANVAS2D_GUMBALL_HANDLE_LENGTH, y: pivot.y },
+  ];
+}
+
+function handleEnabled(kind: Canvas2dGumballHandleKind, config: Canvas2dGumballConfig): boolean {
+  if (kind === "moveX" || kind === "moveY") return config.moveAxes;
+  if (kind === "scaleX" || kind === "scaleY") return config.scaleAxes;
+  return kind === "scaleUniform" ? config.scaleUniform : config.rotate;
+}
+
+/** 👆️ The handle a press at screen `(x, y)` grabs: the topmost enabled knob within its hit radius, else the turn ring
+ * within its band, else `null`. */
+export function canvas2dGumballHandleAt(meta: Canvas2dGumballMeta, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballHandleKind | null {
+  if (!meta.active) return null;
+  const pivot = canvas2dGumballPivotScreen(meta.pivotLayer, view);
+  const knob = canvas2dGumballKnobs(pivot).find((candidate) => handleEnabled(candidate.kind, meta.config) && Math.hypot(x - candidate.x, y - candidate.y) <= CANVAS2D_GUMBALL_HIT_RADIUS);
+  if (knob) return knob.kind;
+  return meta.config.rotate && Math.abs(Math.hypot(x - pivot.x, y - pivot.y) - CANVAS2D_GUMBALL_ROTATE_RADIUS) <= CANVAS2D_GUMBALL_RING_HIT_BAND ? "rotate" : null;
+}
+
+/** 🎚️ The verb one handle drags with. */
+export function canvas2dGumballVerb(kind: Canvas2dGumballHandleKind): "translateSelection" | "rotateSelection" | "scaleSelection" {
+  if (kind === "moveX" || kind === "moveY") return "translateSelection";
+  return kind === "rotate" ? "rotateSelection" : "scaleSelection";
+}
+
+/** ✊️ The gesture a press of `kind` at screen `(x, y)` opens, pinning the meta's selection ids and liveness. */
+export function canvas2dGumballBegin(meta: Canvas2dGumballMeta, kind: Canvas2dGumballHandleKind, x: number, y: number): Canvas2dGumballGesture {
+  return { kind, start: { x, y }, pivotLayer: meta.pivotLayer, modelToLayer: meta.modelToLayer ?? IDENTITY_MAP, ids: [...meta.selectionIds], live: meta.liveDispatch ?? false, total: null, streamed: false };
+}
+
+function layerToModel(map: Canvas2dGumballModelToLayer, x: number, y: number): { readonly x: number; readonly y: number } {
+  return { x: (x - map.offset[0]) / map.scale[0], y: (y - map.offset[1]) / map.scale[1] };
+}
+
+function wrapAngle(angle: number): number {
+  return angle - 2 * Math.PI * Math.round(angle / (2 * Math.PI));
+}
+
+/** 🧮️ The cumulative pose delta from the press to screen `(x, y)` in model units — a turn's angle unwrapped against the
+ * gesture's last total, so a drag past the ring's far side keeps turning instead of jumping a full turn; `null` when it
+ * moves nothing. */
+export function canvas2dGumballTotal(gesture: Canvas2dGumballGesture, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballTransformPayload | null {
+  const ids = [...gesture.ids];
+  const pivot = canvas2dGumballPivotScreen(gesture.pivotLayer, view);
+  const { kind, start } = gesture;
+  if (kind === "moveX" || kind === "moveY") {
+    const before = screenToWorld(start.x, start.y, view);
+    const after = screenToWorld(x, y, view);
+    const beforeModel = layerToModel(gesture.modelToLayer, before.x, before.y);
+    const afterModel = layerToModel(gesture.modelToLayer, after.x, after.y);
+    const dx = kind === "moveX" ? afterModel.x - beforeModel.x : 0;
+    const dy = kind === "moveY" ? afterModel.y - beforeModel.y : 0;
+    if (Math.abs(dx) < MOVE_EPSILON && Math.abs(dy) < MOVE_EPSILON) return null;
+    return { action: "translateSelection", args: { ids, dx, dy, dz: 0 } };
+  }
+  if (kind === "rotate") {
+    const raw = Math.atan2(y - pivot.y, x - pivot.x) - Math.atan2(start.y - pivot.y, start.x - pivot.x);
+    const previous = gesture.total ? (gesture.total.args.angle as number) : 0;
+    const angle = previous + wrapAngle(raw - previous);
+    if (Math.abs(angle) < TURN_EPSILON) return null;
+    return { action: "rotateSelection", args: { ids, ax: 0, ay: 0, az: 1, angle } };
+  }
+  const reach0 = Math.hypot(start.x - pivot.x, start.y - pivot.y);
+  const reach1 = Math.hypot(x - pivot.x, y - pivot.y);
+  const ratio = reach0 > 1e-6 ? reach1 / reach0 : 1;
+  if (Math.abs(ratio - 1) < TURN_EPSILON) return null;
+  const [sx, sy] = kind === "scaleUniform" ? [ratio, ratio] : kind === "scaleX" ? [ratio, 1] : [1, ratio];
+  return { action: "scaleSelection", args: { ids, sx, sy, sz: 1 } };
+}
+
+/** ➖️ The increment from `previous` to `current` (offsets subtract, angles subtract, factors divide); `null` when it
+ * moves nothing. */
+export function canvas2dGumballIncrement(previous: Canvas2dGumballTransformPayload | null, current: Canvas2dGumballTransformPayload): Canvas2dGumballTransformPayload | null {
+  if (!previous || previous.action !== current.action) return current;
+  const before = previous.args;
+  const after = current.args;
+  if (current.action === "translateSelection") {
+    const dx = (after.dx as number) - (before.dx as number);
+    const dy = (after.dy as number) - (before.dy as number);
+    return Math.abs(dx) < MOVE_EPSILON && Math.abs(dy) < MOVE_EPSILON ? null : { action: current.action, args: { ...after, dx, dy } };
+  }
+  if (current.action === "rotateSelection") {
+    const angle = (after.angle as number) - (before.angle as number);
+    return Math.abs(angle) < TURN_EPSILON ? null : { action: current.action, args: { ...after, angle } };
+  }
+  const sx = (after.sx as number) / (before.sx as number);
+  const sy = (after.sy as number) / (before.sy as number);
+  return Math.abs(sx - 1) < TURN_EPSILON && Math.abs(sy - 1) < TURN_EPSILON ? null : { action: current.action, args: { ...after, sx, sy } };
+}
+
+/** 🛑️ The pose delta that moves nothing for a handle — a commit whose tail moved nothing carries it. */
+export function canvas2dGumballIdentity(kind: Canvas2dGumballHandleKind, ids: readonly string[]): Canvas2dGumballTransformPayload {
+  const action = canvas2dGumballVerb(kind);
+  if (action === "translateSelection") return { action, args: { ids: [...ids], dx: 0, dy: 0, dz: 0 } };
+  if (action === "rotateSelection") return { action, args: { ids: [...ids], ax: 0, ay: 0, az: 1, angle: 0 } };
+  return { action, args: { ids: [...ids], sx: 1, sy: 1, sz: 1 } };
+}
+
+/** 🧾️ `payload` stamped with its tool-transaction `phase`. */
+function phased(payload: Canvas2dGumballTransformPayload, phase: "stream" | "commit"): Canvas2dGumballTransformPayload {
+  return { action: payload.action, args: { ...payload.args, phase } };
+}
+
+/** 🌊️ A pointer move: a live gesture streams the increment since its last tick (`phase: stream`); a non-live one only
+ * records its total for the local preview. */
+export function canvas2dGumballDrag(gesture: Canvas2dGumballGesture, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballDragStep {
+  const total = canvas2dGumballTotal(gesture, view, x, y);
+  if (!total) return { gesture, dispatch: null };
+  if (!gesture.live) return { gesture: { ...gesture, total }, dispatch: null };
+  const step = canvas2dGumballIncrement(gesture.total, total);
+  if (!step) return { gesture, dispatch: null };
+  return { gesture: { ...gesture, total, streamed: true }, dispatch: phased(step, "stream") };
+}
+
+/** 💾️ The release at screen `(x, y)`: a live gesture commits its ONE transaction with the remaining tail (the identity
+ * when nothing is left; nothing when it never moved); a non-live one dispatches its whole pose delta as ONE one-shot. */
+export function canvas2dGumballRelease(gesture: Canvas2dGumballGesture, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballTransformPayload | null {
+  const total = canvas2dGumballTotal(gesture, view, x, y);
+  if (!gesture.live) return total;
+  const tail = total ? canvas2dGumballIncrement(gesture.total, total) : null;
+  if (!gesture.streamed && !tail) return null;
+  return phased(tail ?? canvas2dGumballIdentity(gesture.kind, gesture.ids), "commit");
+}
+
+/** 🧯️ A host cancel: a live gesture that streamed drops its open transaction with zero trace (`phase: abort`); anything
+ * else dispatches nothing. */
+export function canvas2dGumballCancel(gesture: Canvas2dGumballGesture, reason: Canvas2dGumballCancelReason): Canvas2dGumballTransformPayload | null {
+  if (!gesture.live || !gesture.streamed) return null;
+  return { action: canvas2dGumballVerb(gesture.kind), args: { ids: [...gesture.ids], phase: "abort", reason } };
+}
+
+type Canvas2dGumballOverlayProps = {
+  readonly layersJson: string | undefined;
+  readonly activeUtility: string | undefined;
+  readonly camera: CanvasCamera;
+  readonly viewportWidth: number;
+  readonly viewportHeight: number;
+  readonly onDispatch: (action: string, args: Record<string, unknown>) => void;
+};
+
+/** 🫥️ What a non-live gesture paints while it previews locally: the gesture and the pointer it last saw. */
+type LocalPreview = {
+  readonly gesture: Canvas2dGumballGesture;
+  readonly pointer: { readonly x: number; readonly y: number };
+};
+
+export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, viewportWidth, viewportHeight, onDispatch }: Canvas2dGumballOverlayProps) {
+  const meta = useMemo(() => parseCanvas2dGumballMeta(layersJson), [layersJson]);
+  const view: Canvas2dGumballView = useMemo(() => ({ camera, viewportWidth, viewportHeight }), [camera, viewportHeight, viewportWidth]);
+  const gestureRef = useRef<Canvas2dGumballGesture | null>(null);
+  const [preview, setPreview] = useState<LocalPreview | null>(null);
+  const visible = activeUtility === "transform" && meta != null && viewportWidth > 0 && viewportHeight > 0;
+  const pivotScreen = useMemo(() => (meta ? canvas2dGumballPivotScreen(meta.pivotLayer, view) : null), [meta, view]);
+
+  const send = useCallback(
+    (payload: Canvas2dGumballTransformPayload | null) => {
+      if (payload) onDispatch(payload.action, payload.args);
     },
-    [node.controllerId, node.surfaceId, onAction],
-  );
-  const mapContextMenu = useMapContextMenuSpecs(dispatch);
-  const shellContextMenuFallback = useShellContextMenuFallback();
-  const columns = useMemo(() => {
-    if (!scene) return [] as TableColumnRecord[];
-    try {
-      return parseSceneJsonField<TableColumnRecord[]>(scene.columnsJson);
-    } catch {
-      return [];
-    }
-  }, [scene]);
-  const rows = useMemo(() => {
-    if (!scene) return [] as TableRowRecord[];
-    try {
-      return parseSceneJsonField<TableRowRecord[]>(scene.rowsJson);
-    } catch {
-      return [];
-    }
-  }, [scene]);
-  const rowIds = useMemo(() => new Map(rows.map((row, index) => [row, String(row.id ?? row.pluginId ?? index)])), [rows]);
-  const getRowId = useCallback((row: TableRowRecord): string => {
-    const id = rowIds.get(row);
-    if (id === undefined) throw new Error("table row is not part of the captured scene");
-    return id;
-  }, [rowIds]);
-  const selectedRows = useMemo(() => {
-    if (!scene?.selectionJson) return undefined;
-    try {
-      const parsed = parseSceneJsonField<{ readonly selectedIds?: readonly string[] }>(scene.selectionJson);
-      return new Set(parsed.selectedIds ?? []);
-    } catch {
-      return undefined;
-    }
-  }, [scene]);
-  const sort = useMemo(() => {
-    if (!scene?.sortJson) return undefined;
-    try {
-      return parseSceneJsonField<{ readonly columnId?: string; readonly direction?: "asc" | "desc" }>(scene.sortJson);
-    } catch {
-      return undefined;
-    }
-  }, [scene]);
-  const tableColumns = useMemo<TableColumn<TableRowRecord>[]>(
-    () =>
-      columns.map((column) => ({
-        id: column.id,
-        header: column.label,
-        sortable: column.sortable,
-        accessor: (row) => {
-          const value = row[column.id];
-          if (isTableCellRecord(value)) return renderTableCell(value, `${node.surfaceId}.${getRowId(row)}.${column.id}`, column.label, onAction);
-          return String(value ?? "");
-        },
-      })),
-    [columns, getRowId, node.surfaceId, onAction],
+    [onDispatch],
   );
 
-  if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
+  const end = useCallback(() => {
+    gestureRef.current = null;
+    setPreview(null);
+  }, []);
 
-  const rowDragMime = scene.rowDragMime;
-  const dropAction = scene.dropActionJson ? parseSceneJsonField<ActionDescriptor>(scene.dropActionJson) : undefined;
+  const cancel = useCallback(
+    (reason: Canvas2dGumballCancelReason) => {
+      const gesture = gestureRef.current;
+      if (gesture) send(canvas2dGumballCancel(gesture, reason));
+      end();
+    },
+    [end, send],
+  );
+  const cancelRef = useRef(cancel);
+  cancelRef.current = cancel;
+  useEffect(() => {
+    const onBlur = () => {
+      if (gestureRef.current) cancelRef.current("blur");
+    };
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("blur", onBlur);
+      if (gestureRef.current) cancelRef.current("captureLost");
+    };
+  }, []);
+
+  const localPoint = useCallback((event: ReactPointerEvent<Element>) => {
+    const host = event.currentTarget.closest(".semio-canvas-2d-host") as HTMLElement | null;
+    const rect = host?.getBoundingClientRect();
+    if (!rect) return { x: event.clientX, y: event.clientY };
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }, []);
+
+  const onPointerDown = useCallback(
+    (kind: Canvas2dGumballHandleKind, event: ReactPointerEvent<SVGElement>) => {
+      if (!meta) return;
+      event.preventDefault();
+      event.stopPropagation();
+      (event.currentTarget as SVGElement).setPointerCapture(event.pointerId);
+      const point = localPoint(event);
+      const gesture = canvas2dGumballBegin(meta, kind, point.x, point.y);
+      gestureRef.current = gesture;
+      setPreview({ gesture, pointer: point });
+    },
+    [localPoint, meta],
+  );
+
+  const onPointerMove = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      const gesture = gestureRef.current;
+      if (!gesture) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const point = localPoint(event);
+      const step = canvas2dGumballDrag(gesture, view, point.x, point.y);
+      gestureRef.current = step.gesture;
+      send(step.dispatch);
+      if (!gesture.live) setPreview({ gesture: step.gesture, pointer: point });
+    },
+    [localPoint, send, view],
+  );
+
+  const onPointerUp = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      const gesture = gestureRef.current;
+      if (!gesture) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const point = localPoint(event);
+      send(canvas2dGumballRelease(gesture, view, point.x, point.y));
+      end();
+    },
+    [end, localPoint, send, view],
+  );
+
+  const onPointerCancel = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      if (!gestureRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancel("captureLost");
+    },
+    [cancel],
+  );
+
+  if (!visible || !meta || !pivotScreen) return null;
+  const { config } = meta;
+  const cx = pivotScreen.x;
+  const cy = pivotScreen.y;
+  const knobs = canvas2dGumballKnobs(pivotScreen);
+  const knob = (kind: Exclude<Canvas2dGumballHandleKind, "rotate">) => knobs.find((candidate) => candidate.kind === kind) ?? { x: cx, y: cy };
+  const ghost = preview && !preview.gesture.live ? preview : null;
 
   return (
-    <div
-      className="semio-table-host h-full min-h-0 w-full"
-      data-surface-id={node.surfaceId}
-      onDragOver={
-        dropAction
-          ? (event) => {
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "copy";
-            }
-          : undefined
-      }
-      onDrop={
-        dropAction
-          ? (event) => {
-              event.preventDefault();
-              const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
-              if (!encoded?.trim()) return;
-              try {
-                dispatchCellAction(onAction, dropAction, JSON.parse(encoded) as Record<string, unknown>);
-              } catch {
-                return;
-              }
-            }
-          : undefined
-      }
-    >
-      <Table
-        className="h-full w-full"
-        columns={tableColumns}
-        data={rows}
-        getRowId={getRowId}
-        selectedRows={selectedRows}
-        sortColumn={sort?.columnId}
-        sortDirection={sort?.direction}
-        onSort={(columnId, direction) =>
-          onAction({
-            controllerId: node.controllerId,
-            action: "sortTable",
-            args: { surfaceId: node.surfaceId, columnId, direction },
-          })
-        }
-        rowDragProps={
-          rowDragMime
-            ? (row) =>
-                row._drag
-                  ? {
-                      draggable: true,
-                      onDragStart: (event) => {
-                        event.dataTransfer.setData(rowDragMime, JSON.stringify(row._drag));
-                        event.dataTransfer.effectAllowed = "copy";
-                      },
-                    }
-                  : {}
-            : undefined
-        }
-        onRowClick={(row) =>
-          scene.domainId && scene.domainGranularityId
-            ? onAction({
-                controllerId: node.controllerId,
-                action: "interactionSelect",
-                args: { domainId: scene.domainId, targets: JSON.stringify([{ granularity: scene.domainGranularityId, id: getRowId(row) }]), merge: "replace", method: "pick" },
-              })
-            : onAction({
-                controllerId: node.controllerId,
-                action: "selectRow",
-                args: { surfaceId: node.surfaceId, row },
-              })
-        }
-        onRowContextMenu={(row, index, event) => {
-          if (!requestContextMenu) return;
-          event.preventDefault();
-          event.stopPropagation();
-          const rowId = String(row.id ?? row.pluginId ?? index);
-          void (async () => {
-            const menu = await openSurfaceContextMenu(
-              requestContextMenu,
-              {
-                menu: { id: "table", args: null },
-                surface: {
-                  surfaceId: node.surfaceId,
-                  kind: "table",
-                  hits: [{ domain: "row", id: rowId }],
-                  selection: selectedRows && selectedRows.size > 0 ? [{ domain: "row", ids: [...selectedRows] }] : [],
-                },
-                windowInstanceId: windowInstanceId ?? undefined,
-                point: { x: event.clientX, y: event.clientY },
-              },
-              mapContextMenu,
-              shellContextMenuFallback,
-            );
-            const menuActions = tableRowMenuPlacementItems(row, onAction);
-            setContextMenu({
-              x: event.clientX,
-              y: event.clientY,
-              ...menu,
-              items: menuActions.length ? [...menu.items, ...(menu.items.length ? [{ id: "table-row-action-separator", separator: true } as ContextMenuItem] : []), ...menuActions] : menu.items,
-            });
-          })();
-        }}
-      />
-      <ContextMenuController
-        title={contextMenuTitleLabel}
-        open={contextMenu != null}
-        position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenu?.items ?? []}
-        onOpenChange={(open) => {
-          if (!open) setContextMenu(null);
-        }}
-      />
-    </div>
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel} onLostPointerCapture={onPointerCancel}>
+      {config.rotate ? (
+        <>
+          <circle cx={cx} cy={cy} r={CANVAS2D_GUMBALL_ROTATE_RADIUS} fill="none" stroke={SPATIAL_AXIS_COLOR_REFS.y} strokeWidth={1.5} strokeDasharray="4 4" />
+          <circle
+            className="cursor-grab"
+            style={{ pointerEvents: "stroke" }}
+            cx={cx}
+            cy={cy}
+            r={CANVAS2D_GUMBALL_ROTATE_RADIUS}
+            fill="none"
+            stroke="transparent"
+            strokeWidth={CANVAS2D_GUMBALL_RING_HIT_BAND * 2}
+            onPointerDown={(event) => onPointerDown("rotate", event)}
+          />
+        </>
+      ) : null}
+      {config.moveAxes ? (
+        <>
+          <line x1={cx} y1={cy} x2={knob("moveX").x} y2={knob("moveX").y} stroke={SPATIAL_AXIS_COLOR_REFS.x} strokeWidth={2} />
+          <circle className="pointer-events-auto cursor-ew-resize" cx={knob("moveX").x} cy={knob("moveX").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.x} onPointerDown={(event) => onPointerDown("moveX", event)} />
+          <line x1={cx} y1={cy} x2={knob("moveY").x} y2={knob("moveY").y} stroke={SPATIAL_AXIS_COLOR_REFS.y} strokeWidth={2} />
+          <circle className="pointer-events-auto cursor-ns-resize" cx={knob("moveY").x} cy={knob("moveY").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.y} onPointerDown={(event) => onPointerDown("moveY", event)} />
+        </>
+      ) : null}
+      {config.scaleAxes ? (
+        <>
+          <circle className="pointer-events-auto cursor-ew-resize" cx={knob("scaleX").x} cy={knob("scaleX").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.x} opacity={0.85} onPointerDown={(event) => onPointerDown("scaleX", event)} />
+          <circle className="pointer-events-auto cursor-ns-resize" cx={knob("scaleY").x} cy={knob("scaleY").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.y} opacity={0.85} onPointerDown={(event) => onPointerDown("scaleY", event)} />
+        </>
+      ) : null}
+      {config.scaleUniform ? (
+        <circle className="pointer-events-auto cursor-nwse-resize" cx={knob("scaleUniform").x} cy={knob("scaleUniform").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.z} onPointerDown={(event) => onPointerDown("scaleUniform", event)} />
+      ) : null}
+      <circle cx={cx} cy={cy} r={4} fill="var(--foreground)" stroke="var(--muted-foreground)" strokeWidth={1} />
+      {ghost ? <Canvas2dGumballGhost preview={ghost} pivot={pivotScreen} /> : null}
+      {preview ? <circle cx={cx} cy={cy} r={3} fill="var(--warning-border)" fillOpacity={0.9} /> : null}
+    </svg>
   );
 }
-//#endregion Component
-//#endregion TableHost
-//#endregion 🔖️TableHost
+
+/** 👻️ A non-live gesture's local preview in screen space: the dragged axis offset for a move, the arm to the pointer for
+ * a turn, the reach ring for a scaling. The document only changes on release. */
+function Canvas2dGumballGhost({ preview, pivot }: { readonly preview: LocalPreview; readonly pivot: { readonly x: number; readonly y: number } }) {
+  const { gesture, pointer } = preview;
+  const stroke = "var(--warning-border)";
+  if (gesture.kind === "moveX" || gesture.kind === "moveY") {
+    const x = gesture.kind === "moveX" ? pivot.x + pointer.x - gesture.start.x : pivot.x;
+    const y = gesture.kind === "moveY" ? pivot.y + pointer.y - gesture.start.y : pivot.y;
+    return (
+      <>
+        <line x1={pivot.x} y1={pivot.y} x2={x} y2={y} stroke={stroke} strokeOpacity={0.9} strokeWidth={1.5} strokeDasharray="3 3" />
+        <circle cx={x} cy={y} r={5} fill="none" stroke={stroke} strokeOpacity={0.9} strokeWidth={2} />
+      </>
+    );
+  }
+  if (gesture.kind === "rotate") return <line x1={pivot.x} y1={pivot.y} x2={pointer.x} y2={pointer.y} stroke={stroke} strokeOpacity={0.9} strokeWidth={2} />;
+  return <circle cx={pivot.x} cy={pivot.y} r={Math.hypot(pointer.x - pivot.x, pointer.y - pivot.y)} fill="none" stroke={stroke} strokeOpacity={0.9} strokeWidth={1.5} strokeDasharray="3 3" />;
+}
+//#endregion 🧭️Canvas2dGumballOverlay

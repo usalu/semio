@@ -1,0 +1,169 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "crates",
+     "files",
+     "targets",
+     "apiRoots",
+     "editable",
+     "defect",
+     "expect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "crates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "name",
+        "dir",
+        "root"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "dir": {
+         "type": "string"
+        },
+        "root": {
+         "type": "string"
+        }
+       }
+      },
+      "minItems": 1
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "targets": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "apiRoots": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "editable": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      ]
+     },
+     "defect": {
+      "type": "string"
+     },
+     "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "edits",
+       "report",
+       "audit"
+      ],
+      "properties": {
+       "edits": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       },
+       "report": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "removedLeaves",
+         "repointedLeaves",
+         "repointedChains",
+         "addedImports",
+         "removedModules",
+         "unresolvedMirrors",
+         "multiMounted",
+         "invisible"
+        ],
+        "properties": {
+         "removedLeaves": {
+          "type": "integer"
+         },
+         "repointedLeaves": {
+          "type": "integer"
+         },
+         "repointedChains": {
+          "type": "integer"
+         },
+         "addedImports": {
+          "type": "integer"
+         },
+         "removedModules": {
+          "type": "integer"
+         },
+         "unresolvedMirrors": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "multiMounted": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "invisible": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "audit": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

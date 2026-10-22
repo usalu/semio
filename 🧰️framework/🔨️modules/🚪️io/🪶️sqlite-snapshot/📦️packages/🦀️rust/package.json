@@ -10,10 +10,10 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-refusal": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-native",
-    "test-operation": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
-    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
+    "test-refusal": "repo run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
+    "test-native": "repo run @semio-tech/framework-sqlite-snapshot-rs:test-native",
+    "test-operation": "repo run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
+    "test-ownership": "repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
   },
   "devDependencies": {
     "@semio-tech/compiler-syntax-rust-ts": "workspace:*",

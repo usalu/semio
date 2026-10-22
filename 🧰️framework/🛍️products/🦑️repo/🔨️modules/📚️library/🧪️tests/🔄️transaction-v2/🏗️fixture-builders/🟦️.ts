@@ -204,7 +204,7 @@ export function generatorFixture(name: string): Fixture {
     symlinkSync(join(getWorkspaceRoot(), "node_modules"), join(row.repoRoot, "node_modules"), "junction");
     writeFileSync(join(row.repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
     writeFileSync(join(row.repoRoot, "package.json"), "{\"name\":\"transaction-generator-fixture\",\"private\":true}\n");
-    const project = `${JSON.stringify({ name: "@fixture/generator", root: owner, targets: { generate: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts generate" } }, "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } }, check: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts check" } } } }, null, 2)}\n`;
+    const project = `${JSON.stringify({ name: "@fixture/generator", root: owner, targets: { generate: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts generate" } }, "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts preview-generated" } }, check: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts check" } } } }, null, 2)}\n`;
     writeFileSync(join(row.repoRoot, "project.json"), project);
     writeFiles(join(row.workspace, "🧪️generator"), {
       "📋️project.json": project,

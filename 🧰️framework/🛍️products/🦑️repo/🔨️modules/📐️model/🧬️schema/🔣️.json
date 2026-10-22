@@ -1422,7 +1422,7 @@
       ]
     },
     "TicketPlan": {
-      "$comment": "🧷️ An IDE-native plan or spec file archived into the ticket folder on close.",
+      "$comment": "🧷️ A client-native plan or spec file archived into the ticket folder on close.",
       "type": "object",
       "properties": {
         "client": {
@@ -1535,7 +1535,7 @@
       }
     },
     "Ticket": {
-      "$comment": "🔖️ A ticket: one unit of work with a lifecycle and a contribution record. The Go twin carries a hand-written `UnmarshalJSON` that additionally rewrites goal and contributor compose-ids and absorbs pre-schema field spellings. Both belong to `🪪️identity` and `🎫️tickets`; this crate is the pure shape.",
+      "$comment": "🔖️ A ticket with durable parent, plan, sessions, interactions and agent records. Rooted date, slug and filesystem paths are derived identity fields.",
       "type": "object",
       "properties": {
         "title": {
@@ -1566,6 +1566,9 @@
         "goal": {
           "type": "string"
         },
+        "parent": {
+          "type": "string"
+        },
         "plan": {
           "anyOf": [
             {
@@ -1584,7 +1587,15 @@
         },
         "interactions": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Interaction" }
+          "items": {
+            "$ref": "#/$defs/Interaction"
+          }
+        },
+        "agents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketAgent"
+          }
         }
       },
       "required": [

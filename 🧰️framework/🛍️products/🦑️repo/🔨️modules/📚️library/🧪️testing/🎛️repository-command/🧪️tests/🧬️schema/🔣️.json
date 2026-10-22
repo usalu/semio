@@ -1,0 +1,41 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "stdout",
+     "stderr",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "stdout": {
+      "type": "string"
+     },
+     "stderr": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

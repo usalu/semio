@@ -1,13 +1,14 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{withPrintExecutionV1,withPrintScratchV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import { receiveScriptProcessInvocation,createIssuedResourceControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts fonts|generate viz|preview-generated|test`. */
+/** 🖨️ `@semio-tech/print` router: `repo ./📜️script.ts fonts|generate viz|preview-generated|test`. */
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
 import { runArtifactTypeScriptPackageMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 //#region 🖨️RouterAdapters
 class FontsScript extends BundleScript {
@@ -43,15 +44,15 @@ class TestScript extends BundleScript {
   }
 }
 class CheckScript extends BundleScript{
- async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
+ async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dirname,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
 }
 //#endregion 🖨️RouterAdapters
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("fonts", FontsScript)
   .register("generate", GenerateScript)
   .register("preview-generated", PrintTokenPreviewScript)
   .register("check",CheckScript)
   .register("test", TestScript);
 
-if(import.meta.main){if(process.argv[2]==="test"&&process.argv[3]==="inspect-refusal"){const{runPrintCompilerRefusalInspectorV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts"),{withCompiledPrintProbeV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts");await runPrintCompilerRefusalInspectorV1(process.env,process.argv.slice(4),withCompiledPrintProbeV1);}else await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test"}));}
+if(isMainModuleV1(import.meta.url)){if(process.argv[2]==="test"&&process.argv[3]==="inspect-refusal"){const{runPrintCompilerRefusalInspectorV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts"),{withCompiledPrintProbeV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts");await runPrintCompilerRefusalInspectorV1(process.env,process.argv.slice(4),withCompiledPrintProbeV1);}else await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test"}));}

@@ -2,6 +2,7 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use std::cell::{Cell, RefCell};
+use crate::telemetry_test_gate as gate;
 
 //#region 🕰️ClockFixture
 thread_local! {
@@ -48,6 +49,7 @@ fn fixture() -> serde_json::Value {
 //#region 🧪️Tail
 #[test]
 fn watchdog_tail_uses_the_original_guard_for_admission_and_terminal() {
+    let _gate = gate();
     let fixture = fixture();
     for row in fixture["cases"].as_array().unwrap() {
         let readings = std::array::from_fn(|index| row["clock"][index].as_u64());
@@ -71,6 +73,7 @@ fn watchdog_tail_uses_the_original_guard_for_admission_and_terminal() {
 
 #[test]
 fn watchdog_tail_a_previous_success_cannot_change_a_later_same_operation_result() {
+    let _gate = gate();
     let operation = OperationId(731);
     let generation = Generation(51);
     let previous = {
@@ -94,6 +97,7 @@ fn watchdog_tail_a_previous_success_cannot_change_a_later_same_operation_result(
 
 #[test]
 fn watchdog_tail_held_optional_telemetry_keeps_terminal_fault_without_waiting() {
+    let _gate = gate();
     let site = site_registry().try_lock().expect("original static telemetry fixture gate is available");
     let violations = violation_ring().try_lock().expect("original static telemetry fixture gate is available");
     let (returned, verdict) = std::thread::scope(|scope| {

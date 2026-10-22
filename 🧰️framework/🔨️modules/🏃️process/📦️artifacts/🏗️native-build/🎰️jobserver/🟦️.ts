@@ -4,6 +4,8 @@ import { closeSync, constants, mkdirSync, openSync, readSync, rmSync, writeSync 
 import { join } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { runtimeSupportsV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../⚙️runtime/🧲️native/🟦️.ts";
 
 const protocol = schema.definitions.Protocol.const;
 const issuedJobservers=new WeakSet<JobserverV1>();
@@ -90,9 +92,8 @@ function fifoChannel(directory: string, published: number): TokenChannelV1 {
 
 /** 🪟️ A named Win32 semaphore holding the published tokens, polled with a zero timeout; `bun:ffi` is read as a runtime builtin so Node and Vite never resolve it. */
 async function semaphoreChannel(published: number): Promise<TokenChannelV1> {
-  const ffi = process.getBuiltinModule("bun:ffi") as typeof import("bun:ffi") | undefined;
-  if (ffi === undefined) throw Error("Win32 jobserver semaphores require the Bun runtime");
-  const { dlopen, FFIType } = ffi;
+  if (!runtimeSupportsV1("ffi")) throw Error("Win32 jobserver semaphores require the Bun runtime");
+  const { dlopen, FFIType } = runtimeNativeSystemV1();
   const kernel = dlopen("kernel32.dll", {
     CreateSemaphoreW: { args: [FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.ptr], returns: FFIType.ptr },
     WaitForSingleObject: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u32 },

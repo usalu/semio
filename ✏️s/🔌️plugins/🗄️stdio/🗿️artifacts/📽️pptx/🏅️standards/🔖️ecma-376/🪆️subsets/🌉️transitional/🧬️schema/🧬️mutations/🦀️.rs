@@ -71,7 +71,7 @@ pub mod set_relationship_base;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxTransitionalMutation")]
+#[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxTransitionalMutation", reference = PptxSnapshot, reference_diff = PptxDiff)]
 pub enum PptxTransitionalMutation {
     SetMainNamespace(set_main_namespace::SetMainNamespace),
     SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace),
@@ -93,7 +93,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-drawing-namespace", "set
 #[cfg(test)]
 pub fn apply_pptx_transitional_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxTransitionalMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

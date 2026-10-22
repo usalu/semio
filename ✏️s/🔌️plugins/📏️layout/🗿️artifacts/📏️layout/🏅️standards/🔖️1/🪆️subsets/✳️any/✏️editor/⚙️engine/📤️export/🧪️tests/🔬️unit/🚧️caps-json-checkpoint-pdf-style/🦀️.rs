@@ -395,10 +395,10 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
     use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
     use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
     use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
-    let mut snapshot = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
+    let created = protocol::apply_diff_cold(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
+    let mut snapshot = protocol::apply_diff_cold(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     snapshot.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -33,5 +33,5 @@ class ReceivingScript extends BundleScript{
   await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","original_receiving_","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,cargoPhase);
  }
 }
-const router=new ScriptRouter(import.meta.dir).register("test-source",SourceScript).register("test-native",NativeScript).register("test-snapshot-receiving-native",ReceivingScript);
+const router=new ScriptRouter(import.meta.dirname).register("test-source",SourceScript).register("test-native",NativeScript).register("test-snapshot-receiving-native",ReceivingScript);
 await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test-source"}));

@@ -12,11 +12,17 @@ export function abandonedTestSandboxV1(facts: TestSandboxFactsV1, alive: (pid: n
   return !alive(facts.pid) || facts.heartbeatAgeMilliseconds > declared.layout.staleHeartbeatMilliseconds;
 }
 
-/** ♻️ Lists the sandbox directories of this host with the facts a reclaim decision needs. */
+/** ♻️ Lists the sandbox directories of this host with the facts a reclaim decision needs: the sandboxes of every agent session directory below the host-wide parent. */
 export function listTestSandboxesV1(parent: string, now: number = Date.now(), declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly Readonly<{ root: string; facts: TestSandboxFactsV1 }>[] {
   if (!existsSync(parent)) return [];
-  return readdirSync(parent).filter(name => /^[0-9a-f]{8}$/u.test(name)).flatMap(name => {
-    const root = join(parent, name);
+  return readdirSync(parent).filter(name => name !== declared.ports.directory && /^[a-z][a-z0-9]{0,11}$/u.test(name)).flatMap(name => listSessionSandboxesV1(join(parent, name), now, declared));
+}
+
+/** ♻️ Lists the sandbox directories below the root of one agent session. */
+export function listSessionSandboxesV1(home: string, now: number = Date.now(), declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly Readonly<{ root: string; facts: TestSandboxFactsV1 }>[] {
+  if (!existsSync(home)) return [];
+  return readdirSync(home).filter(name => /^[0-9a-f]{8}$/u.test(name)).flatMap(name => {
+    const root = join(home, name);
     try {
       const status = statSync(root);
       if (!status.isDirectory()) return [];
@@ -26,6 +32,19 @@ export function listTestSandboxesV1(parent: string, now: number = Date.now(), de
       return [{ root, facts: { pid, heartbeatAgeMilliseconds: now - beat, directoryAgeMilliseconds: now - status.mtimeMs } }];
     } catch { return []; }
   });
+}
+
+/** ♻️ Releases the sandboxes and the temp root of one agent session: abandoned sandboxes go (images detached first), a live one keeps the session root; when nothing is kept the whole root goes. */
+export function reclaimAgentSessionSandboxesV1(session: Readonly<{ resources: Readonly<{ tests: Readonly<{ root: string }> }> }>, options: Readonly<{ parent?: string; now?: number; alive?: (pid: number) => boolean; detach?: (root: string) => readonly string[] }> = {}, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): Readonly<{ released: number; kept: number }> {
+  const home = join(testSandboxParentV1(options.parent, declared), session.resources.tests.root), now = options.now ?? Date.now(), alive = options.alive ?? testProcessAliveV1, detach = options.detach ?? detachDiskImagesUnderV1;
+  if (!existsSync(home)) return { released: 0, kept: 0 };
+  let released = 0, kept = 0;
+  for (const { root, facts } of listSessionSandboxesV1(home, now, declared)) {
+    if (!abandonedTestSandboxV1(facts, alive, declared)) { kept++; continue; }
+    try { detach(root); rmSync(root, { recursive: true, force: true }); released++; } catch { kept++; }
+  }
+  if (kept === 0) { try { detach(home); rmSync(home, { recursive: true, force: true }); released++; } catch { kept++; } }
+  return { released, kept };
 }
 
 /** ♻️ Reclaims abandoned sandboxes and port leases: images under a dead sandbox are detached first, then the tree is removed; at most one sweep per declared interval unless forced. */

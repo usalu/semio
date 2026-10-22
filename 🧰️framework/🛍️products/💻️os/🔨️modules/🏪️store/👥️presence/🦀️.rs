@@ -1,13 +1,23 @@
 //! 👥️ Presence peers: the bounded peer table and its root custody, peer entries, retirement of returned peer roots, and
 //! the lane item receipt every ephemeral publication reports. The ephemeral lanes of the engine own one table; the
-//! presence read, publication io and rejection leaves read it without naming the engine.
+//! presence read, publication io and rejection leaves read it without naming the engine. This crate owns the whole
+//! presence lane: the store, the peers publication and commit, the retirement owners and the rejection owner.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-use semio_framework_value::ValueError;
-use std::sync::Arc;
-use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value_snapshot_read::*;
+use semio_framework_io_control::NativeSnapshotDecodeOwner;
+use semio_framework_os_store_read::ArtifactStoreDisplacedSnapshotRetirement;
+use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
+use semio_framework_os_store_one_item::*;
+use protocol::{Mutation, MutationDiff, apply_operation};
+use semio_framework_value::{FromValue, ToValue};
+use std::{collections::BTreeMap, marker::PhantomData, sync::Arc, mem::{size_of, size_of_val}};
+use semio_framework_os_store_ephemeral::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemAdmissionRejected, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared, ArtifactEphemeralOneItemPublication};
+#[cfg(test)]
+use semio_framework_value_snapshot_read::presence_test_retirement;
 
 /// 🧬️ Exact witness returned after one, and only one, lane item changes a live root.
 /// 🌉️ Carries serde alongside `ToValue`/`FromValue`: `TypedOperationResultPage::try_serialize`
@@ -296,3 +306,30 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeersRetirem
 impl<P> Drop for PresencePeersRetirement<P> {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "incomplete presence-peer retirement reached Drop without bounded disposal"); }
 }
+
+//#region 🔖️Authority
+#[path = "👥️presence-store-and-peers-publication/🦀️.rs"]
+mod presence_store_and_peers_publication;
+pub use presence_store_and_peers_publication::{PresencePeersCommit, PresencePeersPublication, PresenceStore};
+
+#[path = "🚪️io/📬️publication/🦀️.rs"]
+mod presence_publication_io;
+
+#[path = "🔗️read/🦀️.rs"]
+mod presence_peer_read;
+pub use presence_peer_read::PresencePeersRead;
+
+#[path = "🚫️rejection/🦀️.rs"]
+mod presence_peer_rejection;
+pub use presence_peer_rejection::PresencePeerAdmissionRejected;
+
+pub use semio_framework_os_presence_native_snapshot::ArtifactPresenceSnapshot;
+
+#[path = "♻️retirement/🦀️.rs"]
+mod presence_retirement;
+pub use presence_retirement::PresenceStoreRetirement;
+//#endregion 🔖️Authority
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

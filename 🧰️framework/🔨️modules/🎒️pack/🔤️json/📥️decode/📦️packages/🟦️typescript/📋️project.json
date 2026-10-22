@@ -21,6 +21,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/**/*",
       "sharedGlobals"
     ],
-    "options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}
+    "options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript","command":"repo ./📜️script.ts test","forwardAllArgs":true}
   }}
 }

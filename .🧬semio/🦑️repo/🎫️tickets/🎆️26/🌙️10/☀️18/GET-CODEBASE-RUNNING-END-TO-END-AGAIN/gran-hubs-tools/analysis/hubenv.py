@@ -3,10 +3,11 @@ import os,sys,json,subprocess,collections
 T=os.path.dirname(os.path.abspath(__file__))
 GEN=os.path.normpath(T+"/../../🗑️generated/gran-value")
 OUT=os.path.normpath(T+"/../../🗑️generated/gran-hubs")
-os.environ.setdefault("GRAN_GEN",GEN)
+os.environ.setdefault("GRAN_GEN",OUT if os.path.exists(OUT+"/crates2.json") else GEN)
 sys.path.insert(0,os.path.normpath(T+"/../../gran-value-tools/analysis"))
 from graph import *
 from tree import *
+GEN=os.path.normpath(T+"/../../🗑️generated/gran-value")
 reach=json.load(open(GEN+"/reach.json"))
 HUBS=['plugin','os-kernel','kernel','job','os-store-sync']
 def hubdir(h): return byname['semio-framework-'+h]
@@ -67,3 +68,9 @@ def make_world():
         dm[lib[d]]=m
     w=World(I2L,dm);Model.world=w
     return w,I2L,I2D,lib
+
+
+def libmaps():
+    MAN = json.load(open(OUT + '/manifests.json'))
+    lib = {d: (MAN.get(d, {}).get('lib') or c['name']).replace('-', '_') for d, c in C.items()}
+    return lib, {lib[d]: d for d in C}

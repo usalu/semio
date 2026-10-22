@@ -7,6 +7,7 @@ import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
 import {compactCargoIncrementalSessionsV1,withCargoCacheMaintenanceV1, deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
 import {cargoDirectories} from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 📊️ Dry-run visibility into the shared cache root: per-area sizes, unit counts, and exactly what `cache-prune` would delete. */
 export class CacheReportScript extends BundleScript {
@@ -16,7 +17,7 @@ export class CacheReportScript extends BundleScript {
       const areas = await scanCacheAreas(this.repoRoot, control, json ? undefined : (area, unit) => console.log(`[cache-report] scanned ${area}/${unit.path}`));
       const plan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
       if (json) {
-        console.log(JSON.stringify(plan));
+        writeResultLineV1(JSON.stringify(plan));
         return;
       }
       for (const area of plan.areas) {

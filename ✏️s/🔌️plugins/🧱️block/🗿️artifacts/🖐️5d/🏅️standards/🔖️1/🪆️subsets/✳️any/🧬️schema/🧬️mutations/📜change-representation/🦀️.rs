@@ -25,6 +25,15 @@ pub fn change_representation_description<Op: From<crate::change_representation_d
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeRepresentationDescription where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_representation_description::ChangeRepresentationDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-description", record: "ChangedRepresentationDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" description", self.id), &format!("Beschreibung von Repräsentation \"{}\" ändern", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ChangeRepresentationDescription where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_representation_description::ChangeRepresentationDescription> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::change_representation_description::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeRepresentationDes
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" description", self.id), &format!("Beschreibung von Repräsentation \"{}\" ändern", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

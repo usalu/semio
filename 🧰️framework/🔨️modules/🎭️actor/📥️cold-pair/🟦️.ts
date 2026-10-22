@@ -160,6 +160,6 @@ export function coldDocumentPairFrontierEquals(left: ColdDocumentPairFrontier, r
 //#region 🧪️StatusCodecLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️cold-pair-wit-status-codec-agrees-with-the-neutral-schema-and-rejects-ev/🟦️.ts");
-  await registerTests1(import.meta.vitest, { parseWitColdPairIngressStatus }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { parseWitColdPairIngressStatus }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️StatusCodecLaws

@@ -113,7 +113,7 @@ async fn an_optional_field_is_restored_to_none_and_to_some() {
     let mut base = ModelSnapshot::default();
     base.openings.insert("o".into(), Opening { host: "w".into(), kind: OpeningKind::Void { width: 1.0, height: 2.0 }, offset: 1.0, sill_override: None, width: None, height: Some(2.1), flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "O".into() });
     let diff = ModelDiff::openings("o", Entry::Patched(OpeningPatch { width: Some(Assigned::new(Some(0.9))), height: Some(Assigned::new(None)), ..Default::default() }));
-    let after = protocol::apply_diff(&diff, &base).expect("applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("applies");
     assert_eq!((after.openings["o"].width, after.openings["o"].height), (Some(0.9), None));
     assert_diff_algebra_inverse_law::<ModelSnapshot, ModelDiff>(&base, &diff).await;
 }
@@ -125,7 +125,7 @@ async fn property_patches_set_replace_and_remove_and_invert() {
     base.properties.insert("w".into(), PropertySet::from([("Pset".to_string(), [("Fire".to_string(), value("EI60"))].into())]));
     let patch = PropertySetPatch { assigned: [("Pset".to_string(), [("Fire".to_string(), None), ("Acoustic".to_string(), Some(value("45 dB")))].into())].into() };
     let diff = ModelDiff::properties("w", Entry::Patched(patch));
-    let after = protocol::apply_diff(&diff, &base).expect("applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("applies");
     assert!(!after.properties["w"]["Pset"].contains_key("Fire") && after.properties["w"]["Pset"].contains_key("Acoustic"));
     assert_diff_algebra_inverse_law::<ModelSnapshot, ModelDiff>(&base, &diff).await;
 }
@@ -136,10 +136,10 @@ async fn property_patches_set_replace_and_remove_and_invert() {
 #[semio_framework_async_macros::async_test]
 async fn apply_refuses_with_a_code_and_the_collection_and_id_as_target() {
     let base = base();
-    let duplicate = protocol::apply_diff(&ModelDiff::storeys("st", Entry::Created(storey("Again", 9, 3.0))), &base).expect_err("created id exists");
+    let duplicate = protocol::apply_diff_cold(&ModelDiff::storeys("st", Entry::Created(storey("Again", 9, 3.0))), &base).expect_err("created id exists");
     assert_eq!((duplicate.code.as_str(), duplicate.target), ("mutation.apply.duplicate-id", vec!["storeys".to_string(), "st".to_string()]));
     for entry in [E::Deleted, E::Replaced(storey("X", 1, 1.0)), E::Patched(heightened(3.0))] {
-        let missing = protocol::apply_diff(&ModelDiff::storeys("ghost", entry), &base).expect_err("changed id is absent");
+        let missing = protocol::apply_diff_cold(&ModelDiff::storeys("ghost", entry), &base).expect_err("changed id is absent");
         assert_eq!((missing.code.as_str(), missing.target), ("mutation.apply.missing-target", vec!["storeys".to_string(), "ghost".to_string()]));
     }
 }
@@ -148,7 +148,7 @@ async fn apply_refuses_with_a_code_and_the_collection_and_id_as_target() {
 async fn apply_is_all_or_nothing() {
     let base = base();
     let diff = ModelDiff { storeys: Some(KeyedDelta([("st".to_string(), E::Patched(heightened(3.4))), ("ghost".to_string(), E::Deleted)].into())), ..ModelDiff::default() };
-    assert!(protocol::apply_diff(&diff, &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
     assert_eq!(base.storeys["st"].height, 3.0, "the base is untouched by a refused diff");
 }
 
@@ -157,7 +157,7 @@ async fn an_empty_diff_is_the_identity_and_reports_empty() {
     let base = base();
     let empty = ModelDiff::default();
     assert!(protocol::DiffAlgebra::<ModelSnapshot>::is_empty(&empty));
-    assert_eq!(protocol::apply_diff(&empty, &base).expect("applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&empty, &base).expect("applies"), base);
 }
 //#endregion 🔖️Apply
 

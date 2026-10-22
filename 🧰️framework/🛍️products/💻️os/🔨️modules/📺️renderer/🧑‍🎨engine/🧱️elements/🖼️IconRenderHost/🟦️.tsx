@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "../⚛️react-port/🟦️.ts";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { IconShotFrame, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
 import { renderIconRequest } from "./🚚️request/🟦️.ts";

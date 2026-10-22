@@ -16,15 +16,6 @@ pub struct UpdateBoltInputs {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateBoltInputs where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_bolt_inputs::UpdateBoltInputs> + From<crate::remove_joint::RemoveJoint> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "joint", kind: "update-bolt-inputs", record: "UpdatedJoint" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
-        crate::update_bolt_inputs::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::update_bolt_inputs::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update joint {}", self.joint.id),
@@ -34,6 +25,18 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateBoltInputs where O
     fn target(&self) -> Vec<String> {
         vec![self.joint.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<En1993Snapshot, Op> for UpdateBoltInputs where Op: protocol::ColdMutation<En1993Snapshot, ReferenceDiff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_bolt_inputs::UpdateBoltInputs> + From<crate::remove_joint::RemoveJoint> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1993Snapshot>>::ReferenceDiff> {
+        crate::update_bolt_inputs::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::update_bolt_inputs::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Payload
 

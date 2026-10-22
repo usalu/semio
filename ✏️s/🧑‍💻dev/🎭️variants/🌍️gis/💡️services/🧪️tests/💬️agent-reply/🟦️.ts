@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 /** 💬️ The agent's own voice, end to end, with nothing mocked on either side — ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AC1, audit `📓️g19-ai-user-experience-audit.md`

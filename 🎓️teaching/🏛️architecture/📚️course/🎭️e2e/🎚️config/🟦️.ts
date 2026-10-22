@@ -20,7 +20,7 @@ import { defineConfig } from "@playwright/test";
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL;
-if (!baseURL) throw new Error("Run the end-to-end gate through `bun repo run @teaching/architecture-course:test-e2e`; it boots the stack these specs need");
+if (!baseURL) throw new Error("Run the end-to-end gate through `repo run @teaching/architecture-course:test-e2e`; it boots the stack these specs need");
 
 /** 🖥️ The desktop window every spec but the phone's opens. */
 export const DESKTOP_VIEWPORT = { width: 1440, height: 900 } as const;

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter,receiveScriptProcessInvocation,runScriptMain} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

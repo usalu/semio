@@ -9,6 +9,7 @@ import { loadTaxonomy, pathIsExcluded, validateTaxonomy } from "../🔐️taxono
 import { discoverPackageProblems, discoverPackages } from "../🔭️repository-scan/🟦️.ts";
 import { componentFilenames } from "../⚖️fixed-contract-resolution/🟦️.ts";
 import { fileKindIdForFilename, semanticManifestFilenameForCollection } from "../🗂️file-kind-resolution/🟦️.ts";
+import { runtimeIdsV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔗️ One resolved source dependency between repository-owned semantic components. */
 export interface SemanticConsumerEdge {
@@ -363,7 +364,7 @@ function semanticFlattenExports(value: unknown, prefix = ".", result = new Map<s
   else if (value && typeof value === "object") {
     for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
       if (key.startsWith(".")) semanticFlattenExports(child, key, result);
-      else if (["import", "default", "types", "bun", "node"].includes(key) && !result.has(prefix)) semanticFlattenExports(child, prefix, result);
+      else if (["import", "default", "types", ...runtimeIdsV1()].includes(key) && !result.has(prefix)) semanticFlattenExports(child, prefix, result);
     }
   }
   return result;

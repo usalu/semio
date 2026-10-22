@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { GoTestScript } from "../../🧪️execution/🐹️go/🟦️.ts";
 import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execution/🟦️.ts";
@@ -19,8 +19,8 @@ class ToolRunPolicySourceTestScript extends BundleScript {
   }
 }
 
-/** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
-const router = new ScriptRouter(import.meta.dir)
+/** 🧭️ `@semio-tech/repo-lib` router: `repo ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
+const router = new ScriptRouter(import.meta.dirname)
   .register("test-tool-run-policy-source",ToolRunPolicySourceTestScript)
   .register("test-fixture-ownership",FixtureOwnershipTestScript).register("test-general-execution-ownership",GeneralExecutionOwnershipScript)
   .register("typecheck", TypecheckScript)

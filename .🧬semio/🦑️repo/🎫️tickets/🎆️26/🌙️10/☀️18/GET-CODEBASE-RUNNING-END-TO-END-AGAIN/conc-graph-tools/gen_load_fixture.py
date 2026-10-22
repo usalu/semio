@@ -143,6 +143,43 @@ def digest_row(path, tag, size=10):
     return {"kind": "digest", "path": path, "fact": {"sha256": tag * 64, "size": size, "mtimeMs": 1700000000000.5}}
 
 
+import importlib.util
+_spec = importlib.util.spec_from_file_location("oracle_slice", os.path.join(HERE, "oracle_slice.py"))
+oracle = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(oracle)
+
+
+def own(root, edges, **targets):
+    return {"root": root, "edges": edges, "targets": {t: ({"dependsOn": d} if d is not None else {}) for t, d in targets.items()}}
+
+
+closure_base = {
+    "a": own("pkg/a", ["b"], build=["^build"], test=[{"target": "all", "projects": "*"}], local=["build"]),
+    "b": own("pkg/b", ["c"], build=["^build", "gen:codegen"]),
+    "c": own("pkg/c", [], build=None),
+    "gen": own("pkg/gen", [], codegen=None),
+    "w": own("pkg/w", ["a"], build=None),
+    "z": own("pkg/z", [], build=None),
+    "cat": own("pkg/cat", [], build=None),
+}
+closure_cases = [
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "a", "target": "build"}]}, "roots": []},
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "a", "target": "test"}]}, "roots": []},
+    {"owners": closure_base, "selection": {"kind": "owners", "projects": ["a"], "exclude": []}, "roots": ["a"]},
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "a", "target": "local"}]}, "roots": []},
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "a", "target": "build"}]}, "roots": [], "providers": [{"consumerRoots": ["pkg/a"], "sourcePath": "pkg/cat/catalog.json"}]},
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "z", "target": "build"}]}, "roots": [], "providers": [{"consumerRoots": ["pkg/a"], "sourcePath": "pkg/cat/catalog.json"}]},
+    {"owners": closure_base, "selection": {"kind": "tasks", "tasks": [{"project": "nope", "target": "build"}]}, "roots": []},
+    {"owners": {**closure_base, "d": own("pkg/d", ["a"], build=[{"target": "build", "dependencies": True}, {"target": "build", "projects": ["z", "w"]}])}, "selection": {"kind": "tasks", "tasks": [{"project": "d", "target": "build"}]}, "roots": []},
+]
+closure_cases += [
+    {"owners": {**closure_base, "e": own("pkg/e", ["a", "npm:left-pad"], build=None)}, "external": ["npm:left-pad"], "selection": {"kind": "tasks", "tasks": [{"project": "e", "target": "build"}]}, "roots": []},
+    {"owners": {**closure_base, "e": own("pkg/e", ["a", "ghost"], build=None)}, "external": ["npm:left-pad"], "selection": {"kind": "tasks", "tasks": [{"project": "e", "target": "build"}]}, "roots": []},
+    {"owners": {**closure_base, "e": own("pkg/e", ["a", "ghost"], build=None)}, "external": [], "selection": {"kind": "owners", "projects": ["e"], "exclude": []}, "roots": ["e"]},
+]
+for case in closure_cases:
+    case["expected"] = oracle.expected(case)
+
 POLICY_IMPL = library_policy()
 implementation_vectors = [
     [],
@@ -163,18 +200,20 @@ fixture = {
     "shape": {"workspaceRoot": W, "part": part, "stubs": stubs, "expected": shape_model(W, part, stubs)},
     "shapeImplementation": shape_implementation,
     "implementation": [{"rows": rows, "expected": implementation_model(rows)} for rows in implementation_vectors],
+    "closures": closure_cases,
 }
 with open(os.path.join(OUT, "fixture.json"), "w", encoding="utf8") as handle:
     json.dump(fixture, handle, ensure_ascii=False, indent=1, sort_keys=True)
     handle.write("\n")
 row_schema = {"type": "object", "required": ["kind", "path", "fact"], "properties": {"kind": {"type": "string"}, "path": {"type": "string"}, "fact": {}}}
-schema = {"type": "object", "additionalProperties": False, "required": ["version", "policy", "language", "shape", "shapeImplementation", "implementation"], "properties": {
+schema = {"type": "object", "additionalProperties": False, "required": ["version", "policy", "language", "shape", "shapeImplementation", "implementation", "closures"], "properties": {
     "version": {"const": 1},
     "policy": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["args", "env", "expected"], "properties": {"args": {"type": "array", "items": {"type": "string"}}, "env": {"type": "object", "additionalProperties": {"type": "string"}}, "expected": {"type": "object"}}}},
     "language": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["env", "expected"], "properties": {"env": {"type": "object", "additionalProperties": {"type": "string"}}, "expected": {"enum": ["en", "de"]}}}},
     "shape": {"type": "object", "additionalProperties": False, "required": ["workspaceRoot", "part", "stubs", "expected"], "properties": {"workspaceRoot": {"type": "string"}, "part": {"type": "object"}, "stubs": {"type": "object"}, "expected": {"type": "object"}}},
     "shapeImplementation": {"type": "object", "additionalProperties": False, "required": ["workspaceRoot", "part", "stubs", "implementation", "expected"], "properties": {"workspaceRoot": {"type": "string"}, "part": {"type": "object"}, "stubs": {"type": "object"}, "implementation": {"type": "object"}, "expected": {"type": "object"}}},
-    "implementation": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["rows", "expected"], "properties": {"rows": {"type": "array", "items": row_schema}, "expected": {"type": "object"}}}}}}
+    "implementation": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["rows", "expected"], "properties": {"rows": {"type": "array", "items": row_schema}, "expected": {"type": "object"}}}},
+    "closures": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["owners", "selection", "roots", "expected"], "properties": {"owners": {"type": "object"}, "external": {"type": "array", "items": {"type": "string"}}, "selection": {"type": "object"}, "roots": {"type": "array", "items": {"type": "string"}}, "providers": {"type": "array"}, "expected": {"type": "object"}}}}}}
 with open(os.path.join(OUT, "fixture-schema.json"), "w", encoding="utf8") as handle:
     json.dump(schema, handle, ensure_ascii=False, indent=1)
     handle.write("\n")

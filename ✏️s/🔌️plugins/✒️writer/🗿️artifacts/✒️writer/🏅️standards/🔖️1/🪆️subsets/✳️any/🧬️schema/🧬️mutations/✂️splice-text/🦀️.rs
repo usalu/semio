@@ -45,17 +45,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text-range", kind: "splice-text", record: "SplicedText" };
 
-    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     /// 🎯️ The writer's authored body, like `EditText`: its composed `document` child derives from it.
     fn target(&self) -> Vec<String> {
         vec!["text".to_string()]
@@ -72,6 +61,21 @@ where
             (true, true) => semio_framework_ui_locale::LocalizedLabel::native("Edit a text range", "Textbereich bearbeiten"),
         }
     }
+}
+
+impl<Op> protocol::ColdMutationKind<WriterSnapshot, Op> for SpliceText
+where
+    Op: protocol::ColdMutation<WriterSnapshot, ReferenceDiff = WriterDiff> + From<SpliceText>,
+{
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 
 /// ✂️ The most scalars of a run a history label quotes.

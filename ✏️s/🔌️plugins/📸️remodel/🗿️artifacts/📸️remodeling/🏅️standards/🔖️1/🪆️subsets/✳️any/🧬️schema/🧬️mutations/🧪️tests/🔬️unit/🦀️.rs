@@ -43,7 +43,7 @@ fn applied(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> Remodeli
     let outcome = mutation.diff(base);
     let rejected: Vec<_> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{message:?}")).collect();
     assert!(rejected.is_empty(), "scenario step {mutation:?} was rejected: {rejected:?}");
-    protocol::apply_diff(outcome.diff(), base).expect("valid mutation diff")
+    protocol::apply_diff_cold(outcome.diff(), base).expect("valid mutation diff")
 }
 
 /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once
@@ -265,7 +265,7 @@ async fn results_and_content_inverse_law() {
 async fn move_step_style_diff_absorb_law() {
     let base = populated_scene_fixture();
     let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = change_stream_sync("stream-1".into(), 20.0).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

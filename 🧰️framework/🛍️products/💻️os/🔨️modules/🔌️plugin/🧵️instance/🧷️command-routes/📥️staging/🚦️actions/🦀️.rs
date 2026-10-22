@@ -25,7 +25,7 @@ use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use std::mem::ManuallyDrop;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
@@ -39,7 +39,7 @@ use crate::commands_instance_root::framework_reserved_action_kind;
 use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
 use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     pub async fn dispatch_action(&mut self, action: &str, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let Some(slot)=self.ingress.stage_action_source(action, source_args, original_fault, cx)?else{return Ok(None)};
         let Some(mut source)=self.ingress.action_ingress_sources.get_mut(slot).unwrap().loan_source(cx)?else{return Ok(None)};
@@ -222,7 +222,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     let parent_document_id = self.stores.store.envelope().id.clone();
                     let staged = DslValue::Object(arguments.iter().map(|(key, value)| (key.clone(), value.clone())).collect());
                     let (_, snapshot, _, history) = self.history.cache.as_ref().expect("cache refreshed above");
-                    let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_composition.child_content_root), render_operation, parent_document_id, None).await.with_instance(self.tools.instance_operation_owner.clone());
+                    let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_composition.child_content_root), render_operation, &parent_document_id, None).await.with_instance(self.tools.instance_operation_owner.clone());
                     A::agent_target_revision(&address.action_id, &staged, &doc).await?.ok_or_else(|| {
                         Fault::new(
                             FaultOrigin::Framework,
@@ -299,7 +299,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             if !self.ingress.action_source_capture_ready(&address.action_id, cx){return Ok(None)}
             let mut original_args=if self.ingress.action_source_pending(){None}else{let mut arguments=invocation.arguments.clone();arguments.insert("windowId".into(),DslValue::String(address.window_instance_id.clone()));self.fill_agent_revisions(address,&mut arguments).await?;
             Some(DslValue::Object(arguments.into_iter().collect()))};
-            let Some(command)=self.ingress.receive_action_command(&address.action_id, &mut original_args, &mut None, cx).await?else{return Ok(None)};
+            let Some(command)=self.ingress.receive_action_command::<A>(&address.action_id, &mut original_args, &mut None, cx).await?else{return Ok(None)};
             let wire=<A::Command as protocol::OpBinary>::encode_op(&command).map_err(|source|source.into_fault())?;
             let admission=self.tools.admit_command_wire(&*self.stores, &address.action_id, &wire, 1).await?;self.media.require_complete_tool_operation_pipeline(&admission)?;
             self.begin_agent_lane_preview(Box::new(command),admission,&ActionMeta{view_state:Some(view),..meta.clone()},cx).await?;

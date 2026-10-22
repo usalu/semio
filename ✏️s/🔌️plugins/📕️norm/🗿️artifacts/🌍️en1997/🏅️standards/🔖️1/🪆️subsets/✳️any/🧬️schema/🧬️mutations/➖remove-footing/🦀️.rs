@@ -18,6 +18,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveFooting where Op: 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove", entity: "footing", kind: "remove-footing", record: "RemovedFooting",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove footing", "Fundament entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for RemoveFooting where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::insert_footing::InsertFooting> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::remove_footing::diff::diff(self, base)
     }
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveFooting where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove footing", "Fundament entfernen")
-    }
 }
 
 //#region 🪢️Mounts

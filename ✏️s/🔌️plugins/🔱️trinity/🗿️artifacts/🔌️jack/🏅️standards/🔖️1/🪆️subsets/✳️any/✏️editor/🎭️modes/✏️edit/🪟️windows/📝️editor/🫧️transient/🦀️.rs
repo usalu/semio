@@ -79,28 +79,35 @@ pub struct JackEditorWindowTransientDiff {
     pub selection: Option<Option<JackEditorSelection>>,
 }
 
-impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
-    fn apply(&self, base: &JackEditorWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JackEditorWindowTransient> {
-        let mut next = base.clone();
-        if let Some(selection) = &self.selection {
-            next.selection.clone_from(selection);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTransientDiff {}
 
+impl protocol::ColdMutationDiff<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.selection.is_some() {
             self.selection = other.selection;
         }
     }
+
+    fn apply(&self, unpublished: &mut JackEditorWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(selection) = &self.selection {
+            next.selection.clone_from(selection);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
-    fn inverse(&self, base: &JackEditorWindowTransient) -> Self {
-        Self { selection: self.selection.as_ref().map(|_| base.selection.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.selection.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
+    fn inverse(&self, base: &JackEditorWindowTransient) -> Self {
+        Self { selection: self.selection.as_ref().map(|_| base.selection.clone()) }
     }
 }
 
@@ -129,8 +136,8 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
     type Mutation = JackEditorWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(editor_window_transient_footprint, editor_window_transient_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

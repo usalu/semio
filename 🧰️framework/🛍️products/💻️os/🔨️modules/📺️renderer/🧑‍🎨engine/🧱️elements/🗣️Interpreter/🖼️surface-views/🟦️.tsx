@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useCallback, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useSyncExternalStore, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { type SceneLaneRef, sceneFromLanes } from "@semio-tech/framework";
 import { UiDocumentStore, useUiDocumentRevision } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type Component, type UiNodeRecord } from "@semio-tech/framework";

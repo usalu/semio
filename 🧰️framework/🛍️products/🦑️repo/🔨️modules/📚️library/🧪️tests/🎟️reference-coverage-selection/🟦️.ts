@@ -107,8 +107,8 @@ test("large non-Rust token sets never perform a quadratic Rust coverage join", (
 
 test("reference coverage gate is registered through its exact default-budget route", async () => {
   const expected = vector.execution, pkg = join(library, "📦️packages/🟦️typescript"), project = JSON.parse(readFileSync(join(pkg, "📋️project.json"), "utf8")), packageJson = JSON.parse(readFileSync(join(pkg, "package.json"), "utf8"));
-  expect(project.targets[expected.target]?.options.command).toBe("bun ./📜️script.ts test " + expected.route);
-  expect(packageJson.scripts[expected.target]).toBe('bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:' + expected.target);
+  expect(project.targets[expected.target]?.options.command).toBe("repo ./📜️script.ts test " + expected.route);
+  expect(packageJson.scripts[expected.target]).toBe('repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:' + expected.target);
   const { path: routePath, text: router } = readRegisteredTestRoute(root, expected.route);
   expect(router).toContain('if (segments[0] === "' + expected.route + '")');
   expect(router).toContain('🧪️tests/🎟️reference-coverage-selection/🟦️.ts');

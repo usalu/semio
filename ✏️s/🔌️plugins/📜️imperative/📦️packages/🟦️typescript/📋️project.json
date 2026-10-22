@@ -7,7 +7,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

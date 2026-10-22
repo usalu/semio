@@ -22,7 +22,7 @@ pub struct OperationDiagnosticPublication{
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original operation diagnostic publication has no admitted next action")}
 fn source_birth()->RetirementDemand{RetirementDemand{copy_bytes:RetainedCloneSource::<Vec<Diagnostic>>::constructor_copy_bytes(),capacity_bytes:RetainedCloneSource::<Vec<Diagnostic>>::owned_constructor_capacity_bytes::<()>(),depth:1,..Default::default()}}
-fn source_close(owner:&RetainedCloneSource<Vec<Diagnostic>>,body:usize)->Result<RetirementDemand,ValueError>{owner.next_close_demands(body)}
+fn source_close(owner:&RetainedCloneSource<Vec<Diagnostic>>,body:usize)->Result<RetirementDemand,ValueError>{owner.next_close_demand(body)}
 fn projection_close(owner:&RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>,body:usize)->Result<RetirementDemand,ValueError>{owner.close_demand(body)}
 impl OperationDiagnosticPublication{
  /// 📏️ Small retained framing is admitted before moving the original diagnostic vector.

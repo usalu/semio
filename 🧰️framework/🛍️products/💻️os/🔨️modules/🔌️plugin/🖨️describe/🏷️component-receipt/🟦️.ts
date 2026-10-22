@@ -1,9 +1,10 @@
-import { spawnSync } from "node:child_process";
+
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitLeafV1, type CargoArtifactObservationV1, type CargoInputObservationV1, type CargoProvenanceRootsV1, type CargoResourceWitnessV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 export type { CargoProvenanceRootsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, componentToolchainV1, encodeComponentReceiptV1, parseComponentReceiptV1 } from "./🧬️schema/🟦️.ts";
 import { type ComponentProfileV1, type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
@@ -70,7 +71,7 @@ const toolchains = new Map<string, string>();
 export function rustToolchainIdentityV1(repoRoot: string): string {
   const known = toolchains.get(repoRoot);
   if (known) return known;
-  const result = spawnSync("rustc", ["-vV"], { cwd: repoRoot, encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["-vV"], { command: "rustc", cwd: repoRoot, encoding: "utf8" });
   if (result.status !== 0) throw new Error(`rustc -vV failed: ${result.stderr}`);
   const identity = rustToolchainIdentityFromVersionV1(result.stdout);
   toolchains.set(repoRoot, identity);

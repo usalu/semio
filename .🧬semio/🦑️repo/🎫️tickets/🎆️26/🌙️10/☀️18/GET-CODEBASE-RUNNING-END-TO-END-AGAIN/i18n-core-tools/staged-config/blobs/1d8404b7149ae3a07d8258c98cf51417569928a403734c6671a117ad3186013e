@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Language Resolution",
+  "description": "The ordered sources that choose the language of texts; no language is ever assumed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "environmentOrder", "explicitVariable", "configSource", "preferenceListVariable", "neutralTags", "osLocale", "refusal"],
+  "properties": {
+    "version": { "const": 1 },
+    "environmentOrder": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Z_]+$" } },
+    "explicitVariable": { "type": "string", "pattern": "^[A-Z_]+$" },
+    "configSource": { "const": "config" },
+    "preferenceListVariable": { "type": "string", "pattern": "^[A-Z_]+$" },
+    "neutralTags": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "osLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "darwin": { "type": "object", "additionalProperties": false, "required": ["command", "args", "timeoutMs"], "properties": { "command": { "type": "string", "minLength": 1 }, "args": { "type": "array", "items": { "type": "string" } }, "timeoutMs": { "type": "integer", "minimum": 100 } } },
+        "win32": { "type": "object", "additionalProperties": false, "required": ["intl"], "properties": { "intl": { "const": true } } }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de", "unknownFlag", "unknownVariable", "unknownConfig"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 },
+        "unknownFlag": { "$ref": "#/definitions/Bilingual" },
+        "unknownVariable": { "$ref": "#/definitions/Bilingual" },
+        "unknownConfig": { "$ref": "#/definitions/Bilingual" }
+      }
+    }
+  },
+  "definitions": {
+    "Bilingual": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } } }
+  }
+}

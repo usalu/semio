@@ -16,8 +16,8 @@
     ]
   },
   "targets": {
-    "test-native": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native" } },
-    "test-source": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source" } },
-    "test-strict": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-strict" } }
+    "test-native": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test-native" } },
+    "test-source": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test-source" } },
+    "test-strict": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test-strict" } }
   }
 }

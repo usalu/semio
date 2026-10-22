@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "paths": [
+    {
+      "id": "owned-posix",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": null,
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "id": "inherited-child",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/issued/shared",
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "id": "inherited-root",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/issued",
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "id": "sibling-refused",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/issued-other",
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "id": "parent-refused",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/elsewhere",
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "id": "relative-owner-refused",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "shared",
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "id": "noncanonical-refused",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/issued/../issued/shared",
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "id": "symlink-refused",
+      "platform": "posix",
+      "root": "/issued",
+      "owner": "/issued/shared",
+      "symlink": true,
+      "accepted": false
+    },
+    {
+      "id": "overlong-before-effects",
+      "platform": "posix",
+      "root": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "owner": null,
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "id": "windows-owned",
+      "platform": "windows",
+      "root": "C:\\issued",
+      "owner": null,
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "id": "windows-child",
+      "platform": "windows",
+      "root": "C:\\issued",
+      "owner": "C:\\issued\\shared",
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "id": "windows-other-drive",
+      "platform": "windows",
+      "root": "C:\\issued",
+      "owner": "D:\\shared",
+      "symlink": false,
+      "accepted": false
+    }
+  ],
+  "runs": [
+    {
+      "id": "zero-touch-inherited-environment",
+      "environment": "inherited",
+      "failure": "none",
+      "cleanupFails": false,
+      "cancelled": false,
+      "accepted": true,
+      "commandCalls": 1
+    },
+    {
+      "id": "provided-environment",
+      "environment": "provided",
+      "failure": "none",
+      "cleanupFails": false,
+      "cancelled": false,
+      "accepted": true,
+      "commandCalls": 1
+    },
+    {
+      "id": "error-primary-over-cleanup",
+      "environment": "provided",
+      "failure": "error",
+      "cleanupFails": true,
+      "cancelled": false,
+      "accepted": false,
+      "commandCalls": 1
+    },
+    {
+      "id": "undefined-primary-over-cleanup",
+      "environment": "inherited",
+      "failure": "undefined",
+      "cleanupFails": true,
+      "cancelled": false,
+      "accepted": false,
+      "commandCalls": 1
+    },
+    {
+      "id": "false-primary-over-cleanup",
+      "environment": "inherited",
+      "failure": "false",
+      "cleanupFails": true,
+      "cancelled": false,
+      "accepted": false,
+      "commandCalls": 1
+    },
+    {
+      "id": "cleanup-refusal",
+      "environment": "provided",
+      "failure": "none",
+      "cleanupFails": true,
+      "cancelled": false,
+      "accepted": false,
+      "commandCalls": 1
+    },
+    {
+      "id": "pre-cancel-before-allocation",
+      "environment": "inherited",
+      "failure": "none",
+      "cleanupFails": false,
+      "cancelled": true,
+      "accepted": false,
+      "commandCalls": 0
+    }
+  ],
+  "commands": [
+    {
+      "id": "clean-human-no-sandbox-marker",
+      "failure": "none",
+      "finishFails": false,
+      "preCancelled": false,
+      "expectedCode": 0,
+      "accepted": true,
+      "report": "default"
+    },
+    {
+      "id": "nonzero-status-after-settlement",
+      "failure": "nonzero",
+      "finishFails": false,
+      "preCancelled": false,
+      "expectedCode": 7,
+      "accepted": false,
+      "report": "explicit"
+    },
+    {
+      "id": "signal-after-settlement",
+      "failure": "signal",
+      "finishFails": false,
+      "preCancelled": false,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "default"
+    },
+    {
+      "id": "cancelled-status-unknown",
+      "failure": "cancelled",
+      "finishFails": true,
+      "preCancelled": false,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "explicit"
+    },
+    {
+      "id": "undefined-primary-over-report",
+      "failure": "undefined",
+      "finishFails": true,
+      "preCancelled": false,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "default"
+    },
+    {
+      "id": "false-primary-over-report",
+      "failure": "false",
+      "finishFails": true,
+      "preCancelled": false,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "explicit"
+    },
+    {
+      "id": "prestart-error-status-unknown",
+      "failure": "error",
+      "finishFails": false,
+      "preCancelled": false,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "default"
+    },
+    {
+      "id": "report-error-after-success",
+      "failure": "none",
+      "finishFails": true,
+      "preCancelled": false,
+      "expectedCode": 0,
+      "accepted": false,
+      "report": "explicit"
+    },
+    {
+      "id": "preabort-no-command-or-report",
+      "failure": "none",
+      "finishFails": false,
+      "preCancelled": true,
+      "expectedCode": null,
+      "accepted": false,
+      "report": "default"
+    }
+  ],
+  "reports": [
+    {
+      "project": "@semio-tech/repo-cli-go",
+      "output": "{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-cli-go-45454396/test/test.xml"
+    },
+    {
+      "project": "@semio-tech/repo-workspace-go",
+      "output": "{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-workspace-go-a36015c2/test/test.xml"
+    },
+    {
+      "project": "@semio-tech/repo-graphql-go",
+      "output": "{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-graphql-go-a7e78177/test/test.xml"
+    },
+    {
+      "project": "@semio-tech/repo-tickets-go",
+      "output": "{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-tickets-go-c1db19fb/test/test.xml"
+    }
+  ]
+}

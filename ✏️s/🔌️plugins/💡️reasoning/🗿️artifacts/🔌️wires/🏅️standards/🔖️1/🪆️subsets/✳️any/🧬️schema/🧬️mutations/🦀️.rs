@@ -24,6 +24,10 @@ impl protocol::Mutation<WiresSnapshot> for WiresMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
+
+impl protocol::ColdMutation<WiresSnapshot> for WiresMutation {
+    type ReferenceDiff = WiresDiff;
     fn diff(&self, _base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
         match *self {}
     }

@@ -65,9 +65,9 @@ fn selection_fixture() -> (serde_json::Value, Fem2dSnapshot) {
 
 #[test]
 fn remove_selection_orders_dependencies_and_restores_exact_snapshot() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     use semio_framework_os_command::SemanticMutation;
-    use protocol::ColdMutation;
+
     let (fixture, before) = selection_fixture();
     for (selection, kinds) in [("completeSelection", "completeKinds"), ("loadSelection", "loadKinds")] {
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");

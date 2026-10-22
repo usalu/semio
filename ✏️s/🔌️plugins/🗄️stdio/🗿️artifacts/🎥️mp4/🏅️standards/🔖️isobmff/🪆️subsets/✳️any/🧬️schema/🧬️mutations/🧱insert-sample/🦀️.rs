@@ -17,7 +17,17 @@ pub struct InsertSample {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sample", kind: "insert-sample", record: "InsertSample" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert sample", "Sample einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::ColdMutation<Mp4Snapshot>>::ReferenceDiff> {
         let Self { track_index, index, sample } = self;
         protocol::MutationOutcome::new({
             let count = base.tracks.get(*track_index).map_or(1, |track| track.samples.len() as u32 + 1);
@@ -31,12 +41,6 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
                 vec![Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: *track_index, index: *index })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert sample", "Sample einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

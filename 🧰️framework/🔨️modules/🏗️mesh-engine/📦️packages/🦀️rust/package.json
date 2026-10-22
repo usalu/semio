@@ -9,7 +9,7 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-engine-rs:test-native"
+    "test-native": "repo run @semio-tech/framework-mesh-engine-rs:test-native"
   },
   "devDependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

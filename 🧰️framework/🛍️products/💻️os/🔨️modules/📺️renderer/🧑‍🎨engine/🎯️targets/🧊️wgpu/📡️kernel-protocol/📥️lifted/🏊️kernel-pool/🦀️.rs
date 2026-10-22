@@ -28,7 +28,7 @@ impl Default for KernelRequestQueue {
     fn default() -> Self {
         Self {
             state: Mutex::new(KernelRequestQueueState {
-                slots: semio_framework_async::boxed_fixed_slots(|| None),
+                slots: semio_framework_async_slots::boxed_fixed_slots(|| None),
                 read: 0,
                 write: 0,
                 len: 0,

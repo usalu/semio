@@ -12,21 +12,9 @@ pub struct NotePresenceDiff {
     pub camera_zoom: Option<f64>,
 }
 
-impl MutationDiff<NotePresence> for NotePresenceDiff {
-    fn apply(&self, base: &NotePresence, _capability: ApplyCapability) -> MutationApplyResult<NotePresence> {
-        let mut next = base.clone();
-        if let Some(camera_x) = self.camera_x {
-            next.camera_x = camera_x;
-        }
-        if let Some(camera_y) = self.camera_y {
-            next.camera_y = camera_y;
-        }
-        if let Some(camera_zoom) = self.camera_zoom {
-            next.camera_zoom = camera_zoom;
-        }
-        Ok(next)
-    }
+impl MutationDiff<NotePresence> for NotePresenceDiff {}
 
+impl protocol::ColdMutationDiff<NotePresence> for NotePresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera_x.is_some() {
             self.camera_x = other.camera_x;
@@ -38,14 +26,32 @@ impl MutationDiff<NotePresence> for NotePresenceDiff {
             self.camera_zoom = other.camera_zoom;
         }
     }
+
+    fn apply(&self, unpublished: &mut NotePresence, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(camera_x) = self.camera_x {
+            next.camera_x = camera_x;
+        }
+        if let Some(camera_y) = self.camera_y {
+            next.camera_y = camera_y;
+        }
+        if let Some(camera_zoom) = self.camera_zoom {
+            next.camera_zoom = camera_zoom;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<NotePresence> for NotePresenceDiff {
-    fn inverse(&self, base: &NotePresence) -> Self {
-        Self { camera_x: self.camera_x.map(|_| base.camera_x), camera_y: self.camera_y.map(|_| base.camera_y), camera_zoom: self.camera_zoom.map(|_| base.camera_zoom) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<NotePresence> for NotePresenceDiff {
+    fn inverse(&self, base: &NotePresence) -> Self {
+        Self { camera_x: self.camera_x.map(|_| base.camera_x), camera_y: self.camera_y.map(|_| base.camera_y), camera_zoom: self.camera_zoom.map(|_| base.camera_zoom) }
     }
 }

@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "annotation", kind: "insert-annotation", record: "Insert" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_insert_annotation(self.index, self.at, self.annotation.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert annotation at {} on page {}", self.at, self.index), &format!("Anmerkung an {} auf Seite {} einfügen", self.at, self.index))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string(), self.at.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertAnnotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertAnnotation> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_insert_annotation(self.index, self.at, self.annotation.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

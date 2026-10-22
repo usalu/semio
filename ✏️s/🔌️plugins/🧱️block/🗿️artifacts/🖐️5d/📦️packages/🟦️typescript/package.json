@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/block-5d:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/block-5d:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/block-5d:test"
+    "build": "repo run @semio-tech/block-5d:build",
+    "check": "repo run @semio-tech/block-5d:check",
+    "test": "repo run @semio-tech/block-5d:test"
   },
   "exports": {
     ".": {

@@ -18,10 +18,14 @@ pub fn set_shape_coordinate<Op: From<SetShapeCoordinate>>(layer_id:semio_framewo
 }
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetShapeCoordinate where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetShapeCoordinate> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape", kind: "set-shape-coordinate", record: "SetShapeCoordinate" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit shape geometry", "Formgeometrie bearbeiten") }
+    fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for SetShapeCoordinate where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetShapeCoordinate> {
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit shape geometry", "Formgeometrie bearbeiten") }
-    fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
 }

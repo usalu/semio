@@ -9,14 +9,18 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 pub struct InsertVariable { pub index: Option<usize>, pub item: semio_s_artifact_norm_en1990_model::VariableAction, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertVariable where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_variable::RemoveVariable> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "variable", kind: "insert-variable", record: "InsertedVariable" };
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> { crate::insert_variable::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert variable action", "Veränderliche Einwirkung einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1990Snapshot, Op> for InsertVariable where Op: protocol::ColdMutation<En1990Snapshot, ReferenceDiff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_variable::RemoveVariable> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1990Snapshot>>::ReferenceDiff> { crate::insert_variable::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::insert_variable::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert variable action", "Veränderliche Einwirkung einfügen")
-    }
 }
 
 //#region 🪢️Mounts

@@ -1,0 +1,189 @@
+{
+ "version": 1,
+ "accepted": [
+  {
+   "segments": [],
+   "mode": "workspace",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "--dry"
+   ],
+   "mode": "workspace",
+   "dry": true,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "dry"
+   ],
+   "mode": "workspace",
+   "dry": true,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "workspace"
+   ],
+   "mode": "workspace",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "workspace",
+    "dry"
+   ],
+   "mode": "workspace",
+   "dry": true,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "coverage"
+   ],
+   "mode": "coverage",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "coverage",
+    "--dry"
+   ],
+   "mode": "coverage",
+   "dry": true,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "empty-folders",
+    "dry"
+   ],
+   "mode": "empty-folders",
+   "dry": true,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "marker-only-folders"
+   ],
+   "mode": "marker-only-folders",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "taxonomy"
+   ],
+   "mode": "taxonomy",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "taxonomy",
+    "a",
+    "--dry"
+   ],
+   "mode": "taxonomy",
+   "dry": false,
+   "arguments": [
+    "a",
+    "--dry"
+   ]
+  },
+  {
+   "segments": [
+    "test"
+   ],
+   "mode": "test",
+   "dry": false,
+   "arguments": []
+  },
+  {
+   "segments": [
+    "test",
+    "x",
+    "y"
+   ],
+   "mode": "test",
+   "dry": false,
+   "arguments": [
+    "x",
+    "y"
+   ]
+  }
+ ],
+ "rejected": [
+  {
+   "segments": [
+    "--dry",
+    "--dry"
+   ]
+  },
+  {
+   "segments": [
+    "foo"
+   ]
+  },
+  {
+   "segments": [
+    "coverage",
+    "x"
+   ]
+  },
+  {
+   "segments": [
+    "coverage",
+    "dry",
+    "dry"
+   ]
+  },
+  {
+   "segments": [
+    "--dry",
+    "coverage"
+   ]
+  },
+  {
+   "segments": [
+    "dry",
+    "extra"
+   ]
+  },
+  {
+   "segments": [
+    ""
+   ]
+  },
+  {
+   "segments": [
+    "Workspace"
+   ]
+  },
+  {
+   "segments": [
+    "empty-folders",
+    "--dryrun"
+   ]
+  },
+  {
+   "segments": [
+    "marker-only-folders",
+    "dry",
+    "dry"
+   ]
+  }
+ ],
+ "nonArrays": [
+  "workspace",
+  null,
+  {
+   "0": "dry"
+  },
+  7
+ ]
+}

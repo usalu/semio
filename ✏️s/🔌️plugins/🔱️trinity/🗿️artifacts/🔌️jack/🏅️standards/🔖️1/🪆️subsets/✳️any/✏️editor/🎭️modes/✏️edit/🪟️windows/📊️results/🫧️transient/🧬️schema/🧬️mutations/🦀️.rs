@@ -7,7 +7,7 @@ pub use replace_query_result::ReplaceQueryResult;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = JackResultsWindowTransient, diff = JackResultsWindowTransientDiff, schema = "trinity.jackresultswindowtransient")]
+#[mutations(snapshot = JackResultsWindowTransient, diff = JackResultsWindowTransientDiff, schema = "trinity.jackresultswindowtransient", reference = JackResultsWindowTransient, reference_diff = JackResultsWindowTransientDiff)]
 pub enum JackResultsWindowTransientMutation {
     #[dsl(key = "replace-query-result")]
     ReplaceQueryResult(ReplaceQueryResult),

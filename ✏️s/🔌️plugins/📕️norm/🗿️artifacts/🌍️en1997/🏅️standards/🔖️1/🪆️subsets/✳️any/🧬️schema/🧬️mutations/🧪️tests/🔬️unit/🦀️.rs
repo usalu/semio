@@ -1,7 +1,7 @@
 use super::*;
 use crate::document::AnnexChoice;
 use crate::standards::v1::subsets::any::schema::snapshot::compliant_demo;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// ⚖️ One value per `En1997Mutation` variant — the closed set the semantics/round-trip
 /// tests iterate.

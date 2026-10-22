@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖️Header
-# Zero-touch macOS/Linux bootstrap: the native C/C++ toolchain (apt-get, dnf, pacman, zypper or Homebrew), Bun, the Node.js
-# the build tool runs on (`package.json` engines.node), rustup with the `rust-toolchain.toml` pin, Go, .NET, and uv,
-# then `workspace:setup` (which installs packages). Every downloaded installer is pinned and sha256-verified before it runs:
-# Bun from its tools schema, the rest from `🧬️schema/🔣️.json` next to this script.
+# Zero-touch macOS/Linux bootstrap: the native C/C++ toolchain (apt-get, dnf, pacman, zypper or Homebrew), the Node.js
+# the build tool runs on (`package.json` engines.node), rustup with the `rust-toolchain.toml` pin, .NET, and uv (the pinned Go that builds the launcher is fetched by the launcher installer from the Go rows of the same pins, and the repository provisions it into its tools partition afterwards),
+# then the `repo` launcher built from the checkout (it provisions the pinned JavaScript runtime itself, so no Bun is installed here)
+# and `workspace:setup` (which installs packages). Every downloaded installer is pinned and sha256-verified before it runs,
+# from `🧬️schema/🔣️.json` next to this script; the runtime pins live in the launcher registry.
 # 🧭️Invoke from a fresh clone: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup` (full
-# bootstrap); `bun ./📜️script.ts setup native` routes here once Bun exists.
+# bootstrap); `repo setup native` routes here once the launcher exists.
 # Every step probes before it installs and never writes user-global tool configuration.
 # Native setup is rooted here and does not depend on devcontainer scripts.
 # #endregion 🔖️Header
@@ -121,10 +122,11 @@ cd "$REPO_ROOT" || exit 1
 
 #region 🔖️Config
 SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
-DOTNET_CHANNEL="${DOTNET_CHANNEL:-8.0}"
 LOCAL_BIN="${HOME}/.local/bin"
 PINS_FILE="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json"
-BUN_PINS_FILE="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json"
+LAUNCHER_INSTALL="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh"
+LAUNCHER_REGISTRY="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json"
+LAUNCHER_BIN="${XDG_DATA_HOME:-$HOME/.local/share}/semio/launcher/bin"
 
 log() {
   printf '[semio] %s\n' "$*" >&2
@@ -201,21 +203,6 @@ version_at_least() {
   [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | sed -n '1p')" = "$2" ]
 }
 
-bun_release_row() {
-  awk -v want_platform="$1" -v want_arch="$2" -v want_musl="$3" '
-    /"version": "[0-9]+\.[0-9]+\.[0-9]+"/ && version == "" { split($0, part, "\""); version = part[4] }
-    /"release": "https:/ { split($0, part, "\""); release = part[4] }
-    /"platform": "[a-z0-9]+"/ { split($0, part, "\""); platform = part[4] }
-    /"arch": "[a-z0-9]+"/ { split($0, part, "\""); arch = part[4] }
-    /"musl": (true|false)/ { musl = index($0, "true") ? "true" : "false" }
-    /"archive": "bun-/ { split($0, part, "\""); archive = part[4] }
-    /"sha256": "[a-f0-9]+"/ && archive != "" {
-      split($0, part, "\"")
-      if (platform == want_platform && arch == want_arch && musl == want_musl) { print version, release, archive, part[4]; exit }
-      archive = ""
-    }
-  ' "$BUN_PINS_FILE"
-}
 #endregion 🔖️PinnedDownloads
 
 #region 🔖️EnsureUv
@@ -269,10 +256,10 @@ linux_package_manager() {
 
 linux_toolchain_packages() {
   case "$1" in
-  apt-get) printf '%s\n' build-essential cmake ninja-build pkg-config uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof ;;
-  dnf) printf '%s\n' gcc gcc-c++ make cmake ninja-build pkgconf-pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu procps-ng findutils lldb lsof ;;
-  pacman) printf '%s\n' base-devel cmake ninja pkgconf util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof ;;
-  zypper) printf '%s\n' gcc gcc-c++ make cmake ninja pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof ;;
+  apt-get) printf '%s\n' build-essential pkg-config uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof ;;
+  dnf) printf '%s\n' gcc gcc-c++ make pkgconf-pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu procps-ng findutils lldb lsof ;;
+  pacman) printf '%s\n' base-devel pkgconf util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof ;;
+  zypper) printf '%s\n' gcc gcc-c++ make pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof ;;
   esac
 }
 
@@ -303,9 +290,9 @@ ensure_native_toolchain() {
   Darwin)
     xcode-select -p >/dev/null 2>&1 || log "Xcode Command Line Tools are missing; run xcode-select --install and rerun setup."
     if command -v brew >/dev/null 2>&1; then
-      brew install cmake ninja pkg-config || log "Homebrew could not install cmake, ninja and pkg-config."
+      brew install pkg-config || log "Homebrew could not install pkg-config."
     else
-      log "Homebrew not available; install CMake, Ninja and pkg-config before running native C++ builds."
+      log "Homebrew not available; install pkg-config before running native C++ builds (CMake and Ninja are provisioned by the repository)."
     fi
     export CMAKE_PRESET="${CMAKE_PRESET:-macos}"
     ;;
@@ -316,12 +303,12 @@ ensure_native_toolchain() {
       log "Installing the native toolchain with $manager: ${packages[*]}"
       install_linux_packages "$manager" "${packages[@]}" || log "The native toolchain install through $manager failed (package index, lock or privileges); setup continues and reports what is missing."
     else
-      log "No supported package manager (apt-get, dnf, pacman, zypper) found; install a C/C++ compiler, make, CMake, Ninja, pkg-config, libuuid, ICU, curl, git and unzip."
+      log "No supported package manager (apt-get, dnf, pacman, zypper) found; install a C/C++ compiler, make, pkg-config, libuuid, ICU, curl, git and unzip (CMake and Ninja are provisioned by the repository)."
     fi
     export CMAKE_PRESET="${CMAKE_PRESET:-linux}"
     ;;
   esac
-  report_missing_tools cc c++ make cmake ninja pkg-config curl git unzip
+  report_missing_tools cc c++ make pkg-config curl git unzip
 }
 
 ensure_rust_toolchain() {
@@ -345,7 +332,8 @@ ensure_rust_toolchain() {
 ensure_node() {
   export PATH="$LOCAL_BIN:$PATH"
   local version row pinned archive root download
-  version="$(cd "$REPO_ROOT" && bun -e 'process.stdout.write(require("./package.json").engines.node)')" || return 1
+  version="$(awk -F'"' '/"engines"/ { engines = 1 } engines && /"node"[[:space:]]*:/ { print $4; exit }' "$REPO_ROOT/package.json")"
+  [ -n "$version" ] || return 1
   if [ "$(node --version 2>/dev/null)" = "v$version" ]; then
     return 0
   fi
@@ -375,59 +363,34 @@ ensure_node() {
   ln -sf "$root/bin/node" "$LOCAL_BIN/node"
 }
 
-go_version() {
-  go version 2>/dev/null | sed -nE 's/^go version go([0-9]+\.[0-9]+(\.[0-9]+)?).*/\1/p'
-}
-
-ensure_go() {
-  export PATH="$LOCAL_BIN:$PATH"
-  local row version installed archive root download
-  row="$(host_pin go)" || return 1
-  version="$(pin_field "$row" version)"
-  installed="$(go_version)"
-  if [ -n "$installed" ] && version_at_least "$installed" "$version"; then
-    return 0
-  fi
-  archive="$(pin_field "$row" url)"
-  archive="${archive##*/}"
-  root="${XDG_DATA_HOME:-$HOME/.local/share}/semio/go/go$version"
-  if [ ! -x "$root/go/bin/go" ]; then
-    log "Installing Go $version into $root…"
-    download="$(mktemp -d)"
-    fetch_pinned "$row" "$download/$archive" || {
-      rm -rf "$download"
-      return 1
-    }
-    mkdir -p "$root" && tar -xzf "$download/$archive" -C "$root" || {
-      rm -rf "$download"
-      return 1
-    }
-    rm -rf "$download"
-  fi
-  mkdir -p "$LOCAL_BIN"
-  ln -sf "$root/go/bin/go" "$LOCAL_BIN/go"
-  ln -sf "$root/go/bin/gofmt" "$LOCAL_BIN/gofmt"
+dotnet_sdk_pin() {
+  sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p' "$REPO_ROOT/global.json" | sed -n '1p'
 }
 
 ensure_dotnet() {
   export DOTNET_ROOT="${DOTNET_ROOT:-$HOME/.dotnet}" DOTNET_CLI_TELEMETRY_OPTOUT=1
   export PATH="$LOCAL_BIN:$PATH"
-  if command -v dotnet >/dev/null 2>&1 && dotnet --list-runtimes 2>/dev/null | grep -q "^Microsoft.NETCore.App ${DOTNET_CHANNEL}\."; then
+  local row installer sdk
+  sdk="$(dotnet_sdk_pin)"
+  [ -n "$sdk" ] || {
+    log "No SDK version pinned in $REPO_ROOT/global.json."
+    return 1
+  }
+  if command -v dotnet >/dev/null 2>&1 && dotnet --list-sdks 2>/dev/null | grep -q "^${sdk} "; then
     return 0
   fi
-  local row installer
   row="$(pin_row dotnet-install any any)"
   [ -n "$row" ] || {
     log "No pinned dotnet-install script in $PINS_FILE."
     return 1
   }
-  log "Installing .NET SDK $DOTNET_CHANNEL into $DOTNET_ROOT…"
+  log "Installing .NET SDK $sdk into $DOTNET_ROOT…"
   installer="$(mktemp)"
   fetch_pinned "$row" "$installer" || {
     rm -f "$installer"
     return 1
   }
-  bash "$installer" --channel "$DOTNET_CHANNEL" --install-dir "$DOTNET_ROOT" --no-path || {
+  bash "$installer" --version "$sdk" --install-dir "$DOTNET_ROOT" --no-path || {
     rm -f "$installer"
     return 1
   }
@@ -451,59 +414,19 @@ ensure_browser_libraries() {
 }
 #endregion 🔖️NativeToolchain
 
-#region 🔖️EnsureBun
-install_pinned_bun() {
-  local version="$1" platform arch musl=false row pinned release archive sha download
-  platform="$(host_platform)" || return 1
-  arch="$(host_arch)" || return 1
-  if host_is_musl; then musl=true; fi
-  row="$(bun_release_row "$platform" "$arch" "$musl")"
-  if [ -z "$row" ]; then
-    log "No pinned Bun distribution for $platform/$arch (musl=$musl) in $BUN_PINS_FILE."
-    return 1
-  fi
-  read -r pinned release archive sha <<<"$row"
-  [ "$pinned" = "$version" ] || {
-    log "The Bun pin $pinned in $BUN_PINS_FILE differs from package.json packageManager bun@$version; update both."
+#region 🔖️EnsureLauncher
+ensure_launcher() {
+  export PATH="$LOCAL_BIN:$PATH"
+  log "Building the repo launcher (it provisions the pinned JavaScript runtime itself)…"
+  bash "$LAUNCHER_INSTALL" "$LAUNCHER_BIN" || return 1
+  export PATH="$LAUNCHER_BIN:$PATH"
+  hash -r
+  [ -x "$LAUNCHER_BIN/repo" ] || {
+    log "The repo launcher was not installed into $LAUNCHER_BIN."
     return 1
   }
-  download="$(mktemp -d)"
-  download_verified "$release/$archive" "$sha" "$download/$archive" || {
-    rm -rf "$download"
-    return 1
-  }
-  mkdir -p "$BUN_INSTALL/bin"
-  unzip -p "$download/$archive" "${archive%.zip}/bun" >"$download/bun" && chmod 755 "$download/bun" && mv -f "$download/bun" "$BUN_INSTALL/bin/bun" || {
-    rm -rf "$download"
-    return 1
-  }
-  rm -rf "$download"
 }
-
-ensure_bun() {
-  local package_manager
-  package_manager="$(awk -F'"' '/"packageManager"[[:space:]]*:/ { print $4; exit }' "$REPO_ROOT/package.json")"
-  if ! printf '%s\n' "$package_manager" | grep -Eq '^bun@[0-9]+\.[0-9]+\.[0-9]+$'; then
-    log "package.json must declare an exact packageManager bun@x.y.z before native setup."
-    return 1
-  fi
-  local required_version="${package_manager#bun@}"
-  local actual_version
-  actual_version="$(bun --version 2>/dev/null || true)"
-  export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
-  export PATH="${BUN_INSTALL}/bin:${PATH}"
-  if [ "$actual_version" != "$required_version" ]; then
-    log "Installing repository-pinned Bun $required_version…"
-    install_pinned_bun "$required_version" || return 1
-    hash -r
-    actual_version="$(bun --version 2>/dev/null || true)"
-  fi
-  if [ "$actual_version" != "$required_version" ]; then
-    log "Bun toolchain mismatch: package.json requires $required_version, but native setup resolved ${actual_version:-missing}. Install bun-v$required_version and rerun setup."
-    return 1
-  fi
-}
-#endregion 🔖️EnsureBun
+#endregion 🔖️EnsureLauncher
 
 #region 🔖️RepoBootstrap
 repo_bootstrap() {
@@ -514,7 +437,7 @@ repo_bootstrap() {
   cd "$REPO_ROOT"
   export SEMIO_WORKSPACE_ROOT="$REPO_ROOT"
   log "Installing the native repository command…"
-  bun repo run repo-mcp:install || return 1
+  repo run repo-mcp:install || return 1
   export PATH="$LOCAL_BIN:$PATH"
   hash -r
   repo --help >/dev/null || return 1
@@ -528,16 +451,15 @@ repo_bootstrap() {
 
 #region 🔖️Main
 cd "$REPO_ROOT"
-[ -f "$PINS_FILE" ] && [ -f "$BUN_PINS_FILE" ] || {
-  log "Pinned toolchain manifests are missing; expected $PINS_FILE and $BUN_PINS_FILE."
+[ -f "$PINS_FILE" ] && [ -f "$LAUNCHER_REGISTRY" ] && [ -f "$LAUNCHER_INSTALL" ] || {
+  log "Pinned toolchain manifests are missing; expected $PINS_FILE, $LAUNCHER_REGISTRY and $LAUNCHER_INSTALL."
   exit 1
 }
 ensure_native_toolchain
-ensure_bun
+ensure_launcher || exit 1
 ensure_node || log "Node.js provisioning failed; install the Node.js version pinned in package.json engines.node and rerun setup."
 ensure_rust_toolchain || log "Rust toolchain provisioning failed; install rustup from https://rustup.rs and rerun setup."
-ensure_go || log "Go provisioning failed; install the Go version pinned in $PINS_FILE from https://go.dev/dl and rerun setup."
-ensure_dotnet || log ".NET SDK ${DOTNET_CHANNEL} provisioning failed; install it from https://dot.net and rerun setup."
+ensure_dotnet || log ".NET SDK provisioning failed; install the SDK version pinned in $REPO_ROOT/global.json from https://dot.net and rerun setup."
 ensure_uv || log "uv provisioning failed; install the uv version pinned in $PINS_FILE from https://docs.astral.sh/uv and rerun setup."
 repo_bootstrap
 log "Native (Unix) bootstrap complete. Open a new shell to load the updated PATH."

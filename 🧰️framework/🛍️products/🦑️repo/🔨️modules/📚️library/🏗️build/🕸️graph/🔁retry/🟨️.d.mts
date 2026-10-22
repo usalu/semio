@@ -1,0 +1,2 @@
+/** 🔁️ Projects only bounded source identities and hashes; raw observed facts and environment values never leave the owner. */
+export function buildGraphRetryDiagnosticV1(root:string,reason:string,observed?:Readonly<{before?:string|null;after?:string|null;stale?:readonly Readonly<{kind:unknown;path:string;fact?:unknown}>[]}>,currentDigest?:(path:string)=>string|null):Readonly<{version:1;reason:string;before:string|null;after:string|null;facts:readonly Readonly<{kind:string;path:string|null;before:string;after:string|null}>[]}>;

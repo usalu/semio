@@ -649,7 +649,7 @@ pub mod mutation_bridge {
     /// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.
     pub fn apply_outcome(outcome: protocol::MutationOutcome<PdfDiff>, snapshot: &mut PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
         let (diff, messages) = outcome.into_parts();
-        match protocol::apply_diff(&diff, snapshot) {
+        match protocol::apply_diff_cold(&diff, snapshot) {
             Ok(next) => {
                 *snapshot = next;
                 protocol::MutationOutcome::new(diff).absorb_messages(messages)
@@ -660,7 +660,7 @@ pub mod mutation_bridge {
 
     /// ▶️ Applies one mutation through its leaf-owned diff.
     pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
         let outcome = mutation.diff(snapshot);
         apply_outcome(outcome, snapshot)
     }
@@ -699,7 +699,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {

@@ -22,7 +22,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "representation", kind: "bind-representation", record: "BoundRepresentation" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind representation for {}", self.role), &format!("Repräsentation für {} binden", self.role))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.role.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioKitSnapshot, Op> for BindRepresentation
+where
+    Op: protocol::ColdMutation<SemioKitSnapshot, ReferenceDiff = crate::schema::diff::SemioKitDiff> + From<BindRepresentation> + From<crate::schema::mutations::unbind_representation::UnbindRepresentation>,
+{
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioKitSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -31,11 +43,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind representation for {}", self.role), &format!("Repräsentation für {} binden", self.role))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.role.clone()]
-    }
 }
 //#endregion 🔖️Payload

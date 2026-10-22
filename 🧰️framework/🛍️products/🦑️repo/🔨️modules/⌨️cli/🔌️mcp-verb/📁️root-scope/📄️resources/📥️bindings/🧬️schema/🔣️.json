@@ -1,0 +1,82 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contexts",
+    "operations"
+  ],
+  "properties": {
+    "contexts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "endpoint",
+          "token"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "first",
+              "second"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "endpoint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "context",
+          "kind",
+          "ambient",
+          "expected"
+        ],
+        "properties": {
+          "context": {
+            "enum": [
+              "first",
+              "second"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "process",
+              "event"
+            ]
+          },
+          "ambient": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

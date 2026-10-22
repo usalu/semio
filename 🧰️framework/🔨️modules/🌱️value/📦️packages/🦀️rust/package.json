@@ -7,19 +7,19 @@
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "scripts": {
-    "test-native-literal-refusal-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-source",
-    "test-native-literal-refusal-native": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-native",
-    "test-native-recipient-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-recipient-source",
-    "test-native-recipient": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-recipient",
-    "test-portable": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-portable",
-    "test-type-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-type-ownership",
-    "test-decode-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-decode-ownership",
-    "test-refusal-codec": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-refusal-codec",
-    "test-ordered-retirement-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-ordered-retirement-source",
-    "test-retained-utf8-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-retained-utf8-source",
-    "test-retained-utf8-native": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-retained-utf8-native",
-    "test-retained-equality-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-retained-equality-source",
-    "test-retained-equality-native": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-retained-equality-native"
+    "test-native-literal-refusal-source": "repo run @semio-tech/value-rs:test-native-literal-refusal-source",
+    "test-native-literal-refusal-native": "repo run @semio-tech/value-rs:test-native-literal-refusal-native",
+    "test-native-recipient-source": "repo run @semio-tech/value-rs:test-native-recipient-source",
+    "test-native-recipient": "repo run @semio-tech/value-rs:test-native-recipient",
+    "test-portable": "repo run @semio-tech/value-rs:test-portable",
+    "test-type-ownership": "repo run @semio-tech/value-rs:test-type-ownership",
+    "test-decode-ownership": "repo run @semio-tech/value-rs:test-decode-ownership",
+    "test-refusal-codec": "repo run @semio-tech/value-rs:test-refusal-codec",
+    "test-ordered-retirement-source": "repo run @semio-tech/value-rs:test-ordered-retirement-source",
+    "test-retained-utf8-source": "repo run @semio-tech/value-rs:test-retained-utf8-source",
+    "test-retained-utf8-native": "repo run @semio-tech/value-rs:test-retained-utf8-native",
+    "test-retained-equality-source": "repo run @semio-tech/value-rs:test-retained-equality-source",
+    "test-retained-equality-native": "repo run @semio-tech/value-rs:test-retained-equality-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

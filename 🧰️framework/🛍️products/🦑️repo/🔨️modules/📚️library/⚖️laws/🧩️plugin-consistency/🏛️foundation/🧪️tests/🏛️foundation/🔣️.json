@@ -1,0 +1,523 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "app-id-demo-0",
+   "rule": "policyAppIdFromCrateDir",
+   "args": [
+    "x/🎛️apps/🔭️demo/🦀️rust"
+   ],
+   "expect": "demo"
+  },
+  {
+   "id": "app-id-none-1",
+   "rule": "policyAppIdFromCrateDir",
+   "args": [
+    "no/apps/here"
+   ],
+   "expect": ""
+  },
+  {
+   "id": "app-id-none-2",
+   "rule": "policyAppIdFromCrateDir",
+   "args": [
+    "a/🎛️apps"
+   ],
+   "expect": ""
+  },
+  {
+   "id": "app-id-d-e-3",
+   "rule": "policyAppIdFromCrateDir",
+   "args": [
+    "a/🎛️apps/🔭️d-e/x"
+   ],
+   "expect": "d-e"
+  },
+  {
+   "id": "normalize-legacy-module-with-lib-suffix",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🔨️modules/🔸️render/⚡️implementations/🦀️rust/📦️lib.rs"
+   ],
+   "expect": "alpha/render#lib"
+  },
+  {
+   "id": "normalize-legacy-module-with-distinct-app",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🎛️apps/🔸️ui/🔨️modules/🔸️panel/⚡️implementations/🦀️rust/🦀️.rs"
+   ],
+   "expect": "alpha/ui/panel"
+  },
+  {
+   "id": "normalize-legacy-module-with-app-named-like-the-plugin",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🎛️apps/🔸️alpha/🔨️modules/🔸️panel/⚡️implementations/🦀️rust/🦀️.rs"
+   ],
+   "expect": "alpha/panel"
+  },
+  {
+   "id": "normalize-legacy-framework-module",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "🧰️framework/🔨️modules/🔸️x/⚡️implementations/🦀️rust/🦀️.rs"
+   ],
+   "expect": "framework/x"
+  },
+  {
+   "id": "normalize-artifact-layout-engine",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️doc/⚙️engine/🦀️.rs"
+   ],
+   "expect": "alpha/doc/engine"
+  },
+  {
+   "id": "normalize-artifact-layout-protocol-alias",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️doc/📡️protocol/🦀️.rs"
+   ],
+   "expect": "alpha/doc/spr"
+  },
+  {
+   "id": "normalize-artifact-layout-same-name-as-plugin",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️alpha/⚙️engine/🦀️.rs"
+   ],
+   "expect": "alpha/engine"
+  },
+  {
+   "id": "normalize-artifact-layout-deeper-tail",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️doc/⚙️engine/🔸️sub/🦀️.rs"
+   ],
+   "expect": "alpha/doc/engine#sub-"
+  },
+  {
+   "id": "normalize-unrecognised-path-is-unchanged",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "plain/path.txt"
+   ],
+   "expect": "plain/path.txt"
+  },
+  {
+   "id": "normalize-dot-slash-prefix-is-dropped",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    "./plain/x"
+   ],
+   "expect": "plain/x"
+  },
+  {
+   "id": "normalize-hidden-directory-is-not-a-dot-slash-prefix",
+   "rule": "policyNormalizeRelPath",
+   "args": [
+    ".hidden/file"
+   ],
+   "expect": ".hidden/file",
+   "defect": "🟦️.ts:96 drops two characters when the path merely starts with a dot, so .hidden/file becomes idden/file"
+  },
+  {
+   "id": "priority-of-plugin-crate-is-kept",
+   "rule": "policyNewSurfacePriority",
+   "args": [
+    {
+     "pluginId": "alpha"
+    },
+    "medium"
+   ],
+   "expect": "medium"
+  },
+  {
+   "id": "priority-outside-plugins-is-low",
+   "rule": "policyNewSurfacePriority",
+   "args": [
+    {
+     "pluginId": ""
+    },
+    "high"
+   ],
+   "expect": "low"
+  },
+  {
+   "id": "region-events-record-spacing-and-labels",
+   "rule": "policyParseRegionEvents",
+   "args": [
+    [
+     "//#region 🔧️A",
+     "  // #region  Spaced label  ",
+     "//#endregion",
+     "// #endregion Spaced label",
+     "//#regionX",
+     "// #region",
+     "code // #region no"
+    ]
+   ],
+   "expect": [
+    {
+     "kind": "open",
+     "line": 1,
+     "spaceAfterSlashes": false,
+     "label": "🔧️A"
+    },
+    {
+     "kind": "open",
+     "line": 2,
+     "spaceAfterSlashes": true,
+     "label": "Spaced label"
+    },
+    {
+     "kind": "close",
+     "line": 3,
+     "spaceAfterSlashes": false,
+     "label": ""
+    },
+    {
+     "kind": "close",
+     "line": 4,
+     "spaceAfterSlashes": true,
+     "label": "Spaced label"
+    },
+    {
+     "kind": "open",
+     "line": 6,
+     "spaceAfterSlashes": true,
+     "label": ""
+    }
+   ]
+  },
+  {
+   "id": "region-pairing-nests-and-ignores-unmatched-closes",
+   "rule": "policyPairRegionSpans",
+   "args": [
+    [
+     {
+      "kind": "close",
+      "line": 1,
+      "spaceAfterSlashes": false,
+      "label": "orphan"
+     },
+     {
+      "kind": "open",
+      "line": 2,
+      "spaceAfterSlashes": false,
+      "label": "outer"
+     },
+     {
+      "kind": "open",
+      "line": 3,
+      "spaceAfterSlashes": false,
+      "label": "inner"
+     },
+     {
+      "kind": "close",
+      "line": 4,
+      "spaceAfterSlashes": false,
+      "label": "inner"
+     },
+     {
+      "kind": "close",
+      "line": 5,
+      "spaceAfterSlashes": false,
+      "label": "outer"
+     },
+     {
+      "kind": "open",
+      "line": 6,
+      "spaceAfterSlashes": false,
+      "label": "dangling"
+     }
+    ]
+   ],
+   "expect": [
+    {
+     "label": "inner",
+     "closeLabel": "inner",
+     "startLine": 3,
+     "endLine": 4
+    },
+    {
+     "label": "outer",
+     "closeLabel": "outer",
+     "startLine": 2,
+     "endLine": 5
+    }
+   ]
+  },
+  {
+   "id": "pub-mod-spans-ignore-braces-in-strings",
+   "rule": "policyParseModSpans",
+   "args": [
+    [
+     "pub mod outer {",
+     "    pub mod inner {",
+     "        fn x() { let s = \"}\"; }",
+     "    }",
+     "}",
+     "pub mod flat;",
+     "mod private {",
+     "}"
+    ]
+   ],
+   "expect": [
+    {
+     "name": "inner",
+     "startLine": 2,
+     "endLine": 4
+    },
+    {
+     "name": "outer",
+     "startLine": 1,
+     "endLine": 5
+    }
+   ]
+  },
+  {
+   "id": "innermost-module-wins",
+   "rule": "policyModAtLine",
+   "args": [
+    [
+     {
+      "name": "inner",
+      "startLine": 2,
+      "endLine": 4
+     },
+     {
+      "name": "outer",
+      "startLine": 1,
+      "endLine": 5
+     }
+    ],
+    3
+   ],
+   "expect": "inner"
+  },
+  {
+   "id": "outer-module-at-its-own-line",
+   "rule": "policyModAtLine",
+   "args": [
+    [
+     {
+      "name": "inner",
+      "startLine": 2,
+      "endLine": 4
+     },
+     {
+      "name": "outer",
+      "startLine": 1,
+      "endLine": 5
+     }
+    ],
+    5
+   ],
+   "expect": "outer"
+  },
+  {
+   "id": "no-module-outside-spans",
+   "rule": "policyModAtLine",
+   "args": [
+    [
+     {
+      "name": "inner",
+      "startLine": 2,
+      "endLine": 4
+     },
+     {
+      "name": "outer",
+      "startLine": 1,
+      "endLine": 5
+     }
+    ],
+    7
+   ],
+   "expect": ""
+  },
+  {
+   "id": "label-emoji-prefix",
+   "rule": "policyLabelName",
+   "args": [
+    "🔖️Foo bar"
+   ],
+   "expect": "Foo bar"
+  },
+  {
+   "id": "label-digits-and-symbols-prefix",
+   "rule": "policyLabelName",
+   "args": [
+    "12-- Baz "
+   ],
+   "expect": "Baz"
+  },
+  {
+   "id": "label-already-clean",
+   "rule": "policyLabelName",
+   "args": [
+    "Plain"
+   ],
+   "expect": "Plain"
+  },
+  {
+   "id": "label-accented-letter-is-kept",
+   "rule": "policyLabelName",
+   "args": [
+    "🔖️Écran"
+   ],
+   "expect": "Écran"
+  },
+  {
+   "id": "body-balances-braces-and-masks-strings",
+   "rule": "policyExtractFnBody",
+   "args": [
+    "fn a() { let s = \"}\"; if x { y } } trailing",
+    0
+   ],
+   "expect": "{ let s = \"}\"; if x { y } }"
+  },
+  {
+   "id": "body-starts-at-the-first-brace-after-the-index",
+   "rule": "policyExtractFnBody",
+   "args": [
+    "fn a() { let s = \"}\"; if x { y } } trailing",
+    12
+   ],
+   "expect": "{ y }"
+  },
+  {
+   "id": "no-brace-gives-empty-body",
+   "rule": "policyExtractFnBody",
+   "args": [
+    "fn a();",
+    0
+   ],
+   "expect": ""
+  },
+  {
+   "id": "unterminated-body-runs-to-the-end",
+   "rule": "policyExtractFnBody",
+   "args": [
+    "fn a() { x",
+    0
+   ],
+   "expect": "{ x"
+  },
+  {
+   "id": "pascal-kebab",
+   "rule": "policyPascalAppStructName",
+   "args": [
+    "my-app"
+   ],
+   "expect": "MyAppApp"
+  },
+  {
+   "id": "pascal-snake-and-kebab",
+   "rule": "policyPascalAppStructName",
+   "args": [
+    "my-app_x"
+   ],
+   "expect": "MyAppXApp"
+  },
+  {
+   "id": "pascal-single",
+   "rule": "policyPascalAppStructName",
+   "args": [
+    "demo"
+   ],
+   "expect": "DemoApp"
+  },
+  {
+   "id": "pascal-empty-segments",
+   "rule": "policyPascalAppStructName",
+   "args": [
+    "--a--b"
+   ],
+   "expect": "ABApp"
+  },
+  {
+   "id": "root-script-source-root-script",
+   "rule": "policyIsRootScriptSource",
+   "args": [
+    "📜️script.ts"
+   ],
+   "expect": true
+  },
+  {
+   "id": "root-script-source-owned-directory-file",
+   "rule": "policyIsRootScriptSource",
+   "args": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🏗️crate-shape/🟦️.ts"
+   ],
+   "expect": true
+  },
+  {
+   "id": "root-script-source-owned-directory-itself-not",
+   "rule": "policyIsRootScriptSource",
+   "args": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency"
+   ],
+   "expect": false
+  },
+  {
+   "id": "root-script-source-other-library-file",
+   "rule": "policyIsRootScriptSource",
+   "args": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/x/🟦️.ts"
+   ],
+   "expect": false
+  },
+  {
+   "id": "root-script-modules-are-the-owned-leaf-modules",
+   "rule": "policyRootScriptModulePaths",
+   "args": [],
+   "expect": [
+    "📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🔸️b/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔸️a/🟦️.ts"
+   ],
+   "files": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔸️a/🟦️.ts": [],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔸️a/🧪️tests/🟦️.ts": [],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔸️a/other.ts": [],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🔸️b/🟦️.ts": [],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔸️c/🟦️.ts": [],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/node_modules/🟦️.ts": []
+   }
+  },
+  {
+   "id": "package-script-modules-are-the-os-commands",
+   "rule": "policyPackageScriptModulePaths",
+   "args": [],
+   "expect": [
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🔸️x/🟦️.ts"
+   ],
+   "files": {
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🔸️x/🟦️.ts": [],
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🔸️x/🧪️tests/🟦️.ts": [],
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🔸️y/🟦️.ts": []
+   }
+  },
+  {
+   "id": "rust-files-skip-generated-and-dependency-directories",
+   "rule": "policyAllRustFiles",
+   "args": [],
+   "expect": [
+    "a/b.rs",
+    "c.rs",
+    "z/y.rs"
+   ],
+   "files": {
+    "a/b.rs": [],
+    "c.rs": [],
+    "z/y.rs": [],
+    "target/t.rs": [],
+    "node_modules/n.rs": [],
+    "a/c.txt": [],
+    "compose/x.rs": []
+   }
+  }
+ ]
+}

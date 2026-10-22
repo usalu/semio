@@ -5,7 +5,7 @@ use semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect;
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 fn base_document() -> DrawingSnapshot {
     let mut doc = default_drawing_document("mutations-test", None);
@@ -66,7 +66,7 @@ async fn set_layer_opacity_diff_absorb_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
     let d1 = set_layer_opacity(layer_id.clone().into(), 0.5).diff(&base).diff().clone();
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = set_layer_opacity(layer_id.into(), 0.25).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -159,7 +159,7 @@ fn field_patch_validation_fixtures() {
 
 #[test]
 fn stroke_fields_preserve_appearance_and_undo() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let original = DrawingSnapshot { layers: vec![create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Stroke target")).to_string().into()).expect("nonempty authored identity"), "Stroke target")].into(), ..Default::default() };
     let id = semio_s_artifact_draw_drawing_model::layer_id(&original.layers[0]);
     let mut document = original.clone();
@@ -183,7 +183,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
 
 #[test]
 fn text_field_edits_preserve_numeric_strings_and_other_facets() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let layer = semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).clone();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -367,7 +367,7 @@ async fn absorbing_layer_adds_survives_earlier_sibling_shifts() {
     ];
     for pair in steps {
         let d1 = pair[0].diff(&base).diff().clone();
-        let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
         let d2 = pair[1].diff(&mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }

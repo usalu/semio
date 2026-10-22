@@ -117,7 +117,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "svg-import"
       ],
@@ -161,7 +161,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "svg-project"
       ],
@@ -205,7 +205,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "svg-compare"
       ],
@@ -494,7 +494,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-declaration-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-declaration-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -544,7 +544,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-doctype-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-doctype-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -594,7 +594,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-element-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-element-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -644,7 +644,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-element-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-element-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -694,7 +694,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-element-name-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-element-name-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -744,7 +744,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -794,7 +794,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-text-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-text-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -844,7 +844,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-view-box-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-view-box-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -894,7 +894,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-transform-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-transform-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

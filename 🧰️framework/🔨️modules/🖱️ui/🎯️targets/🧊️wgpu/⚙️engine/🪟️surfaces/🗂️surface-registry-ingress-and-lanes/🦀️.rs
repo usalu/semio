@@ -34,7 +34,7 @@ pub struct UiSurfaceSlot {
 /// [`UiWindow`] (~186 KiB): held inline, the 64-slot array is ~11.9 MiB of `Ui`, materialised in the
 /// constructing frame by `array::from_fn` and copied again by every by-value move of `Ui`
 /// (`Ui::new` → `Mutex::new` → `OnceLock::get_or_init` stacked ~88 MiB). Boxed, the array is built
-/// straight on the heap by [`semio_framework_async::boxed_fixed_slots`] and `Ui` stays pointer-sized
+/// straight on the heap by [`semio_framework_async_slots::boxed_fixed_slots`] and `Ui` stays pointer-sized
 /// here. `generations` is `[u64; 64]` = 512 B and stays inline.
 pub struct UiSurfaceRegistry {
     pub slots: Box<[Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]>,
@@ -43,7 +43,7 @@ pub struct UiSurfaceRegistry {
 
 impl Default for UiSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), generations: [0; UI_LAYOUT_SURFACE_SLOTS] }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), generations: [0; UI_LAYOUT_SURFACE_SLOTS] }
     }
 }
 

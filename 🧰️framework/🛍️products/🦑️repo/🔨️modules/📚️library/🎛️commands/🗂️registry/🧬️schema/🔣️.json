@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Root Command Registry V1",
-  "description": "Every command of the root script `bun ./📜️script.ts <command>`: the module and export that implement it, what its process needs before it can start (`none`: it runs on a fresh clone with only Bun; `dependencies`: it needs the locked dependencies, which the router installs through `repo dependencies ensure` with progress before the module is loaded), and its help in every declared language. The `module` closure of a `none` row is held free of bare imports by the zero-touch law; every closure is held free of workspace package specifiers.",
+  "description": "Every command of the root script `repo ./📜️script.ts <command>`: the module and export that implement it, what its process needs before it can start (`none`: it runs on a fresh clone with only Bun; `dependencies`: it needs the locked dependencies, which the router installs through `repo dependencies ensure` with progress before the module is loaded), and its help in every declared language. The `module` closure of a `none` row is held free of bare imports by the zero-touch law; every closure is held free of workspace package specifiers.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "languages", "labels", "commands"],

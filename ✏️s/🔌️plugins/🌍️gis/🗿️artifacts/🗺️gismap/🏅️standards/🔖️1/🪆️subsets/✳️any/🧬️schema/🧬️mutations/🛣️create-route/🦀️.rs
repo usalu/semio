@@ -29,16 +29,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "route", kind: "create-route", record: "CreatedRoute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create route \"{}\"", self.item.id), &format!("Route \"{}\" erstellen", self.item.id))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for CreateRoute
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<CreateRoute> + From<crate::standards::v1::subsets::any::schema::mutations::delete_route::DeleteRoute>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create route \"{}\"", self.item.id), &format!("Route \"{}\" erstellen", self.item.id))
     }
 }
 //#endregion 🔹Payload

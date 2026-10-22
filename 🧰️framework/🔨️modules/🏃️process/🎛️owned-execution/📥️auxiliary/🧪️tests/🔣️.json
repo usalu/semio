@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "name": "empty-data",
+      "scalar": "x",
+      "count": 0,
+      "accepted": true
+    },
+    {
+      "name": "utf8-data",
+      "scalar": "🙂",
+      "count": 2,
+      "accepted": true
+    },
+    {
+      "name": "exact-byte-limit",
+      "scalar": "a",
+      "count": 25165824,
+      "accepted": true
+    },
+    {
+      "name": "byte-limit-refusal",
+      "scalar": "a",
+      "count": 25165825,
+      "accepted": false
+    },
+    {
+      "name": "multibyte-limit-refusal",
+      "scalar": "🙂",
+      "count": 6291457,
+      "accepted": false
+    },
+    {
+      "name": "unpaired-surrogate-refusal",
+      "scalar": "\ud800",
+      "count": 1,
+      "accepted": false
+    }
+  ],
+  "childProcess": {
+    "sourceEntry": "./📜️script.ts",
+    "ingress": "birth-owning-program",
+    "birthMilliseconds": 20000
+  }
+}

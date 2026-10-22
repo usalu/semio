@@ -7,7 +7,7 @@ use super::*;
 pub(super) struct GuestRelayAttempt {
     pub(super) runtime: Arc<GuestRuntimes>,
     pub(super) instance: Arc<Mutex<GuestInstanceSlot>>,
-    pub(super) instance_gate: Arc<semio_framework_async::Semaphore>,
+    pub(super) instance_gate: Arc<semio_framework_async_sync::Semaphore>,
     pub(super) pool: WorkerPool,
     pub(super) cancel_scheduled: Arc<AtomicBool>,
     pub(super) cancel_admitted: Arc<AtomicBool>,

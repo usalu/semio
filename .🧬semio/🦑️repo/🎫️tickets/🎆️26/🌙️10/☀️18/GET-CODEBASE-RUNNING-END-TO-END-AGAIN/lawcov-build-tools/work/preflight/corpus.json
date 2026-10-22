@@ -1,0 +1,279 @@
+{
+ "version": 1,
+ "requirements": [
+  {
+   "name": "linux",
+   "policy": "linux"
+  },
+  {
+   "name": "darwin",
+   "policy": "darwin"
+  },
+  {
+   "name": "win32",
+   "policy": "win32"
+  },
+  {
+   "name": "no exchange and no tools",
+   "value": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": false
+   }
+  },
+  {
+   "name": "arm64 only with one tool and exchange",
+   "value": {
+    "architectures": [
+     "arm64"
+    ],
+    "minimumAvailableBytes": 1,
+    "tools": [
+     "a"
+    ],
+    "exchange": true
+   }
+  }
+ ],
+ "axes": {
+  "architecture": [
+   "x64",
+   "arm64",
+   "ia32"
+  ],
+  "byteOffsets": [
+   -1,
+   0,
+   1
+  ],
+  "toolPool": [
+   "cc",
+   "pkg-config",
+   "hdiutil",
+   "a",
+   "extra"
+  ],
+  "exchange": [
+   "supported",
+   "unsupported",
+   "unprobed"
+  ],
+  "caseSensitive": [
+   "yes",
+   "no",
+   "unprobed"
+  ]
+ },
+ "invalidFacts": [
+  {
+   "name": "negative bytes",
+   "patch": {
+    "availableBytes": -1
+   }
+  },
+  {
+   "name": "fractional bytes",
+   "patch": {
+    "availableBytes": 1.5
+   }
+  },
+  {
+   "name": "unknown exchange",
+   "patch": {
+    "exchange": "maybe"
+   }
+  },
+  {
+   "name": "unknown case state",
+   "patch": {
+    "caseSensitive": "sometimes"
+   }
+  },
+  {
+   "name": "repeated tools",
+   "patch": {
+    "tools": [
+     "cc",
+     "cc"
+    ]
+   }
+  },
+  {
+   "name": "an extra field",
+   "patch": {
+    "extra": 1
+   }
+  },
+  {
+   "name": "a missing field",
+   "drop": "platform"
+  },
+  {
+   "name": "tools that are not strings",
+   "patch": {
+    "tools": [
+     1
+    ]
+   }
+  }
+ ],
+ "invalidRequirements": [
+  {
+   "name": "no architectures",
+   "requirement": {
+    "architectures": [],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": false
+   }
+  },
+  {
+   "name": "an unknown architecture",
+   "requirement": {
+    "architectures": [
+     "ia32"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": false
+   }
+  },
+  {
+   "name": "repeated architectures",
+   "requirement": {
+    "architectures": [
+     "x64",
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": false
+   }
+  },
+  {
+   "name": "a zero minimum",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 0,
+    "tools": [],
+    "exchange": false
+   }
+  },
+  {
+   "name": "an upper-case tool",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [
+     "CC"
+    ],
+    "exchange": false
+   }
+  },
+  {
+   "name": "a tool with a space",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [
+     "a b"
+    ],
+    "exchange": false
+   }
+  },
+  {
+   "name": "a tool starting with a digit",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [
+     "1a"
+    ],
+    "exchange": false
+   }
+  },
+  {
+   "name": "repeated tools",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [
+     "a",
+     "a"
+    ],
+    "exchange": false
+   }
+  },
+  {
+   "name": "an exchange that is not boolean",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": "yes"
+   }
+  },
+  {
+   "name": "an unknown field",
+   "requirement": {
+    "architectures": [
+     "x64"
+    ],
+    "minimumAvailableBytes": 100,
+    "tools": [],
+    "exchange": false,
+    "skip": true
+   }
+  }
+ ],
+ "arguments": {
+  "accepted": [
+   [
+    "preflight"
+   ]
+  ],
+  "rejected": [
+   [],
+   [
+    "preflight",
+    "--scope"
+   ],
+   [
+    "x"
+   ],
+   [
+    "preflight",
+    "preflight"
+   ],
+   [
+    "Preflight"
+   ],
+   [
+    "preflight "
+   ]
+  ]
+ },
+ "base": {
+  "platform": "linux",
+  "architecture": "x64",
+  "availableBytes": 100,
+  "tools": [],
+  "exchange": "supported",
+  "caseSensitive": "yes"
+ }
+}

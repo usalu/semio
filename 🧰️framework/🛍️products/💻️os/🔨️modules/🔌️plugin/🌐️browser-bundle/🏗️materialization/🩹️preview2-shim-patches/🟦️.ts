@@ -28,23 +28,29 @@ export function patchPreview2ShimGuestLogClassification(cliPath: string): void {
   writeFileSync(cliPath, source.replaceAll(original, classified));
 }
 
-/** 🗣️ Upstream's own release of a buffered guest line — `@bytecodealliance/preview2-shim@0.25.0`'s
+/** 🗣️ Upstream's own release of a buffered guest line — `@bytecodealliance/preview2-shim@0.30.0`'s
  * `dist/browser/cli.js` `consoleStream`, where `flush()` publishes whatever is buffered, complete
  * line or not. Anchored verbatim so a shim upgrade fails closed instead of silently reinstating the
  * fragment storm below. */
-const PREVIEW2_PARTIAL_LINE_RELEASE = `        flush() {
-            pending += decoder.decode();
-            if (pending) {
-                writeLine(pending);
-            }
-            pending = "";
+const PREVIEW2_PARTIAL_LINE_RELEASE = `    const flush = () => {
+        pending += decoder.decode();
+        if (pending) {
+            writeLine(pending);
+        }
+        pending = "";
+    };
+    return {
+        write(contents) {
+            pending += decoder.decode(contents, { stream: true });
+            emitCompleteLines();
         },
+        flush,
         blockingFlush() {
             this.flush?.();
         },
-        drop() {
-            this.flush?.();
-        },
+        // OutputStream marks itself closed before calling the handler's drop.
+        drop: flush,
+    };
 `;
 
 /** 🧵 One logical guest line is ONE host emit — the law `🌐️wasi/🟦️.ts`'s `createGuestLogLineSink`
@@ -52,21 +58,29 @@ const PREVIEW2_PARTIAL_LINE_RELEASE = `        flush() {
  * stream. A flush releases COMPLETE lines only; an unterminated tail is released on drop, written
  * out directly rather than through `this.flush`, because `OutputStream[Symbol.dispose]` clears
  * `open` before it calls `drop` and `this.flush` then throws `{ tag: "closed" }`. */
-const SEMIO_COMPLETE_LINE_RELEASE = `        flush() {
-            pending += decoder.decode();
+const SEMIO_COMPLETE_LINE_RELEASE = `    const flush = () => {
+        pending += decoder.decode();
+        emitCompleteLines();
+    };
+    const drop = () => {
+        pending += decoder.decode();
+        emitCompleteLines();
+        if (pending) {
+            writeLine(pending);
+            pending = "";
+        }
+    };
+    return {
+        write(contents) {
+            pending += decoder.decode(contents, { stream: true });
             emitCompleteLines();
         },
+        flush,
         blockingFlush() {
             this.flush?.();
         },
-        drop() {
-            pending += decoder.decode();
-            emitCompleteLines();
-            if (pending) {
-                writeLine(pending);
-                pending = "";
-            }
-        },
+        drop,
+    };
 `;
 
 /** 🧵 Releases guest log lines whole, so {@link patchPreview2ShimGuestLogClassification}'s severity

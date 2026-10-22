@@ -29,7 +29,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -47,7 +47,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test compute",
+        "command": "repo ./📜️script.ts test compute",
         "forwardAllArgs": true
       }
     },
@@ -65,7 +65,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test compute keys",
+        "command": "repo ./📜️script.ts test compute keys",
         "forwardAllArgs": true
       }
     }

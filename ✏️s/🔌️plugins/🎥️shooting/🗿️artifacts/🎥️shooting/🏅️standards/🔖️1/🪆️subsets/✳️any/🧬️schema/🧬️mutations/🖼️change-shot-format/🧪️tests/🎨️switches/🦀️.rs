@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️change-shot-format/🎨️switches/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-shot-format diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("change-shot-format diff applies")
 }
 
 /// ▶️ `change-shot-format` swaps the raster/vector target of one shot. The format string is stored
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-shot-format/switches-shot-wide-to-svg: committed diff did not carry before to after");
 }
 

@@ -27,17 +27,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "signature-field", kind: "insert-signature-field", record: "Insert" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::insert_signature_field_rows(base, &self.name, &self.placements, self.field_index, self.entry_index)))
-    }
-
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(RemoveSignatureField { name: self.name.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" einfügen", self.name))
     }
@@ -45,6 +34,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertSignatureField
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertSignatureField> + From<crate::standards::v1_7::subsets::h::schema::mutations::remove_signature_field::RemoveSignatureField>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(support::insert_signature_field_rows(base, &self.name, &self.placements, self.field_index, self.entry_index)))
+    }
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(RemoveSignatureField { name: self.name.clone() })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

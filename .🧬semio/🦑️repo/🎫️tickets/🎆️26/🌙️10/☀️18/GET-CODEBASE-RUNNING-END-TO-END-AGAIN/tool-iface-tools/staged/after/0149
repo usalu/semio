@@ -1,122 +1,72 @@
-import { report } from "../🏃️operation/🟦️.ts";
-import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
-import { normalizeRelative } from "../🛣️path/🟦️.ts";
-import { sha256, assertNoFollowAncestors } from "../📁️input/🟦️.ts";
-import { sourceAdmissionAssertLexical } from "../🚪️source-admission/📁️io/🟦️.ts";
+/** 🎯️ The attempt selection and lease handling of the taxonomy plan apply. */
+import { normalizeRelative } from "../../🛣️path/🟦️.ts";
+import { sha256 } from "../../📁️input/🟦️.ts";
 
-import { lstatSync, readFileSync, readdirSync, readlinkSync } from "node:fs";
-import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { join } from "node:path";
-import type { OpaqueTreeDigest, TaxonomyInventoryOptions, TaxonomyNoFollowTreeDigest, TaxonomyPlan, TaxonomyVerification, TaxonomyViolation } from "../📜️plan-contracts/🟦️.ts";
-import { absolutePath, stableViolations, violation } from "../🏷️file-kind-matching/🟦️.ts";
-import { TransactionRepositoryAuthority, TransactionRepositoryAuthorityError, assertTransactionRepositoryPath, isTransactionRepositoryAuthorityError } from "../🏛️repository-authority/🟦️.ts";
-import { execToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
+import { posix } from "node:path";
+import { type TaxonomyApplyOptions, requireTaxonomyValue } from "../../📜️plan-contracts/🟦️.ts";
+import { absolutePath, checkCancellation, resolveFileKind } from "../../🏷️file-kind-matching/🟦️.ts";
+import { type MutableJournalRecord } from "../../💾️durable-journal/🟦️.ts";
+import { logicalRepositorySymlinkTargetPath } from "../../➰️symlink-targets/🟦️.ts";
+import { canonicalDirectoryName } from "../../🧐️preimage-assertions/🟦️.ts";
+import { type TransactionLeaseHandle, type TransactionLeaseRecord, releaseTransactionLease } from "../../🔐️transaction-lease/🟦️.ts";
+import { acquireTransactionLease } from "../../🔑️transaction-lease-acquisition/🟦️.ts";
+import { type PreflightReferenceBasis } from "../../🛫️embedded-roots/🟦️.ts";
+import type { bindTransactionNames, checkPlanAuthority } from "../📜️plan-checks/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-interface OpaqueCounts {
-  files: number;
-  directories: number;
-  symlinks: number;
-  others: number;
-}
-
-function noFollowMerkleNode(path: string, counts: OpaqueCounts, format: "opaque-v1" | "path-state-v1", excluded: ReadonlySet<string> = new Set()): string {
-  const stat = lstatSync(path);
-  const numericMode = stat.mode & 0o7777;
-  const mode = numericMode.toString(8);
-  if (stat.isSymbolicLink()) {
-    counts.symlinks++;
-    const target = readlinkSync(path);
-    return format === "opaque-v1" ? sha256(`symlink\u0000${mode}\u0000${target}`) : sha256(canonicalJson({ kind: "symlink", mode: numericMode, target }));
+/** 🧭 Selects the resumed attempt or allocates the next attempt ordinal and binds its journal paths. */
+export function selectAttempt({ existingAttempts, resumeRelative, digest, taxonomy, attemptsRelative, journalFilename, repoRoot }: Pick<ReturnType<typeof checkPlanAuthority>, "existingAttempts" | "resumeRelative"> & Pick<ReturnType<typeof bindTransactionNames>, "digest" | "taxonomy" | "attemptsRelative" | "journalFilename" | "repoRoot">) {
+  const txn = {} as { attemptOrdinal: string; journalRelative: string; selectedAttempt: (typeof existingAttempts)[number] | undefined; leaseHandle: TransactionLeaseHandle | undefined; preflightReferenceBasis: PreflightReferenceBasis | undefined; lockedResumeJournal: MutableJournalRecord | undefined };
+  if (resumeRelative) {
+    const match = existingAttempts.find((entry) => entry.journalRelative === resumeRelative);
+    if (!match) throw new Error(`Resume journal is not an exact existing canonical attempt for plan ${digest}`);
+    if (match.journal.state === "rolled-back") throw new Error("Cannot resume journal in state rolled-back");
+    txn.selectedAttempt = match;
+    txn.attemptOrdinal = match.ordinal;
+    txn.journalRelative = match.journalRelative;
+  } else {
+    const active = existingAttempts.find((entry) => entry.journal.state !== "rolled-back" && entry.journal.state !== "committed");
+    if (active) throw new Error(`Transaction attempt ${active.ordinal} is active and must be resumed`);
+    if (existingAttempts.some((entry) => entry.journal.state === "committed")) throw new Error("Plan already has a committed transaction attempt");
+    const next = existingAttempts.length === 0 ? 1 : Math.max(...existingAttempts.map((entry) => Number.parseInt(entry.ordinal, 10))) + 1;
+    if (next > 999999) throw new Error("Transaction attempt ordinal space is exhausted");
+    txn.attemptOrdinal = String(next).padStart(6, "0");
+    const attemptDirectory = canonicalDirectoryName(taxonomy, "transaction-attempt", txn.attemptOrdinal, "transaction-attempts");
+    txn.journalRelative = normalizeRelative(`${attemptsRelative}/${attemptDirectory}/${journalFilename}`);
   }
-  if (stat.isFile()) {
-    counts.files++;
-    return sha256(Buffer.concat([Buffer.from(format === "opaque-v1" ? `file\u0000${mode}\u0000` : `file\u0000${numericMode}\u0000${stat.size}\u0000`), readFileSync(path)]));
+  const attemptRelative = posix.dirname(txn.journalRelative);
+  const journalPath = absolutePath(repoRoot, txn.journalRelative);
+  return { txn, attemptRelative, journalPath };
+}
+
+/** 🔑 Defines the lease acquisition and release and checks the symlink targets, baseline commit and cancellation. */
+export function defineLeaseAndPreChecks({ txn, repositoryAuthority, attemptRelative, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, transactionProbe, plan, repoRoot, taxonomy, options }: Pick<ReturnType<typeof selectAttempt>, "txn" | "attemptRelative"> & Pick<ReturnType<typeof bindTransactionNames>, "repositoryAuthority" | "leaseDirectory" | "leasePreparationName" | "leaseJsonWritePreparationName" | "journalFilename" | "jsonPreviousName" | "digest" | "transactionProbe" | "plan" | "repoRoot" | "taxonomy"> & { readonly options: TaxonomyApplyOptions }) {
+  const acquireLease = (backupRoot: string, beforePublish?: (owned?: TransactionLeaseRecord) => void): void => {
+    txn.leaseHandle = acquireTransactionLease(repositoryAuthority, attemptRelative, backupRoot, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, txn.attemptOrdinal, beforePublish, transactionProbe);
+  };
+  const releaseLease = (): void => {
+    if (!txn.leaseHandle) return;
+    releaseTransactionLease(repositoryAuthority, `${attemptRelative}/${leaseDirectory}`, txn.leaseHandle);
+    txn.leaseHandle = undefined;
+  };
+  for (const edit of plan.symlinkTargetEdits) {
+    const localTarget = logicalRepositorySymlinkTargetPath(repoRoot, edit.sourcePath, edit.oldTarget);
+    if (localTarget !== edit.logicalTargetSourcePath) throw new Error(`Symlink target authority is not repository-local or does not match its logical source: ${edit.sourcePath}`);
+    const linkMoves = plan.moves.filter((move) => move.sourcePath === edit.sourcePath);
+    const targetMoves = plan.moves.filter((move) => move.sourcePath === edit.logicalTargetSourcePath);
+    const expectedFinalPath = linkMoves.length === 0 ? edit.sourcePath : linkMoves.length === 1 ? requireTaxonomyValue(linkMoves[0],"linkMoves[0]").destinationPath : "";
+    const expectedTargetFinalPath = targetMoves.length === 0 ? edit.logicalTargetSourcePath : targetMoves.length === 1 ? requireTaxonomyValue(targetMoves[0],"targetMoves[0]").destinationPath : "";
+    if (edit.finalPath !== expectedFinalPath || edit.logicalTargetFinalPath !== expectedTargetFinalPath) throw new Error(`Symlink target projection does not match exact plan moves: ${edit.sourcePath}`);
+    const expectedTarget = posix.relative(posix.dirname(expectedFinalPath), expectedTargetFinalPath);
+    if (!expectedTarget || expectedTarget !== edit.newTarget || expectedTarget.startsWith("/") || posix.normalize(posix.join(posix.dirname(expectedFinalPath), expectedTarget)) !== expectedTargetFinalPath) throw new Error(`Symlink relative target does not resolve to its frozen logical target: ${edit.sourcePath}`);
+    if (edit.logicalTargetPreimage.state === "directory" || edit.windowsLinkType !== "file") throw new Error(`Symlink directory target lacks recursive no-follow authority: ${edit.sourcePath}`);
+    if (edit.logicalTargetPreimage.state === "absent" && !resolveFileKind(edit.logicalTargetSourcePath, taxonomy, undefined, []).kind) throw new Error(`Broken symlink target kind cannot be proven: ${edit.sourcePath}`);
+    const targetDigestible = { sourcePath: edit.sourcePath, finalPath: edit.finalPath, oldTarget: edit.oldTarget, newTarget: edit.newTarget, logicalTargetSourcePath: edit.logicalTargetSourcePath, logicalTargetFinalPath: edit.logicalTargetFinalPath, logicalTargetPreimage: edit.logicalTargetPreimage };
+    if (edit.sourceTargetDigest !== sha256(canonicalJson(targetDigestible))) throw new Error(`Symlink source-target authority digest changed: ${edit.sourcePath}`);
   }
-  if (stat.isDirectory()) {
-    counts.directories++;
-    const children = readdirSync(path).sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).filter((name) => !excluded.has(join(path, name))).map((name) => ({ name: Buffer.from(name).toString("hex"), digest: noFollowMerkleNode(join(path, name), counts, format, excluded) }));
-    return format === "opaque-v1" ? sha256(`directory\u0000${mode}\u0000${children.map((child) => `${child.name}\u0000${child.digest}`).join("\u0000")}`) : sha256(canonicalJson({ kind: "directory", mode: numericMode, children }));
-  }
-  counts.others++;
-  return format === "opaque-v1" ? sha256(`other\u0000${mode}\u0000${stat.size}`) : sha256(canonicalJson({ kind: "other", mode: numericMode, size: stat.size }));
-}
-
-function opaqueNodeDigest(path: string, counts: OpaqueCounts): string { return noFollowMerkleNode(path, counts, "opaque-v1"); }
-
-function noFollowNodeDigest(path: string, counts: OpaqueCounts, excluded: ReadonlySet<string> = new Set()): string { return noFollowMerkleNode(path, counts, "path-state-v1", excluded); }
-
-export function noFollowTreeDigestExcluding(root: string, relativeRoot: string, excludedPaths: readonly string[]): TaxonomyNoFollowTreeDigest {
-  const path = absolutePath(root, normalizeRelative(relativeRoot));
-  const excluded = new Set(excludedPaths.map((entry) => absolutePath(root, entry)));
-  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
-  const digest = noFollowNodeDigest(path, counts, excluded);
-  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
-}
-
-export function transactionTreeDigest(authority: TransactionRepositoryAuthority, logicalRoot: string, physicalRoot: string, excludedPaths: readonly string[]): TaxonomyNoFollowTreeDigest {
-  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
-  let path: string, excluded: Set<string>;
-  try {
-    if (!Array.isArray(excludedPaths)) throw new Error("Transaction tree exclusions must be an explicit array");
-    assertTransactionRepositoryPath(authority, logicalRoot, "subtree", "Transaction logical tree");
-    assertTransactionRepositoryPath(authority, physicalRoot, "subtree", "Transaction physical tree");
-    for (const path of excludedPaths) sourceAdmissionAssertLexical(path, "Transaction tree exclusion", false);
-    path = absolutePath(authority.repoRoot, physicalRoot);
-    excluded = new Set(excludedPaths.map((entry: string) => absolutePath(authority.repoRoot, entry)));
-    assertNoFollowAncestors(authority.repoRoot, path, "Transaction physical tree");
-  } catch (cause) {
-    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
-    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
-  }
-  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
-  const digest = noFollowNodeDigest(path, counts, excluded);
-  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
-}
-
-/** 🌲️ Computes an exact recursive tree identity without following any symlink. */
-export function noFollowTreeDigest(root: string, relativeRoot: string): TaxonomyNoFollowTreeDigest {
-  const path = absolutePath(root, normalizeRelative(relativeRoot));
-  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
-  const digest = noFollowNodeDigest(path, counts);
-  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
-}
-
-/** 🛡️ Computes a no-follow Merkle digest for an explicitly named opaque tree. */
-export function opaqueTreeDigest(root: string, relativeRoot: string): OpaqueTreeDigest {
-  const normalized = normalizeRelative(relativeRoot);
-  const path = absolutePath(root, normalized);
-  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
-  const digest = opaqueNodeDigest(path, counts);
-  return { algorithm: "sha256-merkle-v1", relativeRoot: normalized, digest, ...counts };
-}
-
-export function repositoryHead(repoRoot: string): string {
-  return execToolSyncV1("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim();
-}
-
-/** 🫧️ The scope a verdict must be computed over for `scope` to be judged whole (verifier closure): a scope inside a mutation facet —
- * below `<owner>/🧬️schema/🧬️mutations` or `<owner>/🧪️tests/🧫️fixtures/🧬️mutations`, or a `🧬️schema` / `🧪️tests/🧫️fixtures` directory that holds a
- * `🧬️mutations` (`holdsMutations`) — widens to `<owner>`, the root that owns both the implementation cases and their fixture
- * bundles, because the case-pairing rules read both sides; every other scope is closed already. */
-export function taxonomyClosedScope(scope: string, holdsMutations: (path: string) => boolean, taxonomy: Pick<LoadedTaxonomy["discoverySchema"], "testsDirName" | "testFixturesDirName" | "schemaScopeOwnerLevels">): string {
-  const segments = scope.replace(/\/+$/u, "").split("/");
-  const levels = taxonomy.schemaScopeOwnerLevels;
-  const at = segments.findIndex((segment, index) => index > 0 && (segment === levels.facetDirName && segments[index - 1] !== levels.moduleMemberDirName || segment === taxonomy.testFixturesDirName && segments[index - 1] === taxonomy.testsDirName && segments[index - 2] !== levels.moduleMemberDirName) && (segments[index + 1] === levels.mutationsFacetDirName || index === segments.length - 1 && holdsMutations(segments.join("/"))));
-  const owner = at > 0 && segments[at] === taxonomy.testFixturesDirName ? at - 1 : at;
-  return owner < 0 ? segments.join("/") : segments.slice(0, owner).join("/");
-}
-
-/** ⚖️ A plan's verdict: its unresolved problems plus one violation per planned move, relocation, symlink retarget, evidence removal and
- * structured reference edit; clean when none is an error. */
-export function taxonomyPlanVerdict(plan: TaxonomyPlan, progress?: TaxonomyInventoryOptions["progress"]): Pick<TaxonomyVerification, "violations" | "clean"> {
-  const violations: TaxonomyViolation[] = [...plan.unresolved];
-  for (const move of plan.moves) violations.push(violation("normalization-move-required", move.sourcePath, `Path must move to ${move.destinationPath}`));
-  for (const relocation of plan.embeddedTicketRootRelocations) violations.push(violation("embedded-ticket-root-relocation-required", relocation.sourcePath, `Embedded ticket evidence must relocate to ${relocation.destinationPath}`));
-  for (const edit of plan.symlinkTargetEdits) violations.push(violation("symlink-target-edit-required", edit.sourcePath, `Repository-local symlink target must become ${edit.newTarget}`));
-  for (const removal of plan.evidenceRemovals) violations.push(violation("evidence-removal-required", removal.sourcePath, "Redundant evidence must be disposition-staged"));
-  for (const edit of plan.edits) violations.push(violation("reference-edit-required", edit.path, `Structured reference must change at ${edit.structuredLocation}`));
-  const stable = stableViolations(violations);
-  const clean = stable.every((entry) => entry.severity !== "error");
-  report(progress, "verify", "complete", stable.length, stable.length);
-  return { violations: stable, clean };
+  runToolSyncV1("git", ["cat-file", "-e", `${plan.baselineCommit}^{commit}`], { check: true, cwd: repoRoot, stdio: "ignore" }).stdout;
+  if (plan.excludedTreeDigests.length > 0) throw new Error("Opaque digest filesystem access is disabled; replan with empty excludedTreeDigests");
+  if (!options.resumeJournal) checkCancellation(repoRoot, options.cancelFile);
+  return { acquireLease, releaseLease };
 }

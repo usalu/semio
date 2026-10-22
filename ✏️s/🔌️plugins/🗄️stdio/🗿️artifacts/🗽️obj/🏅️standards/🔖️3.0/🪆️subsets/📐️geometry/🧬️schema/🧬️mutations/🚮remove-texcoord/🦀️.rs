@@ -20,7 +20,16 @@ pub struct RemoveTexcoord {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "texcoord", kind: "remove-texcoord", record: "RemoveTexcoord" };
 
-    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff_remove_texcoord(*index))
     }
@@ -32,12 +41,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -24,7 +24,7 @@ fn history_edit_step_reference_closure_preserves_cycles_and_refuses_invalid_cand
     }
     let base=StepSnapshot::default();
     let diff=crate::standards::v_ap214::subsets::base::schema::diff::StepDiff{entities:Some(crate::standards::v_ap214::subsets::base::schema::diff::StepEntitiesDiff{added:vec![crate::standards::v_ap214::subsets::base::schema::diff::StepEntityAdded{index:0,entity:crate::schema::snapshot::StepEntity{id:10,name:"THING".into(),args:vec![StepValue::Reference(99)],complex:Vec::new()}}],..Default::default()}),..Default::default()};
-    let error=protocol::apply_diff(&diff, &base).unwrap_err();
+    let error=protocol::apply_diff_cold(&diff, &base).unwrap_err();
     assert_eq!(error.code,"mutation.apply.dangling-reference");
     assert_eq!(error.target,["entities","10","args","0"]);
     assert_eq!(base,StepSnapshot::default());

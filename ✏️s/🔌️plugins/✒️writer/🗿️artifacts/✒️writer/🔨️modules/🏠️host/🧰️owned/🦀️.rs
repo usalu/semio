@@ -4,7 +4,7 @@ use crate::op::WriterMutation;
 use crate::schema;
 use crate::WriterSnapshot;
 use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget;
-use semio_framework_value::retirement::OwnedValueRetirementFactory;
+use semio_framework_value::OwnedValueRetirementFactory;
 
 /// 🗃️ The framework-bounded document owner catalog, funded for a store no scheduler grants.
 pub fn writer_document_store_owners() -> store::os_store::document_store_owners::DocumentStoreOwners<WriterSnapshot, WriterMutation> {

@@ -1,4 +1,5 @@
 import {captureOwnedCommandResultV1} from "../../../🎛️owned-execution/📥️capture/🟦️.ts";
+import { ensureCargoLockCurrentV1 } from "../../../🦀️cargo-workspace/🟦️.ts";
 import{withCompilerCapacityConsumptionV1}from"../../../🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
 import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type NativeBuildStageCapacityV1}from"./🎟️stage/🟦️.ts";
 import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
@@ -264,7 +265,7 @@ declare const nativeCompilationBrand:unique symbol;
 export type NativeBuildCompilationV1=Readonly<{readonly[nativeCompilationBrand]:true}>;
 type CompilationScopeV1={live:boolean;accepting:boolean;view:CompletedCargoCompilationViewV1;pending:Set<Promise<unknown>>;failures:unknown[]};
 const nativeCompilationsV1=new WeakMap<NativeBuildCompilationV1,CompilationScopeV1>();
-const compilationPendingMaximumV1=compilationSourceSchema.properties.maximumPendingOperations.const,compilationBytesMaximumV1=compilationSourceSchema.properties.maximumBytes.const;
+const compilationPendingMaximumV1=compilationSourceSchema.properties.maximumPendingOperations.const,compilationBytesMaximumV1=compilationSourceSchema.properties.maximumRetainedCompilationBytes.const;
 /** 🧾️ Borrows an actual completed pass while its writer, retained allocation and whole-outcome consumer remain held. */
 export function withNativeBuildCompilationTaskV1<T>(token:NativeBuildCompilationV1,body:(view:CompletedCargoCompilationViewV1)=>Promise<T>):Promise<T>{
  const scope=nativeCompilationsV1.get(token);if(!scope)throw Error("Actual completed Native pass capture required");const admitted=scope.live&&scope.accepting&&typeof body==="function"&&scope.pending.size<compilationPendingMaximumV1,task=withIssuedResourceOperationV1(scope.view.control,async()=>{await Promise.resolve();if(!admitted)throw Error("Live finite completed Native pass task required");await scope.view.recheck();const value=await body(Object.freeze({...scope.view,files:new Map(scope.view.files)}));await scope.view.recheck();return value;});if(admitted){scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.pending.delete(task);scope.failures.push(error);});}return task;
@@ -566,6 +567,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       checkPass();
       broker.registerPass({ id: pass.id, profile: pass.profile, target: pass.target });
       const port = options.cargo ?? { command: "cargo", args: [] };
+      await ensureCargoLockCurrentV1({ workspaceRoot: options.cwd, cwd: options.cwd, program: port.command, prefix: port.args, args, environment: inputs.environment, control: effectControl, force: false });checkPass();
       const child = spawn(port.command, [...port.args, ...args], { cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...inputs.environment, SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...jobserver.environment(), RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, generation.root, options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
       const terminal=nativeBuildChildTerminalV1(child);children.add(child);
       const stop = (): void => terminateOwnedChildTree(child),logs:ReturnType<typeof boundedLog>[]=[],streams:Promise<void>[]=[];let primary:{error:unknown}|undefined;

@@ -1,6 +1,6 @@
 /** 🔸️ The part2 phase of useAgentBridge. */
 import { bridgeProtocols } from "../🛰️offer/🟦️.ts";
-import { useEffect } from "react";
+import { useEffect } from "../../⚛️react-port/🟦️.ts";
 import { BRIDGE_VERSION, decodeGatewayToShell, encodeShellToGateway, type GatewayToShell } from "@semio-tech/framework/mcp/bridge";
 import { decodeShellAppCommand, encodeShellAppFrame, shellAppFault } from "@semio-tech/framework/mcp/channel";
 import type { useDiscoveredState } from "../🔶️discovered/🟦️.tsx";

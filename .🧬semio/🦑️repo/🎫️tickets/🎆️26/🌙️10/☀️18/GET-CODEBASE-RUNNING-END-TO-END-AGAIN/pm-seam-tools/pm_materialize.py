@@ -15,7 +15,7 @@ def schema_view(d):
                  "storeRoleFiles": {r["home"]: inputs["ambientHomeFiles"], r["config"]: inputs["ambientConfigFiles"]},
                  "producerFileLabel": " and ".join(seen),
                  "resolutionOracles": [d["resolution"]["oracle"], "typescript", "node", "node-missing", "none"],
-                 "managerProtocol": {"manager": d["id"], "label": d["label"], "lockFile": primary["name"], "scopeConfig": (d["configurations"]["scope"] or [""])[0], "generationDirectory": d["generationDirectory"], "strictProfilePrefix": d["resolution"]["strictPrefix"] or "", "hostVersionKey": d["runtime"]["hostVersionKey"] or ""}})
+                 "managerProtocol": {"manager": d["id"], "label": d["label"], "lockFile": primary["name"], "scopeConfig": (d["configurations"]["scope"] or [""])[0], "generationDirectory": d["generationDirectory"], "strictProfilePrefix": d["resolution"]["strictPrefix"] or "", "hostVersionKey": d["runtime"]["hostVersionKey"] or "", "cacheVariable": next((n for n, s in d["environment"]["set"].items() if s == "role:cache" and n != "XDG_CACHE_HOME"), "")}})
     return view
 def lookup(view, path):
     value = view

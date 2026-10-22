@@ -14,7 +14,7 @@ use super::*;
 pub async fn assert_history_edits_end_to_end<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource]) -> String
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let descriptors = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS;
@@ -40,7 +40,7 @@ where
 async fn acceptance_offered<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<[bool; 5], AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut app = match acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true,cx).await {
         Ok(app) => app,
@@ -79,7 +79,7 @@ where
 async fn acceptance_census<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], withdraw_only: &BTreeSet<String>,cx:&mut semio_framework_job::StepContext<'_>) -> String
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let leaves: Vec<&str> = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).filter(|kind| !withdraw_only.contains(*kind)).collect();
     let mut cases = acceptance_cases::<A>(fixtures);
@@ -211,7 +211,7 @@ pub(super) enum AcceptanceSearch {
 pub(super) async fn acceptance_search<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource], reload: bool,cx:&mut semio_framework_job::StepContext<'_>) -> AcceptanceSearch
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut skipped = Vec::new();
     let committed = acceptance_cases::<A>(fixtures);

@@ -1,18 +1,20 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 
 import{createIssuedResourceControlV1}from"../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { typecheckAdmittedProjectV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
+/** 🧰️ `@semio-tech/framework` router: `repo ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
-import { spawnSync } from "node:child_process";
+
 import { fileURLToPath } from "node:url";
 import { runVitestV1, readVitestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runtimeCommandNameV1, runtimeTypeEnvironmentV1 } from "../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runToolSyncV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
@@ -344,7 +346,7 @@ function retainedUiNativeStripOnly(): void {
   `;
   const environment = { ...process.env };
   delete environment.NO_COLOR;
-  const child = spawnSync("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
+  const child = runToolSyncV1("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
   assert.equal(child.status, 0, child.stderr);
   assert.equal(child.signal, null);
   const result = JSON.parse(child.stdout) as { laws: number; grants: number; tableCloseTurns: number; retired: number; cancellationCloseTurns: number; cancellations: number; siblingInsertions: number; validationTurns: number; validationCloseTurns: number; validationCancellations: number; validationCases: number; hashBytes: number; hashCalls: number; hashChunks: number; hashCloseTurns: number; hashCancellations: number; hashCases: number; readCancelTurns: number; readRetirementTurns: number; readCloseTurns: number; independentReadCloseTurns: number; readCancellations: number; readCaptures: number; readCloses: number; readCases: number };
@@ -428,7 +430,7 @@ class WindowUtilityScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("window-utility-check accepts no arguments");
     const source = fileURLToPath(new URL("@semio-tech/framework-manifest/testing/window-view-context", import.meta.url));
-    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
     const { testWindowViewContext } = await import("@semio-tech/framework-manifest/testing/window-view-context");
     testWindowViewContext();
   }
@@ -453,11 +455,11 @@ class TypecheckScript extends BundleScript {
 class InstallationIdentityScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("Installation identity check accepts no arguments");
-    const child = spawnSync(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", import.meta.url))], { cwd: this.root, env: process.env, stdio: "inherit" });
+    const child = runToolSyncV1(runtimeCommandNameV1(), ["test", fileURLToPath(new URL("../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", import.meta.url))], { cwd: this.root, env: process.env, stdio: "inherit" });
     if (child.status !== 0) throw new Error("Installation identity contract failed");
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

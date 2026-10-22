@@ -17,6 +17,19 @@ where
     Op: protocol::Mutation<EquationGraphWindowConfig, Diff = EquationGraphWindowConfigDiff> + From<SetCamera>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EquationGraphWindowConfig, Op> for SetCamera
+where
+    Op: protocol::ColdMutation<EquationGraphWindowConfig, ReferenceDiff = EquationGraphWindowConfigDiff> + From<SetCamera>,
+{
     fn diff(&self, base: &EquationGraphWindowConfig) -> protocol::MutationOutcome<EquationGraphWindowConfigDiff> {
         if base.camera == self.camera {
             return protocol::MutationOutcome::new(EquationGraphWindowConfigDiff::default()).warning("mutation.no-op", "Configuration field is unchanged.");
@@ -33,10 +46,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["camera".into()]
-    }
 }

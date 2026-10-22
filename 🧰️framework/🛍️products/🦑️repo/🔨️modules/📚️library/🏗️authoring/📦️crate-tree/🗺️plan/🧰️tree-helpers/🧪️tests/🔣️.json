@@ -1,0 +1,109 @@
+{
+ "version": 1,
+ "lca": [
+  {
+   "files": [
+    "a/b/c.rs",
+    "a/b/d/e.rs"
+   ],
+   "expected": "a/b"
+  },
+  {
+   "files": [
+    "a/b/c.rs"
+   ],
+   "expected": "a/b"
+  },
+  {
+   "files": [],
+   "expected": ""
+  },
+  {
+   "files": [
+    "x/y.rs",
+    "z/w.rs"
+   ],
+   "expected": ""
+  },
+  {
+   "files": [
+    "/a/b/c.rs",
+    "/a/d.rs"
+   ],
+   "expected": "/a"
+  },
+  {
+   "files": [
+    "a.rs",
+    "b.rs"
+   ],
+   "expected": "."
+  },
+  {
+   "files": [
+    "a/b/c.rs",
+    "a/b/c.rs"
+   ],
+   "expected": "a/b"
+  },
+  {
+   "files": [
+    "a/b.rs",
+    "a/bc/d.rs"
+   ],
+   "expected": "a"
+  }
+ ],
+ "items": [
+  {
+   "text": "fn a(){} mod m { fn b(){} mod n { fn c(){} } } mod f;",
+   "names": [
+    "a",
+    "b",
+    "c"
+   ]
+  },
+  {
+   "text": "",
+   "names": []
+  },
+  {
+   "text": "mod only { }",
+   "names": []
+  },
+  {
+   "text": "struct S; mod m { struct T; }",
+   "names": [
+    "S",
+    "T"
+   ]
+  }
+ ],
+ "removals": [
+  {
+   "text": "/// doc\nfn f() {}  \nnext",
+   "needle": "fn f() {}",
+   "expected": "next"
+  },
+  {
+   "text": "fn f() {}\nnext",
+   "needle": "fn f() {}",
+   "expected": "next"
+  },
+  {
+   "text": "x\n    /// doc\n    fn f() {}\t\n    next",
+   "needle": "fn f() {}",
+   "expected": "    next"
+  },
+  {
+   "text": "fn f() {} // trailing\nnext",
+   "needle": "fn f() {}",
+   "expected": "// trailing\nnext"
+  },
+  {
+   "text": "fn f() {}",
+   "needle": "fn f() {}",
+   "expected": ""
+  }
+ ]
+}

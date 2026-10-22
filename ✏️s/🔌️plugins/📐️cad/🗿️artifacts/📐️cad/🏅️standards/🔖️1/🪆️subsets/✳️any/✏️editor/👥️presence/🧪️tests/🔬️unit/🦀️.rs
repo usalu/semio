@@ -1,7 +1,7 @@
 //! 🧪️ CAD presence — the sparse `Set` mutation's concrete inverse sums to exactly the negative diff.
 use super::{CadPresence, CadPresenceDiff, CadPresenceMutation};
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn peer() -> CadPresence {
     CadPresence { camera_zoom: 2.0, engagement_step: "Pick".into(), engagement_pane: Some("shape".into()), ..CadPresence::default() }

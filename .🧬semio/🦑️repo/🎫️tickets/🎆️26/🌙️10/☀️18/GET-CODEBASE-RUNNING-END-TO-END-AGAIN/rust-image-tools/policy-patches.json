@@ -1,0 +1,57 @@
+[
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+  "old": "\"maximumBytes\": 70866960384",
+  "new": "\"maximumBytes\": 105226698752"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+  "old": "      \"capacityBytes\": 17179869184,\n      \"maximumLogicalBytes\": 17178820608",
+  "new": "      \"capacityBytes\": 51539607552,\n      \"maximumLogicalBytes\": 51538558976"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧬️schema/🔣️.json",
+  "old": "\"maximum\": 70866960384",
+  "new": "\"maximum\": 105226698752"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+  "old": "      \"capacityBytes\": 17179869184,\n      \"filesystemBytes\": 17178820608,",
+  "new": "      \"capacityBytes\": 51539607552,\n      \"filesystemBytes\": 51538558976,"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+  "old": "\"budgetBytes\": 13957595136,",
+  "new": "\"budgetBytes\": 19326304256,"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts",
+  "old": "expect(actual.capacityBytes).toBe(17179869184);",
+  "new": "expect(actual.capacityBytes).toBe(51539607552);"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🟦️.ts",
+  "old": "expect(bytes(\"cargo-store\")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-3*1024**3);",
+  "new": "expect(bytes(\"cargo-home\")).toBe(3*1024**3);expect(bytes(\"unit-cache\")).toBe(24*1024**3);expect(bytes(\"cargo-store\")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-30*1024**3);"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json",
+  "old": "      \"purpose\": {\n        \"en\": \"Cargo store, compiled units and Nx task artifacts.\",\n        \"de\": \"Cargo-Speicher, kompilierte Einheiten und Nx-Task-Artefakte.\"\n      }",
+  "new": "      \"purpose\": {\n        \"en\": \"Cargo store, compiled units and Nx task artifacts.\",\n        \"de\": \"Cargo-Speicher, kompilierte Einheiten und Nx-Task-Artefakte.\"\n      },\n      \"recreate\": \"carried\",\n      \"carry\": [\n        \"cargo/home\",\n        \"u/o\",\n        \"u/e\",\n        \"u/a\"\n      ]"
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json",
+  "old": "    {\n      \"id\": \"cargo-store\",",
+  "new": "    {\n      \"id\": \"cargo-home\",\n      \"root\": \"repository\",\n      \"kind\": \"nested\",\n      \"directory\": \"cargo/home\",\n      \"partition\": \"rust\",\n      \"budget\": {\n        \"bytes\": 3221225472\n      },\n      \"managed\": {\n        \"owner\": \"cargo\"\n      },\n      \"writers\": [\n        \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts\"\n      ],\n      \"purpose\": {\n        \"en\": \"Cargo home: the shared registry, git checkouts and pinned tool binaries, one for every workspace of the checkout.\",\n        \"de\": \"Cargo-Home: die gemeinsame Registry, Git-Checkouts und fest eingebundene Werkzeug-Binärdateien, eines für alle Workspaces des Checkouts.\"\n      }\n    },\n    {\n      \"id\": \"unit-cache\",\n      \"root\": \"repository\",\n      \"kind\": \"nested\",\n      \"directory\": \"u\",\n      \"partition\": \"rust\",\n      \"budget\": {\n        \"bytes\": 25769803776\n      },\n      \"managed\": {\n        \"owner\": \"cargo\"\n      },\n      \"writers\": [\n        \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts\"\n      ],\n      \"purpose\": {\n        \"en\": \"Content-addressed compile units, the lanes of the running Cargo commands and the admission memo; collected in the background above the high-water mark.\",\n        \"de\": \"Inhaltsadressierte Compile-Einheiten, die Lanes der laufenden Cargo-Befehle und das Zulassungsgedächtnis; oberhalb der Hochwassermarke im Hintergrund bereinigt.\"\n      }\n    },\n    {\n      \"id\": \"cargo-store\","
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json",
+  "old": "\"en\": \"Cargo build, target, home and incremental state: the rest of the rust partition.\",\n        \"de\": \"Cargo-Build-, Target-, Home- und Inkrementalzustand: der Rest der Rust-Partition.\"",
+  "new": "\"en\": \"Cargo build and target directories of both modes and the compiler charges: the rest of the rust partition.\",\n        \"de\": \"Cargo-Build- und Target-Verzeichnisse beider Modi sowie die Compiler-Reservierungen: der Rest der Rust-Partition.\""
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json",
+  "old": "  \"needs\": [\n    {",
+  "new": "  \"needs\": [\n    {\n      \"partition\": \"rust\",\n      \"measuredOn\": \"2026-10-22\",\n      \"headroomPercent\": 15,\n      \"floorBytes\": 4294967296,\n      \"components\": [\n        {\n          \"id\": \"cargo-home\",\n          \"area\": \"cargo-home\",\n          \"measuredBytes\": 1748000000\n        },\n        {\n          \"id\": \"nx-artifacts\",\n          \"area\": \"nx-artifacts\",\n          \"measuredBytes\": 61000000\n        },\n        {\n          \"id\": \"unit-cache\",\n          \"area\": \"unit-cache\",\n          \"measuredBytes\": 8400000000\n        },\n        {\n          \"id\": \"compiler-workspaces\",\n          \"bytes\": 8589934592,\n          \"measuredBytes\": 3900000000\n        }\n      ]\n    },\n    {"
+ }
+]

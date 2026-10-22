@@ -59,9 +59,18 @@ pub(super) use actor_runner_scheduling_terminal_and_spawn::spawn_actor;
 mod native_artifact_host;
 pub use native_artifact_host::{ArtifactChannels, ArtifactHost};
 
+#[path = "🌐️document-socket-reactor/🦀️.rs"]
+mod document_socket_reactor;
+pub use document_socket_reactor::{DocumentSocketReactor, DocumentSocketReactorError, DocumentSocketReactorScope};
+use document_socket_reactor::pump_events;
+
 #[cfg(any(test, feature = "testing"))]
 include!("../🧪️tests/🔬️retained-turn-fixtures/🦀️.rs");
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️echo-suppression-pin/🦀️.rs"]
 mod echo_suppression_pin;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🌐️document-socket-reactor/🦀️.rs"]
+mod document_socket_reactor_tests;

@@ -515,6 +515,13 @@
       "keys": [
         "P"
       ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-diagnostics",
+      "keys": [
+        "!"
+      ]
     }
   ]
 }

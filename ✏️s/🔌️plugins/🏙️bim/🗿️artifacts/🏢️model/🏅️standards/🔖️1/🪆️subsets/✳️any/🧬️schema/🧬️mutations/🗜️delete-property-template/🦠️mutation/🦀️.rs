@@ -16,16 +16,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeletePropertyTemplate> + From<crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "property-template", kind: "delete-property-template", record: "DeletePropertyTemplate" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::delete_property_template::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_property_template::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete property template \"{}\"", self.id), &format!("Eigenschaftsvorlage \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for DeletePropertyTemplate
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<DeletePropertyTemplate> + From<crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::delete_property_template::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_property_template::inverse::inverse(self, base))
     }
 }

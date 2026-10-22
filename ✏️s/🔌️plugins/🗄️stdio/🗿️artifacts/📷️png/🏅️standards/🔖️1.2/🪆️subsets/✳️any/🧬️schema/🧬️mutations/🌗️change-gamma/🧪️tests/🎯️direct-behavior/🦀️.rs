@@ -15,7 +15,7 @@
 //! frame.
 
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌗️change-gamma/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌗️change-gamma/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json");
@@ -38,7 +38,7 @@ fn mutation() -> PngMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(&mutation().diff(&base).diff(), &base).expect("change-gamma applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(&mutation().diff(&base).diff(), &base).expect("change-gamma applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-gamma/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -48,9 +48,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(&payload.diff(&base).diff(), &base).expect("forward change-gamma applies");
+    let mut current = protocol::apply_diff_cold(&payload.diff(&base).diff(), &base).expect("forward change-gamma applies");
     for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        current = protocol::apply_diff(&step.diff(&current).diff(), &current).expect("the change-gamma inverse step applies");
+        current = protocol::apply_diff_cold(&step.diff(&current).diff(), &current).expect("the change-gamma inverse step applies");
     }
     assert_eq!(current, base, "change-gamma/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -98,7 +98,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(&mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-gamma/direct-behavior: committed diff did not carry before to after");
 }
 

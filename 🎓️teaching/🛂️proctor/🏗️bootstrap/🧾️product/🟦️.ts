@@ -1,5 +1,5 @@
 /** 🧾️ The proctor as a cached build product. `@teaching/proctor:build` compiles the executable through the repository's
- * issued Cargo launcher (`--store=shared`, the same code `bun repo cargo` runs) and leaves it at a content-addressed place,
+ * issued Cargo launcher (`--store=shared`, the same code `repo cargo` runs) and leaves it at a content-addressed place,
  * `dist/build/<mode>/<sha256>/proctor`, beside `dist/build/<mode>/receipt.json`, which names that exact path, the digest,
  * the platform and every source file Cargo's dep-info says it read. Every consumer — the dev stack, `check`, the
  * end-to-end gate, the image build, the operator verbs — resolves that receipt with {@link acquireProctor}: a missing or
@@ -98,7 +98,7 @@ export const PROCTOR_DATA_FILES: readonly string[] = (() => {
 
 /** 🛠️ The command that produces the product of `mode`, as the tool of the run spells it. */
 export function proctorBuildCommand(mode: BuildMode, env: Readonly<Record<string, string | undefined>> = process.env): string {
-  return `bun repo${env.SEMIO_BUILD_TOOL === "bazel" ? " --tool=bazel" : ""} run @teaching/proctor:build${mode === "release" ? " --configuration=release" : ""}`;
+  return `repo${env.SEMIO_BUILD_TOOL === "bazel" ? " --tool=bazel" : ""} run @teaching/proctor:build${mode === "release" ? " --configuration=release" : ""}`;
 }
 
 function render(text: string, values: Readonly<Record<string, MessageValue>>, language: "en" | "de"): string {
@@ -380,7 +380,7 @@ export async function captureProctorProduct(repoRoot: string, mode: BuildMode, s
   return receipt;
 }
 
-/** 🚪️ The argument vector of the proctor build for the issued Cargo launcher — the words after `bun repo cargo`. */
+/** 🚪️ The argument vector of the proctor build for the issued Cargo launcher — the words after `repo cargo`. */
 export function proctorCargoArguments(mode: BuildMode): string[] {
   return ["--store=shared", `--configuration=${mode}`, "--", "build", "--locked", "--package", PROCTOR_PACKAGE, "--bin", "proctor", "--message-format=json-render-diagnostics"];
 }
@@ -394,7 +394,7 @@ export interface BuildProctorProductOptions {
 }
 
 /** 🏗️ `@teaching/proctor:build`: compiles the proctor through the issued Cargo launcher of the shared store (the code of
- * `bun repo cargo --store=shared --configuration=<mode> -- build …`, run in the teaching workspace under this invocation's
+ * `repo cargo --store=shared --configuration=<mode> -- build …`, run in the teaching workspace under this invocation's
  * control, so progress and cancellation are the invocation's) and captures the result with {@link captureProctorProduct}
  * while the store is still retained. */
 export async function buildProctorProduct(repoRoot: string, invocation: ScriptInvocation, options: BuildProctorProductOptions = {}): Promise<ProctorProductReceipt> {

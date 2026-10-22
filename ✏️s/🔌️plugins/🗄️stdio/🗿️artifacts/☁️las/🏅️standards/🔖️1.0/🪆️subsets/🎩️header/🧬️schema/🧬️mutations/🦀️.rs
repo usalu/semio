@@ -53,7 +53,7 @@ pub mod set_vlr_data;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = LasSnapshot, diff = LasDiff, schema = "s.stdio.las")]
+#[mutations(snapshot = LasSnapshot, diff = LasDiff, schema = "s.stdio.las", reference = LasSnapshot, reference_diff = LasDiff)]
 pub enum LasMutation {
     SetVersion(set_version::SetVersion),
     SetSystemIdentifier(set_system_identifier::SetSystemIdentifier),

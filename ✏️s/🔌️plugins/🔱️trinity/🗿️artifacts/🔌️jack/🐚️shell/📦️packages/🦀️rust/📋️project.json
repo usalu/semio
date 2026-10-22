@@ -10,7 +10,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -20,7 +20,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts run",
+        "command": "repo ./📜️script.ts run",
         "forwardAllArgs": true
       },
       "continuous": true,

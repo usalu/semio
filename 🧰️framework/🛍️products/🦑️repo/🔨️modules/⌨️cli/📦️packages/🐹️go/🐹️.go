@@ -14,9 +14,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
- "path/filepath"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 	graphqlpkg "github.com/usalu/semio/repo/graphql"
+	launcher "github.com/usalu/semio/repo/launcher"
 	"github.com/usalu/semio/repo/providers"
 	"github.com/usalu/semio/repo/workspace"
 
@@ -78,6 +81,7 @@ func NewRootWithConfig(factory EngineFactory) (*Command, *Config) {
 	root.PersistentFlags().BoolP("text", "", false, "Shorthand for --format text")
 	root.PersistentFlags().BoolP("json", "", false, "Shorthand for --format json")
 	root.PersistentPreRunE = func(cmd *Command, args []string) error {
+  if cmd.Flags().Changed("repo") && config.Repo == "" { return fmt.Errorf("repository directory required / Repository-Verzeichnis erforderlich") }
 		if b, _ := cmd.Flags().GetBool("json"); b {
 			config.Format = "json"
 		} else if b, _ := cmd.Flags().GetBool("text"); b {
@@ -89,6 +93,7 @@ func NewRootWithConfig(factory EngineFactory) (*Command, *Config) {
 	}
 	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
+ root.PersistentFlags().flags["repo"].Single=true
 	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", DefaultCommandTimeout, "Timeout for command execution")
 	root.AddCommand(mcpCommand(factory, &config))
 	root.AddCommand(graphqlCommand(factory, &config))
@@ -160,16 +165,10 @@ func Execute(factory EngineFactory) error {
 
 // 🔶️defaultEngineFactory holds the data fields for a defaultEngineFactory record.
 func defaultEngineFactory(config Config) (*Engine, error) {
-	repoRoot := config.Repo
-	if repoRoot == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		repoRoot = workspace.FindRepoRoot(cwd)
-	}
-	workspace.SetRootDir(repoRoot)
-	exec, err := graphqlpkg.NewExecutorWithContext(repoRoot, graphqlpkg.NewRepoContext(repoRoot))
+	cwd, err := os.Getwd(); if err != nil { return nil, err }
+ var explicit *string; if config.Repo != "" { explicit = &config.Repo }
+ repoRoot, err := workspace.SelectRepoRoot(cwd, explicit); if err != nil { return nil, err }
+	exec, err := graphqlpkg.NewExecutor(repoRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -177,37 +176,22 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 }
 
 // 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.
-type NativeEntrypointPlan struct { Kind string; Arguments []string }
+type NativeEntrypointPlan = launcher.Plan
 
-// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary.
-func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {
- arguments := append([]string{}, argv...)
- if len(argv) >= 4 && argv[0] == "dev" && argv[1] == "mcp" && argv[2] == "stdio" && argv[3] == "os" { return NativeEntrypointPlan{"workspace", arguments} }
- if len(argv) > 0 && argv[0] == "mcp" { return NativeEntrypointPlan{"mcp", arguments[1:]} }
- if len(argv) > 0 && argv[0] == "dashboard" { return NativeEntrypointPlan{"build", append([]string{"run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"}, argv[1:]...)} }
- index := 0
- for index < len(argv) {
-  if argv[index] == "--tool" { index += 2; continue }
-  if len(argv[index]) >= 7 && argv[index][:7] == "--tool=" { index++; continue }; break
- }
- if index > 0 { return NativeEntrypointPlan{"build", arguments} }
- if index < len(argv) { switch argv[index] { case "run", "run-many", "affected", "exec", "watch", "dependencies", "cargo", "tools", "reset", "cache", "preflight", "show", "graph", "inputs", "incremental", "concurrency", "capacity", "leases", "remote-execution": return NativeEntrypointPlan{"build", arguments} } }
- return NativeEntrypointPlan{"domain", arguments}
-}
+// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary; the launcher module owns the one planner.
+func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan { return launcher.PlanRoute(argv) }
 
 // 🛠️NativeScriptTool is the tool-independent owned build process port.
 type NativeScriptTool interface { Run(root string, arguments []string) error }
 
-type nativeBunBuildTool struct{}
+type nativeLauncherTool struct{ entry string }
 
-func (nativeBunBuildTool) Run(root string, arguments []string) error {
- entry := filepath.Join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")
- return runNativeScriptProcess(append([]string{entry, "repo"}, arguments...))
-}
-
-type nativeRootScriptTool struct{}
-func (nativeRootScriptTool) Run(root string, arguments []string) error {
- return runNativeScriptProcess(append([]string{filepath.Join(root, "📜️script.ts")}, arguments...))
+func (tool nativeLauncherTool) Run(root string, arguments []string) error {
+ ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+ code := launcher.DefaultHost().Execute(ctx, root, tool.entry, arguments)
+ stop()
+ if code != 0 { return workspace.ExitError{Code: code} }
+ return nil
 }
 
 // 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.
@@ -216,15 +200,36 @@ func RunNativeScript(arguments []string, tool NativeScriptTool) error {
  return tool.Run(workspace.FindRepoRoot(cwd), arguments)
 }
 
+// 📖️runRootHelp prints the one build catalogue help (the front door of the build implementation, the same text as `bun repo --help`) and then the native commands of the command tree, so no command list is kept twice.
+func runRootHelp(arguments []string) error {
+ cwd, err := os.Getwd(); if err != nil { return err }
+ root := workspace.FindRepoRoot(cwd)
+ ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+ defer stop()
+ host := launcher.DefaultHost()
+ host.HandOff = launcher.RunChild
+ code := host.Execute(ctx, root, "build", arguments)
+ if heading, ok := host.Say(root, arguments, "helpNative", nil); ok {
+  fmt.Fprintln(os.Stdout, "\n"+heading)
+  tree, _ := NewRootWithConfig(defaultEngineFactory)
+  rows := [][2]string{}
+  for _, command := range tree.Commands() { rows = append(rows, [2]string{command.Use, command.Short}) }
+  for _, id := range []string{"helpDashboard", "helpOsMcp"} { if line, found := host.Say(root, arguments, id, nil); found { usage, description, _ := strings.Cut(line, "   "); rows = append(rows, [2]string{usage, strings.TrimLeft(description, " ")}) } }
+  width := 0
+  for _, row := range rows { if len(row[0]) > width { width = len(row[0]) } }
+  for _, row := range rows { fmt.Fprintf(os.Stdout, "  %-*s  %s\n", width, row[0], row[1]) }
+ }
+ if code != 0 { return workspace.ExitError{Code: code} }
+ return nil
+}
+
 // 🔊️RunCLI runs the repo CLI entry point.
 func RunCLI() error {
  plan := PlanNativeEntrypoint(os.Args[1:])
- if plan.Kind == "build" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }
- if plan.Kind == "workspace" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }
- if len(os.Args) == 1 || os.Args[1] == "--help" || os.Args[1] == "-h" { fmt.Fprintln(os.Stdout, "Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph, inputs, incremental, concurrency, capacity, leases, remote-execution\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]") }
-	if err := workspace.BindWorkingDirectory(); err != nil {
-		return err
-	}
+ if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-V") { if code := launcher.DefaultHost().Version(os.Args[1:]); code != 0 { return workspace.ExitError{Code: code} }; return nil }
+ if plan.Kind == "build" && (len(plan.Arguments) == 0 || plan.Arguments[0] == "--help" || plan.Arguments[0] == "-h") { return runRootHelp(plan.Arguments) }
+ if plan.Kind == "build" || plan.Kind == "workspace" || plan.Kind == "script" { return RunNativeScript(plan.Arguments, nativeLauncherTool{plan.Kind}) }
+	if plan.Kind != "mcp" { if err := workspace.BindWorkingDirectory(); err != nil { return err } }
 	if err := Execute(defaultEngineFactory); err != nil {
 		var exitErr workspace.ExitError
 		if errors.As(err, &exitErr) {
@@ -237,7 +242,7 @@ func RunCLI() error {
 
 // 🦀️RunMCP runs the repo MCP entry point (generic kind).
 func RunMCP() error {
-	return RunMcpServerFor(providers.McpClientGeneric, DefaultCommandTimeout)
+ cwd,err:=os.Getwd();if err!=nil { return err };root,err:=workspace.SelectRepoRoot(cwd,nil);if err!=nil { return err };return RunMcpServerFor(context.Background(),root,providers.McpClientGeneric,DefaultCommandTimeout)
 }
 
 // 🔺️mcpCommand holds the data fields for a mcpCommand record.
@@ -248,9 +253,6 @@ func mcpCommand(factory EngineFactory, config *Config) *Command {
 		Short: "Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)",
 		Args:  MaximumNArgs(1),
 		RunE: func(cmd *Command, args []string) error {
-			if dryRun {
-				return nil
-			}
 			kind := providers.McpClientGeneric
 			if len(args) > 0 {
 				parsed, err := providers.ParseMcpClientKind(args[0])
@@ -259,25 +261,15 @@ func mcpCommand(factory EngineFactory, config *Config) *Command {
 				}
 				kind = parsed
 			}
-			return serveMcp(cmd.Context(), kind, config.Timeout)
+			if dryRun {return nil}
+			cwd,err:=os.Getwd();if err!=nil { return err };var explicit *string;if cmd.Flags().Changed("repo") || config.Repo!="" { explicit=&config.Repo };rootDir,err:=workspace.SelectRepoRoot(cwd,explicit);if err!=nil { return err };return serveMcp(cmd.Context(),rootDir,kind,config.Timeout)
 		},
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Initialize and exit without starting server")
 	return cmd
 }
 
-func serveMcp(ctx context.Context, kind providers.McpClientKind, toolTimeout time.Duration) error {
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- RunMcpServerFor(kind, toolTimeout)
-	}()
-	select {
-	case err := <-errCh:
-		return err
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-}
+func serveMcp(ctx context.Context, rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) error { return RunMcpServerFor(ctx,rootDir,kind,toolTimeout) }
 
 // 🕸️graphqlCommand holds the data fields for a graphqlCommand record.
 func graphqlCommand(factory EngineFactory, config *Config) *Command {

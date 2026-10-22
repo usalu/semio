@@ -16,16 +16,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<RemoveSpaceConditions> + From<crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "space-conditions", kind: "remove-space-conditions", record: "RemoveSpaceConditions" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove conditions of space \"{}\"", self.id), &format!("Bedingungen des Raums \"{}\" entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for RemoveSpaceConditions
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<RemoveSpaceConditions> + From<crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::inverse::inverse(self, base))
     }
 }

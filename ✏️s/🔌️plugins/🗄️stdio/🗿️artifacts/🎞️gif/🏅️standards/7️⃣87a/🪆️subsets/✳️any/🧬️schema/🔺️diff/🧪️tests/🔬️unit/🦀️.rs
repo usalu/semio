@@ -54,7 +54,7 @@ async fn gct_tristate_removal_is_some_none() {
     let b = GifSnapshot { gct: None, ..GifSnapshot::default() };
     let d = GifDiff { gct: Some(None), ..GifDiff::default() };
     assert_eq!(d.gct, Some(None));
-    assert_eq!(protocol::apply_diff(&d, &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff_cold(&d, &a).unwrap(), b);
 }
 
 /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `GifDiff` text/binary grammar —

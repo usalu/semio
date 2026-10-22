@@ -14,8 +14,8 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -549,16 +549,9 @@ fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapsh
     next
 }
 
-impl MutationDiff<StepSnapshot> for StepDiff {
-    fn apply(&self, base: &StepSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<StepSnapshot> {
-        if let Some(diff) = &self.entities {
-            validate_entities_diff(&base.entities, diff)?;
-        }
-        let next = apply_step_diff_unchecked(self, base);
-        crate::standards::v_ap214::subsets::base::schema::snapshot::references::validate_step_references(&next)?;
-        Ok(next)
-    }
+impl MutationDiff<StepSnapshot> for StepDiff {}
 
+impl protocol::ColdMutationDiff<StepSnapshot> for StepDiff {
     fn absorb(&mut self, other: Self) {
         if other.file_description.is_some() {
             self.file_description = other.file_description;
@@ -571,9 +564,26 @@ impl MutationDiff<StepSnapshot> for StepDiff {
         }
         self.entities = absorb_entities(self.entities.take(), other.entities);
     }
+
+    fn apply(&self, unpublished: &mut StepSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.entities {
+            validate_entities_diff(&base.entities, diff)?;
+        }
+        let next = apply_step_diff_unchecked(self, base);
+        crate::standards::v_ap214::subsets::base::schema::snapshot::references::validate_step_references(&next)?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<StepSnapshot> for StepDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<StepSnapshot> for StepDiff {
     /// 🔁️ Diff-level undo read off `base`: each header slot the diff writes is restored from `base`, and the entity triple inverts to
     /// removing what was added, un-modifying what was modified, and re-inserting what was removed at its base position.
     fn inverse(&self, base: &StepSnapshot) -> Self {
@@ -583,10 +593,6 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
             file_schema: self.file_schema.as_ref().map(|_| base.header.file_schema.clone()),
             entities: self.entities.as_ref().map(|entities| entities.inverse(&base.entities)).filter(|entities| !entities.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 

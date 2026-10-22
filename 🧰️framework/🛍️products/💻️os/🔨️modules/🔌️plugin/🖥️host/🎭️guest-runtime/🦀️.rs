@@ -72,20 +72,21 @@ mod mock_guest_runtime_tests;
 /// `📜️world.wit`, which declares only `world actor`), a finding recorded in
 /// `📓️terra-B1-host-native-report.md`.
 
-pub(crate) use wasmtime::component::Accessor;
-use semio_framework_actor::{ActorId, OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobBudget, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputReply, OriginalJobSource, OriginalJobStartReply, OriginalJobStepReply, PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_plugin_host_engine::wasm;
+pub(crate) use wasm::component::Accessor;
+use semio_framework_actor::{ActorId, OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobBudget, OriginalJobCallFailure, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputState, OriginalJobSource, OriginalJobStartReply, OriginalJobStepReply, PackageHash, PackageId, ActorId as RuntimeActorId};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget, Event, TurnResult, TurnStatus};
 use semio_framework_plugin_host_engine::{BudgetLimiter, EpochDeadlineCell, EpochDeadlines, EpochDemand, IsolatedCompileTarget, SharedEngineConfig, build_shared_engine, compiled_cache_path, default_compiled_cache_root, hex_encode, load_compiled_component, plugin_host_worker_pool, shared_engine_config_hash, store_compiled_component};
-use wasmtime::component::{Component, Linker, ResourceTable};
-use wasmtime::{Engine, ResourceLimiter, Store};
+use wasm::component::{Component, Linker, ResourceTable};
+use wasm::{Engine, ResourceLimiter, Store};
 use semio_framework_plugin_guest_contract::{GUEST_DIAGNOSTICS_CAPACITY_BYTES, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault, decode_guest_fault_bytes, identity_turn_fault, sqlite_wire};
 use std::collections::{HashMap, VecDeque};
 use semio_framework_plugin_host_engine::original_deadline::{OriginalDeadlineError, remaining_original_deadline_us};
 use semio_framework_plugin_interpreter_runtime::{OriginalGuestJobCall, OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
 use std::path::PathBuf;
-use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
+use wasm::wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 use semio_framework_plugin_host_wit::conversion::{kernel_turn_inputs_to_wit, wit_command_ingress_to_kernel, wit_effect_to_kernel, wit_lifecycle_receipt_to_kernel, wit_patch_receipt_to_kernel, wit_snapshot_grant, wit_snapshot_limits, wit_snapshot_rejection, wit_snapshot_retirement, wit_turn_status_to_kernel};
 use semio_framework_plugin_host_wit::cold_pair::wit_cold_ingress_to_kernel;
 use semio_framework_plugin_host_wit::wit_capabilities;

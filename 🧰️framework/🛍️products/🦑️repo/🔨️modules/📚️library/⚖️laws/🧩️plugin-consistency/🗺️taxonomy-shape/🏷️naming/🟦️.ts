@@ -10,6 +10,8 @@ import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/�
 import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
 import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 
+import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
 
 const POLICY_BANNED_STEM_SCAN_ROOTS = ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"] as const;
@@ -115,8 +117,8 @@ function policyEmojiPrefixNeedsVs16(name: string): boolean {
 /** ✅️Every Git-visible, non-reserved entry has a semantic canonical emoji identity unique among all siblings. */
 export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const result = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
-  if (result.exitCode !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
+  const result = runToolSyncV1("git", ["ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
+  if (result.status !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
   const inventory = result.stdout.toString().split("\0").filter(Boolean)
     .map((path) => path.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC"))
     .flatMap((path) => {
@@ -269,7 +271,7 @@ export function policyPluginBuilderBreaches(repoRoot: string, crates: readonly P
 export function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy" || crate.role !== "plugin") continue;
+    if (crate.role !== "plugin") continue;
     const ownerRoot = crate.ownerRel;
     const pluginId = crate.pluginId;
 

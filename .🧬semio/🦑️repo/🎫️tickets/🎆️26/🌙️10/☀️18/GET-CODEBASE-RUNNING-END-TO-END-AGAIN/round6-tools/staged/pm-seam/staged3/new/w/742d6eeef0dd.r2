@@ -1,0 +1,61 @@
+[
+ [
+  "/$defs/Protocol/const/producer/scopeFiles",
+  [
+   ".npmrc"
+  ]
+ ],
+ [
+  "/$defs/Protocol/const/producer/ambientHomeFiles",
+  [
+   ".npmrc",
+   ".bunfig.toml"
+  ]
+ ],
+ [
+  "/$defs/Protocol/const/producer/ambientConfigFiles",
+  [
+   ".bunfig.toml"
+  ]
+ ],
+ [
+  "/$defs/Protocol/const/producer/ambientConfigFallback",
+  ".config"
+ ],
+ [
+  "/$defs/Protocol/const/producer/storeRoleFiles",
+  {
+   "bun-home": [
+    ".npmrc",
+    ".bunfig.toml"
+   ],
+   "bun-config": [
+    ".bunfig.toml"
+   ]
+  }
+ ],
+ [
+  "/$defs/Protocol/const/producer/environmentPrefixes",
+  [
+   "BUN_",
+   "NPM_CONFIG_"
+  ]
+ ],
+ [
+  "/$defs/Protocol/const/producer/environmentIgnored",
+  [
+   "NPM_CONFIG_USER_AGENT",
+   "BUN_INSPECT",
+   "BUN_INSPECT_CONNECT_TO",
+   "BUN_INSPECT_NOTIFY"
+  ]
+ ],
+ [
+  "/$defs/Protocol/const/tiers/[1]/covers",
+  "bun version and revision, node version, platform, architecture, installer recipe"
+ ],
+ [
+  "/$defs/Protocol/const/tiers/[2]/covers",
+  "npmrc and bunfig files every installer level could read, and the environment variables that select registries, caches or transport"
+ ]
+]

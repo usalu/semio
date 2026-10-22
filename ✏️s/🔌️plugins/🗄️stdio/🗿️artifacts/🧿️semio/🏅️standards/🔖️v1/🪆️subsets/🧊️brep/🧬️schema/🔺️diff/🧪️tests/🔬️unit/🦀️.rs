@@ -66,10 +66,10 @@ async fn absorb_law_add_then_remove_of_same_added_key_cancels() {
     d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 0, item: BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } } }] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec!["v-new".into()], modified: vec![], added: vec![] });
-    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff_cold(&d2, &protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), sequential);
-    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
+    assert_eq!(protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,9 +79,9 @@ async fn absorb_law_add_then_setfield_patches_added_payload() {
     d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 0, item: BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3::default() } }] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }), tol: Some(2e-7) } }], added: vec![] });
-    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff_cold(&d2, &protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    let result = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+    let result = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(result, sequential);
     assert_eq!(result.vertices[0].point, SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 });
     assert_eq!(result.vertices[0].tol, 2e-7);
@@ -95,9 +95,9 @@ async fn absorb_law_modify_then_remove_drops_pending_patch() {
     d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }), tol: None } }], added: vec![] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec!["v1".into()], modified: vec![], added: vec![] });
-    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff_cold(&d2, &protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    let result = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+    let result = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(result, sequential);
     assert!(result.vertices.is_empty());
 }

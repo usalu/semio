@@ -187,7 +187,7 @@ test("every declared receipt output belongs to its own target and to a handler t
    declared+=1;
    expect(receipts,file+" "+name).toEqual([storeReceiptOutputV1(name)]);
    expect(target.metadata?.semio?.rustBuildIntent,file+" "+name+" is replaced by per-unit compile tasks").toBeUndefined();
-   const script=/^bun (\S*📜️script\.ts)/u.exec(target.options?.command??"")?.[1];
+   const script=/^repo (\S*📜️script\.ts)/u.exec(target.options?.command??"")?.[1];
    expect(script,file+" "+name).toBeDefined();
    const source=resolve(workspaceRoot,(target.options?.cwd??dirname(file)).replace("{projectRoot}",dirname(file)),script!);
    expect(publishers.test(readModuleTreeSource(source,{tests:true})),file+" "+name+" publishes through "+source).toBe(true);

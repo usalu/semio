@@ -14,7 +14,16 @@ pub struct RemoveStream {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream", record: "RemoveStream" };
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveStream {
+    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as protocol::ColdMutation<SemioVideoSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
@@ -23,12 +32,6 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveSt
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

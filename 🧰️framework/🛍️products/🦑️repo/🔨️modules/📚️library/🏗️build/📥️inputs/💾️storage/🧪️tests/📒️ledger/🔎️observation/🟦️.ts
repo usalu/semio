@@ -38,3 +38,18 @@ test("optional ledger refusal retains exact bounded physical predicate observati
     }
   } finally { db.close(); }
 });
+
+test("optional ledger treats only unlinked sidecars as absent and refuses an unlinked main database", () => {
+  const source = readFileSync(new URL("../../../📒️ledger/🟨️.mjs", import.meta.url), "utf8"), tree = ts.createSourceFile("ledger.mjs", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const helper = tree.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "optionalLedgerFileObservationV1");
+  const found: Record<string, ts.ArrowFunction> = {};
+  const visit = (node: ts.Node): void => { if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && ["regular", "optional"].includes(node.name.text) && node.initializer && ts.isArrowFunction(node.initializer)) found[node.name.text] = node.initializer; ts.forEachChild(node, visit); };
+  visit(tree); expect(helper).toBeDefined(); expect(found.regular).toBeDefined(); expect(found.optional).toBeDefined();
+  const observe = new Function("basename", helper!.getText(tree) + ";return optionalLedgerFileObservationV1;")(basename);
+  for (const row of (fixture as unknown as { unlinkedLeaves: { id: string; leaf: string; links: number; outcome: string }[] }).unlinkedLeaves) {
+    const facts = { isFile: () => true, isSymbolicLink: () => false, nlink: row.links, dev: 7, size: 0 };
+    const optional = new Function("lstatSync", "parent", "optionalLedgerFileObservationV1", "const regular=" + found.regular!.getText(tree) + ";const optional=" + found.optional!.getText(tree) + ";return optional;")(() => facts, { dev: 7 }, observe);
+    if (row.outcome === "absent") expect(optional("/root/" + row.leaf, 0), row.id).toBeUndefined();
+    else expect(() => optional("/root/" + row.leaf, 0), row.id).toThrow("Original bounded optional ledger file required");
+  }
+});

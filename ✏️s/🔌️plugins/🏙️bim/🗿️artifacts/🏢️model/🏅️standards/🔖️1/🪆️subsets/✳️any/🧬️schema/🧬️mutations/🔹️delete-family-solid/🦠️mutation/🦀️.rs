@@ -16,16 +16,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteFamilySolid> + From<crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "family-solid", kind: "delete-family-solid", record: "DeleteFamilySolid" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete family solid \"{}\"", self.id), &format!("Familienkörper \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for DeleteFamilySolid
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<DeleteFamilySolid> + From<crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::inverse::inverse(self, base))
     }
 }

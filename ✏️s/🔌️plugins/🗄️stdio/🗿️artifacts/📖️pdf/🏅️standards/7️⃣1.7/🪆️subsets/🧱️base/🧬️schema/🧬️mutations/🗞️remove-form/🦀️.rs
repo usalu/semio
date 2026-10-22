@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "form", kind: "remove-form", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_form(base, &self.id))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.forms.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_form::SetForm { form: base.forms[index].clone(), index: Some(index) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove form {}", self.id), &format!("Formular {} entfernen", self.id))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveForm
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveForm> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_form::SetForm>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_remove_form(base, &self.id))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.forms.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_form::SetForm { form: base.forms[index].clone(), index: Some(index) })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

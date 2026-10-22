@@ -33,8 +33,44 @@ impl LayoutDiff {
     }
 }
 
-impl MutationDiff<LayoutSnapshot> for LayoutDiff {
-    fn apply(&self, snapshot: &LayoutSnapshot, capability: ApplyCapability) -> MutationApplyResult<LayoutSnapshot> {
+impl MutationDiff<LayoutSnapshot> for LayoutDiff {}
+
+impl protocol::ColdMutationDiff<LayoutSnapshot> for LayoutDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.schema.is_some() {
+            self.schema = other.schema;
+        }
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if let Some(later) = other.grid {
+            match &mut self.grid {
+                Some(earlier) => earlier.composed(later),
+                None => self.grid = Some(later),
+            }
+        }
+        absorb_lists!(self, other, paragraph_styles, character_styles, parent_pages, spreads, pages, stories, links);
+        if other.print_target.is_some() {
+            self.print_target = other.print_target;
+        }
+        if let Some(later) = other.data_fields {
+            self.data_fields = absorb_data_fields(self.data_fields.take(), later);
+        }
+        if other.background_drawing.is_some() {
+            self.background_drawing = other.background_drawing;
+            self.drawing_texts = other.drawing_texts;
+        } else {
+            let mut rows: std::collections::BTreeMap<u32, String> = std::mem::take(&mut self.drawing_texts).into_iter().map(|row| (row.index, row.text)).collect();
+            rows.extend(other.drawing_texts.into_iter().map(|row| (row.index, row.text)));
+            self.drawing_texts = rows.into_iter().map(|(index, text)| LayoutDrawingTextRow { index, text }).collect();
+        }
+        if other.referenced_model.is_some() {
+            self.referenced_model = other.referenced_model;
+        }
+    }
+
+    fn apply(&self, unpublished: &mut LayoutSnapshot, capability: ApplyCapability) -> MutationApplyResult<()> {
+        let applied = (|snapshot: &LayoutSnapshot| -> MutationApplyResult<LayoutSnapshot> {
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -88,38 +124,10 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             next.referenced_model = value.clone();
         }
         Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        if other.schema.is_some() {
-            self.schema = other.schema;
-        }
-        if other.name.is_some() {
-            self.name = other.name;
-        }
-        if let Some(later) = other.grid {
-            match &mut self.grid {
-                Some(earlier) => earlier.composed(later),
-                None => self.grid = Some(later),
-            }
-        }
-        absorb_lists!(self, other, paragraph_styles, character_styles, parent_pages, spreads, pages, stories, links);
-        if other.print_target.is_some() {
-            self.print_target = other.print_target;
-        }
-        if let Some(later) = other.data_fields {
-            self.data_fields = absorb_data_fields(self.data_fields.take(), later);
-        }
-        if other.background_drawing.is_some() {
-            self.background_drawing = other.background_drawing;
-            self.drawing_texts = other.drawing_texts;
-        } else {
-            let mut rows: std::collections::BTreeMap<u32, String> = std::mem::take(&mut self.drawing_texts).into_iter().map(|row| (row.index, row.text)).collect();
-            rows.extend(other.drawing_texts.into_iter().map(|row| (row.index, row.text)));
-            self.drawing_texts = rows.into_iter().map(|(index, text)| LayoutDrawingTextRow { index, text }).collect();
-        }
-        if other.referenced_model.is_some() {
-            self.referenced_model = other.referenced_model;
-        }
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 
@@ -146,6 +154,26 @@ fn absorb_data_fields(first: Option<LayoutDataFieldsDelta>, second: LayoutDataFi
 }
 
 impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && self.name.is_none()
+            && self.grid.as_ref().is_none_or(|patch| patch == &GridPatch::default())
+            && self.paragraph_styles.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.character_styles.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.stories.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.links.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.parent_pages.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.spreads.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.pages.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.print_target.is_none()
+            && self.data_fields.as_ref().is_none_or(|delta| delta == &LayoutDataFieldsDelta::default())
+            && self.background_drawing.is_none()
+            && self.drawing_texts.is_empty()
+            && self.referenced_model.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LayoutSnapshot> for LayoutDiff {
     fn inverse(&self, base: &LayoutSnapshot) -> Self {
         let data_fields = self.data_fields.as_ref().map(|delta| {
             let base_entries = base.data_fields.as_ref().map(|dictionary| dictionary.entries.as_slice()).unwrap_or_default();
@@ -175,23 +203,6 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
             drawing_texts: self.drawing_texts.iter().filter_map(|row| labels.get(row.index as usize).map(|text| LayoutDrawingTextRow { index: row.index, text: text.clone() })).collect(),
             referenced_model: self.referenced_model.as_ref().map(|_| base.referenced_model.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && self.name.is_none()
-            && self.grid.as_ref().is_none_or(|patch| patch == &GridPatch::default())
-            && self.paragraph_styles.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.character_styles.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.stories.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.links.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.parent_pages.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.spreads.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.pages.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.print_target.is_none()
-            && self.data_fields.as_ref().is_none_or(|delta| delta == &LayoutDataFieldsDelta::default())
-            && self.background_drawing.is_none()
-            && self.drawing_texts.is_empty()
-            && self.referenced_model.is_none()
     }
 }
 //#endregion 🔖️Apply

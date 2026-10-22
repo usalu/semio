@@ -15,14 +15,6 @@ pub struct InsertCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cell", kind: "insert-cell", record: "InsertCell" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::insert_cell_plan(base, &self.address, &self.value, self.node.as_ref()))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::insert_cell_plan(base, &self.address, &self.value, self.node.as_ref())))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert cell", "Zelle einfügen")
     }
@@ -32,5 +24,14 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {
         target.push(self.address.row.to_string());
         target.push(self.address.column.to_string());
         target
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::insert_cell_plan(base, &self.address, &self.value, self.node.as_ref()))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+        Ok(plan_inverse(canonical_edit::insert_cell_plan(base, &self.address, &self.value, self.node.as_ref())))
     }
 }

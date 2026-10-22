@@ -78,7 +78,7 @@ function policyScriptProjects(configFiles, _options, context) {
                   executor: "repo:script",
                   options: {
                     cwd: workspaceRoot,
-                    command: `bun "${rel}" policy`,
+                    command: `repo "${rel}" policy`,
                   },
                   inputs: [`{workspaceRoot}/${rel}`, ...extraInputs],
                   outputs: [`{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/breaches`],

@@ -13,7 +13,16 @@ pub struct RemoveEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RemoveEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entry", kind: "remove-entry", record: "RemoveEntry" };
 
-    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ZipSnapshot, ZipIso21320Mutation> for RemoveEntry {
+    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::ColdMutation<ZipSnapshot>>::ReferenceDiff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff::diff_remove_entry(name))
     }
@@ -34,12 +43,6 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RemoveEntry {
                 })
                 .unwrap_or_default()
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

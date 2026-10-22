@@ -24,6 +24,8 @@ import {validateJsonSchemaSubset} from "./../../../../../../../🔨️modules/�
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "./../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import {ensureRepositoryCargoLockV1} from "../../../🗂️workspaces/🦀️cargo/🔒️lock/🟦️.ts";
+import {cargoLockStaleFailureV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 
 /** 🧊️ Retains exact per-selection issued arguments and actual phase across Cargo planning and execution. */
@@ -51,10 +53,16 @@ async function admitRepositoryCargoInputsV1(options:RepositoryCargoInputsV1,conf
  return{requests,home,environment:Object.freeze({...options.environment,CARGO_NET_OFFLINE:String(args.includes("--offline"))}),leaseOptions:{directory:join(options.workspace,".cache/b/l/m/data"),resource:"cargo:registry:"+home,signal:control.signal,control}};
 }
 
+/** 🔐️ Verifies the lockfile of every distinct selected manifest against its manifest set before the locked fetch, refreshing it from the shared registry when it lags. */
+async function ensureRepositoryCargoLocksV1(options:RepositoryCargoInputsV1,admitted:Readonly<{requests:readonly Readonly<{manifest:string;cwd:string;args:readonly string[]}>[];environment:Readonly<Record<string,string|undefined>>}>):Promise<void>{
+ const seen=new Set<string>();
+ for(const request of admitted.requests){const manifest=resolve(request.manifest);if(seen.has(manifest))continue;seen.add(manifest);await ensureRepositoryCargoLockV1({workspaceRoot:options.workspace,cwd:request.cwd,program:"cargo",prefix:[],args:request.args,environment:admitted.environment,control:options.control,force:false});}
+}
+
 /** 🏪️ Holds genuine bounded registry writer/read custody across fetch, planning and terminal compiler settlement. */
 async function withRepositoryCargoInputsOwnedV1<T>(options:RepositoryCargoInputsV1,view:RepositoryCargoInputsViewV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{
  const {control,storage}=options,{requests,home,environment}=await admitRepositoryCargoInputsV1(options,view.selections);
- return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},()=>withCompilerWorkspaceSharedWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();try{for(const request of requests){await storage.recheck();const output=await captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();}),()=>body(view));
+ return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},()=>withCompilerWorkspaceSharedWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();try{for(const request of requests){await storage.recheck();const fetch=()=>captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});let output:string;try{output=await fetch();}catch(error){if(!cargoLockStaleFailureV1(error))throw error;await ensureRepositoryCargoLockV1({workspaceRoot:options.workspace,cwd:request.cwd,program:"cargo",prefix:[],args:request.args,environment,control,force:true});output=await fetch();}if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();}),()=>body(view));
 }
 
 /** 🔐️ Holds exclusive bounded registry writer custody for a lockfile resolution that must not first fetch its stale locked graph. */
@@ -69,7 +77,7 @@ async function withRepositoryCargoConfigurationViewsV1<T>(options:RepositoryCarg
  return hold(0,options.control);
 }
 /** 🧊️ Keeps admitted per-selection configuration bytes under exact reader custody through terminal consumption. */
-export async function withRepositoryCargoInputsV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{await admitRepositoryCargoInputsV1(options,null);return withRepositoryCargoConfigurationViewsV1(options,view=>withRepositoryCargoInputsOwnedV1({...options,control:view.control,environment:view.environment,args:view.selections[0]!.arguments,additionalManifests:view.selections.slice(1).map(row=>({manifest:row.manifest,cwd:row.cwd,args:row.arguments}))},view,body));}
+export async function withRepositoryCargoInputsV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{await ensureRepositoryCargoLocksV1(options,await admitRepositoryCargoInputsV1(options,null));return withRepositoryCargoConfigurationViewsV1(options,view=>withRepositoryCargoInputsOwnedV1({...options,control:view.control,environment:view.environment,args:view.selections[0]!.arguments,additionalManifests:view.selections.slice(1).map(row=>({manifest:row.manifest,cwd:row.cwd,args:row.arguments}))},view,body));}
 /** 🔒️ Keeps the same genuine configuration reader across an exclusive original lock/resolve producer. */
 export async function withRepositoryCargoResolutionV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{if(options.consumption.kind!=="resolution")throw Error("Explicit Cargo resolution consumption required");await admitRepositoryCargoInputsV1(options,null);return withRepositoryCargoConfigurationViewsV1(options,view=>withRepositoryCargoResolutionOwnedV1({...options,control:view.control,environment:view.environment},view,body));}
 

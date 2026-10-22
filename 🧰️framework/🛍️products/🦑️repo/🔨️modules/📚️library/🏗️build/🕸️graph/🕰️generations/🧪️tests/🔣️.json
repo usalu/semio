@@ -4278,5 +4278,77 @@
    ]
   }
  ],
- "version": 1
+ "version": 1,
+ "documentSizes": [
+  {
+   "name": "empty-string",
+   "value": "",
+   "maximumBytes": 64,
+   "expandedBytes": 2,
+   "refusal": null
+  },
+  {
+   "name": "ascii-exact",
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "maximumBytes": 66,
+   "expandedBytes": 66,
+   "refusal": null
+  },
+  {
+   "name": "ascii-over",
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "maximumBytes": 65,
+   "expandedBytes": 66,
+   "refusal": "expanded"
+  },
+  {
+   "name": "bmp-exact",
+   "value": "éééééééééééééééééééééééééééééééé",
+   "maximumBytes": 66,
+   "expandedBytes": 66,
+   "refusal": null
+  },
+  {
+   "name": "bmp-over",
+   "value": "éééééééééééééééééééééééééééééééé",
+   "maximumBytes": 65,
+   "expandedBytes": 66,
+   "refusal": "expanded"
+  },
+  {
+   "name": "astral-exact",
+   "value": "💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡",
+   "maximumBytes": 66,
+   "expandedBytes": 66,
+   "refusal": null
+  },
+  {
+   "name": "astral-over",
+   "value": "💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡",
+   "maximumBytes": 65,
+   "expandedBytes": 66,
+   "refusal": "expanded"
+  },
+  {
+   "name": "escaped-exact",
+   "value": "\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"",
+   "maximumBytes": 66,
+   "expandedBytes": 66,
+   "refusal": null
+  },
+  {
+   "name": "compressible-over",
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "maximumBytes": 1025,
+   "expandedBytes": 1026,
+   "refusal": "expanded"
+  },
+  {
+   "name": "packed-over",
+   "value": null,
+   "maximumBytes": 4,
+   "expandedBytes": 4,
+   "refusal": "packed"
+  }
+ ]
 }

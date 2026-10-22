@@ -17,14 +17,18 @@ pub struct ReorderMembers {
 
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ReorderMembers where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::reorder_members::ReorderMembers> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "member", kind: "reorder-members", record: "ReorderedMembers" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move member #{} to #{}", self.from_index, self.to_index), &format!("Bauteil von #{} nach #{} verschieben", self.from_index, self.to_index))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1992Snapshot, Op> for ReorderMembers where Op: protocol::ColdMutation<En1992Snapshot, ReferenceDiff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::reorder_members::ReorderMembers> {
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::reorder_members::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::reorder_members::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move member #{} to #{}", self.from_index, self.to_index), &format!("Bauteil von #{} nach #{} verschieben", self.from_index, self.to_index))
-    }
 }
 
 //#region 🪢️Mounts

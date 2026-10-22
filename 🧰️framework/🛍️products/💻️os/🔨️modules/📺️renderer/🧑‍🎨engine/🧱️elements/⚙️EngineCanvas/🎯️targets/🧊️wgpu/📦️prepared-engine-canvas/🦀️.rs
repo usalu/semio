@@ -68,7 +68,7 @@ pub struct StagedEngineScenes {
 
 impl Default for StagedEngineScenes {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0, faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), len: 0, faulted: false }
     }
 }
 
@@ -146,8 +146,8 @@ pub struct EngineCanvasBuildContext {
     pub document_generation: u64,
     #[cfg(any(test, feature = "testkit"))]
     pub scene_revision: u64,
-    packets: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
-    rejected: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
+    packets: semio_framework_async_slots::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
+    rejected: semio_framework_async_slots::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
     pub len: usize,
     pub rejected_len: usize,
     reservation_sequence: u64,
@@ -162,8 +162,8 @@ impl Default for EngineCanvasBuildContext {
             document_generation: 0,
             #[cfg(any(test, feature = "testkit"))]
             scene_revision: 0,
-            packets: semio_framework_async::OriginalFixedSlotPages::new(),
-            rejected: semio_framework_async::OriginalFixedSlotPages::new(),
+            packets: semio_framework_async_slots::OriginalFixedSlotPages::new(),
+            rejected: semio_framework_async_slots::OriginalFixedSlotPages::new(),
             len: 0,
             rejected_len: 0,
             reservation_sequence: 0,
@@ -427,7 +427,7 @@ pub struct EngineCanvasPresenter {
 
 impl Default for EngineCanvasPresenter {
     fn default() -> Self {
-        Self { slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))), primary_metrics_generation: 0, metrics_invalidation_scan: None, stall_steps: 0, stall_arm: "" }
+        Self { slots: ManuallyDrop::new(Some(semio_framework_async_slots::boxed_fixed_slots(EngineGpuSlot::new))), primary_metrics_generation: 0, metrics_invalidation_scan: None, stall_steps: 0, stall_arm: "" }
     }
 }
 

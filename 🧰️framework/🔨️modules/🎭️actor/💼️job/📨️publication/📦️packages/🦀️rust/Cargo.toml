@@ -19,6 +19,7 @@ semio-framework-value-derive = { path = "../../../../../🌱️value/✨️deriv
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 
 [dev-dependencies]

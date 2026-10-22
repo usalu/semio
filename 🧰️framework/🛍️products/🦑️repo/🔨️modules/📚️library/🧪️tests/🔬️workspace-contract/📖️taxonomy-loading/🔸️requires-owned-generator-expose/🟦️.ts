@@ -58,7 +58,7 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
       const project = contract.target!.slice(0, contract.target!.lastIndexOf(":"));
       if (!contract.previewArguments) expect(contract.previewTarget).toBe(`${project}:preview-generated`);
       else expect(contract.previewTarget!.slice(0, contract.previewTarget!.lastIndexOf(":"))).toBe(project);
-      expect(generatorBuildPreviewCommand(contract)).toEqual(["bun", "repo", "run", contract.previewTarget!]);
+      expect(generatorBuildPreviewCommand(contract)).toEqual(["repo", "run", contract.previewTarget!]);
     }
     expect(external.every((contract) => contract.previewTarget === undefined)).toBe(true);
     expect(validateGeneratorContractsAgainstWorkspace(getWorkspaceRoot(), taxonomy)).toEqual([]);
@@ -102,7 +102,7 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
     expect(selected.every(Boolean)).toBe(true);
     const contract = { ...actor, ownerPath: "compiler", target: "@neutral/compiler:generate-browser", previewTarget: "@neutral/compiler:preview-browser", previewArguments: ["browser", "preview"], previewLimits: fixture.previewLimits[0].limits };
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-      let command = "bun ./📜️script.ts browser preview", cwd = "compiler";
+      let command = "repo ./📜️script.ts browser preview", cwd = "compiler";
       const invocations: unknown[] = [];
       const invoke = new Function("buildTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "repo:script", options: { cwd, command } }), requireRecord, generatorPreviewExecution, (generatorPreviewResourceLimits), (await import("../../../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
@@ -111,7 +111,7 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
       cwd = ".";
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations[1]).toMatchObject({ executable: "bun", args: command.split(" ").slice(1), options: { cwd: "/neutral", maxBuffer: 268435456, timeout: 240000 } });
-      command = "bun ./📜️script.ts preview-generated";
+      command = "repo ./📜️script.ts preview-generated";
       expect(() => invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] })).toThrow("exact owner JSON preview");
       expect(invocations).toHaveLength(2);
     }
@@ -139,7 +139,7 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
     const discovery = await import("../../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts");
     const { default: parseArgv } = await import("yargs-parser");
     for (const row of fixture.ownerExecutionRoutes) {
-      const contract = { ownership: "owned" as const, ownerPath: row.ownerPath ?? "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated" };
+      const contract = { ownership: "owned" as const, ownerPath: row.ownerPath ?? "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated", ...(row.previewArguments ? { previewArguments: row.previewArguments as string[] } : {}), ...(row.previewScript ? { previewScript: row.previewScript as string } : {}) };
       const target = { executor: "repo:script", options: { cwd: row.cwd, command: row.command } };
       if (!row.valid) expect(() => discovery.generatorPreviewExecution(contract, target)).toThrow("exact owner JSON preview");
       else {

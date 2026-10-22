@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:prune-plan-corpus:v1",
+  "title": "Cache Prune Plan Corpus",
+  "description": "Language-agnostic scenarios for the age-then-budget cache prune plan: areas of units with sizes, recency and locks in, per area the unit paths deleted by age and by budget, the retained and the guarded bytes out; hand-written scenarios with authored answers, seeded pseudo-random scenarios and byte counts for the size formatter.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "nowMs", "guardAgeMs", "authored", "random", "bytes"],
+  "properties": {
+    "version": { "const": 1 },
+    "nowMs": { "type": "integer", "minimum": 1 },
+    "guardAgeMs": { "type": "integer", "minimum": 0 },
+    "authored": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/scenario" } },
+    "random": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/scenario" } },
+    "bytes": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } }
+  },
+  "definitions": {
+    "unit": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "recencyMs", "lockHeld", "kind"], "properties": { "path": { "type": "string", "minLength": 1 }, "bytes": { "type": "integer", "minimum": 0 }, "recencyMs": { "type": "integer" }, "lockHeld": { "type": "boolean" }, "kind": { "enum": ["cargo-build", "cargo-incremental", "cargo-incremental-session", "cargo-target-file", "directory"] } } },
+    "area": { "type": "object", "additionalProperties": false, "required": ["name", "budgetBytes", "unusedAgeMs", "units"], "properties": { "name": { "type": "string", "minLength": 1 }, "budgetBytes": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }] }, "unusedAgeMs": { "type": "integer", "minimum": 0 }, "guardAgeMs": { "type": "integer", "minimum": 0 }, "units": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/unit" } } } },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "areas", "expect"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "areas": { "type": "array", "items": { "$ref": "#/definitions/area" } },
+        "expect": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "totalBytes", "unitCount", "age", "budget", "retainedBytes", "guarded"], "properties": { "name": { "type": "string" }, "totalBytes": { "type": "integer" }, "unitCount": { "type": "integer" }, "age": { "type": "array", "items": { "type": "string" } }, "budget": { "type": "array", "items": { "type": "string" } }, "retainedBytes": { "type": "integer" }, "guarded": { "type": "integer" } } } }] }
+      }
+    }
+  }
+}

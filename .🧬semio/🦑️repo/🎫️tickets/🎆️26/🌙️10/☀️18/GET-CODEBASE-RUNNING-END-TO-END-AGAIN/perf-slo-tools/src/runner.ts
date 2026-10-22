@@ -14,15 +14,15 @@ import {terminateOwnedChildTree} from "@@EIGHT@@/@@MODULES@@/@@PROCESS@@/@@TERMI
 const policy=schema.definitions.Policy.const;
 const both=(english:string,german:string)=>`${english}\n${german}`;
 
-/** 🧪 What a bench spawn runs: the implementation (or `neutral` for a command without `--tool`), the arguments of `repo` and whether the process tree's memory is sampled. */
+/** 🥠 What a bench spawn runs: the implementation (or `neutral` for a command without `--tool`), the arguments of `repo` and whether the process tree's memory is sampled. */
 export type BenchSpawnSpecV1=Readonly<{tool:BenchSloToolV1;args:readonly string[];memory:boolean}>;
 /** 🪀 One finished command: its exit code, wall time, when it started on the clock of the ports, the time to the first output and to the first tool marker line, and the peak resident size of its process tree. */
 export type BenchRunV1=Readonly<{exit:number|null;wallMs:number;startedMs:number;firstOutputMs:number|null;markerMs:number|null;peakRssBytes:number|null}>;
-/** 🎯 The tasks one cached run touched: those that may be cached, how many of them executed, and the uncached ones that executed. */
+/** 🥞 The tasks one cached run touched: those that may be cached, how many of them executed, and the uncached ones that executed. */
 export type BenchCacheRunV1=Readonly<{cacheable:number;executedCacheable:number;uncachedExecuted:number;total:number}>;
-/** 🤹 The numbers of one concurrent-agent run: the span of the concurrent sessions, the serial reference, the longest wait for an unrelated project and the criteria that failed. */
+/** 🥟 The numbers of one concurrent-agent run: the span of the concurrent sessions, the serial reference, the longest wait for an unrelated project and the criteria that failed. */
 export type BenchConcurrencyRunV1=Readonly<{makespanMs:number;serialMs:number;maxUnrelatedWaitMs:number;failedRules:number}>;
-/** 🛎 The resident service of the copy: whether the checkout has one and how to start and stop it. */
+/** 🥡 The resident service of the copy: whether the checkout has one and how to start and stop it. */
 export type BenchServicePortV1=Readonly<{available():Promise<boolean>;start():Promise<void>;stop():Promise<void>}>;
 
 /** 🏟 Everything a bench run needs from the outside: the checkout copy, timed commands, observed cache runs, the concurrency harness, the resident service, the host, the clocks and cooperative cancellation. */
@@ -43,18 +43,18 @@ export type BenchPortsV1=Readonly<{
  signal:AbortSignal;
 }>;
 
-/** 🛰 What a run of the bench is told: how many samples replace the authored run counts, whether the resident service exists, the busiest load per core to start at and the stored baseline to compare with. */
+/** 🥢 What a run of the bench is told: how many samples replace the authored run counts, whether the resident service exists, the busiest load per core to start at and the stored baseline to compare with. */
 export type BenchOptionsV1=Readonly<{override:number|null;tools:readonly BenchToolV1[];maxLoad:number|null;baseline:BenchReportV1|null}>;
 
 const sample=(index:number,run:BenchRunV1,values:BenchSampleV1["values"],startKind:BenchStartKindV1|null,load:number|null,ok=run.exit===0):BenchSampleV1=>Object.freeze({index,ok,exit:run.exit,values,startKind,loadPerCore:load});
 const unavailable=(probe:BenchProbeV1,tool:BenchSloToolV1,reason:BenchReasonV1):BenchSeriesV1=>benchSeriesV1({probe:probe.id,tool,lane:probe.lane??null,status:"unavailable",reason,samples:[]});
 
-/** 🧭 Builds the arguments of `repo run` for a target: the resident lane insists on the service, the one-shot lane switches it off when the checkout has one so that the two lanes measure different paths. */
+/** 🥣 Builds the arguments of `repo run` for a target: the resident lane insists on the service, the one-shot lane switches it off when the checkout has one so that the two lanes measure different paths. */
 export function benchRunArgumentsV1(target:string,lane:BenchLaneV1|null,service:boolean,extra:readonly string[]=[]):string[]{
  return ["run",target,...extra,...(lane==="resident"?[policy.residentFlag]:service?[policy.oneshotFlag]:[])];
 }
 
-/** 🧮 Reads the sum of resident sizes of a process and all its descendants from a process table: `ps -A -o pid=,ppid=,rss=` rows (kilobytes) on POSIX systems or `ProcessId,ParentProcessId,WorkingSetSize` CSV rows (bytes) on Windows; shared pages count once per process, so the number is an upper bound. */
+/** 🥤 Reads the sum of resident sizes of a process and all its descendants from a process table: `ps -A -o pid=,ppid=,rss=` rows (kilobytes) on POSIX systems or `ProcessId,ParentProcessId,WorkingSetSize` CSV rows (bytes) on Windows; shared pages count once per process, so the number is an upper bound. */
 export function benchTreeRssV1(table:string,root:number,system:string):number|null{
  const rows=new Map<number,{parent:number;bytes:number}>();
  for(const line of table.split(/\r?\n/u)){
@@ -73,7 +73,7 @@ const processTable=(system:string):Promise<string>=>new Promise(accept=>{
  execFile(command,args,{windowsHide:true,maxBuffer:64*1024*1024},(error,stdout)=>accept(error?"":stdout));
 });
 
-/** 🏃 Runs one command in its own process tree and measures it on a monotonic clock: wall time, the time to the first output byte and to the first line a tool marker matches, and, when asked, the peak resident size of the tree sampled at a fixed interval. The tree is terminated when the signal aborts. */
+/** 🥨 Runs one command in its own process tree and measures it on a monotonic clock: wall time, the time to the first output byte and to the first line a tool marker matches, and, when asked, the peak resident size of the tree sampled at a fixed interval. The tree is terminated when the signal aborts. */
 export function benchSpawnV1(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,markers:readonly RegExp[],memory:boolean,signal:AbortSignal,now:()=>number,system:string=platform()):Promise<BenchRunV1>{
  return new Promise((accept,reject)=>{
   if(signal.aborted){reject(signal.reason);return;}
@@ -175,7 +175,7 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
  }finally{if(started)await ports.service.stop();}
 }
 
-/** 🏁 Runs the selected probes in order, judges every selected objective against its series, annotates the host before and after, and compares with the stored baseline when one is given. A run refuses to start on a host busier than the given load per core; progress is published per probe and the run stops at the next check when cancelled. */
+/** 🥩 Runs the selected probes in order, judges every selected objective against its series, annotates the host before and after, and compares with the stored baseline when one is given. A run refuses to start on a host busier than the given load per core; progress is published per probe and the run stops at the next check when cancelled. */
 export async function benchRunV1(set:BenchSloSetV1,pairs:readonly BenchPairV1[],options:BenchOptionsV1,ports:BenchPortsV1):Promise<BenchReportV1>{
  ports.check();
  const startedAt=ports.clock(),host=ports.host();
@@ -190,7 +190,7 @@ export async function benchRunV1(set:BenchSloSetV1,pairs:readonly BenchPairV1[],
  return options.baseline?benchReportV1({...base,comparison:benchCompareV1(set,report,options.baseline)}):report;
 }
 
-/** 🎚 Condenses the JSON report of one concurrent-agent run to the numbers the bench judges: the span of the concurrent sessions, the serial span, the longest wait that was not for a project of the same group and the criteria that failed. */
+/** 🥪 Condenses the JSON report of one concurrent-agent run to the numbers the bench judges: the span of the concurrent sessions, the serial span, the longest wait that was not for a project of the same group and the criteria that failed. */
 export function benchConcurrencyFromReportV1(report:ConcurrentReportV1):BenchConcurrencyRunV1{
  const run=report.runs[0];
  if(!run)throw Error(both("The concurrency report holds no run","Der Gleichzeitigkeitsbericht enthält keinen Lauf"));
@@ -198,7 +198,7 @@ export function benchConcurrencyFromReportV1(report:ConcurrentReportV1):BenchCon
  return Object.freeze({makespanMs:span(run.measurement.sessions),serialMs:(run.measurement.serial??[]).reduce((sum,row)=>sum+(row.endMs-row.startMs),0),maxUnrelatedWaitMs:Math.max(0,...waits.filter(wait=>wait.relation!=="related").map(wait=>wait.waitMs)),failedRules:run.rules.filter(rule=>rule.status==="fail").length});
 }
 
-/** 🏛 What the real ports need beyond the incremental host: the process spawner, cache runs, concurrency runs, the service and the host sample, all replaceable in tests, and whether this run prepared the copy. */
+/** 🥫 What the real ports need beyond the incremental host: the process spawner, cache runs, concurrency runs, the service and the host sample, all replaceable in tests, and whether this run prepared the copy. */
 export type BenchHostPortsV1=IncrementalHostV1&Readonly<{
  fresh:boolean;
  catalog:string;
@@ -206,12 +206,13 @@ export type BenchHostPortsV1=IncrementalHostV1&Readonly<{
  spawn?:BenchPortsV1["spawn"];
  cache?:BenchPortsV1["cache"];
  concurrency?:BenchPortsV1["concurrency"];
+ concurrencyCommand?:typeof runConcurrencyCommandV1;
  service?:BenchServicePortV1;
  sample?:()=>BenchHostV1;
  clock?:()=>string;
 }>;
 
-/** 🏢 The real ports: reads and writes inside the checkout copy, commands through the copy's own CLI on a monotonic clock, cache runs observed through the incremental harness, concurrency runs through `repo concurrency`, the service looked up in the copy's operations catalogue. */
+/** 🥮 The real ports: reads and writes inside the checkout copy, commands through the copy's own CLI on a monotonic clock, cache runs observed through the incremental harness, concurrency runs through `repo concurrency`, the service looked up in the copy's operations catalogue. */
 export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchPortsV1{
  let sequence=0;
  const cli=(tool:BenchSloToolV1,args:readonly string[])=>{
@@ -225,7 +226,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
   stop:async()=>{const call=cli("neutral",[policy.serviceOperation,"stop"]);await host.run(call.command,call.args,host.root,call.env,host.signal);}
  });
  return Object.freeze({
-  read:path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
+  read:async path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
   write:async(path,text)=>{await writeFile(incrementalInsideV1(host.root,path),text);},
   spawn:host.spawn??((spec,stop)=>{const call=cli(spec.tool,spec.args);return benchSpawnV1(call.command,call.args,host.root,call.env,benchMarkersV1(spec.tool),spec.memory,stop,host.now);}),
   cache:host.cache??(async(tool,target)=>{
@@ -237,7 +238,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
   concurrency:host.concurrency??(async(tool,workload,sessions)=>{
    if(!host.commandPorts)throw Error(both("The command ports are required for concurrency runs","Für Gleichzeitigkeitsläufe werden die Befehlsanschlüsse benötigt"));
    const out:string[]=[];
-   try{await runConcurrencyCommandV1(host.live,["concurrency","run",`--workloads=${workload}`,`--sessions=${sessions}`,`--implementations=${tool}`,"--json",`--root=${host.root}`],{...host.commandPorts,write:line=>{out.push(line);}});}
+   try{await (host.concurrencyCommand??runConcurrencyCommandV1)(host.live,["concurrency","run",`--workloads=${workload}`,`--sessions=${sessions}`,`--implementations=${tool}`,"--json",`--root=${host.root}`],{...host.commandPorts,write:line=>{out.push(line);}});}
    catch(error){if(!out.length)throw error;}
    return benchConcurrencyFromReportV1(JSON.parse(out.join("\n")) as ConcurrentReportV1);
   }),

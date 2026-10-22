@@ -10,7 +10,7 @@ use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, 
 use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked};
 use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactBuilder;
 
 #[semio_framework_async_macros::async_test]
@@ -92,7 +92,7 @@ async fn snapshot_codecs_preserve_declarations_and_xml_wire_ingress_refuses_unpu
         assert_eq!(artifact.set_snapshot(invalid.clone()).expect_err("raw artifact replacement"), expected, "{}", case["id"]);
         assert_eq!(artifact, before, "{} replacement must be atomic", case["id"]);
         let diff = XmlDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(XmlNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
-        assert!(protocol::apply_diff(&diff, &sample_snapshot()).is_err(), "{} diff ingress", case["id"]);
+        assert!(protocol::apply_diff_cold(&diff, &sample_snapshot()).is_err(), "{} diff ingress", case["id"]);
         assert_eq!(xml_document_to_text_checked(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
     }
 
@@ -214,7 +214,7 @@ async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
+        let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let diff_from_apply = crate::apply_mutation(&mut via_apply, &mutation);
@@ -233,15 +233,15 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         crate::apply_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <XmlMutation as Mutation<XmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse_mutation in <XmlMutation as ColdMutation<XmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             crate::apply_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = protocol::apply_diff(diff.diff(), &base).unwrap();
+        let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = protocol::apply_diff(&inverse_diff, &next).unwrap();
+        let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -268,10 +268,10 @@ fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
-    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff_cold(d2, &protocol::apply_diff_cold(d1, base).unwrap()).unwrap();
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(protocol::apply_diff(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff_cold(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -288,7 +288,7 @@ async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
@@ -302,7 +302,7 @@ async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
@@ -322,7 +322,7 @@ async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
@@ -335,7 +335,7 @@ async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
@@ -346,11 +346,11 @@ async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
-        let mid1 = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
-        let mid2 = protocol::apply_diff(d2.diff(), &mid1).unwrap();
+        let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
         let d3 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
-        let sequential = protocol::apply_diff(d3.diff(), &mid2).unwrap();
+        let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
         MutationDiff::absorb(&mut left, d2.diff().clone());
@@ -361,8 +361,8 @@ async fn absorb_law() {
         let mut right = d1.diff().clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
-        assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff_cold(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 }
 //#endregion 🔖️BetweenRoundtripLaw

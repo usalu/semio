@@ -13,19 +13,20 @@ pub struct RemoveBlock {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemoveBlock" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        plan_outcome(remove_block_plan(base, &self.path))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-        Ok(plan_inverse(remove_block_plan(base, &self.path)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for RemoveBlock {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        plan_outcome(remove_block_plan(base, &self.path))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        Ok(plan_inverse(remove_block_plan(base, &self.path)))
     }
 }
 //#endregion 🔖️Payload

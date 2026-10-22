@@ -11,18 +11,18 @@
 #[test]
 fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
-    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+    let declared: Vec<semio_framework_async_slots::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "renderer::kernel_runtime")
-        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .map(|table| semio_framework_async_slots::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
         .collect();
     let measured = vec![
-        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::RetainedSurfaceRegistry", RETAINED_SURFACE_CAPACITY, size_of::<Option<RetainedSurfaceSlot>>(), size_of::<RetainedSurfaceRegistry>()),
-        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::CommandDocumentRetirementRegistry", COMMAND_DOCUMENT_RETIREMENT_CAPACITY, size_of::<Option<CommandDocumentRetirementState>>(), size_of::<CommandDocumentRetirementRegistry>()),
+        semio_framework_async_slots::FixedSlotTableBudget::new("kernel_runtime::RetainedSurfaceRegistry", RETAINED_SURFACE_CAPACITY, size_of::<Option<RetainedSurfaceSlot>>(), size_of::<RetainedSurfaceRegistry>()),
+        semio_framework_async_slots::FixedSlotTableBudget::new("kernel_runtime::CommandDocumentRetirementRegistry", COMMAND_DOCUMENT_RETIREMENT_CAPACITY, size_of::<Option<CommandDocumentRetirementState>>(), size_of::<CommandDocumentRetirementRegistry>()),
     ];
-    semio_framework_async::assert_fixed_slot_tables(
+    semio_framework_async_slots::assert_fixed_slot_tables(
         "renderer::kernel_runtime",
         fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
         fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,

@@ -59,9 +59,9 @@ describe("devServerUrl", () => {
 });
 
 describe("wgpuDevPlayUrl", () => {
-  test("builds root and legacy play urls", () => {
+  test("builds the root play url and maps a wildcard host to loopback", () => {
     expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly")).toBe("http://127.0.0.1:6178/?plugin=lowpoly");
-    expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly", "/renderer-modules/wgpu/")).toBe("http://127.0.0.1:6178/renderer-modules/wgpu/?plugin=lowpoly");
+    expect(wgpuDevPlayUrl("0.0.0.0", 6178, "low poly")).toBe("http://127.0.0.1:6178/?plugin=low%20poly");
   });
 });
 

@@ -10,7 +10,7 @@
     },
     {
       "project": "repo",
-      "target": "test-nx-reset",
+      "target": "test-cache-reset",
       "status": "pending"
     },
     {

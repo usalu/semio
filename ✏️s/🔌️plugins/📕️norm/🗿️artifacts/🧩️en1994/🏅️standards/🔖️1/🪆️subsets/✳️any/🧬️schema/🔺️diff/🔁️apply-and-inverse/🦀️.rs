@@ -2,39 +2,9 @@
 
 use super::*;
 
-impl protocol::MutationDiff<En1994Snapshot> for En1994Diff {
-    fn apply(&self, base: &En1994Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1994Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.structure_kind {
-            next.structure_kind = value.clone();
-        }
-        if let Some(value) = &self.steel_f_y_pa {
-            next.steel_f_y_pa = value.clone();
-        }
-        if let Some(rows) = &self.beams {
-            next.beams = rows.apply_rows(&base.beams).map_err(|error| error.under(["beams"]))?;
-        }
-        if let Some(rows) = &self.columns {
-            next.columns = rows.apply_rows(&base.columns).map_err(|error| error.under(["columns"]))?;
-        }
-        if let Some(rows) = &self.slabs {
-            next.slabs = rows.apply_rows(&base.slabs).map_err(|error| error.under(["slabs"]))?;
-        }
-        if let Some(value) = &self.fire_rating {
-            next.fire_rating = value.clone();
-        }
-        if let Some(value) = &self.insulation_thickness_m {
-            next.insulation_thickness_m = value.clone();
-        }
-        if let Some(value) = &self.fatigue_detail {
-            next.fatigue_detail = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<En1994Snapshot> for En1994Diff {}
 
+impl protocol::ColdMutationDiff<En1994Snapshot> for En1994Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -76,9 +46,49 @@ impl protocol::MutationDiff<En1994Snapshot> for En1994Diff {
             self.fatigue_detail = other.fatigue_detail;
         }
     }
+
+    fn apply(&self, unpublished: &mut En1994Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.structure_kind {
+            next.structure_kind = value.clone();
+        }
+        if let Some(value) = &self.steel_f_y_pa {
+            next.steel_f_y_pa = value.clone();
+        }
+        if let Some(rows) = &self.beams {
+            next.beams = rows.apply_rows(&base.beams).map_err(|error| error.under(["beams"]))?;
+        }
+        if let Some(rows) = &self.columns {
+            next.columns = rows.apply_rows(&base.columns).map_err(|error| error.under(["columns"]))?;
+        }
+        if let Some(rows) = &self.slabs {
+            next.slabs = rows.apply_rows(&base.slabs).map_err(|error| error.under(["slabs"]))?;
+        }
+        if let Some(value) = &self.fire_rating {
+            next.fire_rating = value.clone();
+        }
+        if let Some(value) = &self.insulation_thickness_m {
+            next.insulation_thickness_m = value.clone();
+        }
+        if let Some(value) = &self.fatigue_detail {
+            next.fatigue_detail = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<En1994Snapshot> for En1994Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none() && self.structure_kind.is_none() && self.steel_f_y_pa.is_none() && self.beams.as_ref().map_or(true, |rows| rows.is_empty()) && self.columns.as_ref().map_or(true, |rows| rows.is_empty()) && self.slabs.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_rating.is_none() && self.insulation_thickness_m.is_none() && self.fatigue_detail.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1994Snapshot> for En1994Diff {
     fn inverse(&self, base: &En1994Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex.clone()),
@@ -91,9 +101,5 @@ impl protocol::DiffAlgebra<En1994Snapshot> for En1994Diff {
             insulation_thickness_m: self.insulation_thickness_m.as_ref().map(|_| base.insulation_thickness_m.clone()),
             fatigue_detail: self.fatigue_detail.as_ref().map(|_| base.fatigue_detail.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.structure_kind.is_none() && self.steel_f_y_pa.is_none() && self.beams.as_ref().map_or(true, |rows| rows.is_empty()) && self.columns.as_ref().map_or(true, |rows| rows.is_empty()) && self.slabs.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_rating.is_none() && self.insulation_thickness_m.is_none() && self.fatigue_detail.is_none()
     }
 }

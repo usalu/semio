@@ -59,91 +59,91 @@
       "project": "@semio-tech/wfc-bitmap-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite"
     },
     {
       "project": "@semio-tech/wfc-bitmap-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-native",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite native"
     },
     {
       "project": "@semio-tech/wfc-bitmap-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-source",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite source"
     },
     {
       "project": "@semio-tech/wfc-grid2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite"
     },
     {
       "project": "@semio-tech/wfc-grid2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-native",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite native"
     },
     {
       "project": "@semio-tech/wfc-grid2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-source",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite source"
     },
     {
       "project": "@semio-tech/wfc-grid3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite"
     },
     {
       "project": "@semio-tech/wfc-grid3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-native",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite native"
     },
     {
       "project": "@semio-tech/wfc-grid3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-source",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite source"
     },
     {
       "project": "@semio-tech/wfc-2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite"
     },
     {
       "project": "@semio-tech/wfc-2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-native",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite native"
     },
     {
       "project": "@semio-tech/wfc-2d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-source",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite source"
     },
     {
       "project": "@semio-tech/wfc-3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite"
     },
     {
       "project": "@semio-tech/wfc-3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-native",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite native"
     },
     {
       "project": "@semio-tech/wfc-3d-rs",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
       "target": "test-snapshot-sqlite-source",
-      "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      "command": "repo ./📜️script.ts test-snapshot-sqlite source"
     }
   ],
   "ownedSparseState": {
@@ -184,91 +184,91 @@
       "project": "@semio-tech/wfc-bitmap",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript/📋️project.json",
       "target": "build",
-      "command": "bun ./📜️script.ts build"
+      "command": "repo ./📜️script.ts build"
     },
     {
       "project": "@semio-tech/wfc-bitmap",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript/📋️project.json",
       "target": "check",
-      "command": "bun ./📜️script.ts check"
+      "command": "repo ./📜️script.ts check"
     },
     {
       "project": "@semio-tech/wfc-bitmap",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript/📋️project.json",
       "target": "test",
-      "command": "bun ./📜️script.ts test"
+      "command": "repo ./📜️script.ts test"
     },
     {
       "project": "@semio-tech/wfc-grid2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "build",
-      "command": "bun ./📜️script.ts build"
+      "command": "repo ./📜️script.ts build"
     },
     {
       "project": "@semio-tech/wfc-grid2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "check",
-      "command": "bun ./📜️script.ts check"
+      "command": "repo ./📜️script.ts check"
     },
     {
       "project": "@semio-tech/wfc-grid2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "test",
-      "command": "bun ./📜️script.ts test"
+      "command": "repo ./📜️script.ts test"
     },
     {
       "project": "@semio-tech/wfc-grid3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "build",
-      "command": "bun ./📜️script.ts build"
+      "command": "repo ./📜️script.ts build"
     },
     {
       "project": "@semio-tech/wfc-grid3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "check",
-      "command": "bun ./📜️script.ts check"
+      "command": "repo ./📜️script.ts check"
     },
     {
       "project": "@semio-tech/wfc-grid3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "test",
-      "command": "bun ./📜️script.ts test"
+      "command": "repo ./📜️script.ts test"
     },
     {
       "project": "@semio-tech/wfc-2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "build",
-      "command": "bun ./📜️script.ts build"
+      "command": "repo ./📜️script.ts build"
     },
     {
       "project": "@semio-tech/wfc-2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "check",
-      "command": "bun ./📜️script.ts check"
+      "command": "repo ./📜️script.ts check"
     },
     {
       "project": "@semio-tech/wfc-2d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/📋️project.json",
       "target": "test",
-      "command": "bun ./📜️script.ts test"
+      "command": "repo ./📜️script.ts test"
     },
     {
       "project": "@semio-tech/wfc-3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "build",
-      "command": "bun ./📜️script.ts build"
+      "command": "repo ./📜️script.ts build"
     },
     {
       "project": "@semio-tech/wfc-3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "check",
-      "command": "bun ./📜️script.ts check"
+      "command": "repo ./📜️script.ts check"
     },
     {
       "project": "@semio-tech/wfc-3d",
       "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/📋️project.json",
       "target": "test",
-      "command": "bun ./📜️script.ts test"
+      "command": "repo ./📜️script.ts test"
     }
   ]
 }

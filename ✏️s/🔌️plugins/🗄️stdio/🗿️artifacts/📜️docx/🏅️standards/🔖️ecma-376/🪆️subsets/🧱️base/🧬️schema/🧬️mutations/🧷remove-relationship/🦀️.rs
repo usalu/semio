@@ -16,20 +16,21 @@ pub struct RemoveRelationship {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveRelationship {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "relationship", kind: "remove-relationship", record: "RemoveRelationship" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::relationship_removal_diff(opc, &self.owner, &self.id)))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-        let previous = opc_layer::with_package(base, |opc| opc_layer::relationship_at(opc, &self.owner, &self.id)).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
-        Ok(previous.map(|(at, existing)| DocxMutation::SetRelationship(set_relationship::SetRelationship::of(&self.owner, &existing, Some(at)))).into_iter().collect())
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove relationship", "Beziehung entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["opc".to_string(), "relationships".to_string(), self.owner.clone(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for RemoveRelationship {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::relationship_removal_diff(opc, &self.owner, &self.id)))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        let previous = opc_layer::with_package(base, |opc| opc_layer::relationship_at(opc, &self.owner, &self.id)).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
+        Ok(previous.map(|(at, existing)| DocxMutation::SetRelationship(set_relationship::SetRelationship::of(&self.owner, &existing, Some(at)))).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

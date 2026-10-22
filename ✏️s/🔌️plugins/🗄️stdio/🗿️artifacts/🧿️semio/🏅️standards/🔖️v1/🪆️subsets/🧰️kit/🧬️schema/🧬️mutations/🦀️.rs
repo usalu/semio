@@ -35,7 +35,7 @@ use crate::schema::mutations::unbind_representation;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit")]
+#[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit", reference = SemioKitSnapshot, reference_diff = SemioKitDiff)]
 pub enum SemioKitMutation {
     CreateObject(create_object::CreateObject),
     DeleteObject(delete_object::DeleteObject),
@@ -81,7 +81,7 @@ pub const KINDS: &[&str] = &["create-object",
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
-    <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::diff(mutation, base)
+    <SemioKitMutation as protocol::ColdMutation<SemioKitSnapshot>>::diff(mutation, base)
 }
 
 
@@ -92,7 +92,7 @@ pub fn diff_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnaps
 /// inverse-law scenario `apply_semio_kit_mutation` alone can't reach.
 pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     mutation.inverse(base)?
 
     })

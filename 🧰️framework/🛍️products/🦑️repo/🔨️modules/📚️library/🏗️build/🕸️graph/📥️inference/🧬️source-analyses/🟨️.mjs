@@ -6,7 +6,7 @@ import { observedSourceAnalysisV1, observedRequireResolve } from "../../../../�
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "source-analyses";
-let requirePhysicalSourceV1, LIBRARY_ROOT, loaded, readPhysicalSource, revisionIdentity, register;
+let requirePhysicalSourceV1, LIBRARY_ROOT, loaded, readPhysicalSource, revisionIdentity, register, inferrerStampV1;
 export let TAXONOMY_PROJECTION, TAXONOMY;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
@@ -14,6 +14,7 @@ export function wire(registry) {
   ({ requirePhysicalSourceV1, LIBRARY_ROOT, readPhysicalSource } = registry.coordinates);
   ({ loaded } = registry.bootstrap);
   ({ revisionIdentity, register } = registry);
+  ({ inferrerStampV1 } = registry.stamps);
   TAXONOMY_PROJECTION = register({ id: `build:taxonomy-projection:v1:${createHash("sha256").update(revisionIdentity.url).digest("hex")}`, revision: createHash("sha256").update(taxonomyProjectionV1.toString()).digest("hex"), analyze: (_path, bytes) => taxonomyProjectionV1(JSON.parse(bytes.toString("utf8"))) });
   TAXONOMY = readTaxonomyProjectionV1(join(LIBRARY_ROOT, "🔣️taxonomy.json"));
 }
@@ -142,15 +143,15 @@ export function sourceAnalysisOwnerIdentityV1(url,revision){return createHash("s
 /** 🧬️ Binds structural parsers to their evaluated implementation and compiler bytes. */
 export function prepareSourceAnalysesV1(){
   if(!sourceAnalysesV1){
-    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,compiler=observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"),revision=createHash("sha256").update(revisionIdentity.revision).update(loaded.commandInputHash).update(readPhysicalSource(compiler)).digest("hex");
-    const owner=sourceAnalysisOwnerIdentityV1(revisionIdentity.url,revisionIdentity.revision),identity=role=>`build:${role}:v1:${owner}`;
+    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,compiler=observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"),stamp=inferrerStampV1("source-analyses"),stampRevision=createHash("sha256").update(stamp).digest("hex"),revision=createHash("sha256").update(stamp).update(readPhysicalSource(compiler)).digest("hex");
+    const owner=sourceAnalysisOwnerIdentityV1(revisionIdentity.url,stamp),identity=role=>`build:${role}:v1:${owner}`;
     sourceAnalysesV1={
       command:register({id:identity("command-imports"),revision,analyze:(path,bytes)=>commandParser(path,bytes.toString("utf8"))}),
       references:register({id:identity("command-references"),revision,analyze:(path,bytes)=>{const text=bytes.toString("utf8");return {runtime:runtimeParser(path,text),urls:urlParser(path,text)};}}),
       module:register({id:identity("module-imports"),revision,analyze:(path,bytes)=>({imports:moduleParser(path,bytes.toString("utf8")),runtimeImports:runtimeParser(path,bytes.toString("utf8")),productionImports:productionParser(path,bytes.toString("utf8"))})}),
-      script:register({id:identity("script-requirements"),revision:revisionIdentity.revision,analyze:(_path,bytes)=>{const text=bytes.toString("utf8");return {go:/["']go["']\s*,|\brunGo\w*\(/.test(text),wasm:/\b(?:buildWasmWebV1|buildRepositoryWasmWebV1)\s*\(/.test(text)};}}),
-      nativeScript:register({id:identity("native-script-admission"),revision:revisionIdentity.revision,analyze:(_path,bytes)=>loaded.nativeHostScriptAdmissionV1(bytes.toString("utf8"))}),
-      rust:register({id:identity("rust-references"),revision:createHash("sha256").update(revisionIdentity.revision).update(RUST_REFERENCE_NAMESPACE).digest("hex"),analyze:(_path,bytes)=>boundedRustReferences(bytes,RUST_SOURCE_CACHE)})
+      script:register({id:identity("script-requirements"),revision:stampRevision,analyze:(_path,bytes)=>{const text=bytes.toString("utf8");return {go:/["']go["']\s*,|\brunGo\w*\(/.test(text),wasm:/\b(?:buildWasmWebV1|buildRepositoryWasmWebV1)\s*\(/.test(text)};}}),
+      nativeScript:register({id:identity("native-script-admission"),revision:stampRevision,analyze:(_path,bytes)=>loaded.nativeHostScriptAdmissionV1(bytes.toString("utf8"))}),
+      rust:register({id:identity("rust-references"),revision:createHash("sha256").update(stamp).update(RUST_REFERENCE_NAMESPACE).digest("hex"),analyze:(_path,bytes)=>boundedRustReferences(bytes,RUST_SOURCE_CACHE)})
     };
   }
   return sourceAnalysesV1;

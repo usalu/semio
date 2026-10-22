@@ -8,7 +8,7 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
@@ -18,7 +18,7 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_ui_contract::*;
 
 /// 🔁️ Shared document replacement invalidates concrete window transients and retains displaced owners.
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
     pub fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let cursor = if closing { &mut self.close.close_window_retirement_cursor } else { &mut self.maintenance.maintenance_window_retirement_cursor };
@@ -26,7 +26,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     pub fn prepare_document_window_reset(&self) -> Result<WindowTransientOwnerRegistry, Fault> {
         if self.close.close_started {
             return Err(plugin_sdk_fault("a closing app cannot replace its document window owners"));

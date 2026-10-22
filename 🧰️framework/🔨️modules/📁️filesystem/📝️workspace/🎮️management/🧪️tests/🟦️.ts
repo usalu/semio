@@ -23,7 +23,7 @@ test("guided file commands match shared neutral outcomes and independent SQLite"
 });
 
 test("guided entry revisions reject copied and foreign observations before publication",async()=>{
- let publications=0;const port:ManagementPort={inspect:async()=>observed("one",false),publish:async()=>{publications++;return{};},record:async()=>{}};const signal=new AbortController().signal;const first=new Management(port),second=new Management(port);const token=await first.inspect("a",signal);
+ let publications=0;const port:ManagementPort={prepare,inspect:async()=>observed("one",false),publish:async()=>{publications++;return{};},record:async()=>{}};const signal=new AbortController().signal;const first=new Management(port),second=new Management(port);const token=await first.inspect("a",signal);
  for(const invalid of [{...token},token]){await expect((invalid===token?second:first).execute({kind:"retain-entry",path:"a"},invalid,signal,()=>{})).rejects.toThrow("conflict");}expect(publications).toBe(0);
 });
 
@@ -34,7 +34,7 @@ test("guided command schema and actual owner refuse unknown requests before obse
 
 
 test("guided request snapshots remain unchanged across asynchronous inspection",async()=>{
- let release!:()=>void;const waiting=new Promise<void>(resolve=>{release=resolve;}),seen:string[]=[];let published:Command|undefined;const manager=new Management({inspect:async path=>{seen.push(path);await waiting;return null;},publish:async command=>{published=command;return{};},record:async()=>{}});const request={kind:"create-file",path:"original.txt",text:"original"}as Command;const pending=manager.execute(request,undefined,new AbortController().signal,()=>{});Object.assign(request,{path:"../foreign",text:"changed"});release();await pending;expect(seen).toEqual(["original.txt","original.txt"]);expect(published).toEqual({kind:"create-file",path:"original.txt",text:"original"});expect(Object.isFrozen(published)).toBe(true);
+ let release!:()=>void;const waiting=new Promise<void>(resolve=>{release=resolve;}),seen:string[]=[];let published:Command|undefined;const manager=new Management({prepare,inspect:async path=>{seen.push(path);await waiting;return null;},publish:async command=>{published=command;return{};},record:async()=>{}});const request={kind:"create-file",path:"original.txt",text:"original"}as Command;const pending=manager.execute(request,undefined,new AbortController().signal,()=>{});Object.assign(request,{path:"../foreign",text:"changed"});release();await pending;expect(seen).toEqual(["original.txt","original.txt"]);expect(published).toEqual({kind:"create-file",path:"original.txt",text:"original"});expect(Object.isFrozen(published)).toBe(true);
 });
 
 

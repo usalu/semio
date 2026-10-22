@@ -41,7 +41,8 @@ pub struct RuntimeCloseWorkerState<PA: PluginApp> {
     #[cfg(test)]
     pub callback_phase_us: [AtomicU64; 24],
 }
-pub(super) struct RuntimeCloseEntry<PA: PluginApp> {
+#[doc(hidden)]
+pub struct RuntimeCloseEntry<PA: PluginApp> {
     pub state: std::sync::Arc<RuntimeCloseWorkerState<PA>>,
 }
 #[doc(hidden)]

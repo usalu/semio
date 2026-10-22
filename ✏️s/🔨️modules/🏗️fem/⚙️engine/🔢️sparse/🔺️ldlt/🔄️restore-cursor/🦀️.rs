@@ -50,6 +50,7 @@ impl LdltRestoreCursor {
         let state = self.state.as_mut().ok_or(NumericalCheckpointFault::Field)?;
         let n = state.a.n;
         let entries = n.saturating_mul(n.saturating_sub(1)) / 2;
+        self.owner_cursor.growth = matches!(page.field, 4 | 5 | 9 | 12 | 13);
         let complete = match page.field {
             1 => restore_paged_u32_entry(&mut state.a.colptr, &page, n.saturating_add(1), &mut self.page_entry, &mut self.owner_cursor, context)?,
             2 => restore_paged_u32_entry(&mut state.a.rowind, &page, u32::MAX as usize, &mut self.page_entry, &mut self.owner_cursor, context)?,

@@ -15,17 +15,6 @@ pub struct SetPreviewEval {
 impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransientMutation> for SetPreviewEval {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-eval", kind: "set-preview-eval", record: "SetPreviewEval" };
 
-    fn diff(&self, _base: &Generation3dViewTransient) -> protocol::MutationOutcome<Generation3dViewTransientPatch> {
-        protocol::MutationOutcome::new(Generation3dViewTransientPatch { preview_eval_text: Some(Generation3dPreviewEvalChange { text: self.eval_text.clone() }), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dViewTransient) -> Result<Vec<Generation3dViewTransientMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { eval_text: base.preview_eval_text.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Preview Eval", "Vorschauauswertung setzen")
     }
@@ -33,4 +22,16 @@ impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransient
     fn target(&self) -> Vec<String> {
         vec!["previewEvalText".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dViewTransient, Generation3dViewTransientMutation> for SetPreviewEval {
+    fn diff(&self, _base: &Generation3dViewTransient) -> protocol::MutationOutcome<Generation3dViewTransientPatch> {
+        protocol::MutationOutcome::new(Generation3dViewTransientPatch { preview_eval_text: Some(Generation3dPreviewEvalChange { text: self.eval_text.clone() }), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dViewTransient) -> Result<Vec<Generation3dViewTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { eval_text: base.preview_eval_text.clone() }.into()]
+    
+    })())
+}
 }

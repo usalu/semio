@@ -9,14 +9,18 @@ use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 pub struct RemoveZone { pub zone_id: String }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for RemoveZone where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::insert_zone::InsertZone> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "zone", kind: "remove-zone", record: "RemoveZone" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::remove_zone::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for RemoveZone where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::insert_zone::InsertZone> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::remove_zone::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::remove_zone::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
-    }
 }
 
 //#region 🪢️Mounts

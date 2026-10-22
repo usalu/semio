@@ -19,7 +19,7 @@ Headless Rust building energy model (BEM) engine. EnergyPlus-class transient who
 
 - Docstrings start with a unique emoji; no comments inside definitions
 - Regions in `lib.rs` or `src/` modules; unit tests in each module
-- `bun ./script.ts test` via nx `@semio-tech/energy-engine`
+- `repo ./script.ts test` via nx `@semio-tech/energy-engine`
 - Do not depend on `norm_*` or CAD energy modules
 
 ## Stack

@@ -77,8 +77,15 @@ impl SemioTextDiff {
     }
 }
 
-impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
-    fn apply(&self, base: &SemioTextSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioTextSnapshot> {
+impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {}
+
+impl protocol::ColdMutationDiff<SemioTextSnapshot> for SemioTextDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_indexed_slot(&mut self.runs, other.runs);
+    }
+
+    fn apply(&self, unpublished: &mut SemioTextSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(runs) = &self.runs {
             validate_indexed_triple(runs, base.runs.len(), ["runs"])?;
@@ -90,22 +97,22 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
             }
             next.runs = apply_indexed_rows(runs, &base.runs);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_indexed_slot(&mut self.runs, other.runs);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 /// 🧮️ `text`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
-    fn inverse(&self, base: &SemioTextSnapshot) -> Self {
-        SemioTextDiff { runs: self.runs.as_ref().map(|runs| inverse_indexed_rows(runs, &base.runs)) }
-    }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
+    fn inverse(&self, base: &SemioTextSnapshot) -> Self {
+        SemioTextDiff { runs: self.runs.as_ref().map(|runs| inverse_indexed_rows(runs, &base.runs)) }
     }
 }
 //#endregion 🔖️Diff

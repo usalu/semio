@@ -15,9 +15,9 @@ export type HostSampleV1=Readonly<{version:1;atMs:number;platform:"darwin"|"linu
 /** 🎫️ What one operation asks for (`Request` of the schema). */
 export type HostRequestV1=Readonly<{id:string;operation:string;priority:"batch"|"interactive";minimumJobs:number;preferredJobs:number;fixedMegabytes:number;perJobMegabytes:number;cpuPerJob:number}>;
 /** ⏳️ A request in the queue (`Waiter` of the schema). */
-export type HostWaiterV1=Readonly<{request:HostRequestV1;arrivedAtMs:number;pid:number}>;
+export type HostWaiterV1=Readonly<{request:HostRequestV1;arrivedAtMs:number;pid:number;session?:string;weight?:number}>;
 /** 🔐️ A live admission (`Grant` of the schema); `observedMegabytes` is what its process tree holds right now. */
-export type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number}>;
+export type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number;session?:string}>;
 /** 🧾️ Why a request was admitted or kept waiting. */
 export type HostReasonV1="fits"|"reduced"|"override"|"memory"|"swap"|"swap-activity"|"pressure-critical"|"pressure-warn"|"files"|"attaches"|"load"|"queue-order";
 /** ⚖️ The verdict for one request. */
@@ -65,10 +65,10 @@ export function hostFloorMegabytesV1(policy:HostCapacityPolicyV1,host:Pick<HostS
  return Math.min(host.totalMegabytes,Math.max(policy.memory.floorMinimumMegabytes,Math.min(policy.memory.floorMaximumMegabytes,share)));
 }
 
-/** 🔢️ Orders waiters for service: interactive before batch, then by arrival, then by id. */
-export function orderHostWaitersV1(waiters:readonly HostWaiterV1[]):HostWaiterV1[]{
- const rank=(waiter:HostWaiterV1)=>waiter.request.priority==="interactive"?0:1;
- return [...waiters].sort((left,right)=>rank(left)-rank(right)||left.arrivedAtMs-right.arrivedAtMs||(left.request.id<right.request.id?-1:left.request.id>right.request.id?1:0));
+/** 🔢️ Orders waiters for service: interactive before batch, then the agent session holding the least memory per unit of budget weight (weighted fair share between sessions; waiters without a session count as holding nothing), then by arrival, then by id. */
+export function orderHostWaitersV1(waiters:readonly HostWaiterV1[],ledger:readonly Pick<HostGrantV1,"session"|"reservedMegabytes">[]=[]):HostWaiterV1[]{
+ const rank=(waiter:HostWaiterV1)=>waiter.request.priority==="interactive"?0:1,held=(waiter:HostWaiterV1)=>waiter.session===undefined?0:ledger.reduce((sum,grant)=>sum+(grant.session===waiter.session?grant.reservedMegabytes:0),0),weight=(waiter:HostWaiterV1)=>waiter.weight??1;
+ return [...waiters].sort((left,right)=>rank(left)-rank(right)||held(left)*weight(right)-held(right)*weight(left)||left.arrivedAtMs-right.arrivedAtMs||(left.request.id<right.request.id?-1:left.request.id>right.request.id?1:0));
 }
 
 /** 🚧️ Names what holds every admission back without being a hard stop: raised memory pressure, an open file table above its ceiling share or as many attached disk images as the maximum; undefined when none applies. These can be waited out, and are overridden only when nothing of ours is running. */
@@ -79,7 +79,7 @@ export function softHostReasonV1(policy:HostCapacityPolicyV1,host:HostSampleV1):
  return undefined;
 }
 
-/** 🧮️ Decides, for a host sample, the live grants and the queue, which requests start now and with how many jobs; a pure function of its arguments. Reservations count in full only while a grant ramps up (`memory.rampMilliseconds`), then the memory it really holds speaks for itself. A waiter refused for memory or load does not hold later ones back: they pass while they fit. It becomes a strict barrier only if finishing our own grants would admit it (foreign pressure never creates a barrier, draining cannot help it) and it has waited `wait.bypassMilliseconds` or been overtaken `wait.maximumBypasses` times, counting grants admitted since it arrived; so it cannot starve. A batch waiter older than `wait.agingMilliseconds` ranks as interactive, so a stream of interactive requests cannot starve it. */
+/** 🧮️ Decides, for a host sample, the live grants and the queue, which requests start now and with how many jobs; a pure function of its arguments. Reservations count in full only while a grant ramps up (`memory.rampMilliseconds`), then the memory it really holds speaks for itself. A waiter refused for memory or load does not hold later ones back: they pass while they fit. It becomes a strict barrier only if finishing our own grants would admit it (foreign pressure never creates a barrier, draining cannot help it) and it has waited `wait.bypassMilliseconds` or been overtaken `wait.maximumBypasses` times, counting grants admitted since it arrived; so it cannot starve. A batch waiter older than `wait.agingMilliseconds` ranks as interactive, so a stream of interactive requests cannot starve it. The load only scales jobs down: foreign load (editors, indexers) never refuses a request whose memory fits, it is admitted with its minimum jobs; the cores of our own grants plus the request are what must stay under `load.perCoreCeiling` per core. */
 export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSampleV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):HostEvaluationV1{
  const floor=hostFloorMegabytesV1(policy,host),cap=Math.max(0,host.totalMegabytes-floor);
  const ramping=(grant:HostGrantV1)=>nowMs-grant.admittedAtMs<policy.memory.rampMilliseconds;
@@ -93,25 +93,26 @@ export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSamp
  const swapping=host.swapOutMegabytesPerSecond===null||host.swapOutMegabytesPerSecond>0;
  const soft=softHostReasonV1(policy,host);
  const hard:HostReasonV1|undefined=host.pressure==="critical"?"pressure-critical":host.swapUsedMegabytes!==null&&host.swapUsedMegabytes>swapCeiling&&swapping?"swap":host.swapOutMegabytesPerSecond!==null&&host.swapOutMegabytesPerSecond>policy.swap.outMegabytesPerSecond?"swap-activity":undefined;
- const drainedRoom=Math.min(host.availableMegabytes+ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),host.totalMegabytes)-floor,drainedBudget=Math.floor(cap*policy.memory.budgetBasisPoints/10000),drainedLoadRoom=host.load===null?Infinity:ceiling-Math.max(0,host.load-ledgerCpu);
+ const drainedRoom=Math.min(host.availableMegabytes+ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),host.totalMegabytes)-floor,drainedBudget=Math.floor(cap*policy.memory.budgetBasisPoints/10000);
  const aged=waiters.map(waiter=>waiter.request.priority==="batch"&&nowMs-waiter.arrivedAtMs>=policy.wait.agingMilliseconds?Object.freeze({...waiter,request:Object.freeze({...waiter.request,priority:"interactive" as const})}):waiter);
- const decisions:HostDecisionV1[]=[],heads:{bypasses:number}[]=[];let blocked=false,admitted=0;
- for(const waiter of orderHostWaitersV1(aged)){
+ const decisions:HostDecisionV1[]=[],heads:{bypasses:number}[]=[];let blocked=false,admitted=0,own=ledgerCpu;
+ for(const waiter of orderHostWaitersV1(aged,ledger)){
   const request=waiter.request,need=(jobs:number)=>Math.min(request.fixedMegabytes+jobs*request.perJobMegabytes,cap),waited=nowMs-waiter.arrivedAtMs;
   const refuse=(reason:HostReasonV1):void=>{decisions.push(Object.freeze({id:request.id,verdict:"wait",jobs:0,reservedMegabytes:0,reason}));};
-  const admit=(jobs:number,reason:HostReasonV1):void=>{const reserved=need(jobs);room-=reserved;if(loadRoom!==Infinity)loadRoom-=jobs*request.cpuPerJob;admitted++;for(const head of heads){head.bypasses++;if(head.bypasses>=policy.wait.maximumBypasses)blocked=true;}decisions.push(Object.freeze({id:request.id,verdict:"admit",jobs,reservedMegabytes:reserved,reason}));};
+  const admit=(jobs:number,reason:HostReasonV1):void=>{const reserved=need(jobs);room-=reserved;if(loadRoom!==Infinity)loadRoom-=jobs*request.cpuPerJob;own+=jobs*request.cpuPerJob;admitted++;for(const head of heads){head.bypasses++;if(head.bypasses>=policy.wait.maximumBypasses)blocked=true;}decisions.push(Object.freeze({id:request.id,verdict:"admit",jobs,reservedMegabytes:reserved,reason}));};
   if(hard){refuse(hard);continue;}
   if(blocked){refuse("queue-order");continue;}
   const memoryFits=need(request.minimumJobs)<=room;
   let jobs=0;
   if(soft===undefined)for(let candidate=request.preferredJobs;candidate>=request.minimumJobs;candidate--)if(need(candidate)<=room&&candidate*request.cpuPerJob<=loadRoom){jobs=candidate;break;}
+  if(jobs===0&&soft===undefined&&memoryFits&&own+request.minimumJobs*request.cpuPerJob<=ceiling)jobs=request.minimumJobs;
   if(jobs>0){admit(jobs,jobs<request.preferredJobs?"reduced":"fits");continue;}
   const reason:HostReasonV1=!memoryFits?"memory":soft??"load";
   if(reason!=="memory"&&ledger.length===0&&admitted===0&&waited>=policy.load.overrideAfterMilliseconds)admit(request.minimumJobs,"override");
   else{
    refuse(reason);
    if(reason==="memory"||reason==="load"){
-    const drains=soft===undefined&&need(request.minimumJobs)<=Math.min(drainedRoom,drainedBudget)&&request.minimumJobs*request.cpuPerJob<=drainedLoadRoom,bypasses=ledger.filter(grant=>grant.admittedAtMs>=waiter.arrivedAtMs).length;
+    const drains=soft===undefined&&need(request.minimumJobs)<=Math.min(drainedRoom,drainedBudget)&&request.minimumJobs*request.cpuPerJob<=ceiling,bypasses=ledger.filter(grant=>grant.admittedAtMs>=waiter.arrivedAtMs).length;
     if(drains&&(waited>=policy.wait.bypassMilliseconds||bypasses>=policy.wait.maximumBypasses))blocked=true;else if(drains)heads.push({bypasses});
    }
   }

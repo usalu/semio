@@ -24,7 +24,7 @@ fn document_lane_create_shot_reaches_prepared_and_closes_under_quoted_grants() {
     let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<ShootingSnapshot, ShootingMutation>> = store::mutation_apply_preparation_factory::<ShootingSnapshot, ShootingMutation>();
     let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, ShootingSnapshot::default(), mutation, grant());
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, ShootingSnapshot::default(), mutation, 1 << 16, grant());
     assert!(law.turns <= PREPARATION_TURN_BOUND && law.close_turns <= CLOSE_TURN_BOUND, "document lane create shot prepared in {} turns and closed in {} turns", law.turns, law.close_turns);
     assert_eq!(law.post.shots, vec![shot]);
     assert_eq!(law.inverse.len(), 1, "creating one shot is undone by exactly one row");
@@ -37,7 +37,7 @@ fn config_lane_set_camera_reaches_prepared_and_closes_under_quoted_grants() {
     let base = ShootingConfig::default();
     let mut camera = base.camera.clone();
     camera.position = [4.0, 5.0, 6.0];
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), ShootingConfigMutation::SetCamera(SetCamera { camera: camera.clone() }), grant());
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), ShootingConfigMutation::SetCamera(SetCamera { camera: camera.clone() }), 1 << 16, grant());
     assert!(law.turns <= PREPARATION_TURN_BOUND && law.close_turns <= CLOSE_TURN_BOUND, "config lane set camera prepared in {} turns and closed in {} turns", law.turns, law.close_turns);
     assert_eq!(law.post.camera, camera);
     assert_eq!(law.inverse, vec![ShootingConfigMutation::SetCamera(SetCamera { camera: base.camera })]);

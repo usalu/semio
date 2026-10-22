@@ -147,5 +147,467 @@
         "provider/publication.ts"
       ]
     }
-  ]
+  ],
+  "sourceDemandExportCases": [
+    {
+      "name": "absent-runtime",
+      "requested": "runtime",
+      "accepted": true,
+      "expected": "runtime"
+    },
+    {
+      "name": "absent-compile",
+      "requested": "compile",
+      "accepted": true,
+      "expected": "compile"
+    },
+    {
+      "name": "runtime-runtime",
+      "previous": "runtime",
+      "requested": "runtime",
+      "accepted": true,
+      "expected": "runtime"
+    },
+    {
+      "name": "runtime-compile",
+      "previous": "runtime",
+      "requested": "compile",
+      "accepted": true,
+      "expected": "compile"
+    },
+    {
+      "name": "compile-runtime",
+      "previous": "compile",
+      "requested": "runtime",
+      "accepted": true,
+      "expected": "compile"
+    },
+    {
+      "name": "compile-compile",
+      "previous": "compile",
+      "requested": "compile",
+      "accepted": true,
+      "expected": "compile"
+    },
+    {
+      "name": "invalid-previous-0",
+      "previous": null,
+      "requested": "runtime",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-previous-1",
+      "previous": false,
+      "requested": "runtime",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-previous-2",
+      "previous": 0,
+      "requested": "runtime",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-previous-3",
+      "previous": "source",
+      "requested": "runtime",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-requested-0",
+      "requested": null,
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-requested-1",
+      "requested": false,
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-requested-2",
+      "requested": 0,
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "name": "invalid-requested-3",
+      "requested": "freshness",
+      "accepted": false,
+      "expected": null
+    }
+  ],
+  "execOwnerAdmission": {
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "workspace",
+          "root": ".",
+          "manifest": "📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "other",
+          "root": "other",
+          "manifest": "other/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": []
+    },
+    "cases": [
+      {
+        "name": "exact-workspace",
+        "args": [
+          "exec",
+          "--projects=workspace",
+          "--",
+          "git",
+          "show",
+          "HEAD:path"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "workspace"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "workspace"
+        ],
+        "owners": [
+          "workspace"
+        ]
+      },
+      {
+        "name": "exact-source-closure",
+        "args": [
+          "exec",
+          "--projects",
+          "app",
+          "--",
+          "command"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "app"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "app"
+        ],
+        "owners": [
+          "app",
+          "lib"
+        ]
+      },
+      {
+        "name": "repeat-comma-and-canonical-order",
+        "args": [
+          "exec",
+          "--projects=lib,app",
+          "-p",
+          "app",
+          "--",
+          "echo",
+          "a"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "app",
+            "lib"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "app",
+          "lib"
+        ],
+        "owners": [
+          "app",
+          "lib"
+        ]
+      },
+      {
+        "name": "exact-root-and-name",
+        "args": [
+          "exec",
+          "-p=directory:library,name:app",
+          "--",
+          "echo"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "directory:library",
+            "name:app"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "app",
+          "lib"
+        ],
+        "owners": [
+          "app",
+          "lib"
+        ]
+      },
+      {
+        "name": "bare-root",
+        "args": [
+          "exec",
+          "-p",
+          "library",
+          "--",
+          "echo"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "library"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "lib"
+        ],
+        "owners": [
+          "lib"
+        ]
+      },
+      {
+        "name": "finite-exclude",
+        "args": [
+          "exec",
+          "--projects=app,lib",
+          "--exclude",
+          "name:app",
+          "--",
+          "echo"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "app",
+            "lib"
+          ],
+          "exclude": [
+            "name:app"
+          ]
+        },
+        "projects": [
+          "lib"
+        ],
+        "owners": [
+          "lib"
+        ]
+      },
+      {
+        "name": "empty-selection-parity",
+        "args": [
+          "exec",
+          "--projects=missing",
+          "--",
+          "echo"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "missing"
+          ],
+          "exclude": []
+        },
+        "projects": [],
+        "owners": []
+      },
+      {
+        "name": "excluded-all",
+        "args": [
+          "exec",
+          "-p",
+          "app",
+          "--exclude=app",
+          "--",
+          "echo"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "app"
+          ],
+          "exclude": [
+            "app"
+          ]
+        },
+        "projects": [],
+        "owners": []
+      },
+      {
+        "name": "forwarded-flags-are-literal",
+        "args": [
+          "exec",
+          "-p",
+          "workspace",
+          "--",
+          "echo",
+          "--projects=app"
+        ],
+        "selection": {
+          "kind": "owners",
+          "projects": [
+            "workspace"
+          ],
+          "exclude": []
+        },
+        "projects": [
+          "workspace"
+        ],
+        "owners": [
+          "workspace"
+        ]
+      },
+      {
+        "name": "default-roster",
+        "args": [
+          "exec",
+          "--",
+          "echo",
+          "--projects=workspace"
+        ],
+        "projects": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ],
+        "selection": {
+          "kind": "all"
+        },
+        "owners": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ]
+      },
+      {
+        "name": "wildcard-roster",
+        "args": [
+          "exec",
+          "-p",
+          "*",
+          "--",
+          "echo"
+        ],
+        "projects": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ],
+        "selection": {
+          "kind": "all"
+        },
+        "owners": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ]
+      },
+      {
+        "name": "tag-roster",
+        "args": [
+          "exec",
+          "-p",
+          "tag:chosen",
+          "--",
+          "echo"
+        ],
+        "projects": [
+          "app"
+        ],
+        "selection": {
+          "kind": "all"
+        },
+        "owners": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ]
+      },
+      {
+        "name": "negative-roster",
+        "args": [
+          "exec",
+          "-p",
+          "!other",
+          "--",
+          "echo"
+        ],
+        "projects": [
+          "app",
+          "lib",
+          "workspace"
+        ],
+        "selection": {
+          "kind": "all"
+        },
+        "owners": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ]
+      },
+      {
+        "name": "wildcard-exclusion-roster",
+        "args": [
+          "exec",
+          "-p",
+          "app,lib",
+          "--exclude",
+          "l*",
+          "--",
+          "echo"
+        ],
+        "projects": [
+          "app"
+        ],
+        "selection": {
+          "kind": "all"
+        },
+        "owners": [
+          "app",
+          "lib",
+          "other",
+          "workspace"
+        ]
+      }
+    ]
+  }
 }

@@ -306,7 +306,6 @@ fn durable_semantic_sources_preserve_original_decision_order_without_value_proje
 }
 
 #[test]
-#[cfg(feature = "deflate")]
 fn durable_pack_planning_borrows_original_and_reports_codec_heap_and_cancellation() {
     use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["packPlanning"];

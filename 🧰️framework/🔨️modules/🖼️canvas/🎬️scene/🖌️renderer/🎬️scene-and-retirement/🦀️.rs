@@ -39,7 +39,7 @@ pub(super) struct OpaqueSceneRetirementRegistry {
 
 impl Default for OpaqueSceneRetirementRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None, command: None, command_backing_bytes: 0, command_credited_bytes: 0 }), faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None, command: None, command_backing_bytes: 0, command_credited_bytes: 0 }), faulted: false }
     }
 }
 

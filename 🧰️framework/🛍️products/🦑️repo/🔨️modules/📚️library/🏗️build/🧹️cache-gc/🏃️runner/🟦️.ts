@@ -1,9 +1,10 @@
-import {chmod,lstat,readdir,rmdir,unlink} from "node:fs/promises";
-import {nativeImageBackingFilenameV1,nativeImageDirectoryHostV1,nativePartitionOfV1,nativeStatfsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,unlink,writeFile} from "node:fs/promises";
+import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import ticket from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json" with {type:"json"};
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {CACHE_RUNTIME_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReasonV1,planCacheCollectionV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 const runtime=CACHE_RUNTIME_V1,protocol=ticket.definitions.Protocol.const,mount="m",tickets=new RegExp(protocol.ticketPattern,"u");
 
@@ -16,7 +17,7 @@ export type CacheRunnerPortsV1=Readonly<{
  alive(pid:number):boolean;
  sqliteFree(file:string):Promise<boolean>;
  platform?:NodeJS.Platform;
- delegate?(owner:string,areaId:string,dryRun:boolean):Promise<string|undefined>;
+ delegate?(owner:string,areaId:string,dryRun:boolean,language:CacheLanguageV1):Promise<string|undefined>;
 }>;
 
 /** 🧟️ Asks the operating system whether a process still exists; a process we may not signal still exists. */
@@ -26,7 +27,7 @@ export function cachePidAliveV1(pid:number):boolean{
 
 /** 🔐️ Proves a SQLite lease file is unheld: an exclusive transaction without waiting only succeeds when no process holds a shared or exclusive lock. */
 export async function cacheSqliteFreeV1(file:string):Promise<boolean>{
- const {Database}=await import("bun:sqlite");let database:InstanceType<typeof Database>|undefined;
+ const {Database}={ Database: SqliteDatabaseV1 };let database:InstanceType<typeof Database>|undefined;
  try{database=new Database(file,{create:false,readwrite:true});database.exec("PRAGMA busy_timeout=0");database.exec("BEGIN EXCLUSIVE");database.exec("ROLLBACK");return true;}
  catch(error){return !/locked|busy/iu.test(String((error as Error).message));}
  finally{try{database?.close();}catch{}}
@@ -60,8 +61,8 @@ export async function measureCacheTreeV1(path:string,ports:CacheRunnerPortsV1,li
    if(++entries>limit){partial=true;stack.length=0;break;}
    if(entries%runtime.checkEvery===0)await tick();
    const full=join(directory,child.name);
-   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch{}continue;}
-   let info;try{info=await lstat(full);}catch{continue;}
+   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){directories=Math.max(directories,ports.now());recency=Math.max(recency,ports.now());}}continue;}
+   let info;try{info=await lstat(full);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")recency=Math.max(recency,ports.now());continue;}
    if(info.isSymbolicLink())continue;
    if(info.nlink>1){const exact=Number.isSafeInteger(info.ino)?info:await lstat(full,{bigint:true}).catch(()=>info),key=exact.dev+":"+exact.ino;if(seen.has(key))continue;seen.add(key);}
    bytes+=allocated(info);files++;recency=Math.max(recency,info.mtimeMs,info.atimeMs);
@@ -83,79 +84,120 @@ export async function probeCacheHeldV1(measure:CacheMeasureV1,ports:CacheRunnerP
 
 const exists=async(path:string):Promise<boolean>=>lstat(path).then(()=>true,()=>false);
 
-async function partitionStateV1(directory:string,ports:CacheRunnerPortsV1):Promise<Readonly<{state:CachePartitionRowV1["state"];usedBytes:number|null;capacityBytes:number|null;partial:boolean}>>{
- let outer;try{outer=await lstat(directory);}catch{return{state:"absent",usedBytes:null,capacityBytes:null,partial:false};}
+async function partitionStateV1(directory:string,ports:CacheRunnerPortsV1,deep:boolean):Promise<Readonly<{state:CachePartitionRowV1["state"];usedBytes:number|null;capacityBytes:number|null;partial:boolean;walked:boolean}>>{
+ let outer;try{outer=await lstat(directory);}catch{return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};}
  const inner=join(directory,mount);let child;try{child=await lstat(inner);}catch{child=undefined;}
- const platform=ports.platform??process.platform,backing=nativeImageBackingFilenameV1(platform),mounted=nativeImageDirectoryHostV1(platform)?nativePartitionOfV1(inner,platform)?.attached===true:child?.isDirectory()===true&&child.dev!==outer.dev;
- if(mounted){const row=await nativeStatfsV1(inner,{platform});return{state:"mounted",usedBytes:(row.blocks-row.bfree)*row.bsize,capacityBytes:row.blocks*row.bsize,partial:false};}
- if(await exists(join(directory,backing)))return{state:"detached",usedBytes:null,capacityBytes:null,partial:false};
+ const platform=ports.platform??process.platform,declaration=nativeStorageBackendOfDirectoryV1(directory,{platform}),backing=declaration.backingFilename,mounted=declaration.capabilities.includes("mounted-volume")?child?.isDirectory()===true&&child.dev!==outer.dev:nativePartitionOfV1(inner,platform)?.attached===true;
+ if(mounted){const row=await nativeStatfsV1(inner,{platform});return{state:"mounted",usedBytes:(row.blocks-row.bfree)*row.bsize,capacityBytes:row.blocks*row.bsize,partial:false,walked:false};}
+ if(await exists(join(directory,backing)))return{state:"detached",usedBytes:null,capacityBytes:null,partial:false,walked:false};
+ if(!child)return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};
+ if(!deep)return{state:"directory",usedBytes:null,capacityBytes:null,partial:false,walked:false};
  const measure=await measureCacheTreeV1(inner,ports,runtime.statusEntriesPerTarget,"partition");
- return{state:measure.present?"directory":"absent",usedBytes:measure.present?measure.bytes:null,capacityBytes:null,partial:measure.partial};
+ return{state:measure.present?"directory":"absent",usedBytes:measure.present?measure.bytes:null,capacityBytes:null,partial:measure.partial,walked:true};
 }
 
-/** 📈️ Reads the ledger's status from the disk without taking a lease: the envelope and the measured tree for mounted partitions (statfs of the mounted image on macOS, the declared envelope of a directory partition on Linux and Windows), bounded walks for everything else. */
-export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,ports:CacheRunnerPortsV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions,only?:ReadonlySet<string>):Promise<CacheReportV1>{
- const rows:CachePartitionRowV1[]=[],areaRows:CacheAreaRowV1[]=[],states=new Map<string,Awaited<ReturnType<typeof partitionStateV1>>>(),used=new Map<string,number>(),partial=new Map<CacheRootIdV1,boolean>(),selected=(id:string)=>only===undefined||only.has(id);
+/** 🪪️ Reads the physical size an image was born with from its `image.json`; no such record (directory hosts, absent image) is null. */
+export async function readImageEnvelopeV1(directory:string):Promise<number|null>{
+ try{const value=JSON.parse(await readFile(join(directory,"image.json"),"utf8")) as {maximumPhysicalBytes?:unknown};return Number.isSafeInteger(value.maximumPhysicalBytes)?value.maximumPhysicalBytes as number:null;}catch{return null;}
+}
+
+/** 📒️ Reads the size ledger of the repository cache root; a missing or damaged file is an empty ledger. */
+export async function loadCacheSizesV1(workspace:string,ledger:CacheLedgerV1):Promise<CacheSizeLedgerV1>{
+ try{return readCacheSizeLedgerV1(JSON.parse(await readFile(join(cacheRootDirectoryV1(workspace,ledger,"repository"),CACHE_SIZE_FILE_V1),"utf8")));}catch{return{version:1,records:{}};}
+}
+
+/** ✍️ Merges measured sizes into the size ledger (null forgets a key) and replaces the file atomically; losing a write only costs the next status a deep walk. */
+export async function recordCacheSizesV1(workspace:string,ledger:CacheLedgerV1,updates:Readonly<Record<string,CacheSizeRecordV1|null>>):Promise<boolean>{
+ if(!Object.keys(updates).length)return true;
+ const directory=cacheRootDirectoryV1(workspace,ledger,"repository"),file=join(directory,CACHE_SIZE_FILE_V1),records:Record<string,CacheSizeRecordV1>={...(await loadCacheSizesV1(workspace,ledger)).records};
+ for(const[key,value]of Object.entries(updates))if(value===null)delete records[key];else records[key]=value;
+ const newest=Object.entries(records).sort((left,right)=>right[1].atMs-left[1].atMs||(left[0]<right[0]?-1:1)).slice(0,runtime.maximumSizeRecords);
+ const temporary=file+"."+process.pid+".tmp";
+ try{await mkdir(directory,{recursive:true});await writeFile(temporary,JSON.stringify({version:1,records:Object.fromEntries(newest.sort((left,right)=>left[0]<right[0]?-1:1))},null,1)+"\n");await rename(temporary,file);return true;}
+ catch{await unlink(temporary).catch(()=>{});return false;}
+}
+
+type Sized=Readonly<{present:boolean;usedBytes:number|null;entries:number;partial:boolean;source:CacheSourceV1;recordedAtMs:number|null}>;
+const MISSING:Sized={present:false,usedBytes:null,entries:0,partial:false,source:"unknown",recordedAtMs:null};
+
+/** 📈️ Reads the ledger's status from the disk without taking a lease and, by default, without walking any tree: partitions come from the (virtual) statfs of their mounted image, every other size from the size ledger that collections and deep status write, existence from one lstat or readdir. `deep` walks everything with progress and cancellation, then records what it measured. */
+export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,ports:CacheRunnerPortsV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions,only?:ReadonlySet<string>,options:Readonly<{deep:boolean}>={deep:false}):Promise<CacheReportV1>{
+ const deep=options.deep,sizes=deep?{version:1 as const,records:{}}:await loadCacheSizesV1(workspace,ledger),fresh:Record<string,CacheSizeRecordV1>={},rows:CachePartitionRowV1[]=[],areaRows:CacheAreaRowV1[]=[],states=new Map<string,Awaited<ReturnType<typeof partitionStateV1>>>(),used=new Map<string,Sized>(),partial=new Map<CacheRootIdV1,boolean>(),selected=(id:string)=>only===undefined||only.has(id),now=ports.now();
+ const sized=async(key:string,paths:readonly string[],stage:string):Promise<Sized>=>{
+  if(deep){
+   let bytes=0,entries=0,isPartial=false,present=false;
+   for(const path of paths){const measure=await measureCacheTreeV1(path,ports,runtime.statusEntriesPerTarget,stage);bytes+=measure.bytes;entries+=measure.entries;isPartial=isPartial||measure.partial;present=present||measure.present;}
+   if(present)fresh[key]={usedBytes:bytes,partial:isPartial,atMs:now};
+   return{present,usedBytes:present?bytes:null,entries,partial:isPartial,source:present?"walked":"unknown",recordedAtMs:null};
+  }
+  let present=false;for(const path of paths)if(await exists(path)){present=true;break;}
+  if(!present)return MISSING;
+  const record=sizes.records[key];
+  return record?{present:true,usedBytes:record.usedBytes,entries:0,partial:record.partial,source:"recorded",recordedAtMs:record.atMs}:{present:true,usedBytes:null,entries:0,partial:false,source:"unknown",recordedAtMs:null};
+ };
+ const matching=async(root:string,pattern:string):Promise<string[]>=>{const matcher=new RegExp(pattern,"u");try{return(await readdir(root)).filter(name=>matcher.test(name)).map(name=>join(root,name));}catch{return[];}};
  for(const area of ledger.areas.filter(area=>area.kind==="partition"||area.kind==="control"&&area.managed)){
   if(!selected(area.id))continue;
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
-  const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,state=area.kind==="partition"?await partitionStateV1(directory,ports):await (async()=>{const measure=await measureCacheTreeV1(directory,ports,runtime.statusEntriesPerTarget,area.id);return{state:measure.present?"directory" as const:"absent" as const,usedBytes:measure.present?measure.bytes:null,capacityBytes:null,partial:measure.partial};})();
-  if(area.partition)states.set(area.partition,state);
-  rows.push({id:area.id,kind:area.kind as "partition"|"control",directory,state:state.state,usedBytes:state.usedBytes,budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions),capacityBytes:state.capacityBytes,partial:state.partial,owner:area.managed!.owner});
+  const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,budgetBytes=cacheAreaBudgetBytesV1(ledger,area,partitions);
+  if(area.kind==="partition"){
+   const state=await partitionStateV1(directory,ports,deep);states.set(area.partition!,state);
+   rows.push({id:area.id,kind:"partition",directory,state:state.state,usedBytes:state.usedBytes,budgetBytes,capacityBytes:state.capacityBytes,partial:state.partial,owner:area.managed!.owner,source:state.usedBytes===null?"unknown":state.walked?"walked":"statfs",recordedAtMs:null,envelopeBytes:await readImageEnvelopeV1(directory),declaredBytes:partitions[area.partition!]!.capacityBytes,recreate:area.recreate==="derived"});
+  }else{
+   const size=await sized(area.id,[directory],area.id);
+   rows.push({id:area.id,kind:"control",directory,state:size.present?"directory":"absent",usedBytes:size.usedBytes,budgetBytes,capacityBytes:null,partial:size.partial,owner:area.managed!.owner,source:size.source,recordedAtMs:size.recordedAtMs,envelopeBytes:null,declaredBytes:null,recreate:false});
+  }
  }
  const nested=ledger.areas.filter(area=>area.kind==="nested"&&selected(area.id)).sort((left,right)=>Number("remainder" in (left.budget??{}))-Number("remainder" in (right.budget??{})));
  for(const area of nested){
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
-  const state=states.get(area.partition!)??await partitionStateV1(join(workspace,partitions[area.partition!]!.directory),ports),directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,budget=cacheAreaBudgetBytesV1(ledger,area,partitions),remainder=area.budget&&"remainder" in area.budget;
+  const state=states.get(area.partition!)??await partitionStateV1(join(workspace,partitions[area.partition!]!.directory),ports,deep),directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,budget=cacheAreaBudgetBytesV1(ledger,area,partitions),remainder=area.budget&&"remainder" in area.budget,owner=area.managed!.owner;
   let row:CacheAreaRowV1;
-  if(state.state==="detached"||state.state==="absent")row={id:area.id,root:area.root,partition:area.partition!,directory,present:false,measurable:false,usedBytes:null,budgetBytes:budget,entries:0,partial:false,over:false,owner:area.managed!.owner};
+  if(state.state==="detached"||state.state==="absent")row={id:area.id,root:area.root,partition:area.partition!,directory,present:false,measurable:false,usedBytes:null,budgetBytes:budget,entries:0,partial:false,over:false,owner,source:"unknown",recordedAtMs:null};
   else if(remainder){
-   const siblings=nested.filter(other=>other.partition===area.partition&&other.id!==area.id).reduce((sum,other)=>sum+(used.get(other.id)??0),0),total=state.usedBytes??0,own=Math.max(0,total-siblings);
-   row={id:area.id,root:area.root,partition:area.partition!,directory,present:true,measurable:state.usedBytes!==null,usedBytes:state.usedBytes===null?null:own,budgetBytes:budget,entries:0,partial:state.partial,over:budget!==null&&own>budget,owner:area.managed!.owner};
+   const siblings=nested.filter(other=>other.partition===area.partition&&other.id!==area.id).map(other=>used.get(other.id)),known=siblings.every(row=>row!==undefined&&row.usedBytes!==null),total=state.usedBytes;
+   if(total===null||!known)row={id:area.id,root:area.root,partition:area.partition!,directory,present:true,measurable:total!==null,usedBytes:null,budgetBytes:budget,entries:0,partial:false,over:false,owner,source:"unknown",recordedAtMs:null};
+   else{
+    const own=Math.max(0,total-siblings.reduce((sum,row)=>sum+row!.usedBytes!,0)),stamps=siblings.map(row=>row!.recordedAtMs).filter((value):value is number=>value!==null),recorded=stamps.length>0;
+    row={id:area.id,root:area.root,partition:area.partition!,directory,present:true,measurable:true,usedBytes:own,budgetBytes:budget,entries:0,partial:state.partial||siblings.some(row=>row!.partial),over:budget!==null&&own>budget,owner,source:recorded?"recorded":state.walked?"walked":"statfs",recordedAtMs:recorded?Math.min(...stamps):null};
+   }
   }else{
-   const measure=await measureCacheTreeV1(directory,ports,runtime.statusEntriesPerTarget,area.id);used.set(area.id,measure.bytes);
-   row={id:area.id,root:area.root,partition:area.partition!,directory,present:measure.present,measurable:true,usedBytes:measure.bytes,budgetBytes:budget,entries:measure.entries,partial:measure.partial,over:budget!==null&&measure.bytes>budget,owner:area.managed!.owner};
+   const size=await sized(area.id,[directory],area.id);used.set(area.id,size);
+   row={id:area.id,root:area.root,partition:area.partition!,directory,present:size.present,measurable:true,usedBytes:size.usedBytes,budgetBytes:budget,entries:size.entries,partial:size.partial,over:budget!==null&&size.usedBytes!==null&&size.usedBytes>budget,owner,source:size.source,recordedAtMs:size.recordedAtMs};
   }
   areaRows.push(row);
  }
- const totals=new Map<CacheRootIdV1,number>([["repository",0],["native",0]]),retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[];
+ const totals=new Map<CacheRootIdV1,number>([["repository",0],["native",0]]),retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[],count=(root:CacheRootIdV1,size:Sized)=>{totals.set(root,totals.get(root)!+(size.usedBytes??0));partial.set(root,(partial.get(root)??false)||size.partial||size.usedBytes===null);};
  for(const area of ledger.areas.filter(area=>(area.kind==="tree"||area.kind==="control"&&area.collect)&&selected(area.id))){
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
-  const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions),budget=cacheAreaBudgetBytesV1(ledger,area,partitions);
-  let usedBytes=0,entries=0,isPartial=false,present=false;
-  if(directory!==null){const measure=await measureCacheTreeV1(directory,ports,runtime.statusEntriesPerTarget,area.id);usedBytes=measure.bytes;entries=measure.entries;isPartial=measure.partial;present=measure.present;}
-  else{
-   const root=cacheRootDirectoryV1(workspace,ledger,area.root),matcher=new RegExp(area.pattern!,"u");let names:string[]=[];try{names=await readdir(root);}catch{}
-   for(const name of names)if(matcher.test(name)){const measure=await measureCacheTreeV1(join(root,name),ports,runtime.statusEntriesPerTarget,area.id);usedBytes+=measure.bytes;entries+=measure.entries;isPartial=isPartial||measure.partial;present=present||measure.present;}
-  }
-  totals.set(area.root,totals.get(area.root)!+usedBytes);partial.set(area.root,(partial.get(area.root)??false)||isPartial);
-  areaRows.push({id:area.id,root:area.root,partition:null,directory,present,measurable:true,usedBytes,budgetBytes:budget,entries,partial:isPartial,over:budget!==null&&usedBytes>budget,owner:area.managed?.owner??null});
+  const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions),budget=cacheAreaBudgetBytesV1(ledger,area,partitions),size=await sized(area.id,directory!==null?[directory]:await matching(cacheRootDirectoryV1(workspace,ledger,area.root),area.pattern!),area.id);
+  if(size.present)count(area.root,size);
+  areaRows.push({id:area.id,root:area.root,partition:null,directory,present:size.present,measurable:true,usedBytes:size.usedBytes,budgetBytes:budget,entries:size.entries,partial:size.partial,over:budget!==null&&size.usedBytes!==null&&size.usedBytes>budget,owner:area.managed?.owner??null,source:size.source,recordedAtMs:size.recordedAtMs});
  }
  for(const retirement of ledger.retirements){
   if(only&&!only.has("retired"))continue;
   await ports.progress("status:"+retirement.directory);ports.signal.throwIfAborted();
-  const measure=await measureCacheTreeV1(join(cacheRootDirectoryV1(workspace,ledger,retirement.root),...retirement.directory.split("/")),ports,runtime.statusEntriesPerTarget,retirement.directory);
-  if(!measure.present)continue;
-  retired.push({root:retirement.root,path:retirement.root+":"+retirement.directory,kind:"retired",usedBytes:measure.bytes,entries:measure.entries,partial:measure.partial});
-  totals.set(retirement.root,totals.get(retirement.root)!+measure.bytes);partial.set(retirement.root,(partial.get(retirement.root)??false)||measure.partial);
+  const size=await sized("retired:"+retirement.root+":"+retirement.directory,[join(cacheRootDirectoryV1(workspace,ledger,retirement.root),...retirement.directory.split("/"))],retirement.directory);
+  if(!size.present)continue;
+  retired.push({root:retirement.root,path:retirement.root+":"+retirement.directory,kind:"retired",usedBytes:size.usedBytes,entries:size.entries,partial:size.partial,source:size.source,recordedAtMs:size.recordedAtMs});count(retirement.root,size);
  }
  if(!only||only.has("undeclared"))for(const root of["repository","native"] as const){
   for(const entry of await undeclaredEntriesV1(workspace,ledger,root)){
    await ports.progress("status:"+entry);ports.signal.throwIfAborted();
-   const measure=await measureCacheTreeV1(join(cacheRootDirectoryV1(workspace,ledger,root),...entry.split("/")),ports,runtime.statusEntriesPerTarget,entry);
-   undeclared.push({root,path:root+":"+entry,kind:"undeclared",usedBytes:measure.bytes,entries:measure.entries,partial:measure.partial});
-   totals.set(root,totals.get(root)!+measure.bytes);partial.set(root,(partial.get(root)??false)||measure.partial);
+   const size=await sized("undeclared:"+root+":"+entry,[join(cacheRootDirectoryV1(workspace,ledger,root),...entry.split("/"))],entry);
+   undeclared.push({root,path:root+":"+entry,kind:"undeclared",usedBytes:size.usedBytes,entries:size.entries,partial:size.partial,source:size.source,recordedAtMs:size.recordedAtMs});count(root,size);
   }
  }
+ if(deep)await recordCacheSizesV1(workspace,ledger,fresh);
  const roots=(["repository","native"] as const).map(id=>({id,directory:ledger.roots[id].directory,usedBytes:totals.get(id)!,budgetBytes:ledger.roots[id].maximumBytes,partial:partial.get(id)??false}));
- return{version:1,workspace,generatedAtMs:ports.now(),partitions:rows,areas:areaRows,roots,retired,undeclared};
+ return{version:1,workspace,generatedAtMs:now,partitions:rows,areas:areaRows,roots,retired,undeclared};
 }
 
 /** 🕵️ Lists the root-relative entries nobody declared, descending only through containers of declared homes. */
 export async function undeclaredEntriesV1(workspace:string,ledger:CacheLedgerV1,root:CacheRootIdV1):Promise<readonly string[]>{
  const base=cacheRootDirectoryV1(workspace,ledger,root),found:string[]=[],pending=[""];
  while(pending.length){
-  const prefix=pending.shift()!;let names:string[];try{names=await readdir(prefix?join(base,...prefix.split("/")):base);}catch{continue;}
+  const prefix=pending.shift()!;let names:string[];try{names=await readdir(prefix?join(base,...prefix.split("/")):base);}catch(error){if(prefix&&(error as NodeJS.ErrnoException).code==="ENOTDIR"){const path=root+":"+prefix;throw Error(cacheTextV1("en","error.container",{path})+"\n"+cacheTextV1("de","error.container",{path}));}continue;}
   for(const name of names.sort()){
    const path=prefix?prefix+"/"+name:name,kind=classifyCachePathV1(ledger,root,path).kind;
    if(kind==="undeclared")found.push(path);else if(kind==="container")pending.push(path);
@@ -215,7 +257,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
   for(const area of ledger.areas){
    if(!selected(area.id))continue;
    if(area.managed&&area.kind!=="partition"&&area.kind!=="control"){
-    const answer=ports.delegate?await ports.delegate(area.managed.owner,area.id,request.dryRun):undefined;
+    const answer=ports.delegate?await ports.delegate(area.managed.owner,area.id,request.dryRun,output.language):undefined;
     if(answer!==undefined){delegated.push({owner:area.managed.owner,text:answer});notes.push(text("gc.owner",{owner:area.managed.owner,text:answer}));}else notes.push(text("gc.managed",{id:area.id,owner:area.managed.owner}));
     continue;
    }
@@ -237,7 +279,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    const base=cacheRootDirectoryV1(workspace,ledger,root),names=await undeclaredEntriesV1(workspace,ledger,root);
    if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs});
   }
-  const plans=planCacheCollectionV1(resolved.map(row=>row.target),now),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[];let kept=0,freed=0;
+  const plans=planCacheCollectionV1(resolved.map(row=>row.target),now),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[],gone=new Map<string,number>(),goneNames=new Set<string>();let kept=0,freed=0;
   output.write(text("gc.start",{count:plans.length,mode:text(request.dryRun?"gc.mode.plan":"gc.mode.apply")}));
   for(const note of notes)output.write(note);
   for(const[index,plan]of plans.entries()){
@@ -253,12 +295,20 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
     const held=await probeCacheHeldV1(again,ports);
     if(held||ports.now()-again.recencyMs<row.target.quietMs||again.recencyMs>unit.recencyMs){kept++;output.write(held?text("gc.held",{path:label,holder:held}):text("gc.changed",{path:label}));continue;}
     output.write(text("gc.remove",{path:label,bytes:formatCacheBytesV1(removal.bytes),reason}));
-    try{await removeCacheTreeV1(path,ports,"remove:"+label);removed.push(removal);freed+=removal.bytes;}
+    try{await removeCacheTreeV1(path,ports,"remove:"+label);removed.push(removal);freed+=removal.bytes;gone.set(plan.id,(gone.get(plan.id)??0)+removal.bytes);goneNames.add(plan.id+"/"+removal.name);}
     catch(error){if(ports.signal.aborted)throw error;failed.push({target:plan.id,name:removal.name,message:String((error as Error).message??error)});}
    }
    if(!request.dryRun&&row.target.kind==="retired"&&plan.removals.length===row.target.units.length&&!failed.some(item=>item.target===plan.id))await rmdir(row.base).catch(()=>{});
   }
   output.write(text(request.dryRun?"gc.summary.plan":"gc.summary.apply",{count:removed.length,bytes:formatCacheBytesV1(freed),kept}));
+  const updates:Record<string,CacheSizeRecordV1|null>={},at=ports.now(),record=(bytes:number)=>({usedBytes:Math.max(0,bytes),partial:false,atMs:at});
+  for(const[index,plan]of plans.entries()){
+   const row=resolved[index]!;if(row.target.heldBy!==undefined)continue;
+   if(row.target.kind==="area")updates[row.target.id]=record(plan.totalBytes-(gone.get(plan.id)??0));
+   else if(row.target.kind==="retired")updates["retired:"+row.target.id]=row.target.units.every(unit=>goneNames.has(plan.id+"/"+unit.name))?null:record(plan.totalBytes-(gone.get(plan.id)??0));
+   else for(const unit of row.target.units)updates["undeclared:"+row.target.id.slice(0,row.target.id.indexOf(":"))+":"+unit.name]=goneNames.has(plan.id+"/"+unit.name)?null:record(unit.bytes);
+  }
+  await recordCacheSizesV1(workspace,ledger,updates);
   return Object.freeze({dryRun:request.dryRun,plans,removed,kept,failed,freedBytes:freed,delegated});
  }finally{for(const row of resolved)try{row.release?.();}catch{}}
 }

@@ -7,7 +7,7 @@ use semio_framework_value::ValueError;
 use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
 use std::sync::Arc;
 
-pub fn factory()->Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<BmpSnapshot,BmpMutation>>{Arc::new(RetainedClonePreparationFactory::new(Arc::new(BmpPublication),Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),64).expect("bmp retained publication depth"))}
+pub fn factory()->Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<BmpSnapshot,BmpMutation>>{Arc::new(RetainedClonePreparationFactory::new(Arc::new(BmpPublication),Arc::new(semio_framework_value::OwnedValueRetirementFactory::default()),Arc::new(semio_framework_value::SharedValueRetirementFactory::default()),64).expect("bmp retained publication depth"))}
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct BmpPublication;
 impl RetainedCloneEdit<BmpSnapshot,BmpMutation> for BmpPublication{

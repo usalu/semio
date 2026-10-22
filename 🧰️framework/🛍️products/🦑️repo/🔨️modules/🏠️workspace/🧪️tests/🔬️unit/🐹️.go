@@ -457,3 +457,35 @@ func TestIdeConfigurationPaths(t *testing.T) {
 	}
 	t.Logf("[DEBUG] Go authority inspected %d shared path vectors in both path forms and %d inventory boundaries twice", len(fixture.PathCases), len(fixture.InventoryCases))
 }
+
+func TestRunToolRunsRegisteredToolsAndRefusesUnknownOnes(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	result, err := RunTool("git", []string{"--version"}, ToolRunOptions{})
+	if err != nil || result.Status != 0 || !strings.HasPrefix(result.Stdout, "git version") {
+		t.Fatalf("RunTool(git) = %+v, %v", result, err)
+	}
+	failed, err := RunTool("git", []string{"no-such-subcommand-for-the-registry"}, ToolRunOptions{})
+	if err != nil || failed.Status == 0 {
+		t.Fatalf("a failing tool must answer its status, got %+v, %v", failed, err)
+	}
+	if _, err := RunTool("no-such-tool-for-the-registry", nil, ToolRunOptions{}); err == nil {
+		t.Fatal("an unknown tool id must be refused")
+	}
+}
+
+func TestToolCommandMarksRegisteredRunsAndDropsIdeInjections(t *testing.T) {
+	t.Setenv("VSCODE_INSPECTOR_OPTIONS", "x")
+	command := ToolCommand("git", "--version")
+	if command.Env == nil {
+		t.Skip("no tool registry above the working directory")
+	}
+	joined := strings.Join(command.Env, "\n")
+	if !strings.Contains(joined, "SEMIO_TOOL_RUN=git") || strings.Contains(joined, "VSCODE_INSPECTOR_OPTIONS") {
+		t.Fatalf("the registry environment was not applied: %s", joined)
+	}
+	if plain := ToolCommand("echo", "x"); plain.Env != nil {
+		t.Fatal("an unregistered command must keep the process environment")
+	}
+}

@@ -1,0 +1,67 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🟦️.ts",
+  "from": "new2/farm/tests/law.ts",
+  "replaces": "new/farm/tests/law.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🔣️.json",
+  "from": "new2/farm/tests/fixture.json",
+  "replaces": "new/farm/tests/🔣️.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧰️fake/🟨️.mjs",
+  "from": "new2/farm/tests/fake/service.mjs",
+  "replaces": "new/farm/tests/fake/service.mjs"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧰️other/🟨️.mjs",
+  "from": "new2/farm/tests/fake/other.mjs"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🛰️detached/🟦️.ts",
+  "from": "new2/tests/detached.ts",
+  "replaces": "new/tests/detached.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🏊️farm-dispatch/🟦️.ts",
+  "from": "new2/tests/dispatch.ts",
+  "replaces": "new/tests/dispatch.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🟦️.ts",
+  "from": "new2/tests/merge.ts",
+  "replaces": "new/tests/merge.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🧰️service/🟨️.mjs",
+  "from": "new2/tests/merge-service.mjs",
+  "replaces": "new/tests/merge-service.mjs"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🧪️tests/🏊️receipts/🟦️.ts",
+  "from": "new2/tests/receipts.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧰️pool/🧪️tests/🟦️.ts",
+  "from": "new2/pool/tests.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🏊️leaves/🧪️tests/🏊️duplicate/🟦️.ts",
+  "from": "new2/leaves/tests/duplicate/law.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🏊️leaves/🧪️tests/🏊️duplicate/🧰️service/🟨️.mjs",
+  "from": "new2/leaves/tests/duplicate/service.mjs"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧬️schema/🔣️.json",
+  "from": "new2/farm/tests/fixture-schema.json",
+  "replaces": "new/farm/tests/fixture-schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🐍️oracle.py",
+  "from": "new2/farm/tests/oracle.py",
+  "replaces": "new/farm/tests/oracle.py"
+ }
+]

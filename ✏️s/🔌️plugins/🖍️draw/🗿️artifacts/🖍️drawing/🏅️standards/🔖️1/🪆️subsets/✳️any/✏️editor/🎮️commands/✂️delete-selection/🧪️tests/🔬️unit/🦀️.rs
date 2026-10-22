@@ -23,7 +23,7 @@ fn point(document:&DrawingSnapshot,id:&str,index:usize)->String {
 
 #[test]
 fn multi_path_deletion_preserves_style_and_is_reversible() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let before=paths();let ids=vec!["first".into(),"second".into()];
     let selected=vec![point(&before,"first",0),point(&before,"first",1),point(&before,"second",1)];
     let emit=plan(&before,"editNodes",&ids,&selected).unwrap();

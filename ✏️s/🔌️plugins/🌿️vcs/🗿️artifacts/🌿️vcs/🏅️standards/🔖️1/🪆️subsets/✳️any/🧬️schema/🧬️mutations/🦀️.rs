@@ -16,7 +16,7 @@ pub use crate::standards::v1::subsets::any::schema::operations::*;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = VcsSnapshot, diff = crate::VcsDiff, schema = "vcs.vcs")]
+#[mutations(snapshot = VcsSnapshot, diff = crate::VcsDiff, schema = "vcs.vcs", reference = VcsSnapshot, reference_diff = crate::VcsDiff)]
 pub enum VcsDemoMutation {
     RenameVcs(RenameVcs),
     ChangeCounter(ChangeCounter),

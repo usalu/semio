@@ -9,6 +9,7 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
+use store::ReferenceSpaceMember as _;
 use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
@@ -143,7 +144,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         for op in ops.iter() {
             op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
         }
-        let messages = SpaceMember::preview_wire(&self.store, &op_bytes).await;
+        let messages = self.store.preview_wire(&op_bytes).await;
         protocol::DispatchReport { policy: self.store.merge_policy(), worst: protocol::worst_level(&messages), messages }
     }
 

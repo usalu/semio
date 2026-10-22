@@ -5,6 +5,7 @@ import{defineScriptProviderV1,loadScriptProviderV1}from"../../../../🏃️proce
 import type{ResourceLeaseControl}from"../../../../🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{StylingPythonOperationV1,StylingPythonProviderV1,StylingPythonWheelViewV1}from"./🔌️provider/🟦️.ts";
 import{resolve}from"node:path";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 /** 🧷️ Names the port and the exact functions its repository implementation must expose. */
 export const STYLING_PYTHON_PROVIDER_V1=defineScriptProviderV1<StylingPythonProviderV1<ScriptInvocation,ResourceLeaseControl>>("styling-python",["run","withWheel"]);
 /** 🏗️ Runs one producer operation under the provider's storage and custody. */
@@ -15,4 +16,4 @@ export async function withAdmittedStylingPythonWheelV1<T>(invocation:ScriptInvoc
 export class StylingPythonDepsScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw new Error("Python deps accepts no options");await runAdmittedStylingPythonV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"styling:python-deps",buildBudgetMs()),"deps");}}
 /** 🎡️ Publishes one wheel after actual compiler CPU and accepted children settle. */
 export class StylingPythonBuildScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw new Error("Python build accepts no options");await runAdmittedStylingPythonV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"styling:python-build",buildBudgetMs()),"build");}}
-if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>new ScriptRouter(resolve(import.meta.dir,"../../📦️packages/🐍️python")).register("deps",StylingPythonDepsScript).register("build",StylingPythonBuildScript).run(process.argv.slice(2),original));
+if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,original=>new ScriptRouter(resolve(import.meta.dirname,"../../📦️packages/🐍️python")).register("deps",StylingPythonDepsScript).register("build",StylingPythonBuildScript).run(process.argv.slice(2),original));

@@ -64,6 +64,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "morph-target", kind: "delete-morph-target", record: "DeletedMorphTarget" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Delete Morph Target", "Morphziel löschen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["delete-morph-target".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for DeleteMorphTargetMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteMorphTargetMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -72,19 +85,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Morph Target", "Morphziel löschen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["delete-morph-target".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

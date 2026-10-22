@@ -57,7 +57,7 @@ impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
         eprintln!("[describe:{level}] {message}");
     }
 
-    fn operation_clock_us(&mut self)->Option<u64>{None}
+    fn operation_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
@@ -276,7 +276,9 @@ const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 /// 🎟️ The one fixed turn a descriptor emission runs under: a describe call retains nothing, so its five-axis grant stays small and explicit.
 fn describe_budget() -> semio_framework::kernel::Budget {
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 };
-    semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant }, fuel: DESCRIBE_FUEL_BUDGET, deadline_us: semio_framework_job::default_now_us().expect("descriptor root clock is available").checked_add(u64::from(DESCRIBE_DEADLINE_MS)*1_000).expect("descriptor deadline fits the original clock"), max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    let deadline_us = semio_framework_job::default_now_us().expect("descriptor root clock is available").checked_add(u64::from(DESCRIBE_DEADLINE_MS)*1_000).expect("descriptor deadline fits the original clock");
+    let work = semio_framework::kernel::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: deadline_us, fuel: DESCRIBE_FUEL_BUDGET };
+    semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work, grant }, retained_policy: grant, work_fuel: DESCRIBE_FUEL_BUDGET, fuel: DESCRIBE_FUEL_BUDGET, deadline_us, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 /// 🛡️ Ceiling for the one artifact the emitter reads: a `wasm32-wasip2` component built either as the

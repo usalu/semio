@@ -19,6 +19,16 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeSceneSunIntensity>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-intensity", kind: "change-scene-sun-intensity", record: "ChangedSceneSunIntensity" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sun intensity to {}", self.new_intensity), &format!("Sonnenintensität auf {} ändern", self.new_intensity))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for ChangeSceneSunIntensity
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<ChangeSceneSunIntensity>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -28,7 +38,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sun intensity to {}", self.new_intensity), &format!("Sonnenintensität auf {} ändern", self.new_intensity))
-    }
 }

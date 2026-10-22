@@ -23,17 +23,23 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "structure-classic-model", kind: "create-structure-classic-model", record: "CreatedStructureClassicModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create structure-classic-model child {}", self.child_id), &format!("Klassisches-Tragwerksmodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["structure_classic_model".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<CadSnapshot, Op> for CreateStructureClassicModel
+where
+    Op: protocol::ColdMutation<CadSnapshot, ReferenceDiff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_structure_classic_model::CreateStructureClassicModel> + From<crate::delete_structure_classic_model::DeleteStructureClassicModel>,
+{
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

@@ -201,7 +201,7 @@
         "win32-x64"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "svg-structure"
       ],
@@ -252,7 +252,7 @@
         "win32-x64"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "svg-compare"
       ],

@@ -1,7 +1,9 @@
 /** 📝️ Derives cargo-nextest scope configurations and validates dependency-update manifest ownership.
  * @see https://nexte.st/docs/configuration/ */
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseYamlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export const NEXTEST = ".config/nextest.toml";
 export const NEXTEST_SCOPES = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/⏱️process-budgets/native-profile.json";
@@ -46,11 +48,11 @@ const DEPENDABOT_MANIFESTS: Readonly<Record<string, (folder: string) => boolean>
 function dependabotDirectories(workspace: string, pattern: string): string[] {
   const relative = pattern.replace(/^\/+/, "");
   if (!relative.includes("*")) return existsSync(join(workspace, relative)) ? [relative] : [];
-  return [...new Bun.Glob(relative).scanSync({ cwd: workspace, onlyFiles: false })].sort();
+  return [...new GlobV1(relative).scanSync({ cwd: workspace, onlyFiles: false })].sort();
 }
 
 export function dependabotProblems(workspace: string): string[] {
-  const document = Bun.YAML.parse(readFileSync(join(workspace, ".github/dependabot.yml"), "utf8")) as { updates: { "package-ecosystem": string; directory?: string; directories?: string[] }[] };
+  const document = runtimeParseYamlV1(readFileSync(join(workspace, ".github/dependabot.yml"), "utf8")) as { updates: { "package-ecosystem": string; directory?: string; directories?: string[] }[] };
   const problems: string[] = [], covered = new Map<string, Set<string>>();
   for (const update of document.updates) {
     const ecosystem = update["package-ecosystem"], manifest = DEPENDABOT_MANIFESTS[ecosystem];
@@ -83,7 +85,7 @@ export async function writeDerivedConfig(workspace: string): Promise<string[]> {
   const write = async (path: string, next: string): Promise<void> => {
     const file = join(workspace, path);
     if (normalize(readFileSync(file, "utf8")) === normalize(next)) return;
-    await Bun.write(file, next);
+    writeFileSync(file, next);
     changed.push(path);
   };
   const root = readFileSync(join(workspace, NEXTEST), "utf8");

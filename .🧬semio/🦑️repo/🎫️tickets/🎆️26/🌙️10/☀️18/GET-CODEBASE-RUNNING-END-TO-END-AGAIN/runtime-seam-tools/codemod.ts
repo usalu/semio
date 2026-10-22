@@ -42,7 +42,7 @@ function bunChain(node: import("typescript").Node): string[] | undefined {
   }
 }
 
-export function transformSource(path: string, text: string, importFrom: string): TransformResultV1 {
+export function transformSource(path: string, text: string, importFor: (name: string) => string): TransformResultV1 {
   const kind = path.endsWith(".tsx") ? ts.ScriptKind.TSX : path.endsWith(".ts") || path.endsWith(".mts") || path.endsWith(".cts") ? ts.ScriptKind.TS : ts.ScriptKind.JS;
   const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind);
   const edits: EditV1[] = [];
@@ -103,11 +103,27 @@ export function transformSource(path: string, text: string, importFrom: string):
         else if (node.name.text === "path") replace(node, "import.meta.filename");
         else if (node.name.text === "main") replace(node, "isMainModuleV1(import.meta.url)", "isMainModuleV1");
       }
+    } else if (ts.isStringLiteral(node) && node.text === "bun" && ts.isCallExpression(node.parent) && node.parent.arguments.indexOf(node) >= 0 && node.parent.arguments.indexOf(node) <= 2 && (() => { const next = node.parent.arguments[node.parent.arguments.indexOf(node) + 1]; return next !== undefined && ts.isArrayLiteralExpression(next) && next.elements[0] !== undefined && ts.isStringLiteral(next.elements[0]!) && next.elements[0]!.text === "repo"; })()) {
+      const array = node.parent.arguments[node.parent.arguments.indexOf(node) + 1] as import("typescript").ArrayLiteralExpression, first = array.elements[0]!, second = array.elements[1];
+      replace(node, node.getText(source).startsWith("'") ? "'repo'" : '"repo"');
+      const end = second === undefined ? first.getEnd() : second.getStart(source);
+      if (!overlaps(first.getStart(source), end)) { consumed.push([first.getStart(source), end]); edits.push({ start: first.getStart(source), end, text: "" }); }
+    } else if (ts.isStringLiteral(node) && node.text === "bun" && ts.isCallExpression(node.parent) && node.parent.arguments.indexOf(node) >= 0 && node.parent.arguments.indexOf(node) <= 2 && (() => { const next = node.parent.arguments[node.parent.arguments.indexOf(node) + 1]; return next !== undefined && ts.isArrayLiteralExpression(next) && next.elements[0] !== undefined && ts.isStringLiteral(next.elements[0]!) && next.elements[0]!.text === "test"; })()) {
+      const array = node.parent.arguments[node.parent.arguments.indexOf(node) + 1] as import("typescript").ArrayLiteralExpression;
+      replace(node, "runtimeExecutableV1()", "runtimeExecutableV1");
+      const rest = array.elements.slice(1).map(element => element.getText(source)).join(", ");
+      replace(array, `runtimeTestArgumentsV1([${rest}])`, "runtimeTestArgumentsV1");
     } else if (ts.isStringLiteral(node) && node.text === "bun" && ts.isCallExpression(node.parent) && node.parent.arguments.indexOf(node) >= 0 && node.parent.arguments.indexOf(node) <= 2) {
       const next = node.parent.arguments[node.parent.arguments.indexOf(node) + 1];
       const first = next !== undefined && ts.isArrayLiteralExpression(next) ? next.elements[0] : undefined;
       const script = first !== undefined && (!ts.isStringLiteral(first) && !ts.isNoSubstitutionTemplateLiteral(first) || /[/.]/u.test((first as import("typescript").StringLiteral).text));
       if (script) replace(node, "runtimeExecutableV1()", "runtimeExecutableV1");
+    } else if (ts.isArrayLiteralExpression(node) && node.elements.length >= 2 && ts.isStringLiteral(node.elements[0]!) && node.elements[0]!.text === "bun" && ts.isStringLiteral(node.elements[1]!) && node.elements[1]!.text === "repo" && !(ts.isCallExpression(node.parent) && node.parent.arguments.some(argument => ts.isStringLiteral(argument)))) {
+      const first = node.elements[0]!, second = node.elements[1]!;
+      if (!overlaps(first.getStart(source), second.getStart(source))) { consumed.push([first.getStart(source), second.getStart(source)]); edits.push({ start: first.getStart(source), end: second.getStart(source), text: "" }); }
+    } else if (ts.isTupleTypeNode(node) && node.elements.length >= 2 && ts.isLiteralTypeNode(node.elements[0]!) && ts.isStringLiteral((node.elements[0] as import("typescript").LiteralTypeNode).literal) && ((node.elements[0] as import("typescript").LiteralTypeNode).literal as import("typescript").StringLiteral).text === "bun" && ts.isLiteralTypeNode(node.elements[1]!) && ((node.elements[1] as import("typescript").LiteralTypeNode).literal as import("typescript").StringLiteral).text === "repo") {
+      const first = node.elements[0]!, second = node.elements[1]!;
+      if (!overlaps(first.getStart(source), second.getStart(source))) { consumed.push([first.getStart(source), second.getStart(source)]); edits.push({ start: first.getStart(source), end: second.getStart(source), text: "" }); }
     } else if (ts.isArrayLiteralExpression(node)) {
       const items = node.elements;
       const head = items[0], second = items[1];
@@ -116,12 +132,16 @@ export function transformSource(path: string, text: string, importFrom: string):
         const flag = items[at]!, value = items[at + 1]!;
         if (ts.isStringLiteral(flag) && flag.text === "--types" && ts.isStringLiteral(value) && value.text === "bun") replace(value, "runtimeTypeEnvironmentV1()", "runtimeTypeEnvironmentV1");
       }
+    } else if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "bun:test") {
+      const named = node.importClause?.namedBindings;
+      const API = ["test", "describe", "expect", "beforeAll", "afterAll", "beforeEach", "afterEach"];
+      if (node.importClause?.name === undefined && named !== undefined && ts.isNamedImports(named) && named.elements.every(element => API.includes((element.propertyName ?? element.name).text))) replace(node.moduleSpecifier, `"${importFor("test")}"`);
     } else if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "bun:sqlite") {
       const clause = node.importClause;
       const named = clause?.namedBindings;
       if (clause !== undefined && clause.name === undefined && named !== undefined && ts.isNamedImports(named) && named.elements.length === 1 && (named.elements[0]!.propertyName ?? named.elements[0]!.name).text === "Database") {
         const local = named.elements[0]!.name.text;
-        replace(node, `import { SqliteDatabaseV1 as ${local} } from "${importFrom}";`);
+        replace(node, `import { SqliteDatabaseV1 as ${local} } from "${importFor("SqliteDatabaseV1")}";`);
       }
     } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal) && node.argument.literal.text === "bun:sqlite" && node.qualifier !== undefined && ts.isIdentifier(node.qualifier) && node.qualifier.text === "Database") {
       replace(node, node.isTypeOf ? "typeof SqliteDatabaseV1" : "SqliteDatabaseV1", "SqliteDatabaseV1");
@@ -148,14 +168,15 @@ export function transformSource(path: string, text: string, importFrom: string):
   for (const edit of [...edits].sort((a, b) => b.start - a.start)) result = result.slice(0, edit.start) + edit.text + result.slice(edit.end);
 
   if (used.size > 0) {
-    const names = [...used].sort();
-    const line = `import { ${names.join(", ")} } from "${importFrom}";`;
+    const groups = new Map<string, string[]>();
+    for (const name of [...used].sort()) { const specifier = importFor(name); groups.set(specifier, [...(groups.get(specifier) ?? []), name]); }
+    const lines = [...groups].map(([specifier, names]) => `import { ${names.join(", ")} } from "${specifier}";`);
     const imports = source.statements.filter(ts.isImportDeclaration);
     const shift = (position: number): number => { let offset = position; for (const edit of edits) if (edit.end <= position) offset += edit.text.length - (edit.end - edit.start); return offset; };
     let at: number, prefix = "", suffix = "\n";
     if (imports.length > 0) { at = shift(imports.at(-1)!.getEnd()); prefix = "\n"; suffix = ""; }
     else { const first = source.statements[0]; at = first === undefined ? result.length : shift(first.getStart(source, true)); }
-    result = result.slice(0, at) + prefix + line + suffix + result.slice(at);
+    result = result.slice(0, at) + prefix + lines.join("\n") + suffix + result.slice(at);
   }
   return { text: result, edits: edits.length, manual, used: [...used] };
 }

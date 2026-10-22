@@ -1,0 +1,327 @@
+{
+ "version": 1,
+ "types": [
+  {
+   "text": "String",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "Option<String>",
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "Option<Vec<String>>",
+   "optional": true,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "Vec<String>",
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "Vec<u8>",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "bytes"
+  },
+  {
+   "text": "BTreeMap<String, Foo>",
+   "optional": false,
+   "cardinality": "map",
+   "scalar": "Foo"
+  },
+  {
+   "text": "HashMap<String,i64>",
+   "optional": false,
+   "cardinality": "map",
+   "scalar": "int64"
+  },
+  {
+   "text": "[f64; 2]",
+   "optional": false,
+   "cardinality": "fixedList",
+   "scalar": "float64"
+  },
+  {
+   "text": "[ f64 ;3 ]",
+   "optional": false,
+   "cardinality": "fixedList",
+   "scalar": "float64"
+  },
+  {
+   "text": "Option<[u8; 4]>",
+   "optional": true,
+   "cardinality": "fixedList",
+   "scalar": "u8"
+  },
+  {
+   "text": "Option < String >",
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "  Vec < String >  ",
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "BTreeMap<u32, String>",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "BTreeMap<u32,String>"
+  },
+  {
+   "text": "Option<Option<String>>",
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "Option<String>"
+  },
+  {
+   "text": "bool",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "bool"
+  },
+  {
+   "text": "Vec<Vec<u8>>",
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "bytes"
+  },
+  {
+   "text": "Option<Vec<u8>>",
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "bytes"
+  },
+  {
+   "text": "f32",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "float32"
+  },
+  {
+   "text": "Box<dyn Fn()>",
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "Box<dynFn()>"
+  }
+ ],
+ "extract": [
+  {
+   "name": "the named struct with every field shape",
+   "text": "use std::collections::BTreeMap;\n\n/// Docs for Widget.\n#[derive(Debug)]\npub struct Widget {\n    /// doc line\n    pub id: String,\n    pub display_name: Option<String>,\n    pub count: i32,\n    pub big: Option<u64>,\n    pub ratio: f64,\n    pub enabled: bool,\n    pub tags: Vec<String>,\n    pub weights: [f64; 2],\n    pub labels: BTreeMap<String, String>,\n    pub index: HashMap<String, Vec<u8>>,\n    pub blob: Vec<u8>,\n    #[state(persisted_shared)]\n    pub status: String,\n    #[value(rename = \"customName\")]\n    pub renamed: String,\n    private_field: i32,\n    pub nested: Option<Vec<Option<String>>>,\n    pub items: Option<Vec<Item>>,\n    /* block */ pub spaced : Vec < u8 >,\n}\n\npub struct Other { pub zzz: String }\n",
+   "type": "Widget",
+   "expected": {
+    "typeName": "Widget",
+    "fields": [
+     {
+      "name": "id",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "displayName",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "count",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     },
+     {
+      "name": "big",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "uint64",
+      "state": ""
+     },
+     {
+      "name": "ratio",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64",
+      "state": ""
+     },
+     {
+      "name": "enabled",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     },
+     {
+      "name": "tags",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "weights",
+      "optional": false,
+      "cardinality": "fixedList",
+      "scalar": "float64",
+      "state": ""
+     },
+     {
+      "name": "labels",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "index",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "bytes",
+      "state": ""
+     },
+     {
+      "name": "blob",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bytes",
+      "state": ""
+     },
+     {
+      "name": "status",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": "persisted-shared"
+     },
+     {
+      "name": "customName",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "nested",
+      "optional": true,
+      "cardinality": "list",
+      "scalar": "Option<String>",
+      "state": ""
+     },
+     {
+      "name": "items",
+      "optional": true,
+      "cardinality": "list",
+      "scalar": "Item",
+      "state": ""
+     },
+     {
+      "name": "spaced",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bytes",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "a second struct in the same file",
+   "text": "use std::collections::BTreeMap;\n\n/// Docs for Widget.\n#[derive(Debug)]\npub struct Widget {\n    /// doc line\n    pub id: String,\n    pub display_name: Option<String>,\n    pub count: i32,\n    pub big: Option<u64>,\n    pub ratio: f64,\n    pub enabled: bool,\n    pub tags: Vec<String>,\n    pub weights: [f64; 2],\n    pub labels: BTreeMap<String, String>,\n    pub index: HashMap<String, Vec<u8>>,\n    pub blob: Vec<u8>,\n    #[state(persisted_shared)]\n    pub status: String,\n    #[value(rename = \"customName\")]\n    pub renamed: String,\n    private_field: i32,\n    pub nested: Option<Vec<Option<String>>>,\n    pub items: Option<Vec<Item>>,\n    /* block */ pub spaced : Vec < u8 >,\n}\n\npub struct Other { pub zzz: String }\n",
+   "type": "Other",
+   "expected": {
+    "typeName": "Other",
+    "fields": [
+     {
+      "name": "zzz",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "an unknown struct name",
+   "text": "use std::collections::BTreeMap;\n\n/// Docs for Widget.\n#[derive(Debug)]\npub struct Widget {\n    /// doc line\n    pub id: String,\n    pub display_name: Option<String>,\n    pub count: i32,\n    pub big: Option<u64>,\n    pub ratio: f64,\n    pub enabled: bool,\n    pub tags: Vec<String>,\n    pub weights: [f64; 2],\n    pub labels: BTreeMap<String, String>,\n    pub index: HashMap<String, Vec<u8>>,\n    pub blob: Vec<u8>,\n    #[state(persisted_shared)]\n    pub status: String,\n    #[value(rename = \"customName\")]\n    pub renamed: String,\n    private_field: i32,\n    pub nested: Option<Vec<Option<String>>>,\n    pub items: Option<Vec<Item>>,\n    /* block */ pub spaced : Vec < u8 >,\n}\n\npub struct Other { pub zzz: String }\n",
+   "type": "Nope",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "no expected name",
+   "text": "use std::collections::BTreeMap;\n\n/// Docs for Widget.\n#[derive(Debug)]\npub struct Widget {\n    /// doc line\n    pub id: String,\n    pub display_name: Option<String>,\n    pub count: i32,\n    pub big: Option<u64>,\n    pub ratio: f64,\n    pub enabled: bool,\n    pub tags: Vec<String>,\n    pub weights: [f64; 2],\n    pub labels: BTreeMap<String, String>,\n    pub index: HashMap<String, Vec<u8>>,\n    pub blob: Vec<u8>,\n    #[state(persisted_shared)]\n    pub status: String,\n    #[value(rename = \"customName\")]\n    pub renamed: String,\n    private_field: i32,\n    pub nested: Option<Vec<Option<String>>>,\n    pub items: Option<Vec<Item>>,\n    /* block */ pub spaced : Vec < u8 >,\n}\n\npub struct Other { pub zzz: String }\n",
+   "type": null,
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "a private struct is not a schema",
+   "text": "struct Hidden { pub a: String }",
+   "type": "Hidden",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "an empty struct",
+   "text": "pub struct Nothing {}",
+   "type": "Nothing",
+   "expected": {
+    "typeName": "Nothing",
+    "fields": []
+   },
+   "oracle": true
+  },
+  {
+   "name": "nested generic angle brackets keep a field together",
+   "text": "pub struct G { pub a: BTreeMap<String, Vec<Option<String>>>, pub b: u8 }",
+   "type": "G",
+   "expected": {
+    "typeName": "G",
+    "fields": [
+     {
+      "name": "a",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "Vec<Option<String>>",
+      "state": ""
+     },
+     {
+      "name": "b",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "u8",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  }
+ ]
+}

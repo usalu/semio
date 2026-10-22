@@ -19,6 +19,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLayer where Op: pr
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert", entity: "layer", kind: "insert-layer", record: "InsertedLayer",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert soil layer", "Bodenschicht einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for InsertLayer where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::remove_layer::RemoveLayer> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::insert_layer::diff::diff(self, base)
     }
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLayer where Op: pr
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert soil layer", "Bodenschicht einfügen")
-    }
 }
 
 //#region 🪢️Mounts

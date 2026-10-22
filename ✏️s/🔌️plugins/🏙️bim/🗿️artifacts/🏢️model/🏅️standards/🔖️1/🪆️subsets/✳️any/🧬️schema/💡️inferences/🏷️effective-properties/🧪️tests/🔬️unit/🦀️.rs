@@ -126,7 +126,7 @@ fn the_cache_is_transparent_and_a_property_edit_recomputes_one_node_and_no_geome
     assert_eq!(session.report().computed, 0, "a second refresh is all cache hits");
     assert_eq!(warm, uncached);
     let edit = ModelDiff::properties("w-north", Entry::Created(set(&[("FireRating", text("EI30"))])));
-    let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
     let incremental = session.update(&after, &edit).clone();
     let report = session.report().clone();
     assert_eq!(report.computed_by_kind.get("properties"), Some(&1), "{report:?}");
@@ -141,12 +141,12 @@ fn a_template_edit_reaches_every_holder_it_applies_to_and_a_type_edit_its_instan
     let mut session = ModelInferenceSession::new();
     session.refresh(&snapshot);
     let edit = ModelDiff::property_templates("pt-wall", Entry::Patched(PropertyTemplatePatch { applies_to: Some(vec![TemplateTarget::Wall]), ..Default::default() }));
-    let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
     let incremental = session.update(&after, &edit).clone();
     assert_eq!(incremental, infer(&after));
     assert!(incremental.effective_properties["wt-300"].get("Pset_WallCommon", "ThermalTransmittance").is_none(), "the type fell out of the template");
     let retype = ModelDiff::properties("wt-300", Entry::Patched(semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::PropertySetPatch { assigned: std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), Some(text("EI30")))]))]) }));
-    let next = protocol::apply_diff(&retype, &after).expect("applies");
+    let next = protocol::apply_diff_cold(&retype, &after).expect("applies");
     let served = session.update(&next, &retype).clone();
     assert_eq!(served, infer(&next));
     assert_eq!(value(&served, "w-west", "FireRating").value, text("EI30"), "the instances follow their type");

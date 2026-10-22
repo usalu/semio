@@ -66,7 +66,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare",
         "forwardAllArgs": false,
         "env": {
           "SEMIO_BUILD_MODE": "prototype"
@@ -132,7 +132,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts activate",
         "forwardAllArgs": false,
         "env": {
           "SEMIO_BUILD_MODE": "prototype"
@@ -162,7 +162,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve",
         "env": {
           "SEMIO_TECH_PLAY_PORT": "6033",
           "NODE_OPTIONS": "",
@@ -190,7 +190,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve",
         "forwardAllArgs": false
       },
       "cache": false,
@@ -235,7 +235,7 @@
                 "id": "describe-tool",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "build"
                 ],
@@ -252,7 +252,7 @@
                 "id": "font-assets",
                 "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "build"
                 ],
@@ -269,7 +269,7 @@
                 "id": "fonts",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "fonts"
                 ],
@@ -288,7 +288,7 @@
                 "id": "support",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "support"
                 ],
@@ -306,7 +306,7 @@
                 "id": "canvas-runtime-assets",
                 "root": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "stage-runtime-assets"
                 ],
@@ -322,7 +322,7 @@
                 "id": "flow-wasm",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "wasm"
                 ],
@@ -341,7 +341,7 @@
                 "id": "surface-wasm",
                 "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "wasm"
                 ],
@@ -360,7 +360,7 @@
                 "id": "editor-wasm",
                 "root": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "wasm"
                 ],
@@ -379,7 +379,7 @@
                 "id": "graph-wasm",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "wasm"
                 ],
@@ -398,7 +398,7 @@
                 "id": "puzzle-wasm",
                 "root": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "wasm"
                 ],
@@ -417,7 +417,7 @@
                 "id": "map-tiles",
                 "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "map-tiles"
                 ],
@@ -433,7 +433,7 @@
                 "id": "bundle",
                 "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "bundle"
                 ],
@@ -456,7 +456,7 @@
                 "id": "pages",
                 "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "pages"
                 ],
@@ -481,7 +481,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+        "command": "repo ./🔨️modules/📦️site/📜️script.ts build",
         "forwardAllArgs": false
       },
       "cache": false,
@@ -496,7 +496,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -510,7 +510,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -528,7 +528,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
         "forwardAllArgs": false
       },
       "continuous": true,
@@ -544,7 +544,7 @@
       "outputs": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release-routing",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-release-routing",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -562,7 +562,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-release",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -580,7 +580,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-enduser",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-enduser",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -598,7 +598,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -614,7 +614,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/📦️site/📜️script.ts verify",
+        "command": "repo ./🔨️modules/📦️site/📜️script.ts verify",
         "forwardAllArgs": false
       },
       "metadata": {

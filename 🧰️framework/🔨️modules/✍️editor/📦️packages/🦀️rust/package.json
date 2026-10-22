@@ -10,7 +10,7 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-owned-error": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-editor-rs:test-owned-error"
+    "test-owned-error": "repo run @semio-tech/framework-editor-rs:test-owned-error"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

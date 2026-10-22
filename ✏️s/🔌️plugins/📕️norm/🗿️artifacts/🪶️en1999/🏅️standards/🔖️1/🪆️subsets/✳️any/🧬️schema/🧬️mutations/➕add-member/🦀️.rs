@@ -24,20 +24,21 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for AddMember where Op: prot
         record: "AddedMember",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add member", "Bauteil hinzufügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for AddMember where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::remove_member::RemoveMember> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::add_member::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::add_member::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add member", "Bauteil hinzufügen")
-    }
 }
 
 //#region 🪢️Mounts

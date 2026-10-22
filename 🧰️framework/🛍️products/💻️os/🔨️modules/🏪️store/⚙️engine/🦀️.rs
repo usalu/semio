@@ -4,10 +4,13 @@
 
 #[path = "../🧩️composition/🌱️initial/🪪️identity/🦀️.rs"]
 pub mod initial_child_identity;
-#[path = "../🧩️composition/📬️publication/🤝️group/🦀️.rs"]
-pub mod member_group;
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;
+
+/// 🧪️ Library unit tests observe every physical birth and release through the shared heap witness.
+#[cfg(test)]
+#[global_allocator]
+static ENGINE_LIBRARY_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

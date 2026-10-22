@@ -18,6 +18,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeInvestigationDepth
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change", entity: "investigation-depth", kind: "change-investigation-depth", record: "ChangedInvestigationDepth",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change ground investigation depth", "Erkundungstiefe ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for ChangeInvestigationDepth where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::change_investigation_depth::ChangeInvestigationDepth> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::change_investigation_depth::diff::diff(self, base)
     }
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeInvestigationDepth
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change ground investigation depth", "Erkundungstiefe ändern")
-    }
 }
 
 //#region 🪢️Mounts

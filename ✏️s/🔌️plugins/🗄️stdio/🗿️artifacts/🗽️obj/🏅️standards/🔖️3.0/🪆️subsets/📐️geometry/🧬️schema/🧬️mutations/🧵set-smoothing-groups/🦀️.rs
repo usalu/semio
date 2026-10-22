@@ -21,18 +21,21 @@ pub struct SetSmoothingGroups {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "smoothing-groups", kind: "set-smoothing-groups", record: "SetSmoothingGroups" };
 
-    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        let Self { smoothing_groups } = self;
-        protocol::MutationOutcome::new(diff_set_smoothing_groups(smoothing_groups.clone()))
-    }
-    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-        Ok(vec![ObjMutation::SetSmoothingGroups(SetSmoothingGroups { smoothing_groups: base.smoothing_groups.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set smoothing groups", "Glättungsgruppen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
+        let Self { smoothing_groups } = self;
+        protocol::MutationOutcome::new(diff_set_smoothing_groups(smoothing_groups.clone()))
+    }
+    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
+        Ok(vec![ObjMutation::SetSmoothingGroups(SetSmoothingGroups { smoothing_groups: base.smoothing_groups.clone() })])
     }
 }
 //#endregion 🔖️Payload

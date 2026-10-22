@@ -12,7 +12,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-surface-contract",
+        "command": "repo ./📜️script.ts test-surface-contract",
         "forwardAllArgs": false
       }
     },
@@ -22,7 +22,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-neutral-surface",
+        "command": "repo ./📜️script.ts test-neutral-surface",
         "forwardAllArgs": false
       }
     }

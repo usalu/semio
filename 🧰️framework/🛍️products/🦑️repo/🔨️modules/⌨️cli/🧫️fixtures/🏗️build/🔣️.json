@@ -1,6 +1,6 @@
 {
   "project": "@semio-tech/repo-cli-go",
-  "command": "bun ./📜️script.ts build",
+  "command": "repo ./📜️script.ts build",
   "entryPoint": ".",
   "artifacts": {
     "directory": "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"

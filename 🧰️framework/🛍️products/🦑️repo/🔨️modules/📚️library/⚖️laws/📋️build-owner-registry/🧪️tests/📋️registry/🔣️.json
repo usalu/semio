@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "a-missing-registry-is-invalid",
+   "rule": "policyBuildOwnerRegistryBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": [
+    [
+     "build-owner-registry-registry-invalid-📋️build-owners.json",
+     "repo/build-owner-registry",
+     "high",
+     false,
+     "📋️build-owners.json"
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "an-unparseable-registry-is-invalid",
+   "rule": "policyBuildOwnerRegistryBreaches",
+   "files": {
+    "📋️build-owners.json": [
+     "{not json"
+    ]
+   },
+   "expect": [
+    [
+     "build-owner-registry-registry-invalid-📋️build-owners.json",
+     "repo/build-owner-registry",
+     "high",
+     false,
+     "📋️build-owners.json"
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "authored-and-derived-findings-differ-in-autofixability",
+   "rule": "policyBuildOwnerRegistryBreaches",
+   "files": {
+    "📋️build-owners.json": [
+     "{\"version\":1,\"owners\":[{\"name\":\"x\",\"root\":\"a\",\"manifest\":\"a/Cargo.toml\",\"packages\":[]},{\"name\":\"y\",\"root\":\"b\",\"manifest\":\"b/Cargo.toml\",\"packages\":[]}],\"catalogProviders\":[{\"ownerRoot\":\"p\",\"sourcePath\":\"p/s.ts\",\"consumerRoots\":[\"q\"]}]}"
+    ],
+    "b/Cargo.toml": [
+     "[package]",
+     "name = \"zzz\""
+    ],
+    "c/Cargo.toml": [
+     "[package]",
+     "name = \"c\""
+    ]
+   },
+   "expect": [
+    [
+     "build-owner-registry-cargo-without-row-c/Cargo.toml",
+     "repo/build-owner-registry",
+     "high",
+     true,
+     "c/Cargo.toml"
+    ],
+    [
+     "build-owner-registry-missing-root-x",
+     "repo/build-owner-registry",
+     "high",
+     true,
+     "a"
+    ],
+    [
+     "build-owner-registry-name-mismatch-y",
+     "repo/build-owner-registry",
+     "high",
+     true,
+     "b/Cargo.toml"
+    ],
+    [
+     "build-owner-registry-provider-consumer-root-q",
+     "repo/build-owner-registry",
+     "high",
+     false,
+     "q"
+    ],
+    [
+     "build-owner-registry-provider-owner-root-p",
+     "repo/build-owner-registry",
+     "high",
+     false,
+     "p"
+    ],
+    [
+     "build-owner-registry-provider-source-p/s.ts",
+     "repo/build-owner-registry",
+     "high",
+     false,
+     "p/s.ts"
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "a-consistent-registry-is-clean",
+   "rule": "policyBuildOwnerRegistryBreaches",
+   "files": {
+    "📋️build-owners.json": [
+     "{\"version\":1,\"owners\":[{\"name\":\"x\",\"root\":\"a\",\"manifest\":\"a/Cargo.toml\",\"packages\":[]}],\"catalogProviders\":[]}"
+    ],
+    "a/Cargo.toml": [
+     "[package]",
+     "name = \"x\""
+    ]
+   },
+   "expect": [],
+   "git": true
+  }
+ ]
+}

@@ -8,7 +8,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/🫓️refuses/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/🫓️refuses/📸️snapshot/➡️after/🔣️.json"));
@@ -30,7 +30,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("scale-frames/refuses-a-zero-factor: the diff applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("scale-frames/refuses-a-zero-factor: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-frames` raises on the committed base.

@@ -36,17 +36,13 @@ pub use retained_codec_catalog::{ArtifactCodecCatalogStep, RetainedArtifactCodec
 
 pub use semio_framework_os_store_snapshot_clone as snapshot_clone_preparation;
 
-pub use semio_framework_os_store_replay::replay_preparation;
+pub use semio_framework_os_store_replay_operation as replay_preparation;
 pub use replay_preparation::{ArtifactMutationSource, ArtifactReplayPreparationRequest, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationStep, ArtifactReplayPreparationTask, ArtifactReplayPrepared, admit_replay_preparation_step};
 use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 pub use replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode};
-#[path="🔁️replay/🎮️operation/🌱️derived/🧩️store/🦀️.rs"]
-mod derived_operation_store;
 #[path="🕰️history/🎮️command/🦀️.rs"]
 mod native_vcs_command;
-pub use native_vcs_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand};
-#[path="🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🦀️.rs"]
-mod original_history_report;
+pub use native_vcs_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand,ArtifactStoreNativeVcs};
 use semio_framework_value_snapshot_read as snapshot_read_registry_handle;
 use semio_framework_value_snapshot_read as snapshot_read_registry_retirement;
 pub use semio_framework_os_spr::command::MessageCopyCursor;
@@ -101,7 +97,7 @@ pub mod durable_group {
     pub use semio_framework_os_store_durable_group_wire::lifted_durable_group::*;
 }
 
-use semio_framework_os_store_engine::member_group;
+use semio_framework_os_store_engine_member_group as member_group;
 
 use semio_framework_os_store_one_item_batch as one_item_owners;
 pub use one_item_owners::OneItemOwners;
@@ -217,6 +213,8 @@ use semio_framework_os_store_link_schema::{artifact_link_from_record, artifact_l
 //#region 🔖️EphemeralLanes
 
 pub use semio_framework_os_store_ephemeral::*;
+pub use semio_framework_os_store_presence::*;
+pub use semio_framework_os_store_presence as presence;
 
 //#region 🔖️Text
 //#region 🔖️Text
@@ -513,7 +511,7 @@ use semio_framework_os_store_composition::{build_apply_command_bytes, fold_compe
 use semio_framework_os_store_composition::composition_group;
 pub use semio_framework_os_store_composition::composition_group::{GroupOwnsError, GroupOwnsPreparation, GroupOwnsStep};
 pub use semio_framework_os_store_engine_owners::lifted_store::{ArtifactStoreCloseHost, ArtifactStoreCloseView, ArtifactStoreCursorDisposer, ArtifactStoreOwnedDisposer};
-pub use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, BlobStore, LinkResolver, LinkState, MemberDirectory, MemberFactory, MemberLinkResolver, MemberStoreVisitor, MemberStoreVisitorMut, MemberVisit, NoBlobStore, NoMembers, SpaceMember, content_id};
+pub use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, BlobStore, LinkResolver, LinkState, MemberDirectory, MemberFactory, MemberLinkResolver, MemberStoreVisitor, MemberStoreVisitorMut, MemberVisit, ReferenceSpaceMember, NoBlobStore, NoMembers, SpaceMember, content_id};
 pub use semio_framework_os_store_space::lifted_store::{SpaceHost, create_member_store, install_funded_member_store_owners, install_unscheduled_catalog, open_member_store, space_history_store_owners};
 pub(crate) use semio_framework_os_store_space::lifted_store::{validate_member_history_identity};
 pub use semio_framework_os_store_engine_core::lifted_store::{ArtifactEnvelopeView, CommandReceipt, HistoryColumn, StoreCursor, StoreLog, StoreMintToken, StoreOwners, StoreWire, build_history_columns};

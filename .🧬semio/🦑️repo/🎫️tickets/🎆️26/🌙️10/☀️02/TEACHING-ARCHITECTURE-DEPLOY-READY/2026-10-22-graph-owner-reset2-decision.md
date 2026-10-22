@@ -1,0 +1,5 @@
+# Graph Owner Reset2 Decision
+
+Actual6110 launched once22:19:42Z and exited1/null without cancellation22:20:03Z. Root received launch and terminal notices together before thissettlement; noactivehandle nowremains. Frozen original8067B/SHAab87804f369386fb13e033d4dd8a5cd53107a03b52548975f9a4a536fe4aac7e. Capacityoption repair advancedinto readNativeRepoRecoveryPlan, whoseboundedSource read nowrefuses uncapturedcaching/project.json atsourceCount1021.35postSourcepins,host,70hardancestors remainexact. No resetreceipt/testpass.
+
+NextauthorizedSourcefixusesexisting exactRuntimeDataCompanions recoveryCLI row for twoauthoredprojectJSONs, withactualcompilercapture regression; Nativeactualconsumptionoftablemustbeverified. No rawhostfallback/unknowncompanion/legacyacceptance/sourceguardrelaxation or automaticretry. MetadataactualSource290; prospectiveSource311/critical341 count corrected for threealreadycriticaloverlaps. Allrunnableseals remainhistoricala668 and previewsstale.

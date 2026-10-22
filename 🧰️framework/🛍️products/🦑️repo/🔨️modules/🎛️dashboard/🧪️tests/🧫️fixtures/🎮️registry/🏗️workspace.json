@@ -8,11 +8,11 @@
         "name": "fixture",
         "scripts": {
           "nx": "bun bootstrap nx",
-          "dashboard": "bun repo run @fixture/dashboard:run",
-          "dashboard:start": "bun repo run @fixture/dashboard:daemon -- start",
-          "dev": "bun repo run workspace:dev",
-          "test:quiz": "bun repo run @fixture/quiz:test",
-          "test:quiz:e2e": "bun repo run @fixture/quiz:test-e2e",
+          "dashboard": "repo run @fixture/dashboard:run",
+          "dashboard:start": "repo run @fixture/dashboard:daemon -- start",
+          "dev": "repo run workspace:dev",
+          "test:quiz": "repo run @fixture/quiz:test",
+          "test:quiz:e2e": "repo run @fixture/quiz:test-e2e",
           "build:docs": "nx run-many -t build",
           "lint": "eslint ."
         }
@@ -75,7 +75,7 @@
                 {
                   "id": "bun-test",
                   "verb": "test",
-                  "command": ["bun", "repo", "exec", "--projects={project}", "--", "bun", "test"],
+                  "command": ["repo", "exec", "--projects={project}", "--", "bun", "test"],
                   "parameters": [
                     { "id": "project", "kind": "text", "default": "workspace" },
                     { "id": "file", "kind": "text", "required": true, "valuePositional": true },

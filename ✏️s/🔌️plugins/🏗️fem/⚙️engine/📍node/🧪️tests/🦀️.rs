@@ -2,7 +2,8 @@
 use super::FemNode;
 use super::FemNodeValue;
 use super::DIMENSION;
-use semio_framework_value::{DslValue, FromValue, RetirementDemand, ValueError, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress}, snapshot_projection::{ProjectionField, SnapshotProjectionCursor}};
+use semio_framework_value::{DslValue, FromValue, RetirementDemand, ValueError, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value_snapshot_projection::snapshot_projection::{ProjectionField, SnapshotProjectionCursor};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::NativeDecodeConstructionRecipient, native_decoding::owned::NativeRecordSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096);assert!(d.capacity_bytes<=65536);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
 struct Recipient{grant:RetainedCloneGrant}

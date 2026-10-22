@@ -18,21 +18,6 @@
       "glue": "../../🚪️entrypoint/🦀️.rs"
     },
     {
-      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/⚙️build/🟦️.ts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🟦️.ts",
-      "kind": "typescript",
-      "boundary": "none",
-      "anchor": "extensionBuildConfig"
-    },
-    {
-      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️.ts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🟦️.ts",
-      "kind": "typescript",
-      "boundary": "package-reexport",
-      "anchor": "export function activate(",
-      "glue": "../../🟦️.ts"
-    },
-    {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "kind": "javascript-declaration",

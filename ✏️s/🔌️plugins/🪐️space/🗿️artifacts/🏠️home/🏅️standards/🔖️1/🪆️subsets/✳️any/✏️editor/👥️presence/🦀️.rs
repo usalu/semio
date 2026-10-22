@@ -17,19 +17,26 @@ pub struct HomePresence {}
 #[value(rename_all = "camelCase", default)]
 pub struct HomePresenceDiff {}
 
-impl protocol::MutationDiff<HomePresence> for HomePresenceDiff {
-    fn apply(&self, base: &HomePresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomePresence> {
-        Ok(base.clone())
-    }
+impl protocol::MutationDiff<HomePresence> for HomePresenceDiff {}
+
+impl protocol::ColdMutationDiff<HomePresence> for HomePresenceDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut HomePresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<HomePresence> for HomePresenceDiff {
-    fn inverse(&self, _base: &HomePresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl protocol::ColdDiffAlgebra<HomePresence> for HomePresenceDiff {
+    fn inverse(&self, _base: &HomePresence) -> Self {
+        Self {}
     }
 }
 
@@ -95,11 +102,13 @@ impl Mutation<HomePresence> for HomePresenceMutation {
     }
 
     type Diff = HomePresenceDiff;
+}
 
+impl protocol::ColdMutation<HomePresence> for HomePresenceMutation {
+    type ReferenceDiff = HomePresenceDiff;
     fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresenceDiff> {
         protocol::MutationOutcome::new(HomePresenceDiff {})
     }
-
     fn inverse(&self, _base: &HomePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![HomePresenceMutation::Noop]

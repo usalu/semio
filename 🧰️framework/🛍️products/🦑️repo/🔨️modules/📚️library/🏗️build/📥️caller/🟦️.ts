@@ -1,7 +1,7 @@
 import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "./📤️orchestration/🟨️.mjs";
-import nxCallerSchema from"../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };
+import {declaredCapabilitiesV1} from "./🛰️service/🟦️.ts";
 import authoringSchema from "../🧬️schema/📥️authoring.json" with { type: "json" };
 import schema from "../🧬️schema/📥️caller.json" with { type: "json" };
 import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
@@ -10,18 +10,20 @@ import { canonicalArchitectureEnvironment } from "../../⚡️caching/🦀️car
 import {readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { NativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1, scriptProcessEnvironment, readScriptProcessEnvelope, type ScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1, scriptProcessEnvironment, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { BuildExecutionV1, BuildGraphV1 } from "../🕸️graph/🟦️.ts";
 import type { selectBuildTasksV1 } from "../🧭️selection/🟦️.ts";
 import { resolve } from "node:path";
-import {issueRepositoryCargoExecutionBackendV1} from "../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
-import {isStoreRepairSelectionV1} from "../🧾️store-receipt/🟨️.mjs";
+import {createRequire} from "node:module";
+import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦️.ts";
+/** 🪶️ Loads the Cargo execution contract only when a native owner command asks for it, so no other command pays for the Cargo test harness, its sandbox and the native build storage. */
+const issueCargoExecutionBackendV1=(...call:Parameters<typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts").issueRepositoryCargoExecutionBackendV1>)=>(createRequire(import.meta.url)("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts") as typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts")).issueRepositoryCargoExecutionBackendV1(...call);
 
 /** 🏛️ Declares actual native resources granted to an owned build invocation. */
-export interface NativeBuildCallerCapabilitiesV1 { readonly tool:"nx"|"bazel"; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>; readonly launches:readonly (readonly string[])[] }
+export interface NativeBuildCallerCapabilitiesV1 { readonly tool:string; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>; readonly launches:readonly (readonly string[])[] }
 
 /** 🎟️ Creates the configured native grant before the build process envelope is issued. */
-export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly string[],tool:"nx"|"bazel",environment:NodeJS.ProcessEnv):NativeBuildCallerCapabilitiesV1 {
+export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly string[],tool:string,environment:NodeJS.ProcessEnv):NativeBuildCallerCapabilitiesV1 {
   if(validateJsonSchemaSubset(nativeSchema.$defs.NativeOwnerExecutionPolicyV1,executionPolicy).length)throw Error("Build native execution policy refused");
   const canonical=canonicalArchitectureEnvironment(root,environment),offline=canonical.CARGO_NET_OFFLINE??"false";
   if(!["true","false"].includes(offline))throw Error("Build native network selection refused");
@@ -31,7 +33,7 @@ export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly 
 }
 
 /** 📝️ Admits explicit editor resource grants before an original process envelope is created. */
-export function readBuildAuthoringCapabilitiesV1(root:string,args:readonly string[],tool:"nx"|"bazel",value:unknown):NativeBuildCallerCapabilitiesV1 {
+export function readBuildAuthoringCapabilitiesV1(root:string,args:readonly string[],tool:string,value:unknown):NativeBuildCallerCapabilitiesV1 {
   if(validateJsonSchemaSubset(authoringSchema,value).length)throw Error("Build authoring capabilities refused");
   const declared=value as NativeBuildCallerCapabilitiesV1,request=["repo",...args],workspaceRoot=resolve(root);
   if(resolve(workspaceRoot,declared.workspaceRoot)!==workspaceRoot||declared.tool!==undefined&&declared.tool!==tool||JSON.stringify(declared.arguments)!==JSON.stringify(request)||JSON.stringify(declared.selection)!==JSON.stringify(request)||!declared.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Original authored build request changed");
@@ -55,7 +57,7 @@ export function issueBuildTaskEnvironmentV1(root:string,invocation:ScriptInvocat
 
 function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,execution:BuildExecutionV1,args:readonly string[],environment:NodeJS.ProcessEnv,orchestration?:object):NodeJS.ProcessEnv {
   readIssuedScriptProcessEnvelopeV1(invocation);
-  const capabilities=invocation.capabilities as NativeBuildCallerCapabilitiesV1;
+  const capabilities=declaredCapabilitiesV1(invocation.capabilities as NativeBuildCallerCapabilitiesV1);
   if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root))throw Error("Original build caller authority required");
   const canonical=canonicalArchitectureEnvironment(root,{...environment,SEMIO_BUILD_MODE:capabilities.buildMode,CARGO_NET_OFFLINE:String(capabilities.native.network.offline)});
   if(resolve(capabilities.native.artifactDirectory)!==canonical.CARGO_TARGET_DIR)throw Error("Build native artifact authority changed");
@@ -64,7 +66,7 @@ function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,executio
   if(orchestration!==undefined){if(request!==undefined)throw Error("Native commands cannot receive orchestration authority");selected=orchestration;}
   if(request!==undefined){
     if(validateJsonSchemaSubset(nativeSchema.properties.command,request).length)throw Error("Discovered native build command required");
-    const declared=request as NativeOwnerCapabilities["command"],command={...declared,arguments:[...declared.arguments,...effective]},cargoExecutionBackend=issueRepositoryCargoExecutionBackendV1(root,command,capabilities.native.transport);
+    const declared=request as NativeOwnerCapabilities["command"],command={...declared,arguments:[...declared.arguments,...effective]},cargoExecutionBackend=issueCargoExecutionBackendV1(root,command,capabilities.native.transport);
     selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
   }
   const result=scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:selected},{...canonical,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_WORKSPACE_ROOT:root});
@@ -75,16 +77,8 @@ function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,executio
 
 /** 🪪️ Admits only an already declared Repo request beneath its privately live original. */
 export function readOwnedBuildInvocationV1(root:string,invocation:ScriptInvocation,args:readonly string[]):NativeBuildCallerCapabilitiesV1{
- const original=readIssuedScriptProcessEnvelopeV1(invocation),capabilities=original.capabilities as NativeBuildCallerCapabilitiesV1;if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root)||capabilities.arguments[0]!=="repo")throw Error("Original Repo build caller required");
- const request:string[]=["repo"];let tool=capabilities.tool;const selected:string[]=[];for(let index=0;index<args.length;index++){const argument=args[index]!;if(argument==="--"){selected.push(...args.slice(index));break;}if(argument==="--tool"){tool=args[++index]as typeof tool;continue;}if(argument.startsWith("--tool=")){tool=argument.slice(7)as typeof tool;continue;}if(argument==="--workers"){index++;continue;}if(argument.startsWith("--workers=")){continue;}selected.push(argument);}request.push(...selected);if(tool!==capabilities.tool||!capabilities.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Undeclared original Repo build selection");return capabilities;
-}
-
-/** 📨️ Serializes only predeclared Nx child data while retaining the exact private parent invocation. */
-export function projectOwnedNxProcessEnvelopeV1(root:string,invocation:ScriptInvocation,selected:readonly string[]):ScriptProcessEnvelope{
- const original=readIssuedScriptProcessEnvelopeV1(invocation),role=original.capabilities as NativeBuildCallerCapabilitiesV1,selection=["nx",...selected];let capabilities:object;
- if(role.tool!==undefined){if(validateJsonSchemaSubset(schema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="repo")throw Error("Original Repo-to-Nx caller required");const launches=role.launches.filter(launch=>launch[0]==="nx");if(!launches.length||!launches.some(launch=>JSON.stringify(launch)===JSON.stringify(selection))&&!isStoreRepairSelectionV1(selected))throw Error("Undeclared Repo-to-Nx child selection");capabilities={workspaceRoot:role.workspaceRoot,arguments:launches[0],selection,buildMode:role.buildMode,native:role.native,launches};}
- else{const role=original.capabilities as import("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts").NativeNxCallerCapabilitiesV1;if(validateJsonSchemaSubset(nxCallerSchema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="nx"||!role.launches?.some(launch=>JSON.stringify(launch)===JSON.stringify(selection)))throw Error("Undeclared original Nx child selection");capabilities={...role,selection};}
- if(validateJsonSchemaSubset(nxCallerSchema,capabilities).length)throw Error("Closed original Nx child data required");return readScriptProcessEnvelope({...original,capabilities},Date.now());
+ const original=readIssuedScriptProcessEnvelopeV1(invocation),capabilities=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1);if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root)||capabilities.arguments[0]!=="repo")throw Error("Original Repo build caller required");
+ const request:string[]=["repo"];let tool=capabilities.tool;const selected:string[]=[];for(let index=0;index<args.length;index++){const argument=args[index]!;if(argument==="--"){selected.push(...args.slice(index));break;}if(argument==="--tool"){tool=args[++index]as typeof tool;continue;}if(argument.startsWith("--tool=")){tool=argument.slice(7)as typeof tool;continue;}if(argument==="--workers"){index++;continue;}if(argument.startsWith("--workers=")){continue;}if(argument==="--graph-policy"){index++;continue;}if(argument.startsWith("--graph-policy=")){continue;}selected.push(argument);}request.push(...buildOperationArgumentsV1(selected));if(tool!==capabilities.tool||!capabilities.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Undeclared original Repo build selection");return capabilities;
 }
 
 /** 🗺️ Plans one selected request into the declared neutral task roster; the composition root injects its planner so the caller never imports a build tool. */
@@ -92,7 +86,7 @@ export type BuildOrchestrationPlannerV1=(graph:BuildGraphV1,request:Awaited<Retu
 
 /** 🧭️ Keeps actual pinned graph custody while issuing only a reachable neutral task's declared descendants. */
 export async function withBuildOrchestrationTaskEnvironmentV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,execution:BuildExecutionV1,args:readonly string[],environment:NodeJS.ProcessEnv,context:object,planner:BuildOrchestrationPlannerV1,body:(environment:NodeJS.ProcessEnv,actual:ResourceLeaseControl)=>Promise<T>):Promise<T>{
- requireIssuedResourceControlInvocationV1(phaseControl,invocation);const original=readIssuedScriptProcessEnvelopeV1(invocation),caller=original.capabilities as NativeBuildCallerCapabilitiesV1;
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);const original=readIssuedScriptProcessEnvelopeV1(invocation),caller=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1);
  if(validateJsonSchemaSubset(schema,caller).length||resolve(caller.workspaceRoot)!==resolve(root)||caller.selection[0]!=="repo")throw Error("Original selected Repo orchestration required");
  const processPin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST},check=()=>{checkScriptInvocation(invocation);if(environment.SEMIO_BUILD_GRAPH_PATH!==processPin.path||environment.SEMIO_BUILD_GRAPH_DIGEST!==processPin.digest||process.env.SEMIO_BUILD_GRAPH_PATH!==processPin.path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==processPin.digest)throw Error("Original process orchestration graph binding changed");};check();
  const [{withRepositoryBuildGraphPublicationV1,resolveBuildTargetV1},{parseBuildInvocationV1,resolveBuildInvocationV1},{selectBuildTasksV1}]=await Promise.all([import("../🕸️graph/🟦️.ts"),import("../🧭️invocation/🟦️.ts"),import("../🧭️selection/🟦️.ts")]);check();

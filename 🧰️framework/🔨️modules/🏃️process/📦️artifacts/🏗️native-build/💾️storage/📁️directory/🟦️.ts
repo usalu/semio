@@ -31,9 +31,9 @@ export function flushNativeDirectoryV1(path:string,port:NativeDirectoryPlatformP
 export function requireNativeDirectoryUnusedV1(paths:readonly string[],host:NativeWindowsHostPortV1=nativeWindowsSystemHostPortV1()):void{
  for(const path of paths){const result=host.openExclusive(path);if(result.ok)continue;throw Error(result.error===protocol.windowsErrors.sharing?protocol.refusals.windowsInUse+": "+path:"Directory could not be probed (Win32 error "+result.error+"): "+path);}
 }
-/** 🧪️ Builds the closed child-process environment for the owned partition script: fixed PATH and locale on Linux, the validated Windows system directory on Windows. */
+/** 🧪️ Builds the closed child-process environment for the owned partition script: fixed PATH and locale on Linux and macOS, the validated Windows system directory on Windows. */
 export function nativeDirectoryChildEnvironmentV1(directory:string,environment:Readonly<Record<string,string|undefined>>=process.env,platform:string=process.platform):Readonly<Record<string,string>>{
- if(platform==="linux")return Object.freeze({...protocol.childEnvironment.linux});
+ if(platform==="linux"||platform==="darwin")return Object.freeze({...protocol.childEnvironment[platform]});
  if(platform!=="win32")throw Error("Actual fixed platform required");
  const root=environment.SystemRoot;if(typeof root!=="string"||!new RegExp(protocol.exchange.windows.systemRoot.pattern,"u").test(root)||win32.normalize(root)!==root)throw Error("Canonical Windows SystemRoot required");
  return Object.freeze({SystemRoot:root,WINDIR:root,PATH:win32.join(root,protocol.exchange.windows.systemRoot.library),TEMP:directory,TMP:directory});

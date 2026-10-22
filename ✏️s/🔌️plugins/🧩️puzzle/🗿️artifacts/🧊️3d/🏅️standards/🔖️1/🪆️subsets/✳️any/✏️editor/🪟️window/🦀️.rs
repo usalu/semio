@@ -639,8 +639,8 @@ impl semio_framework_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwn
     type State = Puzzle3dWindowTransient;
     type Mutation = Puzzle3dWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
             puzzle3d_window_transient_preflight,
             puzzle3d_window_transient_transfer,

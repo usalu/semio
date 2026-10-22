@@ -1,6 +1,6 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-/** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
+/** 🌊️ `@semio-tech/flow-js` router: `repo ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import { runCmd } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";

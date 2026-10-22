@@ -185,7 +185,7 @@ impl ModelInferenceSession {
         let pending = self.pending.take();
         match (self.previous.as_ref(), pending) {
             (Some(previous), _) if !self.stale && previous == snapshot => self.begin(&ModelDiff::default()),
-            (Some(previous), Some(pending)) if !self.stale && protocol::apply_diff(&pending, previous).is_ok_and(|applied| &applied == snapshot) => self.begin(&pending),
+            (Some(previous), Some(pending)) if !self.stale && protocol::apply_diff_cold(&pending, previous).is_ok_and(|applied| &applied == snapshot) => self.begin(&pending),
             _ => self.begin_full(),
         }
     }

@@ -32,6 +32,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "input", kind: "resize-input", record: "ResizedInput" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize input to {}×{}", self.width, self.height), &format!("Größe der Eingabe auf {}×{} ändern", self.width, self.height))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for ResizeInput
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<ResizeInput> + From<crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -41,8 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize input to {}×{}", self.width, self.height), &format!("Größe der Eingabe auf {}×{} ändern", self.width, self.height))
-    }
 }
 //#endregion 🔖️ResizeInput

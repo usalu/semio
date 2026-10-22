@@ -27,16 +27,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "region", kind: "delete-region", record: "DeletedRegion" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete region \"{}\"", self.id), &format!("Region \"{}\" löschen", self.id))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for DeleteRegion
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<DeleteRegion> + From<crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete region \"{}\"", self.id), &format!("Region \"{}\" löschen", self.id))
     }
 }
 //#endregion 🔹Payload

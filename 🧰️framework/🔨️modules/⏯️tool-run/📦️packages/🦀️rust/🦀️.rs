@@ -3,6 +3,11 @@
 
 #[path = "../../🦀️.rs"]
 mod component;
+
+/// 🧪️ Library unit tests observe every physical birth and release through the shared heap witness.
+#[cfg(test)]
+#[global_allocator]
+static TOOL_RUN_LIBRARY_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub use component::testkit;

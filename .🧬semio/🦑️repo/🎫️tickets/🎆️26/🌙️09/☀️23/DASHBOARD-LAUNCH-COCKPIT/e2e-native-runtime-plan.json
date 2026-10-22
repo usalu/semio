@@ -40,17 +40,19 @@
       },
       "status": "passed",
       "actual": {
-        "process": 35120,
+        "process": 52569,
         "exit": 0,
         "passed": 53,
         "failed": 0,
         "ignored": 0,
         "filtered": 0,
-        "seconds": 30.74,
-        "log": "🗑️generated/e2e-filesystem-segmented-history-hsg3.log",
-        "artifacts": "🗑️generated/hsg3",
+        "seconds": 66.25,
+        "compileSeconds": 8.89,
+        "log": "🗑️generated/e2e-filesystem-current-fs53.log",
+        "artifacts": "🗑️generated/fs53c",
         "platform": "macOS arm64"
-      }
+      },
+      "currentQualification": "Current actual whole-library pass; cross-platform compilation remains independently qualified."
     },
     {
       "id": "filesystem-check-x86_64-pc-windows-msvc",
@@ -300,6 +302,66 @@
         "bodyExecuted": false,
         "reason": "Generated task cannot consume its own output: semio-framework-os-flow-browser-package:wasm",
         "log": "🗑️generated/e2e-build-skill-validation-v3.log"
+      },
+      "status": "passed",
+      "actual": {
+        "exit": 0,
+        "interface": "repo --tool=nx --lang=en capacity run --memory=128 --cpu=1 -- python3 -B",
+        "validator": "/Users/ueli/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "subject": ".agents/skills/build",
+        "output": "Skill is valid!",
+        "seconds": 0.085199875,
+        "log": "🗑️generated/e2e-build-skill-validation-capacity-v5.log",
+        "validatorSha256": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c",
+        "skillSha256": "a022fc60041db338b537c20f1829ce4d2fa0bd0ef43e6aec607a6ebf8796a7ee",
+        "qualification": "Actual official skill metadata validator; not workspace graph or runtime acceptance"
+      }
+    },
+    {
+      "id": "native-whole-retirement-owning-command",
+      "args": [
+        "--tool=nx",
+        "--lang=en",
+        "run",
+        "@semio-tech/framework-process:test-native-storage-platform",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🔨️modules/🏃️process/📋️project.json#test-native-storage-platform",
+      "runtimeEntry": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🟦️.ts",
+      "requiredRegressionEntry": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🧪️tests/🟦️.ts",
+      "requiredNamedTests": [
+        "Native whole recomputable retirement rejects foreign persistent and incomplete charges against Ajv",
+        "Native durable terminal continuation matches SQLite exact remaining-subset relation",
+        "Native terminal identities rebind reboot devices and refuse changed remaining inodes",
+        "Native whole retirement refuses invented opaque tokens before physical access",
+        "Native partial terminal continuation uses genuine EX and refuses replacement without losing its intent"
+      ],
+      "status": "pending-actual-owning-command",
+      "preconditions": [
+        "Genuine Graph recovery completed through the declared first-party reset route.",
+        "Native final source boundary, literal selected test mount and actual Original/control fixture independently reviewed.",
+        "No canonical dashboard or CLI build/install/publication."
+      ],
+      "expected": [
+        "Actual selected Native storage platform suite reaches and passes each required whole-retirement law and all other selected suite bodies.",
+        "Exact actual per-body results and whole terminal independently reconciled; no static, stand-in, skipped or synthetic receipt acceptance.",
+        "Actual fixture uses issued build-test invocation and derived control, real Native factory, private genuine allocation capture, close, interruption and resume."
+      ],
+      "sourceReview": {
+        "nativeManifest": "oct21-native-whole-retirement.md",
+        "revision": "2026-10-22",
+        "frozenPaths": 11,
+        "semantic": "independently-accepted",
+        "owningRouteAndFixture": "independently-accepted",
+        "runtimePassed": false,
+        "coordinatorOrder": {
+          "report": "oct22-native-coordinator-order.md",
+          "frozenPaths": 6,
+          "independentlySourceAccepted": true,
+          "productionPolicy": "pending-actual-owned-command",
+          "nativeLawNames": 5
+        }
       }
     },
     {
@@ -331,6 +393,62 @@
       ]
     },
     {
+      "id": "terminal-semantic-owner-laws",
+      "status": "pending",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--locked",
+        "-p",
+        "semio-framework-repo-dashboard-terminal",
+        "-p",
+        "semio-framework-repo-dashboard-source-view",
+        "--lib",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "precondition": "Genuine current Root resolver whole0 and current Source acceptance; preserve canonical cold-first ordering before any dashboard/CLI binary publication.",
+      "expected": [
+        "Actual complete terminal library and explicit source-view library test bodies, not dependency compilation alone.",
+        "All nine retained source UI laws, seven terminal feedback/settings laws and the source-view portable settlement law execute, with no ignored required tests.",
+        "Existing unchanged terminal Source budget and actual per-owner admission remain authoritative."
+      ],
+      "requiredCoverage": {
+        "retainedSourceUiLaws": 9,
+        "newTerminalFeedbackSettingsLaws": 7,
+        "sourceViewOwnerSettlementLaws": 1
+      },
+      "qualification": "No compiler/body/whole acceptance yet. Registered windows/unit selection is a separate canonical route."
+    },
+    {
+      "id": "canonical-dashboard-unit-owner-dispatch",
+      "status": "pending-owning-command-dispatch",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-unit",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "precondition": "Actual Source0 and exclusive cold-first whole acceptance, then canonical build/install.",
+      "expected": [
+        "Actual corrected canonical sixteen-package unit dispatcher runs through its existing owner command and Native custody.",
+        "The three new first-party source-view/feedback/keymap-editor packages are selected; dependency compilation does not substitute for actual available owner test bodies.",
+        "Retain actual admitted package roster, named bodies, ignored counts and whole terminal separately from the focused two-package and registered windows results."
+      ],
+      "requiredPackages": [
+        "semio-framework-repo-dashboard-source-view",
+        "semio-framework-repo-dashboard-feedback",
+        "semio-framework-repo-dashboard-keymap-editor"
+      ],
+      "staticExpectedPackageCount": 16
+    },
+    {
       "id": "developer-tools-live",
       "args": [
         "run",
@@ -348,6 +466,46 @@
       ],
       "acceptance": "A skipped required host debugger is an unmet runtime check, not a passing LLDB/Node/Pdb execution claim.",
       "status": "pending"
+    },
+    {
+      "id": "repo-cli-mcp-root-scope-native",
+      "args": [
+        "run",
+        "@semio-tech/repo-cli-rs:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "expected": [
+        "Official repo-mcp install prerequisite authenticates a current canonical frontend publication before this gate; Dashboard cold-start ordering remains separate.",
+        "Existing CLI TestScript executes seven native crates (previous six plus semio-framework-repo-workspace), including mounted provided-root MCP and shared root-selection laws.",
+        "Then the same Original executes strict owned TypeScript checking and eight actual Bun SDK/schema laws. Six installed child conversations (three disjoint roots × generic/codex) read only resources/list and files/folders, comparing exact independent filesystem inventories and canonical application/json schema.",
+        "Pre/post installed receipt, profile/executable hash, native header and pin must match; capture protocol body, actual owned shutdown status/signal and outer whole separately. No AGENTS, fake repository marker, global cwd mutation or new runtime external dependency."
+      ],
+      "requiredTests": [
+        "root_scope_tests::provided_root_bounds_real_repository_mcp_files_and_folders",
+        "root_selection_tests::explicit_repository_root_uses_the_provided_directory_and_refuses_invalid_paths",
+        "entrypoint::tests::native_mcp_repository_option_matches_shared_root_vectors",
+        "repository file and folder resources use closed JSON documents",
+        "canonical files and folders JSON agrees with independent schema and SQLite oracles",
+        "official installed repo MCP SDK bounds explicit sibling roots and preserves canonical JSON",
+        "SDK bridge preserves its first parser or protocol refusal through connection and close settlement",
+        "repository process and event ports retain captured context",
+        "MCP resource templates bind one nonempty identity",
+        "root_scope_tests::ticket_tool_results_preserve_canonical_document_and_path",
+        "ticket lifecycle outcomes retain exact dynamic paths",
+        "local ticket options refuse nonboolean authority flags"
+      ],
+      "status": "pending",
+      "expectedTestCounts": {
+        "nativeCrates": 7,
+        "bun": 8,
+        "installedConversations": 6
+      },
+      "prerequisites": [
+        "repo-mcp:install"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+      "runtimeEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧪️installed/🟦️.ts"
     },
     {
       "id": "os-mcp-native-protocol",
@@ -462,7 +620,20 @@
       "expected": [
         "Actual dashboard docking/pointer controls and exact ten TUI libraries through their owning workspace."
       ],
-      "scope": "Source/native TUI laws; actual installed window proof belongs to installed-journeys."
+      "scope": "Source/native TUI laws; actual installed window proof belongs to installed-journeys.",
+      "status": "pending-registered-source-native-orchestration",
+      "acceptedDirectLibraries": {
+        "process": 72467,
+        "exit": 0,
+        "owners": 10,
+        "passed": 395,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0,
+        "compileSeconds": 54.17,
+        "log": "🗑️generated/e2e-tui-window-libraries-direct-t10d.log",
+        "qualification": "Accepted direct ten-library native behavior only; registered test-windows includes separate Source and terminal orchestration, installed journeys and native Windows execution remain unrun."
+      }
     },
     {
       "id": "process-deadline",
@@ -480,6 +651,342 @@
         "daemon": 3,
         "terminal": 1
       }
+    },
+    {
+      "id": "rooted-ticket-service-rust",
+      "args": [
+        "run",
+        "@semio-tech/repo-tickets-rs:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📋️project.json",
+      "requiredTests": [
+        "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+        "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+        "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+        "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+        "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+        "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+        "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+        "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state"
+      ],
+      "expected": [
+        "Actual existing owning test target executes its own language package tests; dependency package unit bodies are not inferred from a different owner.",
+        "Retain actual named bodies, ignored/filtered exclusions, compiler and whole terminal separately."
+      ],
+      "status": "pending-owning-command-dispatch",
+      "directNativeFallback": {
+        "status": "passed-behavior-only",
+        "condition": "After original15 actual settlement, only if corpus29672 still owns singular Source lane; coordinate parent/High before launch",
+        "args": [
+          "cargo",
+          "--store=shared",
+          "--configuration=prototype",
+          "--",
+          "test",
+          "--manifest-path",
+          "Cargo.toml",
+          "--locked",
+          "-p",
+          "semio-framework-repo-tickets",
+          "--lib",
+          "rooted_lifecycle_tests",
+          "--",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "requiredTests": [
+          "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+          "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+          "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+          "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+          "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+          "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+          "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+          "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state"
+        ],
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/Cargo.toml",
+        "testMount": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🦀️.rs",
+        "qualification": "Filtered direct native crate behavior proof only; actual owning repo-run dispatch, other unit bodies, installed SDK and cold launch remain distinct. No Dashboard publication/install is invoked.",
+        "log": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+        "artifacts": "🗑️generated/rtk8a",
+        "purpose": "Approved independent native behavior gate while High Source28241 remains live; no Dashboard publish/install",
+        "session": 91975,
+        "actual": {
+          "session": 91975,
+          "exit": 0,
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 9,
+          "seconds": 0.01,
+          "log": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+          "owners": [
+            {
+              "package": "semio-framework-repo-tickets",
+              "library": "semio_framework_repo_tickets",
+              "bodies": [
+                {
+                  "law": "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+                  "status": "ok"
+                },
+                {
+                  "law": "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+                  "status": "ok"
+                }
+              ],
+              "summary": {
+                "status": "ok",
+                "passed": 8,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 9,
+                "elapsed": "0.01s"
+              }
+            }
+          ],
+          "qualification": "Filtered direct Native rooted behavior only; other nine unit bodies, registered owner command and installed MCP remain separate"
+        },
+        "nextRequiredTests": [
+          "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+          "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+          "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+          "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+          "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+          "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+          "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+          "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state"
+        ],
+        "nextStatus": "settled zero",
+        "nextLog": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+        "nextSession": 91975,
+        "actualHistory": [
+          {
+            "session": 49840,
+            "exit": 101,
+            "passed": 6,
+            "failed": 1,
+            "ignored": 0,
+            "filtered": 9,
+            "seconds": 0.01,
+            "log": "🗑️generated/e2e-rooted-ticket-service-rust.log",
+            "bodyProjection": [
+              {
+                "package": "semio-framework-repo-tickets",
+                "library": "semio_framework_repo_tickets",
+                "bodies": [
+                  {
+                    "law": "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+                    "status": "FAILED"
+                  }
+                ],
+                "summary": {
+                  "status": "FAILED",
+                  "passed": 6,
+                  "failed": 1,
+                  "ignored": 0,
+                  "measured": 0,
+                  "filtered": 9,
+                  "elapsed": "0.01s"
+                }
+              }
+            ],
+            "primary": "Persisted interactions absent: rooted lifecycle assertion unwraps None at line33",
+            "owner": "Root ticket codec slice",
+            "qualification": "Seven filtered direct Native behavior bodies; registered owner dispatch and other nine tests remain distinct"
+          },
+          {
+            "session": 91975,
+            "exit": 0,
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "filtered": 9,
+            "seconds": 0.01,
+            "log": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+            "owners": [
+              {
+                "package": "semio-framework-repo-tickets",
+                "library": "semio_framework_repo_tickets",
+                "bodies": [
+                  {
+                    "law": "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+                    "status": "ok"
+                  },
+                  {
+                    "law": "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+                    "status": "ok"
+                  }
+                ],
+                "summary": {
+                  "status": "ok",
+                  "passed": 8,
+                  "failed": 0,
+                  "ignored": 0,
+                  "measured": 0,
+                  "filtered": 9,
+                  "elapsed": "0.01s"
+                }
+              }
+            ],
+            "qualification": "Filtered direct Native rooted behavior only; other nine unit bodies, registered owner command and installed MCP remain separate"
+          }
+        ]
+      },
+      "acceptedBehavior": {
+        "process": 91975,
+        "exit": 0,
+        "passed": 8,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 9,
+        "seconds": 0.01,
+        "log": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+        "qualification": "Accepted filtered direct Native behavior; owning repo-run target, remaining nine unit bodies and installed SDK still unrun."
+      }
+    },
+    {
+      "id": "repo-cli-go-root-scope",
+      "args": [
+        "run",
+        "@semio-tech/repo-cli-go:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+      "requiredTests": [],
+      "expected": [
+        "Actual existing owning test target executes its own language package tests; dependency package unit bodies are not inferred from a different owner.",
+        "Retain actual named bodies, ignored/filtered exclusions, compiler and whole terminal separately."
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "repo-workspace-go-root-scope",
+      "args": [
+        "run",
+        "@semio-tech/repo-workspace-go:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/📋️project.json",
+      "requiredTests": [
+        "TestExplicitRepositoryRootUsesProvidedDirectory"
+      ],
+      "expected": [
+        "Actual existing owning test target executes its own language package tests; dependency package unit bodies are not inferred from a different owner.",
+        "Retain actual named bodies, ignored/filtered exclusions, compiler and whole terminal separately."
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "repo-graphql-go-root-scope",
+      "args": [
+        "run",
+        "@semio-tech/repo-graphql-go:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/📋️project.json",
+      "requiredTests": [
+        "TestTicketContextsKeepIndependentLifecycles"
+      ],
+      "expected": [
+        "Actual existing owning test target executes its own language package tests; dependency package unit bodies are not inferred from a different owner.",
+        "Retain actual named bodies, ignored/filtered exclusions, compiler and whole terminal separately."
+      ],
+      "status": "pending",
+      "testMount": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/📁️ticket-scope/🐹️.go"
+    },
+    {
+      "id": "repo-tickets-go-root-scope",
+      "args": [
+        "run",
+        "@semio-tech/repo-tickets-go:test",
+        "--skip-cache",
+        "--output=stream"
+      ],
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/📋️project.json",
+      "requiredTests": [],
+      "expected": [
+        "Actual existing owning test target executes its own language package tests; dependency package unit bodies are not inferred from a different owner.",
+        "Retain actual named bodies, ignored/filtered exclusions, compiler and whole terminal separately."
+      ],
+      "status": "pending"
     }
   ],
   "prohibited": [
@@ -488,5 +995,24 @@
     "unowned artifact copy or installation record fabrication",
     "parallel native compiler gates"
   ],
-  "acceptance": "Require each whole owned command terminal, actual named-body counts and explicit skips/exclusions. This plan is an input, not runtime proof."
+  "acceptance": "Require each whole owned command terminal, actual named-body counts and explicit skips/exclusions. This plan is an input, not runtime proof.",
+  "coordinatorPolicy": {
+    "sourcePrerequisite": "Current Source0 named bodies and whole accepted; normal current-input guards remain authoritative.",
+    "publicationFence": [
+      "canonical-cold-lazy-launch",
+      "canonical-build-and-install"
+    ],
+    "coldExclusive": true,
+    "forbidBeforeCold": [
+      "dashboard/CLI build, install or publication",
+      "installed receipt inspection or manufactured cold state",
+      "CLI MCP/developer-tools producer beside cold"
+    ],
+    "blockedPlatformChecks": [
+      "filesystem-check-x86_64-pc-windows-msvc",
+      "filesystem-check-x86_64-unknown-linux-gnu"
+    ],
+    "blockedPlatformQualification": "Retain unmet-toolchain-capability as separate unpassed platform checks; do not stop usable-host cold dispatch merely because these array entries precede it and do not mark them passed. Actual isolated hosted Windows/Linux and container execution remain required.",
+    "nativeQueue": "Serialize this ticket’s own Native/compiler producers under genuine resource custody. Once actual Source0 immutable-snapshot/backend admission is evidenced, independent peer domains may request normal capacity while Source0 bodies run, with whole acceptance still pending, frozen shared Sources and no dashboard/CLI canonical build, install, receipt inspection or publication before Root-owned cold. No queue bypass or authority over external producers is implied."
+  }
 }

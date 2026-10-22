@@ -1,5 +1,5 @@
 /** 🔤️ Text editor completions, rename and menu: the wasm session and rename state, the completions and rename info, the session factory, the caret screen position, the completion, rename and context menu handlers and the session ready callback. */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "../../⚛️react-port/🟦️.ts";
 import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { useLabel } from "@semio-tech/ui-react";

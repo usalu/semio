@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "$schema": "./.nx/installation/node_modules/nx/schemas/nx-schema.json",
   "cli": {
     "packageManager": "bun"
   },
@@ -12,10 +12,10 @@
     ],
     "sharedGlobals": [
       {
-        "runtime": "node -p \"process.platform.concat(process.arch)\""
+        "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
       },
       {
-        "runtime": "bun --version"
+        "runtime": "repo tools exec --light bun -- --version"
       },
       {
         "env": "SEMIO_BUILD_MODE"
@@ -50,7 +50,7 @@
     "uv": [
       "{projectRoot}/**/*.py",
       "{projectRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock"
+      "{projectRoot}/uv.lock"
     ],
     "dotnet": [
       "{projectRoot}/**/*.cs",

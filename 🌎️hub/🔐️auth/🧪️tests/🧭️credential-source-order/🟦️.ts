@@ -122,7 +122,7 @@ export function nativeCredentialSourceOrderConforms(source: NativeCredentialSour
     session[0]!.includes("await runNativeBinary(") &&
     binary.length === 1 &&
     binary[0]!.includes("await runOwnedCommand(") &&
-    ownerTargetCommand(source.project, "dev-secure-native") === "bun ./📜️script.ts dev secure-native"
+    ownerTargetCommand(source.project, "dev-secure-native") === "repo ./📜️script.ts dev secure-native"
   );
 }
 
@@ -188,7 +188,7 @@ export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopu
     source.directory.includes("directory_socket_hello_v1()") &&
     !source.runner.includes('runCmd("cargo", ["run"') &&
     source.runner.includes("runCmd(requireMcpBinary") &&
-    ownerTargetCommand(source.project, "dev-secure-mcp") === "bun ./📜️script.ts dev secure-mcp"
+    ownerTargetCommand(source.project, "dev-secure-mcp") === "repo ./📜️script.ts dev secure-mcp"
   );
 }
 

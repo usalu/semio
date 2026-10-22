@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::default_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::mutations::replace_source;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn replace_source_diff_applies_onto_the_base_snapshot() {
@@ -22,7 +22,7 @@ async fn replace_source_diff_applies_onto_the_base_snapshot() {
     assert!(diff.source.is_some());
     assert!(diff.tiles.is_none(), "a source replacement names no tile row");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base).await;
-    let (applied_source, _) = crate::presentation_working_scene(&protocol::apply_diff(&diff, &base).expect("valid mutation diff"));
+    let (applied_source, _) = crate::presentation_working_scene(&protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff"));
     assert_eq!(applied_source.kind, "video");
 }
 
@@ -48,20 +48,20 @@ fn diff_of(tiles: PresentationTilesDelta) -> PresentationDiff {
 fn positional_tile_delta_applies_inverts_and_sums_at_a_middle_row() {
     let base = snapshot_of(&["a", "b", "c"]);
     let insert = diff_of(PresentationTilesDelta::insertion(1, tile("x")));
-    let inserted = protocol::apply_diff(&insert, &base).expect("valid insertion");
+    let inserted = protocol::apply_diff_cold(&insert, &base).expect("valid insertion");
     assert_eq!(ids(&inserted), ["a", "x", "b", "c"]);
     let relocate = diff_of(PresentationTilesDelta::relocation(&inserted.tiles, 0, 3));
-    let moved = protocol::apply_diff(&relocate, &inserted).expect("valid relocation");
+    let moved = protocol::apply_diff_cold(&relocate, &inserted).expect("valid relocation");
     assert_eq!(ids(&moved), ["x", "b", "c", "a"]);
     let remove = diff_of(PresentationTilesDelta::removal(&moved.tiles, 1));
-    let removed = protocol::apply_diff(&remove, &moved).expect("valid removal");
+    let removed = protocol::apply_diff_cold(&remove, &moved).expect("valid removal");
     assert_eq!(ids(&removed), ["x", "c", "a"]);
     let mut sum = insert;
     sum.absorb(relocate);
     sum.absorb(remove);
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("valid sum"), removed);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("valid sum"), removed);
     let inverse = protocol::DiffAlgebra::inverse(&sum, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &removed).expect("valid inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &removed).expect("valid inverse"), base);
 }
 
 #[test]
@@ -69,5 +69,5 @@ fn positional_tile_delta_refuses_a_removal_that_is_not_at_its_base_index() {
     let base = snapshot_of(&["a", "b"]);
     let mut removal = PresentationTilesDelta::removal(&base.tiles, 0);
     removal.removed[0].index = 1;
-    assert!(protocol::apply_diff(&diff_of(removal), &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff_of(removal), &base).is_err());
 }

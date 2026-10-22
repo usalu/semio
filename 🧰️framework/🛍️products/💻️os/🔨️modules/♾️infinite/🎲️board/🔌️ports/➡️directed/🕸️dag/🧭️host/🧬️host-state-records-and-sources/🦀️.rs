@@ -46,7 +46,7 @@ pub struct DagPointerState {
 /// 🧩️ DagHost paint component: icon paint cache, computing progress, evaluation status and dimming.
 pub struct DagPaintState {
     pub dimmed: HistoryFoldSet<NodeId>,
-    pub icon_paint_cache: graph::IconPaintCache,
+    pub icon_paint_cache: semio_framework_os_infinite_board_engine::IconPaintCache,
     pub computing_active: Option<NodeId>,
     pub computing_stale: NumericSet<NodeId>,
     pub computing_active_anim_phase: Cell<f64>,

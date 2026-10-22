@@ -184,6 +184,6 @@
   ],
   "route": {
     "target": "test-root-surface-abstraction-law-source",
-    "command": "bun ./📜️script.ts test root-surface-abstraction-law-source"
+    "command": "repo ./📜️script.ts test root-surface-abstraction-law-source"
   }
 }

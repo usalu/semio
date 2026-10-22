@@ -1,0 +1,454 @@
+{
+  "version": 1,
+  "plans": [
+    {
+      "id": "shared-reference",
+      "input": {
+        "availableBytes": 0,
+        "minimumAvailableBytes": 8,
+        "references": [
+          "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "inventories": [
+          {
+            "identity": "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "allocatedBytes": 16,
+            "modified": 1
+          },
+          {
+            "identity": "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "allocatedBytes": 8,
+            "modified": 2
+          },
+          {
+            "identity": "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "allocatedBytes": 8,
+            "modified": 3
+          }
+        ]
+      },
+      "retired": [
+        "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "id": "lock-retained",
+      "input": {
+        "availableBytes": 0,
+        "minimumAvailableBytes": 32,
+        "references": [
+          "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        "inventories": [
+          {
+            "identity": "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "allocatedBytes": 8,
+            "modified": 2
+          },
+          {
+            "identity": "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "allocatedBytes": 64,
+            "modified": 1
+          },
+          {
+            "identity": "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "allocatedBytes": 16,
+            "modified": 3
+          }
+        ]
+      },
+      "retired": [
+        "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "id": "already-funded",
+      "input": {
+        "availableBytes": 8,
+        "minimumAvailableBytes": 8,
+        "references": [],
+        "inventories": [
+          {
+            "identity": "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "allocatedBytes": 16,
+            "modified": 1
+          }
+        ]
+      },
+      "retired": []
+    },
+    {
+      "id": "all-referenced",
+      "input": {
+        "availableBytes": 0,
+        "minimumAvailableBytes": 8,
+        "references": [
+          "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        "inventories": [
+          {
+            "identity": "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "allocatedBytes": 16,
+            "modified": 1
+          },
+          {
+            "identity": "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "allocatedBytes": 8,
+            "modified": 2
+          },
+          {
+            "identity": "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "allocatedBytes": 8,
+            "modified": 3
+          }
+        ]
+      },
+      "retired": []
+    },
+    {
+      "id": "largest-physical-first",
+      "input": {
+        "availableBytes": 0,
+        "minimumAvailableBytes": 32,
+        "references": [],
+        "inventories": [
+          {
+            "identity": "source:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "allocatedBytes": 16,
+            "modified": 1
+          },
+          {
+            "identity": "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "allocatedBytes": 32,
+            "modified": 3
+          },
+          {
+            "identity": "lock:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "allocatedBytes": 24,
+            "modified": 2
+          }
+        ]
+      },
+      "retired": [
+        "source:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    }
+  ],
+  "physical": [
+    "orphan",
+    "referenced",
+    "key-reference",
+    "generation",
+    "inference",
+    "publication-fallback",
+    "pack",
+    "unknown",
+    "corrupt",
+    "symlink",
+    "hardlink",
+    "leaf-replaced",
+    "ancestor-replaced",
+    "reference-replaced",
+    "new-reference",
+    "cancel",
+    "busy-reader",
+    "busy-writer",
+    "exact-task-missing",
+    "optional-release",
+    "optional-new-reference"
+  ],
+  "reuse": [
+    "missing-validity-window",
+    "missing-unpublished-image",
+    "corrupt-validity-window",
+    "missing-ancestor",
+    "cancel"
+  ],
+  "worker": {
+    "literal": "./👷️read.mjs",
+    "role": "source",
+    "suffix": ".mjs"
+  },
+  "recovery": [
+    {
+      "scenario": "referenced",
+      "fundedBy": "closures",
+      "optionalCalls": 0,
+      "orphanRetained": false
+    },
+    {
+      "scenario": "publication-fallback",
+      "fundedBy": "publications",
+      "optionalCalls": 1,
+      "orphanRetained": true
+    },
+    {
+      "scenario": "optional-release",
+      "fundedBy": "fresh-closures",
+      "optionalCalls": 1,
+      "orphanRetained": false
+    },
+    {
+      "scenario": "optional-new-reference",
+      "fundedBy": "refused",
+      "optionalCalls": 1,
+      "orphanRetained": true
+    }
+  ],
+  "retirementStates": [
+    {
+      "id": "prepared",
+      "input": {
+        "committed": false,
+        "original": "bound",
+        "retired": "absent",
+        "remaining": 2
+      },
+      "state": "prepared"
+    },
+    {
+      "id": "rename-window",
+      "input": {
+        "committed": false,
+        "original": "absent",
+        "retired": "bound",
+        "remaining": 2
+      },
+      "state": "committed"
+    },
+    {
+      "id": "rename-new-generation",
+      "input": {
+        "committed": false,
+        "original": "fresh",
+        "retired": "bound",
+        "remaining": 2
+      },
+      "state": "committed"
+    },
+    {
+      "id": "committed",
+      "input": {
+        "committed": true,
+        "original": "absent",
+        "retired": "bound",
+        "remaining": 1
+      },
+      "state": "committed"
+    },
+    {
+      "id": "new-generation",
+      "input": {
+        "committed": true,
+        "original": "fresh",
+        "retired": "bound",
+        "remaining": 1
+      },
+      "state": "committed"
+    },
+    {
+      "id": "terminal",
+      "input": {
+        "committed": true,
+        "original": "absent",
+        "retired": "absent",
+        "remaining": 0
+      },
+      "state": "terminal"
+    },
+    {
+      "id": "terminal-new-generation",
+      "input": {
+        "committed": true,
+        "original": "fresh",
+        "retired": "absent",
+        "remaining": 0
+      },
+      "state": "terminal"
+    },
+    {
+      "id": "uncommitted-loss",
+      "input": {
+        "committed": false,
+        "original": "absent",
+        "retired": "absent",
+        "remaining": 0
+      },
+      "state": "refuse"
+    },
+    {
+      "id": "prepared-replaced",
+      "input": {
+        "committed": false,
+        "original": "fresh",
+        "retired": "absent",
+        "remaining": 2
+      },
+      "state": "refuse"
+    },
+    {
+      "id": "duplicate-old",
+      "input": {
+        "committed": true,
+        "original": "bound",
+        "retired": "bound",
+        "remaining": 2
+      },
+      "state": "refuse"
+    },
+    {
+      "id": "missing-retired-members",
+      "input": {
+        "committed": true,
+        "original": "absent",
+        "retired": "absent",
+        "remaining": 1
+      },
+      "state": "refuse"
+    },
+    {
+      "id": "old-reappeared",
+      "input": {
+        "committed": true,
+        "original": "bound",
+        "retired": "absent",
+        "remaining": 0
+      },
+      "state": "refuse"
+    }
+  ],
+  "transport": {
+    "channel": "owned-stdin",
+    "maximumBytes": 65536,
+    "argumentCount": 8,
+    "boundaries": [
+      65535,
+      65536,
+      65537
+    ],
+    "launchOwner": "runClosureReadCohortsV1",
+    "launcher": "withOwnedCommandChannelV1",
+    "requestSuffix": "\n",
+    "terminalFrame": "null\n",
+    "captureOwner": "prepareClosureReadSourceV1",
+    "argumentSource": "captured.argv",
+    "bootstrapSource": "captured.bootstrap",
+    "readySource": "captured.digest",
+    "entryExport": "runCapturedBuildSourceV1",
+    "captureArguments": [
+      "worker",
+      "control"
+    ],
+    "creditOwner": "closureReadReplyCreditV1",
+    "creditField": "maximumReplyBytes",
+    "framing": {
+      "owner": "closureReadInputFramesV1",
+      "format": "base64",
+      "policies": [
+        "I",
+        "S"
+      ],
+      "collections": [
+        "bootstrapFrames",
+        "requestFrames"
+      ],
+      "sources": [
+        "captured.bootstrap",
+        "packet"
+      ],
+      "cases": [
+        {
+          "id": "empty",
+          "text": "x",
+          "repeat": 0,
+          "expectedBytes": 0,
+          "expectedFrames": 1
+        },
+        {
+          "id": "text-bound-plus-one",
+          "text": "x",
+          "repeat": 65537,
+          "expectedBytes": 65537,
+          "expectedFrames": 1
+        },
+        {
+          "id": "binary-exact",
+          "text": "x",
+          "repeat": 4194304,
+          "expectedBytes": 4194304,
+          "expectedFrames": 1
+        },
+        {
+          "id": "binary-plus-one",
+          "text": "x",
+          "repeat": 4194305,
+          "expectedBytes": 4194305,
+          "expectedFrames": 2
+        },
+        {
+          "id": "unicode-split",
+          "text": "雪",
+          "repeat": 1398102,
+          "expectedBytes": 4194306,
+          "expectedFrames": 2
+        }
+      ]
+    }
+  },
+  "groups": [
+    "complete",
+    "new-generation",
+    "known-missing-pack",
+    "unindexed-pack",
+    "manifest-changed",
+    "member-changed",
+    "ancestor-changed",
+    "new-member",
+    "cancel-after-commit"
+  ],
+  "readResult": {
+    "copies": 64,
+    "expectedReferences": 1,
+    "maximumBytes": 16777216
+  },
+  "workBudget": [
+    {
+      "remaining": 0,
+      "bytes": 0,
+      "result": 0
+    },
+    {
+      "remaining": 1,
+      "bytes": 1,
+      "result": 0
+    },
+    {
+      "remaining": 1,
+      "bytes": 2,
+      "result": null
+    },
+    {
+      "remaining": 3,
+      "bytes": 2,
+      "result": 1
+    },
+    {
+      "remaining": 17179869184,
+      "bytes": 536870912,
+      "result": 16642998272
+    }
+  ],
+  "snapshot": {
+    "version": 2,
+    "graphVersion": 1,
+    "projects": [
+      "p"
+    ],
+    "dependencyRecords": 0,
+    "externalRecords": 0,
+    "gzipMagicHex": "1f8b"
+  }
+}

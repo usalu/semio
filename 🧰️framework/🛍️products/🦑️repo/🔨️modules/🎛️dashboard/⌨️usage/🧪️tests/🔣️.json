@@ -42,7 +42,7 @@
       "accepted": false
     },
     {
-      "command": "bun repo dashboard",
+      "command": "repo dashboard",
       "accepted": false
     }
   ],

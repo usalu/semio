@@ -195,7 +195,7 @@ pub static DB_IO_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std:
 
 pub static DB_IO_LOST_OWNER_WAKE_REQUESTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn db_io_request_lost_owner_maintenance() {
+pub fn db_io_request_lost_owner_maintenance() {
     if !DB_IO_LOST_OWNER_WAKE_REQUESTED.swap(true, std::sync::atomic::Ordering::AcqRel) {
         crate::request_any_controller();
     }

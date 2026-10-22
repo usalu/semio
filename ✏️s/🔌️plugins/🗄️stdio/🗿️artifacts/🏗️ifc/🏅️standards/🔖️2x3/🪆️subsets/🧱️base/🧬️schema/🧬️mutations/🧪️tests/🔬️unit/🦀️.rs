@@ -45,7 +45,7 @@ async fn upsert_then_inverse_restores_absent_id_via_remove() {
     let base = snap.clone();
     apply_ifc2x3_mutation(&mut snap, &mutation);
     assert_eq!(snap.document.instances.len(), 1);
-    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inv = <Ifc2x3Mutation as ColdMutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, vec![Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 })]);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
@@ -59,7 +59,7 @@ async fn remove_then_inverse_restores_prior_instance() {
     let mutation = Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 2 });
     apply_ifc2x3_mutation(&mut snap, &mutation);
     assert_eq!(snap.document.instances.len(), 1);
-    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inv = <Ifc2x3Mutation as ColdMutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, vec![Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(2, "IFCDOOR").await, index: Some(0) })]);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
@@ -148,11 +148,11 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
     let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: replacement, index: None });
     let changed_outcome = Mutation::diff(&mutation, &imported);
-    let changed = protocol::apply_diff(changed_outcome.diff(), &imported).expect("valid upsert diff");
+    let changed = protocol::apply_diff_cold(changed_outcome.diff(), &imported).expect("valid upsert diff");
     assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
     let inverse = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse");
     let restored_outcome = Mutation::diff(&inverse, &changed);
-    let restored = protocol::apply_diff(restored_outcome.diff(), &changed).expect("valid inverse diff");
+    let restored = protocol::apply_diff_cold(restored_outcome.diff(), &changed).expect("valid inverse diff");
     assert_eq!(restored, imported);
     assert_exact("interior upsert inverse", &semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&restored).expect("inverse export")).await;
 

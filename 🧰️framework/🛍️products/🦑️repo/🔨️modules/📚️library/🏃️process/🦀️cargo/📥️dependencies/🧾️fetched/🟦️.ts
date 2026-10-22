@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {posix,resolve,sep} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 const protocol=Object.freeze({...schema.definitions.Protocol.const});
 const digestOf=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
@@ -14,7 +15,7 @@ export type FetchedPortV1=Readonly<{read(path:string):Promise<Uint8Array|undefin
 
 /** 📜️ Classifies a lockfile: only registry and path packages can be proven fetched by directory stamps; git sources keep the unconditional fetch. */
 export function classifyFetchedLockV1(text:string):"registry"|"unsupported"{
- let document:{package?:Array<{source?:unknown}>};try{document=Bun.TOML.parse(text) as typeof document;}catch{return"unsupported";}
+ let document:{package?:Array<{source?:unknown}>};try{document=runtimeParseTomlV1(text) as typeof document;}catch{return"unsupported";}
  if(!Array.isArray(document.package))return"unsupported";
  let registry=false;
  for(const row of document.package){if(row.source===undefined)continue;if(typeof row.source!=="string"||!/^(registry|sparse)\+/u.test(row.source))return"unsupported";registry=true;}
@@ -26,7 +27,7 @@ export async function fetchedLockPathV1(manifest:string,read:FetchedPortV1["read
  let directory=posix.dirname(manifest);
  for(let depth=0;depth<64;depth++){
   const bytes=await read(posix.join(directory,"Cargo.toml"));
-  if(bytes){let document:{workspace?:unknown;package?:{workspace?:unknown}};try{document=Bun.TOML.parse(Buffer.from(bytes).toString("utf8")) as typeof document;}catch{return undefined;}
+  if(bytes){let document:{workspace?:unknown;package?:{workspace?:unknown}};try{document=runtimeParseTomlV1(Buffer.from(bytes).toString("utf8")) as typeof document;}catch{return undefined;}
    if(document.workspace!==undefined)return posix.join(directory,"Cargo.lock");
    if(typeof document.package?.workspace==="string"){const explicit=posix.normalize(posix.join(directory,document.package.workspace));return explicit.startsWith("..")?undefined:posix.join(explicit,"Cargo.lock");}}
   if(directory==="."||directory==="")break;
@@ -37,7 +38,7 @@ export async function fetchedLockPathV1(manifest:string,read:FetchedPortV1["read
 
 /** 📦️ The `name-version` of every registry package a lockfile pins, `undefined` for a lockfile that cannot be read. */
 export function fetchedPackagesV1(text:string):string[]|undefined{
- let document:{package?:Array<{name?:unknown;version?:unknown;source?:unknown}>};try{document=Bun.TOML.parse(text) as typeof document;}catch{return undefined;}
+ let document:{package?:Array<{name?:unknown;version?:unknown;source?:unknown}>};try{document=runtimeParseTomlV1(text) as typeof document;}catch{return undefined;}
  if(!Array.isArray(document.package))return undefined;
  const rows:string[]=[];
  for(const row of document.package){if(row.source===undefined)continue;if(typeof row.name!=="string"||typeof row.version!=="string"||/[\\/]/u.test(row.name+row.version))return undefined;rows.push(row.name+"-"+row.version);}

@@ -24,6 +24,12 @@ pub fn rename_part_kind<Op: From<crate::rename_part_kind::RenamePartKind>>(new_n
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RenamePartKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::rename_part_kind::RenamePartKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "part-kind", kind: "rename-part-kind", record: "RenamedPartKind" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename part kind to \"{}\"", self.new_name), &format!("Bauteilart in \"{}\" umbenennen", self.new_name))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for RenamePartKind where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::rename_part_kind::RenamePartKind> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::rename_part_kind::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RenamePartKind where Op
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename part kind to \"{}\"", self.new_name), &format!("Bauteilart in \"{}\" umbenennen", self.new_name))
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -95,6 +95,7 @@ impl Planner<'_> {
 }
 /// 🧵️ Converts unique mask buffers within bounded grants before publishing a composite.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct RasterStackJob {pending:Option<CompositeInput>,#[doc(hidden)] pub composite:Option<CompositeJob>,#[doc(hidden)] pub composite_retirement:Option<CompositeRetirement>,#[doc(hidden)] pub output:Option<RasterImage>,#[doc(hidden)] pub completed:usize,#[doc(hidden)] pub done:bool,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,#[doc(hidden)] pub total:usize,#[doc(hidden)] pub origin:[f64;2],#[doc(hidden)] pub empty:bool,cancelled:bool}
 impl RasterStackJob {
     pub fn new(input:RasterStackInput)->Result<Self,PixelEditError>{

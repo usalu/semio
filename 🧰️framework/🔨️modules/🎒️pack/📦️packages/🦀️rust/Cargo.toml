@@ -48,6 +48,7 @@ semio-framework-pack-io = { path = "../../🔌️io/📦️packages/🦀️rust"
 semio-framework-pack-json = { path = "../../🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-record = { path = "../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-record-encode = { path = "../../🌱️value/🛫️encode/📦️packages/🦀️rust" }
+semio-framework-pack-record-encode-cursor = { path = "../../🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/📦️packages/🦀️rust" }
 semio-framework-pack-record-preflight = { path = "../../🌱️value/🫳️preflight/📦️packages/🦀️rust" }
 semio-framework-pack-record-retained = { path = "../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-pack-record-schema = { path = "../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
@@ -60,6 +61,7 @@ semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️deco
 semio-framework-value-schema = { path = "../../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 blake3 = "1.8.2"
+semio-framework-value-paged-text = { path = "../../../🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

@@ -1,0 +1,20 @@
+# Current Session Causal Negative Review
+
+Current bounded review found one concrete production readiness-budget blocker; High and Root notified immediately. No Source execution or edits.
+
+Current runClosureReadCohortsV1 authenticates bootstrap ready frame before batching and starts outputBytes with its positive byte extent. closureReadReplyMaximumV1 returns full P.maximumResultBytes for every batch containing roles beyond source/lock/retired. Since S.maximumOutputBytes equals P.maximumResultBytes, readyBytes+fullReplyBound cannot fit; the first such batch deterministically refuses before request at frames===1. Actual production inventories include generation/inference/other roles. Existing positive two-source-batch fixture does not cover this cause. Correction must account for readiness overhead within unchanged total capture authority and prove a non-Source role reaches actual request.
+
+The two new wireFailures are otherwise causally well-formed: missing-end genuine child receives bootstrap then EOF, producing ready+semantic failure2frames; malformed genuine child receives ready, one empty success, malformed request then semantic failure3frames. The helper validates closed failure and exact ready digest; SQLite projects status1/signalnull/emptystderr/framecount/failureName/message and compares closed rows. Bootstrap readiness is counted explicitly rather than mistaken as payload proof. Real Original/control isolation and terminal joining remain; no historical47370 attribution is claimed.
+
+Current ReadSessionFixture strictAjv-valid at schema29506/07874702193f777d7699fedb529288eb124a06fcdfe28d00862dde09e8061829, corpus1582/b0dbd3134c75c7454250ffe0962487a136b6f2db793c489309f36206649d22c9, test14935/3bb05fd11970d3e0b02ac5494db496320edb60c5691cc6421f9d27b4ffc467d3. First two selected laws explicit60000 and third150000; CLI150000/phase330000 honest sum+margin.
+
+Current prepareClosureReadSourceV1 additionally directly imports existing captureBuildSourceClosureV1 owner, buildSourceClosureNodeArgumentsV1 actual node owner and source-closure schema, all absent old204 roster. Exact library paths are 🏗️build/📥️source/🔏️closure/{🟦️.ts,🧬️schema/🔣️.json,🟢️node/🟨️.mjs}; declaration and any actual directly consumed parser inputs must be admitted in final coherent witness map. Source213 proposal is historical preliminary, not final.
+
+No final current clearance before readiness-budget repair and coherent handoff. No production eval, CLI, Native, Source/control/ledger mutations.
+## Coherent674e Handoff Recheck
+
+Handoff25484/674e2fb925f9f9cffc8542430cbc6b088a709d7a1c1b1b5926163ce9e52eddb7: all41 physical byte/hash rows matched. Current session corpus strictAjv-valid. Readiness blocker corrected:128ready+8192failure+4096diagnostic+16764800reply exactly equals unchanged16777216capture. Parent checks actual ready<=128, uses residual bound for unknown roles and terminates full-bound cohort; worker enforces identical residual cap during accumulation and final wire encoding. Genuine FIRSTgeneration-pointer cohort now asserts exact successful result, so non-Source eligibility is causally covered.
+
+Node selected-Source additive helper is pure validation: exact closed absolute path/hash rows, duplicates refused, compared captured module hashes and required selected worker entry. Session detaches selected rows and fixes identity once per actual issued lifetime; it does not fund/control any operation. Required directly consumed declaration sourceclosure/🟢️node/🟨️.d.mts is absent handoff41 and must be added to final roster because session imports new helper and consumes ReturnType declaration.
+
+Remaining concrete selected-law blocker: packet test still extracts closureReadResultPacketV1 with only P, while actual function now reads document.ReadSessionProtocol.maximumReplyBytes. It will ReferenceError; its corpus also still accepts16MiB success boundaries instead of residual16764800. High notified to schema/test-first align packet3 while retaining total capture16MiB. No new literal/phase needed. Hence674e is not final blanket clearance.

@@ -154,7 +154,7 @@ async fn a_diff_outside_the_reads_serves_the_stored_result_without_walking_the_p
     assert_eq!(first, untouched, "a project edit leaves the inference alone");
     assert!(session.report().gated && session.report().computed == 0, "a diff outside the reads walks no plan");
     let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).storey_levels.clone();
     assert!((recomputed["st-first"].elevation - first.storey_levels["st-first"].elevation - 0.4).abs() < 1e-9, "a storey height edit re-infers the levels above");
 }

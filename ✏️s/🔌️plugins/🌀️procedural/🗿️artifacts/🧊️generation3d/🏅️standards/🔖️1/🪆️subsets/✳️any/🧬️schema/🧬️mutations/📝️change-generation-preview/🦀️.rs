@@ -18,19 +18,23 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "preview", kind: "change-generation-preview", record: "ChangedGenerationPreview" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::change_generation_preview::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        crate::change_generation_preview::inverse::inverse(self, base)
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match &self.text {
             Some(_) => semio_framework_ui_locale::LocalizedLabel::native("Change the generation preview", "Generierungsvorschau ändern"),
             None => semio_framework_ui_locale::LocalizedLabel::native("Clear the generation preview", "Generierungsvorschau löschen"),
         }
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for ChangeGenerationPreview
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<ChangeGenerationPreview>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::change_generation_preview::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        crate::change_generation_preview::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️ChangeGenerationPreview

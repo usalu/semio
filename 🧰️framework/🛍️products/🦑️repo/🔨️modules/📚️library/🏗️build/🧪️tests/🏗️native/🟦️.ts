@@ -40,7 +40,7 @@ test("CMake owner loads independently of root audit code and owns direct Nx comm
  expect(Object.keys(compiled.metafile!.inputs)).not.toContain("📜️script.ts");
  expect(Object.keys(compiled.metafile!.inputs).some(input=>input.includes("/🔍️discovery/"))).toBe(false);
  const project = JSON.parse(readFileSync(resolve(root,"📋️project.json"),"utf8"));
- for(const target of fixture.cppTargets) expect(project.targets[target].options.command).toBe(`bun ./${fixture.cmakeEntry} cpp ${target.slice(4)}`);
+ for(const target of fixture.cppTargets) expect(project.targets[target].options.command).toBe(`repo ./${fixture.cmakeEntry} cpp ${target.slice(4)}`);
 });
 
 test("Cargo synchronization reuses content-bound admission and observes manifest and lock changes",async()=>{

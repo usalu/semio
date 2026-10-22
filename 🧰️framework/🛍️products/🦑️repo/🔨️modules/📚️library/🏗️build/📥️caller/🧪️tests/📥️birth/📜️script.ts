@@ -3,7 +3,7 @@ import {writeFile} from "node:fs/promises";
 import {resolve,relative,basename} from "node:path";
 import {receiveScriptProcessInvocation,readIssuedScriptProcessEnvelopeV1,scriptProcessEnvironment,requireIssuedScriptInvocationV1,createIssuedResourceControlV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83e\udded\ufe0frouting/\ud83d\udfe6\ufe0f.ts";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
-import {projectOwnedNxProcessEnvelopeV1} from "../../🟦️.ts";
+import {projectOwnedNxProcessEnvelopeV1} from "../../../🔧️tools/🧶️nx/📨️envelope/🟦️.ts";
 import fixture from "./🔣️.json";
 
 const root=process.env.SEMIO_WORKSPACE_ROOT!,receipt=resolve(process.argv[2]??""),artifact=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??"");

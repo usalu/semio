@@ -18,22 +18,23 @@ pub type SetTextPayload = SetTextMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
-        protocol::MutationOutcome::new(diff_at_path(&self.path.0, XmlNodeDiff::Text { text: Some(self.text.clone()) }))
-    }
-
-    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
-        Ok(match self.path.resolve(base.doc.root.as_ref()) {
-            Some(XmlNode::Text { text }) => vec![super::XmlMutation::SetText(Self { path: self.path.clone(), text: text.clone() })],
-            _ => Vec::new(),
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-text".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+        protocol::MutationOutcome::new(diff_at_path(&self.path.0, XmlNodeDiff::Text { text: Some(self.text.clone()) }))
+    }
+    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
+        Ok(match self.path.resolve(base.doc.root.as_ref()) {
+            Some(XmlNode::Text { text }) => vec![super::XmlMutation::SetText(Self { path: self.path.clone(), text: text.clone() })],
+            _ => Vec::new(),
+        })
     }
 }
 

@@ -1,7 +1,7 @@
 use super::*;
 use crate::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
 use crate::editor::drawing::modes::edit::windows::canvas::transient::{DrawingCanvasWindowTransientMutation, DrawingCanvasWindowTransientOwner};
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 
 fn block_on_drawing_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -124,9 +124,9 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let after = protocol::apply_diff(config_mutation.diff(&base_config).diff(), &base_config).unwrap();
+    let after = protocol::apply_diff_cold(config_mutation.diff(&base_config).diff(), &base_config).unwrap();
     assert_eq!(after, next_config);
-    let restored = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+    let restored = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, base_config);
     assert_eq!(DrawingCanvasWindowConfig::parse_dsl(&base_config.print_dsl()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfig::decode_pack(&base_config.encode_pack()).unwrap(), base_config);
@@ -136,9 +136,9 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     let base_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["nextTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let transient_mutation: DrawingCanvasWindowTransientMutation = semio_framework_pack_json::from_json_str(&fixture["transientMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let after = protocol::apply_diff(transient_mutation.diff(&base_transient).diff(), &base_transient).unwrap();
+    let after = protocol::apply_diff_cold(transient_mutation.diff(&base_transient).diff(), &base_transient).unwrap();
     assert_eq!(after, next_transient);
-    let restored = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+    let restored = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, base_transient);
     assert_eq!(DrawingCanvasWindowTransient::parse_dsl(&base_transient.print_dsl()).unwrap(), base_transient);
     assert_eq!(DrawingCanvasWindowTransient::decode_pack(&base_transient.encode_pack()).unwrap(), base_transient);

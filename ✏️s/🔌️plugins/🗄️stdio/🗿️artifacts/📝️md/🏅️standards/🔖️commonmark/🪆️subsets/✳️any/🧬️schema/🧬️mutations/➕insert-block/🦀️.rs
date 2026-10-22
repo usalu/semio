@@ -15,19 +15,22 @@ pub struct InsertBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for InsertBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "block", kind: "insert-block", record: "InsertBlock" };
 
-    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<MdSnapshot, MdMutation> for InsertBlock {
+    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::ColdMutation<MdSnapshot>>::ReferenceDiff> {
         let Self { path, index, block } = self;
         protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())))
     }
     fn inverse(&self, _base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
         let Self { path, index, .. } = self;
         Ok(vec![MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone(), index: *index })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -56,7 +56,7 @@ pub mod set_screen_size;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = GifSnapshot, diff = GifDiff, schema = "GifMutation")]
+#[mutations(snapshot = GifSnapshot, diff = GifDiff, schema = "GifMutation", reference = GifSnapshot, reference_diff = GifDiff)]
 pub enum GifMutation {
     SetScreenSize(set_screen_size::SetScreenSize),
     SetGlobalColorTable(set_global_color_table::SetGlobalColorTable),
@@ -110,8 +110,8 @@ pub fn demo_mutation_cases() -> Vec<GifMutation> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
-    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <GifMutation as ColdMutation<GifSnapshot>>::diff(mutation, snapshot);
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

@@ -1,5 +1,5 @@
 /** 🖍️ Text editor buffer and edit helpers: the token class colors, the highlighted buffer, the host label, the multi-span replace, the line range and identifier prefix helpers and the local echo reconciliation. */
-import { type ReactNode } from "react";
+import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { type UiTranslationKey } from "@semio-tech/ui-react";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import type { GrammarToken, SpanRange } from "../🏷️editor-types/🟦️.ts";

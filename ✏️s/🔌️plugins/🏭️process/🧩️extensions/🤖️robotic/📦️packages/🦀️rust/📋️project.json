@@ -17,7 +17,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -25,7 +25,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts package",
+        "command": "repo ./📜️script.ts package",
         "forwardAllArgs": true
       },
       "cache": true,

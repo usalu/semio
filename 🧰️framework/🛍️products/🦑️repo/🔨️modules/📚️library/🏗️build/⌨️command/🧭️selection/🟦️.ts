@@ -1,0 +1,5 @@
+import{fileURLToPath}from"node:url";
+import{parseBuildInvocationV1,buildInvocationRequestsHelpV1}from"../../🧭️invocation/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+/** 🧭️ Selects a closed executable verb kernel before capturing its actual import graph. */
+export function repositoryCommandKernelV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>=process.env):Readonly<{kind:"preflight"|"dependencies"|"cache"|"cache-ledger"|"runtime";entry:string}>{const selected=parseBuildInvocationV1(args,environment).args,command=selected[0],help=buildInvocationRequestsHelpV1(selected)&&!(command==="run"&&selected[1]?.startsWith("@semio-tech/repo-dashboard-rs:")),kind=command==="preflight"||help?"preflight":command==="dependencies"?"dependencies":command==="remote-cache"?"cache":command==="cache"?(["status","gc","verify"].includes(selected[1]??"")&&!selected.includes("--tasks")?"cache-ledger":"cache"):"runtime",entry=fileURLToPath(new URL("../"+schema.properties.kernels.const[kind],import.meta.url));return Object.freeze({kind,entry});}

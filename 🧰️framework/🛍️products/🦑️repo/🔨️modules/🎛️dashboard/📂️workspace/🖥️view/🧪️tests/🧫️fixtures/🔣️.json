@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "load",
+      "kind": "load",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": false,
+      "authoritative": false,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": false,
+      "expected": "adopt"
+    },
+    {
+      "name": "cancelled-load",
+      "kind": "load",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": true,
+      "authoritative": false,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": false,
+      "expected": "ignore"
+    },
+    {
+      "name": "committed-after-cancel",
+      "kind": "save",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": true,
+      "authoritative": true,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": true,
+      "expected": "adopt"
+    },
+    {
+      "name": "stale-operation",
+      "kind": "save",
+      "operation": 1,
+      "currentOperation": 2,
+      "cancelled": false,
+      "authoritative": true,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": false,
+      "expected": "ignore"
+    },
+    {
+      "name": "missing-window",
+      "kind": "save",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": false,
+      "authoritative": true,
+      "windowPresent": false,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": false,
+      "expected": "ignore"
+    },
+    {
+      "name": "dirty-load",
+      "kind": "load",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": false,
+      "authoritative": false,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": true,
+      "expected": "ignore"
+    },
+    {
+      "name": "changed-generation",
+      "kind": "load",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": false,
+      "authoritative": false,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 3,
+      "dirty": false,
+      "expected": "ignore"
+    },
+    {
+      "name": "worker-disconnected",
+      "kind": "disconnect",
+      "operation": 1,
+      "currentOperation": 1,
+      "cancelled": false,
+      "authoritative": false,
+      "windowPresent": true,
+      "expectedGeneration": 2,
+      "currentGeneration": 2,
+      "dirty": false,
+      "expected": "disconnect"
+    }
+  ],
+  "effectOrder": [
+    "worker-settled",
+    "model-adopted",
+    "view-remounted",
+    "pending-started"
+  ]
+}

@@ -680,6 +680,69 @@
       }
     },
     {
+      "id": "renderer-modules",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "📺️renderer-modules",
+      "budget": {
+        "bytes": 268435456
+      },
+      "collect": {
+        "unusedAgeMs": 2592000000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        ".storybook/📖️stories/🧭️coordination/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Renderer modules served to the storybook.",
+        "de": "Dem Storybook bereitgestellte Renderer-Module."
+      }
+    },
+    {
+      "id": "browser-actor-containment",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "browser-actor-child-containment",
+      "budget": {
+        "bytes": 67108864
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🌎️hub/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "purpose": {
+        "en": "Test artifacts of the browser actor child containment check.",
+        "de": "Testartefakte der Browser-Actor-Child-Isolationsprüfung."
+      }
+    },
+    {
+      "id": "elan",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "tools/elan",
+      "budget": {
+        "bytes": 3221225472
+      },
+      "collect": {
+        "unusedAgeMs": 7776000000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "👴️leutwiler/💤️realparts-of-powers-z-n/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Lean toolchains of the workspace-owned elan home, one per pinned elan version.",
+        "de": "Lean-Toolchains des arbeitsbereichseigenen elan-Verzeichnisses, eine je festgelegter elan-Version."
+      }
+    },
+    {
       "id": "diff",
       "root": "repository",
       "kind": "tree",
@@ -701,7 +764,7 @@
       }
     },
     {
-      "id": "cargo-legacy",
+      "id": "cargo-protected",
       "root": "repository",
       "kind": "tree",
       "directory": "cargo",
@@ -946,15 +1009,6 @@
     {
       "root": "repository",
       "directory": "tools/sdk",
-      "quietMs": 86400000,
-      "reason": {
-        "en": "Tool installs moved into the tools partition.",
-        "de": "Werkzeug-Installationen liegen jetzt in der Werkzeug-Partition."
-      }
-    },
-    {
-      "root": "repository",
-      "directory": "tools/elan",
       "quietMs": 86400000,
       "reason": {
         "en": "Tool installs moved into the tools partition.",

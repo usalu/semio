@@ -177,7 +177,7 @@ pub struct EngineSurfaceRegistry {
 
 impl Default for EngineSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }), next_text_editor_receipt: 1, text_editor_outbox_cursor: 0, faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }), next_text_editor_receipt: 1, text_editor_outbox_cursor: 0, faulted: false }
     }
 }
 

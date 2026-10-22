@@ -20,7 +20,7 @@ use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory
 use pack::snapshot::ArtifactPack;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_artifact_reference::ArtifactRef;
-use store::{ArtifactStore, ArtifactStoreInitializationAuthority, Mutation, MutationDiff};
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, ColdMutation, Mutation, MutationDiff};
 use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
 use store::os_store::backbone::Backbone;
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, *};
@@ -207,7 +207,7 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
     let mut state = base.clone();
     for bytes in ops {
         let op = <TestMutation as ::protocol::OpBinary>::decode_op(bytes).expect("a member op decodes");
-        let outcome = <TestMutation as Mutation<TestSnapshot>>::diff(&op, &state);
+        let outcome = <TestMutation as ColdMutation<TestSnapshot>>::diff(&op, &state);
         state = protocol::apply_diff_cold(outcome.diff(), &state).expect("a member op applies");
     }
     state

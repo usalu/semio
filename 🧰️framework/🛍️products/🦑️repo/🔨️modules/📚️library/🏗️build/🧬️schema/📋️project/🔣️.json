@@ -78,11 +78,17 @@
       },
       "anyOf": [
         {
+          "properties": {
+            "port": true
+          },
           "required": [
             "port"
           ]
         },
         {
+          "properties": {
+            "portEnv": true
+          },
           "required": [
             "portEnv"
           ]

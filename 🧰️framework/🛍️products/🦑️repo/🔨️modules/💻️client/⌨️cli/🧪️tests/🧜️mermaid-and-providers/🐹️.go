@@ -2,7 +2,7 @@
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Mermaid LOC diagrams, provider registry, management and editor providers.
+// Mermaid LOC diagrams, provider registry, management and agent-client providers.
 
 // #endregion 🧲️Header
 
@@ -329,37 +329,37 @@ func TestNullManagementProvider(t *testing.T) {
 	}
 }
 
-func TestAllEditorProviders(t *testing.T) {
-	providers := AllEditorProviders()
+func TestAllAgentClientProviders(t *testing.T) {
+	providers := AllAgentClientProviders()
 	if len(providers) == 0 {
-		t.Fatal("AllEditorProviders() returned empty")
+		t.Fatal("AllAgentClientProviders() returned empty")
 	}
 	kinds := make(map[string]bool)
 	for _, p := range providers {
 		if p.Kind() == "" {
-			t.Error("editor provider has empty Kind()")
+			t.Error("agent-client provider has empty Kind()")
 		}
 		kinds[p.Kind()] = true
 	}
 	for _, expected := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
 		if !kinds[expected] {
-			t.Errorf("missing editor provider for %s", expected)
+			t.Errorf("missing agent-client provider for %s", expected)
 		}
 	}
 }
 
-func TestGetEditorProvider(t *testing.T) {
+func TestGetAgentClientProvider(t *testing.T) {
 	for _, client := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
-		p := GetEditorProvider(client)
+		p := GetAgentClientProvider(client)
 		if p == nil {
-			t.Errorf("GetEditorProvider(%s) returned nil", client)
+			t.Errorf("GetAgentClientProvider(%s) returned nil", client)
 			continue
 		}
 		if p.Kind() != client {
 			t.Errorf("expected Kind()=%s, got %s", client, p.Kind())
 		}
 	}
-	if p := GetEditorProvider("nonexistent"); p != nil {
+	if p := GetAgentClientProvider("nonexistent"); p != nil {
 		t.Errorf("expected nil for unknown client, got %v", p)
 	}
 }

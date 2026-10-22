@@ -1,0 +1,129 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "placeholder-grammar-leaves-are-reported",
+   "rule": "policyGrammarHonestyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a0/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🅰️.g4": [
+     "header",
+     "DOCUMENT: 'schema' [ ]+",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b0/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🅰️.g4": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a1/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔤️.ebnf": [
+     "header",
+     "header = 'schema', space,",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b1/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔤️.ebnf": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a2/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio": [
+     "header",
+     "payload = *OCTET",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b2/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a3/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔠️.abnf": [
+     "header",
+     "payload = *OCTET",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b3/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔠️.abnf": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a4/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📡️.protocol.semio": [
+     "header",
+     "payload = *OCTET",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b4/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📡️.protocol.semio": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a5/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🥋️.ksy": [
+     "header",
+     "size-eos: true",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b5/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🥋️.ksy": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a6/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🌶️.spicy": [
+     "header",
+     "payload: bytes &eod;",
+     "footer"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b6/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🌶️.spicy": [
+     "a real grammar body"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️c/notes.txt": [
+     "payload = *OCTET"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🔠️.abnf": [
+     "payload = *OCTET"
+    ]
+   },
+   "expect": [
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a0/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🅰️.g4",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a1/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔤️.ebnf",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a2/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a3/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔠️.abnf",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a4/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📡️.protocol.semio",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a5/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🥋️.ksy",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ],
+    [
+     "grammar-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a6/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🌶️.spicy",
+     "stdio-artifacts/grammar-honesty",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "a-grammar-allowlisted-by-intent-is-exempt",
+   "rule": "policyGrammarHonestyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🔠️.abnf": [
+     "payload = *OCTET"
+    ]
+   },
+   "expect": [],
+   "oracle": false,
+   "defect": "🟦️.ts:30-384 keys 353 allowlist entries on the legacy leaf naming ending in -component.<ext>, while the walked leaves normalise to a bare trailing dash, so no allowlist entry can ever match or go stale"
+  }
+ ]
+}

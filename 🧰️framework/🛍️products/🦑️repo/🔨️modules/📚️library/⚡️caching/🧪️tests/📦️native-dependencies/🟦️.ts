@@ -2,6 +2,7 @@ import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import {testRecordV1} from "../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
+import toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json" with { type: "json" };
 import { existsSync, realpathSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve, relative, sep } from "node:path";
@@ -44,6 +45,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
   const inheritedBrowserPath = process.env.PLAYWRIGHT_BROWSERS_PATH;
   try {
     authorCargoFixture();
+    for (const [path, contents] of Object.entries(fixture.python.files)) writeFileSync(join(root, path), contents as string);
     const { cargoRepositoryPackages } = await import("../../../🗂️workspaces/🦀️cargo/🟦️.ts");
     assert.deepEqual(cargoRepositoryPackages(root), fixture.cargo.expectedMembers);
     delete process.env.PLAYWRIGHT_BROWSERS_PATH;
@@ -52,14 +54,14 @@ export async function testNativeDependencies(workspace: string, output: string,i
     for (const row of fixture.environments) {
       const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [];
       assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
-      assert.equal(target.options.command, `bun "${fixture.entry}" sync ${row.kind}`);
+      assert.equal(target.options.command, `repo "${fixture.entry}" sync ${row.kind}`);
       await prepareDependencies(row.kind, root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
         assert.equal(cwd, root); assert.equal(signal,phaseFor(controller.signal).leaseControl.signal);
-        if (capture) return command==="cargo"&&args[0]==="--version"?identity(cwd,signal):"";
+        if (capture) return command==="cargo"&&args[0]==="--version"?identity(cwd,signal):command==="dotnet"?toolchainPolicy.dotnet.sdk:"";
         calls.push([command, ...args]);
         for (const [key, value] of Object.entries(row.environment ?? {})) assert.equal(env[key], interpolate(value as string));
         return "";
-      });
+      }, process.env, async (base: NodeJS.ProcessEnv) => ({ ...base, ...toolchainPolicy.go.variables }));
       assert.deepEqual(calls, row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
     }
     for (const row of fixture.browserPaths) {

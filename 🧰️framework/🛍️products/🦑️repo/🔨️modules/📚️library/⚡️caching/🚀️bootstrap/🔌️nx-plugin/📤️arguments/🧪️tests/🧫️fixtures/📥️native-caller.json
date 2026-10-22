@@ -27,7 +27,7 @@
       "task": "value:generate",
       "manifest": "value/Cargo.toml",
       "workingDirectory": "value",
-      "program": "bun",
+      "program": "repo",
       "arguments": [
         "/repo/value/📜️script.ts",
         "generate"
@@ -37,7 +37,7 @@
       "task": "ui:generate",
       "manifest": "ui/Cargo.toml",
       "workingDirectory": "ui",
-      "program": "bun",
+      "program": "repo",
       "arguments": [
         "/repo/ui/📜️script.ts",
         "generate"

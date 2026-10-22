@@ -54,7 +54,7 @@ use std::future::Future;
 use pack::snapshot::ArtifactPack;
 use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::ArtifactCommand;
-use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, NoMembers, SpaceMember};
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, NoMembers, ReferenceSpaceMember, SpaceMember};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;

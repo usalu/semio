@@ -15,7 +15,16 @@ pub struct RenameEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "entry", kind: "rename-entry", record: "RenameEntry" };
 
-    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {
+    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::ColdMutation<ZipSnapshot>>::ReferenceDiff> {
         let Self { name, new_name } = self;
         {
             if base.entries.iter().any(|existing| existing.name == *new_name) {
@@ -27,12 +36,6 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {
     fn inverse(&self, _base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
         let Self { name, new_name } = self;
         Ok(vec![ZipIso21320Mutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

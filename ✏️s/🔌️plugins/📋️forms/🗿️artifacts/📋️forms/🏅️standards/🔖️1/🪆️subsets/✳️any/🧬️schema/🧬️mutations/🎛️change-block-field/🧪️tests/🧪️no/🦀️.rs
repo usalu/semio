@@ -44,7 +44,7 @@ async fn applies_to_committed_after() {
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "change-block-field/no-ops-when-the-field-already-holds-the-value: applied state differs from committed after-snapshot");
     assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "an unapplied edit must not re-mint the structure/results handles");
-    let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &base);
+    let produced = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &base);
     assert_eq!(produced.diff(), &FormsDiff::default(), "an unapplied change-block-field carries the identity diff");
 }
 
@@ -52,7 +52,7 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
-    let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
+    let produced = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     let declared = outcome.get("code").or_else(|| outcome["messages"][0].get("code")).and_then(serde_json::Value::as_str);

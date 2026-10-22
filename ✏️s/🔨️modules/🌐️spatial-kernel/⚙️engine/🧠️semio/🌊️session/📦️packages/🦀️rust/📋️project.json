@@ -13,7 +13,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -23,7 +23,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -31,7 +31,7 @@
     "wasm": {
       "executor": "repo:script",
       "cache": true,
-      "options": { "command": "bun ./📜️script.ts wasm", "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust" },
+      "options": { "command": "repo ./📜️script.ts wasm", "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust" },
       "metadata": {
         "semio": {
           "wasmPackageSourceV1": { "version": 1, "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust" }
@@ -49,7 +49,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -61,7 +61,7 @@
         "wasm"
       ],
       "options": {
-        "command": "bun ./📜️script.ts browser-test",
+        "command": "repo ./📜️script.ts browser-test",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -75,7 +75,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": false
       },

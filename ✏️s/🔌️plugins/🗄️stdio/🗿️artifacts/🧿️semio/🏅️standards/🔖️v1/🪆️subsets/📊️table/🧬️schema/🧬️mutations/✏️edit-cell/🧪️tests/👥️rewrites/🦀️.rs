@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/➡️after/🔣️.json"));
@@ -33,7 +33,7 @@ fn edit_cell() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn rewrites_only_the_addressed_cell() {
     let base = before();
-    let produced = protocol::apply_diff(edit_cell().diff(&base).diff(), &base).expect("edit-cell applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(edit_cell().diff(&base).diff(), &base).expect("edit-cell applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-cell/rewrites-the-population-cell-of-the-second-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.rows[1].cells[1], SemioValue::Int { lexeme: "3755251".to_string() }, "the addressed cell must hold new_value");
     assert_eq!(produced.rows[1].cells[0], base.rows[1].cells[0], "the sibling cell in the same row must be untouched");
@@ -49,9 +49,9 @@ async fn the_undo_edit_cell_restores_the_captured_value() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "edit-cell of a reachable cell undoes as exactly one edit-cell");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward edit-cell applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward edit-cell applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo edit-cell applies to the edited table");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo edit-cell applies to the edited table");
     }
     assert_eq!(current, base, "edit-cell/rewrites-the-population-cell-of-the-second-row: the undo did not restore the before-snapshot");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&edit_cell(), &base);
+    let outcome = <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::diff(&edit_cell(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-cell/rewrites-the-population-cell-of-the-second-row: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -106,6 +106,6 @@ async fn committed_diff_is_canonical_and_omits_columns_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-cell diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed edit-cell diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff did not carry before to after");
 }

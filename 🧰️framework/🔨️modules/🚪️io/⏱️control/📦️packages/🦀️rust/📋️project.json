@@ -29,7 +29,7 @@
       "outputs": [],
       "metadata": {"semio":{"execution":{"version":1,"kind":"source"}}},
       "options": {
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -59,7 +59,7 @@
       "outputs": [],
       "metadata": {"semio":{"execution":{"version":1,"kind":"native","scope":"test"}}},
       "options": {
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -89,7 +89,7 @@
       "outputs": [],
       "metadata": {"semio":{"execution":{"version":1,"kind":"native","scope":"test"}}},
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-receiving-native",
+        "command": "repo ./📜️script.ts test-snapshot-receiving-native",
         "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
       },
       "cache": true,

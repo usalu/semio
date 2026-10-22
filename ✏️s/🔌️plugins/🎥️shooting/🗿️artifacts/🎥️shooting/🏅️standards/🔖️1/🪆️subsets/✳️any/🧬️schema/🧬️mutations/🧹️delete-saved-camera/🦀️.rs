@@ -19,6 +19,19 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<DeleteSavedCamera> + From<crate::standards::v1::subsets::any::schema::mutations::create_saved_camera::CreateSavedCamera>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "saved-camera", kind: "delete-saved-camera", record: "DeletedSavedCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete saved camera \"{}\"", self.id), &format!("Gespeicherte Kamera \"{}\" löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for DeleteSavedCamera
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<DeleteSavedCamera> + From<crate::standards::v1::subsets::any::schema::mutations::create_saved_camera::CreateSavedCamera>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -28,10 +41,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete saved camera \"{}\"", self.id), &format!("Gespeicherte Kamera \"{}\" löschen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }

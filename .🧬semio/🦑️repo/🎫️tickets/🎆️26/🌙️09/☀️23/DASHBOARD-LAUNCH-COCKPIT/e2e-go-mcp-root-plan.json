@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "status": "joint-source-frozen-all-Go-runtime-pending",
+  "scope": "immutable per-server Go MCP repository context and genuine domain ports",
+  "execution": "sequential through existing repo test owners after sole Native handoff; no raw Go command",
+  "commands": [
+    {
+      "project": "@semio-tech/repo-cli-go",
+      "target": "test",
+      "command": "repo run @semio-tech/repo-cli-go:test --skip-cache --output=stream -- -count=1 -v",
+      "requiredBodies": [
+        "TestMcpServersRetainIndependentRepositoryRoots",
+        "TestMcpRepositoryOptionsPreservePresence",
+        "TestMcpResourceTemplateFixture",
+        "TestMcpRepositoryPortsRetainCapturedConfiguration",
+        "TestMcpCancellationClosesOwnedProtocolInput",
+        "TestMcpScopedIdentitiesRetainTheirParentTechnology"
+      ]
+    },
+    {
+      "project": "@semio-tech/repo-workspace-go",
+      "target": "test",
+      "command": "repo run @semio-tech/repo-workspace-go:test --skip-cache --output=stream -- -count=1 -v",
+      "requiredBodies": [
+        "TestExplicitRepositoryRootUsesProvidedDirectory"
+      ]
+    },
+    {
+      "project": "@semio-tech/repo-graphql-go",
+      "target": "test",
+      "command": "repo run @semio-tech/repo-graphql-go:test --skip-cache --output=stream -- -count=1 -v",
+      "requiredBodies": [
+        "TestTicketContextsKeepIndependentLifecycles"
+      ]
+    },
+    {
+      "project": "@semio-tech/repo-tickets-go",
+      "target": "test",
+      "command": "repo run @semio-tech/repo-tickets-go:test --skip-cache --output=stream -- -count=1 -v",
+      "requiredBodies": [
+        "TestTicketScopePortableSegments",
+        "TestTicketScopeInvalidIDsHaveNoEffects",
+        "TestTicketScopeDraftSymlinksHaveNoEffects",
+        "TestTicketScopeProjectedDraftRefusesBeforeCreate",
+        "TestTicketScopeProjectedRetitleRefusesBeforeRename",
+        "TestTicketScopeNamespaceSeparators",
+        "TestTicketDocumentPreservesAllDeclaredState"
+      ]
+    }
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "absolute ticket generated short owned namespace, created by test with precreation UTF16 guards",
+    "SEMIO_TEST_XML_OUTPUT_FILE": "distinct absolute ticket 🗑️generated/<owner>.xml via existing test protocol"
+  },
+  "neutral": {
+    "resources": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧪️tests/🟦️.ts",
+    "routes": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧭️routes/🧪️tests/🟦️.ts",
+    "bindings": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/📥️bindings/🧪️tests/🟦️.ts",
+    "execution": "literal imports from already-owned installed SDK suite; no new Source target or Source42 claim",
+    "oracles": [
+      "Ajv schema validation",
+      "SQLite independent JSON/result reconstruction"
+    ],
+    "ticketLifecycle": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🎫️tickets/🧪️tests/🟦️.ts"
+  },
+  "currentCustody": {
+    "native": {
+      "owner": "Controls",
+      "status": "idle after68127 zero-body compiler refusal; Root coordinating3 narrow companion fixes and directTUI10 retry",
+      "qualification": "No dashboard receipt/bin/install/cold effects"
+    },
+    "source": {
+      "session": 29512,
+      "status": "terminal-exit1-before-gofmt; no new Source request"
+    },
+    "goBodiesRun": false,
+    "corpusRestored": false,
+    "sourceFormatter": null
+  },
+  "qualification": "All new Go compiler/body and neutral Source runtime results pending; previous Rust/SDK sources are separate evidence.",
+  "actualTestMount": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/📁️root-scope/🐹️.go",
+    "mechanism": "canonicalGoModulePlan packageModuleOwner adopts semantic owner/🧪️tests/<case>/🐹️.go declaring cli into root test overlay"
+  },
+  "protocolLifecycle": {
+    "transport": "actual Serve tools/call",
+    "response": "closed {path,ticket} JSON text content, same three operations",
+    "requests": "fixture snake_case no_issue/no_management, dynamic returned paths, private NoManagement roots",
+    "mutations": "open both; close/title change/reopen first; persisted independent history and draft bytes",
+    "runtime": "unrun"
+  },
+  "additionalMountedSources": [
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/📁️ticket-scope/🐹️.go",
+      "test": "TestTicketContextsKeepIndependentLifecycles"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧪️tests/📁️scope/🐹️.go",
+      "tests": [
+        "TestTicketScopePortableSegments",
+        "TestTicketScopeInvalidIDsHaveNoEffects",
+        "TestTicketScopeDraftSymlinksHaveNoEffects",
+        "TestTicketScopeProjectedDraftRefusesBeforeCreate",
+        "TestTicketScopeProjectedRetitleRefusesBeforeRename",
+        "TestTicketScopeNamespaceSeparators",
+        "TestTicketDocumentPreservesAllDeclaredState"
+      ]
+    }
+  ],
+  "formatPrerequisite": {
+    "plan": "e2e-go-format-plan.json",
+    "command": "supported repo exec --projects=workspace -- gofmt -w exact owned paths",
+    "boundary": "after actual corpus recovery whole before four actual Go test-owner gates",
+    "status": "failed-before-gofmt-resource-loan-deadline",
+    "log": "🗑️generated/e2e-go-format-gfmt4.log",
+    "tty": 29512,
+    "effects": "48 exact post hashes unchanged",
+    "files": 48,
+    "lastAttempt": {
+      "sessionId": 29512,
+      "exitCode": 1,
+      "log": "🗑️generated/e2e-go-format-gfmt4.log",
+      "artifacts": "🗑️generated/gfmt4",
+      "outcome": "Natural whole1 before gofmt: Original resource loan deadline exhausted remaining214/arm229 during closure proof, no selected-row packet or closure-child refusal. Post26stable0errors5changedhashes; post48stable0errors0changedhashes; noformat effects."
+    }
+  },
+  "qualifications": "All15 required Go bodies remain unrun; source/mount/arity review and native/SDK Source controls are separate evidence.",
+  "canonicalGoBoundary": {
+    "status": "source-reviewed-runtime-pending",
+    "sameOriginal": true,
+    "issuedScratchAndCaches": true,
+    "genericSandboxMarkerRequired": false,
+    "reportAuthority": "existing prepareTestCommandV1 explicit/default contract",
+    "reportDeclarations": "four exact owning target outputs"
+  }
+}

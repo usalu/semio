@@ -7,8 +7,9 @@ import { shouldSkipPathForUloc } from "../📊️metrics/🛤️path-rules/🟦�
 import { normalizeBundleScopeLabel } from "../🏷️labels/🟦️.ts";
 import { formatBundleMetricSuffixes, METRIC_KIND_SIZE, METRIC_KIND_ULOC } from "../📊️metrics/🎨️format/🟦️.ts";
 import { buildCommitMetricsForRange, gitDeltaSumsEqual, sumMicroCommitLangMetrics, validateCommitMetricsDeltaSum } from "../📊️metrics/🧮️summary/🟦️.ts";
-import type { MetricsRunner, UlocRunner } from "../📊️metrics/🏷️types/🟦️.ts";
-import { metricsRunnerFromUloc } from "../📊️metrics/💾️scan/🟦️.ts";
+import type { MetricsRunner } from "../📊️metrics/🏷️types/🟦️.ts";
+import { createDefaultMetricsRunner } from "../📊️metrics/💾️scan/🟦️.ts";
+import {refuseCommitV1} from "../📖️texts/🟦️.ts";
 
 function addGitDeltaSums(a: GitDeltaSum, b: GitDeltaSum): GitDeltaSum {
   return { added: a.added + b.added, removed: a.removed + b.removed, edited: a.edited + b.edited };
@@ -48,11 +49,11 @@ export function buildBundleDateDeltasMap(root: string, base: string, head: strin
       if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
       const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
       if (owners.length === 0) {
-        throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+        throw refuseCommitV1("failed","attribution.changed-path-is-not-attributed",{path:String(row.path)});
       }
       if (owners.length > 1) {
         const names = owners.map((i) => bundles[i]!.label).join(", ");
-        throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+        throw refuseCommitV1("failed","attribution.changed-path-matches-multiple-bundles",{names:String(names),path:String(row.path)});
       }
       addUlocDeltaToBundleDateMap(map, sumGitLangDeltas(rowDeltas[index]!), dateLine, owners[0]!);
     }
@@ -85,11 +86,11 @@ export function buildBundleDateSizeDeltasMap(root: string, base: string, head: s
       if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
       const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
       if (owners.length === 0) {
-        throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+        throw refuseCommitV1("failed","attribution.changed-path-is-not-attributed",{path:String(row.path)});
       }
       if (owners.length > 1) {
         const names = owners.map((i) => bundles[i]!.label).join(", ");
-        throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+        throw refuseCommitV1("failed","attribution.changed-path-matches-multiple-bundles",{names:String(names),path:String(row.path)});
       }
       addSizeRowToBundleDateMap(map, row, dateLine, owners[0]!, root, parent, sha);
     }
@@ -155,11 +156,11 @@ export function partitionRangeDeltasByBundle(root: string, base: string, head: s
     rangeTotal = addGitDeltaSums(rangeTotal, chunk);
     const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
     if (owners.length === 0) {
-      throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+      throw refuseCommitV1("failed","attribution.changed-path-is-not-attributed",{path:String(row.path)});
     }
     if (owners.length > 1) {
       const names = owners.map((i) => bundles[i]!.label).join(", ");
-      throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+      throw refuseCommitV1("failed","attribution.changed-path-matches-multiple-bundles",{names:String(names),path:String(row.path)});
     }
     const bi = owners[0]!;
     bundleTotals[bi] = addGitDeltaSums(bundleTotals[bi]!, chunk);
@@ -179,11 +180,11 @@ export function partitionRangeSizeDeltasByBundle(root: string, base: string, hea
     rangeTotal = addGitDeltaSums(rangeTotal, chunk);
     const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
     if (owners.length === 0) {
-      throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+      throw refuseCommitV1("failed","attribution.changed-path-is-not-attributed",{path:String(row.path)});
     }
     if (owners.length > 1) {
       const names = owners.map((i) => bundles[i]!.label).join(", ");
-      throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+      throw refuseCommitV1("failed","attribution.changed-path-matches-multiple-bundles",{names:String(names),path:String(row.path)});
     }
     const bi = owners[0]!;
     bundleTotals[bi] = addGitDeltaSums(bundleTotals[bi]!, chunk);
@@ -206,21 +207,19 @@ export function validateBundleDayDeltasAttribution(bundles: CommitBundleSection[
       for (const [dateLine, d] of perDay) {
         if (listedDates.has(dateLine)) continue;
         if (gitDeltaLineTotal(d) === 0) continue;
-        throw new Error(`commit: ${bundle.label} has micro-commit changes on ${dateLine} (${formatGitDeltaSumBrief(d)}) but that day is missing from your bundle body — add a 🎆️ section or fix attribution`);
+        throw refuseCommitV1("missing","attribution.has-changes-on-but-that",{label:String(bundle.label),dateLine:String(dateLine),delta:String(formatGitDeltaSumBrief(d))});
       }
     }
     if (additive && (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed)) {
-      throw new Error(
-        `commit: per-day 📊️metric${kindToken} for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`,
-      );
+      throw refuseCommitV1("failed","attribution.per-day-metric-for-does",{kindToken:String(kindToken),label:String(bundle.label),daySum:String(formatGitDeltaSumBrief(daySum)),total:String(formatGitDeltaSumBrief(total))},);
     }
   }
 }
 
 /** 🚫️All bundle-commit metrics constraints (days→bundle, bundles→range, languages→range). */
-export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], metricsRunner?: MetricsRunner | UlocRunner): void {
+export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], metricsRunner?: MetricsRunner): void {
   root = gitRepoRoot(root);
-  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner ?? createDefaultMetricsRunner();
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
   const { bundleTotals: ulocPartitioned, rangeTotal: ulocRangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
   const { bundleTotals: sizePartitioned, rangeTotal: sizeRangeTotal } = partitionRangeSizeDeltasByBundle(root, base, head, bundles, prefixSets);

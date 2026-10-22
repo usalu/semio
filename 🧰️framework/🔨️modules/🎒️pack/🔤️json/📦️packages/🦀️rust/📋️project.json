@@ -28,7 +28,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving source"
+        "command": "repo ./📜️script.ts test-original-receiving source"
       }
     },
     "test-original-receiving-native": {
@@ -43,7 +43,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving native"
+        "command": "repo ./📜️script.ts test-original-receiving native"
       }
     },
     "test-read-policy-source": {
@@ -58,7 +58,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-read-policy-source"
+        "command": "repo ./📜️script.ts test-read-policy-source"
       }
     },
     "test-ownership": {
@@ -73,7 +73,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership"
+        "command": "repo ./📜️script.ts test-ownership"
       }
     },
     "test-native": {
@@ -88,7 +88,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-persistent-canonical-source": {
@@ -103,7 +103,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust -- bun ./📜️script.ts test-persistent-canonical source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust -- repo ./📜️script.ts test-persistent-canonical source"
       },
       "metadata": {
         "semio": {
@@ -126,7 +126,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust --manifest 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-persistent-canonical native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust --manifest 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-persistent-canonical native"
       },
       "metadata": {
         "semio": {
@@ -149,7 +149,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-immutable-tree source"
+        "command": "repo ./📜️script.ts test-immutable-tree source"
       }
     },
     "test-immutable-tree-native": {
@@ -164,7 +164,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-immutable-tree native"
+        "command": "repo ./📜️script.ts test-immutable-tree native"
       }
     },
     "test-tree-wire-source": {
@@ -179,7 +179,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-tree-wire-source"
+        "command": "repo ./📜️script.ts test-tree-wire-source"
       }
     },
     "test-tree-wire-native": {
@@ -194,7 +194,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native tree-wire"
+        "command": "repo ./📜️script.ts test-native tree-wire"
       }
     }
   }

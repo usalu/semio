@@ -91,7 +91,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts git-show"
+        "command": "repo ./📜️script.ts git-show"
       }
     },
     "git-blame": {
@@ -173,7 +173,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts git-blame"
+        "command": "repo ./📜️script.ts git-blame"
       }
     },
     "git-diff": {
@@ -256,7 +256,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts git-diff"
+        "command": "repo ./📜️script.ts git-diff"
       }
     },
     "git-history": {
@@ -324,7 +324,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts git-history"
+        "command": "repo ./📜️script.ts git-history"
       }
     },
     "terminal": {
@@ -416,7 +416,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts terminal"
+        "command": "repo ./📜️script.ts terminal"
       }
     },
     "test": {
@@ -447,7 +447,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "git-status": {
@@ -524,7 +524,7 @@
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts git-status"
+        "command": "repo ./📜️script.ts git-status"
       }
     },
     "debug": {
@@ -533,7 +533,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts debug",
+        "command": "repo ./📜️script.ts debug",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -645,7 +645,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts debuggers",
+        "command": "repo ./📜️script.ts debuggers",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -676,7 +676,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
-        "command": "bun ./📜️script.ts setup-debugger",
+        "command": "repo ./📜️script.ts setup-debugger",
         "forwardAllArgs": true
       },
       "metadata": {

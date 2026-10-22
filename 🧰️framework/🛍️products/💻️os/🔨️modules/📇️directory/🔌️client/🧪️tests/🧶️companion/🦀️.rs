@@ -37,7 +37,7 @@ pub mod client {
     pub mod document_http {
         pub use semio_framework_os_directory_client::client::document_http::*;
         use semio_framework_schema_validator::OwnedJsonSchemaValidator;
-        use semio_framework_os_directory_client::client::{DirectoryClient, DirectoryTransport, DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, HttpMethod};
+        use semio_framework_os_directory_client::{DirectoryClient, DirectoryTransport, DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, HttpMethod};
         use semio_framework_os_directory_client::DocumentScope;
         use semio_framework_async::OperationContext;
 
@@ -48,7 +48,7 @@ pub mod client {
     #[path = "."]
     pub mod native {
         pub use semio_framework_os_directory_client::client::native::*;
-        use semio_framework_os_directory_client::client::{DirectoryTransport, DirectoryWsConnection, HttpMethod, TransportError};
+        use semio_framework_os_directory_client::{DirectoryTransport, DirectoryWsConnection, HttpMethod, TransportError};
         use semio_framework_actor::{ActorId, PackageId};
         use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
         use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpBodyCancellationHandle, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, HttpTransportStart, HttpTransportTerminalGuard, TokioHostRuntime, HTTP_BUCKET_REFILL_INTERVAL_MS};
@@ -70,7 +70,7 @@ pub mod client {
 #[path = "../../../🪪️identity/🧪️tests/🔬️unit"]
 pub mod identity {
     pub use semio_framework_os_directory_client::identity::*;
-    use semio_framework_os_directory_client::client::{DirectoryTransport, LocalHubCredential};
+    use semio_framework_os_directory_client::{DirectoryTransport, LocalHubCredential};
     use semio_framework_async::OperationContext;
     use semio_framework_value_derive::{FromValue, ToValue};
     use std::sync::{Arc, OnceLock};

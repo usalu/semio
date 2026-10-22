@@ -7,5 +7,5 @@
      { "env": "SEMIO_BUILD_BUDGET_MS" }
    ]
  },
- "targets":{"test-typescript":{"executor":"repo:script", "cache": true, "outputs": [],"options":{"cwd":"🧰️framework/🔨️modules/📁️filesystem/🧾️observation","command":"bun ./📜️script.ts test","forwardAllArgs":true},"inputs":["default", "^default", "testEnv"]},"test-journal":{"executor":"repo:script", "inputs": ["default", "^default", "testEnv"],"cache":true,"outputs":[],"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/📁️filesystem/🧾️observation","command":"bun ./📜️script.ts test journal","forwardAllArgs":false}}}
+ "targets":{"test-typescript":{"executor":"repo:script", "cache": true, "outputs": [],"options":{"cwd":"🧰️framework/🔨️modules/📁️filesystem/🧾️observation","command":"repo ./📜️script.ts test","forwardAllArgs":true},"inputs":["default", "^default", "testEnv"]},"test-journal":{"executor":"repo:script", "inputs": ["default", "^default", "testEnv"],"cache":true,"outputs":[],"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/📁️filesystem/🧾️observation","command":"repo ./📜️script.ts test journal","forwardAllArgs":false}}}
 }

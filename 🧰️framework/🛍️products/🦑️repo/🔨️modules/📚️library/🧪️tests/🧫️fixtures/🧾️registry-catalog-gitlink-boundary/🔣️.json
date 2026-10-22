@@ -11,7 +11,7 @@
   ],
   "execution": {
     "target": "test-registry-catalog-gitlink-boundary",
-    "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary",
+    "command": "repo ./📜️script.ts test registry-catalog-gitlink-boundary",
     "cache": false
   },
   "ownerIndex": {

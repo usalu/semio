@@ -6,7 +6,8 @@ import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import {nativeHostFilesystemViewV1} from "../🟦️.ts";
 import {storeReceiptOutputV1} from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
-import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostSourceFactsV1,nativeHostArtifactPathV1,declaredPlaygroundHostInputPathsV1,nativeHostScriptAdmissionV1 } from "../🟨️.mjs";
+import { spawnSync } from "node:child_process";
+import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostSourceFactsV1,nativeHostArtifactPathV1,declaredPlaygroundHostInputPathsV1,nativeHostScriptAdmissionV1,nativeHostMismatchTextV1,nativeHostLanguagesV1 } from "../🟨️.mjs";
 
 /** 🖥 Checks an open owner producer inventory against independent JSON and TOML oracles. */
 export async function nativeHostContractLaws(repoRoot:string):Promise<void> {
@@ -19,11 +20,20 @@ export async function nativeHostContractLaws(repoRoot:string):Promise<void> {
     if(row.accepted) {assert(validate(row.input));assert.deepEqual(invoke(),row.input);}
     else assert.throws(invoke);
   }
+  const mismatch=fixture.mismatch,oracle=spawnSync("python3",["-I",resolve(import.meta.dir,"./🧮️resources/🐍️oracle/🐍️.py"),resolve(import.meta.dir,"../🧬️schema/🔣️.json"),resolve(import.meta.dir,"./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
+  assert.equal(oracle.status,0,oracle.stderr);
+  const oracleTexts=JSON.parse(oracle.stdout);
+  for(const language of ["en","de"] as const) {assert.equal(nativeHostMismatchTextV1(mismatch.host,mismatch.facts,mismatch.context,[language]),mismatch.expected[language]);assert.equal(oracleTexts[language],mismatch.expected[language]);}
+  assert.equal(nativeHostMismatchTextV1(mismatch.host,mismatch.facts,mismatch.context,["en","de"]),`${mismatch.expected.en}\n${mismatch.expected.de}`);
+  assert.deepEqual(nativeHostLanguagesV1({SEMIO_LANGUAGE:"de_CH.UTF-8"}),["de"]);
+  assert.deepEqual(nativeHostLanguagesV1({LANG:"en_US.UTF-8"}),["en"]);
+  assert.deepEqual(nativeHostLanguagesV1({}),["en","de"]);
+  assert.throws(()=>admitPlaygroundNativeHostV1(mismatch.host,()=>mismatch.facts,mismatch.context),(error:Error)=>error.message.includes(mismatch.host.project)&&error.message.includes(mismatch.host.cratePath)&&error.message.includes(mismatch.context));
   const source=`nativeHost = { cratePath = "${fixture.owner.cratePath}", project = "${fixture.owner.project}", package = "${fixture.owner.package}", binary = "${fixture.owner.binary}", target = "${fixture.owner.target}" }`;
   assert.deepEqual(parsePlaygroundNativeHostV1(source),(toml.parse(source) as any).nativeHost);
   for(const invalid of [source+"\n"+source,source.replace('binary = "alpha-native"','binary = "alpha-native", binary = "other"'),source.replace('binary = "alpha-native"','unknown = "alpha-native"')]) assert.throws(()=>parsePlaygroundNativeHostV1(invalid));
   for(const changed of [{...facts,modes:{"native-build":["prototype"] as const}},{...facts,binaries:[]},{...facts,project:"foreign"}]) assert.throws(()=>admitPlaygroundNativeHostV1(fixture.owner,()=>changed));
-  const root=fixture.owner.cratePath, sources=new Map<string,string>([[`${root}/Cargo.toml`, '[package]\nname = "alpha-native"\n\n[[bin]]\nname = "alpha-native"\n'],[`${root}/📋️project.json`, JSON.stringify({root,name:fixture.owner.project,targets:{"native-build":{executor:"repo:script",outputs:["{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"],configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}},options:{cwd:root,command:"bun ./📜️script.ts build"}}}})],[`${root}/📜️script.ts`, "export {}"]]);
+  const root=fixture.owner.cratePath, sources=new Map<string,string>([[`${root}/Cargo.toml`, '[package]\nname = "alpha-native"\n\n[[bin]]\nname = "alpha-native"\n'],[`${root}/📋️project.json`, JSON.stringify({root,name:fixture.owner.project,targets:{"native-build":{executor:"repo:script",outputs:["{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"],configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}},options:{cwd:root,command:"repo ./📜️script.ts build"}}}})],[`${root}/📜️script.ts`, "export {}"]]);
   const directories=new Set(root.split("/").map((_:string,index:number)=>root.split("/").slice(0,index+1).join("/")));
   const view={admitScript:(path:string)=>nativeHostScriptAdmissionV1(sources.get(path)!),kind:(path:string)=>sources.has(path)?"file":directories.has(path)?"directory":null,readText:(path:string)=>sources.get(path)!};
   assert.deepEqual(nativeHostSourceFactsV1(root,view),{...facts,outputs:{"native-build":{prototype:["{projectRoot}/dist/native-prototype"],release:["{projectRoot}/dist/native-release"]}}});

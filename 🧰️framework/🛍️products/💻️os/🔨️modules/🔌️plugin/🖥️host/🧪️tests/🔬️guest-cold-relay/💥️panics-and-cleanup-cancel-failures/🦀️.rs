@@ -15,7 +15,7 @@ async fn mounted_start_panic_restores_the_instance_and_the_next_route_progresses
     wait_for_available_instance(&pool, &handle.instance).await;
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available(), "the unwind lease must restore the taken instance");
 
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit(
         Lane::UserVisible,
         Box::new(move || {
@@ -69,7 +69,7 @@ async fn cancel_panic_quarantines_instance_releases_permit_and_faults_once_on_on
     assert_eq!(mock.cancel_admissions(), 1, "a panicking cancel-job admission must never be retried");
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined(), "cancel unwind must retain but quarantine the uncertain instance before fault delivery");
 
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit(
         Lane::UserVisible,
         Box::new(move || {
@@ -128,7 +128,7 @@ async fn context_cancellation_failure_faults_once_quarantines_and_releases_one_w
     wait_for_quarantine(&pool, &handle.instance).await;
     assert_eq!(mock.cancel_admissions(), 1, "ordinary cancel failure must consume the sole admission without retry");
 
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit(
         Lane::UserVisible,
         Box::new(move || {
@@ -159,7 +159,7 @@ async fn drop_cleanup_cancel_failure_quarantines_before_the_next_mounted_route()
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
     assert_eq!(mock.cancel_admissions(), 1, "Drop cleanup must not retry an ordinary cancel failure");
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit(
         Lane::UserVisible,
         Box::new(move || {

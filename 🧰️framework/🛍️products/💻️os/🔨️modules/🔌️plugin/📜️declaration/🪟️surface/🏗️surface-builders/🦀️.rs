@@ -196,12 +196,12 @@ impl<S, M> SnapshotBuilder<S, M> {
 impl<S, M> ArtifactBuilder for SnapshotBuilder<S, M>
 where
     S: Default + Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-    M: Mutation<S>,
+    M: Mutation<S> + ::protocol::ColdMutation<S>,
     M::Diff: MutationDiff<S>,
 {
     type Snapshot = S;
     type Mutation = M;
-    type Diff = M::ReferenceDiff;
+    type Diff = <M as ::protocol::ColdMutation<S>>::ReferenceDiff;
 
     fn empty() -> Self {
         Self::wrap(S::default())
@@ -215,13 +215,13 @@ where
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::wrap(S::decode_pack(bytes)?))
     }
-    fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::ReferenceDiff>) {
+    fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<<M as ::protocol::ColdMutation<S>>::ReferenceDiff>) {
         let (snapshot, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, mutation.diff(&self.snapshot));
         drop(mutation);
         drop(self.snapshot);
         (Self::wrap(snapshot), outcome)
     }
-    fn absorb(self, diff: M::ReferenceDiff) -> protocol::MutationApplyResult<Self> {
+    fn absorb(self, diff: <M as ::protocol::ColdMutation<S>>::ReferenceDiff) -> protocol::MutationApplyResult<Self> {
         let applied = protocol::apply_diff_cold(&diff, &self.snapshot);
         drop(diff);
         drop(self.snapshot);

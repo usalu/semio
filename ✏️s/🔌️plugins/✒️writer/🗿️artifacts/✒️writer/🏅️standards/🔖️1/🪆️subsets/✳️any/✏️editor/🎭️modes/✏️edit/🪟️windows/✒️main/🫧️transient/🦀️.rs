@@ -62,20 +62,9 @@ pub struct WriterMainWindowTransientDiff {
     pub engagement_input: Option<String>,
 }
 
-impl protocol::MutationDiff<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
-    fn apply(&self, base: &WriterMainWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterMainWindowTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.editor_selection {
-            next.editor_selection = value.value.clone();
-        }
-        if let Some(value) = &self.lint_generation {
-            next.lint_generation = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<WriterMainWindowTransient> for WriterMainWindowTransientDiff {}
+
+impl protocol::ColdMutationDiff<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.editor_selection.is_some() {
             self.editor_selection = other.editor_selection;
@@ -87,18 +76,37 @@ impl protocol::MutationDiff<WriterMainWindowTransient> for WriterMainWindowTrans
             self.engagement_input = other.engagement_input;
         }
     }
+
+    fn apply(&self, unpublished: &mut WriterMainWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.editor_selection {
+            next.editor_selection = value.value.clone();
+        }
+        if let Some(value) = &self.lint_generation {
+            next.lint_generation = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.editor_selection.is_none() && self.lint_generation.is_none() && self.engagement_input.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
     fn inverse(&self, base: &WriterMainWindowTransient) -> Self {
         Self {
             editor_selection: self.editor_selection.as_ref().map(|_| WriterOptionalSelection { value: base.editor_selection.clone() }),
             lint_generation: self.lint_generation.as_ref().map(|_| base.lint_generation.clone()),
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.editor_selection.is_none() && self.lint_generation.is_none() && self.engagement_input.is_none()
     }
 }
 

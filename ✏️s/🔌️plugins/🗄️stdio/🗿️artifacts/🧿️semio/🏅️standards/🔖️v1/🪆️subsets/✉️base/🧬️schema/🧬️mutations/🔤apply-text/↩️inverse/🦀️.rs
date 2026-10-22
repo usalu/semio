@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyText`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use crate::schema::snapshot::SemioSnapshot;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_text::ApplyText>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Text(b) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyText { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Text(b) => <SemioTextMutation as ColdMutation<SemioTextSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyText { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

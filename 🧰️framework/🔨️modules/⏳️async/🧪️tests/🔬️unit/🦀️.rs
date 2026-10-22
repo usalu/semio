@@ -64,7 +64,7 @@ async fn child_cancel_never_propagates_upward_to_parent() {
 //#region 🌳️ScopeTests
 #[semio_framework_async_macros::async_test]
 async fn scope_handle_child_scope_shares_cancellation_lineage() {
-    use testkit::ManualRuntime;
+    use semio_framework_async_testkit::ManualRuntime;
     let runtime = ManualRuntime::new(0).await;
     let parent = runtime.open_scope(ScopeOwner::Service("test-parent"), None).await;
     let child = runtime.open_scope(ScopeOwner::Service("test-child"), Some(&parent)).await;
@@ -76,7 +76,7 @@ async fn scope_handle_child_scope_shares_cancellation_lineage() {
 //#region 🧪️ManualRuntimeTests
 #[semio_framework_async_macros::async_test]
 async fn manual_runtime_spawn_scoped_runs_a_ready_future_on_drive() {
-    use testkit::ManualRuntime;
+    use semio_framework_async_testkit::ManualRuntime;
     let runtime = ManualRuntime::new(0).await;
     let scope = runtime.open_scope(ScopeOwner::Actor(1), None).await;
     let ctx = OperationContext { actor: 1, generation: 0, trace: TraceId(1), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };
@@ -90,7 +90,7 @@ async fn manual_runtime_spawn_scoped_runs_a_ready_future_on_drive() {
 
 #[semio_framework_async_macros::async_test]
 async fn manual_runtime_sleep_until_resolves_only_after_injected_time_advances() {
-    use testkit::ManualRuntime;
+    use semio_framework_async_testkit::ManualRuntime;
     let runtime = ManualRuntime::new(0).await;
     let scope = runtime.open_scope(ScopeOwner::Service("timer"), None).await;
     let ctx = OperationContext { actor: 0, generation: 0, trace: TraceId(2), lane: 0, deadline_ms: Some(100), cancel: scope.cancel.clone(), capability: None };
@@ -116,7 +116,7 @@ async fn manual_runtime_sleep_until_resolves_only_after_injected_time_advances()
 
 #[semio_framework_async_macros::async_test]
 async fn manual_runtime_drive_observes_a_real_cross_thread_wake() {
-    use testkit::ManualRuntime;
+    use semio_framework_async_testkit::ManualRuntime;
     let runtime = ManualRuntime::new(0).await;
     let scope = runtime.open_scope(ScopeOwner::Service("cross-thread-wake"), None).await;
     let ctx = OperationContext { actor: 0, generation: 0, trace: TraceId(5), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };
@@ -144,7 +144,7 @@ async fn manual_runtime_drive_observes_a_real_cross_thread_wake() {
 
 #[semio_framework_async_macros::async_test]
 async fn manual_runtime_cancel_scope_reports_finished_and_cancelled() {
-    use testkit::ManualRuntime;
+    use semio_framework_async_testkit::ManualRuntime;
     let runtime = ManualRuntime::new(0).await;
     let scope = runtime.open_scope(ScopeOwner::Actor(7), None).await;
     let ctx = OperationContext { actor: 7, generation: 0, trace: TraceId(3), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };

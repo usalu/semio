@@ -6,8 +6,8 @@ use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxXmlPart}
 #[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::diff::XmlDiff;
 #[cfg(test)]
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
@@ -108,21 +108,9 @@ fn rewind_xml_parts(base: &Vec<PptxXmlPart>, diff: &PptxXmlPartsDelta) -> PptxXm
 //#endregion 🔖️XmlPartDiffLogic
 
 //#region 🔖️Apply
-impl MutationDiff<PptxSnapshot> for PptxDiff {
-    fn apply(&self, base: &PptxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<PptxSnapshot> {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema.clone_from(schema);
-        }
-        if let Some(diff) = &self.opc {
-            diff.commit_into(&mut next.opc, capability).map_err(|error| error.under(["opc"]))?;
-        }
-        if let Some(diff) = &self.xml_parts {
-            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<PptxSnapshot> for PptxDiff {}
 
+impl protocol::ColdMutationDiff<PptxSnapshot> for PptxDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -136,21 +124,39 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         };
         self.xml_parts = compose_optional(self.xml_parts.take(), other.xml_parts);
     }
+
+    fn apply(&self, unpublished: &mut PptxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema.clone_from(schema);
+        }
+        if let Some(diff) = &self.opc {
+            diff.commit_into(&mut next.opc, capability).map_err(|error| error.under(["opc"]))?;
+        }
+        if let Some(diff) = &self.xml_parts {
+            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<PptxSnapshot> for PptxDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.opc.is_none() && self.xml_parts.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PptxSnapshot> for PptxDiff {
     fn inverse(&self, base: &PptxSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             opc: self.opc.as_ref().map(|diff| diff.rewind(&base.opc)),
             xml_parts: self.xml_parts.as_ref().map(|diff| rewind_xml_parts(&base.xml_parts, diff)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.opc.is_none() && self.xml_parts.is_none()
     }
 }
 //#endregion 🔖️DiffAlgebra

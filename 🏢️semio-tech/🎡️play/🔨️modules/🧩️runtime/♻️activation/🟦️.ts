@@ -136,7 +136,7 @@ function playServedActivationRow(pluginId: string, candidates: readonly PlayActi
   if (new Set(candidates.map(candidate => candidate.row.artifactSha256)).size === 1) return { ...candidates[0]!.row, rebuiltAt: earliest(candidates) };
   const installed = options.installedArtifactSha256?.(pluginId);
   const served = candidates.filter(candidate => candidate.row.artifactSha256 === installed);
-  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run bun repo run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-prototype)`);
+  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run repo run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-prototype)`);
   const newest = served.reduce((best, candidate) => candidate.receiptMtimeMs > best.receiptMtimeMs ? candidate : best);
   options.warn?.(`[play] lane drift: ${pluginId} served from ${newest.lane} (${installed!.slice(0, 8)}), stale in ${candidates.filter(candidate => candidate.row.artifactSha256 !== installed).map(candidate => candidate.lane).join(", ")}`);
   return { ...newest.row, rebuiltAt: earliest(served) };
@@ -170,7 +170,7 @@ function readPlayActivationLane(workspace: string, lane: string): PlayActivation
   try { return { lane, receipt: readActivationReceipt(directory), receiptMtimeMs: statSync(join(directory, ACTIVATION_RECEIPT_FILE)).mtimeMs }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing play activation lane receipt: ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+    throw new Error(`Missing play activation lane receipt: ${lane} (run repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 

@@ -34,6 +34,16 @@ impl PaintRegionMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "tiled-region", kind: "paint-region", record: "PaintRegion" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Paint tiled region", "Kachelbereich malen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("ifd:{}:region:{},{},{},{}", self.ifd_index, self.x, self.y, self.width, self.height)]
+    }
+}
+
+impl protocol::ColdMutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
         match paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), |_, _| true) {
             Ok(runs) if runs.is_empty() => protocol::MutationOutcome::new(TiffDiff::default()),
@@ -41,19 +51,10 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation 
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, [format!("ifd:{}:region:{},{},{},{}", self.ifd_index, self.x, self.y, self.width, self.height)]),
         }
     }
-
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
         let current = |run: &TiffSampleRun| base.ifds.get(self.ifd_index).and_then(|ifd| ifd.blocks.get(run.block)).and_then(|block| block.samples.get(run.offset..run.offset + run.samples.len()));
         let runs = paint_tiff_region_runs(base, &self.revision, self.ifd_index, self.region(), self.color(), |_, _| true).unwrap_or_default();
         Ok(runs.iter().filter_map(|run| current(run).map(|words| TiffMutation::ReplaceSamples(ReplaceSamplesMutation { ifd_index: self.ifd_index, block: run.block, offset: run.offset, samples: words.to_vec() }))).collect())
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint tiled region", "Kachelbereich malen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("ifd:{}:region:{},{},{},{}", self.ifd_index, self.x, self.y, self.width, self.height)]
     }
 }
 

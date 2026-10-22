@@ -1,5 +1,5 @@
 /** 🖥️ Display chrome panel: the host api, the windows and layout trees, the window kind icons and the Display panel tabs. */
-import { type ReactNode } from "react";
+import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { Button, COMPOSE_WINDOW_TEMPLATE_MIME, Icon, type IconName, Input, type PanelTabNode, type TreeDataItem, type TreePanelConfig, singleTreeLeaf, windowTemplatePaletteTreeDragController, childElementId } from "@semio-tech/ui-react";
 import { type NamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/framework/infinite/world/r3f";

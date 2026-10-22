@@ -2,7 +2,7 @@
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-use semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationProgress;
+use semio_framework_os_store_replay_operation::ArtifactReplayPreparationProgress;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
@@ -20,9 +20,11 @@ use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotR
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_framework_os_vcs::io::binary::entity_identity::mint_edit_id;
 use semio_framework_os_vcs::VcsError;
+use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
 use semio_framework_os_vcs::ArtifactHistoryKey;
 use semio_framework_os_store_space_schema::{ArtifactEnvelope, ArtifactProjectionCacheMode, ArtifactProjectionCause, ArtifactProjectionEvent, ArtifactProjectionInvalidation, HistoryLane, OpenToolTransaction, SupersedeInput};
 use semio_framework_os_store_replay::ReplayTurnBudget;
+use semio_framework_os_store_replay::original_ingress::OriginalReplayEdits;
 use semio_framework_os_store_replay::{PendingLocalStep, PendingReprojection, ReprojectionAdvance, TailStep};
 //#region 🔖️EphemeralLanes
 
@@ -92,3 +94,17 @@ pub use convergence_early_exit_and_applied_mutation::{
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+/// 📨️ Publishes the preflighted original diagnostic owner through the current Store component borrows.
+pub fn publish_prepared_diagnostics<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, diagnostics: &mut ArtifactStoreDiagnosticStage, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, VcsError>
+where
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+        if diagnostics.row_count()==0{return Ok(Default::default());}
+        let Some((entry,messages,worst,receipt))=diagnostics.take(grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?else{return Err(VcsError::ValidationFailed("preflighted diagnostic transfer lost its exact grant".into()));};
+        let previous=store.log.envelope.edit_messages.admit_prepared(entry.into_entry()).unwrap_or_else(|_|panic!("unchanged premeasured diagnostic ledger must admit its exact original"));
+        if let Some(previous)=previous{let mut owner=diagnostics.displaced.take().expect("preborn exact displaced diagnostic owner");*owner=ArtifactStoreMessageLedgerRetirement::new(previous.edit_id,previous.messages);store.owners.displaced_retirements.push_reserved(owner);}
+        store.replay.pending_report.install_prepared_messages(messages,worst);Ok(receipt)
+    
+}

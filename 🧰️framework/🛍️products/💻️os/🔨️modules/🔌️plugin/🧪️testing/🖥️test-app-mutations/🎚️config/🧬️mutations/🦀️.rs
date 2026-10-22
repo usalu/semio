@@ -6,7 +6,7 @@ pub use crate::test_app_mutation_fixture::config::mutations::change_test_config_
 #[canonical_json(owner = store)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot=crate::test_app_mutation_fixture::config::TestConfig,diff=crate::test_app_mutation_fixture::config::TestConfigDiff,schema="plugin.testkit.config")]
+#[mutations(snapshot=crate::test_app_mutation_fixture::config::TestConfig,diff=crate::test_app_mutation_fixture::config::TestConfigDiff,schema="plugin.testkit.config", reference = crate::test_app_mutation_fixture::config::TestConfig, reference_diff = crate::test_app_mutation_fixture::config::TestConfigDiff)]
 pub enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
 }

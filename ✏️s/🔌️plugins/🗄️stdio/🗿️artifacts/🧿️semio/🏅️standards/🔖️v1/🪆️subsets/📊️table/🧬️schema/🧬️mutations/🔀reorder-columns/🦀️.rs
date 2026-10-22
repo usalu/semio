@@ -17,6 +17,15 @@ pub struct ReorderColumns {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for ReorderColumns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "columns", kind: "reorder-columns", record: "ReorderedColumns" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move column {} to #{}", self.name, self.to_index), &format!("Spalte {} nach #{} verschieben", self.name, self.to_index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.name.clone()]
+    }
+}
+
+impl<Op: SemioTableOp> protocol::ColdMutationKind<SemioTableSnapshot, Op> for ReorderColumns {
     fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
@@ -26,11 +35,5 @@ impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for Reorde
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move column {} to #{}", self.name, self.to_index), &format!("Spalte {} nach #{} verschieben", self.name, self.to_index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.name.clone()]
-    }
 }
 //#endregion 🔖️Payload

@@ -2,6 +2,7 @@ import { dirname, join, relative } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { cargoRepositoryPackages } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 interface CrateIndexRecord {
   dir: string;
@@ -51,7 +52,7 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
 
   for (const member of cargoRepositoryPackages(repoRoot)) {
     const manifest = join(repoRoot, member.manifest);
-    const parsed = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package?: { name?: string }; lib?: { name?: string } };
+    const parsed = runtimeParseTomlV1(readFileSync(manifest, "utf8")) as { package?: { name?: string }; lib?: { name?: string } };
     const pkgName = member.name;
     const libName = parsed.lib?.name ?? pkgName.replaceAll("-", "_");
     const record: CrateIndexRecord = { dir: dirname(manifest), pkgName, libName };

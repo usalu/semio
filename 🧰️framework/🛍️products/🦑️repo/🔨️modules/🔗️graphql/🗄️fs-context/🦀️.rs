@@ -20,7 +20,7 @@ use semio_framework_repo_model::{
 };
 use semio_framework_repo_providers::{ManagementLabel, ManagementMilestone, ManagementProvider, ManagementProviders, McpClientKind, VersionControlProvider};
 use semio_framework_repo_statutes::{SourceFile, SourceSet};
-use semio_framework_repo_tickets::{CoordinatorEventSink, FileTicketStore, PlanRoots, SystemClock as TicketSystemClock, TicketChangeRequest, TicketCloseRequest, TicketId, TicketLayout, TicketOpenRequest, TicketReopenRequest, TicketService};
+use semio_framework_repo_tickets::{CoordinatorEventSink, FileTicketStore, InteractionMetadata, PlanRoots, SystemClock as TicketSystemClock, TicketChangeRequest, TicketCloseRequest, TicketId, TicketLayout, TicketOpenRequest, TicketReopenRequest, TicketService};
 use semio_framework_repo_todos::{FsDraftStore, FsTodoTree, Todos};
 use serde_json::{json, Value as Json};
 

@@ -1,3 +1,4 @@
+import "../⌨️commands/🧪️tests/🟦️.ts";
 import "../💾️storage/🧪️tests/🌐️platform/🟦️.ts";
 import "../💾️storage/🧪️tests/📤️diagnostics/🟦️.ts";
 import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
@@ -12,8 +13,8 @@ import glob from "fast-glob";
 import * as bunOwnership from "../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
 import {prepareJavascriptDependencies,javascriptDependencyProducerArgumentsV1} from "../💾️storage/🟦️.ts";
-import dependencyInstallSchema from "../💾️storage/🧬️schema/📥️install.json"with{type:"json"};
-import {SyncScript,RefreshLockScript} from "../🧪️tests/🔬️script-commands/🟦️.ts";
+import {javascriptInstallSchemaV1 as dependencyInstallSchema} from "../💾️storage/🧱️schemas/🟦️.ts";
+import {SyncScript,RefreshLockScript} from "../⌨️commands/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/🟦️.ts";
 import { zipSync, unzipSync } from "fflate";
@@ -146,7 +147,7 @@ test("an independent Node bundle executes the same authored command corpus", asy
   const source = createSourceFile("dependencies.ts", readFileSync(join(owner, "💾️storage/🟦️.ts"), "utf8"), ScriptTarget.Latest, true);
   const operation = source.statements.find(statement => isFunctionDeclaration(statement) && statement.name?.text === "javascriptDependencyProducerArgumentsV1");
   if (!operation) throw new Error("Dependency operation is missing");
-  await build({ stdin: { contents: "const installSchema="+JSON.stringify(dependencyInstallSchema)+";"+operation.getText(source), loader: "ts" }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
+  await build({ bundle: true, stdin: { contents: "import {selectPackageManagerV1} from "+JSON.stringify(join(owner, "🔌️managers/📚️catalog/🟦️.ts"))+";const installSchema="+JSON.stringify(dependencyInstallSchema)+";Object.defineProperty(installSchema.$defs.ManagerProtocol,\"manager\",{value:selectPackageManagerV1(\"javascript\")});"+operation.getText(source), loader: "ts", resolveDir: owner }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
   const entry = join(output, "oracle.mjs");
   writeFileSync(entry, `import { javascriptDependencyProducerArgumentsV1 } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)};process.stdout.write(JSON.stringify(cases.map(operation=>({args:javascriptDependencyProducerArgumentsV1(operation.mode,"/cache"),cwd:"workspace"}))));`);
   const child = Bun.spawn(["node", entry], { stdout: "pipe", stderr: "pipe" });

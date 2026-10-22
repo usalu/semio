@@ -1,9 +1,12 @@
 /** 🕸️ Assembles the build inference plugin from its revisioned components and loads a complete new component graph whenever any authored Source of the module changes. */
+import {createRequire} from "node:module";
+const javascriptManagerV1 = createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 import { registerSourceAnalysisV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
 import { fileURLToPath } from "node:url";
 import { createRevisionIdentity, createRevisionLoader, readComponentRoster, wireRevisionedComponents } from "./🪢️revision-graph/🟨️.mjs";
 import manifest from "./🗂️components/🔣️.json" with { type: "json" };
 import * as coordinates from "./📍️coordinates/🟨️.mjs";
+import * as stamps from "./🔖️stamps/🟨️.mjs";
 import * as bootstrap from "./🔁️bootstrap/🟨️.mjs";
 import * as sourceAnalyses from "./🧬️source-analyses/🟨️.mjs";
 import * as bunLock from "./🧶️bun-lock/🟨️.mjs";
@@ -27,6 +30,7 @@ const KERNEL = "./🪢️revision-graph/🟨️.mjs";
 const roster = readComponentRoster(manifest);
 const staticModules = Object.freeze({
   coordinates,
+  stamps,
   bootstrap,
   "source-analyses": sourceAnalyses,
   "bun-lock": bunLock,
@@ -47,7 +51,7 @@ const staticModules = Object.freeze({
 if (roster.length !== Object.keys(staticModules).length || roster.some((entry) => staticModules[entry.name]?.component !== entry.name)) throw Error("Inference component roster differs from the statically imported components");
 
 /** 🔏️ Every source file of this module, in roster order, so the implementation revision covers the complete component graph. */
-const sourceFiles = Object.freeze([import.meta.url, new URL(KERNEL, import.meta.url), new URL(MANIFEST, import.meta.url), ...roster.map((entry) => new URL(entry.path, import.meta.url))].map((url) => fileURLToPath(url)));
+const sourceFiles = Object.freeze([import.meta.url, new URL(KERNEL, import.meta.url), new URL(MANIFEST, import.meta.url), ...roster.map((entry) => new URL(entry.path, import.meta.url))].map((url) => fileURLToPath(url)).concat(createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").sourceFilesV1()));
 
 /** 📇️ Registers each source analysis once per identity and revision, so graphs of the same revision share one provider instead of re-registering its id. */
 const latestRegistrations = new Map();
@@ -72,8 +76,17 @@ const current = wireRevisionedComponents({ roster, modules: staticModules, servi
 revisionIdentity.bind(current.modules.revision.implementationRevision());
 loader.adopt(revisionIdentity.revision, current);
 
-/** 📋️ The authored files of the implementation this module loaded with the bytes they had at load: the facts a generation names for every project it built. */
+/** 📋️ The authored files of the implementation this module loaded with the bytes they had at load. */
 export const loadedImplementationRowsV1 = Object.freeze(current.modules.revision.implementationRows());
+
+/** 🔖️ Turns implementation rows into the facts a generation names: the declared stamp of each inferrer and the content of the data no inferrer covers. */
+export const classifyImplementationRowsV1 = current.modules.stamps.classifyImplementationRowsV1;
+
+/** 🚧️ Names the loaded executable files that no inferrer and no infrastructure fragment of the protocol claims. */
+export const unclassifiedImplementationCodeV1 = current.modules.stamps.unclassifiedCodeV1;
+
+/** 📜️ The declared inference protocol of the loaded revision. */
+export const inferenceProtocolV1 = current.modules.stamps.inferenceProtocolV1;
 
 const { invokeCurrentImplementation } = current.modules.invocation;
 
@@ -133,7 +146,7 @@ export function createMetadata(...args){return invokeCurrentImplementation("meta
 
 export default {
   name: "@repo/emoji-project-json",
-  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: BuildInferenceContextV1) => Promise<GeneratedNodes>]} */ ([`**/{${current.modules.coordinates.PROJECT_BASENAME},Cargo.toml,bun.lock,*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)]),
+  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: BuildInferenceContextV1) => Promise<GeneratedNodes>]} */ ([`**/{${current.modules.coordinates.PROJECT_BASENAME},Cargo.toml,${javascriptManagerV1.lockFileNames.join(",")},*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)]),
   createDependencies,
   createMetadata,
 };

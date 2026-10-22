@@ -16,7 +16,13 @@ pub struct ChangeSteelFYPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSteelFYPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_steel_fy_pa::ChangeSteelFYPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "steel-fy-pa", kind: "change-steel-fy-pa", record: "ChangedSteelFYPa" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change structural steel yield strength fy", "Streckgrenze fy des Baustahls ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for ChangeSteelFYPa where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_steel_fy_pa::ChangeSteelFYPa> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::change_steel_fy_pa::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,9 +31,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSteelFYPa where Op
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change structural steel yield strength fy", "Streckgrenze fy des Baustahls ändern")
-    }
 }
 //#endregion 🔖️Payload
 

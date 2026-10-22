@@ -74,7 +74,7 @@ pub mod set_file_schema;
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "StepMutation")]
+#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "StepMutation", reference = StepSnapshot, reference_diff = StepDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StepMutation {
     SetFileDescription(set_file_description::SetFileDescription),
@@ -101,8 +101,8 @@ pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
-    let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <StepMutation as ColdMutation<StepSnapshot>>::diff(mutation, snapshot);
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

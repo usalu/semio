@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-svg:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-svg:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-svg:test"
+    "build": "repo run @semio-tech/stdio-svg:build",
+    "check": "repo run @semio-tech/stdio-svg:check",
+    "test": "repo run @semio-tech/stdio-svg:test"
   },
   "exports": {
     ".": {

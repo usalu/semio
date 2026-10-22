@@ -220,8 +220,8 @@
     "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
     "target": "test-rust-writable-path-authority",
-    "command": "bun ./📜️script.ts test rust-writable-path-authority",
-    "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-writable-path-authority",
+    "command": "repo ./📜️script.ts test rust-writable-path-authority",
+    "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-writable-path-authority",
     "route": "rust-writable-path-authority",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"
   },

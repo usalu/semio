@@ -15,7 +15,16 @@ pub struct EditRun {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "run", kind: "edit-run", record: "EditedRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit run #{}", self.index), &format!("Textlauf #{} bearbeiten", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
@@ -24,11 +33,5 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit run #{}", self.index), &format!("Textlauf #{} bearbeiten", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -371,6 +371,30 @@ fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: 
     }
 }
 
+/// 🩺️ Recovers every element result from nodal displacements and the element's own member load: the local vector is the
+/// element's `dofs_per_node` slots of each node's six-component displacement, so one superposed or solved displacement
+/// field yields the same element state as the factorized solve; elements naming a node outside the model are skipped.
+fn recover_elements(model: &AnalysisModel, displacements: &[NodeDisplacement], member_load: impl Fn(&str) -> Option<MemberUdl>) -> Vec<(String, ElementResult)> {
+    let node_slot = node_index_of(&model.nodes);
+    let displacement_slot: HashMap<&str, usize> = model.nodes.iter().enumerate().map(|(slot, node)| (node.id.as_str(), slot)).collect();
+    let mut recovered = Vec::with_capacity(model.elements.len());
+    'elements: for element in &model.elements {
+        let node_ids = element.node_ids();
+        let dofs = element.dofs_per_node();
+        let mut local = Vec::with_capacity(node_ids.len() * dofs.len());
+        for node_id in &node_ids {
+            let Some(&slot) = displacement_slot.get(node_id.as_str()) else { continue 'elements };
+            for &dof in dofs {
+                local.push(displacements[slot].values[dof.index()]);
+            }
+        }
+        let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
+        let load = member_load(element.id());
+        recovered.push((element.id().to_string(), element.recover(&ctx, &VecD::from_vec(local), load.as_ref())));
+    }
+    recovered
+}
+
 fn combine_results(model: &AnalysisModel, case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
     let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
     let mut reactions: Vec<NodeReaction> = Vec::new();

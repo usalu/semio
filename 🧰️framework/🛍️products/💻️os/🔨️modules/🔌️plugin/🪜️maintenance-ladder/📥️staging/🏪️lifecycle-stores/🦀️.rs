@@ -7,7 +7,7 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
@@ -37,7 +37,7 @@ pub fn original_disposal_step<T>(slot:&mut ArtifactDisposal<T>,owner:&mut T,gran
  Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other},false))
 }
 
-impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
  pub fn close_owned_stores_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
   let demand=self.shared().close_owned_stores_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
@@ -57,7 +57,7 @@ impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceEx
  }
 }
 
-impl<'v, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
  pub fn close_owned_stores_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.close.close_owned_advance_ready{return Ok(RetirementDemand{depth:1,..Default::default()});}
   match self.close.close_owned_stage{

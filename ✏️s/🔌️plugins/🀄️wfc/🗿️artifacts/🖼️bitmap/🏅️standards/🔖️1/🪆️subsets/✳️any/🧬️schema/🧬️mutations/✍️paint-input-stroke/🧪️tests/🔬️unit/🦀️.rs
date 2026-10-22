@@ -14,7 +14,7 @@ fn base() -> BitmapSnapshot {
 }
 
 fn codes(mutation: &BitmapMutation, snapshot: &BitmapSnapshot) -> Vec<(String, String)> {
-    let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(mutation, snapshot);
+    let outcome = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(mutation, snapshot);
     outcome.messages().iter().map(|message| (crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
 }
 
@@ -49,14 +49,14 @@ fn an_unknown_palette_index_is_a_missing_target() {
 #[test]
 fn a_stroke_with_no_cell_inside_the_sample_is_a_missing_target() {
     assert_eq!(codes(&paint_input_stroke(vec![point(9, 9), point(12, 9)], 0), &base()), vec![("error".to_string(), "mutation.target-missing".to_string())]);
-    assert!(<BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&paint_input_stroke(vec![point(9, 9)], 0), &base()).expect("valid retained mutation inverse fixture").is_empty(), "nothing to undo");
+    assert!(<BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::inverse(&paint_input_stroke(vec![point(9, 9)], 0), &base()).expect("valid retained mutation inverse fixture").is_empty(), "nothing to undo");
 }
 
 #[test]
 fn a_stroke_that_leaves_the_sample_paints_the_rest_and_warns_partial() {
     let mutation = paint_input_stroke(vec![point(2, 0), point(5, 0)], 0);
     assert_eq!(codes(&mutation, &base()), vec![("warning".to_string(), "mutation.partial".to_string())]);
-    let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &base());
+    let outcome = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation, &base());
     let region = &outcome.diff().input_regions[0];
     assert_eq!((region.x, region.y, region.width, region.height), (2, 0, 2, 1), "the region covers the inside cells only");
     assert_eq!(region.pixels.clone(), vec![0, 0]);
@@ -78,7 +78,7 @@ fn an_empty_or_oversized_stroke_breaks_the_invariant() {
 fn the_inverse_restores_the_stroke_region() {
     let before = base();
     let mutation = paint_input_stroke(vec![point(0, 2), point(3, 0)], 1);
-    let inverse = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&mutation, &before).expect("valid retained mutation inverse fixture");
+    let inverse = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::inverse(&mutation, &before).expect("valid retained mutation inverse fixture");
     let mut snapshot = before.clone();
     vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).expect("forward applies");
     assert_ne!(snapshot, before);

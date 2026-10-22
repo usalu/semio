@@ -83,6 +83,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-alpha-mode", kind: "change-material-alpha-mode", record: "ChangedMaterialAlphaMode" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Material Alpha Mode", "Alpha-Modus des Materials ändern")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["change-material-alpha-mode".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for ChangeMaterialAlphaModeMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<ChangeMaterialAlphaModeMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -91,19 +104,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Material Alpha Mode", "Alpha-Modus des Materials ändern")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["change-material-alpha-mode".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

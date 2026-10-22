@@ -8,12 +8,12 @@ use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
-    let forward = protocol::apply_diff(mutation.diff(base).diff(), base).expect("valid mutation diff");
+    let forward = protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("valid mutation diff");
     let mut restored = forward.clone();
     let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
-        restored = protocol::apply_diff(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
+        restored = protocol::apply_diff_cold(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
     forward
@@ -247,7 +247,7 @@ async fn every_mutation_kind_satisfies_the_inverse_sum_law() {
 async fn change_part_kind_label_diff_absorb_law() {
     let base = empty_block5d_snapshot();
     let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = change_part_kind_label("second".into()).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -256,7 +256,7 @@ async fn change_part_kind_label_diff_absorb_law() {
 async fn move_grip_2d_diff_absorb_law() {
     let base = seeded_snapshot();
     let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

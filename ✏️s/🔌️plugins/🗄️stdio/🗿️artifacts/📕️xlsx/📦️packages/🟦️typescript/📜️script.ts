@@ -1,11 +1,11 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ xlsx TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-xlsx",{ bundleRuntime: "bun",suites:["🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-xlsx",{ bundleRuntime: "runtime",suites:["🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 
 if ((process.argv[2] ?? "test") === "test") {
   const root = resolve(import.meta.dir, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪟️viewer-cell-window");

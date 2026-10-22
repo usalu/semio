@@ -20,7 +20,7 @@ use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableM
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
 use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
 #[allow(unused_imports)]
@@ -78,14 +78,14 @@ async fn mutation_diff_law_covers_a_wrapped_variant() {
     let base = audio_base();
 
     let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 96_000 }) });
-    let d2 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
+    let d2 = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&wrapped, &base);
     assert!(matches!(d2.diff(), SemioDiff::Audio(_)));
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &wrapped);
     applied = __next;
-    assert_eq!(protocol::apply_diff(d2.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(d2.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, d2);
-    let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
+    let inv2 = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv2.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv2[0]);
@@ -108,7 +108,7 @@ async fn mutation_diff_law_flow_insert_node() {
         SemioSubsetSnapshot::Flow(s) => assert_eq!(s.nodes, vec![node]),
         other => panic!("expected Flow, got {other:?}"),
     }
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
@@ -120,11 +120,11 @@ async fn mutation_diff_law_flow_insert_node() {
 async fn kind_mismatch_wrapped_mutation_records_an_error_outcome() {
     let base = flow_base();
     let wrapped = SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 1 }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&wrapped, &base);
     assert_eq!(diff.diff(), &SemioDiff::NoChange);
     assert!(diff.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).unwrap(), base);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).unwrap(), base);
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, Vec::<SemioMutation>::new(), "a kind-mismatched wrapped mutation has nothing to restore");
 }
 
@@ -176,9 +176,9 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
     for subset in bases {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset };
         let m = wrap_absent_mutation(&base.subset);
-        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
         assert!(diff.diff().is_empty(), "wrapped no-op mutation must diff empty: {diff:?}");
-        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+        let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert!(inv.len() <= 1, "a harmless wrapped mutation undoes in at most one step");
     }
 }
@@ -192,15 +192,15 @@ async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
     let m = SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Text(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -219,15 +219,15 @@ async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
     let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep {
         mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7, at: None }),
     });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -245,15 +245,15 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Mesh(Default::default()) };
     let m = SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "m1".into(), primitives: vec![] }, at: None }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Mesh(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -271,15 +271,15 @@ async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
     let m = SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::InsertRow(insert_row::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Table(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -300,15 +300,15 @@ async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
     let m = SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
         mutation: SemioGraphMutation::CreateNode(create_node::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), width: 0.0, height: 0.0, ports: vec![], properties: vec![], at: None }),
     });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Graph(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -327,15 +327,15 @@ async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Object(Default::default()) };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "brep-x".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
     let m = SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brep-x".into(), target }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Object(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
@@ -353,15 +353,15 @@ async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
     let m = SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into(), at: None }) });
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+    let diff = <SemioMutation as ColdMutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Kit(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
     let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
-    assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);

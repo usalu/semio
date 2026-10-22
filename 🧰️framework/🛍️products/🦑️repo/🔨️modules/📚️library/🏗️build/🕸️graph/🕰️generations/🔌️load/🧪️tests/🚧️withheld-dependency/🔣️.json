@@ -1,0 +1,580 @@
+{
+  "version": 1,
+  "emptyDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cases": [
+    {
+      "id": "complete-inventory-withholds-nothing",
+      "projects": {
+        "crate-a": {
+          "root": "libs/a",
+          "targets": {
+            "build": {
+              "inputs": []
+            }
+          }
+        },
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-a"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {
+        "test-one": "x/tests/case/spec.feature"
+      },
+      "digests": {
+        "x/tests/case/spec.feature": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed"
+      },
+      "expected": {
+        "dangling": [],
+        "withheld": [],
+        "remaining": [
+          "crate-a",
+          "test-one"
+        ],
+        "unavailable": [],
+        "text": []
+      }
+    },
+    {
+      "id": "project-created-after-the-snapshot",
+      "projects": {
+        "crate-a": {
+          "root": "libs/a",
+          "targets": {
+            "build": {
+              "inputs": []
+            }
+          }
+        },
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-a",
+                    "crate-new"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {
+        "test-one": "x/tests/case/spec.feature"
+      },
+      "digests": {
+        "x/tests/case/spec.feature": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed"
+      },
+      "expected": {
+        "dangling": [
+          {
+            "source": "test-one",
+            "root": "x/tests",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "withheld": [
+          "test-one"
+        ],
+        "remaining": [
+          "crate-a"
+        ],
+        "unavailable": [
+          {
+            "root": "x/tests",
+            "project": "test-one",
+            "source": "x/tests/case/spec.feature",
+            "sha256": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed",
+            "reason": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "text": [
+          {
+            "en": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "de": "Graph: test-one wird zurückgehalten: x/tests/case/spec.feature hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält (crate-new); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von test-one entfernen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-names-in-code-point-order",
+      "projects": {
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "b-crate",
+                    "é-crate",
+                    "B-crate"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {
+        "test-one": "x/tests/case/spec.feature"
+      },
+      "digests": {
+        "x/tests/case/spec.feature": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed"
+      },
+      "expected": {
+        "dangling": [
+          {
+            "source": "test-one",
+            "root": "x/tests",
+            "missing": [
+              "B-crate",
+              "b-crate",
+              "é-crate"
+            ]
+          }
+        ],
+        "withheld": [
+          "test-one"
+        ],
+        "remaining": [],
+        "unavailable": [
+          {
+            "root": "x/tests",
+            "project": "test-one",
+            "source": "x/tests/case/spec.feature",
+            "sha256": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed",
+            "reason": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (B-crate, b-crate, é-crate), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "missing": [
+              "B-crate",
+              "b-crate",
+              "é-crate"
+            ]
+          }
+        ],
+        "text": [
+          {
+            "en": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (B-crate, b-crate, é-crate), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "de": "Graph: test-one wird zurückgehalten: x/tests/case/spec.feature hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält (B-crate, b-crate, é-crate); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von test-one entfernen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "only-the-affected-test-project-waits",
+      "projects": {
+        "crate-a": {
+          "root": "libs/a",
+          "targets": {
+            "build": {
+              "inputs": []
+            }
+          }
+        },
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-a"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        },
+        "test-two": {
+          "root": "y/tests",
+          "tags": [
+            "type:test",
+            "owner:y"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/y/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-a",
+                    "crate-gone"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        },
+        "test-three": {
+          "root": "z/tests",
+          "tags": [
+            "type:test",
+            "owner:z"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/z/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-a"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {
+        "test-one": "x/tests/case/spec.feature",
+        "test-two": "y/tests/case/spec.feature",
+        "test-three": "z/tests/case/spec.feature"
+      },
+      "digests": {
+        "x/tests/case/spec.feature": "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed",
+        "y/tests/case/spec.feature": "3fc4ccfe745870e2c0d99f71f30ff0656c8dedd41cc1d7d3d376b0dbe685e2f3",
+        "z/tests/case/spec.feature": "8b5b9db0c13db24256c829aa364aa90c6d2eba318b9232a4ab9313b954d3555f"
+      },
+      "expected": {
+        "dangling": [
+          {
+            "source": "test-two",
+            "root": "y/tests",
+            "missing": [
+              "crate-gone"
+            ]
+          }
+        ],
+        "withheld": [
+          "test-two"
+        ],
+        "remaining": [
+          "crate-a",
+          "test-one",
+          "test-three"
+        ],
+        "unavailable": [
+          {
+            "root": "y/tests",
+            "project": "test-two",
+            "source": "y/tests/case/spec.feature",
+            "sha256": "3fc4ccfe745870e2c0d99f71f30ff0656c8dedd41cc1d7d3d376b0dbe685e2f3",
+            "reason": "graph: test-two is withheld: y/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-gone), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-two",
+            "missing": [
+              "crate-gone"
+            ]
+          }
+        ],
+        "text": [
+          {
+            "en": "graph: test-two is withheld: y/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-gone), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-two",
+            "de": "Graph: test-two wird zurückgehalten: y/tests/case/spec.feature hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält (crate-gone); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von test-two entfernen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "a-project-that-is-no-test-is-not-checked",
+      "projects": {
+        "crate-a": {
+          "root": "libs/a",
+          "targets": {
+            "build": {
+              "inputs": [
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-gone"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {},
+      "digests": {},
+      "expected": {
+        "dangling": [],
+        "withheld": [],
+        "remaining": [
+          "crate-a"
+        ],
+        "unavailable": [],
+        "text": []
+      }
+    },
+    {
+      "id": "a-vanished-declaring-file-has-the-digest-of-no-bytes",
+      "projects": {
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-new"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {
+        "test-one": "x/tests/case/spec.feature"
+      },
+      "digests": {},
+      "expected": {
+        "dangling": [
+          {
+            "source": "test-one",
+            "root": "x/tests",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "withheld": [
+          "test-one"
+        ],
+        "remaining": [],
+        "unavailable": [
+          {
+            "root": "x/tests",
+            "project": "test-one",
+            "source": "x/tests/case/spec.feature",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "reason": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "text": [
+          {
+            "en": "graph: test-one is withheld: x/tests/case/spec.feature depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "de": "Graph: test-one wird zurückgehalten: x/tests/case/spec.feature hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält (crate-new); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von test-one entfernen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "no-declaring-file-falls-back-to-the-project-root",
+      "projects": {
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test",
+            "owner:x"
+          ],
+          "targets": {
+            "test": {
+              "inputs": [
+                "{workspaceRoot}/x/tests/**/*",
+                {
+                  "input": "nativeSources",
+                  "projects": [
+                    "crate-new"
+                  ]
+                },
+                {
+                  "env": "SEMIO_TEST_LEVEL"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "configs": {},
+      "digests": {
+        "x/tests": "2b64c6d9afd8a34ed0dbf35f7de171a8825a50d9f42f05e98fe2b1addf00ab44"
+      },
+      "expected": {
+        "dangling": [
+          {
+            "source": "test-one",
+            "root": "x/tests",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "withheld": [
+          "test-one"
+        ],
+        "remaining": [],
+        "unavailable": [
+          {
+            "root": "x/tests",
+            "project": "test-one",
+            "source": "x/tests",
+            "sha256": "2b64c6d9afd8a34ed0dbf35f7de171a8825a50d9f42f05e98fe2b1addf00ab44",
+            "reason": "graph: test-one is withheld: x/tests depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "missing": [
+              "crate-new"
+            ]
+          }
+        ],
+        "text": [
+          {
+            "en": "graph: test-one is withheld: x/tests depends on projects that this graph snapshot does not contain (crate-new), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of test-one",
+            "de": "Graph: test-one wird zurückgehalten: x/tests hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält (crate-new); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von test-one entfernen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "a-test-without-native-sources-waits-for-nothing",
+      "projects": {
+        "test-one": {
+          "root": "x/tests",
+          "tags": [
+            "type:test"
+          ],
+          "targets": {
+            "lint": {
+              "inputs": [
+                "{workspaceRoot}/x/**/*"
+              ]
+            }
+          }
+        }
+      },
+      "configs": {},
+      "digests": {},
+      "expected": {
+        "dangling": [],
+        "withheld": [],
+        "remaining": [
+          "test-one"
+        ],
+        "unavailable": [],
+        "text": []
+      }
+    }
+  ],
+  "laws": [
+    {
+      "name": "the full graph records the declaring file of every project before it withholds",
+      "start": "export async function discoverBuildGraphV1(",
+      "end": "/** 🔌️ The identity of the one builder custody",
+      "before": "configs[name]??=file",
+      "after": "withholdDanglingTestProjectsV1({"
+    },
+    {
+      "name": "the full graph withholds before it indexes the owner of every file",
+      "start": "export async function discoverBuildGraphV1(",
+      "end": "/** 🔌️ The identity of the one builder custody",
+      "before": "withholdDanglingTestProjectsV1({",
+      "after": "const ownerOf=createProjectFileIndexV1(projects)"
+    },
+    {
+      "name": "the partial graph withholds against the kept projects of the previous generation",
+      "start": "export async function discoverBuildGraphPartV1(",
+      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "before": "const kept=stubs.filter(",
+      "after": "withholdDanglingTestProjectsV1({"
+    },
+    {
+      "name": "the partial graph withholds before it derives the environment and the file map",
+      "start": "export async function discoverBuildGraphPartV1(",
+      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "before": "withholdDanglingTestProjectsV1({",
+      "after": "const listed=["
+    },
+    {
+      "name": "the partial graph withholds before the dependencies of the test projects are inferred",
+      "start": "export async function discoverBuildGraphPartV1(",
+      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "before": "withholdDanglingTestProjectsV1({",
+      "after": "tests.discoverTestBuildDependenciesV1("
+    },
+    {
+      "name": "a withheld test project keeps its tag so the next run replaces it",
+      "start": "export async function discoverBuildGraphPartV1(",
+      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "before": "tags[row.project!]",
+      "after": "unavailable:row,nodeRows:nodeRows[row.project!]"
+    },
+    {
+      "name": "a withheld test stub no longer hides files of a project that is back",
+      "start": "export async function discoverBuildGraphPartV1(",
+      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "before": "!stub.tag&&stub.kind===\"unavailable\"",
+      "after": "projectFileMap:Record<string,{file:string}[]>"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🗄️ `@semio-tech/stdio-plugin` router: `bun ./📜️script.ts test`. */
+/** 🗄️ `@semio-tech/stdio-plugin` router: `repo ./📜️script.ts test`. */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";

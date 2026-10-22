@@ -8,7 +8,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
 import { withHostPlatformOutputsV1 } from "../../../🎯️host-platform/🟦️.ts";
-import { createRequire } from "node:module";
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as rawReadFileSync, renameSync as rawRenameSync, writeFileSync as rawWriteFileSync } from "node:fs";
 import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
@@ -23,6 +23,12 @@ const { existsSync, readFileSync, readdirSync } = observedFs;
 /** 🪓️ Broad project groups that a native target replaces with its Cargo module closure; every other authored input still reaches the hash. */
 const NATIVE_REPLACED_INPUTS = new Set(["default", "^default", "production", "^production", "nativeSources", "^nativeSources", "nativeTestSources", "^nativeTestSources"]);
 const CARGO_TEST_DRIVER = "/🏃️process/🧪️testing/🦀️cargo/";
+const NATIVE_COMMAND_DRIVERS = Object.freeze([CARGO_TEST_DRIVER, "/🏃️process/📦️artifacts/🏗️native-build/", "/🏃️process/📦️artifacts/🕸️wasm-build/"]);
+/** 🧷️ A command closure reaches a declared native driver when one of its sources lives inside a driver directory.
+ * @param {readonly unknown[]} sources */
+export function reachesNativeCommandDriverV1(sources) {
+  return sources.some((path) => typeof path === "string" && NATIVE_COMMAND_DRIVERS.some((driver) => path.includes(driver)));
+}
 const inputKey = (input) => typeof input === "string" ? input : JSON.stringify(input);
 const distinctInputs = (inputs) => { const seen = new Set(); return inputs.filter((input) => { const key = inputKey(input); return !seen.has(key) && seen.add(key); }); };
 const generatedCommandKeys = new WeakMap();
@@ -172,7 +178,7 @@ function precisionContextV1(workspaceRoot, facts, scripts) {
     cargoSources: (root) => cargoSourceInputs(root, workspaceRoot, facts, true),
     cargoToolchain: POLICY.toolchains.cargo.files,
     cargoIdentity: (directory) => (readToml(join(workspaceRoot, directory, "Cargo.toml")).package ? loaded.cargoLockInput(loaded.cargoManifestInputV1(directory||"."), workspaceRoot) : undefined),
-    program: precisionProgramHostV1(workspaceRoot, scripts, () => document, () => (compiler ??= createRequire(import.meta.url)("typescript"))),
+    program: precisionProgramHostV1(workspaceRoot, scripts, () => document, () => (compiler ??= parserTypescriptV1())),
   };
   const context = { document, host };
   precisionContexts.set(scripts, context);
@@ -320,6 +326,13 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     }
     return [group.name];
   };
+  const commandSourceMemo = new Map();
+  const commandSourcesOf = (candidate) => {
+    const key = JSON.stringify([candidate.executor, candidate.options, candidate.configurations]);
+    let sources = commandSourceMemo.get(key);
+    if (!sources) commandSourceMemo.set(key, sources = nativeTargetCommandInputs(candidate, workspaceRoot, commandInputs, scripts, root));
+    return sources;
+  };
   for (const [name, target] of Object.entries(admitted)) {
     const inheritedBase=targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target,...(target.cache===false&&target.inputs===undefined?{inputs:["default"]}:{}) }, root, ownsScript);
     const inherited=inheritedBase.metadata?.semio?.hostPlatformOutputsV1?withHostPlatformOutputsV1(inheritedBase,process.platform):inheritedBase;
@@ -327,18 +340,18 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     let policy = targetPolicy(name,inherited);
     const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
     if (execution === "native" && !nativeProject) throw Error(`Native execution contract requires a native project owner: ${json.name}:${name}`);
-    const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && (execution === "native" || typeof policy.options?.command === "string" && (await nativeTargetCommandInputs({...policy,configurations:undefined},workspaceRoot,commandInputs,scripts,root)).some(path=>typeof path==="string"&&(path.includes(CARGO_TEST_DRIVER)||path.includes("/🏃️process/📦️artifacts/🏗️native-build/")||path.includes("/🏃️process/📦️artifacts/🕸️wasm-build/"))));
+    const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && policy.executor !== "repo:noop" && (execution === "native" || typeof policy.options?.command === "string" && reachesNativeCommandDriverV1(await commandSourcesOf({...policy,configurations:undefined})));
     const nativeTarget = execution !== "source" && !orchestrator && (nativePolicyTarget || nativeProject && /^(?:build|wasm|native|test|lint|check|verify)(?:-|$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts"));
     const artifactTarget = artifactTypeScript && /^(?:build|check|test)$/.test(name);
     if(nativePolicyTarget){
       const command=policy.options?.command;
-      if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Cargo owner test requires one Bun script command: ${json.name}:${name}`);
+      if(typeof command!=="string"||!command.startsWith("repo "))throw Error(`Cargo owner test requires one script command: ${json.name}:${name}`);
       const driver=buildPath(relative(workspaceRoot,join(LIBRARY_ROOT,"⚡️caching/🦀️cargo/📜️script.ts")));
       const ownerCwd=policy.options?.cwd??root;
       const boundCommand=bindBuildCommandV1(command,workspaceRoot,ownerCwd,root,[]).command;
       policy.executor="repo:script";
       let nativeOwnerCommand;try{nativeOwnerCommand=declaredNativeOwnerCommandV1(nativeManifest,ownerCwd,boundCommand);}catch(error){throw new Error(`Original discovered native command owner ${json.name}:${name}: ${error.message}`,{cause:error});}
-      policy.options={...policy.options,ownerArguments:true,cwd:".",nativeOwnerCommand,command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(nativeManifest)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      policy.options={...policy.options,ownerArguments:true,cwd:".",nativeOwnerCommand,command:`repo ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(nativeManifest)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
       const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
       if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
       else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
@@ -348,14 +361,14 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     }
     if (execution !== "source" && !orchestrator && !/ native owner-command /u.test(policy.options?.command??"") && (await targetScriptClosure({...policy,configurations:undefined}, workspaceRoot, scripts, root))?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
       const command=policy.options?.command,ownerCwd=policy.options?.cwd??root;
-      if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Process owner requires one Bun script command: ${json.name}:${name}`);
+      if(typeof command!=="string"||!command.startsWith("repo "))throw Error(`Process owner requires one script command: ${json.name}:${name}`);
       const driver=buildPath(relative(workspaceRoot,join(LIBRARY_ROOT,"🏃️process/🧭️routing/📥️owner-command/📜️script.ts")));
-      const bound=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(buildPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
+      const bound=command.replace(/^repo\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`repo ${JSON.stringify(buildPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
       policy.executor="repo:script";
-      policy.options={...policy.options,ownerArguments:true,cwd:".",command:`bun ${JSON.stringify(driver)} owner-command --cwd ${JSON.stringify(ownerCwd)} -- ${bound}`};
+      policy.options={...policy.options,ownerArguments:true,cwd:".",command:`repo ${JSON.stringify(driver)} owner-command --cwd ${JSON.stringify(ownerCwd)} -- ${bound}`};
     }
     if (nativeTarget) {
-      const commandSources = await nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts, root);
+      const commandSources = await commandSourcesOf(policy);
       const runsTests = nativeTargetRunsTestsV1(name, target.metadata?.semio?.execution, commandSources), authored = nativeAuthoredInputsV1(policy.inputs ?? [], commandInputs);
       policy.inputs = nativeTargetInputsV1(runsTests, [...internCommandSources(commandSources), ...nativeLockInputs(policy), ...(policy.cargoTestPolicyInputs ?? [])], runsTests ? [...(POLICY.targetDefaults?.test?.inputs ?? []), ...authored] : authored);
       delete policy.cargoTestPolicyInputs;
@@ -364,7 +377,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     }
     if ((nativeTarget || policy.metadata?.semio?.componentStoreV1) && nativeProject && readToml(join(workspaceRoot, nativeRoot, "Cargo.toml")).package) {
       const lockOwner = join(LIBRARY_ROOT, "🏗️build/📥️inputs/🔒️lock/📜️script.ts");
-      policy.inputs.push(...await relativeScriptInputs([lockOwner], workspaceRoot, scripts), `{workspaceRoot}/${buildPath(relative(workspaceRoot, join(dirname(lockOwner), "🔣️schema.json")))}`, loaded.cargoLockInput(nativeManifest, workspaceRoot));
+      policy.inputs.push(...internCommandSources([...await relativeScriptInputs([lockOwner], workspaceRoot, scripts), `{workspaceRoot}/${buildPath(relative(workspaceRoot, join(dirname(lockOwner), "🔣️schema.json")))}`]), loaded.cargoLockInput(nativeManifest, workspaceRoot));
     }
     if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(await genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts, root))];

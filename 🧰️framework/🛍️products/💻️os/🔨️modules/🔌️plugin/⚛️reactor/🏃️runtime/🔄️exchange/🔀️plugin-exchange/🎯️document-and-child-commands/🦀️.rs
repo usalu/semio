@@ -1,6 +1,7 @@
 //! 🎯️ Document and child commands: local interaction queries, context menus, envelope ingestion, composed children and the history read of one plugin exchange. See [`super`].
 
 use super::*;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
 /// 🔎️ Reads, acknowledges or cancels a local interaction query and answers its receipt or rejection.
 pub(super) async fn arm_local_interaction_query<PA: PluginApp>(
@@ -52,10 +53,10 @@ pub(super) async fn arm_context_menu<PA: PluginApp>(
             });
             match outcome.await {
                 Ok(items) => frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items) }),
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                Err(fault) => push_app_fault(frames, Some(seq), fault).await,
             }
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -88,7 +89,7 @@ pub(super) async fn arm_apply_envelopes<PA: PluginApp>(
                 frames.push(protocol::AppFrame::Conflicts { in_reply_to: None, conflicts: encode_wire_serialized(&open) });
             }
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -119,7 +120,7 @@ pub(super) async fn arm_load_children<PA: PluginApp>(
             flags.mutated = true;
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -138,7 +139,7 @@ pub(super) async fn arm_read_children<PA: PluginApp>(
     });
     match read.await {
         Ok(entries) => frames.push(protocol::AppFrame::Children { in_reply_to: seq, entries }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -157,7 +158,7 @@ pub(super) async fn arm_read_child_heads<PA: PluginApp>(
     });
     match read.await {
         Ok(entries) => frames.push(protocol::AppFrame::ChildHeads { in_reply_to: seq, entries }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -176,7 +177,7 @@ pub(super) async fn arm_read_history<PA: PluginApp>(
     });
     match snapshot.await {
         Ok(history_patch) => frames.push(protocol::AppFrame::HistorySnapshot { in_reply_to: seq, history_patch: encode_wire_serialized(&history_patch) }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

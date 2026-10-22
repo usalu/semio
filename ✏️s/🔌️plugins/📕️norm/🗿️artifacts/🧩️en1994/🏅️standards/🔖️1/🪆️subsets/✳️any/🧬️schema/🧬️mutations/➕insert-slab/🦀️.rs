@@ -17,7 +17,13 @@ pub struct InsertSlab {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertSlab where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::remove_slab::RemoveSlab> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "slab", kind: "insert-slab", record: "InsertedSlab" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert composite slab", "Verbunddecke einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for InsertSlab where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::remove_slab::RemoveSlab> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::insert_slab::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,9 +32,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertSlab where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert composite slab", "Verbunddecke einfügen")
-    }
 }
 //#endregion 🔖️Payload
 

@@ -9,7 +9,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::RetirementDemand;
-use store::SpaceMember;
+use store::ReferenceSpaceMember;
 use semio_framework_value::ValueError;
 use semio_framework_plugin_publication_mounted::mounted_child_group_receipt;
 use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
@@ -30,7 +30,7 @@ use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_framework_plugin_publication_mounted::mounted_child_group_receipt::mounted_nested_retirement_demand;
 use semio_framework_os_kernel as store;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     pub fn admit_private_child_group_frame(&mut self,operation:u64,captured_millis:i64,expires_at_us:u64,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}

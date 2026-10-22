@@ -24,7 +24,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
-        "command": "bun ./📜️script.ts test neutral-ownership"
+        "command": "repo ./📜️script.ts test neutral-ownership"
       }
     },
     "test-schema": {
@@ -47,7 +47,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
-        "command": "bun ./📜️script.ts test schema"
+        "command": "repo ./📜️script.ts test schema"
       }
     },
     "check-types": {
@@ -69,7 +69,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
-        "command": "bun ./📜️script.ts check types"
+        "command": "repo ./📜️script.ts check types"
       }
     },
     "test-ownership": {
@@ -93,7 +93,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
-        "command": "bun ./📜️script.ts test ownership"
+        "command": "repo ./📜️script.ts test ownership"
       }
     }
   }

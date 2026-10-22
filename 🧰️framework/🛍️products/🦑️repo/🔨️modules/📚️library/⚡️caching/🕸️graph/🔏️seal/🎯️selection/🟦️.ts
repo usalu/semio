@@ -1,4 +1,6 @@
 import {createHash} from "node:crypto";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptLocksV1=packageManagerRegistryV1.forEcosystem("javascript").flatMap(manager=>manager.lockFileNames()),javascriptScopeConfigsV1=packageManagerRegistryV1.forEcosystem("javascript").flatMap(manager=>manager.configurationNames("scope"));
 import {lstat,readFile} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -14,7 +16,7 @@ export interface SelectedGraphSourcePortsV1 {capture(scope:Readonly<{roots:reado
 export interface SelectedGraphSourceReceiptV1 {readonly version:1;readonly scope:SelectedGraphScopeV1;readonly journal:SelectedGraphJournalWitnessV1;readonly files:readonly {path:string;sha256:string;device:string;inode:string}[];readonly ancestry:readonly {path:string;device:string;inode:string}[];}
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
 const pathPattern=/^(?!\/)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[^\\:\u0000]+$/u;
-const identities=new Set(["package.json","project.json","📋️project.json","Cargo.toml","go.mod","go.work","go.sum","go.work.sum","pyproject.toml","uv.lock","bun.lock","package-lock.json","yarn.lock","pnpm-lock.yaml","nx.json",".nxignore",".gitignore","bunfig.toml","rust-toolchain.toml"]);
+const identities=new Set(["package.json","project.json","📋️project.json","Cargo.toml","go.mod","go.work","go.sum","go.work.sum","pyproject.toml","uv.lock",...javascriptLocksV1,"yarn.lock","pnpm-lock.yaml","nx.json",".nxignore",".gitignore",...javascriptScopeConfigsV1,"rust-toolchain.toml"]);
 /** 🏛️ Retains every project identity, package resolver and workspace compiler authority. */
 export function isGlobalGraphIdentityPathV1(path:string):boolean {return identities.has(path.split("/").at(-1)!)||path===".cargo/config.toml"||path.endsWith("/.cargo/config.toml");}
 const selectedPlans=new Map<string,CompiledJsonSchemaSubset>();

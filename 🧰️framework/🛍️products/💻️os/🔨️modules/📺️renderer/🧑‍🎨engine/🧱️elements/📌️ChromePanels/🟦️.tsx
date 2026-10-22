@@ -11,7 +11,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, type ReactElement } from "react";
+import { useMemo, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, type IconName, type PanelTabBranch, type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
 import { type NamedLayout, type WindowLayout } from "@semio-tech/framework";
 import { defaultAppsSettingsTabLabel, shellLabel, shellTabIcon } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";

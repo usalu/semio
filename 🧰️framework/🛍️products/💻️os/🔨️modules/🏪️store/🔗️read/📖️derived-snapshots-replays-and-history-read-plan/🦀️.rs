@@ -29,12 +29,12 @@ impl<P> ArtifactDerivedSnapshot<P> {
 
 /// ⏪️ Store-owned history replay whose input edits and projection origin cannot be supplied by the caller.
 pub struct ArtifactDerivedReplay<P, Mu: Mutation<P>> {
-        pub history_source:Option<semio_framework_os_store_replay::replay_preparation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
+        pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
     pub history_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>,
     pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_framework_os_spr::Edit<Mu>>>>,
     pub history_issuer_close:Option<semio_framework_value::FactoryAuthority>,
     pub history_operation:Option<(usize,usize)>,
-    pub failed_operation:Option<semio_framework_os_store_replay::replay_preparation::ArtifactDerivedOperation<P,Mu>>,
+    pub failed_operation:Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
     pub preparation_receipt:RetainedCloneProgress,
 pub replay: Option<EditReplay<P, Mu>>,
     pub plan: Option<HistoryReadPlan>,
@@ -44,7 +44,7 @@ pub replay: Option<EditReplay<P, Mu>>,
     pub revision: [u8; 32],
 }
 
-impl<P, Mu: Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
+impl<P: Clone, Mu: Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
         /// 🧾️ Exposes the original caller-granted replay work to the mounted history controller.
     pub fn take_preparation_receipt(&mut self)->RetainedCloneProgress{std::mem::take(&mut self.preparation_receipt)}
 /// 📈️ Reports genuine cumulative work inside the currently sealed operation producer.
@@ -66,8 +66,8 @@ impl<P, Mu: Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
 
 /// 🕰️ A generation-fenced cursor resolving a preview's inputs and folding its prefix under the caller's deadline.
 pub struct ArtifactDerivedHistoryPreview<P, Mu: Mutation<P>> {
-        pub derived_operation:Option<semio_framework_os_store_replay::replay_preparation::ArtifactDerivedOperation<P,Mu>>,
-    pub history_source:Option<semio_framework_os_store_replay::replay_preparation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
+        pub derived_operation:Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
+    pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
     pub history_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>,
     pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_framework_os_spr::Edit<Mu>>>>,
     pub history_issuer_close:Option<semio_framework_value::FactoryAuthority>,
@@ -217,7 +217,7 @@ where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
         if self.registry_retirement.is_some() {return Some(snapshot_registry_alias_demands(&self.registry_retirement));}
         let preview=self.preview.as_ref()?;
         if !preview.drafts.terminal_is_empty() {return Some(Ok(RetirementDemand {depth:1,..Default::default()}));}
-                if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_replay::replay_preparation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
+                if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
         if let Some(owner)=preview.operation_close.as_ref(){return Some(semio_framework_value::factory_ticket_demands(owner,body));}
         if preview.displaced_operation.is_some(){return Some(Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}));}
         if let Some(id)=preview.operation_identity.as_ref(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<MutationId>(),release_bytes:id.0.capacity(),depth:1,..Default::default()}));}

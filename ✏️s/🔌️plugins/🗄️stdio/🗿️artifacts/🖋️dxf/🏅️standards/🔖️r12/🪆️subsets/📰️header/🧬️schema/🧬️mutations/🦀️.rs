@@ -101,7 +101,7 @@ pub mod set_style;
 /// is not an approved semantic verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = DxfSnapshot, diff = DxfDiff, schema = "DxfMutation")]
+#[mutations(snapshot = DxfSnapshot, diff = DxfDiff, schema = "DxfMutation", reference = DxfSnapshot, reference_diff = DxfDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DxfMutation {
 

@@ -56,7 +56,7 @@ fn assert_matches_kernel(motion: LowpolySelectionMotion, edit: impl Fn(&mut semi
     assert_ne!(Some(&channels[0]), state.attributes.iter().find(|held| held.name == "authored"), "the motion really changed the channel");
     let raised = lowpoly_selection_motion_diff(&snapshot, id, &SELECTED, &motion);
     assert!(raised.messages().iter().all(|message| message.code.0 != "mutation.invariant"), "the motion is clean");
-    let after = protocol::apply_diff(raised.diff(), &snapshot).expect("the diff applies");
+    let after = protocol::apply_diff_cold(raised.diff(), &snapshot).expect("the diff applies");
     let applied = after.objects.iter().find(|object| object.id == id).and_then(|object| object.mesh_state.clone());
     assert_eq!(applied, Some(expected), "applying the rows yields the kernel's mesh, channels and recomputed normals included");
 }
@@ -92,10 +92,10 @@ async fn the_inverse_restores_the_normal_channels_and_sums_to_the_negative_diff(
     let scale = LowpolyMutation::ScaleSelection(semio_s_artifact_lowpoly_lowpoly_mut_geometry::scale_selection::ScaleSelection { object_id: id.into(), vertex_ids: SELECTED.to_vec(), pivot: [0.0; 3], factor: [2.0, 1.0, 0.5] });
     for mutation in [rotate, scale] {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &snapshot).await;
-        let forward = protocol::apply_diff(<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &snapshot).diff(), &snapshot).expect("forward applies");
+        let forward = protocol::apply_diff_cold(<LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(&mutation, &snapshot).diff(), &snapshot).expect("forward applies");
         let mut restored = forward;
-        for step in <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &snapshot).expect("inverse") {
-            restored = protocol::apply_diff(<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&step, &restored).diff(), &restored).expect("inverse step applies");
+        for step in <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::inverse(&mutation, &snapshot).expect("inverse") {
+            restored = protocol::apply_diff_cold(<LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(&step, &restored).diff(), &restored).expect("inverse step applies");
         }
         assert_eq!(meshed(&restored).1.attributes, meshed(&snapshot).1.attributes, "the Normal channels are back to the base");
     }

@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "case": "complete-selected-parent",
+      "selection": "same",
+      "accepted": true
+    },
+    {
+      "case": "unselected-helper",
+      "selection": "missing",
+      "accepted": false
+    },
+    {
+      "case": "empty-selection",
+      "selection": "empty",
+      "accepted": false
+    },
+    {
+      "case": "changed-selected-image",
+      "selection": "hash",
+      "accepted": false
+    },
+    {
+      "case": "different-root",
+      "selection": "root",
+      "accepted": false
+    },
+    {
+      "case": "no-compiler-provenance",
+      "selection": "absent",
+      "accepted": false
+    },
+    {
+      "case": "noncanonical-order",
+      "selection": "unsorted",
+      "accepted": false
+    },
+    {
+      "case": "undeclared-field",
+      "selection": "extra",
+      "accepted": false
+    }
+  ]
+}

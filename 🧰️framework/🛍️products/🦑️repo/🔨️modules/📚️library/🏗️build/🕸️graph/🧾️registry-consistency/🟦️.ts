@@ -1,9 +1,10 @@
-import { spawnSync } from "node:child_process";
+
 import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import cachingPolicy from "../../../⚡️caching/🔣️policy.json" with { type: "json" };
 import ownershipPolicy from "../../../🗂️workspaces/🔣️policy.json" with { type: "json" };
 import { readBuildOwnerRegistryV1, type BuildOwnerRegistryV1 } from "../🚪️admission/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 📋️ One row of the build owner registry. */
 export type OwnerRow = BuildOwnerRegistryV1["owners"][number];
@@ -188,7 +189,7 @@ export function memoryOwnerTree(files: Readonly<Record<string, string>>, policy:
 
 function listManifests(root: string, policy: OwnerTreePolicy, scope?: OwnerScope): string[] {
   const scopes = scopesOf(scope);
-  const listed = spawnSync("git", ["ls-files", "-z", "-c", "-o", "--exclude-standard", ...(scopes && !scopes.includes(".") ? ["--", ...scopes.map((prefix) => `:(literal)${prefix}`)] : [])], { cwd: root, maxBuffer: 1 << 29 });
+  const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "-o", "--exclude-standard", ...(scopes && !scopes.includes(".") ? ["--", ...scopes.map((prefix) => `:(literal)${prefix}`)] : [])], { cwd: root, maxBuffer: 1 << 29 });
   const names = [PROJECT, CARGO];
   if (listed.status === 0) return listed.stdout.toString("utf8").split("\0").filter((path) => names.includes(basename(path)) && !excludedFromOwners(path, policy) && existsSync(join(root, path))).sort(compareBytes);
   const found: string[] = [];
@@ -211,12 +212,12 @@ export function readOwnerTree(root: string, policy: OwnerTreePolicy = OWNER_TREE
     exists: (path) => existsSync(join(root, path)),
     file: (path) => { const facts = lstatSync(join(root, path), { throwIfNoEntry: false }); return facts !== undefined && facts.isFile(); },
     tracked: (path) => {
-      if (!trackedCache.has(path)) { const listed = spawnSync("git", ["ls-files", "-z", "-c", "--", `:(literal)${path}`], { cwd: root, maxBuffer: 1 << 29 }); trackedCache.set(path, listed.status === 0 && listed.stdout.length > 0); }
+      if (!trackedCache.has(path)) { const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "--", `:(literal)${path}`], { cwd: root, maxBuffer: 1 << 29 }); trackedCache.set(path, listed.status === 0 && listed.stdout.length > 0); }
       return trackedCache.get(path)!;
     },
     read: (path) => { try { return readFileSync(join(root, path), "utf8"); } catch { return undefined; } },
     ignored: (path) => {
-      if (!ignoredCache.has(path)) ignoredCache.set(path, spawnSync("git", ["check-ignore", "-q", "--", path], { cwd: root }).status === 0);
+      if (!ignoredCache.has(path)) ignoredCache.set(path, runToolSyncV1("git", ["check-ignore", "-q", "--", path], { cwd: root }).status === 0);
       return ignoredCache.get(path)!;
     },
   };

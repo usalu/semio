@@ -1,4 +1,6 @@
 import {readManagedNxActivationTargetV1} from "./🔗️activation/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import activationSchema from "./🔗️activation/🧬️schema/🔣️.json" with {type:"json"};
 import {withArtifactRelativeDirectoryV1,requireArtifactDescriptorClosureV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -36,11 +38,17 @@ import {cloneNxSdkSnapshotV1,nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1
 import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRequire } from "node:module";
+/** 📦️ Resolves a file of a package installed below `<directory>/node_modules` to its real path without a module loader, so the captured implementation never has to create a require for a data directory. */
+const installedFileV1=(directory:string,specifier:string):string=>realpathSync(join(directory,"node_modules",...specifier.split("/")));
+/** 🔧️ Resolves the executable a package declares under `bin` to its real path, the way the package manager links it. */
+const installedBinaryV1=(directory:string,name:string,binary:string):string=>{const root=dirname(installedFileV1(directory,name+"/package.json"));return realpathSync(join(root,(JSON.parse(readFileSync(join(root,"package.json"),"utf8")) as {bin:Record<string,string>}).bin[binary]!));};
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { prepareBun } from "./🟦️bun/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../../🔨️modules/⚙️runtime/🧲️native/🟦️.ts";
 
 export type NxTooling = { readonly cli: string; readonly modulePath: string; readonly bun: string; readonly authorizer:string };
 const RECIPE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools";
@@ -79,7 +87,7 @@ export function windowsLinkReplaceInfoV1(destination:string):Buffer{
  * https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-setfileinformationbyhandle */
 export function replaceWindowsDirectoryLinkV1(source:string,destination:string):void{
   if(process.platform!=="win32")throw new Error("Atomic Windows link replacement requires Windows");
-  const {dlopen,FFIType}=createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi"),kernel=dlopen("kernel32.dll",{CreateFileW:{args:[FFIType.ptr,FFIType.u32,FFIType.u32,FFIType.ptr,FFIType.u32,FFIType.u32,FFIType.ptr],returns:FFIType.i64},SetFileInformationByHandle:{args:[FFIType.i64,FFIType.i32,FFIType.ptr,FFIType.u32],returns:FFIType.i32},CloseHandle:{args:[FFIType.i64],returns:FFIType.i32},GetLastError:{args:[],returns:FFIType.u32}});
+  const {dlopen,FFIType}=runtimeNativeSystemV1(),kernel=dlopen("kernel32.dll",{CreateFileW:{args:[FFIType.ptr,FFIType.u32,FFIType.u32,FFIType.ptr,FFIType.u32,FFIType.u32,FFIType.ptr],returns:FFIType.i64},SetFileInformationByHandle:{args:[FFIType.i64,FFIType.i32,FFIType.ptr,FFIType.u32],returns:FFIType.i32},CloseHandle:{args:[FFIType.i64],returns:FFIType.i32},GetLastError:{args:[],returns:FFIType.u32}});
   let failure:unknown;
   try{
     const handle=kernel.symbols.CreateFileW(Buffer.from(`\\\\?\\${source}\0`,"utf16le"),0x10000,7,null,3,0x2200000,null);
@@ -122,13 +130,13 @@ export function nxToolingInstallFilesV1(recipe: Parameters<typeof nxToolingInsta
     assertToolingPatchV1(Buffer.from(bytes).toString("utf8"));
     const artifact=`patches/${createHash("sha256").update(bytes).digest("hex")}.patch`;patches[name]=artifact;files.set(artifact,Buffer.from(bytes));
   }
-  return new Map([["package.json",Buffer.from(JSON.stringify({...nxToolingInstallManifestV1(recipe),patchedDependencies:patches},null,2)+"\n")],["bun.lock",Buffer.from(JSON.stringify({...captured,patchedDependencies:patches},null,2)+"\n")],...files]);
+  return new Map([["package.json",Buffer.from(JSON.stringify({...nxToolingInstallManifestV1(recipe),patchedDependencies:patches},null,2)+"\n")],[javascriptLockV1,Buffer.from(JSON.stringify({...captured,patchedDependencies:patches},null,2)+"\n")],...files]);
 }
 
 /** 📸️ Captures the same detached installation images for read-only planning and the eventual issued publication. */
 async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
   const root = realpathSync(workspace), recipe = join(root, RECIPE), files = new Map<string, Buffer>();
-  for (const name of ["package.json", "bun.lock"]) files.set(name, readFileSync(join(recipe, name)));
+  for (const name of ["package.json", javascriptLockV1]) files.set(name, readFileSync(join(recipe, name)));
   const manifest = JSON.parse(files.get("package.json")!.toString());
   if (!/^bun@\d+\.\d+\.\d+$/.test(manifest.packageManager)) throw new Error("Invalid Nx tooling Bun pin");
   const patches = manifest.semio?.toolPatches;
@@ -138,7 +146,7 @@ async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
     if (isAbsolute(path) || path.includes("\\") || path.split("/").some(part => !part || part === "." || part === "..") || isAbsolute(local) || local.startsWith("..")) throw new Error(`Invalid tooling patch: ${path}`);
     files.set(path, readFileSync(canonical));
   }
-  const capturedLock=Bun.JSONC.parse(files.get("bun.lock")!.toString()),installFiles=nxToolingInstallFilesV1(manifest,capturedLock,files),dependencyFiles=nxDependencyInstallFilesV1(manifest,capturedLock);
+  const capturedLock=runtimeParseJsoncV1(files.get(javascriptLockV1)!.toString()),installFiles=nxToolingInstallFilesV1(manifest,capturedLock,files),dependencyFiles=nxDependencyInstallFilesV1(manifest,capturedLock);
   files.clear();for(const [path,bytes] of installFiles)files.set(path,bytes);
   const authorizer=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📦️runtime/🟦️.ts",signal);
   files.set(".semio-authorizer-source.json",Buffer.from(JSON.stringify(authorizer.manifest)+"\n"));
@@ -154,7 +162,7 @@ async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
 async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolingStoreV1,publisher:ManagedToolingPublisherV1,control:ResourceLeaseControl): Promise<NxTooling|ToolingHeadroomRefusalV1> {
   requireIssuedResourceControlRefinementV1(store.control,control);checkResourceLeaseControl(control);requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();checkResourceLeaseControl(control);if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw new Error("Original declared tooling partition required");const signal=control.signal;signal.throwIfAborted();
   const{root,files,manifest,dependencyFiles,authorizer,compiler,environment,sdkDigest}=await captureNxToolingInputsV1(workspace,signal),bun=await prepareBun(root,manifest.packageManager.slice(4),store,control,publisher);if(isToolingHeadroomRefusalV1(bun))return bun;const sdkBase=requireNativeStoragePathV1(store.root,join(store.root,"sdk")),sdkDirectory=join(sdkBase,sdkDigest);
-  const pristine=await ensureNxPristineSdkV1(root,store,publisher,dependencyFiles,environment,control,async directory=>{const downloadCache=requireNativeStoragePathV1(store.root,join(store.root,"downloads"));regularDirectory(downloadCache);await withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal,control,resources:[{resource:"nx-tool-download-cache",mode:"exclusive"}]},()=>runNxSetupCommandV1(bun,["install","--frozen-lockfile","--ignore-scripts","--cache-dir",downloadCache,"--backend","copyfile"],directory,"nx:install",control,store.environment));});
+  const pristine=await ensureNxPristineSdkV1(root,store,publisher,dependencyFiles,environment,control,async directory=>{const downloadCache=requireNativeStoragePathV1(store.root,join(store.root,"downloads"));regularDirectory(downloadCache);await withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal,control,resources:[{resource:"nx-tool-download-cache",mode:"exclusive"}]},()=>runNxSetupCommandV1(bun,[...selectPackageManagerV1("javascript").render("install-pinned",{platform:process.platform,cache:downloadCache}).arguments],directory,"nx:install",control,store.environment));});
   if(isToolingHeadroomRefusalV1(pristine))return pristine;
   return withNxSdkDerivativeProjectionV1(root,store,control,sdkDirectory,dependencyFiles,async projection=>{
   files.set(".semio-sdk-material.json",Buffer.from(JSON.stringify(projection.material)+"\n"));
@@ -166,14 +174,14 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
     if (marker.version !== 1 || marker.digest !== digest) throw new Error("Nx tooling ownership mismatch");
     if(marker.binaries?.version!==1||marker.binaries.entry!==".semio-nx-sdk-binaries.json"||Object.keys(marker.binaries).sort().join(",")!=="digest,entry,version")throw new Error("Original SDK binary authority required");await verifyNxSdkBinaryLinksV1(directory,marker.binaries.digest,store,control);
     if(!nxAuthorizerReceiptHoldsV1(directory,marker.authorizers)||marker.authorizers.sourceSha256!==authorizer.digest)throw new Error("Nx immutable authorizer receipt changed");
-    const modulePath = join(directory, "node_modules"), require = createRequire(join(directory, "package.json"));
+    const modulePath = join(directory, "node_modules");
     for (const [name, version] of Object.entries(nxExternalPinsV1(manifest.dependencies))) {
-      const path = realpathSync(require.resolve(name + "/package.json")), local = relative(modulePath, path);
+      const path = installedFileV1(directory, name + "/package.json"), local = relative(modulePath, path);
       if (isAbsolute(local) || local.startsWith("..") || JSON.parse(readFileSync(path, "utf8")).version !== version) throw new Error(`Incomplete Nx tooling: ${name}`);
     }
-    for(const [name,path] of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies) as [string,string][]){const packageName=name.slice(0,name.lastIndexOf("@")),receipt=toolPatchReceipt(dirname(require.resolve(packageName+"/package.json")),Buffer.from(capturedInputs.get(path)!).toString());if(JSON.stringify(marker.patches?.[name])!==JSON.stringify(receipt))throw new Error("Nx patch receipt changed");}
+    for(const [name,path] of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies) as [string,string][]){const packageName=name.slice(0,name.lastIndexOf("@")),receipt=toolPatchReceipt(dirname(installedFileV1(directory,packageName+"/package.json")),Buffer.from(capturedInputs.get(path)!).toString());if(JSON.stringify(marker.patches?.[name])!==JSON.stringify(receipt))throw new Error("Nx patch receipt changed");}
     await preflightNxAuthorizersV1(directory,control,store.environment);await store.recheck();
-    return { cli: require.resolve("nx/bin/nx.js"), modulePath, bun,authorizer:join(directory,"semio-authorizers.mjs") };
+    return { cli: installedBinaryV1(directory, "nx", "nx"), modulePath, bun,authorizer:join(directory,"semio-authorizers.mjs") };
   });
   let present = true;
   try { lstatSync(destination); }
@@ -187,13 +195,13 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
     await quote.writeInputs(staging,control);
     const started=performance.now(),result=await quote.clone(staging,control),binaryReceipt=Buffer.from(JSON.stringify(result.binaries)+"\n");requireNxSdkDerivativeReceiptImagesV1([binaryReceipt]);writeFileSync(join(staging,".semio-nx-sdk-binaries.json"),binaryReceipt,{flag:"wx",mode:0o444});
     let patchBytes=0;const replacements=new Map<string,{bytes:Uint8Array;mode:number}>(),batches:ReadonlyMap<string,Uint8Array>[]=[],applied:{root:string;patch:string}[]=[];
-    for(const[name,path]of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies)as[string,string][]){if(name.slice(0,name.lastIndexOf("@"))!=="nx")throw new Error("Explicit owned Nx patch required");const require=createRequire(join(staging,"package.json")),packageRoot=dirname(require.resolve(name.slice(0,name.lastIndexOf("@"))+"/package.json")),patch=Buffer.from(capturedInputs.get(path)!).toString(),source=new Map<string,Uint8Array>();for(const relativePath of toolPatchAdditions(patch).keys()){const absolute=requireNativeStoragePathV1(store.root,join(packageRoot,relativePath)),status=lstatSync(absolute);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>16777216)throw new Error("Bounded independently writable SDK patch Source required");const bytes=replacements.get(absolute)?.bytes??readFileSync(absolute);if(bytes.byteLength>16777216||patchBytes+bytes.byteLength>16777216)throw new Error("Bounded independently writable SDK patch Source required");patchBytes+=bytes.byteLength;source.set(relativePath,bytes);}const images=applyToolingPatchImagesV1(source,patch);batches.push(images);for(const[relativePath,bytes]of images){const absolute=requireNativeStoragePathV1(store.root,join(packageRoot,relativePath)),status=lstatSync(absolute);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1)throw new Error("Original private SDK patch inode required");replacements.set(absolute,{bytes,mode:status.mode&0o777});}applied.push({root:packageRoot,patch});}
+    for(const[name,path]of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies)as[string,string][]){if(name.slice(0,name.lastIndexOf("@"))!=="nx")throw new Error("Explicit owned Nx patch required");const packageRoot=dirname(installedFileV1(staging,name.slice(0,name.lastIndexOf("@"))+"/package.json")),patch=Buffer.from(capturedInputs.get(path)!).toString(),source=new Map<string,Uint8Array>();for(const relativePath of toolPatchAdditions(patch).keys()){const absolute=requireNativeStoragePathV1(store.root,join(packageRoot,relativePath)),status=lstatSync(absolute);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>16777216)throw new Error("Bounded independently writable SDK patch Source required");const bytes=replacements.get(absolute)?.bytes??readFileSync(absolute);if(bytes.byteLength>16777216||patchBytes+bytes.byteLength>16777216)throw new Error("Bounded independently writable SDK patch Source required");patchBytes+=bytes.byteLength;source.set(relativePath,bytes);}const images=applyToolingPatchImagesV1(source,patch);batches.push(images);for(const[relativePath,bytes]of images){const absolute=requireNativeStoragePathV1(store.root,join(packageRoot,relativePath)),status=lstatSync(absolute);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1)throw new Error("Original private SDK patch inode required");replacements.set(absolute,{bytes,mode:status.mode&0o777});}applied.push({root:packageRoot,patch});}
     const replacementBytes=requireNxSdkDerivativePatchImagesV1(batches);await store.recheck();for(const[absolute,row]of replacements){const status=lstatSync(requireNativeStoragePathV1(store.root,absolute));if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1)throw new Error("Original private SDK patch inode required");unlinkSync(absolute);writeFileSync(absolute,row.bytes,{flag:"wx",mode:row.mode});}for(const row of applied)toolPatchReceipt(row.root,row.patch);await store.recheck();
     signal.throwIfAborted();
-    const captured=Buffer.from(JSON.stringify(snapshotNxAuthorizerSourcesV1(authorizer))+"\n"),snapshot=join(staging,".semio-authorizer-captured.json"),program=join(staging,".semio-authorizer-compiler.mjs"),sealed=await compileNxAuthorizerSnapshotV1(root,snapshotNxAuthorizerSourcesV1(compiler),control,"bun","program"),snapshotDigest=createHash("sha256").update(captured).digest("hex"),programDigest=createHash("sha256").update(sealed.bytes).digest("hex");if(captured.byteLength>snapshotPolicy.maximumSnapshotBytes||sealed.bytes.byteLength>snapshotPolicy.maximumOutputBytes)throw new Error("SDK derivative compiler publication byte ceiling exceeded");writeFileSync(snapshot,captured,{flag:"wx",mode:0o444});writeFileSync(program,sealed.bytes,{flag:"wx",mode:0o444});await store.recheck();
+    const captured=Buffer.from(JSON.stringify(snapshotNxAuthorizerSourcesV1(authorizer))+"\n"),snapshot=join(staging,".semio-authorizer-captured.json"),program=join(staging,".semio-authorizer-compiler.mjs"),sealed=await compileNxAuthorizerSnapshotV1(root,snapshotNxAuthorizerSourcesV1(compiler),control,"runtime","program"),snapshotDigest=createHash("sha256").update(captured).digest("hex"),programDigest=createHash("sha256").update(sealed.bytes).digest("hex");if(captured.byteLength>snapshotPolicy.maximumSnapshotBytes||sealed.bytes.byteLength>snapshotPolicy.maximumOutputBytes)throw new Error("SDK derivative compiler publication byte ceiling exceeded");writeFileSync(snapshot,captured,{flag:"wx",mode:0o444});writeFileSync(program,sealed.bytes,{flag:"wx",mode:0o444});await store.recheck();
     try{await withResourceLeases({directory:join(root,".cache/b/l/m/data"),control,signal,resources:[{resource:"nx-authorizer-source:"+snapshot,mode:"shared"},{resource:"nx-authorizer-compiler:"+program,mode:"shared"}]},async()=>{await runNxSetupCommandV1(bun,[program,"compile",root,snapshot,snapshotDigest,staging],root,"nx:authorizers",control,nxSdkCompilerEnvironmentV1(scriptResourceProcessEnvironmentV1(control,scriptInvocationEnvironment(store.invocation,store.environment))));await store.recheck();if(createHash("sha256").update(readFileSync(program)).digest("hex")!==programDigest||createHash("sha256").update(readFileSync(snapshot)).digest("hex")!==snapshotDigest)throw new Error("Original authorizer compiler/snapshot bytes changed");});}finally{rmSync(snapshot,{force:true});rmSync(program,{force:true});}
-    const patches:Record<string,ReturnType<typeof toolPatchReceipt>>={},require=createRequire(join(staging,"package.json"));
-    for(const [name,path] of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies) as [string,string][])patches[name]=toolPatchReceipt(dirname(require.resolve(name.slice(0,name.lastIndexOf("@"))+"/package.json")),Buffer.from(capturedInputs.get(path)!).toString());
+    const patches:Record<string,ReturnType<typeof toolPatchReceipt>>={};
+    for(const [name,path] of Object.entries(JSON.parse(Buffer.from(capturedInputs.get("package.json")!).toString()).patchedDependencies) as [string,string][])patches[name]=toolPatchReceipt(dirname(installedFileV1(staging,name.slice(0,name.lastIndexOf("@"))+"/package.json")),Buffer.from(capturedInputs.get(path)!).toString());
     const authorizers={version:1,mode:"release",sourceSha256:authorizer.digest,entry:"semio-authorizers.mjs",outputs:[{path:"semio-authorizers.mjs",sha256:createHash("sha256").update(readFileSync(join(staging,"semio-authorizers.mjs"))).digest("hex")}]};
     const toolingReceipt=Buffer.from(JSON.stringify({version:1,digest,patches,authorizers,binaries:{version:1,entry:".semio-nx-sdk-binaries.json",digest:result.binaries.digest}}));requireNxSdkDerivativeReceiptImagesV1([binaryReceipt,toolingReceipt]);writeFileSync(join(staging,".semio-nx-tooling.json"),toolingReceipt,{flag:"wx"});
     await installed(staging);

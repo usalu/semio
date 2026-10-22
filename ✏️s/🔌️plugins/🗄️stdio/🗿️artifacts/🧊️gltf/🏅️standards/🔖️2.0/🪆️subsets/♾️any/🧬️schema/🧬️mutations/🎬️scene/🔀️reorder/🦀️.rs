@@ -69,6 +69,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "scenes", kind: "reorder-scenes", record: "ReorderedScenes" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Reorder Scenes", "Szenen umordnen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["reorder-scenes".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for ReorderScenesMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<ReorderScenesMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -77,19 +90,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Scenes", "Szenen umordnen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["reorder-scenes".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

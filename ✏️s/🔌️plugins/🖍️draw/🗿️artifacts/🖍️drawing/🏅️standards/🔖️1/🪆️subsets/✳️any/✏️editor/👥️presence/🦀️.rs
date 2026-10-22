@@ -35,10 +35,9 @@ pub struct DrawingPresenceDiff {
     pub camera: Option<store::Viewport2d>,
 }
 
-impl protocol::MutationDiff<DrawingPresence> for DrawingPresenceDiff {
-    fn apply(&self, base: &DrawingPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DrawingPresence> {
-        Ok(DrawingPresence { engagement_input: self.engagement_input.clone().unwrap_or_else(|| base.engagement_input.clone()), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) })
-    }
+impl protocol::MutationDiff<DrawingPresence> for DrawingPresenceDiff {}
+
+impl protocol::ColdMutationDiff<DrawingPresence> for DrawingPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.engagement_input.is_some() {
             self.engagement_input = other.engagement_input;
@@ -47,14 +46,23 @@ impl protocol::MutationDiff<DrawingPresence> for DrawingPresenceDiff {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut DrawingPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = DrawingPresence { engagement_input: self.engagement_input.clone().unwrap_or_else(|| base.engagement_input.clone()), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
-    fn inverse(&self, base: &DrawingPresence) -> Self {
-        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.engagement_input.is_none() && self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
+    fn inverse(&self, base: &DrawingPresence) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }
 
@@ -164,13 +172,15 @@ impl Mutation<DrawingPresence> for DrawingPresenceMutation {
             Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<DrawingPresence> for DrawingPresenceMutation {
+    type ReferenceDiff = DrawingPresenceDiff;
     fn diff(&self, base: &DrawingPresence) -> protocol::MutationOutcome<DrawingPresenceDiff> {
         match self {
             Self::Set { engagement_input, camera } => protocol::MutationOutcome::new(DrawingPresenceDiff { engagement_input: (&base.engagement_input != engagement_input).then(|| engagement_input.clone()), camera: (&base.camera != camera).then(|| camera.clone()) }),
         }
     }
-
     fn inverse(&self, base: &DrawingPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::Set { engagement_input: base.engagement_input.clone(), camera: base.camera.clone() }])
     }

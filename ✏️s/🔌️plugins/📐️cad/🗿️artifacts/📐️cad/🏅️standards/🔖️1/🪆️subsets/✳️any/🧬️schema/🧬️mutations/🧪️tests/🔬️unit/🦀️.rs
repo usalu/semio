@@ -5,7 +5,7 @@ use semio_s_artifact_cad_cad_mut_slots::{create_building_model::CreateBuildingMo
 use semio_s_artifact_cad_cad_mut_documents::{create_drawing::CreateDrawing, delete_drawing::DeleteDrawing};
 use semio_s_artifact_cad_cad_mut_nodes::{create_node::CreateNode, delete_node::DeleteNode, rename_node::RenameNode};
 use semio_s_artifact_cad_cad_testing::{sample_model_child, sample_reference, sample_scene};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
 pub fn every_mutation() -> Vec<CadMutation> {
@@ -47,10 +47,10 @@ pub fn every_mutation() -> Vec<CadMutation> {
 async fn inverse_inverts_every_variant_against_a_populated_scene() {
     let base = sample_scene();
     for op in every_mutation() {
-        let forward = protocol::apply_diff(op.diff(&base).diff(), &base).expect("valid mutation diff");
+        let forward = protocol::apply_diff_cold(op.diff(&base).diff(), &base).expect("valid mutation diff");
         let mut restored = forward.clone();
         for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture") {
-            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
+            restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
         }
         assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
     }
@@ -143,7 +143,7 @@ async fn delete_missing_drawing_is_a_target_missing_error() {
 async fn create_drawing_duplicate_id_never_applies() {
     let sample = sample_model_child("dup-drawing-1");
     let mut base = sample_scene();
-    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
+    base = protocol::apply_diff_cold(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
     let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
@@ -176,7 +176,7 @@ async fn create_node_outcome_obeys_the_policy_matrix() {
 async fn delete_drawing_outcome_obeys_the_policy_matrix() {
     let sample = sample_model_child("law-drawing-2");
     let mut base = sample_scene();
-    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
+    base = protocol::apply_diff_cold(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
     store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "cad-drawing-2".into() })).await;
 }
 
@@ -227,7 +227,7 @@ async fn deleting_a_middle_row_inverts_at_its_original_index() {
     assert!(matches!(delete_drawing.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateDrawing(CreateDrawing { index: Some(index), .. })] if *index as usize == position));
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_drawing, &base).await;
     let insert = CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-first".into(), label: "First".into(), kind: "group".into() }, index: Some(0) });
-    let after = protocol::apply_diff(insert.diff(&base).diff(), &base).expect("insert applies");
+    let after = protocol::apply_diff_cold(insert.diff(&base).diff(), &base).expect("insert applies");
     assert_eq!(after.nodes[0].id, "node-first");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
 }

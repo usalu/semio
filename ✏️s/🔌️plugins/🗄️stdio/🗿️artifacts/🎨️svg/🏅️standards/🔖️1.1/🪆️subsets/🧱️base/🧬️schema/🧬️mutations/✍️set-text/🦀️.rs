@@ -18,24 +18,28 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-text".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetTextPayload
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetTextPayload>,
+{
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) }))
     }
-
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         Ok(match node_at(&base.doc, path) {
             Ok(SvgNode::Text { text }) => vec![Op::from(Self { path: path.clone(), text: text.clone() })],
             _ => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-text".to_string()]
     }
 }
 

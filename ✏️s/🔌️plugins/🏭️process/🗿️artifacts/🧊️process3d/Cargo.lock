@@ -2533,6 +2533,7 @@ dependencies = [
  "semio-framework-actor-pack",
  "semio-framework-actor-vocabulary",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-value",
@@ -2664,6 +2665,7 @@ name = "semio-framework-async"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-async-timer",
  "semio-framework-trace",
  "semio-framework-value",
  "wasm-bindgen",
@@ -2677,6 +2679,17 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
+
+[[package]]
+name = "semio-framework-async-slots"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-async-timer"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-canvas"
@@ -2730,6 +2743,7 @@ dependencies = [
  "kurbo 0.13.1",
  "peniko 0.6.1",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-canvas-assets",
  "semio-framework-geometry",
  "semio-framework-intrinsic-size",
@@ -4107,6 +4121,7 @@ name = "semio-framework-os-infinite-board-engine"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-canvas",
  "semio-framework-geometry",
  "semio-framework-graph-drawing",
@@ -4201,6 +4216,7 @@ dependencies = [
 name = "semio-framework-os-infinite-board-normal-model"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-slots",
  "semio-framework-canvas",
  "semio-framework-graph-drawing",
  "semio-framework-graph-engine",
@@ -4388,6 +4404,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-tool-run",
@@ -4413,6 +4430,7 @@ dependencies = [
  "image",
  "semio-framework",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
@@ -5789,6 +5807,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-pack-record",
  "semio-framework-pack-record-encode",
+ "semio-framework-pack-record-encode-cursor",
  "semio-framework-pack-record-preflight",
  "semio-framework-pack-record-retained",
  "semio-framework-pack-record-schema",
@@ -5955,6 +5974,21 @@ dependencies = [
  "semio-framework-pack-record-schema",
  "semio-framework-replication-codec",
  "semio-framework-value",
+ "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-framework-pack-record-encode-cursor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-pack-format",
+ "semio-framework-pack-record-preflight",
+ "semio-framework-pack-record-schema",
+ "semio-framework-replication-codec",
+ "semio-framework-value",
+ "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
 ]
 

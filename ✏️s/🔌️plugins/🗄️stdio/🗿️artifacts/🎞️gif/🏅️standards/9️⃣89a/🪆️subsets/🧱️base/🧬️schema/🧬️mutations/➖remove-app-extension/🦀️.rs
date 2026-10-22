@@ -15,6 +15,15 @@ pub struct RemoveAppExtension {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "app-extension", kind: "remove-app-extension", record: "RemoveAppExtension" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove app extension", "Anwendungserweiterung entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(GifDiff { app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
@@ -25,12 +34,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
             Some(ext) => vec![GifMutation::AddAppExtension(add_app_extension::AddAppExtension { index: *index, extension: ext.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove app extension", "Anwendungserweiterung entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

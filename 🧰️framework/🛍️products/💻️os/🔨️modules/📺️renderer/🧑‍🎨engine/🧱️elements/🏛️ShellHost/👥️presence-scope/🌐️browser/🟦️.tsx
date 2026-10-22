@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
+import { createRoot, type Root } from "../../../⚛️react-port/🟦️.ts";
 import {
   type DocumentScope
 } from "@semio-tech/framework/document/scope";

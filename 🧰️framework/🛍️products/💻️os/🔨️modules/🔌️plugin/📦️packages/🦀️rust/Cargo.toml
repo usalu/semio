@@ -235,5 +235,3 @@ required-features = ["original-actor-context-testing"]
 name = "reserved-producer"
 path = "../../📜️declaration/👷️job/🎟️birth/🧪️tests/🎟️native/🦀️.rs"
 required-features = ["reserved-producer-testing"]
-semio-framework-plugin-testing-fixtures = { path = "../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
-semio-framework-plugin-testing-fixtures-publication = { path = "../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }

@@ -69,7 +69,7 @@ impl Vector {
     }
 
     pub(super) fn produced(&self) -> protocol::MutationOutcome<RemodelingDiff> {
-        <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&self.mutation(), &self.before())
+        <RemodelingMutation as protocol::ColdMutation<RemodelingSnapshot>>::diff(&self.mutation(), &self.before())
     }
 
     pub(super) fn committed_diff(&self) -> Value {

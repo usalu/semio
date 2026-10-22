@@ -1,3 +1,5 @@
+const expandBackends=(value:string)=>value.replaceAll("{backends}",buildBackendIdsV1().join("|"));
+import {buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -19,7 +21,7 @@ import scoping from "./🧫️fixtures/🧭️scoping/🔣️.json" with {type:"
 
 const help=catalog as BuildHelpCatalogV1,taskOperations=["run","run-many","affected","exec","watch"],entry=(name:string)=>name==="root"?[]:name.split(" ");
 
-const root=join(import.meta.dir,"../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,"package.json")),ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
+const root=join(import.meta.dir,"../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(import.meta.url),ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
 
 /** 🌳️ The installed Nx plans the toy task graph in a clean workspace, independent of this repository's bounded cache contract. */
 function nxTaskGraph():unknown{
@@ -39,7 +41,7 @@ test("the operation catalogue is schema-valid, unique and every synopsis and fla
  const names=catalog.operations.map(row=>row.name);
  expect(new Set(names).size).toBe(names.length);
  expect([...names].sort()).toEqual([...schema.definitions.OperationName.enum].sort());
- for(const language of help.languages){const root=renderBuildHelpV1(help,{},language);for(const row of help.operations)expect(root.includes(row.synopsis),language+" "+row.name+": "+row.synopsis).toBe(true);for(const flag of help.flags)for(const name of [flag.name,...(flag.aliases??[])])expect(root.includes(name),language+" "+name).toBe(true);}
+ for(const language of help.languages){const root=renderBuildHelpV1(help,{},language);for(const row of help.operations)expect(root.includes(expandBackends(row.synopsis)),language+" "+row.name+": "+row.synopsis).toBe(true);for(const flag of help.flags)for(const name of [flag.name,...(flag.aliases??[])])expect(root.includes(name),language+" "+name).toBe(true);}
 });
 
 test("human help and examples use the canonical native frontend in every declared language",()=>{
@@ -62,13 +64,13 @@ test("human help and examples use the canonical native frontend in every declare
  }finally{database.close();}
 });
 
-test("every neutral operation has a tool state, and unimplemented states are honest",async()=>{
+test("every backend operation claim in the registry names a catalogue operation, and unimplemented states are honest",async()=>{
  for(const row of catalog.operations){
-  expect(["nx","bazel"].every(tool=>["native","adapter","neutral","missing"].includes(row.implementations[tool as "nx"|"bazel"])),row.name).toBe(true);
+  expect(buildBackendIdsV1().every(tool=>["native","adapter","neutral","missing"].includes(buildBackendRowV1(tool).operations[row.name]??"neutral")),row.name).toBe(true);
   if(row.dryRun)expect(row.notes?.some(note=>note.en.includes("--dry-run")||note.en.includes("Changed files"))||row.name==="run-many"||row.name==="affected",row.name).toBe(true);
  }
  const cache=catalog.operations.find(row=>row.name==="cache")!,bazel=(await import("../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();
- expect(cache.implementations.bazel).toBe("adapter");
+ expect(buildBackendRowV1("bazel").operations[cache.name]).toBe("adapter");
  expect(bazel.tool).toBe("bazel");
  expect([typeof bazel.status,typeof bazel.clear]).toEqual(["function","function"]);
  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"build-operations-model",maximumElapsedMilliseconds:30000},{},Date.now()),async original=>{
@@ -119,10 +121,10 @@ test("every command prints its own usage, distinct from the root usage, and each
  for(const row of help.operations){
   const own=renderBuildHelpV1(help,{operation:row.name},"en");
   expect(own.includes(`repo ${row.name} - `),row.name).toBe(true);
-  expect(own.includes(row.synopsis),row.name).toBe(true);
+  expect(own.includes(expandBackends(row.synopsis)),row.name).toBe(true);
   expect(own.includes("Examples:"),row.name).toBe(true);
   expect(own,row.name).not.toBe(renderBuildHelpV1(help,{},"en"));
-  for(const name of row.flags){const flag=help.flags.find(candidate=>candidate.name===name);expect(flag,row.name+" "+name).toBeDefined();expect(own.includes(name),row.name+" "+name).toBe(true);expect(flag!.operations?.includes(row.name),row.name+" "+name).toBe(true);}
+  for(const name of row.flags){const flag=help.flags.find(candidate=>candidate.name===name&&candidate.operations?.includes(row.name));expect(flag,row.name+" "+name).toBeDefined();expect(own.includes(name),row.name+" "+name).toBe(true);expect(flag!.operations?.includes(row.name),row.name+" "+name).toBe(true);}
   english.add(own);
  }
  expect(english.size).toBe(help.operations.length);
@@ -213,7 +215,7 @@ test("a subcommand lists only the options it reads and the examples that belong 
   expect(subcommand.flags,row.operation+" "+row.subcommand).toEqual(row.flags);
   for(const name of subcommand.flags??[])expect(operation.flags.includes(name),name).toBe(true);
   for(const language of help.languages){
-   const page=renderBuildHelpV1(help,{operation:row.operation,subcommand:row.subcommand},language),optionLines=page.split("\n").filter(line=>/^  (-\w, )?--[a-z]/u.test(line)&&!/^  (--tool|--workers|-h, --help|--lang)/u.test(line));
+   const page=renderBuildHelpV1(help,{operation:row.operation,subcommand:row.subcommand},language),optionLines=page.split("\n").filter(line=>/^  (-\w, )?--[a-z]/u.test(line)&&!/^  (--tool|--workers|--service|-h, --help|--lang)/u.test(line));
    expect(optionLines.length,row.operation+" "+row.subcommand+" "+language).toBe(row.flags.length);
    for(const name of row.flags)expect(page.includes(`  ${name}`),name).toBe(true);
    for(const command of row.examples)expect(page.includes(`  ${command}`),command).toBe(true);

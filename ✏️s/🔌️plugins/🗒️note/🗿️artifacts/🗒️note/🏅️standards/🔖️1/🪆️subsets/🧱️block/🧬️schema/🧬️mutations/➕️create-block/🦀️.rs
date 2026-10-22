@@ -32,6 +32,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", crate::schema::block_id(&self.block)), &format!("Block \"{}\" erstellen", crate::schema::block_id(&self.block)))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![crate::schema::block_id(&self.block).to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for CreateBlock
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<CreateBlock> + From<crate::standards::v1::subsets::block::schema::mutations::delete_block::DeleteBlock>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -41,11 +53,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", crate::schema::block_id(&self.block)), &format!("Block \"{}\" erstellen", crate::schema::block_id(&self.block)))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![crate::schema::block_id(&self.block).to_string()]
-    }
 }
 //#endregion 🔖️Mutation

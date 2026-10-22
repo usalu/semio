@@ -3,7 +3,7 @@ use semio_framework_os_kernel::ColdMutationDiff;
 use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
 use crate::opening_config::mutations::{admit_local_document, apply_local_catalog_config_mutation_reporting, LocalDocument, LocalDocumentStorage};
-use protocol::Mutation;
+use protocol::{Mutation};
 
 fn document(document_id: &str) -> LocalDocument {
     LocalDocument { document_id: document_id.to_string(), schema: "s.space".to_string(), name: document_id.to_uppercase(), storage: LocalDocumentStorage::File, target: format!("/data/{document_id}.os"), admitted_at_ms: 9 }

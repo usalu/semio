@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 pub struct ChangeConnectionActionFK { pub connection_id: String, pub action_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionActionFK where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_action_fk::ChangeConnectionActionFK> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-action-fKN", kind: "change-connection-action-fk", record: "ChangedConnectionActionFK" };
-    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1995Snapshot>>::Diff> { crate::change_connection_action_fk::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Characteristic fastener force F_k of action {} on connection {}", self.action_id, self.connection_id), &format!("Charakteristische Verbindungsmittelkraft F_k der Einwirkung {} an Verbindung {} ändern", self.action_id, self.connection_id)) }
+    fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.action_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeConnectionActionFK where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_action_fk::ChangeConnectionActionFK> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_connection_action_fk::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_connection_action_fk::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Characteristic fastener force F_k of action {} on connection {}", self.action_id, self.connection_id), &format!("Charakteristische Verbindungsmittelkraft F_k der Einwirkung {} an Verbindung {} ändern", self.action_id, self.connection_id)) }
-    fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.action_id.clone()] }
 }
 
 //#region 🪢️Mounts

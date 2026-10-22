@@ -33,7 +33,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify solar-source",
+        "command": "repo ./📜️script.ts verify solar-source",
         "forwardAllArgs": true
       }
     },
@@ -43,7 +43,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify solar-native",
+        "command": "repo ./📜️script.ts verify solar-native",
         "forwardAllArgs": true
       }
     },
@@ -59,7 +59,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -67,7 +67,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -76,7 +76,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -89,7 +89,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
+        "command": "repo ./📜️script.ts test --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
         "env": {
           "SEMIO_ENERGY_BESTEST_REGENERATE": "1"
         }
@@ -114,7 +114,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -132,7 +132,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -150,7 +150,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -159,7 +159,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -177,7 +177,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib optical_field_tests --no-fail-fast",
+        "command": "repo ./📜️script.ts test --lib optical_field_tests --no-fail-fast",
         "forwardAllArgs": true
       }
     },
@@ -187,7 +187,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib glazing_and_gas --no-fail-fast",
+        "command": "repo ./📜️script.ts test --lib glazing_and_gas --no-fail-fast",
         "forwardAllArgs": true
       }
     },
@@ -197,14 +197,14 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib energy_document_history --no-fail-fast",
+        "command": "repo ./📜️script.ts test --lib energy_document_history --no-fail-fast",
         "forwardAllArgs": true
       }
     },
     "verify-thermal-source": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-thermal source",
+        "command": "repo ./📜️script.ts verify-thermal source",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -213,7 +213,7 @@
     "verify-thermal-native": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-thermal native",
+        "command": "repo ./📜️script.ts verify-thermal native",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -224,7 +224,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts lock"
+        "command": "repo ./📜️script.ts lock"
       },
       "metadata": {
         "semio": {
@@ -238,7 +238,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-publication source"
+        "command": "repo ./📜️script.ts verify-publication source"
       }
     },
     "verify-publication-native": {
@@ -247,7 +247,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-publication native"
+        "command": "repo ./📜️script.ts verify-publication native"
       }
     },
     "verify-weather-source": {
@@ -256,7 +256,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-weather source"
+        "command": "repo ./📜️script.ts verify-weather source"
       }
     },
     "verify-weather-native": {
@@ -265,13 +265,13 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-weather native"
+        "command": "repo ./📜️script.ts verify-weather native"
       }
     },
     "verify-enclosure-source": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-enclosure source",
+        "command": "repo ./📜️script.ts verify-enclosure source",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -280,7 +280,7 @@
     "verify-enclosure-native": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-enclosure native",
+        "command": "repo ./📜️script.ts verify-enclosure native",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -291,7 +291,7 @@
       "outputs": [],
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-results native",
+        "command": "repo ./📜️script.ts verify-results native",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       }
     },
@@ -300,7 +300,7 @@
       "outputs": [],
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts verify-results source",
+        "command": "repo ./📜️script.ts verify-results source",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       }
     },
@@ -310,7 +310,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-batch source",
+        "command": "repo ./📜️script.ts verify-batch source",
         "forwardAllArgs": true
       }
     },
@@ -320,7 +320,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-batch native",
+        "command": "repo ./📜️script.ts verify-batch native",
         "forwardAllArgs": true
       }
     }

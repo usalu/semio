@@ -9,7 +9,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -19,7 +19,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts regenerate-example",
+        "command": "repo ./📜️script.ts regenerate-example",
         "forwardAllArgs": true
       },
       "outputs": [],

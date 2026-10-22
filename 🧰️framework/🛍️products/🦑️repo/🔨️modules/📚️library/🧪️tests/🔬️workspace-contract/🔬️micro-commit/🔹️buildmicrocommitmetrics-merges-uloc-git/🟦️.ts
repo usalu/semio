@@ -21,7 +21,7 @@ export function registerBuildmicrocommitmetricsMergesUlocGitTests(): void {
       spawnSync("git", ["commit", "-m", "seed"], { cwd: root, env: gitSpawnEnv() });
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root, env: gitSpawnEnv() });
-      const metrics = buildMicroCommitMetrics(root, { countRepoByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }) });
+      const metrics = buildMicroCommitMetrics(root, { countRepoUlocByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }), countRepoSizeByLanguage: () => ({}) });
       expect(metrics.some((m) => m.lang === "Rust" && m.code === 100)).toBe(true);
       expect(metrics.some((m) => m.lang === "TypeScript" && m.code === 50 && m.added > 0)).toBe(true);
     } finally {
@@ -64,7 +64,7 @@ export function registerBuildmicrocommitmetricsMergesUlocGitTests(): void {
   test("shouldSkipPathForUloc skips dot paths license templates and .🧬semio", async () => {
     const { shouldSkipPathForUloc } = await import("../../../../🎛️commands/📝️commit/📊️metrics/🛤️path-rules/🟦️.ts");
     const root = getWorkspaceRoot();
-    expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
+    expect(shouldSkipPathForUloc(root, ".claude/plans/foo.plan.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, ".agents/skills/micro-commit/SKILL.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "repo/AGENTS.md")).toBe(false);
@@ -132,10 +132,10 @@ export function registerBuildmicrocommitmetricsMergesUlocGitTests(): void {
     expect(classifyPathForMetrics("doc/sample.ltx")).toBe("TeX");
     expect(langMetricsEmoji("TeX")).toBe("📐️");
   });
-  test("uncoveredStagedAreas flags missing cursor-plans and product coverage", async () => {
+  test("uncoveredStagedAreas flags missing ticket-plans and product coverage", async () => {
     const { uncoveredStagedAreas } = await import("../../../../🎛️commands/📝️commit/🔸️bullets/🟦️.ts");
-    const staged = [".cursor/plans/brush_fix_cfd8a931.plan.md", "framework/product/playground/renderer/react/index.tsx"];
-    expect(uncoveredStagedAreas(["🫡️Only micro-commit skill wording"], staged)).toContain(".cursor/plans");
+    const staged = [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️02/BRUSH-FILL-COLLISION/brush_fix_cfd8a931.plan.md", "framework/product/playground/renderer/react/index.tsx"];
+    expect(uncoveredStagedAreas(["🫡️Only micro-commit skill wording"], staged)).toContain("ticket plans");
     expect(uncoveredStagedAreas(["🫡️Only micro-commit skill wording"], staged)).toContain("product");
     const ok = uncoveredStagedAreas(["📋️Plan brush edge resurrection guard and sync", "🖌️Playground renderer restores brush placement after structural deletes"], staged);
     expect(ok).toEqual([]);

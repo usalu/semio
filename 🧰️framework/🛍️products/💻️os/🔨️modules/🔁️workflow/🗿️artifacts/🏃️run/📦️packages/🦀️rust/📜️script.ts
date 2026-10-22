@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🏃️ Workflow run artifact package router. */
 import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {BundleScript, ScriptRouter} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -21,5 +21,5 @@ class RunSqliteVerifyScript extends BundleScript{
   await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"run-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
  }
 }
-const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite", RunSqliteTestScript).register("verify", RunSqliteVerifyScript);
-await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-run",{testPackages:["semio-framework-artifact-workflow-run-tests"],commands: router});
+const router = new ScriptRouter(import.meta.dirname).register("test-snapshot-sqlite", RunSqliteTestScript).register("verify", RunSqliteVerifyScript);
+await runArtifactRustPackageMain(import.meta.dirname,"semio-framework-artifact-workflow-run",{testPackages:["semio-framework-artifact-workflow-run-tests"],commands: router});

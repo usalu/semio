@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-step:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-step:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-step:test"
+    "build": "repo run @semio-tech/stdio-step:build",
+    "check": "repo run @semio-tech/stdio-step:check",
+    "test": "repo run @semio-tech/stdio-step:test"
   },
   "exports": {
     ".": {

@@ -226,7 +226,7 @@ test("the genuine 164-entry snapshot preserves the exact escaped source span and
 test("both historical source gates are mounted through Nx", () => {
   const projectSource = readFileSync(join(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"), project = JSON.parse(projectSource);
   expect(getNodeValue(parseTree(projectSource)!)).toEqual(project);
-  for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
+  for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("repo ./📜️script.ts test " + row.id);
 });
 
 test("historical whole ledger wrapper has no public schema authority",()=>{expect(existsSync(join(libraryRoot,"🧬️schema/🔣️frozen-seal-ledger/🔣️.json"))).toBe(false);});

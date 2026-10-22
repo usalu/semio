@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Anchored apply of the staged storage-seam set (wave 1021a).
+"""🧷 Anchored apply of the staged storage-seam set (wave 1021a).
 
   apply.py [--root DIR] [--group g1,g2|all] [--list]            dry run (default): status of every operation, nothing written
   apply.py [--root DIR] [--group ...] --write [--backup DIR]    applies all selected groups all-or-nothing; originals go to DIR

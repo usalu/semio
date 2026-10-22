@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "language", kind: "set-language", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_language(base, self.language.clone()))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        vec![Op::from(SetLanguage { language: base.language.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set language", "Sprache setzen")
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetLanguage
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetLanguage>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_language(base, self.language.clone()))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        vec![Op::from(SetLanguage { language: base.language.clone() })]
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

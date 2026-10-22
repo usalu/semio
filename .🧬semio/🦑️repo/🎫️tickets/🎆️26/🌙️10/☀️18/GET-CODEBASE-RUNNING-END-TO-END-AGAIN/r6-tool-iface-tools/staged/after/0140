@@ -1,0 +1,169 @@
+import {createHash} from "node:crypto";
+
+import {cp,copyFile,lstat,mkdir,readFile,readdir,readlink,rename,rm,writeFile} from "node:fs/promises";
+import {dirname,join} from "node:path";
+import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {globMatchV1,parityNormalizedDigestsV1,parityTaskKeyV1,resolveParityOutputPatternsV1,type ParityFileV1,type ParityNxInputsV1,type ParityObservationV1,type ParityOutputsV1,type ParityPlanV1,type ParityResolvedSampleV1,type ParityRulesV1,type ParityRunV1,type ParityRunnerV1,type ParityToolV1} from "../🟦️.ts";
+import {groupParityBazelSpawnsV1,parseParityBazelEventsV1,parseParityBazelExecutionLogV1,parseParityJsonObjectsV1,parseParityNxInputsV1,parseParityPlanV1,parityBazelRunV1,parityNxRunV1} from "../📥️evidence/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
+/** 🧰️ Everything the live runner needs: the checkout, the caller's authority, where evidence goes and how results are read. */
+export type ParityLiveContextV1=Readonly<{root:string;invocation:ScriptInvocation;out:string;environment:NodeJS.ProcessEnv;rules:ParityRulesV1;progress:(label:string)=>Promise<void>}>;
+
+const authority=["SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_SCRIPT_POLICY","SEMIO_SCRIPT_CAPABILITIES","SEMIO_BUILD_TOOL","SEMIO_BUILD_EVIDENCE_DIR","SEMIO_BUILD_MODE","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST","SEMIO_BUILD_REUSE_GRAPH"];
+const maximumPath=240,maximumLog=268435456;
+const slash=(path:string):string=>path.split("\\").join("/");
+const sha256=(bytes:Uint8Array):string=>createHash("sha256").update(bytes).digest("hex");
+
+type Captured=Readonly<{exit:number|null;reason:ParityRunV1["reason"];durationMs:number;stdout:string;stderr:string}>;
+
+/** 🧾️ Walks the declared output roots of a run, hashes every entry and copies the files into the tool's own output root. */
+export async function captureParityOutputsV1(root:string,roots:Readonly<Record<string,readonly string[]>>,destination:string,rules:ParityRulesV1,maximumBytes:number,check:()=>void):Promise<ParityOutputsV1>{
+ const files:Record<string,ParityFileV1>={};let total=0,visited=0;
+ const normalizable=(path:string)=>rules.rules.some(rule=>rule.surface==="output"&&rule.glob!==undefined&&globMatchV1(rule.glob,path));
+ const visit=async(path:string):Promise<void>=>{
+  if(++visited%64===0)check();
+  const absolute=join(root,path),facts=await lstat(absolute).catch(error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;});
+  if(!facts)return;
+  const mode=facts.mode&0o777;
+  if(facts.isSymbolicLink()){files[path]={kind:"symlink",mode,link:await readlink(absolute)};return;}
+  if(facts.isDirectory()){files[path]={kind:"directory",mode};for(const child of (await readdir(absolute)).sort())await visit(path+"/"+child);return;}
+  total+=facts.size;if(total>maximumBytes)throw Error(`Declared outputs exceed ${maximumBytes} bytes`);
+  const bytes=await readFile(absolute),normalized=normalizable(path)&&bytes.length<=33554432?parityNormalizedDigestsV1(path,bytes,rules):{};
+  files[path]={kind:"file",mode,size:bytes.length,sha256:sha256(bytes),...(Object.keys(normalized).length?{normalized}:{})};
+  await mkdir(dirname(join(destination,path)),{recursive:true});await copyFile(absolute,join(destination,path));
+ };
+ for(const task of Object.keys(roots).sort())for(const path of roots[task]!)await visit(path);
+ return {roots:Object.fromEntries(Object.entries(roots).map(([task,paths])=>[task,[...paths]])),files};
+}
+
+/** 🛟️ How one output root was set aside before a run and how it returns afterwards. */
+export type ParityAsideV1=Readonly<{path:string;how:"absent"|"move"|"copy"}>;
+
+const tracked=(root:string,path:string):boolean=>{const result=runToolSyncV1("git",["ls-files","-z","--",path],{cwd:root,encoding:"utf8"});return result.status===0&&result.stdout.length>0;};
+const move=async(from:string,to:string):Promise<void>=>{await mkdir(dirname(to),{recursive:true});try{await rename(from,to);}catch(error){if((error as NodeJS.ErrnoException).code!=="EXDEV")throw error;await cp(from,to,{recursive:true,verbatimSymlinks:true,preserveTimestamps:true});await rm(from,{recursive:true,force:true});}};
+
+/** 🧳️ Sets the declared output roots aside so a run starts without stale products: untracked roots move, tracked ones stay in place and are copied; the journal makes an interrupted run recoverable. */
+export async function setParityOutputsAsideV1(root:string,paths:readonly string[],aside:string):Promise<Readonly<{restore:()=>Promise<void>;journal:readonly ParityAsideV1[]}>>{
+ const journal:ParityAsideV1[]=[];
+ await mkdir(aside,{recursive:true});
+ for(const path of paths){
+  const absolute=join(root,path),facts=await lstat(absolute).catch(error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;});
+  if(!facts){journal.push({path,how:"absent"});continue;}
+  journal.push({path,how:tracked(root,path)?"copy":"move"});
+  await writeFile(join(aside,"journal.json"),JSON.stringify({root,journal}));
+  if(journal.at(-1)!.how==="copy")await cp(absolute,join(aside,path),{recursive:true,verbatimSymlinks:true,preserveTimestamps:true});else await move(absolute,join(aside,path));
+ }
+ await writeFile(join(aside,"journal.json"),JSON.stringify({root,journal}));
+ return {journal,restore:()=>restoreParityOutputsV1(root,journal,aside)};
+}
+
+/** ♻️ Puts every set-aside root back exactly as it was and removes whatever the run produced. */
+export async function restoreParityOutputsV1(root:string,journal:readonly ParityAsideV1[],aside:string):Promise<void>{
+ for(const entry of journal){
+  const absolute=join(root,entry.path);
+  await rm(absolute,{recursive:true,force:true});
+  if(entry.how!=="absent")await move(join(aside,entry.path),absolute);
+ }
+ await rm(join(aside,"journal.json"),{force:true});
+}
+
+/** 🧹️ Removes what a run produced under the declared roots while the set-aside copies stay untouched. */
+export async function removeParityOutputsV1(root:string,paths:readonly string[]):Promise<void>{for(const path of paths)await rm(join(root,path),{recursive:true,force:true});}
+
+/** 🚑️ Restores every journal an interrupted verification left under the output directory. */
+export async function recoverParityOutputsV1(out:string):Promise<number>{
+ let restored=0;
+ const visit=async(directory:string):Promise<void>=>{
+  const entries=await readdir(directory,{withFileTypes:true}).catch(()=>[]);
+  for(const entry of entries){
+   const path=join(directory,entry.name);
+   if(entry.isFile()&&entry.name==="journal.json"){const record=JSON.parse(await readFile(path,"utf8")) as {root:string;journal:ParityAsideV1[]};await restoreParityOutputsV1(record.root,record.journal,directory);restored++;}
+   else if(entry.isDirectory())await visit(path);
+  }
+ };
+ await visit(out);
+ return restored;
+}
+
+/** 🏃️ Creates the live runner: it launches `repo` for each tool exactly as a developer would, with the caller's cancellation and progress. */
+export function createParityRunnerV1(context:ParityLiveContextV1):ParityRunnerV1{
+ const {root,invocation,out,rules}=context,projects=new Map<string,Promise<Record<string,unknown>|undefined>>();let sequence=0;
+ const check=()=>checkScriptInvocation(invocation);
+ const environment=(tool:ParityToolV1,extra:Record<string,string>={}):Record<string,string|undefined>=>{const base={...context.environment};for(const name of authority)delete base[name];return {...base,NO_COLOR:"1",FORCE_COLOR:"0",SEMIO_BUILD_TOOL:tool,...extra};};
+ const spawn=async(sample:ParityResolvedSampleV1,label:string,args:readonly string[],env:Record<string,string|undefined>,directory:string):Promise<Captured>=>{
+  check();await mkdir(directory,{recursive:true});await context.progress(`${sample.id}:${label}`);
+  const stem=join(directory,`${String(++sequence).padStart(3,"0")}-${label.replaceAll(/[^a-z0-9-]/gu,"-")}`);
+  if(stem.length>maximumPath)throw Error(`Parity evidence path exceeds ${maximumPath} characters: ${stem}`);
+  const started=performance.now(),result=await captureOwnedProcess(process.execPath,[...args],{invocation,cwd:root,env,budgetMs:sample.timeoutSeconds*1000,maxOutputBytes:maximumLog,stdoutPath:stem+".out",stderrPath:stem+".err"});
+  return {exit:result.status,reason:result.reason??"exit",durationMs:Math.round(performance.now()-started),stdout:result.stdout,stderr:result.stderr};
+ };
+ const configuration=(sample:ParityResolvedSampleV1)=>sample.configuration?[`--configuration=${sample.configuration}`]:[];
+ const project=(name:string,sample:ParityResolvedSampleV1):Promise<Record<string,unknown>|undefined>=>{
+  let known=projects.get(name);
+  if(!known){known=spawn(sample,"show-"+name.replaceAll(/[^A-Za-z0-9]/gu,"-").slice(0,40),["repo","show","project",name],environment("nx"),join(out,"graph")).then(captured=>{const found=parseParityJsonObjectsV1(captured.stdout).find((row):row is Record<string,unknown>=>row!==null&&typeof row==="object"&&"targets" in (row as object));return found;});projects.set(name,known);}
+  return known;
+ };
+ return {
+  async plan(sample,tool){
+   try{
+    const captured=await spawn(sample,`${tool}-plan`,["repo",`--tool=${tool}`,"run",sample.target,...configuration(sample),"--dry-run"],environment(tool),join(out,sample.id));
+    const plan=parseParityPlanV1(captured.stdout);
+    return {plan,errors:plan?[]:[`${tool} dry run printed no task graph (exit ${captured.exit}): ${captured.stderr.trim().split("\n").slice(-3).join(" | ")}`]};
+   }catch(error){return {plan:null,errors:[`${tool} dry run failed: ${(error as Error).message}`]};}
+  },
+  async roots(sample,plans){
+   const roots:Record<string,string[]>={},errors:string[]=[];
+   const seen=new Set<string>();
+   for(const plan of plans)for(const id of Object.keys(plan.tasks)){
+    const target=plan.tasks[id]!.target,key=parityTaskKeyV1(plan,id);
+    if(seen.has(key))continue;seen.add(key);
+    try{
+     const owner=await project(target.project,sample);
+     const definition=(owner?.targets as Record<string,Record<string,unknown>>|undefined)?.[target.target];
+     if(!owner||!definition){errors.push(`no project definition for ${key}`);continue;}
+     const configured=target.configuration?((definition.configurations as Record<string,{execution?:Record<string,unknown>}>|undefined)?.[target.configuration]?.execution??{}):{},execution={...(definition.execution as Record<string,unknown>),...configured};
+     const patterns=Array.isArray(definition.outputs)?definition.outputs.filter((row):row is string=>typeof row==="string"):[];
+     if(!patterns.length)continue;
+     const resolved=resolveParityOutputPatternsV1(patterns,{project:target.project,root:String(owner.root??"."),execution},{SEMIO_BUILD_MODE:sample.configuration??"prototype"}),expanded:string[]=[];
+     for(const path of resolved){if(/[*?[{]/u.test(path)){for await(const match of new Bun.Glob(path).scan({cwd:root,onlyFiles:false,dot:true}))expanded.push(slash(match));}else expanded.push(path);}
+     if(expanded.length)roots[key]=expanded.sort();
+    }catch(error){errors.push(`${key}: ${(error as Error).message}`);}
+   }
+   return {roots,errors};
+  },
+  async observe(sample,tool,phase,plan,roots){
+   const directory=join(out,sample.id,`${tool}-${phase}`),errors:string[]=[],evidence=join(directory,"evidence"),aside=join(directory,"aside"),destination=join(directory,"outputs");
+   const observation:{-readonly [K in keyof ParityObservationV1]:ParityObservationV1[K]}={version:1,sample:sample.id,tool,phase,plan,run:null,outputs:null,inputs:null,spawns:null,closure:null,errors};
+   const union=[...new Set(Object.values(roots).flat())].sort().filter((path,_index,all)=>!all.some(parent=>parent!==path&&path.startsWith(parent+"/")));
+   await mkdir(evidence,{recursive:true});
+   const set=await setParityOutputsAsideV1(root,union,aside);
+   try{
+    const extra={SEMIO_BUILD_EVIDENCE_DIR:evidence},base=["repo",`--tool=${tool}`,"run",sample.target,...configuration(sample)];
+    if(phase==="restored"){await spawn(sample,`${tool}-warm`,base,environment(tool,extra),directory);await removeParityOutputsV1(root,union);await rm(evidence,{recursive:true,force:true});await mkdir(evidence,{recursive:true});}
+    const captured=await spawn(sample,`${tool}-${phase}`,phase==="fresh"&&sample.skipCache?[...base,"--skip-cache"]:base,environment(tool,extra),directory),output=captured.stdout+"\n"+captured.stderr,process_={exit:captured.exit,reason:captured.reason,durationMs:captured.durationMs};
+    observation.outputs=await captureParityOutputsV1(root,roots,destination,rules,sample.maximumOutputBytes,check);
+    if(tool==="nx"){
+     observation.run=parityNxRunV1(process_,output,plan,rules.extractors);
+     if(phase==="fresh"&&plan){
+      const ids=[sample.target,...sample.inputTasks],inputs:Record<string,ParityNxInputsV1>={};
+      for(const id of ids){const inspected=await spawn(sample,`nx-inputs-${id.replaceAll(/[^A-Za-z0-9]/gu,"-").slice(0,30)}`,["repo","--tool=nx","inputs",id],environment("nx"),directory);Object.assign(inputs,parseParityNxInputsV1(inspected.stdout,[id]));}
+      observation.inputs=Object.keys(inputs).length?inputs:null;
+      if(!observation.inputs)errors.push("nx printed no task inputs");
+     }
+    }else{
+     const read=async(name:string):Promise<string|undefined>=>readFile(join(evidence,name),"utf8").catch(()=>undefined);
+     const closure=await read("bazel.closure.json"),events=await read("bazel.bep.jsonl"),log=await read("bazel.execlog.jsonl");
+     const labels=closure?(JSON.parse(closure) as {labelToTask:Record<string,string>;queried:string[];declaredEnvironment:Record<string,string[]>}):undefined;
+     if(!labels||events===undefined)errors.push("bazel left no evidence in "+evidence);
+     observation.run=parityBazelRunV1(process_,parseParityBazelEventsV1(events??""),labels?.labelToTask??{},plan,rules.extractors);
+     if(labels){observation.closure={queried:labels.queried.map(label=>labels.labelToTask[label]??label)};if(log!==undefined&&phase==="fresh")observation.spawns=groupParityBazelSpawnsV1(parseParityBazelExecutionLogV1(log),labels.labelToTask,labels.declaredEnvironment);}
+     if(phase==="fresh"&&log===undefined)errors.push("bazel left no execution log");
+    }
+   }catch(error){errors.push(`${tool} ${phase}: ${(error as Error).message}`);}
+   finally{await set.restore();}
+   return observation;
+  }
+ };
+}

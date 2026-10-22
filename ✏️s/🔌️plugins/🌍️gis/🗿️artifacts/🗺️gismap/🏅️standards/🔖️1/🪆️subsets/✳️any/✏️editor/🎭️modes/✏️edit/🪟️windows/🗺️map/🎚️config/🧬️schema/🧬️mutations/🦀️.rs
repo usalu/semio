@@ -28,7 +28,7 @@ pub use set_vector_style::SetVectorStyle;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = MapWindowConfig, diff = MapWindowConfigDiff, schema = "gis.mapwindowcfg")]
+#[mutations(snapshot = MapWindowConfig, diff = MapWindowConfigDiff, schema = "gis.mapwindowcfg", reference = MapWindowConfig, reference_diff = MapWindowConfigDiff)]
 pub enum MapWindowConfigMutation {
     SetLayerVisibility(SetLayerVisibility),
     SetCamera(SetCamera),

@@ -1,5 +1,5 @@
 import schemaContract from"./🧬️schema/🔣️.json"with{type:"json"};
-import{constants,lstatSync,openSync,fstatSync,readSync,closeSync}from"node:fs";
+import{constants,lstatSync,openSync,fstatSync,readSync,closeSync,readFileSync}from"node:fs";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{createHash}from"node:crypto";
 import{resolve,isAbsolute,parse,relative,sep,join}from"node:path";
@@ -22,6 +22,7 @@ const capturedSources=capturedPhysicalSources(import.meta.semioCapturedPhysicalS
 function capturedReadRefusalV1(captured,path){const distance=relative(captured.root,path),inside=distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);return Object.freeze({version:1,scope:inside?"workspace":"outside",path:inside?distance.split(sep).join("/"):null,sourceCount:captured.sources.size});}
 function capture(path,maximumBytes,retainText){
  const expected=capturedSources?.sources.get(path);if(capturedSources&&!expected)throw Error("Undeclared compiler-captured physical Source read refused: "+JSON.stringify(capturedReadRefusalV1(capturedSources,path)));
+ if(capturedSources){const bytes=readFileSync(path);if(bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==expected)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:bytes.length,text:retainText?new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes):null});}
  const base=parse(path).root,parts=relative(base,path).split(sep).filter(Boolean),parents=[];let current=base;
  if(parts.length>maximumAncestors)throw Error("Source revision ancestry capacity exceeded");
  for(const part of["",...parts.slice(0,-1)]){if(part)current=join(current,part);const row=lstatSync(current,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw Error("Physical Source revision ancestry required");parents.push({path:current,dev:row.dev,ino:row.ino,mode:row.mode});}
@@ -37,7 +38,12 @@ function capture(path,maximumBytes,retainText){
  try{closeSync(file);}catch(error){if(!failed){failed=true;primary=error;}}finally{window?.fill(0);retained?.fill(0);}
  if(failed)throw primary;if(expected!==undefined&&value.sha256!==expected)throw Error("Compiler-captured physical Source byte identity changed");return value;
 }
-const ownSourceURL=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL),ownPath=fileURLToPath(ownSourceURL),loaded=capture(ownPath,maximumSourceBytes,false),ownSchemaPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",ownSourceURL)),loadedSchema=capturedSources?capture(ownSchemaPath,maximumTextBytes,false):undefined;
+const ownSourceURL=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL),ownPath=fileURLToPath(ownSourceURL),ownSchemaPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",ownSourceURL));
+function ownRow(path){try{const row=lstatSync(path,{bigint:true});return row.isFile()&&!row.isSymbolicLink()?{stamp:stamp(row),settled:Number(row.ctimeNs/1000000n)<Date.now()-settleMilliseconds&&Number(row.mtimeNs/1000000n)<Date.now()-settleMilliseconds}:undefined;}catch{return undefined;}}
+const ownBefore=[ownRow(ownPath),capturedSources?ownRow(ownSchemaPath):null],loaded=capture(ownPath,maximumSourceBytes,false),loadedSchema=capturedSources?capture(ownSchemaPath,maximumTextBytes,false):undefined,ownAfter=[ownRow(ownPath),capturedSources?ownRow(ownSchemaPath):null];
+const ownTrusted=ownBefore[0]?.settled&&ownBefore[0].stamp===ownAfter[0]?.stamp&&(ownBefore[1]===null||ownBefore[1]?.settled&&ownBefore[1].stamp===ownAfter[1]?.stamp)?[ownBefore[0].stamp,ownBefore[1]?.stamp??null]:undefined;
+function ownUnchanged(){return ownTrusted!==undefined&&ownRow(ownPath)?.stamp===ownTrusted[0]&&(ownTrusted[1]===null||ownRow(ownSchemaPath)?.stamp===ownTrusted[1]);}
+
 const pinKeyV1=Symbol.for("semio.implementationPin.context.v1"),pinContextV1=globalThis[pinKeyV1]??=new AsyncLocalStorage();
 /** 📍️ True while an invocation is committed to the implementation it loaded: every self-check of a loaded Source then lets the invocation finish, and what it publishes names the loaded bytes, so a Source edited meanwhile is left to the next invocation. */
 export function implementationPinnedV1(){return pinContextV1.getStore()?.active===true;}
@@ -47,7 +53,8 @@ export async function withImplementationPinV1(body){const parent=pinContextV1.ge
 export function pinnedAuthorityReadV1(key,read){const rows=pinContextV1.getStore()?.active===true?pinContextV1.getStore().authority:undefined;if(!rows)return read();if(!rows.has(key))rows.set(key,read());return rows.get(key);}
 /** 🧽️ Forgets the authority snapshot so the next read starts a new consistent view; a graph load calls it before it reads its authority. */
 export function clearPinnedAuthorityV1(){pinContextV1.getStore()?.authority?.clear();}
-function current(){if(implementationPinnedV1())return;if(capture(ownPath,loaded.byteLength,false).sha256!==loaded.sha256||loadedSchema&&capture(ownSchemaPath,loadedSchema.byteLength,false).sha256!==loadedSchema.sha256)throw Error("Stale loaded Source revision reader; restart required");}
+function unchanged(path,row){try{return capture(path,row.byteLength,false).sha256===row.sha256;}catch(error){if(error?.message==="Bounded physical Source revision required"||error?.code==="ENOENT")return false;throw error;}}
+function current(){if(implementationPinnedV1())return;if(ownUnchanged())return;if(!unchanged(ownPath,loaded)||loadedSchema&&!unchanged(ownSchemaPath,loadedSchema))throw Error("Stale loaded Source revision reader; restart required");}
 /** 🔏️ Streams one finite ordinary Source revision; returned DATA grants no physical resource custody. */
 export function captureBoundedSourceRevisionV1(path,maximumBytes,retainText=false){
  if(typeof path!=="string"||!isAbsolute(path)||resolve(path)!==path||path.length>maximumPathUnits||path.includes("\0")||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>maximumSourceBytes||typeof retainText!=="boolean"||retainText&&maximumBytes>maximumTextBytes)throw Error("Reducing finite Source revision request required");

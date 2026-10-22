@@ -3,13 +3,13 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::forms_steps;
 use crate::mutations::create_step;
 use crate::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_a_no_operation() {
     let base = FormsSnapshot::default();
     let diff = FormsDiff::default();
-    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ async fn create_step_diff_applies_onto_the_base_snapshot() {
     let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
     let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
     let diff: FormsDiff = operation.diff(&base).into_parts().0;
-    assert_eq!(forms_steps(&protocol::apply_diff(&diff, &base).expect("valid mutation diff")).len(), 1);
+    assert_eq!(forms_steps(&protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff")).len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -29,12 +29,12 @@ async fn positional_step_delta_inserts_moves_and_inverts_at_middle_rows() {
     let diff = |delta: FormsStepsDelta| FormsDiff { steps: Some(delta), ..Default::default() };
     let base = snapshot(&["a", "b", "c"]);
     let insert = diff(FormsStepsDelta::insertion(1, step("x")));
-    let inserted = protocol::apply_diff(&insert, &base).expect("valid insertion");
+    let inserted = protocol::apply_diff_cold(&insert, &base).expect("valid insertion");
     let relocate = diff(FormsStepsDelta::relocation(&forms_steps(&inserted), 3, 0));
-    let moved = protocol::apply_diff(&relocate, &inserted).expect("valid relocation");
+    let moved = protocol::apply_diff_cold(&relocate, &inserted).expect("valid relocation");
     assert_eq!(order(&moved), ["c", "a", "x", "b"]);
     let mut sum = insert;
     sum.absorb(relocate);
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("valid sum"), moved);
-    assert_eq!(protocol::apply_diff(&protocol::DiffAlgebra::inverse(&sum, &base), &moved).expect("valid inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("valid sum"), moved);
+    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum, &base), &moved).expect("valid inverse"), base);
 }

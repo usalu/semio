@@ -58,7 +58,7 @@ function schemaCatalog(repoRoot: string): Readonly<Record<string, SchemaCatalogS
   const scopes = (JSON.parse(readFileSync(join(repoRoot, SCHEMA_CATALOG_PATH), "utf8")) as { readonly scopes: Record<string, SchemaCatalogScope> }).scopes;
   const catalogued = new Set(Object.values(scopes).map((scope) => scope.path));
   for (const module of hubSchemaModuleDirectories(repoRoot)) {
-    if (!catalogued.has(module)) throw new Error(`hub schema module ${module} is absent from ${SCHEMA_CATALOG_PATH}; regenerate it with \`bun ./📜️script.ts schema generate\``);
+    if (!catalogued.has(module)) throw new Error(`hub schema module ${module} is absent from ${SCHEMA_CATALOG_PATH}; regenerate it with \`repo ./📜️script.ts schema generate\``);
   }
   schemaCatalogScopes = scopes;
   return scopes;

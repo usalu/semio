@@ -131,8 +131,8 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
   const contract = taxonomy.schema.generatorContracts[regeneration.contractId];
   if (!contract || contract.ownership !== "owned" || !contract.ownerPath || !contract.target || !contract.previewTarget) throw new Error(`Regeneration ${regeneration.id} does not reference an owned generator contract`);
   const roots = contract.outputRoots.map((output) => output.path).sort(generatorPathCompare);
-  if (regeneration.cwd !== contract.ownerPath || canonicalJson(regeneration.command) !== canonicalJson(["bun", "repo", "run", contract.target])) throw new Error(`Regeneration ${regeneration.id} command is not schema-owned`);
-  const expectedVerify = contract.checkTarget ? ["bun", "repo", "run", contract.checkTarget] : undefined;
+  if (regeneration.cwd !== contract.ownerPath || canonicalJson(regeneration.command) !== canonicalJson(["repo", "run", contract.target])) throw new Error(`Regeneration ${regeneration.id} command is not schema-owned`);
+  const expectedVerify = contract.checkTarget ? ["repo", "run", contract.checkTarget] : undefined;
   if (canonicalJson(regeneration.verifyCommand) !== canonicalJson(expectedVerify)) throw new Error(`Regeneration ${regeneration.id} verification command is not schema-owned`);
   if (canonicalJson([...regeneration.outputRoots].sort()) !== canonicalJson(roots)) throw new Error(`Regeneration ${regeneration.id} output roots do not match its contract`);
   assertGeneratorNodeRecords(regeneration.preOutputs, roots, `Regeneration ${regeneration.id} preOutputs`);

@@ -1,7 +1,7 @@
 //! 📬️ Original window mutation payloads carry their captured typed retirement issuer; the displaced-snapshot refresh transfer lives beside them.
 use semio_framework_value::{FactoryBoxedValue,retirement::{RetireOwned,RetirementCursor,boxed_owner_birth_bytes}};
 use std::any::Any;
-pub trait ErasedWindowMutationValue:Send{
+pub trait ErasedWindowMutationValue:Send+Sync{
  fn as_any(&self)->&dyn Any;
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>;
  fn clone_value(&self)->Box<dyn ErasedWindowMutationValue>;

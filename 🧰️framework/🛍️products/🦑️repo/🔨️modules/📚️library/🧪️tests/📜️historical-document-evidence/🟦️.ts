@@ -14,8 +14,8 @@ const historicalDocumentEvidence = exportedHistoricalDocumentEvidence as (path: 
 test("historicalDocumentEvidence and its schema are exported, registered and self-valid", () => {
   expect(typeof historicalDocumentEvidence).toBe("function");
   const schema = loadCatalogTaxonomy();
-  expect(Object.keys(schema.historicalDocumentEvidencePopulations)).toEqual(["ticket-report", "ticket-workspace", "cursor-plan-snapshot", "dev-prompt-log"]);
-  expect(schema.referenceClosure.historicalDocumentEvidence).toBe("ticket-report-workspace-cursor-plan-snapshot-and-dev-prompt-log-whole-document-excluded");
+  expect(Object.keys(schema.historicalDocumentEvidencePopulations)).toEqual(["ticket-report", "ticket-workspace", "dev-prompt-log"]);
+  expect(schema.referenceClosure.historicalDocumentEvidence).toBe("ticket-report-workspace-and-dev-prompt-log-whole-document-excluded");
   expect(validateTaxonomy(schema)).toEqual([]);
 });
 
@@ -23,10 +23,10 @@ test("validateHistoricalDocumentEvidencePopulations rejects every declared mutat
   const base = loadCatalogTaxonomy().historicalDocumentEvidencePopulations;
   expect(validateHistoricalDocumentEvidencePopulations(structuredClone(base))).toEqual([]);
   const mutations: ((value: Record<string, any>) => void)[] = [
-    (value) => { delete value["cursor-plan-snapshot"]; },
+    (value) => { delete value["ticket-report"]; },
     (value) => { delete value["ticket-workspace"]; },
     (value) => { delete value["dev-prompt-log"]; },
-    (value) => { value["extra-population"] = structuredClone(value["cursor-plan-snapshot"]); },
+    (value) => { value["extra-population"] = structuredClone(value["ticket-report"]); },
     (value) => { value["dev-prompt-log"].directoryPattern = "**/wrong/**"; },
     (value) => { value["dev-prompt-log"].leafPattern = "^.+$"; },
     (value) => { value["ticket-report"].grammar = "wrong"; },
@@ -34,9 +34,9 @@ test("validateHistoricalDocumentEvidencePopulations rejects every declared mutat
     (value) => { value["ticket-report"].leafPattern = "^📓️.md$"; },
     (value) => { value["ticket-workspace"].directoryPattern = "**/wrong/*"; },
     (value) => { value["ticket-workspace"].leafPattern = "^📓️.+\\.md$"; },
-    (value) => { delete value["cursor-plan-snapshot"].reason; },
-    (value) => { value["cursor-plan-snapshot"].extra = true; },
-    (value) => { value["cursor-plan-snapshot"].leafPattern = "("; },
+    (value) => { delete value["dev-prompt-log"].reason; },
+    (value) => { value["dev-prompt-log"].extra = true; },
+    (value) => { value["ticket-workspace"].leafPattern = "("; },
     (value) => { value["ticket-report"] = "not-an-object"; },
   ];
   for (const mutate of mutations) {
@@ -54,8 +54,8 @@ test("historicalDocumentEvidence matches the exact bounded population against th
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/OS-EXCLUSIVE-STATE-AUTHORITY/🧪m3-plugin-component.pre-patch.rs", true, "a ticket-evidence Rust snapshot at ticket-root level"],
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-number-deasync.py", true, "a loose scratch script at ticket-root level"],
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📌️important.md", true, "a ticket working note — excluded as a reference SOURCE only; ticket_close's emptiness check reads entry.size, never this file's content"],
-    [".cursor/plans/2d_references_on_grid_ff798114.plan.md", true, "Cursor plan snapshot"],
-    [".cursor/plans/not-a-plan.md", false, "a .cursor/plans file that is not a *.plan.md snapshot stays live"],
+    [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️06/INFINITE-WORLD-2D-REFERENCES/2d_references_on_grid_ff798114.plan.md", true, "a ticket-owned plan is ticket workspace"],
+    [".cursor/plans/2d_references_on_grid_ff798114.plan.md", false, "a client plan directory is no historical population: it stays live"],
     ["🧰️framework/🔨️modules/📚️library/🔣️taxonomy.json", false, "production schema stays live"],
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎫️ticket.json", false, "the ticket manifest itself matches a fixedFilenameContracts pattern (ticket-manifest) and is never exempted"],
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS/Cargo.toml", false, "a ticket-embedded package's own manifest matches cargo-manifest and is never exempted"],
@@ -104,7 +104,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   const evidenceSnapshot = `${closedTicketDir}/🧪scratch.pre-patch.rs`;
   const looseScratch = `${closedTicketDir}/loose-scratch.txt`;
   const workingNote = `${closedTicketDir}/📌️note.md`;
-  const cursorPlan = ".cursor/plans/histref_fixture_test_deadbeef.plan.md";
+  const ticketPlan = `${closedTicketDir}/histref_fixture_test_deadbeef.plan.md`;
   const productionDoc = "🧪️tests/📖️histref-production-neighbornotes.md";
   const embeddedManifest = `${closedTicketDir}/embedded-pkg/Cargo.toml`;
   const embeddedSource = `${closedTicketDir}/embedded-pkg/lib.rs`;
@@ -123,7 +123,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   put(`${openTicketDir}/🎫️ticket.json`, `${JSON.stringify({ title: "Histref Open Fixture", status: "open", description: "fixture" }, null, 2)}\n`);
   put(openReport, prose(openTicketDir));
   put(noManifestReport, prose(noManifestTicketDir));
-  put(cursorPlan, prose(".cursor/plans"));
+  put(ticketPlan, prose(closedTicketDir));
   put(productionDoc, prose(scope));
   put(embeddedManifest, '[package]\nname = "histref-embedded"\nversion = "0.1.0"\n');
   put(embeddedSource, prose(`${closedTicketDir}/embedded-pkg`));
@@ -148,7 +148,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   expect(blocked.has(evidenceSnapshot), "a ticket evidence snapshot must not block the move").toBe(false);
   expect(blocked.has(looseScratch), "a loose ticket-root scratch file must not block the move").toBe(false);
   expect(blocked.has(workingNote), "a ticket working note must not block the move").toBe(false);
-  expect(blocked.has(cursorPlan), "Cursor plan snapshot must not block the move").toBe(false);
+  expect(blocked.has(ticketPlan), "a ticket-owned plan must not block the move").toBe(false);
   expect(blocked.has(productionDoc), "a production file must still block the move").toBe(true);
   expect(blocked.has(embeddedSource), "a source file inside a ticket-embedded package boundary must still block the move — never swept in as scratch").toBe(true);
   expect(blocked.has(embeddedReport), "a 📓️ narrative report sitting INSIDE the same ticket-embedded package boundary — beside embeddedSource, under the very manifest that keeps embeddedSource live — must still not block the move: document kind, not proximity to a manifest, is the discriminator").toBe(false);
@@ -167,14 +167,14 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
 test("the exemption is driven entirely by the schema population, not hardcoded: an empty population map reproduces the pre-change blocked state for the exact same paths", () => {
   const taxonomy = { discoverySchema: { historicalDocumentEvidencePopulations: {}, fixedFilenameContracts: {} }, pathMatcher: createTaxonomyPathMatcher() };
   const openReportPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️goal-session-status.md";
-  const cursorPlanPath = ".cursor/plans/2d_references_on_grid_ff798114.plan.md";
+  const ticketPlanPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️06/INFINITE-WORLD-2D-REFERENCES/2d_references_on_grid_ff798114.plan.md";
   const promptLogPath = ".🧬semio/🦑️repo/💬️prompts/🐙️ueli.md";
   expect(historicalDocumentEvidence(openReportPath, taxonomy, root), "before: no population means even a ticket report is a live reference").toBe(false);
-  expect(historicalDocumentEvidence(cursorPlanPath, taxonomy, root), "before: no population means a Cursor plan snapshot is a live reference too").toBe(false);
+  expect(historicalDocumentEvidence(ticketPlanPath, taxonomy, root), "before: no population means a ticket-owned plan is a live reference too").toBe(false);
   expect(historicalDocumentEvidence(promptLogPath, taxonomy, root), "before: no population means a prompt-log transcript is a live reference too").toBe(false);
   const real = { discoverySchema: loadCatalogTaxonomy(), pathMatcher: createTaxonomyPathMatcher() };
   expect(historicalDocumentEvidence(openReportPath, real, root), "after: the real registration exempts it").toBe(true);
-  expect(historicalDocumentEvidence(cursorPlanPath, real, root), "after: the real registration exempts it").toBe(true);
+  expect(historicalDocumentEvidence(ticketPlanPath, real, root), "after: the real registration exempts it").toBe(true);
   expect(historicalDocumentEvidence(promptLogPath, real, root), "after: the real registration exempts it").toBe(true);
 });
 

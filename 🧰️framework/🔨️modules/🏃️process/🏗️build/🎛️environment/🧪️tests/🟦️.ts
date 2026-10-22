@@ -15,7 +15,7 @@ test("owned runtime startup cache environment agrees with neutral Ajv and SQLite
 test("dashboard runtime environment verification has no IDE catalog authority",()=>{
  expect(Object.keys(schema.definitions)).toEqual(["Environment"]);
  const root=process.cwd(),owner=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/📋️project.json"),"utf8"));
- expect(owner.targets["test-runtime-environment"]).toMatchObject({executor:"repo:script",options:{cwd:"🧰️framework/🔨️modules/🏃️process",command:"bun ./📜️script.ts test runtime-environment"}});
+ expect(owner.targets["test-runtime-environment"]).toMatchObject({executor:"repo:script",options:{cwd:"🧰️framework/🔨️modules/🏃️process",command:"repo ./📜️script.ts test runtime-environment"}});
  const route=readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/📜️script.ts"),"utf8");expect(route).toContain('"runtime-environment": { source: "🏗️build/🎛️environment/🧪️tests/🟦️.ts"');
 });
 test("actual compiler environment disables implicit caches for every dashboard build mode",()=>{

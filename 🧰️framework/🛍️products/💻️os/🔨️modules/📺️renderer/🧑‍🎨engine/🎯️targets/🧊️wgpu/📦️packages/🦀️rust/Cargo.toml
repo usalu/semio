@@ -31,7 +31,7 @@ semio-framework-trace = { workspace = true }
 # design ticket packet P2a) — portable on every target (`run_on_worker` itself, which needs
 # `semio_framework_async::WorkerPool`, is only called from the native-only half of `frame_job.rs`; the
 # job-protocol types used by the browser and native presentation module build clean on wasm32).
-# Workspace-internal — `bun ./📜️script.ts verify dependencies` stays 238→238.
+# Workspace-internal — `repo ./📜️script.ts verify dependencies` stays 238→238.
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-pixels = { path = "../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
@@ -77,7 +77,7 @@ semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️module
 # but this dependency line was missing — a real, pre-existing defect this crate's own build never
 # surfaced because `cargo check -p semio-framework-os-renderer-wgpu` never reached this crate's files at
 # all (blocked upstream by `semio-framework-2d`/`-graph`/`-ui` — see Phase 1 packet P1e's own report).
-# Workspace-internal — `bun ./📜️script.ts verify dependencies` stays 238→238.
+# Workspace-internal — `repo ./📜️script.ts verify dependencies` stays 238→238.
 ui_host = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
 # 🖼️ P3a: same missing-dependency defect as `ui_host` above — `os_host.rs`/`winit_app.rs`/`deadlines.rs`
 # already named `ui_render::{FrameScheduler, InvalidationReason, DispatchEvent, CursorRequest, ...}`
@@ -234,7 +234,7 @@ semio-framework-os-renderer-wgpu-kernel-runtime = { path = "../../🧠️kernel-
 # `🧵️frame-job/🦀️.rs:13` imports `Lane` — all four unresolved (`E0463`/`E0433`/`E0432`) because this
 # dependency existed only under `cfg(not(target_arch = "wasm32"))`, which is why the browser target
 # never compiled. `entrypoint` stays OFF here: `block_on` must not be reachable from a browser build.
-# Workspace-internal — `bun ./📜️script.ts verify dependencies` is unchanged.
+# Workspace-internal — `repo ./📜️script.ts verify dependencies` is unchanged.
 semio-framework-async = { workspace = true }
 # 📡️ The browser half of the document relay: `ArtifactHost` and the `store_sync::sync` vocabulary the
 # shell's one `open_document` body names on both targets, plus the `broadcast` receiver it drains.

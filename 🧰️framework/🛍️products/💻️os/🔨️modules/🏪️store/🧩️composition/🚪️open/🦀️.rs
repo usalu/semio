@@ -1,5 +1,10 @@
 //! 📂️ Caller-retained member-open authority: bounded input ownership, scoped progress and close.
 
+/// 🧪️ Library unit tests observe every physical request and release through the shared requested-byte observer.
+#[cfg(test)]
+#[global_allocator]
+static MEMBER_OPEN_LIBRARY_HEAP:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+
 #[path = "🏭️operation/🛂️receiving/🦀️.rs"]
 pub mod receiving;
 #[path = "🏭️operation/🧬️schema/📦️decoder/🦀️.rs"]

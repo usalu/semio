@@ -32,7 +32,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",
@@ -58,7 +58,8 @@
           "runtimeSourceEntries": [
             "{projectRoot}/🧪️tests/🟦️.ts",
             "{projectRoot}/🧪️tests/📒️ledger/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts"
           ]
         }
       }

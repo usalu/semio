@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator",
-        "command": "bun ./📜️script.ts list",
+        "command": "repo ./📜️script.ts list",
         "forwardAllArgs": true
       },
       "metadata": {

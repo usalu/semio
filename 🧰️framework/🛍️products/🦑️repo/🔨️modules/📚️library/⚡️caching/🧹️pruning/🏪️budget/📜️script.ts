@@ -14,6 +14,7 @@ import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{mkdtemp}from"node:fs/promises";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 const runtime=schema.definitions.Runtime.const;
 
 /** 🏪️ Maintains the authored inactive byte budget under the actual repository caller. */
@@ -37,4 +38,4 @@ export class InactiveCargoRetirementScript extends BundleScript {
 export function runInactiveCompilerMaintenanceV1(context:Readonly<{root:string;repoRoot:string;invocation:ScriptInvocation;control:ResourceLeaseControl}>,operation:"preview"|"retire"):Promise<void>{requireIssuedResourceControlInvocationV1(context.control,context.invocation);checkResourceLeaseControl(context.control);return withRequestedIssuedResourceControlV1(context.control,runtime.maximumMilliseconds,phase=>new InactiveCargoRetirementScript(context.root,context.repoRoot,context.invocation).run([operation],phase));}
 
 const root=dirname(fileURLToPath(import.meta.url)),router=new ScriptRouter(root).register("cache-retire-inactive",InactiveCargoRetirementScript);
-if(import.meta.main)await receiveScriptProcessInvocation(process.env,invocation=>runScriptMain(router,{invocation}));
+if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,invocation=>runScriptMain(router,{invocation}));

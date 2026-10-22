@@ -5,7 +5,7 @@ import { publishWorkspaceMembership } from "../📣️publication/🟦️.ts";
 export function parseWorkspacePublicationArguments(segments: readonly string[]): "check" | "write" {
   if (segments.length === 1 && segments[0] === "--check") return "check";
   if (segments.length === 1 && segments[0] === "--write") return "write";
-  throw new Error("usage: bun ./📜️script.ts workspaces <--write|--check>");
+  throw new Error("usage: repo ./📜️script.ts workspaces <--write|--check>");
 }
 
 /** 🚪️ Routes workspace publication without owning discovery or document behavior. */

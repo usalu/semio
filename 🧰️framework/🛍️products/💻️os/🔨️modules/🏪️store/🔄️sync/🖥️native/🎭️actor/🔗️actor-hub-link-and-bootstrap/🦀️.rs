@@ -124,7 +124,7 @@ impl ArtifactActor {
         self.connect_future = Some(Box::pin(async move {
             let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: operation_cancel, capability: None };
             let admission_ctx = ctx.clone();
-            let (admission_sender, admission_receiver) = semio_framework_async::oneshot::channel();
+            let (admission_sender, admission_receiver) = semio_framework_async_sync::oneshot::channel();
             let admission_job = Box::new(move || {
                 let admission = source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000);
                 let _ = admission_sender.send(admission);
@@ -366,7 +366,7 @@ impl ArtifactActor {
     }
 
     async fn replay_local_outbox_after_bootstrap(&mut self) -> Result<(), semio_framework_os_vcs::VcsError> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testing"))]
         if std::mem::take(&mut self.fail_bootstrap_local_replay_once) {
             return Err(semio_framework_os_vcs::VcsError::Backbone("injected bootstrap local replay failure".into()));
         }

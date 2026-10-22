@@ -66,27 +66,9 @@ pub struct DwgDiff {
     pub application_history: Option<DwgApplicationHistory>,
 }
 
-impl MutationDiff<DwgSnapshot> for DwgDiff {
-    fn apply(&self, base: &DwgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<DwgSnapshot> {
-        Ok(DwgSnapshot {
-            schema: base.schema.clone(),
-            version: self.version.clone().unwrap_or_else(|| base.version.clone()),
-            maintenance_version: self.maintenance_version.unwrap_or(base.maintenance_version),
-            codepage: self.codepage.unwrap_or(base.codepage),
-            drawing: self.drawing.clone().unwrap_or_else(|| base.drawing.clone()),
-            header: self.header.clone().unwrap_or_else(|| base.header.clone()),
-            classes: self.classes.clone().unwrap_or_else(|| base.classes.clone()),
-            dependencies: self.dependencies.clone().unwrap_or_else(|| base.dependencies.clone()),
-            summary: self.summary.clone().unwrap_or_else(|| base.summary.clone()),
-            application: self.application.clone().unwrap_or_else(|| base.application.clone()),
-            template: self.template.clone().unwrap_or_else(|| base.template.clone()),
-            auxiliary_header: self.auxiliary_header.clone().unwrap_or_else(|| base.auxiliary_header.clone()),
-            revision_history: self.revision_history.clone().unwrap_or_else(|| base.revision_history.clone()),
-            preview: self.preview.clone().unwrap_or_else(|| base.preview.clone()),
-            application_history: self.application_history.clone().unwrap_or_else(|| base.application_history.clone()),
-        })
-    }
+impl MutationDiff<DwgSnapshot> for DwgDiff {}
 
+impl protocol::ColdMutationDiff<DwgSnapshot> for DwgDiff {
     /// ➕️ Coalesces sequential field replacements with last-write-wins semantics.
     fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
@@ -132,9 +114,50 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
             self.application_history = other.application_history;
         }
     }
+
+    fn apply(&self, unpublished: &mut DwgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = DwgSnapshot {
+            schema: base.schema.clone(),
+            version: self.version.clone().unwrap_or_else(|| base.version.clone()),
+            maintenance_version: self.maintenance_version.unwrap_or(base.maintenance_version),
+            codepage: self.codepage.unwrap_or(base.codepage),
+            drawing: self.drawing.clone().unwrap_or_else(|| base.drawing.clone()),
+            header: self.header.clone().unwrap_or_else(|| base.header.clone()),
+            classes: self.classes.clone().unwrap_or_else(|| base.classes.clone()),
+            dependencies: self.dependencies.clone().unwrap_or_else(|| base.dependencies.clone()),
+            summary: self.summary.clone().unwrap_or_else(|| base.summary.clone()),
+            application: self.application.clone().unwrap_or_else(|| base.application.clone()),
+            template: self.template.clone().unwrap_or_else(|| base.template.clone()),
+            auxiliary_header: self.auxiliary_header.clone().unwrap_or_else(|| base.auxiliary_header.clone()),
+            revision_history: self.revision_history.clone().unwrap_or_else(|| base.revision_history.clone()),
+            preview: self.preview.clone().unwrap_or_else(|| base.preview.clone()),
+            application_history: self.application_history.clone().unwrap_or_else(|| base.application_history.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<DwgSnapshot> for DwgDiff {
+    fn is_empty(&self) -> bool {
+        self.version.is_none()
+            && self.maintenance_version.is_none()
+            && self.codepage.is_none()
+            && self.drawing.is_none()
+            && self.header.is_none()
+            && self.classes.is_none()
+            && self.dependencies.is_none()
+            && self.summary.is_none()
+            && self.application.is_none()
+            && self.template.is_none()
+            && self.auxiliary_header.is_none()
+            && self.revision_history.is_none()
+            && self.preview.is_none()
+            && self.application_history.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DwgSnapshot> for DwgDiff {
     /// 🔁️ Concrete diff-level undo: every field this diff replaces is replaced back by the value `base` carries, and a field it leaves alone stays untouched.
     fn inverse(&self, base: &DwgSnapshot) -> Self {
         DwgDiff {
@@ -153,23 +176,6 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
             preview: restore(&self.preview, &base.preview),
             application_history: restore(&self.application_history, &base.application_history),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.version.is_none()
-            && self.maintenance_version.is_none()
-            && self.codepage.is_none()
-            && self.drawing.is_none()
-            && self.header.is_none()
-            && self.classes.is_none()
-            && self.dependencies.is_none()
-            && self.summary.is_none()
-            && self.application.is_none()
-            && self.template.is_none()
-            && self.auxiliary_header.is_none()
-            && self.revision_history.is_none()
-            && self.preview.is_none()
-            && self.application_history.is_none()
     }
 }
 //#endregion 🔖️Diff

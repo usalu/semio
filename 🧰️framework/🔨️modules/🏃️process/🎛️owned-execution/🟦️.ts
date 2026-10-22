@@ -1,7 +1,10 @@
+import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
+export type{OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1} from "./📥️capture/🟦️.ts";
+import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts";
 import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
-export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
+export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
@@ -23,6 +26,7 @@ export interface OwnedCommandOptions {
   readonly outputStyle?: "stream" | "stream-without-prefixes" | "static";
   readonly control?: ResourceLeaseControl;
   readonly input?: string | Uint8Array;
+  readonly auxiliaryInput?: OwnedCommandAuxiliaryInputV1;
   readonly output?: Readonly<{maximumBytes:number;maximumLines:number}>;
   readonly outputConsumer?: (bytes: Uint8Array, stream: OwnedCommandStreamV1) => unknown;
   readonly env?: Readonly<Record<string, string | undefined>>;
@@ -47,7 +51,7 @@ export async function captureOwnedCommandV1(command: string, args: readonly stri
 }
 
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
-export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => console.log(line)): () => void {
+export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => { process.stderr.write(line + "\n"); }): () => void {
   const started = Date.now(),
     progress = setInterval(() => output(`[${label}] running elapsedMs=${Date.now() - started}`), intervalMs);
   return () => clearInterval(progress);
@@ -71,8 +75,11 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   if(options.outputConsumer!==undefined&&(typeof options.outputConsumer!=="function"||options.output===undefined))throw new Error(`${label} output consumer requires finite output limits`);
   if(options.outputStyle!==undefined&&!outputSchema.definitions.Style.enum.includes(options.outputStyle))throw Error(`${label} has an invalid output style`);
   if(options.outputStyle==="static"){if(!options.output||!options.control)throw Error(`${label} static output requires finite limits and actual control`);requireIssuedResourceControlV1(options.control);}
-  if (options.signal?.aborted) throw new Error(`${label} stopped: cancelled`);
-  const child = spawn(command, args, { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe"], windowsHide: true });
+  const auxiliary=options.auxiliaryInput===undefined?undefined:readOwnedCommandAuxiliaryInputV1(options.auxiliaryInput);
+  if(auxiliary){if(!options.control)throw Error("Actual Original auxiliary input control required");requireIssuedResourceControlV1(options.control);if(options.signal!==undefined&&options.signal!==options.control.signal)throw Error("Same Original auxiliary input signal required");}
+  const commandSignal=auxiliary?options.control!.signal:options.signal;
+  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw new Error(`${label} stopped: cancelled`);}
+  const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env), child = spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
   let stopped = "", closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
   const terminate = (reason: string): void => {
@@ -117,8 +124,8 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   };
   if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:process.stdout,options.stdout!=="ignore","stdout");
   forward(child.stderr!,process.stderr,true,"stderr");
-  options.signal?.addEventListener("abort", abort, { once: true });
-  if (options.signal?.aborted) abort();
+  commandSignal?.addEventListener("abort", abort, { once: true });
+  if (commandSignal?.aborted) abort();
   const interrupt = (): void => terminate("SIGINT");
   const stop = (): void => terminate("SIGTERM");
   process.once("SIGINT", interrupt);
@@ -135,7 +142,9 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   };
   const stopProgress = startNativeProgress(label, 10_000, publish);
   const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`));
+  let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
+    const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,error=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=error;}terminate("auxiliary input publication refused");}):Promise.resolve();
     const inputPublication = options.input === undefined || !child.stdin ? Promise.resolve() : new Promise<void>(accept => {
       child.stdin!.once("finish", accept); child.stdin!.once("close", accept);
       child.stdin!.once("error", () => { if (!closed && !stopped) terminate("input publication refused"); accept(); });
@@ -145,20 +154,23 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
       child.once("error", error => console.error(error.message));
       child.once("close", (code, signal) => { closed = true; accept({code,signal}); });
     });
-    await inputPublication;
+    await Promise.all([inputPublication,auxiliaryPublication]);
     stopProgress();
     if(consumerRefused)await Promise.allSettled([...pending]);else await Promise.race([Promise.all([...pending]), interrupted]);
     if(options.outputStyle==="static")try{for(const row of buffered)await Promise.race([writeOwnedCommandOutputV1(row.destination,row.text,options.control!),interrupted.then(()=>{throw Error(`${label} output delivery stopped: ${stopped}`);})]);}catch(error){deliveryFailed=true;deliveryFailure=error;}
     try{await Promise.all([process.stdout,process.stderr].map(output=>new Promise<void>((accept,reject)=>output.write("",error=>error?reject(error):accept()))));}catch(error){if(!deliveryFailed){deliveryFailed=true;deliveryFailure=error;}}
     if(consumerRefused){const returned=await Promise.all(consumerWork),failures=[consumerFailure,...returned.flatMap(row=>row.status==="rejected"?[row.reason]:[]),...(publicationRefused?[publicationFailure]:[])];if(failures.length>1)throw new AggregateError(failures,`${label} output consumer and accepted work failed`);throw consumerFailure;}
     if (publicationRefused) throw publicationFailure;
+    if(auxiliary&&commandSignal?.aborted)throw commandSignal.reason;
+    if(auxiliaryFailed)throw auxiliaryFailure;
+    if(auxiliary)requireIssuedResourceControlV1(options.control!);
     if (stopped&&stopped!=="output delivery refused") throw new Error(`${label} stopped: ${stopped}`);
     if(stopped==="output delivery refused"&&status.signal!==null)throw deliveryFailure;
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;
   } finally {
     for(const stream of deliveryStreams)stream.off("error",deliveryRefused);
-    options.signal?.removeEventListener("abort", abort);
+    commandSignal?.removeEventListener("abort", abort);
     stopProgress();
     stopTimeout();
     process.off("SIGINT", interrupt);

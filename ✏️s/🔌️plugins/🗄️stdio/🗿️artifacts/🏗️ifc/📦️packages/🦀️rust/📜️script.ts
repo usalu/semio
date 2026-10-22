@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ ifc Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-ifc", {

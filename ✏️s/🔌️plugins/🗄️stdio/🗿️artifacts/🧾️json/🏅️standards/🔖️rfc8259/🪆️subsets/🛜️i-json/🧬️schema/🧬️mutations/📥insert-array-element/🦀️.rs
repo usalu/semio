@@ -15,7 +15,16 @@ pub struct InsertArrayElement {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "array-element", kind: "insert-array-element", record: "InsertArrayElement" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert array element", "Array-Element einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElement {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, index, value } = self;
         delegated(Ok(JsonMutation::InsertArrayElement(InsertArrayElementPayload { path: path.clone(), index: *index, value: value.clone() })), base)
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElem
             Some(JsonValue::Array { items }) => vec![JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path.clone(), index: (*index).min(items.len()) })],
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert array element", "Array-Element einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

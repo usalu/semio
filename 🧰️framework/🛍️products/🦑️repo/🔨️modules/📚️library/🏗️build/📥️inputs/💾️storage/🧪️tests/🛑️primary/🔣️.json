@@ -1,0 +1,297 @@
+{
+  "version": 1,
+  "refusals": [
+    {
+      "id": "worker-before-effects",
+      "kind": "worker",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "worker-after-owned-retirement",
+      "kind": "worker",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "error-before-effects",
+      "kind": "error",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "error-after-owned-retirement",
+      "kind": "error",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "undefined-before-effects",
+      "kind": "undefined",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "undefined-after-owned-retirement",
+      "kind": "undefined",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "null-before-effects",
+      "kind": "null",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "null-after-owned-retirement",
+      "kind": "null",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "false-before-effects",
+      "kind": "false",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "false-after-owned-retirement",
+      "kind": "false",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "zero-before-effects",
+      "kind": "zero",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "zero-after-owned-retirement",
+      "kind": "zero",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "empty-before-effects",
+      "kind": "empty",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "empty-after-owned-retirement",
+      "kind": "empty",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    },
+    {
+      "id": "message-getter-before-effects",
+      "kind": "message-getter",
+      "retiredBytes": 0,
+      "retiredFiles": 0
+    },
+    {
+      "id": "message-getter-after-owned-retirement",
+      "kind": "message-getter",
+      "retiredBytes": 4096,
+      "retiredFiles": 1
+    }
+  ],
+  "admission": [
+    {
+      "kind": "timeout",
+      "expired": false,
+      "deferred": true
+    },
+    {
+      "kind": "timeout",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "worker",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "worker",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "undefined",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "undefined",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "null",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "null",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "false",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "false",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "zero",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "zero",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "empty",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "empty",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "message-getter",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "message-getter",
+      "expired": true,
+      "deferred": false
+    },
+    {
+      "kind": "proxy",
+      "expired": false,
+      "deferred": false
+    },
+    {
+      "kind": "proxy",
+      "expired": true,
+      "deferred": false
+    }
+  ],
+  "issuer": {
+    "forbiddenExports": [
+      "withBuildGraphDiagnosticBackingV1",
+      "currentBuildGraphDiagnosticBackingV1",
+      "withBuildGraphWriterScopeV1"
+    ],
+    "constructors": [
+      "withRepositoryBuildGraphFixtureV1",
+      "withRepositoryBuildGraphPublicationFixtureV1"
+    ],
+    "nativeFactory": "withRepositoryCacheGraphFixtureV1"
+  },
+  "preparation": [
+    {
+      "id": "partial-progress-defers",
+      "acquired": true,
+      "partial": true,
+      "files": 1,
+      "available": 0,
+      "failure": null,
+      "expected": "deferred"
+    },
+    {
+      "id": "partial-no-progress-defers",
+      "acquired": true,
+      "partial": true,
+      "files": 0,
+      "available": 0,
+      "failure": null,
+      "expected": "deferred"
+    },
+    {
+      "id": "busy-defers",
+      "acquired": false,
+      "partial": false,
+      "files": 0,
+      "available": 0,
+      "failure": null,
+      "expected": "deferred"
+    },
+    {
+      "id": "funded-retired",
+      "acquired": true,
+      "partial": false,
+      "files": 1,
+      "available": 1,
+      "failure": null,
+      "expected": "retired"
+    },
+    {
+      "id": "funded-no-retirement",
+      "acquired": true,
+      "partial": false,
+      "files": 0,
+      "available": 1,
+      "failure": null,
+      "expected": "deferred"
+    },
+    {
+      "id": "unfunded-is-not-success",
+      "acquired": true,
+      "partial": false,
+      "files": 1,
+      "available": 0,
+      "failure": null,
+      "expected": "floor"
+    },
+    {
+      "id": "partial-primary-undefined",
+      "acquired": true,
+      "partial": true,
+      "files": 1,
+      "available": 0,
+      "failure": "undefined",
+      "expected": "primary"
+    },
+    {
+      "id": "partial-primary-null",
+      "acquired": true,
+      "partial": true,
+      "files": 1,
+      "available": 0,
+      "failure": "null",
+      "expected": "primary"
+    },
+    {
+      "id": "partial-primary-false",
+      "acquired": true,
+      "partial": true,
+      "files": 1,
+      "available": 0,
+      "failure": "false",
+      "expected": "primary"
+    },
+    {
+      "id": "partial-primary-zero",
+      "acquired": true,
+      "partial": true,
+      "files": 1,
+      "available": 0,
+      "failure": "zero",
+      "expected": "primary"
+    }
+  ]
+}

@@ -39,6 +39,20 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "elements", kind: "rotate-elements", record: "RotatedElements" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (items_en, items_de) = element_count_label(self.targets.len());
+        let (degrees_en, degrees_de) = number_label(self.angle.to_degrees());
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.clone()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioModelSnapshot, Op> for RotateElements
+where
+    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<RotateElements>,
+{
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
         let Some(delta) = self.delta() else {
             return protocol::MutationOutcome::fatal("mutation.invariant", "axis-nonzero: a turn needs a finite angle about a finite axis of non-zero length", self.targets.clone());
@@ -47,14 +61,6 @@ where
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.angle == 0.0 || self.delta().is_none(), base))
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let (items_en, items_de) = element_count_label(self.targets.len());
-        let (degrees_en, degrees_de) = number_label(self.angle.to_degrees());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
-    }
-    fn target(&self) -> Vec<String> {
-        self.targets.clone()
     }
 }
 //#endregion 🔖️Payload

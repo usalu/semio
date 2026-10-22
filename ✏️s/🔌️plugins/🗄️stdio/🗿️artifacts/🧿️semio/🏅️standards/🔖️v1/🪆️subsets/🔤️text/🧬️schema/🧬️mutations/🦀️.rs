@@ -38,7 +38,7 @@ use super::reorder_runs;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text")]
+#[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text", reference = SemioTextSnapshot, reference_diff = SemioTextDiff)]
 pub enum SemioTextMutation {
     InsertRun(insert_run::InsertRun),
     RemoveRun(remove_run::RemoveRun),
@@ -61,7 +61,7 @@ pub const KINDS: &[&str] = &["insert-run", "remove-run", "edit-run", "change-run
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
-    <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::diff(mutation, base)
+    <SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::diff(mutation, base)
 }
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
@@ -72,8 +72,8 @@ pub fn diff_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioTextMutation as ColdMutation<SemioTextSnapshot>>::inverse(mutation, base)?
 
     })
 }

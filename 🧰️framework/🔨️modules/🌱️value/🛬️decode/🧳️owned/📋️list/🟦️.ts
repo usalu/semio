@@ -21,3 +21,6 @@ export class NativePersistentListReceiving{
 
 /** 📏️ Enclosing metadata keeps its own work allowance before a native child selects payload bytes. */
 export function nativeReceivingChildBody(bodyBytes:number,metadataBytes:number):number{if(!Number.isSafeInteger(bodyBytes)||bodyBytes<0||!Number.isSafeInteger(metadataBytes)||metadataBytes<0)throw Error("Native receiving requires nonnegative safe body extents");return Math.max(0,bodyBytes-metadataBytes);}
+
+/** 📦️ A stable child allocation is admitted once and released only after its cursor is empty. */
+export function nativeReceivingChildCustody(event:"birth"|"terminal-release",childBytes:number,pointerBytes:number,metadataBytes:number,childCopyBytes:number):{copyBytes:number;capacityBytes:number;releaseBytes:number}{for(const bytes of[childBytes,pointerBytes,metadataBytes,childCopyBytes])if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Native receiving requires nonnegative safe custody extents");return event==="birth"?{copyBytes:childCopyBytes+childBytes+2*pointerBytes+metadataBytes,capacityBytes:childBytes,releaseBytes:0}:{copyBytes:2*pointerBytes+metadataBytes,capacityBytes:0,releaseBytes:childBytes};}

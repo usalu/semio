@@ -4,7 +4,7 @@
 //! each group parameterized over a scaling value to reveal where a cost curve goes superlinear, not
 //! just a single-point timing. The blind-merge benchmark group is gone (CRDT layer deleted,
 //! `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`). Run via
-//! `nx run @protocol/testkit-rs:bench` (`bun ./📜️script.ts bench`).
+//! `nx run @protocol/testkit-rs:bench` (`repo ./📜️script.ts bench`).
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use protocol_testkit::{GenProfile, HistoryLogGen, OpDagGen};

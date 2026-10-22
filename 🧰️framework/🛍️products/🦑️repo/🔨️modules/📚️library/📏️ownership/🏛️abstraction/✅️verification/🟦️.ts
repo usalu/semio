@@ -8,6 +8,7 @@ import { policyExtractTypescriptSchemaFields } from "../../../🧬️schema/🔍
 import { policyExtractTypescriptSchemaFile } from "../../../🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts";
 import { abstractionOwnershipSchema, abstractionOwnershipViolations, type AbstractionOwnership } from "../🧱️contract/🟦️.ts";
 import { abstractionOwnershipRustCommands, abstractionOwnershipSchemaFields } from "../🔍️source-projection/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🧪️ Compares language-independent ownership vectors with Ajv and real schema representations. */
 export function abstractionOwnershipChecks(root: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): number {
@@ -55,7 +56,7 @@ export function abstractionOwnershipChecks(root: string, operations: PolicySourc
       ["🔗️.graphql", policyExtractGraphqlSchemaFields],
       ["🛰️.proto", policyExtractProtobufSchemaFields],
     ] as const,
-    typescript = new (globalThis as any).Bun.Transpiler({ loader: "ts" });
+    typescript = new TranspilerV1({ loader: "ts" });
   for (const path of fixture.artifactSchemas) {
     const artifactSource = policySourceText(root, path, operations);
     if (artifactSource.state !== "file") throw new Error(`[verify abstraction-ownership] ${path}: ${artifactSource.state}.`);

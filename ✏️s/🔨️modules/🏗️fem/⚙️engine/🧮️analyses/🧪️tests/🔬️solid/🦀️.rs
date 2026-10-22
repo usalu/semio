@@ -1,6 +1,8 @@
 use semio_s_fem_algebra::*;
 use semio_s_fem_elements3d::Hex8;
 use semio_s_fem_elements3d::Tet4;
+use semio_s_fem_elements3d::von_mises_solid;
+use crate::ResultSource;
 use semio_s_fem_static::Elements;
 use semio_s_fem_model::Dof;
 use semio_s_fem_model::Element;
@@ -149,7 +151,7 @@ fn tet4_self_weight_matches_total_mass_times_gravity() {
     };
     let case = semio_s_fem_analyses_model::LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
     let results = crate::solve_multi_case(&model, &[case], &[], [0.0, 0.0, -g]).expect("solves");
-    let result = results.get("self_weight").unwrap();
+    let result = results.get(&ResultSource::LoadCase("self_weight".into())).unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
     let expected = density * tet_volume(&positions) * g;
     assert!((total_tz_reaction - expected).abs() / expected < 1e-9, "reaction sum {total_tz_reaction} vs expected {expected}");
@@ -262,7 +264,7 @@ fn hex8_cantilever_tip_deflection(nx: usize, ny: usize, nz: usize) -> f64 {
     let model = AnalysisModel { nodes, elements, supports };
     let case = LoadCase { id: "tip".into(), nodal_loads, member_loads: vec![], self_weight: false };
     let results = solve_multi_case(&model, std::slice::from_ref(&case), &[], [0.0, 0.0, 0.0]).expect("hex cantilever solves");
-    let result = results.get("tip").unwrap();
+    let result = results.get(&ResultSource::LoadCase("tip".into())).unwrap();
     face.iter().map(|&(j, k)| result.displacements.iter().find(|d| d.node_id == id(nx, j, k)).unwrap().values[Dof::Tz.index()]).sum::<f64>() / face.len() as f64
 }
 

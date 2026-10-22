@@ -527,6 +527,6 @@ export class RetainedUiChildIdsCursor {
 //#region 🧪️PrivateOwnershipProbe
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️typednodefields-preflights-every-capture-before-transfer-under-private-r/🟦️.ts");
-  await registerTests1(import.meta.vitest, { Builder, OwnedUiPayload, RetainedUiTypedCursor, activity, ownPayload, readers, saturationProbe }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { Builder, OwnedUiPayload, RetainedUiTypedCursor, activity, ownPayload, readers, saturationProbe }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️PrivateOwnershipProbe

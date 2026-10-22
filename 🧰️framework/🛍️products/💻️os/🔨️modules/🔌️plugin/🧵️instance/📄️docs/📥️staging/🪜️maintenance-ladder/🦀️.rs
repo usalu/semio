@@ -16,7 +16,7 @@ use crate::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault};
@@ -70,7 +70,7 @@ pub fn removed(progress: RetainedCloneProgress) -> PluginLifecycleStep {
 fn owners_admission_fault<P, Mutation>(refusal: store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, Mutation>) -> Fault
 where
     P: semio_framework_value::ToValue,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P>,
 {
     let store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners, progress } = refusal;
     std::mem::forget(owners);
@@ -108,7 +108,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     }
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     pub fn document_archive_load_demands(&self, active: &ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = item_demand();
         if active.terminal_target.is_some() || (closing && !active.terminal()) {

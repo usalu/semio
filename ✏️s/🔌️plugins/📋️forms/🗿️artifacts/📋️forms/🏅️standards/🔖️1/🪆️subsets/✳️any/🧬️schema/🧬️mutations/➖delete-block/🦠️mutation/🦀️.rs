@@ -23,6 +23,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "block", kind: "delete-block", record: "DeletedBlock" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete block \"{}\"", self.id), &format!("Block \"{}\" löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.step_id.clone(), self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for DeleteBlock
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<DeleteBlock> + From<crate::standards::v1::subsets::any::schema::mutations::create_block::mutation::CreateBlock>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         crate::standards::v1::subsets::any::schema::mutations::delete_block::diff::diff_delete_block(self, base)
     }
@@ -32,11 +44,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete block \"{}\"", self.id), &format!("Block \"{}\" löschen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.step_id.clone(), self.id.clone()]
-    }
 }
 //#endregion ✂️DeleteBlock

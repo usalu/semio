@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyAudio`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_audio::ApplyAudio>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Audio(b) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyAudio { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Audio(b) => <SemioAudioMutation as ColdMutation<SemioAudioSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyAudio { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

@@ -14,7 +14,16 @@ pub struct RemoveMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemoveMember" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove member", "Eigenschaft entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveMember {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, key } = self;
         delegated(Ok(JsonMutation::RemoveMember(RemoveMemberPayload { path: path.clone(), key: key.clone() })), base)
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveMember {
                 .unwrap_or_default(),
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove member", "Eigenschaft entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

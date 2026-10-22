@@ -57,7 +57,7 @@ pub fn capabilities_search_input_schema() -> serde_json::Value {
 
 /// 📐️ MCP's `tools/list` requires an `outputSchema` (when present) to describe a JSON OBJECT at the
 /// top level — a bare `type:"array"` fails the SDK client's own Zod validation of the `Tool` shape
-/// (caught live running `bun repo run @semio-tech/framework-os-mcp:test -- quick`, not read off the spec).
+/// (caught live running `repo run @semio-tech/framework-os-mcp:test -- quick`, not read off the spec).
 /// The hits themselves are therefore wrapped under a `results` property.
 pub fn capabilities_search_output_shape() -> serde_json::Value {
     serde_json::json!({ "type": "object", "properties": { "results": { "type": "array" }, "total": { "type": "integer" }, "nextCursor": { "type": ["string", "null"] } } })

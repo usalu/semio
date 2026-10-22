@@ -19,22 +19,26 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "display-doc-title", kind: "remove-display-doc-title", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "ViewerPreferences")))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| Op::from(SetDisplayDocTitle { display, entry_index: support::catalog_entry_position(base, "ViewerPreferences") })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UA-Anzeigeeinstellung für den Titel entfernen")
     }
 
     fn target(&self) -> Vec<String> {
         vec!["ViewerPreferences".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveDisplayDocTitle
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveDisplayDocTitle> + From<crate::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::SetDisplayDocTitle>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "ViewerPreferences")))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| Op::from(SetDisplayDocTitle { display, entry_index: support::catalog_entry_position(base, "ViewerPreferences") })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

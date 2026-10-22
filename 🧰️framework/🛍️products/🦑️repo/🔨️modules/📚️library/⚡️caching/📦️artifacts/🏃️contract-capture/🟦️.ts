@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { runtimeSpawnSyncV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏃️ Captures a bounded subprocess while retaining progress and cancellation. */
 export async function captureArtifactContract(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
@@ -11,7 +12,7 @@ export async function captureArtifactContract(command: string, args: string[], c
   const terminate = (reason: string): void => {
     stopped ||= reason;
     if (!child.pid) return;
-    if (process.platform === "win32") (globalThis as any).Bun.spawnSync(["taskkill", "/pid", String(child.pid), "/t", "/f"], { stdout: "ignore", stderr: "ignore" });
+    if (process.platform === "win32") runtimeSpawnSyncV1(["taskkill", "/pid", String(child.pid), "/t", "/f"], { stdout: "ignore", stderr: "ignore" });
     else {
       try {
         process.kill(-child.pid, "SIGTERM");

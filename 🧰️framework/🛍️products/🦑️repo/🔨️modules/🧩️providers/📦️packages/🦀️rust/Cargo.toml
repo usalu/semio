@@ -4,7 +4,7 @@ name = "semio-framework-repo-providers"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "semio repo providers: GitHub management via gh, git version control, devcontainer sandbox, the eight editor providers and the provider registry, all process execution behind a runner port"
+description = "semio repo providers: GitHub management via gh, git version control, devcontainer sandbox, the eight agent-client providers and the provider registry, all process execution behind a runner port"
 
 [package.metadata.semio]
 role = "library"

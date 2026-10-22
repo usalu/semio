@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./📜️script.ts manifests",
+        "command": "repo ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -46,7 +46,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./📜️script.ts test-oracle",
+        "command": "repo ./📜️script.ts test-oracle",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -56,7 +56,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./📜️script.ts test-conformance-oracle",
+        "command": "repo ./📜️script.ts test-conformance-oracle",
         "forwardAllArgs": true
       },
       "outputs": []

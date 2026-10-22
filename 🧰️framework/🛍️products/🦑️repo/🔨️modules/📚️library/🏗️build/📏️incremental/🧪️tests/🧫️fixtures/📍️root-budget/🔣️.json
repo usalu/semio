@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "note": "Default disposable root per platform and temporary directory, in UTF-16 units; root plus the longest product path must stay within the 255 budget.",
+  "maximumPathLength": 255,
+  "longestProductPathUnits": 226,
+  "cases": [
+    {
+      "id": "mac-real-home",
+      "platform": "darwin",
+      "temporary": "/var/folders/pm/ab12cd34ef56gh78ij90kl12mn34/T",
+      "home": "/Users/ueli",
+      "root": "/Users/ueli/.sinc"
+    },
+    {
+      "id": "linux-sandbox-home",
+      "platform": "linux",
+      "temporary": "/tmp/st/ab12cd34/tmp",
+      "home": "/home/u",
+      "root": "/home/u/.sinc"
+    },
+    {
+      "id": "mac-short-sandbox-long-home",
+      "platform": "darwin",
+      "temporary": "/var/folders/ab/T",
+      "home": "/home/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root": "/var/folders/ab/T/sinc"
+    },
+    {
+      "id": "mac-real-temporary-long-home",
+      "platform": "darwin",
+      "temporary": "/var/folders/pm/ab12cd34ef56gh78ij90kl12mn34/T",
+      "home": "/home/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root": "/tmp/sinc"
+    },
+    {
+      "id": "linux-long-both",
+      "platform": "linux",
+      "temporary": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "home": "/home/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root": "/tmp/sinc"
+    },
+    {
+      "id": "linux-tmp-boundary-28",
+      "platform": "linux",
+      "temporary": "/aaaaaaaaaaaaaaaaaaaaaa",
+      "home": "/home/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root": "/aaaaaaaaaaaaaaaaaaaaaa/sinc"
+    },
+    {
+      "id": "linux-tmp-over-by-one",
+      "platform": "linux",
+      "temporary": "/aaaaaaaaaaaaaaaaaaaaaaa",
+      "home": "/home/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root": "/tmp/sinc"
+    },
+    {
+      "id": "linux-home-boundary-28",
+      "platform": "linux",
+      "temporary": "/tmp/x",
+      "home": "/hhhhhhhhhhhhhhhhhhhhh",
+      "root": "/hhhhhhhhhhhhhhhhhhhhh/.sinc"
+    },
+    {
+      "id": "linux-home-over-by-one",
+      "platform": "linux",
+      "temporary": "/tmp/x",
+      "home": "/hhhhhhhhhhhhhhhhhhhhhh",
+      "root": "/tmp/x/sinc"
+    },
+    {
+      "id": "windows-short",
+      "platform": "win32",
+      "temporary": "C:\\t",
+      "home": "C:\\Users\\u",
+      "root": "C:\\t\\sinc"
+    },
+    {
+      "id": "windows-appdata",
+      "platform": "win32",
+      "temporary": "C:\\Users\\firstname\\AppData\\Local\\Temp",
+      "home": "C:\\Users\\firstname",
+      "root": "C:\\sinc"
+    },
+    {
+      "id": "windows-other-drive",
+      "platform": "win32",
+      "temporary": "D:\\Users\\firstname\\AppData\\Local\\Temp",
+      "home": "D:\\Users\\firstname",
+      "root": "D:\\sinc"
+    }
+  ],
+  "excluded": {
+    "files": [
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/x/note.md",
+        "kept": false
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎯️goals/g.json",
+        "kept": true
+      },
+      {
+        "path": "🧰️framework/a.ts",
+        "kept": true
+      },
+      {
+        "path": "deleted.txt",
+        "kept": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/x/🤖️generated/📇️registry/Cargo.toml",
+        "kept": true,
+        "ignored": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/x/🤖️generated.json",
+        "kept": true,
+        "ignored": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs",
+        "kept": true,
+        "ignored": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/other.rs",
+        "kept": false,
+        "ignored": true
+      }
+    ]
+  }
+}

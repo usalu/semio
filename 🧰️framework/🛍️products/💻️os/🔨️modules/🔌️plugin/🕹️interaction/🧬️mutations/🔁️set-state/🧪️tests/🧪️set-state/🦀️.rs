@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 #[test]
 fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {

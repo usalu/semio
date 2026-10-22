@@ -23,7 +23,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts members --check",
+        "command": "repo ./📜️script.ts members --check",
         "forwardAllArgs": true
       }
     },
@@ -32,7 +32,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts members --write",
+        "command": "repo ./📜️script.ts members --write",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -52,7 +52,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts contract-check",
+        "command": "repo ./📜️script.ts contract-check",
         "forwardAllArgs": true
       }
     },
@@ -67,7 +67,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts original-control-contract-check"
+        "command": "repo ./📜️script.ts original-control-contract-check"
       }
     },
     "queued-contract-check": {
@@ -81,7 +81,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts queued-contract-check"
+        "command": "repo ./📜️script.ts queued-contract-check"
       }
     },
     "bun-contract-check": {
@@ -95,7 +95,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts bun-contract-check"
+        "command": "repo ./📜️script.ts bun-contract-check"
       }
     },
     "runtime-contract-check": {
@@ -109,7 +109,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts runtime-contract-check"
+        "command": "repo ./📜️script.ts runtime-contract-check"
       }
     },
     "capability-contract-check": {
@@ -123,7 +123,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts capability-contract-check"
+        "command": "repo ./📜️script.ts capability-contract-check"
       }
     },
     "controlled-contract-check": {
@@ -137,7 +137,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts contract-check controlled-owner"
+        "command": "repo ./📜️script.ts contract-check controlled-owner"
       }
     }
   }

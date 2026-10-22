@@ -1,5 +1,5 @@
 /** 🟢️ The build shell context phase of useCanvasAndFooter. */
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type ContextMenuItemSpec, type LocalizedLabel, organizeContextMenu, resolveWindowActions } from "@semio-tech/framework";
 import { type ContextMenuItem, isContextMenuPointerTarget } from "@semio-tech/ui-react";
 import { mapContextMenuSpecs } from "../../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";

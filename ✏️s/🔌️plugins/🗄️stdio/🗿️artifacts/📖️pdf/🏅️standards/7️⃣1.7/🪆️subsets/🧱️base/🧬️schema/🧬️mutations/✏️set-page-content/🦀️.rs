@@ -20,19 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-content", kind: "set-page-content", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_page_content(base, self.index, &self.content))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.pages.get(self.index).map(|page| Op::from(SetPageContent { index: self.index, content: page.content.clone() })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Inhalt von Seite {} setzen", self.index))
     }
@@ -40,6 +27,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageContent
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageContent>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_page_content(base, self.index, &self.content))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.pages.get(self.index).map(|page| Op::from(SetPageContent { index: self.index, content: page.content.clone() })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

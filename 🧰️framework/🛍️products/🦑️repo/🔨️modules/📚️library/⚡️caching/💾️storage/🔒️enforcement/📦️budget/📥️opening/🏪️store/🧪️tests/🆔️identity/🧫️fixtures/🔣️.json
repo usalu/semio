@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "rows": [
+    {"id": "unchanged", "change": "none", "accepted": true},
+    {"id": "content-written-below-the-root", "change": "write-below-root", "accepted": true},
+    {"id": "root-replaced-by-a-new-directory", "change": "replace-root", "accepted": false},
+    {"id": "root-replaced-by-a-symlink", "change": "root-symlink", "accepted": false},
+    {"id": "backing-replaced-by-a-new-file", "change": "replace-backing", "accepted": false},
+    {"id": "backing-grown", "change": "grow-backing", "accepted": false},
+    {"id": "backing-removed", "change": "remove-backing", "accepted": false}
+  ]
+}

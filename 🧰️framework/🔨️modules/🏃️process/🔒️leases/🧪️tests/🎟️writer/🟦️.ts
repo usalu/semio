@@ -3,6 +3,7 @@ import {testPythonV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts"
 import type{ResourceLeaseControl}from"../../🟦️.ts";
 import{Database}from"bun:sqlite";
 import*as leases from"../../🟦️.ts";
+type WriterStepV1=Readonly<{op:string;control:string;name:string;parent:string;requestedMilliseconds:number;accepted:boolean}>;
 const proofSchema=componentSchema.definitions.WriterProofCorpus;
 import proofFixture from"./🎟️proof.json"with{type:"json"};
 import{test,expect}from"bun:test";
@@ -13,7 +14,8 @@ const schema=componentSchema.definitions.WriterIssuanceCorpus;
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import fixture from"./🔣️.json"with{type:"json"};
 import{acquireResourceLease,requireResourceLeaseCustodyV1,resourceLeasePathV1}from"../../🟦️.ts";
-import{createIssuedResourceControlV1}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import interleaving from"./🎟️interleaving.json"with{type:"json"};
 import{captureOwnedCommandV1}from"../../../🎛️owned-execution/🟦️.ts";
 
 test("actual shared lease public promotion cannot prove exclusive writer custody",async()=>{
@@ -62,3 +64,22 @@ test("current retirement catalog identity retains exact schema and kernel custod
  expect(fixture.sharedAdmission).toEqual({resources:"timeout",claims:"empty"});const empty={examined:0,retired:0,allocatedBytes:0};await expect(leases.retireResourceLeasesV1(directory,control)).rejects.toThrow("Resource lease timed out: "+fixture.admissionResource);expect(await leases.retireResourceQueueClaimsV1(directory,control)).toEqual(empty);expect(await snapshot(foreignPath)).toEqual(before);admission.exec("ROLLBACK");admission.close();admission=undefined;const live=await leases.retireResourceQueueClaimsV1(directory,control);expect(live.examined).toBe(1);expect(live.retired).toBe(0);expect(await fs.lstat(join(claims,claimNames[0]!)).then(()=>true,()=>false)).toBe(true);expect(await snapshot(foreignPath)).toEqual(before);
  }finally{admission?.close();held?.release();current?.release();foreign?.release();await rm(directory,{recursive:true,force:true});}
 }),30000);
+
+/** 🎟️ Keeps a writer proof bound to its holder while narrowed phase controls re-verify it after a busy queue wait. */
+test("writer proof identifies the holder for descendants and refuses siblings and ancestors against a SQLite lineage oracle",()=>withBuildTestInvocationV1(async original=>{
+ expect(new Ajv({strict:true}).validate(interleaving.schema,{version:interleaving.version,cases:interleaving.cases})).toBe(true);
+ const artifacts=(original.capabilities as{artifacts:string}).artifacts;await mkdir(artifacts,{recursive:true});const directory=await mkdtemp(join(artifacts,"li-")),db=new Database(":memory:");
+ try{db.exec("create table lineage(name text primary key,parent text)");
+  for(const row of interleaving.cases){const resource="interleaving:"+row.id,controls=new Map<string,ResourceLeaseControl>([["holder",createIssuedResourceControlV1(original,"lease:interleaving-holder",120000)]]),contender=createIssuedResourceControlV1(original,"lease:interleaving-contender",120000);controls.set("contender",contender);db.exec("delete from lineage");db.query("insert into lineage values('holder',null)").run();db.query("insert into lineage values('contender',null)").run();
+   let lease:leases.ResourceLease|undefined,proof:unknown,holderName="",alive=false,pending:Promise<leases.ResourceLease>|undefined,settled=false;const binding={directory,resource,path:resourceLeasePathV1(directory,resource)},requireProof=Reflect.get(leases,"requireResourceLeaseWriterProofV1")as(proof:unknown,binding:unknown,control:ResourceLeaseControl)=>void,capture=Reflect.get(leases,"captureResourceLeaseWriterProofV1")as(lease:unknown,directory:string,resource:string,control:ResourceLeaseControl)=>unknown;
+   try{for(const step of row.steps as readonly object[] as readonly WriterStepV1[]){if(step.op==="acquire"){const control=controls.get(step.control)!;lease=await leases.acquireQueuedResourceLease({directory,resource,owner:"interleaving-holder",mode:"exclusive",signal:control.signal,control});proof=capture(lease,directory,resource,control);holderName=step.control;alive=true;}
+    else if(step.op==="contend"){pending=leases.acquireQueuedResourceLease({directory,resource,owner:"interleaving-contender",mode:"exclusive",signal:contender.signal,control:contender}).then(value=>{settled=true;return value;});await new Promise<void>(done=>setTimeout(done,150));expect(settled,row.id+": busy contender").toBe(false);}
+    else if(step.op==="child"){controls.set(step.name,createRequestedIssuedResourceControlV1(controls.get(step.parent)!,step.requestedMilliseconds));db.query("insert into lineage values(?,?)").run(step.name,step.parent);}
+    else if(step.op==="sibling"){controls.set(step.name,createIssuedResourceControlV1(original,"lease:interleaving-"+step.name,0));db.query("insert into lineage values(?,null)").run(step.name);}
+    else if(step.op==="require"){let accepted=true;try{requireProof(proof,binding,controls.get(step.control)!);}catch{accepted=false;}const oracle=db.query("with recursive up(name,parent) as(select name,parent from lineage where name=?1 union all select l.name,l.parent from lineage l join up on l.name=up.parent) select count(*) held from up where name=?2").get(step.control,holderName)as{held:number};expect(accepted,row.id+": "+step.control).toBe(alive&&oracle.held>0);expect(accepted,row.id+": "+step.control+" fixture").toBe(step.accepted);}
+    else if(step.op==="release"){lease!.release();alive=false;}
+    else if(step.op==="settle"){const next=await pending!;next.release();pending=undefined;}}
+   }finally{try{lease?.release();}catch{}if(pending)try{(await pending).release();}catch{}}
+  }
+ }finally{db.close();await rm(directory,{recursive:true,force:true});}
+}),60000);

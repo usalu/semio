@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-png:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-png:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-png:test"
+    "build": "repo run @semio-tech/stdio-png:build",
+    "check": "repo run @semio-tech/stdio-png:check",
+    "test": "repo run @semio-tech/stdio-png:test"
   },
   "exports": {
     ".": {

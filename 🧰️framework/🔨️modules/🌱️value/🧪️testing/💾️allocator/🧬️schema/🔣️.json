@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "initialBytes",
+    "grownBytes",
+    "events",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "initialBytes": {
+      "const": 32
+    },
+    "grownBytes": {
+      "const": 64
+    },
+    "events": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requested",
+          "released"
+        ],
+        "properties": {
+          "requested": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "released": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested",
+        "released",
+        "largestRelease"
+      ],
+      "properties": {
+        "requested": {
+          "const": 96
+        },
+        "released": {
+          "const": 96
+        },
+        "largestRelease": {
+          "const": 64
+        }
+      }
+    }
+  }
+}

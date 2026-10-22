@@ -65,6 +65,7 @@ M["native/watch.json"] = PIN_TARGET
 M["bench/workspace.mjs"] = member(T, e("\U0001F5A5", "fixture-server"), e("\U0001F3D7", "workspace"), JS)
 M["bench/ports.mjs"] = member(T, e("\U0001F5A5", "fixture-server"), e("\U0001F50C", "ports"), JS)
 M["bench/serve.mjs"] = member(T, e("\U0001F5A5", "fixture-server"), JS)
+M["bench/environment.mjs"] = member(T, e("\U0001F5A5", "fixture-server"), e("\U0001F9EA", "environment"), JS)
 CALLER = B + "/" + e("\U0001F4E5", "caller")
 SVC = CALLER + "/" + e("\U0001F6F0", "service")
 LAW = L + "/" + e("\u2696", "laws") + "/" + e("\U0001F6F0", "service-invocation")
@@ -97,10 +98,9 @@ REWRITES = {
     "resident/tests/protocol.test.ts": [('join(HERE,"fixtures/vectors.json")', 'join(HERE,"%s")' % member(e("\U0001F9EB", "fixtures"), JSON_))],
     "resident/tests/client.test.ts": [('join(HERE,"fixtures/eligibility.json")', 'join(HERE,"%s")' % member(e("\U0001F9EB", "fixtures"), e("\U0001F4CB") + "eligibility.json"))],
     "resident/tests/oracle.py": [('os.path.join(HERE, "..", "schema", "schema.json")', 'os.path.join(HERE, "..", "%s", "%s")' % (e("\U0001F9EC", "schema"), JSON_))],
-    "resident/tests/graph.test.ts": [('process.env.SEMIO_GENERATIONS_MODULE??"/Users/ueli/Documents/semio/' + B + "/" + e("\U0001F578", "graph") + "/" + e("\U0001F570", "generations") + "/" + JS + '"', 'process.env.SEMIO_GENERATIONS_MODULE??new URL("../../../%s/%s/%s",import.meta.url).pathname' % (e("\U0001F578", "graph"), e("\U0001F570", "generations"), JS))],
+    "resident/tests/graph.test.ts": [('join(workspaceRoot(),"' + B + "/" + e("\U0001F578", "graph") + "/" + e("\U0001F570", "generations") + "/" + JS + '")', 'new URL("../../../%s/%s/%s",import.meta.url).pathname' % (e("\U0001F578", "graph"), e("\U0001F570", "generations"), JS))],
     "resident/tests/service.test.ts": [('join(import.meta.dir,"..","..","bench","serve.mjs")', 'join(import.meta.dir,"..","%s","%s")' % (e("\U0001F5A5", "fixture-server"), JS)), ('join(WATCHER,"..")', 'process.env.SEMIO_REPO_NATIVE_DIR??""'), ('join(import.meta.dir,"..","client","main.mjs")', 'join(import.meta.dir,"..","..","%s","%s","%s")' % (CLIENT, e("⌨", "main"), JS))],
     "resident/tests/executor.test.ts": [('join(import.meta.dir,"executor-fixture.mjs")', 'join(import.meta.dir,"%s","%s")' % (e("\U0001F3D7", "fixture"), JS))],
-    "bench/serve.mjs": [('flag("--bin",process.env.SEMIO_REPO_NATIVE_DIR??"/private/tmp/hot2/bin")', 'flag("--bin",process.env.SEMIO_REPO_NATIVE_DIR??"")'), ('(process.env.STAMPS??"/private/tmp/hot2/stamps")', '(process.env.STAMPS??tmpdir()+"/semio-resident-stamps")'), ('import {realpathSync} from "node:fs";', 'import {realpathSync} from "node:fs";\nimport {tmpdir} from "node:os";')],
 }
 
 SPEC = re.compile(r'(["\'])(\.{1,2}/[^"\'\n$\{]+)\1')

@@ -19,6 +19,7 @@
     "./native-build": "./📦️artifacts/🏗️native-build/🟦️.ts",
     "./wasm-build": "./📦️artifacts/🕸️wasm-build/🟦️.ts",
     "./leases": "./🔒️leases/🟦️.ts",
+    "./agent-sessions": "./🪪️agent-sessions/🟦️.ts",
     "./context": "./📋️context/🟦️.ts",
     "./command": "./🎛️command/🟦️.ts",
     "./build-mode": "./🏗️build/🎚️mode/🟦️.ts",
@@ -28,6 +29,7 @@
     "./native-cache": "./📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
     "./go-build": "./📦️artifacts/🐹️go-build/🟦️.ts",
     "./compiler-state": "./🏗️build/🗃️state/🟦️.ts",
+    "./toolchains": "./🏗️build/🧰️toolchains/🟦️.ts",
     "./typescript-check": "./🏗️build/🟦️typescript/🟦️.ts",
     "./native-plan": "./📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts",
     "./context-contract": "./📋️context/📋️contract/🟦️.ts",
@@ -168,8 +170,8 @@
     "cross-spawn": "7.0.6"
   },
   "scripts": {
-    "test-cargo-build-lease": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-cargo-build-lease",
-    "test-native-artifact-publication": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-native-artifact-publication"
+    "test-cargo-build-lease": "repo run @semio-tech/framework-process:test-cargo-build-lease",
+    "test-native-artifact-publication": "repo run @semio-tech/framework-process:test-native-artifact-publication"
   },
   "dependencies": {
     "@semio-tech/compiler-syntax-rust-ts": "workspace:*",

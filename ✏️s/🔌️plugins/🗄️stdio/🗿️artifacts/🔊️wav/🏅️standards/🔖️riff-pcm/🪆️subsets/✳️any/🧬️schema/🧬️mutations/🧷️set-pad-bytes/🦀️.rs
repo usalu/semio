@@ -24,7 +24,16 @@ impl SetPadBytes {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetPadBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "pad-bytes", kind: "set-pad-bytes", record: "SetPadBytes" };
 
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set pad bytes", "Füllbytes setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<WavSnapshot, WavMutation> for SetPadBytes {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as protocol::ColdMutation<WavSnapshot>>::ReferenceDiff> {
         match validate_wav_serialization(&WavSnapshot { fmt_pad_byte: self.fmt_pad_byte, data_pad_byte: self.data_pad_byte, ..base.clone() }) {
             Ok(()) => protocol::MutationOutcome::new(self.wanted(base)),
             Err(issue) => protocol::MutationOutcome::error("mutation.target-mismatch", format!("{}: {}", issue.code, issue.message), issue.target),
@@ -32,12 +41,6 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetPadBytes {
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
         Ok((!protocol::DiffAlgebra::is_empty(&self.wanted(base))).then(|| WavMutation::SetPadBytes(SetPadBytes { fmt_pad_byte: base.fmt_pad_byte, data_pad_byte: base.data_pad_byte })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set pad bytes", "Füllbytes setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

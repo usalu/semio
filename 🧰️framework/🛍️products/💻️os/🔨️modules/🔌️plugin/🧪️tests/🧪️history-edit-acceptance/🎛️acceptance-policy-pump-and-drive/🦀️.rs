@@ -17,7 +17,7 @@ pub(super) fn acceptance_meta() -> ActionMeta {
 pub(super) async fn acceptance_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, args: Vec<(&str, DslValue)>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), AcceptanceError>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut args = Some(DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect()));
     let meta=acceptance_meta();
@@ -42,7 +42,7 @@ where
 pub(super) async fn acceptance_pump<A, M>(app: &mut VcsArtifactApp<A, M>, done: impl Fn(&VcsArtifactApp<A, M>) -> bool,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), AcceptanceError>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){return Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
@@ -64,7 +64,7 @@ where
 pub(super) async fn acceptance_close<A, M>(app: &mut VcsArtifactApp<A, M>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let failed=acceptance_pump(app, |app| !app.time_travel.has_pending_work(),cx).await.err();
     artifact_app_laws::close_registered_fixture_app(app,acceptance_policy(),cx).expect("original acceptance app terminal close");
@@ -78,7 +78,7 @@ where
 pub(super) async fn acceptance_seeded<A, M>(manifest: fn() -> App, base: &str, ops: &[&A::Mutation], strict: bool,cx:&mut semio_framework_job::StepContext<'_>) -> Result<VcsArtifactApp<A, M>, AcceptanceSeedFault>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
@@ -117,7 +117,7 @@ where
 pub(super) fn acceptance_head<A, M>(app: &VcsArtifactApp<A, M>) -> Result<(DslValue, String), AcceptanceError>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let head = app.stores.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
     let value = (semio_framework_value::ToValue::to_value(&head), pack::snapshot::ArtifactDsl::print_dsl(&head));
@@ -143,7 +143,7 @@ pub(super) async fn acceptance_drive<A, M>(
     kind: Option<usize>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(String, DslValue), AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut begin = vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target.to_string()))];
     begin.extend(store.map(|store| (HISTORY_EDIT_ARG_STORE, DslValue::String(store.to_string()))));

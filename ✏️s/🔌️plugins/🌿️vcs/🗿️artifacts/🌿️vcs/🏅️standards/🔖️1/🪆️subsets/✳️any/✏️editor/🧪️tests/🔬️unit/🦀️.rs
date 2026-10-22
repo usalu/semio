@@ -171,8 +171,8 @@ pub(crate) mod context {
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<VcsSnapshot, VcsDemoMutation>(), maximum_depth: 4, ..Default::default() };
             let (mut retirement, _) = store::os_store::snapshot_read::retire_document_envelope(
                 envelope,
-                std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsSnapshot>::default()),
-                std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsDemoMutation>::default()),
+                std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<VcsSnapshot>::default()),
+                std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<VcsDemoMutation>::default()),
                 grant,
             )
             .map_err(|(error, ..)| error)

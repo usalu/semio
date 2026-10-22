@@ -17,7 +17,7 @@ use semio_framework_os_kernel::os_directory::client::HttpMethod;
 use semio_framework_os_kernel::os_directory::client::HttpResponse;
 use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
 use semio_framework_os_kernel::os_directory::client::TransportError;
-use semio_framework_os_kernel::os_directory::descriptor_digest_v1;
+use semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -25,14 +25,14 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use semio_framework_os_mcp_hub_remote::remote::{AuthorizedDocumentView, HUB_AUTHORITY_SETTLE_WAIT_MS, HUB_BINDING_DIAGNOSTIC_MAX_BYTES, HUB_COMPONENT_STREAM_ATTEMPTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_NETWORK_BUDGET_SETTLE_WAIT_MS, HUB_REFRESH_NETWORK_BUDGET_BYTES, HUB_REFRESH_RETRY_BASE_MS, HUB_REFRESH_RETRY_MAX_MS, HubBindingPhase, HubBindingProgress, HubComponentTransferPhase, HubRemoteBinding, HubRemoteBindingState, HubStreamObservation, await_network_budget, binding_error_to_gateway, bounded_diagnostic, descriptor_resource_uri, directory_dial_refusal, hub_refresh_retry_ms, map_catalog_client_error, map_client_error, parse_descriptor_resource_uri, validate_document_count, validate_hub_origin};
+use crate::remote::{AuthorizedDocumentView, HUB_AUTHORITY_SETTLE_WAIT_MS, HUB_BINDING_DIAGNOSTIC_MAX_BYTES, HUB_COMPONENT_STREAM_ATTEMPTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_NETWORK_BUDGET_SETTLE_WAIT_MS, HUB_REFRESH_NETWORK_BUDGET_BYTES, HUB_REFRESH_RETRY_BASE_MS, HUB_REFRESH_RETRY_MAX_MS, HubBindingPhase, HubBindingProgress, HubComponentTransferPhase, HubRemoteBinding, HubRemoteBindingState, HubStreamObservation, await_network_budget, binding_error_to_gateway, bounded_diagnostic, descriptor_resource_uri, directory_dial_refusal, hub_refresh_retry_ms, map_catalog_client_error, map_client_error, parse_descriptor_resource_uri, validate_document_count, validate_hub_origin};
 use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
 use semio_framework_os_mcp_hub_pair::binding_errors::{HUB_UNAVAILABLE_DETAIL_MAX_CHARS, HubBindingError, HubUnavailableCause};
 use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairBody, CanonicalPairMountError};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_mcp_capabilities::source_builders::catalog_contract_descriptor;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_remote::remote::{HubComponentAssets, complete_authorized_directory_dial, settled_pair_attempt};
+use crate::remote::{HubComponentAssets, complete_authorized_directory_dial, settled_pair_attempt};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

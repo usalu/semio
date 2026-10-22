@@ -22,7 +22,13 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceAssumedWp 
         record: "ChangedWindFaceAssumedWp",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change assumed wind pressure on the face", "Angenommenen Winddruck auf die Fläche ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1991Snapshot, Op> for ChangeWindFaceAssumedWp where Op: protocol::ColdMutation<En1991Snapshot, ReferenceDiff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::change_wind_face_assumed_wp::ChangeWindFaceAssumedWp> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1991Snapshot>>::ReferenceDiff> {
         crate::change_wind_face_assumed_wp::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -31,9 +37,6 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceAssumedWp 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed wind pressure on the face", "Angenommenen Winddruck auf die Fläche ändern")
-    }
 }
 //#endregion 🔖️Payload
 

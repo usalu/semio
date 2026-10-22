@@ -9,7 +9,7 @@ use crate::children_components::ChildComposition;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
@@ -19,7 +19,7 @@ use semio_framework_ui_contract::*;
 #[doc(hidden)]
 pub const MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY: usize = ARTIFACT_LIVE_OUTPUT_SLOTS / 4;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🌡️ True while the child-root or child-member retirement registry holds at least
     /// [`MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY`] retirements. An app that re-points a slot at a new
     /// content-addressed child per edit (writer mints one per keystroke) admits one of each per commit, which the single

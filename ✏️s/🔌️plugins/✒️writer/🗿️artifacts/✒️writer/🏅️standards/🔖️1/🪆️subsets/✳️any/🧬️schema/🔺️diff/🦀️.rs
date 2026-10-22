@@ -36,8 +36,27 @@ use crate::WriterSnapshot;
 use protocol::MutationDiff;
 #[cfg(test)] use super::*;
 
-impl MutationDiff<WriterSnapshot> for WriterDiff {
-    fn apply(&self, snapshot: &WriterSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterSnapshot> {
+impl MutationDiff<WriterSnapshot> for WriterDiff {}
+
+impl protocol::ColdMutationDiff<WriterSnapshot> for WriterDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(language_id);
+        take!(uri);
+        take!(text);
+        take!(document);
+    }
+
+    fn apply(&self, unpublished: &mut WriterSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -57,26 +76,18 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         if let Some(document) = &self.document {
             next.document = document.clone();
         }
-        Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(schema);
-        take!(id);
-        take!(language_id);
-        take!(uri);
-        take!(text);
-        take!(document);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<WriterSnapshot> for WriterDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.language_id.is_none() && self.uri.is_none() && self.text.is_none() && self.document.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<WriterSnapshot> for WriterDiff {
     fn inverse(&self, base: &WriterSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -86,9 +97,6 @@ impl protocol::DiffAlgebra<WriterSnapshot> for WriterDiff {
             text: self.text.as_ref().map(|_| base.text.clone()),
             document: self.document.as_ref().map(|_| base.document.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.id.is_none() && self.language_id.is_none() && self.uri.is_none() && self.text.is_none() && self.document.is_none()
     }
 }
 

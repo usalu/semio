@@ -92,11 +92,39 @@
      "old": "const.platform||!process.versions.bun||!Number.isSafeInteger(device)",
      "new": "const.platform||!runtimeSupportsV1(\"ffi\")||!Number.isSafeInteger(device)",
      "count": 1
+    },
+    {
+     "old": "const nativeVolumeEventPreparationSourceV1=String.raw`",
+     "new": "/** 🍎️ Closed Bun child program that observes one volume's event service through Bun's FFI; the preparation command starts it with the Bun executable. */\nexport const nativeVolumeEventPreparationSourceV1=String.raw`",
+     "count": 1
+    },
+    {
+     "old": "events,closed:true}));`;\n",
+     "new": "events,closed:true}));`;\n/** 🍎️ Gives the executable that runs the closed volume event program. */\nexport const nativeVolumeEventPreparationProgramV1=():string=>process.versions.bun?process.execPath:\"bun\";\n",
+     "count": 1
+    },
+    {
+     "old": "return Object.freeze({program:process.execPath,args:Object.freeze([\"-e\"",
+     "new": "return Object.freeze({program:nativeVolumeEventPreparationProgramV1(),args:Object.freeze([\"-e\"",
+     "count": 1
     }
    ],
    "imports": [
     "runtimeNativeSystemV1",
     "runtimeSupportsV1"
+   ],
+   "extract": [
+    {
+     "start": "/** 🍎️ Closed Bun child program",
+     "end": "process.versions.bun?process.execPath:\"bun\";",
+     "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🍞️bun/🟦️.ts",
+     "symbols": [
+      "nativeVolumeEventPreparationSourceV1",
+      "nativeVolumeEventPreparationProgramV1"
+     ],
+     "reexport": false,
+     "prefix": ""
+    }
    ]
   },
   {
@@ -138,6 +166,11 @@
     {
      "old": "createRequire(import.meta.url)(\"bun:ffi\") as typeof import(\"bun:ffi\")",
      "new": "runtimeNativeSystemV1()",
+     "count": 1
+    },
+    {
+     "old": "control,\"bun\",\"program\")",
+     "new": "control,\"runtime\",\"program\")",
      "count": 1
     }
    ],
@@ -222,10 +255,22 @@
      "old": ":bun:${process.versions.bun}",
      "new": ":${runtimeKeyV1()}",
      "count": 2
+    },
+    {
+     "old": "readonly runtime?:\"bun\"|\"node\"}",
+     "new": "readonly runtime?:RuntimeIdV1}",
+     "count": 1
+    },
+    {
+     "old": "runtime===\"node\"?\"node\":runtime===\"bun\"&&!process.versions.bun?\"bun\":process.execPath",
+     "new": "runtime===undefined?process.execPath:runtimeExecutableForV1(runtime)",
+     "count": 1
     }
    ],
    "imports": [
-    "runtimeKeyV1"
+    "runtimeKeyV1",
+    "RuntimeIdV1",
+    "runtimeExecutableForV1"
    ]
   },
   {
@@ -328,7 +373,12 @@
    "edits": [
     {
      "old": "compiler={name:\"Bun\",version:Bun.version,revision:Bun.revision,target:\"bun\",format:\"esm\",minify:true}",
-     "new": "compiler={name:runtimeIdentityV1().id,version:runtimeIdentityV1().version,revision:runtimeIdentityV1().revision,target:\"runtime\",format:\"esm\",minify:true}",
+     "new": "compiler={name:runtimeIdentityV1().product,version:runtimeIdentityV1().version,revision:runtimeIdentityV1().revision,target:runtimeIdentityV1().id,format:\"esm\",minify:true}",
+     "count": 1
+    },
+    {
+     "old": "control,\"bun\");bytes=result.bytes",
+     "new": "control,\"runtime\");bytes=result.bytes",
      "count": 1
     }
    ],
@@ -385,10 +435,26 @@
      "old": "if (typeof Bun === \"undefined\" || Bun.version !== \"1.4.2\" || ",
      "new": "if (runtimeIdentityV1().version !== \"1.4.2\" || ",
      "count": 1
+    },
+    {
+     "old": "runtime:{kind:\"bun\",version:\"1.4.2\",",
+     "new": "runtime:{kind:runtimeIdentityV1().id,version:\"1.4.2\",",
+     "count": 1
+    },
+    {
+     "old": "assert.equal(globalThis.Bun?.version, \"1.4.2\", \"browser actor artifact: unqualified codegen runtime\");",
+     "new": "assert.equal(process.versions[${JSON.stringify(runtimeDetectKeyV1())}], \"1.4.2\", \"browser actor artifact: unqualified codegen runtime\");",
+     "count": 1
+    },
+    {
+     "old": "runtime: \"bun@\" + Bun.version,",
+     "new": "runtime: ${JSON.stringify(runtimeIdentityV1().id)} + \"@\" + process.versions[${JSON.stringify(runtimeDetectKeyV1())}],",
+     "count": 1
     }
    ],
    "imports": [
-    "runtimeIdentityV1"
+    "runtimeIdentityV1",
+    "runtimeDetectKeyV1"
    ]
   },
   {
@@ -443,6 +509,16 @@
     {
      "old": " || target === \"bun\" ||",
      "new": " ||",
+     "count": 1
+    },
+    {
+     "old": "const readers = new Set([\"readFileSync\", \"readFile\"]);",
+     "new": "const readers = new Set([\"readFileSync\", \"readFile\", \"runtimeFileV1\"]);",
+     "count": 1
+    },
+    {
+     "old": "    if ((readers.has(name!) || name === \"file\") && tokens[index + 1]?.text === \"(\") {\n      if (name === \"file\" && tokens[index - 2]?.text !== \"Bun\") continue;\n",
+     "new": "    if (readers.has(name!) && tokens[index + 1]?.text === \"(\") {\n",
      "count": 1
     }
    ],
@@ -683,6 +759,843 @@
    "imports": [
     "isRuntimeBuiltinSpecifierV1"
    ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "edits": [
+    {
+     "old": "    runtime?: \"bun\" | \"node\";",
+     "new": "    runtime?: RuntimeIdV1;",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "RuntimeIdV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts",
+   "edits": [
+    {
+     "old": "captureOwnedCommandV1(process.versions.bun?\"node\":process.execPath,",
+     "new": "captureOwnedCommandV1(runtimeExecutableForV1(\"node\"),",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeExecutableForV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+   "edits": [
+    {
+     "old": "captureOwnedCommandResultV1(process.versions.bun?\"node\":process.execPath,",
+     "new": "captureOwnedCommandResultV1(runtimeExecutableForV1(\"node\"),",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeExecutableForV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📇️registry/🟦️.ts",
+   "edits": [
+    {
+     "old": "[\"bun\", \"node_modules\", \"dependency-store\"]",
+     "new": "[\"node-modules\", \"node_modules\", \"dependency-store\"]",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts",
+   "edits": [
+    {
+     "old": "readonly runtime?: \"javascript\" | \"bun\"; readonly invocation",
+     "new": "readonly runtime?: \"javascript\" | \"runtime\"; readonly invocation",
+     "count": 1
+    },
+    {
+     "old": "if(options.runtime===\"bun\"){",
+     "new": "if(options.runtime===\"runtime\"){",
+     "count": 1
+    },
+    {
+     "old": "...[\"bun\",...(options.external??[])].map(",
+     "new": "...[...runtimeBuiltinNamesV1(),...(options.external??[])].map(",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeBuiltinNamesV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧩️artifact-package/🟦️.ts",
+   "edits": [
+    {
+     "old": "readonly bundleRuntime?: \"javascript\" | \"bun\";",
+     "new": "readonly bundleRuntime?: \"javascript\" | \"runtime\";",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
+   "edits": [
+    {
+     "old": "[\"bun\",\"javascript\"]as const",
+     "new": "[\"runtime\",\"javascript\"]as const",
+     "count": 2
+    },
+    {
+     "old": "(runtime===\"bun\"?\"bun\":\"esbuild\")",
+     "new": "(runtime===\"runtime\"?\"runtime\":\"esbuild\")",
+     "count": 2
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "edits": [
+    {
+     "old": "\"--\",\"bun\",\"nx\",\"run\",watchTarget",
+     "new": "\"--\",runtimeCommandNameV1(),\"nx\",\"run\",watchTarget",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️caller/🟦️.ts",
+   "edits": [
+    {
+     "old": "\"--\",\"bun\",\"nx\",\"run\",invocation.watch",
+     "new": "\"--\",runtimeCommandNameV1(),\"nx\",\"run\",invocation.watch",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+   "edits": [
+    {
+     "old": "target:\"node\"|\"bun\",entryRole",
+     "new": "target:\"node\"|\"runtime\",entryRole",
+     "count": 1
+    },
+    {
+     "old": "if(target!==\"node\"&&target!==\"bun\")throw",
+     "new": "if(target!==\"node\"&&target!==\"runtime\")throw",
+     "count": 1
+    },
+    {
+     "old": "const bytes=new Uint8Array(await result.outputs[0]!.arrayBuffer());",
+     "new": "const bytes=await result.outputs[0]!.bytes();",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "for(const target of[\"bun\",\"node\"]as const)",
+     "new": "for(const target of[\"runtime\",\"node\"]as const)",
+     "count": 2
+    },
+    {
+     "old": "control,\"bun\",role as never",
+     "new": "control,\"runtime\",role as never",
+     "count": 1
+    },
+    {
+     "old": "control,\"bun\",row.role as",
+     "new": "control,\"runtime\",row.role as",
+     "count": 1
+    },
+    {
+     "old": "target===\"bun\"?process.execPath:\"node\"",
+     "new": "target===\"runtime\"?process.execPath:\"node\"",
+     "count": 3
+    },
+    {
+     "old": "control,\"bun\",\"program\"),program=join(output,\".sealed-compiler.mjs\")",
+     "new": "control,\"runtime\",\"program\"),program=join(output,\".sealed-compiler.mjs\")",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧬️schema/📜️receipt.json",
+   "edits": [
+    {
+     "old": "        \"name\": {\n          \"const\": \"Bun\"\n        },",
+     "new": "        \"name\": {\n          \"type\": \"string\",\n          \"minLength\": 1,\n          \"maxLength\": 32\n        },",
+     "count": 1
+    },
+    {
+     "old": "        \"target\": {\n          \"const\": \"bun\"\n        },",
+     "new": "        \"target\": {\n          \"enum\": [\n            \"bun\",\n            \"node\"\n          ]\n        },",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+   "edits": [
+    {
+     "old": "runOwnedCommand(\"bun\", [\"x\", \"eslint\", \"--max-warnings\", \"0\", \"--config\", \"../../🧹️lint/🟦️.ts\", \".\", ...segments], this.root",
+     "new": "runOwnedCommand(...runtimePackageCommandV1(\"exec\", [\"eslint\", \"--max-warnings\", \"0\", \"--config\", \"../../🧹️lint/🟦️.ts\", \".\", ...segments]), this.root",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimePackageCommandV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩺️environment/📋️inspection/🟦️.ts",
+   "edits": [
+    {
+     "old": "for (const command of [\"bun\", \"node\", \"cargo\", \"rustc\", \"go\", \"uv\", \"dotnet\", \"cmake\"]) {",
+     "new": "for (const command of [...runtimeCommandNamesV1(), \"cargo\", \"rustc\", \"go\", \"uv\", \"dotnet\", \"cmake\"]) {",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNamesV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+   "edits": [
+    {
+     "old": "runCmd(\"bun\", [\"add\", \"--no-save\", `${platformPkg}@${version}`], { cwd: this.root });",
+     "new": "runCmd(...runtimePackageCommandV1(\"add\", [`${platformPkg}@${version}`]), { cwd: this.root });",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimePackageCommandV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "edits": [
+    {
+     "old": "if (cmd === \"bun\" || cmd === process.execPath) {",
+     "new": "if (isHostRuntimeCommandV1(cmd)) {",
+     "count": 1
+    },
+    {
+     "old": "spawnSync(process.versions.bun ? process.execPath : \"bun\", [CARGO_RELAY_SCRIPT",
+     "new": "spawnSync(runtimeExecutableV1(), [CARGO_RELAY_SCRIPT",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isHostRuntimeCommandV1",
+    "runtimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🟦️.ts",
+   "edits": [
+    {
+     "old": "program:operation.continuation.program===\"bun\"?process.execPath:operation.continuation.program,",
+     "new": "program:runtimeProgramV1(operation.continuation.program),",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeProgramV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+   "edits": [
+    {
+     "old": "command:selection.command===\"bun\"?process.execPath:selection.command,",
+     "new": "command:runtimeProgramV1(selection.command),",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeProgramV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts",
+   "edits": [
+    {
+     "old": "return server.command === \"bun\" && args[0]",
+     "new": "return isRuntimeExecutableV1(server.command) && args[0]",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isRuntimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🟨️.mjs",
+   "edits": [
+    {
+     "old": "  if(typeof Bun!==\"undefined\"){wrapSync(Bun,\"spawnSync\",args=>args[0]?.cmd??args[0]);wrapAsync(Bun,\"spawn\",args=>args[0]?.cmd??args[0]);}",
+     "new": "  require(\"../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts\").runtimeObserveSpawnV1((command,milliseconds)=>{try{profile.event(repoProfileSpawnLabelV1(command),milliseconds);}catch{}});",
+     "count": 1
+    },
+    {
+     "old": "started through `Bun.spawn`, `Bun.spawnSync` and the callable members of",
+     "new": "started through the owned runtime spawn family and the callable members of",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🟦️.ts",
+   "edits": [
+    {
+     "old": "const server = Bun.serve({",
+     "new": "const server = await runtimeServeV1({",
+     "count": 1
+    },
+    {
+     "old": "const file = Bun.file(full);",
+     "new": "const file = runtimeFileV1(full).body();",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeServeV1",
+    "runtimeFileV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts",
+   "edits": [
+    {
+     "old": "if (process.versions.bun === version) return process.execPath;",
+     "new": "if (runtimeIdentityV1().id === manifest.runtime && runtimeIdentityV1().version === version) return runtimeExecutableV1();",
+     "count": 1
+    },
+    {
+     "old": "join(store.root,\"bun\")",
+     "new": "join(store.root,manifest.runtime)",
+     "count": 1
+    },
+    {
+     "old": "executable = join(directory, process.platform === \"win32\" ? \"bun.exe\" : \"bun\");",
+     "new": "executable = join(directory, process.platform === \"win32\" ? manifest.runtime + \".exe\" : manifest.runtime);",
+     "count": 1
+    },
+    {
+     "old": "staged = join(staging, process.platform === \"win32\" ? \"bun.exe\" : \"bun\");",
+     "new": "staged = join(staging, process.platform === \"win32\" ? manifest.runtime + \".exe\" : manifest.runtime);",
+     "count": 1
+    },
+    {
+     "old": "/bun${process.platform === \"win32\" ? \".exe\" : \"\"}",
+     "new": "/${manifest.runtime}${process.platform === \"win32\" ? \".exe\" : \"\"}",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdentityV1",
+    "runtimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+   "edits": [
+    {
+     "old": "  \"required\": [\n    \"version\",\n    \"release\",\n    \"distributions\"\n  ],",
+     "new": "  \"required\": [\n    \"runtime\",\n    \"version\",\n    \"release\",\n    \"distributions\"\n  ],",
+     "count": 1
+    },
+    {
+     "old": "  \"properties\": {\n    \"version\": {",
+     "new": "  \"properties\": {\n    \"runtime\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[a-z]+$\"\n    },\n    \"version\": {",
+     "count": 1
+    },
+    {
+     "old": "      \"const\": {\n        \"version\": \"1.4.2\",",
+     "new": "      \"const\": {\n        \"runtime\": \"bun\",\n        \"version\": \"1.4.2\",",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🔤️toml/🟦️.ts",
+   "edits": [
+    {
+     "old": "import{requireToolingPublicationValueV1}from\"../../../🧹️retention/📏️headroom/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import type {ManagedToolingPublisherV1} from \"../../../🧹️retention/📥️physical/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {randomBytes} from \"node:crypto\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {join} from \"node:path\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {writeFile,rm,mkdir} from \"node:fs/promises\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {prepareBun} from \"../../../🟦️bun/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {captureOwnedCommandV1} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {readPhysicalCargoSourceV1} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "import {requireNativeStoragePathV1} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts\";\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "/** 🔤️ Uses the pinned system TOML runtime behind a first-party bounded data port on Bun and Node callers. */\nexport function rustupTomlValueV1(source:string,workspace:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<unknown>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>rustupTomlValueOwnedV1(source,workspace,store,actual,publisher));}\nasync function rustupTomlValueOwnedV1(source:string,workspace:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<unknown>{requireIssuedResourceControlInvocationV1(control,store.invocation);requireIssuedResourceControlRefinementV1(store.control,control);requireNativeStorageReservationV1(store.storage,store.control);if(Buffer.byteLength(source)>schema.definitions.Protocol.const.maximumDistributionManifestBytes)throw Error(\"Bounded Rustup TOML bytes required\");await store.storage.recheck();if(typeof Bun!==\"undefined\")return Bun.TOML.parse(source);const recipe=await readPhysicalCargoSourceV1(join(workspace,\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json\"),{expectedBytes:null,version:1,root:workspace,maximumBytes:65536,remainingFiles:1},control);if(!recipe)throw Error(\"Original pinned Bun recipe required\");const manager=JSON.parse(Buffer.from(recipe).toString(\"utf8\")).packageManager;if(typeof manager!==\"string\"||!/^bun@[0-9]+[.][0-9]+[.][0-9]+$/u.test(manager))throw Error(\"Original pinned Bun parser required\");const program=requireToolingPublicationValueV1(await prepareBun(workspace,manager.slice(4),store,control,publisher)),directory=requireNativeStoragePathV1(store.root,join(store.root,\"tmp\"));await mkdir(directory,{recursive:true});const input=requireNativeStoragePathV1(store.root,join(directory,\"toml-\"+randomBytes(6).toString(\"hex\")));await store.storage.recheck();await writeFile(input,source,{flag:\"wx\"});try{const output=await captureOwnedCommandV1(program,[\"-e\",\"process.stdout.write(JSON.stringify(Bun.TOML.parse(await Bun.file(process.argv[1]).text())))\",input],workspace,{control,env:store.environment,output:{maximumBytes:schema.definitions.Protocol.const.maximumTomlOutputBytes,maximumLines:1024}});await store.storage.recheck();return JSON.parse(output);}finally{await rm(input);}}",
+     "new": "/** 🔤️ Parses TOML through the owned runtime TOML port behind a first-party bounded data port. */\nexport function rustupTomlValueV1(source:string,workspace:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl):Promise<unknown>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>rustupTomlValueOwnedV1(source,store,actual));}\nasync function rustupTomlValueOwnedV1(source:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl):Promise<unknown>{requireIssuedResourceControlInvocationV1(control,store.invocation);requireIssuedResourceControlRefinementV1(store.control,control);requireNativeStorageReservationV1(store.storage,store.control);if(Buffer.byteLength(source)>schema.definitions.Protocol.const.maximumDistributionManifestBytes)throw Error(\"Bounded Rustup TOML bytes required\");await store.storage.recheck();return runtimeParseTomlV1(source);}",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeParseTomlV1"
+   ],
+   "before": true
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/📁️root/🟦️.ts",
+   "edits": [
+    {
+     "old": "/** 🏁️ Registers a callback for the end of the current bun test file, because `bun test` ends its process without running exit handlers. */\nfunction atBunTestEnd(callback: () => void): void {\n  try {\n    if (typeof require === \"undefined\" || (globalThis as { Bun?: unknown }).Bun === undefined) return;\n    (require(\"bun:test\") as { afterAll?: (hook: () => void) => void }).afterAll?.(callback);\n  } catch {}\n}\n",
+     "new": "/** 🏁️ Registers a callback for the end of the current test file, because some test runners end their process without running exit handlers. */\nfunction atTestEnd(callback: () => void): void {\n  try { runtimeTestApiV1()?.afterAll(callback); } catch {}\n}\n",
+     "count": 1
+    },
+    {
+     "old": "atBunTestEnd(() => sandbox.dispose());",
+     "new": "atTestEnd(() => sandbox.dispose());",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeTestApiV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🟦️.ts",
+   "edits": [
+    {
+     "old": "/** 🛡️ Inserts the guard preload after the `test` verb of a bun test command when the guard is active and the preload exists next to this module; every other command is returned unchanged. */",
+     "new": "/** 🛡️ Inserts the guard preload into the test command of the hosting runtime when the guard is active and that runtime's adapter directory holds a preload next to this module; every other command is returned unchanged. */",
+     "count": 1
+    },
+    {
+     "old": "  const mode = env[declared.environment.guard] ?? declared.guard.defaultMode, program = basename(command).replace(/\\.exe$/iu, \"\");\n  if (mode === \"off\" || args[0] !== \"test\" || !(program === \"bun\" || resolve(command) === resolve(process.execPath))) return args;\n  const preload = fileURLToPath(new URL(\"./🔌️preload/🟦️.ts\", import.meta.url));\n  return existsSync(preload) && !args.includes(\"--preload\") ? [args[0], \"--preload\", preload, ...args.slice(1)] : args;",
+     "new": "  const mode = env[declared.environment.guard] ?? declared.guard.defaultMode;\n  if (mode === \"off\" || !isHostRuntimeCommandV1(command)) return args;\n  const preload = fileURLToPath(new URL(`./${runtimeAdapterNameV1()}/🔌️preload/🟦️.ts`, import.meta.url));\n  return existsSync(preload) ? runtimeTestPreloadV1(args, preload) ?? args : args;",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isHostRuntimeCommandV1",
+    "runtimeAdapterNameV1",
+    "runtimeTestPreloadV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🔌️preload/🟦️.ts",
+   "edits": [
+    {
+     "old": "fs: join(here, \"../🩻️fs/🟦️.ts\"), \"fs/promises\": join(here, \"../🩻️fs-promises/🟦️.ts\"), child_process: join(here, \"../🩻️child-process/🟦️.ts\"),",
+     "new": "fs: join(here, \"../../🩻️fs/🟦️.ts\"), \"fs/promises\": join(here, \"../../🩻️fs-promises/🟦️.ts\"), child_process: join(here, \"../../🩻️child-process/🟦️.ts\"),",
+     "count": 1
+    },
+    {
+     "old": "const guardRoot = join(here, \"../..\");",
+     "new": "const guardRoot = join(here, \"../../..\");",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "const preload = join(root, \"🛡️guard/🔌️preload/🟦️.ts\");",
+     "new": "const preload = join(root, \"🛡️guard/🍞️bun/🔌️preload/🟦️.ts\");",
+     "count": 2
+    },
+    {
+     "old": "join(root, \"🛡️guard/🩻️sqlite/🟦️.ts\")",
+     "new": "join(root, \"🛡️guard/🍞️bun/🩻️sqlite/🟦️.ts\")",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🟦️.ts",
+   "edits": [
+    {
+     "old": "||!process.versions.bun||!isAbsolute(selection.cwd)",
+     "new": "||!runtimeSupportsV1(\"test\")||!isAbsolute(selection.cwd)",
+     "count": 1
+    },
+    {
+     "old": "captureOwnedCommandResultV1(process.execPath,[\"test\",file,...selection.arguments]",
+     "new": "captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file]),...selection.arguments]",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeSupportsV1",
+    "runtimeTestArgumentsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "createRequire:()=>()=>library,checkResourceLeaseControl",
+     "new": "createRequire:()=>()=>library,runtimeSupportsV1:()=>true,runtimeNativeSystemV1:()=>library,checkResourceLeaseControl",
+     "count": 1
+    },
+    {
+     "old": "\"utf8\"),tree=ts.createSourceFile(\"service-child.ts\",source,",
+     "new": "\"utf8\"),payloadSource=await fs.readFile(new URL(\"../🍎️events/🍞️bun/🟦️.ts\",import.meta.url),\"utf8\"),payloadTree=ts.createSourceFile(\"service-payload.ts\",payloadSource,ts.ScriptTarget.Latest,true),tree=ts.createSourceFile(\"service-child.ts\",source,",
+     "count": 1
+    },
+    {
+     "old": "\"utf8\"),tree=ts.createSourceFile(\"service-worker-input.ts\",source,",
+     "new": "\"utf8\"),payloadSource=await fs.readFile(new URL(\"../🍎️events/🍞️bun/🟦️.ts\",import.meta.url),\"utf8\"),payloadTree=ts.createSourceFile(\"service-payload.ts\",payloadSource,ts.ScriptTarget.Latest,true),tree=ts.createSourceFile(\"service-worker-input.ts\",source,",
+     "count": 1
+    },
+    {
+     "old": "script=tree.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(value=>ts.isIdentifier(value.name)&&value.name.text===\"nativeVolumeEventPreparationSourceV1\"))",
+     "new": "script=payloadTree.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(value=>ts.isIdentifier(value.name)&&value.name.text===\"nativeVolumeEventPreparationSourceV1\"))",
+     "count": 2
+    },
+    {
+     "old": "new Function(\"schema\",\"process\",compile(script!.getText(tree))",
+     "new": "new Function(\"schema\",\"process\",\"runtimeSupportsV1\",\"nativeVolumeEventPreparationProgramV1\",compile(script!.getText(payloadTree).replace(/^export /u,\"\"))",
+     "count": 2
+    },
+    {
+     "old": "(schema,{platform:\"darwin\",versions:{bun:\"Source\"},execPath:\"/bun\"})",
+     "new": "(schema,{platform:\"darwin\",versions:{bun:\"Source\"},execPath:\"/bun\"},()=>true,()=>\"/bun\")",
+     "count": 1
+    },
+    {
+     "old": "(schema,{platform:\"darwin\",versions:{bun:\"Source\"},execPath:process.execPath})",
+     "new": "(schema,{platform:\"darwin\",versions:{bun:\"Source\"},execPath:process.execPath},()=>true,()=>process.execPath)",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts",
+   "edits": [],
+   "imports": [],
+   "extract": [
+    {
+     "start": "/** 🏃️ Runs only checksum-bound captured modules at their original Source URLs. */\nexport const buildSourceClosureLoaderV1=String.raw`",
+     "end": "\n`;",
+     "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+     "symbols": [
+      "buildSourceClosureLoaderV1"
+     ],
+     "reexport": true,
+     "prefix": "import schema from \"../🧬️schema/🔣️.json\" with { type: \"json\" };\n\nconst policy = schema.definitions.Policy.const;\n\n"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🏭️runner/🟦️.ts",
+   "edits": [],
+   "imports": [],
+   "extract": [
+    {
+     "start": "/** 🏭️ The self-contained program a hermetic Bazel action runs",
+     "end": "\n`;",
+     "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🏭️runner/🍞️bun/🟦️.ts",
+     "symbols": [
+      "BAZEL_HERMETIC_RUNNER"
+     ],
+     "reexport": true,
+     "prefix": ""
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "process:{platform:\"win32\",arch:\"x64\",versions:{bun:\"Source-only\"}},",
+     "new": "process:{platform:\"win32\",arch:\"x64\",versions:{bun:\"Source-only\"}},runtimeSupportsV1:()=>true,",
+     "count": 4
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+   "edits": [
+    {
+     "old": "return [\"JSON\", \"Bun\", \"URL\", \"import\"].includes(name)",
+     "new": "return [\"JSON\", \"URL\", \"import\"].includes(name)",
+     "count": 1
+    },
+    {
+     "old": "      if (owner?.kind === \"namespace\" && owner.name === \"Bun\" && property === \"file\" && args[0]?.kind === \"url\") return { kind: \"text\", name: args[0].name };\n",
+     "new": "",
+     "count": 1
+    },
+    {
+     "old": "    if (callee.kind === \"namespace\" && callee.name === \"fs.readFileSync\" && args[0]?.kind === \"url\") return { kind: \"text\", name: args[0].name };",
+     "new": "    if (callee.kind === \"namespace\" && (callee.name === \"fs.readFileSync\" || callee.name === \"runtime.file\") && args[0]?.kind === \"url\") return { kind: \"text\", name: args[0].name };",
+     "count": 1
+    },
+    {
+     "old": "    if ([\"node:fs\", \"fs\"].includes(module)) return { kind: \"namespace\", name: name === \"*\" ? \"fs\" : `fs.${name}` };",
+     "new": "    if ([\"node:fs\", \"fs\"].includes(module)) return { kind: \"namespace\", name: name === \"*\" ? \"fs\" : `fs.${name}` };\n    if (/\\/⚙️runtime\\/(?:🌍️serve\\/)?🟦️\\.ts$/u.test(module) && name === \"runtimeFileV1\") return { kind: \"namespace\", name: \"runtime.file\" };",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🧫️fixtures/🔣️.json",
+   "edits": [
+    {
+     "old": "import schema from \\\"./schema.json\\\";const fixture=Bun.file(new URL(",
+     "new": "import schema from \\\"./schema.json\\\";import {runtimeFileV1} from \\\"../../⚙️runtime/🌍️serve/🟦️.ts\\\";const fixture=runtimeFileV1(new URL(",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗺️test-layout/🟦️.ts",
+   "edits": [
+    {
+     "old": "const fileReader = ts.isIdentifier(call) && fileBinding(call) === 1 || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || call.expression.text === \"Bun\" && bound(call.expression) === undefined && call.name.text === \"file\");",
+     "new": "const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === \"runtimeFileV1\") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && fileBinding(call.expression) === 4 && readers.has(call.name.text);",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧩️semantic-census/🟦️.ts",
+   "edits": [
+    {
+     "old": "[\"import\", \"default\", \"types\", \"bun\", \"node\"].includes(key)",
+     "new": "[\"import\", \"default\", \"types\", ...runtimeIdsV1()].includes(key)",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeIdsV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+   "edits": [
+    {
+     "old": "    \"bun:test\",\n",
+     "new": "    \"node:test\",\n",
+     "count": 1
+    },
+    {
+     "old": "    \"bun:sqlite\",\n",
+     "new": "    \"node:sqlite\",\n",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧾️plan-parsing/🟦️.ts",
+   "edits": [
+    {
+     "old": "command.length !== 4 || command[0] !== \"bun\" ||",
+     "new": "command.length !== 4 || !isRuntimeExecutableV1(command[0]) ||",
+     "count": 1
+    },
+    {
+     "old": "verifyCommand.length !== 4 || verifyCommand[0] !== \"bun\" ||",
+     "new": "verifyCommand.length !== 4 || !isRuntimeExecutableV1(verifyCommand[0]) ||",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "isRuntimeExecutableV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts",
+   "edits": [
+    {
+     "old": "if (existsSync(abs)) return { command: \"bun\", args: [abs,",
+     "new": "if (existsSync(abs)) return { command: runtimeCommandNameV1(), args: [abs,",
+     "count": 1
+    },
+    {
+     "old": "if (supplied) return { command: \"bun\", args: [supplied.script,",
+     "new": "if (supplied) return { command: runtimeCommandNameV1(), args: [supplied.script,",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts",
+   "edits": [
+    {
+     "old": "    command: \"bun\",\n    args: [join(repoRoot, REPO_TEST_DOMAIN_REL, \"🖥️host\", \"🟦️.ts\")",
+     "new": "    command: runtimeCommandNameV1(),\n    args: [join(repoRoot, REPO_TEST_DOMAIN_REL, \"🖥️host\", \"🟦️.ts\")",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🩺️environment/📋️inspection/🟦️.ts",
+   "edits": [
+    {
+     "old": "[\"typescript\", \"bun\", [\"--version\"]],",
+     "new": "[\"typescript\", runtimeCommandNameV1(), [\"--version\"]],",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "edits": [
+    {
+     "old": "\"--\", \"bun\", ...direct]",
+     "new": "\"--\", runtimeCommandNameV1(), ...direct]",
+     "count": 2
+    },
+    {
+     "old": "const expected = [\"bun\", ...(args ?? [])];",
+     "new": "const expected = [runtimeCommandNameV1(), ...(args ?? [])];",
+     "count": 1
+    },
+    {
+     "old": "return { command: \"bun\", args, cwd: options.cwd as string };",
+     "new": "return { command: runtimeCommandNameV1(), args, cwd: options.cwd as string };",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeCommandNameV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+   "edits": [
+    {
+     "old": "const blob=\"Bun\"in globalThis,target=blob?URL.createObjectURL(new Blob([sourceBytes],{type:\"text/javascript\"})):\"data:text/javascript;base64,\"+sourceBytes.toString(\"base64\");",
+     "new": "const sourceModule=runtimeSourceUrlV1(sourceBytes),target=sourceModule.url;",
+     "count": 1
+    },
+    {
+     "old": "finally{if(blob)URL.revokeObjectURL(target);}",
+     "new": "finally{sourceModule.release();}",
+     "count": 1
+    }
+   ],
+   "imports": [
+    "runtimeSourceUrlV1"
+   ]
+  },
+  {
+   "path": "🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
+   "edits": [
+    {
+     "old": "{ process?: { versions?: { node?: string; bun?: string } }; setImmediate",
+     "new": "{ process?: { versions?: { node?: string } }; setImmediate",
+     "count": 1
+    },
+    {
+     "old": "if ((host.process?.versions?.node || host.process?.versions?.bun) && typeof",
+     "new": "if (host.process?.versions?.node && typeof",
+     "count": 1
+    }
+   ],
+   "imports": []
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "program=`const m=await import(${JSON.stringify(module)});await m.profilePhaseV1(\"test.outer\",async()=>{Bun.spawnSync([process.execPath,\"-e\",\"0\"]);await Bun.sleep(5);});`",
+     "new": "runtime=new URL(\"../../../../../../../🔨️modules/⚙️runtime/🟦️.ts\",import.meta.url).href,program=`const m=await import(${JSON.stringify(module)}),r=await import(${JSON.stringify(runtime)});await m.profilePhaseV1(\"test.outer\",async()=>{r.runtimeSpawnSyncV1([process.execPath,\"-e\",\"0\"]);await r.runtimeSleepV1(5);});`",
+     "count": 1
+    }
+   ],
+   "imports": []
   }
- ]
+ ],
+ "moves": [
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🔌️preload/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🍞️bun/🔌️preload/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🩻️sqlite/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🍞️bun/🩻️sqlite/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🗄️bun-sqlite-statement/🟦️.d.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🍞️bun/🗄️sqlite-statement/🟦️.d.ts"
+  }
+ ],
+ "deletes": []
 }

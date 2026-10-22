@@ -30,6 +30,7 @@ semio-framework-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/�
 semio-framework-os-kernel-db-io-registry = { path = "../../../📇️io-registry/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-storage-driver-runtime = { path = "../../../🧵️driver-runtime/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
+semio-framework-async-sync = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 
@@ -41,6 +42,7 @@ semio-framework-os-kernel-db-actor = { path = "../../../../🎭️actor/📦️p
 semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["claimed-backend-laws", "testkit"] }
 semio-framework-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-async-sync = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
 serde_json = { workspace = true }

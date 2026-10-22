@@ -1,0 +1,385 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:remote-cache:v1",
+  "title": "Repository Remote Cache Contract",
+  "description": "🌐️ The one tool-neutral description of a shared remote task cache. Every build implementation renders the same resolved contract into its own switches: Bazel into --remote_cache and friends, Nx into its self-hosted remote cache environment. The contract holds no secret: the access token is read at run time from the environment variable the contract names and is never written to disk by the repository.",
+  "oneOf": [
+    { "$ref": "#/definitions/Contract" },
+    { "$ref": "#/definitions/Policy" },
+    { "$ref": "#/definitions/Status" },
+    { "$ref": "#/definitions/ServerStatus" },
+    { "$ref": "#/definitions/CollectionReport" },
+    { "$ref": "#/definitions/GcResult" },
+    { "$ref": "#/definitions/TextCatalogue" }
+  ],
+  "definitions": {
+    "Endpoint": {
+      "description": "Origin of the cache server: http or https, host, optional port; no credentials, path, query or fragment. HTTP is the one protocol Bazel and Nx both speak.",
+      "type": "string",
+      "pattern": "^https?://(\\[[0-9A-Fa-f:]+\\]|[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?)(:[0-9]{1,5})?$",
+      "maxLength": 270
+    },
+    "Instance": {
+      "description": "Namespace inside one server. It travels as the first URL path segment, so two repositories or two trust levels never share entries. The words the protocols use as routes are reserved.",
+      "type": "string",
+      "pattern": "^(?!(?:ac|cas|v1|healthz|status)$)[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "Access": {
+      "description": "What the credentials of this client may do. read-only never pushes, whatever the upload switch says.",
+      "enum": ["read-only", "read-write"]
+    },
+    "Download": {
+      "description": "Which outputs a build fetches from the cache: toplevel the outputs of the requested targets, all every output. Nx always fetches everything; Bazel's task adapter restores the snapshots of the requested targets from bazel-bin, so a mode that leaves them in the remote store (minimal) is not part of the contract: the restore would fail with ENOENT.",
+      "enum": ["toplevel", "all"]
+    },
+    "EnvironmentName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+    },
+    "Token": {
+      "description": "A bearer token value: URL-safe characters only, so no shell, JSON or header quoting is ever needed.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._~+/=-]{1,4096}$"
+    },
+    "Contract": {
+      "description": "The resolved contract of one enabled remote cache.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "auth"],
+      "properties": {
+        "version": { "const": 1 },
+        "endpoint": { "$ref": "#/definitions/Endpoint" },
+        "instance": { "$ref": "#/definitions/Instance" },
+        "access": { "$ref": "#/definitions/Access" },
+        "upload": { "description": "Whether this machine pushes the results it computed locally; they only leave the machine when access is read-write too.", "type": "boolean" },
+        "compression": { "description": "Whether blobs travel compressed where the tool supports it.", "type": "boolean" },
+        "download": { "$ref": "#/definitions/Download" },
+        "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "retries": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "auth": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tokenEnvironment"],
+          "properties": {
+            "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+          }
+        }
+      }
+    },
+    "Defaults": {
+      "description": "The committed defaults: no endpoint (the remote cache is off), read-only, and a conservative transport.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "tokenEnvironment"],
+      "properties": {
+        "endpoint": { "oneOf": [{ "$ref": "#/definitions/Endpoint" }, { "const": null }] },
+        "instance": { "$ref": "#/definitions/Instance" },
+        "access": { "$ref": "#/definitions/Access" },
+        "upload": { "type": "boolean" },
+        "compression": { "type": "boolean" },
+        "download": { "$ref": "#/definitions/Download" },
+        "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "retries": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+      }
+    },
+    "Names": {
+      "description": "The environment variables that override one default each; the access token variable is named by tokenEnvironment.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpoint", "instance", "access", "upload", "compression", "download", "timeoutSeconds", "retries", "tokenEnvironment"],
+      "properties": {
+        "endpoint": { "$ref": "#/definitions/EnvironmentName" },
+        "instance": { "$ref": "#/definitions/EnvironmentName" },
+        "access": { "$ref": "#/definitions/EnvironmentName" },
+        "upload": { "$ref": "#/definitions/EnvironmentName" },
+        "compression": { "$ref": "#/definitions/EnvironmentName" },
+        "download": { "$ref": "#/definitions/EnvironmentName" },
+        "timeoutSeconds": { "$ref": "#/definitions/EnvironmentName" },
+        "retries": { "$ref": "#/definitions/EnvironmentName" },
+        "tokenEnvironment": { "$ref": "#/definitions/EnvironmentName" }
+      }
+    },
+    "ServerPolicy": {
+      "description": "The bounds, switches and tokens of the repository's own cache server (repo remote-cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays. actionResults says how far uploaded Bazel action results are checked: off, structure (a well-formed message) or complete (additionally every blob they name is stored, and a result is answered only while that holds).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "environment", "tokenEnvironment"],
+      "properties": {
+        "host": { "type": "string", "minLength": 1, "maxLength": 253 },
+        "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "directory": { "description": "Relative to the workspace root; the default is the home the cache ledger declares for the remote cache.", "type": "string", "pattern": "^[^\\u0000/\\\\][^\\u0000]*$" },
+        "maximumBytes": { "type": "integer", "minimum": 1048576 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1024 },
+        "maximumAgeDays": { "type": "integer", "minimum": 0, "maximum": 3650 },
+        "readOnly": { "description": "true refuses every write with 403, whatever token is presented.", "type": "boolean" },
+        "tls": {
+          "description": "null serves plain HTTP; otherwise the certificate chain and private key files (PEM) of an HTTPS listener.",
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["certificate", "key"],
+              "properties": {
+                "certificate": { "type": "string", "minLength": 1 },
+                "key": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        },
+        "actionResults": { "enum": ["off", "structure", "complete"] },
+        "maximumActionResultBytes": { "type": "integer", "minimum": 1024, "maximum": 67108864 },
+        "maintenanceSeconds": { "description": "How often a running server re-reads its directory, so entries collected by another process stop counting; 0 switches it off.", "type": "integer", "minimum": 0, "maximum": 86400 },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["readOnly", "tlsCertificate", "tlsKey"],
+          "properties": {
+            "readOnly": { "$ref": "#/definitions/EnvironmentName" },
+            "tlsCertificate": { "$ref": "#/definitions/EnvironmentName" },
+            "tlsKey": { "$ref": "#/definitions/EnvironmentName" }
+          }
+        },
+        "tokenEnvironment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["read", "write"],
+          "properties": {
+            "read": { "$ref": "#/definitions/EnvironmentName" },
+            "write": { "$ref": "#/definitions/EnvironmentName" }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "description": "The authored data in the build policy: which variables override the defaults, the defaults and the server bounds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "environment", "defaults", "server"],
+      "properties": {
+        "version": { "const": 1 },
+        "environment": { "$ref": "#/definitions/Names" },
+        "defaults": { "$ref": "#/definitions/Defaults" },
+        "server": { "$ref": "#/definitions/ServerPolicy" }
+      }
+    },
+    "Rendering": {
+      "description": "What one build implementation does with the contract. Values that could carry a secret are redacted; unsupported names the contract fields the tool cannot honour.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mechanism", "applied", "unsupported", "uploadEnforcedBy"],
+      "properties": {
+        "mechanism": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "applied": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "unsupported": { "type": "array", "uniqueItems": true, "items": { "enum": ["compression", "download", "timeoutSeconds", "retries"] } },
+        "uploadEnforcedBy": { "description": "client: the tool itself withholds uploads. server: the tool cannot, so uploads are only prevented by a read-only token on the server. none: uploads are wanted.", "enum": ["client", "server", "none"] }
+      }
+    },
+    "Probe": {
+      "description": "One bounded read-only request against the path the selected tool uses; it stores nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "reachable", "authorized", "status", "milliseconds"],
+      "properties": {
+        "protocol": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "reachable": { "type": "boolean" },
+        "authorized": { "type": "boolean" },
+        "status": { "type": ["integer", "null"] },
+        "milliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Status": {
+      "description": "What repo remote-cache status prints: the client contract, how both build tools render it, one probe per protocol, what the running server reports about itself and what the local store directory holds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "configured", "contract", "effectiveUpload", "token", "renderings", "probes", "server", "store"],
+      "properties": {
+        "version": { "const": 1 },
+        "configured": { "type": "boolean" },
+        "contract": { "oneOf": [{ "$ref": "#/definitions/Contract" }, { "const": null }] },
+        "effectiveUpload": { "type": "boolean" },
+        "token": {
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["environment", "present"],
+              "properties": {
+                "environment": { "$ref": "#/definitions/EnvironmentName" },
+                "present": { "type": "boolean" }
+              }
+            }
+          ]
+        },
+        "renderings": {
+          "oneOf": [
+            { "const": null },
+            {
+              "description": "One rendering per build backend, keyed by the backend id.",
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "patternProperties": { "^[a-z][a-z0-9-]{0,31}$": { "$ref": "#/definitions/Rendering" } }
+            }
+          ]
+        },
+        "probes": { "oneOf": [{ "const": null }, { "type": "array", "items": { "$ref": "#/definitions/Probe" } }] },
+        "server": { "oneOf": [{ "const": null }, { "$ref": "#/definitions/ServerStatus" }] },
+        "store": {
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["directory", "entries", "bytes", "maximumBytes"],
+              "properties": {
+                "directory": { "type": "string", "minLength": 1 },
+                "entries": { "type": "integer", "minimum": 0 },
+                "bytes": { "type": "integer", "minimum": 0 },
+                "maximumBytes": { "type": "integer", "minimum": 1048576 }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Counter": {
+      "description": "What one keyspace of a running server did since it started; stale counts action results dropped on a read because a blob they name left the store.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hits", "misses", "puts", "conflicts", "rejected", "stale"],
+      "properties": {
+        "hits": { "type": "integer", "minimum": 0 },
+        "misses": { "type": "integer", "minimum": 0 },
+        "puts": { "type": "integer", "minimum": 0 },
+        "conflicts": { "type": "integer", "minimum": 0 },
+        "rejected": { "type": "integer", "minimum": 0 },
+        "stale": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ServerStatus": {
+      "description": "The document a running server answers on GET /status.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "protocols", "entries", "bytes", "reservedBytes", "maximumBytes", "maximumEntryBytes", "readOnly", "validation", "counters", "startedAt"],
+      "properties": {
+        "version": { "const": 1 },
+        "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
+        "entries": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "reservedBytes": { "type": "integer", "minimum": 0 },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+        "readOnly": { "type": "boolean" },
+        "validation": { "enum": ["off", "structure", "complete"] },
+        "counters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ac", "cas", "nx"],
+          "properties": {
+            "ac": { "$ref": "#/definitions/Counter" },
+            "cas": { "$ref": "#/definitions/Counter" },
+            "nx": { "$ref": "#/definitions/Counter" }
+          }
+        },
+        "startedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" }
+      }
+    },
+    "StoreBounds": {
+      "description": "The finite bounds a store is opened with: total bytes, bytes per entry (not above the total) and the idle age in milliseconds after which an entry is dropped (0 keeps entries until space is needed).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumBytes", "maximumEntryBytes", "maximumAgeMilliseconds"],
+      "properties": {
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+        "maximumAgeMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Fill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries", "bytes"],
+      "properties": { "entries": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 } }
+    },
+    "Removed": {
+      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), age (idle for too long) and budget (least recently used beyond the bound).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries", "bytes", "dangling", "age", "budget"],
+      "properties": {
+        "entries": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "dangling": { "type": "integer", "minimum": 0 },
+        "age": { "type": "integer", "minimum": 0 },
+        "budget": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CollectionReport": {
+      "description": "What one collection of a store directory did or, for a plan, would do.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "dryRun", "scanned", "removed", "remaining"],
+      "properties": {
+        "version": { "const": 1 },
+        "dryRun": { "type": "boolean" },
+        "scanned": { "$ref": "#/definitions/Fill" },
+        "removed": { "$ref": "#/definitions/Removed" },
+        "remaining": { "$ref": "#/definitions/Fill" }
+      }
+    },
+    "GcResult": {
+      "description": "What repo remote-cache gc --json prints: the collection report of the directory, or a marker that the directory does not exist.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "dryRun", "directory", "present"],
+          "properties": {
+            "version": { "const": 1 },
+            "dryRun": { "type": "boolean" },
+            "directory": { "type": "string", "minLength": 1 },
+            "present": { "const": false }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "dryRun", "directory", "scanned", "removed", "remaining"],
+          "properties": {
+            "version": { "const": 1 },
+            "dryRun": { "type": "boolean" },
+            "directory": { "type": "string", "minLength": 1 },
+            "scanned": { "$ref": "#/definitions/Fill" },
+            "removed": { "$ref": "#/definitions/Removed" },
+            "remaining": { "$ref": "#/definitions/Fill" }
+          }
+        }
+      ]
+    },
+    "TextCatalogue": {
+      "description": "The bilingual messages of the remote cache command: every key has exactly the two catalogue languages.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "languages", "messages"],
+      "properties": {
+        "version": { "const": 1 },
+        "languages": { "const": ["en", "de"] },
+        "messages": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z-]*(\\.[a-z][a-z-]*)+$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["en", "de"],
+              "properties": { "en": { "type": "string" }, "de": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -152,6 +152,11 @@
           "invalidFunction": 1
         },
         "childEnvironment": {
+          "darwin": {
+            "PATH": "/usr/bin:/bin",
+            "LANG": "C",
+            "LC_ALL": "C"
+          },
           "linux": {
             "PATH": "/usr/bin:/bin",
             "LANG": "C",

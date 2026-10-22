@@ -17,6 +17,16 @@ pub struct SetDrag {
 
 impl protocol::MutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> for SetDrag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drag", kind: "set-drag", record: "SetDrag" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Drag", "Ziehvorgang setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["drag".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> for SetDrag {
     fn diff(&self, base: &WiresCanvasTransient) -> protocol::MutationOutcome<WiresCanvasTransientDiff> {
         protocol::MutationOutcome::new(WiresCanvasTransientDiff {
             drag_node_id: (base.drag_node_id != self.node_id).then(|| WiresCanvasOptionalNode { value: self.node_id.clone() }),
@@ -33,10 +43,4 @@ impl protocol::MutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> 
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Drag", "Ziehvorgang setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["drag".into()]
-    }
 }

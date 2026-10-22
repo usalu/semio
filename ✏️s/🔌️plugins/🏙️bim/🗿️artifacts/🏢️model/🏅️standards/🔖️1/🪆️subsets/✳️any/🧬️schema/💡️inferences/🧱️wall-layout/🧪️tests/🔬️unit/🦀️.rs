@@ -66,7 +66,7 @@ fn close(left: f64, right: f64) -> bool {
 
 fn raised(delta: f64) -> ModelSnapshot {
     let height = house().storeys["st-ground"].height + delta;
-    protocol::apply_diff(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() })), &house()).expect("the height edit applies")
+    protocol::apply_diff_cold(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() })), &house()).expect("the height edit applies")
 }
 
 fn layout_json(layout: &WallLayout) -> serde_json::Value {
@@ -146,8 +146,8 @@ fn compute_storey_levels_for_test(snapshot: &ModelSnapshot) -> BTreeMap<String, 
 
 #[semio_framework_async_macros::async_test]
 async fn freeing_a_wall_top_makes_it_independent_of_storey_heights() {
-    let freed = protocol::apply_diff(&ModelDiff::walls("w-ground-south", Entry::Patched(WallPatch { top: Some(TopConstraint::Unconnected { height: 3.0 }), ..Default::default() })), &house()).expect("the top edit applies");
-    let after = protocol::apply_diff(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() })), &freed).expect("the height edit applies");
+    let freed = protocol::apply_diff_cold(&ModelDiff::walls("w-ground-south", Entry::Patched(WallPatch { top: Some(TopConstraint::Unconnected { height: 3.0 }), ..Default::default() })), &house()).expect("the top edit applies");
+    let after = protocol::apply_diff_cold(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() })), &freed).expect("the height edit applies");
     assert!(close(compute_wall_layout(&after)["w-ground-south"].height, 3.0));
 }
 

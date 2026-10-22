@@ -4,7 +4,7 @@
   "execution": {
     "projectLibraryRelativePath": "📦️packages/🟦️typescript/📋️project.json",
     "target": "test-historical-package-owner-identity",
-    "command": "bun ./📜️script.ts test historical-package-owner-identity"
+    "command": "repo ./📜️script.ts test historical-package-owner-identity"
   },
   "historicalDocument": {
     "libraryRelativePath": "🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",

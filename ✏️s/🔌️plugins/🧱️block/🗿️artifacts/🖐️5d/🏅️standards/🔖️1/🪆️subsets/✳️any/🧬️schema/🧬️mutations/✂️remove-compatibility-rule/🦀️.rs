@@ -24,6 +24,15 @@ pub fn remove_compatibility_rule<Op: From<crate::remove_compatibility_rule::Remo
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RemoveCompatibilityRule where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::add_compatibility_rule::AddCompatibilityRule> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "compatibility-rule", kind: "remove-compatibility-rule", record: "RemovedCompatibilityRule" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove compatibility rule \"{}\"", self.id), &format!("Kompatibilitätsregel \"{}\" entfernen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for RemoveCompatibilityRule where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::add_compatibility_rule::AddCompatibilityRule> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::remove_compatibility_rule::diff::diff(self, base)
     }
@@ -33,12 +42,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RemoveCompatibilityRule
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove compatibility rule \"{}\"", self.id), &format!("Kompatibilitätsregel \"{}\" entfernen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -31,7 +31,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -50,7 +50,7 @@ const KINDS = [
 
 //#region 🏭️Generate
 const generate = (): void => {
-  const built = spawnToolSyncV1("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
+  const built = runToolSyncV1("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error("engine build failed");
   const run = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate"), [fixtures], { stdio: "inherit" });
   if (run.status !== 0) throw new Error("fixture generation failed");

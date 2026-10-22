@@ -454,7 +454,7 @@ pub mod text {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 
 pub use semio_s_artifact_shooting_shooting_schema::diff;
 

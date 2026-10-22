@@ -393,14 +393,14 @@ impl ArtifactContribution {
     pub async fn mutation<Snapshot, Op, K>(mut self, target_artifact_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
     where
         Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary + 'static,
-        K: ::protocol::CompositeMutationKind<Snapshot, Op> + 'static,
+        Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary + 'static,
+        K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op> + 'static,
     {
         fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
         where
             Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-            Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary,
-            K: ::protocol::CompositeMutationKind<Snapshot, Op>,
+            Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary,
+            K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op>,
         {
             ::semio_framework_async::poll::resolve_ready(async {
                 let base = Snapshot::decode_pack(snapshot_pack).map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.snapshot-decode", error.to_string()))?;
@@ -493,7 +493,7 @@ impl ArtifactContribution {
 /// id namespacing, contributed-inference identity) — pure over already-assembled manifest data,
 /// never touches a runtime registry.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum ContributionRegistrationError {
+pub enum ContributionRegistrationError {
     DependencyNotDeclared { plugin_id: String, artifact_kind: String, owner: String },
     InvalidArtifactKind(String),
     MalformedMutationId { plugin_id: String, mutation_id: String },
@@ -730,7 +730,7 @@ pub type ColdContributedMutationPlan = fn(&[u8], &[u8]) -> Result<ContributedMut
 
 /// 🧰️ One committed contributed-mutation runtime entry — the wire roster row plus the fn pointer
 /// `wire_artifact_mutation_plan` calls.
-pub(crate) struct ContributedMutationRuntimeEntry {
+pub struct ContributedMutationRuntimeEntry {
     roster: WireMutationRosterEntry,
     plan_cold: ColdContributedMutationPlan,
 }

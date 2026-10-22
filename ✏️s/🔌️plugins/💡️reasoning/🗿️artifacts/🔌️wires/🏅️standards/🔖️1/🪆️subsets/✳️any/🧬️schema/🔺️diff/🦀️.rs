@@ -6,19 +6,26 @@
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct WiresDiff {}
 
-impl protocol::MutationDiff<crate::WiresSnapshot> for WiresDiff {
-    fn apply(&self, base: &crate::WiresSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<crate::WiresSnapshot> {
-        Ok(base.clone())
-    }
+impl protocol::MutationDiff<crate::WiresSnapshot> for WiresDiff {}
+
+impl protocol::ColdMutationDiff<crate::WiresSnapshot> for WiresDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut crate::WiresSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<crate::WiresSnapshot> for WiresDiff {
-    fn inverse(&self, _base: &crate::WiresSnapshot) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl protocol::ColdDiffAlgebra<crate::WiresSnapshot> for WiresDiff {
+    fn inverse(&self, _base: &crate::WiresSnapshot) -> Self {
+        Self {}
     }
 }
 //#endregion 🔖️Diff

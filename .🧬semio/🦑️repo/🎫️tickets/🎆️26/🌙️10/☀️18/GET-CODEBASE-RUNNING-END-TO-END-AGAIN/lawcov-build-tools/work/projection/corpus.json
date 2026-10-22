@@ -1,0 +1,540 @@
+{
+ "version": 1,
+ "pins": [
+  {
+   "name": "workspace links are dropped",
+   "dependencies": {
+    "a": "1.0.0",
+    "b": "workspace:*",
+    "c": "2.0.0"
+   },
+   "expected": {
+    "a": "1.0.0",
+    "c": "2.0.0"
+   }
+  },
+  {
+   "name": "only the exact workspace star is a link",
+   "dependencies": {
+    "a": "workspace:^",
+    "b": "workspace:*x"
+   },
+   "expected": {
+    "a": "workspace:^",
+    "b": "workspace:*x"
+   }
+  },
+  {
+   "name": "nothing to drop",
+   "dependencies": {
+    "a": "1.0.0"
+   },
+   "expected": {
+    "a": "1.0.0"
+   }
+  },
+  {
+   "name": "no dependencies",
+   "dependencies": {},
+   "expected": {}
+  }
+ ],
+ "projections": [
+  {
+   "name": "the pinned inputs are the recipe's identity and the lock without patch rows",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "",
+   "package": "{\"name\":\"@semio-tech/nx-bootstrap-tools\",\"private\":true,\"packageManager\":\"bun@1.3.14\",\"dependencies\":{\"nx\":\"23.2.0\"}}\n",
+   "lockText": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"x\"}},\"packages\":{\"nx\":[\"nx@23.2.0\",\"\",{},\"sha512-pinned\"]}}\n"
+  },
+  {
+   "name": "a first-party workspace link is not an external pin",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0",
+     "@semio-tech/local": "workspace:*"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "",
+   "package": "{\"name\":\"@semio-tech/nx-bootstrap-tools\",\"private\":true,\"packageManager\":\"bun@1.3.14\",\"dependencies\":{\"nx\":\"23.2.0\"}}\n",
+   "lockText": null
+  },
+  {
+   "name": "dependency order is kept",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "z": "1.0.0",
+     "a": "2.0.0",
+     "m": "3.0.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a lock without patch rows is unchanged",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "",
+   "package": null,
+   "lockText": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"x\"}},\"packages\":{\"nx\":[\"nx@23.2.0\",\"\",{},\"sha512-pinned\"]}}\n"
+  },
+  {
+   "name": "unicode in the lock is written as is",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    },
+    "note": "é🧪"
+   },
+   "error": "",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a recipe that is not private is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": false,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a recipe without dependencies is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {},
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a range version is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "^23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a package manager other than bun is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "npm@10.0.0",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "an unknown recipe field is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    },
+    "scripts": {}
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a recipe without the semio patches is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+     "": {
+      "name": "x"
+     }
+    },
+    "patchedDependencies": {
+     "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+     "nx": [
+      "nx@23.2.0",
+      "",
+      {},
+      "sha512-pinned"
+     ]
+    }
+   },
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a null lock is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": null,
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "an array lock is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": [],
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "a string lock is refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": "lock",
+   "error": "Closed pinned dependency recipe required",
+   "package": null,
+   "lockText": null
+  },
+  {
+   "name": "inputs above the byte ceiling are refused",
+   "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+     "nx": "23.2.0"
+    },
+    "semio": {
+     "toolPatches": {
+      "nx@23.2.0": "patches/current.patch"
+     }
+    }
+   },
+   "lock": {
+    "lockfileVersion": 1,
+    "blob": "@16MiB"
+   },
+   "error": "Pinned dependency input byte ceiling exceeded",
+   "package": null,
+   "lockText": null
+  }
+ ]
+}

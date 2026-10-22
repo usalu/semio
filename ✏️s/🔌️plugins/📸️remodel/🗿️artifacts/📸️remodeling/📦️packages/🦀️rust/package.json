@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-remodel-window-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/remodel-remodeling-rs:verify-remodel-window-ownership"
+    "verify-remodel-window-ownership": "repo run @semio-tech/remodel-remodeling-rs:verify-remodel-window-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

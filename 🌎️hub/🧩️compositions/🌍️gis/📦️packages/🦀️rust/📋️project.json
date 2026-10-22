@@ -26,7 +26,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts installed-service-source"
+        "command": "repo ./📜️script.ts installed-service-source"
       },
       "outputs": [],
       "inputs": [
@@ -40,7 +40,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts component-cold-map-patch-check",
+        "command": "repo ./📜️script.ts component-cold-map-patch-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -50,7 +50,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
+        "command": "repo ./📜️script.ts component-cold-map-patch-native-check",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -64,7 +64,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts durable-three-store-assembly-check",
+        "command": "repo ./📜️script.ts durable-three-store-assembly-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -75,7 +75,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts durable-three-store-assembly-native-check",
+        "command": "repo ./📜️script.ts durable-three-store-assembly-native-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -86,7 +86,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts map-create-region-group-check",
+        "command": "repo ./📜️script.ts map-create-region-group-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -97,7 +97,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts map-create-region-group-native-check",
+        "command": "repo ./📜️script.ts map-create-region-group-native-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -108,7 +108,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-check",
+        "command": "repo ./📜️script.ts native-codec-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -118,7 +118,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -129,7 +129,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-projection",
+        "command": "repo ./📜️script.ts native-codec-projection",
         "forwardAllArgs": true
       },
       "outputs": [
@@ -141,7 +141,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-transport-check"
+        "command": "repo ./📜️script.ts inference-transport-check"
       },
       "inputs": ["default", "^default", "gisTree"],
       "outputs": [],
@@ -153,7 +153,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-oracle",
+        "command": "repo ./📜️script.ts native-codec-oracle",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "gisTree"],
@@ -164,7 +164,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-discovery-oracle"
+        "command": "repo ./📜️script.ts inference-discovery-oracle"
       },
       "inputs": ["default", "^default", "gisTree"],
       "outputs": [],
@@ -185,7 +185,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-discovery-check"
+        "command": "repo ./📜️script.ts inference-discovery-check"
       },
       "inputs": ["default", "^default", "gisTree"],
       "outputs": [],
@@ -206,7 +206,7 @@
       ],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-edit-durability-check"
+        "command": "repo ./📜️script.ts hub-edit-durability-check"
       },
       "outputs": [],
       "metadata": {

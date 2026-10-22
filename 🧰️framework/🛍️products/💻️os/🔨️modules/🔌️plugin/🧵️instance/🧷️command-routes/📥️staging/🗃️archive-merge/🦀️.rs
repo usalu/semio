@@ -10,12 +10,12 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🔀️ Merges a decoded read-back into the live document (design §22.22) in the host's own poll turn and requests the
     /// operation's terminal: `Ready` with what it took (`completed == total`) and is ahead by, or the fault that
     /// refused it. Nothing is replaced.

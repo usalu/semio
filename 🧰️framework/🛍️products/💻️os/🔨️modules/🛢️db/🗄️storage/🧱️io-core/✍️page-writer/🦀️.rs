@@ -175,7 +175,7 @@ impl DbIoPageWriter {
                 self.transition(current, next)?;
                 self.seal_phase = 3;
                 let pages = std::mem::replace(&mut self.pages, std::array::from_fn(|_| None));
-                let owner = DbIoPages { operation: self.operation, pages, retained: self.reserved, visible: self.seal_visible, first_offset: 0, total_len: self.total_len, shell_returned: false, result_handback: None };
+                let owner = DbIoPages { operation: self.operation, pages, retained: self.reserved, visible: self.seal_visible, first_offset: 0, total_len: self.total_len, shell_returned: false, result_handback: None, custody: None };
                 self.shell_returned = true;
                 self.reserved = 0;
                 self.cursor = 0;

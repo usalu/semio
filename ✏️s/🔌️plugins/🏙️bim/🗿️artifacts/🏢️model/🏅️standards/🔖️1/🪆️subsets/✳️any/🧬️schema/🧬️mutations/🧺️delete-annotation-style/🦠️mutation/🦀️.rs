@@ -16,16 +16,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteAnnotationStyle> + From<crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "annotation-style", kind: "delete-annotation-style", record: "DeleteAnnotationStyle" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete annotation style \"{}\"", self.id), &format!("Beschriftungsstil \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for DeleteAnnotationStyle
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<DeleteAnnotationStyle> + From<crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::inverse::inverse(self, base))
     }
 }

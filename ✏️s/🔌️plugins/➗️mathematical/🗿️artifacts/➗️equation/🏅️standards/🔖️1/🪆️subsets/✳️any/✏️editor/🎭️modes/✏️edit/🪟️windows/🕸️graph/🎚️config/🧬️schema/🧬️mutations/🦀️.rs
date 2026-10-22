@@ -16,7 +16,7 @@ pub use set_camera::SetCamera;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "kebab-case"))]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = EquationGraphWindowConfig, diff = EquationGraphWindowConfigDiff, schema = "mathematical.equationgraphwindowconfig")]
+#[mutations(snapshot = EquationGraphWindowConfig, diff = EquationGraphWindowConfigDiff, schema = "mathematical.equationgraphwindowconfig", reference = EquationGraphWindowConfig, reference_diff = EquationGraphWindowConfigDiff)]
 pub enum EquationGraphWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

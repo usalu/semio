@@ -6,3 +6,5 @@ dest.update({
  "conformance_oracle.py":d("CONF","TESTS","ORACLE",PY),"conformance_test.ts":d("CONF","TESTS",TS),
  "semio_test.ts":d("TOOLS","SEMIO","TESTS",TS),"backends_test.ts":d("BACKENDS","TESTS",TS),
 })
+
+dest.update({"nx_envelope.ts":d("TOOLS","NX","ENVELOPE",TS)})

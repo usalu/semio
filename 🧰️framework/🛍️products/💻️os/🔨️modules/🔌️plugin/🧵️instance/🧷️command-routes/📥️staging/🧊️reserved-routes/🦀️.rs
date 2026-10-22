@@ -18,7 +18,7 @@ use std::collections::HashSet;
 use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
 use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_decl_views::child_view::MemberKey;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -34,7 +34,7 @@ use crate::commands_instance_root::catalogue_snapshot_from_document;
 use crate::commands_instance_root::note_shell_command_label;
 use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
     /// runtime is counted in — never the bare item count the route used to hand its job, which
     /// no longer matched the two-row footprint its own config preflight declares.

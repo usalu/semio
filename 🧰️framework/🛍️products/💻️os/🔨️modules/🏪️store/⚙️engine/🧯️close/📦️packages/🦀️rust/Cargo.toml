@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-engine-close"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Close witnesses and cursor admission over the StoreParts bundle"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-engine-close"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }

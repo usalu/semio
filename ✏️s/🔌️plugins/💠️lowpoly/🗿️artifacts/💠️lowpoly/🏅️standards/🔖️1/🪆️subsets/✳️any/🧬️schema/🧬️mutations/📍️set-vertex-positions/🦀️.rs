@@ -33,18 +33,24 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vertex-positions", kind: "set-vertex-positions", record: "SetVertexPositionsDone" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let count = self.positions.len();
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Position {count} vertices of \"{}\"", self.object_id), &format!("{count} Eckpunkte von \"{}\" positionieren", self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LowpolySnapshot, Op> for SetVertexPositions
+where
+    Op: protocol::ColdMutation<LowpolySnapshot, ReferenceDiff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::set_vertex_positions::SetVertexPositions>,
+{
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<LowpolySnapshot>>::ReferenceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Payload

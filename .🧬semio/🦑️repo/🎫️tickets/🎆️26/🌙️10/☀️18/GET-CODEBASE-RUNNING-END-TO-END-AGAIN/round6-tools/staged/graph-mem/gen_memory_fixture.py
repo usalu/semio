@@ -6,7 +6,7 @@ NEW = HERE / "staged/new/memory"
 spec = importlib.util.spec_from_file_location("oracle", NEW / "tests/oracle.py")
 oracle = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(oracle)
-schema = json.loads((NEW / "module/schema.json").read_text(encoding="utf8"))
+schema = json.loads((NEW / "module/🧬️schema/🔣️.json").read_text(encoding="utf8"))
 policy, messages = schema["definitions"]["Policy"]["const"], schema["definitions"]["Messages"]["const"]
 MB = 1048576
 state = lambda used, budget, running, workers, blocked=False, collected=False: {"used": used, "budget": budget, "running": running, "workers": workers, "blocked": blocked, "collected": collected}
@@ -49,16 +49,18 @@ budgets = [
 for name, environment, expected in budgets:
     assert oracle.budget(policy, environment) == expected, name
 languages = [
-    ("dashboard-locale-first", {"SEMIO_DASHBOARD_LOCALE": "de", "LANG": "en_US.UTF-8"}, "de"),
-    ("system-locale-german", {"LANG": "de_DE.UTF-8"}, "de"),
-    ("unsupported-locale-falls-through", {"LC_ALL": "fr_FR.UTF-8", "LANG": "de_AT"}, "de"),
-    ("nothing-set-is-english", {}, "en"),
-    ("unsupported-only-is-english", {"LANG": "fr_FR"}, "en"),
-    ("lc-all-beats-lang", {"LC_ALL": "en_GB", "LANG": "de_DE"}, "en"),
+    ("explicit-language-wins", {"SEMIO_LANGUAGE": "de", "SEMIO_DASHBOARD_LOCALE": "en", "LANG": "en_US.UTF-8"}, ["de"]),
+    ("dashboard-locale-before-system-locale", {"SEMIO_DASHBOARD_LOCALE": "de", "LANG": "en_US.UTF-8"}, ["de"]),
+    ("system-locale-german", {"LANG": "de_DE.UTF-8"}, ["de"]),
+    ("system-locale-english", {"LANG": "en_GB.UTF-8"}, ["en"]),
+    ("unsupported-locale-falls-through", {"LC_ALL": "fr_FR.UTF-8", "LANG": "de_AT"}, ["de"]),
+    ("lc-all-beats-lang", {"LC_ALL": "en_GB", "LANG": "de_DE"}, ["en"]),
+    ("nothing-set-prints-both-languages", {}, ["en", "de"]),
+    ("unsupported-only-prints-both-languages", {"LANG": "fr_FR"}, ["en", "de"]),
 ]
 for name, environment, expected in languages:
-    assert oracle.language(environment) == expected, name
-rendered = [(key, {"used": 1234, "budget": 3072, "running": 5}, environment) for key in ("waiting", "serial", "resumed") for environment in ({"LANG": "en_US"}, {"LANG": "de_DE"})]
+    assert oracle.languages(policy, environment) == expected, name
+rendered = [(key, {"used": 1234, "budget": 3072, "running": 5}, environment) for key in ("waiting", "serial", "resumed") for environment in ({"LANG": "en_US"}, {"LANG": "de_DE"}, {})]
 governor = [
     {"name": "unconstrained", "workers": 3, "budgetMegabytes": 3000, "baseMegabytes": 100, "garbageShare": 0.5, "expectParallel": 3, "expectWaits": False, "tasks": [{"memoryMegabytes": 100, "durationMilliseconds": 1000}] * 6},
     {"name": "waits-for-memory", "workers": 4, "budgetMegabytes": 500, "baseMegabytes": 100, "garbageShare": 0.5, "expectWaits": True, "tasks": [{"memoryMegabytes": 200, "durationMilliseconds": 600}] * 8},
@@ -67,6 +69,7 @@ governor = [
     {"name": "abort-rejects-waiting-projects", "workers": 2, "budgetMegabytes": 300, "baseMegabytes": 100, "garbageShare": 0.0, "abortAtMilliseconds": 1000, "tasks": [{"memoryMegabytes": 150, "durationMilliseconds": 5000}] * 6},
     {"name": "arrival-order-under-pressure", "workers": 3, "budgetMegabytes": 250, "baseMegabytes": 100, "garbageShare": 0.0, "expectWaits": True, "tasks": [{"memoryMegabytes": m, "durationMilliseconds": d} for m, d in [(120, 400), (30, 900), (200, 300), (10, 100), (90, 700), (60, 250), (140, 500)]]},
     {"name": "progress-lines-are-spaced", "workers": 3, "budgetMegabytes": 300, "baseMegabytes": 100, "garbageShare": 0.0, "expectWaits": True, "language": "de", "tasks": [{"memoryMegabytes": 150, "durationMilliseconds": 20000}] * 4},
+    {"name": "unresolved-language-prints-both", "workers": 3, "budgetMegabytes": 300, "baseMegabytes": 100, "garbageShare": 0.0, "expectWaits": True, "language": "none", "tasks": [{"memoryMegabytes": 150, "durationMilliseconds": 8000}] * 4},
 ]
 fixture = {
     "version": 1, "policy": policy, "messages": messages,
@@ -77,7 +80,7 @@ fixture = {
     "governor": governor,
 }
 fixture["messages"] = messages
-fixture["messageCases"] = [{"key": key, "fields": fields, "environment": environment, "expect": oracle.render(messages, key, fields, environment)} for key, fields, environment in rendered]
+fixture["messageCases"] = [{"key": key, "fields": fields, "environment": environment, "expect": oracle.render(policy, messages, key, fields, environment)} for key, fields, environment in rendered]
 del fixture["messages_cases"]
 (NEW / "tests/fixture.json").write_text(json.dumps(fixture, ensure_ascii=False, indent=1) + "\n", encoding="utf8")
 print("fixture", len(admission), "admission states,", len(governor), "scenarios")

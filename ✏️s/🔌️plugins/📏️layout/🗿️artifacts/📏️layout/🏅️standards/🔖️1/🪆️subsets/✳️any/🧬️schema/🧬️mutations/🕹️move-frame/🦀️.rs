@@ -24,6 +24,16 @@ pub struct MoveFrame {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for MoveFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "frame", kind: "move-frame", record: "MovedFrame" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" verschieben", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for MoveFrame where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_move_frame(self, base)
     }
@@ -33,12 +43,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for MoveFrame where Op: protocol::Muta
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" verschieben", self.frame_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.frame_id.clone()]
-    }
 }
 //#endregion 🕹️MoveFrame
 

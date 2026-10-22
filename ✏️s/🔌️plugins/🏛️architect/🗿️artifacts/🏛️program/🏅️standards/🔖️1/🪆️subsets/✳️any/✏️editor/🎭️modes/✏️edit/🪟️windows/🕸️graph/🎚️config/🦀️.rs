@@ -20,29 +20,35 @@ pub struct ArchitectGraphWindowConfigDiff {
     pub viewport: Option<Viewport2d>,
 }
 
-impl protocol::MutationDiff<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
-    fn apply(&self, base: &ArchitectGraphWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectGraphWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.viewport {
-            next.viewport = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.viewport.is_some() {
             self.viewport = other.viewport;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectGraphWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.viewport {
+            next.viewport = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
-    fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Self {
-        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self.viewport.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Self {
+        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()) }
     }
 }
 
@@ -90,15 +96,17 @@ impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConf
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
+}
 
-    fn diff(&self, base: &ArchitectGraphWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+impl protocol::ColdMutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigMutation {
+    type ReferenceDiff = ArchitectGraphWindowConfigDiff;
+    fn diff(&self, base: &ArchitectGraphWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SetViewport(SetViewport { viewport }) = self;
         if base.viewport == *viewport {
             return protocol::MutationOutcome::new(ArchitectGraphWindowConfigDiff::default()).warning("mutation.no-op", "Graph viewport is unchanged.");
         }
         protocol::MutationOutcome::new(ArchitectGraphWindowConfigDiff { viewport: Some(viewport.clone()) })
     }
-
     fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         let Self::SetViewport(SetViewport { viewport }) = self;

@@ -64,11 +64,11 @@ export class BoundedPreparationScript extends Script {
 export class BoundedSynchronizeScript extends Script {
   async run(args: string[]): Promise<void> {
     const root = getWorkspaceRoot();
-    await withRepositoryCargoPreparationV1(findWorkspaceRoot(scriptModuleDirectory), root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase, store) => {
+    await withRepositoryCargoPreparationV1(findWorkspaceRoot(scriptModuleDirectory), root, this.invocation, createIssuedResourceControlV1(this.invocation, "native:preparation-entry", 0), process.env, async (environment, phase, store, storeControl) => {
       class BoundedSynchronize extends SynchronizeScript {
         protected override readonly environment = environment;
         protected override phase() { return phase; }
-        protected override execute(command: string, args: string[], cwd: string, label: string, budget: number, options: OwnedCommandOptions): Promise<void> { return withCompilerWorkspaceWriteV1(store.storage, cargoPreparationStorageFromEnvironmentV1(environment).leaseDirectory, phase.leaseControl, () => super.execute(command, args, cwd, label, budget, options)); }
+        protected override execute(command: string, args: string[], cwd: string, label: string, budget: number, options: OwnedCommandOptions): Promise<void> { return withCompilerWorkspaceWriteV1(store.storage, cargoPreparationStorageFromEnvironmentV1(environment).leaseDirectory, storeControl, () => super.execute(command, args, cwd, label, budget, options)); }
       }
       await new BoundedSynchronize(root, findWorkspaceRoot(root), this.invocation).run(args);
     });

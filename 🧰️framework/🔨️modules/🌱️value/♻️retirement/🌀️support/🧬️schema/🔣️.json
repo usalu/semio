@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Conjunctive Retirement Type Support",
+  "description": "Finite directed type conjunction: cycles retain support only when every reachable leaf supports controlled retirement. Query state is local to the current synchronous traversal; panics restore the exact prior frontier without allocation. Eight node slots bound test vocabulary only, not production traversal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "nodes",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "root": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 7
+          },
+          "expected": {
+            "type": "boolean"
+          },
+          "nodes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "supported",
+                "children"
+              ],
+              "properties": {
+                "supported": {
+                  "type": "boolean"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

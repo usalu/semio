@@ -19,7 +19,7 @@ use std::future::Future;
 use std::collections::HashSet;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -33,7 +33,7 @@ use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of
 use semio_framework_plugin_instance_docs::docs_instance_root::tool_transaction_shape_fault;
 use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// 🧪️ Lands one app `Emit` through the production `dispatch_emit` seam under a named
     /// verb — the harness for laws about what the reactor does with an emit's effect list before
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
@@ -193,7 +193,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             let mut running = self.stores.store.snapshot().map_err(|error| error.into_fault())?;
             let foreign = Vec::new();
             for op in &artifact_mutations {
-                if op.foreign_step_source(&running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")); }
+                if ColdMutation::foreign_step_source(op, &running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")); }
                 let outcome = op.diff(&running);
                 if !outcome.is_applicable(protocol::MergePolicy::default()) {
                     return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
@@ -396,7 +396,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     ///
     /// 🎯️ RESOLVED (was BLOCKED — see `📓️terra-dedyn-fw-os-spacemember-report.md` §dispatch_group,
     /// and `📓️terra-dispatch-group-split-report.md` for the fix): `store::os_store::composition_coordinator::CompositionCoordinator::
-    /// dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>` now takes SEPARATE type
+    /// dispatch_group<Mp: SpaceMember, Mc: ReferenceSpaceMember + MemberFactory>` now takes SEPARATE type
     /// parameters for `parent` and `children` — `self.store` (`ArtifactStore<A::Snapshot,
     /// A::Mutation>`, this app's own fixed type, only ever mutated) unifies as `Mp`; `dispatches`
     /// (`Vec<(&mut M, ChildDispatch<'_>)>`, this composition's CHILD-kind enum, the only side ever

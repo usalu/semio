@@ -14,7 +14,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test native"
+        "command": "repo ./📜️script.ts test native"
       }
     },
     "test-source": {
@@ -31,7 +31,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test source"
+        "command": "repo ./📜️script.ts test source"
       }
     }
   },

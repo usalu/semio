@@ -1,5 +1,5 @@
 /** 🛤️ World3dHost tool-run trace lane: mounts the scene's `toolRunTrace` lane for one window as instanced meshes per mesh and verdict batch. */
-import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense } from "../../⚛️react-port/🟦️.ts";
 import { BufferGeometry } from "@semio-tech/ui-react";
 import { ToolRunTraceLayer, type ToolRunTraceRecordStore } from "../⏯️tool-run-trace/🟦️.tsx";
 import { type WorldMeshRecord } from "../🔭️scene-schema/🟦️.ts";

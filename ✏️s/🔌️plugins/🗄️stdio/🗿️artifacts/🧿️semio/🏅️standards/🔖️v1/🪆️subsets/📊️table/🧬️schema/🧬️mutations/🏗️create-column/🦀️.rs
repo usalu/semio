@@ -21,6 +21,15 @@ pub struct CreateColumn {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for CreateColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "column", kind: "create-column", record: "CreatedColumn" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create column {}", self.name), &format!("Spalte {} erstellen", self.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.name.clone()]
+    }
+}
+
+impl<Op: SemioTableOp> protocol::ColdMutationKind<SemioTableSnapshot, Op> for CreateColumn {
     fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
@@ -30,11 +39,5 @@ impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for Create
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create column {}", self.name), &format!("Spalte {} erstellen", self.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.name.clone()]
-    }
 }
 //#endregion 🔖️Payload

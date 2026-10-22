@@ -165,7 +165,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only adds-the-diagram-asset",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only adds-the-diagram-asset",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -218,7 +218,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only swaps-the-logo-payload",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only swaps-the-logo-payload",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -271,7 +271,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only removes-the-logo-asset",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only removes-the-logo-asset",
         "seed": 0,
         "platform": "darwin-arm64"
       },

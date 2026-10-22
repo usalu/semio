@@ -17,7 +17,7 @@ use protocol::OpBinary;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_scene::SceneDoc;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 use semio_framework_value_derive::ToValue;
 use semio_framework_plugin_tool_run::ToolRunMemberEmissionOwner;
 use semio_framework_plugin_tool_run::ToolRunMemberOwners;

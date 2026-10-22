@@ -9,6 +9,7 @@ fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKin
 fn number_demand(_: &u64,_:&u64,_:usize,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:2*size_of::<u64>(),depth:1,..Default::default()})}
 fn number_step(left:&u64,right:&u64,_:usize,g:RetainedCloneGrant)->Result<(Option<std::cmp::Ordering>,usize,RetainedCloneProgress),ValueError>{if g.maximum_copy_bytes<2*size_of::<u64>(){return Ok((None,0,Default::default()))}Ok((Some(left.cmp(right)),0,RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<u64>(),..Default::default()}))}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Fields{insertion:Option<HistoryFoldIndexInsert<u64,(u64,Dictionary)>>,displaced:Option<ControlledRetirement<(u64,(u64,Dictionary))>>}
 /// 🧳️ This exact original admission belongs to one business turn, one cache and one epoch.
 pub struct NeuralCacheInsert{origin:(u64,u64),cache:usize,epoch:u64,fields:ManuallyDrop<Option<Fields>>,close:Option<ControlledRetirement<Fields>>,phase:u8,closing:bool,committed:bool}

@@ -65,9 +65,10 @@ describe("tool registry document", () => {
     expect(toolGlobMatchesV1("a/**/c.ts", "a/b/d/c.ts")).toBe(true);
     expect(toolGlobMatchesV1("a/*/c.ts", "a/b/d/c.ts")).toBe(false);
     expect(toolGlobMatchesV1("**/🧪️tests/**", "x/🧪️tests/y.ts")).toBe(true);
-    const cargo = findToolV1("cargo")!;
-    expect(toolCallerAllowedV1(cargo, "✏️s/🔌️plugins/x/🏭️generator/🟦️.ts")).toBe(false);
-    expect(toolCallerAllowedV1(cargo, "✏️s/🔌️plugins/x/🧪️tests/🟦️.ts")).toBe(true);
+    const hdiutil = findToolV1("hdiutil")!, cargo = findToolV1("cargo")!;
+    expect(toolCallerAllowedV1(hdiutil, "✏️s/🔌️plugins/x/🏭️generator/🟦️.ts")).toBe(false);
+    expect(toolCallerAllowedV1(hdiutil, "✏️s/🔌️plugins/x/🧪️tests/🟦️.ts")).toBe(true);
+    expect(toolCallerAllowedV1(cargo, "✏️s/🔌️plugins/x/🏭️generator/🟦️.ts")).toBe(true);
     expect(toolRawSpawnAllowedV1(cargo, cargo.adapter)).toBe(true);
     expect(toolRawSpawnAllowedV1(cargo, "✏️s/x/🟦️.ts")).toBe(false);
   });

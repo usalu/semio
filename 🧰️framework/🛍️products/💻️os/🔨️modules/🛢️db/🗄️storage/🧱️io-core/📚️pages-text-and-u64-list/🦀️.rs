@@ -24,7 +24,7 @@ impl DbIoPages {
 
     pub fn take_for_async_driver(&mut self) -> Self {
         let operation = self.operation;
-        std::mem::replace(self, Self { operation, pages: std::array::from_fn(|_| None), retained: 0, visible: 0, first_offset: 0, total_len: 0, shell_returned: true, result_handback: None })
+        std::mem::replace(self, Self { operation, pages: std::array::from_fn(|_| None), retained: 0, visible: 0, first_offset: 0, total_len: 0, shell_returned: true, result_handback: None, custody: None })
     }
 
     pub fn transfer_to_backend(&mut self, backend_operation: u64) -> Result<(), DbError> {
@@ -176,6 +176,7 @@ impl Drop for DbIoPages {
             total_len: self.total_len,
             shell_returned: self.shell_returned,
             result_handback: self.result_handback.take(),
+            custody: self.custody.take(),
         };
         self.retained = 0;
         self.visible = 0;

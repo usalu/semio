@@ -16,7 +16,7 @@
 //! 🪡 **Where tokio actually lives**: the future-polling reactor only, in a sibling crate (design
 //! ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet R2; re-hosted onto
 //! [`WorkerPool`] by Phase 1 packet P1b, `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services`).
-//! [`ManualRuntime`] in this crate (behind the `testkit` feature) exists so downstream crates can
+//! `ManualRuntime` in the sibling crate `semio-framework-async-testkit` exists so downstream crates can
 //! unit-test against [`HostAsyncRuntime`] without ever linking tokio.
 //!
 //! 🧭 **Scope discipline**: [`HostAsyncRuntime::spawn_scoped`] takes a `&ScopeHandle`, not an
@@ -34,10 +34,6 @@
 //! packet P1a) for the worker-pool redesign this file implements.
 
 use std::collections::VecDeque;
-#[cfg(feature = "testkit")]
-use std::future::Future;
-#[cfg(feature = "testkit")]
-use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::task::Waker;
@@ -106,37 +102,11 @@ use lane::LANE_COUNT;
 #[cfg(not(target_arch = "wasm32"))]
 use lane::is_low_priority;
 
-#[path = "⏰️timer-wheel/🦀️.rs"]
-mod timer_wheel;
-use timer_wheel::TIMER_ACTIONS_PER_POOL_TURN;
-pub use timer_wheel::{TimerSleep, TimerWheel};
-
-//#region 🪢️Oneshot
-/// 🪢️ Single-value handoff between exactly one [`oneshot::Sender`] and one [`oneshot::Receiver`] —
-/// the repo-owned replacement for `tokio::sync::oneshot` (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9
-/// packet P9a), sized for the services crate's own completion-signal shape: submit a closure onto a
-/// [`WorkerPool`] job, `.await` (or poll) its one eventual result from the caller.
-#[path = "🪢️oneshot/🦀️.rs"]
-pub mod oneshot;
-//#endregion 🪢️Oneshot
-
-#[path = "🚦️sync-primitives/🦀️.rs"]
-mod sync_primitives;
-pub use sync_primitives::{AcquireOwned, Notified, Notify, OwnedPermit, Semaphore};
+use semio_framework_async_timer::{TIMER_ACTIONS_PER_POOL_TURN, TimerWheel};
 
 #[path = "🔀️combinators/🦀️.rs"]
 mod combinators;
 pub use combinators::{Either, join2, race2, select2, yield_once};
-
-#[path = "🗺️sharded-map/🦀️.rs"]
-mod sharded_map;
-pub use sharded_map::ShardedMap;
-
-#[path = "🧱️boxed-slots/🦀️.rs"]
-mod boxed_slots;
-pub use boxed_slots::{FixedSlotTableBudget, boxed_fixed_slots, boxed_slots};
-#[cfg(not(target_arch = "wasm32"))]
-pub use boxed_slots::{assert_fixed_slot_tables, on_bounded_stack};
 
 #[path = "🧵️worker-pool/🦀️.rs"]
 mod worker_pool;
@@ -173,31 +143,11 @@ pub use native_pool::{WORKER_STACK_BYTES, WorkerPool, WorkerPoolUse};
 pub use wasm_pool::{CooperativePoolSnapshot, WorkerPool, WorkerPoolUse};
 
 
-//#region 🧪️ManualRuntime
-/// 🧪️ In-crate [`HostAsyncRuntime`] test double: a manual poll loop over an injected clock, so
-/// downstream crates (packets R2/R4) can unit-test against the trait without linking tokio. Time
-/// never advances on its own — callers drive it with [`ManualRuntime::set_now_ms`] and progress the
-/// futures with [`ManualRuntime::drive`]. Feature-gated (`testkit`, which the companion crate
-/// `semio-framework-async-tests` enables) rather than part of the default build, so the pure
-/// crate never ships test-only bookkeeping in a normal dependency. Phase 1 packet P1a: no longer
-/// implements `run_blocking` — the trait method was removed; a test that needs blocking-style work
-/// now submits directly to a [`WorkerPool`] it constructs itself.
-#[cfg(feature = "testkit")]
-#[path = "🎭️testkit/🦀️.rs"]
-pub mod testkit;
-#[cfg(feature = "testkit")]
-pub use testkit::ManualRuntime;
-//#endregion 🧪️ManualRuntime
-
 #[path = "🔂️poll/🦀️.rs"]
 pub mod poll;
 
 #[path = "🔐️publication/🦀️.rs"]
 pub mod publication;
-
-#[path="🎰️slots/📄️pages/🦀️.rs"]
-mod original_fixed_slot_pages;
-pub use original_fixed_slot_pages::OriginalFixedSlotPages;
 
 #[cfg(feature = "testkit")]
 #[doc(hidden)]

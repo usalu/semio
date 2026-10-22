@@ -20,29 +20,35 @@ pub struct ArchitectAdjacencyWindowConfigDiff {
     pub adjacency_kind_filter: Option<AdjacencyKindFilterSet>,
 }
 
-impl protocol::MutationDiff<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
-    fn apply(&self, base: &ArchitectAdjacencyWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectAdjacencyWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.adjacency_kind_filter {
-            next.adjacency_kind_filter = value.value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.adjacency_kind_filter.is_some() {
             self.adjacency_kind_filter = other.adjacency_kind_filter;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectAdjacencyWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.adjacency_kind_filter {
+            next.adjacency_kind_filter = value.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
-    fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Self {
-        Self { adjacency_kind_filter: self.adjacency_kind_filter.as_ref().map(|_| AdjacencyKindFilterSet { value: base.adjacency_kind_filter.clone() }) }
-    }
-
     fn is_empty(&self) -> bool {
         self.adjacency_kind_filter.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Self {
+        Self { adjacency_kind_filter: self.adjacency_kind_filter.as_ref().map(|_| AdjacencyKindFilterSet { value: base.adjacency_kind_filter.clone() }) }
     }
 }
 
@@ -92,15 +98,17 @@ impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWi
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
+}
 
-    fn diff(&self, base: &ArchitectAdjacencyWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+impl protocol::ColdMutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigMutation {
+    type ReferenceDiff = ArchitectAdjacencyWindowConfigDiff;
+    fn diff(&self, base: &ArchitectAdjacencyWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }) = self;
         if base.adjacency_kind_filter == *adjacency_kind_filter {
             return protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfigDiff::default()).warning("mutation.no-op", "Adjacency filter is unchanged.");
         }
         protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfigDiff { adjacency_kind_filter: Some(AdjacencyKindFilterSet { value: adjacency_kind_filter.clone() }) })
     }
-
     fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         let Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }) = self;

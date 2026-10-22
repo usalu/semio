@@ -1,10 +1,11 @@
-import { execFileSync } from "node:child_process";
+
 import { existsSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
 import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
 import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
 import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
 
@@ -145,7 +146,7 @@ export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolic
     if (!injected.has(contract.target)) injected.set(contract.target, []);
     for (const output of contract.outputRoots) { const target = output.producer?.target ?? contract.target; (injected.get(target) ?? injected.set(target, []).get(target)!).push(`{workspaceRoot}/${output.path}`); }
   }
-  const manifests = (tracked ?? execFileSync("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { cwd: repoRoot, maxBuffer: 1 << 28 }).toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
+  const manifests = (tracked ?? runToolSyncV1("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { check: true, cwd: repoRoot, maxBuffer: 1 << 28 }).stdout.toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
   const records: CacheRecordV1[] = [];
   for (const manifest of manifests.sort()) {
     let json: any;

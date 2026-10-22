@@ -38,7 +38,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -54,7 +54,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -71,7 +71,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -88,7 +88,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -105,7 +105,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -122,7 +122,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     }

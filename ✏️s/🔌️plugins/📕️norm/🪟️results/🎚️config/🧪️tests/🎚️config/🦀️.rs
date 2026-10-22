@@ -1,6 +1,6 @@
 //! 🧪️ Public config protocol laws checked against the language-neutral fixture and serde.
 
-use semio_framework_os_kernel::{apply_diff, Mutation, OpBinary, OpText};
+use semio_framework_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, OpText};
 use semio_s_plugin_norm_results_config::schema::NormResultsWindowConfig;
 use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
 
@@ -28,12 +28,12 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
         let base = NormResultsWindowConfig { selected_check_index: serde_json::from_value(case["before"].clone()).unwrap() };
         let outcome = mutation.diff(&base);
         assert_eq!(!outcome.messages().is_empty(), case["warning"].as_bool().unwrap());
-        let next = apply_diff(outcome.diff(), &base).unwrap();
+        let next = apply_diff_cold(outcome.diff(), &base).unwrap();
         assert_eq!(next.selected_check_index, payload.index, "{}", case["id"]);
         assert_eq!(serde_json::to_value(next.selected_check_index).unwrap(), case["after"]);
         let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(backwards.len(), 1);
-        assert_eq!(apply_diff(backwards[0].diff(&next).diff(), &next).unwrap(), base);
+        assert_eq!(apply_diff_cold(backwards[0].diff(&next).diff(), &next).unwrap(), base);
         assert_eq!(NormResultsWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(NormResultsWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
@@ -80,9 +80,9 @@ fn committed_wire_witness_is_the_canonical_wire() {
 
 fn assert_wire_transition(mutation: &NormResultsWindowConfigMutation, expected: &serde_json::Value) {
     let base = NormResultsWindowConfig { selected_check_index: Some(17) };
-    let next = apply_diff(mutation.diff(&base).diff(), &base).unwrap();
+    let next = apply_diff_cold(mutation.diff(&base).diff(), &base).unwrap();
     assert_eq!(serde_json::to_value(next.selected_check_index).unwrap(), *expected);
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), base);
+    assert_eq!(apply_diff_cold(inverse[0].diff(&next).diff(), &next).unwrap(), base);
 }

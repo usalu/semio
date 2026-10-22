@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}, which re-exports its public names; `ShellHost` re-exports the keybinding hooks and `World3dHost` re-exports `mapContextMenuSpecs`, so import specifiers stay unchanged while `NodeGraph` reads them here.
  */
 
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext } from "../../⚛️react-port/🟦️.ts";
 import { formatKeybindingShortcut, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/framework/assets";
 import type { ContextMenuItemSpec, PluginContextMenuRequest } from "@semio-tech/framework";

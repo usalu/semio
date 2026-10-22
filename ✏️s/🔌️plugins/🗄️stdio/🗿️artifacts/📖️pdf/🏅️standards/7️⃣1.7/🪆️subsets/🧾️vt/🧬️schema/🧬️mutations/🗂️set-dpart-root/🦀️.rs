@@ -25,10 +25,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dpart-root", kind: "set-dpart-root", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VT-Dokumentpartition {} setzen", self.job))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["DPartRoot".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetDpartRoot
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetDpartRoot> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root::RemoveDpartRoot>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::dpart_root_rows(base, &self.job, &self.placements, self.entry_index)))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_entry(base, "DPartRoot") {
@@ -36,14 +48,6 @@ where
                 None => vec![Op::from(RemoveDpartRoot {})],
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VT-Dokumentpartition {} setzen", self.job))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["DPartRoot".to_string()]
     }
 }
 //#endregion 🔖️Mutation

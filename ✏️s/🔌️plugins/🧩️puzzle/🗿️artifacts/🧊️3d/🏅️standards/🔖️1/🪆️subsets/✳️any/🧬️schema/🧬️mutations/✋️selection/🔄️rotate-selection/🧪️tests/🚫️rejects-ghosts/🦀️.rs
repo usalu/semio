@@ -33,7 +33,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `rotate-selection` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle3dMutation as protocol::ColdMutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -66,7 +66,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_one() {
     assert!(DIFF_ABSENT.as_str().is_empty(), "rotate-selection/rejects-ghosts: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle3dMutation as protocol::ColdMutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle3dDiff::default(), "rotate-selection/rejects-ghosts: a refusing diff builder answers the default diff");
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "rotate-selection/rejects-ghosts declares a rejected outcome");

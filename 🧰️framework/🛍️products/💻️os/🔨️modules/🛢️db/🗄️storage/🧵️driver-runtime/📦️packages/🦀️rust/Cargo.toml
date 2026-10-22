@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
+semio-framework-async-sync = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"] }

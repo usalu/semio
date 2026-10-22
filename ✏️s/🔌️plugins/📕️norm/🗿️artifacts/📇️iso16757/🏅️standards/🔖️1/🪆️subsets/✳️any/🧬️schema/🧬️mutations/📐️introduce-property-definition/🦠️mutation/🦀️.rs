@@ -21,7 +21,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroducePropertyDefin
 
         protocol::SemanticDescriptor { verb: "insert", entity: "propertyDefinition", kind: "introduce-property-definition", record: "IntroducedPropertyDefinition" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create property definition \"{}\"", self.property_definition.names.preferred.text), &format!("Eigenschaftsdefinition \"{}\" erstellen", self.property_definition.names.preferred.text))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.property_definition.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for IntroducePropertyDefinition where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_property_definition::mutation::RetirePropertyDefinition> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::introduce_property_definition::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,11 +39,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroducePropertyDefin
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create property definition \"{}\"", self.property_definition.names.preferred.text), &format!("Eigenschaftsdefinition \"{}\" erstellen", self.property_definition.names.preferred.text))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.property_definition.id.clone()]
-    }
 }
 //#endregion 🔖️Payload

@@ -22,7 +22,16 @@ pub struct ReplaceByteRange {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "byte-range", kind: "replace-byte-range", record: "ReplaceByteRange" };
 
-    fn diff(&self, _base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange {
+    fn diff(&self, _base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::ReferenceDiff> {
         let Self { offset, remove_len, insert } = self;
         protocol::MutationOutcome::new(BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: *remove_len, insert: insert.clone() }] })
     }
@@ -34,12 +43,6 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange
             let removed_bytes = base.bytes[start..end].to_vec();
             vec![BinaryMutation::ReplaceByteRange(ReplaceByteRange { offset: start, remove_len: insert.len(), insert: removed_bytes })]
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

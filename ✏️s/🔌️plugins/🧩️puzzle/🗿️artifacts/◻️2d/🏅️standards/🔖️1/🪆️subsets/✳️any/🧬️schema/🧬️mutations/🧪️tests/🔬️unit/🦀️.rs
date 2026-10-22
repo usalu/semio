@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;

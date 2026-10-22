@@ -1,33 +1,10 @@
-/** 🏗️ glTF fixture generator: the FileReader shim, the untyped document model and the ONE real base document that three's own scene graph and GLTFExporter produce. */
+/** 🏗️ glTF fixture generator: the off-browser host, the untyped document model and the ONE real base document that three's own scene graph and GLTFExporter produce. */
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { installOffBrowserGlobals } from "../../../../../../../../🔮️oracles/🧊️mesh/🟦️.ts";
 
-//#region 🩹️Shims
-class ShimFileReader {
-  result: unknown = null;
-  onload: (() => void) | null = null;
-  onloadend: (() => void) | null = null;
-  onerror: ((e: unknown) => void) | null = null;
-  private done(): void {
-    this.onloadend?.();
-    this.onload?.();
-  }
-  readAsArrayBuffer(blob: Blob): void {
-    blob.arrayBuffer().then((buffer) => {
-      this.result = buffer;
-      this.done();
-    }, (error) => this.onerror?.(error));
-  }
-  readAsDataURL(blob: Blob): void {
-    blob.arrayBuffer().then((buffer) => {
-      this.result = `data:${blob.type || "application/octet-stream"};base64,${Buffer.from(buffer).toString("base64")}`;
-      this.done();
-    }, (error) => this.onerror?.(error));
-  }
-}
-(globalThis as { FileReader?: unknown }).FileReader ??= ShimFileReader as unknown as typeof FileReader;
+installOffBrowserGlobals();
 
-//#endregion 🩹️Shims
 //#region 📦️Document model (untyped — this generator edits the raw exported glTF JSON structurally)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Doc = any;

@@ -79,3 +79,15 @@ Expected wall time on this host: cold dominated by play (about 3 h, 68 component
 ## 6. Before the GO (coordinator)
 
 The preflight proves tools, pins, ports and four applied markers. It does not prove that `show projects` / `tools setup bazel` are green or that the remaining staged sets (course x-paths/x-release/x-proctor, play/demo manifests beyond the cache flag, hub) are applied; a missing set shows up as a FAIL/WARN in the matrix, not as a preflight stop. The dry-run (`--dry-run`) lists exactly what will run.
+
+## 7. READY2 (graph policy, memory gate, target names)
+
+- **Graph policy**: task commands (`run`) always plan fresh and take no policy; the only graph reads are `show`, and these use `--graph-policy=current` (never waits for a rebuild). `show` still queues at the capacity gate (5 GB; measured: `[capacity] waiting 100s for show`), so the check is one `show targets --graph-policy=current` plus `show project <name>` only for names it did not list.
+- **Target names**: new preflight check, on by default before every heavy phase (`--verify-targets` to force it on a preflight-only run, `--no-verify-targets` to skip): every project:target of the plan (cold/e2e/probe steps plus serve, test-e2e, dev, dev-site, prepare-prototype) must exist in the published graph, otherwise FAIL before anything starts. Not run against the real graph yet (the first generation is not published); logic verified with a fake `bun`.
+- **Live memory gate**: load is informational only; available memory FAILs only below 2 GB (WARN below 6 GB); capacity pressure warn/critical is a WARN; `[capacity] waiting ...` lines are recorded as waits per step; step timeouts already include gate waiting.
+- **Agent sessions**: `repo session` is not live (`bun repo session --help` crashes); the driver keeps the current env (`SEMIO_CARGO_LANE` per product). Nothing to change until round 6.
+- `selftest.py` still 102 assertions, 0 failures.
+
+## 8. READY3 (graph read form)
+
+The CLI caller parser refuses `--graph-policy=current` after `show`; the driver now sets `SEMIO_BUILD_GRAPH_POLICY=current` (documented env form) and reads the generation once with `show targets --json` for all projects and targets (no per-project `show project`). A failed or timed-out read is a WARN (names not verified), a listed generation lacking a name is a FAIL. Verified with a fake `bun` (policy env required, JSON list); not against the live graph (gate/lease wait).

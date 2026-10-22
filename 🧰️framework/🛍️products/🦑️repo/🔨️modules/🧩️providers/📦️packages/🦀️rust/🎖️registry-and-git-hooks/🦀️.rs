@@ -5,23 +5,23 @@
 use super::*;
 
 // #region 🎖️ProviderRegistry
-/// 🔌️ Every registered editor provider, in registration order.
-pub fn all_editor_providers() -> Vec<EditorProviders> {
+/// 🔌️ Every registered agent-client provider, in registration order.
+pub fn all_agent_client_providers() -> Vec<AgentClientProviders> {
     vec![
-        EditorProviders::from(CopilotEditorProvider),
-        EditorProviders::from(CursorEditorProvider),
-        EditorProviders::from(WindsurfEditorProvider),
-        EditorProviders::from(ClaudeCodeEditorProvider),
-        EditorProviders::from(DroidEditorProvider),
-        EditorProviders::from(CodexEditorProvider),
-        EditorProviders::from(AntigravityEditorProvider),
-        EditorProviders::from(KiroEditorProvider),
+        AgentClientProviders::from(CopilotAgentClientProvider),
+        AgentClientProviders::from(CursorAgentClientProvider),
+        AgentClientProviders::from(WindsurfAgentClientProvider),
+        AgentClientProviders::from(ClaudeCodeAgentClientProvider),
+        AgentClientProviders::from(DroidAgentClientProvider),
+        AgentClientProviders::from(CodexAgentClientProvider),
+        AgentClientProviders::from(AntigravityAgentClientProvider),
+        AgentClientProviders::from(KiroAgentClientProvider),
     ]
 }
 
-/// 💻️ The editor provider for a client slug.
-pub fn get_editor_provider(client: &str) -> Option<EditorProviders> {
-    all_editor_providers().into_iter().find(|provider| provider.kind() == client)
+/// 💻️ The agent-client provider for a client slug.
+pub fn get_agent_client_provider(client: &str) -> Option<AgentClientProviders> {
+    all_agent_client_providers().into_iter().find(|provider| provider.kind() == client)
 }
 
 /// 🐙️ The default management provider (GitHub) bound to a runner.

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { uiSpacingLen } from "@semio-tech/ui-styling";
 import {
   type AbsoluteLayout,

@@ -3,13 +3,19 @@
  * An application whose generated ambient file (`next-env.d.ts`) the workspace excludes is type-checked by its own `tsconfig.json` after the workspace program, and its diagnostics count; an excluded ambient file without such a project is refused.
  * @see 📜️script.ts
  */
-import { spawn, spawnSync } from "node:child_process";
+
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { totalmem } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type ts from "typescript";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runToolSyncV1, startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 //#region 🔖️TypescriptProject
 /** 🎚️ Which roots the generated project lists: every checked-in or untracked-but-not-ignored source, optionally narrowed. */
@@ -71,7 +77,7 @@ function posixPath(path: string): string {
 /** 🎯️ Validates one `--scope` value: a repo-relative folder or file prefix that stays inside the checkout. */
 function normalizeScope(value: string): string {
   const scope = posixPath(value).replace(/^\.\//, "").replace(/\/+$/, "");
-  if (scope === "" || isAbsolute(scope) || /^[A-Za-z]:/.test(scope) || scope.split("/").includes("..")) throw new Error(`${TYPESCRIPT_TAG} --scope must be a repo-relative path inside the checkout, got ${JSON.stringify(value)}`);
+  if (scope === "" || isAbsolute(scope) || /^[A-Za-z]:/.test(scope) || scope.split("/").includes("..")) throw refuseVerifyV1("invalid","typescript.scope-must-be-a-repo",{tag:String(TYPESCRIPT_TAG),value:String(JSON.stringify(value))});
   return scope;
 }
 
@@ -88,7 +94,7 @@ export function parseTypescriptProjectArguments(args: readonly string[]): Typesc
     };
     const count = (minimum: number): number => {
       const text = value(), parsed = Number(text);
-      if (!Number.isInteger(parsed) || parsed < minimum) throw new Error(`${TYPESCRIPT_TAG} ${flag} needs an integer of at least ${minimum}, got ${JSON.stringify(text)}`);
+      if (!Number.isInteger(parsed) || parsed < minimum) throw refuseVerifyV1("invalid","typescript.needs-an-integer-of-at",{tag:String(TYPESCRIPT_TAG),flag:String(flag),minimum:String(minimum),text:String(JSON.stringify(text))});
       return parsed;
     };
     if (flag === "--scope") scopes.push(normalizeScope(value()));
@@ -99,15 +105,15 @@ export function parseTypescriptProjectArguments(args: readonly string[]): Typesc
     else if (flag === "--timeout-minutes") timeoutMinutes = count(1);
     else if (flag === "--max-diagnostics") maximumDiagnostics = count(0);
     else if (flag === "--list") list = true;
-    else throw new Error(`${TYPESCRIPT_TAG} unknown flag ${JSON.stringify(flag)} (expected --scope <path>, --changed, --files-from <list>, --out <file>, --heap-mb <n>, --timeout-minutes <n>, --max-diagnostics <n>, --list)`);
+    else throw refuseVerifyV1("invalid","typescript.unknown-flag",{tag:String(TYPESCRIPT_TAG),flag:String(JSON.stringify(flag))});
   }
   return { selection: { scopes, changedOnly }, out, filesFrom, heapMegabytes, timeoutMinutes, maximumDiagnostics, list };
 }
 
 /** 📚️ Runs `git` read-only in the checkout and returns its NUL-separated records. */
 function gitRecords(root: string, args: readonly string[]): string[] {
-  const result = spawnSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: root, encoding: "utf8", maxBuffer: 1 << 29, shell: false });
-  if (result.error || result.status !== 0) throw new Error(`${TYPESCRIPT_TAG} git ${args.join(" ")} failed: ${result.error?.message ?? result.stderr}`);
+  const result = runToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: root, encoding: "utf8", maxBuffer: 1 << 29, shell: false });
+  if (result.error || result.status !== 0) throw refuseVerifyV1("failed","typescript.git-failed",{tag:String(TYPESCRIPT_TAG),command:args.join(" "),stderr:String(result.error?.message ?? result.stderr)});
   return result.stdout.split("\0").filter((record) => record !== "");
 }
 
@@ -125,14 +131,14 @@ export function listTypescriptChangedSources(root: string): string[] {
 
 /** 🚫️ The `exclude` patterns of the root `tsconfig.json`, the single place the workspace declares what is not source. */
 export function readTypescriptWorkspaceExcludes(root: string): string[] {
-  const document = Bun.JSONC.parse(readFileSync(join(root, "tsconfig.json"), "utf8")) as { exclude?: unknown };
-  if (!Array.isArray(document.exclude) || !document.exclude.every((entry): entry is string => typeof entry === "string")) throw new Error(`${TYPESCRIPT_TAG} tsconfig.json must declare an exclude list of strings`);
+  const document = runtimeParseJsoncV1(readFileSync(join(root, "tsconfig.json"), "utf8")) as { exclude?: unknown };
+  if (!Array.isArray(document.exclude) || !document.exclude.every((entry): entry is string => typeof entry === "string")) throw refuseVerifyV1("invalid","typescript.tsconfig-json-must-declare-an",{tag:String(TYPESCRIPT_TAG)});
   return document.exclude.map(posixPath);
 }
 
 /** 🧹️ Whether the same rules `tsc` applies to `exclude` drop a path: a pattern excludes the match itself and everything below it. */
 function excluder(patterns: readonly string[]): (path: string) => boolean {
-  const globs = patterns.map((pattern) => new Bun.Glob(pattern.replace(/^\.\//, "")));
+  const globs = patterns.map((pattern) => new GlobV1(pattern.replace(/^\.\//, "")));
   const folders = new Map<string, boolean>();
   const folderExcluded = (folder: string): boolean => {
     if (folder === "" || folder === ".") return false;
@@ -173,7 +179,7 @@ export function listTypescriptAppProjects(root: string, sources: readonly string
   for (const path of [...new Set(sources)].sort()) {
     if (path.split("/").pop() !== TYPESCRIPT_APP_AMBIENT_FILE || !excluded(path)) continue;
     const slash = path.lastIndexOf("/"), folder = slash < 0 ? "" : path.slice(0, slash), project = folder === "" ? "tsconfig.json" : `${folder}/tsconfig.json`;
-    if (!existsSync(join(root, project))) throw new Error(`${TYPESCRIPT_TAG} ${path} is excluded from the workspace program but ${project} does not exist, so nothing would type-check the application`);
+    if (!existsSync(join(root, project))) throw refuseVerifyV1("failed","typescript.is-excluded-from-the-workspace",{tag:String(TYPESCRIPT_TAG),path:String(path),project:String(project)});
     projects.push({ folder, project });
   }
   return projects;
@@ -197,7 +203,7 @@ export function typescriptProjectDocument(roots: readonly string[], toRoot: stri
       noEmit: true,
       skipLibCheck: true,
       incremental: false,
-      types: ["bun", "node"],
+      types: [runtimeTypeEnvironmentV1(), "node"],
       paths: Object.fromEntries(Object.entries(existingPaths).map(([name, target]) => [name, [`${prefix}${target}`]])),
     },
     include: [],
@@ -223,7 +229,7 @@ export function writeTypescriptProject(root: string, parsed: TypescriptProjectAr
   const listed = parsed.filesFrom === undefined ? undefined : readTypescriptRootList(root, parsed.filesFrom);
   const roots = selectTypescriptRoots(sources, readTypescriptWorkspaceExcludes(root), listed === undefined ? parsed.selection : { ...parsed.selection, listed }, changed);
   const kept = new Set(roots), stale = listed === undefined ? [] : listed.filter((path) => !kept.has(path));
-  if (roots.length === 0) throw new Error(`${TYPESCRIPT_TAG} the selection matches no TypeScript source`);
+  if (roots.length === 0) throw refuseVerifyV1("failed","typescript.the-selection-matches-no-source",{tag:String(TYPESCRIPT_TAG)});
   const path = resolve(root, parsed.out ?? join(defaultProjectFolder(root), "🔣️tsconfig.json"));
   const existing = Object.fromEntries(Object.entries(TYPESCRIPT_AMBIENT_PATHS).filter(([, target]) => existsSync(join(root, target))));
   mkdirSync(dirname(path), { recursive: true });
@@ -275,7 +281,7 @@ async function checkTypescriptProjectInChild(projectPath: string, logPath: strin
     },
   };
   const parsed = typescript.getParsedCommandLineOfConfigFile(resolve(projectPath), { noEmit: true }, configHost);
-  if (parsed === undefined) throw new Error(`${TYPESCRIPT_TAG} ${projectPath} cannot be read`);
+  if (parsed === undefined) throw refuseVerifyV1("failed","typescript.cannot-be-read",{tag:String(TYPESCRIPT_TAG),projectPath:String(projectPath)});
   const program = typescript.createProgram({ rootNames: parsed.fileNames, options: parsed.options, projectReferences: parsed.projectReferences, configFileParsingDiagnostics: typescript.getConfigFileParsingDiagnostics(parsed) });
   const syntax: ts.Diagnostic[] = [], semantic: ts.Diagnostic[] = [], broken = new Set<ts.SourceFile>();
   for (const source of program.getSourceFiles()) {
@@ -298,12 +304,12 @@ export function runTypescriptCompiler(root: string, projectPath: string, logPath
   try {
     createRequire(import.meta.url).resolve("typescript");
   } catch {
-    throw new Error(`${TYPESCRIPT_TAG} the typescript package is not installed for ${fileURLToPath(import.meta.url)}; install the workspace dependencies first`);
+    throw refuseVerifyV1("failed","typescript.the-package-is-not-installed",{tag:String(TYPESCRIPT_TAG),url:String(fileURLToPath(import.meta.url))});
   }
   return new Promise((done, fail) => {
     const started = Date.now();
-    const child = spawn("node", [`--max-old-space-size=${heapMegabytes}`, "--experimental-strip-types", "--disable-warning=ExperimentalWarning", fileURLToPath(import.meta.url), TYPESCRIPT_CHECK_FLAG, projectPath, logPath, syntaxLogPath], { cwd: root, stdio: ["ignore", "inherit", "inherit"], shell: false });
-    const heartbeat = setInterval(() => console.error(`${TYPESCRIPT_TAG} type-check running for ${Math.round((Date.now() - started) / 1000)}s (log ${logPath})`), 60_000);
+    const child = startToolV1("node", [`--max-old-space-size=${heapMegabytes}`, "--experimental-strip-types", "--disable-warning=ExperimentalWarning", fileURLToPath(import.meta.url), TYPESCRIPT_CHECK_FLAG, projectPath, logPath, syntaxLogPath], { cwd: root, stdio: ["ignore", "inherit", "inherit"], shell: false });
+    const heartbeat = setInterval(() => sayVerifyV1("typescript.type-check-running-for-s",{tag:String(TYPESCRIPT_TAG),seconds:String(Math.round((Date.now() - started) / 1000)),logPath:String(logPath)},"error"), 60_000);
     const deadline = setTimeout(() => child.kill("SIGKILL"), timeoutMinutes * 60_000);
     const interrupt = (signal: NodeJS.Signals): void => void child.kill(signal);
     const forward = ["SIGINT", "SIGTERM"] as const;
@@ -319,7 +325,7 @@ export function runTypescriptCompiler(root: string, projectPath: string, logPath
     });
     child.once("close", (status, signal) => {
       release();
-      if (signal !== null) fail(new Error(`${TYPESCRIPT_TAG} the type-check was stopped by ${signal} after ${Math.round((Date.now() - started) / 1000)}s`));
+      if (signal !== null) fail(refuseVerifyV1("failed","typescript.the-type-check-was-stopped",{tag:String(TYPESCRIPT_TAG),signal:String(signal),seconds:String(Math.round((Date.now() - started) / 1000))}));
       else done(status ?? 1);
     });
   });
@@ -329,26 +335,26 @@ export function runTypescriptCompiler(root: string, projectPath: string, logPath
 function reportTypescriptSyntaxFiles(syntaxLog: string, syntaxPath: string): void {
   const files = summarizeTypescriptSyntaxFiles(syntaxLog);
   if (files.length === 0) return;
-  console.log(`${TYPESCRIPT_TAG} ${files.length} file(s) do not parse and were not type-checked (every other file was; log ${syntaxPath}):`);
+  sayVerifyV1("typescript.file-do-not-parse-and",{tag:String(TYPESCRIPT_TAG),files:files.length,syntaxPath:String(syntaxPath)});
   for (const { first, count } of files.slice(0, 50)) console.log(`${TYPESCRIPT_TAG}   ${first}${count > 1 ? ` (+${count - 1} more)` : ""}`);
-  if (files.length > 50) console.log(`${TYPESCRIPT_TAG}   … ${files.length - 50} more file(s)`);
+  if (files.length > 50) sayVerifyV1("typescript.more-file",{tag:String(TYPESCRIPT_TAG),files:String(files.length - 50)});
 }
 
 /** 🚀️ Entry of `verify typescript <project|check> [flags]`: `project` writes the tsconfig, `check` writes it and type-checks every root. */
 export async function runTypescriptVerification(root: string, segments: readonly string[]): Promise<void> {
   const [command, ...flags] = segments;
-  if (command !== "project" && command !== "check") throw new Error(`${TYPESCRIPT_TAG} usage: verify typescript <project|check> [--scope <path>]… [--changed] [--files-from <list>] [--out <file>] [--heap-mb <n>] [--timeout-minutes <n>] [--max-diagnostics <n>] [--list]`);
+  if (command !== "project" && command !== "check") throw refuseVerifyV1("usage","typescript.usage-project-check-scope-path",{tag:String(TYPESCRIPT_TAG)});
   const parsed = parseTypescriptProjectArguments(flags);
   const { path, roots, stale } = writeTypescriptProject(root, parsed);
   console.log(`${TYPESCRIPT_TAG} project ${path} roots=${roots.length}`);
-  if (stale.length > 0) console.log(`${TYPESCRIPT_TAG} dropped ${stale.length} listed root(s) that are missing, excluded or shadowed: ${stale.slice(0, 20).join(", ")}${stale.length > 20 ? ", …" : ""}`);
+  if (stale.length > 0) sayVerifyV1("typescript.dropped-listed-root-that-are",{tag:String(TYPESCRIPT_TAG),count:stale.length,list:stale.slice(0, 20).join(", "),more:String(stale.length > 20 ? ", …" : "")});
   if (parsed.list) for (const rootPath of roots) console.log(rootPath);
   if (command === "project") return;
   const logPath = join(dirname(path), `${basename(path, ".json")}.tsc.txt`), syntaxPath = join(dirname(path), `${basename(path, ".json")}.syntax.txt`), heap = parsed.heapMegabytes ?? defaultHeapMegabytes();
   console.log(`${TYPESCRIPT_TAG} node --max-old-space-size=${heap} ${relative(root, fileURLToPath(import.meta.url))} ${TYPESCRIPT_CHECK_FLAG} ${relative(root, path)} > ${relative(root, logPath)}`);
   const status = await runTypescriptCompiler(root, path, logPath, syntaxPath, heap, parsed.timeoutMinutes);
   const summary = summarizeTypescriptDiagnostics(readFileSync(logPath, "utf8"));
-  if (status !== 0 && status !== 2) throw new Error(`${TYPESCRIPT_TAG} the type-check crashed with status ${status}; the log ${logPath} holds the cause (heap exhaustion is status 134: raise --heap-mb)`);
+  if (status !== 0 && status !== 2) throw refuseVerifyV1("failed","typescript.the-type-check-crashed-with",{tag:String(TYPESCRIPT_TAG),status:String(status),logPath:String(logPath)});
   const codes = Object.entries(summary.byCode).sort((left, right) => right[1] - left[1] || (left[0] < right[0] ? -1 : 1)).slice(0, 12).map(([code, count]) => `${code}=${count}`).join(" ");
   console.log(`${TYPESCRIPT_TAG} roots=${roots.length} diagnostics=${summary.total} files=${summary.files} top: ${codes || "none"}`);
   reportTypescriptSyntaxFiles(readFileSync(syntaxPath, "utf8"), syntaxPath);
@@ -360,18 +366,18 @@ export async function runTypescriptVerification(root: string, segments: readonly
     const appName = `${basename(path, ".json")}.app-${basename(app.folder) || "root"}`, appLog = join(dirname(path), `${appName}.tsc.txt`), appSyntax = join(dirname(path), `${appName}.syntax.txt`);
     const appStatus = await runTypescriptCompiler(root, resolve(root, app.project), appLog, appSyntax, heap, parsed.timeoutMinutes);
     const appSummary = summarizeTypescriptDiagnostics(readFileSync(appLog, "utf8"));
-    if (appStatus !== 0 && appStatus !== 2) throw new Error(`${TYPESCRIPT_TAG} the type-check crashed with status ${appStatus} on ${app.project}; the log ${appLog} holds the cause`);
+    if (appStatus !== 0 && appStatus !== 2) throw refuseVerifyV1("failed","typescript.the-type-check-crashed-with-2",{tag:String(TYPESCRIPT_TAG),status:String(appStatus),project:String(app.project),log:String(appLog)});
     console.log(`${TYPESCRIPT_TAG} app ${app.project} diagnostics=${appSummary.total} files=${appSummary.files}`);
     reportTypescriptSyntaxFiles(readFileSync(appSyntax, "utf8"), appSyntax);
     appDiagnostics += appSummary.total;
   }
   const total = summary.total + appDiagnostics;
-  if (total > parsed.maximumDiagnostics) throw new Error(`${TYPESCRIPT_TAG} ${total} diagnostic(s) exceed the allowed ${parsed.maximumDiagnostics}; see ${logPath}`);
+  if (total > parsed.maximumDiagnostics) throw refuseVerifyV1("failed","typescript.diagnostic-exceed-the-allowed-see",{tag:String(TYPESCRIPT_TAG),total:String(total),allowed:String(parsed.maximumDiagnostics),logPath:String(logPath)});
   console.log(`${TYPESCRIPT_TAG} passed.`);
 }
 //#endregion 🔖️TypescriptProject
 
-if (import.meta.main && process.argv[2] === TYPESCRIPT_CHECK_FLAG) {
+if (isMainModuleV1(import.meta.url) && process.argv[2] === TYPESCRIPT_CHECK_FLAG) {
   const [projectPath, logPath, syntaxLogPath] = process.argv.slice(3);
   if (projectPath === undefined || logPath === undefined || syntaxLogPath === undefined) throw new Error(`${TYPESCRIPT_TAG} ${TYPESCRIPT_CHECK_FLAG} needs <project> <log> <syntax-log>`);
   process.exitCode = await checkTypescriptProjectInChild(projectPath, logPath, syntaxLogPath);

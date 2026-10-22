@@ -1,0 +1,223 @@
+{
+ "version": 1,
+ "scalarDefects": [
+  {
+   "raw": "constructor",
+   "expected": "constructor",
+   "defect": "🧱️contract/🟦️.ts:policyCanonicalScalar indexes a plain object literal, so a token that names an Object.prototype member (`constructor`, `toString`, `hasOwnProperty`, `valueOf`) returns the inherited function instead of the token"
+  },
+  {
+   "raw": "toString",
+   "expected": "toString",
+   "defect": "🧱️contract/🟦️.ts:policyCanonicalScalar indexes a plain object literal, so a token that names an Object.prototype member (`constructor`, `toString`, `hasOwnProperty`, `valueOf`) returns the inherited function instead of the token"
+  },
+  {
+   "raw": "hasOwnProperty",
+   "expected": "hasOwnProperty",
+   "defect": "🧱️contract/🟦️.ts:policyCanonicalScalar indexes a plain object literal, so a token that names an Object.prototype member (`constructor`, `toString`, `hasOwnProperty`, `valueOf`) returns the inherited function instead of the token"
+  },
+  {
+   "raw": "valueOf",
+   "expected": "valueOf",
+   "defect": "🧱️contract/🟦️.ts:policyCanonicalScalar indexes a plain object literal, so a token that names an Object.prototype member (`constructor`, `toString`, `hasOwnProperty`, `valueOf`) returns the inherited function instead of the token"
+  }
+ ],
+ "state": [
+  {
+   "raw": " PERSISTED_SHARED ",
+   "expected": "persisted-shared"
+  },
+  {
+   "raw": "a_b-C",
+   "expected": "a-b-c"
+  },
+  {
+   "raw": "",
+   "expected": ""
+  },
+  {
+   "raw": "EPHEMERAL",
+   "expected": "ephemeral"
+  },
+  {
+   "raw": "x__y",
+   "expected": "x--y"
+  }
+ ],
+ "scalar": [
+  {
+   "raw": "String",
+   "expected": "string"
+  },
+  {
+   "raw": "string",
+   "expected": "string"
+  },
+  {
+   "raw": "bool",
+   "expected": "bool"
+  },
+  {
+   "raw": "boolean",
+   "expected": "bool"
+  },
+  {
+   "raw": "Boolean",
+   "expected": "bool"
+  },
+  {
+   "raw": "i32",
+   "expected": "int32"
+  },
+  {
+   "raw": "u32",
+   "expected": "uint32"
+  },
+  {
+   "raw": "i64",
+   "expected": "int64"
+  },
+  {
+   "raw": "u64",
+   "expected": "uint64"
+  },
+  {
+   "raw": "f32",
+   "expected": "float32"
+  },
+  {
+   "raw": "f64",
+   "expected": "float64"
+  },
+  {
+   "raw": "Int",
+   "expected": "int32"
+  },
+  {
+   "raw": "Float",
+   "expected": "float64"
+  },
+  {
+   "raw": "bytes",
+   "expected": "bytes"
+  },
+  {
+   "raw": "Vec<u8>",
+   "expected": "bytes"
+  },
+  {
+   "raw": " Vec < u8 > ",
+   "expected": "bytes"
+  },
+  {
+   "raw": "Option<String>",
+   "expected": "Option<String>"
+  },
+  {
+   "raw": "",
+   "expected": ""
+  },
+  {
+   "raw": "Widget",
+   "expected": "Widget"
+  },
+  {
+   "raw": "Str ing",
+   "expected": "string"
+  },
+  {
+   "raw": "double",
+   "expected": "double"
+  },
+  {
+   "raw": "number",
+   "expected": "number"
+  }
+ ],
+ "snake": [
+  {
+   "name": "display_name",
+   "expected": "displayName"
+  },
+  {
+   "name": "a_b_c",
+   "expected": "aBC"
+  },
+  {
+   "name": "_x",
+   "expected": "X"
+  },
+  {
+   "name": "already",
+   "expected": "already"
+  },
+  {
+   "name": "a__b",
+   "expected": "aB"
+  },
+  {
+   "name": "",
+   "expected": ""
+  },
+  {
+   "name": "x_1_y",
+   "expected": "x1Y"
+  },
+  {
+   "name": "trailing_",
+   "expected": "trailing"
+  },
+  {
+   "name": "ID_value",
+   "expected": "IDValue"
+  }
+ ],
+ "find": [
+  {
+   "name": "no expected name never matches",
+   "text": "pub struct A {",
+   "pattern": "\\bpub\\s+struct\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\{",
+   "flags": "",
+   "expected": null,
+   "found": null
+  },
+  {
+   "name": "the named declaration is found and the body starts after the brace",
+   "text": "pub struct A { x }\npub struct B {  y }",
+   "pattern": "\\bpub\\s+struct\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\{",
+   "flags": "",
+   "expected": "B",
+   "found": {
+    "typeName": "B",
+    "bodyStart": 33
+   }
+  },
+  {
+   "name": "an absent name is not found",
+   "text": "pub struct A {",
+   "pattern": "\\bpub\\s+struct\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\{",
+   "flags": "",
+   "expected": "C",
+   "found": null
+  },
+  {
+   "name": "a global pattern is accepted as is",
+   "text": "message M {",
+   "pattern": "\\bmessage\\s+([A-Za-z_]\\w*)\\s*\\{",
+   "flags": "g",
+   "expected": "M",
+   "found": {
+    "typeName": "M",
+    "bodyStart": 11
+   }
+  },
+  {
+   "name": "a prefix of the name does not match",
+   "text": "type Widgets {",
+   "pattern": "\\btype\\s+([A-Za-z_]\\w*)\\s*\\{",
+   "flags": "",
+   "expected": "Widget",
+   "found": null
+  }
+ ]
+}

@@ -13,7 +13,16 @@ pub struct RemoveStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
-    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Textstil entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_style(name))
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Textstil entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

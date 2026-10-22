@@ -22,13 +22,17 @@ pub struct SetPageGuides {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageGuides where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_guides::SetPageGuides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-guides", kind: "set-page-guides", record: "SetPageGuides" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
+    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for SetPageGuides where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_guides::SetPageGuides> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_guides(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_page_guides(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
-    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 
 fn guide_ok(guide: &LayoutRect) -> bool {

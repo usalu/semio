@@ -196,35 +196,9 @@ impl protocol::list_delta::RowPatch<ProcessStep> for Process3dStepPatch {
 }
 
 //#region 🔖️Apply
-impl MutationDiff<Process3dSnapshot> for Process3dDiff {
-    fn apply(&self, snapshot: &Process3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Process3dSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(delta) = &self.workshop {
-            next.workshop = Workshop { machines: delta.commit_onto(&next.workshop.machines, capability).map_err(|error| error.under(["workshop"]))? };
-        }
-        if let Some(value) = &self.stock_id {
-            next.stock_id = value.clone();
-        }
-        if let Some(value) = &self.stock_label {
-            next.stock_label = value.clone();
-        }
-        if let Some(value) = &self.stock_pose {
-            next.stock_pose = value.clone();
-        }
-        if let Some(value) = &self.stock_payload {
-            next.stock_payload = value.clone();
-        }
-        if let Some(value) = &self.stock_solid {
-            next.stock_solid = value.clone();
-        }
-        if let Some(delta) = &self.step_payloads {
-            next.step_payloads = delta.commit_onto(&next.step_payloads, capability).map_err(|error| error.under(["stepPayloads"]))?;
-            let derived = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&next), next.workshop.clone());
-            next.steps = derived.steps;
-            next.tool_solids = derived.tool_solids;
-        }
-        Ok(next)
-    }
+impl MutationDiff<Process3dSnapshot> for Process3dDiff {}
+
+impl protocol::ColdMutationDiff<Process3dSnapshot> for Process3dDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -252,9 +226,52 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(stock_solid);
         compose!(step_payloads);
     }
+
+    fn apply(&self, unpublished: &mut Process3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(delta) = &self.workshop {
+            next.workshop = Workshop { machines: delta.commit_onto(&next.workshop.machines, capability).map_err(|error| error.under(["workshop"]))? };
+        }
+        if let Some(value) = &self.stock_id {
+            next.stock_id = value.clone();
+        }
+        if let Some(value) = &self.stock_label {
+            next.stock_label = value.clone();
+        }
+        if let Some(value) = &self.stock_pose {
+            next.stock_pose = value.clone();
+        }
+        if let Some(value) = &self.stock_payload {
+            next.stock_payload = value.clone();
+        }
+        if let Some(value) = &self.stock_solid {
+            next.stock_solid = value.clone();
+        }
+        if let Some(delta) = &self.step_payloads {
+            next.step_payloads = delta.commit_onto(&next.step_payloads, capability).map_err(|error| error.under(["stepPayloads"]))?;
+            let derived = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&next), next.workshop.clone());
+            next.steps = derived.steps;
+            next.tool_solids = derived.tool_solids;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Process3dSnapshot> for Process3dDiff {
+    fn is_empty(&self) -> bool {
+        self.workshop.as_ref().is_none_or(Process3dMachinesDelta::is_empty)
+            && self.stock_id.is_none()
+            && self.stock_label.is_none()
+            && self.stock_pose.is_none()
+            && self.stock_payload.is_none()
+            && self.stock_solid.is_none()
+            && self.step_payloads.as_ref().is_none_or(Process3dStepsDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Process3dSnapshot> for Process3dDiff {
     fn inverse(&self, base: &Process3dSnapshot) -> Self {
         Self {
             workshop: self.workshop.as_ref().map(|delta| delta.inverse(&base.workshop.machines)),
@@ -265,15 +282,6 @@ impl protocol::DiffAlgebra<Process3dSnapshot> for Process3dDiff {
             stock_solid: self.stock_solid.as_ref().map(|_| base.stock_solid.clone()),
             step_payloads: self.step_payloads.as_ref().map(|delta| delta.inverse(&base.step_payloads)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.workshop.as_ref().is_none_or(Process3dMachinesDelta::is_empty)
-            && self.stock_id.is_none()
-            && self.stock_label.is_none()
-            && self.stock_pose.is_none()
-            && self.stock_payload.is_none()
-            && self.stock_solid.is_none()
-            && self.step_payloads.as_ref().is_none_or(Process3dStepsDelta::is_empty)
     }
 }
 //#endregion 🔖️Apply

@@ -15,7 +15,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -28,7 +28,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
+        "command": "repo ./📜️script.ts test renderer-contract",
         "forwardAllArgs": true
       }
     },
@@ -43,7 +43,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
+        "command": "repo ./📜️script.ts test renderer-contract",
         "forwardAllArgs": true
       },
       "cache": true,

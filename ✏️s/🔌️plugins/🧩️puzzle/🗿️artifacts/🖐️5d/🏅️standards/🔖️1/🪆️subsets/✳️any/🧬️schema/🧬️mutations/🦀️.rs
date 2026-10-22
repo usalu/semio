@@ -13,8 +13,8 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
-use protocol::DiffAlgebra;
-use protocol::Mutation;
+use protocol::{DiffAlgebra};
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-5d document mutation vocabulary: id-keyed part create-delete plus per-2d/

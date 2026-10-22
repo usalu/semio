@@ -1,3 +1,8 @@
+import ts from "typescript";
+import { Database } from "bun:sqlite";
+import "../../📂️workspace/🖥️view/🧪️tests/🟦️.ts";
+import "../../🖥️terminal/📣️feedback/🧪️tests/🟦️.ts";
+import "../../🖥️terminal/⚙️settings/⌨️keymap/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
@@ -139,4 +144,75 @@ test("every scenario of the keymap feature is proved by a test of this file and 
     for (const name of bun) expect(own.includes(`test(${JSON.stringify(name)}`), `${title}: ${name}`).toBe(true);
     for (const name of native) expect(rust.slice(0, rust.indexOf(`fn ${name}(`)).trimEnd().endsWith("#[test]"), `${title}: ${name}`).toBe(true);
   }
+});
+
+
+test("registered window native selections retain source feedback settings and semantic owner coverage", () => {
+  const fixture = read("../../🧫️fixtures/🪟️windows/🎟️coverage/🔣️.json");
+  const validate = new Ajv({ strict: true }).compile(read("../../🧬️schema/🪟️windows/🎟️coverage/🔣️.json"));
+  expect(validate(fixture)).toBe(true);
+  expect(validate({ ...fixture, unknown: true })).toBe(false);
+  const missing = structuredClone(fixture); missing.native[0].required.pop();
+  expect(validate(missing)).toBe(false);
+  const source = readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
+  const parsed = ts.createSourceFile("dashboard.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  expect((parsed as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
+  const literals = new Map<string, string>();
+  const strings = (node: ts.Node | undefined): string[] => {
+    if (!node || !ts.isArrayLiteralExpression(node)) throw Error("Expected authored literal selection");
+    return node.elements.map((item) => {
+      if (ts.isStringLiteral(item)) return item.text;
+      if (ts.isIdentifier(item) && literals.has(item.text)) return literals.get(item.text)!;
+      throw Error("Expected local immutable string selection");
+    });
+  };
+  const units: string[][] = [], selections: { packages: string[]; extraArgs: string[] }[][] = [];
+  const visit = (node: ts.Node, withinWindows = false): void => {
+    const windowBranch = ts.isIfStatement(node) && ts.isBinaryExpression(node.expression) && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken && ts.isStringLiteral(node.expression.right) && node.expression.right.text === "windows";
+    if (windowBranch) { visit(node.thenStatement, true); return; }
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+      if (node.initializer && ts.isStringLiteral(node.initializer) && ts.isVariableDeclarationList(node.parent) && (node.parent.flags & ts.NodeFlags.Const)) literals.set(node.name.text, node.initializer.text);
+      if (node.name.text === "crates") units.push(strings(node.initializer));
+      if (withinWindows && node.name.text === "selections") {
+        if (!node.initializer || !ts.isArrayLiteralExpression(node.initializer)) throw Error("Expected native child selections");
+        selections.push(node.initializer.elements.map((item) => {
+          if (!ts.isObjectLiteralExpression(item)) throw Error("Expected native child object");
+          const fields = new Map(item.properties.map((property) => {
+            if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) throw Error("Expected native child field");
+            return [property.name.text, property.initializer] as const;
+          }));
+          return { packages: strings(fields.get("packages")), extraArgs: strings(fields.get("extraArgs")) };
+        }));
+      }
+    }
+    ts.forEachChild(node, (child) => visit(child, withinWindows));
+  };
+  visit(parsed);
+  expect(units).toHaveLength(1); expect(selections).toHaveLength(1); expect(selections[0]).toHaveLength(2);
+  const first = selections[0]![0]!;
+  expect(first.extraArgs.slice(0, 2)).toEqual(["--lib", "-E"]);
+  expect(first.extraArgs).toHaveLength(3);
+  const expression = first.extraArgs[2]!;
+  expect(expression).toMatch(/^test\([a-z0-9_]+\)(?:\s*\|\s*test\([a-z0-9_]+\))*$/);
+  const filters = [...expression.matchAll(/test\(([a-z0-9_]+)\)/g)].map((match) => match[1]!);
+  const own = ts.createSourceFile("controls.ts", readFileSync(new URL(import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const imports = own.statements.filter(ts.isImportDeclaration).map((node) => (node.moduleSpecifier as ts.StringLiteral).text);
+  const roster = fixture.native.flatMap((owner: { package: string; source: string; required: string[] }) => [...readModuleTreeSource(new URL(owner.source, import.meta.url)).matchAll(/#\[test\]\s*fn\s+([a-z0-9_]+)\s*\(/g)].map((match) => ({ package: owner.package, name: match[1]! })));
+  const db = new Database(":memory:");
+  try {
+    const admit = (unitPackages: string[], packages: string[], tokens: string[], entries: string[]): boolean => {
+      if (!fixture.unitPackages.every((name: string) => unitPackages.includes(name)) || !fixture.native.every((row: { package: string }) => packages.includes(row.package)) || !fixture.retainedFilters.every((token: string) => tokens.includes(token)) || !entries.includes(fixture.neutralEntry)) return false;
+      const actual = roster.filter((row: { package: string; name: string }) => packages.includes(row.package) && tokens.some((token) => row.name.includes(token))).map((row: { package: string; name: string }) => row.package + "::" + row.name).sort();
+      const oracle = db.query("select json_extract(r.value,'$.package') || '::' || json_extract(r.value,'$.name') identity from json_each(?1) r where exists(select 1 from json_each(?2) p where p.value=json_extract(r.value,'$.package')) and exists(select 1 from json_each(?3) f where instr(json_extract(r.value,'$.name'),f.value)>0) order by identity").all(JSON.stringify(roster), JSON.stringify(packages), JSON.stringify(tokens)) as { identity: string }[];
+      expect(actual).toEqual(oracle.map((row) => row.identity));
+      return fixture.native.every((owner: { package: string; required: string[] }) => owner.required.every((name) => actual.includes(owner.package + "::" + name)));
+    };
+    expect(admit(units[0]!, first.packages, filters, imports)).toBe(true);
+    for (const name of fixture.unitPackages) expect(admit(units[0]!.filter((value) => value !== name), first.packages, filters, imports)).toBe(false);
+    for (const owner of fixture.native) expect(admit(units[0]!, first.packages.filter((value) => value !== owner.package), filters, imports)).toBe(false);
+    for (const token of ["source_", ...fixture.native[0].required.slice(9)]) expect(admit(units[0]!, first.packages, filters.filter((value) => value !== token), imports)).toBe(false);
+    expect(admit(units[0]!, first.packages, filters, imports.filter((value) => value !== fixture.neutralEntry))).toBe(false);
+    const settlement = read("../../📂️workspace/🖥️view/🧪️tests/🧫️fixtures/🔣️.json");
+    expect(settlement.cases.map((row: { name: string }) => row.name)).toEqual(fixture.settlementCases);
+  } finally { db.close(); }
 });

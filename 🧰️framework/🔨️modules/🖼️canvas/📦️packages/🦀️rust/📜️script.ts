@@ -21,4 +21,4 @@ class StageRuntimeAssetsScript extends BundleScript {
   await stageAdmittedArtifactTreesV1({workspace:this.repoRoot,invocation:this.invocation,phase,mode,trees:productsRoot=>runtimeAssetStageTrees(productsRoot,mode)});
  }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("stage-runtime-assets",StageRuntimeAssetsScript), { invocation: original, defaultCommand: "test" }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test",TestScript).register("stage-runtime-assets",StageRuntimeAssetsScript), { invocation: original, defaultCommand: "test" }));

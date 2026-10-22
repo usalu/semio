@@ -13,6 +13,7 @@ import { leadingEmojiIdentity } from "../../../../../📦️packages/🟦️type
 import { isExcludedTestPath, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { SKIP_DIR_NAMES, testCollectionIndexes, testFixtureCollectionIndex } from "../🧭️case-discovery/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧾️Contract
@@ -309,7 +310,7 @@ function fixtureSourceDependencies(path: string, source: string, taxonomy: TestT
       }
       if (ts.isCallExpression(node)) {
         const call = node.expression;
-        const fileReader = ts.isIdentifier(call) && fileBinding(call) === 1 || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || call.expression.text === "Bun" && bound(call.expression) === undefined && call.name.text === "file");
+        const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === "runtimeFileV1") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && fileBinding(call.expression) === 4 && readers.has(call.name.text);
         const target = fileReader ? readTarget(node.arguments[0]) : undefined;
         if (target) add(target, node.getStart(root));
       }
@@ -326,7 +327,7 @@ function fixtureManifestDependencies(path: string, source: string, taxonomy: Tes
   if (!["Cargo.toml", "package.json"].includes(name) || testFixtureCollectionIndex(path, taxonomy) >= 0) return [];
   const record = (value: unknown): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
   let manifest: Record<string, unknown>;
-  try { manifest = record(name === "Cargo.toml" ? Bun.TOML.parse(source) : JSON.parse(source)); } catch { return []; }
+  try { manifest = record(name === "Cargo.toml" ? runtimeParseTomlV1(source) : JSON.parse(source)); } catch { return []; }
   const targets = new Set<string>();
   const add = (value: unknown, repoRelative = false): void => {
     if (typeof value !== "string") return;

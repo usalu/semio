@@ -15,8 +15,8 @@ use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
 use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
-use protocol::DiffAlgebra;
-use protocol::Mutation;
+use protocol::{DiffAlgebra};
+use protocol::{Mutation};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-3d document mutation vocabulary: id-keyed object/target-volume/reference

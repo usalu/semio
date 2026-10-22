@@ -19,7 +19,7 @@ import { resolveManifestLabel, shellLabel } from "../../../🛠️ShellHelpers/�
 import { reduceBootstrapUiState, type BootstrapUiState } from "../../🪪️host-bootstrap/🟦️.tsx";
 import { canonicalSurfaceId, scopeRuntimeKey } from "../../🔐️identity-binding/🟦️.ts";
 import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🗃️ Applies a local catalog document event. */
 export function handleLocalCatalogEventMessage({ localCatalogClientInstanceIdRef, setLocalCatalog, message }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "localCatalogClientInstanceIdRef" | "setLocalCatalog"> & {

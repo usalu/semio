@@ -1,0 +1,196 @@
+{
+ "files": 103,
+ "creates": 8,
+ "rows": 130,
+ "sweeps": 6,
+ "edits": 464,
+ "groups": {
+  "ci": {
+   "files": 5,
+   "rows": 8,
+   "edits": 8
+  },
+  "catalogue-tools-exec": {
+   "files": 2,
+   "rows": 9,
+   "edits": 9
+  },
+  "law": {
+   "files": 1,
+   "rows": 1,
+   "edits": 1
+  },
+  "json-commands": {
+   "files": 80,
+   "rows": 86,
+   "edits": 368
+  },
+  "payloads": {
+   "files": 5,
+   "rows": 9,
+   "edits": 16
+  },
+  "docs": {
+   "files": 13,
+   "rows": 17,
+   "edits": 62
+  }
+ },
+ "rules": {
+  "repo-repo": {
+   "group": "repair",
+   "files": 0,
+   "matches": 0
+  },
+  "repo-repo-closed": {
+   "group": "repair",
+   "files": 0,
+   "matches": 0
+  },
+  "argv-script": {
+   "group": "json-commands",
+   "files": 27,
+   "matches": 101
+  },
+  "argv-inspector": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 1
+  },
+  "program-script": {
+   "group": "json-commands",
+   "files": 7,
+   "matches": 11
+  },
+  "program-repo-args": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 1
+  },
+  "string-script": {
+   "group": "json-commands",
+   "files": 5,
+   "matches": 10
+  },
+  "string-script-quoted": {
+   "group": "json-commands",
+   "files": 2,
+   "matches": 6
+  },
+  "string-cjs": {
+   "group": "json-commands",
+   "files": 2,
+   "matches": 11
+  },
+  "string-nx-run": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 1
+  },
+  "string-bun-test": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 1
+  },
+  "string-uv": {
+   "group": "json-commands",
+   "files": 27,
+   "matches": 182
+  },
+  "runtime-probes": {
+   "group": "json-commands",
+   "files": 10,
+   "matches": 39
+  },
+  "policy-probes": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 3
+  },
+  "policy-probe-go": {
+   "group": "json-commands",
+   "files": 0,
+   "matches": 0
+  },
+  "policy-probe-rustc": {
+   "group": "json-commands",
+   "files": 1,
+   "matches": 1
+  },
+  "json-bun-repo": {
+   "group": "json-commands",
+   "files": 0,
+   "matches": 0
+  },
+  "payload-bun-repo": {
+   "group": "payloads",
+   "files": 2,
+   "matches": 3
+  },
+  "payload-bun-test-argv": {
+   "group": "payloads",
+   "files": 1,
+   "matches": 1
+  },
+  "payload-bun-script-argv": {
+   "group": "payloads",
+   "files": 2,
+   "matches": 3
+  },
+  "payload-bun-test-text": {
+   "group": "payloads",
+   "files": 2,
+   "matches": 6
+  },
+  "payload-bun-install-text": {
+   "group": "payloads",
+   "files": 2,
+   "matches": 3
+  },
+  "dashboard-run": {
+   "group": "docs",
+   "files": 6,
+   "matches": 47
+  },
+  "dashboard-open": {
+   "group": "docs",
+   "files": 10,
+   "matches": 14
+  },
+  "doc-script": {
+   "group": "docs",
+   "files": 1,
+   "matches": 1
+  },
+  "doc-bun-repo": {
+   "group": "docs",
+   "files": 0,
+   "matches": 0
+  },
+  "ci-report": {
+   "group": "ci",
+   "files": 1,
+   "matches": 1
+  },
+  "ci-bun-repo": {
+   "group": "ci",
+   "files": 1,
+   "matches": 7
+  }
+ },
+ "scannedRoots": {
+  "nx.json": 1,
+  "README.md": 1,
+  "📋️project.json": 1,
+  ".github": 9,
+  ".agents": 4,
+  ".devcontainer": 5,
+  "✏️s": 89644,
+  "♻️mit-bestand": 1921,
+  "🎓️teaching": 232,
+  "🌎️hub": 1477,
+  "🏢️semio-tech": 55,
+  "🧰️framework": 30579
+ },
+ "inScopeFiles": 123929
+}

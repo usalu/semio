@@ -106,7 +106,7 @@ func runBenchmark(cmd *Command, args []string) error {
 				return
 			}
 
-			c := exec.Command(t.Cmd, t.Args...)
+			c := workspace.ToolCommand(t.Cmd, t.Args...)
 			c.Dir = t.Dir
 			output, err := c.Output()
 			if err != nil {

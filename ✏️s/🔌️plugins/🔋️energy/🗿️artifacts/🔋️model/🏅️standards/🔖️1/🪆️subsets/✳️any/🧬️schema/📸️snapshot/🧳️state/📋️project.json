@@ -4,7 +4,7 @@
     "verify-native": {
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state",
-        "command": "bun ./📜️script.ts verify native"
+        "command": "repo ./📜️script.ts verify native"
       },
       "executor": "repo:script",
       "cache": true,
@@ -13,7 +13,7 @@
     "verify-source": {
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state",
-        "command": "bun ./📜️script.ts verify source"
+        "command": "repo ./📜️script.ts verify source"
       },
       "executor": "repo:script",
       "cache": true,

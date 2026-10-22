@@ -1,0 +1,206 @@
+{
+ "refusals": [
+  {
+   "expected": "ok",
+   "id": "real",
+   "mutate": []
+  },
+  {
+   "expected": "error",
+   "id": "fragment claimed by two inferrers",
+   "mutate": [
+    {
+     "fromPath": [
+      "inferrers",
+      "coordinates",
+      "sources",
+      0
+     ],
+     "path": [
+      "inferrers",
+      "bun-lock",
+      "sources",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "fragment claimed as infrastructure and by an inferrer",
+   "mutate": [
+    {
+     "fromPath": [
+      "inferrers",
+      "coordinates",
+      "sources",
+      0
+     ],
+     "path": [
+      "none",
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "stamp of another inferrer",
+   "mutate": [
+    {
+     "path": [
+      "inferrers",
+      "coordinates",
+      "stamp"
+     ],
+     "value": "semio.graph-inferrer.bootstrap/1"
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "stamp without a positive version",
+   "mutate": [
+    {
+     "path": [
+      "inferrers",
+      "coordinates",
+      "stamp"
+     ],
+     "value": "semio.graph-inferrer.coordinates/0"
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "unknown scope",
+   "mutate": [
+    {
+     "path": [
+      "inferrers",
+      "coordinates",
+      "scope"
+     ],
+     "value": "everything"
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "no sources",
+   "mutate": [
+    {
+     "path": [
+      "inferrers",
+      "coordinates",
+      "sources"
+     ],
+     "value": []
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "a record stamp does not belong to the protocol",
+   "mutate": [
+    {
+     "path": [
+      "record"
+     ],
+     "value": "semio.graph-record/1"
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "unknown protocol key",
+   "mutate": [
+    {
+     "path": [
+      "extra"
+     ],
+     "value": 1
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "version 2",
+   "mutate": [
+    {
+     "path": [
+      "version"
+     ],
+     "value": 2
+    }
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/🟨️.mjs"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🟦️.ts"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️unknown-new-module/🟨️.mjs"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🟨️.mjs"
+  }
+ ],
+ "version": 1
+}

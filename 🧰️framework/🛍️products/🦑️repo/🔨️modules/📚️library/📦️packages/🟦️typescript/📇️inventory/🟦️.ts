@@ -27,7 +27,7 @@ export { default as discoveryRuntimeDocument } from "../../../🔍️discovery/�
 export { inspectRuntimeGraphV1, runtimeFixturePathV1 } from "../../../🔍️discovery/🕸️runtime/🟦️.ts";
 export type { RuntimeCargoObservationV1, RuntimeCargoUnitV1 } from "../../../🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts";
 export { implementationLeafBasenameFinding, taxonomyFileKindIsImplementation } from "../../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-export { generatorPreviewResourceLimits, generatorPreviewScriptArguments } from "../../../🔍️discovery/🛠️generator-commands/🟦️.ts";
+export { generatorPreviewResourceLimits, generatorPreviewScriptArguments, generatorPreviewScriptPath } from "../../../🔍️discovery/🛠️generator-commands/🟦️.ts";
 export { resolveWorkspaceTaxonomyAuthority } from "../../../🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts";
 export { discoverCatalogPackages, generatorProjectedInputView, registryCatalogProjectedInputView, registryExampleCatalog } from "../../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
 export { inventorySchemaScopes, schemaCollectionContractPath, schemaScopeIdFromDocumentId } from "../../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
@@ -50,5 +50,4 @@ export type { PolicySchemaFieldShape, PolicySchemaLeafExtract } from "../../../�
 export { jsonDocumentDuplicateKeys } from "../../../🧬️schema/🔣️json-document/🟦️.ts";
 export { policyAppPresenceTypeName } from "../../../🧬️schema/🗺️surface/🧱️contract/🟦️.ts";
 export { inventoryTaxonomy } from "../../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
-export { normalizationEngineDeclarations } from "../../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 export { parseGeneratorPreviewManifest } from "../../../🧹️normalization/🧾️plan-parsing/🟦️.ts";

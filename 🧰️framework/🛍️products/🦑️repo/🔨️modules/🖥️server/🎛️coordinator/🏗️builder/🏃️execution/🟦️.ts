@@ -19,7 +19,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import executionSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 
-const PACKAGE_DIR=resolve(import.meta.dir,"../../📦️packages/🟦️typescript");
+const PACKAGE_DIR=resolve(import.meta.dirname,"../../📦️packages/🟦️typescript");
 /** 🏗️ Compiles the actual coordinator with a dedicated bounded compiler defining Source closure. */
 export async function buildCoordinatorNextV1(workspace:string,invocation:ScriptInvocation,segments:string[]=[]):Promise<void>{
     if(validateJsonSchemaSubset(executionSchema,{version:1,command:"build",modes:["prototype","release"],maximumDefiningFiles:192}).length)throw new Error("Closed Next compiler command required");

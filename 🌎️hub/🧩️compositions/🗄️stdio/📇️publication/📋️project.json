@@ -6,7 +6,7 @@
   "targets": {
     "publish": {
       "executor": "repo:script",
-      "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "options": { "command": "repo 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true },
       "cache": false,
       "metadata": {
         "semio": {
@@ -16,7 +16,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "options": { "command": "repo 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true },
       "outputs": [],
       "cache": true
     }

@@ -24,7 +24,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

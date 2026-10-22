@@ -121,7 +121,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Draw
             Ok(inverse) => inverse,
             Err(error) => { *self.mutation = Some(mutation); return Err(error); }
         };
-        let post = match ::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+        let post = match ::protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()) {
             Ok(post) => post,
             Err(error) => {
                 *self.mutation = Some(mutation);

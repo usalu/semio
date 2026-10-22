@@ -1,5 +1,5 @@
 use crate::*;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
     let (forward, _messages) = protocol::apply_mutation(base, operation).expect("valid mutation");

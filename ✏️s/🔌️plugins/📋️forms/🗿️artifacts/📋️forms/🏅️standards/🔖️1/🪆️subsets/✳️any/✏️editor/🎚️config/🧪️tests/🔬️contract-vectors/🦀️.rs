@@ -1,6 +1,6 @@
 use crate::editor::forms::config::*;
 use dsl::os_pack as pack;
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn forms_configuration_contract_vectors_match_the_json_oracle() {
@@ -15,9 +15,9 @@ fn forms_configuration_contract_vectors_match_the_json_oracle() {
         assert_eq!(FormsConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.messages().len(), vector["errors"].as_u64().unwrap() as usize);
-        let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
+        let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&next)).unwrap(), vector["expected"]);
-        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base);
     }
 }

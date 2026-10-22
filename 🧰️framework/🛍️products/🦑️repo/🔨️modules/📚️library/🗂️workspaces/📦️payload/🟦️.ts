@@ -1,6 +1,7 @@
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import {ownsPayload as physicalOwnsPayload} from "./🟨️.cjs";
+import physicalModule from "./🟨️.cjs";
+const{ownsPayload:physicalOwnsPayload}=physicalModule;
 export interface PackagePayloadOwner { readonly absDir: string; readonly name?: string; readonly exports?: unknown; }
 export interface PackagePayloadEntry {
   readonly kind: "directory" | "file" | "symlink" | "other";

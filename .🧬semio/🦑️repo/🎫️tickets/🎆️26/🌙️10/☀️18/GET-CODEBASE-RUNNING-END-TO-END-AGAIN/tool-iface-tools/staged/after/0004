@@ -50,7 +50,7 @@ import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framewor
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 // 🩹️ Defensive: three's PLY/GLTF exporters need these off-browser; STL/OBJ do not, in principle, but
 // the mesh pilot's spike found them cheap insurance and the cost of carrying them is one shim block.
@@ -442,7 +442,7 @@ async function main(argv: readonly string[]): Promise<number> {
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const cargoTargetDir = cargoTargetDirectory(findWorkspaceRoot());
-    const build = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const subsetsDir = join(import.meta.dir, "..", "..");
     if (command === "carrier") {

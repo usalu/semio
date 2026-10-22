@@ -15,9 +15,9 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifSnapshot};
 #[cfg(test)] use crate::standards::v89a::subsets::any::schema::snapshot::{GifRgb};
 use framework_schema::ArtifactSchema;
-use protocol::os_spr::command::DiffAlgebra;
+use protocol::os_spr::command::{ColdDiffAlgebra, DiffAlgebra};
 #[cfg(test)] use protocol::{DiffCodec};
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -606,8 +606,47 @@ impl GifDiff {
     }
 }
 
-impl MutationDiff<GifSnapshot> for GifDiff {
-    fn apply(&self, base: &GifSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<GifSnapshot> {
+impl MutationDiff<GifSnapshot> for GifDiff {}
+
+impl protocol::ColdMutationDiff<GifSnapshot> for GifDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.width.is_some() {
+            self.width = other.width;
+        }
+        if other.height.is_some() {
+            self.height = other.height;
+        }
+        if other.gct.is_some() {
+            self.gct = other.gct;
+        }
+        if other.background_color_index.is_some() {
+            self.background_color_index = other.background_color_index;
+        }
+        if other.pixel_aspect_ratio.is_some() {
+            self.pixel_aspect_ratio = other.pixel_aspect_ratio;
+        }
+        if other.loop_count.is_some() {
+            self.loop_count = other.loop_count;
+        }
+        match (&mut self.frames, other.frames) {
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (slot @ None, Some(theirs)) => *slot = Some(theirs),
+            _ => {}
+        }
+        match (&mut self.comments, other.comments) {
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (slot @ None, Some(theirs)) => *slot = Some(theirs),
+            _ => {}
+        }
+        match (&mut self.app_extensions, other.app_extensions) {
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (slot @ None, Some(theirs)) => *slot = Some(theirs),
+            _ => {}
+        }
+    }
+
+    fn apply(&self, unpublished: &mut GifSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(frames) = &self.frames {
             validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"])?;
         }
@@ -645,43 +684,8 @@ impl MutationDiff<GifSnapshot> for GifDiff {
         if let Some(d) = &self.app_extensions {
             next.app_extensions = d.apply(&next.app_extensions);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.width.is_some() {
-            self.width = other.width;
-        }
-        if other.height.is_some() {
-            self.height = other.height;
-        }
-        if other.gct.is_some() {
-            self.gct = other.gct;
-        }
-        if other.background_color_index.is_some() {
-            self.background_color_index = other.background_color_index;
-        }
-        if other.pixel_aspect_ratio.is_some() {
-            self.pixel_aspect_ratio = other.pixel_aspect_ratio;
-        }
-        if other.loop_count.is_some() {
-            self.loop_count = other.loop_count;
-        }
-        match (&mut self.frames, other.frames) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
-            (slot @ None, Some(theirs)) => *slot = Some(theirs),
-            _ => {}
-        }
-        match (&mut self.comments, other.comments) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
-            (slot @ None, Some(theirs)) => *slot = Some(theirs),
-            _ => {}
-        }
-        match (&mut self.app_extensions, other.app_extensions) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
-            (slot @ None, Some(theirs)) => *slot = Some(theirs),
-            _ => {}
-        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -718,6 +722,12 @@ where
 }
 
 impl DiffAlgebra<GifSnapshot> for GifDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GifSnapshot> for GifDiff {
     fn inverse(&self, base: &GifSnapshot) -> Self {
         Self {
             width: self.width.map(|_| base.width),
@@ -730,10 +740,6 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
             comments: self.comments.as_ref().map(|d| d.inverse(&base.comments)),
             app_extensions: self.app_extensions.as_ref().map(|d| d.inverse(&base.app_extensions)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 

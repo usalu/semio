@@ -1,0 +1,109 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "constants",
+  "ok",
+  "errors"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "constants": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "target",
+    "hard"
+   ],
+   "properties": {
+    "target": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "files",
+      "bytes",
+      "lines"
+     ],
+     "properties": {
+      "files": {
+       "type": "integer"
+      },
+      "bytes": {
+       "type": "integer"
+      },
+      "lines": {
+       "type": "integer"
+      }
+     }
+    },
+    "hard": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "files",
+      "bytes",
+      "lines"
+     ],
+     "properties": {
+      "files": {
+       "type": "integer"
+      },
+      "bytes": {
+       "type": "integer"
+      },
+      "lines": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  },
+  "ok": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "files",
+       "bytes",
+       "lines"
+      ],
+      "properties": {
+       "files": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       },
+       "lines": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "errors": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  }
+ }
+}

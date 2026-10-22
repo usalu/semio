@@ -1,6 +1,6 @@
 //! 👥️ The presence roster and the presence rooms with their settings, readers and admission.
 
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_framework_server_contract::{PresenceEntry, PresenceFrame};
 use semio_framework_server_throttle::ClientKey;
 use serde::{Deserialize, Serialize};

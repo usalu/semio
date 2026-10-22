@@ -174,7 +174,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check source"
+        "command": "repo ./📜️script.ts canonical-bootstrap-folder-mirror-check source"
       }
     },
     "canonical-bootstrap-folder-mirror-process-check": {
@@ -187,7 +187,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check process"
+        "command": "repo ./📜️script.ts canonical-bootstrap-folder-mirror-check process"
       }
     },
     "browser-host-staging-check": {
@@ -196,7 +196,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick \"--testNamePattern=ticket-owned browser host staging\""
+        "command": "repo ./📜️script.ts test quick \"--testNamePattern=ticket-owned browser host staging\""
       },
       "inputs": [
         "default",
@@ -214,7 +214,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts closed-browser-component-factory-check"
+        "command": "repo ./📜️script.ts closed-browser-component-factory-check"
       }
     },
     "build": {
@@ -234,7 +234,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -254,7 +254,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify",
+        "command": "repo ./📜️script.ts verify",
         "forwardAllArgs": true
       }
     },
@@ -264,7 +264,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts bench",
+        "command": "repo ./📜️script.ts bench",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -288,7 +288,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts plugin",
+        "command": "repo ./📜️script.ts plugin",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -303,7 +303,7 @@
       "outputs": ["{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/reports/size"],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts plugin size",
+        "command": "repo ./📜️script.ts plugin size",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -317,7 +317,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts parity",
+        "command": "repo ./📜️script.ts parity",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -336,7 +336,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts index-lint",
+        "command": "repo ./📜️script.ts index-lint",
         "forwardAllArgs": true
       }
     },
@@ -350,7 +350,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts host-handle-lint",
+        "command": "repo ./📜️script.ts host-handle-lint",
         "forwardAllArgs": true
       }
     },
@@ -400,7 +400,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify matrix",
+        "command": "repo ./📜️script.ts verify matrix",
         "forwardAllArgs": true
       }
     },
@@ -445,7 +445,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify tool-run",
+        "command": "repo ./📜️script.ts verify tool-run",
         "forwardAllArgs": true
       }
     },
@@ -505,7 +505,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify two-human",
+        "command": "repo ./📜️script.ts verify two-human",
         "forwardAllArgs": true
       }
     },
@@ -533,7 +533,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify connections",
+        "command": "repo ./📜️script.ts verify connections",
         "forwardAllArgs": true
       }
     },
@@ -561,7 +561,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify idle",
+        "command": "repo ./📜️script.ts verify idle",
         "forwardAllArgs": true
       }
     },
@@ -589,7 +589,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify latency",
+        "command": "repo ./📜️script.ts verify latency",
         "forwardAllArgs": true
       }
     },
@@ -617,7 +617,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify idle --soak-minutes 30 --windows 10",
+        "command": "repo ./📜️script.ts verify idle --soak-minutes 30 --windows 10",
         "forwardAllArgs": true
       }
     },
@@ -630,7 +630,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify catalog",
+        "command": "repo ./📜️script.ts verify catalog",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -643,7 +643,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts cold-boot-check s react dev"
+        "command": "repo ./📜️script.ts cold-boot-check s react dev"
       },
       "outputs": [],
       "metadata": {
@@ -667,7 +667,7 @@
       "cache": false,
       "options": {
         "cwd": ".",
-        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe foreign-kind-s",
+        "command": "repo 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe foreign-kind-s",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -687,7 +687,7 @@
       "cache": false,
       "options": {
         "cwd": ".",
-        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe pinch-diagram-contrast-s",
+        "command": "repo 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe pinch-diagram-contrast-s",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -697,7 +697,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts distribution generate",
+        "command": "repo ./📜️script.ts distribution generate",
         "forwardAllArgs": true
       }
     },
@@ -711,7 +711,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts distribution preview",
+        "command": "repo ./📜️script.ts distribution preview",
         "forwardAllArgs": true
       }
     },
@@ -721,7 +721,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts distribution check",
+        "command": "repo ./📜️script.ts distribution check",
         "forwardAllArgs": true
       }
     },
@@ -734,7 +734,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts playground-session"
+        "command": "repo ./📜️script.ts playground-session"
       }
     },
     "preview-playground-session": {
@@ -747,7 +747,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts playground-session preview"
+        "command": "repo ./📜️script.ts playground-session preview"
       },
       "dependsOn": []
     },
@@ -758,7 +758,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts playground-session check"
+        "command": "repo ./📜️script.ts playground-session check"
       }
     },
     "generate-scale-fixture": {
@@ -766,7 +766,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate scale-fixture",
+        "command": "repo ./📜️script.ts generate scale-fixture",
         "forwardAllArgs": true
       }
     },
@@ -780,7 +780,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated",
+        "command": "repo ./📜️script.ts preview-generated",
         "forwardAllArgs": true
       }
     },
@@ -790,7 +790,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts scale-fixture check",
+        "command": "repo ./📜️script.ts scale-fixture check",
         "forwardAllArgs": true
       }
     },
@@ -804,7 +804,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts bench plugins native",
+        "command": "repo ./📜️script.ts bench plugins native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -822,7 +822,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts bench plugins react",
+        "command": "repo ./📜️script.ts bench plugins react",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -840,7 +840,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts bench plugins wgpu",
+        "command": "repo ./📜️script.ts bench plugins wgpu",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -858,7 +858,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ../../🚚️distribution/📜️script.ts inputs",
+        "command": "repo ../../🚚️distribution/📜️script.ts inputs",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -877,7 +877,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts channel-version check",
+        "command": "repo ./📜️script.ts channel-version check",
         "forwardAllArgs": true
       }
     },
@@ -891,7 +891,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts channel-version generate",
+        "command": "repo ./📜️script.ts channel-version generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -906,7 +906,7 @@
       "continuous": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts serve-hold",
+        "command": "repo ./📜️script.ts serve-hold",
         "forwardAllArgs": true
       }
     },
@@ -920,7 +920,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify home",
+        "command": "repo ./📜️script.ts verify home",
         "forwardAllArgs": true
       }
     },
@@ -929,7 +929,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify two-human --journey viewer",
+        "command": "repo ./📜️script.ts verify two-human --journey viewer",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -943,7 +943,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify two-human --journey cross-undo",
+        "command": "repo ./📜️script.ts verify two-human --journey cross-undo",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -957,7 +957,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify boot",
+        "command": "repo ./📜️script.ts verify boot",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -1010,7 +1010,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify time-travel",
+        "command": "repo ./📜️script.ts verify time-travel",
         "forwardAllArgs": true
       }
     },
@@ -1019,7 +1019,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -1044,7 +1044,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts parity journey",
+        "command": "repo ./📜️script.ts parity journey",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -1182,7 +1182,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts channel-version test-describe-ownership"
+        "command": "repo ./📜️script.ts channel-version test-describe-ownership"
       }
     },
     "channel-version-contributions-check": {
@@ -1195,7 +1195,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts channel-version test-contributions",
+        "command": "repo ./📜️script.ts channel-version test-contributions",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
       }
     },
@@ -1209,7 +1209,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts distribution-output-check",
+        "command": "repo ./📜️script.ts distribution-output-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -1229,7 +1229,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts source-watch-check",
+        "command": "repo ./📜️script.ts source-watch-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -1249,7 +1249,7 @@
         "testEnv"
       ],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
+        "command": "repo ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
         "cwd": "."
       }
     },
@@ -1263,7 +1263,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify-staged",
+        "command": "repo ./📜️script.ts verify-staged",
         "forwardAllArgs": true
       }
     }

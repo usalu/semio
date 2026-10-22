@@ -19,8 +19,8 @@
 ///     }
 /// }
 /// ```
-/// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over every required
-/// method), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
+/// expands to the enum, `impl SpaceMember for NoteMembers` and `impl ReferenceSpaceMember for NoteMembers`
+/// (match-delegation over every required method), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
 #[macro_export]
 macro_rules! space_members {
     (native_producer:$native_producer:expr,history_limits:$history_limits:expr,maximum_history_allocation_bytes:$history_allocation_bytes:expr,pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty, $catalog:ty, $catalog_value:expr)),+ $(,)? }) => {
@@ -99,20 +99,17 @@ macro_rules! space_members {
             fn one_item_wire_publication_supported(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m.as_ref())),+ }
             }
-            fn begin_one_item_wire_publication(&self, request: $crate::os_store::one_item_publication::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>, $crate::os_store::one_item_publication::ArtifactStoreBatchAdmissionRejected<$crate::os_store::one_item_publication::MemberStoreOneItemWire>> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m.as_ref(), request)),+ }
-            }
             fn owned_publication_birth_bytes(&self, request: &$crate::os_store::MemberStoreOwnedBatchRequest) -> Result<usize, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owned_publication_birth_bytes(m.as_ref(), request)),+ }
             }
             fn begin_one_item_owned_publication(&self, request: &mut $crate::os_store::MemberStoreOwnedBatchRequest, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>>, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_owned_publication(m.as_ref(), request, grant)),+ }
             }
-            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, grant)),+ }
+            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
             }
-            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, grant)),+ }
+            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
             }
             fn stage_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stage_one_item_publication(m.as_mut(), publication, visibility, grant)),+ }
@@ -168,20 +165,11 @@ macro_rules! space_members {
             async fn is_dirty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m.as_ref()).await),+ }
             }
-            async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::commit_checkpoint(m.as_mut(), message, authors, identity).await),+ }
-            }
             async fn current_checkpoint_id(&self) -> Option<String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m.as_ref()).await),+ }
             }
             async fn current_alternative_id(&self) -> Option<String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m.as_ref()).await),+ }
-            }
-            async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::checkout(m.as_mut(), checkpoint_id, alternative_id, identity).await),+ }
-            }
-            async fn create_alternative(&mut self, name: String, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::create_alternative(m.as_mut(), name, identity).await),+ }
             }
             async fn last_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m.as_ref()).await),+ }
@@ -189,32 +177,8 @@ macro_rules! space_members {
             async fn last_undone_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_undone_local_edit_timestamp(m.as_ref()).await),+ }
             }
-            async fn undo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::undo(m.as_mut(), identity).await),+ }
-            }
-            async fn redo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo(m.as_mut(), identity).await),+ }
-            }
             async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::as_any_mut(m.as_mut()).await),+ }
-            }
-            async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::preview_wire(m.as_ref(), ops).await),+ }
-            }
-            async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire(m.as_mut(), cmd_bytes, identity).await),+ }
-            }
-            async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire_with_policy(m.as_mut(), cmd_bytes, policy, identity).await),+ }
-            }
-            async fn event_log_payload(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::event_log_payload(m.as_ref()).await),+ }
-            }
-            async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::announce_tail_edit_payload(m.as_mut()).await),+ }
-            }
-            async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::ingest_remote_payload(m.as_mut(), envelopes).await),+ }
             }
             async fn tail_group_id(&self) -> Option<String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_group_id(m.as_ref()).await),+ }
@@ -225,29 +189,68 @@ macro_rules! space_members {
             async fn redo_tail(&self) -> Option<(String, Option<String>)> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m.as_ref()).await),+ }
             }
-            async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_group_id(m.as_mut(), group_id).await),+ }
-            }
-            async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_origin(m.as_mut(), origin).await),+ }
-            }
-            async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::set_owner(m.as_mut(), owner).await),+ }
-            }
-            async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::envelope_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn merge_persisted_envelope(&mut self, envelope_pack: &[u8]) -> Result<$crate::os_store::replay::PairMerge, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_persisted_envelope(m.as_mut(), envelope_pack).await),+ }
-            }
-            async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
-            }
             async fn merge_policy(&self) -> $crate::os_spr::MergePolicy {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m.as_ref()).await),+ }
+            }
+        }
+
+        impl $crate::os_store::ReferenceSpaceMember for $enum_name {
+            fn begin_one_item_wire_publication(&self, request: $crate::os_store::one_item_publication::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>, $crate::os_store::one_item_publication::ArtifactStoreBatchAdmissionRejected<$crate::os_store::one_item_publication::MemberStoreOneItemWire>> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::begin_one_item_wire_publication(m.as_ref(), request)),+ }
+            }
+            async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::commit_checkpoint(m.as_mut(), message, authors, identity).await),+ }
+            }
+            async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::checkout(m.as_mut(), checkpoint_id, alternative_id, identity).await),+ }
+            }
+            async fn create_alternative(&mut self, name: String, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::create_alternative(m.as_mut(), name, identity).await),+ }
+            }
+            async fn undo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::undo(m.as_mut(), identity).await),+ }
+            }
+            async fn redo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::redo(m.as_mut(), identity).await),+ }
+            }
+            async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::preview_wire(m.as_ref(), ops).await),+ }
+            }
+            async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::dispatch_wire(m.as_mut(), cmd_bytes, identity).await),+ }
+            }
+            async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::dispatch_wire_with_policy(m.as_mut(), cmd_bytes, policy, identity).await),+ }
+            }
+            async fn event_log_payload(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::event_log_payload(m.as_ref()).await),+ }
+            }
+            async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::announce_tail_edit_payload(m.as_mut()).await),+ }
+            }
+            async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::ingest_remote_payload(m.as_mut(), envelopes).await),+ }
+            }
+            async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::stamp_tail_group_id(m.as_mut(), group_id).await),+ }
+            }
+            async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::stamp_tail_origin(m.as_mut(), origin).await),+ }
+            }
+            async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::set_owner(m.as_mut(), owner).await),+ }
+            }
+            async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::document_pack_bytes(m.as_ref()).await),+ }
+            }
+            async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::envelope_pack_bytes(m.as_ref()).await),+ }
+            }
+            async fn merge_persisted_envelope(&mut self, envelope_pack: &[u8]) -> Result<$crate::os_store::replay::PairMerge, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::merge_persisted_envelope(m.as_mut(), envelope_pack).await),+ }
+            }
+            async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
+                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
             }
         }
 

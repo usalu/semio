@@ -12,7 +12,7 @@ use semio_framework_test_fixtures::fixture_path;
 extern crate semio_framework_os_kernel as protocol;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/⬅️before/🔣️.json").leak());
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/➡️after/🔣️.json").leak());
@@ -31,7 +31,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-energy-model applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-energy-model applies to its committed before-snapshot")
 }
 
 /// ▶️ `delete-energy-model` empties the fixed `energy_model` slot; the composed child document itself is not this parent's business.
@@ -65,7 +65,7 @@ async fn inverse_reinstalls_the_escrowed_energy_handle() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-energy-model/vacates-the-energy-slot: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("delete-energy-model/vacates-the-energy-slot: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-energy-model/vacates-the-energy-slot: inverse did not restore the before-snapshot");
 }
@@ -135,11 +135,11 @@ async fn committed_diff_is_canonical() {
 async fn committed_diff_applies_to_after() {
     let base = before();
     let in_memory = mutation().diff(&base).diff().clone();
-    assert_eq!(protocol::apply_diff(&in_memory, &base).expect("the in-memory diff applies"), expected_after(), "delete-energy-model/vacates-the-energy-slot: the in-memory diff must carry before to after");
+    assert_eq!(protocol::apply_diff_cold(&in_memory, &base).expect("the in-memory diff applies"), expected_after(), "delete-energy-model/vacates-the-energy-slot: the in-memory diff must carry before to after");
 
     let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     assert_eq!(decoded, semio_s_artifact_cad_cad_model_diff::CadDiff::default(), "delete-energy-model/vacates-the-energy-slot: a `null` energyModel is indistinguishable from an untouched one, so the decoded diff is empty");
-    assert_eq!(protocol::apply_diff(&decoded, &base).expect("the decoded diff applies"), base, "delete-energy-model/vacates-the-energy-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &base).expect("the decoded diff applies"), base, "delete-energy-model/vacates-the-energy-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
 }
 
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.

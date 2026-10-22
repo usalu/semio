@@ -6,18 +6,34 @@ import {dirname,join,relative,sep} from "node:path";
 import {parse} from "yaml";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import cases from "./🔣️.json" with {type:"json"};
+import coverageSchema from "../../🧬️schema/🪟️windows/🎟️coverage/🔣️.json" with {type:"json"};
+import coverage from "../../🧫️fixtures/🪟️windows/🎟️coverage/🔣️.json" with {type:"json"};
 
 const root=()=>{let path=import.meta.dir;for(let depth=0;depth<32;depth++){if(existsSync(join(path,".github/workflows/build-system.yml")))return path;const parent=dirname(path);if(parent===path)break;path=parent;}throw Error("Repository CI root required");};
 const document=(path:string)=>parse(readFileSync(join(root(),path),"utf8"));
 
+const assertGateOrder=(actual:string[])=>{
+ expect(actual).toEqual(cases.gates.map(row=>row.id));
+ const db=new Database(":memory:");try{
+  expect(db.query("SELECT (SELECT key FROM json_each(?1) WHERE value='canonical-cold-lazy-launch') < (SELECT key FROM json_each(?1) WHERE value=?2) AS coldFirst").get(JSON.stringify(actual),cases.windowGate.id)).toEqual({coldFirst:1});
+  expect(db.query("SELECT group_concat(value,'>') AS ordered FROM json_each(?)").get(JSON.stringify(actual))).toEqual({ordered:cases.gates.map(row=>row.id).join(">")});
+ }finally{db.close();}
+};
+
 test("dashboard CI host and gate vectors are closed and independently ordered",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(cases)).toBe(true);
  expect(validate({...cases,unknown:true})).toBe(false);
+ expect(validate({...cases,windowGate:{...cases.windowGate,command:"repo cargo test"}})).toBe(false);
+ expect(new Ajv({strict:true}).compile(coverageSchema)(coverage)).toBe(true);
+ expect(cases.gates.find(row=>row.id===cases.windowGate.id)).toEqual(cases.windowGate);
  const db=new Database(":memory:");try{
   const rows=db.query("SELECT json_extract(value,'$.name') AS name,json_extract(value,'$.runner') AS runner FROM json_each(?) ORDER BY key").all(JSON.stringify(cases.hosts));
   expect(rows).toEqual(cases.hosts);
   expect(db.query("SELECT count(DISTINCT json_extract(value,'$.name')) AS count FROM json_each(?)").get(JSON.stringify(cases.hosts))).toEqual({count:3});
   expect(db.query("SELECT count(DISTINCT json_extract(value,'$.id')) AS count FROM json_each(?)").get(JSON.stringify(cases.gates))).toEqual({count:7});
+  const native=coverage.native.flatMap(owner=>owner.required.map(name=>owner.package+"::"+name));
+  expect(db.query("SELECT count(DISTINCT value) AS count FROM json_each(?)").get(JSON.stringify(native))).toEqual({count:17});
+  expect(db.query("SELECT count(DISTINCT value) AS count FROM json_each(?)").get(JSON.stringify(coverage.settlementCases))).toEqual({count:8});
  }finally{db.close();}
 });
 
@@ -31,6 +47,7 @@ test("every native host runs actual dashboard editing language cold install and 
  const steps=job.steps as {id?:string;run?:string;uses?:string;env?:Record<string,string>}[];
  const bootstrap=steps.findIndex(step=>step.uses==="./.github/actions/native-repo");expect(bootstrap).toBeGreaterThan(0);
  for(const row of cases.gates){const position=steps.findIndex(step=>step.id===row.id);expect(position,row.id).toBeGreaterThan(bootstrap);expect(steps[position]!.run?.trim(),row.id).toBe(row.command);expect(steps[position]!.env?.SEMIO_TEST_ARTIFACT_DIR).toBe("${{ runner.temp }}/dashboard-artifacts");expect(steps[position]!.env?.SEMIO_BUILD_TEST_RESULTS_DIR).toBe("${{ runner.temp }}/dashboard-results");}
+ assertGateOrder(steps.filter(step=>cases.gates.some(row=>row.id===step.id)).map(step=>step.id!));
  expect(steps.findIndex(step=>step.id==="canonical-cold-lazy-launch")).toBeLessThan(steps.findIndex(step=>step.id==="installed-journeys"));
  const evidence=steps.find(step=>step.uses?.startsWith("actions/upload-artifact@")) as any;expect(evidence.if).toBe("${{ !cancelled() }}");expect(evidence.with["retention-days"]).toBe(14);expect(evidence.with.path).toContain("dashboard-artifacts");expect(evidence.with.path).toContain("dashboard-results");
  expect(steps.filter(step=>step.env?.SEMIO_LANGUAGE==="de").map(step=>step.run)).toEqual(["repo --help"]);
@@ -42,7 +59,7 @@ test("native CI recovery publishes the owned frontend before ordinary repository
  const steps=action.runs.steps as {uses?:string;run?:string;shell?:string;if?:string}[];
  expect(steps[0]!.uses).toBe("./.github/actions/bun-repo");
  const recoveries=steps.filter(step=>step.run?.includes("repo-mcp:build"));expect(recoveries).toHaveLength(2);
- for(const step of recoveries){expect(step.run).toContain("bun repo run repo-mcp:build --skip-cache");expect(step.run).toContain("--help");expect(step.run).toContain("GITHUB_PATH");expect(step.run).not.toMatch(/repo dashboard|cargo |rustc |git (?:reset|checkout|clean)/u);expect(step.if).toContain("runner.os");}
+ for(const step of recoveries){expect(step.run).toContain("repo run repo-mcp:build --skip-cache");expect(step.run).toContain("--help");expect(step.run).toContain("GITHUB_PATH");expect(step.run).not.toMatch(/repo dashboard|cargo |rustc |git (?:reset|checkout|clean)/u);expect(step.if).toContain("runner.os");}
  expect(recoveries.map(step=>step.shell)).toEqual(["bash","pwsh"]);
 });
 
@@ -55,6 +72,7 @@ test("devcontainer CI builds the actual configuration and refuses an unexecuted 
  const execution=action.runs.steps.find((step:any)=>step.uses===cases.devcontainer.adapter);expect(execution.with.configFile).toBe(cases.devcontainer.configuration);expect(execution.with.push).toBe("never");expect(execution.with.inheritEnv).toBe(false);
  const commands=execution.with.runCmd.trim().split("\n");expect(commands[0]).toBe("set -euo pipefail");expect(commands.at(-1)).toBe("tail -c 16384 /tmp/dashboard-help.log");expect(commands).toContain("run_gate help repo --help");
  for(const id of cases.devcontainer.gates)expect(commands).toContain("run_gate "+id+" "+cases.gates.find(row=>row.id===id)!.command);
+ assertGateOrder(commands.filter((line:string)=>line.startsWith("run_gate ")).map((line:string)=>line.split(" ")[1]!).filter((id:string)=>cases.gates.some(row=>row.id===id)));
  expect(execution.with.runCmd).toContain('tail -c 16384 "/tmp/dashboard-$gate.log"');expect(execution.with.runCmd).toContain('exit "$status"');
  expect(execution.with.env).toContain("SEMIO_LANGUAGE=en");expect(execution.with.env).toContain("SEMIO_TEST_ARTIFACT_DIR=/tmp/dashboard-artifacts");
  const observed=action.runs.steps.find((step:any)=>step.id==="observed");expect(observed.if).toContain("!cancelled()");expect(observed.env.ACTUAL_OUTPUT).toContain("runCmdOutput");expect(observed.run).toContain(cases.devcontainer.completedEntry);expect(observed.run).toContain("exit 1");expect(observed.run).toContain("dashboard-devcontainer.log");

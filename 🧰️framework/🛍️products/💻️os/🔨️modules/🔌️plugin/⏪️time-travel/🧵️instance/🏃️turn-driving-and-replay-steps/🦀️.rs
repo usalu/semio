@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_plugin_child::ChildContentRetirement;
 use semio_framework::Fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ⏯️ One bounded driver turn (≤ [`TIME_TRAVEL_TURN_WALL_US`], design §20.14): owed scope, retirement, base watch, one
     /// replay slice, one authoring slice and one deferred-reprojection slice, all against ONE wall deadline taken when the
     /// turn begins on the ledger's turn clock (audit W2A-3) — a slow operation ends the turn, never an operation count; a
@@ -25,14 +25,15 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         }
         let moved = self.watch_time_travel_base(identity).await?;
         if !moved && self.time_travel.session.stage == TimeTravelStage::Editing && self.time_travel.preview_progress().is_some() {
-            if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant },Some(receiving)).await? {
+            let preview_command = TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant };
+            if let TimeTravelStoreOutput::Previewed(step) = cx.with_native_receiving_ready(async |receiving| self.time_travel_run(preview_command,Some(receiving)).await).map_err(ValueError::into_fault)?? {
                 self.adopt_time_travel_preview_step(step,Some(grant)).await?;
             }
         }
         if !moved && self.time_travel.session.stage == TimeTravelStage::Replaying && self.time_travel.replaying() {
-            self.step_time_travel_replay(grant,deadline_us, identity,receiving).await?;
+            cx.with_native_receiving_ready(async |receiving| self.step_time_travel_replay(grant,deadline_us, identity,receiving).await).map_err(ValueError::into_fault)??;
         }
-        if self.time_travel.authoring.is_some() && self.step_supersede_authoring(grant,deadline_us, identity,receiving).await? != SupersedeAuthored::Pending {
+        if self.time_travel.authoring.is_some() && cx.with_native_receiving_ready(async |receiving| self.step_supersede_authoring(grant,deadline_us, identity,receiving).await).map_err(ValueError::into_fault)?? != SupersedeAuthored::Pending {
             self.note_time_travel_changed(true, true);
         }
         if self.shared().reprojection_drives() {

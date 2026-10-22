@@ -22,3 +22,8 @@ One `🥒️.feature` per case under `🧪️tests/` with an adapter per impleme
 
 `📃️document-parsing`, `🚫️syntax-errors`, `🙅️unsupported-syntax`, `🔀️variable-coercion`,
 `▶️query-execution`, `✏️mutation-execution`, `❌️execution-errors`, `📜️sdl-dump`.
+
+
+## GraphQL Client Types
+
+The canonical `🔤️types` owner reads the served SDL and repository operation documents, then projects TypeScript client types. `repo run @semio-tech/repo-graphql-rs:generate-types` writes the deterministic output, `check-types` compares it without writing, and `test-types-source` runs the owned parser/projection against graphql-js and the TypeScript syntax oracle. `preview-types` emits the existing read-only generator protocol. These controls have no editor host or extension package dependency.

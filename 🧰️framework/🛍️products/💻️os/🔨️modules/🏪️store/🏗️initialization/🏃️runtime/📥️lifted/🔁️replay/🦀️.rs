@@ -5,7 +5,7 @@ use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use semio_framework_os_spr::{Edit, Mutation, OpBinary};
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_os_store_replay::fold_operation;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 use semio_framework_value::RetainedCloneStep;
@@ -30,7 +30,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn admit_native_snapshot_read(&self, generation: u64, grant: RetainedCloneGrant) -> Result<Option<(semio_framework_value_snapshot_read::SnapshotRead<P>, RetainedCloneProgress)>, ValueError>
     where P: Send + Sync + 'static,
     {
-        let demand=Self::native_snapshot_read_demand();if !permits(grant,demand){return Ok(None);}
+        let demand=Self::native_snapshot_read_demand();if !retained_clone_grant_admits(grant,demand){return Ok(None);}
         let revision=self.revision.revision(self.current_checkpoint_id.as_deref());
         if !self.read_registry.publish_authority(generation,revision){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"initialization read registry authority is busy"));}
         let current=self.current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"initialization original current absent"))?;

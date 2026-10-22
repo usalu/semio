@@ -230,7 +230,7 @@ pub struct ArtifactActor {
     /// 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces an
     /// absent archive ([`ArtifactEvent::DocumentArchiveAbsent`]).
     pub(super) folder_bootstrapped: bool,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub(super) folder_writes: usize,
     pub remote_state: RemoteState,
     pub last_status: Option<ArtifactSyncStatus>,
@@ -243,7 +243,7 @@ pub struct ArtifactActor {
     pub(super) close_drain_deadline: Option<Instant>,
     pub(super) readiness: Option<Arc<dyn Fn() + Send + Sync>>,
     pub(super) readiness_requested: Arc<std::sync::atomic::AtomicBool>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub(super) fail_bootstrap_local_replay_once: bool,
 }
 

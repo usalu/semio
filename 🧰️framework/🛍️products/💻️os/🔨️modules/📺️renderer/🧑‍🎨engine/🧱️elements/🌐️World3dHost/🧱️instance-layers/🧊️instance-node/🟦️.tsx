@@ -1,5 +1,5 @@
 /** 🧊️ World3d instance layers, instance node: the per-instance node that paints a mesh or primitive with its pose, paint ids and highlight, and the cached orientation quaternion of an instance. */
-import { useCallback, useMemo, Suspense, type ComponentProps } from "react";
+import { useCallback, useMemo, Suspense, type ComponentProps } from "../../../⚛️react-port/🟦️.ts";
 import { reactHostPort, BufferGeometry, DoubleSide, EdgesGeometry, Group, Quaternion } from "@semio-tech/ui-react";
 import { ToolRunProvisionalOutline, useToolRunProvisional } from "../../⏯️tool-run-trace/🟦️.tsx";
 import { world3dGlbHitFaceId, type World3dSubElementPaint } from "../../📏️modelling/🟦️.tsx";

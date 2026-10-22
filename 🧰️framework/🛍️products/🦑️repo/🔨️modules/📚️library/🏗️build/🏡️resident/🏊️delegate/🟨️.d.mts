@@ -1,0 +1,6 @@
+export const WARM_PRELOAD_SOURCE:string;
+export function writeWarmPreloadV1(directory:string):string;
+export interface WarmWorkerV1{child:any;state:string}
+export interface WarmPoolV1{top():void;take():WarmWorkerV1|undefined;run(worker:WarmWorkerV1,request:{argv:readonly string[];cwd?:string;env?:Record<string,string|null>},options:{onOutput(stream:"stdout"|"stderr",text:string):unknown;signal?:AbortSignal}):Promise<{exit:number;signal:string|null;started:boolean}>;stats():Record<string,number>;idleCount():number;close():Promise<void>}
+export function createWarmPoolV1(options:{command:readonly string[];environment:Record<string,string|undefined>;cwd:string;size:number;idleMilliseconds:number;readyTimeoutMilliseconds?:number;spawnProcess?:unknown;log?:(kind:string,detail:string)=>void;now?:()=>number}):WarmPoolV1;
+export function createDelegatedExecutionPortV1(options:{pool:WarmPoolV1;executors?:import("./🏭️executor/🟨️.mjs").ExecutorPoolV1;executorArgumentsFor?:(id:string)=>readonly string[];coldCommand:readonly string[];argvFor:(id:string)=>readonly string[];environment:Record<string,string|undefined>;cwd:string;timing?:(kind:"executor"|"warm"|"cold")=>void}):import("../🏛️service/🟨️.mjs").ExecutionPortV1;

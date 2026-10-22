@@ -1,11 +1,12 @@
 /** 🟠️ The mode windows phase of usePanelHosting. */
-import { type CSSProperties, useMemo } from "react";
+import { type CSSProperties, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition, type LocalizedLabel } from "@semio-tech/framework";
 import { spawnedGuestWindowInstancesV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { childElementId, ChromeAwareWindowScrollSurface, type ModeWindowDescriptor, WindowBodySkeleton } from "@semio-tech/ui-react";
 import { InterpretedUiNode } from "../../../🗣️Interpreter/🟦️.tsx";
 import { TreeWindowContext } from "../../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
-import { MediaTransportOwnerContext, type MediaTransportOwner } from "../../../🎬️MediaTransportHost/🟦️.tsx";
+import { MediaTransportOwnerScope } from "../../../🎬️MediaTransportHost/🔗️owner-scope/🟦️.tsx";
+import type { MediaTransportOwnerV1 } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { ShellFaultBoundary } from "../../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { World3dWindowViewStoreContext } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel, WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -26,7 +27,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const primaryMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-    const primaryMediaOwner = (windowId: string): MediaTransportOwner | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle } : null;
+    const primaryMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle } : null;
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
       introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
@@ -45,7 +46,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
       const spawnedApp = activeSpawnedApp;
       const spawnedLocalDocumentOwner = localDocumentOwnerRegistry.acquire({ pluginId: spawned.pluginId, appId: spawned.appId, sessionInstanceId: spawned.instanceId, runtimeKey: `spawned:${spawned.id}`, clientInstanceId: spawned.id });
       const spawnedMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
-      const spawnedMediaOwner = (windowId: string): MediaTransportOwner | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle } : null;
+      const spawnedMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle } : null;
       const spawnedWorld3dViews = world3dWindowViewRegistry.scope(`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`);
       const spawnedKindById = new Map(spawnedApp.windowKinds.map((kind) => [kind.id, kind] as const));
       const spawnedDeclaredTitles = new Map(resolveFrameworkLayoutSeed(spawnedApp.defaultLayout, withLocalizedWindowKindLabels(spawnedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).extraInstances.map((extra) => [extra.id, extra.title] as const));
@@ -80,7 +81,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                    {bodyStore ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode windowId={windowId} localDocumentOwner={spawnedLocalDocumentOwner} store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
+                    {bodyStore ? <MediaTransportOwnerScope owner={spawnedMediaOwner(windowId)}><InterpretedUiNode windowId={windowId} localDocumentOwner={spawnedLocalDocumentOwner} store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerScope> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
               </World3dWindowViewStoreContext.Provider>
@@ -119,7 +120,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                   <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                  <MediaTransportOwnerContext.Provider value={browserActorStore === undefined ? primaryMediaOwner(kind.id) : null}><InterpretedUiNode windowId={kind.id} localDocumentOwner={currentLocalDocumentOwner} store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => currentDocumentRuntimeKey !== null && browserActorUi !== undefined ? onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent) : undefined} /></MediaTransportOwnerContext.Provider>
+                  <MediaTransportOwnerScope owner={browserActorStore === undefined ? primaryMediaOwner(kind.id) : null}><InterpretedUiNode windowId={kind.id} localDocumentOwner={currentLocalDocumentOwner} store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => currentDocumentRuntimeKey !== null && browserActorUi !== undefined ? onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent) : undefined} /></MediaTransportOwnerScope>
                   </TreeWindowContext.Provider>
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
@@ -165,7 +166,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
                   <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                     {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                     <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                      <MediaTransportOwnerContext.Provider value={primaryMediaOwner(instance.id)}><InterpretedUiNode windowId={instance.id} localDocumentOwner={currentLocalDocumentOwner} store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider>
+                      <MediaTransportOwnerScope owner={primaryMediaOwner(instance.id)}><InterpretedUiNode windowId={instance.id} localDocumentOwner={currentLocalDocumentOwner} store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerScope>
                     </TreeWindowContext.Provider>
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>

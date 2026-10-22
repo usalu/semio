@@ -25,7 +25,7 @@ use std::task::{Context, Poll, Waker};
 
 use db_ids::GenerationId;
 use db_ids::DbError;
-use db_observe::{EmitEvent, EmitField, NullEmit};
+use db_observe::{Emit as _, EmitEvent, EmitField, NullEmit};
 use db_policy::{DbConfig, MailboxCapacities, Priority, Profile};
 
 //#region 🔖️Envelope

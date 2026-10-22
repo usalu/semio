@@ -1,3 +1,5 @@
+/** 🛰️ Adopts the leaves a farm worker staged into the graph under this process's writer custody. */
+export function adoptStagedGraphLeavesV1(workspaceRoot:string,stagingRoot:string,names:readonly string[]):Readonly<{published:number;present:number;declined:boolean}>;
 /** 📍️ Projects the project-root sentinel to its exact Cargo manifest coordinate. */
 export function cargoManifestInputV1(root:string):string;
 /** 🔒️ Publishes a compact Cargo lock inventory under original graph writer custody. */

@@ -18,7 +18,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete node \"{}\"", self.id.value), &format!("Knoten \"{}\" löschen", self.id.value))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for DeleteNode
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<DeleteNode> + From<crate::schema::mutations::create_edge::CreateEdge> + From<crate::schema::mutations::create_node::CreateNode>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,11 +39,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete node \"{}\"", self.id.value), &format!("Knoten \"{}\" löschen", self.id.value))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.value.clone()]
-    }
 }
 //#endregion 🔖️Payload

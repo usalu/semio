@@ -13,7 +13,16 @@ pub struct RemoveElement {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
-    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PlySnapshot, PlyMutation> for RemoveElement {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::ColdMutation<PlySnapshot>>::ReferenceDiff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_element(name))
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

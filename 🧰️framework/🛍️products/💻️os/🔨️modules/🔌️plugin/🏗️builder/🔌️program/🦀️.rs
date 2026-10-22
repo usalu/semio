@@ -21,6 +21,7 @@ pub mod inference_gateway;
 #[allow(unused_imports)]
 pub use inference_gateway::*;
 use semio_framework::AppDefinition;
+use semio_framework_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework::manifest::{CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use semio_framework::{kernel::{ActorId, ArtifactKind, CapabilityRequirement, InvocationResult, Rights, Scope}, ActionKind, CommandDefinition, Fault, PluginManifest};
 use std::collections::{HashMap, HashSet};

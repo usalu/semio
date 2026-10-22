@@ -1,180 +1,202 @@
-/** 🔐️ Scope runtime keys, hub session storage, shell props, announced page streams, the hub bootstrap origin, identity mutation envelopes and the shell actor and surface id helpers.
- *
- * 🧱️ Child module of {@link ../🟦️.tsx | ShellHost}, which re-exports every public name below so import specifiers stay unchanged.
- */
+/** 🟠️ The close document phase of useShellUriAndDocuments. */
+import { useCallback, useEffect, useMemo, useState } from "../../../⚛️react-port/🟦️.ts";
+import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding } from "@semio-tech/framework/backbone";
+import { syncAttachDocumentIdV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { requestBackboneFilePath, requestBackboneFolderPath } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { commitLocalFoldersConfigMutationV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "../../📎️local-folders/🟦️.tsx";
+import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "@semio-tech/framework/config/mutations";
+import { reduceBootstrapUiState, reduceExecutionTargetUiState, retainInferencePortOwnerAfterCloseV1 } from "../../🪪️host-bootstrap/🟦️.tsx";
+import { type SyncAttachTargetV1 } from "../../../🔄️ShellSync/🟦️.tsx";
+import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
+import { SPACE_INDEX_DOCUMENT_ID } from "../../🧾️space-artifact-creation/🟦️.ts";
+import { tellSyncAttachFailureV1 } from "../../🧱️built-node-stores/🟦️.ts";
+import type { ShellCoreAfterApplyHostEffects } from "../../⚡️host-effects/🟦️.ts";
+import type { useScopeState } from "../🔶️scope/🟦️.ts";
+import type { useOpenDocument } from "../🔸️open-document/🟦️.ts";
 
-import { type HubConnectionStorageV1 } from "@semio-tech/framework/directory/sign-in";
-// #region 🔌️Adapters
-import {
-  type AppRole,
-  type ArtifactDialect,
-  dialectCoordinate,
-  createBrowserStoragePort,
-  createMemoryStoragePort,
-  createScopedStoragePort,
-  type PluginRegistryEntry,
-  type ShellBrand,
-  type StoragePort
-} from "@semio-tech/framework";
-import { type DocumentScope } from "@semio-tech/framework/document/scope";
-import { STREAM_MUX_ANNOUNCEMENT, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
-import { type MutationEnvelope } from "@semio-tech/framework/replication";
-import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
-import { type Identity, type IdentityConfigMutation, identityMutationDiffPair } from "@semio-tech/framework/config/mutations";
-import { type UiLocale } from "@semio-tech/ui-react";
-import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
-import type { PluginCatalog } from "@semio-tech/framework";
-import type { InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
-import type { ReactNode } from "../../⚛️react-port/🟦️.ts";
-import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
-import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
+/** 🟡 Builds closeDocument, localFolderBindings, setLocalFolderBindings, rememberLocalFolder of useShellUriAndDocuments. */
+export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArtifactCreationsForRuntime, backboneWorkerRef, backgroundSpaceIndexSessionsRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, socketActorReadyRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, dispatch, retireDocumentAttachment, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, core, tutorialDrivenRef, retireBrowserActorUi, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, directoryScopedOwnersRef, spaceDirectoryHistoriesRef, closeDocumentRef, scope, resolveSyncTargetSession, loadedPlugins, showTransientNoticeRef, openDocument, syncBackboneUri }: Pick<ReturnType<typeof useScopeState>, "openDocumentSessionsRef" | "cancelSpaceArtifactCreationsForRuntime" | "backboneWorkerRef" | "backgroundSpaceIndexSessionsRef" | "setSpaceArtifactCreationCatalog" | "setSpaceArtifactCreationCatalogUi" | "socketActorReadyRef" | "inferencePortOpeningRef" | "inferencePortOwnerRef" | "inferencePortAuthorityRef" | "inferencePortEpochRef" | "dispatch" | "retireDocumentAttachment" | "localDocumentOwnerRegistry" | "liveDialogRef" | "closeOwnedDialog" | "tutorialDrivenRef" | "retireBrowserActorUi" | "rebootstrapDiscardedSessionsRef" | "setInferenceHistoryByRuntimeKey" | "setPresencePeersByRuntimeKey" | "setBootstrapUiByDocument" | "setExecutionTargetUiByDocument" | "directoryScopedOwnersRef" | "spaceDirectoryHistoriesRef" | "closeDocumentRef" | "scope" | "resolveSyncTargetSession" | "loadedPlugins" | "showTransientNoticeRef" | "syncBackboneUri"> & { readonly core: ShellCoreAfterApplyHostEffects } & Pick<ReturnType<typeof useOpenDocument>, "openDocument">) {
+  const closeDocument = useCallback((runtimeKey: string, clientInstanceId?: string) => {
+    const entry = openDocumentSessionsRef.current.get(runtimeKey);
+    if (!entry) return;
+    if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, null);
+    entry.creationMount?.close(new Error("document closed"));
+    entry.rejectReady(new Error("document closed"));
+    entry.replacements.invalidate();
+    const retirement = entry.port?.retire();
+    void retirement?.catch(error => undefined);
+    entry.port = null;
+    entry.pending = [];
+    entry.pendingBytes = 0;
+    cancelSpaceArtifactCreationsForRuntime(runtimeKey, backboneWorkerRef.current);
+    if (entry.scope?.documentId === SPACE_INDEX_DOCUMENT_ID) {
+      void backgroundSpaceIndexSessionsRef.current.retire(entry.scope.spaceId, owned => owned.clientInstanceId === entry.clientInstanceId).catch(error => undefined);
+      setSpaceArtifactCreationCatalog((catalog) => catalog?.clientInstanceId === entry.clientInstanceId ? null : catalog);
+      setSpaceArtifactCreationCatalogUi((status) => status?.clientInstanceId === entry.clientInstanceId ? null : status);
+    }
+    const waiter = socketActorReadyRef.current.get(runtimeKey);
+    if (waiter?.clientInstanceId === entry.clientInstanceId) {
+      waiter.reject(new Error("document closed"));
+      socketActorReadyRef.current.delete(runtimeKey);
+    }
+    const pendingInference = inferencePortOpeningRef.current;
+    if (pendingInference?.owner.runtimeKey === runtimeKey) pendingInference.mailbox.close("inference-opening: document retired");
+    const inferenceOwner = inferencePortOwnerRef.current;
+    const retainedInferenceOwner = retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey);
+    if (inferenceOwner !== null && retainedInferenceOwner === null) {
+      backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: inferenceOwner.owner, serviceId: inferenceOwner.serviceId, action: "close", operationEpoch: inferenceOwner.operationEpoch, payload: {} }) });
+      inferencePortOwnerRef.current = retainedInferenceOwner;
+      inferencePortAuthorityRef.current = null;
+      inferencePortEpochRef.current = inferenceOwner.operationEpoch + 1;
+      dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
+    }
+    void retireDocumentAttachment(entry.plugin, entry.session.instanceId, entry.clientInstanceId).catch(error => undefined);
+    localDocumentOwnerRegistry.retire({ pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId });
+    openDocumentSessionsRef.current.delete(runtimeKey);
+    const dialog = liveDialogRef.current;
+    if (dialog?.origin.document?.runtimeKey === runtimeKey && dialog.origin.document.clientInstanceId === entry?.clientInstanceId) closeOwnedDialog(dialog.openingId);
+    const tutorial = core.tutorialRunRef.current;
+    if (tutorial?.origin.document?.runtimeKey === runtimeKey && tutorial.origin.document.clientInstanceId === entry?.clientInstanceId) {
+      core.tutorialTransitionEpochRef.current += 1;
+      tutorialDrivenRef.current.retire();
+      core.tutorialClockRef.current?.pause();
+      void tutorial.stop().catch((error) => undefined);
+      dispatch({ type: "SET_TUTORIAL", value: null });
+    }
+    retireBrowserActorUi(runtimeKey, "browser-actor-action: document retired");
+    rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
+    setInferenceHistoryByRuntimeKey((current) => {
+      if (!(runtimeKey in current)) return current;
+      const next = { ...current };
+      delete next[runtimeKey];
+      return next;
+    });
+    setPresencePeersByRuntimeKey((current) => {
+      if (!(runtimeKey in current)) return current;
+      const next = { ...current };
+      delete next[runtimeKey];
+      return next;
+    });
+    setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "detached", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { scope: entry.scope }) }));
+    setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { scope: entry.scope }) }));
+    if (entry.scope !== undefined && directoryScopedOwnersRef.current.delete(runtimeKey)) {
+      backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-close", scope: entry.scope }) });
+    }
+    const spaceDirectory = spaceDirectoryHistoriesRef.current.get(runtimeKey);
+    if (spaceDirectory !== undefined) {
+      spaceDirectoryHistoriesRef.current.delete(runtimeKey);
+      if (![...spaceDirectoryHistoriesRef.current.values()].some((history) => history.spaceId === spaceDirectory.spaceId)) backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-space-close", spaceId: spaceDirectory.spaceId }) });
+    }
+    const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
+    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+  }, [localDocumentOwnerRegistry, retireBrowserActorUi]);
+  closeDocumentRef.current = closeDocument;
 
-export function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
-  const scope = message.scope;
-  if (scope === undefined || scope.documentId !== message.documentId) return null;
-  return documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
+  /** 🔗️ Opens the sync card's typed target ({@link SyncAttachTargetV1}) through {@link openDocument}: a hub space's
+   * document, a folder, or a file's folder, as the session app's document.
+   *
+   * 🪪️ A hub binding names the surface it wants — the store worker refuses a hub binding that carries neither
+   * `requestedSurfaceId` nor a previously installed target (`socket-actor-failed … installed-target-unavailable`) — the
+   * session app's own canonical one, the same expression `openDocument` resolves bindings with.
+   *
+   * 📐️ The schema is the artifact's OWN (`AppDefinition.io.artifactSchema`), not the chrome breadcrumb: a hub plan
+   * states the document's schema and `documentOpenPlanAuthority` refuses an open that differs (the gis map answered
+   * `document open: authority mismatch` against the breadcrumb `"semio.gis.2d"`). The breadcrumb stays the fallback
+   * for an app that declares no artifact io. */
+  /** 📁️ This device's remembered folder bindings (`os.config.local-folders`, an event-sourced config facet persisted local-only
+   * in this shell's own storage: never shared, never in a URL), with the attach and detach that record them. */
+  const [localFolderBindings, setLocalFolderBindings] = useState<LocalFolderBindings>(() => readLocalFolderBindingsV1(scope.storage));
+  const rememberLocalFolder = useCallback((binding: LocalFolderBinding) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, attachLocalFolder(binding))), [scope.storage]);
+  const forgetLocalFolder = useCallback((documentId: string) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, detachLocalFolder(documentId))), [scope.storage]);
+
+  /** 🧷️ Attaches the focused program's document to a folder, a file or a hub. The document is addressed by the program's
+   * own document identity — the id its store stamps on every envelope it publishes — so the actor admits the program's
+   * edits as its own document's instead of refusing each batch as another document's (`local.backbone-scope-mismatch`,
+   * e2e R2-4); a program without a document has nothing to attach. */
+  const openSyncTarget = useCallback(
+    async (target: SyncAttachTargetV1) => {
+      const targetSession = resolveSyncTargetSession();
+      if (!targetSession) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+      const identity = (target.kind === "remote" && target.documentId !== null) || plugin === undefined ? null : await plugin.readAppDocumentIdentity(targetSession.instanceId);
+      const documentId = syncAttachDocumentIdV1(target, identity);
+      if (documentId === null) {
+        showTransientNoticeRef.current(shellLabel("ui.sync.documentUnidentified"), "warning", "sync.attach.document-unidentified");
+        return;
+      }
+      const folderPath = target.kind === "folder" ? target.path : target.kind === "file" ? target.folder : null;
+      const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
+      const bindings: PersistenceBinding[] =
+        target.kind === "remote"
+          ? [{ kind: "hub", dataClass: "persistedShared", baseUrl: `http://${target.hostPort}`, spaceId: target.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
+          : [{ kind: "folder", dataClass: "persistedLocalOnly", path: target.kind === "folder" ? target.path : target.folder }];
+      const appArtifactSchema = (targetSession.app as unknown as { readonly io?: { readonly artifactSchema?: string } }).io?.artifactSchema;
+      const receipt = await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
+      if (receipt !== null && folderPath !== null) rememberLocalFolder({ documentId, pluginId: targetSession.pluginId, appId: targetSession.app.id, folder: { kind: "path", path: folderPath } });
+    },
+    [loadedPlugins, openDocument, rememberLocalFolder, resolveSyncTargetSession],
+  );
+  /** 📎️ Attaches the focused program's document to a sync target as the person's gesture. Every gesture goes through here —
+   * the card's Attach, the attach action, the reconnect offer — so a failure is told and logged
+   * ({@link tellSyncAttachFailureV1}) and never dropped as an unhandled rejection (live fault F9: the card's `onAttach`
+   * dropped the promise, so a document that did not attach said nothing). */
+  const attachSyncTarget = useCallback((target: SyncAttachTargetV1): Promise<void> => openSyncTarget(target).catch(tellSyncAttachFailureV1(showTransientNoticeRef.current)), [openSyncTarget]);
+
+  /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */
+  const detachSyncBackbone = useCallback(() => {
+    if (syncBackboneUri) {
+      const runtimeKey = syncBackboneUri.replace(/^actor:\/\//, "");
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      if (entry !== undefined && entry.scope === undefined && entry.persistenceBindings.some((binding) => binding.kind === "folder")) forgetLocalFolder(entry.documentId);
+      closeDocument(runtimeKey);
+    }
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+  }, [closeDocument, forgetLocalFolder, syncBackboneUri]);
+
+  /** 🪪️ The document identity the focused program holds, read once per program (retried while its channel comes up): the
+   * key a remembered folder binding is offered back under. */
+  const syncTargetProgram = resolveSyncTargetSession();
+  const [syncProgramIdentity, setSyncProgramIdentity] = useState<LocalFolderIdentityV1 | null>(null);
+  useEffect(() => {
+    const pluginId = syncTargetProgram?.pluginId;
+    const instanceId = syncTargetProgram?.instanceId;
+    const appId = syncTargetProgram?.app.id;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle;
+    setSyncProgramIdentity(null);
+    if (pluginId === undefined || instanceId === undefined || appId === undefined || plugin === undefined) return;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const read = (attempt: number): void => {
+      void plugin.readAppDocumentIdentity(instanceId).then((identity) => {
+        if (live) setSyncProgramIdentity(identity.parent_document_id === null ? null : { documentId: identity.parent_document_id, pluginId, appId });
+      }, () => {
+        if (live && attempt < 10) timer = setTimeout(() => read(attempt + 1), 1_000);
+      });
+    };
+    read(0);
+    return () => {
+      live = false;
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [syncTargetProgram?.pluginId, syncTargetProgram?.instanceId, syncTargetProgram?.app.id, loadedPlugins]);
+  /** 📂️ The remembered folder offered back for the focused program's document, while that document is not attached. */
+  const folderReconnectOffer = useMemo(
+    () => localFolderReconnectOfferV1(localFolderBindings, syncProgramIdentity, new Set([...openDocumentSessionsRef.current.values()].filter((entry) => entry.scope === undefined).map((entry) => entry.documentId))),
+    [localFolderBindings, syncProgramIdentity, syncBackboneUri],
+  );
+  const [folderReconnectBusy, setFolderReconnectBusy] = useState(false);
+  /** 🔁️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
+  const reconnectLocalFolder = useCallback((binding: LocalFolderBinding) => {
+    setFolderReconnectBusy(true);
+    void attachSyncTarget({ kind: "folder", path: binding.folder.path }).finally(() => setFolderReconnectBusy(false));
+  }, [attachSyncTarget]);
+
+  const browseSyncBackbonePath = useCallback(async (kind: "file" | "folder") => {
+    const path = kind === "folder" ? await requestBackboneFolderPath() : await requestBackboneFilePath();
+    if (path) dispatch({ type: "SET_SYNC_DRAFT_PATH", value: path });
+  }, []);
+  return { closeDocument, forgetLocalFolder, attachSyncTarget, detachSyncBackbone, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, browseSyncBackbonePath };
 }
-
-/** 🗄️ Where one browsing context remembers the hub session it minted. `sessionStorage`, not
- * `localStorage`: the connection BOOK (which hubs exist, which one is selected) is durable identity
- * and belongs to the profile, but a session capability belongs to the browsing context that signed
- * in — it must survive a reload, and it must not outlive the tab or leak into a second one. A
- * blocked or throwing store yields `null`, which is simply "no session", never a boot failure. */
-export function hubSessionStorageV1(): HubConnectionStorageV1 | null {
-  try {
-    return typeof globalThis.sessionStorage === "undefined" ? null : globalThis.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-// #endregion 🔌️Adapters
-
-//#region FrameworkOsShell
-//#region 🐚️ShellMount
-/** 🐚️ Public props for {@link FrameworkOsShell} — the multi-instance-safe entry point. `shellId`,
- * `storageNamespace`, and `ownsPage` exist so several shells can be mounted on one page: `ownsPage`
- * gates the handful of behaviors that are legitimately page-global (document title, browser history
- * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
- * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
-export interface FrameworkOsShellProps {
-  readonly catalog: PluginCatalog;
-  readonly backboneWorkerFactory?: () => Worker;
-  readonly documentServices?: readonly InstalledServicePresentationV1<ReactNode>[];
-  readonly hostPorts?: ShellHostPortsV1;
-  readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
-  readonly pluginFilter?: string;
-  readonly plugins: readonly PluginRegistryEntry[];
-  readonly appId?: string;
-  /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — resolved by
-   * `resolveBootAppRole`/`VITE_SEMIO_APP_ROLE` at the `bootFrameworkOs` call site, default `"editor"`.
-   * Used only to prefer a same-role app when `appId` doesn't pin one explicitly; the actual role of an
-   * open session always comes from `session.app.role`, never this prop. */
-  readonly appRole?: AppRole;
-  readonly locks?: ResolvedShellLocks;
-  readonly defaults?: FrameworkOsDefaults;
-  readonly initialLocale?: UiLocale;
-  readonly brand?: ShellBrand;
-  readonly shellId?: string;
-  readonly storageNamespace?: string;
-  readonly ownsPage?: boolean;
-  /** 🐚️ Skips the brand/app introduction auto-start (and any brand-owned tutorial's own auto-considered
-   * reveal) for a shell that's mounted but not the one the user is actually looking at — a live
-   * multi-shell page (e.g. the mit-bestand demonstrator's background panes) has no iframe boundary for
-   * the existing `window.self !== window.top` heuristic below to key off, so several shells would
-   * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
-   * single-shell-per-page behavior unchanged). */
-  readonly suppressAutoIntroduction?: boolean;
-}
-
-/** 📶️ The page's stream channel when the serve that hosts this page announces one (`STREAM_MUX_ANNOUNCEMENT`, defined by
- * the dev serve's backbone plugin), else the silent endpoint: a production bundle or a test harness has no channel to dial, and
- * dialing one anyway made every jsdom law that mounts the shell log a refused WebSocket. */
-export function announcedPageStreams(): StreamMuxChannelV1 | StreamMuxEndpointV1 {
-  let path: unknown;
-  try {
-    path = (import.meta as unknown as { readonly env?: Readonly<Record<string, unknown>> }).env?.[STREAM_MUX_ANNOUNCEMENT];
-  } catch {
-    path = undefined;
-  }
-  return typeof path === "string" && path.startsWith("/") ? pageStreamMuxChannelV1(path) : SILENT_STREAM_MUX_ENDPOINT_V1;
-}
-
-//#region 🔖️Identity
-/** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3 — reads one
- * `VITE_S_*` compile-time define (`💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`'s
- * `define` block). Guarded for non-Vite embeds (SSR/tests/other bundlers) where `import.meta.env` is
- * absent — mirrors `🐚️Shell/🟦️.tsx`'s `readViteAppRoleEnv` idiom (that file is out of this
- * lane's lease, so re-implemented locally rather than imported). Returns `undefined` for an unset/
- * empty define, never `""` — every call site treats "no hub env" as "skip identity entirely" (§C3
- * "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly"). */
-export function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_DATA_DIR"): string | undefined {
-  try {
-    const env = (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env;
-    return env?.[name] || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** 🌐️ The origin the hub workspace signs in against. `VITE_S_HUB_URL` is the hub's own origin (the
- * same value `hubEnv` uses for the directory lane); it is normalized to a bare origin because
- * `parseHubOriginV1` refuses a path, credentials, a query or a fragment. Without that define the
- * page origin is the only honest guess — a shell embedded beside its own hub. */
-export function hubBootstrapOriginV1(): string {
-  const declared = readViteSEnv("VITE_S_HUB_URL");
-  if (declared !== undefined) {
-    try {
-      return new URL(declared).origin;
-    } catch {}
-  }
-  return typeof globalThis.location === "undefined" ? "http://127.0.0.1:7777" : globalThis.location.origin;
-}
-
-/** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation}: `diff.payload` is the sparse identity diff the mutation
- * names and `inverse.inverseDiff` the sum of its concrete inverse mutations' diffs (`🎚️config/🧬️schema/🧬️mutations/🟦️.ts`). The store
- * worker folds the diff through the twin of the central applier and persists the result; no record travels. */
-export function identityMutationEnvelope(actor: string, mutation: IdentityConfigMutation, base: Identity | null): MutationEnvelope {
-  const { diff, inverse } = identityMutationDiffPair(mutation, base);
-  return {
-    id: `identity-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-    actor,
-    document: IDENTITY_CONFIG_SCHEMA,
-    schemaVersion: IDENTITY_CONFIG_SCHEMA,
-    payloadHash: "",
-    diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: diff },
-    inverse: { targetOperation: mutation.mutation, inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: inverse }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
-  };
-}
-
-/** 🪪️ Mints the shell actor id (contract §C0: `user:{userId}#{shellSessionId}`) once identity
- * resolves; the pre-identity default stays `client-{shellSessionId}` (unchanged shape, just the
- * random-suffix source now shared with the post-sign-in id so a reload's actor id is stable relative
- * to its own tab even before/without a hub). */
-export function shellActorId(sessionId: string, identity: Identity | null): string {
-  return identity ? `user:${identity.userId}#${sessionId}` : `client-${sessionId}`;
-}
-
-/** 🪪️ Canonical surface id (contract §C0 `<kind>@<standard>/<subset>#<role>`) for local UI routing.
- * Hub transport surface authority comes only from the complete verified installed execution target. */
-export function canonicalSurfaceId(dialect: ArtifactDialect, role: AppRole): string {
-  return `${dialectCoordinate(dialect)}#${role}`;
-}
-
-/** 🔌️ Accepts extension-only hot swaps while protecting a plugin-owned active app session. */
-export function reloadRetainsActiveApp(apps: readonly { readonly id: string }[], activeAppId?: string): boolean {
-  return activeAppId === undefined || apps.some((app) => app.id === activeAppId);
-}
-//#endregion 🔖️Identity
-
-/** 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
- * an in-memory port (never durable, regardless of namespace); a namespaced non-ephemeral shell gets a
- * scoped view over browser storage; a bare non-ephemeral shell (the historical single-app-per-page
- * case) gets the plain shared browser port. */
-export function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string | undefined): StoragePort {
-  if (ephemeral) return createMemoryStoragePort();
-  const browser = createBrowserStoragePort();
-  return storageNamespace ? createScopedStoragePort(browser, storageNamespace) : browser;
-}
-//#endregion 🐚️ShellMount
-//#endregion FrameworkOsShell

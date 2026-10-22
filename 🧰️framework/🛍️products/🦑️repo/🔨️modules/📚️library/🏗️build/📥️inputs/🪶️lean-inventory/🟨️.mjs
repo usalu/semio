@@ -11,16 +11,16 @@ export function readInventoryRecordLeanV1(directory,key,maximumBytes){
  if(typeof directory!=="string"||!NAMESPACES.includes(directory.split(/[\\/]/u).at(-1))||typeof key!=="string"||!KEY.test(key)||!Number.isSafeInteger(maximumBytes)||maximumBytes<1)throw Error("Closed inventory leaf identity required");
  const path=join(directory,key+".json"),before=lstatSync(path,{bigint:true});
  if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<1n||before.size>BigInt(maximumBytes))throw Error("Single-link bounded regular inventory record required");
- const size=Number(before.size),bytes=Buffer.allocUnsafe(size),fd=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0));
- try{
-  if(!same(before,fstatSync(fd,{bigint:true})))throw Error("Inventory record changed while opening");
+ const size=Number(before.size),bytes=Buffer.allocUnsafe(size),fd=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));
+ let failed=false;try{
+  const opened=fstatSync(fd,{bigint:true});if(!opened.isFile()||!same(before,opened))throw Error("Inventory record changed while opening");
   for(let offset=0;offset<size;){const count=readSync(fd,bytes,offset,size-offset,offset);if(!count)throw Error("Inventory record shortened");offset+=count;}
   if(readSync(fd,Buffer.allocUnsafe(1),0,1,size))throw Error("Inventory record grew");
   if(!same(before,fstatSync(fd,{bigint:true})))throw Error("Inventory record changed while reading");
- }finally{closeSync(fd);}
+ }catch(error){failed=true;throw error;}finally{try{closeSync(fd);}catch(error){if(!failed)throw error;}}
  const sha256=createHash("sha256").update(bytes).digest("hex");
  if(sha256!==key)throw Error("Inventory record content differs from its name");
- return Object.freeze({sha256,byteLength:size,value:JSON.parse(bytes.toString("utf8")),stamp:stampOf(before)});
+ return Object.freeze({sha256,byteLength:size,value:JSON.parse(new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes)),stamp:stampOf(before)});
 }
 
 /** 🧊️ Remembers that a leaf with exactly this identity was read, hashed and validated; a content addressed leaf with an unchanged identity cannot have changed. */

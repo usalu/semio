@@ -12,7 +12,7 @@ use semio_hub_directory_dispatch::HubDirectories;
 use semio_hub_runtime::readiness::{HubMode, hub_readiness};
 use semio_hub_state::HubState;
 use semio_hub_ledgers::socket_grants::{SOCKET_GRANT_BINDING_PENDING_CAPACITY, SOCKET_GRANT_LEDGER_CAPACITY, SocketAudienceV1, SocketBindingKeyV1, SocketBindingValidityV1, SocketGrantKeyV1, SocketGrantLedgerV1, SocketGrantRecordV1, SocketGrantStateV1, SocketSubjectV1};
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_hub_directory_sqlite::SqliteDirectory;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use semio_hub_session_routes::guard::authenticate_admin_principal;

@@ -47,7 +47,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// invariant, so a merge policy is allowed to absorb it.
 #[test]
 fn a_missing_tile_is_an_error_target_missing() {
-    let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    let produced = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentationDiff::default(), "a rejecting delete-tile must carry the identity diff, never a half-built presentation handle");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
@@ -60,7 +60,7 @@ fn a_missing_tile_is_an_error_target_missing() {
 #[test]
 fn the_committed_diff_is_declared_absent() {
     assert!((*DIFF_ABSENT).is_empty(), "🔺️diff/🚫️.absent must be an empty marker, not a stand-in patch");
-    let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    let produced = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentationDiff::default(), "delete-tile/rejects-deleting-a-missing-tile: a rejection must produce no delta at all");
 }
 
@@ -83,7 +83,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "delete-tile/rejects-deleting-a-missing-tile declares a rejected outcome");
-    let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    let produced = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

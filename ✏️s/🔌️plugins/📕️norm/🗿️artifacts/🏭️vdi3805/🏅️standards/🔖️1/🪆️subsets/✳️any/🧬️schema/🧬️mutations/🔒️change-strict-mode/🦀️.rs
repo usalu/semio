@@ -16,7 +16,13 @@ pub struct ChangeStrictMode {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeStrictMode where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_strict_mode::ChangeStrictMode> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "strict-mode", kind: "change-strict-mode", record: "ChangedStrictMode" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change strict mode to {}", self.new_strict_mode), &format!("Strikten Modus auf {} ändern", self.new_strict_mode))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for ChangeStrictMode where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_strict_mode::ChangeStrictMode> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::change_strict_mode::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,9 +31,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeStrictMode where 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change strict mode to {}", self.new_strict_mode), &format!("Strikten Modus auf {} ändern", self.new_strict_mode))
-    }
 }
 //#endregion 🔖️Payload
 

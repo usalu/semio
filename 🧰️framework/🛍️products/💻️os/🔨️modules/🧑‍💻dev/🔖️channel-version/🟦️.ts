@@ -1,14 +1,16 @@
 import { CHANNEL_VERSION_PIN_PATH, channelVersionCensusRoots, type ChannelVersionSourceViewV1 } from "./🔍️census/🟦️.ts";
 import { admitChannelVersionContributionPathV1, admitChannelVersionContributionsV1, type ChannelVersionConsumerV1, type ChannelVersionContributionOwnerV1 } from "./📣️contributions/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 export { admitChannelVersionContributionsV1 } from "./📣️contributions/🟦️.ts";
 export type { ChannelVersionConsumerV1, ChannelVersionContributionOwnerV1 } from "./📣️contributions/🟦️.ts";
 /** 🔖️Owns the app-engine channel pin and admits contributions from present source owners. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import { declaredComponentKind, type DiscoveredPackage, discoverCatalogPackages, loadCatalogTaxonomy, registryCatalogInputView, type RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
 import { parseComponentPackageId } from "@semio-tech/plugin-registry/discovery";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "@semio-tech/framework-plugin/describe/component-build";
+import { runtimeParseTomlV1 } from "../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 const OS = "🧰️framework/🛍️products/💻️os";
 const MOD = `${OS}/🔨️modules`;
@@ -34,7 +36,7 @@ function contributedChannelConsumersV1(packages: readonly DiscoveredPackage[], v
   for (const pkg of packages) {
     if (pkg.lang !== "🟦️typescript" && pkg.lang !== "🦀️rust") continue;
     const manifest = view.readText(pkg.manifestPath);
-    const document = (pkg.lang === "🦀️rust" ? Bun.TOML.parse(manifest) : JSON.parse(manifest)) as { package?: { metadata?: { semio?: Record<string, unknown> } }; semio?: Record<string, unknown> };
+    const document = (pkg.lang === "🦀️rust" ? runtimeParseTomlV1(manifest) : JSON.parse(manifest)) as { package?: { metadata?: { semio?: Record<string, unknown> } }; semio?: Record<string, unknown> };
     const declaration = pkg.lang === "🦀️rust" ? document.package?.metadata?.semio?.["channel-version-consumers"] : document.semio?.channelVersionConsumers;
     if (declaration === undefined) continue;
     const path = `${pkg.ownerRel}/${admitChannelVersionContributionPathV1(declaration)}`;
@@ -50,7 +52,7 @@ function contributedChannelConsumersV1(packages: readonly DiscoveredPackage[], v
 function channelVersionCandidateFiles(repoRoot: string, consumers: readonly ChannelVersionConsumerV1[], packages: readonly DiscoveredPackage[], view: RegistryCatalogInputView): readonly string[] {
   const roots = channelVersionCensusRoots(packages, consumers);
   const pathspecs = roots.flatMap(root => CHANNEL_VERSION_CENSUS_EXTENSIONS.map(extension => `:(glob)${root}/**/*.${extension}`));
-  const listed = spawnSync("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|channelVersion|CHANNEL_VERSION|app_channel_version|6170704368616e6e656c56657273696f6e", "--", ...pathspecs], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const listed = runToolSyncV1("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|channelVersion|CHANNEL_VERSION|app_channel_version|6170704368616e6e656c56657273696f6e", "--", ...pathspecs], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (listed.status !== 0 && listed.status !== 1) throw Error(`channel-version census: git grep failed (${listed.status}): ${listed.stderr}`);
   const owners = packages.filter(pkg => pkg.lang === "🦀️rust").map(pkg => ({ ownerRel: pkg.ownerRel, manifest: view.readText(pkg.manifestPath) }));
   return listed.stdout.split("\0").filter(path => path.length > 0 && !channelVersionIsDescribeOutputV1(path, owners) && path !== CHANNEL_VERSION_PIN_PATH && !path.startsWith(`${MOD}/🧑‍💻dev/🔖️channel-version/`) && !path.startsWith(`${MOD}/🧑‍💻dev/🧪️tests/🔖️channel-version/`));

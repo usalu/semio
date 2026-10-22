@@ -237,11 +237,11 @@ pub fn cad_tool_yields(models: &CadPaneModels, entries: &[CadToolEntry]) -> Vec<
         };
         for (key, pane, leaf) in leaves {
             let Some((_, state)) = states.iter_mut().find(|(candidate, _)| *candidate == pane) else { continue };
-            let outcome = <SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::diff(&leaf, state);
+            let outcome = <SemioModelMutation as protocol::ColdMutation<SemioModelSnapshot>>::diff(&leaf, state);
             if outcome.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error || message.code.0 == "mutation.no-op") {
                 continue;
             }
-            let Ok(next) = protocol::apply_diff(outcome.diff(), state) else { continue };
+            let Ok(next) = protocol::apply_diff_cold(outcome.diff(), state) else { continue };
             *state = next;
             yields.push((key, CadToolLeaf { pane, leaf }));
         }

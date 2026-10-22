@@ -50,7 +50,7 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
     use crate::standards::v1_7::subsets::base::schema::mutations::set_object_value::SetObjectValue;
     use crate::standards::v1_7::subsets::base::schema::diff::{PdfIndexedDiff, PdfIndexedItem};
-    use protocol::{Mutation, DiffAlgebra};
+    use protocol::{ColdMutation, Mutation, ColdDiffAlgebra, DiffAlgebra};
     let native = encode_pdf(&text_document(&[(200.0, 300.0, "role")])).unwrap();
     let base = decode_pdf(&native).unwrap();
     assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_count(&native).unwrap(), base.pages.len());
@@ -60,13 +60,13 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     let mut object = base.objects.iter().find(|object| object.id == dependency.owner).unwrap().value.clone();
     let PdfObject::Stream { data, .. } = &mut object else { unreachable!() }; *data = b"q Q".to_vec();
     let refused = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object.clone(), index: None, admitted_stream_roles: None }).diff(&base);
-    assert!(protocol::apply_diff(refused.diff(), &base).is_err());
+    assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
     let mut replacement = role.clone(); replacement.value = PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] };
     let operation = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object, index: None, admitted_stream_roles: Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index, value: replacement }], ..PdfIndexedDiff::default() }) });
     let outcome = operation.diff(&base);
-    let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
+    let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
     assert_eq!(next.pages[0].content, vec![PdfOp::Save, PdfOp::Restore]);
-    assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&base), &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&outcome.diff().inverse(&base), &next).unwrap(), base);
 }
 
 #[test]
@@ -128,25 +128,25 @@ fn pdf_stream_roles_native_colour_admission_uses_components_and_foreign_referenc
 fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     use crate::standards::v1_7::subsets::base::schema::mutations::{PdfMutation, InsertObject};
     use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfIndexedDiff, PdfIndexedItem};
-    use protocol::{Mutation,DiffAlgebra};
+    use protocol::{ColdMutation, Mutation,ColdDiffAlgebra, DiffAlgebra};
     let base=decode_pdf(&encode_pdf(&text_document(&[(200.0,300.0,"role")])).unwrap()).unwrap();
     let (index,role)=base.admitted_stream_roles.iter().enumerate().find(|(_,role)|matches!(role.value,PdfStreamRoleValue::Operators {..})).unwrap();
     let mut changed=role.clone();changed.value=PdfStreamRoleValue::Operators {content:vec![PdfOp::Save,PdfOp::Restore]};
     let diff=PdfDiff {admitted_stream_roles:Some(PdfIndexedDiff {modified:vec![PdfIndexedItem {index,value:changed}],..Default::default()}),..Default::default()};
-    let next=protocol::apply_diff(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore]);
+    let next=protocol::apply_diff_cold(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore]);
     let replay:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
     let expected:Vec<String>=serde_json::from_value(replay["nativeOperatorNames"].clone()).unwrap();
     let native=encode_pdf(&next).unwrap();
     assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_operator_names(&native).unwrap(),vec![expected]);
     assert_eq!(decode_pdf(&native).unwrap().pages[0].content,next.pages[0].content);
-    assert_eq!(protocol::apply_diff(&diff.inverse(&base),&next).unwrap(),base);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base),&next).unwrap(),base);
     let owner=ObjRef {num:500,gen:7};
     let identity=PdfGraphIdentity {owner,path:Vec::new()};
     let added=PdfAdmittedStreamRole {identity:identity.clone(),dependencies:vec![identity],value:PdfStreamRoleValue::MetadataText {text:"retained fixture".into()}};
     let insert=PdfMutation::InsertObject(InsertObject {id:owner,value:PdfObject::Stream {dict:Vec::new(),data:b"retained fixture".to_vec(),filters:Vec::new()},index:None,admitted_stream_roles:Some(PdfIndexedDiff {added:vec![PdfIndexedItem {index:base.admitted_stream_roles.len(),value:added}],..Default::default()})});
-    let inserted=protocol::apply_diff(insert.diff(&base).diff(),&base).unwrap();
+    let inserted=protocol::apply_diff_cold(insert.diff(&base).diff(),&base).unwrap();
     let mut restored=inserted.clone();
-    for inverse in insert.inverse(&base).unwrap() {restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}
+    for inverse in insert.inverse(&base).unwrap() {restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}
     assert_eq!(restored,base);
 }
 
@@ -212,7 +212,7 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
 fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfIndexedDiff, PdfIndexedItem};
     use crate::standards::v1_7::subsets::base::schema::mutations::{special_edit, PdfMutation, RemoveObject};
-    use protocol::{DiffAlgebra, Mutation};
+    use protocol::{ColdDiffAlgebra, DiffAlgebra, ColdMutation, Mutation};
     use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
     let replay: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
     let owners: Vec<ObjRef> = replay["owners"].as_array().unwrap().iter().map(|owner| ObjRef { num: owner["num"].as_u64().unwrap() as u32, gen: owner["gen"].as_u64().unwrap() as u16 }).collect();
@@ -227,24 +227,24 @@ fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     assert!(validate_role_inputs(&base.objects, &base.objects, &[], &base.admitted_stream_roles).is_ok());
 
     let reordered = PdfDiff { admitted_stream_roles:Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index: first_role, value: roles[1].clone() }, PdfIndexedItem { index: first_role + 1, value: roles[0].clone() }], ..PdfIndexedDiff::default() }), ..Default::default() };
-    let swapped = protocol::apply_diff(&reordered, &base).unwrap();
+    let swapped = protocol::apply_diff_cold(&reordered, &base).unwrap();
     assert_eq!(swapped.admitted_stream_roles[first_role], roles[1]);
     assert_eq!(swapped.admitted_stream_roles[first_role + 1], roles[0]);
-    assert_eq!(protocol::apply_diff(&reordered.inverse(&base), &swapped).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&reordered.inverse(&base), &swapped).unwrap(), base);
 
     let special = special_edit(&SnapshotEditEvent::RemoveValue { path: format!("/objects/{first_object}") }, &base).unwrap().unwrap();
     let [PdfMutation::RemoveObject(RemoveObject { id, admitted_stream_roles: None })] = special.as_slice() else { panic!("object removal leaf") };
     assert_eq!(*id, owners[0]);
     let refused = special[0].diff(&base);
-    assert!(protocol::apply_diff(refused.diff(), &base).is_err());
+    assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
 
     let deletion = PdfMutation::RemoveObject(RemoveObject { id: owners[0], admitted_stream_roles:Some(PdfIndexedDiff { removed: vec![first_role], ..PdfIndexedDiff::default() }) });
     let outcome = deletion.diff(&base);
-    let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
+    let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
     let remaining: Vec<ObjRef> = next.admitted_stream_roles.iter().map(|role| role.identity.owner).filter(|owner| owners.contains(owner)).collect();
     assert_eq!(remaining, vec![retained_owner]);
     assert!(next.objects.iter().all(|object| object.id != owners[0]));
-    assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&base), &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&outcome.diff().inverse(&base), &next).unwrap(), base);
 
     assert_eq!(replay["physicalByteEditRefused"], true);
     let mut physical = base.clone();
@@ -255,5 +255,5 @@ fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     let mut pathed = roles[1].clone();
     pathed.identity.path = vec![PdfGraphPath::Entry { key: "Missing".into() }];
     let refusal = PdfDiff { admitted_stream_roles:Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index: first_role + 1, value: pathed }], ..PdfIndexedDiff::default() }), ..Default::default() };
-    assert!(protocol::apply_diff(&refusal, &base).is_err());
+    assert!(protocol::apply_diff_cold(&refusal, &base).is_err());
 }

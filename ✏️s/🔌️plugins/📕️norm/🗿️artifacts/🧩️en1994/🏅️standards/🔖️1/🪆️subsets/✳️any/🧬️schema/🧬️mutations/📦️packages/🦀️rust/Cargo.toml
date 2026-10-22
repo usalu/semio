@@ -23,6 +23,10 @@ path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 testkit = ["dep:semio-s-plugin-norm-compliance"]
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-plugin-norm-compliance = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }

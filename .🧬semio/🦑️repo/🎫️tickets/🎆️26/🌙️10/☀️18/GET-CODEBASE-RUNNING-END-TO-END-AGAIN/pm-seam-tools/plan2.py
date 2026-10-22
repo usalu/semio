@@ -7,13 +7,14 @@ import hashlib, importlib, json, os, sys
 os.environ["PM_ROUND"] = "2"
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import paths
-R1 = os.environ.get("R1", "/private/tmp/pm-seam/r1")
-R2 = os.environ.get("R2", "/private/tmp/pm-seam/r2")
+R1 = os.environ.get("R1", "/private/tmp/pm-seam/r1f")
+R2 = os.environ.get("R2", "/private/tmp/pm-seam/r2f")
 GROUPS = ["seam2", "schemas", "storage2", "generation2", "glue", "graph2", "tools2", "policy2", "ratchet2"]
 edits = []
-def edit(path, id, group, old, new, count=1):
+BASES = {"langs-conc": os.environ.get("LC_OVERLAY", "/private/tmp/langs-conc/ov")}
+def edit(path, id, group, old, new, count=1, alt=None, base=None, emit=True):
     assert group in GROUPS, group
-    edits.append({"path": path, "id": id, "group": group, "old": old, "new": new, "count": count})
+    edits.append({"path": path, "id": id, "group": group, "old": old, "new": new, "count": count, "alt": alt, "base": base, "emit": emit})
 def load_specs():
     for name in sorted(n[:-3] for n in os.listdir(paths.HERE) if n.startswith("plan2_") and n.endswith(".py")):
         importlib.import_module(name).declare(edit, paths)
@@ -22,13 +23,15 @@ def read(root, rel):
 def proven():
     by_path, problems = {}, []
     for item in edits:
-        text = by_path.setdefault(item["path"], {"text": read(R1, item["path"]), "rows": []})
+        key = item["path"] if item["base"] is None else (item["path"], item["base"])
+        text = by_path.setdefault(key, {"text": read(R1 if item["base"] is None else BASES[item["base"]], item["path"]), "rows": [], "path": item["path"]})
         count = text["text"].count(item["old"])
         if count != item["count"]:
             problems.append("%s [%s] anchor count %d, expected %d" % (item["path"].split("/")[-2] + "/" + item["path"].split("/")[-1], item["id"], count, item["count"]))
             continue
         text["text"] = text["text"].replace(item["old"], item["new"])
-        text["rows"].append({"id": item["id"], "group": item["group"], "old": item["old"], "new": item["new"], "counts": [item["count"]]})
+        if item["emit"]:
+            text["rows"].append({"id": item["id"], "group": item["group"], "old": item["old"], "new": item["new"], "counts": [item["count"]], **({"alt": item["alt"]} if item["alt"] else {})})
     return by_path, problems
 SKIP = {"node_modules", ".git", "target", "dist", ".cache"}
 def changed_files(edited):
@@ -53,15 +56,17 @@ def main():
     if problems:
         print("\n".join(problems)); sys.exit(1)
     if mode == "apply":
-        for rel, item in by_path.items():
-            with open(os.path.join(R2, rel), "w", encoding="utf-8", newline="") as handle:
+        for key, item in by_path.items():
+            if not isinstance(key, str):
+                continue
+            with open(os.path.join(R2, key), "w", encoding="utf-8", newline="") as handle:
                 handle.write(item["text"])
         print("applied", sum(len(i["rows"]) for i in by_path.values()), "edits in", len(by_path), "files")
         return
     if mode != "cut":
         raise SystemExit(__doc__)
     rewrites, new_files = [], []
-    for rel in changed_files(set(by_path)):
+    for rel in changed_files({k for k in by_path if isinstance(k, str)}):
         r2 = read(R2, rel)
         r1_path = os.path.join(R1, rel)
         if not os.path.exists(r1_path):
@@ -75,7 +80,21 @@ def main():
         paths.new_write(rel + ".r2", r2)
         group = "ratchet2" if "⚖️ratchet" in rel else "seam2" if rel.startswith(paths.MANAGERS) else "schemas"
         rewrites.append({"id": "rewrite-" + hashlib.sha256(rel.encode()).hexdigest()[:8], "group": group, "path": rel, "oldSha256": hashlib.sha256(r1.encode()).hexdigest(), "old": rel + ".r1", "new": rel + ".r2"})
-    plan = {"version": 1, "groups": GROUPS, "requires": "round 1 applied", "files": [{"path": p, "edits": i["rows"]} for p, i in by_path.items()], "rewrites": rewrites, "newFiles": new_files}
+    merged, snapshots, alternative = {}, {}, set()
+    for key, item in by_path.items():
+        merged.setdefault(item["path"], []).extend(item["rows"])
+        if isinstance(key, str):
+            snapshots[key] = {"pre": key + ".pre", "postSha256": hashlib.sha256(item["text"].encode("utf-8")).hexdigest()}
+            paths.new_write(key + ".pre", read(R1, key))
+        else:
+            alternative.add(item["path"])
+    files = []
+    for p, rows in merged.items():
+        row = {"path": p, "edits": rows}
+        if p not in alternative and p in snapshots:
+            row.update(snapshots[p])
+        files.append(row)
+    plan = {"version": 1, "groups": GROUPS, "requires": "round 1 applied", "files": files, "rewrites": rewrites, "newFiles": new_files}
     json.dump(plan, open(os.path.join(paths.STAGE, "plan.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print("edits", sum(len(i["rows"]) for i in by_path.values()), "files", len(by_path), "rewrites", len(rewrites), "new", len(new_files))
+    print("edits", sum(len(r) for r in merged.values()), "files", len(merged), "rewrites", len(rewrites), "new", len(new_files))
 main()

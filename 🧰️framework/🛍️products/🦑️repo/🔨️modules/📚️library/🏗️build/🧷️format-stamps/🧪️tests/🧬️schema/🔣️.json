@@ -1,0 +1,173 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Format stamp admission fixture",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "table",
+  "files",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "table": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "stamps",
+    "resources"
+   ],
+   "properties": {
+    "stamps": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "schema",
+       "pointer"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "schema": {
+        "type": "string"
+       },
+       "pointer": {
+        "type": "string"
+       },
+       "member": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "resources": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "prefix",
+       "stamps"
+      ],
+      "properties": {
+       "prefix": {
+        "type": "string"
+       },
+       "stamps": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object"
+   }
+  },
+  "cases": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "declared",
+     "live",
+     "resource",
+     "mode",
+     "admission",
+     "moved"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "declared": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "live": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object"
+      }
+     },
+     "resource": {
+      "type": "string"
+     },
+     "mode": {
+      "enum": [
+       "shared",
+       "exclusive"
+      ]
+     },
+     "admission": {
+      "enum": [
+       "pass",
+       "stale"
+      ]
+     },
+     "moved": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "id",
+        "own",
+        "live"
+       ],
+       "properties": {
+        "id": {
+         "type": "string"
+        },
+        "own": {
+         "type": "string"
+        },
+        "live": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "en": {
+      "type": "string"
+     },
+     "de": {
+      "type": "string"
+     },
+     "shown": {
+      "type": "integer"
+     },
+     "hidden": {
+      "type": "integer"
+     },
+     "enMore": {
+      "type": "string"
+     },
+     "deMore": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

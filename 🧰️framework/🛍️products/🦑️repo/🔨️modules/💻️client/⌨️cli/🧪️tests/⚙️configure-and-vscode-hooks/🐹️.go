@@ -234,7 +234,7 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := vsCodeEventFromHookEvent(tc.event, tc.parentInfo)
+			result := copilotEventFromHookEvent(tc.event, tc.parentInfo)
 			if result != tc.expect {
 				t.Errorf("expected %q, got %q", tc.expect, result)
 			}
@@ -242,9 +242,9 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 	}
 }
 
-func TestFormatVSCodeHookOutput(t *testing.T) {
+func TestFormatCopilotHookOutput(t *testing.T) {
 	t.Run("PreToolUse allow", func(t *testing.T) {
-		out := formatVSCodeHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		out := formatCopilotHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -261,7 +261,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("PreToolUse deny", func(t *testing.T) {
-		out := formatVSCodeHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: false, Message: "blocked: git checkout"}}})
+		out := formatCopilotHookOutput("PreToolUse", HookResultAgentToolStarting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: false, Message: "blocked: git checkout"}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -278,7 +278,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("SessionStart with message", func(t *testing.T) {
-		out := formatVSCodeHookOutput("SessionStart", HookResultAgentStarted{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true, Message: "agent.started acknowledged"}}})
+		out := formatCopilotHookOutput("SessionStart", HookResultAgentStarted{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true, Message: "agent.started acknowledged"}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -292,7 +292,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("Stop always has hookSpecificOutput", func(t *testing.T) {
-		out := formatVSCodeHookOutput("Stop", HookResultAgentEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		out := formatCopilotHookOutput("Stop", HookResultAgentEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -306,7 +306,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("UserPromptSubmit always has hookSpecificOutput", func(t *testing.T) {
-		out := formatVSCodeHookOutput("UserPromptSubmit", HookResultAgentPromptSubmitting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		out := formatCopilotHookOutput("UserPromptSubmit", HookResultAgentPromptSubmitting{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -320,7 +320,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("PostToolUse always has hookSpecificOutput", func(t *testing.T) {
-		out := formatVSCodeHookOutput("PostToolUse", HookResultAgentToolEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
+		out := formatCopilotHookOutput("PostToolUse", HookResultAgentToolEnded{HookResultAgentBase: HookResultAgentBase{HookResultBase: HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -334,7 +334,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("unknown event empty output", func(t *testing.T) {
-		out := formatVSCodeHookOutput("", HookResultBase{Allowed: true, Message: "test"})
+		out := formatCopilotHookOutput("", HookResultBase{Allowed: true, Message: "test"})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -356,7 +356,7 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 		if !result.IsAllowed() {
 			t.Fatal("expected allowed")
 		}
-		out := formatVSCodeHookOutput("PreToolUse", result)
+		out := formatCopilotHookOutput("PreToolUse", result)
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON: %v", err)
@@ -381,7 +381,7 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 			t.Fatal("expected blocked")
 		}
 		hookEventName := extractHookEventNameFromStdin(payload)
-		out := formatVSCodeHookOutput(hookEventName, result)
+		out := formatCopilotHookOutput(hookEventName, result)
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON: %v", err)

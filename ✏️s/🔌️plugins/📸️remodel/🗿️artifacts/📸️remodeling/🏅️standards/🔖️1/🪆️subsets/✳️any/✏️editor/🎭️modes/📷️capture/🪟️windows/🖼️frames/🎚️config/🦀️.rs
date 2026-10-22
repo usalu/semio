@@ -27,7 +27,11 @@ impl protocol::Mutation<RemodelingFramesWindowConfig> for RemodelingFramesWindow
         schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config", semantic_kind: "set-frame-cursor", display_name: "Set Remodeling Frames Window Frame Cursor", emoji: "🎚️", aggregate_variant: "SetFrameCursor", payload_schema: "remodeling.frameswindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &RemodelingFramesWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigMutation {
+    type ReferenceDiff = RemodelingFramesWindowConfigDiff;
+    fn diff(&self, base: &RemodelingFramesWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         match self {
             Self::SetFrameCursor { frame_cursor } => {
                 let diff = RemodelingFramesWindowConfigDiff { frame_cursor: (&base.frame_cursor != frame_cursor).then(|| frame_cursor.clone()), ..Default::default() };
@@ -107,7 +111,8 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingFramesWindowConfigO
     type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RemodelingFramesWindowConfig, RemodelingFramesWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
@@ -123,31 +128,37 @@ pub struct RemodelingFramesWindowConfigDiff {
     pub frame_cursor: Option<RemodelingFrameCursor>,
 }
 
-impl protocol::MutationDiff<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
-    fn apply(&self, base: &RemodelingFramesWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RemodelingFramesWindowConfig> {
-        let mut next = base.clone();
-        if let Some(frame_cursor) = &self.frame_cursor {
-            next.frame_cursor = frame_cursor.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.frame_cursor.is_some() {
             self.frame_cursor = other.frame_cursor;
         }
     }
+
+    fn apply(&self, unpublished: &mut RemodelingFramesWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(frame_cursor) = &self.frame_cursor {
+            next.frame_cursor = frame_cursor.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
     fn inverse(&self, base: &RemodelingFramesWindowConfig) -> Self {
         Self {
             frame_cursor: self.frame_cursor.as_ref().map(|_| base.frame_cursor.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔺️Diff

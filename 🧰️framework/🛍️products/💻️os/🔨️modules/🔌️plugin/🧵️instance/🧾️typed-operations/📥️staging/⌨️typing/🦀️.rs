@@ -27,7 +27,7 @@ use semio_framework::{ActionKind, FaultCode, FaultOrigin};
 use semio_framework_plugin_decl_emission::ActionMeta;
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, SpaceMember};
+use store::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
 use crate::typed_bundle::TypedCtx;
 use semio_framework::kernel::UiDirtyScope;
@@ -46,7 +46,7 @@ use semio_framework_tool_machine::TYPING_BUFFER_ARG;
 use semio_framework_tool_machine::TYPING_COMMIT_ARG;
 
 //#region 🔖️Driver
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🛠️ Reads a dispatch's continuous-tool arguments. A typing delivery (`typing`) folds into its window's run: a commit
     /// signal (`typingCommit`) publishes the run as ONE edit and never reaches the app, an edit while a history edit freezes
     /// the document drops the run and is refused `timeTravel.frozen`, every other edit runs the verb with its operation

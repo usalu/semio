@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "state": "source-ready-runtime-unrun",
+  "interface": {
+    "options": "auxiliaryInput:{version:1,text:string}",
+    "maximumBytes": 25165824,
+    "descriptor": 3,
+    "stdin": "preexisting-inherit-or-explicit-input",
+    "control": "actual-issued-control-same-signal",
+    "terminal": "publication-and-actual-child-close",
+    "original": "not-renewed"
+  },
+  "loader": {
+    "export": "buildSourceClosureStreamLoaderV1",
+    "arguments": [
+      "--eval",
+      "<exact-loader-bytes>",
+      "--",
+      "<exact-snapshot-sha256>",
+      "...typedArgs"
+    ],
+    "proof": [
+      "version:1",
+      "snapshot:null",
+      "sha256",
+      "loaderSha256:actual-evaluated-bytes",
+      "root:validated-snapshot-root",
+      "recheck:same-physical-images"
+    ],
+    "fileTransport": "preserved-through-same-module-validation-and-hooks",
+    "storageBlocks": 384
+  },
+  "commands": [
+    "repo run workspace:test-workspace-build --skip-cache --output=stream",
+    "repo run @semio-tech/framework-process:test-owned-execution --skip-cache --output=stream"
+  ],
+  "requiredRegressionNames": [
+    "owned auxiliary DATA UTF-8 boundaries match the independent SQLite contract",
+    "actual owned auxiliary pipe: inherit",
+    "actual owned auxiliary pipe: large",
+    "actual owned auxiliary pipe: early-close",
+    "actual owned auxiliary pipe: cancel",
+    "actual owned auxiliary pipe: deadline",
+    "actual owned auxiliary pipe: consumer-primary",
+    "actual owned auxiliary pipe: status",
+    "actual owned auxiliary pipe: large-stream",
+    "auxiliary publication preserves callback event and undefined primary failures",
+    "immutable auxiliary snapshot boundaries match the independent SQLite contract",
+    "actual auxiliary immutable loader binds eval bytes argv and physical Source"
+  ],
+  "sourceHashes": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts",
+      "bytes": 27258,
+      "sha256": "c796b9210f10e9084fd6098c766dd498f3949bd84a73c55f04fca53fc4b7dd85",
+      "absoluteUtf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
+      "bytes": 6150,
+      "sha256": "8f3141139c85b7a5631e7dbab2f20ccbcea44cf8f877adfe5716017aeffc0112",
+      "absoluteUtf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🔣️.json",
+      "bytes": 1357,
+      "sha256": "1af345ac05363aed23dc9e75037ad986b08494ef2ae904ed7af8d3161a187f19",
+      "absoluteUtf16": 140
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts",
+      "bytes": 6582,
+      "sha256": "e252e5d1b62992ea6b55c516cbc205f9acf7cd1ec76603e3ebe4b04666cbcf26",
+      "absoluteUtf16": 138
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🟦️.ts",
+      "bytes": 2449,
+      "sha256": "8006bf42dc10c033aaa6a3bf2fa32e06a8e9d4dbe43f7978ebc4be0fa9231329",
+      "absoluteUtf16": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json",
+      "bytes": 1082,
+      "sha256": "1bab4709501f27bb272273c5e3c1fa6965f12058dda0f3292193e2fdac78bd97",
+      "absoluteUtf16": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🔣️.json",
+      "bytes": 714,
+      "sha256": "1c780752e235db3cb5b47d3dc8e35246f51bc7d9887b2085ab35023ddd13ceff",
+      "absoluteUtf16": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🟦️.ts",
+      "bytes": 5256,
+      "sha256": "bc887d9ed0eba4a11cd00de221dad70e8b68ee2fed674323c5accb82fa4268f0",
+      "absoluteUtf16": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts",
+      "bytes": 3208,
+      "sha256": "9b401518aebca051d3f544c0f1c5ca447c19a266ced2d18d41fa4a21b793eb78",
+      "absoluteUtf16": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "bytes": 16377,
+      "sha256": "0455563d375770f72fc07a81ccda7c4d2df8f7543e04f629404aed68f6dc4833",
+      "absoluteUtf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "bytes": 1981,
+      "sha256": "c96b98b763e4c440bfd6d85868734011650d0d0547c647335ed6f2aff35ebcde",
+      "absoluteUtf16": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "bytes": 12329,
+      "sha256": "600a21163fb7230749f27816eb7f1d93b22df42564d8e0819854cd23639edb9d",
+      "absoluteUtf16": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 34794,
+      "sha256": "52f0acd2e9a071249fde922de9ccaad3b04ee2577b4f7548582e21621f0560d2",
+      "absoluteUtf16": 78
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+      "bytes": 6480,
+      "sha256": "fbe66b19ca9248986a0e5ca68667cb94f3c6a949e6b28f667d8fd2fd046642d2",
+      "absoluteUtf16": 107
+    },
+    {
+      "path": "📋️project.json",
+      "bytes": 166119,
+      "sha256": "d2f516884b48d0f6901270d9b6648abe2f1fa65e67ae4091d6c9ab866ab3a162",
+      "absoluteUtf16": 43
+    }
+  ],
+  "staticChecks": {
+    "parseErrors": 0,
+    "missingLiteralImports": 0,
+    "maximumAbsoluteUtf16": 140
+  },
+  "qualification": [
+    "No Source/Native/child producer launched by Controls.",
+    "No runtime pass or cross-platform execution inferred.",
+    "Joint Source0 root declaration/main may receive separately authorized Root additions after this observation.",
+    "High owns actual BuildCLI admission/caller transition; cold-first remains held."
+  ]
+}

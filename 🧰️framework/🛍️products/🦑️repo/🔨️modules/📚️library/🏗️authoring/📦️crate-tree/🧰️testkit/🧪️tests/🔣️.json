@@ -1,0 +1,1831 @@
+{
+ "version": 1,
+ "keys": [
+  {
+   "row": "serde = \"1\"",
+   "key": "serde",
+   "ident": "serde"
+  },
+  {
+   "row": "  tempfile = { version = \"3\" }",
+   "key": "tempfile",
+   "ident": "tempfile"
+  },
+  {
+   "row": "serde.workspace = true",
+   "key": "serde",
+   "ident": "serde"
+  },
+  {
+   "row": "my-crate.path = \"../x\"",
+   "key": "my-crate",
+   "ident": "my_crate"
+  },
+  {
+   "row": "a_b = 1",
+   "key": "a_b",
+   "ident": "a_b"
+  },
+  {
+   "row": "# serde = 1",
+   "key": "",
+   "ident": ""
+  },
+  {
+   "row": "[dependencies]",
+   "key": "",
+   "ident": ""
+  },
+  {
+   "row": "",
+   "key": "",
+   "ident": ""
+  },
+  {
+   "row": "1abc = 2",
+   "key": "1abc",
+   "ident": "1abc"
+  },
+  {
+   "row": "a.b.c = 1",
+   "key": "",
+   "ident": ""
+  },
+  {
+   "row": "x=1",
+   "key": "x",
+   "ident": "x"
+  }
+ ],
+ "cfg": [
+  {
+   "attribute": "cfg(test)",
+   "gate": [],
+   "cfg": [],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(test, feature = \"testkit\"))",
+   "gate": [
+    "testkit"
+   ],
+   "cfg": [
+    "testkit"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(feature = \"testkit\")",
+   "gate": [
+    "testkit"
+   ],
+   "cfg": [
+    "testkit"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(not(feature = \"testkit\"))",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(all(test, feature = \"x\"))",
+   "gate": [],
+   "cfg": [
+    "x"
+   ],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(any(test, feature = \"x\"))",
+   "gate": [
+    "x"
+   ],
+   "cfg": [
+    "x"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(feature = \"x\", feature = \"y\", test))",
+   "gate": [
+    "x",
+    "y"
+   ],
+   "cfg": [
+    "x",
+    "y"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(feature = \"x\", feature = \"y\"))",
+   "gate": [],
+   "cfg": [
+    "x",
+    "y"
+   ],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(all(feature = \"testkit\", unix))",
+   "gate": [
+    "testkit"
+   ],
+   "cfg": [
+    "testkit"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(test, not(feature = \"x\")))",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(not(any(test, feature = \"x\")))",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(target_os = \"linux\")",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg_attr(test, derive(Debug))",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": " cfg ( any ( test , feature = \"a\" ) ) ",
+   "gate": [
+    "a"
+   ],
+   "cfg": [
+    "a"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(test, feature = \"testkit\", feature = \"other\"))",
+   "gate": [
+    "testkit",
+    "other"
+   ],
+   "cfg": [
+    "testkit",
+    "other"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(test, feature = \"testkit\"",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg()",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(feature=\"x\")",
+   "gate": [],
+   "cfg": [
+    "x"
+   ],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(all(not(test), feature = \"testkit\"))",
+   "gate": [
+    "testkit"
+   ],
+   "cfg": [
+    "testkit"
+   ],
+   "testOnly": true
+  },
+  {
+   "attribute": "cfg(any(test, all(feature = \"z\", unix)))",
+   "gate": [],
+   "cfg": [
+    "z"
+   ],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(any(all(test), feature = \"q\"))",
+   "gate": [],
+   "cfg": [
+    "q"
+   ],
+   "testOnly": false
+  },
+  {
+   "attribute": "derive(Debug)",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "",
+   "gate": [],
+   "cfg": [],
+   "testOnly": false
+  },
+  {
+   "attribute": "cfg(test)  ",
+   "gate": [],
+   "cfg": [],
+   "testOnly": true
+  }
+ ],
+ "only": [
+  {
+   "attributes": [
+    "inline(always)",
+    "cfg(test)"
+   ],
+   "expected": "cfg(test)"
+  },
+  {
+   "attributes": [],
+   "expected": null
+  },
+  {
+   "attributes": [
+    "cfg( test )"
+   ],
+   "expected": "cfg( test )"
+  },
+  {
+   "attributes": [
+    "cfg(any(test, feature = \"testkit\"))",
+    "cfg(test)"
+   ],
+   "expected": "cfg(any(test, feature = \"testkit\"))"
+  },
+  {
+   "attributes": [
+    "cfg(feature = \"x\")"
+   ],
+   "expected": null
+  },
+  {
+   "attributes": [
+    "cfg(not(test))"
+   ],
+   "expected": null
+  },
+  {
+   "attributes": [
+    "cfg(feature = \"testkit\")"
+   ],
+   "expected": "cfg(feature = \"testkit\")"
+  }
+ ],
+ "gates": [
+  {
+   "name": "a gated public fn",
+   "text": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() -> u8 { 1 }\nfn other() {}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() -> u8 { 1 }",
+     "names": [
+      "make"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "an inherent method names its owner",
+   "text": "pub struct S;\nimpl S {\n    #[cfg(feature = \"testkit\")]\n    pub fn probe(&self) {}\n    pub fn real(&self) {}\n}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\n    pub fn probe(&self) {}",
+     "names": [
+      "probe"
+     ],
+     "method": true,
+     "owner": "S",
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a re-export lists its leaf names",
+   "text": "#[cfg(feature = \"testkit\")]\npub use crate::inner::{A, B as C};\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub use crate::inner::{A, B as C};",
+     "names": [
+      "A",
+      "C"
+     ],
+     "method": false,
+     "owner": null,
+     "use": true
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a private use is a use without names",
+   "text": "#[cfg(feature = \"testkit\")]\nuse crate::inner::A;\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\nuse crate::inner::A;",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": true
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a private fn declares no exported name",
+   "text": "#[cfg(feature = \"testkit\")]\nfn hidden() {}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\nfn hidden() {}",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a gated macro names itself",
+   "text": "#[cfg(feature = \"testkit\")]\nmacro_rules! mk { () => {} }\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\nmacro_rules! mk { () => {} }",
+     "names": [
+      "mk"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "further attributes belong to the item",
+   "text": "#[cfg(feature = \"testkit\")]\n#[derive(Debug)]\npub struct P { x: u8 }\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\n#[derive(Debug)]\npub struct P { x: u8 }",
+     "names": [
+      "P"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a trait method without pub names nothing",
+   "text": "pub trait T {\n    #[cfg(feature = \"testkit\")]\n    fn probe(&self);\n}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\n    fn probe(&self);",
+     "names": [],
+     "method": true,
+     "owner": "T",
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a gated static mut",
+   "text": "#[cfg(feature = \"testkit\")]\npub static mut X: u8 = 0;\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub static mut X: u8 = 0;",
+     "names": [
+      "X"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a restricted visibility exports nothing",
+   "text": "#[cfg(feature = \"testkit\")]\npub(crate) fn inner() {}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub(crate) fn inner() {}",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "qualifiers before the keyword are skipped",
+   "text": "#[cfg(feature = \"testkit\")]\npub const fn build() {}\n#[cfg(feature = \"testkit\")]\npub async unsafe fn later() {}\n#[cfg(any(test, feature = \"testkit\"))]\npub extern \"C\" fn callback() {}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub const fn build() {}",
+     "names": [
+      "build"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    },
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub async unsafe fn later() {}",
+     "names": [
+      "later"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    },
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(any(test, feature = \"testkit\"))]\npub extern \"C\" fn callback() {}",
+     "names": [
+      "callback"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a gated module",
+   "text": "#[cfg(feature = \"testkit\")]\npub mod helpers { pub fn a() {} }\n#[cfg(feature = \"testkit\")]\nmod private_helpers { pub fn a() {} }\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub mod helpers { pub fn a() {} }",
+     "names": [
+      "helpers"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    },
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\nmod private_helpers { pub fn a() {} }",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a gated statement",
+   "text": "fn f() {\n    #[cfg(feature = \"testkit\")]\n    let x = 1;\n}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\n    let x = 1;",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "test-only and non-gate attributes are not gates",
+   "text": "#[cfg(test)]\nfn t() {}\n#[cfg(feature = \"x\")]\npub fn y() {}\n#[cfg(all(test, feature = \"x\"))]\npub fn z() {}\n",
+   "gates": [],
+   "defect": ""
+  },
+  {
+   "name": "a generic trait impl names the implementing type",
+   "text": "impl<T: Clone> Trait<T> for Wrapper<T> {\n    #[cfg(feature = \"testkit\")]\n    pub fn probe(&self) {}\n}\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\n    pub fn probe(&self) {}",
+     "names": [
+      "probe"
+     ],
+     "method": true,
+     "owner": "Wrapper",
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "text without any cfg is skipped",
+   "text": "pub fn plain() {}\n",
+   "gates": [],
+   "defect": ""
+  },
+  {
+   "name": "a gated type alias and constant",
+   "text": "#[cfg(feature = \"testkit\")]\npub type Alias = u8;\n#[cfg(feature = \"testkit\")]\npub const LIMIT: u8 = 3;\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub type Alias = u8;",
+     "names": [
+      "Alias"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    },
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\npub const LIMIT: u8 = 3;",
+     "names": [
+      "LIMIT"
+     ],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a gated impl block",
+   "text": "#[cfg(feature = \"testkit\")]\nimpl S { pub fn m(&self) {} }\n",
+   "gates": [
+    {
+     "features": [
+      "testkit"
+     ],
+     "text": "#[cfg(feature = \"testkit\")]\nimpl S { pub fn m(&self) {} }",
+     "names": [],
+     "method": false,
+     "owner": null,
+     "use": false
+    }
+   ],
+   "defect": ""
+  }
+ ],
+ "declared": [
+  {
+   "text": "pub fn a() {}\nstruct B;\nenum C { X }\ntrait D {}\ntype E = u8;\nconst F: u8 = 1;\nstatic G: u8 = 2;\nmod h {}\nunion I { a: u8 }\nmacro_rules! j { () => {} }\n",
+   "expected": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I",
+    "a",
+    "h",
+    "j"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "static mut COUNTER: u8 = 0;\nconst fn g() {}\npub unsafe fn u() {}\nextern \"C\" fn cb() {}\n",
+   "expected": [
+    "COUNTER",
+    "cb",
+    "g",
+    "u"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "impl S {\n    fn method() {}\n    const K: u8 = 1;\n    type T = u8;\n}\ntrait Tr {\n    fn m();\n    type A;\n    const C: u8;\n}\n",
+   "expected": [
+    "Tr"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "mod outer {\n    pub fn inner() { fn local() {} const L: u8 = 1; }\n    pub mod deeper { pub struct D; }\n}\n",
+   "expected": [
+    "D",
+    "L",
+    "deeper",
+    "inner",
+    "local",
+    "outer"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "pub(crate) struct S<T>(T);\nstruct R<'a> { x: &'a u8 }\n",
+   "expected": [
+    "R",
+    "S"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "fn f<const N: usize>() {}\nstruct W<const M: usize>;\nimpl<const K: usize> W<K> {}\n",
+   "expected": [
+    "W",
+    "f"
+   ],
+   "defect": "F30"
+  },
+  {
+   "text": "fn main() { let r = x.type; let s = a::fn_name; }\n",
+   "expected": [
+    "main"
+   ],
+   "defect": ""
+  },
+  {
+   "text": "",
+   "expected": [],
+   "defect": ""
+  }
+ ],
+ "externals": [
+  {
+   "name": "normal, dev-only and dev-features",
+   "manifest": "[package]\nname = \"x\"\n\n[dependencies]\nserde = \"1\"\nserde_json = { version = \"1\", features = [\"std\"] }\nmy-crate = { path = \"../my-crate\", features = [\"derive\"] }\nwork.workspace = true\n\n[dev-dependencies]\ntempfile = \"3\"\nserde = { version = \"1\", features = [\"derive\", \"rc\"] }\nserde_json = { version = \"1\", features = [\"std\", \"preserve_order\"] }\nmy-crate = { path = \"../my-crate\", features = [\"derive\", \"testkit\"] }\ndev-only.workspace = true\n",
+   "dependencies": [
+    "serde = \"1\"",
+    "serde_json = { version = \"1\", features = [\"std\"] }",
+    "my-crate = { path = \"../my-crate\", features = [\"derive\"] }",
+    "work.workspace = true"
+   ],
+   "devDependencies": [
+    "tempfile = \"3\"",
+    "serde = { version = \"1\", features = [\"derive\", \"rc\"] }",
+    "serde_json = { version = \"1\", features = [\"std\", \"preserve_order\"] }",
+    "my-crate = { path = \"../my-crate\", features = [\"derive\", \"testkit\"] }",
+    "dev-only.workspace = true"
+   ]
+  },
+  {
+   "name": "no dependency tables",
+   "manifest": "[package]\nname = \"x\"\n",
+   "dependencies": [],
+   "devDependencies": []
+  },
+  {
+   "name": "rows are optional when only dev rows are known",
+   "manifest": "[dev-dependencies]\nonly = \"1\"\n",
+   "devDependencies": [
+    "only = \"1\""
+   ],
+   "dependencies": []
+  }
+ ],
+ "optional": [
+  {
+   "row": "serde = \"1\"",
+   "expected": "serde = { version = \"1\", optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "serde.workspace = true",
+   "expected": "serde = { workspace = true, optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "serde = { version = \"1\" }",
+   "expected": "serde = { version = \"1\", optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "serde = { version = \"1\", optional = true }",
+   "expected": "serde = { version = \"1\", optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "  indented = \"2\"",
+   "expected": "  indented = { version = \"2\", optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "x = { path = \"../x\" }  ",
+   "expected": "x = { path = \"../x\", optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "x = { workspace = true, features = [\"a\"] }",
+   "expected": "x = { workspace = true, features = [\"a\"], optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "x = { version = \"1\", default-features = false, features = [\"a\", \"b\"] }",
+   "expected": "x = { version = \"1\", default-features = false, features = [\"a\", \"b\"], optional = true }",
+   "defect": ""
+  },
+  {
+   "row": "x = { version = \"1\", optional=true }",
+   "expected": "x = { version = \"1\", optional=true }",
+   "defect": ""
+  },
+  {
+   "row": "serde = \"1\" # pinned",
+   "expected": "serde = { version = \"1\", optional = true } # pinned",
+   "defect": "F31"
+  },
+  {
+   "row": "serde = '1'",
+   "expected": "serde = { version = '1', optional = true }",
+   "defect": "F31"
+  }
+ ],
+ "required": [
+  {
+   "name": "an integration test needs the gate features its code names",
+   "targetTokens": [
+    "make",
+    "other"
+   ],
+   "gated": {
+    "testkit": [
+     "make",
+     "build"
+    ],
+    "extra": [
+     "zzz"
+    ],
+    "also": [
+     "other"
+    ]
+   },
+   "expected": [
+    "also",
+    "testkit"
+   ]
+  },
+  {
+   "name": "nothing gated",
+   "targetTokens": [
+    "a"
+   ],
+   "gated": {},
+   "expected": []
+  },
+  {
+   "name": "no names in common",
+   "targetTokens": [
+    "a"
+   ],
+   "gated": {
+    "testkit": [
+     "make"
+    ]
+   },
+   "expected": []
+  }
+ ],
+ "withRequired": [
+  {
+   "name": "a missing row is appended after the last line; an existing one is extended",
+   "manifest": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "byTarget": {
+    "t1": [
+     "testkit"
+    ],
+    "t2": [
+     "testkit",
+     "a"
+    ],
+    "ghost": [
+     "x"
+    ]
+   },
+   "expected": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\nrequired-features = [\"testkit\"]\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\", \"testkit\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "defect": ""
+  },
+  {
+   "name": "no targets change nothing",
+   "manifest": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "byTarget": {},
+   "expected": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "defect": ""
+  },
+  {
+   "name": "an empty feature list changes nothing",
+   "manifest": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "byTarget": {
+    "t1": []
+   },
+   "expected": "[package]\nname = \"x\"\n\n[[test]]\nname = \"t1\"\npath = \"tests/t1.rs\"\n\n[[test]]\nname = \"t2\"\nrequired-features = [\"a\"]\npath = \"tests/t2.rs\"\n\n[lib]\npath = \"src/lib.rs\"\n",
+   "defect": ""
+  },
+  {
+   "name": "a section at the end of the file",
+   "manifest": "[[test]]\nname = \"t\"\npath = \"p.rs\"",
+   "byTarget": {
+    "t": [
+     "k"
+    ]
+   },
+   "expected": "[[test]]\nname = \"t\"\npath = \"p.rs\"\nrequired-features = [\"k\"]",
+   "defect": ""
+  },
+  {
+   "name": "a target without a name is left alone",
+   "manifest": "[[test]]\npath = \"p.rs\"\n",
+   "byTarget": {
+    "t": [
+     "k"
+    ]
+   },
+   "expected": "[[test]]\npath = \"p.rs\"\n",
+   "defect": ""
+  },
+  {
+   "name": "an existing feature is not repeated",
+   "manifest": "[[test]]\nname = \"t\"\nrequired-features = [\"k\"]\n",
+   "byTarget": {
+    "t": [
+     "k"
+    ]
+   },
+   "expected": "[[test]]\nname = \"t\"\nrequired-features = [\"k\"]\n",
+   "defect": ""
+  },
+  {
+   "name": "a multi-line array is extended as one row",
+   "manifest": "[[test]]\nname = \"t3\"\nrequired-features = [\n    \"a\",\n]\npath = \"x\"\n",
+   "byTarget": {
+    "t3": [
+     "testkit"
+    ]
+   },
+   "expected": "[[test]]\nname = \"t3\"\nrequired-features = [\"a\", \"testkit\"]\npath = \"x\"\n",
+   "defect": "F32"
+  },
+  {
+   "name": "other sections between tests keep their place",
+   "manifest": "[[test]]\nname = \"t\"\n\n[dependencies]\nx = \"1\"\n",
+   "byTarget": {
+    "t": [
+     "k"
+    ]
+   },
+   "expected": "[[test]]\nname = \"t\"\nrequired-features = [\"k\"]\n\n[dependencies]\nx = \"1\"\n",
+   "defect": ""
+  }
+ ],
+ "featureRows": [
+  {
+   "feature": {
+    "name": "testkit",
+    "entries": [
+     "dep:tempfile",
+     "a/testkit"
+    ]
+   },
+   "expected": "testkit = [\"dep:tempfile\", \"a/testkit\"]",
+   "defect": ""
+  },
+  {
+   "feature": {
+    "name": "empty",
+    "entries": []
+   },
+   "expected": "empty = []",
+   "defect": ""
+  },
+  {
+   "feature": {
+    "name": "q",
+    "entries": [
+     "x\"y"
+    ]
+   },
+   "expected": "q = [\"x\\\"y\"]",
+   "defect": ""
+  },
+  {
+   "feature": {
+    "name": "a+b",
+    "entries": [
+     "x"
+    ]
+   },
+   "expected": "\"a+b\" = [\"x\"]",
+   "defect": "F33"
+  }
+ ],
+ "withFeatures": [
+  {
+   "name": "an existing row is replaced in place",
+   "manifest": "[package]\nname = \"x\"\n\n[features]\ntestkit = [\"old\"]\nkeep = [\"k\"]\n\n[dependencies]\nserde = \"1\"\n",
+   "features": [
+    {
+     "name": "testkit",
+     "entries": [
+      "dep:t",
+      "a/testkit"
+     ]
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[features]\ntestkit = [\"dep:t\", \"a/testkit\"]\nkeep = [\"k\"]\n\n[dependencies]\nserde = \"1\"\n",
+   "defect": ""
+  },
+  {
+   "name": "a new row joins the existing section",
+   "manifest": "[package]\nname = \"x\"\n\n[features]\ntestkit = [\"old\"]\nkeep = [\"k\"]\n\n[dependencies]\nserde = \"1\"\n",
+   "features": [
+    {
+     "name": "fresh",
+     "entries": [
+      "x"
+     ]
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[features]\nfresh = [\"x\"]\ntestkit = [\"old\"]\nkeep = [\"k\"]\n\n[dependencies]\nserde = \"1\"\n",
+   "defect": ""
+  },
+  {
+   "name": "a missing section is created before dependencies",
+   "manifest": "[package]\nname = \"x\"\n\n[dependencies]\nserde = \"1\"\n",
+   "features": [
+    {
+     "name": "testkit",
+     "entries": []
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[features]\ntestkit = []\n\n[dependencies]\nserde = \"1\"\n",
+   "defect": ""
+  },
+  {
+   "name": "a missing section goes to the end without dependencies",
+   "manifest": "[package]\nname = \"x\"\n",
+   "features": [
+    {
+     "name": "testkit",
+     "entries": [
+      "a/testkit"
+     ]
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[features]\ntestkit = [\"a/testkit\"]\n",
+   "defect": ""
+  },
+  {
+   "name": "a multi-line array is replaced as a whole",
+   "manifest": "[features]\ntestkit = [\n    \"a\",\n    \"b\",\n]\nother = []\n",
+   "features": [
+    {
+     "name": "testkit",
+     "entries": [
+      "c"
+     ]
+    }
+   ],
+   "expected": "[features]\ntestkit = [\"c\"]\nother = []\n",
+   "defect": ""
+  },
+  {
+   "name": "several features keep their order",
+   "manifest": "[dependencies]\n",
+   "features": [
+    {
+     "name": "b",
+     "entries": []
+    },
+    {
+     "name": "a",
+     "entries": [
+      "x"
+     ]
+    }
+   ],
+   "expected": "[features]\na = [\"x\"]\nb = []\n\n[dependencies]\n",
+   "defect": ""
+  },
+  {
+   "name": "a feature name that is not a bare key is quoted",
+   "manifest": "[features]\nab = [\"keep\"]\na_b = [\"keep2\"]\n",
+   "features": [
+    {
+     "name": "a.b",
+     "entries": [
+      "z"
+     ]
+    }
+   ],
+   "expected": "[features]\n\"a.b\" = [\"z\"]\nab = [\"keep\"]\na_b = [\"keep2\"]\n",
+   "defect": "F33"
+  }
+ ],
+ "wiring": [
+  {
+   "name": "a dev-only external used by gated code becomes an optional dependency",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() { tempfile::tempdir(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [
+    {
+     "key": "tempfile",
+     "ident": "tempfile",
+     "dependency": false,
+     "devOnly": true,
+     "devFeatures": [],
+     "devRow": "tempfile = \"3\"",
+     "row": "tempfile = \"3\""
+    }
+   ],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": [
+        "dep:tempfile"
+       ]
+      }
+     ],
+     "optionalDependencies": [
+      "tempfile"
+     ],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "a gate feature is forwarded to the dependency whose gated names the code uses",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn run() { a::make(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    },
+    "b": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": [
+        "a/testkit"
+       ]
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {
+      "a": [
+       "testkit"
+      ]
+     },
+     "gatedNames": {
+      "testkit": [
+       "run"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "a consumer that names a gated item without gating its own code consumes the feature",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "pub fn run() { a::make(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {
+      "a": [
+       "testkit"
+      ]
+     },
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a toolkit dependency with dev features is forwarded when gated code needs its gated names",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() { serde_json::to_string(&1); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [
+    {
+     "key": "serde_json",
+     "ident": "serde_json",
+     "dependency": true,
+     "devOnly": false,
+     "devFeatures": [
+      "preserve_order"
+     ],
+     "devRow": "serde_json = { version = \"1\", features = [\"preserve_order\"] }",
+     "row": "serde_json = \"1\""
+    }
+   ],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": [
+        "serde_json/preserve_order"
+       ]
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "declared features are not test gates",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [
+    "testkit"
+   ],
+   "expect": {
+    "a": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a gated method counts when its owner is also named",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "pub struct Probe;\nimpl Probe {\n    #[cfg(any(test, feature = \"testkit\"))]\n    pub fn peek(&self) {}\n}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "pub fn run(p: a::Probe) { p.peek(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "peek"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {
+      "a": [
+       "testkit"
+      ]
+     },
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a gated method alone without its owner is not consumed",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "pub struct Probe;\nimpl Probe {\n    #[cfg(any(test, feature = \"testkit\"))]\n    pub fn peek(&self) {}\n}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "pub fn run() { peek(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "peek"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a re-export behind a gate is consumed through its root",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(feature = \"testkit\")]\npub use crate::inner::Helper;\n#[cfg(feature = \"testkit\")]\npub fn probe() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "use a::Helper;\nfn f(_: Helper) {}\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "Helper",
+       "probe"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {
+      "a": [
+       "testkit"
+      ]
+     },
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a file mounted by two crates belongs to the crate whose plan owns it",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": [
+      "src/shared.rs"
+     ],
+     "files": {
+      "src/shared.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn shared() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": [],
+     "files": {
+      "src/shared.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn shared() {}\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "shared"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "a file mounted by two crates belongs to the one that depends on no other holder",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "src/shared.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn shared() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [
+      "a"
+     ],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "src/shared.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn shared() {}\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "shared"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "files the closure compiles only with the feature count as gated code",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n",
+      "a/src/extra.rs": "pub fn other() { tempfile::tempdir(); }\n"
+     },
+     "featureFiles": {
+      "testkit": [
+       "a/src/extra.rs"
+      ]
+     }
+    }
+   ],
+   "externals": [
+    {
+     "key": "tempfile",
+     "ident": "tempfile",
+     "dependency": false,
+     "devOnly": true,
+     "devFeatures": [],
+     "devRow": "tempfile = \"3\"",
+     "row": "tempfile = \"3\""
+    }
+   ],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": [
+        "dep:tempfile"
+       ]
+      }
+     ],
+     "optionalDependencies": [
+      "tempfile"
+     ],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "an extern crate alias resolves to the dependency",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "extern crate tempfile as tf;\n#[cfg(any(test, feature = \"testkit\"))]\npub fn make() { tf::tempdir(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [
+    {
+     "key": "tempfile",
+     "ident": "tempfile",
+     "dependency": false,
+     "devOnly": true,
+     "devFeatures": [],
+     "devRow": "tempfile = \"3\"",
+     "row": "tempfile = \"3\""
+    }
+   ],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": [
+        "dep:tempfile"
+       ]
+      }
+     ],
+     "optionalDependencies": [
+      "tempfile"
+     ],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "a crate without gates needs no wiring",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "pub fn plain() {}\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {}
+    }
+   }
+  },
+  {
+   "name": "dev dependencies carry the consumed features too",
+   "crates": [
+    {
+     "name": "a",
+     "ident": "a",
+     "dependsOn": [],
+     "devDependsOn": [],
+     "owned": null,
+     "files": {
+      "a/src/lib.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n"
+     },
+     "featureFiles": {}
+    },
+    {
+     "name": "b",
+     "ident": "b",
+     "dependsOn": [],
+     "devDependsOn": [
+      "a"
+     ],
+     "owned": null,
+     "files": {
+      "b/src/lib.rs": "pub fn run() { a::make(); }\n"
+     },
+     "featureFiles": {}
+    }
+   ],
+   "externals": [],
+   "declared": [],
+   "expect": {
+    "a": {
+     "features": [
+      {
+       "name": "testkit",
+       "entries": []
+      }
+     ],
+     "optionalDependencies": [],
+     "consumed": {},
+     "gatedNames": {
+      "testkit": [
+       "make"
+      ]
+     }
+    },
+    "b": {
+     "features": [],
+     "optionalDependencies": [],
+     "consumed": {
+      "a": [
+       "testkit"
+      ]
+     },
+     "gatedNames": {}
+    }
+   }
+  }
+ ],
+ "build": {
+  "files": {
+   "src/a.rs": "#[cfg(any(test, feature = \"testkit\"))]\npub fn make() {}\n#[cfg(feature = \"other\")]\npub fn thing() {}\n",
+   "src/b.rs": "pub fn plain() {}\n",
+   "src/c.rs": "#[cfg(feature = \"testkit\")]\nuse x::Y;\n"
+  },
+  "closures": {
+   "testkit": [
+    "src/a.rs",
+    "src/extra.rs"
+   ]
+  }
+ }
+}

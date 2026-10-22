@@ -1,0 +1,487 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "relative",
+  "compare",
+  "manifest",
+  "manifestDefect",
+  "rebase",
+  "keys",
+  "render",
+  "hiding",
+  "admission",
+  "addMembers",
+  "lock",
+  "router",
+  "includes",
+  "manifestPaths"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "relative": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "from",
+     "to",
+     "expected"
+    ],
+    "properties": {
+     "from": {
+      "type": "string"
+     },
+     "to": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "compare": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "left",
+     "right",
+     "sign"
+    ],
+    "properties": {
+     "left": {
+      "type": "string"
+     },
+     "right": {
+      "type": "string"
+     },
+     "sign": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "manifest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "dependencies",
+    "devDependencies",
+    "targetSections",
+    "unsupported"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "dependencies": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "devDependencies": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "targetSections": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "unsupported": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "manifestDefect": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "expectedUnsupportedContains",
+    "defect"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "expectedUnsupportedContains": {
+     "type": "string"
+    },
+    "defect": {
+     "type": "string"
+    }
+   }
+  },
+  "rebase": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "row",
+     "from",
+     "to",
+     "expected"
+    ],
+    "properties": {
+     "row": {
+      "type": "string"
+     },
+     "from": {
+      "type": "string"
+     },
+     "to": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "keys": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "row",
+     "expected"
+    ],
+    "properties": {
+     "row": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "render": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "spec",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "description",
+       "workspaceRel",
+       "libPath",
+       "dependencyRows",
+       "devDependencyRows",
+       "targetSections"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "description": {
+        "type": "string"
+       },
+       "workspaceRel": {
+        "type": "string"
+       },
+       "libPath": {
+        "type": "string"
+       },
+       "dependencyRows": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "devDependencyRows": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "targetSections": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "featureRows": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "hiding": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "member",
+     "patterns",
+     "expected"
+    ],
+    "properties": {
+     "member": {
+      "type": "string"
+     },
+     "patterns": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "admission": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "manifest",
+     "problems"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "manifest": {
+      "type": "string"
+     },
+     "problems": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "addMembers": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "manifest",
+     "additions",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "manifest": {
+      "type": "string"
+     },
+     "additions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "lock": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "artifact",
+    "carved",
+    "members",
+    "expected"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "artifact": {
+     "type": "string"
+    },
+    "carved": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "dependsOn"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "dependsOn": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "members": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "expected": {
+     "type": "string"
+    }
+   }
+  },
+  "router": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "script",
+     "artifact",
+     "additions",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "script": {
+      "type": "string"
+     },
+     "artifact": {
+      "type": "string"
+     },
+     "additions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "includes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "from",
+     "to",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "from": {
+      "type": "string"
+     },
+     "to": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "manifestPaths": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "from",
+     "to",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "from": {
+      "type": "string"
+     },
+     "to": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

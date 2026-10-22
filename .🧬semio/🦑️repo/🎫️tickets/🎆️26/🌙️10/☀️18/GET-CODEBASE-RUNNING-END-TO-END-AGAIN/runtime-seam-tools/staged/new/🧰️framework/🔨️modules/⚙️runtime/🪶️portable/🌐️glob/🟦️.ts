@@ -1,6 +1,7 @@
 import { readdirSync, statSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeGlobScanOptionsV1, RuntimeGlobV1 } from "../../📋️contract/🟦️.ts";
 
 const MAXIMUM_ALTERNATIVES = 4096;
@@ -47,7 +48,7 @@ function expandBraces(pattern: string): string[] {
     const group = braceGroup(pattern, index);
     if (group === undefined) return [NEVER];
     const head = pattern.slice(0, index).replace(/\*+$/u, stars => BOUND.repeat(stars.length)), tail = pattern.slice(group.end + 1).replace(/^\*+(?!\/)/u, stars => BOUND.repeat(stars.length)), expanded = group.parts.flatMap(part => expandBraces(head + part + tail));
-    if (expanded.length > MAXIMUM_ALTERNATIVES) throw Error("Glob pattern expands to too many alternatives");
+    if (expanded.length > MAXIMUM_ALTERNATIVES) throw Error(runtimeMessageV1("globTooMany", {}));
     return expanded;
   }
   return [pattern];
@@ -242,7 +243,7 @@ export function compileGlobV1(pattern: string): RuntimeGlobV1 {
   const negated = pattern.startsWith("!");
   const alternatives = expandBraces(negated ? pattern.slice(1) : pattern).map(compileAlternative);
   const match = (path: string): boolean => alternatives.some(alternative => alternative.expression?.test(path) === true) !== negated;
-  const reject = (): never => { throw Error("Negated glob patterns cannot be scanned"); };
+  const reject = (): never => { throw Error(runtimeMessageV1("globNegated", {})); };
   if (negated) return { match, scan: reject, scanSync: reject };
   const publish = (settled: SettledV1, path: string): string => (settled.absolute ? join(settled.cwd, path) : path);
   return {
@@ -251,7 +252,7 @@ export function compileGlobV1(pattern: string): RuntimeGlobV1 {
       const settled = settle(options), seen = new Set<string>();
       for (const alternative of alternatives) {
         if (alternative.expression === undefined) continue;
-        if (alternative.segments[0] === "") throw Error("Absolute glob scan patterns are not supported");
+        if (alternative.segments[0] === "") throw Error(runtimeMessageV1("globAbsolute", {}));
         for (const path of walkSync(alternative.segments, settled, "", 0)) if (!seen.has(path)) { seen.add(path); yield publish(settled, path); }
       }
     },
@@ -259,7 +260,7 @@ export function compileGlobV1(pattern: string): RuntimeGlobV1 {
       const settled = settle(options), seen = new Set<string>();
       for (const alternative of alternatives) {
         if (alternative.expression === undefined) continue;
-        if (alternative.segments[0] === "") throw Error("Absolute glob scan patterns are not supported");
+        if (alternative.segments[0] === "") throw Error(runtimeMessageV1("globAbsolute", {}));
         for await (const path of walkAsync(alternative.segments, settled, "", 0)) if (!seen.has(path)) { seen.add(path); yield publish(settled, path); }
       }
     },

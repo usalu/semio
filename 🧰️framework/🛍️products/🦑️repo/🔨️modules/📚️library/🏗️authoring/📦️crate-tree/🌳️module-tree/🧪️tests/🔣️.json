@@ -1,0 +1,812 @@
+{
+ "version": 1,
+ "sources": [
+  {
+   "name": "a mixed file",
+   "text": "//! inner doc\n#![allow(dead_code)]\nuse std::fmt;\npub use crate::a::{b, c as d};\n\n#[cfg(test)]\nmod tests {\n    fn t() {}\n}\n\n/// docs\n#[path = \"other.rs\"]\npub(crate) mod file_mod;\n\npub mod inline_mod {\n    pub struct S;\n    pub fn f() {}\n    mod deeper { const X: u8 = 1; }\n}\n\n#[cfg(all(test, feature = \"x\"))]\nmod only_tests;\n\nconst C: u8 = 1;\nstatic ST: u8 = 2;\npub struct P { a: u8 }\nenum E { A }\ntype T = u8;\npub trait Tr {}\nimpl Tr for P {}\nmacro_rules! m { () => {} }\nextern crate alloc;\npub async fn af() {}\nunion U { a: u8 }\n",
+   "tree": {
+    "innerAttributes": [
+     "#![allow(dead_code)]"
+    ],
+    "modules": [
+     {
+      "name": "tests",
+      "visibility": "private",
+      "inline": true,
+      "conditionalTest": true,
+      "pathAttribute": null,
+      "attributes": [
+       "cfg(test)"
+      ],
+      "text": "#[cfg(test)]\nmod tests {\n    fn t() {}\n}",
+      "children": [],
+      "items": [
+       {
+        "kind": "fn",
+        "name": "t",
+        "visibility": "private"
+       }
+      ]
+     },
+     {
+      "name": "file_mod",
+      "visibility": "pub(crate)",
+      "inline": false,
+      "conditionalTest": false,
+      "pathAttribute": "other.rs",
+      "attributes": [
+       "path = \"other.rs\""
+      ],
+      "text": "#[path = \"other.rs\"]\npub(crate) mod file_mod;",
+      "children": [],
+      "items": []
+     },
+     {
+      "name": "inline_mod",
+      "visibility": "pub",
+      "inline": true,
+      "conditionalTest": false,
+      "pathAttribute": null,
+      "attributes": [],
+      "text": "pub mod inline_mod {\n    pub struct S;\n    pub fn f() {}\n    mod deeper { const X: u8 = 1; }\n}",
+      "children": [
+       {
+        "name": "deeper",
+        "visibility": "private",
+        "inline": true,
+        "conditionalTest": false,
+        "pathAttribute": null,
+        "attributes": [],
+        "text": "mod deeper { const X: u8 = 1; }",
+        "children": [],
+        "items": [
+         {
+          "kind": "const",
+          "name": "X",
+          "visibility": "private"
+         }
+        ]
+       }
+      ],
+      "items": [
+       {
+        "kind": "struct",
+        "name": "S",
+        "visibility": "pub"
+       },
+       {
+        "kind": "fn",
+        "name": "f",
+        "visibility": "pub"
+       }
+      ]
+     },
+     {
+      "name": "only_tests",
+      "visibility": "private",
+      "inline": false,
+      "conditionalTest": true,
+      "pathAttribute": null,
+      "attributes": [
+       "cfg(all(test, feature = \"x\"))"
+      ],
+      "text": "#[cfg(all(test, feature = \"x\"))]\nmod only_tests;",
+      "children": [],
+      "items": []
+     }
+    ],
+    "items": [
+     {
+      "kind": "use",
+      "name": null,
+      "visibility": "private",
+      "text": "use std::fmt;"
+     },
+     {
+      "kind": "use",
+      "name": null,
+      "visibility": "pub",
+      "text": "pub use crate::a::{b, c as d};"
+     },
+     {
+      "kind": "const",
+      "name": "C",
+      "visibility": "private",
+      "text": "const C: u8 = 1;"
+     },
+     {
+      "kind": "static",
+      "name": "ST",
+      "visibility": "private",
+      "text": "static ST: u8 = 2;"
+     },
+     {
+      "kind": "struct",
+      "name": "P",
+      "visibility": "pub",
+      "text": "pub struct P { a: u8 }"
+     },
+     {
+      "kind": "enum",
+      "name": "E",
+      "visibility": "private",
+      "text": "enum E { A }"
+     },
+     {
+      "kind": "type",
+      "name": "T",
+      "visibility": "private",
+      "text": "type T = u8;"
+     },
+     {
+      "kind": "trait",
+      "name": "Tr",
+      "visibility": "pub",
+      "text": "pub trait Tr {}"
+     },
+     {
+      "kind": "impl",
+      "name": "Tr",
+      "visibility": "private",
+      "text": "impl Tr for P {}"
+     },
+     {
+      "kind": "macro",
+      "name": "m",
+      "visibility": "private",
+      "text": "macro_rules! m { () => {} }"
+     },
+     {
+      "kind": "extern-crate",
+      "name": "alloc",
+      "visibility": "private",
+      "text": "extern crate alloc;"
+     },
+     {
+      "kind": "fn",
+      "name": "af",
+      "visibility": "pub",
+      "text": "pub async fn af() {}"
+     },
+     {
+      "kind": "struct",
+      "name": "U",
+      "visibility": "private",
+      "text": "union U { a: u8 }"
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "nested and conditional modules",
+   "text": "pub(super) mod a {\n    pub(in crate::x) mod b {\n        mod c;\n    }\n}\n#[cfg(test)]\n#[path = \"x.rs\"]\nmod m;\n#[cfg(not(test))] mod n;\n",
+   "tree": {
+    "innerAttributes": [],
+    "modules": [
+     {
+      "name": "a",
+      "visibility": "pub(super)",
+      "inline": true,
+      "conditionalTest": false,
+      "pathAttribute": null,
+      "attributes": [],
+      "text": "pub(super) mod a {\n    pub(in crate::x) mod b {\n        mod c;\n    }\n}",
+      "children": [
+       {
+        "name": "b",
+        "visibility": "pub(in crate::x)",
+        "inline": true,
+        "conditionalTest": false,
+        "pathAttribute": null,
+        "attributes": [],
+        "text": "pub(in crate::x) mod b {\n        mod c;\n    }",
+        "children": [
+         {
+          "name": "c",
+          "visibility": "private",
+          "inline": false,
+          "conditionalTest": false,
+          "pathAttribute": null,
+          "attributes": [],
+          "text": "mod c;",
+          "children": [],
+          "items": []
+         }
+        ],
+        "items": []
+       }
+      ],
+      "items": []
+     },
+     {
+      "name": "m",
+      "visibility": "private",
+      "inline": false,
+      "conditionalTest": true,
+      "pathAttribute": "x.rs",
+      "attributes": [
+       "cfg(test)",
+       "path = \"x.rs\""
+      ],
+      "text": "#[cfg(test)]\n#[path = \"x.rs\"]\nmod m;",
+      "children": [],
+      "items": []
+     },
+     {
+      "name": "n",
+      "visibility": "private",
+      "inline": false,
+      "conditionalTest": false,
+      "pathAttribute": null,
+      "attributes": [
+       "cfg(not(test))"
+      ],
+      "text": "#[cfg(not(test))] mod n;",
+      "children": [],
+      "items": []
+     }
+    ],
+    "items": []
+   },
+   "oracle": true
+  },
+  {
+   "name": "an empty file",
+   "text": "",
+   "tree": {
+    "innerAttributes": [],
+    "modules": [],
+    "items": []
+   },
+   "oracle": true
+  },
+  {
+   "name": "item qualifiers",
+   "text": "pub(crate) const fn cf() {}\nunsafe impl Send for X {}\nasync unsafe fn au() {}\npub extern crate foo;\n#[derive(Debug)] struct D;\nfn with_body() { mod not_a_module { } }\npub(crate) static mut SM: u8 = 0;\n",
+   "tree": {
+    "innerAttributes": [],
+    "modules": [],
+    "items": [
+     {
+      "kind": "fn",
+      "name": "cf",
+      "visibility": "pub(crate)",
+      "text": "pub(crate) const fn cf() {}"
+     },
+     {
+      "kind": "impl",
+      "name": "Send",
+      "visibility": "private",
+      "text": "unsafe impl Send for X {}"
+     },
+     {
+      "kind": "fn",
+      "name": "au",
+      "visibility": "private",
+      "text": "async unsafe fn au() {}"
+     },
+     {
+      "kind": "extern-crate",
+      "name": "foo",
+      "visibility": "pub",
+      "text": "pub extern crate foo;"
+     },
+     {
+      "kind": "struct",
+      "name": "D",
+      "visibility": "private",
+      "text": "#[derive(Debug)] struct D;"
+     },
+     {
+      "kind": "fn",
+      "name": "with_body",
+      "visibility": "private",
+      "text": "fn with_body() { mod not_a_module { } }"
+     },
+     {
+      "kind": "static",
+      "name": "mut",
+      "visibility": "pub(crate)",
+      "text": "pub(crate) static mut SM: u8 = 0;"
+     }
+    ]
+   },
+   "oracle": false
+  }
+ ],
+ "defects": [
+  {
+   "name": "an extern \"C\" function is a function",
+   "text": "pub unsafe extern \"C\" fn uf() {}\n",
+   "expectedItem": {
+    "kind": "fn",
+    "name": "uf",
+    "visibility": "pub"
+   },
+   "defect": "🌳️module-tree/🟦️.ts:parseRustSourceTree skips the `extern` qualifier but not the ABI string literal that follows it, so `extern \"C\" fn` is classified `other` with no name"
+  }
+ ],
+ "cfg": [
+  {
+   "attribute": "cfg(test)",
+   "expected": true
+  },
+  {
+   "attribute": "cfg( test )",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(all(test, feature = \"x\"))",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(any(test, test))",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(any(test, unix))",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(all(unix, windows))",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(not(test))",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(feature = \"test\")",
+   "expected": false
+  },
+  {
+   "attribute": "allow(dead_code)",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(all())",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(any())",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(all(any(test), unix))",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(all(test))",
+   "expected": true
+  },
+  {
+   "attribute": "  cfg(test)  ",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(any(all(test, unix), test))",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(all(unix, any(test, test)))",
+   "expected": true
+  },
+  {
+   "attribute": "cfg(any(all(test, unix), unix))",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(test, unix)",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(testing)",
+   "expected": false
+  },
+  {
+   "attribute": "cfg()",
+   "expected": false
+  },
+  {
+   "attribute": "cfg_attr(test, derive(Debug))",
+   "expected": false
+  },
+  {
+   "attribute": "cfg(all(test,))",
+   "expected": true
+  }
+ ],
+ "docs": [
+  {
+   "source": "/// a\nfn f() {}\n",
+   "expected": "/// a\nfn f() {}\n"
+  },
+  {
+   "source": "fn f() {}\n/// dangling\n",
+   "expected": "fn f() {}\n// dangling\n"
+  },
+  {
+   "source": "mod m {\n    fn f() {}\n    /// dangling\n}\n",
+   "expected": "mod m {\n    fn f() {}\n    // dangling\n}\n"
+  },
+  {
+   "source": "/// a\n/// b\n\n// plain\n\nfn f() {}\n",
+   "expected": "/// a\n/// b\n\n// plain\n\nfn f() {}\n"
+  },
+  {
+   "source": "fn f() {}\n/// a\n\n}\n",
+   "expected": "fn f() {}\n// a\n\n}\n"
+  },
+  {
+   "source": "/// a\n// plain\n}\n",
+   "expected": "// a\n// plain\n}\n"
+  },
+  {
+   "source": "//// four slashes\n}\n",
+   "expected": "//// four slashes\n}\n"
+  },
+  {
+   "source": "",
+   "expected": ""
+  },
+  {
+   "source": "no docs at all\n",
+   "expected": "no docs at all\n"
+  },
+  {
+   "source": "/// a\r\nfn f() {}\r\n",
+   "expected": "/// a\r\nfn f() {}\r\n"
+  },
+  {
+   "source": "fn f() {\n    /// stray\n    )\n",
+   "expected": "fn f() {\n    // stray\n    )\n"
+  },
+  {
+   "source": "/// x\n  ]\n",
+   "expected": "// x\n  ]\n"
+  }
+ ],
+ "itemComments": [
+  {
+   "source": "a\n// c1\n// c2\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "// c1"
+  },
+  {
+   "source": "a\n\n// c1\n\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "//! inner\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "x\n/// doc\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "/// doc"
+  },
+  {
+   "source": "fn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "// only\n// two\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "// only"
+  }
+ ],
+ "outerDocs": [
+  {
+   "source": "x\n/// a\n/// b\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "/// a"
+  },
+  {
+   "source": "/// a\n//// not doc\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "    /// a\n    fn f() {}\n",
+   "needle": "fn f",
+   "expected": "    /// a"
+  },
+  {
+   "source": "let x = 1; fn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "// plain\nfn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  },
+  {
+   "source": "fn f() {}\n",
+   "needle": "fn f",
+   "expected": "fn f"
+  }
+ ],
+ "pathValue": [
+  {
+   "attribute": "path = \"a/b.rs\"",
+   "expected": "a/b.rs"
+  },
+  {
+   "attribute": "path=\"x\"",
+   "expected": "x"
+  },
+  {
+   "attribute": "path = \"a\\\"b\"",
+   "expected": "a\\\"b"
+  },
+  {
+   "attribute": "path = x",
+   "expected": null
+  },
+  {
+   "attribute": "cfg(test)",
+   "expected": null
+  },
+  {
+   "attribute": "path = \"a\" extra",
+   "expected": null
+  },
+  {
+   "attribute": "pathx = \"a\"",
+   "expected": null
+  },
+  {
+   "attribute": "path = \"\"",
+   "expected": ""
+  }
+ ],
+ "leaves": [
+  {
+   "statement": "use a::b;",
+   "expected": [
+    "b"
+   ]
+  },
+  {
+   "statement": "use a::{b, c as d, e::f};",
+   "expected": [
+    "b",
+    "d",
+    "f"
+   ]
+  },
+  {
+   "statement": "use a::{self, b};",
+   "expected": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "statement": "pub use crate::x::y as z;",
+   "expected": [
+    "z"
+   ]
+  },
+  {
+   "statement": "pub(crate) use a::*;",
+   "expected": []
+  },
+  {
+   "statement": "use a::b::{c::{d, e}, f};",
+   "expected": [
+    "d",
+    "e",
+    "f"
+   ]
+  },
+  {
+   "statement": "extern crate a;",
+   "expected": []
+  },
+  {
+   "statement": "use self::x;",
+   "expected": [
+    "x"
+   ]
+  },
+  {
+   "statement": "use a::{b::*, c};",
+   "expected": [
+    "c"
+   ]
+  },
+  {
+   "statement": "use ::a::b;",
+   "expected": [
+    "b"
+   ]
+  }
+ ],
+ "leafDefects": [
+  {
+   "statement": "use a::{b as c, self as d};",
+   "expected": [
+    "c",
+    "d"
+   ],
+   "defect": "🌳️module-tree/🟦️.ts:useLeafNames tests `tokens[a + 2] === \"as\"` for `self as d`, but `as` is at `a + 1`, so a renamed `self` import binds the parent name (`a`) instead of the alias (`d`)"
+  }
+ ],
+ "prune": [
+  {
+   "statement": "use a::{b, c, d};",
+   "leaves": [
+    "b",
+    "d"
+   ],
+   "expected": "use a::{b, d};"
+  },
+  {
+   "statement": "use a::{b, c, d};",
+   "leaves": [
+    "c"
+   ],
+   "expected": "use a::c;"
+  },
+  {
+   "statement": "pub use a::{b, c as d};",
+   "leaves": [
+    "d"
+   ],
+   "expected": "pub use a::c as d;"
+  },
+  {
+   "statement": "use a::{b::{c, d}, e};",
+   "leaves": [
+    "c",
+    "e"
+   ],
+   "expected": "use a::{b::c, e};"
+  },
+  {
+   "statement": "use a::{b, *};",
+   "leaves": [
+    "b"
+   ],
+   "expected": "use a::b;"
+  },
+  {
+   "statement": "use a::b;",
+   "leaves": [
+    "b"
+   ],
+   "expected": "use a::b;"
+  },
+  {
+   "statement": "use a::{b};",
+   "leaves": [
+    "z"
+   ],
+   "expected": ""
+  },
+  {
+   "statement": "use a::{self, b};",
+   "leaves": [
+    "a"
+   ],
+   "expected": "use a;"
+  },
+  {
+   "statement": "use {a::b, c::d};",
+   "leaves": [
+    "b",
+    "d"
+   ],
+   "expected": "use {a::b, c::d};"
+  },
+  {
+   "statement": "use a::{/* x */ b, // y\n c};",
+   "leaves": [
+    "b",
+    "c"
+   ],
+   "expected": "use a::{b, c};"
+  },
+  {
+   "statement": "pub(crate) use a::{b, c};",
+   "leaves": [
+    "c"
+   ],
+   "expected": "pub(crate) use a::c;"
+  },
+  {
+   "statement": "use a::{b::{c, d}, b::{e}};",
+   "leaves": [
+    "c",
+    "e"
+   ],
+   "expected": "use a::b::{c, e};"
+  }
+ ],
+ "identifiers": [
+  {
+   "source": "fn f(a: u8) -> Vec<T> { let x = a.b; x }",
+   "expected": [
+    "T",
+    "Vec",
+    "a",
+    "b",
+    "f",
+    "fn",
+    "let",
+    "u8",
+    "x"
+   ]
+  },
+  {
+   "source": "",
+   "expected": []
+  },
+  {
+   "source": "// comment only\n",
+   "expected": []
+  },
+  {
+   "source": "let s = \"string ident\";",
+   "expected": [
+    "let",
+    "s"
+   ]
+  }
+ ],
+ "references": [
+  {
+   "source": "fn f(a: u8) { a.b; c::d; self::e; Foo { x: 1 }; g(h) }",
+   "expected": [
+    "Foo",
+    "a",
+    "c",
+    "e",
+    "f",
+    "fn",
+    "g",
+    "h",
+    "self",
+    "u8"
+   ]
+  },
+  {
+   "source": "a::b::c",
+   "expected": [
+    "a"
+   ]
+  },
+  {
+   "source": "crate::x::y",
+   "expected": [
+    "crate",
+    "x"
+   ]
+  },
+  {
+   "source": "super::z",
+   "expected": [
+    "super",
+    "z"
+   ]
+  },
+  {
+   "source": "x.y.z",
+   "expected": [
+    "x"
+   ]
+  },
+  {
+   "source": "n: T",
+   "expected": [
+    "T"
+   ]
+  }
+ ]
+}

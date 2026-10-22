@@ -14,6 +14,9 @@ import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import type { SchemaCheck } from "../🧱️script-bases/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 export class SpaceHistorySqliteNativeTestScript extends BundleScript {
   async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
@@ -23,7 +26,7 @@ export class SpaceHistorySqliteSourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-space-history-sqlite-source accepts no arguments");
     const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, [runtimeResolveV1("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
     await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
   }
 }
@@ -40,7 +43,7 @@ export class SnapshotRouteAdmissionScript extends BundleScript {
   const duplicate=structuredClone(fixture);duplicate.cases[1].id=duplicate.cases[0].id;
   const forged=structuredClone(fixture);forged.cases[0].cause='unowned replacement cause';
   const enlarged=structuredClone(fixture);enlarged.original.grant.maximumItems=1;
-  const{Database}=await import('bun:sqlite');const oracle=new Database(':memory:');try{
+  const{Database}={ Database: SqliteDatabaseV1 };const oracle=new Database(':memory:');try{
    oracle.run("CREATE TABLE original_cases(id TEXT PRIMARY KEY,cause TEXT NOT NULL CHECK((id IN ('empty-original-route','disconnected-original-route') AND cause='io_run: route must contain connected hops') OR (id IN ('sqlite-intermediate-original-route','sqlite-nonexact-original-route') AND cause='io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops') OR (id='sqlite-self-original-route' AND cause='io_run: inconsistent SQLite snapshot descriptor'))) WITHOUT ROWID");
    for(const row of fixture.cases)oracle.run('INSERT INTO original_cases VALUES(?,?)',row.id,row.cause);
    assert.equal((oracle.query('SELECT count(*) count FROM original_cases').get()as{count:number}).count,identities.length);
@@ -64,7 +67,7 @@ export class SnapshotCodecReceivingScript extends BundleScript {
   const fixture=JSON.parse(readFileSync(join(owner,'🧪️tests/🧫️fixtures/🔣️.json'),'utf8'));
   const actualGrant=JSON.parse(readFileSync(join(this.repoRoot,'🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json'),'utf8')),validateGrant=semioSchemaAjvV1({strict:true,allErrors:true}).compile(actualGrant);assert(validateGrant(fixture.original.grant),JSON.stringify(validateGrant.errors));
   assert(validateGrant(fixture.original.defaultRefusalGrant),JSON.stringify(validateGrant.errors));
-  const{Database}=await import('bun:sqlite');const reference=new Database(':memory:');try{reference.run(readFileSync(join(owner,'🧬️schema/🗄️.sql'),'utf8'));reference.run('INSERT INTO retained_value VALUES(1,7)');assert.deepEqual(reference.query('SELECT id,value FROM retained_value').all(),[{id:1,value:7}]);assert.equal((reference.query('PRAGMA integrity_check').get()as {integrity_check:string}).integrity_check,'ok');}finally{reference.close();}
+  const{Database}={ Database: SqliteDatabaseV1 };const reference=new Database(':memory:');try{reference.run(readFileSync(join(owner,'🧬️schema/🗄️.sql'),'utf8'));reference.run('INSERT INTO retained_value VALUES(1,7)');assert.deepEqual(reference.query('SELECT id,value FROM retained_value').all(),[{id:1,value:7}]);assert.equal((reference.query('PRAGMA integrity_check').get()as {integrity_check:string}).integrity_check,'ok');}finally{reference.close();}
   assert.equal(fixture.custodyCases.find((row:{id:string})=>row.id==='import-refused-frame-birth').callerRetainsDatabase,true);
   assert.equal(fixture.custodyCases.find((row:{id:string})=>row.id==='import-refused-release').recipientOccupied,true);
   const ordered=new Database(':memory:');try{ordered.run('CREATE TABLE original_values(ordinal INTEGER PRIMARY KEY,value INTEGER)');for(const row of fixture.relocationCases){ordered.run('DELETE FROM original_values');for(const[index,value]of row.values.entries())ordered.run('INSERT INTO original_values VALUES(?,?)',index,value);assert.deepEqual(ordered.query<{value:number},[]>('SELECT value FROM original_values ORDER BY ordinal').all().map(value=>value.value),row.values);assert.deepEqual([...row.original,...row.replacement].sort((a:number,b:number)=>a-b),[...row.values].sort((a:number,b:number)=>a-b));if(row.completed)assert.deepEqual(row.original,row.values);}}finally{ordered.close();}
@@ -95,7 +98,7 @@ export class TypedSnapshotFileSourceScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-typed-snapshot-file-source accepts no arguments");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
  }
 }
@@ -116,7 +119,7 @@ export class SpaceHistoryValidationScript extends BundleScript{
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("test-space-history-validation requires source or native");
   if(segments[0]==="source"){
    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🛂️validation/🧪️tests/🟦️.ts");
-   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+   await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
    await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_borrowed_validation_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
@@ -127,7 +130,7 @@ export class StableIdentityCheckScript extends BundleScript {
     if (args.length > 1 || (args.length && args[0] !== "--native")) throw Error("stable-identity-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta");
     const fixtures = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🪪️stable-identity/🔣️.json"), "utf8")) as { vectors: { id: string; base: { id: string; value: number }[]; patches: { target: string; row: { id: string; value: number } }[]; accepted: boolean; expected: { id: string; value: number }[] }[] };
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     for (const vector of fixtures.vectors) {
       const database = new Database(":memory:");
       try {
@@ -204,7 +207,7 @@ export class OriginalSnapshotReceivingScript extends BundleScript{
   const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-snapshot-receiving source|native");
   const sources=[join(this.repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧪️tests/🟦️.ts")];
   for(const source of sources){
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});
   }
   if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_snapshot_pack_receiving_preserves_same_source_control_and_paid_close","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));

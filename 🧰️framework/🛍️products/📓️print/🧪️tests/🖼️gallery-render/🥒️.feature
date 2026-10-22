@@ -10,7 +10,7 @@ Feature: Every catalogue kind renders, in both themes and both languages
   No third-party library renders a semio LaTeX document, so nothing can adjudicate appearance; the
   recorded decision `viz-typeset-appearance` names what stands in its place. The evidence is
   committed as JSON under `shared://🖼️gallery-render/🖼️gallery-render.json` and is REGENERATED, never hand-written:
-  `bun ./📜️script.ts test viz fixtures` in `📦️packages/🟦️typescript` rebuilds the whole matrix,
+  `repo ./📜️script.ts test viz fixtures` in `📦️packages/🟦️typescript` rebuilds the whole matrix,
   extracts each variant's per-kind page text with pdfjs-dist and records its rebuild-stable hash.
 
   The matrix is every generated gallery section x {light, dark} x {en, de}. A section's document is

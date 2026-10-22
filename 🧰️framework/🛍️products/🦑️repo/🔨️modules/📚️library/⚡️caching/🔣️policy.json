@@ -54,21 +54,37 @@
   ],
   "targetClasses": [
     {
-      "decision": { "class": "live", "reason": "drives-running-process" },
-      "exact": ["acceptance-goal", "acceptance-plan"]
-    },
-    {
-      "decision": { "class": "side-effecting", "reason": "mutates-workspace" },
-      "exact": ["channel-version-generate", "logo", "schema-mirror"],
-      "heads": ["generator"]
-    },
-    {
-      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
+      "decision": {
+        "class": "live",
+        "reason": "drives-running-process"
+      },
       "exact": [
-        "compile-extension",
+        "acceptance-goal",
+        "acceptance-plan"
+      ]
+    },
+    {
+      "decision": {
+        "class": "side-effecting",
+        "reason": "mutates-workspace"
+      },
+      "exact": [
+        "channel-version-generate",
+        "logo",
+        "schema-mirror"
+      ],
+      "heads": [
+        "generator"
+      ]
+    },
+    {
+      "decision": {
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs"
+      },
+      "exact": [
         "cpp-build",
         "cpp-configure",
-        "extension-package",
         "generator-inputs",
         "graph-generate",
         "mcp-build",
@@ -84,7 +100,10 @@
       ]
     },
     {
-      "decision": { "class": "deterministic", "reason": "check-without-outputs" },
+      "decision": {
+        "class": "deterministic",
+        "reason": "check-without-outputs"
+      },
       "exact": [
         "akteursnetz-validate",
         "boundaries",
@@ -131,12 +150,27 @@
         "schema",
         "stdio"
       ],
-      "tails": ["check", "test", "oracle", "lint", "source", "native"],
-      "tokens": ["contract"]
+      "tails": [
+        "check",
+        "test",
+        "oracle",
+        "lint",
+        "source",
+        "native"
+      ],
+      "tokens": [
+        "contract"
+      ]
     },
     {
-      "decision": { "class": "deterministic", "reason": "pure-function-of-inputs" },
-      "heads": ["build", "generate"]
+      "decision": {
+        "class": "deterministic",
+        "reason": "pure-function-of-inputs"
+      },
+      "heads": [
+        "build",
+        "generate"
+      ]
     }
   ],
   "continuous": [
@@ -191,8 +225,8 @@
         "SEMIO_BUILD_BUDGET_MS"
       ],
       "commands": [
-        "bun --version",
-        "node --version"
+        "repo tools exec --light bun -- --version",
+        "repo tools exec --light node -- --version"
       ]
     },
     "cargo": {
@@ -239,8 +273,8 @@
         "CARGO_PROFILE_WASM_RELEASE_OPT_LEVEL"
       ],
       "commands": [
-        "rustc -vV",
-        "cargo --version"
+        "repo tools exec --light rustc -- -vV",
+        "repo tools exec --light cargo -- --version"
       ]
     },
     "go": {
@@ -249,33 +283,32 @@
         "go.work.sum"
       ],
       "environment": [
-        "GOOS",
-        "GOARCH",
-        "CGO_ENABLED",
         "CGO_CFLAGS",
+        "CGO_ENABLED",
         "CGO_LDFLAGS",
+        "GOARCH",
+        "GOEXPERIMENT",
         "GOFLAGS",
-        "GOTOOLCHAIN"
+        "GOOS"
       ],
       "commands": [
-        "go version"
+        "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint go"
       ]
     },
     "python": {
-      "files": [
-        "pyproject.toml",
-        "uv.lock",
-        "conftest.py",
-        ".python-version"
-      ],
+      "files": [],
       "environment": [
-        "PYTHONPATH",
         "PYTHONHASHSEED",
-        "UV_PYTHON"
+        "PYTHONOPTIMIZE",
+        "PYTHONPATH",
+        "UV_COMPILE_BYTECODE",
+        "UV_EXTRA_INDEX_URL",
+        "UV_INDEX_URL",
+        "UV_NO_BINARY",
+        "UV_NO_BUILD"
       ],
       "commands": [
-        "uv --version",
-        "python --version"
+        "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint python"
       ]
     },
     "dotnet": {
@@ -287,12 +320,12 @@
         "NuGet.Config"
       ],
       "environment": [
-        "DOTNET_ROLL_FORWARD",
         "Configuration",
+        "DOTNET_ROLL_FORWARD",
         "RuntimeIdentifier"
       ],
       "commands": [
-        "dotnet --version"
+        "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint dotnet"
       ]
     },
     "cmake": {
@@ -302,15 +335,18 @@
       ],
       "environment": [
         "CC",
-        "CXX",
         "CFLAGS",
-        "CXXFLAGS",
-        "LDFLAGS",
+        "CMAKE_GENERATOR",
         "CMAKE_TOOLCHAIN_FILE",
-        "CMAKE_GENERATOR"
+        "CXX",
+        "CXXFLAGS",
+        "DEVELOPER_DIR",
+        "LDFLAGS",
+        "MACOSX_DEPLOYMENT_TARGET",
+        "SDKROOT"
       ],
       "commands": [
-        "cmake --version"
+        "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint cmake"
       ]
     },
     "wasm": {
@@ -326,7 +362,7 @@
         "TRUNK_BUILD_PUBLIC_URL"
       ],
       "commands": [
-        "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" fingerprint"
+        "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" fingerprint"
       ]
     }
   },
@@ -564,7 +600,7 @@
     },
     "guardAgeMs": 172800000,
     "cargo": {
-      "budgetBytes": 13957595136,
+      "budgetBytes": 19326304256,
       "unusedAgeMs": 604800000,
       "incremental": {
         "budgetBytes": 6442450944,
@@ -584,8 +620,8 @@
     "strictStorage": {
       "version": 1,
       "directory": "rust/fixed",
-      "capacityBytes": 17179869184,
-      "filesystemBytes": 17178820608,
+      "capacityBytes": 51539607552,
+      "filesystemBytes": 51538558976,
       "maximumWorkspaceBytes": 4294967296,
       "maximumArtifactBytes": 1073741824
     },

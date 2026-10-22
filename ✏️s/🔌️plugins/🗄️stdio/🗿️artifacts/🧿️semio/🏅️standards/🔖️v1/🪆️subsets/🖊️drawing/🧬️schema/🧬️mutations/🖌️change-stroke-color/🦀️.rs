@@ -22,7 +22,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stroke-color", kind: "change-stroke-color", record: "ChangedStrokeColor" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stroke color of style \"{}\"", self.style_name), &format!("Strichfarbe von Stil \"{}\" ändern", self.style_name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.style_name.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for ChangeStrokeColor
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<ChangeStrokeColor>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -31,11 +43,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stroke color of style \"{}\"", self.style_name), &format!("Strichfarbe von Stil \"{}\" ändern", self.style_name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.style_name.clone()]
-    }
 }
 //#endregion 🔖️Payload

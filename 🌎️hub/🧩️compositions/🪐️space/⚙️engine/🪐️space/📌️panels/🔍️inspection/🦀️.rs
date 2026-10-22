@@ -9,7 +9,7 @@
 //! per-file `s_play_action` (returning the legacy `ActionDescriptor`) is gone — `crate::engine::space::
 //! s_play_action` already returns the contract's own `(ActionId, Option<UiValue>)` pair.
 
-use semio_hub_space_operations::{os_parameter_types_compatible_shim, parameter_entity_id};
+use semio_hub_space_operations::{parameter_entity_id, workflow_parameter_fits_os_type};
 use semio_hub_space_foundation::terminology::SStudioLabels;
 use crate::{ui_value_list, ui_value_map, ui_value_text};
 use semio_hub_space_foundation::S_PLAY_INSPECTOR_TAB_ID;
@@ -61,7 +61,7 @@ fn node_ids_arg(ids: &[String]) -> UiAssemblyResult<UiValue> {
     ui_value_list(values)
 }
 
-/// 🌉️ `⚙️engine`'s `parameter_entity_id`/`os_parameter_types_compatible_shim`/`workflow_parameter_to_os`
+/// 🌉️ `⚙️engine`'s `parameter_entity_id`/`workflow_parameter_fits_os_type`/`workflow_parameter_to_os`
 /// are async fns (kernel-shape convention); this whole render tree stays U1-sync (the contract
 /// builder's own sync-only ruling, `📌️important.md`), bridged the same way `🎮️commands/🔍️open-instance/
 /// 🦀️.rs`'s `handle` bridges its own callee.
@@ -134,7 +134,7 @@ fn inspector_parameter_row(projection: &WorkflowSnapshot, node: &WorkflowNode, t
         .try_item(fixed_text("__direct__", "ui.inspector.bind-select-item-value")?, fixed_label(term_labels.direct_value.as_str(), "ui.inspector.bind-select-item-label")?)
         .map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select-item", "parameter-binding select item admission failed"))?;
     for parameter in &projection.parameters {
-        if !semio_hub_space_operations::resolve_future(os_parameter_types_compatible_shim(parameter, &field_spec.parameter_type)) {
+        if !semio_hub_space_operations::resolve_future(workflow_parameter_fits_os_type(parameter, &field_spec.parameter_type)) {
             continue;
         }
         let value_id = entity_id(parameter);

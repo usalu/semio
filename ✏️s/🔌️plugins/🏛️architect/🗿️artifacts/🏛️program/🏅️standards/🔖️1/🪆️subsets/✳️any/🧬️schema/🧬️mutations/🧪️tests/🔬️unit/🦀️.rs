@@ -6,15 +6,15 @@ use crate::standards::v1::subsets::any::schema::kernel::*;
 use crate::standards::v1::subsets::any::schema::registers::*;
 use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
-    let forward = protocol::apply_diff(operation.diff(snapshot).diff(), snapshot).expect("valid mutation diff");
+    let forward = protocol::apply_diff_cold(operation.diff(snapshot).diff(), snapshot).expect("valid mutation diff");
     let mut backward = operation.inverse(snapshot).expect("valid retained mutation inverse fixture");
     backward.reverse();
     let mut restored = forward.clone();
     for undo in &backward {
-        restored = protocol::apply_diff(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
+        restored = protocol::apply_diff_cold(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, snapshot, "inverse (reversed) must exactly restore the pre-operation fixture");
     forward
@@ -227,7 +227,7 @@ async fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
     let d1 = create.diff(&base).into_parts().0;
-    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = ProgramMutation::RenameRegisterRow(crate::standards::v1::subsets::any::schema::mutations::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -265,7 +265,7 @@ async fn replace_of_a_middle_row_keeps_its_position_and_obeys_the_sum_law() {
     replacement.department = Some("Operations".into());
     let order: Vec<EntityId> = base.stakeholders.iter().map(|row| row.header.id.clone()).collect();
     let replace = ProgramMutation::ReplaceRegisterRow(crate::standards::v1::subsets::any::schema::mutations::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(replacement) });
-    let after = protocol::apply_diff(replace.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(replace.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.stakeholders.iter().map(|row| row.header.id.clone()).collect::<Vec<_>>(), order, "the replaced row keeps its position");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&replace, &base).await;
     let mut created = base.stakeholders[0].clone();
@@ -296,7 +296,7 @@ async fn composed_table_kinds_obey_the_sum_law() {
         ProgramMutation::RenameRegisterRow(crate::standards::v1::subsets::any::schema::mutations::rename_register_row::RenameRegisterRow { register: RegisterKey::BenchmarkRecord, id: benchmark.header.id.clone(), new_name: "Renamed".into() }),
         ProgramMutation::ReplaceRegisterRow(crate::standards::v1::subsets::any::schema::mutations::replace_register_row::ReplaceRegisterRow { row: RegisterRow::BenchmarkRecord(renamed_benchmark) }),
     ] {
-        let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+        let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
         assert_eq!(after.knowledge, crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&after.knowledge_payload), "the knowledge handle follows its rows");
         assert_eq!(after.benchmarks, crate::standards::v1::subsets::any::schema::snapshot::benchmarks_child_from_records(&after.benchmarks_payload), "the benchmarks handle follows its rows");
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -338,7 +338,7 @@ async fn create_at_an_index_and_delete_of_a_middle_row_obey_the_sum_law() {
     let mut inserted = base.stakeholders[0].clone();
     inserted.header.id = EntityId("stakeholder-inserted".into());
     let create_at = |index: Option<usize>| ProgramMutation::CreateRegisterRow(crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(inserted.clone()), index: index });
-    let after = protocol::apply_diff(create_at(Some(1)).diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(create_at(Some(1)).diff(&base).diff(), &base).expect("valid mutation diff");
     let ids: Vec<&str> = after.stakeholders.iter().map(|row| row.header.id.0.as_str()).collect();
     assert_eq!(ids, vec![order[0].0.as_str(), "stakeholder-inserted", order[1].0.as_str(), order[2].0.as_str()], "the row lands at the requested index");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create_at(Some(1)), &base).await;

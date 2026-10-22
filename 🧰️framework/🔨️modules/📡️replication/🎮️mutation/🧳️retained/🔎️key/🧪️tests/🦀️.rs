@@ -17,7 +17,7 @@ fn retained_key_lookup_matches_neutral_queries_without_key_or_row_clone(){
   while lookup.result().is_none(){
    turns+=1;assert!(turns<1000);
    let(demand,heap)=observe(||lookup.demand(rows.borrow(),key.borrow(),String::as_str,corpus["chunkBytes"].as_u64().unwrap()as usize).unwrap());assert_eq!(heap,(0,0));let quote=grant(demand);
-   for denied in [RetainedCloneGrant{maximum_items:0,..quote},RetainedCloneGrant{maximum_copy_bytes:0,..quote},RetainedCloneGrant{maximum_depth:0,..quote}]{
+   for denied in [Some(RetainedCloneGrant{maximum_items:0,..quote}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..quote}),Some(RetainedCloneGrant{maximum_depth:0,..quote})].into_iter().flatten(){
     let(before,offset)=(lookup.index,lookup.offset);let(step,heap)=observe(||lookup.advance(rows.borrow(),key.borrow(),String::as_str,denied).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());assert_eq!((lookup.index,lookup.offset),(before,offset));
    }
    let(step,heap)=observe(||lookup.advance(rows.borrow(),key.borrow(),String::as_str,quote).unwrap());assert_eq!(heap,(0,0));assert!(step.progress().fits(quote));

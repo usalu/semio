@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "macos-four-images",
+      "root": "/private/tmp/sinc",
+      "listing": "/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)\n/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled, nobrowse)\n/dev/disk23s1 on /private/tmp/sinc/.cache/b/l/m (apfs, local, nodev, nosuid, journaled, nobrowse, mounted by ueli)\n/dev/disk25s1 on /private/tmp/sinc/.cache/b/o/m (apfs, local, nodev, nosuid, journaled, nobrowse, mounted by ueli)\n/dev/disk27s1 on /private/tmp/sinc/.cache/b/d/m (apfs, local, nodev, nosuid, journaled, nobrowse, mounted by ueli)\n/dev/disk30s1 on /private/tmp/sinc2/.cache/b/t/m (apfs, local, nobrowse)\n",
+      "expected": [
+        {
+          "device": "/dev/disk23s1",
+          "path": "/private/tmp/sinc/.cache/b/l/m"
+        },
+        {
+          "device": "/dev/disk25s1",
+          "path": "/private/tmp/sinc/.cache/b/o/m"
+        },
+        {
+          "device": "/dev/disk27s1",
+          "path": "/private/tmp/sinc/.cache/b/d/m"
+        }
+      ]
+    },
+    {
+      "id": "linux-nested-and-space",
+      "root": "/tmp/sinc",
+      "listing": "/dev/sda1 on / type ext4 (rw,relatime)\n/dev/loop3 on /tmp/sinc/.cache/b/l/m type ext4 (rw,nosuid,nodev,relatime)\n/dev/loop4 on /tmp/sinc/.cache/b/l/m/inner dir type ext4 (rw,relatime)\ntmpfs on /tmp type tmpfs (rw)\n",
+      "expected": [
+        {
+          "device": "/dev/loop4",
+          "path": "/tmp/sinc/.cache/b/l/m/inner dir"
+        },
+        {
+          "device": "/dev/loop3",
+          "path": "/tmp/sinc/.cache/b/l/m"
+        }
+      ]
+    },
+    {
+      "id": "root-itself-mounted",
+      "root": "/tmp/sinc",
+      "listing": "/dev/loop9 on /tmp/sinc type ext4 (rw)\n",
+      "expected": [
+        {
+          "device": "/dev/loop9",
+          "path": "/tmp/sinc"
+        }
+      ]
+    },
+    {
+      "id": "nothing-below",
+      "root": "/tmp/sinc",
+      "listing": "/dev/sda1 on / type ext4 (rw)\n",
+      "expected": []
+    }
+  ]
+}

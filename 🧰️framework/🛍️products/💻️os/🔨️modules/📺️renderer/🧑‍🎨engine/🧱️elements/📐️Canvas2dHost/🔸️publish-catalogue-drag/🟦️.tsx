@@ -1,5 +1,5 @@
 /** 🔸️ The publish catalogue drag phase of Canvas2dHost. */
-import { useCallback, useEffect, type DragEvent } from "react";
+import { useCallback, useEffect, type DragEvent } from "../../⚛️react-port/🟦️.ts";
 import { CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { worldToScreenLogical } from "../📷️camera-math/🟦️.ts";
 import type { useSceneState } from "../🔶️scene/🟦️.tsx";

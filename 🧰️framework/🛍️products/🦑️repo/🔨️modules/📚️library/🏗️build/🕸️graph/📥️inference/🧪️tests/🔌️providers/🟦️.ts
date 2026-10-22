@@ -19,7 +19,7 @@ const loaderPath = resolve(library, "../../../../🔨️modules/🏃️process/�
 const prefix = "{workspaceRoot}/";
 
 const inputsOf = async (directory: string, cache = createScriptInputCache()): Promise<readonly string[]> => {
-  const target = { options: { cwd: relative(workspace, directory), command: "bun ./📜️script.ts run" } };
+  const target = { options: { cwd: relative(workspace, directory), command: "repo ./📜️script.ts run" } };
   const declarations: unknown[] = await cacheInternals.genericTargetCommandInputs(target, workspace, [], cache);
   return declarations.filter((input): input is string => typeof input === "string").map(input => input.slice(prefix.length));
 };

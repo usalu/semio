@@ -5,7 +5,7 @@
   "tags": ["language:rust", "role:engine", "family:wfc"],
   "namedInputs": {"default": ["{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/⚙️engine/**/*"]},
   "targets": {
-    "check": {"executor": "repo:script", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts check", "forwardAllArgs": true}},
-    "test": {"executor": "repo:script", "outputs": [], "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true}}
+    "check": {"executor": "repo:script", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "repo ./📜️script.ts check", "forwardAllArgs": true}},
+    "test": {"executor": "repo:script", "outputs": [], "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test", "forwardAllArgs": true}}
   }
 }

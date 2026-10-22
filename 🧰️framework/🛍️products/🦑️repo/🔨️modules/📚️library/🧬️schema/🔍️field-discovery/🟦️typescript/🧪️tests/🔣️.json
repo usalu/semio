@@ -1,0 +1,708 @@
+{
+ "version": 1,
+ "types": [
+  {
+   "text": "string",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string;",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string",
+   "mark": true,
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string | undefined",
+   "mark": false,
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string | null",
+   "mark": false,
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "  string  |  undefined ",
+   "mark": false,
+   "optional": true,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string[]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "Array<string>",
+   "mark": false,
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "Array < Foo >",
+   "mark": false,
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "Foo"
+  },
+  {
+   "text": "Record<string, number>",
+   "mark": false,
+   "optional": false,
+   "cardinality": "map",
+   "scalar": "number"
+  },
+  {
+   "text": "Record < string , boolean > | undefined",
+   "mark": false,
+   "optional": true,
+   "cardinality": "map",
+   "scalar": "bool"
+  },
+  {
+   "text": "[number, number]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "fixedList",
+   "scalar": "number"
+  },
+  {
+   "text": "[number, number, number]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "fixedList",
+   "scalar": "number"
+  },
+  {
+   "text": "[number, string]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "[number,string]"
+  },
+  {
+   "text": "[number]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "[number]"
+  },
+  {
+   "text": "Foo[] | undefined",
+   "mark": false,
+   "optional": true,
+   "cardinality": "list",
+   "scalar": "Foo"
+  },
+  {
+   "text": "boolean",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "bool"
+  },
+  {
+   "text": "Map<string, number>",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "Map<string,number>"
+  },
+  {
+   "text": "string[][]",
+   "mark": false,
+   "optional": false,
+   "cardinality": "list",
+   "scalar": "string[]"
+  },
+  {
+   "text": "string | number",
+   "mark": false,
+   "optional": false,
+   "cardinality": "scalar",
+   "scalar": "string|number"
+  }
+ ],
+ "extract": [
+  {
+   "name": "an interface with every property shape",
+   "text": "export interface Widget {\n  id: string;\n  displayName?: string;\n  count: number;\n  big: number | undefined;\n  nullable: string | null;\n  tags: string[];\n  names: Array<string>;\n  pair: [number, number];\n  labels: Record<string, string>;\n  blob: Uint8Array;\n  /** @state persisted_shared */\n  status: string;\n  \"quoted-key\": boolean;\n  'single': number;\n  ref: Other;\n  id: number;\n}\n\nexport interface Other { zzz: string; }\n",
+   "type": "Widget",
+   "expected": {
+    "typeName": "Widget",
+    "fields": [
+     {
+      "name": "id",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "displayName",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "count",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "big",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "nullable",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "tags",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "names",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "pair",
+      "optional": false,
+      "cardinality": "fixedList",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "labels",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "blob",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "Uint8Array",
+      "state": ""
+     },
+     {
+      "name": "status",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": "persisted-shared"
+     },
+     {
+      "name": "quoted-key",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     },
+     {
+      "name": "single",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "ref",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "Other",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "a second interface in the same file",
+   "text": "export interface Widget {\n  id: string;\n  displayName?: string;\n  count: number;\n  big: number | undefined;\n  nullable: string | null;\n  tags: string[];\n  names: Array<string>;\n  pair: [number, number];\n  labels: Record<string, string>;\n  blob: Uint8Array;\n  /** @state persisted_shared */\n  status: string;\n  \"quoted-key\": boolean;\n  'single': number;\n  ref: Other;\n  id: number;\n}\n\nexport interface Other { zzz: string; }\n",
+   "type": "Other",
+   "expected": {
+    "typeName": "Other",
+    "fields": [
+     {
+      "name": "zzz",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "an unknown interface",
+   "text": "export interface Widget {\n  id: string;\n  displayName?: string;\n  count: number;\n  big: number | undefined;\n  nullable: string | null;\n  tags: string[];\n  names: Array<string>;\n  pair: [number, number];\n  labels: Record<string, string>;\n  blob: Uint8Array;\n  /** @state persisted_shared */\n  status: string;\n  \"quoted-key\": boolean;\n  'single': number;\n  ref: Other;\n  id: number;\n}\n\nexport interface Other { zzz: string; }\n",
+   "type": "Nope",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "no expected name",
+   "text": "export interface Widget {\n  id: string;\n  displayName?: string;\n  count: number;\n  big: number | undefined;\n  nullable: string | null;\n  tags: string[];\n  names: Array<string>;\n  pair: [number, number];\n  labels: Record<string, string>;\n  blob: Uint8Array;\n  /** @state persisted_shared */\n  status: string;\n  \"quoted-key\": boolean;\n  'single': number;\n  ref: Other;\n  id: number;\n}\n\nexport interface Other { zzz: string; }\n",
+   "type": null,
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "an interface extending local interfaces lists its own fields first",
+   "text": "interface Base { baseField: string; shared: number; }\ninterface Mixin { mixed: boolean; }\nexport interface Child extends Base, Mixin { own: string; }\nexport interface Missing extends Unknown { x: string; }\nexport type Alias = Child;\nexport type Chain = Alias;\n",
+   "type": "Child",
+   "expected": {
+    "typeName": "Child",
+    "fields": [
+     {
+      "name": "own",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "baseField",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "shared",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "mixed",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": false
+  },
+  {
+   "name": "an interface extending an unknown one cannot be resolved",
+   "text": "interface Base { baseField: string; shared: number; }\ninterface Mixin { mixed: boolean; }\nexport interface Child extends Base, Mixin { own: string; }\nexport interface Missing extends Unknown { x: string; }\nexport type Alias = Child;\nexport type Chain = Alias;\n",
+   "type": "Missing",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "an alias resolves to the aliased interface",
+   "text": "interface Base { baseField: string; shared: number; }\ninterface Mixin { mixed: boolean; }\nexport interface Child extends Base, Mixin { own: string; }\nexport interface Missing extends Unknown { x: string; }\nexport type Alias = Child;\nexport type Chain = Alias;\n",
+   "type": "Alias",
+   "expected": {
+    "typeName": "Alias",
+    "fields": [
+     {
+      "name": "own",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "baseField",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "shared",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "mixed",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": false
+  },
+  {
+   "name": "an alias of an alias resolves transitively",
+   "text": "interface Base { baseField: string; shared: number; }\ninterface Mixin { mixed: boolean; }\nexport interface Child extends Base, Mixin { own: string; }\nexport interface Missing extends Unknown { x: string; }\nexport type Alias = Child;\nexport type Chain = Alias;\n",
+   "type": "Chain",
+   "expected": {
+    "typeName": "Chain",
+    "fields": [
+     {
+      "name": "own",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "baseField",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "shared",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     },
+     {
+      "name": "mixed",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": false
+  },
+  {
+   "name": "a non-exported interface is not a schema",
+   "text": "interface Hidden { a: string; }\n",
+   "type": "Hidden",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "readonly members and methods",
+   "text": "export interface R { readonly a: string; method(): void; b?: number; }\n",
+   "type": "R",
+   "expected": {
+    "typeName": "R",
+    "fields": [
+     {
+      "name": "a",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "b",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  }
+ ],
+ "defects": [
+  {
+   "name": "a line comment that looks like a member is not a field",
+   "text": "export interface C {\n  // legacy: string;\n  real: number;\n}\n",
+   "type": "C",
+   "expected": {
+    "typeName": "C",
+    "fields": [
+     {
+      "name": "real",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     }
+    ]
+   },
+   "defect": "🟦️typescript/🟦️.ts:policyExtractTypescriptSchemaFields scans the body with a regex and does not skip comments, so `// legacy: string;` becomes a field"
+  },
+  {
+   "name": "an inline object type is one field, not several",
+   "text": "export interface D {\n  inline: { a: string; b: number };\n  after: boolean;\n}\n",
+   "type": "D",
+   "expected": {
+    "typeName": "D",
+    "fields": [
+     {
+      "name": "inline",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "{ a: string; b: number }",
+      "state": ""
+     },
+     {
+      "name": "after",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "boolean",
+      "state": ""
+     }
+    ]
+   },
+   "defect": "🟦️typescript/🟦️.ts: the member regex ends a type at the first `;`, so an inline object type yields a truncated type and its inner members leak as top-level fields (`b`)"
+  },
+  {
+   "name": "the last member may omit its semicolon",
+   "text": "export interface Other { zzz: string }\n",
+   "type": "Other",
+   "expected": {
+    "typeName": "Other",
+    "fields": [
+     {
+      "name": "zzz",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "defect": "🟦️typescript/🟦️.ts: every member must end with `;`, so a member without a trailing semicolon (valid TypeScript, e.g. the last member of a one-line interface) is dropped"
+  },
+  {
+   "name": "members separated by newlines only",
+   "text": "export interface Asi {\n  a: string\n  b: number\n}\n",
+   "type": "Asi",
+   "expected": {
+    "typeName": "Asi",
+    "fields": [
+     {
+      "name": "a",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "b",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "number",
+      "state": ""
+     }
+    ]
+   },
+   "defect": "🟦️typescript/🟦️.ts: semicolon-free interfaces (valid, common style) merge members into one mistyped field"
+  }
+ ],
+ "modules": {
+  "files": {
+   "/w/a.ts": "export interface Widget { a: string; }\nexport interface Hidden { h: number; }\n",
+   "/w/b.ts": "export { Widget as Public } from \"./a.ts\";\nexport type { Hidden } from \"./a.ts\";\nexport type Direct = Widget;\n",
+   "/w/c.ts": "import { Widget } from \"./a.ts\";\nimport type { Hidden as Renamed } from \"./a.ts\";\nexport type Imported = Widget;\nexport type RenamedAlias = Renamed;\nexport interface Local { l: string; }\nexport { Local as Exposed };\n",
+   "/w/d.ts": "import { Widget } from \"./a.ts\";\nexport interface Mixed extends Widget { own: number; }\n"
+  },
+  "cases": [
+   {
+    "name": "a re-export with a rename",
+    "module": "/w/b.ts",
+    "type": "Public",
+    "expected": {
+     "typeName": "Public",
+     "fields": [
+      {
+       "name": "a",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "string",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "a type-only re-export",
+    "module": "/w/b.ts",
+    "type": "Hidden",
+    "expected": {
+     "typeName": "Hidden",
+     "fields": [
+      {
+       "name": "h",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "number",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "an exported alias of an unexported name finds nothing through the local scope",
+    "module": "/w/b.ts",
+    "type": "Direct",
+    "expected": {
+     "typeName": "",
+     "fields": []
+    }
+   },
+   {
+    "name": "an exported alias of an imported name",
+    "module": "/w/c.ts",
+    "type": "Imported",
+    "expected": {
+     "typeName": "Imported",
+     "fields": [
+      {
+       "name": "a",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "string",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "an alias of a renamed import",
+    "module": "/w/c.ts",
+    "type": "RenamedAlias",
+    "expected": {
+     "typeName": "RenamedAlias",
+     "fields": [
+      {
+       "name": "h",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "number",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "a local interface exported under another name",
+    "module": "/w/c.ts",
+    "type": "Exposed",
+    "expected": {
+     "typeName": "Exposed",
+     "fields": [
+      {
+       "name": "l",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "string",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "an interface extending an imported one inherits its fields",
+    "module": "/w/d.ts",
+    "type": "Mixed",
+    "expected": {
+     "typeName": "Mixed",
+     "fields": [
+      {
+       "name": "own",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "number",
+       "state": ""
+      },
+      {
+       "name": "a",
+       "optional": false,
+       "cardinality": "scalar",
+       "scalar": "string",
+       "state": ""
+      }
+     ]
+    }
+   },
+   {
+    "name": "an unresolvable specifier finds nothing",
+    "module": "/w/b.ts",
+    "type": "Nowhere",
+    "expected": {
+     "typeName": "",
+     "fields": []
+    }
+   }
+  ]
+ },
+ "filePath": {
+  "files": {
+   "a.ts": "export interface Widget { a: string; }\n",
+   "b.ts": "export { Widget as Public } from \"./a.ts\";\n",
+   "c.ts": "export { Widget as Deep } from \"./b\";\n"
+  },
+  "entry": "b.ts",
+  "type": "Public",
+  "expected": {
+   "typeName": "Public",
+   "fields": [
+    {
+     "name": "a",
+     "optional": false,
+     "cardinality": "scalar",
+     "scalar": "string",
+     "state": ""
+    }
+   ]
+  },
+  "missing": {
+   "entry": "x.ts",
+   "text": "export { Widget as Gone } from \"./nothing.ts\";\n",
+   "type": "Gone"
+  },
+  "packageSpecifier": "export { Widget as Pkg } from \"pkg\";\n"
+ }
+}

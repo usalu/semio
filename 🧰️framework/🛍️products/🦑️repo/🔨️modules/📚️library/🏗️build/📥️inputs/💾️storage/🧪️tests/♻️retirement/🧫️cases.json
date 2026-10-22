@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "leaves": 0,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 0,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "single",
+      "leaves": 1,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 1,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "below-batch",
+      "leaves": 63,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 63,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "exact-batch",
+      "leaves": 64,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 64,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "next-batch",
+      "leaves": 65,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 65,
+      "rechecks": 3,
+      "error": null
+    },
+    {
+      "id": "two-batches",
+      "leaves": 128,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 128,
+      "rechecks": 3,
+      "error": null
+    },
+    {
+      "id": "third-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 129,
+      "rechecks": 4,
+      "error": null
+    },
+    {
+      "id": "already-funded",
+      "leaves": 65,
+      "lowWaterBytes": 65,
+      "requiredAvailableBytes": 0,
+      "fault": null,
+      "failAfter": null,
+      "retired": 0,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "funded-after-one",
+      "leaves": 65,
+      "lowWaterBytes": 65,
+      "requiredAvailableBytes": 512,
+      "fault": null,
+      "failAfter": null,
+      "retired": 1,
+      "rechecks": 2,
+      "error": null
+    },
+    {
+      "id": "cancel-within-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "cancel",
+      "failAfter": 32,
+      "retired": 32,
+      "rechecks": 1,
+      "error": "primary"
+    },
+    {
+      "id": "undefined-within-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "undefined",
+      "failAfter": 32,
+      "retired": 32,
+      "rechecks": 1,
+      "error": "undefined"
+    },
+    {
+      "id": "identity-within-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "identity",
+      "failAfter": 32,
+      "retired": 32,
+      "rechecks": 1,
+      "error": "identity"
+    },
+    {
+      "id": "hardlink-within-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "hardlink",
+      "failAfter": 32,
+      "retired": 32,
+      "rechecks": 1,
+      "error": "identity"
+    },
+    {
+      "id": "blocks-within-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "blocks",
+      "failAfter": 32,
+      "retired": 32,
+      "rechecks": 1,
+      "error": "blocks"
+    },
+    {
+      "id": "native-before-second-batch",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "native",
+      "failAfter": 64,
+      "retired": 64,
+      "rechecks": 2,
+      "error": "primary"
+    },
+    {
+      "id": "final-native-undefined",
+      "leaves": 65,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": "final-undefined",
+      "failAfter": null,
+      "retired": 65,
+      "rechecks": 3,
+      "error": "undefined"
+    },
+    {
+      "id": "Original-only-window",
+      "leaves": 129,
+      "lowWaterBytes": 0,
+      "requiredAvailableBytes": 1000000,
+      "fault": null,
+      "failAfter": null,
+      "retired": 129,
+      "rechecks": 4,
+      "error": null
+    }
+  ],
+  "lifecycle": [
+    {
+      "id": "deferred",
+      "acquired": false,
+      "retiredFiles": 0,
+      "retainedOptionalBytes": 0,
+      "availableBytes": 10,
+      "fault": null,
+      "value": false,
+      "error": null
+    },
+    {
+      "id": "funded-no-effects",
+      "acquired": true,
+      "retiredFiles": 0,
+      "retainedOptionalBytes": 0,
+      "availableBytes": 10,
+      "fault": null,
+      "value": false,
+      "error": null
+    },
+    {
+      "id": "funded-after-retirement",
+      "acquired": true,
+      "retiredFiles": 1,
+      "retainedOptionalBytes": 0,
+      "availableBytes": 10,
+      "fault": null,
+      "value": true,
+      "error": null
+    },
+    {
+      "id": "physical-pressure",
+      "acquired": true,
+      "retiredFiles": 1,
+      "retainedOptionalBytes": 0,
+      "availableBytes": 9,
+      "fault": null,
+      "value": null,
+      "error": "pressure"
+    },
+    {
+      "id": "logical-pressure",
+      "acquired": true,
+      "retiredFiles": 1,
+      "retainedOptionalBytes": 101,
+      "availableBytes": 10,
+      "fault": null,
+      "value": null,
+      "error": "pressure"
+    },
+    {
+      "id": "undefined-callback-primary",
+      "acquired": true,
+      "retiredFiles": 0,
+      "retainedOptionalBytes": 0,
+      "availableBytes": 10,
+      "fault": "undefined",
+      "value": null,
+      "error": "undefined"
+    }
+  ],
+  "groupDelegation": [
+    {
+      "id": "empty",
+      "retained": [],
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "failure": null,
+      "mutateTo": null
+    },
+    {
+      "id": "physical-allocation",
+      "retained": [
+        2,
+        3
+      ],
+      "retiredBytes": 512,
+      "retiredFiles": 1,
+      "failure": null,
+      "mutateTo": null
+    },
+    {
+      "id": "false-primary",
+      "retained": [],
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "failure": "false",
+      "mutateTo": null
+    },
+    {
+      "id": "undefined-primary",
+      "retained": [],
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "failure": "undefined",
+      "mutateTo": null
+    },
+    {
+      "id": "cancellation-primary",
+      "retained": [],
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "failure": "cancel",
+      "mutateTo": null
+    },
+    {
+      "id": "identity-primary",
+      "retained": [],
+      "retiredBytes": 0,
+      "retiredFiles": 0,
+      "failure": "identity",
+      "mutateTo": null
+    },
+    {
+      "id": "request-mutation-after-delegation",
+      "retained": [
+        2,
+        3
+      ],
+      "retiredBytes": 512,
+      "retiredFiles": 1,
+      "failure": null,
+      "mutateTo": 8
+    }
+  ]
+}

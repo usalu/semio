@@ -68,7 +68,7 @@ fn text_demand(left:&String,right:&String,position:usize,body:usize)->Result<Ret
 
 pub(super) fn text_slice_demand(left:&str,right:&str,position:usize,body:usize)->Result<RetirementDemand,ValueError>{
     let remaining=left.len().min(right.len()).checked_sub(position).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original text insertion cursor exceeds its keys"))?;
-    Ok(RetirementDemand {copy_bytes:size_of::<usize>()+size_of::<Option<std::cmp::Ordering>>()+2*remaining.min(body/2),depth:1,..Default::default()})
+    Ok(RetirementDemand {copy_bytes:size_of::<usize>()+size_of::<Option<std::cmp::Ordering>>()+2*remaining.min((body/2).max(1)),depth:1,..Default::default()})
 }
 
 fn ordered_text_demand<K>(left:&(K,String),right:&(K,String),position:usize,body:usize)->Result<RetirementDemand,ValueError>{

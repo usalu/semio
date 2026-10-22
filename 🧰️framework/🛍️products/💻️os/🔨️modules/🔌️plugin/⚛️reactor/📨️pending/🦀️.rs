@@ -64,7 +64,7 @@ pub enum PendingPatchPhase {
 }
 
 impl PendingPatchPhase {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub(crate) const fn guest_owes_turn(self) -> bool {
         matches!(self, Self::Queued | Self::Acknowledged | Self::Rejecting)
     }

@@ -2,17 +2,17 @@
   "name": "@semio-tech/framework-os-kernel",
   "private": true,
   "scripts": {
-    "test-command-ingress-consumer": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-command-ingress-consumer",
-    "test-artifact-kind": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-artifact-kind",
-    "test-snapshot-sqlite-admission": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-snapshot-sqlite-admission",
-    "test-borrowed-key-index-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-borrowed-key-index-native",
-    "test-intrinsic-retirement-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-intrinsic-retirement-native",
-    "test-directory-checkpoint-pair-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-source",
-    "test-directory-checkpoint-pair-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-native",
-    "test-directory-descriptor-digest-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-source",
-    "test-directory-descriptor-digest-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native",
-    "test-retained-lane-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-retained-lane-source",
-    "test-retained-lane-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-retained-lane-native"
+    "test-command-ingress-consumer": "repo run @semio-tech/framework-os-kernel:test-command-ingress-consumer",
+    "test-artifact-kind": "repo run @semio-tech/framework-os-kernel:test-artifact-kind",
+    "test-snapshot-sqlite-admission": "repo run @semio-tech/framework-os-kernel:test-snapshot-sqlite-admission",
+    "test-borrowed-key-index-native": "repo run @semio-tech/framework-os-kernel:test-borrowed-key-index-native",
+    "test-intrinsic-retirement-native": "repo run @semio-tech/framework-os-kernel:test-intrinsic-retirement-native",
+    "test-directory-checkpoint-pair-source": "repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-source",
+    "test-directory-checkpoint-pair-native": "repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-native",
+    "test-directory-descriptor-digest-source": "repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-source",
+    "test-directory-descriptor-digest-native": "repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native",
+    "test-retained-lane-source": "repo run @semio-tech/framework-os-kernel:test-retained-lane-source",
+    "test-retained-lane-native": "repo run @semio-tech/framework-os-kernel:test-retained-lane-native"
   },
   "devDependencies": {
     "@semio-tech/framework-plugin": "workspace:*",

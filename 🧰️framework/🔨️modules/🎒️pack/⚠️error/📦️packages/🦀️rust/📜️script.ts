@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -9,12 +9,13 @@ import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } fro
 import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 import { resolveTypescriptCompilerV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
 /** 🧬️ Checks canonical typed Pack error ownership without product infrastructure. */
 class OwnershipScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-ownership accepts no arguments");
     const test = resolve(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
     await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true});
   }
 }
@@ -28,5 +29,5 @@ class NativeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
+const router = new ScriptRouter(import.meta.dirname).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

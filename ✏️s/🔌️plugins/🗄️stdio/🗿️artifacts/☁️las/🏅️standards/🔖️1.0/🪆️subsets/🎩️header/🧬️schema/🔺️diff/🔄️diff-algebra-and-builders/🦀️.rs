@@ -83,27 +83,9 @@ fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
     }
 }
 
-impl MutationDiff<LasSnapshot> for LasDiff {
-    fn apply(&self, base: &LasSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<LasSnapshot> {
-        if let Some(diff) = &self.vlrs {
-            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
-        }
-        if let Some(diff) = &self.points {
-            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points")?;
-        }
-        let mut header = base.header.clone();
-        apply_header_diff(&mut header, self);
-        let vlrs = match &self.vlrs {
-            Some(vd) => vd.apply_unchecked(&base.vlrs),
-            None => base.vlrs.clone(),
-        };
-        let points = match &self.points {
-            Some(pd) => pd.apply_unchecked(&base.points),
-            None => base.points.clone(),
-        };
-        Ok(LasSnapshot { schema: base.schema.clone(), header, vlrs, points })
-    }
+impl MutationDiff<LasSnapshot> for LasDiff {}
 
+impl protocol::ColdMutationDiff<LasSnapshot> for LasDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Header
     /// scalars: LWW. `vlrs`/`points`: index-transport via [`absorb_indexed_triple`].
     fn absorb(&mut self, other: Self) {
@@ -185,9 +167,37 @@ impl MutationDiff<LasSnapshot> for LasDiff {
         self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs);
         self.points = absorb_points(self.points.take(), other.points);
     }
+
+    fn apply(&self, unpublished: &mut LasSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.vlrs {
+            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
+        }
+        if let Some(diff) = &self.points {
+            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points")?;
+        }
+        let mut header = base.header.clone();
+        apply_header_diff(&mut header, self);
+        let vlrs = match &self.vlrs {
+            Some(vd) => vd.apply_unchecked(&base.vlrs),
+            None => base.vlrs.clone(),
+        };
+        let points = match &self.points {
+            Some(pd) => pd.apply_unchecked(&base.points),
+            None => base.points.clone(),
+        };
+        *unpublished = LasSnapshot { schema: base.schema.clone(), header, vlrs, points };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<LasSnapshot> for LasDiff {
+    fn is_empty(&self) -> bool {
+        self == &LasDiff::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LasSnapshot> for LasDiff {
     /// 🔁️ The negative diff: every touched header scalar restores its base value and the `vlrs`/`points` triples invert against the
     /// base rows.
     fn inverse(&self, base: &LasSnapshot) -> Self {
@@ -221,10 +231,6 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
             vlrs: self.vlrs.as_ref().map(|vlrs| vlrs.inverse(&base.vlrs)),
             points: self.points.as_ref().map(|points| points.inverse(&base.points)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &LasDiff::default()
     }
 }
 

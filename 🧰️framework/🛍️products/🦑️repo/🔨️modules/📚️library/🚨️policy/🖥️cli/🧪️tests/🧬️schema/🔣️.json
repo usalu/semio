@@ -1,0 +1,99 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "items",
+  "bins",
+  "fake",
+  "defaultSuffix",
+  "modes",
+  "badMode"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "items": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "node",
+     "expected"
+    ],
+    "properties": {
+     "node": {},
+     "expected": {
+      "type": "array",
+      "items": {}
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "bins": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "envCli",
+    "envMcp"
+   ],
+   "properties": {
+    "envCli": {
+     "type": "string"
+    },
+    "envMcp": {
+     "type": "string"
+    }
+   }
+  },
+  "fake": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "lines",
+     "exit"
+    ],
+    "properties": {
+     "lines": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exit": {
+      "type": "integer"
+     },
+     "expected": {},
+     "message": {
+      "type": "string"
+     },
+     "stderr": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "defaultSuffix": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  },
+  "modes": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 2
+  },
+  "badMode": {
+   "type": "string"
+  }
+ }
+}

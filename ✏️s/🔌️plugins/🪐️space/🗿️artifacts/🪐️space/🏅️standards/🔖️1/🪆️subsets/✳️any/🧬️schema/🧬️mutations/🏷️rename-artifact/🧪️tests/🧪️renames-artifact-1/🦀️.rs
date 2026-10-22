@@ -32,14 +32,14 @@ fn mutation() -> SSpaceMutation {
     decode_value((*MUTATION))
 }
 fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
-    <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &before())
+    <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Renaming `artifact-1` rewrites only that row's `name`; its ids, kind, dialect and both
 /// timestamps stay exactly as committed (a rename is not a touch).
 #[semio_framework_async_macros::async_test]
 async fn rewrites_only_the_name_of_the_committed_after() {
-    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("rename-artifact applies to its committed before-index");
+    let applied = protocol::apply_diff_cold(built_outcome().diff(), &before()).expect("rename-artifact applies to its committed before-index");
     assert_eq!(applied, expected_after(), "rename-artifact/renames-artifact-1: the renamed index differs from the committed after-snapshot");
     let renamed = applied.artifacts.iter().find(|row| row.id == "artifact-1").expect("artifact-1 survives its own rename");
     assert_eq!(renamed.updated_at_ms, 1000, "rename-artifact/renames-artifact-1: renaming must not restamp updatedAtMs");
@@ -50,13 +50,13 @@ async fn rewrites_only_the_name_of_the_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn renaming_back_restores_before() {
     let base = before();
-    let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward rename-artifact applies");
-    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let forward = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(&mutation(), &base);
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward rename-artifact applies");
+    let inverse = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "rename-artifact/renames-artifact-1: the inverse of one rename is exactly one rename back");
     for step in &inverse {
-        let undo = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the rename-artifact inverse step applies");
+        let undo = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the rename-artifact inverse step applies");
     }
     assert_eq!(snapshot, base, "rename-artifact/renames-artifact-1: renaming back to \"Site Plan\" did not restore the before-index");
 }
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_value::<SSpaceDiff>((*DIFF));
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-index");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-index");
     assert_eq!(produced, expected_after(), "rename-artifact/renames-artifact-1: committed diff did not carry before to after");
 }
 

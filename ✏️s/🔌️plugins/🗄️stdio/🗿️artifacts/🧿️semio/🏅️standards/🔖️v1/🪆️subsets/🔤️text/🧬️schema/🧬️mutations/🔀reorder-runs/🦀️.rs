@@ -16,7 +16,16 @@ pub struct ReorderRuns {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRuns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "runs", kind: "reorder-runs", record: "ReorderedRuns" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Textlauf #{} nach #{} verschieben", self.from, self.to))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.from.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRuns {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
@@ -25,11 +34,5 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRun
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Textlauf #{} nach #{} verschieben", self.from, self.to))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.from.to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -33,7 +33,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -53,7 +53,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

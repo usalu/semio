@@ -16,11 +16,18 @@ where
     Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<CommitResponse>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "commit", entity: "response", kind: "commit-response", record: "CommittedResponse" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Submit Response", "Antwort absenden") }
+    fn target(&self) -> Vec<String> { vec![self.response.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for CommitResponse
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<CommitResponse>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> { crate::standards::v1::subsets::any::schema::mutations::component::commit_response::diff::diff(self, base) }
     fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::standards::v1::subsets::any::schema::mutations::component::commit_response::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Submit Response", "Antwort absenden") }
-    fn target(&self) -> Vec<String> { vec![self.response.id.clone()] }
 }

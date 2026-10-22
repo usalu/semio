@@ -5,7 +5,7 @@ use crate::schema::mutations::WriterMutation;
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 
 use crate::WriterSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 
 pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {

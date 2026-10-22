@@ -62,9 +62,65 @@
     }
   ],
   "currentAttempt": {
-    "session": 21940,
-    "status": "live; capacity-only before Git body",
+    "session": 29712,
+    "status": "live; corrected explicit-owner exec route; initial host capacity only",
     "capture": "memory only; no Source snapshot files",
-    "wholeExit": null
+    "wholeExit": null,
+    "beforeObservation": "generated/e2e-corpus-owner-exec-before.json",
+    "observationPoints": 26
+  },
+  "priorAttempt": {
+    "session": 21940,
+    "wholeExit": 1,
+    "status": "owned exactPTY cancellation at reviewed general exec correction boundary",
+    "last": "old all-roster inference293/3738",
+    "gitBody": false,
+    "recoveredBlobs": 0
+  },
+  "recoveredHistoricalSource": {
+    "revision": "fd14da55f18997fe8d7d6437818696353d2d7b8d",
+    "interface": [
+      "repo",
+      "--tool=nx",
+      "--lang=en",
+      "capacity",
+      "run",
+      "--memory=128",
+      "--cpu=1",
+      "--",
+      "git"
+    ],
+    "wholeExit": 0,
+    "exactGitBlobHashes": true,
+    "blobs": [
+      {
+        "kind": "schema",
+        "bytes": 2491,
+        "gitBlob": "34028308f0c1a053fa5f524ec63f93ef5c88dec4",
+        "expectedGitBlob": "34028308f0c1a053fa5f524ec63f93ef5c88dec4",
+        "exact": true,
+        "sha256": "c248d2ffe0e30ff3c190e8c624b2313cc17f295c1dce827c9ec4f6b8155094ff",
+        "canonicalSha256": "56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611"
+      },
+      {
+        "kind": "fixture",
+        "bytes": 2363,
+        "gitBlob": "4dddd69af26342828ebde72fcc62ddafa2601539",
+        "expectedGitBlob": "4dddd69af26342828ebde72fcc62ddafa2601539",
+        "exact": true,
+        "sha256": "df98580e5f205111c3f4acd2df6c8a6bb84b7409450fd7145d83292fbb936bea",
+        "canonicalSha256": "f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820"
+      }
+    ],
+    "originalCaseCount": 6,
+    "sourceBodiesSavedToTicket": false,
+    "status": "restored-in-place-independently-source-accepted-runtime-gates-pending",
+    "report": "oct21-sequence-corpus-recovery.md",
+    "originalProjectionHashes": {
+      "schema": "56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611",
+      "fixture": "f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820"
+    },
+    "extensionPreserved": true,
+    "independentSourceReview": true
   }
 }

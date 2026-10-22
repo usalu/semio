@@ -49,7 +49,7 @@ fn no_op_leaves_the_document_untouched() {
 /// an Error and never a Fatal — the mutation applies, it just carries no change.
 #[test]
 fn the_no_op_is_a_warning_not_a_rejection() {
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "update-analysis-settings/keeps-the-analysis-196e4a: a no-op update-analysis-settings must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
@@ -81,7 +81,7 @@ fn inverse_restores_before() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "update-analysis-settings/keeps-the-analysis-196e4a declares a no-op outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "update-analysis-settings's no-op is declared at warn level");
@@ -108,7 +108,7 @@ fn committed_json_is_canonical() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "update-analysis-settings/keeps-the-analysis-196e4a: produced diff differs from the committed 🔺️diff/🔣️.json");

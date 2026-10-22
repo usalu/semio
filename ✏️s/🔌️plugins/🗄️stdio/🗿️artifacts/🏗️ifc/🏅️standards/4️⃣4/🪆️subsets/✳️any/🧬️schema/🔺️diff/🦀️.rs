@@ -15,8 +15,8 @@ use crate::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEn
 #[cfg(test)] use crate::standards::v4::subsets::any::schema::snapshot::{IfcTypedValue};
 use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 
 //#region 🔖️IndexTransport
 /// 📐️ Own local copy (per the recipe's "hand-duplicated, macro-free" convention — never shared
@@ -565,14 +565,9 @@ fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
     next
 }
 
-impl MutationDiff<IfcSnapshot> for IfcDiff {
-    fn apply(&self, base: &IfcSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<IfcSnapshot> {
-        if let Some(diff) = &self.entities {
-            validate_entities_diff(&base.entities, diff)?;
-        }
-        Ok(apply_ifc_diff_unchecked(self, base))
-    }
+impl MutationDiff<IfcSnapshot> for IfcDiff {}
 
+impl protocol::ColdMutationDiff<IfcSnapshot> for IfcDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `entities`: see [`absorb_entities`].
     fn absorb(&mut self, other: Self) {
@@ -587,9 +582,24 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
         }
         self.entities = absorb_entities(self.entities.take(), other.entities);
     }
+
+    fn apply(&self, unpublished: &mut IfcSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.entities {
+            validate_entities_diff(&base.entities, diff)?;
+        }
+        *unpublished = apply_ifc_diff_unchecked(self, base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<IfcSnapshot> for IfcDiff {
+    fn is_empty(&self) -> bool {
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().is_none_or(IfcEntitiesDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<IfcSnapshot> for IfcDiff {
     /// 🔁️ Diff-level undo: every header field the diff sets returns to its base value, and the entity rows invert key by key.
     fn inverse(&self, base: &IfcSnapshot) -> Self {
         Self {
@@ -598,10 +608,6 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
             file_schema: self.file_schema.as_ref().map(|_| base.header.file_schema.clone()),
             entities: self.entities.as_ref().map(|diff| diff.inverse(&base.entities)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().is_none_or(IfcEntitiesDiff::is_empty)
     }
 }
 

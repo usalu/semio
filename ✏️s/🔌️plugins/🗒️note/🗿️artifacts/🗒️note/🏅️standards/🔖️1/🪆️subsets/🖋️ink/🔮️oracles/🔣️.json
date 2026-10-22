@@ -200,7 +200,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only thickens-the-sketch-stroke",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only thickens-the-sketch-stroke",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -267,7 +267,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only redraws-the-sketch-polyline",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only redraws-the-sketch-polyline",
         "seed": 0,
         "platform": "darwin-arm64"
       },

@@ -5,6 +5,7 @@ import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgress
 import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
 import { repoCacheDirectory } from "@semio-tech/repo-lib/process";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
@@ -19,12 +20,12 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
     const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
     const output = demonstratorE2eOutputDirectory(root, process.env.SEMIO_TICKET_DIR, session.id);
     console.log(`Testing Demonstrator at ${baseURL}`);
-    const child = Bun.spawn([process.execPath, join(context.repoRoot, "node_modules/playwright/cli.js"), "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdout: "inherit", stderr: "inherit", stdin: "ignore" });
+    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
     const cancel = (): void => { child.kill("SIGTERM"); };
     controller.signal.addEventListener("abort", cancel, { once: true });
     if (controller.signal.aborted) cancel();
     let status: number;
-    try { status = await child.exited; }
+    try { status = await toolExitV1(child); }
     finally { controller.signal.removeEventListener("abort", cancel); }
     if (status !== 0 && !controller.signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
   } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }

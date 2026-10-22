@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📸️create-shot/📸️appends/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("create-shot diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("create-shot diff applies")
 }
 
 /// ▶️ `create-shot` stores the payload's shot record verbatim, including its absent `background`
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_and_duplicate_shot_id_is_fatal() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "create-shot/appends-shot-macro: re-creating \"shot-macro\" must be Fatal");
     assert_eq!(second.messages()[0].code.0, "mutation.duplicate-id", "create-shot/appends-shot-macro: the duplicate guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["shot-macro".to_string()], "create-shot/appends-shot-macro: the duplicate is reported against the colliding shot id");
-    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff_cold(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "create-shot/appends-shot-macro: a Fatal duplicate must leave the snapshot untouched");
 }
 
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-shot/appends-shot-macro: committed diff did not carry before to after");
 }
 

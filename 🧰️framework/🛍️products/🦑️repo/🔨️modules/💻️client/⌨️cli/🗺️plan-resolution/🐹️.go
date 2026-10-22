@@ -27,19 +27,6 @@ func ResolvePlanSource(kind McpClientKind, id string) (absPath string, isDir boo
 		return "", false, fmt.Errorf("repository root is not set")
 	}
 	switch kind {
-	case McpClientCursor:
-		pattern := filepath.Join(root, ".cursor", "plans", "*_"+id+".plan.md")
-		matches, gerr := filepath.Glob(pattern)
-		if gerr != nil {
-			return "", false, gerr
-		}
-		if len(matches) == 0 {
-			return "", false, fmt.Errorf("no Cursor plan matches id %q (glob %s)", id, pattern)
-		}
-		if len(matches) > 1 {
-			return "", false, fmt.Errorf("ambiguous Cursor plan id %q: %d matches", id, len(matches))
-		}
-		return filepath.Clean(matches[0]), false, nil
 	case McpClientKiro:
 		dir := filepath.Join(root, ".kiro", "specs", id)
 		st, statErr := os.Stat(dir)

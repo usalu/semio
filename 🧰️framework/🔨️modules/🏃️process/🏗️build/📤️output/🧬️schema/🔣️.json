@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Output Contract",
+  "description": "The one output contract of the CLI. The result of a command (its JSON document under the machine flag, its report otherwise) is the only thing written to the result stream. Progress, waiting, logging and every other diagnostic line goes to the diagnostic stream. When the machine flag is present before the argument separator, the contract diverts the process-wide writers (`process.stdout.write` and the listed `console` methods) to the diagnostic stream, so no call site can corrupt the document; the result writer is the only way to reach the result stream.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "machineFlag", "separator", "result", "diagnostic", "divertedConsole", "contractKey"],
+  "properties": {
+    "version": { "const": 1 },
+    "machineFlag": { "const": "--json" },
+    "separator": { "const": "--" },
+    "result": { "const": "stdout" },
+    "diagnostic": { "const": "stderr" },
+    "divertedConsole": { "type": "array", "items": { "enum": ["log", "info", "debug", "table", "dir", "dirxml"] }, "uniqueItems": true, "minItems": 1 },
+    "contractKey": { "type": "string", "pattern": "^[a-z][a-z0-9.]*\\.v[0-9]+$" }
+  }
+}

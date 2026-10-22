@@ -1,11 +1,13 @@
 /** 🏃️ Runs unmirror over whole artifact trees of a working tree: discovers the carved crates, plans every source and manifest edit, checks that the dependency graph stays acyclic and optionally writes the result. */
-import { execFileSync } from "node:child_process";
+
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, posix, relative } from "node:path";
 import { Unmirror, type UnmirrorReport } from "../🟦️.ts";
 import { Universe, type CrateInfo } from "../🔍️resolver/🟦️.ts";
 import { addDependencyLines, declaredDependencies, removeDependencyLines, type DependencyAddition } from "../📝️manifest/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** ⚙️ Options of one run: the artifact directories to unwind, the path prefixes that must not be touched, whether to write and an optional staging directory. */
 export type UnmirrorRunOptions = Readonly<{ repoRoot: string; artifacts: readonly string[]; excluded?: readonly string[]; apply: boolean; force?: boolean; stageDir?: string; log?: (line: string) => void }>;
@@ -24,7 +26,7 @@ export type UnmirrorRunResult = Readonly<{
 const FAMILY_PREFIX = "semio-s-artifact-";
 const IDENT_PATTERN = /\b(semio_s_artifact_[a-z0-9_]+)\b/gu;
 
-const git = (repoRoot: string, ...args: string[]): string => execFileSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 29 });
+const git = (repoRoot: string, ...args: string[]): string => runToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { check: true, cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 29 }).stdout;
 const listFiles = (repoRoot: string, pathspec: string): string[] => [...git(repoRoot, "ls-files", "-z", "--", pathspec).split("\0"), ...git(repoRoot, "ls-files", "-z", "--others", "--exclude-standard", "--", pathspec).split("\0")].filter(Boolean);
 const identsIn = (text: string): Set<string> => new Set([...text.matchAll(IDENT_PATTERN)].map((match) => match[1]!));
 
@@ -47,7 +49,7 @@ function packageRoots(repoRoot: string): { manifest: string; dirs: string[]; lib
       const text = readFileSync(absolute, "utf8");
       if (!/^\[package\]/mu.test(text)) continue;
       let parsed: { lib?: { path?: string } } = {};
-      try { parsed = Bun.TOML.parse(text) as { lib?: { path?: string } }; } catch { parsed = { lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(text.indexOf("[lib]")))?.[1] } }; }
+      try { parsed = runtimeParseTomlV1(text) as { lib?: { path?: string } }; } catch { parsed = { lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(text.indexOf("[lib]")))?.[1] } }; }
       const dir = posix.dirname(manifest);
       const lib = posix.normalize(posix.join(dir, parsed.lib?.path ?? "src/lib.rs"));
       rows.push({ manifest, dirs: [...new Set([dir, posix.dirname(lib)])], lib });
@@ -97,7 +99,7 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     if (!existsSync(absolute)) continue;
     const text = readFileSync(absolute, "utf8");
     let parsed: { package?: { name?: string }; lib?: { path?: string } };
-    try { parsed = Bun.TOML.parse(text) as typeof parsed; } catch { parsed = { package: { name: /^name\s*=\s*"([^"]+)"/mu.exec(text)?.[1] }, lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(Math.max(0, text.indexOf("[lib]"))))?.[1] } }; }
+    try { parsed = runtimeParseTomlV1(text) as typeof parsed; } catch { parsed = { package: { name: /^name\s*=\s*"([^"]+)"/mu.exec(text)?.[1] }, lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(Math.max(0, text.indexOf("[lib]"))))?.[1] } }; }
     const name = parsed.package?.name;
     if (!name?.startsWith(FAMILY_PREFIX)) continue;
     const dir = posix.dirname(manifest);

@@ -90,7 +90,7 @@ pub use mutations::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_os_spr::{Mutation, MutationLeaf, OpText};
+    use semio_framework_os_spr::{ColdMutation, Mutation, MutationLeaf, OpText};
 
     fn fixture() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("law fixture")

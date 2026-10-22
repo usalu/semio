@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { directorySessionAuthorityTextV1 } from "@semio-tech/framework/directory/session-refresh";
 
 export type SessionAuthorityNoticeStateV1 = "pending" | "unavailable";

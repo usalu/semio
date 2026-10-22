@@ -93,11 +93,11 @@
     "./testing/worker-vm-source": "./🧪️testing/✂️worker-vm-source/🟦️.ts"
   },
   "scripts": {
-    "test-command-ingress-consumer": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-command-ingress-consumer",
-    "test-snapshot-sqlite-admission": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-snapshot-sqlite-admission",
-    "test-original-job-native": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-original-job-native",
-    "test-media-turn-native": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-media-turn-native",
-    "test-original-reactor-receiving-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-plugin:test-original-reactor-receiving-source"
+    "test-command-ingress-consumer": "repo run @semio-tech/framework-plugin:test-command-ingress-consumer",
+    "test-snapshot-sqlite-admission": "repo run @semio-tech/framework-plugin:test-snapshot-sqlite-admission",
+    "test-original-job-native": "repo run @semio-tech/framework-plugin:test-original-job-native",
+    "test-media-turn-native": "repo run @semio-tech/framework-plugin:test-media-turn-native",
+    "test-original-reactor-receiving-source": "repo run @semio-tech/framework-plugin:test-original-reactor-receiving-source"
   },
   "devDependencies": {
     "@bytecodealliance/jco-transpile": "0.20.0",

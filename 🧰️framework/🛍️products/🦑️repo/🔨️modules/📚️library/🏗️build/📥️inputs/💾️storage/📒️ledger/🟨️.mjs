@@ -7,6 +7,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 const schema=componentSchema.definitions.OptionalLedger,quotaSchema=componentSchema.definitions.OptionalQuota;
 import {checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 /** 📏️ Counts only declared optional leaves on the original enforcing device. */
 function inventoryV1(root,control){
@@ -25,8 +26,7 @@ const busy=error=>error?.code==="SQLITE_BUSY"||error?.errcode===5||error?.errno=
 
 /** 🗃️ Keeps both runtime system databases behind one local synchronous interface. */
 async function databaseV1(path){
- if(process.versions.bun){const name="bun:sqlite",{Database}=await import(name),database=new Database(path,{create:true});return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.query(sql).get(...args),close:()=>database.close()};}
- const {DatabaseSync}=await import("node:sqlite"),database=new DatabaseSync(path);return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.prepare(sql).get(...args),close:()=>database.close()};
+ const database=new SqliteDatabaseV1(path,{create:true});return {exec:sql=>database.exec(sql),row:(sql,...args)=>database.query(sql).get(...args),close:()=>database.close()};
 }
 
 /** 📒️ Holds operation custody across durable intent, physical mutation and clean accounting. */
@@ -36,7 +36,7 @@ export async function openBuildGraphOptionalLedgerV1(options){
  checkResourceLeaseControl(control);await image.recheck();const root=image.root,path=requireNativeStoragePathV1(root,join(root,protocol.filename)),gatePath=requireNativeStoragePathV1(root,join(root,protocol.gateFilename)),backing=await image.port.observe({version:1,root,leaseDirectory,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:image.filesystemBytes,maximumArtifactBytes:image.filesystemBytes},control);if(!backing||backing.root!==root||backing.maximumPhysicalBytes!==image.maximumPhysicalBytes)throw Error("Original enforcing optional graph image required");
  const check=()=>checkResourceLeaseControl(control),inventory=()=>inventoryV1(root,control),available=()=>{const space=nativeStatfsSyncV1(root);return space.bavail*space.bsize;},journalBound=bytes=>protocol.maximumJournalHeaderBytes+bytes/protocol.pageBytes*(protocol.pageBytes+protocol.journalPageOverheadBytes),metadataPeak=protocol.maximumDatabaseBytes+protocol.maximumGateDatabaseBytes+journalBound(protocol.maximumDatabaseBytes)+journalBound(protocol.maximumGateDatabaseBytes);
  check();const parent=lstatSync(root);if(!parent.isDirectory()||parent.isSymbolicLink()||realpathSync(root)!==root)throw Error("Original optional ledger ancestry required");
- const regular=(file,maximum)=>{const row=lstatSync(file);if(row.nlink===0)throw Object.assign(Error("Unlinked optional ledger file"),{code:"ENOENT"});if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.dev!==parent.dev||row.size>maximum)throw Error("Original bounded optional ledger file required: "+JSON.stringify(optionalLedgerFileObservationV1(file,maximum,row,parent)));return row;},optional=(file,maximum)=>{try{return regular(file,maximum);}catch(error){if(error.code!=="ENOENT")throw error;}};
+ const regular=(file,maximum)=>{const row=lstatSync(file);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.dev!==parent.dev||row.size>maximum)throw Error("Original bounded optional ledger file required: "+JSON.stringify(optionalLedgerFileObservationV1(file,maximum,row,parent)));return row;},optional=(file,maximum)=>{try{if(/-(?:journal|wal|shm)$/u.test(file)&&lstatSync(file).nlink===0)return;return regular(file,maximum);}catch(error){if(error.code!=="ENOENT")throw error;}};
  for(const[file,maximum]of[[path,protocol.maximumDatabaseBytes],[gatePath,protocol.maximumGateDatabaseBytes]])optional(file,maximum);
  const free=available();if(!Number.isSafeInteger(free)||free<metadataPeak)throw Error("Exact optional ledger metadata headroom required");
  let database,gate,identity,gateIdentity,live=true;

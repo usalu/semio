@@ -41,7 +41,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-delay-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-delay-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -91,7 +91,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-disposal-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-disposal-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -141,7 +141,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-transparency-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-transparency-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -191,7 +191,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-user-input-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-user-input-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

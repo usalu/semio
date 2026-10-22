@@ -1,5 +1,5 @@
 #[allow(unused_imports)] use semio_s_artifact_block_2d_editor::config::*;
-use protocol::DiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
 
 #[test]
 fn an_empty_config_has_only_the_empty_diff() {

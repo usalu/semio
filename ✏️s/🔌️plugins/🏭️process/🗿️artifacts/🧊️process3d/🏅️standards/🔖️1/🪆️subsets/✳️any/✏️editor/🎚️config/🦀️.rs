@@ -162,44 +162,9 @@ pub struct Process3dConfigDiff {
     pub resolved_up_to: Option<Process3dOptionalCursor>,
 }
 
-impl protocol::MutationDiff<Process3dConfig> for Process3dConfigDiff {
-    fn apply(&self, base: &Process3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Process3dConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = &self.camera_position {
-            next.camera_position = value.clone();
-        }
-        if let Some(value) = &self.camera_target {
-            next.camera_target = value.clone();
-        }
-        if let Some(value) = &self.camera_fov {
-            next.camera_fov = value.clone();
-        }
-        if let Some(value) = &self.sun_enabled {
-            next.sun_enabled = value.clone();
-        }
-        if let Some(value) = &self.sun_azimuth {
-            next.sun_azimuth = value.clone();
-        }
-        if let Some(value) = &self.sun_elevation {
-            next.sun_elevation = value.clone();
-        }
-        if let Some(value) = &self.sun_intensity {
-            next.sun_intensity = value.clone();
-        }
-        if let Some(value) = &self.sun_color {
-            next.sun_color = value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        if let Some(value) = &self.resolved_up_to {
-            next.resolved_up_to = value.value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Process3dConfig> for Process3dConfigDiff {}
+
+impl protocol::ColdMutationDiff<Process3dConfig> for Process3dConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.engagement_input.is_some() {
             self.engagement_input = other.engagement_input;
@@ -235,9 +200,55 @@ impl protocol::MutationDiff<Process3dConfig> for Process3dConfigDiff {
             self.resolved_up_to = other.resolved_up_to;
         }
     }
+
+    fn apply(&self, unpublished: &mut Process3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.camera_position {
+            next.camera_position = value.clone();
+        }
+        if let Some(value) = &self.camera_target {
+            next.camera_target = value.clone();
+        }
+        if let Some(value) = &self.camera_fov {
+            next.camera_fov = value.clone();
+        }
+        if let Some(value) = &self.sun_enabled {
+            next.sun_enabled = value.clone();
+        }
+        if let Some(value) = &self.sun_azimuth {
+            next.sun_azimuth = value.clone();
+        }
+        if let Some(value) = &self.sun_elevation {
+            next.sun_elevation = value.clone();
+        }
+        if let Some(value) = &self.sun_intensity {
+            next.sun_intensity = value.clone();
+        }
+        if let Some(value) = &self.sun_color {
+            next.sun_color = value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        if let Some(value) = &self.resolved_up_to {
+            next.resolved_up_to = value.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Process3dConfig> for Process3dConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none() && self.sun_enabled.is_none() && self.sun_azimuth.is_none() && self.sun_elevation.is_none() && self.sun_intensity.is_none() && self.sun_color.is_none() && self.contributions_json.is_none() && self.resolved_up_to.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Process3dConfig> for Process3dConfigDiff {
     fn inverse(&self, base: &Process3dConfig) -> Self {
         Self {
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
@@ -252,9 +263,6 @@ impl protocol::DiffAlgebra<Process3dConfig> for Process3dConfigDiff {
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
             resolved_up_to: self.resolved_up_to.as_ref().map(|_| Process3dOptionalCursor { value: base.resolved_up_to.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none() && self.sun_enabled.is_none() && self.sun_azimuth.is_none() && self.sun_elevation.is_none() && self.sun_intensity.is_none() && self.sun_color.is_none() && self.contributions_json.is_none() && self.resolved_up_to.is_none()
     }
 }
 
@@ -466,7 +474,10 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ .. }) => &Self::DESCRIPTORS[4],
         }
     }
+}
 
+impl protocol::ColdMutation<Process3dConfig> for Process3dConfigMutation {
+    type ReferenceDiff = Process3dConfigDiff;
     fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfigDiff> {
         protocol::MutationOutcome::new(match self {
             Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value }) => Process3dConfigDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
@@ -488,7 +499,6 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value }) => Process3dConfigDiff { resolved_up_to: (base.resolved_up_to != *value).then(|| Process3dOptionalCursor { value: *value }), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &Process3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ .. }) => Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: base.engagement_input.clone() }),

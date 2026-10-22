@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph:diagnostic-fixture:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumPending": 64,
+        "maximumOperations": 4096,
+        "maximumPathUnits": 256,
+        "optionalMaximumBytes": 0,
+        "optionalMinimumAvailableBytes": 0
+      }
+    },
+    "GraphFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "source",
+        "funding",
+        "publication",
+        "maintenance"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "source": {
+          "const": "workspace-read-only"
+        },
+        "funding": {
+          "const": "diagnostic-disposable"
+        },
+        "publication": {
+          "const": "optional-declined-required-retained"
+        },
+        "maintenance": {
+          "const": "settled-readers-kernel-ex"
+        }
+      }
+    },
+    "PublicationFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempts",
+        "declined"
+      ],
+      "properties": {
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "declined": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PublicationPolicy": {
+      "const": {
+        "version": 1,
+        "optionalMaximumBytes": 1048576,
+        "optionalMinimumAvailableBytes": 0
+      }
+    },
+    "MaintenanceOwnerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "enum": [
+            "live-fixture",
+            "canonical",
+            "expired-fixture",
+            "unrelated-native",
+            "copied-image"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ReceiverTransitionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "outcome",
+        "renewed",
+        "admitted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "enum": [
+            "acquired",
+            "deferred",
+            "false",
+            "undefined",
+            "cancel"
+          ]
+        },
+        "renewed": {
+          "type": "boolean"
+        },
+        "admitted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MaintenanceDeferralProbeResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consumed",
+        "acquired"
+      ],
+      "properties": {
+        "consumed": {
+          "const": true
+        },
+        "acquired": {
+          "const": false
+        }
+      }
+    }
+  }
+}

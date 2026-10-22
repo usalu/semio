@@ -5,6 +5,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use pack::snapshot::ArtifactPack;
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 
 //#region 🧫️Snapshot
 #[doc(hidden)]
@@ -65,7 +66,6 @@ fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapsho
         Ok(database)
     }
 fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         use store::sqlite_snapshot::SqliteSnapshotPhase;
         let rows = &database.table("document_state")?.rows;
@@ -203,7 +203,6 @@ pub(crate) struct TestDiff {
 }
 
 fn test_slot_uris(snapshot: &TestSnapshot) -> Vec<String> {
-    use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
     snapshot.slot.iter().map(|child| child.target.to_uri()).collect()
 }
 

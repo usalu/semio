@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️EventSourcedHistory
     /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
@@ -118,7 +118,7 @@ where
     /// 🧱️ Where a replay of the live order from `length` starts: the head, the tail snapshot, or the nearest retained prefix
     /// at or before `length` (exact: [`Self::prune_prefix_ring`]), else the genesis; the replay folds the rest of the prefix
     /// itself ([`EditReplay::new_after_prefix`]).
-    pub(super) fn live_base(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> (usize, Arc<P>) {
+    pub fn live_base(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> (usize, Arc<P>) {
         let applied = store_log.applied_edit_ids.len();
         if !self.current_detached && length == applied {
             return (applied, Arc::clone(&*self.current));
@@ -295,7 +295,7 @@ where
     /// 🚩️ The live projection's retained states from prefix length `horizon` on — the pruned ring's entries (exact:
     /// [`Self::prune_prefix_ring`]), the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
     /// store keeps, so the probe never owns a last reference.
-    pub(super) fn convergence_checkpoints(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
+    pub fn convergence_checkpoints(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
         let length = store_log.applied_edit_ids.len();
         let mut checkpoints: Vec<(usize, Arc<P>)> = self
             .prefix_ring

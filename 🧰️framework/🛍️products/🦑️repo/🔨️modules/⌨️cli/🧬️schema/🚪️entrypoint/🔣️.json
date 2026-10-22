@@ -7,7 +7,9 @@
     "buildVerbs",
     "dashboardArguments",
     "vectors",
-    "rootScriptPrefixes"
+    "rootScriptPrefixes",
+    "scriptExtensions",
+    "scriptOptions"
   ],
   "properties": {
     "buildVerbs": {
@@ -63,7 +65,8 @@
               "domain",
               "build",
               "mcp",
-              "workspace"
+              "workspace",
+              "script"
             ]
           },
           "arguments": {
@@ -83,6 +86,19 @@
           "stdio",
           "os"
         ]
+      ]
+    },
+    "scriptExtensions": {
+      "const": [
+        ".ts",
+        ".mjs",
+        ".js"
+      ]
+    },
+    "scriptOptions": {
+      "const": [
+        "watch",
+        "cwd"
       ]
     }
   }

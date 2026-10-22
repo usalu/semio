@@ -5,7 +5,7 @@ use super::*;
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
     /// 🧹️ Keeps original custody until every child and separate parent transfer is admitted.
@@ -264,7 +264,7 @@ where
 impl<P, Mutation, M> Drop for ActiveArtifactStoreReplacement<P, Mutation, M>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
     fn drop(&mut self) {

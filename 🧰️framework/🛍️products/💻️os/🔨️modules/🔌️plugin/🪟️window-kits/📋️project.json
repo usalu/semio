@@ -22,7 +22,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits"
       }
     },
@@ -35,7 +35,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits"
       }
     }

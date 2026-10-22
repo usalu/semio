@@ -2,12 +2,12 @@ use crate::schema::diff;
 use crate::{schema::snapshot::LasPoint, schema::snapshot::LasVlr};
 use crate::schema::snapshot::LasHeader;
 use crate::LasSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::apply_mutation;
 use crate::standards::v1_0::subsets::any::schema::mutations::*;
 use crate::schema::diff::{LasPointsDiff, LasVlrsDiff};
-use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutationDiff, MutationDiff};
 use protocol::{OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_path;
 
@@ -17,7 +17,7 @@ fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff_cold(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[test]
@@ -67,9 +67,9 @@ fn inverse_law() {
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
         let d = m.diff(&base);
-        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
+        let mutated = protocol::apply_diff_cold(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -77,13 +77,13 @@ fn inverse_law() {
 //#region 🔖️absorb_law
 fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
     let d1 = m1.diff(base);
-    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let sequential = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff_cold(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[test]
@@ -117,9 +117,9 @@ fn absorb_law() {
 fn absorb_law_associativity() {
     let base = base_snapshot();
     let d1 = LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "one".into() }).diff(&base);
-    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid1 = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = LasMutation::InsertPoint(insert_point::InsertPoint { index: 0, point: point(9) }).diff(&mid1);
-    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).expect("valid second diff");
     let d3 = LasMutation::SetPoint(set_point::SetPoint { index: 0, point: point(7) }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -131,8 +131,8 @@ fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), protocol::apply_diff_cold(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid associated diff"), protocol::apply_diff_cold(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️between_roundtrip_law
 
@@ -407,7 +407,7 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
         assert_eq!(moved.points[1].x, before[1].0 as f64 * scale.0 + offset.0, "and it must be exactly `record * scale + offset`");
 
         let mut restored = moved;
-        for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base).expect("valid retained mutation inverse fixture") {
+        for step in &<LasMutation as ColdMutation<LasSnapshot>>::inverse(&kind, &base).expect("valid retained mutation inverse fixture") {
             apply_mutation(&mut restored, step);
         }
         assert_eq!(restored, base, "putting the old scale and offset back must restore the document exactly");

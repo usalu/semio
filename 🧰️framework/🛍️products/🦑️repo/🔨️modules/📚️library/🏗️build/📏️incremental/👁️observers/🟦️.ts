@@ -9,7 +9,7 @@ export type IncrementalSpawnV1=Readonly<{label:string;mnemonic:string;runner:str
 
 /** 🗜️ Decompresses a zstd stream with the decoder the runtime provides and refuses output beyond the bound. */
 export function incrementalZstdV1(bytes:Uint8Array):Uint8Array{
- const bun=(globalThis as {Bun?:{zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}}).Bun,node=(zlib as unknown as {zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}).zstdDecompressSync,decode=bun?.zstdDecompressSync??node;
+ const decode=(zlib as unknown as {zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}).zstdDecompressSync;
  if(!decode)throw Error("A zstd decoder is required to read the Bazel execution log");
  const output=decode(bytes);
  if(output.length>policy.maximumLogBytes)throw Error("Bounded Bazel execution log required");

@@ -3,7 +3,7 @@
 use super::*;
 use semio_framework::Fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// 👀️ Store and settings watch (§3.3): emits `baseChanged` / `settingsChanged` with their policies.
     ///
     /// - A base change rebinds a retargetable job to the new identity in place; any other job is closed and
@@ -128,7 +128,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         self.tool_runs.selected=Some(index);
         self.watch_tool_run_generations();
         if self.retire_tool_runs_until(cx)?{self.tool_runs.select_primary();return Ok(());}
-        let outcome=if self.tool_runs.select_run(run){self.drive_selected_tool_run(deadline,cx.retained_grant(),identity).await.map_err(semio_framework_job::OriginalTurnFailure::from)}else{Ok(())};
+        let grant=cx.retained_grant();
+        let outcome=if self.tool_runs.select_run(run){match cx.with_native_receiving_ready(async |receiving| self.drive_selected_tool_run(deadline,grant,identity,receiving).await){Ok(driven)=>driven.map_err(semio_framework_job::OriginalTurnFailure::from),Err(error)=>Err(error.into())}}else{Ok(())};
         self.tool_runs.select_primary();
         outcome
     }
@@ -182,7 +183,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 }
                 self.finalize_tool_run_turn(deadline,grant,identity,receiving).await
             }
-            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline,grant),
+            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline,grant,receiving),
         }
     }
 

@@ -29,7 +29,7 @@ pub mod upsert_instance;
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3Mutation")]
+#[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3Mutation", reference = Ifc2x3Snapshot, reference_diff = Ifc2x3Diff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Ifc2x3Mutation {
     UpsertInstance(upsert_instance::UpsertInstance),
@@ -49,8 +49,8 @@ pub const KINDS: &[&str] = &["upsert-instance", "remove-instance", "set-header"]
 /// state, per `Mutation::diff`'s contract).
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <Ifc2x3Mutation as ColdMutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

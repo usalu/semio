@@ -28,6 +28,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "curated-item", kind: "delete-curated-item", record: "DeletedCuratedItem" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove \"{}\" from curation", self.object_id), &format!("\"{}\" aus Kuratierung entfernen", self.object_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.object_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<CurationSnapshot, Op> for DeleteCuratedItem
+where
+    Op: protocol::ColdMutation<CurationSnapshot, ReferenceDiff = CurationDiff> + From<DeleteCuratedItem> + From<crate::standards::v1::subsets::any::schema::mutations::create_curated_item::CreateCuratedItem>,
+{
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
@@ -37,11 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove \"{}\" from curation", self.object_id), &format!("\"{}\" aus Kuratierung entfernen", self.object_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.object_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

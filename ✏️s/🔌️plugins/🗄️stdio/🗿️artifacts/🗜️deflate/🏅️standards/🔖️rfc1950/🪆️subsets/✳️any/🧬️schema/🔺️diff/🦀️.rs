@@ -39,27 +39,9 @@ pub struct DeflateDiff {
     pub payload: Option<Vec<u8>>,
 }
 
-impl MutationDiff<DeflateSnapshot> for DeflateDiff {
-    fn apply(&self, base: &DeflateSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DeflateSnapshot> {
-        let mut next = base.clone();
-        if let Some(v) = self.compression_method {
-            next.compression_method = v;
-        }
-        if let Some(v) = self.window_bits {
-            next.window_bits = v;
-        }
-        if let Some(v) = self.compression_level_hint {
-            next.compression_level_hint = v;
-        }
-        if let Some(v) = self.dict_id {
-            next.dict_id = v;
-        }
-        if let Some(v) = &self.payload {
-            next.payload = v.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<DeflateSnapshot> for DeflateDiff {}
 
+impl protocol::ColdMutationDiff<DeflateSnapshot> for DeflateDiff {
     fn absorb(&mut self, other: Self) {
         if other.compression_method.is_some() {
             self.compression_method = other.compression_method;
@@ -77,9 +59,37 @@ impl MutationDiff<DeflateSnapshot> for DeflateDiff {
             self.payload = other.payload;
         }
     }
+
+    fn apply(&self, unpublished: &mut DeflateSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(v) = self.compression_method {
+            next.compression_method = v;
+        }
+        if let Some(v) = self.window_bits {
+            next.window_bits = v;
+        }
+        if let Some(v) = self.compression_level_hint {
+            next.compression_level_hint = v;
+        }
+        if let Some(v) = self.dict_id {
+            next.dict_id = v;
+        }
+        if let Some(v) = &self.payload {
+            next.payload = v.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
+    fn is_empty(&self) -> bool {
+        self.compression_method.is_none() && self.window_bits.is_none() && self.compression_level_hint.is_none() && self.dict_id.is_none() && self.payload.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DeflateSnapshot> for DeflateDiff {
     fn inverse(&self, base: &DeflateSnapshot) -> Self {
         DeflateDiff {
             compression_method: self.compression_method.map(|_| base.compression_method),
@@ -88,10 +98,6 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
             dict_id: self.dict_id.map(|_| base.dict_id),
             payload: self.payload.as_ref().map(|_| base.payload.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.compression_method.is_none() && self.window_bits.is_none() && self.compression_level_hint.is_none() && self.dict_id.is_none() && self.payload.is_none()
     }
 }
 

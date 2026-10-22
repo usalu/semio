@@ -43,8 +43,29 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use protocol::{DiffAlgebra, MutationDiff};
 
-impl MutationDiff<JackSnapshot> for JackDiff {
-    fn apply(&self, snapshot: &JackSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JackSnapshot> {
+impl MutationDiff<JackSnapshot> for JackDiff {}
+
+impl protocol::ColdMutationDiff<JackSnapshot> for JackDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(name);
+        take!(manifest_id);
+        take!(manifest);
+        take!(camera);
+        take!(content);
+        take!(root_node_id);
+        take!(query);
+    }
+
+    fn apply(&self, unpublished: &mut JackSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
         let mut next = snapshot.clone();
         if let Some(value) = &self.schema {
             next.schema = value.clone();
@@ -70,28 +91,18 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         if let Some(value) = &self.query {
             next.query = value.clone();
         }
-        Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(schema);
-        take!(name);
-        take!(manifest_id);
-        take!(manifest);
-        take!(camera);
-        take!(content);
-        take!(root_node_id);
-        take!(query);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<JackSnapshot> for JackDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.name.is_none() && self.manifest_id.is_none() && self.manifest.is_none() && self.camera.is_none() && self.content.is_none() && self.root_node_id.is_none() && self.query.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JackSnapshot> for JackDiff {
     fn inverse(&self, base: &JackSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -103,9 +114,6 @@ impl DiffAlgebra<JackSnapshot> for JackDiff {
             root_node_id: self.root_node_id.as_ref().map(|_| base.root_node_id.clone()),
             query: self.query.as_ref().map(|_| base.query.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.name.is_none() && self.manifest_id.is_none() && self.manifest.is_none() && self.camera.is_none() && self.content.is_none() && self.root_node_id.is_none() && self.query.is_none()
     }
 }
 

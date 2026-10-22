@@ -67,7 +67,7 @@ fn inverse_restores_before() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"), "update-analysis-settings/raises-the-mode-908c2b declares an applied outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "update-analysis-settings/raises-the-mode-908c2b: a clean application raises no diagnostic, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("update-analysis-settings/raises-the-mode-908c2b: declared applied but the mutation was rejected");
@@ -110,7 +110,7 @@ fn committed_json_is_canonical() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/raises-the-mode-908c2b: the analysis facet is written as a whole value, never as a collection delta");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");

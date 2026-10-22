@@ -1,4 +1,4 @@
-//! 🔭️ Provider interfaces: the management, version control, sandbox and editor provider traits plus the downward ports.
+//! 🔭️ Provider interfaces: the management, version control, sandbox and agent-client provider traits plus the downward ports.
 //!
 //! Holds the `🔭️ProviderInterfaces`, `🔌️Ports` regions of the crate root; the root re-exports its items.
 
@@ -113,9 +113,9 @@ pub trait SandboxProvider {
     fn kind(&self) -> &'static str;
 }
 
-/// 📝️ Editor and agent integrations.
+/// 📝️ Agent-client integrations.
 #[dyn_enum]
-pub trait EditorProvider {
+pub trait AgentClientProvider {
     fn kind(&self) -> &'static str;
     fn resolve_native_event(&self, native_event: &str, tool_kind: ToolKind) -> ProviderResult<(HookEvent, String)>;
     fn format_hook_output(&self, hook_event_name: &str, result: &HookResult) -> String;
@@ -124,7 +124,7 @@ pub trait EditorProvider {
 // #endregion 🔭️ProviderInterfaces
 
 // #region 🔌️Ports
-/// 🪝️ The formatting half of an editor, declared here so `🔨️modules/🪝️hooks` depends downward on
+/// 🪝️ The formatting half of an agent client, declared here so `🔨️modules/🪝️hooks` depends downward on
 /// `🧩️providers` instead of the other way round — fix 5 of `📓️go-region-dependency-graph.md`.
 pub trait HookFormatter {
     /// 🧾️ Renders a hook result for one native hook event name.
@@ -133,13 +133,13 @@ pub trait HookFormatter {
     fn native_event_from_hook_event(&self, event: HookEvent, parent_info: &str) -> String;
 }
 
-impl HookFormatter for EditorProviders {
+impl HookFormatter for AgentClientProviders {
     fn format_hook_output(&self, hook_event_name: &str, result: &HookResult) -> String {
-        EditorProvider::format_hook_output(self, hook_event_name, result)
+        AgentClientProvider::format_hook_output(self, hook_event_name, result)
     }
 
     fn native_event_from_hook_event(&self, event: HookEvent, parent_info: &str) -> String {
-        EditorProvider::native_event_from_hook_event(self, event, parent_info)
+        AgentClientProvider::native_event_from_hook_event(self, event, parent_info)
     }
 }
 
@@ -150,6 +150,8 @@ pub trait IssueTracker {
     fn create_issue(&self, title: &str, body: &str, milestone: Option<i64>) -> ProviderResult<String>;
     fn close_issue(&self, issue_url: &str) -> ProviderResult<()>;
     fn reopen_issue(&self, issue_url: &str) -> ProviderResult<()>;
+    fn update_issue_title(&self, issue_url: &str, title: &str) -> ProviderResult<()>;
+    fn delete_issue(&self, issue_url: &str) -> ProviderResult<()>;
     fn get_issue_details(&self, issue_url: &str) -> ProviderResult<Option<ManagementIssue>>;
     fn add_comment(&self, issue_url: &str, comment: &str) -> ProviderResult<()>;
     fn add_labels(&self, issue_url: &str, labels: &[String]) -> ProviderResult<()>;
@@ -168,6 +170,8 @@ impl IssueTracker for ManagementProviders {
     fn reopen_issue(&self, issue_url: &str) -> ProviderResult<()> {
         ManagementProvider::reopen_issue(self, issue_url)
     }
+    fn update_issue_title(&self, issue_url: &str, title: &str) -> ProviderResult<()> { ManagementProvider::update_issue_title(self, issue_url, title) }
+    fn delete_issue(&self, issue_url: &str) -> ProviderResult<()> { ManagementProvider::delete_issue(self, issue_url) }
     fn get_issue_details(&self, issue_url: &str) -> ProviderResult<Option<ManagementIssue>> {
         ManagementProvider::get_issue_details(self, issue_url)
     }

@@ -43,6 +43,8 @@ semio-framework-value = { workspace = true }
 semio-framework-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-command = { path = "../../🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", features = ["record-codec-laws"] }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

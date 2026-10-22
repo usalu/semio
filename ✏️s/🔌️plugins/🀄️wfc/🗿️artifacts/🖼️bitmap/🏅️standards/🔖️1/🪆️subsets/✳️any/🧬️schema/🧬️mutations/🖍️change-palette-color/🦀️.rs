@@ -30,6 +30,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "palette-color", kind: "change-palette-color", record: "ChangedPaletteColor" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change palette colour {}", self.index), &format!("Palettenfarbe {} ändern", self.index))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for ChangePaletteColor
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<ChangePaletteColor>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -39,8 +48,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change palette colour {}", self.index), &format!("Palettenfarbe {} ändern", self.index))
-    }
 }
 //#endregion 🔖️ChangePaletteColor

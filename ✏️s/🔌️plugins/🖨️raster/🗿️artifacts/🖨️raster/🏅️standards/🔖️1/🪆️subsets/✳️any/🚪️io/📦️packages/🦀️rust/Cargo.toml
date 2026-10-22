@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testkit = ["semio-s-artifact-raster-raster-io-media-bridge/testkit"]
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-raster-raster-io-media-bridge = { workspace = true }
 base64_codec = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

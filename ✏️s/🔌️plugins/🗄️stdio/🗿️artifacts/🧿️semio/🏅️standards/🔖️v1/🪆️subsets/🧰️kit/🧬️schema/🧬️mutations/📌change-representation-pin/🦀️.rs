@@ -19,7 +19,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation-pin", kind: "change-representation-pin", record: "ChangedRepresentationPin" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Re-pin representation at #{}", self.index), &format!("Repräsentation bei #{} neu anheften", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioKitSnapshot, Op> for ChangeRepresentationPin
+where
+    Op: protocol::ColdMutation<SemioKitSnapshot, ReferenceDiff = crate::schema::diff::SemioKitDiff> + From<ChangeRepresentationPin>,
+{
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioKitSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,11 +40,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Re-pin representation at #{}", self.index), &format!("Repräsentation bei #{} neu anheften", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -60,8 +60,8 @@ export async function measureCacheTreeV1(path:string,ports:CacheRunnerPortsV1,li
    if(++entries>limit){partial=true;stack.length=0;break;}
    if(entries%runtime.checkEvery===0)await tick();
    const full=join(directory,child.name);
-   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch{}continue;}
-   let info;try{info=await lstat(full);}catch{continue;}
+   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){directories=Math.max(directories,ports.now());recency=Math.max(recency,ports.now());}}continue;}
+   let info;try{info=await lstat(full);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")recency=Math.max(recency,ports.now());continue;}
    if(info.isSymbolicLink())continue;
    if(info.nlink>1){const exact=Number.isSafeInteger(info.ino)?info:await lstat(full,{bigint:true}).catch(()=>info),key=exact.dev+":"+exact.ino;if(seen.has(key))continue;seen.add(key);}
    bytes+=allocated(info);files++;recency=Math.max(recency,info.mtimeMs,info.atimeMs);
@@ -196,7 +196,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
 export async function undeclaredEntriesV1(workspace:string,ledger:CacheLedgerV1,root:CacheRootIdV1):Promise<readonly string[]>{
  const base=cacheRootDirectoryV1(workspace,ledger,root),found:string[]=[],pending=[""];
  while(pending.length){
-  const prefix=pending.shift()!;let names:string[];try{names=await readdir(prefix?join(base,...prefix.split("/")):base);}catch{continue;}
+  const prefix=pending.shift()!;let names:string[];try{names=await readdir(prefix?join(base,...prefix.split("/")):base);}catch(error){if(prefix&&(error as NodeJS.ErrnoException).code==="ENOTDIR"){const path=root+":"+prefix;throw Error(cacheTextV1("en","error.container",{path})+"\n"+cacheTextV1("de","error.container",{path}));}continue;}
   for(const name of names.sort()){
    const path=prefix?prefix+"/"+name:name,kind=classifyCachePathV1(ledger,root,path).kind;
    if(kind==="undeclared")found.push(path);else if(kind==="container")pending.push(path);

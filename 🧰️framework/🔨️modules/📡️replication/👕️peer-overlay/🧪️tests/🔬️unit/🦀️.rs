@@ -4,7 +4,7 @@ use super::*;
 use crate::{PresenceDomain, PresenceInteraction, PresencePeer, PresenceViewKind, PresenceWindowView};
 
 fn load_fixture() -> serde_json::Value {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/👕️peer-overlay-v1/🔣️.json");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json");
     let text = std::fs::read_to_string(path).expect("peer-overlay fixture");
     serde_json::from_str(&text).expect("peer-overlay fixture json")
 }

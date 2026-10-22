@@ -473,9 +473,9 @@ pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 }
 
 pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let inverse = <RasterMutation as ColdMutation<RasterSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let stepped = bridge_step(&base, &mutation);
     Mutation::retire_cold(mutation);
     retire_bridge_snapshot(base);
@@ -524,7 +524,7 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
 pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
-    protocol::apply_diff(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+    protocol::apply_diff_cold(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 
@@ -532,10 +532,10 @@ pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutatio
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
-    use protocol::Mutation;
-    let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
+    use protocol::{ColdMutation, Mutation};
+    let (diff, raised) = <RasterMutation as ColdMutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
     let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
-    let applied = protocol::apply_diff(&diff, snapshot);
+    let applied = protocol::apply_diff_cold(&diff, snapshot);
     <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(diff);
     match applied {
         Ok(next) => Ok((next, messages)),

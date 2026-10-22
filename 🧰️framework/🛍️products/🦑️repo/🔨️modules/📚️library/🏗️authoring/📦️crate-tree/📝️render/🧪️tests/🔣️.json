@@ -1,0 +1,401 @@
+{
+ "version": 1,
+ "relative": [
+  {
+   "from": "/a/b",
+   "to": "/a/c",
+   "expected": "../c"
+  },
+  {
+   "from": "/a/b",
+   "to": "/a/b",
+   "expected": "."
+  },
+  {
+   "from": "/a",
+   "to": "/a/b/c",
+   "expected": "b/c"
+  },
+  {
+   "from": "/a/b/c",
+   "to": "/a",
+   "expected": "../.."
+  },
+  {
+   "from": "/a/b",
+   "to": "/x/y",
+   "expected": "../../x/y"
+  }
+ ],
+ "compare": [
+  {
+   "left": "a",
+   "right": "b",
+   "sign": -1
+  },
+  {
+   "left": "b",
+   "right": "a",
+   "sign": 1
+  },
+  {
+   "left": "a",
+   "right": "a",
+   "sign": 0
+  },
+  {
+   "left": "Z",
+   "right": "a",
+   "sign": -1
+  },
+  {
+   "left": "é",
+   "right": "z",
+   "sign": 1
+  },
+  {
+   "left": "a",
+   "right": "ab",
+   "sign": -1
+  },
+  {
+   "left": "🧪",
+   "right": "z",
+   "sign": 1
+  },
+  {
+   "left": "",
+   "right": "a",
+   "sign": -1
+  },
+  {
+   "left": "a-b",
+   "right": "a_b",
+   "sign": -1
+  },
+  {
+   "left": "a_b",
+   "right": "a-b",
+   "sign": 1
+  }
+ ],
+ "manifest": {
+  "text": "[package]\nname = \"orig\"\n\n[dependencies]\nserde = \"1\"\n# comment\na = { path = \"../a\" }\n\n[dev-dependencies]\nmock = \"3\"\n\n[features]\nf = []\n\n[[bin]]\nname = \"x\"\n\n[build-dependencies]\ncc = \"1\"\n\n[patch.crates-io]\nq = { path = \"../q\" }\n\n[package.metadata.semio.rust-source-boundary]\nk = 1\n\n[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n\n[target.'cfg(windows)'.dependencies]\nwinapi = \"0.3\"\n",
+  "dependencies": [
+   "serde = \"1\"",
+   "a = { path = \"../a\" }"
+  ],
+  "devDependencies": [
+   "mock = \"3\""
+  ],
+  "targetSections": [
+   "[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n",
+   "[target.'cfg(windows)'.dependencies]\nwinapi = \"0.3\"\n"
+  ],
+  "unsupported": [
+   "features",
+   "bin",
+   "build-dependencies",
+   "patch.crates-io",
+   "package.metadata.semio.rust-source-boundary"
+  ]
+ },
+ "manifestDefect": {
+  "text": "[dependencies]\nserde = \"1\"\n[dependencies.tabled]\nversion = \"3\"\n",
+  "expectedUnsupportedContains": "dependencies.tabled",
+  "defect": "📝️render/🟦️.ts:readManifestDependencyRows treats `[dependencies.tabled]` as a different section and silently drops its rows, instead of flagging it unsupported like `[features]` (same blind spot as the dependency inventory, F1)"
+ },
+ "rebase": [
+  {
+   "row": "a = { path = \"../x\", version = \"1\" }",
+   "from": "/w/a",
+   "to": "/w/b",
+   "expected": "a = { path = \"../x\", version = \"1\" }"
+  },
+  {
+   "row": "a = { path = \"../x\" }",
+   "from": "/w/a/sub",
+   "to": "/w/b",
+   "expected": "a = { path = \"../a/x\" }"
+  },
+  {
+   "row": "serde = \"1\"",
+   "from": "/w/a",
+   "to": "/w/b",
+   "expected": "serde = \"1\""
+  },
+  {
+   "row": "a = { path = \"p\" }, b = { path = \"../q\" }",
+   "from": "/w/a",
+   "to": "/w",
+   "expected": "a = { path = \"a/p\" }, b = { path = \"q\" }"
+  }
+ ],
+ "keys": [
+  {
+   "row": "serde = \"1\"",
+   "expected": "serde"
+  },
+  {
+   "row": "  a-b_c = { x = 1 }",
+   "expected": "a-b_c"
+  },
+  {
+   "row": "no equals",
+   "expected": ""
+  },
+  {
+   "row": "[x]",
+   "expected": ""
+  },
+  {
+   "row": "a.workspace = true",
+   "expected": ""
+  },
+  {
+   "row": "",
+   "expected": ""
+  }
+ ],
+ "render": [
+  {
+   "name": "dependencies sort by byte order and empty sections vanish",
+   "spec": {
+    "name": "art-x",
+    "description": "A \"quoted\" crate",
+    "workspaceRel": "../..",
+    "libPath": "src/lib.rs",
+    "dependencyRows": [
+     "serde = \"1\"",
+     "Zed = { path = \"../z\" }",
+     "a = \"2\""
+    ],
+    "devDependencyRows": [],
+    "targetSections": []
+   },
+   "expected": "[package]\nworkspace = \"../..\"\nname = \"art-x\"\nversion.workspace = true\nedition.workspace = true\nrust-version.workspace = true\ndescription = \"A \\\"quoted\\\" crate\"\n\n[package.metadata.semio]\nrole = \"library\"\n\n[lints]\nworkspace = true\n\n[lib]\npath = \"src/lib.rs\"\n\n[dependencies]\nZed = { path = \"../z\" }\na = \"2\"\nserde = \"1\"\n"
+  },
+  {
+   "name": "features, dev dependencies and target sections follow",
+   "spec": {
+    "name": "art-y",
+    "description": "d",
+    "workspaceRel": "..",
+    "libPath": "l.rs",
+    "dependencyRows": [],
+    "devDependencyRows": [
+     "m = \"1\"",
+     "b = \"2\""
+    ],
+    "targetSections": [
+     "[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n\n\n"
+    ],
+    "featureRows": [
+     "f = []",
+     "g = [\"f\"]"
+    ]
+   },
+   "expected": "[package]\nworkspace = \"..\"\nname = \"art-y\"\nversion.workspace = true\nedition.workspace = true\nrust-version.workspace = true\ndescription = \"d\"\n\n[package.metadata.semio]\nrole = \"library\"\n\n[lints]\nworkspace = true\n\n[lib]\npath = \"l.rs\"\n\n[dependencies]\n\n[features]\nf = []\ng = [\"f\"]\n\n[dev-dependencies]\nb = \"2\"\nm = \"1\"\n\n[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n"
+  }
+ ],
+ "hiding": [
+  {
+   "member": "a/b/c",
+   "patterns": [
+    "a/b"
+   ],
+   "expected": "a/b"
+  },
+  {
+   "member": "a/b",
+   "patterns": [],
+   "expected": null
+  },
+  {
+   "member": "x/y",
+   "patterns": [
+    "x/**"
+   ],
+   "expected": "x/**"
+  },
+  {
+   "member": "p/target/q",
+   "patterns": [
+    "**/target"
+   ],
+   "expected": "**/target"
+  },
+  {
+   "member": "a",
+   "patterns": [
+    "*"
+   ],
+   "expected": "*"
+  },
+  {
+   "member": "a/b",
+   "patterns": [
+    "c",
+    "d/**"
+   ],
+   "expected": null
+  },
+  {
+   "member": "x",
+   "patterns": [
+    "x/**"
+   ],
+   "expected": "x/**"
+  },
+  {
+   "member": "a/b/c",
+   "patterns": [
+    "z",
+    "a"
+   ],
+   "expected": "a"
+  }
+ ],
+ "admission": [
+  {
+   "name": "visible members",
+   "manifest": "[workspace]\nmembers = [\"a\", \"b/c\"]\nexclude = [\"zz\"]\n",
+   "problems": []
+  },
+  {
+   "name": "a hidden member",
+   "manifest": "[workspace]\nmembers = [\"a\", \"b/c\"]\n\n[workspace.metadata.semio.repository]\nexclude-patterns = [\"b\"]\n",
+   "problems": [
+    "member b/c is hidden from repository discovery by exclude pattern b"
+   ]
+  },
+  {
+   "name": "cargo exclude without repository metadata",
+   "manifest": "[workspace]\nmembers = [\"a\"]\nexclude = [\"a\"]\n",
+   "problems": [
+    "member a is hidden from repository discovery by exclude pattern a"
+   ]
+  },
+  {
+   "name": "no workspace table",
+   "manifest": "[package]\nname = \"x\"\n",
+   "problems": [
+    "manifest has no [workspace] table"
+   ]
+  }
+ ],
+ "addMembers": [
+  {
+   "name": "members are merged in byte order",
+   "manifest": "[workspace]\nmembers = [\n  \"z\",\n  \"a\",\n]\n",
+   "additions": [
+    "m",
+    "a"
+   ],
+   "expected": "[workspace]\nmembers = [\n  \"a\",\n  \"m\",\n  \"z\",\n]\n"
+  },
+  {
+   "name": "an exclusion that would hide an addition is lifted",
+   "manifest": "[workspace]\nmembers = [\"a\"]\nexclude = [\n  \"m\",\n  \"keep\",\n]\n",
+   "additions": [
+    "m/x"
+   ],
+   "expected": "[workspace]\nmembers = [\n  \"a\",\n  \"m/x\",\n]\nexclude = [\n  \"keep\",\n]\n"
+  }
+ ],
+ "lock": {
+  "text": "# This file is automatically @generated by Cargo.\nversion = 4\n\n[[package]]\nname = \"art\"\nversion = \"0.2.0\"\ndependencies = [\n \"serde\",\n \"zzz\",\n]\n\n[[package]]\nname = \"art-old\"\nversion = \"0.2.0\"\ndependencies = [\n \"serde\",\n]\n\n[[package]]\nname = \"other\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\ndependencies = [\n \"art-old\",\n]\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+  "artifact": "art",
+  "carved": [
+   {
+    "name": "art-new",
+    "dependsOn": [
+     "serde"
+    ]
+   }
+  ],
+  "members": [
+   "art-keep"
+  ],
+  "expected": "# This file is automatically @generated by Cargo.\nversion = 4\n\n[[package]]\nname = \"art\"\nversion = \"0.2.0\"\ndependencies = [\n \"art-new\",\n \"serde\",\n \"zzz\",\n]\n\n[[package]]\nname = \"art-new\"\nversion = \"0.2.0\"\ndependencies = [\n \"serde\",\n \"zzz\",\n]\n\n[[package]]\nname = \"other\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\n"
+ },
+ "router": [
+  {
+   "name": "an extension router call",
+   "script": "await runRepositoryCargoTests([\"art\", \"zed\"]);\n",
+   "artifact": "art",
+   "additions": [
+    "art-b",
+    "art-a"
+   ],
+   "expected": "await runRepositoryCargoTests([\"art\", \"art-a\", \"art-b\", \"zed\"]);\n"
+  },
+  {
+   "name": "a router call without options",
+   "script": "runArtifactRustPackageMain(import.meta.dir, \"art\")\n",
+   "artifact": "art",
+   "additions": [
+    "art-x"
+   ],
+   "expected": "runArtifactRustPackageMain(import.meta.dir, \"art\", { packages: [\"art\", \"art-x\"] })\n"
+  },
+  {
+   "name": "a router call with options",
+   "script": "runArtifactRustPackageMain(import.meta.dir, \"art\", {\n  x: 1,\n})\n",
+   "artifact": "art",
+   "additions": [
+    "art-x"
+   ],
+   "expected": "runArtifactRustPackageMain(import.meta.dir, \"art\", { packages: [\"art\", \"art-x\"],\n  x: 1,\n})\n"
+  },
+  {
+   "name": "existing packages are replaced and sorted",
+   "script": "runArtifactRustPackageMain(d, \"art\", { packages: [\"art\", \"art-b\"] })\n",
+   "artifact": "art",
+   "additions": [
+    "art-a"
+   ],
+   "expected": "runArtifactRustPackageMain(d, \"art\", { packages: [\"art\", \"art-a\", \"art-b\"] })\n"
+  }
+ ],
+ "includes": [
+  {
+   "text": "let a = include_str!(\"data/x.txt\");\nlet b = include_bytes!(\"../y.bin\");\nlet c = include!(\"z.rs\");\nlet d = include_str!(concat!(\"a\", \"b\"));",
+   "from": "/w/a/src",
+   "to": "/w/a/src/deep",
+   "expected": "let a = include_str!(\"../data/x.txt\");\nlet b = include_bytes!(\"../../y.bin\");\nlet c = include!(\"../z.rs\");\nlet d = include_str!(concat!(\"a\", \"b\"));"
+  },
+  {
+   "text": "include_str!(\"x.txt\")",
+   "from": "/w/a",
+   "to": "/w/a",
+   "expected": "include_str!(\"x.txt\")"
+  },
+  {
+   "text": "let s = \"include_str!(\\\"x\\\")\"; // include_str!(\"c\")",
+   "from": "/w/a",
+   "to": "/w/b",
+   "expected": "let s = \"include_str!(\\\"x\\\")\"; // include_str!(\"c\")"
+  }
+ ],
+ "manifestPaths": [
+  {
+   "text": "let p = concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/data/x\");\nlet q = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"fixtures/y\");\nlet r = fixture_text!(\"assets/z\");\nlet s = fixture_path!(\"@fixtures/keep\");",
+   "from": "/w/a",
+   "to": "/w/b/c",
+   "expected": "let p = concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../a/data/x\");\nlet q = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../a/fixtures/y\");\nlet r = fixture_text!(\"../../a/assets/z\");\nlet s = fixture_path!(\"@fixtures/keep\");"
+  },
+  {
+   "text": "let x = 1;",
+   "from": "/w/a",
+   "to": "/w/b",
+   "expected": "let x = 1;"
+  },
+  {
+   "text": "fixture_text!(\"a\")",
+   "from": "/w/a",
+   "to": "/w/a",
+   "expected": "fixture_text!(\"a\")"
+  }
+ ]
+}

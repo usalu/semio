@@ -14,8 +14,15 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateDesignOption> + From<crate::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "design-option", kind: "create-design-option", record: "CreateDesignOption" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::create_design_option::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::create_design_option::inverse::inverse(self, base)) }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create design option", "Anlegen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for CreateDesignOption
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<CreateDesignOption> + From<crate::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::create_design_option::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::create_design_option::inverse::inverse(self, base)) }
 }

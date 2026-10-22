@@ -1,0 +1,20 @@
+{
+ "📋️project.json": "f3b170372f41f3f363394dbb692f92c01eb778cfb062e81bc4add82a1a30cfe1",
+ "🧰️framework/🛍️products/🦑️repo/README.md": "e6b6dabba583e8b0f8061892d683ed00d4c936fb2d3fac2510212a67a6c26d7a",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json": "3d148c5255f90143cb593a449f1ffff25ee58a9e8946299f28c4577b1f7aa1e4",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts": "87ba6dfaeb6b5a6d4e9c488bbc069628b8a82f83387beb886e027ee6dbf3bd6e",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧬️schema/🔣️.json": "3d44dccdb58c6efc485ec4fe636ebf12e552284c150edcc44a93feccc3e2ef3c",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts": "3ff9c6d35a949e45682c56e1423df020917a3cdd4b982a9fc3c4da458c626bb5",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json": "033beb76e03a0cc2848ee2c97f813103e2e27395ee009b523865b1ecd41b7bc7",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧬️schema/🔣️.json": "a693eb2616abef5524b6a58f940fbf252cee7539ac0861a2ea79cacd80532f98",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts": "0f8e2a37583e800e3e40012c86f234f9d65d0b77bbc74e443409a1717d2fe670",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts": "8e57e43bc1a371b2b225676911a5fb7f37b6b34ca335337fd7e51fe38deb176a",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts": "a24db84246142ebb737de9e48eb507bfa799084f65d5f6d727c2c17dcc16f37a",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts": "3b91f3da39445a31218f4a1ad6d7e4c9fa1c952d650da0ec26a64c7c4f3c401a",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/📡️wire.json": "f1eb2db195be3eb2c5b9802060fe73d6b1d24cfb13d0510b223c831b2168f274",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🌐️remote-cache.json": "2a632058624293d5096778e415a1f7299f4be5a3b0cf610336d65665281e2a9d",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": "b021ff9acf42e3f1e32a30d701aff8f8e239d2195c08497cd4fb1f11bc9fccba",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": "ef8ef6c92e4e6cb0076ab6c02eaee7128b19d7d0a0db7805be86f9f81911f564",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts": "ca14d639a002f546233f2578b3b74d7d90a719cdf67373817fb044420c154349",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts": "9aa2045fac3dd1b3c9193b2ed77cea69c1a60b6df0197c01a9523b1fda8a22ea"
+}

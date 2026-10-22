@@ -400,7 +400,7 @@ export async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
   expect(project.targets[vector.target].executor).toBe("repo:script");
-  expect(project.targets[vector.target].options).toEqual({ cwd: relative(getWorkspaceRoot(), packageRoot).replaceAll("\\", "/"), command: `bun ./📜️script.ts test ${vector.command}` });
+  expect(project.targets[vector.target].options).toEqual({ cwd: relative(getWorkspaceRoot(), packageRoot).replaceAll("\\", "/"), command: `repo ./📜️script.ts test ${vector.command}` });
   const ts = await import("typescript"), sourcePath = join(packageRoot, "📜️script.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
   expect(declarations).toHaveLength(1);

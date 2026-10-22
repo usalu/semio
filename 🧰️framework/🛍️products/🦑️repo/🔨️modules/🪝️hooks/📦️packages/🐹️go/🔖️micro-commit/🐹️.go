@@ -2,7 +2,7 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// 🔖️micro-commit carries the micro-commit delegation, the git hook installation and the bun resolution.
+// 🔖️micro-commit carries the micro-commit delegation, the git hook installation and the start of the script through the repo command.
 
 // #endregion 🧲️Header
 
@@ -15,7 +15,6 @@ import (
 	os "os"
 	exec "os/exec"
 	filepath "path/filepath"
-	strings "strings"
 
 	providers "github.com/usalu/semio/repo/providers"
 	workspace "github.com/usalu/semio/repo/workspace"
@@ -23,38 +22,20 @@ import (
 
 // #region 🔖️MicroCommitDelegation
 
-// 📜️MicroCommitArgv answers the argv the repo binary hands to bun for a micro-commit subcommand.
-func MicroCommitArgv(bun string, args []string) []string {
-	argv := []string{bun, "./📜️script.ts", "micro-commit"}
+// 📜️MicroCommitArgv answers the argv the repo binary hands to its own script route for a micro-commit subcommand.
+func MicroCommitArgv(repo string, args []string) []string {
+	argv := []string{repo, "./📜️script.ts", "micro-commit"}
 	return append(argv, args...)
 }
 
-// 🕯️BunCandidates lists every place a bun binary is looked for, in order.
-func BunCandidates(repoRoot string, pinned string, bunInstall string) []string {
-	candidates := []string{}
-	if strings.TrimSpace(pinned) != "" {
-		candidates = append(candidates, strings.TrimSpace(pinned))
-	}
-	candidates = append(candidates, filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun"))
-	if strings.TrimSpace(bunInstall) != "" {
-		for _, name := range []string{"bun", "bun.exe"} {
-			candidates = append(candidates, filepath.Join(strings.TrimSpace(bunInstall), "bin", name))
-		}
-	}
-	for _, relative := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
-		candidates = append(candidates, filepath.Join(repoRoot, relative))
-	}
-	return candidates
-}
-
 // 🔖️RunMicroCommit delegates a micro-commit subcommand to the monorepo script through the process runner.
-func RunMicroCommit(runner providers.ProcessRunner, repoRoot string, bun string, args []string) providers.ProcessOutcome {
-	return runner.Run(providers.ProcessRequest{Argv: MicroCommitArgv(bun, args), Cwd: repoRoot})
+func RunMicroCommit(runner providers.ProcessRunner, repoRoot string, repo string, args []string) providers.ProcessOutcome {
+	return runner.Run(providers.ProcessRequest{Argv: MicroCommitArgv(repo, args), Cwd: repoRoot})
 }
 
 // ♻️RunMicroCommitReset is the `micro-commit reset` delegation every post-checkpoint git hook performs.
-func RunMicroCommitReset(runner providers.ProcessRunner, repoRoot string, bun string) providers.ProcessOutcome {
-	return RunMicroCommit(runner, repoRoot, bun, []string{"reset"})
+func RunMicroCommitReset(runner providers.ProcessRunner, repoRoot string, repo string) providers.ProcessOutcome {
+	return RunMicroCommit(runner, repoRoot, repo, []string{"reset"})
 }
 
 // #endregion 🔖️MicroCommitDelegation
@@ -133,12 +114,12 @@ func RemoveGitHooks(repoRoot string) ([]string, error) {
 // #region 🔖️MicroCommit
 
 func RunMicroCommitScript(ctx context.Context, repoRoot string, args []string) error {
-	bun, err := resolveBunBinary(repoRoot)
+	repo, err := repoExecutable()
 	if err != nil {
 		return err
 	}
 	cmdArgs := append([]string{"./📜️script.ts", "micro-commit"}, args...)
-	c := exec.CommandContext(ctx, bun, cmdArgs...)
+	c := workspace.ToolCommandContext(ctx, repo, cmdArgs...)
 	c.Dir = repoRoot
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -153,38 +134,7 @@ func RunMicroCommitScript(ctx context.Context, repoRoot string, args []string) e
 	return nil
 }
 
-func resolveBunBinary(repoRoot string) (string, error) {
-	if pinned := strings.TrimSpace(os.Getenv("COMPOSE_BUN")); pinned != "" {
-		if _, err := os.Stat(pinned); err == nil {
-			return pinned, nil
-		}
-	}
-	pinPath := filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun")
-	if data, err := os.ReadFile(pinPath); err == nil {
-		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
-			if _, statErr := os.Stat(line); statErr == nil {
-				return line, nil
-			}
-		}
-	}
-	if bunInstall := strings.TrimSpace(os.Getenv("BUN_INSTALL")); bunInstall != "" {
-		for _, name := range []string{"bun", "bun.exe"} {
-			candidate := filepath.Join(bunInstall, "bin", name)
-			if _, err := os.Stat(candidate); err == nil {
-				return candidate, nil
-			}
-		}
-	}
-	for _, rel := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
-		candidate := filepath.Join(repoRoot, rel)
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
-		}
-	}
-	if path, err := exec.LookPath("bun"); err == nil {
-		return path, nil
-	}
-	return "", fmt.Errorf("bun not found — install bun or set COMPOSE_BUN")
-}
+// 🚀️repoExecutable is the running repo command: the micro-commit script starts through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here.
+func repoExecutable() (string, error) { return os.Executable() }
 
 // #endregion 🔖️MicroCommit

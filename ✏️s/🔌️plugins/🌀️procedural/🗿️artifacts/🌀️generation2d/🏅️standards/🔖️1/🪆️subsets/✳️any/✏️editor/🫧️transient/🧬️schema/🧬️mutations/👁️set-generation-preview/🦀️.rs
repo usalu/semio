@@ -15,6 +15,16 @@ pub struct SetGenerationPreview {
 
 impl protocol::MutationKind<Generation2dTransient, Generation2dTransientMutation> for SetGenerationPreview {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "generation-preview", kind: "set-generation-preview", record: "SetGenerationPreview" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Generation Preview", "Erzeugungsvorschau setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["generationPreviewText".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<Generation2dTransient, Generation2dTransientMutation> for SetGenerationPreview {
     fn diff(&self, _base: &Generation2dTransient) -> protocol::MutationOutcome<Generation2dTransientPatch> {
         protocol::MutationOutcome::new(Generation2dTransientPatch { generation_preview_text: Some(Generation2dPreviewTextChange { text: self.preview_text.clone() }), ..Default::default() })
     }
@@ -24,10 +34,4 @@ impl protocol::MutationKind<Generation2dTransient, Generation2dTransientMutation
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Generation Preview", "Erzeugungsvorschau setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["generationPreviewText".into()]
-    }
 }

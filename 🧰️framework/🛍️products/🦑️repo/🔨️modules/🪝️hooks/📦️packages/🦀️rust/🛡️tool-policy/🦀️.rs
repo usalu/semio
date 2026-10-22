@@ -223,7 +223,7 @@ pub fn resolve_hook_event(name: &str, client: &str, tool_name: &str, input: Opti
     if tool_name == "Glob" && input.is_some() {
         kind = ToolKind::Generic;
     }
-    match get_editor_provider(client) {
+    match get_agent_client_provider(client) {
         Some(provider) => provider.resolve_native_event(name, kind).map_err(|error| HookError::new(error.message)),
         None => resolve_claude_compatible_event(name, kind).map_err(|error| HookError::new(error.message)),
     }

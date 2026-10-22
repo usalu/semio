@@ -225,7 +225,7 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     const adminDevCommand = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8")).targets?.["dev-secure-admin"]?.options?.command;
     if (sessionSource.includes("sessionStorage") || sessionSource.includes("headers.authorization") || sessionSource.includes("Bearer ${") || !sessionSource.includes("#semio-admin=") || !sessionSource.includes('credentials: "same-origin"'))
       throw new Error("admin SPA regained a browser-owned bearer carrier");
-    if (viteSource.includes('"/admin/api": hubProxy') || adminDevCommand !== "bun ./📜️script.ts dev secure-admin") throw new Error("admin relay dev target ownership drift");
+    if (viteSource.includes('"/admin/api": hubProxy') || adminDevCommand !== "repo ./📜️script.ts dev secure-admin") throw new Error("admin relay dev target ownership drift");
   } finally {
     await relay?.stop();
     await upstreamServer.stop(true);

@@ -2,7 +2,7 @@
 //! reachable through the aggregate.
 
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapSnapshot};
 use protocol::SemanticMutation;
 
@@ -74,7 +74,7 @@ fn an_unknown_op_line_is_refused() {
 fn applying_a_refused_mutation_leaves_the_document_untouched() {
     let base = scene();
     let mut snapshot = base.clone();
-    let outcome = <BitmapMutation as Mutation<BitmapSnapshot>>::diff(&unpin_pixel(9, 9), &base);
+    let outcome = <BitmapMutation as ColdMutation<BitmapSnapshot>>::diff(&unpin_pixel(9, 9), &base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
     vcs::apply_mutation(&snapshot, &unpin_pixel(9, 9)).map(|(applied_state, _)| { snapshot = applied_state; }).expect("an empty refused diff still applies as a no-op");
     assert_eq!(snapshot, base);

@@ -1,16 +1,16 @@
-import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
-import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
+import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import { artifactsStorageSchema as publicationSchema } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
-import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
-import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "@semio-tech/framework-os-dev/activation";
-export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "@semio-tech/framework-os-dev/activation";
+import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
+export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
 import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
@@ -140,9 +140,13 @@ export function playgroundSessionPublicationV1(variant:string,projection:Generat
 export async function stagePlaygroundSession(workspace:string,invocation:ScriptInvocation,variant:string,projection:GeneratedCatalogProjection):Promise<{readonly path:string;readonly session:PlaygroundSession}>{
  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)||variant.length>64)throw Error("Finite authored session variant required");
  const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode;if(workspace!==authority.repositoryRoot)throw Error("Actual session Original workspace required");const contents=playgroundSessionPublicationV1(variant,projection),session=buildPlaygroundSession(variant,projection),phase=scriptCompilerAdmissionControlV1(invocation,"browser:session",0),sessionsRoot=playgroundSessionsRootV1(workspace,mode),output=join(sessionsRoot,variant);
- return withRepositoryCacheStoreV1(workspace,"products",invocation,phase,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/session/"+variant}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
+ const stage=()=>withRepositoryCacheStoreV1(workspace,"products",invocation,phase,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/session/"+variant}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
   const files=new Map<string,string>();for(const row of contents){const path=join(sink.directory,row.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,row.text,{flag:"wx"});files.set(row.path,path);}
   await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:output},destination=>stageRepositoryArtifacts(destination,"playground-session:"+variant,files));
   return {path:playgroundSessionStagedOutputPath(sessionsRoot,variant),session};
  })));
+ for(let attempt=1;;attempt++){
+  try{return await stage();}
+  catch(error){if(attempt>=schema.definitions.Protocol.const.siblingStagingAttempts||!(error instanceof Error)||error.message!=="Original relative directory facts changed")throw error;await new Promise(accept=>setTimeout(accept,attempt*250+Math.floor(Math.random()*250)));}
+ }
 }

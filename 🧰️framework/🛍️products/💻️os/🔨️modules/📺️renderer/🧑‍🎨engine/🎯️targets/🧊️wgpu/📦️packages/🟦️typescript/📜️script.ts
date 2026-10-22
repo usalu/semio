@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation, scriptInvocationEnvironment,createIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -22,6 +22,8 @@ import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import { runNativeBinary } from "../../⌨️native-entrypoint/🟦️.ts";
 import { listModuleTree, readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📇️ Verifies actual native publication and launch against the independent catalog selection oracle. */
 class NativeEntrypointCatalogTestScript extends BundleScript {
@@ -34,11 +36,11 @@ class NativeEntrypointCatalogTestScript extends BundleScript {
 }
 
 const repoRoot = findWorkspaceRoot();
-const rustPackageRoot = resolve(import.meta.dir, "../🦀️rust");
+const rustPackageRoot = resolve(import.meta.dirname, "../🦀️rust");
 const crateName = "semio-framework-os-renderer-wgpu";
 
 function assertRendererOutputOwnership(): number {
-  const project = JSON.parse(readFileSync(join(import.meta.dir, "📋️project.json"), "utf8"));
+  const project = JSON.parse(readFileSync(join(import.meta.dirname, "📋️project.json"), "utf8"));
   for (const profile of ["prototype", "release"]) {
     const target = { ...project.targets.wasm, ...project.targets.wasm.configurations[profile] };
     assert.equal(target.cache, true);
@@ -101,7 +103,7 @@ class SocketSnapshotSqliteScript extends BundleScript {
   if(segments[0]==="native"){await runAdmittedCargoPackageTestsV1([crateName], this.repoRoot, this.invocation, ["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
   const file=resolve(this.root,"../../🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts");
   await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
-  await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
+  await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file],{cwd:this.repoRoot,budgetMs:120000});
  }
 }
 
@@ -116,7 +118,7 @@ class OriginalFrameSourceScript extends BundleScript {
     if (args.length) throw new Error("Expected test-original-frame-source");
     const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     const files = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🧪️tests/🟦️.ts"].map(file=>resolve(this.repoRoot,file));
-    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...files], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), ...files], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", ...files], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
   }
 }
@@ -128,7 +130,7 @@ class OriginalIoInvocationNativeScript extends BundleScript {
 
 /** 📤️ Checks exact nonempty media output and the actual original Source scalar adapter. */
 class OriginalBrowserOutputSourceScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw new Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw new Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw new Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw new Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),...sources]);await execute(["test",...sources]);}
 }
 /** 🦀️ Runs the actual retained native output with its same finite caller and complete nonempty snapshot. */
 class OriginalBrowserOutputNativeScript extends OriginalBrowserOutputSourceScript {
@@ -500,7 +502,7 @@ class BootCacheInputCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register(
     "native-environment-check",
     class extends BundleScript {
@@ -539,6 +541,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-frame-worker", CheckFrameWorkerScript)
   .register("lint", LintScript);
 
-if (import.meta.main) {
+if (isMainModuleV1(import.meta.url)) {
   await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));
 }

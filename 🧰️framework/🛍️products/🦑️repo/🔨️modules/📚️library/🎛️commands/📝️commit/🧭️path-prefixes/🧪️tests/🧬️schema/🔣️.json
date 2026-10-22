@@ -1,0 +1,221 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "repo",
+  "bundles",
+  "rowMatch",
+  "pathMatch",
+  "expected"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "repo": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "commits"
+   ],
+   "properties": {
+    "base": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "commits": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "subject",
+       "body",
+       "files"
+      ],
+      "properties": {
+       "subject": {
+        "type": "string"
+       },
+       "body": {
+        "type": "string"
+       },
+       "files": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "minItems": 2
+    }
+   }
+  },
+  "bundles": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "label",
+     "dates"
+    ],
+    "properties": {
+     "label": {
+      "type": "string"
+     },
+     "dates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "dateLine",
+        "bullets"
+       ],
+       "properties": {
+        "dateLine": {
+         "type": "string"
+        },
+        "bullets": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 2
+  },
+  "rowMatch": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "field",
+     "expected"
+    ],
+    "properties": {
+     "field": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "pathMatch": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "index",
+     "prefixSets",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "index": {
+      "type": "integer"
+     },
+     "prefixSets": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "expected": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "prefixSets",
+    "assigned",
+    "infer"
+   ],
+   "properties": {
+    "prefixSets": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "assigned": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "infer": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "label",
+       "paths",
+       "expected"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "paths": {
+        "anyOf": [
+         {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "expected": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

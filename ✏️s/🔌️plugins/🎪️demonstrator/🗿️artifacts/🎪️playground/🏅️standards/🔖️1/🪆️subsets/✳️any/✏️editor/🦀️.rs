@@ -233,7 +233,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Play
                     return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 }
                 let inverse = mutation.inverse(base.get())?;
-                let post = protocol::apply_diff(&mutation.diff(base.get()).into_parts().0, base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Playground mutation could not produce its post root"))?;
+                let post = protocol::apply_diff_cold(&mutation.diff(base.get()).into_parts().0, base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Playground mutation could not produce its post root"))?;
                 let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its mutation owner"))?;
                 *self.owners.candidate = Some((post, inverse, forward));
                 self.retained_bytes = completed_bytes;

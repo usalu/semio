@@ -10,6 +10,7 @@ import { Script } from "../../../../../../🔨️modules/🏃️process/📦️p
 import { spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import { runtimePackageCommandV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 const NATIVE_BOOTSTRAP_DIR = "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap";
 
@@ -81,7 +82,7 @@ export class SetupScript extends Script {
         prepare: () => console.log("[prepare] Build prerequisites completed"),
         devcontainer: (rest) => this.runDevcontainer(rest),
       },
-      "bun ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach>]",
+      "repo ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach>]",
     );
   }
 
@@ -94,7 +95,7 @@ export class SetupScript extends Script {
     await dispatchSubcommand(
       segments,
       { start: () => lifecycle.devcontainerStart(host, context), attach: () => lifecycle.devcontainerAttach(host, context) },
-      "bun ./📜️script.ts setup devcontainer <start|attach>",
+      "repo ./📜️script.ts setup devcontainer <start|attach>",
     );
   }
 
@@ -118,7 +119,7 @@ export class SetupScript extends Script {
     const platformPkg = pkgByKey[key];
     if (!platformPkg) return;
     if (existsSync(join(this.root, "node_modules", platformPkg))) return;
-    runCmd("bun", ["add", "--no-save", `${platformPkg}@${version}`], { cwd: this.root });
+    runCmd(...runtimePackageCommandV1("add", [`${platformPkg}@${version}`]), { cwd: this.root });
   }
 
   private runGit(): void {

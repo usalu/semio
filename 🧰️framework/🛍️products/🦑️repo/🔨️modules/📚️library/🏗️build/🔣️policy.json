@@ -1,9 +1,10 @@
 {
   "version": 1,
-  "defaultTool": "nx",
   "presentationResources": [
     "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json"
   ],
+  "javascriptInstall": "all",
+  "javascriptInstallRoots": [],
   "remoteCache": {
     "version": 1,
     "environment": {
@@ -31,10 +32,20 @@
     "server": {
       "host": "127.0.0.1",
       "port": 6090,
-      "directory": ".cache/remote-cache",
-      "maximumBytes": 4294967296,
+      "directory": ".🧬semio/🦑️repo/⚡️cache/remote-cache",
+      "maximumBytes": 2684354560,
       "maximumEntryBytes": 536870912,
       "maximumAgeDays": 30,
+      "readOnly": false,
+      "tls": null,
+      "actionResults": "complete",
+      "maximumActionResultBytes": 4194304,
+      "maintenanceSeconds": 300,
+      "environment": {
+        "readOnly": "SEMIO_REMOTE_CACHE_SERVER_READ_ONLY",
+        "tlsCertificate": "SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE",
+        "tlsKey": "SEMIO_REMOTE_CACHE_SERVER_TLS_KEY"
+      },
       "tokenEnvironment": {
         "read": "SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN",
         "write": "SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN"
@@ -47,8 +58,10 @@
       "📋️project.json",
       "Cargo.toml",
       "package.json",
-      "go.mod",
-      "bun.lock"
+      "go.mod"
+    ],
+    "lockEcosystems": [
+      "javascript"
     ],
     "suffixes": [
       ".patch",
@@ -74,10 +87,10 @@
     ],
     "sharedGlobals": [
       {
-        "runtime": "node -p \"process.platform.concat(process.arch)\""
+        "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
       },
       {
-        "runtime": "bun --version"
+        "runtime": "repo tools exec --light bun -- --version"
       },
       {
         "env": "SEMIO_BUILD_MODE"
@@ -112,7 +125,7 @@
     "uv": [
       "{projectRoot}/**/*.py",
       "{projectRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock"
+      "{projectRoot}/uv.lock"
     ],
     "dotnet": [
       "{projectRoot}/**/*.cs",
@@ -343,6 +356,43 @@
         "multiplex": false,
         "inProcess": false
       }
+    }
+  },
+  "remoteExecution": {
+    "version": 1,
+    "environment": {
+      "endpoint": "SEMIO_REMOTE_EXECUTION_ENDPOINT",
+      "platform": "SEMIO_REMOTE_EXECUTION_PLATFORM",
+      "instance": "SEMIO_REMOTE_EXECUTION_INSTANCE",
+      "properties": "SEMIO_REMOTE_EXECUTION_PROPERTIES",
+      "jobs": "SEMIO_REMOTE_EXECUTION_JOBS",
+      "scheduler": "SEMIO_REMOTE_EXECUTION_SCHEDULER",
+      "workerToken": "SEMIO_REMOTE_EXECUTION_WORKER_TOKEN"
+    },
+    "server": {
+      "host": "127.0.0.1",
+      "port": 8980,
+      "workerPort": 8981,
+      "defaultInstance": "main",
+      "localWorkers": 1,
+      "unmatchedSeconds": 120,
+      "lingerSeconds": 5,
+      "leaseSeconds": 30,
+      "maximumAttempts": 3,
+      "defaultActionSeconds": 3600,
+      "maximumQueued": 100000,
+      "maximumMessageBytes": 33554432,
+      "maximumBatchBytes": 4194304
+    },
+    "worker": {
+      "concurrency": 0,
+      "heartbeatSeconds": 5,
+      "pollSeconds": 20,
+      "directory": ".🧬semio/🦑️repo/⚡️cache/remote-execution",
+      "materialize": "clone",
+      "maximumBlobBytes": 268435456,
+      "sandbox": "auto",
+      "inlineOutputBytes": 4096
     }
   }
 }

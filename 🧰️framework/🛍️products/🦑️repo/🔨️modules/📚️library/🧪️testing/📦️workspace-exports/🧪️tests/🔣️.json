@@ -1,0 +1,397 @@
+{
+ "version": 1,
+ "errorDefects": [
+  {
+   "name": "a bare scope is not a package name",
+   "manifest": {
+    "name": "@s",
+    "exports": "./i.js"
+   },
+   "message": "Explicit package name required",
+   "defect": "📦️workspace-exports/🟦️.ts:publicRuntimePackageExportsV1 validates the name with `^(?:@[^/]+/)?[^/]+$`, which accepts `@s` (a scope without a package) as a plain name"
+  }
+ ],
+ "ok": [
+  {
+   "name": "a string export",
+   "manifest": {
+    "name": "pkg",
+    "exports": "./index.js"
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./index.js"
+    }
+   ]
+  },
+  {
+   "name": "subpath exports",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./i.js",
+     "./util": "./u.js",
+     "./deep/er": "./d.js"
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./i.js"
+    },
+    {
+     "specifier": "pkg/util",
+     "target": "./u.js"
+    },
+    {
+     "specifier": "pkg/deep/er",
+     "target": "./d.js"
+    }
+   ]
+  },
+  {
+   "name": "the node condition wins over types and default",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "types": "./t.d.ts",
+      "node": "./n.js",
+      "default": "./d.js"
+     }
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./n.js"
+    }
+   ]
+  },
+  {
+   "name": "import wins over require",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "import": "./a.mjs",
+      "require": "./a.cjs"
+     }
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./a.mjs"
+    }
+   ]
+  },
+  {
+   "name": "only a require condition has no runtime target",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "require": "./a.cjs"
+     }
+    }
+   },
+   "expected": []
+  },
+  {
+   "name": "nested conditions",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "node": {
+       "import": "./a.mjs",
+       "default": "./a.cjs"
+      },
+      "default": "./d.js"
+     }
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./a.mjs"
+    }
+   ]
+  },
+  {
+   "name": "condition order decides between import and default",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "default": "./d.js",
+      "import": "./a.mjs"
+     }
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./d.js"
+    }
+   ]
+  },
+  {
+   "name": "an array of targets keeps the first",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": [
+      "./a.js",
+      "./b.js"
+     ]
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./a.js"
+    }
+   ]
+  },
+  {
+   "name": "a scoped package",
+   "manifest": {
+    "name": "@s/p",
+    "exports": {
+     ".": "./i.js",
+     "./sub": "./s.js"
+    }
+   },
+   "expected": [
+    {
+     "specifier": "@s/p",
+     "target": "./i.js"
+    },
+    {
+     "specifier": "@s/p/sub",
+     "target": "./s.js"
+    }
+   ]
+  },
+  {
+   "name": "conditions at the top level",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     "import": "./a.mjs",
+     "default": "./d.js"
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./a.mjs"
+    }
+   ]
+  },
+  {
+   "name": "no exports",
+   "manifest": {
+    "name": "pkg"
+   },
+   "expected": []
+  },
+  {
+   "name": "null exports",
+   "manifest": {
+    "name": "pkg",
+    "exports": null
+   },
+   "expected": []
+  },
+  {
+   "name": "a subpath whose conditions have no runtime target is omitted",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./i.js",
+     "./cjs": {
+      "require": "./c.cjs"
+     }
+    }
+   },
+   "expected": [
+    {
+     "specifier": "pkg",
+     "target": "./i.js"
+    }
+   ]
+  }
+ ],
+ "errors": [
+  {
+   "name": "an array manifest",
+   "manifest": [],
+   "message": "Package manifest required"
+  },
+  {
+   "name": "a null manifest",
+   "manifest": null,
+   "message": "Package manifest required"
+  },
+  {
+   "name": "a string manifest",
+   "manifest": "pkg",
+   "message": "Package manifest required"
+  },
+  {
+   "name": "a missing name",
+   "manifest": {
+    "exports": "./i.js"
+   },
+   "message": "Explicit package name required"
+  },
+  {
+   "name": "an invalid name",
+   "manifest": {
+    "name": "a/b",
+    "exports": "./i.js"
+   },
+   "message": "Explicit package name required"
+  },
+  {
+   "name": "an empty name",
+   "manifest": {
+    "name": "",
+    "exports": "./i.js"
+   },
+   "message": "Explicit package name required"
+  },
+  {
+   "name": "a parent segment in a key",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./i.js",
+     "./a/../b": "./b.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "a wildcard key",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     "./*": "./x.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "a backslash in a key",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     "./a\\b": "./x.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "a colon in a key",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     "./a:b": "./x.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "a key without a dot prefix next to subpaths",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./i.js",
+     "util": "./u.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "an empty key segment",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     "./a//b": "./x.js"
+    }
+   },
+   "message": "Explicit portable public export key required"
+  },
+  {
+   "name": "a target outside the package",
+   "manifest": {
+    "name": "pkg",
+    "exports": "../x.js"
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a target without a dot prefix",
+   "manifest": {
+    "name": "pkg",
+    "exports": "x.js"
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a wildcard target",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./a/*.js"
+    }
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a node_modules target",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./node_modules/x.js"
+    }
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a target with an empty segment",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./a//b.js"
+    }
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a target with a dot segment",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./a/./b.js"
+    }
+   },
+   "message": "Portable package-relative runtime export required"
+  },
+  {
+   "name": "a target with a colon",
+   "manifest": {
+    "name": "pkg",
+    "exports": {
+     ".": "./a:b.js"
+    }
+   },
+   "message": "Portable package-relative runtime export required"
+  }
+ ]
+}

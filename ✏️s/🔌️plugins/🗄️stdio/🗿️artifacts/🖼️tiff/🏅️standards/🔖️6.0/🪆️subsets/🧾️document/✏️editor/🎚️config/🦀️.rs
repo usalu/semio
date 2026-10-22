@@ -73,7 +73,11 @@ impl Mutation<TiffEditorConfig> for TiffEditorConfigMutation {
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &TiffEditorConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<TiffEditorConfig> for TiffEditorConfigMutation {
+    type ReferenceDiff = TiffEditorConfigDiff;
+    fn diff(&self, base: &TiffEditorConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SetSelectedIfd { selected_ifd } = self;
         if base.selected_ifd == *selected_ifd {
             return protocol::MutationOutcome::new(TiffEditorConfigDiff::default()).warning("mutation.no-op", "TIFF image page is already selected.");

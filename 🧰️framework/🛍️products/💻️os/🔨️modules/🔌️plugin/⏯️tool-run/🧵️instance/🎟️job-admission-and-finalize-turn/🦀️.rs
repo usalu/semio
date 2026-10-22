@@ -3,7 +3,7 @@
 use super::*;
 use semio_framework::Fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     pub(super) async fn admit_tool_run_job(&mut self) -> Result<(), Fault> {
         let Some(entry) = selected_entry!(self.tool_runs) else { return Ok(()) };
         let (run, generation, state) = (entry.slot.run, entry.slot.generation, entry.slot.state);

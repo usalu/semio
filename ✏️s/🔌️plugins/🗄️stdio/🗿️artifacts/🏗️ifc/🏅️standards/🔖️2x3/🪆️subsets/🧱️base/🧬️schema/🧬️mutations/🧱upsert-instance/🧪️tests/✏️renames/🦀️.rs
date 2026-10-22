@@ -57,7 +57,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <Ifc2x3Mutation as protocol::Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <Ifc2x3Mutation as protocol::ColdMutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "upsert-instance/renames-the-ifcproject-instance: undoing an in-place replacement is exactly one step");
     assert!(matches!(&inverse[0], Ifc2x3Mutation::UpsertInstance(restore) if restore.instance == base.document.instances[0] && restore.index.is_none()), "upsert-instance/renames-the-ifcproject-instance: the undo step must itself be an UpsertInstance carrying the replaced instance");
     let mut snapshot = base.clone();
@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
-    let raised = <Ifc2x3Mutation as protocol::Mutation<Ifc2x3Snapshot>>::diff(&mutation(), &before());
+    let raised = <Ifc2x3Mutation as protocol::ColdMutation<Ifc2x3Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -115,7 +115,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let raised = <Ifc2x3Mutation as protocol::Mutation<Ifc2x3Snapshot>>::diff(&mutation(), &base);
+    let raised = <Ifc2x3Mutation as protocol::ColdMutation<Ifc2x3Snapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "upsert-instance/renames-the-ifcproject-instance: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -146,7 +146,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Ifc2x3Diff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "upsert-instance/renames-the-ifcproject-instance: committed diff did not carry before to after");
 }
 

@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn swaps_the_payload_without_retagging_the_mime() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-texture-bytes applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("replace-texture-bytes applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-texture-bytes/swaps-the-texture-payload-without-retagging-its-mime: applied state differs from the committed after-snapshot");
     assert_eq!(produced.textures[0].bytes, vec![10u8, 20, 30, 40, 50], "the bytes must become the payload's buffer, verbatim");
     assert_ne!(produced.textures[0].bytes.len(), base.textures[0].bytes.len(), "the buffer really is replaced wholesale, not patched in place");
@@ -49,9 +49,9 @@ async fn the_undo_replace_texture_bytes_restores_the_captured_buffer() {
     assert_eq!(undo.len(), 1, "replace-texture-bytes undoes as exactly one replace-texture-bytes");
     let SemioMeshMutation::ReplaceTextureBytes(restore) = &undo[0] else { panic!("replace-texture-bytes must undo as itself") };
     assert_eq!(restore.new_bytes, base.textures[0].bytes, "the undo must recapture BASE's own byte buffer");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-texture-bytes applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward replace-texture-bytes applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-texture-bytes applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo replace-texture-bytes applies");
     }
     assert_eq!(current, base, "replace-texture-bytes/swaps-the-texture-payload-without-retagging-its-mime: the undo did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-texture-bytes/swaps-the-texture-payload-without-retagging-its-mime: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -109,6 +109,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-texture-bytes diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-texture-bytes diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed replace-texture-bytes diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-texture-bytes/swaps-the-texture-payload-without-retagging-its-mime: committed diff did not carry before to after");
 }

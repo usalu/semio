@@ -1,393 +1,322 @@
-// #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/🏘️SpaceBrowser/component.tsx
-/** 🏘️ `🏘️SpaceBrowser` — the end-user spaces surface `🛂️SpaceAdministration` never was: list
- * the spaces I can reach, switch between them, create one, see who is a member and who is here right
- * now, issue an invitation, and redeem one someone sent me. Purely presentational: every mutation
- * leaves as an intent callback, and `useHubConnection` turns it into a closed `DirectoryCommand` on
- * the hub's command path (CQRS — this element never performs a CRUD write). Ticket
- * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2.
- */
-// #endregion 🧲️Header
+/** 🎨️ The theme and driver state and the theme save callbacks of the theme driver settings hook. */
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
+import { type LocalizedLabel } from "@semio-tech/framework";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
+import { type UiPreferencesConfigMutation, setCustomDriver, setCustomTheme, setDriver, setKeybindingOverride as setKeybindingOverrideMutation, setTheme } from "@semio-tech/framework/config/mutations";
+import { buildKeysByActionId, builtinUiDrivers, builtinUiThemes, composeControlKeybindings, DEFAULT_UI_DRIVER, patchUiThemeGeometry, parseUiTheme, serializeUiTheme, type ThemeAppearanceName, type ThemePaletteGroup, UI_TERMINOLOGY_NATIVE, type UiDriver, type UiTheme } from "@semio-tech/ui-react";
+import { canonicalUiDriver, canonicalUiTheme, commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, LOCAL_ONLY_UI_PREFERENCE_VOCABULARY_V1, readUiPreferenceLane, UI_PREFERENCE_UNSHARED_TEXT_V1, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceEnvelopeTextV1, uiPreferenceLaneKeyV1 } from "../../../🎚️UiPreferences/🟦️.ts";
+import { buildOsCommands } from "../../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { downloadMediaExport, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { manifestLabelTextV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import { resolveAppLabel, resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID } from "../../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
+import { type SettingsHostApi } from "../../../📌️ChromePanels/⚙️settings-general/🟦️.tsx";
+import { mintPreferenceLaneIdV1 } from "../../🧱️built-node-stores/🟦️.ts";
+import type { ShellCoreAfterArtifactOpening } from "../../📬️artifact-opening/🟦️.ts";
 
-// #region 🔌️Adapters
-import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, PresenceBar, useLabel, type PresencePeer } from "@semio-tech/ui-react";
-import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
-import {
-  INVITE_TTL_CHOICES_SECS_V1,
-  spaceRowInvitableV1,
-  spaceRowWritableV1,
-  type SpaceBrowserPhaseV1,
-  type SpaceMemberPresenceV1,
-  type SpaceRowV1
-} from "@semio-tech/framework/directory/spaces";
-import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
-import { type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
-// #endregion 🔌️Adapters
+/** 🌈 Binds the theme and driver state and the theme selection callbacks. */
+export function useThemeAndDriverState({ core }: { readonly core: ShellCoreAfterArtifactOpening }) {
+  const {
+    catalog, scope, mobile, locks, dispatch, loadedPlugins, pluginStatusById, session, uiAppearance, uiLayout,
+    uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft,
+    uiKeybindingOverrides, appLabelsOverlay, commitUiPreferenceRef, mergePolicy, uiTheme, uiDriver, backboneWorkerRef,
+    agentBridge, identity, identityRef, verifiedSessionAuthority, handlePreferenceLaneMessageRef, uiLocaleRef,
+    pluginInstallAbortsRef, ensureBackboneWorker, dockLayoutStore, dockUiStateStore, registry, primaryPluginId,
+    hubPluginSource, extensionRegistry, pluginSource, installPlugin, installingPluginIds, reloadPlugin, uninstallPlugin,
+    extensionLedger, extensionIdSet, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled,
+    focusedProgram, toolRunPanelNode, activeIntroduction, activeTutorials, tutorialRecorderAvailable, noteShellCommand,
+    onActionStable, displayHostRef, displayHost, dispatchSetMergePolicy, defaultAppsHost, defaultAppsHostRef,
+    conflictsHost, conflictsHostRef, hasOpenArtifactSurfaces, showTransientNotice, hostPorts
+  } = core;
+  const preferenceVocabulary = hostPorts?.preferenceVocabulary ?? LOCAL_ONLY_UI_PREFERENCE_VOCABULARY_V1;
+  //#region FrameworkOsShell
+  //#region 🔖️ThemeMutators
+  const uiThemeBase = uiThemeDraft ?? uiTheme;
+  const uiThemeDirty = uiThemeDraft !== null;
+  const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
+  const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
+  const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
+  const controlKeybindings = useMemo(() => composeControlKeybindings(keysByActionId, uiKeybindingOverrides), [keysByActionId, uiKeybindingOverrides]);
+  /** ⌨️ Settings ▸ Hotkeys names a bound app action or OS command by its own manifest label in the live language; the
+   * rows used to show humanized control ids ("Undo", "Toggle Panel") that stayed English in German (ticket 26/09/23 U5). */
+  const controlKeybindingLabel = useCallback((controlId: string): string | null => {
+    const action = session?.app.actions.find((candidate) => candidate.id === controlId);
+    if (action !== undefined) return resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label as LocalizedLabel | string, uiTerminology, uiLocale));
+    const command = session?.app.commands.find((candidate) => candidate.id === controlId);
+    if (command !== undefined) return resolveManifestLabel(command.label as LocalizedLabel | string, uiTerminology, uiLocale);
+    return null;
+  }, [appLabelsOverlay, session?.app.actions, session?.app.commands, uiLocale, uiTerminology]);
+  const osCommands = useMemo(
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale, hasOpenArtifactSurfaces),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, hasOpenArtifactSurfaces],
+  );
 
-//#region 🔖️Types
-export interface SpaceBrowserProps {
-  readonly rows: readonly SpaceRowV1[];
-  readonly activeSpaceId: string | null;
-  readonly phase: SpaceBrowserPhaseV1;
-  readonly search: string;
-  readonly members: readonly SpaceMemberPresenceV1[];
-  readonly invite: HubInviteCapabilityV1 | null;
-  readonly redemption: HubRedemptionStateV1;
-  readonly signedIn: boolean;
-  readonly onSearch: (query: string) => void;
-  readonly onOpenSpace: (spaceId: string) => void;
-  readonly onRefresh: () => void;
-  readonly onCreateSpace: (name: string, kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility) => void;
-  readonly onArchiveSpace: (spaceId: string) => void;
-  readonly onCreateInvite: (spaceId: string, role: DirectorySpaceRole, ttlSecs: number) => void;
-  readonly onCopyInvite: () => void;
-  readonly onDismissInvite: () => void;
-  readonly onRedeemInvite: (typed: string) => void;
-}
-//#endregion 🔖️Types
+  /** 🧭️ Direct theme/appearance/locale/terminology/driver/layout setters below (settings panel, theme/driver
+   * editors) bypass `dispatchOsCommand`'s named-command path entirely — this reuses the exact same `os.*`
+   * command id (and its `osCommands`-resolved, locale-adapted label) so a direct-path change folds together
+   * with a command-palette-triggered one in the history panel regardless of which path triggered it. */
+  const noteOsCommand = useCallback(
+    (commandId: string, detail?: Record<string, unknown>) => {
+      const rawLabel = osCommands.find((entry) => entry.id === commandId)?.label as LocalizedLabel | string | undefined;
+      noteShellCommand(commandId, manifestLabelTextV1(rawLabel ?? commandId, uiTerminology), detail);
+    },
+    [osCommands, noteShellCommand, uiTerminology],
+  );
 
-//#region 🔖️Presence
-/** 👥️ Projects the member roster onto the domain-neutral `PresenceBar` peer shape: only members who
- * are actually connected become peers, so the bar never claims presence it cannot observe. */
-export function spaceBrowserPresencePeersV1(members: readonly SpaceMemberPresenceV1[]): readonly PresencePeer[] {
-  return members.filter((member) => member.online).map((member, index) => ({ actor: `user:${member.userId}`, userId: member.userId, label: member.displayName, role: member.role, color: index }));
-}
-//#endregion 🔖️Presence
+  const commitUiPreference = useCallback(
+    (mutation: UiPreferencesConfigMutation) => {
+      if (
+        (mutation.mutation === "setAppearance" && locks.appearance) ||
+        (mutation.mutation === "setLocale" && locks.locale) ||
+        (mutation.mutation === "setTerminology" && locks.terminology) ||
+        (mutation.mutation === "setTheme" && locks.themeId)
+      ) return;
+      const { queued, unshared } = commitUiPreferenceOnLaneV1(preferenceVocabulary, scope.storage, mutation, preferenceLaneRef.current, mintPreferenceLaneIdV1);
+      if (queued !== null) flushPreferenceLaneRef.current();
+      if (unshared) showTransientNotice(UI_PREFERENCE_UNSHARED_TEXT_V1[uiLocaleRef.current === "de" ? "de" : "en"], "warning");
+    },
+    [locks, scope.storage, showTransientNotice, preferenceVocabulary],
+  );
+  commitUiPreferenceRef.current = commitUiPreference;
 
-//#region 🔖️CreateSpace
-function CreateSpaceForm({ disabled, onCreateSpace }: { readonly disabled: boolean; readonly onCreateSpace: SpaceBrowserProps["onCreateSpace"] }): ReactElement {
-  const id = useId();
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<DirectorySpaceKind>("atelier");
-  const [visibility, setVisibility] = useState<DirectorySpaceVisibility>("private");
-  const titleLabel = useLabel(hubUiLabel("os.hub.spaces.createTitle"));
-  const nameLabel = useLabel(hubUiLabel("os.hub.spaces.createName"));
-  const kindLabel = useLabel(hubUiLabel("os.hub.spaces.createKind"));
-  const visibilityLabel = useLabel(hubUiLabel("os.hub.spaces.createVisibility"));
-  const atelierLabel = useLabel(hubUiLabel("os.hub.spaces.kindAtelier"));
-  const studioLabel = useLabel(hubUiLabel("os.hub.spaces.kindStudio"));
-  const privateLabel = useLabel(hubUiLabel("os.hub.spaces.visibilityPrivate"));
-  const publicLabel = useLabel(hubUiLabel("os.hub.spaces.visibilityPublic"));
-  const submitLabel = useLabel(hubUiLabel("os.hub.spaces.createSubmit"));
-  const valid = name.trim().length > 0 && !/\p{Cc}/u.test(name);
-
-  const submit = (event: FormEvent): void => {
-    event.preventDefault();
-    if (!disabled && valid) {
-      onCreateSpace(name, kind, visibility);
-      setName("");
+  /** 🌐️ The signed-in user's preference lane (ticket 26/09/23 U5): while a verified hub session stands, the worker pages
+   * this user's `user.preference-recorded` events from the lane's frontier and wakes on every directory head past it;
+   * each page folds into this device's log in hub order ({@link foldUiPreferenceLanePageV1}), and every change of a
+   * `persistedShared` preference made here is recorded as a `record-user-preference` command, re-sent under its own
+   * request id until a page acknowledges it — so a change made offline reaches every device once the hub is back. A
+   * `persistedLocalOnly` preference (the chrome layout) never leaves the device. */
+  const preferenceLaneRef = useRef<string | null>(null);
+  const preferenceLaneInFlightRef = useRef(new Set<string>());
+  const flushPreferenceLaneRef = useRef<() => void>(() => undefined);
+  flushPreferenceLaneRef.current = () => {
+    const lane = preferenceLaneRef.current;
+    const worker = backboneWorkerRef.current;
+    if (lane === null || worker === null) return;
+    for (const entry of readUiPreferenceLane(scope.storage, lane).outbox) {
+      if (preferenceLaneInFlightRef.current.has(entry.requestId)) continue;
+      preferenceLaneInFlightRef.current.add(entry.requestId);
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-record", requestId: entry.requestId, schema: UI_PREFERENCES_LANE_SCHEMA_V1, mutation: uiPreferenceEnvelopeTextV1(entry) }) });
     }
   };
+  handlePreferenceLaneMessageRef.current = (message) => {
+    const lane = preferenceLaneRef.current;
+    if (message.kind === "preference-lane-page") {
+      if (lane === null || identityRef.current?.userId !== message.userId) return;
+      foldUiPreferenceLanePageV1(preferenceVocabulary, scope.storage, lane, message);
+      flushPreferenceLaneRef.current();
+      return;
+    }
+    if (message.requestId !== null) preferenceLaneInFlightRef.current.delete(message.requestId);
+  };
+  const preferenceLaneUserId = verifiedSessionAuthority !== null && identity?.hubBaseUrl ? identity.userId : null;
+  const preferenceLaneHubBaseUrl = verifiedSessionAuthority !== null ? identity?.hubBaseUrl ?? null : null;
+  useEffect(() => {
+    if (preferenceLaneUserId === null || preferenceLaneHubBaseUrl === null) return;
+    const lane = uiPreferenceLaneKeyV1(preferenceLaneHubBaseUrl, preferenceLaneUserId);
+    const worker = ensureBackboneWorker();
+    preferenceLaneRef.current = lane;
+    preferenceLaneInFlightRef.current.clear();
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-open", baseUrl: preferenceLaneHubBaseUrl, userId: preferenceLaneUserId, after: readUiPreferenceLane(scope.storage, lane).afterSeq }) });
+    return () => {
+      if (preferenceLaneRef.current === lane) preferenceLaneRef.current = null;
+      preferenceLaneInFlightRef.current.clear();
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-close" }) });
+    };
+  }, [ensureBackboneWorker, preferenceLaneHubBaseUrl, preferenceLaneUserId, scope.storage]);
 
-  return (
-    <form aria-label={titleLabel} onSubmit={submit} className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium">{titleLabel}</h3>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-name`} className="text-xs text-muted-foreground">{nameLabel}</label>
-        <input id={`${id}-name`} data-element-alias="os.hub.spaces.createName" name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-kind`} className="text-xs text-muted-foreground">{kindLabel}</label>
-          <select id={`${id}-kind`} value={kind} disabled={disabled} onChange={(event) => setKind(event.target.value === "studio" ? "studio" : "atelier")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value="atelier">{atelierLabel}</option>
-            <option value="studio">{studioLabel}</option>
-          </select>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-visibility`} className="text-xs text-muted-foreground">{visibilityLabel}</label>
-          <select id={`${id}-visibility`} value={visibility} disabled={disabled} onChange={(event) => setVisibility(event.target.value === "public" ? "public" : "private")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value="private">{privateLabel}</option>
-            <option value="public">{publicLabel}</option>
-          </select>
-        </div>
-      </div>
-      <Button id="os.hub.spaces.createSubmit" icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
-    </form>
+  const draftThemePatch = useCallback(
+    (patch: (next: UiTheme) => void) => {
+      const next = patchUiThemeGeometry(uiThemeBase, patch);
+      if (next) dispatch({ type: "SET_UI_THEME_DRAFT", value: next });
+    },
+    [uiThemeBase],
   );
-}
-//#endregion 🔖️CreateSpace
 
-//#region 🔖️Invite
-function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopyInvite, onDismissInvite, onRedeemInvite }: {
-  readonly row: SpaceRowV1 | null;
-  readonly invite: SpaceBrowserProps["invite"];
-  readonly redemption: HubRedemptionStateV1;
-  readonly disabled: boolean;
-  readonly onCreateInvite: SpaceBrowserProps["onCreateInvite"];
-  readonly onCopyInvite: SpaceBrowserProps["onCopyInvite"];
-  readonly onDismissInvite: SpaceBrowserProps["onDismissInvite"];
-  readonly onRedeemInvite: SpaceBrowserProps["onRedeemInvite"];
-}): ReactElement {
-  const id = useId();
-  const [role, setRole] = useState<DirectorySpaceRole>("spectator");
-  const [ttlSecs, setTtlSecs] = useState<number>(INVITE_TTL_CHOICES_SECS_V1[1]);
-  const [typed, setTyped] = useState("");
-  const titleLabel = useLabel(hubUiLabel("os.hub.invite.title"));
-  const createTitleLabel = useLabel(hubUiLabel("os.hub.invite.createTitle"));
-  const roleLabel = useLabel(hubUiLabel("os.hub.invite.role"));
-  const expiryLabel = useLabel(hubUiLabel("os.hub.invite.expiry"));
-  const hourLabel = useLabel(hubUiLabel("os.hub.invite.expiryHour"));
-  const dayLabel = useLabel(hubUiLabel("os.hub.invite.expiryDay"));
-  const weekLabel = useLabel(hubUiLabel("os.hub.invite.expiryWeek"));
-  const createLabel = useLabel(hubUiLabel("os.hub.invite.create"));
-  const readyLabel = useLabel(hubUiLabel("os.hub.invite.ready"));
-  const copyLabel = useLabel(hubUiLabel("os.hub.invite.copy"));
-  const copiedLabel = useLabel(hubUiLabel("os.hub.invite.copied"));
-  const copyFailedLabel = useLabel(hubUiLabel("os.hub.invite.copyFailed"));
-  const dismissLabel = useLabel(hubUiLabel("os.hub.invite.dismiss"));
-  const redeemTitleLabel = useLabel(hubUiLabel("os.hub.invite.redeemTitle"));
-  const redeemFieldLabel = useLabel(hubUiLabel("os.hub.invite.redeemField"));
-  const redeemLabel = useLabel(hubUiLabel("os.hub.invite.redeem"));
-  const redeemingLabel = useLabel(hubUiLabel("os.hub.invite.redeeming"));
-  const redeemedLabel = useLabel(hubUiLabel("os.hub.invite.redeemed"));
-  const authorLabel = useLabel(hubUiLabel("os.hub.spaces.roleAuthor"));
-  const spectatorLabel = useLabel(hubUiLabel("os.hub.spaces.roleSpectator"));
-  const errorInvalid = useLabel(hubUiLabel("os.hub.invite.errorInvalid"));
-  const errorExpired = useLabel(hubUiLabel("os.hub.invite.errorExpired"));
-  const errorAlready = useLabel(hubUiLabel("os.hub.invite.errorAlreadyMember"));
-  const errorUnauthorized = useLabel(hubUiLabel("os.hub.invite.errorUnauthorized"));
-  const errorUnreachable = useLabel(hubUiLabel("os.hub.invite.errorUnreachable"));
-  const errorRefused = useLabel(hubUiLabel("os.hub.invite.errorRefused"));
-  const errorCancelled = useLabel(hubUiLabel("os.hub.invite.errorCancelled"));
-
-  const redemptionError = redemption.error === null
-    ? null
-    : redemption.error === "invalid-invite"
-      ? errorInvalid
-      : redemption.error === "expired-invite"
-        ? errorExpired
-        : redemption.error === "already-member"
-          ? errorAlready
-          : redemption.error === "unauthorized"
-            ? errorUnauthorized
-            : redemption.error === "unreachable"
-              ? errorUnreachable
-              : redemption.error === "cancelled"
-                ? errorCancelled
-                : errorRefused;
-
-  return (
-    <section aria-label={titleLabel} className="flex flex-col gap-3 border-t pt-3">
-      <h3 className="text-sm font-medium">{titleLabel}</h3>
-
-      {row === null || !spaceRowInvitableV1(row) ? null : (
-        <form
-          aria-label={createTitleLabel}
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!disabled) onCreateInvite(row.id, role, ttlSecs);
-          }}
-          className="flex flex-col gap-2"
-        >
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor={`${id}-role`} className="text-xs text-muted-foreground">{roleLabel}</label>
-              <select id={`${id}-role`} data-element-alias="os.hub.invite.role" value={role} disabled={disabled} onChange={(event) => setRole(event.target.value === "author" ? "author" : "spectator")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-                <option value="spectator">{spectatorLabel}</option>
-                <option value="author">{authorLabel}</option>
-              </select>
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor={`${id}-ttl`} className="text-xs text-muted-foreground">{expiryLabel}</label>
-              <select id={`${id}-ttl`} data-element-alias="os.hub.invite.expiry" value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[0])}>{hourLabel}</option>
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[1])}>{dayLabel}</option>
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[2])}>{weekLabel}</option>
-              </select>
-            </div>
-          </div>
-          <Button id="os.hub.invite.create" icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
-        </form>
-      )}
-
-      {invite === null ? null : (
-        <div role="status" aria-live="polite" data-semio-hub-invite={invite.spaceId} className="flex flex-col gap-2 rounded-sm border px-single py-1">
-          <p className="text-xs text-muted-foreground">{readyLabel}</p>
-          <output htmlFor={`${id}-invite`} className="break-all text-xs">{invite.link}</output>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button id="os.hub.invite.copy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopyInvite}>{copyLabel}</Button>
-            <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismissInvite}>{dismissLabel}</Button>
-          </div>
-          {invite.copy === "copied" ? <p className="text-xs">{copiedLabel}</p> : null}
-          {invite.copy === "failed" ? <p role="alert" className="text-xs text-destructive">{copyFailedLabel}</p> : null}
-        </div>
-      )}
-
-      <form
-        aria-label={redeemTitleLabel}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (redemption.phase !== "redeeming") onRedeemInvite(typed);
-        }}
-        className="flex flex-col gap-2"
-      >
-        <label htmlFor={`${id}-redeem`} className="text-xs text-muted-foreground">{redeemFieldLabel}</label>
-        <input
-          id={`${id}-redeem`}
-          data-element-alias="os.hub.invite.redeemField"
-          name="invitation"
-          required
-          value={typed}
-          disabled={redemption.phase === "redeeming"}
-          aria-invalid={redemption.error !== null}
-          aria-describedby={redemption.error === null ? undefined : `${id}-redeem-error`}
-          onChange={(event) => setTyped(event.target.value)}
-          className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
-        />
-        <Button icon="unlock" type="submit" variant="outline" aria-busy={redemption.phase === "redeeming"} aria-label={redemption.phase === "redeeming" ? redeemingLabel : redeemLabel} disabled={redemption.phase === "redeeming" || typed.trim().length === 0}>
-          {redemption.phase === "redeeming" ? redeemingLabel : redeemLabel}
-        </Button>
-        {redemption.phase === "redeemed" ? <p role="status" aria-live="polite" className="text-xs">{redeemedLabel}</p> : null}
-        {redemptionError === null ? null : <p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-destructive">{redemptionError}</p>}
-      </form>
-    </section>
+  const setThemeId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      commitUiPreference(setTheme(id));
+      noteOsCommand("os.setThemeId", { themeId: id });
+    },
+    [commitUiPreference, noteOsCommand],
   );
-}
-//#endregion 🔖️Invite
 
-//#region 🔖️Row
-/** 🏠️ One space row: an open button carrying the whole accessible name (space, role, and whether it
- * is the one currently open) plus an archive control only where the caller may write. */
-function SpaceRow({ row, active, busy, roleText, currentLabel, onOpenSpace, onArchiveSpace }: {
-  readonly row: SpaceRowV1;
-  readonly active: boolean;
-  readonly busy: boolean;
-  readonly roleText: string;
-  readonly currentLabel: string;
-  readonly onOpenSpace: SpaceBrowserProps["onOpenSpace"];
-  readonly onArchiveSpace: SpaceBrowserProps["onArchiveSpace"];
-}): ReactElement {
-  const openLabel = useLabel(hubUiLabel("os.hub.spaces.open"), { name: row.name });
-  const archiveLabel = useLabel(hubUiLabel("os.hub.spaces.archive"), { name: row.name });
-  const membersLabel = useLabel(hubUiLabel("os.hub.spaces.memberCount"), { count: row.memberCount });
-  const documentsLabel = useLabel(hubUiLabel("os.hub.spaces.documentCount"), { count: row.documentCount });
-  const onlineLabel = useLabel(hubUiLabel("os.hub.spaces.onlineCount"), { count: row.activeConnections });
-  return (
-    <li data-space-id={row.id} data-space-access={row.access} className="flex flex-col gap-1 rounded-sm border px-single py-1 sm:flex-row sm:items-center sm:justify-between">
-      <button
-        type="button"
-        aria-current={active ? "true" : undefined}
-        aria-label={`${openLabel} — ${roleText}${active ? ` (${currentLabel})` : ""}`}
-        onClick={() => onOpenSpace(row.id)}
-        className="min-w-0 flex-1 text-left text-sm"
-      >
-        <span className="block truncate font-medium">{row.name}</span>
-        <span className="block text-xs text-muted-foreground">{`${roleText} · ${membersLabel} · ${documentsLabel}${row.activeConnections > 0 ? ` · ${onlineLabel}` : ""}`}</span>
-      </button>
-      {spaceRowWritableV1(row) ? (
-        <Button icon="file-archive" type="button" variant="outline" disabled={busy} aria-label={archiveLabel} onClick={() => onArchiveSpace(row.id)}>
-          {archiveLabel}
-        </Button>
-      ) : null}
-    </li>
+  const setThemeColor = useCallback(
+    (key: string, hex: string) =>
+      draftThemePatch((next) => {
+        next.colors[key] = hex;
+      }),
+    [draftThemePatch],
   );
-}
-//#endregion 🔖️Row
-
-//#region 🔖️Browser
-/** 🏘️ The surface. A `role="list"` of spaces where each row's open control is a real button carrying
- * `aria-current` for the active space, a search box, a live status line for the load/mutate phase, a
- * member roster with presence, the create form, and the invitation panel. Single column at phone
- * width; the roster moves beside the list from `md:` up. */
-export function SpaceBrowser({
-  rows,
-  activeSpaceId,
-  phase,
-  search,
-  members,
-  invite,
-  redemption,
-  signedIn,
-  onSearch,
-  onOpenSpace,
-  onRefresh,
-  onCreateSpace,
-  onArchiveSpace,
-  onCreateInvite,
-  onCopyInvite,
-  onDismissInvite,
-  onRedeemInvite,
-}: SpaceBrowserProps): ReactElement {
-  const id = useId();
-  const title = useLabel(hubUiLabel("os.hub.spaces.title"));
-  const listLabel = useLabel(hubUiLabel("os.hub.spaces.list"));
-  const searchLabel = useLabel(hubUiLabel("os.hub.spaces.search"));
-  const currentLabel = useLabel(hubUiLabel("os.hub.spaces.current"));
-  const emptyLabel = useLabel(hubUiLabel("os.hub.spaces.empty"));
-  const noMatchesLabel = useLabel(hubUiLabel("os.hub.spaces.noMatches"));
-  const loadingLabel = useLabel(hubUiLabel("os.hub.spaces.loading"));
-  const staleLabel = useLabel(hubUiLabel("os.hub.spaces.stale"));
-  const submittingLabel = useLabel(hubUiLabel("os.hub.spaces.submitting"));
-  const failedLabel = useLabel(hubUiLabel("os.hub.spaces.failed"));
-  const refreshLabel = useLabel(hubUiLabel("os.hub.spaces.refresh"));
-  const authorLabel = useLabel(hubUiLabel("os.hub.spaces.roleAuthor"));
-  const spectatorLabel = useLabel(hubUiLabel("os.hub.spaces.roleSpectator"));
-  const publicLabel = useLabel(hubUiLabel("os.hub.spaces.accessPublic"));
-  const membersLabel = useLabel(hubUiLabel("os.hub.spaces.members"));
-  const onlineLabel = useLabel(hubUiLabel("os.hub.spaces.online"));
-  const awayLabel = useLabel(hubUiLabel("os.hub.spaces.away"));
-  const ownerLabel = useLabel(hubUiLabel("os.hub.spaces.owner"));
-  const activeRow = rows.find((row) => row.id === activeSpaceId) ?? null;
-  const busy = phase === "submitting";
-  const statusText = phase === "loading" ? loadingLabel : phase === "stale" ? staleLabel : phase === "submitting" ? submittingLabel : phase === "failed" ? failedLabel : "";
-  const peers = spaceBrowserPresencePeersV1(members);
-
-  return (
-    <section aria-labelledby={`${id}-title`} data-semio-hub-spaces-phase={phase} className="flex w-full min-w-0 flex-col gap-4 p-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
-        <Button icon="rotate-cw" type="button" variant="outline" aria-label={refreshLabel} disabled={busy} onClick={onRefresh}>{refreshLabel}</Button>
-      </header>
-
-      <p role="status" aria-live="polite" data-semio-hub-spaces-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-search`} className="text-xs text-muted-foreground">{searchLabel}</label>
-        <input id={`${id}-search`} name="spaceSearch" type="search" value={search} onChange={(event) => onSearch(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
-      </div>
-
-      <div className="flex flex-col gap-4 md:flex-row md:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{search.trim().length > 0 ? noMatchesLabel : emptyLabel}</p>
-          ) : (
-            <ul role="list" data-element-alias="os.hub.spaces.list" aria-label={listLabel} className="flex flex-col gap-1">
-              {rows.map((row) => (
-                <SpaceRow
-                  key={row.id}
-                  row={row}
-                  active={row.id === activeSpaceId}
-                  busy={busy}
-                  currentLabel={currentLabel}
-                  roleText={row.access === "public" ? publicLabel : row.role === "author" ? authorLabel : spectatorLabel}
-                  onOpenSpace={onOpenSpace}
-                  onArchiveSpace={onArchiveSpace}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <aside aria-label={membersLabel} className="flex w-full min-w-0 flex-col gap-2 md:w-64">
-          <h3 className="text-sm font-medium">{membersLabel}</h3>
-          <PresenceBar peers={peers} />
-          <ul role="list" className="flex flex-col gap-1">
-            {members.map((member) => (
-              <li key={member.userId} data-user-id={member.userId} data-online={member.online ? "true" : "false"} className="flex items-center justify-between gap-2 text-xs">
-                <span className="min-w-0 truncate">{member.displayName}</span>
-                <span className="shrink-0 text-muted-foreground">{`${member.owner ? `${ownerLabel} · ` : ""}${member.role === "author" ? authorLabel : spectatorLabel} · ${member.online ? onlineLabel : awayLabel}`}</span>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
-
-      {signedIn ? <CreateSpaceForm disabled={busy} onCreateSpace={onCreateSpace} /> : null}
-
-      <InvitePanel row={activeRow} invite={invite} redemption={redemption} disabled={busy} onCreateInvite={onCreateInvite} onCopyInvite={onCopyInvite} onDismissInvite={onDismissInvite} onRedeemInvite={onRedeemInvite} />
-    </section>
+  const setThemeSpacing = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.spacing[key] = value;
+      }),
+    [draftThemePatch],
   );
+  const setThemeFontStack = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.fontStacks[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeStroke = useCallback(
+    (key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.strokes[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeRadius = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.radii[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeOpacity = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.opacities[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeMetric = useCallback(
+    (section: string, key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.metrics[section] = { ...(next.metrics[section] ?? {}), [key]: value };
+      }),
+    [draftThemePatch],
+  );
+  const setThemeAppearancePaint = useCallback(
+    (appearance: ThemeAppearanceName, group: ThemePaletteGroup, key: string, hex: string, alpha?: number) =>
+      draftThemePatch((next) => {
+        next.appearances[appearance][group][key] = alpha === undefined ? { hex } : { hex, alpha };
+      }),
+    [draftThemePatch],
+  );
+
+  const resetTheme = useCallback(() => {
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    commitUiPreference(setTheme("semio"));
+  }, [commitUiPreference]);
+  return { uiThemeBase, commitUiPreference, dispatch, uiThemeId, uiDriverDraft, uiDriver, noteOsCommand, uiDriverId, session, uiTerminology, uiDriverList, uiAppearance, uiLayout, mobile, dockLayoutStore, dockUiStateStore, uiLocale, uiThemeDirty, uiThemeList, setThemeId, setThemeColor, setThemeSpacing, setThemeFontStack, setThemeStroke, setThemeRadius, setThemeOpacity, setThemeMetric, setThemeAppearancePaint, resetTheme, controlKeybindings, controlKeybindingLabel, locks, mergePolicy, dispatchSetMergePolicy, displayHostRef, displayHost, defaultAppsHostRef, conflictsHostRef, defaultAppsHost, conflictsHost, hubPluginSource, registry, extensionRegistry, extensionIdSet, pluginSource, loadedPlugins, pluginStatusById, primaryPluginId, catalog, extensionLedger, installPlugin, uninstallPlugin, reloadPlugin, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled, agentBridge, onActionStable, pluginInstallAbortsRef, uiLocaleRef, installingPluginIds, toolRunPanelNode, focusedProgram, keysByActionId, osCommands };
 }
-//#endregion 🔖️Browser
+
+/** 💾 Builds the theme save callbacks and the settings host ref. */
+export function useThemeSaveAndSettingsHostRef({ uiThemeBase, commitUiPreference, dispatch, uiThemeId, uiDriverDraft, uiDriver, noteOsCommand, uiDriverId }: Pick<ReturnType<typeof useThemeAndDriverState>, "uiThemeBase" | "commitUiPreference" | "dispatch" | "uiThemeId" | "uiDriverDraft" | "uiDriver" | "noteOsCommand" | "uiDriverId">) {
+  const saveTheme = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiTheme = { ...uiThemeBase, id, label: trimmed };
+      commitUiPreference(setCustomTheme(id, canonicalUiTheme(saved)));
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      commitUiPreference(setTheme(id));
+    },
+    [commitUiPreference, uiThemeBase],
+  );
+
+  const deleteTheme = useCallback(
+    (id: string) => {
+      if (!id.startsWith("custom.")) return;
+      commitUiPreference(setCustomTheme(id, null));
+      if (uiThemeId === id) commitUiPreference(setTheme("semio"));
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    },
+    [commitUiPreference, uiThemeId],
+  );
+
+  const exportTheme = useCallback(() => {
+    downloadMediaExport(`${uiThemeBase.id}.theme.dsl`, "text/plain", serializeUiTheme(uiThemeBase));
+  }, [uiThemeBase]);
+
+  const importTheme = useCallback(async () => {
+    const opened = (await requestFileOpen(".theme.dsl,.dsl,text/plain"))[0];
+    if (!opened) return;
+    try {
+      const parsed = parseUiTheme(JSON.parse(opened.contents));
+      saveTheme(parsed.label || parsed.id);
+    } catch {}
+  }, [saveTheme]);
+  //#endregion 🔖️ThemeMutators
+
+  //#region 🚗️DriverMutators
+  const uiDriverBase = uiDriverDraft ?? uiDriver;
+  const uiDriverDirty = uiDriverDraft !== null;
+
+  const setDriverId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      commitUiPreference(setDriver(id));
+      noteOsCommand("os.setDriver", { driver: id });
+    },
+    [commitUiPreference, noteOsCommand],
+  );
+
+  const setDriverField = useCallback(
+    <K extends keyof Omit<UiDriver, "id" | "label">>(key: K, value: UiDriver[K]) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: { ...uiDriverBase, [key]: value } });
+    },
+    [uiDriverBase],
+  );
+
+  const saveDriver = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiDriver = { ...uiDriverBase, id, label: trimmed };
+      commitUiPreference(setCustomDriver(id, canonicalUiDriver(saved)));
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      commitUiPreference(setDriver(id));
+    },
+    [commitUiPreference, uiDriverBase],
+  );
+
+  const deleteDriver = useCallback(
+    (id: string) => {
+      if (!id.startsWith("custom.")) return;
+      commitUiPreference(setCustomDriver(id, null));
+      if (uiDriverId === id) commitUiPreference(setDriver(DEFAULT_UI_DRIVER.id));
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+    },
+    [commitUiPreference, uiDriverId],
+  );
+  //#endregion 🚗️DriverMutators
+
+  const [themeSaveLabel, setThemeSaveLabel] = useState("");
+  const [driverSaveLabel, setDriverSaveLabel] = useState("");
+  const [keybindingCaptureControlId, setKeybindingCaptureControlId] = useState<string | null>(null);
+  const setKeybindingOverride = useCallback((controlId: string, keys: string) => {
+    commitUiPreference(setKeybindingOverrideMutation(controlId, keys));
+  }, [commitUiPreference]);
+  const resetKeybindingOverride = useCallback((controlId: string) => {
+    commitUiPreference(setKeybindingOverrideMutation(controlId, null));
+  }, [commitUiPreference]);
+  useEffect(() => {
+    const onNavigateToHotkey = (event: Event) => {
+      const path = (event as CustomEvent<{ readonly path?: string }>).detail?.path;
+      if (path) setKeybindingCaptureControlId(path);
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: true });
+      dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID] });
+    };
+    window.addEventListener("navigate-to-hotkey", onNavigateToHotkey);
+    return () => window.removeEventListener("navigate-to-hotkey", onNavigateToHotkey);
+  }, [dispatch]);
+  const settingsHostRef = useRef<SettingsHostApi | null>(null);
+  return { uiDriverBase, uiDriverDirty, setDriverId, setDriverField, saveDriver, deleteDriver, driverSaveLabel, setDriverSaveLabel, saveTheme, deleteTheme, exportTheme, importTheme, themeSaveLabel, setThemeSaveLabel, keybindingCaptureControlId, setKeybindingCaptureControlId, setKeybindingOverride, resetKeybindingOverride, settingsHostRef };
+}

@@ -19,6 +19,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallBaseWidth wher
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change", entity: "wall-base-width", kind: "change-wall-base-width", record: "ChangedWallBaseWidth",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change retaining wall base width", "Sohlbreite der Stützwand ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for ChangeWallBaseWidth where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::change_wall_base_width::ChangeWallBaseWidth> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::change_wall_base_width::diff::diff(self, base)
     }
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallBaseWidth wher
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change retaining wall base width", "Sohlbreite der Stützwand ändern")
-    }
 }
 
 //#region 🪢️Mounts

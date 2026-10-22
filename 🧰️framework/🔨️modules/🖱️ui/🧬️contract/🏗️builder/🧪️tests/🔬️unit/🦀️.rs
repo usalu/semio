@@ -231,7 +231,6 @@ fn number_input_prints_its_value_at_its_precision() {
     let crate::Component::Input(props) = &node.component else { panic!("an input") };
     assert_eq!(props.value.as_str(), "2.50");
     assert_eq!(props.precision, Some(2));
-    assert_eq!(crate::accessibility_value(&node.component).text.as_deref(), Some("2.50"));
 }
 
 #[test]

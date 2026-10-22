@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_replication_codec::PackEncodeOptions as EncodeOptions;
 fn encode_document(spec:&semio_framework_dsl_record::RecordSpec,record:&semio_framework_dsl_record::RecordValue,options:&EncodeOptions)->Result<Vec<u8>,semio_framework_pack_error::PackRefusal>{
- crate::encode_document_controlled(spec,record,options,&mut semio_framework_value::native_encoding::NativeEncodeControl::new(1<<30,&mut |_|true))
+ semio_framework_pack_record_encode::encode_document_controlled(spec,record,options,&mut semio_framework_value::native_encoding::NativeEncodeControl::new(1<<30,&mut |_|true))
 }
 use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as B,RecordLayout,DslField,FieldValue};
 use semio_framework_dsl_record_derive::DslRecord;

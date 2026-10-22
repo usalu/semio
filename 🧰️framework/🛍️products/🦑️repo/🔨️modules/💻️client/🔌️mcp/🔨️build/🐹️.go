@@ -32,7 +32,7 @@ type BuildSurface struct {
 	Prefix    []string
 	Root      string
 	Environ   func() []string
-	Lookup    func(string) (string, bool)
+	Sessions  SessionOpener
 	Process   int
 	Parent    int
 	gate      chan struct{}
@@ -72,19 +72,29 @@ func NewBuildSurface(root string, catalogue Catalogue, policy Policy) (*BuildSur
 	if err != nil {
 		return nil, err
 	}
-	return &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Lookup: os.LookupEnv, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}, nil
+	surface := &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}
+	surface.Sessions = &surfaceSessions{surface: surface, known: map[SessionRequest]AgentIdentity{}}
+	return surface, nil
 }
 
-// 🪪️Agent names the agent of a call: the `agent` argument, else the agent of the connection.
-func (surface *BuildSurface) Agent(ctx context.Context, explicit string) AgentIdentity {
-	if explicit != "" {
-		return NewAgent(explicit)
+// 🪪️Agent opens the agent session of a call: the `agent` argument names it, else the connection does (client name and process ids; the client's own session variable wins inside `repo session open`). A session that cannot be opened leaves the call without an address, so the child resolves its own, and the reason is returned as a hint.
+func (surface *BuildSurface) Agent(ctx context.Context, explicit string) (AgentIdentity, string) {
+	request := SessionRequest{Agent: explicit}
+	if explicit == "" {
+		client := ""
+		if session, ok := SessionFrom(ctx); ok {
+			client = session.ClientInfo().Name
+		}
+		request = SessionRequest{Client: client, ClientProcess: surface.Parent, Process: surface.Process}
+		if client == "" {
+			request.Client = "agent"
+		}
 	}
-	client := ""
-	if session, ok := SessionFrom(ctx); ok {
-		client = session.ClientInfo().Name
+	identity, err := surface.Sessions.Open(ctx, request)
+	if err != nil {
+		return AgentIdentity{ID: "unattached"}, "agent session not opened (" + err.Error() + "); the command attaches to its own session"
 	}
-	return ConnectionAgent(surface.Lookup, surface.Policy.Identity.ConnectionSources, client, surface.Parent, surface.Process)
+	return identity, ""
 }
 
 // 🌿️Environment builds the environment of a child: the inherited one without the authored strip list, the authored constants, then the call's own variables.
@@ -203,7 +213,7 @@ func (surface *BuildSurface) handler(tool BuildTool) ToolHandler {
 			}
 			return CallToolResult{}, err
 		}
-		agent := surface.Agent(ctx, invocation.Agent)
+		agent, sessionHint := surface.Agent(ctx, invocation.Agent)
 		limits := surface.Policy.Limits
 		report := &throttle{interval: time.Duration(limits.ProgressIntervalMs) * time.Millisecond, deliver: func(value float64, message string) { _ = progress.Report(ctx, value, nil, message) }}
 		send := report.send
@@ -235,6 +245,9 @@ func (surface *BuildSurface) handler(tool BuildTool) ToolHandler {
 			return CallToolResult{}, ctx.Err()
 		}
 		result := NewBuildResult(tool, invocation, agent, outcome)
+		if sessionHint != "" {
+			result.Hint = strings.TrimSpace(result.Hint + " " + sessionHint)
+		}
 		structured, err := json.Marshal(result)
 		if err != nil {
 			return CallToolResult{}, err

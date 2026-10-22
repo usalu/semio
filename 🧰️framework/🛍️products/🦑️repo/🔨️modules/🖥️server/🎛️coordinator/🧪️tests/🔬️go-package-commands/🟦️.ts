@@ -32,7 +32,7 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const { level, rest } = resolveTestLevel(segments);
-  await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, PACKAGE_DIR), ...rest], { env: coordinatorGoEnvironment(context.repoRoot) });
+  await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, PACKAGE_DIR), ...rest], context.invocation, { env: coordinatorGoEnvironment(context.repoRoot) });
 }
 
 /** 🏃️ Runs the `DevScript` command under the caller's roots and invocation. */

@@ -16,6 +16,7 @@ import (
 
 	graphql "github.com/usalu/semio/repo/graphql"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func firstJSONLine(output string) (json.RawMessage, bool) {
@@ -201,8 +202,7 @@ func normalizeRelativeTimes(s string) string {
 
 // 🚪️ The native process route obeys the shared argv contract before domain parsing.
 func TestNativeEntrypointContract(t *testing.T) {
- root := workspace.FindRepoRoot(func() string { value, _ := os.Getwd(); return value }())
- raw, err := os.ReadFile(root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json")
+ raw, err := os.ReadFile(sandbox.OriginPath("..", "..", "🧫️fixtures", "🚪️entrypoint", "🔣️.json"))
  if err != nil { t.Fatal(err) }
  var fixture struct { Vectors []struct { ID string `json:"id"`; Argv []string `json:"argv"`; Kind string `json:"kind"`; Arguments []string `json:"arguments"` } `json:"vectors"` }
  if err := json.Unmarshal(raw, &fixture); err != nil { t.Fatal(err) }

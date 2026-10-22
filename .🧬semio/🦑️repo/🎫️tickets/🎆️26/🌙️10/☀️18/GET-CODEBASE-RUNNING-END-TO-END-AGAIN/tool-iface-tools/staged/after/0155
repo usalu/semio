@@ -1,343 +1,315 @@
-package statutes
+// #region 🧲️Header
+
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+
+// 🔒️git carries the git version control provider and the git diff queries.
+
+// #endregion 🧲️Header
+
+package providers
 
 import (
-	json "encoding/json"
-	os "os"
-	filepath "path/filepath"
-	sort "sort"
+	fmt "fmt"
+	regexp "regexp"
+	strconv "strconv"
 	strings "strings"
-	unicode "unicode"
+	time "time"
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
 )
 
-// #region 🔣️Path Emoji
+// #region 🔒️Git
 
-// 🔏️pathEmojiEntry is one language-neutral file or directory identity fact.
-type pathEmojiEntry struct {
-	Path     string `json:"path"`
-	NodeKind string `json:"nodeKind"`
-	Reserved bool   `json:"reserved,omitempty"`
-}
+// 🔌️GitVersionControlProvider holds the data fields for a git version control provider record.
+type GitVersionControlProvider struct{}
 
-// ⚠️pathEmojiFinding is one deterministic naming statute result.
-type pathEmojiFinding struct {
-	Kind    string `json:"kind"`
-	Path    string `json:"path"`
-	Sibling string `json:"sibling,omitempty"`
-	Emoji   string `json:"emoji,omitempty"`
-}
+// 💿️Kind holds the data fields for a Kind record.
+func (p *GitVersionControlProvider) Kind() string { return "git" }
 
-// 🪞️foldPathEmojiIdentity removes presentation selectors from a logical emoji identity.
-func foldPathEmojiIdentity(value string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(value, "\uFE0E", ""), "\uFE0F", "")
-}
-
-// 😀️leadingPathEmojiIdentity extracts every contiguous leading emoji grapheme.
-func leadingPathEmojiIdentity(value string) (string, string, string) {
-	first, rest := model.ExtractEntityEmoji(value)
-	if first == "" {
-		return "", value, ""
-	}
-	identity := first
-	for {
-		next, remaining := model.ExtractEntityEmoji(rest)
-		if next == "" {
-			break
-		}
-		identity += next
-		rest = remaining
-	}
-	return identity, rest, first
-}
-
-// ⚖️pathEmojiStatuteFindings evaluates the shared file/folder sibling namespace.
-func pathEmojiStatuteFindings(entries []pathEmojiEntry, genericEmojiIdentities []string) []pathEmojiFinding {
-	generic := map[string]bool{}
-	for _, emoji := range genericEmojiIdentities {
-		generic[foldPathEmojiIdentity(emoji)] = true
-	}
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Path < entries[j].Path })
-	seen := map[string]pathEmojiEntry{}
-	findings := []pathEmojiFinding{}
-	for _, entry := range entries {
-		name := entry.Path
-		if index := strings.LastIndex(name, "/"); index >= 0 {
-			name = name[index+1:]
-		}
-		identity, rest, first := leadingPathEmojiIdentity(name)
-		reservedDocumentation := rest == "README" || strings.HasPrefix(rest, "README.") || rest == "LICENSE" || strings.HasPrefix(rest, "LICENSE.") || rest == "AGENTS.md"
-		if entry.NodeKind == "file" && reservedDocumentation {
-			if identity != "" {
-				findings = append(findings, pathEmojiFinding{Kind: "reserved-emoji", Path: entry.Path, Emoji: identity})
-			}
-			continue
-		}
-		if entry.Reserved {
-			continue
-		}
-		if identity == "" {
-			findings = append(findings, pathEmojiFinding{Kind: "missing", Path: entry.Path})
-			continue
-		}
-		multiple := identity != first
-		for index := range rest {
-			if emoji, _ := model.ExtractEntityEmoji(rest[index:]); emoji != "" {
-				multiple = true
-				break
-			}
-		}
-		if multiple {
-			findings = append(findings, pathEmojiFinding{Kind: "multiple", Path: entry.Path, Emoji: identity})
-		}
-		if generic[foldPathEmojiIdentity(first)] {
-			findings = append(findings, pathEmojiFinding{Kind: "generic", Path: entry.Path, Emoji: first})
-		}
-		if (model.EmojiText(first) != strings.ReplaceAll(first, "\uFE0E", "") || strings.Contains(first, "\u20E3")) && !strings.Contains(first, "\uFE0F") {
-			findings = append(findings, pathEmojiFinding{Kind: "presentation", Path: entry.Path, Emoji: first})
-		}
-		if rest != "" {
-			firstRest, _ := utf8DecodeRuneInString(rest)
-			if unicode.IsSpace(firstRest) {
-				findings = append(findings, pathEmojiFinding{Kind: "spacing", Path: entry.Path, Emoji: identity})
-			}
-		}
-		parent := ""
-		if index := strings.LastIndex(entry.Path, "/"); index >= 0 {
-			parent = entry.Path[:index]
-		}
-		key := parent + "\x00" + foldPathEmojiIdentity(first)
-		if previous, ok := seen[key]; ok {
-			findings = append(findings, pathEmojiFinding{Kind: "duplicate", Path: entry.Path, Sibling: previous.Path, Emoji: foldPathEmojiIdentity(first)})
-		} else {
-			seen[key] = entry
-		}
-	}
-	return findings
-}
-
-// 🔡️utf8DecodeRuneInString isolates the standard-library decoding call for path spacing checks.
-func utf8DecodeRuneInString(value string) (rune, int) {
-	for _, character := range value {
-		return character, len(string(character))
-	}
-	return 0, 0
-}
-
-type pathEmojiFixedContract struct {
-	PathPattern string `json:"pathPattern"`
-	Descendants string `json:"descendants"`
-	Scope       struct {
-		Kind                     string `json:"kind"`
-		EcosystemID              string `json:"ecosystemId"`
-		FixedFilenameContractID  string `json:"fixedFilenameContractId"`
-		FixedDirectoryContractID string `json:"fixedDirectoryContractId"`
-		Path                     string `json:"path"`
-	} `json:"scope"`
-}
-
-type pathEmojiTaxonomy struct {
-	PathEmojiPolicy struct {
-		GenericEmojiIdentities        []string `json:"genericEmojiIdentities"`
-		ReservedSubtreeDirectoryNames []string `json:"reservedSubtreeDirectoryNames"`
-	} `json:"pathEmojiPolicy"`
-	FixedFilenameContracts  map[string]pathEmojiFixedContract `json:"fixedFilenameContracts"`
-	FixedDirectoryContracts map[string]pathEmojiFixedContract `json:"fixedDirectoryContracts"`
-	PathExclusions          map[string]struct {
-		Path string `json:"path"`
-	} `json:"pathExclusions"`
-}
-
-func pathEmojiPackageContext(root, path string) (bool, string) {
-	parts := strings.Split(path, "/")
-	parent := parts[:len(parts)-1]
-	packagesIndex := -1
-	for index := len(parent) - 1; index >= 0; index-- {
-		_, rest, first := leadingPathEmojiIdentity(parent[index])
-		if rest == "packages" && foldPathEmojiIdentity(first) == foldPathEmojiIdentity("📦️") {
-			packagesIndex = index
-			break
-		}
-	}
-	ecosystemID := ""
-	if packagesIndex >= 0 && packagesIndex+1 < len(parent) {
-		ecosystemID = parent[packagesIndex+1]
-	}
-	parentPath := filepath.Join(root, filepath.FromSlash(strings.Join(parent, "/")))
-	adjacentEcosystem := ""
-	for _, manifest := range []struct{ name, ecosystemID string }{{"Cargo.toml", "🦀️rust"}, {"go.mod", "🐹️go"}, {"package.json", "🟦️typescript"}} {
-		_, manifestError := os.Lstat(filepath.Join(parentPath, manifest.name))
-		if filepath.Base(path) == manifest.name || manifestError == nil {
-			adjacentEcosystem = manifest.ecosystemID
-			break
-		}
-	}
-	if ecosystemID == "" {
-		ecosystemID = adjacentEcosystem
-	}
-	packageRoot := packagesIndex == len(parent)-2 || adjacentEcosystem != ""
-	return packageRoot, ecosystemID
-}
-
-func pathEmojiContractApplies(root, path string, contract pathEmojiFixedContract, taxonomy pathEmojiTaxonomy) bool {
-	matched, err := workspace.Match(contract.PathPattern, path)
-	if err != nil || !matched {
-		return false
-	}
-	switch contract.Scope.Kind {
-	case "exact-path":
-		return path == contract.Scope.Path
-	case "repository-root":
-		return !strings.Contains(path, "/")
-	case "package-root":
-		packageRoot, ecosystemID := pathEmojiPackageContext(root, path)
-		return packageRoot && ecosystemID == contract.Scope.EcosystemID
-	case "sibling-fixed-filename-contract":
-		sibling, ok := taxonomy.FixedFilenameContracts[contract.Scope.FixedFilenameContractID]
-		if !ok {
-			return false
-		}
-		siblingPath := filepath.Join(root, filepath.FromSlash(filepath.ToSlash(filepath.Dir(path))), filepath.Base(sibling.PathPattern))
-		_, siblingError := os.Lstat(siblingPath)
-		return siblingError == nil
-	case "fixed-directory-contract":
-		parent, ok := taxonomy.FixedDirectoryContracts[contract.Scope.FixedDirectoryContractID]
-		return ok && pathEmojiContractApplies(root, filepath.ToSlash(filepath.Dir(path)), parent, taxonomy)
-	default:
-		return true
-	}
-}
-
-func pathEmojiInventory(ctx *PolicyContext) ([]pathEmojiEntry, []string, error) {
-	data, err := os.ReadFile(filepath.Join(ctx.RootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🔣️taxonomy.json"))
+// 🌐️RepoURL holds the data fields for a RepoURL record.
+func (p *GitVersionControlProvider) RepoURL() (string, error) {
+	out, err := workspace.ToolCommand("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
-		return nil, nil, err
+		return "", err
 	}
-	var taxonomy pathEmojiTaxonomy
-	if err := json.Unmarshal(data, &taxonomy); err != nil {
-		return nil, nil, err
+	return strings.TrimSpace(string(out)), nil
+}
+
+// ⚙️Configure holds the data fields for a Configure record.
+func (p *GitVersionControlProvider) Configure(repoRoot string) error { return nil }
+
+// 💾️Checkpoint holds the data fields for a Checkpoint record.
+func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description string) (string, error) {
+	if _, _, exitCode := workspace.ExecCommand("git", []string{"diff", "--cached", "--quiet"}, repoRoot); exitCode == 0 {
+		if err := p.StageAll(repoRoot); err != nil {
+			return "", fmt.Errorf("stage all failed: %w", err)
+		}
 	}
-	output, err := workspace.ToolCommand("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
+	args := []string{"commit", "-m", description}
+	stdout, stderr, exitCode := workspace.ExecCommand("git", args, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit failed (exit %d): %s", exitCode, strings.TrimSpace(stderr))
+	}
+	_ = stdout
+	sha, err := p.CurrentCheckpoint(repoRoot)
 	if err != nil {
-		return nil, nil, err
+		return "", fmt.Errorf("failed to get checkpoint sha after checkpoint: %w", err)
 	}
-	rawFiles := strings.Split(string(output), "\x00")
-	files := []string{}
-	directories := map[string]bool{}
-	for _, rawFile := range rawFiles {
-		if rawFile == "" {
-			continue
-		}
-		file := strings.TrimSuffix(workspace.NormalizePath(rawFile), "/")
-		if file == "" {
-			continue
-		}
-		info, statError := os.Lstat(filepath.Join(ctx.RootDir, filepath.FromSlash(file)))
-		if statError != nil {
-			continue
-		}
-		if info.IsDir() {
-			directories[file] = true
-		} else {
-			files = append(files, file)
-		}
-		for parent := filepath.ToSlash(filepath.Dir(file)); parent != "." && parent != ""; parent = filepath.ToSlash(filepath.Dir(parent)) {
-			directories[parent] = true
-		}
+	return sha, nil
+}
+
+func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := workspace.ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse HEAD failed: %s", strings.TrimSpace(stderr))
 	}
-	reservedSubtrees := map[string]bool{}
-	for _, name := range taxonomy.PathEmojiPolicy.ReservedSubtreeDirectoryNames {
-		reservedSubtrees[foldPathEmojiIdentity(name)] = true
+	return strings.TrimSpace(stdout), nil
+}
+
+// ✔️Checkin holds the data fields for a Checkin record.
+func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string) error {
+	contributorBranch := contributor + "/latest"
+
+	_, stderr, exitCode := workspace.ExecCommand("git", []string{"fetch", "origin", "main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fetch origin main failed: %s", strings.TrimSpace(stderr))
 	}
-	isExcluded := func(path string) bool {
-		for _, exclusion := range taxonomy.PathExclusions {
-			if strings.HasPrefix(path+"/", exclusion.Path) {
-				return true
+
+	currentBranch, err := p.CurrentBranch(repoRoot)
+	if err != nil {
+		return err
+	}
+
+	if currentBranch != contributorBranch {
+		_, stderr, exitCode = workspace.ExecCommand("git", []string{"switch", contributorBranch}, repoRoot)
+		if exitCode != 0 {
+
+			_, stderr, exitCode = workspace.ExecCommand("git", []string{"switch", "-c", contributorBranch}, repoRoot)
+			if exitCode != 0 {
+				return fmt.Errorf("git switch to %s failed: %s", contributorBranch, strings.TrimSpace(stderr))
 			}
 		}
-		return false
 	}
-	underReserved := func(path string) bool {
-		parts := strings.Split(path, "/")
-		for _, part := range parts[:len(parts)-1] {
-			_, rest, _ := leadingPathEmojiIdentity(part)
-			if reservedSubtrees[foldPathEmojiIdentity(part)] || reservedSubtrees[foldPathEmojiIdentity(rest)] {
-				return true
-			}
-		}
-		return false
+
+	_, stderr, exitCode = workspace.ExecCommand("git", []string{"merge", "--ff-only", "origin/main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fast-forward merge to main failed: %s", strings.TrimSpace(stderr))
 	}
-	isReservedSubtreeName := func(path string) bool {
-		name := path
-		if index := strings.LastIndex(name, "/"); index >= 0 {
-			name = name[index+1:]
-		}
-		_, rest, _ := leadingPathEmojiIdentity(name)
-		return reservedSubtrees[foldPathEmojiIdentity(name)] || reservedSubtrees[foldPathEmojiIdentity(rest)]
-	}
-	contractReserved := func(path string, contracts map[string]pathEmojiFixedContract) bool {
-		for _, contract := range contracts {
-			if pathEmojiContractApplies(ctx.RootDir, path, contract, taxonomy) {
-				return true
-			}
-		}
-		return false
-	}
-	fixedReservedRoots := []string{}
-	for directory := range directories {
-		for _, contract := range taxonomy.FixedDirectoryContracts {
-			if contract.Descendants == "reserved" && pathEmojiContractApplies(ctx.RootDir, directory, contract, taxonomy) {
-				fixedReservedRoots = append(fixedReservedRoots, directory)
+	return nil
+}
+
+// 🔷️Checkout holds the data fields for a Checkout record.
+func (p *GitVersionControlProvider) Checkout(repoRoot string, contributor string, description string) (string, error) {
+	contributorBranch := contributor + "/latest"
+	now := time.Now().UTC()
+	archiveBranch := fmt.Sprintf("%s/%04d/%02d/%02d", contributor, now.Year(), now.Month(), now.Day())
+
+	_, stderr, exitCode := workspace.ExecCommand("git", []string{"branch", archiveBranch, contributorBranch}, repoRoot)
+	if exitCode != 0 {
+
+		for i := 2; i <= 99; i++ {
+			candidate := fmt.Sprintf("%s-%d", archiveBranch, i)
+			_, _, ec := workspace.ExecCommand("git", []string{"branch", candidate, contributorBranch}, repoRoot)
+			if ec == 0 {
+				archiveBranch = candidate
 				break
 			}
 		}
 	}
-	underFixedReserved := func(path string) bool {
-		for _, reservedRoot := range fixedReservedRoots {
-			if strings.HasPrefix(path, reservedRoot+"/") {
-				return true
+
+	_, stderr, exitCode = workspace.ExecCommand("git", []string{"switch", "main"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git switch to main failed: %s", strings.TrimSpace(stderr))
+	}
+
+	_, stderr, exitCode = workspace.ExecCommand("git", []string{"merge", "--squash", contributorBranch}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	_, stderr, exitCode = workspace.ExecCommand("git", []string{"commit", "-m", description}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	sha, err := p.CurrentCheckpoint(repoRoot)
+	if err != nil {
+		return "", err
+	}
+	return sha, nil
+}
+
+// 🌿️CurrentBranch holds the data fields for a CurrentBranch record.
+func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := workspace.ExecCommand("git", []string{"rev-parse", "--abbrev-ref", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse --abbrev-ref HEAD failed: %s", strings.TrimSpace(stderr))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+// 📄️StagedFiles holds the data fields for a StagedFiles record.
+func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
+	stdout, stderr, exitCode := workspace.ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
+	}
+	var files []string
+	for _, line := range strings.Split(strings.ReplaceAll(stdout, "\r\n", "\n"), "\n") {
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+	return files, nil
+}
+
+// 🏷️StageAll holds the data fields for a StageAll record.
+func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
+	_, stderr, exitCode := workspace.ExecCommand("git", []string{"add", "-A"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git add -A failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+// 🌳️GitIndexRef is the git ref for the staging index. Used for unstaged-only diffs (index vs working tree).
+// ⏹️Requirements: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
+const GitIndexRef = ":0"
+
+// 📨️GetGitDiffLines MUST retrieve the requested value or return an error.
+// GetGitDiffLines retrieves and returns the git diff lines.
+// ✔️For unstaged-only diffs use baseCheckpoint GitIndexRef (index vs working tree).
+func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map[string]*model.DiffLines, error) {
+	if baseCheckpoint == "" {
+		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
+	}
+	args := BuildGitDiffArgs("-U0", baseCheckpoint, headCheckpoint, paths)
+	stdout, stderr, exitCode := workspace.ExecCommand("git", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
+	}
+	result := make(map[string]*model.DiffLines)
+	var currentFile string
+	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.HasPrefix(line, "diff --git ") {
+			parts := strings.Fields(line)
+			if len(parts) >= 4 {
+				newPath := strings.TrimPrefix(parts[3], "b/")
+				currentFile = newPath
+				if result[currentFile] == nil {
+					result[currentFile] = &model.DiffLines{Added: []int{}, Removed: []int{}}
+				}
+			}
+		} else if strings.HasPrefix(line, "+++ b/") {
+			currentFile = strings.TrimPrefix(line, "+++ b/")
+			if result[currentFile] == nil {
+				result[currentFile] = &model.DiffLines{Added: []int{}, Removed: []int{}}
+			}
+		} else if strings.HasPrefix(line, "@@") && currentFile != "" {
+			match := lineRegex.FindStringSubmatch(line)
+			if match != nil {
+				oldStart, _ := strconv.Atoi(match[1])
+				oldCount := 1
+				if match[2] != "" {
+					oldCount, _ = strconv.Atoi(match[2])
+				}
+				for i := 0; i < oldCount; i++ {
+					result[currentFile].Removed = append(result[currentFile].Removed, oldStart+i)
+				}
+
+				newStart, _ := strconv.Atoi(match[3])
+				newCount := 1
+				if match[4] != "" {
+					newCount, _ = strconv.Atoi(match[4])
+				}
+				for i := 0; i < newCount; i++ {
+					result[currentFile].Added = append(result[currentFile].Added, newStart+i)
+				}
 			}
 		}
-		return false
 	}
-	entries := []pathEmojiEntry{}
-	for directory := range directories {
-		if !isExcluded(directory) {
-			entries = append(entries, pathEmojiEntry{Path: directory, NodeKind: "directory", Reserved: underReserved(directory) || underFixedReserved(directory) || isReservedSubtreeName(directory) || contractReserved(directory, taxonomy.FixedDirectoryContracts)})
-		}
-	}
-	for _, file := range files {
-		file = workspace.NormalizePath(file)
-		if file != "" && !isExcluded(file) {
-			entries = append(entries, pathEmojiEntry{Path: file, NodeKind: "file", Reserved: underReserved(file) || underFixedReserved(file) || contractReserved(file, taxonomy.FixedFilenameContracts)})
-		}
-	}
-	return entries, taxonomy.PathEmojiPolicy.GenericEmojiIdentities, nil
+	return result, nil
 }
 
-func pathEmojiBreaches(ctx *PolicyContext, nodeKind string) []model.Breach {
-	entries, generic, err := pathEmojiInventory(ctx)
-	if err != nil {
-		return nil
+// 🧱️BuildGitDiffArgs MUST construct and return the fully initialized result.
+// BuildGitDiffArgs constructs and returns the git diff args.
+// 🌳️GitIndexRef as baseCheckpoint yields unstaged-only diff (index vs working tree) with no tree-ish.
+func BuildGitDiffArgs(flag, baseCheckpoint, headCheckpoint string, paths []string) []string {
+	if baseCheckpoint == GitIndexRef {
+		if len(paths) == 0 {
+			return []string{"diff", flag, "-M"}
+		}
+		return append([]string{"diff", flag, "-M", "--"}, paths...)
 	}
-	byPath := map[string]string{}
-	for _, entry := range entries {
-		byPath[entry.Path] = entry.NodeKind
+	if headCheckpoint == "" {
+		if len(paths) == 0 {
+			return []string{"diff", flag, "-M", baseCheckpoint}
+		}
+		return append([]string{"diff", flag, "-M", baseCheckpoint, "--"}, paths...)
 	}
-	kinds := map[string]map[string]model.Statute{
-		"directory": {"missing": model.BreachFolderNameMissingEmoji, "generic": model.BreachFolderNameGenericEmoji, "presentation": model.BreachFolderNameNoncanonicalEmojiPresentation, "spacing": model.BreachFolderNameWhitespaceAfterEmoji, "duplicate": model.BreachFolderNameEmojiNotUnique, "multiple": model.BreachFolderNameMultipleEmojis},
-		"file":      {"missing": model.BreachFileNameMissingEmoji, "generic": model.BreachFileNameGenericEmoji, "presentation": model.BreachFileNameNoncanonicalEmojiPresentation, "spacing": model.BreachFileNameWhitespaceAfterEmoji, "duplicate": model.BreachFileNameEmojiNotUnique, "multiple": model.BreachFileNameMultipleEmojis, "reserved-emoji": model.BreachFileNameReservedEmoji},
+	if len(paths) == 0 {
+		return []string{"diff", flag, "-M", baseCheckpoint, headCheckpoint}
 	}
-	breachs := []model.Breach{}
-	for _, finding := range pathEmojiStatuteFindings(entries, generic) {
-		if byPath[finding.Path] != nodeKind {
+	return append([]string{"diff", flag, "-M", baseCheckpoint, headCheckpoint, "--"}, paths...)
+}
+
+// 🔺️GitDiffStatus holds the data fields for a git diff status record.
+type GitDiffStatus struct {
+	Status string
+	From   string
+	To     string
+}
+
+// 🔻️GetGitDiffStatus MUST retrieve the requested value or return an error.
+// 🐙️GetGitDiffStatus retrieves and returns the git diff status.
+func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]GitDiffStatus, error) {
+	if baseCheckpoint == "" {
+		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
+	}
+	args := []string{"diff", "--name-status", "-M"}
+	if baseCheckpoint != GitIndexRef {
+		args = append(args, baseCheckpoint)
+		if headCheckpoint != "" {
+			args = append(args, headCheckpoint)
+		}
+	}
+	if len(paths) > 0 {
+		args = append(args, "--")
+		args = append(args, paths...)
+	}
+	stdout, stderr, exitCode := workspace.ExecCommand("git", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff status failed: %s", strings.TrimSpace(stderr))
+	}
+	var results []GitDiffStatus
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line == "" {
 			continue
 		}
-		summary := "Path \"" + finding.Path + "\" breaches the " + finding.Kind + " emoji statute"
-		breachs = append(breachs, ctx.CreateBreach(summary, kinds[nodeKind][finding.Kind], finding.Path, 0, 0, finding.Path))
+		parts := strings.Split(line, "\t")
+		if len(parts) < 2 {
+			continue
+		}
+		status := strings.TrimSpace(parts[0])
+		if strings.HasPrefix(status, "R") && len(parts) >= 3 {
+			results = append(results, GitDiffStatus{Status: "renamed", From: parts[1], To: parts[2]})
+			continue
+		}
+		file := parts[1]
+		switch status {
+		case "A":
+			results = append(results, GitDiffStatus{Status: "added", To: file})
+		case "D":
+			results = append(results, GitDiffStatus{Status: "deleted", From: file})
+		case "M":
+			results = append(results, GitDiffStatus{Status: "modified", To: file})
+		default:
+			results = append(results, GitDiffStatus{Status: "modified", To: file})
+		}
 	}
-	return breachs
+	return results, nil
 }
 
-// #endregion 🔣️Path Emoji
+// #endregion 🔒️Git

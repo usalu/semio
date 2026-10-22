@@ -19,6 +19,8 @@ import { awaitChildExit, awaitTcpReady } from "../../♻️activation/🩺️rea
 import { ParityRenderer } from "../🏗️structure/🟦️.ts";
 
 import { parityOutDir } from "../📊️report/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeSleepV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 
 
@@ -60,7 +62,7 @@ function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): 
 
 type ParityServerHandle = { readonly daemon: SpawnDaemonHandle; readonly port: number };
 
-/** ⏱️A cold `bun ./📜️script.ts dev` boot can mean compiling the ENTIRE plugin crate catalog (33 crates)
+/** ⏱️A cold `repo ./📜️script.ts dev` boot can mean compiling the ENTIRE plugin crate catalog (33 crates)
  * plus, for wgpu, a from-scratch trunk/cargo build — many minutes with an empty `target/`, not the
  * ~40-60s a warm-cache boot takes. Default generously; `PARITY_BOOT_BUDGET_MS` overrides for CI/tuning. */
 const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_MS ?? 900_000);
@@ -83,12 +85,12 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       if (Date.now() >= lockDeadline) throw new Error(`plugin prebuild lock for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (${lockPath})`);
-      await Bun.sleep(500);
+      await runtimeSleepV1(500);
     }
   }
   try {
     const logStream = createWriteStream(logPath);
-    const daemon = spawnDaemon("bun", [devScript, "plugin", variant], {
+    const daemon = spawnDaemon(runtimeExecutableV1(), [devScript, "plugin", variant], {
       cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
       env: {
         ...process.env,
@@ -116,7 +118,7 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
   const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
   const logPath = join(parityOutDir(), `boot-${renderer}-${variant}.log`);
   const logStream = createWriteStream(logPath);
-  const daemon = spawnDaemon("bun", [devScript, "dev"], {
+  const daemon = spawnDaemon(runtimeExecutableV1(), [devScript, "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
     env: {
       ...process.env,

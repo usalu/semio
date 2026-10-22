@@ -47,7 +47,7 @@ pub struct WorldInteractionMeshToken {
 }
 
 #[derive(Clone, Copy)]
-struct WorldInteractionMeshSlot {
+pub struct WorldInteractionMeshSlot {
     pub id: WorldInteractionId,
     pub generation: u64,
     pub version: u64,
@@ -64,7 +64,7 @@ pub struct WorldInteractionMeshRegistry {
 }
 
 #[derive(Clone, Copy)]
-struct WorldInteractionMeshPlan {
+pub struct WorldInteractionMeshPlan {
     pub slot: u16,
     pub epoch: u64,
     existing_generation: Option<u64>,
@@ -86,7 +86,7 @@ fn mesh3d_schema_bytes(schema: Mesh3dSchema) -> Option<usize> {
 
 impl Default for WorldInteractionMeshRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: semio_framework_async::boxed_fixed_slots(|| 0), faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: semio_framework_async_slots::boxed_fixed_slots(|| 0), faulted: false }
     }
 }
 
@@ -223,7 +223,7 @@ pub struct WorldInteractionObjectRegistry {
 
 impl Default for WorldInteractionObjectRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), occupied: [0; WORLD_INTERACTION_OBJECT_CAPACITY.div_ceil(64)], epochs: semio_framework_async::boxed_fixed_slots(|| 0), instance_order: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, revision: u64::MAX, faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), occupied: [0; WORLD_INTERACTION_OBJECT_CAPACITY.div_ceil(64)], epochs: semio_framework_async_slots::boxed_fixed_slots(|| 0), instance_order: semio_framework_async_slots::boxed_fixed_slots(|| None), instance_len: 0, revision: u64::MAX, faulted: false }
     }
 }
 

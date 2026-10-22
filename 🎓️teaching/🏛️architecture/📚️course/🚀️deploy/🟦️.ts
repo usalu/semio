@@ -32,7 +32,7 @@
  * https://docs.docker.com/reference/cli/docker/ */
 
 import { courseOriginalBuildModeV1 } from "../🏗️builder/🎚️mode/🟦️.ts";
-import { spawn, spawnSync } from "node:child_process";
+
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { requireIssuedScriptInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
@@ -41,6 +41,7 @@ import { type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/�
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import course from "../🔣️.json" with { type: "json" };
 import deployment from "./🔣️.json" with { type: "json" };
+import { runToolSyncV1, startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🔣️Constants
 /** 🌐️ The host the CDN serves the site at. */
@@ -172,7 +173,7 @@ export const COURSE_DEPLOY_CLEANUP_MS = 45_000;
 export function docker(args: readonly string[], options: Readonly<{ signal?: AbortSignal; env?: NodeJS.ProcessEnv; input?: string | Uint8Array; cwd?: string }> = {}): Promise<DockerAnswer> {
   return new Promise((accept, reject) => {
     if (options.signal?.aborted) return reject(new Error("cancelled"));
-    const child = spawn("docker", [...args], { shell: false, cwd: options.cwd, env: Object.fromEntries(Object.entries({ ...process.env, ...options.env }).filter(([, value]) => value !== undefined)), stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
+    const child = startToolV1("docker", [...args], { shell: false, cwd: options.cwd, env: Object.fromEntries(Object.entries({ ...process.env, ...options.env }).filter(([, value]) => value !== undefined)), stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
     const written: Buffer[] = [];
     let stderr = "";
     child.stdout!.on("data", (chunk: Buffer) => written.push(chunk));
@@ -216,7 +217,7 @@ export async function dockerServerVersion(signal?: AbortSignal): Promise<string>
  * its time; `unknown` outside a git checkout. */
 export function sourceRevision(repoRoot: string): Readonly<{ revision: string; created: string }> {
   const git = (...args: string[]): string | undefined => {
-    const run = spawnSync("git", args, { cwd: repoRoot, encoding: "utf8", windowsHide: true });
+    const run = runToolSyncV1("git", args, { cwd: repoRoot, encoding: "utf8", windowsHide: true });
     return run.status === 0 ? run.stdout.trim() : undefined;
   };
   const head = git("rev-parse", "HEAD");
@@ -287,7 +288,7 @@ export function deploymentDrift(repoRoot: string, read: (path: string) => string
   if (limits.size > 1) problems.push(`${DEPLOY}/Caddyfile defaults PROCTOR_LIMIT_BODY_BYTES to ${[...limits].join(" and ")}`);
   expect(WORKFLOW, workflow, [`path: ${BUNDLE}/dist/release/${COURSE_PAGES_DIRECTORY}`]);
   for (const image of [...dockerfile.matchAll(/^ARG \w+_IMAGE=(\S+)$/gmu), ...compose.matchAll(/^\s+image:\s*(\S+)$/gmu)].map((line) => line[1]!)) if (!image.startsWith(COURSE_IMAGE_REPOSITORY) && !/^[\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/u.test(image)) problems.push(`the base image ${image} is not pinned to an exact tag and digest`);
-  for (const action of new Set([...workflow.matchAll(/^\s*(?:- )?uses:\s*(\S+)/gmu)].map((line) => line[1]!))) if (!/@[0-9a-f]{40}$/u.test(action)) problems.push(`${WORKFLOW} uses ${action} without a commit hash`);
+  for (const action of new Set([...workflow.matchAll(/^\s*(?:- )?uses:\s*(\S+)/gmu)].map((line) => line[1]!))) if (!action.startsWith("./") && !/@[0-9a-f]{40}$/u.test(action)) problems.push(`${WORKFLOW} uses ${action} without a commit hash`);
   const project = JSON.parse(read(`${BUNDLE}/📋️project.json`)) as { targets: Record<string, unknown> };
   for (const [path, text] of Object.entries({ ...texts, "package.json": read("package.json") })) for (const target of new Set([...text.matchAll(new RegExp(`${PROJECT}:([a-z0-9-]+)`, "gu"))].map((mention) => mention[1]!))) if (!(target in project.targets)) problems.push(`${path} names ${PROJECT}:${target}, which is not a target of the package`);
   try {

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {withNextStorageV1} from "../../🏗️builder/💾️storage/🟦️.ts";
@@ -9,7 +9,7 @@ import storageSchema from "../../🏗️builder/💾️storage/🧬️schema/�
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { createRequire } from "node:module";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
+/** 🧭️ Coordinator Next.js package router: `repo ./📜️script.ts build|dev|start|test|policy`. */
 import { join, relative } from "node:path";
 import {writeFile} from "node:fs/promises";
 import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
@@ -25,7 +25,7 @@ export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLi
 });
 
 /** ⚙️ Every Next.js invocation runs inside this package, never at the repository root. */
-const PACKAGE_DIR = import.meta.dir;
+const PACKAGE_DIR = import.meta.dirname;
 
 /** 🏗️ Delegates the coordinator's compile to its actual dedicated command owner. */
 class BuildScript extends BundleScript{async run(segments:string[]):Promise<void>{const {buildCoordinatorNextV1}=await import("../../🏗️builder/🏃️execution/🟦️.ts");await buildCoordinatorNextV1(this.repoRoot,this.invocation,segments);}}
@@ -69,11 +69,11 @@ class TestScript extends BundleScript {
       return;
     }
     const { level, rest } = resolveTestLevel(segments);
-    await runCanonicalGoTests(join(import.meta.dir, "../.."), [...goLevelTestArgs(level), ...rest]);
+    await runCanonicalGoTests(join(import.meta.dirname, "../.."), [...goLevelTestArgs(level), ...rest], this.invocation);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("dev", DevScript).register("start", StartScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("dev", DevScript).register("start", StartScript).register("test", TestScript);
 
 await runRepoScriptMain(router, import.meta.url, { defaultCommand: "build" });

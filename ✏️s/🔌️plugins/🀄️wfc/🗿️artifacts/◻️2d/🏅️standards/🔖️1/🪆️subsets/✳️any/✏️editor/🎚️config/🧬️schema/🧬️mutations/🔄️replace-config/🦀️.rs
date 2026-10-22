@@ -19,6 +19,19 @@ where
     Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc2d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc2d::config::mutations::change_camera::ChangeCamera>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc2dConfig, Op> for ReplaceConfig
+where
+    Op: protocol::ColdMutation<Wfc2dConfig, ReferenceDiff = Wfc2dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc2d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc2d::config::mutations::change_camera::ChangeCamera>,
+{
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
         let config = &self.config;
         protocol::MutationOutcome::new(Wfc2dConfigDiff {
@@ -37,10 +50,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["config".into()]
-    }
 }

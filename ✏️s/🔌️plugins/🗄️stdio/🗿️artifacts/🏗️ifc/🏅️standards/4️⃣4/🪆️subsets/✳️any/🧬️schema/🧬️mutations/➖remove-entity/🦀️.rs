@@ -14,6 +14,15 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
     fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id } = self;
         protocol::MutationOutcome::new(diff::diff_remove_entity(*id))
@@ -25,12 +34,6 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
             Some(index) => IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: base.entities[index].clone() }),
             None => return Ok(Vec::new()),
         }])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

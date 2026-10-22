@@ -25,7 +25,8 @@
         "chunkBytes": 65536,
         "receiptHeapMiB": 512,
         "selectedDirectory": "selected",
-        "maximumRevalidations": 8
+        "maximumRevalidations": 8,
+        "maximumClosurePasses": 2
       }
     },
     "SelectedPublicationFile": {

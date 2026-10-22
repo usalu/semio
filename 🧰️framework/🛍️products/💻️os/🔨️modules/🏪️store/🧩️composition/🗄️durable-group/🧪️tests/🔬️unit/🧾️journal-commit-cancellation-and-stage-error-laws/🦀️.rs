@@ -16,7 +16,7 @@ async fn durable_store_owned_three_member_bind_and_base_recovery_retain_exact_pr
         assert!(member.recovery_pack.starts_with(b"\x89SEM\r\n\x1a\n"));
         assert_eq!(member.recovery_pack_sha256, semio_framework_hash::sha256_hex(&member.recovery_pack));
     }
-    let recovered = match decision.recover_store_owned(&parent_store, &drawing_store, &value_store).expect("all-base recovery verifies every bound outcome") {
+    let recovered = match recover_decision_store_owned(&decision, &parent_store, &drawing_store, &value_store).expect("all-base recovery verifies every bound outcome") {
         DurableOwnedThreeStoreRecoveryV1::Apply(recovered) => recovered,
         DurableOwnedThreeStoreRecoveryV1::AlreadyApplied => panic!("base stores cannot report already applied"),
     };
@@ -26,7 +26,7 @@ async fn durable_store_owned_three_member_bind_and_base_recovery_retain_exact_pr
     }
     let mut tampered = decision;
     tampered.value.recovery_pack[0] ^= 1;
-    assert!(tampered.recover_store_owned(&parent_store, &drawing_store, &value_store).is_err());
+    assert!(recover_decision_store_owned(&tampered, &parent_store, &drawing_store, &value_store).is_err());
     drop(recovered);
     drop(bound);
     close_demo_artifact_store(&mut value_store);

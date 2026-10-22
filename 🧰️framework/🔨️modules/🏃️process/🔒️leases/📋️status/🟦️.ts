@@ -3,13 +3,14 @@ import {readdirSync,readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {classifyLeaseResourceV1,findLeaseCycleV1,formatLeaseViolationV1,leaseBlockersV1,leaseLanguageV1,leaseOrderPolicyV1,shortLeaseResourceV1,type LeaseCycleV1,type LeaseModeV1,type LeaseNodeV1,type LeaseViolationV1} from "../🧭️order/🟦️.ts";
 import {leaseRegistryRootV1,listLeaseRegistryDirectoriesV1,readLeaseRegistryEntriesV1,readLeaseViolationsV1,type LeaseRegistryEntryV1} from "../🧭️order/🗂️registry/🟦️.ts";
+import {agentSessionRegistryRootV1,agentSessionStoreV1,parseAgentSessionAddressV1,readAgentSessionV1} from "../../🪪️agent-sessions/🗄️store/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const protocol=schema.definitions.Protocol.const;
 /** 🎒️ One held lease. */
-export type LeaseHolderV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;heldSeconds:number;class:string;rank:number;source:"registry"|"queue";command?:string}>;
+export type LeaseHolderV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;heldSeconds:number;class:string;rank:number;source:"registry"|"queue";command?:string;session?:string;agent?:string}>;
 /** ⏳️ One waiting request and the participants it waits for. */
-export type LeaseWaiterV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;waitedSeconds:number;class:string;rank:number;source:"registry"|"queue";position?:number;queued?:number;blockers:readonly string[];command?:string}>;
+export type LeaseWaiterV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;waitedSeconds:number;class:string;rank:number;source:"registry"|"queue";position?:number;queued?:number;blockers:readonly string[];command?:string;session?:string;agent?:string}>;
 /** ➡️ One edge of the wait-for graph. */
 export type LeaseEdgeV1=Readonly<{from:string;to:string;resource:string}>;
 /** 🚪️ The machine-wide admission queue beside the leases: what is granted and what waits for memory or load (`Admission` of the schema). */
@@ -40,15 +41,15 @@ export function readLeaseQueuesV1(directory:string):readonly Ticket[]{
 }
 
 /** 🧮️ Combines the registry, the arrival queues and the violation log of one lease directory into a report; a pure function of its arguments. */
-export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;entries:readonly LeaseRegistryEntryV1[];queues:readonly Ticket[];violations:readonly LeaseViolationV1[]}>,environment:Readonly<Record<string,string|undefined>>=process.env):LeaseReportV1{
+export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;entries:readonly LeaseRegistryEntryV1[];queues:readonly Ticket[];violations:readonly LeaseViolationV1[];agents?:ReadonlyMap<string,string>}>,environment:Readonly<Record<string,string|undefined>>=process.env):LeaseReportV1{
  const policy=leaseOrderPolicyV1(environment),names=new Map<string,string>(),holders:LeaseHolderV1[]=[],waiters:LeaseWaiterV1[]=[],nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean}}>();
  const node=(id:string)=>{let row=nodes.get(id);if(!row){row={holds:[]};nodes.set(id,row);}return row;};
- const known=new Set<string>(),commands=new Map<number,string>();
+ const known=new Set<string>(),commands=new Map<number,string>(),sessions=new Map<number,Readonly<{session:string;agent?:string}>>(),owner=(pid:number)=>{const row=sessions.get(pid);return row===undefined?{}:{session:row.session,...row.agent===undefined?{}:{agent:row.agent}};};
  for(const entry of input.entries){
-  commands.set(entry.pid,entry.command);
+  commands.set(entry.pid,entry.command);if(entry.session!==undefined)sessions.set(entry.pid,{session:entry.session,...input.agents?.has(entry.session)?{agent:input.agents.get(entry.session)!}:{}});
   for(const row of entry.holds){
    const key=hash(row.resource),cls=classifyLeaseResourceV1(policy,row.resource);names.set(key,row.resource);known.add(`h\0${entry.pid}\0${key}`);
-   holders.push({resource:row.resource,hash:key,mode:row.mode,pid:entry.pid,task:row.task,sinceMs:row.sinceMs,heldSeconds:Math.max(0,Math.floor((input.atMs-row.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:"registry",command:entry.command});
+   holders.push({resource:row.resource,hash:key,mode:row.mode,pid:entry.pid,task:row.task,sinceMs:row.sinceMs,heldSeconds:Math.max(0,Math.floor((input.atMs-row.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:"registry",command:entry.command,...owner(entry.pid)});
    node(`${entry.pid}/${row.task}`).holds.push({key,mode:row.mode});
   }
   for(const row of entry.waits){
@@ -63,7 +64,7 @@ export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;
   const id=`${ticket.pid}/q`,run=holderRun(tickets),asHolder=ticket.position<=run;
   if(asHolder){
    if(known.has(`h\0${ticket.pid}\0${key}`))continue;
-   holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:"queue",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{}});
+   holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:"queue",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{},...owner(ticket.pid)});
    node(id).holds.push({key,mode:ticket.mode});
   }else if(!known.has(`w\0${ticket.pid}\0${key}`)){
    node(id).wait={key,mode:ticket.mode,sinceMs:ticket.arrivedAtMs,queued:true};
@@ -75,7 +76,7 @@ export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;
   const blockers=leaseBlockersV1(list,row),pid=Number.parseInt(row.id,10),task=row.id.endsWith("/q")?0:Number.parseInt(row.id.slice(row.id.indexOf("/")+1),10),cls=names.has(row.wait.key)?classifyLeaseResourceV1(policy,names.get(row.wait.key)!):{id:"unclassified",rank:0};
   for(const to of blockers)edges.push({from:row.id,to,resource:names.get(row.wait.key)??""});
   const ticket=byKey.get(row.wait.key)?.find(candidate=>candidate.pid===pid);
-  waiters.push({resource:names.get(row.wait.key)??"",hash:row.wait.key,mode:row.wait.mode,pid,task,sinceMs:row.wait.sinceMs,waitedSeconds:Math.max(0,Math.floor((input.atMs-row.wait.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:known.has(`w\0${pid}\0${row.wait.key}`)?"registry":"queue",...ticket?{position:ticket.position,queued:ticket.queued}:{},blockers,...commands.has(pid)?{command:commands.get(pid)}:{}});
+  waiters.push({resource:names.get(row.wait.key)??"",hash:row.wait.key,mode:row.wait.mode,pid,task,sinceMs:row.wait.sinceMs,waitedSeconds:Math.max(0,Math.floor((input.atMs-row.wait.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:known.has(`w\0${pid}\0${row.wait.key}`)?"registry":"queue",...ticket?{position:ticket.position,queued:ticket.queued}:{},blockers,...commands.has(pid)?{command:commands.get(pid)}:{},...owner(pid)});
   const cycle=findLeaseCycleV1(list,row.id);
   if(cycle){const signature=[...cycle.members].sort().join("|");if(!seen.has(signature)){seen.add(signature);cycles.push(cycle);}}
  }
@@ -88,7 +89,7 @@ const fill=(template:string,values:Readonly<Record<string,string|number>>):strin
 /** 🖨️ Renders a report as lines in the chosen language. */
 export function formatLeaseReportV1(language:"en"|"de",report:LeaseReportV1):readonly string[]{
  const catalogue=schema.definitions.Messages.const,text=Object.fromEntries(Object.entries(catalogue).map(([key,value])=>[key,value[language]])) as Record<keyof typeof catalogue,string>,name=(row:{resource:string;hash:string})=>row.resource?shortLeaseResourceV1(row.resource):fill(text.unnamed,{hash:row.hash.slice(0,12)});
- const command=(row:{command?:string})=>row.command?`  ${row.command.slice(0,80)}`:"";
+ const command=(row:{command?:string;session?:string;agent?:string})=>(row.session===undefined?"":fill(text.sessionTag,{session:row.session.slice(row.session.indexOf(".")+1),agent:row.agent??"?"}))+(row.command?`  ${row.command.slice(0,80)}`:"");
  const lines=[fill(text.header,{directory:report.directory,holders:report.holders.length,waiters:report.waiters.length,cycles:report.cycles.length,violations:report.violations.length})];
  if(report.holders.length===0&&report.waiters.length===0)lines.push(fill(text.empty,{directory:report.directory}));
  for(const row of report.holders)lines.push(fill(text.holder,{mode:row.mode,resource:name(row),pid:row.pid,seconds:row.heldSeconds,class:`${row.class} ${row.rank}`,command:command(row)}));
@@ -111,7 +112,9 @@ const flag=(args:readonly string[],name:string):string|undefined=>{for(const arg
 /** 📋️ Reads the live state of one lease directory. */
 export function readLeaseReportV1(directory:string,environment:Readonly<Record<string,string|undefined>>,atMs:number,violations:number):LeaseReportV1{
  const root=leaseRegistryRootV1(environment),resolved=resolve(directory);
- return buildLeaseReportV1({directory:resolved,atMs,entries:readLeaseRegistryEntriesV1(root,resolved,atMs),queues:readLeaseQueuesV1(resolved),violations:readLeaseViolationsV1(root,resolved,violations)},environment);
+ const entries=readLeaseRegistryEntriesV1(root,resolved,atMs),agents=new Map<string,string>(),sessions=agentSessionRegistryRootV1(environment);
+ for(const entry of entries){const address=parseAgentSessionAddressV1(entry.session);if(address===undefined||agents.has(entry.session!))continue;const found=readAgentSessionV1(agentSessionStoreV1(sessions,address.worktree),address.id);if(found!==undefined)agents.set(entry.session!,found.agent.id);}
+ return buildLeaseReportV1({directory:resolved,atMs,entries,queues:readLeaseQueuesV1(resolved),violations:readLeaseViolationsV1(root,resolved,violations),agents},environment);
 }
 
 /** 🚪️ Dispatches `repo leases status [--json] [--lease-directory=<path>] [--all] [--violations=<n>]`; the machine-wide admission queue is appended when the context offers it. */

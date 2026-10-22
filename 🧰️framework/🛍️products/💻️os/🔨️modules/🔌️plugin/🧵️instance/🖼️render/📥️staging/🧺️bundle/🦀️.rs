@@ -12,7 +12,7 @@ use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -23,7 +23,7 @@ use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
 
 /// 🧺️ The exclusive borrows the `render` use cases need; built by the composer (`VcsArtifactApp::render_ctx`) or reborrowed by a higher bundle.
-pub struct RenderCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct RenderCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
@@ -40,7 +40,7 @@ pub struct RenderCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'sta
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> RenderCtx<'ctx, A, M, X> {
     /// 🔍️ The shared twin over the same borrows, for the `&self` members.
     pub fn shared(&self) -> RenderRef<'_, A, M, X> {
         RenderRef { app: &*self.app, stores: &*self.stores, history: &*self.history, child_composition: &*self.child_composition, tools: &*self.tools, ingest: &*self.ingest, time_travel: &*self.time_travel, tool_machines: &*self.tool_machines, extension: PhantomData }
@@ -48,7 +48,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> RenderCt
 }
 
 /// 🔍️ The shared borrows the `render` `&self` use cases need (`Copy`: every field is a shared reference).
-pub struct RenderRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct RenderRef<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'v A,
     pub stores: &'v InstanceStores<A>,
     pub history: &'v CommandHistory<A>,
@@ -60,11 +60,11 @@ pub struct RenderRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'stati
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Clone for RenderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Clone for RenderRef<'v, A, M, X> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Copy for RenderRef<'v, A, M, X> {}
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Copy for RenderRef<'v, A, M, X> {}
 

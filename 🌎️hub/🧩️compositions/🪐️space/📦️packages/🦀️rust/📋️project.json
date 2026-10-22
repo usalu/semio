@@ -14,7 +14,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-identity-rows-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-identity-rows-check"
       },
       "outputs": []
     },
@@ -23,7 +23,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-identity-rows-check --native"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-identity-rows-check --native"
       },
       "outputs": []
     },
@@ -32,14 +32,14 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts plugin-identity-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts plugin-identity-check"
       },
       "outputs": []
     },
     "snapshot-owner-census-source": {
       "executor": "repo:script",
       "cache": true,
-      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census source"},
+      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "repo ./📜️script.ts snapshot-owner-census source"},
       "outputs": [],
       "inputs": [
         "default",
@@ -52,7 +52,7 @@
     "snapshot-owner-census-native": {
       "executor": "repo:script",
       "cache": true,
-      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census native"},
+      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "repo ./📜️script.ts snapshot-owner-census native"},
       "outputs": [],
       "inputs": [
         "default",
@@ -67,7 +67,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts interactive-job-catalog-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts interactive-job-catalog-check"
       },
       "outputs": []
     },
@@ -76,7 +76,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts interactive-job-catalog-check --native"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts interactive-job-catalog-check --native"
       },
       "outputs": []
     },
@@ -85,7 +85,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-event-page-owner-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-event-page-owner-check"
       },
       "outputs": []
     },
@@ -94,7 +94,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-event-page-owner-check --native"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-event-page-owner-check --native"
       },
       "outputs": []
     },
@@ -103,7 +103,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-projection-persistence-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-projection-persistence-check"
       },
       "outputs": []
     },
@@ -112,7 +112,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts home-directory-projection-persistence-check --native"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts home-directory-projection-persistence-check --native"
       },
       "outputs": []
     },
@@ -120,7 +120,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -131,7 +131,7 @@
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts persistence-data-class-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts persistence-data-class-check"
       },
       "outputs": []
     }

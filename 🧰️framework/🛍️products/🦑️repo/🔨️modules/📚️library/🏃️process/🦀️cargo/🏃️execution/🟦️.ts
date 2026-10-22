@@ -14,6 +14,8 @@ import {readNativeOwnerCapabilities,type NativeOwnerCapabilities} from "../../..
 import nativeSchema from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json" with { type: "json" };
 import type {RepositoryExactCargoLawOptions} from "../🎯️exact/🟦️.ts";
+import { runtimeProgramV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 const endpoint=fileURLToPath(new URL("./📜️script.ts",import.meta.url));
 const identity=(path:string,status:BigIntStats):CargoExecutionSourceV1["file"]=>({path,device:String(status.dev),inode:String(status.ino)});
@@ -47,9 +49,9 @@ function captureSource(path:string,maximumBytes:number):Readonly<{source:CargoEx
 /** 🎟️ Binds one actual selected native command to its unique physical package declaration. */
 export function issueRepositoryCargoExecutionBackendV1(root:string,command:NativeOwnerCapabilities["command"],transport:NativeOwnerCapabilities["transport"]):CargoExecutionBackendV1|undefined {
  if(!isAbsolute(root)||root!==resolve(root)||validateJsonSchemaSubset(nativeSchema.properties.command,command).length||validateJsonSchemaSubset(nativeSchema.properties.transport,transport).length)throw Error("Original Cargo execution caller required");
- const manifest=sourcePath(root,command.manifest),original=captureSource(manifest,transport.maximumBytes),cargo=Bun.TOML.parse(original.bytes.toString("utf8")) as {package?:{metadata?:{semio?:Record<string,unknown>}}},reference=cargo.package?.metadata?.semio?.["cargo-execution"];
+ const manifest=sourcePath(root,command.manifest),original=captureSource(manifest,transport.maximumBytes),cargo=runtimeParseTomlV1(original.bytes.toString("utf8")) as {package?:{metadata?:{semio?:Record<string,unknown>}}},reference=cargo.package?.metadata?.semio?.["cargo-execution"];
  if(reference===undefined)return;if(typeof reference!=="string")throw Error("Cargo execution declaration reference required");
- const declared=captureSource(sourcePath(root,reference,dirname(manifest)),transport.maximumBytes-original.bytes.length),declaration=readCargoExecutionContractV1("declaration",JSON.parse(declared.bytes.toString("utf8"))),operation=selectCargoExecutionOperationV1(declaration,{program:command.program,cwd:command.workingDirectory,arguments:command.arguments},root);if(!operation)return;const {request}=operation,continuation=operation.continuation?{program:operation.continuation.program==="bun"?process.execPath:operation.continuation.program,cwd:sourcePath(root,operation.continuation.cwd),arguments:operation.continuation.arguments}:null;
+ const declared=captureSource(sourcePath(root,reference,dirname(manifest)),transport.maximumBytes-original.bytes.length),declaration=readCargoExecutionContractV1("declaration",JSON.parse(declared.bytes.toString("utf8"))),operation=selectCargoExecutionOperationV1(declaration,{program:command.program,cwd:command.workingDirectory,arguments:command.arguments},root);if(!operation)return;const {request}=operation,continuation=operation.continuation?{program:runtimeProgramV1(operation.continuation.program),cwd:sourcePath(root,operation.continuation.cwd),arguments:operation.continuation.arguments}:null;
  if(sourcePath(root,request.manifest)!==manifest)throw Error("Declared Cargo execution manifest differs from original caller");sourcePath(root,request.cwd);
  return readCargoExecutionContractV1("backend",{version:1,program:process.execPath,arguments:[endpoint,"execute"],cwd:root,sources:[original.source,declared.source],request,continuation});
 }

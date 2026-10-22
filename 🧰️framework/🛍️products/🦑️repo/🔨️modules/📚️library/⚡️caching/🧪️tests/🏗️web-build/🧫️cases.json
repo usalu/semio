@@ -74,13 +74,6 @@
     "inherited",
     "independent"
   ],
-  "extensionSource": "export const retained = 42; const retainedPrototypeDeclaration = \"no-size-optimization\"; if (import.meta.vitest) { await Promise.resolve(\"test-only\"); }",
-  "watch": {
-    "source": "export const watchedValue: number = 1;",
-    "updatedSource": "export const watchedValue: number = 2;",
-    "expected": 2,
-    "invalidSource": "export const watchedValue: number = ;"
-  },
   "largePrototype": {
     "characters": 17825792,
     "maximumManifestBytes": 4096,

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "maximumInputBytes": 4096,
+  "cases": [
+    {
+      "name": "prefix",
+      "prefix": "ctrl+e",
+      "binding": null,
+      "cancel": false,
+      "expected": "saved"
+    },
+    {
+      "name": "binding",
+      "prefix": null,
+      "binding": {
+        "id": "prefix.show-help",
+        "keys": [
+          "f12"
+        ]
+      },
+      "cancel": false,
+      "expected": "saved"
+    },
+    {
+      "name": "cancel",
+      "prefix": "ctrl+e",
+      "binding": null,
+      "cancel": true,
+      "expected": "cancelled"
+    },
+    {
+      "name": "conflict",
+      "prefix": null,
+      "binding": {
+        "id": "prefix.show-help",
+        "keys": [
+          "n"
+        ]
+      },
+      "cancel": false,
+      "expected": "refused"
+    },
+    {
+      "name": "invalid-prefix",
+      "prefix": "plain",
+      "binding": null,
+      "cancel": false,
+      "expected": "refused"
+    },
+    {
+      "name": "unchanged",
+      "prefix": null,
+      "binding": null,
+      "cancel": false,
+      "expected": "unchanged"
+    },
+    {
+      "name": "aliases",
+      "prefix": null,
+      "binding": {
+        "id": "prefix.show-help",
+        "keys": [
+          "?",
+          "f12"
+        ]
+      },
+      "cancel": false,
+      "expected": "saved"
+    }
+  ]
+}

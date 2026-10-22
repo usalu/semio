@@ -1,4 +1,4 @@
-"""Independent Python oracle of the incremental conformance model (standard library only): it re-implements the evaluation, the verdict, the mutations, the Bazel labels, the environment scrub and the compact execution log decoder, and prints the results for the fixture rows given as JSON on stdin."""
+"""Independent Python oracle of the incremental conformance model (standard library only): it re-implements the evaluation, the verdict, the mutations, the Bazel labels, the environment scrub (invocation, capability, build and Nx state dropped; Bun's transpiler cache switched off because it is keyed by content, not by location) and the compact execution log decoder, and prints the results for the fixture rows given as JSON on stdin."""
 import base64,hashlib,json,re,subprocess,sys
 
 def effect(sens,task,kind):
@@ -52,7 +52,7 @@ def label(kind,value):
 
 def child(parent,extra):
     kept={k:v for k,v in parent.items() if k=="SEMIO_LANGUAGE" or not re.match(r"(SEMIO_|NX_)",k)}
-    kept.update(extra);return kept
+    kept["BUN_RUNTIME_TRANSPILER_CACHE_PATH"]="0";kept.update(extra);return kept
 
 def varint(b,i):
     r=0;s=0

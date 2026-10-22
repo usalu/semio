@@ -20,7 +20,16 @@ pub struct RemoveObject {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "object", kind: "remove-object", record: "RemoveObject" };
 
-    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove object", "Objekt entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for RemoveObject {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_object(name))
     }
@@ -32,12 +41,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveObject {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove object", "Objekt entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

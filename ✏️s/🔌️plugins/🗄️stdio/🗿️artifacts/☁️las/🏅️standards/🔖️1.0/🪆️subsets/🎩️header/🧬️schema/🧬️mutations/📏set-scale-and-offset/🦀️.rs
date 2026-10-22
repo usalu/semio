@@ -23,18 +23,21 @@ pub struct SetScaleAndOffset {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "scale-and-offset", kind: "set-scale-and-offset", record: "SetScaleAndOffset" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        let Self { scale, offset } = self;
-        protocol::MutationOutcome::new(diff::diff_set_scale_and_offset(base, *scale, *offset))
-    }
-    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetScaleAndOffset(SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set scale and offset", "Maßstab und Versatz setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::ColdMutation<LasSnapshot>>::ReferenceDiff> {
+        let Self { scale, offset } = self;
+        protocol::MutationOutcome::new(diff::diff_set_scale_and_offset(base, *scale, *offset))
+    }
+    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
+        Ok(vec![LasMutation::SetScaleAndOffset(SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })])
     }
 }
 //#endregion 🔖️Payload

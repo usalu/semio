@@ -7,8 +7,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/draw-js:test",
-    "utility-action-policy": "bun --cwd \"../../../../..\" repo run @semio-tech/draw-js:utility-action-policy"
+    "test": "repo run @semio-tech/draw-js:test",
+    "utility-action-policy": "repo run @semio-tech/draw-js:utility-action-policy"
   },
   "dependencies": {},
   "devDependencies": {

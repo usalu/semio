@@ -1,7 +1,8 @@
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
 import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import * as React from "../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useState } from "../⚛️react-port/🟦️.ts";
 import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { PluginSurfaceActionsContext } from "../🗣️Interpreter/🧷️interpreter-context/🟦️.ts";

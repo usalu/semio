@@ -1,8 +1,8 @@
 //! 🧪️ Shared transform vectors preserve concurrent geometry and inspector field intent.
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

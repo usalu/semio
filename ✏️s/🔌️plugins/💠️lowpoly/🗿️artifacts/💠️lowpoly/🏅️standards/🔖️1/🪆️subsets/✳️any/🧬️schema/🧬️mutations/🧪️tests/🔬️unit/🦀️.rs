@@ -2,7 +2,7 @@ use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use super::*;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
     let mesh = default_snapshot().objects[0].mesh.clone();
@@ -20,7 +20,7 @@ async fn create_object_obeys_the_inverse_and_absorb_laws() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
     let d1 = create.diff(&base).into_parts().0;
-    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = LowpolyMutation::RenameObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -172,7 +172,7 @@ fn refresh_lowpoly_mutation_fixtures_when_requested() {
         std::fs::write(&mutation_path, fixture_json_encode(&mutation)).expect("write mutation");
         let (after, _) = protocol::apply_mutation(&before, &mutation).expect("apply mutation");
         std::fs::write(&after_path, fixture_json_encode(&after)).expect("write after");
-        let raised = <LowpolyMutation as Mutation<LowpolySnapshot>>::diff(&mutation, &before);
+        let raised = <LowpolyMutation as ColdMutation<LowpolySnapshot>>::diff(&mutation, &before);
         std::fs::write(&diff_path, fixture_json_encode(raised.diff())).expect("write diff");
     }
 }

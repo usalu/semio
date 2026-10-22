@@ -1,7 +1,7 @@
 /** 🔸️ The open document phase of useShellUriAndDocuments. */
 import { FolderArchivePersistenceV1, FolderReadBackRouteV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1 } from "../../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";

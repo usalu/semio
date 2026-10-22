@@ -70,4 +70,7 @@ pub use run_and_entry::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_PCG_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 // #endregion 🔖️Tests

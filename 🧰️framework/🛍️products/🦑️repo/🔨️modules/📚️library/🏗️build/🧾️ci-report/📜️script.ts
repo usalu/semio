@@ -1,11 +1,15 @@
+import {buildBackendAlternationV1,requireBuildBackendIdV1} from "../🔌️backends/🟦️.ts";
 import {existsSync,readdirSync,readFileSync,statSync} from "node:fs";
 import {join,relative} from "node:path";
-import {ciCacheDeltaV1,compareCiPlansV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,resolveCiLanguageV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiToolV1} from "./🟦️.ts";
+import {ciCacheDeltaV1,compareCiPlansV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiToolV1} from "./🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const usage=`Usage: bun script.ts <command> [--lang en|de] ...
   cache-directory --status <file>
-  cache-delta  --tool nx|bazel --before <file> --after <file> [--label <text>]
-  proof        --tool nx|bazel --status0 <file> --status1 <file> --status2 <file> --log1 <file> --log2 <file>
+  cache-delta  --tool ${buildBackendAlternationV1()} --before <file> --after <file> [--label <text>]
+  proof        --tool ${buildBackendAlternationV1()} --status0 <file> --status1 <file> --status2 <file> --log1 <file> --log2 <file>
   plan         --plan <file> --targets <list> [--label <text>]
   parity       --first <file> --second <file> --targets <list>
   tests        --dir <directory> [--require]
@@ -35,7 +39,7 @@ function parse(command:string,args:readonly string[]):Map<string,string>{
 }
 
 const need=(values:Map<string,string>,name:string):string=>{const value=values.get(name);if(value===undefined)throw Error(`Option --${name} required`);return value;};
-const tool=(values:Map<string,string>):CiToolV1=>{const value=need(values,"tool");if(value!=="nx"&&value!=="bazel")throw Error("Option --tool must be nx or bazel");return value;};
+const tool=(values:Map<string,string>):CiToolV1=>requireBuildBackendIdV1(need(values,"tool"));
 const read=(path:string):string=>readFileSync(path,"utf8");
 
 function xmlFiles(directory:string):string[]{
@@ -49,7 +53,7 @@ function xmlFiles(directory:string):string[]{
 }
 
 function run(command:string,values:Map<string,string>,environment:Readonly<Record<string,string|undefined>>):{text:string;ok:boolean}{
- const language=resolveCiLanguageV1(values.get("lang"),environment);
+ const flag=values.get("lang"),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,flag===undefined?[]:["--lang",flag],environment).language;
  if(command==="cache-directory"){
   const status=readCiCacheStatusV1(read(need(values,"status")));
   return {text:`${status.available&&status.directory!==null?status.directory:""}\n`,ok:true};
@@ -90,4 +94,4 @@ export function runCiReportV1(argv:readonly string[],environment:Readonly<Record
  }catch(error){write(`${(error as Error).message}\n`);return 2;}
 }
 
-if(import.meta.main)process.exit(runCiReportV1(process.argv.slice(2),process.env,text=>process.stdout.write(text)));
+if(isMainModuleV1(import.meta.url))process.exit(runCiReportV1(process.argv.slice(2),process.env,text=>process.stdout.write(text)));

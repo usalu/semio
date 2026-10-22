@@ -396,15 +396,15 @@ impl Drop for Generation2dMutationDecodeAuthority {
 /// 📦️ Installs Generation2d's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
 pub fn generation2d_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Generation2dSnapshot, Generation2dMutation> {
-    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation2dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation2dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
 }
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Generation2dSnapshot, Generation2dMutation> for Generation2dEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
             self.edit_history_decoder(),
         )
         .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>)
@@ -431,6 +431,6 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Gen
     }
 
     fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation2dMutation>>> {
-        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
     }
 }

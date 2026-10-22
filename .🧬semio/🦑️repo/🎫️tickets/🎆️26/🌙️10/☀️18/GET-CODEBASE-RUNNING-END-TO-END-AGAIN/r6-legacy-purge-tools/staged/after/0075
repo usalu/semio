@@ -1,0 +1,65 @@
+{
+  "title": "Migrate Detail Panel Old Build UI Sizing",
+  "status": "closed",
+  "description": "Analyze the old build detail panel UI sizing and alignment systematically and migrate patterns into the new build. Port layout dimensions, spacing tokens, field alignment, and tree structure from Design.Details.tsx.old into Design.tsx.",
+  "summary": "Restored connection translation controls to steppers in the sketchpad detail panel and updated sketchpad Playwright coverage to validate the stepper UI with a default baseURL.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/704"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-26T11:52:05.230934423Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Analyze the old build detail panel UI sizing and alignment systematically and migrate patterns into the new build. Port layout dimensions, spacing tokens, field alignment, and tree structure from Design.Details.tsx.old into Design.tsx.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-26 12:11:03",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "4010dc93d7897058f4e2aff2168723f9ccefb118",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-27 12:18:22",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Replace connection translation sliders with steppers for gap, shift, and rise in the sketchpad detail panel.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-27T12:31:39.705049641Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Restored connection translation controls to steppers in the sketchpad detail panel and updated sketchpad Playwright coverage to validate the stepper UI with a default baseURL.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    }
+  ]
+}

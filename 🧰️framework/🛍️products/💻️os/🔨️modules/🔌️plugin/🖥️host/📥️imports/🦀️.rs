@@ -33,9 +33,10 @@ use semio_framework::{MediaClass, MediaForm, MediaType};
 use semio_framework_actor::{ActorId as RuntimeActorId, PackageId};
 use semio_framework_async::{CancelToken, CapabilityTokenId, HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle, TraceId};
 use semio_framework_os_services::{HttpRequest as ServiceHttpRequest, StorageError, TokioHostRuntime};
-use wasmtime::component::{Accessor, Destination, HasSelf, StreamProducer, StreamReader, StreamResult, VecBuffer};
-use wasmtime::{ResourceLimiter, StoreContextMut};
-use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
+use semio_framework_plugin_host_engine::wasm;
+use wasm::component::{Accessor, Destination, HasSelf, StreamProducer, StreamReader, StreamResult, VecBuffer};
+use wasm::{ResourceLimiter, StoreContextMut};
+use wasm::wasi::{WasiCtx, WasiCtxView, WasiView};
 
 //#region 🔌️Bindings
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): this file no longer runs its own
@@ -94,7 +95,7 @@ pub(crate) struct AsyncActorHostState {
     patch_sink: Vec<wit_ui::UiPatch>,
     limiter: semio_framework_plugin_host_engine::BudgetLimiter,
     wasi_ctx: WasiCtx,
-    resource_table: wasmtime::component::ResourceTable,
+    resource_table: wasm::component::ResourceTable,
 }
 
 impl AsyncActorHostState {
@@ -130,7 +131,7 @@ impl AsyncActorHostState {
             patch_sink: Vec::new(),
             limiter: semio_framework_plugin_host_engine::BudgetLimiter::default(),
             wasi_ctx,
-            resource_table: wasmtime::component::ResourceTable::new(),
+            resource_table: wasm::component::ResourceTable::new(),
         }
     }
 
@@ -365,7 +366,7 @@ impl StreamProducer<AsyncActorHostState> for ChunkStreamProducer {
     type Item = u8;
     type Buffer = VecBuffer<u8>;
 
-    fn poll_produce<'a>(self: Pin<&mut Self>, cx: &mut Context<'_>, _store: StoreContextMut<'a, AsyncActorHostState>, mut destination: Destination<'a, u8, VecBuffer<u8>>, _finish: bool) -> Poll<wasmtime::Result<StreamResult>> {
+    fn poll_produce<'a>(self: Pin<&mut Self>, cx: &mut Context<'_>, _store: StoreContextMut<'a, AsyncActorHostState>, mut destination: Destination<'a, u8, VecBuffer<u8>>, _finish: bool) -> Poll<wasm::Result<StreamResult>> {
         let mut shared = self.shared.lock().expect("ChunkShared mutex poisoned");
         if let Some(chunk) = shared.queue.pop_front() {
             destination.set_buffer(chunk.into());
@@ -421,11 +422,11 @@ async fn decode_dsl(bytes: &[u8]) -> Option<semio_framework::DslValue> {
     store::pack_rt::decode_wire_value(bytes).ok()
 }
 
-async fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> {
+async fn decode_json<T: semio_framework_value::FromValue>(bytes: &[u8]) -> Option<T> {
     if bytes.is_empty() {
         return None;
     }
-    serde_json::from_slice(bytes).ok()
+    semio_framework_pack_json::from_json_str(std::str::from_utf8(bytes).ok()?, semio_framework_pack_json::JsonMemberPolicy::Replace).ok()
 }
 
 /// 🐛️ Local copy of `🦀️.rs`'s own `wit_effect_to_kernel`, retargeted at this file's OWN
@@ -580,7 +581,7 @@ impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
         eprintln!("[actor-async:{}:{level}] {message}", self.actor);
     }
 
-    fn operation_clock_us(&mut self)->Option<u64>{None}
+    fn operation_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
@@ -959,7 +960,7 @@ impl host_async_bindings::semio::framework::pure::HostWithStore<AsyncActorHostSt
 
 /// 🪟️ The actual asynchronous actor state retains its own inline receiving slot.
 impl semio_framework_plugin_host_operation::OperationHostStore for AsyncActorHostState {
-    fn operation_clock_us(&mut self)->Option<u64>{host_async_bindings::semio::framework::pure::Host::operation_clock_us(self)}
+    fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{host_async_bindings::semio::framework::pure::Host::operation_clock_us(self,clock_binding)}
  fn operation_slot(&mut self)->&mut semio_framework_plugin_host_operation::OperationSlot{&mut self.operation_slot}
  fn operation_log(&mut self,level:String,message:String){host_async_bindings::semio::framework::pure::Host::log(self,level,message)}
  fn operation_now_ms(&mut self)->i64{host_async_bindings::semio::framework::pure::Host::now_ms(self)}

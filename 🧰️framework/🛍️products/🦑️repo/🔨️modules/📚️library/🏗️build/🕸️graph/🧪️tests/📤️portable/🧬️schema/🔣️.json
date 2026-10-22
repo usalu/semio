@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "batches",
+    "failures",
+    "sliceFailures"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "maximumProjects": 32,
+        "maximumBytes": 16777216,
+        "retryCaughtFailures": false
+      }
+    },
+    "batches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "lengths",
+          "groups",
+          "glyph"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "lengths": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 14,
+              "maximum": 16777217
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            }
+          },
+          "glyph": {
+            "enum": [
+              "x",
+              "é"
+            ]
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "atChunk",
+          "projects"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "error",
+              "capacity",
+              "message-getter",
+              "code-getter",
+              "proxy"
+            ]
+          },
+          "atChunk": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "projects": {
+            "enum": [
+              2,
+              65
+            ]
+          }
+        }
+      }
+    },
+    "sliceFailures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "selection",
+          "expected",
+          "generationCalls",
+          "fallbackCalls"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "error",
+              "unknown",
+              "empty-generation",
+              "unknown-owner",
+              "inherited-code",
+              "code-getter",
+              "proxy",
+              "message-getter",
+              "capacity"
+            ]
+          },
+          "selection": {
+            "enum": [
+              "tasks",
+              "projects"
+            ]
+          },
+          "expected": {
+            "const": "primary"
+          },
+          "generationCalls": {
+            "const": 1
+          },
+          "fallbackCalls": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

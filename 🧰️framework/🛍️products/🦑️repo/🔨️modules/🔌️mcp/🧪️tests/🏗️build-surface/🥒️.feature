@@ -34,7 +34,7 @@ Feature: The repo MCP exposes the neutral build catalogue as tools
   Scenario: A call runs under the agent that made it
     Given a call with the argument agent alpha
     When the child process starts
-    Then SEMIO_AGENT_ID and SEMIO_SESSION are alpha and SEMIO_CARGO_LANE is the lane derived from alpha, and the variables of an enclosing invocation are removed
+    Then SEMIO_AGENT_SESSION is the address of the session that repo session open issued for alpha, no per-tool identity variable is set, and the variables of an enclosing invocation are removed
 
   @id-cancellation
   @level-quick

@@ -72,13 +72,6 @@
       "projectionSha256": "72ae84a57fb961ace6216079ee83dd7a0cf71aba403c094c270107473968cc0b"
     },
     {
-      "configurationRoot": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
-      "previousPath": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/vitest.config.ts",
-      "ownerPath": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🧪️tests/🎚️config/🟦️.ts",
-      "expectedName": "@semio-tech/trinity-jack-lsp-worker",
-      "projectionSha256": "573208b8f7f4b4eaef903f5e583e180715a5cd392f7131102fc6b3a8c1553c85"
-    },
-    {
       "configurationRoot": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript",
       "previousPath": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🧪️tests/🎚️config/🟦️.ts",

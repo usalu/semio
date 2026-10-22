@@ -18,7 +18,7 @@ use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
 
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 
 
 //#region 🔖️Mutations
@@ -44,7 +44,7 @@ pub use semio_s_artifact_stdio_semio_value_mutation_leaves::{insert_list_item, r
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation")]
+#[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation", reference = SemioValueSnapshot, reference_diff = SemioValueTreeDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of
@@ -76,7 +76,7 @@ pub const KINDS: &[&str] = &["set-value", "set-map-entry", "remove-map-entry", "
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> protocol::MutationOutcome<SemioValueTreeDiff> {
-    <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, base)
+    <SemioValueMutation as ColdMutation<SemioValueSnapshot>>::diff(mutation, base)
 }
 
 /// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
@@ -88,7 +88,7 @@ pub fn diff_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValu
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> Result<Vec<SemioValueMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, base)?
+    <SemioValueMutation as ColdMutation<SemioValueSnapshot>>::inverse(mutation, base)?
 
     })
 }

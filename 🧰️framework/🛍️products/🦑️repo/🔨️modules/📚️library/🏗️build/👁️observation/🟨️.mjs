@@ -1,15 +1,17 @@
 import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
-import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1} from "../📥️inputs/💾️storage/🟨️.mjs";
+import{declareFormatStampV1}from"../🧷️format-stamps/🟨️.mjs";
+import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,requireRepositoryBuildGraphObservationPathV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from "../🧠️memory/🟨️.mjs";
 import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 
 /** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
 const packInferenceRecordV1=bytes=>new Promise((accept,reject)=>brotliCompress(bytes,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:bytes.length}},(error,packed)=>error?reject(error):accept(packed)));
-import { createRequire } from "node:module";
-import { basename, dirname, join, resolve } from "node:path";
+import{createRequire}from"node:module";
+import { basename, dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { openRecordStore, recordKey } from "../../⚡️caching/🗃️records/🟦️.ts";
 import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -18,6 +20,18 @@ import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs
 
 /** 🗃️ This module's own bytes: persisted observations validated by another revision of these rules are a miss. */
 const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256;
+
+/** 🔖️ The declared stamps of the inference protocol, registered by the stamps component of each revision: a project record names the stamp of every inferrer that took part in its output instead of the bytes of their code, and a stamp row holds while that inferrer still carries the stamp it was recorded with. */
+const inferenceStamps=new Map();
+let stampedFragments=[];
+export function registerInferenceStampsV1(entries,fragments=[]){for(const[path,stamp]of entries){if(typeof path!=="string"||!path||typeof stamp!=="string"||!stamp)throw Error("Inference stamp path and value required");inferenceStamps.set(path,stamp);}if(!Array.isArray(fragments)||fragments.some(fragment=>typeof fragment!=="string"||fragment.length<2))throw Error("Inference source fragments required");stampedFragments=[...fragments];}
+
+/** 🏷️ The declared stamp of the persisted project record format: a record written under another stamp is a miss. */
+const recordStampV1=()=>sourceAnalysisSchemaV1.$defs.record.const.stamp;
+declareFormatStampV1("graph.record",sourceAnalysisSchemaV1);
+
+/** 📌️ Records the stamp of each named inferrer in the active inference scope, so the record that is being computed names exactly the protocol versions it took part in. */
+export function observedInferenceStampsV1(paths){for(const path of paths)record("stamp",path);}
 
 /** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
 export function requireCurrentObservationV1(){if(implementationPinnedV1())return;try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
@@ -45,6 +59,14 @@ let sourceAnalysisBytes = 0;
 let loadSealed = false;
 let authorityDigest;
 
+/** 🧊️ Keeps the serialized image of recently inferred projects up to the declared byte bound, oldest first out: a repeated round in this process reuses a retained image, every other repeat reads the persisted record, so the images of thousands of projects never accumulate. */
+const retainedProjectImages=new Set();let retainedProjectImageBytes=0;
+function retainProjectImageV1(cachePath,entry){
+ const previous=projectImages.get(cachePath);if(previous?.image)retainedProjectImageBytes-=previous.image.length;
+ retainedProjectImages.delete(cachePath);projectImages.set(cachePath,entry);retainedProjectImages.add(cachePath);retainedProjectImageBytes+=entry.image.length;
+ while(retainedProjectImageBytes>GRAPH_MEMORY_POLICY_V1.retainedImageBytes&&retainedProjectImages.size){const oldest=retainedProjectImages.values().next().value,held=projectImages.get(oldest);retainedProjectImages.delete(oldest);if(held?.image){retainedProjectImageBytes-=held.image.length;held.image=null;}}
+}
+
 /** 📊️ Exposes owned project computation counts without influencing source admission. */
 export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}
 
@@ -59,7 +81,7 @@ export async function observeInferenceSnapshotV1(compute){
 }
 
 /** 📊️ Reports owned observation counts without exposing or discarding original source facts. */
-export function sourceObservationStatsV1(){let projectObservationRows=0;for(const project of projectImages.values())projectObservationRows+=project.observations.length;return {loadObservations:loadObservations.size,projectImages:projectImages.size,originalInferencePublications:originalInferencePublications.size,projectObservationRows,captureObservations:sourceCaptures.getStore()?.size??0,recordStores:recordStores.size,analysisEntries:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes};}
+export function sourceObservationStatsV1(){let projectObservationRows=0,projectImageBytes=0;for(const project of projectImages.values()){projectObservationRows+=project.observations.length;projectImageBytes+=project.image?.length??0;}return {loadObservations:loadObservations.size,projectImages:projectImages.size,projectImageBytes,originalInferencePublications:originalInferencePublications.size,projectObservationRows,captureObservations:sourceCaptures.getStore()?.size??0,recordStores:recordStores.size,analysisEntries:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes};}
 
 /** 🔏️ Registers one explicit parser revision; receipts can never provide executable analysis code. */
 export function registerSourceAnalysisV1({id,revision,analyze}){
@@ -84,27 +106,30 @@ function projectObservationHoldsV1(row,parent){
  checks?.set(key,{fact,holds});rows?.set(row,holds);return holds;
 }
 
-/** 🪪️ Seals module-load authority and names it by the meaning of its facts, so project records inherit implementation identity by digest instead of by rows. */
+/** 📛️ The identity every persisted project record of this process is written under: its record stamp and the authority digest of its module loads, equal in every process whose records another may reuse. */
+export function inferenceRecordIdentityV1(){return createHash("sha256").update(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()])).digest("hex");}
+
+/** 🪪️ Seals module-load authority and names it by the meaning of its data facts, so project records inherit the declared policies and schemas by digest instead of by rows; every file below a fragment of the inference protocol is named by its stamp, never by its bytes. */
 export function inferenceAuthorityDigestV1(){
  loadSealed=true;
- return authorityDigest??=createHash("sha256").update(JSON.stringify([...loadObservations.values()].map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort())).digest("hex");
+ return authorityDigest??=createHash("sha256").update(JSON.stringify([...loadObservations.values()].filter(row=>!(row.kind==="file"&&stampedFragments.some(fragment=>row.path.includes(fragment)))).map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort())).digest("hex");
 }
 
 /** 📦️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
-export async function observeProjectInferenceV1({cachePath,key,owner,reusable},compute){
+export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare},compute){
  requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
- const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,inferenceAuthorityDigestV1(),key])).digest("hex"),previous=projectImages.get(cachePath);
+ const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1(),key])).digest("hex"),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
- if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
-  const value=JSON.parse(previous.image.toString("utf8"));
+ if(previous?.identity===identity&&previous.image!==null&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
+  const value=internJsonStringsV1(JSON.parse(previous.image.toString("utf8")),graphStringInternerV1);
   if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
- const value=await observeInferenceComputationV1({cachePath,key,reusable},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
+ const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
  const publication=originalInferencePublications.get(cachePath);
  if(!publication)throw Error("Original project inference observations required");
  inherit(publication.observations);
- projectImages.set(cachePath,{identity,image:Buffer.from(JSON.stringify(value)),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
- return value;
+ retainProjectImageV1(cachePath,{identity,image:Buffer.from(JSON.stringify(value)),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
+ return internJsonStringsV1(value,graphStringInternerV1);
 }
 
 /** 📥️ Retains every actual source fact, including facts inherited from valid inference records. */
@@ -303,6 +328,7 @@ function typescriptDirectoriesV1(path){try{return fs.readdirSync(path||".",{with
 
 /** 🔎️ Recomputes one observation's fact exactly as it was first taken. */
 const facts = {
+  stamp: (path) => inferenceStamps.get(path) ?? "!unregistered",
   analysis: (path,fact) => sourceAnalysisFactHoldsV1(path,fact),
   file: (path) => fileFact(path),
   exists: (path) => fs.existsSync(path),
@@ -604,20 +630,19 @@ export async function observeInference({ cachePath, key, reusable }, compute) {
 }
 
 /** 🧷️ Validates nested project records within one original inference; its outer publication still rechecks every source fact freshly. */
-async function observeInferenceComputationV1({cachePath,key,reusable},compute,nestedProject) {
+async function observeInferenceComputationV1({cachePath,key,reusable,prepare},compute,nestedProject) {
   requireCurrentObservationV1();loadSealed = true;
   originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
   const parent=scopes.getStore();
-  const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
+  const digest = createHash("sha256").update(JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
+  const lookup=async()=>{
   let candidate;
-  try {
-    const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);if(Array.isArray(header.blocks))header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks),...header.observations];
-    if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && (nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))) {
-      candidate={value:JSON.parse(text.slice(split+1)),header,headerDigest:createHash("sha256").update(text.slice(0,split)).digest("hex")};
-    }
-    for (const { kind, path, fact } of Array.isArray(header.observations) ? header.observations : []) if (kind === "file" && typeof fact?.sha256 === "string") hints.set(path, fact);
-  } catch {}
-  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&(nestedProject?sharedObservationsHoldV1(candidate.header.observations,parent):current(candidate.header.observations))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return value;}
+  const record=readInferencePhysicalRecordV1(cachePath,true);if(record){const{header,line}=record;if(header.digest===digest&&(nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations)))candidate={value:record.value,header,headerDigest:createHash("sha256").update(line).digest("hex")};for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
+  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&(nestedProject?sharedObservationsHoldV1(candidate.header.observations,parent):current(candidate.header.observations))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return{value};}
+  return undefined;
+  };
+  const reused=await lookup()??(prepare!==undefined&&await prepare()?await lookup():undefined);
+  if(reused)return reused.value;
   const observations = new Map(), started = Date.now();
   const records=observedRecordStoreV1(`${cachePath}.records`);
   const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
@@ -693,15 +718,49 @@ export async function receiveSourcePreparationV1(original,control){
 }
 
 /** 📜️ The header line of a persisted inference record (its digest and observations), read without the result that follows it. */
-export function inferenceHeaderLine(cachePath) {
-  const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), newline = text.indexOf("\n");
-  return newline < 0 ? null : text.slice(0, newline);
+export function inferenceHeaderLine(cachePath){return readInferencePhysicalRecordV1(cachePath).line;}
+
+
+const observationUTF8V1=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true});
+const observationBlockPolicyV1=sourceAnalysisSchemaV1.$defs.observationBlock.const,blockRowsValidatorV1=compileJsonSchemaSubset({$defs:sourceAnalysisSchemaV1.$defs,$ref:"#/$defs/observationRows"}),headerValidatorV1=compileJsonSchemaSubset({$defs:sourceAnalysisSchemaV1.$defs,$ref:"#/$defs/inferenceHeader"});
+/** 📏️ Projects finite aggregate admission DATA without granting physical read custody. */
+export function observationBlockBudgetAdmitsV1(used,next,maximum){return Number.isSafeInteger(used)&&Number.isSafeInteger(next)&&Number.isSafeInteger(maximum)&&used>=0&&next>=0&&maximum>=1&&used<=maximum-next;}
+function observationReadBudgetV1(){return{packed:0,output:0,rows:0,nodes:0,parentSets:new Map()};}
+function observationChargeV1(budget,kind,next){const maximum=observationBlockPolicyV1[{packed:"maximumAggregatePackedBytes",output:"maximumAggregateOutputBytes",rows:"maximumAggregateRows",nodes:"maximumAggregateNodes"}[kind]];if(!observationBlockBudgetAdmitsV1(budget[kind],next,maximum))throw Error("Finite aggregate observation "+kind+" budget exceeded");budget[kind]+=next;}
+function observationParentsFenceV1(path,parents){return()=>{requireRepositoryBuildGraphObservationPathV1(path,"read");for(const original of parents){const row=fs.lstatSync(original.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||[row.dev,row.ino,row.mode].join(":")!==original.identity)throw Error("Observation ancestry changed");}};}
+function observationAbsenceFenceV1(path,parents,missing){const unchanged=observationParentsFenceV1(path,Object.freeze(parents.map(row=>Object.freeze({...row}))));return Object.freeze({absent:true,missing,parentFence:unchanged,recheck:()=>{unchanged();try{fs.lstatSync(missing);throw Error("Absent observation coordinate reappeared");}catch(error){if(error?.code!=="ENOENT")throw error;}}});}
+function observationLeafFenceV1(path,parents,epoch){const unchanged=observationParentsFenceV1(path,parents);return()=>{unchanged();const actual=fs.lstatSync(path,{bigint:true});if(!actual.isFile()||actual.isSymbolicLink()||actual.nlink!==1n||observationEpochV1(actual)!==epoch)throw Error("Observation leaf changed before delivery");};}
+function observationEpochV1(row){return[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");}
+function observationPhysicalReadV1(path,maximumBytes,optional,namedBlock=false,budget=observationReadBudgetV1(),absenceProof=false){
+ path=resolve(path);const custody=requireRepositoryBuildGraphObservationPathV1(path,"read"),check=()=>requireRepositoryBuildGraphObservationPathV1(path,"read"),parents=[],ancestry=[];for(let cursor=dirname(path);;cursor=dirname(cursor)){if(ancestry.length>=observationBlockPolicyV1.maximumAncestors)throw Error("Finite observation ancestry required");ancestry.push(cursor);if(dirname(cursor)===cursor)break;}ancestry.reverse();let device,inside=false;
+ const unchanged=observationParentsFenceV1(path,parents);
+ for(const directory of ancestry){if(custody.root===directory)inside=true;let row;try{row=fs.lstatSync(directory,{bigint:true});}catch(error){if(error?.code!=="ENOENT"||!optional||custody.kind==="managed"&&(directory===custody.root||!inside||!relative(custody.root,directory).split(sep).some(name=>["np","ip","rr"].includes(name))))throw error;unchanged();try{fs.lstatSync(directory);throw Error("Absent observation namespace reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}return absenceProof?observationAbsenceFenceV1(path,parents,directory):null;}if(!row.isDirectory()||row.isSymbolicLink()||inside&&device!==undefined&&row.dev!==device)throw Error("Original observation physical ancestry required");if(inside)device=row.dev;parents.push({path:directory,identity:[row.dev,row.ino,row.mode].join(":")});}
+ const parentKey=dirname(path),retained=budget.parentSets.get(parentKey);let retainedParents;if(retained){if(retained.length!==parents.length||parents.some((row,index)=>row.path!==retained[index].path||row.identity!==retained[index].identity))throw Error("Observation retained ancestry changed");retainedParents=retained;}else{if(!observationBlockBudgetAdmitsV1(budget.parentSets.size,1,observationBlockPolicyV1.maximumParentSets))throw Error("Finite observation parent sets exceeded");retainedParents=Object.freeze(parents.map(row=>Object.freeze(row)));budget.parentSets.set(parentKey,retainedParents);}
+ let initial;try{initial=fs.lstatSync(path,{bigint:true});}catch(error){if(error?.code!=="ENOENT"||!optional){if(error?.code==="ENOENT"&&namedBlock){unchanged();try{fs.lstatSync(path);throw Error("Absent named inference block reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}throw Object.assign(Error("Named inference observation block is absent"),{code:"BUILD_INFERENCE_BLOCK_ABSENT",cause:error});}throw error;}unchanged();try{fs.lstatSync(path);throw Error("Absent observation leaf reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}return absenceProof?observationAbsenceFenceV1(path,parents,path):null;}if(!initial.isFile()||initial.isSymbolicLink()||initial.nlink!==1n||inside&&initial.dev!==device||initial.size<1n||initial.size>BigInt(maximumBytes))throw Error("Bounded original observation leaf required");const epoch=observationEpochV1(initial),descriptor=fs.openSync(path,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW??0)|(fs.constants.O_NONBLOCK??0));let bytes,readFailed=false;try{check();const opened=fs.fstatSync(descriptor,{bigint:true});if(!opened.isFile()||observationEpochV1(opened)!==epoch)throw Error("Observation descriptor identity changed");observationChargeV1(budget,"packed",Number(initial.size));bytes=Buffer.alloc(Number(initial.size));let offset=0;while(offset<bytes.length){check();const count=fs.readSync(descriptor,bytes,offset,Math.min(65536,bytes.length-offset),offset);if(count===0)throw Error("Partial observation leaf read");offset+=count;}if(observationEpochV1(fs.fstatSync(descriptor,{bigint:true}))!==epoch)throw Error("Observation descriptor changed during read");}catch(error){readFailed=true;throw error;}finally{try{fs.closeSync(descriptor);}catch(error){if(!readFailed)throw error;}}const recheck=observationLeafFenceV1(path,retainedParents,epoch);recheck();return{bytes,recheck,epoch};
 }
+function observationJsonV1(text,budget=observationReadBudgetV1()){let depth=0,nodes=0,string=false,escape=false;for(let index=0;index<text.length;index++){const char=text[index];if(string){if(escape)escape=false;else if(char==="\\")escape=true;else if(char==='"')string=false;continue;}if(char==='"'){string=true;if(++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON nodes required");}else if(char==="["||char==="{"){if(++depth>observationBlockPolicyV1.maximumDepth||++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON depth required");}else if(char==="]"||char==="}")depth--;else if(char===","&&++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON nodes required");}observationChargeV1(budget,"nodes",nodes);return JSON.parse(text);}
+function observationInflateV1(packed,budget,maximum){const remaining=observationBlockPolicyV1.maximumAggregateOutputBytes-budget.output;if(remaining<1)throw Error("Finite aggregate observation output budget exhausted");const bytes=brotliDecompressSync(packed,{maxOutputLength:Math.min(maximum,remaining)});observationChargeV1(budget,"output",bytes.length);return bytes;}
+const verifiedBlocks=new Map(),VERIFIED_BLOCK_ROWS=4194304;let verifiedBlockRows=0;
+/** 🧊️ Remembers a block whose bytes, hash and rows this process verified, by the full identity of its leaf. */
+function rememberVerifiedBlockV1(path,epoch,rows){if(verifiedBlockRows+rows.length>VERIFIED_BLOCK_ROWS){verifiedBlocks.clear();verifiedBlockRows=0;}const prior=verifiedBlocks.get(path);if(prior)verifiedBlockRows-=prior.rows.length;verifiedBlocks.set(path,{epoch,rows,recheck:undefined});verifiedBlockRows+=rows.length;}
+/** 🧊️ A verified block while its leaf still has the identity it was verified with (device, inode, mode, links, size and both nanosecond stamps); any other leaf is read and validated again. */
+function verifiedBlockV1(path){
+ const entry=verifiedBlocks.get(path);if(entry===undefined)return undefined;
+ try{const row=fs.lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&row.nlink===1n&&observationEpochV1(row)===entry.epoch){entry.recheck??=()=>{requireRepositoryBuildGraphObservationPathV1(path,"read");const actual=fs.lstatSync(path,{bigint:true});if(!actual.isFile()||actual.isSymbolicLink()||observationEpochV1(actual)!==entry.epoch)throw Error("Observation leaf changed before delivery");};return entry;}}catch{}
+ verifiedBlockRows-=entry.rows.length;verifiedBlocks.delete(path);return undefined;
+}
+/** 🧊️ Registers a block that a farm worker of this implementation validated and that the caller verified to hold, by its hash, the text it is named by: its first reader takes the rows of the registration instead of validating the leaf again. A leaf that is not the one regular file the adoption wrote is not registered. */
+export function adoptVerifiedBlockV1(path,text){
+ try{const row=fs.lstatSync(path,{bigint:true});if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1n)return;rememberVerifiedBlockV1(path,observationEpochV1(row),internObservationsV1(JSON.parse(text)));}catch{}
+}
+function readObservationBlockV1(directory,digest,optional=false,budget=observationReadBudgetV1()){const path=inferenceObservationBlockPathV1(directory,digest),verified=verifiedBlockV1(path);if(verified){requireRepositoryBuildGraphObservationPathV1(path,"read");observationChargeV1(budget,"rows",verified.rows.length);return{rows:verified.rows,recheck:verified.recheck,epoch:verified.epoch};}const physical=observationPhysicalReadV1(path,observationBlockPolicyV1.maximumPackedBytes,optional,true,budget,optional);if(!physical||physical.absent)return physical;const bytes=observationInflateV1(physical.bytes,budget,observationBlockPolicyV1.maximumOutputBytes);if(createHash("sha256").update(bytes).digest("hex")!==digest)throw Error("Inference block content differs from its name");const rows=observationJsonV1(observationUTF8V1.decode(bytes),budget);if(blockRowsValidatorV1.validate(rows).length)throw Error("Closed inference observation block rows required");observationChargeV1(budget,"rows",rows.length);physical.recheck();const shared=internObservationsV1(rows);rememberVerifiedBlockV1(path,physical.epoch,shared);return{rows:shared,recheck:physical.recheck,epoch:physical.epoch};}
+function readInferencePhysicalRecordV1(cachePath,optional=false){const budget=observationReadBudgetV1(),physical=observationPhysicalReadV1(cachePath,observationBlockPolicyV1.maximumHeaderPackedBytes,optional,false,budget);if(!physical)return null;const text=observationUTF8V1.decode(observationInflateV1(physical.bytes,budget,observationBlockPolicyV1.maximumHeaderOutputBytes)),newline=text.indexOf("\n");if(newline<0)throw Error("Complete inference header and result required");const line=text.slice(0,newline),header=observationJsonV1(line,budget);if(headerValidatorV1.validate(header).length)throw Error("Closed inference record header required");const result=text.slice(newline+1);if(header.resultSha256!==createHash("sha256").update(result).digest("hex"))throw Error("Inference result content differs from its header");const value=observationJsonV1(result,budget);observationChargeV1(budget,"rows",header.authorityObservations.length+header.observations.length);const expanded=expandInferenceBlocksV1(dirname(cachePath),header.blocks,budget);header.observations=[...expanded,...internObservationsV1(header.observations)];if(header.observations.length>observationBlockPolicyV1.maximumHeaderRows)throw Error("Finite expanded inference rows required");physical.recheck();return{header,line,value};}
 
 /** 🧱️ The shared fact table of persisted records: the rows of one record are cut into content-defined blocks (a cut follows every row whose key hash hits the mask once a block has its minimum rows), so the long runs of rows that thousands of projects share, such as one command closure, become the same block files and a record header lists block digests instead of repeating the rows. */
 const BLOCK_MINIMUM_ROWS=32,BLOCK_MAXIMUM_ROWS=4096,BLOCK_CUT_MASK=0x7f;
-const blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=new Map(),blocksByDigest=new Map(),blocksWritten=new Set();
+const blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=new Map();
 let blockRowCounter=0;
+const blocksRefused=new Map(),BLOCK_REFUSAL_MILLISECONDS=30000;
 const blockRowIdV1=row=>{let id=blockRowIdentities.get(row);if(id===undefined){id=++blockRowCounter;blockRowIdentities.set(row,id);}return id;};
 const blockRowCutV1=row=>{let cut=blockRowCuts.get(row);if(cut===undefined){const key=observationKeyV1(row);let hash=0x811c9dc5;for(let at=0;at<key.length;at++){hash^=key.charCodeAt(at);hash=Math.imul(hash,16777619);}cut=(hash>>>0)&BLOCK_CUT_MASK;blockRowCuts.set(row,cut);}return cut;};
 function partitionObservationsV1(rows){
@@ -717,17 +776,9 @@ function partitionObservationsV1(rows){
 /** 🧊️ One full-digest observation block path is shared by readers and publishers. */
 export function inferenceObservationBlockPathV1(directory,digest){const policy=sourceAnalysisSchemaV1.$defs.observationBlock.const;if(typeof directory!=="string"||resolve(directory)!==directory||typeof digest!=="string"||!new RegExp(policy.digestPattern,"u").test(digest))throw Error("Canonical observation block path required");const path=join(directory,policy.directory,digest+policy.extension);if(path.length>256)throw Error("Observation block path exceeds256 characters");return path;}
 
-/** 💾️ Writes one block file once per process and directory; a block the quota refuses stays inline in its record. */
+/** 💾️ Publishes shared block bytes only after current physical presence, hash and closed rows are validated. */
 function persistInferenceBlockV1(directory,block){
- let known=blocksByIdentity.get(block.key);
- if(known===undefined){known={digest:createHash("sha256").update(observationRowsJsonV1(block.rows)).digest("hex"),rows:block.rows};blocksByIdentity.set(block.key,known);if(!blocksByDigest.has(known.digest))blocksByDigest.set(known.digest,block.rows);}
- block.digest=known.digest;
- const stamp=directory+"\0"+known.digest;if(blocksWritten.has(stamp))return true;
- const path=inferenceObservationBlockPathV1(directory,known.digest);
- if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}
- const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows))),temporary=`${path}.${process.pid}.${Date.now()}.tmp`;if(temporary.length>256)throw Error("Observation block staging path exceeds256 characters");
- if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{fs.mkdirSync(dirname(path),{recursive:true});fs.writeFileSync(temporary,packed,{flag:"wx"});fs.renameSync(temporary,path);}))return false;
- blocksWritten.add(stamp);return true;
+ requireRepositoryBuildGraphObservationPathV1(directory,"write");let known=blocksByIdentity.get(block.key);if(known===undefined){known={digest:createHash("sha256").update(observationRowsJsonV1(block.rows)).digest("hex")};blocksByIdentity.set(block.key,known);}block.digest=known.digest;const path=inferenceObservationBlockPathV1(directory,known.digest),present=readObservationBlockV1(directory,known.digest,true);if(present&&!present.absent){present.recheck();return true;}if((blocksRefused.get(directory)??0)>Date.now())return false;const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22}}),temporary=path+"."+process.pid+"."+Date.now()+".tmp";if(temporary.length>observationBlockPolicyV1.maximumPathUnits)throw Error("Observation block staging path exceeds256 characters");if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{present.recheck();let created;if(present.missing===dirname(path)){fs.mkdirSync(dirname(path));const row=fs.lstatSync(dirname(path),{bigint:true}),parent=fs.lstatSync(dirname(dirname(path)),{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==parent.dev)throw Error("Original created block directory required");created=[row.dev,row.ino,row.mode].join(":");}else if(present.missing!==path)throw Error("Only exact block directory creation admitted");const fence=()=>{present.parentFence();if(created!==undefined){const row=fs.lstatSync(dirname(path),{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||[row.dev,row.ino,row.mode].join(":")!==created)throw Error("Created block directory identity changed");}};fence();fs.writeFileSync(temporary,packed,{flag:"wx"});fence();fs.renameSync(temporary,path);fence();})){blocksRefused.set(directory,Date.now()+BLOCK_REFUSAL_MILLISECONDS);return false;}const published=readObservationBlockV1(directory,known.digest);published.recheck();return true;
 }
 
 /** 🧾️ The header text of a record: blocks first (written before the record that names them), rows no block could hold inline. */
@@ -737,30 +788,11 @@ function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){
  return `{"digest":${JSON.stringify(digest)},"resultSha256":"${resultSha256}","authorityObservations":${observationRowsJsonV1(authority)},"blocks":${JSON.stringify(blocks)},"observations":${observationRowsJsonV1(inline)}}`;
 }
 
-/** 📖️ The rows of the named blocks, each block read, verified against its name and interned once per process; a bad block is removed so the record that named it is recomputed. */
-function expandInferenceBlocksV1(directory,digests){
- const rows=[];
- for(const digest of digests){
-  let block=blocksByDigest.get(digest);
-  if(block===undefined){
-   const path=inferenceObservationBlockPathV1(directory,digest);
-   try{
-    const text=brotliDecompressSync(fs.readFileSync(path)).toString("utf8");
-    if(createHash("sha256").update(text).digest("hex")!==digest)throw Error("Inference block content differs from its name");
-    block=internObservationsV1(JSON.parse(text));blocksByDigest.set(digest,block);
-   }catch(error){try{fs.rmSync(path,{force:true});}catch{}throw error;}
-  }
-  for(const row of block)rows.push(row);
- }
- return rows;
-}
+/** 📖️ Revalidates every named block physically and retains all identities through the final delivery fence. */
+function expandInferenceBlocksV1(directory,digests,budget=observationReadBudgetV1()){const rows=[],proofs=[];if(!Array.isArray(digests)||digests.length>observationBlockPolicyV1.maximumBlocks)throw Error("Finite inference block roster required");for(const digest of digests){const block=readObservationBlockV1(directory,digest,false,budget);proofs.push(block.recheck);for(const row of block.rows)rows.push(row);if(rows.length>observationBlockPolicyV1.maximumHeaderRows)throw Error("Finite expanded inference rows required");}for(const recheck of proofs)recheck();return rows;}
 
-/** 🧾️ A persisted record header with its blocks expanded: every row the record observed, in block order followed by the inline rows. */
-export function readInferenceHeaderV1(cachePath){
- const text=brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"),newline=text.indexOf("\n"),header=JSON.parse(text.slice(0,newline));
- header.observations=[...expandInferenceBlocksV1(dirname(cachePath),header.blocks??[]),...header.observations];
- return header;
-}
+/** 🧾️ Reads a physically authenticated closed inference header and all named blocks under actual reader custody. */
+export function readInferenceHeaderV1(cachePath){return readInferencePhysicalRecordV1(cachePath).header;}
 
 /**
  * ✅️ {@link current} without blocking: every recorded fact re-checked through the libuv pool, `limit` at a time; false at the first stale

@@ -30,17 +30,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "transforms", kind: "rotate-transforms", record: "RotatedTransforms" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::rotate_transforms::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::rotate_transforms::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = generation3d_label_number(self.angle.to_degrees());
         let (items_en, items_de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
@@ -50,5 +39,20 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for RotateTransforms
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::rotate_transforms::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::rotate_transforms::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️RotateTransforms

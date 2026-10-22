@@ -71,3 +71,31 @@ NEW3 = {
     "gc-launch-test.ts": J(GCD, TESTS, LAUNCH, TS),
     "ledger-needs-test.ts": J(LED, TESTS, E(0x1F4CF) + "needs", TS),
 }
+
+COMMANDDIR, CACHEDIR = E(0x2328) + "command", E(0x1F4BE) + "cache"
+MEMBERS, SCAN = E(0x1F5C2) + "members", E(0x1F50E) + "scan"
+CLOSURES = J(L, CACHING, STORAGE, ENFORCEMENT, BUDGET, E(0x1F578) + "graph", E(0x1F4CF) + "headroom", E(0x1F9FE) + "closures")
+MEMBERS_DIR = J(CLOSURES, MEMBERS)
+NEW4 = {
+    "members-engine.mjs": J(MEMBERS_DIR, E(0x1F7E8) + ".mjs"),
+    "members-engine.d.mts": J(MEMBERS_DIR, E(0x1F7E8) + ".d.mts"),
+    "members-schema.json": J(MEMBERS_DIR, SCHEMA, JSON_),
+    "members-scan.ts": J(MEMBERS_DIR, SCAN, TS),
+    "members-test.ts": J(MEMBERS_DIR, TESTS, TS),
+    "members-cases.json": J(MEMBERS_DIR, TESTS, E(0x1F9EB) + "cases.json"),
+    "members-scan-test.ts": J(MEMBERS_DIR, TESTS, SCAN, TS),
+    "members-resolve-test.ts": J(MEMBERS_DIR, TESTS, E(0x1F9F1) + "resolve", TS),
+    "members-child-test.ts": J(MEMBERS_DIR, TESTS, E(0x1F477) + "child", TS),
+}
+TARGET4 = {
+    "closures-ts": J(CLOSURES, TS),
+    "closures-schema": J(CLOSURES, SCHEMA, JSON_),
+    "graph-storage": TARGET["graph-storage"],
+    "catalog": TARGET["catalog"],
+    "kernel-cache": J(B, COMMANDDIR, CACHEDIR, TS),
+    "kernel-ledger": J(B, COMMANDDIR, CACHEDIR, E(0x1F4CB) + "ledger", TS),
+    "kernel-selection": J(B, COMMANDDIR, E(0x1F9ED) + "selection", TS),
+    "selection-fixture": J(B, COMMANDDIR, E(0x1F9ED) + "selection", JSON_),
+    "selection-test": J(B, COMMANDDIR, TESTS, TS),
+}
+NEW4.update({"gc-verify-test.ts": J(GCD, TESTS, E(0x1F52C) + "verify", TS), "gc-reclaim.ts": NEW3["gc-reclaim.ts"], "gc-command.ts": NEW3["gc-command.ts"], "ledger-texts.json": NEW3["ledger-texts.json"]})

@@ -8,6 +8,7 @@ import {scriptInvocationEnvironment} from "@semio-tech/process/routing/invocatio
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /**
  * 🏭️ The language-neutral production mutation bridge an owner exposes. It is a plain executable
@@ -21,13 +22,13 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
   let candidate = owner;
   for (;;) {
     const abs = join(repoRoot, candidate, MUTATION_BRIDGE_REL);
-    if (existsSync(abs)) return { command: "bun", args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
+    if (existsSync(abs)) return { command: runtimeCommandNameV1(), args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
     const parent = candidate.split("/").slice(0, -1).join("/");
     if (parent === "" || parent === candidate) break;
     candidate = parent;
   }
   const supplied = selectMutationInventoryProviderV1(providers, join(repoRoot, owner));
-  if (supplied) return { command: "bun", args: [supplied.script, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
+  if (supplied) return { command: runtimeCommandNameV1(), args: [supplied.script, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
   return null;
 }
 

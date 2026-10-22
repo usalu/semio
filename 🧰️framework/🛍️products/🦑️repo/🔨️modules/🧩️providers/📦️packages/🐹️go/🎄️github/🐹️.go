@@ -23,14 +23,15 @@ import (
 // makes is a recordable (argv, cwd) → outcome exchange and no scenario needs the gh binary.
 type GitHubManagementProvider struct {
 	runner ProcessRunner
+	rootDir string
 }
 
 // 🆕️NewGitHubManagementProvider binds a provider to the runner every gh invocation goes through.
-func NewGitHubManagementProvider(runner ProcessRunner) *GitHubManagementProvider {
+func NewGitHubManagementProvider(rootDir string, runner ProcessRunner) *GitHubManagementProvider {
 	if runner == nil {
 		runner = NewSystemProcessRunner()
 	}
-	return &GitHubManagementProvider{runner: runner}
+	return &GitHubManagementProvider{runner: runner, rootDir:rootDir}
 }
 
 // 📜️Issued lists every argv this provider issued through its runner, in order.
@@ -43,10 +44,7 @@ func (p *GitHubManagementProvider) Issued() [][]string {
 
 // 🐙️gh issues one gh invocation and reports stdout, stderr and the exit status.
 func (p *GitHubManagementProvider) gh(args []string) (string, string, int) {
-	if p.runner == nil {
-		p.runner = NewSystemProcessRunner()
-	}
-	outcome := p.runner.Run(ProcessRequest{Argv: append([]string{"gh"}, args...)})
+		outcome := p.runner.Run(ProcessRequest{Argv: append([]string{"gh"}, args...), Cwd:p.rootDir})
 	return outcome.Stdout, outcome.Stderr, outcome.Status
 }
 
@@ -420,17 +418,17 @@ func (p *GitHubManagementProvider) ListOpenIssuesWithLabel(label string) ([]stri
 
 // 🔸️GhCreateIssue opens a ticket issue through the default management provider.
 func GhCreateIssue(title, body string, milestone *int) (string, error) {
-	return NewGitHubManagementProvider(nil).CreateIssue(title, body, milestone)
+	return NewGitHubManagementProvider(workspace.GetRootDir(), nil).CreateIssue(title, body, milestone)
 }
 
 // 📪️GhCloseIssue closes an issue through the default management provider.
 func GhCloseIssue(issueURL string) error {
-	return NewGitHubManagementProvider(nil).CloseIssue(issueURL)
+	return NewGitHubManagementProvider(workspace.GetRootDir(), nil).CloseIssue(issueURL)
 }
 
 // 🌿️GhGetIssueNodeID reads an issue node id through the default management provider.
 func GhGetIssueNodeID(issueURL string) (string, error) {
-	return NewGitHubManagementProvider(nil).GetIssueNodeID(issueURL)
+	return NewGitHubManagementProvider(workspace.GetRootDir(), nil).GetIssueNodeID(issueURL)
 }
 
 // #endregion ❄️Goals

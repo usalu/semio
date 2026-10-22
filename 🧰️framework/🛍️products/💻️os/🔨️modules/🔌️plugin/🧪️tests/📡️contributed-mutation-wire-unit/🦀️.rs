@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::contributed_mutation_wire::{WireTestDiff, WireTestSnapshot};
 use crate::contributed_mutation_wire::mutations::WireTestMutation;
-use protocol::{CompositeMutationKind, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary};
+use protocol::{CompositeMutationKind, ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary};
 
 #[doc(hidden)]
 pub fn cases() -> serde_json::Value {

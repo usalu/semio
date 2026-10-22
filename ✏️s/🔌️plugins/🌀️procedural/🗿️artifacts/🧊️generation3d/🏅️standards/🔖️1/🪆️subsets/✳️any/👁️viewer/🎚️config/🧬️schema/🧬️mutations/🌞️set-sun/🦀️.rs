@@ -14,17 +14,6 @@ pub struct SetSun {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetSun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sun", kind: "set-sun", record: "SetSun" };
 
-    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
-        protocol::MutationOutcome::new(Generation3dViewConfigPatch { sun_json: Some(self.json.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { json: base.sun_json.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Sun", "Sonne setzen")
     }
@@ -32,4 +21,16 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
     fn target(&self) -> Vec<String> {
         vec!["sunJson".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetSun {
+    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { sun_json: Some(self.json.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { json: base.sun_json.clone() }.into()]
+    
+    })())
+}
 }

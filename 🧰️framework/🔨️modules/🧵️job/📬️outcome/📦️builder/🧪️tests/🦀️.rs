@@ -6,7 +6,7 @@ fn original_payload_authority_private_borrow_does_not_clone_its_ledger(){
  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(99203),Generation(7),stock,||Some(1),u64::MAX,1000);
  let mut original=None;
  for _ in 0..17{
-  let((pointer,count),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1},|cx|{let observation=(Arc::as_ptr(&cx.payload_ledger),Arc::strong_count(&cx.payload_ledger));cx.consume_fuel(1);Ok(observation)}).unwrap());
+  let((pointer,count),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1},|cx|{let ledger=semio_framework_job::JobPayloadStep::payload_ledger(&*cx);let observation=(Arc::as_ptr(ledger),Arc::strong_count(ledger));cx.consume_fuel(1);Ok(observation)}).unwrap());
   assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(caller.receipt(),Default::default());
   match original{Some(expected)=>assert_eq!((pointer,count),expected),None=>original=Some((pointer,count))}
  }

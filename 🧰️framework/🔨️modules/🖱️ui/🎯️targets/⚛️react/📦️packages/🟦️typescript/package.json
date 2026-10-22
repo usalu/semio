@@ -27,7 +27,7 @@
   },
   "targets": {
     "lint": {
-      "command": "bun ./📜️script.ts lint",
+      "command": "repo ./📜️script.ts lint",
       "cwd": "."
     }
   },

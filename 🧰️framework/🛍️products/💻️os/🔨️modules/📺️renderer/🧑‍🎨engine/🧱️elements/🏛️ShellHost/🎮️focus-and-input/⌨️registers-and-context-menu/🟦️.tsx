@@ -2,7 +2,7 @@
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { TutorialDriveV1 } from "../../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type ContextMenuItemSpec, type IntroductionInteraction, parseResolvedPluginViewState, type PluginContextMenuRequest, type PluginSourceEvent, retireContributorInstances, hostArmedViewContext, panelViewContext } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { type LocalInteractionState } from "@semio-tech/framework/replication";

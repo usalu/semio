@@ -49,7 +49,6 @@
           "partitionPattern": "^(.+)/\\.cache/b/[a-z]/fixed\\.dmg$",
           "leaseResourcePrefix": "native-fixed-image:",
           "detach": {
-            "program": "/usr/bin/hdiutil",
             "arguments": [
               "detach"
             ],

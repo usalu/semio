@@ -1,5 +1,5 @@
 /** 🔑️ The hub sign out, agent client configuration and delegation callbacks of the hub connection hook. */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "../../⚛️react-port/🟦️.ts";
 import type { DirectoryCommand, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 import { runHubSignOutV1 } from "@semio-tech/framework/directory/sign-in";
 import { archiveSpaceCommandV1, createInviteCommandV1, createSpaceCommandV1, filterSpaceRowsV1, inviteRedemptionErrorFromStatusV1, parseInviteTokenV1, spaceMemberPresenceV1 } from "@semio-tech/framework/directory/spaces";

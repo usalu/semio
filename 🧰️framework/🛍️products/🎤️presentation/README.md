@@ -19,15 +19,15 @@ mount it through the renderer.
 
 ## Commands
 
-Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`) and search
+Start `repo dashboard`, choose **New Task** (`Ctrl+B n`) and search
 `presentation test` or `projektetage dev/build`. Each owner target routes to its
 `📜️script.ts` through the build graph.
 
 ```bash
-bun run dashboard run @semio-tech/presentation:test -- quick
-bun run dashboard run @semio-tech/presentation-react:test -- quick
-bun run dashboard run @semio-tech/mit-bestand-praesentation-projektetage:dev --detach --wait-ready
-bun run dashboard run @semio-tech/mit-bestand-praesentation-projektetage:build
+repo run @semio-tech/presentation:test -- quick
+repo run @semio-tech/presentation-react:test -- quick
+repo run @semio-tech/mit-bestand-praesentation-projektetage:dev --detach --wait-ready
+repo run @semio-tech/mit-bestand-praesentation-projektetage:build
 ```
 
 The deck's task offers **Open ready address** (`Ctrl+B u`). Task overview retains

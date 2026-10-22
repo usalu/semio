@@ -88,13 +88,13 @@ pub(super) fn flow_vcs_step_scan(host_snapshot: &FlowHostSnapshot, operation: &m
     Ok(())
 }
 
-pub(super) /// 🎯️ The one write lane of the retained stepper. The concrete mutation's diff is built from reads of the active version and turned into a
+/// 🎯️ The one write lane of the retained stepper. The concrete mutation's diff is built from reads of the active version and turned into a
 /// successor ONLY by [`protocol::apply_diff_cold`]; the successor replaces the displaced active version, which retires cold. Returns the mutation's
 /// own concrete inverse rows (built from the pre-state), which the caller keeps as its history inverse or retires.
-fn flow_vcs_apply_inverted(document: &mut FlowVcsDocument, mutation: FlowMutation) -> Result<Vec<FlowMutation>, FlowVcsFault> {
+pub(super) fn flow_vcs_apply_inverted(document: &mut FlowVcsDocument, mutation: FlowMutation) -> Result<Vec<FlowMutation>, FlowVcsFault> {
     let active = document.host_snapshot();
-    let inverse = crate::os_spr::Mutation::inverse(&mutation, active).map_err(|_| FlowVcsFault::InvalidMutation);
-    let (diff, messages) = crate::os_spr::Mutation::diff(&mutation, active).into_parts();
+    let inverse = crate::os_spr::ColdMutation::inverse(&mutation, active).map_err(|_| FlowVcsFault::InvalidMutation);
+    let (diff, messages) = crate::os_spr::ColdMutation::diff(&mutation, active).into_parts();
     let applied = if messages.is_empty() { protocol::apply_diff_cold(&diff, active).ok() } else { None };
     <FlowDiff as protocol::MutationDiff<FlowHostSnapshot>>::retire_cold(diff);
     retire_flow_mutation(mutation);

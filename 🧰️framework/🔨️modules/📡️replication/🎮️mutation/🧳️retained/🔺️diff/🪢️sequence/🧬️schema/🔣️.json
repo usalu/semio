@@ -1,54 +1,181 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ordered Retained Diff Sequence",
   "type": "object",
-  "additionalProperties": false,
   "required": [
+    "schema",
+    "base",
     "cases",
     "cancelCuts",
-    "maximumTurns"
+    "bodyBytes",
+    "deniedCurrencies",
+    "wideText",
+    "outputHandoff"
   ],
+  "additionalProperties": false,
   "properties": {
+    "schema": {
+      "const": "semio.retained-diff-sequence/v1"
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "a",
+        "b",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "type": "integer"
+        },
+        "b": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
     "cases": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 8,
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "required": [
-          "before",
-          "sets",
-          "expected"
+          "name",
+          "edits",
+          "accepted",
+          "messageCount"
         ],
         "properties": {
-          "before": {
-            "type": "integer"
+          "name": {
+            "type": "string"
           },
-          "sets": {
+          "edits": {
             "type": "array",
-            "minItems": 2,
-            "maxItems": 4,
             "items": {
-              "type": "integer"
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "setA": {
+                  "type": "integer"
+                },
+                "setB": {
+                  "type": "integer"
+                },
+                "requireA": {
+                  "type": "integer"
+                },
+                "warning": {
+                  "type": "boolean"
+                }
+              }
             }
           },
+          "accepted": {
+            "type": "boolean"
+          },
           "expected": {
-            "type": "integer"
+            "type": "object"
+          },
+          "messageCount": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }
     },
     "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "bodyBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "deniedCurrencies": {
       "const": [
-        0,
-        3,
-        16,
-        64,
-        2048
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
       ]
     },
-    "maximumTurns": {
-      "const": 2048
+    "wideText": {
+      "type": "object",
+      "required": [
+        "text",
+        "repeat"
+      ],
+      "properties": {
+        "repeat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "outputHandoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "cancelCuts",
+        "maximumTurns"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "before",
+              "sets",
+              "expected"
+            ],
+            "properties": {
+              "before": {
+                "type": "integer"
+              },
+              "sets": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 4,
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "expected": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "cancelCuts": {
+          "const": [
+            0,
+            3,
+            16,
+            64,
+            2048
+          ]
+        },
+        "maximumTurns": {
+          "const": 2048
+        }
+      }
     }
   }
 }

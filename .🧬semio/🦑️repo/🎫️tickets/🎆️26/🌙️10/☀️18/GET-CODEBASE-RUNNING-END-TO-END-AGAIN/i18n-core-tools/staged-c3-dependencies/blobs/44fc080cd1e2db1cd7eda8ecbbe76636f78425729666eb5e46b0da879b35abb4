@@ -1,0 +1,13 @@
+import { bindCatalogV1, type TextValuesV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+import { sayV1, type ProgressLevelV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts";
+import catalog from "./🔣️.json" with { type: "json" };
+
+/** 📖️ The texts of the dependency truth and direction lints in English and German. */
+export const DEPENDENCIES_TEXTS_V1 = bindCatalogV1("dependencies", catalog);
+
+/** 🔑️ Every message key of this catalog. */
+export type DependenciesTextKeyV1 = keyof typeof catalog.messages;
+
+/** 📢️ Says one line of this catalog as data; the CLI boundary renders it in the resolved language. */
+export const sayDependenciesV1 = (key: DependenciesTextKeyV1, values: TextValuesV1 = {}, level: ProgressLevelV1 = "info"): void => sayV1(DEPENDENCIES_TEXTS_V1, key, values, level);
+

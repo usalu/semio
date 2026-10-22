@@ -189,7 +189,7 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 		mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
 	}
 	switch kind {
-	case McpClientCursor, McpClientCopilot, McpClientClaude, McpClientCodex:
+	case McpClientCopilot, McpClientClaude, McpClientCodex:
 		openOpts = append(openOpts, mcp.WithString("plan_id", mcp.Description(mcpDesc(kind, "arg_plan_id"))))
 	case McpClientKiro:
 		openOpts = append(openOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))
@@ -218,7 +218,7 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 		mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 	}
 	switch kind {
-	case McpClientCursor, McpClientCopilot, McpClientClaude, McpClientCodex:
+	case McpClientCopilot, McpClientClaude, McpClientCodex:
 		reopenOpts = append(reopenOpts, mcp.WithString("plan_id", mcp.Description(mcpDesc(kind, "arg_plan_id"))))
 	case McpClientKiro:
 		reopenOpts = append(reopenOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))

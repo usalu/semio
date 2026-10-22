@@ -1,8 +1,9 @@
 /** 🪢️ The artifact neutrality census: doc-comment stripping, framework artifact names and the tool machine vocabulary of the utilities. */
-import { spawnSync } from "node:child_process";
+
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { TEST_SEGMENT } from "../🧮️placeholder-and-job-census/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🪢️ArtifactNeutrality
 /** 🧽️ `text` with every doc comment blanked — each character but a line break becomes a space, so lines and columns hold: a Rust
@@ -71,7 +72,7 @@ const ARTIFACT_NAME_SCOPE_EXCLUDED = /(^|\/)(🧪️tests|tests|🧫️fixtures|
  * name, doc comments included): the scanner never finds more lines in a file than the oracle, and never a file it does not list. */
 export function runArtifactNameCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
   const scope = ["--", "🧰️framework/*.rs", "🧰️framework/*.ts", "🧰️framework/*.tsx", ":!*.d.ts", ...ARTIFACT_NAME_CENSUS_EXEMPT.map((path) => `:!${path}`)];
-  const counted = spawnSync("git", ["grep", "-c", "-I", "-i", "-E", FRAMEWORK_ARTIFACT_NAMES.join("|"), ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const counted = runToolSyncV1("git", ["grep", "-c", "-I", "-i", "-E", FRAMEWORK_ARTIFACT_NAMES.join("|"), ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   const oracle = new Map(counted.stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")).replace(/^"|"$/gu, ""), Number(row.slice(row.lastIndexOf(":") + 1))] as const).filter(([path]) => !ARTIFACT_NAME_SCOPE_EXCLUDED.test(path)));
   const hits: ArtifactNameHit[] = [];
   const disagreements: string[] = [];
@@ -123,7 +124,7 @@ export function utilityArtifactsOfSources(sources: readonly Readonly<{ path: str
 /** 🗃️ The utility-machine census (design §22.32 d) over every tracked plugin Rust source that names `UtilityDefinition` or a
  * {@link TOOL_MACHINE_VOCABULARY} word: every artifact with utilities, and among them the offenders without machine vocabulary. */
 export function runUtilityMachineCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
-  const listed = spawnSync("git", ["grep", "-l", "-z", "-I", "-E", ["UtilityDefinition", ...TOOL_MACHINE_VOCABULARY].join("|"), "--", "✏️s/🔌️plugins/*.rs"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const listed = runToolSyncV1("git", ["grep", "-l", "-z", "-I", "-E", ["UtilityDefinition", ...TOOL_MACHINE_VOCABULARY].join("|"), "--", "✏️s/🔌️plugins/*.rs"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   const paths = listed.stdout.split("\0").filter(Boolean);
   const sources: { path: string; text: string }[] = [];
   for (const [index, path] of paths.entries()) {

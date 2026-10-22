@@ -19,7 +19,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "vertex", kind: "move-vertex", record: "MovedVertex" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vertex \"{}\" to ({}, {}, {})", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex \"{}\" nach ({}, {}, {}) verschieben", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.vertex_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioBrepSnapshot, Op> for MoveVertex
+where
+    Op: protocol::ColdMutation<SemioBrepSnapshot, ReferenceDiff = crate::schema::diff::SemioBrepDiff> + From<MoveVertex>,
+{
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioBrepSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,11 +40,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vertex \"{}\" to ({}, {}, {})", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex \"{}\" nach ({}, {}, {}) verschieben", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.vertex_id.clone()]
-    }
 }
 //#endregion 🔖️Payload

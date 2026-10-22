@@ -10,12 +10,13 @@ import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** 🦀️ `@semio-tech/framework-async` task router: `bun ./📜️script.ts <test|typegen>`. */
+/** 🦀️ `@semio-tech/framework-async` task router: `repo ./📜️script.ts <test|typegen>`. */
 import { mkdirSync } from "node:fs";
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runWorkerMaintenanceCheckScript, runWorkerParkingCheckScript, runWorkerDeferredWakeCheckScript, runWorkerPoolUseCheckScript, runTypegenScript, runPreviewGeneratedScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔔️ Neutral lifecycle and actual native/cooperative idle wake acceptance. */
 class WorkerMaintenanceCheckScript extends BundleScript {
@@ -92,13 +93,13 @@ class CancelReturnScript extends BundleScript{
   if(segments.length!==1||segments[0]===undefined||!["source","native"].includes(segments[0]))throw new Error("test-cancel-return requires source or native");
   const file=resolve(this.root,"../../🛑️cancel/♻️retirement/🧪️tests/🟦️.ts"),claim=resolve(this.root,"../../♻️cancel-return/📬️claim/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,["test",file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
-  await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:3600000,listMilliseconds:60000,lawMilliseconds:120000},invocation:this.invocation,manifestPaths:{ "semio-framework-async-tests": resolve(this.root, "../../🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml"), "semio-framework-async-wasm-pool-tests": resolve(this.root, "../../🧪️tests/🍰️companion-wasm-pool/📦️packages/🦀️rust/Cargo.toml") },cwd:this.repoRoot,groups: [{ package: "semio-framework-async-tests", target: { kind: "lib", name: "semio_framework_async_tests" }, laws: ["cancellation_retirement::tests::cancel_token_retirement_original_ancestor_nodes_release_without_recursive_drop", "cancellation_retirement::tests::cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original", "cancellation_retirement::tests::cancel_token_borrowed_original_alias_return_keeps_root_waiters_and_exact_pointer", "cancellation_retirement::tests::cancel_token_borrowed_alias_return_rejects_foreign_root_and_keeps_original", "publication_claim::tests::original_publication_permit_return_slot_has_exact_allocator_and_parallel_custody"] }]});
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-cancel-return",CancelReturnScript).register("check", CheckScript).register("test", TestScript).register("test-publication-docs", PublicationDocsTestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
+const router = new ScriptRouter(import.meta.dirname).register("test-cancel-return",CancelReturnScript).register("check", CheckScript).register("test", TestScript).register("test-publication-docs", PublicationDocsTestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

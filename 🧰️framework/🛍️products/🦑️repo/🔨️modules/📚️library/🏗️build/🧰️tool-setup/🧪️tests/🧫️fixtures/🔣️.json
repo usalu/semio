@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "files": {
+    "package.json": "{\"packageManager\": \"bun@9.8.7\", \"devDependencies\": {\"playwright\": \"^1.0.0\"}}",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json": "{\"go\": {\"tool\": {\"version\": \"9.9.9\"}}, \"python\": {\"tool\": {\"version\": \"8.8.8\"}, \"interpreters\": {\"main\": {\"series\": \"7.7\"}, \"oracle\": {\"series\": \"6.6\"}}}, \"dotnet\": {\"sdk\": \"5.5.5\"}, \"cmake\": {\"cmake\": {\"version\": \"4.4.4\"}, \"ninja\": {\"version\": \"3.3.3\"}}}",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json": "{\"definitions\": {\"Pins\": {\"const\": {\"assets\": [{\"tool\": \"go\", \"version\": \"9.9.9\"}, {\"tool\": \"node\", \"version\": \"11.1.1\", \"platform\": \"darwin\"}, {\"tool\": \"node\", \"version\": \"11.1.1\", \"platform\": \"linux\"}, {\"tool\": \"rustup\", \"version\": \"2.2.2\"}]}}}}",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json": "{\"definitions\": {\"Release\": {\"const\": {\"version\": \"1.2.3\"}}}}",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json": "{\"definitions\": {\"Release\": {\"const\": {\"version\": \"77\"}}}}",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json": "{\"version\": \"0.0.1\"}",
+    "rust-toolchain.toml": "[toolchain]\nprofile = \"minimal\"\nchannel = \"nightly-2030-01-02\"\ncomponents = [\"rust-src\"]\n",
+    "Cargo.lock": "[[package]]\nname = \"wasm-bindgen-macro\"\nversion = \"0.1.1\"\n\n[[package]]\nname = \"wasm-bindgen\"\nversion = \"0.9.9\"\n\n[[package]]\nname = \"wasm-bindgen-shared\"\nversion = \"0.1.1\"\n",
+    "node_modules/.bun/playwright-core@4.0.0/node_modules/playwright-core/browsers.json": "{\"browsers\": [{\"name\": \"firefox\", \"revision\": \"1\"}, {\"name\": \"chromium\", \"revision\": \"4242\"}]}"
+  },
+  "packages": {
+    "playwright-core": "node_modules/.bun/playwright-core@4.0.0/node_modules/playwright-core"
+  },
+  "expected": {
+    "bazel": "1.2.3",
+    "bun": "9.8.7",
+    "cargo-llvm-cov": "0.8.7",
+    "cargo-nextest": "0.9.140",
+    "chromium": "4242",
+    "cmake": "4.4.4",
+    "dotnet": "5.5.5",
+    "go": "9.9.9",
+    "ninja": "3.3.3",
+    "node": "11.1.1",
+    "python-main": "7.7",
+    "python-oracle": "6.6",
+    "rust": "nightly-2030-01-02",
+    "rustup": "2.2.2",
+    "tectonic": "0.0.1",
+    "trunk": "0.21.14",
+    "uv": "8.8.8",
+    "wasm-bindgen": "0.9.9",
+    "wasm-opt": "77",
+    "wasm-pack": "0.15.0"
+  },
+  "matches": [
+    {
+      "found": "3.14.4",
+      "pin": "3.14",
+      "expected": true
+    },
+    {
+      "found": "3.140.1",
+      "pin": "3.14",
+      "expected": false
+    },
+    {
+      "found": "3.1",
+      "pin": "3.14",
+      "expected": false
+    },
+    {
+      "found": "1.4.2",
+      "pin": "1.4.2",
+      "expected": true
+    },
+    {
+      "found": "1.4.20",
+      "pin": "1.4.2",
+      "expected": false
+    },
+    {
+      "found": "nightly-2030-01-02",
+      "pin": "nightly-2030-01-02",
+      "expected": true
+    },
+    {
+      "found": "130",
+      "pin": "130",
+      "expected": true
+    },
+    {
+      "found": "1300",
+      "pin": "130",
+      "expected": false
+    }
+  ]
+}

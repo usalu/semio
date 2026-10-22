@@ -14,7 +14,7 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/puzzle-5d-react:test"
+    "test": "repo run @semio-tech/puzzle-5d-react:test"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

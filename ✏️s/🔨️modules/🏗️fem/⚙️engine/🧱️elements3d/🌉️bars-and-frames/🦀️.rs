@@ -230,7 +230,7 @@ fn frame3_geometric_bending_cell(length: f64, axial: f64, row: usize, column: us
 }
 
 /// 🧩️ Resolves the two geometric bending planes without allocating a local matrix.
-fn frame3_local_geometric_cell(length: f64, axial: f64, row: usize, column: usize) -> f64 {
+pub fn frame3_local_geometric_cell(length: f64, axial: f64, row: usize, column: usize) -> f64 {
     for (indices, signs) in [([1usize, 5, 7, 11], [1.0; 4]), ([2usize, 4, 8, 10], Y_PLANE_SIGN)] {
         if let (Some(i), Some(j)) = (indices.iter().position(|index| *index == row), indices.iter().position(|index| *index == column)) {
             return signs[i] * signs[j] * frame3_geometric_bending_cell(length, axial, i, j);

@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
+
 import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -52,7 +53,7 @@ function main(argv: readonly string[]): number {
     args.push("--out", process.env.SEMIO_FIXTURE_OUT ?? fallback);
   }
 
-  const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...args], {
+  const run = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...args], {
     cwd: join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust"),
     encoding: "utf8",
   });

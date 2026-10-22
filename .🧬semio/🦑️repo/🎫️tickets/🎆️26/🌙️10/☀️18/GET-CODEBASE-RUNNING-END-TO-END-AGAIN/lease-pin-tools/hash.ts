@@ -1,0 +1,11 @@
+import{createHash}from"node:crypto";
+import{readFileSync}from"node:fs";
+const path=process.argv[2];
+const component=JSON.parse(readFileSync(path,"utf8")) as Record<string,any>;
+const definitions=component.definitions;
+const names=["RetirementPolicy","ClaimCustodyPolicy","ClaimRetentionPolicy","WriterProofCorpus","WriterIssuanceCorpus"];
+const normalized=(value:any,prefix:string):any=>Array.isArray(value)?value.map(item=>normalized(item,prefix)):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).filter(([key])=>key!=="$schema"&&key!=="$id").map(([key,item])=>[key,key==="$ref"&&typeof item==="string"&&prefix&&item.startsWith(prefix)?"#"+item.slice(prefix.length):normalized(item,prefix)])):value;
+const canonical=(value:any):any=>Array.isArray(value)?value.map(canonical):value&&typeof value==="object"?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+const values:Record<string,unknown>={NamespaceTicket:normalized({...component,definitions:Object.fromEntries(Object.entries(definitions).filter(([key])=>!names.includes(key)))},"")};
+for(const name of names)values[name]=normalized(definitions[name],"#/definitions/"+name);
+for(const[name,value]of Object.entries(values))console.log(name,createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex"));

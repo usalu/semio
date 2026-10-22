@@ -1,145 +1,85 @@
-/** 🖱️ The scene-host context menu contract: the shell fallback context, the surface menu title keys and opener, the app keybinding context and hooks, and the mapping of plugin menu specs onto menu rows.
+/** 🗺️ The element-host registry: the one contract the generic React renderer reads to find the concrete element hosts it mounts.
  *
- * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}, which re-exports its public names; `ShellHost` re-exports the keybinding hooks and `World3dHost` re-exports `mapContextMenuSpecs`, so import specifiers stay unchanged while `NodeGraph` reads them here.
+ * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}. The Interpreter knows only this contract; the composition root (`🪢️ElementHosts`) registers the concrete scene hosts, the extension hosts and the document-selection port, so no host is imported by the Interpreter.
  */
 
-import { createContext, useCallback, useContext } from "../../⚛️react-port/🟦️.ts";
-import { formatKeybindingShortcut, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { isIconName } from "@semio-tech/framework/assets";
-import type { ContextMenuItemSpec, PluginContextMenuRequest } from "@semio-tech/framework";
-import { contextMenuGroupLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { wireLabel } from "../🌉️scene-host-contract/🟦️.ts";
+import type { ComponentKind, ComponentSceneHostProps } from "@semio-tech/framework";
+import type { ComponentType } from "../../⚛️react-port/🟦️.ts";
+import type { ComponentSceneHostResolverV1, ExtensionHostPropsV1, ExtensionHostResolverV1 } from "../🧩️host-contract/🟦️.ts";
 
-export const ShellContextMenuFallbackContext = createContext<(() => ContextMenuItem[]) | undefined>(undefined);
+//#region ComponentSceneHostRegistry
+const componentSceneHosts = new Map<ComponentKind, ComponentSceneHostResolverV1>();
 
-export function useShellContextMenuFallback(): (() => ContextMenuItem[]) | undefined {
-  return useContext(ShellContextMenuFallbackContext);
+/** 🧭️ Registers the host that renders one `ComponentKind`; the returned function retires exactly this registration. */
+export function registerComponentSceneHostV1(kind: ComponentKind, resolve: ComponentSceneHostResolverV1): () => void {
+  componentSceneHosts.set(kind, resolve);
+  return () => {
+    if (componentSceneHosts.get(kind) === resolve) componentSceneHosts.delete(kind);
+  };
 }
 
-export type SurfaceContextMenuResult = {
-  readonly items: ContextMenuItem[];
-  readonly titleKey: UiTranslationKey;
+/** 🧭️ The scene host registered for `kind` as the component this lane mounts, or `undefined` when the composition root supplied none; the one place a registered host becomes a React component. */
+export function resolveComponentSceneHost(kind: ComponentKind): ComponentType<ComponentSceneHostProps> | undefined {
+  return componentSceneHosts.get(kind)?.() as ComponentType<ComponentSceneHostProps> | undefined;
+}
+//#endregion ComponentSceneHostRegistry
+
+//#region ExtensionHostRegistry
+const extensionHostResolvers = new Set<ExtensionHostResolverV1>();
+
+/** 🧩️ Registers a resolver of extension hosts; the returned function retires exactly this registration. */
+export function registerExtensionHostV1(resolve: ExtensionHostResolverV1): () => void {
+  extensionHostResolvers.add(resolve);
+  return () => {
+    extensionHostResolvers.delete(resolve);
+  };
+}
+
+/** 🧩️ The extension host the first registered resolver owns for `extensionId` as the component this lane mounts, or `undefined` when none does; the one place a registered host becomes a React component. */
+export function resolveExtensionHost(extensionId: string): ComponentType<ExtensionHostPropsV1> | undefined {
+  for (const resolve of extensionHostResolvers) {
+    const host = resolve(extensionId);
+    if (host !== undefined) return host as ComponentType<ExtensionHostPropsV1>;
+  }
+  return undefined;
+}
+//#endregion ExtensionHostRegistry
+
+//#region LeftoverSelectionPort
+/** 🌲️ The document-scoped selection a guest's leftover publication leaves behind, as far as a retained tree reads it. */
+export type LeftoverSelectionOverlayV1 = { readonly ids: readonly string[] };
+
+/** 🌲️ The document selection a tree row reads: its subscription, its current overlay and its row predicate. */
+export type LeftoverSelectionPortV1 = {
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly overlay: () => LeftoverSelectionOverlayV1 | null;
+  readonly itemSelected: (itemId: string, leftoverIds: readonly string[] | undefined) => boolean;
 };
 
-const contextMenuSurfaceTitleKeys = {
-  blockList: "ui.surfaceContextMenu.step",
-  board2d: "ui.surfaceContextMenu.board",
-  canvas2d: "ui.surfaceContextMenu.canvas",
-  diffView: "ui.surfaceContextMenu.diff",
-  eventFeed: "ui.surfaceContextMenu.event",
-  graphTimeline: "ui.surfaceContextMenu.history",
-  inkCanvas: "ui.surfaceContextMenu.ink",
-  nodeGraph: "ui.surfaceContextMenu.flow",
-  paint2d: "ui.surfaceContextMenu.paint",
-  table: "ui.surfaceContextMenu.row",
-  textEditor: "ui.surfaceContextMenu.editor",
-  tiledMap: "ui.surfaceContextMenu.map",
-  virtualFileSystem: "ui.surfaceContextMenu.file",
-  world3d: "ui.surfaceContextMenu.scene",
-} as const satisfies Record<string, UiTranslationKey>;
+const NO_LEFTOVER_SELECTION: LeftoverSelectionPortV1 = { subscribe: () => () => {}, overlay: () => null, itemSelected: () => false };
 
-const contextMenuTargetTitleKeys = {
-  architecture: "ui.surfaceContextMenu.architecture",
-  attraction: "ui.surfaceContextMenu.attraction",
-  block: "ui.surfaceContextMenu.block",
-  edge: "ui.surfaceContextMenu.edge",
-  entry: "ui.surfaceContextMenu.entry",
-  feature: "ui.surfaceContextMenu.feature",
-  group: "ui.surfaceContextMenu.group",
-  handle: "ui.surfaceContextMenu.handle",
-  layer: "ui.surfaceContextMenu.layer",
-  node: "ui.surfaceContextMenu.node",
-  object: "ui.surfaceContextMenu.object",
-  part: "ui.surfaceContextMenu.part",
-  path: "ui.surfaceContextMenu.path",
-  pixel: "ui.surfaceContextMenu.pixel",
-  position: "ui.surfaceContextMenu.position",
-  reference: "ui.surfaceContextMenu.reference",
-  route: "ui.surfaceContextMenu.route",
-  row: "ui.surfaceContextMenu.row",
-  slider: "ui.surfaceContextMenu.slider",
-  vortex: "ui.surfaceContextMenu.vortex",
-} as const satisfies Record<string, UiTranslationKey>;
+let leftoverSelectionPort: LeftoverSelectionPortV1 = NO_LEFTOVER_SELECTION;
 
-export function surfaceContextMenuTitleKey(request: PluginContextMenuRequest): UiTranslationKey {
-  const hitDomain = request.surface?.hits?.[0]?.domain;
-  if (hitDomain && hitDomain in contextMenuTargetTitleKeys) return contextMenuTargetTitleKeys[hitDomain as keyof typeof contextMenuTargetTitleKeys];
-  const surfaceKind = request.surface?.kind;
-  if (surfaceKind && surfaceKind in contextMenuSurfaceTitleKeys) return contextMenuSurfaceTitleKeys[surfaceKind as keyof typeof contextMenuSurfaceTitleKeys];
-  return "ui.surfaceContextMenu.workspace";
+/** 🌲️ Supplies the document selection every retained tree reads; the returned function retires exactly this port. */
+export function registerLeftoverSelectionPortV1(port: LeftoverSelectionPortV1): () => void {
+  leftoverSelectionPort = port;
+  return () => {
+    if (leftoverSelectionPort === port) leftoverSelectionPort = NO_LEFTOVER_SELECTION;
+  };
 }
 
-export async function openSurfaceContextMenu(
-  requestContextMenu: ((request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>) | undefined,
-  request: PluginContextMenuRequest,
-  mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
-  shellFallback: (() => ContextMenuItem[]) | undefined,
-): Promise<SurfaceContextMenuResult> {
-  const titleKey = surfaceContextMenuTitleKey(request);
-  if (!requestContextMenu) return { items: shellFallback?.() ?? [], titleKey };
-  try {
-    return { items: mapSpecs(await requestContextMenu(request)), titleKey };
-  } catch {
-    return { items: [], titleKey };
-  }
+/** 🌲️ Subscribes to the registered document selection; a stable function, so a store hook never resubscribes. */
+export function subscribeLeftoverSelectionV1(listener: () => void): () => void {
+  return leftoverSelectionPort.subscribe(listener);
 }
 
-const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
-
-/** ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
-export const AppKeybindingsContext = createContext<ReadonlyMap<string, string>>(EMPTY_KEYS_BY_ACTION_ID);
-
-/** ⌨️ Resolves action→keys bindings from the nearest {@link AppKeybindingsContext} provider. */
-export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
-  return useContext(AppKeybindingsContext);
+/** 🌲️ The registered document selection's current overlay, `null` while none is published or registered. */
+export function leftoverSelectionOverlayV1(): LeftoverSelectionOverlayV1 | null {
+  return leftoverSelectionPort.overlay();
 }
 
-/** 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
-export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
-  const keysByActionId = useAppKeybindingsByActionId();
-  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+/** 🌲️ Whether the registered document selection marks the tree row `itemId` selected. */
+export function leftoverItemSelectedV1(itemId: string, leftoverIds: readonly string[] | undefined): boolean {
+  return leftoverSelectionPort.itemSelected(itemId, leftoverIds);
 }
-
-/** 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`.
- *
- * 🗂️ A `menu.group.<category>` row travels from the guest with `label: undefined` by contract — the
- * taxonomy is chrome vocabulary the SHELL owns, not app vocabulary (`plugin/🦀️.rs`'s `Menu::group`,
- * asserted by `plugin-runtime-plugin-builder-contract`'s "group rows travel with no label"). So the
- * label is resolved here from the same EN/DE `ui.ribbon.parent.*` bundle the ribbon reads, exactly
- * like the wgpu target's `shell_context_menu_item_from_spec` does through `ribbon_parent_label` —
- * including its default folder icon. Without this the React shell rendered the raw ids
- * (`menu.group.history`, `menu.group.selection`, …), measured 2026-09-09 21:05. */
-export function mapContextMenuSpecs(
-  specs: readonly ContextMenuItemSpec[] | null | undefined,
-  dispatch: (action: string, args?: Record<string, unknown>) => void,
-  keysByActionId?: ReadonlyMap<string, string>,
-): ContextMenuItem[] {
-  return (specs ?? []).map((spec) => {
-    const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
-    const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
-    const groupLabel = spec.label === undefined ? contextMenuGroupLabel(spec.id) : undefined;
-    return {
-      id: spec.id,
-      action: spec.action,
-      label: spec.label === undefined ? groupLabel : wireLabel(spec.label),
-      icon: spec.icon && isIconName(spec.icon) ? spec.icon : groupLabel === undefined ? undefined : "folder",
-      color: spec.color,
-      shortcut,
-      disabled: spec.disabled,
-      reason: spec.disabled && spec.reason ? wireLabel(spec.reason) : undefined,
-      separator: spec.separator,
-      checked: spec.checked,
-      destructive: spec.destructive,
-      onSelect: spec.action
-        ? (event) => {
-            const clientX = event && "clientX" in event && typeof event.clientX === "number" ? event.clientX : undefined;
-            const clientY = event && "clientY" in event && typeof event.clientY === "number" ? event.clientY : undefined;
-            const pointArgs = (spec.action === "openVortexSuggestions" || spec.action === "openHandleSuggestions") && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
-            dispatch(spec.action!, { ...spec.args, ...pointArgs });
-          }
-        : undefined,
-      onHover: spec.hoverAction ? () => dispatch(spec.hoverAction!, spec.hoverArgs) : undefined,
-      children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
-    };
-  });
-}
+//#endregion LeftoverSelectionPort

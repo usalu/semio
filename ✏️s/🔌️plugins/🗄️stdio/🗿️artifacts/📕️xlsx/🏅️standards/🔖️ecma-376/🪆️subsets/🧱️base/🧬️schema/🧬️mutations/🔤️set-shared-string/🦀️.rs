@@ -16,19 +16,20 @@ pub struct SetSharedString {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shared-string", kind: "set-shared-string", record: "SetSharedString" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::set_shared_string_plan(base, self.index, &self.value, self.node.as_ref()))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::set_shared_string_plan(base, self.index, &self.value, self.node.as_ref())))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set shared string", "Gemeinsame Zeichenfolge setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::set_shared_string_plan(base, self.index, &self.value, self.node.as_ref()))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+        Ok(plan_inverse(canonical_edit::set_shared_string_plan(base, self.index, &self.value, self.node.as_ref())))
     }
 }
 //#endregion 🔖️Payload

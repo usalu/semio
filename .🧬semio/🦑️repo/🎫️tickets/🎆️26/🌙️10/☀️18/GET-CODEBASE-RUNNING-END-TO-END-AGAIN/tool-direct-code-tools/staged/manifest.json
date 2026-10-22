@@ -1,0 +1,272 @@
+{
+ "version": 1,
+ "deleted": [],
+ "files": [
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+   "kind": "edit",
+   "after": "0000",
+   "beforeSha256": "8fc0b4afea9b295329b868633b325ebf55fb220934e41986302b2fe1766d0bf7",
+   "afterSha256": "fae9763418b23c1accb7554e1875e9e6f977312b2913e442192ee9e79e67f3c0"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json",
+   "kind": "edit",
+   "after": "0001",
+   "beforeSha256": "126b4e8b814e4f9552bf3b8dda29f08c52614252f01f511c5f1b8e2c69924e59",
+   "afterSha256": "785bf3b81effd736cb8a0d6470a69076837a65aecd2d793903f56c867407bb62"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧬️schema/🔣️.json",
+   "kind": "edit",
+   "after": "0002",
+   "beforeSha256": "cf556d84affed1522cabed3a76d93b0c24c1c2a5ce206fc8c0c0dc64633aaac8",
+   "afterSha256": "a593e7574b7d027df0a3293d9825daaedb81844f238c93cc072fa41ccc055189"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+   "kind": "edit",
+   "after": "0003",
+   "beforeSha256": "df08233361564c237cfcd6087f86d093fcfd91660ffd26e633998bbc3cd3ef46",
+   "afterSha256": "df08233361564c237cfcd6087f86d093fcfd91660ffd26e633998bbc3cd3ef46"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+   "kind": "edit",
+   "after": "0004",
+   "beforeSha256": "073c35821c19eca9bba3eb7aba6ae86036cfa08b7f414b877a3e75ed937da8fb",
+   "afterSha256": "073c35821c19eca9bba3eb7aba6ae86036cfa08b7f414b877a3e75ed937da8fb"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🏁️benchmark/🐹️.go",
+   "kind": "edit",
+   "after": "0005",
+   "beforeSha256": "85fe8542b75dd6665a9deefc894e925ae8a6842c426967e12c00b5f481e60a0d",
+   "afterSha256": "7145683741522254ea644a0887c2650106123f07ac6ac66b3fce595e30a9504b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🔄️update/🐹️.go",
+   "kind": "edit",
+   "after": "0006",
+   "beforeSha256": "ce9a74f42e66034db4ee11fcf5e26729b1a0dec7562281353526fc3c59ec0819",
+   "afterSha256": "8675adf330c8074776a378fd9e6b6df56e35b3f8eb61c1cf2689b818d95520da"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/🦀️.rs",
+   "kind": "edit",
+   "after": "0007",
+   "beforeSha256": "130f01f29928c7e6159707e97b3541f17eb607edc9eaba467506bdd93f144ee5",
+   "afterSha256": "a4c2019fcd9c10e68bdb2bd7c2f3566717d944f15af6039445617c51dd2f18be"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/🕸️test-command/🐹️.go",
+   "kind": "edit",
+   "after": "0008",
+   "beforeSha256": "07c68e9297a5f648a056c34145f13cd53b2905e299c4859f2f3fa996a27fe41c",
+   "afterSha256": "2b630678605f691b279a46eaa59b667825314524df57757cdae8d7d4c4afe2b0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🎨️formatter/🐹️.go",
+   "kind": "edit",
+   "after": "0009",
+   "beforeSha256": "5b45df190966b08a0c877bbdc14a2cf6dac70afe3bcfc7587be7ea0da7244c05",
+   "afterSha256": "b00fc61995432fe6fd019eb5937e4371adddbd771edc750fe9d0772b9685e2d0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔃️update-command/🐹️.go",
+   "kind": "edit",
+   "after": "0010",
+   "beforeSha256": "f0b6740a52dd6320004a884f9e4328f85e48cebef3ecfae9515bf602235e3863",
+   "afterSha256": "bda84dc4b15b1497d6dd7e5fe82d65587c8e1b101c0ae6045f3714f62ce4f675"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔮️benchmark/🐹️.go",
+   "kind": "edit",
+   "after": "0011",
+   "beforeSha256": "6cd6fbb84998d044a7aa5cfea5e61f73bb74d8756980138040140194cc65322a",
+   "afterSha256": "b6c6bc9d75a8c961e9e7c81cd3e174cde6d6796a8bf76d13fc717ce695a08d1c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔷️configure-micro-commit/🐹️.go",
+   "kind": "edit",
+   "after": "0012",
+   "beforeSha256": "eef713e6340de162cbfdf6e9623ae8738f40939c90cc56298ffd56e8a6bb8276",
+   "afterSha256": "7080c3934750cb2211b60a029748535a5f2314d141cf1cb9c81770f9881a2dbb"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🚫️gitignore-and-formatters/🐹️.go",
+   "kind": "edit",
+   "after": "0013",
+   "beforeSha256": "ea0dc97ea9330a97104939cb215eaa830d40b1eee012446bb3fe4eebafd14931",
+   "afterSha256": "292c7db1aae32938f8e12a5f507d267e63f60205015b1972f90eb34553491982"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🛠️path-time-exec-utils/🐹️.go",
+   "kind": "edit",
+   "after": "0014",
+   "beforeSha256": "37c41d310e6c3439599aeade63e93c77b31f983da75d97c584cb7c5d894385ba",
+   "afterSha256": "0184cefdfccbc3c64bdc437b3c9dd79e22b79b94b6a0b2f383df499298f739a7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️test-runners/🐹️.go",
+   "kind": "edit",
+   "after": "0015",
+   "beforeSha256": "e48471bbdf7ac754c63ad8e30a5e1fa45efbed8b8538170d3f469525c595aa8d",
+   "afterSha256": "77e9a2d0c20507e901f6aa0ff5e2c4f79ba76f1e065b5e0a0bba8b58b87fc8cd"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🏃️process/🐹️.go",
+   "kind": "edit",
+   "after": "0016",
+   "beforeSha256": "69f3a8953c13af4973f11b06f357fdddcbb89caa5114eac34fb93703038f3387",
+   "afterSha256": "fde827141c116835f44d825c35c87d864e86d491d8fdc107cba8044e76aa8f67"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/🔌️gitsource/🐹️.go",
+   "kind": "edit",
+   "after": "0017",
+   "beforeSha256": "a3f05cfb0cac223a8e35371b3b0cacc7cc71ebb4bed76105230f9797e29f27c3",
+   "afterSha256": "6bf3da81e5cad34f255c0a8608f73474d5bbcc7487f691826ab4adc945c59535"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📇️indexed-generated-output/🟦️.ts",
+   "kind": "edit",
+   "after": "0018",
+   "beforeSha256": "4e1fcfcd71faaa0e2dd3ef4239d8221036a0af0172e40e6e41161045715605ec",
+   "afterSha256": "5ac626bc8bc1c2b0c542b7fb5901bb96388c567e117a24de76267226f6be4a5b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts",
+   "kind": "edit",
+   "after": "0019",
+   "beforeSha256": "78b032f7b0f0a7f1fce63c05b1185d8d41c5c5eb4274d370a5796c6514fab5c8",
+   "afterSha256": "0713077133e1aa6f0c2b197bb96e709f3774df0f162f48ceee2e6164297f140a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/⌨️command/🟦️.ts",
+   "kind": "new",
+   "after": "0020",
+   "beforeSha256": null,
+   "afterSha256": "f01fb06c2a110f4f3c2155ffaab551e21c700eb5d34a2bc652d2639a9c8447c5"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/📒️allowlist/🔣️.json",
+   "kind": "new",
+   "after": "0021",
+   "beforeSha256": null,
+   "afterSha256": "fdd62e7ba3ab9b37dc2806cae8274f1b2dbc624b6723af103f584147c05faf11"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🟦️.ts",
+   "kind": "new",
+   "after": "0022",
+   "beforeSha256": null,
+   "afterSha256": "7c1d0ff427572b16277f1a07b51b2a2a4b8415a7d850f644ebd53c82d20b39ac"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧪️tests/🐍️oracle/🐍️.py",
+   "kind": "new",
+   "after": "0023",
+   "beforeSha256": null,
+   "afterSha256": "f4f813bf9bcd76a24b97978651a5ba6911aae276400ae0da0c18e8fb9eb2872e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧪️tests/🟦️.ts",
+   "kind": "new",
+   "after": "0024",
+   "beforeSha256": null,
+   "afterSha256": "77082fd7b8a091b874ef97edc38beb74f87abbc433ed0bcd4b9be159ef25dbb2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧪️tests/🧫️fixtures/🔣️.json",
+   "kind": "new",
+   "after": "0025",
+   "beforeSha256": null,
+   "afterSha256": "41d8edfedcfd8cd0bac0d67d209c0058e80e72496014319c72602d60f8edf1b0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧬️schema/🔣️.json",
+   "kind": "new",
+   "after": "0026",
+   "beforeSha256": null,
+   "afterSha256": "990fa98713751042417d036d2f9383d4e42e3f5889a7dd861c0b1a7d7d57adc6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts",
+   "kind": "edit",
+   "after": "0027",
+   "beforeSha256": "80c333e9aa86cf6821d2181385925e5d3301f2c6abde69e64e015794434949f9",
+   "afterSha256": "c564bced6d9a0b01c89756600f01f75ec12c4bcf5c2d2fa3ebc3c32d49139845"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+   "kind": "edit",
+   "after": "0028",
+   "beforeSha256": "2d5baeaf6f882f5511c3a3548f14fab365b476c741d26f122aafda43bd73b06a",
+   "afterSha256": "20d2412005cd23067a665caf16a9c34ac1064c3efc0ec972c3b2765edd644f8e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts",
+   "kind": "edit",
+   "after": "0029",
+   "beforeSha256": "e9119fc8ef348b12d10eab2c08858cc50fafd5dc30ff28d6048289d1b61d61db",
+   "afterSha256": "2941c604b05237ba8f6a1633ed128f9a403b7d6368139846cfbd15f96612f55b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🔣️.json",
+   "kind": "edit",
+   "after": "0030",
+   "beforeSha256": "397f39a7ff6f38ae7b5fc303ab033cc082f7d3c1147326ab30263928e50c8a35",
+   "afterSha256": "a027291bfbee052ec3024263f6b5f85be706009093aee48f95058794f7f0bf1d"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+   "kind": "edit",
+   "after": "0031",
+   "beforeSha256": "48483c7fa03d500e63671e68f0d59bc5afa721db7a1d49ae76ed601d48204851",
+   "afterSha256": "0a448be1d0d3f3dd3cedaac928906d1fc7e96f076920b8fc3566534f6d037008"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/📏️measure/🟦️.ts",
+   "kind": "edit",
+   "after": "0032",
+   "beforeSha256": "c2e20d382f1dc679bde7f30c805c13947b3bab102228b1ac6f06a51c140aac91",
+   "afterSha256": "d180f9656a66c86cb103baeef8e447ff503f80b67812db4e31b6e110a3cbdf93"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts",
+   "kind": "edit",
+   "after": "0033",
+   "beforeSha256": "3e0c5efa2d6266b91afd21cdeeb84617ea20e06afd2406da55ffb5b6b45c3459",
+   "afterSha256": "02784a285f2223af3562503105437ca47174e3746c2c661f2799f338483a8094"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts",
+   "kind": "edit",
+   "after": "0034",
+   "beforeSha256": "9f801fe048a800e1f07f1724732f1bc7d3135ee94811cfcf2b55d0d948ef8339",
+   "afterSha256": "9f801fe048a800e1f07f1724732f1bc7d3135ee94811cfcf2b55d0d948ef8339"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+   "kind": "edit",
+   "after": "0035",
+   "beforeSha256": "c1892ebb8d7f09c7fa93532425a85512e966de3f8cd5d0d3c8093922bbd18626",
+   "afterSha256": "c1892ebb8d7f09c7fa93532425a85512e966de3f8cd5d0d3c8093922bbd18626"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/🏃️process/🐹️.go",
+   "kind": "edit",
+   "after": "0036",
+   "beforeSha256": "230636e5d13878c53b4602628a0ddf0c2d9cb0fcdb1f69195dedd3b379ee5c5d",
+   "afterSha256": "018eca95292e9a47cd714067f68dbfde44ff7d953a5d1c0d6e3c19c97e0d693f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/🔖️micro-commit/🐹️.go",
+   "kind": "edit",
+   "after": "0037",
+   "beforeSha256": "98fb0d77988087019f5697861ac0cdfefb806a248c7b8ab6717aa6e1d50ca424",
+   "afterSha256": "fb0116f26b37597fdd93e8443aaded24f26984ff988844e9811c0bfbe4dffbc1"
+  }
+ ]
+}

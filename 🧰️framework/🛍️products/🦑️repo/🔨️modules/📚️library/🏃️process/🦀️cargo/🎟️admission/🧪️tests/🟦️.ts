@@ -41,3 +41,8 @@ test("generic Cargo test command requires its exact actual owner phase without r
  }));}}
  finally{db.close();}
 },5000);
+
+test("Cargo test preparation owns the schema-declared compile-phase budget and never the test-level deadline",()=>{
+ const owner=tree.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="runRepositoryCargoTests");if(!owner)throw Error("Actual Cargo test owner required");
+ const body=owner.getText(tree);expect(body).toContain("buildPreparationBudgetMs(");expect(body).not.toContain("testLevelBudgetMs(");
+});

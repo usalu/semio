@@ -1,0 +1,176 @@
+{
+ "version": 1,
+ "repoRoot": "/repo",
+ "layouts": [
+  {
+   "name": "build and target differ",
+   "build": "/repo/b",
+   "target": "/repo/t",
+   "scans": {
+    "build": [
+     {
+      "path": "b1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "cargo-build"
+     }
+    ],
+    "target": [
+     {
+      "path": "t1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "cargo-target-file"
+     }
+    ],
+    "incremental": {
+     "units": [
+      {
+       "path": "i1",
+       "bytes": 10,
+       "recencyMs": 1000,
+       "lockHeld": false,
+       "kind": "cargo-incremental"
+      }
+     ],
+     "staleSessions": [
+      {
+       "path": "s1",
+       "bytes": 10,
+       "recencyMs": 1000,
+       "lockHeld": false,
+       "kind": "cargo-incremental-session"
+      }
+     ]
+    },
+    "vite": [
+     {
+      "path": "v1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "directory"
+     }
+    ],
+    "agents": [
+     {
+      "path": "a1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "directory"
+     },
+     {
+      "path": "a2",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "directory"
+     }
+    ]
+   }
+  },
+  {
+   "name": "a shared build and target directory is scanned once",
+   "build": "/repo/b",
+   "target": "/repo/b",
+   "scans": {
+    "build": [
+     {
+      "path": "b1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "cargo-build"
+     },
+     {
+      "path": "b2",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "cargo-build"
+     }
+    ],
+    "target": [
+     {
+      "path": "t1",
+      "bytes": 10,
+      "recencyMs": 1000,
+      "lockHeld": false,
+      "kind": "cargo-target-file"
+     }
+    ],
+    "incremental": {
+     "units": [],
+     "staleSessions": []
+    },
+    "vite": [],
+    "agents": []
+   }
+  },
+  {
+   "name": "everything empty",
+   "build": "/repo/b",
+   "target": "/repo/t",
+   "scans": {
+    "build": [],
+    "target": [],
+    "incremental": {
+     "units": [],
+     "staleSessions": []
+    },
+    "vite": [],
+    "agents": []
+   }
+  }
+ ],
+ "roots": [
+  {
+   "area": "cargo",
+   "kind": "cargo-build",
+   "expected": "build"
+  },
+  {
+   "area": "cargo",
+   "kind": "cargo-target-file",
+   "expected": "target"
+  },
+  {
+   "area": "cargo-incremental",
+   "kind": "cargo-incremental",
+   "expected": "build"
+  },
+  {
+   "area": "cargo-incremental",
+   "kind": "cargo-target-file",
+   "expected": "target"
+  },
+  {
+   "area": "cargo-incremental-sessions",
+   "kind": "cargo-incremental-session",
+   "expected": "build"
+  },
+  {
+   "area": "vite",
+   "kind": "directory",
+   "expected": "cache:vite"
+  },
+  {
+   "area": "agents",
+   "kind": "directory",
+   "expected": "cache:agents"
+  },
+  {
+   "area": "vite",
+   "kind": "cargo-target-file",
+   "expected": "cache:vite"
+  },
+  {
+   "area": "other",
+   "kind": "directory",
+   "expected": "cache:other"
+  }
+ ]
+}

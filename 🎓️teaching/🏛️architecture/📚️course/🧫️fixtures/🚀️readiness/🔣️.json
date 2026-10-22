@@ -8,7 +8,7 @@
         "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"",
         "native_repo_bin=\"$native_repo_dir/repo\"",
         "if ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then",
-        "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache",
+        "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache",
         "fi",
         "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help",
         "printf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\""
@@ -89,7 +89,7 @@
     "siteCondition": "${{ inputs.site && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
     "proctorCondition": "${{ inputs.proctor && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
     "commands": [
-      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:test",
@@ -102,13 +102,13 @@
       "proctor"
     ],
     "siteCommands": [
-      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:publish --configuration=release"
     ],
     "proctorSteps": [
-      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:docker-image-build",
@@ -136,7 +136,7 @@
     },
     "step": "Check generic host tools, capacity and filesystem support before allocation",
     "documentation": [
-      "generic host preflight",
+      "Generic host preflight",
       "8 GiB",
       "atomic directory exchange",
       "case-sensitive",

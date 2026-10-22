@@ -30,16 +30,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "route-data", kind: "replace-route-data", record: "ReplacedRouteData" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace route \"{}\" data", self.id), &format!("Daten von Route \"{}\" ersetzen", self.id))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for ReplaceRouteData
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<ReplaceRouteData>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace route \"{}\" data", self.id), &format!("Daten von Route \"{}\" ersetzen", self.id))
     }
 }
 //#endregion 🔹Payload

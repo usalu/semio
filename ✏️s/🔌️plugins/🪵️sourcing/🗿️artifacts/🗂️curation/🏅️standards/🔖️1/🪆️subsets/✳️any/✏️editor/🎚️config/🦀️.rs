@@ -112,29 +112,9 @@ pub struct SourcingCurationConfigDiff {
     pub contributions_json: Option<String>,
 }
 
-impl protocol::MutationDiff<SourcingCurationConfig> for SourcingCurationConfigDiff {
-    fn apply(&self, base: &SourcingCurationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SourcingCurationConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.filters_query {
-            next.filters.query = value.clone();
-        }
-        if let Some(value) = &self.filters_module_ids {
-            next.filters.module_ids = value.clone();
-        }
-        if let Some(value) = &self.filters_typology_path {
-            next.filters.typology_path = value.clone();
-        }
-        if let Some(value) = self.filters_min_availability {
-            next.filters.min_availability = value;
-        }
-        if let Some(value) = &self.filters_sort {
-            next.filters.sort = value.value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<SourcingCurationConfig> for SourcingCurationConfigDiff {}
+
+impl protocol::ColdMutationDiff<SourcingCurationConfig> for SourcingCurationConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.filters_query.is_some() {
             self.filters_query = other.filters_query;
@@ -155,9 +135,40 @@ impl protocol::MutationDiff<SourcingCurationConfig> for SourcingCurationConfigDi
             self.contributions_json = other.contributions_json;
         }
     }
+
+    fn apply(&self, unpublished: &mut SourcingCurationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.filters_query {
+            next.filters.query = value.clone();
+        }
+        if let Some(value) = &self.filters_module_ids {
+            next.filters.module_ids = value.clone();
+        }
+        if let Some(value) = &self.filters_typology_path {
+            next.filters.typology_path = value.clone();
+        }
+        if let Some(value) = self.filters_min_availability {
+            next.filters.min_availability = value;
+        }
+        if let Some(value) = &self.filters_sort {
+            next.filters.sort = value.value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.filters_query.is_none() && self.filters_module_ids.is_none() && self.filters_typology_path.is_none() && self.filters_min_availability.is_none() && self.filters_sort.is_none() && self.contributions_json.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDiff {
     fn inverse(&self, base: &SourcingCurationConfig) -> Self {
         Self {
             filters_query: self.filters_query.as_ref().map(|_| base.filters.query.clone()),
@@ -167,9 +178,6 @@ impl protocol::DiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDif
             filters_sort: self.filters_sort.as_ref().map(|_| SourcingOptionalSort { value: base.filters.sort.clone() }),
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.filters_query.is_none() && self.filters_module_ids.is_none() && self.filters_typology_path.is_none() && self.filters_min_availability.is_none() && self.filters_sort.is_none() && self.contributions_json.is_none()
     }
 }
 //#endregion 🔖️Config
@@ -315,7 +323,10 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
             SourcingCurationConfigMutation::SetContributions(_) => &Self::DESCRIPTORS[5],
         }
     }
+}
 
+impl protocol::ColdMutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
+    type ReferenceDiff = SourcingCurationConfigDiff;
     fn diff(&self, base: &SourcingCurationConfig) -> protocol::MutationOutcome<SourcingCurationConfigDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetFilterQuery(SetFilterQueryEdit { value }) => SourcingCurationConfigDiff { filters_query: (base.filters.query != *value).then(|| value.clone()), ..Default::default() },
@@ -326,7 +337,6 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
             Self::SetContributions(SetContributionsEdit { json }) => SourcingCurationConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &SourcingCurationConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetFilterQuery(_) => Self::SetFilterQuery(SetFilterQueryEdit { value: base.filters.query.clone() }),

@@ -91,7 +91,7 @@ class ActivationScript extends BundleScript {
       const fontControl=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"activation:font-digest",60000),0,controller.signal),supportDigest=await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,fontControl,async artifact=>{support.set(FONT_ASSET,join(artifact.path,FONT_ASSET));try{return await activationFilesDigest(support,fontControl.signal);}finally{support.delete(FONT_ASSET);}}),completed = [];
       const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
       const healthy = healthyPreparedComponents(verdicts, playgroundCatalog().find((row) => row.variant === variant)?.pluginId ?? variant);
-      for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
+      for (const line of preparedComponentReportLines(healthy.excluded, `repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
       if (healthy.refusal) throw new Error(healthy.refusal);
       const previousWarm = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
       if (previousWarm && previousWarm.variant === variant && previousWarm.profile === profile) {
@@ -151,7 +151,7 @@ async function activatePlaygroundRuntime(invocation:ScriptInvocation,variant: st
   checkScriptInvocation(invocation);
   const target = playgroundActivationTargetV1(variant, profile, renderer);
   console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
-  await runRepositoryCommand(invocation,"bun", ["repo", "run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null});
+  await runRepositoryCommand(invocation,"repo", ["run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null});
 }
 
 export { ActivationScript, activatePlaygroundRuntime };

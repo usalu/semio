@@ -116,7 +116,7 @@ mod child_complete_group_candidate_tests{
             for case in corpus["cases"].as_array().unwrap(){
                 let field=case["field"].as_str().unwrap();let large="m".repeat(8194);assert_eq!(large.len(),8194);let mut child=super::ChildEmit::open("","",0);
                 match field{"owner"=>child.owner=large,"slot"=>child.slot=large,"child_id"=>child.child_id=large,"op_schema"=>child.op_schema.0=large,_=>{let keys:Vec<&str>=field.split('.').collect();assert_eq!(keys.len(),3);let label=semio_framework_ui_locale::LocalizedLabel::from_fn(|terminology,locale|if terminology.as_str()==keys[1]&&locale.as_str()==keys[2]{large.clone()}else{String::new()});child.labels.push(label);}}
-                use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+                use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
                 assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}).unwrap(),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
                 if matches!(field,"owner"|"slot"|"child_id"|"op_schema"){for _ in 0..64{if matches!(child.close_one(page).unwrap(),RetainedCloneStep::Complete(_)){panic!("a String backing releases whole: a 4096-byte release grant can never retire the 8194-byte owner: {field}")}}}
                 let whole=RetainedCloneGrant{maximum_release_bytes:8194+4096,..page};
@@ -194,7 +194,8 @@ mod child_complete_group_candidate_tests{
         }
         #[test]
         fn child_complete_actual_authored_label_producer_preserves_all_axes_and_retained_source(){
-            use semio_framework_value::{paged_text::{PagedText,InlineTextBuffer},NativeEncodeControl,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep};
+            use semio_framework_value_paged_text::paged_text::{PagedText,InlineTextBuffer};
+            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep};
             let fixture:serde_json::Value=crate::fixture_json("✍️authored-label");assert_eq!(fixture["englishBytes"],8194);assert_eq!(fixture["germanBytes"],8205);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);
             fn drain<const N:usize>(paged:&mut PagedText<N>,inline:&mut InlineTextBuffer)->usize{if !inline.terminal_is_empty(){assert!(inline.close_one(1));}let mut released=0;for _ in 0..8205+128{match paged.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Complete(_)=>break,RetainedCloneStep::Progress(progress)=>{let released_items=progress.copied_items;let released_bytes=progress.released_bytes;assert!(progress.copied_bytes<=4096);assert_eq!(progress.retained_capacity_bytes,0);assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;}}}assert!(paged.terminal_is_empty()&&inline.terminal_is_empty());released}
             for large in[false,true]{let operation=crate::test_app_mutation_fixture::SetLabel{value:if large{std::iter::repeat_n('x',8181).collect()}else{fixture["shortValue"].as_str().unwrap().to_owned()}};for terminology in semio_framework_ui_locale::Terminology::ALL{for locale in semio_framework_ui_locale::Locale::ALL{let(prefix,suffix)=match locale{semio_framework_ui_locale::Locale::En=>(fixture["englishPrefix"].as_str().unwrap(),fixture["englishSuffix"].as_str().unwrap()),semio_framework_ui_locale::Locale::De=>(fixture["germanPrefix"].as_str().unwrap(),fixture["germanSuffix"].as_str().unwrap())};let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);paged.encode_with_inline(&mut inline,&mut active,65536,&mut control,|output|operation.label_into(terminology,locale,output)).unwrap();let expected=prefix.as_bytes().iter().copied().chain(operation.value.as_bytes().iter().copied()).chain(suffix.as_bytes().iter().copied());if large{assert!(active&&inline.borrow().is_err());assert!(paged.borrow().unwrap().bytes().eq(expected));}else{assert!(!active&&paged.borrow().is_err());assert!(inline.borrow().unwrap().bytes().eq(expected));assert_eq!(control.owned_bytes(),0);}let allocated=paged.allocated_bytes();assert_eq!(allocated,control.owned_bytes());assert_eq!(drain(&mut paged,&mut inline),allocated);
@@ -214,7 +215,8 @@ mod child_complete_group_candidate_tests{
         #[test]
         fn child_complete_group_source_candidate_owned_publication_preserves_empty_original_and_parent(){
             mod publication{include!("../../../../🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs");}
-            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep},paged_text::TextReadSource};
+            use semio_framework_value_paged_text::paged_text::TextReadSource;
+            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
             use semio_framework_os_kernel::os_pack::codec::PackEncodeOptions;
             use paged_encoder::PagedChildGroups;
             const CAPACITY:usize=isize::MAX as usize;
@@ -350,7 +352,8 @@ mod child_complete_group_candidate_tests{
         }
         #[test]
         fn child_complete_actual_authored_paged_source8194_frame8202_physical4096(){
-            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,paged_text::TextReadSource,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+            use semio_framework_value_paged_text::paged_text::TextReadSource;
+            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
             use semio_framework_os_kernel::os_pack::codec::PackEncodeOptions;
             struct Original;impl TextReadSource for Original{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{(index<8194).then_some(b'x')}}
             struct Observed<'a>{inner:&'a mut dyn OperationByteOutput,accepted:&'a std::sync::atomic::AtomicUsize}
@@ -376,14 +379,15 @@ mod child_complete_group_candidate_tests{
         }
         #[test]
         fn child_complete_candidate_retirement_keeps_currencies_independent(){
-            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,paged_text::TextReadSource,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+            use semio_framework_value_paged_text::paged_text::TextReadSource;
+            use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
             use semio_framework_os_kernel::os_pack::codec::PackEncodeOptions;
             struct Original;impl std::fmt::Display for Original{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{for _ in 0..8194{formatter.write_str("x")?;}Ok(())}}impl TextReadSource for Original{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{(index<8194).then_some(b'x')}}
             let fixture:serde_json::Value=crate::fixture_json("♻️child-currencies");assert_eq!(fixture["semanticBytes"],8194);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumCopyBytes"],4096);assert_eq!(fixture["maximumCapacityBytes"],0);assert_eq!(fixture["maximumReleaseBytes"],4096);assert_eq!(fixture["maximumDepth"],64);
             for carrier in 0..8{
                 let mut owner=paged_owner::PagedChildOwner::empty();let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);let options=PackEncodeOptions::default();
                 for(index,field)in[reader::ChildGroupText::Owner,reader::ChildGroupText::Slot,reader::ChildGroupText::ChildId,reader::ChildGroupText::Schema].into_iter().enumerate(){if index==carrier{owner.read_metadata_from_encoding_source(field,&Original,&options,&mut control).unwrap();}else{owner.read_metadata_from_encoding_source(field,&"cell",&options,&mut control).unwrap();}}
-                if carrier>=4{let mut receipt=owner.produce_owned_operation(1,&options,&mut control,|_,output,control|output.write_bytes(&[0],control).map_err(Into::into)).unwrap();receipt.read_first_schema_from_source(&"schema",&mut control).unwrap();let mut index=4;for terminology in semio_framework_ui_locale::Terminology::ALL{for locale in semio_framework_ui_locale::Locale::ALL{if index==carrier{receipt.produce_label(terminology,locale,&mut control,|output|semio_framework_value::paged_text::write_encoding_format(output,format_args!("{Original}"))).unwrap();}else{receipt.produce_label(terminology,locale,&mut control,|output|semio_framework_value::paged_text::write_encoding_format(output,format_args!("cell"))).unwrap();}index+=1;}}receipt.commit(&mut control).unwrap();}
+                if carrier>=4{let mut receipt=owner.produce_owned_operation(1,&options,&mut control,|_,output,control|output.write_bytes(&[0],control).map_err(Into::into)).unwrap();receipt.read_first_schema_from_source(&"schema",&mut control).unwrap();let mut index=4;for terminology in semio_framework_ui_locale::Terminology::ALL{for locale in semio_framework_ui_locale::Locale::ALL{if index==carrier{receipt.produce_label(terminology,locale,&mut control,|output|semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("{Original}"))).unwrap();}else{receipt.produce_label(terminology,locale,&mut control,|output|semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("cell"))).unwrap();}index+=1;}}receipt.commit(&mut control).unwrap();}
                 let backing=owner.allocated_bytes();assert!(backing>=8194&&backing<=65536);assert_eq!(control.owned_bytes(),backing);let(mut copied,mut disposed)=(0,0);
                 for _ in 0..100000{
                     if owner.terminal_is_empty(){break}let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();assert_eq!(owner.next_capacity_byte_demand(4096).unwrap(),0);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64};

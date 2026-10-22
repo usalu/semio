@@ -18,6 +18,19 @@ where
     Op: protocol::Mutation<Wfc3dConfig, Diff = Wfc3dConfigDiff> + From<ChangeCamera>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "camera", kind: "change-camera", record: "ChangeCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc3dConfig, Op> for ChangeCamera
+where
+    Op: protocol::ColdMutation<Wfc3dConfig, ReferenceDiff = Wfc3dConfigDiff> + From<ChangeCamera>,
+{
     fn diff(&self, base: &Wfc3dConfig) -> protocol::MutationOutcome<Wfc3dConfigDiff> {
         let diff = Wfc3dConfigDiff { camera_x: (base.camera_x != self.x).then_some(self.x), camera_y: (base.camera_y != self.y).then_some(self.y), camera_zoom: (base.camera_zoom != self.zoom).then_some(self.zoom), ..Default::default() };
         if protocol::DiffAlgebra::<Wfc3dConfig>::is_empty(&diff) {
@@ -31,10 +44,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["camera".into()]
-    }
 }

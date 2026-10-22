@@ -108,6 +108,8 @@ pub fn cancel_job_wit(job:u64,budget:semio_framework_plugin_abi::wasip2::JobBudg
 fn with_owned_job_receipt(body:impl FnOnce()->OriginalOwnedJobCall)->u64{ORIGINAL_OWNED_JOB_RECEIPT.with(|receipt|{let Ok(mut receipt)=receipt.try_borrow_mut()else{return semio_framework_plugin_abi::operation_authority::owned_result::encode_refusal(ValueRefusalKind::InvariantViolated)};match receipt.produce(body){Ok(bytes)=>u64::from(bytes.as_ptr()as usize as u32)|(184u64<<32),Err(error)=>semio_framework_plugin_abi::operation_authority::owned_result::encode_refusal(error.kind)}})}
 /// 🧱️ Exact resident metadata handback releases no source, output or retained capacity.
 pub fn release_owned_job_receipt(pointer:u32,length:u32)->bool{ORIGINAL_OWNED_JOB_RECEIPT.with(|receipt|{let Ok(mut receipt)=receipt.try_borrow_mut()else{return false};if !receipt.owns_pointer(pointer as usize){return false}receipt.hand_back(pointer as usize,length as usize);true})}
+/// 📥️ The fixed owned start receipt names whether the refused admission left the host-held source unconsumed.
+pub fn start_job_owned(source:Option<kernel::OriginalJobSource>,budget:kernel::OriginalJobBudget)->u64{with_owned_job_receipt(||OriginalOwnedJobCall::borrow_start(&start_job_original(source,budget)))}
 /// ▶️ The fixed owned reply preserves the actual original logical receipt.
 pub fn step_job_owned(job:u64,budget:kernel::OriginalJobBudget)->u64{with_owned_job_receipt(||OriginalOwnedJobCall::borrow_step(&step_job_original(job,budget)))}
 /// 📤️ A paid bounded page stays in the original Entry while its metadata crosses the core ABI.

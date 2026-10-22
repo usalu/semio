@@ -31,6 +31,19 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "nodes", kind: "move-nodes", record: "MovedNodes" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(generation2d_label_number);
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} node(s) by ({x_en}, {y_en})", self.ids.len()), &format!("{} Knoten um ({x_de}; {y_de}) verschieben", self.ids.len()))
+    }
+    fn target(&self) -> Vec<String> {
+        self.ids.clone()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for MoveNodes
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<crate::move_widget::MoveWidget>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::move_nodes::diff::diff(self, base)
     }
@@ -40,12 +53,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(generation2d_label_number);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} node(s) by ({x_en}, {y_en})", self.ids.len()), &format!("{} Knoten um ({x_de}; {y_de}) verschieben", self.ids.len()))
-    }
-    fn target(&self) -> Vec<String> {
-        self.ids.clone()
-    }
 }
 //#endregion 🔖️MoveNodes

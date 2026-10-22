@@ -17,7 +17,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "representation", kind: "unbind-representation", record: "UnboundRepresentation" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind representation at #{}", self.index), &format!("Bindung der Repräsentation an #{} aufheben", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioKitSnapshot, Op> for UnbindRepresentation
+where
+    Op: protocol::ColdMutation<SemioKitSnapshot, ReferenceDiff = crate::schema::diff::SemioKitDiff> + From<UnbindRepresentation> + From<crate::schema::mutations::bind_representation::BindRepresentation>,
+{
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioKitSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,11 +38,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind representation at #{}", self.index), &format!("Bindung der Repräsentation an #{} aufheben", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -21,23 +21,27 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "trim-box", kind: "remove-trim-box", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let rows = support::page_objects(base).get(self.page_index).copied().map_or_else(PdfDiff::default, |page| support::remove_entry_rows(base, page, "TrimBox"));
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox").map(|trim_box| Op::from(SetTrimBox { page_index: self.page_index, trim_box, entry_index: support::entry_position(base, page, "TrimBox") }))).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} entfernen", self.page_index))
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.page_index.to_string(), "TrimBox".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveTrimBox
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveTrimBox> + From<crate::standards::v1_7::subsets::vt::schema::mutations::set_trim_box::SetTrimBox>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let rows = support::page_objects(base).get(self.page_index).copied().map_or_else(PdfDiff::default, |page| support::remove_entry_rows(base, page, "TrimBox"));
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox").map(|trim_box| Op::from(SetTrimBox { page_index: self.page_index, trim_box, entry_index: support::entry_position(base, page, "TrimBox") }))).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

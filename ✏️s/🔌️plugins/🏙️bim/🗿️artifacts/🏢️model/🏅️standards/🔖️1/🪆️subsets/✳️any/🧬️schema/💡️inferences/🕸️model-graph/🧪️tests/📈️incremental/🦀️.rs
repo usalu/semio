@@ -128,7 +128,7 @@ fn one_wall_move_in_511_walls_and_64_windows_updates_in_under_15_ms() {
     for row in 1..=9usize {
         let y = row as f64 * 4.0 + 0.5;
         let moved = ModelDiff::walls(format!("h-{row:03}-007"), Entry::Patched(WallPatch { axis: Some(line((28.0, y), (32.0, y))), ..Default::default() }));
-        snapshot = protocol::apply_diff(&moved, &snapshot).expect("applies");
+        snapshot = protocol::apply_diff_cold(&moved, &snapshot).expect("applies");
         let start = Instant::now();
         session.update(&snapshot, &moved);
         samples.push(start.elapsed());
@@ -199,7 +199,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         settle(&mut session, &snapshot);
         let before = session.inference().clone();
         let renamed = ModelDiff { project: Some(ProjectPatch { name: Some("Renamed".into()), ..Default::default() }), ..Default::default() };
-        let after = protocol::apply_diff(&renamed, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
         let served = session.update(&after, &renamed).clone();
         assert!(session.report().gated && session.report().computed == 0 && session.report().computed_by_kind.get("annotation").is_none(), "{:?}", session.report());
         assert_eq!(served, before);
@@ -212,7 +212,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
         let edit = ModelDiff::text_notes("note-1", Entry::Patched(TextNotePatch { text: Some("Verified".into()), ..Default::default() }));
-        let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
         let incremental = session.update(&after, &edit).clone();
         let report = session.report().clone();
         assert!(!report.gated && report.computed_by_kind.get("annotation") == Some(&1), "{report:?}");
@@ -236,7 +236,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
             ("storey above", ModelDiff::storeys("st-first", Entry::Patched(StoreyPatch { height: Some(3.3), ..Default::default() })), false),
         ];
         for (what, edit, reads) in edits {
-            current = protocol::apply_diff(&edit, &current).expect("the edit applies");
+            current = protocol::apply_diff_cold(&edit, &current).expect("the edit applies");
             let incremental = session.update(&current, &edit).clone();
             let report = session.report().clone();
             assert_eq!(report.computed_by_kind.get("annotation").copied().unwrap_or(0), usize::from(reads), "{what}: {report:?}");
@@ -320,7 +320,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         settle(&mut session, &snapshot);
         let before = session.inference().spaces["s-1"].clear_height;
         let edit = ModelDiff::ceilings("ce-hall", Entry::Patched(CeilingPatch { offset: Some(0.9), ..Default::default() }));
-        let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
         let incremental = session.update(&after, &edit).clone();
         let report = session.report().clone();
         assert!(!report.gated, "{report:?}");
@@ -338,14 +338,14 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
         let renamed = ModelDiff::ceilings("ce-hall", Entry::Patched(CeilingPatch { name: Some("Entrance Hall".into()), ..Default::default() }));
-        let named = protocol::apply_diff(&renamed, &snapshot).expect("applies");
+        let named = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
         let served = session.update(&named, &renamed).clone();
         let report = session.report().clone();
         assert_eq!((report.computed_by_kind.get("solid"), report.computed_by_kind.get("room")), (None, None), "{report:?}");
         assert_eq!(served, ModelInference::infer(&named).expect("infers"));
         let material = named.materials.keys().next().cloned().expect("a material");
         let thicker = ModelDiff::ceiling_types("ct-board", Entry::Patched(CeilingTypePatch { layers: Some(vec![layer(&material, 0.0625), layer(&material, 0.05)]), ..Default::default() }));
-        let deeper = protocol::apply_diff(&thicker, &named).expect("applies");
+        let deeper = protocol::apply_diff_cold(&thicker, &named).expect("applies");
         let incremental = session.update(&deeper, &thicker).clone();
         let report = session.report().clone();
         assert_eq!((report.computed_by_kind.get("solid"), report.computed_by_kind.get("room")), (Some(&1), Some(&1)), "{report:?}");
@@ -358,7 +358,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
         let renamed = ModelDiff { project: Some(ProjectPatch { name: Some("Renamed".into()), ..Default::default() }), ..Default::default() };
-        let after = protocol::apply_diff(&renamed, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
         session.update(&after, &renamed);
         assert!(session.report().gated && session.report().computed == 0, "{:?}", session.report());
         snapshot.ceilings.clear();
@@ -414,7 +414,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         settle(&mut session, &snapshot);
         let before = session.inference().wall_layout["w-hip"].top_z;
         let edit = ModelDiff::roofs("r-hip", Entry::Patched(RoofPatch { shape: Some(RoofShape::Hip { pitch: 0.5 }), ..Default::default() }));
-        let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
         let incremental = session.update(&after, &edit).clone();
         let report = session.report().clone();
         assert!(!report.gated, "{report:?}");
@@ -442,7 +442,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         settle(&mut session, &snapshot);
         let base_before = session.inference().wall_layout["w-base"].base_z;
         let edit = ModelDiff::slabs("sl-slope", Entry::Patched(SlabPatch { slope: Some(Assigned::new(Some(Slope { direction: 0.0, angle: 0.2 }))), ..Default::default() }));
-        let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
         let incremental = session.update(&after, &edit).clone();
         let report = session.report().clone();
         assert_eq!((report.computed_by_kind.get("surface"), report.computed_by_kind.get("wall-layout")), (Some(&1), Some(&1)), "{report:?}");
@@ -457,12 +457,12 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
         let edit = ModelDiff::walls("w-rail", Entry::Patched(WallPatch { base_offset: Some(0.1), ..Default::default() }));
-        let after = protocol::apply_diff(&edit, &snapshot).expect("applies");
+        let after = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
         let incremental = session.update(&after, &edit).clone();
         assert_eq!(session.report().computed_by_kind.get("surface"), None, "{:?}", session.report());
         assert_eq!(incremental, ModelInference::infer(&after).expect("infers"));
         let renamed = ModelDiff { project: Some(ProjectPatch { name: Some("Renamed".into()), ..Default::default() }), ..Default::default() };
-        let named = protocol::apply_diff(&renamed, &after).expect("applies");
+        let named = protocol::apply_diff_cold(&renamed, &after).expect("applies");
         session.update(&named, &renamed);
         assert!(session.report().gated && session.report().computed == 0, "{:?}", session.report());
     }
@@ -512,7 +512,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
     }
 
     fn apply(session: &mut ModelInferenceSession, snapshot: &mut ModelSnapshot, edit: &ModelDiff) -> ModelInference {
-        *snapshot = protocol::apply_diff(edit, snapshot).expect("the edit applies");
+        *snapshot = protocol::apply_diff_cold(edit, snapshot).expect("the edit applies");
         session.update(snapshot, edit).clone()
     }
 
@@ -629,7 +629,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
     }
 
     fn apply(session: &mut ModelInferenceSession, snapshot: &mut ModelSnapshot, edit: &ModelDiff) -> ModelInference {
-        *snapshot = protocol::apply_diff(edit, snapshot).expect("the edit applies");
+        *snapshot = protocol::apply_diff_cold(edit, snapshot).expect("the edit applies");
         session.update(snapshot, edit).clone()
     }
 

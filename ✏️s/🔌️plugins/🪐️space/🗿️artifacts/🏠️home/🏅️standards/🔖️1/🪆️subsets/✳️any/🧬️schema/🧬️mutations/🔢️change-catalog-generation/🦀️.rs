@@ -24,6 +24,12 @@ pub fn change_catalog_generation(new_catalog_generation: u64) -> SHomeMutation {
 impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "catalog-generation", kind: "change-catalog-generation", record: "ChangedCatalogGeneration" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogstand auf {} ändern", self.new_catalog_generation))
+    }
+}
+
+impl protocol::ColdMutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGeneration {
     fn diff(&self, base: &SHomeSnapshot) -> protocol::MutationOutcome<SHomeDiff> {
         super::diff::diff(self, base)
     }
@@ -33,8 +39,5 @@ impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGener
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogstand auf {} ändern", self.new_catalog_generation))
-    }
 }
 //#endregion 🔖️Mutation

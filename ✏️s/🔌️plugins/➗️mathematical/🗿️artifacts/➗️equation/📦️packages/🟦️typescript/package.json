@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/mathematical-equation:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/mathematical-equation:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/mathematical-equation:test"
+    "build": "repo run @semio-tech/mathematical-equation:build",
+    "check": "repo run @semio-tech/mathematical-equation:check",
+    "test": "repo run @semio-tech/mathematical-equation:test"
   },
   "exports": {
     ".": {

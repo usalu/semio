@@ -213,7 +213,7 @@ impl DrawingMutationCandidateAuthority {
     /// its parent chain on `source`, and each patched transform or path geometry lands in place; the replaced geometry is
     /// retired through the candidate's retirement owner.
     pub fn apply_selection_transform(&mut self, source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<(), &'static str> {
-        let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, source);
+        let outcome = <DrawingMutation as ColdMutation<DrawingSnapshot>>::diff(mutation, source);
         if !outcome.is_applicable(protocol::MergePolicy::default()) {
             return Err("drawing-store.selection-transform-rejected");
         }

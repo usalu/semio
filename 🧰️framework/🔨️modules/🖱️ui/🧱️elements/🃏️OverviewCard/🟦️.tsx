@@ -126,10 +126,10 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
 export const overviewCardChipClass = cn(windowChromeTitleChipClass, "inline-flex items-center gap-single px-single text-xs font-medium");
 
 /** 🏷️ A footer chip that only labels the card's own action (the whole card is the button): muted text and a chevron
- * that follow the card's hover. */
+ * that follow the card's hover. The pointer zooms the page behind the card only while it is over this chip. */
 export function OverviewCardOpenChip({ slot, children }: { readonly slot: string; readonly children: React.ReactNode }): React.ReactElement {
   return (
-    <div data-slot={`${slot}-open-chip`} className={windowChromeTitleChipClass}>
+    <div data-slot={`${slot}-open-chip`} data-layered-zoom="" className={windowChromeTitleChipClass}>
       <span className="inline-flex items-center gap-single px-single text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
         {children}
         <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
@@ -144,12 +144,14 @@ export interface OverviewCardActionProps extends React.ButtonHTMLAttributes<HTML
 }
 
 /** 🎬️ A real button in a card's footer chip, at least 24 px tall (WCAG 2.2 target size): the primary action reads in the
- * foreground colour with a chevron that nudges on hover, a secondary one reads muted until hovered. */
+ * foreground colour with a chevron that nudges on hover, a secondary one reads muted until hovered. The pointer zooms
+ * the page behind the card only while it is over the primary action. */
 export const OverviewCardAction = React.forwardRef<HTMLButtonElement, OverviewCardActionProps>(({ primary = false, className, children, style, type, ...rest }, ref) => (
   <button
     ref={ref}
     type={type ?? "button"}
     data-overview-card-action={primary ? "primary" : "secondary"}
+    data-layered-zoom={primary ? "" : undefined}
     className={cn(
       overviewCardChipClass,
       "group/action cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50",

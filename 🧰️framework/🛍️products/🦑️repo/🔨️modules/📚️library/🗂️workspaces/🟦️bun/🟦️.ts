@@ -1,4 +1,5 @@
-import {createBunWorkspaceOwnershipV1} from "./🟨️.cjs";
+import physicalModule from "./🟨️.cjs";
+const{createBunWorkspaceOwnershipV1}=physicalModule;
 import {fileURLToPath} from "node:url";
 import {capturePhysicalSourceTextV1,physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 export type BunWorkspaceDeclarationV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; owners: readonly string[] }>;

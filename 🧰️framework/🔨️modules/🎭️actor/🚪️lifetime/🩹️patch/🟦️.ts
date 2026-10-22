@@ -67,6 +67,6 @@ export function validateActorUiPatchPairing(patchCount: number, receipt: ActorUi
 //#region 🧪️IssuedPatchReceiptLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️actor-ui-patch-receipt-matches-shared-canonical-vectors-and-the-independ/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️IssuedPatchReceiptLaws

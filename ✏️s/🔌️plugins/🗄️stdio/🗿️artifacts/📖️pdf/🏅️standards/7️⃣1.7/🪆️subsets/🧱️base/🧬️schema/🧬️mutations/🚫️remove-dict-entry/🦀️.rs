@@ -22,17 +22,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dict-entry", kind: "remove-dict-entry", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key)))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        original_dict_value(base, self.id, &self.path, &self.key).map(|(position, value)| Op::from(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: Some(position) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove dictionary entry {}", self.key), &format!("Wörterbucheintrag {} entfernen", self.key))
     }
@@ -40,6 +29,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![format!("{} {}", self.id.num, self.id.gen), self.key.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveDictEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveDictEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_dict_entry::SetDictEntry>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key)))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        original_dict_value(base, self.id, &self.path, &self.key).map(|(position, value)| Op::from(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: Some(position) })).into_iter().collect()
+    
+    })())
+}
 }
 
 fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<(usize, PdfObject)> {

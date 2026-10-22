@@ -13,7 +13,16 @@ pub struct RemoveRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "record", kind: "remove-record", record: "RemoveRecord" };
 
-    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove record", "Datensatz entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::ColdMutation<CsvSnapshot>>::ReferenceDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) })
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove record", "Datensatz entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

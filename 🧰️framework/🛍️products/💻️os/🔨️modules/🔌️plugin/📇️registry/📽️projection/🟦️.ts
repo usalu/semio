@@ -1,14 +1,14 @@
 import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import neutralPublication from "@semio-tech/plugin-registry-publication/publication.json" with { type: "json" };
-import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "@semio-tech/plugin-registry-publication";
+import neutralPublication from "../📣️publication/🔣️.json" with { type: "json" };
+import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "../📣️publication/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { defaultPlaygroundVariant } from "../🎮️playground/⭐️default/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import type { RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
-import { discoverCatalogPackages, registryCatalogProjectedInputView, discoverPackageProblems, parseRegistryCatalogProjection, registryCatalogInputView, validateGeneratorContractsAgainstWorkspace, publicationComponentAdmission, renderOwnerPublications } from "@semio-tech/repo-lib/inventory";
+import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { discoverCatalogPackages, registryCatalogProjectedInputView, discoverPackageProblems, parseRegistryCatalogProjection, registryCatalogInputView, validateGeneratorContractsAgainstWorkspace, publicationComponentAdmission, renderOwnerPublications } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildModesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, componentOwnerRootV1, moduleDirectoryName, parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
@@ -19,7 +19,7 @@ import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWith
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";
-import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🟦️.ts";
 
 
 export function emitTypeScript(entries: DeployedRegistryEntryV1[], directories: readonly ModuleDirectory[], outputRoot = parseCatalogPublicationV1(neutralPublication).outputRoot): string {
@@ -480,7 +480,7 @@ export class CheckScript extends BundleScript {
     stale.push(...[...actual.directories, ...actual.files].filter((path) => !expectedPaths.has(path)).map((path) => `generated/${path}`));
     if (stale.length > 0) {
       console.error(`plugin registry catalog is stale: ${stale.join(", ")}`);
-      console.error("run `bun repo run @semio-tech/plugin-registry:generate` to refresh.");
+      console.error("run `repo run @semio-tech/plugin-registry:generate` to refresh.");
       process.exit(1);
     }
     const newContractPluginRoots = publicationPackageRootsV1(this.publication).length ? findNewContractPluginRoots(repoRoot).filter(row=>publicationPackageRootsV1(this.publication).some(root=>relative(repoRoot,row.pluginRoot).replaceAll("\\","/").startsWith(root+"/"))) : [];

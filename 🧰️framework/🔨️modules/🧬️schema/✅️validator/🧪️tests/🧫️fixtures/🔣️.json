@@ -1157,6 +1157,442 @@
           "exclusiveMaximum": 10
         }
       }
+    },
+    {
+      "id": "tuple-exact",
+      "value": [
+        "alpha",
+        7
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-wrong-first",
+      "value": [
+        7,
+        7
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-wrong-second",
+      "value": [
+        "alpha",
+        "7"
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-empty-prefix",
+      "value": [],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tuple-short-prefix",
+      "value": [
+        "alpha"
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tuple-extra-default",
+      "value": [
+        "alpha",
+        false
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tuple-extra-true",
+      "value": [
+        "alpha",
+        false
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": true
+        }
+      }
+    },
+    {
+      "id": "tuple-extra-false",
+      "value": [
+        "alpha",
+        false
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-extra-schema-valid",
+      "value": [
+        "alpha",
+        7,
+        8
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "id": "tuple-extra-schema-invalid",
+      "value": [
+        "alpha",
+        7,
+        "8"
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "id": "tuple-boolean-schema-pass",
+      "value": [
+        1
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "id": "tuple-boolean-schema-refuse",
+      "value": [
+        1,
+        2
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "id": "tuple-reference-valid",
+      "value": [
+        "alpha"
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "definitions": {
+            "word": {
+              "type": "string"
+            }
+          },
+          "items": [
+            {
+              "$ref": "#/definitions/word"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-reference-invalid",
+      "value": [
+        1
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "definitions": {
+            "word": {
+              "type": "string"
+            }
+          },
+          "items": [
+            {
+              "$ref": "#/definitions/word"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "homogeneous-extra-false-ignored",
+      "value": [
+        "alpha",
+        "beta"
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "homogeneous-still-validates",
+      "value": [
+        "alpha",
+        7
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "homogeneous-boolean-false",
+      "value": [
+        1
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": false,
+          "additionalItems": true
+        }
+      }
+    },
+    {
+      "id": "absent-items-extra-false-ignored",
+      "value": [
+        1,
+        "alpha"
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-scalar-keywords-ignored",
+      "value": 7,
+      "valid": true,
+      "input": {
+        "schema": {
+          "items": [
+            false
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-minimum-retained",
+      "value": [
+        1
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            true
+          ],
+          "minItems": 2,
+          "additionalItems": true
+        }
+      }
+    },
+    {
+      "id": "tuple-nested-valid",
+      "value": [
+        [
+          "alpha",
+          1
+        ]
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "additionalItems": false
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-nested-invalid",
+      "value": [
+        [
+          "alpha",
+          1,
+          2
+        ]
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "type": "array",
+          "items": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "additionalItems": false
+            }
+          ],
+          "additionalItems": false
+        }
+      }
     }
   ],
   "comparisons": [

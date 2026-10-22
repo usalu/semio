@@ -1,0 +1,152 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "lead",
+  "anywhere",
+  "normalize",
+  "tokens",
+  "scopeErrors",
+  "scopeLine"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "lead": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "anywhere": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "normalize": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "tokens": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "label",
+     "expected"
+    ],
+    "properties": {
+     "label": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "scopeErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "line",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "line": {
+      "type": "string"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "scopeLine": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

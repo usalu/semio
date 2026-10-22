@@ -29,6 +29,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "cell-pin", kind: "unpin-cell", record: "ClearedCellPin" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unpin cell ({}, {})", self.x, self.y), &format!("Fixierung von Zelle ({}, {}) aufheben", self.x, self.y))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![format!("{},{}", self.x, self.y)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid2dSnapshot, Op> for UnpinCell
+where
+    Op: protocol::ColdMutation<Grid2dSnapshot, ReferenceDiff = Grid2dDiff> + From<UnpinCell> + From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell>,
+{
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
@@ -38,11 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unpin cell ({}, {})", self.x, self.y), &format!("Fixierung von Zelle ({}, {}) aufheben", self.x, self.y))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![format!("{},{}", self.x, self.y)]
-    }
 }
 //#endregion 🔖️UnpinCell

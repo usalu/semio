@@ -1,0 +1,59 @@
+# Inference Closure Refusal
+
+## Actual Boundary
+
+Formatter28241 gfmt2 settled whole1 before gofmt. Its actual closure child returned status1 and signalnull; the primary worker error was Complete inference closure publication required at closures/👷️read.mjs:20:132. Fresh current writer/reader source uses the same real newline and exact five-key inference header, so no current newline or schema mismatch, stale member, corruption, writer or historical actor has been established. The error identifies no selected row. No private cache was inspected or changed. All46 Go hashes remain unchanged.
+
+## Proposed Narrow Context
+
+The retained closed schema describes one frozen context attached to the same actual inference Error, keeping its message, cause and child terminal status. It records the already-selected image-relative path, existing packed-byte digest, packed and expanded byte counts, and the first existing failing operation or structural guard. No header, body, decoded text, absolute host path or additional disk read is included. Bounds reuse the current closure Protocol maximumFileBytes, maximumExpandedBytes and maximumPathUnits. It is a permanent bounded refusal DTO, not temporary tracing or broader observability.
+
+The inference parsing boundary should track inflation, UTF8 decode, header boundary, header JSON, unchanged compound header authentication and body JSON stages without weakening or reordering the existing predicates. Context is attached to owned/extensible Error values only without replacing a primary value or preexisting context; refusal to enrich cannot replace the original error. The worker continues to fail and the parent retains its real status/stderr. Current own Error instances cover the observed structural refusal.
+
+## Schema-First Regression
+
+Ten portable cases include a genuine current observation writer roundtrip and targeted negative mutations. The actual current writer/header serializer must supply the baseline bytes; a second handcrafted codec is insufficient. The actual reader function must reject the mutated cases with unchanged message and the first check. The existing Brotli/UTF8/JSON implementations plus independent SQLite header/body/byte projection provide the external oracle; byte counts and frozen context shape are checked with Ajv. Test-only DATA ports may choose the handcrafted path/fixture while preserving actual writer and reader implementations. Physical filesystem/lifetime and actual Original execution remain separate gates.
+
+No checked-in implementation or test was changed for this design while Controls owns the live paired resolver. Implementation waits that actual whole plus tuple audit/source release. No unchanged formatter retry is authorized. Root is separately correcting ticket codec/model persistence; future formatter inputs must append any absent exact Go paths after that slice is frozen, while preserving the original46.
+
+## Existing Genuine Writer Seam
+
+Low identified the already-mounted library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts body named actual observation publication reads its persisted full-digest block under the same genuine writer. It uses actual observeInference inside withRepositoryBuildInferenceDatasetV1 with the real Original, verifies on-disk Brotli header/blocks and proves fresh-module replay. Extend this genuine publication baseline into the actual closure reader; do not hand-render a header or create a parallel writer codec. Negative cases can use bounded handcrafted mutations of this generated fixture publication and actual reader computational functions through DATA ports. Shared cache remains untouched.
+
+## Authored Implementation and Independent Review
+
+The worker now attaches inferenceClosureRefusal to the same owned/extensible Error without changing its message or child status. A preexisting property, frozen Error, primitive primary or diagnostic construction failure is preserved. Root-relative path, existing packed SHA256 and counts come from the already-selected read; no new IO or decoded payload is emitted. Existing acceptance predicates remain in their original order. References is an additional final structural stage. The closed schema and11portable mutation cases are checked in at closures/schema and closures/tests/inference.
+
+The existing real writer test calls verifyInferencePublicationV1 after actual observeInference persistence. Its positive baseline uses the complete current payload and bytesAt descriptor code against that genuine fixture. Negative cases bind an explicit DATA read port; the extractor excludes only the bytesAt declaration for that override, avoiding declaration shadowing. Compression failure uses an empty wire, UTF8 failure uses inflated0xff. SQLite independent byte/header projections, Bun SHA256 and Ajv cover the closed outputs. The original block-digest and fresh-disk-replay assertions remain after the new call. Fixture descendant length is checked before its mkdtemp.
+
+Independent source review accepted the production/error/lifetime and corrected extractor boundaries. TypeScript/JavaScript parse DATA has zero diagnostics; Ajv validates the portable cases. No new Source target was added. No actual Source/Bun body or formatter success is claimed; the next native repo formatter request will supply the selected-row diagnostic if the same closure member refuses again.
+
+### Actual Gfmt3 Whole and Broader Decompression Frontier
+
+Owned session98487 exited1 before gofmt. The closure child returned status1/signalnull and Node ERR_BUFFER_TOO_LARGE at payload line28, with maximum134217728 bytes. The existing seven-role Brotli branch is shared, and no inference context appeared in the rendered stderr; neither fact identifies the actual selected role/path or proves annotation bypass. Post26 source points were stable with no errors and four changed hashes; post48 Go files were stable with no errors and unchanged hashes. No formatting or Go test body acceptance follows. The log and exact metadata observations remain under generated.
+
+Current source exposes a potential generation-policy mismatch: generation index/frontier readers allow536870912 bytes while closure decompression permits134217728. This is not attribution of the failing row. The next bounded correction extends diagnostic role/path/effective limit and proves actual stderr transport while preserving the original error, status, grammar and all limits. No private cache was inspected.
+
+### Seven-Role Context and Actual Worker Transport
+
+The source-reviewed correction replaces the just-authored inference-only DTO with a single closed compressed-payload context for the existing seven roles. It records only role, image-relative path, packed digest/bytes, expanded count or null, effective output bound, and first structural stage. The original Error/value, decompression bound, budget, validation order and refusal message remain unchanged. The top-level worker catch synchronously emits one schema-validated packet bounded to4096bytes, handles partial writes, ignores diagnostic-output failure, and rethrows the original primary. Existing parent capture retains the actual status, signal and stderr.
+
+The existing genuine observeInference publication regression now passes its real dataset phase control into the helper. A real worker child reads that unchanged publication with remainingBytes=packed.length+1, producing the actual Brotli output refusal at one byte without a large fixture. Assertions require childstatus1/signalnull, the bounded packet, original ERR_BUFFER_TOO_LARGE, and independent SQLite reconstruction of the same status/signal/stderr JSON transport. Seven portable role cases additionally call the extracted complete actual reader and real decompressor, preserve exact RangeError identity, validate the DTO, and exercise partial/failed diagnostic writes. Original eleven inference structural cases remain.
+
+Low independently accepted the physical source and transport/regression design. Fresh static parsing found zero diagnostics in the worker, inference test, optional-cache writer test and Source0 aggregator; Ajv accepted the closed fixture. These are DATA/source checks only. Actual new test bodies and the next formatter outcome remain pending. No failing-row attribution, private cache inspection or bound increase was performed.
+
+### Independent Generation Size-Contract Trace
+
+Low independently confirmed current generation store line303 checks only the packed result length. Index/frontier publication calls390/392 pass512MiB; their own readIndex/readFrontier paths291/296 use that same512MiB as Brotli expanded maxOutputLength. The closure reader instead enforces128MiB expanded. Therefore an own-reader-valid generation index/frontier with expanded extent in(128,512]MiB can be published yet refused by the closure reader. The writer also has no independent expanded pre-pack check at that seam. This is a current source-contract mismatch, not identification of the actual98487 or29512 selected role/row. The live29512 result remains authoritative; no private cache was read and no limit/guard was changed.
+
+### Concurrent Physical Source Observation During Gfmt4
+
+Controls reported current reader/schema changes after High froze its reviewed128MiB diagnostic slice: special index/frontier512MiB inflation, a scanner still receiving a full Brotli Buffer, and schemaexpanded256MiB. High neither authored nor reverted those changes and makes no actor claim. A distinct metadata/SHA-only observation of the three current closure source files is retained under generated without changing the authoritative26-point pre/post roster. This observation cannot establish the bytes loaded by29512 or its individual worker children. The current live request and normal guards determine its actual result. Earlier128MiB source statements describe the earlier reviewed snapshot, not a promise about later peer bytes.
+
+### Gfmt4 Actual Deadline and Current Callsite Map
+
+Owned session29512 naturally exited1 at the resource-loan deadline before gofmt, with remaining214/arm229 stack. No selected-row refusal packet or closure-child failure was rendered. Post26 facts were stable/error-free with five changed hashes (graph, storage/schema, generations/load); post48 Go hashes were unchanged. These facts do not identify a row or writer. No unchanged retry was launched.
+
+Current source map for the performance audit: closures/🟦️.ts exports captureBuildGraphClosureProofV1 at62 and enters private captureClosureProof at63–64. That function inventories rows then batches captureOwnedCommandResultV1 through 👷️read.mjs under the same custody control. The normal preparation caller is caching/storage/enforcement/🔌nx/📦graph/TS prepareNxGraphCacheStorageV1 at70–76. Its queued broad recovery at74 refines the existing control with repositoryCacheOrdinaryMaintenanceV1().maximumWaitMilliseconds and calls recoverBuildGraphImageHeadroomV1, then retireBuildGraphOptionalHeadroomV1. Budget/TS reads the unchanged schema.$defs.ordinaryMaintenance.const {version:1,mode:queued,maximumWaitMilliseconds:1800000}. This is a current source contract/quote, not proof that every historical loaded frame equals current bytes. The scoped opportunistic recovery in build/inputs/storage/MJS218–220 separately calls image.withExclusiveMaintenance(wait:false) and retireBuildGraphOptionalGroupsHeadroomV1.
+
+After the actual boundary, the test fixture explicitly declares packed-sha256 generation basename identity. Its selected generation paths use the independent Bun digest of the actual wire before asserting the real decompressor failure. Peer-added actual generation policy/scanner extraction bindings were already present and were preserved. Fresh TypeScript parsing and fixture Ajv validation pass; no new runtime result is claimed.

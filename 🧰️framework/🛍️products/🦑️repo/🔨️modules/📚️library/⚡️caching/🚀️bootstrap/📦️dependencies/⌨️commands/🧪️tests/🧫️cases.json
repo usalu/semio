@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "route": "sync",
+      "export": "SyncScript",
+      "mode": "sync",
+      "production": true
+    },
+    {
+      "route": "lock",
+      "export": "RefreshLockScript",
+      "mode": "lock",
+      "production": true
+    },
+    {
+      "route": "contract-check",
+      "export": "ContractCheckScript",
+      "mode": "test",
+      "production": false
+    },
+    {
+      "route": "sync",
+      "export": "RefreshLockScript",
+      "mode": "lock",
+      "production": false
+    },
+    {
+      "route": "lock",
+      "export": "RefreshLockScript",
+      "mode": "sync",
+      "production": false
+    }
+  ]
+}

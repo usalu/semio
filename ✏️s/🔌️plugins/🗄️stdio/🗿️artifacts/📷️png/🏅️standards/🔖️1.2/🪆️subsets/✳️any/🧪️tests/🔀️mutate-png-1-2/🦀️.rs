@@ -5,7 +5,7 @@
 //!
 //! Every `mutate-<kind>`/`inverse-<kind>` pair is registered from the ONE `KINDS` list this file,
 //! the catalog manifest and the vocabulary's own `KINDS` constant all separately spell out —
-//! `bun ./📜️script.ts contract` is what keeps all three honest against each other (the framework
+//! `repo ./📜️script.ts contract` is what keeps all three honest against each other (the framework
 //! never parses Rust to check it itself).
 //!
 //! The oracle side never touches this repository's own codec: `oracle_apply_mutation`/

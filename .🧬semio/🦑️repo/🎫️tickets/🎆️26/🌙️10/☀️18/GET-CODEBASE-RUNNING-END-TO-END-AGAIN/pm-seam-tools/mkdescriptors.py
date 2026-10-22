@@ -18,25 +18,27 @@ def recipe(kind, extra, prefixes, keys=clear_keys, backends=None, version=1):
     value["directoryRoles"] = [value[role] for role in ("cache", "global", "bin", "temporary", "home", "config")]
     value.update(LIMITS)
     return value
-def descriptor(id, ecosystem, toolchain, executable, runtime, manifests, identity, locks, configurations, environment, recipe_value, backend_kinds, operations, installed, resolution, generation, component, label, producer):
+def descriptor(id, ecosystem, toolchain, executable, runtime, manifests, identity, locks, configurations, environment, recipe_value, backend_kinds, operations, installed, resolution, generation, component, label, producer, owned=(), staged=""):
     return {"version": 1, "id": id, "label": label, "ecosystem": ecosystem, "toolchain": toolchain, "executable": executable, "runtime": runtime, "manifests": manifests,
             "manifestIdentity": identity, "locks": locks, "configurations": configurations, "environment": environment, "recipe": recipe_value,
-            "backendKinds": backend_kinds, "operations": operations, "installed": installed, "resolution": resolution, "producerInputs": producer, "generationDirectory": generation, "graphComponent": component}
+            "backendKinds": backend_kinds, "operations": operations, "installed": installed, "resolution": resolution, "producerInputs": producer, "ownedModules": list(owned), "stagedConfiguration": staged, "generationDirectory": generation, "graphComponent": component}
 SEMVER = "^([0-9]+\\.[0-9]+\\.[0-9]+)"
 items = {
  "🍞️bun": descriptor("bun", "javascript", "javascript", "bun",
    {"hostVersionKey": "bun", "probe": {"arguments": ["--version"], "pattern": SEMVER}},
    ["package.json"], {"excludedTopLevelFields": ["scripts", "semio"], "bootstrapFields": ["dependencies", "devDependencies", "optionalDependencies", "patchedDependencies"]},
-   [{"name": "bun.lock", "role": "primary", "format": "bun-lock"}],
+   [{"name": "bun.lock", "role": "primary", "format": "bun-lock"}, {"name": "bun.lockb", "role": "secondary", "format": "bun-lockb"}],
    {"scope": ["bunfig.toml"], "home": [".bunfig.toml", ".npmrc"], "config": [".bunfig.toml"]},
    {"set": {**isolation, "NODE_ENV": "literal:{nodeEnvironment}", "BUN_INSTALL_CACHE_DIR": "role:cache", "BUN_INSTALL_GLOBAL_DIR": "role:global", "BUN_INSTALL_BIN": "role:bin"}},
    recipe_bun, kinds_of("clonefile", "copyfile", "hardlink", "symlink"),
    {"lock": {"arguments": ["install", "--lockfile-only", "--{lifecycle}", "--linker={linker}", "--backend={backend}", "--cache-dir", "{cache}"]},
     "sync": {"arguments": ["install", "--frozen-lockfile", "--{lifecycle}", "--linker={linker}", "--backend={backend}", "--cache-dir", "{cache}"]},
-    "verify": {"arguments": ["install", "--frozen-lockfile", "--dry-run", "--{lifecycle}", "--linker={linker}", "--backend={backend}", "--cache-dir", "{cache}"]}},
+    "verify": {"arguments": ["install", "--frozen-lockfile", "--dry-run", "--{lifecycle}", "--linker={linker}", "--backend={backend}", "--cache-dir", "{cache}"]},
+    "install-pinned": {"arguments": ["install", "--frozen-lockfile", "--{lifecycle}", "--cache-dir", "{cache}", "--backend", "{backend}"], "values": {"backend": "copyfile"}}},
    {"containers": ["node_modules/.bun"], "entry": "{name}@{version}", "match": "listed", "nameTransform": "identity", "nameEscape": {"/": "+"}, "fold": "identity", "suffix": "^(\\+[0-9a-f]{16})?$", "sourcePrefix": None},
    {"profiles": ["bun-import", "bun-require"], "strictPrefix": "bun-", "oracle": "bun", "conditions": {"bun-import": ["bun", "node-addons", "node", "import", "default"], "bun-require": ["bun", "node-addons", "node", "require", "default"]}}, "j", "bun-lock", "Bun",
-   {"scopeFiles": [".npmrc"], "ambientHomeFiles": [".npmrc", ".bunfig.toml"], "ambientConfigFiles": [".bunfig.toml"], "ambientConfigFallback": ".config", "environmentPrefixes": ["BUN_", "NPM_CONFIG_"], "environmentIgnored": ["NPM_CONFIG_USER_AGENT", "BUN_INSPECT", "BUN_INSPECT_CONNECT_TO", "BUN_INSPECT_NOTIFY"]}),
+   {"scopeFiles": [".npmrc"], "ambientHomeFiles": [".npmrc", ".bunfig.toml"], "ambientConfigFiles": [".bunfig.toml"], "ambientConfigFallback": ".config", "environmentPrefixes": ["BUN_", "NPM_CONFIG_"], "environmentIgnored": ["NPM_CONFIG_USER_AGENT", "BUN_INSPECT", "BUN_INSPECT_CONNECT_TO", "BUN_INSPECT_NOTIFY"]},
+   ["🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs", "🗂️workspaces/🟦️bun"], '[install]\nlinker = "isolated"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n'),
  "📦️npm": descriptor("npm", "javascript", "javascript", "npm",
    {"hostVersionKey": None, "probe": {"arguments": ["--version"], "pattern": SEMVER}},
    ["package.json"], {"excludedTopLevelFields": ["scripts", "semio"], "bootstrapFields": ["dependencies", "devDependencies", "optionalDependencies", "overrides"]},
@@ -47,7 +49,8 @@ items = {
    {},
    {"lock": {"arguments": ["install", "--package-lock-only", "--{lifecycle}", "--install-strategy={strategy}", "--cache", "{cache}"]},
     "sync": {"arguments": ["ci", "--{lifecycle}", "--install-strategy={strategy}", "--cache", "{cache}"]},
-    "verify": {"arguments": ["ci", "--dry-run", "--{lifecycle}", "--install-strategy={strategy}", "--cache", "{cache}"]}},
+    "verify": {"arguments": ["ci", "--dry-run", "--{lifecycle}", "--install-strategy={strategy}", "--cache", "{cache}"]},
+    "install-pinned": {"arguments": ["ci", "--{lifecycle}", "--cache", "{cache}"]}},
    {"containers": ["node_modules"], "entry": "{name}", "match": "exact", "nameTransform": "identity", "nameEscape": {}, "fold": "identity", "suffix": None, "sourcePrefix": None},
    {"profiles": ["node-import", "node-require"], "strictPrefix": None, "oracle": "node", "conditions": {"node-import": ["node-addons", "node", "import", "default"], "node-require": ["node-addons", "node", "require", "default"]}}, "j", None, "npm",
    {"scopeFiles": [".npmrc"], "ambientHomeFiles": [".npmrc"], "ambientConfigFiles": [], "ambientConfigFallback": ".config", "environmentPrefixes": ["npm_config_", "NPM_CONFIG_"], "environmentIgnored": ["NPM_CONFIG_USER_AGENT"]}),
@@ -64,7 +67,7 @@ items = {
     "verify": {"arguments": ["metadata", "--locked", "--format-version", "1", "--manifest-path", "{manifest}"]}},
    {"containers": ["registry/src/*"], "entry": "{name}-{version}", "match": "exact", "nameTransform": "identity", "nameEscape": {}, "fold": "identity", "suffix": None, "sourcePrefix": "registry+"},
    {"profiles": [], "strictPrefix": None, "oracle": "none", "conditions": {}}, "r", None, "Cargo",
-   {"scopeFiles": [".cargo/config.toml", "rust-toolchain.toml"], "ambientHomeFiles": [".cargo/config.toml"], "ambientConfigFiles": [], "ambientConfigFallback": ".config", "environmentPrefixes": ["CARGO_", "RUSTUP_"], "environmentIgnored": []}),
+   {"scopeFiles": [".cargo/config.toml", "rust-toolchain.toml"], "ambientHomeFiles": [".cargo/config.toml"], "ambientConfigFiles": [], "ambientConfigFallback": ".config", "environmentPrefixes": ["CARGO_", "RUSTUP_"], "environmentIgnored": []}, ["🗂️workspaces/🦀️cargo"]),
  "🐹️go": descriptor("go", "go", "go", "go",
    {"hostVersionKey": None, "probe": {"arguments": ["version"], "pattern": "^go version go(\\S+)"}},
    ["go.mod", "go.work"], {"excludedTopLevelFields": [], "bootstrapFields": []},
@@ -82,11 +85,12 @@ items = {
    ["pyproject.toml"], {"excludedTopLevelFields": [], "bootstrapFields": ["project", "dependency-groups", "tool"]},
    [{"name": "uv.lock", "role": "primary", "format": "uv-lock"}],
    {"scope": ["uv.toml", ".python-version"], "home": [], "config": ["uv/uv.toml"]},
-   {"set": {**isolation, "UV_CACHE_DIR": "role:cache", "UV_PYTHON_INSTALL_DIR": "role:global", "UV_PYTHON_PREFERENCE": "literal:only-managed", "UV_PYTHON_DOWNLOADS": "literal:manual", "UV_NO_PROGRESS": "literal:1"}},
+   {"set": {**isolation, "UV_CACHE_DIR": "role:cache", "UV_PYTHON_INSTALL_DIR": "role:global", "UV_PYTHON_PREFERENCE": "literal:only-managed", "UV_PYTHON_DOWNLOADS": "literal:manual", "UV_NO_CONFIG": "literal:1", "UV_NO_PROGRESS": "literal:1"}},
    recipe("python-install-projection", {"cache": "uv-cache", "global": "uv-python", "bin": "uv-bin"}, ["UV_"]),
    {},
    {"lock": {"arguments": ["lock", {"optional": ["--cache-dir", "{cache}"]}]},
-    "sync": {"arguments": ["sync", "--locked", {"optional": ["--cache-dir", "{cache}"]}], "scopes": {"all": ["--all-packages", "--all-groups"]}},
+    "sync": {"arguments": ["sync", "--locked", {"optional": ["--project", "{project}"]}, {"each": "groups", "arguments": ["--group", "{item}"]}, {"optional": ["--cache-dir", "{cache}"]}], "scopes": {"all": ["--all-packages", "--all-groups"]}},
+    "provision": {"arguments": ["python", "install", "{series}"]},
     "verify": {"arguments": ["lock", "--check", {"optional": ["--cache-dir", "{cache}"]}]}},
    {"containers": [".venv/lib/*/site-packages", ".venv/Lib/site-packages"], "entry": "{name}-{version}.dist-info", "match": "listed", "nameTransform": "pep-escape", "nameEscape": {}, "fold": "pep-escape", "suffix": None, "sourcePrefix": None},
    {"profiles": [], "strictPrefix": None, "oracle": "none", "conditions": {}}, "p", None, "uv",
@@ -109,5 +113,17 @@ def write(relative, value):
     paths.seam_write(paths.MANAGERS + "/" + relative, json.dumps(value, ensure_ascii=False, indent=2) + "\n")
 for folder, value in items.items():
     write(folder + "/🔣️.json", value)
+write("🔣️catalog.json", {"version": 1, "adapters": {value["id"]: folder for folder, value in items.items()}})
+write("🔣️owned.json", {"version": 1, "description": "Repository data that names the files of the selected manager of one ecosystem. Flipping the manager means editing exactly these files; the contract suite proves that each of them still names the selected manager's files.", "data": {
+    "🔣️taxonomy.json": {"ecosystem": "javascript", "names": ["lock", "scopeConfig"]},
+    "⚡️caching/🔣️policy.json": {"ecosystem": "javascript", "names": ["lock", "scopeConfig"]},
+    "⚡️caching/🧬️schema/🔣️.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧬️schema/🔣️.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "🏗️build/🪞️parity/🔣️rules.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "🏗️build/🏃️execution/🔒️hermetic/🔣️.json": {"ecosystem": "javascript", "names": ["scopeConfig"]},
+    "🏗️build/📏️incremental/📋️scenarios/🔣️.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "🖼️assets/📽️nested-cargo-package-projection/🔣️.json": {"ecosystem": "javascript", "names": ["lock"]},
+    "📦️packages/🟦️typescript/📋️project.json": {"ecosystem": "javascript", "names": ["lock"]}}})
 write("🔣️policy.json", {"version": 1, "selection": {"javascript": "bun", "rust": "cargo", "go": "go", "python": "uv", "dotnet": "dotnet"}})
 print(len(items), "descriptors")

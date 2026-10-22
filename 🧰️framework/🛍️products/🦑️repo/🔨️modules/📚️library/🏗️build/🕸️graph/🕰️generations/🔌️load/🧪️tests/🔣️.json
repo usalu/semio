@@ -1,18 +1,1183 @@
 {
+ "closures": [
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "gen"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "cat",
+     "gen",
+     "w",
+     "z"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [
+    "a"
+   ],
+   "selection": {
+    "exclude": [],
+    "kind": "owners",
+    "projects": [
+     "a"
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "gen"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "local"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "cat",
+     "gen"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "providers": [
+    {
+     "consumerRoots": [
+      "pkg/a"
+     ],
+     "sourcePath": "pkg/cat/catalog.json"
+    }
+   ],
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "z"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "providers": [
+    {
+     "consumerRoots": [
+      "pkg/a"
+     ],
+     "sourcePath": "pkg/cat/catalog.json"
+    }
+   ],
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "z",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "error": "unknown"
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "nope",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "d",
+     "gen",
+     "w",
+     "z"
+    ]
+   },
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "d": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/d",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        {
+         "dependencies": true,
+         "target": "build"
+        },
+        {
+         "projects": [
+          "z",
+          "w"
+         ],
+         "target": "build"
+        }
+       ]
+      }
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "d",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "admitted": [
+     "a",
+     "b",
+     "c",
+     "e"
+    ]
+   },
+   "external": [
+    "npm:left-pad"
+   ],
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "e": {
+     "edges": [
+      "a",
+      "npm:left-pad"
+     ],
+     "root": "pkg/e",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "e",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "error": "unknown"
+   },
+   "external": [
+    "npm:left-pad"
+   ],
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "e": {
+     "edges": [
+      "a",
+      "ghost"
+     ],
+     "root": "pkg/e",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [],
+   "selection": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "e",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "expected": {
+    "error": "unknown"
+   },
+   "external": [],
+   "owners": {
+    "a": {
+     "edges": [
+      "b"
+     ],
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      },
+      "local": {
+       "dependsOn": [
+        "build"
+       ]
+      },
+      "test": {
+       "dependsOn": [
+        {
+         "projects": "*",
+         "target": "all"
+        }
+       ]
+      }
+     }
+    },
+    "b": {
+     "edges": [
+      "c"
+     ],
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build",
+        "gen:codegen"
+       ]
+      }
+     }
+    },
+    "c": {
+     "edges": [],
+     "root": "pkg/c",
+     "targets": {
+      "build": {}
+     }
+    },
+    "cat": {
+     "edges": [],
+     "root": "pkg/cat",
+     "targets": {
+      "build": {}
+     }
+    },
+    "e": {
+     "edges": [
+      "a",
+      "ghost"
+     ],
+     "root": "pkg/e",
+     "targets": {
+      "build": {}
+     }
+    },
+    "gen": {
+     "edges": [],
+     "root": "pkg/gen",
+     "targets": {
+      "codegen": {}
+     }
+    },
+    "w": {
+     "edges": [
+      "a"
+     ],
+     "root": "pkg/w",
+     "targets": {
+      "build": {}
+     }
+    },
+    "z": {
+     "edges": [],
+     "root": "pkg/z",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "roots": [
+    "e"
+   ],
+   "selection": {
+    "exclude": [],
+    "kind": "owners",
+    "projects": [
+     "e"
+    ]
+   }
+  }
+ ],
  "implementation": [
   {
    "expected": {
     "all": [],
     "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-    "projects": []
+    "environment": []
    },
    "rows": []
   },
   {
    "expected": {
-    "all": [],
-    "digest": "0e99922a72e31efc1e854d2edfac31fc810f0662faaf1a2e3516acebcccaff1d",
-    "projects": []
+    "all": [
+     {
+      "fact": {
+       "mtimeMs": 1700000000000.5,
+       "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+       "size": 10
+      },
+      "kind": "digest",
+      "path": "lib/data/policy.json"
+     }
+    ],
+    "digest": "6f42b48f19df9d14f09924b926cd1f2a47dd18050d9507132e353eea451038c8",
+    "environment": []
    },
    "rows": [
     {
@@ -22,15 +1187,34 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/🏗️build/📥️inputs/💾️storage/📒️ledger/x.mjs"
+     "path": "lib/data/policy.json"
     }
    ]
   },
   {
    "expected": {
     "all": [],
-    "digest": "89d8de786ad7eab20fea88e225ff705bdd398dc16ce14411c4372a548021a0ba",
-    "projects": [
+    "digest": "10605904bbeebd90745051ba8b4a71735de8451b4374ae7d4be452c702db8af2",
+    "environment": []
+   },
+   "rows": [
+    {
+     "fact": "semio.graph-inferrer.nodes/1",
+     "kind": "stamp",
+     "path": "inferrer:nodes",
+     "scope": "project"
+    },
+    {
+     "fact": "semio.graph-inferrer.native/1",
+     "kind": "stamp",
+     "path": "inferrer:native",
+     "scope": "native"
+    }
+   ]
+  },
+  {
+   "expected": {
+    "all": [
      {
       "fact": {
        "mtimeMs": 1700000000000.5,
@@ -38,20 +1222,36 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+      "path": "lib/data/policy.json"
+     }
+    ],
+    "digest": "de6c7c9f8525c8b86addb74f4ba95e1440a469b6acc11a0c9a8cf30f58149f9e",
+    "environment": [
+     {
+      "fact": "semio.graph-inferrer.core/1",
+      "kind": "stamp",
+      "path": "inferrer:core"
      },
      {
-      "fact": {
-       "mtimeMs": 1700000000000.5,
-       "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
-       "size": 10
-      },
-      "kind": "digest",
-      "path": "lib/🏗️build/🕸️graph/📥️inference/🎯️target-policy/y.mjs"
+      "fact": "semio.graph-inferrer.edges/1",
+      "kind": "stamp",
+      "path": "inferrer:edges"
      }
     ]
    },
    "rows": [
+    {
+     "fact": "semio.graph-inferrer.core/1",
+     "kind": "stamp",
+     "path": "inferrer:core",
+     "scope": "all"
+    },
+    {
+     "fact": "semio.graph-inferrer.edges/1",
+     "kind": "stamp",
+     "path": "inferrer:edges",
+     "scope": "environment"
+    },
     {
      "fact": {
       "mtimeMs": 1700000000000.5,
@@ -59,16 +1259,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
-    },
-    {
-     "fact": {
-      "mtimeMs": 1700000000000.5,
-      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
-      "size": 10
-     },
-     "kind": "digest",
-     "path": "lib/🏗️build/🕸️graph/📥️inference/🎯️target-policy/y.mjs"
+     "path": "lib/data/policy.json"
     }
    ]
   },
@@ -82,7 +1273,7 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/a.mjs"
+      "path": "lib/data/a.json"
      },
      {
       "fact": {
@@ -91,11 +1282,11 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/b.json"
+      "path": "lib/data/b.json"
      }
     ],
-    "digest": "81742029a3edcd83ac8a96c06ec57d16cd92ae91722c3daa993c742f53622cbc",
-    "projects": []
+    "digest": "f12908b8b96fcf9d1f71356f0adc49186a49305b5a2a7b759a4c3fe25e9ef233",
+    "environment": []
    },
    "rows": [
     {
@@ -105,7 +1296,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/a.mjs"
+     "path": "lib/data/a.json"
     },
     {
      "fact": {
@@ -114,7 +1305,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/b.json"
+     "path": "lib/data/b.json"
     },
     {
      "fact": {
@@ -123,7 +1314,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/a.mjs"
+     "path": "lib/data/a.json"
     }
    ]
   },
@@ -137,7 +1328,7 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/a.mjs"
+      "path": "lib/data/a.json"
      },
      {
       "fact": {
@@ -146,11 +1337,11 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/a.mjs"
+      "path": "lib/data/a.json"
      }
     ],
-    "digest": "61c5b671aa446eb8ce2473d78841c0390366dfaec02cf7139868678b1cffd1de",
-    "projects": []
+    "digest": "38754f295b6b05063799c1cdfbd791d14ae5ec23a7d941270147e8a4e2ff5f39",
+    "environment": []
    },
    "rows": [
     {
@@ -160,7 +1351,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/a.mjs"
+     "path": "lib/data/a.json"
     },
     {
      "fact": {
@@ -169,7 +1360,7 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/a.mjs"
+     "path": "lib/data/a.json"
     }
    ]
   },
@@ -183,49 +1374,41 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/ü😀.mjs"
-     },
-     {
-      "fact": {
-       "mtimeMs": 1700000000000.5,
-       "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
-       "size": 10
-      },
-      "kind": "digest",
-      "path": "lib/core/b.json"
+      "path": "lib/data/ü😀.json"
      }
     ],
-    "digest": "d90bf5044e7edf9f28ecacae1fa44fd5e7dd66e6c1b4a4de560d738e68445d6e",
-    "projects": [
+    "digest": "14d3c52c31b9ace6040807326037527eb992e95b5e2839da52fbfbb4303f5efd",
+    "environment": [
      {
-      "fact": {
-       "mtimeMs": 1700000000000.5,
-       "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
-       "size": 10
-      },
-      "kind": "digest",
-      "path": "lib/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/p.mjs"
+      "fact": "semio.graph-inferrer.core/1",
+      "kind": "stamp",
+      "path": "inferrer:core"
+     },
+     {
+      "fact": "semio.graph-inferrer.core/2",
+      "kind": "stamp",
+      "path": "inferrer:core"
      }
     ]
    },
    "rows": [
     {
-     "fact": {
-      "mtimeMs": 1700000000000.5,
-      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
-      "size": 10
-     },
-     "kind": "digest",
-     "path": "lib/🏗️build/📥️inputs/💾️storage/📒️ledger/x.mjs"
+     "fact": "semio.graph-inferrer.core/1",
+     "kind": "stamp",
+     "path": "inferrer:core",
+     "scope": "all"
     },
     {
-     "fact": {
-      "mtimeMs": 1700000000000.5,
-      "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
-      "size": 10
-     },
-     "kind": "digest",
-     "path": "lib/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/p.mjs"
+     "fact": "semio.graph-inferrer.core/1",
+     "kind": "stamp",
+     "path": "inferrer:core",
+     "scope": "all"
+    },
+    {
+     "fact": "semio.graph-inferrer.core/2",
+     "kind": "stamp",
+     "path": "inferrer:core",
+     "scope": "all"
     },
     {
      "fact": {
@@ -234,69 +1417,9 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/ü😀.mjs"
-    },
-    {
-     "fact": {
-      "mtimeMs": 1700000000000.5,
-      "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "size": 10
-     },
-     "kind": "digest",
-     "path": "lib/core/b.json"
+     "path": "lib/data/ü😀.json"
     }
    ]
-  }
- ],
- "language": [
-  {
-   "env": {},
-   "expected": "en"
-  },
-  {
-   "env": {
-    "LANG": "de_DE.UTF-8"
-   },
-   "expected": "de"
-  },
-  {
-   "env": {
-    "LANG": "en_US.UTF-8"
-   },
-   "expected": "en"
-  },
-  {
-   "env": {
-    "LC_ALL": "de"
-   },
-   "expected": "de"
-  },
-  {
-   "env": {
-    "LANG": "de_DE",
-    "LC_ALL": "fr_FR"
-   },
-   "expected": "de"
-  },
-  {
-   "env": {
-    "LANG": "de_DE.UTF-8",
-    "LC_ALL": "C"
-   },
-   "expected": "de"
-  },
-  {
-   "env": {
-    "LANG": "en_US",
-    "SEMIO_DASHBOARD_LOCALE": "de"
-   },
-   "expected": "de"
-  },
-  {
-   "env": {
-    "LC_MESSAGES": "DE_CH@euro"
-   },
-   "expected": "de"
   }
  ],
  "policy": [
@@ -855,7 +1978,19 @@
        "size": 10
       },
       "kind": "digest",
-      "path": "lib/core/a.mjs"
+      "path": "lib/data/policy.json"
+     },
+     {
+      "fact": "semio.graph-inferrer.edges/1",
+      "kind": "stamp",
+      "path": "inferrer:edges",
+      "scope": "environment"
+     },
+     {
+      "fact": "semio.graph-inferrer.core/1",
+      "kind": "stamp",
+      "path": "inferrer:core",
+      "scope": "all"
      }
     ]
    },
@@ -935,16 +2070,7 @@
         "size": 10
        },
        "kind": "digest",
-       "path": "lib/core/a.mjs"
-      },
-      {
-       "fact": {
-        "mtimeMs": 1700000000000.5,
-        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
-        "size": 10
-       },
-       "kind": "digest",
-       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+       "path": "lib/data/policy.json"
       }
      ],
      "targets": [
@@ -977,16 +2103,7 @@
         "size": 10
        },
        "kind": "digest",
-       "path": "lib/core/a.mjs"
-      },
-      {
-       "fact": {
-        "mtimeMs": 1700000000000.5,
-        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
-        "size": 10
-       },
-       "kind": "digest",
-       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+       "path": "lib/data/policy.json"
       }
      ],
      "targets": []
@@ -1011,7 +2128,7 @@
         "size": 10
        },
        "kind": "digest",
-       "path": "lib/core/a.mjs"
+       "path": "lib/data/policy.json"
       }
      ],
      "targets": []
@@ -1048,16 +2165,7 @@
         "size": 10
        },
        "kind": "digest",
-       "path": "lib/core/a.mjs"
-      },
-      {
-       "fact": {
-        "mtimeMs": 1700000000000.5,
-        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
-        "size": 10
-       },
-       "kind": "digest",
-       "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+       "path": "lib/data/policy.json"
       }
      ],
      "tag": "tests",
@@ -1099,18 +2207,21 @@
       "size": 10
      },
      "kind": "digest",
-     "path": "lib/core/a.mjs"
+     "path": "lib/data/policy.json"
     }
    ],
-   "projects": [
+   "environment": [
     {
-     "fact": {
-      "mtimeMs": 1700000000000.5,
-      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
-      "size": 10
-     },
-     "kind": "digest",
-     "path": "lib/🏗️build/🕸️graph/📥️inference/📦️project-nodes/x.mjs"
+     "fact": "semio.graph-inferrer.edges/1",
+     "kind": "stamp",
+     "path": "inferrer:edges",
+     "scope": "environment"
+    },
+    {
+     "fact": "semio.graph-inferrer.core/1",
+     "kind": "stamp",
+     "path": "inferrer:core",
+     "scope": "all"
     }
    ]
   },

@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎥️create-saved-camera/🎥️appends/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("create-saved-camera diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("create-saved-camera diff applies")
 }
 
 /// ▶️ `create-saved-camera` parks a new pose in the `savedCameras` library. Nothing points at it
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_duplicate_camera_id_is_fatal() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "create-saved-camera/appends-saved-camera-top: re-creating \"cam-top\" must be Fatal");
     assert_eq!(second.messages()[0].code.0, "mutation.duplicate-id", "create-saved-camera/appends-saved-camera-top: the duplicate guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["cam-top".to_string()], "create-saved-camera/appends-saved-camera-top: the duplicate is reported against the colliding camera id");
-    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff_cold(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "create-saved-camera/appends-saved-camera-top: a Fatal duplicate must leave the snapshot untouched");
 }
 
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-saved-camera/appends-saved-camera-top: committed diff did not carry before to after");
 }
 

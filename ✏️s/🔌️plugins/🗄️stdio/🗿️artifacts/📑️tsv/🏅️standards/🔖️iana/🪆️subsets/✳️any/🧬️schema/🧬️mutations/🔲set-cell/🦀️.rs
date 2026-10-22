@@ -16,7 +16,16 @@ pub struct SetCell {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
-    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<TsvSnapshot, TsvMutation> for SetCell {
+    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as protocol::ColdMutation<TsvSnapshot>>::ReferenceDiff> {
         let Self { row_index, field_index, value } = self;
         protocol::MutationOutcome::new({
             let mut fields = vec![None; field_index + 1];
@@ -32,12 +41,6 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -34,7 +34,7 @@ export class OsScript extends Script {
       const rest = segments.slice(1);
       const bundle = rest.find((segment) => !segment.startsWith("--"));
       if (!bundle) {
-        console.error("[os.run] usage: bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]");
+        console.error("[os.run] usage: repo ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]");
         process.exit(1);
       }
       const repoRoot = getWorkspaceRoot();
@@ -42,7 +42,7 @@ export class OsScript extends Script {
         const missing = missingPluginWasmArtifacts(repoRoot);
         if (missing.length > 0) {
           console.error(`[os.run] missing built plugin artifact(s): ${missing.join(", ")}`);
-          for (const pluginId of missing) console.error(`[os.run]   build it: bun repo run workspace:components describe ${pluginId}`);
+          for (const pluginId of missing) console.error(`[os.run]   build it: repo run workspace:components describe ${pluginId}`);
           process.exit(1);
         }
       }
@@ -65,7 +65,7 @@ export class OsScript extends Script {
 export class SemioScript extends Script {
   run(segments: string[]): void {
     if (segments.length === 0) {
-      console.error("[semio] usage: bun ./📜️script.ts semio <inspect|verify|open|convert> <path>");
+      console.error("[semio] usage: repo ./📜️script.ts semio <inspect|verify|open|convert> <path>");
       process.exit(1);
     }
     runCmd("cargo", ["run", "-p", "semio-framework-os-kernel", "--features", "native-bin", "--bin", "semio", "--", ...segments], {

@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 serde_json = { workspace = true }

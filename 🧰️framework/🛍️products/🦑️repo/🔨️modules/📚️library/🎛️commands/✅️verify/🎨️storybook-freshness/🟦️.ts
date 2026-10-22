@@ -3,6 +3,7 @@
  */
 import { existsSync, readFileSync, readdirSync, type Dirent } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import {sayVerifyV1} from "../📖️texts/🟦️.ts";
 
 //#region 🔖️VerifyScript
 /** 📖️ Every `StoryScope.sourceRoots`/`storyGlobs` entry across `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s `STORY_SCOPES`
@@ -35,9 +36,9 @@ export async function checkStorybookFreshness(repoRoot: string): Promise<void> {
   // stylesheet that never scans `Layout`/`Panel`/`ShellHost` class names.
   checkAppTailwindEntries(repoRoot, offenders);
   if (offenders.length) {
-    console.error(`[verify] ${offenders.length} Storybook scope / Tailwind entry path(s) are stale:`);
+    sayVerifyV1("storybook.scope-tailwind-entry-path-are",{offenders:offenders.length},"error");
     for (const o of offenders) console.error(`  ${o}`);
-    console.error("run-check `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s HAND_CURATED_SCOPES (or the opting-in package's own manifest / app globals.css) — see 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.");
+    sayVerifyV1("storybook.run-check-stories-coordination-ts",{},"error");
     process.exit(1);
   }
 }

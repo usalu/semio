@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts manifests",
+        "command": "repo ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -51,7 +51,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts build-manifests",
+        "command": "repo ./📜️script.ts build-manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -66,7 +66,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts extensions",
+        "command": "repo ./📜️script.ts extensions",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -81,7 +81,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts extensions-manifests",
+        "command": "repo ./📜️script.ts extensions-manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -96,7 +96,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts aspect",
+        "command": "repo ./📜️script.ts aspect",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -111,7 +111,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
-        "command": "bun ./📜️script.ts aspect-manifests",
+        "command": "repo ./📜️script.ts aspect-manifests",
         "forwardAllArgs": true
       },
       "metadata": {

@@ -1,0 +1,19 @@
+== truth
+[verify dependencies parity js] manifests={manifests} external-rows={externalRows} evidenced={evidencedRows} unowned={unownedRows} undeclared-imports={undeclaredImports} lock-workspaces={lockWorkspaces} lock-mismatches={lockMismatches} lock-fixtures={lockFixtureChecks}
+  {file}:{line}: {dependency} wird von {manifest} nicht deklariert
+  {manifest}: {dependency} hat keinen Nachweis in Quelle, Konfiguration oder Skript des eigenen Bereichs
+[verify dependencies parity js] sauber.
+[verify dependencies self-test] hostile-mutations={mutations} sauber. ¦ mutations
+  oracle-conflict {ecosystem}:{name} deklariert von {users}
+  toolchain-owner-conflict js:{name}@{version} deklariert von {user} (lock-owned={lockOwned})
+  toolchain-audit {failure}
+[verify dependencies] {dependencyBaselineRelPath} geschrieben: {entries} Drittanbieter-Abhängigkeit(en) bei Commit {commit}.
+[verify dependencies] Baseline: {entries} Drittanbieter-Abhängigkeit(en) (Commit {commit}); aktuell: {current}. ¦ entries,commit,current
+[verify dependencies] {removedDeps} Abhängigkeit(en) seit der Baseline entfernt (besteht immer — die Ratsche zieht nur an):
+[verify dependencies] {newDeps} NEUE Abhängigkeit(en) nicht in {dependencyBaselineRelPath}:
+  {ecosystem}:{name}@{version} (Arten: {kinds}; verwendet von: {users}{more})
+[verify dependencies] sauber — keine neuen Drittanbieter-Abhängigkeiten.
+== cargo direction
+[cargo-dependency-direction] Alle Deklarationsarten werden aufgelöst; inventoriedPackages={inventory}
+== source direction
+[rust-source-direction] {rule}: {from}:{line} → {to}; runtime path literal={call}; context={edge}

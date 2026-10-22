@@ -31,7 +31,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "check": {
@@ -46,7 +46,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     }
   }

@@ -13,7 +13,7 @@ export function testSelectedRuntimeDependencies(targets: Record<string, any>, gr
     const expected = [...fixture.sharedEngines,...(renderer === "react" ? row.engines : [`${rendererProject}:wasm`])];
     assert.deepEqual(require("lodash").sortBy(engines), require("lodash").sortBy(expected), name + ": only declared runtime engines");
     if (!graph) continue;
-    const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, [owner], [`dev-${row.variant}-${renderer}-${profile}`], undefined, {}, false);
+    const tasks = createRequire(join(process.cwd(), ".nx/installation/package.json"))("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, [owner], [`dev-${row.variant}-${renderer}-${profile}`], undefined, {}, false);
     const ids = Object.keys(tasks.tasks);
     if (renderer === "react") assert.ok(!ids.some(id => id.startsWith(rendererProject + ":")), name + ": React must not compile the WGPU renderer");
     const fontTask = fixture.fontTool.project + ":build";

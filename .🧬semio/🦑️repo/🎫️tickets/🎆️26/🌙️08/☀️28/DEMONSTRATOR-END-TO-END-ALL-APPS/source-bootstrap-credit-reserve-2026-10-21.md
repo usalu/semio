@@ -1,0 +1,9 @@
+# Initial Captured Source Credit Reserve
+
+The previous preparation check reserved bootstrap + maximum request +6 bytes, omitting the newly mandatory43-byte full-quantum credit frame. Under the unchanged16MiB input cap, the last legal bootstrap is16,711,631bytes: bootstrap +65,537-byte request +43-byte credit +5-byte terminal reserve exactly equals16,777,216. The immediately following byte must refuse before Node launch.
+
+Schema/neutral cases were saved first. Session source metadata names the existing closureReadCohortAdmitsV1 policy; two new closed credit vectors use fresh frames1/outputREADY128/outputLines1/diagnostic0 and exact last-byte/+1bootstrap extents. The existing actual-helper/SQLite oracle test includes them. A new actual Source AST assertion requires preparation to call that exact shared policy with maxRequest+1 and fixed reply quantum, exact fresh state, and the retained requireAdmittedBuildSourceClosureV1(snapshot,original) call before budget admission. No new budget API/formula or cap was introduced.
+
+Production changed only the prepareClosureReadSourceV1 guard and its existing MJS helper import. It now reuses the same exact cohort admission policy as the running protocol. Mandatory parent admission, actual Original/control, capture cache, schema parity and exact executable argument construction remain intact. Runtime was informed before this narrow write; its physical admitted test-body work is separate.
+
+Changed paths under closures/: 🧬️schema/🔣️.json; 🧪️tests/📡️session/🔣️.json; 🧪️tests/📡️session/💳️.ts; 📡️session/🟦️.ts. Exact byte sizes/SHA256 are in generated/source-bootstrap-credit-boundary.json. Both TS files have zero parser diagnostics. Owning Native tests and SQLite execution remain pending; the analysis VM refused string code generation, so no extracted helper execution is claimed from that attempted analysis. No Native process/probe or focused Source was launched. All own code is frozen again.

@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:preflight-matrix-corpus:v1",
+  "title": "Preflight Matrix Corpus",
+  "description": "Language-agnostic axes for the build preflight: requirement sets (authored policy rows or literal), the axes of an exhaustive sweep over host facts, invalid facts and requirements, and bare-command arguments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "requirements", "axes", "invalidFacts", "invalidRequirements", "arguments", "base"],
+  "properties": {
+    "version": { "const": 1 },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "policy": { "enum": ["linux", "darwin", "win32"] }, "value": { "type": "object" } },
+        "oneOf": [{ "required": ["policy"] }, { "required": ["value"] }]
+      }
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "byteOffsets", "toolPool", "exchange", "caseSensitive"],
+      "properties": {
+        "architecture": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "byteOffsets": { "type": "array", "minItems": 1, "items": { "type": "integer" } },
+        "toolPool": { "type": "array", "items": { "type": "string" } },
+        "exchange": { "type": "array", "items": { "enum": ["supported", "unsupported", "unprobed"] } },
+        "caseSensitive": { "type": "array", "items": { "enum": ["yes", "no", "unprobed"] } }
+      }
+    },
+    "invalidFacts": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name"], "properties": { "name": { "type": "string" }, "patch": { "type": "object" }, "drop": { "type": "string" } } } },
+    "invalidRequirements": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "requirement"], "properties": { "name": { "type": "string" }, "requirement": { "type": "object" } } } },
+    "arguments": { "type": "object", "additionalProperties": false, "required": ["accepted", "rejected"], "properties": { "accepted": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }, "rejected": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } } } },
+    "base": { "type": "object" }
+  }
+}

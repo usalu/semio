@@ -33,6 +33,10 @@ pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBy
 mod native_tree;
 pub use native_tree::{ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
 
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+
 use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
 pub use semio_framework_value::ToValue;
 

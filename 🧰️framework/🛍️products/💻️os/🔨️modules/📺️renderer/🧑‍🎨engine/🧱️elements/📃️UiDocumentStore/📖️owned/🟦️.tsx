@@ -1,5 +1,5 @@
 //#region 🧬️OwnedReadSource
-import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "../../⚛️react-port/🟦️.ts";
 import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "@semio-tech/ui-contract/retained/read-lease";
 import type { RetainedUiNodeRecord } from "@semio-tech/ui-contract/retained/wire/typed";
 import type { OwnedUiSceneDiagnostic } from "@semio-tech/ui-contract/retained/scene/binding";

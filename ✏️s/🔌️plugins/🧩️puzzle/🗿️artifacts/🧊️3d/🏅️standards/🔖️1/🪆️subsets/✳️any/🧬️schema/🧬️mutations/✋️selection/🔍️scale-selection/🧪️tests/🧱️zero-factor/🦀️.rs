@@ -31,7 +31,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `scale-selection` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle3dMutation as protocol::ColdMutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -64,7 +64,7 @@ fn refusal_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_invariant_is_the_declared_refusal() {
     assert!(DIFF_ABSENT.as_str().is_empty(), "scale-selection/zero-factor: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle3dMutation as protocol::ColdMutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle3dDiff::default(), "scale-selection/zero-factor: a Fatal outcome carries the default diff");
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "scale-selection/zero-factor declares a rejected outcome");
@@ -76,6 +76,6 @@ fn the_invariant_is_the_declared_refusal() {
 /// 🌐️ The refusal does not depend on the scene: the empty scene refuses the same payload the same way.
 #[test]
 fn the_invariant_is_independent_of_the_base() {
-    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &Puzzle3dSnapshot::default());
+    let produced = <Puzzle3dMutation as protocol::ColdMutation<Puzzle3dSnapshot>>::diff(&mutation(), &Puzzle3dSnapshot::default());
     assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant")], "scale-selection/zero-factor: an invariant is a property of the payload alone");
 }

@@ -8,7 +8,7 @@ pub use apply_directory_page::ApplyDirectoryPage;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = HomeTransient, diff = HomeTransientDiff, schema = "s.space.home.transient")]
+#[mutations(snapshot = HomeTransient, diff = HomeTransientDiff, schema = "s.space.home.transient", reference = HomeTransient, reference_diff = HomeTransientDiff)]
 pub enum HomeTransientMutation {
     #[dsl(key = "apply-directory-page")]
     ApplyDirectoryPage(ApplyDirectoryPage),
@@ -26,22 +26,30 @@ pub struct HomeTransientDiff {
 /// 🫧️ The page lane declares itself non-invertible at the mutation level (derived hub state the host re-reads from the origin);
 /// the diff itself still inverts to the held projection so the generic sum law holds.
 impl protocol::DiffAlgebra<HomeTransient> for HomeTransientDiff {
-    fn inverse(&self, base: &HomeTransient) -> Self {
-        Self { directory: self.directory.as_ref().map(|_| base.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.directory.is_none()
     }
 }
 
-impl protocol::MutationDiff<HomeTransient> for HomeTransientDiff {
-    fn apply(&self, base: &HomeTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomeTransient> {
-        Ok(self.directory.clone().unwrap_or_else(|| base.clone()))
+impl protocol::ColdDiffAlgebra<HomeTransient> for HomeTransientDiff {
+    fn inverse(&self, base: &HomeTransient) -> Self {
+        Self { directory: self.directory.as_ref().map(|_| base.clone()) }
     }
+}
+
+impl protocol::MutationDiff<HomeTransient> for HomeTransientDiff {}
+
+impl protocol::ColdMutationDiff<HomeTransient> for HomeTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.directory.is_some() {
             self.directory = other.directory;
         }
+    }
+
+    fn apply(&self, unpublished: &mut HomeTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = self.directory.clone().unwrap_or_else(|| base.clone());
+        Ok(())
     }
 }
 

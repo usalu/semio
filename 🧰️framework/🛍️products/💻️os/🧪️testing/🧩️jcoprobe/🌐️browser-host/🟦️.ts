@@ -1,8 +1,9 @@
 import { statSync } from "node:fs";
 import { join, extname, relative, sep } from "node:path";
+import { runtimeFileV1, runtimeServeV1 } from "../../../../../🔨️modules/⚙️runtime/🌍️serve/🟦️.ts";
 
 
-const ROOT = join(import.meta.dir, "../../..");
+const ROOT = join(import.meta.dirname, "../../..");
 const OWNERS = ["🧪️testing/🧩️jcoprobe/🌐️browser-host", "🧪️tests/🧩️jco-callback", "🧪️testing/🧩️jcoprobe/🌐️browser-bundles"];
 const PORT = Number(process.env.SEMIO_JCO_PROBE_PORT ?? 8846);
 
@@ -15,7 +16,7 @@ const MIME: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
 };
 
-const server = Bun.serve({
+const server = await runtimeServeV1({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url);
@@ -26,7 +27,7 @@ const server = Bun.serve({
     if (!OWNERS.some(owner => normalized.startsWith(owner + "/"))) return new Response("not found", { status: 404 });
     try { if (!statSync(full).isFile()) return new Response("not found", { status: 404 }); }
     catch { return new Response("not found", { status: 404 }); }
-    const file = Bun.file(full);
+    const file = runtimeFileV1(full).body();
     const type = MIME[extname(full)] ?? "application/octet-stream";
     return new Response(file, { headers: { "content-type": type } });
   },

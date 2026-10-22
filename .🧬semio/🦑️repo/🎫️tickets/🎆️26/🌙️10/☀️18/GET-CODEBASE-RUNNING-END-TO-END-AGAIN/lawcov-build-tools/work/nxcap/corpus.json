@@ -1,0 +1,70 @@
+{
+ "version": 1,
+ "plans": [
+  {
+   "name": "one job",
+   "plan": {
+    "version": 1,
+    "id": "p",
+    "jobs": 1,
+    "cpu": 2,
+    "memoryMegabytes": 3072,
+    "fixedMegabytes": 1536,
+    "floorMegabytes": 4096
+   },
+   "parallel": "1"
+  },
+  {
+   "name": "two jobs",
+   "plan": {
+    "version": 1,
+    "id": "p",
+    "jobs": 2,
+    "cpu": 2,
+    "memoryMegabytes": 3072,
+    "fixedMegabytes": 1536,
+    "floorMegabytes": 4096
+   },
+   "parallel": "2"
+  },
+  {
+   "name": "a dozen jobs",
+   "plan": {
+    "version": 1,
+    "id": "p",
+    "jobs": 12,
+    "cpu": 2,
+    "memoryMegabytes": 3072,
+    "fixedMegabytes": 1536,
+    "floorMegabytes": 4096
+   },
+   "parallel": "12"
+  },
+  {
+   "name": "the largest grant",
+   "plan": {
+    "version": 1,
+    "id": "p",
+    "jobs": 1024,
+    "cpu": 2,
+    "memoryMegabytes": 3072,
+    "fixedMegabytes": 1536,
+    "floorMegabytes": 4096
+   },
+   "parallel": "1024"
+  },
+  {
+   "name": "other fields do not change the parallelism",
+   "plan": {
+    "version": 1,
+    "id": "p",
+    "jobs": 3,
+    "cpu": 64,
+    "memoryMegabytes": 999999,
+    "fixedMegabytes": 1,
+    "floorMegabytes": 2
+   },
+   "parallel": "3"
+  }
+ ]
+}

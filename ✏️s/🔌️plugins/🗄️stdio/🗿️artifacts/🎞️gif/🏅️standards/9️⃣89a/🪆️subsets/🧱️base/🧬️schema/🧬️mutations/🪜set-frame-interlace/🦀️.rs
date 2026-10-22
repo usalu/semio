@@ -16,6 +16,15 @@ pub struct SetFrameInterlace {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-interlace", kind: "set-frame-interlace", record: "SetFrameInterlace" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame interlace", "Zeilensprung des Einzelbilds setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, interlace } = self;
         protocol::MutationOutcome::new({
@@ -29,12 +38,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
             Some(f) => vec![GifMutation::SetFrameInterlace(SetFrameInterlace { index: *index, interlace: f.interlace })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame interlace", "Zeilensprung des Einzelbilds setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

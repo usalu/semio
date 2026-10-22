@@ -1,0 +1,630 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "immediate publication goes through the ledger once per leaf",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 120
+    },
+    {
+     "op": "publish",
+     "bytes": 80
+    },
+    {
+     "op": "publish",
+     "bytes": 50,
+     "ledgerAccepts": false
+    }
+   ],
+   "expect": {
+    "results": [
+     "published",
+     "published",
+     "declined"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 120,
+      "retainedDeltaBytes": 120,
+      "accepted": true
+     },
+     {
+      "peakBytes": 80,
+      "retainedDeltaBytes": 80,
+      "accepted": true
+     },
+     {
+      "peakBytes": 50,
+      "retainedDeltaBytes": 50,
+      "accepted": false
+     }
+    ],
+    "used": 300,
+    "owedBytes": 0,
+    "owedLeaves": 0,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "deferred leaves below every threshold owe the ledger",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 10,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 20,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "deferred",
+     "deferred"
+    ],
+    "ledger": [],
+    "used": 130,
+    "owedBytes": 30,
+    "owedLeaves": 2,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "the byte threshold pays one ledger publication with the sum",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 100,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 150,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 60,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 5,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "deferred",
+     "deferred",
+     "deferred",
+     "deferred"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 310,
+      "retainedDeltaBytes": 310,
+      "accepted": true
+     }
+    ],
+    "used": 415,
+    "owedBytes": 5,
+    "owedLeaves": 1,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "the leaf count threshold pays",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 1,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 1,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 1,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "deferred",
+     "deferred",
+     "deferred"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 3,
+      "retainedDeltaBytes": 3,
+      "accepted": true
+     }
+    ],
+    "used": 103,
+    "owedBytes": 0,
+    "owedLeaves": 0,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "the age threshold pays at the next leaf",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 7,
+     "deferred": true
+    },
+    {
+     "op": "clock",
+     "milliseconds": 300
+    },
+    {
+     "op": "publish",
+     "bytes": 7,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "deferred",
+     "clock",
+     "deferred"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 14,
+      "retainedDeltaBytes": 14,
+      "accepted": true
+     }
+    ],
+    "used": 114,
+    "owedBytes": 0,
+    "owedLeaves": 0,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "adopted worker leaves are admitted by the quota, refused ones are removed",
+   "quota": {
+    "maximumBytes": 400,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "adopt",
+     "leaves": [
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000001.br",
+       "bytes": 100
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br",
+       "bytes": 150
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000003.br",
+       "bytes": 100
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000004.br",
+       "bytes": 10
+      }
+     ]
+    }
+   ],
+   "expect": {
+    "results": [
+     "adopted:3"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 260,
+      "retainedDeltaBytes": 260,
+      "accepted": true
+     }
+    ],
+    "used": 360,
+    "owedBytes": 0,
+    "owedLeaves": 0,
+    "removed": [
+     "np/ob/0000000000000000000000000000000000000000000000000000000000000003.br"
+    ],
+    "refused": [
+     "np/ob/0000000000000000000000000000000000000000000000000000000000000003.br"
+    ]
+   }
+  },
+  {
+   "name": "a declined flush keeps the debt, a final flush retries the declared attempts",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 400,
+     "deferred": true,
+     "ledgerAccepts": false
+    },
+    {
+     "op": "publish",
+     "bytes": 10,
+     "deferred": true,
+     "ledgerAccepts": false
+    },
+    {
+     "op": "flush",
+     "final": true,
+     "ledgerAccepts": false
+    },
+    {
+     "op": "flush",
+     "final": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "deferred",
+     "deferred",
+     "postponed",
+     "flushed"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 400,
+      "retainedDeltaBytes": 400,
+      "accepted": false
+     },
+     {
+      "peakBytes": 410,
+      "retainedDeltaBytes": 410,
+      "accepted": false
+     },
+     {
+      "peakBytes": 410,
+      "retainedDeltaBytes": 410,
+      "accepted": false
+     },
+     {
+      "peakBytes": 410,
+      "retainedDeltaBytes": 410,
+      "accepted": false
+     },
+     {
+      "peakBytes": 410,
+      "retainedDeltaBytes": 410,
+      "accepted": false
+     },
+     {
+      "peakBytes": 410,
+      "retainedDeltaBytes": 410,
+      "accepted": true
+     }
+    ],
+    "used": 510,
+    "owedBytes": 0,
+    "owedLeaves": 0,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "a grant holds pending bytes against admission until it is released",
+   "quota": {
+    "maximumBytes": 300,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "grant",
+     "bytes": 150
+    },
+    {
+     "op": "publish",
+     "bytes": 100,
+     "deferred": true
+    },
+    {
+     "op": "publish",
+     "bytes": 60,
+     "deferred": true
+    },
+    {
+     "op": "grant",
+     "bytes": 100
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "publish",
+     "bytes": 60,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "granted",
+     "declined",
+     "declined",
+     "refused",
+     "released",
+     "deferred"
+    ],
+    "ledger": [],
+    "used": 160,
+    "owedBytes": 60,
+    "owedLeaves": 1,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "the free space floor refuses before the ledger is asked",
+   "quota": {
+    "maximumBytes": 1000,
+    "usedBytes": 100,
+    "availableBytes": 200,
+    "minimumAvailableBytes": 100
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "publish",
+     "bytes": 50
+    },
+    {
+     "op": "publish",
+     "bytes": 60
+    },
+    {
+     "op": "publish",
+     "bytes": 10,
+     "deferred": true
+    }
+   ],
+   "expect": {
+    "results": [
+     "published",
+     "declined",
+     "deferred"
+    ],
+    "ledger": [
+     {
+      "peakBytes": 50,
+      "retainedDeltaBytes": 50,
+      "accepted": true
+     }
+    ],
+    "used": 160,
+    "owedBytes": 10,
+    "owedLeaves": 1,
+    "removed": [],
+    "refused": []
+   }
+  },
+  {
+   "name": "a content addressed leaf two workers reported is accounted once and one that was refused is removed once",
+   "quota": {
+    "maximumBytes": 400,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "adopt",
+     "leaves": [
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000001.br",
+       "bytes": 100
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000001.br",
+       "bytes": 100
+      }
+     ]
+    },
+    {
+     "op": "adopt",
+     "leaves": [
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000001.br",
+       "bytes": 100
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br",
+       "bytes": 250
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br",
+       "bytes": 250
+      }
+     ]
+    },
+    {
+     "op": "adopt",
+     "leaves": [
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br",
+       "bytes": 250
+      },
+      {
+       "name": "np/ob/0000000000000000000000000000000000000000000000000000000000000003.br",
+       "bytes": 10
+      }
+     ]
+    }
+   ],
+   "expect": {
+    "results": [
+     "adopted:1",
+     "adopted:0",
+     "adopted:1"
+    ],
+    "ledger": [],
+    "used": 210,
+    "owedBytes": 110,
+    "owedLeaves": 2,
+    "removed": [
+     "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br"
+    ],
+    "refused": [
+     "np/ob/0000000000000000000000000000000000000000000000000000000000000002.br"
+    ]
+   }
+  },
+  {
+   "name": "a receipt reported twice is a rewrite and counts twice",
+   "quota": {
+    "maximumBytes": 400,
+    "usedBytes": 100,
+    "availableBytes": 5000,
+    "minimumAvailableBytes": 10
+   },
+   "policy": {
+    "flushBytes": 300,
+    "flushLeaves": 3,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 3
+   },
+   "steps": [
+    {
+     "op": "adopt",
+     "leaves": [
+      {
+       "name": "ip/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+       "bytes": 20
+      },
+      {
+       "name": "ip/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+       "bytes": 20
+      }
+     ]
+    }
+   ],
+   "expect": {
+    "results": [
+     "adopted:2"
+    ],
+    "ledger": [],
+    "used": 140,
+    "owedBytes": 40,
+    "owedLeaves": 2,
+    "removed": [],
+    "refused": []
+   }
+  }
+ ],
+ "workerCases": []
+}

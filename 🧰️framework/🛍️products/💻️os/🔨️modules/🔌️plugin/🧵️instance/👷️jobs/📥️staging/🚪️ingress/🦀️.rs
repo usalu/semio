@@ -1,7 +1,7 @@
 //! 🔧️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_grant_funds, plugin_retirement_fault};
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_retirement_fault};
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
 use semio_framework_plugin_command::command_admission::{AdmittedToolCommand, TypedCommandWireWriter};
@@ -12,13 +12,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_plugin_instance_children::children_components::ChildComposition;
 use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents};
 use semio_framework_value::{DslValue, RetirementDemand};
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolProof, RESERVED_OUTCOME_ACKNOWLEDGE_TURNS, plugin_job_yield_once, reserved_pump_fault_detail, reserved_pump_fault_is_transient, retained_payload_eq_slice};
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolProof};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_plugin_operation::ToolCancellationHandle;
 use crate::jobs_components::ToolOperations;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
@@ -53,195 +52,6 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn finish_reserved_emit_producer(&mut self, permit: FrameworkReservedCommitPermit) {
         self.release_reserved_emit_slot(permit.operation.operation.0);
         permit.finish();
-    }
-
-    /// 🛡️ Keeps producer admission failures tied to the original reserved identity.
-    pub async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
-        &mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>, verb: &str, raw: &[u8], decoded_items: usize, job: J, meta: &ActionMeta,
-        supplied_admission: Option<semio_framework::ToolWireAdmission>,
-        supplied_authority: FrameworkReservedCommitPermit,
-     cx:&mut semio_framework_job::StepContext<'_>) -> Result<FrameworkReservedCommitPermit, (semio_framework_job::OriginalTurnFailure,FrameworkReservedCommitPermit)> {
-        let mut permit=supplied_authority;
-        match self.run_framework_reserved_job_inner(mounted_policy, stores, verb, raw, decoded_items, job, meta, supplied_admission, &permit, cx).await {
-            Ok(()) => Ok(permit),
-            Err(fault) => { permit.lease.cancel(); Err((fault,permit)) },
-        }
-    }
-
-    pub(crate) async fn run_framework_reserved_job_inner<J: semio_framework_job::InteractiveJob + Send + 'static>(&mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,verb:&str,raw:&[u8],decoded_items:usize,job:J,meta:&ActionMeta,supplied_admission:Option<semio_framework::ToolWireAdmission>,supplied_authority:&FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-        if supplied_authority.lease.keyed && (self.typed_operation_reservations[supplied_authority.operation.operation.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(supplied_authority.operation.operation.0)||supplied_authority.lease.key.operation_id!=supplied_authority.operation.operation){return Err(plugin_sdk_fault("reserved producer lost its original keyed slot admission").into());}
-        self.drive_framework_reserved_worker(mounted_policy, stores, verb, raw, decoded_items, job, meta, supplied_admission, supplied_authority.operation, supplied_authority.lease.cancel_token(), false, cx).await
-    }
-
-    pub(crate) async fn drive_framework_reserved_worker<J: semio_framework_job::InteractiveJob + Send + 'static>(
-        &mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,
-        verb: &str,
-        raw: &[u8],
-        decoded_items: usize,
-        job: J,
-        _meta: &ActionMeta,
-        supplied_admission: Option<semio_framework::ToolWireAdmission>,
-        operation: semio_framework_job::Operation,
-        cancel: &semio_framework_job::CancelToken,
-        mounted_owner: bool,
-     cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
-        let proof = self.qualified_tool_proof(stores, verb)?;
-        if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
-            return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory"))).into());
-        }
-        let key = proof.key();
-        let admission = match supplied_admission {
-            Some(admission) => admission,
-            None => self.tool_jobs.admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), raw).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?,
-        };
-        if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
-            return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission"))).into());
-        }
-        let generation = operation.generation;
-        if mounted_owner && !self.tool_operations.get(operation.operation.0).is_some_and(|owner| owner.operation.operation == operation.operation && owner.operation.base_revision == operation.base_revision && owner.operation.generation == operation.generation) { return Err(plugin_sdk_fault("reserved producer lost its original mounted operation authority").into()); }
-        let operation_id = operation.operation;
-        let dispatch = self
-            .tool_jobs
-            .dispatch(semio_framework::ToolOperationSpec::new(key.controller_id, key.tool_id, proof.schema_id(), job, operation))
-            .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
-
-        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-        let step_grant = mounted_policy.preparation;
-        let close_grant = mounted_policy.close;
-        let source=(cx.operation(),cx.generation());
-        let mut pending=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,source);
-        let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:step_grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:proof.contract().max_work_units_per_step,step_budget_us:semio_framework_job::INTERACTIVE_LANE_WALL_US};
-        let mut session=loop{plugin_job_yield_once().await;if let Some(session)=pending.admit_pending(config,cx)?{break session}};
-        drop(pending);
-        let mut checkpoint_progress = 0u64;
-        let mut step_overruns = semio_framework_trace::StepOverrunLedger::new();
-        loop {
-            plugin_job_yield_once().await;
-            let poll = match session.pump_one(&pool, semio_framework_async::Lane::Interactive, step_grant) {
-                Ok(poll) => poll,
-                Err(fault) if reserved_pump_fault_is_transient(&fault) => {
-                    #[cfg(target_arch = "wasm32")]
-                    if let Some(now_ms) = semio_framework_job::default_now_ms() {
-                        pool.pump(now_ms);
-                    }
-                    continue;
-                }
-                Err(fault) => {
-                    return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-pump"), format!("framework route '{verb}' lost its mounted worker transition: {}", reserved_pump_fault_detail(&fault)))).into());
-                }
-            };
-            if !matches!(poll, semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) {
-                #[cfg(target_arch = "wasm32")]
-                if let Some(now_ms) = semio_framework_job::default_now_ms() {
-                    pool.pump(now_ms);
-                }
-                continue;
-            }
-            let Some((issued, receipt)) = session.take_checked_out_retained_step_receipt() else { return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-missing"), "framework reserved mounted worker checkout lost its exact outcome")).into()) };
-            if !receipt.fits(issued) {
-                cancel.cancel_now();
-                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-receipt"), format!("framework route '{verb}' reported a step receipt beyond its issued grant"))).into());
-            }
-            let mut protocol_fault = None;
-            let (terminal, terminal_kind) = {
-                let Some(view) = session.checked_out_outcome().map_err(|error| plugin_sdk_fault(error.into_message()))? else {
-                    session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved paid step lost its exact resume authority"))?;
-                    continue;
-                };
-                let kind = match &view {
-                    semio_framework_job::JobOutcomeView::Yield { .. } | semio_framework_job::JobOutcomeView::PreviewReady { .. } => 0,
-                    semio_framework_job::JobOutcomeView::CheckpointReady { state, applied_progress, .. } => {
-                        if *applied_progress < checkpoint_progress || state.len() > proof.contract().max_output_bytes {
-                            protocol_fault = Some("interactive-job.checkpoint");
-                        }
-                        checkpoint_progress = *applied_progress;
-                        0
-                    }
-                    semio_framework_job::JobOutcomeView::Complete { output, .. } => {
-                        if output.map_or(!raw.is_empty(), |output| output.len() > proof.contract().max_output_bytes || !retained_payload_eq_slice(output, raw)) {
-                            protocol_fault = Some("interactive-job.output-envelope");
-                        }
-                        1
-                    }
-                    semio_framework_job::JobOutcomeView::Cancelled { .. } => 2,
-                    semio_framework_job::JobOutcomeView::Fault { .. } => 3,
-                };
-                (view.is_terminal(), kind)
-            };
-            let overrun = session.callback_verdict().copied().is_some_and(|verdict| step_overruns.admit(&verdict).is_terminal());
-            if !terminal {
-                let mut acknowledged = false;
-                for _ in 0..RESERVED_OUTCOME_ACKNOWLEDGE_TURNS {
-                    plugin_job_yield_once().await;
-                    if session.checked_out_outcome_descriptor().is_none() {
-                        acknowledged = true;
-                        break;
-                    }
-                    let step = session.acknowledge_checked_out_outcome(close_grant);
-                    if step.progress() == RetainedCloneProgress::default() {
-                        break;
-                    }
-                }
-                if !acknowledged {
-                    cancel.cancel_now();
-                    return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-acknowledge"), format!("framework route '{verb}' could not acknowledge its retained outcome"))).into());
-                }
-                if let Some(code) = protocol_fault {
-                    cancel.cancel_now();
-                    return Err((Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' returned an invalid retained checkpoint"))).into());
-                }
-                if overrun {
-                    cancel.cancel_now();
-                }
-                session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved outcome lost its exact resume authority"))?;
-                continue;
-            }
-            session.begin_close();
-            loop {
-                plugin_job_yield_once().await;
-                let grant=close_grant;
-                if matches!(session.has_original_cancel_alias_witness(&cancel),Ok(true)){
-                    match session.return_original_cancel_alias_step(&cancel,grant){
-                        Ok(_)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>continue,
-                        Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into()),
-                    }
-                }
-                let demand=session.retirement_demands(grant.maximum_copy_bytes).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>semio_framework_job::OriginalTurnFailure::from(error),semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_job::OriginalTurnFailure::from(plugin_sdk_fault("reserved original session close remains contended"))})?;
-                if !plugin_grant_funds(demand,grant){continue}
-                match cx.with_retained_loan(grant,|same|session.close_step(same))?{
-                    semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{..}|semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>{},
-                    semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{..}if session.terminal_is_empty()=>break,
-                    semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{..}=>return Err(plugin_sdk_fault("reserved original session closed without its terminal witness").into()),
-                }
-            }
-            if overrun {
-                return Err((Fault::new(
-                    FaultOrigin::Framework,
-                    FaultCode::new("interactive-job.step-overrun"),
-                    format!("framework route '{verb}' overran the 8 ms step ceiling for {} consecutive steps, worst {}us", step_overruns.consecutive_overruns(), step_overruns.worst_elapsed_us()),
-                )).into());
-            }
-            if let Some(code) = protocol_fault {
-                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' did not preserve its admitted envelope"))).into());
-            }
-            match terminal_kind {
-                1 => break,
-                2 => return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled"))).into()),
-                3 => return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.fault"), format!("framework route '{verb}' returned a retained fault"))).into()),
-                _ => return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.terminal-kind"), "framework reserved session closed without a terminal outcome")).into()),
-            }
-        }
-        if cancel.is_cancelled().await {
-            return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled-or-output"), format!("framework route '{verb}' was cancelled before commit"))).into());
-        }
-        let live_revision_bytes = stores.store.content_revision();
-        let live_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision_bytes[..8].try_into().expect("revision lane width")));
-        let live_generation = semio_framework_job::Generation(stores.store.generation());
-        if !matches!(semio_framework_job::validate_commit(&operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
-            return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("framework route '{verb}' completed against a stale revision or generation"))).into());
-        }
-        Ok(())
     }
 
     pub fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str) -> Result<QualifiedToolProof, Fault> {
@@ -392,7 +202,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     }
 
     /// 📏️ Quotes the next retiring typed-operation turn: its private child group's close, one owner hand-off, or the operation's own retirement.
-    pub fn typed_operation_retirement_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
+    pub fn typed_operation_retirement_demands<M: ReferenceSpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed before its retirement quote"))?;
         if operation.close_fault_pending(){return operation.close_fault_demands(body).map_err(plugin_retirement_fault);}
         if let Some(group) = operation.owned_child_group {

@@ -62,7 +62,7 @@ impl Drop for OwnedVcsStore {
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
 pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Result<Vec<VcsDemoMutation>, semio_framework_value::ValueError> {
     Ok({
-    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)?
+    <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::inverse(mutation, snapshot)?
 
     })
 }
@@ -76,7 +76,7 @@ pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) 
 /// what an `inverse-<kind>` scenario has to apply for the metamorphic law to mean anything.
 pub fn inverse_vcs_mutation_steps(mutation: &VcsDemoMutation, base: &VcsSnapshot) -> Result<Vec<VcsDemoMutation>, semio_framework_value::ValueError> {
     Ok({
-    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, base)?
+    <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::inverse(mutation, base)?
 
     })
 }

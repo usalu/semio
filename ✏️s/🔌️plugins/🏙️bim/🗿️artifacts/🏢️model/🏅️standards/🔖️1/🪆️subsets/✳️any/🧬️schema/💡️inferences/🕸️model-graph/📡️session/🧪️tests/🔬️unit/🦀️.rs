@@ -48,7 +48,7 @@ fn renamed() -> ModelDiff {
 }
 
 fn after(snapshot: &ModelSnapshot, diff: &ModelDiff) -> ModelSnapshot {
-    protocol::apply_diff(diff, snapshot).expect("the edit applies")
+    protocol::apply_diff_cold(diff, snapshot).expect("the edit applies")
 }
 
 #[test]

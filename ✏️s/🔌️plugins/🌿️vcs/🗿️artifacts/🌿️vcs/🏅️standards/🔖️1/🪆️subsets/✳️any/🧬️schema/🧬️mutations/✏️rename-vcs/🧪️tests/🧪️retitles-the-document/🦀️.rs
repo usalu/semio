@@ -83,7 +83,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-vcs/retitles-the-document declares an applied outcome");
-    let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let produced = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "rename-vcs/retitles-the-document: a real retitle must not carry any diagnostic, got {:?}", produced.messages());
     assert_eq!(produced.diff().title.as_deref(), Some("Retitled Fixture"), "rename-vcs's sparse diff must pin exactly the title field");
 }
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
 /// sneak past this fixture.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let outcome = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-vcs/retitles-the-document: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-vcs/retitles-the-document: committed diff did not carry before to after");
 }
 

@@ -160,7 +160,7 @@ pub mod derived_construction {
             (Self::from_snapshot(self.snapshot), diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(Self::from_snapshot(self.snapshot))
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {

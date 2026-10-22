@@ -1,150 +1,160 @@
-/** 🔶️ The scope phase of useShellUriAndDocuments. */
-import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
-import { spaceIndexOf, resolveUiDirtyScope } from "@semio-tech/framework";
-import { shellSessionRouteV1 } from "../../🔀️surface-switch/🟦️.ts";
-import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { LOCAL_CATALOG_ACTIONS_V1, localCatalogRehydrationArgumentsV1 } from "../../🗂️local-catalog/🟦️.ts";
-import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+/** 🔶️ The document services phase of useSpawnedSession. */
+import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
+import { panelTabKindId, pendingWindowUiNode, type BuiltNode, type UiDirtyScope, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
+import { focusedProgramKeyV1, programKeyedEntriesV1, withProgramEntriesV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedGuestWindowInstancesV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { type WindowLayoutNode } from "@semio-tech/ui-react";
+import { sessionProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
-import { buildSpacePanelState, parsePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
-import { parseShellRoute } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { encodeWindowActionInvocation } from "../../📨️window-invocation/🟦️.ts";
-import { findDialectApp, SPACE_INDEX_DOCUMENT_ID } from "../../🧾️space-artifact-creation/🟦️.ts";
-import { logUnlessRetiredV1, requiredHostPanelLeafId } from "../../🧱️built-node-stores/🟦️.ts";
-import type { ShellCoreAfterApplyHostEffects } from "../../⚡️host-effects/🟦️.ts";
+import { flattenPanelTabLeaves, resolveCanvasBodyKey, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { applyUiRefreshResponseToCache, buildUiRefreshRequest, mergeRecordPreservingIdentity } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { type SpawnedAppEntry } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { isPluginInstanceRetiredV1 } from "../../../🔌️PluginRuntime/🟦️.tsx";
+import { liveInstanceWindowFaultV1 } from "../../🩺️fault/🟦️.ts";
+import { publishBuiltNodesV1, publishPanelBodiesV1, type SpawnedRefreshSlotV1 } from "../../🧱️built-node-stores/🟦️.ts";
+import type { ShellCoreAfterContributionsAndRefresh } from "../../🔁️contributions-refresh/🟦️.ts";
 
-/** 🔷 Builds scope, localDocumentOwnerRegistry, hostConfig, hostMode of useShellUriAndDocuments. */
-export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHostEffects }) {
+/** 🔷 Builds documentServices, scope, hostMode, dispatch of useSpawnedSession. */
+export function useDocumentServicesState({ core }: { readonly core: ShellCoreAfterContributionsAndRefresh }) {
   const {
-    scope, localDocumentOwnerRegistry, hostConfig, hostMode, dispatch, loadedPlugins, session, hostPlugin, hostApp,
-    landingAppId, hostAppId, activeUtilityByWindowId, activeToolId, extraWindowInstances, liveDialogRef, syncBackboneUri,
-    openSpaceIdRef, rememberOpenSpaceId, openInstanceIdRef, sessionRef, applyShellUriRef, shellRouteLedgerRef,
-    backboneWorkerRef, shellActorIdRef, identityRef, hubEnv, identityResolution, uiLocaleRef, showTransientNoticeRef,
-    backgroundSpaceIndexSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLane, retireDocumentAttachment,
-    setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, cancelSpaceArtifactCreationsForRuntime,
-    setHubWorkspaceOpen, inferencePortEpochRef, inferencePortOwnerRef, inferencePortAuthorityRef,
-    inferencePortOpeningRef, setInferenceHistoryByRuntimeKey, localCatalog, rehydratedLocalDocumentsRef,
-    openDocumentSessionsRef, bindDocumentBackbone, captureDialogOrigin, captureEffectOwner, closeOwnedDialog,
-    browserActorUiByRuntimeKeyRef, retireBrowserActorUi, directoryScopedOwnersRef, spaceDirectoryHistoriesRef,
-    socketActorReadyRef, setBootstrapUiByDocument, setExecutionTargetUiByDocument, setPresencePeersByRuntimeKey,
-    rebootstrapDiscardedSessionsRef, ensureBackboneWorker, readLocalDocumentRef, shellUri, sessionRouteRef,
-    setSessionRoute, requestSessionRoute, panel, tutorialDrivenRef, postBrowserActorViewState, refreshUi,
-    updateSpacePanel, switchToPluginApp, applyHostEffects
+    documentServices, scope, hostMode, dispatch, loadedPlugins, session, uiLocale, uiTerminology, applyHistoryPatch,
+    leftoverReplaceRefreshBodiesV1, applyLeftoverInteractionView, hostApp, landingAppId, appLabelsOverlay, shellLayout,
+    spawnedRefreshSlotsRef, extraWindowCounterRef, extraWindowInstancesRef, sessionWorkRef, sealedInstancesRef,
+    sessionSwitchGateRef, setSurfaceSwitchBusy, spawnedUiRefreshCacheRef, spawnedLayoutSeedRef, rememberOpenSpaceId,
+    openInstanceIdRef, sessionRef, shellSessionLaneRef, builtNodeStoreCacheRef, backboneWorkerRef, identity, identityRef,
+    verifiedSessionAuthorityRef, showTransientNoticeRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef,
+    inferencePortEpochRef, inferencePortOwnerRef, inferencePortAuthorityRef, retiredSessionDocumentOwnersRef,
+    inferencePortOpeningRef, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, loadedPluginsRef,
+    pluginSupervisorByIdRef, reportRefreshFault, documentServiceInventoryRef, ensureBackboneWorker,
+    establishPrimaryWithShardRetry, panel, spawnedIdsRef, focusedProgram, focusedApp, focusedSpawnedId,
+    activeUtilityByWindowIdRef, activeToolIdRef, writeToolRegister, activeWindowIdRef, shellStateRef,
+    injectActiveUtility, publishContributions, refreshUi
   } = core;
-  const applyShellUri = useCallback(
-    async (uri: string, preservedViewState?: ViewModel): Promise<boolean> => {
-      const currentSession = sessionRef.current;
-      if (!hostConfig || !currentSession || loadedPlugins.length === 0) return false;
-      const path = uri.split("?")[0] ?? "/";
-      const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
-      const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
-      if (!sPlugin) return false;
-      if (route.kind === "landing") {
-        rememberOpenSpaceId(null);
-        openInstanceIdRef.current = null;
-        if (!landingAppId) throw new Error("required landing app identity is unavailable");
-        if (currentSession.app.id !== landingAppId) return (await switchToPluginApp(hostConfig.pluginId, landingAppId, preservedViewState)) !== null;
-        return true;
+  const refreshSpawnedUiPass = useCallback(
+    async (spawned: SpawnedAppEntry, viewState: ViewModel) => {
+      const loadedPlugins = loadedPluginsRef.current;
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
+      const plugin = pluginEntry?.handle;
+      const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (!plugin || !app) {
+        console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
+        const unavailableWindowId = spawnedWindowInstanceIdV1(spawned.id, "main");
+        publishBuiltNodesV1(builtNodeStoreCacheRef.current, [[`spawned:${unavailableWindowId}`, { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode]]);
+        dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: { [unavailableWindowId]: "idle" } });
+        dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+        dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+        return;
       }
-      if (route.kind === "notFound") {
-        rememberOpenSpaceId(null);
-        openInstanceIdRef.current = null;
-        return true;
+      const spawnedSeed = `${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`;
+      if (spawnedLayoutSeedRef.current !== spawnedSeed) {
+        spawnedLayoutSeedRef.current = spawnedSeed;
+        spawnedUiRefreshCacheRef.current = new Map();
       }
-      const { spaceId, instanceId } = route;
-      if (!studioMatch && !instanceId) {
-        const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
-        const spaceIndex = spaceIndexOf(hostPlugin?.manifest.topicContributions);
-        const spaceApp = spaceIndex && (findDialectApp(hostPlugin, spaceIndex.dialect, "editor") ?? findDialectApp(hostPlugin, spaceIndex.dialect, "viewer"));
-        if (!spaceIndex || !spaceApp || !hostPlugin) {
-          console.warn("[os-shell] applyShellUri: the host plugin names no space index app (os.space-index) — not loaded yet");
-          return false;
-        }
-        const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
-        rememberOpenSpaceId(spaceId);
-        openInstanceIdRef.current = null;
-        if (spaceIndexAlreadyOpen) return true;
-        const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToPluginApp(hostConfig.pluginId, spaceApp.id, preservedViewState);
-        if (!spaceSession) return false;
-        void openDocumentRef.current({ documentId: SPACE_INDEX_DOCUMENT_ID, schema: spaceIndex.documentSchema, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle }).catch(logUnlessRetiredV1("[os-shell] space index opening failed"));
-        return true;
+      const cache = spawnedUiRefreshCacheRef.current;
+      const windowKinds = spawnedGuestWindowInstancesV1(app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds));
+      const guestActiveWindowId = guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current) ?? resolveCanvasBodyKey(app);
+      const fullViewState: ViewModel = injectActiveUtility(
+        {
+          ...spawnedProgramViewStateV1(viewState, app),
+          locale: uiLocale,
+          terminology: uiTerminology,
+          windowId: guestActiveWindowId,
+          windowInstances: windowKinds.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, spawned.id, spawnedIdsRef.current),
+        },
+        spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
+      );
+      const panelTabLeaves = flattenPanelTabLeaves(app.panelTabs);
+      const contributions = await publishContributions({ pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(viewState, app) }, sessionProgramsV1(loadedPlugins, spawned.pluginId), true);
+      if (contributions.status === "failed") console.error(`[os-shell] contributions push into spawned "${spawned.pluginId}" #${spawned.instanceId} failed: ${contributions.reason}`);
+      if (spawnedLayoutSeedRef.current !== spawnedSeed) return;
+      const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, fullViewState, cache);
+      if (request) {
+        const response = await plugin.refreshUi(spawned.instanceId, request);
+        if (spawnedLayoutSeedRef.current !== spawnedSeed) return;
+        applyUiRefreshResponseToCache(cache, response);
       }
-      const studioChanged = openSpaceIdRef.current !== spaceId;
-      rememberOpenSpaceId(spaceId);
-      if (!hostAppId) throw new Error("required host app identity is unavailable");
-      const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToPluginApp(hostConfig.pluginId, hostAppId, preservedViewState);
-      if (!studioSession) return false;
-      const studioControllerId = studioSession.app.controllerId;
-      const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
-      if (studioChanged) {
-        openInstanceIdRef.current = null;
-        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
-        await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope), routeOwner);
-      }
-      if (openInstanceIdRef.current === (instanceId ?? null)) return true;
-      openInstanceIdRef.current = instanceId ?? null;
-      if (instanceId) {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
-      } else {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
-        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-        updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
-      }
-      return true;
+      const uiByWindowId = Object.fromEntries(windowKinds.map((kind) => [spawnedWindowInstanceIdV1(spawned.id, kind.id), (cache.get(`window:${kind.id}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()] as const));
+      const spawnedKeyed = <T,>(byGuestWindowId: Readonly<Record<string, T>>): Readonly<Record<string, T>> =>
+        Object.fromEntries(Object.entries(byGuestWindowId).map(([windowId, value]) => [spawnedWindowInstanceIdV1(spawned.id, windowId), value] as const));
+      const dynamicEngagements = spawnedKeyed((cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {});
+      const dynamicMeasures = spawnedKeyed((cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
+      publishBuiltNodesV1(builtNodeStoreCacheRef.current, Object.entries(uiByWindowId).map(([windowId, node]) => [`spawned:${windowId}`, node] as const));
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(uiByWindowId).map(([windowId, node]) => [windowId, node.activity] as const)) });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)) });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)) });
+      const panelBodies = programKeyedEntriesV1(
+        spawned.id,
+        Object.fromEntries(panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined] as const)),
+      );
+      const panelStores = publishPanelBodiesV1(builtNodeStoreCacheRef.current, Object.entries(panelBodies));
+      dispatch({ type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, panelStores)) });
+      const toolMeasures = programKeyedEntriesV1(spawned.id, (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
+      dispatch({ type: "SET_TOOL_MEASURES_BY_TOOL_ID", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(toolMeasures))) });
     },
-    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, hostApp, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel, rememberOpenSpaceId],
+    [injectActiveUtility, publishContributions, uiLocale, uiTerminology],
   );
-  applyShellUriRef.current = applyShellUri;
+  const refreshSpawnedUiPassRef = useRef(refreshSpawnedUiPass);
+  refreshSpawnedUiPassRef.current = refreshSpawnedUiPass;
+  const refreshSpawnedUi = useCallback(
+    (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }): Promise<void> => {
+      if (scopeArg.kind === "none") return Promise.resolve();
+      const slots = spawnedRefreshSlotsRef.current;
+      const running = slots.get(spawned.id);
+      if (running) {
+        running.viewState = viewState;
+        running.again = true;
+        return running.done;
+      }
+      const slot: SpawnedRefreshSlotV1 = { viewState, again: false, done: Promise.resolve() };
+      slot.done = (async () => {
+        try {
+          do {
+            slot.again = false;
+            await refreshSpawnedUiPassRef.current(spawned, slot.viewState);
+          } while (slot.again);
+        } finally {
+          slots.delete(spawned.id);
+        }
+      })();
+      slots.set(spawned.id, slot);
+      return slot.done;
+    },
+    [],
+  );
+
+  const sessionTripleKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
+  const sessionHumanKey = `${identity?.userId ?? ""}:${identity?.displayName ?? ""}`;
+  useEffect(() => {
+    const current = sessionRef.current;
+    if (!current) return;
+    void refreshUi(current).catch((renderError) => reportRefreshFault(current.pluginId, renderError));
+  }, [refreshUi, reportRefreshFault, sessionTripleKey]);
 
   useEffect(() => {
-    const current = session;
-    if (!current || !hostPlugin || current.pluginId !== hostPlugin.handle.pluginId || current.app.id !== landingAppId) return;
-    const seen = rehydratedLocalDocumentsRef.current.get(current.instanceId) ?? new Set<string>();
-    rehydratedLocalDocumentsRef.current.set(current.instanceId, seen);
-    const pending = localCatalog.documents.filter((document) => !seen.has(`${document.documentId}@${document.admittedAtMs}`));
-    if (pending.length === 0) return;
-    let cancelled = false;
-    void (async () => {
-      for (const document of pending) {
-        if (cancelled) return;
-        seen.add(`${document.documentId}@${document.admittedAtMs}`);
-        const archive = await readLocalDocumentRef.current(document);
-        if (archive === null || cancelled) continue;
-        const args = localCatalogRehydrationArgumentsV1({ document, archive });
-        if (args === null) continue;
-        const owner = captureEffectOwner(current, captureDialogOrigin(current));
-        const response = await hostPlugin.handle.handleAction(current.instanceId, encodeWindowActionInvocation(current, { controllerId: current.app.controllerId, action: LOCAL_CATALOG_ACTIONS_V1.rehydrate, args }), current.viewState);
-        if (!cancelled) await applyHostEffects(response.requestedEffects ?? [], current, resolveUiDirtyScope(response.uiScope), owner);
-      }
-    })().catch(logUnlessRetiredV1("[os-shell] local catalog re-hydration failed"));
-    return () => {
-      cancelled = true;
-    };
-  }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, hostPlugin, landingAppId, localCatalog, session]);
-
-  useEffect(() => {
-    const { overlay, sessionRoute: route } = shellSessionRouteV1(shellUri, sessionRouteRef.current);
-    sessionRouteRef.current = route;
-    setSessionRoute(route);
-    if (!hostMode || loadedPlugins.length === 0) return;
-    setHubWorkspaceOpen(overlay);
-    if (route === null || !shellRouteLedgerRef.current.shouldApply(route)) return;
-    requestSessionRoute(route);
-  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode, session?.pluginId, session?.instanceId, identityResolution, requestSessionRoute]);
-
-  const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
-    if (!session) return null;
-    if (hostMode && panel?.activeSpawnedId) {
-      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-      if (spawned) {
-        const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
-      }
+    if (!hostMode || !session) {
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      return;
     }
-    return session;
-  }, [loadedPlugins, panel, session, hostMode]);
-  return { resolveSyncTargetSession, loadedPlugins, ensureBackboneWorker, identityRef, hubEnv, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, retireBrowserActorUi, shellActorIdRef, socketActorReadyRef, postBrowserActorViewState, retireDocumentAttachment, spaceDirectoryHistoriesRef, directoryScopedOwnersRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, documentAttachmentLane, bindDocumentBackbone, dispatch, backboneWorkerRef, closeDocumentRef, openDocumentRef, sessionRef, activeToolId, activeUtilityByWindowId, extraWindowInstances, session, cancelSpaceArtifactCreationsForRuntime, backgroundSpaceIndexSessionsRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, tutorialDrivenRef, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, scope, showTransientNoticeRef, syncBackboneUri, uiLocaleRef, hostApp, updateSpacePanel };
+    const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+    if (!activeSpawned) {
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      return;
+    }
+    void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
+      const fault = liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1);
+      if (fault !== null) dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {}, fault });
+    });
+  }, [panel, refreshSpawnedUi, refreshSpawnedUiPass, session, hostMode]);
+
+  /** 🪟️ The session layout the shell was showing when a spawned program took the canvas — restored
+   * verbatim when focus comes back, so opening a foreign editor and closing it again does not cost
+   * the user the arrangement they built. */
+  const sessionLayoutBeforeSpawnRef = useRef<{ readonly layout: WindowLayoutNode | null; readonly activeWindowId: string | null } | null>(null);
+  const focusedProgramKey = focusedProgramKeyV1(focusedProgram);
+  const seededFocusedProgramKeyRef = useRef<string>("");
+  return { session, seededFocusedProgramKeyRef, focusedProgramKey, activeToolIdRef, writeToolRegister, focusedSpawnedId, focusedApp, sessionLayoutBeforeSpawnRef, shellLayout, activeWindowIdRef, appLabelsOverlay, uiTerminology, uiLocale, dispatch, scope, loadedPluginsRef, openDocumentSessionsRef, closeDocumentRef, documentAttachmentLanesRef, identity, sessionRef, shellSessionLaneRef, refreshUi, reportRefreshFault, establishPrimaryWithShardRetry, pluginSupervisorByIdRef, sessionHumanKey, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, loadedPlugins, sessionWorkRef, sealedInstancesRef, openDocumentRef, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef, inferencePortOwnerRef, inferencePortOpeningRef, verifiedSessionAuthorityRef, identityRef, retiredSessionDocumentOwnersRef, inferencePortEpochRef, ensureBackboneWorker, inferencePortAuthorityRef, browserActorUiByRuntimeKeyRef, shellStateRef, applyHistoryPatch, applyLeftoverInteractionView, leftoverReplaceRefreshBodiesV1, refreshSpawnedUi };
 }

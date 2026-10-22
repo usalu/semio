@@ -99,7 +99,7 @@ test("a held SQLite lease file is detected by the kernel lock and released locks
 test("queue tickets of living processes hold their unit and those of dead ones do not",async()=>{
  reset();
  const ticket=(pid:number)=>"0000000abc-"+pid.toString(36).padStart(7,"0")+"-owner";
- const dead=Bun.spawnSync(["true"]).pid;
+ const dead=Bun.spawnSync([process.execPath,"-e","0"]).pid;
  file("q/a.queue/"+ticket(process.pid),1,DAY);file("z/a.queue/"+ticket(dead),1,DAY);file("y/a.queue/not-a-ticket",1,DAY);
  const live=await measureCacheTreeV1(join(workspace,"q"),ports(),100),gone=await measureCacheTreeV1(join(workspace,"z"),ports(),100),odd=await measureCacheTreeV1(join(workspace,"y"),ports(),100);
  expect(await probeCacheHeldV1(live,ports())).toBe("pid:"+process.pid);

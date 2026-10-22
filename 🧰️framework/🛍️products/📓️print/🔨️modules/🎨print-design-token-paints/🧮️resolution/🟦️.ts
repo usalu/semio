@@ -77,7 +77,7 @@ export function loadPrintDesignTokens(): PrintDesignTokens {
 
 /** 🎨️ Renders the canonical LaTeX stylesheet text from framework design-token paints. */
 export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = loadPrintDesignTokens()): string {
-  const lines: string[] = ["% Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
+  const lines: string[] = ["% Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
   for (const [key, hex] of Object.entries(tokens.colors)) lines.push(`\\definecolor{${latexColorKey(key)}}{HTML}{${hex.replace(/^#/, "")}}`);
   lines.push("");
   const unitFactor = remFactor(tokens.spacing.compact ?? "0.2rem");

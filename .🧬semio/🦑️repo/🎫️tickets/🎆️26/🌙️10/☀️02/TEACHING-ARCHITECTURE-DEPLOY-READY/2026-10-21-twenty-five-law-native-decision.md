@@ -1,0 +1,5 @@
+# Twenty-Five-Law Native Decision
+
+Actual Native96815 exited1/null without cancellation at21:49:58Z, before collecting all25 selected laws. Frozen original52776B/SHA236b6615a0b9e0ae98f02235a4817e716da493a477a2d3045cf87f2755e922b3. Its complete worker packet identifies snapshots/2d61db03258b7af9601a3b5896c190710d0579138ea3123de459355e2c1eadd9.json,124213751B,manifestVersion1,manifestProjectsnull,manifestDependencies873,check snapshot-manifest. This establishes the exact refused current run input.
+
+57 postreads had0 errors and one buildmain peer delta; host unchanged, artifact empty, ancestors unchanged. Host postbodies do not establish loaded revisions. Root common ledger has no active Native lane. No retry, cache deletion, peer action, legacy acceptance or cancellation. Cargo implements a clean current-store owner lifecycle correction; two Low agents audit contract and terminal freeze. Source286 metadata remains prepared only, historical runnable a668 seals unchanged. Prefix, captured neutral, controller and redeploy artifact remain unproven.

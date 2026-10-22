@@ -1,5 +1,5 @@
 /** 🔁️ Board2dHost lifecycle and sync: the layout effect that creates the board session and the scene sync effects that feed the session and the canvas appearance. */
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "../../⚛️react-port/🟦️.ts";
 import { useCanvasAppearanceSync } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1, type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";

@@ -120,7 +120,7 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
 #[test]
 fn playback_snapshot_installed_supplier_preserves_actual_owned_payload(){
  use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,RetainedCloneGrant};use semio_framework_value_factory::FactorySharedRetirement;use std::sync::Arc;
- let snapshot=Arc::new(decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).unwrap());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<Mp3Snapshot>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Mp3Snapshot>::default());let mut owner=FactorySharedRetirement::new(snapshot,factory);
+ let snapshot=Arc::new(decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).unwrap());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<Mp3Snapshot>>=Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Mp3Snapshot>::default());let mut owner=FactorySharedRetirement::new(snapshot,factory);
  for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());assert!(owner.close_step(grant).unwrap().progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty());
 }
 

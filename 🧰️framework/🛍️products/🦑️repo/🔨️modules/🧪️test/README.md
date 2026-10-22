@@ -36,30 +36,30 @@ same testing layout as other semantic owners.
 ## Commands
 
 ```bash
-bun run dashboard run @semio-tech/repo-test-domain:test-discover                 # every case the build graph will generate a project for
-bun run dashboard run @semio-tech/repo-test-domain:test-doctor                   # toolchains; a missing one fails setup, never skips
-bun run dashboard run @semio-tech/repo-test-domain:test-contract                 # everything provable without executing a test
-bun run dashboard run @semio-tech/repo-test-domain:test-oracle -- <level>         # the reference implementation only
-bun run dashboard run @semio-tech/repo-test-domain:test-subject -- <level>         # this repository's implementations only
-bun run dashboard run @semio-tech/repo-test-domain:test-parity -- <level>         # oracle + subjects + semantic comparison
-bun run dashboard run @semio-tech/repo-test-domain:test -- <level>         # contract, then parity
-bun run dashboard run @semio-tech/repo-test-domain:test-report                   # re-render JUnit from the last run
-bun run dashboard run @semio-tech/repo-test-domain:test-clean -- [--dry] [--stale]  # marked generated test state, nothing else
-bun run dashboard run @semio-tech/repo-test-domain:test-dependency               # oracle purity + production reachability
-bun run dashboard run @semio-tech/repo-test-domain:test-inventory                # runs the owner's production bridge; runtime = manifest = tests
-bun run dashboard run @semio-tech/repo-test-domain:test-fixture-generate
-bun run dashboard run @semio-tech/repo-test-domain:test-fixture-reproduce
-bun run dashboard run @semio-tech/repo-test-domain:test-fixture-verify
-bun run dashboard run @semio-tech/repo-test-domain:test-fixture-audit
-bun run dashboard run @semio-tech/repo-test-domain:test-probe -- [--json]        # lists external measurement tools and their qualification status
-bun run dashboard run @semio-tech/repo-test-domain:test-matrix -- [--enforce]     # the 16-dimension coverage report; --enforce applies the 6 release gates
-bun run dashboard run @semio-tech/repo-test-domain:test-gc -- [--apply]       # mark-and-sweep over the fixture CAS and run directories; dry by default
+repo run @semio-tech/repo-test-domain:test-discover                 # every case the build graph will generate a project for
+repo run @semio-tech/repo-test-domain:test-doctor                   # toolchains; a missing one fails setup, never skips
+repo run @semio-tech/repo-test-domain:test-contract                 # everything provable without executing a test
+repo run @semio-tech/repo-test-domain:test-oracle -- <level>         # the reference implementation only
+repo run @semio-tech/repo-test-domain:test-subject -- <level>         # this repository's implementations only
+repo run @semio-tech/repo-test-domain:test-parity -- <level>         # oracle + subjects + semantic comparison
+repo run @semio-tech/repo-test-domain:test -- <level>         # contract, then parity
+repo run @semio-tech/repo-test-domain:test-report                   # re-render JUnit from the last run
+repo run @semio-tech/repo-test-domain:test-clean -- [--dry] [--stale]  # marked generated test state, nothing else
+repo run @semio-tech/repo-test-domain:test-dependency               # oracle purity + production reachability
+repo run @semio-tech/repo-test-domain:test-inventory                # runs the owner's production bridge; runtime = manifest = tests
+repo run @semio-tech/repo-test-domain:test-fixture-generate
+repo run @semio-tech/repo-test-domain:test-fixture-reproduce
+repo run @semio-tech/repo-test-domain:test-fixture-verify
+repo run @semio-tech/repo-test-domain:test-fixture-audit
+repo run @semio-tech/repo-test-domain:test-probe -- [--json]        # lists external measurement tools and their qualification status
+repo run @semio-tech/repo-test-domain:test-matrix -- [--enforce]     # the 16-dimension coverage report; --enforce applies the 6 release gates
+repo run @semio-tech/repo-test-domain:test-gc -- [--apply]       # mark-and-sweep over the fixture CAS and run directories; dry by default
 ```
 
 `--owner <path>`, `--owner-root <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;
 `--implementation <id>` narrows their subject implementations. `discover` lists all cases.
 Choose **New Task** (`Ctrl+B n`), search `repo test` plus the phase and select its registered target. Extra selectors go in **Arguments**, results appear in the task output and the task menu controls cancellation. Every
-test owner has one generated project (`bun repo run <project>:lint|test`): `lint` runs its contract phase and `test` runs its cases
+test owner has one generated project (`repo run <project>:lint|test`): `lint` runs its contract phase and `test` runs its cases
 (`cases <owner> [level] [--facet <phase>] [--case <slug>]`), the level and selection passed as arguments.
 
 Protocol v2 defines the full selector vocabulary — `--artifact`, `--standard`, `--subset`,
@@ -103,9 +103,9 @@ A runtime mutation is owned by the **smallest semantic subset**, never by an art
 wildcard scope — a cross-subset operation declares an explicit typed `compound` instead of falling
 back to the whole artifact. The owner's `🔮️oracles/🔣️.json` carries a `MutationManifest` naming, per
 mutation, the production dispatch variant it corresponds to and the outcome classes
-(`applied|no-op|empty|disjoint|rejected`) it can reach. `bun run dashboard run @semio-tech/repo-test-domain:test-inventory` runs the owner's
+(`applied|no-op|empty|disjoint|rejected`) it can reach. `repo run @semio-tech/repo-test-domain:test-inventory` runs the owner's
 **production mutation bridge** (`🏭️bridge/📜️script.ts`, discovered by walking up from the owner) and
-`bun run dashboard run @semio-tech/repo-test-domain:test-contract` then requires runtime dispatch, the manifest and the claimed test catalog
+`repo run @semio-tech/repo-test-domain:test-contract` then requires runtime dispatch, the manifest and the claimed test catalog
 to agree **exactly** — a mutation reachable in production and missing from the manifest, or declared in
 the manifest with no dispatch behind it, is a blocking breach, not a coverage footnote.
 

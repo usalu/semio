@@ -349,24 +349,9 @@ fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
     false
 }
 
-impl MutationDiff<AviSnapshot> for AviDiff {
-    fn apply(&self, base: &AviSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<AviSnapshot> {
-        if let Some(diff) = &self.streams {
-            validate_indexed(&base.streams, diff, validate_stream_diff)?;
-        }
-        if let Some(diff) = &self.unknown_chunks {
-            validate_indexed(&base.unknown_chunks, diff, |_, _| Ok(()))?;
-        }
-        Ok(AviSnapshot {
-            schema: base.schema.clone(),
-            main_header: self.main_header.clone().unwrap_or_else(|| base.main_header.clone()),
-            streams: self.streams.as_ref().map_or_else(|| base.streams.clone(), |sd| apply_indexed(&base.streams, sd, apply_stream_diff)),
-            idx1_present: self.idx1_present.unwrap_or(base.idx1_present),
-            unknown_chunks: self.unknown_chunks.as_ref().map_or_else(|| base.unknown_chunks.clone(), |cd| apply_indexed(&base.unknown_chunks, cd, apply_riff_diff)),
-            hdrl_extra: self.hdrl_extra.clone().unwrap_or_else(|| base.hdrl_extra.clone()),
-        })
-    }
+impl MutationDiff<AviSnapshot> for AviDiff {}
 
+impl protocol::ColdMutationDiff<AviSnapshot> for AviDiff {
     fn absorb(&mut self, other: Self) {
         if other.main_header.is_some() {
             self.main_header = other.main_header;
@@ -388,6 +373,25 @@ impl MutationDiff<AviSnapshot> for AviDiff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut AviSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.streams {
+            validate_indexed(&base.streams, diff, validate_stream_diff)?;
+        }
+        if let Some(diff) = &self.unknown_chunks {
+            validate_indexed(&base.unknown_chunks, diff, |_, _| Ok(()))?;
+        }
+        *unpublished = AviSnapshot {
+            schema: base.schema.clone(),
+            main_header: self.main_header.clone().unwrap_or_else(|| base.main_header.clone()),
+            streams: self.streams.as_ref().map_or_else(|| base.streams.clone(), |sd| apply_indexed(&base.streams, sd, apply_stream_diff)),
+            idx1_present: self.idx1_present.unwrap_or(base.idx1_present),
+            unknown_chunks: self.unknown_chunks.as_ref().map_or_else(|| base.unknown_chunks.clone(), |cd| apply_indexed(&base.unknown_chunks, cd, apply_riff_diff)),
+            hdrl_extra: self.hdrl_extra.clone().unwrap_or_else(|| base.hdrl_extra.clone()),
+        };
+        Ok(())
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -399,6 +403,12 @@ fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApply
 }
 
 impl DiffAlgebra<AviSnapshot> for AviDiff {
+    fn is_empty(&self) -> bool {
+        self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() && self.hdrl_extra.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<AviSnapshot> for AviDiff {
     fn inverse(&self, base: &AviSnapshot) -> Self {
         Self {
             main_header: self.main_header.as_ref().map(|_| base.main_header.clone()),
@@ -407,9 +417,6 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
             unknown_chunks: self.unknown_chunks.as_ref().map(|chunks| inverse_indexed(chunks, &base.unknown_chunks, |_, chunk: &RiffChunk| chunk.clone())).filter(|chunks| !chunks.is_empty()),
             hdrl_extra: self.hdrl_extra.as_ref().map(|_| base.hdrl_extra.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() && self.hdrl_extra.is_none()
     }
 }
 

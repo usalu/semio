@@ -3,6 +3,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { generatorProjectedInputView, loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseGeneratorInputProjection } from "@semio-tech/repo-lib/inventory";
 import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { loadWgpuPackageTaxonomy, renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
+import { runtimeStdinStreamV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /** ⚙️ Executes exact preview, generation, or freshness commands without writing outside six owned leaves. */
 export async function runWgpuPackageGenerator(repoRoot: string, mode: string, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly isCancelled?: () => boolean } = {}): Promise<void> {
@@ -22,7 +23,7 @@ export async function runWgpuPackageGenerator(repoRoot: string, mode: string, op
     if (mode !== "preview" || selected !== protocol.protocol) throw new Error("WGPU projected inputs require the exact preview protocol");
     const chunks: Uint8Array[] = [];
     let size = 0;
-    for await (const chunk of Bun.stdin.stream()) {
+    for await (const chunk of runtimeStdinStreamV1()) {
       if (isCancelled()) throw new Error("WGPU package preview cancelled");
       size += chunk.byteLength;
       if (size > protocol.maxBytes) throw new Error("WGPU projected inputs exceed the declared byte bound");

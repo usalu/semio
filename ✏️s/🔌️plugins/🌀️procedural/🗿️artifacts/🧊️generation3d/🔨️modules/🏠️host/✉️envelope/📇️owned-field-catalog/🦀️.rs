@@ -10,15 +10,15 @@ pub struct Generation3dEnvelopeOwnedFieldCatalog;
 /// 📦️ Installs Generation3d's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
 pub fn generation3d_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Generation3dSnapshot, Generation3dMutation> {
-    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
 }
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3dMutation> for Generation3dEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dMutation>::default()),
             self.edit_history_decoder(),
         )
         .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>)
@@ -45,7 +45,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Gen
     }
 
     fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation3dMutation>>> {
-        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
     }
 }
 //#endregion 🔖️TypedOwnedEnvelopeCatalog

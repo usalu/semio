@@ -36,6 +36,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "tiny-attribute", kind: "set-tiny-attribute", record: "SetTinyAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set tiny attribute", "Tiny-Attribut setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetTinyAttribute
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetTinyAttribute>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, name, value, index } = self;
         {
@@ -49,12 +61,6 @@ where
         let Self { path, name, .. } = self;
         let (value, index) = prior_attribute(base, path, name);
         Ok(vec![Op::from(SetTinyAttribute { path: path.clone(), name: name.clone(), value, index })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set tiny attribute", "Tiny-Attribut setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

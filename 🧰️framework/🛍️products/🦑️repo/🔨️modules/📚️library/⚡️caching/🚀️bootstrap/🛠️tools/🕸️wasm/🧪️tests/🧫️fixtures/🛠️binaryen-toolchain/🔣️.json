@@ -36,5 +36,6 @@
     "binaryen-version_130/bin/wasm-opt\ninvalid"
   ],
   "target": "deps-wasm-opt",
+  "wasmTarget": "deps-wasm",
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts"
 }

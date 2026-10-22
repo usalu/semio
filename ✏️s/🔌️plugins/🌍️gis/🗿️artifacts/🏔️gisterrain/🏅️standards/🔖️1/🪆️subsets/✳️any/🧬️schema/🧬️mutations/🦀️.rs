@@ -15,7 +15,7 @@ pub use crate::schema::operations::*;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[mutations(snapshot = GisTerrainSnapshot, diff = GisTerrainDiff, schema = "gis.gisterrain")]
+#[mutations(snapshot = GisTerrainSnapshot, diff = GisTerrainDiff, schema = "gis.gisterrain", reference = GisTerrainSnapshot, reference_diff = GisTerrainDiff)]
 pub enum GisTerrainMutation {
     ChangeExaggeration(ChangeExaggeration),
     ChangeImportedFeatures(ChangeImportedFeatures),

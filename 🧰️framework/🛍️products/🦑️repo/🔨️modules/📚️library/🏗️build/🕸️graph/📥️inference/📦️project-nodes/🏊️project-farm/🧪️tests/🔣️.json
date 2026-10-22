@@ -1,0 +1,1414 @@
+{
+ "jobs": [
+  {
+   "n": 0,
+   "delay": 35,
+   "value": 7
+  },
+  {
+   "n": 1,
+   "delay": 21,
+   "value": 8
+  },
+  {
+   "n": 2,
+   "delay": 55,
+   "value": 11
+  },
+  {
+   "n": 3,
+   "delay": 10,
+   "value": 16
+  },
+  {
+   "n": 4,
+   "delay": 38,
+   "value": 23
+  },
+  {
+   "n": 5,
+   "delay": 43,
+   "value": 32
+  },
+  {
+   "n": 6,
+   "delay": 9,
+   "value": 43
+  },
+  {
+   "n": 7,
+   "delay": 14,
+   "value": 56
+  },
+  {
+   "n": 8,
+   "delay": 37,
+   "value": 71
+  },
+  {
+   "n": 9,
+   "delay": 10,
+   "value": 88
+  },
+  {
+   "n": 10,
+   "delay": 21,
+   "value": 107
+  },
+  {
+   "n": 11,
+   "delay": 57,
+   "value": 128
+  },
+  {
+   "n": 12,
+   "delay": 46,
+   "value": 151
+  },
+  {
+   "n": 13,
+   "delay": 57,
+   "value": 176
+  },
+  {
+   "n": 14,
+   "delay": 46,
+   "value": 203
+  },
+  {
+   "n": 15,
+   "delay": 16,
+   "value": 232
+  },
+  {
+   "n": 16,
+   "delay": 21,
+   "value": 263
+  },
+  {
+   "n": 17,
+   "delay": 25,
+   "value": 296
+  },
+  {
+   "n": 18,
+   "delay": 21,
+   "value": 331
+  },
+  {
+   "n": 19,
+   "delay": 55,
+   "value": 368
+  },
+  {
+   "n": 20,
+   "delay": 38,
+   "value": 407
+  },
+  {
+   "n": 21,
+   "delay": 24,
+   "value": 448
+  },
+  {
+   "n": 22,
+   "delay": 2,
+   "value": 491
+  },
+  {
+   "n": 23,
+   "delay": 15,
+   "value": 536
+  },
+  {
+   "n": 24,
+   "delay": 41,
+   "value": 583
+  },
+  {
+   "n": 25,
+   "delay": 51,
+   "value": 632
+  },
+  {
+   "n": 26,
+   "delay": 54,
+   "value": 683
+  },
+  {
+   "n": 27,
+   "delay": 34,
+   "value": 736
+  },
+  {
+   "n": 28,
+   "delay": 59,
+   "value": 791
+  },
+  {
+   "n": 29,
+   "delay": 28,
+   "value": 848
+  },
+  {
+   "n": 30,
+   "delay": 4,
+   "value": 907
+  },
+  {
+   "n": 31,
+   "delay": 35,
+   "value": 968
+  },
+  {
+   "n": 32,
+   "delay": 22,
+   "value": 18
+  },
+  {
+   "n": 33,
+   "delay": 41,
+   "value": 83
+  },
+  {
+   "n": 34,
+   "delay": 23,
+   "value": 150
+  },
+  {
+   "n": 35,
+   "delay": 44,
+   "value": 219
+  },
+  {
+   "n": 36,
+   "delay": 28,
+   "value": 290
+  },
+  {
+   "n": 37,
+   "delay": 1,
+   "value": 363
+  },
+  {
+   "n": 38,
+   "delay": 14,
+   "value": 438
+  },
+  {
+   "n": 39,
+   "delay": 18,
+   "value": 515
+  },
+  {
+   "n": 40,
+   "delay": 19,
+   "value": 594
+  },
+  {
+   "n": 41,
+   "delay": 7,
+   "value": 675
+  },
+  {
+   "n": 42,
+   "delay": 4,
+   "value": 758
+  },
+  {
+   "n": 43,
+   "delay": 54,
+   "value": 843
+  },
+  {
+   "n": 44,
+   "delay": 35,
+   "value": 930
+  },
+  {
+   "n": 45,
+   "delay": 46,
+   "value": 6
+  },
+  {
+   "n": 46,
+   "delay": 49,
+   "value": 97
+  },
+  {
+   "n": 47,
+   "delay": 18,
+   "value": 190
+  }
+ ],
+ "version": 1,
+ "plan": [
+  {
+   "projects": 3741,
+   "environment": {},
+   "cores": 10
+  },
+  {
+   "projects": 3741,
+   "environment": {},
+   "cores": 2
+  },
+  {
+   "projects": 3741,
+   "environment": {},
+   "cores": 3
+  },
+  {
+   "projects": 3741,
+   "environment": {},
+   "cores": 64
+  },
+  {
+   "projects": 23,
+   "environment": {},
+   "cores": 10
+  },
+  {
+   "projects": 24,
+   "environment": {},
+   "cores": 10
+  },
+  {
+   "projects": 47,
+   "environment": {},
+   "cores": 10
+  },
+  {
+   "projects": 12,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "auto"
+   },
+   "cores": 10
+  },
+  {
+   "projects": 3741,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "0"
+   },
+   "cores": 10
+  },
+  {
+   "projects": 3741,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "off"
+   },
+   "cores": 10
+  },
+  {
+   "projects": 3741,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "False"
+   },
+   "cores": 10
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "3"
+   },
+   "cores": 1
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": " 7 "
+   },
+   "cores": 1
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "64"
+   },
+   "cores": 1
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "65"
+   },
+   "cores": 1
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "x"
+   },
+   "cores": 1
+  },
+  {
+   "projects": 5,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": "-1"
+   },
+   "cores": 1
+  },
+  {
+   "projects": 1000,
+   "environment": {
+    "SEMIO_GRAPH_WORKERS": ""
+   },
+   "cores": 4
+  }
+ ],
+ "languages": [
+  {
+   "environment": {}
+  },
+  {
+   "environment": {
+    "LANG": "de_CH.UTF-8"
+   }
+  },
+  {
+   "environment": {
+    "LANG": "en_US.UTF-8"
+   }
+  },
+  {
+   "environment": {
+    "LANG": "fr_FR.UTF-8"
+   }
+  },
+  {
+   "environment": {
+    "LANG": "fr_FR.UTF-8",
+    "LC_ALL": "de"
+   }
+  },
+  {
+   "environment": {
+    "SEMIO_LANGUAGE": "EN",
+    "LANG": "de_DE"
+   }
+  },
+  {
+   "environment": {
+    "LC_MESSAGES": "de@euro"
+   }
+  },
+  {
+   "environment": {
+    "LC_ALL": "C",
+    "LANG": "en-GB"
+   }
+  }
+ ],
+ "messages": [
+  {
+   "key": "waiting",
+   "fields": {
+    "workers": 6,
+    "projects": 3741
+   }
+  },
+  {
+   "key": "starting",
+   "fields": {
+    "workers": 4,
+    "megabytes": 2048
+   }
+  },
+  {
+   "key": "serial",
+   "fields": {
+    "projects": 3741,
+    "reason": "host capacity"
+   }
+  },
+  {
+   "key": "refused",
+   "fields": {
+    "reason": "identity differs"
+   }
+  },
+  {
+   "key": "lost",
+   "fields": {
+    "reason": "exited"
+   }
+  },
+  {
+   "key": "degraded",
+   "fields": {
+    "reason": "restarts: exited"
+   }
+  },
+  {
+   "key": "failed",
+   "fields": {
+    "project": "@semio-tech/os-command-rs",
+    "reason": "boom"
+   }
+  },
+  {
+   "key": "declined",
+   "fields": {
+    "project": "p"
+   }
+  },
+  {
+   "key": "recycled",
+   "fields": {
+    "worker": 2,
+    "megabytes": 2101
+   }
+  },
+  {
+   "key": "finished",
+   "fields": {
+    "adopted": 3700,
+    "projects": 3741,
+    "workers": 6,
+    "seconds": 412,
+    "failed": 3,
+    "lost": 1,
+    "recycled": 5
+   }
+  }
+ ],
+ "runtime": [
+  {
+   "runtime": "bun",
+   "megabytes": 2048
+  },
+  {
+   "runtime": "bun",
+   "megabytes": 1000
+  },
+  {
+   "runtime": "node",
+   "megabytes": 2048
+  },
+  {
+   "runtime": "deno",
+   "megabytes": 2048
+  }
+ ],
+ "corpus": {
+  "closures": [
+   {
+    "namespace": "build-input-closures",
+    "text": "{\"files\":[\"a.ts\",\"b.ts\"]}"
+   },
+   {
+    "namespace": "build-input-closures",
+    "text": "{\"files\":[\"a.ts\",\"c.ts\"]}"
+   },
+   {
+    "namespace": "build-lock-closures",
+    "text": "{\"lock\":\"alpha\"}"
+   },
+   {
+    "namespace": "build-lock-closures",
+    "text": "{\"lock\":\"beta\",\"crates\":3}"
+   },
+   {
+    "namespace": "build-input-closures",
+    "text": "{\"files\":[]}"
+   }
+  ],
+  "blocks": [
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/0.ts\",\"fact\":{\"size\":0}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/1.ts\",\"fact\":{\"size\":1}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/2.ts\",\"fact\":{\"size\":2}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/3.ts\",\"fact\":{\"size\":3}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/4.ts\",\"fact\":{\"size\":4}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/5.ts\",\"fact\":{\"size\":5}}]",
+   "[{\"kind\":\"file\",\"path\":\"/w/shared/6.ts\",\"fact\":{\"size\":6}}]"
+  ],
+  "projects": [
+   {
+    "root": "crates/p00",
+    "record": "{\"name\":\"p00\",\"value\":0}",
+    "closures": [
+     0,
+     1
+    ],
+    "blocks": [
+     0,
+     1,
+     3
+    ],
+    "receipts": [
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     },
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/6ed6d86e942a1b1ab9d4d7d4.json.records/0-0-fdeec26126b42c20.pack",
+      "text": "pack 0 0 pack"
+     },
+     {
+      "name": "np/6ed6d86e942a1b1ab9d4d7d4.json.records/0-1-a99cae2d56eeaf7a.idx",
+      "text": "pack 0 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p01",
+    "record": "{\"name\":\"p01\",\"value\":1}",
+    "closures": [
+     1,
+     4
+    ],
+    "blocks": [
+     1,
+     3,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     },
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/a08bfbc7c61b09def6b194a4.json.records/1-0-3c6f84b07f30057f.pack",
+      "text": "pack 1 0 pack"
+     },
+     {
+      "name": "np/a08bfbc7c61b09def6b194a4.json.records/1-1-02a707fcfaf9e328.idx",
+      "text": "pack 1 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p02",
+    "record": "{\"name\":\"p02\",\"value\":4}",
+    "closures": [
+     2
+    ],
+    "blocks": [
+     2,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     },
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     },
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/9520e10e4dd03b17c425b892.json.records/2-0-893b3d98b15e6f23.pack",
+      "text": "pack 2 0 pack"
+     },
+     {
+      "name": "np/9520e10e4dd03b17c425b892.json.records/2-1-ea75d5cd204bbf9c.idx",
+      "text": "pack 2 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p03",
+    "record": "{\"name\":\"p03\",\"value\":9}",
+    "closures": [
+     0,
+     3
+    ],
+    "blocks": [
+     0,
+     3,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     },
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     },
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/c1dadb0272e919355a85fa5b.json.records/3-0-89971071d58f0c98.pack",
+      "text": "pack 3 0 pack"
+     },
+     {
+      "name": "np/c1dadb0272e919355a85fa5b.json.records/3-1-18166a411aedf667.idx",
+      "text": "pack 3 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p04",
+    "record": "{\"name\":\"p04\",\"value\":16}",
+    "closures": [
+     3,
+     4
+    ],
+    "blocks": [
+     0,
+     2,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     },
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     },
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/2e47eeb14efdc1654afeb35f.json.records/4-0-51d172f7b44d5920.pack",
+      "text": "pack 4 0 pack"
+     },
+     {
+      "name": "np/2e47eeb14efdc1654afeb35f.json.records/4-1-183152ef5198d338.idx",
+      "text": "pack 4 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p05",
+    "record": "{\"name\":\"p05\",\"value\":25}",
+    "closures": [
+     0,
+     1
+    ],
+    "blocks": [
+     1,
+     4,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     },
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     },
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/8ec2fe5323e1062d813d66b9.json.records/5-0-f935d874dea072a1.pack",
+      "text": "pack 5 0 pack"
+     },
+     {
+      "name": "np/8ec2fe5323e1062d813d66b9.json.records/5-1-69e8cf597670eb6f.idx",
+      "text": "pack 5 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p06",
+    "record": "{\"name\":\"p06\",\"value\":36}",
+    "closures": [
+     1,
+     4
+    ],
+    "blocks": [
+     2,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     },
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     },
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/d2a69da14ce1e9d24e0ef46d.json.records/6-0-0bcc06ec3ed713ef.pack",
+      "text": "pack 6 0 pack"
+     },
+     {
+      "name": "np/d2a69da14ce1e9d24e0ef46d.json.records/6-1-16f48265efa72327.idx",
+      "text": "pack 6 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p07",
+    "record": "{\"name\":\"p07\",\"value\":49}",
+    "closures": [
+     2
+    ],
+    "blocks": [
+     0,
+     1,
+     3
+    ],
+    "receipts": [
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     },
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     },
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/21416e9ab874e3fbfb78a4bc.json.records/7-0-a6bb0cb2a06f2a65.pack",
+      "text": "pack 7 0 pack"
+     },
+     {
+      "name": "np/21416e9ab874e3fbfb78a4bc.json.records/7-1-b08f565fde2bae10.idx",
+      "text": "pack 7 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p08",
+    "record": "{\"name\":\"p08\",\"value\":64}",
+    "closures": [
+     0,
+     3
+    ],
+    "blocks": [
+     1,
+     3,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     },
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     },
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/70cfa43c42724fc7de90cc50.json.records/8-0-d74336c97c4e823d.pack",
+      "text": "pack 8 0 pack"
+     },
+     {
+      "name": "np/70cfa43c42724fc7de90cc50.json.records/8-1-9d30220951bc99c8.idx",
+      "text": "pack 8 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p09",
+    "record": "{\"name\":\"p09\",\"value\":81}",
+    "closures": [
+     3,
+     4
+    ],
+    "blocks": [
+     2,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     },
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     },
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/ec4e23b0a9614bcf023675eb.json.records/9-0-c5839dbef8c2224c.pack",
+      "text": "pack 9 0 pack"
+     },
+     {
+      "name": "np/ec4e23b0a9614bcf023675eb.json.records/9-1-8ec8f355f76dbf87.idx",
+      "text": "pack 9 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p10",
+    "record": "{\"name\":\"p10\",\"value\":100}",
+    "closures": [
+     0,
+     1
+    ],
+    "blocks": [
+     0,
+     3,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     },
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     },
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/a60820485b37ff4d289cde63.json.records/10-0-b88c11cc03d98def.pack",
+      "text": "pack 10 0 pack"
+     },
+     {
+      "name": "np/a60820485b37ff4d289cde63.json.records/10-1-e9a20c606129bbde.idx",
+      "text": "pack 10 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p11",
+    "record": "{\"name\":\"p11\",\"value\":121}",
+    "closures": [
+     1,
+     4
+    ],
+    "blocks": [
+     0,
+     2,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     },
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/b149ee4de5bad416c0696ddd.json.records/11-0-502dafcacc0bbc44.pack",
+      "text": "pack 11 0 pack"
+     },
+     {
+      "name": "np/b149ee4de5bad416c0696ddd.json.records/11-1-fb675a8b59560ddd.idx",
+      "text": "pack 11 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p12",
+    "record": "{\"name\":\"p12\",\"value\":144}",
+    "closures": [
+     2
+    ],
+    "blocks": [
+     1,
+     4,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     },
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/3f6fe8de0adce0b672a9b9b5.json.records/12-0-3971680c3dbdb21c.pack",
+      "text": "pack 12 0 pack"
+     },
+     {
+      "name": "np/3f6fe8de0adce0b672a9b9b5.json.records/12-1-fedf4c807eee7865.idx",
+      "text": "pack 12 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p13",
+    "record": "{\"name\":\"p13\",\"value\":169}",
+    "closures": [
+     0,
+     3
+    ],
+    "blocks": [
+     2,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     },
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     },
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/4dc6fb92759adf2eff010d95.json.records/13-0-790e1c08afc876bf.pack",
+      "text": "pack 13 0 pack"
+     },
+     {
+      "name": "np/4dc6fb92759adf2eff010d95.json.records/13-1-1b2706511734db65.idx",
+      "text": "pack 13 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p14",
+    "record": "{\"name\":\"p14\",\"value\":196}",
+    "closures": [
+     3,
+     4
+    ],
+    "blocks": [
+     0,
+     1,
+     3
+    ],
+    "receipts": [
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     },
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     },
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/c961a86e3e2060c1dfcdd55e.json.records/14-0-e369497e0dff4c9f.pack",
+      "text": "pack 14 0 pack"
+     },
+     {
+      "name": "np/c961a86e3e2060c1dfcdd55e.json.records/14-1-0a242caad5e136ec.idx",
+      "text": "pack 14 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p15",
+    "record": "{\"name\":\"p15\",\"value\":225}",
+    "closures": [
+     0,
+     1
+    ],
+    "blocks": [
+     1,
+     3,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/a4115d9f3f96262d77f214e7.json",
+      "text": "{\"crate\":\"crate-4\"}"
+     },
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     },
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/5297c3888919a2a6b51e99b4.json.records/15-0-894fbbae8252b465.pack",
+      "text": "pack 15 0 pack"
+     },
+     {
+      "name": "np/5297c3888919a2a6b51e99b4.json.records/15-1-9a2f2851320776fd.idx",
+      "text": "pack 15 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p16",
+    "record": "{\"name\":\"p16\",\"value\":256}",
+    "closures": [
+     1,
+     4
+    ],
+    "blocks": [
+     2,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/447b9f56a70936df75f3cc39.json",
+      "text": "{\"crate\":\"crate-5\"}"
+     },
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     },
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/9bcb534ed6d4ba33903a1a41.json.records/16-0-fcce7f80d7a3e404.pack",
+      "text": "pack 16 0 pack"
+     },
+     {
+      "name": "np/9bcb534ed6d4ba33903a1a41.json.records/16-1-b44ae1070a60f29b.idx",
+      "text": "pack 16 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p17",
+    "record": "{\"name\":\"p17\",\"value\":289}",
+    "closures": [
+     2
+    ],
+    "blocks": [
+     0,
+     3,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/300452c649c6ddb00a806a1f.json",
+      "text": "{\"crate\":\"crate-6\"}"
+     },
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     },
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/b5c7b75b7dce5cceba6c93b5.json.records/17-0-07208f2955b04806.pack",
+      "text": "pack 17 0 pack"
+     },
+     {
+      "name": "np/b5c7b75b7dce5cceba6c93b5.json.records/17-1-d9620a71db86bc58.idx",
+      "text": "pack 17 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p18",
+    "record": "{\"name\":\"p18\",\"value\":324}",
+    "closures": [
+     0,
+     3
+    ],
+    "blocks": [
+     0,
+     2,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/587a00e87325618ed0c2f0a2.json",
+      "text": "{\"crate\":\"crate-7\"}"
+     },
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     },
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/b57fdff6872f2497d4e05ab7.json.records/18-0-810f965d8266e818.pack",
+      "text": "pack 18 0 pack"
+     },
+     {
+      "name": "np/b57fdff6872f2497d4e05ab7.json.records/18-1-a25386a2b8b5f90a.idx",
+      "text": "pack 18 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p19",
+    "record": "{\"name\":\"p19\",\"value\":361}",
+    "closures": [
+     3,
+     4
+    ],
+    "blocks": [
+     1,
+     4,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/d7d6336cc4993ef2d85e3717.json",
+      "text": "{\"crate\":\"crate-8\"}"
+     },
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     },
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/86e0f6e62cc94405e7286222.json.records/19-0-a91a04be904641bd.pack",
+      "text": "pack 19 0 pack"
+     },
+     {
+      "name": "np/86e0f6e62cc94405e7286222.json.records/19-1-593ab9a4434f231e.idx",
+      "text": "pack 19 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p20",
+    "record": "{\"name\":\"p20\",\"value\":400}",
+    "closures": [
+     0,
+     1
+    ],
+    "blocks": [
+     2,
+     6
+    ],
+    "receipts": [
+     {
+      "name": "rr/9ddaf38e2c7703e4b787c95b.json",
+      "text": "{\"crate\":\"crate-9\"}"
+     },
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     },
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/8478e7a8924d0cafe676a63d.json.records/20-0-34f354b5bf6f5c21.pack",
+      "text": "pack 20 0 pack"
+     },
+     {
+      "name": "np/8478e7a8924d0cafe676a63d.json.records/20-1-3a63f36d53f66436.idx",
+      "text": "pack 20 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p21",
+    "record": "{\"name\":\"p21\",\"value\":441}",
+    "closures": [
+     1,
+     4
+    ],
+    "blocks": [
+     0,
+     1,
+     3
+    ],
+    "receipts": [
+     {
+      "name": "rr/a5ba6c49dd5e38ae338c7328.json",
+      "text": "{\"crate\":\"crate-10\"}"
+     },
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     },
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/92e1fb5552fc02ccf7b63b56.json.records/21-0-a39a3a30d0681e0f.pack",
+      "text": "pack 21 0 pack"
+     },
+     {
+      "name": "np/92e1fb5552fc02ccf7b63b56.json.records/21-1-9078e26a924a8062.idx",
+      "text": "pack 21 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p22",
+    "record": "{\"name\":\"p22\",\"value\":484}",
+    "closures": [
+     2
+    ],
+    "blocks": [
+     1,
+     3,
+     4
+    ],
+    "receipts": [
+     {
+      "name": "rr/eb7a01b31f44793a2094c757.json",
+      "text": "{\"crate\":\"crate-0\"}"
+     },
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/bb1db922efa691bfbc0e2f1d.json.records/22-0-7f1bfbd2ffce117e.pack",
+      "text": "pack 22 0 pack"
+     },
+     {
+      "name": "np/bb1db922efa691bfbc0e2f1d.json.records/22-1-d8f7a5cc9326d8c1.idx",
+      "text": "pack 22 1 idx"
+     }
+    ]
+   },
+   {
+    "root": "crates/p23",
+    "record": "{\"name\":\"p23\",\"value\":529}",
+    "closures": [
+     0,
+     3
+    ],
+    "blocks": [
+     2,
+     5
+    ],
+    "receipts": [
+     {
+      "name": "rr/5b8b34ea1d55953ba30f88e8.json",
+      "text": "{\"crate\":\"crate-1\"}"
+     },
+     {
+      "name": "rr/9a8c7d5864d8fb17e58acd13.json",
+      "text": "{\"crate\":\"crate-2\"}"
+     },
+     {
+      "name": "rr/1ffb165983aec40418952bbc.json",
+      "text": "{\"crate\":\"crate-3\"}"
+     }
+    ],
+    "packs": [
+     {
+      "name": "np/8df63b2343ed8be346caefc1.json.records/23-0-9da0360829d8e968.pack",
+      "text": "pack 23 0 pack"
+     },
+     {
+      "name": "np/8df63b2343ed8be346caefc1.json.records/23-1-46592fa75435f2d3.idx",
+      "text": "pack 23 1 idx"
+     }
+    ]
+   }
+  ],
+  "workers": [
+   1,
+   2,
+   5
+  ],
+  "seeds": [
+   1,
+   7,
+   42
+  ]
+ }
+}

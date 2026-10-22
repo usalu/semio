@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../../../../tsconfig.json",
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/course-react-typecheck.tsbuildinfo",
@@ -17,7 +16,7 @@
       "@semio-tech/framework": ["../../../../../../📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/framework-server": ["../../../../../🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/ui-react/introduction": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/👋️introduction/🟦️.tsx"],
-      "@semio-tech/ui-react/i18n": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts"],
+      "@semio-tech/ui-react/i18n": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/🟦️.ts"],
       "@semio-tech/ui-react/chrome": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"],
       "@semio-tech/ui-react": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
       "dom-accessibility-api": ["../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"]

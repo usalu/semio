@@ -1,0 +1,15 @@
+# Final Focused Reuse and Block Review
+
+Static review of candidate report7e08854a69c362b88c903d68bf5198ebf10912fdde8de0da4a489c6b73bc3708, with author's subsequent owned observation delta.29 candidate leaves were independently opened nofollow, ordinary single-link, before/after descriptor and named epochs compared:28 match report; observation now75558B/SHA25654756999e2cb5f84e4631f49b005a49cb6be1fd93dc5d39853df8695ee8153dc, separately observed stable. No complete capture/ancestor-cohort proof is claimed by this leaf check.
+
+High attributes the24B net observation delta solely to parsing result JSON in the shared header/block budget before final physical fence and using record.value. I inspected that resulting code; exact old-body diff attribution is High's.
+
+No remaining concrete static blocker in this focused reuse/fixture/block candidate. Reuse always holds genuine managed consumer for nonempty refs; only exact stable leaf absence misses; present and absent delivery fences remain. Cold lean reader now nonblocking/fstat/first-primary/fatal UTF8. Observation removes volatile memo physical authority and reader unlink; actual bounded nofollow descriptor, dev/ino/mode ancestry, fatal UTF8, hash, closed rows, shared aggregate output/packed/node/row budget and physical delivery fences are present. Named missing block is typed strict refusal, initial absent header is ordinary miss. Errors/cancellation propagate rather than optional broad-catch recomputation.
+
+Inspected actual block parent/child tests: real publisher warm blocks, actual group invalidation and cold-header fresh publication; independent SQLite edges and SHA/Brotli reads; warmed isolated fault receipts require actual readerFailed/samePrimary/no producer increment/evidence retention; exact missing code, cancellation signal identity and secondary close evidence. Path tests exercise issued writer/reader, stale/nested fixture rejection, mapper coordinate cases, closed budgets and ordinary sink. These are authored tests, not executed results.
+
+New maintenance mapper separates exact live private fixture image/Original/control and child writer lease from canonical root/binding/namespace lease. Cargo must use it consistently in final GC; that integration is reviewed separately. Source-role literals automatically derive child entries; no runtimeSourceEntries metadata addition needed. Root must pin actual new/changed sources and direct witnesses, preserve actual law caps, then perform genuine Native validation.
+
+Scope excludes final Cargo multipart GC snapshot, later peer edits and any actual typecheck/test/build result. No Source function, helper, Native or cache effect ran in this review.
+
+Final renewal+peer adoption follow-up: see fixture-renewal-runtime-independent-review.md. Held report91816164 cohort34 + direct25 all independently hash/ordinary/nofollow/FD-name stable match. Integrated renewal blocker is resolved by reviewed sameallocation epoch issuer, no remaining concrete static blocker; actual Native remains unrun.

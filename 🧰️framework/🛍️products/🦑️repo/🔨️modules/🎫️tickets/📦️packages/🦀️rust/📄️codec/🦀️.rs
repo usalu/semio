@@ -37,6 +37,7 @@ enum GoMember {
     Text(&'static str, String),
     Object(&'static str, Vec<GoMember>),
     Strings(&'static str, Vec<String>),
+    Objects(&'static str, Vec<Vec<GoMember>>),
 }
 
 /// 🖨️ Renders members the way `json.MarshalIndent(value, "", "  ")` renders a struct.
@@ -51,6 +52,15 @@ fn render_members(members: &[GoMember], depth: usize) -> String {
         match member {
             GoMember::Text(name, value) => lines.push(format!("{indent}{}: {}", go_json_string(name), go_json_string(value))),
             GoMember::Object(name, nested) => lines.push(format!("{indent}{}: {}", go_json_string(name), render_members(nested, depth + 1))),
+            GoMember::Objects(name, values) => {
+                if values.is_empty() {
+                    lines.push(format!("{indent}{}: []", go_json_string(name)));
+                } else {
+                    let element_indent = "  ".repeat(depth + 2);
+                    let elements: Vec<String> = values.iter().map(|value| format!("{element_indent}{}", render_members(value, depth + 2))).collect();
+                    lines.push(format!("{indent}{}: [\n{}\n{indent}]", go_json_string(name), elements.join(",\n")));
+                }
+            }
             GoMember::Strings(name, values) => {
                 if values.is_empty() {
                     lines.push(format!("{indent}{}: []", go_json_string(name)));
@@ -146,7 +156,7 @@ pub fn decode_ticket_document(text: &str) -> TicketResult<Ticket> {
         _ => None,
     };
     let interactions: Vec<Interaction> = decode_array(members.get("interactions"), decode_interaction);
-    let mut agents: Vec<TicketAgent> = decode_array(members.get("agents"), decode_agent);
+    let agents: Vec<TicketAgent> = decode_array(members.get("agents"), decode_agent);
 
     let mut ticket = Ticket {
         year: 0,
@@ -164,32 +174,16 @@ pub fn decode_ticket_document(text: &str) -> TicketResult<Ticket> {
         plan,
         sessions: Vec::new(),
         interactions,
-        agents: Vec::new(),
+        agents,
         folder_path: String::new(),
         json_path: String::new(),
         important_path: String::new(),
     };
-    if ticket.description.is_empty() {
-        ticket.description = text_member("prompt");
-    }
-    match members.get("sessions") {
-        Some(Value::Array(entries)) if entries.iter().all(Value::is_string) => {
-            for entry in entries {
-                append_session_id(&mut ticket, entry.as_str().unwrap_or_default());
-            }
+    if let Some(Value::Array(entries)) = members.get("sessions") {
+        for entry in entries.iter().filter_map(Value::as_str) {
+            append_session_id(&mut ticket, entry);
         }
-        Some(value @ Value::Array(_)) => {
-            let legacy = decode_array(Some(value), decode_agent);
-            for agent in &legacy {
-                append_session_id(&mut ticket, &agent.session);
-            }
-            if agents.is_empty() {
-                agents = legacy;
-            }
-        }
-        _ => {}
     }
-    ticket.agents = agents;
     if ticket.summary.is_empty() {
         for interaction in ticket.interactions.iter().rev() {
             if is_ticket_interaction_kind(&interaction.kind, "ticket.close") && !interaction.summary.is_empty() {
@@ -205,13 +199,9 @@ pub fn decode_ticket_document(text: &str) -> TicketResult<Ticket> {
     Ok(ticket)
 }
 
-/// 🖨️ Encodes one `🎫️ticket.json` document, member order and omission rules included.
-///
-/// Divergence note, faithfully reproduced: `parent` is READ by the decoder but never written, because
-/// the Go struct tags it `json:"-"` while the decoding alias declares `parent,omitempty`. A ticket
-/// whose parent is set therefore loses it on the next save.
+/// 🖨️ Encodes the durable ticket fields in canonical declaration order.
 pub fn encode_ticket_document(ticket: &Ticket) -> String {
-    let mut members: Vec<GoMember> = Vec::with_capacity(9);
+    let mut members: Vec<GoMember> = Vec::with_capacity(12);
     members.push(GoMember::Text("title", ticket.title.clone()));
     if !ticket.emoji.is_empty() {
         members.push(GoMember::Text("emoji", ticket.emoji.clone()));
@@ -233,6 +223,9 @@ pub fn encode_ticket_document(ticket: &Ticket) -> String {
     if !ticket.goal.is_empty() {
         members.push(GoMember::Text("goal", ticket.goal.clone()));
     }
+    if !ticket.parent.is_empty() {
+        members.push(GoMember::Text("parent", ticket.parent.clone()));
+    }
     if let Some(plan) = &ticket.plan {
         let mut nested: Vec<GoMember> = Vec::with_capacity(4);
         if !plan.client.is_empty() {
@@ -252,7 +245,52 @@ pub fn encode_ticket_document(ticket: &Ticket) -> String {
     if !ticket.sessions.is_empty() {
         members.push(GoMember::Strings("sessions", ticket.sessions.clone()));
     }
+    if !ticket.interactions.is_empty() {
+        members.push(GoMember::Objects("interactions", ticket.interactions.iter().map(interaction_members).collect()));
+    }
+    if !ticket.agents.is_empty() {
+        members.push(GoMember::Objects("agents", ticket.agents.iter().map(agent_members).collect()));
+    }
     render_members(&members, 0)
+}
+
+/// 🧵️ Appends nonempty text fields without changing declaration order.
+fn optional_text_members(members: &mut Vec<GoMember>, fields: &[(&'static str, &str)]) {
+    members.extend(fields.iter().filter(|(_, value)| !value.is_empty()).map(|(name, value)| GoMember::Text(name, (*value).to_string())));
+}
+
+/// 🧾️ Encodes ordered durable interactions and their file identities.
+fn interaction_members(interaction: &Interaction) -> Vec<GoMember> {
+    let mut members = vec![GoMember::Text("kind", interaction.kind.clone()), GoMember::Text("date", interaction.date.clone()), GoMember::Text("author", interaction.author.clone()), GoMember::Text("system", interaction.system.clone()), GoMember::Text("client", interaction.client.clone()), GoMember::Text("checkpoint", interaction.checkpoint.clone())];
+    optional_text_members(&mut members, &[("prompt", &interaction.prompt), ("summary", &interaction.summary), ("llm", &interaction.llm), ("effort", &interaction.effort)]);
+    if !interaction.files.is_empty() {
+        let files = interaction.files.iter().map(|file| {
+            let mut fields = vec![GoMember::Text("path", file.path.clone())];
+            optional_text_members(&mut fields, &[("id", &file.id), ("uri", &file.uri)]);
+            fields
+        }).collect();
+        members.push(GoMember::Objects("files", files));
+    }
+    members
+}
+
+/// 🤖️ Encodes ordered agent metadata and its nested plan without losing empty plan objects.
+fn agent_members(agent: &TicketAgent) -> Vec<GoMember> {
+    let mut members = vec![GoMember::Text("session", agent.session.clone())];
+    optional_text_members(&mut members, &[("contributor", &agent.contributor), ("system", &agent.system), ("client", &agent.client), ("llm", &agent.llm), ("effort", &agent.effort), ("transcript", &agent.transcript)]);
+    if let Some(plan) = &agent.plan {
+        let mut fields = Vec::new();
+        if !plan.steps.is_empty() {
+            let steps = plan.steps.iter().map(|step| {
+                let mut fields = vec![GoMember::Text("id", step.id.clone()), GoMember::Text("name", step.name.clone())];
+                optional_text_members(&mut fields, &[("description", &step.description), ("status", &step.status), ("ideated", &step.ideated), ("started", &step.started), ("completed", &step.completed), ("abandoned", &step.abandoned)]);
+                fields
+            }).collect();
+            fields.push(GoMember::Objects("steps", steps));
+        }
+        members.push(GoMember::Object("plan", fields));
+    }
+    members
 }
 
 /// ➕️ Appends a session id once, ignoring blanks and duplicates.

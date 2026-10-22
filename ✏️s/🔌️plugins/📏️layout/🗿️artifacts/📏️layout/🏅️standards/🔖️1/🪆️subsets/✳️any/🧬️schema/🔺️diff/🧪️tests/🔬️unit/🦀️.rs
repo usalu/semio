@@ -2,10 +2,10 @@ use super::*;
 use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document;
 use crate::{PageFramesDelta, PagePatch};
 use crate::{FramePatch};
-use protocol::{DiffAlgebra, Mutation};
+use protocol::{DiffAlgebra, ColdMutation, Mutation};
 
 fn apply(diff: &LayoutDiff, base: &LayoutSnapshot) -> LayoutSnapshot {
-    protocol::apply_diff(diff, base).expect("the diff applies")
+    protocol::apply_diff_cold(diff, base).expect("the diff applies")
 }
 
 fn absorbed(first: &LayoutDiff, second: &LayoutDiff) -> LayoutDiff {
@@ -150,7 +150,7 @@ fn removal_off_its_base_index_is_refused() {
     let base = default_document();
     let id = base.pages[0].id.clone();
     let diff = LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![LayoutPageRemoval { id, index: 7 }], ..Default::default() }), ..Default::default() };
-    assert!(protocol::apply_diff(&diff, &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
 }
 
 /// 🎯️ The rows built for a whole-list payload apply back to exactly that payload: removed, inserted and relocated rows together.

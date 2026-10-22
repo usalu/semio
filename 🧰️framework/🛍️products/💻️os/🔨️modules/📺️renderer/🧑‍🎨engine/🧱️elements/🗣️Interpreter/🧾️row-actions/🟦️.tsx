@@ -11,7 +11,7 @@ import {
   useRef,
   useSyncExternalStore,
   type ReactElement
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import { rowActionAdmissionKeyV1, rowActionAdmissionRegistryV1, type RowActionAdmissionOwnerV1 } from "../🎬️row-action-admission/🟦️.ts";
 import { Button, DisabledReasonHint } from "@semio-tech/ui-react";
 import { type ActionBinding } from "@semio-tech/framework";

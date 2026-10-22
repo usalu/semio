@@ -40,7 +40,7 @@ test("the fact table holds each distinct fact once and agrees with a serial set 
   expect(new Set(rows.map(row=>JSON.stringify(row)))).toEqual(serial);
   expect(seal.facts.count).toBe(fixture.expectedDistinct);expect(seal.facts.sha256).toBe(sha(captured!.bytes));
   expect(seal.records.map(([path]:[string])=>path)).toEqual([...paths.values()].sort());
-  const inline=censusInferenceRecordsV1([...paths.values()].sort());expect(inline.records.map(([path,digest]:[string,string])=>[path,digest])).toEqual(seal.records.map(([path]:[string])=>[path,sha(brotliDecompressSync(readFileSync(path)).toString("utf8").split("\n")[0]!)]));
+  const inline=censusInferenceRecordsV1([...paths.values()].sort());expect(inline.records.map(([path,digest])=>[path,digest])).toEqual(seal.records.map(([path]:[string])=>[path,sha(brotliDecompressSync(readFileSync(path)).toString("utf8").split("\n")[0]!)]));
   if(python){const headers=[...paths.values()].map(path=>brotliDecompressSync(readFileSync(path)).toString("utf8").split("\n")[0]),recordsOnly=new Set<string>();for(const header of headers)for(const row of JSON.parse(header!).observations)recordsOnly.add(JSON.stringify(row));const result=Bun.spawnSync([python,"-I","-c","import json,sys\nrows=set()\nfor header in json.loads(sys.stdin.read()):\n    for row in json.loads(header)['observations']:\n        rows.add(json.dumps(row,ensure_ascii=False,separators=(',',':')))\nprint(len(rows))"],{stdin:Buffer.from(JSON.stringify(headers))});expect(Number(result.stdout.toString().trim())).toBe(recordsOnly.size);}
  }finally{rmSync(root,{recursive:true,force:true});}
 });

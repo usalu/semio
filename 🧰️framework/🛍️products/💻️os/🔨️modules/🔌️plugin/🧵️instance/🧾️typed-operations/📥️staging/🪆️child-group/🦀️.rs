@@ -4,14 +4,13 @@
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_child::ChildContentRetirement;
 use semio_framework_plugin_decl_emission::Emit;
-use store::MemberFactory;
+use store::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildGroupSource;
 use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::RetirementDemand;
-use store::SpaceMember;
 use semio_framework_value::ValueError;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework::FaultFrom;
@@ -41,7 +40,7 @@ use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_grou
 use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::entry::MountedCommandEntrySource;
 use semio_framework_plugin_instance_docs::docs_instance_root::typed_operation_document_is_fresh;
 
-impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if self.child_composition.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9){return Ok(RetainedCloneStep::Complete(Default::default()))}
         let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{let step=self.advance_private_child_group_granted(mounted,same,grant)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;

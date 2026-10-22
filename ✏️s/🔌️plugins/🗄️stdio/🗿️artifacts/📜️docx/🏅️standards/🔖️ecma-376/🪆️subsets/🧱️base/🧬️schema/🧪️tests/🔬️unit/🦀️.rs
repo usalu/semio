@@ -388,7 +388,7 @@ fn canonical_marker_path(snapshot: &DocxSnapshot, part_path: &str, marker: &str)
 #[test]
 fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, insert_table_row, set_paragraph_style, set_run_formatting, set_run_text, DocxMutation};
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
     use quick_xml::XmlVersion;
@@ -517,7 +517,7 @@ fn malformed_authored_authority_is_refused_atomically() {
     }
 
     let diff = DocxDiff { xml_parts: Some(semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
-    assert!(protocol::apply_diff(&diff, &valid).is_err(), "invalid candidate diff must be refused");
+    assert!(protocol::apply_diff_cold(&diff, &valid).is_err(), "invalid candidate diff must be refused");
     let mut source = valid.clone();
     let drifting = valid.xml_parts[0].clone();
     let outcome = apply_docx_mutation(&mut source, &DocxMutation::SetPart(set_part::SetPart { path: drifting.path.clone(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: drifting.materialize_document_exact().unwrap() }, index: None, override_index: None }));

@@ -8,6 +8,9 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { DISTRIBUTION_LAYOUT, distributionOutputOwner, parseDistributionManifest, parseDistributionStaticInputs, type DistributionInput, type DistributionLayout, type DistributionManifest } from "../🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 
 
@@ -70,10 +73,10 @@ async function distributionStaticSourcePaths(workspace: string, entries: readonl
     }
     if (!/\.[cm]?[jt]sx?$/u.test(path)) return;
     const loader = path.endsWith("tsx") ? "tsx" : /\.[mc]?ts$/u.test(path) ? "ts" : path.endsWith("jsx") ? "jsx" : "js";
-    const source = new Bun.Transpiler({ loader, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true }).transformSync(readFileSync(canonical, "utf8"));
+    const source = new TranspilerV1({ loader, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true }).transformSync(readFileSync(canonical, "utf8"));
     for (const specifier of registryStaticImports(source, path)) {
-      if (specifier.startsWith("node:") || specifier.startsWith("bun:") || builtinModules.includes(specifier)) continue;
-      const resolved = Bun.resolveSync(specifier, dirname(canonical));
+      if (specifier.startsWith("node:") || isRuntimeBuiltinSpecifierV1(specifier) || builtinModules.includes(specifier)) continue;
+      const resolved = runtimeResolveV1(specifier, dirname(canonical));
       if (!specifier.startsWith(".")) {
         let parent = dirname(resolved);
         while (parent !== root) {

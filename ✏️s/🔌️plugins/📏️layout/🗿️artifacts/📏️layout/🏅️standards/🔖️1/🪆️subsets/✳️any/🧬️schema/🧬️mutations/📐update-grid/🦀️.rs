@@ -22,6 +22,13 @@ pub struct UpdateGrid {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateGrid where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_grid::UpdateGrid> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "grid", kind: "update-grid", record: "UpdatedGrid" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update baseline grid", "Grundlinienraster aktualisieren")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdateGrid where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_grid::UpdateGrid> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_grid(self, base)
     }
@@ -31,9 +38,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateGrid where Op: protocol::Mut
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update baseline grid", "Grundlinienraster aktualisieren")
-    }
 }
 
 pub fn diff_update_grid(payload: &UpdateGrid, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

@@ -32,6 +32,15 @@ pub fn add_author_at<Op: From<crate::add_author::AddAuthor>>(author: BlockAuthor
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for AddAuthor where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::remove_author::RemoveAuthor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "author", kind: "add-author", record: "AddedAuthor" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.author.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for AddAuthor where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::remove_author::RemoveAuthor> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::add_author::diff::diff(self, base)
     }
@@ -41,12 +50,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for AddAuthor where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.author.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -22,20 +22,21 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateCooling where Op
         record: "UpdatedCooling",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din18599Snapshot, Op> for UpdateCooling where Op: protocol::ColdMutation<Din18599Snapshot, ReferenceDiff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::update_cooling::UpdateCooling> {
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::update_cooling::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::update_cooling::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
-    }
 }
 
 //#region 🪢️Mounts

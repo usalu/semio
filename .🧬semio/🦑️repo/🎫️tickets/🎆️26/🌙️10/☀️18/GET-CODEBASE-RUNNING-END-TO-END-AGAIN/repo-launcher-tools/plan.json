@@ -254,7 +254,7 @@
    "creates": [
     {
      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md",
-     "sha256": "cc019a630c435428d3e4b6f33d3be64996b49389c4dcaedbcb207e344eac4096",
+     "sha256": "0cc021aa655331b21490f04b46f9ca9c2e3258e787ffa4a81d76e359cd92d537",
      "mode": 420
     },
     {
@@ -677,6 +677,125 @@
      "repl": "Node, Go, rustup und uv, bauen den `repo`-Launcher (er stellt die gepinnte JavaScript-Laufzeit selbst bereit)",
      "count": 1,
      "sha256Before": "e6b6dabba583e8b0f8061892d683ed00d4c936fb2d3fac2510212a67a6c26d7a"
+    }
+   ],
+   "rewrites": [],
+   "deletes": []
+  },
+  "consumers": {
+   "creates": [],
+   "edits": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🧮️composition/🟦️.ts",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 1,
+     "sha256Before": "8fafa70b54749aa220993f7ee3722ba80cb764a4c4f86dd2c9f790dc5ad0180e"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🧮️composition/🟦️.ts",
+     "pattern": "\\^bun(?=[ (\\\\])",
+     "repl": "^repo",
+     "count": 1,
+     "sha256Before": "8fafa70b54749aa220993f7ee3722ba80cb764a4c4f86dd2c9f790dc5ad0180e"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🟦️.ts",
+     "pattern": "\\^bun(?=[ (\\\\])",
+     "repl": "^repo",
+     "count": 1,
+     "sha256Before": "c7d3e7fdb422aaad934643081cd8328fc21f0ea95c96533076fa68e8e5298467"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 5,
+     "sha256Before": "d97e6255d1bc2a82e50705dbb5af1fe660fbb51135fed571404e7044926a4160"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+     "pattern": "\\^bun(?=[ (\\\\])",
+     "repl": "^repo",
+     "count": 1,
+     "sha256Before": "d97e6255d1bc2a82e50705dbb5af1fe660fbb51135fed571404e7044926a4160"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+     "pattern": "requires one Bun script command",
+     "repl": "requires one script command",
+     "count": 2,
+     "sha256Before": "d97e6255d1bc2a82e50705dbb5af1fe660fbb51135fed571404e7044926a4160"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 17,
+     "sha256Before": "7f6c0c508600259cbaf7b13be74c3b8f5ce7071a3edc7a029d0dfdc9cc6fa5ef"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 5,
+     "sha256Before": "59a4895bcb699cbb5b5862f38385b94b788e3b2d80fadfe5a0446b2b5352a9e5"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 1,
+     "sha256Before": "fd32f638c8a50b91fe59cce0b9a499535bf64a8e3b7378d8870fc6cc9c69b1ba"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 1,
+     "sha256Before": "5f129a320853a7effa825b80c79ef0b6167e179b94beaf9fc560735699f73145"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+     "pattern": "(?<=[`\\\"'])bun (?=\\./|\\\"|'|\\$\\{|[^\\s\\\"'`]*📜️script\\.ts|[^\\s\\\"'`]*/script\\.ts|repo\\b|--watch|--cwd)",
+     "repl": "repo ",
+     "count": 2,
+     "sha256Before": "d36d206786552f55d27c7cbb022843affff0a030c22e1b4b2113f91bb934c5be"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧬️schema/🔣️.json",
+     "pattern": "\\^bun(?=[ (\\\\])",
+     "repl": "^repo",
+     "count": 2,
+     "sha256Before": "f9698d0f9f59d4e7957d0b788568ce85c92cffb14ebd7ffdc1683a22acd07939"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟨️.mjs",
+     "pattern": "\\^bun(?=[ (\\\\])",
+     "repl": "^repo",
+     "count": 1,
+     "sha256Before": "b367c8fdf1daa849f22a376a65d1cdccc85aa9cc684d53934c6cbb59954e6767"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+     "pattern": "tokens\\[0\\] !== \"bun\"",
+     "repl": "tokens[0] !== \"repo\"",
+     "count": 1,
+     "sha256Before": "97a065a890383bb11428771c764298146f8ce9ceb0ea7b97d5cf850855bfe86d"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+     "pattern": "`bun <script> <words…>`",
+     "repl": "`repo <script> <words…>`",
+     "count": 1,
+     "sha256Before": "97a065a890383bb11428771c764298146f8ce9ceb0ea7b97d5cf850855bfe86d"
+    },
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧐️preimage-assertions/🟦️.ts",
+     "pattern": "(\\[\\s*)\\\"bun\\\",\\s*\\\"repo\\\"",
+     "repl": "\\1\"repo\"",
+     "count": 2,
+     "sha256Before": "4f794a18237e2deb3342a27ee310a74bb483e524619246079513754b1a761fff"
     }
    ],
    "rewrites": [],

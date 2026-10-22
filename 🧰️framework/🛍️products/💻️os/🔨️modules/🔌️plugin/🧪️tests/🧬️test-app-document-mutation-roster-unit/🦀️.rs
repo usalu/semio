@@ -3,7 +3,7 @@ use crate::test_app_mutation_fixture::document::mutations::set_count::SetCount;
 use crate::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
 use crate::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 use crate::test_app_mutation_fixture::document::mutations::TestMutation;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 #[test]
 fn direct_leaves_preserve_generic_document_codecs_and_laws() {
     let base = TestSnapshot { count: 3, label: "before".into(), slot: vec![crate::test_app_mutation_fixture::document::test_child_handle("child-0!s.test.child@native/*").expect("declared child uri")] };

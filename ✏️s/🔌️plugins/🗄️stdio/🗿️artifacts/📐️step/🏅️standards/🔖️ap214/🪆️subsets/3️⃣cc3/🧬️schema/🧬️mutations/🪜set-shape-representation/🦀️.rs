@@ -21,6 +21,16 @@ pub struct SetShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for SetShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-representation", kind: "set-shape-representation", record: "SetShapeRepresentation" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.id.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepCc3Mutation> for SetShapeRepresentation {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let result = match &self.representation {
             None => ladder::remove_representation_diff(base, self.id),
@@ -31,17 +41,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for SetShapeRepresent
             Err(message) => rejected(message),
         }
     }
-
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc3Mutation>, semio_framework_value::ValueError> {
         Ok(restored(ladder::restore_entity_rows(base, self.id)))
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.to_string()]
     }
 }
 //#endregion 🔖️Payload

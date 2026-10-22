@@ -32,6 +32,15 @@ pub fn add_attribute_at<Op: From<crate::add_attribute::AddAttribute>>(attribute:
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for AddAttribute where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::remove_attribute::RemoveAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "attribute", kind: "add-attribute", record: "AddedAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\"", self.attribute.key), &format!("Attribut \"{}\" hinzufügen", self.attribute.key))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.attribute.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for AddAttribute where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::remove_attribute::RemoveAttribute> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::add_attribute::diff::diff(self, base)
     }
@@ -41,12 +50,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for AddAttribute where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\"", self.attribute.key), &format!("Attribut \"{}\" hinzufügen", self.attribute.key))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.attribute.key.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

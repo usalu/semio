@@ -2,11 +2,11 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that installs Bun, Node.js, Go, uv and rustup from checksum-pinned archives (repo pins), installs the remaining machine dependencies with winget when missing, prepares repo-local caches and env vars, applies repo-local git settings (core.longpaths) and syncs workspace dependencies. Needs no elevation: the cache partitions are directories with per-directory NTFS case sensitivity.
+# Specs: Zero-touch Windows-native bootstrap that installs Node.js, uv and rustup from checksum-pinned archives and builds the `repo` launcher (which provisions the pinned JavaScript runtime itself) (Go is provisioned by the repository into its tools partition) (repo pins), installs the remaining machine dependencies with winget when missing, prepares repo-local caches and env vars, applies repo-local git settings (core.longpaths) and syncs workspace dependencies. Needs no elevation: the cache partitions are directories with per-directory NTFS case sensitivity.
 #
 # Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
 # `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup`
-# `bun ./📜️script.ts setup native` routes here once Bun exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
+# `repo setup native` routes here once the launcher exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
 # decodes a BOM-less script with the ANSI code page and would turn every emoji path literal below into a different path.
 #
 #endregion 🧲️Header
@@ -229,16 +229,6 @@ function Get-PinnedAsset {
     return $asset
 }
 
-function Get-PinnedBunAsset {
-    $release = (Get-Content -LiteralPath $script:BunPinsFile -Raw -Encoding UTF8 | ConvertFrom-Json).definitions.Release.const
-    $architecture = Get-HostArchitecture
-    $row = $release.distributions | Where-Object { $_.platform -eq "win32" -and $_.arch -eq $architecture -and -not $_.musl } | Select-Object -First 1
-    if ($null -eq $row) {
-        throw "No pinned Bun for win32/$architecture in $script:BunPinsFile."
-    }
-    return [pscustomobject]@{ version = $release.version; url = "$($release.release)/$($row.archive)"; sha256 = $row.sha256 }
-}
-
 function Get-InstalledVersion {
     param([string]$Command)
 
@@ -309,23 +299,42 @@ function Install-PinnedExecutables {
     }
 }
 
+function Test-DotnetSdkInstalled {
+    param([string]$Version)
+
+    $dotnet = Get-FirstCommandPath @("dotnet.exe")
+    if (-not $dotnet) { return $false }
+    $sdks = & $dotnet "--list-sdks" 2>$null
+    return [bool]($sdks | Where-Object { $_ -match ("^" + [Regex]::Escape($Version) + " ") })
+}
+
+function Install-PinnedDotnetSdk {
+    param([string]$RepoRoot)
+
+    $sdk = (Get-Content -LiteralPath (Join-Path $RepoRoot "global.json") -Raw -Encoding UTF8 | ConvertFrom-Json).sdk.version
+    $dotnetRoot = Join-Path $env:LOCALAPPDATA "Microsoft\dotnet"
+    if (-not (Test-DotnetSdkInstalled -Version $sdk)) {
+        $asset = Get-PinnedAsset -Tool "dotnet-install-powershell"
+        $scratch = New-ScratchDirectory
+        try {
+            $installer = Join-Path $scratch "dotnet-install.ps1"
+            Save-VerifiedDownload -Url $asset.url -Sha256 $asset.sha256 -Destination $installer
+            Write-Step "Installing .NET SDK $sdk..."
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Version $sdk -InstallDir $dotnetRoot -NoPath | Out-Host
+            if ($LASTEXITCODE -ne 0) { throw "dotnet-install failed with exit code $LASTEXITCODE" }
+        } finally {
+            Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+    return $dotnetRoot
+}
+
 function Install-PinnedToolchain {
     param([string]$RepoRoot)
 
     $manifest = Get-Content -LiteralPath (Join-Path $RepoRoot "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json
     $toolsRoot = Join-Path $env:LOCALAPPDATA "semio"
     $paths = @()
-
-    $bun = Get-PinnedBunAsset
-    if ($manifest.packageManager -ne "bun@$($bun.version)") {
-        throw "The Bun pin $($bun.version) in $script:BunPinsFile differs from package.json packageManager $($manifest.packageManager); update both."
-    }
-    $bunBin = Join-HomePath @(".bun", "bin")
-    if ((Get-InstalledVersion "bun.exe") -ne $bun.version) {
-        Write-Step "Installing Bun $($bun.version)..."
-        Install-PinnedExecutables -Asset $bun -Destination $bunBin -FileNames @("bun.exe")
-    }
-    $paths += $bunBin
 
     $node = Get-PinnedAsset -Tool "node"
     if ($manifest.engines.node -ne $node.version) {
@@ -337,15 +346,6 @@ function Install-PinnedToolchain {
         Install-PinnedDirectory -Asset $node -Destination $nodeRoot -Child "node-v$($node.version)-win-$(Get-HostArchitecture)"
     }
     if (Test-Path -LiteralPath $nodeRoot) { $paths += $nodeRoot }
-
-    $go = Get-PinnedAsset -Tool "go"
-    $goRoot = Join-Path $toolsRoot "go\go$($go.version)"
-    $installedGo = Get-InstalledVersion "go.exe"
-    if ($null -eq $installedGo -or [version]$installedGo -lt [version]$go.version) {
-        Write-Step "Installing Go $($go.version)..."
-        Install-PinnedDirectory -Asset $go -Destination $goRoot -Child "go"
-    }
-    if (Test-Path -LiteralPath $goRoot) { $paths += (Join-Path $goRoot "bin") }
 
     $uv = Get-PinnedAsset -Tool "uv"
     $installedUv = Get-InstalledVersion "uv.exe"
@@ -368,6 +368,7 @@ function Install-PinnedToolchain {
             Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
+    $paths += (Install-PinnedDotnetSdk -RepoRoot $RepoRoot)
     return $paths
 }
 
@@ -462,7 +463,8 @@ function Stop-RepoPythonProcesses {
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
 $script:PinsFile = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🧬️schema\🔣️.json"
-$script:BunPinsFile = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\📚️library\⚡️caching\🚀️bootstrap\🛠️tools\🟦️bun\🧬️schema\🔣️.json"
+$script:LauncherInstall = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1"
+$script:LauncherBin = Join-Path $env:LOCALAPPDATA "semio\launcher\bin"
 Set-RepoLocalGitConfig -RepoRoot $repoRoot
 Write-WindowsLongPathsGuidance
 Write-WindowsReadinessFacts -RepoRoot $repoRoot
@@ -477,14 +479,11 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "BurntSushi.ripgrep.MSVC" -Label "ripgrep"
     Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
     Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
-    Sync-WingetPackage -Id "Kitware.CMake" -Label "CMake"
-    Sync-WingetPackage -Id "Ninja-build.Ninja" -Label "Ninja"
     Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
     $debuggerPolicyPath = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\💻️client\🛠️developer-tools\🧬️schema\🔣️.json"
     $debuggerPolicy = (Get-Content -LiteralPath $debuggerPolicyPath -Raw | ConvertFrom-Json).'$defs'.NativeDebuggerSetupPolicy.const.windows
     Sync-WingetPackage -Id $debuggerPolicy.pythonPackage -Label "LLDB Python Runtime" -AdditionalArguments @("--version", $debuggerPolicy.pythonVersion, "--scope", "user", "--location", (Join-Path $env:LOCALAPPDATA $debuggerPolicy.pythonDirectory), "--override", $debuggerPolicy.pythonOptions.Replace("{pythonRoot}", (Join-Path $env:LOCALAPPDATA $debuggerPolicy.pythonDirectory)))
     Sync-WingetPackage -Id $debuggerPolicy.llvmPackage -Label "LLVM Native Debugger" -AdditionalArguments @("--version", $debuggerPolicy.llvmVersion, "--scope", "machine", "--location", (Join-Path $env:ProgramFiles $debuggerPolicy.llvmDirectory))
-    Sync-WingetPackage -Id "Microsoft.DotNet.SDK.8" -Label ".NET SDK 8.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
     $msvcCppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
@@ -526,11 +525,9 @@ Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightP
 #region 🌐️GlobalCliInstall
 if (-not $SkipGlobalCliInstall) {
     Refresh-CurrentProcessPath
-    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @("rustup.exe")
     $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
 
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("add", "--global", "@google/gemini-cli", "typescript-language-server", "typescript", "pyright") -WorkingDirectory $repoRoot
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
     Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install") -WorkingDirectory $repoRoot
 }
@@ -539,10 +536,10 @@ if (-not $SkipGlobalCliInstall) {
 #region 🧱️RepoBootstrap
 if (-not $SkipRepoBootstrap) {
     Refresh-CurrentProcessPath
-    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
     Stop-RepoPythonProcesses -RepoRoot $repoRoot -Consent:$StopRepoPython
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "repo-mcp:install") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath (Get-Command "powershell.exe").Source -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $script:LauncherInstall, "-Destination", $script:LauncherBin) -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath (Join-Path $script:LauncherBin "repo.exe") -ArgumentList @("run", "repo-mcp:install") -WorkingDirectory $repoRoot
     $repoReceipt = Get-Content -Raw -LiteralPath (Join-Path $env:LOCALAPPDATA "Semio\repo\installed.json") | ConvertFrom-Json
     if ($repoReceipt.version -ne 1 -or $repoReceipt.platform -ne "win32" -or -not (Test-Path -LiteralPath $repoReceipt.executable -PathType Leaf)) { throw "Verified native repo installation receipt required." }
     Set-UserPathPriority -PreferredEntries @($repoReceipt.directory)
@@ -560,8 +557,13 @@ if (-not $SkipRepoBootstrap) {
 #region 🎬️Playwright
 if (-not $SkipPlaywrightInstall) {
     Refresh-CurrentProcessPath
-    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("x", "playwright", "install", "chromium") -WorkingDirectory $repoRoot
+    $playwrightCli = Join-Path $repoRoot "node_modules\playwright\cli.js"
+    if (Test-Path -LiteralPath $playwrightCli -PathType Leaf) {
+        $nodePath = Get-CommandPathOrThrow -Label "node" -Candidates @("node.exe")
+        Invoke-RepoCommand -FilePath $nodePath -ArgumentList @($playwrightCli, "install", "chromium") -WorkingDirectory $repoRoot
+    } else {
+        Write-Step "Playwright is not installed; skipping the Chromium browser."
+    }
 }
 #endregion 🎬️Playwright
 

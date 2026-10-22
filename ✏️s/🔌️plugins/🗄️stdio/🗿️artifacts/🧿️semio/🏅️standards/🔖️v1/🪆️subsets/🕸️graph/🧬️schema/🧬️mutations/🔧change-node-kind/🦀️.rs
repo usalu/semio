@@ -17,7 +17,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind", record: "ChangedNodeKind" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\" kind to {}", self.id.value, self.new_kind), &format!("Art von Knoten \"{}\" auf {} ändern", self.id.value, self.new_kind))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for ChangeNodeKind
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<ChangeNodeKind>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,11 +38,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\" kind to {}", self.id.value, self.new_kind), &format!("Art von Knoten \"{}\" auf {} ändern", self.id.value, self.new_kind))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.value.clone()]
-    }
 }
 //#endregion 🔖️Payload

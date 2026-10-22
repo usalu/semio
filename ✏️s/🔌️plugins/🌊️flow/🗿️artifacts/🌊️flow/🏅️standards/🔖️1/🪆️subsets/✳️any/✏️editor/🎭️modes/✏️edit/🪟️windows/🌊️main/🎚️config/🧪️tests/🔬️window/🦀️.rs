@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use crate::editor::flow::modes::edit::windows::main::config::*;
 use crate::editor::flow::modes::edit::windows::main::transient::{FlowGenerationsWindowTransientOwner, FlowWindowTransient, FlowWindowTransientMutation};
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 
 fn block_on_flow_window_ownership<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -266,8 +266,8 @@ async fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let base_transient: FlowWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
         let mutation: FlowMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = protocol::apply_diff(mutation.diff(&base_config).diff(), &base_config).unwrap();
-        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&base_config).diff(), &base_config).unwrap();
+        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_config);
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base_config).await;
         assert_eq!(FlowMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
@@ -275,8 +275,8 @@ async fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
         let mutation: FlowWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = protocol::apply_diff(mutation.diff(&base_transient).diff(), &base_transient).unwrap();
-        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&base_transient).diff(), &base_transient).unwrap();
+        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_transient);
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base_transient).await;
         assert_eq!(FlowWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);

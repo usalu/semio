@@ -15,5 +15,5 @@ export function nativeImageHostMountOfV1(mountOutput:string,real:string):Readonl
 /** 🛑️ Refuses a nested attach inside a parent mounted without owners and names the one-time remount. */
 export function requireNativeImageHostOwnersV1(mountOutput:string,directory:string):void{
  const host=nativeImageHostMountV1(mountOutput,directory);
- if(!host.owners)throw Error("Nested Native image cannot attach inside the parent mounted without owners at "+host.mountPoint+"; once, while no process uses it, run `/usr/bin/hdiutil detach "+host.mountPoint+"` and rerun `bun repo`, which re-attaches the parent canonically with owners on");
+ if(!host.owners)throw Error("Nested Native image cannot attach inside the parent mounted without owners at "+host.mountPoint+"; once, while no process uses it, run `/usr/bin/hdiutil detach "+host.mountPoint+"` and rerun `repo`, which re-attaches the parent canonically with owners on");
 }

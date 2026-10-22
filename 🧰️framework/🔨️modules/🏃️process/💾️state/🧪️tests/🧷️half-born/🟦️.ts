@@ -17,7 +17,7 @@ test("the half-born journal of the incident resumes its original charge instead 
    expect(charge.owner,row.name).toBe(owner);expect(charge.bytes,row.name).toBe(policy.chargeBytes);
    db.query("INSERT INTO expected VALUES(?,?)").run(row.name,row.recovery.expected);
    const observation={version:1,charge:{id:charge.id,owner:charge.owner,kind:charge.kind,bytes:charge.bytes,phase:charge.phase},binding:row.recovery.binding?charge.id:null,intent:row.recovery.intent?charge.id:null,directoryPresent:row.recovery.directoryPresent};
-   expect(persistentStateRecoveryV1(observation),row.name).toBe((db.query("SELECT action FROM expected WHERE name=?").get(row.name)as{action:string}).action);checked++;
+   expect<string>(persistentStateRecoveryV1(observation),row.name).toBe((db.query("SELECT action FROM expected WHERE name=?").get(row.name)as{action:string}).action);checked++;
   }
   expect(checked).toBe(2);
  }finally{db.close();}

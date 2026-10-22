@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, Paramete
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 use replication::{MapDelta, MapEntryOperation};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::diff::JackDiff;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
@@ -259,26 +259,9 @@ fn invert_map<V: Clone, M: MapView<V>>(delta: &MapDelta<V>, base: &M) -> MapDelt
 
 //#endregion 🔖️MapAlgebra
 
-impl MutationDiff<RewritingSnapshot> for RewritingDiff {
-    fn apply(&self, snapshot: &RewritingSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RewritingSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(graph) = &self.working_graph {
-            next.working_graph = MutationDiff::<JackSnapshot>::apply(graph, &snapshot.working_graph, capability).map_err(|error| error.under(["workingGraph"]))?;
-        }
-        if let Some(patch) = &self.lhs {
-            patch.write_into(&mut next.lhs);
-        }
-        if let Some(patch) = &self.rhs {
-            patch.write_into(&mut next.rhs);
-        }
-        if let Some(bindings) = &self.parameter_bindings {
-            bindings.apply_onto(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
-        }
-        if let Some(layout) = &self.rule_layout {
-            layout.apply_onto(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<RewritingSnapshot> for RewritingDiff {}
+
+impl protocol::ColdMutationDiff<RewritingSnapshot> for RewritingDiff {
     fn absorb(&mut self, other: Self) {
         match (&mut self.working_graph, other.working_graph) {
             (Some(earlier), Some(next)) => MutationDiff::<JackSnapshot>::absorb(earlier, next),
@@ -298,9 +281,37 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
         MapDelta::absorb_optional(&mut self.parameter_bindings, other.parameter_bindings);
         MapDelta::absorb_optional(&mut self.rule_layout, other.rule_layout);
     }
+
+    fn apply(&self, unpublished: &mut RewritingSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(graph) = &self.working_graph {
+            next.working_graph = MutationDiff::<JackSnapshot>::apply(graph, &snapshot.working_graph, capability).map_err(|error| error.under(["workingGraph"]))?;
+        }
+        if let Some(patch) = &self.lhs {
+            patch.write_into(&mut next.lhs);
+        }
+        if let Some(patch) = &self.rhs {
+            patch.write_into(&mut next.rhs);
+        }
+        if let Some(bindings) = &self.parameter_bindings {
+            bindings.apply_onto(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
+        }
+        if let Some(layout) = &self.rule_layout {
+            layout.apply_onto(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<RewritingSnapshot> for RewritingDiff {
+    fn is_empty(&self) -> bool {
+        self.working_graph.as_ref().is_none_or(|graph| DiffAlgebra::<JackSnapshot>::is_empty(graph)) && self.lhs.as_ref().is_none_or(LhsPatch::is_empty) && self.rhs.as_ref().is_none_or(RhsPatch::is_empty) && self.parameter_bindings.as_ref().is_none_or(MapDelta::is_empty) && self.rule_layout.as_ref().is_none_or(MapDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RewritingSnapshot> for RewritingDiff {
     fn inverse(&self, base: &RewritingSnapshot) -> Self {
         Self {
             working_graph: self.working_graph.as_ref().map(|graph| DiffAlgebra::<JackSnapshot>::inverse(graph, &base.working_graph)),
@@ -309,9 +320,6 @@ impl DiffAlgebra<RewritingSnapshot> for RewritingDiff {
             parameter_bindings: self.parameter_bindings.as_ref().map(|delta| invert_map(delta, &base.parameter_bindings)),
             rule_layout: self.rule_layout.as_ref().map(|delta| invert_map(delta, &base.rule_layout)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.working_graph.as_ref().is_none_or(|graph| DiffAlgebra::<JackSnapshot>::is_empty(graph)) && self.lhs.as_ref().is_none_or(LhsPatch::is_empty) && self.rhs.as_ref().is_none_or(RhsPatch::is_empty) && self.parameter_bindings.as_ref().is_none_or(MapDelta::is_empty) && self.rule_layout.as_ref().is_none_or(MapDelta::is_empty)
     }
 }
 

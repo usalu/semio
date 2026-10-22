@@ -369,7 +369,7 @@ pub struct HookOutput {
 /// record. `json_mode` prints the plain record for every other client. Otherwise a refusal goes to
 /// stderr with exit code 2 and an allowed result prints only its message, if it has one.
 pub fn render_hook_output(client: &str, event: HookEvent, parent_info: &str, native_event_name: &str, result: &HookResult, json_mode: bool) -> HookOutput {
-    if let Some(provider) = get_editor_provider(client) {
+    if let Some(provider) = get_agent_client_provider(client) {
         if provider.kind() == "copilot-chat" {
             let hook_event_name = if native_event_name.is_empty() { HookFormatter::native_event_from_hook_event(&provider, event, parent_info) } else { native_event_name.to_string() };
             return HookOutput { stdout: HookFormatter::format_hook_output(&provider, &hook_event_name, result), stderr: String::new(), exit_code: 0 };
@@ -390,14 +390,14 @@ pub fn resolve_native_event_name(client: &str, event: HookEvent, parent_info: &s
     if !named.is_empty() {
         return named;
     }
-    match get_editor_provider(client) {
+    match get_agent_client_provider(client) {
         Some(provider) => HookFormatter::native_event_from_hook_event(&provider, event, parent_info),
         None => String::new(),
     }
 }
 
-/// 🎆️ The editor provider for a client slug, as the closed provider enum.
-pub fn editor_for_client(client: &str) -> Option<EditorProviders> {
-    get_editor_provider(client)
+/// 🎆️ The agent-client provider for a client slug, as the closed provider enum.
+pub fn agent_client_for(client: &str) -> Option<AgentClientProviders> {
+    get_agent_client_provider(client)
 }
 //#endregion 🖨️Formatting

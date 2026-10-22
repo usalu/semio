@@ -1,0 +1,262 @@
+{
+ "version": 1,
+ "family": [
+  {
+   "eff": [
+    "a",
+    "mutations",
+    "x"
+   ],
+   "expected": "x"
+  },
+  {
+   "eff": [
+    "a",
+    "mutations",
+    "subsets",
+    "fam",
+    "x"
+   ],
+   "expected": "fam"
+  },
+  {
+   "eff": [
+    "mutations"
+   ],
+   "expected": null
+  },
+  {
+   "eff": [
+    "a"
+   ],
+   "expected": null
+  },
+  {
+   "eff": [
+    "mutations",
+    "subsets"
+   ],
+   "expected": ""
+  },
+  {
+   "eff": [
+    "a",
+    "b"
+   ],
+   "expected": null
+  },
+  {
+   "eff": [],
+   "expected": null
+  },
+  {
+   "eff": [
+    "mutations",
+    "x",
+    "subsets",
+    "y"
+   ],
+   "expected": "y"
+  }
+ ],
+ "label": [
+  {
+   "families": [
+    null,
+    null
+   ],
+   "expected": null
+  },
+  {
+   "families": [
+    "x",
+    "x"
+   ],
+   "expected": "mut-x"
+  },
+  {
+   "families": [
+    "x",
+    "y"
+   ],
+   "expected": "mut-family"
+  },
+  {
+   "families": [
+    "a_b"
+   ],
+   "expected": "mut-a-b"
+  },
+  {
+   "families": [
+    "x",
+    null
+   ],
+   "expected": null
+  },
+  {
+   "families": [
+    "x",
+    "x",
+    null
+   ],
+   "expected": "mut-x"
+  },
+  {
+   "families": [],
+   "expected": null
+  },
+  {
+   "families": [
+    "🧪️x"
+   ],
+   "expected": "mut-x"
+  },
+  {
+   "families": [
+    "--"
+   ],
+   "expected": "mut"
+  },
+  {
+   "families": [
+    "x",
+    "x",
+    "y"
+   ],
+   "expected": "mut-family"
+  },
+  {
+   "families": [
+    "Foo_Bar"
+   ],
+   "expected": "mut-foo-bar"
+  }
+ ],
+ "mutationLabels": [
+  {
+   "label": "mut-a",
+   "expected": true
+  },
+  {
+   "label": "mut",
+   "expected": false
+  },
+  {
+   "label": "mut-",
+   "expected": true
+  },
+  {
+   "label": "Mut-a",
+   "expected": false
+  },
+  {
+   "label": "",
+   "expected": false
+  }
+ ],
+ "slug": [
+  {
+   "name": "🧬️schema",
+   "expected": "schema"
+  },
+  {
+   "name": "Foo_Bar baz",
+   "expected": "foo-bar-baz"
+  },
+  {
+   "name": "--a--",
+   "expected": "a"
+  },
+  {
+   "name": "a--b",
+   "expected": "a-b"
+  },
+  {
+   "name": "ÄÖ",
+   "expected": ""
+  },
+  {
+   "name": "x1",
+   "expected": "x1"
+  },
+  {
+   "name": "🧪️tests-more",
+   "expected": "tests-more"
+  },
+  {
+   "name": "",
+   "expected": ""
+  },
+  {
+   "name": "  spaced name ",
+   "expected": "spaced-name"
+  },
+  {
+   "name": "9lives",
+   "expected": "9lives"
+  },
+  {
+   "name": "a.b/c",
+   "expected": "a-b-c"
+  }
+ ],
+ "ident": [
+  {
+   "name": "a-b-c",
+   "expected": "a_b_c"
+  },
+  {
+   "name": "plain",
+   "expected": "plain"
+  },
+  {
+   "name": "-",
+   "expected": "_"
+  },
+  {
+   "name": "",
+   "expected": ""
+  }
+ ],
+ "emoji": [
+  {
+   "name": "🧬️schema",
+   "expected": "🧬️"
+  },
+  {
+   "name": "plain",
+   "expected": "🧩️"
+  },
+  {
+   "name": "⚖️laws",
+   "expected": "⚖️"
+  },
+  {
+   "name": "1abc",
+   "expected": "🧩️"
+  },
+  {
+   "name": "🚀x",
+   "expected": "🚀"
+  },
+  {
+   "name": "",
+   "expected": "🧩️"
+  },
+  {
+   "name": "👩‍💻x",
+   "expected": "👩"
+  }
+ ],
+ "placeholder": [
+  {
+   "index": 0,
+   "expected": "__CRATE_0__"
+  },
+  {
+   "index": 12,
+   "expected": "__CRATE_12__"
+  }
+ ]
+}

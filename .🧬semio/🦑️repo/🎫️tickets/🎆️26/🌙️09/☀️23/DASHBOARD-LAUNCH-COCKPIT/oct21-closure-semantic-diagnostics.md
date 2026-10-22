@@ -1,0 +1,15 @@
+# Closure Semantic Failure Diagnostics
+
+Actual70115 advanced immutable Node readiness and failed before test bodies with `Closed graph record manifest required`. Current source already passes the full schema root. No selected manifest/path/legacy state was inferred or inspected. Peer owns domain-neutral tuple-validator repair and corresponding schema/producer tests; no competing execution fix here.
+
+Schema/fixture/tests first: eight portable failure observations compare publication decisions with independent SQLite and validate emitted packets independently with Ajv. Actual current retainer runs through recording ports for partial writes, invalid packets, unavailable terminal, frozen/existing context and exact undefined/false/write-refusal primary. Existing actual record-encoder/gzip/SQLite format law now checks bounded snapshot context on its authored version1 negative. All runtime bodies remain unrun.
+
+The worker strict manifest predicate is unchanged; only the stage marker is set before it. Bounded context now admits snapshot kind and snapshot-manifest check, with actual image-relative path/digest/packed bytes plus nullable safe integer version/project/dependency counts. No manifest content or full row is copied. Optional context fields are copied only when present into existing closed semantic failure packet.
+
+The parent validates the actual ReadFailure DTO and its existing8192-byte wire allowance, retains observed terminal/null, attaches without overwriting existing context, and explicitly emits the same finite semantic DATA in a partial-write-aware stderr packet. Diagnostic/validation/publication failure cannot replace the primary, including undefined. It makes no inference about native termination cause; current terminal reader result or null remains honest. No cap, grammar, custody, Source guard, Original or cleanup policy changed.
+
+Exact eight authored paths/hashes/zero syntax diagnostics are in `🗑️generated/e2e-closure-semantic-diagnostics-inputs.json`; maxpath201UTF16. One new literally mounted named Source0 body: `closed worker semantic failures retain bounded context and the first primary against SQLite`. Existing actual producer fixture name is retained. No producer launched; Source0 retry waits joint tuple fix/source review.
+
+Fresh conjunctive schema identity:0e19dc9e602eec77023e42978819fd7d350418a084ad7a650da2bcb208d6b38b/51059B. Exact semantic difference from own saved schema is only existing `/definitions/Fixture/required` and `/definitions/Fixture/properties/snapshot`, coordinating canonical root fixture publication; all own PayloadRefusal/ReadFailureObservation definitions unchanged. No actor attribution; exact input record refreshed.
+
+Both independent Low reviews accepted the current eight-path semantic diagnostic boundary, including the refreshed conjunctive schema. Root additively retained all73 prior Source0 names plus the new semantic-observation law (74 total). Generic tuple validator repair is peer-owned; its observed red probe and upcoming actual owning tests are separate from this diagnostic source acceptance. No extra producer was launched.

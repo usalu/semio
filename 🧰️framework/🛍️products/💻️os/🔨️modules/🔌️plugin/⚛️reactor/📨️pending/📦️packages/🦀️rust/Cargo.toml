@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["original-actor-context-testing"]
 original-actor-context-testing = []
 
 [dependencies]

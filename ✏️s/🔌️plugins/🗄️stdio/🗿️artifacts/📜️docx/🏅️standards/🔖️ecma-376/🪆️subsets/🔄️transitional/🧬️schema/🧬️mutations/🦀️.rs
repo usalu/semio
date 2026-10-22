@@ -63,7 +63,7 @@ pub mod set_relationship_base;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxTransitionalMutation")]
+#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxTransitionalMutation", reference = DocxSnapshot, reference_diff = DocxDiff)]
 pub enum DocxTransitionalMutation {
     SetMainNamespace(set_main_namespace::SetMainNamespace),
     SetRelationshipBase(set_relationship_base::SetRelationshipBase),
@@ -84,7 +84,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 #[cfg(test)]
 pub fn apply_docx_transitional_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxTransitionalMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

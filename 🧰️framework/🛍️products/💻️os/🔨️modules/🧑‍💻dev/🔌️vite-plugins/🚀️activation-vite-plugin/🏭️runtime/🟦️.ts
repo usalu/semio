@@ -61,7 +61,7 @@ export async function reportActivationFreshness(receipt: ActivationReceipt, opti
       installedPackageHash,
     }
   }, options.signal);
-  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun repo run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
+  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `repo run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
 }
 
 /** 📡️ Subscribes one dev server to activation receipts and lazy plugin materialization; the returned function releases every server-owned subscription. */

@@ -14,7 +14,16 @@ pub struct SetLinetype {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "linetype", kind: "set-linetype", record: "SetLinetype" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set linetype", "Linientyp setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { name, linetype } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
@@ -29,12 +38,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
                 None => vec![DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.clone() })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set linetype", "Linientyp setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

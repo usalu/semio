@@ -26,6 +26,7 @@ conformance = []
 
 [dependencies]
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework-replication = { workspace = true }
 semio-framework-server-contract = { path = "../../🔨️modules/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-server-storage = { path = "../../🔨️modules/🗄️storage/📦️packages/🦀️rust" }

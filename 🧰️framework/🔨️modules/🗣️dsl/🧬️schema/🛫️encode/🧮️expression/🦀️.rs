@@ -13,6 +13,11 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn paged(error:semio_framework_value_persistent::list::PagedListError)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason)}
 #[derive(Clone,Copy,Default)]
 struct Frame{phase:u8,minimum:u8,bracket:bool,quoted:bool,ordinal:usize,offset:usize,index:usize}
+impl semio_framework_value::retirement::RetireOwned for Frame{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 /// 🎟️ One admitted source, traversal or output event keeps its original physical receipt.
 #[derive(Default)]
 pub struct RetainedExpressionStep{pub progress:RetainedCloneProgress,pub written_bytes:usize,pub complete:bool}
@@ -61,3 +66,9 @@ impl RetainedExpressionCursor{
  pub fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedExpressionStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedExpressionStep{complete:true,..Default::default()});}let demand=self.retirement_demands()?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}self.phase=4;let released=if self.frames.pop().is_some(){0}else if !self.frames.terminal_is_empty(){self.frames.release_empty_page(grant.maximum_release_bytes).map_err(paged)?.released_allocation_bytes}else{self.phase=5;self.identity=None;0};Ok(RetainedExpressionStep{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:released,..Default::default()},complete:self.terminal_is_empty(),written_bytes:0})}
 }
 impl Drop for RetainedExpressionCursor{fn drop(&mut self){assert!(self.frames.terminal_is_empty(),"original expression backing requires funded terminal retirement");}}
+/// ♻️ Physical retirement hands the paged traversal frames to their controlled owner.
+impl semio_framework_value::retirement::RetireOwned for RetainedExpressionCursor{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let frames=unsafe{std::ptr::read(&owner.frames)};semio_framework_value::retirement::RetireOwned::retirement(frames)}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.frames)}
+ fn controlled_retirement_supported()->bool{true}
+}

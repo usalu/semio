@@ -247,10 +247,10 @@ pub fn apply_remodeling_mutation_json(snapshot_json: &str, mutation_json: &str) 
 /// state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn undo_remodeling_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <RemodelingMutation as Mutation<RemodelingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+    for undo in <RemodelingMutation as ColdMutation<RemodelingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);

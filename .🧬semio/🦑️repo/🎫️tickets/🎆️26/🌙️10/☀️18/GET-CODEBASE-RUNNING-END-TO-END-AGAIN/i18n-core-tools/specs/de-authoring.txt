@@ -1,0 +1,18 @@
+== command
+Aufruf: repo ./📜️script.ts new artifact <Eigentümerwurzel> <neues-Artefaktverzeichnis>
+   oder: repo ./📜️script.ts new standard <Artefaktwurzel> <neues-Standardverzeichnis>
+   oder: repo ./📜️script.ts new subset <Standardwurzel> <neues-Subsetverzeichnis> [--dry-run]
+   oder: repo ./📜️script.ts new mutation <Mutationswurzel-des-Eigentümers> <Emoji-semantischer-Name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]
+   oder: repo ./📜️script.ts new crates <Artefaktpaket-Verzeichnis> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<Modulpfad>,...] [--target=<Dateien>/<Bytes>/<Zeilen>] [--hard=<Dateien>/<Bytes>/<Zeilen>] [--backup=<Verzeichnis>] [--verify [--oracle] [--keep] --sandbox=<Verzeichnis>] | --check-applied [--base=<Git-Referenz>] [--samples=<Anzahl>] [--keep] --sandbox=<Verzeichnis>
+   oder: repo ./📜️script.ts new leaves <Rust-Datei> [--dry-run] [--json-schema]   (liefert TypeScript-/GraphQL-/Proto-Facet-Begleiter und mit --json-schema die JSON-Schema-Blätter aus ihren Dokumenten)
+new mutation: {crate} liegt schon über dem Quell-Gate (lib {files} Dateien / {lines} Zeilen, Test {files2} Dateien); plane einen Zuschnitt mit `repo ./📜️script.ts new crates`
+new mutation: {crate} liegt kurz vor dem Quell-Gate (lib {files} Dateien / {lines} Zeilen, Test {files2} Dateien); plane einen Zuschnitt mit `repo ./📜️script.ts new crates`
+new leaves: {positional} hat keinen ArtifactSchemaDescriptor-Begleiter, den es zu liefern gäbe.
+new leaves: {positional} — {serving} {leaves} Begleiter aus ihren Dokumenten; installiere in jedem Host, der sie auflöst, einen SchemaLeafReader (FileSystemSchemaLeaves).
+  {run}{delete} {path}
+Eigentümerzeilen: {added}
+new crates: {artifactCrate} — {writes} Datei(en) für {crates} Crate(s) geschrieben.
+new crates --unmirror: {size} Datei(en), {size2} Manifest(e), {removedLeaves} Spiegel-Re-Export(e) entfernt, {repointedChains} Pfad(e) umgelenkt, {addedImports} Import(e) hinzugefügt, {removedModules} Modul(e) entfernt{run}.
+new: {rel} — {verb} {created} Datei(en), {skipped} bereits vorhanden.
+== artifact-tree
+new subset: {note}

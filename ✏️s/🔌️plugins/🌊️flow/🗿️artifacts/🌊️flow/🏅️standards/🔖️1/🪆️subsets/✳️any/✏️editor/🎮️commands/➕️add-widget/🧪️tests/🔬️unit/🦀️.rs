@@ -39,7 +39,7 @@ fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_defa
     assert_eq!(descriptor_reference, serde_json::json!({ "kind": "inputNote" }));
 
     let mutation = child_add_widget_mutation(&content, descriptor, 40.0, 51.0).expect("host-free child mutation");
-    content = semio_framework_os_kernel::apply_diff(diff_semio_flow_mutation(&mutation, &content).diff(), &content).expect("the add-widget leaf applies to the content it was built for");
+    content = semio_framework_os_kernel::apply_diff_cold(diff_semio_flow_mutation(&mutation, &content).diff(), &content).expect("the add-widget leaf applies to the content it was built for");
 
     assert_eq!(&content.nodes[..before.nodes.len()], before.nodes.as_slice());
     assert_eq!(content.edges, before.edges);
@@ -106,7 +106,7 @@ fn child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default()
         let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = semio_framework_pack_json::from_json_str(case.descriptor, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed descriptor");
         let mut content = SemioFlowSnapshot::default();
         let mutation = child_add_widget_mutation_from_descriptor(&content, &descriptor, case.info, 12.0, 34.0).expect("typed child mutation");
-        content = semio_framework_os_kernel::apply_diff(diff_semio_flow_mutation(&mutation, &content).diff(), &content).expect("the add-widget leaf applies to the content it was built for");
+        content = semio_framework_os_kernel::apply_diff_cold(diff_semio_flow_mutation(&mutation, &content).diff(), &content).expect("the add-widget leaf applies to the content it was built for");
         let inserted = content.nodes.last().expect("appended node");
         let params = case.params.iter().map(|(key, value)| serde_json::json!({ "key": key, "value": value })).collect::<Vec<_>>();
         assert_eq!(

@@ -40,6 +40,7 @@ semio-framework-os-renderer-wgpu-kernel-protocol = { path = "../../../📡️ker
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-slots = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-services = { workspace = true }

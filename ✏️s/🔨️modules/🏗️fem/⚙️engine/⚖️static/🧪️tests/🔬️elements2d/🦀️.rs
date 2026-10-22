@@ -1,3 +1,4 @@
+use super::*;
 use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;

@@ -120,9 +120,9 @@ impl BoardSceneState {
     }
 
     pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64) -> BoardWheelPlan {
-        let mut next = self.camera.clone();
-        semio_framework_canvas::camera::wheel_screen(&mut next, &self.viewport(), sx, sy, delta_y);
-        BoardWheelPlan { revision: self.interaction_revision, expected: self.camera.clone(), next }
+        let mut moved: semio_framework_canvas::camera::Camera = self.camera.into();
+        semio_framework_canvas::camera::wheel_screen(&mut moved, &self.viewport(), sx, sy, delta_y);
+        BoardWheelPlan { revision: self.interaction_revision, expected: self.camera.clone(), next: moved.into() }
     }
 
     pub fn begin_delete_property_audit(&mut self, planning: &mut BoardDeletePlanningOperation, kind: BoardDeleteKind, id: &str) {

@@ -1,0 +1,36 @@
+{
+  "title": "Fix Design App Toolbar Missing Elements",
+  "status": "closed",
+  "description": "Design app toolbar lost crucial elements like the create and filter as well the tool setting bar not rendering the settings properly",
+  "summary": "Fixed the Design app toolbar by adding missing create and filter toolbar sections with proper internationalization. Added DesignToolbarFilters and DesignToolbarCreate components, registered them in the Design app, and added i18n labels for English and German. All TypeScript compilation errors have been resolved.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/586"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-16T13:27:47.512394876Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Design app toolbar lost crucial elements like the create and filter as well the tool setting bar not rendering the settings properly",
+      "llm": "sonnet-4-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-16T13:41:51.5556881Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "summary": "Fixed the Design app toolbar by adding missing create and filter toolbar sections with proper internationalization. Added DesignToolbarFilters and DesignToolbarCreate components, registered them in the Design app, and added i18n labels for English and German. All TypeScript compilation errors have been resolved.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    }
+  ]
+}

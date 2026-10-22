@@ -1,17 +1,25 @@
 import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
+import {createRequire} from "node:module";
+const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 /** 🧭️ Tracks the literal import closure of command scripts and the packages they consume. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createRequire, isBuiltin } from "node:module";
+import { isBuiltin } from "node:module";
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { GlobV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 const { existsSync, statSync } = observedFs;
+
+/** 🚧️ Turns an import of a command closure that resolves to nothing into the withheld-project failure of its importing source, so one broken file withholds its own project instead of aborting the whole graph. */
+function unresolvedSourceImportV1(error,path){return Object.assign(Error(String(error.message),{cause:error}),{code:"BUILD_SOURCE_UNPARSEABLE",source:path,sha256:createHash("sha256").update(observedFs.readFileSync(path)).digest("hex")});}
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
@@ -190,15 +198,14 @@ function declaredDirectoryV1(directory) {
 /** 🌿️ The module files the target's `metadata.semio.closure.modules` globs match, which join the target's command closure as entries. */
 function declaredModuleGlobEntriesV1(globs, workspaceRoot, projectRoot, cache) {
   if (!Array.isArray(globs) || !globs.length) return [];
-  if (!globalThis.Bun?.Glob) throw Error("Declared module globs require Bun.Glob");
-  return memoizedObservedComputationV1(cache.declared, memoDigestV1("module-globs", workspaceRoot, projectRoot, globs), () => declaredModuleGlobsV1(globs, workspaceRoot, projectRoot, { readdir: declaredDirectoryV1, Glob: globalThis.Bun.Glob, join }).map(path => resolve(workspaceRoot, path)));
+  return memoizedObservedComputationV1(cache.declared, memoDigestV1("module-globs", workspaceRoot, projectRoot, globs), () => declaredModuleGlobsV1(globs, workspaceRoot, projectRoot, { readdir: declaredDirectoryV1, Glob: GlobV1, join }).map(path => resolve(workspaceRoot, path)));
 }
 
 /** 🪁️ Joins the compiler's own program for each TypeScript project in `metadata.semio.closure.typescript` to the closure, records the generator targets whose outputs it reads and names the installed packages it resolved. */
 function declaredProjectClosureV1(projects, workspaceRoot, projectRoot, cache, closure) {
   if (!Array.isArray(projects) || !projects.length) return undefined;
   const project = memoizedObservedComputationV1(cache.declared, memoDigestV1("typescript-project", workspaceRoot, projectRoot, projects), () => {
-    const compiler = createRequire(import.meta.url)("typescript");
+    const compiler = parserTypescriptV1();
     return declaredTypeScriptProjectsV1(projects, workspaceRoot, projectRoot, { compiler, host: observedTypeScriptHost(compiler.sys), readdir: declaredDirectoryV1, join, dirname, isAbsolute });
   });
   if (!project.files.length) return undefined;
@@ -226,7 +233,7 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
   const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey);
   let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
   return memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
-  const compiler = createRequire(import.meta.url)("typescript"), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set();
+  const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set();
   const visit = async(path,source=true) => {
     await checkpoint();
     if (closurePathNameV1(cache, workspaceRoot, path).startsWith("{workspaceRoot}/../")) throw new Error(`Command import escapes workspace: ${path}`);
@@ -251,7 +258,7 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
         catch (error) {
           if (error.code !== "MODULE_NOT_FOUND") throw error;
           resolved = compiler.resolveModuleName(resource.specifier, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, host).resolvedModule?.resolvedFileName;
-          if (!resolved) {if(requiredSources||resource.suffix||!/\.[cm]?[jt]sx?$/u.test(resource.specifier))throw error;continue;}
+          if (!resolved) {if(requiredSources||resource.suffix||!/\.[cm]?[jt]sx?$/u.test(resource.specifier))throw unresolvedSourceImportV1(error,path);continue;}
           if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
         }
         imports.push({path:resolved,source:resource.source});
@@ -289,7 +296,7 @@ export async function nativeCommandInputs(workspaceRoot, scripts) {
   const cargo = POLICY.toolchains.cargo, javascript = POLICY.toolchains.javascript;
   return [
     ...await relativeScriptInputs([script], workspaceRoot, scripts),
-    ...[...javascript.files.filter((file) => !["package.json", "bun.lock"].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
+    ...[...javascript.files.filter((file) => !["package.json", javascriptManagerV1.primaryLockName].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
     { externalDependencies: ["@iarna/toml"] },
     ...cargo.environment.map((env) => ({ env })),
     ...[...javascript.commands, ...cargo.commands].map((runtime) => ({ runtime })),
@@ -350,17 +357,17 @@ export async function nativeTargetCommandInputs(target, workspaceRoot, fallback,
 /** 🎯️ Hashes any script-backed target's own command closure, exactly, instead of the whole router. */
 export async function genericTargetCommandInputs(target, workspaceRoot, fallback, scripts = createScriptInputCache(), projectRoot = ".") {
   const sources = await targetScriptSources(target, workspaceRoot, scripts, projectRoot),closure=sources.closure;
-  if (!closure) return [...fallback, "{workspaceRoot}/package.json", "{workspaceRoot}/bun.lock"];
+  if (!closure) return [...fallback, "{workspaceRoot}/package.json", `{workspaceRoot}/${javascriptManagerV1.primaryLockName}`];
   const key=memoDigestV1(closure,sources.fallback?fallback:null,sources.packages??[]);
   let index=0;const checkpoint=(force=false)=>yieldInferenceV1(scripts.context,"build:command-source-packages",++index,force);
   return memoizedObservedAsyncComputationV1(scripts.commandDependencies,key,async()=>{
-  const packages = new Set(), graph = existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
+  const packages = new Set(), graph = existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName)) ? readBunLockGraph(workspaceRoot) : undefined;
   for (const input of closure) {
     await checkpoint();
     const file = resolve(workspaceRoot, input.slice("{workspaceRoot}/".length));
     if (!existsSync(file)) continue;
     for (const specifier of observedSourceAnalysisV1(prepareSourceAnalysesV1().module,file).imports) {
-      if (specifier.startsWith(".") || specifier.startsWith("/") || isBuiltin(specifier) || specifier.startsWith("bun:")) continue;
+      if (specifier.startsWith(".") || specifier.startsWith("/") || isBuiltin(specifier) || isRuntimeBuiltinSpecifierV1(specifier)) continue;
       const name = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
       if (!graph) { packages.add(name); continue; }
       const key = graph.resolveImport(buildPath(relative(workspaceRoot, file)), name);
@@ -372,7 +379,7 @@ export async function genericTargetCommandInputs(target, workspaceRoot, fallback
     const key = graph.resolveImport(sources.projectConfig.slice("{workspaceRoot}/".length), name);
     if (key && graph.externalNodes[`npm:${key}`]) packages.add(`npm:${key}`);
   }
-  const inputs = [...new Set([...closure,...(sources.fallback?[...fallback,"{workspaceRoot}/package.json","{workspaceRoot}/bun.lock"]:[])]), { externalDependencies: [...packages].sort() }];
+  const inputs = [...new Set([...closure,...(sources.fallback?[...fallback,"{workspaceRoot}/package.json",`{workspaceRoot}/${javascriptManagerV1.primaryLockName}`]:[])]), { externalDependencies: [...packages].sort() }];
   return inputs;
   },checkpoint);
 }

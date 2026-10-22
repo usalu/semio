@@ -1,0 +1,9 @@
+# Fresh a668 Next Captured Neutral Gate
+
+DATApreparationonly: no runnable plan or receipt exists. Reservedneutraloperation ad6cf50a6de707a070cd1a79e5df3423. Admission requires actualprefixunitmarkers+sixorderedcapturestages+cleanup+acceptedprefixreceipt+separatelyjoinedouter0/null.
+
+Existingclosed7fields version/kind/cohort/captureId/operation/template/evidence use onlyactualrawfivepredecessorreceipts. identity→fresh-create-receipt-COHORT.json;source→fresh-source-receipt-CAPTURE.json;manifest→fresh-capture-manifest-CAPTURE.json;git→outerfresh-git-transfer-terminal-CAPTURE.json;provision→fresh-provision-receipt-COHORT.json. Template80575/8f3840c878c375687c16e3908a277e71ad66db847f0db6628cc78e44dab1cad1;guestown995/d44c9e8f0bc023687ade1e091a4c346c73185cdc23bba9cd04d7b70bfda2603b. Actualcapturedmanifest supplies252Sourceauthority.
+
+Eachseparatelybornprepare/run requests existingpublic21600000ms budgetupfront;incominglimitsclamp. Worker14290000;hostminimum14410000;nominalstartupheadroom7190000ms. Prepare84filesexclusively;actualrunmustprove40phases/141selectedtitlesandproperjoinedguest+hostterminals+postchecks. parentTerminalProvenfalseisinsufficientforouter0. Controller21/facts/export/finalremainindependentmandatorylatergates.
+
+Eventualoutputcandidate is course/TypeScript/dist/redeploy-a668cb604f2b/{site,proctor}; itdoesnotexist asverifieddelivery. No suffix isauthorizedbythisnote.

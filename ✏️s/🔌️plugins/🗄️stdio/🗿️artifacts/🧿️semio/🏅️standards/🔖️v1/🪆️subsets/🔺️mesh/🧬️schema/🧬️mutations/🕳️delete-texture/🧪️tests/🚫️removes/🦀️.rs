@@ -10,7 +10,7 @@
 use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️delete-texture/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -34,7 +34,7 @@ fn mutation() -> SemioMeshMutation {
 async fn removes_the_leading_texture() {
     let base = before();
     assert_eq!(base.textures.len(), 2, "the fixture needs a trailing texture for the order-restoring inverse to matter");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-texture applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-texture applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert!(!produced.textures.iter().any(|texture| texture.id == "tex-a"), "the named texture must be gone");
     assert_eq!(produced.textures, vec![base.textures[1].clone()], "the trailing texture slides down into index 0");
@@ -51,9 +51,9 @@ async fn the_undo_restores_original_position_without_mutating_referenced_sibling
     assert_eq!(undo.len(), 1);
     let SemioMeshMutation::CreateTexture(recreate) = &undo[0] else { panic!("undo must insert the deleted texture at its original position") };
     assert_eq!((recreate.texture.id.as_str(), recreate.at), ("tex-a", Some(0)));
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-texture applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-texture applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: the undo did not restore the before-snapshot, order included");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-texture diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-texture diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-texture diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }
 
@@ -120,8 +120,8 @@ async fn texture_references_refuse_deletion_and_keep_sibling_references_during_i
     let targeted = SemioMeshMutation::DeleteTexture(crate::schema::mutations::delete_texture::DeleteTexture { id: base.textures[1].id.clone() });
     let refused = targeted.diff(&base);
     assert!(!refused.messages().is_empty());
-    assert_eq!(protocol::apply_diff(refused.diff(), &base).unwrap(), base);
-    let mut current = protocol::apply_diff(mutation().diff(&base).diff(), &base).unwrap();
-    for step in mutation().inverse(&base).expect("valid retained mutation inverse fixture") { let outcome = step.diff(&current); assert!(outcome.messages().is_empty()); current = protocol::apply_diff(outcome.diff(), &current).unwrap(); }
+    assert_eq!(protocol::apply_diff_cold(refused.diff(), &base).unwrap(), base);
+    let mut current = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).unwrap();
+    for step in mutation().inverse(&base).expect("valid retained mutation inverse fixture") { let outcome = step.diff(&current); assert!(outcome.messages().is_empty()); current = protocol::apply_diff_cold(outcome.diff(), &current).unwrap(); }
     assert_eq!(current, base);
 }

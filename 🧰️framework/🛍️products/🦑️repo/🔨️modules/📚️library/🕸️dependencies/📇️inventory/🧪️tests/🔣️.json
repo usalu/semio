@@ -1,0 +1,1501 @@
+{
+ "version": 1,
+ "freezeErrors": [
+  {
+   "name": "a Cargo manifest outside every workspace fails the freeze",
+   "files": {
+    "orphan/Cargo.toml": "[package]\nname = \"o\"\n"
+   },
+   "message": "Cargo package has no workspace: orphan/Cargo.toml"
+  }
+ ],
+ "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+ "taxonomy": {
+  "testsDirName": "tests",
+  "testFixturesDirName": "fixtures",
+  "testExamplesDirName": "examples",
+  "testOraclesDirName": "oracles",
+  "testProbeDirName": "probes",
+  "testGeneratorDirName": "generators",
+  "testDomainPath": "qa"
+ },
+ "freeze": [
+  {
+   "name": "cargo manifests: workspace refs, internal names, proc-macro, dev/build/target tables, merge across manifests",
+   "oracle": "ts",
+   "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/a\", \"crates/m\", \"crates/fixtures/x\"]\n\n[workspace.dependencies]\nserde = \"1.0.200\"\ntokio = { version = \"1.38\", features = [\"rt\"] }\nsemio-core = { path = \"crates/core\" }\nanyhow = { version = \"1.0.80\" }\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nserde.workspace = true\ntokio = { workspace = true }\nsemio-core = { workspace = true }\nregex = \"1.10\"\nlocal = { path = \"../local\" }\nsemio-extra = \"0.1\"\ndb_core = \"0.1\"\nmulti = { version = \"2.0\", features = [\n  \"a\",\n] }\n\n[dev-dependencies]\nproptest = \"1.4\"\n\n[build-dependencies]\ncc = \"1.0\"\n\n[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n\n[[bin]]\nname = \"x\"\npath = \"src/main.rs\"\n",
+    "crates/fixtures/x/Cargo.toml": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\ninsta = \"1.39\"\nregex = \"1.9\"\n",
+    "crates/m/Cargo.toml": "[package]\nname = \"m\"\nversion = \"0.1.0\"\n\n[lib]\nproc-macro = true\n\n[dependencies]\nsyn = \"2\"\nquote = { version = \"1\" }\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "rust",
+     "name": "cc",
+     "version": "1.0",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.0",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "insta",
+     "version": "1.39",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "crates/fixtures/x/Cargo.toml"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "crates/fixtures/x/Cargo.toml",
+       "version": "1.39",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "libc",
+     "version": "0.2",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "0.2",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "multi",
+     "version": "2.0",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "2.0",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "proptest",
+     "version": "1.4",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.4",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "quote",
+     "version": "1",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/m/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/m/Cargo.toml",
+       "version": "1",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "regex",
+     "version": "1.10",
+     "kinds": [
+      "production-runtime",
+      "test-runner"
+     ],
+     "users": [
+      "crates/a/Cargo.toml",
+      "crates/fixtures/x/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.10",
+       "kind": "production-runtime"
+      },
+      {
+       "user": "crates/fixtures/x/Cargo.toml",
+       "version": "1.9",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "serde",
+     "version": "1.0.200",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.0.200",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "syn",
+     "version": "2",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/m/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/m/Cargo.toml",
+       "version": "2",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "tokio",
+     "version": "1.38",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.38",
+       "kind": "production-runtime"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "cargo table-form dependencies are inventoried",
+   "oracle": "ts",
+   "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/a\", \"crates/m\", \"crates/fixtures/x\"]\n\n[workspace.dependencies]\nserde = \"1.0.200\"\ntokio = { version = \"1.38\", features = [\"rt\"] }\nsemio-core = { path = \"crates/core\" }\nanyhow = { version = \"1.0.80\" }\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nserde.workspace = true\ntokio = { workspace = true }\nsemio-core = { workspace = true }\nregex = \"1.10\"\nlocal = { path = \"../local\" }\nsemio-extra = \"0.1\"\ndb_core = \"0.1\"\nmulti = { version = \"2.0\", features = [\n  \"a\",\n] }\n\n[dependencies.tabled]\nversion = \"3.0\"\n\n[dev-dependencies]\nproptest = \"1.4\"\n\n[build-dependencies]\ncc = \"1.0\"\n\n[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n\n[[bin]]\nname = \"x\"\npath = \"src/main.rs\"\n",
+    "crates/fixtures/x/Cargo.toml": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\ninsta = \"1.39\"\nregex = \"1.9\"\n",
+    "crates/m/Cargo.toml": "[package]\nname = \"m\"\nversion = \"0.1.0\"\n\n[lib]\nproc-macro = true\n\n[dependencies]\nsyn = \"2\"\nquote = { version = \"1\" }\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "rust",
+     "name": "cc",
+     "version": "1.0",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.0",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "insta",
+     "version": "1.39",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "crates/fixtures/x/Cargo.toml"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "crates/fixtures/x/Cargo.toml",
+       "version": "1.39",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "libc",
+     "version": "0.2",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "0.2",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "multi",
+     "version": "2.0",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "2.0",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "proptest",
+     "version": "1.4",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.4",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "quote",
+     "version": "1",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/m/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/m/Cargo.toml",
+       "version": "1",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "regex",
+     "version": "1.10",
+     "kinds": [
+      "production-runtime",
+      "test-runner"
+     ],
+     "users": [
+      "crates/a/Cargo.toml",
+      "crates/fixtures/x/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.10",
+       "kind": "production-runtime"
+      },
+      {
+       "user": "crates/fixtures/x/Cargo.toml",
+       "version": "1.9",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "serde",
+     "version": "1.0.200",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.0.200",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "syn",
+     "version": "2",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "crates/m/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/m/Cargo.toml",
+       "version": "2",
+       "kind": "production-build"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "tabled",
+     "version": "3.0",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "3.0",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "rust",
+     "name": "tokio",
+     "version": "1.38",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "crates/a/Cargo.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "crates/a/Cargo.toml",
+       "version": "1.38",
+       "kind": "production-runtime"
+      }
+     ]
+    }
+   ],
+   "defect": "dependencyParseCargoToml ignores `[dependencies.<name>]` table-form sections (📇️inventory/🟦️.ts:175: section regex only matches `...dependencies` suffix)"
+  },
+  {
+   "name": "package.json sections, internal names, skipped trees, test-owned manifests",
+   "oracle": "ts",
+   "files": {
+    "package.json": "{\"name\": \"root\", \"workspaces\": [\"pkgs/a\"], \"dependencies\": {\"left-pad\": \"^1.3.0\", \"@semio-tech/core\": \"workspace:*\"}, \"devDependencies\": {\"vitest\": \"^1.0.0\", \"internal-lib\": \"1.0.0\"}}",
+    "pkgs/a/package.json": "{\"name\": \"internal-lib\", \"version\": \"1.0.0\", \"dependencies\": {\"react\": \"^18.0.0\", \"linked\": \"link:../x\"}, \"peerDependencies\": {\"react-dom\": \"^18\"}, \"optionalDependencies\": {\"fsevents\": \"^2\"}, \"devDependencies\": {\"vitest\": \"^1.1.0\"}}",
+    "pkgs/tests/p/package.json": "{\"dependencies\": {\"react\": \"^17\"}}",
+    "node_modules/x/package.json": "{\"dependencies\": {\"hidden\": \"1\"}}",
+    "compose/p/package.json": "{\"dependencies\": {\"composed\": \"1\"}}",
+    "pkgs/bad/package.json": "{"
+   },
+   "expected": [
+    {
+     "ecosystem": "js",
+     "name": "fsevents",
+     "version": "^2",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "pkgs/a/package.json"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "pkgs/a/package.json",
+       "version": "^2",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "js",
+     "name": "left-pad",
+     "version": "^1.3.0",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "package.json"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "package.json",
+       "version": "^1.3.0",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "js",
+     "name": "react",
+     "version": "^18.0.0",
+     "kinds": [
+      "production-runtime",
+      "test-runner"
+     ],
+     "users": [
+      "pkgs/a/package.json",
+      "pkgs/tests/p/package.json"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "pkgs/a/package.json",
+       "version": "^18.0.0",
+       "kind": "production-runtime"
+      },
+      {
+       "user": "pkgs/tests/p/package.json",
+       "version": "^17",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "js",
+     "name": "react-dom",
+     "version": "^18",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "pkgs/a/package.json"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "pkgs/a/package.json",
+       "version": "^18",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "js",
+     "name": "vitest",
+     "version": "^1.0.0",
+     "kinds": [
+      "repository-tooling"
+     ],
+     "users": [
+      "package.json",
+      "pkgs/a/package.json"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "package.json",
+       "version": "^1.0.0",
+       "kind": "repository-tooling"
+      },
+      {
+       "user": "pkgs/a/package.json",
+       "version": "^1.1.0",
+       "kind": "repository-tooling"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "go.mod requirements, indirect, replaces, workspace membership",
+   "oracle": "python",
+   "files": {
+    "go.work": "go 1.22\n\nuse (\n\t./a\n\t./compose/b\n)\n\nuse ./c\n",
+    "a/go.mod": "module example.com/a\n\ngo 1.22\n\nrequire (\n\tgithub.com/x/y v1.2.3\n\tgithub.com/z/w v0.1.0 // indirect\n\texample.com/local v0.0.0\n\tsemio.tech/q v1.0.0\n\tnodots v1.0.0\n)\n\nreplace example.com/local => ../local\n",
+    "c/go.mod": "module example.com/c\n\ngo 1.22\n\nrequire github.com/x/y v1.3.0\nrequire example.com/a v0.0.0\n",
+    "compose/b/go.mod": "module example.com/b\n\nrequire github.com/hidden/h v1.0.0\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "go",
+     "name": "github.com/x/y",
+     "version": "v1.2.3",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "a/go.mod",
+      "c/go.mod"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "a/go.mod",
+       "version": "v1.2.3",
+       "kind": "production-runtime"
+      },
+      {
+       "user": "c/go.mod",
+       "version": "v1.3.0",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "go",
+     "name": "github.com/z/w",
+     "version": "v0.1.0",
+     "kinds": [
+      "production-build"
+     ],
+     "users": [
+      "a/go.mod"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "a/go.mod",
+       "version": "v0.1.0",
+       "kind": "production-build"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pyproject multi-line arrays",
+   "oracle": "ts",
+   "files": {
+    "py/pyproject.toml": "[project]\nname = \"p\"\ndependencies = [\n  \"requests>=2.31\",\n  \"semio-tools\",\n  \"numpy\",\n]\n\n[project.optional-dependencies]\ndev = [\n  \"pytest>=8\",\n]\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "python",
+     "name": "numpy",
+     "version": "*",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "py/pyproject.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "py/pyproject.toml",
+       "version": "*",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "python",
+     "name": "pytest",
+     "version": ">=8",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "py/pyproject.toml"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "py/pyproject.toml",
+       "version": ">=8",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "python",
+     "name": "requests",
+     "version": ">=2.31",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "py/pyproject.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "py/pyproject.toml",
+       "version": ">=2.31",
+       "kind": "production-runtime"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pyproject single-line dependency arrays",
+   "oracle": "ts",
+   "files": {
+    "py/lines/pyproject.toml": "[project]\nname = \"q\"\ndependencies = [\"flask>=3\", \"click\"]\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "python",
+     "name": "click",
+     "version": "*",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "py/lines/pyproject.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "py/lines/pyproject.toml",
+       "version": "*",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "python",
+     "name": "flask",
+     "version": ">=3",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "py/lines/pyproject.toml"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "py/lines/pyproject.toml",
+       "version": ">=3",
+       "kind": "production-runtime"
+      }
+     ]
+    }
+   ],
+   "defect": "dependencyCollectPython (📇️inventory/🟦️.ts:889) only reads one requirement string per line, so `dependencies = [\"a\", \"b\"]` yields nothing"
+  },
+  {
+   "name": "csproj attribute versions and test projects",
+   "oracle": "python",
+   "files": {
+    "dn/App/App.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Newtonsoft.Json\" Version=\"13.0.1\" />\n    <PackageReference Include=\"Serilog\" />\n  </ItemGroup>\n</Project>\n",
+    "dn/Tests/Tests.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Newtonsoft.Json\" Version=\"13.0.3\" />\n    <PackageReference Include=\"xunit\" Version=\"2.9.0\" />\n  </ItemGroup>\n</Project>\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "dotnet",
+     "name": "Newtonsoft.Json",
+     "version": "13.0.1",
+     "kinds": [
+      "production-runtime",
+      "test-runner"
+     ],
+     "users": [
+      "dn/App/App.csproj",
+      "dn/Tests/Tests.csproj"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "dn/App/App.csproj",
+       "version": "13.0.1",
+       "kind": "production-runtime"
+      },
+      {
+       "user": "dn/Tests/Tests.csproj",
+       "version": "13.0.3",
+       "kind": "test-runner"
+      }
+     ]
+    },
+    {
+     "ecosystem": "dotnet",
+     "name": "Serilog",
+     "version": "*",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "dn/App/App.csproj"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "dn/App/App.csproj",
+       "version": "*",
+       "kind": "production-runtime"
+      }
+     ]
+    },
+    {
+     "ecosystem": "dotnet",
+     "name": "xunit",
+     "version": "2.9.0",
+     "kinds": [
+      "test-runner"
+     ],
+     "users": [
+      "dn/Tests/Tests.csproj"
+     ],
+     "productionReachable": false,
+     "declarations": [
+      {
+       "user": "dn/Tests/Tests.csproj",
+       "version": "2.9.0",
+       "kind": "test-runner"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "csproj child-element Version",
+   "oracle": "python",
+   "files": {
+    "dn/Child/Child.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Polly\">\n      <Version>8.4.0</Version>\n    </PackageReference>\n  </ItemGroup>\n</Project>\n"
+   },
+   "expected": [
+    {
+     "ecosystem": "dotnet",
+     "name": "Polly",
+     "version": "8.4.0",
+     "kinds": [
+      "production-runtime"
+     ],
+     "users": [
+      "dn/Child/Child.csproj"
+     ],
+     "productionReachable": true,
+     "declarations": [
+      {
+       "user": "dn/Child/Child.csproj",
+       "version": "8.4.0",
+       "kind": "production-runtime"
+      }
+     ]
+    }
+   ],
+   "defect": "dependencyCollectDotnet regex only reads the Version attribute (📇️inventory/🟦️.ts:937), not a `<Version>` child element"
+  },
+  {
+   "name": "composition, target, git and empty manifests are ignored",
+   "oracle": "ts",
+   "files": {
+    "compose/Cargo.toml": "[dependencies]\nhidden = \"1\"\n",
+    "temp/compose/x/package.json": "{\"dependencies\": {\"hid\": \"1\"}}",
+    "target/Cargo.toml": "[dependencies]\nt = \"1\"\n",
+    ".git/x/package.json": "{\"dependencies\": {\"g\": \"1\"}}"
+   },
+   "expected": []
+  }
+ ],
+ "classify": [
+  {
+   "name": "no registry claim leaves the entry alone",
+   "entry": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime"
+    ],
+    "users": [
+     "a/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   },
+   "oracleIds": null,
+   "expected": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime"
+    ],
+    "users": [
+     "a/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   }
+  },
+  {
+   "name": "only test-owned declarations become test-oracle with sorted ids",
+   "entry": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "test-runner"
+    ],
+    "users": [
+     "qa/x/package.json",
+     "pkg/oracles/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "qa/x/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     },
+     {
+      "user": "pkg/oracles/package.json",
+      "version": "1.0.0",
+      "kind": "production-build"
+     }
+    ]
+   },
+   "oracleIds": [
+    "z-id",
+    "a-id"
+   ],
+   "expected": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "test-oracle"
+    ],
+    "users": [
+     "qa/x/package.json",
+     "pkg/oracles/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "qa/x/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     },
+     {
+      "user": "pkg/oracles/package.json",
+      "version": "1.0.0",
+      "kind": "production-build"
+     }
+    ],
+    "oracleIds": [
+     "a-id",
+     "z-id"
+    ]
+   }
+  },
+  {
+   "name": "a production declaration is an oracle conflict",
+   "entry": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime",
+     "test-runner"
+    ],
+    "users": [
+     "a/package.json",
+     "qa/x/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     },
+     {
+      "user": "qa/x/package.json",
+      "version": "1.0.0",
+      "kind": "test-runner"
+     },
+     {
+      "user": "b/package.json",
+      "version": "1.0.0",
+      "kind": "production-build"
+     }
+    ]
+   },
+   "oracleIds": [
+    "o1"
+   ],
+   "expected": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime",
+     "test-runner"
+    ],
+    "users": [
+     "a/package.json",
+     "qa/x/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     },
+     {
+      "user": "qa/x/package.json",
+      "version": "1.0.0",
+      "kind": "test-runner"
+     },
+     {
+      "user": "b/package.json",
+      "version": "1.0.0",
+      "kind": "production-build"
+     }
+    ],
+    "oracleIds": [
+     "o1"
+    ],
+    "oracleConflictUsers": [
+     "a/package.json",
+     "b/package.json"
+    ]
+   }
+  },
+  {
+   "name": "a repository-tooling declaration is not production",
+   "entry": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "repository-tooling"
+    ],
+    "users": [
+     "a/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "repository-tooling"
+     }
+    ]
+   },
+   "oracleIds": [
+    "o1"
+   ],
+   "expected": {
+    "ecosystem": "js",
+    "name": "pkg",
+    "version": "1.0.0",
+    "kinds": [
+     "test-oracle"
+    ],
+    "users": [
+     "a/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "a/package.json",
+      "version": "1.0.0",
+      "kind": "repository-tooling"
+     }
+    ],
+    "oracleIds": [
+     "o1"
+    ]
+   }
+  },
+  {
+   "name": "the interface owner manifest is exempt for its own ecosystem",
+   "entry": {
+    "ecosystem": "js",
+    "name": "three",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime"
+    ],
+    "users": [
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   },
+   "oracleIds": [
+    "three-ref"
+   ],
+   "expected": {
+    "ecosystem": "js",
+    "name": "three",
+    "version": "1.0.0",
+    "kinds": [
+     "test-oracle"
+    ],
+    "users": [
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ],
+    "oracleIds": [
+     "three-ref"
+    ]
+   }
+  },
+  {
+   "name": "the interface owner exemption does not cross ecosystems",
+   "entry": {
+    "ecosystem": "rust",
+    "name": "three",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime"
+    ],
+    "users": [
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   },
+   "oracleIds": [
+    "three-ref"
+   ],
+   "expected": {
+    "ecosystem": "rust",
+    "name": "three",
+    "version": "1.0.0",
+    "kinds": [
+     "production-runtime"
+    ],
+    "users": [
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+    ],
+    "productionReachable": false,
+    "declarations": [
+     {
+      "user": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "version": "1.0.0",
+      "kind": "production-runtime"
+     }
+    ],
+    "oracleIds": [
+     "three-ref"
+    ],
+    "oracleConflictUsers": [
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+    ]
+   }
+  }
+ ],
+ "testDomain": [
+  {
+   "name": "every directory kind and the domain path",
+   "taxonomy": {
+    "testsDirName": "tests",
+    "testFixturesDirName": "fixtures",
+    "testExamplesDirName": "examples",
+    "testOraclesDirName": "oracles",
+    "testProbeDirName": "probes",
+    "testGeneratorDirName": "generators",
+    "testDomainPath": "qa"
+   },
+   "expected": {
+    "directoryNames": [
+     "tests",
+     "fixtures",
+     "examples",
+     "oracles",
+     "probes",
+     "generators"
+    ],
+    "domainPath": "qa"
+   }
+  },
+  {
+   "name": "a missing directory name is rejected",
+   "taxonomy": {
+    "testsDirName": "tests",
+    "testFixturesDirName": "fixtures",
+    "testExamplesDirName": "examples",
+    "testOraclesDirName": "oracles",
+    "testGeneratorDirName": "generators",
+    "testDomainPath": "qa"
+   },
+   "expected": null
+  },
+  {
+   "name": "an empty directory name is rejected",
+   "taxonomy": {
+    "testsDirName": "",
+    "testFixturesDirName": "fixtures",
+    "testExamplesDirName": "examples",
+    "testOraclesDirName": "oracles",
+    "testProbeDirName": "probes",
+    "testGeneratorDirName": "generators",
+    "testDomainPath": "qa"
+   },
+   "expected": null
+  },
+  {
+   "name": "a missing domain path is rejected",
+   "taxonomy": {
+    "testsDirName": "tests",
+    "testFixturesDirName": "fixtures",
+    "testExamplesDirName": "examples",
+    "testOraclesDirName": "oracles",
+    "testProbeDirName": "probes",
+    "testGeneratorDirName": "generators"
+   },
+   "expected": null
+  }
+ ],
+ "composition": [
+  {
+   "path": "compose/a/package.json",
+   "expected": true
+  },
+  {
+   "path": "temp/compose/a/Cargo.toml",
+   "expected": true
+  },
+  {
+   "path": "pkgs/compose/a.json",
+   "expected": false
+  },
+  {
+   "path": "composer/a",
+   "expected": false
+  },
+  {
+   "path": "compose",
+   "expected": false
+  },
+  {
+   "path": "a/temp/compose/x",
+   "expected": false
+  }
+ ],
+ "goModule": [
+  {
+   "name": "block and single-line requires, indirect, local and remote replaces",
+   "content": "module example.com/m\n\nrequire (\n\ta.io/b v1.0.0\n\tc.io/d v2.0.0 // indirect\n)\nrequire e.io/f v3.0.0\n\nreplace (\n\ta.io/b => ../b\n\tc.io/d v2.0.0 => example.org/d v2.1.0\n\tg.io/h => C:\\\\work\\\\h\n)\nreplace i.io/j => /abs/j\nreplace k.io/l v1.0.0 => ./l\n",
+   "expected": {
+    "module": "example.com/m",
+    "localReplaces": [
+     "a.io/b",
+     "g.io/h",
+     "i.io/j",
+     "k.io/l"
+    ],
+    "requirements": [
+     {
+      "name": "a.io/b",
+      "version": "v1.0.0",
+      "kind": "production-runtime"
+     },
+     {
+      "name": "c.io/d",
+      "version": "v2.0.0",
+      "kind": "production-build"
+     },
+     {
+      "name": "e.io/f",
+      "version": "v3.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   }
+  },
+  {
+   "name": "an empty file has no module",
+   "content": "",
+   "expected": {
+    "localReplaces": [],
+    "requirements": []
+   }
+  },
+  {
+   "name": "CRLF line endings",
+   "content": "module x.io/m\r\nrequire (\r\n\ta.io/b v1.0.0\r\n)\r\n",
+   "expected": {
+    "module": "x.io/m",
+    "localReplaces": [],
+    "requirements": [
+     {
+      "name": "a.io/b",
+      "version": "v1.0.0",
+      "kind": "production-runtime"
+     }
+    ]
+   }
+  }
+ ],
+ "lockMismatches": [
+  {
+   "name": "every mismatch kind in deterministic order",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "dependencies": {
+       "a": "1",
+       "b": "2"
+      },
+      "devDependencies": {
+       "c": "3"
+      }
+     }
+    ],
+    [
+     "pkgs/x/package.json",
+     {
+      "dependencies": {
+       "d": "1"
+      }
+     }
+    ],
+    [
+     "pkgs/y/package.json",
+     {}
+    ]
+   ],
+   "workspaces": {
+    "": {
+     "dependencies": {
+      "a": "1",
+      "b": "3",
+      "e": "9"
+     }
+    },
+    "pkgs/x": {
+     "dependencies": {
+      "d": "1"
+     },
+     "devDependencies": {
+      "z": "1"
+     }
+    }
+   },
+   "expected": [
+    {
+     "dependency": "b",
+     "kind": "version-mismatch",
+     "lockVersion": "3",
+     "manifest": "package.json",
+     "manifestVersion": "2",
+     "section": "dependencies"
+    },
+    {
+     "dependency": "e",
+     "kind": "stale-in-lock",
+     "lockVersion": "9",
+     "manifest": "package.json",
+     "section": "dependencies"
+    },
+    {
+     "dependency": "c",
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "manifestVersion": "3",
+     "section": "devDependencies"
+    },
+    {
+     "dependency": "z",
+     "kind": "stale-in-lock",
+     "lockVersion": "1",
+     "manifest": "pkgs/x/package.json",
+     "section": "devDependencies"
+    },
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/y/package.json"
+    }
+   ]
+  },
+  {
+   "name": "backslash manifest paths address the posix workspace key",
+   "manifests": [
+    [
+     "pkgs\\x\\package.json",
+     {
+      "dependencies": {
+       "d": "1"
+      }
+     }
+    ]
+   ],
+   "workspaces": {
+    "pkgs\\x": {
+     "dependencies": {
+      "d": "1"
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs\\x\\package.json"
+    }
+   ]
+  },
+  {
+   "name": "a non-object lock snapshot makes every workspace missing",
+   "manifests": [
+    [
+     "package.json",
+     {}
+    ]
+   ],
+   "workspaces": null,
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "package.json"
+    }
+   ]
+  },
+  {
+   "name": "peer and optional sections are compared too",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "peerDependencies": {
+       "p": "^1"
+      },
+      "optionalDependencies": {
+       "o": "^2"
+      }
+     }
+    ]
+   ],
+   "workspaces": {
+    "": {
+     "peerDependencies": {
+      "p": "^2"
+     },
+     "optionalDependencies": {}
+    }
+   },
+   "expected": [
+    {
+     "dependency": "o",
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "manifestVersion": "^2",
+     "section": "optionalDependencies"
+    },
+    {
+     "dependency": "p",
+     "kind": "version-mismatch",
+     "lockVersion": "^2",
+     "manifest": "package.json",
+     "manifestVersion": "^1",
+     "section": "peerDependencies"
+    }
+   ]
+  }
+ ]
+}

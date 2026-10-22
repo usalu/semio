@@ -28,7 +28,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -36,7 +36,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -45,7 +45,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -53,7 +53,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -71,7 +71,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -89,7 +89,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",

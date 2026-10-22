@@ -2,7 +2,7 @@
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer};
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_child::ChildMemberRetirement;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
@@ -61,7 +61,7 @@ impl MaintenanceCursors {
 }
 
 /// 🫎️ Close cursors: the positions and drained flags of the close ladder.
-pub struct CloseCursors<A: ArtifactApp, M: SpaceMember + MemberFactory> {
+pub struct CloseCursors<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> {
     pub close_window_retirement_cursor: usize,
     pub close_started: bool,
     pub close_cancellation_cursor: usize,
@@ -104,7 +104,7 @@ pub struct CloseCursors<A: ArtifactApp, M: SpaceMember + MemberFactory> {
     pub close_interaction_disposer: ManuallyDrop<ArtifactDisposal<ConfigStore<protocol::InteractionState, InteractionConfigMutation>>>,
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> CloseCursors<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> CloseCursors<A, M> {
     /// 🫏️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {
         Self {

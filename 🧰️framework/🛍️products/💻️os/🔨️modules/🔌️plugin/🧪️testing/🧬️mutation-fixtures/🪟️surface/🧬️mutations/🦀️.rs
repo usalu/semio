@@ -5,7 +5,7 @@ pub use set_surface_count::SetSurfaceCount;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot=super::SurfaceSnapshot,diff=super::SurfaceDiff,schema="plugin.testkit.surface")]
+#[mutations(snapshot=super::SurfaceSnapshot,diff=super::SurfaceDiff,schema="plugin.testkit.surface", reference = super::SurfaceSnapshot, reference_diff = super::SurfaceDiff)]
 pub enum SurfaceMutation {
     SetSurfaceCount(SetSurfaceCount),
 }

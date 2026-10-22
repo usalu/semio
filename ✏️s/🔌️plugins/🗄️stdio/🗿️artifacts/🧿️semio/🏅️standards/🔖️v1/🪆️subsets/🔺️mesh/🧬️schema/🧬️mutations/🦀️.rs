@@ -124,7 +124,7 @@ use crate::schema::mutations::set_primitive_topology;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh")]
+#[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh", reference = SemioMeshSnapshot, reference_diff = SemioMeshDiff)]
 pub enum SemioMeshMutation {
     CreateMesh(create_mesh::CreateMesh),
     DeleteMesh(delete_mesh::DeleteMesh),
@@ -174,7 +174,7 @@ pub const KINDS: &[&str] = &["create-mesh",
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
-    <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::diff(mutation, base)
+    <SemioMeshMutation as protocol::ColdMutation<SemioMeshSnapshot>>::diff(mutation, base)
 }
 
 
@@ -186,8 +186,8 @@ pub fn diff_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::inverse(mutation, base)?
 
     })
 }

@@ -365,8 +365,8 @@ enum PencilConstructionStage {
 
 /// 🎼️ Original paged symmetric pencils support physical modal and signed geometric analyses.
 pub struct SymmetricPencilConstruction {
-    matrix: Option<Csr>,
-    mass: Option<VecD>,
+    pub(super) matrix: Option<Csr>,
+    pub(super) mass: Option<VecD>,
     mounted_mass: Option<MountedScalarSlots>,
     second: Option<Csr>,
     stage: PencilConstructionStage,
@@ -378,7 +378,7 @@ pub struct SymmetricPencilConstruction {
     mass_indptr: PagedList<u32, SPARSE_INDEX_SPACE>,
     mass_indices: PagedList<u32, SPARSE_INDEX_SPACE>,
     mass_values: PagedList<f64, SPARSE_INDEX_SPACE>,
-    complete: Option<(CscSym, Csr)>,
+    pub(super) complete: Option<(CscSym, Csr)>,
 }
 
 impl SymmetricPencilConstruction {

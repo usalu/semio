@@ -3,12 +3,13 @@
   "roots": {
     "repository": {
       "directory": ".🧬semio/🦑️repo/⚡️cache",
-      "maximumBytes": 21474836480,
+      "maximumBytes": 25769803776,
       "undeclaredUnusedAgeMs": 1209600000,
       "undeclaredQuietMs": 3600000,
       "ignored": [
         ".DS_Store",
-        "🧭️prune-stamp.json"
+        "🧭️prune-stamp.json",
+        "🧭️size-ledger.json"
       ]
     },
     "native": {
@@ -54,7 +55,8 @@
       "purpose": {
         "en": "Repository graph facts and Nx daemon data.",
         "de": "Repository-Graphfakten und Nx-Daemondaten."
-      }
+      },
+      "recreate": "derived"
     },
     {
       "id": "dependencies",
@@ -156,7 +158,14 @@
       "purpose": {
         "en": "Cargo store, compiled units and Nx task artifacts.",
         "de": "Cargo-Speicher, kompilierte Einheiten und Nx-Task-Artefakte."
-      }
+      },
+      "recreate": "carried",
+      "carry": [
+        "cargo/home",
+        "u/o",
+        "u/e",
+        "u/a"
+      ]
     },
     {
       "id": "control",
@@ -216,6 +225,46 @@
       }
     },
     {
+      "id": "cargo-home",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "cargo/home",
+      "partition": "rust",
+      "budget": {
+        "bytes": 3221225472
+      },
+      "managed": {
+        "owner": "cargo"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Cargo home: the shared registry, git checkouts and pinned tool binaries, one for every workspace of the checkout.",
+        "de": "Cargo-Home: die gemeinsame Registry, Git-Checkouts und fest eingebundene Werkzeug-Binärdateien, eines für alle Workspaces des Checkouts."
+      }
+    },
+    {
+      "id": "unit-cache",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "u",
+      "partition": "rust",
+      "budget": {
+        "bytes": 25769803776
+      },
+      "managed": {
+        "owner": "cargo"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Content-addressed compile units, the lanes of the running Cargo commands and the admission memo; collected in the background above the high-water mark.",
+        "de": "Inhaltsadressierte Compile-Einheiten, die Lanes der laufenden Cargo-Befehle und das Zulassungsgedächtnis; oberhalb der Hochwassermarke im Hintergrund bereinigt."
+      }
+    },
+    {
       "id": "cargo-store",
       "root": "repository",
       "kind": "nested",
@@ -230,8 +279,73 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts"
       ],
       "purpose": {
-        "en": "Cargo build, target, home and incremental state: the rest of the rust partition.",
-        "de": "Cargo-Build-, Target-, Home- und Inkrementalzustand: der Rest der Rust-Partition."
+        "en": "Cargo build and target directories of both modes and the compiler charges: the rest of the rust partition.",
+        "de": "Cargo-Build- und Target-Verzeichnisse beider Modi sowie die Compiler-Reservierungen: der Rest der Rust-Partition."
+      }
+    },
+    {
+      "id": "graph-inference",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "inference",
+      "partition": "graph",
+      "budget": {
+        "bytes": 2147483648
+      },
+      "managed": {
+        "owner": "graph"
+      },
+      "reclaim": {
+        "softAvailableBytes": 1879048192,
+        "targetAvailableBytes": 2147483648
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Optional graph caches and fact blocks, reclaimed in the background above the hard floor.",
+        "de": "Optionale Graph-Caches und Faktenblöcke, im Hintergrund oberhalb der harten Untergrenze zurückgewonnen."
+      }
+    },
+    {
+      "id": "graph-closures",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "build-input-closures",
+      "partition": "graph",
+      "budget": {
+        "bytes": 1342177280
+      },
+      "managed": {
+        "owner": "graph"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs"
+      ],
+      "purpose": {
+        "en": "Content-addressed source closures of the graph.",
+        "de": "Inhaltsadressierte Quell-Closures des Graphen."
+      }
+    },
+    {
+      "id": "graph-lock-closures",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "build-lock-closures",
+      "partition": "graph",
+      "budget": {
+        "bytes": 67108864
+      },
+      "managed": {
+        "owner": "graph"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs"
+      ],
+      "purpose": {
+        "en": "Content-addressed lock closures of the graph.",
+        "de": "Inhaltsadressierte Lock-Closures des Graphen."
       }
     },
     {
@@ -253,6 +367,17 @@
         "en": "Bazel disk cache, bounded by a share of the products partition.",
         "de": "Bazel-Disk-Cache, begrenzt durch einen Anteil der Produkt-Partition."
       }
+    },
+    {
+      "id": "semio-actions",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "semio/actions",
+      "partition": "products",
+      "budget": { "basisPoints": 2000 },
+      "managed": { "owner": "semio" },
+      "writers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts"],
+      "purpose": { "en": "Action cache of the in-house build engine: outputs by digest and entries by action key.", "de": "Aktions-Cache der hauseigenen Build-Engine: Ausgaben nach Digest und Einträge nach Aktionsschlüssel." }
     },
     {
       "id": "go",
@@ -562,7 +687,8 @@
         "custody": "quiet"
       },
       "writers": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts"
       ],
       "purpose": {
         "en": "Nx plugin command captures.",
@@ -612,6 +738,69 @@
       }
     },
     {
+      "id": "renderer-modules",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "📺️renderer-modules",
+      "budget": {
+        "bytes": 268435456
+      },
+      "collect": {
+        "unusedAgeMs": 2592000000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        ".storybook/📖️stories/🧭️coordination/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Renderer modules served to the storybook.",
+        "de": "Dem Storybook bereitgestellte Renderer-Module."
+      }
+    },
+    {
+      "id": "browser-actor-containment",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "browser-actor-child-containment",
+      "budget": {
+        "bytes": 67108864
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🌎️hub/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "purpose": {
+        "en": "Test artifacts of the browser actor child containment check.",
+        "de": "Testartefakte der Browser-Actor-Child-Isolationsprüfung."
+      }
+    },
+    {
+      "id": "elan",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "tools/elan",
+      "budget": {
+        "bytes": 3221225472
+      },
+      "collect": {
+        "unusedAgeMs": 7776000000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "👴️leutwiler/💤️realparts-of-powers-z-n/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Lean toolchains of the workspace-owned elan home, one per pinned elan version.",
+        "de": "Lean-Toolchains des arbeitsbereichseigenen elan-Verzeichnisses, eine je festgelegter elan-Version."
+      }
+    },
+    {
       "id": "diff",
       "root": "repository",
       "kind": "tree",
@@ -633,7 +822,7 @@
       }
     },
     {
-      "id": "cargo-legacy",
+      "id": "cargo-protected",
       "root": "repository",
       "kind": "tree",
       "directory": "cargo",
@@ -749,25 +938,6 @@
       }
     },
     {
-      "id": "remote-execution",
-      "root": "repository",
-      "kind": "tree",
-      "directory": "remote-execution",
-      "budget": {
-        "bytes": 67108864
-      },
-      "managed": {
-        "owner": "nx"
-      },
-      "writers": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json"
-      ],
-      "purpose": {
-        "en": "Remote execution platform descriptors restored by Nx.",
-        "de": "Von Nx wiederhergestellte Remote-Execution-Plattformbeschreibungen."
-      }
-    },
-    {
       "id": "query-index",
       "root": "repository",
       "kind": "tree",
@@ -788,6 +958,102 @@
         "en": "Go event query index keyed by a repository fingerprint.",
         "de": "Go-Ereignis-Abfrageindex, geschlüsselt über einen Repository-Fingerabdruck."
       }
+    },
+    {
+      "id": "remote-cache",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "remote-cache",
+      "budget": {
+        "bytes": 3221225472
+      },
+      "managed": {
+        "owner": "remote-cache"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Shared Bazel and Nx result cache served by repo remote-cache, bounded and least recently used first.",
+        "de": "Gemeinsamer Bazel- und Nx-Ergebniscache von repo remote-cache, begrenzt und die am längsten ungenutzten zuerst."
+      }
+    },
+    {
+      "id": "remote-execution",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "remote-execution",
+      "budget": {
+        "bytes": 536870912
+      },
+      "managed": {
+        "owner": "remote-execution"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Blob cache and private input roots of the workers of repo remote-execution, bounded and least recently used first.",
+        "de": "Blob-Cache und private Eingabeverzeichnisse der Worker von repo remote-execution, begrenzt und die am längsten ungenutzten zuerst."
+      }
+    }
+  ],
+  "needs": [
+    {
+      "partition": "rust",
+      "measuredOn": "2026-10-22",
+      "headroomPercent": 15,
+      "floorBytes": 4294967296,
+      "components": [
+        {
+          "id": "cargo-home",
+          "area": "cargo-home",
+          "measuredBytes": 1748000000
+        },
+        {
+          "id": "nx-artifacts",
+          "area": "nx-artifacts",
+          "measuredBytes": 61000000
+        },
+        {
+          "id": "unit-cache",
+          "area": "unit-cache",
+          "measuredBytes": 8400000000
+        },
+        {
+          "id": "compiler-workspaces",
+          "bytes": 8589934592,
+          "measuredBytes": 3900000000
+        }
+      ]
+    },
+    {
+      "partition": "graph",
+      "measuredOn": "2026-10-21",
+      "headroomPercent": 20,
+      "floorBytes": 1073741824,
+      "components": [
+        {
+          "id": "closures",
+          "area": "graph-closures",
+          "measuredBytes": 1136250880
+        },
+        {
+          "id": "lock-closures",
+          "area": "graph-lock-closures",
+          "measuredBytes": 14123008
+        },
+        {
+          "id": "inference",
+          "area": "graph-inference",
+          "measuredBytes": 1818488832
+        },
+        {
+          "id": "publication",
+          "bytes": 536870912,
+          "measuredBytes": 0
+        }
+      ]
     }
   ],
   "retirements": [
@@ -848,15 +1114,6 @@
     {
       "root": "repository",
       "directory": "tools/sdk",
-      "quietMs": 86400000,
-      "reason": {
-        "en": "Tool installs moved into the tools partition.",
-        "de": "Werkzeug-Installationen liegen jetzt in der Werkzeug-Partition."
-      }
-    },
-    {
-      "root": "repository",
-      "directory": "tools/elan",
       "quietMs": 86400000,
       "reason": {
         "en": "Tool installs moved into the tools partition.",

@@ -94,7 +94,9 @@
         "slot": {"$ref": "#/definitions/Slot"},
         "key": {"$ref": "#/definitions/Key"},
         "keys": {"type": "array", "maxItems": 64, "items": {"$ref": "#/definitions/Key"}},
-        "usedAt": {"type": "integer", "minimum": 0}
+        "usedAt": {"type": "integer", "minimum": 0},
+        "session": {"type": "string", "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"},
+        "agent": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"}
       }
     },
     "Inventory": {

@@ -16,7 +16,16 @@ pub struct SetVlrData {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vlr-data", kind: "set-vlr-data", record: "SetVlrData" };
 
-    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set VLR data", "VLR-Daten setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<LasSnapshot, LasMutation> for SetVlrData {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::ColdMutation<LasSnapshot>>::ReferenceDiff> {
         let Self { index, data } = self;
         protocol::MutationOutcome::new(diff::diff_set_vlr_data(*index, data.clone()))
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set VLR data", "VLR-Daten setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

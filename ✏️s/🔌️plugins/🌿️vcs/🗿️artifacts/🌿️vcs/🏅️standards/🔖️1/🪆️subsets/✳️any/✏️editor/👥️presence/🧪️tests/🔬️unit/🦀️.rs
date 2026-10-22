@@ -1,4 +1,4 @@
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::editor::vcs::presence::*;
 
 #[semio_framework_async_macros::async_test]

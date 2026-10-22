@@ -1,7 +1,7 @@
 //! 🧪️ Pixel content replacement preserves metadata and has an exact nullable inverse.
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 use semio_framework_mutation_diff::MutationDiff;
 
 #[test]
@@ -14,7 +14,7 @@ fn change_layer_pixels_matches_independent_json_and_round_trips() {
     let mut expected = fixture["before"].clone();
     for key in ["imageKey", "width", "height"] { expected["layers"][0][key] = fixture["mutation"]["content"][key].clone(); }
     let (diff, _) = mutation.diff(&base).into_parts();
-    let actual = protocol::apply_diff(&diff, &base).unwrap();
+    let actual = protocol::apply_diff_cold(&diff, &base).unwrap();
     let rendered: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&actual)))).unwrap();
     assert_eq!(json_numbers(rendered), json_numbers(expected));
     assert_eq!(RasterMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
@@ -22,7 +22,7 @@ fn change_layer_pixels_matches_independent_json_and_round_trips() {
     let mut restored = actual;
     for undo in inverse {
         let (change, _) = undo.diff(&restored).into_parts();
-        let previous = protocol::apply_diff(&change, &restored).unwrap();
+        let previous = protocol::apply_diff_cold(&change, &restored).unwrap();
         MutationDiff::retire_cold(change);
         semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);
         restored = previous;

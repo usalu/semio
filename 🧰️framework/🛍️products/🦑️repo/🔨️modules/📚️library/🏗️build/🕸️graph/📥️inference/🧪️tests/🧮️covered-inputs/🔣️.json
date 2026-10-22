@@ -9,7 +9,7 @@
     "tools/check.test.ts": "import { helper } from './helper.ts';\nexport const checked = helper;\n",
     "tools/helper.ts": "export const helper = 3;\n"
   },
-  "command": "bun ./tools/📜️script.ts check",
+  "command": "repo ./tools/📜️script.ts check",
   "base": ["tools/a.ts", "tools/b.ts", "tools/rawsrc.ts", "tools/📜️script.ts"],
   "cases": [
     { "id": "modules the entry closure compiled change nothing", "projectRoot": ".", "inputs": ["{workspaceRoot}/tools/a.ts", "{workspaceRoot}/tools/b.ts"], "closure": ["tools/a.ts", "tools/b.ts", "tools/rawsrc.ts", "tools/📜️script.ts"] },

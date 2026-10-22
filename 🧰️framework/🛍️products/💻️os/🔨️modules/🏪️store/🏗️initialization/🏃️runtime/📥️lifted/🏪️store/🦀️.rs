@@ -214,6 +214,7 @@ pub struct ArtifactStoreInitializationRuntime<P> {
     pub revision: std::mem::ManuallyDrop<CursorRevisionAccumulator>,
     pub close_active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub supersessions: std::mem::ManuallyDrop<EffectiveSupersessions>,
+    pub read_registry: std::mem::ManuallyDrop<SnapshotReadLeaseRegistryOwner>,
     pub(crate) close_phase: u8,
     taken: bool,
 }
@@ -225,7 +226,33 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
-        Self::new_with_registry(artifact_id, schema, current,initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new()) }
+        Self::new_with_registry(artifact_id, schema, current, initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new())
+    }
+
+    /// 🧷️ Seats the runtime on the exact lease registry that later transfers to the Store, so every issued read stays returnable.
+    pub fn new_with_registry(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog, registry: SnapshotReadLeaseRegistryOwner) -> Self {
+        let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[artifact_id.as_bytes(), schema.as_bytes(), &initial_digest]);
+        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
+        Self {
+            current: std::mem::ManuallyDrop::new(Some(current)),
+            applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
+            redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
+            cursor_applied_edit_ids: std::mem::ManuallyDrop::new(cursor_applied_edit_ids),
+            cursor_redo_edit_ids: std::mem::ManuallyDrop::new(cursor_redo_edit_ids),
+            current_checkpoint_id: std::mem::ManuallyDrop::new(None),
+            local_actor_id: std::mem::ManuallyDrop::new(actor),
+            dag: std::mem::ManuallyDrop::new(Some(semio_framework_os_spr::MutationDag::new())),
+            edit_sequence: 0,
+            clock: fresh_replica_clock(),
+            initial_digest,
+            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }),
+            close_active: std::mem::ManuallyDrop::new(None),
+            supersessions: std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),
+            read_registry: std::mem::ManuallyDrop::new(registry),
+            close_phase: 0,
+            taken: false,
+        }
+    }
 
     pub fn current_mut(&mut self) -> Option<&mut P> {
         self.current.as_mut().and_then(Arc::get_mut)
@@ -324,7 +351,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// `None` for a withdrawn or faulted input; `None` when the edit has no forward at `index`.
     pub fn effective_forward<'a, Mutation>(&self, edit: &'a Edit<Mutation>, index: usize, schema: &str) -> Option<EffectiveOperation<'a, P, Mutation>>
     where
-        Mutation: self::Mutation<P> + OpBinary,
+        P: Clone,
+        Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
     {
         let original = edit.forwards.get(index)?;
         let mutation_id = edit.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id()).unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
@@ -337,11 +365,12 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// fails or exceeds `maximum_bytes`.
     pub fn fold_forward<Mutation>(&mut self, edit: &Edit<Mutation>, index: usize, schema: &str, maximum_bytes: usize) -> Result<ArtifactStoreInitializationForward<P>, &'static str>
     where
-        Mutation: self::Mutation<P> + OpBinary,
+        P: Clone,
+        Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
     {
         if let Some(original) = edit.forwards.get(index).filter(|op| op.may_emit_foreign_steps()) {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-            self.revision.unit_flags.insert((digest, index), original.foreign_step_source(self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
+            self.revision.unit_flags.insert((digest, index), <Mutation as self::Mutation<P>>::foreign_step_source(original, self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
         }
         let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationForward::Exhausted) };
         let Some(operation) = effective.operation() else { return Ok(ArtifactStoreInitializationForward::Folded { displaced: None, fuel: 1 }) };

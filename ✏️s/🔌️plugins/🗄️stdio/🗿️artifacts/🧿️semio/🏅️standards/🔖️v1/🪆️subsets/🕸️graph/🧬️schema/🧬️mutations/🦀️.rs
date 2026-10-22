@@ -53,7 +53,7 @@ use crate::schema::mutations::set_node_property;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph")]
+#[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph", reference = SemioGraphSnapshot, reference_diff = SemioGraphDiff)]
 pub enum SemioGraphMutation {
     CreateNode(create_node::CreateNode),
     DeleteNode(delete_node::DeleteNode),
@@ -87,7 +87,7 @@ pub const KINDS: &[&str] = &["create-node", "delete-node", "change-node-kind", "
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
-    <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(mutation, base)
+    <SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(mutation, base)
 }
 
 
@@ -99,8 +99,8 @@ pub fn diff_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGrap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::inverse(mutation, base)?
 
     })
 }

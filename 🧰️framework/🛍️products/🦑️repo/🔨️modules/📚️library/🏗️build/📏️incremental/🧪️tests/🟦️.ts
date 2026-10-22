@@ -1,3 +1,4 @@
+import {buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
 /** 🔁️ Incremental build conformance: the evaluation model, verdicts, mutations, observers, runner and command are checked against language-agnostic fixtures, an independent Python oracle, Bazel's own binary (execution log, summary line, `rdeps`) and the installed Nx's own run-record class. */
 import {test,expect} from "bun:test";
 import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -8,11 +9,13 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import mounts from "./🧫️fixtures/💽️mounts/🔣️.json" with {type:"json"};
+import rootBudget from "./🧫️fixtures/📍️root-budget/🔣️.json" with {type:"json"};
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
 import {incrementalComparisonsV1,incrementalExpectedV1,incrementalLabelV1,incrementalMutateV1,incrementalQuiescentV1,incrementalRdepsExpressionV1,incrementalRdepsPackageV1,incrementalRdepsTasksV1,incrementalReportV1,incrementalScenarioIssuesV1,incrementalSliceV1,incrementalVerdictV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalObservationV1,type IncrementalScenarioSetV1,type IncrementalSliceV1,type IncrementalToolV1} from "../🟦️.ts";
 import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
-import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDisposableV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalRunScenarioV1,incrementalRunV1,incrementalSelectV1,incrementalSliceFromGraphV1,type IncrementalAdapterV1,type IncrementalHostV1,type IncrementalPortsV1} from "../🏃️runner/🟦️.ts";
-import {incrementalArgumentsV1,incrementalDefaultRootV1,incrementalOptionNamesV1,renderIncrementalPlanV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../⌨️command/🟦️.ts";
+import {incrementalDetachMountsV1,incrementalMountsInsideV1,incrementalRefreshV1,incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDisposableV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalRunScenarioV1,incrementalRunV1,incrementalSelectV1,incrementalSliceFromGraphV1,type IncrementalAdapterV1,type IncrementalHostV1,type IncrementalPortsV1} from "../🏃️runner/🟦️.ts";
+import {incrementalArgumentsV1,incrementalDefaultRootV1,incrementalTrackedFilesV1,incrementalOptionNamesV1,renderIncrementalPlanV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../⌨️command/🟦️.ts";
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import {bazelCommandPlanV1,bazelTaskReportOptionsV1} from "../../🔧️tools/🏗️bazel/🧭️commands/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -310,9 +313,9 @@ test("cloning copies tracked files including emoji names and links into an empty
  try{
   const live=join(base,"live");mkdirSync(join(live,"🧰️x/y"),{recursive:true});
   writeFileSync(join(live,"🧰️x/y/🟦️.ts"),"export {};\n");writeFileSync(join(live,"plain.txt"),"hello");symlinkSync("plain.txt",join(live,"link"));
-  const files=["🧰️x/y/🟦️.ts","plain.txt","link"],ticks:string[]=[],copy=join(base,"copy");
+  symlinkSync(join(live,"plain.txt"),join(live,"back"));const files=["🧰️x/y/🟦️.ts","plain.txt","link","back"],ticks:string[]=[],copy=join(base,"copy");
   const done=await incrementalCloneV1(live,copy,files,{signal:new AbortController().signal,progress:async(count,total)=>{ticks.push(`${count}/${total}`);}});
-  expect(done).toBe(3);expect(ticks.at(-1)).toBe("3/3");
+  expect(done).toBe(4);expect(ticks.at(-1)).toBe("4/4");expect(existsSync(join(copy,"back"))).toBe(false);
   expect(readFileSync(join(copy,"🧰️x/y/🟦️.ts"),"utf8")).toBe("export {};\n");expect(readFileSync(join(copy,"plain.txt"),"utf8")).toBe("hello");
   expect(lstatSync(join(copy,"link")).isSymbolicLink()).toBe(true);expect(readlinkSync(join(copy,"link"))).toBe("plain.txt");
   await expect(incrementalCloneV1(live,copy,files,{signal:new AbortController().signal,progress:async()=>{}})).rejects.toThrow("must be empty");
@@ -320,7 +323,7 @@ test("cloning copies tracked files including emoji names and links into an empty
   const stop=new AbortController();stop.abort();
   await expect(incrementalCloneV1(live,join(base,"stopped"),files,{signal:stop.signal,progress:async()=>{}})).rejects.toThrow("Cancelled");
   await expect(incrementalCloneV1(live,join(base,"deep"),["a/".repeat(130)+"b"],{signal:new AbortController().signal,progress:async()=>{}})).rejects.toThrow("exceeds");
-  expect(readdirSync(live).sort()).toEqual(["link","plain.txt","🧰️x"].sort());
+  expect(readdirSync(live).sort()).toEqual(["back","link","plain.txt","🧰️x"].sort());
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
@@ -354,14 +357,12 @@ test("a dry-run plan is read from the first line that opens the JSON object, wha
 });
 
 test("the command arguments are closed, bilingual in their errors and default to both implementations and all phases",()=>{
- expect(incrementalArgumentsV1(["list"])).toMatchObject({operation:"list",scenarios:"all",tools:["nx","bazel"],phases:["warm","edit","revert"],json:false,fresh:false});
+ expect(incrementalArgumentsV1(["list"])).toMatchObject({operation:"list",scenarios:"all",tools:buildBackendIdsV1(),phases:["warm","edit","revert"],json:false,fresh:false});
  expect(incrementalArgumentsV1(["run","--scenario=a,b","--implementations","bazel","--phases=edit","--json","--root=/tmp/x","--file=r.json","--lang=de"])).toMatchObject({operation:"run",scenarios:["a","b"],tools:["bazel"],phases:["edit"],json:true,root:"/tmp/x",file:"r.json",language:"de"});
  expect(incrementalArgumentsV1(["plan","--scenario=all"]).scenarios).toBe("all");
  for(const[bad,message]of [[[],"Expected repo incremental"],[["go"],"Expected repo incremental"],[["run","extra"],"Expected repo incremental"],[["run","--wat"],"Unknown incremental option"],[["run","--json","--json"],"Repeated option"],[["run","--scenario"],"needs a value"],[["run","--implementations=make"],"Unknown implementation"],[["run","--phases=cold"],"Unknown phase"],[["run","--lang=fr"],"Unknown language"],[["run","--json=1"],"Unknown incremental option"]] as const)
   expect(()=>incrementalArgumentsV1(bad as never),JSON.stringify(bad)).toThrow(message);
  expect(()=>incrementalArgumentsV1(["go"])).toThrow("Erwartet: repo incremental");
- expect(incrementalDefaultRootV1("darwin","/var/folders/ab/T")).toBe("/var/folders/ab/T/sinc");expect(incrementalDefaultRootV1("linux","/tmp/st/ab12cd34/tmp")).toBe("/tmp/st/ab12cd34/tmp/sinc");expect(incrementalDefaultRootV1("win32","C:\\Users\\u\\AppData\\Local\\Temp")).toBe("C:\\Users\\u\\AppData\\Local\\Temp\\sinc");
- const tooLong="/"+"a".repeat(100);expect(()=>incrementalDefaultRootV1("linux",tooLong)).toThrow("is too long for the disposable root");expect(()=>incrementalDefaultRootV1("linux",tooLong)).toThrow("zu lang für das Wegwerf-Verzeichnis");
  expect(renderIncrementalPlanV1(set,[{scenario:"s",tool:"nx",expected:{direct:[],must:["a:b"],may:["a:b"],cutoff:[]}}],"de")).toBe("s / nx: muss 1, darf 1, abgeschnitten 0\n  a:b");
 });
 
@@ -383,13 +384,15 @@ test("the command lists, prepares, plans, runs and discards through its ports wi
  try{
   const live=join(base,"live"),copy=join(base,"copy"),script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";mkdirSync(join(live,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"),{recursive:true});writeFileSync(join(live,script),"// cli\n");writeFileSync(join(live,"a.ts"),"a\n");
   const out:string[]=[],stages:string[]=[],log:string[]=[],reports:unknown[]=[],single=slice({version:1,selected:["lib:generate"],tasks:{"lib:generate":{family:"bun-script",cache:true,outputs:true,dependsOn:[],consumes:[],inputs:[]}}});
-  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",tmpdir:()=>"/tmp/t",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
+  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
   await runIncrementalCommandV1(live,["incremental","list","--lang=de"],ports());
   expect(out.at(-1)).toContain(set.scenarios[0]!.title.de);
   await expect(runIncrementalCommandV1(live,["incremental","run","--root="+copy],ports())).rejects.toThrow("Prepare the disposable root first");
   await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
   expect(existsSync(join(copy,script))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(true);
-  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all"]);
+  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all","--tool=nx tools setup all"]);
+  stages.length=0;log.length=0;await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
+  expect(stages.some(stage=>stage.startsWith("refresh:"))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(false);expect(log.length).toBe(4);
   await expect(runIncrementalCommandV1(live,["incremental","plan","--scenario=lib-none","--root="+copy],ports())).rejects.toThrow("Unknown scenario");
   out.length=0;
   await runIncrementalCommandV1(live,["incremental","plan","--scenario=fw-ts-comment","--implementations=bazel","--root="+copy,"--json"],ports());
@@ -438,7 +441,7 @@ test("the Bazel adapter asks for the compact execution log only when the environ
 test("the neutral catalogue documents repo incremental in both languages with exactly the options and subcommands the parser accepts",()=>{
  const row=catalog.operations.find(operation=>operation.name==="incremental")!;
  expect(row).toBeDefined();
- expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});
+ expect((row as {implementations?:unknown}).implementations).toBeUndefined();
  expect(row.progress&&row.cancellable).toBe(true);
  expect("subcommands" in row?row.subcommands!.map(sub=>sub.name):[]).toEqual(["list","plan","prepare","run","discard"]);
  const names=incrementalOptionNamesV1(),accepted=new Set([...names.valued,...names.plain].filter(name=>name!=="--lang"));
@@ -458,4 +461,65 @@ test("the comparison pairs Nx and Bazel rows of the same scenario and phase, lis
  expect(renderIncrementalReportV1(report,set,"en")).toContain("comparison of the implementations: nx / bazel\n  s / warm run: same tasks\n  s / edit: different tasks\n    only nx: c:d\n    only bazel: e:f");
  expect(renderIncrementalReportV1(report,set,"de")).toContain("Vergleich der Implementierungen: nx / bazel");
  expect(python({...fixture,comparisonRows:rows}).comparisons).toEqual(incrementalComparisonsV1(rows));
+});
+
+for(const row of rootBudget.cases)test(`default disposable root ${row.id} keeps the longest product path within the budget`,()=>{
+ const found=incrementalDefaultRootV1(row.platform,row.temporary,row.home);
+ expect(found).toBe(row.root);
+ expect(found.length+1+rootBudget.longestProductPathUnits).toBeLessThanOrEqual(rootBudget.maximumPathLength);
+ expect(schema.definitions.Policy.const.maximumRootLength+1+rootBudget.longestProductPathUnits).toBeLessThanOrEqual(schema.definitions.Policy.const.maximumPathLength);
+});
+
+test("the inventory of a checkout lists what git lists plus the ignored generated outputs, without the ticket workspace and ignored build output, and a clone skips files deleted from the working tree",async()=>{
+ const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-inv-")));
+ try{
+  const git=(...args:string[])=>{const run=spawnSync("git",["-C",base,...args],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return run.stdout;};
+  git("init","-q");writeFileSync(join(base,".gitignore"),"dist/\n**/🤖️generated/\n**/🤖️generated.*\n/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/*.rs\n");
+  for(const row of rootBudget.excluded.files){mkdirSync(dirname(join(base,row.path)),{recursive:true});writeFileSync(join(base,row.path),"x");}
+  mkdirSync(join(base,"dist/prototype/next/standalone"),{recursive:true});writeFileSync(join(base,"dist/prototype/next/standalone/server.js"),"x");
+  git("add","-A",".");rmSync(join(base,"deleted.txt"));
+  const listed=await incrementalTrackedFilesV1(base,new AbortController().signal);
+  const kept=rootBudget.excluded.files.filter(row=>row.kept).map(row=>row.path),oracle=[...git("ls-files","-z","-co","--exclude-standard").split("\0"),...git("ls-files","-z","-o","-i","--exclude-standard","--",":(glob)**/🤖️generated/**",":(glob)**/🤖️generated.*","🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs").split("\0")].filter(file=>file&&!rootBudget.excluded.files.some(row=>!row.kept&&row.path===file));
+  expect([...listed].sort()).toEqual([...new Set(oracle)].sort());
+  for(const path of kept)expect(listed,path).toContain(path);
+  expect(listed.some(file=>file.includes("🎫️tickets")||file.startsWith("dist/")||file.endsWith("other.rs"))).toBe(false);
+  const copy=join(base,"..","incr-inv-copy-"+Date.now());
+  try{await incrementalCloneV1(base,copy,listed,{signal:new AbortController().signal,progress:async()=>{}});expect(existsSync(join(copy,"deleted.txt"))).toBe(false);expect(existsSync(join(copy,"🧰️framework/a.ts"))).toBe(true);expect(existsSync(join(copy,"🧰️framework/🔨️modules/x/🤖️generated/📇️registry/Cargo.toml"))).toBe(true);}finally{rmSync(copy,{recursive:true,force:true});}
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+for(const row of mounts.cases)test(`mounts below a disposable root ${row.id} are found deepest first`,()=>{
+ expect(incrementalMountsInsideV1(row.listing,row.root)).toEqual(row.expected);
+});
+
+test("detaching the mounts of a root that holds none, or does not exist, detaches nothing, and the real mount table lists no mount below a fresh directory",async()=>{
+ const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-mnt-")));
+ try{
+  expect(await incrementalDetachMountsV1(base,new AbortController().signal)).toBe(0);
+  expect(await incrementalDetachMountsV1(join(base,"absent"),new AbortController().signal)).toBe(0);
+  expect(await incrementalDetachMountsV1(base,new AbortController().signal,"win32")).toBe(0);
+  const table=spawnSync("mount",[],{encoding:"utf8"});expect(table.status).toBe(0);
+  expect(incrementalMountsInsideV1(table.stdout,base)).toEqual([]);
+  expect(incrementalMountsInsideV1(table.stdout,"/").length).toBeGreaterThan(0);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("refreshing a prepared root adds what is missing, replaces what differs and keeps what the bootstrap built, reports progress and stops when cancelled",async()=>{
+ const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-refresh-")));
+ try{
+  const live=join(base,"live"),copy=join(base,"copy");mkdirSync(join(live,"🧰️x"),{recursive:true});
+  writeFileSync(join(live,"🧰️x/same.ts"),"same");writeFileSync(join(live,"🧰️x/changed.ts"),"before");writeFileSync(join(live,"🧰️x/equalsize.ts"),"aaaa");symlinkSync("same.ts",join(live,"🧰️x/link"));
+  const files=["🧰️x/same.ts","🧰️x/changed.ts","🧰️x/equalsize.ts","🧰️x/link"],hooks={signal:new AbortController().signal,progress:async()=>{}};
+  await incrementalCloneV1(live,copy,files,hooks);mkdirSync(join(copy,"node_modules"));writeFileSync(join(copy,"node_modules/built.js"),"built");
+  expect(await incrementalRefreshV1(live,copy,files,hooks)).toEqual({added:0,updated:0});
+  writeFileSync(join(live,"🧰️x/changed.ts"),"after, longer");writeFileSync(join(live,"🧰️x/equalsize.ts"),"bbbb");writeFileSync(join(live,"🧰️x/new.ts"),"new");rmSync(join(live,"🧰️x/link"));symlinkSync("changed.ts",join(live,"🧰️x/link"));
+  const next=[...files,"🧰️x/new.ts"],ticks:string[]=[];
+  expect(await incrementalRefreshV1(live,copy,next,{signal:hooks.signal,progress:async(done,total)=>{ticks.push(`${done}/${total}`);}})).toEqual({added:1,updated:3});
+  expect(ticks.at(-1)).toBe("5/5");
+  expect(readFileSync(join(copy,"🧰️x/changed.ts"),"utf8")).toBe("after, longer");expect(readFileSync(join(copy,"🧰️x/equalsize.ts"),"utf8")).toBe("bbbb");expect(readFileSync(join(copy,"🧰️x/new.ts"),"utf8")).toBe("new");expect(readlinkSync(join(copy,"🧰️x/link"))).toBe("changed.ts");expect(readFileSync(join(copy,"node_modules/built.js"),"utf8")).toBe("built");
+  expect(await incrementalRefreshV1(live,copy,next,hooks)).toEqual({added:0,updated:0});
+  const stop=new AbortController();stop.abort();
+  await expect(incrementalRefreshV1(live,copy,next,{signal:stop.signal,progress:async()=>{}})).rejects.toThrow("Cancelled");
+  await expect(incrementalRefreshV1(live,join(live,"nested"),next,hooks)).rejects.toThrow("separate from the live checkout");
+ }finally{rmSync(base,{recursive:true,force:true});}
 });

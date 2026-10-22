@@ -1,5 +1,8 @@
 import { SCRIPT_PROVIDERS_ENV, defineScriptProviderV1, loadScriptProviderSyncV1, loadScriptProviderV1 } from "../🔌️providers/🟦️.ts";
 import type { ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
+import type { CargoLockOutcomeV1 } from "./🔒️lock/🟦️.ts";
+export { cargoLockStaleFailureV1, cargoLockStaleOutputV1, cargoLockMissingCrateV1, CargoLockRefusedV1 } from "./🔒️lock/🟦️.ts";
+export type { CargoLockOutcomeV1 } from "./🔒️lock/🟦️.ts";
 
 /** 🧭️ Names the Cargo workspace that owns a package manifest. */
 export type CargoWorkspaceScopeV1 = Readonly<{ directory: string; manifest: string; lock: string; memberManifests: readonly string[] }>;
@@ -20,6 +23,9 @@ export interface CargoWorkspaceProviderV1 {
   workspaceForManifest(root: string, manifest: string): CargoWorkspaceScopeV1;
   prepareInvocation(root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, control: ResourceLeaseControl): Promise<void>;
 }
+
+/** 🔐️ Names the Cargo invocation whose workspace lockfile must be current and the caller authority that runs the refresh. */
+export type CargoLockEnsureRequestV1 = Readonly<{ workspaceRoot: string; cwd: string; program: string; prefix: readonly string[]; args: readonly string[]; environment: Readonly<Record<string, string | undefined>>; control: ResourceLeaseControl; force: boolean }>;
 
 /** 🧷️ Names the port and the exact functions its implementation must expose. */
 export const CARGO_WORKSPACE_PROVIDER_V1 = defineScriptProviderV1<CargoWorkspaceProviderV1>("cargo-workspace", ["observeSource", "observeInput", "observeOutput", "completeObservation", "prepareCapabilityLinks", "runCapabilityContributionChecks", "repositoryPackages", "workspaceForManifest", "prepareInvocation"]);
@@ -44,3 +50,8 @@ export function cargoRepositoryPackages(root: string): readonly CargoWorkspacePa
 export function cargoWorkspaceForManifest(root: string, manifest: string): CargoWorkspaceScopeV1 { return sync().workspaceForManifest(root, manifest); }
 /** 🛠️ Runs the preparation programs a Cargo invocation needs before it starts. */
 export async function prepareCargoWorkspaceInvocation(root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, control: ResourceLeaseControl): Promise<void> { return (await loadScriptProviderV1(CARGO_WORKSPACE_PROVIDER_V1)).prepareInvocation(root, args, cwd, environment, control); }
+let lockEnsurer: ((request: CargoLockEnsureRequestV1) => Promise<CargoLockOutcomeV1>) | undefined;
+/** 🔐️ Registers the in-process implementation that brings a workspace lockfile up to date; the implementing module registers itself when it loads, so captured closures need no computed import. */
+export function registerCargoLockEnsurerV1(ensurer: (request: CargoLockEnsureRequestV1) => Promise<CargoLockOutcomeV1>): void { lockEnsurer = ensurer; }
+/** 🔐️ Brings the lockfile of the selected workspace up to date with its manifests before a locked Cargo command; a process whose repository layer is not loaded has nothing to refresh. */
+export async function ensureCargoLockCurrentV1(request: CargoLockEnsureRequestV1): Promise<CargoLockOutcomeV1 | "absent"> { return lockEnsurer ? lockEnsurer(request) : "absent"; }

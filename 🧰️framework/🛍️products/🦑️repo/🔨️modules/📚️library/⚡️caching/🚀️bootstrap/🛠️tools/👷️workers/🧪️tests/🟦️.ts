@@ -22,7 +22,7 @@ function changed(changes:Readonly<Record<string,unknown>>){
 test("the worker plan becomes the Nx job count and batch mode the installed Nx reads, and every contract field is reported once",()=>{
  for(const row of fixture.scenarios){
   const plan=planWorkersV1(changed(row.policy),row.host,row.overrides),settings=nxWorkerSettingsV1(plan,{batchCapable:row.batchCapable});
-  expect(settings.environment,row.name).toEqual(row.environment);
+  expect<unknown>(settings.environment,row.name).toEqual(row.environment);
   expect(settings.mapping.map(entry=>entry.field).sort(),row.name).toEqual([...workerContractFieldsV1()].sort());
   expect(settings.mapping.find(entry=>entry.field==="localJobs")!.support,row.name).toBe("exact");
   for(const kind of WORKER_ACTION_KINDS_V1)expect(settings.mapping.find(entry=>entry.field===`kinds.${kind}.workers`)!.support,row.name).toBe("unsupported");

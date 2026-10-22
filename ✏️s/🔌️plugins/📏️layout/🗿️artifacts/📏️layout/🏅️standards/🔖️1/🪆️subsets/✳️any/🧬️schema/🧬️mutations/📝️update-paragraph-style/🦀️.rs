@@ -27,6 +27,16 @@ pub struct UpdateParagraphStyle {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParagraphStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_paragraph_style::UpdateParagraphStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "paragraph-style", kind: "update-paragraph-style", record: "UpdatedParagraphStyle" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdateParagraphStyle where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_paragraph_style::UpdateParagraphStyle> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_paragraph_style(self, base)
     }
@@ -36,12 +46,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParagraphStyle where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 
 fn alignment_ok(value: &str) -> bool {

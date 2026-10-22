@@ -17,7 +17,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // `🖱️ui/🎬️scene/🟦️.ts`'s own `ActionDescriptor` import from this file erases cleanly.
 
 // #region 🧬️GeneratedMirror
-/** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`bun repo run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
+/** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`repo run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
 
 // #endregion 🧬️GeneratedMirror
 //#region 🔌️PluginAndAppContract
@@ -25,7 +25,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 //#region 🔖️HostResolvedArgs
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️hostresolvedargs/🟦️.ts");
-  await registerTests1(import.meta.vitest, { artifactKindChoices, decodeArtifactKindChoice, decodeSurfaceAppChoice, encodeArtifactKindChoice, encodeSurfaceAppChoice }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { artifactKindChoices, decodeArtifactKindChoice, decodeSurfaceAppChoice, encodeArtifactKindChoice, encodeSurfaceAppChoice }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🔖️HostResolvedArgs
 

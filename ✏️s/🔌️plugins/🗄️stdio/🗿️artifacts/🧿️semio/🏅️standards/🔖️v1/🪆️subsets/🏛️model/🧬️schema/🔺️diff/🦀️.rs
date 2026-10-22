@@ -196,24 +196,9 @@ pub struct SemioModelDiff {
 //#endregion 🔖️DiffTypes
 
 //#region 🔖️Apply
-impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    fn apply(&self, base: &SemioModelSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.spatial {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;
-            apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
-        }
-        if let Some(d) = &self.elements {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |added| added.item.id.clone(), ["elements"])?;
-            apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
-        }
-        if let Some(d) = &self.relations {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |added| added.item.id.clone(), ["relations"])?;
-            apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {}
 
+impl protocol::ColdMutationDiff<SemioModelSnapshot> for SemioModelDiff {
     fn absorb(&mut self, other: Self) {
         self.spatial = match (self.spatial.take(), other.spatial) {
             (None, b) => b,
@@ -230,6 +215,25 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
             (a, None) => a,
             (Some(a), Some(b)) => Some(absorb_named(a, &b, |r: &ModelRelation| r.id.clone(), absorb_relation_diff, apply_relation)),
         };
+    }
+
+    fn apply(&self, unpublished: &mut SemioModelSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.spatial {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;
+            apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
+        }
+        if let Some(d) = &self.elements {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |added| added.item.id.clone(), ["elements"])?;
+            apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
+        }
+        if let Some(d) = &self.relations {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |added| added.item.id.clone(), ["relations"])?;
+            apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -284,16 +288,18 @@ fn apply_relation(relation: &mut ModelRelation, diff: &ModelRelationDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
+    fn is_empty(&self) -> bool {
+        self.spatial.is_none() && self.elements.is_none() && self.relations.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
     fn inverse(&self, base: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
             spatial: self.spatial.as_ref().map(|d| inverse_named(&base.spatial, d, |n: &SpatialNode| n.id.clone(), inverse_spatial)),
             elements: self.elements.as_ref().map(|d| inverse_named(&base.elements, d, |e: &SemioModelElement| e.id.clone(), inverse_element)),
             relations: self.relations.as_ref().map(|d| inverse_named(&base.relations, d, |r: &ModelRelation| r.id.clone(), inverse_relation)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.spatial.is_none() && self.elements.is_none() && self.relations.is_none()
     }
 }
 

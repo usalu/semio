@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook")]
+#[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook", reference = PlaybookSnapshot, reference_diff = PlaybookDiff)]
 pub enum PlaybookMutation {
     ChangeTitle(ChangeTitle),
 }
@@ -61,7 +61,7 @@ pub const KINDS: &[&str] = &["change-title"];
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_playbook_mutation_steps(mutation: &PlaybookMutation, base: &PlaybookSnapshot) -> Result<Vec<PlaybookMutation>, semio_framework_value::ValueError> {
     Ok({
-    <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::inverse(mutation, base)?
+    <PlaybookMutation as protocol::ColdMutation<PlaybookSnapshot>>::inverse(mutation, base)?
 
     })
 }

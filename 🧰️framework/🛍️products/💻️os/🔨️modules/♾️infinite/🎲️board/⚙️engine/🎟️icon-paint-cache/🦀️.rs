@@ -46,7 +46,7 @@ struct IconPaintRegistry {
 
 impl Default for IconPaintRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| IconPaintSlot { key: None, epoch: 0, generation: 0, value: None }), epoch: 1, faulted: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| IconPaintSlot { key: None, epoch: 0, generation: 0, value: None }), epoch: 1, faulted: false }
     }
 }
 

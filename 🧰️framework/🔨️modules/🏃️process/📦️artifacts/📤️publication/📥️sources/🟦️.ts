@@ -12,7 +12,7 @@ type Options=Readonly<{maximumFiles:number;maximumBytes:number;control?:Resource
 type Identity=Readonly<{dev:bigint;ino:bigint;size:bigint;mode:bigint;mtimeNs:bigint;ctimeNs:bigint;nlink:bigint}>;
 type Row={path:string;file:FileHandle;identity:Identity;ancestors:ReadonlyArray<Readonly<{path:string;dev:bigint;ino:bigint}>>;entry:ArtifactSourceEntryV1};
 type Scope={accepting:boolean;live:boolean;rows:Map<string,Row>;options:Options;pending:Set<Promise<unknown>>;failures:unknown[]};
-const descriptorLimit=schema.properties.maximumDescriptors.const,auxiliaryDescriptors=schema.properties.auxiliaryDescriptors.const,chunkBytes=schema.properties.chunkBytes.const,maximumFiles=schema.properties.maximumFiles.const,maximumBytes=schema.properties.maximumBytes.const;
+const descriptorLimit=schema.properties.maximumDescriptors.const,auxiliaryDescriptors=schema.properties.auxiliaryDescriptors.const,chunkBytes=schema.properties.chunkBytes.const,maximumFiles=schema.properties.maximumFiles.const,maximumBytes=schema.properties.maximumPublicationBytes.const;
 const scopes=new WeakMap<ArtifactSourceSetV1,Scope>();let reservedDescriptors=0;
 function check(options:Options){options.signal?.throwIfAborted();if(options.control)checkResourceLeaseControl(options.control);}
 function scopeFor(token:ArtifactSourceSetV1){const scope=scopes.get(token);if(!scope?.live||!scope.accepting)throw Error("Live admitted artifact source set required");check(scope.options);return scope;}

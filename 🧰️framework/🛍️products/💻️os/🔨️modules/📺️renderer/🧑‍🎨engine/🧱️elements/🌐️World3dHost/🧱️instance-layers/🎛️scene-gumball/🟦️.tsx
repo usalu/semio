@@ -1,5 +1,5 @@
 /** 🎛️ World3d instance layers, scene gumball: the transform gumball a selection carries in the three.js scene. */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { UnifiedGumball, useUiDriver, type GumballConfig, type GumballHandleKind, type GumballPose, Object3D } from "@semio-tech/ui-react";
 import { useUiCanvasHovered } from "../../🧮️gumball-math/🟦️.ts";
 

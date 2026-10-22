@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🧲️Header
 
@@ -7,7 +7,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🧪️ Router of the repository testing domain:
-//   bun ./📜️script.ts <discover|contract|oracle|subject|parity|run|cases|report|clean|dependency|nx|doctor|acceptance> [args…]
+//   repo ./📜️script.ts <discover|contract|oracle|subject|parity|run|cases|report|clean|dependency|nx|doctor|acceptance> [args…]
 
 //#endregion 🧲️Header
 
@@ -33,7 +33,7 @@ import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🚦�
 class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
-    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-cache", "--", level, ...rest], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-cache", "--", level, ...rest], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
   }
 }
 
@@ -57,22 +57,22 @@ class TestScript extends Script {
     if (segments[0] === "schema") return new SchemaScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
     if (segments[0] === "artifact-root-source") {
       if (segments.length !== 1) throw new Error("Expected test artifact-root-source");
-      runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧾️artifact-root-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd(process.execPath, ["test", join(import.meta.dirname, "🧪️tests", "🧾️artifact-root-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "oracle-source-ownership") {
       if (segments.length !== 1) throw new Error("Expected test oracle-source-ownership");
-      runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🔮️oracle-source-ownership", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd(process.execPath, ["test", join(import.meta.dirname, "🧪️tests", "🔮️oracle-source-ownership", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "command-composition-source") {
       if (segments.length !== 1) throw new Error("Expected test command-composition-source");
-      runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧱️command-composition-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd(process.execPath, ["test", join(import.meta.dirname, "🧪️tests", "🧱️command-composition-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "mutation-payload-parity" || segments[0] === "mutation-history-gates" || segments[0] === "fault-notices-gate") {
       if (segments.length !== 1) throw new Error(`Expected test ${segments[0]}`);
-      runCmd(process.execPath, ["test", `./${join(import.meta.dir, "🧪️tests", `🧪️${segments[0]}`, "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd(process.execPath, ["test", `./${join(import.meta.dirname, "🧪️tests", `🧪️${segments[0]}`, "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     return new RunScript(this.root, this.repoRoot, this.invocation).run(segments);
@@ -82,7 +82,7 @@ class TestScript extends Script {
 export { policy } from "./⚖️policy/🧹️domain/🟦️.ts";
 export const policyFile = "⚖️policy/🧹️domain/🟦️.ts";
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("discover", DiscoverScript)
   .register("dsl", DslScript)
   .register("contract", ContractScript)

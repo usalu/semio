@@ -93,8 +93,16 @@ impl SemioTableDiff {
     }
 }
 
-impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
-    fn apply(&self, base: &SemioTableSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioTableSnapshot> {
+impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {}
+
+impl protocol::ColdMutationDiff<SemioTableSnapshot> for SemioTableDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_indexed_slot(&mut self.columns, other.columns);
+        absorb_indexed_slot(&mut self.rows, other.rows);
+    }
+
+    fn apply(&self, unpublished: &mut SemioTableSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(columns) = &self.columns {
             validate_indexed_triple(columns, base.columns.len(), ["columns"])?;
@@ -109,23 +117,22 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
             }
             next.rows = apply_indexed_rows(rows, &base.rows);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_indexed_slot(&mut self.columns, other.columns);
-        absorb_indexed_slot(&mut self.rows, other.rows);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 /// 🧮️ `table`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
-    fn inverse(&self, base: &SemioTableSnapshot) -> Self {
-        SemioTableDiff { columns: self.columns.as_ref().map(|columns| inverse_indexed_rows(columns, &base.columns)), rows: self.rows.as_ref().map(|rows| inverse_indexed_rows(rows, &base.rows)) }
-    }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Self {
+        SemioTableDiff { columns: self.columns.as_ref().map(|columns| inverse_indexed_rows(columns, &base.columns)), rows: self.rows.as_ref().map(|rows| inverse_indexed_rows(rows, &base.rows)) }
     }
 }
 //#endregion 🔖️Diff

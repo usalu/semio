@@ -6,8 +6,8 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "preview:browser-package": "bun --cwd \"../../../../../../../..\" repo run semio-framework-os-flow-core:preview-generated",
-    "test:browser-ownership": "bun --cwd \"../../../../../../../..\" repo run semio-framework-os-flow-core:test-browser-ownership"
+    "preview:browser-package": "repo run semio-framework-os-flow-core:preview-generated",
+    "test:browser-ownership": "repo run semio-framework-os-flow-core:test-browser-ownership"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*",

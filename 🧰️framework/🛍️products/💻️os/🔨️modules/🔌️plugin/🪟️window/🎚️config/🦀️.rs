@@ -44,13 +44,18 @@ pub use pack_authority_and_publication::{ErasedWindowConfigPublication, TypedWin
 #[path = "🗄️store-owners/🦀️.rs"]
 mod store_owners;
 pub use store_owners::{DirectIngress, TypedWindowConfigStoreOwner};
-use store_owners::{ErasedWindowConfigStoreOwner, WindowConfigPartition};
+use store_owners::{ErasedWindowConfigStoreOwner, WindowConfigPartition, WindowConfigStore};
 
 #[path = "🧭️owner-registry/🦀️.rs"]
 mod owner_registry;
 pub use owner_registry::{WINDOW_CONFIG_PACK_LOAD_TURNS, WindowConfigOwnerRegistry};
 use owner_registry::{close_window_actor, controlled_owner_demands, window_actor_demands};
 
+#[cfg(test)]
+extern crate self as semio_framework_plugin_window_config;
+#[cfg(test)]
+#[path="🧪️tests/📷️camera-owner/🦀️.rs"]
+mod camera_owner;
 #[cfg(test)]
 #[path="🏠️catalog/🧪️tests/🦀️.rs"]
 mod original_catalog_tests;

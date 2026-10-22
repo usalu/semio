@@ -49,16 +49,28 @@ impl GuestRuntime for OwnedRuntime {
         self.execute_actor_turn(owned_instance_mut(inst)?, events, budget, identity)
     }
 
-    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
-        self.start_actor_job(owned_instance_mut(inst)?, job, kind, input)
+    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
+        match owned_instance_mut(inst){Ok(state)=>self.start_actor_job(state,source,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,source,fault)}
     }
 
-    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        self.step_actor_job(owned_instance_mut(inst)?, job, budget)
+    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
+        match owned_instance_mut(inst){Ok(state)=>self.step_actor_job(state,job,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,None,fault)}
     }
 
-    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
-        self.cancel_actor_job(owned_instance_mut(inst)?, job)
+    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
+        match owned_instance_mut(inst){Ok(state)=>self.read_actor_job_output(state,job,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,None,fault)}
+    }
+
+    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
+        match owned_instance_mut(inst){Ok(state)=>self.acknowledge_actor_job_output(state,job,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,None,fault)}
+    }
+
+    async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        match owned_instance_mut(inst){Ok(state)=>self.cancel_actor_job(state,job,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,None,fault)}
+    }
+
+    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        match owned_instance_mut(inst){Ok(state)=>self.close_actor_jobs(state,budget,execution),Err(fault)=>OriginalGuestJobCall::unsubmitted(execution,None,fault)}
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {

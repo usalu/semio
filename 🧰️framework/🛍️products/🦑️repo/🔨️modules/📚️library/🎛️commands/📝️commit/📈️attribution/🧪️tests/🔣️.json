@@ -1,0 +1,799 @@
+{
+ "version": 1,
+ "repo": {
+  "base": {
+   "README.md": "readme\n"
+  },
+  "commits": [
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️21🚩️1",
+    "body": "🎆️26🌙️10☀️21⏰️10⌚️00⏱️00",
+    "files": {
+     "framework/core/a.ts": "l1\nl2\nl3\n",
+     "ui/button/b.ts": "m1\nm2\n"
+    }
+   },
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️22🚩️2",
+    "body": "🎆️26🌙️10☀️22⏰️10⌚️00⏱️00",
+    "files": {
+     "framework/core/a.ts": "l1\nl2\nl3\nl4\nl5\n"
+    }
+   }
+  ]
+ },
+ "bundles": [
+  {
+   "label": "🏘️framework🧰️core",
+   "dates": [
+    {
+     "dateLine": "🎆️26🌙️10☀️21",
+     "bullets": [
+      "🚀x"
+     ]
+    },
+    {
+     "dateLine": "🎆️26🌙️10☀️22",
+     "bullets": [
+      "🚀x"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "🖱️ui🧩️button",
+   "dates": [
+    {
+     "dateLine": "🎆️26🌙️10☀️21",
+     "bullets": [
+      "🚀x"
+     ]
+    }
+   ]
+  }
+ ],
+ "expected": {
+  "prefixSets": [
+   [
+    "framework/core/a.ts",
+    "framework/core"
+   ],
+   [
+    "ui/button/b.ts",
+    "ui/button"
+   ]
+  ],
+  "assigned": [
+   [
+    "framework/core/a.ts"
+   ],
+   [
+    "ui/button/b.ts"
+   ]
+  ],
+  "infer": [
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": null,
+    "expected": [
+     "framework/core/a.ts"
+    ]
+   },
+   {
+    "label": "🖱️ui🧩️button",
+    "paths": null,
+    "expected": [
+     "ui/button/b.ts"
+    ]
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "framework/core/a.ts",
+     "framework/core/c.ts"
+    ],
+    "expected": [
+     "framework/core"
+    ]
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "docs/x.md"
+    ],
+    "expected": []
+   },
+   {
+    "label": "🏘️",
+    "paths": null,
+    "expected": []
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "Framework/Core/Z.ts",
+     "framework/core/y.ts"
+    ],
+    "expected": [
+     "Framework"
+    ]
+   }
+  ],
+  "dateUloc": [
+   [
+    [
+     "🎆️26🌙️10☀️21",
+     {
+      "added": 3,
+      "removed": 0,
+      "edited": 0
+     }
+    ],
+    [
+     "🎆️26🌙️10☀️22",
+     {
+      "added": 2,
+      "removed": 0,
+      "edited": 0
+     }
+    ]
+   ],
+   [
+    [
+     "🎆️26🌙️10☀️21",
+     {
+      "added": 2,
+      "removed": 0,
+      "edited": 0
+     }
+    ]
+   ]
+  ],
+  "dateSize": [
+   [
+    [
+     "🎆️26🌙️10☀️21",
+     {
+      "added": 9,
+      "removed": 0,
+      "edited": 0
+     }
+    ],
+    [
+     "🎆️26🌙️10☀️22",
+     {
+      "added": 6,
+      "removed": 0,
+      "edited": 9
+     }
+    ]
+   ],
+   [
+    [
+     "🎆️26🌙️10☀️21",
+     {
+      "added": 6,
+      "removed": 0,
+      "edited": 0
+     }
+    ]
+   ]
+  ],
+  "partitionUloc": {
+   "bundleTotals": [
+    {
+     "added": 5,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "rangeTotal": {
+    "added": 7,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  "partitionSize": {
+   "bundleTotals": [
+    {
+     "added": 15,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 6,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "rangeTotal": {
+    "added": 21,
+    "removed": 0,
+    "edited": 0
+   }
+  }
+ },
+ "rowMatch": [
+  {
+   "field": "framework/core/a.ts",
+   "expected": [
+    0
+   ]
+  },
+  {
+   "field": "ui/button/b.ts",
+   "expected": [
+    1
+   ]
+  },
+  {
+   "field": "docs/x.md",
+   "expected": []
+  },
+  {
+   "field": "old/x.ts\tframework/core/a.ts",
+   "expected": [
+    0
+   ]
+  },
+  {
+   "field": "framework/core/a.ts\tui/button/b.ts",
+   "expected": [
+    0,
+    1
+   ]
+  },
+  {
+   "field": "{ui => framework}/core/a.ts",
+   "expected": [
+    0
+   ]
+  }
+ ],
+ "validate": [
+  {
+   "name": "days that add up are accepted",
+   "totals": [
+    {
+     "added": 5,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 3,
+       "removed": 0,
+       "edited": 0
+      }
+     ],
+     [
+      "🎆️26🌙️10☀️22",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ],
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ]
+   ],
+   "additive": true,
+   "message": null
+  },
+  {
+   "name": "a day missing from the bundle body is refused",
+   "bundles": [
+    {
+     "label": "🏘️framework🧰️core",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🖱️ui🧩️button",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    }
+   ],
+   "totals": [
+    {
+     "added": 5,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 3,
+       "removed": 0,
+       "edited": 0
+      }
+     ],
+     [
+      "🎆️26🌙️10☀️22",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ],
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ]
+   ],
+   "additive": true,
+   "message": "commit.attribution.has-changes-on-but-that"
+  },
+  {
+   "name": "days that do not add up to the bundle are refused",
+   "totals": [
+    {
+     "added": 6,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 3,
+       "removed": 0,
+       "edited": 0
+      }
+     ],
+     [
+      "🎆️26🌙️10☀️22",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ],
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ]
+   ],
+   "additive": true,
+   "message": "commit.attribution.per-day-metric-for-does"
+  },
+  {
+   "name": "the byte kind need not add up",
+   "totals": [
+    {
+     "added": 60,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 3,
+       "removed": 0,
+       "edited": 0
+      }
+     ],
+     [
+      "🎆️26🌙️10☀️22",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ],
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ]
+   ],
+   "additive": false,
+   "message": null
+  },
+  {
+   "name": "an unlisted day with no change is ignored",
+   "bundles": [
+    {
+     "label": "🏘️framework🧰️core",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🖱️ui🧩️button",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    }
+   ],
+   "totals": [
+    {
+     "added": 3,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 2,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 3,
+       "removed": 0,
+       "edited": 0
+      }
+     ],
+     [
+      "🎆️26🌙️10☀️22",
+      {
+       "added": 0,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ],
+    [
+     [
+      "🎆️26🌙️10☀️21",
+      {
+       "added": 2,
+       "removed": 0,
+       "edited": 0
+      }
+     ]
+    ]
+   ],
+   "additive": true,
+   "message": null
+  },
+  {
+   "name": "a bundle without day data counts as zero",
+   "totals": [
+    {
+     "added": 0,
+     "removed": 0,
+     "edited": 0
+    },
+    {
+     "added": 0,
+     "removed": 0,
+     "edited": 0
+    }
+   ],
+   "days": [
+    [],
+    []
+   ],
+   "additive": true,
+   "message": null
+  }
+ ],
+ "brief": [
+  {
+   "delta": {
+    "added": 1,
+    "removed": 3,
+    "edited": 2
+   },
+   "expected": "➕️1✏️2➖️3🟰️6"
+  },
+  {
+   "delta": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   },
+   "expected": "➕️0✏️0➖️0🟰️0"
+  }
+ ],
+ "header": [
+  {
+   "label": "🏘️framework🧰️core📊️metric📃uloc",
+   "uloc": {
+    "added": 5,
+    "removed": 0,
+    "edited": 0
+   },
+   "size": {
+    "added": 15,
+    "removed": 0,
+    "edited": 0
+   },
+   "ulocBloc": 100,
+   "sizeBloc": 4000,
+   "expected": "🏘️framework🧰️core📊️metric📃uloc💯️100📈️5➗️5.26➕️5🟰️5📊️metric💾size💯️4KB📈️15B➗️0.376➕️15B🟰️15B"
+  },
+  {
+   "label": " 🖱️ui🧩️button ",
+   "uloc": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   },
+   "size": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   },
+   "ulocBloc": 0,
+   "sizeBloc": 0,
+   "expected": "🖱️ui🧩️button📊️metric📃uloc📊️metric💾size"
+  }
+ ],
+ "commitErrors": [
+  {
+   "name": "a changed path that no bundle owns",
+   "extra": {
+    "docs/readme.md": "x\n"
+   },
+   "bundles": [
+    {
+     "label": "🏘️framework🧰️core",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      },
+      {
+       "dateLine": "🎆️26🌙️10☀️22",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🖱️ui🧩️button",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    }
+   ],
+   "message": "commit.attribution.changed-path-is-not-attributed"
+  },
+  {
+   "name": "a changed path that two bundles own",
+   "extra": {
+    "framework/other/z.ts": "x\n"
+   },
+   "bundles": [
+    {
+     "label": "🥅️framework",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      },
+      {
+       "dateLine": "🎆️26🌙️10☀️22",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🏘️framework🧰️core",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      },
+      {
+       "dateLine": "🎆️26🌙️10☀️22",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🖱️ui🧩️button",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    }
+   ],
+   "message": "commit.attribution.changed-path-matches-multiple-bundles"
+  },
+  {
+   "name": "a bundle body that omits a micro-commit day",
+   "extra": {},
+   "bundles": [
+    {
+     "label": "🏘️framework🧰️core",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    },
+    {
+     "label": "🖱️ui🧩️button",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🚀x"
+       ]
+      }
+     ]
+    }
+   ],
+   "message": "commit.attribution.has-changes-on-but-that"
+  }
+ ],
+ "pathMatch": [
+  {
+   "path": "framework/core/a.ts",
+   "index": 0,
+   "prefixSets": [
+    [
+     "framework/core"
+    ],
+    [
+     "ui"
+    ]
+   ],
+   "expected": true
+  },
+  {
+   "path": "framework/core/a.ts",
+   "index": 1,
+   "prefixSets": [
+    [
+     "framework/core"
+    ],
+    [
+     "ui"
+    ]
+   ],
+   "expected": false
+  },
+  {
+   "path": "framework/core/a.ts",
+   "index": 0,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": true
+  },
+  {
+   "path": "ui/button/z.ts",
+   "index": 0,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": false
+  },
+  {
+   "path": "ui/button/z.ts",
+   "index": 1,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": true
+  }
+ ],
+ "sortReverse": {
+  "expectedOrder": [
+   "🏘️framework🧰️core",
+   "🖱️ui🧩️button"
+  ]
+ }
+}

@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use semio_s_plugin_norm_compliance::AnnexChoice;
@@ -333,58 +333,9 @@ impl En1990RowEdit for En1990EffectEdit {
     }
 }
 
-impl MutationDiff<En1990Snapshot> for En1990Diff {
-    fn apply(&self, base: &En1990Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1990Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = self.annex {
-            next.annex = value;
-        }
-        if let Some(value) = &self.project_id {
-            next.project_id = value.clone();
-        }
-        if let Some(value) = &self.structure_kind {
-            next.structure_kind = value.clone();
-        }
-        if let Some(value) = self.altitude_m {
-            next.altitude_m = value;
-        }
-        if let Some(value) = self.consequence_class {
-            next.consequence_class = value;
-        }
-        if let Some(value) = self.reliability_class {
-            next.reliability_class = value;
-        }
-        if let Some(value) = self.design_working_life_category {
-            next.design_working_life_category = value;
-        }
-        if let Some(value) = self.design_working_life_years {
-            next.design_working_life_years = value;
-        }
-        if let Some(value) = self.reference_period_years {
-            next.reference_period_years = value;
-        }
-        if let Some(value) = &self.supervision_level {
-            next.supervision_level = value.clone();
-        }
-        if let Some(value) = &self.inspection_level {
-            next.inspection_level = value.clone();
-        }
-        if let Some(value) = self.k_fi_declared {
-            next.k_fi_declared = value;
-        }
-        if let Some(value) = self.beta_computed {
-            next.beta_computed = value;
-        }
-        next.permanents = self.permanents.commit_onto(&base.permanents, capability).map_err(|error| error.under(["permanents"]))?;
-        next.variables = self.variables.commit_onto(&base.variables, capability).map_err(|error| error.under(["variables"]))?;
-        next.accidentals = self.accidentals.commit_onto(&base.accidentals, capability).map_err(|error| error.under(["accidentals"]))?;
-        next.seismics = self.seismics.commit_onto(&base.seismics, capability).map_err(|error| error.under(["seismics"]))?;
-        next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
-        next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls, capability).map_err(|error| error.under(["bridgeSls"]))?;
-        apply_rows::<En1990EffectEdit>(&mut next.effects, &self.effects).map_err(|error| error.under(["effects"]))?;
-        Ok(next)
-    }
+impl MutationDiff<En1990Snapshot> for En1990Diff {}
 
+impl protocol::ColdMutationDiff<En1990Snapshot> for En1990Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -435,9 +386,87 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
             push_row(&mut self.effects, edit);
         }
     }
+
+    fn apply(&self, unpublished: &mut En1990Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = self.annex {
+            next.annex = value;
+        }
+        if let Some(value) = &self.project_id {
+            next.project_id = value.clone();
+        }
+        if let Some(value) = &self.structure_kind {
+            next.structure_kind = value.clone();
+        }
+        if let Some(value) = self.altitude_m {
+            next.altitude_m = value;
+        }
+        if let Some(value) = self.consequence_class {
+            next.consequence_class = value;
+        }
+        if let Some(value) = self.reliability_class {
+            next.reliability_class = value;
+        }
+        if let Some(value) = self.design_working_life_category {
+            next.design_working_life_category = value;
+        }
+        if let Some(value) = self.design_working_life_years {
+            next.design_working_life_years = value;
+        }
+        if let Some(value) = self.reference_period_years {
+            next.reference_period_years = value;
+        }
+        if let Some(value) = &self.supervision_level {
+            next.supervision_level = value.clone();
+        }
+        if let Some(value) = &self.inspection_level {
+            next.inspection_level = value.clone();
+        }
+        if let Some(value) = self.k_fi_declared {
+            next.k_fi_declared = value;
+        }
+        if let Some(value) = self.beta_computed {
+            next.beta_computed = value;
+        }
+        next.permanents = self.permanents.commit_onto(&base.permanents, capability).map_err(|error| error.under(["permanents"]))?;
+        next.variables = self.variables.commit_onto(&base.variables, capability).map_err(|error| error.under(["variables"]))?;
+        next.accidentals = self.accidentals.commit_onto(&base.accidentals, capability).map_err(|error| error.under(["accidentals"]))?;
+        next.seismics = self.seismics.commit_onto(&base.seismics, capability).map_err(|error| error.under(["seismics"]))?;
+        next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
+        next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls, capability).map_err(|error| error.under(["bridgeSls"]))?;
+        apply_rows::<En1990EffectEdit>(&mut next.effects, &self.effects).map_err(|error| error.under(["effects"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1990Snapshot> for En1990Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.project_id.is_none()
+            && self.structure_kind.is_none()
+            && self.altitude_m.is_none()
+            && self.consequence_class.is_none()
+            && self.reliability_class.is_none()
+            && self.design_working_life_category.is_none()
+            && self.design_working_life_years.is_none()
+            && self.reference_period_years.is_none()
+            && self.supervision_level.is_none()
+            && self.inspection_level.is_none()
+            && self.k_fi_declared.is_none()
+            && self.beta_computed.is_none()
+            && self.permanents.is_empty()
+            && self.variables.is_empty()
+            && self.accidentals.is_empty()
+            && self.seismics.is_empty()
+            && self.members.is_empty()
+            && self.bridge_sls.is_empty()
+            && self.effects.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1990Snapshot> for En1990Diff {
     fn inverse(&self, base: &En1990Snapshot) -> Self {
         Self {
             annex: self.annex.map(|_| base.annex),
@@ -461,29 +490,6 @@ impl DiffAlgebra<En1990Snapshot> for En1990Diff {
             bridge_sls: self.bridge_sls.inverse(&base.bridge_sls),
             effects: invert_rows::<En1990EffectEdit>(&base.effects, &self.effects),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.project_id.is_none()
-            && self.structure_kind.is_none()
-            && self.altitude_m.is_none()
-            && self.consequence_class.is_none()
-            && self.reliability_class.is_none()
-            && self.design_working_life_category.is_none()
-            && self.design_working_life_years.is_none()
-            && self.reference_period_years.is_none()
-            && self.supervision_level.is_none()
-            && self.inspection_level.is_none()
-            && self.k_fi_declared.is_none()
-            && self.beta_computed.is_none()
-            && self.permanents.is_empty()
-            && self.variables.is_empty()
-            && self.accidentals.is_empty()
-            && self.seismics.is_empty()
-            && self.members.is_empty()
-            && self.bridge_sls.is_empty()
-            && self.effects.is_empty()
     }
 }
 

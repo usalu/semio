@@ -10,7 +10,7 @@
     "./standards/1/subsets/any/schema/testing/document": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️testing/🪪️document/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/note-note-js:test"
+    "test": "repo run @semio-tech/note-note-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

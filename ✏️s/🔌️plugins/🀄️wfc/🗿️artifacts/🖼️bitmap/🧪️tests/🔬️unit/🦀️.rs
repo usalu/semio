@@ -219,7 +219,7 @@ fn write_fixture(directory: &std::path::Path, leaf: &str, body: &str) {
 fn emit_committed_fixtures() {
         let root = subset_root();
     for (kind, case, before, mutation) in fixtures::cases() {
-        let outcome = <crate::BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &before);
+        let outcome = <crate::BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation, &before);
         let mut after = before.clone();
         vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
         let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);

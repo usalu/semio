@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "mimeType": "application/json",
+  "cases": [
+    {
+      "name": "empty-files",
+      "uri": "repo://files",
+      "document": {
+        "repo": {
+          "files": []
+        }
+      }
+    },
+    {
+      "name": "empty-folders",
+      "uri": "repo://folders",
+      "document": {
+        "repo": {
+          "folders": []
+        }
+      }
+    },
+    {
+      "name": "file-metadata",
+      "uri": "repo://files",
+      "document": {
+        "repo": {
+          "files": [
+            {
+              "id": "file:src/local.rs",
+              "path": "src/local.rs",
+              "name": "local.rs",
+              "kind": "source",
+              "extension": ".rs"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "folder-metadata",
+      "uri": "repo://folders",
+      "document": {
+        "repo": {
+          "folders": [
+            {
+              "id": "folder:src",
+              "path": "src",
+              "name": "src",
+              "kind": "source"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

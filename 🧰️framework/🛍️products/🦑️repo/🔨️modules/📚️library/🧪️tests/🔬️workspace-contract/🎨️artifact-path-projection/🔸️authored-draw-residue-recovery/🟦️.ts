@@ -87,7 +87,7 @@ export function registerAuthoredDrawResidueRecoveryTests(): void {
         expect(errors).toEqual([]);
         expect(parsed).toEqual(JSON.parse(content));
         if (row.path.endsWith("📋️project.json")) {
-          projectCwds += Object.values(parsed.targets as Record<string, { options: { cwd: string; command: string } }>).filter(({ options }) => options.cwd.startsWith(projection.sourceRoot) && options.command.startsWith("bun ./📜️script.ts test")).length;
+          projectCwds += Object.values(parsed.targets as Record<string, { options: { cwd: string; command: string } }>).filter(({ options }) => options.cwd.startsWith(projection.sourceRoot) && options.command.startsWith("repo ./📜️script.ts test")).length;
           workspaceGlobs += parsed.namedInputs.default.filter((value: string) => value.startsWith("{workspaceRoot}/") && value.endsWith("/**/*.rs")).length;
         } else expect(parsed.entries.flatMap((entry: { users: string[] }) => entry.users)).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.dependencyUserCount);
       } else if (row.format === "toml") {
@@ -129,8 +129,8 @@ export function registerAuthoredDrawResidueRecoveryTests(): void {
     expect(readPaths).toEqual([...new Set(readPaths)]);
     const nx = JSON.parse(context.files["nx.json"]!.content);
     for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("./"))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
-    const nxScript = (JSON.parse(context.files["package.json"]!.content) as { scripts: Record<string, string> }).scripts.nx!.match(/^bun \.\/(\S+) nx$/u)?.[1];
-    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
+    const nxScript = (JSON.parse(context.files["package.json"]!.content) as { scripts: Record<string, string> }).scripts.nx!.match(/^repo \.\/(\S+) nx$/u)?.[1];
+    if (nxScript === undefined) throw new Error("package.json names no `repo ./<script> nx` runner");
     expect(DRAW_SOURCE_SCENARIO.producerContext.compilerRoots).toEqual([nxScript]);
     for (const row of context.modules) {
       if (row.kind === "json-data") {

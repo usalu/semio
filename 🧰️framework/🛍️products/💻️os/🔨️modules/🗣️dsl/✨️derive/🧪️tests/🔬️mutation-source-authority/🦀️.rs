@@ -103,6 +103,14 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
             fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
             return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs"));
         }
+        "dependency-scope-anchor" => {
+            let nested = workspace.join("nested");
+            fs::create_dir_all(&nested).unwrap();
+            fs::write(nested.join("package.json"), r#"{"workspaces":[]}"#).unwrap();
+            fs::write(nested.join("bun.lock"), "").unwrap();
+            fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
+            return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs"));
+        }
         "symlink-ancestor" => {
             let link = workspace.join("domain-link");
             link_dir(&workspace.join("domain"), &link);

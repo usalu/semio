@@ -15,6 +15,15 @@ pub struct UpsertInstance {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for UpsertInstance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "instance", kind: "upsert-instance", record: "UpsertInstance" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Upsert instance", "Instanz einfügen oder aktualisieren")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for UpsertInstance {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         let Self { instance, index } = self;
         let order = || base.document.instances.iter().map(|existing| existing.id).collect::<Vec<_>>();
@@ -38,12 +47,6 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for UpsertInstance {
             Some(existing) => Ifc2x3Mutation::UpsertInstance(Self { instance: existing.clone(), index: None }),
             None => Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: instance.id }),
         }])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Upsert instance", "Instanz einfügen oder aktualisieren")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

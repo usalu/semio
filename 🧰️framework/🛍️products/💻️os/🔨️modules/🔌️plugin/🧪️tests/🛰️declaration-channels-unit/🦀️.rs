@@ -1,7 +1,7 @@
 //! 🧪️ Shared declaration-channel laws run by each genuine leaf owner.
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{FromValue, ToValue};
-use protocol::{Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
+use protocol::{ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
 use semio_framework_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 

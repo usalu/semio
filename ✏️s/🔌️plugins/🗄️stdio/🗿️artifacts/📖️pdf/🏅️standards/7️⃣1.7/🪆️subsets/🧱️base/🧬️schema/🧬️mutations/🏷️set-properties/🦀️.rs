@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "properties", kind: "set-properties", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_properties(base, self.properties.clone(), self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.properties.iter().find(|item| item.name == self.properties.name) { Some(previous) => vec![Op::from(SetProperties { properties: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_properties::RemoveProperties { name: self.properties.name.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set properties {}", self.properties.name), &format!("Eigenschaften {} setzen", self.properties.name))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.properties.name.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetProperties
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetProperties> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_properties::RemoveProperties>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_properties(base, self.properties.clone(), self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.properties.iter().find(|item| item.name == self.properties.name) { Some(previous) => vec![Op::from(SetProperties { properties: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_properties::RemoveProperties { name: self.properties.name.clone() })] }
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

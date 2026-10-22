@@ -84,7 +84,7 @@
  * the dialog through its ARIA mirror (`#semio-wgpu-accessibility`), chrome through `dumpChrome` hit rects, the board with the
  * pointer and keyboard on the canvas at the positions `semioWgpuIntrospection.dumpBoard2d` publishes (region `🔖️Wgpu`).
  *
- * Run: `bun repo run @semio-tech/framework-os-dev:time-travel -- --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/⏪️time-travel/🟦️.ts [--serve <url>] [--renderer react|wgpu] [--locales en,de] [--chords en,de] [--only 1,2,3]
+ * Run: `repo run @semio-tech/framework-os-dev:time-travel -- --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/⏪️time-travel/🟦️.ts [--serve <url>] [--renderer react|wgpu] [--locales en,de] [--chords en,de] [--only 1,2,3]
  * [--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--universal] [--variant <declared variant>] [--explore]` — the serve is reused when it answers, else
  * started for the run and stopped after it ({@link ensureDevServe}). `--only` selects steps (each selection boots its own
  * document, so a later step needs the earlier ones it builds on: 3–7 and 11 build on 2, 6 and 7 on 4–5); `reload` selects the

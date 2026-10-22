@@ -1,4 +1,5 @@
 /** 🕸️ Derives project dependency edges and publishes the complete module facts of one graph. */
+const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createRequire, isBuiltin } from "node:module";
@@ -130,7 +131,7 @@ export function projectFilesToProcess(context) {
 /** 🏭️ Validates complete authored producers independently of the selected executable projection. */
 export async function validateGeneratorOutputProducersV1(contracts,projects,workspaceRoot,selection,registry,context){
  const check=()=>{if(context.workspaceRoot!==workspaceRoot)throw Error("Actual generator inference workspace context required");if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);}};check();
- await libraryBootstrap;check();const admission=createRequire(import.meta.url)("../../🚪️admission/🟦️.ts"),selected=admission.readBuildGraphSelectionV1(selection).kind==="tasks",owners=selected?admission.readBuildOwnerRegistryV1(registry):undefined,byRoot=new Map(Object.entries(projects).flatMap(([name,project])=>[[resolve(workspaceRoot,project.root),name],...(project.metadata?.nativeRoot?[[resolve(workspaceRoot,project.metadata.nativeRoot),name]]:[])])),authored=new Map();let steps=0;
+ await libraryBootstrap;check();const admission=createRequire(import.meta.url)("../../🚪️admission/🟦️.ts"),selected=admission.readBuildGraphSelectionV1(selection).kind!=="all",owners=selected?admission.readBuildOwnerRegistryV1(registry):undefined,byRoot=new Map(Object.entries(projects).flatMap(([name,project])=>[[resolve(workspaceRoot,project.root),name],...(project.metadata?.nativeRoot?[[resolve(workspaceRoot,project.metadata.nativeRoot),name]]:[])])),authored=new Map();let steps=0;
  for(const contract of Object.values(contracts)){
   const participants=[contract.ownerPath,...contract.outputRoots.flatMap(output=>output.producer?[output.producer.ownerPath]:[])];if(!participants.some(root=>typeof root==="string"&&byRoot.has(resolve(workspaceRoot,root))))continue;
   for(const output of contract.outputRoots){if(!output.producer)continue;await yieldInferenceV1(context,"build:generator-producers",++steps);const producer=output.producer,separator=producer.target.lastIndexOf(":"),name=producer.target.slice(0,separator),target=producer.target.slice(separator+1);let valid;
@@ -148,7 +149,7 @@ export async function validateGeneratorOutputProducersV1(contracts,projects,work
 /** 🕸️ Native manifests and package imports contribute edges without spawning a build or installer. */
 export async function createDependenciesImplementation(_options, context) {
   const { workspaceRoot, projects } = context;
-  const locked = _options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
+  const locked = _options?.analyzeLockfile && existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName)) ? readBunLockGraph(workspaceRoot) : undefined;
   const byRoot = new Map(Object.entries(projects).flatMap(([name, project]) => [[resolve(workspaceRoot, project.root), name],...(project.metadata?.nativeRoot?[[resolve(workspaceRoot,project.metadata.nativeRoot),name]]:[])]));
   const byPackage = new Map();
   const manifests = new Map();

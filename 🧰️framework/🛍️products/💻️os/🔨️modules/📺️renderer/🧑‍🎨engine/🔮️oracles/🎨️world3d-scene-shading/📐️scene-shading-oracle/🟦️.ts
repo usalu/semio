@@ -7,6 +7,8 @@ import { createHash } from "node:crypto";
 import { paintedShaderFromProduction, renderSceneShading, renderSceneShadingS2 } from "../🎨️scene-shading-renderers/🟦️.ts";
 import { renderWgpuCelebration, renderWgpuShading, renderWgpuTextured } from "../🧊️wgpu-shading-renderers/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -49,11 +51,11 @@ export async function runSceneShadingOracle(
   const playwrightSpecifier = "playwright";
   const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as SceneShadingOracleFixture;
-  const threePath = Bun.resolveSync("three", repoRoot);
+  const threePath = runtimeResolveV1("three", repoRoot);
   const webgpu = ["shading-wgpu", "shading-s2-wgpu", "shading-s2-current-mesh", "shading-s2-ordered-mesh", "shading-s2-painted", "shading-s2-celebration"].includes(command);
   const program = command === "shading-s2-painted" ? renderWgpuTextured : command === "shading-s2-celebration" ? renderWgpuCelebration : webgpu ? renderWgpuShading : command === "shading-s2-oracle" ? renderSceneShadingS2 : renderSceneShading;
   const source = 'import * as THREE from "three";\nglobalThis.renderSceneShading = ' + program.toString();
-  const build = await Bun.build({
+  const build = await runtimeBundleV1({
     entrypoints: ["semio-shading-oracle"],
     target: "browser",
     format: "iife",

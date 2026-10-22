@@ -13,6 +13,16 @@ pub struct SetRunOutput {
 
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetRunOutput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run_output_json", kind: "set-run-output", record: "SetRunOutput" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["run_output_json".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ImperativeConfig, ImperativeConfigMutation> for SetRunOutput {
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfigDiff> {
         if base.run_output_json == self.json {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The requested configuration value is already current.");
@@ -25,12 +35,6 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetR
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["run_output_json".into()]
-    }
 }
 
 #[cfg(test)]

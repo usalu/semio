@@ -327,7 +327,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
     }
 }
 fn retire_ordered<V>(map: OrderedMap<V>, retire: fn(V)) {
-    use semio_framework_value::{retained_clone::RetainedCloneGrant,ordered::RetirementStep};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;use semio_framework_value_ordered::ordered::RetirementStep;
     let mut cursor = map.retire();
     loop {
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("Flow ordered release demand"),maximum_depth:cursor.next_depth_demand()};
@@ -342,7 +342,7 @@ fn retire_ordered<V>(map: OrderedMap<V>, retire: fn(V)) {
 }
 impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
     fn insert_ordered<V>(&mut self,map:&mut OrderedMap<V>,key:String,value:V,retire:fn(V))->Result<(),ValueError>{
-        use semio_framework_value::{retained_clone::RetainedCloneGrant,ordered::RetirementStep};
+        use semio_framework_value::retained_clone::RetainedCloneGrant;use semio_framework_value_ordered::ordered::RetirementStep;
         let value=Owned::new(value,retire);
         self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
             let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);

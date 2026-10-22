@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     pub(super) async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> {
         self.tools.bounded_tool_contracts
             .iter()

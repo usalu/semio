@@ -1,0 +1,166 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "document",
+  "pointerOk",
+  "pointerMissing",
+  "pointerInvalid",
+  "tomlOk",
+  "tomlErrors",
+  "admission"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "document": {},
+  "pointerOk": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "pointer",
+     "expected"
+    ],
+    "properties": {
+     "pointer": {
+      "type": "string"
+     },
+     "expected": {}
+    }
+   },
+   "minItems": 1
+  },
+  "pointerMissing": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  },
+  "pointerInvalid": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  },
+  "tomlOk": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "tomlErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "admission": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "cases",
+    "errors",
+    "exceedsBytes"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "target",
+       "expected"
+      ],
+      "properties": {
+       "target": {
+        "type": "string"
+       },
+       "expected": {}
+      }
+     },
+     "minItems": 1
+    },
+    "errors": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "target",
+       "message"
+      ],
+      "properties": {
+       "target": {
+        "type": "string"
+       },
+       "message": {
+        "type": "string"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "exceedsBytes": {
+     "type": "integer"
+    }
+   }
+  }
+ }
+}

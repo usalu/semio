@@ -4,12 +4,12 @@
 
 use crate::schema::snapshot::LineEnding;
 use crate::TxtSnapshot;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use framework_schema::ArtifactSchema;
-use protocol::os_spr::command::DiffAlgebra;
+use protocol::os_spr::command::{ColdDiffAlgebra, DiffAlgebra};
 use std::collections::HashSet;
 
 //#region 🔖️LinesDiff
@@ -228,22 +228,9 @@ pub struct TxtDiff {
     pub lines: Option<TxtLinesDiff>,
 }
 
-impl MutationDiff<TxtSnapshot> for TxtDiff {
-    fn apply(&self, base: &TxtSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TxtSnapshot> {
-        if let Some(lines) = &self.lines {
-            validate_txt_lines(base.lines.len(), lines)?;
-        }
-        Ok(TxtSnapshot {
-            schema: base.schema.clone(),
-            lines: match &self.lines {
-                Some(ld) => ld.apply(&base.lines),
-                None => base.lines.clone(),
-            },
-            trailing_newline: self.trailing_newline.unwrap_or(base.trailing_newline),
-            line_ending: self.line_ending.unwrap_or(base.line_ending),
-        })
-    }
+impl MutationDiff<TxtSnapshot> for TxtDiff {}
 
+impl protocol::ColdMutationDiff<TxtSnapshot> for TxtDiff {
     /// ➕️ Sequential-coalesce only (see trait docs): `self` is base→mid, `other` is mid→after.
     /// Scalars are LWW; `lines` composes via [`absorb_pair`]'s structural index-transport.
     fn absorb(&mut self, other: Self) {
@@ -266,6 +253,23 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
                 }
             }
         };
+    }
+
+    fn apply(&self, unpublished: &mut TxtSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(lines) = &self.lines {
+            validate_txt_lines(base.lines.len(), lines)?;
+        }
+        *unpublished = TxtSnapshot {
+            schema: base.schema.clone(),
+            lines: match &self.lines {
+                Some(ld) => ld.apply(&base.lines),
+                None => base.lines.clone(),
+            },
+            trailing_newline: self.trailing_newline.unwrap_or(base.trailing_newline),
+            line_ending: self.line_ending.unwrap_or(base.line_ending),
+        };
+        Ok(())
     }
 }
 
@@ -300,13 +304,15 @@ fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResu
 }
 
 impl DiffAlgebra<TxtSnapshot> for TxtDiff {
+    fn is_empty(&self) -> bool {
+        self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().is_none_or(TxtLinesDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<TxtSnapshot> for TxtDiff {
     /// 🔁️ The negative diff: each touched scalar restores its base value and the lines triple inverts against the base lines.
     fn inverse(&self, base: &TxtSnapshot) -> Self {
         Self { trailing_newline: self.trailing_newline.map(|_| base.trailing_newline), line_ending: self.line_ending.map(|_| base.line_ending), lines: self.lines.as_ref().map(|lines| lines.inverse(&base.lines)) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().is_none_or(TxtLinesDiff::is_empty)
     }
 }
 

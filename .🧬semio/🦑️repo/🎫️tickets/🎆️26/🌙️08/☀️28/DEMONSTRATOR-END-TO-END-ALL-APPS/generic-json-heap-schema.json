@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "purpose",
+    "limits",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "generic-json-tree-memory-corroboration"
+    },
+    "limits": {
+      "const": {
+        "expandedBytes": 268435456,
+        "heapMiB": 1536,
+        "maximumNodes": 4194304,
+        "maximumReferences": 262144,
+        "maximumDepth": 64
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "shape",
+          "encoding",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "ascii-padding",
+              "unicode-padding",
+              "wide-node-boundary",
+              "wide-keys-boundary",
+              "reference-boundary",
+              "node-overflow"
+            ]
+          },
+          "shape": {
+            "enum": [
+              "one-string",
+              "wide-array-with-padding-string",
+              "wide-object-with-padding-string",
+              "distinct-source-markers-with-padding-string",
+              "wide-array"
+            ]
+          },
+          "wireBytes": {
+            "const": 268435456
+          },
+          "nodes": {
+            "enum": [
+              4194303,
+              4194305
+            ]
+          },
+          "references": {
+            "const": 262144
+          },
+          "encoding": {
+            "enum": [
+              "ascii",
+              "ascii-with-one-literal-non-latin-codepoint"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "accepted",
+              "bounded-node-refusal"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

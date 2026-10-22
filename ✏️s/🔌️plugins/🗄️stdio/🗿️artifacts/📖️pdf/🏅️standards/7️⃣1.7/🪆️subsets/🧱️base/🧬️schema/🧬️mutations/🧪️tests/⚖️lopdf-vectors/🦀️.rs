@@ -28,7 +28,7 @@ use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
 use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Harness
 /// 🧬️ The typed model alone, without the retained COS carrier.

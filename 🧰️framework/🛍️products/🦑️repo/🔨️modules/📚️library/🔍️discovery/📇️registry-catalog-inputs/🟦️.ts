@@ -1,8 +1,10 @@
 import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
-import { execFileSync } from "node:child_process";
+
 import { extname } from "node:path";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { tomlTableBody } from "../🪧️owner-markers/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🌳️ Logical preimage filesystem used equally by catalog generation and transaction revalidation. */
 export interface RegistryCatalogInputView {
@@ -62,7 +64,7 @@ export function registryCatalogGitlinkBoundaries(repoRoot: string): ReadonlySet<
   if (cached) return cached;
   let boundaries: ReadonlySet<string>;
   try {
-    const stdout = execFileSync("git", ["ls-files", "--stage", "-z"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    const stdout = runToolSyncV1("git", ["ls-files", "--stage", "-z"], { check: true, cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }).stdout;
     const found = new Set<string>();
     for (const row of stdout.split("\0")) {
       if (!row) continue;
@@ -84,7 +86,7 @@ export type RegistryCatalogOwnerIndex = Readonly<{ known: ReadonlySet<string>; c
 export function registryCatalogOwnerIndex(repoRoot: string, packagesDirName: string): RegistryCatalogOwnerIndex | undefined {
   let stdout: string;
   try {
-    stdout = execFileSync("git", ["ls-files", "-z", "--cached"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
+    stdout = runToolSyncV1("git", ["ls-files", "-z", "--cached"], { check: true, cwd: repoRoot, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] }).stdout;
   } catch { return undefined; }
   const marker = `/${packagesDirName}/`, known = new Set<string>([""]), candidates = new Set<string>([""]);
   const include = (into: Set<string>, directory: string): void => {
@@ -126,8 +128,9 @@ export interface RegistryCompilerImport {
 export type RegistryCompilerLanguage = "ts" | "tsx" | "js" | "jsx";
 
 /** 🔎️ Validates Bun's runtime compiler capability and returns owned import records. */
-export function scanRegistryCompilerImports(source: string, language: RegistryCompilerLanguage, platform: unknown = Reflect.get(globalThis, "Bun")): readonly RegistryCompilerImport[] {
+export function scanRegistryCompilerImports(source: string, language: RegistryCompilerLanguage, platform: unknown = undefined): readonly RegistryCompilerImport[] {
   if (language !== "ts" && language !== "tsx" && language !== "js" && language !== "jsx") throw new Error("Registry import discovery requires an explicit supported compiler language.");
+  if (platform === undefined) return new TranspilerV1({ loader: language }).scanImports(source).map((row) => ({ path: row.path, kind: row.kind }));
   if (platform === null || typeof platform !== "object" && typeof platform !== "function") throw new Error("Registry import discovery requires Bun's compiler runtime.");
   const constructor: unknown = Reflect.get(platform, "Transpiler");
   if (typeof constructor !== "function") throw new Error("Registry import discovery requires Bun.Transpiler.");

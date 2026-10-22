@@ -129,7 +129,7 @@ pub use crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_ro
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
-#[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf")]
+#[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf", reference = GltfSnapshot, reference_diff = GltfDiff)]
 pub enum GltfMutation {
     BindDefaultScene(BindDefaultSceneMutation),
     BindMorphTargetAttribute(BindMorphTargetAttributeMutation),

@@ -323,7 +323,7 @@ test("workspace source, check, and publication routes are exact across package a
   for (const route of Object.values(fixture.routes)) {
     expect(project.targets[route.target]?.options?.command).toBe(route.command);
     expect(
-      Object.values(manifest.scripts).filter((command) => command === `bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${route.target}`),
+      Object.values(manifest.scripts).filter((command) => command === `repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${route.target}`),
       route.target,
     ).toHaveLength(1);
   }

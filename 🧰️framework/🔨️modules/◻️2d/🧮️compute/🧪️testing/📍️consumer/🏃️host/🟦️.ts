@@ -1,10 +1,11 @@
 /** 🧫️ Registers the complete caller-owned compute witness with independent test oracles. */
-import {expect,test} from "bun:test";
+import { runtimeParseTomlV1 } from "../../../../../⚙️runtime/📄️parse/🟦️.ts";
+import { expect, test } from "../../../../../⚙️runtime/🧪️test/🟦️.ts";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import {verifyComputeConsumer,type ComputeConsumerDescriptor} from "../🟦️.ts";
 import {validateJsonSchemaSubset,requireRecord,type UnknownRecord} from "@semio-tech/schema-validator-ts";
-const dependencies=(source:string):string[]=>{const parsed=requireRecord(Bun.TOML.parse(source),"manifest");return Object.keys(parsed.dependencies===undefined?{}:requireRecord(parsed.dependencies,"dependencies"));};
+const dependencies=(source:string):string[]=>{const parsed=requireRecord(runtimeParseTomlV1(source),"manifest");return Object.keys(parsed.dependencies===undefined?{}:requireRecord(parsed.dependencies,"dependencies"));};
 export function registerComputeConsumerTests(descriptor:ComputeConsumerDescriptor,schema:UnknownRecord,read:(path:string)=>string):void{
  test("closed compute consumer descriptor agrees with independent schema admission",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate(descriptor)).toBe(true);expect(validateJsonSchemaSubset(schema,descriptor)).toEqual([]);for(const hostile of [{...descriptor,extra:true},{...descriptor,bindings:[]},{...descriptor,bindings:["ForeignEngine"]}]){expect(validate(hostile)).toBe(false);expect(validateJsonSchemaSubset(schema,hostile).length).toBeGreaterThan(0);}});
  test("actual consumer directly binds the canonical compute family",()=>{

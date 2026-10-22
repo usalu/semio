@@ -7,7 +7,7 @@ type OwnedSvgElement = { getAttribute(name: string): string | null; querySelecto
 type OwnedSvgDocument = { querySelector(selector: string): OwnedSvgElement | null; querySelectorAll(selector: string): Iterable<OwnedSvgElement> };
 type OwnedJsDomConstructor = new (markup: string, options: { contentType: string }) => { window: { document: OwnedSvgDocument } };
 const { JSDOM } = createRequire(import.meta.url)("jsdom") as { JSDOM: OwnedJsDomConstructor };
-const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
+const assetsRoot = (): string => join(import.meta.dirname, "..", "..", "..");
 
 //#region ⚙️Kinds
 interface LogoTransformData {

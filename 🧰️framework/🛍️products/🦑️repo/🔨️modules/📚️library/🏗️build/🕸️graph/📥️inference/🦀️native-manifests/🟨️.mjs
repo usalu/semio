@@ -1,8 +1,9 @@
 /** 🦀️ Resolves Cargo and Go manifests, native dependency closures, mounted Rust Source and native generator preparation. */
 import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
 import { dirname, isAbsolute, sep, join, relative, resolve } from "node:path";
 import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import {runtimeKeyV1} from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 const { existsSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -84,11 +85,11 @@ let tomlParsing;
 
 /** 🧾️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
 export function readToml(path) {
-  tomlParsing ??= ((require) => ({ namespace: `iarna-toml-parse-v1:${require("@iarna/toml/package.json").version}`, parse: require("@iarna/toml").parse }))(createRequire(import.meta.url));
+  tomlParsing ??= { namespace: `toml-parse-v1:${runtimeKeyV1()}`, parse: (source) => runtimeParseTomlV1(source) };
   return memoizedFileRecord(tomlParsing.namespace, path, (bytes) => {
     const source=bytes.toString("utf8");
     try{return tomlParsing.parse(source);}catch(cause){
-      const integer=value=>Number.isInteger(value)&&value>=0?value:null,tomlObservation={version:1,path:resolve(path),namespace:tomlParsing.namespace,sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.byteLength,line:integer(cause?.line),column:integer(cause?.col),position:integer(cause?.pos),sourceLine:(source.split(/\r?\n/u)[integer(cause?.line)??0]??"").slice(0,512)};
+      const where=cause?.position??cause?.errors?.[0]?.position,integer=value=>Number.isInteger(value)&&value>=0?value:null,line=integer(where?.line-1),tomlObservation={version:1,path:resolve(path),namespace:tomlParsing.namespace,sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.byteLength,line,column:integer(where?.column-1),position:integer(where?.offset),sourceLine:(source.split(/\r?\n/u)[line??0]??"").slice(0,512)};
       const error=Object.assign(new Error("Observed TOML parse refused: "+JSON.stringify(tomlObservation),{cause}),{code:"BUILD_SOURCE_UNPARSEABLE",source:tomlObservation.path,sha256:tomlObservation.sha256});error.tomlObservation=tomlObservation;throw error;
     }
   });
@@ -207,7 +208,7 @@ export function withNativePreparation(project, workspaceRoot, contracts, cache =
         if (error.code !== "NATIVE_INPUT_ADMISSION") throw error;
         const admission = "native-input-admission";
         project.metadata = { ...project.metadata, nativeInputAdmission: { manifest: buildPath(relative(workspaceRoot, manifest)), diagnostic: error.message } };
-        project.targets[admission] = executionTargetV1("source", { executor: "repo:script", cache: false, options: { cwd: ".", command: `bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts native-input-check --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, manifest)))}` } });
+        project.targets[admission] = executionTargetV1("source", { executor: "repo:script", cache: false, options: { cwd: ".", command: `repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts native-input-check --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, manifest)))}` } });
         plans.set(tests, { admission });
       }
     }

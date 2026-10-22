@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().sections.is_some(), "create-section/appends-the-ipe300-profile: the created profile must surface in the sections delta");
     assert!(outcome.diff().materials.is_none(), "create-section/appends-the-ipe300-profile: a section is independent of the material catalogue");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

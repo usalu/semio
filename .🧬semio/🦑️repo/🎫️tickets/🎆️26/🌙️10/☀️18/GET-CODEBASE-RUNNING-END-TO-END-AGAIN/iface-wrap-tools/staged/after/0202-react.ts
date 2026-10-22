@@ -1,25 +1,45 @@
-/** 🧩️ The host contract of the element-host registry: what a lane implementation registers and the Interpreter resolves, spelled with no renderer-library type.
+/** 🧷️ The context every retained view reads: the interpreter context type, the plugin surface actions context and the label resolver.
  *
- * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}. A host is a function of its props; how the lane mounts one (the React lane mounts it as a component) stays inside the lane.
+ * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import type { ComponentSceneHostProps } from "@semio-tech/framework";
+import { createContext, useContext } from "../../⚛️react-port/🟦️.ts";
+import { type LocalDocumentOwnerV1 } from "../🧭️local-document-owner/🟦️.ts";
+import { type InputOutcomeV1, type ShellInputActionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import { type UiLabel, type UiTranslationKey } from "@semio-tech/ui-react";
+import { type ActionDispatchLifecycleV1, type ContextMenuItemSpec, type PluginContextMenuRequest } from "@semio-tech/framework";
+import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
+import { type UiIntent } from "@semio-tech/framework";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 
-//#region ExtensionHost
-/** 📨️ What a `Component::Extension` host receives: the authored props and the identity of the node that carries them. */
-export type ExtensionHostPropsV1 = { readonly value: unknown; readonly nodeId: string | number; readonly nodeKey: string };
+//#region 🔖️UiInterpreter
+export function interpLabel(key: UiTranslationKey): UiLabel {
+  return shellLabel(key);
+}
 
-/** 🎛️ The host of one extension id: a function of {@link ExtensionHostPropsV1} whose rendered result only the lane that mounts it reads. */
-export type ExtensionHostV1 = (props: ExtensionHostPropsV1) => unknown;
+//#region UiInterpreterContext
+export type UiInterpreterContext = {
+  readonly store: UiDocumentStore;
+  readonly localDocumentOwner?: LocalDocumentOwnerV1 | null;
+  /** 🌉️ Legacy ActionDescriptor channel — the seam this Interpreter still speaks to the 14 unowned
+   * scene-host elements through (see `🌉️SurfaceBridge`). Semantic components (button/input/select/…)
+   * never use this; they go through `emitIntent`/`UiIntent` instead. */
+  readonly onAction: (action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => void | Promise<unknown>;
+  /** 🎬️ Semantic dispatch — fires a `UiIntent` built from the node's own `ActionBinding`s. */
+  /** 🔁️ Answers with the promise the shell's own dispatch settles on, so a CONTINUOUS control (a
+   * dragged slider, a held spinner) can tell whether its last value has landed. `void` is still
+   * accepted for a sink that has nothing to settle. */
+  readonly onIntent: (intent: UiIntent, windowId?: string) => void | Promise<void | InputOutcomeV1>;
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+  /** 🪪️ The DOM id of the row this subtree renders inside — a tree row or a table row. A node key is unique only among its
+   * siblings, so a row's inline controls and cells are addressed under their row ({@link uiNodeDomId}). */
+  readonly domScope?: string;
+};
+//#endregion UiInterpreterContext
 
-/** 🔎️ Answers the host for an extension id at render time, or `undefined` for an id it does not own; reading the id and the host only then keeps a registration safe while the host modules are still evaluating. */
-export type ExtensionHostResolverV1 = (extensionId: string) => ExtensionHostV1 | undefined;
-//#endregion ExtensionHost
+export const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestContextMenu"]>(undefined);
 
-//#region ComponentSceneHost
-/** 🎬️ The host of one `ComponentKind` scene: a function of the authored scene props whose rendered result only the lane that mounts it reads. */
-export type ComponentSceneHostV1 = (props: ComponentSceneHostProps) => unknown;
-
-/** 🧭️ Resolves a scene host at render time: modules form a cycle with the hosts' own helpers, so a captured host can still be `undefined` at registration and only a live read is ready by first paint. */
-export type ComponentSceneHostResolverV1 = () => ComponentSceneHostV1 | undefined;
-//#endregion ComponentSceneHost
+export function usePluginSurfaceActions(): UiInterpreterContext["requestContextMenu"] {
+  return useContext(PluginSurfaceActionsContext);
+}
+//#endregion 🔖️UiInterpreter

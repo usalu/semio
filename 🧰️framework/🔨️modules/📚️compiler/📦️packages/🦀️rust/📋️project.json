@@ -36,7 +36,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     }
   }

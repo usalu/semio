@@ -48,7 +48,7 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
     if let Some(message) = outcome.messages().first() {
         return Err(MutationRefusal { code: message.code.0.to_string(), message: message.message.to_string() });
     }
-    *snapshot = kernel::apply_diff(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
+    *snapshot = kernel::apply_diff_cold(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
     Ok(())
 }
 
@@ -57,7 +57,7 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
 /// Artifacts re-export it under their own `apply_<artifact>_mutation` name; no schema module applies a diff itself.
 pub fn apply_mutation<P, M: kernel::Mutation<P>>(snapshot: &mut P, mutation: &M) -> kernel::MutationOutcome<M::Diff> {
     let outcome = mutation.diff(snapshot);
-    match kernel::apply_diff(outcome.diff(), snapshot) {
+    match kernel::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

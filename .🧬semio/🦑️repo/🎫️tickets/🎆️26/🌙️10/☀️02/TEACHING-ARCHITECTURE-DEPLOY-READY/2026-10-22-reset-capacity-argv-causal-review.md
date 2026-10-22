@@ -1,0 +1,9 @@
+# Capacity-Granted Recovery Argv
+
+The concrete current reverse call chain is capacity argument rewriting, rather than established implementation receipt publication. withBuildCapacityV1 line67 supplies grantedBuildArgumentsV1 whenever the real request has per-job memory. That helper lines42–45 removes earlier parallel head options and appends canonical --parallel=<handle.jobs> before the opaque separator tail. Build entry lines90 and109 pass these granted args to the captured kernel and ordinary root CLI respectively.
+
+The dispatched reset arguments match the closed recovery selector before this transformation, but actual capacity admitted one of eight jobs. The resulting injected --parallel=1 is not in the original selector whitelist. Its option loop therefore returns undefined, leading to ordinary diagnostics/environment/Nx/Graph behavior instead of the fixed reset owner. The earlier inner-callback test stubs that outer wrapper and cannot detect this discrepancy. This is a concrete current code edge consistent with observed admission, not an attribution of mutable host bytes to the settled process.
+
+The narrow correction is schema-bound canonical positive finite capacity grant syntax for the selected fixed recovery command, retaining authored owner/dependency validation, unknown-option refusal, exact Original/control and opaque tail behavior. It grants no extra parallelism or cache authority. The actual host capacity handle remains authoritative for jobs. A regression should exercise the real outer capacity dispatcher with a genuine grant and verify the reset port is reached before ordinary semantic Graph paths.
+
+The previous generic optional writer maintenance hazard remains real but is not established as this failure cause; no optional-publication bypass or special receipt propagation design is recommended. Cargo owns the closed selector/corpus correction. No Source edits, Source execution, Native, cache or ledger action occurred.

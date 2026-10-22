@@ -803,8 +803,8 @@ describe("package boundary glue-content classification", () => {
     const libraryPackageRoot = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(join(libraryPackageRoot, "📋️project.json"), "utf8"));
     const libraryPackage = JSON.parse(readFileSync(join(libraryPackageRoot, "package.json"), "utf8"));
-    expect(project.targets["test-package-body-policy"].options.command).toBe("bun ./📜️script.ts test package-body-policy");
-    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-package-body-policy");
+    expect(project.targets["test-package-body-policy"].options.command).toBe("repo ./📜️script.ts test package-body-policy");
+    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-package-body-policy");
   });
 
   test("the remaining package-purity fixture stays a non-authoritative testing example outside production coordinate metadata", () => {

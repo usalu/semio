@@ -94,7 +94,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "edit-text/warns-that-the-brief-body-is-unchanged: a no-op is its own outcome class, not a rejection");
-    let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let produced = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "edit-text/warns-that-the-brief-body-is-unchanged: an unchanged body is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "edit-text/warns-that-the-brief-body-is-unchanged: exactly one diagnostic is raised");
     assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "edit-text/warns-that-the-brief-body-is-unchanged: raised diagnostic code differs from the declared one");
@@ -104,7 +104,7 @@ async fn declared_outcome_holds() {
 /// reaches `diff_set_text`, so `document` — this mutation's ONLY output field — stays null.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let outcome = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced edit-text diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-text/warns-that-the-brief-body-is-unchanged: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -126,7 +126,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: WriterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-text diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "edit-text/warns-that-the-brief-body-is-unchanged: committed diff did not carry before to after");
 }
 

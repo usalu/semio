@@ -11,13 +11,13 @@ use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, Media};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use crate::render_bundle::RenderCtx;
 use semio_framework_ui_contract::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     pub async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
         self.refresh_cache().await?;
         let (snapshot, config, history) = self.history.command_cache_inputs();

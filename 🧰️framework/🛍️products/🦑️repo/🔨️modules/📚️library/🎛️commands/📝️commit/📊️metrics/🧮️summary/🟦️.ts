@@ -4,9 +4,10 @@ import { gitRepoRoot, gitTrackedPaths } from "../../🌳️git/🟦️.ts";
 import { accumulateRangeSizeDeltas, accumulateRangeUlocDeltas, accumulateStagedSizeDeltas, accumulateStagedUlocDeltas, accumulateUlocDeltasFromPaths, gitDeltaLineTotal, gitRangeNumstat, pathUnderPrefixes } from "../🔀️deltas/🟦️.ts";
 import { classifyPathForMetrics, langMetricsEmoji, MAX_METRICS_FILE_BYTES, shouldSkipPathForUloc } from "../🛤️path-rules/🟦️.ts";
 import { countUnifiedLocForFile } from "../🔢️uloc/🟦️.ts";
-import type { MetricKindId, MetricsRunner, MicroCommitLangMetrics, UlocByLanguage, UlocRunner } from "../🏷️types/🟦️.ts";
-import { createDefaultMetricsRunner, createDefaultUlocRunner } from "../💾️scan/🟦️.ts";
-import { COMMIT_METRIC_HEADER, COMMIT_METRIC_TOTAL_EMOJI, formatMetricBody, langMetricsSlug, METRIC_KINDS } from "../🎨️format/🟦️.ts";
+import type { MetricKindId, MetricsRunner, MicroCommitLangMetrics, UlocByLanguage } from "../🏷️types/🟦️.ts";
+import { createDefaultMetricsRunner } from "../💾️scan/🟦️.ts";
+import { COMMIT_METRIC_TOTAL_EMOJI, formatMetricBody, langMetricsSlug, METRIC_KINDS } from "../🎨️format/🟦️.ts";
+import {refuseCommitV1} from "../../📖️texts/🟦️.ts";
 
 /** 📂️Sums unified LOC for tracked paths under prefixes (bundle-scoped 💯️). */
 export function countUnifiedLocUnderPathPrefixes(root: string, prefixes: string[]): number {
@@ -125,26 +126,20 @@ export function buildCommitMetricsForRange(root: string, base: string, head = "H
 }
 
 /** 📊️Builds micro-commit uloc metrics: repo uloc per language + staged git deltas. */
-export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
+export function buildMicroCommitMetrics(root: string, runner: MetricsRunner = createDefaultMetricsRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateStagedUlocDeltas(repoRoot);
-  const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
+  const codeByLang = runner.countRepoUlocByLanguage(repoRoot);
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
 
 /** 📊️Builds uloc metrics for a git revision range (optional path prefixes). */
-export function buildMicroCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
+export function buildMicroCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], runner: MetricsRunner = createDefaultMetricsRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateRangeUlocDeltas(repoRoot, base, head, pathPrefixes);
-  const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
+  const codeByLang = runner.countRepoUlocByLanguage(repoRoot);
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
-
-/** 📊️Micro-commit metrics block header (legacy alias). */
-export const MICRO_COMMIT_ULOC_HEADER = COMMIT_METRIC_HEADER;
-
-/** 🔢️Emoji for the aggregate total row (legacy alias). */
-export const MICRO_COMMIT_ULOC_TOTAL_EMOJI = COMMIT_METRIC_TOTAL_EMOJI;
 
 /** 📊️Sums per-language metric rows into one total. */
 export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): MicroCommitLangMetrics {
@@ -215,7 +210,7 @@ export function formatCommitMetricsLines(bundle: CommitMetricsBundle): string[] 
   return lines;
 }
 
-/** 📊️Renders the unified LOC block (legacy: uloc-only footer). */
+/** 📊️Renders the unified LOC block for uloc rows alone. */
 export function formatMicroCommitMetricsLines(metrics: MicroCommitLangMetrics[]): string[] {
   return formatCommitMetricsLines({ uloc: metrics, size: [] });
 }
@@ -239,9 +234,7 @@ export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangM
   }
   if (!gitDeltaSumsEqual({ added, edited, removed }, total)) {
     const kindToken = METRIC_KINDS[kind].token;
-    throw new Error(
-      `commit: per-language ${kindToken} deltas do not sum to the footer total — languages ➕️${added}✏️${edited}➖️${removed}🟰️${gitDeltaLineTotal({ added, edited, removed })} vs footer ➕️${total.added}✏️${total.edited}➖️${total.removed}🟰️${gitDeltaLineTotal(total)}`,
-    );
+    throw refuseCommitV1("failed","metrics.per-language-deltas-do-not",{kindToken:String(kindToken),added:String(added),edited:String(edited),removed:String(removed),sum:String(gitDeltaLineTotal({ added, edited, removed })),footerAdded:String(total.added),footerEdited:String(total.edited),footerRemoved:String(total.removed),footerSum:String(gitDeltaLineTotal(total))},);
   }
 }
 

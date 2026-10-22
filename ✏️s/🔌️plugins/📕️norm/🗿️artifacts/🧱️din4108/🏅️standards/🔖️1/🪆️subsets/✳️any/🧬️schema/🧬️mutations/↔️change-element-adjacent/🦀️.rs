@@ -20,7 +20,14 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeElementAdjacent w
         kind: "change-element-adjacent",
         record: "ChangedElementAdjacent",
     };
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change adjacent space of the element", "Angrenzenden Bereich des Bauteils ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeElementAdjacent where Op: protocol::ColdMutation<Din4108Snapshot, ReferenceDiff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::change_element_adjacent::ChangeElementAdjacent> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din4108Snapshot>>::ReferenceDiff> {
         crate::change_element_adjacent::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,9 +36,6 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeElementAdjacent w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change adjacent space of the element", "Angrenzenden Bereich des Bauteils ändern")
-    }
 }
 
 //#region 🪢️Mounts

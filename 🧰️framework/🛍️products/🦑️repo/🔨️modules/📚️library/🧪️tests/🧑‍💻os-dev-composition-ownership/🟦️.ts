@@ -28,7 +28,7 @@ const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫�
 describe("OS development composition ownership", () => {
   test("validates the exact portable semantic owner map", () => {
     
-    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractContext"]["name"]).toEqual("🧑‍💻os-dev-composition-ownership");expect(fixture["contractContext"]["kind"]).toEqual("os-dev-composition-ownership");expect(fixture["contractContext"]["parentKinds"]).toEqual(["fixtures","schema","tests"]);expect(fixture["routerPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");expect(fixture["ownerImporterPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts");expect(fixture["registration"]["target"]).toEqual("test-os-dev-composition-ownership");expect(fixture["registration"]["command"]).toEqual("bun repo run @semio-tech/repo-lib:test-os-dev-composition-ownership");expect(fixture["registration"]["packagePath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json");expect(fixture["registration"]["projectPath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json");
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractContext"]["name"]).toEqual("🧑‍💻os-dev-composition-ownership");expect(fixture["contractContext"]["kind"]).toEqual("os-dev-composition-ownership");expect(fixture["contractContext"]["parentKinds"]).toEqual(["fixtures","schema","tests"]);expect(fixture["routerPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");expect(fixture["ownerImporterPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts");expect(fixture["registration"]["target"]).toEqual("test-os-dev-composition-ownership");expect(fixture["registration"]["command"]).toEqual("repo run @semio-tech/repo-lib:test-os-dev-composition-ownership");expect(fixture["registration"]["packagePath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json");expect(fixture["registration"]["projectPath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json");
     
     expect(fixture.owners).toHaveLength(47);
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(47);
@@ -141,11 +141,11 @@ describe("OS development composition ownership", () => {
   test("registers one Bun/Nx owner route whose inputs are exactly the contract closure", () => {
     const registration = fixture.registration;
     const packageManifest = JSON.parse(readFileSync(resolve(repoRoot, registration.packagePath), "utf8")) as { scripts?: Record<string, string> };
-    expect(packageManifest.scripts?.[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
-    expect(registration.command).toBe(`bun ${packageManifest.scripts?.[registration.target]}`);
+    expect(packageManifest.scripts?.[registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
+    expect(registration.command).toBe(`repo ${packageManifest.scripts?.[registration.target]}`);
     const project = JSON.parse(readFileSync(resolve(repoRoot, registration.projectPath), "utf8")) as { targets?: Record<string, { inputs?: string[]; options?: { command?: string } }> };
     const target = project.targets?.[registration.target];
-    expect(target?.options?.command).toBe("bun ./📜️script.ts test os-dev-composition-ownership");
+    expect(target?.options?.command).toBe("repo ./📜️script.ts test os-dev-composition-ownership");
     const contractPaths = new Set([
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",

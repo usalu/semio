@@ -8,9 +8,9 @@
     "./index": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-machine-rs:test",
-    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-machine-rs:check",
-    "test-node-graph-row-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-machine-rs:test-node-graph-row-ownership"
+    "test": "repo run @semio-tech/framework-tool-machine-rs:test",
+    "check": "repo run @semio-tech/framework-tool-machine-rs:check",
+    "test-node-graph-row-ownership": "repo run @semio-tech/framework-tool-machine-rs:test-node-graph-row-ownership"
   },
   "bundleKind": "library",
   "devDependencies": {

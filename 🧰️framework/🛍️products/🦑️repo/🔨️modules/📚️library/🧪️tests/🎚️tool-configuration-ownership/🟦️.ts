@@ -13,11 +13,11 @@ import { build, loadConfigFromFile } from "vite";
 
 type Owner = Readonly<{
   id: string;
-  tool: "vite" | "playwright" | "tailwind" | "postcss" | "eslint" | "dependency-cruiser" | "vscode-test";
+  tool: "vite" | "playwright" | "tailwind" | "postcss" | "eslint" | "dependency-cruiser";
   previousPath: string;
   ownerPath: string;
   effectiveRoot: string;
-  loader: "vite-native" | "module" | "postcss-load-config" | "eslint" | "dependency-cruiser" | "vscode-test";
+  loader: "vite-native" | "module" | "postcss-load-config" | "eslint" | "dependency-cruiser";
   mode: "serve" | "build" | "test" | "lint" | "verify";
 }>;
 type Fixture = Readonly<{
@@ -58,12 +58,12 @@ describe("Tool configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["target"]).toEqual("test-tool-configuration-ownership");expect(fixture["postcss"]["ownerId"]).toEqual("ui-react-postcss");expect(fixture["postcss"]["packageExport"]).toEqual("./postcss.config");expect(fixture["postcss"]["packageExportTarget"]).toEqual("./🟦️.mts");expect(fixture["postcss"]["standaloneLoader"]["kind"]).toEqual("explicit-search-place");expect(fixture["postcss"]["standaloneLoader"]["searchPlace"]).toEqual("🟦️.mts");expect(fixture["postcss"]["viteLoader"]["kind"]).toEqual("inline-plugin-array");expect(fixture["postcss"]["viteLoader"]["exportName"]).toEqual("uiPostcssInlinePlugins");
     
-    expect(fixture.owners).toHaveLength(12);
-    expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(12);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(12);
+    expect(fixture.owners).toHaveLength(11);
+    expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(11);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(11);
     expect(fixture.removedShims).toHaveLength(2);
-    expect(fixture.consumers).toHaveLength(20);
-    expect(fixture.projectInputs).toHaveLength(8);
+    expect(fixture.consumers).toHaveLength(19);
+    expect(fixture.projectInputs).toHaveLength(7);
   });
 
   test("requires anonymous semantic owners and removes fixed predecessors and shims", () => {
@@ -108,7 +108,7 @@ describe("Tool configuration ownership", () => {
     }
   }, 30_000);
 
-  test("loads Playwright, Tailwind, ESLint, dependency-cruiser and VS Code configurations through installed tool contracts", async () => {
+  test("loads Playwright, Tailwind, ESLint and dependency-cruiser configurations through installed tool contracts", async () => {
     const playwright = ownerById.get("demonstrator-playwright")!;
     const listed = spawnSync(process.execPath, [resolve(repoRoot, "node_modules/playwright/cli.js"), "test", "--config", resolve(repoRoot, playwright.ownerPath), "--list"], { cwd: repoRoot, encoding: "utf8", timeout: 30_000, env: { ...process.env, PLAYWRIGHT_BASE_URL: "http://127.0.0.1:6029" } });
     expect(listed.status, listed.stderr).toBe(0);
@@ -141,12 +141,7 @@ describe("Tool configuration ownership", () => {
     expect(dependencyConfig.forbidden.length).toBeGreaterThan(20);
     expect(dependencyConfig.options).toBeDefined();
 
-    const vscodeOwner = ownerById.get("vscode-extension-test")!;
-    const vscodeLoader = await import(pathToFileURL(resolve(repoRoot, "node_modules/@vscode/test-cli/out/cli/config.mjs")).href);
-    const vscode = await vscodeLoader.tryLoadConfigFile(resolve(repoRoot, vscodeOwner.ownerPath));
-    expect(vscode.path).toBe(resolve(repoRoot, vscodeOwner.ownerPath));
-    expect(vscode.tests[0].files).toBe(resolve(repoRoot, vscodeOwner.effectiveRoot, "out/test/**/*.test.js"));
-    expect(vscode.tests[0].workspaceFolder).toBe(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode"));
+
   }, 60_000);
 
   test("loads the anonymous PostCSS package entry and Vite inline plugins through distinct installed contracts", async () => {
@@ -218,10 +213,10 @@ describe("Tool configuration ownership", () => {
     const script = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts");
     expect(script).toContain('segments[0] === "tool-configuration-ownership"');
     const project = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"));
-    expect(project.targets[fixture.registration.target].options.command).toBe("bun ./📜️script.ts test tool-configuration-ownership");
+    expect(project.targets[fixture.registration.target].options.command).toBe("repo ./📜️script.ts test tool-configuration-ownership");
     expect(project.targets[fixture.registration.target].inputs).toContain("{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts");
     for (const path of [ownerById.get(fixture.postcss.ownerId)!.ownerPath, fixture.postcss.packageEntryPath, fixture.postcss.historicalFixturePath]) expect(project.targets[fixture.registration.target].inputs).toContain(`{workspaceRoot}/${path}`);
     const manifest = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

@@ -87,8 +87,17 @@ fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Opt
 //#endregion 🔹Rows
 
 //#region 🔹Apply
-impl MutationDiff<GisMapSnapshot> for GisMapDiff {
-    fn apply(&self, snapshot: &GisMapSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisMapSnapshot> {
+impl MutationDiff<GisMapSnapshot> for GisMapDiff {}
+
+impl protocol::ColdMutationDiff<GisMapSnapshot> for GisMapDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_features_delta(&mut self.positions, other.positions);
+        absorb_features_delta(&mut self.routes, other.routes);
+        absorb_features_delta(&mut self.regions, other.regions);
+    }
+
+    fn apply(&self, unpublished: &mut GisMapSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
         let mut next = snapshot.clone();
         if let Some(delta) = &self.positions {
             next.positions = delta.commit_onto(&next.positions, capability).map_err(|error| error.under(["positions"]))?;
@@ -99,25 +108,24 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
         if let Some(delta) = &self.regions {
             next.regions = delta.commit_onto(&next.regions, capability).map_err(|error| error.under(["regions"]))?;
         }
-        Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        absorb_features_delta(&mut self.positions, other.positions);
-        absorb_features_delta(&mut self.routes, other.routes);
-        absorb_features_delta(&mut self.regions, other.regions);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<GisMapSnapshot> for GisMapDiff {
+    fn is_empty(&self) -> bool {
+        [&self.positions, &self.routes, &self.regions].into_iter().all(|delta| delta.as_ref().is_none_or(GisMapFeaturesDelta::is_empty))
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GisMapSnapshot> for GisMapDiff {
     fn inverse(&self, base: &GisMapSnapshot) -> Self {
         Self {
             positions: self.positions.as_ref().map(|delta| delta.inverse(&base.positions)),
             routes: self.routes.as_ref().map(|delta| delta.inverse(&base.routes)),
             regions: self.regions.as_ref().map(|delta| delta.inverse(&base.regions)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        [&self.positions, &self.routes, &self.regions].into_iter().all(|delta| delta.as_ref().is_none_or(GisMapFeaturesDelta::is_empty))
     }
 }
 //#endregion 🔹Apply

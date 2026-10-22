@@ -10,6 +10,8 @@ package cli
 
 import (
 	context "context"
+ json "encoding/json"
+ sort "sort"
 	fmt "fmt"
 	strconv "strconv"
 	strings "strings"
@@ -57,24 +59,12 @@ func policyCheck(ctx context.Context, request CallToolRequest) (*CallToolResult,
 }
 
 // 🎫️ticketOpenWithKind handles MCP ticket_open for a specific IDE MCP surface.
-func ticketOpenWithKind(ctx context.Context, request CallToolRequest, kind providers.McpClientKind) (*CallToolResult, error) {
-	args := getArgs(request)
-	emoji, _, _ := getStringArg(args, "emoji")
-	title, _, _ := getStringArg(args, "title")
-	prompt, _, _ := getStringArg(args, "prompt")
-	goal, _, _ := getStringArg(args, "goal")
-	client, _, _ := getStringArg(args, "client")
-	llm, _, _ := getStringArg(args, "llm")
-	effort, _, _ := getStringArg(args, "effort")
-	draft, _, _ := getStringArg(args, "draft")
-	parent, _, _ := getStringArg(args, "parent")
-	issue, _, _ := getStringArg(args, "issue")
-	planID, _, _ := getStringArg(args, "plan_id")
-	specID, _, _ := getStringArg(args, "spec_id")
-	client = providers.ResolveMcpTicketClient(kind, client)
-
-	result := ToolTicketOpen(emoji, title, prompt, llm, effort, client, draft, false, goal, parent, false, issue, kind, planID, specID)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) ticketOpenWithKind(ctx context.Context, request CallToolRequest, kind providers.McpClientKind) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request)
+ read:=func(name string) string { value,_,_:=getStringArg(args,name);return value }
+ noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError};noIssue,_,argumentError:=getBoolArg(args,"no_issue");if argumentError!=nil {return nil,argumentError}
+ ticket,err:=repository.repo.TicketOpen(model.TicketOpenInput{Emoji:read("emoji"),Title:read("title"),Prompt:read("prompt"),Goal:read("goal"),Client:providers.ResolveMcpTicketClient(kind,read("client")),LLM:read("llm"),Effort:read("effort"),Draft:read("draft"),Parent:read("parent"),Issue:read("issue"),PlanID:read("plan_id"),SpecID:read("spec_id"),NoIssue:noIssue,NoManagement:noManagement})
+ return mcpTicketResult(ticket,err)
 }
 
 func ticketRead(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
@@ -163,45 +153,19 @@ func resolveTicketForReopen(path string) (int, int, int, string, error) {
 }
 
 // 🔶️ticketClose holds the data fields for a ticketClose record.
-func ticketClose(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-	args := getArgs(request)
-	path, _, _ := getStringArg(args, "path")
-	summary, _, _ := getStringArg(args, "summary")
-	filesSlice, _, _ := getStringSliceArg(args, "files")
-	title, _, _ := getStringArg(args, "title")
-	noManagement, _, _ := getBoolArg(args, "no_management")
-
-	year, month, day, slug, err := resolveTicketForClose(path)
-	if err != nil {
-		return nil, err
-	}
-
-	result := ToolTicketClose(year, month, day, slug, summary, filesSlice, title, noManagement)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) ticketClose(ctx context.Context,request CallToolRequest) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request);value,_,_:=getStringArg(args,"path")
+ year,month,day,slug,err:=repository.resolveTicket(value,model.TicketStatusOpen);if err!=nil { return nil,err }
+ summary,_,_:=getStringArg(args,"summary");files,_,_:=getStringSliceArg(args,"files");title,present,_:=getStringArg(args,"title");var titleValue *string;if present { titleValue=&title };noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError}
+ ticket,err:=repository.repo.TicketClose(model.TicketCloseInput{Year:year,Month:month,Day:day,Slug:slug,Summary:summary,Files:files,Title:titleValue,NoManagement:noManagement});return mcpTicketResult(ticket,err)
 }
 
 // 📬️ticketReopenWithKind handles MCP ticket_reopen for a specific IDE MCP surface.
-func ticketReopenWithKind(ctx context.Context, request CallToolRequest, kind providers.McpClientKind) (*CallToolResult, error) {
-	args := getArgs(request)
-	path, _, _ := getStringArg(args, "path")
-	prompt, _, _ := getStringArg(args, "prompt")
-	client, _, _ := getStringArg(args, "client")
-	llm, _, _ := getStringArg(args, "llm")
-	effort, _, _ := getStringArg(args, "effort")
-	title, _, _ := getStringArg(args, "title")
-	draft, _, _ := getStringArg(args, "draft")
-	noManagement, _, _ := getBoolArg(args, "no_management")
-	planID, _, _ := getStringArg(args, "plan_id")
-	specID, _, _ := getStringArg(args, "spec_id")
-	client = providers.ResolveMcpTicketClient(kind, client)
-
-	year, month, day, slug, err := resolveTicketForReopen(path)
-	if err != nil {
-		return nil, err
-	}
-
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, effort, client, draft, title, "", "", noManagement, kind, planID, specID)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) ticketReopenWithKind(ctx context.Context,request CallToolRequest,kind providers.McpClientKind) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request);read:=func(name string) string { value,_,_:=getStringArg(args,name);return value }
+ year,month,day,slug,err:=repository.resolveTicket(read("path"),model.TicketStatusClosed);if err!=nil { return nil,err }
+ title,present,_:=getStringArg(args,"title");var titleValue *string;if present { titleValue=&title };noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError}
+ ticket,err:=repository.repo.TicketReopen(model.TicketReopenInput{Year:year,Month:month,Day:day,Slug:slug,Prompt:read("prompt"),Client:providers.ResolveMcpTicketClient(kind,read("client")),LLM:read("llm"),Effort:read("effort"),Draft:read("draft"),Title:titleValue,PlanID:read("plan_id"),SpecID:read("spec_id"),NoManagement:noManagement});return mcpTicketResult(ticket,err)
 }
 
 // 🗑️draftDelete holds the data fields for a draftDelete record.
@@ -255,64 +219,20 @@ func todoDelete(ctx context.Context, request CallToolRequest) (*CallToolResult, 
 }
 
 // ⛳️goalOpen holds the data fields for a goalOpen record.
-func goalOpen(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-	args := getArgs(request)
-	title, _, _ := getStringArg(args, "title")
-	description, _, _ := getStringArg(args, "description")
-	prompt, _, _ := getStringArg(args, "prompt")
-	dueDate, _, _ := getStringArg(args, "due_date")
-	llm, _, _ := getStringArg(args, "llm")
-	client, _, _ := getStringArg(args, "client")
-	noManagement, _, _ := getBoolArg(args, "no_github")
-	parent, _, _ := getStringArg(args, "parent")
-	milestone, _, _ := getStringArg(args, "milestone")
-
-	result := ToolGoalCreate(title, description, prompt, dueDate, llm, client, noManagement, parent, milestone)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) goalOpen(ctx context.Context,request CallToolRequest) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request);read:=func(name string) string { value,_,_:=getStringArg(args,name);return value };noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError}
+ goal,err:=repository.repo.GoalCreate(model.GoalCreateInput{Title:read("title"),Description:read("description"),Prompt:read("prompt"),DueDate:read("due_date"),LLM:read("llm"),Client:read("client"),Parent:read("parent"),Milestone:read("milestone"),NoManagement:noManagement});return mcpDomainResult(goal,err)
 }
 
 // 🔹️goalClose holds the data fields for a goalClose record.
-func goalClose(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-	args := getArgs(request)
-	id, err := requireStringArg(args, "id")
-	if err != nil {
-		return nil, err
-	}
-	summary, err := requireStringArg(args, "summary")
-	if err != nil {
-		return nil, err
-	}
-	noManagement, _, _ := getBoolArg(args, "no_github")
-
-	result := ToolGoalClose(id, summary, noManagement)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) goalClose(ctx context.Context,request CallToolRequest) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request);id,err:=requireStringArg(args,"id");if err!=nil { return nil,err };summary,err:=requireStringArg(args,"summary");if err!=nil { return nil,err };noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError}
+ goal,err:=repository.repo.GoalClose(model.GoalCloseInput{ID:id,Summary:summary,NoManagement:noManagement});return mcpDomainResult(goal,err)
 }
 
-func goalReopen(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-	args := getArgs(request)
-	id, err := requireStringArg(args, "id")
-	if err != nil {
-		return nil, err
-	}
-	prompt, err := requireStringArg(args, "prompt")
-	if err != nil {
-		return nil, err
-	}
-	llm, err := requireStringArg(args, "llm")
-	if err != nil {
-		return nil, err
-	}
-	client, err := requireStringArg(args, "client")
-	if err != nil {
-		return nil, err
-	}
-	title, _, _ := getStringArg(args, "title")
-	description, _, _ := getStringArg(args, "description")
-	dueDate, _, _ := getStringArg(args, "due_date")
-	noManagement, _, _ := getBoolArg(args, "no_github")
-
-	result := ToolGoalReopen(id, prompt, llm, client, title, description, dueDate, noManagement)
-	return toolResultToMCP(result)
+func (repository *mcpRepository) goalReopen(ctx context.Context,request CallToolRequest) (*CallToolResult,error) {
+ if err:=ctx.Err();err!=nil { return nil,err };args:=getArgs(request);read:=func(name string) string { value,_,_:=getStringArg(args,name);return value };optional:=func(name string) *string { value,present,_:=getStringArg(args,name);if !present { return nil };return &value };noManagement,_,argumentError:=getBoolArg(args,"no_management");if argumentError!=nil {return nil,argumentError}
+ goal,err:=repository.repo.GoalReopen(model.GoalReopenInput{ID:read("id"),Prompt:read("prompt"),LLM:read("llm"),Client:read("client"),Title:optional("title"),Description:optional("description"),DueDate:optional("due_date"),NoManagement:noManagement});return mcpDomainResult(goal,err)
 }
 
 // 📤️export holds the data fields for a export record.
@@ -348,3 +268,16 @@ func contributorRemove(ctx context.Context, request CallToolRequest) (*CallToolR
 // #endregion 🪄️Handlers
 
 // #endregion 🔌️Mcp Surface
+
+// 🧾️mcpDomainResult renders the actual domain outcome without a human text conversion.
+func mcpDomainResult(value interface{},err error) (*CallToolResult,error) { if err!=nil { return nil,err };payload,err:=json.Marshal(value);if err!=nil { return nil,err };return textResult(string(payload)),nil }
+
+// 🎫️resolveTicket chooses only from this server's retained repository service.
+func (repository *mcpRepository) resolveTicket(path string,status model.TicketStatus) (int,int,int,string,error) {
+ if path!="" { return parseTicketPath(path) }
+ tickets,err:=repository.repo.GetTickets(nil,nil,nil,&status);if err!=nil { return 0,0,0,"",err };if len(tickets)==0 { return 0,0,0,"",fmt.Errorf("no %s tickets in this repository",status) }
+ sort.Slice(tickets,func(i,j int) bool { a,b:=tickets[i],tickets[j];if a.Year!=b.Year { return a.Year>b.Year };if a.Month!=b.Month { return a.Month>b.Month };if a.Day!=b.Day { return a.Day>b.Day };return a.Slug>b.Slug });selected:=tickets[0];return selected.Year,selected.Month,selected.Day,selected.Slug,nil
+}
+
+// 🎫️mcpTicketResult returns the exact rooted ticket identity for subsequent protocol operations.
+func mcpTicketResult(ticket *model.Ticket,err error) (*CallToolResult,error) { if err!=nil { return nil,err };if ticket==nil { return nil,fmt.Errorf("ticket outcome required") };return mcpDomainResult(struct { Path string `json:"path"`;Ticket *model.Ticket `json:"ticket"` }{fmt.Sprintf("%02d/%02d/%02d/%s",ticket.Year,ticket.Month,ticket.Day,ticket.Slug),ticket},nil) }

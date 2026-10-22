@@ -14,7 +14,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

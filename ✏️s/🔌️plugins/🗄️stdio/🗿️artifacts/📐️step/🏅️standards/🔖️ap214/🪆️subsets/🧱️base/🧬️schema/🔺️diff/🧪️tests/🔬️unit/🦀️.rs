@@ -4,7 +4,7 @@ use super::*;
 async fn invalid_collection_targets_are_rejected_before_mutation() {
     let base = StepSnapshot::default();
     let diff = StepDiff { entities: Some(StepEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-    let error = protocol::apply_diff(&diff, &base).expect_err("missing entity target must be rejected");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing entity target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, StepSnapshot::default());

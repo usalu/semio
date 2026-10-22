@@ -5,8 +5,8 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-layout-window-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/layout-layout-rs:verify-layout-window-ownership",
-    "verify-layout-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/layout-layout-rs:verify-layout-document-contract"
+    "verify-layout-window-ownership": "repo run @semio-tech/layout-layout-rs:verify-layout-window-ownership",
+    "verify-layout-document-contract": "repo run @semio-tech/layout-layout-rs:verify-layout-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

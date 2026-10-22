@@ -9,7 +9,7 @@ export type RemoteCacheContractV1=Readonly<{version:1;endpoint:string;instance:s
 export type RemoteCachePolicyV1=Readonly<typeof buildPolicy.remoteCache>;
 
 /** 🧾️ Names which tools render the contract and what the selected one could not honour. */
-export type RemoteCacheRenderingV1=Readonly<{mechanism:"bazel-flags"|"nx-environment";applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none"}>;
+export type RemoteCacheRenderingV1=Readonly<{mechanism:string;applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none"}>;
 
 const definitions=schema.definitions;
 

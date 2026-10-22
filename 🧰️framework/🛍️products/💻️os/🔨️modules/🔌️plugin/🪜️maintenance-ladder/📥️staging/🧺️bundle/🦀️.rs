@@ -13,7 +13,7 @@ use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaT
 use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -28,7 +28,7 @@ use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
 
 /// 🧺️ The exclusive borrows the `ladders` use cases need; built by the composer (`VcsArtifactApp::ladder_ctx`) or reborrowed by a higher bundle.
-pub struct LadderCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct LadderCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
@@ -51,7 +51,7 @@ pub struct LadderCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'sta
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> LadderCtx<'ctx, A, M, X> {
     /// 🔍️ The shared twin over the same borrows, for the `&self` members.
     pub fn shared(&self) -> LadderRef<'_, A, M, X> {
         LadderRef { app: &*self.app, stores: &*self.stores, roster: &*self.roster, ingress: &*self.ingress, interaction: &*self.interaction, history: &*self.history, txn: &*self.txn, child_composition: &*self.child_composition, pending: &*self.pending, tools: &*self.tools, media: &*self.media, ingest: &*self.ingest, maintenance: &*self.maintenance, close: &*self.close, tool_runs: &*self.tool_runs, time_travel: &*self.time_travel, tool_machines: &*self.tool_machines, extension: PhantomData }
@@ -79,7 +79,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> LadderCt
 }
 
 /// 🔍️ The shared borrows the `ladders` `&self` use cases need (`Copy`: every field is a shared reference).
-pub struct LadderRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct LadderRef<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'v A,
     pub stores: &'v InstanceStores<A>,
     pub roster: &'v PeerRoster<A>,
@@ -100,15 +100,15 @@ pub struct LadderRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'stati
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Clone for LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Clone for LadderRef<'v, A, M, X> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Copy for LadderRef<'v, A, M, X> {}
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Copy for LadderRef<'v, A, M, X> {}
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> LadderRef<'v, A, M, X> {
     /// ⬇️ Shares the `render` view of the same borrows.
     pub fn render_ref(&self) -> RenderRef<'_, A, M, X> {
         RenderRef { app: self.app, stores: self.stores, history: self.history, child_composition: self.child_composition, tools: self.tools, ingest: self.ingest, time_travel: self.time_travel, tool_machines: self.tool_machines, extension: PhantomData }

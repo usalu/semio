@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤖️ The live agent loop, end to end, with nothing mocked on either side: a real `semio-os-mcp`

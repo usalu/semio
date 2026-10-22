@@ -1,7 +1,7 @@
 # 🧩️ Providers
 
 Everything outside the repository the repo talks to, each behind an interface: management (GitHub
-through `gh`), version control (git), sandboxing (devcontainer), and the editors — Copilot, Cursor,
+through `gh`), version control (git), sandboxing (devcontainer), and the agent clients — Copilot, Cursor,
 Windsurf, Claude, Droid, Codex, Antigravity, Kiro. Process execution never happens in a caller.
 
 ## 📦️ Packages
@@ -16,5 +16,5 @@ One `🥒️.feature` per case under `🧪️tests/` with an adapter per impleme
 `🔮️oracles/🔣️.json`. The `🌿️git-version-control` scenarios are `@level-long` because they spawn a
 real version control system, so they run under `parity long`, never `fundamental` or `quick`.
 
-`🪪️mcp-client-kind-parse`, `🪝️editor-hook-output-format`, `🐙️github-management-transcripts`,
+`🪪️mcp-client-kind-parse`, `🪝️agent-client-hook-output-format`, `🐙️github-management-transcripts`,
 `🌿️git-version-control`.

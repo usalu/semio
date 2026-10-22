@@ -53,7 +53,7 @@ async fn set_spec_json_with_invalid_json_reports_a_fault() {
 
 #[test]
 fn canonical_import_vectors_preserve_document_identity_and_answers() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json")).unwrap();
     let current: FormsSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
@@ -63,7 +63,7 @@ fn canonical_import_vectors_preserve_document_identity_and_answers() {
         assert_eq!(outcome.is_ok(), case["valid"].as_bool().unwrap(), "{}", case["name"]);
         if let Ok(emit) = outcome {
             let mut result = current.clone();
-            for mutation in emit.artifact_mutations { result = protocol::apply_diff(mutation.diff(&result).diff(), &result).expect("valid mutation diff"); }
+            for mutation in emit.artifact_mutations { result = protocol::apply_diff_cold(mutation.diff(&result).diff(), &result).expect("valid mutation diff"); }
             assert_eq!(result.id, current.id);
             assert_eq!(result.responses, current.responses);
             let expected: FormsSnapshot = semio_framework_pack_json::from_json_str(case["source"].as_str().unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

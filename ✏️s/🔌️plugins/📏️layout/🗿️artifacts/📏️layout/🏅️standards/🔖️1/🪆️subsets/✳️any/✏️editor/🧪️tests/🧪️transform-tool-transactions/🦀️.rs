@@ -305,8 +305,8 @@ async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
 
 /// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
 fn folded(log: &[LayoutMutation]) -> LayoutSnapshot {
-    use protocol::{Mutation, MutationDiff};
-    log.iter().fold(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document(), |document, mutation| protocol::apply_diff(mutation.diff(&document).diff(), &document).expect("the leaf applies"))
+    use protocol::{ColdMutation, Mutation, MutationDiff};
+    log.iter().fold(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document(), |document, mutation| protocol::apply_diff_cold(mutation.diff(&document).diff(), &document).expect("the leaf applies"))
 }
 
 fn drag_leaf(dx: f64) -> LayoutMutation {

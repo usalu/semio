@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>

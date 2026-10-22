@@ -1,0 +1,391 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "sources",
+  "declaration",
+  "lifecycle",
+  "legacy",
+  "reserved",
+  "code",
+  "within",
+  "scopePath",
+  "enclosing"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "sources": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "text"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "declaration": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "requirements",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "requirements": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "toolId",
+        "root",
+        "scope",
+        "verbs",
+        "measures",
+        "lane",
+        "inventory"
+       ],
+       "properties": {
+        "toolId": {
+         "type": "string"
+        },
+        "root": {
+         "type": "string"
+        },
+        "scope": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "verbs": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "measures": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "lane": {
+         "type": "string"
+        },
+        "inventory": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "file",
+        "line",
+        "contains"
+       ],
+       "properties": {
+        "file": {
+         "type": "string"
+        },
+        "line": {
+         "type": "integer"
+        },
+        "contains": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "minItems": 1
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "lifecycle": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "requirements",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "requirements": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "toolId",
+        "root",
+        "scope",
+        "verbs",
+        "measures",
+        "lane",
+        "inventory"
+       ],
+       "properties": {
+        "toolId": {
+         "type": "string"
+        },
+        "root": {
+         "type": "string"
+        },
+        "scope": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "verbs": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "measures": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "lane": {
+         "type": "string"
+        },
+        "inventory": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "file",
+        "line",
+        "contains"
+       ],
+       "properties": {
+        "file": {
+         "type": "string"
+        },
+        "line": {
+         "type": "integer"
+        },
+        "contains": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "minItems": 1
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "legacy": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "file",
+     "line",
+     "contains"
+    ],
+    "properties": {
+     "file": {
+      "type": "string"
+     },
+     "line": {
+      "type": "integer"
+     },
+     "contains": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1
+     }
+    }
+   }
+  },
+  "reserved": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "file",
+     "line",
+     "contains"
+    ],
+    "properties": {
+     "file": {
+      "type": "string"
+     },
+     "line": {
+      "type": "integer"
+     },
+     "contains": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1
+     }
+    }
+   }
+  },
+  "code": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "within": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "prefix",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "prefix": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "scopePath": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "root",
+     "entry",
+     "expected"
+    ],
+    "properties": {
+     "root": {
+      "type": "string"
+     },
+     "entry": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "enclosing": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "at",
+     "opener",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "at": {
+      "type": "integer"
+     },
+     "opener": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

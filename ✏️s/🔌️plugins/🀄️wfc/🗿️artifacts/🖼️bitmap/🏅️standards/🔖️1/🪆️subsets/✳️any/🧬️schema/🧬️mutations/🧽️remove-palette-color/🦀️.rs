@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "palette-color", kind: "remove-palette-color", record: "RemovedPaletteColor" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove palette colour {}", self.index), &format!("Palettenfarbe {} entfernen", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for RemovePaletteColor
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<RemovePaletteColor> + From<crate::standards::v1::subsets::any::schema::mutations::add_palette_color::AddPaletteColor>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove palette colour {}", self.index), &format!("Palettenfarbe {} entfernen", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️RemovePaletteColor

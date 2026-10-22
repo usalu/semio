@@ -14,7 +14,7 @@ pub(super) async fn arm_open_artifact(
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
             effect_bytes.push(encode_wire_serialized(&effect));
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -31,7 +31,7 @@ pub(super) async fn arm_set_default_app(
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
             effect_bytes.push(encode_wire_serialized(&effect));
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -48,7 +48,7 @@ pub(super) async fn arm_clear_default_app(
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
             effect_bytes.push(encode_wire_serialized(&effect));
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -67,7 +67,7 @@ pub(super) async fn arm_set_merge_policy<PA: PluginApp>(
     });
     match outcome.await {
         Ok(outcome) => frames.extend(outcome),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -86,7 +86,7 @@ pub(super) async fn arm_resolve_conflict<PA: PluginApp>(
     });
     match outcome.await {
         Ok(outcome) => frames.extend(outcome),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -105,7 +105,7 @@ pub(super) async fn arm_read_conflicts<PA: PluginApp>(
     });
     match outcome.await {
         Ok(outcome) => frames.extend(outcome),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

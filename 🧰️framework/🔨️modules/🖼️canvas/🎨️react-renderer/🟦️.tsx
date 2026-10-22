@@ -397,8 +397,8 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 // #region 🔖️Vitest
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️canvaseventbindingcontroller/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { CanvasEventBindingController }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { CanvasEventBindingController }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerTests2 } = await import("./🧪️tests/🪶️demand-frames/🟦️.tsx");
-  await registerTests2(import.meta.vitest, { WasmCanvas, React, createDemandFrameScheduler }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { WasmCanvas, React, createDemandFrameScheduler }, { directory: import.meta.dirname, url: import.meta.url });
 }
 // #endregion 🔖️Vitest

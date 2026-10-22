@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧪️NumericIndexTests
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";

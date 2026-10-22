@@ -34,14 +34,14 @@ use semio_framework_value::ToValue;
     let diff = comment(&fixture["after"]);
     assert!(!diff.is_empty(), "a comment-only edit is a persisted change");
     for replay in [XlsxDiff::parse_diff(&diff.print_diff()).unwrap(), XlsxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
-        assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after);
-        assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).unwrap(), before);
+        assert_eq!(protocol::apply_diff_cold(&replay, &before).unwrap(), after);
+        assert_eq!(protocol::apply_diff_cold(&replay.inverse(&before), &after).unwrap(), before);
     }
     let mut cleared = after.clone();
     cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
     let mut combined = diff;
     combined.absorb(comment(&fixture["cleared"]));
-    assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared, "an empty comment remains an explicit edit");
+    assert_eq!(protocol::apply_diff_cold(&combined, &before).unwrap(), cleared, "an empty comment remains an explicit edit");
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
 }

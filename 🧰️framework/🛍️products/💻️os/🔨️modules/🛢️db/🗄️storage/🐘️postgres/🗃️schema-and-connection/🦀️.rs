@@ -83,7 +83,7 @@ pub(super) struct PostgresDbIoExecutor {
     pub(super) writers: std::sync::Mutex<Option<Box<WalWriterTable<PostgresWalWriterGuard>>>>,
     pub(super) backend_terminal: std::sync::atomic::AtomicBool,
     pub(super) active_operation: u64,
-    pub(super) close_future: std::sync::Mutex<Option<semio_framework_async::oneshot::Receiver<()>>>,
+    pub(super) close_future: std::sync::Mutex<Option<semio_framework_async_sync::oneshot::Receiver<()>>>,
 }
 
 impl PostgresDbIoExecutor {

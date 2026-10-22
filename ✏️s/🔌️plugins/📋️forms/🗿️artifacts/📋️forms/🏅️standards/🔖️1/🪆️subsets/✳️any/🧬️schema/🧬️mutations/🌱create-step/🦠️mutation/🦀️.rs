@@ -24,6 +24,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.title), &format!("Schritt \"{}\" erstellen", self.step.title))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.step.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for CreateStep
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<CreateStep> + From<crate::standards::v1::subsets::any::schema::mutations::delete_step::mutation::DeleteStep>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         crate::standards::v1::subsets::any::schema::mutations::create_step::diff::diff_create_step(self, base)
     }
@@ -33,11 +45,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.title), &format!("Schritt \"{}\" erstellen", self.step.title))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.step.id.clone()]
-    }
 }
 //#endregion 🌱️CreateStep

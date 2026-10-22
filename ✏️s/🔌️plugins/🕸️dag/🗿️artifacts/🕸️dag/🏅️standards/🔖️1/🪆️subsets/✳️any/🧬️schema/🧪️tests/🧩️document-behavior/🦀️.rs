@@ -1,7 +1,7 @@
 use crate::{DagNodeKind, SemioGraphMutation};
 use crate::standards::v1::subsets::any::schema::*;
 use crate::{DagHostSnapshotEdge, DagScene};
-use semio_framework_os_kernel::apply_diff;
+use semio_framework_os_kernel::apply_diff_cold;
 use semio_s_artifact_stdio_semio_graph::schema::mutations::{diff_semio_graph_mutation, inverse_semio_graph_mutation};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 fn apply_leaf(content: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> usize {
     let outcome = diff_semio_graph_mutation(leaf, content);
     let raised = outcome.messages().len();
-    *content = apply_diff(outcome.diff(), content).expect("a leaf diff applies to the content it was computed from");
+    *content = apply_diff_cold(outcome.diff(), content).expect("a leaf diff applies to the content it was computed from");
     raised
 }
 

@@ -1,8 +1,10 @@
 import {spawn} from "node:child_process";
 import {formatHostCapacityV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityStatusV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,withHostCapacityV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {agentSessionAddressV1,agentSessionCapacityRowsV1,agentSessionRegistryRootV1,currentAgentSessionV1,renderAgentSessionCapacityV1} from "../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../🟦️.ts";
+import {writeDiagnosticLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
-/** 🔌️ What the capacity command touches: output, environment, directory and policy; tests replace them. */
+/** 🔌️ What the capacity command touches: the result writer, environment, directory and policy; tests replace them. The waiting lines of `capacity run` always go to the diagnostic stream. */
 export type CapacityCommandContextV1=HostCapacityPortsV1&Readonly<{environment:NodeJS.ProcessEnv;write:(line:string)=>void;directory?:string;policy?:HostCapacityPolicyV1}>;
 
 const flag=(head:readonly string[],name:string):string|undefined=>{
@@ -20,11 +22,13 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
  const control=createCapacityControlV1();
  try{
   const now=context.now??Date.now,snapshot=await readHostCapacityStatusV1({...context,directory,policy,control:control.control});
-  if(head.includes("--json")){context.write(JSON.stringify(snapshot,null,2));return 0;}
+  const sessions=agentSessionCapacityRowsV1(snapshot,agentSessionRegistryRootV1(context.environment),context.now===undefined?{}:{now:context.now()});
+  if(head.includes("--json")){context.write(JSON.stringify({...snapshot,sessions},null,2));return 0;}
   const language=resolveHostCapacityLanguageV1(context.environment),host=snapshot.host;
   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
   for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-grant.admittedAtMs)/1000)}));
   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
+  for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
   return 0;
  }finally{control.dispose();}
 }
@@ -37,7 +41,8 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
  if(!sized)throw Error(`Unknown capacity operation: ${operation}`);
  const waiting=createCapacityControlV1();
  try{
-  return await withHostCapacityV1({...context,directory,policy,request:sized,control:waiting.control},async handle=>{
+  const session=currentAgentSessionV1({environment:context.environment});
+  return await withHostCapacityV1({...context,write:writeDiagnosticLineV1,directory,policy,request:sized,control:waiting.control,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
    waiting.dispose();
    const child=spawn(command[0]!,command.slice(1),{stdio:"inherit",env:{...context.environment,...handle.environment,...handle.plan.jobs>0&&sized.perJobMegabytes>0?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{}}}),forward=(name:NodeJS.Signals)=>()=>{child.kill(name);},handlers=(["SIGINT","SIGTERM"] as const).map(name=>[name,forward(name)] as const);
    for(const [name,handler] of handlers)process.on(name,handler);

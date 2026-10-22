@@ -234,6 +234,14 @@ sweep("docs", R, r"\bbun repo\b", "repo", len(re.findall(r"\bbun repo\b", rd)))
 sweep("docs", R, r"\bbun (\./📜️script\.ts)", r"repo \1", len(re.findall(r"\bbun (\./📜️script\.ts)", rd)))
 sweep("docs", R, r"install Bun, Node, Go, rustup and uv", "install Node, Go, rustup and uv, build the `repo` launcher (which provisions the pinned JavaScript runtime itself)", len(re.findall(r"install Bun, Node, Go, rustup and uv", rd)))
 sweep("docs", R, r"Bun, Node, Go, rustup und uv", "Node, Go, rustup und uv, bauen den `repo`-Launcher (er stellt die gepinnte JavaScript-Laufzeit selbst bereit)", len(re.findall(r"Bun, Node, Go, rustup und uv", rd)))
+# --- group consumers: the parsers and generators of the command form (apply together with manifest-neutral.py and the test sweep, after chain18)
+LIB = M + "/📚️library"
+consumers = [LIB + "/⚡️caching/📇️inventory/🧮️composition/🟦️.ts", LIB + "/🏗️build/🕸️graph/🦀️rust/🟦️.ts", LIB + "/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs", LIB + "/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs", LIB + "/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs", LIB + "/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs", LIB + "/🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs", LIB + "/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs", LIB + "/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧬️schema/🔣️.json", LIB + "/🎮️playground/🖥️native-host/🟨️.mjs", LIB + "/🏗️build/📥️inputs/🎯️precision/🟦️.ts", LIB + "/🧹️normalization/🧐️preimage-assertions/🟦️.ts"]
+rules = [(r"(?<=[`\"'])bun (?=\./|\"|'|\$\{|[^\s\"'`]*📜️script\.ts|[^\s\"'`]*/script\.ts|--watch|--cwd)", "repo "), (r"\^bun(?=[ (\\])", "^repo"), (r"(\[\s*)\"bun\",\s*\"repo\"", r'\1"repo"'), (r"\bbun repo\b(?=[ `'\")]|$)", "repo"), (r"requires one Bun script command", "requires one script command"), (r'tokens\[0\] !== "bun"', 'tokens[0] !== "repo"'), (r"`bun <script> <words…>`", "`repo <script> <words…>`")]
+for path in consumers:
+    for pattern, repl in rules:
+        found = len(re.findall(pattern, live(path)))
+        if found: sweep("consumers", path, pattern, repl, found)
 for g in plan["groups"].values():
     for row in g["edits"]:
         if "old" in row: row["sha256Before"] = sha(live(row["path"]))

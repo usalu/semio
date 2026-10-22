@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import "./📥️resolution/🟦️.ts";
 import {createRequire} from "node:module";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";

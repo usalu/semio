@@ -1,0 +1,9 @@
+# Source290 Seal Preview Review
+
+The non-runnable preview is internally coherent. Independently recomputing canonical raw JSON plus LF reproduces guestOwn995/2615d23f, template90,988/148140ce, prefixOwn14,225/7ba42642 and intent8,829/58a70ecd. Replacing only the historical guest-own hash embedded in actual core reproduces prospective core14,728/a0be30f2. All five full hashes are in the audit JSON. Embedded guest/core/template pins and guest/control map symmetry match exactly.
+
+All74 declared intent alias hashes, eight parent input hashes and historical critical-paths raw hash join their83 control pins. The historical critical-paths pin is intentionally a file identity, not the current323-path schema roster. Current control contents, seven guest own files and five unchanged prefix files match preview pins. The sixth prefix file is the explicitly prospective core. TemplateSource contains290 exact policy paths; metadata agrees on323 critical,46 phases,160 Source titles and161 collection vectors. Existing reviewed budgets14815000/14905000/15715000/15835000, prefix5610000 and public21600000 retain their joins and margins.
+
+Reserved cohort6cd12f6a6cb19cfb52fc8beeebec277f and capturecdad875764f13998c58426b801867915 remain preview identities. Actual guestOwn is still995/d44c9e8f and core14,728/1229008e; actual template remains historical252-Source input. No preview value was published into these seals, and this audit does not assert current hashes for all290 Source files after the observation.
+
+Fresh full nofollow physical custody and output-absence checks are mandatory after focused28 success and before any Root-authorized capture. This preview is not launch authority, a captured manifest, or release proof. Exact computed pin joins are retained in `🗑️generated/2026-10-21-source290-seal-preview-independent-review.json`. No runnable publication, Source evaluation or Native action occurred.

@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀set-primitive-topology/🔀️switches/📸️snapshot/⬅️before/🔣️.json"));
@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn switches_the_draw_mode_without_touching_a_buffer() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("set-primitive-topology applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("set-primitive-topology applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: applied state differs from the committed after-snapshot");
     let edited = &produced.meshes[0].primitives[0];
     assert_ne!(edited.topology, base.meshes[0].primitives[0].topology, "the topology really must have changed");
@@ -48,9 +48,9 @@ async fn the_undo_set_primitive_topology_restores_the_triangle_mode() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "set-primitive-topology undoes as exactly one set-primitive-topology");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward set-primitive-topology applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward set-primitive-topology applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo set-primitive-topology applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo set-primitive-topology applies");
     }
     assert_eq!(current, base, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -111,6 +111,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-primitive-topology diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-primitive-topology diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed set-primitive-topology diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: committed diff did not carry before to after");
 }

@@ -24,6 +24,7 @@ import { measureRustCrate } from "../📦️crate-tree/🗺️plan/📏️measur
 import { resolveOwningCrate } from "../📦️crate-tree/🗺️plan/📦️cargo-lib/🟦️.ts";
 import { addWorkspaceMembers, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📦️crate-tree/📝️render/🟦️.ts";
 import { BUILD_OWNER_REGISTRY_FILE, reconcileBuildOwnerRegistry } from "../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export type NewMutationScaffoldOptions = {
   readonly composite?: boolean;
@@ -378,7 +379,7 @@ export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, 
 }
 
 function readWorkspacePointer(manifest: string): string {
-  return (Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? ".";
+  return (runtimeParseTomlV1(readFileSync(manifest, "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? ".";
 }
 
 /** 🏘️ Registers a new family crate with the owning workspace: member list, aggregate dependency, router packages and lockfile. */

@@ -2,7 +2,7 @@
 
 use geo::BoundingRect;
 use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
+use semio_framework_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, ColdMutation, Mutation, MutationDiff};
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};

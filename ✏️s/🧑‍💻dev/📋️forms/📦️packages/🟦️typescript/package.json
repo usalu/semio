@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "verify-forms-try-window-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/s-forms-composition-tests:verify-forms-try-window-ownership"
+    "verify-forms-try-window-ownership": "repo run @semio-tech/s-forms-composition-tests:verify-forms-try-window-ownership"
   },
   "semio": {
     "role": "test",

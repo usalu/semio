@@ -40,6 +40,7 @@ actions!{
     NewTask => "new-task",
     ShowTasks => "show-tasks",
     ShowSettings => "show-settings",
+    ShowDiagnostics => "show-diagnostics",
     ShowHelp => "show-help",
     ShowHiddenTasks => "show-hidden-tasks",
     SearchOutput => "search-output",
@@ -84,7 +85,7 @@ actions!{
 enum Class { Files, Document, Launcher, Pane, Terminal }
 
 fn class_of(body: &Body) -> Class {
-    match body { Body::Files(_) => Class::Files, Body::Document(_) => Class::Document, Body::Launcher(_) => Class::Launcher, Body::Overview | Body::Settings | Body::Help => Class::Pane, Body::Output { .. } => Class::Terminal }
+    match body { Body::Files(_) => Class::Files, Body::Document(_) => Class::Document, Body::Launcher(_) => Class::Launcher, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_) => Class::Pane, Body::Output { .. } => Class::Terminal }
 }
 
 /// 🚦️ Whether the dashboard goes on.
@@ -171,6 +172,8 @@ impl Dashboard {
             self.on_signals(tui, signals);
             return if self.quit_requested { Flow::Quit } else { Flow::Continue };
         }
+        let editor_index=self.focused_index(tui);
+        if self.editor_key(tui,editor_index,key){return Flow::Continue;}
         let Some(spec) = spec_of(key) else { return self.pass_key(tui, key) };
         if let Some(chord) = self.escape_then_prefix(&spec) {
             if self.terminal_has_keyboard(tui) { let _ = self.pass_key(tui, &KeyEvent { key: Key::Esc, mods: 0 }); } else { self.view_key(tui, &KeyEvent { key: Key::Esc, mods: 0 }, &KeySpec { name: KeyName::Named("esc".into()), ctrl: false, alt: false, shift: false }); }
@@ -286,7 +289,7 @@ impl Dashboard {
             Input::First => self.windows[index].pane.select(isize::MIN / 2),
             Input::Last => self.windows[index].pane.select(isize::MAX / 2),
             Input::Activate => self.activate_row(tui, index),
-            Input::Back => { if !overview { self.set_body(tui, index, Kind::Overview, None); } }
+            Input::Back => { if !overview { let kind=if matches!(self.windows[index].body,Body::KeymapEditor(_)){Kind::Settings}else{Kind::Overview};self.set_body(tui,index,kind,None); } }
             Input::Char(c) if overview => { self.set_body(tui, index, Kind::Launcher, None); self.launcher_input(tui, index, Input::Char(c)); }
             _ => {}
         }
@@ -295,6 +298,7 @@ impl Dashboard {
 
     fn on_paste(&mut self, tui: &mut Tui, event: &Event, text: &str) {
         let index = self.focused_index(tui);
+        if let Body::KeymapEditor(editor)=&mut self.windows[index].body{if editor.editing.is_some(){editor.push(text);self.refresh_pane(tui,index);}return;}
         if self.management_paste(tui,index,text){return;}
         if self.management_blocks_edit(index){self.notice=Some(self.text().source_busy.as_str().into());return;}
         if let Body::Files(files) = &mut self.windows[index].body {
@@ -440,7 +444,7 @@ impl Dashboard {
 // #region 🔖️Actions
 impl Dashboard {
     fn show(&mut self, tui: &mut Tui, kind: Kind) {
-        let existing = self.windows.iter().position(|window| matches!((&window.body, kind), (Body::Overview, Kind::Overview) | (Body::Settings, Kind::Settings) | (Body::Help, Kind::Help)));
+        let existing = self.windows.iter().position(|window| matches!((&window.body, kind), (Body::Overview, Kind::Overview) | (Body::Settings, Kind::Settings) | (Body::Help, Kind::Help) | (Body::Diagnostics, Kind::Diagnostics)));
         let index = existing.unwrap_or_else(|| self.create_window(tui, kind, Place::Preference));
         self.focus_window(tui, index);
     }
@@ -452,10 +456,10 @@ impl Dashboard {
     pub fn perform(&mut self, tui: &mut Tui, action: Action) -> Flow {
         let index = self.focused_index(tui);
         match action {
-            Action::CreateFile=>self.begin_management(tui,index,super::sources::management::EntryAction::CreateFile),
-            Action::CreateDirectory=>self.begin_management(tui,index,super::sources::management::EntryAction::CreateDirectory),
-            Action::RenameEntry=>self.begin_management(tui,index,super::sources::management::EntryAction::Rename),
-            Action::RetainEntry=>self.begin_management(tui,index,super::sources::management::EntryAction::Retain),
+            Action::CreateFile=>self.begin_management(tui,index,dashboard_source_view::EntryAction::CreateFile),
+            Action::CreateDirectory=>self.begin_management(tui,index,dashboard_source_view::EntryAction::CreateDirectory),
+            Action::RenameEntry=>self.begin_management(tui,index,dashboard_source_view::EntryAction::Rename),
+            Action::RetainEntry=>self.begin_management(tui,index,dashboard_source_view::EntryAction::Retain),
             Action::InspectHistory=>self.begin_history(tui,index,None),
             Action::ReconcileHistory=>self.begin_history(tui,index,Some(semio_framework_filesystem_workspace::commands::HistoryAction::Reconcile)),
             Action::ArchiveHistory=>self.begin_history(tui,index,Some(semio_framework_filesystem_workspace::commands::HistoryAction::Archive)),
@@ -469,6 +473,7 @@ impl Dashboard {
             Action::NewTask => { let created = self.create_window(tui, Kind::Launcher, Place::Preference); self.focus_window(tui, created); }
             Action::ShowTasks => self.show(tui, Kind::Overview),
             Action::ShowSettings => self.show(tui, Kind::Settings),
+            Action::ShowDiagnostics => self.show(tui,Kind::Diagnostics),
             Action::ShowHelp => self.show(tui, Kind::Help),
             Action::ShowHiddenTasks => {
                 self.hidden.clear();
@@ -549,6 +554,7 @@ impl Dashboard {
     pub fn poll_source_suggestions(&mut self) -> bool { self.windows.iter_mut().fold(false, |changed, window| match &mut window.body { Body::Launcher(launcher) => launcher.poll_suggestions() || changed, _ => changed }) }
 
     pub fn frame(&mut self, tui: &mut Tui) {
+        self.flush_source_effects(tui);
         let (focused, input) = (self.focused_index(tui), self.input_mode);
         for (index, window) in self.windows.iter().enumerate() {
             if !window.is_output() { continue; }

@@ -28,6 +28,16 @@ impl ReplaceSamplesMutation {
 
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceSamplesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "samples", kind: "replace-samples", record: "ReplaceSamples" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec![format!("ifd:{}:block:{}:samples:{}", self.ifd_index, self.block, self.offset)]
+    }
+}
+
+impl protocol::ColdMutationKind<TiffSnapshot, TiffMutation> for ReplaceSamplesMutation {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
         let Some(current) = self.current(base) else {
             return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, "tiff: sample run leaves its block", [format!("ifd:{}:block:{}:offset:{}", self.ifd_index, self.block, self.offset)]);
@@ -40,12 +50,6 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceSamplesMutati
     }
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
         Ok(self.current(base).map(|current| TiffMutation::ReplaceSamples(Self { ifd_index: self.ifd_index, block: self.block, offset: self.offset, samples: current.to_vec() })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec![format!("ifd:{}:block:{}:samples:{}", self.ifd_index, self.block, self.offset)]
     }
 }
 //#endregion Semantics

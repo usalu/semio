@@ -1,0 +1,15 @@
+# Admission Timeout Context
+
+The Source19378 whole command ended before test bodies with the exact primary `Resource lease timed out: resource-directory-admission:v1`. Read-only source inspection supports several directory-admission callers; the stack does not prove which caller, holder, queue predecessor or budget caused the refusal. No deadlock, missing deadline or foreign process attribution is inferred.
+
+Add a closed schema-first diagnostic to the existing lease timeout error: version, operation, materialized directory, requested resource and mode, elapsed request/admission time, requested timeout and remaining requested budget at admission entry. Attach this immutable DATA to the same primary error; preserve the exact message. The normal resource projection must retain that context and the original cause. Do not create a releasing/cancellation port, renew a clock, widen a limit, bypass SQLite or change cleanup.
+
+Exercise actual private fixture SQLite admission contention through public resource/queued acquisition. The independent existing Bun SQLite implementation holds and releases the real admission transaction; Ajv and SQLite independently validate neutral fixture outcomes. Include zero-time probes, finite queued admission timeout, genuine release before deadline, cancellation/progress primary identity, queue cleanup and reacquisition. Current Source/native runtime acceptance is pending.
+
+The authored five-case corpus and real SQLite test are mounted in the existing resource-lease suite. Normalized resource timeouts retain the original admission Error as cause and share its immutable context. Direct admission timeouts keep original object/message/stack identity. Cancellation and observer failures are not annotated or replaced. No runtime body has executed; source review is pending.
+
+Independent review found that queued pendingOptions correctly reduces timeout before catalog admission. The test now accepts finite nonnegative local timeout at most the outer requested timeout and checks remaining-at-entry against that exact local timeout. The production budget reduction is unchanged. This suite covers open/queue-publish labels; queue-sweep and retirement label wiring is source-reviewed, not a distinct new exercised body. The raw AbortSignal cancellation case is not proof of Original cancellation transport.
+
+A sixth genuine blocked observer case retains a pre-existing nonconfigurable diagnostic property on an unfrozen same-message Error. The attachment now refuses to overwrite that property, preserving the observer primary instead of throwing a descriptor TypeError. It is diagnostic DATA, never authority. Final runtime remains pending.
+
+Final independent review accepted the sixth primary-preservation case. High parsed the current lease implementation, new admission test and mounted resource-lease test with the existing repository TypeScript parser: zero parse diagnostics. This is DATA only. Source0 now actually awaits the current callable under its issued artifact/30-second controls, with no new Source43 target; the registry remains42. All runtime bodies are still unrun.

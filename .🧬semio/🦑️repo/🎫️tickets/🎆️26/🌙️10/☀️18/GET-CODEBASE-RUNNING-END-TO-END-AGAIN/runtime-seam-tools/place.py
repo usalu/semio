@@ -11,7 +11,20 @@ TREE = {
     "schema.json": [n("🧬", "schema"), n("🔣") + ".json"],
     "selection.ts": [n("🧭", "selection"), TS],
     "facade.ts": [TS],
+    "family-identity.ts": [n("🏷", "identity"), TS],
+    "family-parse.ts": [n("📄", "parse"), TS],
+    "family-main.ts": [n("🏁", "main"), TS],
+    "family-glob.ts": [n("🌐", "glob"), TS],
+    "family-process.ts": [n("🚀", "process"), TS],
+    "family-serve.ts": [n("🌍", "serve"), TS],
+    "family-sqlite.ts": [n("🗃", "sqlite"), TS],
+    "family-native.ts": [n("🧲", "native"), TS],
+    "family-source.ts": [n("🔬", "source"), TS],
+    "family-semver.ts": [n("🔢", "semver"), TS],
+    "messages.ts": [n("🗣", "messages"), TS],
+    "messages.json": [n("🧬", "schema"), n("🗣", "messages") + ".json"],
     "bun.ts": [n("🍞", "bun"), TS],
+    "bun-tooling.ts": [n("🍞", "bun"), n("🧩", "tooling"), TS],
     "node.ts": [n("🟢", "node"), TS],
     "glob.ts": [n("🪶", "portable"), n("🌐", "glob"), TS],
     "toml.ts": [n("🪶", "portable"), n("📄", "toml"), TS],
@@ -30,13 +43,9 @@ TREE = {
     "esbuild.ts": [n("🟢", "node"), n("📦", "esbuild"), TS],
     "native.ts": [n("🟢", "node"), n("🧲", "native"), TS],
     "testapi-node.ts": [n("🟢", "node"), n("🧪", "test"), TS],
-    "testapi-bun.ts": [n("🍞", "bun"), n("🧪", "test"), TS],
     "testapi.ts": [n("🧪", "test"), TS],
-    "missing.ts": [n("🚫", "missing"), TS],
     "expect.ts": [n("🪶", "portable"), n("✅", "expect"), TS],
-    "main.ts": [n("🪶", "portable"), n("🏁", "main"), TS],
     "law.ts": [n("⚖", "law"), TS],
-    "ledger.json": [n("⚖", "law"), n("📒") + ".json"],
     "tests.ts": [n("🧪", "tests"), TS],
     "fixtures.json": [n("🧪", "tests"), n("🧫", "fixtures"), n("🔣") + ".json"],
     "native-provider.cjs": [n("🧪", "tests"), n("🧫", "fixtures"), n("🧲", "native-provider") + ".cjs"],
@@ -46,6 +55,7 @@ TREE = {
 def target(root, key): return os.path.join(root, MODULE, *TREE[key])
 def main():
     roots = [os.path.join(HERE, "staged", "new")] + sys.argv[1:]
+    for root in roots: shutil.rmtree(os.path.join(root, MODULE), ignore_errors=True)
     for key in sorted(TREE):
         src = os.path.join(HERE, "src", key)
         if not os.path.exists(src): continue

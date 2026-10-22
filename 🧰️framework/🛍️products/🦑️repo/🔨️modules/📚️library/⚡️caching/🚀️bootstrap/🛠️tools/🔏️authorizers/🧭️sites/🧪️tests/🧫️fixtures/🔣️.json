@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "static-forms",
+   "path": "a.ts",
+   "source": "import a from \"x1\";\nimport {b} from './x2.json' with {type:\"json\"};\nexport * from \"x3\";\nimport \"x4\";\nimport type {T} from \"type-only\";\nexport {c} from \"x5\";",
+   "specifiers": [
+    "./x2.json",
+    "x1",
+    "x3",
+    "x4",
+    "x5"
+   ],
+   "computed": 0,
+   "extra": []
+  },
+  {
+   "id": "dynamic-forms",
+   "path": "a.mjs",
+   "source": "const a=await import(\"d1\");\nconst b=import('./d2.mjs');\nconst n=\"dyn\";\nconst c=import(n);\nconst d=import(`d3`);",
+   "specifiers": [
+    "./d2.mjs",
+    "d1",
+    "d3"
+   ],
+   "computed": 1,
+   "extra": []
+  },
+  {
+   "id": "create-require-chain",
+   "path": "a.mjs",
+   "source": "import {createRequire} from \"node:module\";\nconst a=createRequire(import.meta.url)(\"typescript\");\nconst b=createRequire(fileURLToPath(import.meta.url))('./rel.cjs');\nconst c=createRequire(import.meta.url).resolve(\"nx/package.json\");",
+   "specifiers": [
+    "./rel.cjs",
+    "nx/package.json",
+    "node:module",
+    "typescript"
+   ],
+   "computed": 0,
+   "extra": []
+  },
+  {
+   "id": "bound-names",
+   "path": "a.mjs",
+   "source": "import {createRequire} from \"node:module\";\nconst x=1,req=createRequire(import.meta.url);\nconst loaded=req(\"@iarna/toml\");\nreq.resolve(\"smol-toml/package.json\");\nlet other;other=createRequire(base);other(\"pkg-b\");\nrequire(\"direct\");",
+   "specifiers": [
+    "@iarna/toml",
+    "direct",
+    "node:module",
+    "pkg-b",
+    "smol-toml/package.json"
+   ],
+   "computed": 0,
+   "extra": []
+  },
+  {
+   "id": "computed-forms",
+   "path": "a.mjs",
+   "source": "import {createRequire} from \"node:module\";\nconst req=createRequire(import.meta.url);\nconst name=pick();\nreq(name);\nreq.resolve(name);\nimport(name);\ncreateRequire(base)(name);\nrequire(name);",
+   "specifiers": [
+    "node:module"
+   ],
+   "computed": 5,
+   "extra": []
+  },
+  {
+   "id": "look-alikes-in-text",
+   "path": "a.mjs",
+   "source": "// require(\"in-comment\")\n/* import(\"in-block\") */\nconst text='require(\"in-string\")';\nconst regex=/require\\(\"in-regex\"\\)/u;\nexport const real=await import(\"real\");",
+   "specifiers": [
+    "real"
+   ],
+   "computed": 0,
+   "extra": [
+    "in-comment",
+    "in-string"
+   ]
+  },
+  {
+   "id": "import-meta-resolve",
+   "path": "a.mjs",
+   "source": "const a=import.meta.resolve(\"meta-pkg\");",
+   "specifiers": [
+    "meta-pkg"
+   ],
+   "computed": 0,
+   "extra": []
+  },
+  {
+   "id": "cjs-script",
+   "path": "a.cjs",
+   "source": "const a=require(\"c1\");\nconst b=require.resolve(\"c2\");\nmodule.exports={a,b};",
+   "specifiers": [
+    "c1",
+    "c2"
+   ],
+   "computed": 0,
+   "extra": []
+  }
+ ]
+}

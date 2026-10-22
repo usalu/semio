@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️rename-saved-camera/🔤️relabels/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("rename-saved-camera diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("rename-saved-camera diff applies")
 }
 
 /// ▶️ `rename-saved-camera` builds the saved-camera patch with `label: Some(..)` and `camera: None`
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_relabelling_to_the_same_label_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "rename-saved-camera/relabels-cam-close-to-tight: relabelling to the current label is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "rename-saved-camera/relabels-cam-close-to-tight: the equality guard's frozen code");
-    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff_cold(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "rename-saved-camera/relabels-cam-close-to-tight: a no-op relabel applies an empty diff");
 }
 
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-saved-camera/relabels-cam-close-to-tight: committed diff did not carry before to after");
 }
 

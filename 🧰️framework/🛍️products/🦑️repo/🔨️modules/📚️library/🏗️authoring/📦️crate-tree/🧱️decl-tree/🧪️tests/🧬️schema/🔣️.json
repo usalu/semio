@@ -1,0 +1,231 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "rootFile",
+  "rootText",
+  "files",
+  "decls",
+  "reach",
+  "unionFind",
+  "slices"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "rootFile": {
+   "type": "string"
+  },
+  "rootText": {
+   "type": "string"
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "decls": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "raw",
+     "eff",
+     "file",
+     "scope",
+     "inlineRoot",
+     "testOnly",
+     "isComponent",
+     "parentId",
+     "depthInFile",
+     "children",
+     "inline"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "raw": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "eff": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "file": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "scope": {
+      "type": "string"
+     },
+     "inlineRoot": {
+      "type": "boolean"
+     },
+     "testOnly": {
+      "type": "boolean"
+     },
+     "isComponent": {
+      "type": "boolean"
+     },
+     "parentId": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "depthInFile": {
+      "type": "integer"
+     },
+     "children": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "inline": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "reach": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "unionFind": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "ops",
+     "groups",
+     "separate"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "ops": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 2
+      }
+     },
+     "groups": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 1
+      }
+     },
+     "separate": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 2
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "slices": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "root",
+    "files",
+    "expected"
+   ],
+   "properties": {
+    "root": {
+     "type": "string"
+    },
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "members",
+       "attach"
+      ],
+      "properties": {
+       "members": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 1
+       },
+       "attach": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 1
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

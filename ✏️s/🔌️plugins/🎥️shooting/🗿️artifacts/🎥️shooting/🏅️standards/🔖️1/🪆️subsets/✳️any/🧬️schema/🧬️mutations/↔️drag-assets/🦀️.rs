@@ -22,15 +22,7 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<DragAssets>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "assets", kind: "drag-assets", record: "DraggedAssets" };
-    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native("Drag 1 asset", "1 Asset ziehen"),
@@ -40,4 +32,19 @@ where
     fn target(&self) -> Vec<String> {
         self.asset_ids.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for DragAssets
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<DragAssets>,
+{
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }

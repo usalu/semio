@@ -26,7 +26,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -34,31 +34,31 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "outputs": [],
-      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}
+      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
       "outputs": [],
-      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}
+      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
       "outputs": [],
-      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}
+      "options": {"cwd":"✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}
     },
     "test": {
       "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

@@ -25,7 +25,7 @@ fn width(base: &En1992Snapshot, value: f64) -> En1992Mutation {
 async fn patches_on_one_row_coalesce_into_one_patch() {
     let base = En1992Snapshot::default();
     let first = diff_of(&width(&base, 0.41), &base);
-    let mid = protocol::apply_diff(&first, &base).expect("first");
+    let mid = protocol::apply_diff_cold(&first, &base).expect("first");
     let second = diff_of(&En1992Mutation::ChangeMemberHeight(ChangeMemberHeight { member_id: base.members[0].id.clone(), new_value: 0.77 }), &mid);
     let mut sum = first.clone();
     sum.absorb(second.clone());
@@ -40,7 +40,7 @@ async fn nested_action_patches_coalesce_by_action_id() {
     let action = member.actions[0].id.clone();
     let set = |value: f64| En1992Mutation::ChangeActionVk(ChangeActionVk { member_id: member.id.clone(), action_id: action.clone(), new_value: value });
     let first = diff_of(&set(11.0), &base);
-    let mid = protocol::apply_diff(&first, &base).expect("first");
+    let mid = protocol::apply_diff_cold(&first, &base).expect("first");
     let second = diff_of(&set(22.0), &mid);
     let mut sum = first.clone();
     sum.absorb(second.clone());
@@ -57,7 +57,7 @@ async fn insert_then_remove_cancels_and_remove_then_insert_replaces() {
     member.id = "member-created".into();
     let insert = En1992Mutation::InsertMember(InsertMember { index: 1, member: member.clone() });
     let created = diff_of(&insert, &base);
-    let mid = protocol::apply_diff(&created, &base).expect("insert");
+    let mid = protocol::apply_diff_cold(&created, &base).expect("insert");
     let deleted = diff_of(&En1992Mutation::RemoveMember(RemoveMember { member_id: member.id.clone() }), &mid);
     let mut sum = created.clone();
     sum.absorb(deleted.clone());
@@ -67,11 +67,11 @@ async fn insert_then_remove_cancels_and_remove_then_insert_replaces() {
     let index = 0;
     let existing = base.members[index].clone();
     let removed = diff_of(&En1992Mutation::RemoveMember(RemoveMember { member_id: existing.id.clone() }), &base);
-    let mid = protocol::apply_diff(&removed, &base).expect("remove");
+    let mid = protocol::apply_diff_cold(&removed, &base).expect("remove");
     let restored = diff_of(&En1992Mutation::InsertMember(InsertMember { index, member: existing.clone() }), &mid);
     let mut sum = removed.clone();
     sum.absorb(restored.clone());
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("replace"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("replace"), base);
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, removed, restored).await;
 }
 
@@ -79,7 +79,7 @@ async fn insert_then_remove_cancels_and_remove_then_insert_replaces() {
 async fn reorder_and_inverse_follow_the_negative_diff() {
     let base = En1992Snapshot::default();
     let moved = diff_of(&En1992Mutation::ReorderMembers(ReorderMembers { from_index: 0, to_index: base.members.len() - 1 }), &base);
-    let after = protocol::apply_diff(&moved, &base).expect("reorder");
+    let after = protocol::apply_diff_cold(&moved, &base).expect("reorder");
     assert_ne!(after, base);
-    assert_eq!(protocol::apply_diff(&moved.inverse(&base), &after).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&moved.inverse(&base), &after).expect("inverse"), base);
 }

@@ -126,7 +126,7 @@ def fixtures(out):
     for index, chain in enumerate(chains):
         ident = "%016x" % (0x0123456789abcdef + index)
         data["capabilities"].append({"key": key.hex(), "id": ident, "caveats": chain, "token": mint(key, chain, ident)})
-    for root in ["/Users/ueli/Documents/semio", "/w", "/ünï/çode", "/a/b c/d"]:
+    for root in ["/work/semio", "/w", "/ünï/çode", "/a/b c/d"]:
         data["endpoints"].append({"root": root, "id": hashlib.sha256(("semio-repo-service-v1\0" + root).encode()).hexdigest()[:12]})
     for name, samples in SAMPLES.items():
         v = validator(name)

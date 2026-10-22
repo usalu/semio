@@ -2,7 +2,7 @@
   "version": 1,
   "operations": [
     {
-      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
+      "command": { "program": "repo", "cwd": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
       "continuation": null,
       "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust", "packages": ["semio-framework-async-macros"], "arguments": [] }
     }

@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { parseSemanticPackageBrowserProfile } from "@semio-tech/repo-lib/inventory";
+import { runtimeBundleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🔭️ One schema-owned workspace package binding of the browser profile. */
 export interface WgpuBrowserBinding {
@@ -56,9 +58,9 @@ function nearestManifest(repoRoot: string, entryPath: string): string {
 export async function deriveWgpuBrowserClosure(repoRoot: string, profile: Pick<WgpuBrowserProfile, "ownerPath" | "inlineTestDefine" | "entries">): Promise<WgpuBrowserClosure> {
   const modules = new Set<string>(), specifiers = new Map<string, string>();
   for (const entry of profile.entries) {
-    const result = await Bun.build({ root: repoRoot, entrypoints: [join(repoRoot, profile.ownerPath, entry.sourceRelativePath)], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "wgpu-browser-closure", setup(builder) {
+    const result = await runtimeBundleV1({ root: repoRoot, entrypoints: [join(repoRoot, profile.ownerPath, entry.sourceRelativePath)], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "wgpu-browser-closure", setup(builder) {
       builder.onResolve({ filter: /.*/u }, (request) => {
-        if (!request.path.startsWith(".") && !isAbsolute(request.path)) specifiers.set(request.path, Bun.resolveSync(request.path, dirname(request.importer)));
+        if (!request.path.startsWith(".") && !isAbsolute(request.path)) specifiers.set(request.path, runtimeResolveV1(request.path, dirname(request.importer)));
         return undefined;
       });
       builder.onLoad({ filter: /.*/u }, (request) => {
@@ -135,5 +137,5 @@ export async function checkWgpuBrowserClosure(repoRoot: string): Promise<void> {
   ];
   if (render(projected.taxonomy) === fresh.taxonomyText && render(projected.project) === fresh.projectText) return;
   const problems = rows.filter(([, values]) => values.length).map(([name, values]) => `${name}: ${values.length} (${values.slice(0, 3).join(" | ")})`);
-  throw new Error(`The WGPU browser closure declared in the generator contract is stale; run bun repo run @semio-tech/framework-renderer-wgpu:generate-browser-closure\n${problems.join("\n")}`);
+  throw new Error(`The WGPU browser closure declared in the generator contract is stale; run repo run @semio-tech/framework-renderer-wgpu:generate-browser-closure\n${problems.join("\n")}`);
 }

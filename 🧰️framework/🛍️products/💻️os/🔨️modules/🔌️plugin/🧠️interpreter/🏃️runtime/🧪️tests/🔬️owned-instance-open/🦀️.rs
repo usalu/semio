@@ -37,7 +37,12 @@ fn a_trapped_owned_instance_refuses_every_later_turn() {
     instance.poisoned = true;
     let refusal = runtime.execute_actor_turn(&mut instance, &[], open_budget(), &mut identity).expect_err("a trapped owned instance must refuse");
     assert!(format!("{refusal:?}").contains("poisoned"), "a trapped owned instance must name its poisoning, got {refusal:?}");
-    let refusal = runtime.start_actor_job(&mut instance, 1, "semio.test", Vec::new()).expect_err("a trapped owned instance must refuse jobs too");
+    let input = semio_framework_actor::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: 1_000_000, fuel: 1_000 }, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 64, maximum_release_bytes: 64, maximum_depth: 8 } };
+    let budget = semio_framework_actor::OriginalJobBudget { input, retained_policy: input.grant, fuel: 100, deadline_us: 1_000_000, cancelled: false };
+    let execution = semio_framework_actor::OriginalGuestExecutionBudget { input, fuel: 100, deadline_us: 1_000_000 };
+    let call = runtime.start_actor_job(&mut instance, None, budget, execution);
+    assert!(!call.execution.submitted, "a poisoned instance never receives the call");
+    let refusal = call.original.expect_err("a trapped owned instance must refuse jobs too");
     assert!(format!("{refusal:?}").contains("poisoned"), "a trapped owned instance must name its poisoning, got {refusal:?}");
     crate::test_native_authority::close(&mut identity);
 }

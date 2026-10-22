@@ -5,7 +5,7 @@ import protocol from "./🔣️.json" with { type: "json" };
 export type LanguageEnvironmentV1 = Readonly<Record<string, string | undefined>>;
 
 /** 🧭️ Where the chosen language came from. */
-export type LanguageResolutionV1 = Readonly<{ language: string; source: string }>;
+export type LanguageResolutionV1<T extends string = string> = Readonly<{ language: T; source: string }>;
 
 let remembered: readonly string[] | undefined;
 
@@ -52,30 +52,31 @@ function refuse(row: Readonly<Record<"en" | "de", string>>, languages: readonly 
 }
 
 /** 🗣️ Chooses the language of texts from the offered languages; no language is assumed. Order: `--lang`, `SEMIO_LANGUAGE` (both must name an offered language), `LANGUAGE` (first offered entry), the first non-empty of `LC_ALL`, `LC_MESSAGES`, `LANG`, then the operating system language list; a source that names no offered language is skipped, and when none resolves the bilingual refusal is thrown. */
-export function resolveLanguageV1(languages: readonly string[], args: readonly string[], environment: LanguageEnvironmentV1, osLanguages: OsLanguageListV1 = osLanguageListV1): LanguageResolutionV1 {
+export function resolveLanguageV1<T extends string>(languages: readonly T[], args: readonly string[], environment: LanguageEnvironmentV1, osLanguages: OsLanguageListV1 = osLanguageListV1): LanguageResolutionV1<T> {
+  const offered: readonly string[] = languages;
   const flag = languageFlagV1(args);
   if (flag !== undefined) {
-    if (!languages.includes(flag)) throw refuse(protocol.refusal.unknownFlag, languages, { value: flag });
-    return { language: flag, source: "--lang" };
+    if (!offered.includes(flag)) throw refuse(protocol.refusal.unknownFlag, languages, { value: flag });
+    return { language: flag as T, source: "--lang" };
   }
   const explicit = environment[protocol.explicitVariable];
   if (explicit !== undefined && explicit !== "") {
     const tag = languageSubtagV1(explicit);
-    if (tag === undefined || !languages.includes(tag)) throw refuse(protocol.refusal.unknownVariable, languages, { name: protocol.explicitVariable, value: explicit });
-    return { language: tag, source: protocol.explicitVariable };
+    if (tag === undefined || !offered.includes(tag)) throw refuse(protocol.refusal.unknownVariable, languages, { name: protocol.explicitVariable, value: explicit });
+    return { language: tag as T, source: protocol.explicitVariable };
   }
   for (const entry of (environment[protocol.preferenceListVariable] ?? "").split(":")) {
     const tag = languageSubtagV1(entry);
-    if (tag !== undefined && languages.includes(tag)) return { language: tag, source: protocol.preferenceListVariable };
+    if (tag !== undefined && offered.includes(tag)) return { language: tag as T, source: protocol.preferenceListVariable };
   }
   const name = protocol.environmentOrder.find((candidate) => (environment[candidate] ?? "") !== "");
   if (name !== undefined) {
     const tag = languageSubtagV1(environment[name]);
-    if (tag !== undefined && languages.includes(tag)) return { language: tag, source: name };
+    if (tag !== undefined && offered.includes(tag)) return { language: tag as T, source: name };
   }
   for (const entry of osLanguages()) {
     const tag = languageSubtagV1(entry);
-    if (tag !== undefined && languages.includes(tag)) return { language: tag, source: "os" };
+    if (tag !== undefined && offered.includes(tag)) return { language: tag as T, source: "os" };
   }
   throw languageRefusalV1(languages);
 }

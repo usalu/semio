@@ -32,6 +32,7 @@ type rpcPeer struct {
 	reader  *bufio.Reader
 	next    int
 	pending []json.RawMessage
+	stashed map[int]rpcReply
 }
 
 type rpcReply struct {
@@ -68,6 +69,10 @@ func (peer *rpcPeer) begin(method string, params any) int {
 func (peer *rpcPeer) await(id int) rpcReply {
 	peer.t.Helper()
 	reply := rpcReply{}
+	if early, found := peer.stashed[id]; found {
+		delete(peer.stashed, id)
+		return early
+	}
 	for {
 		_ = peer.conn.SetReadDeadline(time.Now().Add(20 * time.Second))
 		line, err := peer.reader.ReadBytes('\n')
@@ -91,6 +96,10 @@ func (peer *rpcPeer) await(id int) rpcReply {
 			reply.Result, reply.Error = envelope.Result, envelope.Error
 			return reply
 		}
+		if peer.stashed == nil {
+			peer.stashed = map[int]rpcReply{}
+		}
+		peer.stashed[*envelope.ID] = rpcReply{Result: envelope.Result, Error: envelope.Error}
 	}
 }
 
@@ -139,7 +148,6 @@ func newBuildSession(t *testing.T, script string, adjust func(*Policy)) *session
 	}
 	surface.Binary, surface.Prefix = "sh", []string{"-c", script, "repo"}
 	surface.Process, surface.Parent = 4242, 4241
-	surface.Lookup = func(string) (string, bool) { return "", false }
 	surface.Environ = func() []string {
 		return []string{"PATH=" + os.Getenv("PATH"), "MARKS=" + marks, "SEMIO_SCRIPT_POLICY=inherited", "SEMIO_PROCESS_OWNER_CONTEXT=inherited"}
 	}
@@ -200,7 +208,17 @@ func decodeToolResult(t *testing.T, reply rpcReply) (CallToolResult, BuildResult
 	return CallToolResult{Content: result.Content, IsError: result.IsError}, build
 }
 
-const reportScript = `printf '{"agent":"%s","session":"%s","lane":"%s","tool":"%s","language":"%s","level":"%s","policy":"%s","owner":"%s","args":"%s"}' "$SEMIO_AGENT_ID" "$SEMIO_SESSION" "$SEMIO_CARGO_LANE" "${SEMIO_BUILD_TOOL:-}" "${SEMIO_LANGUAGE:-}" "${SEMIO_TEST_LEVEL:-}" "${SEMIO_SCRIPT_POLICY:-none}" "${SEMIO_PROCESS_OWNER_CONTEXT:-none}" "$*"`
+// 🧪️reportScript stands in for the `repo` executable: `session open --json` answers like the real command (a deterministic session per agent name or per connection, and one line per call in $MARKS/opens), everything else reports what the child sees.
+const reportScript = `if [ "$1" = session ]; then
+ agent=""; client=""; clientpid=""; ownerpid=""
+ for a in "$@"; do case "$a" in --agent=*) agent="${a#--agent=}";; --client=*) client="${a#--client=}";; --client-pid=*) clientpid="${a#--client-pid=}";; --owner-pid=*) ownerpid="${a#--owner-pid=}";; esac; done
+ [ -n "$MARKS" ] && echo "$*" >> "$MARKS/opens"
+ [ -n "$FAIL_SESSION" ] && { echo "no session" >&2; exit 3; }
+ if [ -z "$agent" ]; then agent="$(printf '%s' "$client" | tr 'A-Z ' 'a-z_')-$clientpid-$ownerpid"; fi
+ printf '{"version":1,"created":true,"address":"0123456789ab.s%s","session":{"id":"s%s","agent":{"id":"%s"},"resources":{"cargo":{"lane":"l%s"}}}}' "$agent" "$agent" "$agent" "$agent"
+ exit 0
+fi
+printf '{"address":"%s","tool":"%s","language":"%s","level":"%s","policy":"%s","owner":"%s","args":"%s","legacy":"%s"}' "$SEMIO_AGENT_SESSION" "${SEMIO_BUILD_TOOL:-}" "${SEMIO_LANGUAGE:-}" "${SEMIO_TEST_LEVEL:-}" "${SEMIO_SCRIPT_POLICY:-none}" "${SEMIO_PROCESS_OWNER_CONTEXT:-none}" "$*" "${SEMIO_AGENT_ID:-}${SEMIO_SESSION:-}${SEMIO_CARGO_LANE:-}"`
 
 func TestServerListsDerivedBuildToolsAndTasks(t *testing.T) {
 	fixture := newBuildSession(t, reportScript, nil)
@@ -243,17 +261,20 @@ func TestToolCallReturnsStructuredResultAndAttributesTheAgent(t *testing.T) {
 	if text.IsError || !build.OK || build.ExitCode != 0 || build.Operation != "run" || build.BuildTool != "bazel" {
 		t.Fatalf("result %+v", build)
 	}
-	var data struct{ Agent, Session, Lane, Tool, Language, Policy, Owner, Args string }
+	var data struct{ Address, Tool, Language, Policy, Owner, Args, Legacy string }
 	if err := json.Unmarshal(build.Data, &data); err != nil {
 		t.Fatalf("data %s: %v", build.Data, err)
 	}
-	if data.Agent != "alpha" || data.Session != "alpha" || data.Lane != AgentLane("alpha") || data.Tool != "bazel" || data.Language != "en" || data.Args != "run a:b" {
-		t.Fatalf("the child must see the agent and the selection: %+v", data)
+	if data.Address != "0123456789ab.salpha" || data.Tool != "bazel" || data.Language != "en" || data.Args != "run a:b" {
+		t.Fatalf("the child must see the session address and the selection: %+v", data)
+	}
+	if data.Legacy != "" {
+		t.Fatalf("no per-tool identity variable reaches the child: %q", data.Legacy)
 	}
 	if data.Policy != "none" || data.Owner != "none" {
 		t.Fatalf("a call is its own original invocation: %+v", data)
 	}
-	if build.Agent.ID != "alpha" || strings.Join(build.Command, " ") != "repo run a:b" {
+	if build.Agent.ID != "alpha" || build.Agent.Session != "salpha" || build.Agent.Lane != "lalpha" || strings.Join(build.Command, " ") != "repo run a:b" {
 		t.Fatalf("the result names the agent and the exact command: %+v", build)
 	}
 	if len(text.Content) != 1 || !strings.HasPrefix(text.Content[0].Text, "OK repo run a:b") {
@@ -261,10 +282,74 @@ func TestToolCallReturnsStructuredResultAndAttributesTheAgent(t *testing.T) {
 	}
 	other := fixture.callTool("test", map[string]any{"project": "@semio-tech/repo-client", "test_level": "quick"}, nil)
 	_, tested := decodeToolResult(t, other)
-	var testData struct{ Agent, Level, Args string }
+	var testData struct{ Address, Level, Args string }
 	_ = json.Unmarshal(tested.Data, &testData)
-	if !strings.HasPrefix(testData.Agent, "harness_client-") || testData.Level != "quick" || testData.Args != "run @semio-tech/repo-client:test" {
-		t.Fatalf("a call without agent runs as the agent of the connection: %+v", testData)
+	if testData.Address != "0123456789ab.sharness_client-4241-4242" || tested.Agent.ID != "harness_client-4241-4242" || testData.Level != "quick" || testData.Args != "run @semio-tech/repo-client:test" {
+		t.Fatalf("a call without agent runs as the agent of the connection: %+v %+v", testData, tested.Agent)
+	}
+}
+
+func TestEachAgentOpensItsSessionOnceAndAFailureNeverStopsTheCall(t *testing.T) {
+	fixture := newBuildSession(t, reportScript, nil)
+	for index := 0; index < 3; index++ {
+		fixture.callTool("run", map[string]any{"target": "a:b", "agent": "alpha"}, nil)
+	}
+	fixture.callTool("run", map[string]any{"target": "a:b", "agent": "beta"}, nil)
+	fixture.callTool("run", map[string]any{"target": "a:b"}, nil)
+	fixture.callTool("run", map[string]any{"target": "a:b"}, nil)
+	opens, err := os.ReadFile(filepath.Join(fixture.marks, "opens"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(opens)), "\n")
+	want := []string{"session open --json --agent=alpha", "session open --json --agent=beta", "session open --json --client=Harness Client --client-pid=4241 --owner-pid=4242"}
+	if len(lines) != len(want) {
+		t.Fatalf("one open per distinct agent: %q", lines)
+	}
+	for index := range want {
+		if lines[index] != want[index] {
+			t.Fatalf("open %d got=%q want=%q", index, lines[index], want[index])
+		}
+	}
+	broken := newBuildSession(t, reportScript, nil)
+	broken.surface.Environ = func() []string {
+		return []string{"PATH=" + os.Getenv("PATH"), "MARKS=" + broken.marks, "FAIL_SESSION=1"}
+	}
+	text, build := decodeToolResult(t, broken.callTool("run", map[string]any{"target": "a:b"}, nil))
+	var data struct{ Address string }
+	_ = json.Unmarshal(build.Data, &data)
+	if text.IsError || !build.OK || data.Address != "" || build.Agent.ID != "unattached" || !strings.Contains(build.Hint, "agent session not opened") {
+		t.Fatalf("a failed session open leaves the call running without an address: %+v %+v", build, data)
+	}
+}
+
+func TestSessionRequestsBuildTheRepoArguments(t *testing.T) {
+	cases := map[string]SessionRequest{
+		"session open --json --agent=x":                                          {Agent: "x"},
+		"session open --json --client=c --client-pid=3 --owner-pid=4":            {Client: "c", ClientProcess: 3, Process: 4},
+		"session open --json --client=c":                                         {Client: "c"},
+		"session open --json":                                                    {},
+	}
+	for want, request := range cases {
+		if got := strings.Join(request.Argv(), " "); got != want {
+			t.Errorf("argv got=%q want=%q", got, want)
+		}
+	}
+	if _, err := ParseSession([]byte(`{"address":"","session":{}}`)); err == nil {
+		t.Error("a reply without an address is refused")
+	}
+	if _, err := ParseSession([]byte("not json")); err == nil {
+		t.Error("garbage is refused")
+	}
+	identity, err := ParseSession([]byte(`{"address":"0123456789ab.sa","session":{"id":"sa","agent":{"id":"agent-1"},"resources":{"cargo":{"lane":"sa"}}}}`))
+	if err != nil || identity != (AgentIdentity{ID: "agent-1", Session: "sa", Lane: "sa", Address: "0123456789ab.sa"}) {
+		t.Errorf("identity %+v %v", identity, err)
+	}
+	if env := (AgentIdentity{}).Environment(AgentEnvironment{Session: "SEMIO_AGENT_SESSION"}); len(env) != 0 {
+		t.Errorf("a call without an address carries no variable: %v", env)
+	}
+	if env := identity.Environment(AgentEnvironment{Session: "SEMIO_AGENT_SESSION"}); env["SEMIO_AGENT_SESSION"] != "0123456789ab.sa" || len(env) != 1 {
+		t.Errorf("the address is the one variable: %v", env)
 	}
 }
 

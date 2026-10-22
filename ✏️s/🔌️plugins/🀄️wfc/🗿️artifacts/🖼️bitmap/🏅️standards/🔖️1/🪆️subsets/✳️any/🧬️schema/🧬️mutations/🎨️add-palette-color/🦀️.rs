@@ -32,6 +32,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "palette-color", kind: "add-palette-color", record: "AddedPaletteColor" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add palette colour at {}", self.index), &format!("Palettenfarbe an {} hinzufügen", self.index))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for AddPaletteColor
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<AddPaletteColor> + From<crate::standards::v1::subsets::any::schema::mutations::remove_palette_color::RemovePaletteColor>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -41,8 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add palette colour at {}", self.index), &format!("Palettenfarbe an {} hinzufügen", self.index))
-    }
 }
 //#endregion 🔖️AddPaletteColor

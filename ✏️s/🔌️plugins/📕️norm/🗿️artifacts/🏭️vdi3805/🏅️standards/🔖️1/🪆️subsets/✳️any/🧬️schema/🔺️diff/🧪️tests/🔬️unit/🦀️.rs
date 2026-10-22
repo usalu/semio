@@ -20,7 +20,7 @@ fn diff_of(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vdi3805Diff {
 
 async fn law(base: &Vdi3805Snapshot, first: &Vdi3805Mutation, second: impl Fn(&Vdi3805Snapshot) -> Vdi3805Mutation) -> Vdi3805Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -55,7 +55,7 @@ async fn add_then_remove_cancels_and_remove_then_add_replaces() {
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");
     let existing = base.curves.values().next().expect("curve").clone();
     let sum = law(&base, &Vdi3805Mutation::RemoveCurve(RemoveCurve { id: existing.id.clone() }), |_| Vdi3805Mutation::AddCurve(AddCurve { curve: existing.clone() })).await;
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("replace"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("replace"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -94,9 +94,9 @@ async fn the_derived_index_follows_the_product_rows() {
     let mutation = Vdi3805Mutation::AddProduct(AddProduct { product: product.clone(), index: Some(0) });
     let forward = diff_of(&mutation, &base);
     assert!(forward.products.is_some());
-    let after = protocol::apply_diff(&forward, &base).expect("apply");
+    let after = protocol::apply_diff_cold(&forward, &base).expect("apply");
     assert_eq!(after.index, semio_s_artifact_norm_vdi3805_model::CatalogIndex::from_catalog(&after.catalog));
-    assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let sum = law(&base, &mutation, |_| Vdi3805Mutation::RemoveProduct(RemoveProduct { id: product.identity.article_number.clone() })).await;
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");

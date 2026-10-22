@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { iconIdToRustVariant, readCatalogSources, type AssetArtifact } from "../../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 
-const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
+const assetsRoot = (): string => join(import.meta.dirname, "..", "..", "..");
 
 //#region 📦️Catalog
 function readMetabolismSvgs(iconsDir: string, sources: readonly { id: string; path: string }[]): Record<string, string> {

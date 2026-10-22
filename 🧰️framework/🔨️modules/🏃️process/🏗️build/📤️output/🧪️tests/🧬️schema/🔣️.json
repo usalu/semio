@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Output Contract Corpus",
+  "description": "Language-agnostic cases of the output contract: which argument lists ask for machine output, and which lines a child process writes to which stream.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "requested", "child"],
+  "properties": {
+    "version": { "const": 1 },
+    "requested": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "args", "expected"],
+        "properties": { "name": { "type": "string" }, "args": { "type": "array", "items": { "type": "string" } }, "expected": { "type": "boolean" } }
+      }
+    },
+    "child": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "mode", "args", "environment", "stdout", "stderr"],
+        "properties": {
+          "name": { "type": "string" },
+          "mode": { "enum": ["noise", "progress"] },
+          "args": { "type": "array", "items": { "type": "string" } },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+          "stdout": { "type": "array", "items": { "type": "string" } },
+          "stderr": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

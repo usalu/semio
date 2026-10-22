@@ -15,7 +15,16 @@ pub struct SetInlines {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "inlines", kind: "set-inlines", record: "SetInlines" };
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<MdSnapshot, MdMutation> for SetInlines {
+    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::ColdMutation<MdSnapshot>>::ReferenceDiff> {
         let Self { path, index, inlines } = self;
         protocol::MutationOutcome::new(match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
             Some(MdBlock::Heading { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) })),
@@ -36,12 +45,6 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

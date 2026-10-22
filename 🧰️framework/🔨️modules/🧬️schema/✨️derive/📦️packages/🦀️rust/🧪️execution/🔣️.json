@@ -2,7 +2,7 @@
   "version": 1,
   "operations": [
     {
-      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
+      "command": { "program": "repo", "cwd": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
       "continuation": null,
       "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust", "packages": ["semio-framework-schema-derive"], "arguments": [] }
     }

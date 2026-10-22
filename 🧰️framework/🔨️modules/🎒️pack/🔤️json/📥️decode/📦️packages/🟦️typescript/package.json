@@ -7,7 +7,7 @@
     "./testing/invocation": "./🧪️testing/📥️invocation/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/pack-json-decode-ts:test"
+    "test": "repo run @semio-tech/pack-json-decode-ts:test"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*",

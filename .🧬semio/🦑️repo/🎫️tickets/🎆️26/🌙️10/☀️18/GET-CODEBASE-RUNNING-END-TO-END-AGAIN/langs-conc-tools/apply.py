@@ -100,7 +100,10 @@ def provision_go():
         if row["format"] == "zip":
             with zipfile.ZipFile(archive) as bundle: bundle.extractall(extracted)
         else:
-            with tarfile.open(archive, "r:gz") as bundle: bundle.extractall(extracted, filter="data")
+            with tarfile.open(archive, "r:gz") as bundle:
+                for member in bundle.getmembers():
+                    if not (member.isreg() or member.isdir()) or member.name.startswith("/") or ".." in member.name.split("/"): raise RuntimeError("unsafe archive member: " + member.name)
+                bundle.extractall(extracted)
         payload = os.path.join(extracted, row["prefix"]) if row["prefix"] else extracted
         base = "" if row["binaryDirectory"] == "." else row["binaryDirectory"] + "/"
         files = {}

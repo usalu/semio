@@ -1,0 +1,282 @@
+{
+ "version": 1,
+ "semantic": [
+  {
+   "name": "a Mutation impl",
+   "source": "impl Mutation for X {}\n",
+   "expected": [
+    "Mutation"
+   ]
+  },
+  {
+   "name": "a MutationDiff impl",
+   "source": "impl MutationDiff<S> for Y {}\n",
+   "expected": [
+    "MutationDiff"
+   ]
+  },
+  {
+   "name": "a DiffAlgebra impl",
+   "source": "impl DiffAlgebra for Z {}\n",
+   "expected": [
+    "DiffAlgebra"
+   ]
+  },
+  {
+   "name": "apply_to_artifact",
+   "source": "fn apply_to_artifact(a: &mut A) {}\n",
+   "expected": [
+    "apply_to_artifact"
+   ]
+  },
+  {
+   "name": "a diff function returning a diff type",
+   "source": "fn diff_text(a: &A) -> TextDiff { todo!() }\n",
+   "expected": [
+    "diff_text"
+   ]
+  },
+  {
+   "name": "a diff function returning something else",
+   "source": "fn diff_names() -> Vec<String> { vec![] }\n",
+   "expected": []
+  },
+  {
+   "name": "every kind at once, sorted",
+   "source": "impl Mutation for A {}\nimpl DiffAlgebra for B {}\nfn apply_to_artifact() {}\nfn diff_x() -> XDiff { todo!() }\n",
+   "expected": [
+    "DiffAlgebra",
+    "Mutation",
+    "apply_to_artifact",
+    "diff_x"
+   ]
+  },
+  {
+   "name": "names in strings and comments",
+   "source": "// impl Mutation for X\nlet s = \"impl DiffAlgebra for Y\";\nfn plain() {}\n",
+   "expected": []
+  },
+  {
+   "name": "a trait that merely contains the word",
+   "source": "impl MutationLike for X {}\nimpl Display for Y {}\n",
+   "expected": []
+  },
+  {
+   "name": "an empty source",
+   "source": "",
+   "expected": []
+  },
+  {
+   "name": "a generic impl",
+   "source": "impl<T: Clone> Mutation for Wrapper<T> where T: Debug {}\n",
+   "expected": [
+    "Mutation"
+   ]
+  }
+ ],
+ "dependencies": [
+  {
+   "name": "serde_json",
+   "source": "use serde_json::Value;\n",
+   "expected": [
+    "serde_json"
+   ]
+  },
+  {
+   "name": "uri helpers",
+   "source": "fn f() { to_uri(); parse_coordinate(); parse_uri_controlled(); }\n",
+   "expected": [
+    "parse_coordinate",
+    "parse_uri_controlled",
+    "to_uri"
+   ]
+  },
+  {
+   "name": "a cfg(test) module is excluded",
+   "source": "#[cfg(test)]\nmod tests { use serde_json::Value; fn t() { to_uri(); } }\nfn live() {}\n",
+   "expected": []
+  },
+  {
+   "name": "a cfg(test) function is excluded",
+   "source": "#[cfg(test)]\nfn t() { to_uri(); }\nfn live() { parse_uri(); }\n",
+   "expected": [
+    "parse_uri"
+   ]
+  },
+  {
+   "name": "serialisation attributes name their owner",
+   "source": "#[value(serialize_controlled_with = \"crate::io::text::ser\", deserialize_controlled_with = \"crate::io::binary::de\")]\nstruct S;\n",
+   "expected": [
+    "io::binary",
+    "io::text"
+   ]
+  },
+  {
+   "name": "a foreign io owner",
+   "source": "#[value(retire_with = \"crate::io::weird::f\")]\nstruct S;\n",
+   "expected": [
+    "io::"
+   ]
+  },
+  {
+   "name": "codec traits and functions",
+   "source": "use semio::OpText;\nfn f() { encode_op(); decode_diff(); }\n",
+   "expected": [
+    "OpText",
+    "decode_diff",
+    "encode_op"
+   ]
+  },
+  {
+   "name": "the framework io schema crate",
+   "source": "use semio_framework_io_schema::X;\n",
+   "expected": [
+    "semio_framework_io_schema"
+   ]
+  },
+  {
+   "name": "pack runtime paths",
+   "source": "fn f() { pack_rt::encode_pack(); }\n",
+   "expected": [
+    "pack_rt::encode_pack"
+   ]
+  },
+  {
+   "name": "strings do not count",
+   "source": "let s = \"serde_json to_uri io::text\";\n",
+   "expected": []
+  },
+  {
+   "name": "a clean schema",
+   "source": "pub struct Schema { pub a: u8 }\n",
+   "expected": []
+  },
+  {
+   "name": "a cfg(test) attribute with an item list",
+   "source": "#[cfg(test)] use serde_json;\nfn f() {}\n",
+   "expected": []
+  },
+  {
+   "name": "any non-listed io path",
+   "source": "fn f() { crate::io::weird(); }\n",
+   "expected": [
+    "io::"
+   ]
+  }
+ ],
+ "symbols": [
+  {
+   "name": "json projections",
+   "source": "export function widgetToJson() {}\nexport const widgetFromJsonText = 1;\nexport function toJsonThing() {}\n",
+   "expected": [
+    "widgetFromJsonText",
+    "widgetToJson"
+   ]
+  },
+  {
+   "name": "encoders and decoders",
+   "source": "export function encodeFooJson() {}\nexport function decodeBarProtobuf() {}\nexport const writeBazJsonValue = 1;\nexport function decodeNothing() {}\n",
+   "expected": [
+    "decodeBarProtobuf",
+    "encodeFooJson",
+    "writeBazJsonValue"
+   ]
+  },
+  {
+   "name": "fixed names",
+   "source": "export const floatLexeme = 1;\nexport const jsonGeometry = 2;\nexport class TxtProtobufThing {}\nexport const txtProtobufKey = 3;\nexport const txtProtobufString = 4;\nexport const txtProtobufOther = 5;\n",
+   "expected": [
+    "TxtProtobufThing",
+    "floatLexeme",
+    "jsonGeometry",
+    "txtProtobufKey",
+    "txtProtobufString"
+   ]
+  },
+  {
+   "name": "remodeling and tikz",
+   "source": "export function decodeRemodelingSnapshot() {}\nexport function decodeRemodelingOther() {}\nexport function renderFooTikz() {}\nexport function inferBarTikzPlan() {}\nexport function inferTikzLater() {}\n",
+   "expected": [
+    "decodeRemodelingSnapshot",
+    "inferBarTikzPlan",
+    "renderFooTikz"
+   ]
+  },
+  {
+   "name": "re-exports and aliases",
+   "source": "const x = 1;\nexport { x as widgetToJson };\nexport { y as plain } from './y';\n",
+   "expected": [
+    "widgetToJson"
+   ]
+  },
+  {
+   "name": "comments and strings are not exports",
+   "source": "// export function aToJson() {}\nconst s = 'export function bToJson() {}';\n",
+   "expected": []
+  },
+  {
+   "name": "no exports",
+   "source": "const a = 1;\n",
+   "expected": []
+  }
+ ],
+ "diffs": [
+  {
+   "name": "both representations exist",
+   "semantic": "impl MutationDiff<S> for A {}\nimpl MutationDiff<S> for B {}\n",
+   "text": "impl DiffText for A {}\ndiff_text!(B);\n",
+   "binary": "impl DiffBinary for A {}\ndiff_binary!(B);\n",
+   "expected": []
+  },
+  {
+   "name": "the binary owner lacks one",
+   "semantic": "impl MutationDiff<S> for A {}\nimpl MutationDiff<S> for B {}\n",
+   "text": "impl DiffText for A {}\ndiff_text!(B);\n",
+   "binary": "impl DiffBinary for A {}\n",
+   "expected": [
+    "B"
+   ]
+  },
+  {
+   "name": "the text owner lacks both",
+   "semantic": "impl MutationDiff<S> for A {}\nimpl MutationDiff<S> for B {}\n",
+   "text": "",
+   "binary": "impl DiffBinary for A {}\ndiff_binary!(B);\n",
+   "expected": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "name": "qualified paths",
+   "semantic": "impl MutationDiff<S> for crate::m::A {}\n",
+   "text": "impl DiffText for other::A {}\n",
+   "binary": "diff_binary!(x::y::A);\n",
+   "expected": []
+  },
+  {
+   "name": "no semantic diff",
+   "semantic": "struct X;\n",
+   "text": "",
+   "binary": "",
+   "expected": []
+  },
+  {
+   "name": "duplicates collapse and names sort",
+   "semantic": "impl MutationDiff<S> for B {}\nimpl MutationDiff<T> for B {}\nimpl MutationDiff<S> for A {}\n",
+   "text": "",
+   "binary": "",
+   "expected": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "name": "a string mentioning the impl is ignored",
+   "semantic": "let s = \"impl MutationDiff<S> for Q\";\n",
+   "text": "",
+   "binary": "",
+   "expected": []
+  }
+ ]
+}

@@ -131,7 +131,7 @@ impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}self.step(grant).unwrap_or_else(RetirementStep::Failure)}
  fn terminal_is_empty(&self)->bool{self.handle.source.is_none()&&self.original.is_none()&&self.pending.is_none()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{if self.handle.source.is_some(){Ok(0)}else{Ok(self.demands(0)?.copy_bytes)}}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{false}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}

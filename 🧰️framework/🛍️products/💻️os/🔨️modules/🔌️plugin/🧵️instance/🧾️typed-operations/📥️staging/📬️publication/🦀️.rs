@@ -23,7 +23,7 @@ use store::os_store::store_schema::HistoryLane;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
 use protocol::OpText;
 use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN;

@@ -1,15 +1,20 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync,mkdtempSync,rmSync,writeFileSync } from "node:fs";
-import { join, relative,dirname,resolve,posix,win32 } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join, relative,dirname,resolve,posix,win32,isAbsolute } from "node:path";
 import {pathToFileURL} from "node:url";
 import ts from "typescript";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "@semio-tech/stdio-inventory-ts";
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
-import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata,readStdioArtifactBuildGraphPin } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
+import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 import Ajv from "ajv";
+import {createHash} from "node:crypto";
+import {gunzipSync} from "node:zlib";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {encodeGraphRecordsV1,decodeGraphRecordsV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs";
+import recordPolicy from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json" with {type:"json"};
 import type {ScriptInvocation} from "@semio-tech/process/routing";
-import { buildPinSchema as pinSchema } from "@semio-tech/repo-lib/build";
+import { readBuildGraphV1,buildPinSchema as pinSchema } from "@semio-tech/repo-lib/build";
 import {verifyStdioCargoPhaseV1} from "./🎟️phase/🟦️.ts";
 
 type CommandOwnership = Readonly<{
@@ -72,16 +77,32 @@ export async function testStdioArtifactPackageContract(repoRoot:string,invocatio
 
 /** 🕸️ Compares declared artifact dependencies with Cargo metadata and the portable build graph. */
 export async function testStdioArtifactPackageGraph(repoRoot:string,invocation:ScriptInvocation): Promise<void> {
-  verifyStdioBuildGraphPinFixtures(repoRoot);
+  await verifyStdioBuildGraphPinFixtures(repoRoot);
   const contract = stdioArtifactPackageContract(repoRoot);
-  await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot,invocation));
+  await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot,invocation),invocation);
 }
 
-/** 📌️ Checks exact-pin admission and changed-byte refusal against independent schema and SHA oracles. */
-export function verifyStdioBuildGraphPinFixtures(repoRoot:string):void{
- const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;assert(artifacts,"Original Stdio pin fixture artifacts required");const root=mkdtempSync(join(artifacts,"sp-")),path=join(root,"graph.json"),fixture=readStdioJson(join(repoRoot,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph/📌️pin.json")),validate=new Ajv({strict:true}).compile(pinSchema);
- try{for(const row of fixture.cases){const source=row.change==="malformed-json"?"{":JSON.stringify(row.change==="invalid-graph"?{version:0}:fixture.graph);writeFileSync(path,source);const digest=new Bun.CryptoHasher("sha256").update(source).digest("hex"),publication:{path?:string;digest?:string}={path,digest};if(row.change==="missing-path")delete publication.path;if(row.change==="missing-digest")delete publication.digest;if(row.change==="relative-path")publication.path="graph.json";if(row.change==="invalid-digest")publication.digest="invalid";if(row.change==="changed-bytes")writeFileSync(path,source+" ");assert.equal(validate(publication),row.schemaAccepted,row.name);const environment={SEMIO_BUILD_GRAPH_PATH:publication.path,SEMIO_BUILD_GRAPH_DIGEST:publication.digest};if(row.accepted)assert.deepEqual(readStdioArtifactBuildGraphPin(environment),fixture.graph);else assert.throws(()=>readStdioArtifactBuildGraphPin(environment),row.name);}
- }finally{rmSync(root,{recursive:true,force:true});}console.log(`[stdio-package-contract] immutable pin fixtures=${fixture.cases.length} independentSchemaAndSha=true`);
+/** 📌️ Checks current record publications and immutable pin refusal against independent schema, gzip and SHA oracles. */
+export async function verifyStdioBuildGraphPinFixtures(repoRoot:string):Promise<void>{
+ const base=join(repoRoot,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph"),fixture=readStdioJson(join(base,"📌️pin.json")),schema=readStdioJson(join(base,"🧬️schema/🔣️.json")),ajv=new Ajv({strict:true}),validate=ajv.compile(pinSchema);
+ assert.equal(ajv.validate(schema,fixture),true,JSON.stringify(ajv.errors));assert.deepEqual(validateJsonSchemaSubset(schema,fixture),[]);
+ const encoded=await encodeGraphRecordsV1(fixture.graph,{policy:recordPolicy.records as Parameters<typeof encodeGraphRecordsV1>[1]["policy"],maximumBytes:recordPolicy.maximumSnapshotBytes}),manifest=JSON.parse(encoded.manifestBytes.toString("utf8")),sha=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
+ assert.equal(manifest.version,fixture.publication.manifestVersion);assert.equal(manifest.graph.version,fixture.publication.graphVersion);assert.equal(encoded.digest,new Bun.CryptoHasher("sha256").update(encoded.manifestBytes).digest("hex"));
+ for(const[name,digest]of manifest.projects){const bytes=encoded.records.get(digest);assert(bytes);assert.equal(sha(bytes),digest);assert.deepEqual(JSON.parse(gunzipSync(bytes).toString("utf8")),fixture.graph.projects[name]);}
+ for(const row of fixture.cases){
+  const records=new Map(encoded.records);let bytes=Buffer.from(encoded.manifestBytes);if(row.change==="malformed-json")bytes=Buffer.from("{");if(row.change==="whole-graph")bytes=Buffer.from(JSON.stringify(fixture.graph));if(row.change==="manifest-version")bytes=Buffer.from(JSON.stringify({...manifest,version:1}));if(row.change==="invalid-graph")bytes=Buffer.from(JSON.stringify({...manifest,graph:{...manifest.graph,version:0}}));
+  const digest=sha(bytes),expected=join(repoRoot,"pin-fixture","snapshots",digest+".json"),publication:{path?:string;digest?:string}={path:expected,digest};
+  if(row.change==="missing-path")delete publication.path;if(row.change==="missing-digest")delete publication.digest;if(row.change==="relative-path")publication.path="graph.json";if(row.change==="wrong-path")publication.path=join(repoRoot,"another-image","snapshots",digest+".json");if(row.change==="invalid-digest")publication.digest="invalid";if(row.change==="changed-bytes")bytes=Buffer.concat([bytes,Buffer.from(" ")]);
+  const first=records.keys().next().value as string;if(row.change==="missing-record")records.delete(first);if(row.change==="changed-record")records.set(first,Buffer.concat([records.get(first)!,Buffer.from(" ")]));assert.equal(validate(publication),row.schemaAccepted,row.name);assert.equal(validateJsonSchemaSubset(pinSchema,publication).length===0,row.schemaAccepted,row.name);
+  const read=async()=>{assert.equal(validate(publication),true);assert(publication.path&&isAbsolute(publication.path));assert.equal(publication.path,expected);assert.equal(sha(bytes),publication.digest);return readBuildGraphV1(await decodeGraphRecordsV1(bytes,async key=>records.get(key),{policy:recordPolicy.records as Parameters<typeof decodeGraphRecordsV1>[2]["policy"]}));};
+  if(row.accepted)assert.deepEqual(await read(),fixture.graph,row.name);else await assert.rejects(read,row.name);
+ }
+ const source=sourceFile(join(repoRoot,"✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts")),entry=source.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="readStdioArtifactBuildGraphPin");assert(entry);assert.deepEqual(entry.parameters.map(node=>node.name.getText(source)),["repoRoot","invocation"]);assert(entry.parameters.every(node=>!node.questionToken&&!node.initializer));
+ const calls:ts.CallExpression[]=[];const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node);ts.forEachChild(node,visit);};visit(entry);
+ const named=(name:string)=>calls.filter(node=>ts.isIdentifier(node.expression)&&node.expression.text===name),publication=named("withRepositoryBuildGraphPublicationV1");assert.equal(publication.length,1);assert.equal(publication[0]!.arguments.length,3);assert.deepEqual(publication[0]!.arguments.slice(0,2).map(node=>node.getText(source)),["repoRoot","control"]);assert.equal(named("createIssuedResourceControlV1")[0]?.arguments[0]?.getText(source),"invocation");assert(named("checkScriptInvocation").length>=2);assert.equal(named("checkResourceLeaseControl")[0]?.arguments[0]?.getText(source),"actual");assert.equal(named("readBuildGraphV1")[0]?.arguments[0]?.getText(source),"graph");
+ for(const name of ["readFileSync","loadBuildGraphV1","JSON.parse"])assert(!calls.some(node=>node.expression.getText(source)===name),"Pinned Stdio reader cannot replace or directly parse the owned publication");
+ const facade=sourceFile(join(repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts"));assert(facade.statements.some(node=>ts.isExportDeclaration(node)&&node.exportClause&&ts.isNamedExports(node.exportClause)&&node.exportClause.elements.some(item=>item.name.text==="withRepositoryBuildGraphPublicationV1")&&node.moduleSpecifier?.getText(facade).includes("🏗️build/🕸️graph/🟦️.ts")));
+ console.log(`[stdio-package-contract] immutable pin fixtures=${fixture.cases.length} recordVersion=${manifest.version} graphVersion=${manifest.graph.version}`);
 }
 
 /** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, build inputs and package scripts to the command-ownership contract. */
@@ -128,7 +149,7 @@ export async function verifyStdioCommandOwnership(repoRoot = findWorkspaceRoot()
     const set = STDIO_COMMAND_INPUTS[command];
     assert(set, `stdio command ${command} declares no input set`);
     assert(project.targets?.[command]?.inputs?.includes(STDIO_NAMED_INPUTS[set]), `target ${command} does not hash ${STDIO_NAMED_INPUTS[set]}`);
-    assert.equal(project.targets[command].options?.command, `bun ./📜️script.ts ${command}`);
+    assert.equal(project.targets[command].options?.command, `repo ./📜️script.ts ${command}`);
     routing(manifest.scripts?.[command],packageDirectory,repoRoot,`${fixture.registration.projectName}:${command}`,{resolve});
   }
   console.log(`[stdio-command-ownership] owners=${fixture.owners.length} routers=${fixture.routers.length} artifacts=${fixture.artifactDefinitions.length} commands=${compositionRouter.commands.length}`);

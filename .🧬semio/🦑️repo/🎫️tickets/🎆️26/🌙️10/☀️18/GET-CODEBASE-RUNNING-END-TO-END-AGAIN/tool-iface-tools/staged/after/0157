@@ -1,162 +1,73 @@
-// #region 🧲️Header
+/** 🔌️ The interface-import census: which packages a test domain may import and where it imports an interface-owned package directly. */
 
-// 2026 Ueli Saluz <ueli@semio-tech.com>
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-// 🏁️checkpoints carries the checkpoint loading, streaming and the checkpoint log sources.
+//#region 🧮️SourceCensus
+/** 🧱️ The JavaScript libraries reachable only through their interface module, package → owning directory (the dependency
+ * policy's {@link DEPENDENCY_INTERFACE_OWNERS}): production code outside the owner never imports the package or its
+ * subpaths; test-domain code (the taxonomy's tests, fixtures, examples, oracles, probes, generators) may use it as an oracle. */
+export const INTERFACE_OWNED_PACKAGES: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(Object.entries(DEPENDENCY_INTERFACE_OWNERS).filter(([, owner]) => owner.ecosystem === "js").map(([name, owner]) => [name, owner.directory])));
 
-// #endregion 🧲️Header
+/** 🧱️ One import of an interface-owned package outside its owner. */
+export type InterfaceImportHit = Readonly<{ path: string; line: number; specifier: string; owner: string }>;
 
-package contributors
+const MODULE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["']([^"'\n]+)["']/gmu;
 
-import (
-	context "context"
-	fmt "fmt"
-	strings "strings"
-
-	model "github.com/usalu/semio/repo/model"
-	workspace "github.com/usalu/semio/repo/workspace"
-)
-
-// #region 🏁️Checkpoints
-
-// ◼LoadCheckpoints MUST return all matching checkpoints from the data source.
-// 🔢️LoadCheckpoints loads the checkpoints of the current repository root through the ported reader,
-// so the author identifier the log carries reaches the checkpoint rather than being dropped.
-func LoadCheckpoints(limit *int) []model.Checkpoint {
-	return ListCheckpoints(NewFsCheckpointSource(workspace.GetRootDir()), limit)
+/** 🧱️ Whether a path belongs to the test domain: under the domain root or below one of its directory names. */
+export function isTestDomainPath(path: string, testDomain: Readonly<{ directoryNames: readonly string[]; domainPath: string }>): boolean {
+  return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
 }
 
-// 💾️StreamCheckpoints MUST invoke the callback for each matching checkpoints entry.
-// ✔️StreamCheckpoints streams checkpoints entries through the callback.
-func StreamCheckpoints(ctx context.Context, limit *int, out chan<- model.Checkpoint, opts ...model.StreamOptions) error {
-	defer close(out)
-	var options model.StreamOptions
-	if len(opts) > 0 {
-		options = opts[0]
-	}
-	checkpoints := LoadCheckpoints(limit)
-	for _, c := range checkpoints {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			if !model.MatchesFilter(c.SHA, options) && !model.MatchesFilter(c.Title, options) {
-				continue
-			}
-			if !model.MatchesQuery(c.SHA+" "+c.Title, options) {
-				continue
-			}
-			out <- c
-		}
-	}
-	return nil
+/** 🧱️ The imports of interface-owned packages in one production source outside their owners. */
+export function interfaceImportHitsOfText(path: string, text: string, owners: Readonly<Record<string, string>> = INTERFACE_OWNED_PACKAGES): InterfaceImportHit[] {
+  const hits: InterfaceImportHit[] = [];
+  for (const match of text.matchAll(MODULE_SPECIFIER)) {
+    const specifier = match[1]!;
+    const owned = Object.keys(owners).find((name) => specifier === name || specifier.startsWith(`${name}/`));
+    if (!owned || path.startsWith(owners[owned]!)) continue;
+    const at = match.index! + match[0].length - specifier.length - 1;
+    hits.push({ path, line: text.slice(0, at).split("\n").length, specifier, owner: owners[owned]! });
+  }
+  return hits;
 }
 
-// 📜️CheckpointLogFormat is the pretty format the checkpoint log is read in.
-const CheckpointLogFormat = "%H|%aN|%ad|%s"
-
-// 🏁️Checkpoint is one recorded checkpoint of the repository history, the shape 📐️model declares
-// and the Rust twin reexports; the date is the `--date=iso-strict` text the log carries.
-type Checkpoint = model.Checkpoint
-
-// 📖️CheckpointSource is where the checkpoint log comes from.
-type CheckpointSource interface {
-	// 📜️Log returns the checkpoint log, at most limit entries when a limit is given.
-	Log(limit *int) string
+/** 🧱️ The interface-ownership census over every tracked TypeScript / JavaScript production source (the test domain read from
+ * the taxonomy), cross-checked line for line against `git grep` (the oracle). */
+export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
+  const testDomain = dependencyTestDomain(taxonomy);
+  const pathspec = ["--", "*.ts", "*.tsx", "*.js", "*.jsx", "*.mjs", "*.cjs", ":!.🧬semio"];
+  const listed = runToolSyncV1("git", ["ls-files", "-z", ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
+  const sources = listed.stdout.split("\0").filter((path) => path && !isTestDomainPath(path, testDomain));
+  const hits: InterfaceImportHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("interface-ownership census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} production sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    if (Object.keys(INTERFACE_OWNED_PACKAGES).some((name) => text.includes(name))) hits.push(...interfaceImportHitsOfText(path, text));
+  }
+  const names = Object.keys(INTERFACE_OWNED_PACKAGES).map((name) => name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|");
+  const production = new Set(sources);
+  const oracle = new Set(
+    runToolSyncV1("git", ["grep", "-n", "-E", `(from|import|require)[[:space:]]*\\(?[[:space:]]*["'](${names})(/[^"']*)?["']`, ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 })
+      .stdout.split("\n")
+      .filter(Boolean)
+      .map((row) => row.split(":").slice(0, 2))
+      .filter(([path]) => production.has(path!) && !Object.values(INTERFACE_OWNED_PACKAGES).some((owner) => path!.startsWith(owner)))
+      .map((parts) => parts.join(":")),
+  );
+  const scanned = new Set(hits.map((hit) => `${hit.path}:${hit.line}`));
+  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
+  onProgress(`${sources.length}/${sources.length} production sources scanned`);
+  return { files: sources.length, hits, disagreements };
 }
-
-// 🧠️MemoryCheckpointSource serves a frozen log.
-type MemoryCheckpointSource struct {
-	log string
-}
-
-// 🌱️NewMemoryCheckpointSource builds a source that serves this log.
-func NewMemoryCheckpointSource(log string) *MemoryCheckpointSource {
-	return &MemoryCheckpointSource{log: log}
-}
-
-// 📜️Log returns the frozen log, truncated to a limit when one is given.
-func (source *MemoryCheckpointSource) Log(limit *int) string {
-	if limit == nil {
-		return source.log
-	}
-	lines := strings.Split(source.log, "\n")
-	if *limit < len(lines) {
-		lines = lines[:*limit]
-	}
-	return strings.Join(lines, "\n")
-}
-
-// 💽️FsCheckpointSource reads the log out of a real git repository.
-type FsCheckpointSource struct {
-	root string
-}
-
-// 🆕️NewFsCheckpointSource builds the source of a repository root.
-func NewFsCheckpointSource(root string) *FsCheckpointSource {
-	return &FsCheckpointSource{root: root}
-}
-
-// 📜️Log runs git log under the pretty format the checkpoint reader expects.
-func (source *FsCheckpointSource) Log(limit *int) string {
-	args := []string{"log", "--pretty=format:" + CheckpointLogFormat, "--date=iso-strict"}
-	if limit != nil {
-		args = append(args, fmt.Sprintf("-n%d", *limit))
-	}
-	command := workspace.ToolCommand("git", args...)
-	command.Dir = source.root
-	out, err := command.Output()
-	if err != nil {
-		return ""
-	}
-	return string(out)
-}
-
-// 📥️ParseCheckpointLog parses a checkpoint log. A line needs four separated parts; the title
-// keeps every separator it contains, and the author becomes the checkpoint author identifier.
-func ParseCheckpointLog(log string) []Checkpoint {
-	found := make([]Checkpoint, 0)
-	for _, line := range strings.Split(log, "\n") {
-		parts := strings.Split(line, "|")
-		if len(parts) < 4 {
-			continue
-		}
-		var author *string
-		if parts[1] != "" {
-			value := parts[1]
-			author = &value
-		}
-		found = append(found, Checkpoint{ID: parts[0], SHA: parts[0], Title: strings.Join(parts[3:], "|"), AuthorID: author, Date: parts[2]})
-	}
-	return found
-}
-
-// 📋️ListCheckpoints returns every checkpoint the source carries, newest first.
-func ListCheckpoints(source CheckpointSource, limit *int) []Checkpoint {
-	return ParseCheckpointLog(source.Log(limit))
-}
-
-// 🔎️SearchCheckpoints returns every checkpoint whose sha or title contains the term.
-func SearchCheckpoints(source CheckpointSource, limit *int, term string) []Checkpoint {
-	needle := strings.ToLower(term)
-	found := make([]Checkpoint, 0)
-	for _, checkpoint := range ListCheckpoints(source, limit) {
-		haystack := strings.ToLower(checkpoint.SHA + " " + checkpoint.Title)
-		if needle == "" || strings.Contains(haystack, needle) {
-			found = append(found, checkpoint)
-		}
-	}
-	return found
-}
-
-// 🪪️CheckpointID returns the artifact identifier of a checkpoint: the contributor segment, when
-// the checkpoint names an author, followed by the checkpoint segment carrying the full sha.
-func CheckpointID(checkpoint Checkpoint) string {
-	contributor := ""
-	if checkpoint.AuthorID != nil && *checkpoint.AuthorID != "" {
-		contributor = segment("contributor", workspace.Flat(*checkpoint.AuthorID), "")
-	}
-	return segment("checkpoint", checkpoint.SHA, contributor)
-}
-
-// #endregion 🏁️Checkpoints
+//#endregion 🧮️SourceCensus

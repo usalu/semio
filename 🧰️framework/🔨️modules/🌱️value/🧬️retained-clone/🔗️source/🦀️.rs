@@ -91,7 +91,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  }
  /// 🔐️ Retains the exact original projection only through its genuine owning source.
  pub fn retain_original(&self,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError>{unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?,grant)}}
- pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<U>,RetainedCloneProgress),ValueError> where F:for<'source>FnOnce(&'source T)->&'source U{unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?.project(discriminator,project),grant)}}
+ pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<U>,RetainedCloneProgress),ValueError> where F:for<'source>FnOnce(&'source T)->&'source U{RetainedOwnedProjection::<U>::admit_constructor(grant)?;unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?.project(discriminator,project),grant)}}
  /// 🪪️ Borrows the retained initiating authority for paid source freshness validation.
  pub fn original_authority(&self)->Option<&A>{self.owner.as_ref().map(|owner|owner.get())}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_copy_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::copy_demand(&self.lease)}}

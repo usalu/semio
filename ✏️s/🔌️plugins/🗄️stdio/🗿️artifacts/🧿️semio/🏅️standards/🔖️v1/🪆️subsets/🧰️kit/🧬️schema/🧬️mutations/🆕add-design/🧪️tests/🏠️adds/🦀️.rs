@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕add-design/🏠️adds/📸️snapshot/⬅️before/🔣️.json"));
@@ -31,7 +31,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_roof_design_with_no_pieces_and_no_connections() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("add-design applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("add-design applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "add-design/adds-an-empty-roof-design: applied state differs from the committed after-snapshot");
     assert_eq!(produced.designs.len(), base.designs.len() + 1, "add-design adds exactly one design");
     let created = produced.designs.last().expect("the new design is pushed at the end");
@@ -48,9 +48,9 @@ async fn the_undo_remove_design_takes_the_roof_design_back_out() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "add-design undoes as exactly one remove-design");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-design applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward add-design applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-design applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo remove-design applies");
     }
     assert_eq!(current, base, "add-design/adds-an-empty-roof-design: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-design/adds-an-empty-roof-design: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-design diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed add-design diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed add-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-design/adds-an-empty-roof-design: committed diff did not carry before to after");
 }

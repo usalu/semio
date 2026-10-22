@@ -242,11 +242,11 @@ use semio_framework_plugin::HistoryView;
     /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
     /// `VcsArtifactApp`'s config store does when it dispatches them.
     pub fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
         let mut next = base.clone();
         for operation in &emit.config_mutations {
             let diff = operation.diff(&next).into_parts().0;
-            next = protocol::apply_diff(&diff, &next).expect("config mutation diff");
+            next = protocol::apply_diff_cold(&diff, &next).expect("config mutation diff");
         }
         next
     }

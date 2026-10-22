@@ -26,17 +26,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "machine", kind: "create-machine", record: "CreatedMachine" };
 
-    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create machine \"{}\"", self.machine.label), &format!("Maschine \"{}\" erstellen", self.machine.label))
     }
@@ -44,5 +33,20 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.machine.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Process3dSnapshot, Op> for CreateMachine
+where
+    Op: protocol::ColdMutation<Process3dSnapshot, ReferenceDiff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::delete_machine::DeleteMachine>,
+{
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️CreateMachine

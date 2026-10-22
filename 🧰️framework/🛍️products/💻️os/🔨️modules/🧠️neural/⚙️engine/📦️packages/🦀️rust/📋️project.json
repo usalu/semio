@@ -43,7 +43,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -60,7 +60,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "forwardAllArgs": true
       }
     },
@@ -78,7 +78,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-type-ownership"
+        "command": "repo ./📜️script.ts test-type-ownership"
       }
     },
     "test-output-source": {
@@ -95,7 +95,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-output-source"
+        "command": "repo ./📜️script.ts test-output-source"
       }
     },
     "test-evaluation-source": {
@@ -112,7 +112,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-evaluation-source"
+        "command": "repo ./📜️script.ts test-evaluation-source"
       }
     },
     "test-input-source": {
@@ -129,7 +129,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-input-source"
+        "command": "repo ./📜️script.ts test-input-source"
       }
     },
     "test-topology-source": {
@@ -146,7 +146,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-topology-source"
+        "command": "repo ./📜️script.ts test-topology-source"
       }
     }
   }

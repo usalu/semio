@@ -25,7 +25,7 @@ func mcpDesc(kind McpClientKind, key string) string {
 	return ""
 }
 
-// 🔌️mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
+// 🔌️mcpDescriptionTable: keys = stable ids; inner map must include generic + each agent-client kind used.
 var mcpDescriptionTable = map[string]map[McpClientKind]string{
 	"prompt_enhance": {
 		McpClientGeneric: "Use when you are about to add behavior and must align the change with repository rules before editing.",
@@ -292,7 +292,6 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientCodex:   "Use when Codex must split a region into its own file before shrinking the original module.",
 	},
 	"arg_plan_id": {
-		McpClientCursor:  "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
 		McpClientCopilot: "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
 		McpClientClaude:  "Set when a `.claude/plan/<id>.md` file exists and must be archived into the ticket on close.",
 		McpClientCodex:   "Set when a `.codex/memory/<repo>/<id>.md` file exists and must be archived into the ticket on close.",

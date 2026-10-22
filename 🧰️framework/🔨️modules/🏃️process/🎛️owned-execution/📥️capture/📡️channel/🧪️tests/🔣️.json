@@ -56,6 +56,11 @@
     {
       "case": "blocked-close",
       "expected": "preserved"
+    },
+    {
+      "case": "terminal",
+      "expected": "completed"
     }
-  ]
+  ],
+  "sourceEntry": "./👷️child/📜️script.ts"
 }

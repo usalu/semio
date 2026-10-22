@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "tile-media", kind: "change-tile-media", record: "ChangedTileMedia" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change media of tile \"{}\"", self.tile_id), &format!("Medien von Kachel \"{}\" ändern", self.tile_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.tile_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid3dSnapshot, Op> for ChangeTileMedia
+where
+    Op: protocol::ColdMutation<Grid3dSnapshot, ReferenceDiff = Grid3dDiff> + From<ChangeTileMedia>,
+{
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change media of tile \"{}\"", self.tile_id), &format!("Medien von Kachel \"{}\" ändern", self.tile_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.tile_id.clone()]
-    }
 }
 //#endregion 🔖️ChangeTileMedia

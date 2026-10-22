@@ -363,7 +363,8 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
                 return pick_select_action(&state.session, &state.camera, &state.selection, &state.interaction, &state.scene, x, y, inner, shift, ctrl);
             }
         } else {
-            return marquee_select_action(&mut state.session, &mut state.camera, &mut state.selection, &mut state.interaction, &mut state.scene, render_pick_viewport(&state.session), shift, ctrl);
+            let viewport = render_pick_viewport(&state.session);
+            return marquee_select_action(&mut state.session, &mut state.camera, &mut state.selection, &mut state.interaction, &mut state.scene, viewport, shift, ctrl);
         }
     }
     if button == 0 && state.selection.interaction_mode == "paint" && state.selection.paint_stroke_active {
@@ -447,7 +448,7 @@ pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input
     let Some(mut authority) = state.authority.interaction_authority.take() else {
         return WorldInteractionAuthorityStep::Fault;
     };
-    let step = authority.step(&state.selection, &state.gumball, &state.scene, generation, input, context);
+    let step = authority.step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.gumball, &mut state.interaction, &mut state.scene, generation, input, context);
     state.authority.interaction_authority = Some(authority);
     step
 }
@@ -499,7 +500,7 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
     let Some(mut retirement) = state.retirement.dynamic_retirement.take() else {
         return true;
     };
-    let complete = retirement.step(&state.selection, &state.gumball, &state.scene,context);
+    let complete = retirement.step(&mut state.selection, &mut state.interaction, &mut state.scene, &mut state.bridge, context);
     context.consume_fuel(1);
     if complete && retirement.terminal_is_empty() {
         return true;

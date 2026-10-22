@@ -167,8 +167,8 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     assert_eq!(mutations.len(), 1);
     let PngMutation::PaintNativeSamples(mutation) = &mutations[0] else { panic!("native PNG mutation") };
     assert_eq!(mutation.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&snapshot));
-    use protocol::{Mutation, MutationDiff};
-    let edited = protocol::apply_diff(mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
+    use protocol::{ColdMutation, Mutation, MutationDiff};
+    let edited = protocol::apply_diff_cold(mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
     assert_eq!(crate::standards::v1_2::subsets::any::schema::operations::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     work.begin_close();
     let probe = semio_framework_job::close_with_self_funded_context(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 }, |cx| work.close_step(cx)).expect("original fixture close turn");
@@ -182,13 +182,13 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
 
 #[test]
 fn retained_pixel_region_publishes_one_revision_guarded_edit_and_native_png() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let base = rgba_snapshot(4, 3, [1, 2, 3, 255].repeat(12));
     let mutations = drive_pixel_region(&pixel_region_command(), &base);
     assert_eq!(mutations.len(), 1);
     let PngMutation::PatchPixels(patch) = &mutations[0] else { panic!("typed region mutation") };
     assert_eq!(patch.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base));
-    let edited = protocol::apply_diff(mutations[0].diff(&base).diff(), &base).unwrap();
+    let edited = protocol::apply_diff_cold(mutations[0].diff(&base).diff(), &base).unwrap();
     let pixels = crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().pixels;
     assert_eq!(&pixels[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
     assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap(), edited);
@@ -323,13 +323,13 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
 
 #[test]
 fn metadata_edit_and_inverse_preserve_exact_source_authority() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     let base = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")).unwrap();
     let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base), gama: Some(50_000) });
     assert_eq!(PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-    let edited = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
-    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
+    let edited = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
+    let restored = protocol::apply_diff_cold(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::png::PngEditor, || semio_framework_plugin::App { definition: crate::editor::png::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

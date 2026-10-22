@@ -12,7 +12,7 @@ use semio_framework_test_fixtures::fixture_path;
 extern crate semio_framework_os_kernel as protocol;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/⬅️before/🔣️.json").leak());
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/➡️after/🔣️.json").leak());
@@ -31,7 +31,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-building-model applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("create-building-model applies to its committed before-snapshot")
 }
 
 /// ▶️ `create-building-model` writes the fixed `building_model` slot even when it is already occupied; the other three slots never move.
@@ -68,7 +68,7 @@ async fn inverse_reinstalls_the_displaced_building_handle() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("create-building-model/rehandles-the-occupied-building-slot: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("create-building-model/rehandles-the-occupied-building-slot: inverse step applies");
     }
     assert_eq!(snapshot, base, "create-building-model/rehandles-the-occupied-building-slot: inverse did not restore the before-snapshot");
 }
@@ -129,7 +129,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-building-model/rehandles-the-occupied-building-slot: committed diff did not carry before to after");
 }
 

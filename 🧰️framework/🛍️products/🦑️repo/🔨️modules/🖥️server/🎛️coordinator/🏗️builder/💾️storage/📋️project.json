@@ -26,7 +26,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",
@@ -55,7 +55,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test nx-cache",
+        "command": "repo ./📜️script.ts test nx-cache",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",
@@ -83,7 +83,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test execution",
+        "command": "repo ./📜️script.ts test execution",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",

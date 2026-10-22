@@ -9,7 +9,7 @@ use axum::Json;
 use directory::{os_directory, DslValue, ToValue};
 use directory::os_directory::{AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, DirectoryCommand, DirectoryEvent, DirectorySpaceRole, DirectorySpaceVisibility, DocumentView, MemberView, SpaceView};
 use futures::{SinkExt, StreamExt};
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::Tracer;
 use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;

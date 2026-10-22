@@ -1,160 +1,116 @@
 // #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/📡️EventFeedHost/component.tsx
-/** 📰️ `📡️EventFeedHost` — renders an `EventFeedScene`: a scrollable log of `entriesJson` entries
- * (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, and
- * dispatching `activateAction` on entry click. */
+// 🎨️ framework/products/os/modules/renderer/engine/elements/🔗️HubConnection/🏛️workspace/component.tsx
+/** 🏛️ `HubWorkspace` — the one composed surface a shell mounts: `🔐️HubSignIn` above
+ * `🏘️SpaceBrowser` above `🤖️AgentDelegations`, all driven by a single `useHubConnection` lane. It
+ * lives in its own leaf rather than beside the hook because every pane imports that file's label
+ * bundle, and a composition placed there would close an import cycle around
+ * `registerUiTranslationBundles`.
+ * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slices AU2 and M6b. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "../⚛️react-port/🟦️.ts";
-import { type ComponentSceneHostProps, type EventFeedEntry, type MutationMessage } from "@semio-tech/framework";
-import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { formatHostTemporalValueV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
+import { useEffect, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
+import { Button, useLabel } from "@semio-tech/ui-react";
+import { useHubConnection } from "../🟦️.tsx";
+import { hubUiLabel } from "../🌐️ui-labels/🟦️.ts";
+import { type HubConnectionPortV1 } from "../🔌️connection-contract/🟦️.ts";
+import { HubSignInPane } from "../../🔐️HubSignIn/🟦️.tsx";
+import { SpaceBrowser } from "../../🏘️SpaceBrowser/🟦️.tsx";
+import { HubFirstRun } from "../../🎓️HubFirstRun/🟦️.tsx";
+import { AgentDelegations } from "../../🤖️AgentDelegations/🟦️.tsx";
+import { hubFirstRunSeenV1, hubFirstRunStateFromV1, markHubFirstRunSeenV1 } from "@semio-tech/framework/directory/first-run";
+import { spaceRowInvitableV1 } from "@semio-tech/framework/directory/spaces";
 // #endregion 🔌️Adapters
 
-//#region 🔖️EventFeedHost
-//#region EventFeedHost
-//#region Helpers
-const FEED_TONE_CLASS: Record<string, string> = {
-  info: "text-foreground",
-  success: "text-success",
-  warning: "text-warning",
-  error: "text-destructive",
-  /** ⚖️ `Severity::Fatal` (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
-   * CLASS-CONFLICTS` §C1) — bolder than plain `error` since a fatal outcome never partially applied. */
-  fatal: "text-destructive font-semibold",
-};
-
-/** ⚖️ Mints one {@link EventFeedEntry} from a `MutationMessage` (contract freeze §C2/§C9) — `tone`
- * follows `level` 1:1 (`FEED_TONE_CLASS` covers all four, including `fatal`), `title` stays the raw
- * `code` (a consumer localizes it via `ui.mutation.code.*`, never by parsing `message`), `detail`
- * carries the English prose verbatim. */
-export function mintMutationMessageFeedEntry(message: MutationMessage, id: string, timestampMs: number, iconId: IconName = "triangle-alert"): EventFeedEntry {
-  return { id, timestampMs, iconId, title: message.code, detail: message.message, tone: message.level };
+// #region 🏛️HubWorkspace
+export interface HubWorkspaceProps {
+  readonly port: HubConnectionPortV1;
+  /** 🌐️ `en` or `de`; the closed sign-in error table refuses anything else rather than defaulting. */
+  readonly locale: string;
+  readonly activeSpaceId: string | null;
+  /** 👥️ Hub user ids the shell's own presence lane currently sees. Joined against the hub's roster
+   * inside the hook, so a peer with no hub identity never invents a member row. */
+  readonly onlineUserIds: readonly string[];
+  readonly onOpenSpace: (spaceId: string) => void;
+  readonly onClose: () => void;
 }
-//#endregion Helpers
 
-//#region Component
-/** 📰️ Renders an `EventFeedScene`: a scrollable log of `entriesJson` entries (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, dispatching `activateAction` on entry click. */
-export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
-  const scene = node.eventFeed;
-  const windowInstanceId = useContext(WindowInstanceIdContext);
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
-  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.event");
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
-    },
-    [node.controllerId, node.surfaceId, onAction],
-  );
-  const mapContextMenu = useMapContextMenuSpecs(dispatch);
-  const shellContextMenuFallback = useShellContextMenuFallback();
-  const emptySceneLabel = useLabel("ui.host.emptyScene");
-  const entries = useMemo(() => {
-    if (!scene?.entriesJson) return [] as EventFeedEntry[];
-    try {
-      return parseSceneJsonField<EventFeedEntry[]>(scene.entriesJson);
-    } catch {
-      return [];
-    }
-  }, [scene?.entriesJson]);
-  const listRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!scene?.follow) return;
-    const list = listRef.current;
-    if (!list) return;
-    list.scrollTop = list.scrollHeight;
-  }, [entries, scene?.follow]);
-
-  //#region ContextMenu
-  /** 🖱️ `EventFeedScene` tracks no selection concept — each log row's `id` is still known at the click
-   * site, so unlike the whole-surface-only hosts this reports the right-clicked entry as a `hit` (see
-   * `TableHost`'s `onRowContextMenu` for the analogous per-row convention). */
-  const onEntryContextMenu = useCallback(
-    (entryId: string, event: MouseEvent<HTMLDivElement>): void => {
-      if (!requestContextMenu) return;
-      event.preventDefault();
-      event.stopPropagation();
-      void (async () => {
-        const menu = await openSurfaceContextMenu(
-          requestContextMenu,
-          {
-            menu: { id: "eventFeed", args: null },
-            surface: { surfaceId: node.surfaceId, kind: "eventFeed", hits: [{ domain: "entry", id: entryId }], selection: [] },
-            windowInstanceId: windowInstanceId ?? undefined,
-            point: { x: event.clientX, y: event.clientY },
-          },
-          mapContextMenu,
-          shellContextMenuFallback,
-        );
-        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
-      })();
-    },
-    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
-  );
-  //#endregion ContextMenu
-
-  if (!scene) return <div className="semio-event-feed-empty">{emptySceneLabel}</div>;
-
-  const activateAction = scene.activateAction;
+/** 🏛️ Mounts one hub relationship as a single dialog-shaped surface. Opening a space closes the
+ * surface first, so the shell never navigates behind an overlay that still owns focus. */
+export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onOpenSpace, onClose }: HubWorkspaceProps): ReactElement {
+  const hub = useHubConnection(port, onlineUserIds);
+  const { watchSpaceMembers } = hub;
+  useEffect(() => watchSpaceMembers(activeSpaceId), [activeSpaceId, watchSpaceMembers]);
+  const title = useLabel(hubUiLabel("os.hub.signIn.title"));
+  const closeLabel = useLabel(hubUiLabel("os.hub.signIn.cancel"));
+  const replayLabel = useLabel(hubUiLabel("os.hub.firstRun.replay"));
+  const firstRunState = hubFirstRunStateFromV1(hub.session.phase, hub.rows, activeSpaceId);
+  const [tour, setTour] = useState<"auto" | "replay" | null>(() => (hubFirstRunSeenV1(port.storage) ? null : "auto"));
+  const dismissTour = (): void => {
+    markHubFirstRunSeenV1(port.storage);
+    setTour(null);
+  };
   return (
-    <div ref={listRef} className="semio-event-feed-host flex h-full min-h-0 w-full flex-col gap-single overflow-auto p-single" data-surface-id={node.surfaceId}>
-      {entries.map((entry) => (
-        <div
-          key={entry.id}
-          className={cn("flex items-start gap-single rounded-md p-single", activateAction && cn(interactiveHoverFillClass, "cursor-pointer"))}
-          role={activateAction ? "button" : "paragraph"}
-          tabIndex={activateAction ? 0 : undefined}
-          onClick={
-            activateAction
-              ? () =>
-                  onAction({
-                    controllerId: node.controllerId,
-                    action: activateAction,
-                    args: { surfaceId: node.surfaceId, id: entry.id },
-                  })
-              : undefined
-          }
-          onKeyDown={
-            activateAction
-              ? (event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onAction({ controllerId: node.controllerId, action: activateAction, args: { surfaceId: node.surfaceId, id: entry.id } });
-                }
-              : undefined
-          }
-          onContextMenu={(event) => onEntryContextMenu(entry.id, event)}
-        >
-          <span aria-hidden>
-            <Icon icon={entry.iconId as IconName} size="small" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-single">
-              <span className={cn("truncate text-xs font-medium", entry.tone ? FEED_TONE_CLASS[entry.tone] : undefined)}>{entry.title}</span>
-              <span className="text-muted-foreground ml-auto shrink-0 text-[0.625rem] tabular-nums">
-                {formatHostTemporalValueV1({ id: entry.id, source: { kind: "epochMs", timestampMs: entry.timestampMs }, format: "time" }, Date.now())}
-              </span>
-            </div>
-            {entry.detail ? <p className="text-muted-foreground truncate text-xs">{entry.detail}</p> : null}
-          </div>
-        </div>
-      ))}
-      <ContextMenuController
-        title={contextMenuTitleLabel}
-        open={contextMenu != null}
-        position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenu?.items ?? []}
-        onOpenChange={(open) => {
-          if (!open) setContextMenu(null);
-        }}
+    <section aria-label={title} data-semio-hub-workspace={hub.connection.id} className="flex w-full min-w-0 flex-col">
+      {tour === null ? null : <HubFirstRun locale={locale} state={firstRunState} onDismiss={dismissTour} {...(tour === "replay" ? { initialStepIndex: 0 } : {})} />}
+      <div className="flex flex-wrap justify-end gap-2 p-2">
+        <Button id="os.hub.firstRun.replay" icon="graduation-cap" type="button" variant="ghost" aria-label={replayLabel} onClick={() => setTour("replay")}>
+          {replayLabel}
+        </Button>
+        <Button id="os.hub.signIn.cancel" icon="x" type="button" variant="outline" aria-label={closeLabel} onClick={onClose}>
+          {closeLabel}
+        </Button>
+      </div>
+      <HubSignInPane
+        book={hub.book}
+        session={hub.session}
+        locale={locale}
+        onSelectConnection={hub.selectConnection}
+        onAddHub={hub.addRemoteHub}
+        onForgetHub={hub.forgetHub}
+        onSignIn={hub.signIn}
+        onCancel={hub.cancelSignIn}
+        onSignOut={hub.signOut}
       />
-    </div>
+      <SpaceBrowser
+        rows={hub.rows}
+        activeSpaceId={activeSpaceId}
+        phase={hub.spacesPhase}
+        search={hub.search}
+        members={hub.members}
+        invite={hub.invite}
+        redemption={hub.redemption}
+        signedIn={hub.session.phase === "signed-in"}
+        onSearch={hub.setSearch}
+        onOpenSpace={(spaceId) => {
+          onClose();
+          onOpenSpace(spaceId);
+        }}
+        onRefresh={hub.refreshSpaces}
+        onCreateSpace={hub.createSpace}
+        onArchiveSpace={hub.archiveSpace}
+        onCreateInvite={hub.createInvite}
+        onCopyInvite={hub.copyInvite}
+        onDismissInvite={hub.dismissInvite}
+        onRedeemInvite={hub.redeemInvite}
+      />
+      <AgentDelegations
+        spaceId={activeSpaceId}
+        rows={hub.delegations}
+        phase={hub.delegationPhase}
+        error={hub.delegationError}
+        credential={hub.agentCredential}
+        signedIn={hub.session.phase === "signed-in"}
+        canDelegate={hub.rows.some((row) => row.id === activeSpaceId && spaceRowInvitableV1(row))}
+        onRefresh={hub.refreshDelegations}
+        onCreate={hub.createDelegation}
+        onDownloadCredential={hub.downloadAgentCredential}
+        onDismissCredential={hub.dismissAgentCredential}
+        onInstallMcpClient={hub.installAgentMcpClient}
+        onCopyMcpClientConfig={hub.copyAgentMcpClientConfig}
+        onRevoke={hub.revokeDelegation}
+      />
+    </section>
   );
 }
-//#endregion Component
-//#endregion EventFeedHost
-//#endregion 🔖️EventFeedHost
+// #endregion 🏛️HubWorkspace

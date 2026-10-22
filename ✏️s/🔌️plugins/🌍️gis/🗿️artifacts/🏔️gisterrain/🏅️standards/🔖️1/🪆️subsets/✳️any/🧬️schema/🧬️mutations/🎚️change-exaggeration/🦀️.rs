@@ -24,19 +24,20 @@ pub struct ChangeExaggeration {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeExaggeration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "exaggeration", kind: "change-exaggeration", record: "ChangedExaggeration" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change terrain exaggeration to {}", self.new_exaggeration), &format!("Geländeüberhöhung auf {} ändern", self.new_exaggeration))
+    }
+}
+
+impl protocol::ColdMutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeExaggeration {
     fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisTerrainSnapshot) -> Result<Vec<GisTerrainMutation>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change terrain exaggeration to {}", self.new_exaggeration), &format!("Geländeüberhöhung auf {} ändern", self.new_exaggeration))
-    }
 }
 //#endregion 🔹Payload

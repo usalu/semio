@@ -19,10 +19,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "lang", kind: "remove-lang", record: "Remove" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA language", "PDF/UA-Sprache entfernen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["Lang".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveLang
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveLang> + From<crate::standards::v1_7::subsets::ua::schema::mutations::set_lang::SetLang>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "Lang")))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let entry_index = support::catalog_entry_position(base, "Lang");
@@ -32,14 +44,6 @@ where
                 _ => Vec::new(),
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA language", "PDF/UA-Sprache entfernen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["Lang".to_string()]
     }
 }
 //#endregion 🔖️Mutation

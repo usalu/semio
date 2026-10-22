@@ -25,6 +25,15 @@ pub fn change_handle_kind_default_wire_kind<Op: From<crate::change_handle_kind_d
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeHandleKindDefaultWireKind where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_handle_kind_default_wire_kind::ChangeHandleKindDefaultWireKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "handle-kind", kind: "change-handle-kind-default-wire-kind", record: "ChangedHandleKindDefaultWireKind" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change handle kind \"{}\" default wire kind to \"{}\"", self.id, self.new_default_wire_kind), &format!("Standarddrahtart von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_default_wire_kind))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for ChangeHandleKindDefaultWireKind where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_handle_kind_default_wire_kind::ChangeHandleKindDefaultWireKind> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::change_handle_kind_default_wire_kind::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeHandleKindDefault
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change handle kind \"{}\" default wire kind to \"{}\"", self.id, self.new_default_wire_kind), &format!("Standarddrahtart von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_default_wire_kind))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

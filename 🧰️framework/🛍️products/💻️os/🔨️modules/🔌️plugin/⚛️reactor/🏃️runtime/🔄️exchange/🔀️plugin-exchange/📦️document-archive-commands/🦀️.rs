@@ -16,7 +16,7 @@ pub(super) async fn arm_load_document_archive<PA: PluginApp>(
     });
     match admitted.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -35,7 +35,7 @@ pub(super) async fn arm_merge_document_archive<PA: PluginApp>(
     });
     match admitted.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -60,7 +60,7 @@ pub(super) async fn arm_poll_document_archive_load<PA: PluginApp>(
             flags.mutated |= status.state == protocol::DocumentArchiveLoadState::Ready;
             frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -79,7 +79,7 @@ pub(super) async fn arm_cancel_document_archive_load<PA: PluginApp>(
     });
     match cancelled.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -98,7 +98,7 @@ pub(super) async fn arm_acknowledge_document_archive_load<PA: PluginApp>(
     });
     match acknowledged.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -118,7 +118,7 @@ pub(super) async fn arm_read_document_identity<PA: PluginApp>(
     });
     match read.await {
         Ok(identity) => frames.push(protocol::AppFrame::DocumentIdentity { in_reply_to: seq, identity }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -137,7 +137,7 @@ pub(super) async fn arm_read_document_archive<PA: PluginApp>(
     });
     match read.await {
         Ok(archive) => frames.push(protocol::AppFrame::DocumentArchive { in_reply_to: seq, archive }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

@@ -22,12 +22,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "edge-property", kind: "set-edge-property", record: "SetEdgeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (key, owner) = (&self.key, &self.edge_id.value);
         match semio_s_artifact_stdio_semio_value_model::schema::snapshot::semio_value_scalar_label(&self.value) {
@@ -37,6 +31,18 @@ where
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for SetEdgeProperty
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<SetEdgeProperty>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
     }
 }
 //#endregion 🔖️Payload

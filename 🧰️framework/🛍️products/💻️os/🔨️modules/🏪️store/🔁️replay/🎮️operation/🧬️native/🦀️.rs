@@ -117,11 +117,11 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   if let Some(active)=self.active.as_ref(){return semio_framework_value::factory_ticket_demands(active,body);}
   if !self.retirement.is_empty(){return Ok(RetirementDemand{copy_bytes:self.retirement.next_copy_byte_demand()?,capacity_bytes:self.retirement.next_capacity_byte_demand(body)?,release_bytes:self.retirement.next_release_byte_demand()?,depth:self.retirement.next_depth_demand()?});}
   if let Some(rows)=self.rows.as_ref(){return if rows.terminal_is_empty(){Ok(header::<Option<OriginalVectorCursor<M>>>())}else{rows.next_demand(body)};}
-  if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<P,CapturedSnapshotSource<P>>>>())}else{source.next_close_demands(body)};}
+  if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<P,CapturedSnapshotSource<P>>>>())}else{source.next_close_demand(body)};}
   if let Some(input)=self.input.as_ref(){return if input.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<M>>>())}else{input.close_demand(body)};}
   macro_rules! pending{($field:ident,$kind:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$kind>(true,&None,body);}};}
   if self.base.is_some(){return Ok(CapturedSnapshotSource::<P>::constructor_demand());}
-  pending!(source_authority,CapturedSnapshotSource<P>);pending!(post,P);pending!(inverse,Vec<M>);pending!(pages,PagedList<M,{usize::MAX}>);pending!(pending,M);pending!(messages,Vec<semio_framework_os_spr::MutationMessage>);
+  pending!(source_authority,CapturedSnapshotSource<P>);if self.post.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}pending!(inverse,Vec<M>);pending!(pages,PagedList<M,{usize::MAX}>);if self.pending.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<M>::constructor_capacity_bytes(),depth:1,..Default::default()});}pending!(messages,Vec<semio_framework_os_spr::MutationMessage>);
   if self.next.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::factory::shared::FactorySharedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
   if self.snapshots.is_some()||self.mutations.is_some(){return Ok(header::<Arc<dyn semio_framework_value::FactoryRetirement>>());}
   if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return factory.demands(body);}

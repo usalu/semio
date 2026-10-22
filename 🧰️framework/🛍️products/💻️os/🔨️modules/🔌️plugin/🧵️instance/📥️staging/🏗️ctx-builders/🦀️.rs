@@ -16,7 +16,7 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use crate::{InstanceExtensions, VcsArtifactApp};
 use semio_framework_plugin_instance_ladders::ladder_bundle::{LadderCtx, LadderRef};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
@@ -29,7 +29,7 @@ use std::marker::PhantomData;
 use semio_framework_plugin_time_travel::TimeTravelActionOutcome;
 use semio_framework_plugin_tool_run::ToolRunActionOutcome;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     #[doc(hidden)]
     pub fn render_ctx(&mut self) -> RenderCtx<'_, A, M, InstanceExtensions> {
         RenderCtx { app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, interaction: &mut self.interaction, history: &mut self.history, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, ingest: &mut self.ingest, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
@@ -94,7 +94,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
     /// 🧪️ Test-only typed-value helper. Production callers must enter with an exact
     /// owner-qualified retained raw-page admission and cannot infer identity from a bare command.

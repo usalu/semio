@@ -49,7 +49,7 @@ leaderboard sums those. Every badge of this course but `completionist` asks for 
 
 Every command of this site is a target of the project `@teaching/architecture-course` (manifest `📦️packages/🟦️typescript/📋️project.json`, router `📦️packages/🟦️typescript/📜️script.ts`). The neutral build entry runs it: `repo [--tool=nx|bazel] run @teaching/architecture-course:<target>[:<configuration>] [-- <arguments>]`. Nx with Bun is the default; Bazel executes the same graph with `--tool=bazel` (or `SEMIO_BUILD_TOOL=bazel`). Bazel on macOS needs an ASCII checkout path. The [build chapter](../../../🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run) documents both implementations, the cache rules and the recovery steps; never call `nx`, `bazel`, raw `cargo` or `rustc` yourself.
 
-The dashboard is the developer command surface: start `bun run dashboard`, choose **New Task** (`Ctrl+B n`), and search for `architecture-course` plus the operation. Select the owning `@teaching/architecture-course` target and complete its parameter form. The id of the dashboard command is the `<project>:<target>` id used below, and the global `build-tool` axis of the form selects Nx or Bazel for the same task. Its sixteen registered targets include preflight and CI browser preparation; CI uses the same targets. Once a server reports readiness, choose **Open ready address** (`Ctrl+B u`) from its task.
+The dashboard is the developer command surface: start `repo dashboard`, choose **New Task** (`Ctrl+B n`), and search for `architecture-course` plus the operation. Select the owning `@teaching/architecture-course` target and complete its parameter form. The id of the dashboard command is the `<project>:<target>` id used below, and the global `build-tool` axis of the form selects Nx or Bazel for the same task. Its sixteen registered targets include preflight and CI browser preparation; CI uses the same targets. Once a server reports readiness, choose **Open ready address** (`Ctrl+B u`) from its task.
 
 ### Prerequisites
 
@@ -66,7 +66,7 @@ The dashboard is the developer command surface: start `bun run dashboard`, choos
 
 ### Commands
 
-All targets live in the project `@teaching/architecture-course` and run `bun ./📜️script.ts <target>` in `📦️packages/🟦️typescript`. `assets` and `tokens` below are the dependencies `@semio-tech/assets:build` and `@semio-tech/ui-styling-tokens:generate`, which the tool runs first.
+All targets live in the project `@teaching/architecture-course` and run `repo ./📜️script.ts <target>` in `📦️packages/🟦️typescript`. `assets` and `tokens` below are the dependencies `@semio-tech/assets:build` and `@semio-tech/ui-styling-tokens:generate`, which the tool runs first.
 
 | Command (`repo run …`) | What it does | Runs after | Cache | Port |
 |---|---|---|---|---|
@@ -726,7 +726,7 @@ Dieses Kapitel ist die deutsche Fassung des Entwickler-Teils (*Develop*) dieser 
 
 Jeder Befehl dieser Seite ist ein Target des Projekts `@teaching/architecture-course` (Manifest `📦️packages/🟦️typescript/📋️project.json`, Router `📦️packages/🟦️typescript/📜️script.ts`) und läuft über den werkzeugneutralen Build-Einstieg: `repo [--tool=nx|bazel] run @teaching/architecture-course:<target>[:<configuration>] [-- <Argumente>]`. Nx mit Bun ist der Standard; Bazel führt denselben Graphen mit `--tool=bazel` (oder `SEMIO_BUILD_TOOL=bazel`) aus. Bazel braucht unter macOS einen ASCII-Checkout-Pfad. Das [Build-Kapitel](../../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch) beschreibt beide Implementierungen, die Cache-Regeln und die Wiederherstellung; rufe weder `nx`, `bazel`, rohes `cargo` noch `rustc` selbst auf.
 
-Die Kommandooberfläche ist das Dashboard: Starte `bun run dashboard`, wähle **New Task** (`Ctrl+B n`) und suche nach `architecture-course` und der Operation. Wähle das Target `@teaching/architecture-course:…` und fülle das Parameterformular aus. Die Dashboard-Befehls-ID ist die unten verwendete ID `<Projekt>:<Target>`; die globale Achse `build-tool` im Formular wählt Nx oder Bazel für dieselbe Aufgabe. Die sechzehn registrierten Targets umfassen `preflight` und `ci-browser-prepare`; die CI nutzt dieselben Targets. Meldet ein Server Bereitschaft, öffnet **Open ready address** (`Ctrl+B u`) im Task-Menü die Adresse.
+Die Kommandooberfläche ist das Dashboard: Starte `repo dashboard`, wähle **New Task** (`Ctrl+B n`) und suche nach `architecture-course` und der Operation. Wähle das Target `@teaching/architecture-course:…` und fülle das Parameterformular aus. Die Dashboard-Befehls-ID ist die unten verwendete ID `<Projekt>:<Target>`; die globale Achse `build-tool` im Formular wählt Nx oder Bazel für dieselbe Aufgabe. Die sechzehn registrierten Targets umfassen `preflight` und `ci-browser-prepare`; die CI nutzt dieselben Targets. Meldet ein Server Bereitschaft, öffnet **Open ready address** (`Ctrl+B u`) im Task-Menü die Adresse.
 
 ### Voraussetzungen
 
@@ -743,7 +743,7 @@ Die Kommandooberfläche ist das Dashboard: Starte `bun run dashboard`, wähle **
 
 ### Befehle
 
-Alle Targets gehören zum Projekt `@teaching/architecture-course` und führen `bun ./📜️script.ts <target>` in `📦️packages/🟦️typescript` aus. `assets` und `tokens` sind die Abhängigkeiten `@semio-tech/assets:build` und `@semio-tech/ui-styling-tokens:generate`, die das Werkzeug zuerst ausführt.
+Alle Targets gehören zum Projekt `@teaching/architecture-course` und führen `repo ./📜️script.ts <target>` in `📦️packages/🟦️typescript` aus. `assets` und `tokens` sind die Abhängigkeiten `@semio-tech/assets:build` und `@semio-tech/ui-styling-tokens:generate`, die das Werkzeug zuerst ausführt.
 
 | Befehl (`repo run …`) | Was er tut | Läuft nach | Cache | Port |
 |---|---|---|---|---|

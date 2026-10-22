@@ -36,7 +36,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "selection", kind: "move-selection", record: "MovedSelection" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        self.motion().label(&self.object_id, self.vertex_ids.len())
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.object_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LowpolySnapshot, Op> for MoveSelection
+where
+    Op: protocol::ColdMutation<LowpolySnapshot, ReferenceDiff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::set_vertex_positions::SetVertexPositions>,
+{
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<LowpolySnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -45,12 +57,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        self.motion().label(&self.object_id, self.vertex_ids.len())
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.object_id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

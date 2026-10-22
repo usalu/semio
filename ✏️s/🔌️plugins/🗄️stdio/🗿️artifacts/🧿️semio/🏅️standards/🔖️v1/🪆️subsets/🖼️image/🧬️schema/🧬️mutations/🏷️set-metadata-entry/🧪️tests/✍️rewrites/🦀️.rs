@@ -10,7 +10,7 @@ use crate::schema::diff::SemioImageDiff;
 use crate::schema::mutations::set_metadata_entry;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/⬅️before/🔣️.json"));
@@ -29,14 +29,14 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The existing entry's value is rewritten in place — no second `Author` entry appears.
 #[semio_framework_async_macros::async_test]
 async fn rewrites_the_author_entry_in_place() {
     let base = before();
-    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-metadata-entry applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(leaf_outcome().diff(), &base).expect("set-metadata-entry applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-metadata-entry/rewrites-the-existing-author-entry: applied state differs from the committed after-snapshot");
     assert_eq!(produced.metadata.len(), base.metadata.len(), "rewriting an EXISTING key must not append a duplicate entry");
     assert_eq!(produced.metadata[0].key, "Author", "the entry keeps its name key");
@@ -54,7 +54,7 @@ async fn the_undo_set_metadata_entry_restores_the_old_value() {
     let base = before();
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string(), at: None })], "an existing key undoes as a set carrying BASE's own value, never as a remove");
     let mut current = before();
     current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
@@ -114,6 +114,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-metadata-entry diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed set-metadata-entry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-metadata-entry/rewrites-the-existing-author-entry: committed diff did not carry before to after");
 }

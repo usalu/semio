@@ -558,7 +558,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(pinnedVersion).toBe(bunVersion);
     expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
     expect(configuration.error).toBeUndefined();
-    expect(configuration.config.postCreateCommand).toEqual(["bun", "repo", "run", "workspace:setup"]);
+    expect(configuration.config.postCreateCommand).toEqual(["repo", "run", "workspace:setup"]);
     expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-js-all");
     expect(dockerfile).not.toContain("bun.sh/install");
     expect(dockerfile).toContain("sha256sum -c -");

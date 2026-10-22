@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-wav:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-wav:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-wav:test"
+    "build": "repo run @semio-tech/stdio-wav:build",
+    "check": "repo run @semio-tech/stdio-wav:check",
+    "test": "repo run @semio-tech/stdio-wav:test"
   },
   "exports": {
     ".": {

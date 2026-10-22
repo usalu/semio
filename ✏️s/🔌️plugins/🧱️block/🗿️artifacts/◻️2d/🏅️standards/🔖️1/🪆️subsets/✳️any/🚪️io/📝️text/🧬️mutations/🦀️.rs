@@ -42,7 +42,7 @@ use crate::text::mutations::*;
 use semio_s_artifact_block_2d_mutations::*;
 use semio_s_artifact_block_2d_diff::Block2dDiff;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_block_2d_mut_meta::add_attribute::{add_attribute, AddAttribute};
 use semio_s_artifact_block_2d_mut_meta::add_author::{add_author, AddAuthor};
 use semio_s_artifact_block_2d_mut_meta::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
@@ -82,14 +82,14 @@ pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_
     let base: Block2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let expected: Block2dSnapshot = semio_framework_pack_json::from_json_str(after_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mutation: Block2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let forward = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(&mutation, &base);
-    let applied = protocol::apply_diff(forward.diff(), &base).map_err(|error| format!("{error:?}"))?;
-    let inverse = <Block2dMutation as Mutation<Block2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let forward = <Block2dMutation as ColdMutation<Block2dSnapshot>>::diff(&mutation, &base);
+    let applied = protocol::apply_diff_cold(forward.diff(), &base).map_err(|error| format!("{error:?}"))?;
+    let inverse = <Block2dMutation as ColdMutation<Block2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(step, &undone);
-        undone = protocol::apply_diff(outcome.diff(), &undone).map_err(|error| format!("{error:?}"))?;
+        let outcome = <Block2dMutation as ColdMutation<Block2dSnapshot>>::diff(step, &undone);
+        undone = protocol::apply_diff_cold(outcome.diff(), &undone).map_err(|error| format!("{error:?}"))?;
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = semio_framework_value::DslValue::object([

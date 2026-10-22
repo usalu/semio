@@ -82,7 +82,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "create-position/adds-lighthouse-position-after-harbor: this fixture pins an applied outcome");
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "create-position/adds-lighthouse-position-after-harbor: an applied outcome with no declared messages must emit none, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_gis_map_mutation(&mut snapshot, &mutation()).expect("create-position/adds-lighthouse-position-after-harbor: declared applied but the mutation was rejected");
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
 /// mutation is allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let outcome = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-position/adds-lighthouse-position-after-harbor: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisMapDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-position/adds-lighthouse-position-after-harbor: committed diff did not carry before to after");
 }
 
@@ -125,7 +125,7 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn adds_exactly_one_position_and_inverts_to_a_delete_of_that_id() {
     let base = before();
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "create-position/adds-lighthouse-position-after-harbor: creating a fresh id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("create-position writes a positions delta");
     assert_eq!(delta.inserted.iter().map(|insertion| insertion.row.id.as_str()).collect::<Vec<_>>(), vec!["pos-lighthouse"], "create-position/adds-lighthouse-position-after-harbor: exactly the payload's own feature is added");

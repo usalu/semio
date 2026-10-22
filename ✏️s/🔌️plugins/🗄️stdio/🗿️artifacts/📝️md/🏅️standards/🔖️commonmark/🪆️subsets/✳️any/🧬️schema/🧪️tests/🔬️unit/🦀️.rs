@@ -8,7 +8,7 @@ use crate::standards::v_commonmark::subsets::any::io::export::serializers::rende
 use crate::standards::v_commonmark::subsets::any::io::import::deserializers::{parse_inline, parse_markdown_blocks};
 use crate::{MdDiff, MdMutation, STDIO_MD_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -385,7 +385,7 @@ async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
+        let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let diff_from_apply = crate::apply_mutation(&mut via_apply, &mutation);
@@ -404,15 +404,15 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         crate::apply_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <MdMutation as Mutation<MdSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse_mutation in <MdMutation as ColdMutation<MdSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             crate::apply_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = protocol::apply_diff(diff.diff(), &base).unwrap();
+        let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = protocol::apply_diff(&inverse_diff, &next).unwrap();
+        let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -426,10 +426,10 @@ fn two_para_root(a: &str, b: &str) -> MdSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
-    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff_cold(d2, &protocol::apply_diff_cold(d1, base).unwrap()).unwrap();
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(protocol::apply_diff(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff_cold(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -443,7 +443,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -456,7 +456,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -466,7 +466,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -481,7 +481,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -492,11 +492,11 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid1 = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid1);
-        let mid2 = protocol::apply_diff(d2.diff(), &mid1).unwrap();
+        let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
         let d3 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid2);
-        let sequential = protocol::apply_diff(d3.diff(), &mid2).unwrap();
+        let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
         MutationDiff::absorb(&mut left, d2.diff().clone());
@@ -507,8 +507,8 @@ async fn absorb_law() {
         let mut right = d1.diff().clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
-        assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff_cold(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 
     {
@@ -518,7 +518,7 @@ async fn absorb_law() {
         };
         let path = [MdPathStep::BlockQuote { index: 0 }];
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: path.to_vec(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let MdBlockDiff::BlockQuote { blocks: Some(inner) } = &absorbed.blocks.as_ref().unwrap().modified[0].diff else {

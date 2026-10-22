@@ -143,6 +143,12 @@ function jsonSchemaSubsetSnapshot(value: unknown, copies = new Map<object, unkno
 
 type JsonSchemaSubsetCheck = (value: unknown, path: string) => string[];
 
+/** 🏎️ Schema patterns whose three look-aheads each scan the whole path again, with the regular expression that accepts exactly the same strings in one pass (the verdicts are checked against the original on every distinct pattern of the repository's schemas and against Ajv in the validator tests). */
+const jsonSchemaSubsetLinearPatterns: ReadonlyMap<string, string> = new Map([[String.raw`^(?!/)(?!.*(?:^|/)\.\.(?:/|$))(?!.*\\)(?!.*\u0000).+$`, String.raw`^(?=[^\n\r\u2028\u2029])(?!/)(?:(?!\.\.(?:/|$))[^/\\\u0000\n\r\u2028\u2029]*(?:/|$))+$`]]);
+
+/** 🔤️ Compiles one schema pattern in unicode mode, through its single-pass equivalent when one is known. */
+function jsonSchemaSubsetPattern(source: string): RegExp { return new RegExp(jsonSchemaSubsetLinearPatterns.get(source) ?? source, "u"); }
+
 /** 🧱️ An explicitly prepared snapshot owns reusable schema decisions and observes each supplied value anew. */
 export interface CompiledJsonSchemaSubset { validate(value: unknown): string[] }
 
@@ -167,10 +173,12 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
     const any = Array.isArray(contract.anyOf) ? contract.anyOf.map(member => prepare(member, scope)) : undefined;
     const one = Array.isArray(contract.oneOf) ? contract.oneOf.map(member => prepare(member, scope)) : undefined;
     const enums = Array.isArray(contract.enum) ? contract.enum : undefined;
-    const pattern = typeof contract.pattern === "string" ? new RegExp(contract.pattern, "u") : undefined;
+    const pattern = typeof contract.pattern === "string" ? jsonSchemaSubsetPattern(contract.pattern) : undefined;
     const minimumLength = typeof contract.minLength === "number" ? contract.minLength : undefined;
     const maximumLength = typeof contract.maxLength === "number" ? contract.maxLength : undefined;
-    const items = "items" in contract ? prepare(contract.items, scope) : undefined;
+    const tuple = Array.isArray(contract.items) ? contract.items.map(member => prepare(member, scope)) : undefined;
+    const items = tuple === undefined && "items" in contract ? prepare(contract.items, scope) : undefined;
+    const additionalItems = tuple !== undefined && "additionalItems" in contract ? prepare(contract.additionalItems, scope) : undefined;
     const contains = "contains" in contract ? prepare(contract.contains, scope) : undefined;
     const required = Array.isArray(contract.required) ? contract.required.filter((key): key is string => typeof key === "string") : [];
     const properties = jsonSchemaSubsetObject(contract.properties) ?? {};
@@ -206,7 +214,11 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
         if (typeof contract.minItems === "number" && value.length < contract.minItems) errors.push(`${path} must contain at least ${contract.minItems} item(s)`);
         if (typeof contract.maxItems === "number" && value.length > contract.maxItems) errors.push(`${path} must contain at most ${contract.maxItems} item(s)`);
         if (contract.uniqueItems === true && jsonSchemaSubsetDuplicates(value)) errors.push(`${path} items must be unique`);
-        if (items) for (let index = 0; index < value.length; index++) errors.push(...items(value[index], `${path}/${index}`));
+        if (tuple) for (let index = 0; index < value.length; index++) {
+          const child = tuple[index] ?? additionalItems;
+          if (child) errors.push(...child(value[index], `${path}/${index}`));
+        }
+        else if (items) for (let index = 0; index < value.length; index++) errors.push(...items(value[index], `${path}/${index}`));
         if (contains && !value.some((item, index) => contains(item, `${path}/${index}`).length === 0)) errors.push(`${path} must contain a matching item`);
       }
       const object = jsonSchemaSubsetObject(value);

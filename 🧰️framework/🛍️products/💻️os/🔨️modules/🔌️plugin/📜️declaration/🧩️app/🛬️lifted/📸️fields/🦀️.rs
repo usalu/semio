@@ -25,6 +25,7 @@ pub struct ContextRetirementParts<A:ArtifactApp>{pub metadata:ContextOwnedFields
 
 /// 🔗️ The aliases a captured context borrows from roots its issuers still own: each retires as a lease, and only a last owner pays the deep release.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct ContextResidualLeases{children:SharedControlledRetirement<ChildContentView>,entities:Option<SharedControlledRetirement<std::collections::BTreeSet<u64>>>,payload:Option<SharedControlledRetirement<Vec<u8>>>}
 
 struct Cursor<A:ArtifactApp>{metadata:ControlledRetirement<ContextOwnedFields<A::Draft,A::Transient,A::Mutation>>,residual:ManuallyDrop<Option<ContextOriginalResidual<A>>>,leases:Option<ControlledRetirement<ContextResidualLeases>>,peers:Option<store::os_store::presence::PresencePeersRetirement<A::Presence>>}

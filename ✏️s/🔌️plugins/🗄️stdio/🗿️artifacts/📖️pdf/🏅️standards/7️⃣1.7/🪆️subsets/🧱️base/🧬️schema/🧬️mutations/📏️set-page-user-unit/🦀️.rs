@@ -20,19 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-user-unit", kind: "set-page-user-unit", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_page_user_unit(self.index, self.user_unit))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.pages.get(self.index).map(|page| Op::from(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Benutzereinheit von Seite {} setzen", self.index))
     }
@@ -40,6 +27,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageUserUnit
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageUserUnit>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_page_user_unit(self.index, self.user_unit))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.pages.get(self.index).map(|page| Op::from(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

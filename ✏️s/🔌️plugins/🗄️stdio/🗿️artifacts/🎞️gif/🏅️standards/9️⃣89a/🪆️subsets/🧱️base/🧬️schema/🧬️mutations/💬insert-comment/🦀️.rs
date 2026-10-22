@@ -16,6 +16,15 @@ pub struct InsertComment {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "comment", kind: "insert-comment", record: "InsertComment" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for InsertComment {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, text } = self;
         protocol::MutationOutcome::new({
@@ -25,12 +34,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertComment {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(vec![GifMutation::RemoveComment(remove_comment::RemoveComment { index: (*index).min(base.comments.len()) })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

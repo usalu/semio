@@ -39,7 +39,7 @@ import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import type { Run, Block, Doc, Recipe } from "./📇️document-model/🟦️.ts";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -434,7 +434,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
-    const build = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const fixturesDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     if (command === "carrier") {

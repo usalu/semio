@@ -1,5 +1,5 @@
 use semio_s_artifact_norm_en1998_mutations::*;
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use semio_s_artifact_norm_en1998_mut_buildings::update_site;
 
@@ -24,6 +24,6 @@ async fn update_site_applies_seismic_zone_enum() {
     site.seismic_zone = DeSeismicZone::Zone3;
     let mutation = En1998Mutation::UpdateSite(update_site::UpdateSite { site: site.clone() });
     let outcome = mutation.diff(&base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("apply");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("apply");
     assert_eq!(applied.site.seismic_zone, DeSeismicZone::Zone3);
 }

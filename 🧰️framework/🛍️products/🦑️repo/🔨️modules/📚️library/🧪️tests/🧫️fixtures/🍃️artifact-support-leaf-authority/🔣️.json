@@ -16,7 +16,7 @@
   },
   "execution": {
     "target": "test-artifact-support",
-    "command": "bun ./📜️script.ts test artifact-support long",
+    "command": "repo ./📜️script.ts test artifact-support long",
     "generatorEnvironment": { "name": "SEMIO_TAXONOMY_GENERATOR_SENTINEL", "value": "current-process-environment" },
     "oracleRetention": { "rootPrefix": "🧪️energy-pointer-oracle-", "retainedInputs": ["Cargo.toml", "🦀️.rs"], "disposableOutputs": ["Cargo.lock", "🎯️target"], "retainOnFailure": true },
     "fixtureRetention": { "ownerPath": "📓️energy-support-acceptance/🧾️runs", "prefixes": { "support": "🧪️energy-support-current-", "oracle": "🧪️energy-pointer-oracle-", "unowned": "🧪️energy-oracle-unowned-" }, "rejectedChildren": ["../escape", "nested/child", "", "🧪️energy-pointer-oracle-foreign"] }

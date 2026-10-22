@@ -21,7 +21,16 @@ pub struct SetCompressionParams {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompressionParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression-params", kind: "set-compression-params", record: "SetCompressionParams" };
 
-    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DeflateSnapshot, DeflateMutation> for SetCompressionParams {
+    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as protocol::ColdMutation<DeflateSnapshot>>::ReferenceDiff> {
         let Self { method, window_bits, level_hint } = self;
         if *method > 15 || *window_bits > 15 {
             return protocol::MutationOutcome::refuse(protocol::OutcomeCode::Invariant, "deflate: the method and window size are 4-bit header fields", ["compression-params"]);
@@ -30,12 +39,6 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompression
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
         Ok(vec![DeflateMutation::SetCompressionParams(SetCompressionParams { method: base.compression_method, window_bits: base.window_bits, level_hint: base.compression_level_hint })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

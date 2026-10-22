@@ -14,7 +14,16 @@ pub struct SetString {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "string", kind: "set-string", record: "SetString" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set string", "Zeichenkette setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, value } = self;
         if !matches!(resolve(&base.value, path), Some(JsonValue::String { .. })) {
             return protocol::MutationOutcome::error(CODE_TARGET_MISSING, "set-string: the addressed path does not hold a string, and this verb writes a string over a string so that its own inverse is always another set-string", target_of(path));
@@ -30,12 +39,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
             Some(JsonValue::String { value }) => vec![JsonIJsonMutation::SetString(Self { path: path.clone(), value: value.clone() })],
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set string", "Zeichenkette setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

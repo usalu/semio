@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:revision-graph-corpus:v1",
+  "title": "Revision Graph Corpus",
+  "description": "Language-agnostic cases for the revision graph of the build inference: revision tokens, registry keys, roster admission, revision identity, revisioned imports and wiring visibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "revision", "identity", "imports", "revisions", "keys", "rosters", "wiring"],
+  "definitions": {
+    "name": { "type": "string", "minLength": 1 },
+    "revision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nullableText": { "anyOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }] }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "revision": { "$ref": "#/definitions/revision" },
+    "revisions": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["value", "valid"], "properties": { "value": { "type": "string" }, "valid": { "type": "boolean" } } } },
+    "keys": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "key"], "properties": { "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }, "key": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" } } } },
+    "rosters": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "manifest", "error"], "properties": { "name": { "$ref": "#/definitions/name" }, "manifest": {}, "error": { "$ref": "#/definitions/nullableText" } } } },
+    "identity": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "ops"], "properties": { "name": { "$ref": "#/definitions/name" }, "ops": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["op"], "properties": { "op": { "enum": ["read", "bind"] }, "value": {}, "error": { "type": "string", "minLength": 1 }, "revision": { "$ref": "#/definitions/revision" } } } } } } },
+    "imports": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "paths", "revision", "calls", "error"], "properties": { "name": { "$ref": "#/definitions/name" }, "paths": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "revision": { "type": "string" }, "failOn": { "type": "string" }, "calls": { "type": "array", "items": { "type": "string" } }, "error": { "$ref": "#/definitions/nullableText" } } } },
+    "wiring": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "components", "attempts"],
+        "properties": {
+          "name": { "$ref": "#/definitions/name" },
+          "components": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "needs"], "properties": { "name": { "$ref": "#/definitions/name" }, "needs": { "type": "array", "items": { "type": "string" } }, "component": { "type": "string" }, "wire": { "const": false }, "absent": { "const": true } } } },
+          "attempts": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["fail", "error", "order", "visible"], "properties": { "fail": { "anyOf": [{ "type": "null" }, { "type": "string" }] }, "error": { "$ref": "#/definitions/nullableText" }, "order": { "type": "array", "items": { "type": "string" } }, "visible": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }] } } } }
+        }
+      }
+    }
+  }
+}

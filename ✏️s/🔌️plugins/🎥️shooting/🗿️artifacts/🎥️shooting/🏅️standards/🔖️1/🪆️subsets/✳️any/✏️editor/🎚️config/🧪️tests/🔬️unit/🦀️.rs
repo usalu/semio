@@ -1,6 +1,6 @@
 use crate::ShootingCamera;
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::editor::shooting::config::*;
 
 #[semio_framework_async_macros::async_test]
@@ -37,8 +37,8 @@ async fn shooting_config_operation_backwards_restores_the_pre_operation_snapshot
     assert_eq!(forward, ShootingConfigDiff { selected_shot_ids: Some(vec!["s2".to_string()]), ..Default::default() });
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![ShootingConfigMutation::SetShotSelection(SetShotSelection { shot_ids: vec!["s1".into()] })]);
-    let advanced = protocol::apply_diff(&forward, &base).expect("forward diff applies");
-    let restored = protocol::apply_diff(&backwards[0].diff(&advanced).into_parts().0, &advanced).expect("inverse diff applies");
+    let advanced = protocol::apply_diff_cold(&forward, &base).expect("forward diff applies");
+    let restored = protocol::apply_diff_cold(&backwards[0].diff(&advanced).into_parts().0, &advanced).expect("inverse diff applies");
     assert_eq!(restored, base);
 }
 

@@ -8,13 +8,14 @@
 // #region 🔌️Adapters
 import { decodeDagSelectionJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
 import type { DagSelectionDomains } from "@semio-tech/framework/infinite/board/schema/dag-input";
-import React, {
+import * as React from "../⚛️react-port/🟦️.ts";
+import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState
-} from "react";
+} from "../⚛️react-port/🟦️.ts";
 import {
   CanvasPickMenu,
   cn,

@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐change-stroke-width/📐️thickens/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn thickens_the_stroke_without_recolouring_it() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-stroke-width applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("change-stroke-width applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-stroke-width/thickens-the-primary-styles-stroke: applied state differs from the committed after-snapshot");
     assert_eq!(produced.styles[0].stroke_width, Some(2.5), "the width takes the payload's own value");
     assert_eq!(produced.styles[0].stroke, base.styles[0].stroke, "thickening must NOT recolour the stroke — that is a separate triad");
@@ -50,9 +50,9 @@ async fn the_undo_change_stroke_width_restores_the_original_width() {
     assert_eq!(undo.len(), 1, "change-stroke-width of an existing style undoes as exactly one change-stroke-width");
     let SemioDrawingMutation::ChangeStrokeWidth(restore) = &undo[0] else { panic!("change-stroke-width must undo as change-stroke-width") };
     assert_eq!(restore.new_width, base.styles[0].stroke_width, "the undo must recapture BASE's own width, Option and all");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-stroke-width applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward change-stroke-width applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-stroke-width applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo change-stroke-width applies");
     }
     assert_eq!(current, base, "change-stroke-width/thickens-the-primary-styles-stroke: the undo did not restore the before-snapshot");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-stroke-width/thickens-the-primary-styles-stroke: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -113,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-stroke-width diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-stroke-width diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed change-stroke-width diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-stroke-width/thickens-the-primary-styles-stroke: committed diff did not carry before to after");
 }

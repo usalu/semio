@@ -4,7 +4,7 @@ name = "semio-framework-os-config-merge-policy"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "OS config merge policy setting, leaf and dispatch vocabulary"
+description = "OS config merge policy setting and diff schema"
 
 [package.metadata.semio]
 role = "framework"
@@ -15,7 +15,7 @@ workspace = true
 
 [lib]
 name = "semio_framework_os_config_merge_policy"
-path = "../../🦀️.rs"
+path = "../../🧬️schema/🦀️.rs"
 
 [dependencies]
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

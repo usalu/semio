@@ -44,7 +44,7 @@ use semio_s_artifact_norm_din18599_mut_zoning::update_climate;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = Din18599Snapshot, diff = Din18599Diff, schema = "norm.din18599")]
+#[mutations(snapshot = Din18599Snapshot, diff = Din18599Diff, schema = "norm.din18599", reference = Din18599Snapshot, reference_diff = Din18599Diff)]
 pub enum Din18599Mutation {
     ChangeBuildingCategory(change_building_category::ChangeBuildingCategory),
     ChangeAttachment(change_attachment::ChangeAttachment),
@@ -114,15 +114,15 @@ pub mod mutation_bridge {
 
     /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
     pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Result<(Din18599Snapshot, Vec<String>), String> {
-        let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(mutation, base);
+        let raised = <Din18599Mutation as protocol::ColdMutation<Din18599Snapshot>>::diff(mutation, base);
         let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
         Ok((applied, messages))
     }
 
     /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
     pub fn inverse_din18599_mutation(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
-        <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(mutation, base)
+        <Din18599Mutation as protocol::ColdMutation<Din18599Snapshot>>::inverse(mutation, base)
     }
 }
 pub use crate::mutation_bridge::*;

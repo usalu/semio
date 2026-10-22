@@ -270,7 +270,7 @@ export const AGENT_MCP_SCOPES_BY_AUDIENCE_V1: Readonly<Record<AgentAudienceV1, s
 };
 
 /** 🚀️ How this host starts `semio-os-mcp`: the executable plus every argument up to and including
- * the transport, e.g. `bun <repo>/📜️script.ts dev mcp stdio os` or `<dir>/semio-os-mcp stdio`. */
+ * the transport, e.g. `repo <repo>/📜️script.ts dev mcp stdio os` or `<dir>/semio-os-mcp stdio`. */
 export interface AgentMcpLauncherV1 {
   readonly command: string;
   readonly args: readonly string[];

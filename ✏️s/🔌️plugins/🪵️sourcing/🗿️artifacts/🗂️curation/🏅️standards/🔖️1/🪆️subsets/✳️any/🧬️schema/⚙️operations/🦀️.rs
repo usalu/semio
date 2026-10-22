@@ -42,7 +42,7 @@ pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "chan
 /// apply for the metamorphic law to mean anything.
 pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(mutation, base)?
+    <SourcingMutation as protocol::ColdMutation<CurationSnapshot>>::inverse(mutation, base)?
 
     })
 }

@@ -1,0 +1,19 @@
+# Tuple Owner And Failure Observation Review
+
+Read-only current Source audit, no loaded historical attribution. Actual validator owner has tuple preparation/positional checks at179–181/217–219. Public300B facade only reexports; current owner must be explicit future Source witness. Existing language-agnostic corpus has18tuple rows covering exact/wrongpositions/shortprefix/defaultextra/boolean/ref/nested/minimum semantics. Proof module executes actualowner against independent Ajv and authored Node/esbuild projection, but exports proveJsonSchemaSubsetContractV1 rather than registering a literal Bun test. Existing shape test titles do not exercise that tuple corpus. Minimal witnesses are actualowner,corpus,proofmodule and testingfacade only if imported. Do not claim tuple regression selected merely from facade admission; a real selected law must invoke the corpus/proof or Root select an explicit new law. Existing selectedformats snapshot law60k already exercises actualvalidator on tuple manifests, but not the whole18casecorpus.
+
+Parent failure observation validates closed ReadFailure, caps its serializedworker bytes to maximumFailureBytes, creates closed worker+terminal observation, attaches it only best effort and loops partial writeSync under catch. Caller sets failed/primary before terminaljoin and emission, so diagnostics errors cannot replace originalprimary; no legacy manifest acceptance added. Snapshot worker context now records relativepath,packedhash,role,manifestversion/project/dependencycounts before failure, useful for distinguishing persistedformat without assuming it.
+
+Concrete diagnostic regression sent High: helper closureReadFailurePacketV1 enumerates every PayloadRefusal.properties key, including newly optional manifest fields, then requires allvalues primitive/null. Non-snapshot contexts lack these optionalfields, producingundefined and therefore accepted=null; valid prior inflation/Cargo/precision context is silently dropped. Snapshot contexts populate allthree and survive. Repair must preserve optionalfield semantics using presentownfields or explicit admittednulls, validate closed DATA, and add one non-snapshot plus snapshot regression. Preserve primary and bounded emission; no need to weaken guards or accept oldformat.
+
+Current pins:
+
+- 🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts — 17420/191e45555b7622774ae33e48ef957ba5ba33c33e29b567d7a872a553981af332
+- 🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🟦️.ts — 2246/b578def5227825ea80dbeb8260a0c2966956175f4a8661983be142c3c2a8e2f5
+- 🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧫️fixtures/🔣️.json — 31621/9e2370c7901d6ef4f5872bbb15e4421c47fb5916c55099537ee86f04ceff8a89
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts — 12354/085f27974a29aec06cb96a84e7874fa565609c874d1503507011216cc525b4be
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs — 8171/f4b722bfa8601de6d2a215a71c0dc2edb3ad02e17e597e2633cb16775edea2e0
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json — 51057/78c82c9e35fd90aebcce2660207b3cf1d2a929536002d67624724c5bb3f3f9d1
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs — 30947/cdde033b347f76a9986dafcd03cd0d7d38fc5457e0b9eaa005ce8b454e88e188
+
+Immediate current-byte reconciliation: helper already contains .filter(([,value])=>value!==undefined) on projected fields at the final pin read. The reported optional-field issue was from the earlier inspected body and is now corrected in current Source; it is NOT an outstanding blocker. High notified. Actual regression execution remains unrun.

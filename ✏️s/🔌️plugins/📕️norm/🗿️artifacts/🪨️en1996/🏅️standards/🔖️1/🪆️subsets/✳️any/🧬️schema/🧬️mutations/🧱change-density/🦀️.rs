@@ -19,7 +19,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeDensity where Op: 
         kind: "change-density",
         record: "ChangedDensity",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change masonry density", "Rohdichte des Mauerwerks ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeDensity where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_density::ChangeDensity> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_density::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeDensity where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change masonry density", "Rohdichte des Mauerwerks ändern")
-    }
 }
 
 //#region 🪢️Mounts

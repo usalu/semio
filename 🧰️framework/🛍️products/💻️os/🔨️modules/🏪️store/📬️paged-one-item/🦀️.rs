@@ -134,7 +134,7 @@ fn fault(prefix: &'static str, owner: &'static str) -> ValueError {
 
 impl<S, M, E> ArtifactStoreOneItemPreparationFactory<S, M> for PagedOneItemPreparationFactory<S, M, E>
 where
-    S: SnapshotProjection,
+    S: SnapshotProjection<Output = S>,
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Mutation<S> + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
@@ -240,10 +240,10 @@ enum Phase {
     Sealing,
 }
 
-struct PagedOneItemPreparation<S: SnapshotProjection, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>> {
+struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>> {
     pub base: ManuallyDrop<Option<SnapshotRead<S>>>,
     pub source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
-    pub cursor: ManuallyDrop<Option<S::Cursor>>,
+    pub cursor: ManuallyDrop<Option<S::Projection>>,
     pub post: ManuallyDrop<Option<S>>,
     pub edit: E,
     pending_inverse: ManuallyDrop<Option<Vec<M>>>,
@@ -251,6 +251,11 @@ struct PagedOneItemPreparation<S: SnapshotProjection, M: Send + Sync + 'static, 
     outcome_messages: Option<protocol::MutationMessageLedgerRetirement>,
     outcome_publication: Option<protocol::MutationMessagePublication>,
     pub mutation: ManuallyDrop<Option<M>>,
+    mutation_source: ManuallyDrop<Option<RetainedCloneSource<M, FactoryOwnedSourceAuthority<M>>>>,
+    mutation_authority: ManuallyDrop<Option<FactoryOwnedSourceAuthority<M>>>,
+    returned_edit: ManuallyDrop<Option<Edit<M>>>,
+    returned_edit_retirement: ManuallyDrop<Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>>,
+    returned_post: ManuallyDrop<Option<Arc<S>>>,
     pub authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
     pub mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
     pub snapshot_retirement: ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<S>>>>,
@@ -267,7 +272,7 @@ struct PagedOneItemPreparation<S: SnapshotProjection, M: Send + Sync + 'static, 
 
 impl<S, M, E> PagedOneItemPreparation<S, M, E>
 where
-    S: SnapshotProjection,
+    S: SnapshotProjection<Output = S>,
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
@@ -382,7 +387,7 @@ where
 
 impl<S, M, E> ArtifactStoreOneItemPreparation<S, M> for PagedOneItemPreparation<S, M, E>
 where
-    S: SnapshotProjection,
+    S: SnapshotProjection<Output = S>,
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
@@ -737,7 +742,7 @@ where
 
 impl<S, M, E> PagedOneItemPreparation<S, M, E>
 where
-    S: SnapshotProjection,
+    S: SnapshotProjection<Output = S>,
     M: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
@@ -840,7 +845,7 @@ where
     }
 }
 
-impl<S: SnapshotProjection, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>> Drop for PagedOneItemPreparation<S, M, E> {
+impl<S: SnapshotProjection<Output = S>, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>> Drop for PagedOneItemPreparation<S, M, E> {
     fn drop(&mut self) {
         assert!(
             std::thread::panicking()
@@ -871,18 +876,18 @@ impl<S: SnapshotProjection, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>>
     }
 }
 
-impl<S,M,E> semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationFactory<S,M> for PagedOneItemPreparationFactory<S,M,E>
-where S:SnapshotProjection,M:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned+Mutation<S>+Send+Sync+'static,E:PagedOneItemEdit<S,M>{
+impl<S,M,E> semio_framework_os_store_replay_operation::ArtifactReplayPreparationFactory<S,M> for PagedOneItemPreparationFactory<S,M,E>
+where S:SnapshotProjection<Output=S>,M:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned+Mutation<S>+Send+Sync+'static,E:PagedOneItemEdit<S,M>{
  fn preparation_birth_demand(&self)->RetirementDemand{
-  type Producer<S,M,E>=semio_framework_os_store_replay::replay_preparation::native::NativeSemanticPreparation<S,M,semio_framework_os_store_replay::replay_preparation::native::PagedProjection<S>,semio_framework_os_store_replay::replay_preparation::native::PagedSemanticEdit<S,M,E>>;
-  RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>>()+size_of::<Producer<S,M,E>>(),capacity_bytes:size_of::<Producer<S,M,E>>(),depth:1,..Default::default()}
+  type Producer<S,M,E>=semio_framework_os_store_replay_operation::native::NativeSemanticPreparation<S,M,semio_framework_os_store_replay_operation::native::PagedProjection<S>,semio_framework_os_store_replay_operation::native::PagedSemanticEdit<S,M,E>>;
+  RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<S,M>>()+size_of::<Producer<S,M,E>>(),capacity_bytes:size_of::<Producer<S,M,E>>(),depth:1,..Default::default()}
  }
- fn begin(&self,request:semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparation<S,M>>,RetainedCloneProgress),(ValueError,semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>)>{
-  let d=semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationFactory::preparation_birth_demand(self);
+ fn begin(&self,request:semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<S,M>,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay_operation::ArtifactReplayPreparation<S,M>>,RetainedCloneProgress),(ValueError,semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<S,M>)>{
+  let d=semio_framework_os_store_replay_operation::ArtifactReplayPreparationFactory::preparation_birth_demand(self);
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic paged producer birth not funded"),request));}
   let admitted=request.input.borrow().and_then(|input|{if !E::recognizes(input.get()){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"semantic paged operation has no installed issuer"));}E::preflight(input.get()).map(|_|()).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"semantic paged operation footprint refused"))});
   if let Err(error)=admitted{return Err((error,request));}
-  let owner=semio_framework_os_store_replay::replay_preparation::native::NativeSemanticPreparation::new(request,semio_framework_os_store_replay::replay_preparation::native::PagedProjection::<S>::default(),semio_framework_os_store_replay::replay_preparation::native::PagedSemanticEdit::<S,M,E>::default());
+  let owner=semio_framework_os_store_replay_operation::native::NativeSemanticPreparation::new(request,semio_framework_os_store_replay_operation::native::PagedProjection::<S>::default(),semio_framework_os_store_replay_operation::native::PagedSemanticEdit::<S,M,E>::default());
   Ok((Box::new(owner),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
  }
 }

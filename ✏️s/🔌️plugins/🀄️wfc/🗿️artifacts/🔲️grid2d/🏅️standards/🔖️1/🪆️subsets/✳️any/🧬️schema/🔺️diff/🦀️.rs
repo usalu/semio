@@ -153,39 +153,9 @@ pub struct Grid2dDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
-impl protocol::MutationDiff<Grid2dSnapshot> for Grid2dDiff {
-    fn apply(&self, base: &Grid2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Grid2dSnapshot> {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema.clone_from(schema);
-        }
-        if let Some(seed) = self.seed {
-            next.seed = seed;
-        }
-        if let Some(width) = self.width {
-            next.width = width;
-        }
-        if let Some(height) = self.height {
-            next.height = height;
-        }
-        if let Some(cell_width) = self.cell_width {
-            next.cell_width = cell_width;
-        }
-        if let Some(cell_height) = self.cell_height {
-            next.cell_height = cell_height;
-        }
-        if let Some(periodic_x) = self.periodic_x {
-            next.periodic_x = periodic_x;
-        }
-        if let Some(periodic_y) = self.periodic_y {
-            next.periodic_y = periodic_y;
-        }
-        next.tiles = self.tiles.commit_onto(&base.tiles, capability).map_err(|error| error.under(["tiles"]))?;
-        next.rules = self.rules.commit_onto(&base.rules, capability).map_err(|error| error.under(["rules"]))?;
-        next.pinned = self.pinned.commit_onto(&base.pinned, capability).map_err(|error| error.under(["pinned"]))?;
-        next.masked = self.masked.commit_onto(&base.masked, capability).map_err(|error| error.under(["masked"]))?;
-        Ok(next)
-    }
+impl protocol::MutationDiff<Grid2dSnapshot> for Grid2dDiff {}
+
+impl protocol::ColdMutationDiff<Grid2dSnapshot> for Grid2dDiff {
     fn absorb(&mut self, later: Self) {
         if later.schema.is_some() {
             self.schema = later.schema;
@@ -216,9 +186,61 @@ impl protocol::MutationDiff<Grid2dSnapshot> for Grid2dDiff {
         self.pinned.absorb(later.pinned);
         self.masked.absorb(later.masked);
     }
+
+    fn apply(&self, unpublished: &mut Grid2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema.clone_from(schema);
+        }
+        if let Some(seed) = self.seed {
+            next.seed = seed;
+        }
+        if let Some(width) = self.width {
+            next.width = width;
+        }
+        if let Some(height) = self.height {
+            next.height = height;
+        }
+        if let Some(cell_width) = self.cell_width {
+            next.cell_width = cell_width;
+        }
+        if let Some(cell_height) = self.cell_height {
+            next.cell_height = cell_height;
+        }
+        if let Some(periodic_x) = self.periodic_x {
+            next.periodic_x = periodic_x;
+        }
+        if let Some(periodic_y) = self.periodic_y {
+            next.periodic_y = periodic_y;
+        }
+        next.tiles = self.tiles.commit_onto(&base.tiles, capability).map_err(|error| error.under(["tiles"]))?;
+        next.rules = self.rules.commit_onto(&base.rules, capability).map_err(|error| error.under(["rules"]))?;
+        next.pinned = self.pinned.commit_onto(&base.pinned, capability).map_err(|error| error.under(["pinned"]))?;
+        next.masked = self.masked.commit_onto(&base.masked, capability).map_err(|error| error.under(["masked"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Grid2dSnapshot> for Grid2dDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && self.seed.is_none()
+            && self.width.is_none()
+            && self.height.is_none()
+            && self.cell_width.is_none()
+            && self.cell_height.is_none()
+            && self.periodic_x.is_none()
+            && self.periodic_y.is_none()
+            && self.tiles.is_empty()
+            && self.rules.is_empty()
+            && self.pinned.is_empty()
+            && self.masked.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Grid2dSnapshot> for Grid2dDiff {
     fn inverse(&self, base: &Grid2dSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -234,20 +256,6 @@ impl protocol::DiffAlgebra<Grid2dSnapshot> for Grid2dDiff {
             pinned: self.pinned.inverse(&base.pinned),
             masked: self.masked.inverse(&base.masked),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && self.seed.is_none()
-            && self.width.is_none()
-            && self.height.is_none()
-            && self.cell_width.is_none()
-            && self.cell_height.is_none()
-            && self.periodic_x.is_none()
-            && self.periodic_y.is_none()
-            && self.tiles.is_empty()
-            && self.rules.is_empty()
-            && self.pinned.is_empty()
-            && self.masked.is_empty()
     }
 }
 //#endregion 🔖️Apply

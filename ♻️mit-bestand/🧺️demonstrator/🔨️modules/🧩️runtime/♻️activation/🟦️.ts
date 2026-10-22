@@ -78,7 +78,7 @@ export function mergeDemonstratorActivationReceipts(lanes: readonly Demonstrator
     for (const row of receipt.plugins) {
       const previous = rows.get(row.pluginId);
       if (!previous) { rows.set(row.pluginId, { lane, row }); continue; }
-      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
       if (row.rebuiltAt < previous.row.rebuiltAt) rows.set(row.pluginId, { lane, row });
     }
   }
@@ -93,7 +93,7 @@ function readDemonstratorActivationLane(workspace: string, lane: string): Demons
   try { return { lane, receipt: readActivationReceipt(demonstratorActivationLaneReceiptDirectory(workspace, lane)) }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 

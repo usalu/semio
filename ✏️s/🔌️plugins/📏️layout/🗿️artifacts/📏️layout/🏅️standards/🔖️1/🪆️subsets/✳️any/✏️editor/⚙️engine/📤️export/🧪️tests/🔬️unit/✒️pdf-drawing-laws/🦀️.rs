@@ -325,7 +325,7 @@ fn pdf_export_prints_edited_drawing_text() {
     bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
     use semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::SetDrawingText;
     use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     use semio_framework_io_ports::VectorPoint2;
     use semio_framework_io_ports::VectorTransform;
     use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene};
@@ -344,7 +344,7 @@ fn pdf_export_prints_edited_drawing_text() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
-    let edited = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("rename");
+    let edited = protocol::apply_diff_cold(mutation.diff(&snapshot).diff(), &snapshot).expect("rename");
     let mut engine = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::LayoutEngine::new();
     let list = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::build_display_list_for_page(&mut engine, &edited, &edited.pages[0], "", &[], None, false);
     assert!(list.text_runs.iter().any(|run| run.content == "Title"));
@@ -368,7 +368,7 @@ fn pdf_export_prints_edited_drawing_text() {
 fn pdf_export_prints_a_front_rect_after_the_image() {
     use semio_s_artifact_layout_layout_mutations_frames::reorder_frame::ReorderFrame;
     use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     for _ in 0..8 {
         let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), forward: true });
@@ -376,7 +376,7 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
         if outcome.diff().pages.is_none() {
             break;
         }
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("forward");
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("forward");
     }
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");

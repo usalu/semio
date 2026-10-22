@@ -16,6 +16,16 @@ pub struct ReplacePresence {
 
 impl protocol::MutationKind<DagPresence, DagPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagPresence, DagPresenceMutation> for ReplacePresence {
     fn diff(&self, base: &DagPresence) -> protocol::MutationOutcome<DagPresenceDiff> {
         protocol::MutationOutcome::new(DagPresenceDiff {
             camera_x: (base.camera_x != self.presence.camera_x).then_some(self.presence.camera_x),
@@ -29,12 +39,6 @@ impl protocol::MutationKind<DagPresence, DagPresenceMutation> for ReplacePresenc
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["presence".into()]
-    }
 }
 
 #[cfg(test)]

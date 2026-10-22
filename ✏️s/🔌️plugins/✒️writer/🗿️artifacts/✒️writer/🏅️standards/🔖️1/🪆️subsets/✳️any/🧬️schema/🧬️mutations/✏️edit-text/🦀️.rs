@@ -32,17 +32,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text", kind: "edit-text", record: "EditedText" };
 
-    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     /// 🎯️ The writer's authored body — its composed `document` child derives from it. Concurrent writers of the same field conflict; writers of different fields never do.
     fn target(&self) -> Vec<String> {
         vec!["text".to_string()]
@@ -51,5 +40,20 @@ where
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Edit document text", "Dokumenttext bearbeiten")
     }
+}
+
+impl<Op> protocol::ColdMutationKind<WriterSnapshot, Op> for EditText
+where
+    Op: protocol::ColdMutation<WriterSnapshot, ReferenceDiff = WriterDiff> + From<EditText>,
+{
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

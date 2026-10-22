@@ -31,6 +31,15 @@ pub fn create_handle_at<Op: From<crate::create_handle::CreateHandle>>(handle: Bl
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for CreateHandle where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::delete_handle::DeleteHandle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "handle", kind: "create-handle", record: "CreatedHandle" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create handle \"{}\"", self.handle.id), &format!("Griff \"{}\" erstellen", self.handle.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.handle.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for CreateHandle where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::delete_handle::DeleteHandle> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::create_handle::diff::diff(self, base)
     }
@@ -40,12 +49,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for CreateHandle where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create handle \"{}\"", self.handle.id), &format!("Griff \"{}\" erstellen", self.handle.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.handle.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

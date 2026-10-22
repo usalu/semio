@@ -1,0 +1,224 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "devsDir",
+  "contributor",
+  "parse",
+  "parseDefects",
+  "prepareOnly",
+  "prepareOnlyDefects",
+  "levels"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "devsDir": {
+   "type": "string"
+  },
+  "contributor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "alias",
+    "emoji",
+    "name",
+    "email"
+   ],
+   "properties": {
+    "alias": {
+     "type": "string"
+    },
+    "emoji": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "email": {
+     "type": "string"
+    }
+   }
+  },
+  "parse": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments",
+     "expected"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "tag",
+       "squash",
+       "push"
+      ],
+      "properties": {
+       "tag": {
+        "type": "boolean"
+       },
+       "squash": {
+        "type": "boolean"
+       },
+       "push": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "parseDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "tag",
+       "squash",
+       "push"
+      ],
+      "properties": {
+       "tag": {
+        "type": "boolean"
+       },
+       "squash": {
+        "type": "boolean"
+       },
+       "push": {
+        "type": "boolean"
+       }
+      }
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "prepareOnly": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments",
+     "expected"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "prepareOnlyDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "levels": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "level",
+     "expected"
+    ],
+    "properties": {
+     "level": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "tag",
+       "squash",
+       "push"
+      ],
+      "properties": {
+       "tag": {
+        "type": "boolean"
+       },
+       "squash": {
+        "type": "boolean"
+       },
+       "push": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

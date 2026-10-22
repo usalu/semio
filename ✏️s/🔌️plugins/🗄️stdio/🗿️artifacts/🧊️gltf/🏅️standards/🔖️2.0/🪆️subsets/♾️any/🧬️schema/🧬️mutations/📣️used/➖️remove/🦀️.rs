@@ -67,6 +67,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "used-extension", kind: "remove-used-extension", record: "RemovedUsedExtension" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove Used Extension", "Verwendete Erweiterung entfernen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["remove-used-extension".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for RemoveUsedExtensionMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<RemoveUsedExtensionMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -75,19 +88,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove Used Extension", "Verwendete Erweiterung entfernen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["remove-used-extension".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

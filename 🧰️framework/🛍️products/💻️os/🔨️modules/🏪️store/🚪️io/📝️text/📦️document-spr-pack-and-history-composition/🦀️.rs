@@ -141,7 +141,7 @@ where
 pub async fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
 {
     let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
     parse_decoded_document_spr(pack, log, producer).await
@@ -157,7 +157,7 @@ where
 pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: semio_framework_os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
 {
     let initial_snapshot = producer.decode_genesis_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
@@ -258,7 +258,7 @@ where
         None => Ok(()),
     };
     match composed {
-        Ok(()) => validate_parsed_envelope(envelope).await,
+        Ok(()) => settle_parsed_envelope(envelope).await,
         Err(error) => {
             discard_parsed_envelope(envelope);
             Err(error)

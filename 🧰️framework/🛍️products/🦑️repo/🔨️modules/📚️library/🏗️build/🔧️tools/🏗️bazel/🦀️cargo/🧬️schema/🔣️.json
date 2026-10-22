@@ -25,8 +25,8 @@
      "--all-targets"
     ],
     "messageFormat": "--message-format=json-render-diagnostics",
-    "nativeCommand": "^bun (?:\"[^\"]+\"|\\S+) native cargo (check|build|test) --manifest (\"[^\"]+\"|\\S+)$",
-    "componentCommand": "^bun (?:\"[^\"]+\"|\\S+) component --manifest (\"[^\"]+\"|\\S+)$",
+    "nativeCommand": "^repo (?:\"[^\"]+\"|\\S+) native cargo (check|build|test) --manifest (\"[^\"]+\"|\\S+)$",
+    "componentCommand": "^repo (?:\"[^\"]+\"|\\S+) component --manifest (\"[^\"]+\"|\\S+)$",
     "toolchain": {
      "file": "rust-toolchain.toml",
      "manifest": "lib/rustlib/multirust-channel-manifest.toml",

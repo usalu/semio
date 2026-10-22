@@ -27,5 +27,6 @@ serde = { workspace = true, features = ["derive"] }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-ui-contract-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json.workspace = true

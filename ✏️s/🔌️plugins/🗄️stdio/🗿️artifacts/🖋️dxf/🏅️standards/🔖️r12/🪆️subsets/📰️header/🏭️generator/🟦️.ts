@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -104,7 +105,7 @@ const RECIPES: readonly Recipe[] = [
 
 //#region 🔨️Build
 function ensureBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 
@@ -147,7 +148,7 @@ async function manifestForSingle(recipe: Recipe, outDir: string): Promise<Record
     family: "mechanical",
     files: [{ role: "primary-dxf", path: `${FIXTURE_PATH_PREFIX}${name}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length }],
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: currentPlatform() },
+    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: currentPlatform() },
     reproducible: true,
   };
 }
@@ -178,7 +179,7 @@ async function manifestForPair(recipe: Recipe, outDir: string): Promise<Record<s
       packageVersion: "0.6",
       engineFamily: "dxf-rs",
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT (dxf)", attribution: "Generated with dxf (MIT) via the standalone engine binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },

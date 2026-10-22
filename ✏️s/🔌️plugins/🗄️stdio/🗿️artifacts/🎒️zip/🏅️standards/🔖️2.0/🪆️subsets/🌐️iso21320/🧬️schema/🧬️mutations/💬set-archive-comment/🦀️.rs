@@ -15,18 +15,21 @@ pub struct SetArchiveComment {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "archive-comment", kind: "set-archive-comment", record: "SetArchiveComment" };
 
-    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
-        let Self { comment, comment_utf8 } = self;
-        protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment, *comment_utf8))
-    }
-    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
-        Ok(vec![ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComment {
+    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::ColdMutation<ZipSnapshot>>::ReferenceDiff> {
+        let Self { comment, comment_utf8 } = self;
+        protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment, *comment_utf8))
+    }
+    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
+        Ok(vec![ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })])
     }
 }
 //#endregion 🔖️Payload

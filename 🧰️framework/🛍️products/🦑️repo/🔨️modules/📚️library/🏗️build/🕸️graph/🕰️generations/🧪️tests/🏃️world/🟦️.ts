@@ -44,12 +44,16 @@ async function readOwners(dir:string):Promise<{owners:Owner[];rows:GenerationRow
 
 const fileRow=(path:string,bytes:Uint8Array|undefined):GenerationRowV1=>({kind:"file",path,fact:bytes?{sha256:sha(bytes),size:bytes.length}:{error:"ENOENT"}});
 
+/** 🔖️ The declared stamps of the synthetic inferrers: a path (`inferrer:<id>`) maps to its stamp and the consumers of that stamp. */
+export type StampTableV1=Record<string,{stamp:string;scope:"project"|"environment"|"all"}>;
+const stampRows=(stamps?:StampTableV1):GenerationRowV1[]=>Object.entries(stamps??{}).filter(([,row])=>row.scope==="project"||row.scope==="all").map(([path,row])=>({kind:"stamp",path,fact:row.stamp}));
+
 export function environmentDigest(owners:readonly Owner[]):string{
  return sha(canonicalJsonV1({owners:owners.map(owner=>[owner.name,owner.root]).sort((a,b)=>a[0]<b[0]?-1:1),packages:owners.filter(owner=>owner.package).map(owner=>[owner.package,owner.name]).sort((a,b)=>a[0]!<b[0]!?-1:1)}));
 }
 
-async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[]):Promise<{name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[]}>{
- const rows:GenerationRowV1[]=[],config=await readFile(join(dir,owner.config));rows.push(fileRow(owner.config,config));
+async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[],stamps?:StampTableV1):Promise<{name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[]}>{
+ const rows:GenerationRowV1[]=stampRows(stamps),config=await readFile(join(dir,owner.config));rows.push(fileRow(owner.config,config));
  if(owner.broken)return{name:owner.name,root:owner.root,kind:"unavailable",node:{root:owner.root,project:owner.name,source:owner.config,sha256:sha(config),reason:"broken"},edges:[],targets:[],config:owner.config,rows};
  const sourceDir=owner.root+"/src";let names:string[]|null=null;
  try{names=(await readdir(join(dir,sourceDir))).sort();}catch{}
@@ -70,16 +74,16 @@ async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[]):Promis
 }
 
 /** 🧪️ The compute port of the synthetic workspace: refreshes exactly the owners the store names and, when the environment moved, the edges of every other owner. */
-export function createCompute(dir:string,log:{full:string[];edges:string[];cold:boolean;envStale:boolean;calls:number}[],ownerDelayMs=0){
+export function createCompute(dir:string,log:{full:string[];edges:string[];cold:boolean;envStale:boolean;calls:number}[],ownerDelayMs=0,stamps?:StampTableV1){
  return async(spec:GenerationComputeSpecV1,signal?:AbortSignal):Promise<GenerationComputeResultV1>=>{
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
   const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name)),results:GenerationComputeResultV1["owners"]=[];
   const entry={full:full.map(owner=>owner.name).sort(),edges:[] as string[],cold:spec.cold,envStale:spec.envStale,calls:1};
-  for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));results.push(await inferOwner(dir,owner,owners));}
+  for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));results.push(await inferOwner(dir,owner,owners,stamps));}
   if(!spec.cold&&envDigest!==spec.previousEnv){
-   for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();const inferred=await inferOwner(dir,owner,owners);results.push({name:owner.name,partial:"edges",edges:inferred.edges});entry.edges.push(owner.name);}
+   for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();const inferred=await inferOwner(dir,owner,owners,stamps);results.push({name:owner.name,partial:"edges",edges:inferred.edges});entry.edges.push(owner.name);}
   }
   log.push(entry);
   return{owners:results,env:{digest:envDigest,rows:envRows},global:{version:1,externalNodes:{},edges:[],unavailable:[]}};
@@ -87,8 +91,9 @@ export function createCompute(dir:string,log:{full:string[];edges:string[];cold:
 }
 
 /** 🚪️ The row check of the synthetic workspace: a row holds when its fact is what the tree shows now. */
-export function createHolds(dir:string){
+export function createHolds(dir:string,stamps?:StampTableV1){
  const observe=async(row:GenerationRowV1):Promise<unknown>=>{
+  if(row.kind==="stamp")return stamps?.[row.path]?.stamp??null;
   if(row.kind==="file"){try{const bytes=await readFile(join(dir,row.path));return{sha256:sha(bytes),size:bytes.length};}catch{return{error:"ENOENT"};}}
   if(row.kind==="readdir"){try{return(await readdir(join(dir,row.path))).sort();}catch{return null;}}
   if(row.kind==="field"){try{const json=JSON.parse(await readFile(join(dir,row.path),"utf8"));return{name:json.name,package:json.package??null};}catch{return{error:"ENOENT"};}}
@@ -167,15 +172,15 @@ if(import.meta.main&&process.argv[2]==="child"){
 
 
 /** 🧩️ The partial inference of the synthetic workspace in repository terms (what `discoverPart` returns): owners with their facts, the edges of every processed owner, the environment, and the facts of the whole capture. */
-export function createPartDiscover(dir:string,log:{full:string[];edges:string[];cold:boolean}[]=[],ownerDelayMs=0){
+export function createPartDiscover(dir:string,log:{full:string[];edges:string[];cold:boolean}[]=[],ownerDelayMs=0,stamps?:StampTableV1){
  return async(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>{
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
   const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name));
-  const inferred=[];for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));inferred.push(await inferOwner(dir,owner,owners));}
+  const inferred=[];for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));inferred.push(await inferOwner(dir,owner,owners,stamps));}
   const edgeOnly:{name:string}[]=[],extra:Awaited<ReturnType<typeof inferOwner>>[]=[];
-  if(!spec.cold&&envDigest!==spec.previousEnv)for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();extra.push(await inferOwner(dir,owner,owners));edgeOnly.push({name:owner.name});}
+  if(!spec.cold&&envDigest!==spec.previousEnv)for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();extra.push(await inferOwner(dir,owner,owners,stamps));edgeOnly.push({name:owner.name});}
   log.push({full:inferred.map(row=>row.name).sort(),edges:edgeOnly.map(row=>row.name).sort(),cold:spec.cold});
   const capture=[...inferred,...extra].flatMap(row=>row.rows);
   return{
@@ -187,13 +192,13 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
 }
 
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
-export function createMockHost(dir:string,options:{signal?:AbortSignal;environment?:Record<string,string>;gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];ownerDelayMs?:number}={}){
+export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
  let building=Promise.resolve();
- const implementationRows:GenerationRowV1[]=(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};});
- const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log,options.ownerDelayMs),holds=createHolds(dir);
+ const implementationRows:(GenerationRowV1&{scope?:string})[]=[...(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};}),...Object.entries(options.stamps??{}).map(([path,row])=>({kind:"stamp",path,fact:row.stamp,scope:row.scope}))];
+ const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log,options.ownerDelayMs,options.stamps),holds=createHolds(dir,options.stamps);
  const host={
-  workspaceRoot:dir,namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,
+  workspaceRoot:dir,language:options.language??"en",namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,
   async identity(){return options.identity??IDENTITY;},
   async implementationRows(){return implementationRows;},
   async withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>){events.push("shared");return body({root:join(dir,".gen")},{published});},
@@ -205,8 +210,9 @@ export function createMockHost(dir:string,options:{signal?:AbortSignal;environme
   membership,discoverPart:discover,
   async expand(projects:Record<string,unknown>){expanded.push(Object.keys(projects).sort());return projects;},
   readGraph:(value:unknown)=>value,
+  readLean:(value:unknown)=>value,
   clock:(control:{published:string[]})=>createGraphPhaseClockV1({publish:resource=>{control.published.push(resource);}}),
-  say:(key:string,fields:Record<string,string|number>)=>{said.push({key,text:renderGenerationMessageV1(key as never,fields,options.environment??{})});},
+  say:(key:string,fields:Record<string,string|number>)=>{said.push({key,text:renderGenerationMessageV1(key as never,fields,options.language??"en")});},
  };
  return{host,events,said,published,expanded,log,holdsLog};
 }

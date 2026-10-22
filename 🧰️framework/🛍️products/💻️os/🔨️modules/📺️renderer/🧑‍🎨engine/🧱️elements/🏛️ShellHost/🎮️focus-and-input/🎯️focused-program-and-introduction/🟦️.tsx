@@ -1,6 +1,6 @@
 /** 🎯️ The focused program, history, time travel, introduction and tutorial state of the focus and input hook. */
 import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, type TutorialDefinition } from "@semio-tech/framework";
 import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, spawnedProgramWindowInstancesV1, type FocusedProgramV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, inputAwaitsHubIdentityV1, type HubIdentityGateV1, type VersionedRegisterCellV1 } from "../../🎯️input-ledger/🟦️.ts";

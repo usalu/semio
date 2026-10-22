@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:bazel-host-resources-corpus:v1",
+  "title": "Bazel Host Resources Corpus",
+  "description": "Language-agnostic cases for the Bazel rendering of a host capacity grant: flags, the granted worker host, the per kind resource sets and Bazel's local concurrency. A concurrency row is [jobs, pool cpu, pool memory MB, action cpu, action memory MB, count].",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "settings", "hosts", "kinds", "concurrency"],
+  "properties": {
+    "version": { "const": 1 },
+    "settings": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "plan", "flags"], "properties": { "name": { "type": "string", "minLength": 1 }, "plan": { "$ref": "#/definitions/plan" }, "flags": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "pattern": "^--local_resources=(cpu|memory)=[0-9]+$" } } } } },
+    "hosts": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "plan", "host"], "properties": { "name": { "type": "string", "minLength": 1 }, "plan": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/plan" }] }, "host": { "type": "object", "additionalProperties": false, "required": ["cores", "memoryBytes"], "properties": { "cores": { "type": "integer", "minimum": 1 }, "memoryBytes": { "type": "integer", "minimum": 1 } } } } } },
+    "kinds": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "kinds"], "properties": { "name": { "type": "string" }, "kinds": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": false, "required": ["cpu", "megabytes"], "properties": { "cpu": { "type": "integer", "minimum": 1 }, "megabytes": { "type": "integer", "minimum": 1 } } } } } } },
+    "concurrency": { "type": "array", "minItems": 1, "items": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "integer", "minimum": 0 } } }
+  },
+  "definitions": {
+    "plan": { "type": "object", "additionalProperties": false, "required": ["version", "id", "jobs", "cpu", "memoryMegabytes", "fixedMegabytes", "floorMegabytes"], "properties": { "version": { "const": 1 }, "id": { "type": "string" }, "jobs": { "type": "integer", "minimum": 1 }, "cpu": { "type": "integer", "minimum": 1 }, "memoryMegabytes": { "type": "integer", "minimum": 0 }, "fixedMegabytes": { "type": "integer", "minimum": 0 }, "floorMegabytes": { "type": "integer", "minimum": 0 } } }
+  }
+}

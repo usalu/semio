@@ -26,7 +26,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -45,7 +45,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-absence",
+        "command": "repo ./📜️script.ts test-absence",
         "forwardAllArgs": true
       }
     }

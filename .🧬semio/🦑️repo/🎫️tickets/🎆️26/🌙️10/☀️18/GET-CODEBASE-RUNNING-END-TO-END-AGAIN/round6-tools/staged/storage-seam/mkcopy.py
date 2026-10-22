@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mkcopy.py OUT: a REAL snapshot (no symlinks) of the process module, the filesystem and schema framework modules and a node_modules subset, for verification outside the checkout. OUT must live under /private/tmp/storage-seam/. Nothing under the checkout is written."""
+"""🧫 mkcopy.py OUT: a REAL snapshot (no symlinks) of the process module, the filesystem and schema framework modules and a node_modules subset, for verification outside the checkout. OUT must live under /private/tmp/storage-seam/. Nothing under the checkout is written."""
 import os, shutil, sys
 ROOT = "/Users/ueli/Documents/semio"
 out = sys.argv[1]
@@ -7,7 +7,7 @@ if not out.startswith("/private/tmp/storage-seam/"):
     raise SystemExit("output must live under /private/tmp/storage-seam/")
 F = "🧰️framework"
 P = F + "/🔨️modules/🏃️process"
-DIRS = [P, F + "/🔨️modules/📁️filesystem", F + "/🔨️modules/🧬️schema"]
+DIRS = [P, F + "/🔨️modules/📁️filesystem", F + "/🔨️modules/🧬️schema", F + "/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc"]
 FILES = [".devcontainer/devcontainer.json", ".devcontainer/docker-compose.yml", "package.json", "bunfig.toml"]
 NODE = ["ajv", "fast-deep-equal", "fast-uri", "json-schema-traverse", "require-from-string", "typescript"]
 if os.path.exists(out):

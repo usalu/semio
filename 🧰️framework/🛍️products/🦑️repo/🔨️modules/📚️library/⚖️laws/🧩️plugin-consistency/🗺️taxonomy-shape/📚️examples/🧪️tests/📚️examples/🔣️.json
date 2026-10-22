@@ -1,0 +1,325 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "complete-example-sets-are-clean",
+   "rule": "policySemioArtifactExamplesBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️demo-one/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️demo-one/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️demo-one/🖼️assets/data.json": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️demo-one/🧪️tests/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️demo-one/🧪️tests/🟦️.ts": []
+   },
+   "expect": [],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "plugin-root-examples-and-missing-artifact-examples",
+   "rule": "policySemioArtifactExamplesBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️b/📚️examples/🎬️ok/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "semio-examples-plugin-root-✏️s/🔌️plugins/🔭️alpha",
+     "taxonomy/semio-examples",
+     "high",
+     0
+    ],
+    [
+     "semio-examples-missing-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️b/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-assets-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️b/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️b/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "example-unit-requirements",
+   "rule": "policySemioArtifactExamplesBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse/🎒️packs/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse/🖼️assets/empty.json": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse/🖼️assets/full.json": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/noemoji/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️Bad_Slug/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️no-tests/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️no-tests/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️no-tests/🖼️assets/a": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️half-tests/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️half-tests/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️half-tests/🖼️assets/a": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️half-tests/🧪️tests/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "semio-examples-slug-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-plural-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse-🎒️packs",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-zero-byte-asset-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse-empty.json",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/♻️reuse",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-slug-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/noemoji",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/noemoji",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-assets-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/noemoji",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/noemoji",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-slug-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️Bad_Slug",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️Bad_Slug",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-assets-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️Bad_Slug",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️Bad_Slug",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️no-tests",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-test-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️half-tests",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "surface-examples-are-validated-and-may-be-absent",
+   "rule": "policySemioArtifactExamplesBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️ok/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📚️examples/🎬️v/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️fem/👁️viewer/📚️examples/readme.txt": []
+   },
+   "expect": [
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-assets-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️ok",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-leaf-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📚️examples/🎬️v",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-assets-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📚️examples/🎬️v",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-tests-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📚️examples/🎬️v",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ],
+    [
+     "semio-examples-surface-empty-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️fem/👁️viewer/📚️examples",
+     "taxonomy/semio-examples",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "non-plugin-owner-reports-at-low-priority",
+   "rule": "policySemioArtifactExamplesBreaches",
+   "files": {
+    "🧰️framework/🔨️modules/🔸️o/🗿️artifacts/🔸️a/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "semio-examples-missing-🧰️framework/🔨️modules/🔸️o/🗿️artifacts/🔸️a/📚️examples",
+     "taxonomy/semio-examples",
+     "low",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "🧰️framework/🔨️modules/🔸️o",
+     "pluginId": ""
+    }
+   ]
+  },
+  {
+   "id": "component-leaves-are-named-by-the-taxonomy",
+   "rule": "policyComponentFileBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/⚙️engine/helper.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema/a.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema/b.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🔸️other/odd.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️e/odd.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️e/odd.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️f/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️f/🟦️.ts": []
+   },
+   "expect": [
+    [
+     "component-file-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema",
+     "taxonomy/component-file",
+     "medium",
+     0
+    ],
+    [
+     "component-file-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema",
+     "taxonomy/component-file",
+     "medium",
+     0
+    ],
+    [
+     "component-file-example-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️e",
+     "taxonomy/component-file",
+     "medium",
+     0
+    ],
+    [
+     "component-file-example-ts-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/🎬️e",
+     "taxonomy/component-file",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  }
+ ]
+}

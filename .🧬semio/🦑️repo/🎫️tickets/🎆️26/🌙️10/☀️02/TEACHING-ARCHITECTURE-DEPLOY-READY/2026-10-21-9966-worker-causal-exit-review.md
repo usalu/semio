@@ -1,0 +1,15 @@
+# Prefix9966 Closure Reader Causal Exit Review
+
+Actual observed outcome supplied by coordinator: closure-reader child status1/signalnull/empty stderr. No exact error or producer shape can be derived from those three values alone. No production Source/test executed by this review.
+
+Retained actually sealed worker25845/0e7759d1e229229bd375c0d9add524938452f9b317c26080d55fc189e6acd2b1 uses synchronous one-request stdin bootstrap. It has no explicit process.exit/process.exitCode. All caught body failures optionally write bounded closurePayloadRefusal and rethrow the same primary. Optional packet gating can suppress the custom packet for noncompressed/primitive/nonextensible/oversized context or write failure; it does not suppress Node uncaught-error handling. Import instantiation and createSourceInventoryDataV1 initialization precede that top-level try, so such failures cannot carry its custom packet, but likewise do not establish an empty-stderr cause.
+
+Bounded static relative import walk of current reader reaches12 modules, with no exit call found outside the newly added session reader. Direct imported owner initializers comprise ordinary constants/functions plus inventory construction; no concrete prior bootstrap exit1-without-report route was found. Bare Node builtins/runtime initialization remain external process behavior, not proven by Source alone.
+
+Current Source has concurrently changed to worker27972/e52a2c47902990c0d5c51a98895c692a992eaf529232036e4d78bc3b09d12b39 and schema26850/fe6bc7a9d6f58f02ae6f82620e682617b167fa162310721558be445610b1c63d at first read, so it is not the implementation that produced47370 failure. Current worker imports new session helper and uses newline-framed asynchronous requests. Its explicit silent-exit routes are source-backed: stdout error sets broken+exitCode1, destroys stdin and skips diagnostics; generic error with no payload context writes no stderr custom packet and publishes semantic failure on stdout; failure packet encoding/validation/publication errors are swallowed after exitCode1. Therefore current empty stderr alone is intentional protocol behavior and caller must inspect the failure frame rather than treating stderr absence as no error. These routes are not retrospective diagnoses of47370.
+
+Transient pair consistency observation: first schema snapshot lacked summary nameTruncated/codeTruncated while subsequent helper snapshot emitted them. A later current schema read already adds those required fields; no blocker is asserted against that corrected current pair. Final held pins/tests must bind coherent worker/helper/schema.
+
+No concrete actual producer shape mismatch has been established from the missing terminal context. Current parser row/frontier laws were previously independently reviewed with42 corpus rows, but that static evidence does not identify the actual failing input. Preserve unknown actual primary rather than enlarging limits, retrying or synthesizing receipt evidence.
+
+This report makes no transport verdict; course_log independently traces capture stderr behavior. No Source edits, CLI, Native, effects, retry or ledger changes.

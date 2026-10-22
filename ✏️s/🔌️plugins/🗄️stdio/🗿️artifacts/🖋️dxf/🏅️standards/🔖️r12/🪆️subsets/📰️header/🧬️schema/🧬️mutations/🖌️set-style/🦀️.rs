@@ -14,7 +14,16 @@ pub struct SetStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style", kind: "set-style", record: "SetStyle" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set style", "Textstil setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetStyle {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { name, style } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.styles.iter().find(|s| &s.name == name).cloned().unwrap_or_default();
@@ -29,12 +38,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetStyle {
                 None => vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: name.clone() })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set style", "Textstil setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

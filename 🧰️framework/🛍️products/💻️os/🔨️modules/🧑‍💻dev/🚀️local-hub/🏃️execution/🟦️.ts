@@ -1,11 +1,13 @@
 import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { startToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
 
 
 /** 🧭️ Neutral development role, status, catalog and serve models. Actual persistent session lifetime belongs to ../🎫️session/🟦️.ts; service activation belongs to its independently authored application owner. */
 
-import { spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess } from "node:child_process";
 import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createConnection } from "node:net";
 import { dirname, join, resolve } from "node:path";
@@ -540,7 +542,7 @@ export function devServeWorldV1(repoRoot: string): DevServeWorldV1 {
         if (value === null) delete env[name];
         else env[name] = value;
       }
-      const child = spawn(process.execPath, [join(repoRoot, command.script), ...command.args], { cwd: join(repoRoot, command.cwd), env, stdio: ["ignore", log, log], detached: process.platform !== "win32", windowsHide: true });
+      const child = startToolV1(runtimeCommandNameV1(), [join(repoRoot, command.script), ...command.args], { cwd: join(repoRoot, command.cwd), env, stdio: ["ignore", log, log], detached: process.platform !== "win32", windowsHide: true });
       closeSync(log);
       child.unref();
       if (!child.pid) throw new Error(`dev serve: could not start the serve for port ${request.port}`);

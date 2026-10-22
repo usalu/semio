@@ -18,3 +18,5 @@ export const internals:Readonly<{
 export function discoverCaseDirs(workspaceRoot:string):unknown;
 export function discoverTestBuildProjectsV1(files:readonly string[],options:Readonly<Record<string,unknown>>,context:BuildInferenceContextV1):Promise<GeneratedNodesV1>;
 export function discoverTestBuildDependenciesV1(options:unknown,context:unknown):Promise<unknown>;
+/** 🚧️ The test projects whose native source projects the inventory does not hold, with the missing names. */
+export function danglingTestDependenciesV1(projects:Readonly<Record<string,Readonly<{root:string;tags?:readonly string[];targets?:Readonly<Record<string,Readonly<{inputs?:readonly unknown[]}>>>}>>>):readonly Readonly<{source:string;root:string;missing:readonly string[]}>[];

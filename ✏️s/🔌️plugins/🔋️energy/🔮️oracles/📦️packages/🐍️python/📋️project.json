@@ -14,7 +14,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts setup",
+        "command": "repo ./📜️script.ts setup",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -32,7 +32,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts status",
+        "command": "repo ./📜️script.ts status",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -50,7 +50,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts run",
+        "command": "repo ./📜️script.ts run",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -68,7 +68,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts native",
+        "command": "repo ./📜️script.ts native",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -86,7 +86,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts epjson",
+        "command": "repo ./📜️script.ts epjson",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -104,7 +104,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts emit",
+        "command": "repo ./📜️script.ts emit",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -122,7 +122,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -137,7 +137,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts deps"
+        "command": "repo ./📜️script.ts deps"
       },
       "metadata": {
         "semio": {

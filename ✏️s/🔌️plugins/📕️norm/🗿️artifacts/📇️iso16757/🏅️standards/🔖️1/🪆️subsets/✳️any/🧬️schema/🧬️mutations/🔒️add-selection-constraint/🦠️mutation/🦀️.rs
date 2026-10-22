@@ -17,7 +17,13 @@ pub struct AddSelectionConstraint {
 
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for AddSelectionConstraint where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::remove_selection_constraint::mutation::RemoveSelectionConstraint> { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "selection-constraint", kind: "add-selection-constraint", record: "AddedSelectionConstraint" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add selection constraint on \"{}\"", self.constraint.property_id), &format!("Auswahlbedingung für \"{}\" hinzufügen", self.constraint.property_id))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for AddSelectionConstraint where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::remove_selection_constraint::mutation::RemoveSelectionConstraint> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::add_selection_constraint::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,8 +32,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for AddSelectionConstraint
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add selection constraint on \"{}\"", self.constraint.property_id), &format!("Auswahlbedingung für \"{}\" hinzufügen", self.constraint.property_id))
-    }
 }
 //#endregion 🔖️Payload

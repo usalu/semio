@@ -14,6 +14,12 @@ pub fn validate(payload:&ChangeLayerLocked,base:&RasterSnapshot)->Result<(),prot
 }
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerLocked where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_locked::ChangeLayerLocked> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-lock",kind:"change-layer-locked",record:"ChangedLayerLocked"};
+
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
+    fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
+}
+
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ChangeLayerLocked where Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_locked::ChangeLayerLocked> {
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff> {
         if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Layer protection changed before this edit.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {locked:Some(self.locked),..Default::default()}))
@@ -25,6 +31,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerLocked where 
     
     })())
 }
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
-    fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }

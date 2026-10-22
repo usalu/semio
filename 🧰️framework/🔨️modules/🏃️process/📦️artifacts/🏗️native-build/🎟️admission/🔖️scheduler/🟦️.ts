@@ -3,6 +3,7 @@ import {lstatSync,readFileSync,renameSync,writeFileSync,rmSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { runtimeParseTomlV1 } from "../../../../../⚙️runtime/📄️parse/🟦️.ts";
 
 const protocol=Object.freeze({...schema.definitions.Protocol.const});
 const digestOf=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
@@ -18,7 +19,7 @@ export function schedulerIdentityV1(toolchain:string,environment:Readonly<Record
 
 /** 📂️ Lists the manifest, its lockfile and every binary source Cargo reads for the bins. */
 export function schedulerInputsV1(manifest:string):readonly string[]{
- const document=Bun.TOML.parse(readFileSync(manifest,"utf8")) as {bin?:Array<{path?:string}>},directory=dirname(manifest);
+ const document=runtimeParseTomlV1(readFileSync(manifest,"utf8")) as {bin?:Array<{path?:string}>},directory=dirname(manifest);
  return [manifest,join(directory,"Cargo.lock"),...(document.bin??[]).map(row=>resolve(directory,row.path??"src/main.rs"))];
 }
 

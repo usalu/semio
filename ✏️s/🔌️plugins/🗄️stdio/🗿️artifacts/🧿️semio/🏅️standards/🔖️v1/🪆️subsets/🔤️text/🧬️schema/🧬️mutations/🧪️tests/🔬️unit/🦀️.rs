@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioTextSnapshot {
@@ -15,11 +15,11 @@ fn fixture() -> SemioTextSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in backwards.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward
@@ -49,7 +49,7 @@ async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTextMutation::RemoveRun(remove_run::RemoveRun { index: 99 });
     assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "removing an absent index has nothing to undo");
-    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+    assert_eq!(protocol::apply_diff_cold(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,7 +102,7 @@ async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTextMutation::RemoveMark(remove_mark::RemoveMark { run_index: 99, index: 0 });
     assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff_cold(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]

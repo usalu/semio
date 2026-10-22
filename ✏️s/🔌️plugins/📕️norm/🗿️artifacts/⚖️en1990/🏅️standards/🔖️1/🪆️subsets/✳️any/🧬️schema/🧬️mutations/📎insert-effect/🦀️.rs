@@ -9,14 +9,18 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 pub struct InsertEffect { pub index: Option<usize>, pub item: semio_s_artifact_norm_en1990_model::MemberEffect, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertEffect where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_effect::RemoveEffect> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "effect", kind: "insert-effect", record: "InsertedEffect" };
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> { crate::insert_effect::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert action effect", "Beanspruchung einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1990Snapshot, Op> for InsertEffect where Op: protocol::ColdMutation<En1990Snapshot, ReferenceDiff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_effect::RemoveEffect> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1990Snapshot>>::ReferenceDiff> { crate::insert_effect::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::insert_effect::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert action effect", "Beanspruchung einfügen")
-    }
 }
 
 //#region 🪢️Mounts

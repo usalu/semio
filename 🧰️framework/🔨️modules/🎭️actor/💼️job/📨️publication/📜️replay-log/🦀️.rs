@@ -29,7 +29,7 @@ impl JobReplayLog {
         Ok(Self {
             route,
             generation,
-            records: ManuallyDrop::new(semio_framework_async::boxed_fixed_slots(|| None)),
+            records: ManuallyDrop::new(semio_framework_async_slots::boxed_fixed_slots(|| None)),
             record_count: 0,
             reserved_records: 0,
             reserved_pages: 0,

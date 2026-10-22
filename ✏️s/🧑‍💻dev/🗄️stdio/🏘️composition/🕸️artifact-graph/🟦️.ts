@@ -1,12 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import {createHash} from "node:crypto";
-import { dirname, isAbsolute, join } from "node:path";
+import { dirname, join } from "node:path";
 import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "@semio-tech/stdio-inventory-ts";
 import { cargoWorkspaceForManifest } from "@semio-tech/process/native-build";
-import { readBuildGraphV1, resolveBuildInputsV1, type BuildGraphV1 } from "@semio-tech/repo-lib/build";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import { buildPinSchema as pinSchema } from "@semio-tech/repo-lib/build";
+import { readBuildGraphV1, withRepositoryBuildGraphPublicationV1, resolveBuildInputsV1, type BuildGraphV1 } from "@semio-tech/repo-lib/build";
 import {checkScriptInvocation,withScriptInvocationSignalV1,createIssuedResourceControlV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import { nativeCallerPhaseV1 } from "@semio-tech/repo-lib/artifacts";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
@@ -79,15 +75,16 @@ export function assertStdioArtifactCargoMetadata(repoRoot: string, contract: { p
   console.log(`[stdio-package-contract] Cargo metadata packages=${contract.packages.length}`);
 }
 
-/** 🔏️ Reads only the exact immutable neutral graph issued by the outer owned build invocation. */
-export function readStdioArtifactBuildGraphPin(environment:Readonly<Record<string,string|undefined>>=process.env):BuildGraphV1{
- const pin={path:environment.SEMIO_BUILD_GRAPH_PATH,digest:environment.SEMIO_BUILD_GRAPH_DIGEST};assert.equal(validateJsonSchemaSubset(pinSchema,pin).length,0,"Original immutable build graph path and digest required");assert(pin.path&&isAbsolute(pin.path),"Original absolute immutable build graph pin required");const source=readFileSync(pin.path,"utf8");assert.equal(createHash("sha256").update(source).digest("hex"),pin.digest,"Original Stdio build graph source changed");return readBuildGraphV1(JSON.parse(source));
+/** 🔏️ Reads the outer immutable record publication under its original image and file custody. */
+export async function readStdioArtifactBuildGraphPin(repoRoot:string,invocation:ScriptInvocation):Promise<BuildGraphV1>{
+ checkScriptInvocation(invocation);const control=createIssuedResourceControlV1(invocation,"stdio:graph-pin",0);
+ return withRepositoryBuildGraphPublicationV1(repoRoot,control,async(graph,_digest,actual)=>{checkResourceLeaseControl(actual);checkScriptInvocation(invocation);return readBuildGraphV1(graph);});
 }
 
 /** 🔬️ Compares the admitted artifact dependency projection with the current portable build graph. */
-export async function assertStdioArtifactBuildGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap): Promise<void> {
+export async function assertStdioArtifactBuildGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap, invocation:ScriptInvocation): Promise<void> {
   assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-  const graph=readStdioArtifactBuildGraphPin();
+  const graph=await readStdioArtifactBuildGraphPin(repoRoot,invocation);
   assert.equal(graph.version, 1, "Portable build graph version required");
   assert(graph.projects && typeof graph.projects === "object", "Portable build projects required");
   assert(Array.isArray(graph.dependencies), "Portable build dependency array required");

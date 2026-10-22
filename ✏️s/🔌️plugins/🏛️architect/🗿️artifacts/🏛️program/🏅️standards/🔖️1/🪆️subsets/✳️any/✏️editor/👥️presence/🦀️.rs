@@ -55,27 +55,9 @@ pub struct ArchitectPresenceDiff {
     pub graph_camera_zoom: Option<f64>,
 }
 
-impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresenceDiff {
-    fn apply(&self, base: &ArchitectPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectPresence> {
-        let mut next = base.clone();
-        if let Some(value) = &self.active_register {
-            next.active_register = value.clone();
-        }
-        if let Some(filter) = &self.adjacency_kind_filter {
-            next.adjacency_kind_filter = filter.value.clone();
-        }
-        if let Some(value) = self.graph_camera_x {
-            next.graph_camera_x = value;
-        }
-        if let Some(value) = self.graph_camera_y {
-            next.graph_camera_y = value;
-        }
-        if let Some(value) = self.graph_camera_zoom {
-            next.graph_camera_zoom = value;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresenceDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectPresence> for ArchitectPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.active_register.is_some() {
             self.active_register = other.active_register;
@@ -93,9 +75,37 @@ impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresenceDiff {
             self.graph_camera_zoom = other.graph_camera_zoom;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.active_register {
+            next.active_register = value.clone();
+        }
+        if let Some(filter) = &self.adjacency_kind_filter {
+            next.adjacency_kind_filter = filter.value.clone();
+        }
+        if let Some(value) = self.graph_camera_x {
+            next.graph_camera_x = value;
+        }
+        if let Some(value) = self.graph_camera_y {
+            next.graph_camera_y = value;
+        }
+        if let Some(value) = self.graph_camera_zoom {
+            next.graph_camera_zoom = value;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectPresence> for ArchitectPresenceDiff {
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectPresence> for ArchitectPresenceDiff {
     fn inverse(&self, base: &ArchitectPresence) -> Self {
         Self {
             active_register: self.active_register.as_ref().map(|_| base.active_register.clone()),
@@ -104,10 +114,6 @@ impl protocol::DiffAlgebra<ArchitectPresence> for ArchitectPresenceDiff {
             graph_camera_y: self.graph_camera_y.map(|_| base.graph_camera_y),
             graph_camera_zoom: self.graph_camera_zoom.map(|_| base.graph_camera_zoom),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
     }
 }
 

@@ -11,13 +11,13 @@ use semio_framework_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;
 use std::future::Future;
 use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_framework_ui_contract::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// ⏳️ The `document.loading` refusal of `verb` while a whole-document load still runs (`📓️api-stepped-document-load.md`
     /// §3, gap N17): every verb but a view or interaction verb waits — nothing reads or edits the document being replaced;
     /// hover and pick read only the selection (audit W2A-13) — except `historyEditCancelReplay`, which cancels the load;

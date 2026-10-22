@@ -1,6 +1,6 @@
 use crate::{Filters, TableSort};
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 use crate::editor::sourcing::config::*;
 use crate::SortDirection;
@@ -26,12 +26,12 @@ fn sample_config() -> SourcingCurationConfig {
 
 /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
 async fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfigMutation) -> SourcingCurationConfig {
-    let forward = protocol::apply_diff(operation.diff(config).diff(), config).expect("the forward diff applies");
+    let forward = protocol::apply_diff_cold(operation.diff(config).diff(), config).expect("the forward diff applies");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(operation, config).await;
     let backwards = operation.inverse(config).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("the inverse diff applies");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("the inverse diff applies");
     }
     assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
     forward

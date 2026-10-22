@@ -28,7 +28,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-check",
+        "command": "repo ./📜️script.ts inference-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -45,7 +45,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts cold-document-pair-check",
+        "command": "repo ./📜️script.ts cold-document-pair-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -62,7 +62,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-bridge-check --source"
+        "command": "repo ./📜️script.ts inference-bridge-check --source"
       },
       "outputs": [],
       "metadata": {
@@ -92,7 +92,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-bridge-check --process"
+        "command": "repo ./📜️script.ts inference-bridge-check --process"
       },
       "outputs": [],
       "metadata": {
@@ -106,7 +106,7 @@
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts tiles-check",
+        "command": "repo 📜️script.ts tiles-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -121,7 +121,7 @@
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts tiles-check --native",
+        "command": "repo 📜️script.ts tiles-check --native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -137,7 +137,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun 📜️script.ts tiles-prefetch",
+        "command": "repo 📜️script.ts tiles-prefetch",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -166,7 +166,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -174,7 +174,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -189,7 +189,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -213,7 +213,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-service-receiving-check",
+        "command": "repo ./📜️script.ts inference-service-receiving-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -224,7 +224,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify physical-codecs"
+        "command": "repo ./📜️script.ts verify physical-codecs"
       }
     }
   }

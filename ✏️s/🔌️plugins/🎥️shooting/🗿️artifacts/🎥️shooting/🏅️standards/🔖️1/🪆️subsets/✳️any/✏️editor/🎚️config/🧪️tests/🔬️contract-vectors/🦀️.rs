@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 use crate::ShootingCamera;
 use crate::editor::shooting::config::*;
 use dsl::os_pack as pack;
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_configuration_contract_vectors_match_the_json_oracle() {
@@ -19,9 +19,9 @@ async fn shooting_configuration_contract_vectors_match_the_json_oracle() {
         assert_eq!(ShootingConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
         let outcome = mutation.diff(&base);
         assert!(outcome.messages().is_empty());
-        let next = protocol::apply_diff(outcome.diff(), &base).expect("apply diff");
+        let next = protocol::apply_diff_cold(outcome.diff(), &base).expect("apply diff");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
-        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("apply inverse"));
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).expect("apply inverse"));
         assert_eq!(restored, base);
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }

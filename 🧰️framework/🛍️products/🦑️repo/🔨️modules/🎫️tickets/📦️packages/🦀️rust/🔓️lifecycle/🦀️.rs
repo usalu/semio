@@ -31,6 +31,8 @@ pub struct TicketOpenRequest {
     pub plan_id: String,
     #[serde(default)]
     pub spec_id: String,
+    #[serde(default)]
+    pub draft: String,
 }
 
 /// 📪️ Everything a close request carries.
@@ -70,6 +72,8 @@ pub struct TicketReopenRequest {
     pub plan_id: String,
     #[serde(default)]
     pub spec_id: String,
+    #[serde(default)]
+    pub draft: String,
 }
 
 /// ♻️ Everything a change request carries. An absent member leaves the ticket's value alone.
@@ -77,6 +81,12 @@ pub struct TicketReopenRequest {
 #[serde(rename_all = "camelCase")]
 pub struct TicketChangeRequest {
     pub id: String,
+    #[serde(default)]
+    pub llm: Option<String>,
+    #[serde(default)]
+    pub effort: Option<String>,
+    #[serde(default)]
+    pub client: Option<String>,
     #[serde(default)]
     pub title: Option<String>,
     #[serde(default)]
@@ -123,6 +133,10 @@ pub const OVERSIZED_FILE_BYTES: u64 = 5 << 20;
 /// 🧹️ A subfolder whose files total above this size is purged from a closed ticket folder.
 pub const OVERSIZED_FOLDER_BYTES: u64 = 10 << 20;
 
+/// 🪪️ Request-scoped interaction facts, captured without mutating service or ambient repository state.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InteractionMetadata { pub author: String, pub system: String, pub checkpoint: String }
+
 /// 🎫️ The ticket domain bound to one store, one issue tracker, one clock and one event sink.
 pub struct TicketService<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> {
     pub layout: TicketLayout,
@@ -132,12 +146,13 @@ pub struct TicketService<'a, S: TicketStore, T: IssueTracker, C: Clock, E: Event
     pub events: &'a E,
     pub roots: PlanRoots,
     pub mcp_client: McpClientKind,
+    pub interaction_metadata: InteractionMetadata,
 }
 
 impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<'a, S, T, C, E> {
     /// 🆕️ Binds the domain to its ports.
     pub fn new(layout: TicketLayout, store: &'a S, tracker: &'a T, clock: &'a C, events: &'a E) -> TicketService<'a, S, T, C, E> {
-        TicketService { layout, store, tracker, clock, events, roots: PlanRoots { repo_root: String::new(), home_dir: String::new() }, mcp_client: McpClientKind::Generic }
+        TicketService { layout, store, tracker, clock, events, roots: PlanRoots { repo_root: String::new(), home_dir: String::new() }, mcp_client: McpClientKind::Generic, interaction_metadata: InteractionMetadata::default() }
     }
 
     /// 🗺️ Sets the roots plan resolution reads.
@@ -152,12 +167,18 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         self
     }
 
+    /// 🪪️ Captures interaction metadata on this private service value.
+    pub fn with_interaction_metadata(mut self, metadata: InteractionMetadata) -> Self { self.interaction_metadata = metadata; self }
+
     /// 📖️ Reads one ticket, filling in every derived path.
     pub fn read(&self, id: &TicketId) -> TicketResult<Ticket> {
+        let directory = drafts::owned_ticket_path(&self.layout, id)?;
+        drafts::existing_ancestry(self.store, &directory)?;
         let document_path = self.layout.document_path(id);
         if !self.store.exists(&document_path) {
             return Err(TicketError::not_found(format!("ticket not found: {document_path}")));
         }
+        if !self.store.is_file(&document_path) { return Err(TicketError::invalid("physical ticket document required")); }
         let mut ticket = decode_ticket_document(&self.store.read(&document_path)?)?;
         self.hydrate(&mut ticket, id);
         Ok(ticket)
@@ -165,9 +186,11 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
 
     /// 💾️ Writes one ticket back, refusing a status the vocabulary does not carry.
     pub fn save(&self, ticket: &Ticket) -> TicketResult<()> {
-        if ticket.json_path.is_empty() {
-            return Err(TicketError::invalid("ticket json path is empty"));
-        }
+        let id = TicketId::new(ticket.year, ticket.month, ticket.day, &ticket.slug);
+        let directory = drafts::owned_ticket_path(&self.layout, &id)?;
+        if ticket.json_path != self.layout.document_path(&id) { return Err(TicketError::invalid("ticket document must belong to the service layout")); }
+        drafts::existing_ancestry(self.store, &directory)?;
+        if self.store.exists(&ticket.json_path) && !self.store.is_file(&ticket.json_path) { return Err(TicketError::invalid("physical ticket document required")); }
         self.store.write(&ticket.json_path, &encode_ticket_document(ticket))
     }
 
@@ -241,10 +264,12 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
             slug = format!("{}/{slug}", parent.slug);
         }
         let id = TicketId::new(year, month, day, slug);
-        let ticket_dir = self.layout.ticket_dir(&id);
+        let ticket_dir = drafts::owned_ticket_path(&self.layout, &id)?;
+        drafts::existing_ancestry(self.store, &ticket_dir)?;
         if self.store.exists(&ticket_dir) {
             return Err(TicketError::conflict(format!("ticket folder already exists: {ticket_dir}")));
         }
+        let draft = drafts::prepare(self.store, &self.layout, &id, &request.draft)?;
         self.store.create_directory(&ticket_dir)?;
         let mut journal = TransactionJournal::default();
         self.store.write(&self.layout.important_path(&id), "")?;
@@ -268,10 +293,10 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
             interactions: vec![Interaction {
                 kind: "ticket.open".to_string(),
                 date: self.clock.stamp(),
-                author: String::new(),
-                system: String::new(),
+                author: self.interaction_metadata.author.clone(),
+                system: self.interaction_metadata.system.clone(),
                 client: client.clone(),
-                checkpoint: String::new(),
+                checkpoint: self.interaction_metadata.checkpoint.clone(),
                 prompt: request.prompt.clone(),
                 summary: String::new(),
                 llm: llm.clone(),
@@ -286,6 +311,7 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         append_session_id(&mut ticket, &request.session);
         apply_ticket_plan_from_ids(self.store, &self.roots, &mut ticket, self.mcp_client, &request.plan_id, &request.spec_id)?;
 
+        drafts::attach(self.store, draft)?;
         let mut warnings: Vec<String> = Vec::new();
         if !request.no_issue && !request.no_management {
             let milestone = milestone_number_for_title(self.tracker, &request.goal);
@@ -338,10 +364,10 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         ticket.interactions.push(Interaction {
             kind: "ticket.close".to_string(),
             date: self.clock.stamp(),
-            author: String::new(),
-            system: String::new(),
+            author: self.interaction_metadata.author.clone(),
+            system: self.interaction_metadata.system.clone(),
             client: previous.interactions.last().map(|interaction| interaction.client.clone()).unwrap_or_default(),
-            checkpoint: String::new(),
+            checkpoint: self.interaction_metadata.checkpoint.clone(),
             prompt: String::new(),
             summary: summary.clone(),
             llm: String::new(),
@@ -385,6 +411,7 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         apply_ticket_plan_from_ids(self.store, &self.roots, &mut ticket, self.mcp_client, &request.plan_id, &request.spec_id)?;
 
         let mut journal = TransactionJournal::default();
+        let draft = drafts::prepare(self.store, &self.layout, &id, &request.draft)?;
         let creation = ensure_important_document(self.store, &ticket.important_path.clone(), &mut journal)?;
 
         let previous = ticket.clone();
@@ -392,10 +419,10 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         ticket.interactions.push(Interaction {
             kind: "ticket.reopen".to_string(),
             date: self.clock.stamp(),
-            author: String::new(),
-            system: String::new(),
+            author: self.interaction_metadata.author.clone(),
+            system: self.interaction_metadata.system.clone(),
             client: client.clone(),
-            checkpoint: String::new(),
+            checkpoint: self.interaction_metadata.checkpoint.clone(),
             prompt: request.prompt.clone(),
             summary: String::new(),
             llm: llm.clone(),
@@ -404,6 +431,7 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         });
         append_session_id(&mut ticket, &request.session);
 
+        drafts::attach(self.store, draft)?;
         let mut warnings: Vec<String> = Vec::new();
         if !request.no_management {
             warnings.extend(ensure_ticket_issue(self.tracker, &mut ticket, &previous.title, &request.prompt, "", None, true));
@@ -429,43 +457,60 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
     /// ♻️ Changes a ticket in place, renaming its folder when the title changes its slug.
     pub fn change(&self, request: &TicketChangeRequest) -> TicketResult<TicketOutcome> {
         let id = TicketId::parse(&request.id)?;
+        let llm = request.llm.as_ref().map(|value| resolve_optional(value, semio_framework_repo_model::resolve_allowed_llm)).transpose()?;
+        let effort = request.effort.as_ref().map(|value| resolve_optional(value, semio_framework_repo_model::resolve_allowed_effort)).transpose()?;
+        let client = request.client.as_ref().map(|value| semio_framework_repo_model::resolve_allowed_client(value).map_err(|error| TicketError::invalid(error.to_string()))).transpose()?;
         let mut ticket = self.read(&id)?;
         let mut journal = TransactionJournal::default();
         let mut next_id = id.clone();
         if let Some(title) = request.title.as_ref() {
             let title = title.trim();
-            if title.is_empty() {
-                return Err(TicketError::invalid("ticket title is required"));
-            }
+            if title.is_empty() { return Err(TicketError::invalid("ticket title is required")); }
             let mut slug = ticket_slug_from_title(title)?;
-            if let Some(parent) = id.parent_slug() {
-                slug = format!("{parent}/{slug}");
-            }
+            if let Some(parent) = id.parent_slug() { slug = format!("{parent}/{slug}"); }
             next_id = TicketId::new(id.year, id.month, id.day, slug);
             if next_id.slug != id.slug {
-                let target = self.layout.ticket_dir(&next_id);
-                if self.store.exists(&target) {
-                    return Err(TicketError::conflict(format!("ticket folder already exists: {target}")));
-                }
-                self.store.rename(&self.layout.ticket_dir(&id), &target)?;
+                let target = drafts::owned_ticket_path(&self.layout, &next_id)?;
+                drafts::existing_ancestry(self.store, &target)?;
+                if self.store.exists(&target) { return Err(TicketError::conflict(format!("ticket folder already exists: {target}"))); }
+                let source = drafts::owned_ticket_path(&self.layout, &id)?;
+                drafts::projection(self.store, &source, &target)?;
+                self.store.rename(&source, &target)?;
                 journal.record("rename", &target, "ok");
             }
             ticket.title = title.to_string();
         }
-        if let Some(description) = request.description.as_ref() {
-            ticket.description = description.clone();
+        if let Some(description) = request.description.as_ref() { ticket.description = description.clone(); }
+        if let Some(goal) = request.goal.as_ref() { ticket.goal = goal.clone(); }
+        if let Some(parent) = request.parent.as_ref() { ticket.parent = parent.clone(); }
+        if let Some(interaction) = ticket.interactions.last_mut() {
+            if let Some(description) = request.description.as_ref() { interaction.prompt = description.clone(); }
+            if let Some(value) = llm { interaction.llm = value; }
+            if let Some(value) = effort { interaction.effort = value; }
+            if let Some(value) = client { interaction.client = value; }
         }
-        if let Some(goal) = request.goal.as_ref() {
-            ticket.goal = goal.clone();
-        }
-        if let Some(parent) = request.parent.as_ref() {
-            ticket.parent = parent.clone();
-        }
-        self.hydrate(&mut ticket, &next_id);
-        self.save(&ticket)?;
+        self.hydrate(&mut ticket, &next_id); self.save(&ticket)?;
         journal.record("save", &ticket.json_path, "ok");
+        let mut warnings = Vec::new();
+        if request.title.is_some() && !request.no_management {
+            if let Some(management) = ticket.management.as_ref().filter(|value| !value.issue.is_empty()) {
+                if let Err(error) = self.tracker.update_issue_title(&management.issue, &ticket.title) { warnings.push(format!("Failed to update issue title: {}", error.message)); }
+            }
+        }
         self.emit_ticket_event(semio_framework_repo_events::TICKET_CHANGE_ENDED, &next_id, serde_json::json!({ "title": ticket.title, "goal": ticket.goal }));
-        Ok(self.outcome(&next_id, &ticket, journal, Vec::new()))
+        Ok(self.outcome(&next_id, &ticket, journal, warnings))
+    }
+
+    /// 🗑️ Deletes the remote issue before removing this exact owned ticket subtree.
+    pub fn delete(&self, id: &TicketId, no_management: bool) -> TicketResult<()> {
+        let directory = drafts::owned_ticket_path(&self.layout, id)?;
+        drafts::existing_ancestry(self.store, &directory)?;
+        let ticket = self.read(id)?;
+        if !self.store.is_directory(&directory) { return Err(TicketError::invalid("physical ticket directory required")); }
+        if !no_management {
+            if let Some(management) = ticket.management.as_ref().filter(|value| !value.issue.is_empty()) { self.tracker.delete_issue(&management.issue).map_err(|error| TicketError::store(error.message))?; }
+        }
+        self.store.remove_tree(&directory)
     }
 
     /// 🧹️ Deletes oversized artifacts from one ticket folder, deepest folder first.
@@ -548,6 +593,7 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
 
     fn emit_ticket_event(&self, kind: &str, id: &TicketId, extra: Value) {
         let mut payload = serde_json::json!({ "id": id.rel_path(), "year": id.year, "month": id.month, "day": id.day, "slug": id.slug });
+        if !self.interaction_metadata.author.is_empty() { payload["author"] = Value::String(self.interaction_metadata.author.clone()); }
         if let (Some(target), Value::Object(members)) = (payload.as_object_mut(), extra) {
             for (name, value) in members {
                 target.insert(name, value);

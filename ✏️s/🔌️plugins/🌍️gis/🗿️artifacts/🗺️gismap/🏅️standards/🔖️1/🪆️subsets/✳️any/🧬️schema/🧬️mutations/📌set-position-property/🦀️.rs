@@ -33,16 +33,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "position-property", kind: "set-position-property", record: "PositionPropertySet" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of position \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Position \"{}\" setzen", self.key, self.feature))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for SetPositionProperty
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<SetPositionProperty> + From<crate::standards::v1::subsets::any::schema::mutations::remove_position_property::RemovePositionProperty>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of position \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Position \"{}\" setzen", self.key, self.feature))
     }
 }
 //#endregion 🔹Payload

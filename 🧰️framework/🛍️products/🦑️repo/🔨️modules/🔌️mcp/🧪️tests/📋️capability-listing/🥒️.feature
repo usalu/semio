@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 Feature: Every profile advertises exactly one surface
   The repo MCP server ships six tools, eight resources and four prompts. The names, their order and
-  their per-IDE descriptions come from one authored table, so every implementation and the reference
+  their per-agent-client descriptions come from one authored table, so every implementation and the reference
   SDK server built from that same table must list exactly the same surface.
 
   @id-generic-profile-surface
@@ -18,8 +18,8 @@ Feature: Every profile advertises exactly one surface
   @id-ide-profile-surface
   @level-quick
   @mode-differential
-  Scenario: An IDE profile adds only its own plan or spec argument
+  Scenario: An agent-client profile adds only its own plan or spec argument
     Given the authored surface table shared://📋️surface.json and the authored descriptions asset://🔣️descriptions.json
     And a server started for each of the cursor, kiro, copilot, claude and codex profiles
     When the client lists tools
-    Then only the kiro profile carries `spec_id`, only the plan profiles carry `plan_id`, and the generic profile carries neither
+    Then only the kiro profile carries `spec_id`, only the copilot, claude and codex profiles carry `plan_id`, and the generic and cursor profiles carry neither

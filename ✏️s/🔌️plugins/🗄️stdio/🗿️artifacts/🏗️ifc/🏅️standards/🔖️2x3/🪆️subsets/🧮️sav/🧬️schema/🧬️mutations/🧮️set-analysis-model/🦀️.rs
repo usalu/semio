@@ -16,6 +16,16 @@ pub struct SetAnalysisModel {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "analysis-model", kind: "set-analysis-model", record: "SetAnalysisModel" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set analysis model", "Analysemodell setzen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisModel {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         let Self { id, model, index, instance: exact } = self;
         let instance = match model {
@@ -30,7 +40,6 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisMo
             Err(message) => rejected(message),
         }
     }
-
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3SavMutation>, semio_framework_value::ValueError> {
         let Self { id, model, .. } = self;
         Ok(match mvd::standing(base, *id, &[ANALYSIS_MODEL]) {
@@ -45,14 +54,6 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisMo
                 None => Vec::new(),
             },
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set analysis model", "Analysemodell setzen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

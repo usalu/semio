@@ -57,7 +57,7 @@ pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::sc
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgTinyMutation")]
+#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgTinyMutation", reference = SvgSnapshot, reference_diff = SvgDiff)]
 pub enum SvgTinyMutation {
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration. Tiny's own
     /// identity statement; Full 1.1 has no equivalent operation because it has no profile to stamp.
@@ -118,7 +118,7 @@ pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

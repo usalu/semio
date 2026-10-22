@@ -118,10 +118,10 @@ pub fn apply_playground_mutation_json(snapshot_json: &str, mutation_json: &str) 
 }
 /// ↩️ Applies one mutation and every step of its inverse plan.
 pub fn undo_playground_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+    for undo in <PlaygroundMutation as ColdMutation<PlaygroundSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);

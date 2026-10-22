@@ -95,7 +95,7 @@ describe("framework source topology", () => {
 
   test("declares the portable gate", () => {
     const project = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-    expect(project.targets["test-framework-source-topology"].options.command).toBe("bun ./📜️script.ts test framework-source-topology");
+    expect(project.targets["test-framework-source-topology"].options.command).toBe("repo ./📜️script.ts test framework-source-topology");
   });
 
   test("extracts font, styling, and asset APIs into their semantic owners", async () => {

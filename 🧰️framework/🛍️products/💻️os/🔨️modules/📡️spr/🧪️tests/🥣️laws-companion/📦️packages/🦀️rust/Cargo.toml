@@ -23,6 +23,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 dsl_derive = { path = "../../../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }

@@ -1,208 +1,152 @@
-/** 🎓️ The host, studio and details override anchors and the introduction step derived ids with their reveal effects. */
-import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
-import { FRAMEWORK_PANEL_TAB_CATALOGUE_ID, type IntroductionInteraction, SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
-import { findPanelTabInDock, findPanelTabPath } from "@semio-tech/ui-react";
-import { FRAMEWORK_CATEGORY_TOOL_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
-import { resolveUtilityNodes } from "../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
-import { utilityNodeTreeContainsId } from "../../../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
-import { windowMeasureTreeContainsId } from "../../../🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";
-import type { useDockModel } from "../🧱️dock-model-and-persistence/🟦️.ts";
+/** 🔸️ The apply named layout phase of useDirectoryLaneAndLayout. */
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
+import { type AppRole, resolveLayoutForMode, type WindowLayout } from "@semio-tech/framework";
+import { SURFACE_ROLE_CONTROL_IDS, roleSwitchTargetV1, stepModeIdV1 } from "../../🔀️surface-switch/🟦️.ts";
+import { useActionHotkey } from "@semio-tech/ui-react";
+import { sharedDocumentRoleSwitchRefusedV1 } from "../../🧭️opening/🟦️.ts";
+import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { replayRefusalCodeV1, replayRefusalNoticeTextV1 } from "../../📣️replay-refusal/🟦️.ts";
+import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
+import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
+import type { useScopeState } from "../🔶️scope/🟦️.ts";
 
-/** 🧭 Derives the override anchors and every introduction element, utility, window and tool id. */
-export function useOverrideAnchorsAndIntroductionIds({ hostMode, session, hostAppId, panel, hostCatalogueTabId, dock, activeIntroduction, introductionStepIndex, appLabelsOverlay, uiTerminology, uiLocale, windowMeasuresByWindowId, extraWindowInstances, focusedToolMeasuresByToolId }: Pick<ReturnType<typeof useDockModel>, "hostMode" | "session" | "hostAppId" | "panel" | "hostCatalogueTabId" | "dock" | "activeIntroduction" | "introductionStepIndex" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "windowMeasuresByWindowId" | "extraWindowInstances" | "focusedToolMeasuresByToolId">) {
-  const hostOverrideTabId = hostMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
-  const studioOverrideAnchor = hostOverrideTabId ? findPanelTabInDock(dock, hostOverrideTabId)?.anchor : undefined;
-  const detailsOverrideTabId = panel?.activePanelTab;
-  const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
-
-  /** 🎓️ The current introduction step's target element ids (`introduce` + `show`), classified by
-   * shape — `null` unless that shape is present, so every reveal override below (here and in
-   * `modeWindows`) is a plain truthiness check. A folded utility bar/Actions rail/dock panel would
-   * otherwise hide the target from ever mounting (see `useIntroductionAnchorRect`), leaving the step
-   * centered with no cutout and no way for the user to find what to do. Ids are matched, never
-   * reconstructed: a `framework.window.{segment}` id's segment is `elementIdSegment(windowId)`, a lossy
-   * camelCase normalization — comparing `elementIdSegment(windowId) === segment` OR the same for the
-   * instance's window-kind id is the only safe check (Top/Perspective instances share a kind). */
-  const activeIntroductionStep = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex] ?? null) : null;
-  const introductionElementIds = useMemo(
-    (): readonly string[] => (activeIntroductionStep ? [activeIntroductionStep.introduce, ...activeIntroductionStep.show].filter((id): id is string => Boolean(id)) : []),
-    [activeIntroductionStep],
+/** 🔹 Builds applyNamedLayout, applyModeChange, applyModeStep, switchToSessionRole of useDirectoryLaneAndLayout. */
+export function useApplyNamedLayoutState({ canGoForward, goForward, uiKeybindingOverrides, canGoUp, goUp, dispatch, session, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, refreshUi, reportRefreshFault, sessionRef, loadedPluginsRef, openDocumentSessionsRef, sharedSpaceAccessRef, showTransientNoticeRef, uiLocaleRef, switchToPluginApp }: Pick<ReturnType<typeof useScopeState>, "canGoForward" | "goForward" | "uiKeybindingOverrides" | "canGoUp" | "goUp" | "dispatch" | "session" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault" | "sessionRef" | "loadedPluginsRef" | "openDocumentSessionsRef" | "sharedSpaceAccessRef" | "showTransientNoticeRef" | "uiLocaleRef" | "switchToPluginApp">) {
+  useActionHotkey(
+    "ui.nav.forward",
+    useCallback(() => {
+      if (canGoForward) goForward();
+    }, [canGoForward, goForward]),
+    undefined,
+    [canGoForward, goForward],
+    { overrides: uiKeybindingOverrides },
   );
-  const introductionUtilityId = useMemo(() => {
-    if (!session) return null;
-    const utilities = session.app.utilities ?? [];
-    return introductionElementIds.find((id) => utilities.some((utility) => utility.id === id)) ?? null;
-  }, [introductionElementIds, session]);
-  const introductionActionWindowSegment = useMemo(() => {
-    for (const id of introductionElementIds) {
-      const rest = id.startsWith("framework.window.") ? id.slice("framework.window.".length) : null;
-      const actionIndex = rest?.indexOf(".action.") ?? -1;
-      if (rest && actionIndex >= 0) return rest.slice(0, actionIndex);
-    }
-    return null;
-  }, [introductionElementIds]);
-  const introductionPanelTabId = useMemo(() => {
-    for (const id of introductionElementIds) {
-      if (id.startsWith("framework.panelTab.")) {
-        const rest = id.slice("framework.panelTab.".length);
-        return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
+  useActionHotkey(
+    "ui.nav.up",
+    useCallback(() => {
+      if (canGoUp) goUp();
+    }, [canGoUp, goUp]),
+    undefined,
+    [canGoUp, goUp],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.search.toggle",
+    useCallback(() => dispatch({ type: "SET_SEARCH_OPEN", value: (open) => !open }), []),
+    undefined,
+    [],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.find.toggle",
+    useCallback(() => dispatch({ type: "SET_FIND_OPEN", value: (open) => !open }), []),
+    undefined,
+    [],
+    { overrides: uiKeybindingOverrides },
+  );
+
+  const applyNamedLayout = useCallback(
+    (layout: WindowLayout) => {
+      if (!session) return;
+      const seeded = applyFrameworkLayoutSeed(layout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
+      void refreshUi(session, { kind: "full" }, seeded.extraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
+    },
+    [session, appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
+  );
+
+  const applyModeChange = useCallback(
+    (modeId: string) => {
+      dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+      dispatch({
+        type: "SET_SESSION",
+        value: (current) => {
+          if (!current) return current;
+          const layout = resolveLayoutForMode(current.app, modeId);
+          const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId, activeToolId: undefined } };
+          if (layout) {
+            const seeded = applyFrameworkLayoutSeed(layout, withLocalizedWindowKindLabels(current.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+            extraWindowInstancesRef.current = seeded.extraInstances;
+            extraWindowCounterRef.current = seeded.extraInstances.length;
+            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+            dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
+            void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances).catch((error: unknown) => reportRefreshFault(nextSession.pluginId, error));
+          }
+          return nextSession;
+        },
+      });
+    },
+    [appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
+  );
+
+  /** 🎛️⌨️ Keyboard half of the navbar mode group: cycles `session.app.modes` by one step, wrapping.
+   * Positional rather than one binding per mode id because mode ids are plugin-authored while
+   * `SHELL_KEYBINDINGS` is a static framework table — see its own doc comment. Reads `sessionRef` so
+   * the bound callback survives every session change without re-arming the listener. */
+  const applyModeStep = useCallback(
+    (step: 1 | -1) => {
+      const current = sessionRef.current;
+      if (!current) return;
+      const next = stepModeIdV1(current.app.modes.map((mode) => mode.id), current.viewState.activeModeId ?? current.app.defaultModeId, step);
+      if (next) applyModeChange(next);
+    },
+    [applyModeChange],
+  );
+
+  /** 👁️✏️⌨️ Switches the mounted session to this plugin's OTHER surface for the open document's dialect.
+   * Every `session.app.role` gate (VCS check-in, mutation-command filtering, the viewer mutation
+   * refusal, `canonicalSurfaceId` scope validation) reads the live session, so swapping `session.app`
+   * flips all of them in one step — nothing here reproduces a role rule. */
+  const switchToSessionRole = useCallback(
+    async (role: AppRole): Promise<void> => {
+      const current = sessionRef.current;
+      if (!current) return;
+      const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.manifest.apps ?? [];
+      const target = roleSwitchTargetV1(apps, current.app.dialect, current.app.role, role);
+      if (!target) return;
+      const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === current.pluginId && entry.session.instanceId === current.instanceId)?.scope;
+      if (scope !== undefined && sharedDocumentRoleSwitchRefusedV1(sharedSpaceAccessRef.current.get(scope.spaceId) ?? null, role)) {
+        showTransientNoticeRef.current(replayRefusalNoticeTextV1("view-only-access", uiLocaleRef.current), "warning", replayRefusalCodeV1("view-only-access"));
+        return;
       }
-    }
-    return null;
-  }, [introductionElementIds]);
-  /** 🛠️ Tool ids the active step asks the user to activate (`interactions` of kind `tool`, or a bare
-   * `tool.<id>` introduce/show). Reveals the Tool category chrome so the leaf tab can be pressed —
-   * never drills into the leaf itself (that would open the inactive activate-toggle tree and, via tab
-   * selection, auto-activate + celebrate before the user acts). */
-  const introductionToolPickIds = useMemo((): readonly string[] => {
-    const fromInteractions = (activeIntroductionStep?.interactions ?? [])
-      .filter((interaction): interaction is IntroductionInteraction & { readonly on: { readonly kind: "tool"; readonly id: string } } => interaction.on.kind === "tool")
-      .map((interaction) => interaction.on.id);
-    if (fromInteractions.length > 0) return fromInteractions;
-    return introductionElementIds.flatMap((id) => {
-      const match = /^tool\.([a-z][a-zA-Z0-9]*)$/.exec(id);
-      return match?.[1] ? [match[1]] : [];
-    });
-  }, [activeIntroductionStep, introductionElementIds]);
-  const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
-  const introductionUtilityWindowId = useMemo(() => {
-    if (!introductionUtilityId || !session) return null;
-    for (const kind of session.app.windowKinds) {
-      const utilities = resolveUtilityNodes(session.app, kind, null, kind.id, appLabelsOverlay, uiTerminology, uiLocale);
-      if (utilityNodeTreeContainsId(utilities, introductionUtilityId)) return kind.id;
-    }
-    return null;
-  }, [appLabelsOverlay, introductionUtilityId, session, uiTerminology, uiLocale]);
-  /** 🎓️ Window-kind id whose measures tree owns an introduce/show measure id — force-unfolds the Window
-   * Options rail so targets like `puzzle3d-play-vortex-show` can mount for the tour. */
-  const introductionMeasureWindowId = useMemo(() => {
-    if (!session || introductionElementIds.length === 0) return null;
-    for (const kind of session.app.windowKinds) {
-      const kindMeasures = kind.options.measures ?? [];
-      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(kindMeasures, id))) return kind.id;
-      for (const [windowId, measures] of Object.entries(windowMeasuresByWindowId)) {
-        if (!introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) continue;
-        if (windowId === kind.id || extraWindowInstances.some((instance) => instance.id === windowId && instance.windowKindId === kind.id)) return kind.id;
-      }
-    }
-    return null;
-  }, [extraWindowInstances, introductionElementIds, session, windowMeasuresByWindowId]);
+      await switchToPluginApp(current.pluginId, target.id,undefined,current);
+    },
+    [switchToPluginApp],
+  );
 
-  /** 🛠️ Tool id whose measure tree owns an introduce/show id — keeps mode-level tools like fill
-   * active so targets such as `puzzle3d-play-distribution` stay mounted for the tour. */
-  const introductionToolId = useMemo(() => {
-    if (introductionElementIds.length === 0) return null;
-    for (const [toolId, measures] of Object.entries(focusedToolMeasuresByToolId)) {
-      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) return toolId;
-    }
-    return null;
-  }, [introductionElementIds, focusedToolMeasuresByToolId]);
-  return { introductionToolId, introductionToolPickIds, activeIntroductionStep, introductionPanelTabId, introductionPanelTabAnchor, hostOverrideTabId, studioOverrideAnchor, detailsOverrideTabId, detailsOverrideAnchor, introductionUtilityId, introductionActionWindowSegment, introductionUtilityWindowId, introductionMeasureWindowId };
-}
-
-/**
- * 🎬 Reveals the introduction tool, tool pick, panel tab and expand targets as the steps advance.
- *
- * 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every
- * `panel` interaction of the active step, not just the first, so a step can require opening several.
- */
-export function useIntroductionRevealEffects({ introductionToolId, session, activeToolIdRef, onActionStable, introductionToolPickIds, activeIntroductionStep, mobile, mobilePanelTabs, dispatch, dock, introductionPanelTabId, introductionPanelTabAnchor, panels, completeIntroductionInteraction, treeOpenStates }: Pick<ReturnType<typeof useOverrideAnchorsAndIntroductionIds>, "introductionToolId" | "introductionToolPickIds" | "activeIntroductionStep" | "introductionPanelTabId" | "introductionPanelTabAnchor"> & Pick<ReturnType<typeof useDockModel>, "session" | "activeToolIdRef" | "onActionStable" | "mobile" | "mobilePanelTabs" | "dispatch" | "dock" | "panels" | "completeIntroductionInteraction" | "treeOpenStates">) {
-  const lastIntroductionToolIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!introductionToolId || !session) {
-      lastIntroductionToolIdRef.current = null;
-      return;
-    }
-    if (lastIntroductionToolIdRef.current === introductionToolId && activeToolIdRef.current === introductionToolId) return;
-    lastIntroductionToolIdRef.current = introductionToolId;
-    if (activeToolIdRef.current === introductionToolId) return;
-    onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: introductionToolId } });
-  }, [introductionToolId, onActionStable, session]);
-
-  /** 🛠️ Tool-pick steps (e.g. Füllen): open the Tool category so `tool.<id>` leaf tabs mount in the
-   * panel chrome, clear any already-active tool so the user must activate it, and never select the
-   * leaf path (selecting auto-activates and would celebrate before they act). */
-  const lastIntroductionToolPickStepIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!session || introductionToolPickIds.length === 0 || !activeIntroductionStep) {
-      lastIntroductionToolPickStepIdRef.current = null;
-      return;
-    }
-    if (introductionToolId) return;
-    if (lastIntroductionToolPickStepIdRef.current === activeIntroductionStep.id) return;
-    lastIntroductionToolPickStepIdRef.current = activeIntroductionStep.id;
-    for (const toolId of introductionToolPickIds) {
-      if (activeToolIdRef.current === toolId) {
-        onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
-      }
-    }
-    if (mobile) {
-      const resolved = findPanelTabPath(mobilePanelTabs, FRAMEWORK_CATEGORY_TOOL_ID);
-      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
-      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
-      return;
-    }
-    const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
-    const resolved = findPanelTabPath(dock.anchors[toolAnchor], FRAMEWORK_CATEGORY_TOOL_ID);
-    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: toolAnchor, value: resolved });
-    dispatch({ type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
-  }, [activeIntroductionStep, dock, introductionToolId, introductionToolPickIds, mobile, mobilePanelTabs, onActionStable, session]);
-
-  const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    if (!introductionPanelTabId || !introductionPanelTabAnchor) {
-      lastIntroductionPanelTabIdRef.current = undefined;
-      return;
-    }
-    if (lastIntroductionPanelTabIdRef.current === introductionPanelTabId) return;
-    lastIntroductionPanelTabIdRef.current = introductionPanelTabId;
-    if (mobile) {
-      const resolved = findPanelTabPath(mobilePanelTabs, introductionPanelTabId);
-      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
-      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
-      return;
-    }
-    const resolved = findPanelTabPath(dock.anchors[introductionPanelTabAnchor], introductionPanelTabId);
-    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: introductionPanelTabAnchor, value: resolved });
-    dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
-  }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);
-
-  useEffect(() => {
-    if (!activeIntroductionStep) return;
-    for (const interaction of activeIntroductionStep.interactions ?? []) {
-      if (interaction.on.kind !== "panel") continue;
-      const tabId = interaction.on.id;
-      const located = findPanelTabInDock(dock, tabId);
-      if (!located) continue;
-      const panel = panels[located.anchor];
-      if (!panel.visible || !panel.path.includes(tabId)) continue;
-      completeIntroductionInteraction((candidate) => candidate.on.kind === "panel" && candidate.on.id === tabId);
-    }
-  }, [activeIntroductionStep, completeIntroductionInteraction, dock, panels]);
-
-  /** 🎓️ Expand interactions start with every named tree section forced closed on step entry, then
-   * complete individually as the user opens each one. */
-  const lastIntroductionExpandStepIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    const expandInteractions = (activeIntroductionStep?.interactions ?? []).filter((interaction) => interaction.on.kind === "expand");
-    if (!activeIntroductionStep || expandInteractions.length === 0) {
-      lastIntroductionExpandStepIdRef.current = null;
-      return;
-    }
-    if (lastIntroductionExpandStepIdRef.current !== activeIntroductionStep.id) {
-      lastIntroductionExpandStepIdRef.current = activeIntroductionStep.id;
-      for (const interaction of expandInteractions) {
-        const stateSuffix = `tree-section-${interaction.on.id}`;
-        const catalogueKey = `${FRAMEWORK_PANEL_TAB_CATALOGUE_ID}.tree:${stateSuffix}`;
-        dispatch({ type: "SET_TREE_OPEN_STATE", id: catalogueKey, open: false });
-      }
-      return;
-    }
-    for (const interaction of expandInteractions) {
-      const sectionId = interaction.on.id;
-      const stateSuffix = `tree-section-${sectionId}`;
-      const expanded = Object.entries(treeOpenStates).some(([key, open]) => open && key.endsWith(stateSuffix));
-      if (expanded) completeIntroductionInteraction((candidate) => candidate.on.kind === "expand" && candidate.on.id === sectionId);
-    }
-  }, [activeIntroductionStep, completeIntroductionInteraction, treeOpenStates]);
+  useActionHotkey(
+    "ui.shell.mode.next",
+    useCallback(() => applyModeStep(1), [applyModeStep]),
+    { preventDefault: true },
+    [applyModeStep],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.shell.mode.previous",
+    useCallback(() => applyModeStep(-1), [applyModeStep]),
+    { preventDefault: true },
+    [applyModeStep],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    SURFACE_ROLE_CONTROL_IDS.editor,
+    useCallback(() => void switchToSessionRole("editor").catch((switchError) => console.error("role switch to editor failed", switchError)), [switchToSessionRole]),
+    { preventDefault: true },
+    [switchToSessionRole],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    SURFACE_ROLE_CONTROL_IDS.viewer,
+    useCallback(() => void switchToSessionRole("viewer").catch((switchError) => console.error("role switch to viewer failed", switchError)), [switchToSessionRole]),
+    { preventDefault: true },
+    [switchToSessionRole],
+    { overrides: uiKeybindingOverrides },
+  );
+  return { applyNamedLayout, applyModeChange, switchToSessionRole };
 }

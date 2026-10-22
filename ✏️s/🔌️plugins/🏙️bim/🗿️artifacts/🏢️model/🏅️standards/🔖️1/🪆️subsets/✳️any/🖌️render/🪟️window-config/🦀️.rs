@@ -177,9 +177,9 @@ where
     D: protocol::MutationDiff<S> + 'static,
     M: protocol::Mutation<S, Diff = D> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
 {
-    use protocol::{Mutation, OpBinary, OpText};
-    let after = protocol::apply_diff(mutation.diff(base).diff(), base).expect("the mutation applies");
-    let restored = mutation.inverse(base).expect("the mutation has an inverse").into_iter().rev().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("the inverse applies"));
+    use protocol::{ColdMutation, Mutation, OpBinary, OpText};
+    let after = protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("the mutation applies");
+    let restored = mutation.inverse(base).expect("the mutation has an inverse").into_iter().rev().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).expect("the inverse applies"));
     assert_eq!(&restored, base, "the concrete inverse restores the base");
     assert_eq!(M::parse_op(&mutation.print_op()).expect("op text parses"), *mutation);
     assert_eq!(M::decode_op(&mutation.encode_op().expect("op encodes")).expect("op decodes"), *mutation);

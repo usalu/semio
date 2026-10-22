@@ -1,0 +1,22 @@
+# Node Owned Program Serialization Repair
+
+Actual Native17628 exited1 before collecting21 selected laws. The frozen40588-byte log is SHA256 `13c6a36608dc7156f391e6f0533e3e09e9e5dd5490714da09793f7d5bb9a53a7`. Its bounded startup witness proves EOF before readiness and complete1118-byte stderr `ERR_MODULE_NOT_FOUND` for `.semio-captured-module` from Node24.15.0 eval; both diagnostic snapshots hash `54038cdc69095c17f928c3296bcb9be12c45d24196528f630a705c851ea907e2`.
+
+The enclosing Bun immutable loader redirects literal builtin imports to its private captured-module/fs bridges. The old Node producer serialized an already-transformed function with Function.toString, carrying that Bun-private import into a separate Node process before Node registered its own hooks. The current peer production repair replaces executable-function serialization with an explicit String.raw owned Node program. Its body, manifest/hash checks, strict declared-import resolution, fs wrappers, hooks, entry validation, readiness, and command bounds are preserved. No alias, physical fallback, or require relaxation was introduced. This agent preserved that concurrent repair and authored the finite schema/corpus and captured-parent regression.
+
+The six language-agnostic builtin cases distinguish Node builtin specifiers from the enclosing parent aliases. The existing actual Node immutable-image law now generates a bare receiver-backed producer Source entry, captures it with the actual compiler, and executes it through the production Bun stream loader under projected Original control. That captured parent imports the real Node owner and emits its prepared arguments. The law then launches actual owned Node with those arguments and checks exact readiness, answer42, and the validated resolution projection after the physical helper was overwritten to answer0. It compares the produced program imports with TypeScript AST, Bun compiler scanning, and an independent SQLite fixture projection. This crosses the transformation boundary that failed in the actual startup.
+
+The generated producer retains the bare runScriptProgram receiver, import.meta.main guard, and one captured-export proof.recheck/delegation path; the enclosing stream loader runs its explicit export with main:false. It adds no Source file outside Native artifact storage. Filenames and captured paths retain the256-character bounds.
+
+The same three selected titles have explicit ceilings25000,120000,90000. The Node law increased45000→90000, with actual control30000→60000 to cover compiler capture, captured-parent process, and Node child. Their sum235000 plus60000 shared margin gives map phase295000; CLI120000 is unchanged. No title or explicit Source-witness count was added. Root owns selection and policy integration.
+
+Static verification: strict Ajv validates the closed six-case fixture; Node module, literal owned program, and test syntax diagnostics are0; the loader is a no-substitution String.raw tagged literal; all four current pins match a second ordinary single-link no-follow FD/name read. Independent fixture/timing and runtime/control reviews reported clear. The actual captured-parent/Node law remains unrun, and no production Source was evaluated through tooling. This agent performed no Native, raw Node/Bun, CLI, cache, ledger, or peer action. Own Source writes are complete.
+
+| Current Source | Bytes | SHA256 |
+|---|---:|---|
+| [🟢️node/🟨️.mjs](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs) | 8991 | `dcc896b84dc53761bc694ddc0779e58d3fc13d2292f093474bab0be09125a1f3` |
+| [🧬️schema/🔣️.json](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json) | 16279 | `1b52aac576d4f46cce86e81df7d8c87bea679ad15e3d102fdab1b9d3b0779b27` |
+| [🧪️tests/🕸️resolution/🔣️.json](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🕸️resolution/🔣️.json) | 1870 | `c0358e24ac474e23e94b972224ca23bda3f685f5aa3b8b7020c6771f721b7d16` |
+| [🧪️tests/🕸️resolution/🟦️.ts](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🕸️resolution/🟦️.ts) | 14774 | `ef1f69c1b581d9ca890d4adf11f100225e0c062d66ffd26949183904028e47b9` |
+
+[Exact before/current pins, causal evidence, and test/phase descriptor](🗑️generated/node-owned-program-current.json).

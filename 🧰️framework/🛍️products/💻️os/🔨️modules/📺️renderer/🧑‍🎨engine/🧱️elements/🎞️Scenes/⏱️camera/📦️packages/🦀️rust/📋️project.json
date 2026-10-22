@@ -30,7 +30,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts node-key source",
+        "command": "repo ./📜️script.ts node-key source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }
@@ -47,7 +47,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts node-key native",
+        "command": "repo ./📜️script.ts node-key native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }

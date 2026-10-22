@@ -19,7 +19,7 @@ fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
     let sum = Generation2dDiffRead::new(sum);
     assert_eq!(sum.camera.as_ref(), Some(&incoming));
     assert_eq!(sum.selected_generation, Some(Generation2dSelectionChange { id: None }));
-    let next = Generation2dSnapshotRead::new(protocol::apply_diff(&*sum, &base).expect("absorbed diff applies"));
+    let next = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*sum, &base).expect("absorbed diff applies"));
     assert_eq!(next.host_snapshot.camera, incoming);
     let camera: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next.host_snapshot.camera)).unwrap();
     assert_eq!(camera, oracle["incomingCamera"]);
@@ -38,13 +38,13 @@ fn diff_apply_updates_widget_rows_and_inverts() {
         }),
         ..Default::default()
     });
-    let next = Generation2dSnapshotRead::new(protocol::apply_diff(&*diff, &snapshot).expect("valid mutation diff"));
+    let next = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*diff, &snapshot).expect("valid mutation diff"));
     assert_eq!(next.host_snapshot.widgets.len(), snapshot.host_snapshot.widgets.len() + 1);
     assert_eq!(widget_id(&next.host_snapshot.widgets[1]), "fresh");
     let replaced = next.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == existing_id.as_str()).expect("replaced");
     assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
     let inverse = Generation2dDiffRead::new(DiffAlgebra::inverse(&*diff, &*snapshot));
-    let restored = Generation2dSnapshotRead::new(protocol::apply_diff(&*inverse, &next).expect("inverse applies"));
+    let restored = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*inverse, &next).expect("inverse applies"));
     assert_eq!(*restored, *snapshot);
 }
 
@@ -64,8 +64,8 @@ fn absorb_cancels_add_then_remove_and_turns_remove_then_add_into_replace() {
     let bring_back = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta { inserted: vec![Generation2dWidgetInsertion { index: 0, row: Widget::InputNote { id: existing.clone(), text: "again".into() } }], ..Default::default() }), ..Default::default() };
     let mut replaced = drop_existing.clone();
     MutationDiff::absorb(&mut replaced, bring_back.clone());
-    let sequential = Generation2dSnapshotRead::new(protocol::apply_diff(&bring_back, &Generation2dSnapshotRead::new(protocol::apply_diff(&drop_existing, &base).expect("drop applies"))).expect("bring back applies"));
-    let absorbed = Generation2dSnapshotRead::new(protocol::apply_diff(&replaced, &base).expect("absorbed applies"));
+    let sequential = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&bring_back, &Generation2dSnapshotRead::new(protocol::apply_diff_cold(&drop_existing, &base).expect("drop applies"))).expect("bring back applies"));
+    let absorbed = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&replaced, &base).expect("absorbed applies"));
     assert_eq!(*absorbed, *sequential);
     Generation2dDiff::retire_cold(replaced);
     Generation2dDiff::retire_cold(bring_back);
@@ -80,7 +80,7 @@ fn absorb_cancels_add_then_remove_and_turns_remove_then_add_into_replace() {
 fn the_mutation_diff_contract_retires_an_inhabited_layout_delta_and_its_scratch_projection() {
     let base = empty_generation2d_snapshot();
     let diff = Generation2dDiff { layout: Some(Generation2dLayoutDelta { added: vec![Generation2dLayoutRow { id: "laid-out".into(), layout: semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 } }], ..Default::default() }), ..Default::default() };
-    let scratch = protocol::apply_diff(&diff, &base).expect("inhabited layout delta applies");
+    let scratch = protocol::apply_diff_cold(&diff, &base).expect("inhabited layout delta applies");
     assert!(scratch.host_snapshot.layout.contains_key("laid-out"));
     <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_projection(scratch);
     <Generation2dDiff as MutationDiff<Generation2dSnapshot>>::retire_cold(diff);
@@ -95,16 +95,16 @@ fn positional_widget_delta_moves_sums_and_inverts_at_middle_rows() {
     assert!(length >= 2, "the empty snapshot seeds at least two widgets");
     let note = || Widget::InputNote { id: "fresh".into(), text: "fresh".into() };
     let insert = Generation2dDiffRead::new(Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::insertion(1, note())), ..Default::default() });
-    let inserted = Generation2dSnapshotRead::new(protocol::apply_diff(&*insert, &base).expect("valid insertion"));
+    let inserted = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*insert, &base).expect("valid insertion"));
     let relocate = Generation2dDiffRead::new(Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::relocation(&inserted.host_snapshot.widgets, length, 0)), ..Default::default() });
-    let moved = Generation2dSnapshotRead::new(protocol::apply_diff(&*relocate, &inserted).expect("valid relocation"));
+    let moved = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*relocate, &inserted).expect("valid relocation"));
     assert_eq!(widget_id(&moved.host_snapshot.widgets[0]), widget_id(&inserted.host_snapshot.widgets[length]));
     let mut sum = Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::insertion(1, note())), ..Default::default() };
     MutationDiff::absorb(&mut sum, Generation2dDiff { widgets: Some(Generation2dWidgetsDelta::relocation(&inserted.host_snapshot.widgets, length, 0)), ..Default::default() });
     let sum = Generation2dDiffRead::new(sum);
-    let summed = Generation2dSnapshotRead::new(protocol::apply_diff(&*sum, &base).expect("valid sum"));
+    let summed = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*sum, &base).expect("valid sum"));
     assert_eq!(summed.host_snapshot.widgets, moved.host_snapshot.widgets);
     let inverse = Generation2dDiffRead::new(DiffAlgebra::inverse(&*sum, &base));
-    let restored = Generation2dSnapshotRead::new(protocol::apply_diff(&*inverse, &moved).expect("valid inverse"));
+    let restored = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&*inverse, &moved).expect("valid inverse"));
     assert_eq!(restored.host_snapshot.widgets, base.host_snapshot.widgets);
 }

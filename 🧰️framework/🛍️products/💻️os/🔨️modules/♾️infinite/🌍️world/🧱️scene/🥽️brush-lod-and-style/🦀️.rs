@@ -30,7 +30,7 @@ const WORLD_BRUSH_MESH_REUPLOAD_CLAIMS: u32 = 2;
 /// this lane announces out of is bounded by.
 const WORLD_BRUSH_MESH_REGISTRY_CAPACITY: usize = WORLD_DYNAMIC_MESH_CAPACITY;
 
-struct WorldBrushMeshEntry {
+pub struct WorldBrushMeshEntry {
     pub digest: String,
     paged: bool,
 }
@@ -51,7 +51,7 @@ struct WorldBrushMeshEntry {
 /// - `meshReuploadUrls` — identities a refused id-only announcement is waiting on bytes for, claimed
 ///   at most [`WORLD_BRUSH_MESH_REUPLOAD_CLAIMS`] times per instantiation so a republished stale
 ///   world body cannot re-drive an upload that already ran.
-struct WorldBrushMeshRegistry {
+pub struct WorldBrushMeshRegistry {
     residency: i64,
     pub generation: u64,
     pub entries: HashMap<String, WorldBrushMeshEntry>,
@@ -139,7 +139,7 @@ pub fn sync_world3d_brush_mesh_feedback(assets_state: &mut WorldAssetsState, int
 }
 
 #[derive(Deserialize)]
-struct World3dBrushMeshFeedbackRecord {
+pub struct World3dBrushMeshFeedbackRecord {
     #[serde(rename = "meshResidency")]
     mesh_residency: Option<u64>,
     #[serde(rename = "meshReuploadUrls", default)]
@@ -720,7 +720,7 @@ pub fn retain_ensured_world_material_draws(gpu: &World3dBuildContext, draws: &mu
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-struct WorldTranslucentMaterialItem {
+pub struct WorldTranslucentMaterialItem {
     pub source: usize,
     pub depth: f32,
     pub ordinal: usize,

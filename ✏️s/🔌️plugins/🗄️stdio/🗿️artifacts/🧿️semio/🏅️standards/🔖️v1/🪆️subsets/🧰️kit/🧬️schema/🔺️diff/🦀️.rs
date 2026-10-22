@@ -150,8 +150,22 @@ impl SemioKitDiff {
     }
 }
 
-impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
-    fn apply(&self, base: &SemioKitSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioKitSnapshot> {
+impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {}
+
+impl protocol::ColdMutationDiff<SemioKitSnapshot> for SemioKitDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_indexed_slot(&mut self.types, other.types);
+        absorb_indexed_slot(&mut self.designs, other.designs);
+        absorb_indexed_slot(&mut self.objects, other.objects);
+        absorb_indexed_slot(&mut self.models, other.models);
+        if other.properties.is_some() {
+            self.properties = other.properties;
+        }
+        absorb_indexed_slot(&mut self.representations, other.representations);
+    }
+
+    fn apply(&self, unpublished: &mut SemioKitSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(types) = &self.types {
             validate_indexed_triple(types, base.types.len(), ["types"])?;
@@ -176,18 +190,8 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
             validate_indexed_triple(representations, base.representations.len(), ["representations"])?;
             next.representations = apply_indexed_rows(representations, &base.representations);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_indexed_slot(&mut self.types, other.types);
-        absorb_indexed_slot(&mut self.designs, other.designs);
-        absorb_indexed_slot(&mut self.objects, other.objects);
-        absorb_indexed_slot(&mut self.models, other.models);
-        if other.properties.is_some() {
-            self.properties = other.properties;
-        }
-        absorb_indexed_slot(&mut self.representations, other.representations);
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -195,6 +199,12 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
 /// keyed rows (the `properties` slot restores the base child); `between` is the positional sync/import delta, never used by
 /// mutation leaves.
 impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
     fn inverse(&self, base: &SemioKitSnapshot) -> Self {
         SemioKitDiff {
             types: self.types.as_ref().map(|d| inverse_indexed_rows(d, &base.types)),
@@ -204,9 +214,6 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
             representations: self.representations.as_ref().map(|d| inverse_indexed_rows(d, &base.representations)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 //#endregion 🔖️Diff

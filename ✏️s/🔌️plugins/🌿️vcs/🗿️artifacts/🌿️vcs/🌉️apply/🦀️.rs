@@ -9,7 +9,7 @@ use crate::VcsSnapshot;
 /// diff carries an empty `VcsDiff`, so the snapshot is left untouched and `Ok(())` is still
 /// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
 pub fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> protocol::MutationApplyResult<()> {
-    let next = protocol::apply_diff(<VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
+    let next = protocol::apply_diff_cold(<VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }
@@ -19,8 +19,8 @@ pub fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation
 /// so neither the outcome-policy claim a committed `🎯️outcome/🔣️.json` makes nor a
 /// synchronous test adapter can be served by it.
 pub fn apply_vcs_mutation_reporting(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<String> {
-    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
+    let outcome = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(mutation, snapshot);
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), &*snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| message.code.0.clone()).collect()

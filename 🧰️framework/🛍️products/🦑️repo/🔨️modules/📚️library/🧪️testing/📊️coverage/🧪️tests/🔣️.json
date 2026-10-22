@@ -1,0 +1,296 @@
+{
+ "version": 1,
+ "excluded": [
+  {
+   "path": "a/generated/x.ts",
+   "expected": true
+  },
+  {
+   "path": "framework/module/asset/metabolism/icon/generated/t.rs",
+   "expected": true
+  },
+  {
+   "path": "pkg/foo/pkg/x.js",
+   "expected": true
+  },
+  {
+   "path": "ui/Button.stories.tsx",
+   "expected": true
+  },
+  {
+   "path": "ui/Button.stories.ts",
+   "expected": true
+  },
+  {
+   "path": "x/y.spec.ts",
+   "expected": true
+  },
+  {
+   "path": "x/y.test.ts",
+   "expected": true
+  },
+  {
+   "path": ".storybook/main.ts",
+   "expected": true
+  },
+  {
+   "path": "docs/m.tex",
+   "expected": true
+  },
+  {
+   "path": "gpu/s.wgsl",
+   "expected": true
+  },
+  {
+   "path": "img/i.svg",
+   "expected": true
+  },
+  {
+   "path": "elements/client/lib/geometry/topologic/a.cpp",
+   "expected": true
+  },
+  {
+   "path": "framework/product/os/module/renderer/wgpu/x.rs",
+   "expected": true
+  },
+  {
+   "path": "framework/module/ui/wgpu/y.rs",
+   "expected": true
+  },
+  {
+   "path": "app/dist/o.js",
+   "expected": true
+  },
+  {
+   "path": "app/node_modules/p/i.js",
+   "expected": true
+  },
+  {
+   "path": "crate/target/debug/x.rs",
+   "expected": true
+  },
+  {
+   "path": ".\\a\\generated\\x.ts",
+   "expected": true
+  },
+  {
+   "path": "./a/generated/x.ts",
+   "expected": true
+  },
+  {
+   "path": "a\\b\\c.test.ts",
+   "expected": true
+  },
+  {
+   "path": "app/.storybook/main.ts",
+   "expected": false
+  },
+  {
+   "path": "src/a.ts",
+   "expected": false
+  },
+  {
+   "path": "src/generatedness/x.ts",
+   "expected": false
+  },
+  {
+   "path": "src/pkgs/x.ts",
+   "expected": false
+  },
+  {
+   "path": "src/stories/x.ts",
+   "expected": false
+  },
+  {
+   "path": "src/a.test.tsx",
+   "expected": false
+  },
+  {
+   "path": "src/a.tsx",
+   "expected": false
+  },
+  {
+   "path": "framework/module/ui/wgpuish/x.rs",
+   "expected": false
+  },
+  {
+   "path": "framework/module/ui/wgpu.rs",
+   "expected": false
+  },
+  {
+   "path": "src/target.rs",
+   "expected": false
+  },
+  {
+   "path": "docs/m.texx",
+   "expected": false
+  },
+  {
+   "path": "src/i.svg.ts",
+   "expected": false
+  },
+  {
+   "path": "elements/client/lib/geometry/x.cpp",
+   "expected": false
+  }
+ ],
+ "excludedDefects": [
+  {
+   "path": "generated/x.ts",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "dist/x.js",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "target/debug/x.rs",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "node_modules/p/i.js",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "x.test.ts",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "y.spec.ts",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "Button.stories.ts",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "s.wgsl",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  },
+  {
+   "path": "pkg/x.js",
+   "expected": true,
+   "defect": "📊️coverage/🟦️.ts:coverageGlobToRegExp turns `**/x/**` into `.*/x/.*`, which needs a leading path segment: an entry at the repository root (`generated/…`, `dist/…`, `target/…`, `x.test.ts`) is not excluded although `**/` also matches zero directories"
+  }
+ ],
+ "reasonKeys": true,
+ "summary": {
+  "merged": [
+   [
+    "src/a.ts",
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      3,
+      2
+     ]
+    ]
+   ],
+   [
+    "src/b.ts",
+    [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ]
+    ]
+   ],
+   [
+    "x/generated/g.ts",
+    [
+     [
+      1,
+      1
+     ]
+    ]
+   ],
+   [
+    "src/empty.ts",
+    []
+   ],
+   [
+    "src/z.ts",
+    [
+     [
+      1,
+      1
+     ]
+    ]
+   ]
+  ],
+  "expected": {
+   "linesFound": 6,
+   "linesHit": 3,
+   "pct": 50.0,
+   "perFile": [
+    {
+     "path": "src/b.ts",
+     "linesFound": 2,
+     "linesHit": 0,
+     "pct": 0.0
+    },
+    {
+     "path": "src/a.ts",
+     "linesFound": 3,
+     "linesHit": 2,
+     "pct": 66.66666666666666
+    },
+    {
+     "path": "src/z.ts",
+     "linesFound": 1,
+     "linesHit": 1,
+     "pct": 100.0
+    },
+    {
+     "path": "src/empty.ts",
+     "linesFound": 0,
+     "linesHit": 0,
+     "pct": 100.0
+    }
+   ]
+  }
+ },
+ "threshold": {
+  "pct": 50.0,
+  "passing": 50.0,
+  "failing": 80.0,
+  "worst": 2
+ },
+ "slug": [
+  [
+   "my module/1",
+   "my_module_1"
+  ],
+  [
+   "ok-name_1",
+   "ok-name_1"
+  ],
+  [
+   "a..b",
+   "a_b"
+  ],
+  [
+   "",
+   ""
+  ]
+ ]
+}

@@ -1,0 +1,203 @@
+{
+ "version": 1,
+ "extract": [
+  {
+   "name": "the named type with every field shape",
+   "text": "\"\"\"Block doc for the schema\"\"\"\ntype Widget {\n  \"single line doc\"\n  id: String!\n  displayName: String\n  count: Int!\n  big: UInt64\n  ratio: Float!\n  enabled: Boolean!\n  tags: [String!]!\n  names: [String]\n  labels: [LabelsEntry!]!\n  blob: Bytes\n  status: String! @state(class: PERSISTED_SHARED)\n  filtered(first: Int = 10, after: String): [Item!]\n  # comment: Fake!\n  ref: Other!\n}\n\ntype Other { zzz: String! }\n\ntype Empty\n",
+   "type": "Widget",
+   "expected": {
+    "typeName": "Widget",
+    "fields": [
+     {
+      "name": "id",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "displayName",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "count",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     },
+     {
+      "name": "big",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "UInt64",
+      "state": ""
+     },
+     {
+      "name": "ratio",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "float64",
+      "state": ""
+     },
+     {
+      "name": "enabled",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     },
+     {
+      "name": "tags",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "names",
+      "optional": true,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "labels",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "Labels",
+      "state": ""
+     },
+     {
+      "name": "blob",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "Bytes",
+      "state": ""
+     },
+     {
+      "name": "status",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": "persisted-shared"
+     },
+     {
+      "name": "filtered",
+      "optional": true,
+      "cardinality": "list",
+      "scalar": "Item",
+      "state": ""
+     },
+     {
+      "name": "ref",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "Other",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "a second type",
+   "text": "\"\"\"Block doc for the schema\"\"\"\ntype Widget {\n  \"single line doc\"\n  id: String!\n  displayName: String\n  count: Int!\n  big: UInt64\n  ratio: Float!\n  enabled: Boolean!\n  tags: [String!]!\n  names: [String]\n  labels: [LabelsEntry!]!\n  blob: Bytes\n  status: String! @state(class: PERSISTED_SHARED)\n  filtered(first: Int = 10, after: String): [Item!]\n  # comment: Fake!\n  ref: Other!\n}\n\ntype Other { zzz: String! }\n\ntype Empty\n",
+   "type": "Other",
+   "expected": {
+    "typeName": "Other",
+    "fields": [
+     {
+      "name": "zzz",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "a braceless empty type at the end of the document",
+   "text": "\"\"\"Block doc for the schema\"\"\"\ntype Widget {\n  \"single line doc\"\n  id: String!\n  displayName: String\n  count: Int!\n  big: UInt64\n  ratio: Float!\n  enabled: Boolean!\n  tags: [String!]!\n  names: [String]\n  labels: [LabelsEntry!]!\n  blob: Bytes\n  status: String! @state(class: PERSISTED_SHARED)\n  filtered(first: Int = 10, after: String): [Item!]\n  # comment: Fake!\n  ref: Other!\n}\n\ntype Other { zzz: String! }\n\ntype Empty\n",
+   "type": "Empty",
+   "expected": {
+    "typeName": "Empty",
+    "fields": []
+   },
+   "oracle": true
+  },
+  {
+   "name": "an unknown type",
+   "text": "\"\"\"Block doc for the schema\"\"\"\ntype Widget {\n  \"single line doc\"\n  id: String!\n  displayName: String\n  count: Int!\n  big: UInt64\n  ratio: Float!\n  enabled: Boolean!\n  tags: [String!]!\n  names: [String]\n  labels: [LabelsEntry!]!\n  blob: Bytes\n  status: String! @state(class: PERSISTED_SHARED)\n  filtered(first: Int = 10, after: String): [Item!]\n  # comment: Fake!\n  ref: Other!\n}\n\ntype Other { zzz: String! }\n\ntype Empty\n",
+   "type": "Nope",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "no expected name",
+   "text": "\"\"\"Block doc for the schema\"\"\"\ntype Widget {\n  \"single line doc\"\n  id: String!\n  displayName: String\n  count: Int!\n  big: UInt64\n  ratio: Float!\n  enabled: Boolean!\n  tags: [String!]!\n  names: [String]\n  labels: [LabelsEntry!]!\n  blob: Bytes\n  status: String! @state(class: PERSISTED_SHARED)\n  filtered(first: Int = 10, after: String): [Item!]\n  # comment: Fake!\n  ref: Other!\n}\n\ntype Other { zzz: String! }\n\ntype Empty\n",
+   "type": null,
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "a comment or string with a colon is not a field",
+   "text": "type T {\n  # hidden: Fake!\n  \"a: String\"\n  real: Int\n}\n",
+   "type": "T",
+   "expected": {
+    "typeName": "T",
+    "fields": [
+     {
+      "name": "real",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "an argument list does not leak its names",
+   "text": "type T { f(a: Int!, b: [String!]): String! }",
+   "type": "T",
+   "expected": {
+    "typeName": "T",
+    "fields": [
+     {
+      "name": "f",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  }
+ ],
+ "defects": [
+  {
+   "name": "a braceless empty type followed by another type",
+   "text": "type Empty\ntype Other { zzz: String! }\n",
+   "type": "Empty",
+   "expected": {
+    "typeName": "Empty",
+    "fields": []
+   },
+   "defect": "🔗️graphql/🟦️.ts: the braceless-type fallback uses a negative lookahead for any later `{`, so `type Empty` followed by another type definition is read as absent (typeName empty)"
+  }
+ ]
+}

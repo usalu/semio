@@ -7,24 +7,22 @@ use semio_framework_os_store_ledger::edit_retirement;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_replay::replay_preparation;
-use replay_preparation::ArtifactReplayPreparationProgress;
+use semio_framework_os_store_replay_operation as replay_preparation;
+use replay_preparation::{ArtifactDerivedOperation, ArtifactReplayPrepared, ArtifactReplayPreparationContext, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRequest, ArtifactReplayPreparationTask};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use semio_framework_os_spr::{Edit, Mutation, MutationMeta, OpBinary, OpText};
+use semio_framework_os_spr::{Edit, ColdMutation, Mutation, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactDerivedSnapshot, ErasedSnapshotRead, SnapshotRead, retire_document_envelope};
+use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactDerivedSnapshot, ErasedSnapshotRead, SnapshotRead};
 use semio_framework_os_store_engine_owners::DocumentStoreOwners;
-use semio_framework_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreCursorDisposerPhase, ArtifactStoreDisplacedRetirements, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, SnapshotReadLeaseRegistryOwner};
+use semio_framework_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreCursorDisposerPhase, ArtifactStoreDisplacedRetirements, ArtifactStoreStringVectorRetirement, SnapshotReadLeaseRegistryOwner};
 use semio_framework_os_store_read::history_read_admission::PreparedHistoryReadRetirement;
 use semio_framework_os_store_retirement::resident_backing;
-use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_framework_os_vcs::io::binary::entity_identity::{mint_alternative_id, mint_change_id};
 use semio_framework_os_vcs::io::binary::checkpoint_identity::content_addressed_checkpoint_id;
@@ -47,7 +45,7 @@ use semio_framework_os_store_text_io::text_format::{mutation_ids, validate_durab
 use semio_framework_os_store_command::parse_command;
 use semio_framework_os_store_command::retire_command;
 use semio_framework_os_store_ledger::fold_envelope_history;
-use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport, StackMirrorDirt, retire_replayed_projection, retire_supersede_inputs, validate_composition_pins};
+use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, PendingCommandReport, StackMirrorDirt, retire_replayed_projection, retire_supersede_inputs, validate_composition_pins};
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::{ArtifactStoreBatchAdmissionRejected, ArtifactStoreBatchPublication};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparationFactory};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreBatchItemAuthority, ArtifactStoreBatchSourceOf};
@@ -55,8 +53,8 @@ use semio_framework_os_store_one_item_batch::lifted_one_item_publication::Artifa
 use semio_framework_os_store_operation_wire::{ArtifactOperationWire, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError};
 use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, LaneItemReceipt};
 use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactStorePublication;
-use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep};
-use semio_framework_os_store_replay::{PREFIX_SNAPSHOT_RING_CAPACITY, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, fold_effective_edit, retire_shared_projection, same_effective_inputs};
+use semio_framework_os_store_replay::{EditReplay, EditReplayResult, IndexedAppliedReplayEdits, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep};
+use semio_framework_os_store_replay::{PREFIX_SNAPSHOT_RING_CAPACITY, REPROJECTION_OWNER_SLOTS, fold_effective_edit, retire_shared_projection, same_effective_inputs};
 //#region 🔖️Backbone
 //#region 🔖️Backbone
 use semio_framework_os_store_backbone as backbone;
@@ -85,6 +83,10 @@ use semio_framework_os_store_engine_live::lifted_store::AppliedMutation;
 use semio_framework_os_store_engine_live::lifted_store::transition_retraction_closure;
 use semio_framework_os_store_engine_core::lifted_store::fold_history;
 
+#[path = "../../../🔁️replay/🎮️operation/🌱️derived/🧩️store/🦀️.rs"]
+mod derived_operation_store;
+#[path = "../../../🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🦀️.rs"]
+mod original_report_replay_store;
 #[path = "🗒️draft-config-store-and-checkpoint-identity/🦀️.rs"]
 mod draft_config_store_and_checkpoint_identity;
 pub use draft_config_store_and_checkpoint_identity::{
@@ -113,9 +115,8 @@ pub use close_host_drop_and_pair_merge::{
     merge_by_id, preflight_merge_by_id, retract_history_transitions_from_spr, HistoryFinalization,
     SupersedeScope,
 };
-use semio_framework_os_store_replay::replay_preparation::derived_operation::ArtifactDerivedOperationMode;
-#[cfg(test)] use semio_framework_os_spr::ColdMutation;
-#[cfg(test)] use semio_framework_os_spr::MutationDiff;
+use semio_framework_os_store_replay_operation::derived_operation::ArtifactDerivedOperationMode;
+use semio_framework_os_spr::MutationDiff;
 
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
@@ -124,8 +125,8 @@ use semio_framework_os_store_replay::replay_preparation::derived_operation::Arti
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + ArtifactPack + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn admit_derived_source(&self, registry: &SnapshotReadRegistryHandle, generation: u64, revision: [u8; 32]) -> Result<(), VcsError> {
         self.cursor.admit_derived_source(&self.owners, &self.wire, registry, generation, revision)
@@ -167,7 +168,6 @@ where
         Ok(RetainedCloneStep::Complete(progress))
     }
 
-    #[cfg(test)]
     pub fn derive_reference_provisional_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.admit_derived_source(&source.registry, source.generation, source.revision)?;
         let outcome = <Mutation as ColdMutation<P>>::diff(op, source.snapshot());
@@ -178,7 +178,6 @@ where
         Ok(next.map(|owner| self.seal_derived_snapshot(Arc::new(owner))))
     }
 
-    #[cfg(test)]
     pub fn derive_reference_history_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.admit_derived_source(&source.registry, source.generation, source.revision)?;
         let (diff, mut messages) = <Mutation as ColdMutation<P>>::diff(op, source.snapshot()).into_parts();
@@ -340,9 +339,9 @@ where
 
 }
 
-impl<P, Mutation> ArtifactStore<P, Mutation> where P: ToValue,Mutation: ToValue+semio_framework_os_spr::Mutation<P> {
+impl<P, Mutation> ArtifactStore<P, Mutation> where P: Clone + ToValue + FromValue + Send + Sync + 'static, Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static {
     pub fn publish_prepared_diagnostics(&mut self, diagnostics:&mut ArtifactStoreDiagnosticStage, grant:RetainedCloneGrant)->Result<RetainedCloneProgress,VcsError>{
-        semio_framework_os_store_engine_bundle::publish_prepared_diagnostics(&mut self.parts(), diagnostics, grant)
+        semio_framework_os_store_engine_live::lifted_store::publish_prepared_diagnostics(&mut self.parts(), diagnostics, grant)
     }
 
 }

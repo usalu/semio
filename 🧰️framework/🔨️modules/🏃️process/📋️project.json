@@ -27,7 +27,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "metadata": {
         "semio": {
@@ -52,7 +52,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test descriptor-lifetime"
+        "command": "repo ./📜️script.ts test descriptor-lifetime"
       },
       "metadata": {
         "semio": {
@@ -96,7 +96,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test process-progress"
+        "command": "repo ./📜️script.ts test process-progress"
       },
       "metadata": {
         "semio": {
@@ -140,7 +140,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test routing"
+        "command": "repo ./📜️script.ts test routing"
       }
     },
     "test-artifact-files": {
@@ -157,12 +157,12 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test artifact-files"
+        "command": "repo ./📜️script.ts test artifact-files"
       }
     },
     "test-owned-execution": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "default",
@@ -174,7 +174,27 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test owned-execution"
+        "command": "repo ./📜️script.ts test owned-execution"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🎛️owned-execution/🧪️tests/🟦️.ts",
+            "{projectRoot}/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/🟦️.ts",
+            "{projectRoot}/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/👷️child/📜️script.ts",
+            "{projectRoot}/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts"
+          ]
+        }
       }
     },
     "test-process-tree-termination": {
@@ -187,7 +207,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test process-tree-termination"
+        "command": "repo ./📜️script.ts test process-tree-termination"
       },
       "metadata": {
         "semio": {
@@ -218,7 +238,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test budget"
+        "command": "repo ./📜️script.ts test budget"
       }
     },
     "test-execution-budget": {
@@ -231,7 +251,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test execution-budget"
+        "command": "repo ./📜️script.ts test execution-budget"
       },
       "metadata": {
         "semio": {
@@ -275,7 +295,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test test-command"
+        "command": "repo ./📜️script.ts test test-command"
       }
     },
     "test-cargo-profile": {
@@ -292,7 +312,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-profile"
+        "command": "repo ./📜️script.ts test cargo-profile"
       }
     },
     "test-cargo-driver": {
@@ -309,7 +329,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-driver"
+        "command": "repo ./📜️script.ts test cargo-driver"
       }
     },
     "test-resource-leases": {
@@ -322,7 +342,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test resource-leases"
+        "command": "repo ./📜️script.ts test resource-leases"
       },
       "metadata": {
         "semio": {
@@ -348,7 +368,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test vitest-driver"
+        "command": "repo ./📜️script.ts test vitest-driver"
       }
     },
     "test-artifact-publication": {
@@ -365,7 +385,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test artifact-publication"
+        "command": "repo ./📜️script.ts test artifact-publication"
       }
     },
     "test-owner-context": {
@@ -382,7 +402,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test owner-context"
+        "command": "repo ./📜️script.ts test owner-context"
       }
     },
     "test-capture": {
@@ -399,7 +419,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test capture"
+        "command": "repo ./📜️script.ts test capture"
       }
     },
     "test-exact-cargo-laws": {
@@ -416,7 +436,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test exact-cargo-laws"
+        "command": "repo ./📜️script.ts test exact-cargo-laws"
       }
     },
     "test-native-artifacts": {
@@ -433,7 +453,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-artifacts"
+        "command": "repo ./📜️script.ts test native-artifacts"
       }
     },
     "test-native-storage-platform": {
@@ -446,7 +466,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-storage-platform"
+        "command": "repo ./📜️script.ts test native-storage-platform"
       },
       "metadata": {
         "semio": {
@@ -476,7 +496,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "metadata": {
         "semio": {
@@ -501,7 +521,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- repo ./📜️script.ts test command"
       }
     },
     "test-command-boundary": {
@@ -518,7 +538,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command-boundary"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- repo ./📜️script.ts test command-boundary"
       }
     },
     "test-command-cold": {
@@ -535,7 +555,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command-cold"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- repo ./📜️script.ts test command-cold"
       }
     },
     "test-cargo-test-leases": {
@@ -548,7 +568,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-test-leases"
+        "command": "repo ./📜️script.ts test cargo-test-leases"
       },
       "metadata": {
         "semio": {
@@ -570,7 +590,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test native-build-mode",
+        "command": "repo ./📜️script.ts test native-build-mode",
         "cwd": "🧰️framework/🔨️modules/🏃️process"
       },
       "cache": true
@@ -596,7 +616,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test managed-build-mode"
+        "command": "repo ./📜️script.ts test managed-build-mode"
       }
     },
     "test-go-build-mode": {
@@ -611,7 +631,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test go-build-mode"
+        "command": "repo ./📜️script.ts test go-build-mode"
       }
     },
     "test-cargo-source-admission": {
@@ -636,7 +656,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-source-admission"
+        "command": "repo ./📜️script.ts test cargo-source-admission"
       },
       "metadata": {
         "semio": {
@@ -681,7 +701,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-cache-descriptors"
+        "command": "repo ./📜️script.ts test native-cache-descriptors"
       },
       "metadata": {
         "semio": {
@@ -729,7 +749,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-image-observation"
+        "command": "repo ./📜️script.ts test native-image-observation"
       },
       "metadata": {
         "semio": {
@@ -775,7 +795,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test runtime-environment"
+        "command": "repo ./📜️script.ts test runtime-environment"
       },
       "metadata": {
         "semio": {
@@ -815,7 +835,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test compiler-state"
+        "command": "repo ./📜️script.ts test compiler-state"
       },
       "metadata": {
         "semio": {
@@ -836,7 +856,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-build-lease"
+        "command": "repo ./📜️script.ts test cargo-build-lease"
       },
       "metadata": {
         "semio": {
@@ -862,7 +882,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-artifact-publication"
+        "command": "repo ./📜️script.ts test native-artifact-publication"
       },
       "metadata": {
         "semio": {
@@ -893,7 +913,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test native-queued-cancellation"
+        "command": "repo ./📜️script.ts test native-queued-cancellation"
       }
     },
     "test-compiler-capacity": {
@@ -906,7 +926,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test compiler-capacity"
+        "command": "repo ./📜️script.ts test compiler-capacity"
       },
       "metadata": {
         "semio": {
@@ -929,7 +949,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test compiler-capacity-inheritance"
+        "command": "repo ./📜️script.ts test compiler-capacity-inheritance"
       },
       "metadata": {
         "semio": {
@@ -951,7 +971,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test compiler-capacity-custodian"
+        "command": "repo ./📜️script.ts test compiler-capacity-custodian"
       },
       "metadata": {
         "semio": {
@@ -974,7 +994,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test cargo-profile-policy"
+        "command": "repo ./📜️script.ts test cargo-profile-policy"
       },
       "cache": true
     },
@@ -993,7 +1013,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test workspace"
+        "command": "repo ./📜️script.ts test workspace"
       }
     },
     "test-exact-cargo-storage": {
@@ -1022,7 +1042,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test exact-cargo-storage"
+        "command": "repo ./📜️script.ts test exact-cargo-storage"
       }
     },
     "test-resource-lease-waits": {
@@ -1035,7 +1055,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test resource-lease-waits"
+        "command": "repo ./📜️script.ts test resource-lease-waits"
       },
       "metadata": {
         "semio": {
@@ -1061,7 +1081,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test resource-lease-fairness"
+        "command": "repo ./📜️script.ts test resource-lease-fairness"
       },
       "metadata": {
         "semio": {
@@ -1087,7 +1107,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test resource-lease-order"
+        "command": "repo ./📜️script.ts test resource-lease-order"
       },
       "metadata": {
         "semio": {
@@ -1113,7 +1133,111 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test resource-lease-order-processes"
+        "command": "repo ./📜️script.ts test resource-lease-order-processes"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-agent-sessions": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test agent-sessions"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-agent-sessions-adapters": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test agent-sessions-adapters"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-resource-lease-admission": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test resource-lease-admission"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-resource-lease-writer": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test resource-lease-writer"
       },
       "metadata": {
         "semio": {
@@ -1150,7 +1274,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test windows-conditional-retirement"
+        "command": "repo ./📜️script.ts test windows-conditional-retirement"
       },
       "metadata": {
         "semio": {

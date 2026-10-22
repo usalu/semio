@@ -31,7 +31,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-controlled-oracle"
+        "command": "repo ./📜️script.ts test-controlled-oracle"
       }
     },
     "test-native": {
@@ -47,7 +47,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-source": {
@@ -63,7 +63,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source"
+        "command": "repo ./📜️script.ts test-source"
       }
     },
     "test-text-error-portable": {
@@ -79,7 +79,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-text-error-portable"
+        "command": "repo ./📜️script.ts test-text-error-portable"
       }
     },
     "test-original-domain-source": {
@@ -95,7 +95,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-domain-source"
+        "command": "repo ./📜️script.ts test-original-domain-source"
       }
     },
     "test-original-domain-native": {
@@ -111,7 +111,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-domain-native"
+        "command": "repo ./📜️script.ts test-original-domain-native"
       }
     }
   }

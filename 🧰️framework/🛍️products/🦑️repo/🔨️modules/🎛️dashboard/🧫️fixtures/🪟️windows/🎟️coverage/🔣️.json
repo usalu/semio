@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "unitPackages": [
+    "semio-framework-repo-dashboard-feedback",
+    "semio-framework-repo-dashboard-keymap-editor",
+    "semio-framework-repo-dashboard-source-view"
+  ],
+  "native": [
+    {
+      "package": "semio-framework-repo-dashboard-terminal",
+      "source": "../../🖥️terminal/🦀️.rs",
+      "required": [
+        "source_ui_browses_saves_conflicts_and_requires_explicit_discard",
+        "source_worker_disconnect_retires_without_losing_a_document",
+        "source_committed_save_is_adopted_after_a_late_cancel",
+        "source_worker_yields_at_each_shared_message_quantum_without_losing_settlement",
+        "source_management_creates_renames_and_retains_with_guided_confirmation",
+        "source_management_blocks_dirty_documents_and_supports_nonempty_directories",
+        "source_management_adopts_committed_rename_after_cancellation_and_blocks_edits_until_settled",
+        "source_directory_commands_protect_descendants_and_browse_retained_history",
+        "source_worker_spawn_refusal_unlocks_and_retains_the_guided_form",
+        "terminal_backend_failures_preserve_primary_and_cleanup_from_portable_cases",
+        "unresolved_terminal_failure_reports_both_declared_languages_without_a_default",
+        "clipboard_failure_is_recoverable_and_diagnostics_remain_inspectable_and_copyable",
+        "local_control_failures_are_typed_translated_and_retained_under_a_bounded_history",
+        "settings_keymap_drafts_match_portable_save_cancel_and_refusal_cases",
+        "settings_prefix_is_editable_by_real_keys_and_cancel_never_queues_an_event",
+        "keymap_alias_reset_and_durable_save_results_preserve_other_preferences"
+      ]
+    },
+    {
+      "package": "semio-framework-repo-dashboard-source-view",
+      "source": "../../📂️workspace/🖥️view/🦀️.rs",
+      "required": [
+        "source_settlement_matches_portable_owner_generation_and_cancellation_cases"
+      ]
+    }
+  ],
+  "retainedFilters": [
+    "docking_",
+    "real_pointer_drags_",
+    "escape_focus_loss_",
+    "keyboard_docking_",
+    "every_window_docking_",
+    "splitter_drag_",
+    "nested_splits_"
+  ],
+  "neutralEntry": "../../📂️workspace/🖥️view/🧪️tests/🟦️.ts",
+  "settlementCases": [
+    "load",
+    "cancelled-load",
+    "committed-after-cancel",
+    "stale-operation",
+    "missing-window",
+    "dirty-load",
+    "changed-generation",
+    "worker-disconnected"
+  ]
+}

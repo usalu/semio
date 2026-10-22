@@ -1,19 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "@semio-tech/plugin-window-kits/media";
 import { collectMediaTransportBytes, type MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
+import { useMediaTransportOwner } from "./🔗️owner-scope/🟦️.tsx";
 
 export { MEDIA_TRANSPORT_EXTENSION_ID };
 
 export type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
-
-export type MediaTransportOwner = {
-  readonly instanceId: number;
-  readonly controllerId: string;
-  readonly windowId: string;
-  readonly port: MediaTransportPort;
-};
-
-export const MediaTransportOwnerContext = createContext<MediaTransportOwner | null>(null);
 
 type MediaTransportRun = { cancelRequested: boolean; admitted: boolean };
 
@@ -40,7 +32,7 @@ function invalidContractLabel(value: unknown): string {
 
 /** 🎬️ Owns one revision-bound media export and a real browser audio/video element. */
 export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value: unknown; readonly nodeId: string | number; readonly nodeKey: string }): ReactElement {
-  const owner = useContext(MediaTransportOwnerContext);
+  const owner = useMediaTransportOwner();
   const props = useMemo(() => parseProps(value), [value]);
   const mediaRef = useRef<HTMLMediaElement>(null);
   const runRef = useRef<MediaTransportRun | null>(null);

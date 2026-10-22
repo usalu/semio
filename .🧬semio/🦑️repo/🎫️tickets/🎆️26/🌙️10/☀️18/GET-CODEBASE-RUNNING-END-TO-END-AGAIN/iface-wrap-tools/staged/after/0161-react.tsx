@@ -1,222 +1,71 @@
-/** 🔷️ The SSR-safe diagram fallback: workflow nodes and edges mapped onto the diagram element, the workflow diagram node and the fallback surface.
- *
- * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
- */
-
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent
-} from "../../⚛️react-port/🟦️.ts";
-import {
-  CATALOGUE_DRAG_MIME,
-  cn,
-  ContextMenuController,
-  Diagram,
-  Handle,
-  Position,
-  surfaceClass,
-  useLabel,
-  type Edge,
-  type Node,
-  type NodeProps,
-  type NodeTypes
-} from "@semio-tech/ui-react";
-import {
-  nodeGraphActions,
-  type ActionDescriptor,
-  type ContextMenuItemSpec,
-  type NodeGraphEdgeRecord,
-  type NodeGraphFindItem,
-  type NodeGraphNodeRecord,
-  type NodeGraphScene,
-  type PluginContextMenuRequest,
-  type UiComponentSceneNode
-} from "@semio-tech/framework";
-import { openSurfaceContextMenu, useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
-import { nodeDragMoves, nodeDragRow } from "@semio-tech/framework/tool-machine";
-import {
-  DEFAULT_NODE_GRAPH_VIEWPORT,
-  nodeGraphConnectionIsValid,
-  portHandleId,
-  portLabel,
-  publishNodeGraphSelection,
-  type WorkflowNodeData
-} from "../🧰️graph-core/🟦️.ts";
-import { createNodeGraphInteractionLedger, nodeGraphSelectionMarkKey } from "../🫱️interaction-publication/🟦️.ts";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
+import { CanvasPickMenu, cn, ContextMenuController, SelectionMarquee, surfaceClass, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { type ActionDescriptor, type ContextMenuItemSpec, type NodeGraphScene, type PluginContextMenuRequest, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
+import { openSurfaceContextMenu } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
+import { parseSelectionDomainsFromSession, selectionGroupsFromDomains } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { type GraphKeyboardPort, graphPinchWheelPlan } from "../🧰️graph-core/🟦️.ts";
+import { alignModeToDag, GraphSliderOverlays, SelectionAlignChrome } from "../🖼️dag-overlays/🟦️.tsx";
+import { useWindowInstanceIdState } from "./🔶️window-instance-id/🟦️.tsx";
+import { useDispatchGraphEditsState } from "./🔸️dispatch-graph-edits/🟦️.tsx";
 
 //#region 🔖️NodeGraphHost
-//#region Parsing
-/** 🎯️ Diagram nodes for the React-Flow fallback board, carrying the PLUGIN's selection as their own
- * `selected` flag — see `DiagramGraphFallback`'s ledger docstring for why an unreflected selection is
- * an erased one. Exported for `🧪️tests/🫱️interaction-publication`. */
-export function workflowNodesToDiagramNodes(records: readonly NodeGraphNodeRecord[], selectedNodeIds: readonly string[] = []): Node<WorkflowNodeData>[] {
-  const selected = new Set(selectedNodeIds);
-  return records.map((record) => ({
-    id: record.id,
-    type: "workflow",
-    selected: selected.has(record.id),
-    position: { x: record.x, y: record.y },
-    data: {
-      label: record.label?.trim() || record.instanceId || record.id,
-      inputs: record.inputs,
-      outputs: record.outputs,
-      width: record.width,
-      height: record.height,
-    },
-  }));
-}
-
-function workflowEdgesToDiagramEdges(records: readonly NodeGraphEdgeRecord[]): Edge[] {
-  return records.map((record) => ({
-    id: record.id,
-    source: record.sourceNodeId,
-    target: record.targetNodeId,
-    sourceHandle: record.sourcePortId,
-    targetHandle: record.targetPortId,
-  }));
-}
-//#endregion Parsing
-
-//#region DiagramNode
-function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
-  const inputCount = Math.max(data.inputs.length, 1);
-  const outputCount = Math.max(data.outputs.length, 1);
-  const rowCount = Math.max(inputCount, outputCount);
-  const rowHeight = 18;
-  const bodyHeight = Math.max(data.height, 56 + rowCount * rowHeight);
-  return (
-    <div className="rounded border border-border bg-background text-foreground shadow-sm" style={{ width: data.width, minHeight: bodyHeight }}>
-      <div className="border-b border-border px-2 py-1 text-xs font-medium">{data.label}</div>
-      <div className="relative px-2 py-1 text-[0.625rem] leading-[1.125rem]">
-        {Array.from({ length: rowCount }, (_, rowIndex) => {
-          const input = data.inputs[rowIndex];
-          const output = data.outputs[rowIndex];
-          const top = 8 + rowIndex * rowHeight;
-          return (
-            <div key={`${input?.id ?? "in"}:${output?.id ?? "out"}:${rowIndex}`} className="relative h-[1.125rem]">
-              {input ? (
-                <>
-                  <Handle id={portHandleId(input)} type="target" position={Position.Left} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
-                  <span className="pl-3 text-muted-foreground">{portLabel(input)}</span>
-                </>
-              ) : null}
-              {output ? (
-                <>
-                  <Handle id={portHandleId(output)} type="source" position={Position.Right} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
-                  <span className="absolute right-3 top-0 text-right text-muted-foreground">{portLabel(output)}</span>
-                </>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const workflowNodeTypes: NodeTypes = { workflow: WorkflowDiagramNode };
-//#endregion DiagramNode
-
-//#region DiagramFallback
-export function DiagramGraphFallback({
+//#region WasmGraphSurface
+export function WasmGraphSurface({
   scene,
-  node,
+  surfaceId,
+  controllerId,
   editable,
-  parsedNodes,
-  parsedEdges,
-  findItems,
   requestContextMenu,
   onAction,
+  keyboardPort,
 }: {
   readonly scene: NodeGraphScene;
-  readonly node: UiComponentSceneNode;
+  readonly surfaceId: string;
+  readonly controllerId: string;
   readonly editable: boolean;
-  readonly parsedNodes: readonly NodeGraphNodeRecord[];
-  readonly parsedEdges: readonly NodeGraphEdgeRecord[];
-  readonly findItems: readonly NodeGraphFindItem[];
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
+  readonly keyboardPort: React.MutableRefObject<GraphKeyboardPort | null>;
 }) {
-  const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
-  /** 🎯️ The selection the PLUGIN holds, as this surface's own baseline. React Flow fires
-   * `onSelectionChange` once at mount with an empty list, and publishing that emptiness is how a
-   * selection dispatched a few milliseconds BEFORE this surface existed was wiped: measured on
-   * generation3d, `interactionSelect targets:[] domainId:graph` left this component 15 ms before
-   * `node-graph host mount`, with no pointer event anywhere in the run
-   * (`📓️hot-swap-board-remount-2026-09-15.md` §2). Adopted, never published — the ledger's own rule for
-   * a mark that arrived FROM the plugin — and reflected onto the mounted nodes, so a selection made
-   * before mount is APPLIED at mount instead of dropped. */
-  const sceneSelection = useMemo(() => [...(scene.selection ?? [])], [scene.selection]);
-  const interactionLedger = useMemo(() => createNodeGraphInteractionLedger(), []);
-  const adoptedSelectionRef = useRef<string | null>(null);
-  const sceneSelectionKey = nodeGraphSelectionMarkKey({ nodeIds: sceneSelection });
-  if (adoptedSelectionRef.current !== sceneSelectionKey) {
-    adoptedSelectionRef.current = sceneSelectionKey;
-    interactionLedger.adoptSelection({ nodeIds: sceneSelection });
-  }
-  const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes, sceneSelection), [parsedNodes, sceneSelection]);
-  const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
-  useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges]);
-
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
-    },
-    [node.controllerId, node.surfaceId, onAction],
-  );
-
-  const mapContextMenu = useMapContextMenuSpecs(dispatch);
-  const shellContextMenuFallback = useShellContextMenuFallback();
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
-  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.node");
-
+  const { sessionRef, paintOverlays, emitInteractionState, dispatch, containerRef, sceneRef, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, sessionFactory, onSessionReady, labelCanvasRef, selectionBounds, marquee, gestureRecognizer, pinchLogScaleRef, sliderStateJson, overlaySize, sliderLane, contextMenuTitleLabel, contextMenu } = useWindowInstanceIdState({ scene, onAction, controllerId, surfaceId });
+  const { pickInteraction, dispatchGraphEdits } = useDispatchGraphEditsState({ keyboardPort, sessionRef, paintOverlays, emitInteractionState, dispatch, containerRef, sceneRef });
   return (
     <div
       ref={containerRef}
       className={cn("relative h-full w-full", surfaceClass)}
       data-level="base"
-      onDragOver={(event) => {
-        if (editable && event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) event.preventDefault();
-      }}
-      onDrop={(event: DragEvent<HTMLDivElement>) => {
-        if (!editable) return;
-        event.preventDefault();
-        const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
-        if (!raw) return;
-        let payload: { readonly pluginId?: string; readonly appId?: string };
-        try {
-          payload = JSON.parse(raw) as { readonly pluginId?: string; readonly appId?: string };
-        } catch {
-          return;
-        }
-        if (!payload.pluginId || !payload.appId) return;
-        const rect = containerRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const x = (event.clientX - rect.left - viewport.x) / viewport.zoom;
-        const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
-        dispatch("spawnApp", { pluginId: payload.pluginId, appId: payload.appId, x, y });
-      }}
       onContextMenu={(event) => {
         if (!editable || !requestContextMenu) return;
         event.preventDefault();
         event.stopPropagation();
         void (async () => {
+          const session = sessionRef.current;
+          const container = containerRef.current;
+          let hits: NonNullable<PluginContextMenuSurfaceTarget["hits"]> = [];
+          let domains = { nodes: [] as string[], edges: [] as string[], handles: [] as string[] };
+          if (session && container) {
+            const rect = container.getBoundingClientRect();
+            const sx = event.clientX - rect.left;
+            const sy = event.clientY - rect.top;
+            try {
+              const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+              hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
+            } catch {
+              hits = [];
+            }
+            try {
+              domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedNodeIdsJson());
+            } catch {
+              domains = { nodes: [], edges: [], handles: [] };
+            }
+          }
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
               menu: { id: "nodeGraph", args: null },
-              surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
+              surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
+              windowInstanceId: windowInstanceId ?? undefined,
               point: { x: event.clientX, y: event.clientY },
             },
             mapContextMenu,
@@ -225,70 +74,134 @@ export function DiagramGraphFallback({
           setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
+      onPointerUp={emitInteractionState}
     >
-      <Diagram
-        className="h-full w-full"
-        nodeTypes={workflowNodeTypes}
-        nodes={nodes}
-        edges={edges}
-        fitView={false}
-        defaultViewport={viewport}
-        minZoom={0.05}
-        maxZoom={32}
-        panOnDrag={[0, 1]}
-        selectionOnDrag
-        elementsSelectable
-        nodesDraggable={editable}
-        nodesConnectable={editable}
-        edgesReconnectable={editable}
-        isValidConnection={(connection) => nodeGraphConnectionIsValid(parsedNodes, connection)}
-        onNodesChange={(nextNodes) => setNodes(nextNodes as Node<WorkflowNodeData>[])}
-        onEdgesChange={(nextEdges) => setEdges(nextEdges)}
-        onNodeDragStop={
-          editable
-            ? (_event, draggedNode, draggedNodes) => {
-                const origin = parsedNodes.find((record) => record.id === draggedNode.id);
-                if (!origin) return;
-                const record = { gestureId: `node-drag:${Date.now()}`, nodeIds: (draggedNodes.length > 0 ? draggedNodes : [draggedNode]).map((node) => node.id), dx: draggedNode.position.x - origin.x, dy: draggedNode.position.y - origin.y };
-                if (nodeDragMoves(record)) dispatch(nodeGraphActions.edit, { operations: [nodeDragRow(record)] });
-              }
-            : undefined
-        }
-        onConnect={
-          editable
-            ? (connection) => {
-                if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
-                if (!nodeGraphConnectionIsValid(parsedNodes, connection)) {
-                  return;
-                }
-                dispatch(nodeGraphActions.edit, {
-                  operations: [
-                    {
-                      operation: "connect",
-                      sourceNodeId: connection.source,
-                      sourcePortId: connection.sourceHandle,
-                      targetNodeId: connection.target,
-                      targetPortId: connection.targetHandle,
-                    },
-                  ],
-                });
-              }
-            : undefined
-        }
-        onNodeClick={(_event, clickedNode) => {
-          const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
-          if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
-          if (interactionLedger.publishSelection({ nodeIds: [clickedNode.id] })) publishNodeGraphSelection(dispatch, scene.interactionDomain, { nodeIds: [clickedNode.id] });
+      <WasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
+      <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
+      {selectionBounds ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: selectionBounds.x, top: selectionBounds.y, width: selectionBounds.width, height: selectionBounds.height }} /> : null}
+      {marquee ? (
+        marquee.kind === "lasso" ? (
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
+        ) : (
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
+        )
+      ) : null}
+      <div
+        className="absolute inset-0 z-30 touch-none"
+        data-gesture-surface="dag"
+        onPointerDown={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinchBegin") {
+            const session = sessionRef.current;
+            pinchLogScaleRef.current = 0;
+            pickInteraction.onCanvasPointerLeave();
+            for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
+            session?.pointerCancelScreen?.();
+            session?.renderFrame();
+            paintOverlays();
+            return;
+          }
+          if (verdict.kind !== "single") return;
+          if (!editable) return;
+          if (event.button === 2) return;
+          const session = sessionRef.current;
+          if (!session?.pointerDownScreen) return;
+          const client = { x: event.clientX, y: event.clientY };
+          pickInteraction.onCanvasPointerDown(client);
+          session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+          session.renderFrame();
+          paintOverlays();
         }}
-        onNodeDoubleClick={(_event, clickedNode) => {
-          const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
-          if (record?.instanceId) dispatch("openInstance", { instanceId: record.instanceId });
+        onPointerMove={(event) => {
+          const session = sessionRef.current;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinch") {
+            if (!session?.wheelScreen) return;
+            const plan = graphPinchWheelPlan(verdict.step, pinchLogScaleRef.current);
+            pinchLogScaleRef.current = plan.pendingLogScale;
+            if (plan.calls.length === 0) return;
+            for (const call of plan.calls) session.wheelScreen(call.sx, call.sy, call.deltaX, call.deltaY, call.zoomGesture);
+            session.renderFrame();
+            paintOverlays();
+            return;
+          }
+          if (verdict.kind !== "single") return;
+          if (!session?.pointerMoveScreen) return;
+          const client = { x: event.clientX, y: event.clientY };
+          pickInteraction.onCanvasPointerMove(client);
+          session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+          session.renderFrame();
+          paintOverlays();
         }}
-        onSelectionChange={(selection) => {
-          const nodeIds = selection.nodes.map((entry) => entry.id);
-          if (interactionLedger.publishSelection({ nodeIds })) publishNodeGraphSelection(dispatch, scene.interactionDomain, { nodeIds });
+        onPointerUp={(event) => {
+          const session = sessionRef.current;
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") {
+            pinchLogScaleRef.current = 0;
+            emitInteractionState();
+          }
+          if (verdict.kind !== "single") return;
+          if (!session?.pointerUpScreen) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const client = { x: event.clientX, y: event.clientY };
+          pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
+          session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+          session.renderFrame();
+          emitInteractionState();
+          dispatchGraphEdits();
+        }}
+        onPointerCancel={(event) => {
+          const session = sessionRef.current;
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") {
+            pinchLogScaleRef.current = 0;
+            emitInteractionState();
+          }
+          if (verdict.kind !== "single") return;
+          pickInteraction.onCanvasPointerLeave();
+          if (!session?.pointerCancelScreen) return;
+          session.pointerCancelScreen();
+          session.renderFrame();
+          paintOverlays();
+        }}
+        onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+        onWheel={(event) => {
+          event.preventDefault();
+          const session = sessionRef.current;
+          if (!session?.wheelScreen) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
+          session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
+          session.renderFrame();
+          emitInteractionState();
         }}
       />
+      {selectionBounds && editable ? (
+        <SelectionAlignChrome
+          bounds={selectionBounds}
+          onAlign={(mode) => {
+            const session = sessionRef.current;
+            if (!session?.alignSelection) return;
+            session.alignSelection(alignModeToDag(mode));
+            dispatchGraphEdits();
+            session.renderFrame();
+            emitInteractionState();
+          }}
+        />
+      ) : null}
+      <GraphSliderOverlays
+        scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])}
+        stateJson={sliderStateJson}
+        logicalW={overlaySize.w}
+        logicalH={overlaySize.h}
+        editable={editable}
+        onSliderChange={(widgetId, value) => sliderLane(widgetId).offer(value)}
+        onSliderCommit={(widgetId, value) => sliderLane(widgetId).commit(value)}
+        onSliderAbort={(widgetId, reason) => sliderLane(widgetId).abort(reason)}
+      />
+      <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}
@@ -301,5 +214,6 @@ export function DiagramGraphFallback({
     </div>
   );
 }
-//#endregion DiagramFallback
+
+//#endregion WasmGraphSurface
 //#endregion 🔖️NodeGraphHost

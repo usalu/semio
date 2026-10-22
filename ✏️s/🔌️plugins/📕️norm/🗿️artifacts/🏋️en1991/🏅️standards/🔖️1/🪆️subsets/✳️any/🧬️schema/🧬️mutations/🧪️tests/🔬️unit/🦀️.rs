@@ -1,12 +1,12 @@
 use super::*;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 fn round_trip(base: &En1991Snapshot, operation: &En1991Mutation) -> En1991Snapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("valid mutation diff");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("valid mutation diff");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("valid mutation diff");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward

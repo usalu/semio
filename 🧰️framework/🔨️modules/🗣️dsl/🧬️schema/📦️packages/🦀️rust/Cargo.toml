@@ -33,6 +33,8 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0", features = ["derive"] }
 semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
@@ -64,6 +66,10 @@ path = "../../🧪️tests/🔢️number-refusal/🦀️.rs"
 [[test]]
 name = "optional_field"
 path = "../../🧪️tests/🪆️optional-field/🦀️.rs"
+
+[[test]]
+name = "typed_receiving"
+path = "../../🫴️receiving/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "required_inline"

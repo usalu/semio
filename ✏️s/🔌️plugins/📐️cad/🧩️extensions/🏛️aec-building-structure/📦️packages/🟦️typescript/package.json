@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/cad-js-module-aec-building-structure:test"
+    "test": "repo run @semio-tech/cad-js-module-aec-building-structure:test"
   },
   "dependencies": {
     "@semio-tech/cad-js": "workspace:*",

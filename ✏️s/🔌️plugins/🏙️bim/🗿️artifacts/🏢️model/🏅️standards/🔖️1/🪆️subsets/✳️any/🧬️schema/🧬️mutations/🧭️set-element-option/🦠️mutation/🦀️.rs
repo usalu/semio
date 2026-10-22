@@ -14,8 +14,15 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetElementOption>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "element-option", kind: "set-element-option", record: "SetElementOption" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_element_option::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_element_option::inverse::inverse(self, base)) }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set element option", "Zuordnen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for SetElementOption
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<SetElementOption>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_element_option::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_element_option::inverse::inverse(self, base)) }
 }

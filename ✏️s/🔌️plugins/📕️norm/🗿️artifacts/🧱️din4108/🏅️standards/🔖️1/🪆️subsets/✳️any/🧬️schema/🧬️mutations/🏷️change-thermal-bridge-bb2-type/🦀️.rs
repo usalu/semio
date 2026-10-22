@@ -20,7 +20,14 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeThermalBridgeBb2T
         kind: "change-thermal-bridge-bb2-type",
         record: "ChangedThermalBridgeBb2Type",
     };
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Supplement 2 thermal bridge category", "Wärmebrückenkategorie nach Beiblatt 2 ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeThermalBridgeBb2Type where Op: protocol::ColdMutation<Din4108Snapshot, ReferenceDiff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::change_thermal_bridge_bb2_type::ChangeThermalBridgeBb2Type> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din4108Snapshot>>::ReferenceDiff> {
         crate::change_thermal_bridge_bb2_type::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,9 +36,6 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeThermalBridgeBb2T
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Supplement 2 thermal bridge category", "Wärmebrückenkategorie nach Beiblatt 2 ändern")
-    }
 }
 
 //#region 🪢️Mounts

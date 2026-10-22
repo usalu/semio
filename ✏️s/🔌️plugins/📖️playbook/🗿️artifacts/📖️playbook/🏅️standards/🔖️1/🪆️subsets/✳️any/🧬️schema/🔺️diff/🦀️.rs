@@ -75,8 +75,26 @@ impl semio_framework_value::FromValue for PlaybookDiff {
 use crate::schema::snapshot::PlaybookSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
-    fn apply(&self, snapshot: &PlaybookSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {}
+
+impl protocol::ColdMutationDiff<PlaybookSnapshot> for PlaybookDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(version);
+        take!(title);
+        take!(flow);
+    }
+
+    fn apply(&self, unpublished: &mut PlaybookSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
         let mut next = snapshot.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -93,25 +111,18 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         if let Some(flow) = &self.flow {
             next.flow = flow.clone();
         }
-        Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(schema);
-        take!(id);
-        take!(version);
-        take!(title);
-        take!(flow);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<PlaybookSnapshot> for PlaybookDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.flow.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PlaybookSnapshot> for PlaybookDiff {
     fn inverse(&self, base: &PlaybookSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -120,8 +131,5 @@ impl protocol::DiffAlgebra<PlaybookSnapshot> for PlaybookDiff {
             title: self.title.as_ref().map(|_| base.title.clone()),
             flow: self.flow.as_ref().map(|_| base.flow.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.flow.is_none()
     }
 }

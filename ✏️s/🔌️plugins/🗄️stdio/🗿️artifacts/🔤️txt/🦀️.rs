@@ -50,7 +50,7 @@ pub mod standards {
         // moved to `subsets::any::io`; tests moved beside what they test in `subsets::any::
         // schema`. `register()` is one of stdio's 10 protected imperative plugin-root calls
         // (`crate::engine::register()` in `🗄️stdio/🦀️.rs`, reached via
-        // this artifact's own top-level `pub mod engine` shim) — left callable at this exact
+        // this artifact's own top-level `engine` re-export) — left callable at this exact
         // path via a pure re-export of `subsets::any::io::register` (itself unchanged).
         pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::engine;
         #[path = "."]
@@ -96,7 +96,7 @@ pub mod text {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 pub mod schema {
     pub use super::standards::v_utf_8::subsets::any::schema::*;
 }

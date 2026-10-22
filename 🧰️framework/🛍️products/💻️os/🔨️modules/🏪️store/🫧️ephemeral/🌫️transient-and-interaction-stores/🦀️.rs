@@ -19,13 +19,13 @@ pub struct TransientStore<P, Mutation> {
 }
 
 // 🚫️async: E1 impl of external `Default` — signature fixed outside this repo.
-impl<P: Clone + Default, Mutation: super::Mutation<P>> Default for TransientStore<P, Mutation> {
+impl<P: Clone + Default, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Default for TransientStore<P, Mutation> {
     fn default() -> Self {
         Self::new(P::default())
     }
 }
 
-impl<P: Clone, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
+impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> TransientStore<P, Mutation> {
     /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
         Self { current: Some(Arc::new(current)), reads: Some(SnapshotReadRegistryHandle::new()), close_started: false, active_returned_read: None, generation: 0, _mutation: PhantomData }
@@ -227,7 +227,7 @@ impl<P: Clone, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
         })
     }
 
-    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String>
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
     where
         P: Send + Sync + 'static,
     {
@@ -254,7 +254,7 @@ impl<P: Clone, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
         match publication.phase {
-            ArtifactStoreOneItemPublicationPhase::Preparing => match publication.advance_preparation(grant) {
+            ArtifactStoreOneItemPublicationPhase::Preparing => match publication.advance_preparation(grant, receiving) {
                 Err(refused)=>Ok(refused),
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint, ownership)) => Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership)),
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, ownership)) => {
@@ -292,7 +292,7 @@ impl<P: Clone, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
                 *publication.receipt = Some(receipt);
                 publication.published = true;
                 publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-                Ok(ArtifactStoreOneItemAdvance::Published(receipt))
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt, semio_framework_value::RetainedCloneProgress::default()))
             }
             ArtifactStoreOneItemPublicationPhase::Fault => Ok(ArtifactStoreOneItemAdvance::PreparationRefused),
             ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled transient publication control phase"),
@@ -457,13 +457,13 @@ pub struct InteractionStore<S, Mutation> {
 }
 
 // 🚫️async: E1 impl of external `Default` — signature fixed outside this repo.
-impl<S: Clone + Default, Mutation: super::Mutation<S>> Default for InteractionStore<S, Mutation> {
+impl<S: Clone + Default, Mutation: super::Mutation<S> + protocol::ColdMutation<S>> Default for InteractionStore<S, Mutation> {
     fn default() -> Self {
         Self::new(S::default())
     }
 }
 
-impl<S: Clone, Mutation: super::Mutation<S>> InteractionStore<S, Mutation> {
+impl<S: Clone, Mutation: super::Mutation<S> + protocol::ColdMutation<S>> InteractionStore<S, Mutation> {
     /// 🏗️ Starts with this actor's own initial hover state (typically empty).
     /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(hover: S) -> Self {

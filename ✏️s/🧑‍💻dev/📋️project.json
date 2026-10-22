@@ -22,7 +22,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts composition-check",
+        "command": "repo ./📜️script.ts composition-check",
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       }
@@ -39,7 +39,7 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts mcp-client-e2e",
+        "command": "repo ./📜️script.ts mcp-client-e2e",
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       },
@@ -59,7 +59,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       }
@@ -69,7 +69,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts catalog-check",
+        "command": "repo ./📜️script.ts catalog-check",
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       }
@@ -79,7 +79,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts jack-graph-check",
+        "command": "repo ./📜️script.ts jack-graph-check",
         "cwd": "✏️s/🧑‍💻dev",
         "forwardAllArgs": true
       }
@@ -114,7 +114,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       }
     },
@@ -126,7 +126,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts playground-session"
+        "command": "repo ./📜️script.ts playground-session"
       }
     },
     "check-playground-session": {
@@ -135,7 +135,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts playground-session check"
+        "command": "repo ./📜️script.ts playground-session check"
       }
     },
     "preview-playground-session": {
@@ -144,7 +144,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts playground-session preview"
+        "command": "repo ./📜️script.ts playground-session preview"
       }
     },
     "verify-catalog": {
@@ -153,7 +153,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts verify"
+        "command": "repo ./🧩️catalog/📣️publication/📜️script.ts verify"
       }
     },
     "test-catalog-publication": {
@@ -162,7 +162,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./📜️script.ts catalog-publication-test"
+        "command": "repo ./📜️script.ts catalog-publication-test"
       },
       "inputs": [
         "default",
@@ -213,7 +213,7 @@
       ],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts generate"
+        "command": "repo ./🧩️catalog/📣️publication/📜️script.ts generate"
       },
       "outputs": [
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
@@ -230,7 +230,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts check"
+        "command": "repo ./🧩️catalog/📣️publication/📜️script.ts check"
       }
     },
     "preview-generated": {
@@ -238,7 +238,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
-        "command": "bun ./🧩️catalog/📣️publication/📜️script.ts preview"
+        "command": "repo ./🧩️catalog/📣️publication/📜️script.ts preview"
       },
       "metadata": {
         "semio": {

@@ -5,7 +5,7 @@ GEN=os.path.normpath(T+"/../../🗑️generated/gran-value");OUT=os.path.normpat
 class Resolver:
     def __init__(s,M=None,C=None):
         s.M=M or json.load(open(OUT+'/manifests.json'))
-        s.C=C or json.load(open(GEN+'/crates2.json'))['crates']
+        s.C=C or json.load(open((OUT if os.path.exists(OUT+'/crates2.json') else GEN)+'/crates2.json'))['crates']
         s.tgt={}
         for d,c in s.C.items():
             for k in('normal','build'):

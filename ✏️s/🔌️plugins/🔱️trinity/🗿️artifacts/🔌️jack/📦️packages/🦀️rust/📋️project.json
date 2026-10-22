@@ -37,7 +37,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -48,7 +48,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -60,7 +60,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -73,7 +73,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify jack-document-contract",
+        "command": "repo ./📜️script.ts verify jack-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -91,7 +91,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify jack-query-ownership",
+        "command": "repo ./📜️script.ts verify jack-query-ownership",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -109,7 +109,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify jack-graph-query",
+        "command": "repo ./📜️script.ts verify jack-graph-query",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -127,7 +127,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify jack-child-selection",
+        "command": "repo ./📜️script.ts verify jack-child-selection",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -144,7 +144,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-generate"
+        "command": "repo ./📜️script.ts graph-generate"
       },
       "inputs": [
         "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/**/*manifest.json",
@@ -172,7 +172,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-wire-check"
+        "command": "repo ./📜️script.ts graph-wire-check"
       },
       "outputs": []
     },
@@ -182,7 +182,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -192,7 +192,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -202,7 +202,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -217,7 +217,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       }
     },
     "verify-physical-codecs": {
@@ -226,14 +226,14 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify physical-codecs"
+        "command": "repo ./📜️script.ts verify physical-codecs"
       }
     },
     "verify-jack-native-composition": {
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts verify jack-native-composition",
+        "command": "repo ./📜️script.ts verify jack-native-composition",
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
       }
     }

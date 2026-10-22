@@ -1,0 +1,6 @@
+
+/** 🏎️ Schema patterns whose three look-aheads each scan the whole path again, with the regular expression that accepts exactly the same strings in one pass (the verdicts are checked against the original on every distinct pattern of the repository's schemas and against Ajv in the validator tests). */
+const jsonSchemaSubsetLinearPatterns: ReadonlyMap<string, string> = new Map([[String.raw`^(?!/)(?!.*(?:^|/)\.\.(?:/|$))(?!.*\\)(?!.*\u0000).+$`, String.raw`^(?=[^\n\r\u2028\u2029])(?!/)(?:(?!\.\.(?:/|$))[^/\\\u0000\n\r\u2028\u2029]*(?:/|$))+$`]]);
+
+/** 🔤️ Compiles one schema pattern in unicode mode, through its single-pass equivalent when one is known. */
+function jsonSchemaSubsetPattern(source: string): RegExp { return new RegExp(jsonSchemaSubsetLinearPatterns.get(source) ?? source, "u"); }

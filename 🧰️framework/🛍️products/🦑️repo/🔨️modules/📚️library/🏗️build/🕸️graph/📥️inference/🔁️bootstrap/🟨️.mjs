@@ -14,9 +14,11 @@ export const component = "bootstrap";
 let LIBRARY_ROOT, LIBRARY_URL, RUNTIME_COMPONENT_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, INSTALLATION_IDENTITY_MODULE, INSTALLATION_IDENTITY_SCHEMA, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, SOURCE_INPUT_MODULE, COMMAND_INPUT_MODULE, PROJECT_INPUT_MODULE, BUILD_MODE_MODULE, readPhysicalSource;
 export let libraryBootstrap;
 
-/** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
+/** 🔁️ Loads a captured image through the roots its ComputedImportSites row declares; otherwise evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
 export async function importRevision(source, revision) {
-  const require = createRequire(import.meta.url), url = new URL(source);
+  const url = new URL(source);
+  if (import.meta.semioCapturedPhysicalSources) return import(fileURLToPath(url));
+  const require = createRequire(import.meta.url);
   delete require.cache[require.resolve(fileURLToPath(url))];
   url.searchParams.set("revision", revision);
   return import(url.href);

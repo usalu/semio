@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🧊️dissolved-kernels/🟦️.ts";
+import { policyNoGlueShimBlocksBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🪆️subset-conformance/🟦️.ts";
 import { policyEmojiPrefixBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/🏷️naming/🟦️.ts";
 import { policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/🟦️.ts";
 import { gitSpawnEnv } from "../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
@@ -92,7 +93,7 @@ describe("window completeness policy", () => {
     // ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) — mirrors the on-disk shape every other
     // fixture in this file already uses for 🏅️standards/🪆️subsets.
     const window = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
-    const crate = { dir: "", libRelPath: "", role: "", shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    const crate = { dir: "", libRelPath: "", role: "", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(window, { recursive: true });
       // 🔣️ The required set is taxonomy-driven, never a literal here — adding a lane to
@@ -133,7 +134,7 @@ describe("window completeness policy", () => {
     // 👁️✏️ Modes now live under a subset's surface, not 🎛️apps (W3 dissolution) — see the sibling
     // window-completeness test above for the same shape rationale.
     const mode = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode");
-    const crate = { dir: "", libRelPath: "", role: "", shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    const crate = { dir: "", libRelPath: "", role: "", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(mode, { recursive: true });
       const required = loadTaxonomy().modeRequiredChildDirs;
@@ -259,6 +260,33 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
       rmSync(join(plugin, "🦀️.rs"));
       writeFileSync(join(plugin, "🦀️.rs"), "pub struct ProbeOwnType { pub vertices: Vec<f64> }\n");
       expect(policyDissolvedKindRedefinitionBreaches(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("no-glue-shim-blocks policy", () => {
+  const block = (heading: string): string => `//! crate\n\n${heading}\npub mod schema {}\n`;
+  const fixture = (heading: string): { root: string; rel: string } => {
+    const root = mkdtempSync(join(tmpdir(), "semio-glue-shim-"));
+    const rel = "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/📊️csv";
+    mkdirSync(join(root, rel), { recursive: true });
+    writeFileSync(join(root, rel, "🦀️.rs"), block(heading));
+    return { root, rel };
+  };
+  test("reads the crate-root file of every plugin artifact and refuses the pre-migration shim heading", () => {
+    const { root, rel } = fixture("// ---- Shims: keep pre-migration module paths resolving for external callers ----");
+    try {
+      expect(policyNoGlueShimBlocksBreaches(root).map((breach) => breach.scope)).toEqual([`${rel}/🦀️.rs`]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("accepts the crate's public surface block", () => {
+    const { root } = fixture("// ---- Crate-root module paths: the crate's public surface ----");
+    try {
+      expect(policyNoGlueShimBlocksBreaches(root)).toEqual([]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

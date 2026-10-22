@@ -19,12 +19,13 @@ type Emitter interface {
 }
 
 // 🌐️HTTPEmitter posts envelopes to COMPOSE_SERVER_ADDR.
-type HTTPEmitter struct{}
+type HTTPEmitter struct { url string; token string }
+
+// 🛰️NewHTTPEmitter captures one coordinator endpoint and token.
+func NewHTTPEmitter(address, token string) HTTPEmitter { return HTTPEmitter{url:EmitURL(address), token:strings.TrimSpace(token)} }
 
 // 📤️Emit posts an event to the repo server. No-operation when COMPOSE_SERVER_ADDR is unset.
-func (HTTPEmitter) Emit(kind EventKind, source string, payload interface{}) {
-	Emit(kind, source, payload)
-}
+
 
 // 🔗️EmitURL renders the coordinator endpoint for an address, empty when the address is empty.
 func EmitURL(addr string) string {
@@ -40,8 +41,11 @@ func EmitURL(addr string) string {
 }
 
 // 📤️Emit posts an event to the repo server. No-operation when COMPOSE_SERVER_ADDR is unset.
-func Emit(kind EventKind, source string, payload interface{}) {
-	url := EmitURL(os.Getenv("COMPOSE_SERVER_ADDR"))
+func Emit(kind EventKind, source string, payload interface{}) { NewHTTPEmitter(os.Getenv("COMPOSE_SERVER_ADDR"),os.Getenv("COMPOSE_SERVER_TOKEN")).Emit(kind,source,payload) }
+
+// 📮️Emit delivers through the captured endpoint.
+func (emitter HTTPEmitter) Emit(kind EventKind, source string, payload interface{}) {
+	url := emitter.url
 	if url == "" {
 		return
 	}
@@ -58,11 +62,12 @@ func Emit(kind EventKind, source string, payload interface{}) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if token := strings.TrimSpace(os.Getenv("COMPOSE_SERVER_TOKEN")); token != "" {
+	if token := emitter.token; token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	client := &http.Client{Timeout: 5 * time.Second}
-	_, _ = client.Do(req)
+	response, err := client.Do(req)
+	if err == nil { response.Body.Close() }
 }
 
 // 🖥️getServerAddr returns the server address from COMPOSE_SERVER_ADDR env var.

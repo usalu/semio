@@ -18,17 +18,9 @@ pub struct SHomeDiff {
 use crate::SHomeSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<SHomeSnapshot> for SHomeDiff {
-    fn apply(&self, snapshot: &SHomeSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SHomeSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(value) = self.catalog_generation {
-            next.catalog_generation = value;
-        }
-        Ok(next)
-    }
+impl MutationDiff<SHomeSnapshot> for SHomeDiff {}
+
+impl protocol::ColdMutationDiff<SHomeSnapshot> for SHomeDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -40,13 +32,29 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
         take!(schema);
         take!(catalog_generation);
     }
+
+    fn apply(&self, unpublished: &mut SHomeSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(value) = self.catalog_generation {
+            next.catalog_generation = value;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SHomeSnapshot> for SHomeDiff {
-    fn inverse(&self, base: &SHomeSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), catalog_generation: self.catalog_generation.map(|_| base.catalog_generation) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.catalog_generation.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SHomeSnapshot> for SHomeDiff {
+    fn inverse(&self, base: &SHomeSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), catalog_generation: self.catalog_generation.map(|_| base.catalog_generation) }
     }
 }

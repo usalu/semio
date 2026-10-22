@@ -32,15 +32,15 @@ await runBundleScriptMain(router, import.meta.url);
 - **File**: `export const policyFile = "index.ts"` plus `export const policy = defineLint(...)` in the bundle `script.ts`.
 - **Folder / bundle / technology**: `export const policy = defineLint(...)` in `script.ts` at that directory — runner resolves entity kind from `folder(path)` GraphQL.
 
-Choose **New Task** (`Ctrl+B n`) in `bun run dashboard` and select the owner's registered `lint` or `check` target. For a scoped authored policy route, select `tool:workspace/run-script-verb` and set its `commandLine` to `lint <repo-id> [--markdown]`. The dashboard owns the original command line and streams policy events; inferred `lint-policy` targets remain bound to each owner.
+Choose **New Task** (`Ctrl+B n`) in `repo dashboard` and select the owner's registered `lint` or `check` target. For a scoped authored policy route, select `tool:workspace/run-script-verb` and set its `commandLine` to `lint <repo-id> [--markdown]`. The dashboard owns the original command line and streams policy events; inferred `lint-policy` targets remain bound to each owner.
 
 The repository's shared [policy inference](../../🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs) discovers `📜️script.ts` exports and adds a cacheable `lint-policy` task to the owning project. Its `lint` task depends on `lint-policy`; projects without a declared owner receive a generated `breach-*` project. Both build adapters consume this shared graph.
 
 Run declared tasks through the neutral repository interface:
 
 ```bash
-bun repo run <project>:<task>[:<configuration>]
-bun repo --tool=bazel run <project>:<task>[:<configuration>]
+repo run <project>:<task>[:<configuration>]
+repo --tool=bazel run <project>:<task>[:<configuration>]
 ```
 
 Nx remains the configured default while Bazel qualification is in progress. Backend registration and argument translation belong to the private adapters.

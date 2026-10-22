@@ -1,0 +1,91 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "effectOrder"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "operation",
+          "currentOperation",
+          "cancelled",
+          "authoritative",
+          "windowPresent",
+          "expectedGeneration",
+          "currentGeneration",
+          "dirty",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "load",
+              "save",
+              "disconnect"
+            ]
+          },
+          "operation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currentOperation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "authoritative": {
+            "type": "boolean"
+          },
+          "windowPresent": {
+            "type": "boolean"
+          },
+          "expectedGeneration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currentGeneration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "dirty": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              "adopt",
+              "ignore",
+              "disconnect"
+            ]
+          }
+        }
+      }
+    },
+    "effectOrder": {
+      "const": [
+        "worker-settled",
+        "model-adopted",
+        "view-remounted",
+        "pending-started"
+      ]
+    }
+  }
+}

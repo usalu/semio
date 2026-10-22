@@ -27,8 +27,8 @@
     "./tooling": "./🟨️.mjs"
   },
   "scripts": {
-    "lint": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-test:lint",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-test:test"
+    "lint": "repo run @semio-tech/repo-test:lint",
+    "test": "repo run @semio-tech/repo-test:test"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",

@@ -5,12 +5,13 @@
 use semio_framework_os_spr::{ColdDiffAlgebra};
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
-#[path = "🎮️operation/🦀️.rs"]
-pub mod replay_preparation;
+use semio_framework_os_store_replay_operation as replay_preparation;
 #[path = "🛑️cancel/🦀️.rs"]
 pub mod raw_replay_retirement;
 #[path = "📥️lifted/🔗️read/🦀️.rs"]
 pub mod lifted_snapshot_read;
+#[path = "../📥️ingress/📚️original/🦀️.rs"]
+pub mod original_ingress;
 #[cfg(any(test, feature = "hot-path-census"))] use semio_framework_os_store_ledger::hot_path_census;
 
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
@@ -73,3 +74,7 @@ pub use pending::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailS
 mod budget;
 pub use budget::ReplayTurnBudget;
 pub use semio_framework_os_store_ledger::lifted_replay::{EffectiveSupersessions, edit_supersession_digest, supersession_digest};
+
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

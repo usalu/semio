@@ -8,7 +8,7 @@ use crate::standards::v1_4::subsets::base::schema::mutations::move_page::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// 🚫️ The refusal branch the committed vector cannot express, because a refused mutation
 /// produces no after-state to commit: addressed against a document with no pages at all,

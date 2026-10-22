@@ -183,7 +183,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
         scope: rel,
         priority: "medium",
         reason: `design.md §1: every ${level} has one root ${POLICY_RS_COMPONENT_LEAF_NAME} that mounts its own children and exports one declaration function — this is the ownership backlog counter.`,
-        solution: `bun ./📜️script.ts new ${level} … to scaffold the root skeleton, then hand-author its mounts and declaration fn per the recipe (design.md §5).`,
+        solution: `repo ./📜️script.ts new ${level} … to scaffold the root skeleton, then hand-author its mounts and declaration fn per the recipe (design.md §5).`,
       });
       return;
     }
@@ -667,7 +667,7 @@ export function policyDerivedConfigBreaches(repoRoot: string): BreachRecord[] {
     scope: /^[^:\s]+/.exec(problem)?.[0] ?? problem,
     priority: "high" as const,
     reason: "A checked-in file that derives from one canonical source must equal its derivation, otherwise two copies drift and the editor, container and test runners disagree.",
-    solution: "Run `bun repo run workspace:generate-config` to rewrite the derived files; edit the canonical source (.config/nextest.toml and its declared scope overrides) instead of the copy.",
+    solution: "Run `repo run workspace:generate-config` to rewrite the derived files; edit the canonical source (.config/nextest.toml and its declared scope overrides) instead of the copy.",
   }));
 }
 //#endregion 🔧️PolicyRuleDerivedConfig

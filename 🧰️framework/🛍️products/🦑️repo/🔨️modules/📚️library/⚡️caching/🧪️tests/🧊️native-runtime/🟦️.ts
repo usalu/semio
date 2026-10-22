@@ -59,7 +59,7 @@ export async function testNativeRuntime(workspace:string,_output:string,invocati
   const sourceRoot=join(root,"preparation-source"),receivedTargets=await preparePlaygroundFixtureTargetsV1(workspace,sourceRoot,invocation,actualPhase);assert(receivedTargets[`prepare-${fixture.variant}-native-${mode}`]);
   await buildComponentClosureV1(workspace,new Set([declaration.pluginId]),{facet:"model",invocation,network:repositoryCargoNetworkV1(invocation,workspace),control:actualPhase});checkResourceLeaseControl(actualPhase);
   put("package.json",'{"name":"native-runtime-fixture","private":true,"type":"module"}');put("nx.json",JSON.stringify({useDaemonProcess:false}));put("source/input","first");put(".gitignore","node_modules\n.nx\nout\n.counts\n*.pid\n");
-  put("project.json",JSON.stringify({name:"fixture",targets:{prepare:{executor:"nx:run-commands",cache:true,inputs:["{workspaceRoot}/source/input","{workspaceRoot}/📜️script.ts"],outputs:["{workspaceRoot}/out/runtime"],options:{command:"bun ./📜️script.ts publish"}},consume:{executor:"nx:run-commands",cache:false,outputs:[],dependsOn:["prepare"],options:{command:"bun ./📜️script.ts run"}}}}));
+  put("project.json",JSON.stringify({name:"fixture",targets:{prepare:{executor:"nx:run-commands",cache:true,inputs:["{workspaceRoot}/source/input","{workspaceRoot}/📜️script.ts"],outputs:["{workspaceRoot}/out/runtime"],options:{command:"repo ./📜️script.ts publish"}},consume:{executor:"nx:run-commands",cache:false,outputs:[],dependsOn:["prepare"],options:{command:"repo ./📜️script.ts run"}}}}));
   put("📜️script.ts",`import assert from "node:assert/strict";
 import {appendFileSync,copyFileSync,mkdirSync,readFileSync,writeFileSync,rmSync} from "node:fs";
 import {spawn} from "node:child_process";

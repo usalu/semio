@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {type ResourceLeaseControl} from "../../../../🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -34,8 +34,9 @@ import { catalogueCarrierMapSelfTests } from "../../🧪️tests/🛍️catalogu
 import { numberControlsSelfTests } from "../../🧪️tests/🧪️number-controls/🟦️.ts";
 import { colorInputSelfTests } from "../../🧪️tests/🧪️color-input/🟦️.ts";
 import { textControlsSelfTests } from "../../🧪️tests/🧪️text-controls/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
-const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 
 
 //#region 🔖️test
@@ -147,11 +148,11 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️typegen
 
-if (import.meta.main) {
+if (isMainModuleV1(import.meta.url)) {
   /** 🌱️ Validates the complete semantic contract's direct canonical Value ownership. */
 class OwnershipScript extends BundleScript {async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-ownership");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw new Error("Finite original UI ownership budget required");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️ownership/🧪️tests/🟦️.ts")],this.repoRoot,"ui:ownership",remaining,{signal:this.invocation.control.signal});}}
 
-const router = new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript)
+const router = new ScriptRouter(import.meta.dirname).register("test-ownership",OwnershipScript)
     .register("test", TestScript)
     .register("built-tree-retirement-check", BuiltTreeRetirementScript)
     .register("conformance", ConformanceScript)

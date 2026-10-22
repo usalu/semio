@@ -16,15 +16,19 @@ pub struct RemoveMember {
 
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for RemoveMember where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::insert_member::InsertMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemovedMember" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove member {}", self.member_id), &format!("Bauteil {} entfernen", self.member_id))
+    }
+    fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1992Snapshot, Op> for RemoveMember where Op: protocol::ColdMutation<En1992Snapshot, ReferenceDiff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::insert_member::InsertMember> {
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::remove_member::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::remove_member::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove member {}", self.member_id), &format!("Bauteil {} entfernen", self.member_id))
-    }
-    fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 
 //#region 🪢️Mounts

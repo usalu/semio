@@ -6,7 +6,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compute-ownership-runner:test"
+    "test": "repo run @semio-tech/compute-ownership-runner:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

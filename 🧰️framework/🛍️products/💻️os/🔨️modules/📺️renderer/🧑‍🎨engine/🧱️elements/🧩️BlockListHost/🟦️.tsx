@@ -6,7 +6,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import React, { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
+import * as React from "../⚛️react-port/🟦️.ts";
+import { useCallback, useContext, useMemo, useState, type MouseEvent } from "../⚛️react-port/🟦️.ts";
 import { blockListPaletteTargetStepIdV1, type BlockListSelectionTarget, type BlockListBlock, type BlockListStep, type BlockListPaletteEntry, type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import {
   Button,

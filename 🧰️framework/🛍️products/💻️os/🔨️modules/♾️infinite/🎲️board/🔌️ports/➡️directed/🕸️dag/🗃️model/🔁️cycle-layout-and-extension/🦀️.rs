@@ -7,7 +7,7 @@ use super::*;
 // #region 🔖️Acyclicity
 /// 🚫️ Returns true when adding `source -> target` would create a cycle.
 pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &str) -> bool {
-    ::graph::algorithms::would_create_cycle_ids(existing, source, target)
+    ::semio_framework_graph_algorithms::would_create_cycle_ids(existing, source, target)
 }
 
 // #endregion 🔖️Acyclicity

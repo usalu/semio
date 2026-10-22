@@ -3,6 +3,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readTestSandboxProtocolV1, testPathInsideV1, type TestSandboxProtocolV1 } from "../📐️layout/🟦️.ts";
+import { isHostRuntimeCommandV1, runtimeAdapterNameV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeTestPreloadV1 } from "../../../../⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🛡️ Names what the guard refused or observed. */
 export type GuardViolationKindV1 = "checkout-write" | "protected-write" | "kernel-image" | "process-kill" | "fixed-port";
@@ -99,12 +101,12 @@ export function summarizeGuardReportV1(text: string, limit = 10): readonly strin
   return [`[sandbox-guard] ${rows.length} violation(s): ${[...counts].map(([kind, count]) => `${kind}=${count}`).join(" ")}`, ...rows.slice(0, limit).map(row => `[sandbox-guard]   ${row.kind} ${row.function} ${row.target}${row.frame ? "  at " + row.frame : ""}`)];
 }
 
-/** 🛡️ Inserts the guard preload after the `test` verb of a bun test command when the guard is active and the preload exists next to this module; every other command is returned unchanged. */
+/** 🛡️ Inserts the guard preload into the test command of the hosting runtime when the guard is active and that runtime's adapter directory holds a preload next to this module; every other command is returned unchanged. */
 export function guardArgumentsV1(command: string, args: readonly string[], env: NodeJS.ProcessEnv = process.env, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly string[] {
-  const mode = env[declared.environment.guard] ?? declared.guard.defaultMode, program = basename(command).replace(/\.exe$/iu, "");
-  if (mode === "off" || args[0] !== "test" || !(program === "bun" || resolve(command) === resolve(process.execPath))) return args;
-  const preload = fileURLToPath(new URL("./🔌️preload/🟦️.ts", import.meta.url));
-  return existsSync(preload) && !args.includes("--preload") ? [args[0], "--preload", preload, ...args.slice(1)] : args;
+  const mode = env[declared.environment.guard] ?? declared.guard.defaultMode;
+  if (mode === "off" || !isHostRuntimeCommandV1(command)) return args;
+  const preload = fileURLToPath(new URL(`./${runtimeAdapterNameV1()}/🔌️preload/🟦️.ts`, import.meta.url));
+  return existsSync(preload) ? runtimeTestPreloadV1(args, preload) ?? args : args;
 }
 
 /** 🛡️ Finds the real checkout a test command runs for: the declared environment, else the nearest ancestor holding a `.git` entry or a `.🧬semio` directory. */

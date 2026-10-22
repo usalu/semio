@@ -11,7 +11,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "cache": true
@@ -27,7 +27,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -36,7 +36,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -53,7 +53,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -71,7 +71,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test subset-contract"
+        "command": "repo ./📜️script.ts test subset-contract"
       }
     },
     "test-entity-ownership": {
@@ -91,7 +91,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test entity-ownership"
+        "command": "repo ./📜️script.ts test entity-ownership"
       }
     },
     "test-mutation-leaf-registration": {
@@ -110,7 +110,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test mutation-leaf-registration"
+        "command": "repo ./📜️script.ts test mutation-leaf-registration"
       }
     },
     "test-neutrality": {
@@ -133,7 +133,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test neutrality"
+        "command": "repo ./📜️script.ts test neutrality"
       }
     }
   },

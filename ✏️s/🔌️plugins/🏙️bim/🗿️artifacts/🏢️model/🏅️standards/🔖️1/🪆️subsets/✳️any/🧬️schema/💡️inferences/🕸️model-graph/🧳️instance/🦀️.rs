@@ -14,7 +14,7 @@ use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::infe
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use protocol::{InferenceWorkFailure,InferenceError, Mutation, MutationDiff};
+use protocol::{InferenceWorkFailure,InferenceError, ColdMutation, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -82,7 +82,7 @@ pub fn record_mutations<Op: Mutation<ModelSnapshot, Diff = ModelDiff>>(instance:
         let base = state.as_ref().unwrap_or(snapshot);
         let (diff, _) = mutation.diff(base).into_parts();
         if index + 1 < mutations.len() {
-            match protocol::apply_diff(&diff, base) {
+            match protocol::apply_diff_cold(&diff, base) {
                 Ok(next) => state = Some(next),
                 Err(_) => return,
             }

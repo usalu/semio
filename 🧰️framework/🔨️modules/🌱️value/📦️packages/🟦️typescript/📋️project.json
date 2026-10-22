@@ -28,7 +28,7 @@
         "sharedGlobals"
       ],
       "options": {
-        "command": "bun 📜️script.ts test-numeric-api",
+        "command": "repo 📜️script.ts test-numeric-api",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     },
@@ -45,7 +45,7 @@
         "sharedGlobals"
       ],
       "options": {
-        "command": "bun 📜️script.ts test-dictionary",
+        "command": "repo 📜️script.ts test-dictionary",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     },
@@ -63,7 +63,7 @@
         "sharedGlobals"
       ],
       "options": {
-        "command": "bun 📜️script.ts test-scalars-api",
+        "command": "repo 📜️script.ts test-scalars-api",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     },
@@ -81,7 +81,7 @@
         "sharedGlobals"
       ],
       "options": {
-        "command": "bun 📜️script.ts test-scratch-hash",
+        "command": "repo 📜️script.ts test-scratch-hash",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     }

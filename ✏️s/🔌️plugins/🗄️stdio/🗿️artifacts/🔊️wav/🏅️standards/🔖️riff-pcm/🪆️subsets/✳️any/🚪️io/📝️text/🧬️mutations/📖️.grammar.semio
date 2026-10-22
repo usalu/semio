@@ -1,10 +1,10 @@
 dialect grammar
 grammar stdio.wav.mutations
-start operation
+start mutation
 comment none
 string double backslash
 
-operation = object
+mutation = object
 value = object | array | json-string | number | "true" | "false" | "null"
 object = "{" "}" | "{" member {"," member}* "}"
 member = json-string ":" value

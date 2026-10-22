@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""🧰️ Anchored, all-or-nothing apply of a staged set: every anchor and every recorded base is checked before the first byte is written; `--record` stores the bases, `--write` applies, `--restore` undoes only files still exactly as written."""
 import hashlib, json, os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -38,22 +39,18 @@ def record():
     return 0
 
 
-def plan(tolerate=False):
+def plan():
     writes, notes, known = {}, [], bases()
     for key, editor in patches.EDITORS.items():
         path = J(ROOT, TARGET[key])
         original = read(path)
         before = original.decode("utf-8")
-        try:
-            after = editor(before)
-        except patches.Drift as error:
-            if not tolerate:
-                raise
-            notes.append("skip   %s (%s; kept as is)" % (key, error))
-            continue
+        if key not in known:
+            raise patches.Drift("%s has no recorded base; run --record first" % key)
+        after = editor(before)
         if editor(after) != after:
             raise patches.Drift("%s: patch is not idempotent" % key)
-        state = "base" if sha(original) in (known.get(key) if isinstance(known.get(key), list) else [known.get(key)]) else "drifted since staging, anchors verified" if key in known else "unrecorded base"
+        state = "base" if sha(original) in (known.get(key) if isinstance(known.get(key), list) else [known.get(key)]) else "drifted since staging, anchors verified"
         if after != before:
             writes[path] = after.encode("utf-8")
             notes.append("patch  %s (%s)" % (key, state))
@@ -62,13 +59,25 @@ def plan(tolerate=False):
     for name, target in NEW_FILES.items():
         path = J(ROOT, target)
         data = patches.staged(name).encode("utf-8")
+        merge = getattr(patches, "MERGES", {}).get(name)
+        if merge and os.path.exists(path):
+            base_path, normalize, combine = merge
+            live_text = read(path).decode("utf-8")
+            with open(J(HERE, base_path), encoding="utf-8") as handle:
+                base_text = handle.read()
+            if normalize(live_text) == normalize(base_text) or normalize(live_text) == normalize(data.decode("utf-8")):
+                data = combine(data.decode("utf-8"), live_text).encode("utf-8")
+            else:
+                raise patches.Drift("%s changed beyond the lines a peer repointed" % name)
         if os.path.exists(path):
             if read(path) == data:
                 notes.append("same   %s" % name)
                 continue
             base = known.get("file:" + name)
             accepted = base if isinstance(base, list) else [base]
-            if base is not None and sha(read(path)) not in accepted and not tolerate:
+            if not merge and base is None:
+                raise patches.Drift("%s exists but has no recorded base; run --record first" % name)
+            if not merge and sha(read(path)) not in accepted:
                 raise patches.Drift("%s changed since staging" % name)
             notes.append("update %s" % name)
         else:
@@ -77,17 +86,22 @@ def plan(tolerate=False):
     return writes, notes
 
 
-def running():
-    out = subprocess.run(["ps", "-A", "-o", "pid=,command="], capture_output=True, text=True).stdout
-    return [line.strip()[:160] for line in out.splitlines() if ("dependencies sync" in line or "show projects" in line or "dependencies lock" in line) and "apply.py" not in line and "ps -A" not in line]
-
-
 def restore():
     if not os.path.exists(MANIFEST):
         print("nothing to restore")
         return 1
     with open(MANIFEST, encoding="utf-8") as handle:
         rows = json.load(handle)
+    changed = []
+    for row in rows:
+        path = J(ROOT, row["path"])
+        current = sha(read(path)) if os.path.exists(path) else None
+        if current != row["post"]:
+            changed.append(row["path"])
+    if changed:
+        for name in changed:
+            print("refused: %s changed since it was written; nothing was restored" % name)
+        return 5
     for row in rows:
         path = J(ROOT, row["path"])
         if row["backup"] is None:
@@ -103,12 +117,12 @@ def restore():
 def write(writes):
     os.makedirs(BACKUP, exist_ok=True)
     rows = []
-    for path in writes:
+    for path, data in writes.items():
         name = sha(path.encode())[:16] + ".orig" if os.path.exists(path) else None
         if name is not None:
             with open(J(BACKUP, name), "wb") as handle:
                 handle.write(read(path))
-        rows.append({"path": os.path.relpath(path, ROOT), "backup": name})
+        rows.append({"path": os.path.relpath(path, ROOT), "backup": name, "post": sha(data)})
     with open(MANIFEST, "w", encoding="utf-8") as handle:
         json.dump(rows, handle, indent=1)
     staged = []
@@ -125,8 +139,20 @@ def write(writes):
         for temporary, _ in staged:
             if os.path.exists(temporary):
                 os.remove(temporary)
-        restore()
+        for row in rows:
+            path = J(ROOT, row["path"])
+            if row["backup"] is None:
+                if os.path.exists(path) and sha(read(path)) == row["post"]:
+                    os.remove(path)
+            elif os.path.exists(path) and sha(read(path)) == row["post"]:
+                with open(path, "wb") as handle:
+                    handle.write(read(J(BACKUP, row["backup"])))
         raise
+
+
+def running():
+    out = subprocess.run(["ps", "-A", "-o", "pid=,command="], capture_output=True, text=True).stdout
+    return [line.strip()[:160] for line in out.splitlines() if ("dependencies sync" in line or "show projects" in line or "dependencies lock" in line) and "apply" not in line and "ps -A" not in line]
 
 
 def main(argv):
@@ -143,7 +169,7 @@ def main(argv):
                 print("  ", line)
             return 2
     try:
-        writes, notes = plan("--tolerate-drift" in argv)
+        writes, notes = plan()
     except patches.Drift as error:
         print("refused: drift: %s" % error)
         return 3

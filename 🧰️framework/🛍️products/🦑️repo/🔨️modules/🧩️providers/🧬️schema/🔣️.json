@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/providers.json",
   "title": "🧩️ repo providers",
-  "description": "🧩️ Wire shapes of the repo providers module: the process transcripts its fixtures replay, the hook output records its editor providers format, and the GitHub DTOs its management provider parses out of `gh`.",
+  "description": "🧩️ Wire shapes of the repo providers module: the process transcripts its fixtures replay, the hook output records its agent-client providers format, and the GitHub DTOs its management provider parses out of `gh`.",
   "type": "object",
   "$defs": {
     "Argv": {
@@ -60,7 +60,7 @@
       "enum": ["generic", "plan", "code-search", "code-edit", "test", "build", "terminal"]
     },
     "HookEvent": {
-      "description": "📡️ The neutral lifecycle event slug every editor's native event is mapped onto.",
+      "description": "📡️ The neutral lifecycle event slug every agent client's native event is mapped onto.",
       "enum": [
         "version.checkpoint.starting",
         "version.checkpoint.ended",
@@ -90,16 +90,16 @@
         "agent.thinking.ended"
       ]
     },
-    "EditorKind": {
-      "description": "📝️ The eight editor client slugs the registry hands out, in registration order.",
+    "AgentClientKind": {
+      "description": "📝️ The eight agent-client slugs the registry hands out, in registration order.",
       "enum": ["copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat", "kiro-cli"]
     },
     "McpClientKind": {
-      "description": "🪪️ Which IDE-native MCP surface is talking. Editor identity, not MCP protocol.",
+      "description": "🪪️ Which agent-client MCP surface is talking. Agent-client identity, not MCP protocol.",
       "enum": ["generic", "cursor", "kiro", "copilot", "claude", "codex"]
     },
     "HookResult": {
-      "description": "🔶️ The outcome of a hook invocation: the two fields every result exposes, plus the event-specific payload the editor providers marshal alongside them.",
+      "description": "🔶️ The outcome of a hook invocation: the two fields every result exposes, plus the event-specific payload the agent-client providers marshal alongside them.",
       "type": "object",
       "additionalProperties": false,
       "required": ["allowed"],
@@ -110,13 +110,13 @@
       }
     },
     "HookOutputRecord": {
-      "description": "🪝️ One case of the hook output format: the native hook event name, the result to format, and which editors are asked to format it.",
+      "description": "🪝️ One case of the hook output format: the native hook event name, the result to format, and which agent clients are asked to format it.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "hookEventName", "result"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "hookEventName": { "type": "string", "description": "🔤️ The IDE-native hook event name; the empty string means the caller supplied none." },
+        "hookEventName": { "type": "string", "description": "🔤️ The agent-client-native hook event name; the empty string means the caller supplied none." },
         "result": { "$ref": "#/$defs/HookResult" },
         "nativeEventFrom": {
           "type": "object",

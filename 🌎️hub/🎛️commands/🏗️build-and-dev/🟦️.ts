@@ -11,7 +11,7 @@ import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocal
 import { randomBytes } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess } from "node:child_process";
 import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
 import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
 import { packageNativeRelease, signExecutableForDistribution } from "@semio-tech/process/native-build";
@@ -31,6 +31,8 @@ import { trustedBootstrapCurrent } from "../../🏗️bootstrap/🧾️provenanc
 import { trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { buildAdminSpa, nativeWgpuExecutable, openExternalBrowser, startMcpWorkspaceChild, waitForUiReadiness } from "../../🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts";
 import { type LocalAdminRelay, type LocalBrowserRelay, startLocalAdminRelay, startLocalBrowserRelay } from "../../🚀️local-relay/🛰️servers/🟦️.ts";
+import { startToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** ⏳️ Proves the two launch-route boundaries a fresh `OS_HUB_DATA` boot depends on: an unset
  * `SEMIO_BUILD_BUDGET_MS` (the repository's unlimited budget, `0`) never presents as an already expired
@@ -137,7 +139,7 @@ export class BuildScript extends BundleScript {
  * `dist/publish` — the missing link between "a release binary compiles" and "an operator can be
  * handed one". Local artifact only: nothing is uploaded or pushed anywhere, and where the tarball
  * goes next is a deployment decision this repository does not take. Reached through the root
- * `bun ./📜️script.ts publish os-hub`. */
+ * `repo ./📜️script.ts publish os-hub`. */
 export class PublishScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("Select publish through the build tool without additional arguments");
@@ -280,7 +282,7 @@ export class DevScript extends BundleScript {
         const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
         relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
         const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-        ui = spawn(process.execPath, [uiScript, "serve", "s", "react", "dev"], {
+        ui = startToolV1(runtimeCommandNameV1(), [uiScript, "serve", "s", "react", "dev"], {
           cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
           env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
           shell: false,

@@ -236,8 +236,16 @@ impl SemioGraphDiff {
     }
 }
 
-impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
-    fn apply(&self, base: &SemioGraphSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioGraphSnapshot> {
+impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {}
+
+impl protocol::ColdMutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_indexed_slot(&mut self.nodes, other.nodes);
+        absorb_indexed_slot(&mut self.edges, other.edges);
+    }
+
+    fn apply(&self, unpublished: &mut SemioGraphSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(nodes) = &self.nodes {
             validate_indexed_triple(nodes, base.nodes.len(), ["nodes"])?;
@@ -258,23 +266,22 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
             }
             next.edges = apply_indexed_rows(edges, &base.edges);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_indexed_slot(&mut self.nodes, other.nodes);
-        absorb_indexed_slot(&mut self.edges, other.edges);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 /// 🧮️ `graph`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
 /// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
-        SemioGraphDiff { nodes: self.nodes.as_ref().map(|nodes| inverse_indexed_rows(nodes, &base.nodes)), edges: self.edges.as_ref().map(|edges| inverse_indexed_rows(edges, &base.edges)) }
-    }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
+        SemioGraphDiff { nodes: self.nodes.as_ref().map(|nodes| inverse_indexed_rows(nodes, &base.nodes)), edges: self.edges.as_ref().map(|edges| inverse_indexed_rows(edges, &base.edges)) }
     }
 }
 //#endregion 🔖️Diff

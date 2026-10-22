@@ -1,5 +1,5 @@
 /** 🎬️ InkCanvasHost gestures: the action dispatcher, the interaction selection and hover publishing and the begin, live, commit, abort and atomic gesture lifecycle of the ink events. */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "../../⚛️react-port/🟦️.ts";
 import { inkCanvasActions } from "@semio-tech/framework";
 import { useShellContextMenuFallback, useMapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { type InkCanvasEvent, type InkDragGesture, type InkItem, type InkPendingLive } from "../🧾️ink-model/🟦️.ts";

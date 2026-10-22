@@ -8,9 +8,9 @@
   },
   "ignore": ["node_modules", "dist", "state", "*.log"],
   "targets": [
-    { "name": "build", "cache": true, "inputs": [{ "named": "production" }], "outputs": ["dist"], "command": "bun ./📜️script.ts build" },
-    { "name": "test", "cache": true, "inputs": [{ "named": "test" }], "outputs": [], "command": "bun ./📜️script.ts test" },
-    { "name": "validate", "cache": false, "outputs": [], "command": "bun ./📜️script.ts validate" },
-    { "name": "guarded", "cache": true, "dependsOn": ["validate"], "inputs": [{ "named": "production" }], "outputs": [], "command": "bun ./📜️script.ts guarded" }
+    { "name": "build", "cache": true, "inputs": [{ "named": "production" }], "outputs": ["dist"], "command": "repo ./📜️script.ts build" },
+    { "name": "test", "cache": true, "inputs": [{ "named": "test" }], "outputs": [], "command": "repo ./📜️script.ts test" },
+    { "name": "validate", "cache": false, "outputs": [], "command": "repo ./📜️script.ts validate" },
+    { "name": "guarded", "cache": true, "dependsOn": ["validate"], "inputs": [{ "named": "production" }], "outputs": [], "command": "repo ./📜️script.ts guarded" }
   ]
 }

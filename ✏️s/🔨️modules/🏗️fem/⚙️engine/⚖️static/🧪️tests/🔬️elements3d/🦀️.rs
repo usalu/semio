@@ -1,3 +1,7 @@
+use super::*;
+use semio_s_fem_elements3d::Y_PLANE_SIGN;
+use semio_s_fem_elements3d::frame3_local_geometric_cell;
+use semio_s_fem_elements3d::solid_b_matrix;
 use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;

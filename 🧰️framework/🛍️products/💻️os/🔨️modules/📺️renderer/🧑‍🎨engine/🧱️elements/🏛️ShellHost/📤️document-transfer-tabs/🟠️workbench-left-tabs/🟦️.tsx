@@ -1,5 +1,5 @@
 /** 🟠️ The workbench left tabs phase of useDocumentTransferAndTabs. */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRole, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID } from "@semio-tech/framework";
 import { type PanelTabNode, singleTreeLeaf, staticTreePanelDefinition } from "@semio-tech/ui-react";
 import { type OpenWithEntry } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";

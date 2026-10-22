@@ -1,4 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -15,8 +16,6 @@ def project(path):
     encrypted = reader.is_encrypted
     out = {"encrypted": bool(encrypted), "pageCount": None, "encryption": None}
     if encrypted:
-        # 🔓️An empty user password is what the generator encrypts with; decrypting is how the page
-        # count stays comparable across the pair rather than becoming "unknown" on one side only.
         try:
             reader.decrypt("")
         except Exception:
@@ -41,7 +40,7 @@ else:
 
 //#region 🔬️Probe
 function run(paths: readonly string[]): Record<string, unknown> {
-  const result = spawnSync("python3", ["-c", READER, ...paths], { encoding: "utf8" });
+  const result = runToolSyncV1("python", ["-c", READER, ...paths], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`pypdf reader failed: ${result.stderr}`);
   return JSON.parse(result.stdout) as Record<string, unknown>;
 }

@@ -10,10 +10,10 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
     const tags = level === "exhaustive" ? ["-tags", "exhaustive"] : [];
-    await runCanonicalGoTests(import.meta.dir, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dir), ...rest]);
+    await runCanonicalGoTests(import.meta.dirname, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dirname), ...rest], this.invocation);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

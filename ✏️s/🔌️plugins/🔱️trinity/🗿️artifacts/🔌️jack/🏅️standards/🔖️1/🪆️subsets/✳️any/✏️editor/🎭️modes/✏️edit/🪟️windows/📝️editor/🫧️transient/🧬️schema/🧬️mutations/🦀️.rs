@@ -7,7 +7,7 @@ mod set_editor_selection;
 pub use set_editor_selection::SetEditorSelection;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned)]
-#[mutations(snapshot = JackEditorWindowTransient, diff = JackEditorWindowTransientDiff, schema = "trinity.jackeditorwindowtransient")]
+#[mutations(snapshot = JackEditorWindowTransient, diff = JackEditorWindowTransientDiff, schema = "trinity.jackeditorwindowtransient", reference = JackEditorWindowTransient, reference_diff = JackEditorWindowTransientDiff)]
 pub enum JackEditorWindowTransientMutation {
     #[dsl(key = "set-editor-selection")]
     SetEditorSelection(SetEditorSelection),

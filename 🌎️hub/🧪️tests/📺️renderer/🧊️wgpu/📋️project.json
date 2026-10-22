@@ -8,7 +8,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts journey-check",
+        "command": "repo ./📜️script.ts journey-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
       "outputs": [],
@@ -22,7 +22,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts creation-check",
+        "command": "repo ./📜️script.ts creation-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
       "outputs": [],
@@ -36,7 +36,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts collaboration-check",
+        "command": "repo ./📜️script.ts collaboration-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
       "outputs": [],
@@ -51,7 +51,7 @@
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
-        "command": "bun ./📜️script.ts collaboration-acceptance",
+        "command": "repo ./📜️script.ts collaboration-acceptance",
         "forwardAllArgs": true
       },
       "configurations": {
@@ -87,7 +87,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts native-guest-journey-check",
+        "command": "repo ./📜️script.ts native-guest-journey-check",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
       "outputs": [],
@@ -101,7 +101,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
       },
       "outputs": [],

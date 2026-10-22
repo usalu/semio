@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes staged/🧩️units/🧪️tests/🔣️.json: the language-agnostic test vectors. Graph, scenario, python and go expectations are hand-written here; the key hex values are computed by the independent oracle (stdlib only) and must be reproduced by the TypeScript implementation."""
+"""🧰️ Writes staged/🧩️units/🧪️tests/🔣️.json: the language-agnostic test vectors. Graph, scenario, python and go expectations are hand-written here; the key hex values are computed by the independent oracle (stdlib only) and must be reproduced by the TypeScript implementation."""
 import importlib.util, json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +37,7 @@ graphs = [
      "expect": {"valid": True, "order": ["go:t", "go:u", "go:v", "go:w"], "layer": {"go:t": 0, "go:u": 1, "go:v": 2, "go:w": 3}}},
     {"name": "cycle", "graph": graph(unit("go:a", deps=[("go:b", "interface")]), unit("go:b", deps=[("go:a", "interface")])), "expect": {"valid": False, "kinds": ["cycle"]}},
     {"name": "unknown-dependency", "graph": graph(unit("go:a", deps=[("go:ghost", "interface")])), "expect": {"valid": False, "kinds": ["unknown-dependency"]}},
+    {"name": "both-of-binary", "graph": graph(unit("go:m", kind="binary", interface=None), unit("go:a", deps=[("go:m", "both")])), "expect": {"valid": False, "kinds": ["no-interface"]}},
     {"name": "interface-of-binary", "graph": graph(unit("go:m", kind="binary", interface=None), unit("go:a", deps=[("go:m", "interface")])), "expect": {"valid": False, "kinds": ["no-interface"]}},
     {"name": "implementation-of-binary-is-fine", "graph": graph(unit("go:m", kind="binary", interface=None), unit("go:t", kind="test", interface=None, deps=[("go:m", "implementation")])),
      "expect": {"valid": True, "order": ["go:m", "go:t"], "layer": {"go:m": 0, "go:t": 1}}},
@@ -55,6 +56,7 @@ key_units = [
           sources=["🧰️framework/z.rs", "a/b.rs", "｡/c.rs", "🧪️tests/t.rs"], inputs=["Cargo.toml", "🔣️.json"], externals=["cargo-registry:serde@1.0.1", "cargo-registry:anyhow@1.0.0"], toolchain="rustc 1.95.0", parts=["resolution=abc", "flags=-O"], argv=["cargo", "build", "-p", "app"], env={"B": "2", "A": "1"}, outputs=["libapp.rlib", "app.d"]),
      {"rust:core": {"interfaceClosure": digest("core-i"), "outputClosure": digest("core-o")}, "rust:mac": {"interfaceClosure": digest("mac-i"), "outputClosure": digest("mac-o")}, "rust:doc": {"interfaceClosure": digest("doc-i"), "outputClosure": digest("doc-o")}},
      digest("app-iface"), digest("app-out"), None),
+    ("both-edge-folds-interface-and-output-closure", unit("go:exe", kind="binary", interface=None, deps=[("go:lib", "both")], sources=["exe.go"], outputs=["bin"]), {"go:lib": {"interfaceClosure": digest("lib-i"), "outputClosure": digest("lib-o")}}, None, digest("exe-out"), None),
     ("no-interface-no-dependencies", unit("go:main", kind="binary", interface=None, sources=["main.go"], outputs=["bin"]), {}, None, digest("main-out"), None),
     ("direct-interface-kind", unit("tex:doc", language="tex", deps=[("tex:chap", "interface")], sources=["doc.tex"]), {"tex:chap": {"interfaceClosure": digest("chap-i"), "outputClosure": digest("chap-o")}}, digest("doc-aux"), digest("doc-out"), None),
     ("exposes-subset", unit("go:b", deps=[("go:a", "interface"), ("go:z", "interface")], sources=["b.go"]),
@@ -102,6 +104,13 @@ scenarios = [
         step([("go:q", "body")], ran=["go:q"], hit=["go:p"]),
         step([("go:p", "input")], ran=["go:p"], hit=["go:q"], cutoff=["go:p"]),
         step([("go:p", "revert")], hit=["go:p", "go:q"]),
+    ]},
+    {"name": "both-edge", "graph": graph(unit("go:lib"), unit("go:exe", kind="binary", interface=None, deps=[("go:lib", "both")])), "steps": [
+        step([], ran=["go:exe", "go:lib"]),
+        step([("go:lib", "body")], ran=["go:exe", "go:lib"], cutoff=["go:lib"]),
+        step([("go:lib", "interface")], ran=["go:exe", "go:lib"]),
+        step([("go:lib", "revert")], hit=["go:exe", "go:lib"]),
+        step([("go:lib", "body"), ("go:lib", "fail-hard")], failed=["go:lib"], blocked=["go:exe"]),
     ]},
     {"name": "diamond", "graph": graph(unit("go:base"), unit("go:l", deps=[("go:base", "interface")]), unit("go:r", deps=[("go:base", "interface")]), unit("go:top", deps=[("go:l", "interface"), ("go:r", "interface")])), "steps": [
         step([], ran=["go:base", "go:l", "go:r", "go:top"]),
@@ -180,13 +189,12 @@ PY["plan"] = [{
 # ---------------------------------------------------------------- go
 GO = {}
 GO["scan"] = [
-    {"name": "block-with-aliases", "source": "// Package doc.\npackage p\n\nimport (\n\t\"fmt\"\n\t_ \"embed\"\n\tm \"math\"\n\t. \"strings\"\n\t`raw/path`\n)\n\nfunc F() {}\n", "expect": {"package": "p", "imports": ["embed", "fmt", "math", "raw/path", "strings"], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "constraint-and-cgo", "source": "//go:build linux && !cgo\n\n// Package q.\npackage q\n\nimport \"C\"\nimport \"unsafe\"\n\nvar x = 1\nimport \"never\"\n", "expect": {"package": "q", "imports": ["C", "unsafe"], "constraint": "linux && !cgo", "legacyConstraints": [], "embeds": []}},
-    {"name": "separate-and-semicolon", "source": "package s\nimport \"a\"\nimport \"b\"; import \"c\"\n/* block */ import (\n  \"d\" ; \"e\"\n)\n", "expect": {"package": "s", "imports": ["a", "b", "c", "d", "e"], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "embed-directives", "source": "package e\n\nimport \"embed\"\n\n//go:embed assets/* \"name with space.txt\" other.txt\nvar fs embed.FS\n", "expect": {"package": "e", "imports": ["embed"], "constraint": None, "legacyConstraints": [], "embeds": ["assets/*", "name with space.txt", "other.txt"]}},
-    {"name": "legacy-build-line", "source": "// +build ignore\n\npackage l\n", "expect": {"package": "l", "imports": [], "constraint": None, "legacyConstraints": ["ignore"], "embeds": []}},
-    {"name": "no-imports", "source": "package n\n\nfunc F() {}\nimport \"late\"\n", "expect": {"package": "n", "imports": [], "constraint": None, "legacyConstraints": [], "embeds": []}},
-    {"name": "string-with-import-word", "source": "package w\n\nimport \"fmt\"\n\nvar s = \"import \\\"x\\\"\"\n", "expect": {"package": "w", "imports": ["fmt"], "constraint": None, "legacyConstraints": [], "embeds": []}},
+    {"name": "block-with-aliases", "source": "// Package doc.\npackage p\n\nimport (\n\t\"fmt\"\n\t_ \"embed\"\n\tm \"math\"\n\t. \"strings\"\n\t`raw/path`\n)\n\nfunc F() {}\n", "expect": {"package": "p", "imports": ["embed", "fmt", "math", "raw/path", "strings"], "constraint": None, "embeds": []}},
+    {"name": "constraint-and-cgo", "source": "//go:build linux && !cgo\n\n// Package q.\npackage q\n\nimport \"C\"\nimport \"unsafe\"\n\nvar x = 1\nimport \"never\"\n", "expect": {"package": "q", "imports": ["C", "unsafe"], "constraint": "linux && !cgo", "embeds": []}},
+    {"name": "separate-and-semicolon", "source": "package s\nimport \"a\"\nimport \"b\"; import \"c\"\n/* block */ import (\n  \"d\" ; \"e\"\n)\n", "expect": {"package": "s", "imports": ["a", "b", "c", "d", "e"], "constraint": None, "embeds": []}},
+    {"name": "embed-directives", "source": "package e\n\nimport \"embed\"\n\n//go:embed assets/* \"name with space.txt\" other.txt\nvar fs embed.FS\n", "expect": {"package": "e", "imports": ["embed"], "constraint": None, "embeds": ["assets/*", "name with space.txt", "other.txt"]}},
+    {"name": "no-imports", "source": "package n\n\nfunc F() {}\nimport \"late\"\n", "expect": {"package": "n", "imports": [], "constraint": None, "embeds": []}},
+    {"name": "string-with-import-word", "source": "package w\n\nimport \"fmt\"\n\nvar s = \"import \\\"x\\\"\"\n", "expect": {"package": "w", "imports": ["fmt"], "constraint": None, "embeds": []}},
 ]
 LIN = {"goos": "linux", "goarch": "amd64", "goMinor": 25, "cgo": True, "tags": []}
 DAR = {"goos": "darwin", "goarch": "arm64", "goMinor": 25, "cgo": False, "tags": ["extra"]}

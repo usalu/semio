@@ -18,7 +18,16 @@ pub struct RemoveGeometryConnection {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveGeometryConnection where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "geometry-connection", kind: "remove-geometry-connection", record: "RemovedGeometryConnection" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id), &format!("Verbindung \"{}\" aus Geometrie \"{}\" entfernen", self.connection_id, self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone(), self.connection_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for RemoveGeometryConnection where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::remove_geometry_connection::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,12 +36,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveGeometryConnectio
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id), &format!("Verbindung \"{}\" aus Geometrie \"{}\" entfernen", self.connection_id, self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone(), self.connection_id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

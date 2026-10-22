@@ -168,24 +168,21 @@ pub fn numerical_writer_demand(slot: &Option<RetainedJobPayloadWriter>) -> Optio
     slot.as_ref().map(RetainedJobPayloadWriter::retirement_demands)
 }
 
-/// 🔁️ Closes one restored checkpoint page, then the operation ledger, from the calling step's own wallet; true once the payload is terminal-empty.
+/// 🔁️ Advances past each decoded checkpoint page, then retires the whole payload from its last page down to the operation ledger from the calling step's own wallet; true once the payload is terminal-empty.
 pub fn numerical_restore_close_due(payload: &mut RetainedJobPayload, context: &mut StepContext<'_>, page_slot: &mut usize, page_entry: &mut usize, close_due: &mut bool, total_pages: usize) -> Result<bool, NumericalCheckpointFault> {
+    if page_slot.saturating_add(1) < total_pages {
+        *page_slot += 1;
+        *page_entry = 0;
+        *close_due = false;
+        return Ok(false);
+    }
     let demand = payload.retirement_demands().map_err(|_| NumericalCheckpointFault::Admission)?;
     let grant = context.retained_grant();
     if !numerical_grant_covers(grant, demand) {
         return Ok(false);
     }
-    let pages = payload.page_count();
     let step = payload.close_step(grant).map_err(|_| NumericalCheckpointFault::Admission)?;
     context.consume_retained(step.progress()).map_err(|_| NumericalCheckpointFault::Admission)?;
-    if payload.page_count() < pages {
-        *page_slot += 1;
-        *page_entry = 0;
-        if *page_slot < total_pages {
-            *close_due = false;
-            return Ok(false);
-        }
-    }
     Ok(payload.terminal_is_empty())
 }
 

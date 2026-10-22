@@ -16,7 +16,7 @@ const DAG_PREVIEW_MAX_IMAGE: f64 = 200.0;
 const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 
 #[derive(Clone, Debug)]
-struct PreviewTreeRow {
+pub struct PreviewTreeRow {
     pub path: String,
     pub depth: usize,
     pub label: String,
@@ -26,7 +26,7 @@ struct PreviewTreeRow {
 }
 
 #[derive(Clone, Debug)]
-struct PreviewTreeRowLayout {
+pub struct PreviewTreeRowLayout {
     pub path: String,
     pub row_rect: (f64, f64, f64, f64),
 }

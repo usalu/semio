@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "status": "source-only-unrun",
+  "phases": [
+    {
+      "id": "reuse-presence",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/🟦️.ts",
+      "titles": [
+        {
+          "title": "inference reuse revalidates physical inventories inside the prior ten minute window",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        },
+        {
+          "title": "inference reuse refuses every nonleaf absence and unsafe inventory under managed custody",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        },
+        {
+          "title": "fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        },
+        {
+          "title": "inference reuse preserves issued cancellation and deadlines after warm validation",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        }
+      ],
+      "enclosingMilliseconds": 540000
+    },
+    {
+      "id": "observation-blocks",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/🟦️.ts",
+      "titles": [
+        {
+          "title": "observation block publisher rebuilds retired shared bytes before publishing a fresh header",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        },
+        {
+          "title": "observation block readers refuse stale physical memos without recomputing or deleting evidence",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        },
+        {
+          "title": "observation block path custody classifies actual issued images and ordinary fixtures",
+          "timeoutMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000,
+          "role": "sdk-runtime"
+        }
+      ],
+      "enclosingMilliseconds": 420000
+    },
+    {
+      "id": "optional-global-adapter",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+      "titles": [
+        {
+          "title": "deferred optional retirement retries inside the acquired original writer",
+          "timeoutMilliseconds": 60000
+        }
+      ],
+      "enclosingMilliseconds": 120000
+    },
+    {
+      "id": "optional-retirement-adapter",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️retirement/🟦️.ts",
+      "titles": [
+        {
+          "title": "quiescent retirement delegates exact kernel custody and validates closed pressure DATA",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "optional preparation consumes its Native receiver exactly once",
+          "timeoutMilliseconds": 60000
+        }
+      ],
+      "enclosingMilliseconds": 180000
+    },
+    {
+      "id": "optional-scoped-adapter",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts",
+      "titles": [
+        {
+          "title": "scoped optional recovery returns only consumed Native custody DATA",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "scoped retirement preserves exact group failures and joins Native close",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "optional bridge admits only factory custody and captures request before enrollment",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "scoped optional helper detaches its own asynchronous floor request",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "scoped optional maintenance refuses its own accepted reader",
+          "timeoutMilliseconds": 185000,
+          "innerMilliseconds": 180000,
+          "outerMarginMilliseconds": 5000,
+          "role": "isolated-expected-refusal"
+        }
+      ],
+      "enclosingMilliseconds": 540000
+    },
+    {
+      "id": "optional-pressure-adapter",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/💧️headroom/🟦️.ts",
+      "titles": [
+        {
+          "title": "optional reclamation returns pressure DATA with exact allocated counts and preserves cancellation",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "opportunistic refusal remains in its wrapper while accepted queued writer returns pressure",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "queued reclamation requests retain the existing recovery floor range and closed shape",
+          "timeoutMilliseconds": 60000
+        },
+        {
+          "title": "expected pressure refuses after fulfilled maintenance while real failures stay rejected",
+          "timeoutMilliseconds": 60000
+        }
+      ],
+      "enclosingMilliseconds": 300000
+    },
+    {
+      "id": "optional-atomic-window-adapter",
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🪟️retirement-window/🟦️.ts",
+      "titles": [
+        {
+          "title": "atomic retirement completes its group within one owned exclusive callback",
+          "timeoutMilliseconds": 60000
+        }
+      ],
+      "enclosingMilliseconds": 120000
+    }
+  ],
+  "platformLimited": [
+    {
+      "testFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+      "title": "optional graph maintenance defers actual retained readers and preserves exclusive custody",
+      "platforms": [
+        "darwin"
+      ],
+      "timeoutMilliseconds": 60000,
+      "status": "unrun",
+      "mandatoryLinux": false
+    }
+  ],
+  "notes": [
+    "No side-effect grafts: direct owner entries; scoped entry already imports its adjacent fault laws.",
+    "Main storage entry already imports retirement/scoped laws; exact title selection prevents unrelated execution.",
+    "Mandatory adapter phases select12 controlled laws at60000ms plus1 genuine isolated own-reader refusal (180000ms inner+5000ms outer); scoped enclosing540000ms.",
+    "Root owns final metadata/sealing and actual dispatch.",
+    "POSIX FIFO faults are actual; Windows exercises directory replacement and makes no FIFO claim."
+  ],
+  "counts": {
+    "sdkTitles": 7,
+    "controlledAdapterTitles": 12,
+    "isolatedAdapterTitles": 1,
+    "mandatoryTitles": 20,
+    "totalEnclosingMilliseconds": 2220000
+  }
+}

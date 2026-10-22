@@ -7,7 +7,7 @@ use semio_framework_plugin_actor_host::executor;
 use crate::tasks_extension_continuation::{host, host_for_instance};
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
-struct TaskRecord {
+pub struct TaskRecord {
     pub instance: u32,
     pub key: Option<String>,
     pub restart: Option<Vec<u8>>,

@@ -25,7 +25,7 @@ impl FaultCursor{
     "scope"=>if !matches!(value,DslValue::Null){object(value)?;self.kind=2;return Ok(None)},
     "source"=>if !matches!(value,DslValue::Null){object(value)?;output.source=Some(Default::default());self.kind=3;return Ok(None)},
     "span"=>if !matches!(value,DslValue::Null){object(value)?;output.span=Some(Default::default());self.kind=4;return Ok(None)},
-    "domain"=>{object(value)?;output.domain=Some(std::mem::replace(value,DslValue::Null))},
+    "domain"=>{object(value)?;output.domain=Some(Box::new(std::mem::replace(value,DslValue::Null)))},
     "retryable"=>match value{DslValue::Bool(flag)=>output.retryable=*flag,DslValue::Null=>{},_=>return Err(invalid())},
     "causes"=>if !matches!(value,DslValue::Null){if !matches!(value,DslValue::Array(_)){return Err(invalid())}self.kind=5;self.reserved=false;return Ok(None)},
     "params"=>if !matches!(value,DslValue::Null){object(value)?;self.kind=6;self.reserved=false;return Ok(None)},

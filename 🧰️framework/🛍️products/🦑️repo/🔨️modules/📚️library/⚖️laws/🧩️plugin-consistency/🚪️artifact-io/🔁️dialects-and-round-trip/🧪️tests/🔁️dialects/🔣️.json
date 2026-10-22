@@ -1,0 +1,155 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "stdio-codec-ids-are-unique",
+   "rule": "policyStdioCodecIdUniquenessBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/🦀️.rs": [
+     "const ID_A: &str = \"codec.a\";",
+     "fn reg() {",
+     "    register_document_codec(store::artifact_codec::<T>(ID_A));",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/🦀️.rs": [
+     "pub const ID_B: &str = \"codec.a\";",
+     "register_document_codec(store::artifact_codec::<U<V>>(crate::ids::ID_B));",
+     "register_document_codec(store::artifact_codec::<W>(\"codec.b\"));"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️c/🦀️.rs": [
+     "register_document_codec(store::artifact_codec::<X>(\"codec.c\"));",
+     "register_document_codec(store::artifact_codec::<Y>(UNKNOWN));",
+     "register_document_codec(store::artifact_codec::<Z>(\"codec.b\"));"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs": [
+     "register_document_codec(store::artifact_codec::<T>(\"codec.a\"));"
+    ]
+   },
+   "expect": [
+    [
+     "stdio-codec-id-duplicate-codec.a-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/🦀️.rs-3",
+     "stdio-artifacts/codec-id-uniqueness",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-id-duplicate-codec.a-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/🦀️.rs-2",
+     "stdio-artifacts/codec-id-uniqueness",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-id-duplicate-codec.b-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/🦀️.rs-3",
+     "stdio-artifacts/codec-id-uniqueness",
+     "high",
+     0
+    ],
+    [
+     "stdio-codec-id-duplicate-codec.b-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️c/🦀️.rs-3",
+     "stdio-artifacts/codec-id-uniqueness",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "codec-ids-need-the-stdio-plugin",
+   "rule": "policyStdioCodecIdUniquenessBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs": [
+     "register_document_codec(store::artifact_codec::<T>(\"a\"));",
+     "register_document_codec(store::artifact_codec::<T>(\"a\"));"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "engines-carry-a-round-trip-test",
+   "rule": "policyRoundTripTestBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "pub fn parse() {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "#[cfg(test)]",
+     "mod tests {",
+     "    fn round_trip_is_lossless() {}",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️c/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "fn roundtrip() {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️d/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "#[cfg(test)]",
+     "mod t { fn LOSSLESS() {} }"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️e/🏅️standards/🔖️1/📚️misc/🦀️.rs": [
+     "pub fn parse() {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️f/⚙️engine/🦀️.rs": [
+     "pub fn parse() {}"
+    ],
+    "other/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "pub fn parse() {}"
+    ]
+   },
+   "expect": [
+    [
+     "round-trip-test-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️engine/🦀️.rs",
+     "artifact-io/round-trip-test",
+     "high",
+     0
+    ],
+    [
+     "round-trip-test-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️c/🏅️standards/🔖️1/⚙️engine/🦀️.rs",
+     "artifact-io/round-trip-test",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "flagship-mutations-need-real-variants",
+   "rule": "policyMutationVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs": [
+     "pub enum SvgMutation {",
+     "    NoMutation,",
+     "    SetSnapshot(S),",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs": [
+     "pub enum GltfMutation {",
+     "    #[serde(rename = \"x\")]",
+     "    AddNode { id: u32, name: String },",
+     "    NoMutation,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs": [
+     "// pub enum PdfMutation { Real }",
+     "pub struct Other;"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs": [
+     "pub enum GifMutation { Frame(u8), NoMutation }"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️other/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs": [
+     "pub enum OtherMutation { NoMutation }"
+    ]
+   },
+   "expect": [
+    [
+     "mutation-vocabulary-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+     "artifact-io/mutation-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "mutation-vocabulary-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+     "artifact-io/mutation-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  }
+ ]
+}

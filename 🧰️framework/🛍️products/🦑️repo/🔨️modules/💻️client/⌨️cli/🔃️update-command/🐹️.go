@@ -13,12 +13,13 @@ import (
 	command "github.com/usalu/semio/repo/client/internal/command"
 	yaml "github.com/usalu/semio/repo/yaml"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // 🔄️Update command implementation for dependency updates.
@@ -249,7 +250,7 @@ func findCsprojFiles(rootDir, dir string) []string {
 
 // 🟧️runCommand holds the data fields for a runCommand record.
 func runCommand(dir, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
+	cmd := workspace.ToolCommand(name, args...)
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -258,7 +259,7 @@ func runCommand(dir, name string, args ...string) error {
 }
 
 func runCommandQuiet(dir, name string, args ...string) (string, error) {
-	cmd := exec.Command(name, args...)
+	cmd := workspace.ToolCommand(name, args...)
 	cmd.Dir = dir
 	output, err := cmd.Output()
 	return string(output), err

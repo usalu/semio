@@ -6,6 +6,7 @@
  */
 
 import { registerComponentSceneHostV1, registerExtensionHostV1, registerLeftoverSelectionPortV1 } from "../🗣️Interpreter/🗺️element-host-registry/🟦️.ts";
+import type { ExtensionHostV1 } from "../🗣️Interpreter/🧩️host-contract/🟦️.ts";
 import { Board2dHost } from "../🖥️Board2dHost/🟦️.tsx";
 import { BlockListHost } from "../🧩️BlockListHost/🟦️.tsx";
 import { Canvas2dHost } from "../📐️Canvas2dHost/🟦️.tsx";
@@ -23,7 +24,7 @@ import { TiledMapHost } from "../🧭️TiledMapHost/🟦️.tsx";
 import { World3dHost } from "../🌐️World3dHost/🟦️.tsx";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 
-function mediaTransportExtensionHost(extensionId: string): typeof MediaTransportHost | undefined {
+function mediaTransportExtensionHost(extensionId: string): ExtensionHostV1 | undefined {
   return extensionId === MEDIA_TRANSPORT_EXTENSION_ID ? MediaTransportHost : undefined;
 }
 

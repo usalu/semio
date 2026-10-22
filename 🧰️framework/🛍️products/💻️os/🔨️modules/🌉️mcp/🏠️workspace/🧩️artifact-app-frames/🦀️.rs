@@ -7,7 +7,7 @@ use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_mcp_foundation::reports::RevisionStamp;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps};
+use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps, action_input_arguments};
 
 /// 🔢️ Every `AppCommand` variant's own leading `seq`, as a place to WRITE. The kernel envelope's
 /// sequence and the command's own must be the same number: the guest answers a command by publishing
@@ -425,20 +425,20 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
             message: format!("`{}` declares artifact binding encoding `{}`, which this gateway has no writer for (it writes `{}`)", declared.inference_schema, binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64),
         });
     }
-    let mut body: serde_json::Value = if command.canonical_payload.is_empty() {
-        serde_json::json!({})
+    let mut body = if command.canonical_payload.is_empty() {
+        semio_framework_pack_json::json!({})
     } else {
-        serde_json::from_slice(&command.canonical_payload).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` payload is not a JSON object: {error}", declared.inference_schema) })?
+        semio_framework_pack_json::parse_bytes(&command.canonical_payload, semio_framework_pack_json::JsonMemberPolicy::Replace).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` payload is not a JSON object: {error}", declared.inference_schema) })?
     };
     let Some(object) = body.as_object_mut() else {
         return Err(Fault { code: "app.command.rejected".to_string(), message: format!("`{}` payload is not a JSON object", declared.inference_schema) });
     };
     if object.contains_key(&binding.field) {
-        return serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") });
+        return Ok(semio_framework_pack_json::to_string(&body).into_bytes());
     }
     match command.artifact_document.as_ref() {
         Some(document) => {
-            object.insert(binding.field.clone(), serde_json::json!({ "pack": encode_base64(&document.pack), "spr": encode_base64(&document.spr) }));
+            object.insert(binding.field.clone(), semio_framework_pack_json::json!({ "pack": encode_base64(&document.pack), "spr": encode_base64(&document.spr) }));
         }
         None if binding.required && object.is_empty() => {
             return Err(Fault {
@@ -448,7 +448,7 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
         }
         None => {}
     }
-    serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") })
+    Ok(semio_framework_pack_json::to_string(&body).into_bytes())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -531,7 +531,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
                 AppCommand::PureCommand { capability_id, input } => {
-                    let invocation = self.addressed_action_invocation(&capability_id, &input)?;
+                    let invocation = self.addressed_action_invocation(&capability_id, || action_input_arguments(&input))?;
                     let command = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&invocation));
                     match self.exchange_one_real(
                         instance,

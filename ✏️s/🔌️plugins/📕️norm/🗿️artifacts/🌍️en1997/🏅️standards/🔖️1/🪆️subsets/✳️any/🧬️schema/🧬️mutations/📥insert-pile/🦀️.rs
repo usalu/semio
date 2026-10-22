@@ -19,6 +19,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertPile where Op: pro
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert", entity: "pile", kind: "insert-pile", record: "InsertedPile",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert pile", "Pfahl einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for InsertPile where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::remove_pile::RemovePile> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::insert_pile::diff::diff(self, base)
     }
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertPile where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert pile", "Pfahl einfügen")
-    }
 }
 
 //#region 🪢️Mounts

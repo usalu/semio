@@ -1,7 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runFormSourceScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🧪️ Runs the original extension contribution laws with their defining Flow owner. */
 class ExtensionRegistryScript extends BundleScript {
@@ -23,5 +24,5 @@ class FormSourceScript extends BundleScript {
     await runFormSourceScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-const router=new ScriptRouter(import.meta.dir).register("test-extension-registry",ExtensionRegistryScript).register("test-form-producer",FormProducerScript).register("test-form-source",FormSourceScript);
-if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>router.run(process.argv.slice(2),original));
+const router=new ScriptRouter(import.meta.dirname).register("test-extension-registry",ExtensionRegistryScript).register("test-form-producer",FormProducerScript).register("test-form-source",FormSourceScript);
+if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,original=>router.run(process.argv.slice(2),original));

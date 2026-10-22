@@ -25,7 +25,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "edge-endpoints", kind: "set-edge-endpoints", record: "SetEdgeEndpoints" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioFlowSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set edge endpoints", "Kantenendpunkte setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioFlowSnapshot, Op> for SetEdgeEndpoints
+where
+    Op: protocol::ColdMutation<SemioFlowSnapshot, ReferenceDiff = crate::schema::diff::SemioFlowDiff> + From<SetEdgeEndpoints>,
+{
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioFlowSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -34,12 +46,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set edge endpoints", "Kantenendpunkte setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

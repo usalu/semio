@@ -44,6 +44,15 @@ impl SetLineEndingMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line-ending", kind: "set-line-ending", record: "SetLineEnding" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-line-ending".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMutation {
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
@@ -51,16 +60,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMu
             Ok(true) => protocol::MutationOutcome::new(TxtDiff { line_ending: Some(self.value), ..Default::default() }),
         }
     }
-
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
         Ok(if self.plan(base) == Ok(true) { vec![super::TxtMutation::SetLineEnding(Self { value: base.line_ending })] } else { Vec::new() })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-line-ending".to_string()]
     }
 }
 //#endregion ⚙️Semantics

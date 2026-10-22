@@ -1,0 +1,1067 @@
+{
+ "version": 1,
+ "argsOk": [
+  {
+   "args": [],
+   "expected": {
+    "selection": {
+     "scopes": [],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": null,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  },
+  {
+   "args": [
+    "--scope",
+    "a/b/"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [
+      "a/b"
+     ],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": null,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  },
+  {
+   "args": [
+    "--scope",
+    ".\\x\\y"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [
+      "x/y"
+     ],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": null,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  },
+  {
+   "args": [
+    "--scope",
+    "a",
+    "--scope",
+    "./b//"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [
+      "a",
+      "b"
+     ],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": null,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  },
+  {
+   "args": [
+    "--changed",
+    "--list",
+    "--out",
+    "o.json",
+    "--files-from",
+    "l.txt",
+    "--heap-mb",
+    "2048",
+    "--timeout-minutes",
+    "5",
+    "--max-diagnostics",
+    "10"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [],
+     "changedOnly": true
+    },
+    "out": "o.json",
+    "filesFrom": "l.txt",
+    "heapMegabytes": 2048,
+    "timeoutMinutes": 5,
+    "maximumDiagnostics": 10,
+    "list": true
+   }
+  },
+  {
+   "args": [
+    "--heap-mb",
+    "1024"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": 1024,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  },
+  {
+   "args": [
+    "--max-diagnostics",
+    "0"
+   ],
+   "expected": {
+    "selection": {
+     "scopes": [],
+     "changedOnly": false
+    },
+    "out": null,
+    "filesFrom": null,
+    "heapMegabytes": null,
+    "timeoutMinutes": 180,
+    "maximumDiagnostics": 0,
+    "list": false
+   }
+  }
+ ],
+ "argsErr": [
+  {
+   "args": [
+    "--scope"
+   ],
+   "message": "--scope needs a value"
+  },
+  {
+   "args": [
+    "--scope",
+    "--changed"
+   ],
+   "message": "--scope needs a value"
+  },
+  {
+   "args": [
+    "--out"
+   ],
+   "message": "--out needs a value"
+  },
+  {
+   "args": [
+    "--scope",
+    ".."
+   ],
+   "message": "verify.typescript.scope-must-be-a-repo"
+  },
+  {
+   "args": [
+    "--scope",
+    "a/../b"
+   ],
+   "message": "verify.typescript.scope-must-be-a-repo"
+  },
+  {
+   "args": [
+    "--scope",
+    "/abs"
+   ],
+   "message": "verify.typescript.scope-must-be-a-repo"
+  },
+  {
+   "args": [
+    "--scope",
+    "C:/x"
+   ],
+   "message": "verify.typescript.scope-must-be-a-repo"
+  },
+  {
+   "args": [
+    "--scope",
+    "./"
+   ],
+   "message": "verify.typescript.scope-must-be-a-repo"
+  },
+  {
+   "args": [
+    "--heap-mb",
+    "100"
+   ],
+   "message": "verify.typescript.needs-an-integer-of-at"
+  },
+  {
+   "args": [
+    "--heap-mb",
+    "1.5"
+   ],
+   "message": "verify.typescript.needs-an-integer-of-at"
+  },
+  {
+   "args": [
+    "--timeout-minutes",
+    "0"
+   ],
+   "message": "verify.typescript.needs-an-integer-of-at"
+  },
+  {
+   "args": [
+    "--max-diagnostics",
+    "-1"
+   ],
+   "message": "verify.typescript.needs-an-integer-of-at"
+  },
+  {
+   "args": [
+    "--max-diagnostics",
+    "x"
+   ],
+   "message": "verify.typescript.needs-an-integer-of-at"
+  },
+  {
+   "args": [
+    "--bogus"
+   ],
+   "message": "verify.typescript.unknown-flag"
+  },
+  {
+   "args": [
+    "positional"
+   ],
+   "message": "verify.typescript.unknown-flag"
+  }
+ ],
+ "roots": [
+  {
+   "name": "excludes drop folders and shadowed declarations",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules",
+    "c/gen"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "a/x.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "c/h.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ]
+  },
+  {
+   "name": "glob excludes match at any depth",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "**/dist",
+    "**/gen*"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "a/x.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "c/h.ts",
+    "d/keep.ts",
+    "node_modules/p/i.ts",
+    "top.ts"
+   ]
+  },
+  {
+   "name": "an exclude with a dot prefix still applies",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "./a",
+    "./node_modules"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "b/z.tsx",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ]
+  },
+  {
+   "name": "a file pattern excludes only that file",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "c/h.ts",
+    "top.ts"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "a/x.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "c/gen/g.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "node_modules/p/i.ts"
+   ]
+  },
+  {
+   "name": "scopes keep a folder prefix or an exact file",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules"
+   ],
+   "selection": {
+    "scopes": [
+     "a",
+     "top.ts",
+     "c/h.ts"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "a/x.ts",
+    "a/y.d.ts",
+    "c/h.ts",
+    "top.ts"
+   ]
+  },
+  {
+   "name": "a scope is not a string prefix",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules"
+   ],
+   "selection": {
+    "scopes": [
+     "a/x"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": []
+  },
+  {
+   "name": "changed-only keeps changed sources",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": true
+   },
+   "changed": [
+    "c/h.ts",
+    "a/x.d.ts",
+    "gone.ts"
+   ],
+   "expected": [
+    "c/h.ts"
+   ]
+  },
+  {
+   "name": "a listed root set intersects the live sources",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false,
+    "listed": [
+     "top.ts",
+     "b/z.d.ts",
+     "ghost.ts",
+     "a/x.ts"
+    ]
+   },
+   "changed": [],
+   "expected": [
+    "a/x.ts",
+    "top.ts"
+   ]
+  },
+  {
+   "name": "a scope, changed-only and a listed set combine",
+   "sources": [
+    "a/x.ts",
+    "a/x.d.ts",
+    "a/y.d.ts",
+    "b/z.tsx",
+    "b/z.d.ts",
+    "node_modules/p/i.ts",
+    "c/gen/g.ts",
+    "c/h.ts",
+    "a/x.ts",
+    "d/dist/o.ts",
+    "d/keep.ts",
+    "e/f/gen2/q.ts",
+    "top.ts"
+   ],
+   "excludes": [
+    "node_modules"
+   ],
+   "selection": {
+    "scopes": [
+     "a"
+    ],
+    "changedOnly": true,
+    "listed": [
+     "a/x.ts",
+     "a/y.d.ts",
+     "top.ts"
+    ]
+   },
+   "changed": [
+    "a/y.d.ts",
+    "top.ts"
+   ],
+   "expected": [
+    "a/y.d.ts"
+   ]
+  },
+  {
+   "name": "a declaration next to a tsx file is shadowed",
+   "sources": [
+    "m/w.tsx",
+    "m/w.d.ts"
+   ],
+   "excludes": [],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "m/w.tsx"
+   ]
+  },
+  {
+   "name": "a declaration whose source is excluded stays",
+   "sources": [
+    "m/w.ts",
+    "m/w.d.ts"
+   ],
+   "excludes": [
+    "m/w.ts"
+   ],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": [
+    "m/w.d.ts"
+   ]
+  },
+  {
+   "name": "no sources select nothing",
+   "sources": [],
+   "excludes": [],
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": []
+  }
+ ],
+ "apps": {
+  "files": {
+   "apps/web/tsconfig.json": "{}",
+   "apps/web/next-env.d.ts": "",
+   "apps/web/page.ts": "",
+   "next-env.d.ts": "",
+   "tsconfig.json": "{}",
+   "apps/other/next-env.d.ts": ""
+  },
+  "cases": [
+   {
+    "name": "an excluded ambient file with its own tsconfig is an application",
+    "sources": [
+     "apps/web/next-env.d.ts",
+     "apps/web/page.ts"
+    ],
+    "excludes": [
+     "apps/web/next-env.d.ts"
+    ],
+    "expected": [
+     {
+      "folder": "apps/web",
+      "project": "apps/web/tsconfig.json"
+     }
+    ],
+    "message": null
+   },
+   {
+    "name": "an ambient file that is not excluded is no application",
+    "sources": [
+     "apps/web/next-env.d.ts"
+    ],
+    "excludes": [
+     "other"
+    ],
+    "expected": [],
+    "message": null
+   },
+   {
+    "name": "the repository root can be an application",
+    "sources": [
+     "next-env.d.ts"
+    ],
+    "excludes": [
+     "next-env.d.ts"
+    ],
+    "expected": [
+     {
+      "folder": "",
+      "project": "tsconfig.json"
+     }
+    ],
+    "message": null
+   },
+   {
+    "name": "an excluded ambient file without a tsconfig is refused",
+    "sources": [
+     "apps/other/next-env.d.ts"
+    ],
+    "excludes": [
+     "apps/other"
+    ],
+    "expected": null,
+    "message": "verify.typescript.is-excluded-from-the-workspace"
+   },
+   {
+    "name": "applications are sorted by their ambient path",
+    "sources": [
+     "next-env.d.ts",
+     "apps/web/next-env.d.ts"
+    ],
+    "excludes": [
+     "**/next-env.d.ts",
+     "next-env.d.ts"
+    ],
+    "expected": [
+     {
+      "folder": "apps/web",
+      "project": "apps/web/tsconfig.json"
+     },
+     {
+      "folder": "",
+      "project": "tsconfig.json"
+     }
+    ],
+    "message": null
+   }
+  ]
+ },
+ "appSelect": [
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [
+     "apps"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [
+     "apps/web/page.ts"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [
+     "libs"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": false
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [
+     "apps/webby"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": false
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": true
+   },
+   "changed": [
+    "apps/web/a.ts"
+   ],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": true
+   },
+   "changed": [
+    "libs/a.ts"
+   ],
+   "expected": false
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": false,
+    "listed": [
+     "apps/web/a.ts"
+    ]
+   },
+   "changed": [],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": false,
+    "listed": [
+     "libs/a.ts"
+    ]
+   },
+   "changed": [],
+   "expected": false
+  },
+  {
+   "app": {
+    "folder": "apps/web",
+    "project": "p"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": false,
+    "listed": []
+   },
+   "changed": [],
+   "expected": false
+  },
+  {
+   "app": {
+    "folder": "",
+    "project": "tsconfig.json"
+   },
+   "selection": {
+    "scopes": [
+     "anything"
+    ],
+    "changedOnly": false
+   },
+   "changed": [],
+   "expected": true
+  },
+  {
+   "app": {
+    "folder": "",
+    "project": "tsconfig.json"
+   },
+   "selection": {
+    "scopes": [],
+    "changedOnly": true
+   },
+   "changed": [],
+   "expected": false
+  }
+ ],
+ "document": [
+  {
+   "roots": [
+    "a/x.ts",
+    "b/y.tsx"
+   ],
+   "toRoot": "../..",
+   "existing": {
+    "lines-and-columns": "node_modules/lines-and-columns/build/index.d.ts"
+   },
+   "expected": {
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+     "allowImportingTsExtensions": true,
+     "noEmit": true,
+     "skipLibCheck": true,
+     "incremental": false,
+     "types": [
+      "bun",
+      "node"
+     ],
+     "paths": {
+      "lines-and-columns": [
+       "../../node_modules/lines-and-columns/build/index.d.ts"
+      ]
+     }
+    },
+    "include": [],
+    "files": [
+     "../../a/x.ts",
+     "../../b/y.tsx"
+    ]
+   }
+  },
+  {
+   "roots": [
+    "a.ts"
+   ],
+   "toRoot": "",
+   "existing": {},
+   "expected": {
+    "extends": "tsconfig.json",
+    "compilerOptions": {
+     "allowImportingTsExtensions": true,
+     "noEmit": true,
+     "skipLibCheck": true,
+     "incremental": false,
+     "types": [
+      "bun",
+      "node"
+     ],
+     "paths": {}
+    },
+    "include": [],
+    "files": [
+     "a.ts"
+    ]
+   }
+  },
+  {
+   "roots": [],
+   "toRoot": "..\\..",
+   "existing": {},
+   "expected": {
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+     "allowImportingTsExtensions": true,
+     "noEmit": true,
+     "skipLibCheck": true,
+     "incremental": false,
+     "types": [
+      "bun",
+      "node"
+     ],
+     "paths": {}
+    },
+    "include": [],
+    "files": []
+   }
+  }
+ ],
+ "log": {
+  "text": "src/a.ts(3,5): error TS2322: Type 'string' is not assignable to type 'number'.\n  Type 'x' is not assignable to type 'y'.\nsrc/a.ts(9,1): error TS2304: Cannot find name 'q'.\nsrc/b.ts(1,1): error TS1005: ';' expected.\nerror TS6053: File 'x.ts' not found.\n  The file is in the program because:\nnot a diagnostic: error TS9999: indented? no, mid-line (1,2): error TS1\n    src/c.ts(1,1): error TS2322: indented line is a continuation\nC:\\win\\path.ts(2,2): error TS2322: windows path\nsrc/b.ts(2,1): error TS1005: second syntax error\nerror TS6053: another global\n",
+  "summary": {
+   "total": 7,
+   "files": 3,
+   "byCode": {
+    "TS2322": 2,
+    "TS2304": 1,
+    "TS1005": 2,
+    "TS6053": 2
+   }
+  },
+  "syntax": [
+   {
+    "file": "C:\\win\\path.ts",
+    "count": 1,
+    "first": "C:\\win\\path.ts(2,2): error TS2322: windows path"
+   },
+   {
+    "file": "src/a.ts",
+    "count": 2,
+    "first": "src/a.ts(3,5): error TS2322: Type 'string' is not assignable to type 'number'."
+   },
+   {
+    "file": "src/b.ts",
+    "count": 2,
+    "first": "src/b.ts(1,1): error TS1005: ';' expected."
+   }
+  ]
+ },
+ "rootList": {
+  "text": "# comment\n\n a/x.ts \r\n/ROOT/b/y.ts\nb/y.ts\n#tail\r\nc\\z.ts\n",
+  "expected": [
+   "a/x.ts",
+   "b/y.ts",
+   "c/z.ts"
+  ]
+ },
+ "git": {
+  "files": {
+   "tsconfig.json": "{\n  // JSONC comment\n  \"exclude\": [\"skip\", \"gen\\\\nested\",],\n}\n",
+   "a.ts": "export const a = 1;\n",
+   "b.tsx": "export const b = 2;\n",
+   "c.d.ts": "export {};\n",
+   "skip/s.ts": "export {};\n",
+   ".gitignore": "ignored/\n",
+   "ignored/i.ts": "x\n",
+   "keep.md": "x\n"
+  },
+  "commit": [
+   "tsconfig.json",
+   "a.ts",
+   "b.tsx",
+   "c.d.ts",
+   "skip/s.ts",
+   ".gitignore",
+   "keep.md"
+  ],
+  "later": {
+   "a.ts": "export const a = 2;\n",
+   "new.ts": "export const n = 1;\n",
+   "ignored/j.ts": "y\n"
+  },
+  "removeTracked": "b.tsx",
+  "sources": [
+   "a.ts",
+   "c.d.ts",
+   "new.ts",
+   "skip/s.ts"
+  ],
+  "changed": [
+   "a.ts",
+   "new.ts"
+  ],
+  "excludes": [
+   "skip",
+   "gen/nested"
+  ],
+  "roots": [
+   "a.ts",
+   "c.d.ts",
+   "new.ts"
+  ],
+  "scopedRoots": [
+   "a.ts"
+  ],
+  "listedRoots": [
+   "c.d.ts"
+  ],
+  "outRoots": [
+   "a.ts",
+   "c.d.ts",
+   "new.ts"
+  ]
+ },
+ "e2e": {
+  "files": {
+   "tsconfig.json": "{\"compilerOptions\":{\"strict\":true,\"noEmit\":true,\"module\":\"esnext\",\"target\":\"es2022\",\"types\":[],\"allowImportingTsExtensions\":true}}",
+   "ok.ts": "export const ok: number = 1;\n",
+   "semantic.ts": "export const bad: number = \"text\";\n",
+   "syntax.ts": "export const broken = ;\n",
+   "clean/only.ts": "export const fine = 2;\n"
+  },
+  "expectedCodes": {
+   "TS2322": 1
+  },
+  "syntaxCodePrefix": "TS1",
+  "syntaxFile": "syntax.ts",
+  "semanticFile": "semantic.ts",
+  "cleanFiles": [
+   "ok.ts",
+   "clean/only.ts"
+  ]
+ }
+}

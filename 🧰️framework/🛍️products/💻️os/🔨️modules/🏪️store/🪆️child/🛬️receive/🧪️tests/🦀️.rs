@@ -59,11 +59,11 @@ fn original_child_receive_same_caller_all_partial_prefixes_and_literal_target() 
                 let demand=receiver.demands(source.borrow(),4096).unwrap();
                 caller.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,demand,|native,mut grant| {
                     grant.maximum_items=0;
-                    assert_eq!(receiver.advance(source.borrow(),native,grant)?.progress(),Default::default());
+                    assert_eq!(receiver.advance(source.borrow(),native,4096,grant)?.progress(),Default::default());
                     Ok(RetainedCloneStep::Progress(Default::default()))
                 })).unwrap();
                 assert_eq!(receiver.demands(source.borrow(),4096).unwrap(),demand);
-                let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,demand,|native,grant|receiver.advance(source.borrow(),native,grant))));
+                let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,demand,|native,grant|receiver.advance(source.borrow(),native,4096,grant))));
                 let progress=result.unwrap();
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
                 turns+=1;

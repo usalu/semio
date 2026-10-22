@@ -3,6 +3,7 @@ import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {isAbsolute,join} from "node:path";
 import {requireBazelSlotV1} from "../🧵️sessions/🟦️.ts";
+import {bazelOutputRootV1} from "../📐️path-plan/🟦️.ts";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -47,11 +48,11 @@ export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,s
  const base=join(layout.server,requireBazelSlotV1(slot));if(base.length>256)throw Error("Bazel storage path exceeds 256 characters");return base;
 }
 /** 🌐️ Derives the closed startup and command flags for Bazel's disk, repository-content and optional remote caches; the remote part is the Bazel rendering of the neutral remote cache contract (`🌐️remote-cache`) and stays off until an endpoint is configured. The token travels only in `environment`, which the caller hands to the Bazel client and never persists. */
-export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
+export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean;checkout?:string}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
  const input=options.environment??{},contract=resolveRemoteCacheContractV1(input),command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
  if(options.skipCache)command.push("--noremote_accept_cached");
  const rendering=contract!==undefined&&!options.skipRemoteCache?bazelRemoteCacheV1(contract,input,{helperDirectory:layout.temporary}):undefined;
  if(rendering)command.push(...rendering.flags);
- const flags={startup:Object.freeze([`--output_base=${bazelServerBaseV1(layout,slot)}`]),command:Object.freeze(command),remote:rendering!==undefined,environment:rendering?.environment??Object.freeze({}),...(rendering?.helper?{helper:rendering.helper}:{})};
+ const flags={startup:Object.freeze((()=>{const short=options.checkout===undefined?undefined:bazelOutputRootV1(process.platform,options.checkout);return short?[`--output_user_root=${short.root}`,`--output_base=${short.base(requireBazelSlotV1(slot))}`]:[`--output_base=${bazelServerBaseV1(layout,slot)}`];})()),command:Object.freeze(command),remote:rendering!==undefined,environment:rendering?.environment??Object.freeze({}),...(rendering?.helper?{helper:rendering.helper}:{})};
  if(validateJsonSchemaSubset(schema.definitions.CacheFlags,flags,schema).length)throw Error("Closed Bazel cache flags required");return Object.freeze(flags);
 }

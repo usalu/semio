@@ -55,6 +55,7 @@ semio-framework-plugin-instance-render = { path = "../../../🖼️render/📦�
 semio-framework-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }

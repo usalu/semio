@@ -831,3 +831,740 @@ Fresh Pack Rust project/dispatcher read accepts test-inline-symbol-source: exact
 Fresh process leases source read establishes that acquireUngatedResourceLease192–237 retries only SQLite BUSY after rollback, with actual signal/Original deadline and optional request timeout checked throughout. Line228 throws when that same request budget expires after BUSY. resource-directory-admission:v1 is a reserved SQLite namespace gate, not the graph image itself; shared open custody and exclusive retirement protect database creation/unlink. Current generic acquireHoldingGate305 normalizes this internal timeout to its requested resource, whereas queueClaimCatalog343 directly acquires the directory gate and preserves its primary. awaitQueuedTurn477 invokes reapQueueTicket404, whose catalog acquisition is outside its later exclusive claim-probe catch, so a raw directory-admission timeout can legitimately surface during predecessor inspection. The19378 stack does not retain enough caller/budget/directory context to prove that exact path, nor identify a holder or deadlock. Queue DTO names describe a queued predecessor, not kernel custody.
 
 Recommended next step is a closed bounded admission-context diagnostic (operation/resource class, mode, requested budget and elapsed; no private store enumeration) and a genuine contended catalog/read gate regression proving cancellation, primary identity and exact cleanup. This preserves limits/custody and precedes another supported normal invocation. No passive holder-identification capability was established from the enabled tool metadata; no status/prune/private-store/process action was invoked.
+
+
+### Root OS Next Compiler-only Caller Frontier
+
+Controls89986 whole101 compiled to two E0061 test-call errors, zero bodies; prior trait/testkit errors are gone. Fresh receiving test lines59/65 query body4096, but advance calls62/66 omit that required argument. Actual NativeReceive implementation38 accepts original, control, body, grant. Supplying4096 at those two existing calls is the direct test-only correction, preserving all grants, zero-item refusal and physical assertions. No production/API/manifest change is needed; subsequent actual whole validation remains required.
+
+
+### Admission Diagnostic Patch Review
+
+Fresh Root patch preserves actual budgets and cleanup, attaches frozen readonly context only to the same exact admission-timeout Error, and retains cause/context when generic open projects the message to its requested resource. Six operation labels match current callsites. Five genuine SQLite tests initialize an owned admission DB through public APIs, hold an independent exclusive transaction, and exercise real open/queue timeout, release, observer-primary and cancellation paths with cleanup/reacquisition. Paths/imports resolve; no new public gate-acquisition capability exists. The cancellation row exercises the existing raw AbortSignal API, not Original cancellation transport. Queue-sweep labeling is source-reviewed but not explicitly reached by these five cases.
+
+Found one concrete test flaw: queued pendingOptions intentionally reduces timeoutMs by prior elapsed work, so context.timeoutMs cannot be required to equal the original fixture timeout. Root accepted changing the assertion to finite 0..requested timeout and remainingAtEntry<=that actual local timeout, preserving the production reduction. After that correction the slice is source-ready, with actual lease test bodies still unrun.
+
+
+### Bounded Stage Noise and Named Export Regression Review
+
+Fresh High slice limits plain-stage presentation to14 exact authored owner/stage/command frames, emits first distinct stages and one latest15-second heartbeat, retains at most one pending row, and deduplicates final publication while flushing on clock refusal/reversal. Original publish/yield/checkpoint semantics remain outside presentation suppression. Genuine Original tests rotate clock300ms and preserve primary failure even when final presentation rejects. Actual named buildSourceDemandV1 import is now exercised by14 portable schema cases and independent SQLite role-priority/rejection oracle, mounted statically from existing build tests. This meaningfully detects a missing named export instead of relying only on textual AST presence. Source review found no blocker; all these runtime bodies remain unrun.
+
+
+### Final Admission Primary and Source Reachability Acceptance
+
+Fresh sixth-case review accepts skipping annotation when an extensible same-message observer Error already owns resourceLeaseAdmission. The queued blocked regression preserves that exact error object and its preexisting nonconfigurable frozen context; SQL expected-primary classification and real gate cleanup/reacquisition remain. Queued local-timeout range assertions are corrected without budget renewal. High added an actual awaited Bun Source0 wrapper around the callable suite using the existing build-test Original, issued artifact-entry custody, real repository artifact root and30-second compiler-admission control; static import alone is no longer treated as execution. No additional Source target/roster43 exists. Source-ready with no remaining blocker found; parse and runtime acceptance remain separate and unrun in this audit lane.
+
+
+### Final Bounded Less-common IDE Configuration Screen
+
+Screened immediate names in890 existing directories derived from current curated present source ancestors plus root configuration locations. Excluded ticket/history/cache/generated stores, dependencies and Git; no recursive repository crawl or store inspection occurred. Candidate families included Sublime project/workspace/settings; Eclipse project/classpath/settings; NetBeans; Xcode project/workspace; Qt Creator/CMakeUserPresets; CodeBlocks; VS/VSCode/Cursor/JetBrains; Vim/Neovim/Emacs/Helix/Zed/Fleet/Nova and workspace/user extensions. No active candidate file or control directory was found in that scope. The sole matching directory is root .cursor, whose only child remains plans; historical plans are not active IDE settings and were not deleted. Root .config contains nextest.toml (test-runner policy); .codex contains agent configuration/plans, and .mcp.json retains repo-backed MCP interfaces rather than human IDE launch. Tool-neutral .csproj/build manifests and portable format policy were not classified by filename as IDE controls. This is a bounded current owned-source absence finding, not a claim that every unrelated repository subtree was exhaustively walked.
+
+
+### Repository Inventory Resource Scope Failure
+
+Used required repo MCP resources to assess a broader authoritative inventory. Server repo lists repo://files and repo://folders. Reading files returned internal error -32603. Reading folders returned13 host-root directories (Applications, Library, System, Users, Volumes, bin and others), rather than repository-scoped directories. Therefore these results cannot complete the all-source IDE absence audit, and no retry or raw host/cache crawl was performed. The existing890-directory owned-source screen remains properly scoped. A broader resource-backed proof requires a supported correction of repository MCP workspace binding; host-root inventory must not be silently interpreted as repository source.
+
+
+### Inventory Resource Binding Qualification
+
+Correcting the earlier tentative workspace-binding diagnosis: source does not establish that configuration is wrong. Current native CLI packages/rust/mcp-main.rs7 finds repo root from process current_dir; workspace Rust572 returns a matching repo ancestor or original canonical start directory, not an automatic host-root fallback. Root .codex uses repo mcp with cwd dot; .mcp uses the same command/args without explicit cwd. Current CLI mcp-verb Rust290–305 maps files/folders URIs to root-bound GraphQL repo collections, through FsRepoContext and considered().build_files/build_folders, with no URI path override. The observed human-formatted host-root folder response does not match the inspected current structured YAML handler contract. Actual connected server provenance/start directory is therefore unproved; the observed result is unusable for repository absence proof, but it does not by itself diagnose the configured workspace. No further resource/host scan was attempted.
+
+
+### Native Repository MCP Root-binding Coverage Gap
+
+Actual declared baseline routes are @semio-tech/repo-mcp-rs:test (MCP Rust project/script) and @semio-tech/repo-cli-rs:test (CLI Rust project/script, six actual crates including cli-mcp-verb). They invoke existing runRepositoryCargoTests under their Original. Protocol Rust unit session() uses RecordingRepository, so it does not prove filesystem scope. The cli-mcp-verb crate currently has no mounted unit-test source. Existing CLI tests/mcp-verb-handshake Rust adapter uses real root-bound RepoRepository through repo-cli/run-and-projection::mcp_conversation, but its three scenarios assert initialize, tools/list, resources/list and dry-run, with no repo://files or repo://folders read. The TypeScript SDK handshake oracle uses an in-memory reference server whose resource listing is empty, not the native repository owner.
+
+Current Native runtime plan names OS MCP protocol and canonical OS stdio only; these cannot prove repo MCP root binding. No existing executable gate asserting actual native repository files/folders scope was established. A clean completion is to extend the existing real repository handshake/scope scenario with a schema-neutral owned fixture root, root/subdirectory launch equivalence and exact files/folders sentinel results (no host-root names), plus installed native stdio execution under the existing owned channel/Original after official installation. This is a coverage recommendation, not a newly registered target or executed proof. The nearest existing baseline commands remain the two named test targets above; no producer was launched.
+
+
+### Explicit Owner-only Exec Admission Review
+
+Fresh High source review accepts the closed owners selection variant for bounded exact project/exclude options before the command delimiter. Shared literal matching resolves canonical name/root/name-prefix/directory-prefix against captured declarations; tag/glob/negation remains on the prior roster-dependent path. Admission selects owners and actual dependencies with no invented task; the real planner later creates its unchanged command cwd/program/argv. Five Graph branches and generated-output guard now treat every non-all selection as scoped, serialized schema mirrors the new variant, and the shared helper is explicitly part of graph implementation freshness. Actual Original planner/admission parity, one-observation counters, independent SQLite registry/dependency closure and readBuildGraph serialized acceptance are mounted from Source0. Bounded consumer screen found no omitted owners branch. This is source readiness only; no runtime success or measured latency improvement is claimed.
+
+
+### Mounted Native Repository MCP Provided-root Regression Review
+
+Fresh High slice adds an actual cfg(test) mount in CLI mcp-verb to root-scope/tests/Rust. Existing @repo-cli-rs:test selects that semantic crate, so this is genuine Native reachability rather than an unmounted feature adapter. Three owned sibling roots (including empty) and two explicit profiles run real RepoRepository→repository_server→serve resources/read for files/folders. A bounded65536-byte wire sink, exact response IDs, independent serde_json wire parser, first-party YAML rows, exact expected relative pathsets, unchanged cwd/files and required artifact environment constrain the law. Current Codebase build_folders excludes root dot, matching the fixture. No obvious API/compile/source-scope blocker was found.
+
+If green, this establishes explicit provided-root repository adapter scope. It does not establish actual installed native frontend provenance, stdio SDK launch binding through current_dir/find_repo_root, or repair the currently connected server. Those remain separate acceptance requirements; no runtime result is claimed from this review.
+
+
+### Sequence Corpus Blocking Scope Correction
+
+Controls identified a direct current whole-library dependency: mutation-retained ordered_retained_sequence_preserves_stable_outputs_and_closes_every_prefix reads fixture.outputHandoff, absent from the unrecovered replacement corpus (which only contains cases/cancelCuts/maximumTurns). Thus full25 is blocked on exact original six cases plus preserved new extension, not merely the standalone sequence integration3/Source gate. Do not skip that law or substitute an approximate corpus to claim full-matrix acceptance. This is a source-backed blocker qualification; resolver/recovery capacity waits are not execution proof.
+
+
+### Root OS Testkit Resolver Final Audit
+
+Independently recomputed before/after58137 projections: Root1565 identities/706 registry coordinates+checksums unchanged, Framework1068/612 entire dependency projection unchanged. Seven existing Root peer owners changed dependency sets; fresh physical manifest reads confirm package identities, every addition declared and each removed dependency absent across inspected normal/dev/build/target sections. These are concurrent MCP/plugin/space-schema edges, not invented OS testkit semantic lock additions. Controls genuine offline whole0 is accepted for resolver coherence only; a new locked RootOS compiler/body gate remains necessary.
+
+
+### Canonical Go Rooted Ticket and Goal Ports
+
+Read-only domain review found genuine explicit-root ports rather than requiring a global context shim. Tickets expose NewTicketService(layout,store,tracker,clock,sink), WithRoots(PlanRoots), WithMcpClient and Read/List/Open/Close/Reopen/Change. NewTicketLayout(workspace.RepoMetaDirForRoot(root)) supplies canonical repository paths; FileTicketStore is stateless filesystem access and does not itself claim a repository root. Goals expose NewFsGoalStore(root) through GoalsDirForRoot, and NewGoals(store,management,emitter,author) with actual lifecycle methods. Retain these per repository context and route actual GraphQL/MCP handlers through them. Current GraphQL GetTickets/GetGoals and ticket/goal mutations still invoke ambient free helpers; changing only context construction would leave those leaks.
+
+Secondary ports must also retain the chosen root: Ticket PlanRoots for draft/plan sources, goal ManagementPort RepoURL, actual event sink/emitter and author. Do not substitute inert production ports to bypass global dependencies. A meaningful isolation regression should interleave reads and genuine local no-management lifecycle operations across sibling roots, rather than assert construction-only isolation. No source write or runtime proof from this audit.
+
+
+### Shared Structured Repository Resource Contract Review
+
+Accepted schema-first application/json files/folders resource documents: closed oneOf shapes, exact required row fields, and fixture URI/document coupling. Four neutral vectors have Ajv validation and independent SQLite JSON construction, including empty arrays. No YAML fallback is represented. Schema is shape validation; rooted relative-path semantics remain the actual handler/native regression responsibility. The new Bun oracle must be mounted by a declared Source route or genuinely called by the owned SDK probe; placement alone is not Source42 coverage. Actual Go/native neutral serializer consumption and all runtime execution remain pending.
+
+
+### Final Explicit Root and Installed SDK Source Review
+
+High fixed the concrete Windows verbatim UNC normalization issue: canonical UNC retains a network root instead of becoming relative UNC text; shared five prefix vectors are replayed in Rust/Go. Windows runtime is still unproved. Explicit selectors validate existing canonical directories, refuse empty/duplicate MCP options, and only absent options use nearest Git/start discovery; physical fixtures remain owned and bounded without fake markers/cwd mutation.
+
+High also fixed first-primary masking in the SDK bridge. One separate failure flag retains parser/protocol/undefined errors across pump/body/close; three actual SDK bridge cuts assert one close and no pending read despite independent cleanup refusal. The genuine owned-channel adapter uses that same private conversation. Full captured trailing stdout is parsed and limited to notifications; message/notification/output/Original phase bounds remain. Shared official frontend proof retains exact receipt/pin/profile/native executable hashes and ancestry before/after; shutdown reports actual status/signal rather than claiming EOF success. Seven native crates then owned TSC/Bun four-body SDK driver and official installation prerequisite are physically mounted in existing CLI test. No additional Source43 target exists.
+
+No remaining source blocker found in High coherent slice. Controls Go rooted GraphQL/domain service refactor is separately unready; none of these reviews repairs or proves the currently connected server, installed runtime, cross-host behavior, or hosted CI execution.
+
+### Source0 Ticket Scope Oracle Mount
+
+Fresh source review accepts the literal named import from library/build/tests into the existing GraphQL ticket scope helper and the actual Bun body invoking ticketScopeVectorLawV1(). The helper validates the closed fixture with Ajv and compares independent SQLite root projections through change, close, reopen and deletion. This establishes executable Source0 oracle reachability, not Go production lifecycle execution. No new target or Source43 is introduced; runtime remains unrun.
+
+### Go Lower Root Binding Review (Source Only)
+
+Fresh bounded reads of GraphQL context/root-services, Model ArtifactIndex/FolderKind, Codebase context/files/bundles/technologies, GitHub provider and HTTP emitter show explicit root propagation through the new server context: no NewRepoContext global root mutation, root-scoped technology snapshot and identity construction, filesystem joins using ctx.RootDir, captured provider Cwd and coordinator configuration, root-based ticket layout/PlanRoots and goal store. Existing ambient CLI identity functions delegate the same ArtifactIndex kernel rather than a second implementation. Ambient test-name and ticket lookup helpers remain, but MCP reachability was not established and no defect is inferred from their existence. Final MCP handler/service integration and interleaved physical tests remain under review; none of this is runtime acceptance.
+
+### Go MCP Handler Review: Two Pending Corrections
+
+The fresh factory binds resources, prompts and six registered tools to one mcpRepository receiver and real GraphQL executor. Resource templates dispatch through the selected repository identity census; files/folders are JSON. Two concrete gaps were sent to Controls: the Go root fixture creates its derived row-name directory before checking that full path length, and Serve does not dispatch prompts/get even though prompts/list and prompt registrations exist. Registration alone therefore does not prove actual stdio prompt reachability. These findings remain source-level; no runtime was launched.
+
+### Go Handler Corrections Rechecked
+
+Fresh source now checks the full derived root path before Mkdir and dispatches prompts/get to the registered receiver. The interleaved real Serve fixture creates private root prompt files and requests them. Scoped File/Folder identity and URI getters preserve their populated values; GraphQL carries entry.URI, and both technology loader append sites bind each bundle to its captured parent Technology identity. These corrections close the reported source findings; complete lifecycle integration and all Go execution remain pending.
+
+### Unused Goal Helper Caller Census
+
+Independently read the retained 265-path Go source roster across 22 explicit module roots and found zero current UpdateGoalTitle call/declaration occurrences. This supports the requested unused helper removal within that bounded roster; it is not a historical or exhaustive repository absence claim.
+
+### Rooted Ticket Lifecycle Review
+
+GraphQL now delegates the five ticket transitions through a private copy of its retained real service and the five goal transitions through the retained root aggregate. Request interaction metadata uses root-specific Git facts; session and provider/store bindings stay server scoped. The bounded 265-path Go method census found only the known Recorded/Null/provider Ticket IssueTracker implementations, all carrying the extended methods. A concrete path-bound blocker was sent to Root: AttachDraft validates source descendants and top-level destinations, but a whole-directory move can produce over256 destination descendants; Change retitle has the same risk for attached subtrees. Validate projected descendant paths before either directory rename, without weakening bounds. Source/runtime acceptance remains open pending that correction and final lifecycle tests.
+
+### Rust Lifecycle Twin Review
+
+The physical Rust draft owner bounds source and projected descendants, portable names, collisions, node count and depth; attachment rechecks before each move and preserves a failed remainder. TicketStore physical metadata uses symlink_metadata, so directory checks reject direct symlinks. Open/Reopen call the canonical draft preparation and attachment; the package root mounts five shared scope laws. Metadata validation precedes Change rename and remote deletion failure precedes local removal. Existing-subtree retitle still needs projected descendant preflight, shared with the reported Go issue. These are source findings only; no compiler or runtime acceptance is claimed.
+
+### Canonical Go Six-Law Mount Correction
+
+Verified actual canonicalGoModulePlan: for a registered Go module it adopts direct semantic-owner tests/case implementation files whose package matches the subject, mapping them as virtual test inputs. The new CLI root-scope six-law file is package cli at that exact adopted leaf. Receiver declarations and root services are merged into already registered factory/context sources; no ignored nested source is relied on. This accepts compiler reachability only, with all new Go execution unrun.
+
+### Go Projected-Tree Correction Accepted by Source
+
+Fresh merged service code now preflights every projected draft descendant before Open creates the ticket or Reopen writes important, and preflights the complete existing subtree before Change renames it. Only empty draft source removal remains after moves. GraphQL uses canonical close/interaction validators before optional retitle, preserving refusal before title effects. The helpers reside in registered service source; direct semantic Go test adoption applies to the moved scope laws. No additional source blocker was found in this correction; compiler, oracle and actual lifecycle execution remain unrun.
+
+### Final Rust Rooted Ticket Source Acceptance
+
+The final read/save guards retain canonical bounded identity, physical ancestor metadata and regular document checks; save refuses a document outside its service layout. Native Path::parent termination preserves UNC root ancestry. Six actual scope laws remain mounted, including projected retitle refusal, with private rooted metadata and canonical caller delegation preserved. No further concrete source blocker was found in this slice. Source acceptance is not compilation or runtime acceptance.
+
+### Final Go MCP Ticket Wire Source Acceptance
+
+The actual adopted CLI law now calls Serve tools/call for private-root ticket Open, Close with retitle and Reopen using dynamically returned paths, then checks both persisted histories through authentic rooted GraphQL reads. Local-only snake_case flags are advertised and mapped; all three outcomes return path plus ticket. Lifecycle mutation runs once for the first profile, while both profiles retain resource/prompt coverage; coordinator configuration is cleared before constructors. Fresh source review found no further concrete setup or interface blocker. All new Go tests and protocol execution remain unrun.
+
+### Final Go Guard and Mount Readback
+
+Fresh canonical Go helpers preserve drive roots and UNC share parent termination. The direct ticket scope leaf contains six actual laws, including discriminating projected draft and retitle no-effect cases using valid two-argument JoinPath calls. The GraphQL lifecycle law is a package-graphql direct semantic test leaf, so the reviewed adoption rule reaches it. No additional concrete source blocker was found. Formatting, compiler and runtime results remain unproved; no independent parser pass is claimed.
+
+### Scoped Recovery Receiver Readiness Trace
+
+The observed storage callback recheck is physically inside withExclusiveMaintenance. The group retirement core and namespace writer contain no image.close or recursive maintenance call; their namespace guard releases only its facts lease. Persistent operation permits ready/maintenance, and normal terminal stage closure follows callback return. This rules out a simple post-maintenance caller misuse explanation, but does not establish which automatic lifetime/control transition caused the observed readiness refusal. No actor, deadlock or causal fix is inferred.
+
+Correction: the recovery trace above describes current physical source only. No rendered failing MJS bytes were captured, and pre/post storage source hashes differ. Stack 219:901 alone does not prove the current callback recheck was the executed historical callsite. The current no-close observation cannot identify the failed run's receiver transition.
+
+### RootOS Allocation Observer Composition
+
+Fresh actual allocator sources confirm the testing global allocator calls System directly and updates only its private TLS, while the Job fixture measures through trace HeapWitness. Delegating the testing allocator's underlying four GlobalAlloc methods to HeapWitness composes both real observers without recursion, because HeapWitness itself directly calls System. Success-only allocation/reallocation and original-layout deallocation accounting match. This accepts the proposed canonical design only; the declared edge, genuine dual-observer regression and RootOS rerun remain pending.
+
+### Composed Allocator Physical Patch Review
+
+The fresh patch delegates all four allocator operations to canonical HeapWitness while retaining private TLS and largest-allocation accounting. Actual allocator-root test mounts exercise Vec32→64 total96/96 and nested17/17 trace observations; the fixture include and direct trace manifest path resolve to their canonical owners, with serde_json dev-only. No concrete source blocker found. Genuine paired lock resolution, compilation and these two runtime laws remain pending.
+
+### Native MCP Ticket Outcome Parity
+
+Fresh native helper derives the canonical TicketId path and serializes the actual Ticket as {path,ticket}; all three ticket tool callers use it. Reopen delegates typed input to canonical context handling, including drafts and metadata validation before retitle. The mounted native two-row law invokes this actual helper and compares third-party serde_json output against the shared contract. The scoped Darwin fixture now checks its longest scratch path before mkdtemp. Source accepted, execution unrun.
+
+### Typed MCP Local-Management Flag Admission
+
+Fresh six handlers propagate boolean decoding errors before calling domain transitions; ticket Open checks no_issue as well as no_management. Actual Serve negative rows retain the complementary true flag, demand an RPC error and verify no private ticket was created before valid lifecycle execution. This closes the reported malformed-boolean authority gap by source review. Other unchanged argument parsing is outside this specific law. Runtime unrun.
+
+### MCP Dry-Run Profile Validation
+
+Fresh Go mcpCommand parses and refuses an invalid profile before the dry-run success return; physical root selection and server launch remain after dry-run. This makes the existing invalid-profile neutral case meaningful without introducing filesystem effects. Source accepted, runtime unrun.
+
+### Independent Actual Terminal Reconciliation
+
+Read the exact facade doctest log: four tests passed, zero failed/ignored/filtered, compile11.07s and bodies1.08s. Both positives passed; negative cases produced intended E0283 custom-Drop and E0046 missing close_demands. Read the current FS log:53 announced and53 passed, zero failed/ignored/filtered, compile8.89s and bodies66.25s. Owner-reported whole0 is consistent with these terminal summaries. These scoped successes do not discharge full26/original69, Source42 or installed cross-host workflows.
+
+### Canonical Go Retained Compile Fixture Design
+
+The existing registerBuildTestFixtureV1 retains the genuine receiver Original and issued fixture scope until registered users drain. A compile fixture can open the existing repository artifact allocator inside that scope and retain private roots plus a snapshot-backed callback runner, keeping Original private. Cleanup executes in the opener finally after retain returns and after owned children settle. Expected preaborted helper refusal must occur before operation enrollment/artifact creation and be caught inside the registered user; rejected users otherwise correctly poison the suite. This is source-backed design guidance only; implementation review and runtime remain pending.
+
+### Original Fifteen-Library Matrix Corpus Disjointness
+
+Starting at the retained plan's fifteen Framework library roots, followed215 literal Rust module/include source mounts with no missing mount and no unqualified external module declaration. All69 advertised function names are uniquely present in this union. No source/include reference selects the missing replication sequence corpus/schema or separate retained_diff_sequence integration control; owned projection outputHandoffs refers to its distinct existing fixture. This supports independently executing the original matrix, subject to real ingress/compiler checks. It does not unblock the supplemental mutation-retained consumer or separate integration3, and does not claim full26 acceptance.
+
+### Canonical Go Helper Final Source Read
+
+Required actual Original, issued phase, repository artifact ALS, canonical no-follow overlay owner, complete future path bound, child authority environment and primary-preserving cleanup are coherent in current source. The retained compile fixture captures the actual artifact context and catches expected preabort before enrollment. Obsolete unused tmpdir fallback/effect was removed from its existing dispatcher law. Two Source0 actual-function oracle bodies cover12portable paths and7cleanup/cancellation flows with SQLite, including undefined/false primary identity. Independent full caller arity census awaits the retained exact28caller list; compiler/runtime remain unrun.
+
+### Independent Go Caller AST and Paired Allocator Lock Acceptance
+
+Actual TypeScript AST census of the retained28caller paths found30direct calls, no parse diagnostics and no missing/extra arguments: this.invocation22, context.invocation5, actual fixture original3. This is source syntax/custody evidence, not typechecking. Independently compared every paired before/after lock identity including source/checksum and all dependency sets: Framework1068/612 and Root1565/706 unchanged identities, no add/remove; sole Framework edge delta allocator→trace+serde_json and sole Root allocator→trace. Current manifest normal/dev scope matches. Owner-reported genuine50014/35221 whole0 supports lock readiness, not test-body acceptance.
+
+### Actual Composed Allocator Runtime Acceptance
+
+Independently read e2e-allocator-physical-dual-observers.log: both canonical_allocator_keeps_nested_trace_observations and canonical_allocator_records_same_physical_events_for_both_observers passed;2/2, zero failed/ignored/filtered, compile3.83s and bodies0.01s. Terminal is consistent with owner-reported24793 whole0. RootOS and broader matrix remain separate pending gates.
+
+### Actual RootOS Current Two-Law Acceptance
+
+Independently read e2e-root-artifact-child-observed.log: artifact_child_generic_close_dispatch_selects_one_body_correlated_event and original_child_receive_same_caller_all_partial_prefixes_and_literal_target both passed;2/2, zero failed/ignored/filtered, compile37.98s and bodies0.74s. Consistent with owner-reported71129 whole0. Original Framework15 and full supplemental26 remain separate gates; this result does not repair or validate the missing sequence corpus.
+
+### Corpus Recovery29672 Boundary
+
+Controls reports natural whole1 before any Git/body: Original resource loan deadline exhausted after the native-image exclusive queue; post26 stable with no hash changes. No original corpus bytes were obtained or restored. This report is owner-provided terminal evidence, not independent corpus validation; no unchanged retry or holder/cause inference is justified. Original Framework15 Native12024 remains separate pending work.
+
+Roster clarification: all69 advertised triples belong to original Framework15 (ten owners contain advertised laws; five more whole libraries are supplemental within that matrix). RootOS2 is separate supplemental coverage, not part of the69. The215-source unique-name audit is consistent with that separation.
+
+### Canonical Go Owned Execution Boundary
+
+Found and corrected a concrete missing facade export: the new helper imports repositoryTestArtifactPathV1, now explicitly reexported by the canonical repo-test storage facade. Current owned command boundary retains real control/signal, exact artifact scratch/cache paths and bounded JUnit scratch. Actual runOwnedCommand forwards child streams independently from periodic progress, so logs remain visible. Prepared report finish follows command settlement; typed status/signal and first primary including undefined/false survive finish refusal. Nine actual-function/SQLite cases are source coverage only, not genuine process cancellation execution. Existing explicit/default XML authority remains unchanged; final inferred target-output parity is still under bounded review.
+
+### Go XML Report Authority and Declaration Gap
+
+Existing protocol preserves explicit SEMIO_TEST_XML_OUTPUT_FILE authority; absent that it uses SEMIO_WORKSPACE_ROOT/.cache/b/o/m/tests/results/<slug(project)>-<sha8>/test/test.xml. Current four Go authored test targets declare outputs[]. Bounded actual project-assembly/defaults/target-policy finalization preserves that field through targetBuildModes; no report-output injection was found in that path. This does not establish final report-output parity and was sent to Root for canonical owning declarations/shared inference, without a new allocator seam. Exact default directory suffixes are _semio-tech_repo-cli-go-45454396, _semio-tech_repo-workspace-go-a36015c2, _semio-tech_repo-graphql-go-a7e78177, and _semio-tech_repo-tickets-go-c1db19fb. A fresh loaded-graph/runtime result is not inferred from this source trace.
+
+### Go Report Output Declaration Correction Accepted
+
+Independently recomputed all four canonical report paths from current project names and existing protocol slug/SHA8 rules; each physical outputs array now matches exactly. The existing third Bun body imports actual testReportPathV1 and all four project declarations, verifies default output membership and explicit XML override, and compares SQLite path reconstruction. No report allocator or authority fallback was added. This closes the source declaration gap; actual oracle/typecheck/owning Go execution remain unrun.
+
+### Original15 Compiler Frontier Review
+
+Controls reports current12024 compiler E0599 observer-method errors before bodies. Fresh actual package root exposes physical retirement as pub mod retirement; the turn test calls trait-provided ControlledRetirement methods without importing RetirementCursor. The minimal test-only canonical import is source-coherent, with no API, grant or assertion change. No edit accepted before actual whole, and no broader runtime result is inferred from these compiler diagnostics.
+
+### Original15 Second Compiler Frontier
+
+Controls reports62239 whole101 with zero bodies and two scalar-integration references to removed facade retirement_queue. Fresh persistent package source publicly exposes list::PagedList through its roots reexport of the same canonical paged-list type, and has no reverse integration dependency. A direct test-only persistent edge and two canonical path replacements are source-coherent; no retired alias should be restored. Actual manifest/lock admission and subsequent runtime remain separate pending evidence.
+
+### Actual Rooted Ticket Rust Failure Diagnosis
+
+Controls reports49840 whole101: seven bodies reached, six passed and one failed. Fresh line33 unwraps ticket.interactions.last(), not fixture DATA. Actual Rust encode_ticket_document writes title/emoji/status/description/summary/github/goal/plan/sessions but omits interactions and agents while decode accepts them. Thus Open persistence loses event history before Change reads it. This is a concrete canonical document roundtrip defect, not a reason to weaken the lifecycle law. Root was notified to repair shared schema/Go/Rust ownership and fixtures consistently; no source edit or executed repair is claimed by Low.
+
+### Formatter28241 Inference Refusal Parity
+
+High reports natural whole1 before gofmt with Complete inference closure publication required. Fresh observation writer emits Brotli(header plus actual newline plus JSON body), with the same five closed header keys checked by the closure reader. No current escaped-newline or key-shape mismatch was established. The refused delimiter check indicates the selected inflated row lacks a nonempty header line, but stack alone supplies no row path or loaded-byte provenance. A bounded same-error diagnostic and genuine current writer-to-reader regression are appropriate; no stale/foreign/corruption cause, private deletion or grammar relaxation is inferred.
+
+
+### Durable Ticket Codec Source Review (Current Quiet Slice)
+Fresh physical Rust codec now emits parent, interactions and agents with complete nested declaration-order fields, including empty agent-plan objects. Go model JSON tags persist those same fields; TS oracle projects and renders them. DURABLE-TICKET-STATE exercises all nested fields and HTML-sensitive text. Mounted Rust scope parity checks actual encoder JSON and model serialization against the original vector and re-encoding idempotence. Source acceptance only: the prior 49840 lifecycle failure was real missing interaction persistence; no repaired runtime result exists yet. Existing pre-schema decode branches remain a separate qualified contract concern, not introduced by this correction.
+
+Inference diagnostic baseline port: existing optional-cache law `actual observation publication reads its persisted full-digest block under the same genuine writer` invokes real observeInference under real dataset/Original custody, reads Brotli publication and blocks, then fresh-module replay proves reuse. Writer and closure reader current newline/header grammar match; no failed-live-record cause is established.
+
+
+### Integration Persistent-Owner Framework Lock Audit
+Independently compared actual before versus Framework31543-after package identity/source/checksum maps and dependency sets: Framework1068 identities unchanged, no additions/removals, sole integration-to-persistent edge; Root1565 full projection identical at this intermediate snapshot. Genuine Framework resolver whole0 is owner-reported; paired Root31827 final terminal/projection remains pending. No compiler/test acceptance follows from this resolution audit.
+
+Final paired31543/31827 genuinewhole0 independently reconciled: Framework1068/612 and Root1565/706 exact identity/source/checksum sets unchanged; no package additions/removals; Root all dependency sets identical; Framework sole integration→persistent edge matches physical dev declaration and two canonical persistent::list::PagedList references. Resolution source acceptance granted; original15 runtime remains pending.
+
+
+### Original15 Indexed Edit Denial Diagnosis
+Actual67678 failed two indexed-close laws while active correlated close quotes can change with copy-body. The helper quotes body32768 then lowers copy and calls production close_step, which requotes at the lowered body. Canonical RetainedCloneClose.next_owner_demands delegates active factory_ticket_demands(owner,body); therefore a prior event one-below can fund a different birth (observed items1/cap24/copy0). Classify the actual reselected tuple before asserting denial/noeffects; no forward preflight defect established. Root owns remaining matrix stackoverflow investigation; no stack/cap increase suggested.
+
+### Inference Diagnostic Extraction Review
+Production annotation retains same Error/messages/validation; bounded frozen relative context uses already-read digest/counts, without extra reads. Initial mutation-test port was shadowed by emitted bytesAt function declaration; High corrected emission to exclude only that declaration when explicit override exists. Baseline still uses full actual FD reader and genuine observation writer publication. Source acceptance only; diagnostic/runtime formatter remains unrun.
+
+
+### Recursive Controlled-Capability Type Traversal
+Fresh derive source emits conjunction of all variant component capabilities; Vec/Box delegate recursively to element type. A recursive Node therefore recurses at type-property admission even for shallow Text input. Proposed same-thread synchronous TypeId active-stack traversal is valid for finite conjunction graphs: active-cycle revisit true, all noncycle unsupported leaves still checked, no cross-call memo. Stack-local linked frames avoid a new capacity policy; installed frame must remain unmoved, restore guard must drop before frame, no frame references retained across callback, and callback returns only bool. Panic restoration and unsupported siblings require genuine regressions. Source design review only; actual persistent abort remains stackoverflow, no destructor/cap inference.
+
+
+### Durable Ticket Actual Native Acceptance
+Independent log e2e-rooted-ticket-service-durable.log readback: owner91975 actualwhole0, compile20.93s; all8 rooted_lifecycle_tests passed,0failed/ignored,9unrelatedfiltered,0.01s. Repaired lifecycle and full document roundtrip both pass alongside draft/retitle projection, UNC, identity and remote failure laws. This is native ticket-scope acceptance, not Go/SDK/Source or installed journey proof.
+
+Recursive-support physical patch acceptance: actual stack-local immutable Frame is installed only after initialization, never moved, Restore follows it in declaration order and restores prior head before frame destruction. Pointer traversal completes before synchronous callback; no pointer/borrow escapes. Derive calls helper around conjunction, no cache/cap/newdeps. Four native laws mounted with existing dev edges; callable SQLite/Ajv Source oracle still needs declared base mount. Compiler/runtime unrun.
+
+
+### Stable Native List Child Source Acceptance
+Fresh list receiver stores Option<Box<R>>. RowBirth quotes actual child demand plus allocation sizeofR, one child move and pointer-slot transfers; fullpreflight precedes charge/birth, child capacity grant excludes BoxR, receipt adds actual allocation. Normal/cancel terminal closure drops exactlyone Box after child terminal, release sizeofR (zero forZST). Parent wrapper quote unchanged. New native law reaches RowBirth after3genuine prefixes, denies actual positive axes with0heap/samequote/sourceidentity, then paidbirth/finitecancel/conservation. Indexed close helper now exactselected fixedpoint/allaxes/reselection denial+physicalidentity. Source acceptance only.
+Named derive-helper exposure checked actual retirement/value/persistent/projection/native-owned/factory module reexports; all route retirement::conjunctive_retirement_support canonically. No inline minimal retirement mock found in closed Controls Rust inventory. Compiler still authoritative.
+
+
+### Affected Four Owners Actual Native75
+Independent e2e-value-correlated-stable-child-four-retry.log reconciliation: owner78703 actualwhole0, compile15.78s; summaries14+20+20+21=75passed,0failed/ignored/filtered. All75named starts complete (inline+interleaved standalone ok). Both prior IndexedEdit failures, new stablechild law, prior typed-equality aborted cancellation and all4support laws passed. Support catch_unwind panic text is expected and endsok. Original15/69/full26 acceptance still awaits their complete current runs.
+
+
+### Seven-Role Closure Refusal Transport Source Acceptance
+Current PayloadRefusal covers exactly7compressedroles and effective maximumOutputBytes before actualdecompression; unchanged128MiB/remaining guards. SameError frozen bounded relative context is validated and synchronously transported as≤4096B stderrpacket with partialwrite handling, then originalthrow; outputerrors swallowed withoutprimaryreplacement. Actualwriterpublication helper now runs actualworker under genuinecontrol with remainingpacked+1 and asserts realERR_BUFFER_TOO_LARGE status1/null/contexttransport. Sevenrole extracted laws use realBrotli+exactRangeErroridentity and independentSQLite/Ajv; positiveFDreader and prior shadowfix retained. Source accepted, runtimeformatter/tests stillunrun.
+
+
+### Current Original15 / Exact69 Actual Acceptance
+Independent unique e2e-value-original15-v15f.log: owner86546 actualwhole0, compile3m27s;15actual library headings,238namedstarts=153inlineok+85interleavedstandaloneok. All15summaries0failed/ignored/filtered. Every advertised library+law triple in retainedplan presentexactlyonce (69/69,0missing/duplicate). This supersedes prior currentmatrix failures, does not accept full26/corpus/Source. Historical12024 rawredirect was overwritten and is unavailable; no reconstructed evidence claim.
+
+
+### Generation Packed/Expanded Contract Mismatch (Read-Only)
+Generation store MJS303 pack(value) checks only compressed bytes.length against limit; index/frontier publication390/392 passes512MiB. Own index291/frontier296 reads use Brotli maxOutputLength512MiB (expanded). Closure reader uses common expanded128MiB. Therefore own-reader-valid index/frontier expanded128..512MiB can be published and later refused by closure; writer also does not independently bound expandedJSON beforepacking. This is source contract evidence, not attribution of actual failing29512/98487 row/role; no privatecache/hostscan, no capincrease or guardrelaxation recommended.
+
+
+### Closure Proof Complexity and Cancellation Boundaries
+Read-only immediate owner captureClosureProof inventories all image directories/leaves in Maps, authenticates indexes, then reads/hashes every row (not onlycandidateinventories) in≤64file/512MiB batches within aggregate16GiB. Eachbatch awaits genuine ownedworker under samecontrol, rechecksimage, publishes/yields. Initial ancestry/directories/retirementCatalog/pairs and finalrecheck are synchronous, perI/O deadline/control checks but noeventloopyield/progress untilpayloadbatches. Metadata retirement Kcandidates performs fullN-row recheck beforeeach and againafteropen, plusstart/final: O(K*N) metadata work. Groupnamespace rename explicitly recaptures completeproof. Finitecaps/deadlinechecks exist; source doesnot proveactualCPU/stall/holder or unboundedawait. Worker synchronousinflate/parse/hash is bounded byrole/budget and ownedprocesscancellation; currentreader/schema laterpeerbytes changed, so earlier128MiB mismatch is historicalsource evidence, notloaded29512claim.
+
+
+### Diagnostic Drift Against Current Peer Generation Reader
+Fresh physical reader specialcases generation-index/frontier with actual GENERATION_POLICY_V1 and readGenerationClosureV1 scanner; samepayloadcatch still annotates these roles. Contextschema supports512MiB, generalcap now256MiB (peerbytes, noattribution). Our extractedtest currently lacks both newpolicy/scanner bindings; generation negativecases also useplaceholderhashnames while newbranch authenticatespackedhash BEFOREinflate. Thus intendedRangeError tests would insteadReferenceError/authrefuse. High/Root notified for coherent postwhole actualbinding+hashcorrectpaths, preservingpeersemantics; noedits during29512.
+
+
+### TUI Library Native Gate Versus Canonical Cold Preconditions
+Dashboard windows dispatcher runs Sourcecontrols then terminalfilteredlibs and exact10TUI --lib packages with terminal/native+unit-laws/native, returning before dashboardExecutable/withInstalledDashboard. Direct ordinary repo cargo test --manifest-path framework/Cargo.toml --locked --lib over10packages avoidsSourceingress andbins/install. Bounded107literalRust inputs from10actual libroots acrosscfg have no canonicaldashboardreceipt/install/binary references;10manifests declare nobuildscript. Coldtest requires canonicalinstalled.json absent/invalid/stalesourcedigest, notemptyCargoartifactcache. No receiptread/mutation orproducer performed; dependencybuildscripts/hostedruntime notcertified.
+
+
+### TUI Public Geometry Type Repair
+Actual37476 compiler-only11privateWindowCornerTab errors; publicwindow_chip_layout→publicgroups→publictabs exposed privateelementtype. Freshminimalrepair makes WindowCornerTab typepublic, preservesstatus/drag_x/as_window_tab crateprivacy andallgeometrybehavior. Existingneutralgeometryfixtures definebehavior, noserializedDTO, so unchangedfixtures/laws arecorrect. Sourceaccepted; same10libretry runtimepending.
+
+Post29512 diagnosticreconciliation freshlyaccepted: actualgenerationpolicy/schema and completeactualscanner bound; threegenerationrole filenames use actualwireSHA beforepreinflateauthentication; context/SQL expectations use actualselectedPath. No productionlimit/branch edits fromthisslice; testsunrun. Actual29512 whole1 loanDeadline duringproof, nogofmtbody/rolepacket; no unchangedretry.
+
+TUI68127 compileronly3errors:2staleSurface testpaths andprivategripgeometry. Root chosecanonicalpublicdrag_x alongsidepublicclose/maximize geometry; status/as_window_tab remaincrateprivate. Freshphysicalread confirms exact3fix andunchangedneutralchips.drag assertion. Sourceaccepted, TUIretryunrun.
+
+
+### Exact TUI Ten-Owner Literal Input Roster
+Bounded107physicalRust paths followed from10actualCargo lib roots throughliteralpath/include mounts; no dependency/cache recursion.
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⌨️input-dispatch/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⏱️frame-layout-and-overlays/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🎯️construction-and-focus/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎨️theme/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎬️scene/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏃️host/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏛️frame/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📏️layout/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📐️geometry/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📜️rows/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📝️text/🔤️tables/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📝️text/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🎨️palette/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🎹️encode/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/📜️history/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🖥️pane/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/⌨️vt-key-mouse-paste-and-focus-encoding-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🎲️vt-robustness-law/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/📜️vt-history-reflow-and-selection-text-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/📟️vt-screen-sequence-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🖥️vt-pane-input-search-and-browse-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🖱️vt-pane-pointer-selection-and-paint-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🧫️vt-shared-fixtures-and-corpus-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧬️parser/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🎚️erase-edit-and-modes/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🎨️alternate-screen-sgr-and-reports/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🏗️construction-view-and-resize/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🔎️text-extraction-and-search/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🖍️cursor-motion-and-scrolling/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧱️screen/🧊️screen-grid-and-state/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📡️event/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📺️terminal/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🐧️native-unix/🌬️wake-pipe-and-signals/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🐧️native-unix/🖥️unix-native-terminal/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🐧️native-unix/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🔎️capabilities-and-frame-presenter/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🪟️native-windows/🎚️native-terminal-and-console-modes/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🪟️native-windows/📟️terminal-backend-and-drop/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🪟️native-windows/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🪟️native-windows/🧰️wake-event-and-console-state/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔔️signal/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🌈️cursor-emitter-and-colour-quantizing/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/📤️sgr-emit-and-session-modes/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🔣️csi-mouse-and-paste-decoding/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🔤️parser-state-and-feeding/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🖱️click-counter/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔲️cell/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧩️widgets/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/⌨️input-decoding/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/📏️text-width/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/📜️rows/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️ansi-unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️backend-capabilities/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️backend-clipboard-mailbox/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️backend-native-common/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️backend-native-unix-unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️backend-native-windows-unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/⌨️tui-widget-key-handling-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📊️tui-table-diff-parser-and-theme-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📐️tui-geometry-text-cell-and-ansi-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📟️tui-vt-scene-and-layout-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🚦️tui-chrome-engine-wasm-clipboard-and-pty-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🪟️tui-layout-and-window-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖼️window-contour/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🚦️status-roles/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🪟️drag-preview/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧲️docking/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧲️docking/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🪀️widget/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/➖️Divider/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📃️List/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📶️Progress/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪙️Chip/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🎯️targets/⌨️tui/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Log/🎯️targets/⌨️tui/🦀️.rs`
+
+Finalfocusedgeneration9filesourceacceptance: newtests/📦document-size importsactualpack/policy and10vectors+1invalidlimitlaw, SQLitejson→UTF8BLOB oracle+Ajvfixture; importedbyexistinggensuite anddirectlySource0withoutbroadworldsuite. Relativepaths/publicUint8Arraydeclarationverified. Source42unchanged; actualBununrun.
+
+
+### IDE Extension Neutral Ownership Review
+BoundedVSCode owner: GraphQLparse/projection aretoolneutral firstpartyalgorithms withgraphql-js/TSoracle; canonicalhome repoGraphQLdomain. Current source/plan/execution containIDEqueries/generatedpath/generatorID/refreshcommand andmustrewritecanonicalowner, notrelocateunchangedIDEroute. PlainTypedDocument/GraphQLdocuments canretainifrealcanonicalconsumer. Extensionprovider/mock/builder/custody/package/hostbuild suites areIDE-specific despite neutraltitles; dashboard-onlypolicy law belongsdashboardpolicyowner. Removingactualworkspace repo-vscode packagechangesBunresolution/lock andrequiresgenuinesupportedlocksync, notmanualfabrication. AGENTSmetadatauntouched; dist/out/node_modules/VSIXgeneratedartifacts separatedfromsources.
+
+
+### Direct TUI10 Actual Native Acceptance
+Independentunique e2e-tui-window-libraries-direct-t10d.log owner72467actualwhole0:10ownerheadings,395namedstarts=388inlineok+7standaloneok; summaries58/8/0/0/93/47/102/0/79/8 all0failed/ignored/filtered,compile54.17s. All8drag-preview laws, localizedgrip, neutralgoldenchips, paint/hit/layout andindependentTaffygeometry passed. Frame/host/vt have0ownunitbodies; actualcompanionlawsran. Direct10libraryproofonly, notregisteredtest-windows wholeSource+terminalorchestration, installedjourneys orcrosshostexecution.
+
+
+### IDE Current Ownership Assets Versus Historical DATA
+Exact ownerprojectionpolicy containspositiveVSCode ownerEvidence2/referenceOwner1+README/packageLICENSE/assetLICENSE entries. Readme-license golden mirrors3cases, currentcensus and2recordedpublisherpasses, withoutnon-authoritativehistoricalflag; activeownerretirement needscoherentpositivecase/census/consumerupdate, notclaimoldpasses ascurrentproof. Preserve/rehomeassetthirdpartyattributionifassetretained. ToolconfigpositiveVSCode owner/consumer/projectinput andactualinstalledloaderassertions mustretirecoherently; unrelatedexplicitPostCSShistoricalfixture remainsinertandpreserved. No sourcewritesbyLow.
+
+
+### Automatic Lifecycle Git Hook Retirement Source Acceptance
+ActualattachnowonlyoptionalF3D+completion; configureRepoHooks export/callabsent. Bounded13containerTS/JSON files haveonlynegativeinstall-hooks/core.hooksPath policytokens. Actualrecordinghost14matrix Ajv/SQLite/lodash rejectsautomaticGit/editorcontrols; DBfinallycloses. Source0literalnewautomatic-hooks leaf callsrealownershiphelper withrecordhost; noexternalcommands. READMEtablematchesdisabledhooks. Unrelatedmicrocommit/canonicalsetupGit unchanged. Sourceaccepted, actualBun/lifecycle/containerunrun.
+
+
+### Proof Worker Sessions Physical Source Acceptance
+SessionretainsOriginal/control, orderedrequest/accept, physicalFD/hash/reference/aggregate16GiB checks andimplementationpins. OneoutstandingJSONnewline request, nullterminal, actualpassiveterminaljoin; boundedcohortsreserveUTF8success/failure/diagnostic/input/lineauthority, unknowncompressedrequestexplicitlysingleton. Source/lockminimum81rawmarkerbytes→≤74encodedreferencebytes conservative. Canonicalboundedfailure usesown-data-descriptorguards/Proxyfallback, explicitname/code/message truncation/redaction andonelevelcause; partialoutputbrokenflag preventssecondframe, actualexit1. Real1500referencefixture validatesactualinventoryshape and>pipebuffer2requests; real5isolatedOriginalnegatives+selectedexistingdelayedEOFterminalcase physicallymounted. Fixeddeadline30s/base40, parent140/150, noProductionrenewal/capchange. Allsourceaccepted, runtimeunrun.
+
+
+### Final IDE Retirement / GraphQL Producer Source Acceptance
+Fresh61exactremovedpathsabsent/8neutralrehomedpresent. Canonical9plainGraphQLdocumentstrings andstaticsourceimport removegeneratedtypeproduceredge; noTypedDocument/IDEalias. Producercontract generated[] usesactualrelativeSourceInputs +independentTSpreProcessFile INCLUDINGtypeimports exact5kernels; mountedSource0+GraphQLsuite. Generate/preview explicitkernel/schema inputs excludeoutput; check/test includegeneratedoutput+dependsgenerate, genuineOriginal30s/noargs/Sourceentry. Closed3buildleafactualhelper mountedSource0+bothingress; productabsencepolicy mounteddashboardauthority. Projection/golden37census andtoolconfig11owners/19consumers/7inputs matchactualassertions. Sourceaccepted, genuinelock/sync/buildowner/GraphQL/Sourceexecution pending; no runtimeclaim.
+
+
+### Bun Lock Ownership Complexity Audit (Live37397 Source-Only)
+Actualdependency-storage lockproducer mapswithPublishedBunWorkspaceOwnershipV1(all) progress todependencies:lock-ownership. Canonicalimplementation library/🗂workspaces/🟦bun/🟨CJS sharescontext inventory/documents/selectedMaps acrossscopes/patterns: initialdirectorywalk memoized, notwholephysicaltreeblindlyperscope. Paths256/manifests8MiB+aggregate64MiB/observedpaths524288/facts1048576/entries1048576 boundphysicalwork; symlinksrefused, opaquenode_modules/generated/cacheoutputs skipped. Peroperation signalchecks+controlledadvance; singledir listing/readmanifest synchronous boundedwork. Rechecks deliberatelyreplayallobservedpaths twice+manifestreads; publicationvalidate/currentFence repeatreplays. Conditionalmultiplication: replayfailure buildsfreshcompletecontext; ifsameownershipshape butfactsdiffer, oldobservationsretained (frontiercopiedonlywhenallrecordsidentical), permittingrepeatfullrederiveatlaterfences. This is sourcebehavior, notattributionof3.6M/5.5Mcumulativecountertolivecause/independentroster. Highreportedprogresspastownership; noedit/retry/policychange.
+
+
+## Bun Ownership Semantic Frontier — Read-Only Design Boundary
+
+Current canonical ownership CJS requireCurrentMembershipV1 (lines 354–361) explicitly accepts unchanged scopes/packages/manifest bytes after a fresh physical derivation. It retains the original observed-path map unless every old/fresh path record is identical; only then does it replace frontier stamps. A topology-only addition such as an empty source directory can therefore remain semantically admissible while subsequent fences must rederive against the old path witness. This is a source-supported repeated-work opportunity, not attribution of the live producer counter or runtime cost. Shared-context inventory and scope/document maps already avoid one complete walk per scope.
+
+A safe future schema/test boundary must authenticate the fresh observations after the final awaited continuation before adopting them, retain exact prior manifest-byte equality and disappearance refusals, and carry all fresh decision-manifest text evidence. A blind frontier/path swap can lose content authority or adopt observations invalidated during the last progress callback. Discriminating cases should cover topology-only changes with stable membership, subsequent fast replay, changes during the last continuation, new nonmember decision manifests, actual membership/pattern/owner drift, manifest-byte drift, and disappearance of a previously required nonroot manifest. No source change is proposed during the current publication capture; no directory-stamp shortcut, global memo, or weaker final fence is accepted.
+
+
+## Genuine Dependency Lock 37397 and Quiet Source0 Metadata
+
+Bounded tail of unique generated/e2e-ide-dependencies-lock.log (30,627,274 bytes) ends with repository:build/repo stage complete. The producer plan and post-whole projection agree on session37397 and exit0 for dependencies lock --all; synchronization remains pending. Post-whole26-path observations are stable; the pre/post hash comparison names graph TS and storage MJS only. Root package remains unchanged and the observed Bun lock hash becomes ed0537a858484ad57b5baf973ffc4d02791b5b77eeedd29a8f42458928db8b51. This is actual lock completion evidence, not a reconstructed Bun semantic registry delta or sync proof.
+
+Fresh Source0 declaration has16 inputs: prior2 plus5 canonical GraphQL kernel globs,4 automatic-hook contract DATA paths, and5 explicit absence witnesses. cache:false and version1/live/exercises-host-resources truthfully classify real host/absence assertions. The appended existing source-roster law validates the actual Live cache schema and actual root declaration via Ajv and SQLite; its database closes in finally. Source acceptance only: no new Bun execution or target count is inferred.
+
+Existing ownership repair/test seam: canonical Bun ownership CJS replayCurrentMembershipV1:312, requireCurrentMembershipV1:354–361, currentFence:364, publishCurrentOwnership:407, withPublishedBunWorkspaceOwnershipV1:441. Adjacent existing schema, fixture and TS frontier law already cover physical mutations and final-yield refusal. Candidate minimal refresh performs a complete fresh replay with its synchronous final pass after semantic/raw-text comparisons, then adopts the complete authenticated observation set and fresh decision-text map; a false fresh replay must not be adopted. New real repeated-recheck cases should distinguish empty-directory/nonmember-manifest topology from membership drift, and retain final-continuation mutation refusal. This is a proposed review boundary, not an implemented or measured optimization.
+
+
+## Fresh Peer Bounded-Prefix Retirement Review
+
+Read the exact demonstrator bounded-prefix-retirement-2026-10-21 report and current closure owner. retirementMutationWorkV1 expands to3R+H+2T+2D+12, matching the report. Actual leaf/directory loops reserve before effects under the unchanged cumulative cap, refuse when no progress fits, and stop after real progress. Two full pre-unlink rechecks, FD/path identity, ancestry, immediate siblings, final backing checks and complete final recheck remain. A leaf prefix preserves directories; affordable empty-directory removal starts only after all supplied leaves are removed. Outer custody invalidates the old proof and recaptures survivors. No concrete new issue found in this bounded source review. This does not establish runtime completion, cost improvement, or a solution to full-proof/cohort complexity; all execution remains pending.
+
+
+## Guarded Root Human Entry Documentation Readback
+
+Fresh root README quickstarts use dashboard task forms. The actual Windows bootstrap uses Test-ElevatedSession for readiness reporting and emits separate long-path administrator guidance; no administrator refusal or Mount-DiskImage call was present in the bounded source. Actual root toolchain is nightly-2026-07-20 with the two declared Wasm targets, and three workflow files are present. These source anchors support the seven guarded documentation corrections in oct21-human-entry-documentation-audit.md. No Windows, hosted workflow, dashboard or installed journey execution is inferred; no additional documentation scope was changed by this audit.
+
+
+## Mandatory Admitted Parent Selection Port
+
+Fresh source review accepted requireAdmittedBuildSourceClosureV1: actual private Original issuance before and after closed nonempty canonical admitted-map checks, same root and every child image digest. Validated immutable Node adapter injects the actual captured map; session preparation binds the full captured snapshot and exact captured protocol schema before execution. No optional physical witness fallback remains. Two literal Source0 laws include portable Ajv/SQLite vectors and actual captured compiler→owned child entry/JSON/helper/schema checks plus changed/unadmitted/copied-Original refusals, with primary-preserving cleanup. All runtime execution remains pending; reply-credit/defer protocol requires separate final saved-source review.
+
+
+## Authenticated Ownership Refresh Source Acceptance
+
+Fresh implementation retains shared cumulative physical budget and ownership binding, exact semantic shape, overlapping raw-text equality and prior nonroot disappearance checks. It unions fresh decision texts, performs full fresh replay and a final synchronous state/list/policy/all-text authentication after the awaited continuation, then adopts complete maps into the stable observations object captured by nativeOperations and updates owner.texts. Fourteen actual private-root laws and independent SQLite vectors distinguish semantic topology adoption, subsequent zero discovery, later new-decision byte/removal refusal and final-callback mutation/cancel/undefined. No concrete source blocker found. Extra cumulative work may still reach unchanged policy refusal; no runtime or measured throughput acceptance is inferred.
+
+
+## Frozen Reply Credit / Terminal Deferral Combined Review
+
+Fresh controller, worker and pure credit helpers preserve unchanged16MiB total capture. New canonical reply quantum16,764,800 plus128-byte READY,8192-byte failure and4096-byte diagnostic reserve fits that total. Admission reserves two request input frames and the five-byte final null frame, using encoded UTF8/newlines. Every success wire is checked against actual issued credit before acceptance. Closed deferred replies require prior cohort progress, relational read debit, EOF and actual status0 before mandatory debit callback and retry. A fresh-worker defer refuses, bounding each exact batch to two reads; the same captured worker and issued control persist. The production callback charges deferred bytes without accepting rows or references. New credit/controller law modules are test-only static imports of the existing session suite, not production implementation authorities. Source review found no concrete blocker; all runtime and useful throughput claims remain pending. Bounded-prefix progress still does not solve O(K*N) per-leaf rechecks or repeated full captures.
+
+Production projection readback: closureImplementationURLsV1, storage graphConsumerURLs and graph graphImplementationUrls explicitly retain session TS/MJS and immutable Node/admitted-source helpers. The fourth actual owner is graph/inference/revision MJS implementationFiles(), not observation MJS; fresh read confirms the same worker/schema/session/admitted/Node/generation/resolution entries. The two new credit/controller modules reside under tests/session and are statically imported by the existing Source0 session suite; they are correctly absent from production implementation pins. No missing fourth projection defect remains.
+
+
+## Owned Auxiliary Snapshot Transport Source Review
+
+Final auxiliary DATA validator snapshots closed own nonproxy primitive canonical UTF8 before process birth. The first-party writable port retains callback/event/explicit-undefined first failures separately from completion. Actual issued control/signal is required; fd3 publication and actual process close are awaited, ordinary stdin remains unchanged. Shared immutable loader reads finite fd3 chunks with exact snapshot digest, binds a single actual --eval loader hash and root/snapshot:null, then preserves physical Source rechecks. Ten auxiliary laws plus two shared-loader laws are authored and reached by the focused Source0 stream import; large pipe/stream, cancellation/deadline/consumer/status/early-close and loader argv/digest/physical mutation cases are represented. No runtime execution or platform certification follows from this source review.
+
+
+## Production Dependency Isolation and Split Phase Consumers
+
+Root dependency command extraction is source-accepted: Sync/Refresh production bodies reside in their canonical commands owner; old test owner retains ContractCheck only and direct real suite entry, with no reexport. Actual router, five closed AST/SQLite route/mode cases and exact three Source0 AST inputs are coherent. The Build CLI consumer remains under High coherent kernel rewrite and was explicitly not accepted while its old import was transient.
+
+Controls phase/pinned consumer changes source-accepted: actual graph loader is imported from invocation/graph, public parameter fixture includes policy and typed arguments; cleanup tests extract actual diagnostics Try, preserve arbitrary/undefined first primary, close failures, same phase and environment restoration. Writer law reads actual runtime ensure-before-reader ordering. No runtime result is inferred.
+
+Initial bootstrap reserve final delta: preparation uses the same cohort admission helper with frames1, maximum READY128, no diagnostics, maximum request65,537, full reply quantum and final end frame. The43-byte credit plus5-byte terminator yields maximum bootstrap16,711,631 under unchanged16MiB input. Exact/+1 neutral and actual AST bindings are coherent; mandatory parent admission precedes this guard. Source acceptance only.
+
+
+## Captured Narrow Command Core Source Acceptance
+
+Fresh minimal preflight core review found no source blocker to genuine guarded admission. Root router selects a narrow captured kernel; actual eval/snapshot/loader identity is checked before body, wrong kernels refuse, compiler capture receives the same issued Original/restricted control with fences before expensive work and after continuations, and fd3 publication retains stdin plus stderr-only owned heartbeat. Current environment API is called with exact control/environment pair. Dependency kernel imports the new production command owner. Authored real compiler/kernel/portable identity/publication laws are mounted. Conservative static census is not proof of Bun conditional resolver, dynamic import, capture extent or runtime success. Full sync/Source acceptance is not inferred.
+
+
+## Genuine Admitted Worker Fixture Readback
+
+Fresh peer harness review accepted the closed six-mode DTO and actual Original/control validation before artifact effects, bounded owned paths/Windows argv, genuine authorizer capture→snapshot→compiler→owned child and exact two-argument control environment. It requires the actual worker in the private compiler census; no handmade selection or hash fallback. Cleanup occurs after actual child settlement and preserves arbitrary primary including undefined. Raw Ajv/TypeScript registrations remain outside the executable body; real body statically imports worker/schema. No concrete source blocker found; runtime remains unrun.
+
+
+## Captured Preflight pf1 and Native Plan Reconciliation
+
+The unique2288-byte pf1 log contains actual preflight running→complete then repository complete. Owning terminal reports whole0 in0.72s. Independently compared before/after26 and selected328 snapshots: all stable, zero hash differences. This accepts that minimal captured preflight execution only, not dependency synchronization or broad Source bodies.
+
+Native runtime plan now exposes acceptedBehavior91975/8 and acceptedDirectLibraries72467/395 explicitly while retaining owning-command/registered Source-native orchestration pending statuses. Existing nested direct-ticket evidence was already correct; it was not promoted to owning repo-run execution. No rerun occurred and no unrun registered target was marked passed.
+
+
+## Post-Cancel Schema Boundary Readback
+
+84694 was joined whole1 after capacity-only wait, zero command bodies; it is not synchronization proof. Current auxiliary and SourceClosure schemas retain closed runtime DATA/proof/admitted shapes and accepted limits. Added ChildProcess and CommandProjection definitions are closed test contracts, not a runtime limit expansion. Hash-only prior snapshots do not establish an exact historical semantic diff or actor. Bounded current SourceClosure subtree review found four projection DATA rows without a TS consumer; they remain authored DATA/pending consumer, not a mounted or executed regression until an exact route is established.
+
+The CommandProjection pending-consumer qualification is superseded by fresh kernel test source: the named environment-projection law now consumes all four rows using actual executeCaptured helper extraction, real issued/refined controls, full closed fixture validation and independent SQLite policy/call-count oracle. Copied/expired controls require zero captures/launches and exact refusal; valid paths check actual environment marker/policy/deadline. Source-accepted, runtime unrun; physical process ingress remains a separate genuine law.
+
+
+## Pruning Production Owner Isolation
+
+Fresh seven-path slice source-accepted: pruneTestEvidence joins direct canonical retention and contributions imports, binding the same three exported functions; downstream collection/formatting expression remains unchanged. Focused actual AST binding/import checks, independent SQLite exact sets and TypeScript resolution/export checks are coherent with explicit narrowing guards and database finally cleanup. Source0/projection mounts and three exact dynamic freshness inputs match the authored report. No actual Bun/strict typecheck, closure-size improvement or runtime performance is inferred.
+
+
+## Final Cache Kernel and IDE Dependency Source Boundary
+
+Cache/ledger source-accepted with complementary exact-token routing and eighteen closed cases, including opaque cache gc -- --tasks selecting cache and --tasks=true selecting ledger, preserving prior behavior. Shared authenticated entry, diagnostics/environment and ensure-before-reader custody remain. Static domain counts are not Bun runtime admission.
+
+Actual root package has no three retired VSCode authoring dependencies. Closed fixture fixes exactly three names and four dependency sections; actual package absence, SQLite json_each parity and twelve reinsertion counterexamples are coherent, with finally cleanup. Focused Source0 mount and package freshness input are present (25 inputs). Genuine Bun lock regeneration remains required; no lock/runtime pass is inferred.
+
+
+## Final Worker Companion DATA Review
+
+Fresh canonical registry contains both exact data-reader and process-language owner→sibling-schema pairs. Added closed fixture fields and actual capture law verify owner/schema private-census membership with independent SQLite projection. The extracted actual selection DATA guard accepts captured bytes and refuses omission of each companion; structural wrapper assertion preserves actual private admittedSourcesV1 input. No handmade authority, runtime guard weakening or limit change is introduced. Joint saved-source review is clean; all owning compiler/worker execution remains pending.
+
+
+## Exact Sequence Corpus Restoration Accepted
+
+Fresh two-JSON restoration independently recomputed semantic projections after removing only the outputHandoff extension: fixture f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820 and schema56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611 match authenticated fd14 committed evidence exactly. All six original names and root fields are restored. Required closed outputHandoff retains the actual two existing cases, cuts0/3/16/64/2048 and maximum2048. Current TS original narrow/wide oracle and Rust namespaced consumer align. This is source/input acceptance, not runtime success or recovery of unknown prior uncommitted bytes; full26 and separate sequence Source/native gates remain mandatory.
+
+
+## Developer Live Adapter Source Acceptance
+
+Fresh five-file review caught and resolved a stale dispatcher closure and the incorrect use of invocation.control as a ResourceLeaseControl. Final dispatcher uses the sole canonical factory; that factory issues developer-tools resource control from the actual Original, validates identity/signal, snapshots bounded input and uses actual owned execution. Live Git/shell/Node/Pdb/LLDB tests share the same production adapter. Required debugger tests no longer skip; optional GDB frontend/native evidence remains explicitly qualified. Closed sixteen-row protocol classification and independent SQLite distinguish frontend availability from actual native proof. Real no-install LLDB startup and native breakpoint/arguments/continue/exit remain authored obligations, not executed results. Installed PTY/task receipts remain separate.
+
+
+## Current Lock Capture Two-Hash Readback
+
+Post-freeze selected census reports authorizer schema and build bootstrap hash changes, with no selected26/root-package/Bun-lock change. Fresh source shows a closed explicit axes Source→sibling JSON companion and bootstrap Original-to-phase issuance validation plus existing actual-store/walk/receipt/install checks. No guard/cap relaxation was found. Exact old Source bytes were unavailable to this audit, so no historical equivalence, actor or loaded-version claim follows. Prior admitted-worker two-DATA report does not cover the newer axes pair; its exact regression/report route remains unverified pending coordinator provenance.
+
+
+## Captured CommonJS Boundary Repair
+
+Actual Lock3 log refuses before dependency body on missing named createBunWorkspaceOwnershipV1 from captured CommonJS, with child status1/signalnull; observed Bun1.3.14 is retained rather than asserted as the current1.4.2 pin. Fresh six-source repair imports the canonical CommonJS default object in both first-party façades and destructures existing members; owners/loader remain unchanged. Closed two-row AST/SQLite façade law plus genuine captured child/default factories compared with createRequire/SQLite are coherent. Exact two dynamic subject freshness inputs are explicitly present (Source0 inputs27), preserving prior live/cache/runtime policy. Source-accepted; real production lock integration and runtime/typecheck remain required.
+
+
+## Material Bun Lock4 Exact Projection Acceptance
+
+Independent complete key/value-digest comparison confirms1991→1759 keys: zero added,232 removed,1757 unchanged and two relocated slots. supports-color@7.2.0 current value digest matches four prior nested slots; yallist@5.0.0 matches prior tar/yallist. No new identity is introduced. All three retired IDE authoring dependencies are removed. Unique15.49MB log ends repository complete; result76126 records whole0 and stable373/26/package/Source0 metadata with Bun lock alone changed. This accepts genuine lock generation/projection, not synchronization or installed/runtime proof.
+
+
+## Source0 Captured Require Frontier and Existing SDK Custody
+
+Source036712 refused before test bodies on Captured require declaring module required. Current bootstrap witness creates require from root/package.json DATA, while immutable loader permits only exact captured executable declaring images. That witness only needs two closed parser package/entry resolutions before existing generation/path/version/full-tree checks. No arbitrary-base require or ambient execution fallback is accepted. Graph import.meta.url normalization concern was checked: current loader explicitly injects physical file URL/path/dir, so no proven semio-source identity defect remains.
+
+Existing Nx tooling-use owner validates exact toolkit identity/receipt, retains nx-tooling SH and actual tooling store, then enters the derivative reader through the full callback lifetime. That reader authenticates snapshot/source index/authorizer and complete namespace, rechecking after body. A closed SDK execution port should bind inside that actual custody; serializable receipt DATA alone cannot grant execution. Existing SDK base-string load/locate interface is insufficient provenance for immutable parent execution. Observation resolve-only DATA and parser runtime loading are distinct boundaries requiring separately closed ports. This is design/source evidence, not a new runtime pass.
+
+
+## Closed Parser Witness Resolution Source Acceptance
+
+Fresh seven-path repair removes module execution/resolution from material witnessing. The closed helper admits only TypeScript lib/typescript.js and Iarna toml.js with exact package name/main and one optional ./ spelling. Actual witness derives directories from the authenticated generation target and preserves canonical store/stage, locked-version and full bounded tree hashing/rechecks. Nine SQLite vectors and genuine captured-helper/private native-resolve comparisons are coherent. Review caught an absent four-parent AST subject URL; corrected three-parent URL now resolves actual bootstrap owner. Source-accepted, runtime unrun; broader parser/SDK execution authority remains separate.
+
+Witness source acceptance is superseded pending a concrete physical-kind repair identified by peer review: realpath+prefix alone can accept a directory at the declared main entry, unlike the prior resolver. High is adding an ordinary no-follow file check with directory/missing/symlink rejection and actual captured-child cases inside the same boundary. No runtime pass was claimed; final acceptance requires that saved correction.
+
+
+## Final Witness Physical Kind and Import Diagnostic Acceptance
+
+The parser entry directory gap is resolved in saved Source: <=256 pre-I/O check, ordinary non-symlink lstat before/after, exact identity stamp and canonical in-package realpath. Nine logical plus nine physical vectors include changed identity and foreign canonical entry; genuine child covers files/directories/missing, while symlink/mutation DATA coverage is explicitly qualified. Source acceptance supersedes the earlier pending correction; runtime remains unrun.
+
+Diagnostic clipping now uses a256-codepoint early-breaking loop rather than full Array.from materialization. Instrumented iterator law rejects a257th read and verifies closure, retaining eight independent SQLite Unicode outputs. Serialized helper is self-contained; all three refusal guards remain unchanged and bounded JSON stays within4096 bytes. Source-accepted, no execution authority or runtime pass inferred.
+
+
+## Admitted Subclosure Resolution — Final Source Review
+
+Fresh bounded read of the Source closure owner/schema, shared authorizer import projection, validated snapshot compiler injection, Node adapter and focused resolution fixture/tests found no source blocker. The closed resolution projection requires complete sorted unique path/hash equality with the evaluated physical-source selection and selected targets for every import. Capture uses exact declaring-file/specifier edges and physically rechecks admitted bytes without Bun.resolveSync or a directory/ambient fallback. The strict declaring-map loader refusal remains intact. Compiler and Node paths inject the same validated projection; Node prefixes only modules that consume the field. The actual compiler/immutable-child fixture checks exact nested closure, copied Original refusal and changed-byte rejection. These are authored runtime laws, not executed evidence. Source0 now mounts three focused laws with 68 required names, retaining 42 registered targets, 27 inputs and six runtime entries. No runtime/typecheck/Source0 success is inferred.
+
+
+## Dashboard Semantic Owner Extraction — Design Review
+
+The exact three-owner proposal in oct21-dashboard-feedback-and-settings.md is coherent as a design: source-view borrows existing window models through an explicit port and returns ordered typed effects after the actor borrow ends; feedback/session and keymap drafts each retain one physical implementation in real dependency owners. No terminal dependency, captured mutable Dashboard, copied window state or compatibility reexport is proposed. Per-unit raw-source charging supports genuine extraction, while source-only removal still leaves262268 bytes before adapter work and cannot satisfy the unchanged262144 terminal bound. Final saved source must preserve generation/cancellation/settlement identities and ordered effects, and final actual closures must establish all owner limits and terminal admission. This is design acceptance only; no expanded implementation, compiler or runtime success is claimed.
+
+
+### Subsequent Authorizer Discovery Drift — Current Boundary Refused
+
+A fresh authorizers owner read after the resolution review found runtimeDataDiscoveryV1 added to capture. Its recursive schema readdir occurs before no-follow validation of the initial directory/ancestors, collects all entries and results before the caller source-count limit, and literal JSON lstat precedes sourcePath length validation. Later guarded byte reads prevent acceptance of foreign bytes but do not prevent foreign or unbounded enumeration. Current capture-boundary acceptance is therefore withheld pending a closed bounded discovery contract and genuine negative laws. This does not attribute an author or loaded runtime image and does not invalidate the separate exact map-resolution design. No producer was launched.
+
+
+### Discovery Correction And Bazel Test Reconciliation
+
+Fresh bounded discovery correction resolves the identified source blocker: path validation precedes namespace effects, ordinary no-follow root/ancestor stamps bracket incremental directory reads, shared per-capture entry/directory/result/declared-byte counters and finite depth bound work, and directory close preserves the first primary including undefined. JSON DATA does not gain executable import authority. Twelve I/O-port/SQLite vectors and genuine capture/invalid-JSON law are authored and mounted, not run.
+
+The single Bazel implementation test reconciliation retains four names and eight fixture assets. A genuine compiler-admitted driver imports actual canonical capture/Bazel/fixture implementations, receives the child Original and uses matching control/environment with immutable fd3 input. Nested capture supplies no map fallback. Full census retains esbuild comparison; five existing loader invocations now pair actual control and resource environment. Late-edit and invalid-image refusal assertions remain. No concrete source blocker was found; runtime and strict typecheck remain unrun.
+
+
+Bazel final cleanup refinement reread: the two fixture laws now use a private boolean-first-primary helper that always attempts DB close then owned removal, preserves undefined rejection and prevents cleanup masking. Four names and body assertions remain. Final source acceptance restored; runtime remains unrun.
+
+
+## Final Three-Owner Dashboard Source Review
+
+Independent mod/include traversal matches the frozen terminal closure:14 Rust files,262032 raw UTF8 bytes under the unchanged262144 cap, leaving112 bytes. Source-view has4 physical inputs totaling38111 bytes including its embedded fixture. This is a literal-source measurement, not actual cfg/admission/compiler evidence. All three package path declarations resolve; no reverse terminal dependency or copied model is introduced. The adapter borrows actual browser/document models, collects ordered effects and applies them after actor borrowing; Root first-frame flush is present. The iterator temporary/indexing and duplicate visibility blockers found during review are corrected. Nine retained source UI laws and seven feedback/settings laws remain in terminal; the new source settlement fixture law needs explicit owning native execution. Final source signoff is clean; real lock/admission/compiler/runtime acceptance remains pending.
+
+The final discovery clean-success post-close ancestry fence is accepted after fresh reread. Its single close-mutation scenario is wired to the actual descriptor-stamp port,13 vectors remain, and old close-race spelling is absent. Earlier failed primary, including undefined, exits before later holds; close cannot mask it. No runtime is inferred.
+
+
+## Actual63337 Lock Effects Under Whole Failure
+
+Independent full projection comparison confirms Root1565→1568 package identities with exactly the three semantic dashboard owners added, no removals and all706 registry tuples unchanged. Existing edges change only terminal→the three owners and Value→snapshot-projection; the current Value manifest declares that peer edge. Framework full package projection and lock SHA remain identical1068/612. The actual log records Cargo Locking3 and Adding the exact three owners before captured Source recheck refusal. Therefore the command whole1 does not imply absent resolver effects; only the explained semantic lock projection is accepted, not the owning gate. Post comparison independently records one943 closure-schema SHA/identity drift, with26 and nine package/manifest observations stable. No actor or exact loaded-byte history is inferred.
+
+
+## Registered Dashboard Coverage Correction
+
+The frozen five-path registration correction is source-accepted. Actual first native child retains docking predicates and adds source_ plus the seven exact feedback/settings laws, selecting terminal and source-view; unit coverage now includes all three semantic owners. Closed fixture lists17 required identities/eight settlement vectors. Actual dispatcher AST extraction and independent SQLite relation exercise omissions; three exact dynamic-read freshness inputs are declared on test-windows. Static selection34 (33 terminal plus1 source-view) is not execution. No target, skip or TUI10 change is introduced; owning registered whole remains pending.
+
+
+## Actual24917 Owning Lock Retry
+
+Independent read of the actual whole0 result and unique6904-byte log confirms Cargo Locking0 followed by repository completion. Full Root1568/706 and Framework1068/612 package projections and lock SHA are identical before/after. The three semantic owner dependency arrays match the reviewed manifests. Separate949 observations retain one closure-schema drift;26 controls and15 package/manifest inputs remain stable. This accepts the genuine owning lock retry, without converting current mutable core observations into Source0/runtime evidence. Prior63337 remains whole1 with its explained lock effects.
+
+
+## Final CI And Human Entry Coverage
+
+The frozen seven-path CI/docs correction is source-accepted. Native and devcontainer gates invoke canonical registered test-windows after cold exactly once, preserving all seven gates, host matrix and explicit language/preferences checks. Existing YAML/Ajv/SQLite laws import the17 native/eight settlement coverage vectors and verify exact route/order. A same-file EN/DE README inconsistency found during review is corrected: all four postCreateCommand references now describe native shell bootstrap, repo installation/verification, then workspace setup. No hosted, container, Bun or native execution is inferred.
+
+
+## Frozen Peer Fragment And Binary Transport Boundary
+
+Fresh bounded source/report review is clean: generation-fragment inflation is min(actual64MiB fragment policy, remaining proof bytes), while typed index/frontier512MiB and generic256MiB remain unchanged. Session input accounting uses actual bootstrap/request binary fragment counts cumulatively; credit/null controls retain bounded text framing. Existing root transport oracle exercises the actual helper, closed binary DTO/base64 and exact UTF8 byte reassembly with SQLite arithmetic, preserving the named body and old cases. No source blocker to the released Source0 was found. Peer qualified Node red/green and controller probe outcomes are supplemental, not Source0 whole acceptance. No Source edits or producer launched by this lane.
+
+
+## Actual Source071282 Post Fence
+
+Independent comparison of complete saved before/after records finds949 selected Source records,26 controls and7 inputs exactly equal in path, SHA,bytes,identity and stability, with no missing/extra records. Actual result is whole1 before bodies: Exact captured closure worker readiness required, worker accepted-disposal1/null, parent1/null. This establishes no detected observed drift, not exact loaded-byte provenance or a causal worker diagnosis. Separate runtime-handoff lane owns71-body reconciliation. No retry, TTY consumption or product edit by this lane.
+
+
+## Startup Witness Diagnostic Review
+
+Six-path witness schema/fixture/mount/math source review is clean. Text projections are bounded to128 ready plus4096 before-disposal stderr plus4096 after-disposal stderr UTF8 bytes, while recording exact original byte count, SHA and truncation under the16MiB source text ceiling. JSON escaping legitimately exceeds4096 total and is not misrepresented as a4096-byte packet. Closed comparison/DTO and literal session-suite mount align; six SQLite byte cases and genuine owned-child law remain unrun. Separate runtime lane reviews retainer/first-cause semantics. This is diagnostics only, not an execution fix or readiness root-cause proof.
+
+
+## Hermetic Node Bootstrap Final Source Review
+
+Four-path frozen adapter/fixture source review is clean. Static interpolation-free String.raw keeps six Node builtin imports inside the child program, preserving strict snapshot/hash/path/import-map and captured filesystem guards plus heap/bootstrap/Windows limits. First existing fixture case now compiles a genuine admitted Bun parent under actual Original/control, captures child+adapter and traverses immutable auxiliary loader before producing the Node descriptor. Exact descriptor/bootstrap/digest and both argv bounds are checked;14 prior cases remain. Qualified isolated Bun transform red/green establishes representation behavior only. Actual admitted-parent/Node fixture and Source0 runtime remain pending.
+
+
+## Actual Source070115 Post Fence
+
+Independent complete record comparison confirms26 controls and7 inputs identical. Among952 selected records exactly two test SHA/identity changes occurred: Node fixture067e→4cc87 and resolution fixture3e75→ef1f; no missing/extra records. No actor or exact-loaded-test provenance is inferred. Actual whole1 precedes73 required bodies; readiness advanced and the worker returned Closed graph record manifest semantic refusal. No detected core production drift or readiness progress is Source0 acceptance.
+
+
+## Snapshot Semantic Diagnostic Source Review
+
+Eight-path diagnostic source/schema/fixture review is clean. Snapshot stage marker precedes unchanged strict manifest predicate; context copies only bounded image-relative identity/bytes/hash and nullable safe primitive version/counts using own data descriptors. No manifest content or getter execution is introduced. Existing-context and first-primary preservation remain requirements of the actual retainer law. Eight Ajv/SQLite observations and actual producer-negative context assertions are mounted but unrun. One new named body requires roster reconciliation. This is diagnostic evidence, not tuple execution repair or causal artifact inspection.
+
+
+## Generic Draft7 Tuple Primitive Review
+
+Fresh current primitive semantics are source-clean: positional items schemas use the existing reference scope; only present positions are validated; surplus uses additionalItems schema/false when supplied and is allowed when omitted. Empty tuple remains tuple, while uniform items keeps its existing path and ignores additionalItems per Draft7. Existing min/max/unique/contains/reference checks remain. Peer84 shared vectors,5 comparisons and actual v2 producer corroboration are supplemental; owning cross-runtime validator target and actual Source0 remain required. No new Source0 title or mount is inferred from strengthening existing corpus laws.
+
+
+## Public Native Image Queue Diagnostic Semantics
+
+Bounded read of process/leases/TS establishes that queueWaitInfo reads the first live arrival ticket. Its holderPid is that ticket JSON request PID, holderMode its requested mode and holderSeconds time since its arrival; this is not kernel-holder discovery or acquired-custody proof. Position is own index+1 and queued is max(total ticket names,position). Actual resource acquisition occurs separately when the own ticket reaches head or a valid shared cohort. Reported PID/age therefore cannot identify an actor, stale claim or deadlock. The supported owning lifecycle remains actual issued signal/Original with remaining-budget checks; failed wait removes its own ticket and releases its own independent claim. Bounded exported-source review establishes no cross-owner cancellation or kernel-holder status API. No private files/processes were inspected, no signal/producer/edit issued, and the live request is unchanged.
+
+
+## Actual Source049940 Post Fence
+
+Independent full before/after records are identical for955 selected Source,26 controls and7 inputs, including SHA,identity,bytes and stability; no missing/extra records. Actual whole1 precedes74 required bodies and backend admission. Validated worker context reports snapshot-manifest version1, nonarray projects,873 dependencies,124213751 packed bytes, with worker1/null and parent1/null. This is truthful bounded diagnostic evidence and no detected input drift, not Source0 success or attribution of the observed artifact to a current writer. High owns the narrow writer/selection trace.
+
+
+## Closed Recovery Route Integration
+
+Frozen nine-path route source review is accepted. Pregraph selection authenticates the bounded actual declaration and closes only exact graph/nx actions before generic graph admission. Driver rejects absent/unknown/path/trailing profiles and retains the real Original/control/repository authority under the existing600000ms derivative bound. Live/freshness metadata has no dependencies,outputs or forwarding. Seven identities remain, with49 route and10 driver cases using actual selector extraction,Ajv and independent SQLite. Saved declaration comparison retains93 unrelated target hashes/top-level parity and48416-byte extent. This is source/static acceptance only; generic reset, Native whole capability and actual Bun/reset runtime remain separately pending.
+
+
+## Native Whole Retirement Interim Safety Review
+
+Frozen capability reread confirms privately issued image/EX/reservation capture, authentic charged journal and backing binding, durable intent/quarantine/resume, first-primary cleanup and corrected no-follow internal parent/kernel-absence fences. Prior concrete findings (pre-I/O path validation, partial kernel check, internal quarantine ancestry) were corrected by owner. Two remaining source blockers reported to Root: projected quarantine descendant paths add8 units but preflight only measures original path, permitting durable rename followed by permanent256-unit refusal; inventory yields after identity/ancestry validation before opendir, so the directory identity must be revalidated after continuation before enumeration. These are source findings only; no runtime/reset/probe or private inspection was performed. Final signoff withheld pending narrow corrected frozen boundary.
+
+
+### Native Resume Provenance Gap
+
+Root identified and independent source review confirms resume validates envelope sizes, real issued control/EX and a schema-valid physical subset, but does not establish that the capsule originated from actual Native factory/receipt/journal custody. The fifth authored positive constructs a plain payload folder and caller-authored intent, so it demonstrates protocol deletion rather than genuine whole capability. No new cryptographic bar is inferred: existing Native receipt/backing/journal/envelope semantics must authenticate resumed physical work, with evidence preserved through partial destructive continuation until no effects remain. A genuine factory→private capture→close→interrupted terminal→resume positive and unrelated/plain intent negative are required. Final Native source acceptance remains withheld.
+
+
+## Graph Format And Canonical Reset Core Review
+
+Canonical profile reset source sequence is coherent: actual invocation authority,closed partition options,lease owner,resume-before-open,real image EX/reservation/private token,normal close,Native terminal then accounting. Cleanup preserves first undefined/false primary and reset does not recurse into the Graph semantic format gate. Final Native provenance remains separate.
+
+One concrete format-gate blocker found: ordinary missing-marker initialization invokes terminal-consuming withExclusiveMaintenance, then the gate and Store reuse the closed image for checks/reservation/body. Existing fixed receiver closes and unregisters after maintenance. Require an explicit consumed result and genuine sameOriginal close/reopen before ordinary reservation; maintenance caller already owns EX. Marker schema/ino:size binding,zero-allocation census and dedicated store-format role otherwise remain source-reviewed,not runtime accepted.
+
+
+Graph consumed-image correction is source-accepted after fresh reread: gate returns consumed:true only after standalone EX and uses only control thereafter; current-marker/owned-maintenance return false. Store closes and reopens the same partition/control, revalidates marker before reservation, and bounds work to two opens with repeat-consumption refusal. Cleanup retains primary. Six recording/SQLite cases and79-name Source0 runtime remain unrun. Native whole provenance capability remains separately pending final source review.
+
+
+## Additive Marker Custody And Native Stage Followup
+
+Seven frozen marker-custody files match their published hashes. Four authority arrays include the marker schema once; source/state vectors are15/31 with fixed index5. Recomputed preserved14/29 prefix hashes match the earlier boundary exactly. No runtime passage is inferred.
+
+Current Native staged WIP reread confirms projected quarantine bounds and post-yield directory checks, plus payload/evidence/receipt whitelist and receipt-last effects. Backing-present resume restores canonical path and uses real factory/EX inside-journal verification before private continuation. This addresses earlier provenance direction at source level; final frozen schema/tests/hash review remains required and no runtime/reset acceptance is claimed.
+
+
+## Final Native Whole Capability Source Acceptance
+
+Final frozen implementation8982fa7dcbb6aec2a325ff7acafbde07f6d894fa83744210c40610705449af3a and schema7989c0a65108d0a26e66ccbd0000a6cdf892a54a53f773205521fdc6756e3564 independently verified. Genuine image/EX/reservation capture and factory/EX inside-journal resume,closed staged evidence whitelist and receipt-last disposal,durable CAS/quarantine,partial kernel/descriptor/internal-parent fences,projected256 bounds,post-yield checks and first-primary cleanup resolve prior concrete blockers. No further source blocker found. Final semantic source acceptance is given; actual Native tests and genuine Graph reset remain pending. Separate runtime-handoff lane owns fixture/route correspondence.
+
+
+Current bootstrap route4 delta reread is source-clean: one canonical positive-safe-integer parallel option supports capacity-admitted pregraph recovery, rejecting duplicate/unsafe/malformed forms and tails while preserving closed owner/profile/Original/control.28 vectors exercise actual outer/runtime dispatch plus SQLite. The new named capacity-admitted recovery body requires Source0 roster reconciliation beyond79 if additive. No runtime success is inferred and no reset launch blocker found.
+
+
+## Actual Graph Reset gr1
+
+Independent62672 gr1 readback confirms whole1/status1null before reset body or closed outcome. Actual refusal is undeclared compiler-captured caching project DATA in readNativeRepoRecoveryPlanV1,sourceCount1021. All67 before/after Source/input records are exactly equal SHA,bytes,identity,stability with no missing/extra rows. No Native retirement/reset runtime acceptance is inferred. High owns exact declared DATA companion correction; strict captured-map guard remains required.
+
+
+## Coordinator Policy And Pregraph DATA Followup
+
+Independent lease-order read confirms an exclusive Native coordinator was unclassified and would trigger enforced hold-and-wait after15000ms while awaiting image custody; this is source risk,not gr1 cause. Narrow exact-same-image relation remains under owner repair,without global/unclassified waiver.
+
+Four-path pregraph DATA correction source-accepted: only the two fixed caching/repo-mcp declarations accompany bootstrapCLI,matching Protocol owners. No generic discovery/fallback/execution authority or1024/16MiB increase. Existing actual-capture SHA/excluded-neighbor and SQLite law is strengthened without a new title/target; current unique companion count45 and81 Source0 roster retained. Runtime/gr2 and coordinator integration remain pending.
+
+
+## Final Coordinator Order Source Acceptance
+
+Frozen six-path correction source-accepted: generic optional binding requires exact lease catalog,both schema-owned prefixes and equal nonempty suffix. Only Native whole coordinator rank5→same Native fixed image rank6 is exempt. Foreign catalog/image,journal/persistent/unclassified and reverse acquisition retain refusal; existing capacity edges,15000ms grace and other rules unchanged. Twelve neutral/SQLite cases and existing five Native law identities remain. Actual policy acquisition/reset runtime is pending; no gr2 source blocker found.
+
+
+## Actual Graph Reset gr2 Accepted
+
+Independent77248 readback accepts actual whole0/status0null. Unique log records closing,quarantine4,remove1/4,retired and closed graph outcome retiredImages1/logicalBytes4293918720,then repository completion. All74 before/after Source/input records exactly match SHA,bytes,identity,stability. Observed30.445s is dispatch-to-terminal-observation upper bound,not exact OS timing. This is genuine macOS Graph reset acceptance only; Native unit,Source0,cold and other-host execution remain pending.

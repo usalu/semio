@@ -30,11 +30,11 @@ impl DagGraphState {
         Some(WorldBox { min_x: content.min_x - pad, min_y: content.min_y - pad, max_x: content.max_x + pad, max_y: content.max_y + pad })
     }
 
-    /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::content_fully_visible` — pure layout math relocated there
+    /// 🗺️ Thin wrapper over `semio_framework_ui_wgpu_light::minimap::content_fully_visible` — pure layout math relocated there
     /// (see `.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`).
     pub fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
         let cam = &self.host_snapshot.camera;
-        ui_wgpu::wgpu::minimap::content_fully_visible(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, 12.0)
+        semio_framework_ui_wgpu_light::minimap::content_fully_visible(&semio_framework_ui_wgpu_light::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, 12.0)
     }
 
     pub fn selected_snapshot_nodes(&self) -> Vec<(usize, DagNodeSpec)> {

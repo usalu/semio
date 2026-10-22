@@ -5,9 +5,9 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-source": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-source",
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-native",
-    "test-snapshot-receiving-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-snapshot-receiving-native"
+    "test-source": "repo run @semio-tech/framework-io-control-rs:test-source",
+    "test-native": "repo run @semio-tech/framework-io-control-rs:test-native",
+    "test-snapshot-receiving-native": "repo run @semio-tech/framework-io-control-rs:test-snapshot-receiving-native"
   },
   "devDependencies": {
     "@semio-tech/framework-compiler-ts": "workspace:*",

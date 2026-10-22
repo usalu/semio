@@ -64,7 +64,7 @@
  ],
  "commands": [
   {
-   "command": "bun ./📜️script.ts verify a b",
+   "command": "repo ./📜️script.ts verify a b",
    "words": {
     "script": "./📜️script.ts",
     "words": [
@@ -550,63 +550,63 @@
    "identity": {
     "project": "root",
     "target": "verify-owned",
-    "command": "bun ./script.ts verify owned"
+    "command": "repo ./script.ts verify owned"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "alpha",
-    "command": "bun ./script.ts verify alpha"
+    "command": "repo ./script.ts verify alpha"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "beta-native",
-    "command": "bun ./script.ts verify beta native"
+    "command": "repo ./script.ts verify beta native"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "gamma",
-    "command": "bun ./script.ts verify gamma"
+    "command": "repo ./script.ts verify gamma"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "delta",
-    "command": "bun ./script.ts verify delta"
+    "command": "repo ./script.ts verify delta"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "scan",
-    "command": "bun ./script.ts scan"
+    "command": "repo ./script.ts scan"
    }
   },
   {
    "identity": {
     "project": "root",
     "target": "quiet",
-    "command": "bun ./script.ts quiet"
+    "command": "repo ./script.ts quiet"
    }
   },
   {
    "identity": {
     "project": "app",
     "target": "typecheck",
-    "command": "bun ./script.ts typecheck"
+    "command": "repo ./script.ts typecheck"
    }
   },
   {
    "identity": {
     "project": "app",
     "target": "script",
-    "command": "bun ./script.ts test"
+    "command": "repo ./script.ts test"
    }
   }
  ],
@@ -614,12 +614,12 @@
   {
    "project": "other",
    "target": "x",
-   "command": "bun ./script.ts verify alpha"
+   "command": "repo ./script.ts verify alpha"
   },
   {
    "project": "root",
    "target": "build",
-   "command": "bun ./script.ts build"
+   "command": "repo ./script.ts build"
   }
  ],
  "refusals": [
@@ -653,7 +653,7 @@
    "identity": {
     "project": "root",
     "target": "unknown-crate",
-    "command": "bun ./script.ts verify alpha"
+    "command": "repo ./script.ts verify alpha"
    },
    "rule": "unknown-crate",
    "reads": [
@@ -672,7 +672,7 @@
    "identity": {
     "project": "root",
     "target": "root-crate",
-    "command": "bun ./script.ts verify alpha"
+    "command": "repo ./script.ts verify alpha"
    },
    "rule": "root-crate",
    "reads": [
@@ -691,7 +691,7 @@
    "identity": {
     "project": "root",
     "target": "no-branch",
-    "command": "bun ./script.ts verify missing"
+    "command": "repo ./script.ts verify missing"
    },
    "rule": "no-branch",
    "reads": [
@@ -711,7 +711,7 @@
    "identity": {
     "project": "root",
     "target": "unbounded-cargo",
-    "command": "bun ./script.ts verify gamma"
+    "command": "repo ./script.ts verify gamma"
    },
    "rule": "unbounded-cargo",
    "reads": [

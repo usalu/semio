@@ -141,10 +141,10 @@
         "seal": "755055dad0b2ed965173c98f50d8796431d88e5a3390d9d2e0a2b7a9d426be74",
         "recordedBy": "2026/09/23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",
         "evidence": { "revision": "7af1259dba8", "date": "2026-10-14" },
-        "reason": "The repository build interface replaces Nx-specific vocabulary (ticket 2026/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL): the package identity field `nxProjectName` becomes the neutral `projectName` the discovery admission already requires, and the benchmark command in the renderer doc-comment rewrite is spelled through `bun repo run`. Packages, mappings, consumers and counts are unchanged.",
+        "reason": "The repository build interface replaces Nx-specific vocabulary (ticket 2026/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL): the package identity field `nxProjectName` becomes the neutral `projectName` the discovery admission already requires, and the benchmark command in the renderer doc-comment rewrite is spelled through `repo run`. Packages, mappings, consumers and counts are unchanged.",
         "moves": [
           { "from": "nxProjectName", "to": "projectName", "revision": "7af1259dba8" },
-          { "from": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "to": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "revision": "7af1259dba8" }
+          { "from": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "to": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "revision": "7af1259dba8" }
         ]
       }
     ] },

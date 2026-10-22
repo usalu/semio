@@ -13,7 +13,7 @@ use semio_framework_plugin_instance_extension::{ExtensionCtx, ExtensionRef, Inst
 use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -25,7 +25,7 @@ use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
 
 /// 🧺️ The exclusive borrows the `tt-turns` use cases need; built by the composer (`VcsArtifactApp::time_travel_ctx`) or reborrowed by a higher bundle.
-pub struct TimeTravelCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct TimeTravelCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
@@ -45,7 +45,7 @@ pub struct TimeTravelCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> TimeTravelCtx<'ctx, A, M, X> {
     /// 🔍️ The shared twin over the same borrows, for the `&self` members.
     pub fn shared(&self) -> TimeTravelRef<'_, A, M, X> {
         TimeTravelRef { stores: &*self.stores, txn: &*self.txn, child_composition: &*self.child_composition, tool_runs: &*self.tool_runs, time_travel: &*self.time_travel, extension: PhantomData }
@@ -68,7 +68,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> TimeTrav
 }
 
 /// 🔍️ The shared borrows the `tt-turns` `&self` use cases need (`Copy`: every field is a shared reference).
-pub struct TimeTravelRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct TimeTravelRef<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub stores: &'v InstanceStores<A>,
     pub txn: &'v Transactions<A>,
     pub child_composition: &'v ChildComposition<M>,
@@ -77,15 +77,15 @@ pub struct TimeTravelRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 's
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Clone for TimeTravelRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Clone for TimeTravelRef<'v, A, M, X> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Copy for TimeTravelRef<'v, A, M, X> {}
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Copy for TimeTravelRef<'v, A, M, X> {}
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> TimeTravelRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> TimeTravelRef<'v, A, M, X> {
     /// 🔌️ The shared bundle of this extension, shared from the extension seam's view.
     pub fn of_extension_ref<'e>(ext: &'e ExtensionRef<'_, A, M, X>) -> TimeTravelRef<'e, A, M, X> {
         TimeTravelRef { stores: ext.stores, txn: ext.txn, child_composition: ext.child_composition, tool_runs: ext.tool_runs, time_travel: ext.time_travel, extension: PhantomData }

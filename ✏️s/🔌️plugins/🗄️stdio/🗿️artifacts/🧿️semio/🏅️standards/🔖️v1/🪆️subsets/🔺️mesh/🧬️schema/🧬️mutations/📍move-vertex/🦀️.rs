@@ -20,7 +20,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "vertex", kind: "move-vertex", record: "MovedVertex" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vertex {} of primitive \"{}\" in mesh \"{}\" to ({}, {}, {})", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex {} von Primitiv \"{}\" in Netz \"{}\" nach ({}, {}, {}) verschieben", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![format!("{}:{}:{}", self.mesh_id, self.primitive_id, self.vertex_index)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioMeshSnapshot, Op> for MoveVertex
+where
+    Op: protocol::ColdMutation<SemioMeshSnapshot, ReferenceDiff = crate::schema::diff::SemioMeshDiff> + From<MoveVertex>,
+{
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioMeshSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,11 +41,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vertex {} of primitive \"{}\" in mesh \"{}\" to ({}, {}, {})", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex {} von Primitiv \"{}\" in Netz \"{}\" nach ({}, {}, {}) verschieben", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![format!("{}:{}:{}", self.mesh_id, self.primitive_id, self.vertex_index)]
-    }
 }
 //#endregion 🔖️Payload

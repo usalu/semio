@@ -29,7 +29,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -46,7 +46,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-neutral-owner",
+        "command": "repo ./📜️script.ts test-neutral-owner",
         "forwardAllArgs": true
       }
     }

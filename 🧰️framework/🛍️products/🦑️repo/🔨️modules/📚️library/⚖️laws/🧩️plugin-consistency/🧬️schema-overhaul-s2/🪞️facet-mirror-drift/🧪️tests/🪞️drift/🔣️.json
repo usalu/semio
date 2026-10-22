@@ -1,0 +1,309 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "mirrored-facets-are-clean",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "a-missing-sibling-mirror-drifts",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "facet-mirror-drift-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+     "stdio-artifacts/facet-mirror-drift",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "an-extra-sibling-field-drifts",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "  unrelatedThing: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "facet-mirror-drift-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+     "stdio-artifacts/facet-mirror-drift",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "an-unparseable-json-mirror-drifts",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{not json"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "facet-mirror-drift-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+     "stdio-artifacts/facet-mirror-drift",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "a-field-missing-from-the-mirror-drifts",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "facet-mirror-drift-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+     "stdio-artifacts/facet-mirror-drift",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "a-longer-name-containing-the-field-satisfies-the-mirror",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeIdentifier: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "serde-tags-and-variants-are-known-names",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "#[serde(tag = \"kind\")]",
+     "pub enum Op {",
+     "    Add { x: u8 },",
+     "    Remove(u8),",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export type Op = { kind: string; x: number; add: number; remove: number };"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Op {",
+     "  x: Int",
+     "  kind: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"x\": {}, \"kind\": {}, \"schema\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Op {",
+     "  uint32 x = 1;",
+     "  string kind = 2;",
+     "}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "comments-and-strings-hide-fields",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs": [
+     "// pub struct Old { ghost_field: u8 }",
+     "const S: &str = \"hidden_field: u8\";",
+     "pub struct Node {",
+     "    pub node_id: u32,",
+     "    pub label: String,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts": [
+     "export interface Node {",
+     "  nodeId: number;",
+     "  label: string;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql": [
+     "type Node {",
+     "  nodeId: Int",
+     "  label: String",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": [
+     "{\"properties\": {\"nodeId\": {}, \"label\": {}}}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto": [
+     "message Node {",
+     "  uint32 nodeId = 1;",
+     "  string label = 2;",
+     "}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "subsets-without-a-snapshot-schema-are-not-checked",
+   "rule": "policyFacetMirrorDriftBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": [
+     "pub struct X { pub a_field: u8 }"
+    ]
+   },
+   "expect": []
+  }
+ ]
+}

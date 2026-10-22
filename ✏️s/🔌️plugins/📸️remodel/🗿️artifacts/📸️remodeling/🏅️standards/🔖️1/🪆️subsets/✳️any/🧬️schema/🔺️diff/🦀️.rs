@@ -754,40 +754,9 @@ fn nonempty<T>(delta: T, is_empty: impl Fn(&T) -> bool) -> Option<T> {
     (!is_empty(&delta)).then_some(delta)
 }
 
-impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
-    fn apply(&self, base: &RemodelingSnapshot, _capability: ApplyCapability) -> MutationApplyResult<RemodelingSnapshot> {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(delta) = &self.streams {
-            next.streams = delta.apply_rows(&base.streams).map_err(|error| error.under(["streams"]))?;
-        }
-        if let Some(delta) = &self.assets {
-            next.assets = asset_map(delta.apply_rows(&asset_entries(&base.assets)).map_err(|error| error.under(["assets"]))?);
-        }
-        if let Some(delta) = &self.durable_artifacts {
-            next.durable_artifacts = delta.apply_rows(&base.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))?;
-        }
-        if let Some(delta) = &self.calibration {
-            next.calibration.cameras = delta.cameras.apply_rows(&base.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))?;
-            next.calibration.rig = delta.rig.apply_rows(&base.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))?;
-        }
-        if let Some(params) = &self.params {
-            params.apply_rows(&mut next.params);
-        }
-        if let Some(delta) = &self.gcps {
-            next.gcps = delta.apply_rows(&base.gcps).map_err(|error| error.under(["gcps"]))?;
-        }
-        if let Some(results) = &self.results {
-            results.apply_rows(&mut next.results);
-        }
-        Ok(next)
-    }
+impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {}
 
+impl protocol::ColdMutationDiff<RemodelingSnapshot> for RemodelingDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -822,9 +791,50 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut RemodelingSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(delta) = &self.streams {
+            next.streams = delta.apply_rows(&base.streams).map_err(|error| error.under(["streams"]))?;
+        }
+        if let Some(delta) = &self.assets {
+            next.assets = asset_map(delta.apply_rows(&asset_entries(&base.assets)).map_err(|error| error.under(["assets"]))?);
+        }
+        if let Some(delta) = &self.durable_artifacts {
+            next.durable_artifacts = delta.apply_rows(&base.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))?;
+        }
+        if let Some(delta) = &self.calibration {
+            next.calibration.cameras = delta.cameras.apply_rows(&base.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))?;
+            next.calibration.rig = delta.rig.apply_rows(&base.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))?;
+        }
+        if let Some(params) = &self.params {
+            params.apply_rows(&mut next.params);
+        }
+        if let Some(delta) = &self.gcps {
+            next.gcps = delta.apply_rows(&base.gcps).map_err(|error| error.under(["gcps"]))?;
+        }
+        if let Some(results) = &self.results {
+            results.apply_rows(&mut next.results);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
     fn inverse(&self, base: &RemodelingSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -837,10 +847,6 @@ impl DiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
             gcps: self.gcps.as_ref().map(|delta| delta.inverse_rows(&base.gcps)),
             results: self.results.as_ref().map(|results| results.restoring(&base.results)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔖️Apply

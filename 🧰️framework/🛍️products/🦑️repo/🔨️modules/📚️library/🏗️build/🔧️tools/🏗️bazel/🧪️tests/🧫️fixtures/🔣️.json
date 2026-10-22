@@ -26,7 +26,7 @@
           "build": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts build"
+              "command": "repo ./📜️script.ts build"
             },
             "dependsOn": [
               "^build",

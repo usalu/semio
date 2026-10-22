@@ -238,7 +238,7 @@ test("registers exact Bun, Nx, cache, and package closure", () => {
   for (const path of [fixture.transaction.ledgerBoundaries, fixture.transaction.harness, fixture.transaction.suite, fixture.transaction.normalization, fixture.transaction.taxonomy, fixture.transaction.discovery])
     expect(inputs.has(`{workspaceRoot}/${path}`), path).toBe(true);
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(packageJson.scripts[source.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${source.target}`);
+  expect(packageJson.scripts[source.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${source.target}`);
 });
 
 

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import{readFileSync}from"node:fs";
 import{join}from"node:path";
 import{createHash}from"node:crypto";
@@ -19,7 +21,7 @@ export class GraphScript extends BundleScript{
    const registry=readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(this.repoRoot,"📋️build-owners.json"),"utf8")));
    assert.equal(createHash("sha256").update(JSON.stringify(registry)).digest("hex"),graph.admission?.registry,"Current declared registry must match the graph admission");
    checkResourceLeaseControl(actual);const files=buildGraphMembersV1(await workspaceBuildFilesV1(this.repoRoot,this.invocation));checkResourceLeaseControl(actual);
-   const declared=await discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||file==="bun.lock"||file.endsWith(".patch")),{analyzeLockfile:true,catalogProviders:registry.catalogProviders},{workspaceRoot:this.repoRoot,invocation:this.invocation,phaseControl:actual,registry});checkResourceLeaseControl(actual);
+   const declared=await discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{analyzeLockfile:true,catalogProviders:registry.catalogProviders},{workspaceRoot:this.repoRoot,invocation:this.invocation,phaseControl:actual,registry});checkResourceLeaseControl(actual);
    for(const[,contribution]of declared)for(const[name,project]of Object.entries(contribution.projects)){
     checkResourceLeaseControl(actual);const resolved=graph.projects[name];assert.ok(resolved,`Graph omitted ${name}`);
     for(const[targetName,target]of Object.entries(project.targets)){

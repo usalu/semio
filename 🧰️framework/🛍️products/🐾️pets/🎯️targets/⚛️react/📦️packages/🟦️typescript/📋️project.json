@@ -43,7 +43,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -59,7 +59,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       }
     },
@@ -89,7 +89,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts dev",
+        "command": "repo ./📜️script.ts dev",
         "env": {
           "NODE_OPTIONS": "",
           "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",

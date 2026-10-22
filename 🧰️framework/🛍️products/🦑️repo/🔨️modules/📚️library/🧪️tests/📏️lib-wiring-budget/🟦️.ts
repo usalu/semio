@@ -42,7 +42,7 @@ describe("library wiring budget of plugin crates", () => {
     for (const [path, lines] of roots) {
       const pinned = ratchet.entries[path];
       if (lines <= budget) continue;
-      if (pinned === undefined) breaches.push(`${path}: ${lines} lines exceed the ${budget}-line wiring budget; carve it with \`bun ./📜️script.ts new crates\` instead of growing the root`);
+      if (pinned === undefined) breaches.push(`${path}: ${lines} lines exceed the ${budget}-line wiring budget; carve it with \`repo ./📜️script.ts new crates\` instead of growing the root`);
       else if (lines > pinned) breaches.push(`${path}: grew from ${pinned} to ${lines} lines`);
     }
     expect(breaches).toEqual([]);

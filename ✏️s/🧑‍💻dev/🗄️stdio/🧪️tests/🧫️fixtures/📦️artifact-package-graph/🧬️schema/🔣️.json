@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stdio Immutable Graph Publication Fixtures",
+  "type": "object",
+  "required": [
+    "graph",
+    "publication",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "graph": {
+      "type": "object"
+    },
+    "publication": {
+      "type": "object",
+      "required": [
+        "manifestVersion",
+        "graphVersion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "manifestVersion": {
+          "const": 2
+        },
+        "graphVersion": {
+          "const": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "change",
+          "accepted",
+          "schemaAccepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "change": {
+            "enum": [
+              "none",
+              "missing-path",
+              "missing-digest",
+              "relative-path",
+              "invalid-digest",
+              "changed-bytes",
+              "malformed-json",
+              "invalid-graph",
+              "wrong-path",
+              "whole-graph",
+              "manifest-version",
+              "missing-record",
+              "changed-record"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "schemaAccepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

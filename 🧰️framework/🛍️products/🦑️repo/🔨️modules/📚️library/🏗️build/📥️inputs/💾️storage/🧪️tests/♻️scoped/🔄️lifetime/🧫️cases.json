@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "acquired-consumes-before-fresh-capacity",
+      "acquired": true,
+      "failure": "none",
+      "closeFails": false,
+      "expected": [
+        "selected",
+        "scoped",
+        "close",
+        "fresh",
+        "funded"
+      ]
+    },
+    {
+      "id": "deferred-consumes-before-fresh-capacity",
+      "acquired": false,
+      "failure": "none",
+      "closeFails": false,
+      "expected": [
+        "selected",
+        "scoped",
+        "close",
+        "fresh",
+        "funded"
+      ]
+    },
+    {
+      "id": "undefined-primary-survives-close",
+      "acquired": true,
+      "failure": "undefined",
+      "closeFails": true,
+      "expected": [
+        "selected",
+        "scoped",
+        "close"
+      ]
+    },
+    {
+      "id": "identity-primary-survives-close",
+      "acquired": false,
+      "failure": "identity",
+      "closeFails": true,
+      "expected": [
+        "selected",
+        "scoped",
+        "close"
+      ]
+    }
+  ],
+  "nativeCases": [
+    {
+      "retainedReader": false,
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 35651584,
+      "scratchBytes": 4194304
+    },
+    {
+      "retainedReader": true,
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 35651584,
+      "scratchBytes": 4194304
+    }
+  ]
+}

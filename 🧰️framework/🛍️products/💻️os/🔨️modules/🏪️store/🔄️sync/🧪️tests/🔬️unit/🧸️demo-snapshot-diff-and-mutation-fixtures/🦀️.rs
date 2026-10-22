@@ -102,9 +102,9 @@ impl crate::os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
     }
 }
 
-impl MutationDiff<DemoSnapshot> for DemoDiff {
-    
+impl MutationDiff<DemoSnapshot> for DemoDiff {}
 
+impl crate::os_spr::ColdMutationDiff<DemoSnapshot> for DemoDiff {
     fn absorb(&mut self, other: Self) {
         if other.n.is_some() {
             self.n = other.n;
@@ -112,7 +112,7 @@ impl MutationDiff<DemoSnapshot> for DemoDiff {
     }
 
     fn apply(&self, snapshot: &mut DemoSnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
-                if let Some(value) = self.n { snapshot.n = value; }
+        if let Some(value) = self.n { snapshot.n = value; }
         Ok(())
     }
 }

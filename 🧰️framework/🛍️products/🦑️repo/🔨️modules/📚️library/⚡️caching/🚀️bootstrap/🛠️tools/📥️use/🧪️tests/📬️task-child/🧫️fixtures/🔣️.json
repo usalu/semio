@@ -11,7 +11,7 @@
   "files": {
     "nx.json": "{\"plugins\": [], \"analytics\": false, \"cacheDirectory\": \"c\"}",
     "package.json": "{\"name\": \"nx-child-fixture\", \"private\": true}",
-    "project.json": "{\"name\": \"toy\", \"targets\": {\"inspect\": {\"executor\": \"nx:run-commands\", \"cache\": false, \"options\": {\"command\": \"bun ./\\ud83d\\udcdc\\ufe0fscript.ts inspect\", \"cwd\": \".\"}}}}",
+    "project.json": "{\"name\": \"toy\", \"targets\": {\"inspect\": {\"executor\": \"nx:run-commands\", \"cache\": false, \"options\": {\"command\": \"repo ./\\ud83d\\udcdc\\ufe0fscript.ts inspect\", \"cwd\": \".\"}}}}",
     "📜️script.ts": "import {createRequire} from \"node:module\";\nif(process.argv.at(-1)!==\"inspect\")throw Error(\"Original child command required\");const sdk=createRequire(process.env.SEMIO_TEST_SDK_PACKAGE!),data=sdk(\"nx/src/utils/cache-directory\").workspaceDataDirectory,graph=sdk(\"nx/src/project-graph/project-graph\").readCachedProjectGraph();console.log(JSON.stringify({hasProject:!!graph.nodes.toy,sameData:data===process.env.NX_WORKSPACE_DATA_DIRECTORY,data,inheritedData:process.env.NX_WORKSPACE_DATA_DIRECTORY}));\n"
   },
   "guardian": {

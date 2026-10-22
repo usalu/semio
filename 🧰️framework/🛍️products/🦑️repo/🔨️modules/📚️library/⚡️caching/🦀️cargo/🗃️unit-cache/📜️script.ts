@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,fstatSync,mkdirSync,readFileSync,readdirSync,statSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
@@ -8,7 +8,8 @@ import {digestFileV1,emitUnitEventV1,lookupUnitV1,publishUnitV1,restoreUnitV1,ty
 import {lanePathsV1} from "./🧵️lane/🟦️.ts";
 import {buildScriptsEnabledV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
 import {brokerOfV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
-import {collectGarbageV1,measureGcV1,planGcV1} from "./🧹️gc/🟦️.ts";
+import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,planGcV1} from "./🧹️gc/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -118,7 +119,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  }finally{claim?.release();}
 }
 
-/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `stats` summarises the event logs, `plan` and `gc` run the bounded cleanup. */
+/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `stats` summarises the event logs, `plan` and `gc` run the bounded cleanup; `gc --single-flight` is the background collector (one at a time, progress lines on stderr, SIGINT and SIGTERM cancel it). */
 export async function manageV1(args:readonly string[]):Promise<unknown>{
  const [command,...rest]=args,value=(flag:string)=>{const index=rest.indexOf(flag);return index<0?undefined:rest[index+1];},root=resolve(value("--root")??"");
  if(command==="stats"){
@@ -128,11 +129,15 @@ export async function manageV1(args:readonly string[]):Promise<unknown>{
  }
  const capacity=Number(value("--capacity")??0);if(!Number.isSafeInteger(capacity)||capacity<1)throw Error("--capacity <bytes> required");
  if(command==="plan")return planGcV1(measureGcV1(root,capacity,Date.now()));
- if(command==="gc")return collectGarbageV1(root,capacity);
+ if(command==="gc"&&!rest.includes("--single-flight"))return collectGarbageV1(root,capacity);
+ if(command==="gc"){
+  const controller=new AbortController();for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>controller.abort(new Error("cancelled")));
+  return collectGarbageSingleFlightV1(root,capacity,{signal:controller.signal,progress:(done,total)=>{process.stderr.write(JSON.stringify({progress:done,total})+"\n");}});
+ }
  throw Error("Unknown unit-cache command");
 }
 
-if(import.meta.main){
+if(isMainModuleV1(import.meta.url)){
  const argv=process.argv.slice(2);
  if(argv[0]==="--semio-unit-cache"){manageV1(argv.slice(1)).then(result=>{console.log(JSON.stringify(result));},error=>{console.error(String(error?.message??error));process.exitCode=1;});}
  else wrapRustcV1(argv,process.env,process.cwd()).then(status=>{process.exitCode=status;},error=>{console.error(String(error?.message??error));process.exitCode=1;});

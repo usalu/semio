@@ -29,17 +29,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "transforms", kind: "scale-transforms", record: "ScaledTransforms" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::scale_transforms::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::scale_transforms::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de), (z_en, z_de)] = [self.sx, self.sy, self.sz].map(generation3d_label_number);
         let (en, de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
@@ -49,5 +38,20 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for ScaleTransforms
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::scale_transforms::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::scale_transforms::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️ScaleTransforms

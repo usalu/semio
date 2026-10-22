@@ -26,7 +26,7 @@ export async function testNxSourceCacheCustody(workspace: string, output: string
     mkdirSync(inventory, { recursive: true }); writeFileSync(join(inventory, key + ".json"), contract);
     writeFileSync(join(root, "nx.json"), JSON.stringify({ useDaemonProcess: false, plugins: [], tasksRunnerOptions: { default: { runner: "nx/tasks-runners/default", options: {} } } }));
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "source-custody-fixture", private: true, scripts: { build: "nx run fixture:build" } }));
-    writeFileSync(join(root, "project.json"), JSON.stringify({ name: "fixture", root: ".", targets: { build: { executor: "nx:run-commands", cache: true, inputs: [{ env: "SEMIO_SOURCE_CLOSURE_" + key }], outputs: [productOutput], options: { command: "bun ./📜️script.ts build", cwd: "." } } } }));
+    writeFileSync(join(root, "project.json"), JSON.stringify({ name: "fixture", root: ".", targets: { build: { executor: "nx:run-commands", cache: true, inputs: [{ env: "SEMIO_SOURCE_CLOSURE_" + key }], outputs: [productOutput], options: { command: "repo ./📜️script.ts build", cwd: "." } } } }));
     writeFileSync(join(root, "source.json"), JSON.stringify({ value: row.initial }));
     writeFileSync(join(root, "📜️script.ts"), `#!/usr/bin/env bun
 import {existsSync,writeFileSync,readFileSync,mkdirSync} from "node:fs";

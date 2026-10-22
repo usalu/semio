@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import { CanvasPickMenu, cn, ContextMenuController, SelectionMarquee, surfaceClass, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ContextMenuItemSpec, type NodeGraphScene, type PluginContextMenuRequest, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";

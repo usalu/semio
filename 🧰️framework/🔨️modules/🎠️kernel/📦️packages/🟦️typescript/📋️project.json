@@ -30,7 +30,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -50,7 +50,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test localized-label",
+        "command": "repo ./📜️script.ts test localized-label",
         "forwardAllArgs": true
       }
     },
@@ -69,7 +69,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test receipt-port"
+        "command": "repo ./📜️script.ts test receipt-port"
       },
       "metadata": {
         "semio": {

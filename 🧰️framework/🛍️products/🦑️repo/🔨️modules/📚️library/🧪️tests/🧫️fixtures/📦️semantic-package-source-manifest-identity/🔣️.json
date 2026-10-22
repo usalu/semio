@@ -17,7 +17,7 @@
   "facts": {
     "cargoManifestContent": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
     "nodeManifestContent": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
-    "projectManifestContent": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}"
+    "projectManifestContent": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}"
   },
   "cases": [
     {
@@ -152,7 +152,7 @@
         {
           "field": "projectManifestContent",
           "oldValue": "\"targets\":{",
-          "newValue": "\"targets\":{\"test-native\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test-native\",\"forwardAllArgs\":true}},"
+          "newValue": "\"targets\":{\"test-native\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test-native\",\"forwardAllArgs\":true}},"
         }
       ],
       "expected": true
@@ -162,8 +162,8 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
-          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"sourceRoot\": \"🧪️fixture/🧊️source-wgpu\",\n  \"targets\": {\n    \"test\": {\n      \"options\": {\n        \"cwd\": \"🧪️fixture/🧊️source-wgpu\",\n        \"command\": \"bun ./📜️script.ts test\"\n      }\n    }\n  }\n}\n"
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
+          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"sourceRoot\": \"🧪️fixture/🧊️source-wgpu\",\n  \"targets\": {\n    \"test\": {\n      \"options\": {\n        \"cwd\": \"🧪️fixture/🧊️source-wgpu\",\n        \"command\": \"repo ./📜️script.ts test\"\n      }\n    }\n  }\n}\n"
         }
       ],
       "expected": true
@@ -459,7 +459,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{}}"
         }
       ],
@@ -470,7 +470,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":[]}"
         }
       ],
@@ -481,7 +481,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":null}"
         }
       ],
@@ -492,7 +492,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":\"test\"}"
         }
       ],
@@ -503,7 +503,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":null}}"
         }
       ],
@@ -514,7 +514,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":[]}}"
         }
       ],
@@ -525,7 +525,7 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
           "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{}}}"
         }
       ],
@@ -536,8 +536,8 @@
       "changes": [
         {
           "field": "projectManifestContent",
-          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
-          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}},}"
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}},}"
         }
       ],
       "expected": false

@@ -1,0 +1,139 @@
+{
+ "runner": {
+  "unit": "🏗build/🧹cache-gc/🏃runner",
+  "files": {
+   "test.ts": "🏗️build/🧹️cache-gc/🏃️runner/🧪️tests/🟦️.ts",
+   "corpus.json": "🏗️build/🧹️cache-gc/🏃️runner/🧪️tests/🔣️.json",
+   "schema.json": "🏗️build/🧹️cache-gc/🏃️runner/🧪️tests/🧬️schema/🔣️.json",
+   "oracle.py": "🏗️build/🧹️cache-gc/🏃️runner/🧪️tests/🐍️oracle/🐍️.py"
+  },
+  "group": "cache-gc"
+ },
+ "gccommand": {
+  "unit": "🏗build/🧹cache-gc/⌨command",
+  "files": {
+   "test.ts": "🏗️build/🧹️cache-gc/⌨️command/🧪️tests/🧮️arguments/🟦️.ts",
+   "corpus.json": "🏗️build/🧹️cache-gc/⌨️command/🧪️tests/🧮️arguments/🔣️.json",
+   "schema.json": "🏗️build/🧹️cache-gc/⌨️command/🧪️tests/🧮️arguments/🧬️schema/🔣️.json",
+   "oracle.py": "🏗️build/🧹️cache-gc/⌨️command/🧪️tests/🧮️arguments/🐍️oracle/🐍️.py"
+  },
+  "group": "cache-gc"
+ },
+ "leasecli": {
+  "unit": "🏗build/🔒leases/⌨command",
+  "files": {
+   "test.ts": "🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🟦️.ts",
+   "corpus.json": "🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🔣️.json",
+   "schema.json": "🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🧬️schema/🔣️.json",
+   "oracle.py": "🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🐍️oracle/🐍️.py"
+  }
+ },
+ "retry": {
+  "unit": "🏗build/🕸graph/🔁retry",
+  "files": {
+   "test.ts": "🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/🟦️.ts",
+   "corpus.json": "🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/📋️extra.json",
+   "schema.json": "🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/🧬️schema/🔣️.json",
+   "oracle.py": "🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/🐍️oracle/🐍️.py"
+  }
+ },
+ "genfiles": {
+  "unit": "🏗build/🕸graph/🗂generation-files",
+  "files": {
+   "test.ts": "🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🟦️.ts",
+   "corpus.json": "🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🔣️.json",
+   "schema.json": "🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🧬️schema/🔣️.json",
+   "oracle.py": "🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🐍️oracle/🐍️.py"
+  }
+ },
+ "identity-fixed": {
+  "unit": "⚡caching/🚀bootstrap/🛠tools/📦sdk/🪪identity",
+  "files": {
+   "test.ts": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts",
+   "corpus.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🔣️.json",
+   "schema.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "overwrite": true,
+  "expect": {
+   "test.ts": "732bf5014a03081b73d42d006afdfca030a41a4b08a2ea4fa9c62d0bff92ffdd",
+   "corpus.json": "e426003738e3a9b83ef42de99ccca4f901b957e3e7631f3e62f540e37823234e",
+   "schema.json": "6ca7d5ce36a1fb360022bbd76623d74eef7740f06aecdac84bc72ce73ca13264",
+   "oracle.py": "f11952ccecf74f07e3b44a0c1f7247aff9e2d775ee54ec89c96bcfdd1fa7c182"
+  }
+ },
+ "pool-fixed": {
+  "unit": "⚡caching/💾storage/🔒enforcement/🧵session/🏊pool",
+  "files": {
+   "test.ts": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts",
+   "corpus.json": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🔣️.json",
+   "schema.json": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "overwrite": true,
+  "expect": {
+   "test.ts": "acf326847c09af8991cf036cf9d62bc3902fb98ffe1432589cdb7b2242f9b73d",
+   "corpus.json": "504704558d39e9131bc742949518fd9f84092a3b0d155f71ccba30326d76315b",
+   "schema.json": "deb5f115cba5c750843475022192c54c4b852056c0a8048fd5a7999e285c5ac4",
+   "oracle.py": "88f96c54bec47f3dd8ab5879b4c72b4834c49b51eeec174edb0f8b16d8a9eaee"
+  }
+ },
+ "snapshot-fixed": {
+  "unit": "⚡caching/🚀bootstrap/🛠tools/🔏authorizers/📦snapshot",
+  "files": {
+   "test.ts": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts",
+   "corpus.json": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/📋️faults.json",
+   "schema.json": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "overwrite": true,
+  "expect": {
+   "test.ts": "2494b54765f2ff35e9acb4c2980fe62501e7c295bff970b9d7d1be88f2f1f7c8",
+   "corpus.json": "9534f1f85edf09bb868924c2c750925eb1179798b96a6362f63e191006828b55",
+   "schema.json": "2cc4c533ba8f4cf84756a494282555084b9ebea1b9c8058f4ea0c0c651534f35",
+   "oracle.py": "bc1f38b334fd484ab1a28f2c55835630c7167b93ab2680c0cbda2c15c814abfe"
+  }
+ },
+ "patch-fixed": {
+  "unit": "⚡caching/🚀bootstrap/🛠tools/🩹patch",
+  "files": {
+   "test.ts": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts",
+   "corpus.json": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/📋️hunks.json",
+   "schema.json": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "overwrite": true,
+  "expect": {
+   "test.ts": "75193337aadd308ff61b61d08cf8bebd96862db069779bb0f6e2d9372d8b9d5e",
+   "corpus.json": "fabe05453affefd753c3c2584b364dde688855bb2dfd2e8e4e37b19ff3218892",
+   "schema.json": "f6ca43b762cec2cf624860a9ab63b8c0c2cea661c8329af4f41c0a893ef873b0",
+   "oracle.py": "9e591bba1b4f2405a6c412c138b9dc28d9cc56b490765734df3f75ddd310075a"
+  }
+ },
+ "acquisition": {
+  "unit": "⚡caching/🚀bootstrap/🛠tools/📦sdk/📥source/📥acquisition",
+  "files": {
+   "test.ts": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts",
+   "corpus.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🔣️.json",
+   "schema.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "stage": "fixes"
+ },
+ "pristine": {
+  "unit": "⚡caching/🚀bootstrap/🛠tools/📦sdk/📥source/🧊pristine",
+  "files": {
+   "test.ts": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts",
+   "corpus.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🔣️.json",
+   "schema.json": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🧬️schema/🔣️.json",
+   "oracle.py": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🐍️oracle/🐍️.py"
+  },
+  "group": "main",
+  "stage": "fixes"
+ }
+}

@@ -177,7 +177,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "png-import"
       ],
@@ -221,7 +221,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "png-project"
       ],
@@ -265,7 +265,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "png-compare"
       ],
@@ -309,7 +309,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "png-chunk-project"
       ],
@@ -372,7 +372,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "png-chunk-compare"
       ],
@@ -581,7 +581,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-header-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-header-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -629,7 +629,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-palette-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-palette-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -677,7 +677,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-transparency-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-transparency-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -727,7 +727,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-gamma-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-gamma-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -775,7 +775,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-chromaticities-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-chromaticities-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -823,7 +823,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-srgb-intent-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-srgb-intent-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -871,7 +871,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-physical-dims-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-physical-dims-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -919,7 +919,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-timestamp-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-timestamp-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -967,7 +967,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-background-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-background-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1015,7 +1015,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-text-chunk-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-text-chunk-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1063,7 +1063,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-text-chunk-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-text-chunk-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1111,7 +1111,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-text-chunk-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-text-chunk-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1159,7 +1159,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1207,7 +1207,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-unknown-chunk-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-unknown-chunk-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1255,7 +1255,7 @@
         "packageVersion": "0.18.1",
         "engineFamily": "png",
         "engineVersion": "0.18.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-unknown-chunk-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-unknown-chunk-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1307,7 +1307,7 @@
         "packageVersion": "11.3.0",
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",
@@ -1353,7 +1353,7 @@
         "packageVersion": "11.3.0",
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",
@@ -1399,7 +1399,7 @@
         "packageVersion": "11.3.0",
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",

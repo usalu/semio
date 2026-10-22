@@ -202,7 +202,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 pub fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
@@ -215,7 +215,8 @@ where
 /// the fold's effective supersessions. A retained loader steps it under its own deadline.
 pub fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
 where
-    Mutation: super::Mutation<P> + OpBinary,
+    P: Clone,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
@@ -228,7 +229,7 @@ where
 pub fn adopt_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, mut result: EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
 {
     let adopted = take_loaded_replay(envelope, &mut result);
     let retired = result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()));
@@ -243,7 +244,8 @@ where
 /// 🎴️ Writes a finished load replay into `envelope` and takes its reached projection; every untaken owner stays attached to `result`.
 pub fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
-    Mutation: super::Mutation<P> + OpBinary,
+    P: Clone,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
 {
     fill_supersession_targets::<P, Mutation>(envelope)?;
     for (edit_id, inverse) in result.take_rebased_undo_rows() {

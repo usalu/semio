@@ -1,4 +1,4 @@
-//! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*
+//! 🕸️ CLI: `repo ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*
 //! [--policy <laissez-faire|normal|vigilant>]` shells out to `cargo run -p semio-framework-os-run
 //! --release -- <same args>`. This binary owns argv
 //! parsing and studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in
@@ -92,17 +92,17 @@ fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = Strin
     let artifact_by_plugin: HashMap<&str, (&str, &str)> = catalog.plugins.iter().map(|row| (row.plugin_id.as_str(), (row.crate_path.as_str(), row.wasm_out.as_str()))).collect();
     let mut resolved = HashMap::new();
     for plugin_id in plugin_ids.collect::<BTreeSet<_>>() {
-        let (crate_path, wasm_out) = artifact_by_plugin.get(plugin_id.as_str()).ok_or_else(|| format!("plugin `{plugin_id}` is not in the plugin registry — regenerate it: `bun repo run @semio-tech/plugin-registry:generate`"))?;
+        let (crate_path, wasm_out) = artifact_by_plugin.get(plugin_id.as_str()).ok_or_else(|| format!("plugin `{plugin_id}` is not in the plugin registry — regenerate it: `repo run @semio-tech/plugin-registry:generate`"))?;
         let path = repo_root.join(crate_path).join(component_directory).join(wasm_out);
         if !path.is_file() {
-            return Err(format!("plugin `{plugin_id}`'s shipped component is missing at {}; build it: `bun repo run <its crate project>:describe`", path.display()));
+            return Err(format!("plugin `{plugin_id}`'s shipped component is missing at {}; build it: `repo run <its crate project>:describe`", path.display()));
         }
         resolved.insert(plugin_id, path);
     }
     Ok(resolved)
 }
 
-/// 🪪️ One row of the registry's `🔣️plugins.json` (`bun repo run @semio-tech/plugin-registry:generate`
+/// 🪪️ One row of the registry's `🔣️plugins.json` (`repo run @semio-tech/plugin-registry:generate`
 /// output) — only the two fields `resolve_descriptor_paths` needs; every other field (capabilities,
 /// contributes, …) is ignored by ordinary serde (no `deny_unknown_fields` here).
 #[derive(serde::Deserialize)]

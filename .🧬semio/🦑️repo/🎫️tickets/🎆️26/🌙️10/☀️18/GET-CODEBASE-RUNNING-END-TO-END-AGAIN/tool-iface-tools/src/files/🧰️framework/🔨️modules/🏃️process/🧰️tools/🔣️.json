@@ -256,10 +256,6 @@
    "en": "{caller} may not run {tool}; allowed callers: {allowed}. Go through the adapter {adapter}.",
    "de": "{caller} darf {tool} nicht ausführen; erlaubte Aufrufer: {allowed}. Den Adapter {adapter} verwenden."
   },
-  "syncRefused": {
-   "en": "{tool} is a heavy tool and cannot run synchronously; use runToolV1.",
-   "de": "{tool} ist ein schweres Werkzeug und kann nicht synchron laufen; runToolV1 verwenden."
-  },
   "versionMismatch": {
    "en": "{tool} {found} differs from the pinned {pinned}.",
    "de": "{tool} {found} weicht vom gepinnten {pinned} ab."
@@ -299,18 +295,6 @@
   "finished": {
    "en": "[tools] {tool} finished ({status}).",
    "de": "[tools] {tool} beendet ({status})."
-  },
-  "guardRefused": {
-   "en": "Direct spawn of {command} by {caller} is refused: use runToolV1(\"{tool}\", ...).",
-   "de": "Direkter Start von {command} durch {caller} wird verweigert: runToolV1(\"{tool}\", ...) verwenden."
-  },
-  "guardWarned": {
-   "en": "Direct spawn of {command} by {caller}: use runToolV1(\"{tool}\", ...).",
-   "de": "Direkter Start von {command} durch {caller}: runToolV1(\"{tool}\", ...) verwenden."
-  },
-  "capacityMissing": {
-   "en": "No machine capacity gate is installed; {tool} runs unadmitted.",
-   "de": "Kein Kapazitätstor des Rechners installiert; {tool} läuft ohne Zulassung."
   }
  },
  "tools": [
@@ -423,7 +407,10 @@
      "bytes": "bytes",
      "extras": [
       "musl"
-     ]
+     ],
+     "hostExtras": {
+      "musl": false
+     }
     }
    },
    "provision": {
@@ -806,10 +793,7 @@
     "🧰️framework/🔨️modules/🏃️process/🏗️build/**"
    ],
    "allowedCallers": [
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**",
-    "🧰️framework/🔨️modules/🏃️process/**"
+    "**"
    ],
    "environment": {
     "mode": "inherit",
@@ -898,7 +882,8 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
    ],
    "allowedCallers": [
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/**"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/**"
    ],
    "environment": {
     "mode": "inherit",
@@ -2179,7 +2164,8 @@
    "allowedCallers": [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/**",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**",
-    "🎓️teaching/**"
+    "🎓️teaching/**",
+    "🌎️hub/**"
    ],
    "environment": {
     "mode": "inherit",

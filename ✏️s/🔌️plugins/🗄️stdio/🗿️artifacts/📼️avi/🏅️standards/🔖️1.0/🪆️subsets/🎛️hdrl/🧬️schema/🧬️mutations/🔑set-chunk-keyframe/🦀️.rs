@@ -16,7 +16,16 @@ pub struct SetChunkKeyframe {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "chunk-keyframe", kind: "set-chunk-keyframe", record: "SetChunkKeyframe" };
 
-    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set chunk keyframe", "Keyframe-Kennung des Chunks setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::ColdMutation<AviSnapshot>>::ReferenceDiff> {
         let Self { stream_index, index, keyframe } = self;
         protocol::MutationOutcome::new(chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: AviChunkDiff { data: None, keyframe: Some(*keyframe) } }], added: vec![] }))
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set chunk keyframe", "Keyframe-Kennung des Chunks setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

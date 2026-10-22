@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn raises_metallic_without_touching_roughness() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-material-metallic applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("change-material-metallic applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: applied state differs from the committed after-snapshot");
     assert_eq!(produced.materials[0].metallic, 1.0, "the metallic factor must take the payload's absolute value");
     assert_eq!(produced.materials[0].roughness, base.materials[0].roughness, "the sibling roughness factor is a SEPARATE triad and must not move");
@@ -49,9 +49,9 @@ async fn the_undo_change_material_metallic_restores_the_original_factor() {
     assert_eq!(undo.len(), 1, "change-material-metallic undoes as exactly one change-material-metallic");
     let SemioMeshMutation::ChangeMaterialMetallic(restore) = &undo[0] else { panic!("change-material-metallic must undo as itself") };
     assert_eq!(restore.new_metallic, base.materials[0].metallic, "the undo must recapture BASE's own metallic factor");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-material-metallic applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward change-material-metallic applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-material-metallic applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo change-material-metallic applies");
     }
     assert_eq!(current, base, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: the undo did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -108,6 +108,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-material-metallic diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed change-material-metallic diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff did not carry before to after");
 }

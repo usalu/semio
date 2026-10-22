@@ -1,0 +1,384 @@
+{
+ "version": 1,
+ "source": "#[cfg(test)]\npub(crate) use a::{b, c as d, e::f};\nuse crate::x::*;\nfn f() {\n    use std::fmt::{self, Display};\n    use ::core::mem as m;\n}\npub use self::g::h;\n#[allow(unused)] #[doc = \"x\"] use k::l;\nmacro_rules! mm { ($x:ident) => { use $x::y; } }\n",
+ "statements": [
+  {
+   "text": "#[cfg(test)]\npub(crate) use a::{b, c as d, e::f};",
+   "visibility": "pub(crate)",
+   "attributes": [
+    "#[cfg(test)]"
+   ],
+   "keyword": "pub(crate) use",
+   "leaves": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "a",
+      "c"
+     ],
+     "alias": "d",
+     "glob": false
+    },
+    {
+     "path": [
+      "a",
+      "e",
+      "f"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ]
+  },
+  {
+   "text": "use crate::x::*;",
+   "visibility": "",
+   "attributes": [],
+   "keyword": "use",
+   "leaves": [
+    {
+     "path": [
+      "crate",
+      "x"
+     ],
+     "alias": null,
+     "glob": true
+    }
+   ]
+  },
+  {
+   "text": "use std::fmt::{self, Display};",
+   "visibility": "",
+   "attributes": [],
+   "keyword": "use",
+   "leaves": [
+    {
+     "path": [
+      "std",
+      "fmt"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "std",
+      "fmt",
+      "Display"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ]
+  },
+  {
+   "text": "use ::core::mem as m;",
+   "visibility": "",
+   "attributes": [],
+   "keyword": "use",
+   "leaves": [
+    {
+     "path": [
+      "core",
+      "mem"
+     ],
+     "alias": "m",
+     "glob": false
+    }
+   ]
+  },
+  {
+   "text": "pub use self::g::h;",
+   "visibility": "pub",
+   "attributes": [],
+   "keyword": "pub use",
+   "leaves": [
+    {
+     "path": [
+      "self",
+      "g",
+      "h"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ]
+  },
+  {
+   "text": "#[allow(unused)] #[doc = \"x\"] use k::l;",
+   "visibility": "",
+   "attributes": [
+    "#[allow(unused)]",
+    "#[doc = \"x\"]"
+   ],
+   "keyword": "use",
+   "leaves": [
+    {
+     "path": [
+      "k",
+      "l"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ]
+  }
+ ],
+ "skipped": [
+  "use $x::y;",
+  "use a::{b, ;",
+  "use a::*::b;",
+  "use a::{b c};",
+  "let x = u.use;",
+  "fn f() { s.use(1); }",
+  "use ;",
+  "use a::b"
+ ],
+ "binding": [
+  {
+   "leaf": {
+    "path": [
+     "a",
+     "b"
+    ],
+    "alias": null,
+    "glob": false
+   },
+   "expected": "b"
+  },
+  {
+   "leaf": {
+    "path": [
+     "a",
+     "b"
+    ],
+    "alias": "c",
+    "glob": false
+   },
+   "expected": "c"
+  },
+  {
+   "leaf": {
+    "path": [
+     "a"
+    ],
+    "alias": null,
+    "glob": true
+   },
+   "expected": null
+  },
+  {
+   "leaf": {
+    "path": [
+     "a",
+     "b"
+    ],
+    "alias": "_",
+    "glob": false
+   },
+   "expected": null
+  },
+  {
+   "leaf": {
+    "path": [],
+    "alias": null,
+    "glob": false
+   },
+   "expected": null
+  },
+  {
+   "leaf": {
+    "path": [
+     "a"
+    ],
+    "alias": null,
+    "glob": false
+   },
+   "expected": "a"
+  },
+  {
+   "leaf": {
+    "path": [
+     "a",
+     "_"
+    ],
+    "alias": null,
+    "glob": false
+   },
+   "expected": null
+  }
+ ],
+ "render": [
+  {
+   "name": "leaves of one parent group together",
+   "leaves": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "a",
+      "c"
+     ],
+     "alias": "d",
+     "glob": false
+    },
+    {
+     "path": [
+      "x",
+      "y"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "m"
+     ],
+     "alias": null,
+     "glob": true
+    }
+   ],
+   "visibility": "",
+   "attributes": [],
+   "indent": "",
+   "expected": "use a::{b, c as d};\nuse x::y;\nuse m::*;"
+  },
+  {
+   "name": "duplicates collapse",
+   "leaves": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ],
+   "visibility": "pub",
+   "attributes": [],
+   "indent": "",
+   "expected": "pub use a::b;"
+  },
+  {
+   "name": "attributes and indentation precede every statement",
+   "leaves": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "x",
+      "y"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ],
+   "visibility": "pub(crate)",
+   "attributes": [
+    "#[cfg(test)]",
+    "#[allow(x)]"
+   ],
+   "indent": "    ",
+   "expected": "#[cfg(test)]\n    #[allow(x)]\n    pub(crate) use a::b;\n    #[cfg(test)]\n    #[allow(x)]\n    pub(crate) use x::y;"
+  },
+  {
+   "name": "root-level names",
+   "leaves": [
+    {
+     "path": [
+      "a"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "b"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ],
+   "visibility": "",
+   "attributes": [],
+   "indent": "",
+   "expected": "use {a, b};"
+  },
+  {
+   "name": "a single root-level name",
+   "leaves": [
+    {
+     "path": [
+      "a"
+     ],
+     "alias": null,
+     "glob": false
+    }
+   ],
+   "visibility": "",
+   "attributes": [],
+   "indent": "",
+   "expected": "use a;"
+  },
+  {
+   "name": "no leaves",
+   "leaves": [],
+   "visibility": "",
+   "attributes": [],
+   "indent": "",
+   "expected": ""
+  },
+  {
+   "name": "a glob and a name under one parent stay in one group",
+   "leaves": [
+    {
+     "path": [
+      "p",
+      "q"
+     ],
+     "alias": null,
+     "glob": false
+    },
+    {
+     "path": [
+      "p"
+     ],
+     "alias": null,
+     "glob": true
+    }
+   ],
+   "visibility": "",
+   "attributes": [],
+   "indent": "",
+   "expected": "use p::{q, *};"
+  }
+ ]
+}

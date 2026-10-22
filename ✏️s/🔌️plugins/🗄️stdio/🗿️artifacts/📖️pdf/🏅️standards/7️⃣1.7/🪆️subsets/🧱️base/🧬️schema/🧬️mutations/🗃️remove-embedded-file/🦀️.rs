@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "embedded-file", kind: "remove-embedded-file", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_embedded_file(base, &self.id))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.embedded_files.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_embedded_file::SetEmbeddedFile { file: base.embedded_files[index].clone(), index: Some(index) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove embedded-file {}", self.id), &format!("Eingebettete Datei {} entfernen", self.id))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveEmbeddedFile
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveEmbeddedFile> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_embedded_file::SetEmbeddedFile>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_remove_embedded_file(base, &self.id))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.embedded_files.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_embedded_file::SetEmbeddedFile { file: base.embedded_files[index].clone(), index: Some(index) })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

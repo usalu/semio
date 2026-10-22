@@ -1,0 +1,40 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🔣️.json",
+   "after": "abe901494a1d402cb8ee7d761cdc8b116c7bc09826140a8294b99d2c39211e54"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🟦️.ts",
+   "after": "44fc080cd1e2db1cd7eda8ecbbe76636f78425729666eb5e46b0da879b35abb4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🧪️tests/🟦️.ts",
+   "after": "eaf92a714ba8fffa2bfecfb0a1f77194458b5d03b45dd0dcb82f0e6e8a09484a"
+  }
+ ],
+ "edited": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "43143cceaf51ee2076ce81c9a7125a196a34c236b1e99c745aa2bd0288612fa2",
+   "base": "decbb0bb31b83cd701082cc65078e39a74f093c06dfa673a25ceba15f9f7ff0e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts",
+   "after": "2f6d7b7a749ef87cd2f076aa2a7c48a38f55a4028e9e9689df3715fbc6b5405b",
+   "base": "df3354c9e1bbda36c708dbf043e53ffa9cdd8642cadc9c980b986e9022861d5b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts",
+   "after": "a561c0f0611147b68d62ed35fa47f3938224fc7c8f38fdc22fa7b60f91592ae5",
+   "base": "568ff337eef4967a62476cf792921052b38918502089969e067a09c30d872302"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts",
+   "after": "a5dcd328935411ed91447e2715e10dd846765ad5de062987629f903c01c9e126",
+   "base": "62b40198d30e7aeec04924f20af2782a1b5fd426c7a77f34bb26d4b85b15d513"
+  }
+ ]
+}

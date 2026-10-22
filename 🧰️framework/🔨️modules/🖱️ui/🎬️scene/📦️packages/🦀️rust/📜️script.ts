@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { runAdmittedCargoCommandV1, runAdmittedCargoPackageTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -17,8 +17,9 @@ import { fileURLToPath } from "node:url";
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
-const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 
 /** 🎬️ The scene crates, bottom up: the math producers, the pack codec, the doc contract, the product scenes, the surface bridge, then the facade. */
 const SCENE_PACKAGES = ["semio-framework-ui-scene-algebra", "semio-framework-ui-scene-camera", "semio-framework-ui-scene-mesh", "semio-framework-ui-scene-pass", "semio-framework-ui-scene-picking", "semio-framework-ui-scene-pack", "semio-framework-ui-scene-doc", "semio-framework-ui-scene-modelling", "semio-framework-ui-scene-world3d", "semio-framework-ui-scene-node-graph", "semio-framework-ui-scene-plane", "semio-framework-ui-scene-views", "semio-framework-ui-scene-surface", "semio-framework-ui-scene"];
@@ -43,7 +44,7 @@ class CheckWasmScript extends BundleScript {
 }
 //#endregion 🔖️check-wasm
 
-if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript);
+if (isMainModuleV1(import.meta.url)) {
+  const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("check-wasm", CheckWasmScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

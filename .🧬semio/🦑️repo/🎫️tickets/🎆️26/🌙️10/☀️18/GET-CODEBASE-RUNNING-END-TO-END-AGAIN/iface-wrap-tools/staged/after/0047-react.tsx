@@ -1,563 +1,393 @@
-/** 🧱️ The instances layer and the mesh visuals hook of {@link ../🟦️.tsx | World3dHost}.
- *
- * 🧱️ The scene gumball (`🎛️scene-gumball`), instance node (`🧊️instance-node`), point-cloud layer
- * (`☁️point-cloud-layer`), vortex markers (`🌪️vortex-markers`) and instance chrome store
- * (`🪟️instance-chrome-store`) live in the child folders beside this file; `World3dHost` re-exports
- * the public names from the module that owns each of them.
+// #region 🧲️Header
+// 🎨️ framework/products/os/modules/renderer/engine/elements/🏘️SpaceBrowser/component.tsx
+/** 🏘️ `🏘️SpaceBrowser` — the end-user spaces surface `🛂️SpaceAdministration` never was: list
+ * the spaces I can reach, switch between them, create one, see who is a member and who is here right
+ * now, issue an invitation, and redeem one someone sent me. Purely presentational: every mutation
+ * leaves as an intent callback, and `useHubConnection` turns it into a closed `DirectoryCommand` on
+ * the hub's command path (CQRS — this element never performs a CRUD write). Ticket
+ * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2.
  */
-
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
-import { hopTrace } from "@semio-tech/framework-trace";
+// #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { reactHostPort, type GumballHandleKind, type GumballPose, BufferGeometry, EdgesGeometry, Group } from "@semio-tech/ui-react";
-
+import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
+import { Button, PresenceBar, useLabel, type PresencePeer } from "@semio-tech/ui-react";
+import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
+import {
+  INVITE_TTL_CHOICES_SECS_V1,
+  spaceRowInvitableV1,
+  spaceRowWritableV1,
+  type SpaceBrowserPhaseV1,
+  type SpaceMemberPresenceV1,
+  type SpaceRowV1
+} from "@semio-tech/framework/directory/spaces";
+import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
+import { type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
-import { type World3dSubElementPaint } from "../📏️modelling/🟦️.tsx";
-import { type MergeMode } from "@semio-tech/framework";
-import { worldProjectionGumballPlane, WorldLayerStack, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
-import { type WorldEnvironmentRecord, type WorldHoverComponent, type WorldInstanceRecord, type WorldMeshData, type WorldMeshRecord, type WorldSelectionRecord } from "../🔭️scene-schema/🟦️.ts";
-import { useThree } from "../🎨️mesh-render/🟦️.tsx";
-import { type MeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
-import { buildMeshVisuals, disposeMeshVisuals, type MeshVisuals, type VertexPickData } from "../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
-import { world3dComponentInteractionTarget } from "../🔗️instance-selection/🟦️.ts";
-import { applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, clearWorldGumballTransformPreview, GUMBALL_TRANSFORM_EPSILON, gumballLivePreviewDeltaBetweenPoses, isWorldInstanceRootObject3D, isWorldTransformGumballMode, setWorldGumballTransformPreview, worldGumballConfigForProjection, type WorldGumballLivePose, type WorldGumballTransformPreview, type WorldPaintOrigin } from "../🧮️gumball-math/🟦️.ts";
-import { componentPickMergeMode, resolveWorldMergeMode } from "../🎯️marquee-and-bridges/🟦️.tsx";
-import { SceneGumball } from "./🎛️scene-gumball/🟦️.tsx";
-import { WORLD_INSTANCE_UNIT_SCALE, WorldInstanceNode, worldInstanceQuaternion } from "./🧊️instance-node/🟦️.tsx";
-import { createWorldInstanceChromeStore, worldHoverPaintIdV1, WorldInstanceChromeContext } from "./🪟️instance-chrome-store/🟦️.ts";
 
-//#region 🔖️World3dHost
-//#region WorldInstancesLayer
-/** 🧊️ Retains the viewport's existing visual leases for both drawing and accessible publication status. */
-export function useWorldMeshVisuals(meshes:readonly WorldMeshRecord[]):Map<string,MeshVisuals>{
-  const meshVisualsRef = useRef(new Map<string, MeshVisuals>());
-  const retiredMeshVisualsRef = useRef<MeshVisuals[]>([]);
-  const meshVisuals = useMemo(() => {
-    const held = meshVisualsRef.current;
-    const next = new Map<string, MeshVisuals>();
-    const closeSpan = hopTrace.open("mesh.decode", { meshes: meshes.length });
-    let built = 0;
-    for (const mesh of meshes) {
-      const existing = held.get(mesh.id);
-      if (existing && existing.record === mesh) {
-        next.set(mesh.id, existing);
-        continue;
-      }
-      if (existing) retiredMeshVisualsRef.current.push(existing);
-      try{next.set(mesh.id, buildMeshVisuals(mesh));}catch(error){next.set(mesh.id,{record:mesh,geometry:null,border:null,vertexPick:null,edge:null,appearance:null,fault:error instanceof Error?error.message:String(error),closed:false});}
-      built += 1;
-    }
-    for (const [meshId, existing] of held) if (!next.has(meshId)) retiredMeshVisualsRef.current.push(existing);
-    meshVisualsRef.current = next;
-    closeSpan({ built, kept: meshes.length - built });
-    return next;
-  }, [meshes]);
-  useEffect(() => {
-    const retired = retiredMeshVisualsRef.current;
-    retiredMeshVisualsRef.current = [];
-    for (const entry of retired) disposeMeshVisuals(entry);
-  }, [meshVisuals]);
-  useEffect(
-    () => () => {
-      for (const entry of meshVisualsRef.current.values()) disposeMeshVisuals(entry);
-      meshVisualsRef.current = new Map();
-      for (const entry of retiredMeshVisualsRef.current) disposeMeshVisuals(entry);
-      retiredMeshVisualsRef.current = [];
-    },
-    [],
-  );
-  return meshVisuals;
+//#region 🔖️Types
+export interface SpaceBrowserProps {
+  readonly rows: readonly SpaceRowV1[];
+  readonly activeSpaceId: string | null;
+  readonly phase: SpaceBrowserPhaseV1;
+  readonly search: string;
+  readonly members: readonly SpaceMemberPresenceV1[];
+  readonly invite: HubInviteCapabilityV1 | null;
+  readonly redemption: HubRedemptionStateV1;
+  readonly signedIn: boolean;
+  readonly onSearch: (query: string) => void;
+  readonly onOpenSpace: (spaceId: string) => void;
+  readonly onRefresh: () => void;
+  readonly onCreateSpace: (name: string, kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility) => void;
+  readonly onArchiveSpace: (spaceId: string) => void;
+  readonly onCreateInvite: (spaceId: string, role: DirectorySpaceRole, ttlSecs: number) => void;
+  readonly onCopyInvite: () => void;
+  readonly onDismissInvite: () => void;
+  readonly onRedeemInvite: (typed: string) => void;
 }
+//#endregion 🔖️Types
 
-export function WorldInstancesLayer({
-  meshVisuals,
-  instances,
-  meshes,
-  selection,
-  persistentSelectionMode,
-  palette,
-  projectionSpec,
-  onInstancePointerDown,
-  onInstancePointerMove,
-  onLocalHoverRelease,
-  onHoverPaint,
-  onWorldPick,
-  onComponentHover,
-  onPaintAt,
-  gumballDragActive,
-  controllerId,
-  gumballPreviewSourceId,
-  sharedGumballPreview,
-  onGumballDraggingChanged,
-  gumballLiveDispatch,
-  onGumballDragStart,
-  onGumballDrag,
-  onGumballDragEnd,
-  onFaceDragStart,
-  mergedComponentIds,
-  mergedInstanceIds,
-  blockPick,
-  environment,
-  subElementPaint,
-}: {
-  readonly meshVisuals:ReadonlyMap<string,MeshVisuals>;
-  readonly instances: readonly WorldInstanceRecord[];
-  readonly meshes: readonly WorldMeshRecord[];
-  readonly selection: WorldSelectionRecord;
-  /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldMergeMode`'s doc. */
-  readonly persistentSelectionMode: MergeMode;
-  readonly palette: MeshStylePalette;
-  readonly projectionSpec?: WorldProjectionSpec;
-  readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
-  readonly onInstancePointerMove: (id: string | null) => void;
-  /** 🎯️ Subscribes a "the pointer left this pane" listener; returns the unsubscribe. The host fires it
-   * from the canvas root's `pointerleave` so the layer withdraws its local hover claim. */
-  readonly onLocalHoverRelease?: (listener: () => void) => () => void;
-  /** 🩺️ What the hover chrome currently paints (raycast claim merged with the guest echo) — the host
-   * mirrors it onto `data-hover-paint-id` so a probe reads the painted hover, not only the echoed one. */
-  readonly onHoverPaint?: (id: string | null) => void;
-  readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
-  readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
-  readonly onPaintAt?: (objectId: string, u: number, v: number, origin: WorldPaintOrigin) => void;
-  readonly gumballDragActive: boolean;
-  readonly controllerId: string;
-  readonly gumballPreviewSourceId: string;
-  readonly sharedGumballPreview: WorldGumballTransformPreview | null;
-  readonly onGumballDraggingChanged: (dragging: boolean) => void;
-  /** ⚡️ The document owns the mid-drag pose (see `WorldSelectionRecord.gumballLiveDispatch`): no local
-   * instance preview is written or shared, the instances draw whatever `instancesJson` says. */
-  readonly gumballLiveDispatch: boolean;
-  readonly onGumballDragStart?: (kind: GumballHandleKind, before: GumballPose) => void;
-  readonly onGumballDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
-  readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
-  readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
-  /** 🧬️ Live drag-preview merged component id set (null when no marquee drag is in progress). */
-  readonly mergedComponentIds?: readonly number[] | null;
-  /** 🤝️ Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
-  readonly mergedInstanceIds?: readonly string[] | null;
-  /** 🔳️ Disables instance picking; passed for brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
-  readonly blockPick?: boolean;
-  readonly environment?: WorldEnvironmentRecord | null;
-  readonly subElementPaint: World3dSubElementPaint;
-}) {
-  const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
-  const [localHoveredComponent, setLocalHoveredComponent] = useState<WorldHoverComponent | null>(null);
-  const onComponentHoverPainted = useCallback(
-    (args: { objectId: string; mode: string; id: number } | null) => {
-      setLocalHoveredComponent((prior) => {
-        const next = args && args.mode !== "mesh" && args.mode !== "object" ? args : null;
-        if (prior === next || (prior && next && prior.objectId === next.objectId && prior.mode === next.mode && prior.id === next.id)) return prior;
-        return next;
-      });
-      onComponentHover(args);
-    },
-    [onComponentHover],
-  );
-  const hoveredComponent = localHoveredComponent ?? selection.hoveredComponent;
-  const geometries = useMemo(() => {
-    const map = new Map<string, BufferGeometry>();
-    for (const [meshId, entry] of meshVisuals) if (entry.geometry) map.set(meshId, entry.geometry);
-    return map;
-  }, [meshVisuals]);
-  /** 🎨️ Per-meshId border outline geometry, shared by every instance of that mesh — never rebuilt per instance. */
-  const borderGeometries = useMemo(() => {
-    const map = new Map<string, EdgesGeometry>();
-    for (const [meshId, entry] of meshVisuals) if (entry.border) map.set(meshId, entry.border);
-    return map;
-  }, [meshVisuals]);
-  const vertexPickByMeshId = useMemo(() => {
-    const map = new Map<string, VertexPickData | null>();
-    for (const [meshId, entry] of meshVisuals) if (entry.record.data) map.set(meshId, entry.vertexPick);
-    return map;
-  }, [meshVisuals]);
-  const edgeGeometryByMeshId = useMemo(() => {
-    const map = new Map<string, BufferGeometry | null>();
-    for (const [meshId, entry] of meshVisuals) if (entry.record.data) map.set(meshId, entry.edge);
-    return map;
-  }, [meshVisuals]);
-  const targets = useMemo(() => selection.targets ?? { mesh: true, vertex: false, edge: false, face: false }, [selection.targets]);
-  const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
-  const currentComponentIds = new Set(selection.componentIds ?? []);
-  const mergedComponentIdsSet = mergedComponentIds ? new Set(mergedComponentIds) : null;
-  const selectedComponentIds = useMemo(
-    () => (mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds),
-    [currentComponentIds, mergedComponentIdsSet],
-  );
-  const previewComponentIds = useMemo(
-    () => (mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>()),
-    [currentComponentIds, mergedComponentIdsSet],
-  );
-  const analyticComponentIdsByInstance = useMemo(() => {
-    const byInstance = new Map<string, Set<number>>();
-    const byTarget = new Map(instances.map(instance => [instance.interactionId ?? instance.id, instance]));
-    for (const target of selection.gumballSelectionIds ?? []) {
-      const address = /^(.+)\.(vertex|edge|face)\.(0|[1-9][0-9]*)~/.exec(target);
-      if (!address || address[2] !== selectionMode) continue;
-      const instance = byTarget.get(address[1]!);
-      const group = Number(address[3]);
-      if (!instance?.componentSource || !Number.isSafeInteger(group)) continue;
-      const mesh = meshById.get(instance.meshId ?? instance.id);
-      if (!mesh || world3dComponentInteractionTarget([instance], [mesh], instance.id, address[2]!, group)?.id !== target) continue;
-      let groups = byInstance.get(instance.id);
-      if (!groups) byInstance.set(instance.id, groups = new Set());
-      groups.add(group);
+//#region 🔖️Presence
+/** 👥️ Projects the member roster onto the domain-neutral `PresenceBar` peer shape: only members who
+ * are actually connected become peers, so the bar never claims presence it cannot observe. */
+export function spaceBrowserPresencePeersV1(members: readonly SpaceMemberPresenceV1[]): readonly PresencePeer[] {
+  return members.filter((member) => member.online).map((member, index) => ({ actor: `user:${member.userId}`, userId: member.userId, label: member.displayName, role: member.role, color: index }));
+}
+//#endregion 🔖️Presence
+
+//#region 🔖️CreateSpace
+function CreateSpaceForm({ disabled, onCreateSpace }: { readonly disabled: boolean; readonly onCreateSpace: SpaceBrowserProps["onCreateSpace"] }): ReactElement {
+  const id = useId();
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState<DirectorySpaceKind>("atelier");
+  const [visibility, setVisibility] = useState<DirectorySpaceVisibility>("private");
+  const titleLabel = useLabel(hubUiLabel("os.hub.spaces.createTitle"));
+  const nameLabel = useLabel(hubUiLabel("os.hub.spaces.createName"));
+  const kindLabel = useLabel(hubUiLabel("os.hub.spaces.createKind"));
+  const visibilityLabel = useLabel(hubUiLabel("os.hub.spaces.createVisibility"));
+  const atelierLabel = useLabel(hubUiLabel("os.hub.spaces.kindAtelier"));
+  const studioLabel = useLabel(hubUiLabel("os.hub.spaces.kindStudio"));
+  const privateLabel = useLabel(hubUiLabel("os.hub.spaces.visibilityPrivate"));
+  const publicLabel = useLabel(hubUiLabel("os.hub.spaces.visibilityPublic"));
+  const submitLabel = useLabel(hubUiLabel("os.hub.spaces.createSubmit"));
+  const valid = name.trim().length > 0 && !/\p{Cc}/u.test(name);
+
+  const submit = (event: FormEvent): void => {
+    event.preventDefault();
+    if (!disabled && valid) {
+      onCreateSpace(name, kind, visibility);
+      setName("");
     }
-    return byInstance;
-  }, [instances, meshById, selection.gumballSelectionIds, selectionMode]);
-  const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
-  const selectedIds = selection.ids ?? [];
-  const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(), []);
-  reactHostPort.useLayoutEffect(() => {
-    instanceChromeStore.setSnapshot({
-      selectedIds: new Set(selection.ids ?? []),
-      hoveredId: selection.hoveredId ?? null,
-      hoveredKindId: selection.hoveredKindId ?? null,
-      previewInstanceIds: mergedInstanceIdsSet,
-    });
-  }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredKindId, selection.ids]);
-  const handleLocalInstancePointerMove = useCallback(
-    (id: string | null) => {
-      instanceChromeStore.setLocalHover(id);
-      onInstancePointerMove(id);
-    },
-    [instanceChromeStore, onInstancePointerMove],
-  );
-  reactHostPort.useEffect(() => {
-    if (!onLocalHoverRelease) return undefined;
-    return onLocalHoverRelease(() => instanceChromeStore.setLocalHover(undefined));
-  }, [instanceChromeStore, onLocalHoverRelease]);
-  reactHostPort.useEffect(() => {
-    if (!onHoverPaint) return undefined;
-    const publish = () => onHoverPaint(worldHoverPaintIdV1(instanceChromeStore.localHover(), instanceChromeStore.getSnapshot().hoveredId));
-    publish();
-    return instanceChromeStore.subscribe(publish);
-  }, [instanceChromeStore, onHoverPaint]);
-  const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
-  const transformMode = selection.transformMode;
-  const transformGumballMode = isWorldTransformGumballMode(transformMode);
-  const gumballConfig = useMemo(() => {
-    if (selection.gumballConfig) {
-      const plane = worldProjectionGumballPlane(projectionSpec);
-      return plane ? { ...selection.gumballConfig, plane } : selection.gumballConfig;
-    }
-    return worldGumballConfigForProjection(transformMode ?? "move", projectionSpec);
-  }, [selection.gumballConfig, transformMode, projectionSpec]);
-  const paintMode = selection.interactionMode === "paint";
-  const gumballVisible = Boolean(selection.gumballActive) && transformGumballMode && !paintMode;
-  const invalidate = useThree((state) => state.invalidate);
-  const instanceRootsRef = useRef(new Map<string, Group>());
-  const gumballLiveBasesRef = useRef(new Map<string, WorldGumballLivePose>());
-  /** ⚡️ Final local poses held across the post-drag React frame(s) until `instancesJson` catches up — prevents a one-frame snap-back to the pre-drag pose. */
-  const gumballCommitHoldRef = useRef(new Map<string, WorldGumballLivePose>());
-  const gumballLiveStartPoseRef = useRef<GumballPose | null>(null);
-  const gumballLivePoseRef = useRef<GumballPose | null>(null);
-  const gumballLiveKindRef = useRef<GumballHandleKind | null>(null);
-  const gumballPreviewPivotRef = useRef<readonly [number, number, number]>([0, 0, 0]);
-
-  const publishGumballPreview = useCallback(
-    (before: GumballPose, after: GumballPose, handleKind: GumballHandleKind | null, instanceIds: readonly string[]) => {
-      if (!controllerId || instanceIds.length === 0) return;
-      setWorldGumballTransformPreview(controllerId, {
-        sourceId: gumballPreviewSourceId,
-        transformMode,
-        handleKind,
-        before,
-        after,
-        instanceIds,
-        pivot: gumballPreviewPivotRef.current,
-      });
-    },
-    [controllerId, gumballPreviewSourceId, transformMode],
-  );
-
-  const registerInstanceRoot = useCallback((id: string, group: Group | null) => {
-    if (isWorldInstanceRootObject3D(group)) instanceRootsRef.current.set(id, group);
-    else instanceRootsRef.current.delete(id);
-  }, []);
-
-  const writeGumballPreviewPoses = useCallback(
-    (poses: ReadonlyMap<string, WorldGumballLivePose>) => {
-      for (const [id, pose] of poses) {
-        const root = instanceRootsRef.current.get(id);
-        if (!root) continue;
-        applyGumballLivePreviewPoseToObject3D(root, pose);
-      }
-      invalidate();
-    },
-    [invalidate],
-  );
-
-  const applyGumballLivePreview = useCallback(
-    (before: GumballPose, after: GumballPose, handleKind: GumballHandleKind | null) => {
-      const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
-      const poses = new Map<string, WorldGumballLivePose>();
-      for (const [id, base] of gumballLiveBasesRef.current) {
-        poses.set(id, delta ? applyGumballLivePreviewDeltaToPose(base, delta) : base);
-      }
-      writeGumballPreviewPoses(poses);
-      publishGumballPreview(before, after, handleKind, [...gumballLiveBasesRef.current.keys()]);
-      return poses;
-    },
-    [publishGumballPreview, transformMode, writeGumballPreviewPoses],
-  );
-
-  const applySharedGumballPreview = useCallback(
-    (preview: WorldGumballTransformPreview) => {
-      const delta = gumballLivePreviewDeltaBetweenPoses(preview.transformMode, preview.before, preview.after, preview.handleKind ?? undefined);
-      const poses = new Map<string, WorldGumballLivePose>();
-      for (const id of preview.instanceIds) {
-        const instance = instances.find((entry) => entry.id === id);
-        if (!instance) continue;
-        const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-        const scale = instance.scale ?? [1, 1, 1];
-        const rotation = instance.rotation ?? [0, 0, 0, 1];
-        const base: WorldGumballLivePose = {
-          position: [position[0], position[1], position[2]],
-          quaternion: [rotation[0], rotation[1], rotation[2], rotation[3]],
-          scale: [scale[0], scale[1], scale[2]],
-        };
-        poses.set(id, delta ? applyGumballLivePreviewDeltaToPose(base, delta) : base);
-      }
-      writeGumballPreviewPoses(poses);
-    },
-    [instances, writeGumballPreviewPoses],
-  );
-
-  const resetGumballPreviewPosesFromInstances = useCallback(() => {
-    for (const instance of instances) {
-      const root = instanceRootsRef.current.get(instance.id);
-      if (!root) continue;
-      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-      const scale = instance.scale ?? [1, 1, 1];
-      const rotation = instance.rotation ?? [0, 0, 0, 1];
-      applyGumballLivePreviewPoseToObject3D(root, {
-        position: [position[0], position[1], position[2]],
-        quaternion: [rotation[0], rotation[1], rotation[2], rotation[3]],
-        scale: [scale[0], scale[1], scale[2]],
-      });
-    }
-    invalidate();
-  }, [instances, invalidate]);
-
-  useLayoutEffect(() => {
-    const before = gumballLiveStartPoseRef.current;
-    const after = gumballLivePoseRef.current;
-    if (gumballDragActive && before && after) {
-      applyGumballLivePreview(before, after, gumballLiveKindRef.current);
-      return;
-    }
-    if (!gumballDragActive && sharedGumballPreview && sharedGumballPreview.sourceId !== gumballPreviewSourceId) {
-      applySharedGumballPreview(sharedGumballPreview);
-      return;
-    }
-    if (!gumballDragActive && !sharedGumballPreview && gumballCommitHoldRef.current.size === 0) {
-      resetGumballPreviewPosesFromInstances();
-      return;
-    }
-    const hold = gumballCommitHoldRef.current;
-    if (hold.size === 0) return;
-    writeGumballPreviewPoses(hold);
-    let allMatch = true;
-    for (const [id, pose] of hold) {
-      const instance = instances.find((entry) => entry.id === id);
-      if (!instance) {
-        allMatch = false;
-        continue;
-      }
-      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-      const scale = instance.scale ?? [1, 1, 1];
-      const rotation = instance.rotation ?? [0, 0, 0, 1];
-      if (
-        Math.abs(position[0] - pose.position[0]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(position[1] - pose.position[1]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(position[2] - pose.position[2]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(scale[0] - pose.scale[0]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(scale[1] - pose.scale[1]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(scale[2] - pose.scale[2]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(rotation[0] - pose.quaternion[0]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(rotation[1] - pose.quaternion[1]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(rotation[2] - pose.quaternion[2]) > GUMBALL_TRANSFORM_EPSILON ||
-        Math.abs(rotation[3] - pose.quaternion[3]) > GUMBALL_TRANSFORM_EPSILON
-      ) {
-        allMatch = false;
-      }
-    }
-    if (allMatch) hold.clear();
-  }, [applyGumballLivePreview, applySharedGumballPreview, gumballDragActive, gumballPreviewSourceId, instances, resetGumballPreviewPosesFromInstances, sharedGumballPreview, writeGumballPreviewPoses]);
-
-  useEffect(
-    () => () => {
-      clearWorldGumballTransformPreview(controllerId, gumballPreviewSourceId);
-    },
-    [controllerId, gumballPreviewSourceId],
-  );
-
-  const handleGumballDraggingChanged = useCallback(
-    (dragging: boolean) => {
-      if (dragging) gumballCommitHoldRef.current.clear();
-      onGumballDraggingChanged(dragging);
-    },
-    [onGumballDraggingChanged],
-  );
-
-  const handleGumballDragStart = useCallback(
-    (kind: GumballHandleKind, before: GumballPose) => {
-      if (gumballLiveDispatch) {
-        gumballLiveBasesRef.current.clear();
-        gumballCommitHoldRef.current.clear();
-        onGumballDragStart?.(kind, before);
-        return;
-      }
-      gumballPreviewPivotRef.current = selection.gumballTarget ?? [before.position[0], before.position[1], before.position[2]];
-      const bases = new Map<string, WorldGumballLivePose>();
-      for (const id of selectedIds) {
-        const root = instanceRootsRef.current.get(id);
-        if (!root) continue;
-        bases.set(id, {
-          position: [root.position.x, root.position.y, root.position.z],
-          quaternion: [root.quaternion.x, root.quaternion.y, root.quaternion.z, root.quaternion.w],
-          scale: [root.scale.x, root.scale.y, root.scale.z],
-        });
-      }
-      gumballLiveBasesRef.current = bases;
-      gumballCommitHoldRef.current.clear();
-      gumballLiveStartPoseRef.current = before;
-      gumballLivePoseRef.current = before;
-      gumballLiveKindRef.current = kind;
-      publishGumballPreview(before, before, kind, selectedIds);
-      onGumballDragStart?.(kind, before);
-    },
-    [gumballLiveDispatch, onGumballDragStart, publishGumballPreview, selectedIds, selection.gumballTarget],
-  );
-
-  const handleGumballDrag = useCallback(
-    (kind: GumballHandleKind, pose: GumballPose) => {
-      if (gumballLiveDispatch) {
-        onGumballDrag?.(kind, pose);
-        return;
-      }
-      const before = gumballLiveStartPoseRef.current ?? pose;
-      gumballLiveStartPoseRef.current = before;
-      gumballLivePoseRef.current = pose;
-      gumballLiveKindRef.current = kind;
-      applyGumballLivePreview(before, pose, kind);
-      onGumballDrag?.(kind, pose);
-    },
-    [applyGumballLivePreview, gumballLiveDispatch, onGumballDrag],
-  );
-
-  const handleGumballDragEnd = useCallback(
-    (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      if (gumballLiveDispatch) {
-        onGumballDragEnd(kind, before, after);
-        return;
-      }
-      const start = gumballLiveStartPoseRef.current ?? before;
-      const finals = applyGumballLivePreview(start, after, kind);
-      gumballCommitHoldRef.current = finals;
-      gumballLiveBasesRef.current.clear();
-      gumballLiveStartPoseRef.current = null;
-      gumballLivePoseRef.current = null;
-      gumballLiveKindRef.current = null;
-      clearWorldGumballTransformPreview(controllerId, gumballPreviewSourceId);
-      onGumballDragEnd(kind, before, after);
-    },
-    [applyGumballLivePreview, controllerId, gumballLiveDispatch, gumballPreviewSourceId, onGumballDragEnd],
-  );
-
-  const mergeMode = useCallback(
-    (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)),
-    [selection.selectionMergeMode, persistentSelectionMode],
-  );
-
-  const paintFromHit = useCallback((objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }, origin: WorldPaintOrigin) => {
-    if (!onPaintAt) return;
-    let u = event.uv?.x;
-    let v = event.uv?.y;
-    if (u == null || v == null) {
-      if (event.faceIndex == null || !mesh.indices.length) return;
-      const i0 = mesh.indices[event.faceIndex * 3] ?? 0;
-      const i1 = mesh.indices[event.faceIndex * 3 + 1] ?? 0;
-      const i2 = mesh.indices[event.faceIndex * 3 + 2] ?? 0;
-      if (!mesh.uvs || mesh.uvs.length < 6) return;
-      u = (mesh.uvs[i0 * 2]! + mesh.uvs[i1 * 2]! + mesh.uvs[i2 * 2]!) / 3;
-      v = (mesh.uvs[i0 * 2 + 1]! + mesh.uvs[i1 * 2 + 1]! + mesh.uvs[i2 * 2 + 1]!) / 3;
-    }
-    onPaintAt(objectId, u, v, origin);
-  }, [onPaintAt]);
+  };
 
   return (
-    <WorldInstanceChromeContext.Provider value={instanceChromeStore}>
-    <WorldLayerStack>
-      <group>
-        {instances.map((instance, index) => {
-          const meshId = instance.meshId ?? instance.id;
-          const meshRecord = meshById.get(meshId);
-          const meshData = meshRecord?.data;
-          const geometry = geometries.get(meshId);
-          const position = instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0];
-          const scale = instance.scale ?? WORLD_INSTANCE_UNIT_SCALE;
-          const quaternion = worldInstanceQuaternion(instance);
-          const isActiveObject = instance.id === selection.activeObjectId || (instance.interactionId != null && instance.interactionId === selection.activeObjectId);
-          const componentIds = instance.componentSource ? analyticComponentIdsByInstance.get(instance.id) ?? new Set<number>() : isActiveObject ? selectedComponentIds : new Set<number>();
-          const selectedIds = instance.componentSource && isActiveObject && mergedComponentIdsSet ? new Set([...componentIds].filter(id => mergedComponentIdsSet.has(id))) : componentIds;
-          return (
-            <WorldInstanceNode
-              key={instance.id}
-              instance={instance}
-              previewInstanceSelected={undefined}
-              index={index}
-              meshRecord={meshRecord}
-              meshData={meshData}
-              geometry={geometry}
-              appearance={meshVisuals.get(meshId)?.appearance}
-              borderGeometry={borderGeometries.get(meshId)}
-              palette={palette}
-              vertexPick={vertexPickByMeshId.get(meshId) ?? null}
-              edgeGeometry={edgeGeometryByMeshId.get(meshId) ?? null}
-              paintTextureBase64={meshData?.paintTextureBase64}
-              position={position as [number, number, number]}
-              scale={scale as [number, number, number]}
-              quaternion={quaternion}
-              targets={targets}
-              activeObjectId={selection.activeObjectId ?? undefined}
-              selectionMode={selectionMode}
-              selectedComponentIds={selectedIds}
-              previewComponentIds={previewComponentIds}
-              hoveredComponent={hoveredComponent}
-              showEdges={selection.showEdges}
-              pickEnabled={pickEnabled}
-              onPaintAt={onPaintAt}
-              paintFromHit={paintFromHit}
-              flatShading={instance.smoothShading === false}
-              onInstancePointerDown={onInstancePointerDown}
-              onInstancePointerMove={handleLocalInstancePointerMove}
-              onWorldPick={onWorldPick}
-              onComponentHover={onComponentHoverPainted}
-              mergeMode={mergeMode}
-              faceDragActive={selection.faceDragActive === true}
-              onFaceDragStart={onFaceDragStart}
-              environmentMaterial={environment?.material}
-              environmentShadowEnabled={environment?.shadow?.enabled === true}
-              subElementPaint={subElementPaint}
-              onRootRef={registerInstanceRoot}
-            />
-          );
-        })}
-      </group>
-      <SceneGumball
-        target={selection.gumballTarget}
-        config={gumballConfig}
-        active={gumballVisible}
-        onDraggingChanged={handleGumballDraggingChanged}
-        onDragStart={handleGumballDragStart}
-        onDrag={handleGumballDrag}
-        onDragEnd={handleGumballDragEnd}
-      />
-    </WorldLayerStack>
-    </WorldInstanceChromeContext.Provider>
+    <form aria-label={titleLabel} onSubmit={submit} className="flex flex-col gap-2">
+      <h3 className="text-sm font-medium">{titleLabel}</h3>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`${id}-name`} className="text-xs text-muted-foreground">{nameLabel}</label>
+        <input id={`${id}-name`} data-element-alias="os.hub.spaces.createName" name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <label htmlFor={`${id}-kind`} className="text-xs text-muted-foreground">{kindLabel}</label>
+          <select id={`${id}-kind`} value={kind} disabled={disabled} onChange={(event) => setKind(event.target.value === "studio" ? "studio" : "atelier")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+            <option value="atelier">{atelierLabel}</option>
+            <option value="studio">{studioLabel}</option>
+          </select>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <label htmlFor={`${id}-visibility`} className="text-xs text-muted-foreground">{visibilityLabel}</label>
+          <select id={`${id}-visibility`} value={visibility} disabled={disabled} onChange={(event) => setVisibility(event.target.value === "public" ? "public" : "private")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+            <option value="private">{privateLabel}</option>
+            <option value="public">{publicLabel}</option>
+          </select>
+        </div>
+      </div>
+      <Button id="os.hub.spaces.createSubmit" icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
+    </form>
   );
 }
-//#endregion WorldInstancesLayer
-//#endregion 🔖️World3dHost
+//#endregion 🔖️CreateSpace
+
+//#region 🔖️Invite
+function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopyInvite, onDismissInvite, onRedeemInvite }: {
+  readonly row: SpaceRowV1 | null;
+  readonly invite: SpaceBrowserProps["invite"];
+  readonly redemption: HubRedemptionStateV1;
+  readonly disabled: boolean;
+  readonly onCreateInvite: SpaceBrowserProps["onCreateInvite"];
+  readonly onCopyInvite: SpaceBrowserProps["onCopyInvite"];
+  readonly onDismissInvite: SpaceBrowserProps["onDismissInvite"];
+  readonly onRedeemInvite: SpaceBrowserProps["onRedeemInvite"];
+}): ReactElement {
+  const id = useId();
+  const [role, setRole] = useState<DirectorySpaceRole>("spectator");
+  const [ttlSecs, setTtlSecs] = useState<number>(INVITE_TTL_CHOICES_SECS_V1[1]);
+  const [typed, setTyped] = useState("");
+  const titleLabel = useLabel(hubUiLabel("os.hub.invite.title"));
+  const createTitleLabel = useLabel(hubUiLabel("os.hub.invite.createTitle"));
+  const roleLabel = useLabel(hubUiLabel("os.hub.invite.role"));
+  const expiryLabel = useLabel(hubUiLabel("os.hub.invite.expiry"));
+  const hourLabel = useLabel(hubUiLabel("os.hub.invite.expiryHour"));
+  const dayLabel = useLabel(hubUiLabel("os.hub.invite.expiryDay"));
+  const weekLabel = useLabel(hubUiLabel("os.hub.invite.expiryWeek"));
+  const createLabel = useLabel(hubUiLabel("os.hub.invite.create"));
+  const readyLabel = useLabel(hubUiLabel("os.hub.invite.ready"));
+  const copyLabel = useLabel(hubUiLabel("os.hub.invite.copy"));
+  const copiedLabel = useLabel(hubUiLabel("os.hub.invite.copied"));
+  const copyFailedLabel = useLabel(hubUiLabel("os.hub.invite.copyFailed"));
+  const dismissLabel = useLabel(hubUiLabel("os.hub.invite.dismiss"));
+  const redeemTitleLabel = useLabel(hubUiLabel("os.hub.invite.redeemTitle"));
+  const redeemFieldLabel = useLabel(hubUiLabel("os.hub.invite.redeemField"));
+  const redeemLabel = useLabel(hubUiLabel("os.hub.invite.redeem"));
+  const redeemingLabel = useLabel(hubUiLabel("os.hub.invite.redeeming"));
+  const redeemedLabel = useLabel(hubUiLabel("os.hub.invite.redeemed"));
+  const authorLabel = useLabel(hubUiLabel("os.hub.spaces.roleAuthor"));
+  const spectatorLabel = useLabel(hubUiLabel("os.hub.spaces.roleSpectator"));
+  const errorInvalid = useLabel(hubUiLabel("os.hub.invite.errorInvalid"));
+  const errorExpired = useLabel(hubUiLabel("os.hub.invite.errorExpired"));
+  const errorAlready = useLabel(hubUiLabel("os.hub.invite.errorAlreadyMember"));
+  const errorUnauthorized = useLabel(hubUiLabel("os.hub.invite.errorUnauthorized"));
+  const errorUnreachable = useLabel(hubUiLabel("os.hub.invite.errorUnreachable"));
+  const errorRefused = useLabel(hubUiLabel("os.hub.invite.errorRefused"));
+  const errorCancelled = useLabel(hubUiLabel("os.hub.invite.errorCancelled"));
+
+  const redemptionError = redemption.error === null
+    ? null
+    : redemption.error === "invalid-invite"
+      ? errorInvalid
+      : redemption.error === "expired-invite"
+        ? errorExpired
+        : redemption.error === "already-member"
+          ? errorAlready
+          : redemption.error === "unauthorized"
+            ? errorUnauthorized
+            : redemption.error === "unreachable"
+              ? errorUnreachable
+              : redemption.error === "cancelled"
+                ? errorCancelled
+                : errorRefused;
+
+  return (
+    <section aria-label={titleLabel} className="flex flex-col gap-3 border-t pt-3">
+      <h3 className="text-sm font-medium">{titleLabel}</h3>
+
+      {row === null || !spaceRowInvitableV1(row) ? null : (
+        <form
+          aria-label={createTitleLabel}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!disabled) onCreateInvite(row.id, role, ttlSecs);
+          }}
+          className="flex flex-col gap-2"
+        >
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <label htmlFor={`${id}-role`} className="text-xs text-muted-foreground">{roleLabel}</label>
+              <select id={`${id}-role`} data-element-alias="os.hub.invite.role" value={role} disabled={disabled} onChange={(event) => setRole(event.target.value === "author" ? "author" : "spectator")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+                <option value="spectator">{spectatorLabel}</option>
+                <option value="author">{authorLabel}</option>
+              </select>
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <label htmlFor={`${id}-ttl`} className="text-xs text-muted-foreground">{expiryLabel}</label>
+              <select id={`${id}-ttl`} data-element-alias="os.hub.invite.expiry" value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+                <option value={String(INVITE_TTL_CHOICES_SECS_V1[0])}>{hourLabel}</option>
+                <option value={String(INVITE_TTL_CHOICES_SECS_V1[1])}>{dayLabel}</option>
+                <option value={String(INVITE_TTL_CHOICES_SECS_V1[2])}>{weekLabel}</option>
+              </select>
+            </div>
+          </div>
+          <Button id="os.hub.invite.create" icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
+        </form>
+      )}
+
+      {invite === null ? null : (
+        <div role="status" aria-live="polite" data-semio-hub-invite={invite.spaceId} className="flex flex-col gap-2 rounded-sm border px-single py-1">
+          <p className="text-xs text-muted-foreground">{readyLabel}</p>
+          <output htmlFor={`${id}-invite`} className="break-all text-xs">{invite.link}</output>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button id="os.hub.invite.copy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopyInvite}>{copyLabel}</Button>
+            <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismissInvite}>{dismissLabel}</Button>
+          </div>
+          {invite.copy === "copied" ? <p className="text-xs">{copiedLabel}</p> : null}
+          {invite.copy === "failed" ? <p role="alert" className="text-xs text-destructive">{copyFailedLabel}</p> : null}
+        </div>
+      )}
+
+      <form
+        aria-label={redeemTitleLabel}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (redemption.phase !== "redeeming") onRedeemInvite(typed);
+        }}
+        className="flex flex-col gap-2"
+      >
+        <label htmlFor={`${id}-redeem`} className="text-xs text-muted-foreground">{redeemFieldLabel}</label>
+        <input
+          id={`${id}-redeem`}
+          data-element-alias="os.hub.invite.redeemField"
+          name="invitation"
+          required
+          value={typed}
+          disabled={redemption.phase === "redeeming"}
+          aria-invalid={redemption.error !== null}
+          aria-describedby={redemption.error === null ? undefined : `${id}-redeem-error`}
+          onChange={(event) => setTyped(event.target.value)}
+          className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
+        />
+        <Button icon="unlock" type="submit" variant="outline" aria-busy={redemption.phase === "redeeming"} aria-label={redemption.phase === "redeeming" ? redeemingLabel : redeemLabel} disabled={redemption.phase === "redeeming" || typed.trim().length === 0}>
+          {redemption.phase === "redeeming" ? redeemingLabel : redeemLabel}
+        </Button>
+        {redemption.phase === "redeemed" ? <p role="status" aria-live="polite" className="text-xs">{redeemedLabel}</p> : null}
+        {redemptionError === null ? null : <p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-destructive">{redemptionError}</p>}
+      </form>
+    </section>
+  );
+}
+//#endregion 🔖️Invite
+
+//#region 🔖️Row
+/** 🏠️ One space row: an open button carrying the whole accessible name (space, role, and whether it
+ * is the one currently open) plus an archive control only where the caller may write. */
+function SpaceRow({ row, active, busy, roleText, currentLabel, onOpenSpace, onArchiveSpace }: {
+  readonly row: SpaceRowV1;
+  readonly active: boolean;
+  readonly busy: boolean;
+  readonly roleText: string;
+  readonly currentLabel: string;
+  readonly onOpenSpace: SpaceBrowserProps["onOpenSpace"];
+  readonly onArchiveSpace: SpaceBrowserProps["onArchiveSpace"];
+}): ReactElement {
+  const openLabel = useLabel(hubUiLabel("os.hub.spaces.open"), { name: row.name });
+  const archiveLabel = useLabel(hubUiLabel("os.hub.spaces.archive"), { name: row.name });
+  const membersLabel = useLabel(hubUiLabel("os.hub.spaces.memberCount"), { count: row.memberCount });
+  const documentsLabel = useLabel(hubUiLabel("os.hub.spaces.documentCount"), { count: row.documentCount });
+  const onlineLabel = useLabel(hubUiLabel("os.hub.spaces.onlineCount"), { count: row.activeConnections });
+  return (
+    <li data-space-id={row.id} data-space-access={row.access} className="flex flex-col gap-1 rounded-sm border px-single py-1 sm:flex-row sm:items-center sm:justify-between">
+      <button
+        type="button"
+        aria-current={active ? "true" : undefined}
+        aria-label={`${openLabel} — ${roleText}${active ? ` (${currentLabel})` : ""}`}
+        onClick={() => onOpenSpace(row.id)}
+        className="min-w-0 flex-1 text-left text-sm"
+      >
+        <span className="block truncate font-medium">{row.name}</span>
+        <span className="block text-xs text-muted-foreground">{`${roleText} · ${membersLabel} · ${documentsLabel}${row.activeConnections > 0 ? ` · ${onlineLabel}` : ""}`}</span>
+      </button>
+      {spaceRowWritableV1(row) ? (
+        <Button icon="file-archive" type="button" variant="outline" disabled={busy} aria-label={archiveLabel} onClick={() => onArchiveSpace(row.id)}>
+          {archiveLabel}
+        </Button>
+      ) : null}
+    </li>
+  );
+}
+//#endregion 🔖️Row
+
+//#region 🔖️Browser
+/** 🏘️ The surface. A `role="list"` of spaces where each row's open control is a real button carrying
+ * `aria-current` for the active space, a search box, a live status line for the load/mutate phase, a
+ * member roster with presence, the create form, and the invitation panel. Single column at phone
+ * width; the roster moves beside the list from `md:` up. */
+export function SpaceBrowser({
+  rows,
+  activeSpaceId,
+  phase,
+  search,
+  members,
+  invite,
+  redemption,
+  signedIn,
+  onSearch,
+  onOpenSpace,
+  onRefresh,
+  onCreateSpace,
+  onArchiveSpace,
+  onCreateInvite,
+  onCopyInvite,
+  onDismissInvite,
+  onRedeemInvite,
+}: SpaceBrowserProps): ReactElement {
+  const id = useId();
+  const title = useLabel(hubUiLabel("os.hub.spaces.title"));
+  const listLabel = useLabel(hubUiLabel("os.hub.spaces.list"));
+  const searchLabel = useLabel(hubUiLabel("os.hub.spaces.search"));
+  const currentLabel = useLabel(hubUiLabel("os.hub.spaces.current"));
+  const emptyLabel = useLabel(hubUiLabel("os.hub.spaces.empty"));
+  const noMatchesLabel = useLabel(hubUiLabel("os.hub.spaces.noMatches"));
+  const loadingLabel = useLabel(hubUiLabel("os.hub.spaces.loading"));
+  const staleLabel = useLabel(hubUiLabel("os.hub.spaces.stale"));
+  const submittingLabel = useLabel(hubUiLabel("os.hub.spaces.submitting"));
+  const failedLabel = useLabel(hubUiLabel("os.hub.spaces.failed"));
+  const refreshLabel = useLabel(hubUiLabel("os.hub.spaces.refresh"));
+  const authorLabel = useLabel(hubUiLabel("os.hub.spaces.roleAuthor"));
+  const spectatorLabel = useLabel(hubUiLabel("os.hub.spaces.roleSpectator"));
+  const publicLabel = useLabel(hubUiLabel("os.hub.spaces.accessPublic"));
+  const membersLabel = useLabel(hubUiLabel("os.hub.spaces.members"));
+  const onlineLabel = useLabel(hubUiLabel("os.hub.spaces.online"));
+  const awayLabel = useLabel(hubUiLabel("os.hub.spaces.away"));
+  const ownerLabel = useLabel(hubUiLabel("os.hub.spaces.owner"));
+  const activeRow = rows.find((row) => row.id === activeSpaceId) ?? null;
+  const busy = phase === "submitting";
+  const statusText = phase === "loading" ? loadingLabel : phase === "stale" ? staleLabel : phase === "submitting" ? submittingLabel : phase === "failed" ? failedLabel : "";
+  const peers = spaceBrowserPresencePeersV1(members);
+
+  return (
+    <section aria-labelledby={`${id}-title`} data-semio-hub-spaces-phase={phase} className="flex w-full min-w-0 flex-col gap-4 p-4">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
+        <Button icon="rotate-cw" type="button" variant="outline" aria-label={refreshLabel} disabled={busy} onClick={onRefresh}>{refreshLabel}</Button>
+      </header>
+
+      <p role="status" aria-live="polite" data-semio-hub-spaces-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`${id}-search`} className="text-xs text-muted-foreground">{searchLabel}</label>
+        <input id={`${id}-search`} name="spaceSearch" type="search" value={search} onChange={(event) => onSearch(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
+      </div>
+
+      <div className="flex flex-col gap-4 md:flex-row md:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{search.trim().length > 0 ? noMatchesLabel : emptyLabel}</p>
+          ) : (
+            <ul role="list" data-element-alias="os.hub.spaces.list" aria-label={listLabel} className="flex flex-col gap-1">
+              {rows.map((row) => (
+                <SpaceRow
+                  key={row.id}
+                  row={row}
+                  active={row.id === activeSpaceId}
+                  busy={busy}
+                  currentLabel={currentLabel}
+                  roleText={row.access === "public" ? publicLabel : row.role === "author" ? authorLabel : spectatorLabel}
+                  onOpenSpace={onOpenSpace}
+                  onArchiveSpace={onArchiveSpace}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <aside aria-label={membersLabel} className="flex w-full min-w-0 flex-col gap-2 md:w-64">
+          <h3 className="text-sm font-medium">{membersLabel}</h3>
+          <PresenceBar peers={peers} />
+          <ul role="list" className="flex flex-col gap-1">
+            {members.map((member) => (
+              <li key={member.userId} data-user-id={member.userId} data-online={member.online ? "true" : "false"} className="flex items-center justify-between gap-2 text-xs">
+                <span className="min-w-0 truncate">{member.displayName}</span>
+                <span className="shrink-0 text-muted-foreground">{`${member.owner ? `${ownerLabel} · ` : ""}${member.role === "author" ? authorLabel : spectatorLabel} · ${member.online ? onlineLabel : awayLabel}`}</span>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </div>
+
+      {signedIn ? <CreateSpaceForm disabled={busy} onCreateSpace={onCreateSpace} /> : null}
+
+      <InvitePanel row={activeRow} invite={invite} redemption={redemption} disabled={busy} onCreateInvite={onCreateInvite} onCopyInvite={onCopyInvite} onDismissInvite={onDismissInvite} onRedeemInvite={onRedeemInvite} />
+    </section>
+  );
+}
+//#endregion 🔖️Browser

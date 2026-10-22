@@ -37,7 +37,8 @@ pub const TOOL_CANCELLATION_SLOTS: usize = 1_024;
 
 const TOOL_CANCELLATION_WORDS: usize = TOOL_CANCELLATION_SLOTS / u64::BITS as usize;
 
-pub(crate) struct ToolPublicationScopePermit {
+#[doc(hidden)]
+pub struct ToolPublicationScopePermit {
     _app: PublicationPermit,
     _document: Option<PublicationPermit>,
     _operation: PublicationPermit,
@@ -182,14 +183,14 @@ impl ToolCancellationHandle {
 }
 
 pub struct ToolCancellationLeaseOriginal {
-    pub(crate) handle: ToolCancellationHandle,
+    #[doc(hidden)] pub handle: ToolCancellationHandle,
     pub(crate) document: ArtifactDocumentAuthority,
     pub(crate) document_generation: u64,
-    pub(crate) key: ToolOperationKey,
-    pub(crate) token: semio_framework_job::CancelToken,
-    pub(crate) publication_claim: PublicationClaimHandle,
-    pub(crate) document_claim: Option<PublicationClaimHandle>,
-    pub(crate) keyed: bool,
+    #[doc(hidden)] pub key: ToolOperationKey,
+    #[doc(hidden)] pub token: semio_framework_job::CancelToken,
+    #[doc(hidden)] pub publication_claim: PublicationClaimHandle,
+    #[doc(hidden)] pub document_claim: Option<PublicationClaimHandle>,
+    #[doc(hidden)] pub keyed: bool,
     pub(crate) finished: bool,
 }
 

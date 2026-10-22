@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 pub struct ChangeMemberBearingLength { pub member_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberBearingLength where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_bearing_length::ChangeMemberBearingLength> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-bearingLengthM", kind: "change-member-bearing-length", record: "ChangedMemberBearingLength" };
-    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1995Snapshot>>::Diff> { crate::change_member_bearing_length::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Bearing length l of member {}", self.member_id), &format!("Aufstandslänge l von Bauteil {} ändern", self.member_id)) }
+    fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeMemberBearingLength where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_bearing_length::ChangeMemberBearingLength> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_member_bearing_length::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_member_bearing_length::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Bearing length l of member {}", self.member_id), &format!("Aufstandslänge l von Bauteil {} ändern", self.member_id)) }
-    fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 
 //#region 🪢️Mounts

@@ -23,7 +23,7 @@ import {
 // #endregion 🔌️Adapters
 import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { type Anchor, ANCHORS } from "@semio-tech/ui-react";
-import { useEffect } from "react";
+import { useEffect } from "../../⚛️react-port/🟦️.ts";
 import type { DomainSelection, InteractionState } from "@semio-tech/framework-interaction";
 import type { ShellDialogV1 } from "../../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";

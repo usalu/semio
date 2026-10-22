@@ -330,7 +330,7 @@ fn original_inference_fixture_caller(items:usize)->(semio_framework_job::Origina
 
 fn close_stepped(caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:semio_framework_value::RetainedCloneGrant,cursor:&mut InferenceCursor<String>,values:&mut InferenceValues<i64>){
  for _ in 0..10000{
-  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(if !cursor.close_original_pending_step(cx)?{false}else if !values.close_step(cx)?{false}else{cursor.close_original_plan_step(cx)})).unwrap().unwrap());
+  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|{let turn=|failure:InferenceWorkFailure|match failure{InferenceWorkFailure::Original(failure)=>failure,other=>panic!("{other:?}")};if !cursor.close_original_pending_step(cx).map_err(turn)?{return Ok(false)}if !values.close_step(cx).map_err(turn)?{return Ok(false)}cursor.close_original_plan_step(cx).map_err(turn)}).unwrap());
   assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));if result{return}
  }panic!("same original driver owners did not finish paid close");
 }

@@ -1,0 +1,9 @@
+# Resource SQLite Holder Observability Review
+
+Conditional read-only SELECT was not performed: actual Source declares no persisted held-lease/birth/deadline rows to query. Exact schema in leases184 is semio_resource_lease(id INTEGER PRIMARY KEY CHECK(id=1),version INTEGER NOT NULL CHECK(version=1),resource TEXT NOT NULL). It stores one durable resource identity only. No mode,pid,birth,deadline or live-holder column exists. The graph resource is not the separate retention continuation catalog.
+
+Actual acquire216–225 selects the identity after BEGIN forshared or BEGIN EXCLUSIVE forexclusive; heldmode/control/signal/phase live only in private originalLeases WeakMap plus the actual SQLite connection's kernel transaction locks. Release closes the connection. Queue tickets are separately persisted request DATA, not holder rows. Therefore a read-only identity SELECT could confirm the already-derived resource name but cannot resolve the requested owner/expiry question, and no authority to probe locks or invoke Source was granted.
+
+The owner requires rollback/delete journal mode at214. WAL replay/checkpoint is neither needed nor attempted; even a supported read-only tool would observe only a consistent durable identity snapshot, not another process's private transaction/control or Original deadline. Busy or available SELECT would not prove absence/presence of a shared holder and must not be used as a lease probe.
+
+Source pin: 🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts — 75284/03f0c550dff79a518cd0ed8225f0f6da1bd54a89fd848494763a9ff532600673. No SQLite connection, SELECT,PRAGMA,checkpoint,recovery,Source evaluation,CLI,processprobe or filesystem mutation outside this authored report occurred. Actual39792 remains solely executor-owned. Cause remains unproved from available recorded DATA; stop this diagnosis here.

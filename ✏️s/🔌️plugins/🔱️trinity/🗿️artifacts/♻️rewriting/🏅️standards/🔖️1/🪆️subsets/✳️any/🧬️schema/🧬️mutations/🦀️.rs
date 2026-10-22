@@ -25,7 +25,7 @@ pub(crate) use support::{offset_text};
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = RewritingSnapshot, diff = RewritingDiff, schema = "s.trinity.rewriting")]
+#[mutations(snapshot = RewritingSnapshot, diff = RewritingDiff, schema = "s.trinity.rewriting", reference = RewritingSnapshot, reference_diff = RewritingDiff)]
 pub enum RewriteRuleMutation {
     EditWorkingGraph(EditWorkingGraph),
     EditLhs(EditLhs),

@@ -16,3 +16,11 @@ Feature: Reuse Complete Current Ownership Evidence
       | irrelevant source or generated output churn | acceptance |
       | unsettled incomplete observation | full verification |
       | original cancellation or final-yield mutation | refusal |
+
+  Scenario: An authenticated semantically equal topology becomes the current frontier
+    Given complete required manifest bytes and a physically changed decision topology
+    When a fresh derivation has the same scopes, patterns and selected packages
+    And its complete frontier passes replay and the final synchronous fence
+    Then the next barrier replays the adopted frontier without rediscovery
+    And newly observed nonmember decision manifests remain byte-authenticated
+    And cancellation or mutation in the last fresh continuation refuses adoption

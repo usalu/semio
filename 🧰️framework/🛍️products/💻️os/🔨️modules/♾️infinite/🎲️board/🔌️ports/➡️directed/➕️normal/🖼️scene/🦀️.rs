@@ -50,8 +50,7 @@ pub use grid_snap_and_brush_candidates::{board_set_grid_visible, brush_compatibl
 
 #[path = "🧬️scene-types-and-delete-records/🦀️.rs"]
 mod scene_types_and_delete_records;
-pub(crate) use scene_types_and_delete_records::BoardPropertyAudit;
-use scene_types_and_delete_records::{BoardDeleteEntry, BoardPointerDelta, BoardPropertyAuditFrame};
+pub use scene_types_and_delete_records::{BoardDeleteEntry, BoardPointerDelta, BoardPropertyAudit, BoardPropertyAuditFrame};
 pub use scene_types_and_delete_records::{
     BoardDeleteKind, BoardDeletePlan, BoardDeletePlanningOperation, BoardDeletePlanningPhase, BoardFillCaptureFault, BoardPointerPlanFault, BoardSceneState, BoardStyleState, BoardWheelPlan, BOARD_FILL_TEXT_BYTES,
 };

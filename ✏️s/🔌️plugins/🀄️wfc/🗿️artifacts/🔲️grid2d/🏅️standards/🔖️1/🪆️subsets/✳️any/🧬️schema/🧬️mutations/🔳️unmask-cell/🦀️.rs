@@ -29,6 +29,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "restore", entity: "cell", kind: "unmask-cell", record: "RestoredCell" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) demaskieren", self.x, self.y))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![format!("{},{}", self.x, self.y)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid2dSnapshot, Op> for UnmaskCell
+where
+    Op: protocol::ColdMutation<Grid2dSnapshot, ReferenceDiff = Grid2dDiff> + From<UnmaskCell> + From<crate::standards::v1::subsets::any::schema::mutations::mask_cell::MaskCell>,
+{
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
@@ -38,11 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) demaskieren", self.x, self.y))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![format!("{},{}", self.x, self.y)]
-    }
 }
 //#endregion 🔖️UnmaskCell

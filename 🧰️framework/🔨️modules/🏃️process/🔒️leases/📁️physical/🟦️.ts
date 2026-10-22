@@ -2,6 +2,8 @@ import {constants,openSync,closeSync,fstatSync,lstatSync} from "node:fs";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { runtimeSupportsV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../⚙️runtime/🧲️native/🟦️.ts";
 
 /** 🔐️ Retains exact physical compiler lock descriptors under the original process lifetime. */
 export interface PhysicalFileLocksV1 {readonly pid:number;readonly paths:readonly string[];check():void;close():void;}
@@ -13,9 +15,9 @@ function retainPhysicalDescriptorV1(path:string,held:{fd:number;path:string;dev:
 
 /** 🏪️ Uses system flock through the required Bun runtime; unsupported backends refuse before mutation. */
 export async function acquirePhysicalFileLocksV1(paths:readonly string[],control:ResourceLeaseControl,request:Readonly<{version:1;wait:boolean}>):Promise<PhysicalFileLocksV1>{
- checkResourceLeaseControl(control);if(validateJsonSchemaSubset(schema.definitions.Request,request,schema).length)throw Error("Closed physical compiler lock request required");if(!process.versions.bun||!["darwin","linux"].includes(process.platform))throw Error("Qualified physical compiler file lock backend required");
+ checkResourceLeaseControl(control);if(validateJsonSchemaSubset(schema.definitions.Request,request,schema).length)throw Error("Closed physical compiler lock request required");if(!runtimeSupportsV1("ffi")||!["darwin","linux"].includes(process.platform))throw Error("Qualified physical compiler file lock backend required");
  const admitted=paths.map(requireMaterializedPathV1).sort();if(validateJsonSchemaSubset(schema,admitted).length)throw Error("Exact physical compiler lock paths required");
- const {dlopen,read}=process.getBuiltinModule("bun:ffi") as typeof import("bun:ffi"),errnoName=process.platform==="darwin"?"__error":"__errno_location",library=dlopen(process.platform==="darwin"?"/usr/lib/libSystem.B.dylib":"libc.so.6",{flock:{args:["i32","i32"],returns:"i32"},[errnoName]:{args:[],returns:"ptr"}}),protocol=schema.definitions.Protocol.const,held:{fd:number;path:string;dev:number;ino:number}[]=[];let closed=false;
+ const {dlopen,read}=runtimeNativeSystemV1(),errnoName=process.platform==="darwin"?"__error":"__errno_location",library=dlopen(process.platform==="darwin"?"/usr/lib/libSystem.B.dylib":"libc.so.6",{flock:{args:["i32","i32"],returns:"i32"},[errnoName]:{args:[],returns:"ptr"}}),protocol=schema.definitions.Protocol.const,held:{fd:number;path:string;dev:number;ino:number}[]=[];let closed=false;
  const close=():void=>{if(closed)return;closed=true;for(const row of held.reverse()){library.symbols.flock!(row.fd,protocol.unlock);closeSync(row.fd);}library.close();};
  try{
   for(const path of admitted){checkResourceLeaseControl(control);const fd=retainPhysicalDescriptorV1(path,held);

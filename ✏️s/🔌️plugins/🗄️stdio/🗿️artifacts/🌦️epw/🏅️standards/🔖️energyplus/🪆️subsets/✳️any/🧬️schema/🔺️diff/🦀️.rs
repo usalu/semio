@@ -8,7 +8,7 @@
 
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
@@ -190,12 +190,9 @@ pub struct EpwDiff {
     pub records: Option<EpwRecordsDiff>,
 }
 
-impl MutationDiff<EpwSnapshot> for EpwDiff {
-    fn apply(&self, base: &EpwSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<EpwSnapshot> {
-        validate_epw_diff(self, base)?;
-        Ok(apply_epw_diff_unchecked(self, base))
-    }
+impl MutationDiff<EpwSnapshot> for EpwDiff {}
 
+impl protocol::ColdMutationDiff<EpwSnapshot> for EpwDiff {
     fn absorb(&mut self, other: Self) {
         if other.location.is_some() {
             self.location = other.location;
@@ -233,6 +230,13 @@ impl MutationDiff<EpwSnapshot> for EpwDiff {
             Some(d1) => d1,
         };
         self.records = Some(absorb_records(d1, d2));
+    }
+
+    fn apply(&self, unpublished: &mut EpwSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_epw_diff(self, base)?;
+        *unpublished = apply_epw_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -426,6 +430,20 @@ fn inverse_records(diff: &EpwRecordsDiff, base: &[EpwRecord]) -> EpwRecordsDiff 
 }
 
 impl DiffAlgebra<EpwSnapshot> for EpwDiff {
+    fn is_empty(&self) -> bool {
+        self.location.is_none()
+            && self.design_conditions.is_none()
+            && self.typical_extreme_periods.is_none()
+            && self.ground_temperatures.is_none()
+            && self.holidays_dst.is_none()
+            && self.comments_1.is_none()
+            && self.comments_2.is_none()
+            && self.data_periods.is_none()
+            && self.records.as_ref().is_none_or(EpwRecordsDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<EpwSnapshot> for EpwDiff {
     fn inverse(&self, base: &EpwSnapshot) -> Self {
         Self {
             location: self.location.as_ref().map(|_| base.location.clone()),
@@ -438,18 +456,6 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
             data_periods: self.data_periods.as_ref().map(|_| base.data_periods.clone()),
             records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.location.is_none()
-            && self.design_conditions.is_none()
-            && self.typical_extreme_periods.is_none()
-            && self.ground_temperatures.is_none()
-            && self.holidays_dst.is_none()
-            && self.comments_1.is_none()
-            && self.comments_2.is_none()
-            && self.data_periods.is_none()
-            && self.records.as_ref().is_none_or(EpwRecordsDiff::is_empty)
     }
 }
 

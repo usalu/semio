@@ -16,6 +16,16 @@ pub struct SetGroupAssignment {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group-assignment", kind: "set-group-assignment", record: "SetGroupAssignment" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set group assignment", "Gruppenzuordnung setzen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         let Self { id, assignment, index, instance: exact } = self;
         let instance = match assignment {
@@ -39,7 +49,6 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssig
             Err(message) => rejected(message),
         }
     }
-
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3SavMutation>, semio_framework_value::ValueError> {
         let Self { id, assignment, .. } = self;
         Ok(match mvd::standing(base, *id, &[GROUP_ASSIGNMENT]) {
@@ -54,14 +63,6 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssig
                 None => Vec::new(),
             },
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set group assignment", "Gruppenzuordnung setzen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -6,3 +6,4 @@
 - `overlay.sh` builds `/private/tmp/polyglot-units/ov` (staged module at its real depth + symlinks to the real validator, live TypeScript units engine, node_modules); `cd` there for `node node_modules/typescript/bin/tsc -p tsconfig.json` and `bun test <module>/🧪️tests`.
 - `units-cli.ts` plans the Go or Python units of a checkout read-only (`git ls-files`) and prints counts.
 - Scratch: `/private/tmp/polyglot-units/` only.
+- Round 3: `gen-fixture-languages.py` (vectors for dotnet, cpp, wit, tex), `witoracle/` (Rust program over wit-parser/wit-component, build with `CARGO_TARGET_DIR=<private dir> cargo build --offline`, point `POLYGLOT_WIT_ORACLE` at the binary), `bazel-proof.ts python|go|cpp`, group 4 needs the tool-iface git adapter (`--without-tool-iface` for mirrors).

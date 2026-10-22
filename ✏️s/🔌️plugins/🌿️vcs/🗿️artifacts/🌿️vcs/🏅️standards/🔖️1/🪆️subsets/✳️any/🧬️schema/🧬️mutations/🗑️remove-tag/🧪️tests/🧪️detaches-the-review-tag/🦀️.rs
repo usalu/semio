@@ -85,7 +85,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-tag/detaches-the-review-tag declares an applied outcome");
-    let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let produced = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "remove-tag/detaches-the-review-tag: review IS present in BASE, so target-missing must not fire, got {:?}", produced.messages());
     let delta = produced.diff().tags.clone().expect("remove-tag's diff pins a tags delta");
     assert_eq!(delta.removed.iter().map(|entry| (entry.id.as_str(), entry.index)).collect::<Vec<_>>(), vec![("review", 0)], "remove-tag's delta must carry the one removed tag at its base index");
@@ -97,7 +97,7 @@ async fn declared_outcome_holds() {
 /// by naming what LEAVES, never by re-sending what stays.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let outcome = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-tag/detaches-the-review-tag: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-tag/detaches-the-review-tag: committed diff did not carry before to after");
 }
 

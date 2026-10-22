@@ -1,6 +1,5 @@
 //! 👥️ Presence retirement witnesses that need the snapshot-read registry: boxed closes, returned-string admission and registry alias closure; the generic factory and observers are re-exported from the testing crate.
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ErasedSnapshotRetirement};
-use semio_framework_value_testing_presence_retirement::{observed_step, CLOSE_GRANT};
 use std::sync::Arc;
 
 pub use semio_framework_value_testing_presence_retirement::*;

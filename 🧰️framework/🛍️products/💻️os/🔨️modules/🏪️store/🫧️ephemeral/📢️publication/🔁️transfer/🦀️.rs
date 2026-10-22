@@ -1,6 +1,6 @@
 //! 🔁️ Ownership-only ephemeral replacement with domain admission and bounded retirement.
 
-use semio_framework_os_store_ephemeral::{ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest};
+use crate::{ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest};
 use semio_framework_value::ArtifactOwnedValueRetirementFactory;
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
 use std::sync::Arc;
@@ -81,7 +81,7 @@ impl<P, M> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M
 }
 
 #[cfg(test)]
-use semio_framework_os_store_ephemeral::ArtifactEphemeralBaseRead;
+use crate::ArtifactEphemeralBaseRead;
 #[cfg(test)] use semio_framework_os_store_one_item::ArtifactStoreOneItemPreparationStep;
 #[cfg(test)] use semio_framework_value::ErasedSnapshotRetirement;
 #[cfg(test)] use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;

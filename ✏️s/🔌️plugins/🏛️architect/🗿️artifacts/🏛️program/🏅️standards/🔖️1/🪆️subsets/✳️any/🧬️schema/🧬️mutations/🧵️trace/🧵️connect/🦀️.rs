@@ -25,6 +25,19 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ConnectTrace> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_trace::DisconnectTrace>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "trace", kind: "connect-trace", record: "ConnectedTrace" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Nachverfolgung \"{}\" -> \"{}\" verknüpfen", self.trace.from_id.0, self.trace.to_id.0))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.trace.id.0.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for ConnectTrace
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<ConnectTrace> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_trace::DisconnectTrace>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -34,10 +47,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Nachverfolgung \"{}\" -> \"{}\" verknüpfen", self.trace.from_id.0, self.trace.to_id.0))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.trace.id.0.clone()]
-    }
 }

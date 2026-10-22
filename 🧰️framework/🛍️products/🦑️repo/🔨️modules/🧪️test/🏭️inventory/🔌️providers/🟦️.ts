@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { discoverCargoWorkspaces } from "@semio-tech/repo-lib/cargo";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export type MutationInventoryProviderV1 = { script: string; roots: string[] };
 
@@ -32,7 +33,7 @@ export function discoverMutationInventoryProvidersV1(repoRoot: string): Mutation
   return discoverCargoWorkspaces(repoRoot).flatMap(scope => {
     const manifest = resolve(repoRoot, scope.manifest);
     physical(repoRoot, manifest, false);
-    const authority = (Bun.TOML.parse(readFileSync(manifest, "utf8")) as any).workspace?.metadata?.semio?.["mutation-inventory"];
+    const authority = (runtimeParseTomlV1(readFileSync(manifest, "utf8")) as any).workspace?.metadata?.semio?.["mutation-inventory"];
     if (authority === undefined) return [];
     const provider = admitMutationInventoryProviderV1(authority), owner = dirname(manifest), script = resolve(owner, provider.script);
     physical(owner, script, false);

@@ -7,10 +7,10 @@
     "./testing/consumer/host": "./🧪️testing/📍️consumer/🏃️host/🟦️.ts"
   },
   "scripts": {
-    "test-neutral-ownership": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:test-neutral-ownership",
-    "test-schema": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:test-schema",
-    "test-ownership": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:test-ownership",
-    "check-types": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:check-types"
+    "test-neutral-ownership": "repo run @semio-tech/2d-compute:test-neutral-ownership",
+    "test-schema": "repo run @semio-tech/2d-compute:test-schema",
+    "test-ownership": "repo run @semio-tech/2d-compute:test-ownership",
+    "check-types": "repo run @semio-tech/2d-compute:check-types"
   },
   "devDependencies": {
     "@iarna/toml": "2.2.5",

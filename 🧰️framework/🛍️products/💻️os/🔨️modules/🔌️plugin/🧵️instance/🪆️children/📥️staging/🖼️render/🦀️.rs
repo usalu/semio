@@ -9,13 +9,13 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_ui_contract::*;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🕸️ Re-syncs `self.composition`'s ownership/link graph from the parent's own live
     /// `ArtifactRefs` projection (`child_refs()`/`links()`) — the mechanism
     /// `store::os_store::composition_coordinator::CompositionGraph::sync_member`'s own doc comment names as the required follow-up

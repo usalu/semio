@@ -24,20 +24,21 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMemberMYEd where O
         record: "ChangedMemberMYEd",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change bending moment My of the member", "Biegemoment My des Bauteils ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for ChangeMemberMYEd where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_member_m_y_ed::ChangeMemberMYEd> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::change_member_m_y_ed::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_member_m_y_ed::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bending moment My of the member", "Biegemoment My des Bauteils ändern")
-    }
 }
 
 //#region 🪢️Mounts

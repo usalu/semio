@@ -429,7 +429,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     fn read_committed_descriptor(&self, plugin_id: &str) -> Result<PackageDescriptor, RunError> {
         let Some(path) = self.descriptor_path_for_plugin.get(plugin_id) else {
             return Err(RunError::Host(format!(
-                "plugin `{plugin_id}` has no committed `🛂️.descriptor.semio` registered (regenerate the registry: `bun repo run @semio-tech/plugin-registry:generate`) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)"
+                "plugin `{plugin_id}` has no committed `🛂️.descriptor.semio` registered (regenerate the registry: `repo run @semio-tech/plugin-registry:generate`) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)"
             )));
         };
         if !path.is_file() {

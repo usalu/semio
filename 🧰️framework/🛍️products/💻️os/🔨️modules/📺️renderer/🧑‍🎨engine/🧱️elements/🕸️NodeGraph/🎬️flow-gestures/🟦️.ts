@@ -9,7 +9,7 @@ import {
   useMemo,
   useRef,
   useState
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer, nodeGraphActions } from "@semio-tech/framework";
 import { useAppKeybindingsByActionId, useShellContextMenuFallback } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
 import { nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, resolveHostSnapshotWidgetInstanceId } from "../🧰️graph-core/🟦️.ts";

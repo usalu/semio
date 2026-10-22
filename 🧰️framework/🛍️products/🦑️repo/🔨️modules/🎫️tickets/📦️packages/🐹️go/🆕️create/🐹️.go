@@ -549,7 +549,7 @@ func CreateTicket(emoji, title, prompt, llm, effort, client, draft string, noIss
 // 🔢️ListFilesAtCheckpoint returns a list of files at checkpoint entries.
 func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 	if checkpoint == "" {
-		files, err := model.ScopeToFiles(workspace.Scope{Kind: workspace.ScopeRepo}, codebase.GetTechnologies())
+		files, err := model.ScopeToFiles(workspace.GetRootDir(), workspace.Scope{Kind: workspace.ScopeRepo}, codebase.GetTechnologies())
 		if err != nil {
 			return nil, err
 		}
@@ -566,8 +566,8 @@ func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 		}
 		files = append(files, strings.TrimSpace(line))
 	}
-	files = model.FilterConsideredFiles(files)
-	files = model.FilterGitIgnored(files)
+	files = model.FilterConsideredFiles(workspace.GetRootDir(), files)
+	files = model.FilterGitIgnored(workspace.GetRootDir(), files)
 	return files, nil
 }
 

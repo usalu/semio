@@ -13,6 +13,20 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   closure:"graph: {count} projects of the closure verified, no other project read",
   cold:"graph: no usable generation ({reason}), building the first one",
   stale:"graph: serving generation {generation} built by another implementation (graph policy current)",
+  reason:"graph: {project} is stale: {why}",
+  reasonStamp:"the inference protocol of {inferrer} changed from {recorded} to {current}",
+  reasonInput:"the input file {path} changed",
+  reasonListing:"the entries of the directory {path} changed",
+  reasonData:"the declared data file {path} changed",
+  reasonAnalysis:"the source analysis of {path} changed",
+  reasonFact:"the recorded {kind} fact of {path} changed",
+  reasonMembership:"the workspace file {path} was {change}",
+  reasonMore:"graph: {count} more stale inputs are not listed",
+  withheldDependency:"graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
+  withheldSource:"graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
+  changeAdded:"added",
+  changeRemoved:"removed",
+  changeChanged:"changed",
  }),
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -23,20 +37,51 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   closure:"Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
   cold:"Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
   stale:"Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
+  reason:"Graph: {project} ist veraltet: {why}",
+  reasonStamp:"das Inferenzprotokoll von {inferrer} wechselte von {recorded} zu {current}",
+  reasonInput:"die Eingabedatei {path} hat sich geändert",
+  reasonListing:"die Einträge des Verzeichnisses {path} haben sich geändert",
+  reasonData:"die deklarierte Datendatei {path} hat sich geändert",
+  reasonAnalysis:"die Quellanalyse von {path} hat sich geändert",
+  reasonFact:"der aufgezeichnete Fakt {kind} von {path} hat sich geändert",
+  reasonMembership:"die Arbeitsbereichsdatei {path} wurde {change}",
+  reasonMore:"Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
+  withheldDependency:"Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
+  withheldSource:"Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
+  changeAdded:"hinzugefügt",
+  changeRemoved:"entfernt",
+  changeChanged:"geändert",
  }),
 });
 
-/** 🌐️ Picks the language of the process like every other progress text: dashboard locale, then the system locale, English first and German second. */
-export function selectGenerationLanguageV1(environment){
- return["SEMIO_DASHBOARD_LOCALE","LC_ALL","LC_MESSAGES","LANG"].map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value==="en"||value==="de")??"en";
-}
-
-/** 🗣️ Renders one message in the language of the environment. */
-export function renderGenerationMessageV1(key,fields,environment){
- const template=GENERATION_MESSAGES_V1[selectGenerationLanguageV1(environment)][key];
+/** 🗣️ Renders one message in the language the caller resolved with the shared resolver. */
+export function renderGenerationMessageV1(key,fields,language){
+ const template=GENERATION_MESSAGES_V1[language]?.[key];
  if(template===undefined)throw Error("Closed generation message required: "+key);
  return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
 }
+
+/** 🚧️ The fields of the message that words one withheld project: the project, its declaring source, the projects it waits for and the start of the digest of the observed bytes. */
+function withheldFieldsV1(row){return{project:row.project??row.root,source:row.source,target:row.missing?.join(", ")??"",sha:row.sha256.slice(0,12)};}
+
+/** 🚧️ Words one withheld project in the language of the caller: the projects a test project waits for, or the source that does not parse. */
+export function describeUnavailableProjectV1(row,language){return renderGenerationMessageV1(row.missing?"withheldDependency":"withheldSource",withheldFieldsV1(row),language);}
+
+/**
+ * 🚧️ Withholds from one graph snapshot every test project that depends on a project the snapshot does not hold: its row (declaring file from `configs`, digest of that file from `digest`, English reason, the missing names) joins `unavailable` under the project root and the project leaves `projects`.
+ * Test inference reads project names from the live disk while the inventory is the snapshot of one run, so a project created or removed meanwhile is a dependency "not yet in this generation": only the test project waits and the next run finds the project. Returns the names withheld.
+ */
+export function withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling,digest}){
+ for(const{source,root,missing}of dangling){
+  const file=configs[source]??root;
+  unavailable.set(root,{root,project:source,source:file,sha256:digest(file),reason:renderGenerationMessageV1("withheldDependency",{project:source,source:file,target:missing.join(", ")},"en").slice(0,2048),missing:[...missing]});
+  delete projects[source];
+ }
+ return dangling.map(row=>row.source);
+}
+
+/** 📣️ Says, once per build, which projects the partial inference withheld and what repairs each of them. */
+export function announceWithheldProjectsV1(host,part){for(const owner of part.owners)if(owner.unavailable)host.say(owner.unavailable.missing?"withheldDependency":"withheldSource",withheldFieldsV1(owner.unavailable));}
 
 /** 🚦️ Reads the graph policy from `--graph-policy fresh|current` (before `--`) or the environment; `--graph` is taken by the portable dry-run alias. Returns the policy, whether anything chose it and the remaining arguments. */
 export function extractGraphPolicyV1(args,environment){
@@ -52,39 +97,109 @@ export function extractGraphPolicyV1(args,environment){
  return{policy,explicit,args:remaining};
 }
 
-/** 🧱️ Splits the facts of the loaded implementation by their consumers: a module no record can depend on is dropped, a module that only shapes the nodes of valid projects belongs to those projects, every other module to every project, every unavailable project and the environment; identical facts are kept once. */
+/** 🧱️ Splits the facts of the loaded implementation by their consumers: a data file nobody covers belongs to every project and the environment, the stamp of an inferrer of scope `all` or `environment` belongs to the environment, and the stamp of a project inferrer belongs to nobody here because every project record names exactly the stamps it took part in. */
 export function scopeImplementationRowsV1(rows){
- const scopes=GENERATION_POLICY_V1.implementation,all=[],projects=[],seen=new Set();
- for(const row of rows){
-  const key=rowKeyV1(row);if(seen.has(key)||scopes.none.some(prefix=>row.path.includes(prefix)))continue;seen.add(key);
-  (scopes.projects.some(prefix=>row.path.includes(prefix))?projects:all).push(row);
+ const all=[],environment=[],seen=new Set();
+ for(const{scope,...row}of rows){
+  const key=rowKeyV1(row);if(seen.has(key))continue;seen.add(key);
+  if(row.kind!=="stamp")all.push(row);else if(scope==="environment"||scope==="all")environment.push(row);
  }
- return{all,projects};
+ return{all,environment};
 }
 
-/** 🪪️ The digest that stamps a generation: the loaded bytes of every module of the implementation, whoever consumes it. */
+/** 🪪️ The digest that stamps a generation: the declared stamp of every inferrer and the bytes of every data file the implementation reads, never the bytes of code. */
 export function implementationDigestV1(rows){
- return createHash("sha256").update(canonicalJsonV1(rows.map(row=>[row.path,row.fact.sha256]).sort((a,b)=>compareCodePointsV1(a[0],b[0])||compareCodePointsV1(a[1],b[1])))).digest("hex");
+ return createHash("sha256").update(canonicalJsonV1(rows.map(row=>[row.kind,row.path,row.kind==="stamp"?row.fact:row.fact.sha256]).sort((a,b)=>compareCodePointsV1(a[1],b[1])||compareCodePointsV1(String(a[2]),String(b[2]))))).digest("hex");
+}
+
+/**
+ * 🍰️ The owners a selected scope needs, as a fixpoint over the generation: every admitted owner admits the owners it imports (its dependency edges, transitively); only the active targets follow their `dependsOn` (`^target` over the dependency edges, `project:target`, `target`, objects with `projects` and `dependencies`, `*` for the active target only). Catalog provider owners join when an active owner lies below one of their consumer roots.
+ * `owners` maps every owner name to its root, `external` names the external nodes; `fragment(name)` yields `{edges, node}`. A task, a root or an edge to a name that is neither an owner nor an external node refuses with `GENERATION_UNKNOWN_OWNER`: a slice is never silently incomplete.
+ */
+export async function sliceClosureV1({owners,fragment,selection,roots=[],providers=[],external=[]}){
+ const cache=new Map(),known=new Set(Object.keys(owners)),outside=new Set(external),admitted=new Set(),active=new Map(),queue=[];
+ const get=async name=>{let row=cache.get(name);if(!row){row=await fragment(name);cache.set(name,row);}return row;};
+ const unknown=name=>Object.assign(Error("Unknown project in the closure: "+name),{code:"GENERATION_UNKNOWN_OWNER"});
+ const admit=async name=>{
+  const todo=[name];
+  while(todo.length){const at=todo.pop();if(admitted.has(at))continue;if(!known.has(at)){if(at===name||!outside.has(at))throw unknown(at);continue;}admitted.add(at);for(const edge of(await get(at)).edges)todo.push(edge.target);}
+ };
+ const task=async(name,target,optional)=>{
+  if(!known.has(name))throw unknown(name);await admit(name);
+  if(optional&&!(await get(name)).node?.targets?.[target])return;
+  const set=active.get(name)??new Set();if(!set.has(target)){set.add(target);active.set(name,set);queue.push([name,target]);}
+ };
+ if(selection.kind==="tasks")for(const row of selection.tasks)await task(row.project,row.target,false);else for(const name of roots)await admit(name);
+ while(queue.length){
+  const[name,target]=queue.shift(),row=await get(name),operation=row.node?.targets?.[target];if(!operation)continue;
+  const dependencies=[...new Set(row.edges.map(edge=>edge.target))].filter(value=>known.has(value));
+  for(const dependency of Array.isArray(operation.dependsOn)?operation.dependsOn:[]){
+   if(typeof dependency==="string"){
+    if(dependency.startsWith("^"))for(const value of dependencies)await task(value,dependency.slice(1),true);
+    else if(dependency.includes(":")){const at=dependency.lastIndexOf(":");await task(dependency.slice(0,at),dependency.slice(at+1),false);}
+    else await task(name,dependency,false);
+   }else if(dependency&&typeof dependency==="object"&&typeof dependency.target==="string"){
+    const projects=dependency.dependencies?dependencies:dependency.projects===undefined?[name]:dependency.projects==="*"?[...known]:typeof dependency.projects==="string"?[dependency.projects]:dependency.projects;
+    for(const value of projects)await task(value,dependency.target,dependency.dependencies===true);
+   }
+  }
+ }
+ const inside=(root,path)=>root==="."||path===root||path.startsWith(root+"/");
+ for(const provider of providers){
+  if(![...active.keys()].some(name=>provider.consumerRoots.some(root=>inside(root,owners[name]))))continue;
+  let best;for(const[name,root]of Object.entries(owners))if(inside(root,provider.sourcePath)&&(best===undefined||root.length>owners[best].length))best=name;
+  if(best!==undefined)await admit(best);
+ }
+ return admitted;
 }
 
 /**
  * 🧩️ Shapes what one partial inference produced into the compute result of the store: every owner carries the facts of its own inference record plus the captured facts below its roots, edges go to their source owner, facts nobody consumed belong to the environment.
  * `workspaceRoot` makes row paths comparable (rows carry absolute paths); the root project never claims facts by path.
  */
-export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",implementation={all:[],projects:[]}}){
+export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",implementation={all:[],environment:[]}}){
  const processed=new Set([...part.owners.map(owner=>owner.name),...part.edgeOnly.map(owner=>owner.name)]),edgesOf=new Map(),other=[];
  for(const edge of part.edges){if(processed.has(edge.source)){let list=edgesOf.get(edge.source);if(!list)edgesOf.set(edge.source,list=[]);list.push(edge);}else other.push(edge);}
  const prefix=root=>root==="."?undefined:workspaceRoot+separator+root.split("/").join(separator)+separator,prefixes=roots=>roots.filter(Boolean).map(prefix).filter(Boolean);
- const claimed=new Set(),owners=[];
+ const claimed=new Set(),owners=[],ordered=part.rows.map((row,at)=>[row.path,at]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
+ const under=entry=>{let low=0,high=ordered.length;while(low<high){const middle=(low+high)>>>1;if(ordered[middle][0]<entry)low=middle+1;else high=middle;}const found=[];for(;low<ordered.length&&ordered[low][0].startsWith(entry);low++)found.push(ordered[low][1]);return found;};
  const claim=(base,roots)=>{
-  const keys=new Set(base.map(rowKeyV1)),rows=[...base],list=prefixes(roots);
-  if(list.length)for(const row of part.rows)if(list.some(entry=>row.path.startsWith(entry))){const key=rowKeyV1(row);if(!keys.has(key)){keys.add(key);rows.push(row);}}
+  const keys=new Set(base.map(rowKeyV1)),list=prefixes(roots);let rows=base;
+  if(list.length)for(const at of[...new Set(list.flatMap(under))].sort((a,b)=>a-b)){const row=part.rows[at],key=rowKeyV1(row);if(!keys.has(key)){keys.add(key);if(rows===base)rows=[...base];rows.push(row);}}
   for(const key of keys)claimed.add(key);return rows;
  };
- for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:edgesOf.get(owner.name)??[],targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),rows:[...claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),...implementation.all,...(owner.unavailable?[]:implementation.projects)]});
+ for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:edgesOf.get(owner.name)??[],targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),rows:[...claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),...implementation.all]});
  for(const owner of part.edgeOnly){const stub=stubs[owner.name];owners.push({name:owner.name,partial:"edges",edges:edgesOf.get(owner.name)??[],rows:claim([],[stub.root,stub.nativeRoot])});}
- const environment=[...part.env.rows,...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all];
+ const environment=[...part.env.rows,...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all,...implementation.environment];
  return{owners,env:{digest:part.env.digest,rows:environment},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[]};
+}
+
+/** 🔍️ Names the exact input behind one stale reason of a plan: the stamp of an inferrer, an input file, a directory listing, a declared data file, a source analysis or a workspace file that appeared, vanished or changed. `current` maps stamp paths to the stamps this process carries. */
+export function describeGenerationReasonV1(reason,{workspaceRoot,separator="/",current=new Map(),language}){
+ const display=path=>path.startsWith(workspaceRoot+separator)?path.slice(workspaceRoot.length+separator.length).split(separator).join("/"):path;
+ const project=reason.owners?.[0]??"@env";let key,fields;
+ if(reason.change){key="reasonMembership";fields={path:display(reason.change.path),change:renderGenerationMessageV1({added:"changeAdded",removed:"changeRemoved"}[reason.change.kind]??"changeChanged",{},language)};}
+ else{
+  const{kind,path}=reason.row;
+  if(kind==="stamp"){key="reasonStamp";fields={inferrer:path.replace(/^inferrer:/u,""),recorded:String(reason.row.fact),current:current.get(path)??"?"};}
+  else if(kind==="file"){key="reasonInput";fields={path:display(path)};}
+  else if(kind==="digest"||kind==="field"){key="reasonData";fields={path:display(path)};}
+  else if(kind==="readdir"||kind==="readdirNames"||kind==="directories"){key="reasonListing";fields={path:display(path)};}
+  else if(kind==="analysis"){key="reasonAnalysis";fields={path:display(path)};}
+  else{key="reasonFact";fields={kind,path:display(path)};}
+ }
+ const why=renderGenerationMessageV1(key,fields,language);
+ return{project,key,fields,why,text:renderGenerationMessageV1("reason",{project,why},language)};
+}
+
+/** 📣️ Says why a build starts: the reason of a cold start, or the number of stale projects followed by the first stale inputs by name. */
+export function announceGenerationBuildV1(host,spec,rows){
+ if(spec.cold){host.say("cold",{reason:spec.coldReason??"empty"});return;}
+ host.say("building",{dirty:spec.owners.length,generation:spec.generation??0});
+ const current=new Map(rows.filter(row=>row.kind==="stamp").map(row=>[row.path,row.fact])),language=host.language;
+ for(const reason of spec.reasons??[]){const row=describeGenerationReasonV1(reason,{workspaceRoot:host.workspaceRoot,separator:host.separator,current,language});host.say("reason",{project:row.project,why:row.why});}
+ const listed=(spec.reasons??[]).filter(reason=>reason.row).length;
+ if((spec.staleRows??0)>listed)host.say("reasonMore",{count:spec.staleRows-listed});
 }
 
 /** 📊️ Turns the store's progress events into the shared graph phase counters with their bilingual labels. */
@@ -99,25 +214,49 @@ export function createGenerationProgressV1(clock){
 
 const needsBuild=async()=>({built:false,published:false,needsBuild:true,computed:0});
 
-/**
- * 🕰️ Loads the all-workspace graph (or the closure of some projects) from the newest sealed generation. A shared reader verifies and serves it without ever taking a writer; only a stale generation (and a fresh policy) enters the builder custody, where a holder that finds the work done by a peer serves that generation.
- * `host` binds the repository: `identity()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `readGraph(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
+/** 📦️ Expands fixed project/UTF8-byte groups once and preserves every caught consumer failure. */
+export async function expandInChunksV1(projects,expand,{maximumProjects,maximumBytes}){
+ const names=Object.keys(projects),result={};
+ const pass=async group=>{
+  const chunk={};for(const name of group)chunk[name]=projects[name];
+  Object.assign(result,await expand(chunk));
+ };
+ let group=[],bytes=0;
+ for(const name of names){const size=Buffer.byteLength(JSON.stringify(projects[name]));if(group.length&&(group.length>=maximumProjects||bytes+size>maximumBytes)){await pass(group);group=[];bytes=0;}group.push(name);bytes+=size;}
+ if(group.length)await pass(group);
+ return result;
+}
+
+/** 🌊️ The streaming twin of {@link expandInChunksV1}: the same fixed project and UTF8 byte groups, formed from `[name, node]` pairs as they arrive, so the raw nodes of a group are released as soon as the group is expanded and only the expanded projects accumulate. */
+export async function expandStreamV1(entries,expand,{maximumProjects,maximumBytes}){
+ const result={};
+ const pass=async group=>{Object.assign(result,await expand(Object.fromEntries(group)));};
+ let group=[],bytes=0;
+ for await(const entry of entries){const size=Buffer.byteLength(JSON.stringify(entry[1]));if(group.length&&(group.length>=maximumProjects||bytes+size>maximumBytes)){await pass(group);group=[];bytes=0;}group.push(entry);bytes+=size;}
+ if(group.length)await pass(group);
+ return result;
+}
+
+/** 🕰️ Loads the all-workspace graph, the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation.
+ * `host` binds the repository: `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
-export async function loadGenerationGraphV1(host,{policy="fresh",closure}={}){
- const identity=await host.identity(),roots=closure?[...new Set(closure)]:undefined,rows=await host.implementationRows(),implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows);
+export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean}={}){
+ const identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=await host.implementationRows(),implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:32,maximumBytes:16777216};
  const attempt=async(builder,store,control)=>{
   const engine=createGenerationStoreV1(host.storeOptions(store,control)),progress=createGenerationProgressV1(host.clock(control));
-  const compute=builder?async(spec,signal)=>shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part:await host.discoverPart(spec,signal,control),stubs:spec.stubs,implementation:scoped}):async()=>{throw Error("A shared graph reader never computes");};
+  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
   const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,builder:builder?body=>body():needsBuild};
-  const started=Date.now(),result=roots?await engine.refreshClosure({...base,roots}):await engine.refresh(base);
+  const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return value;}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
+  const started=Date.now(),result=roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
   if(result.needsBuild)return{needsBuild:true};
-  const assembled=await engine.assemble(result.current,{names:result.names&&[...result.names],compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
-  const projects=await host.expand(assembled.projects,control);
-  const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:{kind:"all"},registry:host.registryDigest,closure:assembled.membership}});
   const generation=result.current.manifest.generation;
   if(result.served==="current")host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});
   else if(result.served==="built"&&result.published)host.say("published",{generation,computed:result.computed,seconds:Math.round((Date.now()-started)/1000)});
-  else if(host.verbose)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
+  else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
+  if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
+  const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
+  const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort()])).digest("hex"):assembled.membership;
+  const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest}});
   return{graph,result};
  };
  const first=await host.withShared((store,control)=>attempt(false,store,control));

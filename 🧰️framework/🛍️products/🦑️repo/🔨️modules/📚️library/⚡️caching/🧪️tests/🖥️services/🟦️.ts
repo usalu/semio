@@ -25,8 +25,8 @@ async function testContinuousServiceScenario(workspace: string, generated: strin
   put("package.json", { name: "continuous-isolation-fixture", private: true });
   put(".gitignore", "node_modules\n.nx\nstate\n");
   put("project.json", { name: "fixture", targets: {
-    serve: { executor: "nx:run-commands", continuous: true, cache: false, metadata: scenario.sharing ? {} : contract.metadata, options: { command: "bun ./📜️script.ts serve" } },
-    test: { executor: "nx:run-commands", cache: false, dependsOn: ["serve"], options: { command: "bun ./📜️script.ts test" } },
+    serve: { executor: "nx:run-commands", continuous: true, cache: false, metadata: scenario.sharing ? {} : contract.metadata, options: { command: "repo ./📜️script.ts serve" } },
+    test: { executor: "nx:run-commands", cache: false, dependsOn: ["serve"], options: { command: "repo ./📜️script.ts test" } },
   } });
   put("state/.keep", "");
   put("📜️script.ts", String.raw`import { appendFileSync, existsSync, writeFileSync, readFileSync, renameSync } from "node:fs";
@@ -52,7 +52,7 @@ async function testContinuousServiceScenario(workspace: string, generated: strin
     put("app/index.html", "<!doctype html><title>Nx Vite fixture</title>");
     put("app/⚙️vite.config.ts", 'export default { logLevel: "silent" };');
     const project = JSON.parse(readFileSync(join(root, "project.json"), "utf8"));
-    project.targets.prepare = { executor: "nx:run-commands", cache: false, options: { command: "bun ./📜️script.ts prepare" } };
+    project.targets.prepare = { executor: "nx:run-commands", cache: false, options: { command: "repo ./📜️script.ts prepare" } };
     project.targets.serve.dependsOn = ["prepare"]; put("project.json", project);
     put("📜️script.ts", String.raw`import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";

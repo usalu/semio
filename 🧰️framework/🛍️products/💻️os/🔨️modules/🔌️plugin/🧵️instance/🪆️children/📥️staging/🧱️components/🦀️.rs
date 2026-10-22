@@ -10,14 +10,15 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
 use std::mem::ManuallyDrop;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 use semio_framework_plugin_publication_mounted::owner::MountedPrivateChildGroup;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
 /// 🏕️ Child composition: the live owned children, their private groups, content roots and retirement registries.
-pub struct ChildComposition<M: SpaceMember + MemberFactory> {
+pub struct ChildComposition<M: ReferenceSpaceMember + MemberFactory> {
     /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
     /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
     /// lane's live `ArtifactStore`, generalized to N children instead of one fixed lane. Each
@@ -49,7 +50,7 @@ pub struct ChildComposition<M: SpaceMember + MemberFactory> {
     pub composition: CompositionCoordinator,
 }
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🛶️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(composition: CompositionCoordinator) -> Self {
         Self {

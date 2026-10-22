@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "color-space", kind: "set-color-space", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_color_space(base, self.color_space.clone(), self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.color_spaces.iter().find(|item| item.name == self.color_space.name) { Some(previous) => vec![Op::from(SetColorSpace { color_space: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_color_space::RemoveColorSpace { name: self.color_space.name.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set color-space {}", self.color_space.name), &format!("Farbraum {} setzen", self.color_space.name))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.color_space.name.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetColorSpace
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetColorSpace> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_color_space::RemoveColorSpace>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_color_space(base, self.color_space.clone(), self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.color_spaces.iter().find(|item| item.name == self.color_space.name) { Some(previous) => vec![Op::from(SetColorSpace { color_space: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_color_space::RemoveColorSpace { name: self.color_space.name.clone() })] }
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "manifest edited after the last receipt refreshes the lock and the build proceeds",
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\", \"b\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "a/src/lib.rs": "",
+        "b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "b/src/lib.rs": ""
+      },
+      "steps": [
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } },
+        { "do": "ensure", "expect": { "outcomes": ["current"], "cargoCalls": 0, "oracle": "locked-ok" } },
+        { "do": "write", "files": { "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nb = { path = \"../b\" }\n" }, "expect": { "oracle": "locked-stale" } },
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } },
+        { "do": "ensure", "expect": { "outcomes": ["current"], "cargoCalls": 0, "oracle": "locked-ok" } }
+      ]
+    },
+    {
+      "name": "a manifest outside the workspace reached by a path dependency invalidates the receipt",
+      "files": {
+        "ws/Cargo.toml": "[workspace]\nmembers = [\"a\"]\nresolver = \"2\"\n",
+        "ws/a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nfar = { path = \"../../far\" }\n",
+        "ws/a/src/lib.rs": "",
+        "far/Cargo.toml": "[package]\nname = \"far\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[workspace]\n",
+        "far/src/lib.rs": ""
+      },
+      "manifest": "ws/Cargo.toml",
+      "steps": [
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } },
+        { "do": "write", "files": { "far/Cargo.toml": "[package]\nname = \"far\"\nversion = \"0.2.0\"\nedition = \"2021\"\n[workspace]\n" }, "expect": { "oracle": "locked-stale" } },
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } }
+      ]
+    },
+    {
+      "name": "a forced check after a locked failure repairs a lock the receipt wrongly vouches for",
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "a/src/lib.rs": ""
+      },
+      "steps": [
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } },
+        { "do": "write", "files": { "Cargo.lock": "# stale\nversion = 4\n" }, "expect": { "oracle": "locked-stale" } },
+        { "do": "ensure-force", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } }
+      ]
+    },
+    {
+      "name": "concurrent builds refresh once and the others observe the fresh receipt",
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\", \"b\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "a/src/lib.rs": "",
+        "b/Cargo.toml": "[package]\nname = \"b\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "b/src/lib.rs": ""
+      },
+      "steps": [
+        { "do": "ensure-concurrent", "expect": { "outcomes": ["current", "current", "current", "refreshed"], "oracle": "locked-ok" } }
+      ]
+    },
+    {
+      "name": "an unresolvable crate is refused in English and German naming the crate",
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nnosuchcrate-xyz = \"1\"\n",
+        "a/src/lib.rs": ""
+      },
+      "steps": [
+        { "do": "ensure", "expect": { "refusedCrate": "nosuchcrate-xyz" } }
+      ]
+    },
+    {
+      "name": "an unresolvable crate with a network grant tries online once and then refuses naming the crate",
+      "online": true,
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nnosuchcrate-xyz = { version = \"1\", registry = \"semio-offline-fixture\" }\n",
+        "a/src/lib.rs": "",
+        ".cargo/config.toml": "[registries.semio-offline-fixture]\nindex = \"sparse+http://127.0.0.1:9/index/\"\n"
+      },
+      "steps": [
+        { "do": "ensure", "expect": { "refusedCrate": "nosuchcrate-xyz" } }
+      ]
+    }
+  ]
+}

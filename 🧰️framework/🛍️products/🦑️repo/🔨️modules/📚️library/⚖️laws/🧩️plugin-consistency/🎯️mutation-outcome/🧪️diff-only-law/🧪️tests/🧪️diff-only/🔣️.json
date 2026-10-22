@@ -1,0 +1,522 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "every-rule-under-the-mutations-facet",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "🔸️area/🧬️mutations/🔹️leaf/🦀️.rs",
+   "source": [
+    "use crate::apply;",
+    "impl MutationKind<Doc> for Add {",
+    "    type Diff = Doc; // @R13",
+    "    fn diff(&self, base: &Doc, scratch: &mut Vec<u8>) -> Out { // @R8",
+    "        let mut copy = base.clone(); // @R12",
+    "        let next = state_after(base); // @R10",
+    "        apply_diff(&d); // @R9",
+    "        out.apply(1); // @R9",
+    "        Out::new()",
+    "    }",
+    "    fn inverse(&self, base: &Doc) -> Out {",
+    "        let n = negative(x); // @R11",
+    "        let m = d.negate(); // @R11",
+    "        let k = diff(a); // @R11",
+    "        let j = flip_inverse(y);",
+    "        let q = flip_inverse(outcome); // @R11",
+    "        Out::RestoreAll // @R14",
+    "    }",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r13-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-3",
+     "diff-only-mutation/whole-state-diff",
+     "high",
+     3
+    ],
+    [
+     "diff-only-r8-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-4",
+     "diff-only-mutation/leaf-mutable-base",
+     "high",
+     4
+    ],
+    [
+     "diff-only-r12-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-5",
+     "diff-only-mutation/base-clone-diff",
+     "high",
+     5
+    ],
+    [
+     "diff-only-r10-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-6",
+     "diff-only-mutation/leaf-between",
+     "high",
+     6
+    ],
+    [
+     "diff-only-r9-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-7",
+     "diff-only-mutation/leaf-applies-diff",
+     "high",
+     7
+    ],
+    [
+     "diff-only-r9-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-8",
+     "diff-only-mutation/leaf-applies-diff",
+     "high",
+     8
+    ],
+    [
+     "diff-only-r11-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-12",
+     "diff-only-mutation/diff-derived-inverse",
+     "high",
+     12
+    ],
+    [
+     "diff-only-r11-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-13",
+     "diff-only-mutation/diff-derived-inverse",
+     "high",
+     13
+    ],
+    [
+     "diff-only-r11-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-14",
+     "diff-only-mutation/diff-derived-inverse",
+     "high",
+     14
+    ],
+    [
+     "diff-only-r11-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-16",
+     "diff-only-mutation/diff-derived-inverse",
+     "high",
+     16
+    ],
+    [
+     "diff-only-r14-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-17",
+     "diff-only-mutation/restore-inverse",
+     "high",
+     17
+    ]
+   ]
+  },
+  {
+   "id": "whole-snapshot-diff-impl-and-diff-machinery",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "🔸️area/🧬️mutations/🔹️leaf/🔺️diff/🦀️.rs",
+   "source": [
+    "impl MutationDiff<Doc> for Doc { // @R13",
+    "    fn apply(&self, base: &Doc) -> Doc { base.clone() }",
+    "    fn absorb(&mut self, other: &Doc) {}",
+    "    fn helper_between() {}",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r13-🔸️area/🧬️mutations/🔹️leaf/🔺️diff/🦀️.rs-1",
+     "diff-only-mutation/whole-state-diff",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "plugin-artifact-leaf-scans-logic-impls-and-diffish-names",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️k/⚙️engine/🦀️.rs",
+   "source": [
+    "impl MutationKind<Doc> for Move {",
+    "    fn inverse(&self, base: &Doc) -> Out {",
+    "        let x = state_after(base); // @R10 @R11",
+    "        Out::empty()",
+    "    }",
+    "    fn unrelated(&self) { thing.apply(2); } // @R9",
+    "}",
+    "fn helper_diff(a: &mut Doc) {} // @R8",
+    "fn plain(a: &mut Doc) { a.apply(1); }"
+   ],
+   "expect": [
+    [
+     "diff-only-r10-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️k/⚙️engine/🦀️.rs-3",
+     "diff-only-mutation/leaf-between",
+     "high",
+     3
+    ],
+    [
+     "diff-only-r11-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️k/⚙️engine/🦀️.rs-3",
+     "diff-only-mutation/diff-derived-inverse",
+     "high",
+     3
+    ],
+    [
+     "diff-only-r9-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️k/⚙️engine/🦀️.rs-6",
+     "diff-only-mutation/leaf-applies-diff",
+     "high",
+     6
+    ],
+    [
+     "diff-only-r8-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️k/⚙️engine/🦀️.rs-8",
+     "diff-only-mutation/leaf-mutable-base",
+     "high",
+     8
+    ]
+   ]
+  },
+  {
+   "id": "outcome-apply-to-is-gone",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "🔸️area/🧱️host/🦀️.rs",
+   "source": [
+    "fn run(o: Outcome) { let n = o.apply_to(&base); } // @R16",
+    "impl MutationOutcome<D> {",
+    "    fn apply_to(&self) {} // @R16",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r16-🔸️area/🧱️host/🦀️.rs-1",
+     "diff-only-mutation/outcome-apply-to",
+     "high",
+     1
+    ],
+    [
+     "diff-only-r16-🔸️area/🧱️host/🦀️.rs-3",
+     "diff-only-mutation/outcome-apply-to",
+     "high",
+     3
+    ]
+   ]
+  },
+  {
+   "id": "non-leaf-source-without-signals-is-clean",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "🔸️area/🧱️host/🦀️.rs",
+   "source": [
+    "fn run() { let x = 1; x.apply(2); }"
+   ],
+   "expect": []
+  },
+  {
+   "id": "masking-hides-strings-comments-and-test-items",
+   "rule": "policyDiffOnlyFileBreaches",
+   "path": "🔸️area/🧬️mutations/🔹️leaf/🦀️.rs",
+   "source": [
+    "fn build() {",
+    "    let a = \"state_after(x)\";",
+    "    // state_after(y)",
+    "    let r = r#\"out.apply(1)\"#;",
+    "    let c = '\"';",
+    "    let z = state_after(q); // @R10",
+    "}",
+    "#[cfg(test)]",
+    "mod tests {",
+    "    fn t() { out.apply(1); state_after(1); }",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r10-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-6",
+     "diff-only-mutation/leaf-between",
+     "high",
+     6
+    ]
+   ]
+  },
+  {
+   "id": "row-emitter-banned-calls",
+   "rule": "policyRowEmitterFileBreaches",
+   "path": "🔸️area/🧬️mutations/🔹️leaf/🦀️.rs",
+   "source": [
+    "fn build() {",
+    "    let m = commit_built(rows); // @R18",
+    "    let n = mesh.bevel_job(args); // @R18",
+    "    let s = \"equals_base\";",
+    "    // sparse_rows(x)",
+    "    let k = Row::produced(a); // @R18",
+    "}",
+    "#[cfg(test)]",
+    "mod tests {",
+    "    fn t() { commit_built(rows); }",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r18-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-2",
+     "diff-only-mutation/row-emitter",
+     "high",
+     2
+    ],
+    [
+     "diff-only-r18-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-3",
+     "diff-only-mutation/row-emitter",
+     "high",
+     3
+    ],
+    [
+     "diff-only-r18-🔸️area/🧬️mutations/🔹️leaf/🦀️.rs-6",
+     "diff-only-mutation/row-emitter",
+     "high",
+     6
+    ]
+   ]
+  },
+  {
+   "id": "row-emitter-journal-directory",
+   "rule": "policyRowEmitterFileBreaches",
+   "path": "🔸️area/🥽️mesh/📝️journal/🦀️.rs",
+   "source": [
+    "fn go() { commit_built(x); } // @R18"
+   ],
+   "expect": [
+    [
+     "diff-only-r18-🔸️area/🥽️mesh/📝️journal/🦀️.rs-1",
+     "diff-only-mutation/row-emitter",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "row-emitter-ignores-tests-and-other-directories",
+   "rule": "policyRowEmitterFileBreaches",
+   "path": "🔸️area/🧬️mutations/🧪️tests/🦀️.rs",
+   "source": [
+    "fn go() { commit_built(x); }"
+   ],
+   "expect": []
+  },
+  {
+   "id": "row-emitter-other-directory-is-ignored",
+   "rule": "policyRowEmitterFileBreaches",
+   "path": "🔸️area/🧱️host/🦀️.rs",
+   "source": [
+    "fn go() { commit_built(x); }"
+   ],
+   "expect": []
+  },
+  {
+   "id": "host-apply-snapshot-escape-and-before-after-differencing",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️area/✏️editor/🦀️.rs",
+   "source": [
+    "fn go(s: &Doc) {",
+    "    let c = snapshot_mut(s); // @R17",
+    "    let d = make_diff(&before, &after); // @R17",
+    "}",
+    "fn compute_diff(before: &Doc, after: &Doc) -> D { D } // @R17"
+   ],
+   "expect": [
+    [
+     "diff-only-r17-🔸️area/✏️editor/🦀️.rs-2",
+     "diff-only-mutation/host-apply",
+     "high",
+     2
+    ],
+    [
+     "diff-only-r17-🔸️area/✏️editor/🦀️.rs-3",
+     "diff-only-mutation/host-apply",
+     "high",
+     3
+    ],
+    [
+     "diff-only-r17-🔸️area/✏️editor/🦀️.rs-5",
+     "diff-only-mutation/host-apply",
+     "high",
+     5
+    ]
+   ]
+  },
+  {
+   "id": "host-apply-framework-skips-before-after-calls",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔸️area/🦀️.rs",
+   "source": [
+    "fn go() { let d = make_diff(&before, &after); }",
+    "fn c(a: &Doc) { snapshot_mut(a); } // @R17"
+   ],
+   "expect": [
+    [
+     "diff-only-r17-🧰️framework/🛍️products/💻️os/🔨️modules/🔸️area/🦀️.rs-2",
+     "diff-only-mutation/host-apply",
+     "high",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "host-apply-scope-skips-excluded-directories",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️area/✏️editor/🧪️tests/🦀️.rs",
+   "source": [
+    "fn go(s: &Doc) { snapshot_mut(s); }"
+   ],
+   "expect": []
+  },
+  {
+   "id": "host-apply-typescript-ref-assignment-from-local-apply",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️app/shell.tsx",
+   "source": [
+    "const next = applyLocal(doc);",
+    "documentSnapshotRef.current = next; // @R17",
+    "documentSnapshotRef.current = fromServer;"
+   ],
+   "expect": [
+    [
+     "diff-only-r17-🔸️app/shell.tsx-2",
+     "diff-only-mutation/host-apply",
+     "high",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "host-apply-mutable-parameter-write-without-central-applier",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️area/🌉️apply/🦀️.rs",
+   "source": [
+    "fn put(doc: &mut DocSnapshot) {",
+    "    doc.rows.push(1); // @R17",
+    "}",
+    "fn put_ok(doc: &mut DocSnapshot, d: D) {",
+    "    *doc = apply_diff(d);",
+    "}"
+   ],
+   "expect": [
+    [
+     "diff-only-r17-🔸️area/🌉️apply/🦀️.rs-2",
+     "diff-only-mutation/host-apply",
+     "high",
+     2
+    ]
+   ],
+   "oracle": false
+  },
+  {
+   "id": "host-apply-writer-called-only-from-the-diff-machinery-is-exempt",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️area/🌉️apply/🦀️.rs",
+   "source": [
+    "fn put(doc: &mut DocSnapshot) {",
+    "    doc.rows.push(1);",
+    "}"
+   ],
+   "expect": [],
+   "group": {
+    "🔸️area/🌉️apply/🔹️b/🦀️.rs": [
+     "impl MutationDiff<D> for E {",
+     "    fn apply(&self) { put(&mut s); }",
+     "}"
+    ]
+   },
+   "oracle": false
+  },
+  {
+   "id": "host-apply-typescript-whole-archive-put-outside-an-import-path",
+   "rule": "policyHostApplyFileBreaches",
+   "path": "🔸️app/handlers.ts",
+   "source": [
+    "const save = () => { put({ kind: \"localDocumentArchive\", bytes }); }; // @R17",
+    "const importDoc = () => { admitArchive(x); put({ kind: \"localDocumentArchive\", bytes }); };"
+   ],
+   "expect": [
+    [
+     "diff-only-r17-🔸️app/handlers.ts-1",
+     "diff-only-mutation/host-apply",
+     "high",
+     1
+    ]
+   ],
+   "oracle": false
+  },
+  {
+   "id": "inverse-sum-law-diff-leaf-without-test",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️add/🔺️diff/🦀️.rs": [
+     "impl MutationDiff<X> for X {}"
+    ]
+   },
+   "expect": [
+    [
+     "diff-only-r15-🔸️area/🧬️mutations/🔹️add/🔺️diff/🦀️.rs-1",
+     "diff-only-mutation/inverse-sum-law-untested",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "inverse-sum-law-tested-leaf-is-clean",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️add/🔺️diff/🦀️.rs": [
+     "impl MutationDiff<X> for X {}"
+    ],
+    "🔸️area/🧬️mutations/🔹️add/🧪️tests/🔬️t/🦀️.rs": [
+     "fn t() { assert_mutation_inverse_sum_law(a); }"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "inverse-sum-law-composite-plan-leaf-is-exempt",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️plan1/🧩️plan/🦀️.rs": [
+     "fn p() {}"
+    ],
+    "🔸️area/🧬️mutations/🔹️plan1/🔺️diff/🦀️.rs": [
+     "fn d() {}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "inverse-sum-law-payload-named-by-a-family-test",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️move/🦀️.rs": [
+     "impl MutationKind<Doc> for Move {}"
+    ],
+    "🔸️area/🧬️mutations/🔹️other/🦀️.rs": [
+     "impl MutationKind<Doc> for Other {}"
+    ],
+    "🔸️area/🧪️tests/🔬️law/🦀️.rs": [
+     "fn law() { assert_mutation_inverse_sum_law(Move::new()); }",
+     "fn unrelated() { other(); }"
+    ]
+   },
+   "expect": [
+    [
+     "diff-only-r15-🔸️area/🧬️mutations/🔹️other/🦀️.rs-1",
+     "diff-only-mutation/inverse-sum-law-untested",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "inverse-sum-law-reached-through-a-helper",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️swap/🦀️.rs": [
+     "impl MutationKind<Doc> for Swap {}"
+    ],
+    "🔸️area/🧪️tests/🔬️law/🦀️.rs": [
+     "fn law() { check(); }",
+     "fn check() { assert_mutation_inverse_sum_law(Swap::new()); }"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "inverse-sum-law-slug-literal-names-the-leaf",
+   "rule": "policyInverseSumLawUntestedLeafBreaches",
+   "tree": {
+    "🔸️area/🧬️mutations/🔹️rotate-all/🔺️diff/🦀️.rs": [
+     "impl MutationDiff<X> for X {}"
+    ],
+    "🔸️area/🧪️tests/🔬️law/🦀️.rs": [
+     "fn law() { assert_mutation_inverse_sum_law(\"rotate-all\"); }"
+    ]
+   },
+   "expect": []
+  }
+ ]
+}

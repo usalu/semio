@@ -80,7 +80,7 @@ impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparati
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-mutation-owner-missing"))?;
         let inverse = mutation.inverse(base.get())?;
-        let post = crate::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+        let post = crate::protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-authority-missing"))?;
         let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
@@ -185,7 +185,7 @@ impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparati
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-mutation-owner-missing"))?;
         let inverse = mutation.inverse(base.get())?;
-        let post = crate::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+        let post = crate::protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-authority-missing"))?;
         let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);

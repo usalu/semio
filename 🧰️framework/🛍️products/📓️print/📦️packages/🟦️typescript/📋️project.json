@@ -24,14 +24,14 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     },
     "generate": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🎨print-design-token-paints/📜️script.ts generate"
+        "command": "repo ../../🔨️modules/🎨print-design-token-paints/📜️script.ts generate"
       },
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
@@ -40,7 +40,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
           "externalDependencies": []
@@ -59,7 +59,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate viz"
+        "command": "repo ./📜️script.ts generate viz"
       },
       "metadata": {
         "semio": {
@@ -72,7 +72,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "inputs": [
         "default",
@@ -83,7 +83,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
-        { "runtime": "bun --version" }
+        { "runtime": "repo tools exec --light bun -- --version" }
       ],
       "outputs": []
     },
@@ -91,7 +91,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts build"
+        "command": "repo ../../🔨️modules/🔤print-font-catalog/📜️script.ts build"
       },
       "metadata": {
         "semio": {
@@ -109,7 +109,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
           "externalDependencies": []
@@ -127,7 +127,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -151,7 +151,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -169,7 +169,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-macro-staging": {
@@ -194,10 +194,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         {
           "externalDependencies": [
@@ -211,7 +211,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test macro",
+        "command": "repo ./📜️script.ts test macro",
         "forwardAllArgs": false
       }
     },
@@ -225,7 +225,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -250,7 +250,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
         "forwardAllArgs": false
       }
     },
@@ -265,7 +265,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test viz coverage",
+        "command": "repo ./📜️script.ts test viz coverage",
         "forwardAllArgs": false
       },
       "outputs": []
@@ -275,7 +275,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test viz full",
+        "command": "repo ./📜️script.ts test viz full",
         "forwardAllArgs": false
       },
       "dependsOn": [
@@ -298,7 +298,7 @@
       "parallelism": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts prepare"
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts prepare"
       },
       "metadata": {
         "semio": {
@@ -316,18 +316,18 @@
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/**/*",
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         }
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts verify"
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts verify"
       }
     },
     "deps-tex": {
@@ -337,7 +337,7 @@
       "parallelism": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
+        "command": "repo ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
       },
       "metadata": {
         "semio": {
@@ -357,7 +357,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test viz fixtures",
+        "command": "repo ./📜️script.ts test viz fixtures",
         "forwardAllArgs": true
       }
     },
@@ -427,7 +427,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test native-grammar",
+        "command": "repo ./📜️script.ts test native-grammar",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -446,7 +446,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
+        "command": "repo ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
       },
       "metadata": {
         "semio": {
@@ -468,7 +468,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test measurement",
+        "command": "repo ./📜️script.ts test measurement",
         "forwardAllArgs": false
       }
     }

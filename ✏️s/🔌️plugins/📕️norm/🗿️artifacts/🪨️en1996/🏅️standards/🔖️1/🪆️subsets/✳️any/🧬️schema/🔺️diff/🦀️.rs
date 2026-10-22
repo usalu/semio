@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
@@ -93,17 +93,9 @@ pub struct En1996Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<En1996Snapshot> for En1996Diff {
-    fn apply(&self, base: &En1996Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1996Snapshot> {
-        Ok(En1996Snapshot {
-            annex: self.annex.unwrap_or(base.annex),
-            masonry_class: self.masonry_class.unwrap_or(base.masonry_class),
-            design_situation: self.design_situation.unwrap_or(base.design_situation),
-            storeys: self.storeys.unwrap_or(base.storeys),
-            walls: self.walls.commit_onto(&base.walls, capability).map_err(|error| error.under(["walls"]))?,
-        })
-    }
+impl MutationDiff<En1996Snapshot> for En1996Diff {}
 
+impl protocol::ColdMutationDiff<En1996Snapshot> for En1996Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -119,9 +111,31 @@ impl MutationDiff<En1996Snapshot> for En1996Diff {
         }
         self.walls.absorb(other.walls);
     }
+
+    fn apply(&self, unpublished: &mut En1996Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = En1996Snapshot {
+            annex: self.annex.unwrap_or(base.annex),
+            masonry_class: self.masonry_class.unwrap_or(base.masonry_class),
+            design_situation: self.design_situation.unwrap_or(base.design_situation),
+            storeys: self.storeys.unwrap_or(base.storeys),
+            walls: self.walls.commit_onto(&base.walls, capability).map_err(|error| error.under(["walls"]))?,
+        };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1996Snapshot> for En1996Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.masonry_class.is_none()
+            && self.design_situation.is_none()
+            && self.storeys.is_none()
+            && self.walls.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1996Snapshot> for En1996Diff {
     fn inverse(&self, base: &En1996Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex),
@@ -130,14 +144,6 @@ impl DiffAlgebra<En1996Snapshot> for En1996Diff {
             storeys: self.storeys.as_ref().map(|_| base.storeys),
             walls: self.walls.inverse(&base.walls),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.masonry_class.is_none()
-            && self.design_situation.is_none()
-            && self.storeys.is_none()
-            && self.walls.is_empty()
     }
 }
 

@@ -6,7 +6,9 @@
         let variants = T::variants();
         for (keyword, spec_fn) in &variants {
             if line == keyword.as_str() || line.starts_with(&format!("{keyword} ")) {
-                let record = crate::parse_exact(line, &(spec_fn.ordinary)(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
+                let spec = (spec_fn.ordinary)();
+                let body = if spec.keyword.is_some() { line } else { line[keyword.len()..].trim_start() };
+                let record = crate::parse_exact(body, &spec, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
                 return T::from_named_record(keyword, &record);
             }
         }
@@ -17,5 +19,7 @@
         let (keyword, record) = op.to_named_record();
         let variants = T::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        print(&record, &(spec_fn.ordinary)(), JoinMode::Inline)
+        let spec = (spec_fn.ordinary)();
+        let body = print(&record, &spec, JoinMode::Inline);
+        if spec.keyword.is_some() { body } else if body.is_empty() { keyword } else { format!("{keyword} {body}") }
     }

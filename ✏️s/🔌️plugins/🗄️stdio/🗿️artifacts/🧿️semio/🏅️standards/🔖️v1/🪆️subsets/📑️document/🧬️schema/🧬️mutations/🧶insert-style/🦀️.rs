@@ -27,7 +27,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "style", kind: "insert-style", record: "InsertStyle" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Stil einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDocumentSnapshot, Op> for InsertStyle
+where
+    Op: protocol::ColdMutation<SemioDocumentSnapshot, ReferenceDiff = crate::schema::diff::SemioDocumentDiff> + From<InsertStyle> + From<crate::schema::mutations::remove_style::RemoveStyle>,
+{
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDocumentSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -36,12 +48,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Stil einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

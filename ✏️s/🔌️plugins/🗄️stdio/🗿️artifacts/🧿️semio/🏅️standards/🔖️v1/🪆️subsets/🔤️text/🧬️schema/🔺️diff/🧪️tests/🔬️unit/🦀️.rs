@@ -17,7 +17,7 @@ fn modify_run(index: usize, diff: SemioTextRunDiff) -> SemioTextDiff {
 async fn apply_touches_only_named_run_fields() {
     let base = one_run("a");
     let diff = modify_run(0, SemioTextRunDiff { content: Some("b".into()), ..Default::default() });
-    let next = protocol::apply_diff(&diff, &base).expect("apply must succeed for a well-formed fixture");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(next.runs[0].content, "b");
     assert_eq!(next.runs[0].language, "en", "untouched run fields must be preserved");
 }
@@ -29,17 +29,17 @@ async fn absorb_equals_sequential_apply() {
     let second = modify_run(0, SemioTextRunDiff { language: Some("de".into()), content: Some("c".into()), ..Default::default() });
     let mut absorbed = first.clone();
     absorbed.absorb(second.clone());
-    let sequential = protocol::apply_diff(&second, &protocol::apply_diff(&first, &base).unwrap()).unwrap();
-    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), sequential);
+    let sequential = protocol::apply_diff_cold(&second, &protocol::apply_diff_cold(&first, &base).unwrap()).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_base() {
     let base = one_run("a");
     let diff = modify_run(0, SemioTextRunDiff { content: Some("b".into()), ..Default::default() });
-    let next = protocol::apply_diff(&diff, &base).unwrap();
+    let next = protocol::apply_diff_cold(&diff, &base).unwrap();
     let inverse = protocol::command::DiffAlgebra::inverse(&diff, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &next).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]

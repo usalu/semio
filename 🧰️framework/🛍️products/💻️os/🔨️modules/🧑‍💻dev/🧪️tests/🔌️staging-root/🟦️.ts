@@ -110,7 +110,7 @@ describe("one plugin staging root", () => {
     const expected = [...fixture.root.sourceFiles, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json", relative(repoRoot, fileURLToPath(import.meta.url)).replaceAll("\\", "/")].map((path) => `{workspaceRoot}/${path}`).sort();
     expect([...project.namedInputs.stagingRootSources].sort()).toEqual(expected);
     const targets = Object.values(project.targets) as { options?: { command?: string }; inputs?: readonly string[] }[];
-    for (const target of targets.filter((target) => target.options?.command?.startsWith("bun ./📜️script.ts test"))) expect(target.inputs).toContain("stagingRootSources");
+    for (const target of targets.filter((target) => target.options?.command?.startsWith("repo ./📜️script.ts test"))) expect(target.inputs).toContain("stagingRootSources");
   });
 });
 

@@ -1,0 +1,514 @@
+{
+ "version": 1,
+ "table": {
+  "stamps": [
+   {
+    "id": "a.walk",
+    "schema": "a.json",
+    "pointer": "/p/walk"
+   },
+   {
+    "id": "a.map",
+    "schema": "b.json",
+    "pointer": "/inferrers",
+    "member": "stamp"
+   },
+   {
+    "id": "a.cache",
+    "schema": "c.json",
+    "pointer": "/f"
+   },
+   {
+    "id": "a.many",
+    "schema": "d.json",
+    "pointer": "/inferrers",
+    "member": "stamp"
+   }
+  ],
+  "resources": [
+   {
+    "prefix": "alpha:",
+    "stamps": [
+     "a.walk",
+     "a.map"
+    ]
+   },
+   {
+    "prefix": "beta:",
+    "stamps": [
+     "a.cache"
+    ]
+   },
+   {
+    "prefix": "delta:",
+    "stamps": [
+     "a.many"
+    ]
+   }
+  ]
+ },
+ "files": {
+  "a.json": {
+   "p": {
+    "walk": "w/1"
+   }
+  },
+  "b.json": {
+   "inferrers": {
+    "x": {
+     "stamp": "x/1",
+     "scope": "project"
+    },
+    "y": {
+     "stamp": "y/1",
+     "scope": "native"
+    }
+   }
+  },
+  "c.json": {
+   "f": "c1"
+  },
+  "d.json": {
+   "inferrers": {
+    "x1": {
+     "stamp": "x1/1",
+     "scope": "project"
+    },
+    "x2": {
+     "stamp": "x2/1",
+     "scope": "project"
+    },
+    "x3": {
+     "stamp": "x3/1",
+     "scope": "project"
+    },
+    "x4": {
+     "stamp": "x4/1",
+     "scope": "project"
+    },
+    "x5": {
+     "stamp": "x5/1",
+     "scope": "project"
+    },
+    "x6": {
+     "stamp": "x6/1",
+     "scope": "project"
+    },
+    "x7": {
+     "stamp": "x7/1",
+     "scope": "project"
+    },
+    "x8": {
+     "stamp": "x8/1",
+     "scope": "project"
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "name": "nothing moved",
+   "declared": [
+    "a.walk",
+    "a.map",
+    "a.cache",
+    "a.many"
+   ],
+   "live": {},
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "scalar stamp bumped",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/2"
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.walk",
+     "own": "w/1",
+     "live": "w/2"
+    }
+   ],
+   "en": "This command runs an outdated implementation: the declared format stamp a.walk moved from w/1 to w/2. It yields alpha:/r without producing anything.",
+   "de": "Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel a.walk wechselte von w/1 zu w/2. Er gibt alpha:/r frei, ohne etwas zu erzeugen."
+  },
+  {
+   "name": "member stamp bumped",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "b.json": {
+     "inferrers": {
+      "x": {
+       "stamp": "x/2",
+       "scope": "project"
+      },
+      "y": {
+       "stamp": "y/1",
+       "scope": "native"
+      }
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.map.x",
+     "own": "x/1",
+     "live": "x/2"
+    }
+   ]
+  },
+  {
+   "name": "member scope edited without a stamp bump",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "b.json": {
+     "inferrers": {
+      "x": {
+       "stamp": "x/1",
+       "scope": "all"
+      },
+      "y": {
+       "stamp": "y/1",
+       "scope": "native"
+      }
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "member removed",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "b.json": {
+     "inferrers": {
+      "x": {
+       "stamp": "x/1",
+       "scope": "project"
+      }
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.map.y",
+     "own": "y/1",
+     "live": "-"
+    }
+   ]
+  },
+  {
+   "name": "member added",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "b.json": {
+     "inferrers": {
+      "x": {
+       "stamp": "x/1",
+       "scope": "project"
+      },
+      "y": {
+       "stamp": "y/1",
+       "scope": "native"
+      },
+      "z": {
+       "stamp": "z/1",
+       "scope": "all"
+      }
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.map.z",
+     "own": "-",
+     "live": "z/1"
+    }
+   ]
+  },
+  {
+   "name": "two stamps moved are reported in table order",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/9"
+     }
+    },
+    "b.json": {
+     "inferrers": {
+      "x": {
+       "stamp": "x/3",
+       "scope": "project"
+      },
+      "y": {
+       "stamp": "y/1",
+       "scope": "native"
+      }
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.walk",
+     "own": "w/1",
+     "live": "w/9"
+    },
+    {
+     "id": "a.map.x",
+     "own": "x/1",
+     "live": "x/3"
+    }
+   ]
+  },
+  {
+   "name": "a stamp of another resource moved",
+   "declared": [
+    "a.walk",
+    "a.map",
+    "a.cache"
+   ],
+   "live": {
+    "c.json": {
+     "f": "c2"
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "the moved stamp of the bound resource",
+   "declared": [
+    "a.walk",
+    "a.map",
+    "a.cache"
+   ],
+   "live": {
+    "c.json": {
+     "f": "c2"
+    }
+   },
+   "resource": "beta:/image",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.cache",
+     "own": "c1",
+     "live": "c2"
+    }
+   ]
+  },
+  {
+   "name": "a stamp the process never declared",
+   "declared": [
+    "a.cache"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/2"
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "shared access is never guarded",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/2"
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "shared",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "an unbound resource is never guarded",
+   "declared": [
+    "a.walk",
+    "a.map",
+    "a.cache"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/2"
+     }
+    }
+   },
+   "resource": "gamma:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "a stamp moved and moved back",
+   "declared": [
+    "a.walk",
+    "a.map"
+   ],
+   "live": {
+    "a.json": {
+     "p": {
+      "walk": "w/1"
+     }
+    }
+   },
+   "resource": "alpha:/r",
+   "mode": "exclusive",
+   "admission": "pass",
+   "moved": []
+  },
+  {
+   "name": "eight stamps moved are reported bounded",
+   "declared": [
+    "a.many"
+   ],
+   "live": {
+    "d.json": {
+     "inferrers": {
+      "x1": {
+       "stamp": "x1/2",
+       "scope": "project"
+      },
+      "x2": {
+       "stamp": "x2/2",
+       "scope": "project"
+      },
+      "x3": {
+       "stamp": "x3/2",
+       "scope": "project"
+      },
+      "x4": {
+       "stamp": "x4/2",
+       "scope": "project"
+      },
+      "x5": {
+       "stamp": "x5/2",
+       "scope": "project"
+      },
+      "x6": {
+       "stamp": "x6/2",
+       "scope": "project"
+      },
+      "x7": {
+       "stamp": "x7/2",
+       "scope": "project"
+      },
+      "x8": {
+       "stamp": "x8/2",
+       "scope": "project"
+      }
+     }
+    }
+   },
+   "resource": "delta:/r",
+   "mode": "exclusive",
+   "admission": "stale",
+   "moved": [
+    {
+     "id": "a.many.x1",
+     "own": "x1/1",
+     "live": "x1/2"
+    },
+    {
+     "id": "a.many.x2",
+     "own": "x2/1",
+     "live": "x2/2"
+    },
+    {
+     "id": "a.many.x3",
+     "own": "x3/1",
+     "live": "x3/2"
+    },
+    {
+     "id": "a.many.x4",
+     "own": "x4/1",
+     "live": "x4/2"
+    },
+    {
+     "id": "a.many.x5",
+     "own": "x5/1",
+     "live": "x5/2"
+    },
+    {
+     "id": "a.many.x6",
+     "own": "x6/1",
+     "live": "x6/2"
+    },
+    {
+     "id": "a.many.x7",
+     "own": "x7/1",
+     "live": "x7/2"
+    },
+    {
+     "id": "a.many.x8",
+     "own": "x8/1",
+     "live": "x8/2"
+    }
+   ],
+   "shown": 6,
+   "hidden": 2,
+   "enMore": "... and 2 more stamps moved.",
+   "deMore": "... und 2 weitere Stempel wechselten."
+  }
+ ]
+}

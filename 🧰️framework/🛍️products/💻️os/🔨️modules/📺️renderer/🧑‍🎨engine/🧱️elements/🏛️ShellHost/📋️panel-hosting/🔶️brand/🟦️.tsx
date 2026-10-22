@@ -1,6 +1,6 @@
 /** 🔶️ The brand phase of usePanelHosting. */
 import { useInitialExampleReadiness } from "../../../🐚️Shell/🎬️initial-example/🟦️.ts";
-import { type ReactNode, useCallback, useEffect, useMemo } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
 import { type Anchor, cn, findPanelTabNode, navbarFillItem, type NavbarItem, PanelChromeTabBar, type PanelTabSelectionOptions, SemioLogo, ShellBrandLogo, ResponsiveLabel, shellChromeTitleClassName, Toggle } from "@semio-tech/ui-react";
 import { resolveBootExampleId } from "../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";

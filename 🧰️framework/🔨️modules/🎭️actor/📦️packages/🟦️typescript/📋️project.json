@@ -15,7 +15,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -31,7 +31,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-wire-turn-source",
+        "command": "repo ./📜️script.ts test-wire-turn-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -57,7 +57,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-product-independent-source",
+        "command": "repo ./📜️script.ts test-product-independent-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -75,7 +75,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-product-independent-source",
+        "command": "repo ./📜️script.ts test-product-independent-source",
         "forwardAllArgs": true
       },
       "metadata": {

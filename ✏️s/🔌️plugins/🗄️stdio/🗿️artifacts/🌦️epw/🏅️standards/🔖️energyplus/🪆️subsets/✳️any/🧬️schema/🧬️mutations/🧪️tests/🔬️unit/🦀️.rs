@@ -1,7 +1,7 @@
 use crate::{standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriods, standards::energyplus::subsets::any::schema::snapshot::EpwLocation, standards::energyplus::subsets::any::schema::snapshot::EpwRecord, standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot};
 use crate::apply_mutation;
 use crate::standards::energyplus::subsets::any::schema::mutations::*;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 
 //#region 🔖️Fixtures
@@ -92,7 +92,7 @@ async fn mutation_diff_law() {
     ];
     for m in variants {
         let diff = m.diff(&base);
-        let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
+        let expected = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let returned_diff = apply_mutation(&mut via_apply, &m);
@@ -123,8 +123,8 @@ async fn inverse_law() {
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
         let d = m.diff(&base);
-        let mid = protocol::apply_diff(d.diff(), &base).unwrap();
-        let back = protocol::apply_diff(&d.diff().inverse(&base), &mid).unwrap();
+        let mid = protocol::apply_diff_cold(d.diff(), &base).unwrap();
+        let back = protocol::apply_diff_cold(&d.diff().inverse(&base), &mid).unwrap();
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }
@@ -136,46 +136,46 @@ async fn absorb_law() {
     let base = base_snapshot();
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("40", "ins")) }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("41", "f")) }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("42", "g")) }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("43", "orig")) }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "patched".into() }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Add+SetRecordField absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).unwrap(), after, "Add+SetRecordField absorb mismatch");
     assert_eq!(after.records[1].dry_bulb_temp, "patched");
 
     let d1 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "will-vanish".into() }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 1 }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
 
     let base = base_snapshot();
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: Box::new(record("44", "a")) }).diff(&base);
-    let s1 = protocol::apply_diff(d1.diff(), &base).unwrap();
+    let s1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 0, field_index: 6, value: "a2".into() }).diff(&s1);
-    let s2 = protocol::apply_diff(d2.diff(), &s1).unwrap();
+    let s2 = protocol::apply_diff_cold(d2.diff(), &s1).unwrap();
     let d3 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 2 }).diff(&s2);
-    let s3 = protocol::apply_diff(d3.diff(), &s2).unwrap();
+    let s3 = protocol::apply_diff_cold(d3.diff(), &s2).unwrap();
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -186,9 +186,9 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
-    assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff_cold(&right, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), protocol::apply_diff_cold(&right, &base).unwrap(), "absorb must be associative");
 }
 //#endregion 🔖️FieldSweep
 

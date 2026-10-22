@@ -35,7 +35,7 @@ fn mutation() -> LocalCatalogConfigMutation {
 #[test]
 fn unlists_the_studio_and_keeps_its_sibling() {
     let base = before();
-    let outcome = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &base);
+    let outcome = <LocalCatalogConfigMutation as protocol::ColdMutation<LocalCatalog>>::diff(&mutation(), &base);
     let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("retire applies to its committed before-catalog");
     assert_eq!(applied, expected_after(), "retire-local-document: the catalog differs from the committed after-snapshot");
     assert_eq!(applied.documents, vec![base.documents[1].clone()], "retire-local-document: the sibling must survive untouched");
@@ -45,12 +45,12 @@ fn unlists_the_studio_and_keeps_its_sibling() {
 #[test]
 fn undoing_the_retirement_restores_before() {
     let base = before();
-    let inverse = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <LocalCatalogConfigMutation as protocol::ColdMutation<LocalCatalog>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [LocalCatalogConfigMutation::AdmitLocalDocument(undo)] if undo.document_id == "studio-alpha" && undo.admitted_at_ms == base.documents[0].admitted_at_ms), "retire-local-document: the undo re-admits BASE's own entry");
-    let forward = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &base);
+    let forward = <LocalCatalogConfigMutation as protocol::ColdMutation<LocalCatalog>>::diff(&mutation(), &base);
     let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward retire applies");
     for step in &inverse {
-        let undo = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(step, &snapshot);
+        let undo = <LocalCatalogConfigMutation as protocol::ColdMutation<LocalCatalog>>::diff(step, &snapshot);
         snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the retire inverse step applies");
     }
     assert_eq!(snapshot, base, "retire-local-document: undoing the retirement did not restore the before-catalog");
@@ -73,7 +73,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_and_diff_hold() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"));
-    let produced = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &before());
+    let produced = <LocalCatalogConfigMutation as protocol::ColdMutation<LocalCatalog>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None);
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(produced.diff()), committed);

@@ -1,5 +1,5 @@
 /** 🪟️ The panel active paths, the history tab and override tab reveals, the time travel reveal and the tool tab selection effects. */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
 import { spawnedIdOfWindowInstanceV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type Anchor, ANCHORS, findPanelTabInDock, findPanelTabPath, panelTabChildren, reconcileActivePath } from "@semio-tech/ui-react";

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ Repo CLI task router. */
@@ -13,6 +13,7 @@ import { readEntityCatalog } from "../../../../../../../🔨️modules/🧬️sc
 import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { REFRESH_COMMAND, REPO_CLI_GO, repoEntityKindTarget } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 import { runTestScript, runPreviewEntityKindsScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const REPO_CLI_MAIN = "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp";
 
@@ -38,7 +39,7 @@ class BuildScript extends BundleScript {
   }
 }
 
-/** ⏱️Default `test` MUST stay ≤30s — `-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `main_test.go`; run `bun ./📜️script.ts test -- -run TestX` or drop `-short` for the full suite. */
+/** ⏱️Default `test` MUST stay ≤30s — `-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `main_test.go`; run `repo ./📜️script.ts test -- -run TestX` or drop `-short` for the full suite. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
@@ -73,14 +74,14 @@ class TestEntityKindsScript extends BundleScript {
     if (segments.length) throw new Error("test-entity-kinds accepts no arguments");
     const { proveRepoEntityKindsOwnership } = await import("../../🧪️tests/🏷️entity-kinds/🟦️.ts");
     proveRepoEntityKindsOwnership(this.repoRoot);
-    await runCanonicalGoTests(join(this.repoRoot, REPO_CLI_GO), ["-short", "-count=1", "-v", "-run", "^TestAllEntityEmojisProjectsTheFrameworkCatalog$"], { env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, packages: ["."] });
+    await runCanonicalGoTests(join(this.repoRoot, REPO_CLI_GO), ["-short", "-count=1", "-v", "-run", "^TestAllEntityEmojisProjectsTheFrameworkCatalog$"], this.invocation, { env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, packages: ["."] });
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript)
+const router = new ScriptRouter(import.meta.dirname).register("dev", DevScript).register("build", BuildScript).register("test", TestScript)
   .register("generate-entity-kinds", GenerateEntityKindsScript)
   .register("preview-generated", PreviewEntityKindsScript)
   .register("check-entity-kinds", CheckEntityKindsScript)
   .register("test-entity-kinds", TestEntityKindsScript);
 
-if (import.meta.main) await runRepoScriptMain(router, import.meta.url);
+if (isMainModuleV1(import.meta.url)) await runRepoScriptMain(router, import.meta.url);

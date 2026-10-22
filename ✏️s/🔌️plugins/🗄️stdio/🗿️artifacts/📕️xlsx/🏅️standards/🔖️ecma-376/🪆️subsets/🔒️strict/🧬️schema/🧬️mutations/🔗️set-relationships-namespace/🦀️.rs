@@ -13,19 +13,20 @@ pub struct SetRelationshipsNamespace {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshipsNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationships-namespace", kind: "set-relationships-namespace", record: "SetRelationshipsNamespace" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, &self.namespace))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(relationships_namespace_inverse(base))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set relationships namespace", "Beziehungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshipsNamespace {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, &self.namespace))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(relationships_namespace_inverse(base))
     }
 }
 //#endregion 🔖️Payload

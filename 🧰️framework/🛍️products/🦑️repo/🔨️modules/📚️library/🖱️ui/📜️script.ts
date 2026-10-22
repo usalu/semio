@@ -34,7 +34,7 @@ class CheckChromeI18nScript extends BundleScript {
 //#endregion 🌐️chrome-i18n-lint
 
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("dev", DevScript)
   .register("build", BuildScript)
   .register("check-ui-primitives", CheckUiPrimitivesScript)

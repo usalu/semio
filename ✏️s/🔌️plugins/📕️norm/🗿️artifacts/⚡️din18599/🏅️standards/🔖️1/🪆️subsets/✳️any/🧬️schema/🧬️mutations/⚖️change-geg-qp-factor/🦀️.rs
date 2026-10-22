@@ -22,20 +22,21 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeGegQpFactor wher
         record: "ChangedGegQpFactor",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change GEG primary energy requirement factor", "GEG-Anforderungsfaktor für den Primärenergiebedarf ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din18599Snapshot, Op> for ChangeGegQpFactor where Op: protocol::ColdMutation<Din18599Snapshot, ReferenceDiff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::change_geg_qp_factor::ChangeGegQpFactor> {
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::change_geg_qp_factor::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_geg_qp_factor::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change GEG primary energy requirement factor", "GEG-Anforderungsfaktor für den Primärenergiebedarf ändern")
-    }
 }
 
 //#region 🪢️Mounts

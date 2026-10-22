@@ -246,7 +246,7 @@
         "win32-x64"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "csv-rows"
       ],
@@ -297,7 +297,7 @@
         "win32-x64"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "csv-compare"
       ],
@@ -769,7 +769,7 @@
         "packageVersion": "1.4.0",
         "engineFamily": "burntsushi-csv",
         "engineVersion": "1.4.0",
-        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -821,7 +821,7 @@
         "packageVersion": "1.4.0",
         "engineFamily": "burntsushi-csv",
         "engineVersion": "1.4.0",
-        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -873,7 +873,7 @@
         "packageVersion": "1.4.0",
         "engineFamily": "burntsushi-csv",
         "engineVersion": "1.4.0",
-        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -925,7 +925,7 @@
         "packageVersion": "1.4.0",
         "engineFamily": "burntsushi-csv",
         "engineVersion": "1.4.0",
-        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -977,7 +977,7 @@
         "packageVersion": "1.4.0",
         "engineFamily": "burntsushi-csv",
         "engineVersion": "1.4.0",
-        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },

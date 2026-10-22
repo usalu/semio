@@ -1,5 +1,5 @@
 /** 🔸️ The auto checkin scheduler phase of useCheckInAndSync. */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { buildFrameworkSyncUtilities } from "@semio-tech/framework/backbone";
 import { type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
 import { selectQuarantinedConflicts } from "../../../🐚️Shell/🕹️shell-store/🟦️.ts";

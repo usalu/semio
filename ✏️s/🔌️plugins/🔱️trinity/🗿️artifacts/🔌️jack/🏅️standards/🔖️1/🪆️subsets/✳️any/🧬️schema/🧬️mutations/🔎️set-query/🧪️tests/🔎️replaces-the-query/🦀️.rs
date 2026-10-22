@@ -55,7 +55,7 @@ async fn inverse_restores_before() {
 /// 🔺️ The produced diff is the committed one: every slot `None` except `query`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &before());
+    let outcome = <TrinityGraphMutation as protocol::ColdMutation<JackSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-query/🔎️replaces-the-query: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -68,7 +68,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: JackDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies");
     assert_eq!(produced, after(), "set-query/🔎️replaces-the-query: committed diff did not carry before to after");
 }
 
@@ -77,9 +77,9 @@ async fn committed_diff_applies_to_after() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"));
-    let produced = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &before());
+    let produced = <TrinityGraphMutation as protocol::ColdMutation<JackSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "an applied set-query carries no diagnostics, got {:?}", produced.messages());
-    let repeated = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &after());
+    let repeated = <TrinityGraphMutation as protocol::ColdMutation<JackSnapshot>>::diff(&mutation(), &after());
     assert_eq!(repeated.diff(), &JackDiff::default(), "setting the query the document already holds changes nothing");
     assert_eq!(repeated.messages().first().map(|message| message.code.0.as_str()), Some("mutation.no-op"));
 }

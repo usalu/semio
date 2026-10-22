@@ -6,7 +6,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 8,
+    "fuel": 11,
     "accepted": true
   },
   {
@@ -16,7 +16,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 8,
+    "fuel": 11,
     "accepted": false
   },
   {
@@ -26,7 +26,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 8,
+    "fuel": 11,
     "accepted": false
   },
   {
@@ -36,7 +36,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 8,
+    "fuel": 11,
     "accepted": false
   },
   {
@@ -46,7 +46,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 8,
+    "fuel": 11,
     "accepted": false
   },
   {
@@ -56,7 +56,7 @@
       "retainedCapacityBytes": 26,
       "releasedBytes": 30
     },
-    "fuel": 0,
+    "fuel": 1,
     "accepted": true
   }
 ]

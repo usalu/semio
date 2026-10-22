@@ -502,7 +502,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },

@@ -1,6 +1,7 @@
 // 🧵️ Child framing borrows original paged semantic text and retains its symbol frontier explicitly.
+use semio_framework_value_paged_text::paged_text::PagedText;
 use semio_framework_os_kernel::{os_pack::codec::PackEncodeOptions,os_pack::PackRefusal,os_spr::operation_bytes::{OperationByteOutput,OperationByteLimitedOutput,OperationSourceCollection,with_operation_encode_policy}};
-use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, paged_text::PagedText, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_ui_locale::{Terminology,Locale};
 use std::cmp::Ordering;

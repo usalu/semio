@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:dependency-edges-corpus:v1",
+  "title": "Dependency Edges Corpus",
+  "description": "Language-agnostic cases for the module dependency edges of the build graph: sources with the projects, workspace packages and lock file in force and the project dependencies they yield, and the choice of a tracked source file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "workspaceRoot", "projects", "byPackage", "locked", "rows", "tracked"],
+  "definitions": { "strings": { "type": "array", "items": { "type": "string" } } },
+  "properties": {
+    "version": { "const": 1 },
+    "workspaceRoot": { "type": "string", "pattern": "^/" },
+    "projects": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "object", "required": ["root"], "additionalProperties": false, "properties": { "root": { "type": "string", "minLength": 1 }, "metadata": { "type": "object", "additionalProperties": false, "required": ["nativeRoot"], "properties": { "nativeRoot": { "type": "string", "minLength": 1 } } } } } },
+    "byPackage": { "type": "object", "additionalProperties": { "type": "string" } },
+    "locked": { "type": "object", "additionalProperties": false, "required": ["keys", "external"], "properties": { "keys": { "type": "object", "additionalProperties": { "type": "string" } }, "external": { "$ref": "#/definitions/strings" } } },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "file", "text", "imports", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "file": { "type": "string", "minLength": 1 },
+          "text": { "type": "string" },
+          "imports": { "$ref": "#/definitions/strings" },
+          "expected": { "$ref": "#/definitions/strings" },
+          "queried": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } }
+        }
+      }
+    },
+    "tracked": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "files", "map", "project", "preferred", "expected"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "files": { "$ref": "#/definitions/strings" }, "map": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": { "$ref": "#/definitions/strings" } }] }, "project": { "type": "string" }, "preferred": { "type": "string" }, "hint": { "type": "string" }, "expected": { "type": "string" } }
+      }
+    }
+  }
+}

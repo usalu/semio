@@ -16,7 +16,7 @@ fn diff_of(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Din18599Diff
 
 async fn law(base: &Din18599Snapshot, first: &Din18599Mutation, second: impl Fn(&Din18599Snapshot) -> Din18599Mutation) -> Din18599Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -64,8 +64,8 @@ async fn a_zone_list_setter_names_every_row_and_inverts() {
     let forward = diff_of(&mutation, &base);
     let rows = forward.zones.as_ref().expect("zones");
     assert_eq!((rows.removed.len(), rows.inserted.len()), (base.zones.len(), zones.len()));
-    let after = protocol::apply_diff(&forward, &base).expect("apply");
+    let after = protocol::apply_diff_cold(&forward, &base).expect("apply");
     assert_eq!(after.zones, zones);
-    assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }

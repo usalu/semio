@@ -1,5 +1,5 @@
 /** 🟠️ The part3 phase of useAgentBridge. */
-import { useEffect } from "react";
+import { useEffect } from "../../⚛️react-port/🟦️.ts";
 import type { useDiscoveredState } from "../🔶️discovered/🟦️.tsx";
 
 /** 🟡 Runs the effects and registrations of useAgentBridge. */

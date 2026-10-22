@@ -1,0 +1,35 @@
+# Fixed Managed Graph Diagnostic Fixture Plan
+
+Prepared 2026-10-21T07:59:45.469Z. Root approved the reuse Source change and selected a fixed owner-issued diagnostic fixture. Cargo grants me exclusive ownership of fixture additions, cache-store targeted issuer changes, and targeted graph storage.mjs integration; Cargo will not edit storage.mjs. No fixture Source has been written.
+
+## Exact API and Issuers
+
+Proposed graph export `withRepositoryBuildGraphFixtureV1(workspace, original, phaseControl, body)` has no caller-selected path, quota, Native options, effect ports, or authority. It opens/reuses the existing genuine diagnostics store under the same Original, then calls a new fixed cache-store owner `withRepositoryCacheGraphFixtureV1(parent, original, body)`. That owner validates the exact live diagnostics parent and retained frame, creates the existing funded disposable Native child machinery at its fixed short `tmp/gf-<12hex>` name, commits and binds the fixed allocation, and privately issues graph reader stores only during its controlled reader callback. Actual graph stores keep the same Original/control/reservation and private accepted-consumer enrollment used by production.
+
+Graph callback gets fixed root/sourceRoot coordinates, actual privately registered image, and owner methods `withWriter(body)`, `withConsumer(body)`, and `withMaintenance(body)`. Graph private AsyncLocalStorage maps graph DATA paths only during that issued fixture lifetime. withWriter enters an actual issued graph reader, initializes the real optional ledger, establishes the existing private graph writer scope, then calls the actual production fact writer route (its nested path), so existing producers and reuse reader mapping run unchanged. withConsumer calls the actual production graph consumer while that issued reader is retained. withMaintenance starts only after writer/readers settle and invokes the actual image.withExclusiveMaintenance callback; kernelEX proof stays the actual Native issued object. No test can install an arbitrary store, port, control or writer.
+
+## Fixed Budget and Path Bound
+
+Reuse the existing diagnostic child policy: filesystem 33554432, physical cap 41943040, committed allocation 8388608 bytes. Add a separately closed graph fixture policy with fixed optional quota maximumBytes 0 and minimumAvailableBytes 0; this makes actual observation optional persistence decline through the real quota/ledger route without filling a shared image. Source and lock inventories, one small inference image, ledger and reference fixtures fit the 8MiB allocation; any growth beyond that remains a real refusal. Physical root uses the Native diagnostic owner’s short canonical cache root, never the long SEMIO_TEST_ARTIFACT_DIR as a Native backing. Test outputs/reports stay in the ticket sink. Avoid contexts/selections and consecutive64hex directory levels; assert all physical leaf/temp paths <=256UTF16 units before effects. The sourceRoot is a fixed `s` directory inside the same child and is observed as the actual fixture coordinate only.
+
+## Ancestry, Lifetime and Failure
+
+The Native child is the genuine disposable image from the current parent, with actual fixed funding and terminal cleanup. Reader/writer operations use private-issued cache scopes and retaining frames. The fixture accepts finite child operations before invocation, stops admission on body settlement, drains all accepted work, preserves the first body or child failure including undefined/falsy primaries, then closes owner ledger/readers and lets Native retire its own child. Maintenance rejects if entered from an active fixture reader/writer rather than creating a self-deadlock. No canonical shared namespace is altered. No raw Native/cache effects are run outside Root’s later declared actual test ingress.
+
+## Source Ownership
+
+Targeted cache-store runtime/schema at `caching/storage/enforcement/budget/opening/store`; graph storage runtime/declaration plus new fixed fixture schema at `build/inputs/storage/🧪️fixture/🧬️schema/🔣️.json`; reuse schema, dedicated new presence corpus/tests, and runtime afterward. Graph Data mapping fixture branch and writer setup are private in storage.mjs, not a generic injection API. Cargo adapts GC tests to the same callback API and owns its recovery files. Root owns metadata/phases/Source pins. Runtime/read-only/corpus tests still require schema/corpus and actual tests authored first; Native RED/GREEN remains unrun.
+
+## Reviewed Layout and Lifetime Addendum
+
+Cargo confirms8MiB allocation suffices. Remove the proposed s directory: sourceRoot is the actual physical repository workspace root, read-only; the private fixture scope maps only Graph DATA into its issued child. No actual Source copy or mutation. Graph image root contains only production graph namespaces, so GC has no fixture namespace exemption. Actual compactSourceInputs can consume existing Cargo.toml/helper Source under the real workspace and publish into the fixture via private graph DATA mapping.
+
+Lowcourse finds no issuer design blocker if exact private stores and ALS context remain isolated across concurrent fixture/production callbacks and nested consumers; coordinate misuse must refuse rather than fall back to canonical paths. withMaintenance must reject active and accepted-but-undrained readers/writers. Fixed quota0 affects only optional publication, preserving required ledger and closure writes. Add genuine accepted-child drainage and false/undefined body-primary cases in the fixture regression. Existing Native funding/terminal cleanup remains unchanged.
+
+## Root Approval
+
+Root approved fixed fixture implementation with actual workspace read-only SourceRoot, private exact-Original Graph DATA ALS, genuine funded Native child/readers/writers/EX and no caller paths/quotas/ports. All Lowcourse lifetime/isolation/accepted-child/falsey requirements remain required. Schema/corpus and actual regression Source are authored before implementation. No Native/cache effect is authorized before Root final dispatch.
+
+## Final Actual Test Ingress Correction
+
+Lowcourse rejected the initial raw-eval child test design before any execution. Replaced it with literal static `observation/🧪️tests/🪪️presence/👷️child/📜️script.ts` and sibling implementation, own receiver ingress and relative first-party imports. Parent captures only the compiler-admitted static child URL; no live Source code is evaluated as an argument. Expected descriptor/falsey/cancel/deadline rejections use separate child Originals so one intentional rejection cannot poison later fixture cases. Parent tests require warm producer and same predicate-primary evidence before counting refusals. All four actual laws use existing sdk-runtime (120000 total,110000 body,10000 drain) rather than sdk-fence’s30second role; proposed enclosing neutral budget540000 ms. Each issued reader is also retained through the actual Native image operation port; wrapper maintenance rejects accepted-but-undrained work before kernel admission.

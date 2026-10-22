@@ -9,7 +9,7 @@
      "generate": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts generate"
+       "command": "repo ./📜️script.ts generate"
       },
       "cache": true,
       "outputs": [
@@ -22,7 +22,7 @@
      "test": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts test"
+       "command": "repo ./📜️script.ts test"
       },
       "cache": true,
       "outputs": [],
@@ -42,7 +42,7 @@
      "build": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts build"
+       "command": "repo ./📜️script.ts build"
       },
       "cache": true,
       "outputs": [
@@ -55,7 +55,7 @@
      "test": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts test"
+       "command": "repo ./📜️script.ts test"
       },
       "cache": true,
       "outputs": [],
@@ -69,7 +69,7 @@
      "test-snapshot": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts test snapshot"
+       "command": "repo ./📜️script.ts test snapshot"
       },
       "cache": true,
       "outputs": [
@@ -82,7 +82,7 @@
      "test-live": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts test live"
+       "command": "repo ./📜️script.ts test live"
       },
       "cache": false,
       "outputs": []
@@ -90,7 +90,7 @@
      "test-gate": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts test gate"
+       "command": "repo ./📜️script.ts test gate"
       },
       "cache": true,
       "outputs": [],
@@ -104,7 +104,7 @@
      "check": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts check"
+       "command": "repo ./📜️script.ts check"
       },
       "cache": true,
       "outputs": [],
@@ -115,7 +115,7 @@
      "serve": {
       "execution": {
        "kind": "command",
-       "command": "bun ./📜️script.ts serve"
+       "command": "repo ./📜️script.ts serve"
       },
       "cache": false,
       "continuous": true,

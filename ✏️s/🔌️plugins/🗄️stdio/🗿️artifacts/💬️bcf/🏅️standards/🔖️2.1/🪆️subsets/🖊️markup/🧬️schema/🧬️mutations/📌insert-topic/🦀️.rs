@@ -15,7 +15,16 @@ pub struct InsertTopic {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "topic", kind: "insert-topic", record: "InsertTopic" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         let Self { topic, index } = self;
         let at = index.unwrap_or(base.topics.len());
         protocol::MutationOutcome::new(BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexedAdded { index: at, item: topic.clone() }] }), parts: None })
@@ -23,12 +32,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
     fn inverse(&self, _base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         let Self { topic, .. } = self;
         Ok(vec![BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

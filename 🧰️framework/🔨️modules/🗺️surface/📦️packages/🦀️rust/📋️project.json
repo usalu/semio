@@ -33,7 +33,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-scene-wire-native"
+        "command": "repo ./📜️script.ts test-scene-wire-native"
       }
     },
     "test-scene-wire-source": {
@@ -49,14 +49,14 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-scene-wire-source"
+        "command": "repo ./📜️script.ts test-scene-wire-source"
       }
     },
     "wasm": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts wasm"
+        "command": "repo ./📜️script.ts wasm"
       },
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "cache": true,
@@ -75,7 +75,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "inputs": [
         "default",
@@ -101,7 +101,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source"
+        "command": "repo ./📜️script.ts test-source"
       }
     }
   }

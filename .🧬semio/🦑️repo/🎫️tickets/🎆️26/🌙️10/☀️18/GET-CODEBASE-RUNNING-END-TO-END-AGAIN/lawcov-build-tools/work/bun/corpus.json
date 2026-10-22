@@ -1,0 +1,611 @@
+{
+ "schemaVersion": 1,
+ "archives": [
+  {
+   "name": "a deflated member is inflated to its exact bytes",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "",
+   "sha256": "1eaba0ce005f35ff02dc885d8dfa1acdd639aa6644dacada1d68ae13ca2e042a",
+   "bytes": 13600
+  },
+  {
+   "name": "a stored member is copied as it is",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [],
+   "select": "bun-darwin-aarch64/zeros",
+   "error": "",
+   "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+   "bytes": 64
+  },
+  {
+   "name": "a small stored text member",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [],
+   "select": "bun-darwin-aarch64/README.md",
+   "error": "",
+   "sha256": "6ad966d094d4b82a15c3a304fcea53681a7644105d1e4ade77bb612b04ef1885",
+   "bytes": 29
+  },
+  {
+   "name": "a trailing blob within the comment window still finds the directory",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "trail",
+     "bytes": 60000
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "",
+   "sha256": "1eaba0ce005f35ff02dc885d8dfa1acdd639aa6644dacada1d68ae13ca2e042a",
+   "bytes": 13600
+  },
+  {
+   "name": "an unknown member is not found",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [],
+   "select": "bun-darwin-aarch64/missing",
+   "error": "Bun archive has no selected executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a member name must match exactly",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [],
+   "select": "bun-darwin-aarch64/BUN",
+   "error": "Bun archive has no selected executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a trailing blob beyond the window hides the directory",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "trail",
+     "bytes": 70000
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Bun archive has no selected executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a truncated archive has no directory",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "truncate",
+     "bytes": 10
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Bun archive has no selected executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "an encrypted member is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "central",
+     "entry": "bun-darwin-aarch64/bun",
+     "field": "flags",
+     "value": 1
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Invalid Bun ZIP executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a compression method other than stored or deflated is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "central",
+     "entry": "bun-darwin-aarch64/bun",
+     "field": "method",
+     "value": 9
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Invalid Bun ZIP executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "an expanded size beyond 256 MiB is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "central",
+     "entry": "bun-darwin-aarch64/zeros",
+     "field": "expandedSize",
+     "value": 268435457
+    }
+   ],
+   "select": "bun-darwin-aarch64/zeros",
+   "error": "Invalid Bun ZIP executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a local header without its signature is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "local",
+     "entry": "bun-darwin-aarch64/bun",
+     "field": "signature",
+     "value": 0
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Invalid Bun ZIP executable",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a central entry without its signature is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "central",
+     "entry": "bun-darwin-aarch64/README.md",
+     "field": "signature",
+     "value": 0
+    }
+   ],
+   "select": "bun-darwin-aarch64/bun",
+   "error": "Invalid Bun ZIP directory",
+   "sha256": "",
+   "bytes": 0
+  },
+  {
+   "name": "a stored member whose declared expanded size lies is refused",
+   "members": [
+    {
+     "name": "bun-darwin-aarch64/README.md",
+     "method": "stored",
+     "content": {
+      "text": "readme of the pinned release\n"
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/bun",
+     "method": "deflated",
+     "content": {
+      "repeat": "#!bun executable bytes 0123456789 ",
+      "times": 400
+     }
+    },
+    {
+     "name": "bun-darwin-aarch64/zeros",
+     "method": "stored",
+     "content": {
+      "repeat": "\u0000",
+      "times": 64
+     }
+    }
+   ],
+   "mutations": [
+    {
+     "op": "central",
+     "entry": "bun-darwin-aarch64/zeros",
+     "field": "expandedSize",
+     "value": 65
+    }
+   ],
+   "select": "bun-darwin-aarch64/zeros",
+   "error": "Invalid Bun ZIP size",
+   "sha256": "",
+   "bytes": 0
+  }
+ ],
+ "distributions": [
+  {
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-windows-x64-baseline.zip"
+  },
+  {
+   "platform": "win32",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-windows-aarch64.zip"
+  },
+  {
+   "platform": "darwin",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-darwin-x64-baseline.zip"
+  },
+  {
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-darwin-aarch64.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-linux-x64-baseline.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-linux-aarch64.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "archive": "bun-linux-x64-musl-baseline.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "arm64",
+   "musl": true,
+   "archive": "bun-linux-aarch64-musl.zip"
+  }
+ ],
+ "unsupported": [
+  {
+   "name": "another version",
+   "versionOffset": 1,
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false
+  },
+  {
+   "name": "musl on macOS",
+   "versionOffset": 0,
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": true
+  },
+  {
+   "name": "musl on Windows",
+   "versionOffset": 0,
+   "platform": "win32",
+   "arch": "x64",
+   "musl": true
+  },
+  {
+   "name": "an unknown platform",
+   "versionOffset": 0,
+   "platform": "freebsd",
+   "arch": "x64",
+   "musl": false
+  },
+  {
+   "name": "an unknown architecture",
+   "versionOffset": 0,
+   "platform": "linux",
+   "arch": "ia32",
+   "musl": false
+  }
+ ]
+}

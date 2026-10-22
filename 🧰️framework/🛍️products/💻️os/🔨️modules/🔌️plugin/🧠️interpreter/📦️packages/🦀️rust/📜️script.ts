@@ -7,6 +7,7 @@ import { scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
 import { runTestJobExportsNativeScript, runTestPollInputNativeScript, runTestCompletedNativeScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🧠️ Type-checks the owned interpreter crate. */
 class CheckScript extends BundleScript {
@@ -59,4 +60,4 @@ class TestCompletedNativeScript extends BundleScript {
     await runTestCompletedNativeScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test-completed-source",TestCompletedSourceScript).register("test-completed-native",TestCompletedNativeScript).register("test-poll-input-source",TestPollInputSourceScript).register("test-poll-input-native",TestPollInputNativeScript).register("check", CheckScript).register("test", TestScript).register("test-job-exports", TestJobExportsScript).register("test-job-exports-native", TestJobExportsNativeScript), { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test-completed-source",TestCompletedSourceScript).register("test-completed-native",TestCompletedNativeScript).register("test-poll-input-source",TestPollInputSourceScript).register("test-poll-input-native",TestPollInputNativeScript).register("check", CheckScript).register("test", TestScript).register("test-job-exports", TestJobExportsScript).register("test-job-exports-native", TestJobExportsNativeScript), { invocation: original }));

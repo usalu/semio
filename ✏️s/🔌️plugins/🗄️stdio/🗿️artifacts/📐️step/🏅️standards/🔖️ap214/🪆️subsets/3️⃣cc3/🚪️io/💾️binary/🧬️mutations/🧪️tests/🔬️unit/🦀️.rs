@@ -1,7 +1,7 @@
 //! 🧪️ Every committed CC3 intent preserves native codecs, diff and exact inverse.
 
 use crate::standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_value::{FromValue, ToValue};
 
 #[test]
@@ -22,10 +22,10 @@ fn class_native_committed_intents_have_canonical_codecs_and_exact_semantics() {
         assert_eq!(StepCc3Mutation::decode_op(&binary).unwrap(), mutation);
         let result = mutation.diff(&before);
         assert!(result.messages().is_empty(), "{:?}", result.messages());
-        let applied = protocol::apply_diff(result.diff(), &before).unwrap();
+        let applied = protocol::apply_diff_cold(result.diff(), &before).unwrap();
         assert_eq!(applied.to_value(), after.to_value());
         let mut restored = applied;
-        for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
+        for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored.to_value(), before.to_value());
     }
 }

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "id": "private-live-fixture",
+      "owner": "live-fixture",
+      "accepted": true
+    },
+    {
+      "id": "bound-canonical",
+      "owner": "canonical",
+      "accepted": true
+    },
+    {
+      "id": "expired-fixture",
+      "owner": "expired-fixture",
+      "accepted": false
+    },
+    {
+      "id": "unrelated-real-native",
+      "owner": "unrelated-native",
+      "accepted": false
+    },
+    {
+      "id": "copied-object",
+      "owner": "copied-image",
+      "accepted": false
+    }
+  ],
+  "coordinates": [
+    {
+      "kind": "canonical"
+    },
+    {
+      "kind": "selection",
+      "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "kind": "dataset",
+      "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "receiverTransitions": [
+    {
+      "id": "same-child-acquired",
+      "outcome": "acquired",
+      "renewed": true,
+      "admitted": true
+    },
+    {
+      "id": "same-child-deferred",
+      "outcome": "deferred",
+      "renewed": true,
+      "admitted": true
+    },
+    {
+      "id": "same-child-false",
+      "outcome": "false",
+      "renewed": false,
+      "admitted": false
+    },
+    {
+      "id": "same-child-undefined",
+      "outcome": "undefined",
+      "renewed": false,
+      "admitted": false
+    },
+    {
+      "id": "same-child-cancel",
+      "outcome": "cancel",
+      "renewed": false,
+      "admitted": false
+    }
+  ]
+}

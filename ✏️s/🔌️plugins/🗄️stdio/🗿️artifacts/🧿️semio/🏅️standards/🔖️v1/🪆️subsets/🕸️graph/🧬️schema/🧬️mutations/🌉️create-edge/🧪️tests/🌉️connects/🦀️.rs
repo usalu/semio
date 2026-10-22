@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉️create-edge/🌉️connects/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioGraphMutation {
 async fn creates_the_edge_between_two_existing_nodes() {
     let base = before();
     assert!(base.edges.is_empty(), "the fixture starts with two nodes and no edge at all");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-edge applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("create-edge applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-edge/connects-the-source-node-to-the-sink-node: applied state differs from the committed after-snapshot");
     assert_eq!(produced.edges.len(), 1, "create-edge adds exactly one edge");
     let created = &produced.edges[0];
@@ -51,9 +51,9 @@ async fn the_undo_delete_edge_removes_the_connection_again() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-edge undoes as exactly one delete-edge");
     assert!(matches!(undo[0], SemioGraphMutation::DeleteEdge(_)), "the undo of a create is the matching delete");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-edge applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward create-edge applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-edge applies to the connected graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo delete-edge applies to the connected graph");
     }
     assert_eq!(current, base, "create-edge/connects-the-source-node-to-the-sink-node: the undo did not restore the before-snapshot");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-edge/connects-the-source-node-to-the-sink-node: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -107,6 +107,6 @@ async fn committed_diff_is_canonical_and_omits_nodes_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-edge diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-edge diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed create-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-edge/connects-the-source-node-to-the-sink-node: committed diff did not carry before to after");
 }

@@ -22,6 +22,16 @@ pub struct RenamePage {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for RenamePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_page::RenamePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "page", kind: "rename-page", record: "RenamedPage" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for RenamePage where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_page::RenamePage> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_page(self, base)
     }
@@ -31,12 +41,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for RenamePage where Op: protocol::Mut
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🏷️RenamePage
 

@@ -59,9 +59,9 @@ export function appendCargoProfileSelectorsV1(args:readonly string[],profile:Car
 
 /** 🦀️ Converts native release syntax only when it agrees with the actual selected intent. */
 export function cargoProfileInvocationArgumentsV1(args:readonly string[],rendered:CargoProfileRenderedConfigurationV1):readonly string[]{
- const accepted=appendCargoProfileConfigurationArgumentsV1(args,rendered.plan.profile,[]),end=accepted.indexOf("--"),head=end<0?accepted:accepted.slice(0,end),tail=end<0?[]:accepted.slice(end),selected:string[]=[];let profile=false;
- for(let index=0;index<head.length;index++){const row=head[index]!;if(row==="--release"){if(profile||rendered.plan.profile!=="release")throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push("--profile","release");continue;}if(row==="--profile"||row.startsWith("--profile=")){const value=row==="--profile"?head[++index]:row.slice(10);if(profile||value!==rendered.plan.profile)throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push("--profile",value);continue;}selected.push(row);}
- if(!profile)selected.push("--profile",rendered.plan.profile);return appendCargoProfileSelectorsV1([...selected,...tail],rendered);
+ const accepted=appendCargoProfileConfigurationArgumentsV1(args,rendered.plan.profile,[]),end=accepted.indexOf("--"),head=end<0?accepted:accepted.slice(0,end),tail=end<0?[]:accepted.slice(end),selected:string[]=[],option=head[0]==="nextest"?"--cargo-profile":"--profile",prebuilt=head[0]==="nextest"&&head.some(row=>row==="--binaries-metadata"||row.startsWith("--binaries-metadata=")||row==="--archive-file"||row.startsWith("--archive-file="));let profile=false;
+ for(let index=0;index<head.length;index++){const row=head[index]!;if(row==="--release"){if(profile||rendered.plan.profile!=="release")throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push(option,"release");continue;}if(row===option||row.startsWith(option+"=")){const value=row===option?head[++index]:row.slice(option.length+1);if(profile||value!==rendered.plan.profile)throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push(option,value);continue;}selected.push(row);}
+ if(!profile&&!prebuilt)selected.push(option,rendered.plan.profile);return appendCargoProfileSelectorsV1([...selected,...tail],rendered);
 }
 
 /** 📦️ Closes the concrete native artifact entry before paid store admission. */

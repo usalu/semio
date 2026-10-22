@@ -33,16 +33,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "route-property", kind: "set-route-property", record: "RoutePropertySet" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" setzen", self.key, self.feature))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for SetRouteProperty
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<SetRouteProperty> + From<crate::standards::v1::subsets::any::schema::mutations::remove_route_property::RemoveRouteProperty>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" setzen", self.key, self.feature))
     }
 }
 //#endregion 🔹Payload

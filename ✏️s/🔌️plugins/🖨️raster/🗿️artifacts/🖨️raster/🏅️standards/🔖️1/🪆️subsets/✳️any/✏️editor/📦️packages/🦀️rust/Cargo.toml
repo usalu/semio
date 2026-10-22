@@ -26,6 +26,7 @@ semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-publication = { workspace = true }
+semio-framework-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-pixels = { workspace = true }

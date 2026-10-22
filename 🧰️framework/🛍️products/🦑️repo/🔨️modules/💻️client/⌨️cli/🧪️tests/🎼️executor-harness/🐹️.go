@@ -349,7 +349,7 @@ type scriptProcessEnvelope struct {
 	Capabilities              map[string]any      `json:"capabilities"`
 }
 
-// 📨️provideScriptEnvelope gives the Script processes this test spawns the original process envelope a parent `bun repo` run would have handed down: the same wire the TypeScript suites build with createScriptProcessEnvelope, finite and starting now. An envelope inherited from a real parent is kept.
+// 📨️provideScriptEnvelope gives the Script processes this test spawns the original process envelope a parent `repo` run would have handed down: the same wire the TypeScript suites build with createScriptProcessEnvelope, finite and starting now. An envelope inherited from a real parent is kept.
 func provideScriptEnvelope(t *testing.T, owner string, budget time.Duration) {
 	t.Helper()
 	if os.Getenv(scriptProcessInvocationEnv) != "" {

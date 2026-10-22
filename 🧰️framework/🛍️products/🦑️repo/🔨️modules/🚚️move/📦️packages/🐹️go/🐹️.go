@@ -179,7 +179,7 @@ func GenerateFileHeader(path string, language languages.LanguagePlugin) string {
 	if language == nil || !language.SupportsHeaders() {
 		return ""
 	}
-	gitAuthor := workspace.GetGitAuthor()
+	gitAuthor := workspace.GetGitAuthor(workspace.GetRootDir())
 	year := strconv.Itoa(time.Now().Year())
 	contributors := year + " " + gitAuthor
 	return language.FormatHeader(codebase.FileHeaderId(path), codebase.FileHeaderUri(path), "", contributors, workspace.AGPLLicenseText(), "")

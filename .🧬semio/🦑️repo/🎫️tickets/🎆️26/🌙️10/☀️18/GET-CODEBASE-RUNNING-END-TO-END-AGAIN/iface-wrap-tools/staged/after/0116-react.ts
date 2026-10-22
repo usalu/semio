@@ -1,162 +1,84 @@
-/** 🟠️ The switch plugin app phase of useSpawnedSession. */
-import { DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/service";
-import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
-import { prepareDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
-import { createAdmittedShellInstanceV1 } from "../../🗨️dialog-origin/🟦️.ts";
-import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
-import { type AppDefinition } from "@semio-tech/framework";
-import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
-import { quiesceSessionWorkV1, surfaceSwitchBusyTextV1 } from "../../🔀️surface-switch/🟦️.ts";
-import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { type ActiveSession, type SpaceProgramEntry } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
-import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { buildSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
-import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
-import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
-import { encodeWindowActionInvocation } from "../../📨️window-invocation/🟦️.ts";
+/** 🪟️ The browser actor ui patch offer and mounted identity messages of the backbone worker.
+ *
+ * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim. */
+import { browserDocumentMountIsCurrentV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { type BackboneWorkerResponse, encodeBackboneWorkerRequest, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
+import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { applyBrowserActorUiPatchesV1, browserActorPanelKeysV1 } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
+import { reduceBootstrapUiState, reduceExecutionTargetUiState, type BootstrapUiState, type ExecutionTargetUiState } from "../../🪪️host-bootstrap/🟦️.tsx";
 import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
-import { requiredHostPanelLeafId, withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
-import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
-import type { useUpdateSpacePanelState } from "../🔸️update-space-panel/🟦️.ts";
+import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
+import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
-/** 🟡 Builds switchToPluginApp, syncSpawnedPluginDocument, ensureSpawnedPlugin of useSpawnedSession. */
-export function useSwitchPluginAppState({ hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance">) {
-  const switchToPluginApp = useCallback(
-    async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession): Promise<ActiveSession | null> => {
-      const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
-      setSurfaceSwitchBusy(true);
-      try {
-        const outcome = await sessionSwitchGateRef.current.run(
-          {
-            session,
-            resolveApp: (targetPluginId, targetAppId) => loadedPlugins.find((entry) => entry.handle.pluginId === targetPluginId)?.manifest.apps.find((candidate) => candidate.id === targetAppId) ?? null,
-            appId: (app) => app.id,
-            quiesce: async (retiring) => {
-              const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
-              if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
-              return quiet;
-            },
-            seal: (retiring) => sealedInstancesRef.current.seal(retiring.pluginId, retiring.instanceId),
-            unseal: (kept) => sealedInstancesRef.current.unseal(kept.pluginId, kept.instanceId),
-            createInstance: async (targetPluginId, app) => {
-              const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
-              if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
-              if (documentSource === undefined) return handle.createApp(app.id);
-              const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
-              if (targetPluginId !== documentSource.pluginId || !current() || !app.dialect) throw new Error("surface-document.predecessor-stale");
-              const readArchive = handle.readAppDocumentArchive;
-              const loadArchive = handle.loadAppDocumentArchive;
-              if (!readArchive || !loadArchive) throw new Error("surface-document.archive-port-unavailable");
-              const owners = [...openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === handle && entry.session.instanceId === documentSource.instanceId);
-              if (owners.length > 1) throw new Error("surface-document.owner-ambiguous");
-              const owner = owners[0];
-              const surfaceId = canonicalSurfaceId(app.dialect,app.role);
-              let receipt: DocumentOpeningReceiptV1 | null = null;
-              return prepareDocumentSurfaceV1({
-                current,
-                capture: () => readArchive(documentSource.instanceId),
-                create: () => handle.createApp(app.id),
-                restore: (instanceId,archive) => loadArchive(instanceId,archive),
-                attach: async instanceId => {
-                  if (owner === undefined) return;
-                  const nextSession: ActiveSession = { pluginId: targetPluginId,instanceId,app,viewState: viewState ?? defaultViewState(app),documentInitialized: true };
-                  const bindings = owner.persistenceBindings.map(binding => binding.kind === "hub" ? { ...binding,requestedSurfaceId: surfaceId } : binding);
-                  receipt = await openDocumentRef.current(owner.openingReference,bindings,{ plugin: handle,session: nextSession });
-                  if (receipt === null) throw new Error("surface-document.attachment-refused");
-                },
-                release: async instanceId => {
-                  if (receipt !== null) closeDocumentRef.current(receipt.runtimeKey,receipt.clientInstanceId);
-                  await documentAttachmentLanesRef.current.get(handle)?.get(instanceId)?.drain();
-                  await handle.destroyApp(instanceId);
-                },
-              });
-            },
-            retire: retireSessionInstance,
-            defaultViewState,
-            publish: (next) => dispatch({ type: "SET_SESSION", value: { ...next,documentInitialized: documentSource !== undefined } }),
-            seedLayout: (app) => {
-              const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
-              extraWindowInstancesRef.current = seeded.extraInstances;
-              extraWindowCounterRef.current = seeded.extraInstances.length;
-              dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-              dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
-              if (hostMode && app.id === landingAppId) {
-                rememberOpenSpaceId(null);
-                openInstanceIdRef.current = null;
-              }
-            },
-            refresh: refreshUi,
-          },
-          { pluginId, appId, viewState },
-          (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
-        );
-        if (outcome.status === "draining" || outcome.status === "busy") {
-          showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
-          return null;
-        }
-        return outcome.session === null || documentSource === undefined ? outcome.session : { ...outcome.session,documentInitialized: true };
-      } finally {
-        setSurfaceSwitchBusy(false);
-      }
-    },
-    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale, rememberOpenSpaceId],
-  );
+/** 🩻️ Validates a browser actor ui patch offer against the open session and answers a verdict per surface. */
+export function handleBrowserActorUiPatchMessage({ openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, setBrowserActorUiVersion, publishUiRefreshSectionsV1, uiRefreshCacheRef, message, worker, core }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "openDocumentSessionsRef" | "browserActorUiByRuntimeKeyRef" | "setBrowserActorUiVersion" | "publishUiRefreshSectionsV1" | "uiRefreshCacheRef"> & {
+  readonly message: Extract<BackboneWorkerResponse, Readonly<{ kind: "browser-actor-ui-patch" }>>;
+  readonly worker: Worker;
+  readonly core: ShellCoreAfterIdentityAndDocumentPorts;
+}) {
+  const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
+  const entry = openDocumentSessionsRef.current.get(runtimeKey);
+  const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
+  if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId) return;
+  const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+  const refusal =
+    entry.scope === undefined || entry.scope.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId
+      ? "scope-mismatch"
+      : expectedSurfaceId !== message.verifiedSurfaceId
+        ? `verified-surface-mismatch: session ${expectedSurfaceId ?? "<none>"} offer ${message.verifiedSurfaceId}`
+        : message.instanceId !== 0
+            ? `instance-mismatch: ${message.instanceId}`
+            : retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId)
+              ? "retained-owner-mismatch"
+              : null;
+  const answer = (verdicts: readonly { readonly surface: string; readonly outcome: "acknowledged" | "rejected"; readonly revision: number; readonly reason?: string }[]) =>
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, verdicts }) });
+  if (refusal !== null) {
+    answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal })));
+    return;
+  }
+  const applied = applyBrowserActorUiPatchesV1(message.patches, new Set(entry.session.app.windowKinds.map((kind) => kind.id)), browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { windows: retained.windows, panels: retained.panels, sections: retained.sections });
+  if (applied.stores !== null && retained === undefined) {
+    const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
+    browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windows: applied.stores.windows, panels: applied.stores.panels, sections: applied.stores.sections, identity: null, actions });
+  }
+  if (applied.stores !== null && (retained === undefined || applied.surfacesAdded)) setBrowserActorUiVersion((current) => current + 1);
+  const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey),
+    shown = core.shellStateRef.current.pluginRuntime.session;
+  if (applied.sectionsChanged && live !== undefined && shown?.pluginId === entry.session.pluginId && shown.instanceId === entry.session.instanceId) publishUiRefreshSectionsV1(uiRefreshCacheRef.current, live);
+  answer(applied.verdicts);
+  return;
+}
 
-  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, artifactJson: string, viewState: ViewModel) => {
-    try {
-      const document = JSON.parse(artifactJson) as Record<string, unknown>;
-      const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState: spawnedProgramViewStateV1(viewState, app) };
-      await plugin.handleAction(pluginInstanceId, encodeWindowActionInvocation(targetSession, { controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
-    } catch (syncError) {
-    }
-  }, []);
-
-  const ensureSpawnedPlugin = useCallback(
-    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, artifactJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
-      if (!isCurrent()) return null;
-      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
-      if (!pluginEntry || !session) return null;
-      const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
-      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-      const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
-      if (existing) {
-        if (artifactJson && app) {
-          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, artifactJson, sourceViewState ?? session.viewState);
-        }
-        return isCurrent() ? studioPanelFocusingSpawned(currentPanel, existing) : null;
-      }
-      const instanceId = await createAdmittedShellInstanceV1(isCurrent, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
-      if (instanceId === null) return null;
-      if (artifactJson && app) {
-        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? session.viewState);
-      }
-      if (!isCurrent()) {
-        await pluginEntry.handle.destroyApp(instanceId);
-        return null;
-      }
-      const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
-      return studioPanelFocusingSpawned(currentPanel, {
-        id: spawnedId,
-        pluginId: program.pluginId,
-        instanceId,
-        appId: program.appId,
-        label: label ?? program.label,
-        breadcrumb: program.breadcrumb,
-      });
-    },
-    [loadedPlugins, session, syncSpawnedPluginDocument, hostApp],
-  );
-
-  useEffect(() => {
-    const services = documentServices.filter((presentation) => loadedPlugins.some((entry) => entry.handle.pluginId === presentation.owner && (entry.manifest.topicContributions ?? []).some((topic) => {
-      if (topic.topic !== DOCUMENT_SERVICE_TOPIC_V1) return false;
-      try { return admitDocumentServiceWireDeclarationV1(presentation.owner, topic.payload).serviceId === presentation.serviceId; } catch { return false; }
-    }))).map(({owner, serviceId}) => ({owner, serviceId}));
-    documentServiceInventoryRef.current=services;
-    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-contributions", services }) });
-  }, [loadedPlugins, documentServices]);
-  return { switchToPluginApp, ensureSpawnedPlugin };
+/** 🏔️ Binds the mounted browser actor identity and resolves the document ready state. */
+export function handleBrowserActorUiMountedMessage({ openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, failDocumentBackbone, dispatch, setBrowserActorUiVersion, message, rebootstrapDiscardedSessionsRef, setBootstrapUiByDocument, setExecutionTargetUiByDocument }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "openDocumentSessionsRef" | "browserActorUiByRuntimeKeyRef" | "failDocumentBackbone" | "dispatch" | "setBrowserActorUiVersion"> & {
+  readonly message: Extract<BackboneWorkerResponse, Readonly<{ kind: "browser-actor-ui-mounted" }>>;
+  readonly rebootstrapDiscardedSessionsRef: RefObject<Map<string, ActiveSession>>;
+  readonly setBootstrapUiByDocument: Dispatch<SetStateAction<BootstrapUiState>>;
+  readonly setExecutionTargetUiByDocument: Dispatch<SetStateAction<ExecutionTargetUiState>>;
+}) {
+  const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
+  const entry = openDocumentSessionsRef.current.get(runtimeKey);
+  const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+  if (entry === undefined || retained === undefined || !browserDocumentMountIsCurrentV1(
+    { clientInstanceId: entry.clientInstanceId, scope: entry.scope, instanceId: entry.session.instanceId },
+    { clientInstanceId: retained.clientInstanceId, scope: retained.scope, instanceId: retained.sessionInstanceId, activationGeneration: retained.activationGeneration, verifiedSurfaceId: retained.verifiedSurfaceId, revision: retained.windows.get(message.windowKindId)?.getRevisionSnapshot() ?? 0 },
+    { ...message, revision: message.uiRevision },
+  )) return;
+  if (entry.creationMount !== null && !entry.creationMount.accept(message.catalogGenerationId)) {
+    failDocumentBackbone(runtimeKey, entry, new Error("artifact-creation.catalog-generation-mismatch"));
+    return;
+  }
+  browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { ...retained, identity: message });
+  entry.resolveReady();
+  const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
+  if (discarded !== undefined) {
+    rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
+    dispatch({ type: "SET_SESSION", value: (current) => current ?? discarded });
+  }
+  setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.scope.documentId, scope: message.scope }));
+  setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: message.scope.documentId, scope: message.scope }));
+  setBrowserActorUiVersion((current) => current + 1);
+  return;
 }

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "role": "inference",
+  "path": "inference/fixture/np/000000000000000000000000.json",
+  "cases": [
+    {
+      "id": "actual-writer-roundtrip",
+      "mutation": "none",
+      "expectedCheck": null
+    },
+    {
+      "id": "missing-header-boundary",
+      "mutation": "remove-newline",
+      "expectedCheck": "header-boundary"
+    },
+    {
+      "id": "empty-header",
+      "mutation": "empty-header",
+      "expectedCheck": "header-boundary"
+    },
+    {
+      "id": "invalid-header-json",
+      "mutation": "header-json",
+      "expectedCheck": "header-json"
+    },
+    {
+      "id": "wrong-body-digest",
+      "mutation": "body-digest",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-observation-shape",
+      "mutation": "observations",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-block-shape",
+      "mutation": "blocks",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-body-json-with-matching-digest",
+      "mutation": "body-json",
+      "expectedCheck": "body-json"
+    },
+    {
+      "id": "invalid-utf8",
+      "mutation": "utf8",
+      "expectedCheck": "utf8"
+    },
+    {
+      "id": "invalid-compressed-bytes",
+      "mutation": "compression",
+      "expectedCheck": "inflation"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ use pack::snapshot::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
 use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
-use protocol::{Mutation, ColdMutationDiff,MutationDiff, MutationLeaf};
+use protocol::{ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf};
 use store::OpBinary;
 
 #[doc(hidden)]

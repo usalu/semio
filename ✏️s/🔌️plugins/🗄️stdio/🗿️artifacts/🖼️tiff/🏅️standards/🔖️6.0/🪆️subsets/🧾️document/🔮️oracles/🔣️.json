@@ -88,7 +88,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "tiff-import"
       ],
@@ -132,7 +132,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "tiff-project"
       ],
@@ -176,7 +176,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "tiff-compare"
       ],
@@ -466,7 +466,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only insert-ifd-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only insert-ifd-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -515,7 +515,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-ifd-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-ifd-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -564,7 +564,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-tag-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-tag-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -613,7 +613,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-tag-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-tag-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -662,7 +662,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only paint-region-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only paint-region-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -711,7 +711,7 @@
         "packageVersion": "0.11.3",
         "engineFamily": "tiff",
         "engineVersion": "0.11.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-samples-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-samples-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

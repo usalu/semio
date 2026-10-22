@@ -1,0 +1,556 @@
+{
+ "version": 1,
+ "constants": {
+  "header": "📊️metric",
+  "tokens": {
+   "uloc": "📃uloc",
+   "size": "💾size"
+  },
+  "symbols": {
+   "net": "➕️",
+   "edit": "✏️",
+   "rem": "➖️",
+   "sum": "🟰️",
+   "bloc": "💯️",
+   "up": "📈️",
+   "down": "📉️",
+   "ratio": "➗️"
+  }
+ },
+ "count": [
+  {
+   "n": 0,
+   "loc": "0",
+   "size": "0"
+  },
+  {
+   "n": -5,
+   "loc": "5",
+   "size": "5B"
+  },
+  {
+   "n": 1,
+   "loc": "1",
+   "size": "1B"
+  },
+  {
+   "n": 7,
+   "loc": "7",
+   "size": "7B"
+  },
+  {
+   "n": 99,
+   "loc": "99",
+   "size": "99B"
+  },
+  {
+   "n": 100,
+   "loc": "100",
+   "size": "100B"
+  },
+  {
+   "n": 999,
+   "loc": "999",
+   "size": "999B"
+  },
+  {
+   "n": 999.4,
+   "loc": "999",
+   "size": "999B"
+  },
+  {
+   "n": 999.5,
+   "loc": "1k",
+   "size": "1KB"
+  },
+  {
+   "n": 1000,
+   "loc": "1k",
+   "size": "1KB"
+  },
+  {
+   "n": 1001,
+   "loc": "1k",
+   "size": "1KB"
+  },
+  {
+   "n": 1234,
+   "loc": "1.23k",
+   "size": "1.23KB"
+  },
+  {
+   "n": 1500,
+   "loc": "1.5k",
+   "size": "1.5KB"
+  },
+  {
+   "n": 9999,
+   "loc": "10k",
+   "size": "10KB"
+  },
+  {
+   "n": 10000,
+   "loc": "10k",
+   "size": "10KB"
+  },
+  {
+   "n": 12345,
+   "loc": "12.3k",
+   "size": "12.3KB"
+  },
+  {
+   "n": 99949,
+   "loc": "99.9k",
+   "size": "99.9KB"
+  },
+  {
+   "n": 99950,
+   "loc": "100k",
+   "size": "100KB"
+  },
+  {
+   "n": 123456,
+   "loc": "123k",
+   "size": "123KB"
+  },
+  {
+   "n": 422377,
+   "loc": "422k",
+   "size": "422KB"
+  },
+  {
+   "n": 999499,
+   "loc": "999k",
+   "size": "999KB"
+  },
+  {
+   "n": 999500,
+   "loc": "1M",
+   "size": "1MB"
+  },
+  {
+   "n": 999999,
+   "loc": "1M",
+   "size": "1MB"
+  },
+  {
+   "n": 1000000,
+   "loc": "1M",
+   "size": "1MB"
+  },
+  {
+   "n": 1300000,
+   "loc": "1.3M",
+   "size": "1.3MB"
+  },
+  {
+   "n": 12345678,
+   "loc": "12.3M",
+   "size": "12.3MB"
+  },
+  {
+   "n": 999999999,
+   "loc": "1000M",
+   "size": "1GB"
+  },
+  {
+   "n": 1000000000,
+   "loc": "1000M",
+   "size": "1GB"
+  },
+  {
+   "n": 2500000000,
+   "loc": "2500M",
+   "size": "2.5GB"
+  },
+  {
+   "n": 0.5,
+   "loc": "0.5",
+   "size": "0.5B"
+  },
+  {
+   "n": 0.25,
+   "loc": "0.25",
+   "size": "0.25B"
+  },
+  {
+   "n": 0.0004,
+   "loc": "0.0004",
+   "size": "0.0004B"
+  },
+  {
+   "n": 3.14159,
+   "loc": "3.14",
+   "size": "3.14B"
+  },
+  {
+   "n": 42.4242,
+   "loc": "42.4",
+   "size": "42.4B"
+  }
+ ],
+ "ratio": [
+  {
+   "n": 0,
+   "expected": "0"
+  },
+  {
+   "n": -1,
+   "expected": "0"
+  },
+  {
+   "n": 0.5,
+   "expected": "50"
+  },
+  {
+   "n": 1,
+   "expected": "100"
+  },
+  {
+   "n": 2,
+   "expected": "200"
+  },
+  {
+   "n": 0.12345,
+   "expected": "12.3"
+  },
+  {
+   "n": 0.01234,
+   "expected": "1.23"
+  },
+  {
+   "n": 0.001,
+   "expected": "0.1"
+  },
+  {
+   "n": 0.0005,
+   "expected": "0.05"
+  },
+  {
+   "n": 1.234e-05,
+   "expected": "0.001"
+  },
+  {
+   "n": 1e-06,
+   "expected": "0.0001"
+  },
+  {
+   "n": 1e-07,
+   "expected": "0.0001"
+  },
+  {
+   "n": 0.9999,
+   "expected": "100"
+  },
+  {
+   "n": 0.00999,
+   "expected": "0.999"
+  },
+  {
+   "n": 0.00099,
+   "expected": "0.1"
+  }
+ ],
+ "slug": [
+  {
+   "lang": "TypeScript",
+   "expected": "typescript"
+  },
+  {
+   "lang": "C#",
+   "expected": "csharp"
+  },
+  {
+   "lang": "Bourne Shell",
+   "expected": "shell"
+  },
+  {
+   "lang": "Bourne Again Shell",
+   "expected": "shell"
+  },
+  {
+   "lang": "Shell",
+   "expected": "shell"
+  },
+  {
+   "lang": "Docker",
+   "expected": "docker"
+  },
+  {
+   "lang": "Dockerfile",
+   "expected": "dockerfile"
+  },
+  {
+   "lang": "Ruby",
+   "expected": "ruby"
+  },
+  {
+   "lang": "C++",
+   "expected": "c"
+  },
+  {
+   "lang": "Objective-C",
+   "expected": "objectivec"
+  },
+  {
+   "lang": "",
+   "expected": ""
+  },
+  {
+   "lang": "A Very Long Language Name That Exceeds",
+   "expected": "averylonglanguagenametha"
+  },
+  {
+   "lang": "Rust",
+   "expected": "rust"
+  },
+  {
+   "lang": "TeX",
+   "expected": "tex"
+  },
+  {
+   "lang": "Visual Basic .NET",
+   "expected": "visualbasicnet"
+  },
+  {
+   "lang": "日本語",
+   "expected": ""
+  }
+ ],
+ "round": [
+  {
+   "n": 0,
+   "digits": 3,
+   "expected": 0
+  },
+  {
+   "n": 1234.5678,
+   "digits": 3,
+   "expected": 1230
+  },
+  {
+   "n": -1234.5678,
+   "digits": 3,
+   "expected": -1230
+  },
+  {
+   "n": 0.00123456,
+   "digits": 2,
+   "expected": 0.0012
+  },
+  {
+   "n": 5,
+   "digits": 1,
+   "expected": 5
+  },
+  {
+   "n": 99.95,
+   "digits": 3,
+   "expected": 100
+  },
+  {
+   "n": 1e-09,
+   "digits": 3,
+   "expected": 1e-09
+  },
+  {
+   "n": 123456,
+   "digits": 2,
+   "expected": 120000
+  },
+  {
+   "n": 0.5,
+   "digits": 1,
+   "expected": 0.5
+  },
+  {
+   "n": 2.5,
+   "digits": 1,
+   "expected": 3
+  },
+  {
+   "n": -2.5,
+   "digits": 1,
+   "expected": -3
+  }
+ ],
+ "body": [
+  {
+   "kind": "uloc",
+   "code": 1000,
+   "added": 100,
+   "edited": 20,
+   "removed": 10,
+   "expected": "📊️metric📃uloc💯️1k📈️90➗️9.89➕️100✏️20➖️10🟰️130"
+  },
+  {
+   "kind": "uloc",
+   "code": 0,
+   "added": 0,
+   "edited": 0,
+   "removed": 0,
+   "expected": "📊️metric📃uloc"
+  },
+  {
+   "kind": "size",
+   "code": 2048,
+   "added": 512,
+   "edited": 0,
+   "removed": 0,
+   "langEmoji": "🟦️",
+   "langSlug": "typescript",
+   "expected": "📊️metric🟦️typescript💾size💯️2.05KB📈️512B➗️33.3➕️512B🟰️512B"
+  },
+  {
+   "kind": "uloc",
+   "code": 500,
+   "added": 0,
+   "edited": 0,
+   "removed": 40,
+   "langEmoji": "🦀️",
+   "langSlug": "rust",
+   "expected": "📊️metric🦀️rust📃uloc💯️500📉️40➗️7.41➖️40🟰️40"
+  },
+  {
+   "kind": "uloc",
+   "code": 100,
+   "added": 100,
+   "edited": 0,
+   "removed": 0,
+   "expected": "📊️metric📃uloc💯️100📈️100➕️100🟰️100"
+  },
+  {
+   "kind": "uloc",
+   "code": 90,
+   "added": 10,
+   "edited": 5,
+   "removed": 10,
+   "expected": "📊️metric📃uloc💯️90➕️10✏️5➖️10🟰️25"
+  },
+  {
+   "kind": "size",
+   "code": 1500000,
+   "added": 0,
+   "edited": 300,
+   "removed": 0,
+   "expected": "📊️metric💾size💯️1.5MB✏️300B🟰️300B"
+  },
+  {
+   "kind": "uloc",
+   "code": 12,
+   "added": 3,
+   "edited": 0,
+   "removed": 15,
+   "langEmoji": "🐍️",
+   "langSlug": "python",
+   "expected": "📊️metric🐍️python📃uloc💯️12📉️12➗️50➕️3➖️15🟰️18"
+  },
+  {
+   "kind": "uloc",
+   "code": 0.4,
+   "added": 1,
+   "edited": 0,
+   "removed": 0,
+   "expected": "📊️metric📃uloc📈️1➕️1🟰️1"
+  },
+  {
+   "kind": "uloc",
+   "code": 50,
+   "added": 0,
+   "edited": 7,
+   "removed": 0,
+   "langEmoji": "🧾️",
+   "expected": "📊️metric📃uloc💯️50✏️7🟰️7"
+  }
+ ],
+ "suffix": [
+  {
+   "line": "base",
+   "delta": {
+    "added": 0,
+    "edited": 0,
+    "removed": 0
+   },
+   "expected": "base"
+  },
+  {
+   "line": "base",
+   "delta": {
+    "added": 5,
+    "edited": 0,
+    "removed": 0
+   },
+   "expected": "base➕️5🟰️5"
+  },
+  {
+   "line": "base",
+   "delta": {
+    "added": 0,
+    "edited": 3,
+    "removed": 0
+   },
+   "expected": "base✏️3🟰️3"
+  },
+  {
+   "line": "base",
+   "delta": {
+    "added": 0,
+    "edited": 0,
+    "removed": 9
+   },
+   "expected": "base➖️9🟰️9"
+  },
+  {
+   "line": "base",
+   "delta": {
+    "added": 1200,
+    "edited": 30,
+    "removed": 4000
+   },
+   "expected": "base➕️1.2k✏️30➖️4k🟰️5.23k"
+  },
+  {
+   "line": "base",
+   "delta": {
+    "added": 0,
+    "edited": 1000,
+    "removed": 0
+   },
+   "expected": "base✏️1k🟰️1k"
+  }
+ ],
+ "bundle": [
+  {
+   "ulocDelta": {
+    "added": 10,
+    "edited": 2,
+    "removed": 1
+   },
+   "sizeDelta": {
+    "added": 4096,
+    "edited": 0,
+    "removed": 0
+   },
+   "ulocBloc": 800,
+   "sizeBloc": 120000,
+   "expected": "📊️metric📃uloc💯️800📈️9➗️1.14➕️10✏️2➖️1🟰️13📊️metric💾size💯️120KB📈️4.1KB➗️3.53➕️4.1KB🟰️4.1KB"
+  },
+  {
+   "ulocDelta": {
+    "added": 0,
+    "edited": 0,
+    "removed": 0
+   },
+   "sizeDelta": {
+    "added": 0,
+    "edited": 0,
+    "removed": 0
+   },
+   "ulocBloc": 0,
+   "sizeBloc": 0,
+   "expected": "📊️metric🟦️typescript📃uloc📊️metric🟦️typescript💾size",
+   "langEmoji": "🟦️",
+   "langSlug": "typescript"
+  }
+ ]
+}

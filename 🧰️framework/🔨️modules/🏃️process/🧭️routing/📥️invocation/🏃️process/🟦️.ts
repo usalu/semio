@@ -13,6 +13,9 @@ import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️valida
 import { checkScriptInvocation, readScriptPolicy, type ScriptInvocation, type ScriptPolicy, type ScriptProgress } from "../🟦️.ts";
 import {readScriptProcessJsonV1,readScriptProcessJsonWireV1} from "./📥️json/🟦️.ts";
 
+// [DEBUG] spin-hunt begin
+if(process.env.SEMIO_DEBUG_SPIN==="1"){const ring:string[]=[],holder=globalThis as unknown as Record<string,(...args:unknown[])=>unknown>;for(const name of["setImmediate","setTimeout"]){const original=holder[name]!;holder[name]=function(this:unknown,...args:unknown[]){ring.push(name+" "+String(new Error().stack).split("\n").slice(2,8).map(line=>line.trim()).join(" | "));if(ring.length>48)ring.shift();return original.apply(this,args);};}process.on("SIGUSR2",()=>{process.stderr.write("[DEBUG] spin ring\n"+ring.join("\n")+"\n");});}
+// [DEBUG] spin-hunt end
 /** 📨️ Transfers the original process deadline without rebasing child authority. */
 export type ScriptProcessEnvelope = Readonly<{ version: 1; policy: ScriptPolicy; deadlineEpochMilliseconds: number | null; capabilities: object }>;
 export const SCRIPT_PROCESS_INVOCATION_ENV = "SEMIO_SCRIPT_PROCESS_INVOCATION";
@@ -62,22 +65,23 @@ function createScriptProcessProgressWriterV1(write:(line:string)=>void,environme
  const policy=progressSchema.const.dependencyWork,workPending:(Pending|undefined)[]=policy.slots.map(()=>undefined),counts:(number|undefined)[]=policy.families.map(()=>undefined),elapsed:(number|undefined)[]=policy.families.map(()=>undefined);
  let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined,frame:string|undefined,workAt:number|undefined,workClock:number|undefined,workState:"unopened"|"paced"|"unclocked"="unopened";
  const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write("[script] "+row.message+"\n");};
- const stagePolicy=progressSchema.const.selectionStages,stagePending:(Pending|undefined)[]=stagePolicy.commands.map(()=>undefined);let stageOpen=false,stageAt:number|undefined,stageClock:number|undefined;
+ const stagePolicy=progressSchema.const.selectionStages,stageSeen=stagePolicy.commands.map(()=>false);let stageOpen=false,stageAt:number|undefined,stageClock:number|undefined,stageLast:number|undefined,stageLatest:(Row&{slot:number})|undefined;
+ const flushStage=()=>{const latest=stageLatest,last=stageLast;stageLatest=undefined;stageLast=undefined;stageOpen=false;stageAt=undefined;stageClock=undefined;stageSeen.fill(false);if(latest&&latest.slot!==last)emit(latest);};
  const ordered=(family?:number,rows=workPending)=>rows.flatMap((row,slot)=>row&&(family===undefined||policy.families.indexOf(policy.slots[slot]!.family)===family)?[{row,slot}]:[]).sort((a,b)=>a.row.rank-b.row.rank||a.slot-b.slot);
  const drain=(rows=workPending,family?:number)=>{for(const{row,slot}of ordered(family,rows)){rows[slot]=undefined;emit(row);}},drainWork=(family?:number)=>drain(workPending,family);
  const remember=(slot:number,row:Row,rows=workPending)=>{rows[slot]=undefined;const previous=ordered(undefined,rows);previous.forEach(({row},rank)=>{row.rank=rank;});rows[slot]={...row,rank:previous.length};};
- const flushOld=()=>{if(pending){drainWork();const row=pending;pending=undefined;emit(row);}},emitOld=(row:Row)=>{drainWork();emit(row);},flush=()=>{drain(stagePending);drainWork();flushOld();};
+ const flushOld=()=>{if(pending){drainWork();const row=pending;pending=undefined;emit(row);}},emitOld=(row:Row)=>{drainWork();emit(row);},flush=()=>{flushStage();drainWork();flushOld();};
  return Object.freeze({flush,publish:(progress:ScriptProgress)=>{
   const row={raw:"[script] "+JSON.stringify(progress)+"\n",message:formatScriptProcessActivityV1(progress,environment)},identity=typeof progress.owner==="string"&&progress.owner.length<=policy.maximumOwnerCharacters&&new RegExp(policy.ownerPattern,"u").test(progress.owner)&&typeof progress.command==="string"&&progress.command.length<=policy.maximumCommandCharacters&&new RegExp(policy.commandPattern,"u").test(progress.command)&&policy.frameStages.includes(progress.stage)?JSON.stringify([progress.owner,progress.command,progress.stage]):undefined;
   const stageSlot=selectionStageSlotV1(progress);
   if(stageSlot!==null){
    if(!stageOpen){flush();stageOpen=true;frame=undefined;key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;}
    const current=now(),bad=!Number.isFinite(current)||stageClock!==undefined&&current<stageClock;
-   if(bad){drain(stagePending);stageClock=Number.isFinite(current)?current:undefined;stageAt=stageClock;emit(row);return;}
-   stageClock=current;if(stageAt===undefined){stageAt=current;emit(row);return;}
-   remember(stageSlot,row,stagePending);if(current-stageAt>=stagePolicy.minimumPublicationMilliseconds){stageAt=current;drain(stagePending);}return;
+   if(bad){flushStage();stageOpen=true;stageSeen[stageSlot]=true;stageClock=Number.isFinite(current)?current:undefined;stageAt=stageClock;stageLast=stageSlot;emit(row);return;}
+   stageClock=current;if(stageAt===undefined||!stageSeen[stageSlot]){stageSeen[stageSlot]=true;stageAt=current;stageLast=stageSlot;stageLatest=undefined;emit(row);return;}
+   stageLatest={...row,slot:stageSlot};if(current-stageAt>=stagePolicy.heartbeatMilliseconds){stageAt=current;stageLast=stageSlot;stageLatest=undefined;emit(row);}return;
   }
-  drain(stagePending);stageOpen=false;stageAt=undefined;stageClock=undefined;
+  flushStage();
   if(identity!==undefined&&identity!==frame){flush();frame=identity;workAt=undefined;workClock=undefined;workState="unopened";counts.fill(undefined);elapsed.fill(undefined);}
   const work=dependencyWorkActivityV1(progress);
   if(work!==null){
@@ -176,17 +180,24 @@ type ControlScope=Scope&{birth:Birth;invocation:IssuedScriptInvocationV1;signal:
 let received=false;
 const invocations=new WeakMap<ScriptInvocation,Birth>(),controls=new WeakMap<ResourceLeaseControl,ControlScope>(),context=new AsyncLocalStorage<ScriptInvocation>();
 const scope=(parent?:Scope):Scope=>({live:true,accepting:true,pending:new Set(),failures:[],retirements:new Set(),...(parent?{parent}:{})});
+/** 🚪️ A refusal that only reports an owner already closed by an earlier failure; it never names the failure itself. */
+export class OriginalAdmissionClosedV1 extends Error{constructor(message:string){super(message);this.name="OriginalAdmissionClosed";}}
+/** 🥇️ Names the languages one failure notice is written in: the one the environment selects, otherwise every declared language, none assumed. */
+export function firstFailureLanguagesV1(environment:Readonly<Record<string,string|undefined>>):readonly("en"|"de")[]{const declared=Object.keys(progressSchema.const.firstFailure.labels) as ("en"|"de")[],selected=progressSchema.const.firstFailure.systemVariables.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value!==undefined&&declared.includes(value as "en"|"de"));return selected===undefined?declared:[selected as "en"|"de"];}
+/** 🥇️ Writes the first failure of an owner in every selected language, so a later refusal of that closed owner never masks it. */
+export function renderFirstFailureV1(first:unknown,masked:unknown,environment:Readonly<Record<string,string|undefined>>):string{const reason=(value:unknown):string=>String(value instanceof Error?value.message:value).split("\n",1)[0]!.slice(0,progressSchema.const.firstFailure.maximumReasonCharacters);return firstFailureLanguagesV1(environment).map(language=>progressSchema.const.firstFailure.labels[language].replace("{first}",reason(first)).replace("{masked}",reason(masked))).join("\n")+"\n";}
+function firstFailureV1(owner:Scope,failure:unknown):unknown{if(!(failure instanceof OriginalAdmissionClosedV1)||!owner.failures.length||owner.failures[0]===failure)return failure;try{process.stderr.write(renderFirstFailureV1(owner.failures[0],failure,process.env));}catch{}return owner.failures[0];}
 function observe<T>(work:Promise<T>):Promise<T>{void work.then(()=>{},()=>{});return work;}
 function track<T>(owner:Scope,run:()=>Promise<T>):Promise<T>{
- for(let row:Scope|undefined=owner;row;row=row.parent)if(!row.live||!row.accepting)throw Error("Original operation admission closed");
+ for(let row:Scope|undefined=owner;row;row=row.parent)if(!row.live||!row.accepting)throw new OriginalAdmissionClosedV1("Original operation admission closed");
  const work=Promise.resolve().then(run);
  for(let row:Scope|undefined=owner;row;row=row.parent){const accepted=row;accepted.pending.add(work);void work.then(()=>{accepted.pending.delete(work);},error=>{accepted.accepting=false;if(!accepted.failures.length)accepted.failures.push(error);accepted.pending.delete(work);});}
  return work;
 }
 async function drain(owner:Scope):Promise<void>{owner.accepting=false;while(owner.pending.size)await Promise.allSettled([...owner.pending]);}
-async function settle<T>(owner:Scope,run:()=>Promise<T>,check?:()=>void):Promise<T>{let value:T|undefined,failed=false,failure:unknown;try{value=await run();}catch(error){failed=true;failure=error;}try{await drain(owner);if(failed)throw failure;if(owner.failures.length)throw owner.failures[0];check?.();return value as T;}finally{owner.live=false;for(const stop of[...owner.retirements])stop();}}
+async function settle<T>(owner:Scope,run:()=>Promise<T>,check?:()=>void):Promise<T>{let value:T|undefined,failed=false,failure:unknown;try{value=await run();}catch(error){failed=true;failure=error;}try{await drain(owner);if(failed)throw firstFailureV1(owner,failure);if(owner.failures.length)throw owner.failures[0];check?.();return value as T;}finally{owner.live=false;for(const stop of[...owner.retirements])stop();}}
 function birthOf(invocation:ScriptInvocation):Birth{const birth=invocations.get(invocation);if(!birth?.live)throw Error("Live Original process issuance required");return birth;}
-function admit(invocation:ScriptInvocation,parent?:ControlScope):Birth{requireIssuedScriptInvocationV1(invocation);const birth=birthOf(invocation);if(!birth.accepting)throw Error("Original process admission closed");for(let row=parent;row;row=row.parentControl)if(!row.live||!row.accepting)throw Error("Original resource admission closed");return birth;}
+function admit(invocation:ScriptInvocation,parent?:ControlScope):Birth{requireIssuedScriptInvocationV1(invocation);const birth=birthOf(invocation);if(!birth.accepting)throw new OriginalAdmissionClosedV1("Original process admission closed");for(let row=parent;row;row=row.parentControl)if(!row.live||!row.accepting)throw new OriginalAdmissionClosedV1("Original resource admission closed");return birth;}
 function startProcessDeadlineV1(remaining:()=>number,expire:()=>void,unref:boolean):()=>void{
  let timer:ReturnType<typeof setTimeout>|undefined,stopped=false;
  const stop=()=>{stopped=true;clearTimeout(timer);};
@@ -207,8 +218,12 @@ export function withScriptProcessEnvelope<T>(envelope:ScriptProcessEnvelope,run:
  return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{presentation.flush();checkScriptInvocation(invocation);return value;},error=>{try{presentation.flush();}catch{}throw error;}).finally(()=>{stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);})));
  }catch(error){return observe(Promise.reject(error));}
 }
-/** 📥️ Receives the real process envelope or reuses its exact live in-process parent. */
-export function receiveScriptProcessInvocation<T>(environment:Readonly<Record<string,string|undefined>>,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{try{const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(wire===undefined)throw Error("Original parent Script process invocation required");if(!context.getStore()){if(wire!==process.env[SCRIPT_PROCESS_INVOCATION_ENV])throw Error("Actual process parent envelope required");if(received)throw Error("Original process birth already received");received=true;}return withScriptProcessEnvelope(readScriptProcessEnvelope(readScriptProcessJsonWireV1(wire),Date.now()),run);}catch(error){return observe(Promise.reject(error));}}
+const implementationPinKeyV1=Symbol.for("semio.implementationPin.context.v1");
+type ImplementationPinV1={active:boolean;authority:Map<unknown,unknown>};
+/** 📌️ Commits a process that received its parent's authenticated invocation to the implementation it loaded: the same shared pin context `withImplementationPinV1` of the repository library opens, so every live-source self-check lets this short run finish and what it publishes names the bytes it loaded; a Source edited meanwhile is left to the next invocation. @see ../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs */
+function withReceivedImplementationPinV1<T>(run:()=>Promise<T>):Promise<T>{const holder=globalThis as unknown as Record<symbol,AsyncLocalStorage<ImplementationPinV1>|undefined>,store=holder[implementationPinKeyV1]??=new AsyncLocalStorage<ImplementationPinV1>(),parent=store.getStore(),pin:ImplementationPinV1={active:true,authority:parent?.active===true?parent.authority:new Map()};return store.run(pin,run).finally(()=>{pin.active=false;});}
+/** 📥️ Receives the real process envelope or reuses its exact live in-process parent, and runs under the pin of the implementation this process loaded. */
+export function receiveScriptProcessInvocation<T>(environment:Readonly<Record<string,string|undefined>>,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{try{const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(wire===undefined)throw Error("Original parent Script process invocation required");if(!context.getStore()){if(wire!==process.env[SCRIPT_PROCESS_INVOCATION_ENV])throw Error("Actual process parent envelope required");if(received)throw Error("Original process birth already received");received=true;}return withScriptProcessEnvelope(readScriptProcessEnvelope(readScriptProcessJsonWireV1(wire),Date.now()),invocation=>withReceivedImplementationPinV1(()=>run(invocation)));}catch(error){return observe(Promise.reject(error));}}
 function remaining(original:ControlScope):number|null{
  requireIssuedScriptInvocationV1(original.invocation);let value=original.invocation.control.remainingMilliseconds();const now=performance.now();for(let row:ControlScope|undefined=original;row;row=row.parentControl){if(!row.live)throw Error("Live Original resource control issuance required");row.signal.throwIfAborted();if(row.deadlineEpochMilliseconds!==null){const absolute=row.deadlineEpochMilliseconds-Date.now();value=value===null?absolute:Math.min(value,absolute);}if(row.requestedMilliseconds!==0){const child=row.requestedMilliseconds-(now-row.started);value=value===null?child:Math.min(value,child);}}if(value!==null&&value<=0)throw Error("Original resource loan deadline exhausted");return value;
 }

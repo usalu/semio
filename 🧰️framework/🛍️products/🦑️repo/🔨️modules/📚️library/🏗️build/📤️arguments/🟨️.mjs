@@ -11,17 +11,20 @@ const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.
 export function ownerArgumentsSourceIdentityV1(){if(!loadedArgumentSourceIdentity)throw Error("Live private Nx argument Source identity required");if(argumentSourceIdentity()!==loadedArgumentSourceIdentity)throw Error("Loaded private Nx argument Source changed");return loadedArgumentSourceIdentity;}
 
 
-/** 🧬️ Admits the closed native caller and command contracts in the Node executor. */
+const canonicalOwnerValueV1=value=>JSON.stringify(value,(_,item)=>item!==null&&typeof item==="object"&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([left],[right])=>left<right?-1:left>right?1:0)):item);
+
+/** 🧬️ Admits the closed native caller and command contracts in the Node executor: constants, enumerations and unique items compare by content, string lengths count code points and a rule it does not understand admits nothing.
+ * @see https://json-schema.org/draft-07/json-schema-validation */
 export function conformsOwnerContractV1(contract,value){
  if(contract.anyOf)return contract.anyOf.some(rule=>conformsOwnerContractV1(rule,value));
  if(contract.type==="null")return value===null;
- if(contract.const!==undefined&&value!==contract.const)return false;
- if(contract.enum!==undefined)return contract.enum.includes(value);
+ if(contract.const!==undefined&&canonicalOwnerValueV1(value)!==canonicalOwnerValueV1(contract.const))return false;
+ if(contract.enum!==undefined){const wanted=canonicalOwnerValueV1(value);return contract.enum.some(item=>canonicalOwnerValueV1(item)===wanted);}
  if(contract.type==="object"){if(value===null||typeof value!=="object"||Array.isArray(value))return false;const keys=Object.keys(value);if(contract.required?.some(key=>!Object.hasOwn(value,key)))return false;if(contract.additionalProperties===false&&keys.some(key=>!Object.hasOwn(contract.properties??{},key)))return false;return Object.entries(contract.properties??{}).every(([key,rule])=>!Object.hasOwn(value,key)||conformsOwnerContractV1(rule,value[key]));}
- if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>conformsOwnerContractV1(contract.items,item))&&(contract.uniqueItems!==true||new Set(value.map(item=>JSON.stringify(item))).size===value.length);
+ if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>contract.items===undefined||conformsOwnerContractV1(contract.items,item))&&(contract.uniqueItems!==true||new Set(value.map(canonicalOwnerValueV1)).size===value.length);
  if(contract.type==="integer")return Number.isSafeInteger(value)&&(contract.minimum===undefined||value>=contract.minimum)&&(contract.maximum===undefined||value<=contract.maximum);
  if(contract.type==="boolean")return typeof value==="boolean";
- if(contract.type==="string")return typeof value==="string"&&(contract.minLength===undefined||value.length>=contract.minLength)&&(contract.maxLength===undefined||value.length<=contract.maxLength)&&(!contract.pattern||new RegExp(contract.pattern,"u").test(value));
+ if(contract.type==="string")return typeof value==="string"&&(contract.minLength===undefined||[...value].length>=contract.minLength)&&(contract.maxLength===undefined||[...value].length<=contract.maxLength)&&(!contract.pattern||new RegExp(contract.pattern,"u").test(value));
  return Object.hasOwn(contract,"const");
 }
 
@@ -37,10 +40,17 @@ export function literalCommandTokensV1(command){
  return tokens;
 }
 
+/** 🚪️ Skips the neutral script-route options (`--watch`, `--cwd <dir>`, `--cwd=<dir>`) that may precede the script of a `repo` command. */
+function launcherScriptIndexV1(args){
+ let index=0;
+ while(index<args.length){if(args[index]==="--watch"||args[index].startsWith("--cwd="))index++;else if(args[index]==="--cwd")index+=2;else break;}
+ return index;
+}
+
 /** 🧭️ Binds only the outer runtime script while preserving every remaining literal argument. */
 export function bindBuildCommandV1(command,workspaceRoot,workingDirectory,projectRoot,arguments_=[]){
  if(!conformsOwnerContractV1(schema.$defs.BuildCommandBindingV1,{command,workspaceRoot,workingDirectory,projectRoot,arguments:arguments_}))throw Error("Closed build command binding required");
- const root=resolve(workspaceRoot),expand=value=>value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",projectRoot),cwd=resolve(root,expand(workingDirectory)),tokens=literalCommandTokensV1(command),program=tokens[0],args=[...tokens.slice(1),...arguments_],runtime=/(?:^|[\\/])(?:bun|node)(?:\.exe)?$/u.test(program??""),index=/(?:^|[\\/])bun(?:\.exe)?$/u.test(program??"")&&args[0]==="run"?1:0;
+ const root=resolve(workspaceRoot),expand=value=>value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",projectRoot),cwd=resolve(root,expand(workingDirectory)),tokens=literalCommandTokensV1(command),program=tokens[0],args=[...tokens.slice(1),...arguments_],launcher=/(?:^|[\\/])repo(?:\.exe)?$/u.test(program??""),runtime=launcher||/(?:^|[\\/])(?:bun|node)(?:\.exe)?$/u.test(program??""),index=launcher?launcherScriptIndexV1(args):/(?:^|[\\/])bun(?:\.exe)?$/u.test(program??"")&&args[0]==="run"?1:0;
  const admit=path=>{const local=relative(root,path);if(local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Build command Source escapes workspace");return path;};
  admit(cwd);let script=null;
  if(runtime&&args[index]?.endsWith("📜️script.ts")){script=admit(resolve(cwd,expand(args[index])));args[index]=script.replaceAll("\\","/");}

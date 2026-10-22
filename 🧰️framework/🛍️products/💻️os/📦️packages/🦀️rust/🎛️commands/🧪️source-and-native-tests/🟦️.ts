@@ -19,6 +19,9 @@ import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "@semio-tech/repo-lib/authoring";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 //#region 🔎️ScalarWireSource
 export class ScalarWireSourceScript extends BundleScript {
@@ -89,7 +92,7 @@ export class CanonicalArchitectureScript extends BundleScript {
 
 /** 🚦️ Verifies the neutral caller input and transport contract through the independent Source oracle. */
 export class CommandTransportSourceTestScript extends BundleScript {
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-source accepts no arguments");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts");await runRepositoryTestCommand(process.execPath,["x","--no-install","tsc","--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot});await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-source accepts no arguments");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts");await runRepositoryTestCommand(process.execPath,["x","--no-install","tsc","--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot});await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});}
 }
 
 /** 🪪️ Keeps all original CLI and SPR I/O laws beside actual retained caller-context laws. */
@@ -134,7 +137,7 @@ export class AssemblyLifetimeNativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-assembly-lifetime-native accepts no arguments");
     const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, [runtimeResolveV1("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
     await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "60000", source], { cwd: this.repoRoot });
   }
 }
@@ -164,7 +167,7 @@ export class CommandIngressConsumerScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-command-ingress-consumer accepts no arguments");
   const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
@@ -221,7 +224,7 @@ export class NativeEditMetadataSourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-native-edit-metadata-source accepts no arguments");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🪪️metadata/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
  }
 }
@@ -231,7 +234,7 @@ export class SyncActorIdentitySourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-sync-actor-identity-source accepts no arguments");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🪪️actor-identity/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
  }
 }
@@ -242,7 +245,7 @@ export class CanonicalPreparationControlSourceScript extends BundleScript {
   if(segments.length)throw Error("test-canonical-preparation-control-source accepts no arguments");
   const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source");
   const sources=[join(root,"🧪️tests/🟦️.ts"),join(root,"🎟️control/🧪️tests/🟦️.ts")];
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),...sources],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot});
  }
 }
@@ -254,7 +257,7 @@ export class ConfigPagedSourceScript extends BundleScript{
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("test-config-paged-source requires source or native");
   if(segments[0]==="source"){
    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧪️tests/🟦️.ts");
-   process.stdout.write(await captureOwnedCommandV1(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
+   process.stdout.write(await captureOwnedCommandV1(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
    process.stdout.write(await captureOwnedCommandV1(process.execPath,["test",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
   }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
@@ -277,7 +280,7 @@ export class CrateBoundariesSourceScript extends BundleScript {
   const cargoPhase=createIssuedResourceControlV1(this.invocation,"source:crate-boundaries",0);
   if(segments.length)throw Error("test-crate-boundaries accepts no arguments");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🧪️tests/📦️crate-boundaries/🟦️.ts");
-  process.stdout.write(await captureOwnedCommandV1(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
+  process.stdout.write(await captureOwnedCommandV1(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
   process.stdout.write(await captureOwnedCommandV1(process.execPath,["test",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
  }
 }
@@ -285,7 +288,7 @@ export class CrateBoundariesSourceScript extends BundleScript {
 export class DiagnosticAdmissionCheckScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-diagnostic-admission accepts no arguments");
-  const {Database}=await import("bun:sqlite");
+  const {Database}={ Database: SqliteDatabaseV1 };
   const {replayReportBlocksFinalize,outcomeCodeLevel}=await import("@semio-tech/framework-replication");
   const law:any=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
   const schema=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json"),"utf8"));
@@ -333,7 +336,7 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
 export class OwnedReplayCheckScript extends BundleScript {
  async run(args:string[]):Promise<void> {
   if(args.length)throw Error("test-owned-replay accepts no arguments");
-  const {Database}=await import("bun:sqlite");
+  const {Database}={ Database: SqliteDatabaseV1 };
   const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
   const law=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧫️replay-retirement/🔣️.json"),"utf8")).ownedReplay as Array<{name:string;base:number;operations:Array<{value:number;fault:string}>;expected:number;coldClones:number;ownedClones:number;terminalOwners:number}>;
   const schema=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json"),"utf8"));
@@ -392,7 +395,7 @@ export class OriginalVcsCommandScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-vcs-command source|native");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
   const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::native_vcs_command::tests::original_vcs_request_custody_closes_owned_unicode_and_authors_with_physical_receipts"]}]});

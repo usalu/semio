@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "pencil-width", kind: "change-pencil-width", record: "ChangedPencilWidth" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::note_setting_label(("pencil width", "Stiftbreite"), self.new_width.map(crate::schema::note_label_number))
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for ChangePencilWidth
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<ChangePencilWidth>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        crate::schema::note_setting_label(("pencil width", "Stiftbreite"), self.new_width.map(crate::schema::note_label_number))
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Mutation

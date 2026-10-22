@@ -13,6 +13,16 @@ pub struct SetContributions {
 
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetContributions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "contributions_json", kind: "set-contributions", record: "SetContributions" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["contributions_json".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ImperativeConfig, ImperativeConfigMutation> for SetContributions {
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfigDiff> {
         imperative_engine::sync_imperative_module_contributions(&self.json);
         if base.contributions_json == self.json {
@@ -26,12 +36,6 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetC
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["contributions_json".into()]
-    }
 }
 
 #[cfg(test)]

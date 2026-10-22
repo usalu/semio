@@ -13,19 +13,20 @@ pub struct RemoveSharedString {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "shared-string", kind: "remove-shared-string", record: "RemoveSharedString" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::remove_shared_string_plan(base, self.index))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::remove_shared_string_plan(base, self.index)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove shared string", "Gemeinsame Zeichenfolge entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for RemoveSharedString {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::remove_shared_string_plan(base, self.index))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+        Ok(plan_inverse(canonical_edit::remove_shared_string_plan(base, self.index)))
     }
 }
 //#endregion 🔖️Payload

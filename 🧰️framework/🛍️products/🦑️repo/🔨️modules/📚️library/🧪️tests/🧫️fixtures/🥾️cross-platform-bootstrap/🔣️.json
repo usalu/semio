@@ -24,7 +24,7 @@
     "installerInvocations": 1,
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
     "packageManagers": ["apt-get", "dnf", "pacman", "zypper"],
-    "requiredTools": ["cc", "c++", "make", "cmake", "ninja", "pkg-config", "curl", "git", "unzip"],
+    "requiredTools": ["cc", "c++", "make", "pkg-config", "curl", "git", "unzip"],
     "forbidden": ["git config --global", ".cargo/config.toml", "fuse-ld", "mold"]
   },
   "windowsBootstrap": {

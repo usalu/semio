@@ -59,7 +59,7 @@ export function publishWorkspaceMembership(repoRoot: string, mode: "check" | "wr
       if (comparison.missing.length > 0) operations.report("stderr", `  missing: ${comparison.missing.join(", ")}`);
       if (comparison.stale.length > 0) operations.report("stderr", `  stale:   ${comparison.stale.join(", ")}`);
       if (comparison.orderChanged) operations.report("stderr", "  (same set, different order)");
-      operations.report("stderr", "run `bun ./📜️script.ts workspaces --write` to refresh.");
+      operations.report("stderr", "run `repo ./📜️script.ts workspaces --write` to refresh.");
       throw new Error("Root workspace membership is stale");
     }
     operations.report("stdout", `root package.json workspaces is fresh (${comparison.expected.length} packages).`);

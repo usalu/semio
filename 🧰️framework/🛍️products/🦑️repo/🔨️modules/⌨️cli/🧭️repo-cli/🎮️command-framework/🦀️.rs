@@ -404,9 +404,15 @@ pub struct Invocation<'a> {
     pub out: &'a mut dyn Write,
     pub err: &'a mut dyn Write,
     pub is_tty: bool,
+    repo_root: std::path::PathBuf,
 }
 
 impl<'a> Invocation<'a> {
+    /// 🪪️ Binds the command to the root validated by its process ingress.
+    pub fn new(parsed: Parsed<'a>, config: Config, out: &'a mut dyn Write, err: &'a mut dyn Write, is_tty: bool, repo_root: std::path::PathBuf) -> Self {
+        Self { parsed, config, out, err, is_tty, repo_root }
+    }
+
     /// 🔤️ A string flag, empty when it is not visible.
     pub fn text(&self, name: &str) -> String {
         match self.parsed.flags.get(name) {
@@ -461,10 +467,7 @@ impl<'a> Invocation<'a> {
 
     /// 🏠️ The repository root the invocation runs against.
     pub fn root(&self) -> std::path::PathBuf {
-        if !self.config.repo.is_empty() {
-            return semio_framework_repo_workspace::find_repo_root(std::path::Path::new(&self.config.repo));
-        }
-        semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")))
+        self.repo_root.clone()
     }
 
     /// 🗄️ The production repository context of the invocation's root.

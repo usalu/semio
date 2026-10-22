@@ -3,17 +3,17 @@
   "targets": [
     {
       "target": "test-graph-publication",
-      "command": "bun ./📜️script.ts test graph-publication",
+      "command": "repo ./📜️script.ts test graph-publication",
       "source": "🕸️graph/📤️publication/🧪️tests/🟦️.ts"
     },
     {
       "target": "test-toolkit-use",
-      "command": "bun ./📜️script.ts test toolkit-use",
+      "command": "repo ./📜️script.ts test toolkit-use",
       "source": "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts"
     },
     {
       "target": "test-selected-graph",
-      "command": "bun ./📜️script.ts test selected-graph",
+      "command": "repo ./📜️script.ts test selected-graph",
       "source": "🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"
     }
   ]

@@ -2,7 +2,7 @@
 //! rows, replayed last-to-first, and those rows' diffs sum to the negative of the forward diff.
 
 use crate::fixture;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::{demo_mutation_cases, SemioVideoMutation};
 
 #[semio_framework_async_macros::async_test]
@@ -10,7 +10,7 @@ async fn demo_mutations_of_this_kind_invert_and_sum_to_the_negative_diff() {
     let base = fixture();
     let mut checked = 0usize;
     for mutation in demo_mutation_cases().into_iter().filter(|mutation| matches!(mutation, SemioVideoMutation::InsertStream(_))) {
-        let (_, messages) = <SemioVideoMutation as Mutation<_>>::diff(&mutation, &base).into_parts();
+        let (_, messages) = <SemioVideoMutation as ColdMutation<_>>::diff(&mutation, &base).into_parts();
         if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
             continue;
         }

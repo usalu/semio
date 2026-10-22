@@ -19,7 +19,16 @@ pub struct ChangeGeometryParameters {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeGeometryParameters where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_geometry_parameters::ChangeGeometryParameters> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "geometry-parameters", kind: "change-geometry-parameters", record: "ChangedGeometryParameters" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace parameters for geometry \"{}\"", self.id), &format!("Parameter für Geometrie \"{}\" ersetzen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for ChangeGeometryParameters where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_geometry_parameters::ChangeGeometryParameters> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::change_geometry_parameters::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,12 +37,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeGeometryParameter
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace parameters for geometry \"{}\"", self.id), &format!("Parameter für Geometrie \"{}\" ersetzen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

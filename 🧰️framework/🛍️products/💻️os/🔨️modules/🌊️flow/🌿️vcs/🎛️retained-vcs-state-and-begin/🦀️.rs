@@ -9,7 +9,6 @@ pub(super) struct FlowVcsOperation {
     pub(super) source: FlowVcsCensus,
     pub(super) action: Option<FlowVcsAction>,
     pub(super) rollback_owner: Option<FlowVcsAction>,
-    pub(super) layout_update: Option<LayoutUpdate<WidgetLayout>>,
     pub(super) retirement: FlowVcsRetirement,
     pub(super) cursor: FlowVcsCursor,
     pub(super) page: Option<FlowVcsPage>,
@@ -98,8 +97,8 @@ impl FlowVcsDocument {
         self.versions.get(self.active).expect("active Flow VCS document version")
     }
 
-    pub(super) /// 🎯️ Installs the successor `protocol::apply_diff_cold` produced as the active version and hands the displaced version back to be retired cold.
-    fn install_applied(&mut self, mut next: FlowHostSnapshot) -> FlowHostSnapshot {
+    /// 🎯️ Installs the successor `protocol::apply_diff_cold` produced as the active version and hands the displaced version back to be retired cold.
+    pub(super) fn install_applied(&mut self, mut next: FlowHostSnapshot) -> FlowHostSnapshot {
         std::mem::swap(self.versions.get_mut(self.active).expect("active Flow VCS document version"), &mut next);
         next
     }

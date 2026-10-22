@@ -1,0 +1,36 @@
+{
+  "title": "Optimize Ring Drag Performance",
+  "status": "closed",
+  "description": "Ring orb dragging stutters and is slow. Optimize pointer event handling, reduce re-renders, and use local state during drag.",
+  "summary": "Optimized Ring drag: local t state for instant visual feedback, rAF-throttled onOrbChange to ~60fps, suppressed CSS transitions during drag via new Orb dragging prop. Build passes, 14 tests green.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/761"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T20:12:50.930100967Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Ring orb dragging stutters and is slow. Optimize pointer event handling, reduce re-renders, and use local state during drag.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02T20:17:14.801471519Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Optimized Ring drag: local t state for instant visual feedback, rAF-throttled onOrbChange to ~60fps, suppressed CSS transitions during drag via new Orb dragging prop. Build passes, 14 tests green.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/elements.tsx"
+        }
+      ]
+    }
+  ]
+}

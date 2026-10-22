@@ -1,233 +1,88 @@
-// #region 🧲️Header
-
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-
-// 🎫️tickets carries the ticket mutations of the repository context.
-
-// #endregion 🧲️Header
-
 package graphql
 
 import (
-	fmt "fmt"
-	os "os"
-	strings "strings"
-
-	contributorspkg "github.com/usalu/semio/repo/contributors"
-	events "github.com/usalu/semio/repo/events"
-	model "github.com/usalu/semio/repo/model"
-	providers "github.com/usalu/semio/repo/providers"
-	ticketspkg "github.com/usalu/semio/repo/tickets"
-	workspace "github.com/usalu/semio/repo/workspace"
+ "strings"
+ languages "github.com/usalu/semio/repo/languages"
+ model "github.com/usalu/semio/repo/model"
+ providers "github.com/usalu/semio/repo/providers"
+ tickets "github.com/usalu/semio/repo/tickets"
+ workspace "github.com/usalu/semio/repo/workspace"
 )
 
-// #region 🎫️Tickets
-
-// 🔺️TicketChange MUST return a non-nil error when the operation fails.
-// ♻️TicketChange performs the ticket change operation on the repo context.
-func (c *RepoContext) TicketChange(input model.TicketChangeInput) (*model.Ticket, error) {
-	ticket, err := ticketspkg.ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return nil, err
-	}
-
-	if input.Title != nil && *input.Title != "" {
-		if err := ticketspkg.UpdateTicketTitle(ticket, *input.Title); err != nil {
-			return nil, err
-		}
-
-		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
-			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				workspace.WriteWarningf("Failed to update GitHub issue title: %v", err)
-			}
-		}
-	}
-
-	changed := false
-	if input.Prompt != nil {
-		ticket.Description = *input.Prompt
-		if len(ticket.Interactions) > 0 {
-			ticket.Interactions[len(ticket.Interactions)-1].Prompt = *input.Prompt
-		}
-		changed = true
-	}
-
-	if len(ticket.Interactions) > 0 {
-		if input.LLM != nil {
-			llmSlug, err := model.ResolveAllowedLLM(*input.LLM)
-			if err != nil {
-				return nil, err
-			}
-			ticket.Interactions[len(ticket.Interactions)-1].LLM = llmSlug
-			changed = true
-		}
-		if input.Effort != nil {
-			effortSlug, err := model.ResolveAllowedEffort(*input.Effort)
-			if err != nil {
-				return nil, err
-			}
-			ticket.Interactions[len(ticket.Interactions)-1].Effort = effortSlug
-			changed = true
-		}
-		if input.Client != nil {
-			uiSlug, err := model.ResolveAllowedClient(*input.Client)
-			if err != nil {
-				return nil, err
-			}
-			ticket.Interactions[len(ticket.Interactions)-1].Client = uiSlug
-			changed = true
-		}
-	}
-	if input.Goal != nil {
-		ticket.Goal = *input.Goal
-		changed = true
-	}
-	if input.Parent != nil {
-		ticket.Parent = *input.Parent
-		changed = true
-	}
-
-	if changed {
-		if err := ticketspkg.SaveTicket(ticket); err != nil {
-			return nil, err
-		}
-		ticketID := model.FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		events.Emit(events.EventTicketChangeEnded, "repo-cli", events.TicketChangePayload{
-			TicketPayload: events.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-			Title:         input.Title, Prompt: input.Prompt, LLM: input.LLM, Effort: input.Effort, Goal: input.Goal, Parent: input.Parent, Author: contributorspkg.GetGitAuthorAlias(),
-		})
-	}
-
-	return ticket, nil
+// 🎫️ticketService retains request metadata without mutating the server's shared service.
+func (c *RepoContext) ticketService(client string) (*tickets.TicketService,error) {
+ service:=*c.tickets
+ service.InteractionMetadata=tickets.TicketInteractionMetadata{Author:workspace.GetGitAuthor(c.rootDir),System:languages.GetSystem(),Checkpoint:workspace.GetGitCheckpoint(c.rootDir)}
+ if client!="" {resolved,err:=model.ResolveAllowedClient(client);if err!=nil {return nil,err};service.McpClient=providers.McpKindFromResolvedClient(resolved)}
+ return &service,nil
 }
 
-// 🔻️TicketDelete MUST return a non-nil error when the operation fails.
-// 🔴️TicketDelete performs the ticket delete operation on the repo context.
-func (c *RepoContext) TicketDelete(input model.TicketDeleteInput) (bool, error) {
-	ticket, err := ticketspkg.ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return false, err
-	}
-
-	if !input.NoManagement && ticket.Management != nil {
-		if ticket.Management.Issue != "" {
-			parts := strings.Split(ticket.Management.Issue, "/")
-			number := parts[len(parts)-1]
-			if err := c.managementProvider.DeleteIssue(number); err != nil {
-				return false, err
-			}
-		}
-	}
-
-	path := ticket.FolderPath
-	if path == "" {
-		path = ticketspkg.GetTicketPath(input.Year, input.Month, input.Day, input.Slug)
-	}
-
-	if err := os.RemoveAll(path); err != nil {
-		return false, err
-	}
-
-	return true, nil
+// 🧾️ticketResult resolves the canonical lifecycle output through its same bound store.
+func ticketResult(service *tickets.TicketService,outcome tickets.TicketOutcome,err error) (*model.Ticket,error) {
+ if err!=nil {return nil,err}
+ for _,warning:=range outcome.Warnings {workspace.WriteWarningf("%s",warning)}
+ id,err:=tickets.ParseTicketID(outcome.ID);if err!=nil {return nil,err};return service.Read(id)
 }
 
-// 📬️TicketOpen MUST return a non-nil error when the operation fails.
-// ⚫️TicketOpen performs the ticket open operation on the repo context.
-func (c *RepoContext) TicketOpen(input model.TicketOpenInput) (*model.Ticket, error) {
-	resolvedClient, err := model.ResolveAllowedClient(input.Client)
-	if err != nil {
-		return nil, err
-	}
-	kind := providers.McpKindFromResolvedClient(resolvedClient)
-	return ticketspkg.OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Effort, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue, kind, input.PlanID, input.SpecID)
+// ♻️TicketChange applies validated changes through the selected repository service.
+func (c *RepoContext) TicketChange(input model.TicketChangeInput) (*model.Ticket,error) {
+ service,err:=c.ticketService("");if err!=nil {return nil,err}
+ outcome,err:=service.Change(tickets.TicketChangeRequest{ID:tickets.NewTicketID(input.Year,input.Month,input.Day,input.Slug).ID(),Title:input.Title,Description:input.Prompt,LLM:input.LLM,Effort:input.Effort,Client:input.Client,Goal:input.Goal,Parent:input.Parent,NoManagement:input.NoManagement})
+ return ticketResult(service,outcome,err)
 }
 
-// 🟦️TicketClose MUST return a non-nil error when the operation fails.
-// 🩵️TicketClose performs the ticket close operation on the repo context.
-func (c *RepoContext) TicketClose(input model.TicketCloseInput) (*model.Ticket, error) {
-	if input.All {
-		tickets, err := ticketspkg.ListTickets(nil, nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		var lastTicket *model.Ticket
-		for _, t := range tickets {
-			if t.Status == model.TicketStatusOpen {
-				ticket := t
-				fmt.Printf("Closing ticket %s...\n", ticket.Slug)
-				if err := ticketspkg.FinishTicket(&ticket, "Bulk close", []string{}, input.NoManagement, true); err != nil {
-					workspace.WriteWarningf("Failed to close ticket %s: %v", ticket.Slug, err)
-					continue
-				}
-				lastTicket = &ticket
-			}
-		}
-
-		if !input.NoManagement {
-			issueURLs, err := c.managementProvider.ListOpenIssuesWithLabel("ticket")
-			if err != nil {
-				workspace.WriteWarningf("Failed to list GitHub issues with 'ticket' label: %v", err)
-			} else {
-				for _, issueURL := range issueURLs {
-					fmt.Printf("Closing GitHub issue %s...\n", issueURL)
-					if err := c.managementProvider.CloseIssue(issueURL); err != nil {
-						workspace.WriteWarningf("Failed to close GitHub issue %s: %v", issueURL, err)
-					}
-				}
-			}
-		}
-		return lastTicket, nil
-	}
-	ticket, err := ticketspkg.ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return nil, err
-	}
-
-	if input.Title != nil && *input.Title != "" {
-		if err := ticketspkg.UpdateTicketTitle(ticket, *input.Title); err != nil {
-			return nil, err
-		}
-
-		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
-			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				workspace.WriteWarningf("Failed to update GitHub issue title: %v", err)
-			}
-		}
-	}
-	if err := ticketspkg.FinishTicket(ticket, input.Summary, input.Files, input.NoManagement, false); err != nil {
-		return nil, err
-	}
-	return ticket, nil
+// 🗑️TicketDelete deletes only a ticket resolved by the selected repository service.
+func (c *RepoContext) TicketDelete(input model.TicketDeleteInput) (bool,error) {
+ service,err:=c.ticketService("");if err!=nil {return false,err}
+ id,err:=tickets.ParseTicketID(tickets.NewTicketID(input.Year,input.Month,input.Day,input.Slug).ID());if err!=nil {return false,err}
+ if err=service.Delete(id,input.NoManagement);err!=nil {return false,err};return true,nil
 }
 
-// 🟪️TicketReopen MUST return a non-nil error when the operation fails.
-// 🩶️TicketReopen performs the ticket reopen operation on the repo context.
-func (c *RepoContext) TicketReopen(input model.TicketReopenInput) (*model.Ticket, error) {
-	ticket, err := ticketspkg.ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return nil, err
-	}
-
-	if input.Title != nil && *input.Title != "" {
-		if err := ticketspkg.UpdateTicketTitle(ticket, *input.Title); err != nil {
-			return nil, err
-		}
-
-		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
-			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				workspace.WriteWarningf("Failed to update GitHub issue title: %v", err)
-			}
-		}
-	}
-	resolvedClient, err := model.ResolveAllowedClient(input.Client)
-	if err != nil {
-		return nil, err
-	}
-	kind := providers.McpKindFromResolvedClient(resolvedClient)
-	if err := ticketspkg.ReopenTicket(ticket, input.Prompt, input.LLM, input.Effort, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement, kind, input.PlanID, input.SpecID); err != nil {
-		return nil, err
-	}
-	return ticket, nil
+// 📬️TicketOpen opens or continues a ticket within the selected repository.
+func (c *RepoContext) TicketOpen(input model.TicketOpenInput) (*model.Ticket,error) {
+ service,err:=c.ticketService(input.Client);if err!=nil {return nil,err}
+ if input.Prompt=="" {input.Prompt=input.Title}
+ prompt:=strings.ToUpper(input.Prompt)
+ if strings.Contains(prompt,"NOTICKET") {return nil,nil}
+ if strings.Contains(prompt,"CONTINUE") {
+  latest,err:=service.Latest();if err!=nil {return nil,err}
+  if latest.Status==model.TicketStatusOpen {return latest,nil}
+  outcome,err:=service.Reopen(tickets.TicketReopenRequest{ID:tickets.NewTicketID(latest.Year,latest.Month,latest.Day,latest.Slug).ID(),Prompt:input.Prompt,LLM:input.LLM,Effort:input.Effort,Client:input.Client,Draft:input.Draft,Goal:input.Goal,Parent:input.Parent,NoManagement:input.NoManagement,Session:c.ticketSession,PlanID:input.PlanID,SpecID:input.SpecID})
+  return ticketResult(service,outcome,err)
+ }
+ outcome,err:=service.Open(tickets.TicketOpenRequest{Emoji:input.Emoji,Title:input.Title,Prompt:input.Prompt,LLM:input.LLM,Effort:input.Effort,Client:input.Client,Draft:input.Draft,Goal:input.Goal,Parent:input.Parent,NoIssue:input.NoIssue,NoManagement:input.NoManagement,Issue:input.Issue,Session:c.ticketSession,PlanID:input.PlanID,SpecID:input.SpecID})
+ return ticketResult(service,outcome,err)
 }
 
-// #endregion 🎫️Tickets
+// 📪️TicketClose settles one ticket or every open ticket within the selected repository.
+func (c *RepoContext) TicketClose(input model.TicketCloseInput) (*model.Ticket,error) {
+ service,err:=c.ticketService("");if err!=nil {return nil,err}
+ if input.All {
+  all,err:=service.List(nil,nil,nil);if err!=nil {return nil,err};var last *model.Ticket
+  for _,ticket:=range all {
+   if ticket.Status!=model.TicketStatusOpen {continue}
+   outcome,err:=service.Close(tickets.TicketCloseRequest{ID:tickets.NewTicketID(ticket.Year,ticket.Month,ticket.Day,ticket.Slug).ID(),Summary:"Bulk close",Bulk:true,NoManagement:input.NoManagement})
+   if err!=nil {workspace.WriteWarningf("Failed to close ticket %s: %v",ticket.Slug,err);continue}
+   last,err=ticketResult(service,outcome,nil);if err!=nil {return nil,err}
+  }
+  if !input.NoManagement {
+   urls,err:=c.managementProvider.ListOpenIssuesWithLabel("ticket");if err!=nil {workspace.WriteWarningf("Failed to list ticket issues: %v",err)}else{for _,url:=range urls {if err=c.managementProvider.CloseIssue(url);err!=nil {workspace.WriteWarningf("Failed to close ticket issue %s: %v",url,err)}}}
+  }
+  return last,nil
+ }
+ if err:=tickets.ValidateTicketCloseRequest(tickets.TicketCloseRequest{Summary:input.Summary,Files:input.Files});err!=nil {return nil,err}
+ id:=tickets.NewTicketID(input.Year,input.Month,input.Day,input.Slug).ID()
+ if input.Title!=nil&&*input.Title!="" {outcome,err:=service.Change(tickets.TicketChangeRequest{ID:id,Title:input.Title,NoManagement:input.NoManagement});if err!=nil {return nil,err};id=outcome.ID}
+ outcome,err:=service.Close(tickets.TicketCloseRequest{ID:id,Summary:input.Summary,Files:input.Files,NoManagement:input.NoManagement})
+ return ticketResult(service,outcome,err)
+}
+
+// 🔓️TicketReopen resumes a ticket through its selected repository service.
+func (c *RepoContext) TicketReopen(input model.TicketReopenInput) (*model.Ticket,error) {
+ if _,_,_,err:=tickets.ResolveTicketInteraction(input.LLM,input.Effort,input.Client);err!=nil {return nil,err}
+ service,err:=c.ticketService(input.Client);if err!=nil {return nil,err}
+ id:=tickets.NewTicketID(input.Year,input.Month,input.Day,input.Slug).ID()
+ if input.Title!=nil&&*input.Title!="" {outcome,err:=service.Change(tickets.TicketChangeRequest{ID:id,Title:input.Title,NoManagement:input.NoManagement});if err!=nil {return nil,err};id=outcome.ID}
+ outcome,err:=service.Reopen(tickets.TicketReopenRequest{ID:id,Prompt:input.Prompt,LLM:input.LLM,Effort:input.Effort,Client:input.Client,Draft:input.Draft,Goal:input.Goal,Parent:input.Parent,NoManagement:input.NoManagement,Session:c.ticketSession,PlanID:input.PlanID,SpecID:input.SpecID})
+ return ticketResult(service,outcome,err)
+}

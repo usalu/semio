@@ -303,7 +303,7 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile pro
 	reopenProperties := map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "prompt": stringField("Additional task description."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "title": stringField("Updated title."), "goal": stringField("Goal id."), "parent": stringField("Parent ticket."), "no_management": booleanField("Skip management integration.")}
 	reopenProperties["prompt"] = Schema{Type: "string", Description: "Additional task description.", MinLength: 1, Pattern: `\S`}
 	switch resolvedProfile {
-	case providers.McpClientCursor, providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
+	case providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
 		openProperties["plan_id"] = stringField("Client plan id.")
 		reopenProperties["plan_id"] = stringField("Client plan id.")
 	case providers.McpClientKiro:

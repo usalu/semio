@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { transformSource } from "./codemod.ts";
 
 const FROM = "../runtime/🟦️.ts";
-const run = (source: string): string => transformSource("x.ts", source, FROM).text;
+const run = (source: string): string => transformSource("x.ts", source, () => FROM).text;
 
 test("calls on the Bun global become facade calls and gain one merged import", () => {
   const out = run(`const a = Bun.TOML.parse(t); const b = new Bun.Glob("*.ts"); const c = Bun.which("git", { PATH: p });\n`);
@@ -33,8 +33,9 @@ test("builtin prefix tests and sqlite imports go through the owned names", () =>
 
 test("tool commands: a script run keeps working through the executable name, a subcommand stays for its owner", () => {
   expect(run(`runCmd("bun", [join(root, "tsc"), "--noEmit", "--types", "bun"]);\n`)).toContain('runCmd(runtimeExecutableV1(), [join(root, "tsc"), "--noEmit", "--types", runtimeTypeEnvironmentV1()]);');
-  const kept = transformSource("x.ts", `runCmd("bun", ["test", file]);\n`, FROM);
-  expect(kept.text).toContain('runCmd("bun", ["test", file]);');
+  expect(run(`runCmd("bun", ["test", file]);\n`)).toContain("runCmd(runtimeExecutableV1(), runtimeTestArgumentsV1([file]));");
+  const kept = transformSource("x.ts", `runCmd("bun", ["install", file]);\n`, () => FROM);
+  expect(kept.text).toContain('runCmd("bun", ["install", file]);');
   expect(kept.manual.some(row => row.rule === "specifier")).toBe(true);
 });
 

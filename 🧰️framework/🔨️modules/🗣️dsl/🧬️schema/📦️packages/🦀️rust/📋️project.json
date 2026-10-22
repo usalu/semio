@@ -38,7 +38,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-presence"
+        "command": "repo ./📜️script.ts test-presence"
       }
     },
     "test-ownership": {
@@ -54,7 +54,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership"
+        "command": "repo ./📜️script.ts test-ownership"
       }
     },
     "test-native": {
@@ -70,7 +70,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-original-receiving-source": {
@@ -87,7 +87,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving source"
+        "command": "repo ./📜️script.ts test-original-receiving source"
       }
     },
     "test-original-receiving-native": {
@@ -104,7 +104,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving native"
+        "command": "repo ./📜️script.ts test-original-receiving native"
       }
     }
   }

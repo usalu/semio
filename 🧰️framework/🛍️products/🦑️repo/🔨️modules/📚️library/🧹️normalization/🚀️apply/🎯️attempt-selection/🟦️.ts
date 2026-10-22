@@ -1,7 +1,7 @@
 /** 🎯️ The attempt selection and lease handling of the taxonomy plan apply. */
 import { normalizeRelative } from "../../🛣️path/🟦️.ts";
 import { sha256 } from "../../📁️input/🟦️.ts";
-import { execFileSync } from "node:child_process";
+
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { posix } from "node:path";
 import { type TaxonomyApplyOptions, requireTaxonomyValue } from "../../📜️plan-contracts/🟦️.ts";
@@ -13,6 +13,7 @@ import { type TransactionLeaseHandle, type TransactionLeaseRecord, releaseTransa
 import { acquireTransactionLease } from "../../🔑️transaction-lease-acquisition/🟦️.ts";
 import { type PreflightReferenceBasis } from "../../🛫️embedded-roots/🟦️.ts";
 import type { bindTransactionNames, checkPlanAuthority } from "../📜️plan-checks/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧭 Selects the resumed attempt or allocates the next attempt ordinal and binds its journal paths. */
 export function selectAttempt({ existingAttempts, resumeRelative, digest, taxonomy, attemptsRelative, journalFilename, repoRoot }: Pick<ReturnType<typeof checkPlanAuthority>, "existingAttempts" | "resumeRelative"> & Pick<ReturnType<typeof bindTransactionNames>, "digest" | "taxonomy" | "attemptsRelative" | "journalFilename" | "repoRoot">) {
@@ -64,7 +65,7 @@ export function defineLeaseAndPreChecks({ txn, repositoryAuthority, attemptRelat
     const targetDigestible = { sourcePath: edit.sourcePath, finalPath: edit.finalPath, oldTarget: edit.oldTarget, newTarget: edit.newTarget, logicalTargetSourcePath: edit.logicalTargetSourcePath, logicalTargetFinalPath: edit.logicalTargetFinalPath, logicalTargetPreimage: edit.logicalTargetPreimage };
     if (edit.sourceTargetDigest !== sha256(canonicalJson(targetDigestible))) throw new Error(`Symlink source-target authority digest changed: ${edit.sourcePath}`);
   }
-  execFileSync("git", ["cat-file", "-e", `${plan.baselineCommit}^{commit}`], { cwd: repoRoot, stdio: "ignore" });
+  runToolSyncV1("git", ["cat-file", "-e", `${plan.baselineCommit}^{commit}`], { check: true, cwd: repoRoot, stdio: "ignore" }).stdout;
   if (plan.excludedTreeDigests.length > 0) throw new Error("Opaque digest filesystem access is disabled; replan with empty excludedTreeDigests");
   if (!options.resumeJournal) checkCancellation(repoRoot, options.cancelFile);
   return { acquireLease, releaseLease };

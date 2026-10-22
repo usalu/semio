@@ -128,12 +128,12 @@
     {
       "root": "/workspace",
       "path": "/workspace-other/private",
-      "sources": 1024,
+      "sources": 2048,
       "expected": {
         "version": 1,
         "scope": "outside",
         "path": null,
-        "sourceCount": 1024
+        "sourceCount": 2048
       }
     },
     {

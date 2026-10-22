@@ -12,7 +12,7 @@ use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_ui_theme::{Rgba, Theme};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{directional_shadow_view_projection, ICON_SHADOW_MAP_SIZE, SceneMaterial3d, SceneMaterialDraw3d, SceneShadow3d, SceneShadowRole3d, WORLD_SHADOW_MAP_SIZE};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{directional_shadow_view_projection, ICON_SHADOW_MAP_SIZE, Mat4Math, SceneMaterial3d, SceneMaterialDraw3d, SceneShadow3d, SceneShadowRole3d, WORLD_SHADOW_MAP_SIZE};
 use std::sync::{LazyLock, Mutex};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_surface_terrain::TerrainSessionCore;

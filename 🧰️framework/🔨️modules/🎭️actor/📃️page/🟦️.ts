@@ -54,6 +54,6 @@ export function readActorBytePage(page: ActorBytePage): Uint8Array {
 //#region 🧪️BytePageLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️actorbytepage-matches-shared-vectors-and-node-buffer-for-every-fixed-wor/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, readActorBytePage }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, readActorBytePage }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️BytePageLaws

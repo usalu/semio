@@ -41,16 +41,9 @@ impl GisTerrainWindowConfigDiff {
     }
 }
 
-impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
-    fn apply(&self, base: &GisTerrainWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisTerrainWindowConfig> {
-        let mut next = base.clone();
-        for step in &self.steps {
-            if let Some(value) = &step.camera_json {
-                next.camera_json = value.clone();
-            }
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         let mut folded = self.folded();
         if let Some(camera) = other.folded().camera_json {
@@ -58,14 +51,29 @@ impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDi
         }
         *self = Self::from(folded);
     }
+
+    fn apply(&self, unpublished: &mut GisTerrainWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        for step in &self.steps {
+            if let Some(value) = &step.camera_json {
+                next.camera_json = value.clone();
+            }
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
-    fn inverse(&self, base: &GisTerrainWindowConfig) -> Self {
-        Self::from(GisTerrainWindowConfigDelta { camera_json: self.folded().camera_json.map(|_| base.camera_json.clone()) })
-    }
     fn is_empty(&self) -> bool {
         self.steps.iter().all(|step| *step == GisTerrainWindowConfigDelta::default())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
+    fn inverse(&self, base: &GisTerrainWindowConfig) -> Self {
+        Self::from(GisTerrainWindowConfigDelta { camera_json: self.folded().camera_json.map(|_| base.camera_json.clone()) })
     }
 }
 //#endregion 🔺️Diff

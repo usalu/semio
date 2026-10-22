@@ -10,6 +10,20 @@ use std::path::PathBuf;
 mod original_path_return;
 pub use original_path_return::{OriginalNativePathReturnRegistry,OriginalNativePathReservation,OriginalSuppliedNativePath};
 
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_NATIVE_IO_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🔬️native-io-unit"]
+mod tests {
+    use super::*;
+    use semio_framework_job_worker::OriginalWorkerFixtureCaller;
+
+    #[path = "🦀️.rs"]
+    mod unit;
+}
+
 fn extension_capacity(extension:&std::borrow::Cow<'static,str>)->usize{match extension{std::borrow::Cow::Owned(text)=>text.capacity(),std::borrow::Cow::Borrowed(_)=>0}}
 
 //#region 📂️Schema

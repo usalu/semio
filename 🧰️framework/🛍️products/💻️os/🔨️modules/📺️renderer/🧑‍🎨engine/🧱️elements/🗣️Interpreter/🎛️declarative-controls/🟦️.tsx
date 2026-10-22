@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useEffect, useRef, type ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 import {
   Button,
   IconSelector,

@@ -172,31 +172,10 @@ func DecodeTicketDocument(text string) (*model.Ticket, error) {
 		Plan:         plan,
 		Interactions: interactions,
 	}
-	if ticket.Description == "" {
-		ticket.Description = textMember(members, "prompt")
-	}
 	if entries, ok := members["sessions"].([]interface{}); ok {
-		allStrings := true
 		for _, entry := range entries {
-			if _, ok := entry.(string); !ok {
-				allStrings = false
-				break
-			}
-		}
-		if allStrings {
-			for _, entry := range entries {
-				AppendSessionID(ticket, entry.(string))
-			}
-		} else {
-			legacy := make([]model.TicketAgent, 0)
-			for _, entry := range objectsOf(members["sessions"]) {
-				legacy = append(legacy, decodeAgent(entry))
-			}
-			for _, agent := range legacy {
-				AppendSessionID(ticket, agent.Session)
-			}
-			if len(agents) == 0 {
-				agents = legacy
+			if sessionID, ok := entry.(string); ok {
+				AppendSessionID(ticket, sessionID)
 			}
 		}
 	}
@@ -218,7 +197,7 @@ func DecodeTicketDocument(text string) (*model.Ticket, error) {
 
 // 🖨️EncodeTicketDocument encodes one ticket document, member order and omission rules included.
 func EncodeTicketDocument(ticket *model.Ticket) string {
-	members := make([]goMember, 0, 9)
+	members := make([]goMember, 0, 12)
 	members = append(members, goMember{name: "title", text: ticket.Title})
 	if ticket.Emoji != "" {
 		members = append(members, goMember{name: "emoji", text: ticket.Emoji})
@@ -240,6 +219,7 @@ func EncodeTicketDocument(ticket *model.Ticket) string {
 	if ticket.Goal != "" {
 		members = append(members, goMember{name: "goal", text: ticket.Goal})
 	}
+	if ticket.Parent != "" { members = append(members, goMember{name: "parent", text: ticket.Parent}) }
 	if ticket.Plan != nil {
 		nested := make([]goMember, 0, 4)
 		if ticket.Plan.Client != "" {
@@ -264,6 +244,11 @@ func EncodeTicketDocument(ticket *model.Ticket) string {
 		for _, interaction := range ticket.Interactions { objects = append(objects, interactionMembers(interaction)) }
 		members = append(members, goMember{name: "interactions", objects: objects, kind: 3})
 	}
+	if len(ticket.Agents) > 0 {
+		objects := make([][]goMember, 0, len(ticket.Agents))
+		for _, agent := range ticket.Agents { objects = append(objects, agentMembers(agent)) }
+		members = append(members, goMember{name: "agents", objects: objects, kind: 3})
+	}
 	return renderGoMembers(members, 0)
 }
 
@@ -282,6 +267,26 @@ func interactionMembers(interaction model.Interaction) []goMember {
 		members = append(members, goMember{name: "files", objects: objects, kind: 3})
 	}
 	return members
+}
+
+// 🤖️agentMembers preserves ordered agent metadata and nested plan state.
+func agentMembers(agent model.TicketAgent) []goMember {
+ members:=[]goMember{{name:"session",text:agent.Session}}
+ for _,field:=range []goMember{{name:"contributor",text:agent.Contributor},{name:"system",text:agent.System},{name:"client",text:agent.Client},{name:"llm",text:agent.LLM},{name:"effort",text:agent.Effort},{name:"transcript",text:agent.Transcript}} {if field.text!="" {members=append(members,field)}}
+ if agent.Plan!=nil {
+  fields:=make([]goMember,0,1)
+  if len(agent.Plan.Steps)>0 {
+   steps:=make([][]goMember,0,len(agent.Plan.Steps))
+   for _,step:=range agent.Plan.Steps {
+    row:=[]goMember{{name:"id",text:step.ID},{name:"name",text:step.Name}}
+    for _,field:=range []goMember{{name:"description",text:step.Description},{name:"status",text:step.Status},{name:"ideated",text:step.Ideated},{name:"started",text:step.Started},{name:"completed",text:step.Completed},{name:"abandoned",text:step.Abandoned}} {if field.text!="" {row=append(row,field)}}
+    steps=append(steps,row)
+   }
+   fields=append(fields,goMember{name:"steps",objects:steps,kind:3})
+  }
+  members=append(members,goMember{name:"plan",nested:fields,kind:1})
+ }
+ return members
 }
 
 // ➕️AppendSessionID appends a session id once, ignoring blanks and duplicates.

@@ -1,0 +1,109 @@
+[
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🟦️.ts",
+  "old": "  const hash = createHash(\"sha256\").update(`nx-tooling-install-v3\\0${environment.platform}\\0${environment.architecture}\\0${environment.libc}\\0`);\n  for (const [name, bytes] of files) hash.update(name + \"\\0\").update(bytes).update(\"\\0\");\n  return hash.digest(\"hex\");",
+  "new": "  const hash = createHash(\"sha256\").update(\"nx-tooling-install-v4\\0\"), field = (value: Uint8Array | string) => { const bytes = typeof value === \"string\" ? Buffer.from(value) : value; hash.update(`${bytes.byteLength}:`).update(bytes); };\n  for (const value of [environment.platform, environment.architecture, environment.libc]) field(value);\n  for (const [name, bytes] of files) { field(name); field(bytes); }\n  return hash.digest(\"hex\");",
+  "marker": "nx-tooling-install-v4",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts",
+  "old": "  const toolingOracle = new Bun.CryptoHasher(\"sha256\").update(`nx-tooling-install-v3\\0${toolingIdentity.environment.platform}\\0${toolingIdentity.environment.architecture}\\0${toolingIdentity.environment.libc}\\0`);\n  for (const [path, bytes] of toolingFiles) toolingOracle.update(path + \"\\0\").update(bytes).update(\"\\0\");",
+  "new": "  const toolingOracle = new Bun.CryptoHasher(\"sha256\").update(\"nx-tooling-install-v4\\0\"), frame = (value: Uint8Array | string) => { const bytes = typeof value === \"string\" ? Buffer.from(value) : value; toolingOracle.update(`${bytes.byteLength}:`).update(bytes); };\n  for (const value of [toolingIdentity.environment.platform, toolingIdentity.environment.architecture, toolingIdentity.environment.libc]) frame(value);\n  for (const [path, bytes] of toolingFiles) { frame(path); frame(bytes); }",
+  "marker": "nx-tooling-install-v4",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+  "old": "independent=new Bun.CryptoHasher(\"sha256\").update(\"nx-tooling-install-v3\\0neutral\\0neutral\\0\\0\");for(const[path,bytes]of files)independent.update(path+\"\\0\").update(bytes).update(\"\\0\");",
+  "new": "independent=new Bun.CryptoHasher(\"sha256\").update(\"nx-tooling-install-v4\\0\").update(\"7:neutral7:neutral0:\");for(const[path,bytes]of files)independent.update(Buffer.byteLength(path)+\":\"+path+bytes.byteLength+\":\").update(bytes);",
+  "marker": "nx-tooling-install-v4",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🧪️tests/🟦️.ts",
+  "old": "oracle=new Bun.CryptoHasher(\"sha256\").update(\"nx-tooling-install-v3\\0darwin\\0arm64\\0\\0\");for(const[path,bytes]of files)oracle.update(path+\"\\0\").update(bytes).update(\"\\0\");",
+  "new": "oracle=new Bun.CryptoHasher(\"sha256\").update(\"nx-tooling-install-v4\\0\").update(\"6:darwin5:arm640:\");for(const[path,bytes]of files)oracle.update(Buffer.byteLength(path)+\":\"+path+bytes.byteLength+\":\").update(bytes);",
+  "marker": "nx-tooling-install-v4",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🟦️.ts",
+  "old": "inflight=0,idle:unknown,opened=0,closed=0;\n",
+  "new": "inflight=0,idle:unknown,opened=0,closed=0;const dropped=new WeakSet<object>();\n",
+  "marker": "const dropped=new WeakSet",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🟦️.ts",
+  "old": "const drop=async(entry:NonNullable<typeof current>)=>{if(current===entry)current=undefined;try{",
+  "new": "const drop=async(entry:NonNullable<typeof current>)=>{if(current===entry)current=undefined;if(dropped.has(entry))return;dropped.add(entry);try{",
+  "marker": "if(dropped.has(entry))return;",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+  "old": "\"maxLength\": 5592408,\n            \"pattern\": \"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$\"",
+  "new": "\"maxLength\": 5592408,\n            \"pattern\": \"^[A-Za-z0-9+/]*={0,2}$\"",
+  "marker": "\"^[A-Za-z0-9+/]*={0,2}$\"",
+  "also": [
+   "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts"
+  ]
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts",
+  "old": "else if(row===\"\"&&before===oldCount&&after===newCount)continue;",
+  "new": "else if(row===\"\"&&(index+1===lines.length||before===oldCount&&after===newCount))continue;",
+  "marker": "index+1===lines.length||before",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "/** 📥️ Authenticates the locked registry tarball before bounded package decoding. */\nexport async function acquireNxPackageSourceV1(workspace:string,original:ScriptInvocation,lock:unknown,phaseControl:ResourceLeaseControl):Promise<NxPackageArchiveV1>{\n requireIssuedResourceControlInvocationV1(phaseControl,original);checkResourceLeaseControl(phaseControl);",
+  "new": "/** 🔌️ Everything acquisition needs from its host: the issued-control admission, the caller authority, a derived control and the network; tests replace them through an explicit parameter. */\nexport type NxPackageSourceHostV1=Readonly<{require(phase:ResourceLeaseControl,original:ScriptInvocation):void;authority(original:ScriptInvocation):Readonly<{repositoryRoot:string;network:Readonly<{offline:boolean}>;child:Readonly<{maximumElapsedMilliseconds:number}>}>;derive(phase:ResourceLeaseControl,milliseconds:number):ResourceLeaseControl;fetch:typeof fetch}>;\n/** 🌐️ The real host: issued controls, the native caller authority and the global fetch. */\nexport const NX_PACKAGE_SOURCE_HOST_V1:NxPackageSourceHostV1=Object.freeze({require:requireIssuedResourceControlInvocationV1,authority:original=>readNativeCallerAuthorityV1(original.capabilities),derive:createRequestedIssuedResourceControlV1,fetch:(input,init)=>fetch(input,init)});\n/** 📥️ Authenticates the locked registry tarball before bounded package decoding. */\nexport async function acquireNxPackageSourceV1(workspace:string,original:ScriptInvocation,lock:unknown,phaseControl:ResourceLeaseControl,host:NxPackageSourceHostV1=NX_PACKAGE_SOURCE_HOST_V1):Promise<NxPackageArchiveV1>{\n host.require(phaseControl,original);checkResourceLeaseControl(phaseControl);",
+  "marker": "NX_PACKAGE_SOURCE_HOST_V1",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "const authority=readNativeCallerAuthorityV1(original.capabilities);",
+  "new": "const authority=host.authority(original);",
+  "marker": "host.authority(original);",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "createRequestedIssuedResourceControlV1(phaseControl,authority.child.maximumElapsedMilliseconds)",
+  "new": "host.derive(phaseControl,authority.child.maximumElapsedMilliseconds)",
+  "marker": "host.derive(phaseControl",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "if(!response.ok||!response.body)throw Error(\"Pinned Nx package download refused: \"+response.status);",
+  "new": "if(!response.ok||!response.body){await response.body?.cancel().catch(()=>undefined);throw Error(\"Pinned Nx package download refused: \"+response.status);}",
+  "marker": "await response.body?.cancel()",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "BigInt(advertised)>BigInt(policy.maximumCompressedBytes)))throw Error(\"Nx package compressed ceiling exceeded\");",
+  "new": "BigInt(advertised)>BigInt(policy.maximumCompressedBytes))){await response.body.cancel().catch(()=>undefined);throw Error(\"Nx package compressed ceiling exceeded\");}",
+  "marker": "await response.body.cancel()",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "old": "response=await fetch(",
+  "new": "response=await host.fetch(",
+  "marker": "await host.fetch(",
+  "also": []
+ },
+ {
+  "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+  "old": "async function restoreNxPackageSourceV1(",
+  "new": "export async function restoreNxPackageSourceV1(",
+  "marker": "export async function restoreNxPackageSourceV1(",
+  "also": []
+ }
+]

@@ -20,7 +20,7 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
         Ok(Some(status)) => frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status }),
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -94,7 +94,7 @@ pub(super) async fn arm_cancel_media_export<PA: PluginApp>(
     let handle = media_export_handle_from_wire(handle);
     match plugin_cancel_media_export(runtime, instance_id, &handle).await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-        Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
+        Err(error) => push_app_fault(frames, Some(seq), plugin_internal_fault(error.to_string())).await,
     }
     Ok(())
 }
@@ -116,7 +116,7 @@ pub(super) async fn arm_media_fingerprint<PA: PluginApp>(
             let value = DslValue::String(fingerprint.0);
             frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

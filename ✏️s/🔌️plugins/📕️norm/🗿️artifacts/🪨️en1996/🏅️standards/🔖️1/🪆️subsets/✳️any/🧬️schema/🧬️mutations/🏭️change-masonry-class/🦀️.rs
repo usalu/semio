@@ -18,7 +18,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeMasonryClass where
         kind: "change-masonry-class",
         record: "ChangedMasonryClass",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change masonry execution class", "Mauerwerksklasse ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeMasonryClass where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_masonry_class::ChangeMasonryClass> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_masonry_class::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeMasonryClass where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change masonry execution class", "Mauerwerksklasse ändern")
-    }
 }
 
 //#region 🪢️Mounts

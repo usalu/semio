@@ -47,7 +47,7 @@ use {semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTable
 use {semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation, semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot};
 use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
 use {semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation, semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Mutation
 pub use semio_s_artifact_stdio_semio_schema::schema::mutations::apply_animation;
@@ -93,7 +93,7 @@ pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_vide
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioSnapshot, diff = SemioDiff, schema = "SemioMutation")]
+#[mutations(snapshot = SemioSnapshot, diff = SemioDiff, schema = "SemioMutation", reference = SemioSnapshot, reference_diff = SemioDiff)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 pub enum SemioMutation {
     ApplyBrep(apply_brep::ApplyBrep),
@@ -127,7 +127,7 @@ pub const KINDS: &[&str] = &["apply-brep", "apply-mesh", "apply-model", "apply-v
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> protocol::MutationOutcome<SemioDiff> {
-    <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, base)
+    <SemioMutation as ColdMutation<SemioSnapshot>>::diff(mutation, base)
 }
 
 
@@ -140,7 +140,7 @@ pub fn diff_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> pr
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioMutation as Mutation<SemioSnapshot>>::inverse(mutation, base)?
+    <SemioMutation as ColdMutation<SemioSnapshot>>::inverse(mutation, base)?
 
     })
 }

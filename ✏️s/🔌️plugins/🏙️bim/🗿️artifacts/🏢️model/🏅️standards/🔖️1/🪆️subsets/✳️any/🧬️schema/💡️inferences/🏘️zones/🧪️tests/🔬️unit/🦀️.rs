@@ -98,7 +98,7 @@ async fn a_zone_membership_edit_re_infers_only_the_zones_and_schemes() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::spaces("sp-west", Entry::Patched(SpacePatch { zone: Some(Assigned::new(Some("z-night".into()))), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     session.update(&edited, &diff);
     let computed = &session.report().computed_by_kind;
     for kind in ["room", "wall-layout", "solid", "plan", "opening-frame", "quantity", "diagnostics"] {
@@ -115,7 +115,7 @@ async fn a_density_edit_re_infers_the_zone_and_the_schemes_that_read_it() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::zones("z-day", Entry::Patched(ZonePatch { occupancy_density: Some(0.2), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     let occupancy = session.update(&edited, &diff).zone_totals["z-day"].occupancy;
     assert!((occupancy - 0.2 * 21.09).abs() < 1e-9);
     assert_eq!(session.report().computed_by_kind.get("zone"), Some(&1));
@@ -133,7 +133,7 @@ async fn a_scheme_usage_edit_re_infers_only_that_scheme() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::area_schemes("as-nsa", Entry::Patched(AreaSchemePatch { usages: Some(vec!["Living".into()]), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     assert_eq!(session.update(&edited, &diff).scheme_totals["as-nsa"].spaces, 2, "the living room and the open space");
     assert_eq!(computed(&session), [("scheme".to_string(), 1)], "no room, take-off or zone is recomputed");
     assert_eq!(session.inference(), &infer(&edited), "the session agrees with a fresh inference");
@@ -145,7 +145,7 @@ async fn a_scheme_zone_list_edit_moves_the_membership_of_the_scheme_only() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::area_schemes("as-day", Entry::Patched(AreaSchemePatch { zones: Some(vec!["z-night".into()]), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     let totals = session.update(&edited, &diff).scheme_totals.clone();
     assert_eq!(totals["as-day"].spaces, 2, "the kitchen and the bedroom live in the night zone");
     assert_eq!(totals["as-nsa"], infer(&snapshot).scheme_totals["as-nsa"], "another scheme keeps its totals");
@@ -159,11 +159,11 @@ async fn creating_and_deleting_a_scheme_adds_and_removes_only_its_own_totals() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let created = ModelDiff::area_schemes("as-extra", Entry::Created(AreaScheme { name: "Extra".into(), measure: AreaMeasure::Gross, usages: vec!["Kitchen".into()], zones: Vec::new() }));
-    let with = protocol::apply_diff(&created, &snapshot).expect("applies");
+    let with = protocol::apply_diff_cold(&created, &snapshot).expect("applies");
     assert_eq!(session.update(&with, &created).scheme_totals["as-extra"].spaces, 1);
     assert_eq!(computed(&session), [("scheme".to_string(), 1)]);
     let deleted = ModelDiff::area_schemes("as-extra", Entry::Deleted);
-    let without = protocol::apply_diff(&deleted, &with).expect("applies");
+    let without = protocol::apply_diff_cold(&deleted, &with).expect("applies");
     assert!(!session.update(&without, &deleted).scheme_totals.contains_key("as-extra"));
     assert_eq!(session.inference(), &infer(&snapshot), "the model is back where it started");
 }
@@ -174,13 +174,13 @@ async fn clearing_the_last_member_of_a_zone_and_deleting_it_leaves_the_schemes_t
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let leave = ModelDiff::spaces("sp-up", Entry::Patched(SpacePatch { zone: Some(Assigned::new(None)), ..Default::default() }));
-    let left = protocol::apply_diff(&leave, &snapshot).expect("applies");
+    let left = protocol::apply_diff_cold(&leave, &snapshot).expect("applies");
     session.update(&left, &leave);
     let leave_kitchen = ModelDiff::spaces("sp-east", Entry::Patched(SpacePatch { zone: Some(Assigned::new(None)), ..Default::default() }));
-    let emptied = protocol::apply_diff(&leave_kitchen, &left).expect("applies");
+    let emptied = protocol::apply_diff_cold(&leave_kitchen, &left).expect("applies");
     assert_eq!(session.update(&emptied, &leave_kitchen).zone_totals["z-night"].spaces, 0);
     let delete = ModelDiff::zones("z-night", Entry::Deleted);
-    let gone = protocol::apply_diff(&delete, &emptied).expect("applies");
+    let gone = protocol::apply_diff_cold(&delete, &emptied).expect("applies");
     let inferred = session.update(&gone, &delete);
     assert!(!inferred.zone_totals.contains_key("z-night"));
     assert_eq!(inferred.scheme_totals["as-sleep"].spaces, 0, "a scheme that counts a deleted zone counts nothing");

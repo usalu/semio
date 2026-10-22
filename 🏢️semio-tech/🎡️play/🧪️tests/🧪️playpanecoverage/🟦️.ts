@@ -161,7 +161,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     /** 🛂️ The law above reads apps from committed descriptors, so a plugin that commits none
      * would pass it by being invisible to it. Every plugin directory therefore MUST commit its
-     * `🔣️.json` (`bun repo run <component-package>:component` writes it beside `🛂️.descriptor.semio`): a missing
+     * `🔣️.json` (`repo run <component-package>:component` writes it beside `🛂️.descriptor.semio`): a missing
      * descriptor is a failure here, not an exemption. */
     it("reads a committed descriptor for every plugin directory", () => {
       expect([...appsByDirectory].filter(([, entry]) => entry === undefined).map(([directory]) => directory).sort()).toEqual([]);

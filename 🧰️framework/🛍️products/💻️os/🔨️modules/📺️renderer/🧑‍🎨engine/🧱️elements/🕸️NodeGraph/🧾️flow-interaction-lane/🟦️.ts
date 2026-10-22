@@ -4,7 +4,7 @@
  */
 
 import { decodeDagHoverJson, decodeDagSelectionJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
 import { flowJsonText, nodeGraphInputDecodeControl, publishNodeGraphHover, publishNodeGraphSelection } from "../🧰️graph-core/🟦️.ts";
 import { readObservedFlowTask, syncFlowSessionStructureFromScene } from "../🔄️flow-session-sync/🟦️.ts";
 import { createNodeGraphInteractionLedger } from "../🫱️interaction-publication/🟦️.ts";

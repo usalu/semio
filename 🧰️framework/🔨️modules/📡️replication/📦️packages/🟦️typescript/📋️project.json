@@ -38,7 +38,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -54,7 +54,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-index-set",
+        "command": "repo ./📜️script.ts test-index-set",
         "forwardAllArgs": true
       }
     },
@@ -70,7 +70,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-index-entry",
+        "command": "repo ./📜️script.ts test-index-entry",
         "forwardAllArgs": true
       }
     },
@@ -86,7 +86,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-index-insertion",
+        "command": "repo ./📜️script.ts test-index-insertion",
         "forwardAllArgs": true
       }
     },
@@ -100,14 +100,14 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-map-delta",
+        "command": "repo 📜️script.ts test-map-delta",
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"
       }
     },
     "test-retained-mutation": {
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun 📜️script.ts test-retained-mutation"
+        "command": "repo 📜️script.ts test-retained-mutation"
       },
       "executor": "repo:script",
       "cache": true,
@@ -129,7 +129,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-diagnostic-transfer",
+        "command": "repo ./📜️script.ts test-diagnostic-transfer",
         "forwardAllArgs": true
       }
     },
@@ -158,7 +158,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-retained-wire-field",
+        "command": "repo ./📜️script.ts test-retained-wire-field",
         "forwardAllArgs": false
       },
       "metadata": {

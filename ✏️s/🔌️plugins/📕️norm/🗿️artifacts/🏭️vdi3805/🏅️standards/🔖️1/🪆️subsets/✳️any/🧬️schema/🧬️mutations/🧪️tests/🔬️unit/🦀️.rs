@@ -1,6 +1,6 @@
 use semio_s_artifact_norm_vdi3805_model::GenericAttributes;
 use crate::*;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 use std::collections::BTreeMap;
 
 /// ↩️ Applies `operation` to `base`, then replays its inverse ON TOP OF the forward document —

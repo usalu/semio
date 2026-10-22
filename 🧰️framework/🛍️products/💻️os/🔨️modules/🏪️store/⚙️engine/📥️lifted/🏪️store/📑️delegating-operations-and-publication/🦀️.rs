@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🪞️ Delegates to [`StoreLive::mutation_ops`].
     #[inline] pub fn mutation_ops(&self) -> Result<Vec<AppliedMutation<'_, Mutation>>, VcsError> { self.live.mutation_ops(&self.log, &self.wire, &self.cursor) }
@@ -78,7 +78,7 @@ where
     #[inline] pub fn begin_member_apply_batch( &self, operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: semio_framework_value::SharedUtf8, mutations: Vec<Mutation>, ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>> where P: Sync, Mutation: Send, { self.cursor.begin_member_apply_batch(&self.log, &self.owners, &self.wire, operation, expected_generation, expected_revision, actor, mutations) }
 
     /// 🪞️ Delegates to [`StoreCursor::begin_apply_batch_owned`].
-    #[allow(clippy::too_many_arguments)] #[inline] pub fn begin_apply_batch_owned<A>( &self, operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: semio_framework_value::SharedUtf8, lane: HistoryLane, group_id: Option<String>, source: ArtifactStoreBatchSourceOf<P, Mutation, A>, outbound: bool, transaction: Option<protocol::TransactionRef>, ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<A::Input>> where P: Sync + Send, A: ArtifactStoreBatchItemAuthority<P, Mutation> + 'static, Mutation: 'static, P: 'static, { self.cursor.begin_apply_batch_owned::<A>(&self.log, &self.wire, operation, expected_generation, expected_revision, actor, lane, group_id, source, outbound, transaction) }
+    #[allow(clippy::too_many_arguments)] #[inline] pub fn begin_apply_batch_owned<A>( &self, operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: semio_framework_value::SharedUtf8, lane: HistoryLane, group_id: Option<String>, source: ArtifactStoreBatchSourceOf<P, Mutation, A>, outbound: bool, transaction: Option<protocol::TransactionRef>, ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<A::Input>> where P: Sync + Send, A: ArtifactStoreBatchItemAuthority<P, Mutation> + 'static, Mutation: 'static, P: 'static, { self.cursor.begin_apply_batch_owned::<A>(&self.log, &self.owners, &self.wire, operation, expected_generation, expected_revision, actor, lane, group_id, source, outbound, transaction) }
 
     /// 🪞️ Delegates to [`StoreLive::batch_item_base`].
     #[inline] fn batch_item_base(&self, staged_root: Option<&Arc<P>>) -> Result<SnapshotRead<P>, VcsError> where P: Sync, { self.live.batch_item_base(&self.owners, &self.wire, &self.cursor, staged_root) }
@@ -90,10 +90,10 @@ where
     #[inline] fn batch_amend_target(&self, transaction: Option<&protocol::TransactionRef>) -> Option<String> { self.log.batch_amend_target(transaction) }
 
     /// 🪞️ Delegates to [`StoreLive::advance_prepared_foreign_steps`].
-    #[inline] pub fn advance_prepared_foreign_steps( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant, )->Result<RetainedCloneStep,ValueError> { self.live.advance_prepared_foreign_steps(&self.cursor, publication, output, grant) }
+    #[inline] pub fn advance_prepared_foreign_steps( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant, )->Result<RetainedCloneStep,ValueError> { self.live.advance_prepared_foreign_steps(&self.owners, &self.cursor, publication, output, grant) }
 
     /// 🪞️ Delegates to [`StoreLive::advance_prepared_operation_wire`].
-    #[inline] pub fn advance_prepared_operation_wire( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],grant:RetainedCloneGrant, )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> { self.live.advance_prepared_operation_wire(&self.cursor, publication, cursor, output, grant) }
+    #[inline] pub fn advance_prepared_operation_wire( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],grant:RetainedCloneGrant, )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> { self.live.advance_prepared_operation_wire(&self.owners, &self.cursor, publication, cursor, output, grant) }
 
     /// 🪞️ Delegates to [`StoreLog::cancel_apply_batch`].
     #[inline] pub fn cancel_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> bool { self.log.cancel_apply_batch(publication) }
@@ -132,7 +132,7 @@ where
     #[inline] pub fn transition_envelope(&self, transition: &semio_framework_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_framework_os_spr::MutationEnvelope { self.log.transition_envelope(transition, dependencies, target, timestamp) }
 
     /// 🪞️ Delegates to [`StoreLive::reproject`].
-    #[inline] async fn reproject(&mut self) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
+    #[inline] pub(super) async fn reproject(&mut self) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
 
     /// 🪞️ Delegates to [`StoreReplay::tail_step`].
     #[inline] pub(super) fn tail_step(&self, envelope: &semio_framework_os_spr::MutationEnvelope) -> Option<TailStep> { self.replay.tail_step(&self.log, &self.cursor, &self.live, envelope) }

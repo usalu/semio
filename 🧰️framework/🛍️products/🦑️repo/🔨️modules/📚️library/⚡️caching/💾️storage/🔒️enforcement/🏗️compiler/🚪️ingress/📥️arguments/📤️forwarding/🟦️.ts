@@ -1,7 +1,7 @@
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const protocol=schema.definitions.Protocol.const;
-export type RepositoryCargoForwardingIntentV1=Readonly<{version:1;kind:"program";command:"run"|"test"|"bench"}>|Readonly<{version:1;kind:"compiler";command:"rustc"|"rustdoc"}>;
+export type RepositoryCargoForwardingIntentV1=Readonly<{version:1;kind:"program";command:"run"|"test"|"bench"|"nextest"}>|Readonly<{version:1;kind:"compiler";command:"rustc"|"rustdoc"}>;
 /** 🎬️ Reads the actual Cargo subcommand without treating global selector values as commands. */
 export function repositoryCargoCommandV1(args:readonly string[]):string|undefined{const delimiter=args.indexOf(protocol.delimiter);const head=delimiter<0?args:args.slice(0,delimiter);let command:string|undefined;for(let index=0;index<head.length;index++){const arg=head[index]!;if(arg.startsWith("+")&&index===0)continue;if(arg.startsWith("-")){const flag=arg.split("=",1)[0]!;if(protocol.globalValueFlags.includes(flag)&&!arg.includes("="))index++;continue;}command=arg;break;}return command;}
 /** 🧭️ Separates Cargo's two forwarding receivers while respecting global selector values. */

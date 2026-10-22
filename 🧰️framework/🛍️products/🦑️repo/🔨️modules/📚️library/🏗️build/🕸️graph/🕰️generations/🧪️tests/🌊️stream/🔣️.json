@@ -1,0 +1,628 @@
+{
+ "version": 1,
+ "owners": [
+  {
+   "name": "a",
+   "root": "pkg/a",
+   "kind": "project",
+   "node": {
+    "name": "a",
+    "root": "pkg/a",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run a build"
+      }
+     },
+     "test": {
+      "execution": {
+       "kind": "command",
+       "command": "run a test"
+      }
+     }
+    }
+   },
+   "edges": [
+    {
+     "source": "a",
+     "target": "b",
+     "type": "static"
+    },
+    {
+     "source": "a",
+     "target": "b",
+     "type": "static"
+    },
+    {
+     "source": "a",
+     "target": "npm:left",
+     "type": "static"
+    }
+   ]
+  },
+  {
+   "name": "b",
+   "root": "pkg/b",
+   "kind": "project",
+   "node": {
+    "name": "b",
+    "root": "pkg/b",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run b build"
+      }
+     }
+    }
+   },
+   "edges": [
+    {
+     "source": "b",
+     "target": "c",
+     "type": "static"
+    },
+    {
+     "source": "b",
+     "target": "npm:right",
+     "type": "static"
+    }
+   ]
+  },
+  {
+   "name": "c",
+   "root": "pkg/c",
+   "kind": "project",
+   "node": {
+    "name": "c",
+    "root": "pkg/c",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run c build"
+      }
+     }
+    }
+   },
+   "edges": [
+    {
+     "source": "c",
+     "target": "a",
+     "type": "static"
+    }
+   ]
+  },
+  {
+   "name": "d",
+   "root": "pkg/d/inner",
+   "kind": "project",
+   "node": {
+    "name": "d",
+    "root": "pkg/d/inner",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run d build"
+      }
+     }
+    }
+   },
+   "edges": [
+    {
+     "source": "d",
+     "target": "e",
+     "type": "implicit"
+    }
+   ]
+  },
+  {
+   "name": "e",
+   "root": "pkg/e",
+   "kind": "project",
+   "node": {
+    "name": "e",
+    "root": "pkg/e",
+    "targets": {}
+   },
+   "edges": []
+  },
+  {
+   "name": "broken",
+   "root": "pkg/broken",
+   "kind": "unavailable",
+   "node": {
+    "root": "pkg/broken",
+    "project": "broken",
+    "source": "pkg/broken/project.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "reason": "unparsable"
+   },
+   "edges": []
+  },
+  {
+   "name": "nested",
+   "root": "pkg/d/inner/nested",
+   "kind": "unavailable",
+   "node": {
+    "root": "pkg/d/inner/nested",
+    "project": "nested",
+    "source": "pkg/d/inner/nested/project.json",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "reason": "unparsable"
+   },
+   "edges": []
+  }
+ ],
+ "global": {
+  "externalNodes": {
+   "npm:left": {
+    "type": "npm",
+    "name": "npm:left"
+   },
+   "npm:right": {
+    "type": "npm",
+    "name": "npm:right"
+   },
+   "npm:unused": {
+    "type": "npm",
+    "name": "npm:unused"
+   }
+  },
+  "edges": [
+   {
+    "source": "npm:left",
+    "target": "npm:right",
+    "type": "static"
+   },
+   {
+    "source": "npm:right",
+    "target": "npm:unused",
+    "type": "static"
+   },
+   {
+    "source": "e",
+    "target": "a",
+    "type": "static"
+   },
+   {
+    "source": "npm:unused",
+    "target": "c",
+    "type": "static"
+   }
+  ],
+  "unavailable": [
+   {
+    "root": "pkg/loose",
+    "source": "pkg/loose/project.json",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "reason": "unparsable"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "everything",
+   "names": null
+  },
+  {
+   "name": "one-project-with-an-external-closure",
+   "names": [
+    "a"
+   ]
+  },
+  {
+   "name": "a-ring-without-its-neighbours",
+   "names": [
+    "c",
+    "b"
+   ]
+  },
+  {
+   "name": "unavailable-below-a-selected-root",
+   "names": [
+    "d",
+    "nested"
+   ]
+  },
+  {
+   "name": "unavailable-outside-the-selection-is-dropped",
+   "names": [
+    "e"
+   ]
+  },
+  {
+   "name": "duplicates-in-the-selection-count-once",
+   "names": [
+    "a",
+    "a",
+    "b"
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "projects": {
+    "a": {
+     "name": "a",
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run a build"
+       }
+      },
+      "test": {
+       "execution": {
+        "kind": "command",
+        "command": "run a test"
+       }
+      }
+     }
+    },
+    "b": {
+     "name": "b",
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run b build"
+       }
+      }
+     }
+    },
+    "c": {
+     "name": "c",
+     "root": "pkg/c",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run c build"
+       }
+      }
+     }
+    },
+    "d": {
+     "name": "d",
+     "root": "pkg/d/inner",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run d build"
+       }
+      }
+     }
+    },
+    "e": {
+     "name": "e",
+     "root": "pkg/e",
+     "targets": {}
+    }
+   },
+   "dependencies": [
+    {
+     "source": "a",
+     "target": "b",
+     "type": "static"
+    },
+    {
+     "source": "a",
+     "target": "npm:left",
+     "type": "static"
+    },
+    {
+     "source": "b",
+     "target": "c",
+     "type": "static"
+    },
+    {
+     "source": "b",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "c",
+     "target": "a",
+     "type": "static"
+    },
+    {
+     "source": "d",
+     "target": "e",
+     "type": "implicit"
+    },
+    {
+     "source": "e",
+     "target": "a",
+     "type": "static"
+    },
+    {
+     "source": "npm:left",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "npm:right",
+     "target": "npm:unused",
+     "type": "static"
+    },
+    {
+     "source": "npm:unused",
+     "target": "c",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:left": {
+     "type": "npm",
+     "name": "npm:left"
+    },
+    "npm:right": {
+     "type": "npm",
+     "name": "npm:right"
+    },
+    "npm:unused": {
+     "type": "npm",
+     "name": "npm:unused"
+    }
+   },
+   "unavailable": [
+    {
+     "root": "pkg/broken",
+     "project": "broken",
+     "source": "pkg/broken/project.json",
+     "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+     "reason": "unparsable"
+    },
+    {
+     "root": "pkg/d/inner/nested",
+     "project": "nested",
+     "source": "pkg/d/inner/nested/project.json",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "reason": "unparsable"
+    },
+    {
+     "root": "pkg/loose",
+     "source": "pkg/loose/project.json",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+     "reason": "unparsable"
+    }
+   ]
+  },
+  {
+   "projects": {
+    "a": {
+     "name": "a",
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run a build"
+       }
+      },
+      "test": {
+       "execution": {
+        "kind": "command",
+        "command": "run a test"
+       }
+      }
+     }
+    }
+   },
+   "dependencies": [
+    {
+     "source": "a",
+     "target": "npm:left",
+     "type": "static"
+    },
+    {
+     "source": "npm:left",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "npm:right",
+     "target": "npm:unused",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:left": {
+     "type": "npm",
+     "name": "npm:left"
+    },
+    "npm:right": {
+     "type": "npm",
+     "name": "npm:right"
+    },
+    "npm:unused": {
+     "type": "npm",
+     "name": "npm:unused"
+    }
+   },
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "b": {
+     "name": "b",
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run b build"
+       }
+      }
+     }
+    },
+    "c": {
+     "name": "c",
+     "root": "pkg/c",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run c build"
+       }
+      }
+     }
+    }
+   },
+   "dependencies": [
+    {
+     "source": "b",
+     "target": "c",
+     "type": "static"
+    },
+    {
+     "source": "b",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "npm:right",
+     "target": "npm:unused",
+     "type": "static"
+    },
+    {
+     "source": "npm:unused",
+     "target": "c",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:right": {
+     "type": "npm",
+     "name": "npm:right"
+    },
+    "npm:unused": {
+     "type": "npm",
+     "name": "npm:unused"
+    }
+   },
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "d": {
+     "name": "d",
+     "root": "pkg/d/inner",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run d build"
+       }
+      }
+     }
+    }
+   },
+   "dependencies": [],
+   "externalNodes": {},
+   "unavailable": [
+    {
+     "root": "pkg/d/inner/nested",
+     "project": "nested",
+     "source": "pkg/d/inner/nested/project.json",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "reason": "unparsable"
+    }
+   ]
+  },
+  {
+   "projects": {
+    "e": {
+     "name": "e",
+     "root": "pkg/e",
+     "targets": {}
+    }
+   },
+   "dependencies": [],
+   "externalNodes": {},
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "a": {
+     "name": "a",
+     "root": "pkg/a",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run a build"
+       }
+      },
+      "test": {
+       "execution": {
+        "kind": "command",
+        "command": "run a test"
+       }
+      }
+     }
+    },
+    "b": {
+     "name": "b",
+     "root": "pkg/b",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run b build"
+       }
+      }
+     }
+    }
+   },
+   "dependencies": [
+    {
+     "source": "a",
+     "target": "b",
+     "type": "static"
+    },
+    {
+     "source": "a",
+     "target": "npm:left",
+     "type": "static"
+    },
+    {
+     "source": "b",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "npm:left",
+     "target": "npm:right",
+     "type": "static"
+    },
+    {
+     "source": "npm:right",
+     "target": "npm:unused",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:left": {
+     "type": "npm",
+     "name": "npm:left"
+    },
+    "npm:right": {
+     "type": "npm",
+     "name": "npm:right"
+    },
+    "npm:unused": {
+     "type": "npm",
+     "name": "npm:unused"
+    }
+   },
+   "unavailable": []
+  }
+ ]
+}

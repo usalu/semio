@@ -286,8 +286,12 @@
    "de": "Perzentile interpolieren linear zwischen den Rängen (inklusive Methode); p95 braucht 20 Stichproben, p99 braucht 100."
   },
   "note-start": {
-   "en": "Edit to rebuild start ends at the first tool marker line, else at the first output line, else at the process exit.",
-   "de": "Von der Änderung bis zum Start des Neubaus zählt bis zur ersten Werkzeugmarke, sonst bis zur ersten Ausgabezeile, sonst bis zum Prozessende."
+   "en": "Edit to rebuild start ends at the first tool marker line. Without a marker the value is only a bound (first output line: lower, process exit: upper) and the objective stays unproven unless the bound already decides it.",
+   "de": "Von der Änderung bis zum Start des Neubaus zählt bis zur ersten Werkzeugmarke. Ohne Marke ist der Wert nur eine Schranke (erste Ausgabezeile: untere, Prozessende: obere) und das Ziel bleibt unbewiesen, solange die Schranke es nicht entscheidet."
+  },
+  "note-marks": {
+   "en": "! marks a blocking objective, * a value inflated by host load.",
+   "de": "! kennzeichnet ein verbindliches Ziel, * einen durch Rechnerlast überhöhten Wert."
   },
   "note-recorded": {
    "en": "Objectives without goal and gate only record the value; the baseline comparison guards them.",
@@ -432,6 +436,10 @@
   "schema": {
    "en": "another report version",
    "de": "andere Berichtsversion"
+  },
+  "start-unobserved": {
+   "en": "the rebuild start was not observed through a tool marker line, so the value is only a bound",
+   "de": "der Start des Neubaus wurde nicht durch eine Werkzeugmarke beobachtet, der Wert ist nur eine Schranke"
   }
  },
  "units": [

@@ -40,7 +40,7 @@ use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_ro
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
+#[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table", reference = SemioTableSnapshot, reference_diff = SemioTableDiff)]
 pub enum SemioTableMutation {
     CreateColumn(create_column::CreateColumn),
     DeleteColumn(delete_column::DeleteColumn),
@@ -64,7 +64,7 @@ pub const KINDS: &[&str] = &["create-column", "delete-column", "rename-column", 
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
-    <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::diff(mutation, base)
+    <SemioTableMutation as protocol::ColdMutation<SemioTableSnapshot>>::diff(mutation, base)
 }
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
@@ -75,8 +75,8 @@ pub fn diff_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTabl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::inverse(mutation, base)?
 
     })
 }

@@ -1,6 +1,8 @@
 import{createRequire}from"node:module";
 import{nativeWindowsExtendedPathV1,nativeWindowsUtf16V1}from"../../📁️directory/🪟️host/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
+import { runtimeSupportsV1 } from "../../../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../⚙️runtime/🧲️native/🟦️.ts";
 const policy=schema.$defs.Policy.const,info=policy.information;
 /** 🧷️ Names a pinned Windows object without exporting a platform handle. */
 export type ConditionalWindowsIdentityV1=Readonly<{volume:string;file:string;directory:boolean;links:number;bytes:number;attributes:number;access:string;write:string;change:string}>;
@@ -39,8 +41,8 @@ export function createConditionalWindowsPortV1(binding:ConditionalWindowsBinding
 }
 /** 🧿️ Loads only public kernel32 APIs for Windows x64 or arm64 under the owned Bun runtime. */
 export function openConditionalWindowsSystemPortV1():ReturnType<typeof createConditionalWindowsPortV1>{
- if(process.platform!=="win32"||!process.versions.bun||!["x64","arm64"].includes(process.arch))throw Error("Actual supported Windows Bun host required");
- const{dlopen,FFIType:f}=createRequire(import.meta.url)("bun:ffi")as typeof import("bun:ffi"),library=dlopen("kernel32.dll",{CreateFileW:{args:[f.ptr,f.u32,f.u32,f.ptr,f.u32,f.u32,f.u64],returns:f.u64},GetFileInformationByHandleEx:{args:[f.u64,f.i32,f.ptr,f.u32],returns:f.i32},SetFileInformationByHandle:{args:[f.u64,f.i32,f.ptr,f.u32],returns:f.i32},GetVolumeInformationByHandleW:{args:[f.u64,f.ptr,f.u32,f.ptr,f.ptr,f.ptr,f.ptr,f.u32],returns:f.i32},GetFileType:{args:[f.u64],returns:f.u32},GetDriveTypeW:{args:[f.ptr],returns:f.u32},CloseHandle:{args:[f.u64],returns:f.i32},GetLastError:{args:[],returns:f.u32}});
+ if(process.platform!=="win32"||!runtimeSupportsV1("ffi")||!["x64","arm64"].includes(process.arch))throw Error("Actual supported Windows Bun host required");
+ const{dlopen,FFIType:f}=runtimeNativeSystemV1(),library=dlopen("kernel32.dll",{CreateFileW:{args:[f.ptr,f.u32,f.u32,f.ptr,f.u32,f.u32,f.u64],returns:f.u64},GetFileInformationByHandleEx:{args:[f.u64,f.i32,f.ptr,f.u32],returns:f.i32},SetFileInformationByHandle:{args:[f.u64,f.i32,f.ptr,f.u32],returns:f.i32},GetVolumeInformationByHandleW:{args:[f.u64,f.ptr,f.u32,f.ptr,f.ptr,f.ptr,f.ptr,f.u32],returns:f.i32},GetFileType:{args:[f.u64],returns:f.u32},GetDriveTypeW:{args:[f.ptr],returns:f.u32},CloseHandle:{args:[f.u64],returns:f.i32},GetLastError:{args:[],returns:f.u32}});
  const symbols=library.symbols as unknown as Record<string,(...args:unknown[])=>unknown>;
  return createConditionalWindowsPortV1({open:(path,access,share,flags)=>BigInt(symbols.CreateFileW!(path,access,share,null,policy.createFile.openExisting,flags,0n)as bigint),information:(handle,kind,data)=>Number(symbols.GetFileInformationByHandleEx!(handle,kind,data,data.length))===1,disposition:(handle,kind,data)=>Number(symbols.SetFileInformationByHandle!(handle,kind,data,data.length))===1,filesystem:(handle,data)=>Number(symbols.GetVolumeInformationByHandleW!(handle,null,0,null,null,null,data,data.length/2))===1,fileType:handle=>Number(symbols.GetFileType!(handle)),driveType:root=>Number(symbols.GetDriveTypeW!(root)),closeHandle:handle=>Number(symbols.CloseHandle!(handle))===1,error:()=>Number(symbols.GetLastError!()),close:()=>library.close()});
 }

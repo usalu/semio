@@ -173,7 +173,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "dxf-project"
       ],
@@ -212,7 +212,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "svg-project"
       ],
@@ -251,7 +251,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "pdf-project"
       ],
@@ -290,7 +290,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "dxf-compare"
       ],
@@ -334,7 +334,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "svg-compare"
       ],
@@ -378,7 +378,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "pdf-compare"
       ],

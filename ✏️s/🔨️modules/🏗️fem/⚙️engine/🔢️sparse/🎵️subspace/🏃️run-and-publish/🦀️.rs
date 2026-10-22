@@ -65,7 +65,7 @@ impl SubspaceIterationJob {
         }
         if self.state.preview_due {
             context.set_stage("fem.subspace.preview-entry");
-            if self.preview_writer.is_some() && self.state.publication_stage == 4 {
+            if self.preview_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
                 if !RetainedJobPayloadWriter::finish_funded(&mut self.preview_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 self.state.preview_due = false;
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
@@ -93,15 +93,23 @@ impl SubspaceIterationJob {
             }
             return Ok(NumericalRun::Yield);
         }
-        if !self.state.converged&&(self.state.iteration>=self.state.max_iter||(self.state.iteration>0&&self.state.final_theta.len()<self.state.p&&self.state.m<self.state.n)){
+        let boundary=self.state.work.stage==SubspaceStage::ReserveIteration&&self.state.work.reserve==0&&self.state.retiring_work.is_none();
+        if boundary&&!self.state.converged&&(self.state.iteration>=self.state.max_iter||(self.state.iteration>0&&self.state.final_theta.len()<self.state.p&&self.state.m<self.state.n)){
             if self.state.m==self.state.n{return Ok(NumericalRun::Fault)}
+            let copy=2*size_of::<semio_s_fem_algebra::PagedMatD>()+size_of::<PagedList<f64,SPARSE_INDEX_SPACE>>()+size_of::<SubspaceWork>();let grant=context.retained_grant();
+            if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(NumericalRun::Yield)}
+            let mut displaced=SubspaceWork::empty();
+            displaced.candidate_x=std::mem::replace(&mut self.state.x,semio_s_fem_algebra::PagedMatD::empty());
+            displaced.theta=std::mem::replace(&mut self.state.final_theta,PagedList::empty());
+            self.state.retiring_work=Some(displaced);
             self.state.m=self.state.m.saturating_mul(2).min(self.state.n);
             self.state.iteration=0;self.state.initialization_cursor=0;
+            context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
             return Ok(NumericalRun::Yield);
         }
         if self.state.iteration >= self.state.max_iter || self.state.converged {
             context.set_stage("fem.subspace.terminal-page");
-            if self.terminal_writer.is_some() && self.state.publication_stage == 4 {
+            if self.terminal_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
                 let mut demand = RetainedJobPayloadWriter::finish_demand();
                 demand.copy_bytes = demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "numerical terminal metadata overflow"))?;
                 if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }

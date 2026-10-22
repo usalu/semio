@@ -238,16 +238,16 @@ fn a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content() {
         .collect();
     assert_eq!(Value::Array(named), fixture["expectedLeaves"]);
     let (forward, inverses) = leaves.iter().fold((base.clone(), Vec::new()), |(state, mut inverses), leaf| {
-        inverses.push(<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::inverse(leaf, &state).unwrap());
-        let (diff, messages) = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
+        inverses.push(<SemioFlowMutation as protocol::ColdMutation<SemioFlowSnapshot>>::inverse(leaf, &state).unwrap());
+        let (diff, messages) = <SemioFlowMutation as protocol::ColdMutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
         assert!(messages.is_empty(), "{leaf:?}: {messages:?}");
-        (protocol::apply_diff(&diff, &state).unwrap(), inverses)
+        (protocol::apply_diff_cold(&diff, &state).unwrap(), inverses)
     });
     assert_eq!(serde_json::to_value(forward.edges.iter().map(|edge| &edge.id).collect::<Vec<_>>()).unwrap(), fixture["expectedForwardSynapses"]);
     assert!(forward.nodes.iter().all(|node| node.id != target));
     let restored = inverses.iter().rev().flatten().fold(forward, |state, inverse| {
-        let diff = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(inverse, &state).into_parts().0;
-        protocol::apply_diff(&diff, &state).unwrap()
+        let diff = <SemioFlowMutation as protocol::ColdMutation<SemioFlowSnapshot>>::diff(inverse, &state).into_parts().0;
+        protocol::apply_diff_cold(&diff, &state).unwrap()
     });
     let by_id = |mut snapshot: SemioFlowSnapshot| {
         snapshot.nodes.sort_by(|a, b| a.id.cmp(&b.id));

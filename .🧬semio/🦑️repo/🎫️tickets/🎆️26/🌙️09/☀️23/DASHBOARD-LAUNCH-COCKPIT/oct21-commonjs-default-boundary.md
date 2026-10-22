@@ -1,0 +1,19 @@
+# Captured CommonJS Default-Object Boundary
+
+The actual third lock attempt admitted its normal6144MiB grant, then terminated whole1 before a dependency lock body. The child reported a missing named `createBunWorkspaceOwnershipV1` export from the captured workspace CommonJS owner. Parent transport retained status1/signalnull. All373 selected observations,26 control observations, root manifest and Bun lock were unchanged after this refusal. Log: `🗑️generated/e2e-ide-tool-dependencies-lock3.log`; result: `🗑️generated/e2e-ide-tool-lock3-result.json`.
+
+The existing immutable loader evaluates the single captured CommonJS owner and exports its canonical `module.exports` value as a default object. Both dependency-kernel TypeScript façades now import that object and destructure their existing factory locally. The actual CommonJS owners, exported factories, policy/physical Source checks and loader are unchanged; no named-export synthesis or compatibility wrapper is added.
+
+Two closed language-neutral cases are authored before the correction. One Bun law uses the actual TypeScript AST and independent SQLite mapping to pin both physical façades to the default-object contract. A second genuine owned immutable child evaluates two handcrafted private CommonJS factories in one capture and compares their results with native createRequire plus SQLite. Its artifact root comes from genuine repository test artifacts under the same Original, with a longest-path check before creation and primary-preserving cleanup. These are module-boundary laws; successful real dependency lock remains required to establish actual production-owner integration.
+
+The initial five implementation/test source paths and hashes: `🗑️generated/e2e-commonjs-default-boundary-inputs.json`. Static TypeScript parser reports0 syntax diagnostics; JSON parses; maximum absolute source path140UTF16. No compiler/typecheck/runtime pass is claimed. Source0 now retains61 required names, registered target count42 unchanged.
+
+Both actual AST subjects are now explicit exact Source0 freshness inputs, avoiding an assumption that syntax projection proves generator inclusion of literal-URL DATA. Source0 retains its actual direct stream-suite import, existing six runtime entries, live uncached classification and all prior inputs, dependencies and outputs. Input count27 (prior25+2). The root project is the sixth source input of this slice; exact refreshed hashes are in the same input artifact.
+
+## Actual Material Retry
+
+Independent final review accepted all six source paths. Freshpf4 completed whole0 in0.540s;26/340/root-manifest/Bun-lock observations were unchanged. New genuine dependency lock is owned TTY76126, unique log `🗑️generated/e2e-ide-tool-dependencies-lock4.log`, artifact namespace `ilk4`. It passed captured module instantiation and entered the actual dependency-storage/lock-ownership body. Completion and publication remain unproved. The first bounded live observation shows frontier1793280 then `javascript-preserving-source:2`; these are delivered progress fields, not a throughput/cycle/causal diagnosis. Source0 regressions and Sync remain pending.
+
+## Genuine Lock Completion
+
+Owned76126 completed actual whole0. Its unique log is15,490,332bytes; no output was buffered as a new process bridge. All373 selected files,26 observation points, root manifest and Source0 metadata retain0 post hash/identity changes. Bun lock alone changed under the genuine producer. Package slots1991→1759:0added,232removed,1757identical value digests,2changed slot values. The latter are resolver relocations: current supports-color7.2.0 matches four prior nested value digests; current yallist5.0.0 matches prior tar/yallist. No new package identity was introduced. Exact before/after/delta/relocation metadata is retained under `e2e-ide-tool-lock4-bun-*`; no source or lockfile snapshot was copied into the ticket. Runtime Source0 and Sync remain separate gates.

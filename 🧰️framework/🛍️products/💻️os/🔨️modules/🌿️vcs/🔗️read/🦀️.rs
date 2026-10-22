@@ -2,7 +2,7 @@
 use super::{ArtifactHistoryKey,ArtifactHistoryLedger};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
-use semio_framework_value::retained_clone::{RetainedCloneBorrowAuthority,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits};
+use semio_framework_value::retained_clone::{RetainedCloneBorrowAuthority,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedOwnedProjection,RetainedCloneStep,retained_clone_grant_admits};
 use std::sync::Arc;
 fn fault(message:&'static str)->ValueError {ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 use semio_framework_value_original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn};
@@ -36,6 +36,8 @@ impl<T> ArtifactHistoryLedger<T> {
  }
  /// 🧷️ Borrows a genuine root lease; callers project their recorded forward operation by field and index.
  pub fn retained_read(&self,key:ArtifactHistoryReadKey)->Result<RetainedCloneRef<'_,T>,ValueError>{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.borrow()}
+ /// 🪪️ Retains a genuine owning alias of the exact root lease so a recorded forward operation can be projected from it later.
+ pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError> where T:Sync{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.retain_original(grant)}
  /// 🧭️ Observes the next original leased slot in constant time for Store cancellation.
  pub fn next_retained_read_key(&self)->Option<ArtifactHistoryReadKey>{let index=self.read_head?;Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key:ArtifactHistoryKey{index,generation:self.slot(index).generation}})}
  /// 🚪️ Queries exact source return through the caller's unchanged body allowance.

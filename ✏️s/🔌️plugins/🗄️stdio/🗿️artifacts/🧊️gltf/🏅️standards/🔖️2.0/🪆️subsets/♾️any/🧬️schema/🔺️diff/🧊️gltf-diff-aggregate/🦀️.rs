@@ -4,8 +4,8 @@ use crate::standards::v2_0::subsets::any::schema::diff::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::os_spr::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::os_spr::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutationDiff, MutationDiff};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.gltf`. No `snapshot: Option<GltfSnapshot>` full-replace slot anywhere.
@@ -225,8 +225,56 @@ impl protocol::DiffRegions for GltfDiff {
 }
 //#endregion 🗺️TouchedRegions
 
-impl MutationDiff<GltfSnapshot> for GltfDiff {
-    fn apply(&self, base: &GltfSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfSnapshot> {
+impl MutationDiff<GltfSnapshot> for GltfDiff {}
+
+impl protocol::ColdMutationDiff<GltfSnapshot> for GltfDiff {
+    fn absorb(&mut self, other: Self) {
+        match (&mut self.asset, other.asset) {
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (slot @ None, Some(theirs)) => *slot = Some(theirs),
+            _ => {}
+        }
+        if other.scene.is_some() {
+            self.scene = other.scene;
+        }
+        macro_rules! absorb_collection {
+            ($field:ident) => {
+                match (&mut self.$field, other.$field) {
+                    (Some(mine), Some(theirs)) => mine.absorb(theirs),
+                    (slot @ None, Some(theirs)) => *slot = Some(theirs),
+                    _ => {}
+                }
+            };
+        }
+        absorb_collection!(scenes);
+        absorb_collection!(nodes);
+        absorb_collection!(meshes);
+        absorb_collection!(accessors);
+        absorb_collection!(buffer_views);
+        absorb_collection!(buffers);
+        absorb_collection!(buffer_bytes);
+        absorb_collection!(materials);
+        absorb_collection!(textures);
+        absorb_collection!(images);
+        absorb_collection!(samplers);
+        absorb_collection!(skins);
+        absorb_collection!(animations);
+        absorb_collection!(cameras);
+        absorb_collection!(extensions_used);
+        absorb_collection!(extensions_required);
+        if other.extensions.is_some() {
+            self.extensions = other.extensions;
+        }
+        if other.extras.is_some() {
+            self.extras = other.extras;
+        }
+        if other.source_form.is_some() {
+            self.source_form = other.source_form;
+        }
+    }
+
+    fn apply(&self, unpublished: &mut GltfSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let applied = (|base: &GltfSnapshot| -> protocol::MutationApplyResult<GltfSnapshot> {
         let mut next = base.clone();
         let doc = &mut next.document;
         if let Some(d) = &self.asset {
@@ -298,55 +346,20 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
             }
         }
         Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        match (&mut self.asset, other.asset) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
-            (slot @ None, Some(theirs)) => *slot = Some(theirs),
-            _ => {}
-        }
-        if other.scene.is_some() {
-            self.scene = other.scene;
-        }
-        macro_rules! absorb_collection {
-            ($field:ident) => {
-                match (&mut self.$field, other.$field) {
-                    (Some(mine), Some(theirs)) => mine.absorb(theirs),
-                    (slot @ None, Some(theirs)) => *slot = Some(theirs),
-                    _ => {}
-                }
-            };
-        }
-        absorb_collection!(scenes);
-        absorb_collection!(nodes);
-        absorb_collection!(meshes);
-        absorb_collection!(accessors);
-        absorb_collection!(buffer_views);
-        absorb_collection!(buffers);
-        absorb_collection!(buffer_bytes);
-        absorb_collection!(materials);
-        absorb_collection!(textures);
-        absorb_collection!(images);
-        absorb_collection!(samplers);
-        absorb_collection!(skins);
-        absorb_collection!(animations);
-        absorb_collection!(cameras);
-        absorb_collection!(extensions_used);
-        absorb_collection!(extensions_required);
-        if other.extensions.is_some() {
-            self.extensions = other.extensions;
-        }
-        if other.extras.is_some() {
-            self.extras = other.extras;
-        }
-        if other.source_form.is_some() {
-            self.source_form = other.source_form;
-        }
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<GltfSnapshot> for GltfDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GltfSnapshot> for GltfDiff {
     fn inverse(&self, base: &GltfSnapshot) -> Self {
         let doc = &base.document;
         Self {
@@ -372,10 +385,6 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
             extras: self.extras.as_ref().map(|_| doc.extras.clone()),
             source_form: self.source_form.map(|_| base.source_form),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 

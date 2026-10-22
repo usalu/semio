@@ -19,7 +19,7 @@
         ],
         "outputs": [],
         "options": {
-          "command": "bun ./📜️script.ts test devcontainer-lifecycle",
+          "command": "repo ./📜️script.ts test devcontainer-lifecycle",
           "forwardAllArgs": false
         },
         "metadata": {
@@ -35,7 +35,7 @@
     "RuntimeBootstrap": {
       "const": {
         "selector": "runtime-bootstrap",
-        "command": "bun ./📜️script.ts test runtime-bootstrap",
+        "command": "repo ./📜️script.ts test runtime-bootstrap",
         "sourceInputObservation": "freshness",
         "runtimeSourceEntries": [
           "{projectRoot}/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts"

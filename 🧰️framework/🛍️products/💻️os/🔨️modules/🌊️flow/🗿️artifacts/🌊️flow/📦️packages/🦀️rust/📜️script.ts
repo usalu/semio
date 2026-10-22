@@ -18,5 +18,5 @@ class OwnedVerifyScript extends BundleScript {
     await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite", FlowSqliteTestScript).register("verify", OwnedVerifyScript);
-await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-flow-flow", { packages: ["semio-framework-artifact-flow-flow", "semio-framework-artifact-flow-flow-model", "semio-framework-artifact-flow-flow-document", "semio-framework-artifact-flow-flow-copy", "semio-framework-artifact-flow-flow-mutation-laws", "semio-framework-artifact-flow-flow-snapshot-laws"], commands: router });
+const router = new ScriptRouter(import.meta.dirname).register("test-snapshot-sqlite", FlowSqliteTestScript).register("verify", OwnedVerifyScript);
+await runArtifactRustPackageMain(import.meta.dirname, "semio-framework-artifact-flow-flow", { packages: ["semio-framework-artifact-flow-flow", "semio-framework-artifact-flow-flow-model", "semio-framework-artifact-flow-flow-document", "semio-framework-artifact-flow-flow-copy", "semio-framework-artifact-flow-flow-mutation-laws", "semio-framework-artifact-flow-flow-snapshot-laws"], commands: router });

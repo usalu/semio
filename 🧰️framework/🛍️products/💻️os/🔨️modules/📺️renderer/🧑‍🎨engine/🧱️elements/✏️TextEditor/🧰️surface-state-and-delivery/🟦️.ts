@@ -1,6 +1,6 @@
 import { usePresenceRuntimeKeyV1 } from "../../👕️canvas-presence/🟦️.tsx";
 /** 🧰️ Text editor surface state and delivery: the session, rename, hover, echo and draft refs, the dispatcher, the read-only and splice typing state, the typing run, the edit delivery, the explicit draft history stepping and the session sync. */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
 import { useShellContextMenuFallback, useAppKeybindingsByActionId } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { publishLocalPresenceTypingV1 } from "../../👕️canvas-presence/🟦️.ts";

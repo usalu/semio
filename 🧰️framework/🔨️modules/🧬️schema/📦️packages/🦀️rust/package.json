@@ -9,9 +9,9 @@
     ".": "./📜️script.ts"
   },
   "scripts": {
-    "generate": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-schema:generate",
-    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-schema:check",
-    "test-neutrality": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-schema:test-neutrality"
+    "generate": "repo run @semio-tech/framework-schema:generate",
+    "check": "repo run @semio-tech/framework-schema:check",
+    "test-neutrality": "repo run @semio-tech/framework-schema:test-neutrality"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

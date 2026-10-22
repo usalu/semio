@@ -54,20 +54,14 @@ impl ColdDiffAlgebra<Vec<Item>> for ItemDelta {
     }
 }
 
-impl semio_framework_mutation_diff::MutationDiff<Vec<Item>> for ItemDelta {
-    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<()> {
-        CAPABILITY.with(|cell| cell.set(Some(capability)));
+impl semio_framework_mutation_diff::MutationDiff<Vec<Item>> for ItemDelta {}
 
-        let next = self.commit_onto(base, capability)
-    ?;
-        ItemDelta::retire_list(std::mem::replace(base, next));
-        Ok(())
-    }
+impl semio_framework_mutation_diff::ColdMutationDiff<Vec<Item>> for ItemDelta {
     fn absorb(&mut self, other: Self) {
         ItemDelta::absorb(self, other)
     }
 
-    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::diff::MutationApplyResult<()> {
+    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<()> {
         CAPABILITY.with(|cell| cell.set(Some(capability)));
         let next = self.commit_onto(base, capability)?;
         ItemDelta::retire_list(std::mem::replace(base, next));

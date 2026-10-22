@@ -8,7 +8,7 @@
    "lib/obj/ignored.cs": "class Ignored {}\n",
    "lib/bin/ignored.cs": "class IgnoredToo {}\n",
    "app/app.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <AssemblyName>labapp</AssemblyName>\n  </PropertyGroup>\n  <ItemGroup>\n    <ProjectReference Include=\"..\\lib\\lib.csproj\" />\n    <Compile Include=\"../shared/*.cs\" />\n    <Compile Remove=\"Skipped.cs\" />\n  </ItemGroup>\n</Project>\n",
-   "app/Program.cs": "using Lab;\n\nConsole.WriteLine(new Greeter().Hello(Shared.Name));\n",
+   "app/Program.cs": "using System;\nusing Lab;\n\nConsole.WriteLine(new Greeter().Hello(Shared.Name));\n",
    "app/Skipped.cs": "class Skipped {}\n",
    "shared/Shared.cs": "static class Shared { public static string Name => \"semio\"; }\n",
    "tests/tests.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n    <IsPackable>false</IsPackable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.NET.Test.Sdk\" Version=\"17.8.0\" />\n    <PackageReference Include=\"xunit\" Version=\"2.6.1\" />\n    <ProjectReference Include=\"../lib/lib.csproj\" />\n  </ItemGroup>\n</Project>\n",
@@ -254,7 +254,11 @@
     "dependencies": [
      [
       "cpp:bar",
-      "implementation"
+      "both"
+     ],
+     [
+      "cpp:foo",
+      "both"
      ]
     ],
     "sources": [
@@ -263,9 +267,8 @@
     "inputs": [
      "CMakeLists.txt",
      "bar/bar.cpp",
-     "bar/include/bar/api.h",
-     "foo/include/foo/api.h",
-     "foo/src/foo.cpp"
+     "foo/src/foo.cpp",
+     "foo/src/internal.h"
     ]
    }
   }

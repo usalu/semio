@@ -119,12 +119,12 @@
   {
    "name": "every document path stays inside the original store",
    "function": "generationFilesV1",
-   "text": "requireNativeStoragePathV1(store.root,path)"
+   "text": "requirePath:requireNativeStoragePathV1"
   },
   {
    "name": "the store is rechecked while documents move",
    "function": "generationFilesV1",
-   "text": "await store.recheck()"
+   "text": "createGenerationFilesV1({store,"
   },
   {
    "name": "the part infers only the named roots",
@@ -179,7 +179,22 @@
   {
    "name": "the generation load starts a new authority snapshot",
    "function": "loadBuildGraphV1",
-   "text": "clearPinnedAuthorityV1();return withImplementationPinV1("
+   "text": "clearPinnedAuthorityV1();"
+  },
+  {
+   "name": "a selected scope is derived from the generation before it is inferred",
+   "function": "loadBuildGraphV1",
+   "text": "loadBuildGraphSliceV1(root,invocation,phaseControl,options)"
+  },
+  {
+   "name": "the host bounds the text of one capture to a quarter of the reference capacity",
+   "function": "generationHostV1",
+   "text": "expansionLimits:{maximumProjects:32,maximumBytes:Math.floor("
+  },
+  {
+   "name": "the host validates the lean graph through its own schema",
+   "function": "generationHostV1",
+   "text": "readLean:(value:unknown)=>readBuildGraphLeanV1(value)"
   }
  ],
  "absent": [
@@ -227,6 +242,11 @@
    "name": "the host identity never contains the module authority",
    "function": "generationHostV1",
    "text": "loadedGraphModuleAuthorityV1"
+  },
+  {
+   "name": "a selected scope never falls back to the selected inference switch",
+   "function": "loadBuildGraphV1",
+   "text": "SEMIO_BUILD_GRAPH_SLICE"
   }
  ]
 }

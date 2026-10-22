@@ -20,6 +20,19 @@ where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<CreateAsset> + From<crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create asset \"{}\"", self.asset.name), &format!("Asset \"{}\" erstellen", self.asset.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.asset.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ShootingSnapshot, Op> for CreateAsset
+where
+    Op: protocol::ColdMutation<ShootingSnapshot, ReferenceDiff = ShootingDiff> + From<CreateAsset> + From<crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset>,
+{
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
@@ -29,10 +42,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create asset \"{}\"", self.asset.name), &format!("Asset \"{}\" erstellen", self.asset.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.asset.id.clone()]
-    }
 }

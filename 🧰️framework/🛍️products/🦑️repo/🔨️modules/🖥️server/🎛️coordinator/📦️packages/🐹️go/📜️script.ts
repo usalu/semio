@@ -23,6 +23,6 @@ class DevScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("dev", DevScript);
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript).register("dev", DevScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

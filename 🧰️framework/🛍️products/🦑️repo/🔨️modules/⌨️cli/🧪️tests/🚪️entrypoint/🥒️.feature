@@ -13,3 +13,10 @@ Feature: One Native Repository Entrypoint
     Then its exact arguments and Original environment are retained
     And progress remains on stderr
     And stdout contains only the existing MCP protocol
+
+  Scenario: A script runs through the provisioned runtime
+    Given an argument vector that names a script file, optionally led by the neutral watch and cwd options
+    When the launcher plans the route
+    Then the script route keeps every argument unchanged
+    And the neutral options map to the flags of the selected runtime
+    And no runtime has to be installed because the launcher provisions the pinned one

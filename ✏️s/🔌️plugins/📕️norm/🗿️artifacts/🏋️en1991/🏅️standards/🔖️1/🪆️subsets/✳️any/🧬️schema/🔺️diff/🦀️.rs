@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
@@ -237,82 +237,9 @@ pub struct En1991Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<En1991Snapshot> for En1991Diff {
-    fn apply(&self, base: &En1991Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1991Snapshot> {
-        Ok(En1991Snapshot {
-            annex: self.annex.unwrap_or(base.annex),
-            snow_zone: self.snow_zone.clone().unwrap_or_else(|| base.snow_zone.clone()),
-            altitude: self.altitude.unwrap_or(base.altitude),
-            en_sk: self.en_sk.unwrap_or(base.en_sk),
-            north_german_lowland_snow: self.north_german_lowland_snow.unwrap_or(base.north_german_lowland_snow),
-            wind_zone: self.wind_zone.unwrap_or(base.wind_zone),
-            en_vb: self.en_vb.unwrap_or(base.en_vb),
-            terrain_category: self.terrain_category.unwrap_or(base.terrain_category),
-            mixed_terrain_upwind: self.mixed_terrain_upwind.unwrap_or(base.mixed_terrain_upwind),
-            mixed_terrain_distance: self.mixed_terrain_distance.unwrap_or(base.mixed_terrain_distance),
-            orography_factor: self.orography_factor.unwrap_or(base.orography_factor),
-            coast_or_island: self.coast_or_island.unwrap_or(base.coast_or_island),
-            air_density: self.air_density.unwrap_or(base.air_density),
-            height: self.height.unwrap_or(base.height),
-            width: self.width.unwrap_or(base.width),
-            depth: self.depth.unwrap_or(base.depth),
-            assumed_delta_t: self.assumed_delta_t.unwrap_or(base.assumed_delta_t),
-            t_max: self.t_max.unwrap_or(base.t_max),
-            t_min: self.t_min.unwrap_or(base.t_min),
-            t_0: self.t_0.unwrap_or(base.t_0),
-            thermal_element_type: self.thermal_element_type.clone().unwrap_or_else(|| base.thermal_element_type.clone()),
-            thermal_bridge_type: self.thermal_bridge_type.unwrap_or(base.thermal_bridge_type),
-            delta_t_m: self.delta_t_m.unwrap_or(base.delta_t_m),
-            storey_count: self.storey_count.unwrap_or(base.storey_count),
-            fire_mode: self.fire_mode.unwrap_or(base.fire_mode),
-            fire_curve: self.fire_curve.unwrap_or(base.fire_curve),
-            fire_duration: self.fire_duration.unwrap_or(base.fire_duration),
-            assumed_gas_temperature: self.assumed_gas_temperature.unwrap_or(base.assumed_gas_temperature),
-            assumed_h_net: self.assumed_h_net.unwrap_or(base.assumed_h_net),
-            fire_compartment_area: self.fire_compartment_area.unwrap_or(base.fire_compartment_area),
-            fire_compartment_height: self.fire_compartment_height.unwrap_or(base.fire_compartment_height),
-            fire_opening_factor: self.fire_opening_factor.unwrap_or(base.fire_opening_factor),
-            fire_thermal_inertia: self.fire_thermal_inertia.unwrap_or(base.fire_thermal_inertia),
-            fire_occupancy: self.fire_occupancy.clone().unwrap_or_else(|| base.fire_occupancy.clone()),
-            fire_load_density_qf: self.fire_load_density_qf.unwrap_or(base.fire_load_density_qf),
-            assumed_qf_d: self.assumed_qf_d.unwrap_or(base.assumed_qf_d),
-            construction_activity: self.construction_activity.clone().unwrap_or_else(|| base.construction_activity.clone()),
-            assumed_construction_qk: self.assumed_construction_qk.unwrap_or(base.assumed_construction_qk),
-            structure_kind: self.structure_kind.unwrap_or(base.structure_kind),
-            bridge_lane: self.bridge_lane.unwrap_or(base.bridge_lane),
-            bridge_span: self.bridge_span.unwrap_or(base.bridge_span),
-            bridge_lane_width: self.bridge_lane_width.unwrap_or(base.bridge_lane_width),
-            assumed_bridge_tandem: self.assumed_bridge_tandem.unwrap_or(base.assumed_bridge_tandem),
-            assumed_bridge_udl: self.assumed_bridge_udl.unwrap_or(base.assumed_bridge_udl),
-            assumed_bridge_lm2: self.assumed_bridge_lm2.unwrap_or(base.assumed_bridge_lm2),
-            assumed_bridge_footway: self.assumed_bridge_footway.unwrap_or(base.assumed_bridge_footway),
-            assumed_bridge_lm3: self.assumed_bridge_lm3.unwrap_or(base.assumed_bridge_lm3),
-            assumed_bridge_lm4: self.assumed_bridge_lm4.unwrap_or(base.assumed_bridge_lm4),
-            bridge_load_group: self.bridge_load_group.clone().unwrap_or_else(|| base.bridge_load_group.clone()),
-            crane_claimed: self.crane_claimed.unwrap_or(base.crane_claimed),
-            crane_class: self.crane_class.clone().unwrap_or_else(|| base.crane_class.clone()),
-            hoist_class: self.hoist_class.clone().unwrap_or_else(|| base.hoist_class.clone()),
-            hoisting_speed: self.hoisting_speed.unwrap_or(base.hoisting_speed),
-            assumed_crane_wheel: self.assumed_crane_wheel.unwrap_or(base.assumed_crane_wheel),
-            assumed_crane_horizontal: self.assumed_crane_horizontal.unwrap_or(base.assumed_crane_horizontal),
-            silo_claimed: self.silo_claimed.unwrap_or(base.silo_claimed),
-            silo_kind: self.silo_kind.clone().unwrap_or_else(|| base.silo_kind.clone()),
-            silo_bulk_density: self.silo_bulk_density.unwrap_or(base.silo_bulk_density),
-            silo_height: self.silo_height.unwrap_or(base.silo_height),
-            silo_hydraulic_radius: self.silo_hydraulic_radius.unwrap_or(base.silo_hydraulic_radius),
-            silo_mu: self.silo_mu.unwrap_or(base.silo_mu),
-            silo_k: self.silo_k.unwrap_or(base.silo_k),
-            assumed_silo_pressure: self.assumed_silo_pressure.unwrap_or(base.assumed_silo_pressure),
-            assumed_silo_patch: self.assumed_silo_patch.unwrap_or(base.assumed_silo_patch),
-            assumed_silo_wall_friction: self.assumed_silo_wall_friction.unwrap_or(base.assumed_silo_wall_friction),
-            floors: self.floors.commit_onto(&base.floors, capability).map_err(|error| error.under(["floors"]))?,
-            self_weight_elements: self.self_weight_elements.commit_onto(&base.self_weight_elements, capability).map_err(|error| error.under(["self_weight_elements"]))?,
-            roofs: self.roofs.commit_onto(&base.roofs, capability).map_err(|error| error.under(["roofs"]))?,
-            wind_faces: self.wind_faces.commit_onto(&base.wind_faces, capability).map_err(|error| error.under(["wind_faces"]))?,
-            accidental_cases: self.accidental_cases.commit_onto(&base.accidental_cases, capability).map_err(|error| error.under(["accidental_cases"]))?,
-        })
-    }
+impl MutationDiff<En1991Snapshot> for En1991Diff {}
 
+impl protocol::ColdMutationDiff<En1991Snapshot> for En1991Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -515,9 +442,161 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
         self.wind_faces.absorb(other.wind_faces);
         self.accidental_cases.absorb(other.accidental_cases);
     }
+
+    fn apply(&self, unpublished: &mut En1991Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = En1991Snapshot {
+            annex: self.annex.unwrap_or(base.annex),
+            snow_zone: self.snow_zone.clone().unwrap_or_else(|| base.snow_zone.clone()),
+            altitude: self.altitude.unwrap_or(base.altitude),
+            en_sk: self.en_sk.unwrap_or(base.en_sk),
+            north_german_lowland_snow: self.north_german_lowland_snow.unwrap_or(base.north_german_lowland_snow),
+            wind_zone: self.wind_zone.unwrap_or(base.wind_zone),
+            en_vb: self.en_vb.unwrap_or(base.en_vb),
+            terrain_category: self.terrain_category.unwrap_or(base.terrain_category),
+            mixed_terrain_upwind: self.mixed_terrain_upwind.unwrap_or(base.mixed_terrain_upwind),
+            mixed_terrain_distance: self.mixed_terrain_distance.unwrap_or(base.mixed_terrain_distance),
+            orography_factor: self.orography_factor.unwrap_or(base.orography_factor),
+            coast_or_island: self.coast_or_island.unwrap_or(base.coast_or_island),
+            air_density: self.air_density.unwrap_or(base.air_density),
+            height: self.height.unwrap_or(base.height),
+            width: self.width.unwrap_or(base.width),
+            depth: self.depth.unwrap_or(base.depth),
+            assumed_delta_t: self.assumed_delta_t.unwrap_or(base.assumed_delta_t),
+            t_max: self.t_max.unwrap_or(base.t_max),
+            t_min: self.t_min.unwrap_or(base.t_min),
+            t_0: self.t_0.unwrap_or(base.t_0),
+            thermal_element_type: self.thermal_element_type.clone().unwrap_or_else(|| base.thermal_element_type.clone()),
+            thermal_bridge_type: self.thermal_bridge_type.unwrap_or(base.thermal_bridge_type),
+            delta_t_m: self.delta_t_m.unwrap_or(base.delta_t_m),
+            storey_count: self.storey_count.unwrap_or(base.storey_count),
+            fire_mode: self.fire_mode.unwrap_or(base.fire_mode),
+            fire_curve: self.fire_curve.unwrap_or(base.fire_curve),
+            fire_duration: self.fire_duration.unwrap_or(base.fire_duration),
+            assumed_gas_temperature: self.assumed_gas_temperature.unwrap_or(base.assumed_gas_temperature),
+            assumed_h_net: self.assumed_h_net.unwrap_or(base.assumed_h_net),
+            fire_compartment_area: self.fire_compartment_area.unwrap_or(base.fire_compartment_area),
+            fire_compartment_height: self.fire_compartment_height.unwrap_or(base.fire_compartment_height),
+            fire_opening_factor: self.fire_opening_factor.unwrap_or(base.fire_opening_factor),
+            fire_thermal_inertia: self.fire_thermal_inertia.unwrap_or(base.fire_thermal_inertia),
+            fire_occupancy: self.fire_occupancy.clone().unwrap_or_else(|| base.fire_occupancy.clone()),
+            fire_load_density_qf: self.fire_load_density_qf.unwrap_or(base.fire_load_density_qf),
+            assumed_qf_d: self.assumed_qf_d.unwrap_or(base.assumed_qf_d),
+            construction_activity: self.construction_activity.clone().unwrap_or_else(|| base.construction_activity.clone()),
+            assumed_construction_qk: self.assumed_construction_qk.unwrap_or(base.assumed_construction_qk),
+            structure_kind: self.structure_kind.unwrap_or(base.structure_kind),
+            bridge_lane: self.bridge_lane.unwrap_or(base.bridge_lane),
+            bridge_span: self.bridge_span.unwrap_or(base.bridge_span),
+            bridge_lane_width: self.bridge_lane_width.unwrap_or(base.bridge_lane_width),
+            assumed_bridge_tandem: self.assumed_bridge_tandem.unwrap_or(base.assumed_bridge_tandem),
+            assumed_bridge_udl: self.assumed_bridge_udl.unwrap_or(base.assumed_bridge_udl),
+            assumed_bridge_lm2: self.assumed_bridge_lm2.unwrap_or(base.assumed_bridge_lm2),
+            assumed_bridge_footway: self.assumed_bridge_footway.unwrap_or(base.assumed_bridge_footway),
+            assumed_bridge_lm3: self.assumed_bridge_lm3.unwrap_or(base.assumed_bridge_lm3),
+            assumed_bridge_lm4: self.assumed_bridge_lm4.unwrap_or(base.assumed_bridge_lm4),
+            bridge_load_group: self.bridge_load_group.clone().unwrap_or_else(|| base.bridge_load_group.clone()),
+            crane_claimed: self.crane_claimed.unwrap_or(base.crane_claimed),
+            crane_class: self.crane_class.clone().unwrap_or_else(|| base.crane_class.clone()),
+            hoist_class: self.hoist_class.clone().unwrap_or_else(|| base.hoist_class.clone()),
+            hoisting_speed: self.hoisting_speed.unwrap_or(base.hoisting_speed),
+            assumed_crane_wheel: self.assumed_crane_wheel.unwrap_or(base.assumed_crane_wheel),
+            assumed_crane_horizontal: self.assumed_crane_horizontal.unwrap_or(base.assumed_crane_horizontal),
+            silo_claimed: self.silo_claimed.unwrap_or(base.silo_claimed),
+            silo_kind: self.silo_kind.clone().unwrap_or_else(|| base.silo_kind.clone()),
+            silo_bulk_density: self.silo_bulk_density.unwrap_or(base.silo_bulk_density),
+            silo_height: self.silo_height.unwrap_or(base.silo_height),
+            silo_hydraulic_radius: self.silo_hydraulic_radius.unwrap_or(base.silo_hydraulic_radius),
+            silo_mu: self.silo_mu.unwrap_or(base.silo_mu),
+            silo_k: self.silo_k.unwrap_or(base.silo_k),
+            assumed_silo_pressure: self.assumed_silo_pressure.unwrap_or(base.assumed_silo_pressure),
+            assumed_silo_patch: self.assumed_silo_patch.unwrap_or(base.assumed_silo_patch),
+            assumed_silo_wall_friction: self.assumed_silo_wall_friction.unwrap_or(base.assumed_silo_wall_friction),
+            floors: self.floors.commit_onto(&base.floors, capability).map_err(|error| error.under(["floors"]))?,
+            self_weight_elements: self.self_weight_elements.commit_onto(&base.self_weight_elements, capability).map_err(|error| error.under(["self_weight_elements"]))?,
+            roofs: self.roofs.commit_onto(&base.roofs, capability).map_err(|error| error.under(["roofs"]))?,
+            wind_faces: self.wind_faces.commit_onto(&base.wind_faces, capability).map_err(|error| error.under(["wind_faces"]))?,
+            accidental_cases: self.accidental_cases.commit_onto(&base.accidental_cases, capability).map_err(|error| error.under(["accidental_cases"]))?,
+        };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1991Snapshot> for En1991Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.snow_zone.is_none()
+            && self.altitude.is_none()
+            && self.en_sk.is_none()
+            && self.north_german_lowland_snow.is_none()
+            && self.wind_zone.is_none()
+            && self.en_vb.is_none()
+            && self.terrain_category.is_none()
+            && self.mixed_terrain_upwind.is_none()
+            && self.mixed_terrain_distance.is_none()
+            && self.orography_factor.is_none()
+            && self.coast_or_island.is_none()
+            && self.air_density.is_none()
+            && self.height.is_none()
+            && self.width.is_none()
+            && self.depth.is_none()
+            && self.assumed_delta_t.is_none()
+            && self.t_max.is_none()
+            && self.t_min.is_none()
+            && self.t_0.is_none()
+            && self.thermal_element_type.is_none()
+            && self.thermal_bridge_type.is_none()
+            && self.delta_t_m.is_none()
+            && self.storey_count.is_none()
+            && self.fire_mode.is_none()
+            && self.fire_curve.is_none()
+            && self.fire_duration.is_none()
+            && self.assumed_gas_temperature.is_none()
+            && self.assumed_h_net.is_none()
+            && self.fire_compartment_area.is_none()
+            && self.fire_compartment_height.is_none()
+            && self.fire_opening_factor.is_none()
+            && self.fire_thermal_inertia.is_none()
+            && self.fire_occupancy.is_none()
+            && self.fire_load_density_qf.is_none()
+            && self.assumed_qf_d.is_none()
+            && self.construction_activity.is_none()
+            && self.assumed_construction_qk.is_none()
+            && self.structure_kind.is_none()
+            && self.bridge_lane.is_none()
+            && self.bridge_span.is_none()
+            && self.bridge_lane_width.is_none()
+            && self.assumed_bridge_tandem.is_none()
+            && self.assumed_bridge_udl.is_none()
+            && self.assumed_bridge_lm2.is_none()
+            && self.assumed_bridge_footway.is_none()
+            && self.assumed_bridge_lm3.is_none()
+            && self.assumed_bridge_lm4.is_none()
+            && self.bridge_load_group.is_none()
+            && self.crane_claimed.is_none()
+            && self.crane_class.is_none()
+            && self.hoist_class.is_none()
+            && self.hoisting_speed.is_none()
+            && self.assumed_crane_wheel.is_none()
+            && self.assumed_crane_horizontal.is_none()
+            && self.silo_claimed.is_none()
+            && self.silo_kind.is_none()
+            && self.silo_bulk_density.is_none()
+            && self.silo_height.is_none()
+            && self.silo_hydraulic_radius.is_none()
+            && self.silo_mu.is_none()
+            && self.silo_k.is_none()
+            && self.assumed_silo_pressure.is_none()
+            && self.assumed_silo_patch.is_none()
+            && self.assumed_silo_wall_friction.is_none()
+            && self.floors.is_empty()
+            && self.self_weight_elements.is_empty()
+            && self.roofs.is_empty()
+            && self.wind_faces.is_empty()
+            && self.accidental_cases.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1991Snapshot> for En1991Diff {
     fn inverse(&self, base: &En1991Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex),
@@ -591,79 +670,6 @@ impl DiffAlgebra<En1991Snapshot> for En1991Diff {
             wind_faces: self.wind_faces.inverse(&base.wind_faces),
             accidental_cases: self.accidental_cases.inverse(&base.accidental_cases),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.snow_zone.is_none()
-            && self.altitude.is_none()
-            && self.en_sk.is_none()
-            && self.north_german_lowland_snow.is_none()
-            && self.wind_zone.is_none()
-            && self.en_vb.is_none()
-            && self.terrain_category.is_none()
-            && self.mixed_terrain_upwind.is_none()
-            && self.mixed_terrain_distance.is_none()
-            && self.orography_factor.is_none()
-            && self.coast_or_island.is_none()
-            && self.air_density.is_none()
-            && self.height.is_none()
-            && self.width.is_none()
-            && self.depth.is_none()
-            && self.assumed_delta_t.is_none()
-            && self.t_max.is_none()
-            && self.t_min.is_none()
-            && self.t_0.is_none()
-            && self.thermal_element_type.is_none()
-            && self.thermal_bridge_type.is_none()
-            && self.delta_t_m.is_none()
-            && self.storey_count.is_none()
-            && self.fire_mode.is_none()
-            && self.fire_curve.is_none()
-            && self.fire_duration.is_none()
-            && self.assumed_gas_temperature.is_none()
-            && self.assumed_h_net.is_none()
-            && self.fire_compartment_area.is_none()
-            && self.fire_compartment_height.is_none()
-            && self.fire_opening_factor.is_none()
-            && self.fire_thermal_inertia.is_none()
-            && self.fire_occupancy.is_none()
-            && self.fire_load_density_qf.is_none()
-            && self.assumed_qf_d.is_none()
-            && self.construction_activity.is_none()
-            && self.assumed_construction_qk.is_none()
-            && self.structure_kind.is_none()
-            && self.bridge_lane.is_none()
-            && self.bridge_span.is_none()
-            && self.bridge_lane_width.is_none()
-            && self.assumed_bridge_tandem.is_none()
-            && self.assumed_bridge_udl.is_none()
-            && self.assumed_bridge_lm2.is_none()
-            && self.assumed_bridge_footway.is_none()
-            && self.assumed_bridge_lm3.is_none()
-            && self.assumed_bridge_lm4.is_none()
-            && self.bridge_load_group.is_none()
-            && self.crane_claimed.is_none()
-            && self.crane_class.is_none()
-            && self.hoist_class.is_none()
-            && self.hoisting_speed.is_none()
-            && self.assumed_crane_wheel.is_none()
-            && self.assumed_crane_horizontal.is_none()
-            && self.silo_claimed.is_none()
-            && self.silo_kind.is_none()
-            && self.silo_bulk_density.is_none()
-            && self.silo_height.is_none()
-            && self.silo_hydraulic_radius.is_none()
-            && self.silo_mu.is_none()
-            && self.silo_k.is_none()
-            && self.assumed_silo_pressure.is_none()
-            && self.assumed_silo_patch.is_none()
-            && self.assumed_silo_wall_friction.is_none()
-            && self.floors.is_empty()
-            && self.self_weight_elements.is_empty()
-            && self.roofs.is_empty()
-            && self.wind_faces.is_empty()
-            && self.accidental_cases.is_empty()
     }
 }
 

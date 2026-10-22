@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | ShellHost}: `useContributionsAndRefresh` runs the original statements in order and returns the bindings later hooks and the render read; the parent merges them into the shared core object.
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
   scopeContributionsJson,

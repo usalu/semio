@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/⬅️before/🔣️.json"));
@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn detaches_only_the_trailing_port() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-node-port applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("remove-node-port applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes[0].ports.len(), base.nodes[0].ports.len() - 1, "the nested ports collection shrinks by exactly one");
     assert_eq!(produced.nodes[0].ports[0], base.nodes[0].ports[0], "the untargeted leading port must stay exactly where it was");
@@ -47,9 +47,9 @@ async fn the_undo_add_node_port_reattaches_the_out_port_in_place() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "remove-node-port of an existing port undoes as exactly one add-node-port");
     assert!(matches!(undo[0], SemioGraphMutation::AddNodePort(_)), "the undo of a remove is the matching add");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-node-port applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward remove-node-port applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo add-node-port applies to the de-ported graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo add-node-port applies to the de-ported graph");
     }
     assert_eq!(current, base, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: the undo did not restore the before-snapshot");
 }
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-node-port diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-node-port diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed remove-node-port diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed diff did not carry before to after");
 }

@@ -130,33 +130,21 @@ def script(text):
 def child(text):
     pattern=re.compile(r'\[("[a-z-]+",)*"concurrency"(,"[a-z-]+")*\]\.includes\(command\?\?""\)')
     m=pattern.search(text)
-    if not m:raise Drift("child nx exclusion: the command list with concurrency is missing")
-    if '"bench"' not in m.group(0):text=text[:m.end()-len('].includes(command??"")')]+',"bench"'+text[m.end()-len('].includes(command??"")'):]
+    if m and '"bench"' not in m.group(0):text=text[:m.end()-len('].includes(command??"")')]+',"bench"'+text[m.end()-len('].includes(command??"")'):]
     anchor='concurrencyArgumentsV1(resolved.args.slice(1));}}\n'
     add='  if(resolved.args[0]==="bench"){const {buildInvocationRequestsHelpV1}=await import("../../%s/%s");if(!buildInvocationRequestsHelpV1(resolved.args)){const {benchArgumentsV1}=await import("../../%s/%s/%s/%s");benchArgumentsV1(resolved.args.slice(1));}}\n'%(names.INVOCATION,names.TS,names.INCR,names.BENCH,names.COMMAND,names.TS)
     return after(text,anchor,add,"child bootstrap arguments",mark='resolved.args[0]==="bench"')
 
-HELP=json.load(open(os.path.join(here,"help-snapshots.json"),encoding="utf8")) if os.path.exists(os.path.join(here,"help-snapshots.json")) else None
-def helpfixture(text):
-    if HELP is None:raise Drift("help-snapshots.json missing: run render-help.py")
-    d=json.loads(text)
-    for lang,rows in HELP.items():
-        s=d["snapshots"][lang]
-        for key,row in rows["changed"].items():
-            if s[key]==row["new"]:continue
-            if s[key]!=row["old"]:raise Drift(f"help fixture {lang}/{key}: neither the old nor the new rendering (an earlier set changed it: run render-help.py again)")
-            s[key]=row["new"]
-        if "bench" in s:continue
-        rebuilt={}
-        for key,value in s.items():
-            rebuilt[key]=value
-            if key=="concurrency run":rebuilt.update(rows["pages"])
-        if "bench" not in rebuilt:raise Drift(f"help fixture {lang}: the page `concurrency run` is missing")
-        d["snapshots"][lang]=rebuilt
-    return json.dumps(d,ensure_ascii=False,indent=2)+"\n"
 EDITS=[(f"{OPS}/{names.CATALOG}",catalog),(f"{OPS}/{names.SCHEMA}/{names.JSON}",schema_enum),(f"{OPS}/{names.TESTS}/{names.REQUIRES}/{names.JSON}",requires),
- (f"{OPS}/{names.TESTS}/{names.FIXTURES}/{names.HELP}/{names.JSON}",helpfixture),(f"{B}/{names.SCRIPT}",script),(f"{B}/{names.CALLER}/{names.CHILD}/{names.TS}",child)]
+ (f"{B}/{names.SCRIPT}",script),(f"{B}/{names.CALLER}/{names.CHILD}/{names.TS}",child)]
 
+HELP_FIXTURE=f"{OPS}/{names.TESTS}/{names.FIXTURES}/{names.HELP}/{names.JSON}"
+HELP_MODULE=f"{OPS}/{names.HELP}/{names.TS}"
+CATALOG_PATH=f"{OPS}/{names.CATALOG}"
+HELP_CLOSURE=[HELP_MODULE,f"{OPS}/"+names.n(0x1F524,"options")+f"/{names.TS}",
+ f"{names.FRAMEWORK}/{names.MODULES}/{names.PROCESS}/{names.PACKAGES}/{names.TYPESCRIPT}/{names.BUILD}/"+names.n(0x1F5E3,"language")+f"/{names.TS}",
+ f"{names.FRAMEWORK}/{names.MODULES}/{names.PROCESS}/{names.BUILD}/"+names.n(0x1F5E3,"language")+f"/{names.TS}",
+ f"{names.FRAMEWORK}/{names.MODULES}/{names.PROCESS}/{names.BUILD}/"+names.n(0x1F5E3,"language")+f"/{names.JSON}"]
 WORKFLOW=".github/workflows/build-system.yml"
 PINS={"checkout":"actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1","cache":"actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0","save":"actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0","upload":"actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2"}
 HEADER_ANCHOR="#              and the sample target must be green and cached under Nx.\n"

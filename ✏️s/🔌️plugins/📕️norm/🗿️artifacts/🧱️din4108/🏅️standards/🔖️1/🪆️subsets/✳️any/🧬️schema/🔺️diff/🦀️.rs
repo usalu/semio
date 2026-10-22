@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
@@ -116,36 +116,9 @@ pub struct Din4108Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<Din4108Snapshot> for Din4108Diff {
-    fn apply(&self, base: &Din4108Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din4108Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = self.climate_zone {
-            next.climate_zone = value;
-        }
-        if let Some(value) = &self.usage {
-            next.usage = value.clone();
-        }
-        if let Some(value) = self.t_int_c {
-            next.t_int_c = value;
-        }
-        if let Some(value) = self.rh_int {
-            next.rh_int = value;
-        }
-        if let Some(value) = self.has_mechanical_ventilation {
-            next.has_mechanical_ventilation = value;
-        }
-        if let Some(value) = self.airtightness_n50 {
-            next.airtightness_n50 = value;
-        }
-        if let Some(value) = self.bb2_details_conform {
-            next.bb2_details_conform = value;
-        }
-        next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
-        next.elements = self.elements.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
-        next.thermal_bridges = self.thermal_bridges.commit_onto(&base.thermal_bridges, capability).map_err(|error| error.under(["thermalBridges"]))?;
-        Ok(next)
-    }
+impl MutationDiff<Din4108Snapshot> for Din4108Diff {}
 
+impl protocol::ColdMutationDiff<Din4108Snapshot> for Din4108Diff {
     fn absorb(&mut self, other: Self) {
         if other.climate_zone.is_some() {
             self.climate_zone = other.climate_zone;
@@ -172,9 +145,55 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
         self.elements.absorb(other.elements);
         self.thermal_bridges.absorb(other.thermal_bridges);
     }
+
+    fn apply(&self, unpublished: &mut Din4108Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = self.climate_zone {
+            next.climate_zone = value;
+        }
+        if let Some(value) = &self.usage {
+            next.usage = value.clone();
+        }
+        if let Some(value) = self.t_int_c {
+            next.t_int_c = value;
+        }
+        if let Some(value) = self.rh_int {
+            next.rh_int = value;
+        }
+        if let Some(value) = self.has_mechanical_ventilation {
+            next.has_mechanical_ventilation = value;
+        }
+        if let Some(value) = self.airtightness_n50 {
+            next.airtightness_n50 = value;
+        }
+        if let Some(value) = self.bb2_details_conform {
+            next.bb2_details_conform = value;
+        }
+        next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
+        next.elements = self.elements.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
+        next.thermal_bridges = self.thermal_bridges.commit_onto(&base.thermal_bridges, capability).map_err(|error| error.under(["thermalBridges"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Din4108Snapshot> for Din4108Diff {
+    fn is_empty(&self) -> bool {
+        self.climate_zone.is_none()
+            && self.usage.is_none()
+            && self.t_int_c.is_none()
+            && self.rh_int.is_none()
+            && self.has_mechanical_ventilation.is_none()
+            && self.airtightness_n50.is_none()
+            && self.bb2_details_conform.is_none()
+            && self.zones.is_empty()
+            && self.elements.is_empty()
+            && self.thermal_bridges.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Din4108Snapshot> for Din4108Diff {
     fn inverse(&self, base: &Din4108Snapshot) -> Self {
         Self {
             climate_zone: self.climate_zone.map(|_| base.climate_zone),
@@ -188,19 +207,6 @@ impl DiffAlgebra<Din4108Snapshot> for Din4108Diff {
             elements: self.elements.inverse(&base.elements),
             thermal_bridges: self.thermal_bridges.inverse(&base.thermal_bridges),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.climate_zone.is_none()
-            && self.usage.is_none()
-            && self.t_int_c.is_none()
-            && self.rh_int.is_none()
-            && self.has_mechanical_ventilation.is_none()
-            && self.airtightness_n50.is_none()
-            && self.bb2_details_conform.is_none()
-            && self.zones.is_empty()
-            && self.elements.is_empty()
-            && self.thermal_bridges.is_empty()
     }
 }
 

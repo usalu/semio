@@ -122,10 +122,9 @@ Let me walk you through 🚶️
 
 > Do you wonder how compose is interoperable? The reason is a shared [specification](#-requirements-) 🪢️
 
-> **Status, plainly.** This repository is the source, not a distribution. There is no installer, no
-> published container image, no package on any registry and no hosted instance; `.github/workflows/`
-> is empty and nothing is uploaded anywhere. Everything below is built from this checkout after
-> `repo dashboard run workspace:setup`, and every release binary named below lands under its own product's `dist/`.
+> Build the products from this checkout with `repo dashboard run workspace:setup`. Every release
+> binary named below lands under its product's `dist/`. The checked-in CI workflows declare native
+> Windows, macOS, Linux and devcontainer dashboard checks; hosted execution remains unverified.
 
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
@@ -170,8 +169,8 @@ binary and read [`🌎️hub/README.md`](🌎️hub/README.md) from the top; its
 decides whether your hub boots at all.
 
 ```bash
-repo run os-hub:build              # → 🌎️hub/📦️packages/🦀️rust/dist/build/os-hub
-repo run workspace:publish -- os-hub     # → dist/publish/os-hub-<version>-<platform>-<arch>.tar.gz
+repo dashboard run os-hub:build              # → 🌎️hub/📦️packages/🦀️rust/dist/build/os-hub
+repo dashboard run workspace:publish -- os-hub     # → dist/publish/os-hub-<version>-<platform>-<arch>.tar.gz
 ```
 
 
@@ -209,7 +208,7 @@ a folder of your work or against a hub space, and bridges them into a semio wind
 open.
 
 ```bash
-repo run @semio-tech/framework-os-mcp-rs:build-release
+repo dashboard run @semio-tech/framework-os-mcp-rs:build-release
 # → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp
 ```
 
@@ -306,7 +305,7 @@ A single file is easier for humans and computers to understand 💡️
 
 You will be surprised
 
-- by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖️
+- by editing source directly in the dashboard’s [Workspace Files](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) 📂️
 - by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
 - by the smooth refactor experience by just going top-to-bottom ⬇️
 - by the beautiful diff for your next code review 🔍️
@@ -635,7 +634,7 @@ The devcontainer includes:
 
 - Node.js 24 LTS, Go 1.26, Python 3.14, .NET SDK 8.0/9.0/10.0
 - Rust via rustup with **no** image-pinned toolchain — `rust-toolchain.toml` is the single source of
-  truth (currently `nightly-2026-07-07` with `wasm32-unknown-unknown` + `wasm32-wasip2`), installed on
+  truth (currently `nightly-2026-07-20` with `wasm32-unknown-unknown` + `wasm32-wasip2`), installed on
   the first `cargo` invocation inside the repo
 - The dashboard developer control plane
 - Pre-configured development environment
@@ -706,9 +705,11 @@ script overrides it.
 
 ## 🪟️ Windows Setup [↑](#-development)
 
-Native Windows development is zero-touch through the checked-in bootstrap script, started from an elevated (Administrator) terminal: the script refuses before it installs anything otherwise (`Test-ElevatedSession` in the script; `-SkipRepoBootstrap` skips the check). The reason it prints is the earlier VHD attach through `Mount-DiskImage`, which the cache partitions no longer use (see the Windows row of the repo docs), so this requirement is under review. Clone with long paths enabled
-(tracked paths reach 226 characters below the clone root, measured with `git ls-files` on 2026-10-19; `setup git` keeps `core.longpaths` in the clone's own
-`.git/config` afterwards) and run the script with the Windows PowerShell 5.1 that ships with Windows — no Bun needed yet:
+Native Windows bootstrap uses the checked-in script from a regular terminal; the cache partitions
+are directories and the script does not require administrator elevation. Clone with long paths enabled
+and keep the clone root short, for example `C:\src\semio`. The script keeps `core.longpaths` in the
+clone's own `.git/config` and reports any machine-wide long-path setting that needs a separate
+administrator action. Run it with the Windows PowerShell 5.1 that ships with Windows — no Bun needed yet:
 
 ```powershell
 git clone -c core.longpaths=true https://github.com/usalu/semio.git
@@ -770,14 +771,14 @@ repo dependencies sync --all                # install; node_modules is a symlink
 repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
 ```
 
-- **Neutral model and two implementations.** Manifests declare inputs, outputs, `cache` and `continuous` once; Nx (default) and Bazel execute the same graph. Bazel turns every selected task into a real action with declared inputs and outputs, uses its own action cache and disk cache (`SEMIO_BAZEL_REMOTE_CACHE` switches an optional remote cache on), and builds only what the selected target needs. A target without `cache: true` and an `outputs` array, or whose plugin cache class forbids replay, always reruns under Bazel. Targets that publish into a leased store declare a store receipt (`.🧾️store/<target>.json`) and rerun alone when their store content is gone. Bazel on macOS needs an ASCII checkout path. The [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run) cover the operations, the manifest and cache rules, both implementations, setup per platform (`tools setup`, readiness, Windows, Linux, devcontainer), the command registry that the dashboard uses (tool selector `nx`/`bazel`, cache and `exec --dry-run` tools), the build owner registry law (`bun ./📜️script.ts verify build-owners`) and the course, play and demonstrator chains, with a German version (`Deutsch`) at the end of that chapter. Source files reach a Bazel action through shared per-directory `filegroup`s, the import closure of every `repo:script` command is a declared input under both tools, and the first real Bazel runs on a scratch host (2026-10-20) showed a cold run, a warm run without a single spawn and a rerun of exactly the task whose declared input changed; a production `repo --tool=bazel run` is not yet verified. Anything not yet run on a real host is marked there as not yet verified.
+- **Neutral model and two implementations.** Manifests declare inputs, outputs, `cache` and `continuous` once; Nx (default) and Bazel execute the same graph. Bazel turns every selected task into a real action with declared inputs and outputs, uses its own action cache and disk cache (`SEMIO_BAZEL_REMOTE_CACHE` switches an optional remote cache on), and builds only what the selected target needs. A target without `cache: true` and an `outputs` array, or whose plugin cache class forbids replay, always reruns under Bazel. Targets that publish into a leased store declare a store receipt (`.🧾️store/<target>.json`) and rerun alone when their store content is gone. Bazel on macOS needs an ASCII checkout path. The [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run) cover the operations, the manifest and cache rules, both implementations, setup per platform (`tools setup`, readiness, Windows, Linux, devcontainer), the command registry that the dashboard uses (tool selector `nx`/`bazel`, cache and `exec --dry-run` tools), the build owner registry law (`repo ./📜️script.ts verify build-owners`) and the course, play and demonstrator chains, with a German version (`Deutsch`) at the end of that chapter. Source files reach a Bazel action through shared per-directory `filegroup`s, the import closure of every `repo:script` command is a declared input under both tools, and the first real Bazel runs on a scratch host (2026-10-20) showed a cold run, a warm run without a single spawn and a rerun of exactly the task whose declared input changed; a production `repo --tool=bazel run` is not yet verified. Anything not yet run on a real host is marked there as not yet verified.
 - **Cargo** is only reachable through `repo cargo`: raw `cargo` and `rustc` are refused at the compiler ingress gate in `.cargo/config.toml`, and private target directories are not allowed.
 - **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`; on Linux it is an unprivileged directory (`fixed.dir`, swapped atomically with `renameat2`, so `.cache` must sit on a native case-sensitive file system, in the devcontainer on its own volume); on Windows too a directory (journaled write-through swap, NTFS per-directory case sensitivity; not run on Windows, and no elevated terminal is demanded except once for the machine-wide long-path setting and the optional Windows feature). macOS images are created silenced (no FSEvents log, no Spotlight index) and the policy is re-applied whenever one is opened. `repo preflight` checks the host first. If every `repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
 - **Dependencies and waiting.** `dependencies sync --all` took about 31 minutes on 2026-10-20 (an earlier attempt ran 7,000 s without finishing): the verification passes are no longer quadratic. Ordinary `repo` calls check a sealed dependency generation receipt (seconds) instead of walking the workspace several times (36 to 58 s per tree pass), and fall back to the complete walk on any mismatch; a sealed receipt has not been seen in a live run yet. A new workspace package cannot be resolved until `dependencies lock --all` and `dependencies sync --all` ran, and the tree must stay untouched while a sync runs. A wait for a cache image shows a `lease-queue` line with position, holder pid and mode; a `remains active on …` line is a running walk, not a wait. Details and open items are in the [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run).
 - **CI.** `.github/workflows/build-system.yml` runs on pull requests, pushes to `main` and by hand on Ubuntu, macOS and Windows: pinned Bun with a verified SHA-256, `repo --help`, `preflight`, `tools setup all`, `dependencies sync --all`, a cache proof for Nx and Bazel on `@teaching/architecture-course:test`, and that target under both tools. It has never run.
 - **Developer dashboard.** Open the dashboard, choose **New Task**, select the owning command and complete its typed form. The dashboard controls startup, output, readiness, cancellation and restart. Add recurring operations to their project target or ticket `🎮️commands.json`; the [daily workflow](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers tests, builds, servers, debugging and source navigation. Start it with `repo dashboard`; builds, tests and checks by agents and automation use `repo …`, and no editor or IDE configuration registers commands.
 - **Go** code lives in member directories with one `🐹️.go` leaf (`📦️packages/🐹️go/<member>/🐹️.go`, tests in `🧪️tests/<case>/🐹️.go`); run it through the package `📜️script.ts` or `repo run <project>:test`, not plain `go test`.
-- **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux. `bun ./📜️script.ts verify zero-touch` is the law behind that rule: it walks nine closures and fails on a bare workspace specifier or an external package.
+- **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux. `repo ./📜️script.ts verify zero-touch` is the law behind that rule: it walks nine closures and fails on a bare workspace specifier or an external package.
 
 ## 🪄️ [AI](AGENTS.md) [↑](#-development-)
 
@@ -892,7 +893,7 @@ All automation, CI runs, and agent workflows are controlled through the canonica
 The repository framework owns the build graph, task selection, configuration, inputs, outputs, progress, and cancellation. All entry points use `repo`: `repo run <project>:<task>`, `repo run-many --targets=test --projects=<projects>`, and `repo graph`. The root `📋️project.json` and package manifests use the owned project schema and `repo:script` executor.
 
 Nx remains the default build tool (`defaultTool` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`); see [Build](#-build-) for Bazel, tool provisioning, dependencies, cargo and cache recovery. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.
-Git hooks are not installed by this repo; run `workspace:lint`, `workspace:format` and `workspace:test` (`repo run workspace:lint`, …) explicitly before pushing. Choose `workspace:setup-git` in the dashboard to remove installed pre-commit or post-commit hooks that would block commits, rebases, or squashes.
+Git hooks are not installed by this repo; choose `workspace:lint`, `workspace:format` and `workspace:test` in the dashboard before pushing. Choose `workspace:setup-git` in the dashboard to remove installed pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ Examples [↑](#-overview)
 

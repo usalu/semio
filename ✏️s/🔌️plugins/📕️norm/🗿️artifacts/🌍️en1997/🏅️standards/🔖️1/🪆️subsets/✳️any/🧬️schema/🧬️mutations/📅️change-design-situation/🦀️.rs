@@ -18,6 +18,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeDesignSituation wh
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change", entity: "design-situation", kind: "change-design-situation", record: "ChangedDesignSituation",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change design situation", "Bemessungssituation ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for ChangeDesignSituation where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::change_design_situation::ChangeDesignSituation> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::change_design_situation::diff::diff(self, base)
     }
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeDesignSituation wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design situation", "Bemessungssituation ändern")
-    }
 }
 
 //#region 🪢️Mounts

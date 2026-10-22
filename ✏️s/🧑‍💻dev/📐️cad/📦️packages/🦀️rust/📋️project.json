@@ -17,7 +17,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -26,7 +26,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -36,7 +36,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -44,7 +44,7 @@
     "wasm": {
       "executor": "repo:script",
       "cache": true,
-      "options": { "command": "bun ./📜️script.ts wasm", "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust" },
+      "options": { "command": "repo ./📜️script.ts wasm", "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust" },
       "metadata": {
         "semio": {
           "wasmPackageSourceV1": { "version": 1, "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust" }
@@ -59,7 +59,7 @@
         "wasm"
       ],
       "options": {
-        "command": "bun ./📜️script.ts browser-test",
+        "command": "repo ./📜️script.ts browser-test",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },

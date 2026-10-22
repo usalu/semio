@@ -20,7 +20,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -28,7 +28,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts package",
+        "command": "repo ./📜️script.ts package",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -55,7 +55,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts geometry-contract",
+        "command": "repo ./📜️script.ts geometry-contract",
         "forwardAllArgs": true
       }
     },
@@ -64,7 +64,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       },
       "outputs": [],

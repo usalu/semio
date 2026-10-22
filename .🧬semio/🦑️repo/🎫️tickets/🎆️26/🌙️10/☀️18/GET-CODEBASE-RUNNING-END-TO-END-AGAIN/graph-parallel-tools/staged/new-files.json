@@ -1,0 +1,50 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🟦️.ts",
+  "from": "staged/new/farm/tests/law.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🔣️.json",
+  "from": "staged/new/farm/tests/🔣️.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧬️schema/🔣️.json",
+  "from": "staged/new/farm/tests/fixture-schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🐍️oracle.py",
+  "from": "staged/new/farm/tests/oracle.py"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧰️fake/🟨️.mjs",
+  "from": "staged/new/farm/tests/fake/service.mjs"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🛰️detached/🟦️.ts",
+  "from": "staged/new/tests/detached.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛰️staging/🟦️.ts",
+  "from": "staged/new/tests/staging.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🏊️farm-dispatch/🟦️.ts",
+  "from": "staged/new/tests/dispatch.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🏊️farm/🟦️.ts",
+  "from": "staged/new/capacity/capacity.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🧪️tests/🏊️module-farm/🟦️.ts",
+  "from": "staged/new/tests/modulefarm.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🟦️.ts",
+  "from": "staged/new/tests/merge.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🧰️service/🟨️.mjs",
+  "from": "staged/new/tests/merge-service.mjs"
+ }
+]

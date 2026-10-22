@@ -85,7 +85,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-layer-opacity/dims-shape-a-to-half declares an applied outcome");
-    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let produced = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-layer-opacity/dims-shape-a-to-half: 0.5 is finite and differs from 1.0, so neither the invariant nor the no-op guard may fire, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-opacity's diff pins a layers delta");
     assert_eq!(delta.modified[0].patch.opacity, Some(0.5), "the patch pins the opacity field");
@@ -96,7 +96,7 @@ async fn declared_outcome_holds() {
 /// re-serialized the fill to fold the alpha in would be caught here and nowhere else.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let outcome = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-layer-opacity/dims-shape-a-to-half: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-layer-opacity/dims-shape-a-to-half: committed diff did not carry before to after");
 }
 

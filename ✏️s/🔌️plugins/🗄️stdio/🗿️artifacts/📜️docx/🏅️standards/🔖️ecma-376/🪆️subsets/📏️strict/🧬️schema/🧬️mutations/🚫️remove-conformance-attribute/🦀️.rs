@@ -11,19 +11,20 @@ pub struct RemoveConformanceAttribute {}
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "conformance-attribute", kind: "remove-conformance-attribute", record: "RemoveConformanceAttribute" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        protocol::MutationOutcome::new(diff_conformance_attribute(base, None))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(conformance_attribute_inverse(base, false))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxStrictMutation> for RemoveConformanceAttribute {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_conformance_attribute(base, None))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(conformance_attribute_inverse(base, false))
     }
 }
 //#endregion 🔖️Payload

@@ -1,6 +1,6 @@
 use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
-use protocol::{command::DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{command::ColdDiffAlgebra, DiffAlgebra, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use quick_xml::{events::Event, reader::Reader};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
@@ -108,7 +108,7 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
             assert!(serialized.contains(token.as_str().expect("preserved token")), "{token} was not preserved");
         }
         assert_quick_xml(&serialized);
-        let restored = protocol::apply_diff(&outcome.diff().inverse(&base), &edited).expect("inverse diff");
+        let restored = protocol::apply_diff_cold(&outcome.diff().inverse(&base), &edited).expect("inverse diff");
         assert_eq!(restored, base);
         let mut inverse_restored = edited.clone();
         for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {

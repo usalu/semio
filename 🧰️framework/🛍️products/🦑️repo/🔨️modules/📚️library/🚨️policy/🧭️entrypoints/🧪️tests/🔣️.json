@@ -1,0 +1,77 @@
+{
+ "version": 1,
+ "dispatch": [
+  {
+   "segments": [],
+   "key": "run",
+   "default": "run",
+   "calls": [],
+   "usage": false
+  },
+  {
+   "segments": [
+    "a",
+    "x",
+    "y"
+   ],
+   "key": "a",
+   "default": null,
+   "calls": [
+    "x",
+    "y"
+   ],
+   "usage": false
+  },
+  {
+   "segments": [],
+   "key": "run",
+   "default": "run",
+   "calls": [],
+   "usage": false
+  },
+  {
+   "segments": [
+    "zzz"
+   ],
+   "key": null,
+   "default": null,
+   "calls": null,
+   "usage": true
+  }
+ ],
+ "usageText": "tool <a|b>",
+ "defects": [
+  {
+   "segments": [
+    "toString"
+   ],
+   "usage": true,
+   "defect": "🧭️entrypoints/🟦️.ts:dispatchSubcommand looks the handler up with `handlers[key]` on a plain object, so an inherited name (`toString`, `constructor`, `hasOwnProperty`) is called as a handler instead of printing the usage line"
+  },
+  {
+   "segments": [
+    "constructor"
+   ],
+   "usage": true,
+   "defect": "same"
+  }
+ ],
+ "policy": [
+  {
+   "segments": [],
+   "expected": false
+  },
+  {
+   "segments": [
+    "test"
+   ],
+   "expected": false
+  },
+  {
+   "segments": [
+    "Policy"
+   ],
+   "expected": false
+  }
+ ]
+}

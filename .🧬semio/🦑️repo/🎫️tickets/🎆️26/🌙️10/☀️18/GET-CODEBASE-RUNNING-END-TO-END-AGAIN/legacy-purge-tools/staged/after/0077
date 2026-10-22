@@ -1,0 +1,48 @@
+{
+  "title": "Add TreeRow Import to Sketchpad App Files",
+  "status": "closed",
+  "description": "Add TreeRow to imports from elements.tsx in Type.tsx, Quality.tsx, Kit.tsx, Home.tsx, and Docs.tsx",
+  "summary": "Added TreeRow to imports from ./elements in Type.tsx, Quality.tsx, Kit.tsx, Home.tsx, and Docs.tsx. All 5 files use TreeRow in JSX. HelperRow not added as it is unused.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/727"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-27T13:16:31.503256926Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Add TreeRow to imports from elements.tsx in Type.tsx, Quality.tsx, Kit.tsx, Home.tsx, and Docs.tsx",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-27T13:17:38.033552095Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Added TreeRow to imports from ./elements in Type.tsx, Quality.tsx, Kit.tsx, Home.tsx, and Docs.tsx. All 5 files use TreeRow in JSX. HelperRow not added as it is unused.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Docs.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Home.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Quality.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        }
+      ]
+    }
+  ]
+}

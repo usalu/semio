@@ -18,7 +18,16 @@ pub struct UpsertMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "member", kind: "upsert-member", record: "UpsertMember" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, key, value, index } = self;
         delegated(Ok(JsonMutation::SetMember(SetMemberPayload { path: path.clone(), key: key.clone(), value: value.clone(), index: *index })), base)
     }
@@ -31,12 +40,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
             },
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

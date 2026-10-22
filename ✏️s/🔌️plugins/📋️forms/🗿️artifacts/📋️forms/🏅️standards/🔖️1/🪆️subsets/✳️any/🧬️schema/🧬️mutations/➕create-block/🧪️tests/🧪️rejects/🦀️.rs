@@ -55,7 +55,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 async fn a_missing_owning_step_is_target_missing() {
     let base = before();
     assert!(forms_steps(&base).is_empty(), "rejects-a-block-for-a-step-that-does-not-exist's before-snapshot must decode to an unresolved, stepless scene");
-    let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &base);
+    let produced = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &base);
     assert_eq!(produced.diff(), &FormsDiff::default(), "a rejecting create-block must carry an empty diff, never a half-built pair of child handles");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
@@ -97,7 +97,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-block/rejects-a-block-for-a-step-that-does-not-exist declares a rejected outcome");
-    let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
+    let produced = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

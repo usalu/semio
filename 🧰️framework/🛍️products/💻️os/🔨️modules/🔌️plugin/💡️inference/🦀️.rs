@@ -125,7 +125,7 @@ impl ArtifactDocumentPayload {
     pub async fn snapshot<P, Mutation>(&self) -> Result<P, String>
     where
         P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
+        Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
     {
         let (pack, spr) = self.pair()?;
         artifact_pair_snapshot::<P, Mutation>(&pack, &spr).await.map_err(|error| format!("artifact-document-decode:{error}"))
@@ -141,7 +141,7 @@ impl ArtifactDocumentPayload {
     pub fn settled_snapshot<P, Mutation>(&self) -> Result<P, String>
     where
         P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
+        Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
     {
         ::semio_framework_async::poll::resolve_ready(self.snapshot::<P, Mutation>())
     }
@@ -156,6 +156,7 @@ pub enum ArtifactInferenceGatewayFailure{Native(ValueError),Json(semio_framework
 
 /// 🧾️ Holds the original semantic cause and a distinct original receipt refusal.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct ArtifactInferenceGatewayRefusal{pub primary:ArtifactInferenceGatewayFailure,pub receipt_refusal:Option<ValueError>}
 impl From<ArtifactInferenceGatewayFailure> for ArtifactInferenceGatewayRefusal{fn from(primary:ArtifactInferenceGatewayFailure)->Self{Self{primary,receipt_refusal:None}}}
 impl From<ValueError> for ArtifactInferenceGatewayRefusal{fn from(primary:ValueError)->Self{ArtifactInferenceGatewayFailure::Native(primary).into()}}

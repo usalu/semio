@@ -12,7 +12,7 @@
     "./testing/script-sources": "./🧪️testing/📜️script-sources/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../..\" repo run os-hub-ts:test"
+    "test": "repo run os-hub-ts:test"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

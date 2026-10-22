@@ -22,7 +22,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts dev",
+        "command": "repo ./📜️script.ts dev",
         "forwardAllArgs": true,
         "env": {
           "SEMIO_BUILD_MODE": "prototype"
@@ -43,7 +43,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ../../🏗️builder/🏃️execution/📜️script.ts build",
+        "command": "repo ../../🏗️builder/🏃️execution/📜️script.ts build",
         "forwardAllArgs": false
       },
       "cache": true,
@@ -68,7 +68,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts start",
+        "command": "repo ./📜️script.ts start",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -104,7 +104,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -121,7 +121,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test next-rebuild"
+        "command": "repo ./📜️script.ts test next-rebuild"
       }
     }
   }

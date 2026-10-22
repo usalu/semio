@@ -1,6 +1,6 @@
 //! 🎭️ Mask events match independent JSON edits and undo exactly through both wire formats.
 use crate::RasterMutation;
-use protocol::{Mutation,MutationDiff,OpText,OpBinary};
+use protocol::{ColdMutation, Mutation,MutationDiff,OpText,OpBinary};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🔣️.json")).unwrap()}
@@ -25,13 +25,13 @@ fn mask_mutations_match_json_oracle_and_exact_history() {
         let mutation:RasterMutation=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());
-        let actual=protocol::apply_diff(&diff, &base).unwrap();
+        let actual=protocol::apply_diff_cold(&diff, &base).unwrap();
         let rendered:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).unwrap();
         assert_eq!(normalized(rendered),normalized(expected),"{}",case["name"]);
         assert_eq!(RasterMutation::parse_op(&mutation.print_op()).unwrap(),mutation);
         assert_eq!(RasterMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(),mutation);
         let (undo,messages)=inverse[0].diff(&actual).into_parts();assert!(messages.is_empty());
-        let restored=protocol::apply_diff(&undo, &actual).unwrap();assert_eq!(restored,base);
+        let restored=protocol::apply_diff_cold(&undo, &actual).unwrap();assert_eq!(restored,base);
         MutationDiff::retire_cold(diff);MutationDiff::retire_cold(undo);
         for document in [base,actual,restored] {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
     }

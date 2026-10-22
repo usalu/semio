@@ -21,7 +21,7 @@ use semio_framework_value::{DslValue, RetainedCloneProgress, ValueError, ValueRe
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::{ManuallyDrop, size_of};
 
-pub(crate) struct OriginalManifestCommandReceiving{
+pub struct OriginalManifestCommandReceiving{
  pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub recipient:usize,pub clock:fn()->Option<u64>,deadline:u64,source:(usize,usize),
  loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,returning:bool,parser:ManuallyDrop<Option<RetainedIntrinsicBody<'static>>>,raw_failure:ManuallyDrop<Option<OriginalCommandPackFailure>>,
  parsed:ManuallyDrop<Option<DslValue>>,args:ManuallyDrop<Option<DslValue>>,fields:[Option<String>;6],kind:u8,phase:u8,action:ManuallyDrop<Option<semio_framework::manifest::ActionAddress>>,action_close:ManuallyDrop<Option<ControlledRetirement<semio_framework::manifest::ActionAddress>>>,injection_source:ManuallyDrop<Option<DslValue>>,injection:ManuallyDrop<Option<Vec<(String,DslValue)>>>,injection_cursor:usize,injection_key:Option<String>,injection_value:Option<String>,injection_text:ManuallyDrop<Option<Vec<u8>>>,injection_text_close:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,address:ManuallyDrop<Option<ManifestCommandAddress>>,fault:ManuallyDrop<Option<Fault>>,closing:ManuallyDrop<Option<ControlledRetirement<DslValue>>>,fault_close:ManuallyDrop<Option<ControlledRetirement<Fault>>>,address_close:ManuallyDrop<Option<ControlledRetirement<ManifestCommandAddress>>>,result:ManuallyDrop<Option<InvocationResult>>,finished:bool,

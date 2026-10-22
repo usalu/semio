@@ -77,7 +77,7 @@
       "type": "object",
       "additionalProperties": {
         "type": "string",
-        "pattern": "^bun "
+        "pattern": "^repo "
       },
       "required": [
         "repo",

@@ -1,10 +1,10 @@
 {
- "intervalMilliseconds": 15000,
+ "intervalMilliseconds": 300000,
  "cases": [
   {"name": "absent stamp is stale", "kind": "absent"},
   {"name": "a recent stamp is fresh", "kind": "file", "ageMilliseconds": 2000, "fresh": true},
-  {"name": "an old stamp is stale", "kind": "file", "ageMilliseconds": 20000, "fresh": false},
-  {"name": "the interval boundary is still fresh", "kind": "file", "ageMilliseconds": 14900, "fresh": true},
+  {"name": "an old stamp is stale", "kind": "file", "ageMilliseconds": 320000, "fresh": false},
+  {"name": "the interval boundary is still fresh", "kind": "file", "ageMilliseconds": 299000, "fresh": true},
   {"name": "a stamp from the future is stale", "kind": "file", "ageMilliseconds": -60000, "fresh": false},
   {"name": "a symbolic link is never trusted", "kind": "link"}
  ]

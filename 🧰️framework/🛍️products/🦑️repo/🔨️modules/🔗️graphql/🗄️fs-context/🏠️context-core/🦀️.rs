@@ -46,7 +46,8 @@ impl FsRepoContext {
         let clock = TicketSystemClock;
         let events = CoordinatorEventSink;
         let roots = PlanRoots { repo_root: self.slash_root(), home_dir: std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_default().replace('\\', "/") };
-        let service = TicketService::new(self.layout(), &store, &tracker, &clock, &events).with_roots(roots).with_mcp_client(kind);
+        let metadata = InteractionMetadata { author: self.author(), system: (if cfg!(target_os = "macos") { "mac" } else if cfg!(windows) { "windows" } else { "linux" }).into(), checkpoint: VersionControlProvider::current_checkpoint(&semio_framework_repo_providers::system_version_control_provider(), &self.slash_root()).unwrap_or_default() };
+        let service = TicketService::new(self.layout(), &store, &tracker, &clock, &events).with_roots(roots).with_mcp_client(kind).with_interaction_metadata(metadata);
         body(&service)
     }
 

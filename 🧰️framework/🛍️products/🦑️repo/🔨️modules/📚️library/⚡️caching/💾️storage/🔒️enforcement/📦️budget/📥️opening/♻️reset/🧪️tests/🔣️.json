@@ -720,5 +720,49 @@
       "foreignReplacement": true,
       "accepted": false
     }
+  ],
+  "workspaces": [
+    {
+      "id": "repository-root",
+      "root": "/repo",
+      "workspace": "/repo",
+      "accepted": true
+    },
+    {
+      "id": "native-cache-root-inside-the-repository",
+      "root": "/repo",
+      "workspace": "/repo/🧰️framework",
+      "accepted": true
+    },
+    {
+      "id": "nested-two-levels",
+      "root": "/repo",
+      "workspace": "/repo/a/b",
+      "accepted": true
+    },
+    {
+      "id": "sibling-with-common-prefix",
+      "root": "/repo",
+      "workspace": "/repo-other",
+      "accepted": false
+    },
+    {
+      "id": "parent-of-the-repository",
+      "root": "/repo",
+      "workspace": "/",
+      "accepted": false
+    },
+    {
+      "id": "prefix-of-the-root-name",
+      "root": "/repo",
+      "workspace": "/rep",
+      "accepted": false
+    },
+    {
+      "id": "unrelated-tree",
+      "root": "/repo",
+      "workspace": "/other/repo",
+      "accepted": false
+    }
   ]
 }

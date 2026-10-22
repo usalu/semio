@@ -110,7 +110,7 @@ export function settleComponentDescriptorV1(repoRoot: string, target: ComponentS
   const committed = existsSync(committedPack) && existsSync(committedJson) ? { pack: readFileSync(committedPack), json: readFileSync(committedJson) } : undefined;
   const equal = committed !== undefined && Buffer.from(committed.pack).equals(Buffer.from(emission.packBytes)) && Buffer.from(committed.json).equals(Buffer.from(emission.jsonBytes));
   const drift = equal ? [] : committed === undefined ? ["$: no committed descriptor pair"] : canonicalDescriptorDiffV1(JSON.parse(committed.json.toString("utf8")), JSON.parse(Buffer.from(emission.jsonBytes).toString("utf8")));
-  const command = `bun repo run workspace:components describe ${target.pluginId}`;
+  const command = `repo run workspace:components describe ${target.pluginId}`;
   if (mode === "verify" && !equal) throw new Error(`${target.pluginId}: the shipped component describes a different semantic descriptor than the committed pair at ${relative(repoRoot, target.ownerRoot)}:\n  ${(drift.length ? drift : ["$: byte encoding differs"]).join("\n  ")}\ncommit the shipped declaration with: ${command}`);
   if (mode === "write" && !equal) publishSemanticPair(target.ownerRoot, emission);
   if (mode === "local") {

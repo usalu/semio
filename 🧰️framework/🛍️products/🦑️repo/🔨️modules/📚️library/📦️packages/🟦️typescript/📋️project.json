@@ -179,7 +179,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-workspace-ownership"
+        "command": "repo ./📜️script.ts test cargo-workspace-ownership"
       },
       "metadata": {
         "semio": {
@@ -221,7 +221,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test build-caller-birth"
+        "command": "repo ./📜️script.ts test build-caller-birth"
       },
       "metadata": {
         "semio": {
@@ -280,7 +280,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-tool-run-policy-source"
+        "command": "repo ./📜️script.ts test-tool-run-policy-source"
       }
     },
     "test-cargo-nextest-configuration": {
@@ -296,7 +296,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-nextest-configuration"
+        "command": "repo ./📜️script.ts test cargo-nextest-configuration"
       }
     },
     "test-general-execution-ownership": {
@@ -311,7 +311,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-general-execution-ownership"
+        "command": "repo ./📜️script.ts test-general-execution-ownership"
       }
     },
     "test-fixture-ownership": {
@@ -327,7 +327,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-fixture-ownership"
+        "command": "repo ./📜️script.ts test-fixture-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -350,7 +350,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test locale-law-ownership"
+        "command": "repo ./📜️script.ts test locale-law-ownership"
       }
     },
     "lint-dependency-direction": {
@@ -359,7 +359,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint dependency-direction"
+        "command": "repo ./📜️script.ts lint dependency-direction"
       },
       "inputs": [
         "sharedGlobals",
@@ -377,7 +377,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test canonical-architecture"
+        "command": "repo ./📜️script.ts test canonical-architecture"
       },
       "inputs": [
         "sharedGlobals",
@@ -412,7 +412,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test canonical-execution"
+        "command": "repo ./📜️script.ts test canonical-execution"
       }
     },
     "test-mutation-case-pair": {
@@ -427,7 +427,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-case-pair"
+        "command": "repo ./📜️script.ts test mutation-case-pair"
       }
     },
     "test-mutation-wire-witness": {
@@ -442,7 +442,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-wire-witness"
+        "command": "repo ./📜️script.ts test mutation-wire-witness"
       }
     },
     "test-mutation-leaf-identity": {
@@ -457,7 +457,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-leaf-identity"
+        "command": "repo ./📜️script.ts test mutation-leaf-identity"
       }
     },
     "go-test": {
@@ -465,7 +465,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts go-test",
+        "command": "repo ./📜️script.ts go-test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -493,7 +493,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test process-budgets"
+        "command": "repo ./📜️script.ts test process-budgets"
       },
       "outputs": [],
       "metadata": {
@@ -516,7 +516,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exact-cargo-laws"
+        "command": "repo ./📜️script.ts test exact-cargo-laws"
       },
       "outputs": []
     },
@@ -525,7 +525,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test go-input-projection"
+        "command": "repo ./📜️script.ts test go-input-projection"
       },
       "outputs": [],
       "inputs": [
@@ -545,7 +545,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test runtime-corpus-behavior"
+        "command": "repo ./📜️script.ts test runtime-corpus-behavior"
       }
     },
     "test-go-dispatch": {
@@ -553,7 +553,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test go-test-dispatch"
+        "command": "repo ./📜️script.ts test go-test-dispatch"
       },
       "outputs": [],
       "inputs": [
@@ -572,7 +572,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test generated-source-topology"
+        "command": "repo ./📜️script.ts test generated-source-topology"
       }
     },
     "test-parser-projection": {
@@ -587,7 +587,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test parser-projection"
+        "command": "repo ./📜️script.ts test parser-projection"
       }
     },
     "test-collection-catalog": {
@@ -602,7 +602,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test collection-catalog"
+        "command": "repo ./📜️script.ts test collection-catalog"
       }
     },
     "test-package-body-policy": {
@@ -611,7 +611,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test package-body-policy"
+        "command": "repo ./📜️script.ts test package-body-policy"
       },
       "inputs": [
         "default",
@@ -630,7 +630,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cross-platform-bootstrap"
+        "command": "repo ./📜️script.ts test cross-platform-bootstrap"
       },
       "metadata": {
         "semio": {
@@ -654,7 +654,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test windows-command-paths"
+        "command": "repo ./📜️script.ts test windows-command-paths"
       }
     },
     "test-kind-only-basename": {
@@ -668,7 +668,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test kind-only-basename"
+        "command": "repo ./📜️script.ts test kind-only-basename"
       },
       "outputs": []
     },
@@ -683,7 +683,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test framework-source-topology"
+        "command": "repo ./📜️script.ts test framework-source-topology"
       },
       "outputs": []
     },
@@ -698,7 +698,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test framework-root-source-topology"
+        "command": "repo ./📜️script.ts test framework-root-source-topology"
       },
       "outputs": []
     },
@@ -713,7 +713,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-artifact-dependency-source"
+        "command": "repo ./📜️script.ts test root-artifact-dependency-source"
       },
       "outputs": []
     },
@@ -728,7 +728,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-taxonomy-workflow-source"
+        "command": "repo ./📜️script.ts test root-taxonomy-workflow-source"
       },
       "outputs": []
     },
@@ -743,7 +743,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-schema-field-source"
+        "command": "repo ./📜️script.ts test root-schema-field-source"
       },
       "outputs": []
     },
@@ -765,7 +765,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-clean-scaffold-source"
+        "command": "repo ./📜️script.ts test root-clean-scaffold-source"
       },
       "metadata": {
         "semio": {
@@ -791,7 +791,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test crate-tree"
+        "command": "repo ./📜️script.ts test crate-tree"
       },
       "outputs": []
     },
@@ -810,7 +810,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test norm-definition-ownership"
+        "command": "repo ./📜️script.ts test norm-definition-ownership"
       },
       "outputs": []
     },
@@ -832,7 +832,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cad-presence-retirement"
+        "command": "repo ./📜️script.ts test cad-presence-retirement"
       },
       "outputs": []
     },
@@ -848,7 +848,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test lib-wiring-budget"
+        "command": "repo ./📜️script.ts test lib-wiring-budget"
       },
       "outputs": []
     },
@@ -864,7 +864,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-mount-emitters"
+        "command": "repo ./📜️script.ts test rust-mount-emitters"
       },
       "outputs": []
     },
@@ -880,7 +880,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-family"
+        "command": "repo ./📜️script.ts test mutation-family"
       },
       "outputs": []
     },
@@ -896,7 +896,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-leaf-generics"
+        "command": "repo ./📜️script.ts test mutation-leaf-generics"
       },
       "outputs": []
     },
@@ -911,7 +911,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test package-asset-constants"
+        "command": "repo ./📜️script.ts test package-asset-constants"
       },
       "outputs": []
     },
@@ -934,7 +934,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-artifact-schema-law-source"
+        "command": "repo ./📜️script.ts test root-artifact-schema-law-source"
       },
       "outputs": []
     },
@@ -956,7 +956,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-surface-abstraction-law-source"
+        "command": "repo ./📜️script.ts test root-surface-abstraction-law-source"
       },
       "outputs": []
     },
@@ -979,7 +979,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-inference-law-source"
+        "command": "repo ./📜️script.ts test root-inference-law-source"
       },
       "outputs": []
     },
@@ -992,7 +992,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-transaction-command-source"
+        "command": "repo ./📜️script.ts test cargo-transaction-command-source"
       }
     },
     "test-manifestless-source-closure": {
@@ -1014,7 +1014,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test manifestless-source-closure"
+        "command": "repo ./📜️script.ts test manifestless-source-closure"
       },
       "outputs": []
     },
@@ -1036,7 +1036,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test plugin-publication-source-ownership"
+        "command": "repo ./📜️script.ts test plugin-publication-source-ownership"
       },
       "outputs": []
     },
@@ -1060,7 +1060,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test app-verification-source-ownership"
+        "command": "repo ./📜️script.ts test app-verification-source-ownership"
       },
       "outputs": []
     },
@@ -1086,7 +1086,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test vitest-configuration-ownership"
+        "command": "repo ./📜️script.ts test vitest-configuration-ownership"
       },
       "outputs": []
     },
@@ -1111,18 +1111,16 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/{📐️source-policy/🟨️.mjs,🕸️dependency-boundaries/🟨️.cjs}",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/{🧪️tests/🎚️config/🟨️.mjs,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️tool-configuration-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test tool-configuration-ownership"
+        "command": "repo ./📜️script.ts test tool-configuration-ownership"
       },
       "outputs": []
     },
@@ -1137,7 +1135,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test repo-source-ownership"
+        "command": "repo ./📜️script.ts test repo-source-ownership"
       },
       "outputs": []
     },
@@ -1152,7 +1150,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test storybook-discovery"
+        "command": "repo ./📜️script.ts test storybook-discovery"
       },
       "outputs": []
     },
@@ -1167,7 +1165,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test os-source-topology"
+        "command": "repo ./📜️script.ts test os-source-topology"
       },
       "outputs": []
     },
@@ -1183,7 +1181,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test path-emoji-statutes"
+        "command": "repo ./📜️script.ts test path-emoji-statutes"
       }
     },
     "test-mutation-ticket-role-routing": {
@@ -1198,7 +1196,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-ticket-role-routing"
+        "command": "repo ./📜️script.ts test mutation-ticket-role-routing"
       }
     },
     "test-mutation-source-index-capture": {
@@ -1213,7 +1211,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-source-index-capture"
+        "command": "repo ./📜️script.ts test mutation-source-index-capture"
       }
     },
     "test-mutation-source-roster-roles": {
@@ -1228,7 +1226,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-source-roster-roles"
+        "command": "repo ./📜️script.ts test mutation-source-roster-roles"
       }
     },
     "test-mutation-source-file-facts": {
@@ -1243,7 +1241,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-source-file-facts"
+        "command": "repo ./📜️script.ts test mutation-source-file-facts"
       }
     },
     "test-typescript-declaration-facts": {
@@ -1258,7 +1256,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test typescript-declaration-facts"
+        "command": "repo ./📜️script.ts test typescript-declaration-facts"
       }
     },
     "typecheck-project": {
@@ -1371,7 +1369,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck project",
+        "command": "repo ./📜️script.ts typecheck project",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -1424,7 +1422,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck units",
+        "command": "repo ./📜️script.ts typecheck units",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -1447,7 +1445,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -1464,7 +1462,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -1480,7 +1478,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test regeneration-commands"
+        "command": "repo ./📜️script.ts test regeneration-commands"
       }
     },
     "test-transaction-v2": {
@@ -1489,7 +1487,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test transaction-v2"
+        "command": "repo ./📜️script.ts test transaction-v2"
       },
       "inputs": [
         "default",
@@ -1511,7 +1509,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-support long"
+        "command": "repo ./📜️script.ts test artifact-support long"
       }
     },
     "test-historical-package-owner-identity": {
@@ -1526,7 +1524,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test historical-package-owner-identity"
+        "command": "repo ./📜️script.ts test historical-package-owner-identity"
       }
     },
     "test-rust-physical-reference-context": {
@@ -1541,7 +1539,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-physical-reference-context long"
+        "command": "repo ./📜️script.ts test rust-physical-reference-context long"
       }
     },
     "test-cargo-provider-binding-trace": {
@@ -1556,7 +1554,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-provider-binding-trace"
+        "command": "repo ./📜️script.ts test cargo-provider-binding-trace"
       }
     },
     "test-metadata-source-provider": {
@@ -1571,7 +1569,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test metadata-source-provider long"
+        "command": "repo ./📜️script.ts test metadata-source-provider long"
       }
     },
     "test-taxonomy-cli-cancellation": {
@@ -1586,14 +1584,14 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test taxonomy-cli-cancellation"
+        "command": "repo ./📜️script.ts test taxonomy-cli-cancellation"
       }
     },
     "test-inventory-artifact-shards": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test inventory-artifact-shards"
+        "command": "repo ./📜️script.ts test inventory-artifact-shards"
       },
       "metadata": {
         "semio": {
@@ -1619,7 +1617,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test root-script-compiler"
+        "command": "repo ./📜️script.ts test root-script-compiler"
       }
     },
     "test-json-reference-owner-lookup": {
@@ -1634,7 +1632,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test json-reference-owner-lookup"
+        "command": "repo ./📜️script.ts test json-reference-owner-lookup"
       }
     },
     "test-cargo-discovery-exclusions": {
@@ -1649,7 +1647,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-discovery-exclusions"
+        "command": "repo ./📜️script.ts test cargo-discovery-exclusions"
       }
     },
     "test-nested-cargo-collision-authority": {
@@ -1664,7 +1662,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test nested-cargo-collision-authority"
+        "command": "repo ./📜️script.ts test nested-cargo-collision-authority"
       }
     },
     "test-registry-import-language": {
@@ -1679,7 +1677,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test registry-import-language"
+        "command": "repo ./📜️script.ts test registry-import-language"
       }
     },
     "test-preflight-reference-basis": {
@@ -1687,7 +1685,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test preflight-reference-basis"
+        "command": "repo ./📜️script.ts test preflight-reference-basis"
       },
       "metadata": {
         "semio": {
@@ -1711,7 +1709,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test typescript-path-collection"
+        "command": "repo ./📜️script.ts test typescript-path-collection"
       }
     },
     "test-frozen-markdown-coordinates": {
@@ -1726,7 +1724,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test frozen-markdown-coordinates"
+        "command": "repo ./📜️script.ts test frozen-markdown-coordinates"
       }
     },
     "test-historical-document-evidence": {
@@ -1741,7 +1739,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test historical-document-evidence"
+        "command": "repo ./📜️script.ts test historical-document-evidence"
       }
     },
     "test-cargo-target-discovery-skip": {
@@ -1756,7 +1754,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-target-discovery-skip"
+        "command": "repo ./📜️script.ts test cargo-target-discovery-skip"
       }
     },
     "test-registry-catalog-gitlink-boundary": {
@@ -1764,7 +1762,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary"
+        "command": "repo ./📜️script.ts test registry-catalog-gitlink-boundary"
       },
       "metadata": {
         "semio": {
@@ -1788,7 +1786,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test historical-json-source-encoding"
+        "command": "repo ./📜️script.ts test historical-json-source-encoding"
       }
     },
     "test-transaction-recovery-authority": {
@@ -1803,7 +1801,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test transaction-recovery-authority"
+        "command": "repo ./📜️script.ts test transaction-recovery-authority"
       }
     },
     "test-transaction-fixture-key-exactness": {
@@ -1818,7 +1816,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test transaction-fixture-key-exactness"
+        "command": "repo ./📜️script.ts test transaction-fixture-key-exactness"
       }
     },
     "test-testing-readme-coordinates": {
@@ -1833,7 +1831,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test testing-readme-coordinates"
+        "command": "repo ./📜️script.ts test testing-readme-coordinates"
       }
     },
     "test-rust-finite-target-consumption": {
@@ -1848,7 +1846,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-finite-target-consumption"
+        "command": "repo ./📜️script.ts test rust-finite-target-consumption"
       }
     },
     "test-readme-current-source-revision": {
@@ -1863,7 +1861,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test readme-current-source-revision"
+        "command": "repo ./📜️script.ts test readme-current-source-revision"
       }
     },
     "test-rust-writable-path-authority": {
@@ -1878,7 +1876,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-writable-path-authority"
+        "command": "repo ./📜️script.ts test rust-writable-path-authority"
       }
     },
     "test-readme-move-source-authority": {
@@ -1893,7 +1891,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test readme-move-source-authority"
+        "command": "repo ./📜️script.ts test readme-move-source-authority"
       }
     },
     "test-artifact-source-residue": {
@@ -1908,7 +1906,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-source-residue"
+        "command": "repo ./📜️script.ts test artifact-source-residue"
       }
     },
     "test-artifact-source-commit": {
@@ -1923,7 +1921,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-source-commit"
+        "command": "repo ./📜️script.ts test artifact-source-commit"
       }
     },
     "test-artifact-empty-facet-authority": {
@@ -1938,7 +1936,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-empty-facet-authority"
+        "command": "repo ./📜️script.ts test artifact-empty-facet-authority"
       }
     },
     "test-rust-divergence-callback-source": {
@@ -1953,7 +1951,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-source"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-source"
       }
     },
     "test-rust-divergence-callback-native": {
@@ -1968,7 +1966,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-native"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-native"
       }
     },
     "test-rust-divergence-callback-syn": {
@@ -1983,7 +1981,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-syn"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-syn"
       }
     },
     "test-readme-current-source-activation": {
@@ -1998,7 +1996,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test readme-current-source-activation"
+        "command": "repo ./📜️script.ts test readme-current-source-activation"
       }
     },
     "test-artifact-io-ownership": {
@@ -2013,7 +2011,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-io-ownership"
+        "command": "repo ./📜️script.ts test artifact-io-ownership"
       }
     },
     "lint-artifact-io-ownership": {
@@ -2027,7 +2025,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint artifact-io-ownership"
+        "command": "repo ./📜️script.ts lint artifact-io-ownership"
       }
     },
     "test-artifact-empty-facet-authoring": {
@@ -2042,7 +2040,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-empty-facet-authoring"
+        "command": "repo ./📜️script.ts test artifact-empty-facet-authoring"
       }
     },
     "test-readme-reviewed-fixture-inputs": {
@@ -2057,7 +2055,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test readme-reviewed-fixture-inputs"
+        "command": "repo ./📜️script.ts test readme-reviewed-fixture-inputs"
       }
     },
     "test-taxonomy-pattern-compiler-reuse": {
@@ -2072,7 +2070,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test taxonomy-pattern-compiler-reuse"
+        "command": "repo ./📜️script.ts test taxonomy-pattern-compiler-reuse"
       }
     },
     "test-reference-coverage-selection": {
@@ -2087,7 +2085,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test reference-coverage-selection"
+        "command": "repo ./📜️script.ts test reference-coverage-selection"
       }
     },
     "test-taxonomy-leading-grapheme": {
@@ -2102,7 +2100,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test taxonomy-leading-grapheme"
+        "command": "repo ./📜️script.ts test taxonomy-leading-grapheme"
       }
     },
     "test-reference-coordinate-progress": {
@@ -2117,7 +2115,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test reference-coordinate-progress"
+        "command": "repo ./📜️script.ts test reference-coordinate-progress"
       }
     },
     "test-markdown-inline-references": {
@@ -2132,7 +2130,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test markdown-inline-references"
+        "command": "repo ./📜️script.ts test markdown-inline-references"
       }
     },
     "test-gherkin-description-inline-code": {
@@ -2147,7 +2145,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test gherkin-description-inline-code"
+        "command": "repo ./📜️script.ts test gherkin-description-inline-code"
       }
     },
     "test-transaction-process-observer": {
@@ -2162,7 +2160,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test transaction-process-observer"
+        "command": "repo ./📜️script.ts test transaction-process-observer"
       }
     },
     "test-nx-workspace-root-file-reference": {
@@ -2177,7 +2175,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test nx-workspace-root-file-reference"
+        "command": "repo ./📜️script.ts test nx-workspace-root-file-reference"
       }
     },
     "test-bare-reference-sibling-precedence": {
@@ -2192,7 +2190,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test bare-reference-sibling-precedence"
+        "command": "repo ./📜️script.ts test bare-reference-sibling-precedence"
       }
     },
     "test-run-vitest-config-argument-tokens": {
@@ -2207,7 +2205,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test run-vitest-config-argument-tokens"
+        "command": "repo ./📜️script.ts test run-vitest-config-argument-tokens"
       }
     },
     "test-cargo-native-owner-discovery": {
@@ -2222,7 +2220,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-native-owner-discovery"
+        "command": "repo ./📜️script.ts test cargo-native-owner-discovery"
       }
     },
     "test-workspace-publication-source": {
@@ -2233,7 +2231,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test workspace-publication-source"
+        "command": "repo ./📜️script.ts test workspace-publication-source"
       },
       "outputs": []
     },
@@ -2245,7 +2243,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test wasm-package-wrappers"
+        "command": "repo ./📜️script.ts test wasm-package-wrappers"
       },
       "outputs": []
     },
@@ -2253,7 +2251,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts workspaces --check"
+        "command": "repo ./📜️script.ts workspaces --check"
       },
       "cache": true,
       "inputs": [
@@ -2268,7 +2266,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts workspaces --write"
+        "command": "repo ./📜️script.ts workspaces --write"
       },
       "inputs": [
         "workspaceMembershipSources"
@@ -2295,7 +2293,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test composition-policy",
+        "command": "repo ./📜️script.ts test composition-policy",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
       }
     },
@@ -2383,7 +2381,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test os-dev-composition-ownership"
+        "command": "repo ./📜️script.ts test os-dev-composition-ownership"
       },
       "outputs": []
     },
@@ -2393,7 +2391,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-dependency-direction"
+        "command": "repo ./📜️script.ts test cargo-dependency-direction"
       },
       "inputs": [
         "default",
@@ -2415,7 +2413,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint cargo-dependency-direction"
+        "command": "repo ./📜️script.ts lint cargo-dependency-direction"
       },
       "inputs": [
         "default",
@@ -2449,7 +2447,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test compute-constructor-owner"
+        "command": "repo ./📜️script.ts test compute-constructor-owner"
       }
     },
     "test-dependency-direction": {
@@ -2464,7 +2462,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test dependency-direction"
+        "command": "repo ./📜️script.ts test dependency-direction"
       }
     },
     "test-rust-source-direction": {
@@ -2473,7 +2471,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction"
+        "command": "repo ./📜️script.ts test rust-source-direction"
       },
       "inputs": [
         "default",
@@ -2503,7 +2501,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction scopes"
+        "command": "repo ./📜️script.ts test rust-source-direction scopes"
       }
     },
     "test-canonical-json": {
@@ -2518,7 +2516,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test canonical-json"
+        "command": "repo ./📜️script.ts test canonical-json"
       }
     },
     "test-mutation-authority-scaffolding": {
@@ -2533,7 +2531,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-authority scaffolding"
+        "command": "repo ./📜️script.ts test mutation-authority scaffolding"
       }
     },
     "test-mutation-authority-inventory": {
@@ -2548,7 +2546,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-authority inventory"
+        "command": "repo ./📜️script.ts test mutation-authority inventory"
       }
     },
     "test-mutation-authority-reachability": {
@@ -2563,7 +2561,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-authority reachability"
+        "command": "repo ./📜️script.ts test mutation-authority reachability"
       }
     },
     "test-mutation-authority-type-origin": {
@@ -2578,7 +2576,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-authority type-origin"
+        "command": "repo ./📜️script.ts test mutation-authority type-origin"
       }
     },
     "test-rust-source-graph": {
@@ -2593,7 +2591,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction graph"
+        "command": "repo ./📜️script.ts test rust-source-direction graph"
       }
     },
     "test-rust-source-attributes": {
@@ -2608,7 +2606,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction attributes"
+        "command": "repo ./📜️script.ts test rust-source-direction attributes"
       }
     },
     "lint-rust-source-direction": {
@@ -2617,7 +2615,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint rust-source-direction"
+        "command": "repo ./📜️script.ts lint rust-source-direction"
       },
       "inputs": [
         "default",
@@ -2662,7 +2660,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test native-dependencies",
+        "command": "repo ./📜️script.ts test native-dependencies",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "forwardAllArgs": false
       }
@@ -2679,7 +2677,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test owned-script-routes"
+        "command": "repo ./📜️script.ts test owned-script-routes"
       }
     },
     "lint-framework-neutral-product-direction": {
@@ -2688,7 +2686,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint framework-neutral-product-direction"
+        "command": "repo ./📜️script.ts lint framework-neutral-product-direction"
       },
       "inputs": [
         "default",
@@ -2716,7 +2714,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint styling-pixels"
+        "command": "repo ./📜️script.ts lint styling-pixels"
       }
     },
     "lint-styling-colors": {
@@ -2731,7 +2729,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint styling-colors"
+        "command": "repo ./📜️script.ts lint styling-colors"
       }
     },
     "test-native-source-ownership": {
@@ -2749,7 +2747,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test native-source-ownership"
+        "command": "repo ./📜️script.ts test native-source-ownership"
       }
     },
     "test-ui-router-ownership": {
@@ -2767,14 +2765,14 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test ui-router-ownership"
+        "command": "repo ./📜️script.ts test ui-router-ownership"
       }
     },
     "ui-storybook-dev": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts ui dev",
+        "command": "repo ./📜️script.ts ui dev",
         "env": {
           "STORYBOOK_PORT": "6010"
         },
@@ -2803,7 +2801,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts ui build",
+        "command": "repo ./📜️script.ts ui build",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_OUTPUT_DIR": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/storybook-static"
@@ -2826,7 +2824,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts ui check-ui-primitives"
+        "command": "repo ./📜️script.ts ui check-ui-primitives"
       },
       "inputs": [
         "default",
@@ -2845,7 +2843,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts ui check-chrome-i18n"
+        "command": "repo ./📜️script.ts ui check-chrome-i18n"
       },
       "inputs": [
         "default",
@@ -2876,7 +2874,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test fixture-law-ownership"
+        "command": "repo ./📜️script.ts test fixture-law-ownership"
       }
     },
     "test-native-owner-command-policy": {
@@ -2885,7 +2883,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test native-owner-command-policy"
+        "command": "repo ./📜️script.ts test native-owner-command-policy"
       },
       "inputs": [
         "default",
@@ -2908,7 +2906,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test dependency-policy-bootstrap"
+        "command": "repo ./📜️script.ts test dependency-policy-bootstrap"
       },
       "outputs": [],
       "dependsOn": [],
@@ -2939,7 +2937,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-binding"
+        "command": "repo ./📜️script.ts test rust-binding"
       },
       "outputs": [],
       "dependsOn": [],
@@ -2960,7 +2958,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-binding native"
+        "command": "repo ./📜️script.ts test rust-binding native"
       },
       "outputs": [],
       "dependsOn": [],
@@ -2999,7 +2997,7 @@
       },
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"
       }
     },
     "test-nx-project-inference": {
@@ -3021,7 +3019,7 @@
       "outputs": [],
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference"
       }
     },
     "test-nx-project-inference-revision": {
@@ -3044,7 +3042,7 @@
       "outputs": [],
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference revision"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference revision"
       }
     },
     "test-nx-project-inference-imports": {
@@ -3069,7 +3067,7 @@
       "outputs": [],
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference imports"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference imports"
       }
     },
     "test-nx-project-inference-facts": {
@@ -3090,7 +3088,7 @@
       "outputs": [],
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference facts"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference facts"
       }
     },
     "test-rust-source-participation": {
@@ -3109,7 +3107,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction participation"
+        "command": "repo ./📜️script.ts test rust-source-direction participation"
       }
     },
     "test-source-services": {
@@ -3127,7 +3125,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test source-services"
+        "command": "repo ./📜️script.ts test source-services"
       }
     },
     "test-multi-scope-verification": {
@@ -3144,7 +3142,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test multi-scope-verification"
+        "command": "repo ./📜️script.ts test multi-scope-verification"
       }
     },
     "test-rust-source-roots": {
@@ -3164,7 +3162,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-source-direction roots"
+        "command": "repo ./📜️script.ts test rust-source-direction roots"
       }
     },
     "test-rust-fixture-ownership": {
@@ -3201,7 +3199,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-fixture-ownership"
+        "command": "repo ./📜️script.ts test rust-fixture-ownership"
       }
     },
     "test-pool-use-ownership": {
@@ -3216,7 +3214,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test pool-use-ownership"
+        "command": "repo ./📜️script.ts test pool-use-ownership"
       }
     },
     "test-deferred-wake-ownership": {
@@ -3231,7 +3229,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test deferred-wake-ownership"
+        "command": "repo ./📜️script.ts test deferred-wake-ownership"
       }
     },
     "test-rust-family-ownership": {
@@ -3239,7 +3237,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-family-ownership"
+        "command": "repo ./📜️script.ts test rust-family-ownership"
       },
       "outputs": [],
       "dependsOn": [],
@@ -3264,7 +3262,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-family-ownership native"
+        "command": "repo ./📜️script.ts test rust-family-ownership native"
       },
       "outputs": [],
       "dependsOn": [],
@@ -3303,7 +3301,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test rust-runtime-path-direction",
+        "command": "repo ./📜️script.ts test rust-runtime-path-direction",
         "forwardAllArgs": true
       }
     },
@@ -3320,7 +3318,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test cargo-library-search-path"
+        "command": "repo ./📜️script.ts test cargo-library-search-path"
       }
     },
     "test-fixture-placement": {
@@ -3380,7 +3378,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test fixture-placement"
+        "command": "repo ./📜️script.ts test fixture-placement"
       }
     },
     "test-mutation-fixture-placement": {
@@ -3440,7 +3438,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test mutation-fixture-placement"
+        "command": "repo ./📜️script.ts test mutation-fixture-placement"
       }
     },
     "test-runtime-fixture-graph": {
@@ -3455,7 +3453,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test runtime-fixture-graph"
+        "command": "repo ./📜️script.ts test runtime-fixture-graph"
       },
       "dependsOn": [
         "workspace:deps-trunk",
@@ -3474,7 +3472,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test artifact-command-extension"
+        "command": "repo ./📜️script.ts test artifact-command-extension"
       }
     },
     "test-generator-preview-receiving": {
@@ -3487,7 +3485,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test generator-preview-receiving",
+        "command": "repo ./📜️script.ts test generator-preview-receiving",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
       },
       "cache": true
@@ -3503,7 +3501,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test selected-runtime-actor-port",
+        "command": "repo ./📜️script.ts test selected-runtime-actor-port",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
       }
     },
@@ -3518,7 +3516,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test nx-owner-arguments",
+        "command": "repo ./📜️script.ts test nx-owner-arguments",
         "forwardAllArgs": false
       }
     },
@@ -3526,7 +3524,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts test nx-owner-arguments-probe",
+        "command": "repo ./📜️script.ts test nx-owner-arguments-probe",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -3553,7 +3551,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test schema-reads"
+        "command": "repo ./📜️script.ts test schema-reads"
       }
     },
     "schema-read-inventory": {
@@ -3565,7 +3563,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts schema-read-inventory",
+        "command": "repo ./📜️script.ts schema-read-inventory",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -3589,7 +3587,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test nx-native-child-issuance",
+        "command": "repo ./📜️script.ts test nx-native-child-issuance",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -3613,7 +3611,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test original-command-control"
+        "command": "repo ./📜️script.ts test original-command-control"
       },
       "metadata": {
         "semio": {
@@ -3636,7 +3634,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test original-exact-preparation-control"
+        "command": "repo ./📜️script.ts test original-exact-preparation-control"
       },
       "metadata": {
         "semio": {
@@ -3659,7 +3657,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test decoder-absence"
+        "command": "repo ./📜️script.ts test decoder-absence"
       },
       "metadata": {
         "semio": {
@@ -3690,7 +3688,7 @@
       },
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test target-execution"
+        "command": "repo ./📜️script.ts test target-execution"
       }
     },
     "test-original-default-preparation-control": {
@@ -3698,7 +3696,7 @@
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test original-default-preparation-control"
+        "command": "repo ./📜️script.ts test original-default-preparation-control"
       },
       "metadata": {
         "semio": {
@@ -3725,7 +3723,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
-        "command": "bun ./📜️script.ts test runtime"
+        "command": "repo ./📜️script.ts test runtime"
       },
       "metadata": {
         "semio": {
@@ -3756,7 +3754,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
-        "command": "bun ./📜️script.ts test ownership"
+        "command": "repo ./📜️script.ts test ownership"
       },
       "metadata": {
         "semio": {
@@ -3773,7 +3771,7 @@
       "outputs": [],
       "options": {
         "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\" owner-command --cwd . -- node --version",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\" owner-command --cwd . -- node --version",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -3832,7 +3830,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test build-source-demand"
+        "command": "repo ./📜️script.ts test build-source-demand"
       },
       "metadata": {
         "semio": {
@@ -3897,7 +3895,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test build-mode"
+        "command": "repo ./📜️script.ts test build-mode"
       },
       "metadata": {
         "semio": {
@@ -3924,7 +3922,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test build-surfaces"
+        "command": "repo ./📜️script.ts test build-surfaces"
       }
     },
     "test-agent-clients": {
@@ -3939,7 +3937,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test agent-clients"
+        "command": "repo ./📜️script.ts test agent-clients"
       }
     },
     "test-derived-config": {
@@ -3954,7 +3952,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test derived-config"
+        "command": "repo ./📜️script.ts test derived-config"
       }
     },
     "test-dashboard-control": {
@@ -3968,7 +3966,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test dashboard-control"
+        "command": "repo ./📜️script.ts test dashboard-control"
       },
       "outputs": [],
       "metadata": {

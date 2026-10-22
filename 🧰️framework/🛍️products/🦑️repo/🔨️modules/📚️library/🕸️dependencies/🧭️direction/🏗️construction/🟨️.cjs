@@ -150,7 +150,7 @@ function assertFocusedBoundarySemantics() {
     ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react@19.3.1/node_modules/react/index.js",
     ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react-dom@19.3.1+peer/node_modules/react-dom/client.js",
     "vitest/importMeta",
-    "bun:test",
+    "node:test",
     "fs",
     "node:path",
   ];
@@ -158,7 +158,7 @@ function assertFocusedBoundarySemantics() {
     "node_modules/three/build/three.module.js",
     ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/three@0.170.0/node_modules/three/build/three.module.js",
     ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react@19.3.1/node_modules/three/index.js",
-    "bun:sqlite",
+    "node:sqlite",
     "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",

@@ -10,6 +10,8 @@ import { policyListMutationDirs } from "../../../🧹️normalization/🧬️mut
 import { policyMaskLiterals } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
 import { policyLineOfIndex } from "../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 /** 📖️The frozen outcome-code vocabulary's language-agnostic document — the one table this gate, the Rust protocol
  * (`OUTCOME_CODES`, persistence) and the TypeScript twin (`outcomeCodeLevel`) share. */
 const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json";
@@ -47,8 +49,8 @@ const POLICY_MUTATION_LAW_INVENTORIES = new Map<string, PolicyMutationLawInvento
 export function policyMutationLawInventory(repoRoot: string): PolicyMutationLawInventory {
   const cached = POLICY_MUTATION_LAW_INVENTORIES.get(repoRoot);
   if (cached) return cached;
-  const listed = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...POLICY_MUTATION_LAW_PATHSPECS], { cwd: repoRoot });
-  if (listed.exitCode !== 0) throw new Error(`git-visible mutation-outcome-law inventory failed: ${listed.stderr.toString()}`);
+  const listed = runToolSyncV1("git", ["ls-files", "-co", "--exclude-standard", "-z", "--", ...POLICY_MUTATION_LAW_PATHSPECS], { cwd: repoRoot });
+  if (listed.status !== 0) throw new Error(`git-visible mutation-outcome-law inventory failed: ${listed.stderr.toString()}`);
   const taxonomy = loadTaxonomy();
   const files = [...new Set(listed.stdout.toString().split("\0").map((relPath) => relPath.normalize("NFC")))]
     .filter((relPath) => relPath && !policyIsRootScriptSource(relPath) && !relPath.split("/").some((segment) => POLICY_SKIP_DIRS.has(segment)) && !taxonomyRelativePathIsExcluded(relPath, taxonomy))

@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/📸️snapshot/⬅️before/🔣️.json"));
@@ -31,7 +31,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_reset_port_ahead_of_the_out_port() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("add-node-port applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("add-node-port applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "add-node-port/inserts-an-in-port-ahead-of-the-existing-out-port: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes[0].ports.len(), base.nodes[0].ports.len() + 1, "the nested ports collection grows by exactly one");
     assert_eq!(produced.nodes[0].ports[0].name, "reset", "the new port must occupy the FINAL-state index it was addressed with");
@@ -48,9 +48,9 @@ async fn the_undo_remove_node_port_detaches_the_reset_port_again() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "add-node-port undoes as exactly one remove-node-port");
     assert!(matches!(undo[0], SemioGraphMutation::RemoveNodePort(_)), "the undo of an add is the matching remove");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-node-port applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward add-node-port applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-node-port applies to the ported graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo remove-node-port applies to the ported graph");
     }
     assert_eq!(current, base, "add-node-port/inserts-an-in-port-ahead-of-the-existing-out-port: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-node-port/inserts-an-in-port-ahead-of-the-existing-out-port: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -104,6 +104,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-node-port diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed add-node-port diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed add-node-port diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-node-port/inserts-an-in-port-ahead-of-the-existing-out-port: committed diff did not carry before to after");
 }

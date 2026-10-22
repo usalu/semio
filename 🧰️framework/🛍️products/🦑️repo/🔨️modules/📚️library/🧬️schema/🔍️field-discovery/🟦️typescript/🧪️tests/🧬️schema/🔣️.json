@@ -1,0 +1,400 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "types",
+  "extract",
+  "defects",
+  "modules",
+  "filePath"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "types": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "mark",
+     "optional",
+     "cardinality",
+     "scalar"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "mark": {
+      "type": "boolean"
+     },
+     "optional": {
+      "type": "boolean"
+     },
+     "cardinality": {
+      "type": "string"
+     },
+     "scalar": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "extract": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "type",
+     "expected",
+     "oracle"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "typeName",
+       "fields"
+      ],
+      "properties": {
+       "typeName": {
+        "type": "string"
+       },
+       "fields": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "optional",
+          "cardinality",
+          "scalar",
+          "state"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "optional": {
+           "type": "boolean"
+          },
+          "cardinality": {
+           "enum": [
+            "scalar",
+            "list",
+            "fixedList",
+            "map"
+           ]
+          },
+          "scalar": {
+           "type": "string"
+          },
+          "state": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "oracle": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "defects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "type",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "typeName",
+       "fields"
+      ],
+      "properties": {
+       "typeName": {
+        "type": "string"
+       },
+       "fields": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "optional",
+          "cardinality",
+          "scalar",
+          "state"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "optional": {
+           "type": "boolean"
+          },
+          "cardinality": {
+           "enum": [
+            "scalar",
+            "list",
+            "fixedList",
+            "map"
+           ]
+          },
+          "scalar": {
+           "type": "string"
+          },
+          "state": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "modules": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "cases"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "module",
+       "type",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "module": {
+        "type": "string"
+       },
+       "type": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "typeName",
+         "fields"
+        ],
+        "properties": {
+         "typeName": {
+          "type": "string"
+         },
+         "fields": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "name",
+            "optional",
+            "cardinality",
+            "scalar",
+            "state"
+           ],
+           "properties": {
+            "name": {
+             "type": "string"
+            },
+            "optional": {
+             "type": "boolean"
+            },
+            "cardinality": {
+             "enum": [
+              "scalar",
+              "list",
+              "fixedList",
+              "map"
+             ]
+            },
+            "scalar": {
+             "type": "string"
+            },
+            "state": {
+             "type": "string"
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "filePath": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "entry",
+    "type",
+    "expected",
+    "missing",
+    "packageSpecifier"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "entry": {
+     "type": "string"
+    },
+    "type": {
+     "type": "string"
+    },
+    "expected": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "typeName",
+      "fields"
+     ],
+     "properties": {
+      "typeName": {
+       "type": "string"
+      },
+      "fields": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "name",
+         "optional",
+         "cardinality",
+         "scalar",
+         "state"
+        ],
+        "properties": {
+         "name": {
+          "type": "string"
+         },
+         "optional": {
+          "type": "boolean"
+         },
+         "cardinality": {
+          "enum": [
+           "scalar",
+           "list",
+           "fixedList",
+           "map"
+          ]
+         },
+         "scalar": {
+          "type": "string"
+         },
+         "state": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "missing": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "entry",
+      "text",
+      "type"
+     ],
+     "properties": {
+      "entry": {
+       "type": "string"
+      },
+      "text": {
+       "type": "string"
+      },
+      "type": {
+       "type": "string"
+      }
+     }
+    },
+    "packageSpecifier": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

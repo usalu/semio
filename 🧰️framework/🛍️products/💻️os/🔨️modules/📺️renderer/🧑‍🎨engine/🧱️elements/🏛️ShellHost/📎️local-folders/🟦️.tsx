@@ -8,7 +8,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import * as React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { OsShellConfig, type StoragePort } from "@semio-tech/framework";
 import { applyLocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFolderBindings, type LocalFoldersConfigMutation } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters

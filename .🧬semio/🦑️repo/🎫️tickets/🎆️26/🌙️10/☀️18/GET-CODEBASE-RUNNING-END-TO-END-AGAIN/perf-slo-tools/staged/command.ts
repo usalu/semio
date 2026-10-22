@@ -92,7 +92,7 @@ export async function runBenchCommandV1(live:string,args:readonly string[],ports
 /** 🔩️ Binds the command to the running build CLI: the incremental harness's ports with progress published under `bench:`, a high resolution clock and plain file access for baselines and reports. */
 export async function benchCommandPortsV1(root:string,invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<BenchCommandPortsV1>{
  const base=await incrementalCommandPortsV1(root,invocation),routing=await import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
- return Object.freeze({...base,now:()=>performance.now(),progress:stage=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:path=>readFile(resolve(path),"utf8"),writeText:async(path,text)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
+ return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
 }
 
 /** 🍜️ The entry the build CLI calls for `repo bench`. */

@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -44,7 +45,7 @@ function platformId(): string {
 
 /** 🦀️ Shells out to the standalone `jpeg-jfif-codec` binary — the ONLY place this file touches it. */
 function codecBuild(recipe: Recipe, outDir: string): void {
-  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`jpeg-jfif-codec build ${recipe.id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -88,7 +89,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
 
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
-  if (command === "test") return spawnToolSyncV1("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
+  if (command === "test") return runToolSyncV1("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
   const value = (flag: string): string | null => {
     const index = rest.indexOf(flag);
     return index === -1 ? null : (rest[index + 1] ?? null);
@@ -106,9 +107,9 @@ async function main(argv: readonly string[]): Promise<number> {
     const dir = join(outDir, "🖼️replace-image-applied");
     const project = (filename: string) => {
       const input = join(dir, filename);
-      const image = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", input], { encoding: "utf8" });
+      const image = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", input], { encoding: "utf8" });
       if (image.status !== 0) throw new Error(image.stderr);
-      const marker = spawnToolSyncV1("bun", [join(import.meta.dir, "..", "🔬️probes", "📜️script.ts"), "jpg-marker-project", "--input", input], { encoding: "utf8" });
+      const marker = runToolSyncV1(runtimeCommandNameV1(), [join(import.meta.dir, "..", "🔬️probes", "📜️script.ts"), "jpg-marker-project", "--input", input], { encoding: "utf8" });
       if (marker.status !== 0) throw new Error(marker.stderr);
       return { image: JSON.parse(image.stdout), marker: JSON.parse(marker.stdout).measurements };
     };
@@ -148,9 +149,9 @@ print(kind + ': written')
       if (command === "markers") {
         const failures: string[] = [];
         for (const [kind, directoryName] of Object.entries(KINDS)) {
-          const written = spawnToolSyncV1("python3", ["-c", WRITER, root, kind, directoryName], { stdio: "inherit" });
+          const written = runToolSyncV1("python", ["-c", WRITER, root, kind, directoryName], { stdio: "inherit" });
           if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
-          const cmp = spawnToolSyncV1("bun", [probes, "jpg-marker-compare", "--input", join(root, directoryName, "⬅️before.jpg"), "--input", join(root, directoryName, "➡️after.jpg")], { encoding: "utf8" });
+          const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "jpg-marker-compare", "--input", join(root, directoryName, "⬅️before.jpg"), "--input", join(root, directoryName, "➡️after.jpg")], { encoding: "utf8" });
           if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
           if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind}: not observable in the marker projection`);
         }

@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_job::StepBudget;
-use semio_s_fem_test_support::{close_payload_page_bytes, close_writer_released, TEST_GRANT};
+use semio_s_fem_test_support::{OriginalNumericalFixture, TEST_GRANT};
 
 #[test]
 fn numerical_restore_funds_each_original_contributor_frontier_separately() {
@@ -75,6 +75,30 @@ fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
     let mut receipt = RetainedCloneProgress::default();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
     step(&mut context)
+}
+
+fn original_writer(original: &mut OriginalNumericalFixture) -> RetainedJobPayloadWriter {
+    let mut writer = None;
+    original.turn(TEST_GRANT, 1, u64::MAX, |cx| { writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, cx)?; Ok(()) }).expect("original writer birth");
+    writer.expect("original writer admitted")
+}
+
+fn original_finish(original: &mut OriginalNumericalFixture, writer: RetainedJobPayloadWriter) -> RetainedJobPayload {
+    let (mut slot, mut output) = (Some(writer), None);
+    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| RetainedJobPayloadWriter::finish_funded(&mut slot, &mut output, cx).map_err(Into::into)).expect("original writer handoff"));
+    output.expect("committed pages hand off one payload")
+}
+
+fn original_begin(original: &mut OriginalNumericalFixture, writer: &mut RetainedJobPayloadWriter) {
+    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+}
+
+fn original_commit(original: &mut OriginalNumericalFixture, writer: &mut RetainedJobPayloadWriter) {
+    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.commit_staged_page_funded(cx, 0).map_err(Into::into)).expect("original staged page commit"));
+}
+
+fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
+    original.turn(TEST_GRANT, 1, u64::MAX, |cx| Ok(step(cx))).expect("original writer turn")
 }
 
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
@@ -231,42 +255,40 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
         let count = row["count"].as_u64().unwrap() as usize;
         let values: Vec<f64> = (0..count).map(|index| index as f64 * 0.25 - 100.0).collect();
         let operation = test_operation(480 + count as u64);
-        let mut sequence = 0;
-        let mut writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
+        let mut original = OriginalNumericalFixture::new(operation);
+        let mut writer = Some(original_writer(&mut original));
         let mut cursor = NumericalPageCursor::new();
         let mut complete = false;
         let mut fault = None;
         for _ in 0..count * 3 + 32 {
             let writer = writer.as_mut().unwrap();
             let result = if writer.staged_page_len().is_none() {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                writer.begin_staged_page(&mut context).map(|_| false)
+                original_begin(&mut original, writer);
+                Ok(false)
             } else {
-                match test_funded_restore(|context| advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor, context)) {
+                match original_step(&mut original, |context| advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor, context)) {
                     Ok(true) => Ok(false),
-                    Ok(false) => test_funded_restore(|context| advance_f64_owner(writer, &values, &mut cursor, context)),
+                    Ok(false) => original_step(&mut original, |context| advance_f64_owner(writer, &values, &mut cursor, context)),
                     Err(error) => Err(error),
                 }
             };
             match result {
                 Ok(true) => {
-                    match writer.commit_staged_page() {
-                        Ok(()) => complete = true,
-                        Err(error) => fault = Some(error),
-                    }
+                    original_commit(&mut original, writer);
+                    complete = true;
                     break;
                 }
                 Ok(false) => {}
-                Err(error) => { fault = Some(error); break; }
+                Err(error) => { fault = Some(format!("{error:?}")); break; }
             }
         }
         let mut pages = Vec::new();
         let mut decoded = Vec::new();
         let mut released = 0;
         if complete {
-            match writer.take().unwrap().finish() {
-                Ok(payload) => {
+            {
+                {
+                    let mut payload = original_finish(&mut original, writer.take().unwrap());
                     for index in 0..payload.page_count() {
                         let bytes = payload.page(index).unwrap();
                         let owner = u64::from_le_bytes(bytes[16..24].try_into().unwrap());
@@ -276,15 +298,17 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
                         pages.push(serde_json::json!({ "owner": owner, "item": item, "bytes": bytes.len(), "scalars": scalars }));
                         for bytes in bytes[start..].chunks_exact(8) { decoded.push(f64::from_bits(u64::from_le_bytes(bytes.try_into().unwrap()))); }
                     }
-                    released += close_payload_page_bytes(payload);
+                    released += payload.page_count() * JOB_PAYLOAD_PAGE_BYTES;
+                    original.close_payload(&mut payload);
+                    assert!(payload.terminal_is_empty());
                 }
-                Err(returned) => { writer = Some(returned); complete = false; }
             }
         }
         if let Some(writer) = writer.as_mut() {
-            released += close_writer_released(writer);
+            original.close_writer(writer);
             assert!(writer.terminal_is_empty());
         }
+        original.finish();
         eprintln!("numerical page {} complete={complete}, fault={fault:?}, cursor={cursor:?}, pages={pages:?}, released={released}", row["id"]);
         observations.push((row["id"].clone(), complete, pages, row["pages"].clone(), decoded, values, released));
     }
@@ -300,17 +324,17 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
 fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
     use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
-    fn advance(kind: &str, writer: &mut RetainedJobPayloadWriter, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, JobPayloadAdmissionFault> {
+    fn advance(original: &mut OriginalNumericalFixture, kind: &str, writer: &mut RetainedJobPayloadWriter, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, ValueError> {
         match kind {
-            "length" => test_funded_restore(|context| advance_owner_length(writer, 2, cursor, context)),
-            "u32" => test_funded_restore(|context| advance_u32_owner(writer, &[7], cursor, context)),
-            "usize" => test_funded_restore(|context| advance_u64_owner(writer, &[7], cursor, context)),
-            "u64" => test_funded_restore(|context| advance_u64_values(writer, &[7], cursor, context)),
-            "f64" => test_funded_restore(|context| advance_f64_owner(writer, &[1.5], cursor, context)),
-            "paged-u32" => test_funded_restore(|context| advance_paged_u32_owner(writer, integers, cursor, context)),
-            "paged-f64" => test_funded_restore(|context| advance_paged_f64_owner(writer, scalars, cursor, context)),
-            "pair" => test_funded_restore(|context| advance_pair_owner(writer, &[(7, 1.5)], cursor, context)),
-            "matrix-shape" | "matrix-scalar" => test_funded_restore(|context| advance_matrix_owner(writer, matrix, cursor, context)),
+            "length" => original_step(original, |context| advance_owner_length(writer, 2, cursor, context)),
+            "u32" => original_step(original, |context| advance_u32_owner(writer, &[7], cursor, context)),
+            "usize" => original_step(original, |context| advance_u64_owner(writer, &[7], cursor, context)),
+            "u64" => original_step(original, |context| advance_u64_values(writer, &[7], cursor, context)),
+            "f64" => original_step(original, |context| advance_f64_owner(writer, &[1.5], cursor, context)),
+            "paged-u32" => original_step(original, |context| advance_paged_u32_owner(writer, integers, cursor, context)),
+            "paged-f64" => original_step(original, |context| advance_paged_f64_owner(writer, scalars, cursor, context)),
+            "pair" => original_step(original, |context| advance_pair_owner(writer, &[(7, 1.5)], cursor, context)),
+            "matrix-shape" | "matrix-scalar" => original_step(original, |context| advance_matrix_owner(writer, matrix, cursor, context)),
             _ => unreachable!(),
         }
     }
@@ -330,33 +354,29 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         let width = row["width"].as_u64().unwrap() as usize;
         let remaining = row["remaining"].as_u64().unwrap() as usize;
         let operation = test_operation(5_000 + index as u64);
-        let mut sequence = 0;
-        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut sequence_receipt);
-        writer.begin_staged_page(&mut context).unwrap();
+        let mut original = OriginalNumericalFixture::new(operation);
+        let mut writer = original_writer(&mut original);
+        original_begin(&mut original, &mut writer);
         writer.write_staged(&[0; JOB_PAYLOAD_PAGE_BYTES][..JOB_PAYLOAD_PAGE_BYTES - remaining]).unwrap();
         let mut cursor = NumericalPageCursor { field: 0, owner: usize::from(kind != "length" && kind != "matrix-shape"), item: 0 };
         let before = cursor;
-        let mut fault = advance(kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
+        let mut fault = advance(&mut original, kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
         let committed = writer.staged_page_len().is_none();
         let held = !committed || cursor == before;
-        drop(context);
         if committed && fault.is_none() {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut sequence_receipt);
-            writer.begin_staged_page(&mut context).unwrap();
-            test_funded_restore(|context| advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor, context)).unwrap();
-            fault = advance(kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
+            original_begin(&mut original, &mut writer);
+            original_step(&mut original, |context| advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor, context)).unwrap();
+            fault = advance(&mut original, kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
         }
-        writer.commit_staged_page().unwrap();
-        let payload = writer.finish().unwrap();
+        original_commit(&mut original, &mut writer);
+        let mut payload = original_finish(&mut original, writer);
         let page_count = payload.page_count();
         let last = payload.page(page_count - 1).unwrap();
         let entry = last[last.len() - width..].to_vec();
         let actual = serde_json::json!({ "committed": committed, "owner": cursor.owner, "item": cursor.item, "entry": entry });
-        let released = close_payload_page_bytes(payload);
-        observations.push((format!("{kind}/{remaining}"), actual, row["expected"].clone(), fault.is_none(), held, released == page_count * JOB_PAYLOAD_PAGE_BYTES));
+        original.close_payload(&mut payload);
+        original.finish();
+        observations.push((format!("{kind}/{remaining}"), actual, row["expected"].clone(), fault.is_none(), held, payload.terminal_is_empty()));
     }
     integers.pop();
     scalars.pop();

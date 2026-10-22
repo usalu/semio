@@ -1,0 +1,318 @@
+{
+ "version": 1,
+ "devsDir": "🧑️‍💻️devs",
+ "contributor": {
+  "alias": "ueli",
+  "emoji": "🐙️",
+  "name": "U",
+  "email": "u@e.x"
+ },
+ "parse": [
+  {
+   "segments": [
+    "ct"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "cs"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": true,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "cp"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": true
+   }
+  },
+  {
+   "segments": [
+    "CT",
+    "CS"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": true,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "ctag"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "csquash",
+    "cpush"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": true,
+    "push": true
+   }
+  },
+  {
+   "segments": [],
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "x",
+    "contact"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "ct,cs"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": true,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "a",
+    "ct"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "tag!x"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "segments": [
+    "a+squash"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": true,
+    "push": false
+   }
+  }
+ ],
+ "parseDefects": [
+  {
+   "segments": [
+    "tag!"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   },
+   "defect": "🪜️steps/🟦️.ts:parseCommitSteps: the alias spellings `tag!`, `squash!`, `push!`, `+tag`, `+squash`, `+push` can never match because `\\b` needs a word character on the side of the symbol, so only the `ct`/`cs`/`cp` and long names work"
+  },
+  {
+   "segments": [
+    "+squash"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": true,
+    "push": false
+   },
+   "defect": "🪜️steps/🟦️.ts:parseCommitSteps: the alias spellings `tag!`, `squash!`, `push!`, `+tag`, `+squash`, `+push` can never match because `\\b` needs a word character on the side of the symbol, so only the `ct`/`cs`/`cp` and long names work"
+  },
+  {
+   "segments": [
+    "push!"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": true
+   },
+   "defect": "🪜️steps/🟦️.ts:parseCommitSteps: the alias spellings `tag!`, `squash!`, `push!`, `+tag`, `+squash`, `+push` can never match because `\\b` needs a word character on the side of the symbol, so only the `ct`/`cs`/`cp` and long names work"
+  },
+  {
+   "segments": [
+    "+tag"
+   ],
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   },
+   "defect": "🪜️steps/🟦️.ts:parseCommitSteps: the alias spellings `tag!`, `squash!`, `push!`, `+tag`, `+squash`, `+push` can never match because `\\b` needs a word character on the side of the symbol, so only the `ct`/`cs`/`cp` and long names work"
+  },
+  {
+   "segments": [
+    "x",
+    "squash!"
+   ],
+   "expected": {
+    "tag": false,
+    "squash": true,
+    "push": false
+   },
+   "defect": "🪜️steps/🟦️.ts:parseCommitSteps: the alias spellings `tag!`, `squash!`, `push!`, `+tag`, `+squash`, `+push` can never match because `\\b` needs a word character on the side of the symbol, so only the `ct`/`cs`/`cp` and long names work"
+  }
+ ],
+ "prepareOnly": [
+  {
+   "segments": [],
+   "expected": true
+  },
+  {
+   "segments": [
+    "cprepare"
+   ],
+   "expected": true
+  },
+  {
+   "segments": [
+    "cprepare",
+    "ct"
+   ],
+   "expected": true
+  },
+  {
+   "segments": [
+    "ct"
+   ],
+   "expected": false
+  },
+  {
+   "segments": [
+    "cs"
+   ],
+   "expected": false
+  },
+  {
+   "segments": [
+    "x"
+   ],
+   "expected": true
+  },
+  {
+   "segments": [
+    "prepare!x"
+   ],
+   "expected": true
+  },
+  {
+   "segments": [
+    "cprepare",
+    "cp"
+   ],
+   "expected": true
+  }
+ ],
+ "prepareOnlyDefects": [
+  {
+   "segments": [
+    "c.",
+    "ct"
+   ],
+   "expected": true,
+   "defect": "🪜️steps/🟦️.ts:isCommitPrepareOnly: `c.`, `prepare!` and `+prepare` can never match (the `\\b` after a symbol needs a following word character), so a prepare alias cannot override an explicit step"
+  },
+  {
+   "segments": [
+    "prepare!",
+    "ct"
+   ],
+   "expected": true,
+   "defect": "🪜️steps/🟦️.ts:isCommitPrepareOnly: `c.`, `prepare!` and `+prepare` can never match (the `\\b` after a symbol needs a following word character), so a prepare alias cannot override an explicit step"
+  },
+  {
+   "segments": [
+    "+prepare",
+    "cs"
+   ],
+   "expected": true,
+   "defect": "🪜️steps/🟦️.ts:isCommitPrepareOnly: `c.`, `prepare!` and `+prepare` can never match (the `\\b` after a symbol needs a following word character), so a prepare alias cannot override an explicit step"
+  }
+ ],
+ "levels": [
+  {
+   "level": "prepare-only",
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "level": "prepare-and-tag",
+   "expected": {
+    "tag": true,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "level": "prepare-and-tag-and-squash",
+   "expected": {
+    "tag": true,
+    "squash": true,
+    "push": false
+   }
+  },
+  {
+   "level": "prepare-and-tag-and-squash-and-push",
+   "expected": {
+    "tag": true,
+    "squash": true,
+    "push": true
+   }
+  },
+  {
+   "level": "unknown-level",
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": false
+   }
+  },
+  {
+   "level": null,
+   "expected": {
+    "tag": false,
+    "squash": false,
+    "push": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "id": "bootstrap",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "nx.admitted-structural-collection-manifests": {
+      "en": "[nx] Admitted {inventory} structural collection manifests",
+      "de": "[nx] {inventory} strukturelle Sammlungsmanifeste zugelassen"
+    },
+    "nx.validating-current-owner-custody": {
+      "en": "[nx] Validating current owner custody ({visited} directories, {admitted} manifests)",
+      "de": "[nx] Aktuelle Eigentümer-Obhut wird geprüft ({visited} Verzeichnisse, {admitted} Manifeste)"
+    },
+    "nx.waiting-for-source-watcher-and": {
+      "en": "[nx] Waiting for source watcher and project graph ({seconds}s); Ctrl+C cancels",
+      "de": "[nx] Warte auf Quell-Watcher und Projektgraph ({seconds} s); Strg+C bricht ab"
+    },
+    "nx.admitting-current-real-project-owners": {
+      "en": "[nx] Admitting current real project owners ({directories} directories)",
+      "de": "[nx] Aktuelle echte Projekteigentümer werden zugelassen ({directories} Verzeichnisse)"
+    },
+    "nx.bootstrap-phases-admissionms-provisioningms-activationms": {
+      "en": "[nx] Bootstrap phases admissionMs={admissionMs} provisioningMs={provisioningMs} activationMs={activationMs}",
+      "de": "[nx] Bootstrap-Phasen admissionMs={admissionMs} provisioningMs={provisioningMs} activationMs={activationMs}"
+    },
+    "nx.could-not-capture-descendants-for": {
+      "en": "Could not capture Nx descendants for cancellation",
+      "de": "Nx-Nachkommen konnten für den Abbruch nicht erfasst werden"
+    },
+    "nx.could-not-inspect-descendants-stopping": {
+      "en": "Could not inspect Nx descendants; stopping owned launch processes: {error}",
+      "de": "Nx-Nachkommen konnten nicht geprüft werden; eigene Startprozesse werden beendet: {error}"
+    },
+    "nx.graph-and-hash-preparation-running": {
+      "en": "[nx] Graph and hash preparation running elapsedMs={elapsedMs}",
+      "de": "[nx] Graph- und Hash-Vorbereitung läuft elapsedMs={elapsedMs}"
+    },
+    "nx.graph-membership-fallback": {
+      "en": "[nx] Graph membership fallback: {reason}",
+      "de": "[nx] Rückfall bei der Graph-Mitgliedschaft: {reason}"
+    },
+    "nx.graph-observation-selected-sealed-elapsedms": {
+      "en": "[nx] Graph observation selected={selected} sealed={sealed} elapsedMs={elapsedMs}",
+      "de": "[nx] Graph-Beobachtung selected={selected} sealed={sealed} elapsedMs={elapsedMs}"
+    },
+    "nx.source-authority-changed-admitting-the": {
+      "en": "[nx] Source authority changed; admitting the current graph again ({attempt}/3)",
+      "de": "[nx] Quellautorität hat sich geändert; der aktuelle Graph wird erneut zugelassen ({attempt}/3)"
+    },
+    "nx.generation-receipt-refused": {
+      "en": "[nx] Generation receipt refused: {reason}",
+      "de": "[nx] Generations-Quittung abgelehnt: {reason}"
+    },
+    "nx.generation-receipt-written": {
+      "en": "[nx] Generation receipt written={written}",
+      "de": "[nx] Generations-Quittung written={written}"
+    }
+  }
+}

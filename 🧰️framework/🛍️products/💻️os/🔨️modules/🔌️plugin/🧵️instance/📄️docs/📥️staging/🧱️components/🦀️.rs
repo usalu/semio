@@ -15,7 +15,7 @@ use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use crate::docs_instance_root::MediaExportPreparation;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_child::SnapshotReadReturnPump;
@@ -85,7 +85,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
 }
 
 /// 🦠️ Envelope jobs: envelope ingress and decode, store replacement and document archive loads.
-pub struct EnvelopeJobs<A: ArtifactApp, M: SpaceMember + MemberFactory> {
+pub struct EnvelopeJobs<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> {
     pub envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>,
     pub envelope_decode_jobs: ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<A::Snapshot, A::Mutation>>,
     pub store_replacement_jobs: ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,
@@ -100,7 +100,7 @@ pub struct EnvelopeJobs<A: ArtifactApp, M: SpaceMember + MemberFactory> {
     pub document_snapshot_read_returns: SnapshotReadReturnPump,
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 🪸️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {
         Self {

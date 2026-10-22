@@ -96,7 +96,7 @@ fn cold_owner_refusal_retires_scratch_and_preserves_original() {
 /// 🧪️ Portable staged-field outcomes agree with an independent transactional projection.
 #[test]
 fn prepared_fields_follow_portable_atomic_outcomes() {
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📦️prepared-fields/🔣️.json")).expect("portable field corpus");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📦️prepared-fields/🔣️.json")).expect("portable field corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         FIELD_RETIREMENTS.with(|value| value.set(0));
         let mut projection = Projection { first: corpus["base"]["first"].as_i64().unwrap(), second: corpus["base"]["second"].as_i64().unwrap() };

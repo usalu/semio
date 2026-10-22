@@ -15,7 +15,7 @@
     "maximumBytes": {
       "type": "integer",
       "minimum": 1048576,
-      "maximum": 68719476736
+      "maximum": 105226698752
     },
     "maximumControlBytes": {
       "type": "integer",

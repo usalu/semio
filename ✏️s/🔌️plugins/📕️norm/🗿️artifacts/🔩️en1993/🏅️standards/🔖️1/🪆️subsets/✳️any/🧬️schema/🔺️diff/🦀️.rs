@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
@@ -284,31 +284,9 @@ pub struct En1993Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<En1993Snapshot> for En1993Diff {
-    fn apply(&self, base: &En1993Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1993Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = self.annex {
-            next.annex = value;
-        }
-        next.materials = self.materials.commit_onto(&base.materials, capability).map_err(|error| error.under(["materials"]))?;
-        next.sections = self.sections.commit_onto(&base.sections, capability).map_err(|error| error.under(["sections"]))?;
-        next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
-        next.load_cases = self.load_cases.commit_onto(&base.load_cases, capability).map_err(|error| error.under(["loadCases"]))?;
-        next.member_actions = self.member_actions.commit_onto(&base.member_actions, capability).map_err(|error| error.under(["memberActions"]))?;
-        next.joints = self.joints.commit_onto(&base.joints, capability).map_err(|error| error.under(["joints"]))?;
-        next.fatigue_details = self.fatigue_details.commit_onto(&base.fatigue_details, capability).map_err(|error| error.under(["fatigueDetails"]))?;
-        next.fire_exposures = self.fire_exposures.commit_onto(&base.fire_exposures, capability).map_err(|error| error.under(["fireExposures"]))?;
-        next.cold_formed_members = self.cold_formed_members.commit_onto(&base.cold_formed_members, capability).map_err(|error| error.under(["coldFormedMembers"]))?;
-        next.plated_panels = self.plated_panels.commit_onto(&base.plated_panels, capability).map_err(|error| error.under(["platedPanels"]))?;
-        next.silo_shells = self.silo_shells.commit_onto(&base.silo_shells, capability).map_err(|error| error.under(["siloShells"]))?;
-        next.tension_components = self.tension_components.commit_onto(&base.tension_components, capability).map_err(|error| error.under(["tensionComponents"]))?;
-        next.bridge_fatigue = self.bridge_fatigue.commit_onto(&base.bridge_fatigue, capability).map_err(|error| error.under(["bridgeFatigue"]))?;
-        next.tower_legs = self.tower_legs.commit_onto(&base.tower_legs, capability).map_err(|error| error.under(["towerLegs"]))?;
-        next.piles = self.piles.commit_onto(&base.piles, capability).map_err(|error| error.under(["piles"]))?;
-        next.crane_runways = self.crane_runways.commit_onto(&base.crane_runways, capability).map_err(|error| error.under(["craneRunways"]))?;
-        Ok(next)
-    }
+impl MutationDiff<En1993Snapshot> for En1993Diff {}
 
+impl protocol::ColdMutationDiff<En1993Snapshot> for En1993Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -330,9 +308,57 @@ impl MutationDiff<En1993Snapshot> for En1993Diff {
         self.piles.absorb(other.piles);
         self.crane_runways.absorb(other.crane_runways);
     }
+
+    fn apply(&self, unpublished: &mut En1993Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = self.annex {
+            next.annex = value;
+        }
+        next.materials = self.materials.commit_onto(&base.materials, capability).map_err(|error| error.under(["materials"]))?;
+        next.sections = self.sections.commit_onto(&base.sections, capability).map_err(|error| error.under(["sections"]))?;
+        next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
+        next.load_cases = self.load_cases.commit_onto(&base.load_cases, capability).map_err(|error| error.under(["loadCases"]))?;
+        next.member_actions = self.member_actions.commit_onto(&base.member_actions, capability).map_err(|error| error.under(["memberActions"]))?;
+        next.joints = self.joints.commit_onto(&base.joints, capability).map_err(|error| error.under(["joints"]))?;
+        next.fatigue_details = self.fatigue_details.commit_onto(&base.fatigue_details, capability).map_err(|error| error.under(["fatigueDetails"]))?;
+        next.fire_exposures = self.fire_exposures.commit_onto(&base.fire_exposures, capability).map_err(|error| error.under(["fireExposures"]))?;
+        next.cold_formed_members = self.cold_formed_members.commit_onto(&base.cold_formed_members, capability).map_err(|error| error.under(["coldFormedMembers"]))?;
+        next.plated_panels = self.plated_panels.commit_onto(&base.plated_panels, capability).map_err(|error| error.under(["platedPanels"]))?;
+        next.silo_shells = self.silo_shells.commit_onto(&base.silo_shells, capability).map_err(|error| error.under(["siloShells"]))?;
+        next.tension_components = self.tension_components.commit_onto(&base.tension_components, capability).map_err(|error| error.under(["tensionComponents"]))?;
+        next.bridge_fatigue = self.bridge_fatigue.commit_onto(&base.bridge_fatigue, capability).map_err(|error| error.under(["bridgeFatigue"]))?;
+        next.tower_legs = self.tower_legs.commit_onto(&base.tower_legs, capability).map_err(|error| error.under(["towerLegs"]))?;
+        next.piles = self.piles.commit_onto(&base.piles, capability).map_err(|error| error.under(["piles"]))?;
+        next.crane_runways = self.crane_runways.commit_onto(&base.crane_runways, capability).map_err(|error| error.under(["craneRunways"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1993Snapshot> for En1993Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.materials.is_empty()
+            && self.sections.is_empty()
+            && self.members.is_empty()
+            && self.load_cases.is_empty()
+            && self.member_actions.is_empty()
+            && self.joints.is_empty()
+            && self.fatigue_details.is_empty()
+            && self.fire_exposures.is_empty()
+            && self.cold_formed_members.is_empty()
+            && self.plated_panels.is_empty()
+            && self.silo_shells.is_empty()
+            && self.tension_components.is_empty()
+            && self.bridge_fatigue.is_empty()
+            && self.tower_legs.is_empty()
+            && self.piles.is_empty()
+            && self.crane_runways.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1993Snapshot> for En1993Diff {
     fn inverse(&self, base: &En1993Snapshot) -> Self {
         Self {
             annex: self.annex.map(|_| base.annex),
@@ -353,26 +379,6 @@ impl DiffAlgebra<En1993Snapshot> for En1993Diff {
             piles: self.piles.inverse(&base.piles),
             crane_runways: self.crane_runways.inverse(&base.crane_runways),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.materials.is_empty()
-            && self.sections.is_empty()
-            && self.members.is_empty()
-            && self.load_cases.is_empty()
-            && self.member_actions.is_empty()
-            && self.joints.is_empty()
-            && self.fatigue_details.is_empty()
-            && self.fire_exposures.is_empty()
-            && self.cold_formed_members.is_empty()
-            && self.plated_panels.is_empty()
-            && self.silo_shells.is_empty()
-            && self.tension_components.is_empty()
-            && self.bridge_fatigue.is_empty()
-            && self.tower_legs.is_empty()
-            && self.piles.is_empty()
-            && self.crane_runways.is_empty()
     }
 }
 

@@ -16,18 +16,21 @@ pub struct SetLoopCount {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "loop-count", kind: "set-loop-count", record: "SetLoopCount" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set loop count", "Wiederholungsanzahl setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetLoopCount {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { loop_count } = self;
         protocol::MutationOutcome::new(GifDiff { loop_count: (*loop_count != base.loop_count).then_some(*loop_count), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         Ok(vec![GifMutation::SetLoopCount(SetLoopCount { loop_count: base.loop_count })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set loop count", "Wiederholungsanzahl setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

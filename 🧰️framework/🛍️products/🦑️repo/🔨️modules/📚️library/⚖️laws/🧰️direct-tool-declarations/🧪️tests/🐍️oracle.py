@@ -1,0 +1,558 @@
+#!/usr/bin/env python3
+"""🔬️ Independent checker of the direct-tool-declarations law (stdlib only, Python 3.9+).
+
+The law is data: `patterns.json` names the banned tools, the file kinds, how commands are extracted from each kind, the excluded paths and the allowed ones.
+This file is one of two implementations (the other is the TypeScript law in the library); `fixtures.json` holds the shared cases and both must agree on every row.
+
+usage: checker.py [--root DIR] [--patterns FILE] [--json] [--files LIST_FILE | --git] [--cases FIXTURES]
+  --git      scan the tracked files of the repository at --root (git ls-files -z); the default
+  --worktree scan tracked and untracked, not ignored files (an overlay that is not committed)
+  --files    scan the NUL- or newline-separated paths of a file instead
+  --cases    run the shared fixture rows (exit 1 on any disagreement)
+Exit 0 = no finding, 1 = findings or a failed case, 2 = usage or an empty scope."""
+import fnmatch
+import json
+import os
+import re
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_patterns(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def glob_regex(pattern):
+    out = ["^"]
+    i = 0
+    while i < len(pattern):
+        c = pattern[i]
+        if c == "*":
+            if pattern[i:i + 3] == "**/":
+                out.append("(?:.*/)?")
+                i += 3
+                continue
+            if pattern[i:i + 2] == "**":
+                out.append(".*")
+                i += 2
+                continue
+            out.append("[^/]*")
+        elif c == "?":
+            out.append("[^/]")
+        else:
+            out.append(re.escape(c))
+        i += 1
+    out.append("$")
+    return re.compile("".join(out))
+
+
+class Law:
+    def __init__(self, patterns):
+        self.p = patterns
+        self.enforced = {}
+        for row in patterns["enforced"]:
+            for command in row["commands"]:
+                self.enforced[command] = row["id"]
+        self.observed = {}
+        for row in patterns["observed"]:
+            for command in row["commands"]:
+                self.observed[command] = row["id"]
+        self.wrappers = set(patterns["wrappers"])
+        self.wrapper_values = patterns["wrapperValueOptions"]
+        self.shells = set(patterns["shells"])
+        self.shell_flags = set(f.lower() for f in patterns["shellCommandFlags"])
+        self.payload = [tuple(x) for x in patterns["payloadAfterDoubleDash"]]
+        self.kinds = []
+        for kind in patterns["kinds"]:
+            self.kinds.append((kind, [glob_regex(g) for g in kind["files"]]))
+        self.excludes = [(row, [glob_regex(g) for g in row["paths"]]) for row in patterns["exclude"]]
+        self.allows = [(row, [glob_regex(g) for g in row["paths"]]) for row in patterns["allow"]]
+        self.prose = {}
+        self.inline = [k["inline"] for k in patterns["kinds"] if "inline" in k][0]
+        for kind in patterns["kinds"]:
+            if kind["id"] == "json-config":
+                self.prose = {"files": [glob_regex(g) for g in kind.get("proseFiles", [])], "keys": set(kind.get("proseKeys", []))}
+
+    def tool_of(self, word):
+        base = word.replace("\\", "/").rsplit("/", 1)[-1]
+        lowered = base.lower()
+        for suffix in (".exe", ".cmd", ".bat", ".ps1"):
+            if lowered.endswith(suffix):
+                base = base[: -len(suffix)]
+                lowered = lowered[: -len(suffix)]
+                break
+        if base in self.enforced:
+            return self.enforced[base], "enforced"
+        if base in self.observed:
+            return self.observed[base], "observed"
+        return None, None
+
+    def split_words(self, text):
+        """Splits a command line into [(kind, value)] where kind is word or sep; separators only outside quotes; `$(` and backticks open a command position anywhere."""
+        out = []
+        buf = []
+        quote = None
+        i = 0
+        n = len(text)
+        seps = sorted(self.p["separators"], key=len, reverse=True)
+
+        def flush():
+            if buf:
+                out.append(("word", "".join(buf)))
+                del buf[:]
+
+        while i < n:
+            c = text[i]
+            if quote:
+                if c == "\\" and quote == '"' and i + 1 < n:
+                    buf.append(text[i:i + 2])
+                    i += 2
+                    continue
+                if text.startswith("$(", i) and quote == '"':
+                    flush()
+                    out.append(("sep", "$("))
+                    i += 2
+                    continue
+                if c == quote:
+                    quote = None
+                buf.append(c)
+                i += 1
+                continue
+            if c in ("'", '"'):
+                quote = c
+                buf.append(c)
+                i += 1
+                continue
+            if c.isspace():
+                flush()
+                i += 1
+                continue
+            if c == "#" and not buf and (i == 0 or text[i - 1].isspace()):
+                break
+            hit = None
+            for s in seps:
+                if text.startswith(s, i):
+                    hit = s
+                    break
+            if hit == "|" and not ((i == 0 or text[i - 1].isspace()) or (i + 1 >= n or text[i + 1].isspace())):
+                hit = None
+            if hit is not None and not (hit == "{" and (i + 1 >= n or not text[i + 1].isspace())) and not (hit == "&" and i + 1 < n and text[i + 1] == ">") and not (hit == "(" and buf):
+                flush()
+                out.append(("sep", hit))
+                i += len(hit)
+                continue
+            buf.append(c)
+            i += 1
+        flush()
+        return out
+
+    def commands(self, text):
+        """Yields (tool, class, word) for every command position of the line, recursing into `sh -c "..."` payloads."""
+        results = []
+        words = self.split_words(text)
+        position = True
+        index = 0
+        while index < len(words):
+            kind, value = words[index]
+            if kind == "sep":
+                position = True
+                index += 1
+                continue
+            if not position:
+                index += 1
+                continue
+            bare = value.strip("'\"")
+            if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", value):
+                index += 1
+                continue
+            if re.match(r"^(\$env:|\$)[A-Za-z_][A-Za-z0-9_]*=", value):
+                index += 1
+                continue
+            base = bare.replace("\\", "/").rsplit("/", 1)[-1]
+            if base in self.wrappers or bare == "&" or bare == ".":
+                options = self.wrapper_values.get(base, [])
+                index += 1
+                while index < len(words) and words[index][0] == "word":
+                    nxt = words[index][1]
+                    if nxt in options and index + 1 < len(words):
+                        index += 2
+                        continue
+                    if nxt.startswith("-") and base in self.wrapper_values:
+                        index += 1
+                        continue
+                    if base == "env" and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", nxt):
+                        index += 1
+                        continue
+                    break
+                continue
+            tool, cls = self.tool_of(bare)
+            if tool is not None:
+                results.append((tool, cls, bare))
+            elif base in self.shells:
+                j = index + 1
+                while j < len(words) and words[j][0] == "word":
+                    if words[j][1].lower() in self.shell_flags and j + 1 < len(words) and words[j + 1][0] == "word":
+                        inner = words[j + 1][1]
+                        if len(inner) >= 2 and inner[0] in ("'", '"') and inner[-1] == inner[0]:
+                            inner = inner[1:-1]
+                        results.extend(self.commands(inner))
+                        break
+                    j += 1
+            elif base == "repo":
+                j = index + 1
+                rest = []
+                while j < len(words) and words[j][0] == "word":
+                    rest.append(words[j][1])
+                    j += 1
+                if "--" in rest:
+                    head = [w for w in rest[: rest.index("--")] if not w.startswith("-")]
+                    for verb in self.payload:
+                        if tuple(head[: len(verb)]) == verb:
+                            tail = " ".join(rest[rest.index("--") + 1:])
+                            results.extend(self.commands(tail))
+                            break
+            position = False
+            index += 1
+        return results
+
+    def prompt_strip(self, line):
+        stripped = line.lstrip()
+        for prompt in self.p["prompts"]:
+            if prompt != "# " and stripped.startswith(prompt):
+                return stripped[len(prompt):]
+        return stripped
+
+    def rewritable(self, path):
+        if self.excluded(path) is not None:
+            return False
+        return not any(row["tools"] == ["*"] and any(regex.match(path) for regex in regexes) for row, regexes in self.allows)
+
+    def kind_of(self, path):
+        for kind, regexes in self.kinds:
+            for regex in regexes:
+                if regex.match(path):
+                    return kind
+        return None
+
+    def excluded(self, path):
+        for row, regexes in self.excludes:
+            for regex in regexes:
+                if regex.match(path):
+                    return row["id"]
+        return None
+
+    def allowed(self, path, tool, context="line"):
+        for row, regexes in self.allows:
+            if (tool in row["tools"] or "*" in row["tools"]) and context in row["contexts"]:
+                for regex in regexes:
+                    if regex.match(path):
+                        return row["id"]
+        return None
+
+    def inline_flagged(self, rule, before, content):
+        first = content.split()[0]
+        if rule.get("repoPayload") and first == "repo":
+            return True
+        lead = before.lower()
+        verbs = "|".join(re.escape(v) for v in rule["verbs"])
+        modals = "|".join(re.escape(v) for v in rule["modals"])
+        pattern = r"(?:^|[.:;!?)]\s*|^\s*(?:[-*+]|\d+[.)])\s*|(?<!\w)(?:%s)\s+)(%s)(?!\w)[^`.;]{0,%d}$" % (modals, verbs, rule["verbGap"])
+        match = re.search(pattern, lead)
+        if not match:
+            return False
+        window = lead[max(0, match.start() - rule["negationWindow"]): match.end()]
+        for word in rule["negations"]:
+            if re.search(r"(?<!\w)%s(?!\w)" % re.escape(word), window):
+                return False
+        return True
+
+    def extract(self, kind, path, text):
+        """Returns [(line, command text, context)] for the file kind."""
+        extractor = kind["extractor"]
+        lines = text.split("\n")
+        found = []
+        if extractor == "markdown":
+            fence = None
+            languages = set(kind["fenceLanguages"])
+            for number, line in enumerate(lines, 1):
+                match = re.match(r"^\s*(```+|~~~+)\s*([\w+-]*)", line)
+                if match:
+                    if fence is None:
+                        fence = match.group(2).lower()
+                    else:
+                        fence = None
+                    continue
+                if fence is not None:
+                    if fence in languages:
+                        found.append((number, self.prompt_strip(line), "fence"))
+                elif kind.get("inlineSpans"):
+                    for span in re.finditer(r"`([^`\n]+)`", line):
+                        content = self.prompt_strip(span.group(1))
+                        if not re.search(r"\s", content.strip()):
+                            continue
+                        if self.inline_flagged(kind["inline"], line[: span.start()], content):
+                            found.append((number, content, "inline"))
+        elif extractor == "script":
+            prefixes = tuple(kind["commentPrefixes"])
+            pending = ""
+            start = 0
+            for number, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith(prefixes):
+                    continue
+                if path.endswith(".ps1") or path.endswith(".psm1"):
+                    stripped = re.sub(r"^&\s+", "& ", stripped)
+                if pending:
+                    stripped = pending + " " + stripped
+                    number = start
+                if stripped.endswith("\\") or stripped.endswith("`") and path.endswith(".ps1"):
+                    pending = stripped[:-1].rstrip()
+                    start = start or number
+                    continue
+                pending = ""
+                start = 0
+                found.append((number, stripped, "line"))
+        elif extractor == "dockerfile":
+            pending = ""
+            start = 0
+            for number, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                if pending:
+                    stripped = pending + " " + stripped
+                else:
+                    start = number
+                if stripped.endswith("\\"):
+                    pending = stripped[:-1].rstrip()
+                    continue
+                pending = ""
+                match = re.match(r"^(RUN|CMD|ENTRYPOINT|HEALTHCHECK\s+(?:--\S+\s+)*CMD)\s+(.*)$", stripped, re.I)
+                if match:
+                    body = match.group(2).strip()
+                    if body.startswith("["):
+                        try:
+                            argv = json.loads(body)
+                            body = " ".join(argv)
+                        except ValueError:
+                            pass
+                    found.append((start, body, "line"))
+        elif extractor == "yaml":
+            keys = set(kind["keys"])
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+                match = re.match(r"^(\s*)(?:-\s+)?([A-Za-z_][\w-]*):\s*(.*)$", line)
+                if match and match.group(2) in keys:
+                    indent = len(match.group(1))
+                    value = match.group(3).strip()
+                    if value[:1] in ("|", ">"):
+                        j = i + 1
+                        while j < len(lines) and (not lines[j].strip() or len(lines[j]) - len(lines[j].lstrip()) > indent):
+                            if lines[j].strip() and not lines[j].strip().startswith("#"):
+                                found.append((j + 1, lines[j].strip(), "line"))
+                            j += 1
+                        i = j
+                        continue
+                    if value and not value.startswith("#"):
+                        if value.startswith("["):
+                            try:
+                                value = " ".join(json.loads(value))
+                            except ValueError:
+                                pass
+                        found.append((i + 1, value.strip("'\"") if value[:1] in ("'", '"') and value[-1:] == value[:1] else value, "line"))
+                i += 1
+        elif extractor == "toml":
+            keys = set(kind["keys"])
+            alias = False
+            for number, line in enumerate(lines, 1):
+                header = re.match(r"^\s*\[([^\]]+)\]", line)
+                if header:
+                    alias = header.group(1).strip() == "alias"
+                    continue
+                match = re.match(r"^\s*([A-Za-z_][\w.-]*)\s*=\s*(.+)$", line)
+                if match and (match.group(1) in keys or alias):
+                    value = match.group(2).strip()
+                    if value[:1] == "[":
+                        words = re.findall(r"\"([^\"]*)\"|'([^']*)'", value)
+                        value = " ".join(a or b for a, b in words)
+                    elif value[:1] in ("'", '"'):
+                        value = value[1:value.find(value[0], 1)]
+                    found.append((number, value, "line"))
+        elif extractor == "bazel":
+            keys = "|".join(re.escape(k) for k in kind["keys"])
+            for match in re.finditer(r"(?:%s)\s*=\s*(\"\"\"|'''|\"|')(.*?)\1" % keys, text, re.S):
+                found.append((text.count("\n", 0, match.start()) + 1, match.group(2), "line"))
+            for match in re.finditer(r"execute\(\s*\[\s*(\"[^\"]*\"|'[^']*')", text):
+                found.append((text.count("\n", 0, match.start()) + 1, match.group(1)[1:-1] + " x", "line"))
+        elif extractor == "json":
+            try:
+                document = json.loads(text)
+            except ValueError:
+                return found
+            for line, command, context in self.walk_json(kind, path, document, text):
+                found.append((line, command, context))
+        return found
+
+    def walk_json(self, kind, path, document, text):
+        string_keys = set(kind["stringKeys"])
+        spaced_keys = set(kind.get("spacedKeys", []))
+        argv_keys = set(kind["argvKeys"])
+        map_keys = set(kind["mapKeys"])
+        prose_file = any(r.match(path) for r in self.prose.get("files", []))
+        prose_keys = self.prose.get("keys", set())
+        rows = []
+
+        cursor = [0]
+
+        def line_of(value):
+            needle = json.dumps(value, ensure_ascii=False)
+            at = text.find(needle, cursor[0])
+            if at >= 0:
+                cursor[0] = at + 1
+            return text.count("\n", 0, cursor[0]) + 1
+
+        def walk(node, key):
+            if isinstance(node, dict):
+                for k, v in node.items():
+                    if k in map_keys and isinstance(v, dict):
+                        for value in v.values():
+                            if isinstance(value, str):
+                                rows.append((line_of(value), value, "json"))
+                        continue
+                    walk(v, k)
+            elif isinstance(node, list):
+                if key in argv_keys and node and all(isinstance(x, str) for x in node):
+                    rows.append((line_of(node[0]), " ".join(node), "json"))
+                    return
+                for item in node:
+                    walk(item, key)
+            elif isinstance(node, str):
+                if key in string_keys or (key in spaced_keys and re.search(r"\s", node.strip())):
+                    rows.append((line_of(node), node, "json"))
+                elif prose_file and key in prose_keys:
+                    for span in re.finditer(r"`([^`\n]+)`", node):
+                        content = self.prompt_strip(span.group(1))
+                        if re.search(r"\s", content.strip()) and self.inline_flagged(self.inline, node[: span.start()], content):
+                            rows.append((line_of(node), content, "inline"))
+
+        walk(document, None)
+        return rows
+
+    def scan_text(self, path, text):
+        kind = self.kind_of(path)
+        if kind is None:
+            return []
+        findings = []
+        for line, command, context in self.extract(kind, path, text):
+            for tool, cls, word in self.commands(command):
+                if cls != "enforced":
+                    continue
+                findings.append({"path": path, "line": line, "tool": tool, "word": word, "command": command.strip()[:160], "kind": kind["id"], "context": context})
+        return findings
+
+    def verdict(self, finding):
+        reason = self.allowed(finding["path"], finding["tool"], finding["context"])
+        return reason
+
+
+def tracked(root, worktree=False):
+    command = ["git", "-C", root, "ls-files", "-z"] + (["-co", "--exclude-standard"] if worktree else [])
+    out = subprocess.run(command, capture_output=True, check=True).stdout.decode("utf-8")
+    return [p for p in out.split("\0") if p]
+
+
+def scan(law, root, paths):
+    findings = []
+    scanned = 0
+    for path in paths:
+        if law.excluded(path) or law.kind_of(path) is None:
+            continue
+        full = os.path.join(root, path)
+        if not os.path.isfile(full) or os.path.islink(full) or os.path.getsize(full) > 8_000_000:
+            continue
+        try:
+            with open(full, encoding="utf-8", newline="") as handle:
+                text = handle.read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        scanned += 1
+        text = text.replace("\r\n", "\n")
+        for finding in law.scan_text(path, text):
+            allow = law.verdict(finding)
+            finding["allowed"] = allow
+            findings.append(finding)
+    return scanned, findings
+
+
+def run_cases(law, cases):
+    failed = []
+    for case in cases["cases"]:
+        got = sorted(set((t, c) for t, c, _ in law.commands(case["command"])))
+        want = sorted(set((t, "enforced") for t in case["tools"]))
+        want = [x for x in want]
+        got = [x for x in got if x[1] == "enforced"]
+        if got != want:
+            failed.append((case["id"], want, got))
+    for case in cases.get("files", []):
+        got = [(f["tool"], f["line"]) for f in law.scan_text(case["path"], case["text"]) if not law.verdict(f)]
+        want = [(t, l) for t, l in case["findings"]]
+        if got != want:
+            failed.append((case["id"], want, got))
+    for case in cases.get("paths", []):
+        got = {"excluded": law.excluded(case["path"]), "kind": (law.kind_of(case["path"]) or {}).get("id"), "allowed": law.allowed(case["path"], case.get("tool", "node"), case.get("context", "line"))}
+        want = case["expect"]
+        if any(got.get(k) != v for k, v in want.items()):
+            failed.append((case["id"], want, got))
+    return failed
+
+
+def main(argv):
+    opts = {"--root": os.getcwd(), "--patterns": os.path.join(HERE, "patterns.json")}
+    flags = set()
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a in ("--root", "--patterns", "--files", "--cases"):
+            opts[a] = argv[i + 1]
+            i += 2
+            continue
+        flags.add(a)
+        i += 1
+    law = Law(load_patterns(opts["--patterns"]))
+    if "--cases" in opts:
+        with open(opts["--cases"], encoding="utf-8") as handle:
+            failed = run_cases(law, json.load(handle))
+        for row in failed:
+            print("CASE FAILED", row)
+        print("cases failed: %d" % len(failed))
+        return 1 if failed else 0
+    root = os.path.abspath(opts["--root"])
+    if "--files" in opts:
+        with open(opts["--files"], encoding="utf-8") as handle:
+            paths = [p for p in re.split(r"[\0\n]", handle.read()) if p]
+    else:
+        paths = tracked(root, "--worktree" in flags)
+    if not paths:
+        print("refused: empty scope", file=sys.stderr)
+        return 2
+    scanned, findings = scan(law, root, paths)
+    live = [f for f in findings if not f["allowed"]]
+    if "--json" in flags:
+        allowed_by = {}
+        for f in findings:
+            if f["allowed"]:
+                allowed_by[f["allowed"]] = allowed_by.get(f["allowed"], 0) + 1
+        print(json.dumps({"scanned": scanned, "findings": live, "allowedCount": len(findings) - len(live), "allowedBy": allowed_by}, ensure_ascii=False, indent=1))
+    else:
+        for f in live:
+            print("%s:%d: %s (%s) %s" % (f["path"], f["line"], f["tool"], f["kind"], f["command"]))
+        print("scanned %d files, %d findings, %d allowed" % (scanned, len(live), len(findings) - len(live)))
+    return 1 if live else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

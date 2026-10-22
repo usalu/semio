@@ -32,14 +32,14 @@ fn mutation() -> SHomeMutation {
     decode_value((*MUTATION))
 }
 fn built_outcome() -> protocol::MutationOutcome<SHomeDiff> {
-    <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation(), &before())
+    <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Pinning the counter to `7` moves `catalogGeneration` from `3` and leaves the launcher's
 /// `schema` field alone — this is a setter, not an increment.
 #[semio_framework_async_macros::async_test]
 async fn pins_the_counter_of_the_committed_after() {
-    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("change-catalog-generation applies to its committed before-document");
+    let applied = protocol::apply_diff_cold(built_outcome().diff(), &before()).expect("change-catalog-generation applies to its committed before-document");
     assert_eq!(applied, expected_after(), "change-catalog-generation/bumps-the-catalog-generation-to-7: the bumped document differs from the committed after-snapshot");
     assert_eq!(applied.catalog_generation, 7, "change-catalog-generation/bumps-the-catalog-generation-to-7: the counter must land on the payload's value, not on before + 1");
 }
@@ -49,13 +49,13 @@ async fn pins_the_counter_of_the_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn repinning_the_old_counter_restores_before() {
     let base = before();
-    let forward = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward change-catalog-generation applies");
-    let inverse = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let forward = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::diff(&mutation(), &base);
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward change-catalog-generation applies");
+    let inverse = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-catalog-generation/bumps-the-catalog-generation-to-7: the inverse of one counter pin is exactly one counter pin back");
     for step in &inverse {
-        let undo = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the change-catalog-generation inverse step applies");
+        let undo = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the change-catalog-generation inverse step applies");
     }
     assert_eq!(snapshot, base, "change-catalog-generation/bumps-the-catalog-generation-to-7: re-pinning generation 3 did not restore the before-document");
 }
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_value::<SHomeDiff>((*DIFF));
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-catalog-generation/bumps-the-catalog-generation-to-7: committed diff did not carry before to after");
 }
 

@@ -42,7 +42,7 @@ pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> A
 
 /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
 /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
-pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::SpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
+pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
     let definition = manifest().definition;
     let registry = AppActionRegistry::from_definition(&definition);
     drop(definition);
@@ -78,7 +78,7 @@ where
 pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     Manifest: std::future::Future<Output = App>,
 {
     let definition = manifest.await.definition;
@@ -91,7 +91,7 @@ where
 /// 🏗️ A `VcsArtifactApp` is born constructing: its store owner catalogs are installed by metered constructor turns
 /// the reactor drives before it admits any command. A fixture that reaches the stores directly settles that
 /// constructor first, claiming and validating every phase receipt exactly as the reactor's exchange does.
-pub fn settle_store_constructor<A: ArtifactApp, M: store::SpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
+pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     let mut receipts = Vec::new();
     loop {
@@ -106,7 +106,7 @@ pub fn settle_store_constructor<A: ArtifactApp, M: store::SpaceMember + store::M
 pub fn drain_store_displaced_retirements<P, Mutation>(store: &mut store::ArtifactStore<P, Mutation>)
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpText + Send + 'static,
 {
     for _ in 0..1_000_000 {
         if store.maintenance_retirements_terminal_is_empty() { return; }
@@ -117,7 +117,7 @@ where
 }
 
 /// 🧹 The close-side twin of [`settle_store_constructor`]: drives the constructor's own close phase to terminal emptiness, claiming every phase receipt, so the close quote that follows names the next application owner instead of the constructor.
-pub fn settle_store_constructor_close<A: ArtifactApp, M: store::SpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
+pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     let mut receipts = Vec::new();
     loop {
@@ -155,7 +155,7 @@ pub struct TypedOperationFixtureReceipt {
 }
 
 /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
-pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_config::WindowConfigOwner, A: ArtifactApp, M: store::SpaceMember + store::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &semio_framework::ViewModel) -> Result<Option<O::State>, semio_framework::Fault> {
+pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_config::WindowConfigOwner, A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &semio_framework::ViewModel) -> Result<Option<O::State>, semio_framework::Fault> {
     Ok(app.stores.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
 }
 

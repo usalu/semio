@@ -1,10 +1,10 @@
 {
   "version": 1,
   "scripts": {
-    "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
-    "setup": "bun repo run workspace:setup",
-    "dashboard": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream",
-    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
+    "setup": "repo run workspace:setup",
+    "dashboard": "repo run @semio-tech/repo-dashboard-rs:run --output=stream",
+    "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
   },
   "cases": [
     {
@@ -16,7 +16,7 @@
     {
       "name": "neutral developer task alias",
       "add": {
-        "dev": "bun repo run workspace:dev"
+        "dev": "repo run workspace:dev"
       },
       "remove": [],
       "accepted": true
@@ -32,7 +32,7 @@
     {
       "name": "bypass task owner",
       "add": {
-        "setup": "bun ./📜️script.ts setup"
+        "setup": "repo ./📜️script.ts setup"
       },
       "remove": [],
       "accepted": false
@@ -40,7 +40,7 @@
     {
       "name": "build alias without rebuild",
       "add": {
-        "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:install"
+        "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:install"
       },
       "remove": [],
       "accepted": false
@@ -48,7 +48,7 @@
     {
       "name": "neutral reserved producer alias",
       "add": {
-        "test-reserved-producer-native": "bun repo run @semio-tech/framework-plugin:test-reserved-producer-native"
+        "test-reserved-producer-native": "repo run @semio-tech/framework-plugin:test-reserved-producer-native"
       },
       "remove": [],
       "accepted": true
@@ -56,7 +56,7 @@
     {
       "name": "neutral configured task alias",
       "add": {
-        "verify": "bun repo run workspace:test:release --skip-cache --output=stream"
+        "verify": "repo run workspace:test:release --skip-cache --output=stream"
       },
       "remove": [],
       "accepted": true
@@ -72,7 +72,7 @@
     {
       "name": "direct Bun task alias",
       "add": {
-        "verify": "bun ./📜️script.ts test"
+        "verify": "repo ./📜️script.ts test"
       },
       "remove": [],
       "accepted": false
@@ -80,7 +80,7 @@
     {
       "name": "shell sequence alias",
       "add": {
-        "verify": "bun repo run workspace:test && bun nx run workspace:build"
+        "verify": "repo run workspace:test && bun nx run workspace:build"
       },
       "remove": [],
       "accepted": false
@@ -88,7 +88,7 @@
     {
       "name": "shell interpolation alias",
       "add": {
-        "verify": "bun repo run workspace:test $(whoami)"
+        "verify": "repo run workspace:test $(whoami)"
       },
       "remove": [],
       "accepted": false
@@ -96,7 +96,7 @@
     {
       "name": "newline alias",
       "add": {
-        "verify": "bun repo run workspace:test\n"
+        "verify": "repo run workspace:test\n"
       },
       "remove": [],
       "accepted": false
@@ -104,7 +104,7 @@
     {
       "name": "targetless alias",
       "add": {
-        "verify": "bun repo run workspace"
+        "verify": "repo run workspace"
       },
       "remove": [],
       "accepted": false
@@ -128,7 +128,7 @@
     {
       "name": "shell pipeline alias",
       "add": {
-        "verify": "bun repo run workspace:test | cat"
+        "verify": "repo run workspace:test | cat"
       },
       "remove": [],
       "accepted": false
@@ -136,7 +136,7 @@
     {
       "name": "quoted interpolation alias",
       "add": {
-        "verify": "bun repo run workspace:test \"${HOME}\""
+        "verify": "repo run workspace:test \"${HOME}\""
       },
       "remove": [],
       "accepted": false
@@ -144,7 +144,7 @@
     {
       "name": "environment assignment alias",
       "add": {
-        "verify": "SEMIO_BUILD_TOOL=bazel bun repo run workspace:test"
+        "verify": "SEMIO_BUILD_TOOL=bazel repo run workspace:test"
       },
       "remove": [],
       "accepted": false
@@ -152,7 +152,7 @@
     {
       "name": "noncanonical double space alias",
       "add": {
-        "verify": "bun repo run  workspace:test"
+        "verify": "repo run  workspace:test"
       },
       "remove": [],
       "accepted": false
@@ -160,19 +160,16 @@
   ],
   "devcontainerRuntime": {
     "postCreateCommand": [
-      "bun",
       "repo",
       "run",
       "workspace:setup"
     ],
     "postStartCommand": [
-      "bun",
       "repo",
       "run",
       "workspace:setup-devcontainer-start"
     ],
     "postAttachCommand": [
-      "bun",
       "repo",
       "run",
       "workspace:setup-devcontainer-attach"
@@ -260,7 +257,7 @@
   ],
   "ownerCommandCases": [
     {
-      "command": "bun ./📜️script.ts test authority",
+      "command": "repo ./📜️script.ts test authority",
       "accepted": true
     },
     {
@@ -268,83 +265,83 @@
       "accepted": true
     },
     {
-      "command": "bun domain/📜️script.ts test",
+      "command": "repo domain/📜️script.ts test",
       "accepted": true
     },
     {
-      "command": "bun ../../📜️script.ts sync",
+      "command": "repo ../../📜️script.ts sync",
       "accepted": true
     },
     {
-      "command": "bun 📜️script.ts generate",
+      "command": "repo 📜️script.ts generate",
       "accepted": true
     },
     {
-      "command": "bun domain\\📜️script.ts test",
+      "command": "repo domain\\📜️script.ts test",
       "accepted": true
     },
     {
-      "command": "bun --watch ./📜️script.ts generate-logo",
+      "command": "repo --watch ./📜️script.ts generate-logo",
       "accepted": true
     },
     {
-      "command": "bun ./📜️script.ts test --filter=\"test(a) | test(b)\"",
+      "command": "repo ./📜️script.ts test --filter=\"test(a) | test(b)\"",
       "accepted": true
     },
     {
-      "command": "bun ./📜️script.ts test 'quoted;argument'",
+      "command": "repo ./📜️script.ts test 'quoted;argument'",
       "accepted": true
     },
     {
-      "command": "bun ./📜️script.ts",
+      "command": "repo ./📜️script.ts",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test ",
+      "command": "repo ./📜️script.ts test ",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test && cargo test",
+      "command": "repo ./📜️script.ts test && cargo test",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test;cargo test",
+      "command": "repo ./📜️script.ts test;cargo test",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test | tee log",
+      "command": "repo ./📜️script.ts test | tee log",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test \"literal | value\" | tee log",
+      "command": "repo ./📜️script.ts test \"literal | value\" | tee log",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test $(whoami)",
+      "command": "repo ./📜️script.ts test $(whoami)",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test \"$(whoami)\"",
+      "command": "repo ./📜️script.ts test \"$(whoami)\"",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test `whoami`",
+      "command": "repo ./📜️script.ts test `whoami`",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test \"`whoami`\"",
+      "command": "repo ./📜️script.ts test \"`whoami`\"",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test $TASK_ARGS",
+      "command": "repo ./📜️script.ts test $TASK_ARGS",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test ${TASK_ARGS}",
+      "command": "repo ./📜️script.ts test ${TASK_ARGS}",
       "accepted": false
     },
     {
-      "command": "bun ./📜️script.ts test\ncargo test",
+      "command": "repo ./📜️script.ts test\ncargo test",
       "accepted": false
     },
     {
@@ -364,7 +361,7 @@
       "accepted": false
     },
     {
-      "command": "bun ./script.ts test",
+      "command": "repo ./script.ts test",
       "accepted": false
     },
     {
@@ -377,7 +374,7 @@
       "target": {
         "executor": "repo:script",
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         }
       },
       "accepted": true
@@ -385,14 +382,14 @@
     {
       "target": {
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         }
       },
       "accepted": true
     },
     {
       "target": {
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "accepted": true
     },
@@ -409,9 +406,9 @@
       "target": {
         "options": {
           "commands": [
-            "bun ./📜️script.ts build",
+            "repo ./📜️script.ts build",
             {
-              "command": "bun ./📜️script.ts test",
+              "command": "repo ./📜️script.ts test",
               "forwardAllArgs": true
             }
           ]
@@ -422,11 +419,11 @@
     {
       "target": {
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         },
         "configurations": {
           "release": {
-            "command": "bun ./📜️script.ts build --release"
+            "command": "repo ./📜️script.ts build --release"
           }
         }
       },
@@ -450,7 +447,7 @@
       "target": {
         "executor": "@nx/js:node",
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         }
       },
       "accepted": false
@@ -458,7 +455,7 @@
     {
       "target": {
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         },
         "configurations": {
           "release": {
@@ -472,7 +469,7 @@
       "target": {
         "options": {
           "commands": [
-            "bun ./📜️script.ts build",
+            "repo ./📜️script.ts build",
             {
               "command": "cargo test"
             }
@@ -494,7 +491,7 @@
       "target": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         }
       },
       "accepted": false
@@ -599,7 +596,7 @@
     },
     {
       "text": "Consult .cursor/plans/archive.md for historical planning evidence.",
-      "accepted": true
+      "accepted": false
     },
     {
       "text": "Configure .vscode/🧩️launch.seed.jsonc.",
@@ -628,7 +625,8 @@
     ".windsurf",
     ".kiro",
     ".atom",
-    ".brackets"
+    ".brackets",
+    ".cursor"
   ],
   "forbiddenExtensions": [
     ".sln",
@@ -658,12 +656,21 @@
     ".cursor/hooks.json",
     ".devcontainer/editor-overlay.json",
     ".cursor/settings.json",
-    ".cursor/rules"
+    ".cursor/rules",
+    ".github/hooks"
   ],
   "pathCases": [
     {
-      "path": ".cursor",
+      "path": ".github/hooks",
+      "accepted": false
+    },
+    {
+      "path": ".github/workflows",
       "accepted": true
+    },
+    {
+      "path": ".cursor",
+      "accepted": false
     },
     {
       "path": ".cursor/launch.json",
@@ -807,11 +814,11 @@
     },
     {
       "path": ".cursor/plans/audit.md",
-      "accepted": true
+      "accepted": false
     },
     {
       "path": ".cursor/plans/mcp.json",
-      "accepted": true
+      "accepted": false
     },
     {
       "path": ".codex/config.toml",

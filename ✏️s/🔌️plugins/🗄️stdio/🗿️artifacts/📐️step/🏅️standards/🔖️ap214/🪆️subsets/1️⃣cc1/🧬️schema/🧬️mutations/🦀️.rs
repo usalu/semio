@@ -61,7 +61,7 @@ pub mod set_product_identity;
 /// ceiling, so undoing a repair can re-introduce the violation the repair removed.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc1")]
+#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc1", reference = StepSnapshot, reference_diff = StepDiff)]
 pub enum StepCc1Mutation {
     SetFileSchema(set_file_schema::SetFileSchema),
     SetProductIdentity(set_product_identity::SetProductIdentity),
@@ -98,8 +98,8 @@ impl StepCc1Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(test)]
 pub fn apply_step_cc1_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc1Mutation) -> protocol::MutationOutcome<StepDiff> {
-    let outcome = <StepCc1Mutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <StepCc1Mutation as ColdMutation<StepSnapshot>>::diff(mutation, snapshot);
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

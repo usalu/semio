@@ -40,7 +40,7 @@ test("the authored worker policy is valid under an independent validator and eve
 
 test("every task is classified as Python's regular expressions classify it",()=>{
  const rows=fixture.classification;
- for(const row of rows)expect(workerActionKindV1(policy,row.target,row.continuous),row.target).toBe(row.kind);
+ for(const row of rows)expect<unknown>(workerActionKindV1(policy,row.target,row.continuous),row.target).toBe(row.kind);
  const oracle=python(`
 import json,re,sys
 policy=json.load(sys.stdin)

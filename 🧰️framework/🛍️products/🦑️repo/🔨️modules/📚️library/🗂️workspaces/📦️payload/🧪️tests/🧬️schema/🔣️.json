@@ -1,0 +1,67 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "owner",
+     "payload",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "absDir"
+      ],
+      "properties": {
+       "absDir": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "exports": {}
+      }
+     },
+     "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "absDir",
+       "name"
+      ],
+      "properties": {
+       "absDir": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       }
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

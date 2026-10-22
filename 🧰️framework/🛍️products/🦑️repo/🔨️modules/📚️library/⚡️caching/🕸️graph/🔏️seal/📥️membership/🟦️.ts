@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -6,6 +6,7 @@ import { collectionManifestsFromInventory } from "../../../🚀️bootstrap/📥
 import policy from "../../../🔣️policy.json" with {type:"json"};
 import ownership from "../../../../🗂️workspaces/🔣️policy.json" with {type:"json"};
 import protocol from "./🧬️schema/🔣️.json" with {type:"json"};
+import { startToolV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 const inventory=protocol.definitions.Protocol.const;
 
 /** 📥️ Reads exact current source membership from Git and admitted ignored structural manifests with bounded original cancellation. */
@@ -16,7 +17,7 @@ export async function nxGraphSourceMembershipV2(root:string,signal?:AbortSignal)
  const excluded=[...roots.map(path=>`--exclude=/${path}/`),...names].map(value=>value.startsWith("--exclude=")?value:`--exclude=**/${value}/`);
  const read=(args:readonly string[],input?:string,allowedCodes:readonly number[]=[0])=>new Promise<string>((accept,reject)=>{
   const readStarted=performance.now();
-  const child=spawn("git",["-c","core.quotepath=false","-c","core.fsmonitor=false",...args],{cwd:root,windowsHide:true,stdio:[input===undefined?"ignore":"pipe","pipe","ignore"]}),chunks:Buffer[]=[];let bytes=0,settled=false;
+  const child=startToolV1("git",["-c","core.quotepath=false","-c","core.fsmonitor=false",...args],{cwd:root,windowsHide:true,stdio:[input===undefined?"ignore":"pipe","pipe","ignore"]}),chunks:Buffer[]=[];let bytes=0,settled=false;
   const finish=(error?:unknown)=>{if(settled)return;settled=true;if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1")console.log(`[nx] Git membership ${args.includes("check-ignore")?"ignore-filter":args.includes("--deleted")?"deleted":args.includes("--others")?"untracked":"tracked"} elapsedMs=${Math.round(performance.now()-readStarted)} status=${error?"refused":"complete"}`);clearTimeout(deadline);signal?.removeEventListener("abort",abort);if(error)reject(error);else accept(Buffer.concat(chunks).toString("utf8"));},abort=()=>{child.kill();finish(signal?.reason??Error("Graph membership cancelled"));},deadline=setTimeout(()=>{child.kill();finish(Error(`Graph membership inventory exceeded ${Math.round(inventory.readDeadlineMilliseconds/1000)} seconds`));},inventory.readDeadlineMilliseconds);
   signal?.addEventListener("abort",abort,{once:true});child.stdout!.on("data",chunk=>{bytes+=chunk.length;if(bytes>inventory.maximumInventoryBytes){child.kill();finish(Error("Graph membership inventory exceeds "+inventory.maximumInventoryBytes+" bytes"));}else chunks.push(chunk);});child.once("error",finish);child.once("close",code=>finish(code!==null&&allowedCodes.includes(code)?undefined:Error(`Git source membership refused (${code})`)));if(input!==undefined){child.stdin?.once("error",finish);child.stdin?.end(input);}
  });

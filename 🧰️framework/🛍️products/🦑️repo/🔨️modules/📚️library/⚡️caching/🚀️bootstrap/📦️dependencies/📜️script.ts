@@ -1,6 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { ScriptRouter, receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { SyncScript, RefreshLockScript, ContractCheckScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
+import {SyncScript,RefreshLockScript} from "./⌨️commands/🟦️.ts";
+import {ContractCheckScript} from "./🧪️tests/🔬️script-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript)).run(process.argv.slice(2), original));

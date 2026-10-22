@@ -42,7 +42,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -50,7 +50,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -59,7 +59,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -68,7 +68,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -82,7 +82,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-source"
       },
       "inputs": [
         "production",
@@ -96,7 +96,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",
@@ -110,7 +110,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -133,7 +133,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test recursive-retirement",
+        "command": "repo ./📜️script.ts test recursive-retirement",
         "forwardAllArgs": true
       }
     },
@@ -149,7 +149,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test stream-roles",
+        "command": "repo ./📜️script.ts test stream-roles",
         "forwardAllArgs": true
       }
     }

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { useLayoutEffect, Suspense } from "react";
+import { useLayoutEffect, Suspense } from "../../⚛️react-port/🟦️.ts";
 import type { ThreeCamera } from "@semio-tech/ui-react";
 import { type WorldMeshRecord } from "../🔭️scene-schema/🟦️.ts";
 import { useThree } from "../🎨️mesh-render/🟦️.tsx";

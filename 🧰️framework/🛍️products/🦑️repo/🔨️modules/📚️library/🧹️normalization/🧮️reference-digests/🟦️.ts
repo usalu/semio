@@ -1,6 +1,6 @@
 import { report } from "../🏃️operation/🟦️.ts";
 import { sourceRelative } from "../🛣️path/🟦️.ts";
-import { spawnSync } from "node:child_process";
+
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { basename, join, posix, relative } from "node:path";
@@ -14,6 +14,7 @@ import { typescriptTokens } from "../🧷️typescript-reference-authority/🟦�
 import { type ReferenceResolutionReach, referenceSignatureMayResolveInto } from "../✂️reference-edits/🟦️.ts";
 import { type ReferencePathIndex, type RustManifestInspection, type StandaloneReferenceTokens, markdownCommentPathReferenceAuthority, rustTokens } from "../🦀️rust-reference-graph/🟦️.ts";
 import { resolveReferenceTokenPath } from "../🧭️reference-resolution/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export const REFERENCE_DIGEST_NAMESPACE = "taxonomy-reference-digest-v1";
 
@@ -32,7 +33,7 @@ export function referenceTokenStore(repoRoot: string): RecordStore | null {
   if (referenceTokenStores.has(repoRoot)) return referenceTokenStores.get(repoRoot)!;
   const root = repoCacheDirectory(repoRoot, "taxonomy", "reference-digests");
   let ignored = false;
-  try { ignored = spawnSync("git", ["check-ignore", "-q", "--no-index", sourceRelative(relative(repoRoot, join(root, "probe")))], { cwd: repoRoot, stdio: "ignore" }).status === 0; } catch {}
+  try { ignored = runToolSyncV1("git", ["check-ignore", "-q", "--no-index", sourceRelative(relative(repoRoot, join(root, "probe")))], { cwd: repoRoot, stdio: "ignore" }).status === 0; } catch {}
   let store: RecordStore | null = null;
   if (ignored) {
     const namespace = normalizationRevision().slice(0, 32);

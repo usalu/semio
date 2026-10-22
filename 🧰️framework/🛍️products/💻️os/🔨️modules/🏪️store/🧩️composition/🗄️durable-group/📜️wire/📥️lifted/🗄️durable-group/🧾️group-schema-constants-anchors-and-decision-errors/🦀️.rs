@@ -1,6 +1,7 @@
 //! 🧾️ Group schema constants, anchors and decision errors: the durable group schema, role and size constants, the anchor, member and prepared outcome records, the three member unsigned record and the decision error. See [`super`].
 
 use super::*;
+use semio_framework_dsl_record::{DslField, FieldValue, Shape};
 
 pub const DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1: &str = "semio.store.durable-owned-three-member-decision.v1";
 
@@ -117,6 +118,8 @@ pub enum DurableOwnedGroupDecisionError {
     EventTooLarge,
     Codec(String),
     Retirement(semio_framework_value::ValueError),
+    #[cfg(feature = "durable-group-testing")]
+    Preparation(semio_framework_value::ValueError),
 }
 
 impl std::fmt::Display for DurableOwnedGroupDecisionError {
@@ -133,9 +136,9 @@ impl std::fmt::Display for DurableOwnedGroupDecisionError {
             Self::EventTooLarge => formatter.write_str("durable owned group decision exceeds its event bound"),
             Self::Codec(message) => formatter.write_str(message),
             Self::Retirement(error) => std::fmt::Display::fmt(error, formatter),
-                    #[cfg(feature = "durable-group-testing")]
+            #[cfg(feature = "durable-group-testing")]
             Self::Preparation(error) => std::fmt::Display::fmt(error, formatter),
-}
+        }
     }
 }
 

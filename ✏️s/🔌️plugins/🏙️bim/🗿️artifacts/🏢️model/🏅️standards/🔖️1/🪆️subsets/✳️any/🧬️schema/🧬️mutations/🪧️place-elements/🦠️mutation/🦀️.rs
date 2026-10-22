@@ -18,16 +18,23 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<PlaceElements>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "elements", kind: "place-elements", record: "PlaceElements" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::place_elements::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::place_elements::inverse::inverse(self, base))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Place {} element(s)", self.placements.len()), &format!("{} Element(e) platzieren", self.placements.len()))
     }
     fn target(&self) -> Vec<String> {
         self.placements.keys().cloned().collect()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for PlaceElements
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<PlaceElements>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::place_elements::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::place_elements::inverse::inverse(self, base))
     }
 }

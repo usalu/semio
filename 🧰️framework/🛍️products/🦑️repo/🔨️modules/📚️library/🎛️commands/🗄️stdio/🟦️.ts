@@ -22,12 +22,12 @@ export class StdioScript extends Script {
     }
     if (gate === "long") {
       for (const structuralGate of ["quick", "schema-parity", "standards-coverage", "codec", "mutation-law", "inference"] as const) stdioRunStructuralGate(this.root, structuralGate);
-      runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "long"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("repo", ["run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "long"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "exhaustive") {
       this.run(["long"]);
-      runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("repo", ["run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "runtime") {

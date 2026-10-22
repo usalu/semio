@@ -190,14 +190,14 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
             directory::os_store::durable_group::DurableOwnedGroupTestMember {
                 edit: durable_edit(2, &format!("{identity}:drawing"), edit_actor, protocol::HybridLogicalTimestamp { logical: 1, ..timestamp }, work.drawing, work.drawing_inverse),
                 post_snapshot: Arc::new(drawing_post),
-                mutation_retirement: Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),
-                snapshot_retirement: Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),
+                mutation_retirement: Arc::new(semio_framework_value::OwnedValueRetirementFactory::default()),
+                snapshot_retirement: Arc::new(semio_framework_value::SharedValueRetirementFactory::default()),
             },
             directory::os_store::durable_group::DurableOwnedGroupTestMember {
                 edit: durable_edit(3, &format!("{identity}:value"), edit_actor, protocol::HybridLogicalTimestamp { logical: 2, ..timestamp }, work.value, work.value_inverse),
                 post_snapshot: Arc::new(value_post),
-                mutation_retirement: Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),
-                snapshot_retirement: Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),
+                mutation_retirement: Arc::new(semio_framework_value::OwnedValueRetirementFactory::default()),
+                snapshot_retirement: Arc::new(semio_framework_value::SharedValueRetirementFactory::default()),
             },
         )
         .expect("Store-owned typed fixed-three decision fixture");

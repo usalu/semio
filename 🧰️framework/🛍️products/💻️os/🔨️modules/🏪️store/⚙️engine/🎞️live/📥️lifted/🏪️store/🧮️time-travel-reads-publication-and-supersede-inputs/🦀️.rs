@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️TimeTravelReads
     /// 🗺️ The effective supersessions the live projection folds with.
@@ -213,10 +213,10 @@ where
     }
 
     /// 🫳️ Keeps the genuine prepared forward and original staged/current prebase borrowed together.
-    fn original_proposal_forward<'a>(&'a self, store_cursor: &StoreCursor<P, Mutation>,publication:&'a ArtifactStoreBatchPublication<P,Mutation>)->Result<(&'a Mutation,&'a P),ValueError>{
+    fn original_proposal_forward<'a>(&'a self, store_owners: &StoreOwners<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>,publication:&'a ArtifactStoreBatchPublication<P,Mutation>)->Result<(&'a Mutation,&'a P),ValueError>{
         use semio_framework_value::ValueRefusalKind;
         
-        if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&self.snapshot_read_leases)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"prepared proposal requires its original Store issuer"));}
+        if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&store_owners.snapshot_read_leases)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"prepared proposal requires its original Store issuer"));}
 if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publication.item_closing||publication.cancel_requested||publication.close_started||store_cursor.generation!=publication.expected_generation||store_cursor.content_revision!=publication.expected_revision||publication.stage.as_ref().is_some_and(|stage|stage.folding.is_some()){
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"foreign proposal requires the original unfurled prepared candidate and live prebase"));
         }
@@ -229,11 +229,11 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
 
     /// 🌐️ Advances original borrowed foreign rows before any fold transfer or replacement of their prebase.
     pub fn advance_prepared_foreign_steps(
-        &self, store_cursor: &StoreCursor<P, Mutation>, publication:&ArtifactStoreBatchPublication<P,Mutation>,
+        &self, store_owners: &StoreOwners<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, publication:&ArtifactStoreBatchPublication<P,Mutation>,
         output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant,
     )->Result<RetainedCloneStep,ValueError> {
-        let(original,prebase)=self.original_proposal_forward(store_cursor, publication)?;
-        let source=if original.may_emit_foreign_steps(){original.foreign_step_source(prebase,output.source_index())?}else{None};
+        let(original,prebase)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
+        let source=if original.may_emit_foreign_steps(){<Mutation as super::Mutation<P>>::foreign_step_source(original,prebase,output.source_index())?}else{None};
         let step=output.advance_source(source,grant)?;
         semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"original prepared foreign row turn")?;
         Ok(step)
@@ -241,10 +241,10 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
 
     /// ✍️ Uses the original installed typed operation codec and caller-funded output prefix without eager encoding.
     pub fn advance_prepared_operation_wire(
-        &self, store_cursor: &StoreCursor<P, Mutation>, publication:&ArtifactStoreBatchPublication<P,Mutation>,
+        &self, store_owners: &StoreOwners<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, publication:&ArtifactStoreBatchPublication<P,Mutation>,
         cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],grant:RetainedCloneGrant,
     )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError>{
-        let(original,_)=self.original_proposal_forward(store_cursor, publication)?;
+        let(original,_)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
         let source=publication.source.as_ref().and_then(|owner|owner.operation_wire_source(original)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"proposal bytes require their original installed typed codec issuer"))?;
         cursor.advance(source,output,grant)
     }
@@ -255,7 +255,7 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️ToolTransactions
     /// 🪂️ Takes the open tool transaction's edit off the applied tail before a remote merge: the ledger, the message ledger

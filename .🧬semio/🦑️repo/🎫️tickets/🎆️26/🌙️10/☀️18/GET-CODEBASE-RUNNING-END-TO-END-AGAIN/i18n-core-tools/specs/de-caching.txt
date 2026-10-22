@@ -1,0 +1,45 @@
+== vite service
+[dev] Port {preferredPort} ist bereits belegt — der Dev-Server scheint unter {url} zu laufen
+[dev] Port {preferredPort} liefert den Play-Eintrag "{servedEntry}", angefordert war aber "{expectedPlayEntry}". Beende diesen Prozess oder setze {vitePort}.
+[dev] Port {preferredPort} ist bereits belegt{occupant}. Beende diesen Prozess oder setze {vitePort}.
+[dev] Port {preferredPort} ist bereits belegt — stattdessen wird auf {resolved} gestartet.
+== vite
+Bündeln von {owner}
+== storage report
+[nx-disk] {incomplete}: {files} eindeutige Dateien; {allocated}
+== inventory
+[nx-policy] Alle Target- und Befehlsverträge bestanden
+== artifacts capture
+[artifact-package-contract] {command} läuft elapsedMs={elapsedMs} ¦ command,elapsedMs
+== artifacts native
+[cargo:locked-metadata] Abhängigkeitssperre geprüft
+== artifacts rust
+[TRACE] {name}-twin checks={run}
+== bundle
+[bun-worker] kompiliert pid={pid} kind={kind}
+== graph
+[nx] Graph-Mitgliedschaft files={files} inventoryMs={inventoryMs} admissionMs={admissionMs} digestMs={digestMs} ¦ files,inventoryMs,admissionMs,digestMs
+== bootstrap admission
+[nx] Strukturelle Quellmitgliedschaft wird zugelassen ({inspected} Verzeichnisse)
+== bootstrap native
+[deps-cpp] Voraussetzung der nativen Build-Werkzeuge abgeschlossen
+[deps-{kind}] Fixierte Werkzeuge und das Rust-WebAssembly-Ziel sind bereit
+== bootstrap authorizers
+[authorizer] Schließen des Quell-Deskriptors nach dem primären Fehler fehlgeschlagen
+== bootstrap wasm
+Binaryen {version} wird vorbereitet…
+Fixiertes Binaryen {version} für {platform}/{architecture} wird heruntergeladen…
+== bootstrap tools
+[nx] Bereinigung der Staging-Ablage nach abgelehnter Veröffentlichung fehlgeschlagen
+== bootstrap bun
+Fixiertes Bun {version} wird beschafft…
+Fixiertes Bun {version} für {platform}/{arch} wird beschafft…
+== ci
+Erfolgreiche CI-Vorfahren werden aufgelöst…
+== cargo
+[cargo-provenance] {target}: {depInfos} dep-info-Dateien, {foreign} fremde
+[cargo-provenance] Fremde Quellwurzel: {value}
+[cargo-provenance] {foreign} fremde Units{removed}
+== pruning
+[cache-report] {name}: {totalBytes} in {unitCount} Units; würde {ageDeletions} ungenutzte Units ({ageBytes}) und {budgetDeletions} Units über Budget ({budgetBytes}) löschen; behält {retainedBytes}{age}
+[cache-prune] {name}: {guardedOverBudgetBytes} über Budget, aber in den letzten {hours} h berührt; bleibt bestehen ¦ name,guardedOverBudgetBytes,hours

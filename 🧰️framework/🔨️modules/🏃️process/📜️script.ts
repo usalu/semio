@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {scriptCompilerAdmissionControlV1} from "./🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "./🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🏃️ Runs neutral process ownership and execution contracts. */
@@ -12,6 +12,8 @@ import {executeCommandV1} from "./🧭️routing/🎛️command/🟦️.ts";
 import {parseCommandArgumentsV1,resolveCommandConfigurationV1} from "./🧭️routing/🎛️command/⚙️configuration/🟦️.ts";
 
 import { resolveTypescriptCompilerV1 } from "./📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { isMainModuleV1 } from "../⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../⚙️runtime/🏷️identity/🟦️.ts";
 /** 🎛️ Runs a configured neutral command with exact context and artifact custody. */
 class CommandScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
@@ -50,6 +52,10 @@ class TestScript extends BundleScript {
       "resource-lease-fairness": {source:"🔒️leases/⚖️fairness/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "resource-lease-order": {source:"🔒️leases/🧭️order/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "resource-lease-order-processes": {source:"🔒️leases/🧭️order/🧪️tests/📥️processes/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "agent-sessions": {source:"🪪️agent-sessions/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "agent-sessions-adapters": {source:"🪪️agent-sessions/🧪️tests/🔗️adapters/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "resource-lease-admission": {source:"🔒️leases/🚪️admission/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "resource-lease-writer": {source:"🔒️leases/🧪️tests/🎟️writer/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "exact-cargo-storage": {source:"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.fundamental,testNamePattern:"exact Cargo refuses missing|actual exact Cargo bounded|exact Cargo preparation|Cargo execution|Declared command tails"},
       "compiler-state": { source: "🏗️build/🟦️typescript/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "runtime-environment": { source: "🏗️build/🎛️environment/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
@@ -92,9 +98,9 @@ class TestScript extends BundleScript {
     if(segments[0]==="compiler-capacity-inheritance")sources.push(resolve(this.root,"🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧪️tests/🟦️.ts"));
     if(segments[0]==="compiler-capacity")sources.push(resolve(this.root,"🔒️leases/📦️bounded/🧪️tests/🟦️.ts"));
     if(segments[0]==="native-storage-platform")sources.push(resolve(this.root,"📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts"),resolve(this.root,"💾️state/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"));
-    if (["routing", "command", "capture", "compiler-state", "cargo-driver", "cargo-profile","exact-cargo-laws","exact-cargo-storage"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", ...(segments[0] === "compiler-state" ? ["--noUncheckedIndexedAccess"] : []), "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...(segments[0]==="exact-cargo-storage"?[resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"),sources.at(-2)!,sources.at(-1)!]:sources)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
+    if (["routing", "command", "capture", "compiler-state", "cargo-driver", "cargo-profile","exact-cargo-laws","exact-cargo-storage"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", ...(segments[0] === "compiler-state" ? ["--noUncheckedIndexedAccess"] : []), "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), ...(segments[0]==="exact-cargo-storage"?[resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"),sources.at(-2)!,sources.at(-1)!]:sources)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", "--timeout", String(scriptInvocationBudget(this.invocation, suite.budgetMs)), ...sources, ...(suite.testNamePattern ? ["--test-name-pattern", suite.testNamePattern] : [])], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1" }, signal: this.invocation.control.signal });
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("command",CommandScript).register("test", TestScript), { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname,resolve(import.meta.dirname,"../..")).register("command",CommandScript).register("test", TestScript), { invocation: original }));

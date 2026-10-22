@@ -7,7 +7,7 @@
 //! `SEMIO_PUZZLE5D_WRITE_FIXTURES=1`, an ordinary run only asserts that every committed file
 //! already equals its regenerated form.
 
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;

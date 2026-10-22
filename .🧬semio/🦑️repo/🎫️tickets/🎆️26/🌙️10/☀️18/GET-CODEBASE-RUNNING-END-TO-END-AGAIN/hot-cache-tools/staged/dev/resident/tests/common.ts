@@ -22,6 +22,9 @@ export async function waitFor(check:()=>boolean|Promise<boolean>,timeoutMs=5000,
 }
 
 export function tempRoot(prefix:string){return realpathSync(mkdtempSync(join(tmpdir(),prefix)));}
+
+/** 🧷 A temporary directory with a path short enough for a unix socket beneath it: the platform's own temporary directory, or the POSIX root `/tmp` where that one is long. */
+export function shortTempDirectory(prefix:string){return mkdtempSync(join(process.platform==="win32"||tmpdir().length<=40?tmpdir():"/tmp",prefix));}
 export const cleanup=(path:string)=>rmSync(path,{recursive:true,force:true});
 
 /** 📸 Naive complete snapshot of a tree: files with modes, directories with stamps, honouring the same exclusions. */

@@ -23,7 +23,7 @@ export async function testGraphRevision(workspace: string, output: string): Prom
       writeFileSync(join(directory, "package.json"), '{"type":"module","name":"graph-revision-fixture"}');
       writeFileSync(join(directory, "nx.json"), "{}");
       mkdirSync(join(directory, "package/📦️packages/🦀️rust"), { recursive: true });
-      writeFileSync(join(directory, "package/📦️packages/🦀️rust/📋️project.json"), '{"name":"fixture","targets":{"build":{"options":{"command":"bun ./📜️script.ts build"}}}}');
+      writeFileSync(join(directory, "package/📦️packages/🦀️rust/📋️project.json"), '{"name":"fixture","targets":{"build":{"options":{"command":"repo ./📜️script.ts build"}}}}');
       writeFileSync(join(directory, "package/📦️packages/🦀️rust/📜️script.ts"), 'console.log("fixture");');
       writeFileSync(join(directory, "package/📦️packages/🦀️rust/Cargo.toml"), fixture.component.cargo);
       writeFileSync(join(directory, "package/📦️packages/🦀️rust/🦀️.rs"), "pub fn neutral_owner() {}\n");

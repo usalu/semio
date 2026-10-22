@@ -104,7 +104,7 @@ pub struct WorldMarqueePickCursor {
 }
 
 #[derive(Clone, Copy)]
-enum WorldMarqueeCandidate {
+pub enum WorldMarqueeCandidate {
     Point { point: [f32; 2], component: Option<u32> },
     Segment { points: [[f32; 2]; 2], component: u32 },
     Triangle { points: [[f32; 2]; 3], component: Option<u32> },

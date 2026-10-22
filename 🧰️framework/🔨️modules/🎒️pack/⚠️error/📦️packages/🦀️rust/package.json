@@ -5,8 +5,8 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-error-rs:test-ownership",
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-error-rs:test-native"
+    "test-ownership": "repo run @semio-tech/framework-pack-error-rs:test-ownership",
+    "test-native": "repo run @semio-tech/framework-pack-error-rs:test-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

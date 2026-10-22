@@ -53,15 +53,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "slot-positions", kind: "set-slot-positions", record: "SetSlotPositions" };
 
-    fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.positions.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native("Set 1 slot position", "1 Slotposition setzen"),
@@ -71,5 +62,20 @@ where
     fn target(&self) -> Vec<String> {
         self.ids()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc3dSnapshot, Op> for SetSlotPositions
+where
+    Op: protocol::ColdMutation<Wfc3dSnapshot, ReferenceDiff = Wfc3dDiff> + From<SetSlotPositions>,
+{
+    fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️SetSlotPositions

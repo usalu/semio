@@ -8,7 +8,7 @@ use protocol::PackLimits;
 use pack::record::RetainedRecordReceiving;
 
 /// 🗿️ Native genesis declares a required persistent original receiver independently of cold Pack decoding.
-pub trait OriginalArtifactPackReceiving:semio_framework_value::RetireOwned+Sync+Sized {
+pub trait OriginalArtifactPackReceiving:semio_framework_value::retirement::RetireOwned+Sync+Sized {
  type Receiving:OriginalArtifactSnapshotReceiving<Self>;
  fn original_pack_birth_demand()->RetirementDemand;
  fn admit_original_pack(source:&[u8],limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self::Receiving,RetainedCloneProgress)>,ValueError>;

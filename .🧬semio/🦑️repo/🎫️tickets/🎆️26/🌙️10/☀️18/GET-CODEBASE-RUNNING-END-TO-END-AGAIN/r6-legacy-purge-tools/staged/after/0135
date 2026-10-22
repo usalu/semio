@@ -1,0 +1,19 @@
+{
+  "title": "Framework Os Host And Dev Crate Consolidation",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Part of CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE. Goal 🎯aioptimizedrepo. Exclusive ownership of assigned tree. Never edit root Cargo.toml/package.json (registrar). Shape V2 only. Temp files in this ticket folder only.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-08-06 00:00:00",
+      "author": "",
+      "system": "",
+      "client": "cursor-chat",
+      "checkpoint": "",
+      "summary": "os-dev e2e path restore after implementations eradication",
+      "llm": "cursor-grok-4.5"
+    }
+  ]
+}

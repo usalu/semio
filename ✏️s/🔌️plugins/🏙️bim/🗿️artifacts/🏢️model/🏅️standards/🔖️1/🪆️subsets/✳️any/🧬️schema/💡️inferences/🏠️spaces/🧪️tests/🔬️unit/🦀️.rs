@@ -301,7 +301,7 @@ async fn a_diff_touching_the_walls_re_infers_the_rooms_and_a_material_diff_does_
     assert_eq!(first, untouched);
     assert_eq!(session.report().computed_by_kind.get("room"), None, "a density edit recomputes no room");
     let moved = ModelDiff::walls("w-east", Entry::Patched(WallPatch { axis: Some(line((5.0, 0.0), (5.0, 3.0))), ..Default::default() }));
-    let edited = protocol::apply_diff(&moved, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&moved, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &moved).spaces.clone();
     assert!(near(first["sp"].area, 3.8 * 2.8, 1e-9));
     assert!(recomputed["sp"].area != first["sp"].area, "the moved east wall opens or resizes the room: {}", recomputed["sp"].area);
@@ -344,18 +344,18 @@ async fn editing_a_ceiling_changes_the_clear_height_through_the_session_and_a_re
     let first = session.update(&snapshot, &ModelDiff::default()).spaces.clone();
     assert!(close(first["sp"].clear_height, 3.0 - 0.3 - 0.0625));
     let rename = ModelDiff::ceilings("ce", Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::CeilingPatch { name: Some("Renamed".into()), ..Default::default() }));
-    let renamed = protocol::apply_diff(&rename, &snapshot).expect("applies");
+    let renamed = protocol::apply_diff_cold(&rename, &snapshot).expect("applies");
     let same = session.update(&renamed, &rename).spaces.clone();
     assert_eq!(same, first);
     assert_eq!(session.report().computed_by_kind.get("room"), None, "a name is not read by the rooms: {:?}", session.report());
     let drop = ModelDiff::ceilings("ce", Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::CeilingPatch { offset: Some(0.6), ..Default::default() }));
-    let edited = protocol::apply_diff(&drop, &renamed).expect("applies");
+    let edited = protocol::apply_diff_cold(&drop, &renamed).expect("applies");
     let lowered = session.update(&edited, &drop).clone();
     assert!(!session.report().gated && session.report().computed_by_kind.get("room") == Some(&1), "{:?}", session.report());
     assert!(close(lowered.spaces["sp"].clear_height, 3.0 - 0.6 - 0.0625) && lowered.spaces["sp"].clear_height < first["sp"].clear_height);
     assert_eq!(lowered, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&edited).expect("infers"), "the incremental result equals a fresh inference");
     let retyped = ModelDiff::ceiling_types("ct", Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::CeilingTypePatch { layers: Some(vec![Layer { material: "m".into(), thickness: 0.2, function: LayerFunction::Finish }]), ..Default::default() }));
-    let thick = protocol::apply_diff(&retyped, &edited).expect("applies");
+    let thick = protocol::apply_diff_cold(&retyped, &edited).expect("applies");
     let deeper = session.update(&thick, &retyped).spaces.clone();
     assert!(close(deeper["sp"].clear_height, 3.0 - 0.6 - 0.2), "the layers of the type are read as well");
 }

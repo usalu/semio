@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "paths",
+    "runs",
+    "commands",
+    "reports"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "paths": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/PathCase"
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/RunCase"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/CommandCase"
+      }
+    },
+    "reports": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/definitions/ReportCase"
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumPathUnits": 256,
+        "ownerPrefix": "go-overlay-",
+        "runPrefix": "run-",
+        "randomSuffixUnits": 6,
+        "overlayFile": "overlay.json"
+      }
+    },
+    "PathCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "root",
+        "owner",
+        "symlink",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "root": {
+          "type": "string"
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symlink": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RunCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "environment",
+        "failure",
+        "cleanupFails",
+        "cancelled",
+        "accepted",
+        "commandCalls"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "environment": {
+          "enum": [
+            "provided",
+            "inherited"
+          ]
+        },
+        "failure": {
+          "enum": [
+            "none",
+            "error",
+            "undefined",
+            "false"
+          ]
+        },
+        "cleanupFails": {
+          "type": "boolean"
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "commandCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "CommandCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "failure",
+        "finishFails",
+        "preCancelled",
+        "expectedCode",
+        "accepted",
+        "report"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "failure": {
+          "enum": [
+            "none",
+            "nonzero",
+            "signal",
+            "cancelled",
+            "undefined",
+            "false",
+            "error"
+          ]
+        },
+        "finishFails": {
+          "type": "boolean"
+        },
+        "preCancelled": {
+          "type": "boolean"
+        },
+        "expectedCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "report": {
+          "enum": [
+            "default",
+            "explicit"
+          ]
+        }
+      }
+    },
+    "ReportCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "output"
+      ],
+      "properties": {
+        "project": {
+          "enum": [
+            "@semio-tech/repo-cli-go",
+            "@semio-tech/repo-workspace-go",
+            "@semio-tech/repo-graphql-go",
+            "@semio-tech/repo-tickets-go"
+          ]
+        },
+        "output": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

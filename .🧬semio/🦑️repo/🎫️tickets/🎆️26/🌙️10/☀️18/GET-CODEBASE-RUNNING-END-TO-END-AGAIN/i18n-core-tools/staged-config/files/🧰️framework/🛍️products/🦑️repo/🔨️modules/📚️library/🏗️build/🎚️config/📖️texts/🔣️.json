@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "config",
+  "languages": ["en", "de"],
+  "messages": {
+    "language-set": { "en": "Language set to {language} (event {id} in {file}).", "de": "Sprache auf {language} gesetzt (Ereignis {id} in {file})." },
+    "language-unset": { "en": "Language setting removed (event {id} in {file}).", "de": "Spracheinstellung entfernt (Ereignis {id} in {file})." },
+    "show-language": { "en": "Configured language: {language}", "de": "Konfigurierte Sprache: {language}" },
+    "show-none": { "en": "No language is configured.", "de": "Es ist keine Sprache konfiguriert." },
+    "show-log": { "en": "Event log: {file} ({events} event(s))", "de": "Ereignisprotokoll: {file} ({events} Ereignis(se))" },
+    "show-effective": { "en": "Effective language: {language} (from {source})", "de": "Wirksame Sprache: {language} (aus {source})" },
+    "show-effective-none": { "en": "Effective language: none chosen yet; run `repo config set language {choice}`.", "de": "Wirksame Sprache: noch keine gewählt; führe `repo config set language {choice}` aus." },
+    "usage": { "en": "Usage: repo config set language <{choice}> | unset language | show [--json]", "de": "Aufruf: repo config set language <{choice}> | unset language | show [--json]" },
+    "unknown-key": { "en": "Unknown setting {key}; only `language` exists.", "de": "Unbekannte Einstellung {key}; es gibt nur `language`." },
+    "unknown-language": { "en": "Language {value} is not offered ({choice}).", "de": "Die Sprache {value} wird nicht angeboten ({choice})." },
+    "no-location": { "en": "No git directory found in {root}; set SEMIO_CONFIG_DIRECTORY to choose where the config is kept.", "de": "In {root} wurde kein Git-Verzeichnis gefunden; setze SEMIO_CONFIG_DIRECTORY, um den Ablageort der Konfiguration zu wählen." },
+    "log-invalid": { "en": "The config log {file} holds an invalid event on line {line}; fix or remove that line.", "de": "Das Konfigurationsprotokoll {file} enthält ein ungültiges Ereignis in Zeile {line}; korrigiere oder entferne die Zeile." }
+  }
+}

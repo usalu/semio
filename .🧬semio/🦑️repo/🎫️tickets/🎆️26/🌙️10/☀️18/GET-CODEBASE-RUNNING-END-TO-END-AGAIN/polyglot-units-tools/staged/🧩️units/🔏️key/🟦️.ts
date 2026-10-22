@@ -23,7 +23,7 @@ export function unitKeyV1(unit: UnitV1, input: {readonly digest: (path: string) 
   const dependencies = [...unit.dependencies].sort((a, b) => compareCodePointsV1(a.unit, b.unit)).map(dependency => {
     const facts = input.dependencies.get(dependency.unit);
     if (dependency.use !== "declared" && !facts) throw Error(`no result for dependency ${dependency.unit} of ${unit.id}`);
-    const digest = dependency.use === "declared" ? "" : dependency.use === "interface" ? facts!.interfaceClosure : facts!.outputClosure;
+    const digest = dependency.use === "declared" ? "" : dependency.use === "interface" ? facts!.interfaceClosure : dependency.use === "implementation" ? facts!.outputClosure : facts!.interfaceClosure === null ? null : `${facts!.interfaceClosure}|${facts!.outputClosure}`;
     if (digest === null) throw Error(`dependency ${dependency.unit} of ${unit.id} has no interface`);
     return [dependency.unit, dependency.use, digest];
   });
@@ -47,7 +47,7 @@ export function unitKeyV1(unit: UnitV1, input: {readonly digest: (path: string) 
 export function interfaceClosureV1(unit: UnitV1, ownInterface: string | null, dependencies: ReadonlyMap<string, UnitResultFactsV1>, policy?: UnitsPolicyV1, exposes: readonly string[] | null = null): string | null {
   if (ownInterface === null) return null;
   const direct = policy && unit.interface ? policy.interfaceKinds[unit.interface.kind]?.closure === "direct" : false;
-  const rowsOf = direct ? [] : unit.dependencies.filter(dependency => dependency.use === "interface" && (exposes === null || exposes.includes(dependency.unit))).map(dependency => [dependency.unit, dependencies.get(dependency.unit)!.interfaceClosure] as const).sort((a, b) => compareCodePointsV1(a[0], b[0]));
+  const rowsOf = direct ? [] : unit.dependencies.filter(dependency => (dependency.use === "interface" || dependency.use === "both") && (exposes === null || exposes.includes(dependency.unit))).map(dependency => [dependency.unit, dependencies.get(dependency.unit)!.interfaceClosure] as const).sort((a, b) => compareCodePointsV1(a[0], b[0]));
   return sha256V1(canonicalJsonV1({i: ownInterface, d: rowsOf}));
 }
 

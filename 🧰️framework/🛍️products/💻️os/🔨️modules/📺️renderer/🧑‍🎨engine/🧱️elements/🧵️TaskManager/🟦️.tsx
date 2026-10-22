@@ -43,7 +43,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useState, useSyncExternalStore, type ReactElement } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
 import { type ActivationRegistry } from "@semio-tech/framework";

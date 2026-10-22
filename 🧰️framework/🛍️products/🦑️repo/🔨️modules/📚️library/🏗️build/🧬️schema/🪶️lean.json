@@ -1,0 +1,89 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Lean build graph: project and target names only",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "lean",
+  "projects",
+  "dependencies"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "lean": {
+   "const": true
+  },
+  "projects": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "root",
+     "targets"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "root": {
+      "type": "string"
+     },
+     "targets": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   }
+  },
+  "dependencies": {
+   "type": "array",
+   "items": {
+    "type": "object"
+   }
+  },
+  "unavailable": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "root",
+     "source",
+     "sha256",
+     "reason"
+    ],
+    "properties": {
+     "root": {
+      "type": "string"
+     },
+     "project": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "sha256": {
+      "type": "string"
+     },
+     "reason": {
+      "type": "string"
+     },
+     "missing": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  }
+ }
+}

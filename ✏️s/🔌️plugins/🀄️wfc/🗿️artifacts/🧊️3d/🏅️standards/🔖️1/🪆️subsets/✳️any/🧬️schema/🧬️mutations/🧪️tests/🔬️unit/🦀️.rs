@@ -1,7 +1,7 @@
 //! 🧪️ The mutation aggregate's own laws: the kind roster is honest against the enum, every verb is
 //! approved, and EVERY kind's `inverse()` restores its pre-mutation document exactly.
 
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::diff::Wfc3dDiff;
 use crate::schema::snapshot::{Color, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d, Wfc3dSnapshot};
@@ -142,7 +142,7 @@ fn every_mutation_round_trips_through_text_and_binary_op_encodings() {
 #[test]
 fn a_missing_target_is_refused_and_changes_nothing() {
     let base = fixture_base();
-    let outcome = <Wfc3dMutation as Mutation<Wfc3dSnapshot>>::diff(&delete_slot("ghost".into()), &base);
+    let outcome = <Wfc3dMutation as ColdMutation<Wfc3dSnapshot>>::diff(&delete_slot("ghost".into()), &base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.target-missing"), "a missing slot must be named");
     assert_eq!(outcome.diff(), &Wfc3dDiff::default(), "a refusal authors no delta");
     let mut projection = base.clone();
@@ -155,7 +155,7 @@ fn a_missing_target_is_refused_and_changes_nothing() {
 fn a_duplicate_id_is_fatal() {
     let base = fixture_base();
     let duplicate = create_tile(0, Tile { id: "room".into(), label: None, weight: 1.0, media: TileMedia3d::default() });
-    let outcome = <Wfc3dMutation as Mutation<Wfc3dSnapshot>>::diff(&duplicate, &base);
+    let outcome = <Wfc3dMutation as ColdMutation<Wfc3dSnapshot>>::diff(&duplicate, &base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️Laws
@@ -176,7 +176,7 @@ fn regenerate_committed_fixture_quintets() {
         std::fs::create_dir_all(directory.join("🔺️diff")).expect("diff dir");
         std::fs::create_dir_all(directory.join("🎯️outcome")).expect("outcome dir");
 
-        let raised = <Wfc3dMutation as Mutation<Wfc3dSnapshot>>::diff(&mutation, &base);
+        let raised = <Wfc3dMutation as ColdMutation<Wfc3dSnapshot>>::diff(&mutation, &base);
         let (after, _) = apply_mutation(&base, &mutation).expect("forward apply");
         let messages: Vec<String> = raised
             .messages()

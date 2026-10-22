@@ -47,7 +47,7 @@ export function lawBuildOptionsV1(held:LawStorageV1,control:CompilerAdmissionCon
 export const lawStoragePolicyV1 = Object.freeze({ stubImageBytes: policy.stubImageBytes, realImageBytes: policy.realImageBytes, reserveBytes: policy.lawReserveBytes });
 
 /** 🛠️ The scheduler binaries every Cargo-backed law shares, compiled once per test process through the repository's canonical issued Cargo entry
- * (`bun repo cargo --store=shared`, the launcher `runRepositoryCargoCommandV1` delegates to), never by a direct `cargo`, and copied out of the shared store's
+ * (`repo cargo --store=shared`, the launcher `runRepositoryCargoCommandV1` delegates to), never by a direct `cargo`, and copied out of the shared store's
  * release target to the artifact directory.
  * @see ../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts */
 export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= (async () => {

@@ -19,8 +19,6 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 //#region 🔖️Types
 
-/// ♻️ Compatibility alias — former nested `part_2` module.
-
 //#endregion 🔖️Types
 
 //#region 🪪️Declaration
@@ -129,7 +127,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🪪️Declaration
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 
 //#region 🪢️Mounts
 #[cfg(test)]

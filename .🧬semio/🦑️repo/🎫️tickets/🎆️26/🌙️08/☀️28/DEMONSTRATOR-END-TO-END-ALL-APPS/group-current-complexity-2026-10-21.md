@@ -1,0 +1,18 @@
+# Current Group Complexity Audit
+
+Read-only observation 2026-10-21T15:15:17.886Z: closure owner 48244 bytes, SHA256 16ce91ee73b9dce81074508a67d74ea1a0d636f06aca01dfaa1c8c210e99da97, mtime/ctime 2026-10-21T15:12:52.020Z. Exact metadata is retained under generated/group-current-complexity-before.json. The editor or origin of this current divergence is not attributed.
+
+Current helper contains two whole-proof rechecks per member, another per directory, and a final whole-proof recheck. parentAfter also copies/sorts the complete remaining sibling Set, enumerates actual sibling names and materializes expected.names after each member and directory removal. Therefore both proof traversal and flat/nested sibling processing are quadratic in group cardinality. A53,969-member flat group would invoke107,940 full proofs including its one directory and final proof; this is static call-count analysis, not a runtime measurement. The unchanged16,777,216 cumulative read-operation cap cannot be assumed to fund that work over the actual large census.
+
+The current13-case test contract also changed: maximumFullProofChecks4096; expected130 checks for64 members,260 for129,389 for129 separate child directories. Its independent SQLite metadata bound is now8*(members+directories+4)^2 under maximumMetadataWorkPerPair. Instrumentation still counts enumeration, Set copies and sort inputs, but that bound explicitly accepts the quadratic work. The earlier reviewed linear contract required one final full proof, an8*(members+directories+4) work bound and group-boundary detection of unsupported raw sibling/reference injections.
+
+Minimal reconciliation, not yet authorized for write in this audit:
+
+- Restore the language-neutral schema/fixture to maximumFullProofChecks1 and maximumMetadataWorkPerEntry8; use existing13 actual-helper cases, restoring final-boundary fault timing and linear SQLite work calculation. Keep exact partial counters and undefined-primary/close failure tests.
+- Replace only helper loop/global-census work from a fresh owner read. Keep per-leaf live Original/Native writer checks, physical ancestry and immediate parent stamps, two FD/target checks and primary close precedence. Track only proven own row/name/stamp changes.
+- Remove per-member and per-directory whole proofs and sibling materialization. Check every removed directory is actually empty; validate/materialize each surviving changed parent exactly once, then run the complete final proof before required Source/lock retirement can advance. Keep Source guard at entry/windows/final and backing/progress windows64.
+- Preserve current kernel image EX and namespace EX, required references, intent protocol, outer retirement window/partial fields, Source guard/roster edits, worker/generation owner/schema changes and all unrelated concurrent bytes. Do not restore a whole prior source buffer.
+
+No Source, fixture or test was changed by this audit; no process was signalled or Native job launched. The focused Source invocation subsequently naturally terminated during a later proof child with status1/empty stderr; no causal diagnosis from coincident Source turnover is claimed.
+
+Coordinator decision after cross-context review: PRESERVE the current stronger per-mutation contract, including refusing before the next optional unlink after off-path reference/sibling mutation. The minimal linear reconciliation above is a superseded proposal and is not authorized or implemented. Current production/schema/fixture/test bytes were not restored or edited by this audit. The concrete follow-up is dynamic child protocol/Source authority, independently of retirement policy.

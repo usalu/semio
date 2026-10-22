@@ -14,6 +14,7 @@ use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_reactor_app::operation_progress::{decode_operation_cancellation, operation_cancellation_target_admitted, operation_progress_dirty_scope};
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use std::future::Future;

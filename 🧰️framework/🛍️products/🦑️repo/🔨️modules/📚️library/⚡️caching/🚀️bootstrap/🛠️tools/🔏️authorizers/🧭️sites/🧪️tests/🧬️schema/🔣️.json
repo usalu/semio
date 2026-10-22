@@ -1,0 +1,71 @@
+{
+ "$id": "semio:repo/authorizers/sites-tests",
+ "title": "Literal site extraction cases",
+ "$defs": {
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "path",
+    "source",
+    "specifiers",
+    "computed",
+    "extra"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1
+    },
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "source": {
+     "type": "string"
+    },
+    "specifiers": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "uniqueItems": true
+    },
+    "computed": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "extra": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "uniqueItems": true,
+     "description": "Specifiers the lenient text extractor may add to the oracle set"
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "cases"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "cases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/Case"
+     }
+    }
+   }
+  }
+ }
+}

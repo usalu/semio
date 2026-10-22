@@ -17,6 +17,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 func uvExists() bool {
@@ -275,7 +277,7 @@ func runExternalCommand(dir string, name string, args []string, cmd *command.Com
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	c := exec.Command(name, args...)
+	c := workspace.ToolCommand(name, args...)
 	c.Dir = dir
 	c.Stdout = cmd.OutOrStdout()
 	c.Stderr = cmd.ErrOrStderr()
@@ -318,7 +320,11 @@ func runCanonicalGoTestDispatch(moduleRoot string, inputPath string, goArgs []st
 	script := filepath.Join(toolchain, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "📦️packages", "🟦️typescript", "📜️script.ts")
 	args := []string{script, "go-test", moduleRoot, inputPath}
 	args = append(args, goArgs...)
-	return runExternalCommand(toolchain, "bun", args, cmd)
+	repo, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	return runExternalCommand(toolchain, repo, args, cmd)
 }
 
 // ⬛️testCommand holds the data fields for a testCommand record.

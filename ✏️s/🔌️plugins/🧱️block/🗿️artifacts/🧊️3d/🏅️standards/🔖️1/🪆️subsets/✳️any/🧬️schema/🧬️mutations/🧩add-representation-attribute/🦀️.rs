@@ -33,6 +33,15 @@ pub fn add_representation_attribute_at<Op: From<crate::add_representation_attrib
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for AddRepresentationAttribute where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::remove_representation_attribute::RemoveRepresentationAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-attribute", kind: "add-representation-attribute", record: "AddedRepresentationAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\" to representation \"{}\"", self.attribute.key, self.id), &format!("Attribut \"{}\" zu Repräsentation \"{}\" hinzufügen", self.attribute.key, self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for AddRepresentationAttribute where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::remove_representation_attribute::RemoveRepresentationAttribute> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::add_representation_attribute::diff::diff(self, base)
     }
@@ -42,12 +51,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for AddRepresentationAttrib
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\" to representation \"{}\"", self.attribute.key, self.id), &format!("Attribut \"{}\" zu Repräsentation \"{}\" hinzufügen", self.attribute.key, self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

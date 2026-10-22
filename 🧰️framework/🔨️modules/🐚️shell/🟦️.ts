@@ -12,8 +12,8 @@
  * The types come from the OS shell module's `🧬️schema` — `🔣️.json` (draft-07) is the language-neutral authority, its
  * Rust registry renders `./🤖️generated/🟦️.ts`, and the schema module's `🟦️.ts` adds a `parse<ExportId>()`
  * runtime guard per export. Regenerate the mirror via
- * `bun repo run @semio-tech/framework-os-shell-rs:typegen`, and gate the three against each other via
- * `bun repo run @semio-tech/framework-os-shell-rs:schema-check`.
+ * `repo run @semio-tech/framework-os-shell-rs:typegen`, and gate the three against each other via
+ * `repo run @semio-tech/framework-os-shell-rs:schema-check`.
  */
 export type * from "./🤖️generated/🟦️.js";
 import type { Anchor, ByAnchor, Conflict, DialogState, ExtraWindowInstance, LoadedPlugin, ShellCommand, ShellError, ShellEvent, ShellState } from "./🤖️generated/🟦️.js";

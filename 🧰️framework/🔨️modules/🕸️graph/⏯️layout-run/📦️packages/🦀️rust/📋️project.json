@@ -23,7 +23,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "check": {
@@ -37,7 +37,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     }
   }

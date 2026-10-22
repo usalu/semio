@@ -20,7 +20,7 @@ use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 
 
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexedCollectionAlgebra
@@ -389,16 +389,9 @@ impl SemioAnimationDiff {
     }
 }
 
-impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn apply(&self, base: &SemioAnimationSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.timelines {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
-            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply_row(item));
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {}
 
+impl protocol::ColdMutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
     fn absorb(&mut self, other: Self) {
         match (&mut self.timelines, other.timelines) {
             (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply_row(item)),
@@ -406,15 +399,28 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut SemioAnimationSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.timelines {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
+            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply_row(item));
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
-        Self { timelines: self.timelines.as_ref().map(|d| inverse_indexed(d, &base.timelines, |d, item| d.inverse(item))) }
-    }
-
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
+    fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
+        Self { timelines: self.timelines.as_ref().map(|d| inverse_indexed(d, &base.timelines, |d, item| d.inverse(item))) }
     }
 }
 

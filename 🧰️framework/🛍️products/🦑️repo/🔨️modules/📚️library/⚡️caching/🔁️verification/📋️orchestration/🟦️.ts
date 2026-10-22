@@ -8,6 +8,7 @@ import probeSchema from "../🧬️schema/🔣️.json" with { type: "json" };
 import probeData from "../🔣️probe.json" with { type: "json" };
 import buildPolicy from "../../../🏗️build/🔣️policy.json" with { type: "json" };
 import type { CacheProbeSpecV1, CacheProbeToolV1 } from "../../../🏗️build/⚙️operations/🟦️.ts";
+import { runtimeSpawnSyncV1, runtimeSpawnV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 const probeSpecification = probeData as CacheProbeSpecV1;
 
@@ -27,18 +28,11 @@ export class CacheVerifyScript extends BundleScript {
   }
 
   private async probeTool(): Promise<CacheProbeToolV1> {
-    const selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? process.env.SEMIO_BUILD_TOOL ?? buildPolicy.defaultTool;
+    const { buildBackendDefaultIdV1, loadBuildBackendV1 } = await import("../../../🏗️build/🔌️backends/🟦️.ts"), selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? process.env.SEMIO_BUILD_TOOL ?? buildBackendDefaultIdV1();
     if (validateJsonSchemaSubset(probeSchema, probeSpecification).length) throw new Error("Closed cache probe specification required");
-    if (selected === "nx") {
-      await (await import("../../🚀️bootstrap/🛠️tools/🟦️.ts")).prepareNxToolingStorageV1(this.repoRoot, this.invocation, createIssuedResourceControlV1(this.invocation, "cache-verify:nx", 0));
-      return (await import("../../🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts")).nxCacheProbeV1(this.repoRoot);
-    }
-    if (selected !== "bazel") throw new Error(`No cache probe implements build tool ${selected}`);
-    const [{ withBazelSetupStorageV1 }, adapter, bootstrap, { bazelCacheProbeV1 }] = await Promise.all([import("../../../🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts"), import("../../../🏗️build/🔧️tools/🏗️bazel/📜️script.ts"), import("../../🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"), import("../../../🏗️build/🔧️tools/🏗️bazel/🔁️probe/🟦️.ts")]);
-    return withBazelSetupStorageV1(this.repoRoot, this.invocation, createIssuedResourceControlV1(this.invocation, "cache-verify:bazel", 0), async (storage, phase) => {
-      const executable = await bootstrap.prepareBazel(this.repoRoot, storage.tools, phase, () => {}, false), modules = await adapter.prepareBazelModulesV1(this.repoRoot, executable, this.invocation, storage, phase);
-      return bazelCacheProbeV1({ version: bootstrap.BAZEL_VERSION, executable, installBase: join(storage.paths.install, bootstrap.BAZEL_VERSION, `${process.platform}-${process.arch}`), module: adapter.BAZEL_MODULE, lock: modules.lock, repository: modules.repository });
-    });
+    const backend = await loadBuildBackendV1(selected);
+    if (!backend.cacheProbe) throw new Error(`No cache probe implements build tool ${selected}`);
+    return backend.cacheProbe({ root: this.repoRoot, invocation: this.invocation });
   }
 
   private async verify(output: string): Promise<void> {
@@ -85,7 +79,7 @@ console.log("[cache-probe] " + command + " executed " + count);
     const run = async (scenario: string, task = "build", mode = "one", success = true): Promise<void> => {
       const started = performance.now();
       const invocation = tool.invocation(probeSpecification, task, fixture, { ...process.env, CACHE_PROBE_MODE: mode });
-      const child = (globalThis as any).Bun.spawn([invocation.command, ...invocation.arguments], { cwd: fixture, env: invocation.environment, stdout: "pipe", stderr: "pipe" });
+      const child = runtimeSpawnV1([invocation.command, ...invocation.arguments], { cwd: fixture, env: invocation.environment, stdout: "pipe", stderr: "pipe" });
       const cancel = (): void => {
         child.kill();
       };
@@ -115,7 +109,7 @@ console.log("[cache-probe] " + command + " executed " + count);
       assert.equal(count("build"), 1);
       assert.deepEqual(readFileSync(join(fixture, "dist/consumer.cjs")), expected);
       if (process.platform !== "win32") assert.equal(lstatSync(join(fixture, "dist/consumer.cjs")).mode & 0o111, 0o111);
-      const consumer = (globalThis as any).Bun.spawnSync(process.platform === "win32" ? ["node", join(fixture, "dist/consumer.cjs")] : [join(fixture, "dist/consumer.cjs")], { stdout: "pipe", env: { ...process.env, FORCE_COLOR: "0" } });
+      const consumer = runtimeSpawnSyncV1(process.platform === "win32" ? ["node", join(fixture, "dist/consumer.cjs")] : [join(fixture, "dist/consumer.cjs")], { stdout: "pipe", env: { ...process.env, FORCE_COLOR: "0" } });
       assert.equal(consumer.exitCode, 0);
       assert.equal(consumer.stdout.toString().trim(), "42");
       await run("test-cold", "test");

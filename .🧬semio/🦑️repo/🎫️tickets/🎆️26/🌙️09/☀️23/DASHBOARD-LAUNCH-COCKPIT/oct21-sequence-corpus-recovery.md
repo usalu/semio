@@ -1,37 +1,35 @@
-# Existing Sequence Corpus Recovery
+# Exact Historical Sequence Corpus Recovery
 
-During test authoring I mistakenly wrote a new-only two-case corpus and closed schema to existing sequence fixture paths before reading their current bytes. The existing cold-reference Source oracle requires six prior rows with base, wideText, conditional refusal and diagnostics. No Source/native test ran against the incompatible replacement. The replacement bytes remain in memory; restoring or extending existing data requires actual repository provenance, not approximating prior cases.
+All commands used the genuine public owned interface `repo --tool=nx --lang=en capacity run --memory=128 --cpu=1 -- git ...`; each completed actualwhole0. No raw Git invocation, modifying Git, private object read, heavy Source/Native producer or versioned Source body copied into the ticket. Source payload remains only in tool/analysis memory until authorized in-place restoration after the current lock terminal.
 
-The approved read-only repo exec git-show command97662 captures both HEAD blobs only in tool memory. HEAD must be checked against existing consumer contracts and any retained pre-edit peer observations, since it may not contain later uncommitted fields. No versioned Source bodies are copied into the ticket. All modifying Git commands remain prohibited. Parent and the two peer agents were informed. Runtime acceptance remains pending.
+HEAD contains the incompatible top-level two-case output-handoff asset. Actual bounded file history returned b7b9f105a82ceca5ae94a26a707bf01965d09d22, fd14da55f18997fe8d7d6437818696353d2d7b8d, bd9e4e02bd0a1225c7cc47d9f2de10f116927e1d. The middle revision provides the genuine original six-case contract matching the retained current Source/native consumers. This is exact committed provenance, not proof of every lost prior uncommitted byte or actor.
 
-The exact existing advertised Source/native sequence control is @semio-tech/framework-replication-rs:test-retained-diff-sequence-{source,native}; native selects semio-framework-replication --test retained_diff_sequence and retains three original laws. It is now explicitly in the execution plan. New neutral outputHandoff cases will extend the original schema/corpus after recovery; the new SQL test belongs the existing sequence Source module. The interim appended oracle was removed exactly from the unrelated retained diagnostic Source module, without discarding peer bytes. Existing native fixture syntax was updated only to explicit Output=Self, actual body forwarding and the current singular Source selector; no old law/expectation is removed.
+A non-PTY read retained exact UTF8 bytes in memory. Independent public git rev-parse returned each blob identity; locally recomputed SHA1 over `blob <byte-length>\0` plus the recovered bytes matches both identities exactly. Earlier PTY framing is not used for the exact-byte proof.
 
-## Scoped Independent Native Controls
+| Asset | Bytes | Git Blob | SHA256 | Canonical Decoded JSON SHA256 |
+|---|---:|---|---|---|
+| schema | 2491 | `34028308f0c1a053fa5f524ec63f93ef5c88dec4` | `c248d2ffe0e30ff3c190e8c624b2313cc17f295c1dce827c9ec4f6b8155094ff` | `56153860bfb02cf3e78869cbbd3cd9622325c8790665daff5d7b1bac55da5611` |
+| fixture | 2363 | `4dddd69af26342828ebde72fcc62ddafa2601539` | `df98580e5f205111c3f4acd2df6c8a6bb84b7409450fd7145d83292fbb936bea` | `f44692035d1d224542e8100588164a7f7f959e8ca23554d03d0e8c312f3cf820` |
 
-Bounded source audit of lower Pack decode (48 entries), intrinsic Pack (20), and Root OS store-child (44) found no sequence DATA or outputHandoff references. The retained owner audit (137 entries) identifies sequence fixture readers only in the dedicated three-law sequence integration test and the new mutation-retained whole-library test. Cargo dependencies compile those retained modules without their cfg(test) mounts; the isolated Pack whole-library roots and Root OS whole-library root do not select those test targets. This supports running the independent Pack/Root OS gates while exact corpus recovery remains pending; it does not grant any acceptance for the affected sequence laws or their JSON. Actual Source admission remains authoritative.
+## Original Case Identity
 
-## Exact Recovery Request Settlement
+- `empty-identity`
+- `one-original-sparse-edit`
+- `later-original-sees-preceding-edit`
+- `later-refusal-keeps-external-original`
+- `first-refusal-is-sticky`
+- `third-edit-reads-second-intermediate-original`
 
-Owned read-only repo exec request97662 settled whole1 before Git execution. After genuine host admission and shared graph-image wait, the authenticated graph headroom owner refused: available971608064 bytes below required1073741824 bytes, retiredBytes0 and retiredFiles0. No source blob was recovered. The incompatible replacement remains explicitly blocked from all sequence runtime acceptance. No Source, capacity or storage guard was bypassed; no versioned source body was copied into the ticket. Parent notified for genuine owned headroom recovery.
+The original base is a0/b1/text original雪; wideText repeats雪21846times. The actual TypeScript consumer retains six original rows in narrow/wide modes; native original sequence consumers use the same base/edits/accepted/messageCount contract. The independent Low readback confirmed current outputHandoff belongs under a separate namespace: two cases (1,[2,3],3) and (9,[8,7,6],6), cancelCuts[0,3,16,64,2048], maximumTurns2048. Preserve that exact current extension instead of overwriting the recovered original root.
 
-## Sequence Control Physical Registration
+## Pending In-Place Restoration
 
-A fresh read of the actual Rust package, rather than the TypeScript package, establishes both controls in 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json. Its same-directory 📜️script.ts registers RetainedDiffSequenceScript. The Source route performs real typed compilation followed by the owned Bun oracle; the native route selects the retained_diff_sequence integration target and its three original laws. The intermediate negative registration report was based on the wrong package search and is withdrawn. This is physical route evidence, not execution or corpus recovery. Original39Source and23whole-library counts exclude these mandatory conditional controls.
+Keep all Source/provider files frozen during High lock24430. After its actual terminal and explicit release, merge the exact original schema with the current closed output-handoff schema under properties.outputHandoff; restore exact original six-case fixture values with the current two-case asset under outputHandoff. Validate against existing Ajv and consumer contracts, preserve any intervening current changes, retain digests, and obtain independent review before sync. No Source write or runtime acceptance has occurred yet. All original26 plus separate Source/native sequence gates remain required.
 
-## Conditional Native Loop Audit
+## Actual In-Place Source Restoration
 
-The actual three-law integration file retains five potentially unbounded consumer paths: source close, controlled value retirement, no-cut preflight, no-cut commit, and apply close. Each must receive a checked fixture-derived finite work guard before execution after corpus recovery. Preserve all existing exact selected demands, feasible denied axes, pointer/custody assertions and physical heap receipts. Cuts remain authored inputs, not substitutes for completion. Body semantics and current Source/retirement selectors must be re-selected exactly before funded steps; a mismatching selection remains a diagnostic rather than grant padding. The fixture is still unrecovered, so no invented row count or runtime success is claimed.
+Highfresh17:51:23UTC disjointcheck confirmed both regular JSONpaths absent current349+26; selected349SHA,26SHA/identity,rootpackage andBunlock remainedstable. Only these two JSONfiles were explicitly released during the capacity-only lock, retaining every provider/package/declaration/core fence and the Sync pause. Artifact: generated/e2e-lock-24430-corpus-disjoint-check.json.
 
-## Exact Read-Only Retry
+Root then saved the original schema plus the explicit closed outputHandoff schema, followed by the exact original six-case fixture plus its preserved two-case outputHandoff. Canonical decoded original schema and fixture projections after removing only the extension exactly match both authenticated historical canonicalSHA256 values in the table. The original fixture values are unchanged. Current closed extension retains both authored cases, five cuts and2048maximumturns; no replacement corpus or migration script was left. Existing Ajv admits the merged document and rejects the old conflicting root shape. StaticDATA is generated/e2e-sequence-restoration-data.json. Actual Source/Python/Bun/native runtime remainsunrun; independent saved-source review pending.
 
-After the shared Source lifetime correction was source-reviewed and frozen, actual owned repo exec request40698 started with both exact HEAD paths from the retained input plan. It was genuinely capacity-admitted and completed dependency receipt verification, then queued for the shared graph image. Output remains only in tool memory. No blob, restored corpus or runtime acceptance is inferred while the owned request remains live. Root retains the sole compiler for dashboard tests.
-
-## Read-Only Retry Whole Settlement
-
-Exact owned TTY40698 naturally settled whole1, without a signal. After genuine host admission and the ordinary graph-image shared/exclusive queue, the original resource loan deadline exhausted in process invocation routing atremaining/arm. Captured128122characters remain in tool memory; no wideText fixture content, Git error/body or schema blob was observed. No source bytes were recovered and no corpus was restored. The deadline and lease guards were preserved. This supersedes the prior live-request status, and remains distinct from the first97662headroom refusal.
-
-## Third owned read-only recovery
-
-After real paired lock coherence, own57585 launched the same exact two git-show refs only through supported repo exec. Output is retained in memory only; no source body has been copied to a ticket file. The last actual poll remains before Git body in repository graph-facts shard7 exclusive queue, position3of3. No process ownership or stale-holder inference, no signal, no lease/deadline/floor change. Zero recovered/restored cases so far. Concurrent existing Pack repairs retain ordinary observed-fact freshness guards.
-
-The exact own57585 PTY was cancelled at the agreed Source scheduling boundary while still in graph-facts exclusive queue; actualwhole1 reported Original Script process interrupted.40371characters stayed in memory, zero Git body/source blobs, zero recovered/restored cases. No foreign process was signalled. This frees the singular Source lane for the independently scheduled fresh process-progress gate after a material physical-space increase; no deadline/floor waiver.
+Independent Low accepted current restored source: remove-only-extension canonicalfixturef4469203…/schema56153860… match authenticatedhistoricalprojections; sixnames and exact closed2caseextension align with actualTS/Rustconsumers. Highpost17:53:08check selected349SHA,26SHA/identity,rootpackage/BunlockSHA/identity allunchanged (generated/e2e-lock-24430-after-corpus-restore-check.json). Original corpus blocker is removed as input readiness; registered Source/native/full26 runtime acceptance remains pending.

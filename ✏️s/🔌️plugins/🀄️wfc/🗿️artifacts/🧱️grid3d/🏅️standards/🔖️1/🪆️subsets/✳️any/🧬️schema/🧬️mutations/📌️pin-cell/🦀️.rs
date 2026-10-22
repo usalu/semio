@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "cell", kind: "pin-cell", record: "Fixed" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin cell {} to tile \"{}\"", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id), &format!("Zelle {} auf Kachel \"{}\" fixieren", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![cell_key(self.pinned.x, self.pinned.y, self.pinned.z)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid3dSnapshot, Op> for PinCell
+where
+    Op: protocol::ColdMutation<Grid3dSnapshot, ReferenceDiff = Grid3dDiff> + From<PinCell> + From<crate::standards::v1::subsets::any::schema::mutations::unpin_cell::UnpinCell>,
+{
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin cell {} to tile \"{}\"", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id), &format!("Zelle {} auf Kachel \"{}\" fixieren", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![cell_key(self.pinned.x, self.pinned.y, self.pinned.z)]
-    }
 }
 //#endregion 🔖️PinCell

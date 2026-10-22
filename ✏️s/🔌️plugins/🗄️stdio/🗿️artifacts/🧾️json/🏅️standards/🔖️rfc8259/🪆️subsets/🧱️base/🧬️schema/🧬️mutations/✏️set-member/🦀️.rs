@@ -33,6 +33,15 @@ fn replaced_row(existing: &JsonValue, new: &JsonValue) -> Option<JsonValueDiff> 
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "member", kind: "set-member", record: "SetMember" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Member", "Eigenschaft setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-member".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMutation {
     fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
         protocol::MutationOutcome::new(match resolve(&base.value, &self.path) {
             Some(JsonValue::Object { members }) => match members.iter().find(|member| member.key == self.key) {
@@ -48,7 +57,6 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMuta
             _ => JsonDiff::default(),
         })
     }
-
     fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<super::JsonMutation>, semio_framework_value::ValueError> {
         Ok(match resolve(&base.value, &self.path) {
             Some(JsonValue::Object { members }) => match members.iter().find(|member| member.key == self.key) {
@@ -58,13 +66,6 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMuta
             },
             _ => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Member", "Eigenschaft setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-member".to_string()]
     }
 }
 

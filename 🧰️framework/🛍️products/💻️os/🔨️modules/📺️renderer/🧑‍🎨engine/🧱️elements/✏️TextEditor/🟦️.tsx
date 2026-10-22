@@ -5,7 +5,7 @@
  * (grammar highlighting, hover tokens, F2 rename with multi-span preview, alt-click completions),
  * its context menu and keyboard-editing wiring, and the SSR-safe `Textarea`-based fallback. */
 // #region 🔌️Adapters
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import { cn, ContextMenuController, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";

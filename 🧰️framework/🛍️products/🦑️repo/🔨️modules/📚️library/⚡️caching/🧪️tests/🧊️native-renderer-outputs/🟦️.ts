@@ -27,13 +27,13 @@ export async function testNativeRendererOutputs(workspace: string, output: strin
     executor: "nx:run-commands", cache: true, parallelism: false,
     inputs: [`{workspaceRoot}/${rust}/Cargo.toml`, `{workspaceRoot}/${rust}/Cargo.lock`, `{workspaceRoot}/${rust}/🦀️.rs`, "{workspaceRoot}/📜️script.ts"],
     outputs: project.targets[row.target].outputs.map((path:string)=>path.replaceAll(authoredRust,rust).replaceAll("{options.env.SEMIO_BUILD_MODE}",row.profile)),
-    options: { command: `bun ./📜️script.ts ${row.profile}`, cwd: ".",env:{SEMIO_BUILD_MODE:row.profile} }
+    options: { command: `repo ./📜️script.ts ${row.profile}`, cwd: ".",env:{SEMIO_BUILD_MODE:row.profile} }
   };
   put("package.json", JSON.stringify({ name: "native-renderer-output-fixture", private: true }));
   put(".cargo/config.toml", `[profile.prototype]\ninherits="dev"\n[profile.release]\nopt-level=3\n`);
   put("nx.json", JSON.stringify({ useDaemonProcess: false }));
   const selectedTarget=targets[mode];assert(selectedTarget!==undefined&&typeof selectedTarget==="object");
-  put(`${typescript}/project.json`, JSON.stringify({ name: "native-renderer", targets: { "native-build": { ...selectedTarget,outputs:project.targets["native-build"].outputs.map((path:string)=>path.replaceAll(authoredRust,rust)),configurations:Object.fromEntries(profiles.map((row:any)=>[row.profile,{command:`bun ./📜️script.ts ${row.profile}`,env:{SEMIO_BUILD_MODE:row.profile}}])), defaultConfiguration:mode } } }));
+  put(`${typescript}/project.json`, JSON.stringify({ name: "native-renderer", targets: { "native-build": { ...selectedTarget,outputs:project.targets["native-build"].outputs.map((path:string)=>path.replaceAll(authoredRust,rust)),configurations:Object.fromEntries(profiles.map((row:any)=>[row.profile,{command:`repo ./📜️script.ts ${row.profile}`,env:{SEMIO_BUILD_MODE:row.profile}}])), defaultConfiguration:mode } } }));
   put(".gitignore", "node_modules\n.nx\ndist\noracle\n.runs\n");
   put(`${rust}/Cargo.toml`, `[workspace]\n[package]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\nedition="2021"\n[features]\nnative-bin=[]\n[[bin]]\nname=${JSON.stringify(fixture.binary)}\npath="🦀️.rs"\nrequired-features=["native-bin"]\n`);
   put(`${rust}/Cargo.lock`, `version=4\n[[package]]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\n`);

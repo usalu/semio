@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, win32 } from "node:path";
 import installationSchema from "./📥️installation/🧬️schema/🔣️.json" with { type: "json" };
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const installationPolicy = installationSchema.$defs.Protocol.const;
 
@@ -90,7 +91,7 @@ class TestScript extends BundleScript {
   }
 }
 
-if(import.meta.main){
- const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("install",InstallScript).register("test-install",InstallationTestScript);
+if(isMainModuleV1(import.meta.url)){
+ const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript).register("install",InstallScript).register("test-install",InstallationTestScript);
  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

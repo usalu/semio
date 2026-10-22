@@ -18,7 +18,7 @@ fn snapshot() -> Ifc2x3Snapshot {
 }
 
 fn applied(base: &Ifc2x3Snapshot, diff: &Ifc2x3Diff) -> Ifc2x3Snapshot {
-    protocol::apply_diff(diff, base).expect("the diff applies")
+    protocol::apply_diff_cold(diff, base).expect("the diff applies")
 }
 
 #[test]

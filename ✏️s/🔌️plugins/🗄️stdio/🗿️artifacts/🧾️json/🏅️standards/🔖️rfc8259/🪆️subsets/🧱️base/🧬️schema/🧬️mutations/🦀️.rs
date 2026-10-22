@@ -14,7 +14,7 @@ pub use crate::schema::mutation_support::{JsonPath, JsonPathSegment};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
-#[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "s.stdio.json")]
+#[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "s.stdio.json", reference = JsonSnapshot, reference_diff = JsonDiff)]
 pub enum JsonMutation {
     SetMember(SetMemberMutation),
     RemoveMember(RemoveMemberMutation),

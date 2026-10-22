@@ -157,7 +157,6 @@ where
         grant: RetainedCloneGrant,
     ) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-        if self.original_producer_pending(){return self.retire_original_producer(grant);}
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.admission_pending()&&!cx.is_cancelled()&&!self.cancel.is_cancelled_now(){
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_envelope_decode",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};

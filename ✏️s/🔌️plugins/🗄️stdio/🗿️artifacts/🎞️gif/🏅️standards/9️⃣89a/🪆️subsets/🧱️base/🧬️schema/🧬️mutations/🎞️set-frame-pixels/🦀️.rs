@@ -17,6 +17,15 @@ pub struct SetFramePixels {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFramePixels {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-pixels", kind: "set-frame-pixels", record: "SetFramePixels" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame pixels", "Pixel des Einzelbilds setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetFramePixels {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let frame_at = |index: usize| base.frames.get(index).map(|frame| (index, frame));
         let Self { index, indices } = self;
@@ -37,12 +46,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFramePixels {
             Some(f) => vec![GifMutation::SetFramePixels(SetFramePixels { index: *index, indices: f.indices.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame pixels", "Pixel des Einzelbilds setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

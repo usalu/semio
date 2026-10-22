@@ -17,7 +17,7 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 const findRoot=(from:string):string=>{for(let at=from;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"bun.lock")))return at;if(dirname(at)===at)throw Error("repository root not found");}};
 const root=findRoot(import.meta.dir),installed=createRequire(join(root,"package.json")),ops=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")) as {cases:{name:string;projects:Record<string,{root:string;targets:Record<string,unknown>}>;edges:string[][];files:string[];namedInputs?:Record<string,unknown[]>;expected:{affected:string[]}}[]};
 type Row={name:string;projects:Record<string,{root:string;targets:Record<string,unknown>}>;edges:string[][];files:string[];namedInputs?:Record<string,unknown[]>;affected:string[];nx?:boolean};
-const rows:Row[]=[...ops.cases.map(row=>({name:row.name,projects:row.projects,edges:row.edges,files:row.files,namedInputs:row.namedInputs,affected:row.expected.affected})),...fixture.cases as Row[]];
+const rows:Row[]=[...ops.cases.map(row=>({name:row.name,projects:row.projects,edges:row.edges,files:row.files,namedInputs:row.namedInputs,affected:row.expected.affected})),...(fixture.cases as object[] as Row[])];
 const graphOf=(row:Row)=>({version:1 as const,projects:Object.fromEntries(Object.entries(row.projects).map(([name,project])=>[name,{name,root:project.root,targets:project.targets}])),dependencies:row.edges.map(([source,target])=>({source:source!,target:target!,type:"static"})),namedInputs:row.namedInputs??{}}) as never;
 const ajv=new Ajv({strict:true,allowUnionTypes:true});
 
@@ -66,7 +66,7 @@ test("a Python walk over the generated package returns the authored answer for e
  expect(run.status,run.stderr).toBe(0);
  const answers=JSON.parse(run.stdout) as string[][];
  for(const[index,input]of inputs.entries()){
-  const names=new Map(Object.keys(input.graph.projects).map(name=>[bazelAffectedLabelV1("p",name),name]));
+  const names=new Map(Object.keys(input.row.projects).map(name=>[bazelAffectedLabelV1("p",name),name]));
   expect(answers[index]!.map(label=>names.get(label)!).sort(),input.row.name).toEqual(input.row.affected);
  }
 },60000);

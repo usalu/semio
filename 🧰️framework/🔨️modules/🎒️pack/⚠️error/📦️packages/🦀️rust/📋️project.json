@@ -28,7 +28,7 @@
         "reads",
         "cargoToolchain"
       ],
-      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}
+      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test-ownership"}
     },
     "test-native": {
       "executor": "repo:script",
@@ -39,7 +39,7 @@
         "reads",
         "cargoToolchain"
       ],
-      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}
+      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "repo ./📜️script.ts test-native"}
     }
   }
 }

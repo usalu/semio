@@ -12,6 +12,16 @@ pub struct SetContributions {
 
 impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for SetContributions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "contributions", kind: "set-contributions", record: "SetContributions" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["contributions".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<PlaybookConfig, PlaybookConfigMutation> for SetContributions {
     fn diff(&self, base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfigDiff> {
         protocol::MutationOutcome::new(PlaybookConfigDiff { contributions_json: (base.contributions_json != self.json).then(|| self.json.clone()) })
     }
@@ -21,12 +31,6 @@ impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for SetContr
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["contributions".into()]
-    }
 }
 
 #[cfg(test)]

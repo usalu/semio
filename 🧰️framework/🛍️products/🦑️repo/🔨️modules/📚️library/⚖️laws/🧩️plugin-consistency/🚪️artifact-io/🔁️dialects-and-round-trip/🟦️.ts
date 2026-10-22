@@ -350,8 +350,8 @@ const POLICY_FLAGSHIP_MUTATION_ALLOWLIST = new Set<string>([
   // 🐛 Keys are policyNormalizeRelPath's canonical <pluginId>/<component>#<tail> short form, NOT
   // the raw file path — a full-path entry silently never matches (found the hard way: this
   // allowlist, and the sibling POLICY_SNIFF_REALITY_ALLOWLIST, both shipped with raw-path keys for
-  // most of a session, during which `bun ./📜️script.ts verify` (a DIFFERENT, narrower gate
-  // pipeline than `bun ./📜️script.ts policy`) was mistakenly used to "confirm" zero breaches —
+  // most of a session, during which `repo ./📜️script.ts verify` (a DIFFERENT, narrower gate
+  // pipeline than `repo ./📜️script.ts policy`) was mistakenly used to "confirm" zero breaches —
   // `policy` is the command that actually runs these rules; always verify against `policy`, not
   // `verify`, when touching anything under //#region 🔧️PolicyRule*).
   "stdio/gltf/standards#2.0-subsets-any-schema-mutations-component", // gltf-internal's steps 1-2 scope didn't include mutations; not yet reached

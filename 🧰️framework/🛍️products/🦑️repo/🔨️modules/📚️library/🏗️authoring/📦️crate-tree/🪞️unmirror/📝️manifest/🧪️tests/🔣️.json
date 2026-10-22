@@ -1,0 +1,245 @@
+{
+ "version": 1,
+ "declared": [
+  {
+   "name": "dependency sections including target and build tables",
+   "manifest": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n\n[build-dependencies]\ncc = \"1\"\n\n[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\n\n[features]\nalpha = []\n",
+   "expected": {
+    "alpha": [
+     "dependencies"
+    ],
+    "zeta": [
+     "dependencies"
+    ],
+    "mock": [
+     "dev-dependencies"
+    ],
+    "cc": [
+     "build-dependencies"
+    ],
+    "libc": [
+     "target.'cfg(unix)'.dependencies"
+    ]
+   }
+  },
+  {
+   "name": "a dependency in several sections",
+   "manifest": "[dependencies]\nserde = \"1\"\n[dev-dependencies]\nserde = \"1\"\n",
+   "expected": {
+    "serde": [
+     "dependencies",
+     "dev-dependencies"
+    ]
+   }
+  },
+  {
+   "name": "keys outside dependency tables are ignored",
+   "manifest": "[package]\nname = \"p\"\n[features]\nserde = []\n[workspace.dependencies]\nws = \"1\"\n",
+   "expected": {
+    "ws": [
+     "workspace.dependencies"
+    ]
+   }
+  },
+  {
+   "name": "an empty manifest",
+   "manifest": "",
+   "expected": {}
+  }
+ ],
+ "declaredDefects": [
+  {
+   "name": "dotted-key and table-form dependencies are declared",
+   "manifest": "[dependencies]\nserde.workspace = true\n[dependencies.tabled]\nversion = \"3\"\n",
+   "expected": {
+    "serde": [
+     "dependencies"
+    ],
+    "tabled": [
+     "dependencies"
+    ]
+   },
+   "defect": "📝️manifest/🟦️.ts:declaredDependencies matches only `name =` at the start of a line inside a `…dependencies` section: `serde.workspace = true` and `[dependencies.tabled]` are not declared dependencies (same blind spot as the dependency inventory)"
+  }
+ ],
+ "add": [
+  {
+   "name": "a new key sorts between its neighbours",
+   "manifest": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n",
+   "additions": [
+    {
+     "name": "mid",
+     "path": "../mid",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nmid = { path = \"../mid\" }\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n"
+  },
+  {
+   "name": "a key that sorts last goes after the last entry",
+   "manifest": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n",
+   "additions": [
+    {
+     "name": "zzz",
+     "path": "../z",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\nzzz = { path = \"../z\" }\n\n[dev-dependencies]\nmock = \"3\"\n"
+  },
+  {
+   "name": "a missing section is created at the end",
+   "manifest": "[package]\nname = \"x\"\n\n[dependencies]\nalpha = \"1\"\n",
+   "additions": [
+    {
+     "name": "t",
+     "path": "../t",
+     "section": "dev-dependencies"
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[dependencies]\nalpha = \"1\"\n\n[dev-dependencies]\nt = { path = \"../t\" }\n"
+  },
+  {
+   "name": "an empty section takes the line right after its header",
+   "manifest": "[dependencies]\n\n[features]\nf = []\n",
+   "additions": [
+    {
+     "name": "a",
+     "path": "../a",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[dependencies]\na = { path = \"../a\" }\n\n[features]\nf = []\n"
+  },
+  {
+   "name": "two additions keep byte order",
+   "manifest": "[dependencies]\nm = \"1\"\n",
+   "additions": [
+    {
+     "name": "b",
+     "path": "../b",
+     "section": "dependencies"
+    },
+    {
+     "name": "a",
+     "path": "../a",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[dependencies]\na = { path = \"../a\" }\nb = { path = \"../b\" }\nm = \"1\"\n"
+  },
+  {
+   "name": "a backslash path is escaped",
+   "manifest": "[dependencies]\nm = \"1\"\n",
+   "additions": [
+    {
+     "name": "w",
+     "path": "..\\win",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[dependencies]\nm = \"1\"\nw = { path = \"..\\\\win\" }\n"
+  },
+  {
+   "name": "trailing blank lines before a new section are collapsed",
+   "manifest": "[package]\nname = \"x\"\n\n\n\n",
+   "additions": [
+    {
+     "name": "d",
+     "path": "../d",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[dependencies]\nd = { path = \"../d\" }\n"
+  },
+  {
+   "name": "no additions change nothing",
+   "manifest": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n",
+   "additions": [],
+   "expected": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\nalpha = \"1\"\nzeta = { version = \"2\" }\n\n[dev-dependencies]\nmock = \"3\"\n"
+  },
+  {
+   "name": "an uppercase name sorts before lowercase in byte order",
+   "manifest": "[dependencies]\nalpha = \"1\"\n",
+   "additions": [
+    {
+     "name": "Zed",
+     "path": "../Zed",
+     "section": "dependencies"
+    }
+   ],
+   "expected": "[dependencies]\nZed = { path = \"../Zed\" }\nalpha = \"1\"\n"
+  }
+ ],
+ "remove": [
+  {
+   "name": "plain and inline-table entries are removed from both sections",
+   "manifest": "[dependencies]\na = \"1\"\nb = { version = \"2\" }\nc = \"3\"\n[dev-dependencies]\na = \"1\"\nd = \"4\"\n",
+   "names": [
+    "a",
+    "b"
+   ],
+   "expected": "[dependencies]\nc = \"3\"\n[dev-dependencies]\nd = \"4\"\n"
+  },
+  {
+   "name": "other sections keep their entries",
+   "manifest": "[package]\nname = \"a\"\n[features]\na = []\n[dependencies]\na = \"1\"\n",
+   "names": [
+    "a"
+   ],
+   "expected": "[package]\nname = \"a\"\n[features]\na = []\n[dependencies]\n"
+  },
+  {
+   "name": "a multi-line inline table is kept whole",
+   "manifest": "[dependencies]\na = {\n  version = \"1\"\n}\nb = \"2\"\n",
+   "names": [
+    "a"
+   ],
+   "expected": "[dependencies]\na = {\n  version = \"1\"\n}\nb = \"2\"\n"
+  },
+  {
+   "name": "names that are not listed stay",
+   "manifest": "[dependencies]\nx = \"1\"\n",
+   "names": [
+    "y"
+   ],
+   "expected": "[dependencies]\nx = \"1\"\n"
+  },
+  {
+   "name": "target tables count as dependency sections",
+   "manifest": "[target.'cfg(unix)'.dependencies]\nlibc = \"0.2\"\nother = \"1\"\n",
+   "names": [
+    "libc"
+   ],
+   "expected": "[target.'cfg(unix)'.dependencies]\nother = \"1\"\n"
+  },
+  {
+   "name": "build dependencies are never removed",
+   "manifest": "[build-dependencies]\ncc = \"1\"\n",
+   "names": [
+    "cc"
+   ],
+   "expected": "[build-dependencies]\ncc = \"1\"\n"
+  }
+ ],
+ "removeDefects": [
+  {
+   "name": "a single-line entry with a features array is removed",
+   "manifest": "[dependencies]\na = { version = \"1\", features = [\"x\"] }\nb = \"2\"\n",
+   "names": [
+    "a"
+   ],
+   "expected": "[dependencies]\nb = \"2\"\n",
+   "defect": "📝️manifest/🟦️.ts:removeDependencyLines refuses any line containing `[`, so an unreferenced dependency with a `features = [...]` array stays in the manifest"
+  },
+  {
+   "name": "a dotted-key workspace entry is removed",
+   "manifest": "[dependencies]\nserde.workspace = true\nb = \"2\"\n",
+   "names": [
+    "serde"
+   ],
+   "expected": "[dependencies]\nb = \"2\"\n",
+   "defect": "📝️manifest/🟦️.ts:removeDependencyLines' key pattern does not match `serde.workspace = true`"
+  }
+ ]
+}

@@ -16,6 +16,15 @@ pub struct SetScreenSize {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "screen-size", kind: "set-screen-size", record: "SetScreenSize" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetScreenSize {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { width, height } = self;
         if let Some((message, target)) = base.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (*width, *height))) {
@@ -25,12 +34,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         Ok(vec![GifMutation::SetScreenSize(SetScreenSize { width: base.width, height: base.height })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

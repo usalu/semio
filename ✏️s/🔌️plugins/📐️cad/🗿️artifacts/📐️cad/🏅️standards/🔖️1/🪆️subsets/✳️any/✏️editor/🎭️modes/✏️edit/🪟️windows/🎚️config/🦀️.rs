@@ -83,10 +83,9 @@ pub struct CadWorldWindowConfigDiff {
     pub dislocate_options: Option<CadDislocateOptions>,
 }
 
-impl protocol::MutationDiff<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
-    fn apply(&self, base: &CadWorldWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadWorldWindowConfig> {
-        Ok(CadWorldWindowConfig { camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()), sun: self.sun.clone().unwrap_or_else(|| base.sun.clone()), dislocate_options: self.dislocate_options.unwrap_or(base.dislocate_options) })
-    }
+impl protocol::MutationDiff<CadWorldWindowConfig> for CadWorldWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
@@ -98,14 +97,23 @@ impl protocol::MutationDiff<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
             self.dislocate_options = other.dislocate_options;
         }
     }
+
+    fn apply(&self, unpublished: &mut CadWorldWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = CadWorldWindowConfig { camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()), sun: self.sun.clone().unwrap_or_else(|| base.sun.clone()), dislocate_options: self.dislocate_options.unwrap_or(base.dislocate_options) };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
-    fn inverse(&self, base: &CadWorldWindowConfig) -> Self {
-        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), sun: self.sun.as_ref().map(|_| base.sun.clone()), dislocate_options: self.dislocate_options.map(|_| base.dislocate_options) }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
+    fn inverse(&self, base: &CadWorldWindowConfig) -> Self {
+        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), sun: self.sun.as_ref().map(|_| base.sun.clone()), dislocate_options: self.dislocate_options.map(|_| base.dislocate_options) }
     }
 }
 
@@ -175,7 +183,11 @@ impl Mutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &CadWorldWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
+    type ReferenceDiff = CadWorldWindowConfigDiff;
+    fn diff(&self, base: &CadWorldWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::Set(CadWorldWindowConfigSet { config }) = self;
         let diff = CadWorldWindowConfigDiff {
             camera: (base.camera != config.camera).then(|| config.camera.clone()),

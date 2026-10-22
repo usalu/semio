@@ -10,7 +10,6 @@ concurrency:
   group: dashboard-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
-  BUN_VERSION: 1.4.2
   NODE_VERSION: 24.15.0
   SEMIO_LANGUAGE: en
   SEMIO_BUILD_MODE: prototype
@@ -41,7 +40,6 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/native-repo
         with:
-          bun-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
       - name: Probe the Explicit German Entry
         env:
@@ -53,12 +51,6 @@ jobs:
           SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
           SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
         run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-filesystem-workspace --lib -- --nocapture --test-threads=1
-      - name: Terminal Editor Controller
-        id: terminal-editor-controller
-        env:
-          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
-          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
-        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-terminal --lib source_ -- --nocapture --test-threads=1
       - name: Explicit Language Choice
         id: explicit-language-choice
         env:
@@ -71,6 +63,12 @@ jobs:
           SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
           SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
         run: repo run @semio-tech/repo-dashboard-rs:test-cold-start --skip-cache --output=stream
+      - name: Registered Window and Source Controls
+        id: terminal-editor-controller
+        env:
+          SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
+        run: repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream
       - name: Installed Journeys
         id: installed-journeys
         env:

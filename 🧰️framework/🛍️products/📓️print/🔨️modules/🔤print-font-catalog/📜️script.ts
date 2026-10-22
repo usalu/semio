@@ -17,6 +17,7 @@ import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
 import type {PrintFontMetrics,PrintFontPositionTable} from "./📏️metrics/🟦️.ts";
+import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔎️ Derives only the tracked Anta Latin default shaping and advance tables. */
 export function derivePrintSansMetrics(workspace:string):PrintFontMetrics {
@@ -106,12 +107,12 @@ export function derivePrintCjkMetrics(workspace:string):PrintFontMetrics {
 class MetricsScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     if(args.length)throw new Error("Font metrics derivation accepts no arguments");
-    const output=join(import.meta.dir,"📏️metrics","🔣️.json");mkdirSync(join(import.meta.dir,"📏️metrics"),{recursive:true});
+    const output=join(import.meta.dirname,"📏️metrics","🔣️.json");mkdirSync(join(import.meta.dirname,"📏️metrics"),{recursive:true});
     writeFileSync(output,JSON.stringify(derivePrintSansMetrics(this.repoRoot),null,2)+"\n");
-    writeFileSync(join(import.meta.dir,"📏️metrics","🌏️.json"),JSON.stringify(derivePrintCjkMetrics(this.repoRoot))+"\n");
+    writeFileSync(join(import.meta.dirname,"📏️metrics","🌏️.json"),JSON.stringify(derivePrintCjkMetrics(this.repoRoot))+"\n");
     console.log("[print-fonts] source-bound primary/CJK metrics derived");
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("metrics", MetricsScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("metrics", MetricsScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

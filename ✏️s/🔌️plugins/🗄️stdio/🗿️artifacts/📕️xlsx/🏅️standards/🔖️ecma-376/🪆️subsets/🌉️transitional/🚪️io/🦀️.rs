@@ -147,7 +147,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = semio_framework_os_kernel::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = semio_framework_os_kernel::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
 

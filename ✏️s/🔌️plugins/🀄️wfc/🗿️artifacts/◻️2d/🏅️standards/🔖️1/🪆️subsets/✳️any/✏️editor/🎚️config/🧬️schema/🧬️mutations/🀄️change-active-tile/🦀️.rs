@@ -18,6 +18,19 @@ where
     Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ChangeActiveTile>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "active-tile", kind: "change-active-tile", record: "ChangeActiveTile" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Active Tile", "Aktive Kachel ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["active-tile".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc2dConfig, Op> for ChangeActiveTile
+where
+    Op: protocol::ColdMutation<Wfc2dConfig, ReferenceDiff = Wfc2dConfigDiff> + From<ChangeActiveTile>,
+{
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
         if base.active_tile_id == self.tile_id {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The active tile is already set.");
@@ -30,10 +43,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Active Tile", "Aktive Kachel ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["active-tile".into()]
-    }
 }

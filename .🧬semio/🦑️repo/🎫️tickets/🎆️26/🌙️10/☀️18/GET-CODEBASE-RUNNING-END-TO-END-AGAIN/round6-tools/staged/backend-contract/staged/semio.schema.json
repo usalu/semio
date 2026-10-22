@@ -16,7 +16,11 @@
         "remoteKeyPrefix": "semio-",
         "remotePath": "/v1/cache/",
         "archiveMagic": "SEMIO1\n",
-        "directory": "semio"
+        "directory": "semio",
+        "ledgerArea": "semio-actions",
+        "ledgerDirectory": "semio/actions",
+        "collectGraceMilliseconds": 600000,
+        "touchIntervalMilliseconds": 60000
       }
     },
     "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },

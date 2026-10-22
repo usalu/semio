@@ -9,12 +9,12 @@ use semio_framework_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 🪹️ No live decode, returned field decoder, or completed record remains.
     pub fn envelope_decode_terminal_is_empty(&self) -> bool {
         self.envelope_decode_jobs.is_empty()

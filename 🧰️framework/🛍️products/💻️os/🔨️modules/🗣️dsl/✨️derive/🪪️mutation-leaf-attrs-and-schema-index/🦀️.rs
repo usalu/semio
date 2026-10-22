@@ -283,7 +283,7 @@ fn mutation_schema_example_collection(path: &Path) -> bool {
     let index = mutation_schema_index(&workspace)?;
     if mutation_schema_example_collection(root) { return Ok(std::rc::Rc::new(BTreeMap::new())); }
     let key = mutation_authority_relative(&workspace, root)?;
-    index.get(&key).cloned().ok_or_else(|| format!("schema document index has no root {key}; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index"))
+    index.get(&key).cloned().ok_or_else(|| format!("schema document index has no root {key}; run repo run @semio-tech/dsl-derive-rs:generate-schema-index"))
 }
 
 type MutationSchemaIndex = BTreeMap<String, std::rc::Rc<BTreeMap<String, PathBuf>>>;
@@ -295,7 +295,7 @@ fn mutation_schema_index(workspace: &Path) -> Result<std::rc::Rc<MutationSchemaI
     thread_local! { static INDEX: std::cell::RefCell<CachedSchemaIndex> = const { std::cell::RefCell::new(None) }; }
     if let Some(cached) = INDEX.with(|current| current.borrow().as_ref().filter(|(root, _)| root == workspace).map(|(_, index)| index.clone())) { return Ok(cached); }
     let path = mutation_authority_locator(workspace, MUTATION_SCHEMA_INDEX_LOCATOR)?;
-    mutation_authority_no_follow(workspace, &path, false).map_err(|error| format!("schema document index {MUTATION_SCHEMA_INDEX_LOCATOR}: {error}; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index"))?;
+    mutation_authority_no_follow(workspace, &path, false).map_err(|error| format!("schema document index {MUTATION_SCHEMA_INDEX_LOCATOR}: {error}; run repo run @semio-tech/dsl-derive-rs:generate-schema-index"))?;
     let raw = crate::compiler_resources::read(&path).map_err(|error| error.to_string())?;
     let parsed = std::rc::Rc::new(parse_mutation_schema_document_index(workspace, &raw)?);
     INDEX.with(|current| *current.borrow_mut() = Some((workspace.to_path_buf(), parsed.clone())));

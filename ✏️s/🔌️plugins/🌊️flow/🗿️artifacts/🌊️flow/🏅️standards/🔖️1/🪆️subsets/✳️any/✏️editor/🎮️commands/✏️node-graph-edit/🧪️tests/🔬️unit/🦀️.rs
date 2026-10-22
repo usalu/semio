@@ -602,9 +602,9 @@ fn flow_edge(id: &str, from: &str, to: &str) -> semio_s_artifact_stdio_semio_flo
 fn fold_leaves(base: &SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation]) -> SemioFlowSnapshot {
     use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
     leaves.iter().fold(base.clone(), |state, leaf| {
-        let (diff, messages) = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
+        let (diff, messages) = <SemioFlowMutation as protocol::ColdMutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
         assert!(messages.is_empty(), "{leaf:?}: {messages:?}");
-        protocol::apply_diff(&diff, &state).unwrap_or_else(|error| panic!("{leaf:?}: {error:?}"))
+        protocol::apply_diff_cold(&diff, &state).unwrap_or_else(|error| panic!("{leaf:?}: {error:?}"))
     })
 }
 

@@ -15,6 +15,15 @@ pub struct SetEntityName {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-name", kind: "set-entity-name", record: "SetEntityName" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id, name } = self;
         protocol::MutationOutcome::new(diff::diff_set_entity_name(*id, name))
@@ -26,12 +35,6 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
             Some(e) => IfcMutation::SetEntityName(SetEntityName { id: *id, name: e.name.clone() }),
             None => return Ok(Vec::new()),
         }])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

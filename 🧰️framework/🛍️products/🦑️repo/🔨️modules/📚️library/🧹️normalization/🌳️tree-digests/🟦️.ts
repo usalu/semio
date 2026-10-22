@@ -3,13 +3,14 @@ import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts
 import { normalizeRelative } from "../🛣️path/🟦️.ts";
 import { sha256, assertNoFollowAncestors } from "../📁️input/🟦️.ts";
 import { sourceAdmissionAssertLexical } from "../🚪️source-admission/📁️io/🟦️.ts";
-import { execFileSync } from "node:child_process";
+
 import { lstatSync, readFileSync, readdirSync, readlinkSync } from "node:fs";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { join } from "node:path";
 import type { OpaqueTreeDigest, TaxonomyInventoryOptions, TaxonomyNoFollowTreeDigest, TaxonomyPlan, TaxonomyVerification, TaxonomyViolation } from "../📜️plan-contracts/🟦️.ts";
 import { absolutePath, stableViolations, violation } from "../🏷️file-kind-matching/🟦️.ts";
 import { TransactionRepositoryAuthority, TransactionRepositoryAuthorityError, assertTransactionRepositoryPath, isTransactionRepositoryAuthorityError } from "../🏛️repository-authority/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 interface OpaqueCounts {
   files: number;
@@ -90,7 +91,7 @@ export function opaqueTreeDigest(root: string, relativeRoot: string): OpaqueTree
 }
 
 export function repositoryHead(repoRoot: string): string {
-  return execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim();
+  return runToolSyncV1("git", ["rev-parse", "HEAD"], { check: true, cwd: repoRoot, encoding: "utf8" }).stdout.trim();
 }
 
 /** 🫧️ The scope a verdict must be computed over for `scope` to be judged whole (verifier closure): a scope inside a mutation facet —

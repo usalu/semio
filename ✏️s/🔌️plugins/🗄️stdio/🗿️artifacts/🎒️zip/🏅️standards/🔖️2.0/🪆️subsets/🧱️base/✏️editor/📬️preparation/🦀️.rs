@@ -197,12 +197,12 @@ mod tests {
         assert!(turns >= source.entries.len());
         assert!(progress.fits(grant()));
         assert_eq!(inverse, ZipMutation::RenameEntry(rename_entry::RenameEntry { name: replacement, new_name: "before.bin".into() }));
-        assert_eq!(vec![inverse], <ZipMutation as protocol::Mutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
+        assert_eq!(vec![inverse], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
         assert_eq!(post.entries[0].data, source.entries[0].data);
         assert_eq!(post.entries[1], source.entries[1]);
         assert_eq!(post.comment, source.comment);
-        let outcome = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(post, protocol::apply_diff(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
+        let outcome = <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::diff(&mutation, &source);
+        assert_eq!(post, protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
     }
 
     #[test]
@@ -215,9 +215,9 @@ mod tests {
         assert_eq!(post.entries, source.entries);
         assert_eq!(post.comment, "replaced comment");
         assert!(!post.comment_utf8);
-        assert_eq!(vec![inverse], <ZipMutation as protocol::Mutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
-        let outcome = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(post, protocol::apply_diff(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
+        assert_eq!(vec![inverse], <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::inverse(&mutation, &source).expect("independent mutation algebra inverse"));
+        let outcome = <ZipMutation as protocol::ColdMutation<ZipSnapshot>>::diff(&mutation, &source);
+        assert_eq!(post, protocol::apply_diff_cold(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
     }
 
     #[test]

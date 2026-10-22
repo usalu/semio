@@ -15,7 +15,7 @@ fn mutation_apply_preparation_publishes_the_post_snapshot_and_a_restoring_invers
     let mutation = TxtMutation::SetLine(SetLineMutation { index: 1, text: "gamma".into() });
     let factory = <TxtEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the TXT document lane declares a preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
     assert_eq!(*law.post, expected);

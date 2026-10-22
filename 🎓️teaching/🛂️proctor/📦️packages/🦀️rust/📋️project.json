@@ -36,8 +36,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/*.rs",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs",
@@ -54,8 +52,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/*.rs",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
@@ -70,6 +66,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json",
       "!{workspaceRoot}/**/target/**",
       "!{workspaceRoot}/**/dist/**",
       "!{workspaceRoot}/**/node_modules/**"
@@ -95,7 +92,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -111,7 +108,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -150,7 +147,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts dev"
+        "command": "repo ./📜️script.ts dev"
       },
       "cache": false,
       "continuous": true
@@ -160,7 +157,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -181,7 +178,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts rebuild"
+        "command": "repo ./📜️script.ts rebuild"
       },
       "cache": false,
       "metadata": {
@@ -195,7 +192,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts health"
+        "command": "repo ./📜️script.ts health"
       },
       "cache": false,
       "metadata": {
@@ -209,7 +206,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts backup",
+        "command": "repo ./📜️script.ts backup",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -239,7 +236,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts restore",
+        "command": "repo ./📜️script.ts restore",
         "forwardAllArgs": true
       },
       "cache": false
@@ -280,7 +277,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts erase",
+        "command": "repo ./📜️script.ts erase",
         "forwardAllArgs": true
       },
       "cache": false
@@ -313,7 +310,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts prune",
+        "command": "repo ./📜️script.ts prune",
         "forwardAllArgs": true
       },
       "cache": false
@@ -323,7 +320,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts capacity",
+        "command": "repo ./📜️script.ts capacity",
         "forwardAllArgs": true
       },
       "cache": false,

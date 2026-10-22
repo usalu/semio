@@ -11,8 +11,8 @@ async fn canonical_xml_and_opc_diff_text_binary_replay_is_exact() {
     assert!(diff.opc.is_some(), "binary package changes must be expressed against OPC state");
 
     for replay in [diff.clone(), DocxDiff::parse_diff(&diff.print_diff()).expect("text replay"), DocxDiff::decode_diff(&diff.encode_diff().expect("binary encode")).expect("binary replay")] {
-        assert_eq!(protocol::apply_diff(&replay, &before).expect("diff applies"), after);
-        assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).expect("inverse applies"), before);
+        assert_eq!(protocol::apply_diff_cold(&replay, &before).expect("diff applies"), after);
+        assert_eq!(protocol::apply_diff_cold(&replay.inverse(&before), &after).expect("inverse applies"), before);
     }
 }
 
@@ -28,7 +28,7 @@ async fn every_demo_diff_round_trips_without_semantic_shadow_state() {
 
 #[test]
 fn canonical_fixture_clears_only_the_main_xml_declaration() {
-    use protocol::command::DiffAlgebra;
+    use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote,retained::{RetainedXmlDeclaration,RetainedXmlText}};
     use std::io::Read;
 
@@ -43,7 +43,7 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
     before.validate_authority().expect("authored base is valid");
     let source = before.clone();
 
-    let after = protocol::apply_diff(&diff, &before).expect("fixture diff applies");
+    let after = protocol::apply_diff_cold(&diff, &before).expect("fixture diff applies");
     assert_eq!(before, source, "diff replay never rewrites its source");
     let main = after.xml_parts.iter().find(|part| part.path == main_path).unwrap();
     assert!(main.document.declaration.is_none());
@@ -51,9 +51,9 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
     expected.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = None;
     assert_eq!(after, expected, "the sparse fixture changes only the canonical XML declaration");
 
-    assert_eq!(protocol::apply_diff(&diff.inverse(&source), &after).expect("inverse applies"), source);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&source), &after).expect("inverse applies"), source);
     for replay in [DocxDiff::parse_diff(&diff.print_diff()).expect("text replay"), DocxDiff::decode_diff(&diff.encode_diff().expect("binary encode")).expect("binary replay")] {
-        assert_eq!(protocol::apply_diff(&replay, &before).expect("codec replay applies"), after);
+        assert_eq!(protocol::apply_diff_cold(&replay, &before).expect("codec replay applies"), after);
     }
 
     let bytes = semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&after).expect("declaration-free package publishes");
@@ -77,14 +77,14 @@ use semio_framework_value::ToValue;
     let diff = DocxDiff { opc: Some(OpcDiff { comment: Some(fixture["after"].as_str().unwrap().to_string()), ..Default::default() }), ..Default::default() };
     assert!(!diff.is_empty());
     for replay in [DocxDiff::parse_diff(&diff.print_diff()).unwrap(), DocxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
-        assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after);
-        assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).unwrap(), before);
+        assert_eq!(protocol::apply_diff_cold(&replay, &before).unwrap(), after);
+        assert_eq!(protocol::apply_diff_cold(&replay.inverse(&before), &after).unwrap(), before);
     }
     let mut cleared = after.clone();
     cleared.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["cleared"].as_str().unwrap()).unwrap();
     let mut combined = diff;
     combined.absorb(DocxDiff { opc: Some(OpcDiff { comment: Some(fixture["cleared"].as_str().unwrap().to_string()), ..Default::default() }), ..Default::default() });
-    assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared);
+    assert_eq!(protocol::apply_diff_cold(&combined, &before).unwrap(), cleared);
     let mutation = DocxMutation::SetPart(set_part::SetPart { path: "word/media/x.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![1, 2] }, index: Some(1), override_index: None });
     assert_eq!(DocxMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(DocxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

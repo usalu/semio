@@ -14,8 +14,15 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateOptionGroup> + From<crate::standards::v1::subsets::any::schema::mutations::delete_option_group::DeleteOptionGroup>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "option-group", kind: "create-option-group", record: "CreateOptionGroup" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::create_option_group::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::create_option_group::inverse::inverse(self, base)) }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create option group", "Anlegen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for CreateOptionGroup
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<CreateOptionGroup> + From<crate::standards::v1::subsets::any::schema::mutations::delete_option_group::DeleteOptionGroup>,
+{
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::create_option_group::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::create_option_group::inverse::inverse(self, base)) }
 }

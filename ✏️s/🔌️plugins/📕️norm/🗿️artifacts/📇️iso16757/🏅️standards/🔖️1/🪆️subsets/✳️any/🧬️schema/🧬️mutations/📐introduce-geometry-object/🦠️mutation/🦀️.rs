@@ -17,15 +17,6 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceGeometryObjec
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "insert", entity: "geometryObject", kind: "introduce-geometry-object", record: "IntroducedGeometryObject" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        crate::introduce_geometry_object::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::introduce_geometry_object::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Create geometry \"{}\"", self.geometry_object.id),
@@ -35,4 +26,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceGeometryObjec
     fn target(&self) -> Vec<String> {
         vec![self.geometry_object.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for IntroduceGeometryObject where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_geometry_object::mutation::RetireGeometryObject> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
+        crate::introduce_geometry_object::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::introduce_geometry_object::inverse::inverse(self, base)?
+    
+    })
+}
 }

@@ -419,7 +419,7 @@ where
                 }
                 let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its mutation owner"))?;
                 let inverse = mutation.inverse(base.get())?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+                let post = protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
                 let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its mutation owner"))?;
                 *self.owners.candidate = Some((post, inverse, forward));
                 self.retained_bytes = retained_bytes;

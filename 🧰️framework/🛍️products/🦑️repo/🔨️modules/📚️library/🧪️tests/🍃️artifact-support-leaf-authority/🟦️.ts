@@ -105,7 +105,7 @@ function lifecycleFixture(): { root: string; baselineCommit: string; ticketDir: 
   put(".git/info/exclude", `${schemaPath}\n.nx/\n${outputRoot}/\n`);
   put("nx.json", '{"defaultBase":"main"}\n');
   put("package.json", '{"name":"support-lifecycle-fixture","private":true}\n');
-  const project = { name: "@fixture/support", root: generator, targets: Object.fromEntries(["generate", "preview-generated", "check-generated"].map((command) => [command, { executor: "nx:run-commands", options: { cwd: generator, command: `bun ./📜️script.ts ${command}` } }])) };
+  const project = { name: "@fixture/support", root: generator, targets: Object.fromEntries(["generate", "preview-generated", "check-generated"].map((command) => [command, { executor: "nx:run-commands", options: { cwd: generator, command: `repo ./📜️script.ts ${command}` } }])) };
   put("project.json", `${JSON.stringify(project, null, 2)}\n`);
   put(`${generator}/📋️project.json`, `${JSON.stringify(project, null, 2)}\n`);
   put(`${generator}/📜️script.ts`, [

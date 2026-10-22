@@ -1,0 +1,75 @@
+{
+  "title": "Explore Button Zoom Only",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Zoom a layered overview only while the pointer is over its explore control. After a level becomes active, do not zoom a control that is already under the cursor until the pointer moves and hovers it again.",
+  "summary": "Pointer zoom on a layered overview starts only on the explore or open control. A fresh level ignores a control already under the cursor until the pointer moves and hovers it again.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS",
+  "sessions": [
+    "25ccfc46-1ea5-456d-a731-e662e197d82c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-22 17:19:36",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "b7b9f105a82ceca5ae94a26a707bf01965d09d22",
+      "prompt": "Zoom a layered overview only while the pointer is over its explore control. After a level becomes active, do not zoom a control that is already under the cursor until the pointer moves and hovers it again."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-22 17:47:23",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "b7b9f105a82ceca5ae94a26a707bf01965d09d22",
+      "summary": "Pointer zoom on a layered overview starts only on the explore or open control. A fresh level ignores a control already under the cursor until the pointer moves and hovers it again.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🥞️layered-home/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/👥️shared-presence/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🔸️opens-page-step-front/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🗺️pages/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🪧️brand.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟠️pane-styles/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟠️zooms-hovered-topic-pans/🟦️.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️22/EXPLORE-BUTTON-ZOOM-ONLY/explore-button-zoom.md"
+        }
+      ]
+    }
+  ]
+}

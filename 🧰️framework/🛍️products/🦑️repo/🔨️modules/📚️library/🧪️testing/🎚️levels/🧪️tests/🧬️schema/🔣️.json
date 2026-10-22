@@ -1,0 +1,133 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "levels",
+  "override",
+  "default",
+  "invalidEnvDefaultsToFundamental"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "levels": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "level",
+     "go",
+     "vitest",
+     "bun",
+     "pytest",
+     "dotnet",
+     "playwright"
+    ],
+    "properties": {
+     "level": {
+      "type": "string"
+     },
+     "go": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "vitest": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "bun": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "pytest": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "dotnet": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "playwright": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 4
+  },
+  "override": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "budgetMs",
+    "go",
+    "pytest",
+    "bun",
+    "playwright"
+   ],
+   "properties": {
+    "budgetMs": {
+     "type": "string"
+    },
+    "go": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "pytest": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "bun": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "playwright": {
+     "type": "integer"
+    }
+   }
+  },
+  "default": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "env",
+    "expectedBun"
+   ],
+   "properties": {
+    "env": {
+     "type": "string"
+    },
+    "expectedBun": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "invalidEnvDefaultsToFundamental": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  }
+ }
+}

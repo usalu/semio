@@ -10,7 +10,7 @@
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/📸️snapshot/⬅️before/🔣️.json"));
@@ -36,7 +36,7 @@ fn mutation() -> ProgramMutation {
 async fn connect_trace_applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("connect-trace/connects-requirement-a-to-decision-a: connect-trace applies to its committed before-snapshot");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("connect-trace/connects-requirement-a-to-decision-a: connect-trace applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "connect-trace/connects-requirement-a-to-decision-a: applied state differs from the committed after-snapshot");
 }
 
@@ -47,9 +47,9 @@ async fn connect_trace_inverse_restores_before() {
     let forward = mutation();
     let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
-    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("connect-trace/connects-requirement-a-to-decision-a: forward diff applies");
+    let mut state = protocol::apply_diff_cold(forward.diff(&base).diff(), &base).expect("connect-trace/connects-requirement-a-to-decision-a: forward diff applies");
     for step in &undo {
-        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("connect-trace/connects-requirement-a-to-decision-a: inverse step applies");
+        state = protocol::apply_diff_cold(step.diff(&state).diff(), &state).expect("connect-trace/connects-requirement-a-to-decision-a: inverse step applies");
     }
     assert_eq!(state, base, "connect-trace/connects-requirement-a-to-decision-a: disconnect-trace (the inverse of an id-creating connect) did not restore the before-snapshot");
 }
@@ -77,7 +77,7 @@ async fn connect_trace_declared_outcome_holds() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert!(outcome.messages().is_empty(), "connect-trace/connects-requirement-a-to-decision-a: connect-trace raised a diagnostic on a fixture that declares a clean apply");
-    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "connect-trace/connects-requirement-a-to-decision-a: connect-trace was rejected by apply on its own before-snapshot");
+    assert!(protocol::apply_diff_cold(outcome.diff(), &base).is_ok(), "connect-trace/connects-requirement-a-to-decision-a: connect-trace was rejected by apply on its own before-snapshot");
 }
 
 /// 🔺️ The sparse delta connect-trace produces is exactly the committed diff — this pins WHICH collection
@@ -103,7 +103,7 @@ async fn connect_trace_committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_committed_diff_applies_to_after() {
     let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-trace/connects-requirement-a-to-decision-a: the committed diff did not carry before to after");
 }
 

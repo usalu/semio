@@ -19,18 +19,22 @@ pub struct ReplacePixelsMutation {
 //#region Semantics
 impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixels", kind: "replace-pixels", record: "ReplacePixels" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["replace-pixels".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation {
     fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
         let Self { pixels } = self;
         protocol::MutationOutcome::new(contribute(base, pixels.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
         Ok((base.image.pixels != self.pixels).then(|| JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.image.pixels.clone() })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["replace-pixels".into()]
     }
 }
 pub fn contribute(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {

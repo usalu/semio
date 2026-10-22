@@ -95,7 +95,7 @@ impl FixedByteCredits {
 
 impl<T, const N: usize> FixedOwnerRing<T, N> {
     pub(crate) fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_slots(N, || None), head: 0, len: 0 }
+        Self { slots: semio_framework_async_slots::boxed_slots(N, || None), head: 0, len: 0 }
     }
 
     pub fn len(&self) -> usize {
@@ -291,7 +291,7 @@ impl HttpTransportState {
     pub(crate) fn new(listener: TcpListener, server: Option<McpServer>, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: BridgeHandle) -> Self {
         Self {
             listener: Some(listener),
-            connections: semio_framework_async::boxed_slots(HTTP_CONNECTION_CAPACITY, || None),
+            connections: semio_framework_async_slots::boxed_slots(HTTP_CONNECTION_CAPACITY, || None),
             terminal: FixedOwnerRing::new(),
             terminal_policy: HttpTerminalPolicy::Handback,
             mode: HttpTransportMode::Running,

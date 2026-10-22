@@ -35,16 +35,16 @@
       "de": "* installiert zuerst die gesperrten Abhängigkeiten, wenn sie fehlen oder geändert sind"
     },
     "provisioning": {
-      "en": "Command {command} needs the locked dependencies; running `bun repo dependencies ensure` (minutes on a fresh clone, Ctrl+C cancels).",
-      "de": "Befehl {command} braucht die gesperrten Abhängigkeiten; führe `bun repo dependencies ensure` aus (auf einem frischen Klon Minuten, Strg+C bricht ab)."
+      "en": "Command {command} needs the locked dependencies; running `repo dependencies ensure` (minutes on a fresh clone, Ctrl+C cancels).",
+      "de": "Befehl {command} braucht die gesperrten Abhängigkeiten; führe `repo dependencies ensure` aus (auf einem frischen Klon Minuten, Strg+C bricht ab)."
     },
     "provisioned": {
       "en": "Dependencies ready after {seconds} s; starting {command}.",
       "de": "Abhängigkeiten nach {seconds} s bereit; starte {command}."
     },
     "provisionFailed": {
-      "en": "Command {command} needs the locked dependencies and `bun repo dependencies ensure` failed: {reason}. Fix the cause, run `bun repo dependencies ensure`, then retry.",
-      "de": "Befehl {command} braucht die gesperrten Abhängigkeiten und `bun repo dependencies ensure` ist fehlgeschlagen: {reason}. Ursache beheben, `bun repo dependencies ensure` ausführen und erneut versuchen."
+      "en": "Command {command} needs the locked dependencies and `repo dependencies ensure` failed: {reason}. Fix the cause, run `repo dependencies ensure`, then retry.",
+      "de": "Befehl {command} braucht die gesperrten Abhängigkeiten und `repo dependencies ensure` ist fehlgeschlagen: {reason}. Ursache beheben, `repo dependencies ensure` ausführen und erneut versuchen."
     },
     "unknownCommand": {
       "en": "Unknown command: {command}",
@@ -191,8 +191,8 @@
       "export": "ScaleFixtureScript",
       "requires": "none",
       "reason": {
-        "en": "Delegates to bun repo run, which provisions itself.",
-        "de": "Delegiert an bun repo run, das sich selbst bereitstellt."
+        "en": "Delegates to repo run, which provisions itself.",
+        "de": "Delegiert an repo run, das sich selbst bereitstellt."
       },
       "synopsis": "scale-fixture check",
       "summary": {
@@ -322,10 +322,10 @@
       "export": "BuildScript",
       "requires": "none",
       "reason": {
-        "en": "Delegates to bun repo run, which provisions itself.",
-        "de": "Delegiert an bun repo run, das sich selbst bereitstellt."
+        "en": "Delegates to repo run, which provisions itself.",
+        "de": "Delegiert an repo run, das sich selbst bereitstellt."
       },
-      "synopsis": "build [canvas fonts|storybook|assets|repo-cli|repo-server|repo-vscode]",
+      "synopsis": "build [canvas fonts|storybook|assets|repo-cli|repo-server]",
       "summary": {
         "en": "Builds workspace slices: canvas fonts, Storybook, assets, repo clients.",
         "de": "Baut Workspace-Teile: Canvas-Schriften, Storybook, Assets, Repo-Clients."

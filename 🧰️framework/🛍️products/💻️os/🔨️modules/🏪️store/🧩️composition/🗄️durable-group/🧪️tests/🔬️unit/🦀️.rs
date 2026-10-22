@@ -30,7 +30,7 @@ fn fixture_test_member(case: &serde_json::Value, ordinal: u64) -> (DurableOwnedG
     let edit = Edit { id: format!("durable-fixture-edit-{ordinal}"), actor: Some(actor.clone()), line: None, forwards: serde_json::from_value(case["forwards"].clone()).unwrap(), inverse: serde_json::from_value::<Vec<String>>(case["inverse"].clone()).unwrap().into(), mutation_meta: vec![crate::os_spr::MutationMeta { mutation_id: Some(crate::os_spr::MutationId(format!("durable-fixture-edit-{ordinal}#0"))), dependencies: Vec::new(), base_version: ordinal, author_id: Some(crate::os_spr::ActorId(actor)), timestamp: HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: 1 }, undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(), transaction: None }], verb: None, sequence_number: ordinal as i32, started_at: String::new(), finished_at: None };
     let post_snapshot = Arc::new(serde_json::from_value::<DemoSnapshot>(case["postSnapshot"].clone()).unwrap());
     let weak = Arc::downgrade(&post_snapshot);
-    (DurableOwnedGroupTestMember { edit, post_snapshot, mutation_retirement: Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<String>::default()), snapshot_retirement: Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<DemoSnapshot>::default()) }, weak)
+    (DurableOwnedGroupTestMember { edit, post_snapshot, mutation_retirement: Arc::new(semio_framework_value::OwnedValueRetirementFactory::<String>::default()), snapshot_retirement: Arc::new(semio_framework_value::SharedValueRetirementFactory::<DemoSnapshot>::default()) }, weak)
 }
 
 #[cfg(feature = "durable-group-testing")]

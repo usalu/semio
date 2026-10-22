@@ -24,7 +24,7 @@ use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::Remov
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing")]
+#[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing", reference = DrawingSnapshot, reference_diff = semio_s_artifact_draw_drawing_diff::DrawingDiff)]
 pub enum DrawingMutation {
     SetLayerVisible(SetLayerVisible),
     SetLayerLocked(SetLayerLocked),
@@ -204,7 +204,7 @@ use semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::U
 //#region 🔖️Apply
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
 pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)
+    <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
 

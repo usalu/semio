@@ -1,4 +1,4 @@
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::mutations::{fixture};
 use crate::io::binary::mutations::wire_tag;
 use crate::io::text::mutations::print_cad_mutation;
@@ -39,7 +39,7 @@ async fn mutation_diff_law() {
         snap = __next;
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
+        assert_eq!(snap, protocol::apply_diff_cold(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
     }
 }
 //#endregion
@@ -49,7 +49,7 @@ async fn mutation_diff_law() {
 /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
 #[semio_framework_async_macros::async_test]
 async fn inverse_law() {
-    use protocol::command::DiffAlgebra;
+    use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
@@ -61,9 +61,9 @@ async fn inverse_law() {
         }
 
         let d = m.diff(&base);
-        let after = protocol::apply_diff(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let after = protocol::apply_diff_cold(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let d_inv = d.diff().inverse(&base);
-        assert_eq!(protocol::apply_diff(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
     }
 }
 //#endregion

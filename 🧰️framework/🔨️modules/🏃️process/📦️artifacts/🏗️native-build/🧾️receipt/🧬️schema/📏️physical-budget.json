@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-build/provenance-physical-budget/v1",
+  "title": "Cargo Provenance Physical Observation Budget",
+  "description": "Finite physical observation budget of one completed Cargo invocation: a full release graph digests several hundred MiB of artifacts and tens of thousands of inputs once, copies the retained compiler closure, then rechecks every retained file before publication. Measured for the descriptor emitter closure (about 1 GB read, 126k work units, 757 MB retained): 100-200 s on an idle host, more than 600 s on a host at load 20 with several concurrent Cargo builds; the deadline is the stall ceiling of that phase (cancellation and progress stay live), three times the slowest measurement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maxBytes", "maxWork", "chunkBytes", "deadlineMs"],
+  "properties": {
+    "version": {"const": 1},
+    "maxBytes": {"const": 17179869184},
+    "maxWork": {"const": 4194304},
+    "chunkBytes": {"const": 1048576},
+    "deadlineMs": {"const": 1800000}
+  }
+}

@@ -11,14 +11,18 @@ pub struct ChangeOutdoorCo2 {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeOutdoorCo2 where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_outdoor_co2::ChangeOutdoorCo2> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-co2", kind: "change-outdoor-co2", record: "ChangeOutdoorCo2" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_outdoor_co2::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeOutdoorCo2 where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_outdoor_co2::ChangeOutdoorCo2> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_outdoor_co2::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_outdoor_co2::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
-    }
 }
 
 //#region 🪢️Mounts

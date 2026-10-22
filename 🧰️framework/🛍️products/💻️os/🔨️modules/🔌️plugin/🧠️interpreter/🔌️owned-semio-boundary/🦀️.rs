@@ -247,11 +247,11 @@ pub struct OwnedSemioInstance {
     pub(super) core: CoreInstance,
 }
 
-pub(crate) struct OwnedSemioCheckpointLayout<'a>{pub(super) actor:&'a OwnedSemioInstance,core_bytes:usize}
+pub struct OwnedSemioCheckpointLayout<'a>{pub(super) actor:&'a OwnedSemioInstance,core_bytes:usize}
 
 impl OwnedSemioCheckpointLayout<'_>{
     /// 👓️ Writes the same retained borrowed VM after its original observed measurement.
-    pub(crate) fn visit(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
+    pub fn visit(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
         visitor(SEMIO_ACTOR_CHECKPOINT_MAGIC)?;visitor(&[SEMIO_ACTOR_CHECKPOINT_VERSION])?;visitor(&self.actor.component_fingerprint.to_le_bytes())?;visitor(&(self.core_bytes as u64).to_le_bytes())?;
         let mut written=0usize;self.actor.core.visit_checkpoint(&mut |bytes|{written=written.checked_add(bytes.len()).filter(|written|*written<=self.core_bytes).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"borrowed actor checkpoint changed after measurement"))?;visitor(bytes)})?;
         if written!=self.core_bytes{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"borrowed actor checkpoint changed after measurement"));}Ok(())
@@ -260,7 +260,7 @@ impl OwnedSemioCheckpointLayout<'_>{
 
 impl OwnedSemioInstance {
     /// 📏️ Retains the original VM borrow and scalar extent without allocating checkpoint storage.
-    pub(crate) fn checkpoint_layout<'a>(&'a self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<OwnedSemioCheckpointLayout<'a>,semio_framework_value::ValueError>{
+    pub fn checkpoint_layout<'a>(&'a self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<OwnedSemioCheckpointLayout<'a>,semio_framework_value::ValueError>{
         control.scoped_stage(|control|{control.begin_stage(0)?;let mut core_bytes=0usize;self.core.visit_checkpoint(&mut |bytes|{core_bytes=core_bytes.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize-25).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"borrowed actor checkpoint extent exceeds address space"))?;control.advance(bytes.len())})?;Ok(OwnedSemioCheckpointLayout{actor:self,core_bytes})})
     }
 

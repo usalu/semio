@@ -5,7 +5,7 @@ import { type BackboneWorkerResponse } from "@semio-tech/framework/backbone";
 import { publishLocalPresenceActorV1 } from "../../../👕️canvas-presence/🟦️.ts";
 import { scopeRuntimeKey } from "../../🔐️identity-binding/🟦️.ts";
 import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
-import type { RefObject } from "react";
+import type { RefObject } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🧦️ Resolves the waiter of a ready socket actor and publishes its local presence actor. */
 export function handleSocketActorMessage({ openDocumentSessionsRef, message, socketActorReadyRef }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "openDocumentSessionsRef"> & {

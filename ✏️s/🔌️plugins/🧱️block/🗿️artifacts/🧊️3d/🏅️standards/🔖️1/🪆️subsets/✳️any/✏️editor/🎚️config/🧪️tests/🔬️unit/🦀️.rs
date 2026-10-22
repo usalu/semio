@@ -10,7 +10,7 @@ async fn block3d_config_default_has_all_tags() {
 }
 
 fn applied(mutation: &Block3dConfigMutation, base: &Block3dConfig) -> Block3dConfig {
-    protocol::apply_diff(mutation.diff(base).diff(), base).expect("valid config diff")
+    protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("valid config diff")
 }
 
 fn restored(mutation: &Block3dConfigMutation, base: &Block3dConfig) -> Block3dConfig {

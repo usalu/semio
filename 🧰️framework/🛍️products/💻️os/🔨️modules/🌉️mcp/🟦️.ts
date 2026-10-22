@@ -1,5 +1,6 @@
 import{mcpJsonPathV1,mcpJsonArrayV1}from"./📡️stdio/🎫️session/📋️data/🟦️.ts";
 import{withMcpClientSessionV1,type McpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
+import { runToolSyncV1, startToolV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 export{withMcpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
 export type{McpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
 import{type ScriptInvocation}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -12,7 +13,7 @@ import{type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/
  * module only ever crosses the process boundary over real stdio, exactly like a real IDE client.
  */
 
-import { type ChildProcessByStdio, spawn, spawnSync } from "node:child_process";
+import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix, win32 } from "node:path";
@@ -80,7 +81,7 @@ const mcpStagingEnvironment = (): NodeJS.ProcessEnv => ({ ...process.env, CARGO_
 export function stageMcpBinaryAsync(repoRoot: string, progress: (line: string) => void, signal?: AbortSignal): Promise<number> {
   return new Promise((resolveStatus) => {
     progress(`[semio-os-mcp] staging via repo run ${MCP_BINARY_TARGET}`);
-    const child = spawn("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], { cwd: repoRoot, shell: false, env: mcpStagingEnvironment(), stdio: ["ignore", "pipe", "pipe"], signal });
+    const child = startToolV1("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], { cwd: repoRoot, shell: false, env: mcpStagingEnvironment(), stdio: ["ignore", "pipe", "pipe"], signal });
     for (const stream of [child.stdout, child.stderr]) createInterface({ input: stream }).on("line", (line) => void (line.trim() && progress(line)));
     child.on("error", (error) => {
       progress(`[semio-os-mcp] ${error.message}`);
@@ -93,7 +94,7 @@ export function stageMcpBinaryAsync(repoRoot: string, progress: (line: string) =
 const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
   stage: (progress) => {
     progress(`[semio-os-mcp] staging via repo run ${MCP_BINARY_TARGET}`);
-    const result = spawnSync("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], {
+    const result = runToolSyncV1("repo", ["run", MCP_BINARY_TARGET, "--output=stream"], {
       cwd: repoRoot,
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
@@ -149,9 +150,9 @@ export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proc
  * staged build's own sources record ({@link mcpBinaryFreshness}): Cargo's dep-info for the binary,
  * i.e. the whole dependency closure — a kernel or plugin-host change the gateway links is as stale as
  * an edit in this module — stat-checked, so a warm tree answers in milliseconds. Any build of the neutral
- * target (a gate's `dependsOn`, `bun ./📜️script.ts build`) publishes the record with the binary, so
+ * target (a gate's `dependsOn`, `repo ./📜️script.ts build`) publishes the record with the binary, so
  * `.mcp.json`'s `initialize` never re-stages a binary a build just produced. `workspace:setup` /
- * `bun ./📜️script.ts setup` calls this to stage ahead of time; a client that starts first is served by
+ * `repo ./📜️script.ts setup` calls this to stage ahead of time; a client that starts first is served by
  * {@link serveWarmMcpStdio}, which never blocks `initialize` on a build. */
 export function ensureMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform, staging: McpBinaryStaging = nativeMcpBinaryStagingFor(repoRoot)): string {
   if (env.SEMIO_OS_MCP_BIN) return requireMcpBinary(repoRoot, env, platform);
@@ -389,7 +390,7 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
   try {
     rows = JSON.parse(readFileSync(registryPath, "utf8"));
   } catch (error) {
-    return { ok: false, detail: `the generated plugin registry ${PLUGIN_REGISTRY_REL} is unreadable (${String(error)}) — run \`bun repo run @semio-tech/plugin-registry:generate\`` };
+    return { ok: false, detail: `the generated plugin registry ${PLUGIN_REGISTRY_REL} is unreadable (${String(error)}) — run \`repo run @semio-tech/plugin-registry:generate\`` };
   }
   const row = rows.find((entry) => entry.pluginId === pluginId);
   if (!row?.cratePath || !row.wasmOut) return { ok: false, detail: `\`${pluginId}\` is not a row of the generated plugin registry — this gate's pinned target names a plugin that is not installed` };
@@ -399,7 +400,7 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
   try {
     declaredWasmSha256 = (JSON.parse(readFileSync(descriptorPath, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256;
   } catch (error) {
-    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`bun repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\`` };
+    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\`` };
   }
   if (!declaredWasmSha256) return { ok: false, detail: `\`${pluginId}\`'s committed descriptor declares no \`hashes.wasmSha256\`, so a staged component cannot be checked against it` };
   const tried: string[] = [];
@@ -416,10 +417,10 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
     if (staged === declaredWasmSha256) return { ok: true, detail: `${pluginId}: ${profile}/${row.wasmOut} ${bytes.length} B, sha256 ${staged.slice(0, 12)}… matches its committed descriptor` };
     return {
       ok: false,
-      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`bun repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\``,
+      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\``,
     };
   }
-  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`bun repo run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };
+  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`repo run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };
 }
 
 /** 🔎️ The ranking properties a compiled capability catalog owes an agent, asserted over one

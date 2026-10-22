@@ -15,7 +15,16 @@ pub struct SetTriangleNormal {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-normal", kind: "set-triangle-normal", record: "SetTriangleNormal" };
 
-    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set triangle normal", "Normale des Dreiecks setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
+    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as protocol::ColdMutation<StlSnapshot>>::ReferenceDiff> {
         let Self { index, normal } = self;
         protocol::MutationOutcome::new(diff::diff_set_triangle_normal(*index, *normal))
     }
@@ -27,12 +36,6 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set triangle normal", "Normale des Dreiecks setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

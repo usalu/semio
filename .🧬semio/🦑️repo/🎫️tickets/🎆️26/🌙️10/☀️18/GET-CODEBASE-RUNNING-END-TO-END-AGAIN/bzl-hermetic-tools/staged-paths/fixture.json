@@ -1,0 +1,1672 @@
+{
+ "version": 1,
+ "oracle": "\"\"\"Independent reference of the Bazel worst-case path law and output roots. Reads one JSON document on stdin: {schema, component, cases} and prints the expected rows.\nSpecification (all lengths in UTF-16 code units):\n  limit        = min(256, win32 ? (long ? 32767 : 260) - 1 : inf)\n  alias(R)     = \"a/\" + sha256(dirname(R))[:10] + \"/\" + basename(R)            (dirname of a top-level file is \"\")\n  host-source  = len(checkout) + 1 + len(R)                                    kind host\n  alias-source = len(base) + 1 + len(\"execroot/_main/\") + len(alias(R))        needs base\n  sandbox-alias-source = len(base) + 1 + len(\"sandbox/<longest sandbox>/<000000>/execroot/_main/\") + len(alias(R))   needs base, sandboxes\n  hermetic-root = len(root) + len(R)  kind hermetic; root = base_template + sep + \"0\"*workDigits + sep + workspace + sep;\n                  a relative base is \"<outputBase>/execroot/_main/\" + base and needs base\n  sandbox-stash = len(base) + 1 + len(\"sandbox/sandbox_stash/<stash mnemonic>/<000000>/\" + snapshot)   kind hermetic, needs base, sandboxes\n  snapshot     = len(base) + 1 + len(\"execroot/_main/bazel-out/<cfg>/bin/<t_0*16>.snapshot/files/<0*32>\")   needs base\n  tree         = len(base) + 1 + len(\"execroot/_main/bazel-out/<cfg>/bin/m_0*16/\") + len(entry)   kind hermetic, needs base\n  worst = the largest family; slack = limit - worst; fits = slack >= 0\n  output root  = template with {drive} = drive of the checkout (win32) and {checkout} = sha256(lowercased backslash path)[:digits]\n\"\"\"\nimport hashlib, json, re, sys\n\ndoc = json.loads(sys.stdin.read())\npolicy, budget = doc[\"schema\"], doc[\"component\"]\nrules = policy[\"definitions\"][\"Policy\"][\"const\"]\nbud = budget[\"definitions\"][\"PathBudget\"][\"const\"]\n\n\ndef u16(text):\n    return len(text.encode(\"utf-16-le\")) // 2\n\n\ndef alias(path):\n    d = path.rsplit(\"/\", 1)[0] if \"/\" in path else \"\"\n    return \"a/\" + hashlib.sha256(d.encode()).hexdigest()[:10] + \"/\" + path.rsplit(\"/\", 1)[-1]\n\n\ndef hermetic_root(platform, base):\n    row = rules[\"hermeticRoot\"][platform]\n    b = row[\"base\"].replace(\"{drive}\", rules[\"fillers\"][\"drive\"])\n    relative = not re.match(r\"^[A-Za-z]:|^[\\\\/]\", b)\n    if relative and base is None:\n        return None\n    text = ((base + \"/\" + rules[\"fillers\"][\"execroot\"]) if relative else \"\") + b + row[\"separator\"] + \"0\" * row[\"workDigits\"] + row[\"separator\"] + row[\"workspace\"] + row[\"separator\"]\n    return u16(text)\n\n\ndef law(case):\n    h, targets = case[\"host\"], case[\"targets\"]\n    p = bud[\"platforms\"][h[\"platform\"]]\n    limit = min(bud[\"repositoryUnits\"], (((32767 if h[\"longPaths\"] == \"enabled\" else 260) - 1) if h[\"platform\"] == \"win32\" else 10 ** 9))\n    cfg = p[\"configuration\"][h[\"arch\"]]\n    base = h.get(\"outputBase\")\n    exe = rules[\"fillers\"][\"execroot\"]\n    sandbox = max(p[\"sandboxes\"], key=len) if p[\"sandboxes\"] else \"\"\n    hroot = hermetic_root(h[\"platform\"], base)\n    snap = exe + \"bazel-out/\" + cfg + \"/bin/\" + bud[\"task\"] + \".snapshot/files/\" + bud[\"file\"]\n    tpre = exe + \"bazel-out/\" + cfg + \"/bin/\" + rules[\"fillers\"][\"tree\"] + \"/\"\n    rows = []\n    for t in targets:\n        fam = []\n        longest = lambda vals, f: max([f(v) for v in vals] or [0])\n        if t[\"kind\"] == \"host\" and h.get(\"checkout\") is not None and t[\"sources\"]:\n            fam.append([\"host-source\", u16(h[\"checkout\"]) + 1 + longest(t[\"sources\"], u16)])\n        if base is not None and t[\"sources\"]:\n            fam.append([\"alias-source\", u16(base) + 1 + u16(exe) + longest(t[\"sources\"], lambda s: u16(alias(s)))])\n            if p[\"sandboxes\"]:\n                fam.append([\"sandbox-alias-source\", u16(base) + 1 + u16(\"sandbox/\" + sandbox + \"/\" + \"0\" * bud[\"sandboxDigits\"] + \"/\" + exe) + longest(t[\"sources\"], lambda s: u16(alias(s)))])\n        if t[\"kind\"] == \"hermetic\" and base is not None and p[\"sandboxes\"]:\n            fam.append([\"sandbox-stash\", u16(base) + 1 + u16(\"sandbox/sandbox_stash/\" + rules[\"fillers\"][\"stash\"] + \"/\" + \"0\" * bud[\"sandboxDigits\"] + \"/\" + snap)])\n        if t[\"kind\"] == \"hermetic\" and hroot is not None and t[\"sources\"]:\n            fam.append([\"hermetic-root\", hroot + longest(t[\"sources\"], u16)])\n        if base is not None:\n            fam.append([\"snapshot\", u16(base) + 1 + u16(snap)])\n        if t[\"kind\"] == \"hermetic\" and base is not None and t.get(\"tree\"):\n            fam.append([\"tree\", u16(base) + 1 + u16(tpre) + longest(t[\"tree\"], u16)])\n        worst = None\n        for name, units in fam:\n            if worst is None or units > worst[1]:\n                worst = [name, units]\n        slack = limit if worst is None else limit - worst[1]\n        rows.append({\"id\": t[\"id\"], \"families\": [{\"name\": n, \"units\": v} for n, v in fam], \"worst\": None if worst is None else {\"name\": worst[0], \"units\": worst[1]}, \"slack\": slack, \"fits\": slack >= 0})\n    return {\"limit\": limit, \"rows\": rows, \"over\": [r[\"id\"] for r in rows if not r[\"fits\"]], \"fits\": all(r[\"fits\"] for r in rows)}\n\n\ndef output_root(case):\n    platform, checkout = case[\"platform\"], case[\"checkout\"]\n    row = rules[\"outputRoot\"][platform]\n    if row is None:\n        return None\n    win = platform == \"win32\"\n    norm = checkout.replace(\"/\", \"\\\\\").lower() if win else checkout\n    m = re.match(r\"^([A-Za-z]:)\", checkout.replace(\"/\", \"\\\\\")) if win else None\n    drive = m.group(1).upper() if m else rules[\"fillers\"][\"drive\"]\n    return row[\"template\"].replace(\"{drive}\", drive).replace(\"{checkout}\", hashlib.sha256(norm.encode()).hexdigest()[: row[\"checkoutDigits\"]])\n\n\nprint(json.dumps({\"law\": [law(c) for c in doc[\"cases\"][\"law\"]], \"roots\": [output_root(c) for c in doc[\"cases\"][\"roots\"]]}))\n",
+ "cases": {
+  "law": [
+   {
+    "name": "darwin-arm64-unprobed-base-0",
+    "host": {
+     "platform": "darwin",
+     "arch": "arm64",
+     "longPaths": "unprobed",
+     "outputBase": "/Users/dev/semio/.cache/b/p/m/bazel/outputs/server/s0",
+     "checkout": "/Users/dev/semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 90
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 128
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "hermetic-root",
+         "units": 129
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        },
+        {
+         "name": "tree",
+         "units": 256
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 256
+       },
+       "slack": 0,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 90
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 128
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "hermetic-root",
+         "units": 246
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 246
+       },
+       "slack": 10,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 88
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 126
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "hermetic-root",
+         "units": 65
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        },
+        {
+         "name": "tree",
+         "units": 316
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 316
+       },
+       "slack": -60,
+       "fits": false
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 88
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 126
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "hermetic-root",
+         "units": 260
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 260
+       },
+       "slack": -4,
+       "fits": false
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 88
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 126
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "hermetic-root",
+         "units": 261
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 261
+       },
+       "slack": -5,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 243
+        },
+        {
+         "name": "alias-source",
+         "units": 90
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 128
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 243
+       },
+       "slack": 13,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [
+        {
+         "name": "sandbox-stash",
+         "units": 214
+        },
+        {
+         "name": "snapshot",
+         "units": 172
+        }
+       ],
+       "worst": {
+        "name": "sandbox-stash",
+        "units": 214
+       },
+       "slack": 42,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-tree-deep",
+      "hermetic-240",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "linux-x64-unprobed-base-1",
+    "host": {
+     "platform": "linux",
+     "arch": "x64",
+     "longPaths": "unprobed",
+     "outputBase": "/home/dev/semio/.cache/b/p/m/bazel/outputs/server/s0",
+     "checkout": "/home/dev/semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 89
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 127
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "hermetic-root",
+         "units": 129
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        },
+        {
+         "name": "tree",
+         "units": 245
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 245
+       },
+       "slack": 11,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 89
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 127
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "hermetic-root",
+         "units": 246
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 246
+       },
+       "slack": 10,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 87
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 125
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "hermetic-root",
+         "units": 65
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        },
+        {
+         "name": "tree",
+         "units": 305
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 305
+       },
+       "slack": -49,
+       "fits": false
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 87
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 125
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "hermetic-root",
+         "units": 260
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 260
+       },
+       "slack": -4,
+       "fits": false
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 87
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 125
+        },
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "hermetic-root",
+         "units": 261
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 261
+       },
+       "slack": -5,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 242
+        },
+        {
+         "name": "alias-source",
+         "units": 89
+        },
+        {
+         "name": "sandbox-alias-source",
+         "units": 127
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 242
+       },
+       "slack": 14,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [
+        {
+         "name": "sandbox-stash",
+         "units": 203
+        },
+        {
+         "name": "snapshot",
+         "units": 161
+        }
+       ],
+       "worst": {
+        "name": "sandbox-stash",
+        "units": 203
+       },
+       "slack": 53,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-tree-deep",
+      "hermetic-240",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "win32-x64-disabled-base-2",
+    "host": {
+     "platform": "win32",
+     "arch": "x64",
+     "longPaths": "disabled",
+     "outputBase": "C:\\b\\0123abcd\\s0",
+     "checkout": "C:\\Users\\abcdefgh\\semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "hermetic-root",
+         "units": 125
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        },
+        {
+         "name": "tree",
+         "units": 218
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 218
+       },
+       "slack": 38,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "hermetic-root",
+         "units": 242
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 242
+       },
+       "slack": 14,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 61
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        },
+        {
+         "name": "tree",
+         "units": 278
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 278
+       },
+       "slack": -22,
+       "fits": false
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 256
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 256
+       },
+       "slack": 0,
+       "fits": true
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 257
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 257
+       },
+       "slack": -1,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 250
+        },
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "snapshot",
+         "units": 134
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 250
+       },
+       "slack": 6,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [
+        {
+         "name": "snapshot",
+         "units": 134
+        }
+       ],
+       "worst": {
+        "name": "snapshot",
+        "units": 134
+       },
+       "slack": 122,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-tree-deep",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "win32-arm64-enabled-base-3",
+    "host": {
+     "platform": "win32",
+     "arch": "arm64",
+     "longPaths": "enabled",
+     "outputBase": "C:\\b\\0123abcd\\s0",
+     "checkout": "C:\\Users\\abcdefgh\\semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "hermetic-root",
+         "units": 125
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        },
+        {
+         "name": "tree",
+         "units": 220
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 220
+       },
+       "slack": 36,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "hermetic-root",
+         "units": 242
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 242
+       },
+       "slack": 14,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 61
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        },
+        {
+         "name": "tree",
+         "units": 280
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 280
+       },
+       "slack": -24,
+       "fits": false
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 256
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 256
+       },
+       "slack": 0,
+       "fits": true
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 51
+        },
+        {
+         "name": "hermetic-root",
+         "units": 257
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 257
+       },
+       "slack": -1,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 250
+        },
+        {
+         "name": "alias-source",
+         "units": 53
+        },
+        {
+         "name": "snapshot",
+         "units": 136
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 250
+       },
+       "slack": 6,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [
+        {
+         "name": "snapshot",
+         "units": 136
+        }
+       ],
+       "worst": {
+        "name": "snapshot",
+        "units": 136
+       },
+       "slack": 120,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-tree-deep",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "win32-x64-disabled-base-4",
+    "host": {
+     "platform": "win32",
+     "arch": "x64",
+     "longPaths": "disabled",
+     "outputBase": "C:\\Users\\abcdefgh\\semio\\.cache\\b\\p\\m\\bazel\\outputs\\server\\s0",
+     "checkout": "C:\\Users\\abcdefgh\\semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 97
+        },
+        {
+         "name": "hermetic-root",
+         "units": 125
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        },
+        {
+         "name": "tree",
+         "units": 262
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 262
+       },
+       "slack": -6,
+       "fits": false
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 97
+        },
+        {
+         "name": "hermetic-root",
+         "units": 242
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 242
+       },
+       "slack": 14,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 95
+        },
+        {
+         "name": "hermetic-root",
+         "units": 61
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        },
+        {
+         "name": "tree",
+         "units": 322
+        }
+       ],
+       "worst": {
+        "name": "tree",
+        "units": 322
+       },
+       "slack": -66,
+       "fits": false
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 95
+        },
+        {
+         "name": "hermetic-root",
+         "units": 256
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 256
+       },
+       "slack": 0,
+       "fits": true
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "alias-source",
+         "units": 95
+        },
+        {
+         "name": "hermetic-root",
+         "units": 257
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 257
+       },
+       "slack": -1,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 250
+        },
+        {
+         "name": "alias-source",
+         "units": 97
+        },
+        {
+         "name": "snapshot",
+         "units": 178
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 250
+       },
+       "slack": 6,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [
+        {
+         "name": "snapshot",
+         "units": 178
+        }
+       ],
+       "worst": {
+        "name": "snapshot",
+        "units": 178
+       },
+       "slack": 78,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-short",
+      "hermetic-tree-deep",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "win32-x64-disabled-nobase-5",
+    "host": {
+     "platform": "win32",
+     "arch": "x64",
+     "longPaths": "disabled",
+     "checkout": "C:\\Users\\abcdefgh\\semio"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 125
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 125
+       },
+       "slack": 131,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 242
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 242
+       },
+       "slack": 14,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 61
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 61
+       },
+       "slack": 195,
+       "fits": true
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 256
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 256
+       },
+       "slack": 0,
+       "fits": true
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 257
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 257
+       },
+       "slack": -1,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [
+        {
+         "name": "host-source",
+         "units": 250
+        }
+       ],
+       "worst": {
+        "name": "host-source",
+        "units": 250
+       },
+       "slack": 6,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [],
+       "worst": null,
+       "slack": 256,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   },
+   {
+    "name": "darwin-x64-unprobed-nobase-6",
+    "host": {
+     "platform": "darwin",
+     "arch": "x64",
+     "longPaths": "unprobed"
+    },
+    "targets": [
+     {
+      "id": "hermetic-short",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "tree": [
+       "0/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts",
+       "0/pppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "hermetic-tree-deep",
+      "kind": "hermetic",
+      "sources": [
+       "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "tree": [
+       "0/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp@1.0.0/node_modules/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/dist/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.js"
+      ]
+     },
+     {
+      "id": "hermetic-240",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "hermetic-241",
+      "kind": "hermetic",
+      "sources": [
+       "✏️s/d/d/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/🟦️.ts"
+      ]
+     },
+     {
+      "id": "host-deep",
+      "kind": "host",
+      "sources": [
+       "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"
+      ]
+     },
+     {
+      "id": "empty",
+      "kind": "hermetic",
+      "sources": []
+     }
+    ],
+    "expected": {
+     "limit": 256,
+     "rows": [
+      {
+       "id": "hermetic-short",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 129
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 129
+       },
+       "slack": 127,
+       "fits": true
+      },
+      {
+       "id": "hermetic-deep",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 246
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 246
+       },
+       "slack": 10,
+       "fits": true
+      },
+      {
+       "id": "hermetic-tree-deep",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 65
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 65
+       },
+       "slack": 191,
+       "fits": true
+      },
+      {
+       "id": "hermetic-240",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 260
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 260
+       },
+       "slack": -4,
+       "fits": false
+      },
+      {
+       "id": "hermetic-241",
+       "families": [
+        {
+         "name": "hermetic-root",
+         "units": 261
+        }
+       ],
+       "worst": {
+        "name": "hermetic-root",
+        "units": 261
+       },
+       "slack": -5,
+       "fits": false
+      },
+      {
+       "id": "host-deep",
+       "families": [],
+       "worst": null,
+       "slack": 256,
+       "fits": true
+      },
+      {
+       "id": "empty",
+       "families": [],
+       "worst": null,
+       "slack": 256,
+       "fits": true
+      }
+     ],
+     "over": [
+      "hermetic-240",
+      "hermetic-241"
+     ],
+     "fits": false
+    }
+   }
+  ],
+  "roots": [
+   {
+    "platform": "win32",
+    "checkout": "C:\\Users\\abcdefgh\\semio",
+    "expected": "C:\\b\\8852e335"
+   },
+   {
+    "platform": "win32",
+    "checkout": "c:/users/abcdefgh/semio",
+    "expected": "C:\\b\\8852e335"
+   },
+   {
+    "platform": "win32",
+    "checkout": "D:\\work\\semio",
+    "expected": "D:\\b\\172e9495"
+   },
+   {
+    "platform": "win32",
+    "checkout": "\\\\server\\share\\semio",
+    "expected": "C:\\b\\da815ab8"
+   },
+   {
+    "platform": "darwin",
+    "checkout": "/Users/dev/semio",
+    "expected": null
+   },
+   {
+    "platform": "linux",
+    "checkout": "/home/dev/semio",
+    "expected": null
+   }
+  ]
+ }
+}

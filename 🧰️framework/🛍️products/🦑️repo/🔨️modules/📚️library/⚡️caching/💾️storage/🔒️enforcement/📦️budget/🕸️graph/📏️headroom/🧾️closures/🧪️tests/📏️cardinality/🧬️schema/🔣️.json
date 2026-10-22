@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumEntries",
+    "metadataMaximumBytes",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumEntries": {
+      "const": 262144
+    },
+    "metadataMaximumBytes": {
+      "const": 1610612736
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "files",
+          "directories",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262145
+          },
+          "directories": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

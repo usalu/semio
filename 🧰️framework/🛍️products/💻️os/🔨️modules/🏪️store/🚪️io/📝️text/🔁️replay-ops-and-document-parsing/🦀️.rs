@@ -8,7 +8,7 @@ use super::*;
 pub async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
 {
     let mut schema = String::new();
     let mut id = String::new();
@@ -231,7 +231,7 @@ where
 pub async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
 {
     let settled = match project_envelope_history(&mut envelope) {
         Ok(supersessions) => validate_durable_history(&envelope).await.map(|()| supersessions),
@@ -275,7 +275,7 @@ where
 pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + ArtifactDsl + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
 {
     let initial_snapshot = P::parse_dsl(dsl)?;
     replay_ops(initial_snapshot, ops, producer).await
@@ -287,7 +287,7 @@ where
 pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
 {
     parse_document_spr(pack, spr, producer).await
 }

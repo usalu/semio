@@ -16,13 +16,15 @@ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/�
 import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { type SchemaCheck, exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🪢️ Verifies explicit binary checkpoint ownership and independent digest/framing witnesses. */
 export class DirectoryDescriptorDigestSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("test-directory-descriptor-digest-source accepts no arguments");
     const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+    await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
     await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   }
 }
@@ -35,7 +37,7 @@ export class DirectoryCheckpointPairSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-directory-checkpoint-pair-source accepts no arguments");
     const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🪢️canonical-checkpoint-pair/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, [runtimeResolveV1("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
     await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
   }
 }

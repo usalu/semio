@@ -34,6 +34,16 @@ impl PaintDirectRegion {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintDirectRegion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "direct-region", kind: "paint-direct-region", record: "PaintDirectRegion" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Paint direct-color region", "Direktfarbbereich malen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("region:{},{},{},{}", self.x, self.y, self.width, self.height)]
+    }
+}
+
+impl protocol::ColdMutationKind<BmpSnapshot, BmpMutation> for PaintDirectRegion {
     fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         match crate::schema::operations::paint_direct_rect(base, &self.revision, self.region(), self.color()) {
             Ok(rect) => protocol::MutationOutcome::new(BmpDiff { rects: rect.into_iter().collect(), ..BmpDiff::default() }),
@@ -44,12 +54,5 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintDirectRegion {
         let region = self.region();
         let changed = crate::schema::operations::checked_region(&base.image, region).ok().and_then(|()| crate::schema::operations::direct_rect(base, region, self.color()));
         Ok(changed.and_then(|rect| base.image.region_rect(rect.region)).map(|rect| BmpMutation::ReplaceSamples(ReplaceSamples { region: rect.region, indices: rect.indices, samples: rect.samples })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint direct-color region", "Direktfarbbereich malen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("region:{},{},{},{}", self.x, self.y, self.width, self.height)]
     }
 }

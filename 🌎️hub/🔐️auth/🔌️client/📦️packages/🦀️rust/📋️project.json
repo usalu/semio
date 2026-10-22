@@ -6,7 +6,7 @@
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
-        "command": "bun 📜️script.ts test-source",
+        "command": "repo 📜️script.ts test-source",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
       },
       "metadata": {

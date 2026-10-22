@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "snap-grid-spacing", kind: "change-snap-grid-spacing", record: "ChangedSnapGridSpacing" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::note_setting_label(("snap grid spacing", "Fangrasterabstand"), self.new_spacing.map(crate::schema::note_label_number))
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for ChangeSnapGridSpacing
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<ChangeSnapGridSpacing>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        crate::schema::note_setting_label(("snap grid spacing", "Fangrasterabstand"), self.new_spacing.map(crate::schema::note_label_number))
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Mutation

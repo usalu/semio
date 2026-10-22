@@ -12,7 +12,6 @@ import (
 	os "os"
 	filepath "path/filepath"
 	strings "strings"
-	sync "sync"
 
 	workspace "github.com/usalu/semio/repo/workspace"
 )
@@ -46,30 +45,28 @@ func (e FolderKind) String() string {
 
 // 💾️DeriveFolderKind MUST return a valid value for any recognized input.
 // 🟠️DeriveFolderKind infers and returns the folder kind from the given input.
-var folderKindCache sync.Map
 
 // 🩵️DeriveFolderKind holds the data fields for a DeriveFolderKind record.
-func DeriveFolderKind(path string) FolderKind {
+func DeriveFolderKind(path string) FolderKind { return (ArtifactIndex{RootDir:workspace.GetRootDir()}).FolderKind(path) }
+
+// 🧭️FolderKind classifies a directory within this index's repository.
+func (index ArtifactIndex) FolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
 		return FolderKindRequired
 	}
 
-	if val, ok := folderKindCache.Load(path); ok {
-		return val.(FolderKind)
-	}
-
 	kind := FolderKindOrganization
 	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml"}
 	for _, indicator := range requiredIndicators {
-		if workspace.FileExists(filepath.Join(workspace.GetRootDir(), path, indicator)) {
+		if workspace.FileExists(filepath.Join(index.RootDir, path, indicator)) {
 			kind = FolderKindRequired
 			break
 		}
 	}
 
 	if kind == FolderKindOrganization {
-		dir := filepath.Join(workspace.GetRootDir(), path)
+		dir := filepath.Join(index.RootDir, path)
 		if entries, err := os.ReadDir(dir); err == nil {
 			for _, entry := range entries {
 				if !entry.IsDir() {
@@ -83,7 +80,6 @@ func DeriveFolderKind(path string) FolderKind {
 		}
 	}
 
-	folderKindCache.Store(path, kind)
 	return kind
 }
 
@@ -130,12 +126,14 @@ func (f *Folder) IsNode() {}
 // 💙️GetID MUST return the stored value without modification.
 // ⚪️GetID returns the i d of the Folder.
 func (f *Folder) GetID() string {
+ if f.ID!="" { return f.ID }
 	return BuildFolderID(f.Path, f.BundleID)
 }
 
 // 💚️GetURI MUST return the stored value without modification.
 // ⚫️GetURI returns the u r i of the Folder.
 func (f *Folder) GetURI() string {
+ if f.URI!="" { return f.URI }
 	return BuildFolderUriFromPath(f.Path)
 }
 
@@ -307,12 +305,14 @@ func IsSemanticallyIgnored(path string) bool {
 // 🖤️GetID MUST return the stored value without modification.
 // 💚️GetID returns the i d of the File.
 func (f *File) GetID() string {
+ if f.ID!="" { return f.ID }
 	return BuildFileID(f.Path, f.BundleID)
 }
 
 // 🤎️GetURI MUST return the stored value without modification.
 // 💛️GetURI returns the u r i of the File.
 func (f *File) GetURI() string {
+ if f.URI!="" { return f.URI }
 	return BuildFileUriFromPath(f.Path)
 }
 

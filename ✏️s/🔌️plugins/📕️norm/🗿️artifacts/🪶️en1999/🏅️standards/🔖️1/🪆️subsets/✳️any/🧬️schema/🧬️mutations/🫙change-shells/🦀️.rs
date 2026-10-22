@@ -23,20 +23,21 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShells where Op: p
         record: "ChangedShells",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change shell structures", "Schalentragwerke ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for ChangeShells where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_shells::ChangeShells> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::change_shells::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_shells::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change shell structures", "Schalentragwerke ändern")
-    }
 }
 
 //#region 🪢️Mounts

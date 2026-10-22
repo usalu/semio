@@ -1,5 +1,5 @@
 use crate::editor::equation::modes::edit::windows::graph::config::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn math_config_dsl_round_trips() {

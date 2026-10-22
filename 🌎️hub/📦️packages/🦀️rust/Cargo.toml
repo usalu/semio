@@ -48,6 +48,7 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { workspace = true, features = ["full"] }
 futures = "0.3"
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-hub-gis = { workspace = true }
 semio-hub-inference-binding = { workspace = true }

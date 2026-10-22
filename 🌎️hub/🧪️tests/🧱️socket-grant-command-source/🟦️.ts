@@ -197,7 +197,7 @@ test("package, cache input and targets bind only the moved owners", () => {
   const project = JSON.parse(readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   expect(project.namedInputs.hubSocketGrantCommandSources).toEqual(fixture.routes.source.inputs);
   expect(project.targets[fixture.routes.source.target]?.inputs).toEqual(["hubSocketGrantCommandSources"]);
-  expect(project.targets[fixture.routes.source.target]?.options?.command).toBe("bun ./📜️script.ts socket-grant-command-source-check");
+  expect(project.targets[fixture.routes.source.target]?.options?.command).toBe("repo ./📜️script.ts socket-grant-command-source-check");
   expect(project.targets[fixture.routes.native.target]?.inputs).toEqual(["hubSocketGrantCommandSources"]);
-  expect(project.targets[fixture.routes.native.target]?.options?.command).toBe("bun ./📜️script.ts socket-grant-check");
+  expect(project.targets[fixture.routes.native.target]?.options?.command).toBe("repo ./📜️script.ts socket-grant-check");
 });

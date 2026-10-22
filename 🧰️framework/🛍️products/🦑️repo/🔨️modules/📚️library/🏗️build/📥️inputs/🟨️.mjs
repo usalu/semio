@@ -1,15 +1,17 @@
 import{physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
+const javascriptManagerV1 = createRequire(import.meta.url)("../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"./📋️data/📥️load/🟨️.mjs";
-import {repositoryBuildGraphWriterDirectoryV1, withBuildGraphOptionalPublicationV1} from "./💾️storage/🟨️.mjs";
+import {repositoryBuildGraphWriterDirectoryV1, withBuildGraphOptionalPublicationV1, withBuildGraphOptionalPublicationsV1, noteBuildGraphStagedLeafV1} from "./💾️storage/🟨️.mjs";
+import { brotliDecompressSync } from "node:zlib";
 import { createRequire } from "node:module";
 import { createCargoResolutionContextV1, cargoResolutionPartsV1, flushCargoReceiptsV1, readCargoResolutionPolicyV1 } from "./🦀️resolution/🟦️.ts";
 import { createCargoReceiptWriterV1 } from "./🦀️resolution/💾️receipt/🟨️.mjs";
 import resolutionDocument from "./🦀️resolution/🔣️.json" with { type: "json" };
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, lstatSync, renameSync, rmSync, existsSync as persistedExists } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { observedFs } from "../👁️observation/🟨️.mjs";
+import { adoptVerifiedBlockV1, observedFs } from "../👁️observation/🟨️.mjs";
 
 const { existsSync, readdirSync } = observedFs;
 
@@ -68,7 +70,49 @@ const VERIFIED_CLOSURES_V1=new Map();
 function publishInputClosureV1(path,contract){
  const verify=()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract))throw Error("Original immutable input closure bytes required");const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return;if(!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});};
  if(persistedExists(path)){verify();return;}
- const temporary=path+"~"+randomUUID();if(temporary.length>256||[...temporary].length>256)throw Error("Input closure staging path exceeds256 characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameSync(temporary,path);verify();}finally{rmSync(temporary,{force:true});}
+ const temporary=path+"~"+randomUUID();if(temporary.length>256||[...temporary].length>256)throw Error("Input closure staging path exceeds256 characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameSync(temporary,path);verify();noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
+}
+
+/** 🛰️ Adopts the leaves a farm worker staged into the graph under this process's writer custody, in the order that keeps every reference satisfied: content-addressed closures and blocks first (the first writer wins and every later copy is verified against it), the record that names them last. A receipt or pack that stands is the first writer's and keeps standing (receipts are sealed and checked when they are used); the optional leaves of one call are one batched publication. A block the adoption verified is registered as verified, so its first reader does not validate it again. Answers how many leaves were published, how many already stood and whether the quota declined them. */
+export function adoptStagedGraphLeavesV1(workspaceRoot, stagingRoot, names) {
+  const root = resolve(stagingRoot), closures = [], optional = [], plan = { published: 0, present: 0, declined: false };
+  for (const name of names) {
+    const [namespace, ...rest] = name.split("/"), leaf = rest.join("/"), source = join(root, namespace, ...rest);
+    if (!leaf || rest.some(part => part === "" || part === ".." || part === ".") || !["inference", "build-input-closures", "build-lock-closures"].includes(namespace)) throw Error("Relative staged graph leaf of a declared namespace required: " + name);
+    if (namespace !== "inference") {
+      const bytes = readFileSync(source);
+      if (!/^[a-f0-9]{64}\.json$/u.test(leaf) || createHash("sha256").update(bytes).digest("hex") !== leaf.slice(0, -5)) throw Error("Closure content differs from its name: " + name);
+      closures.push([namespace, leaf, bytes]);
+      continue;
+    }
+    const target = join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot, "inference"), ...rest), block = /(?:^|\/)ob\/([a-f0-9]{64})\.br$/u.exec(leaf), record = /(?:^|\/)np\/[a-f0-9]{24}\.json$/u.test(leaf);
+    let standing;
+    try { standing = lstatSync(target); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+    if (standing !== undefined && !block && !record) { plan.present++; continue; }
+    const bytes = readFileSync(source);
+    let text;
+    if (block) {
+      const inflated = brotliDecompressSync(bytes);
+      if (createHash("sha256").update(inflated).digest("hex") !== block[1]) throw Error("Block content differs from its name: " + name);
+      text = inflated.toString("utf8");
+    }
+    if (standing !== undefined && standing.size === bytes.byteLength && readFileSync(target).equals(bytes)) { plan.present++; if (text !== undefined) adoptVerifiedBlockV1(target, text); continue; }
+    optional.push({ target, bytes, text, previous: standing?.size ?? 0, last: record });
+  }
+  for (const [namespace, leaf, bytes] of closures) publishInputClosureV1(join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot, namespace), leaf), bytes);
+  if (!optional.length) return plan;
+  optional.sort((a, b) => Number(a.last) - Number(b.last));
+  const peakBytes = optional.reduce((sum, row) => sum + row.bytes.byteLength, 0), retainedDeltaBytes = optional.reduce((sum, row) => sum + Math.min(row.bytes.byteLength, row.bytes.byteLength - row.previous), 0);
+  plan.declined = !withBuildGraphOptionalPublicationsV1(optional.map(row => row.target), { peakBytes, retainedDeltaBytes }, () => {
+    for (const { target, bytes } of optional) {
+      const temporary = /\.(?:pack|idx)$/u.test(target) ? `${target}.${randomBytes(4).toString("hex")}.tmp` : `${target}.${process.pid}.${Date.now()}.tmp`;
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(temporary, bytes, { flag: "wx" });
+      renameSync(temporary, target);
+    }
+  });
+  if (!plan.declined) { plan.published = optional.length; for (const row of optional) if (row.text !== undefined) adoptVerifiedBlockV1(row.target, row.text); }
+  return plan;
 }
 
 /** 📍️ Projects the project-root sentinel into a repository-relative Cargo manifest. */
@@ -186,9 +230,10 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
   if (existsSync(join(workspaceRoot, root, "Cargo.toml")) || json.targets?.wasm) tools.push("cargo");
   if (json.targets?.wasm || json.targets?.["extension-package"] || (tools.includes("cargo") && json.targets?.package)) tools.push("wasm");
   if (goManifest(root, workspaceRoot)) tools.push("go");
-  if (existsSync(join(workspaceRoot, root, "pyproject.toml"))) tools.push("python");
+  const workspaceProject = root === "." || root === "";
+  if (!workspaceProject && existsSync(join(workspaceRoot, root, "pyproject.toml"))) tools.push("python");
   if (readdirSync(join(workspaceRoot, root)).some((file) => /\.[cfv]sproj$/.test(file))) tools.push("dotnet");
-  if (existsSync(join(workspaceRoot, root, "CMakeLists.txt"))) tools.push("cmake");
+  if (!workspaceProject && existsSync(join(workspaceRoot, root, "CMakeLists.txt"))) tools.push("cmake");
   const nativeSources = tools.includes("cargo") ? cargoSourceInputs(nativeRoot, workspaceRoot, facts, false) : undefined;
   const nativeTests = tools.includes("cargo") ? cargoSourceInputs(nativeRoot, workspaceRoot, facts, true) : undefined;
   const runner = buildPath(relative(workspaceRoot, LIBRARY_ROOT));
@@ -207,9 +252,8 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
     const contract = POLICY.toolchains[tool];
     inputs.push(...contract.files.map((file) => `{workspaceRoot}/${file}`));
     inputs.push(...contract.environment.map((env) => ({ env })));
-    inputs.push(...contract.commands.map((runtime) => ({ runtime })));
+    inputs.push(...contract.commands.map((runtime) => ({ runtime: tool === "python" ? `${runtime} ${JSON.stringify(root)}` : runtime })));
   }
-  if (tools.includes("python")) inputs.push({ runtime: `uv run --locked --no-sync --project ${JSON.stringify(root)} python --version` });
   for (const directory of POLICY.generatedDirectories) {
     inputs.push(`!{projectRoot}/**/${directory}/**/*`);
     if (owner !== root) inputs.push(`!{workspaceRoot}/${owner}/**/${directory}/**/*`);
@@ -224,7 +268,7 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
   const artifactSources = artifactTypeScript ? [...await relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json"] : [];
   const javascript = POLICY.toolchains.javascript;
-  const artifactCommandSources = artifactTypeScript ? [...await relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
+  const artifactCommandSources = artifactTypeScript ? [...await relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
   const cargoManifest = existsSync(join(workspaceRoot, nativeManifest)) ? nativeManifest : undefined, persisted = context.sourceRepresentation !== "source";
   if (persisted && cargoManifest && tools.includes("cargo")) await warmCargoResolutionV1(workspaceRoot, scripts, cargoManifest, context);
   const cargoToolchain = tools.includes("cargo") ? [...POLICY.toolchains.cargo.files.map((file) => `{workspaceRoot}/${file}`), ...(persisted && cargoManifest ? [cargoLockInput(cargoManifest, workspaceRoot)] : [])] : undefined;

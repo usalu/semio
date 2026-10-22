@@ -55,6 +55,6 @@ export class GoTestScript extends BundleScript {
     }
     if (segments.length < 2) throw new Error("Expected go-test <module-root> <input-path|-> [go-test-args...]");
     const selection = projectGoInputPackages(segments[0]!, segments[1]!);
-    await runCanonicalGoTests(selection.moduleRoot, segments.slice(2), { env: { ...process.env, SEMIO_TOOLCHAIN_ROOT: this.repoRoot }, packages: selection.packages });
+    await runCanonicalGoTests(selection.moduleRoot, segments.slice(2), this.invocation, { env: { ...process.env, SEMIO_TOOLCHAIN_ROOT: this.repoRoot }, packages: selection.packages });
   }
 }

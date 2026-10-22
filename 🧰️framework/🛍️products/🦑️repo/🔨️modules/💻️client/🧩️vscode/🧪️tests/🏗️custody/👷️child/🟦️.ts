@@ -1,9 +1,0 @@
-import{join}from"node:path";
-import{writeFileSync}from"node:fs";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"@semio-tech/process/routing";
-import{withVscodeSourceSnapshotV1,vscodeSourceFactsV1,type VscodeSourceSnapshotV1}from"../../../🏗️builder/📥️source/🟦️.ts";
-
-/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
-export async function runScriptProgram(): Promise<void> {
-  const root=process.argv[2],kind=process.argv[3];if(!root||!["error","undefined","tamper"].includes(kind??""))throw new Error("Closed VSCode Source failure case required");const primary=kind==="undefined"?undefined:Error("Exact VSCode Source primary");let late=false,escaped:VscodeSourceSnapshotV1|undefined;try{await receiveScriptProcessInvocation(process.env,async original=>{const control=createIssuedResourceControlV1(original,"vscode:source-failure",10000);await withVscodeSourceSnapshotV1(root,join(root,"dependencies"),[join(root,"entry.ts")],control,async(snapshot,actual)=>{escaped=snapshot;void withRequestedIssuedResourceControlV1(actual,0,async phase=>{await phase.yieldContinuation();vscodeSourceFactsV1(snapshot);late=true;});if(kind==="tamper"){const file=vscodeSourceFactsV1(snapshot).find(row=>row.path===join(root,"entry.ts"));if(!file)throw new Error("Actual retained Source extent required");writeFileSync(join(root,"entry.ts"),Buffer.alloc(file.bytes,32));return;}throw primary;});});throw new Error("Failed VSCode Source Original unexpectedly succeeded");}catch(error){let retired=false;try{if(escaped)vscodeSourceFactsV1(escaped);}catch{retired=true;}console.log(JSON.stringify({kind,failed:true,exact:kind==="tamper"?error instanceof Error&&error.message==="VSCode Source changed during compilation":Object.is(error,primary),late,retired}));process.exitCode=1;}
-}

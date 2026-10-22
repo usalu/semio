@@ -22,7 +22,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = ProgramSnapshot, diff = ProgramDiff, schema = "s.architect.program")]
+#[mutations(snapshot = ProgramSnapshot, diff = ProgramDiff, schema = "s.architect.program", reference = ProgramSnapshot, reference_diff = ProgramDiff)]
 pub enum ProgramMutation {
     CreateRegisterRow(crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow),
     DeleteRegisterRow(crate::standards::v1::subsets::any::schema::mutations::delete_register_row::DeleteRegisterRow),
@@ -88,7 +88,7 @@ pub const KINDS: &[&str] = &[
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_program_mutation_steps(mutation: &ProgramMutation, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok({
-    <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::inverse(mutation, base)?
+    <ProgramMutation as protocol::ColdMutation<ProgramSnapshot>>::inverse(mutation, base)?
 
     })
 }

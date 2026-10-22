@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Closed contracts of the continuous integration report: the CacheStatus and DryRunPlan documents the neutral entry prints, the test results directory a run exports, and the verdicts the report prints. Tool-neutral: nothing here names a build implementation except the `Tool` enumeration of the neutral entry.",
   "definitions": {
-    "Tool": {"enum": ["nx", "bazel"]},
+    "Tool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "Activity": {
       "type": "object",
       "additionalProperties": false,

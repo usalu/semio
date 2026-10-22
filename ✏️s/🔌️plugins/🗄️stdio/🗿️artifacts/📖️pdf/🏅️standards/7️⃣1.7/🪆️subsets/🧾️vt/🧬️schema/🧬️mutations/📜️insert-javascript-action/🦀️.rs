@@ -23,18 +23,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "javascript-action", kind: "insert-javascript-action", record: "Insert" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let (_, rows) = support::insert_object_rows(base, support::action_object("JavaScript", "JS", &self.script), &self.placements);
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(RemoveJavascriptAction { script: self.script.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert JavaScript action", "JavaScript-Aktion einfügen")
     }
@@ -42,6 +30,22 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.script.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertJavascriptAction
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertJavascriptAction> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_javascript_action::RemoveJavascriptAction>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let (_, rows) = support::insert_object_rows(base, support::action_object("JavaScript", "JS", &self.script), &self.placements);
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(RemoveJavascriptAction { script: self.script.clone() })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

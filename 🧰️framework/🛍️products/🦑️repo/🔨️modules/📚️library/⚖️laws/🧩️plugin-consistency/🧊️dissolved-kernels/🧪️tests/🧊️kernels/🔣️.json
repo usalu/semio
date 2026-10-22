@@ -1,0 +1,264 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "dissolved-representations-caches-and-whole-document-replaces",
+   "rule": "policyDissolvedKernelsBreaches",
+   "files": {
+    "r/one.rs": [
+     "pub struct S {",
+     "    pub mesh: HalfedgeMesh,",
+     "}"
+    ],
+    "r/two.rs": [
+     "static CACHE: Mutex<EngineCache> = X;"
+    ],
+    "r/three.rs": [
+     "fn f(mesh: HalfedgeMesh) {",
+     "    let local: HalfedgeMesh = x;",
+     "}"
+    ],
+    "r/four.rs": [
+     "fn g(",
+     "    mesh: &HalfedgeMesh,",
+     ") {}"
+    ],
+    "🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs": [
+     "pub struct S { pub store: DrawingStore }",
+     "",
+     "struct T {",
+     "    store: DrawingStore,",
+     "}"
+    ],
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs": [
+     "fn nothing() {}"
+    ],
+    "e/cache.rs": [
+     "let c = EngineCache::new();"
+    ],
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/c.rs": [
+     "let c = EngineCache::new();"
+    ],
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/p.rs": [
+     "let c = EngineCache::new();"
+    ],
+    "m/🧬️mutations/🟤️set-snapshot/🦀️.rs": [],
+    "m/🧬️mutations/🟤️set-snapshot/sub/b.rs": [],
+    "m/other/🟤️set-snapshot/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "dissolved-rep-escape-r/one.rs",
+     "dissolved-kernels/rep-escape",
+     "medium",
+     0
+    ],
+    [
+     "dissolved-rep-escape-r/two.rs",
+     "dissolved-kernels/rep-escape",
+     "medium",
+     0
+    ],
+    [
+     "dissolved-rep-escape-r/four.rs",
+     "dissolved-kernels/rep-escape",
+     "medium",
+     0
+    ],
+    [
+     "dissolved-rep-escape-stale-🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs",
+     "dissolved-kernels/rep-escape",
+     "low",
+     0
+    ],
+    [
+     "dissolved-engine-cache-scope-e/cache.rs",
+     "dissolved-kernels/engine-cache-scope",
+     "medium",
+     0
+    ],
+    [
+     "dissolved-whole-document-replace-m/🧬️mutations/🟤️set-snapshot",
+     "dissolved-kernels/whole-document-replace",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "artifact-kinds-are-s-dot-plugin-dot-artifact",
+   "rule": "policyCanonicalArtifactKindBreaches",
+   "files": {
+    "k/specs.rs": [
+     "ArtifactKindSpec { id: \"s.alpha.beta\" }",
+     "ArtifactKindSpec { id: \"S.Alpha.beta\" }",
+     "ArtifactKindSpec { id: \"s.a.b.c\" }",
+     "ArtifactKindSpec { id: \"s.-a.b\" }",
+     "// ArtifactKindSpec { id: \"bad\" }",
+     "let url = \"http://x\"; ArtifactKindSpec { id: \"bad2\" }",
+     "ArtifactKindSpec { id: \"s.a--b.c\" }",
+     "ArtifactKindSpec{id:\"s.ok-1.ok-2\"}",
+     "pub struct ArtifactKindSpec {"
+    ],
+    "k/plain.rs": [
+     "id: \"bad\""
+    ]
+   },
+   "expect": [
+    [
+     "canonical-artifact-kind-k/specs.rs-2",
+     "composition/canonical-artifact-kind",
+     "medium",
+     2
+    ],
+    [
+     "canonical-artifact-kind-k/specs.rs-3",
+     "composition/canonical-artifact-kind",
+     "medium",
+     3
+    ],
+    [
+     "canonical-artifact-kind-k/specs.rs-4",
+     "composition/canonical-artifact-kind",
+     "medium",
+     4
+    ],
+    [
+     "canonical-artifact-kind-k/specs.rs-7",
+     "composition/canonical-artifact-kind",
+     "medium",
+     7
+    ]
+   ]
+  },
+  {
+   "id": "child-kinds-in-schema-sources",
+   "rule": "policyCanonicalChildKindBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/a.ts": [
+     " * @child kind=s.a.b",
+     " * @child kind=bad",
+     " * @child kind=S.a.b */"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/b.json": [
+     "{\"x-semio-child\": \"s.x.y\"}",
+     "{\"x-semio-child\": \"S.x\"}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/c.graphql": [
+     "# @child(kind: \"bad\")",
+     "type A @child(kind: \"s.a.b\")",
+     "type B @child(kind: \"bad\")"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/d.proto": [
+     "// @child kind=Bad"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/🧪️tests/e.ts": [
+     "@child kind=bad"
+    ],
+    "✏️s/🔌️plugins/🔭️p/other/f.ts": [
+     "@child kind=bad"
+    ]
+   },
+   "expect": [
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/a.ts-2",
+     "composition/canonical-child-kind",
+     "high",
+     2
+    ],
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/a.ts-3",
+     "composition/canonical-child-kind",
+     "high",
+     3
+    ],
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/b.json-2",
+     "composition/canonical-child-kind",
+     "high",
+     2
+    ],
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/c.graphql-3",
+     "composition/canonical-child-kind",
+     "high",
+     3
+    ],
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/d.proto-1",
+     "composition/canonical-child-kind",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "neutral-snapshot-types-are-not-redefined-by-plugins",
+   "rule": "policyDissolvedKindRedefinitionBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/x.rs": [
+     "pub struct SemioTextSnapshot {}",
+     "// struct SemioAudioSnapshot {}",
+     "use stdio::SemioImageSnapshot;",
+     "    pub(crate) enum SemioFlowSnapshot { A }",
+     "struct SemioTableSnapshotExtra;"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/y.rs": [
+     "pub struct SemioTextSnapshot {}"
+    ],
+    "other/z.rs": [
+     "pub struct SemioTextSnapshot {}"
+    ]
+   },
+   "expect": [
+    [
+     "dissolved-kind-redefinition-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/x.rs-SemioTextSnapshot",
+     "composition/dissolved-kind-redefinition",
+     "high",
+     1
+    ],
+    [
+     "dissolved-kind-redefinition-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/x.rs-SemioFlowSnapshot",
+     "composition/dissolved-kind-redefinition",
+     "high",
+     4
+    ]
+   ]
+  },
+  {
+   "id": "composition-runs-the-three-kind-rules",
+   "rule": "policyCompositionBreaches",
+   "files": {
+    "k/specs.rs": [
+     "ArtifactKindSpec { id: \"bad\" }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/x.rs": [
+     "pub struct SemioTextSnapshot {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/a.ts": [
+     "@child kind=bad"
+    ]
+   },
+   "expect": [
+    [
+     "canonical-artifact-kind-k/specs.rs-1",
+     "composition/canonical-artifact-kind",
+     "medium",
+     1
+    ],
+    [
+     "canonical-child-kind-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️schema/a.ts-1",
+     "composition/canonical-child-kind",
+     "high",
+     1
+    ],
+    [
+     "dissolved-kind-redefinition-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/x.rs-SemioTextSnapshot",
+     "composition/dissolved-kind-redefinition",
+     "high",
+     1
+    ]
+   ]
+  }
+ ]
+}

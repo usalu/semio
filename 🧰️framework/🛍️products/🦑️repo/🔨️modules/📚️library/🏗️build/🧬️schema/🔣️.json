@@ -381,6 +381,43 @@
                 }
               },
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "projects",
+                "exclude"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "owners"
+                },
+                "projects": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1024,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512,
+                    "pattern": "^(?!(?:tag:|!))[^*?\\[\\]{}()\\\\]+$"
+                  }
+                },
+                "exclude": {
+                  "type": "array",
+                  "maxItems": 1024,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512,
+                    "pattern": "^(?!(?:tag:|!))[^*?\\[\\]{}()\\\\]+$"
+                  }
+                }
+              }
             }
           ]
         },
@@ -432,6 +469,17 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 2048
+        },
+        "missing": {
+          "description": "Present exactly when the project is withheld because it depends on projects the snapshot does not hold (a project created or removed while the graph was built): their names in code point order. `source` is then the file that declares the withheld project and `sha256` the digest of its bytes (the digest of no bytes when the file vanished); the next run picks the dependency up.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
         }
       }
     },
@@ -541,25 +589,15 @@
         }
       }
     },
-    "BuildTool": {
-      "type": "string",
-      "enum": [
-        "nx",
-        "bazel"
-      ]
-    },
+    "BuildTool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "BuildPolicy": {
       "type": "object",
       "required": [
-        "version",
-        "defaultTool"
+        "version"
       ],
       "properties": {
         "version": {
           "const": 1
-        },
-        "defaultTool": {
-          "$ref": "#/$defs/BuildTool"
         }
       },
       "additionalProperties": true
@@ -602,11 +640,17 @@
       },
       "anyOf": [
         {
+          "properties": {
+            "port": true
+          },
           "required": [
             "port"
           ]
         },
         {
+          "properties": {
+            "portEnv": true
+          },
           "required": [
             "portEnv"
           ]

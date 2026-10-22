@@ -5,7 +5,7 @@ use super::*;
 // #region board_host
 //#region 🪣️Fill
 impl BoardFillJob {
-    fn from_original_state(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation, original_source: semio_framework_action_bus::OriginalToolSourceBinding) -> Self {
+    pub(super) fn from_original_state(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation, original_source: semio_framework_action_bus::OriginalToolSourceBinding) -> Self {
         Self {
                         original_source: Some(original_source),
 operation,

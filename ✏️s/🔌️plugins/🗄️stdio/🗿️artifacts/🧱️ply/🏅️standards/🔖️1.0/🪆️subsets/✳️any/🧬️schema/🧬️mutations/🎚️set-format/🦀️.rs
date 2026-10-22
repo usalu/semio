@@ -13,18 +13,21 @@ pub struct SetFormat {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "format", kind: "set-format", record: "SetFormat" };
 
-    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        let Self { format } = self;
-        protocol::MutationOutcome::new(diff_set_format(*format))
-    }
-    fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-        Ok(vec![PlyMutation::SetFormat(SetFormat { format: base.format })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set format", "Format setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PlySnapshot, PlyMutation> for SetFormat {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::ColdMutation<PlySnapshot>>::ReferenceDiff> {
+        let Self { format } = self;
+        protocol::MutationOutcome::new(diff_set_format(*format))
+    }
+    fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
+        Ok(vec![PlyMutation::SetFormat(SetFormat { format: base.format })])
     }
 }
 //#endregion 🔖️Payload

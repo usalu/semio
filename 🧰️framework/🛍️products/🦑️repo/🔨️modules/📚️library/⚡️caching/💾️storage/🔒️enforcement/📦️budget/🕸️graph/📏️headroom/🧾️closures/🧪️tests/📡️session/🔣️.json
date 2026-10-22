@@ -1,0 +1,662 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "bytes": 0,
+      "kind": "source",
+      "references": 0
+    },
+    {
+      "id": "marker-boundary",
+      "bytes": 80,
+      "kind": "source",
+      "references": 0
+    },
+    {
+      "id": "one-marker",
+      "bytes": 81,
+      "kind": "lock",
+      "references": 1
+    },
+    {
+      "id": "two-markers",
+      "bytes": 162,
+      "kind": "source",
+      "references": 2
+    },
+    {
+      "id": "retired",
+      "bytes": 512,
+      "kind": "retired",
+      "references": 0
+    },
+    {
+      "id": "unknown",
+      "bytes": 1,
+      "kind": "inference",
+      "references": null
+    }
+  ],
+  "paths": [
+    "/image/a",
+    "/image/quote\"\\\n",
+    "/image/😀/ä"
+  ],
+  "failures": [
+    "undefined",
+    "false",
+    "error",
+    "accessor",
+    "cause",
+    "unicode"
+  ],
+  "wireFailures": [
+    {
+      "mode": "missing-end",
+      "status": 1,
+      "signal": null,
+      "stderr": "",
+      "stdoutFrames": 2,
+      "failureName": "Error",
+      "message": "Explicit terminal closure frame required",
+      "successFrames": 0
+    },
+    {
+      "mode": "malformed",
+      "status": 1,
+      "signal": null,
+      "stderr": "",
+      "stdoutFrames": 3,
+      "failureName": "SyntaxError",
+      "message": "Invalid JSON DATA",
+      "successFrames": 1
+    }
+  ],
+  "source": {
+    "captureOwner": "prepareClosureReadSourceV1",
+    "readyVersion": 1,
+    "readyKey": "source",
+    "phases": [
+      "bootstrap",
+      "ready",
+      "credit",
+      "request",
+      "terminal"
+    ],
+    "overflowPayloadBytes": 128,
+    "bootstrapAdmissionOwner": "closureReadCohortAdmitsV1"
+  },
+  "capacity": {
+    "readyBytes": 128,
+    "replyBytes": 16764800,
+    "failureBytes": 8192,
+    "diagnosticBytes": 4096,
+    "outputBytes": 16777216,
+    "firstUnknown": {
+      "kind": "generation-pointer",
+      "document": {
+        "version": 1,
+        "generation": 0,
+        "manifest": null,
+        "parent": null
+      }
+    }
+  },
+  "terminalCases": [
+    {
+      "case": "native-crash",
+      "status": 7,
+      "settlement": "accepted-disposal"
+    },
+    {
+      "case": "live-malformed",
+      "status": null,
+      "settlement": "accepted-disposal"
+    }
+  ],
+  "credits": [
+    {
+      "id": "fresh",
+      "state": {
+        "frames": 0,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "ready",
+      "state": {
+        "frames": 1,
+        "inputBytes": 0,
+        "outputBytes": 128,
+        "outputLines": 1,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "reuse-beyond-old-slack",
+      "state": {
+        "frames": 3,
+        "inputBytes": 0,
+        "outputBytes": 20000,
+        "outputLines": 2,
+        "diagnosticBytes": 0
+      },
+      "expected": 16744928
+    },
+    {
+      "id": "minimum-fit",
+      "state": {
+        "frames": 0,
+        "inputBytes": 0,
+        "outputBytes": 16764800,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": 128
+    },
+    {
+      "id": "minimum-plus-one",
+      "state": {
+        "frames": 0,
+        "inputBytes": 0,
+        "outputBytes": 16764801,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": null
+    },
+    {
+      "id": "two-frames-and-end-fit",
+      "state": {
+        "frames": 253,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "two-frames-and-end-over",
+      "state": {
+        "frames": 254,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": null
+    },
+    {
+      "id": "last-reply-line-fit",
+      "state": {
+        "frames": 0,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "outputLines": 126,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "last-reply-line-over",
+      "state": {
+        "frames": 0,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "outputLines": 127,
+        "diagnosticBytes": 0
+      },
+      "expected": null
+    },
+    {
+      "id": "input-fit",
+      "state": {
+        "frames": 0,
+        "inputBytes": 16711631,
+        "outputBytes": 0,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "input-plus-one",
+      "state": {
+        "frames": 0,
+        "inputBytes": 16711632,
+        "outputBytes": 0,
+        "outputLines": 0,
+        "diagnosticBytes": 0
+      },
+      "expected": null
+    },
+    {
+      "id": "ready-diag-200",
+      "state": {
+        "frames": 1,
+        "inputBytes": 0,
+        "outputBytes": 328,
+        "outputLines": 2,
+        "diagnosticBytes": 200
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "ready-diag-4096",
+      "state": {
+        "frames": 1,
+        "inputBytes": 0,
+        "outputBytes": 4224,
+        "outputLines": 2,
+        "diagnosticBytes": 4096
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "ready-diag-4097",
+      "state": {
+        "frames": 1,
+        "inputBytes": 0,
+        "outputBytes": 4225,
+        "outputLines": 2,
+        "diagnosticBytes": 4097
+      },
+      "expected": 16764799
+    },
+    {
+      "id": "source-bootstrap-last-byte",
+      "state": {
+        "frames": 1,
+        "inputBytes": 16711631,
+        "outputBytes": 128,
+        "outputLines": 1,
+        "diagnosticBytes": 0
+      },
+      "expected": 16764800
+    },
+    {
+      "id": "source-bootstrap-plus-one",
+      "state": {
+        "frames": 1,
+        "inputBytes": 16711632,
+        "outputBytes": 128,
+        "outputLines": 1,
+        "diagnosticBytes": 0
+      },
+      "expected": null
+    }
+  ],
+  "deferred": [
+    {
+      "id": "one-over-credit",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 1500
+      },
+      "accepted": true,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "equal-credit",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 128,
+        "readBytes": 1500
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "fresh-quantum",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 16764800,
+        "readBytes": 1500
+      },
+      "accepted": true,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "quantum-overflow",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 16764801,
+        "readBytes": 1500
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "physical-lower-underflow",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 999
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "read-budget-overflow",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 2001
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "negative-read",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": -1
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "fractional-read",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 1500.5
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "extra-field",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 1500,
+        "extra": true
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "missing-read",
+      "value": {
+        "version": 1,
+        "deferred": true,
+        "requiredBytes": 129
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "wrong-version",
+      "value": {
+        "version": 2,
+        "deferred": true,
+        "requiredBytes": 129,
+        "readBytes": 1500
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    },
+    {
+      "id": "false-defer",
+      "value": {
+        "version": 1,
+        "deferred": false,
+        "requiredBytes": 129,
+        "readBytes": 1500
+      },
+      "accepted": false,
+      "credit": 128,
+      "minimumReadBytes": 1000,
+      "remainingReadBytes": 2000
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "small-unknown-reuse",
+      "mode": "reuse",
+      "accepted": 3,
+      "cohorts": 1,
+      "reads": 3,
+      "failure": false
+    },
+    {
+      "id": "joined-defer-debit-retry",
+      "mode": "defer",
+      "accepted": 2,
+      "cohorts": 2,
+      "reads": 3,
+      "failure": false
+    },
+    {
+      "id": "fresh-cohort-defer-refused",
+      "mode": "fresh-defer",
+      "accepted": 0,
+      "cohorts": 1,
+      "reads": 1,
+      "failure": true
+    },
+    {
+      "id": "defer-terminal-refused",
+      "mode": "bad-terminal",
+      "accepted": 1,
+      "cohorts": 1,
+      "reads": 2,
+      "failure": true
+    },
+    {
+      "id": "malformed-debit-refused",
+      "mode": "bad-debit",
+      "accepted": 1,
+      "cohorts": 1,
+      "reads": 2,
+      "failure": true
+    },
+    {
+      "id": "debit-undefined-primary",
+      "mode": "debit-primary",
+      "accepted": 1,
+      "cohorts": 1,
+      "reads": 2,
+      "failure": true
+    },
+    {
+      "id": "over-credit-success-refused-before-accept",
+      "mode": "over-credit-success",
+      "accepted": 1,
+      "cohorts": 1,
+      "reads": 2,
+      "failure": true
+    }
+  ],
+  "inputFrames": [
+    {
+      "id": "empty",
+      "unit": "",
+      "repeat": 0,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 0,
+      "frames": 1
+    },
+    {
+      "id": "text-boundary",
+      "unit": "a",
+      "repeat": 65536,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 65536,
+      "frames": 1
+    },
+    {
+      "id": "text-over",
+      "unit": "a",
+      "repeat": 65537,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 65537,
+      "frames": 1
+    },
+    {
+      "id": "binary-boundary",
+      "unit": "a",
+      "repeat": 4194304,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 4194304,
+      "frames": 1
+    },
+    {
+      "id": "binary-over",
+      "unit": "a",
+      "repeat": 4194305,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 4194305,
+      "frames": 2
+    },
+    {
+      "id": "aggregate-boundary",
+      "unit": "a",
+      "repeat": 16777216,
+      "suffix": "",
+      "accepted": true,
+      "bytes": 16777216,
+      "frames": 4
+    },
+    {
+      "id": "aggregate-over",
+      "unit": "a",
+      "repeat": 16777217,
+      "suffix": "",
+      "accepted": false,
+      "bytes": 16777217,
+      "frames": null
+    },
+    {
+      "id": "split-unicode",
+      "unit": "a",
+      "repeat": 4194303,
+      "suffix": "😀\n",
+      "accepted": true,
+      "bytes": 4194308,
+      "frames": 2
+    },
+    {
+      "id": "json-line",
+      "unit": "ä",
+      "repeat": 32768,
+      "suffix": "\n",
+      "accepted": true,
+      "bytes": 65537,
+      "frames": 1
+    },
+    {
+      "id": "invalid-unicode",
+      "unit": "",
+      "repeat": 0,
+      "suffix": "\ud800",
+      "accepted": false,
+      "bytes": 3,
+      "frames": null
+    }
+  ],
+  "startups": [
+    {
+      "id": "eof",
+      "observed": null,
+      "stderrBefore": "before startup",
+      "stderrAfter": "actual child refusal",
+      "comparison": "eof"
+    },
+    {
+      "id": "malformed",
+      "observed": "{",
+      "stderrBefore": "startup parser refused",
+      "stderrAfter": "startup parser refused",
+      "comparison": "json"
+    },
+    {
+      "id": "shape",
+      "observed": "{}",
+      "stderrBefore": "",
+      "stderrAfter": "",
+      "comparison": "shape"
+    },
+    {
+      "id": "version",
+      "observed": "{\"version\":2,\"source\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}",
+      "stderrBefore": "",
+      "stderrAfter": "",
+      "comparison": "version"
+    },
+    {
+      "id": "source",
+      "observed": "{\"version\":1,\"source\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}",
+      "stderrBefore": "",
+      "stderrAfter": "",
+      "comparison": "source"
+    },
+    {
+      "id": "noncanonical",
+      "observed": "{ \"version\":1,\"source\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}",
+      "stderrBefore": "",
+      "stderrAfter": "",
+      "comparison": "noncanonical"
+    },
+    {
+      "id": "oversized",
+      "observed": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "stderrBefore": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+      "stderrAfter": "later diagnostic",
+      "comparison": "oversized"
+    },
+    {
+      "id": "unavailable",
+      "observed": null,
+      "stderrBefore": null,
+      "stderrAfter": null,
+      "comparison": "eof"
+    }
+  ]
+}

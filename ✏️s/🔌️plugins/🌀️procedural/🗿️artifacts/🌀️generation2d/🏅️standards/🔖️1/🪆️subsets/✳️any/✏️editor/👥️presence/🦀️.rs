@@ -55,32 +55,40 @@ pub struct Generation2dPresencePatch {
     pub selected_generation: Option<Generation2dPresenceSelectionChange>,
 }
 
-impl protocol::MutationDiff<Generation2dPresence> for Generation2dPresencePatch {
-    fn apply(&self, base: &Generation2dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation2dPresence> {
-        Ok(Generation2dPresence {
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
-            selected_generation_id: self.selected_generation.as_ref().map_or_else(|| base.selected_generation_id.clone(), |change| change.id.clone()),
-            ..base.clone()
-        })
-    }
+impl protocol::MutationDiff<Generation2dPresence> for Generation2dPresencePatch {}
+
+impl protocol::ColdMutationDiff<Generation2dPresence> for Generation2dPresencePatch {
     fn absorb(&mut self, other: Self) {
         self.camera = other.camera.or_else(|| self.camera.take());
         self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
         self.selected_generation = other.selected_generation.or_else(|| self.selected_generation.take());
     }
+
+    fn apply(&self, unpublished: &mut Generation2dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = Generation2dPresence {
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            selected_generation_id: self.selected_generation.as_ref().map_or_else(|| base.selected_generation_id.clone(), |change| change.id.clone()),
+            ..base.clone()
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Generation2dPresence> for Generation2dPresencePatch {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.show_mode.is_none() && self.selected_generation.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation2dPresence> for Generation2dPresencePatch {
     fn inverse(&self, base: &Generation2dPresence) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
             selected_generation: self.selected_generation.as_ref().map(|_| Generation2dPresenceSelectionChange { id: base.selected_generation_id.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none() && self.show_mode.is_none() && self.selected_generation.is_none()
     }
 }
 
@@ -218,7 +226,10 @@ impl Mutation<Generation2dPresence> for Generation2dPresenceMutation {
     }
 
     type Diff = Generation2dPresencePatch;
+}
 
+impl protocol::ColdMutation<Generation2dPresence> for Generation2dPresenceMutation {
+    type ReferenceDiff = Generation2dPresencePatch;
     fn diff(&self, base: &Generation2dPresence) -> protocol::MutationOutcome<Generation2dPresencePatch> {
         let patch = match self {
             Self::SetCamera { camera } => (camera != &base.camera).then(|| Generation2dPresencePatch { camera: Some(camera.clone()), ..Default::default() }),
@@ -230,7 +241,6 @@ impl Mutation<Generation2dPresence> for Generation2dPresenceMutation {
             None => protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds that value."),
         }
     }
-
     fn inverse(&self, base: &Generation2dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetCamera { .. } => Self::SetCamera { camera: base.camera.clone() },

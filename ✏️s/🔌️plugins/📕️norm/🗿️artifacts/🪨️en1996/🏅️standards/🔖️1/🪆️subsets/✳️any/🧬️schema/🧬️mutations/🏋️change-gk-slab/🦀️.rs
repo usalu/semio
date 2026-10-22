@@ -17,7 +17,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeGKSlab where Op: p
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change", entity: "g-k-slab", kind: "change-gk-slab", record: "ChangedGKSlab",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change slab permanent action Gk", "Ständige Deckenlast Gk ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeGKSlab where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_gk_slab::ChangeGKSlab> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_gk_slab::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,9 +33,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeGKSlab where Op: p
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab permanent action Gk", "Ständige Deckenlast Gk ändern")
-    }
 }
 
 //#region 🪢️Mounts

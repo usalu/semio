@@ -24,6 +24,15 @@ pub fn remove_attribute<Op: From<crate::remove_attribute::RemoveAttribute>>(key:
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for RemoveAttribute where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::add_attribute::AddAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "attribute", kind: "remove-attribute", record: "RemovedAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove attribute \"{}\"", self.key), &format!("Attribut \"{}\" entfernen", self.key))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for RemoveAttribute where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::add_attribute::AddAttribute> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::remove_attribute::diff::diff(self, base)
     }
@@ -33,12 +42,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for RemoveAttribute where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove attribute \"{}\"", self.key), &format!("Attribut \"{}\" entfernen", self.key))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.key.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

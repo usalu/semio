@@ -1,0 +1,1426 @@
+{
+ "version": 1,
+ "base": "live",
+ "roots": [
+  "nx.json",
+  "README.md",
+  "📋️project.json",
+  ".github",
+  ".agents",
+  ".devcontainer",
+  "✏️s",
+  "♻️mit-bestand",
+  "🎓️teaching",
+  "🌎️hub",
+  "🏢️semio-tech",
+  "🧰️framework"
+ ],
+ "rows": [
+  {
+   "kind": "literal",
+   "id": "native-repo-input",
+   "group": "ci",
+   "path": ".github/actions/native-repo/action.yml",
+   "old": "inputs:\n  bun-version:\n    description: Repository Bun pin.\n    required: true\n  node-version:\n",
+   "new": "inputs:\n  node-version:\n",
+   "count": 1,
+   "witness": "inputs:\n  node-version:\n"
+  },
+  {
+   "kind": "literal",
+   "id": "native-repo-launcher",
+   "group": "ci",
+   "path": ".github/actions/native-repo/action.yml",
+   "old": "    - uses: ./.github/actions/bun-repo\n      with:\n        bun-version: ${{ inputs.bun-version }}\n        node-version: ${{ inputs.node-version }}\n",
+   "new": "    - uses: ./.github/actions/repo-launcher\n      with:\n        node-version: ${{ inputs.node-version }}\n",
+   "count": 1
+  },
+  {
+   "kind": "literal",
+   "id": "dashboard-bun-pin",
+   "group": "ci",
+   "path": ".github/workflows/dashboard.yml",
+   "old": "  BUN_VERSION: 1.4.2\n",
+   "new": "",
+   "count": 1,
+   "witness": "  NODE_VERSION: 24.15.0"
+  },
+  {
+   "kind": "literal",
+   "id": "dashboard-bun-input",
+   "group": "ci",
+   "path": ".github/workflows/dashboard.yml",
+   "old": "          bun-version: ${{ env.BUN_VERSION }}\n",
+   "new": "",
+   "count": 1,
+   "witness": "          node-version: ${{ env.NODE_VERSION }}"
+  },
+  {
+   "kind": "literal",
+   "id": "launcher-node-check-remove",
+   "group": "ci",
+   "path": ".github/actions/repo-launcher/action.yml",
+   "old": "    - name: Check that the workflow Node pin equals the repository pin\n      if: ${{ inputs.node-version != '' }}\n      shell: bash\n      env:\n        NODE_VERSION: ${{ inputs.node-version }}\n      run: |\n        node -e \"const p=require('./package.json');if(p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins node '+p.engines.node+', the workflow pins '+process.env.NODE_VERSION)\"\n",
+   "new": "",
+   "count": 1,
+   "witness": "repo tools exec --light node -- -e"
+  },
+  {
+   "kind": "literal",
+   "id": "launcher-node-check-insert",
+   "group": "ci",
+   "path": ".github/actions/repo-launcher/action.yml",
+   "old": "    - name: Print the launcher, runtime and implementation versions\n",
+   "new": "    - name: Check that the workflow Node pin equals the repository pin\n      if: ${{ inputs.node-version != '' }}\n      shell: bash\n      env:\n        NODE_VERSION: ${{ inputs.node-version }}\n      run: |\n        repo tools exec --light node -- -e \"const p=require('./package.json');if(p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins node '+p.engines.node+', the workflow pins '+process.env.NODE_VERSION)\"\n    - name: Print the launcher, runtime and implementation versions\n",
+   "count": 1
+  },
+  {
+   "kind": "literal",
+   "id": "bench-workflow-test",
+   "group": "ci",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🟦️.ts",
+   "old": "for(const wanted of [\"bun repo preflight\",\"bun repo tools setup all\",\"bun repo dependencies sync --all\",\"bun repo bench list\",\"bun repo incremental prepare --fresh\",'bun repo bench run \"${args[@]}\"',",
+   "new": "for(const wanted of [\"repo preflight\",\"repo tools setup all\",\"repo dependencies sync --all\",\"repo bench list\",\"repo incremental prepare --fresh\",'repo bench run \"${args[@]}\"',",
+   "count": 1
+  },
+  {
+   "kind": "literal",
+   "id": "c1-synopsis-top",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"synopsis\": \"tools setup [{backends}|toolchains|all]|verify [tool...]|list [--json]|exec <tool> -- <arguments>\"",
+   "new": "\"synopsis\": \"tools setup [{backends}|toolchains|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>\"",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "kind": "literal",
+   "id": "c1-synopsis-exec",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "synopsis\": \"tools exec [--cwd=<path>] [--light] <tool> -- <arguments>\", \"flags\": [\"--cwd\", \"--light\"],",
+   "new": "synopsis\": \"tools exec [--cwd=<path>] [--light] <tool|command> -- <arguments>\", \"flags\": [\"--cwd\", \"--light\"],",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "kind": "literal",
+   "id": "c1-summary",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"summary\": { \"en\": \"Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation.\", \"de\": \"Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch.\" }",
+   "new": "\"summary\": { \"en\": \"Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation. <tool> is a registry id (cargo, node, uv) or an executable a registered tool owns (rustc, rustfmt, python3, bunx).\", \"de\": \"Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch. <tool> ist eine Id der Registratur (cargo, node, uv) oder ein Programm, das ein registriertes Werkzeug besitzt (rustc, rustfmt, python3, bunx).\" }",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "kind": "literal",
+   "id": "c1-examples",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"de\": \"Führt Cargo über die Registratur aus, statt es direkt aufzurufen.\" } }\n      ],",
+   "new": "\"de\": \"Führt Cargo über die Registratur aus, statt es direkt aufzurufen.\" } },\n        { \"command\": \"repo tools exec --light rustc -- -vV\", \"description\": { \"en\": \"Ask an executable that a registered tool owns (rustc belongs to Cargo) for its version.\", \"de\": \"Fragt ein Programm, das ein registriertes Werkzeug besitzt (rustc gehört zu Cargo), nach seiner Version.\" } },\n        { \"command\": \"repo tools exec uv -- run python3 <script>.py\", \"description\": { \"en\": \"Run a Python script through uv without calling uv directly.\", \"de\": \"Führt ein Python-Skript über uv aus, ohne uv direkt aufzurufen.\" } }\n      ],",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "kind": "literal",
+   "id": "c1-note",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "und repo verify tool-spawns verweigert die Starts, die sie umgehen.\" }\n      ]",
+   "new": "und repo verify tool-spawns verweigert die Starts, die sie umgehen.\" },\n        { \"en\": \"A command after -- of exec, watch and capacity run is started as written: pass a repo command or repo tools exec <tool> -- ..., never a bare tool; repo verify tool-declarations refuses declarative files that do.\", \"de\": \"Ein Befehl nach -- von exec, watch und capacity run wird so gestartet, wie er geschrieben steht: Übergib einen repo-Befehl oder repo tools exec <tool> -- ..., niemals ein nacktes Werkzeug; repo verify tool-declarations verweigert deklarative Dateien, die es tun.\" }\n      ]",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "kind": "literal",
+   "id": "c1-import",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "toolMessageV1, toolRootV1, ToolErrorV1,",
+   "new": "toolForCommandV1, toolMessageV1, toolRootV1, ToolErrorV1,",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "kind": "literal",
+   "id": "c1-resolve",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "entry = id === undefined ? undefined : findToolV1(id);",
+   "new": "entry = id === undefined ? undefined : findToolV1(id) ?? toolForCommandV1(id);",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "kind": "literal",
+   "id": "c1-run",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "await runToolV1(entry.id, tail, { root, cwd, env:",
+   "new": "await runToolV1(entry.id, tail, { root, cwd, command: entry.id === id ? undefined : id, env:",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "kind": "literal",
+   "id": "c1-doc",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "`repo tools exec [--cwd=<path>] [--light] <tool> -- <arguments>`. */\nasync function exec(",
+   "new": "`repo tools exec [--cwd=<path>] [--light] <tool|command> -- <arguments>` where the command is an executable a registered tool owns. */\nasync function exec(",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "kind": "literal",
+   "id": "law-verify-dispatch",
+   "group": "law",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+   "old": "    if (segments[0] === \"zero-touch\") {\n      this.runZeroTouch(segments.slice(1));\n      return;\n    }\n",
+   "new": "    if (segments[0] === \"zero-touch\") {\n      this.runZeroTouch(segments.slice(1));\n      return;\n    }\n    if (segments[0] === \"tool-declarations\") {\n      const { runDirectToolDeclarationLawV1 } = await import(\"../../⚖️laws/🧰️direct-tool-declarations/⌨️command/🟦️.ts\");\n      process.exitCode = runDirectToolDeclarationLawV1(this.root, segments.slice(1));\n      return;\n    }\n",
+   "count": 1,
+   "requires": "zero-touch"
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 5,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 7,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 4,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 5,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 5,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 6,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 3,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 1,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 6,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 2,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 7,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 7,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 5,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-script",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"\\2",
+   "count": 6,
+   "proof": "[\n        \"repo\",\n        \"✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "argv-inspector",
+   "group": "json-commands",
+   "path": "📋️project.json",
+   "pattern": "\"bun\",(\\s*)\"x\",",
+   "repl": "\"repo\",\\1\"tools\",\\1\"exec\",\\1\"bun\",\\1\"--\",\\1\"x\",",
+   "count": 1,
+   "proof": "\"repo\",\n              \"tools\",\n              \"exec\",\n              \"bun\",\n              \"--\",\n              \"x\","
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 5,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+   "repl": "\\1\"repo\"",
+   "count": 1,
+   "proof": "\"program\": \"repo\""
+  },
+  {
+   "kind": "regex",
+   "id": "program-repo-args",
+   "group": "json-commands",
+   "path": "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json",
+   "pattern": "(\"program\"\\s*:\\s*)\"bun\"(\\s*,\\s*\"args\"\\s*:\\s*\\[\\s*)\"repo\"\\s*,\\s*",
+   "repl": "\\1\"repo\"\\2",
+   "count": 1,
+   "proof": "\"program\": \"repo\",\n      \"args\": [\n        "
+  },
+  {
+   "kind": "regex",
+   "id": "string-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/📋️project.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+   "repl": "repo ",
+   "count": 1,
+   "proof": "repo ./\\ud83d\\udcdc\\ufe0fscript.ts "
+  },
+  {
+   "kind": "regex",
+   "id": "string-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📋️project.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+   "repl": "repo ",
+   "count": 2,
+   "proof": "repo ./📜️script.ts build\""
+  },
+  {
+   "kind": "regex",
+   "id": "string-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+   "repl": "repo ",
+   "count": 3,
+   "proof": "repo ./📜️script.ts test law-coverag"
+  },
+  {
+   "kind": "regex",
+   "id": "string-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+   "repl": "repo ",
+   "count": 1,
+   "proof": "repo repo/lib/js/bin/lint.ts path/t"
+  },
+  {
+   "kind": "regex",
+   "id": "string-script",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+   "repl": "repo ",
+   "count": 3,
+   "proof": "repo ./📜️script.ts generate-frame-w"
+  },
+  {
+   "kind": "regex",
+   "id": "string-script-quoted",
+   "group": "json-commands",
+   "path": "📋️project.json",
+   "pattern": "(?<=\")bun (?=\\\\\")",
+   "repl": "repo ",
+   "count": 1,
+   "proof": " { \"runtime\": \"repo "
+  },
+  {
+   "kind": "regex",
+   "id": "string-script-quoted",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+   "pattern": "(?<=\")bun (?=\\\\\")",
+   "repl": "repo ",
+   "count": 5,
+   "proof": "repo \\\"🧰️framework/🛍️products/🦑️rep"
+  },
+  {
+   "kind": "regex",
+   "id": "string-cjs",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*\\.cjs)",
+   "repl": "repo tools exec bun -- ",
+   "count": 6,
+   "proof": "repo tools exec bun -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-cjs",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")bun (?=[^\"\\n]*\\.cjs)",
+   "repl": "repo tools exec bun -- ",
+   "count": 5,
+   "proof": "repo tools exec bun -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-nx-run",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")bun run nx run ",
+   "repl": "repo run ",
+   "count": 1,
+   "proof": "repo run "
+  },
+  {
+   "kind": "regex",
+   "id": "string-bun-test",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+   "pattern": "(?<=\")bun test ",
+   "repl": "repo tools exec bun -- test ",
+   "count": 1,
+   "proof": "repo tools exec bun -- test "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 3,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 8,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 8,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 9,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 9,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 4,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 4,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 3,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 4,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 2,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 9,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 11,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 5,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 7,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 11,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 11,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 7,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 9,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 13,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 8,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "string-uv",
+   "group": "json-commands",
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🔮️oracles/🔣️.json",
+   "pattern": "(?<=\")uv (?=run )",
+   "repl": "repo tools exec uv -- ",
+   "count": 7,
+   "proof": "repo tools exec uv -- "
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "nx.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 2,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 16,
+   "proof": "\"runtime\": \"repo tools exec --light bun --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 1,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 2,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 1,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 1,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 6,
+   "proof": "\"runtime\": \"repo tools exec --light bun --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 7,
+   "proof": "\"runtime\": \"repo tools exec --light bun --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 2,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "runtime-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+   "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+   "repl": "\\1repo tools exec --light \\2 --",
+   "count": 1,
+   "proof": "\"runtime\": \"repo tools exec --light node --"
+  },
+  {
+   "kind": "regex",
+   "id": "policy-probes",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+   "pattern": "(?<=\")(bun|node|cargo|uv|python|dotnet|cmake) (--version)(?=\")",
+   "repl": "repo tools exec --light \\1 -- \\2",
+   "count": 3,
+   "proof": "repo tools exec --light bun -- --version"
+  },
+  {
+   "kind": "regex",
+   "id": "policy-probe-rustc",
+   "group": "json-commands",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+   "pattern": "(?<=\")rustc -vV(?=\")",
+   "repl": "repo tools exec --light rustc -- -vV",
+   "count": 1,
+   "proof": "repo tools exec --light rustc -- -vV"
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-repo",
+   "group": "payloads",
+   "path": "📋️project.json",
+   "pattern": "(\"--\",\\s*)\"bun\",\\s*\"repo\",(\\s*)",
+   "repl": "\\1\"repo\",\\2",
+   "count": 1,
+   "proof": "\"--\",\n              \"repo\",\n              "
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-repo",
+   "group": "payloads",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json",
+   "pattern": "(\"--\",\\s*)\"bun\",\\s*\"repo\",(\\s*)",
+   "repl": "\\1\"repo\",\\2",
+   "count": 2,
+   "proof": "\"--\",\n            \"repo\",\n            "
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-test-argv",
+   "group": "payloads",
+   "path": "📋️project.json",
+   "pattern": "(\"--\",\\s*)\"bun\",(\\s*)\"test\"",
+   "repl": "\\1\"repo\",\\2\"tools\",\\2\"exec\",\\2\"bun\",\\2\"--\",\\2\"test\"",
+   "count": 1,
+   "proof": "\"--\",\n              \"repo\",\n              \"tools\",\n              \"exec\",\n              \"bun\",\n              \"--\",\n              \"test\""
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-script-argv",
+   "group": "payloads",
+   "path": "📋️project.json",
+   "pattern": "(\"--\",\\s*)\"bun\",(\\s*\"(?:[^\"\\n]*\\.(?:ts|mjs|js)|\\{workspace\\}/\\{script\\})\")",
+   "repl": "\\1\"repo\",\\2",
+   "count": 2,
+   "proof": "\"--\",\n              \"repo\",\n              \"{workspace}/{script}\""
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-script-argv",
+   "group": "payloads",
+   "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+   "pattern": "(\"--\",\\s*)\"bun\",(\\s*\"(?:[^\"\\n]*\\.(?:ts|mjs|js)|\\{workspace\\}/\\{script\\})\")",
+   "repl": "\\1\"repo\",\\2",
+   "count": 1,
+   "proof": "\"--\", \"repo\", \"./📜️script.ts\""
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-test-text",
+   "group": "payloads",
+   "path": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "pattern": "(?<=-- )bun test",
+   "repl": "repo tools exec bun -- test",
+   "count": 4,
+   "proof": "repo tools exec bun -- test"
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-test-text",
+   "group": "payloads",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "pattern": "(?<=-- )bun test",
+   "repl": "repo tools exec bun -- test",
+   "count": 2,
+   "proof": "repo tools exec bun -- test"
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-install-text",
+   "group": "payloads",
+   "path": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "pattern": "(?<=-- )bun install",
+   "repl": "repo dependencies sync --all",
+   "count": 2,
+   "proof": "ependencies -- repo dependencies sync --all"
+  },
+  {
+   "kind": "regex",
+   "id": "payload-bun-install-text",
+   "group": "payloads",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "pattern": "(?<=-- )bun install",
+   "repl": "repo dependencies sync --all",
+   "count": 1,
+   "proof": "ependencies -- repo dependencies sync --all"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🎤️presentation/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 4,
+   "proof": "repo run "
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🐾️pets/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 10,
+   "proof": "repo run "
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 4,
+   "proof": "repo run "
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/📓️print/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 6,
+   "proof": "repo run "
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/📚️course/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 3,
+   "proof": "repo run @semio-tech/course:test -- qui"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-run",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+   "pattern": "\\bbun run dashboard run ",
+   "repl": "repo run ",
+   "count": 20,
+   "proof": "repo run @semio-tech/repo-test-domain:t"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🌎️hub/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🎓️teaching/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 2,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🎓️teaching/🏛️architecture/🐾️pets/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🎓️teaching/🏛️architecture/📚️course/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 2,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🎓️teaching/🛂️proctor/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 2,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🏢️semio-tech/🎡️play/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 2,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🎤️presentation/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🐾️pets/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/📓️print/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "dashboard-open",
+   "group": "docs",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md",
+   "pattern": "\\bbun run dashboard(?![:\\w-])",
+   "repl": "repo dashboard",
+   "count": 1,
+   "proof": "repo dashboard"
+  },
+  {
+   "kind": "regex",
+   "id": "doc-script",
+   "group": "docs",
+   "path": "🎓️teaching/🏛️architecture/🐾️pets/README.md",
+   "pattern": "(?<![\\w/.-])bun (?=\\S*\\.ts\\b)",
+   "repl": "repo ",
+   "count": 1,
+   "proof": "repo <ticket>/stage_storyboard.ts -"
+  },
+  {
+   "kind": "regex",
+   "id": "ci-report",
+   "group": "ci",
+   "path": ".github/actions/cache-proof/action.yml",
+   "pattern": "(?m)^(\\s*)bun \"\\$CI_REPORT\"",
+   "repl": "\\1repo \"$CI_REPORT\"",
+   "count": 1,
+   "proof": "        repo \"$CI_REPORT\""
+  }
+ ],
+ "sweeps": [
+  {
+   "id": "repo-repo",
+   "group": "repair",
+   "files": [
+    "**/*.md",
+    "**/*.json",
+    "**/*.yml",
+    "**/*.yaml"
+   ],
+   "pattern": "(?<![\\w/.-])repo repo(?= (?:run|run-many|affected|exec|watch|graph|show|inputs|reset|tools|preflight|incremental|concurrency|dependencies|cargo|cache|capacity|leases|remote-execution|remote-cache|doctor|bench|service|session|units|conformance|verify|dashboard|--tool|--help|--lang|--version)(?![\\w-]))",
+   "repl": "repo"
+  },
+  {
+   "id": "repo-repo-closed",
+   "group": "repair",
+   "files": [
+    "**/*.md",
+    "**/*.json",
+    "**/*.yml",
+    "**/*.yaml"
+   ],
+   "pattern": "(?<=[`\"'])repo repo(?=[`\"'])",
+   "repl": "repo"
+  },
+  {
+   "id": "policy-probe-go",
+   "group": "json-commands",
+   "files": [
+    "**/⚡️caching/🔣️policy.json"
+   ],
+   "pattern": "(?<=\")go version(?=\")",
+   "repl": "repo tools exec --light go -- version"
+  },
+  {
+   "id": "json-bun-repo",
+   "group": "json-commands",
+   "files": [
+    "**/*.json"
+   ],
+   "pattern": "(?<=\")bun repo(?![\\w-])",
+   "repl": "repo"
+  },
+  {
+   "id": "doc-bun-repo",
+   "group": "docs",
+   "files": [
+    "**/*.md"
+   ],
+   "pattern": "(?<![\\w/.-])bun repo(?![\\w-])",
+   "repl": "repo"
+  },
+  {
+   "id": "ci-bun-repo",
+   "group": "ci",
+   "files": [
+    "**/*.yml",
+    "**/*.yaml"
+   ],
+   "pattern": "(?<![\\w/.-])bun repo(?![\\w-])",
+   "repl": "repo"
+  }
+ ],
+ "creates": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/⌨️command/🟦️.ts",
+   "sha256": "bfc7163ad888c41883b0f3b65aa3599cd8654ba23362d2a7415e16c8bcc39109",
+   "blob": "bfc7163ad888c41883b0f3b65aa3599cd8654ba23362d2a7415e16c8bcc39109"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🔣️.json",
+   "sha256": "6f96701ecb490d452e6d2598c1398afd5028260da66152bee7889bcdf0652c88",
+   "blob": "6f96701ecb490d452e6d2598c1398afd5028260da66152bee7889bcdf0652c88"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🟦️.ts",
+   "sha256": "2a3a53460ac544e72c97ed69f2fcbfbe99d2d905c239db8aba3434ae6ceef326",
+   "blob": "2a3a53460ac544e72c97ed69f2fcbfbe99d2d905c239db8aba3434ae6ceef326"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🧪️tests/🐍️oracle.py",
+   "sha256": "89b3da5eeff967a0289acbbe7b2324ba0dd0597dda20244c761b915a7e6979ec",
+   "blob": "89b3da5eeff967a0289acbbe7b2324ba0dd0597dda20244c761b915a7e6979ec"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🧪️tests/🟦️.ts",
+   "sha256": "39508809d2356829365d0ace5d718dc50d86cd12ed5a5a747b9760e4cdc76c3c",
+   "blob": "39508809d2356829365d0ace5d718dc50d86cd12ed5a5a747b9760e4cdc76c3c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🧪️tests/🧫️fixtures/🔣️.json",
+   "sha256": "1f6bd4009d63b691ad5106f4c5be73445aaf7dc607cdefdca8c2e8d3b427d625",
+   "blob": "1f6bd4009d63b691ad5106f4c5be73445aaf7dc607cdefdca8c2e8d3b427d625"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🧬️schema/🔣️.json",
+   "sha256": "71c8ad28909a08c2bef81d64edd64137052405611ca41cd71b2fe20c20a317b6",
+   "blob": "71c8ad28909a08c2bef81d64edd64137052405611ca41cd71b2fe20c20a317b6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/🧪️tests/🔎️exec-command/🟦️.ts",
+   "sha256": "e67c12edecff128056423bad2b6df4aa328888abcaa0d17d4bb16307c53023f5",
+   "blob": "e67c12edecff128056423bad2b6df4aa328888abcaa0d17d4bb16307c53023f5"
+  }
+ ],
+ "frozen": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/",
+  "🧰️framework/🔨️modules/🏃️process/"
+ ]
+}

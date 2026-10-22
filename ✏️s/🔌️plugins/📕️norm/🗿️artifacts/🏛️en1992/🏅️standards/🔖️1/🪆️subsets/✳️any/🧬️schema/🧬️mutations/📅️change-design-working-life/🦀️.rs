@@ -16,14 +16,18 @@ pub struct ChangeDesignWorkingLife {
 
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeDesignWorkingLife where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_design_working_life::ChangeDesignWorkingLife> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "design-working-life", kind: "change-design-working-life", record: "ChangedDesignWorkingLife" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change design working life to {} years", self.new_years), &format!("Geplante Nutzungsdauer auf {} Jahre ändern", self.new_years))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1992Snapshot, Op> for ChangeDesignWorkingLife where Op: protocol::ColdMutation<En1992Snapshot, ReferenceDiff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_design_working_life::ChangeDesignWorkingLife> {
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_design_working_life::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_design_working_life::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change design working life to {} years", self.new_years), &format!("Geplante Nutzungsdauer auf {} Jahre ändern", self.new_years))
-    }
 }
 
 //#region 🪢️Mounts

@@ -64,7 +64,7 @@ impl MountedGroupReceiptSource<'_> {
     pub fn identity(&self)->[(usize,usize);4] { let children=self.child_edit_ids.identity();[(self.invocation_id.as_ptr()as usize,self.invocation_id.len()),self.parent_edit_id.map_or((0,0),|id|(id.as_ptr()as usize,id.len())),children[0],children[1]] }
 }
 
-pub(crate) struct MountedGroupReceiptOutput {
+pub struct MountedGroupReceiptOutput {
     pub mutations: Vec<KernelMutation>,
     pub inverse_group: UndoGroup,
     pub command_edit_id: Option<String>,

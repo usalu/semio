@@ -9,7 +9,7 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🦀️cleanup-boundary/🔣️.json"), "utf8"));
   const project = JSON.parse(readFileSync(join(import.meta.dir, "../../📋️project.json"), "utf8")), [owner, target] = fixture.rootTarget.split(":");
   assert.equal(project.name, owner); assert.equal(project.targets[target].cache, false);
-  assert.equal(project.targets[target].options.command, "bun ./📜️script.ts cache-prune");
+  assert.equal(project.targets[target].options.command, "repo ./📜️script.ts cache-prune");
   const ts = require("typescript");
   const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.implementation], bundle: true, write: false, metafile: true, platform: "node", packages: "external", format: "esm", logLevel: "silent" });
   const definitions = Object.keys(graph.metafile.inputs).flatMap(file => {
@@ -33,7 +33,7 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
     }
     writeFileSync(join(root, dirname(fixture.implementation), "../📜️script.ts"), `import { writeFileSync } from "node:fs"; writeFileSync(${JSON.stringify(join(root, fixture.cleanupMarker))}, "Detached cleanup started");\n`);
     writeFileSync(join(root, "project.json"), JSON.stringify({ name: "fixture", targets: Object.fromEntries(fixture.operations.map((operation: string) => [operation, {
-      executor: "nx:run-commands", cache: false, options: { command: `bun "${fixture.implementation}" native cargo ${operation} --manifest Cargo.toml` }
+      executor: "nx:run-commands", cache: false, options: { command: `repo "${fixture.implementation}" native cargo ${operation} --manifest Cargo.toml` }
     }])) }));
     const env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_TEST_ARTIFACT_DIR: root, NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
     for (const operation of fixture.operations) {

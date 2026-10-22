@@ -1,0 +1,106 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "contributor",
+  "names",
+  "repo"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "contributor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "alias",
+    "emoji",
+    "name",
+    "email"
+   ],
+   "properties": {
+    "alias": {
+     "type": "string"
+    },
+    "emoji": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "email": {
+     "type": "string"
+    }
+   }
+  },
+  "names": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "now",
+     "expectedTag",
+     "expectedSubject"
+    ],
+    "properties": {
+     "now": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      },
+      "minItems": 3
+     },
+     "expectedTag": {
+      "type": "string"
+     },
+     "expectedSubject": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "repo": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "commits",
+    "expectedIndex",
+    "none",
+    "lookback"
+   ],
+   "properties": {
+    "commits": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "expectedIndex": {
+     "type": "integer"
+    },
+    "none": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "lookback": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "wipAt"
+     ],
+     "properties": {
+      "wipAt": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  }
+ }
+}

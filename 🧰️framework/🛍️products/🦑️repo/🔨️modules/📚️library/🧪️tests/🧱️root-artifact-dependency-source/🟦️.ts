@@ -123,7 +123,7 @@ describe("root artifact and dependency source ownership", () => {
 
   test("registers one Bun/Nx route", () => {
     const project = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-    expect(project.targets["test-root-artifact-dependency-source"].options.command).toBe("bun ./📜️script.ts test root-artifact-dependency-source");
+    expect(project.targets["test-root-artifact-dependency-source"].options.command).toBe("repo ./📜️script.ts test root-artifact-dependency-source");
   });
 });
 

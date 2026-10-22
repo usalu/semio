@@ -86,6 +86,12 @@ pub struct BitmapTransientDiff {
 }
 
 impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.output_pixels.is_none() && self.contradiction.is_none() && self.output_width.is_none() && self.output_height.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BitmapTransient> for BitmapTransientDiff {
     fn inverse(&self, base: &BitmapTransient) -> Self {
         Self {
             output_pixels: self.output_pixels.as_ref().map(|_| BitmapTransientText { value: base.output_pixels.clone() }),
@@ -94,28 +100,11 @@ impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
             output_height: self.output_height.as_ref().map(|_| base.output_height.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.output_pixels.is_none() && self.contradiction.is_none() && self.output_width.is_none() && self.output_height.is_none()
-    }
 }
 
-impl protocol::MutationDiff<BitmapTransient> for BitmapTransientDiff {
-    fn apply(&self, base: &BitmapTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.output_pixels {
-            next.output_pixels.clone_from(&value.value);
-        }
-        if let Some(value) = &self.contradiction {
-            next.contradiction.clone_from(value);
-        }
-        if let Some(value) = &self.output_width {
-            next.output_width.clone_from(value);
-        }
-        if let Some(value) = &self.output_height {
-            next.output_height.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<BitmapTransient> for BitmapTransientDiff {}
+
+impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
     fn absorb(&mut self, later: Self) {
         if later.output_pixels.is_some() {
             self.output_pixels = later.output_pixels;
@@ -129,6 +118,25 @@ impl protocol::MutationDiff<BitmapTransient> for BitmapTransientDiff {
         if later.output_height.is_some() {
             self.output_height = later.output_height;
         }
+    }
+
+    fn apply(&self, unpublished: &mut BitmapTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.output_pixels {
+            next.output_pixels.clone_from(&value.value);
+        }
+        if let Some(value) = &self.contradiction {
+            next.contradiction.clone_from(value);
+        }
+        if let Some(value) = &self.output_width {
+            next.output_width.clone_from(value);
+        }
+        if let Some(value) = &self.output_height {
+            next.output_height.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

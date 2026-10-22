@@ -11,11 +11,11 @@ const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
 /// 🎯️ One mutation applied through the central applier: the next snapshot, or the refusal's code and detail.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_gltf_mutation(base: &GltfSnapshot, mutation: &GltfMutation) -> Result<GltfSnapshot, String> {
-    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, base);
+    let outcome = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::diff(mutation, base);
     if let Some(message) = outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error) {
         return Err(format!("{} {}", message.code.0, message.message));
     }
-    protocol::apply_diff(outcome.diff(), base).map_err(|error| error.to_string())
+    protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| error.to_string())
 }
 
 /// 🌉️ Applies one mutation through the central applier; a refusal (error or fatal message) is an error.

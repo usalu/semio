@@ -1,367 +1,248 @@
-/** ✅️ Presence and hub link state, document check-in, auto check-in, the history tab and the sync tab.
+/** 🎯️ The focused program, history, time travel, introduction and tutorial state of the focus and input hook. */
+import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
+import { FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, type TutorialDefinition } from "@semio-tech/framework";
+import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, spawnedProgramWindowInstancesV1, type FocusedProgramV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, inputAwaitsHubIdentityV1, type HubIdentityGateV1, type VersionedRegisterCellV1 } from "../../🎯️input-ledger/🟦️.ts";
+import { readStoredIntroductionSeen } from "@semio-tech/ui-react";
+import { resolveAppSurfaceSessionFactory } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
+import { shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad } from "../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+import { appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { sessionWindowInstances } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { parsePanelState, type SpawnedAppEntry } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { timeTravelIndicatorTextV1, TimeTravelWindowIndicator } from "../../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
+import type { ShellCoreAfterPluginLifecycle } from "../../🚀️plugin-lifecycle/🟦️.ts";
+
+/**
+ * 🧭 Binds the focused program, its history and time travel indicator and the introduction and tutorial state with their effects.
  *
- * 🧱️ Child hook module of {@link ../🟦️.tsx | ShellHost}: `useCheckInAndSync` runs the original statements in order and returns the bindings later hooks and the render read; the parent merges them into the shared core object.
+ * 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch
+ * the projection incrementally from then on; without this first snapshot its ledger would start
+ * empty even for a document that already carries entries (a re-opened artifact).
+ *
+ * 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one
+ * first ({@link spawnedBridgeCensusV1}). Keyed on the spawned ROSTER, never on `panel` identity (a
+ * panel object churns on every action), on the loaded-plugin count (a spawned program's window
+ * kinds come from its manifest and a roster entry can be written before its plugin finished
+ * loading), and on the focused program, because focus is what entry 0 means.
+ *
+ * ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`).
  */
-
-import { createAdmittedShellInstanceV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
-// #region 🔌️Adapters
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from "../../⚛️react-port/🟦️.ts";
-import { type DocumentScope } from "@semio-tech/framework/document/scope";
-import { buildFrameworkSyncUtilities, encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
-import { type ScopedPresencePeerV1 } from "../👥️presence-scope/🟦️.ts";
-import { SHELL_HUB_ROUTE, shellRouteAdmissionTextV1, shellRouteAdmissionV1 } from "../🔀️surface-switch/🟦️.ts";
-import { type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
-import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { selectQuarantinedConflicts } from "../../🐚️Shell/🕹️shell-store/🟦️.ts";
-import {
-  panelTabDefinitionToNode,
-  historyRefusalNoticeV1,
-  partitionFrameworkHistoryPanelTab
-} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import {
-  AutoCheckinScheduler,
-  automaticCheckinWaitsV1,
-  canCheckIn,
-  checkpointGateV1,
-  checkpointOnCloseKeyV1,
-  useCheckpointOnCloseV1,
-  computeSyncPillState,
-  syncPillText,
-  type SyncPillState
-} from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
-import { shellHistoryCursorDomV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
-import { shellTabIcon } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-// #endregion 🔌️Adapters
-import { timeTravelPeerPresenceV1, timeTravelRowActionRefusalsV1 } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
-import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { SyncAttachCard, type HubLinkV1, type HubSessionPresenceV1 } from "../../🔄️ShellSync/🟦️.tsx";
-import { UTILITY_CATEGORY_ICON_ID } from "../../🎛️UtilityTree/🟦️.tsx";
-import { shellUncommittedEditCountV1 } from "../🏁️operation-settle/🟦️.ts";
-import { encodeAppCommandInvocation } from "../📨️window-invocation/🟦️.ts";
-import { findSpaceIndexEditor, mintDirectoryCommandRequestId, selectedSpaceArtifactCreationCatalogV1, SPACE_INDEX_DOCUMENT_ID } from "../🧾️space-artifact-creation/🟦️.ts";
-import type { ShellCoreAfterDocumentTransferAndTabs } from "../📤️document-transfer-tabs/🟦️.tsx";
-import type { BackgroundSpaceIndexSession } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
-
-export type ShellCoreAfterCheckInAndSync = ShellCoreAfterDocumentTransferAndTabs & ReturnType<typeof useCheckInAndSync>;
-
-export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
+export function useFocusedProgramAndIntroductionState({ core }: { readonly core: ShellCoreAfterPluginLifecycle }) {
   const {
-    hostMode, shellState, dispatch, historyStore, loadedPlugins, session, uiLocale, uiTerminology, appLabelsOverlay,
-    syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, openSpaceIdRef, panelTreeConfigCacheRef,
-    treeWindowGeneration, treeWindowHost, backboneWorkerRef, identity, identityRef, identityOffline, hubSessionRefused,
-    verifiedSessionAuthority, hubEnv, hubSessionCapability, identityResolution, showTransientNoticeRef,
-    dispatchCheckpointRef, backgroundSpaceIndexSessionsRef, openDocumentRef, closeDocumentRef, retireDocumentAttachment,
-    spaceArtifactCreationCatalog, spaceArtifactCreationCatalogUi, setHubWorkspaceOpen, extensionFetchAbortRef,
-    openDocumentSessionsRef, captureDialogOrigin, presencePeersByRuntimeKey, loadedPluginsRef, navigateHistory,
-    sessionRoute, focusedApp, focusedPanelBodyStores, focusedHistoryV1, historyCheckpointId, focusedTimeTravel,
-    focusedHistoryEntries, attachSyncTarget, detachSyncBackbone, browseSyncBackbonePath, onAction,
-    currentDocumentRuntimeKey, focusedBrowserActorPanels
+    surfaceSessionFactories, brand, suppressAutoIntroduction, scope, hostMode, shellState, dispatch, localInteraction,
+    historyStore, historyOrderByProgramRef, loadedPlugins, session, uiLocale, uiTerminology, refreshHistorySnapshot,
+    toolMeasuresByToolId, panelBodyStoreByKey, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey,
+    activeUtilityByWindowId, activeToolId, expandedCommandId, commandStagedArgsByCommandId, activeWindowId,
+    extraWindowInstances, introductionStepIndex, introductionCompletedInteractions, overlayDialog, tutorialPlaying,
+    tutorialRecording, contributorInstancesRef, contributorPassesRef, externalSlotNodesRef, extraWindowInstancesRef,
+    dropForRetiredInstance, sessionRef, builtNodeStoreCacheRef, backboneWorkerRef, backboneWorkerStreamsDetachRef,
+    setAgentBridgeCensus, identity, identityRef, identityOffline, hubSessionRefused, hubSessionPortRef,
+    hubSessionCapability, directoryHomeOwnerRef, directoryHomeRetirementRef, uiLocaleRef, uiTerminologyRef,
+    retireDirectoryHomeOwner, backgroundSpaceIndexSessionsRef, closeDocumentRef, documentAttachmentLanesRef,
+    spaceArtifactCreationOwnersRef, extensionFetchAbortRef, segmentedDownloadAbortRef, openDocumentSessionsRef,
+    isCurrentDialogOrigin, closeOwnedDialog, browserActorUiByRuntimeKeyRef, loadedPluginsRef, pluginArtifactRebuiltAtRef,
+    registry, primaryPluginId, pluginSource, installPlugin, reloadPlugin
   } = core;
-  //#region FrameworkOsShell
-  //#region 🔖️CheckIn — ticket §C5 "when the user edits an artifact, the mutations are saved and
-  const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
-  const selectedSpaceArtifactCreationCatalog = useMemo(() => selectedSpaceArtifactCreationCatalogV1(
-    spaceArtifactCreationCatalog,
-    spaceArtifactCreationCatalogUi,
-    session === null ? null : captureDialogOrigin(session),
-  ), [captureDialogOrigin, currentDocumentId, currentDocumentRuntimeKey, session, spaceArtifactCreationCatalog, spaceArtifactCreationCatalogUi]);
-  const selectedSpaceArtifactKinds = selectedSpaceArtifactCreationCatalog?.kinds;
-  const artifactCreationChoiceRevisionRef = useRef<string | undefined>(undefined);
-
-  const presencePeers = useMemo((): readonly ScopedPresencePeerV1[] => currentDocumentRuntimeKey === null ? [] : (presencePeersByRuntimeKey[currentDocumentRuntimeKey] ?? []), [currentDocumentRuntimeKey, presencePeersByRuntimeKey]);
-  /** ⏪️👥️ Peers' open history edits, labelled from this program's own history rows: the roster chip says who edits
-   * which mutation, and the history body's affected rows carry a note through the interpreter's presence overlay. */
-  const focusedTimeTravelStage = focusedTimeTravel?.stage ?? null;
-  const rowActionRefusals = useMemo(() => timeTravelRowActionRefusalsV1(focusedTimeTravelStage === null ? null : { stage: focusedTimeTravelStage }), [focusedTimeTravelStage, uiLocale]);
-  const timeTravelPeers = useMemo(() => timeTravelPeerPresenceV1(presencePeers, Object.values(focusedHistoryEntries), { terminology: uiTerminology, locale: uiLocale }), [presencePeers, focusedHistoryEntries, uiTerminology, uiLocale]);
-
-  const currentSyncStatus = currentDocumentRuntimeKey ? (syncStatusByDocumentId[currentDocumentRuntimeKey] ?? null) : null;
-  const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
-
-  /** 📶️ Every attached document's sync status, for the footer's one hub badge — the whole point of
-   * that badge is that it is NOT the active document's, so this reads the full map rather than
-   * `currentSyncStatus`. */
-  const hubConnectionStatuses = useMemo(() => Object.values(syncStatusByDocumentId), [syncStatusByDocumentId]);
-  /** 🔐️ Derived from the SHELL's own hub session, not from the workspace overlay's mirror of it: a
-   * remembered capability is a session until the hub pronounces it over (`hubSessionRefused`), which
-   * survives the overlay being closed and a reload re-verifying it. `"none"` only when this shell was
-   * served without any hub (`VITE_S_HUB_URL` unset) — purely local-first, nothing to sign in to. */
-  const hubSessionPresence: HubSessionPresenceV1 = hubEnv === null ? "none" : hubSessionCapability === null || hubSessionRefused ? "signedOut" : "signedIn";
-  /** 🔗️ What the session revalidation loop last learned about the link: an unreachable hub while the
-   * verified authority is kept is a short shortage the loop rides out on its bounded backoff — the badge
-   * says `reconnecting` and nothing else in the shell stops. */
-  const hubLink: HubLinkV1 = identityOffline ? "unreachable" : verifiedSessionAuthority !== null ? "reachable" : "verifying";
-  /** 🔗️ Opens the hub workspace through its own address, so the badge, the palette verb and a pasted
-   * `/hub` link all take one path — but the overlay's own state is opened directly, because the URI
-   * lane is host-mode-only: `applyShellUri` is guarded by `hostMode`, so in a plugin playground a
-   * `/hub` navigation never reaches the route branch and the entry point would be a dead button
-   * everywhere except the hub host. Signing in to a hub is shell chrome, not a host-mode privilege. */
-  const openHubWorkspace = useCallback(() => {
-    setHubWorkspaceOpen(true);
-    if (hostMode) navigateHistory(SHELL_HUB_ROUTE);
-  }, [hostMode, navigateHistory]);
-  /** 🚪️ What the human is told while the session route waits for the identity it is opened for, or opens without its
-   * hub ({@link shellRouteAdmissionV1}) — a held route is never silent. */
-  const routeAdmission = hostMode && sessionRoute !== null ? shellRouteAdmissionV1(sessionRoute, identityResolution) : "apply";
-  const routeAdmissionNotice = routeAdmission === "apply" ? null : shellRouteAdmissionTextV1(routeAdmission, uiLocale);
-  /** 👥️ The hub identities this shell's presence lane currently sees. A peer with no hub identity
-   * (a folder-only or anonymous participant) contributes nothing, so the roster can never show a
-   * member the directory does not know. */
-  const hubOnlineUserIds = useMemo(() => [...new Set(presencePeers.flatMap((peer) => (typeof peer.userId === "string" && peer.userId.length > 0 ? [peer.userId] : [])))], [presencePeers]);
-
-  const isEditorSession = canCheckIn(session?.app.role);
-
-  useEffect(() => {
-    void backgroundSpaceIndexSessionsRef.current.retain(owned => identity !== null && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPlugins.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId)
-      .catch(error => undefined);
-  }, [identity?.hubBaseUrl, identity?.userId, loadedPlugins]);
-
-  /** 📌️ §C5 item 6 — after a successful checkpoint, `TouchArtifact` the space's `index` document so
-   * every connected user's home/space table `updated`/`updated-by` columns move. The index document
-   * is almost never the one mounted in this shell's single visible session while an artifact editor
-   * is open, so this opens (once per space, cached) a background, non-visible instance of the `s.space`
-   * editor bound to `index` and dispatches its `touchArtifact` command directly — never touches
-   * `dispatch({type:"SET_SESSION"...})`, so the user's own editor stays exactly where it is. */
-  const touchSpaceIndexArtifact = useCallback(
-    async (spaceId: string, artifactId: string) => {
-      try {
-        const identity = identityRef.current;
-        if (identity === null || extensionFetchAbortRef.current.signal.aborted) return;
-        const identityIsCurrent = () => !extensionFetchAbortRef.current.signal.aborted && identityRef.current?.hubBaseUrl === identity.hubBaseUrl && identityRef.current?.userId === identity.userId;
-        const touch = async (plugin: PluginWasmHandle, targetSession: ActiveSession) => {
-          if (!identityIsCurrent() || !plugin.handleCommand) return;
-          const wire = encodeAppCommandInvocation(plugin.pluginId, targetSession.app, "touchArtifact", { id: artifactId, nowMs: Date.now(), actor: identity.userId });
-          await plugin.handleCommand(targetSession.instanceId, wire, targetSession.viewState);
-        };
-        const liveEntry = currentDocumentId === SPACE_INDEX_DOCUMENT_ID && currentDocumentRuntimeKey !== null ? openDocumentSessionsRef.current.get(currentDocumentRuntimeKey) : undefined;
-        if (liveEntry?.scope?.spaceId === spaceId && liveEntry.session.app.role === "editor") {
-          await touch(liveEntry.plugin, liveEntry.session);
-          return;
-        }
-        const current = (owned: BackgroundSpaceIndexSession) => identityIsCurrent() && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPluginsRef.current.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId;
-        await backgroundSpaceIndexSessionsRef.current.run(spaceId, {
-          current,
-          create: async () => {
-            const located = findSpaceIndexEditor(loadedPluginsRef.current);
-            if (!located || !identityIsCurrent()) return null;
-            const { plugin: pluginEntry, app } = located;
-            const plugin = pluginEntry.handle;
-            const instanceId = await createAdmittedShellInstanceV1(() => identityIsCurrent() && loadedPluginsRef.current.some(entry => entry.handle === plugin), () => plugin.createApp(app.id), id => plugin.destroyApp(id));
-            if (instanceId === null) return null;
-            const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
-            let retained = false;
-            try {
-              if (!identityIsCurrent() || !loadedPluginsRef.current.some(entry => entry.handle === plugin)) return null;
-              const receipt = await openDocumentRef.current({ documentId: SPACE_INDEX_DOCUMENT_ID, schema: located.index.documentSchema, spaceId }, undefined, { session: targetSession, plugin, background: true });
-              if (receipt === null) return null;
-              retained = true;
-              return { ...receipt, plugin, session: targetSession, hubBaseUrl: identity.hubBaseUrl, userId: identity.userId };
-            } finally { if (!retained) await plugin.destroyApp(instanceId); }
-          },
-          release: async owned => {
-            try {
-              try { closeDocumentRef.current(owned.runtimeKey, owned.clientInstanceId); }
-              finally { await retireDocumentAttachment(owned.plugin, owned.session.instanceId, owned.clientInstanceId); }
-            } finally { await owned.plugin.destroyApp(owned.session.instanceId); }
-          },
-          visit: async owned => { if (current(owned)) await touch(owned.plugin, owned.session); },
-        });
-      } catch (touchError) {
-      }
-    },
-    [currentDocumentId, currentDocumentRuntimeKey, retireDocumentAttachment],
+  const panel = useMemo(() => (session ? parsePanelState(session.viewState) : null), [session?.viewState.panelJson]);
+  /** 🐚️ Mirrors `panel?.spawnedApps` for the unmount-cleanup effect below — same rationale as
+   * `loadedPluginsRef`: needs the latest value at teardown time without depending on it. */
+  const spawnedAppsRef = useRef<readonly SpawnedAppEntry[]>([]);
+  core.spawnedAppsRef = spawnedAppsRef;
+  spawnedAppsRef.current = panel?.spawnedApps ?? [];
+  const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+  const activeAppTitle = appBreadcrumb(activeSpawnedEntry ? resolveArtifactByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.breadcrumb, uiTerminology) : session ? resolveAppBreadcrumb(session.app, uiTerminology) : []);
+  /** 🪟️ Every live spawned instance id, for the host↔guest window-id translation. A ref too, because
+   * `onAction` and the keydown lane read it at dispatch time from stable callbacks. */
+  const spawnedIds = useMemo(() => (panel?.spawnedApps ?? []).map((entry) => entry.id), [panel?.spawnedApps]);
+  const spawnedIdsRef = useRef<readonly string[]>([]);
+  core.spawnedIdsRef = spawnedIdsRef;
+  spawnedIdsRef.current = spawnedIds;
+  /** 🏁️ Identity of the live spawned ROSTER — what a per-instance subscription must re-run on. */
+  const spawnedRosterKey = (panel?.spawnedApps ?? []).map((entry) => `${entry.id}:${entry.pluginId}:${entry.instanceId}`).join("|");
+  /** 🪟️ The focused spawned instance's own `AppDefinition` — the manifest the canvas, the Display
+   * menu, the Actions rail and the chord loop must read once a foreign program owns the canvas. */
+  const activeSpawnedApp = useMemo(
+    () => (activeSpawnedEntry ? loadedPlugins.find((entry) => entry.handle.pluginId === activeSpawnedEntry.pluginId)?.manifest.apps.find((candidate) => candidate.id === activeSpawnedEntry.appId) : undefined),
+    [activeSpawnedEntry, loadedPlugins],
   );
-
-  /** 📌️ Fires `commitCheckpoint` through the SAME action funnel the History panel's own quick
-   * "Checkpoint" button uses (`history_command` in `🔌️plugin/component.rs`) — `message` is optional
-   * (auto check-ins pass `"auto"`), `authors` rides along for when the framework threads it (today it
-   * doesn't — `history_command` hardcodes `authors: Vec::new()`, see `📓️w3-a-report.md`'s
-   * sharedFileRequest). `checkpointDispatchedRef` lets the effect below tell "a checkpoint we asked
-   * for landed" apart from "the session just mounted with a pre-existing checkpoint". While the focused program's history
-   * is being edited the guest freezes it (`timeTravel.frozen`), so no check-in fires: an automatic one waits for the next
-   * idle window after the session closes, an explicit one is told why (e2e R2-6). */
-  const checkpointDispatchedRef = useRef(false);
-  /** 📌️ Hub Check Ins this shell asked for, by request id, and the latest status per document — the
-   * worker names the acknowledged head and drives the hub job; the shell only shows and cancels it. */
-  const documentCheckInOwnersRef = useRef<Map<string, { readonly runtimeKey: string }>>(new Map());
-  core.documentCheckInOwnersRef = documentCheckInOwnersRef;
-  const [documentCheckInUi, setDocumentCheckInUi] = useState<Readonly<Record<string, { readonly requestId: string; readonly scope: DocumentScope; readonly status: DocumentCheckInStatusV1 }>>>({});
-  core.setDocumentCheckInUi = setDocumentCheckInUi;
-  const requestHubCheckIn = useCallback((runtimeKey: string) => {
-    const entry = openDocumentSessionsRef.current.get(runtimeKey);
-    const worker = backboneWorkerRef.current;
-    if (entry?.scope === undefined || worker === null) return;
-    const requestId = mintDirectoryCommandRequestId();
-    documentCheckInOwnersRef.current.set(requestId, { runtimeKey });
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "document-check-in", requestId, clientInstanceId: entry.clientInstanceId, scope: entry.scope }) });
-  }, []);
-  const cancelHubCheckIn = useCallback((runtimeKey: string) => {
-    const current = documentCheckInUi[runtimeKey];
-    if (current === undefined || isTerminalDocumentCheckInPhaseV1(current.status.phase)) return;
-    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "document-check-in-cancel", requestId: current.requestId, scope: current.scope }) });
-  }, [documentCheckInUi]);
-  /** 📌️ Closes a finished Check In's band; a running one is cancelled, never dismissed. */
-  const dismissHubCheckIn = useCallback((runtimeKey: string) => {
-    setDocumentCheckInUi((current) => {
-      const entry = current[runtimeKey];
-      if (entry === undefined || !isTerminalDocumentCheckInPhaseV1(entry.status.phase)) return current;
-      const { [runtimeKey]: _dismissed, ...rest } = current;
-      return rest;
+  /** 🪟️ Which program owns the canvas right now (`🪟️spawned-program`). A spawned program is a member
+   * of this session, not a picture inside the host app's panel: from here on every window-scoped
+   * decision — the layout seed, the Display menu, the active window, per-window utilities, the
+   * Actions rail and the chord loop — is taken against THIS app, not `session.app`. */
+  const focusedProgram = useMemo(
+    (): FocusedProgramV1 | null =>
+      focusedProgramV1(
+        session ? { pluginId: session.pluginId, instanceId: session.instanceId, appId: session.app.id } : null,
+        hostMode && activeSpawnedEntry && activeSpawnedApp ? activeSpawnedEntry : null,
+      ),
+    [session, hostMode, activeSpawnedEntry, activeSpawnedApp],
+  );
+  const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], focusedProgram), [surfaceSessionFactories, focusedProgram?.pluginId, focusedProgram?.appId, focusedProgram?.instanceId]);
+  const focusedApp = hostMode && activeSpawnedApp ? activeSpawnedApp : (session?.app ?? null);
+  const focusedSpawnedId = focusedProgram?.spawnedId ?? null;
+  const focusedPanelBodyStores = useMemo(() => programEntriesV1(panelBodyStoreByKey, focusedSpawnedId, spawnedIds), [panelBodyStoreByKey, focusedSpawnedId, spawnedIds]);
+  /** ⏯️ The focused program's ToolRun panel body — the task feed and the reveal follow THIS store, not every panel body. */
+  const toolRunPanelStore = focusedPanelBodyStores[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID] ?? null;
+  const subscribeToolRunPanel = useCallback((listener: () => void) => toolRunPanelStore?.subscribeRevision(listener) ?? (() => undefined), [toolRunPanelStore]);
+  const toolRunPanelNode = useSyncExternalStore(subscribeToolRunPanel, () => (toolRunPanelStore === null ? null : builtNodeStoreCacheRef.current.nodeOf(toolRunPanelStore)), () => null) ?? undefined;
+  const focusedToolMeasuresByToolId = useMemo(() => programEntriesV1(toolMeasuresByToolId, focusedSpawnedId, spawnedIds), [toolMeasuresByToolId, focusedSpawnedId, spawnedIds]);
+  const focusedModeId = focusedSpawnedId !== null && focusedApp !== null ? (spawnedProgramViewStateV1<ViewModel>({}, focusedApp).activeModeId ?? focusedApp.id) : (session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "");
+  /** 🧾️ The history the History panel, the undo/redo controls, the uncommitted-edit count and
+   * `data-history-json` all read: the FOCUSED program's own, because that is the document the user
+   * is editing. While a spawned editor owns the canvas the session's ledger is still kept — it is
+   * just not what is shown — so coming back to it shows its own rows, not the editor's. */
+  const focusedHistoryKey = programHistoryKeyV1(focusedProgram);
+  const focusedHistoryV1 = useCallback(() => programHistoryProjectionV1(historyStore.get(), focusedHistoryKey, EMPTY_SHELL_HISTORY_PROJECTION_V1), [historyStore, focusedHistoryKey]);
+  const historyCanUndo = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().canUndo, () => false);
+  const historyCheckpointId = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().currentCheckpointId, () => undefined);
+  /** ⏪️ The focused program's live history-edit session, `null` while none is open: the band shows it whichever panel
+   * is open, and every window of that program wears the indicator. The indicator reads only the stage and its own
+   * text, so a replay progress step re-renders the band and never the window descriptors. */
+  const focusedTimeTravel = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().timeTravel, () => null);
+  /** 📡️ The focused program's history change replaying before adoption (remote, its own step, a document load), `null` while
+   * none waits: the shell announces it outside the History panel whichever panel is open (audit W1E-3). */
+  const focusedReprojection = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().reprojection, () => null);
+  const focusedHistoryEntries = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().entries, () => EMPTY_SHELL_HISTORY_PROJECTION_V1.entries);
+  const timeTravelIndicatorStage = focusedTimeTravel?.stage ?? null;
+  const timeTravelIndicatorText = focusedTimeTravel === null ? null : timeTravelIndicatorTextV1(focusedTimeTravel, { terminology: uiTerminology, locale: uiLocale });
+  const timeTravelIndicator = useMemo(() => (timeTravelIndicatorStage === null || timeTravelIndicatorText === null ? undefined : <TimeTravelWindowIndicator stage={timeTravelIndicatorStage} description={timeTravelIndicatorText} />), [timeTravelIndicatorStage, timeTravelIndicatorText]);
+  useEffect(() => {
+    if (!hostMode || focusedProgram === null || focusedProgram.spawnedId === null) return;
+    refreshHistorySnapshot({ pluginId: focusedProgram.pluginId, instanceId: focusedProgram.instanceId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostMode, focusedProgram?.pluginId, focusedProgram?.instanceId, focusedProgram?.spawnedId, refreshHistorySnapshot]);
+  useEffect(() => {
+    const spawned = (spawnedAppsRef.current ?? []).flatMap((entry) => {
+      const app = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === entry.pluginId)?.manifest.apps.find((candidate) => candidate.id === entry.appId);
+      return app ? [{ id: entry.id, pluginId: entry.pluginId, appId: app.id, instanceId: entry.instanceId, windowIds: spawnedProgramWindowInstancesV1(entry.id, app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey })), frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds)).map((instance) => instance.id) }] : [];
     });
-  }, []);
-  const currentCheckIn = currentDocumentRuntimeKey === null ? undefined : documentCheckInUi[currentDocumentRuntimeKey];
-  const dispatchCheckpoint = useCallback(
-    (message: string): boolean => {
-      if (!session) return false;
-      const gate = checkpointGateV1(focusedHistoryV1().timeTravel, message);
-      if (gate === "frozen") {
-        const notice = historyRefusalNoticeV1("timeTravel.frozen");
-        showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
-      }
-      if (gate !== "dispatch") return false;
-      if (message === "auto") {
-        const attached = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId);
-        const loading = focusedHistoryV1().reprojection?.kind === "load" || attached?.replacements.pending === true;
-        if (automaticCheckinWaitsV1({ loading, attached: attached !== undefined, bound: attached !== undefined && attached.port !== null && !attached.port.closing })) return false;
-      }
-      checkpointDispatchedRef.current = true;
-      const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
-      onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
-      return true;
-    },
-    [focusedHistoryV1, session, onAction],
+    const census = spawnedBridgeCensusV1(
+      session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId, windowIds: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => instance.id) } : null,
+      spawned,
+      focusedProgram,
+    );
+    const next: BridgeInstanceRef[] = [...census].sort((left, right) => Number(right.focused) - Number(left.focused)).map(({ focused: _focused, ...ref }) => ({ ...ref, windowIds: [...ref.windowIds] }));
+    setAgentBridgeCensus((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spawnedRosterKey, loadedPlugins.length, session?.pluginId, session?.app.id, session?.instanceId, focusedProgramKeyV1(focusedProgram)]);
+  useEffect(() => {
+    const live = [programHistoryKeyV1(session), ...spawnedAppsRef.current.map((entry) => programHistoryKeyV1(entry))];
+    historyStore.update((projections) => programHistoryProjectionsRetainedV1(projections, live));
+    for (const key of [...historyOrderByProgramRef.current.keys()]) if (!live.includes(key)) historyOrderByProgramRef.current.delete(key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spawnedRosterKey, session?.pluginId, session?.instanceId]);
+  /** 🪟️ The focused program's live window instances, in the ONE shape every consumer reads: a spawned
+   * program contributes one per declared window kind under its own `${spawnedId}::` namespace; the
+   * session's own app contributes its base kinds plus the user's split/extra instances. */
+  const focusedWindowInstances = useMemo(
+    () =>
+      focusedApp === null
+        ? []
+        : focusedSpawnedId !== null
+          ? spawnedProgramWindowInstancesV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))
+          : sessionWindowInstances(focusedApp, extraWindowInstances),
+    [focusedApp, focusedSpawnedId, extraWindowInstances],
   );
+  const focusedWindowInstancesRef = useRef<readonly { readonly id: string; readonly bodyKey: string; readonly windowKindId: string }[]>([]);
+  focusedWindowInstancesRef.current = focusedWindowInstances;
 
-  const previousCheckpointIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const previous = previousCheckpointIdRef.current;
-    const next = historyCheckpointId;
-    previousCheckpointIdRef.current = next;
-    if (!checkpointDispatchedRef.current || !next || next === previous) return;
-    checkpointDispatchedRef.current = false;
-    if (currentDocumentRuntimeKey !== null) requestHubCheckIn(currentDocumentRuntimeKey);
-    const spaceId = openSpaceIdRef.current;
-    if (spaceId && currentDocumentId && currentDocumentId !== SPACE_INDEX_DOCUMENT_ID) {
-      void touchSpaceIndexArtifact(spaceId, currentDocumentId);
-    }
-  }, [historyCheckpointId, currentDocumentId, currentDocumentRuntimeKey, requestHubCheckIn, touchSpaceIndexArtifact]);
+    sessionRef.current = session;
+  }, [session]);
 
-  const autoCheckinSchedulerRef = useRef<AutoCheckinScheduler | null>(null);
+  const activeIntroduction = brand?.introduction ?? session?.app.introduction;
+  const introductionSeenKey = session ? (brand ? `${brand.id}:${session.app.id}` : session.app.id) : "";
+  const replayIntroductionOnLoad = shouldReplayIntroductionOnLoad(brand);
+  const persistIntroductionSeen = shouldPersistIntroductionSeen(brand);
+  const activeIntroductionRef = useRef(activeIntroduction);
+  activeIntroductionRef.current = activeIntroduction;
+  /** 🎓️ App ids whose tour this shell session has already offered AND had answered (Skip or Done) — the
+   * session-durable half of {@link shouldStartIntroduction}, see its own reasoning for why the
+   * device-local seen flag alone cannot carry this. Lives for the shell mount, exactly the lifetime of
+   * "this session", so a `replayIntroductionOnLoad` brand still replays on the next load. */
+  const dismissedIntroductionAppIdsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (!isEditorSession || !currentDocumentId) {
-      autoCheckinSchedulerRef.current = null;
+    if (!session) return;
+    if (typeof window !== "undefined" && window.self !== window.top) return;
+    if (suppressAutoIntroduction) {
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       return;
     }
-    const scheduler: AutoCheckinScheduler = new AutoCheckinScheduler(() => {
-      if (!dispatchCheckpoint("auto")) scheduler.defer();
+    const armable = shouldStartIntroduction({
+      appId: session.app.id,
+      hasIntroduction: activeIntroduction != null,
+      tutorialActive: shellState.tutorial.activeTutorialId != null,
+      suppressed: suppressAutoIntroduction,
+      replayOnLoad: replayIntroductionOnLoad,
+      seenOnDevice: readStoredIntroductionSeen(scope.storage, introductionSeenKey),
+      dismissedInSession: dismissedIntroductionAppIdsRef.current.has(session.app.id),
     });
-    autoCheckinSchedulerRef.current = scheduler;
-    return () => scheduler.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditorSession, currentDocumentId, dispatchCheckpoint]);
-  const uncommittedEditCountRef = useRef(0);
-  useEffect(() => {
-    let notified: number | null = null;
-    const observe = (): void => {
-      const count = shellUncommittedEditCountV1(focusedHistoryV1().entries);
-      uncommittedEditCountRef.current = count;
-      if (count === notified) return;
-      notified = count;
-      autoCheckinSchedulerRef.current?.notify(count);
-    };
-    observe();
-    return historyStore.subscribe(observe);
-  }, [historyStore, focusedHistoryV1]);
+    if (!armable) return;
+    dispatch({ type: "AUTO_START_INTRODUCTION", key: introductionSeenKey });
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
 
-  const closingSpaceId = openSpaceIdRef.current;
-  useCheckpointOnCloseV1(checkpointOnCloseKeyV1(isEditorSession, session, currentDocumentId), () => {
-    if (uncommittedEditCountRef.current === 0) return;
-    dispatchCheckpoint("auto");
-    if (closingSpaceId && currentDocumentId && currentDocumentId !== SPACE_INDEX_DOCUMENT_ID) void touchSpaceIndexArtifact(closingSpaceId, currentDocumentId);
-  });
-
-  dispatchCheckpointRef.current = dispatchCheckpoint;
-  //#endregion 🔖️CheckIn
-
-  /** 🧾️ `data-history-json` on the shell root follows the focused program's history straight from the store — written on
-   * the element, never through a shell render. */
-  const historyDomElementRef = useRef<HTMLDivElement | null>(null);
-  const publishHistoryDomRef = useRef<() => void>(() => undefined);
-  publishHistoryDomRef.current = () => historyDomElementRef.current?.setAttribute("data-history-json", JSON.stringify(shellHistoryCursorDomV1(focusedHistoryV1(), { terminology: uiTerminology, locale: uiLocale })));
-  const historyDomRef = useCallback((element: HTMLDivElement | null) => {
-    historyDomElementRef.current = element;
-    publishHistoryDomRef.current();
+  const activeTutorials = useMemo((): readonly TutorialDefinition[] => [...(brand?.tutorials ?? []), ...(session?.app.tutorials ?? [])], [brand?.tutorials, session?.app.tutorials]);
+  /** ⏺️ The recorder is dev/studio-only — Vite always defines `import.meta.env.DEV`; guarded for non-Vite (e.g. `bun test`) evaluation. */
+  const tutorialRecorderAvailable = useMemo(() => {
+    try {
+      return Boolean((import.meta as unknown as { readonly env?: { readonly DEV?: boolean } }).env?.DEV);
+    } catch {
+      return false;
+    }
   }, []);
-  useLayoutEffect(() => {
-    publishHistoryDomRef.current();
-    return historyStore.subscribe(() => publishHistoryDomRef.current());
-  }, [historyStore, focusedHistoryV1, uiTerminology, uiLocale]);
 
-  //#region 🧰️FooterUtilityLeaves — bottom-right's History leaf: the framework-injected `framework.panel.history` tab
-  const frameworkHistoryTab = useMemo((): PanelTabNode | null => {
-    const tab = session && focusedApp ? partitionFrameworkHistoryPanelTab(focusedApp.panelTabs).history : undefined;
-    return tab === undefined ? null : panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels);
-  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelBodyStores, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
-  //#endregion 🧰️FooterUtilityLeaves
-
-  //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
-  const quarantinedConflicts = useMemo(() => selectQuarantinedConflicts(shellState), [shellState]);
-  const frameworkSyncTab = useMemo((): PanelTabNode | null => {
-    const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri);
-    if (!syncUtilities.length) return null;
-    const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
-    return singleTreeLeaf({
-      id: "s-sync-status",
-      icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.sync),
-      name: syncPillText(syncPillState, uiLocale),
-      order: 0,
-      tree: {
-        sections: [
-          {
-            id: "framework.sync.root",
-            label: "",
-            items: [
-              {
-                id: "framework.sync.card",
-                label: "",
-                control: (
-                  <SyncAttachCard
-                    activeUri={syncBackboneUri}
-                    cardKind={syncCardKind}
-                    draftPath={syncDraftPath}
-                    syncUtilities={syncUtilities}
-                    status={syncStatus}
-                    quarantinedConflicts={quarantinedConflicts}
-                    onAction={onAction}
-                    onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
-                    onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
-                    onAttach={attachSyncTarget}
-                    onDetach={detachSyncBackbone}
-                    onBrowsePath={() => (syncCardKind === "folder" ? browseSyncBackbonePath("folder") : syncCardKind === "file" ? browseSyncBackbonePath("file") : undefined)}
-                  />
-                ),
-              },
-            ],
-          },
-        ],
-      },
-    });
-  }, [attachSyncTarget, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
-  //#endregion 🔄️SyncLeaf
-
-  return {
-    selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef, presencePeers,
-    rowActionRefusals, timeTravelPeers, hubConnectionStatuses, hubSessionPresence, hubLink, openHubWorkspace,
-    routeAdmission, routeAdmissionNotice, hubOnlineUserIds, cancelHubCheckIn, dismissHubCheckIn, currentCheckIn,
-    historyDomRef, frameworkHistoryTab, frameworkSyncTab
-  };
-  //#endregion FrameworkOsShell
+  const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
+  core.activeUtilityByWindowIdRef = activeUtilityByWindowIdRef;
+  activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
+  const activeToolIdRef = useRef(activeToolId);
+  activeToolIdRef.current = activeToolId;
+  //#region 🎯️InputLedger
+  /** 🎯️ The Input Causality Ledger (ticket 26/09/16/INPUT-CAUSALITY-LEDGER): `onAction` is its one funnel —
+   * every input becomes an entry and reaches `applied | refused(reason) | superseded`, never a silent
+   * `return`. `refusalNoticeThrottleRef` folds a burst of one refusal reason into one notice (§G). */
+  const inputLedgerRef = useRef(createInputLedgerV1());
+  const refusalNoticeThrottleRef = useRef(createRefusalNoticeThrottleV1());
+  /** 🔐️ A user input that arrives while a just-granted hub session is still being resolved to a human waits for it
+   * (bounded, {@link inputAwaitsHubIdentityV1}) instead of reaching the guest identity-less and being refused. */
+  const hubIdentityGateRef = useRef<HubIdentityGateV1>({ capabilityHeld: false, identityKnown: false, refused: false, offline: false });
+  hubIdentityGateRef.current = { capabilityHeld: hubSessionCapability !== null, identityKnown: identity !== null, refused: hubSessionRefused, offline: identityOffline };
+  const hubIdentitySettleRef = useRef(createHubIdentitySettleV1());
+  useEffect(() => {
+    if (!inputAwaitsHubIdentityV1(hubIdentityGateRef.current)) hubIdentitySettleRef.current.settle();
+  }, [identity, hubSessionCapability, hubSessionRefused, identityOffline]);
+  /** 🔢️ L3 versioned registers — the host-owned interaction state a widget renders AND stamps back
+   * (`expectedGeneration`) so a stale press is refused by compare-and-set, never by a wall clock. The
+   * store slices (`activeUtilityByWindowId`, `activeToolId`) stay the RENDERED value; these cells carry
+   * the generation. One cell per window instance, minted lazily off the current value. */
+  const utilityGenerationByWindowRef = useRef(new Map<string, VersionedRegisterCellV1<string | null>>());
+  const toolRegisterRef = useRef(createVersionedRegisterV1<string | null>(activeToolId ?? null));
+  /** 🔢️ Bumped after every APPLIED register write — a write that leaves the VALUE unchanged (the picker's
+   * `utilityId: ""` resync while nothing is armed) moves the generation without moving the store, and the
+   * widgets that stamp `expectedGeneration` must still re-render to read the new one. */
+  const [registerRevision, bumpRegisterRevision] = useReducer((revision: number) => revision + 1, 0);
+  const utilityRegisterCell = useCallback((windowId: string): VersionedRegisterCellV1<string | null> => {
+    const cells = utilityGenerationByWindowRef.current;
+    let cell = cells.get(windowId);
+    if (cell === undefined) {
+      cell = createVersionedRegisterV1<string | null>(activeUtilityByWindowIdRef.current[windowId] ?? null);
+      cells.set(windowId, cell);
+    }
+    return cell;
+  }, []);
+  /** 🔢️ The generation a utility bar / method picker renders for `windowId` (read at render time; the
+   * `registerRevision` dependency is what re-runs the readers after a write). */
+  const utilityGenerationFor = useCallback((windowId: string): number => utilityRegisterCell(windowId).read().generation, [utilityRegisterCell]);
+  useEffect(() => {
+    if (!tutorialRecorderAvailable) return;
+    Object.defineProperty(globalThis, "__semioInputLedger", { configurable: true, get: () => ({ ...inputLedgerRef.current.census(), recent: inputLedgerRef.current.recent() }), set: () => {} });
+    return () => {
+      delete (globalThis as { __semioInputLedger?: unknown }).__semioInputLedger;
+    };
+  }, [tutorialRecorderAvailable]);
+  return { utilityRegisterCell, bumpRegisterRevision, activeUtilityByWindowIdRef, dispatch, toolRegisterRef, activeToolIdRef, focusedToolMeasuresByToolId, activeWindowId, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, introductionStepIndex, introductionCompletedInteractions, tutorialPlaying, tutorialRecording, shellState, overlayDialog, isCurrentDialogOrigin, closeOwnedDialog, session, sessionRef, loadedPluginsRef, localInteraction, dropForRetiredInstance, loadedPlugins, scope, dismissedIntroductionAppIdsRef, persistIntroductionSeen, introductionSeenKey, activeIntroductionRef, expandedCommandId, commandStagedArgsByCommandId, uiLocale, uiTerminology, identityRef, extraWindowInstancesRef, openDocumentSessionsRef, panel, hostMode, backboneWorkerRef, spaceArtifactCreationOwnersRef, closeDocumentRef, browserActorUiByRuntimeKeyRef, backboneWorkerStreamsDetachRef, extensionFetchAbortRef, segmentedDownloadAbortRef, hubSessionPortRef, backgroundSpaceIndexSessionsRef, documentAttachmentLanesRef, directoryHomeOwnerRef, retireDirectoryHomeOwner, directoryHomeRetirementRef, spawnedAppsRef, contributorPassesRef, externalSlotNodesRef, contributorInstancesRef, brand, activeAppTitle, primaryPluginId, installPlugin, registry, pluginArtifactRebuiltAtRef, reloadPlugin, pluginSource, uiLocaleRef, uiTerminologyRef, activeSpawnedEntry, spawnedIds, spawnedRosterKey, activeSpawnedApp, focusedProgram, boardSessionFactory, focusedApp, focusedSpawnedId, focusedPanelBodyStores, toolRunPanelNode, focusedModeId, focusedHistoryV1, historyCanUndo, historyCheckpointId, focusedTimeTravel, focusedReprojection, focusedHistoryEntries, timeTravelIndicator, focusedWindowInstancesRef, activeIntroduction, activeTutorials, tutorialRecorderAvailable, inputLedgerRef, refusalNoticeThrottleRef, hubIdentityGateRef, hubIdentitySettleRef, registerRevision, utilityGenerationFor };
 }

@@ -2,12 +2,14 @@ import {createRequire} from "node:module";
 import {join,resolve} from "node:path";
 import type {TypeScriptCheckProviderV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import {advanceScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔌️ Implements the framework TypeScript check port inside a hermetic action: the compiler resolves from the declared dependency tree of the project and runs `--noEmit` without a product allocation, a lease or compiler state, so the check is a pure function of the declared inputs. Replaces [the repository provider](../../../../🟦️typescript/🔌️provider/🟦️.ts). */
 export const provider:TypeScriptCheckProviderV1={
  async typecheck(request){
   await advanceScriptInvocation(request.invocation,"typecheck","running");
-  const compiler=createRequire(join(request.cwd,"package.json")).resolve("typescript/bin/tsc"),child=Bun.spawn([process.execPath,compiler,"--noEmit","-p",resolve(request.cwd,request.project),...(request.args??[])],{cwd:request.cwd,env:{...process.env,...request.execution?.env},stdin:"ignore",stdout:"inherit",stderr:"inherit"}),code=await child.exited;
+  const compiler=createRequire(join(request.cwd,"package.json")).resolve("typescript/bin/tsc"),child=startToolV1(runtimeCommandNameV1(),[compiler,"--noEmit","-p",resolve(request.cwd,request.project),...(request.args??[])],{cwd:request.cwd,env:{...process.env,...request.execution?.env},stdio:["ignore","inherit","inherit"]}),code=await toolExitV1(child);
   if(code!==0)throw new Error(`TypeScript check failed (${code}): ${request.project}`);
   await advanceScriptInvocation(request.invocation,"typecheck","complete");
  }

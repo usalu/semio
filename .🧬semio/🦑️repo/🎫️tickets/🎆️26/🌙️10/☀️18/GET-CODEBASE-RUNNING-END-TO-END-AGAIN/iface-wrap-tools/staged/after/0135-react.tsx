@@ -1,166 +1,46 @@
-// #region 🧲️Header
-// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/📖️stories/🧪️.story.tsx
-// Specs: Host the framework renderer's `TableHost` with zero WASM engine — `TableHost` is a pure declarative
-// renderer over `TableScene.columnsJson`/`rowsJson` (`@semio-tech/ui-react`'s `Table`), so a story-local
-// reducer alone is enough to make sorting, row selection, the stepper cell, and the row-action button all
-// round-trip for real.
-// Summary: `reduceStoryTableAction` mirrors the subset of a real host app's `sortTable`/`selectRow`/
-// `adjustCount`/`removeRow` handling `TableHost` (`framework/os/renderer/js/react/index.tsx`) actually dispatches —
-// `dispatchCellAction` merges a stepper's `{ delta }` or a row-action button's `{}` into that cell's own
-// `ActionDescriptor.args`, so the reducer reads `rowId` back out of `args` rather than needing a separate wire.
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲️Header
+/** 🟠️ The context menu phase of Canvas2dHost. */
+import { useCallback, useEffect, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
+import { openSurfaceContextMenu } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import type { useSceneState } from "../🔶️scene/🟦️.tsx";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
+/** 🟡 Builds onContextMenu of Canvas2dHost. */
+export function useContextMenu({ requestContextMenu, node, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, containerRef, setViewportSize }: { readonly requestContextMenu: ((request: import("../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83D\uDEC2\uFE0Fmanifest/\uD83D\uDCCB\uFE0Fcontext-menu/\uD83D\uDFE6\uFE0F").UiContextMenuRequest) => Promise<readonly import("../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0F").ContextMenuItemSpec[]>) | undefined; readonly node: import("../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0F").UiComponentSceneNode } & Pick<ReturnType<typeof useSceneState>, "windowInstanceId" | "mapContextMenu" | "shellContextMenuFallback" | "setContextMenu" | "containerRef" | "setViewportSize">) {
+  //#region ContextMenu
+  /** 🖱️ No layer pick/selection is tracked at this level (`Canvas2dScene` carries only camera + `layersJson`) — `hits`/`selection` stay empty per surface convention until layer picking lands here. */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const menu = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            menu: { id: "canvas2d", args: null },
+            surface: { surfaceId: node.surfaceId, kind: "canvas2d", hits: [], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
 
-import { TableHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework";
-
-//#region StoryTypes
-type StoryTableRow = { readonly id: string; readonly name: string; readonly kind: string; readonly count: number };
-type StorySort = { readonly columnId: string; readonly direction: "asc" | "desc" };
-type StoryTableState = { readonly rows: readonly StoryTableRow[]; readonly selectedIds: readonly string[]; readonly sort: StorySort | null };
-//#endregion StoryTypes
-
-//#region Fixtures
-const STORY_TABLE_ROWS: readonly StoryTableRow[] = [
-  { id: "row-beta", name: "Beta", kind: "handle", count: 5 },
-  { id: "row-alpha", name: "Alpha", kind: "seed", count: 2 },
-  { id: "row-gamma", name: "Gamma", kind: "seed", count: 0 },
-];
-//#endregion Fixtures
-
-//#region Reducer
-const STORY_TABLE_CONTROLLER_ID = "table-story";
-
-/** 🧮️ Story-local mirror of the `sortTable`/`selectRow`/`adjustCount`/`removeRow` handling a real host app performs against `TableHost`'s dispatched actions. */
-function reduceStoryTableAction(state: StoryTableState, descriptor: ActionDescriptor): StoryTableState {
-  const args = (descriptor.args ?? {}) as Record<string, unknown>;
-  switch (descriptor.action) {
-    case "sortTable": {
-      const columnId = String(args.columnId ?? "");
-      const direction = args.direction === "desc" ? "desc" : "asc";
-      const rows = [...state.rows].sort((left, right) => {
-        const leftValue = (left as unknown as Record<string, unknown>)[columnId];
-        const rightValue = (right as unknown as Record<string, unknown>)[columnId];
-        if (leftValue === rightValue) return 0;
-        const cmp = (leftValue ?? "") < (rightValue ?? "") ? -1 : 1;
-        return direction === "asc" ? cmp : -cmp;
-      });
-      return { ...state, rows, sort: { columnId, direction } };
-    }
-    case "selectRow": {
-      const row = args.row as { readonly id?: string } | undefined;
-      return { ...state, selectedIds: row?.id ? [row.id] : [] };
-    }
-    case "adjustCount": {
-      const rowId = String(args.rowId ?? "");
-      const delta = Number(args.delta ?? 0);
-      return { ...state, rows: state.rows.map((row) => (row.id === rowId ? { ...row, count: Math.max(0, Math.min(10, row.count + delta)) } : row)) };
-    }
-    case "removeRow": {
-      const rowId = String(args.rowId ?? "");
-      return { ...state, rows: state.rows.filter((row) => row.id !== rowId), selectedIds: state.selectedIds.filter((id) => id !== rowId) };
-    }
-    default:
-      return state;
-  }
-}
-//#endregion Reducer
-
-//#region SceneNode
-function buildStoryTableScene(state: StoryTableState): TableScene {
-  const rows = state.rows.map((row) => ({
-    id: row.id,
-    name: { kind: "text", value: row.name },
-    kind: { kind: "text", value: row.kind },
-    count: { kind: "stepper", value: row.count, min: 0, max: 10, step: 1, action: { controllerId: STORY_TABLE_CONTROLLER_ID, action: "adjustCount", args: { rowId: row.id } } },
-    remove: { kind: "buttons", buttons: [{ iconId: "trash-2", label: "Remove", action: { controllerId: STORY_TABLE_CONTROLLER_ID, action: "removeRow", args: { rowId: row.id } } }] },
-  }));
-  return {
-    columnsJson: JSON.stringify([
-      { id: "name", label: "Name", sortable: true },
-      { id: "kind", label: "Kind", sortable: true },
-      { id: "count", label: "Count", sortable: false },
-      { id: "remove", label: "", sortable: false },
-    ]),
-    rowsJson: JSON.stringify(rows),
-    selectionJson: JSON.stringify({ selectedIds: state.selectedIds }),
-    sortJson: state.sort ? JSON.stringify(state.sort) : undefined,
-  };
-}
-//#endregion SceneNode
-
-//#region StoryHost
-function TableStoryHost({ initialRows }: { readonly initialRows: readonly StoryTableRow[] }): ReactElement {
-  const [state, setState] = useState<StoryTableState>(() => ({ rows: initialRows, selectedIds: [], sort: null }));
-
-  const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => reduceStoryTableAction(current, descriptor));
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setViewportSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
-
-  const node: UiComponentSceneNode = useMemo(
-    () => ({ type: "componentScene", surfaceId: "table.story.overview", controllerId: STORY_TABLE_CONTROLLER_ID, componentKind: "table", table: buildStoryTableScene(state) }),
-    [state],
-  );
-  const debug = useMemo(() => JSON.stringify({ order: state.rows.map((row) => row.id), selectedIds: state.selectedIds, sort: state.sort }), [state]);
-
-  return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <TableHost node={node} onAction={onAction} />
-      </div>
-      <pre data-testid="table-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
-        {debug}
-      </pre>
-    </div>
-  );
+  return { onContextMenu };
 }
-
-/** 🕳️ `TableHost` with an absent `table` scene — exercises the `emptySceneLabel` fallback path with zero fixture setup. */
-function TableStoryEmptyHost(): ReactElement {
-  const node: UiComponentSceneNode = { type: "componentScene", surfaceId: "table.story.empty", controllerId: STORY_TABLE_CONTROLLER_ID, componentKind: "table" };
-  return (
-    <div style={{ height: "100%", width: "100%" }}>
-      <TableHost node={node} onAction={() => undefined} />
-    </div>
-  );
-}
-//#endregion StoryHost
-
-const meta = {
-  title: "🛠️framework🔌️hosts/TableHost",
-  component: TableStoryHost,
-  // 🧭️ The host's props are required, so every story — including the `render`-only ones that mount a
-  // different host entirely — has to carry them. Declaring them once here is what lets a story state
-  // only what it changes.
-  args: { initialRows: STORY_TABLE_ROWS },
-  parameters: { layout: "fullscreen" },
-  tags: ["autodocs"],
-} satisfies Meta<typeof TableStoryHost>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-/** 🧮️ Sortable Name/Kind columns, a stepper cell (`adjustCount`), and a row-action delete button (`removeRow`) — click a header to re-sort, the stepper to change count, the row to select it. */
-export const SortableWithActions: Story = {
-  args: { initialRows: STORY_TABLE_ROWS },
-};
-
-/** 🪜️ The stepper cell on both bounds: `Gamma` sits on `min` (decrement disabled) and `Omega` on `max` (increment disabled). The readout is a `role="spinbutton"` keyboard stop — focus it and press ↑/↓, PageUp/PageDown or Home/End. */
-export const StepperBounds: Story = {
-  args: {
-    initialRows: [
-      { id: "row-gamma", name: "Gamma", kind: "seed", count: 0 },
-      { id: "row-beta", name: "Beta", kind: "handle", count: 5 },
-      { id: "row-omega", name: "Omega", kind: "handle", count: 10 },
-    ],
-  },
-};
-
-/** 🕳️ No `table` scene — the `emptySceneLabel` fallback. */
-export const EmptyScene: Story = {
-  render: () => <TableStoryEmptyHost />,
-};

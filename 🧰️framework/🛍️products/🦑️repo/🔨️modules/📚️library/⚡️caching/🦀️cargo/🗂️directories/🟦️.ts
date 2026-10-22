@@ -1,5 +1,6 @@
 import {existsSync,readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🗂️ Describes current Cargo output directories under original environment precedence. */
 export interface CargoDirectories {
@@ -21,7 +22,7 @@ export function cargoDirectories(repoRoot: string, env: NodeJS.ProcessEnv = proc
   const cached = resolved.get(key);
   if (cached) return cached;
   const path = join(repoRoot, ".cargo", "config.toml");
-  const build = (existsSync(path) ? Bun.TOML.parse(readFileSync(path, "utf8")) as { build?: { "target-dir"?: string; "build-dir"?: string } } : {}).build ?? {};
+  const build = (existsSync(path) ? runtimeParseTomlV1(readFileSync(path, "utf8")) as { build?: { "target-dir"?: string; "build-dir"?: string } } : {}).build ?? {};
   const target = resolve(repoRoot, overrideTarget ?? build["target-dir"] ?? "target");
   const directories = { target, build: overrideBuild ? resolve(repoRoot, overrideBuild) : build["build-dir"] ? resolve(repoRoot, build["build-dir"]) : target };
   resolved.set(key, directories);

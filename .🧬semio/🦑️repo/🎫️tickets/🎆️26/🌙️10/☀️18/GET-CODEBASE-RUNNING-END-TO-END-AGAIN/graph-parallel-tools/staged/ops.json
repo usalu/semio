@@ -1,0 +1,252 @@
+{
+ "version": 1,
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "const writers=new AsyncLocalStorage(),datasets=new AsyncLocalStorage(),",
+   "replacement": "const stagings=new AsyncLocalStorage(),writers=new AsyncLocalStorage(),datasets=new AsyncLocalStorage(),"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "export function withBuildGraphOptionalPublicationV1(path,plan,write){\n const scope=writers.getStore();",
+   "replacement": "export function withBuildGraphOptionalPublicationV1(path,plan,write){\n const staged=stagings.getStore();if(staged){requireBuildGraphStagedPathV1(staged,path);write();return true;}\n const scope=writers.getStore();"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "export function repositoryBuildGraphWriterDirectoryV1(workspace,namespace){\n requireRepositoryBuildGraphWriterV1(workspace);",
+   "replacement": "export function repositoryBuildGraphWriterDirectoryV1(workspace,namespace){\n const staged=stagings.getStore();if(staged){const path=join(staged.root,namespace);mkdirSync(path,{recursive:true});return path;}\n requireRepositoryBuildGraphWriterV1(workspace);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "export function repositoryBuildGraphDataDirectoryV1(workspace,namespace){\n if(!schema.enum.includes(namespace))throw Error(\"Declared bounded graph fact namespace required\");",
+   "replacement": "export function repositoryBuildGraphDataDirectoryV1(workspace,namespace){\n if(!schema.enum.includes(namespace))throw Error(\"Declared bounded graph fact namespace required\");const staged=stagings.getStore();if(staged)return join(staged.root,namespace);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "anchor": "/** 📏️ Observes bounded quota refusal DATA without granting publication capacity. */",
+   "replacement": "/** 🛰️ Runs a body whose graph fact directories are private staging directories: a worker process publishes nothing into the graph backing, its parent adopts the files it staged under the original writer custody. */\nexport function withBuildGraphStagingV1(staging,body){\n if(typeof staging?.root!==\"string\"||!isAbsolute(staging.root))throw Error(\"Absolute private graph staging root required\");\n return stagings.run(Object.freeze({root:resolve(staging.root),readRoot:staging.readRoot}),body);\n}\n\n/** 🧷️ Admits only paths inside the private staging root. */\nfunction requireBuildGraphStagedPathV1(staged,path){\n const local=relative(staged.root,resolve(path));if(local===\"\"||local.startsWith(\"..\")||isAbsolute(local))throw Error(\"Private graph staging path required\");\n}\n\n/** 📖️ The directory a staged body reads published optional leaves from: the graph data directory its parent named, else its private staging directory. */\nexport function repositoryBuildGraphStagedReadDirectoryV1(namespace){\n const staged=stagings.getStore();return staged?join(staged.readRoot??staged.root,namespace):undefined;\n}\n\n/** 📏️ Observes bounded quota refusal DATA without granting publication capacity. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.d.mts",
+   "anchor": "export function withBuildGraphOptionalPublicationV1(",
+   "replacement": "/** 🛰️ Runs a body whose graph fact directories are private staging directories adopted later by the parent that holds the writer custody. */\nexport function withBuildGraphStagingV1<T>(staging:Readonly<{root:string;readRoot?:string}>,body:()=>Promise<T>|T):Promise<T>|T;\n/** 📖️ The directory a staged body reads published optional leaves from, or undefined outside a staged body. */\nexport function repositoryBuildGraphStagedReadDirectoryV1(namespace:string):string|undefined;\nexport function withBuildGraphOptionalPublicationV1("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "anchor": "/** 📍️ Projects the project-root sentinel into a repository-relative Cargo manifest. */",
+   "replacement": "/** 🛰️ Publishes the files a worker process staged under this process's graph writer custody: closure inventories are content addressed and mandatory, every other file is an optional cache leaf of the inference namespace. */\nexport function adoptStagedGraphFilesV1(workspaceRoot,files){\n for(const{name,bytes}of files){\n  const [namespace,...rest]=name.split(\"/\"),leaf=rest.join(\"/\");\n  if(!leaf||rest.some(part=>part===\"\"||part===\"..\"))throw Error(\"Relative staged graph file required: \"+name);\n  if(namespace===\"build-input-closures\"||namespace===\"build-lock-closures\"){\n   const contract=Buffer.from(bytes).toString(\"utf8\");\n   if(!/^[a-f0-9]{64}\\.json$/u.test(leaf)||createHash(\"sha256\").update(contract).digest(\"hex\")!==leaf.slice(0,-5))throw Error(\"Closure content differs from its name: \"+name);\n   publishInputClosureV1(join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot,namespace),leaf),contract);\n  }else if(namespace===\"inference\"){\n   const target=join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot,\"inference\"),leaf),data=Buffer.from(bytes);let previous=0;try{previous=lstatSync(target).size;}catch{}\n   withBuildGraphOptionalPublicationV1(target,{peakBytes:data.byteLength,retainedDeltaBytes:Math.min(data.byteLength,data.byteLength-previous)},()=>{const temporary=`${target}.${process.pid}.${Date.now()}.tmp`;mkdirSync(dirname(target),{recursive:true});writeFileSync(temporary,data,{flag:\"wx\"});renameSync(temporary,target);});\n  }else throw Error(\"Declared graph staging namespace required: \"+name);\n }\n}\n\n/** 📍️ Projects the project-root sentinel into a repository-relative Cargo manifest. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.d.mts",
+   "anchor": "/** 📍️ Projects the project-root sentinel to its exact Cargo manifest coordinate. */",
+   "replacement": "/** 🛰️ Publishes files a worker process staged, under the writer custody of this process. */\nexport function adoptStagedGraphFilesV1(workspaceRoot:string,files:readonly Readonly<{name:string;bytes:Uint8Array}>[]):void;\n/** 📍️ Projects the project-root sentinel to its exact Cargo manifest coordinate. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "anchor": "import { withBuildGraphOptionalPublicationV1 } from \"../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs\";",
+   "replacement": "import { repositoryBuildGraphStagedReadDirectoryV1, withBuildGraphOptionalPublicationV1 } from \"../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "anchor": "read: (key) => { try { return brotliDecompressSync(rawReadFileSync(leaf(key))).toString(\"utf8\"); } catch { return undefined; } },",
+   "replacement": "read: (key) => { const name = `${createHash(\"sha256\").update(key).digest(\"hex\").slice(0, 24)}.json`, shared = repositoryBuildGraphStagedReadDirectoryV1(\"inference\"); for (const path of [leaf(key), shared === undefined ? undefined : join(shared, \"ip\", name)]) if (path !== undefined) { try { return brotliDecompressSync(rawReadFileSync(path)).toString(\"utf8\"); } catch {} } return undefined; },"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "/** 📊️ Reports owned observation counts without exposing or discarding original source facts. */",
+   "replacement": "/** 🛰️ Computes one project's value and the facts it consumed without persisting anything, for a worker process whose parent persists the result under its own custody; `validation` is shared by the projects of one worker so a fact many projects consumed is probed once. */\nexport async function observeDetachedProjectInferenceV1({validation,records,hints=new Map()},compute){\n requireCurrentObservationV1();loadSealed=true;\n const observations=new Map(),started=Date.now();\n const value=await inferenceValidationScopes.run(validation,()=>recordScopes.run({records,hints},()=>scopes.run(observations,compute)));\n requireCurrentObservationV1();\n const image=jsonImage(value);if(image===undefined)throw Error(\"Project inference requires a language-neutral JSON image\");\n return {value:JSON.parse(image),image,rows:[...observations.values()],started};\n}\n\n/** 🛰️ Replays what a worker process consumed into the project scope that awaits it, exactly as if this process had read it: the facts join the scope and its capture, the parser records join the project's record store. */\nexport function replayDetachedProjectInferenceV1(rows,records,sealed){\n retainObservationsV1(scopes.getStore(),rows);retainSourceFactsV1(rows);\n const scope=recordScopes.getStore();\n if(scope?.records)for(const[key,bytes]of records)scope.records.put(key,bytes);\n if(sealed!==undefined&&scope?.sealing)scope.sealing.sealed=sealed;\n}\n\n/** 🪞️ Marks the JSON text of a project value computed elsewhere, so the observing process parses it once instead of walking, printing and parsing the value again. */\nconst PREIMAGED_PROJECT=Symbol(\"preimaged project\");\nexport function preimagedProjectValueV1(image){return {[PREIMAGED_PROJECT]:image};}\n\n/** 🔖️ The digest the record of the project under observation will carry, which a worker process needs to seal that record. */\nexport function currentProjectRecordDigestV1(){return recordScopes.getStore()?.sealing?.digest;}\n\n/** 📦️ Persists the blocks a sealed record names: bytes the worker sent are written, blocks this process already holds are checked, and a block it cannot hold makes the seal unusable. */\nfunction persistSealedBlocksV1(directory,sealed){\n const sent=new Map(sealed.blocks.map(block=>[block.digest,block]));\n for(const digest of sealed.blockDigests)if(!persistInferenceBlockV1(directory,sent.get(digest)??{digest,only:true}))return false;\n return true;\n}\n\n/** 🛰️ Seals the record of a project a worker process computed: the exact bytes the observing process would write (the header naming the shared blocks, compressed together with the value) and the compressed bytes of every block that process does not hold yet; the observing process writes them without walking, printing or compressing anything. */\nconst sealedBlockDigests=new Set();\nexport function sealInferenceRecordV1({digest,image,rows,known,emitted=sealedBlockDigests}){\n const collected=[],header=inferenceHeaderTextV1(digest,createHash(\"sha256\").update(image).digest(\"hex\"),[],rows,\"\",(_directory,block)=>{let identity=blocksByIdentity.get(block.key);if(identity===undefined){identity={digest:createHash(\"sha256\").update(observationRowsJsonV1(block.rows)).digest(\"hex\")};blocksByIdentity.set(block.key,identity);}block.digest=identity.digest;collected.push(block);return true;}),blocks=[];\n for(const block of collected)if(!known.has(block.digest)&&!emitted.has(block.digest)){emitted.add(block.digest);blocks.push({digest:block.digest,packed:brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22}})});}\n const text=Buffer.from(`${header}\n${image}`),packed=brotliCompressSync(text,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:text.length}});\n return {digest,rowCount:rows.length,packed,headerDigest:createHash(\"sha256\").update(header).digest(\"hex\"),blockDigests:collected.map(block=>block.digest),blocks};\n}\n\n/** 🪢️ Shares one row object between every consumer of the same fact, whichever process read it. */\nexport function canonicalObservationRowV1(row){return canonicalObservationV1(row.kind,row.path,row.fact);}\n\n/** 🔖️ Names one fact by the digest of its exact content key (128 bits), so processes can agree that they hold the same fact without sending it. */\nexport function observationRowDigestV1(row){return createHash(\"sha256\").update(observationKeyV1(row)).digest(\"hex\").slice(0,32);}\n\n/** 🛰️ Analyses one source file with a registered parser outside every scope and answers the parser record the analysis store keeps for its bytes, so a worker process prepares what its parent will look up. */\nexport function analyzeSourceRecordV1(provider,path){\n const registered=sourceAnalysisProviderV1(provider),file=absolute(path),bytes=fs.readFileSync(file),sha256=createHash(\"sha256\").update(bytes).digest(\"hex\");\n const result=sourceCaptures.run(undefined,()=>recordScopes.run(undefined,()=>scopes.run(undefined,()=>sourceAnalysisImageV1(registered,file,bytes,sha256))));\n return {key:recordKey(\"source-analysis-v1\",registered.provider.id,registered.provider.revision,file,sha256),bytes:Buffer.from(JSON.stringify(result))};\n}\n\n/** 🛰️ Answers the parser records of every analysis this process still holds in memory, so a worker process starts with what this process already parsed instead of parsing it again. */\nexport function exportSourceAnalysisRecordsV1(){\n return [...sourceAnalysisImages].map(([key,row])=>[key,Buffer.from(JSON.stringify(row.result))]);\n}\n\n/** 🛰️ Lists, of the given files, those whose parser record the record store of the current observation does not hold. */\nexport function missingSourceAnalysisRecordsV1(provider,paths){\n const registered=sourceAnalysisProviderV1(provider),store=recordScopes.getStore()?.records,missing=[];\n if(!store)return missing;\n for(const path of paths){const file=absolute(path);let bytes;try{bytes=fs.readFileSync(file);}catch{continue;}if(store.get(recordKey(\"source-analysis-v1\",registered.provider.id,registered.provider.revision,file,createHash(\"sha256\").update(bytes).digest(\"hex\")))===undefined)missing.push(file);}\n return missing;\n}\n\n/** 🛰️ Stores parser records prepared elsewhere in the record store of the current observation and answers how many it stored. */\nexport function putSourceAnalysisRecordsV1(entries){\n const store=recordScopes.getStore()?.records;if(!store)return 0;\n for(const[key,bytes]of entries)store.put(key,bytes);\n return entries.length;\n}\n\n/** 📊️ Reports owned observation counts without exposing or discarding original source facts. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts",
+   "anchor": "/** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */",
+   "replacement": "/** 🛰️ Computes one project without persisting it, for a worker process whose parent persists the result. */\nexport function observeDetachedProjectInferenceV1<T>(options:Readonly<{validation:Map<unknown,unknown>;records:Readonly<{get(key:string):Uint8Array|undefined;put(key:string,bytes:Uint8Array):void}>;hints?:Map<string,unknown>}>,compute:()=>Promise<T>|T):Promise<{value:T;image:string;rows:SourceObservationV1[];started:number}>;\n/** 🛰️ Replays what a worker process consumed into the project scope that awaits it, with the sealed record it built. */\nexport function replayDetachedProjectInferenceV1(rows:readonly SourceObservationV1[],records:readonly (readonly [string,Uint8Array])[],sealed?:SealedInferenceRecordV1):void;\n/** 📦️ The bytes of one project record built in a worker process, and the blocks its parent lacks. */\nexport interface SealedInferenceRecordV1{readonly digest:string;readonly rowCount:number;readonly packed:Uint8Array;readonly headerDigest:string;readonly blockDigests:readonly string[];readonly blocks:readonly {digest:string;packed:Uint8Array}[]}\n/** 🪞️ Marks the JSON text of a project value computed elsewhere. */\nexport function preimagedProjectValueV1(image:string):object;\n/** 🔖️ The digest the record of the project under observation will carry. */\nexport function currentProjectRecordDigestV1():string|undefined;\n/** 🛰️ Seals the record of a project a worker process computed. */\nexport function sealInferenceRecordV1(input:Readonly<{digest:string;image:string;rows:readonly SourceObservationV1[];known:ReadonlySet<string>;emitted?:Set<string>}>):SealedInferenceRecordV1;\n/** 🪢️ Shares one row object between every consumer of the same fact. */\nexport function canonicalObservationRowV1(row:SourceObservationV1):SourceObservationV1;\n/** 🔖️ Names one fact by the digest of its exact content key. */\nexport function observationRowDigestV1(row:SourceObservationV1):string;\n/** 🛰️ Analyses one source file outside every scope and answers the parser record to store for its bytes. */\nexport function analyzeSourceRecordV1(provider:SourceAnalysisProviderV1,path:string):{key:string;bytes:Buffer};\n/** 🛰️ Answers the parser records of every analysis this process holds in memory. */\nexport function exportSourceAnalysisRecordsV1():[string,Buffer][];\n/** 🛰️ Lists the files whose parser record the current record store lacks. */\nexport function missingSourceAnalysisRecordsV1(provider:SourceAnalysisProviderV1,paths:readonly string[]):string[];\n/** 🛰️ Stores parser records prepared elsewhere and answers how many it stored. */\nexport function putSourceAnalysisRecordsV1(entries:readonly (readonly [string,Uint8Array])[]):number;\n/** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "const image=jsonImage(await compute());if(image===undefined)throw Error(\"Project inference requires a language-neutral JSON image\");return JSON.parse(image);}",
+   "replacement": "const computed=await compute(),image=computed?.[PREIMAGED_PROJECT]??jsonImage(computed);if(image===undefined)throw Error(\"Project inference requires a language-neutral JSON image\");return JSON.parse(image);}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));",
+   "replacement": "const sealing={digest},result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints, sealing }, () => scopes.run(observations, compute)));"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "if (jsonImage(result) !== undefined) originalInferencePublications.set(",
+   "replacement": "if (sealing.sealed!==undefined||jsonImage(result) !== undefined) originalInferencePublications.set("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "if (consistent && !racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {\n    fs.mkdirSync(dirname(cachePath), { recursive: true });\n    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = inferenceHeaderTextV1(digest,createHash(\"sha256\").update(image).digest(\"hex\"),authority,rows,dirname(cachePath));\n    const packed=await packInferenceRecordV1(Buffer.from(`${header}\\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!==\"ENOENT\")throw error;}\n    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, packed,{flag:\"wx\"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,createHash(\"sha256\").update(header).digest(\"hex\"));\n  }",
+   "replacement": "if (consistent && !racy && (sealing.sealed!==undefined||jsonExact(result)) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {\n    fs.mkdirSync(dirname(cachePath), { recursive: true });\n    const temporary = `${cachePath}.${process.pid}.${started}.tmp`,sealed=sealing.sealed!==undefined&&sealing.sealed.digest===digest&&sealing.sealed.rowCount===rows.length&&persistSealedBlocksV1(dirname(cachePath),sealing.sealed)?sealing.sealed:undefined;\n    let header,packed;\n    if(sealed===undefined){const image=JSON.stringify(result);header=inferenceHeaderTextV1(digest,createHash(\"sha256\").update(image).digest(\"hex\"),authority,rows,dirname(cachePath));packed=await packInferenceRecordV1(Buffer.from(`${header}\\n${image}`));}else packed=sealed.packed;\n    const bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!==\"ENOENT\")throw error;}\n    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, packed,{flag:\"wx\"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,sealed===undefined?createHash(\"sha256\").update(header).digest(\"hex\"):sealed.headerDigest);\n  }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){",
+   "replacement": "function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory,persist=persistInferenceBlockV1){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "if(persistInferenceBlockV1(directory,block))blocks.push(block.digest)",
+   "replacement": "if(persist(directory,block))blocks.push(block.digest)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "let known=blocksByIdentity.get(block.key);if(known===undefined){",
+   "replacement": "let known=block.packed===undefined&&block.only!==true?blocksByIdentity.get(block.key):{digest:block.digest};if(known===undefined){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "present=readObservationBlockV1(directory,known.digest,true);if(present&&!present.absent){present.recheck();return true;}if((blocksRefused.get(directory)??0)>Date.now())return false;const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),",
+   "replacement": "present=verifiedBlockV1(path)?{absent:false,recheck:()=>{}}:readObservationBlockV1(directory,known.digest,true);if(present&&!present.absent){present.recheck();return true;}if(block.only===true||(blocksRefused.get(directory)??0)>Date.now())return false;const packed=block.packed??brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "function readObservationBlockV1(directory,digest,optional=false,budget=observationReadBudgetV1()){const path=inferenceObservationBlockPathV1(directory,digest);const physical=",
+   "replacement": "const verifiedBlocks=new Map(),VERIFIED_BLOCK_ROWS=4194304;let verifiedBlockRows=0;\n/** 🧊️ Remembers a block whose bytes, hash and rows this process verified, by the full identity of its leaf. */\nfunction rememberVerifiedBlockV1(path,epoch,rows){if(verifiedBlockRows+rows.length>VERIFIED_BLOCK_ROWS){verifiedBlocks.clear();verifiedBlockRows=0;}const prior=verifiedBlocks.get(path);if(prior)verifiedBlockRows-=prior.rows.length;verifiedBlocks.set(path,{epoch,rows,recheck:undefined});verifiedBlockRows+=rows.length;}\n/** 🧊️ A verified block while its leaf still has the identity it was verified with (device, inode, mode, links, size and both nanosecond stamps); any other leaf is read and validated again. */\nfunction verifiedBlockV1(path){\n const entry=verifiedBlocks.get(path);if(entry===undefined)return undefined;\n try{const row=fs.lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&row.nlink===1n&&observationEpochV1(row)===entry.epoch){entry.recheck??=()=>{requireRepositoryBuildGraphObservationPathV1(path,\"read\");const actual=fs.lstatSync(path,{bigint:true});if(!actual.isFile()||actual.isSymbolicLink()||observationEpochV1(actual)!==entry.epoch)throw Error(\"Observation leaf changed before delivery\");};return entry;}}catch{}\n verifiedBlockRows-=entry.rows.length;verifiedBlocks.delete(path);return undefined;\n}\nfunction readObservationBlockV1(directory,digest,optional=false,budget=observationReadBudgetV1()){const path=inferenceObservationBlockPathV1(directory,digest),verified=verifiedBlockV1(path);if(verified){requireRepositoryBuildGraphObservationPathV1(path,\"read\");observationChargeV1(budget,\"rows\",verified.rows.length);return{rows:verified.rows,recheck:verified.recheck,epoch:verified.epoch};}const physical="
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "observationChargeV1(budget,\"rows\",rows.length);physical.recheck();return{rows:internObservationsV1(rows),recheck:physical.recheck};}",
+   "replacement": "observationChargeV1(budget,\"rows\",rows.length);physical.recheck();const shared=internObservationsV1(rows);rememberVerifiedBlockV1(path,physical.epoch,shared);return{rows:shared,recheck:physical.recheck,epoch:physical.epoch};}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "anchor": "recheck();return{bytes,recheck};",
+   "replacement": "recheck();return{bytes,recheck,epoch};"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs",
+   "anchor": "return [\"🏗️build/📥️inputs/🔏️revision/🟨️.mjs\",",
+   "replacement": "return [\"🏗️build/🏊️farm/🟨️.mjs\", \"🏗️build/🏊️farm/🧬️schema/🔣️.json\", \"🏗️build/🏊️farm/👷️worker/🟨️.mjs\", \"🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs\", \"🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs\", \"🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🏊️module-farm/🟨️.mjs\", \"🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🏊️module-farm/👷️service/🟨️.mjs\", \"🏗️build/📥️inputs/🔏️revision/🟨️.mjs\","
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts",
+   "anchor": "/** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy:",
+   "replacement": "/** 🏊️ Asks the machine-wide gate for the worker processes of the graph inference farm while the invocation already holds its own grant: the request is a fresh one (the inherited grant is set aside), waits at most `waitMilliseconds` and answers the jobs it was granted and how to give them back; answers all preferred jobs when the gate is off and undefined when no grant came in time. */\nexport async function acquireBuildFarmCapacityV1(input:HostCapacityPortsV1&Readonly<{preferredJobs:number;waitMilliseconds:number;environment?:NodeJS.ProcessEnv;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void}>):Promise<Readonly<{jobs:number;release:()=>void}>|undefined>{\n const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1,environment:NodeJS.ProcessEnv={...(input.environment??process.env)};\n delete environment[\"SEMIO_HOST_CAPACITY_GRANT\"];delete environment[\"SEMIO_HOST_CAPACITY_PLAN\"];\n const request=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:\"exec\",preferredJobs:input.preferredJobs,kinds:[\"build\"]});\n if(!policy.enabled||environment[\"SEMIO_HOST_CAPACITY\"]===\"off\"||!request)return Object.freeze({jobs:input.preferredJobs,release:()=>{}});\n const controller=new AbortController(),control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});\n let release=()=>{};const held=new Promise<void>(done=>{release=done;});\n const granted=new Promise<HostCapacityHandleV1>((accept,reject)=>{withHostCapacityV1({...input,directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment},async handle=>{accept(handle);await held;}).catch(reject);});\n const timer=setTimeout(()=>controller.abort(Error(\"Farm capacity wait elapsed\")),input.waitMilliseconds);\n try{const handle=await granted;return Object.freeze({jobs:handle.jobs,release});}\n catch{release();return undefined;}\n finally{clearTimeout(timer);}\n}\n\n/** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy:"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs",
+   "anchor": "import { buildRelativeImportProjectV1 } from \"../../🚪️admission/🟦️.ts\";",
+   "replacement": "import { buildRelativeImportProjectV1 } from \"../../🚪️admission/🟦️.ts\";\nimport { prefillModuleAnalysesV1 } from \"./🏊️module-farm/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs",
+   "anchor": "export async function collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add, publication, scheduledFiles,context={}) {\n  const owners=importProjectOwners(projects),jobs=[];\n  for(const[name,files]of Object.entries(projectFiles))for(const file of files)if(/\\.[cm]?[jt]sx?$/.test(file.file))jobs.push({name,file});\n  let cursor=0;",
+   "replacement": "export async function collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add, publication, scheduledFiles,context={}) {\n  const owners=importProjectOwners(projects),jobs=[];\n  for(const[name,files]of Object.entries(projectFiles))for(const file of files)if(/\\.[cm]?[jt]sx?$/.test(file.file))jobs.push({name,file});\n  await prefillModuleAnalysesV1({workspaceRoot,files:[...new Set(jobs.map(job=>join(workspaceRoot,buildPath(job.file.file))))],provider:prepareSourceAnalysesV1().module,signal:context.invocation?.control.signal});\n  let cursor=0;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "import { createErrorCollectorFromEnvV1 } from \"../../🧾️collect-errors/🟨️.mjs\";",
+   "replacement": "import { createErrorCollectorFromEnvV1 } from \"../../🧾️collect-errors/🟨️.mjs\";\nimport { openProjectFarmV1 } from \"./🏊️project-farm/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "/** 🛡️ Infers the project nodes of every authored emoji-named project config.",
+   "replacement": "/** 🔖️ Names the implementation revision this component loaded, which a worker process must share with its parent. */\nexport const projectInferenceIdentityV1 = () => revisionIdentity.revision;\n\n/** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes. */\nexport function createProjectInferenceEnvironmentV1(session) {\n  const { workspaceRoot, registry, commandInputs, projectsByRoot, componentRoots } = session, context = { workspaceRoot, registry }, scripts = createScriptInputCache(context);\n  const contractPath = join(workspaceRoot, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json\");\n  const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};\n  scripts.generatedOutput = path => readBuildGeneratedCompileOutputV1(path, workspaceRoot, contracts, registry);\n  return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context };\n}\n\n/** 🧱️ Infers the node of one project: its defaults, its native or release preparation and its build modes; a source that does not parse withholds the project instead of failing the graph. */\nexport async function inferProjectBodyV1(environment, job, admission) {\n  const { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context } = environment, { name, root, json, native, pipeline, selectedTargets, selectedInputs } = job;\n  try {\n    await yieldInferenceV1(context, \"build:project-assembly\", 0);\n    const project = await projectWithDefaults(json, root, join(workspaceRoot, root), workspaceRoot, contracts, new Map(), commandInputs, scripts, undefined, \"hash\", admission ? selectedTargets ?? [] : undefined, selectedInputs);\n    const prepare = (apply, predicate) => { const preparing = admission ? { ...project, targets: Object.fromEntries(Object.entries(project.targets).filter(([, target]) => predicate(target))) } : project; apply(preparing); project.targets = { ...project.targets, ...preparing.targets }; if (preparing.metadata !== undefined) project.metadata = preparing.metadata; };\n    if (native) prepare(project => withNativePreparation(project, workspaceRoot, contracts, nativeCache, projectsByRoot, nativeClosures), target => target.metadata?.semio?.execution?.kind !== \"source\");\n    if (pipeline) prepare(project => withReleasePipelinePreparation(project, workspaceRoot, contracts, componentRoots, nativeCache, nativeClosures), target => Boolean(target.metadata?.semio?.release));\n    for (const [targetName, target] of Object.entries(project.targets)) project.targets[targetName] = loaded.targetBuildModes(targetName, target);\n    return project;\n  } catch (error) { if (error?.code !== \"BUILD_SOURCE_UNPARSEABLE\") throw error; return { unavailable: unavailableProjectV1(root, name, workspaceRoot, error) }; }\n}\n\n/** 🛡️ Infers the project nodes of every authored emoji-named project config."
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  const componentRoots = componentCrateRoots(configFiles, workspaceRoot);",
+   "replacement": "  const componentRoots = componentCrateRoots(configFiles, workspaceRoot);\n  const projectEnvironment = { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context };"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "  const inferProject=async({result,name,json})=>{",
+   "replacement": "  const farm=options?.ownerAdmission?undefined:await openProjectFarmV1({workspaceRoot,context,jobs:jobs.length,identity:revisionIdentity.revision,commandInputs,projectsByRoot,componentRoots,readRoot:workspaceDataDirectory(workspaceRoot)});\n  if(farm)options={...options,projectConcurrency:Math.max(options?.projectConcurrency??8,farm.width*2)};\n  const inferProject=async({result,name,json})=>{"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "async()=>{\n      try{\n      await yieldInferenceV1(context,\"build:project-assembly\",0);\n      const project=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),commandInputs,scripts,undefined,\"hash\",options?.ownerAdmission?selectedTargets??[]:undefined,selectedInputs),preparationCache=nativeCache,dependencyRootsCache=nativeClosures;\n      const prepare=(apply,predicate)=>{const preparing=options?.ownerAdmission?{...project,targets:Object.fromEntries(Object.entries(project.targets).filter(([,target])=>predicate(target)))}:project;apply(preparing);project.targets={...project.targets,...preparing.targets};if(preparing.metadata!==undefined)project.metadata=preparing.metadata;};\n      if(native)prepare(project=>withNativePreparation(project,workspaceRoot,contracts,preparationCache,projectsByRoot,dependencyRootsCache),target=>target.metadata?.semio?.execution?.kind!==\"source\");\n      if(pipeline)prepare(project=>withReleasePipelinePreparation(project,workspaceRoot,contracts,componentRoots,preparationCache,dependencyRootsCache),target=>Boolean(target.metadata?.semio?.release));\n      for(const[name,target]of Object.entries(project.targets))project.targets[name]=loaded.targetBuildModes(name,target);\n      return project;\n      }catch(error){if(error?.code!==\"BUILD_SOURCE_UNPARSEABLE\")throw error;return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}\n    }",
+   "replacement": "async()=>{\n      if(farm){const farmed=await farm.infer({name,root,json,native,pipeline,nativeRoot,selectedInputs});if(farmed)return farm.replay(farmed);}\n      return inferProjectBodyV1(projectEnvironment,{name,root,json,native,pipeline,nativeRoot,selectedTargets,selectedInputs},options?.ownerAdmission);\n    }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "anchor": "await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});",
+   "replacement": "await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;}).finally(()=>farm?.close());"
+  }
+ ],
+ "newFiles": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🟨️.mjs",
+   "from": "staged/new/farm/engine.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🟨️.d.mts",
+   "from": "staged/new/farm/engine.d.mts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧬️schema/🔣️.json",
+   "from": "staged/new/farm/schema.json"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/👷️worker/🟨️.mjs",
+   "from": "staged/new/farm/worker.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs",
+   "from": "staged/new/project-farm/glue.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs",
+   "from": "staged/new/project-farm/service.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🏊️module-farm/🟨️.mjs",
+   "from": "staged/new/module-farm/glue.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🏊️module-farm/👷️service/🟨️.mjs",
+   "from": "staged/new/module-farm/service.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🟦️.ts",
+   "from": "staged/new/farm/tests/law.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🔣️.json",
+   "from": "staged/new/farm/tests/🔣️.json"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧬️schema/🔣️.json",
+   "from": "staged/new/farm/tests/fixture-schema.json"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🐍️oracle.py",
+   "from": "staged/new/farm/tests/oracle.py"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🧪️tests/🧰️fake/🟨️.mjs",
+   "from": "staged/new/farm/tests/fake/service.mjs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🛰️detached/🟦️.ts",
+   "from": "staged/new/tests/detached.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛰️staging/🟦️.ts",
+   "from": "staged/new/tests/staging.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🏊️farm-dispatch/🟦️.ts",
+   "from": "staged/new/tests/dispatch.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🏊️farm/🟦️.ts",
+   "from": "staged/new/capacity/capacity.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🧪️tests/🏊️module-farm/🟦️.ts",
+   "from": "staged/new/tests/modulefarm.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🟦️.ts",
+   "from": "staged/new/tests/merge.ts"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏊️farm-merge/🧰️service/🟨️.mjs",
+   "from": "staged/new/tests/merge-service.mjs"
+  }
+ ]
+}

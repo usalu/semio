@@ -221,14 +221,16 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     }
 
     type Diff = Generation2dConfigDiff;
+}
 
+impl protocol::ColdMutation<Generation2dConfig> for Generation2dConfigMutation {
+    type ReferenceDiff = Generation2dConfigDiff;
     fn diff(&self, _base: &Generation2dConfig) -> protocol::MutationOutcome<Generation2dConfigDiff> {
         protocol::MutationOutcome::new(match self {
             Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value }) => Generation2dConfigDiff { show_mode: Some(value.clone()), ..Default::default() },
             Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id }) => Generation2dConfigDiff { selected_generation_id: Some(selected_generation_id.clone()), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &Generation2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Generation2dConfigMutation::SetShowMode(_) => Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value: base.show_mode.clone() }),

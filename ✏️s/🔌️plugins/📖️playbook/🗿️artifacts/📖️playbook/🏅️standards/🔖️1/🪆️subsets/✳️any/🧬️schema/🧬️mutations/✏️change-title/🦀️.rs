@@ -34,6 +34,12 @@ pub fn change_title_operation(new_title: Option<String>) -> PlaybookMutation {
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "playbook", kind: "change-title", record: "ChangedPlaybookTitle" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbook-Titel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
+    }
+}
+
+impl protocol::ColdMutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle {
     fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
         super::diff::diff(self, base)
     }
@@ -43,8 +49,5 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbook-Titel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
-    }
 }
 //#endregion 🔖️Mutation

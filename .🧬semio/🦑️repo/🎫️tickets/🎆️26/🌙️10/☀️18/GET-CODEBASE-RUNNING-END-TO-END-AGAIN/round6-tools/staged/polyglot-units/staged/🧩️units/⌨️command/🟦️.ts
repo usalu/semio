@@ -4,12 +4,18 @@ import {dirname, isAbsolute, join, resolve} from "node:path";
 import {bazelUnitsV1, nxUnitTargetsV1, UNITS_BZL_V1, unitSpecPathV1, unitSpecsV1, unitTargetNameV1} from "../🏗️emit/🟦️.ts";
 import {fileUnitsStoreV1, memoryUnitsStoreV1, runUnitsV1, unitsMessageV1, type ExecuteOutcomeV1, type ExecuteRequestV1, type UnitsRunResultV1} from "../🏃️engine/🟦️.ts";
 import {applyGoOverlayV1, goUnitExecutorV1, planGoUnitsV1, type GoBuildContextV1, type GoWorkspaceSnapshotV1} from "../🐹️go/🟦️.ts";
+import {cmakeReplyToCppProjectV1, cppUnitExecutorV1, planCppUnitsV1, type CppProjectV1} from "../🛠️cpp/🟦️.ts";
+import {dotnetUnitExecutorV1, planDotnetUnitsV1} from "../🔷️dotnet/🟦️.ts";
+import {planTexUnitsV1, texUnitExecutorV1} from "../📓️tex/🟦️.ts";
+import {planWitUnitsV1, witUnitExecutorV1} from "../🕸️wit/🟦️.ts";
 import {planPythonUnitsV1, pythonUnitExecutorV1, type PythonModuleV1} from "../🐍️python/🟦️.ts";
 import {canonicalJsonV1, interfaceClosureV1, outputClosureV1, sha256V1, unitInterfaceFileV1, unitKeyV1, type UnitResultFactsV1} from "../🔏️key/🟦️.ts";
 import {compareCodePointsV1, planUnitsV1, readUnitGraphV1, readUnitsPolicyV1, unitsSchemaFailuresV1, type UnitGraphV1, type UnitV1, type UnitsPolicyV1} from "../🕸️graph/🟦️.ts";
 import policyDocument from "../🔣️.json" with {type: "json"};
 
 const policy: UnitsPolicyV1 = readUnitsPolicyV1(policyDocument);
+const sourceLanguages = ["go", "python", "dotnet", "cpp", "wit", "tex"] as const;
+type SourceLanguage = typeof sourceLanguages[number];
 const both = (english: string, german: string): string => `${english}\n${german}`;
 const operations = ["plan", "run", "emit", "exec"] as const;
 const valuedOptions = Object.freeze(["--for", "--root", "--out", "--out-root", "--spec", "--iface", "--iface-dep", "--impl-dep", "--concurrency", "--only", "--receipts", "--file", "--lang"]);
@@ -21,7 +27,7 @@ export function unitsOptionNamesV1(): {readonly valued: readonly string[]; reado
 
 /** 📝️ The closed arguments of `repo units`. */
 export type UnitsArgumentsV1 = Readonly<{
-  operation: typeof operations[number]; target: "nx" | "bazel" | undefined; for: "go" | "python" | undefined; root: string | undefined; out: string | undefined; outRoot: string | undefined; spec: string | undefined; iface: string | undefined;
+  operation: typeof operations[number]; target: "nx" | "bazel" | undefined; for: SourceLanguage | undefined; root: string | undefined; out: string | undefined; outRoot: string | undefined; spec: string | undefined; iface: string | undefined;
   ifaceDeps: readonly string[]; implDeps: readonly string[]; jobs: number; only: readonly string[]; store: string | undefined; file: string | undefined; json: boolean; language: "en" | "de" | undefined;
 }>;
 
@@ -50,13 +56,13 @@ export function unitsArgumentsV1(args: readonly string[]): UnitsArgumentsV1 {
   }
   const one = (name: string): string | undefined => values.get(name)?.[0], language = one("--lang"), source = one("--for"), jobs = one("--concurrency") === undefined ? 1 : Number(one("--concurrency"));
   if (language !== undefined && language !== "en" && language !== "de") throw Error(both(`Unknown language: ${language} (en|de)`, `Unbekannte Sprache: ${language} (en|de)`));
-  if (source !== undefined && source !== "go" && source !== "python") throw Error(both(`Unknown source language: ${source} (go|python)`, `Unbekannte Quellsprache: ${source} (go|python)`));
+  if (source !== undefined && !(sourceLanguages as readonly string[]).includes(source)) throw Error(both(`Unknown source language: ${source} (${sourceLanguages.join("|")})`, `Unbekannte Quellsprache: ${source} (${sourceLanguages.join("|")})`));
   if (!Number.isInteger(jobs) || jobs < 1 || jobs > 16) throw Error(both("--concurrency takes an integer from 1 to 16", "--concurrency nimmt eine ganze Zahl von 1 bis 16"));
   if ((operation === "plan" || operation === "run" || operation === "emit") && source === undefined) throw Error(both(`units ${operation} needs --for=go|python`, `units ${operation} braucht --for=go|python`));
   if (operation === "emit" && one("--out") === undefined) throw Error(both("units emit needs --out=<directory>", "units emit braucht --out=<Verzeichnis>"));
   if (operation === "exec" && (one("--spec") === undefined || (one("--out") === undefined && one("--out-root") === undefined))) throw Error(both("units exec needs --spec=<file> and --out=<file> or --out-root=<directory>", "units exec braucht --spec=<Datei> und --out=<Datei> oder --out-root=<Verzeichnis>"));
   return Object.freeze({
-    operation, target, for: source as "go" | "python" | undefined, root: one("--root"), out: one("--out"), outRoot: one("--out-root"), spec: one("--spec"), iface: one("--iface"), ifaceDeps: values.get("--iface-dep") ?? [], implDeps: values.get("--impl-dep") ?? [],
+    operation, target, for: source as SourceLanguage | undefined, root: one("--root"), out: one("--out"), outRoot: one("--out-root"), spec: one("--spec"), iface: one("--iface"), ifaceDeps: values.get("--iface-dep") ?? [], implDeps: values.get("--impl-dep") ?? [],
     jobs, only: values.get("--only") ?? [], store: one("--receipts"), file: one("--file"), json: flags.has("--json"), language: language as "en" | "de" | undefined,
   });
 }
@@ -76,15 +82,29 @@ export type UnitsCommandPortsV1 = Readonly<{
 const textOf = (path: string): string => readFileSync(path, "utf8");
 const writeText = (path: string, text: string): void => {mkdirSync(dirname(path), {recursive: true}); writeFileSync(path, text);};
 const absolute = (root: string, path: string): string => isAbsolute(path) ? path : resolve(root, path);
-const wanted = {go: [/\.go$/, /(^|\/)go\.(mod|work|sum)$/, /\.(c|cc|cpp|cxx|h|hh|hpp|hxx|m|mm|s|S|syso)$/], python: [/\.pyi?$/]} as const;
+const wanted: Readonly<Record<SourceLanguage, readonly RegExp[]>> = {
+  go: [/\.go$/, /(^|\/)go\.(mod|work|sum)$/, /\.(c|cc|cpp|cxx|h|hh|hpp|hxx|m|mm|s|S|syso)$/], python: [/\.pyi?$/],
+  dotnet: [/\.(cs|csproj)$/, /(^|\/)(Directory\.(Build|Packages)\.(props|targets)|global\.json|nuget\.config|NuGet\.Config|packages\.lock\.json)$/],
+  cpp: [/\.(c|cc|cpp|cxx|h|hh|hpp|hxx|inl|ipp|tpp|m|mm)$/i, /(^|\/)CMakeLists\.txt$/, /\.cmake$/], wit: [/\.wit$/], tex: [/\.(tex|bib|sty|cls|pdf|png|jpe?g|eps|svg)$/],
+};
 
 type Planned = {readonly graph: UnitGraphV1; readonly overlay: Readonly<Record<string, string>> | undefined; readonly files: readonly string[]; readonly modules: readonly PythonModuleV1[]};
-async function planFor(language: "go" | "python", root: string, ports: UnitsCommandPortsV1): Promise<Planned> {
+async function planFor(language: SourceLanguage, root: string, ports: UnitsCommandPortsV1): Promise<Planned> {
   const tracked = (await ports.files(root, ports.signal)).filter(path => wanted[language].some(pattern => pattern.test(path)));
   const cache = new Map<string, string>(), read = (path: string): string => {let text = cache.get(path); if (text === undefined) {text = textOf(join(root, path)); cache.set(path, text);} return text;};
   if (language === "python") {
     const planned = planPythonUnitsV1({files: tracked, read}, {policy, roots: [""], toolchain: (await ports.run(["python3", "--version"], {cwd: root, env: {}, signal: ports.signal})).output.trim() || "python3", pins: {}});
     return {graph: planned.graph, overlay: undefined, files: tracked, modules: planned.modules};
+  }
+  if (language === "dotnet") {
+    const sdk = (await ports.run(["dotnet", "--version"], {cwd: root, env: {}, signal: ports.signal})).output.trim();
+    return {graph: planDotnetUnitsV1({files: tracked, read}, {policy, toolchain: `dotnet ${sdk}`}).graph, overlay: undefined, files: tracked, modules: []};
+  }
+  if (language === "wit") return {graph: planWitUnitsV1({files: tracked, read}, {policy, toolchain: "owned wit parser v1"}).graph, overlay: undefined, files: tracked, modules: []};
+  if (language === "tex") return {graph: planTexUnitsV1({files: tracked, read}, {policy, toolchain: (await ports.run(["tectonic", "--version"], {cwd: root, env: {}, signal: ports.signal})).output.trim() || "tectonic (not installed)"}), overlay: undefined, files: tracked, modules: []};
+  if (language === "cpp") {
+    const project = await cmakeProjectV1(root, ports);
+    return {graph: planCppUnitsV1(project, {files: tracked, read}, {policy}), overlay: undefined, files: tracked, modules: []};
   }
   const [os, arch, cgo] = (await ports.run(["go", "env", "GOOS", "GOARCH", "CGO_ENABLED"], {cwd: root, env: {}, signal: ports.signal})).output.trim().split("\n"), version = (await ports.run(["go", "version"], {cwd: root, env: {}, signal: ports.signal})).output.trim();
   const context: GoBuildContextV1 = {goos: os!, goarch: arch!, goMinor: Number(/go1\.(\d+)/.exec(version)?.[1] ?? 25), cgo: cgo === "1", tags: []};
@@ -93,6 +113,23 @@ async function planFor(language: "go" | "python", root: string, ports: UnitsComm
   const snapshot: GoWorkspaceSnapshotV1 = given ? applyGoOverlayV1({files: tracked, read}, root, given.replace, given.excludedDirectories) : {files: tracked, read};
   const planned = planGoUnitsV1(snapshot, {policy, context, toolchain: version, tests: true});
   return {graph: planned.graph, overlay, files: tracked, modules: []};
+}
+
+/** 🛠️ Configures the checkout with CMake and Ninja into a scratch directory and reads the file API reply (`codemodel-v2` and the target files) into the C/C++ planner's model. */
+export async function cmakeProjectV1(root: string, ports: UnitsCommandPortsV1): Promise<CppProjectV1> {
+  const scratch = mkdtempSync(join(tmpdir(), "units-cmake-"));
+  try {
+    writeText(join(scratch, ".cmake/api/v1/query/codemodel-v2"), "");
+    const configured = await ports.run(["cmake", "-S", root, "-B", scratch, "-G", "Ninja"], {cwd: root, env: {}, signal: ports.signal});
+    if (configured.code !== 0) throw Error(both(`cmake configure failed:\n${configured.output.trim()}`, `cmake-Konfiguration fehlgeschlagen:\n${configured.output.trim()}`));
+    const replyDirectory = join(scratch, ".cmake/api/v1/reply"), fs = await import("node:fs"), index = fs.readdirSync(replyDirectory).filter(name => name.startsWith("index-")).sort().at(-1)!;
+    const reply = JSON.parse(textOf(join(replyDirectory, index))) as {objects: {kind: string; jsonFile: string}[]}, codemodel = JSON.parse(textOf(join(replyDirectory, reply.objects.find(row => row.kind === "codemodel")!.jsonFile))) as {configurations: {targets: {jsonFile: string}[]}[]};
+    const targets = codemodel.configurations[0]!.targets.map(row => JSON.parse(textOf(join(replyDirectory, row.jsonFile))));
+    const cache = textOf(join(scratch, "CMakeCache.txt")), entry = (name: string): string => new RegExp(`^${name}:[A-Z]+=(.*)$`, "m").exec(cache)?.[1] ?? "";
+    const compilerBase = (path: string): string => path.slice(path.lastIndexOf("/") + 1);
+    const cxx = compilerBase(entry("CMAKE_CXX_COMPILER")) || "c++", c = compilerBase(entry("CMAKE_C_COMPILER")) || "cc", version = (await ports.run([cxx, "--version"], {cwd: root, env: {}, signal: ports.signal})).output.split("\n")[0]!.trim();
+    return cmakeReplyToCppProjectV1({codemodel, targets}, root, {c, cxx, version});
+  } finally {rmSync(scratch, {recursive: true, force: true});}
 }
 
 const summary = (graph: UnitGraphV1): {units: number; edges: number; layers: number} => {
@@ -135,6 +172,10 @@ function executorFor(unit: UnitV1, root: string, scratch: string, ports: UnitsCo
   const read = (path: string): string => textOf(join(root, path));
   if (unit.language === "go") return goUnitExecutorV1({workspace: root, outputRoot: scratch, run: ports.run, ...(overlay ? {overlay} : {})});
   if (unit.language === "python") return pythonUnitExecutorV1({workspace: root, outputRoot: scratch, policy, modules, read, run: ports.run});
+  if (unit.language === "dotnet") return dotnetUnitExecutorV1({workspace: root, outputRoot: scratch, run: ports.run});
+  if (unit.language === "cpp") return cppUnitExecutorV1({workspace: root, outputRoot: scratch, run: ports.run, platform: process.platform});
+  if (unit.language === "wit") return witUnitExecutorV1({workspace: root, read});
+  if (unit.language === "tex") return texUnitExecutorV1({workspace: root, outputRoot: scratch, run: ports.run});
   throw Error(both(`No units executor for ${unit.language}: the ${unit.language} units run through their own engine`, `Kein Units-Ausführer für ${unit.language}: Die ${unit.language}-Einheiten laufen über ihre eigene Engine`));
 }
 
@@ -254,15 +295,13 @@ export async function canonicalGoOverlayV1(root: string, modules: readonly strin
   return {replace, excludedDirectories: [layout.testsDirectory, ...layout.sourceDirectoryNames, ...layout.opaqueDirectoryNames]};
 }
 
-/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout, read-only and cancellable. */
+/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout through the tool interface's git adapter (read-only, bounded, cancellable). */
 async function trackedFiles(directory: string, signal: AbortSignal): Promise<readonly string[]> {
-  const {spawn} = await import("node:child_process");
-  return new Promise((accept, reject) => {
-    const child = spawn("git", ["-C", directory, "ls-files", "-z", "-co", "--exclude-standard"], {stdio: ["ignore", "pipe", "pipe"], windowsHide: true, signal}), chunks: Buffer[] = [];
-    child.stdout.on("data", (chunk: Buffer) => chunks.push(chunk));
-    child.on("error", reject);
-    child.on("close", code => code === 0 ? accept(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean)) : reject(Error(`git ls-files failed (${code})`)));
-  });
+  const adapter: string = "../../../../../../../🔨️modules/🏃️process/🧰️tools/🌿️git/🟦️.ts";
+  const {gitV1} = await import(adapter) as {gitV1: (args: readonly string[], options: {cwd: string; signal: AbortSignal; maximumOutputBytes: number}) => Promise<{status: number | null; stdout: string}>};
+  const result = await gitV1(["-C", directory, "ls-files", "-z", "-co", "--exclude-standard"], {cwd: directory, signal, maximumOutputBytes: 256 * 1024 * 1024});
+  if (result.status !== 0) throw Error(both(`git ls-files failed (${result.status})`, `git ls-files fehlgeschlagen (${result.status})`));
+  return result.stdout.split("\0").filter(Boolean);
 }
 
 /** 🚪️ The entry the build CLI calls for `repo units`. */

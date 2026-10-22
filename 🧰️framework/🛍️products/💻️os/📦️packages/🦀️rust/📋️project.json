@@ -22,7 +22,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-typed-snapshot-file-native"
+        "command": "repo ./📜️script.ts test-typed-snapshot-file-native"
       }
     },
     "test-typed-snapshot-file-source": {
@@ -38,7 +38,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-typed-snapshot-file-source"
+        "command": "repo ./📜️script.ts test-typed-snapshot-file-source"
       }
     },
     "test-original-registry-alias-custody": {
@@ -54,7 +54,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-registry-alias-custody"
+        "command": "repo ./📜️script.ts test-original-registry-alias-custody"
       }
     },
     "test-returned-read-custody": {
@@ -70,7 +70,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-returned-read-custody"
+        "command": "repo ./📜️script.ts test-returned-read-custody"
       }
     },
     "test-member-group-publication-source": {
@@ -86,7 +86,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-member-group-publication-source"
+        "command": "repo ./📜️script.ts test-member-group-publication-source"
       }
     },
     "test-snapshot-sqlite-admission": {
@@ -102,7 +102,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite-admission"
       }
     },
     "test-artifact-kind": {
@@ -118,7 +118,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-artifact-kind"
+        "command": "repo ./📜️script.ts test-artifact-kind"
       }
     },
     "retained-clone-check": {
@@ -131,7 +131,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts retained-clone-check",
+        "command": "repo 📜️script.ts retained-clone-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -146,7 +146,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-opening-attempt-native-check",
+        "command": "repo ./📜️script.ts document-opening-attempt-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -161,7 +161,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-history-completion-check",
+        "command": "repo ./📜️script.ts database-history-completion-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -176,7 +176,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-history-completion-check --native",
+        "command": "repo ./📜️script.ts database-history-completion-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -191,7 +191,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts database-catalog-read-ownership-check",
+        "command": "repo ./📜️script.ts database-catalog-read-ownership-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -206,7 +206,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts database-catalog-read-ownership-check --native",
+        "command": "repo ./📜️script.ts database-catalog-read-ownership-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -221,7 +221,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-capability-completion-check",
+        "command": "repo ./📜️script.ts database-capability-completion-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -236,7 +236,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-capability-completion-check --native",
+        "command": "repo ./📜️script.ts database-capability-completion-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -301,7 +301,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts reopen-storm-check",
+        "command": "repo ./📜️script.ts reopen-storm-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -317,7 +317,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-shutdown-check",
+        "command": "repo ./📜️script.ts database-shutdown-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -332,7 +332,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts database-shutdown-check --native",
+        "command": "repo ./📜️script.ts database-shutdown-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -347,7 +347,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-mount-single-flight-check",
+        "command": "repo ./📜️script.ts document-mount-single-flight-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -362,7 +362,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-mount-single-flight-check --native",
+        "command": "repo ./📜️script.ts document-mount-single-flight-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -377,7 +377,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts durable-owned-group-decision-check",
+        "command": "repo ./📜️script.ts durable-owned-group-decision-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -392,7 +392,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts durable-owned-group-decision-check --native",
+        "command": "repo ./📜️script.ts durable-owned-group-decision-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -407,7 +407,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts durable-group-journal-check",
+        "command": "repo ./📜️script.ts durable-group-journal-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -422,7 +422,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts durable-group-journal-check --native",
+        "command": "repo ./📜️script.ts durable-group-journal-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -437,7 +437,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-committed-compaction-check",
+        "command": "repo ./📜️script.ts wal-committed-compaction-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -452,7 +452,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-committed-compaction-check --native",
+        "command": "repo ./📜️script.ts wal-committed-compaction-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -467,7 +467,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-committed-transactions-check",
+        "command": "repo ./📜️script.ts wal-committed-transactions-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -482,7 +482,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-committed-transactions-check --native",
+        "command": "repo ./📜️script.ts wal-committed-transactions-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -497,7 +497,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-writer-authority-check",
+        "command": "repo ./📜️script.ts wal-writer-authority-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -512,7 +512,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-writer-authority-check --native",
+        "command": "repo ./📜️script.ts wal-writer-authority-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -554,7 +554,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts wal-writer-fence-live",
+        "command": "repo ./📜️script.ts wal-writer-fence-live",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -569,7 +569,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-capacity-check",
+        "command": "repo ./📜️script.ts wal-capacity-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -584,7 +584,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-capacity-check --native",
+        "command": "repo ./📜️script.ts wal-capacity-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -599,7 +599,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-recovery-check",
+        "command": "repo ./📜️script.ts wal-recovery-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -614,7 +614,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-recovery-check --native",
+        "command": "repo ./📜️script.ts wal-recovery-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -629,7 +629,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-session-authority-check",
+        "command": "repo ./📜️script.ts directory-session-authority-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -644,7 +644,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-session-authority-check --native",
+        "command": "repo ./📜️script.ts directory-session-authority-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -660,7 +660,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-event-page-contract-check",
+        "command": "repo ./📜️script.ts directory-event-page-contract-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -675,7 +675,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-event-page-contract-check --native",
+        "command": "repo ./📜️script.ts directory-event-page-contract-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -689,7 +689,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-event-page-client-check",
+        "command": "repo ./📜️script.ts directory-event-page-client-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -704,7 +704,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-event-page-client-check --native",
+        "command": "repo ./📜️script.ts directory-event-page-client-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -719,7 +719,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts directory-event-page-bootstrap-check",
+        "command": "repo ./📜️script.ts directory-event-page-bootstrap-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -734,7 +734,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-segment-state-check",
+        "command": "repo ./📜️script.ts wal-segment-state-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -750,7 +750,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts wal-segment-state-check --native",
+        "command": "repo ./📜️script.ts wal-segment-state-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -767,7 +767,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-directory-runtime-source",
+        "command": "repo ./📜️script.ts test-directory-runtime-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -784,7 +784,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-codec-send-source",
+        "command": "repo ./📜️script.ts test-codec-send-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -801,7 +801,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-backbone-detach-source",
+        "command": "repo ./📜️script.ts test-backbone-detach-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -818,7 +818,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-group-visibility-source",
+        "command": "repo ./📜️script.ts test-group-visibility-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -833,7 +833,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts member-dialect-check",
+        "command": "repo ./📜️script.ts member-dialect-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -852,7 +852,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-member-input-census-source"
+        "command": "repo ./📜️script.ts test-member-input-census-source"
       }
     },
     "test-member-dialect-source": {
@@ -866,7 +866,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-member-dialect-source",
+        "command": "repo ./📜️script.ts test-member-dialect-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -885,7 +885,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-space-history-sqlite-native",
+        "command": "repo ./📜️script.ts test-space-history-sqlite-native",
         "forwardAllArgs": true
       }
     },
@@ -902,7 +902,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-space-history-sqlite-source",
+        "command": "repo ./📜️script.ts test-space-history-sqlite-source",
         "forwardAllArgs": true
       }
     },
@@ -918,7 +918,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -935,7 +935,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-codec-receiving source",
+        "command": "repo ./📜️script.ts test-snapshot-codec-receiving source",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -952,7 +952,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-codec-receiving native",
+        "command": "repo ./📜️script.ts test-snapshot-codec-receiving native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -969,7 +969,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-route-admission source",
+        "command": "repo ./📜️script.ts test-snapshot-route-admission source",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -986,7 +986,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-route-admission native",
+        "command": "repo ./📜️script.ts test-snapshot-route-admission native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -1003,7 +1003,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-snapshot-native-admission",
+        "command": "repo ./📜️script.ts test-snapshot-native-admission",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -1020,7 +1020,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-scalar-wire-source",
+        "command": "repo ./📜️script.ts test-scalar-wire-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -1036,7 +1036,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-pack-single-owner-source",
+        "command": "repo ./📜️script.ts test-pack-single-owner-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -1044,7 +1044,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate-jco-package-adapter",
+        "command": "repo ./📜️script.ts generate-jco-package-adapter",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -1060,7 +1060,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts preview-generated",
+        "command": "repo ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -1068,7 +1068,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts check-jco-package-adapter",
+        "command": "repo ./📜️script.ts check-jco-package-adapter",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
@@ -1084,7 +1084,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
@@ -1101,7 +1101,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
@@ -1110,7 +1110,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": [],
@@ -1134,7 +1134,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-list-record-boundaries",
+        "command": "repo ./📜️script.ts test-list-record-boundaries",
         "cwd": "{projectRoot}"
       }
     },
@@ -1150,7 +1150,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-ieee-payload-native",
+        "command": "repo ./📜️script.ts test-ieee-payload-native",
         "cwd": "{projectRoot}"
       }
     },
@@ -1166,7 +1166,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-ieee-payload-source",
+        "command": "repo ./📜️script.ts test-ieee-payload-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -1181,7 +1181,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts paged-history-stack-check",
+        "command": "repo ./📜️script.ts paged-history-stack-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1201,7 +1201,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts paged-history-stack-check --native",
+        "command": "repo ./📜️script.ts paged-history-stack-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1226,7 +1226,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts document-http-check"
+        "command": "repo ./📜️script.ts document-http-check"
       },
       "metadata": {
         "workspaceCommand": true
@@ -1248,7 +1248,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-directory-lease-fixture"
+        "command": "repo ./📜️script.ts test-directory-lease-fixture"
       }
     },
     "test-composed-pack-schema": {
@@ -1263,7 +1263,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-composed-pack-schema",
+        "command": "repo ./📜️script.ts test-composed-pack-schema",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -1283,7 +1283,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-assembly-lifetime-native"
+        "command": "repo ./📜️script.ts test-assembly-lifetime-native"
       }
     },
     "test-dsl-architecture": {
@@ -1299,7 +1299,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-dsl-architecture"
+        "command": "repo ./📜️script.ts test-dsl-architecture"
       }
     },
     "test-command-ingress-consumer": {
@@ -1308,7 +1308,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-command-ingress-consumer",
+        "command": "repo ./📜️script.ts test-command-ingress-consumer",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -1342,7 +1342,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-command-transport-source",
+        "command": "repo ./📜️script.ts test-command-transport-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1359,7 +1359,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-command-transport-native",
+        "command": "repo ./📜️script.ts test-command-transport-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1376,7 +1376,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-borrowed-key-index-native",
+        "command": "repo ./📜️script.ts test-borrowed-key-index-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1393,7 +1393,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-intrinsic-retirement-native",
+        "command": "repo ./📜️script.ts test-intrinsic-retirement-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1410,7 +1410,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-directory-checkpoint-pair-source",
+        "command": "repo ./📜️script.ts test-directory-checkpoint-pair-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1427,7 +1427,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-directory-checkpoint-pair-native",
+        "command": "repo ./📜️script.ts test-directory-checkpoint-pair-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1444,7 +1444,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-directory-descriptor-digest-source",
+        "command": "repo ./📜️script.ts test-directory-descriptor-digest-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1461,7 +1461,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-directory-descriptor-digest-native",
+        "command": "repo ./📜️script.ts test-directory-descriptor-digest-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1478,7 +1478,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-canonical-preparation-control-source",
+        "command": "repo ./📜️script.ts test-canonical-preparation-control-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -1496,7 +1496,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-returned-read-factory-mount"
+        "command": "repo ./📜️script.ts test-returned-read-factory-mount"
       },
       "metadata": {
         "semio": {
@@ -1520,7 +1520,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-cleanup-context-native"
+        "command": "repo ./📜️script.ts test-original-cleanup-context-native"
       }
     },
     "test-config-paged-source-source": {
@@ -1536,7 +1536,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-config-paged-source source"
+        "command": "repo ./📜️script.ts test-config-paged-source source"
       }
     },
     "test-config-paged-source-native": {
@@ -1552,7 +1552,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-config-paged-source native"
+        "command": "repo ./📜️script.ts test-config-paged-source native"
       }
     },
     "test-space-history-validation-source": {
@@ -1568,7 +1568,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-space-history-validation source"
+        "command": "repo ./📜️script.ts test-space-history-validation source"
       }
     },
     "test-space-history-validation-native": {
@@ -1584,7 +1584,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-space-history-validation native"
+        "command": "repo ./📜️script.ts test-space-history-validation native"
       }
     },
     "test-crate-boundaries": {
@@ -1613,7 +1613,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-crate-boundaries"
+        "command": "repo ./📜️script.ts test-crate-boundaries"
       }
     },
     "db-error-ownership-check": {
@@ -1628,7 +1628,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts db-error-ownership-check"
+        "command": "repo ./📜️script.ts db-error-ownership-check"
       }
     },
     "db-error-ownership-native-check": {
@@ -1643,7 +1643,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts db-error-ownership-check --native",
+        "command": "repo ./📜️script.ts db-error-ownership-check --native",
         "forwardAllArgs": true
       }
     },
@@ -1659,7 +1659,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts stable-identity-check",
+        "command": "repo ./📜️script.ts stable-identity-check",
         "forwardAllArgs": true
       }
     },
@@ -1675,7 +1675,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-diagnostic-admission",
+        "command": "repo 📜️script.ts test-diagnostic-admission",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -1692,13 +1692,13 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-owned-replay"
+        "command": "repo ./📜️script.ts test-owned-replay"
       }
     },
     "canonical-source-identity-source": {
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-canonical-source-identity source"
+        "command": "repo ./📜️script.ts test-canonical-source-identity source"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1713,7 +1713,7 @@
     "canonical-source-identity-native": {
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-canonical-source-identity native"
+        "command": "repo ./📜️script.ts test-canonical-source-identity native"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1737,7 +1737,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-retained-lane source",
+        "command": "repo 📜️script.ts test-retained-lane source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -1753,7 +1753,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-retained-lane native",
+        "command": "repo 📜️script.ts test-retained-lane native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
@@ -1761,7 +1761,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-ingress source"
+        "command": "repo ./📜️script.ts test-original-ingress source"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1777,7 +1777,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-history-input source"
+        "command": "repo ./📜️script.ts test-original-history-input source"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1793,7 +1793,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-history-input native"
+        "command": "repo ./📜️script.ts test-original-history-input native"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1809,7 +1809,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-ingress native"
+        "command": "repo ./📜️script.ts test-original-ingress native"
       },
       "executor": "repo:script",
       "inputs": [
@@ -1834,7 +1834,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-io-retirement source"
+        "command": "repo ./📜️script.ts test-original-io-retirement source"
       }
     },
     "test-original-io-retirement-native": {
@@ -1850,7 +1850,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-io-retirement native"
+        "command": "repo ./📜️script.ts test-original-io-retirement native"
       }
     },
     "semantic-source-source": {
@@ -1865,7 +1865,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts semantic-source source",
+        "command": "repo 📜️script.ts semantic-source source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1886,7 +1886,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts semantic-source native",
+        "command": "repo 📜️script.ts semantic-source native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1907,7 +1907,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts member-facets source",
+        "command": "repo 📜️script.ts member-facets source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1928,7 +1928,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts member-facets native",
+        "command": "repo 📜️script.ts member-facets native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "metadata": {
@@ -1955,7 +1955,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun 📜️script.ts test-original-vcs-command source"
+        "command": "repo 📜️script.ts test-original-vcs-command source"
       },
       "cache": true
     },
@@ -1977,7 +1977,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun 📜️script.ts test-original-vcs-command native"
+        "command": "repo 📜️script.ts test-original-vcs-command native"
       },
       "cache": true
     },
@@ -1995,7 +1995,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-snapshot-receiving source"
+        "command": "repo ./📜️script.ts test-original-snapshot-receiving source"
       }
     },
     "test-original-snapshot-receiving-native": {
@@ -2012,7 +2012,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-snapshot-receiving native"
+        "command": "repo ./📜️script.ts test-original-snapshot-receiving native"
       }
     }
   },

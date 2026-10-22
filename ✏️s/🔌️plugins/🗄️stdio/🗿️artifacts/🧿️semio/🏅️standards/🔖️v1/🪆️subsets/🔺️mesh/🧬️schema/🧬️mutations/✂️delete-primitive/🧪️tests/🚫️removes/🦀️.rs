@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -30,7 +30,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_leading_primitive_inside_the_mesh() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-primitive applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-primitive applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert_eq!(produced.meshes.len(), base.meshes.len(), "removing the last-but-one primitive must not remove the mesh itself");
     assert_eq!(produced.meshes[0].primitives, vec![base.meshes[0].primitives[1].clone()], "the trailing primitive slides down into index 0");
@@ -45,9 +45,9 @@ async fn the_undo_recreates_the_primitive_at_its_original_index() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "the removed primitive is restored by exactly one create");
     assert!(matches!(&undo[0], SemioMeshMutation::CreatePrimitive(create) if create.at == Some(0)), "the create must name the removed index");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-primitive applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-primitive applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: the undo did not restore the before-snapshot, order included");
 }
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioMeshMutation as ColdMutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -105,6 +105,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-primitive diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-primitive diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-primitive diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

@@ -1,5 +1,5 @@
 /** 🔸️ The command phase of useCommandBar. */
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { SemioFaultError, SURFACE_FAULT_CODES, type CommandAddress, type CommandInvocation, type LocalizedLabel, resolveModeTools, resolveUiDirtyScope } from "@semio-tech/framework";
 import { SHELL_HUB_ROUTE } from "../../🔀️surface-switch/🟦️.ts";
 import { programHistoryKeyV1, programHistoryProjectionV1 } from "../../🪟️spawned-program/🟦️.ts";

@@ -13,7 +13,7 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -66,7 +66,7 @@ fn registry_step<T: ClosingOwner>(registry: &mut ArtifactFixedRegistry<T>, curso
     Ok((PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }), Some(id)))
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     fn uncovered_close_frontier() -> ValueError {
         ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plugin close retains an original frontier without its granted owner authority")
     }
@@ -139,7 +139,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::ReservedOutcome=>{drop(self.pending.reserved_commit_outcome.take());Ok(RetainedCloneStep::Progress(handoff()))}
             CloseRung::ToolRuns=>self.tool_run_ctx().tool_run_close_step(cx).map_err(PluginLifecycleFailure::from),
             CloseRung::TimeTravel=>self.time_travel_ctx().time_travel_close_step(grant).map_err(PluginLifecycleFailure::from),
-            CloseRung::ToolOverlay=>self.render_ctx().tool_overlay_retirement_step(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::ToolOverlay=>{let mut render=self.render_ctx();render.abandon_window_preview();render.tool_overlay_retirement_step(grant).map_err(PluginLifecycleFailure::from)},
             CloseRung::LocalQuery=>{let Some(query)=self.interaction.local_interaction_query.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};if !query.is_closing(){query.begin_close();return Ok(RetainedCloneStep::Progress(handoff()))}let step=query.close_step(child)?;if query.terminal_is_empty(){drop(self.take_local_interaction_query_reply());self.interaction.local_interaction_query=None}Ok(RetainedCloneStep::Progress(step.progress()))}
             CloseRung::SnapshotReturns=>{if let Some(stage)=self.ingest.next_snapshot_read_return_stage(&self.stores, &self.interaction){self.interaction.snapshot_read_return_stage=stage}self.ingest.advance_snapshot_read_returns_one(&mut self.stores, &mut self.interaction, grant).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(PluginLifecycleFailure::from)}
             CloseRung::PresenceLocalReads=>self.stores.presence_store.maintenance_local_reads_step(grant).map_err(PluginLifecycleFailure::from),

@@ -9,14 +9,18 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 pub struct RemoveEffect { pub index: usize, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for RemoveEffect where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::insert_effect::InsertEffect> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "effect", kind: "remove-effect", record: "RemovedEffect" };
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> { crate::remove_effect::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove action effect", "Beanspruchung entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1990Snapshot, Op> for RemoveEffect where Op: protocol::ColdMutation<En1990Snapshot, ReferenceDiff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::insert_effect::InsertEffect> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1990Snapshot>>::ReferenceDiff> { crate::remove_effect::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::remove_effect::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove action effect", "Beanspruchung entfernen")
-    }
 }
 
 //#region 🪢️Mounts

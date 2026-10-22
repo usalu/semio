@@ -4,7 +4,7 @@
  */
 
 import { shellDialogSessionIsCurrentV1, type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
   type ActionDispatchLifecycleV1,

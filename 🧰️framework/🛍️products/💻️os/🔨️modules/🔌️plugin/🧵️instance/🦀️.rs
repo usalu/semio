@@ -35,7 +35,7 @@ use std::collections::{BTreeMap, HashMap};
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
 use std::future::Future;
 use pack::snapshot::ArtifactPack;
-use store::{create_config_envelope, ArtifactStore, ConfigStore, MemberFactory, Mutation, NoMembers, SpaceMember};
+use store::{ArtifactStore, ConfigStore, create_config_envelope, MemberFactory, Mutation, NoMembers, ReferenceSpaceMember};
 use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::{ArtifactCommand, ArtifactEnvelope};
 use store::os_store::composition_coordinator::CompositionCoordinator;
@@ -162,7 +162,7 @@ use semio_framework_plugin_window_transient::built_to_component_tree;
 use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job_counted;
 
 
-pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMembers> {
+pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory = NoMembers> {
     pub app: A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     /// 📂️ Store-constructor state: the receipts, units and lane of the four original catalogue constructors.
@@ -207,7 +207,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     pub tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>,
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🔍️ Read-only inspection of this instance's tool run ledger for app-level tests.
     #[cfg(feature = "artifact-app-testing")]
     pub fn tool_run_ledger(&self) -> &ToolRunLedger<A> {
@@ -219,7 +219,7 @@ pub use crate::plugin_app_impl::{FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS, settle_
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::plugin_app_impl::drive_framework_reserved_spawn_like_host;
 pub use semio_framework_ui_contract::*;
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
     fn drop(&mut self) {
         self.tools.tool_cancellations.cancel_scope_generation();
         while let Some((_, id)) = self.pending.pending_reserved.next_id_from(0) {

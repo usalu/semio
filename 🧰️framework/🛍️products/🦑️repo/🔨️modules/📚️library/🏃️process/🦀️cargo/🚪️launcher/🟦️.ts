@@ -1,16 +1,17 @@
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1}from"../⏱️timing/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import {acquireLaneV1,resolveLaneIdV1,systemAncestryV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
-import {collectGarbageV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
-import {focusFromCargoArgumentsV1,laneLanguageV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+import {acquireLaneV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
+import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
+import {gcOutOfSpaceV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
+import {collectAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,reportUnitCacheStillFullV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {unitAdmissionMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {withNativeRecheckWindowV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts";
-import {copyFileSync,mkdirSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,constants} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
@@ -32,6 +33,9 @@ import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️
 import {withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoNetworkV1,withRepositoryCargoInputsV1,withRepositoryCargoResolutionV1} from "../📥️dependencies/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {ensureRepositoryCargoLockV1} from "../../../🗂️workspaces/🦀️cargo/🔒️lock/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 const authored=schema.definitions.Configuration.const;
 
 /** 🧾️ One admitted ad-hoc Cargo command: its explicit store, build configuration, core share and closed subcommand class. */
@@ -75,18 +79,23 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
  try{for(const path of[store.target,store.build,store.temporary]){requireNativeStoragePathV1(options.storage.backing.root,path);mkdirSync(path,{recursive:true});}result=await body(store);}catch(error){failed=true;failure=error;}try{await retire(nonce,lease);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;return result as T;
 }
 
-/** 🧵️ One Cargo command's lane: a private target and build directory of its agent inside the issued compiler store. A lane is held by one Cargo process at a time, so Cargo's unit locks never span two processes; the first free lane of the agent is used and a busy one overflows into a sibling that fills from the shared content-addressed unit cache. Cleanup of idle lanes and cold cache objects runs here at most every ten minutes, inside the image's budget. */
-export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;capacityBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+/** 🧮️ The unit cache may fill the image only up to what the compiler workspace leaves free, so a cold writer is always admitted. */
+const unitCacheBudgetBytesV1=(policy:Readonly<{capacityBytes:number;maximumWorkspaceBytes:number}>):number=>Math.max(0,policy.capacityBytes-policy.maximumWorkspaceBytes);
+
+/** 🧵️ One Cargo command's lane: a private target and build directory of its agent inside the issued compiler store. A lane is held by one Cargo process at a time, so Cargo's unit locks never span two processes; the first free lane of the agent is used and a busy one overflows into a sibling that fills from the shared content-addressed unit cache. Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
+export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
- const root=options.storage.backing.root,language=laneLanguageV1(options.environment);requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
- const base=resolveLaneIdV1({environment:options.environment,ancestry:systemAncestryV1}),lane=acquireLaneV1(options.cacheRoot,base);
+ const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
+ const session=currentAgentSessionV1({environment:options.environment}),base=session.resources.cargo.lane,lane=acquireLaneV1(options.cacheRoot,base,{session:agentSessionAddressV1(session),agent:session.agent.id});
  try{
   for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
-  if(lane.overflow>0)process.stderr.write(laneMessageV1("overflow",{base,lane:lane.paths.id},language)+"\n");
+  const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
+  if(lane.overflow>0)report(laneMessageV1("overflow",{base,lane:lane.paths.id},language));
+  await relieve();
   return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,temporary:options.temporary,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
  }finally{
   lane.release();
-  try{const stamp=join(options.cacheRoot,"gc.stamp");let due=true;try{due=Date.now()-statSync(stamp).mtimeMs>600000;}catch{}if(due){writeFileSync(stamp,String(Date.now()));const{applied}=collectGarbageV1(options.cacheRoot,options.capacityBytes);if(applied.lanes+applied.incremental+applied.objects>0)process.stderr.write(laneMessageV1("collected",applied,language)+"\n");}}catch{}
+  await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report:line=>{process.stderr.write(line+"\n");}});
  }
 }
 
@@ -133,12 +142,14 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
  return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async (store,control)=>{
   const leaseDirectory=readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory;
   mark("store","ready");
-  type Execution=Readonly<{kind:"capture";result:OwnedCommandCaptureV1}>|Readonly<{kind:"stream";status:number}>;
+  type Execution=Readonly<{kind:"capture";result:OwnedCommandCaptureV1;full:boolean}>|Readonly<{kind:"stream";status:number;full:boolean}>;
   const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<Execution>=>{
    const remaining=checkResourceLeaseControl(control);mark("child","begin");
-   if(options.output==="capture"){const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined}),output:options.limits});mark("child",result.status===0&&result.signal===null?"end":"error");return Object.freeze({kind:"capture",result});}
-   let status:number;try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptResourceProcessEnvironmentV1(control,scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined})),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status});
+   if(options.output==="capture"){const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined}),output:options.limits});const success=result.status===0&&result.signal===null;mark("child",success?"end":"error");return Object.freeze({kind:"capture",result,full:!success&&gcOutOfSpaceV1(result.stderr+"\n"+result.stdout)});}
+   let status:number,full=false;try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptResourceProcessEnvironmentV1(control,scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined})),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");},onLine:line=>{if(!full&&gcOutOfSpaceV1(line))full=true;}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status,full:status!==0&&full});
   };
+  const space=readNativeStorageReservationPolicyV1(store.storage,store.control),spaceRoot=unitCacheRootV1(store.root),spaceBudget=unitCacheBudgetBytesV1(space),spaceLanguage=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment).language,spaceReport=(line:string)=>{process.stderr.write(line+"\n");};
+  const retryingFullImage=(run:()=>Promise<Execution>):Promise<Execution>=>retryWhenFullV1(run,{collect:()=>collectAfterOutOfSpaceV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport}),stillFull:()=>reportUnitCacheStillFullV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport})});
   const consumeExecution=(execution:Execution,env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume:(()=>void)|undefined,generatedFile:string|undefined):Promise<number|T>=>withRequestedIssuedResourceControlV1(control,0,async control=>{
    checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind==="capture"?execution.result.status===0&&execution.result.signal===null:execution.status===0;if(success)beforeConsume?.();
    if(execution.kind==="stream")return execution.status;if(options.output!=="capture")throw Error("Actual captured Cargo consumer required");
@@ -157,7 +168,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
       try{
       sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
 
-      broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");const execution=await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,...("lane"in selected&&selected.lane?unitCacheEnvironmentV1({cacheRoot:unitCacheRootV1(store.root),lane:selected.lane.id,laneRoot:selected.lane.root,scheduler,compiler:env.RUSTC??"rustc",toolchain:store.toolchain.digest,focus:focusFromCargoArgumentsV1(compilerArgs),features:{buildScripts:true}}):{}),[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(tokens)},cpuControl);return()=>consumeExecution(execution,env,control,beforeConsume,generatedFile);}
+      broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");await ensureRepositoryCargoLockV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,control:cpuControl,force:false});const execution=await retryingFullImage(()=>execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,...("lane"in selected&&selected.lane?unitCacheEnvironmentV1({cacheRoot:unitCacheRootV1(store.root),lane:selected.lane.id,laneRoot:selected.lane.root,scheduler,compiler:env.RUSTC??"rustc",toolchain:store.toolchain.digest,focus:focusFromCargoArgumentsV1(compilerArgs),features:{buildScripts:true}}):{}),[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(tokens)},cpuControl));return()=>consumeExecution(execution,env,control,beforeConsume,generatedFile);}
       catch(error){executionFailed=true;executionFailure=error;throw error;}
       finally{const secondary:unknown[]=[];try{await sampler?.stop();}catch(error){if(!executionFailed||error!==executionFailure)secondary.push(error);}try{await broker.close();}catch(error){secondary.push(error);}if(secondary.length)throw executionFailed?new AggregateError([executionFailure,...secondary],"Compiler and telemetry retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Compiler telemetry retirement failed");}
      }catch(error){jobserverFailed=true;jobserverFailure=error;throw error;}finally{const secondary:unknown[]=[];try{jobserver.close();}catch(error){secondary.push(error);}try{rmSync(jobserverDirectory,{recursive:true,force:true});}catch(error){secondary.push(error);}if(secondary.length)throw jobserverFailed?new AggregateError([jobserverFailure,...secondary],"Compiler and jobserver retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Jobserver retirement failed");}
@@ -175,7 +186,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
     try{return await admitted(compilerArgs,compilerEnvironment,selected,control,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
-  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,cacheRoot:unitCacheRootV1(store.root),capacityBytes:readNativeStorageReservationPolicyV1(store.storage,store.control).capacityBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
+  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,cacheRoot:unitCacheRootV1(store.root),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
  });
  }));
 }

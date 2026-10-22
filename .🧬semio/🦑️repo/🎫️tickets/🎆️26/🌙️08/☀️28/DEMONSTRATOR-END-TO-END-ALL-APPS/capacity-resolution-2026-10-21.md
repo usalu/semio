@@ -125,3 +125,19 @@ At 2026-10-21T03:44:32.957Z supported graphless capacity and lease diagnostics b
 ## Read-Only Peer Status Observation
 
 App listing/read-only inspection of `Finish architecture course build` (01a153c4-4ebb-7942-a6fd-ecdfa4235111) reports active, with its latest messages also retaining native invocations in repository startup queues. No message was sent and no process/thread was changed. The peer messages do not establish an exact process8301-to-own-handle mapping, so no orphaned/paused-process or cancellation inference is justified. Registry holder and queue facts remain sourced from the supported lease diagnostic. Only compact relevant status was retained here; the peer work is outside this goal.
+
+## Supported Analysis Fleet Reclamation
+
+2026-10-21T11:36:56.543Z: Four supported analysis-only REPL resets reduced aggregate used heap by about1.45 GiB. Low had no control/child; High Native handles live in the separate executor. Root verified0pending MCP requests, closed only its own idle repo-mcp stdin and observed exit0/no signal before reset. Minimal fs/path/log bindings were restored; all reports and inputs remain on disk. Root48592, Runtime5118 and Acceptance82799 remain live. No agent, build or foreign process was stopped; no forced GC, admission floor or custody bypass.
+
+After the reset wave, supported capacity showed10144 MiB available, normal pressure, swap-out0 and older Cargo2654 admitted normally. Other host work changes concurrently, so this observation is not attributed solely to the heap cleanup and does not establish a test pass. The three goal checks are at normal graph-image exclusive recovery admission.
+
+
+### Current Unchanged-Policy Host Sample
+
+2026-10-21T13:22:43.264Z: Supported repo capacity status reported15,154MiB available,6,553MiB floor, normalpressure, zero swap-out and observed aggregate load47.17/10cores. OwnSource13310 was previously admitted at15,997MiB. Supported leases diagnostic exited0 and found foreign graphKernelEX45042, owninitialSH5/5 and no cycles. This confirms ordinary memory admission remains possible, while graph custody is currently queued. No foreign job/agent action or policy override. Full output captured under generated for the ticket; exact registry commands are in command-provenance-audit-2026-10-21.md.
+
+
+### Fresh Frozen-Source Admission Wait
+
+2026-10-21T13:35:55.046Z: Fresh soleSource4598 is waiting normally behind one earlier request. Supported capacity-linear-work.json sample at1792589663687 records14,190MiB available, normalpressure, zero swap-out,6,553MiB floor and6,864MiB unrealized running reservations, leaving773MiB admissionheadroom; requested job is3,584MiB. Six other running grants are observed (including existing5632MiB reservations), aggregate load52.75/10cores. This is new ordinary concurrent reservation pressure, not evidence of renewed fleet analysis leakage or a reason to bypass accounting. No policy/source/governor change or foreign signal. All actual checks remain pending.

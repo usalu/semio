@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔖️SchemaScript
 /** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
@@ -97,7 +98,7 @@ export class SchemaScript extends Script {
     if (args.includes("--check")) {
       const current = existsSync(abs) ? readFileSync(abs, "utf8") : "";
       if (current !== rendered) {
-        console.error(`[schema generate] ${rel} is stale; run bun ./📜️script.ts schema generate.`);
+        console.error(`[schema generate] ${rel} is stale; run repo ./📜️script.ts schema generate.`);
         process.exit(1);
       }
       console.log(`[schema generate] ${rel} is current (${Object.keys(inventory.catalog.scopes).length} scopes).`);
@@ -150,7 +151,7 @@ export class SchemaScript extends Script {
     if (!fixtureBoundary) {
       const rendered = renderSchemaCatalog(inventory.catalog);
       const tracked = this.readCatalog();
-      if (!existsSync(abs)) findings.push({ code: "schema-catalog-missing", path: rel, detail: "Run bun ./📜️script.ts schema generate." });
+      if (!existsSync(abs)) findings.push({ code: "schema-catalog-missing", path: rel, detail: "Run repo ./📜️script.ts schema generate." });
       else if (!tracked.parsed) findings.push({ code: "schema-catalog-malformed", path: rel, detail: "The catalog is not a JSON object after a re-read; a concurrent schema generate is still writing it." });
       else if (tracked.text !== rendered) findings.push({ code: "schema-catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
     }
@@ -201,7 +202,7 @@ export class SchemaScript extends Script {
     }
     const catalog = this.readCatalog().parsed as { generator?: string; taxonomySchemaVersion?: number } | null;
     if (catalog && (catalog.generator !== inventory.catalog.generator || catalog.taxonomySchemaVersion !== inventory.catalog.taxonomySchemaVersion)) stale.push(`${this.catalogPath()} (provenance)`);
-    if (stale.length > 0) console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
+    if (stale.length > 0) console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run repo ./📜️script.ts schema generate && repo ./📜️script.ts schema docs.`);
     else console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
     const findings = schemaRustEntryDiagnostics(inventory.catalog, dump, loadCatalogTaxonomy(), args.includes("--rust-entries-complete"));
     const registered = new Set(dump.entries.map((entry) => entry.scope));
@@ -276,8 +277,8 @@ export class SchemaScript extends Script {
    */
   private test(rest: string[]): void {
     const tracked = this.readCatalog();
-    if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run bun ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
-    const harness = runCmdStatus("bun", [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });
+    if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run repo ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
+    const harness = runCmdStatus(runtimeExecutableV1(), [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });
     const oracle = runCmdStatus(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
     console.log(`[schema test] harness exit=${harness}, draft-07 oracle exit=${oracle}`);
     if (harness !== 0 || oracle !== 0) process.exit(1);

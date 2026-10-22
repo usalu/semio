@@ -25,6 +25,6 @@ export async function testWasmToolFingerprint(workspace: string, output: string)
     const invalid = spawnSync(process.execPath, [script, fixture.command, "--install"], { cwd: directory, env: environment, encoding: "utf8", timeout: 30000 });
     assert.notEqual(invalid.status, 0); assert.match(invalid.stderr, /accepts no arguments/);
     const policy = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../🔣️policy.json"), "utf8"));
-    assert.ok(policy.toolchains.wasm.commands.includes(`bun ${JSON.stringify(script.slice(workspace.length + 1))} fingerprint`));
+    assert.ok(policy.toolchains.wasm.commands.includes(`repo ${JSON.stringify(script.slice(workspace.length + 1))} fingerprint`));
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

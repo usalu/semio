@@ -18,6 +18,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveLayer where Op: pr
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove", entity: "layer", kind: "remove-layer", record: "RemovedLayer",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove soil layer", "Bodenschicht entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for RemoveLayer where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::insert_layer::InsertLayer> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::remove_layer::diff::diff(self, base)
     }
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveLayer where Op: pr
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove soil layer", "Bodenschicht entfernen")
-    }
 }
 
 //#region 🪢️Mounts

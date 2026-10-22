@@ -1,5 +1,5 @@
 /** 📒️ The hub connection book state and the hub command callbacks of the hub connection hook. */
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import type { DirectoryCommand, DirectoryCommandReceiptV1 } from "@semio-tech/framework/directory/schema";
 import { hubSessionInitialStateV1, readHubConnectionBookV1, reduceHubSessionV1, removeHubConnectionV1, runHubSessionAuthorityV1, runHubSignInV1, selectHubConnectionV1, selectedHubConnectionV1, upsertHubConnectionV1, writeHubConnectionBookV1, hubConnectionIdForOriginV1, parseHubOriginV1, type HubConnectionBookV1, type HubSessionAuthorityV1, type HubSignInCredentialV1, type HubSignInErrorCodeV1 } from "@semio-tech/framework/directory/sign-in";
 import { spaceRowsAfterEventsV1, spaceRowsV1, type SpaceBrowserPhaseV1, type SpaceRowV1 } from "@semio-tech/framework/directory/spaces";

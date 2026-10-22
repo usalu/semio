@@ -49,7 +49,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       }
     },
     "test": {
@@ -61,10 +61,10 @@
         "testEnv",
         "goToolchain"
       ],
-      "outputs": [],
+      "outputs": ["{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-cli-go-45454396/test/test.xml"],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-entrypoint-source": {
@@ -79,7 +79,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-entrypoint-source"
+        "command": "repo ./📜️script.ts test-entrypoint-source"
       },
       "metadata": {
         "semio": {

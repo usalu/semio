@@ -16,7 +16,16 @@ pub struct SetViewpointComponents {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-components", kind: "set-viewpoint-components", record: "SetViewpointComponents" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint components", "Blickpunktkomponenten setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         let Self { topic_guid, guid, components } = self;
         protocol::MutationOutcome::new(wrap_viewpoint_diff(base, topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }))
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint components", "Blickpunktkomponenten setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

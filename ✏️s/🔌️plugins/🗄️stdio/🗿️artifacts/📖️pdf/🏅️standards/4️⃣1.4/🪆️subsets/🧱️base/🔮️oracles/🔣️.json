@@ -446,7 +446,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-structural-base-14-v1",
@@ -494,7 +494,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-structural-base-14-v1",
@@ -542,7 +542,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-structural-base-14-v1",
@@ -590,7 +590,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-structural-base-14-v1",
@@ -638,7 +638,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-structural-base-14-v1",

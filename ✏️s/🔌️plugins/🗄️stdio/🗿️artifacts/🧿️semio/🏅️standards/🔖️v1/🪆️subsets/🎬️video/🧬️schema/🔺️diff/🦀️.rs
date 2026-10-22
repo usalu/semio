@@ -356,16 +356,9 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
 //#endregion 🔖️VideoDiffLogic
 
 //#region 🔖️Apply
-impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
-    fn apply(&self, base: &SemioVideoSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.streams {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
-            apply_indexed(&mut next.streams, d, apply_stream);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {}
 
+impl protocol::ColdMutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
     fn absorb(&mut self, other: Self) {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
@@ -373,17 +366,30 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
             (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_stream_diff, apply_stream_to_copy)),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioVideoSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.streams {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
+            apply_indexed(&mut next.streams, d, apply_stream);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
-    fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
-        SemioVideoDiff { streams: self.streams.as_ref().map(|d| inverse_indexed(&base.streams, d, inverse_stream)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.streams.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
+    fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
+        SemioVideoDiff { streams: self.streams.as_ref().map(|d| inverse_indexed(&base.streams, d, inverse_stream)) }
     }
 }
 //#endregion 🔖️DiffAlgebra

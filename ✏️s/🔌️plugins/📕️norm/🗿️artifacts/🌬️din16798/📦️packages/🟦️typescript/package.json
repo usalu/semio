@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-din16798:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-din16798:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-din16798:test"
+    "build": "repo run @semio-tech/norm-din16798:build",
+    "check": "repo run @semio-tech/norm-din16798:check",
+    "test": "repo run @semio-tech/norm-din16798:test"
   },
   "exports": {
     ".": {

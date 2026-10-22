@@ -17,7 +17,16 @@ pub struct InsertRun {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for InsertRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "run", kind: "insert-run", record: "InsertedRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert run at #{}", self.index), &format!("Textlauf an #{} einfügen", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<SemioTextSnapshot, SemioTextMutation> for InsertRun {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::ColdMutation<SemioTextSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
@@ -26,11 +35,5 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for InsertRun 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert run at #{}", self.index), &format!("Textlauf an #{} einfügen", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

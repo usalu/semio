@@ -43,7 +43,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚨️ The branch this vector pins, level and address together.
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-load/no-such-case-21f1b7: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-load/no-such-case-21f1b7: exactly one diagnostic is expected, got {messages:?}");
@@ -68,7 +68,7 @@ fn inverse_has_the_declared_shape() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "replace-load/no-such-case-21f1b7: this vector declares a rejected outcome");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "replace-load/no-such-case-21f1b7: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

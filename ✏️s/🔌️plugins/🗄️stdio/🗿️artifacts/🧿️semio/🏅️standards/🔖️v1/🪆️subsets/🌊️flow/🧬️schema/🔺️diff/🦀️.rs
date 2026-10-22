@@ -320,20 +320,9 @@ fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff {
 //#endregion 🔖️EdgeLogic
 
 //#region 🔖️Apply
-impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
-    fn apply(&self, base: &SemioFlowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.nodes {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
-            apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
-        }
-        if let Some(d) = &self.edges {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
-            apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {}
 
+impl protocol::ColdMutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
     fn absorb(&mut self, other: Self) {
         self.nodes = match (self.nodes.take(), other.nodes) {
             (None, x) => x,
@@ -346,17 +335,34 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
             (Some(a), Some(b)) => Some(absorb_named(a, &b, |e| e.id.clone(), absorb_edge_diff, apply_edge)),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioFlowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.nodes {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
+            apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
+        }
+        if let Some(d) = &self.edges {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
+            apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Self {
-        SemioFlowDiff { nodes: self.nodes.as_ref().map(|d| inverse_named(&base.nodes, d, |n| n.id.clone(), inverse_node)), edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e| e.id.clone(), inverse_edge)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.nodes.is_none() && self.edges.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Self {
+        SemioFlowDiff { nodes: self.nodes.as_ref().map(|d| inverse_named(&base.nodes, d, |n| n.id.clone(), inverse_node)), edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e| e.id.clone(), inverse_edge)) }
     }
 }
 //#endregion 🔖️DiffAlgebra

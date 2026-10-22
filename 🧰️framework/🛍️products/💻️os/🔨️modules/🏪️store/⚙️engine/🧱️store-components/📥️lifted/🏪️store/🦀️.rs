@@ -4,7 +4,7 @@ use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_replay::replay_preparation;
+use semio_framework_os_store_replay_operation as replay_preparation;
 use replay_preparation::ArtifactReplayPreparationFactory;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

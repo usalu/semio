@@ -227,7 +227,7 @@ test("three catalog registrations use canonical registry identity without kernel
     expect(entry.nx).toBeUndefined();
     expect(project.name).toBe(entry.name);
     expect(project.targets.test.executor).toBe("repo:script");
-    expect(project.targets.test.options.command).toBe("bun ./📜️script.ts test");
+    expect(project.targets.test.options.command).toBe("repo ./📜️script.ts test");
     const script = entry.scripts.test.split(/\s+/).filter((part: string) => part !== "bun" && part !== "--skip-cache");
     expect(script.slice(0, 2)).toEqual(["--cwd", JSON.stringify(relative(join(root, directory), root).replaceAll("\\", "/"))]);
     expect(script.slice(2)).toEqual(["repo", "run", project.name + ":test"]);

@@ -10,7 +10,7 @@ use delete_widget::DeleteWidget;
 use delete_widget_position::DeleteWidgetPosition;
 use disconnect_synapse::DisconnectSynapse;
 use move_widget::MoveWidget;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 
@@ -260,7 +260,7 @@ fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
         Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }),
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }),
     ] {
-        let (diff, expected) = <Generation3dMutation as protocol::Mutation<Generation3dSnapshot>>::diff(&mutation, &base).into_parts();
+        let (diff, expected) = <Generation3dMutation as protocol::ColdMutation<Generation3dSnapshot>>::diff(&mutation, &base).into_parts();
         diff.retire_cold();
         let mut projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(base.clone());
         match apply_generation3d_mutation(&mut projection, &mutation) {

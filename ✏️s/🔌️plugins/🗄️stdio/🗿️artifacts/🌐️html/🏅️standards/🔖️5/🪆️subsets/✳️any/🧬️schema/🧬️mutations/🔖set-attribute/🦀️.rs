@@ -17,19 +17,22 @@ pub struct SetAttribute {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::ColdMutation<HtmlSnapshot>>::ReferenceDiff> {
         let Self { path, name, value } = self;
         protocol::MutationOutcome::new(attribute_diff_at_path(base, path, name, value.clone()))
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
         let Self { path, name, .. } = self;
         Ok(vec![HtmlMutation::SetAttribute(SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

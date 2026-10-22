@@ -60,7 +60,7 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
     let base = before();
     assert!(base.assets.contains_key("photo"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the before-snapshot must carry a DIFFERENT asset, so the rejection is about the key and not about an empty map");
     assert!(!base.assets.contains_key("logo"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the targeted asset must genuinely be absent");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &base);
     assert_eq!(produced.diff(), &RasterDiff::default(), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: a rejecting removal must carry an empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: exactly one diagnostic is expected, got {messages:?}");
@@ -109,7 +109,7 @@ async fn declared_outcome_holds() {
     let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("rejected"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached declares a rejected outcome");
     let base = before();
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &base);
     retire(base);
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_pack_json::Value::as_str), Some(message.code.0.as_str()), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared code must match the emitted one");

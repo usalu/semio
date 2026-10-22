@@ -1,8 +1,9 @@
+import {buildBackendRowV1} from "../🔌️backends/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🔧️ The build implementations the neutral entry can select. */
-export type CiToolV1="nx"|"bazel";
+export type CiToolV1=string;
 
 /** 📈️ Build activity the neutral cache status records (Bazel only). */
 export type CiActivityV1=Readonly<{builds:number;actions:number;executed:number;cacheHits:number}>;
@@ -60,15 +61,6 @@ const texts={
 
 /** 🔤️ The message keys every language must define. */
 export const CI_TEXT_KEYS_V1:readonly string[]=Object.freeze(Object.keys(texts.en));
-
-/** 🌍️ Picks the report language: the flag, then SEMIO_LANGUAGE, then the locale; there is no default, so an unresolved language is refused. */
-export function resolveCiLanguageV1(flag:string|undefined,environment:Readonly<Record<string,string|undefined>>):CiLanguageV1{
- for(const value of [flag,environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LANG]){
-  const prefix=(value??"").slice(0,2).toLowerCase();
-  if(prefix==="en"||prefix==="de")return prefix;
- }
- throw Error("Language required: pass --lang en|de or set SEMIO_LANGUAGE");
-}
 
 /** 💬️ Renders one message with `{name}` placeholders. */
 export function ciTextV1(language:CiLanguageV1,key:keyof typeof texts.en,values:Readonly<Record<string,string|number>>={}):string{
@@ -138,10 +130,6 @@ export function renderCiCacheDeltaV1(delta:CiCacheDeltaV1,label:string,hasActivi
  return lines.join("\n");
 }
 
-const nxMarkers=/read the output from the cache|\[local cache\]|\[existing outputs match the cache\]/u;
-const bazelMarkers=/(?:disk|remote) cache hit/u;
-const spawned=/[0-9]+ (?:linux-sandbox|darwin-sandbox|processwrapper-sandbox|windows-sandbox|local|worker)/u;
-
 /** ✅️ Judges a cache proof: run 1 must grow the store, run 2 must not, and run 2 must be recognized as served from the cache by the implementation's own evidence. */
 export function judgeCiCacheProofV1(input:Readonly<{tool:CiToolV1;statuses:readonly [CiCacheStatusV1,CiCacheStatusV1,CiCacheStatusV1];logs:readonly [string,string]}>):CiProofV1{
  const [s0,s1,s2]=input.statuses,[log1,log2]=input.logs,problems:string[]=[];
@@ -149,10 +137,10 @@ export function judgeCiCacheProofV1(input:Readonly<{tool:CiToolV1;statuses:reado
  if(!(s1.entries>s0.entries&&s1.bytes>s0.bytes))problems.push("proofNoGrowth");
  if(s2.entries!==s1.entries)problems.push("proofGrowth");
  let rule:CiProofV1["rule"]="none";
- if(input.tool==="nx"){if(nxMarkers.test(log2))rule="log-marker";}
- else if(bazelMarkers.test(log2))rule="log-marker";
- else if(s0.activity!==undefined&&s1.activity!==undefined&&s2.activity!==undefined&&s1.activity.executed-s0.activity.executed>0&&s2.activity.executed===s1.activity.executed&&s2.activity.builds>s1.activity.builds)rule="activity";
- else if(spawned.test(log1)&&!spawned.test(log2)&&/Build completed successfully/u.test(log2))rule="spawn-marker";
+ const declared=buildBackendRowV1(input.tool).cacheProof,marker=declared?.logMarker?new RegExp(declared.logMarker,"u"):undefined;
+ if(marker?.test(log2))rule="log-marker";
+ else if(declared?.activity===true&&s0.activity!==undefined&&s1.activity!==undefined&&s2.activity!==undefined&&s1.activity.executed-s0.activity.executed>0&&s2.activity.executed===s1.activity.executed&&s2.activity.builds>s1.activity.builds)rule="activity";
+ else if(declared?.spawnMarker){const executed=new RegExp(declared.spawnMarker.executed,"u"),completed=new RegExp(declared.spawnMarker.completed,"u");if(executed.test(log1)&&!executed.test(log2)&&completed.test(log2))rule="spawn-marker";}
  if(rule==="none")problems.push("proofNoHit");
  const proof:CiProofV1={tool:input.tool,ok:problems.length===0,rule,entries,bytes,problems:[...problems]};
  requireShape("Proof",proof,"Closed cache proof required");return Object.freeze(proof);

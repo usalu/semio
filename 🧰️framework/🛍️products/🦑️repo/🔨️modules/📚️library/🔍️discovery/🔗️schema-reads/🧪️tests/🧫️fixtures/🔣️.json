@@ -313,7 +313,7 @@
     },
     {
       "id": "async-bun-json",
-      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";const fixture=Bun.file(new URL(\"./examples.json\",import.meta.url)).json();new Ajv().compile(schema)(fixture);",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import {runtimeFileV1} from \"../../⚙️runtime/🌍️serve/🟦️.ts\";const fixture=runtimeFileV1(new URL(\"./examples.json\",import.meta.url)).json();new Ajv().compile(schema)(fixture);",
       "expected": {
         "reads": 1,
         "resolution": "unresolved",

@@ -58,7 +58,7 @@ fn model() -> ModelSnapshot {
 
 fn raised(snapshot: &ModelSnapshot, delta: f64) -> ModelSnapshot {
     let height = snapshot.storeys["st-ground"].height + delta;
-    protocol::apply_diff(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() })), snapshot).expect("the height edit applies")
+    protocol::apply_diff_cold(&ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() })), snapshot).expect("the height edit applies")
 }
 
 fn close(left: f64, right: f64) -> bool {

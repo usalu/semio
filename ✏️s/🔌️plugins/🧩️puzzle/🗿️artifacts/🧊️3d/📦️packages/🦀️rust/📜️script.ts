@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ puzzle-3d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -17,7 +17,7 @@ class OwnedVerifyScript extends BundleScript {
  * unoptimized state machine plus the retained tool-job poll chain under it outgrows libtest's default
  * 2 MiB per-test thread stack and aborts the binary with `fatal runtime error: stack overflow` before
  * any suite summary is reachable. Raised here — the one permanent script this package owns — so `nx
- * test`, `bun ./📜️script.ts test` and the dashboard commands that call them all inherit it on every
+ * test`, `repo ./📜️script.ts test` and the dashboard commands that call them all inherit it on every
  * platform without a per-developer environment step. A value already present in the environment wins.
  */
 process.env.RUST_MIN_STACK ??= "134217728";

@@ -1,0 +1,108 @@
+{
+ "hoist": [
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n\n\nconst UNUSED: u8 = 3;\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\nuse crate::schema::Snap;\n\npub fn helper(base: &Snap) -> u8 { 1 }\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\npub use support::{helper};\n#[allow(unused_imports)]\nuse support::{deep, inner};\n\n\nfn other() {}\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\nuse crate::schema::Snap;\n\npub fn helper(base: &Snap) -> u8 { inner(base) }\n\npub fn inner(base: &Snap) -> u8 { deep() }\n\npub fn deep() -> u8 { 2 }\n",
+   "moved": [
+    "deep",
+    "helper",
+    "inner"
+   ]
+  },
+  null,
+  null,
+  null,
+  null,
+  null,
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\npub use support::{Acc};\n\n\nimpl<T> Wrap<T> { fn w(&self) {} }\nstruct Wrap<T>(T);\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub struct Acc { n: u8 }\n\nimpl Acc {\n    pub fn new() -> Self { Acc { n: 0 } }\n}\n",
+   "moved": [
+    "Acc"
+   ]
+  },
+  null,
+  {
+   "aggregateText": "//! module docs\nuse crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\nuse crate::schema::Snap;\n\n// why this exists\n/// builds the base\npub fn helper(base: &Snap) -> u8 { 1 }\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\nuse crate::other::Unused;\nuse crate::ids::Id as Ident;\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\nuse crate::schema::Diff;\nuse crate::ids::Id as Ident;\nuse crate::schema::Snap;\n\npub fn helper(base: &Snap, id: Ident) -> Diff { todo!() }\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\npub use support::{a1};\npub(crate) use support::{b1};\n#[allow(unused_imports)]\nuse support::{c1};\n\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub fn a1() {}\n\npub fn b1() {}\n\npub fn c1() {}\n",
+   "moved": [
+    "a1",
+    "b1",
+    "c1"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n#[path = \"sub/mod.rs\"]\npub mod sub;\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub fn helper() {}\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub fn helper() {}\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{real};\n\n\n#[cfg(test)]\nfn helper() {}\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub fn real() {}\n",
+   "moved": [
+    "real"
+   ]
+  },
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🔧️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{helper};\n\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🔧️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub fn helper() {}\n",
+   "moved": [
+    "helper"
+   ]
+  },
+  null,
+  {
+   "aggregateText": "use crate::schema::{Diff, Snap};\n#[path = \"🧰️support/🦀️.rs\"]\npub mod support;\n#[allow(unused_imports)]\nuse support::{Alias, Kind, LIMIT, NAME, used};\n\n\ntrait Helper {}\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\npub enum Agg {\n    A(A),\n}\n",
+   "supportFile": "🧰️support/🦀️.rs",
+   "supportText": "//! 🧰️ `Agg` support: the diff builders and base accessors its mutation leaves call, hosted below the leaves so that no leaf has to import the aggregate module.\n\npub const LIMIT: u8 = 9;\n\npub static NAME: &str = \"n\";\n\npub enum Kind { A }\n\npub type Alias = u8;\n\npub fn used() -> u8 { LIMIT }\n",
+   "moved": [
+    "Alias",
+    "Kind",
+    "LIMIT",
+    "NAME",
+    "used"
+   ]
+  }
+ ],
+ "impl": []
+}

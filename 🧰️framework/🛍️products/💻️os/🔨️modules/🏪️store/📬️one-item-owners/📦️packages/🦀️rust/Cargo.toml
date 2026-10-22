@@ -35,6 +35,7 @@ semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packag
 semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-replay-operation = { path = "../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }

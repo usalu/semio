@@ -20,7 +20,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long --lib sqlite_snapshot_tsv_receiving_original_subset_validation -- --nocapture",
+        "command": "repo ./📜️script.ts test long --lib sqlite_snapshot_tsv_receiving_original_subset_validation -- --nocapture",
         "forwardAllArgs": true
       }
     },
@@ -36,7 +36,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -44,7 +44,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -53,7 +53,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -61,7 +61,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -79,7 +79,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -97,7 +97,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",

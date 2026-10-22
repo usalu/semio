@@ -351,51 +351,9 @@ pub struct En1997Diff {
     pub uplift_cases: Option<En1997UpliftCasesRows>,
 }
 
-impl protocol::MutationDiff<En1997Snapshot> for En1997Diff {
-    fn apply(&self, base: &En1997Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1997Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.structure_id {
-            next.structure_id = value.clone();
-        }
-        if let Some(value) = &self.geotechnical_category {
-            next.geotechnical_category = value.clone();
-        }
-        if let Some(value) = &self.design_situation {
-            next.design_situation = value.clone();
-        }
-        if let Some(value) = &self.design_approach {
-            next.design_approach = value.clone();
-        }
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.groundwater_level {
-            next.groundwater_level = value.clone();
-        }
-        if let Some(value) = &self.investigation_depth {
-            next.investigation_depth = value.clone();
-        }
-        if let Some(rows) = &self.layers {
-            next.layers = rows.commit_onto(&base.layers, capability).map_err(|error| error.under(["layers"]))?;
-        }
-        if let Some(rows) = &self.footings {
-            next.footings = rows.commit_onto(&base.footings, capability).map_err(|error| error.under(["footings"]))?;
-        }
-        if let Some(rows) = &self.piles {
-            next.piles = rows.commit_onto(&base.piles, capability).map_err(|error| error.under(["piles"]))?;
-        }
-        if let Some(rows) = &self.retaining_walls {
-            next.retaining_walls = rows.commit_onto(&base.retaining_walls, capability).map_err(|error| error.under(["retaining_walls"]))?;
-        }
-        if let Some(rows) = &self.slopes {
-            next.slopes = rows.commit_onto(&base.slopes, capability).map_err(|error| error.under(["slopes"]))?;
-        }
-        if let Some(rows) = &self.uplift_cases {
-            next.uplift_cases = rows.commit_onto(&base.uplift_cases, capability).map_err(|error| error.under(["uplift_cases"]))?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<En1997Snapshot> for En1997Diff {}
 
+impl protocol::ColdMutationDiff<En1997Snapshot> for En1997Diff {
     fn absorb(&mut self, other: Self) {
         if other.structure_id.is_some() {
             self.structure_id = other.structure_id;
@@ -461,9 +419,61 @@ impl protocol::MutationDiff<En1997Snapshot> for En1997Diff {
             self.uplift_cases = self.uplift_cases.take().filter(|rows| !rows.is_empty());
         }
     }
+
+    fn apply(&self, unpublished: &mut En1997Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.structure_id {
+            next.structure_id = value.clone();
+        }
+        if let Some(value) = &self.geotechnical_category {
+            next.geotechnical_category = value.clone();
+        }
+        if let Some(value) = &self.design_situation {
+            next.design_situation = value.clone();
+        }
+        if let Some(value) = &self.design_approach {
+            next.design_approach = value.clone();
+        }
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.groundwater_level {
+            next.groundwater_level = value.clone();
+        }
+        if let Some(value) = &self.investigation_depth {
+            next.investigation_depth = value.clone();
+        }
+        if let Some(rows) = &self.layers {
+            next.layers = rows.commit_onto(&base.layers, capability).map_err(|error| error.under(["layers"]))?;
+        }
+        if let Some(rows) = &self.footings {
+            next.footings = rows.commit_onto(&base.footings, capability).map_err(|error| error.under(["footings"]))?;
+        }
+        if let Some(rows) = &self.piles {
+            next.piles = rows.commit_onto(&base.piles, capability).map_err(|error| error.under(["piles"]))?;
+        }
+        if let Some(rows) = &self.retaining_walls {
+            next.retaining_walls = rows.commit_onto(&base.retaining_walls, capability).map_err(|error| error.under(["retaining_walls"]))?;
+        }
+        if let Some(rows) = &self.slopes {
+            next.slopes = rows.commit_onto(&base.slopes, capability).map_err(|error| error.under(["slopes"]))?;
+        }
+        if let Some(rows) = &self.uplift_cases {
+            next.uplift_cases = rows.commit_onto(&base.uplift_cases, capability).map_err(|error| error.under(["uplift_cases"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<En1997Snapshot> for En1997Diff {
+    fn is_empty(&self) -> bool {
+        self.structure_id.is_none() && self.geotechnical_category.is_none() && self.design_situation.is_none() && self.design_approach.is_none() && self.annex.is_none() && self.groundwater_level.is_none() && self.investigation_depth.is_none() && self.layers.as_ref().map_or(true, |rows| rows.is_empty()) && self.footings.as_ref().map_or(true, |rows| rows.is_empty()) && self.piles.as_ref().map_or(true, |rows| rows.is_empty()) && self.retaining_walls.as_ref().map_or(true, |rows| rows.is_empty()) && self.slopes.as_ref().map_or(true, |rows| rows.is_empty()) && self.uplift_cases.as_ref().map_or(true, |rows| rows.is_empty())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1997Snapshot> for En1997Diff {
     fn inverse(&self, base: &En1997Snapshot) -> Self {
         Self {
             structure_id: self.structure_id.as_ref().map(|_| base.structure_id.clone()),
@@ -480,10 +490,6 @@ impl protocol::DiffAlgebra<En1997Snapshot> for En1997Diff {
             slopes: self.slopes.as_ref().map(|rows| rows.inverse(&base.slopes)).filter(|rows| !rows.is_empty()),
             uplift_cases: self.uplift_cases.as_ref().map(|rows| rows.inverse(&base.uplift_cases)).filter(|rows| !rows.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.structure_id.is_none() && self.geotechnical_category.is_none() && self.design_situation.is_none() && self.design_approach.is_none() && self.annex.is_none() && self.groundwater_level.is_none() && self.investigation_depth.is_none() && self.layers.as_ref().map_or(true, |rows| rows.is_empty()) && self.footings.as_ref().map_or(true, |rows| rows.is_empty()) && self.piles.as_ref().map_or(true, |rows| rows.is_empty()) && self.retaining_walls.as_ref().map_or(true, |rows| rows.is_empty()) && self.slopes.as_ref().map_or(true, |rows| rows.is_empty()) && self.uplift_cases.as_ref().map_or(true, |rows| rows.is_empty())
     }
 }
 

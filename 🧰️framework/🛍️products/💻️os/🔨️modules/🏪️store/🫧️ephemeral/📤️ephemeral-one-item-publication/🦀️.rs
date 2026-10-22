@@ -43,7 +43,7 @@ pub struct ArtifactEphemeralOneItemPreparationRequest<P, Mutation> {
 }
 
 pub trait ArtifactEphemeralOneItemPreparation<P, Mutation>: Send {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<P>>;
     fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<P>>;
@@ -76,25 +76,25 @@ impl<Mutation> ArtifactEphemeralOneItemAdmissionRejected<Mutation> {
 
 pub struct ArtifactEphemeralOneItemPublication<P, Mutation> {
     pub(super) operation: semio_framework_job::OperationId,
-    pub(super) expected_generation: u64,
-    pub(super) footprint: ArtifactStoreOneItemFootprint,
-    pub(super) preparation: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>>>,
-    pub(super) displaced_root_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    pub(super) root_retirement_factory: std::mem::ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,
+    pub expected_generation: u64,
+    pub footprint: ArtifactStoreOneItemFootprint,
+    pub preparation: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>>>,
+    pub displaced_root_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub root_retirement_factory: std::mem::ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,
     pub(super) returned_read_registry: std::mem::ManuallyDrop<Option<SnapshotReadRegistryAliasRetirement>>,
     pub(super) returned_read_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub(super) owned_retirement_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,
-    pub(super) receipt: std::mem::ManuallyDrop<Option<LaneItemReceipt>>,
+    pub receipt: std::mem::ManuallyDrop<Option<LaneItemReceipt>>,
     /// 📍️ Last checkpoint the preparation owner reported, kept so progress survives the turn the
     /// owner is released on: a host polling `progress()` must never see a gesture walk backwards.
     pub(super) retained_checkpoint: ArtifactStoreOneItemCheckpoint,
     pub(super) factory_retirement: [Option<semio_framework_value::FactoryAuthority>; 2],
     pub(super) attempts: u8,
-    pub(super) published: bool,
-    pub(super) cancel_requested: bool,
+    pub published: bool,
+    pub cancel_requested: bool,
     pub(super) close_started: bool,
-    pub(super) fault: std::mem::ManuallyDrop<Option<ValueError>>,
-    pub(super) phase: ArtifactStoreOneItemPublicationPhase,
+    pub fault: std::mem::ManuallyDrop<Option<ValueError>>,
+    pub phase: ArtifactStoreOneItemPublicationPhase,
 }
 
 impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
@@ -119,6 +119,21 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         }
     }
 
+    /// 🧱️ Opens a publication in its first phase around one prepared owner; the lane stores drive the public state fields.
+    pub fn preparing(operation: semio_framework_job::OperationId, expected_generation: u64, footprint: ArtifactStoreOneItemFootprint, preparation: Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>, root_retirement_factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+        use std::mem::ManuallyDrop as Held;
+        Self {
+            operation, expected_generation, footprint,
+            preparation: Held::new(Some(preparation)),
+            displaced_root_retirement: Held::new(None), root_retirement_factory: Held::new(Some(root_retirement_factory)),
+            returned_read_registry: Held::new(None), returned_read_retirement: Held::new(None),
+            owned_retirement_factory: Held::new(None), receipt: Held::new(None),
+            retained_checkpoint: Default::default(), factory_retirement: [None, None],
+            attempts: 0, published: false, cancel_requested: false, close_started: false,
+            fault: Held::new(None), phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+        }
+    }
+
     pub fn operation(&self) -> semio_framework_job::OperationId {
         self.operation
     }
@@ -140,10 +155,10 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     /// 🚫️ Borrows the one original refusal and its actual consumed physical currencies.
     pub fn preparation_refusal(&self) -> Option<&ValueError> { self.fault.as_ref() }
 
-    pub(super) fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
+    pub fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
         let result = self.preparation.as_mut().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral publication lost its preparation owner")).and_then(|owner| {
             let grant=ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-            let step=owner.advance(grant)?;
+            let step=owner.advance(grant, receiving)?;
             validate_original_preparation_step(step,grant,owner.prepared().is_some())
         });
         match result {

@@ -1,0 +1,1106 @@
+{
+ "version": 1,
+ "edits": [
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts",
+   "group": "core",
+   "blob": "f0001",
+   "sha": "23e8b1fe5edf4758fa119d772d1ed09ca7d45770ab6e6f91a043fd7238256783",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🌿️current/🟦️.ts",
+   "group": "core",
+   "blob": "f0002",
+   "sha": "2f519409bef755d35d1fe02c892ee175bc11cb9d092e6d93400d2c1b5fce36ec",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts",
+   "group": "core",
+   "blob": "f0003",
+   "sha": "a1737d4fedff30ab910ccd9ca791153e08383b9acea2e31d8a88917e5bca88bf",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗣️messages/🟦️.ts",
+   "group": "core",
+   "blob": "f0004",
+   "sha": "51b0bace187fc08c55bbedb768b4961f44bf7f170ea9368547b9383fad6daef1",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts",
+   "group": "core",
+   "blob": "f0005",
+   "sha": "a5a3324915d20a4d3d44f1bee01debd4991912e0773088940cbb9eecc5322376",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧪️tests/🐍️oracle.py",
+   "group": "core",
+   "blob": "f0006",
+   "sha": "8a4a8c2e7c27c9401a22cd8eb6b3a9f70582badcd684de964f9e429ed9c31531",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧪️tests/📥️worker/🟦️.ts",
+   "group": "core",
+   "blob": "f0007",
+   "sha": "5e58d1126800716f49180f7c21e0e4a59dd9192bd030845dbb5b3c26714e44a8",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧪️tests/🔗️adapters/🟦️.ts",
+   "group": "core",
+   "blob": "f0008",
+   "sha": "5c3cf6e555f42eb35863fb099ab004a30d07023293d0bc06fef7f6f0860f8d13",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧪️tests/🟦️.ts",
+   "group": "core",
+   "blob": "f0009",
+   "sha": "228698806da72067f365ea4f7d3f0b9a867cbcc5f22d067024dbff1fbd36e6c1",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧪️tests/🧫️fixtures/🔣️.json",
+   "group": "core",
+   "blob": "f0010",
+   "sha": "fce29daf345c12962c855a862110b8366c18b3e72422fea423842cbb88df411e",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json",
+   "group": "core",
+   "blob": "f0011",
+   "sha": "d4edde0deffbc91288078b989cc0b9e1538aa13e2a71cf924779e7f5fd8a6a7d",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts",
+   "group": "core",
+   "blob": "f0012",
+   "sha": "a2fe58eb46358c187b8dc79b8e2e82a835fa57e7a8932e9a96f71d1bd8001e30",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🪪️identity/🟦️.ts",
+   "group": "core",
+   "blob": "f0013",
+   "sha": "445137fc7d44c8e6c64c95df2a916e201842ce1f0c2e802a0f1a504511a40cb4",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🟦️.ts",
+   "group": "core",
+   "blob": "f0014",
+   "sha": "08250b2521805e99c98651ae7b17f17886b98c9dcd55c3174df601b02eeaa384",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🧪️tests/🟦️.ts",
+   "group": "core",
+   "blob": "f0015",
+   "sha": "dd897943a0864429fe8a1e9263b69b5bf6d0e3905e4ebfe6a9ed1ce36fc27019",
+   "mode": 420
+  },
+  {
+   "kind": "new",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/🟦️.ts",
+   "group": "core",
+   "blob": "f0016",
+   "sha": "8920369d0c3abc9702af4a65c9609078314592717a85de4add2e2f101505d58b",
+   "mode": 420
+  },
+  {
+   "kind": "delete",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts",
+   "group": "core",
+   "sha": "db973a3cd376c465513bedb57d9713e099c1f0bd6608fecf5728490546ea0eec"
+  },
+  {
+   "kind": "delete",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🧫️fixtures/🔣️.json",
+   "group": "core",
+   "sha": "90fd8ce7563558004b8cd32f22d8cf4b66511f46b3a52456e1ced6b4ad0f9959"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "group": "core",
+   "base": "893785de5009a0473a026837ffa0c020f91f81befd6a9a804425eb98585bce5e",
+   "sha": "89b0abcad8917fbb80098f36efffd8298611322c992ac17a485c8fd2fc3a7100",
+   "hunks": [
+    {
+     "old": "export type HostCapacityOptionsV1=HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>;write?:(line:string)=>void}>;\n",
+     "new": "export type HostCapacityOptionsV1=HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>;write?:(line:string)=>void;session?:Readonly<{address:string;weight:number}>}>;\n"
+    },
+    {
+     "old": " const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid};\n",
+     "new": " const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};\n"
+    },
+    {
+     "old": "      grant=requireHostCapacityV1<HostGrantV1>(\"Grant\",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:bootAt(at)});\n",
+     "new": "      grant=requireHostCapacityV1<HostGrantV1>(\"Grant\",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:bootAt(at),...options.session===undefined?{}:{session:options.session.address}});\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+   "group": "core",
+   "base": "86f33b5d5ba22e458a636e1b4721e142655c8b4ab484278da6231e681eed0baf",
+   "sha": "56f7485e306b2b89320dff3ed9b83e8428f74ddb27cc7df3d55d0d83bc3f454b",
+   "hunks": [
+    {
+     "old": "export type HostWaiterV1=Readonly<{request:HostRequestV1;arrivedAtMs:number;pid:number}>;\n/** 🔐️ A live admission (`Grant` of the schema); `observedMegabytes` is what its process tree holds right now. */\nexport type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number}>;\n",
+     "new": "export type HostWaiterV1=Readonly<{request:HostRequestV1;arrivedAtMs:number;pid:number;session?:string;weight?:number}>;\n/** 🔐️ A live admission (`Grant` of the schema); `observedMegabytes` is what its process tree holds right now. */\nexport type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number;session?:string}>;\n"
+    },
+    {
+     "old": "/** 🔢️ Orders waiters for service: interactive before batch, then by arrival, then by id. */\nexport function orderHostWaitersV1(waiters:readonly HostWaiterV1[]):HostWaiterV1[]{\n const rank=(waiter:HostWaiterV1)=>waiter.request.priority===\"interactive\"?0:1;\n return [...waiters].sort((left,right)=>rank(left)-rank(right)||left.arrivedAtMs-right.arrivedAtMs||(left.request.id<right.request.id?-1:left.request.id>right.request.id?1:0));\n",
+     "new": "/** 🔢️ Orders waiters for service: interactive before batch, then the agent session holding the least memory per unit of budget weight (weighted fair share between sessions; waiters without a session count as holding nothing), then by arrival, then by id. */\nexport function orderHostWaitersV1(waiters:readonly HostWaiterV1[],ledger:readonly Pick<HostGrantV1,\"session\"|\"reservedMegabytes\">[]=[]):HostWaiterV1[]{\n const rank=(waiter:HostWaiterV1)=>waiter.request.priority===\"interactive\"?0:1,held=(waiter:HostWaiterV1)=>waiter.session===undefined?0:ledger.reduce((sum,grant)=>sum+(grant.session===waiter.session?grant.reservedMegabytes:0),0),weight=(waiter:HostWaiterV1)=>waiter.weight??1;\n return [...waiters].sort((left,right)=>rank(left)-rank(right)||held(left)*weight(right)-held(right)*weight(left)||left.arrivedAtMs-right.arrivedAtMs||(left.request.id<right.request.id?-1:left.request.id>right.request.id?1:0));\n"
+    },
+    {
+     "old": " for(const waiter of orderHostWaitersV1(aged)){\n",
+     "new": " for(const waiter of orderHostWaitersV1(aged,ledger)){\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+   "group": "core",
+   "base": "47d5ac1cc679ee4c68c19a9dd923e3867a7a9708fcda20658f6b7109d0266b59",
+   "sha": "42081d3330f60b14bcaf9b47ff746afed5586424188c429518c3c3735f596fe0",
+   "hunks": [
+    {
+     "old": "          \"minimum\": 1\n        }\n",
+     "new": "          \"minimum\": 1\n        },\n        \"session\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{12}\\\\.[a-z][a-z0-9]{0,11}$\"\n        },\n        \"weight\": {\n          \"type\": \"integer\",\n          \"minimum\": 1,\n          \"maximum\": 16\n        }\n"
+    },
+    {
+     "old": "        \"bootAtMs\": {\n          \"type\": \"integer\",\n          \"minimum\": 0\n        }\n      }\n",
+     "new": "        \"bootAtMs\": {\n          \"type\": \"integer\",\n          \"minimum\": 0\n        },\n        \"session\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{12}\\\\.[a-z][a-z0-9]{0,11}$\"\n        }\n      }\n"
+    }
+   ]
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+   "group": "core",
+   "function": "process_project",
+   "base": "c7b5770d12269272f19c3e9c2b0121f8d35082419a2b64444286103eb4dfa462",
+   "sha": "2afbb1465ee031b2543454a7d39c85dce5420b3d8f6b610a1edb7018ca8e0dd0"
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+   "group": "core",
+   "function": "process_script",
+   "base": "527f0d694dfa236d1347c61a9c49ad20955663bd5cec50a22a1418a2706388f1",
+   "sha": "dfb9fe2310fae83a79274407e0355611975f4ed3139d100aba911915a1b96a83"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+   "group": "core",
+   "base": "daf884340cda07ca6d585fa952900020564c92dd27b3562966ba27ffa244ba67",
+   "sha": "9207b67e983f22439759acd4455f12f880e9e3683eb3a703899e085cdcf01ae2",
+   "hunks": [
+    {
+     "old": "    \"./leases\": \"./🔒️leases/🟦️.ts\",\n",
+     "new": "    \"./leases\": \"./🔒️leases/🟦️.ts\",\n    \"./agent-sessions\": \"./🪪️agent-sessions/🟦️.ts\",\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts",
+   "group": "core",
+   "base": "4a883f04f3a07163962f1532fb8139861b01b947c4e803f99c61d7414af32bf6",
+   "sha": "7bea82b1b4ac452577e27fd8bfbf53c2f55e51bdd851a02759c270eef299b8e3",
+   "hunks": [
+    {
+     "old": "import {leaseRegistryRootV1,listLeaseRegistryDirectoriesV1,readLeaseRegistryEntriesV1,readLeaseViolationsV1,type LeaseRegistryEntryV1} from \"../🧭️order/🗂️registry/🟦️.ts\";\n",
+     "new": "import {leaseRegistryRootV1,listLeaseRegistryDirectoriesV1,readLeaseRegistryEntriesV1,readLeaseViolationsV1,type LeaseRegistryEntryV1} from \"../🧭️order/🗂️registry/🟦️.ts\";\nimport {agentSessionRegistryRootV1,agentSessionStoreV1,parseAgentSessionAddressV1,readAgentSessionV1} from \"../../🪪️agent-sessions/🗄️store/🟦️.ts\";\n"
+    },
+    {
+     "old": "export type LeaseHolderV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;heldSeconds:number;class:string;rank:number;source:\"registry\"|\"queue\";command?:string}>;\n/** ⏳️ One waiting request and the participants it waits for. */\nexport type LeaseWaiterV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;waitedSeconds:number;class:string;rank:number;source:\"registry\"|\"queue\";position?:number;queued?:number;blockers:readonly string[];command?:string}>;\n",
+     "new": "export type LeaseHolderV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;heldSeconds:number;class:string;rank:number;source:\"registry\"|\"queue\";command?:string;session?:string;agent?:string}>;\n/** ⏳️ One waiting request and the participants it waits for. */\nexport type LeaseWaiterV1=Readonly<{resource:string;hash:string;mode:LeaseModeV1;pid:number;task:number;sinceMs:number;waitedSeconds:number;class:string;rank:number;source:\"registry\"|\"queue\";position?:number;queued?:number;blockers:readonly string[];command?:string;session?:string;agent?:string}>;\n"
+    },
+    {
+     "old": "export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;entries:readonly LeaseRegistryEntryV1[];queues:readonly Ticket[];violations:readonly LeaseViolationV1[]}>,environment:Readonly<Record<string,string|undefined>>=process.env):LeaseReportV1{\n const policy=leaseOrderPolicyV1(environment),names=new Map<string,string>(),holders:LeaseHolderV1[]=[],waiters:LeaseWaiterV1[]=[],nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean}}>();\n const node=(id:string)=>{let row=nodes.get(id);if(!row){row={holds:[]};nodes.set(id,row);}return row;};\n const known=new Set<string>(),commands=new Map<number,string>();\n for(const entry of input.entries){\n  commands.set(entry.pid,entry.command);\n  for(const row of entry.holds){\n   const key=hash(row.resource),cls=classifyLeaseResourceV1(policy,row.resource);names.set(key,row.resource);known.add(`h\\0${entry.pid}\\0${key}`);\n   holders.push({resource:row.resource,hash:key,mode:row.mode,pid:entry.pid,task:row.task,sinceMs:row.sinceMs,heldSeconds:Math.max(0,Math.floor((input.atMs-row.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:\"registry\",command:entry.command});\n",
+     "new": "export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;entries:readonly LeaseRegistryEntryV1[];queues:readonly Ticket[];violations:readonly LeaseViolationV1[];agents?:ReadonlyMap<string,string>}>,environment:Readonly<Record<string,string|undefined>>=process.env):LeaseReportV1{\n const policy=leaseOrderPolicyV1(environment),names=new Map<string,string>(),holders:LeaseHolderV1[]=[],waiters:LeaseWaiterV1[]=[],nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean}}>();\n const node=(id:string)=>{let row=nodes.get(id);if(!row){row={holds:[]};nodes.set(id,row);}return row;};\n const known=new Set<string>(),commands=new Map<number,string>(),sessions=new Map<number,Readonly<{session:string;agent?:string}>>(),owner=(pid:number)=>{const row=sessions.get(pid);return row===undefined?{}:{session:row.session,...row.agent===undefined?{}:{agent:row.agent}};};\n for(const entry of input.entries){\n  commands.set(entry.pid,entry.command);if(entry.session!==undefined)sessions.set(entry.pid,{session:entry.session,...input.agents?.has(entry.session)?{agent:input.agents.get(entry.session)!}:{}});\n  for(const row of entry.holds){\n   const key=hash(row.resource),cls=classifyLeaseResourceV1(policy,row.resource);names.set(key,row.resource);known.add(`h\\0${entry.pid}\\0${key}`);\n   holders.push({resource:row.resource,hash:key,mode:row.mode,pid:entry.pid,task:row.task,sinceMs:row.sinceMs,heldSeconds:Math.max(0,Math.floor((input.atMs-row.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:\"registry\",command:entry.command,...owner(entry.pid)});\n"
+    },
+    {
+     "old": "   holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:\"queue\",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{}});\n",
+     "new": "   holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:\"queue\",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{},...owner(ticket.pid)});\n"
+    },
+    {
+     "old": "  waiters.push({resource:names.get(row.wait.key)??\"\",hash:row.wait.key,mode:row.wait.mode,pid,task,sinceMs:row.wait.sinceMs,waitedSeconds:Math.max(0,Math.floor((input.atMs-row.wait.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:known.has(`w\\0${pid}\\0${row.wait.key}`)?\"registry\":\"queue\",...ticket?{position:ticket.position,queued:ticket.queued}:{},blockers,...commands.has(pid)?{command:commands.get(pid)}:{}});\n",
+     "new": "  waiters.push({resource:names.get(row.wait.key)??\"\",hash:row.wait.key,mode:row.wait.mode,pid,task,sinceMs:row.wait.sinceMs,waitedSeconds:Math.max(0,Math.floor((input.atMs-row.wait.sinceMs)/1000)),class:cls.id,rank:cls.rank,source:known.has(`w\\0${pid}\\0${row.wait.key}`)?\"registry\":\"queue\",...ticket?{position:ticket.position,queued:ticket.queued}:{},blockers,...commands.has(pid)?{command:commands.get(pid)}:{},...owner(pid)});\n"
+    },
+    {
+     "old": " const command=(row:{command?:string})=>row.command?`  ${row.command.slice(0,80)}`:\"\";\n",
+     "new": " const command=(row:{command?:string;session?:string;agent?:string})=>(row.session===undefined?\"\":fill(text.sessionTag,{session:row.session.slice(row.session.indexOf(\".\")+1),agent:row.agent??\"?\"}))+(row.command?`  ${row.command.slice(0,80)}`:\"\");\n"
+    },
+    {
+     "old": " return buildLeaseReportV1({directory:resolved,atMs,entries:readLeaseRegistryEntriesV1(root,resolved,atMs),queues:readLeaseQueuesV1(resolved),violations:readLeaseViolationsV1(root,resolved,violations)},environment);\n",
+     "new": " const entries=readLeaseRegistryEntriesV1(root,resolved,atMs),agents=new Map<string,string>(),sessions=agentSessionRegistryRootV1(environment);\n for(const entry of entries){const address=parseAgentSessionAddressV1(entry.session);if(address===undefined||agents.has(entry.session!))continue;const found=readAgentSessionV1(agentSessionStoreV1(sessions,address.worktree),address.id);if(found!==undefined)agents.set(entry.session!,found.agent.id);}\n return buildLeaseReportV1({directory:resolved,atMs,entries,queues:readLeaseQueuesV1(resolved),violations:readLeaseViolationsV1(root,resolved,violations),agents},environment);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🧬️schema/🔣️.json",
+   "group": "core",
+   "base": "e9fdd3fec15bf1e1919f710031fe909e9f27fc56702bae28916b5ce0b7ac9bef",
+   "sha": "984d33dd975a855632973c09e7ad16fcb2e26404aa0389c5a23d133b6425fc4a",
+   "hunks": [
+    {
+     "old": "          ]\n        },\n        \"command\": {\n          \"type\": \"string\"\n        }\n",
+     "new": "          ]\n        },\n        \"command\": {\n          \"type\": \"string\"\n        },\n        \"session\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{12}\\\\.[a-z][a-z0-9]{0,11}$\"\n        },\n        \"agent\": {\n          \"type\": \"string\"\n        }\n"
+    },
+    {
+     "old": "          }\n        },\n        \"command\": {\n          \"type\": \"string\"\n        }\n",
+     "new": "          }\n        },\n        \"command\": {\n          \"type\": \"string\"\n        },\n        \"session\": {\n          \"type\": \"string\",\n          \"pattern\": \"^[0-9a-f]{12}\\\\.[a-z][a-z0-9]{0,11}$\"\n        },\n        \"agent\": {\n          \"type\": \"string\"\n        }\n"
+    },
+    {
+     "old": "          \"de\": \"Lease-Verzeichnisse mit registrierten Prozessen:\"\n",
+     "new": "          \"de\": \"Lease-Verzeichnisse mit registrierten Prozessen:\"\n        },\n        \"sessionTag\": {\n          \"en\": \"  session {session} ({agent})\",\n          \"de\": \"  Sitzung {session} ({agent})\"\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts",
+   "group": "core",
+   "base": "8388dcefab9f4ba7a47f0dd647a72f877e21e19a2d40b6d13eeeeb19c0a45139",
+   "sha": "086ee0c0e1491ec539f7a290bbbfab8072467dc29fda85fac91e94fb0b5f335f",
+   "hunks": [
+    {
+     "old": "\n/** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */\nexport type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;\n",
+     "new": "import {agentSessionAddressOfEnvironmentV1} from \"../../../🪪️agent-sessions/🗄️store/🟦️.ts\";\n\n/** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */\nexport type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;\n"
+    },
+    {
+     "old": "  const text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,holds,waits});\n",
+     "new": "  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},holds,waits});\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/♻️reclaim/🟦️.ts",
+   "group": "core",
+   "base": "5115f3651e6a734452e37e3d32ae9f0004636f4ee85a1cd3a354dc3bd82e2caa",
+   "sha": "9c7aa29bbab4d80456787e5e87c5f8f1f5d2bd57042a24e971f3c0d343c2916a",
+   "hunks": [
+    {
+     "old": "/** ♻️ Lists the sandbox directories of this host with the facts a reclaim decision needs. */\nexport function listTestSandboxesV1(parent: string, now: number = Date.now(), declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly Readonly<{ root: string; facts: TestSandboxFactsV1 }>[] {\n  if (!existsSync(parent)) return [];\n  return readdirSync(parent).filter(name => /^[0-9a-f]{8}$/u.test(name)).flatMap(name => {\n    const root = join(parent, name);\n",
+     "new": "/** ♻️ Lists the sandbox directories of this host with the facts a reclaim decision needs: the sandboxes of every agent session directory below the host-wide parent. */\nexport function listTestSandboxesV1(parent: string, now: number = Date.now(), declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly Readonly<{ root: string; facts: TestSandboxFactsV1 }>[] {\n  if (!existsSync(parent)) return [];\n  return readdirSync(parent).filter(name => name !== declared.ports.directory && /^[a-z][a-z0-9]{0,11}$/u.test(name)).flatMap(name => listSessionSandboxesV1(join(parent, name), now, declared));\n}\n\n/** ♻️ Lists the sandbox directories below the root of one agent session. */\nexport function listSessionSandboxesV1(home: string, now: number = Date.now(), declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly Readonly<{ root: string; facts: TestSandboxFactsV1 }>[] {\n  if (!existsSync(home)) return [];\n  return readdirSync(home).filter(name => /^[0-9a-f]{8}$/u.test(name)).flatMap(name => {\n    const root = join(home, name);\n"
+    },
+    {
+     "old": "  });\n",
+     "new": "  });\n}\n\n/** ♻️ Releases the sandboxes and the temp root of one agent session: abandoned sandboxes go (images detached first), a live one keeps the session root; when nothing is kept the whole root goes. */\nexport function reclaimAgentSessionSandboxesV1(session: Readonly<{ resources: Readonly<{ tests: Readonly<{ root: string }> }> }>, options: Readonly<{ parent?: string; now?: number; alive?: (pid: number) => boolean; detach?: (root: string) => readonly string[] }> = {}, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): Readonly<{ released: number; kept: number }> {\n  const home = join(testSandboxParentV1(options.parent, declared), session.resources.tests.root), now = options.now ?? Date.now(), alive = options.alive ?? testProcessAliveV1, detach = options.detach ?? detachDiskImagesUnderV1;\n  if (!existsSync(home)) return { released: 0, kept: 0 };\n  let released = 0, kept = 0;\n  for (const { root, facts } of listSessionSandboxesV1(home, now, declared)) {\n    if (!abandonedTestSandboxV1(facts, alive, declared)) { kept++; continue; }\n    try { detach(root); rmSync(root, { recursive: true, force: true }); released++; } catch { kept++; }\n  }\n  if (kept === 0) { try { detach(home); rmSync(home, { recursive: true, force: true }); released++; } catch { kept++; } }\n  return { released, kept };\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/📁️root/🟦️.ts",
+   "group": "core",
+   "base": "3f5fd5187d1f838b9fd23d98510dada81e2bac35b59c4797a508b442fb83bef1",
+   "sha": "ab82b6336bc0e3ff879f9dfee7009bbe6829a96ebdcb0d38e68a501564bc44a9",
+   "hunks": [
+    {
+     "old": "import { existsSync, mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from \"node:fs\";\n",
+     "new": "import { existsSync, mkdirSync, readFileSync, rmSync, rmdirSync, utimesSync, writeFileSync } from \"node:fs\";\n"
+    },
+    {
+     "old": "import { reclaimAbandonedTestSandboxesV1 } from \"../♻️reclaim/🟦️.ts\";\n",
+     "new": "import { reclaimAbandonedTestSandboxesV1 } from \"../♻️reclaim/🟦️.ts\";\nimport { agentSessionAddressV1, currentAgentSessionV1 } from \"../../../🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "export type TestSandboxOptionsV1 = Readonly<{ route: string; parent?: string; checkout?: string; guard?: TestGuardModeV1; heartbeat?: boolean; reclaim?: boolean }>;\n",
+     "new": "export type TestSandboxOptionsV1 = Readonly<{ route: string; parent?: string; checkout?: string; guard?: TestGuardModeV1; heartbeat?: boolean; reclaim?: boolean; session?: Readonly<{ id: string; worktree: string; resources: Readonly<{ tests: Readonly<{ root: string }> }> }> }>;\n"
+    },
+    {
+     "old": "/** 🏖️ Creates a unique sandbox under the short host-wide parent; it is detached, released and removed on disposal and when the process exits, and abandoned siblings of dead processes are reclaimed first. */\nexport function createTestSandboxV1(options: TestSandboxOptionsV1, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): TestSandboxV1 {\n  if (!/^[a-z0-9][a-z0-9-]{0,127}$/u.test(options.route)) throw Error(\"Invalid test sandbox route\");\n  const parent = testSandboxParentV1(options.parent, declared), names = declared.environment;\n  mkdirSync(parent, { recursive: true, mode: 0o700 });\n",
+     "new": "/** 🏖️ Creates a unique sandbox under the root of the current agent session below the short host-wide parent (the session decides the root, so concurrent agents never share a directory and a gone session takes its sandboxes with it); it is detached, released and removed on disposal and when the process exits, and abandoned siblings of dead processes are reclaimed first. */\nexport function createTestSandboxV1(options: TestSandboxOptionsV1, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): TestSandboxV1 {\n  if (!/^[a-z0-9][a-z0-9-]{0,127}$/u.test(options.route)) throw Error(\"Invalid test sandbox route\");\n  const parent = testSandboxParentV1(options.parent, declared), names = declared.environment, session = options.session ?? currentAgentSessionV1(), home = join(parent, session.resources.tests.root);\n  mkdirSync(home, { recursive: true, mode: 0o700 });\n"
+    },
+    {
+     "old": "    id = randomBytes(4).toString(\"hex\"); root = join(parent, id);\n    try { mkdirSync(root, { mode: 0o700 }); break; } catch (error) { if ((error as NodeJS.ErrnoException).code !== \"EEXIST\" || attempt === 15) throw error; }\n",
+     "new": "    id = randomBytes(4).toString(\"hex\"); root = join(home, id);\n    try { mkdirSync(root, { mode: 0o700 }); break; } catch (error) {\n      const code = (error as NodeJS.ErrnoException).code;\n      if (code === \"ENOENT\" && attempt < 15) { mkdirSync(home, { recursive: true, mode: 0o700 }); continue; }\n      if (code !== \"EEXIST\" || attempt === 15) throw error;\n    }\n"
+    },
+    {
+     "old": "  writeFileSync(owner, JSON.stringify({ version: 1, pid: process.pid, route: options.route, startedAt: Date.now(), checkout: options.checkout ?? null }));\n",
+     "new": "  writeFileSync(owner, JSON.stringify({ version: 1, pid: process.pid, route: options.route, startedAt: Date.now(), checkout: options.checkout ?? null, session: agentSessionAddressV1(session) }));\n"
+    },
+    {
+     "old": "      try { detachDiskImagesUnderV1(root); rmSync(root, { recursive: true, force: true, maxRetries: 3 }); } catch (error) { console.error(`[leak] test sandbox ${root} not released: ${String(error)}`); }\n",
+     "new": "      try { detachDiskImagesUnderV1(root); rmSync(root, { recursive: true, force: true, maxRetries: 3 }); } catch (error) { console.error(`[leak] test sandbox ${root} not released: ${String(error)}`); }\n      try { rmdirSync(home); } catch {}\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts",
+   "group": "core",
+   "base": "2071cbc0509aa0481fd2712615ac9b188560fa13ac63cd06725f801a9586ef02",
+   "sha": "62a397fe98e352fc8650ed511071dd26e743deaabd20f5162822b85715572a69",
+   "hunks": [
+    {
+     "old": "export { reclaimAbandonedTestSandboxesV1, abandonedTestSandboxV1, listTestSandboxesV1 } from \"./♻️reclaim/🟦️.ts\";\n",
+     "new": "export { reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, abandonedTestSandboxV1, listTestSandboxesV1, listSessionSandboxesV1 } from \"./♻️reclaim/🟦️.ts\";\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🟦️.ts",
+   "group": "core",
+   "base": "6d872d987724d226aa9e14b7b8e7d9a8497d76bac3bd28197dc2346d43ad40be",
+   "sha": "53d5cbcb5f9e08102c77f4fbe4bb9cfa28523d8c82faab274a7e3f112a5b3c01",
+   "hunks": [
+    {
+     "old": "  reclaimAbandonedTestSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,\n",
+     "new": "  reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,\n"
+    },
+    {
+     "old": "\nconst declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, \"..\");\n",
+     "new": "\nprocess.env.SEMIO_AGENT_SESSION_DIRECTORY = mkdtempSync(join(tmpdir(), \"sb-sessions-\"));\ndelete process.env.SEMIO_AGENT_SESSION;\nconst declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, \"..\");\n"
+    },
+    {
+     "old": "  });\n  test(\"abandoned sandboxes, images and port leases of dead owners are reclaimed and live ones are kept\", () => {\n",
+     "new": "  });\n  test(\"sandboxes live below the root of their agent session, the owner row names the session, and a gone session releases its root unless a live sandbox is left\", () => {\n    const parent = mkdtempSync(join(tmpdir(), \"sb-session-\")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, [\"-e\", \"0\"]).pid!;\n    const session = { id: \"a1\", worktree: \"0123456789ab\", resources: { tests: { root: \"a1\" } } }, other = { id: \"b2\", worktree: \"0123456789ab\", resources: { tests: { root: \"b2\" } } };\n    try {\n      const mine = createTestSandboxV1({ route: \"s\", parent, reclaim: false, session }), theirs = createTestSandboxV1({ route: \"s\", parent, reclaim: false, session: other });\n      expect(join(mine.root, \"..\")).toBe(realpathSync(join(base, \"a1\"))); expect(join(theirs.root, \"..\")).toBe(realpathSync(join(base, \"b2\")));\n      expect(JSON.parse(readFileSync(join(mine.root, declared.layout.owner), \"utf8\")).session).toBe(\"0123456789ab.a1\");\n      expect(mine.shared).toBe(realpathSync(base));\n      expect(reclaimAgentSessionSandboxesV1(session, { parent })).toEqual({ released: 0, kept: 1 }); expect(existsSync(mine.root)).toBe(true);\n      expect(reclaimAgentSessionSandboxesV1(session, { parent, alive: () => false })).toEqual({ released: 2, kept: 0 });\n      expect(existsSync(join(base, \"a1\"))).toBe(false); expect(existsSync(theirs.root)).toBe(true);\n      mkdirSync(join(base, \"c3\", \"dddddddd\"), { recursive: true }); writeFileSync(join(base, \"c3\", \"dddddddd\", declared.layout.owner), JSON.stringify({ pid: dead }));\n      expect(reclaimAgentSessionSandboxesV1({ resources: { tests: { root: \"nobody\" } } }, { parent })).toEqual({ released: 0, kept: 0 });\n      expect(reclaimAbandonedTestSandboxesV1({ parent, force: true }).reclaimed.map(path => path.slice(-8))).toEqual([\"dddddddd\"]); expect(existsSync(theirs.root)).toBe(true);\n      theirs.dispose(); mine.dispose();\n      expect(existsSync(join(base, \"b2\"))).toBe(false);\n    } finally { rmSync(parent, { recursive: true, force: true }); }\n  });\n  test(\"abandoned sandboxes, images and port leases of dead owners are reclaimed and live ones are kept\", () => {\n"
+    },
+    {
+     "old": "      const directory = join(base, id);\n",
+     "new": "      const directory = join(base, \"d\", id);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "group": "core",
+   "base": "e6b6dabba583e8b0f8061892d683ed00d4c936fb2d3fac2510212a67a6c26d7a",
+   "sha": "4bbc898b5a9ae3eb30036dd739cbe4f47eb90ee6b9cdac0ee75657bca6d6f4ae",
+   "hunks": [
+    {
+     "old": "repo leases status [--json]                          # holders and waiters of leases, lock-order violations, deadlock victims\n",
+     "new": "repo leases status [--json]                          # holders and waiters of leases, lock-order violations, deadlock victims\nrepo session status|list|open|close                  # the agent session of the calling agent: identity, lane, slot preference, sandbox root, budget share\n"
+    },
+    {
+     "old": "| `leases status` | holders, waiters, lock-order violations and deadlock victims of the lease system (see Leases, lock order and queues) | `repo leases status` |\n",
+     "new": "| `leases status` | holders, waiters, lock-order violations and deadlock victims of the lease system (see Leases, lock order and queues) | `repo leases status` |\n| `session` `open`, `status`, `close`, `list` | the agent session of the calling agent and everything issued for it (see Agent sessions) | `repo session status` |\n"
+    },
+    {
+     "old": "| Lock order, deadlock detection, lease status | `repo leases status`, `SEMIO_LEASE_ORDER` | live |\n",
+     "new": "| Lock order, deadlock detection, lease status | `repo leases status`, `SEMIO_LEASE_ORDER` | live |\n| Agent sessions: one identity, lane, slot preference, sandbox root, budget share and capability per agent | `repo session`, `SEMIO_AGENT_SESSION` | staged |\n"
+    },
+    {
+     "old": "| Cargo lanes and compile-unit cache | `repo cargo --store=shared`, `SEMIO_CARGO_LANE`, `SEMIO_UNIT_CACHE_SLOTS` | live |\n",
+     "new": "| Cargo lanes and compile-unit cache | `repo cargo --store=shared`, `repo session status`, `SEMIO_UNIT_CACHE_SLOTS` | live |\n"
+    },
+    {
+     "old": "\n### 🧵️ Sessions: Bazel slots, Cargo lanes and Nx pools\n",
+     "new": "\n### 🪪️ Agent sessions\n\nMany agents work in one worktree. Each of them gets one **agent session**, issued from one schema (`🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json`): the agent identity, a session identifier, the cargo lane, a Bazel slot preference, an Nx daemon namespace, the root of its test sandboxes and its temp root, a lease owner tag, a budget weight and a capability. Every tool adapter reads the session from one API (`currentAgentSessionV1`); the only thing that travels between processes is the session address in `SEMIO_AGENT_SESSION`.\n\n```bash\nrepo session status                      # the session of this command and what it holds (leases, capacity grants, test sandboxes)\nrepo session list [--all] [--json]       # sessions of this worktree (every worktree with --all): agent, client, state, budget share\nrepo session open --agent=<name> --export  # open or attach by name; prints SEMIO_AGENT_SESSION=<address> for a shell\nrepo session close <id> [--force]        # release the sandboxes and the temp root of a session\nrepo session close --dead                # close every session whose process tree is gone\n```\n\n- **Identity.** An explicit name (`--agent`, the MCP argument `agent`) wins; then the client's own session variable (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`), then the MCP connection (client name and process ids), then the nearest agent-client ancestor process (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro; recognised by the executable, never by an argument such as a shell snapshot path), else the default session `d`. The same identity always gives the same session, so a restarted conversation keeps its warm lane and slot.\n- **Attached everywhere.** Every heavy `repo` command attaches at the door and hands its children only the address. The MCP server asks `repo session open --json` once per agent and passes the address to each call; the resident service opens the session of every issued token, keeps the token in the session's private file (never in the record) and gives the executor the session of the connection's agent.\n- **What reads it.** Cargo takes its lane, Bazel prefers the slot `preference mod slots` for its first choice (so concurrent agents start on different slots) and records who used a slot, test sandboxes live below `<tmp>/st/<session>`, the TypeScript compiler keeps its incremental state per session, test run leases name the agent, and leases and capacity grants carry the session address, so `repo leases status` and `repo capacity status` show who holds what.\n- **Budget.** A session's share is its weight divided by the weights of all live sessions. The machine admission queue serves the session that holds the least reserved memory per unit of weight first, then by arrival, so one agent cannot starve the others.\n- **Garbage.** A session is live while it is used (10 minutes) or, with a live owner process, for a day; it is collected one hour after its last use when its owner is gone. Every command collects at most once a minute: the record, the test sandboxes (images detached first) and the temp root go; a sandbox that still runs keeps the session.\n\n### 🧵️ Sessions: Bazel slots, Cargo lanes and Nx pools\n"
+    },
+    {
+     "old": "- **Lanes.** The lane id is `SEMIO_CARGO_LANE`, else derived from the nearest agent-client ancestor process (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro: one lane per agent session), else `d`. A busy lane overflows into `<id>1` to `<id>31`, which start empty and fill from the unit cache. `--store=shared` means \"lane plus shared unit cache\"; `--store=isolated` is unchanged. All lanes live inside the issued rust image and are bounded, so the 926 GB of private targets cannot recur. The launcher creates the directories itself and `.cargo/config.toml` names the default lane.\n",
+     "new": "- **Lanes.** The lane is the cargo lane of the agent session of the command (`repo session status`): one lane per agent, named by the client's session variable, the MCP connection or the nearest agent-client ancestor process (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro), else the default session's lane `d`. A busy lane overflows into `<id>1` to `<id>31`, which start empty and fill from the unit cache. `--store=shared` means \"lane plus shared unit cache\"; `--store=isolated` is unchanged. All lanes live inside the issued rust image and are bounded, so the 926 GB of private targets cannot recur. The launcher creates the directories itself and `.cargo/config.toml` names the default lane.\n"
+    },
+    {
+     "old": "repo leases status [--json]                          # Halter und Wartende von Leases, Verstöße gegen die Sperrreihenfolge, Deadlock-Opfer\n",
+     "new": "repo leases status [--json]                          # Halter und Wartende von Leases, Verstöße gegen die Sperrreihenfolge, Deadlock-Opfer\nrepo session status|list|open|close                  # die Agent-Sitzung des aufrufenden Agents: Identität, Bahn, Slot-Präferenz, Sandbox-Wurzel, Budgetanteil\n"
+    },
+    {
+     "old": "| `leases status` | Halter, Wartende, Verstöße gegen die Sperrreihenfolge und Deadlock-Opfer des Lease-Systems (siehe Leases, Sperrreihenfolge und Warteschlangen) | `repo leases status` |\n",
+     "new": "| `leases status` | Halter, Wartende, Verstöße gegen die Sperrreihenfolge und Deadlock-Opfer des Lease-Systems (siehe Leases, Sperrreihenfolge und Warteschlangen) | `repo leases status` |\n| `session` `open`, `status`, `close`, `list` | die Agent-Sitzung des aufrufenden Agents und alles, was für sie ausgestellt wird (siehe Agent-Sitzungen) | `repo session status` |\n"
+    },
+    {
+     "old": "| Sperrreihenfolge, Deadlock-Erkennung, Lease-Status | `repo leases status`, `SEMIO_LEASE_ORDER` | live |\n",
+     "new": "| Sperrreihenfolge, Deadlock-Erkennung, Lease-Status | `repo leases status`, `SEMIO_LEASE_ORDER` | live |\n| Agent-Sitzungen: eine Identität, Bahn, Slot-Präferenz, Sandbox-Wurzel, Budgetanteil und Berechtigung je Agent | `repo session`, `SEMIO_AGENT_SESSION` | gestaged |\n"
+    },
+    {
+     "old": "| Cargo-Lanes und Compile-Unit-Cache | `repo cargo --store=shared`, `SEMIO_CARGO_LANE`, `SEMIO_UNIT_CACHE_SLOTS` | live |\n",
+     "new": "| Cargo-Lanes und Compile-Unit-Cache | `repo cargo --store=shared`, `repo session status`, `SEMIO_UNIT_CACHE_SLOTS` | live |\n"
+    },
+    {
+     "old": "\n#### Sitzungen: Bazel-Slots, Cargo-Lanes und Nx-Pools\n",
+     "new": "\n#### Agent-Sitzungen\n\nViele Agenten arbeiten in einem Arbeitsbaum. Jeder bekommt eine **Agent-Sitzung**, ausgestellt aus einem Schema (`🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json`): die Agent-Identität, eine Sitzungskennung, die Cargo-Bahn, eine Bazel-Slot-Präferenz, ein Nx-Daemon-Namensraum, die Wurzel der Test-Sandboxes und die Temp-Wurzel, eine Lease-Eigentümer-Marke, ein Budgetgewicht und eine Berechtigung. Jeder Werkzeug-Adapter liest die Sitzung aus einer Schnittstelle (`currentAgentSessionV1`); zwischen Prozessen wandert nur die Sitzungsadresse in `SEMIO_AGENT_SESSION`.\n\n```bash\nrepo session status                      # die Sitzung dieses Befehls und was sie hält (Leases, Kapazitätszusagen, Test-Sandboxes)\nrepo session list [--all] [--json]       # Sitzungen dieses Arbeitsbaums (mit --all jedes Arbeitsbaums): Agent, Client, Zustand, Budgetanteil\nrepo session open --agent=<Name> --export  # öffnen oder binden per Name; gibt SEMIO_AGENT_SESSION=<Adresse> für eine Shell aus\nrepo session close <id> [--force]        # Sandboxes und Temp-Wurzel einer Sitzung freigeben\nrepo session close --dead                # jede Sitzung schließen, deren Prozessbaum beendet ist\n```\n\n- **Identität.** Ein ausdrücklicher Name (`--agent`, das MCP-Argument `agent`) gewinnt; dann die eigene Sitzungsvariable des Clients (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`), dann die MCP-Verbindung (Client-Name und Prozess-IDs), dann der nächste Agent-Client-Vorfahrenprozess (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro; erkannt an der ausführbaren Datei, nie an einem Argument wie dem Pfad eines Shell-Snapshots), sonst die Standard-Sitzung `d`. Dieselbe Identität ergibt immer dieselbe Sitzung, eine neu gestartete Unterhaltung behält also ihre warme Bahn und ihren Slot.\n- **Überall angebunden.** Jeder schwere `repo`-Befehl bindet sich an der Tür an und gibt seinen Kindern nur die Adresse weiter. Der MCP-Server fragt `repo session open --json` einmal je Agent und gibt die Adresse an jeden Aufruf weiter; der residente Dienst öffnet die Sitzung jedes ausgestellten Tokens, hält das Token in der privaten Datei der Sitzung (nie im Datensatz) und gibt dem Executor die Sitzung des Agents der Verbindung.\n- **Wer sie liest.** Cargo nimmt seine Bahn, Bazel bevorzugt zuerst den Slot `Präferenz mod Slots` (gleichzeitige Agenten beginnen so auf verschiedenen Slots) und vermerkt, wer einen Slot nutzte, Test-Sandboxes liegen unter `<tmp>/st/<Sitzung>`, der TypeScript-Compiler hält seinen inkrementellen Zustand je Sitzung, Lauf-Leases der Tests nennen den Agenten, und Leases und Kapazitätszusagen tragen die Sitzungsadresse, sodass `repo leases status` und `repo capacity status` zeigen, wer was hält.\n- **Budget.** Der Anteil einer Sitzung ist ihr Gewicht geteilt durch die Gewichte aller aktiven Sitzungen. Die Zulassungswarteschlange des Rechners bedient zuerst die Sitzung mit dem wenigsten reservierten Speicher je Gewichtseinheit, dann nach Ankunft; ein Agent kann die anderen also nicht aushungern.\n- **Aufräumen.** Eine Sitzung ist aktiv, solange sie benutzt wird (10 Minuten) oder mit lebendem Eigentümerprozess einen Tag lang; eine Stunde nach der letzten Nutzung wird sie eingesammelt, wenn ihr Eigentümer beendet ist. Jeder Befehl sammelt höchstens einmal pro Minute: der Datensatz, die Test-Sandboxes (Images zuerst abgehängt) und die Temp-Wurzel verschwinden; eine laufende Sandbox behält die Sitzung.\n\n#### Sitzungen: Bazel-Slots, Cargo-Lanes und Nx-Pools\n"
+    },
+    {
+     "old": "- **Lanes.** Die Lane-ID ist `SEMIO_CARGO_LANE`, sonst abgeleitet vom nächsten Agent-Client-Vorfahrenprozess (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro: eine Lane je Agent-Sitzung), sonst `d`. Eine belegte Lane läuft in `<id>1` bis `<id>31` über, die leer starten und sich aus dem Unit-Cache füllen. `--store=shared` heißt „Lane plus geteilter Unit-Cache“; `--store=isolated` ist unverändert. Alle Lanes liegen im ausgestellten Rust-Image und sind begrenzt, die 926 GB privater Targets können sich also nicht wiederholen. Der Launcher legt die Verzeichnisse selbst an, und `.cargo/config.toml` nennt die Standard-Lane.\n",
+     "new": "- **Lanes.** Die Lane ist die Cargo-Lane der Agent-Sitzung des Befehls (`repo session status`): eine Lane je Agent, benannt durch die Sitzungsvariable des Clients, die MCP-Verbindung oder den nächsten Agent-Client-Vorfahrenprozess (claude, codex, cursor, windsurf, copilot, antigravity, droid, kiro), sonst die Lane `d` der Standard-Sitzung. Eine belegte Lane läuft in `<id>1` bis `<id>31` über, die leer starten und sich aus dem Unit-Cache füllen. `--store=shared` heißt „Lane plus geteilter Unit-Cache“; `--store=isolated` ist unverändert. Alle Lanes liegen im ausgestellten Rust-Image und sind begrenzt, die 926 GB privater Targets können sich also nicht wiederholen. Der Launcher legt die Verzeichnisse selbst an, und `.cargo/config.toml` nennt die Standard-Lane.\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go",
+   "group": "routing",
+   "base": "cf758b759061de6cd777484732f65f2095b43e9eb76dde6eb9a84985f8b96ed7",
+   "sha": "52e1d4e806db317d16a73c410ba49099f874d059c791e0032f7f86658bc956e1",
+   "hunks": [
+    {
+     "old": " if index < len(argv) { switch argv[index] { case \"run\", \"run-many\", \"affected\", \"exec\", \"watch\", \"dependencies\", \"cargo\", \"tools\", \"reset\", \"cache\", \"preflight\", \"show\", \"graph\", \"inputs\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"remote-execution\": return NativeEntrypointPlan{\"build\", arguments} } }\n",
+     "new": " if index < len(argv) { switch argv[index] { case \"run\", \"run-many\", \"affected\", \"exec\", \"watch\", \"dependencies\", \"cargo\", \"tools\", \"reset\", \"cache\", \"preflight\", \"show\", \"graph\", \"inputs\", \"incremental\", \"concurrency\", \"capacity\", \"leases\", \"remote-execution\", \"session\": return NativeEntrypointPlan{\"build\", arguments} } }\n"
+    }
+   ]
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json",
+   "group": "core",
+   "function": "entrypoint_fixture",
+   "base": "a58c220bc7e6557a716505be4318ae1cd517fdc2cf16e47c49cff00530bc0a2e",
+   "sha": "fd99535ae26bf238985cc73267c0796c42678900f9a452667a52c9e0ebbdfeca"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs",
+   "group": "routing",
+   "base": "1c3a7319c1cac82d275abee13fd3524e865daef5723a06ef3bd50fffa5d164e7",
+   "sha": "de29ba5d09160037f4855b328b1ebaa99b6d0340d94be70919c506687fe290b2",
+   "hunks": [
+    {
+     "old": " let build = index > 0 || argv.get(index).is_some_and(|value| matches!(value.as_str(), \"run\" | \"run-many\" | \"affected\" | \"exec\" | \"watch\" | \"dependencies\" | \"cargo\" | \"tools\" | \"reset\" | \"cache\" | \"preflight\" | \"show\" | \"graph\" | \"inputs\" | \"incremental\" | \"concurrency\" | \"capacity\" | \"leases\" | \"remote-execution\"));\n",
+     "new": " let build = index > 0 || argv.get(index).is_some_and(|value| matches!(value.as_str(), \"run\" | \"run-many\" | \"affected\" | \"exec\" | \"watch\" | \"dependencies\" | \"cargo\" | \"tools\" | \"reset\" | \"cache\" | \"preflight\" | \"show\" | \"graph\" | \"inputs\" | \"incremental\" | \"concurrency\" | \"capacity\" | \"leases\" | \"remote-execution\" | \"session\"));\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md",
+   "group": "core",
+   "base": "de2089390fa024773522d72803cbd7916ab8c514d5eb3dbcb111a549cf13fa3c",
+   "sha": "c047df82d41e65fb0a6b6ccc3d604b4c9d149b584ca686b07afc3472786ede5a",
+   "hunks": [
+    {
+     "old": "Each call runs the `repo` executable itself without a shell, with no standard input and a cleaned environment, and answers with one structured result (`$defs.Result`): exit code, exact command, parsed JSON or the bounded output tail, agent, progress count and hints. It reports `notifications/progress` from the child's typed `[script]` lines, stops the child when the call is cancelled (interrupt, then kill after the grace period) and also runs as an MCP task (`tools/call` with `task`, `tasks/get|result|list|cancel`). Graph queries read the sealed graph by default (`graph_policy` current) and never wait for a rebuild. The argument `agent` (default: the agent of the connection) becomes `SEMIO_AGENT_ID`, `SEMIO_SESSION` and `SEMIO_CARGO_LANE` of the child, so leases, capacity grants, cache lanes and compiler sessions attribute to that agent. `tool`, `workers` and `language` select the build tool, the workers and the text language through `SEMIO_BUILD_TOOL`, `SEMIO_BUILD_WORKERS` and `SEMIO_LANGUAGE`.\n",
+     "new": "Each call runs the `repo` executable itself without a shell, with no standard input and a cleaned environment, and answers with one structured result (`$defs.Result`): exit code, exact command, parsed JSON or the bounded output tail, agent, progress count and hints. It reports `notifications/progress` from the child's typed `[script]` lines, stops the child when the call is cancelled (interrupt, then kill after the grace period) and also runs as an MCP task (`tools/call` with `task`, `tasks/get|result|list|cancel`). Graph queries read the sealed graph by default (`graph_policy` current) and never wait for a rebuild. The argument `agent` (default: the agent of the connection) names the agent session of the call: the server asks `repo session open --json` once per agent (the client's own session variable, the connection, or the explicit name decide the identity) and passes only the session address as `SEMIO_AGENT_SESSION` to the child, so leases, capacity grants, cache lanes, Bazel slots, test sandboxes and compiler sessions attribute to that agent. The tools `session_open`, `session_status`, `session_list` and `session_close` expose the session itself. `tool`, `workers` and `language` select the build tool, the workers and the text language through `SEMIO_BUILD_TOOL`, `SEMIO_BUILD_WORKERS` and `SEMIO_LANGUAGE`.\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🔨️build/🐹️.go",
+   "group": "core",
+   "base": "39bca50957d8cce444be723d6f2a246133524c293139773670a7eedf96d69f91",
+   "sha": "bbff8b2823f97d39e409302736d5c7be2509769bb546118090bc05d054e3d750",
+   "hunks": [
+    {
+     "old": "\tLookup    func(string) (string, bool)\n",
+     "new": "\tSessions  SessionOpener\n"
+    },
+    {
+     "old": "\treturn &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Lookup: os.LookupEnv, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}, nil\n}\n\n// 🪪️Agent names the agent of a call: the `agent` argument, else the agent of the connection.\nfunc (surface *BuildSurface) Agent(ctx context.Context, explicit string) AgentIdentity {\n\tif explicit != \"\" {\n\t\treturn NewAgent(explicit)\n\t}\n\tclient := \"\"\n\tif session, ok := SessionFrom(ctx); ok {\n\t\tclient = session.ClientInfo().Name\n\t}\n\treturn ConnectionAgent(surface.Lookup, surface.Policy.Identity.ConnectionSources, client, surface.Parent, surface.Process)\n",
+     "new": "\tsurface := &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}\n\tsurface.Sessions = &surfaceSessions{surface: surface, known: map[SessionRequest]AgentIdentity{}}\n\treturn surface, nil\n}\n\n// 🪪️Agent opens the agent session of a call: the `agent` argument names it, else the connection does (client name and process ids; the client's own session variable wins inside `repo session open`). A session that cannot be opened leaves the call without an address, so the child resolves its own, and the reason is returned as a hint.\nfunc (surface *BuildSurface) Agent(ctx context.Context, explicit string) (AgentIdentity, string) {\n\trequest := SessionRequest{Agent: explicit}\n\tif explicit == \"\" {\n\t\tclient := \"\"\n\t\tif session, ok := SessionFrom(ctx); ok {\n\t\t\tclient = session.ClientInfo().Name\n\t\t}\n\t\trequest = SessionRequest{Client: client, ClientProcess: surface.Parent, Process: surface.Process}\n\t\tif client == \"\" {\n\t\t\trequest.Client = \"agent\"\n\t\t}\n\t}\n\tidentity, err := surface.Sessions.Open(ctx, request)\n\tif err != nil {\n\t\treturn AgentIdentity{ID: \"unattached\"}, \"agent session not opened (\" + err.Error() + \"); the command attaches to its own session\"\n\t}\n\treturn identity, \"\"\n"
+    },
+    {
+     "old": "\t\tagent := surface.Agent(ctx, invocation.Agent)\n",
+     "new": "\t\tagent, sessionHint := surface.Agent(ctx, invocation.Agent)\n"
+    },
+    {
+     "old": "\t\tresult := NewBuildResult(tool, invocation, agent, outcome)\n",
+     "new": "\t\tresult := NewBuildResult(tool, invocation, agent, outcome)\n\t\tif sessionHint != \"\" {\n\t\t\tresult.Hint = strings.TrimSpace(result.Hint + \" \" + sessionHint)\n\t\t}\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗂️catalog/🐹️.go",
+   "group": "core",
+   "base": "63219e24469d40f4fb538d46dcb015881b0182924ddff4236282039ca0b57910",
+   "sha": "0b08eab43a0f6852c2bcfb1346b833915593617d0316918c6ff7c811f7d50515",
+   "hunks": [
+    {
+     "old": "\tArgument          string           `json:\"argument\"`\n\tPattern           string           `json:\"pattern\"`\n\tDescription       Text             `json:\"description\"`\n\tEnvironment       AgentEnvironment `json:\"environment\"`\n\tConnectionSources []string         `json:\"connectionSources\"`\n",
+     "new": "\tArgument    string           `json:\"argument\"`\n\tPattern     string           `json:\"pattern\"`\n\tDescription Text             `json:\"description\"`\n\tEnvironment AgentEnvironment `json:\"environment\"`\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🔌️build-session/🐹️.go",
+   "group": "core",
+   "base": "8a9279c37a1947564bb1bdce8ecdea9eef447b475aa94436855aa1917552f20f",
+   "sha": "81587cca67d16d1c0b4203541f6b3b4b679a186e76a69535f6b7f26eac8a6481",
+   "hunks": [
+    {
+     "old": "\tpending []json.RawMessage\n",
+     "new": "\tpending []json.RawMessage\n\tstashed map[int]rpcReply\n"
+    },
+    {
+     "old": "\treply := rpcReply{}\n",
+     "new": "\treply := rpcReply{}\n\tif early, found := peer.stashed[id]; found {\n\t\tdelete(peer.stashed, id)\n\t\treturn early\n\t}\n"
+    },
+    {
+     "old": "\t\t\treturn reply\n\t\t}\n\t}\n",
+     "new": "\t\t\treturn reply\n\t\t}\n\t\tif peer.stashed == nil {\n\t\t\tpeer.stashed = map[int]rpcReply{}\n\t\t}\n\t\tpeer.stashed[*envelope.ID] = rpcReply{Result: envelope.Result, Error: envelope.Error}\n\t}\n"
+    },
+    {
+     "old": "\tsurface.Lookup = func(string) (string, bool) { return \"\", false }\n",
+     "new": ""
+    },
+    {
+     "old": "const reportScript = `printf '{\"agent\":\"%s\",\"session\":\"%s\",\"lane\":\"%s\",\"tool\":\"%s\",\"language\":\"%s\",\"level\":\"%s\",\"policy\":\"%s\",\"owner\":\"%s\",\"args\":\"%s\"}' \"$SEMIO_AGENT_ID\" \"$SEMIO_SESSION\" \"$SEMIO_CARGO_LANE\" \"${SEMIO_BUILD_TOOL:-}\" \"${SEMIO_LANGUAGE:-}\" \"${SEMIO_TEST_LEVEL:-}\" \"${SEMIO_SCRIPT_POLICY:-none}\" \"${SEMIO_PROCESS_OWNER_CONTEXT:-none}\" \"$*\"`\n",
+     "new": "// 🧪️reportScript stands in for the `repo` executable: `session open --json` answers like the real command (a deterministic session per agent name or per connection, and one line per call in $MARKS/opens), everything else reports what the child sees.\nconst reportScript = `if [ \"$1\" = session ]; then\n agent=\"\"; client=\"\"; clientpid=\"\"; ownerpid=\"\"\n for a in \"$@\"; do case \"$a\" in --agent=*) agent=\"${a#--agent=}\";; --client=*) client=\"${a#--client=}\";; --client-pid=*) clientpid=\"${a#--client-pid=}\";; --owner-pid=*) ownerpid=\"${a#--owner-pid=}\";; esac; done\n [ -n \"$MARKS\" ] && echo \"$*\" >> \"$MARKS/opens\"\n [ -n \"$FAIL_SESSION\" ] && { echo \"no session\" >&2; exit 3; }\n if [ -z \"$agent\" ]; then agent=\"$(printf '%s' \"$client\" | tr 'A-Z ' 'a-z_')-$clientpid-$ownerpid\"; fi\n printf '{\"version\":1,\"created\":true,\"address\":\"0123456789ab.s%s\",\"session\":{\"id\":\"s%s\",\"agent\":{\"id\":\"%s\"},\"resources\":{\"cargo\":{\"lane\":\"l%s\"}}}}' \"$agent\" \"$agent\" \"$agent\" \"$agent\"\n exit 0\nfi\nprintf '{\"address\":\"%s\",\"tool\":\"%s\",\"language\":\"%s\",\"level\":\"%s\",\"policy\":\"%s\",\"owner\":\"%s\",\"args\":\"%s\",\"legacy\":\"%s\"}' \"$SEMIO_AGENT_SESSION\" \"${SEMIO_BUILD_TOOL:-}\" \"${SEMIO_LANGUAGE:-}\" \"${SEMIO_TEST_LEVEL:-}\" \"${SEMIO_SCRIPT_POLICY:-none}\" \"${SEMIO_PROCESS_OWNER_CONTEXT:-none}\" \"$*\" \"${SEMIO_AGENT_ID:-}${SEMIO_SESSION:-}${SEMIO_CARGO_LANE:-}\"`\n"
+    },
+    {
+     "old": "\tvar data struct{ Agent, Session, Lane, Tool, Language, Policy, Owner, Args string }\n",
+     "new": "\tvar data struct{ Address, Tool, Language, Policy, Owner, Args, Legacy string }\n"
+    },
+    {
+     "old": "\tif data.Agent != \"alpha\" || data.Session != \"alpha\" || data.Lane != AgentLane(\"alpha\") || data.Tool != \"bazel\" || data.Language != \"en\" || data.Args != \"run a:b\" {\n\t\tt.Fatalf(\"the child must see the agent and the selection: %+v\", data)\n",
+     "new": "\tif data.Address != \"0123456789ab.salpha\" || data.Tool != \"bazel\" || data.Language != \"en\" || data.Args != \"run a:b\" {\n\t\tt.Fatalf(\"the child must see the session address and the selection: %+v\", data)\n\t}\n\tif data.Legacy != \"\" {\n\t\tt.Fatalf(\"no per-tool identity variable reaches the child: %q\", data.Legacy)\n"
+    },
+    {
+     "old": "\tif build.Agent.ID != \"alpha\" || strings.Join(build.Command, \" \") != \"repo run a:b\" {\n",
+     "new": "\tif build.Agent.ID != \"alpha\" || build.Agent.Session != \"salpha\" || build.Agent.Lane != \"lalpha\" || strings.Join(build.Command, \" \") != \"repo run a:b\" {\n"
+    },
+    {
+     "old": "\tvar testData struct{ Agent, Level, Args string }\n\t_ = json.Unmarshal(tested.Data, &testData)\n\tif !strings.HasPrefix(testData.Agent, \"harness_client-\") || testData.Level != \"quick\" || testData.Args != \"run @semio-tech/repo-client:test\" {\n\t\tt.Fatalf(\"a call without agent runs as the agent of the connection: %+v\", testData)\n",
+     "new": "\tvar testData struct{ Address, Level, Args string }\n\t_ = json.Unmarshal(tested.Data, &testData)\n\tif testData.Address != \"0123456789ab.sharness_client-4241-4242\" || tested.Agent.ID != \"harness_client-4241-4242\" || testData.Level != \"quick\" || testData.Args != \"run @semio-tech/repo-client:test\" {\n\t\tt.Fatalf(\"a call without agent runs as the agent of the connection: %+v %+v\", testData, tested.Agent)\n\t}\n}\n\nfunc TestEachAgentOpensItsSessionOnceAndAFailureNeverStopsTheCall(t *testing.T) {\n\tfixture := newBuildSession(t, reportScript, nil)\n\tfor index := 0; index < 3; index++ {\n\t\tfixture.callTool(\"run\", map[string]any{\"target\": \"a:b\", \"agent\": \"alpha\"}, nil)\n\t}\n\tfixture.callTool(\"run\", map[string]any{\"target\": \"a:b\", \"agent\": \"beta\"}, nil)\n\tfixture.callTool(\"run\", map[string]any{\"target\": \"a:b\"}, nil)\n\tfixture.callTool(\"run\", map[string]any{\"target\": \"a:b\"}, nil)\n\topens, err := os.ReadFile(filepath.Join(fixture.marks, \"opens\"))\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tlines := strings.Split(strings.TrimSpace(string(opens)), \"\\n\")\n\twant := []string{\"session open --json --agent=alpha\", \"session open --json --agent=beta\", \"session open --json --client=Harness Client --client-pid=4241 --owner-pid=4242\"}\n\tif len(lines) != len(want) {\n\t\tt.Fatalf(\"one open per distinct agent: %q\", lines)\n\t}\n\tfor index := range want {\n\t\tif lines[index] != want[index] {\n\t\t\tt.Fatalf(\"open %d got=%q want=%q\", index, lines[index], want[index])\n\t\t}\n\t}\n\tbroken := newBuildSession(t, reportScript, nil)\n\tbroken.surface.Environ = func() []string {\n\t\treturn []string{\"PATH=\" + os.Getenv(\"PATH\"), \"MARKS=\" + broken.marks, \"FAIL_SESSION=1\"}\n\t}\n\ttext, build := decodeToolResult(t, broken.callTool(\"run\", map[string]any{\"target\": \"a:b\"}, nil))\n\tvar data struct{ Address string }\n\t_ = json.Unmarshal(build.Data, &data)\n\tif text.IsError || !build.OK || data.Address != \"\" || build.Agent.ID != \"unattached\" || !strings.Contains(build.Hint, \"agent session not opened\") {\n\t\tt.Fatalf(\"a failed session open leaves the call running without an address: %+v %+v\", build, data)\n\t}\n}\n\nfunc TestSessionRequestsBuildTheRepoArguments(t *testing.T) {\n\tcases := map[string]SessionRequest{\n\t\t\"session open --json --agent=x\":                                          {Agent: \"x\"},\n\t\t\"session open --json --client=c --client-pid=3 --owner-pid=4\":            {Client: \"c\", ClientProcess: 3, Process: 4},\n\t\t\"session open --json --client=c\":                                         {Client: \"c\"},\n\t\t\"session open --json\":                                                    {},\n\t}\n\tfor want, request := range cases {\n\t\tif got := strings.Join(request.Argv(), \" \"); got != want {\n\t\t\tt.Errorf(\"argv got=%q want=%q\", got, want)\n\t\t}\n\t}\n\tif _, err := ParseSession([]byte(`{\"address\":\"\",\"session\":{}}`)); err == nil {\n\t\tt.Error(\"a reply without an address is refused\")\n\t}\n\tif _, err := ParseSession([]byte(\"not json\")); err == nil {\n\t\tt.Error(\"garbage is refused\")\n\t}\n\tidentity, err := ParseSession([]byte(`{\"address\":\"0123456789ab.sa\",\"session\":{\"id\":\"sa\",\"agent\":{\"id\":\"agent-1\"},\"resources\":{\"cargo\":{\"lane\":\"sa\"}}}}`))\n\tif err != nil || identity != (AgentIdentity{ID: \"agent-1\", Session: \"sa\", Lane: \"sa\", Address: \"0123456789ab.sa\"}) {\n\t\tt.Errorf(\"identity %+v %v\", identity, err)\n\t}\n\tif env := (AgentIdentity{}).Environment(AgentEnvironment{Session: \"SEMIO_AGENT_SESSION\"}); len(env) != 0 {\n\t\tt.Errorf(\"a call without an address carries no variable: %v\", env)\n\t}\n\tif env := identity.Environment(AgentEnvironment{Session: \"SEMIO_AGENT_SESSION\"}); env[\"SEMIO_AGENT_SESSION\"] != \"0123456789ab.sa\" || len(env) != 1 {\n\t\tt.Errorf(\"the address is the one variable: %v\", env)\n"
+    }
+   ]
+  },
+  {
+   "kind": "replace",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🪢️session/🐹️.go",
+   "group": "core",
+   "base": "cb5ff77aa74b6ccd327c89b7e479c701abe7b11f452a3958524358ffe1f0cbdf",
+   "blob": "f0017",
+   "sha": "fe768b320eb60f097f68745f517c748e34fd349fb991a64ec0c32f1e8b6af340"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "group": "nx-watchers",
+   "base": "1e2cd549eb71a148ab258ecd80472b0988a36bac609c8847cff46d1f0c2e50c8",
+   "sha": "a10fe734abeddb84bb527b9d1449e7e846d1561cfe889acdb3580a61e7a29edd",
+   "hunks": [
+    {
+     "old": "import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundedNxNamespaceV1} from \"../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts\";\n",
+     "new": "import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundedNxNamespaceV1} from \"../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts\";\nimport {currentAgentSessionV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "  const identity = createHash(\"sha256\").update(JSON.stringify([resolve(root).replaceAll(\"\\\\\", \"/\"), activation, binding])).digest(\"hex\").slice(0, 24);\n",
+     "new": "  const identity = createHash(\"sha256\").update(JSON.stringify([resolve(root).replaceAll(\"\\\\\", \"/\"), activation, binding, currentAgentSessionV1({environment}).resources.nx.namespace])).digest(\"hex\").slice(0, 24);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+   "group": "nx-watchers",
+   "base": "7a786ecc05de41b08375b7b910d87a6ab68f6b32049edbbc95f44287e11ea725",
+   "sha": "4f23275a623c82b01392c4db6b3064c852e42692781e5cf8cf05c1c7d50663eb",
+   "hunks": [
+    {
+     "old": "import { bunDistribution, bunArchiveExecutable } from \"../../🛠️tools/🟦️bun/🟦️.ts\";\n",
+     "new": "import { bunDistribution, bunArchiveExecutable } from \"../../🛠️tools/🟦️bun/🟦️.ts\";\nimport { currentAgentSessionV1 } from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "  const identity = JSON.stringify([workspace.replaceAll(\"\\\\\", \"/\"), target, Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|NX_TOOLING_IDENTITY|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)]);\n",
+     "new": "  const identity = JSON.stringify([workspace.replaceAll(\"\\\\\", \"/\"), target, Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|NX_TOOLING_IDENTITY|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0), currentAgentSessionV1({environment}).resources.nx.namespace]);\n"
+    },
+    {
+     "old": "    const entries=Object.entries({S_OS_PORT:\"6064\",PLAYGROUND_LOCKED_EXAMPLE_ID:\"🎬️demo\",SEMIO_NX_TOOLING_IDENTITY:\"a\".repeat(64),...selection}).sort(([a],[b])=>a<b?-1:a>b?1:0),identity=JSON.stringify([workspace.replaceAll(\"\\\\\",\"/\"),target,entries]),hash=new Bun.CryptoHasher(\"sha256\").update(identity).digest(\"hex\").slice(0,24);\n",
+     "new": "    const entries=Object.entries({S_OS_PORT:\"6064\",PLAYGROUND_LOCKED_EXAMPLE_ID:\"🎬️demo\",SEMIO_NX_TOOLING_IDENTITY:\"a\".repeat(64),...selection}).sort(([a],[b])=>a<b?-1:a>b?1:0),identity=JSON.stringify([workspace.replaceAll(\"\\\\\",\"/\"),target,entries,currentAgentSessionV1({environment}).resources.nx.namespace]),hash=new Bun.CryptoHasher(\"sha256\").update(identity).digest(\"hex\").slice(0,24);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🟦️.ts",
+   "group": "core",
+   "base": "52634b50bba5d293a3ebe6561df4f3305c11a6342bac732da4e45570e29bd58f",
+   "sha": "9e54059a66d0567a4911effbffbfd301504ef8e0fa25665460f4bdd8842edc8f",
+   "hunks": [
+    {
+     "old": "export {acquireLaneV1,resolveLaneIdV1,systemAncestryV1,DEFAULT_LANE_ID_V1} from \"./🧵️lane/🟦️.ts\";\n",
+     "new": "export {acquireLaneV1,type LaneOwnerV1} from \"./🧵️lane/🟦️.ts\";\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts",
+   "group": "core",
+   "base": "93868eabf8109c826d0ec61193a366c9fb240d346bf8283115930f3c26cdcdb1",
+   "sha": "2d44b4c0a0a61ca9f0c3f037333251c437dbf69733ba57f8831c7a01cba7d5f6",
+   "hunks": [
+    {
+     "old": "import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,resolveLaneIdV1} from \"../🧵️lane/🟦️.ts\";\n",
+     "new": "import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,readLaneV1} from \"../🧵️lane/🟦️.ts\";\n"
+    },
+    {
+     "old": "test(\"lane resolution follows the vectors and refuses malformed identifiers\", () => {\n for(const row of fixture.laneVectors)expect(resolveLaneIdV1({...((\"flag\" in row)?{flag:row.flag as string}:{}),environment:row.environment as Record<string,string>,ancestry:()=>row.ancestry}),row.name).toBe(row.lane);\n const client=[{pid:77,started:\"Mon Oct 20 10:00:00 2026\",command:\"/Applications/Claude.app/claude\"}],first=resolveLaneIdV1({environment:{},ancestry:()=>client}),second=resolveLaneIdV1({environment:{},ancestry:()=>[...client]}),other=resolveLaneIdV1({environment:{},ancestry:()=>[{...client[0]!,pid:78}]});\n expect(first).toBe(second);expect(first).not.toBe(other);expect(first).toMatch(/^[a-z0-9]{1,12}$/u);\n for(const bad of fixture.invalidLanes)expect(()=>resolveLaneIdV1({flag:bad,environment:{},ancestry:()=>[]}),bad).toThrow();\n",
+     "new": "test(\"lane identifiers are validated, and a lane records the session and agent that own it\", () => {\n for(const bad of fixture.invalidLanes)expect(()=>acquireLaneV1(scratch(),bad),bad).toThrow();\n const cache=scratch(),lane=acquireLaneV1(cache,\"a1b2\",{session:\"0123456789ab.a1b2\",agent:\"reviewer\"});\n try{expect(readLaneV1(cache,\"a1b2\")).toMatchObject({id:\"a1b2\",session:\"0123456789ab.a1b2\",agent:\"reviewer\"});}finally{lane.release();}\n const plain=acquireLaneV1(cache,\"plain\");try{expect(readLaneV1(cache,\"plain\")?.session).toBeUndefined();}finally{plain.release();}\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🧫️fixtures/🔣️.json",
+   "group": "core",
+   "base": "29e8ffb583c5f5987ce109d15bec757dd4057a534dd7acd945acbb18f0a162ec",
+   "sha": "b85b6221bc2c2070e091ca0a02d18938f05da933796cc1f030221a474edb68f6",
+   "hunks": [
+    {
+     "old": "  \"laneVectors\": [\n    {\"name\": \"flag wins\", \"flag\": \"abc\", \"environment\": {\"SEMIO_CARGO_LANE\": \"env\"}, \"ancestry\": [], \"lane\": \"abc\"},\n    {\"name\": \"environment next\", \"environment\": {\"SEMIO_CARGO_LANE\": \"env1\"}, \"ancestry\": [{\"pid\": 10, \"started\": \"Mon Oct 20 10:00:00 2026\", \"command\": \"/usr/bin/claude\"}], \"lane\": \"env1\"},\n    {\"name\": \"no client ancestor falls back to the default lane\", \"environment\": {}, \"ancestry\": [{\"pid\": 10, \"started\": \"Mon Oct 20 10:00:00 2026\", \"command\": \"zsh\"}], \"lane\": \"d\"},\n    {\"name\": \"no ancestry falls back to the default lane\", \"environment\": {}, \"ancestry\": [], \"lane\": \"d\"}\n  ],\n",
+     "new": ""
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
+   "group": "core",
+   "base": "28284b9bfa82f6547cc1298d96eb0c654c6d26642d07d12f9f15508803d56d34",
+   "sha": "0134ec81ff59af908af018b56802dd45a7b884670459842328d92981e89c2889",
+   "hunks": [
+    {
+     "old": "import {createHash,randomBytes} from \"node:crypto\";\nimport {closeSync,mkdirSync,openSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from \"node:fs\";\nimport {spawnSync} from \"node:child_process\";\nimport {join} from \"node:path\";\nimport {readFileSync as readSystemFile} from \"node:fs\";\n",
+     "new": "import {randomBytes} from \"node:crypto\";\nimport {closeSync,mkdirSync,openSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from \"node:fs\";\nimport {join} from \"node:path\";\n"
+    },
+    {
+     "old": "/** 🧵️ The default lane every unattributed command shares. */\nexport const DEFAULT_LANE_ID_V1=\"d\";\n/** 🧭️ One ancestor process as the lane resolver sees it. */\nexport type AncestorV1=Readonly<{pid:number;started:string;command:string}>;\n/** 🔌️ Reads the parent chain of the current process; replaceable so resolution is testable on any platform. */\nexport type AncestryPortV1=()=>readonly AncestorV1[];\nconst clients=/(claude|codex|cursor|windsurf|copilot|antigravity|droid|kiro)/iu;\n\n/** 🧬️ Parses a Linux `/proc/<pid>/stat` line into the parent and the start tick; the command name sits in parentheses and may itself contain spaces and parentheses, so the fields are read after the last closing parenthesis. */\nexport function parseProcStatV1(text:string):Readonly<{parent:number;started:string}>|undefined{\n const close=text.lastIndexOf(\")\");if(close<0)return undefined;\n const fields=text.slice(close+2).trim().split(/\\s+/u),parent=Number(fields[1]),started=fields[19];\n return Number.isSafeInteger(parent)&&started!==undefined&&/^[0-9]+$/u.test(started)?Object.freeze({parent,started:\"tick:\"+started}):undefined;\n}\n\n/** 🐧️ Walks the parent chain through `/proc` with an injected reader: no external tool, no spawn, the start tick distinguishes a recycled pid. */\nexport function linuxAncestryV1(read:(path:string)=>string|null,first:number=process.ppid):readonly AncestorV1[]{\n const rows:AncestorV1[]=[];let pid=first;\n for(let depth=0;depth<16&&pid>1;depth++){\n  const stat=read(\"/proc/\"+pid+\"/stat\"),parsed=stat===null?undefined:parseProcStatV1(stat);if(!parsed)break;\n  const line=(read(\"/proc/\"+pid+\"/cmdline\")??\"\").replace(/\\0+$/u,\"\").split(\"\\0\").join(\" \");\n  rows.push({pid,started:parsed.started,command:line||(read(\"/proc/\"+pid+\"/comm\")??\"\").trim()});pid=parsed.parent;\n }\n return rows;\n}\n\n/** 🍎️ Walks the parent chain with `ps`, whose `lstart` column is the start time. */\nexport function psAncestryV1(run:(pid:number)=>string|null,first:number=process.ppid):readonly AncestorV1[]{\n const rows:AncestorV1[]=[];let pid=first;\n for(let depth=0;depth<16&&pid>1;depth++){\n  const output=run(pid);if(output===null)break;\n  const match=/^\\s*(\\d+)\\s+(.{24})\\s+(.*)$/u.exec(output.trim());if(!match)break;\n  rows.push({pid,started:match[2]!,command:match[3]!});pid=Number(match[1]);\n }\n return rows;\n}\n\n/** 🪟️ The PowerShell program that lists every process once: id, parent, UTC start as ISO text, and the command line followed by the image name, so a client matches by either. */\nexport const WINDOWS_PROCESS_LISTING_V1=\"Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid=[int]$_.ProcessId; ppid=[int]$_.ParentProcessId; started=$_.CreationDate.ToUniversalTime().ToString('o'); command=([string]$_.CommandLine + ' ' + [string]$_.Name).Trim() } } | ConvertTo-Json -Compress\";\n\n/** 🪟️ Walks the parent chain of a Windows process listing; a parent that started after its child is a recycled id and ends the chain. */\nexport function windowsAncestryV1(listing:string,first:number=process.ppid):readonly AncestorV1[]{\n let table:unknown;try{table=JSON.parse(listing);}catch{return[];}\n const rows=(Array.isArray(table)?table:[table]).filter((row):row is {pid:number;ppid:number;started:string;command:string}=>!!row&&typeof row===\"object\"&&Number.isSafeInteger((row as {pid?:unknown}).pid)&&Number.isSafeInteger((row as {ppid?:unknown}).ppid)&&typeof (row as {started?:unknown}).started===\"string\"&&typeof (row as {command?:unknown}).command===\"string\");\n const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found:AncestorV1[]=[];let pid=first,child:string|undefined;\n for(let depth=0;depth<16&&pid>4;depth++){\n  const row=byPid.get(pid);if(!row||child!==undefined&&row.started>child)break;\n  found.push({pid,started:row.started,command:row.command});child=row.started;pid=row.ppid;\n }\n return found;\n}\n\n/** 🪪️ Reads the parent chain of the current process: `/proc` on Linux, `ps` on macOS, one PowerShell CIM listing on Windows; a platform or a read that fails reports no ancestry and the default lane applies. */\nexport function systemAncestryV1(platform:NodeJS.Platform=process.platform):readonly AncestorV1[]{\n if(platform===\"linux\")return linuxAncestryV1(path=>{try{return readSystemFile(path,\"utf8\");}catch{return null;}});\n if(platform===\"win32\"){\n  const root=process.env.SystemRoot,program=root?join(root,\"System32\",\"WindowsPowerShell\",\"v1.0\",\"powershell.exe\"):\"powershell.exe\";\n  const result=spawnSync(program,[\"-NoProfile\",\"-NonInteractive\",\"-Command\",WINDOWS_PROCESS_LISTING_V1],{encoding:\"utf8\",windowsHide:true,timeout:20000,maxBuffer:33554432});\n  return result.status===0?windowsAncestryV1(result.stdout):[];\n }\n return psAncestryV1(pid=>{const result=spawnSync(\"ps\",[\"-o\",\"ppid=,lstart=,command=\",\"-p\",String(pid)],{encoding:\"utf8\"});return result.status===0?result.stdout:null;});\n}\n\n\n/** 🏷️ Chooses the lane: an explicit flag, then `SEMIO_CARGO_LANE`, then the nearest agent-client ancestor (one lane per agent session), then the default lane. Lanes never share Cargo build directories, so Cargo's own locks never span two agents. */\nexport function resolveLaneIdV1(input:Readonly<{flag?:string;environment:Readonly<Record<string,string|undefined>>;ancestry:AncestryPortV1}>):string{\n const explicit=input.flag??input.environment.SEMIO_CARGO_LANE;\n if(explicit!==undefined){if(!idPattern.test(explicit))throw Error(\"Cargo lane identifiers are 1 to 12 lowercase letters or digits\");return explicit;}\n const client=input.ancestry().find(row=>clients.test(row.command));\n return client?\"a\"+BigInt(\"0x\"+createHash(\"sha256\").update(client.pid+\"\\0\"+client.started).digest(\"hex\").slice(0,12)).toString(36).slice(0,10):DEFAULT_LANE_ID_V1;\n}\n\n",
+     "new": "/** 🪪️ Who a lane belongs to: the agent session address and the agent, recorded in the lane's metadata so caches and cleanup can be attributed. */\nexport type LaneOwnerV1=Readonly<{session:string;agent:string}>;\n"
+    },
+    {
+     "old": "export function enterLaneV1(root:string,id:string):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{\n const paths=lanePathsV1(root,id);\n for(const directory of[paths.target,paths.build,paths.live,paths.stamps])mkdirSync(directory,{recursive:true});\n const touch=()=>{try{const now=new Date();utimesSync(paths.metadata,now,now);}catch{writeFileSync(paths.metadata,JSON.stringify({version:1,id,createdMs:Date.now()}));}};touch();\n",
+     "new": "export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{\n const paths=lanePathsV1(root,id);\n for(const directory of[paths.target,paths.build,paths.live,paths.stamps])mkdirSync(directory,{recursive:true});\n const touch=()=>{try{const now=new Date();utimesSync(paths.metadata,now,now);}catch{writeFileSync(paths.metadata,JSON.stringify({version:1,id,createdMs:Date.now(),...owner===undefined?{}:{session:owner.session,agent:owner.agent}}));}};touch();\n"
+    },
+    {
+     "old": "export function readLaneV1(root:string,id:string):{version:1;id:string;createdMs:number}|undefined{try{return JSON.parse(readFileSync(lanePathsV1(root,id).metadata,\"utf8\"));}catch{return undefined;}}\n",
+     "new": "export function readLaneV1(root:string,id:string):{version:1;id:string;createdMs:number;session?:string;agent?:string}|undefined{try{return JSON.parse(readFileSync(lanePathsV1(root,id).metadata,\"utf8\"));}catch{return undefined;}}\n"
+    },
+    {
+     "old": "export function acquireLaneV1(root:string,base:string):Readonly<{paths:ReturnType<typeof lanePathsV1>;overflow:number;release():void}>{\n",
+     "new": "export function acquireLaneV1(root:string,base:string,owner?:LaneOwnerV1):Readonly<{paths:ReturnType<typeof lanePathsV1>;overflow:number;release():void}>{\n"
+    },
+    {
+     "old": "  const entered=enterLaneV1(root,id);\n",
+     "new": "  const entered=enterLaneV1(root,id,owner);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "group": "core",
+   "base": "d4544e680a6dc011711edca7ea65833377435ba7a038107a54ade0e09dba06fb",
+   "sha": "f15229179fc81eaa3b61af4cde60a07e2a6f430373ceb2af25d56b64984536c7",
+   "hunks": [
+    {
+     "old": "import {acquireLaneV1,resolveLaneIdV1,systemAncestryV1} from \"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts\";\n",
+     "new": "import {acquireLaneV1} from \"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts\";\nimport {agentSessionAddressV1,currentAgentSessionV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": " const base=resolveLaneIdV1({environment:options.environment,ancestry:systemAncestryV1}),lane=acquireLaneV1(options.cacheRoot,base);\n",
+     "new": " const session=currentAgentSessionV1({environment:options.environment}),base=session.resources.cargo.lane,lane=acquireLaneV1(options.cacheRoot,base,{session:agentSessionAddressV1(session),agent:session.agent.id});\n"
+    }
+   ]
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "group": "core",
+   "function": "catalog",
+   "base": "033beb76e03a0cc2848ee2c97f813103e2e27395ee009b523865b1ecd41b7bc7",
+   "sha": "b0abd922171115c28ac3b03a59e672fd51cad01bbeb769af20463e496c4eb563"
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧬️schema/🔣️.json",
+   "group": "core",
+   "function": "operations_schema",
+   "base": "a693eb2616abef5524b6a58f940fbf252cee7539ac0861a2ea79cacd80532f98",
+   "sha": "16508c456a83fba7b55a74d47fa5f0fe93e893c19fa43fdd00e063add0c37186"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts",
+   "group": "core",
+   "base": "9dc50e0f09eb6542bfea9ecfbdc5a62ea76262e540bcaeaafe4f2caf7a5519ec",
+   "sha": "93766b104003549f07ad30fb4cab194b67eb5633ea7dc84b3dcc0b658d12910c",
+   "hunks": [
+    {
+     "old": "import {formatHostCapacityV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityStatusV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,withHostCapacityV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts\";\n",
+     "new": "import {formatHostCapacityV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityStatusV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,withHostCapacityV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts\";\nimport {agentSessionAddressV1,agentSessionCapacityRowsV1,agentSessionLanguageV1,agentSessionRegistryRootV1,currentAgentSessionV1,renderAgentSessionCapacityV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "  if(head.includes(\"--json\")){context.write(JSON.stringify(snapshot,null,2));return 0;}\n",
+     "new": "  const sessions=agentSessionCapacityRowsV1(snapshot,agentSessionRegistryRootV1(context.environment),context.now===undefined?{}:{now:context.now()});\n  if(head.includes(\"--json\")){context.write(JSON.stringify({...snapshot,sessions},null,2));return 0;}\n"
+    },
+    {
+     "old": "  for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,\"waiter\",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));\n",
+     "new": "  for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,\"waiter\",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));\n  for(const line of renderAgentSessionCapacityV1(sessions,agentSessionLanguageV1(context.environment)))context.write(line);\n"
+    },
+    {
+     "old": "  return await withHostCapacityV1({...context,directory,policy,request:sized,control:waiting.control},async handle=>{\n",
+     "new": "  const session=currentAgentSessionV1({environment:context.environment});\n  return await withHostCapacityV1({...context,directory,policy,request:sized,control:waiting.control,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts",
+   "group": "core",
+   "base": "8ba565237258b90f392a02b0bebf5930a0b5a4c7073673bb69d0d6cebc3c21b6",
+   "sha": "30d573adf343ce9bf2d55fca26d59ee405b71dcfad160912d115bba01ab11271",
+   "hunks": [
+    {
+     "old": "import {availableParallelism} from \"node:os\";\n",
+     "new": "import {availableParallelism} from \"node:os\";\nimport {agentSessionAddressV1,currentAgentSessionV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "  return await withHostCapacityV1({...ports,directory:ports.directory??hostCapacityDirectoryV1(environment),policy,request,control:ports.control??waiting!.control,environment},async handle=>{\n",
+     "new": "  const session=currentAgentSessionV1({environment});\n  return await withHostCapacityV1({...ports,directory:ports.directory??hostCapacityDirectoryV1(environment),policy,request,control:ports.control??waiting!.control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "group": "core",
+   "base": "b021ff9acf42e3f1e32a30d701aff8f8e239d2195c08497cd4fb1f11bc9fccba",
+   "sha": "46c826f8220f2a2fd6b44507534b396128a16318c69839ebb9ab936233bbed35",
+   "hunks": [
+    {
+     "old": "  if(diagnostic[0]===\"capacity\"){const{buildInvocationRequestsHelpV1}=await import(\"./🧭️invocation/🟦️.ts\");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import(\"./⚙️operations/📖️help/🟦️.ts\");console.log(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{runCapacityCommandV1}=await import(\"./🌡️host-capacity/⌨️command/🟦️.ts\");process.exitCode=await runCapacityCommandV1(diagnostic.slice(1),{environment:diagnosticEnvironment,write:line=>console.log(line)});return;}\n",
+     "new": "  if(diagnostic[0]===\"capacity\"){const{buildInvocationRequestsHelpV1}=await import(\"./🧭️invocation/🟦️.ts\");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import(\"./⚙️operations/📖️help/🟦️.ts\");console.log(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{runCapacityCommandV1}=await import(\"./🌡️host-capacity/⌨️command/🟦️.ts\");process.exitCode=await runCapacityCommandV1(diagnostic.slice(1),{environment:diagnosticEnvironment,write:line=>console.log(line)});return;}\n  if(diagnostic[0]===\"session\"){const{buildInvocationRequestsHelpV1}=await import(\"./🧭️invocation/🟦️.ts\");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import(\"./⚙️operations/📖️help/🟦️.ts\");console.log(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{runSessionCommandV1}=await import(\"./🪪️agent-sessions/⌨️command/🟦️.ts\");process.exitCode=await runSessionCommandV1(root,diagnostic.slice(1),{environment:diagnosticEnvironment,write:line=>console.log(line)});return;}\n  const{attachAgentSessionV1}=await import(\"./🪪️agent-sessions/🟦️.ts\");attachAgentSessionV1(root,environment);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "group": "core",
+   "base": "ce528279edfb5573247d7d596aa81bf3b8fc07db1b8e2eb3a060dc5bfa09d2b8",
+   "sha": "2efbf3efd14dd4e0b7cb776cf6e8c61d197359a92ecf5ce3332f9dc2eaec6051",
+   "hunks": [
+    {
+     "old": "import {repositoryCachePartitionRootV1} from \"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts\";\n",
+     "new": "import {repositoryCachePartitionRootV1} from \"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts\";\nimport {agentSessionAddressV1,currentAgentSessionV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": " return withBazelSessionV1(port,servers,{key:selection.key,kind:selection.kind,signal:phaseControl.signal,language:bazelSessionLanguageV1(process.env)},session=>body({session,servers,directories,port}));\n",
+     "new": " const agent=currentAgentSessionV1({environment:process.env});\n return withBazelSessionV1(port,servers,{key:selection.key,kind:selection.kind,signal:phaseControl.signal,language:bazelSessionLanguageV1(process.env),preference:agent.resources.bazel.preference,owner:{session:agentSessionAddressV1(agent),agent:agent.agent.id}},session=>body({session,servers,directories,port}));\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+   "group": "core",
+   "base": "6171f136dc82b20ebe270c6dca26865d6cbcae7db0f19a5d85c215ceda99a6da",
+   "sha": "2a9705cc733100c7fb30ab44ffc8f3c59b6529ecf68d40154f7db9d034da889d",
+   "hunks": [
+    {
+     "old": "export type BazelSlotStateV1=Readonly<{version:1;slot:string;key:string;keys:readonly string[];usedAt:number}>;\n",
+     "new": "export type BazelSlotStateV1=Readonly<{version:1;slot:string;key:string;keys:readonly string[];usedAt:number;session?:string;agent?:string}>;\nexport type BazelSessionOwnerV1=Readonly<{session:string;agent:string}>;\n"
+    },
+    {
+     "old": "/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, warm package), then slots that still keep its package, then slots never used, then the least recently used; ties keep the slot number order. */\nexport function rankBazelSlotsV1(slots:readonly string[],states:Readonly<Record<string,BazelSlotStateV1|undefined>>,key:string):readonly string[]{\n const tier=(slot:string)=>{const state=states[slot];return state===undefined?2:state.key===key?0:state.keys.includes(key)?1:3;},index=(slot:string)=>Number(slot.slice(1)),recency=(left:string,right:string)=>{const first=tier(left);return first<2?states[right]!.usedAt-states[left]!.usedAt:first===3?states[left]!.usedAt-states[right]!.usedAt:0;};\n",
+     "new": "/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, warm package), then slots that still keep its package, then slots never used, then the least recently used; ties go to the slot the agent session prefers (its preference modulo the slot count) and then keep the slot number order, so concurrent agents start on different slots. */\nexport function rankBazelSlotsV1(slots:readonly string[],states:Readonly<Record<string,BazelSlotStateV1|undefined>>,key:string,preference?:number):readonly string[]{\n const tier=(slot:string)=>{const state=states[slot];return state===undefined?2:state.key===key?0:state.keys.includes(key)?1:3;},index=(slot:string)=>preference===undefined?Number(slot.slice(1)):(slots.indexOf(slot)-preference%slots.length+slots.length)%slots.length,recency=(left:string,right:string)=>{const first=tier(left);return first<2?states[right]!.usedAt-states[left]!.usedAt:first===3?states[left]!.usedAt-states[right]!.usedAt:0;};\n"
+    },
+    {
+     "old": "export function nextBazelSlotStateV1(slot:string,previous:BazelSlotStateV1|undefined,key:string,now:number,rules:BazelSessionPolicyV1=policy):BazelSlotStateV1{\n const state={version:1 as const,slot:requireBazelSlotV1(slot),key:requireBazelKeyV1(key),keys:[key,...(previous?.keys??[]).filter(value=>value!==key)].slice(0,rules.retention.packagesPerSlot),usedAt:now};\n",
+     "new": "export function nextBazelSlotStateV1(slot:string,previous:BazelSlotStateV1|undefined,key:string,now:number,rules:BazelSessionPolicyV1=policy,owner?:BazelSessionOwnerV1):BazelSlotStateV1{\n const state={version:1 as const,slot:requireBazelSlotV1(slot),key:requireBazelKeyV1(key),keys:[key,...(previous?.keys??[]).filter(value=>value!==key)].slice(0,rules.retention.packagesPerSlot),usedAt:now,...owner===undefined?{}:{session:owner.session,agent:owner.agent}};\n"
+    },
+    {
+     "old": "export type BazelSessionRequestV1=Readonly<{key:string;signal:AbortSignal;kind?:BazelSlotKindV1;timeoutMilliseconds?:number;language?:BazelLanguageV1}>;\n",
+     "new": "export type BazelSessionRequestV1=Readonly<{key:string;signal:AbortSignal;kind?:BazelSlotKindV1;timeoutMilliseconds?:number;language?:BazelLanguageV1;preference?:number;owner?:BazelSessionOwnerV1}>;\n"
+    },
+    {
+     "old": "   for(const slot of rankBazelSlotsV1(slots,states,request.key)){\n",
+     "new": "   for(const slot of rankBazelSlotsV1(slots,states,request.key,request.preference)){\n"
+    },
+    {
+     "old": "     return Object.freeze({slot,key:request.key,mode,...(before?{previous:before}:{}),async release(){if(released)return;released=true;try{await port.write(slot,nextBazelSlotStateV1(slot,before,request.key,port.now(),rules));}finally{claimed();}}});\n",
+     "new": "     return Object.freeze({slot,key:request.key,mode,...(before?{previous:before}:{}),async release(){if(released)return;released=true;try{await port.write(slot,nextBazelSlotStateV1(slot,before,request.key,port.now(),rules,request.owner));}finally{claimed();}}});\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json",
+   "group": "core",
+   "base": "d6ccd3107b296e9a84001722cbb461fbe3459dbba630df89dc73af99115903c8",
+   "sha": "8ba0e237cbfb446e5f940b513f3934b39942f9f1ccd61baaa03e930cb2db6580",
+   "hunks": [
+    {
+     "old": "        \"usedAt\": {\"type\": \"integer\", \"minimum\": 0}\n",
+     "new": "        \"usedAt\": {\"type\": \"integer\", \"minimum\": 0},\n        \"session\": {\"type\": \"string\", \"pattern\": \"^[0-9a-f]{12}\\\\.[a-z][a-z0-9]{0,11}$\"},\n        \"agent\": {\"type\": \"string\", \"pattern\": \"^[A-Za-z0-9._-]{1,64}$\"}\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts",
+   "group": "core",
+   "base": "ddde2fc2540a980da9db56f5f468b8e444e2dfee01f27426d60593572667b225",
+   "sha": "b648d6ea9d88843128f5f416a3037294e969895bc3595babda5c3cafb9feb785",
+   "hunks": [
+    {
+     "old": "import {runOwnedCommand} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts\";\n",
+     "new": "import {runOwnedCommand} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts\";\nimport {currentAgentSessionV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "/** 🪁️ Type-checks one authored configuration unit by unit against stored declaration outputs. Shared results live in the products store; incremental compiler state lives in the session's compiler-state directory (`SEMIO_SESSION`, default `default`), so concurrent agents share results and never mutable state. */\n",
+     "new": "/** 🪁️ Type-checks one authored configuration unit by unit against stored declaration outputs. Shared results live in the products store; incremental compiler state lives in the compiler-state directory of the agent session, so concurrent agents share results and never mutable state. */\n"
+    },
+    {
+     "old": "    const session = (environment.SEMIO_SESSION ?? \"default\").replace(/[^A-Za-z0-9_.-]/gu, \"_\").slice(0, 64) || \"default\", sharedRoot = join(options.stateRoot, \"units\");\n",
+     "new": "    const session = currentAgentSessionV1({environment}).id, sharedRoot = join(options.stateRoot, \"units\");\n"
+    }
+   ]
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json",
+   "group": "core",
+   "function": "surface",
+   "base": "aa93bb7f624a0f8f3704e480a876bb08ba9d8a20bf08c91d5f751375a839fa7d",
+   "sha": "f13da85b1e2114e25da6d6bf809c7acb642299ce63a7d4994970aa5d93297cd8"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🥒️.feature",
+   "group": "core",
+   "base": "21259fa7c3da323eb89a0ff02c6944896cf1fd9d0f8bc57961b82ec280079fc9",
+   "sha": "be9d6894aec3be8249a23d43261d7ae01d5b1105d4c2eba8929f5bd094b5cd05",
+   "hunks": [
+    {
+     "old": "    Then SEMIO_AGENT_ID and SEMIO_SESSION are alpha and SEMIO_CARGO_LANE is the lane derived from alpha, and the variables of an enclosing invocation are removed\n",
+     "new": "    Then SEMIO_AGENT_SESSION is the address of the session that repo session open issued for alpha, no per-tool identity variable is set, and the variables of an enclosing invocation are removed\n"
+    }
+   ]
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json",
+   "group": "core",
+   "function": "surface_golden",
+   "base": "be9e94e7b7f995a6de5e8f568e0d202f5c7c3174fd612d08bc3d17d656d5aa6f",
+   "sha": "0a92e8586fe4b9a525f18a2556cbc97dac3d6655baf0b0ce13bdab97e7f4a66c"
+  },
+  {
+   "kind": "prog",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧬️schema/🏗️build-surface.json",
+   "group": "core",
+   "function": "surface_schema",
+   "base": "047b9c364e7e697c6ed467b082f147629b99f4a6e5c9de5e4a7fb9979aadfd2b",
+   "sha": "36889b12e74aef4a3a6b25f3b15d3800f8415f4bb0ec5596229718164fe9604d"
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚡️output-cache/🟦️.ts",
+   "group": "core",
+   "base": "4ac82daff92132951b647323bf6eb2a7eb50a8aa2ffb0e3b69f24e98350cf208",
+   "sha": "673e343edf3376afe7546abee487bd978c01fc200a8755ce6242ac2a3f041d64",
+   "hunks": [
+    {
+     "old": "import { digest } from \"../🔢️digests/🟦️.ts\";\n",
+     "new": "import { digest } from \"../🔢️digests/🟦️.ts\";\nimport { agentId as sessionAgentId } from \"../🔐️run-lease/🟦️.ts\";\n"
+    },
+    {
+     "old": "export function agentCacheRoot(repoRoot: string, agentId = process.env.SEMIO_AGENT_ID ?? \"local\"): string {\n",
+     "new": "export function agentCacheRoot(repoRoot: string, agentId = sessionAgentId()): string {\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔐️run-lease/🟦️.ts",
+   "group": "core",
+   "base": "f7619441436274bb92db6ea29ef28e478b98b672426730b914ec918c9cb188e5",
+   "sha": "dd95e65213f8eb4fdd0f58284e78c9c65b6656ee3ac03b87879a8ed24830e195",
+   "hunks": [
+    {
+     "old": "import { dirname, join } from \"node:path\";\n",
+     "new": "import { dirname, join } from \"node:path\";\nimport { currentAgentSessionV1 } from \"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "/** 🏷️ This process's agent identity, from `SEMIO_AGENT_ID`. Never inferred from a username or a hostname. */\nexport function agentId(): string {\n  return (process.env.SEMIO_AGENT_ID ?? \"local\").replace(/[^A-Za-z0-9._-]+/g, \"_\");\n",
+     "new": "/** 🏷️ This process's agent identity: the agent of its agent session. Never inferred from a username or a hostname. */\nexport function agentId(): string {\n  return currentAgentSessionV1().agent.id.replace(/[^A-Za-z0-9._-]+/g, \"_\");\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🟨️.mjs",
+   "group": "service",
+   "base": "b850d1733fcc38f28863e1d2849b929089ad6fb0ac7cfb7261df2492a8d6f333",
+   "sha": "76da06fef22ebaeeaa31fd054ac01f49beb54540053e3a77d7adb6dcca445661",
+   "hunks": [
+    {
+     "old": "import {appendAuditV1} from \"../../📥️caller/🛰️service/🔑️session/🟨️.mjs\";\n",
+     "new": "import {appendAuditV1} from \"../../📥️caller/🛰️service/🔑️session/🟨️.mjs\";\nimport {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,setAgentSessionCapabilityV1,writeAgentSessionTokenV1} from \"../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": " const closed=new Promise(resolve=>{closeResolve=resolve;});\n",
+     "new": " const closed=new Promise(resolve=>{closeResolve=resolve;});\n const agentSessions=new Map(),sessionOf=agent=>{let found=agentSessions.get(agent);if(found===undefined){found=currentAgentSessionV1({environment,worktree:root,agent,origin:\"service\"});agentSessions.set(agent,found);}return found;},sessionEnvironment=agent=>{try{return agentSessionEnvironmentV1(sessionOf(agent));}catch{return {};}};\n"
+    },
+    {
+     "old": "   id:frame.id,args:frame.args,cwd:frame.cwd,env:frame.env??{},signal:controller.signal,connection,timing,state,ports,policy,root,client,\n",
+     "new": "   id:frame.id,args:frame.args,cwd:frame.cwd,env:{...(frame.env??{}),...sessionEnvironment(connection.lane)},signal:controller.signal,connection,timing,state,ports,policy,root,client,\n"
+    },
+    {
+     "old": "   await context.output(\"stdout\",mintCapabilityV1(rootKey,caveats)+\"\\n\");\n",
+     "new": "   const issued=mintCapabilityV1(rootKey,caveats),session=currentAgentSessionV1({environment,worktree:root,agent,origin:\"service\"}),store=agentSessionStoreV1(agentSessionRegistryRootV1(environment),session.worktree),known=new Set([\"status\",\"query\",\"run\",\"watch\",\"admin\"]);\n   writeAgentSessionTokenV1(store,session.id,issued);\n   setAgentSessionCapabilityV1(store,session.id,{scopes:scope.split(\",\").filter(name=>known.has(name)),projects:projects?projects.split(\",\"):[],expiresAtMs:now()+seconds*1000});\n   await context.output(\"stdout\",issued+\"\\n\");\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🟨️.d.mts",
+   "group": "service",
+   "base": "03646f7ff3cd36277a0078ced5931913cd87d72582c6b2ec929bf7ff944f76b0",
+   "sha": "f7eb92e3854baf8e82e177687484ad734a1b97f5c48f87aae4f77bc98ed1426c",
+   "hunks": [
+    {
+     "old": "export function agentIdV1(environment:Readonly<Record<string,string|undefined>>,lane?:string):string;\nexport function forwardCommandV1(options:{root:string;command:string;args:readonly string[];cwd:string;languages:readonly string[];lane?:string;client?:string;env?:Record<string,string>;cap?:string;stdout?:{write(text:string|Uint8Array):unknown};stderr?:{write(text:string|Uint8Array):unknown};environment?:Readonly<Record<string,string|undefined>>;platform?:string;deadlineMs?:number;signal?:AbortSignal;progress?:boolean}):Promise<ForwardResultV1>;\n",
+     "new": "export function agentIdV1(session:{agent:{id:string}}):string;\nexport function forwardCommandV1(options:{root:string;command:string;args:readonly string[];cwd:string;languages:readonly string[];lane?:string;session?:{id:string;worktree:string;agent:{id:string}};client?:string;env?:Record<string,string>;cap?:string;stdout?:{write(text:string|Uint8Array):unknown};stderr?:{write(text:string|Uint8Array):unknown};environment?:Readonly<Record<string,string|undefined>>;platform?:string;deadlineMs?:number;signal?:AbortSignal;progress?:boolean}):Promise<ForwardResultV1>;\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🟨️.mjs",
+   "group": "service",
+   "base": "436c81cde2bc4c3d9f1ea3df51da7c421492861cb911ae3380bb69616f5f36d1",
+   "sha": "aa037fd7e6c8fdd7b87b51d24cdaf8e737bff7c5e6ba09ebbe5637d7d1a96121",
+   "hunks": [
+    {
+     "old": "import {mintCapabilityV1} from \"../📨️protocol/🔑️capability/🟨️.mjs\";\n",
+     "new": "import {mintCapabilityV1} from \"../📨️protocol/🔑️capability/🟨️.mjs\";\nimport {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,readAgentSessionTokenV1} from \"../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": "/** 🪪 The agent identity a client announces: `SEMIO_AGENT_ID` cut to the characters a token may carry, else the lane. */\nexport function agentIdV1(environment,lane=\"default\"){\n const raw=environment.SEMIO_AGENT_ID||lane,clean=Array.from(raw,character=>/^[A-Za-z0-9._:-]$/u.test(character)?character:\"_\").slice(0,64).join(\"\");\n",
+     "new": "/** 🪪 The agent identity a client announces: the agent of its agent session, cut to the characters a token may carry. */\nexport function agentIdV1(session){\n const clean=Array.from(session.agent.id,character=>/^[A-Za-z0-9._:-]$/u.test(character)?character:\"_\").slice(0,64).join(\"\");\n"
+    },
+    {
+     "old": "/** 🎫 The default token of a local launcher: everything but administration, bound to this worktree and agent, for one minute. A token the service issued for an agent session (`SEMIO_SERVICE_TOKEN`) replaces it. */\n",
+     "new": "/** 🎫 The default token of a local launcher: everything but administration, bound to this worktree and agent, for one minute. A token the service issued for the agent session (kept in the session's private token file) replaces it. */\n"
+    },
+    {
+     "old": " const{root,command,args,cwd,languages,lane=\"default\",client=\"repo\",env={},cap,stdout=process.stdout,stderr=process.stderr,environment=process.env,platform=process.platform,deadlineMs,signal,progress=false}=options;\n const runtime=endpointsV1(canonicalRootV1(root),environment,platform),agent=agentIdV1(environment,lane);\n",
+     "new": " const{root,command,args,cwd,languages,lane,client=\"repo\",env={},cap,stdout=process.stdout,stderr=process.stderr,environment=process.env,platform=process.platform,deadlineMs,signal,progress=false}=options;\n const runtime=endpointsV1(canonicalRootV1(root),environment,platform),session=options.session??currentAgentSessionV1({environment,worktree:root,...(lane===undefined?{}:{agent:lane,origin:\"service\"})}),agent=agentIdV1(session);\n"
+    },
+    {
+     "old": "  if(token===undefined&&environment.SEMIO_SERVICE_TOKEN)token=environment.SEMIO_SERVICE_TOKEN;\n",
+     "new": "  if(token===undefined)token=readAgentSessionTokenV1(agentSessionStoreV1(agentSessionRegistryRootV1(environment),session.worktree),session.id);\n"
+    },
+    {
+     "old": "   const lines=[encodeFrameV1({t:\"hello\",v:1,client:{name:client,pid:process.pid,lane:agent},languages,cap:token}),encodeFrameV1({t:\"request\",id:1,command,args,cwd,env,...(deadlineMs?{deadlineMs}:{})})];\n",
+     "new": "   const lines=[encodeFrameV1({t:\"hello\",v:1,client:{name:client,pid:process.pid,lane:agent},languages,cap:token}),encodeFrameV1({t:\"request\",id:1,command,args,cwd,env:{...env,...agentSessionEnvironmentV1(session)},...(deadlineMs?{deadlineMs}:{})})];\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🏛️service/🟦️.ts",
+   "group": "service",
+   "base": "f1e099069f4aa979776a8c983d3b0b5e8e9881407963c9d3bcd978d764a336e1",
+   "sha": "aa4e5ea722c600af298fe5fe692cdd546630033de781e54a4aeb3e11f869e0ed",
+   "hunks": [
+    {
+     "old": "import {WATCHER,cleanup,haveBinary,pick,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from \"../🟦️.ts\";\n",
+     "new": "import {WATCHER,cleanup,haveBinary,pick,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from \"../🟦️.ts\";\nimport {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from \"../../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts\";\n"
+    },
+    {
+     "old": " const runtime=endpointsV1(root,{XDG_RUNTIME_DIR:base},process.platform);\n const executed:string[]=[],aborted:string[]=[],clients:any[]=[];\n const filter=createFilterV1({rooted:[\".git\"],names:[\"node_modules\"]});\n const execution={async run({id,signal,onSpawn,onOutput,owner,client}:any){\n  executed.push(id);clients.push(client);\n",
+     "new": " const runtime=endpointsV1(root,{XDG_RUNTIME_DIR:base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},process.platform);\n const executed:string[]=[],aborted:string[]=[],clients:any[]=[],environments:Record<string,string>[]=[];\n const filter=createFilterV1({rooted:[\".git\"],names:[\"node_modules\"]});\n const execution={async run({id,signal,onSpawn,onOutput,owner,client,env}:any){\n  executed.push(id);clients.push(client);environments.push(env??{});\n"
+    },
+    {
+     "old": "  return forwardCommandV1({root,command,args,cwd:root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:base},stdout:{write:(t:string)=>out.push(String(t))},stderr:{write:(t:string)=>err.push(String(t))},...extra}).then((r:any)=>({...r,out:out.join(\"\"),err:err.join(\"\")}));\n };\n return{root,runtime,service,started,executed,aborted,clients,run,base,custodyEvents,ports,setOwners:(value:any)=>{currentOwners=value;}};\n",
+     "new": "  return forwardCommandV1({root,command,args,cwd:root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(String(t))},stderr:{write:(t:string)=>err.push(String(t))},...extra}).then((r:any)=>({...r,out:out.join(\"\"),err:err.join(\"\")}));\n };\n return{root,runtime,service,started,executed,aborted,clients,environments,run,base,custodyEvents,ports,setOwners:(value:any)=>{currentOwners=value;}};\n"
+    },
+    {
+     "old": "  const seams=residentGraphSeamsV1({root:s.root,environment:{XDG_RUNTIME_DIR:s.base},membership:async()=>{stat++;const frontier=capture();return{digest:digestOf(frontier),frontier,changes:[]};},holds:async()=>true});\n",
+     "new": "  const seams=residentGraphSeamsV1({root:s.root,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},membership:async()=>{stat++;const frontier=capture();return{digest:digestOf(frontier),frontier,changes:[]};},holds:async()=>true});\n"
+    },
+    {
+     "old": "  const r=await forwardCommandV1({root:s.root,command:\"issue\",args:[\"--agent\",\"a1\",\"--classes\",\"run\",\"--for\",\"a\",\"--ttl\",\"60\"],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n",
+     "new": "  const r=await forwardCommandV1({root:s.root,command:\"issue\",args:[\"--agent\",\"a1\",\"--classes\",\"run\",\"--for\",\"a\",\"--ttl\",\"60\"],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n"
+    },
+    {
+     "old": " const issue=async(s:any,...args:string[])=>{const out:string[]=[];const r=await forwardCommandV1({root:s.root,command:\"issue\",args,cwd:s.root,languages:[\"en\"],cap:mintCapabilityV1(keyOf(s.runtime),[]),environment:{XDG_RUNTIME_DIR:s.base},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});expect(r.exit).toBe(0);return out.join(\"\").trim();};\n",
+     "new": " const issue=async(s:any,...args:string[])=>{const out:string[]=[];const r=await forwardCommandV1({root:s.root,command:\"issue\",args,cwd:s.root,languages:[\"en\"],cap:mintCapabilityV1(keyOf(s.runtime),[]),environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});expect(r.exit).toBe(0);return out.join(\"\").trim();};\n"
+    },
+    {
+     "old": "  const call=async(args:string[],languages=[\"en\"])=>{const out:string[]=[],err:string[]=[];const r=await forwardCommandV1({root:s.root,command:\"issue\",args,cwd:s.root,languages,cap:admin,environment:{XDG_RUNTIME_DIR:s.base},stdout:{write:(t:string)=>out.push(t)},stderr:{write:(t:string)=>err.push(t)}});return{exit:r.exit,out:out.join(\"\").trim(),err:err.join(\"\")};};\n",
+     "new": "  const call=async(args:string[],languages=[\"en\"])=>{const out:string[]=[],err:string[]=[];const r=await forwardCommandV1({root:s.root,command:\"issue\",args,cwd:s.root,languages,cap:admin,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(t)},stderr:{write:(t:string)=>err.push(t)}});return{exit:r.exit,out:out.join(\"\").trim(),err:err.join(\"\")};};\n"
+    },
+    {
+     "old": "\n test(\"revoking a session cancels its running command and refuses its later requests; other sessions are unaffected; a restart keeps the revocation\",async()=>{\n",
+     "new": "\n\n test(\"issue opens the agent's session, records the issued capability and keeps the token in the session's private file; the client then runs without any token variable\",async()=>{\n  const s=await startService(),token=await issue(s,\"--agent\",\"sess-1\",\"--classes\",\"run,status\",\"--for\",\"a,b\",\"--ttl\",\"60\");\n  const store=agentSessionStoreV1(agentSessionRegistryRootV1(process.env),agentSessionWorktreeKeyV1(s.root)),row=listAgentSessionsV1(store).find(candidate=>candidate.session.agent.id===\"sess-1\")!;\n  expect(row.session.agent).toEqual({id:\"sess-1\",client:\"service\",origin:\"service\"});expect(row.session.capability.scopes).toEqual([\"run\",\"status\"]);expect(row.session.capability.projects).toEqual([\"a\",\"b\"]);expect(row.session.capability.expiresAtMs).toBeGreaterThan(Date.now());\n  expect(readAgentSessionTokenV1(store,row.session.id)).toBe(token);expect(readFileSync(join(store.directory,row.session.id+\".json\"),\"utf8\")).not.toContain(token);\n  const bare=await forwardCommandV1({root:s.root,command:\"run\",args:[\"a:build\"],cwd:s.root,languages:[\"en\"],lane:\"sess-1\",environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}});\n  expect(bare).toMatchObject({handled:true,exit:0});expect(s.clients.at(-1)).toMatchObject({token,agent:\"sess-1\"});\n });\n\n test(\"the executor environment carries the address of the session of the connection's agent; an address a client sends for another agent is replaced\",async()=>{\n  const s=await startService(),token=await issue(s,\"--agent\",\"sess-2\",\"--ttl\",\"60\");\n  const store=agentSessionStoreV1(agentSessionRegistryRootV1(process.env),agentSessionWorktreeKeyV1(s.root)),own=listAgentSessionsV1(store).find(candidate=>candidate.session.agent.id===\"sess-2\")!.session;\n  await forwardCommandV1({root:s.root,command:\"run\",args:[\"a:build\"],cwd:s.root,languages:[\"en\"],lane:\"sess-2\",cap:token,env:{SEMIO_AGENT_SESSION:\"000000000000.aforged\"},environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}});\n  expect(s.environments.at(-1)!.SEMIO_AGENT_SESSION).toBe(agentSessionAddressV1(own));\n  const second=await s.run(\"run\",[\"d:build\"],{lane:\"sess-3\"}),third=s.environments.at(-1)!;\n  expect(second).toMatchObject({handled:true});expect(third.SEMIO_AGENT_SESSION).toMatch(/^[0-9a-f]{12}\\.a[a-z0-9]+$/u);expect(third.SEMIO_AGENT_SESSION).not.toBe(agentSessionAddressV1(own));\n  expect(readAgentSessionV1(store,third.SEMIO_AGENT_SESSION!.split(\".\")[1]!)!.agent.id).toBe(\"sess-3\");\n  for(const environment of s.environments)for(const name of Object.keys(environment))expect(name).not.toMatch(/^SEMIO_(AGENT_ID|CARGO_LANE|SESSION)$/u);\n });\n\n test(\"revoking a session cancels its running command and refuses its later requests; other sessions are unaffected; a restart keeps the revocation\",async()=>{\n"
+    },
+    {
+     "old": "  const out:string[]=[];const revoke=await forwardCommandV1({root:s.root,command:\"revoke\",args:[a],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n",
+     "new": "  const out:string[]=[];const revoke=await forwardCommandV1({root:s.root,command:\"revoke\",args:[a],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n"
+    },
+    {
+     "old": "  const out:string[]=[];await forwardCommandV1({root:s.root,command:\"revoke\",args:[\"--agent\",\"codex-9\"],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n",
+     "new": "  const out:string[]=[];await forwardCommandV1({root:s.root,command:\"revoke\",args:[\"--agent\",\"codex-9\"],cwd:s.root,languages:[\"en\"],cap:admin,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write:(t:string)=>out.push(t)},stderr:{write(){}}});\n"
+    },
+    {
+     "old": "  await again.start();expect((await forwardCommandV1({root:s.root,command:\"ping\",args:[],cwd:s.root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:s.base},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(true);\n",
+     "new": "  await again.start();expect((await forwardCommandV1({root:s.root,command:\"ping\",args:[],cwd:s.root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(true);\n"
+    },
+    {
+     "old": "   expect((await forwardCommandV1({root:s.root,command:\"ping\",args:[],cwd:s.root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:s.base},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(false);\n",
+     "new": "   expect((await forwardCommandV1({root:s.root,command:\"ping\",args:[],cwd:s.root,languages:[\"en\"],environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(false);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🚪️client/🟦️.ts",
+   "group": "service",
+   "base": "b935358c030b3f13b1de350e76546481739060ac6d5b0f84b6fe2e602fdf2beb",
+   "sha": "e6e8cab98240764351d7449d67419c6055028fb9339b18c47be52480cff2eb80",
+   "hunks": [
+    {
+     "old": "  for(const row of fixture.agents)expect([row,agentIdV1(row.value?{SEMIO_AGENT_ID:row.value}:{},row.fallback)]).toEqual([row,row.agent]);\n",
+     "new": "  for(const row of fixture.agents)expect([row,agentIdV1({agent:{id:row.value||row.fallback}})]).toEqual([row,row.agent]);\n"
+    }
+   ]
+  },
+  {
+   "kind": "hunks",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🟦️.ts",
+   "group": "service",
+   "base": "46edd1ccf6b73386316790a797b2ec00f7ae35d92b289e465cb39b486c1ba471",
+   "sha": "21041a21d54e6d777f7fb036bbad77c155891ba0ea6631996ea69700583acbb4",
+   "hunks": [
+    {
+     "old": "\nexport const HERE=import.meta.dir;\n",
+     "new": "\nprocess.env.SEMIO_AGENT_SESSION_DIRECTORY??=mkdtempSync(join(tmpdir(),\"rs-\"));\nexport const HERE=import.meta.dir;\n"
+    }
+   ]
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 /** 🔸️ The retire authenticated inference phase of useDirectoryAndRoute. */
 import { startDirectorySessionRefreshV1 } from "@semio-tech/framework/directory/session-refresh";
 import { HubSessionPortClientV1 } from "@semio-tech/framework/directory/session-refresh/session-port";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { waitForEvent } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { IDENTITY_CONFIG_SCHEMA, identityActorConfig } from "@semio-tech/framework/backbone/config-lane";

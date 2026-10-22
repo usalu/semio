@@ -85,10 +85,10 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   const project = JSON.parse(readFileSync(join(workspaceRoot, fixture.target.projectPath), "utf8"));
   assert.deepEqual(project.targets[fixture.target.name].inputs, fixture.target.inputs);
   assert.equal(project.targets[fixture.target.name].cache, true);
-  assert.equal(project.targets[fixture.target.name].options.command, "bun ./📜️script.ts test-browser-ownership");
+  assert.equal(project.targets[fixture.target.name].options.command, "repo ./📜️script.ts test-browser-ownership");
   assert.deepEqual(project.targets[fixture.target.previewName].inputs, ["flowBrowserProduction"]);
   assert.deepEqual(project.targets[fixture.target.previewName].outputs, []);
-  assert.equal(project.targets[fixture.target.previewName].options.command, "bun ./📜️script.ts preview-generated");
+  assert.equal(project.targets[fixture.target.previewName].options.command, "repo ./📜️script.ts preview-generated");
   assert.equal(project.targets[fixture.target.previewName].options.cwd, dirname(fixture.target.projectPath));
   const generator = taxonomy.generatorContracts["flow-browser-package"];
   assert.equal(generator.target, "semio-framework-os-flow-browser-package:wasm");

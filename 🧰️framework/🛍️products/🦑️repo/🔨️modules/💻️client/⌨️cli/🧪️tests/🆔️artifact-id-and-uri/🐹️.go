@@ -396,3 +396,27 @@ func TestArtifactIDAndURI(t *testing.T) {
 		})
 	}
 }
+
+func TestArtifactUriExtractionReadsOnlyTheEntityKindFormat(t *testing.T) {
+	fileID := buildFileID("compose/js/src/design.tsx", nil)
+	sectionID := buildSectionID(fileID, []string{"state managment", "store"})
+	definitionID := buildDefinitionID(fileID, nil, "myclass", DefinitionKindImplementation)
+	for _, uri := range []string{"repo://section/" + sectionID, "section/" + sectionID} {
+		if path, parts := extractFileAndSectionsFromUri(uri); path != IdToPath(sectionID) || len(parts) != 2 {
+			t.Errorf("extractFileAndSectionsFromUri(%q) = %q %v", uri, path, parts)
+		}
+	}
+	for _, uri := range []string{"repo://definition/" + definitionID, "definition/" + definitionID} {
+		if path, name := extractFileAndDefinitionFromUri(uri); path != IdToPath(definitionID) || name != "myclass" {
+			t.Errorf("extractFileAndDefinitionFromUri(%q) = %q %q", uri, path, name)
+		}
+	}
+	for _, retired := range []string{"repo://p/f/docs/guide.md/s/intro", "f/docs/guide.md/s/intro", "repo://p/f/docs/guide.md/d/x/y"} {
+		if path, parts := extractFileAndSectionsFromUri(retired); path != "" || parts != nil {
+			t.Errorf("extractFileAndSectionsFromUri(%q) = %q %v, want nothing", retired, path, parts)
+		}
+		if path, name := extractFileAndDefinitionFromUri(retired); path != "" || name != "" {
+			t.Errorf("extractFileAndDefinitionFromUri(%q) = %q %q, want nothing", retired, path, name)
+		}
+	}
+}

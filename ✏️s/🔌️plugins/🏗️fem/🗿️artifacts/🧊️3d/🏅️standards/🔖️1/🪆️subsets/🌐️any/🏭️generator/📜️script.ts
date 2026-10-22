@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -50,10 +50,8 @@ import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framewor
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-// 🩹️ Defensive: three's PLY/GLTF exporters need these off-browser; STL/OBJ do not, in principle, but
-// the mesh pilot's spike found them cheap insurance and the cost of carrying them is one shim block.
-(globalThis as { requestAnimationFrame?: (cb: () => void) => number }).requestAnimationFrame ??= (cb) => { cb(); return 0; };
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -376,7 +374,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
       exportEngine: { family: EXPORT_ENGINE_FAMILY, implementation: "three.js exporters + loaders", version: EXPORT_ENGINE_VERSION },
-      command: `bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       seed: SEED,
       platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
     },
@@ -441,7 +439,7 @@ async function main(argv: readonly string[]): Promise<number> {
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const cargoTargetDir = cargoTargetDirectory(findWorkspaceRoot());
-    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
     const subsetsDir = join(import.meta.dir, "..", "..");
     if (command === "carrier") {
@@ -465,7 +463,7 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "metre", angle: "radian" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "json-rust-fem3d-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
+        generator: { oracle: "json-rust-fem3d-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
         comparisonProfile: "semantic-fem3d-carrier-v1",
         reproducible: true,
         family: "mechanical",

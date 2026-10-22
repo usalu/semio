@@ -15,9 +15,9 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 use semio_framework_plugin_time_travel::*;
 use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 🛬️ The whole-document load (document archive operation) still running on this instance, if any
     /// (`📓️api-stepped-document-load.md`).
     pub fn live_document_load(&self) -> Option<u64> {

@@ -18,7 +18,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "graph", kind: "change-graph-directed", record: "ChangedGraphDirected" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set graph direction to {}", if self.new_directed { "directed" } else { "undirected" }), &format!("Graphrichtung auf {} setzen", if self.new_directed { "gerichtet" } else { "ungerichtet" }))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["graph".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EquationSnapshot, Op> for ChangeGraphDirected
+where
+    Op: protocol::ColdMutation<EquationSnapshot, ReferenceDiff = crate::EquationDiff> + From<ChangeGraphDirected>,
+{
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<EquationSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,11 +39,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set graph direction to {}", if self.new_directed { "directed" } else { "undirected" }), &format!("Graphrichtung auf {} setzen", if self.new_directed { "gerichtet" } else { "ungerichtet" }))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["graph".into()]
-    }
 }
 //#endregion 🔖️Payload

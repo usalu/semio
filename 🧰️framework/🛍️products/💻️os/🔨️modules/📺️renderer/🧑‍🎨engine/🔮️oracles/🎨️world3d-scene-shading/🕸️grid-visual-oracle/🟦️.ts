@@ -6,6 +6,8 @@ import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import type { PixelOracleFixture } from "../🧾️pixel-oracle-fixture/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -198,16 +200,16 @@ export async function runGridVisualOracle(repoRoot: string, outputDirectory: str
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
-  const threePath = Bun.resolveSync("three", repoRoot);
+  const threePath = runtimeResolveV1("three", repoRoot);
   const imports = webgpu
     ? 'import * as THREE from "three";\nglobalThis.renderGridVisual = ' + renderGridWgpu.toString()
     : 'import React from "react";\nimport { createRoot } from "react-dom/client";\nimport { Canvas } from "@react-three/fiber";\nimport { Grid } from "drei-grid";\nimport * as THREE from "three";\nglobalThis.renderGridVisual = ' + renderGridDrei.toString();
-  const build = await Bun.build({
+  const build = await runtimeBundleV1({
     entrypoints: ["semio-grid-visual-oracle"], target: "browser", format: "iife",
     plugins: [{ name: "ticket-grid-visual-oracle", setup(builder) {
       builder.onResolve({ filter: /^semio-grid-visual-oracle$/ }, () => ({ path: "semio-grid-visual-oracle", namespace: "oracle" }));
       builder.onResolve({ filter: /^three$/ }, () => ({ path: threePath }));
-      builder.onResolve({ filter: /^drei-grid$/ }, () => ({ path: Bun.resolveSync("@react-three/drei/core/Grid.js", repoRoot) }));
+      builder.onResolve({ filter: /^drei-grid$/ }, () => ({ path: runtimeResolveV1("@react-three/drei/core/Grid.js", repoRoot) }));
       builder.onLoad({ filter: /.*/, namespace: "oracle" }, () => ({ contents: imports, loader: "js", resolveDir: repoRoot }));
     } }],
   });

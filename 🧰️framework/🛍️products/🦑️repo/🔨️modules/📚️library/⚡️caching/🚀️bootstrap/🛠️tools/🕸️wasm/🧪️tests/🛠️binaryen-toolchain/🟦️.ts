@@ -24,11 +24,11 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   const project = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8"));
   assert.equal(project.targets[fixture.target]?.cache, false);
   assert.deepEqual(project.targets[fixture.target].outputs, []);
-  assert.equal(project.targets[fixture.target].options.command, `bun "${fixture.entry}" prepare`);
-  assert.ok(project.targets["deps-wasm"].dependsOn.includes(fixture.target));
+  assert.equal(project.targets[fixture.target].options.command, `repo "${fixture.entry}" prepare`);
+  assert.ok(project.targets[fixture.wasmTarget].dependsOn.includes(fixture.target));
   const { cacheInternals } = await import("../../../../../../📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const targets = { wasm: { cache: true, dependsOn: ["declarations"] } };
-  assert.deepEqual(testRecordV1(testMethodV1(cacheInternals,"withWasmTooling",targets,true),"wasm").dependsOn, ["declarations", `workspace:${fixture.target}`]);
+  assert.deepEqual(testRecordV1(testMethodV1(cacheInternals,"withWasmTooling",targets,true),"wasm").dependsOn, ["declarations", `workspace:${fixture.wasmTarget}`]);
   assert.deepEqual(testMethodV1(cacheInternals,"withWasmTooling",targets,false), targets);
   if (output) {
     mkdirSync(output, { recursive: true });

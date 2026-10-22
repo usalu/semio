@@ -202,7 +202,7 @@
             {
               "const": {
                 "language": "rust",
-                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧯️close/📥️lifted/🏪️store/🦀️.rs",
                 "symbols": [
                   "close_cursor_admit",
                   "owned_roots_terminal_is_empty"
@@ -621,7 +621,7 @@
             {
               "properties": {
                 "path": {
-                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs"
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧯️close/📥️lifted/🏪️store/🦀️.rs"
                 }
               },
               "type": "object"

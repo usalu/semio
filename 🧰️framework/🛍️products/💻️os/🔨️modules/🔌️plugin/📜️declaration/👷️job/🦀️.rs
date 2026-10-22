@@ -3,6 +3,7 @@ use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind}
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_plugin_decl_views::gesture_contract::GestureSlot;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_decl_views::gesture_contract::GestureCapture;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunView;
 use semio_framework_job::JobOutcomeBorrow;

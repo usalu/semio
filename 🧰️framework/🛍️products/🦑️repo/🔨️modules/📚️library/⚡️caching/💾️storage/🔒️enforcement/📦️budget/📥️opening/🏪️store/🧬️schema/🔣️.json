@@ -137,6 +137,28 @@
         "maxLength": 256,
         "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.ts$"
       }
+    },
+    "ObservationPathPolicy": {
+      "const": {
+        "version": 1,
+        "maximumKnownRoots": 4096,
+        "maximumAncestors": 64,
+        "maximumPathUnits": 256,
+        "maximumWork": 1024
+      }
+    },
+    "GraphFixtureReceiverPolicy": {
+      "const": {
+        "version": 1,
+        "maximumEpochs": 4096,
+        "sameBacking": true,
+        "sameAllocation": true,
+        "failedAdmission": "terminal",
+        "renew": [
+          "acquired",
+          "deferred"
+        ]
+      }
     }
   }
 }

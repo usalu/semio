@@ -16,6 +16,15 @@ pub struct RemoveEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity-arg", kind: "remove-entity-arg", record: "RemoveEntityArg" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {
     fn diff(&self, _base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { id, arg_index } = self;
         protocol::MutationOutcome::new(StepDiff {
@@ -29,12 +38,6 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {
             Some(v) => vec![StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

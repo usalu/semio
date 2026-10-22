@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "native owner names its repository root",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "repo",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        },
+        "buildMode": "prototype"
+      },
+      "accepted": true
+    },
+    {
+      "name": "build orchestration names its workspace root",
+      "value": {
+        "tool": "nx",
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "selection": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "buildMode": "prototype",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        },
+        "launches": [
+          [
+            "repo",
+            "run",
+            "example:build"
+          ]
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "the finite Nx daemon service names its repository itself, not its workspace",
+      "value": {
+        "version": 1,
+        "kind": "nx-daemon-service",
+        "repositoryRoot": "/repo",
+        "workspaceRoot": "/repo/workspace",
+        "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "directory": "/repo/.cache/nx/data",
+        "watcherIdentity": null,
+        "graphIdentity": null,
+        "implementationIdentity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "accepted": true
+    },
+    {
+      "name": "a service without its generation is refused",
+      "value": {
+        "version": 1,
+        "kind": "nx-daemon-service",
+        "repositoryRoot": "/repo",
+        "workspaceRoot": "/repo/workspace",
+        "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "directory": "/repo/.cache/nx/data",
+        "watcherIdentity": null,
+        "graphIdentity": null,
+        "implementationIdentity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "accepted": false
+    },
+    {
+      "name": "a service with a foreign field is refused",
+      "value": {
+        "version": 1,
+        "kind": "nx-daemon-service",
+        "repositoryRoot": "/repo",
+        "workspaceRoot": "/repo/workspace",
+        "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "directory": "/repo/.cache/nx/data",
+        "watcherIdentity": null,
+        "graphIdentity": null,
+        "implementationIdentity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "native": {}
+      },
+      "accepted": false
+    },
+    {
+      "name": "an unknown kind is refused",
+      "value": {
+        "version": 1,
+        "kind": "nx-daemon-client",
+        "repositoryRoot": "/repo",
+        "workspaceRoot": "/repo/workspace",
+        "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "directory": "/repo/.cache/nx/data",
+        "watcherIdentity": null,
+        "graphIdentity": null,
+        "implementationIdentity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "accepted": false
+    },
+    {
+      "name": "no capabilities are refused",
+      "value": null,
+      "accepted": false
+    }
+  ]
+}

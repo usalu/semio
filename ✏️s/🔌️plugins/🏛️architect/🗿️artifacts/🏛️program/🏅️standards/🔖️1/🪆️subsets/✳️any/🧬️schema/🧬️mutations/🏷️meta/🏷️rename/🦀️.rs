@@ -21,6 +21,16 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<RenameMeta>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "meta", kind: "rename-meta", record: "RenamedMeta" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_title), &format!("Dokument in \"{}\" umbenennen", self.new_title))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for RenameMeta
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<RenameMeta>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -30,7 +40,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_title), &format!("Dokument in \"{}\" umbenennen", self.new_title))
-    }
 }

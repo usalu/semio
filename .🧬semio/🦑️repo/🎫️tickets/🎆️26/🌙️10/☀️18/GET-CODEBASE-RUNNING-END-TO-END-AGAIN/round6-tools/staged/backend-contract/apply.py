@@ -40,7 +40,14 @@ for rel,fns in groups.items():
     try:
         for fn in fns:new=fn(new)
     except wire.Drift as error:problems.append(str(error));continue
+    for post_rel,needle,present in wire.POST:
+        if post_rel==rel and (needle in new)!=present:problems.append(f"post-condition failed for {rel[-90:]}: {'missing' if present else 'still contains'} {needle!r}")
     plan.append(("same" if new==old else "edit",rel,old,new))
+for required,why in wire.REQUIRES:
+    if not os.path.exists(os.path.join(a.root,required)):
+        message=f"requires {required[-60:]}: {why}"
+        if a.write:problems.append(message)
+        else:print("WARNING:",message)
 for kind,rel,old,new in plan:print(f"{kind:7} {rel[-150:]}")
 if problems:
     print("REFUSED (nothing written):");[print(" -",p) for p in problems];sys.exit(2)

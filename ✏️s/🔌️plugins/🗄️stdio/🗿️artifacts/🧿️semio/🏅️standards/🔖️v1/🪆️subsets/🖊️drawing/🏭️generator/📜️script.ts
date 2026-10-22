@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -32,6 +32,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -66,7 +67,7 @@ const CARRIERS = [
 
 //#region 🏭️Generate
 const generate = (): void => {
-  const built = spawnSync("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
+  const built = runToolSyncV1("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error("engine build failed");
   const run = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [fixtures], { stdio: "inherit" });
   if (run.status !== 0) throw new Error("fixture generation failed");
@@ -99,7 +100,7 @@ const manifests = (): void => {
         packageVersion: "0.37.5",
         engineFamily: "quick-xml",
         engineVersion: "0.37.5",
-        command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts generate`,
+        command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts generate`,
         platform: `${process.platform}-${process.arch}`,
       },
       provenance: {
@@ -129,7 +130,7 @@ const manifests = (): void => {
 //#region 🧩️Carrier
 /** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
 function carrier(): number {
-  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
   return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }

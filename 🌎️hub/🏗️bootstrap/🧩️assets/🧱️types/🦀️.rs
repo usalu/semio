@@ -40,7 +40,7 @@ pub const TRUSTED_PLUGIN_MODULE_CACHE_CONTROL: &str = "public, max-age=31536000,
 //#region 🔖️AdminPage
 /// 🛡️ Static SPA serving for `/admin` (contract §C2) — reads from `HubState.admin_dir`
 /// (lane 1-B's field, `OS_HUB_ADMIN_DIR` else the compile-time default pointing at lane 2-E's own
-/// `bun repo run os-hub-admin:build` output), mirroring `🔖️Extensions`'s `extension_asset_path`/
+/// `repo run os-hub-admin:build` output), mirroring `🔖️Extensions`'s `extension_asset_path`/
 /// `get_extension_asset` pair exactly: plain `tokio::fs::read`, no `tower-http`, a traversal guard
 /// before ever joining onto `root`, then a second `starts_with` check on the joined path as
 /// defense-in-depth. SPA fallback: any requested path whose exact file is missing (a client-side

@@ -30,8 +30,8 @@ test("actual bounded graph publication retains exact immutable bytes through ori
  await withBuildTestInvocationV1(async original=>{
   const source=JSON.stringify(fixture.graph),database=new Database(":memory:");
   try{await withRepositoryBuildGraphArtifactV1(process.cwd(),fixture.graph as BuildGraphV1,original,scriptCompilerAdmissionControlV1(original,"graph:artifact-fixture",0),async(artifact,actualPhase)=>{
-   const bytes=await readFile(artifact.path),oracle=database.query("SELECT length(cast(? AS blob)) AS bytes").get(source) as {bytes:number};
-   expect(bytes.toString()).toBe(source);expect(bytes.byteLength).toBe(oracle.bytes);expect(oracle.bytes).toBe(fixture.expectedBytes);expect(artifact.digest).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(createHash("sha256").update(source).digest("hex")).toBe(artifact.digest);expect(artifact.path).toContain("/.cache/b/g/m/");
+   const bytes=await readFile(artifact.path),manifest=JSON.parse(bytes.toString());
+   expect(manifest.version).toBe(2);expect(artifact.digest).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(artifact.path).toContain("/.cache/b/g/m/");expect(Object.keys(manifest.graph).sort()).toEqual(Object.keys(fixture.graph).filter(key=>!["projects","dependencies","externalNodes"].includes(key)).sort());for(const[,digest]of manifest.projects)expect((await readFile(join(artifact.path.replace(/[^/]+$/u,""),digest+".gz"))).byteLength).toBeGreaterThan(0);
    const contender=new Database(resourceLeasePathV1(join(process.cwd(),".cache/b/l/m/data"),"build-graph:"+artifact.path));try{expect(()=>contender.exec("BEGIN EXCLUSIVE")).toThrow("database is locked");}finally{contender.close();}
    await withRepositoryBuildGraphArtifactV1(process.cwd(),fixture.graph as BuildGraphV1,original,actualPhase,async again=>{expect(again).toEqual(artifact);});
   });}finally{database.close();}

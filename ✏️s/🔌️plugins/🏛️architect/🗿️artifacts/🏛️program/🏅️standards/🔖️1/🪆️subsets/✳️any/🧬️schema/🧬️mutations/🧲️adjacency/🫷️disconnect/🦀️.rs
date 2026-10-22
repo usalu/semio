@@ -22,6 +22,19 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<DisconnectAdjacency> + From<crate::standards::v1::subsets::any::schema::mutations::connect_adjacency::ConnectAdjacency>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "adjacency", kind: "disconnect-adjacency", record: "DisconnectedAdjacency" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" aufheben", self.id.0))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for DisconnectAdjacency
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<DisconnectAdjacency> + From<crate::standards::v1::subsets::any::schema::mutations::connect_adjacency::ConnectAdjacency>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -31,10 +44,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" aufheben", self.id.0))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.clone()]
-    }
 }

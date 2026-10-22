@@ -356,3 +356,361 @@ Root24207 naturally ended1 after memory admission and before graph/tests with Bo
 ## Fresh Unit Actual Recovery Stage
 
 Unit55974 passed normal one-job memory admission (3584MiB reservation;16604MiB available above the unchanged6553MiB floor policy). Its log emitted961 scoped inventory markers and no scoped retirement marker, then entered coarse graph-image EX waiting behind a retained shared request. At the latest observation it remained live at227s of image wait, position2/4, with no application assertion. Root and Low are auditing candidate retention and coarse per-leaf cost. The valid underfloor wait does not trigger the new funded-observation withdrawal, as intended. No process cancellation, foreign action or Source change by this agent. Full direct log remains generated/unit-withdrawal-scoped.log.
+
+## Mixed Namespace and Batch Save Boundary
+
+At 2026-10-21T07:45:44.465Z maintenance48971, unit55974 and SourceDemand72056 have all passed unchanged normal memory admission but remain pre-assertion in graph image waits. Actual inventory showed zero scoped effects because most populated scopes include unknown regular publication metadata; clean large scope was busy. The mixed recognized-leaf correction now retains unknown regular files and rejects unsafe members. Batch64 Native revalidation is saved. Low then found pre-existing partial/window continuation retries a consumed Native image and returns a field outside closed ReclamationResult; Acceptance owns a test-first one-shot repair and Low review before refreshing only obsolete owned checks. Foreign reader12066 remains untouched.
+
+## Next Reviewed Boundary Prepared
+
+Prepared unique generated/unit-mixed-batch artifact directory, without launching a command. Existing unit55974 remains the sole owned unit invocation and is pretest. The reviewed replacement addresses concrete mixed namespace eligibility, bounded verification batches, and one-shot Native maintenance lifetime after the existing invocation loaded its defining storage source. Any eventual refresh is for that known post-load implementation change, never for wait age. Old log will be archived only after its terminal exit is confirmed.
+
+## Mixed-Leaf And One-Shot Review Complete
+
+At 2026-10-21T07:48:42.964Z Low independently reviewed the saved mixed-leaf, batch64 and one-shot result/lifetime correction as clean for a launch boundary. Root48971 was settled through its own native session only; full log archived as generated/quota-before-mixed-batch.log. Exact terminal text and fresh invocation follow. No foreign jobs or agents were interrupted.
+
+## Reviewed Mixed/Batch Refresh
+
+Settled only owned unit55974 via its supported SIGINT handle after the combined review approved concrete post-load mixed namespace, batch verification and one-shot lifetime repairs. Native terminal exit1 is confirmed, and the full261204-byte log explicitly ends with `Original Script process interrupted`; this is a deliberate pretest cancellation, with no assertion result. Archived as generated/unit-before-mixed-batch.log. No foreign process or agent was stopped. Prepared fresh unique unit-mixed-batch verification uses the same normal one-job controls and full direct logging.
+
+Root48971 exact terminal is Original Script process interrupted after the supported normal SIGINT; this deliberate owned cancellation followed concrete post-load Source repairs, not age. Archived full log280746bytes. Fresh exact maintenance22680 uses generated/quota-mixed-batch.log, prototype, onejob/workersoff and unchanged admission. No assertion has run yet.
+
+Fresh exact demonstrator:test session41186 launched once with `--parallel=1 --workers=off --output=stream`; direct unit-mixed-batch.log and matching artifact directory. Retaining natural terminal; runtime catalog and canonical architecture remain success-only next steps.
+
+## Fresh Mixed-Batch Fleet
+
+Root22680, Runtime41186 and Acceptance75559 each have one exact fresh invocation, no duplicate target. Old Runtime55974 log261204bytes and oldSource72056 log were archived under unit-before-mixed-batch.log and source-before-mixed-batch.log with explicit Original Script process interrupted terminals after normal owned SIGINT. At 2026-10-21T07:49:40.309Z supported capacity status reports15782MiB available, normalpressure,6553MiB unchangedfloor, load25.63 over20 ceiling; all3 fresh checks wait normal CPU/load admission behind2older Cargo requests. This is not a new assertion failure or grounds to bypass policy.
+
+Unit41186 passed normal memory admission and returned from the initial physical graph image preparation into build:selected-source-inputs. This advances beyond the prior valid coarse EX wait. Immutable expanded snapshot admission, Vitest and application assertions are still unproven at this stage.
+
+## Coordinator Model Capacity Checkpoint
+
+Agent inventory reported transient selected-model capacity errors for the coordinator and both peer agents while their native processes continued. This agent resumed the two existing peers once with unchanged settings through followup_task; Acceptance and Low returned to running and retained their original checks. Coordinator still reported model capacity at the latest inventory. No agent was replaced or stopped and no duplicate command was launched. This agent retains unit41186, whose direct log passed2.55MB of selected Source preparation without a test header or reported failure. Source is frozen; initial physical image admission passed, but immutable snapshot and unit assertions remain pending.
+
+## Source Turnover Audit During Retained Checks
+
+Low reported actual peer admission retry facts for dependency-edges/🟨️.mjs, captured c0f311b224663f8a96acd4b88d586766305a6df04ac3411b54861e883b149420 versus physical f9ad54fdf1bc49e510e03235eb52ec98d30f01ae2e6ddaa31e047570f0a51cbf (external save08:07:04Z). Source readback distinguishes the inference revision query loader, its fixed initial loadedImplementationRowsV1 export, and observation’s sealed module-load authority. Replacing a fixed row alone could mislabel executed code and is not an authorized guard relaxation. Own unit41186 full scans still had no graph-retry marker through3.535MB; it remains naturally retained pending its own actual mismatch or terminal. No Source edit, invocation cancellation or foreign action was taken for this audit. Peer findings are also in Low’s source-stability report.
+
+## Sealed Loaded Dependency Revision Change
+
+At 2026-10-21T09:48:44.504Z root22680 native handle confirmed live. Full log repeatedly reports admission mismatch for dependency-edges/🟨️.mjs loaded c0f311b2… versus current f9ad54fd… (physicalmtime08:07:04.194Z). Low source audit proves original sealed load observations cannot reset within that module instance; graph permits nine attempts then fails rather than looping indefinitely. Root settled only its obsolete invocation by normal SIGINT, archived full quota-before-current-dependency.log, and refreshes the exact maintenance command against current Source. SourceDemand owner is applying the same concrete own-job refresh. Unit41186 has no such diagnostic and stays retained. Foreign module/source/jobs are untouched.
+
+Root22680 confirmed terminalexit1; exact end Original Script process interrupted, full4578194bytes archived before current dependency refresh. Fresh physical baseline68definingpaths has no readerrors and unchanged currentdependencyf9ad54fd; it is a physical observation, not a loadedhashclaim.
+
+## Current Capacity Queue Observation
+
+At 2026-10-21T09:51:03Z supported status showed host available7964MiB, normalpressure, swapout0, load20.42; unchangedfloor6553. Retained unitPID91801 observed3573MiB versus3584 reservation. Two new foreign grants contribute6013MiB unrealized ramp reservation; root2555/Source22867 remain queued. No false completion, no admission policy change, no foreign action. The own unit handle and root handle are explicitly live; this is a verified wait.
+
+## Current Dependency Fleet Admitted
+
+At 2026-10-21T09:55:43.551Z root2555 and Acceptance22867 both passed unchanged normal1job3584MiB memory admission and entered resource-directory preparation; no test pass. Low found no strong process-local pre-change dependency evidence in retained unit41186, which therefore stays alive rather than being restarted from age. Source stability and cancellation guards stay intact.
+
+## Actual Current Kernel-Exclusive Receiver Refusal
+
+Root2555 confirmed NATURALterminalexit1 through its nativehandle; no cancellation. Exact current Source naturally raises Native persistent receiver operation is not ready at cleanupcreatePersistentImage142:594→scopedrecovery219:901 after consumingmaintenance. Source22867 independently naturalexit1 samecause. Full logs archived quota-native-receiver-refusal.log and source-native-receiver-refusal.log. No Bun/Vitestassertion. Low proves foreign groupowner now mandateskernelEX; preserveitsguards and repair explicitconsumedhandoff/freshrevalidation testfirst rather than restoreoldSHdeletion. Unit41186 remains retained.
+
+## Consumed Group Handoff Save Boundary
+
+Root saved the contract-first two-branch ScopedOptionalRecoveryResult and owned public union type after Acceptance saved actual-function regression cases. MJS now samples image space only inside the actual acquired kernelEX callback; both outcomes declare consumed:true, false carries no availableBytes and exactly zero retirement. Post-maintenance code performs only Original check and closed DATA validation. Low reviewed this half as clean. Runtime caller/privatebridge/native proof and Acceptance remaining portable/fault/retirement cases are still being saved; no fresh process launched before combinedreview. Foreign group guards unchanged; no testpassclaim.
+
+## Consuming Optional Group Lifetime Repair
+
+Fresh SourceDemand22867 naturally refused before Bun at the Native persistent receiver operation guard. Current externally changed optional scoped recovery requests actual image EX; both acquired and deferred maintenance consume the receiver. Post-maintenance recheck and Nx reuse therefore violate the actual Native lifetime. The current closure group owner explicitly requires kernel EX, so that authority is preserved.
+
+Schema-first isolated lifecycle cases now exercise actual Nx source with SQLite phase ordering: selected recovery, consuming optional group attempt, close, then ordinary fresh-image admission. Both acquired and deferred results require this path. Undefined and identity primaries survive close failures. The bridge return type now uses the owned closed consumed-result union, with no runtime import cycle. Existing compositor ports were aligned separately by Acceptance.
+
+Two Darwin integration cases use real canonical 32MiB images, actual scoped/Nx source, real maintenance writer and private binding, acquired/deferred outcomes, and retained separate reader. Only the fixture request range/budget is projected; the group effect removes a private 4MiB scratch file, and fresh actual physical space is checked after the original closes. These tests verify the Native lifetime, not production-floor funding or closure-group authentication. No test assertion has yet run against this new boundary. Unit41186 remains retained normally pending its own actual result.
+
+Unit41186 settled exit1 through its supported SIGINT handle, with explicit `Original Script process interrupted`. Full log archived as `🗑️generated/unit-before-consumed-handoff.log`; no test header/assertions. Cancellation followed concrete defining storage edits after selected preparation was already observed at08:59; no process-specific pinned digest or08:07 dependency mismatch is claimed. Fresh unit dispatch remains held for combined group-lifetime/performance review.
+
+## Obsolete Unit Released After Proven Defining Change
+
+Runtime confirmed unit41186 terminalexit1 after supported own SIGINT, with exact Original Script process interrupted and no assertions. Full log archived unit-before-consumed-handoff.log. The defining storage change is proven post-load by the08:59 contemporaneous selected-preparation observation and Graph static-import/initial snapshot before root10:01:36 edit. Fresh unit remains held for final lifecycle/performance review. This releases obsolete owned memory without stopping any agent or foreign process. All three fleet agents continue their source/test/review assignments.
+
+## Prepared Verification Dispatch
+
+Fresh exact unit dispatch label `unit-consumed-handoff` is prepared with prototype mode, defining-authority trace, normal one-job/workers-off admission, default maxWorkers1, direct full log and isolated artifacts. No invocation is launched until combined Source custody/lifetime/group-performance review completes. Success alone authorizes the exact catalog then canonical-architecture sequence; browser/release/serve remain separate unfulfilled completion requirements.
+
+## Memory After Owned Obsolete Check Release
+
+Supported capacity at 2026-10-21T10:15:53Z reports19865MiB available, normalpressure, swapout0, load28.85 and no waiters; foreign grants remain running. This follows deliberate settlement of only the proven obsolete own unit41186. No process/agent outside our own check was stopped and no headroom/pressure/load/floor policy changed. Fresh checks await final Source custody review, not memory override.
+
+## Existing Demonstrator Endpoint Probe
+
+At 2026-10-21T10:17:34.536Z read-only request to documented prototype endpoint127.0.0.1:6029 returned {"unavailable":true,"error":"TypeError: fetch failed"}. This does not claim canonical serve readiness or change any process.
+
+## Final Consumed Group And Bounded Source Review Complete
+
+At 2026-10-21T10:22:18.314Z Low independently reviewed saved consumed-result schema/MJS, Nx close-before-fresh caller/private bridge, actual Native lifecycle proof sources, delegated wrapper/own-reader refusal, scalar snapshot, linear committed-group retirement and defining Source captures as clean for launch. No guard or budget relaxation. All actual runtime checks remain pending; root maintenance uses generated/quota-consumed-handoff.log, Runtime exactunit and Acceptance SourceDemand each refresh once after this final source boundary.
+
+Combined review clean; fresh exact `unit-consumed-handoff` launched once through normal repo admission, native session28945. Direct log `🗑️generated/unit-consumed-handoff.log`, artifacts `🗑️generated/unit-consumed-handoff`. Prototype/authority trace/ticket environment, one job and workers off, default Vitest maxWorkers1. No duplicate unit invocation.
+
+Fresh unit28945 passed normal RAM admission and entered repository parser Source metadata/list inspection; observed at 2026-10-21T10:23:20.654Z. This is not graph image/snapshot or test admission.
+
+Fresh reviewed fleet: root75308 maintenance, Runtime28945 exactunit, Acceptance17809 exactSourceDemand. One target invocation each, normal onejob/workersoff/prototype/trace. Root passed memory admission into parser work; other actual milestones/terminals follow. No assertion yet.
+
+## Actual Reserved Service Census Refusal
+
+Root75308 naturally terminalexit1 before tests; full36208bytes archived quota-reserved-service-refusal.log. Source17809 independently naturalexit1 and unit current log shows sameguard. Groupdirectories passes all root entries into Native application path guard before its existing ignoredDirectories/ignoredFiles checks; Native reserved names are.fseventsd/.metadata_never_index, both physically present. Runtime owns a test-first narrow ordering correction with Low review; Native application path guard remains intact, no service traversal/payload access/deletion. Fresh checks held for the concrete fix.
+
+## Provider Service Census Refusal
+
+Unit28945 naturally exited1 before tests. Actual stack: Native application reserved-service guard → closures directories → authenticated closure proof → optional groups → scoped recovery. Full log retained as `🗑️generated/unit-reserved-service-refusal.log`; no assertion result. The census invoked application path authority before excluding Native-owned root services.
+
+After ten schema-first language-neutral cases and an actual-function filesystem/SQLite oracle, the Native contract now owns a name classifier from the same reserved-name schema/case rule used by its unchanged path rejection. The closure census omits only provider-classified root entries before all application path/stat operations. It neither stats nor traverses their payload. Ordinary and nested entries keep existing application authority and strict checks, including symlink refusal for application metadata. Saved cases include mixed-case services, service symlink omission without access, nested names and unsafe application entries. No new verification invocation has launched pending review.
+
+## Provider-Owned Service Census Save
+
+Runtime saved the provider nativeImageServiceEntryV1 classifier using the same existing reserved schema/case rule; Native application guard reuses it with unchanged rejection. Closure census skips only provider-classified ROOT service entries before application path/stat; unknown/nested application paths and application metadata strictness remain. Ten neutral actual-function/real-filesystem/SQLite cases include root mixed-case/service symlink omission without access, nested paths processed, application metadata verification and unsafe unknown/application metadata refusal. Source reviewed final signoff pending; no new check launched yet.
+
+Low found the Native public contract uses explicit reexports; the new classifier is now explicitly reexported after an AST export regression was saved. No additional public API scope changed. Provider/census boundary frozen pending final review.
+
+## Service Census Review Complete
+
+At 2026-10-21T10:29:02.857Z Low verified provider classifier, unchanged Native application guard, root-only no-access service omission, ordinary/nested strictness, ten neutral actualfunction/FS/SQLite cases, explicit public facade reexport and actual AST export regression. Fresh root exact maintenance dispatched once with generated/quota-service-domain.log after signoff; Highs refresh their exact checks once. No runtime pass yet.
+
+Low reviewed provider service boundary clean. Fresh exact unit launched ONCE as native session81249, `🗑️generated/unit-service-census.log` and matching artifact directory, at 2026-10-21T10:29:21.846Z. Normal prototype/trace/ticket/onejob/workers-off controls preserved. Source frozen pending actual result.
+
+Fresh service-census fleet: root22265, unit81249 and SourceDemand25620 each passed unchanged normal1job memory admission and entered parser/dependency preparation.137 recorded paths exist, maximum199 UTF16 units. No assertion yet; retain natural completion.
+
+## Actual Production Census Cardinality Refusal
+
+Root22265 NATURALterminalexit1 before assertions; full26461bytes archived quota-census-cardinality-refusal.log. Service-domain correction passed, but complete group proof hit maximumFiles131072 while inserting another actual application leaf; retiredbytes/files0. Runtime owns bounded complete reference/member-census design, Low measures physical metadata counts, Acceptance reviews reference semantics while retaining Source25620 (live EXqueue at last native poll). No blind budget increase, service access or foreign process action.
+
+## Census Bound Coherence And Metadata Probe
+
+Low metadata count found136474files+23737dirs=160211entries, safely below existing262144 total-entry cap; every file already contributes to that complete bound. Runtime is unifying the conflicting independent131072 file guard without allowing a larger complete census and keeps worker/output/byte/I/O/host limits. Root finite Node V8 metadata probe allocated262144 rows with255UTF16 Unicode paths, stamps/maps/names/references: heapdelta321.6MiB, peak621.1MiB includingbaseline. This corroborates metadata cost only, not actual Bun proof success or full adversarial heap bound. Input census-metadata-heap-probe.mjs retained; generated result disposable. Actual suite boundary/oracle/memory checks pending.
+
+Unit81249 naturally exited1 before tests at the separate131072-file census constraint, after passing the repaired provider service omission. Full log archived `🗑️generated/unit-proof-file-bound-refusal.log`; no assertions. Supported metadata census reports136474 application files and160211 total entries, below the existing262144 complete-entry budget. The redundant file limit is the next actual blocker; existing total cardinality and all byte/worker/request/I/O/host limits remain authoritative.
+
+## Single Existing Census Bound Reviewed
+
+At 2026-10-21T10:40:54.631Z Low reviewed schema-first removal of the redundant maximumFiles property/insertion guard; existing cumulative maximumEntries262144 still rejects additional total names before row materialization. Worker64/request65536/result64MiB/proof16GiB/I/O16m/host budgets unchanged. Actual directory AST+SQLite boundary cases and finite Bun metadata-model allocation observation are saved/registered, not run. Fresh root exact maintenance uses generated/quota-single-census.log after signoff; other exact checks refresh once.
+
+Single-census review clean. Fresh exact unit launched once as native session3016, direct `🗑️generated/unit-single-census.log` and matching artifacts at 2026-10-21T10:41:32.090Z. Normal prototype/trace/ticket/onejob/workers-off retained. All own Source frozen pending actual failure or success.
+
+Fresh single-census fleet: maintenance35182, unit3016 and SourceDemand13259, one exact invocation each. Maintenance/unit normal memoryadmission passed.140 recorded source paths exist, max204UTF16 units. No assertion yet.
+
+## Single Census Fleet Verified Wait
+
+All three fresh checks passed normal memory admission. Root35182 native handle confirmed live; actual rootlog waits graphimage EX position2/2 behind shared72371. Runtime3016 reports live SHqueue3/3 and dependency-generation receipt deferred/implementation-unsettled DATA for generations module, no error/retry/assertion. Source13259 admitted normally after92s. A separate graphless lease-status snapshot returned no parseable JSON to the coordinator; its terminal state is unproven and it is not used as process liveness evidence. Actual check native handles/logs remain authoritative; no restart or foreign action.
+
+Unit3016 naturally exited1 after census unification at the separated owned command capture interface, before any worker/test assertions. Domain closure worker requested64MiB maximum output; the actual separated capture contract requires finite Original control and at most16MiB. Full54,963-byte log archived `🗑️generated/unit-output-bound-refusal.log`. No guard weakening or new invocation; parent coordinates the declared worker-output repair.
+
+## Actual Worker Output Interface Refusal
+
+Root35182 confirmed NATURALterminalexit1 before child/test assertions; full38574bytes archived quota-worker-output-bound-refusal.log. Unit3016 and Source13259 independently same naturalrefusal. Prior shared reader released naturally, enabling actual kernelEX. The closure worker requests64MiB separatedcapture output but owned capture provider permits16MiB and65536lines, so admission refuses before child starts. Runtime owns schema-first consumer packet limit16MiB, actual caller/provider boundary regression, worker overflow consistency and old cardinality assertion update. Provider guard and all other budgets unchanged; no foreign action.
+
+## Worker Wire Bound Save
+
+Runtime saved schema-first consumer packet maximum16MiB to match existing separated provider. Same Originalcontrol/128lines, unchanged provider guard. Already captured worker helper enforces UTF8 serialized JSON plus final newline within that same cap and emits once only after complete response validation; no partial references. Six actualhelper/TextEncoder/SQLite boundary rows plus actual provider/caller/worker AST contract tests saved, old cardinality64MiB assertion narrowed. Final independent review pending; no fresh check yet.
+
+At 2026-10-21T10:51:58.891Z Low final packet alignment review clean. Root exact maintenance freshly dispatched once to generated/quota-worker-wire.log; Highs refresh exact unit/Source once after same boundary. No runtime assertion yet.
+
+Wire-contract review clean. Fresh exact unit launched once as native session5118, direct `🗑️generated/unit-worker-wire.log` and matching artifacts at 2026-10-21T10:52:16.863Z. Normal prototype/trace/ticket/onejob/workers-off controls retained, Source frozen pending actual result.
+
+Fresh worker-wire fleet: root48592, unit5118 and SourceDemand82799, one exact invocation each, normal host-capacity queue.144 recorded Source paths exist, max204UTF16 units; no assertion yet.
+
+At 2026-10-21T11:00:37.111Z retained root48592 passed normal onejob capacity admission after queue and entered parser/frontier Source preparation. No restart, policy change or foreign action; actual worker/proof/test completion still pending.
+
+Unit5118 passed normal memory admission and parser Source preparation; observed graph-image SH queue7/7 at 2026-10-21T11:07:57.348Z. No image/snapshot/test gate or error claimed; same invocation retained.
+
+11:11 UTC: Native maintenance handle 48592 remains live. Supported leases show no cycles; four foreign shared graph-image readers precede exclusive waiter 89033, then maintenance 92541 and unit 92776. No foreign action or source mutation.
+
+11:14 UTC: SourceDemand owner reports native admission of invocation 82799 (one job, 3584 MiB reservation, 11575 MiB available, 6553 MiB floor). Maintenance 48592, unit 5118 and SourceDemand now each await ordinary graph-image custody; no test assertion pass. All foreign work preserved.
+
+11:17:27 UTC: Supported host capacity admitted earlier FIFO Cargo PID93439 with one job. All three goal checks remain admitted and graph-image queued. Host pressure normal and swap-out0; no floor/reservation bypass or foreign process action.
+
+11:21 UTC: Coordinating and review agents released known obsolete source/log/AST buffers while retaining native invocations and control clients. No REPL reset, forced GC, source edit, foreign process or agent stop. Root V8 heap observation was310 MiB before clearing small remaining snapshots; this is coordinator memory evidence, not a backend test.
+
+2026-10-21T11:23:56.694Z: Supported leases and root log show prior EX89033 gone; maintenance/unit/Source advanced from initial SH queue to normal headroom-recovery EX admission (positions6/5/4 respectively) behind three original foreign SH readers. Root48592 confirmed live. No worker/assertion pass or foreign action.
+
+## Analysis VM Resource Release
+
+Known obsolete analysis buffers were detached without touching native work. The analysis VM still reported573657424 bytes used heap and576815104 total heap. No active VM-side control/MCP operation was found in known bindings; unit5118 is owned by the separate functions executor. Parent authorized the supported analysis-only reset to reclaim this VM, preserving unit5118 and its direct log/success-only target sequence. No native process or agent is signaled.
+
+Supported analysis kernel reset completed. Minimal FS/path/log helpers restored; fresh used heap 9120304 bytes, total 13713408 bytes. Separate native session5118 is preserved and will be polled next. No Source edit or native signal occurred.
+
+2026-10-21T11:36:09.777Z: Low, Runtime High and Acceptance High supported analysis-only resets reclaimed about1179 MiB used heap in total. All separate Native invocations remained live. Root local MCP client80743 has0pending requests; closing its stdin normally before an analysis-only reset. Root used heap before reset:329412296bytes; Native handle48592 and prepared commands live in the separate functions executor. No Source/guard/floor change.
+
+2026-10-21T11:36:26.578Z: Root idle local MCP client closed normally with exit0/no signal, then supported analysis-only reset reduced used heap329412296→9422856bytes. Only fs/path bindings restored. Ticket evidence retained; separate root Native invocation48592 and prepared commands preserved. No Native build, agent or foreign process stopped. Reconnect workspace-local repo mcp only when ticket operations are needed.
+
+## Current Worker-Wire Verification Terminal
+
+Unit5118 naturally exited1 before test execution: `Original resource loan deadline exhausted`, with stack through Original remaining/control and Native cleanup maintenance. Its final EX queue was5 of8 behind shared request81882, after approximately1785 seconds of guarded exclusive waiting. Full202174-byte `🗑️generated/unit-worker-wire.log` remains intact. No signal was sent to this invocation, and no foreign work was touched. No unit assertion ran; runtime catalog and canonical architecture remain unrun because their predecessor did not pass. No successor or policy/source change has been launched from this result. Analysis VM release retained the native handle successfully until its natural terminal.
+
+2026-10-21T11:53:50.134Z: Root48592, Runtime5118 and SourceDemand82799 all naturally terminated exit1 before test entry: Original resource loan deadline exhausted during roughly1800s graph-image EX admission behind SH holder81882 (also87073/87765). Root archive quota-image-wait-deadline.log; High owners archive their logs. No signal or source failure/assertion observed. Follow-on checks remain pending.
+
+Next dispatch is a single fresh normal SourceDemand recovery attempt, with Root maintenance and unit held until its snapshot/backend boundary. This prevents three new3584MiB shadow reservations from delaying earlier foreign compilers while still retaining one queued writer for fair admission. All floors, controls, deadlines and custody unchanged; no foreign work stopped.
+
+Terminal unit log archived as `🗑️generated/unit-worker-wire-deadline.log`. Fresh unit dispatch is held until the single SourceDemand recovery attempt reaches actual snapshot/backend admission or explicit coordinator dispatch. Catalog/architecture remain success-only. Source, Original deadlines and guards remain unchanged.
+
+Prepared the exact twenty-case E2E command and evidence checklist in `release-serve-plan-2026-10-21.md`, using short generated e-a artifacts/log, existing service generation/port0, prototype/trace/onejob/workers-off and no external URL. This is preparation only; launch awaits the required fast checks and explicit coordinator dispatch. No Source changes.
+
+2026-10-21T11:58:50.426Z: Supported lease/capacity snapshot: current focused SourcePID56190 waits normal capacity behind earlier requests; prior goal PIDs92541/92776/92966 no longer hold grants or image requests. Foreign Cargo7067 admitted normally; foreign exec4999 now waits EX image and four foreign SH readers remain. No cycles. No process action/source edit or test claim. E2E/release commands are prepared by the High agents, not launched.
+
+2026-10-21T12:25:53.773Z: Focused Source9977 admitted normally with1job/3584MiB,15269MiB available against6553MiB floor; now initial graph-image SH queue6/6. Root maintenance/unit still held until actual snapshot/backend boundary. No proof/worker/assertion pass. Runtime High is performing read-only feasibility audit of distinct conservative DATA-only namespace recovery; no API/source/guard change authorized.
+
+2026-10-21T12:45:32.960Z: Supported128MiB read-only provenance diagnostic13508 admitted normally with20561MiB available/floor6553 and exited0. It printed only PID37466 (parent1181, old Flow producer test); requested81882/87073/87765 were no longer present at observation. This establishes their disappearance, not parent ownership or why they ended. No signal sent. Source9977 owners independently report SH queue moved6/7→2/3 behind EX54449, followed by resource-directory admission. No worker/backend/test pass.
+
+2026-10-21T12:49:21.689Z: Source9977 native handle confirmed natural exit1 after actual KernelEX closure worker execution. Worker inference payload decompressed without an LF header; Complete inference closure publication required, status1 at read.mjs20. No bytes retired or assertions. Highs assigned current producer/role protocol trace and test-first repair; no blind retry or raw payload read. Shared-DATA retirement audit unsafe under supported reader contract; Bazel self-drain not confirmed; no changes made for either hypothesis.
+
+
+## Current Receipt Role Counterexample And Defining Source Repair
+
+2026-10-21T12:55:52.283Z: Independent source-only traces by both execution and read-only agents prove that current ip ProgramReceipt and rr sealed Cargo receipts are Brotli standalone JSON, while np and top-level inference publications carry authenticated header/newline/body records. Therefore the actual focused9977 missing-newline refusal has a valid current producer counterexample; corruption has not been established. Runtime owns schema/test-first exact role/decoder repair. Root first extended the neutral Source custody schema/fixtures/test to seven defining sources and fifteen states, then appended the four exact schema/validator/filename producer dependencies to storage/Graph/inference authority rosters. Readback confirms unchanged fixture index5 and all four dependencies in all three rosters. No Native check is live or passing, no bypass or private payload read occurred, and other agents/processes remain untouched.
+
+
+2026-10-21T13:02:46.634Z: After combined root/High/Low strict role/decoder and defining Source review, Acceptance launched one fresh exact SourceDemand9780, direct source-receipt-formats.log and separate artifacts. Fifteen format vectors and seven-source/fifteen-state custody regressions are saved; assertions remain pending. Root maintenance and Runtime unit stay held until actual Source snapshot/backend. No other agent or foreign job was stopped.
+
+
+### Optional Member Admission Follow-Up
+
+2026-10-21T13:09:54.746Z: Focused9780 has successfully processed 726 bounded authenticated worker packets beyond the prior format refusal, with no test assertions yet. A read-only downstream audit found the existing invalidateGroup four-kind allowlist still excludes the newly distinguished precision/Cargo roles despite their schema membership. Runtime owns an actual invalidation-preflight neutral regression and will replace the duplicated allowlist with the owning exact member schema. Receipt/publication are adjacent inference publications outside group coordinates and must remain rejected as group members. Existing own process is retained pending exact saved-source identity and combined review; no other process or agent was stopped.
+
+
+2026-10-21T13:13:22.025Z: The new actual invalidateGroup preflight regression also exposed discovery of the proof root as an empty relative coordinate. Since complete census includes image.root, treating that discovery sentinel as an unsafe relative path would refuse every first group-planning pass. Runtime is adding a neutral root noncandidate case before the narrow empty-sentinel correction; nonempty unsafe paths and empty durable retirement source remain rejected. Read-only independent source trace confirmed the defect. No production save or process disposition is claimed yet.
+
+
+### Defining Owner Save And Exact Own-Job Disposition
+
+2026-10-21T13:14:56.692Z: Runtime saved the narrow planner corrections after actual-function tests were authored: schema-driven exact six-member admission plus empty root-discovery sentinel. Old owner46,987bytes SHA256361d48f20d417107a222d6a0fe4c31e9c4344119378f248713549ced5ac4b11b had mtime/ctime2026-10-21T12:56:17.846Z, predating focused9780birth13:02:23.560Z; captured beforewrite13:09:56.358Z and stat13:10:46.289Z. New owner47,054bytes SHA2568783087bd1a30f2696382745cbadd39da7d252f44dd29223433496eeaa373021 saved13:13:48.127Z. This establishes a concrete postload defining edit of the active proof path, not a process-specific pinned receipt.
+
+Root and Low finite source review are clean; High final review/disposition is pending. Root authorized normal SIGINT only of its known obsolete SourceDemand9780 after that review, terminal confirmation, complete log archive, and exactly one current-source retry. No other process or agent is authorized to stop. The fifteen format, thirteen actual-admission and eight coordinate regressions remain unexecuted.
+
+
+2026-10-21T13:16:37.310Z: Acceptance confirmed own obsolete9780 terminal exit1 with exact Original Script process interrupted, and archived its complete255,882-byte log as source-before-group-admission.log. One fresh exact current SourceDemand13310 launched with separate source-group-admission.log/artifacts and unchanged normal controls. No foreign process/agent was stopped. No assertion pass has occurred. Root/Runtime heavy jobs remain held until real snapshot/backend boundary.
+
+
+### Concrete Current Retirement Complexity Regression
+
+2026-10-21T13:19:09.988Z: Independent call-graph audit and root source readback found full recheck(proof) twice per committed leaf and once per directory; that helper revalidates every current ancestor/directory/leaf. parentAfter additionally enumerates and sorts the full remaining sibling set on every leaf. These are concrete quadratic current loops, incompatible with the unchanged finite16-million operation budget at the observed large inventory. Runtime owns test-first reconciliation with the prior bounded linear protocol: retain genuine KernelEX, exact namespace writer, complete authenticated reference proof and durable committed intent; per-leaf control/ancestor/parent/descriptor/physical stamps and exact known ownrow/nameSet updates; bounded64windows and final full proof. No bounds, custody or deadlines will be raised. Current13310 retained until exact defining save/signoff; no foreign action.
+
+
+### Linear Work Combined Save Review
+
+2026-10-21T13:31:44.760Z: Runtime replaced only retireCommittedGroupMembersV1 after a fresh read, preserving concurrent outer window/partial helpers. Immediate old source47,676bytes SHA256a7775a3f5900cea13a8d940bafa146fd5f9109997317031d9c59d2dd5e862f42 had mtime/ctime13:19:22.211Z; new47,386bytes SHA256417c8e808016507af68040598bec65d71d54d8576b7398f49ff029b293d43bb3 saved13:28:43.471Z. Root/High/Low final review clean: issued Native/control/ancestry/parent/FD/physical checks remain perleaf; one exact names census per survivingchangedparent, emptycensus perremoveddir, Source/backing/progress windows64 and one final global proof. Thirteen neutral actual-function cases measure fullproofwork, namesentryvisits, Setcopies and sortinput sizes, with129subdirs and undefined-primary/close faults. No Native assertions yet.
+
+Because active13310 has a proven postload defining-owner change, root authorized normalSIGINT only its exact owned handle after review, complete archive source-before-linear-work.log and one fresh source-linear-work retry. No foreign job/agent action. The origin of the prior quadratic implementation is unattributed; only its current behavior is proven. Concurrent partial/window implementation remains intact. Static trace confirms scoped partial gets a fresh coarse recovery chance; no speculative consumer change made without actual headroom refusal.
+
+
+2026-10-21T13:33:05.529Z: Acceptance confirmed only own obsolete13310 terminal exit1 with Original Script process interrupted and archived its complete99,321-byte direct log as source-before-linear-work.log. One fresh current exact SourceDemand4598 launched with unique source-linear-work.log/artifacts and unchanged normal controls. No foreign process or agent touched. Source is frozen; no assertion has run yet.
+
+
+2026-10-21T13:38:11.912Z: Source4598 admitted normally with14,216MiB available against unchanged6,553MiB floor after prior FIFOcapacitywait, completed current dependency verification, then initialimageSHqueue4/4 behindEX41162. No worker/snapshot/backend/tests yet. No memorygovernor change or foreign process action. Source remains frozen; root maintenance/unit held.
+
+
+2026-10-21T13:44:33.152Z: Source4598 cleared initialimageSHqueue and reached actual exclusive graph-closure-proof/read-worker progress under the frozen linear owner. Both High executor and independent log-only Low observer confirm successful child packets; no receipt parser refusal, retirement counts, snapshot/backend or Bun assertion yet. No Source/guard/process change. Root/Runtime heavy checks remain held until actual backend milestone.
+
+
+### Actual Required Generation Index Inflation Refusal
+
+2026-10-21T14:16:04.310Z: Focused Source4598 naturally exited1 before any backend/test/assertion or completedretirement. Complete log376,464bytes. Authenticated worker reports generation-index generations/x/6f6bc85cf178f778d641c34b247e5d6716aa9e8fbac6a8c479b28a8a042de7b5.json.br, packed9,685,390bytes with matching packedSHA, maxOutput134,217,728bytes, expandedsizeunknown, inflationERR_BUFFER_TOO_LARGE. Owning generation normalreader permits expanded512MiB for indexes/frontiers (fragments64MiB), exposing a typed consumer mismatch. Runtime owns schema/test-first bounded token decoder proposal with retained512MiB buffer,64KiBUTF8slices, depth64/boundedrefset and completeclassrange/JSONvalidation. Generic128MiB/4mnode behavior stays otherroles; no arbitrary heap/budgetraise or optional-ignore. Root will own actual-parser standalone heapcorroboration once saved. No Nativegoal job remains live; allchecks held forcombinedreview.
+
+### Generation Decoder Gate
+
+Current focused Source ended naturally before tests on a required generation-index whose authentic packed payload exceeds the generic 128 MiB expansion limit; the owning generation policy permits 512 MiB. The schema-derived bounded scanner now has 42 neutral cases and independent High/Light readback. Native assertions remain pending. The Source dependency fixture now covers nine files and nineteen states across the worker, guards, Graph and inference capture. The standalone actual-function heap probe is waiting for normal 1536 MiB admission; no other process was stopped and no memory floor changed.
+
+The actual-function generation heap probe ended exit0:512MiB expanded,262144references,524337tokens,2977ms; peak RSS732MiB. Focused current SourceDemand was authorized; no other test pass is claimed. See generation-decoder-heap-2026-10-21.md.
+
+### Actual Regression Registration
+
+Source-only import audit found the planned maintenance target did not reach the existing closure test root. Schema and fixture were updated first, then the dispatcher and exact runtimeSourceEntry gained that fourth root. Independent High review and root readback agree. The same pending target now reaches generation42, batch13, member-admission13, receipt15, coordinates8 and Source custody9/19. Existing60000ms script budget remains. No Native assertion is claimed; see native-regression-coverage-2026-10-21.md.
+
+Release proof input release-proof.ts is retained and independently reviewed, not executed. It uses the existing receiver/BundleScript/issued phase and public withViteArtifactV1 release reader, matches only its actual output directory to the exact task receipt, hashes and rechecks within custody, then emits detached proof after drainage. The index.html alias and manifest-count+1 assumptions were verified against current producers. All eight final pane selectors/console rules are in final-browser-smoke-plan-2026-10-21.md. Actual Source remains in physical proof; no snapshot/backend/assertion is yet claimed.
+
+At15:11UTC the retained current Source26169 advanced from full physical graph-closure-proof to exclusive graph-group-planning, without a generation payload or memory refusal. This is actual completion of the repaired reader phase, not snapshot/backend or an assertion pass. The earlier2minute quiet interval was followed by this stage transition; no cancellation or duplicate was used. Supported capacity at15:10:44 remained normalpressure with12177MiBavailable/6553MiBfloor, six grants and two earlierwaiters. One supported128MiB process-metadata capture is queued normally; no memory floor or grant was bypassed.
+
+### Actual Session Protocol Turnover
+
+Source26169 ended naturally exit1 after planning, before tests: child status1/signalnull/empty stderr. Current worker now requires newline-framed requests and explicit null terminal, while the already-loaded launch parent used one-shot JSON/EOF. The current worker emits generic protocol failure DATA on stdout rather than payload-refusal stderr; this explains the observed shape without implying corrupted required data. Current parent now delegates the coherent session protocol. Worker pure generation scanner is byte-identical to the probed7,999byte helper SHA47de492bc591d3b3216f59b85e7c18aa9a1ad44e6fd537937579354b028a3b17; its producer limit remains512MiB.
+
+Concurrent retirement tests now enforce detection of offpath/reference changes before the next optional unlink. Those stronger semantics are preserved; no previous fixture/helper is blindly restored. The new session TS/MJS helpers were missing from three downstream Source authorities. Root added language-neutral11-source/23-state schema/fixture first, then consumer/Graph/inference capture, preserving fixtureindex5 and65536byte bounds. Current owner already captures both helpers. Transport assertion integration and current protocol lifetime review remain in progress. No rerun or assertion pass claimed.
+
+### Shared Infrastructure Coordination
+
+The human instruction to work in conjunction with other agents was applied to the active Make dashboard the sole control chat. A factual coordination note reported the natural one-shot/session seam, our11/23custody/transport integration, preservation of its stronger pre-next-unlink invariant, the16m versus64member work lower bound, and the immutable Node-adapter investigation. No interruption, cancellation or rollback was requested. The other logical part continues.
+
+### Immutable Captured Node Worker Boundary
+
+The existing neutral Source image now drives pinned Node24.15 worker execution through immutable eval loader bytes and an issued-channel bootstrap/READY barrier. The same captured program is reused for every cohort and recapture under an exact issued control. Initial capture compares matching modules against the owner’s existing fourteen selected Source witnesses, alongside full protocol-schema parity. Captured module/schema reads remain immutable; actual cache DATA reads remain live. Eleven execution cases plus five selection cases and real Original/channel tests are registered in the maintenance root. Independent source review is clean; the actual maintenance/Source tests have not yet run.
+
+A normal128MiB Node smoke naturally exited0 and returned value42/captured-schema1 despite physical schema900 and physical code that throws. This verifies the immutable Node map separately from the still-pending Native integration. Evidence/report: immutable-node-worker-2026-10-21.md; generated/node-immutable-smoke.log. No complete Source job was launched by Runtime, no foreign process was affected, and no cap was raised. The app unit/catalog/canonical chain and later twenty-case E2E are prepared with explicit Nx/en and remain held for the actual Source backend gate.
+
+## Current Resumed Gate, 21 October 2026
+
+All six generic JSON parse/reference heap probes exited zero under the admitted 1536 MiB child, including five exact 256 MiB valid inputs and the expected finite-node refusal case. The generation scanner exact 512 MiB/262144-reference probe also exited zero. These are actual standalone memory checks, not Native test-suite passes.
+
+The immutable Node24.15 captured-source adapter is implemented and independently source-reviewed; actual capability, syntax and synthetic captured-source smoke checks exited zero. The focused Source run26169 completed physical closure reading but naturally failed during planning because an already-loaded one-shot parent launched a concurrently updated session worker. No assertion passed in that run. Future cohorts now share a single immutable captured implementation selection.
+
+The remaining pre-Source issue is finite retirement work: the current stronger full proof before every optional mutation cannot finish a large group within16777216 operations. High execution and Low read-only audit are implementing a schema-owned bounded prefix that preserves these checks and uses the existing outer fresh-capture driver. No bounds or headroom floors are being raised. Native suites, all20 browser tests, release build/proof and final live browser smoke remain pending.
+
+## Stronger Retirement Prefix Saved
+
+Schema/neutral fixtures were saved before production. Existing two full checks per optional unlink, sibling census, physical descriptor identity and final complete proof remain. A conservative formula admits a next mutation only while retaining enough work for its final backing/names/global fences. After actual progress the helper returns a truthful prefix, leaving the durable intent and surviving nonempty directories; the existing outer loop discards the proof and captures survivors anew. Zero affordable progress refuses once. All13 stronger cases remain, with5prefix/directory cases and4independent SQL budget vectors added. High and Low readback are clean, and root independently reviewed the saved effects/final fences. Native execution remains pending.
+
+## Closed Reply Credit Implementation In Progress
+
+Fresh source read corrected the earlier cohort-reuse inference: sessionTS explicitly breaks after every unknown-role success, irrespective of actual reply size. Closed credit/defer design is approved and split across both High agents, schema/neutral tests before production, with Low independent review. Existing total16MiB output and frame/input/line caps remain. Actual reply wire length determines whether a tiny terminal deferral is needed; deferred physical/index/inflated readwork must be debited before any same-row retry, without references or logical acceptance. A fresh-cohort deferral fails rather than looping. The other logical owner has explicitly held dependency sync for this protocol and their evaluated/admitted-parent Source selection port. No fresh Source or Native test has been launched during the coordinated edit window.
+
+## Protocol Freeze And Shared Native Birth Gate
+
+Both High agents and Low reviewer report complete own-source freeze. Final production: worker37a28e40/29006bytes, session92ae28a5/9406bytes, MJS78dc09e4/5868bytes, ownerddd9e890/50580bytes. Closed credit/defer covers14credit/12debit/7actual-controller cases; every real cohort caller has the mandatory seventh debit callback. Normal success wire is bounded by issued credit before accept. All14Source files remain within65536bytes and in all four currentness authorities,29states/index5 retained. Exact generated boundaries are worker-credit-test-boundary.json and worker-credit-runtime-boundary.json.
+
+The collaborating infrastructure owner confirmed both actual Native frontends still start the build script without the new admitted map. That launch path is being corrected there; no fallback physical map is authorized. Their dependency sync remains explicitly held until launch/protocol/selection reviews agree. Our fleet launches no Source, native suite or probe before that boundary. One first focused Source leader will be coordinated to avoid duplicate idle3584MiB admissions. All pending Native suites, twenty browser tests, release proof and final service remain unclaimed.
+
+## First Source Leader
+
+The collaborating infrastructure chat will run focused Source0 first after actual native launch handoff, review and dependency sync. Root acknowledged this as the sole first heavy Source producer; our SourceDemand remains pending and still required. Our maintenance/app chains follow actual snapshot/backend admission and coordinated capacity release. Preparation and source review do not establish suite acceptance.
+
+## Coordinator Memory Observation
+
+At16:34UTC the current supported analysis VM used72MiB heap (76MiB allocated). Runtime analysis VM reported41MiB after dropping obsolete read-only strings. These observations are distinct from the actual1536MiB controlled decoder probes. No foreign process or agent was stopped; root currently owns no live native command.
+
+## Native Handoff Stdin Preservation
+
+The collaborating launch owner reports a separate bounded auxiliary input channel is needed to preserve normal stdin (including repo exec). Their implementation/tests cover delivery, cancellation and early closure through the existing process interface. Our Acceptance High is independently reviewing that narrow channel/test contract without editing their code; Low retains actual Source/native-birth review. Our frozen protocol and all pending suite commands remain held until the shared launch/sync/Source0 boundary.
+
+## Auxiliary Input Early-Close Review
+
+Acceptance independently found the new pipe.end callback discarded its error before the once-only delivery completion guard. Node24.15 primary writable implementation confirms end callback may receive an error; a successful already-finished callback may receive null. Root relayed the narrow correction to the owning infrastructure chat: forward the callback error while normalizing null/undefined success, preserving the first error and joined child cleanup. Node documentation: https://nodejs.org/download/release/v24.15.0/docs/api/stream.html#writableendchunk-encoding-callback . This is source/API evidence, not an executed Bun or cross-platform failure. The authored early-close fixture remains pending actual execution.
+
+## Real Worker Test Admission Reconciliation
+
+The collaborating owner established that ordinary raw Bun test evaluation has no compiler-injected map. Runtime High now owns test-only reconciliation of real session/inference/publication worker bodies through a genuinely admitted compiler fixture, preserving all physical protocol/cancellation/deadline cases and same issued invocation/control. Production credit/defer remains frozen. Root independently located the existing actual fixture at library/build/source/closure/tests/selection (emoji taxonomy: 🏗️build/📥️source/🔏️closure/🧪️tests/🔏️selection/🟦️.ts). Its actual pipeline captures authorizer Sources, snapshots them, compiles for Bun/program, then launches a generated compiled fixture through the owned command with scriptInvocationEnvironment and the same control. Parent Ajv/SQLite oracles can stay raw; no forged provenance map, copied Original, Source-file copy, or raw fallback is allowed. Runtime is reusing the actual API rather than adding a generic launcher. Native acceptance remains pending.
+
+## Auxiliary Callback Correction Saved
+
+Acceptance fresh-read confirms the owning process helper now forwards end-callback errors while normalizing null/undefined success and preserving first cause. This closes the identified source-level suppression gap; the seven authored real auxiliary modes still need actual Native execution. Read-only test-ingress inventory is retained in worker-admitted-test-ingress-2026-10-21.md and passed to Runtime for genuine compiler fixture reconciliation. No new Native request was dispatched by this fleet.
+
+## Exact Initial Credit Reserve Saved And Reviewed
+
+Schema/neutral last-byte and +1 cases plus actual AST/SQLite test preceded the narrow Source preparation correction. Preparation now reuses the same cohort admission helper with conservative fresh ready128/line1/frames1 state. Exact input accounting:65537request+43credit+5terminal leaves16711631bootstrap bytes in the unchanged16777216cap; one extra byte refuses. Low fresh read is clean and the mandatory admitted-parent validation remains before Node argument construction. No worker semantics, cap or Native execution changed. Exact source boundary: generated/source-bootstrap-credit-boundary.json.
+
+## Admitted Test Fixture Review Corrections
+
+Runtime saved schema/cases/oracle before the dedicated actual body and captured compiler harness. Parent retains actual named tests and third-party oracles. Low found the environment helper call used three arguments against its actual two-argument(control,environment) API; root relayed the same production handoff expression to the other owner. Test-first AST now requires explicit private control-to-Original binding before fixture creation and the correct two-argument environment call. Acceptance also found and Runtime corrected the translated status assertion and cancellation identity assertion. Low final fresh read is clean for genuine capture→snapshot→compile→ownedchild, worker/schema/helper census, physical source URLs, Windows quote bound, first error and joined cleanup. No Native assertion pass is claimed.
+
+## Current Memory Admission Investigation
+
+Bounded128MiB supported diagnostics actually terminated zero. Foreign Bun dry-run uses about9.9GiB; it and its agent remain untouched. Detailed evidence is retained in memory-admission-current-2026-10-21.md. Queued other-owner sync joined terminal1 before any body for a newly necessary kernel partition; no sync/test pass is claimed.
+
+## Actual Supplemental Credit Acceptance
+
+PinnedNode24.15/SQLite3.53.4 purehelper run joined0 under normal512MiB grant. Counts16credit/16cohort/12deferred/11packetshape/2bootstrap; actualinputidentities stable. Initialprobe oraclefailure retained separately. Details worker-credit-node-results-2026-10-21.md. No Native/Bun/worker/controller/application pass claimed; genuine dependency lock remains capacity-gated.
+
+## Actual Controller Feedback And Host Memory Recovery
+
+The isolated controllerNodeprobe joined0:2success/5expectedrefusals, smallreply3reads/1cohort, joineddefer→debit→samebatchretry, max2reads/batch, exactundefinedprimary preserved. Eightactualinputs stable; details worker-controller-node-results-2026-10-21.md. This is isolatedports, not Native/worker/Original acceptance. Supported hoststatus18:24:22UTC actuallyshows20382MiBavailable/normal/zeroSwapout, dependencygrant admitted18:21:56 andqueueempty. No foreignprocess/agent was stopped and no reclamation cause is inferred. Genuine lock/sync/firstSource0 and all owning applicationchecks remain pending.
+
+
+## Pure Captured-Source Diagnostic Formatter Corroboration
+
+The authorized supplemental command ran through `repo --tool=nx --lang=en capacity run --memory=512 --cpu=1` with system Nodev24.15.0 and heap256, naturally joining terminal0. Actual direct TypeScript helper import (667bytes, SHA2566e314b193d51bb6ed62d8a7839712a8904c87578d806741f70e2ca51c1bf9855) passed all8shared neutral cases,8independent SQLite Unicode projections and12bounded iterator/closure cases. The actual formatter retained its frozen closed8field output,256codepoint clipping and4096-byte JSON cap. Independent SQLite3.53.4 supplied context/Unicode/closed-key/count projections. No failure was reported; all4input SHA256 values matched before and after.
+
+Retained input captured-diagnostics-node-probe.mjs is5902bytes, SHA256e70ccd43cb38523b7efb161c69aa70117654088df0ac3c29c9461d62b6f06944; absolute path141UTF16units. Full actual log/result are generated/captured-diagnostics-node.log and generated/captured-diagnostics-node.json. This is pure formatter feedback only: no loader-guard tests, SDK, Source copy, Original, worker, graph or Native acceptance. No production/test Source changed. App checks remain held behind the common Source0/backend boundary.
+
+
+## Fresh App Unit 58701 — Actual Pretest Failure
+
+The exact qualified prototype/trace one-job/workers-off unit invocation used prepared generated/u-g artifacts and full direct generated/unit-generation-wire.log. It passed normal3584MiB capacity and Source/provider validation, then normal graph-image shared/exclusive admission. The owned handle joined naturally exit1 before any test body. New bounded worker semantic DATA identifies snapshot-manifest version1, non-array projects,873 dependencies and124,213,751 read bytes; current required manifest contract is version2. This is a common preparation refusal, not an app assertion outcome. Full exact argv/env/tool observations and held-successor states are generated/app-generation-chain-state.json. Catalog/canonical were not launched after predecessor failure; no retry/Source edit/foreign process action occurred.

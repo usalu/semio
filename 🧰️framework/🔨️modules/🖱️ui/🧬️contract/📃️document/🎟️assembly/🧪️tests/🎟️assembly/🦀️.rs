@@ -52,6 +52,7 @@ fn close(lease: &mut UiDocumentLease, bytes: usize) {
 
 #[test]
 fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_pointer() {
+    let _gate = crate::arena_test_gate();
     let data = fixture();
     let mut owner = open();
     let mut first = tests::leaf_record(41, "first");
@@ -84,6 +85,7 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
 
 #[test]
 fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_cancels_exact_backing() {
+    let _gate = crate::arena_test_gate();
     for bytes in fixture()["closeGrants"].as_array().unwrap() {
         let mut owner = open();
         place(&mut owner, &mut Some(tests::leaf_record(41, "original")));
@@ -119,6 +121,7 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
 
 #[test]
 fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
+    let _gate = crate::arena_test_gate();
     let mut owner = open();
     place(&mut owner, &mut Some(tests::leaf_record(41, "live")));
     let mut lease = finish(&mut owner);
@@ -152,6 +155,7 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
 //#region 🧪️MetadataAccounting
 #[test]
 fn retained_document_assembly_reports_metadata_initialization_separately_from_empty_payload_capacity() {
+    let _gate = crate::arena_test_gate();
     let mut owner = open();
     let mut source = Some(tests::leaf_record(41, "first"));
     let mut allocated = 0;

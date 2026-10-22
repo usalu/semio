@@ -8,7 +8,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "../⚛️react-port/🟦️.ts";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, rankFuzzyItems, useLabel, useShellScopeOptional, type FuzzySearchResult } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 

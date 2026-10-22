@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const plugin = resolve(import.meta.dir, "../../..");
+const plugin = resolve(import.meta.dirname, "../../..");
 const modules = resolve(plugin, "..");
 const SKIPPED = new Set(["🧷️companions", "🧪️tests", "node_modules", "target", "🗑️generated"]);
 let memo: string | undefined;

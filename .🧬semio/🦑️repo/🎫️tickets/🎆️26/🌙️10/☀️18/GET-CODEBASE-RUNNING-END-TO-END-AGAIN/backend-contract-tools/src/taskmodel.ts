@@ -1,3 +1,4 @@
+import {GlobV1} from "@@RUNTIME@@/🌐️glob/@@TS@@";
 import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "@@VALID@@";
 import {buildModesV1} from "@@PROC@@/@@BUILDMOD@@/@@MODEMOD@@/@@TS@@";
@@ -62,10 +63,10 @@ export function planBuildTasksV1(graph:BuildGraphV1,request:BuildTaskRequestV1):
    if(operation.includes(":")){add(operation);continue;}
    const projects=specification.projects===undefined||specification.projects==="self"?[project]:typeof specification.projects==="string"?[specification.projects]:specification.projects;
    let operations=matchedTargets.get(operation);
-   if(!operations){const matcher=new Bun.Glob(operation);operations=targetNames.filter(name=>matcher.match(name));matchedTargets.set(operation,operations);}
+   if(!operations){const matcher=new GlobV1(operation);operations=targetNames.filter(name=>matcher.match(name));matchedTargets.set(operation,operations);}
    for(const name of operations){
     if(fromDependencies){const seen=new Set<string>(),pending=[...projectDependencies.get(project)??[]];while(pending.length){const candidate=pending.pop()!;if(seen.has(candidate))continue;seen.add(candidate);if(graph.projects[candidate]!.targets[name])add(`${candidate}:${name}`);else pending.push(...projectDependencies.get(candidate)??[]);}}
-    else for(const candidate of Object.keys(graph.projects).filter(candidate=>projects.some(item=>!item.startsWith("!")&&new Bun.Glob(item).match(candidate))&&!projects.some(item=>item.startsWith("!")&&new Bun.Glob(item.slice(1)).match(candidate))))if(graph.projects[candidate]!.targets[name])add(`${candidate}:${name}`);
+    else for(const candidate of Object.keys(graph.projects).filter(candidate=>projects.some(item=>!item.startsWith("!")&&new GlobV1(item).match(candidate))&&!projects.some(item=>item.startsWith("!")&&new GlobV1(item.slice(1)).match(candidate))))if(graph.projects[candidate]!.targets[name])add(`${candidate}:${name}`);
    }
   }
   tasks[id]={...found,label:`t_${hash(id).slice(0,16)}`,dependencies:[...dependencies].sort(),args:[...args],definition,root:owner.root};

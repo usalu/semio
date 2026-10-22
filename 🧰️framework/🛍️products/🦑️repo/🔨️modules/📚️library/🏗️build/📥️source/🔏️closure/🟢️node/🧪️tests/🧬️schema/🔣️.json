@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumWindowsCommandUnits",
+    "cases",
+    "arguments",
+    "mapContract",
+    "bootstrapContract"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumWindowsCommandUnits": {
+      "const": 32767
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "code",
+              "schema",
+              "data",
+              "digest",
+              "module",
+              "import",
+              "path",
+              "buffer",
+              "uncaptured",
+              "descriptor",
+              "maps",
+              "maps-code",
+              "maps-schema"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "executable",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "executable": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "mapContract": {
+      "const": {
+        "version": 1,
+        "entry": "entry.ts",
+        "paths": [
+          "entry.ts",
+          "schema.json",
+          "value.ts"
+        ],
+        "physicalKeys": [
+          "path",
+          "sha256"
+        ],
+        "resolutionKeys": [
+          "imports",
+          "path",
+          "sha256"
+        ],
+        "imports": {
+          "./value.ts": "value.ts",
+          "./schema.json": "schema.json"
+        }
+      }
+    },
+    "bootstrapContract": {
+      "const": {
+        "version": 1,
+        "builtins": [
+          "node:crypto",
+          "node:fs",
+          "node:fs/promises",
+          "node:module",
+          "node:path",
+          "node:url"
+        ],
+        "forbidden": [
+          "./.semio-captured-fs",
+          "./.semio-captured-fs-promises",
+          "./.semio-captured-module"
+        ],
+        "capturedParentAnswer": 42
+      }
+    }
+  }
+}

@@ -176,7 +176,7 @@ pub fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot, canonical_revisio
             let mutation = MdMutation::SpliceSource(splice_source::SpliceSource {
                 splices: ranges.iter().map(|range| Ok(splice_source::SourceSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
             });
-            let outcome = <MdMutation as protocol::Mutation<MdSnapshot>>::diff(&mutation, snapshot);
+            let outcome = <MdMutation as protocol::ColdMutation<MdSnapshot>>::diff(&mutation, snapshot);
             if let Some(message) = outcome.messages().first() {
                 return Err(fault("stdio.md.splice-unrepresentable", message.message.to_string()));
             }

@@ -101,7 +101,7 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 pub struct ArtifactStoreReplayInitializer<P, M, C>
 where
     P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    M: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     pub producer:PhantomData<fn()->C>,
@@ -134,7 +134,7 @@ where
 impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
 where
     P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    M: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     /// 🌱️ Captures the completed `envelope` of a document of `schema` for the replay `operation` of `generation`, owned by `actor`.
@@ -764,7 +764,7 @@ where
 impl<P, M, C> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M, C>
 where
     P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    M: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
@@ -842,7 +842,7 @@ where
 impl<P, M, C> Drop for ArtifactStoreReplayInitializer<P, M, C>
 where
     P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    M: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn drop(&mut self) {
@@ -850,4 +850,6 @@ where
     }
 }
 
-
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

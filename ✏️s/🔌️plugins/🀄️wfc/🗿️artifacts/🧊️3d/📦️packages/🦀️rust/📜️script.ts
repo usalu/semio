@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ wfc-3d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-wfc-3d",{ packages: ["semio-s-artifact-wfc-3d", "semio-s-artifact-wfc-3d-config", "semio-s-artifact-wfc-3d-mut-family", "semio-s-artifact-wfc-3d-inferences", "semio-s-artifact-wfc-3d-mutations", "semio-s-artifact-wfc-3d-schema", "semio-s-artifact-wfc-3d-set-slot-positions", "semio-s-artifact-wfc-3d-snapshot", "semio-s-artifact-wfc-3d-tests", "semio-s-artifact-wfc-3d-transient", "semio-s-artifact-wfc-3d-wfc3d"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],snapshotSqliteTestBudgetMs:120000});

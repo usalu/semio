@@ -6,7 +6,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -21,7 +21,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts manifests",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -36,7 +36,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts markers",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -51,7 +51,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts markers-manifests",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts markers-manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -66,7 +66,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -76,7 +76,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts witness",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts witness",
         "forwardAllArgs": true
       },
       "outputs": [],

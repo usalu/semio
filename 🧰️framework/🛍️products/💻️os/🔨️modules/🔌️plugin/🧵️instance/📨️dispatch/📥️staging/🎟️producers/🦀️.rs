@@ -16,7 +16,7 @@ use std::mem::ManuallyDrop;
 use store::MemberFactory;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use store::SpaceMember;
+use store::ReferenceSpaceMember;
 use semio_framework_value::ValueError;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework::FaultFrom;
@@ -45,7 +45,7 @@ use semio_framework_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission
 use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_framework_os_kernel as store;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
         let proof = self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {

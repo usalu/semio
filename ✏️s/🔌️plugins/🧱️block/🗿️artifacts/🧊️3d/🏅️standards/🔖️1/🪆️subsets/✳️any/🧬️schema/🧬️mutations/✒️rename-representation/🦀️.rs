@@ -25,6 +25,15 @@ pub fn rename_representation<Op: From<crate::rename_representation::RenameRepres
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameRepresentation where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_representation::RenameRepresentation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "representation", kind: "rename-representation", record: "RenamedRepresentation" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename representation \"{}\" to \"{}\"", self.id, self.new_name), &format!("Repräsentation \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for RenameRepresentation where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_representation::RenameRepresentation> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::rename_representation::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameRepresentation wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename representation \"{}\" to \"{}\"", self.id, self.new_name), &format!("Repräsentation \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

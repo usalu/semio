@@ -61,8 +61,8 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let closing=operation.terminal_seen||operation.user_cancel_requested||cx.is_cancelled()||operation.producer_request_retirement.is_some()||operation.session_rejected.is_some()||operation.worker_outcome_pending;
             if turn.is_some_and(|(kind,_)|kind!=closing){break;}
             let policy=if closing{mounted_policy.close}else{mounted_policy.preparation};
-            let (_,turn_grant)=*turn.get_or_insert((closing,semio_framework_plugin_reactor_app::original_plugin_turn_grant(policy,retained)));
-            let grant=semio_framework_plugin_reactor_app::original_plugin_turn_grant(policy,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent));
+            let (_,turn_grant)=*turn.get_or_insert((closing,semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,retained)));
+            let grant=semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent));
             let stepped=cx.with_retained_loan(grant,|same|operation.drive_worker_step(same));
             let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(failure)=>failure.retained_progress()};
             spent=spent.checked_add(progress)?;
@@ -284,7 +284,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             base_revision: semio_framework_job::RevisionId(u64::from_be_bytes([lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7])),
             generation: semio_framework_job::Generation(stores.store.generation()),
             canonical_base_revision,
-            mounted_policy: mounted_policy,
+            mounted_policy: *mounted_policy,
         }
     }
 

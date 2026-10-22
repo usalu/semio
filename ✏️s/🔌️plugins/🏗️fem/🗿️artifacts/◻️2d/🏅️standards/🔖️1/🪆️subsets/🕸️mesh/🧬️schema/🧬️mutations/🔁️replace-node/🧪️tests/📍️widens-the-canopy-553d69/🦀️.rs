@@ -65,7 +65,7 @@ fn inverse_restores_before() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"), "replace-node/📍️widens-the-canopy-553d69 declares an applied outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "replace-node/📍️widens-the-canopy-553d69: a clean application raises no diagnostic, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("replace-node/📍️widens-the-canopy-553d69: declared applied but the mutation was rejected");
@@ -108,7 +108,7 @@ fn committed_json_is_canonical() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     let delta = outcome.diff().nodes.as_ref().expect("nodes delta");
     assert_eq!((delta.inserted.len(), delta.removed.len(), delta.modified.len()), (0, 0, 1), "replace-node/📍️widens-the-canopy-553d69: the delta must be exactly one patched entry");
     assert!(delta.moved.is_empty(), "replace-node/📍️widens-the-canopy-553d69: no verb in this vocabulary re-orders a collection");

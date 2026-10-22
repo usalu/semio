@@ -44,9 +44,9 @@ use semio_framework_ui_contract::*;
 use semio_framework_plugin_time_travel::*;
 use semio_framework_plugin_window_kits_rich::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
 use semio_framework::ViewModel;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ The composed members' edits as the history reads them, keyed by edit id (design §12): every edit (the rows a full
     /// history build lists for the owned-child edits it carries, and the edits a reload backfills), or only the `wanted` ones
     /// (the rows an incremental refresh rebuilds, O(those edits)).

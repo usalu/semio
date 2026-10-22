@@ -3,11 +3,11 @@
   "contract": "testing-readme-current-coordinates-v1",
   "execution": {
     "target": "test-testing-readme-coordinates",
-    "command": "bun ./📜️script.ts test testing-readme-coordinates",
+    "command": "repo ./📜️script.ts test testing-readme-coordinates",
     "route": "testing-readme-coordinates",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts",
     "launchName": "🧹clean🧩️taxonomy🗺️testing-readme-coordinates",
-    "launchCommand": "bun repo run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
+    "launchCommand": "repo run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.192
   },
@@ -99,8 +99,8 @@
     {
       "id": "case-phase-selection",
       "section": "Commands",
-      "markdown": "`--owner <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;\n`--implementation <id>` narrows their subject implementations. `discover` lists all cases.\nFrom the repository root the same phases are reachable as `bun ./📜️script.ts test <phase>`, and every\ncase also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exhaustive`,\n`test-contract`, `test-oracle`, `test-subject`, `test-parity`).",
-      "plainText": "--owner <path>, --case <slug> and --project <name> narrow case-based phases; --implementation <id> narrows their subject implementations. discover lists all cases. From the repository root the same phases are reachable as bun ./📜️script.ts test <phase>, and every case also has generated Nx targets (test, test-quick, test-long, test-exhaustive, test-contract, test-oracle, test-subject, test-parity)."
+      "markdown": "`--owner <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;\n`--implementation <id>` narrows their subject implementations. `discover` lists all cases.\nFrom the repository root the same phases are reachable as `repo ./📜️script.ts test <phase>`, and every\ncase also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exhaustive`,\n`test-contract`, `test-oracle`, `test-subject`, `test-parity`).",
+      "plainText": "--owner <path>, --case <slug> and --project <name> narrow case-based phases; --implementation <id> narrows their subject implementations. discover lists all cases. From the repository root the same phases are reachable as repo ./📜️script.ts test <phase>, and every case also has generated Nx targets (test, test-quick, test-long, test-exhaustive, test-contract, test-oracle, test-subject, test-parity)."
     },
     {
       "id": "selector-requirement-versus-routing",

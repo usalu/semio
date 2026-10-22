@@ -2,7 +2,7 @@ use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use crate::schema::diff::SemioPresentationDiff;
 use crate::{schema::snapshot::SemioPresentationSnapshot, schema::snapshot::Slide, schema::snapshot::SlideFrame, schema::snapshot::SlideLayout, schema::snapshot::SlideMaster, schema::snapshot::SlideShape};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::mutations::*;
 use crate::io::binary::mutations::wire_tag;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
@@ -129,7 +129,7 @@ fn sample_mutations() -> Vec<SemioPresentationMutation> {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
-    protocol::apply_diff(diff, base).expect("valid Semio presentation diff fixture")
+    protocol::apply_diff_cold(diff, base).expect("valid Semio presentation diff fixture")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -157,7 +157,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
-        for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        for inverse_mutation in <SemioPresentationMutation as ColdMutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

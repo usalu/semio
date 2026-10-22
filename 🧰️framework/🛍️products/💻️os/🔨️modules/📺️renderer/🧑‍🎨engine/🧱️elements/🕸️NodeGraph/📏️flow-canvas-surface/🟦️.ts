@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | FlowGraphCanvasHost}: `useFlowCanvasSurface` runs the original statements in order and returns the bindings later hooks and the render read; the component merges them into the shared core object.
  */
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../⚛️react-port/🟦️.ts";
 import { resizeCanvasBackingStore } from "../🖼️dag-overlays/🟦️.tsx";
 import { observeFlowTask } from "../🔄️flow-session-sync/🟦️.ts";
 import type { FlowCoreAfterFlowOverlayAndRender } from "../🎨️flow-overlay-render/🟦️.ts";

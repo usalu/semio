@@ -41,7 +41,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -84,7 +84,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -134,7 +134,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -177,7 +177,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -227,7 +227,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -270,7 +270,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {

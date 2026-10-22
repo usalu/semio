@@ -72,9 +72,9 @@ fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::os_store
 fn prepare_cad_artifact(base: &CadSnapshot, mutation: &CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>), semio_framework_value::ValueError> {
     admit_cad_snapshot(base).map_err(cad_refusal)?;
     admit_cad_artifact_mutation(mutation).map_err(cad_refusal)?;
-    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(mutation, base)?;
-    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(mutation, base);
-    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| cad_refusal(error.to_string()))?;
+    let inverse = <CadMutation as protocol::ColdMutation<CadSnapshot>>::inverse(mutation, base)?;
+    let outcome = <CadMutation as protocol::ColdMutation<CadSnapshot>>::diff(mutation, base);
+    let post = protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| cad_refusal(error.to_string()))?;
     admit_cad_snapshot(&post).map_err(cad_refusal)?;
     Ok((post, inverse))
 }

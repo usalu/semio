@@ -24,18 +24,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "media-annotation", kind: "insert-media-annotation", record: "Insert" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let (_, rows) = support::insert_object_rows(base, support::media_annotation_object(&self.subtype, &self.title), &self.placements);
-        MutationOutcome::new(diff::graph_edit(rows))
-    }
-
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert {} media annotation", self.subtype), &format!("{} Medienanmerkung einfügen", self.subtype))
     }
@@ -43,6 +31,22 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.subtype.clone(), self.title.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertMediaAnnotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertMediaAnnotation> + From<crate::standards::v1_7::subsets::e::schema::mutations::remove_media_annotation::RemoveMediaAnnotation>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let (_, rows) = support::insert_object_rows(base, support::media_annotation_object(&self.subtype, &self.title), &self.placements);
+        MutationOutcome::new(diff::graph_edit(rows))
+    }
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

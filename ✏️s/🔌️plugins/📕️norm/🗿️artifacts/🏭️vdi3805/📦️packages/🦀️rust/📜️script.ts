@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ norm artifact Rust package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-norm-vdi3805", {packages:["semio-s-artifact-norm-vdi3805-checks","semio-s-artifact-norm-vdi3805-diff","semio-s-artifact-norm-vdi3805-editor","semio-s-artifact-norm-vdi3805-examples","semio-s-artifact-norm-vdi3805-inferences","semio-s-artifact-norm-vdi3805-io","semio-s-artifact-norm-vdi3805-model","semio-s-artifact-norm-vdi3805-mut-file","semio-s-artifact-norm-vdi3805-mut-geometry","semio-s-artifact-norm-vdi3805-mut-products","semio-s-artifact-norm-vdi3805-mutations","semio-s-artifact-norm-vdi3805-schema","semio-s-artifact-norm-vdi3805-viewer","semio-s-artifact-norm-vdi3805"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

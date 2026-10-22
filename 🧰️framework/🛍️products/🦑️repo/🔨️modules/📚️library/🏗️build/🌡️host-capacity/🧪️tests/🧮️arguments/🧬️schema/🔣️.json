@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:host-capacity-arguments-corpus:v1",
+  "title": "Host Capacity Arguments Corpus",
+  "description": "Language-agnostic argument vectors for the host capacity ask and the granted-jobs rewrite, with a few authored expectations; the systematic vectors are checked against an independent oracle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "asks", "granted", "commands", "signals", "authored"],
+  "properties": {
+    "version": { "const": 1 },
+    "asks": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["args", "environment"], "properties": { "args": { "type": "array", "items": { "type": "string" } }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } } } },
+    "granted": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["args", "operation", "jobs"], "properties": { "args": { "type": "array", "items": { "type": "string" } }, "operation": { "type": "string" }, "jobs": { "type": "integer", "minimum": 1 } } } },
+    "commands": { "type": "array", "minItems": 1, "items": { "type": "array", "items": { "type": "string" } } },
+    "signals": { "type": "array", "minItems": 1, "items": { "enum": ["SIGINT", "SIGTERM"] } },
+    "authored": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "args", "environment", "expect"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "args": { "type": "array", "items": { "type": "string" } },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+          "expect": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": false, "required": ["operation", "preferredJobs", "kinds"], "properties": { "operation": { "type": "string" }, "preferredJobs": { "type": "integer", "minimum": 1 }, "kinds": { "type": "array", "items": { "enum": ["test", "check", "generate", "build", "script", "service"] } } } }] }
+        }
+      }
+    }
+  }
+}

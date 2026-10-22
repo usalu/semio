@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -200,26 +200,9 @@ pub struct En1998Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<En1998Snapshot> for En1998Diff {
-    fn apply(&self, base: &En1998Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1998Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.site {
-            next.site = value.clone();
-        }
-        next.buildings = self.buildings.commit_onto(&base.buildings, capability).map_err(|error| error.under(["buildings"]))?;
-        next.bridges = self.bridges.commit_onto(&base.bridges, capability).map_err(|error| error.under(["bridges"]))?;
-        next.assessments = self.assessments.commit_onto(&base.assessments, capability).map_err(|error| error.under(["assessments"]))?;
-        next.silos = self.silos.commit_onto(&base.silos, capability).map_err(|error| error.under(["silos"]))?;
-        next.tanks = self.tanks.commit_onto(&base.tanks, capability).map_err(|error| error.under(["tanks"]))?;
-        next.foundations = self.foundations.commit_onto(&base.foundations, capability).map_err(|error| error.under(["foundations"]))?;
-        next.retaining_walls = self.retaining_walls.commit_onto(&base.retaining_walls, capability).map_err(|error| error.under(["retainingWalls"]))?;
-        next.towers = self.towers.commit_onto(&base.towers, capability).map_err(|error| error.under(["towers"]))?;
-        Ok(next)
-    }
+impl MutationDiff<En1998Snapshot> for En1998Diff {}
 
+impl protocol::ColdMutationDiff<En1998Snapshot> for En1998Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -236,9 +219,45 @@ impl MutationDiff<En1998Snapshot> for En1998Diff {
         self.retaining_walls.absorb(other.retaining_walls);
         self.towers.absorb(other.towers);
     }
+
+    fn apply(&self, unpublished: &mut En1998Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.site {
+            next.site = value.clone();
+        }
+        next.buildings = self.buildings.commit_onto(&base.buildings, capability).map_err(|error| error.under(["buildings"]))?;
+        next.bridges = self.bridges.commit_onto(&base.bridges, capability).map_err(|error| error.under(["bridges"]))?;
+        next.assessments = self.assessments.commit_onto(&base.assessments, capability).map_err(|error| error.under(["assessments"]))?;
+        next.silos = self.silos.commit_onto(&base.silos, capability).map_err(|error| error.under(["silos"]))?;
+        next.tanks = self.tanks.commit_onto(&base.tanks, capability).map_err(|error| error.under(["tanks"]))?;
+        next.foundations = self.foundations.commit_onto(&base.foundations, capability).map_err(|error| error.under(["foundations"]))?;
+        next.retaining_walls = self.retaining_walls.commit_onto(&base.retaining_walls, capability).map_err(|error| error.under(["retainingWalls"]))?;
+        next.towers = self.towers.commit_onto(&base.towers, capability).map_err(|error| error.under(["towers"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1998Snapshot> for En1998Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.site.is_none()
+            && self.buildings.is_empty()
+            && self.bridges.is_empty()
+            && self.assessments.is_empty()
+            && self.silos.is_empty()
+            && self.tanks.is_empty()
+            && self.foundations.is_empty()
+            && self.retaining_walls.is_empty()
+            && self.towers.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1998Snapshot> for En1998Diff {
     fn inverse(&self, base: &En1998Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex.clone()),
@@ -252,19 +271,6 @@ impl DiffAlgebra<En1998Snapshot> for En1998Diff {
             retaining_walls: self.retaining_walls.inverse(&base.retaining_walls),
             towers: self.towers.inverse(&base.towers),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.site.is_none()
-            && self.buildings.is_empty()
-            && self.bridges.is_empty()
-            && self.assessments.is_empty()
-            && self.silos.is_empty()
-            && self.tanks.is_empty()
-            && self.foundations.is_empty()
-            && self.retaining_walls.is_empty()
-            && self.towers.is_empty()
     }
 }
 

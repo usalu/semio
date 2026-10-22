@@ -16,17 +16,20 @@ pub struct SetDrawing {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetDrawing {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing", kind: "set-drawing", record: "SetDrawing" };
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
-        protocol::MutationOutcome::new(DwgDiff { drawing: (base.drawing != self.drawing).then(|| self.drawing.clone()), ..DwgDiff::default() })
-    }
-    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.drawing != self.drawing).then(|| DwgMutation::SetDrawing(SetDrawing { drawing: base.drawing.clone() })).into_iter().collect())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set logical drawing", "Logische Zeichnung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DwgSnapshot, DwgMutation> for SetDrawing {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as protocol::ColdMutation<DwgSnapshot>>::ReferenceDiff> {
+        protocol::MutationOutcome::new(DwgDiff { drawing: (base.drawing != self.drawing).then(|| self.drawing.clone()), ..DwgDiff::default() })
+    }
+    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
+        Ok((base.drawing != self.drawing).then(|| DwgMutation::SetDrawing(SetDrawing { drawing: base.drawing.clone() })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

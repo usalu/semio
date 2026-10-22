@@ -1,0 +1,107 @@
+{
+  "cases": [
+    {
+      "id": "bounded-data-ordinary",
+      "scenario": "ordinary",
+      "accepted": true,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-absent",
+      "scenario": "absent",
+      "accepted": true,
+      "maximumEnumerations": 0
+    },
+    {
+      "id": "bounded-data-symlink",
+      "scenario": "symlink",
+      "accepted": false,
+      "maximumEnumerations": 0
+    },
+    {
+      "id": "bounded-data-overflow",
+      "scenario": "overflow",
+      "accepted": false,
+      "maximumEnumerations": 0
+    },
+    {
+      "id": "bounded-data-entries",
+      "scenario": "entries",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-depth",
+      "scenario": "depth",
+      "accepted": false,
+      "maximumEnumerations": 33
+    },
+    {
+      "id": "bounded-data-race",
+      "scenario": "race",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-kind",
+      "scenario": "kind",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-literal-symlink",
+      "scenario": "literal-symlink",
+      "accepted": false,
+      "maximumEnumerations": 0
+    },
+    {
+      "id": "bounded-data-bytes",
+      "scenario": "bytes",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-close-primary",
+      "scenario": "close-primary",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-cancel",
+      "scenario": "cancel",
+      "accepted": false,
+      "maximumEnumerations": 1
+    },
+    {
+      "id": "bounded-data-close-mutation",
+      "scenario": "close-mutation",
+      "accepted": false,
+      "maximumEnumerations": 1
+    }
+  ],
+  "capture": {
+    "files": {
+      "entry.ts": "export const data=new URL(\"./extra.json\",import.meta.url);",
+      "extra.json": "{\"selected\":true}",
+      "🧬️schema/policy.json": "{\"enabled\":true}"
+    },
+    "expected": [
+      "entry.ts",
+      "extra.json",
+      "🧬️schema/policy.json"
+    ],
+    "invalid": "{"
+  },
+  "pregraphCompanions": [
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "excluded": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json"
+    },
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+      "excluded": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json"
+    }
+  ]
+}

@@ -94,6 +94,7 @@ fn validates(source: &FixtureSource, fuel: u64) -> bool {
     let mut original_retained_progress_1 = semio_framework_value::RetainedCloneProgress::default();
     let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99, semio_framework_value::testing::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_1);
     let zero_step = cursor.step(source, &mut zero);
+    drop(zero);
     assert_eq!(cursor.progress().steps, 0);
     assert_eq!(source.projections.get(), 0);
     if source.member_count() > OWNED_DOCUMENT_MAXIMUM_MEMBERS {
@@ -130,6 +131,7 @@ fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
         let mut original_retained_progress_3 = semio_framework_value::RetainedCloneProgress::default();
         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, semio_framework_value::testing::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_3);
         assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
+        drop(first);
         let progress = cursor.progress();
         source.members = chain(row["afterMembers"].as_u64().unwrap() as usize).members;
         let mut original_retained_progress_4 = semio_framework_value::RetainedCloneProgress::default();
@@ -182,6 +184,7 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
         let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99, semio_framework_value::testing::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_5);
         assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
+        drop(first);
         let progress = cursor.progress();
         source.generation.set(source_generation);
         if cancelled {

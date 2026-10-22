@@ -4,7 +4,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::find_layer;
 use semio_framework_plugin::{ArtifactView, ConfigView};
 use semio_s_artifact_raster_raster_editor::commands::duplicate_layer::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::layer_node_id;
 use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;

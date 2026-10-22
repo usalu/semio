@@ -32,6 +32,7 @@ mod sources;
 #[path="🌐️language-choice/🦀️.rs"]
 mod language_choice;
 
+
 use controls::Flow;
 use windows::{Dashboard, Effect};
 
@@ -60,21 +61,56 @@ pub fn help_text(preferences: &dashboard_preferences::Preferences) -> String {
     lines.join("\n")
 }
 
-fn present(term: &mut NativeTerminal, tui: &mut Tui, patch: &semio_framework_ui_tui_terminal::ansi::AnsiPatch) { term.present(patch, tui.cursor()).ok(); }
+fn present<B:TerminalBackend>(term:&mut B,tui:&mut Tui,patch:&semio_framework_ui_tui_terminal::ansi::AnsiPatch)->Result<(),dashboard_feedback::Failure>{term.present(patch,tui.cursor()).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Present,error))}
+
+fn run_view<B:TerminalBackend>(term:&mut B,dash:&mut Dashboard,tui:&mut Tui)->Result<(),dashboard_feedback::TerminalFailure>{
+    let result:Result<(),dashboard_feedback::Failure>=(||{
+    dash.frame(tui);
+    let first = tui.render();
+    present(term, tui, &first)?;
+    let clock = std::time::Instant::now();
+    let now = || clock.elapsed().as_millis() as u64;
+    loop {
+        let polled = dash.poll_daemon(tui);
+        let background = dash.poll_background(tui);
+        let sources = dash.poll_source_suggestions();
+        let documents = dash.poll_documents(tui);
+        let slice = IDLE_SLICE;
+        let wait = tui.deadline_ms().map_or(slice, |ms| slice.min(std::time::Duration::from_millis(ms)));
+        let wait = dash.prefix_wait(std::time::Instant::now()).map_or(wait, |left| wait.min(left));
+        let events = term.wait(Some(std::time::Instant::now() + wait)).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Wait,error))?;
+        let mut quit = polled.quit;
+        for event in &events { if dash.handle(tui, event) == Flow::Quit { quit = true; break; } }
+        if quit || dash.quit_requested { break; }
+        let mut effect_changed=false;
+        for effect in std::mem::take(&mut dash.effects) { match effect { Effect::Copy(text) => { if let Err(error)=term.copy(&text){dash.record_io(dashboard_feedback::Operation::Copy,error);effect_changed=true;} }, Effect::OpenReady(url) => dash.begin_open_ready(&url) } }
+        let expired = dash.expire_prefix(std::time::Instant::now());
+        let ticked = tui.tick(now());
+        if effect_changed || polled.changed || background || sources || documents || !events.is_empty() || ticked || expired { dash.frame(tui); }
+        if let Some(patch) = tui.render_due(now()) { present(term, tui, &patch)?; }
+    }
+    Ok(())
+    })();
+    if let Some(job)=&dash.saving_preferences{job.cancel.store(true,std::sync::atomic::Ordering::Release);}
+    let mut result=result.map_err(dashboard_feedback::TerminalFailure::from);
+    if dash.online(){if let Err(error)=dash.send(&dashboard_wire::ipc::ClientMsg::Detach{}){let cleanup=dashboard_feedback::Failure::io(dashboard_feedback::Operation::Detach,error);match &mut result{Err(failure)=>failure.cleanup.push(cleanup),Ok(())=>result=Err(cleanup.into())}}}
+    result
+}
+
 
 /// ⚙️ Starts a native dashboard with strict optional configuration overrides.
 pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     let root = dashboard_wire::ipc::canonical_path(&parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from));
-    let text = dashboard_preferences::cli_locale(&root, parsed).map(dashboard_labels::labels);
     if !parsed.segments.is_empty() { for choice in dashboard_preferences::language::declared().choices(){let locale=ui_locale::Locale::parse(&choice.language).expect("validated choice");if dashboard_preferences::cli_locale(&root,parsed).is_none_or(|selected|selected==locale){eprintln!("{}",dashboard_labels::labels(locale).cli_dashboard_unexpected_arguments.fill(&[("arguments",&parsed.segments.join(" "))]).into_string());}} return 2; }
     let loaded = dashboard_preferences::load_lenient(&root, parsed);
     if parsed.has_flag("help") { println!("{}", help_text(&loaded.map(|(preferences, _)| preferences).unwrap_or_default())); return 0; }
-    let (mut preferences, problems) = match loaded { Ok(loaded) => loaded, Err(error) => { eprintln!("[dashboard] {error}"); return 2; } };
-    let Ok(mut term) = NativeTerminal::new() else { if let Some(text)=text {eprintln!("{}", text.cli_dashboard_attach_failed.as_str());}else{eprintln!("{}",dashboard_preferences::language::declared().message("terminalUnavailable"));} return 1; };
-    if term.enter().is_err() { return 1; }
+    let (mut preferences, problems) = match loaded { Ok(loaded) => loaded, Err(error) => { let failure=dashboard_feedback::TerminalFailure{primary:dashboard_feedback::Failure::io(dashboard_feedback::Operation::Preferences,error),cleanup:Vec::new()};eprintln!("{}",failure.display(None));return 2; } };
+    let mut preferences_locale=preferences.locale();
+    let mut term=match NativeTerminal::new(){Ok(term)=>term,Err(error)=>{let failure=dashboard_feedback::TerminalFailure{primary:dashboard_feedback::Failure::text(dashboard_feedback::Operation::Enter,error.to_string()),cleanup:Vec::new()};eprintln!("{}",failure.display(preferences_locale));return 1;}};
+    let result=dashboard_feedback::terminal_session(&mut term,|term|{
     if preferences.locale().is_none() {
         let path=if parsed.has_flag("workspace"){dashboard_preferences::shared_path(&root)}else{dashboard_preferences::local_path(&root,parsed)};
-        match language_choice::run(&mut term,&path,Theme::new(if preferences.appearance=="light"{AppearanceName::Light}else{AppearanceName::Dark})) {Ok(Some(locale))=>preferences.language=Some(locale.as_str().into()),Ok(None)=>{let _=term.leave();return 0;},Err(error)=>{let _=term.leave();eprintln!("[dashboard] {error}");return 1;}}
+        match language_choice::run(term,&path,Theme::new(if preferences.appearance=="light"{AppearanceName::Light}else{AppearanceName::Dark}))? {Some(locale)=>{preferences.language=Some(locale.as_str().into());preferences_locale=Some(locale);},None=>return Ok(())}
     }
     let size = term.size().unwrap_or(Size { width: 100, height: 32 });
     let mut tui = Tui::new(size, Theme::new(if preferences.appearance == "light" { AppearanceName::Light } else { AppearanceName::Dark }));
@@ -85,32 +121,9 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     if let Some(problem) = problems.first() { dash.notice = Some(dash.text().prefs_journal_problem.fill(&[("problem", problem)]).into_string()); }
     dash.apply_capabilities(&mut tui, term.capabilities().unicode == UnicodeLevel::Full);
     dash.inventory = Some(dashboard_inventory::start(&root, false));
-    dash.frame(&mut tui);
-    let first = tui.render();
-    present(&mut term, &mut tui, &first);
-    let clock = std::time::Instant::now();
-    let now = || clock.elapsed().as_millis() as u64;
-    loop {
-        let polled = dash.poll_daemon(&mut tui);
-        let background = dash.poll_background(&mut tui);
-        let sources = dash.poll_source_suggestions();
-        let documents = dash.poll_documents(&mut tui);
-        let slice = IDLE_SLICE;
-        let wait = tui.deadline_ms().map_or(slice, |ms| slice.min(std::time::Duration::from_millis(ms)));
-        let wait = dash.prefix_wait(std::time::Instant::now()).map_or(wait, |left| wait.min(left));
-        let events = term.wait(Some(std::time::Instant::now() + wait)).unwrap_or_default();
-        let mut quit = polled.quit;
-        for event in &events { if dash.handle(&mut tui, event) == Flow::Quit { quit = true; break; } }
-        if quit || dash.quit_requested { break; }
-        for effect in std::mem::take(&mut dash.effects) { match effect { Effect::Copy(text) => { let _ = term.copy(&text); }, Effect::OpenReady(url) => dash.begin_open_ready(&url) } }
-        let expired = dash.expire_prefix(std::time::Instant::now());
-        let ticked = tui.tick(now());
-        if polled.changed || background || sources || documents || !events.is_empty() || ticked || expired { dash.frame(&mut tui); }
-        if let Some(patch) = tui.render_due(now()) { present(&mut term, &mut tui, &patch); }
-    }
-    let _ = dash.send(&dashboard_wire::ipc::ClientMsg::Detach {});
-    let _ = term.leave();
-    0
+    run_view(term,&mut dash,&mut tui)
+    });
+    match result{Ok(())=>0,Err(error)=>{eprintln!("{}",error.display(preferences_locale));1}}
 }
 // #endregion 🔖️Run
 

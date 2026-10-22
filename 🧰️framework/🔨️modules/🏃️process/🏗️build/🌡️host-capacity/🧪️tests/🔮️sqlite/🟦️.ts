@@ -24,17 +24,18 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
   if(hard!==null&&!HARD.has(hard))throw Error("Unknown hard reason");
   const filesOver=host.openFiles!==null&&host.openFilesMaximum!==null&&host.openFiles/host.openFilesMaximum>policy.files.ceilingBasisPoints/10000,imagesOver=host.attachedImages!==null&&host.attachedImages>=policy.attaches.maximum;
   const softReason=host.pressure==="warn"?"pressure-warn":filesOver?"files":imagesOver?"attaches":null,soft=softReason===null?0:1,quoted=hard===null?"NULL":`'${hard}'`,empty=totals.n===0?1:0;
-  const held=item.ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),drainedRoom=Math.min(Math.min(host.availableMegabytes+held,host.totalMegabytes)-floor,Math.floor(cap*policy.memory.budgetBasisPoints/10000)),drainedLoad=host.load===null?null:ceiling-Math.max(0,host.load-totals.cpu);
-  const count="MIN(CASE WHEN s.room>="+cap+" THEN w.pref WHEN w.perjob=0 THEN CASE WHEN w.fixed<=s.room THEN w.pref ELSE 0 END ELSE MAX(0,MIN(w.pref,(s.room-w.fixed)/w.perjob)) END, CASE WHEN s.load IS NULL THEN w.pref ELSE MAX(0,MIN(w.pref,CAST(s.load/w.cpu AS INTEGER))) END)";
+  const held=item.ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),drainedRoom=Math.min(Math.min(host.availableMegabytes+held,host.totalMegabytes)-floor,Math.floor(cap*policy.memory.budgetBasisPoints/10000));
+  const memoryJobs="CASE WHEN s.room>="+cap+" THEN w.pref WHEN w.perjob=0 THEN CASE WHEN w.fixed<=s.room THEN w.pref ELSE 0 END ELSE MAX(0,MIN(w.pref,(s.room-w.fixed)/w.perjob)) END",loadJobs="CASE WHEN s.load IS NULL THEN w.pref ELSE MAX(0,MIN(w.pref,CAST(s.load/w.cpu AS INTEGER))) END";
+  const count=`CASE WHEN MIN(${memoryJobs},${loadJobs})>=w.minimum THEN MIN(${memoryJobs},${loadJobs}) WHEN ${memoryJobs}>=w.minimum AND s.own+w.minimum*w.cpu<=${ceiling} THEN w.minimum ELSE 0 END`;
   const fitsMinimum=`(MIN(w.fixed+w.minimum*w.perjob,${cap})<=s.room)`,overrideDue=`(${empty}=1 AND s.admitted=0 AND (${item.nowMs}-w.arrived)>=${policy.load.overrideAfterMilliseconds})`,open=`(${quoted} IS NULL AND s.blocked=0)`;
   const normal=`(${open} AND ${soft}=0 AND ${count}>=w.minimum)`,forced=`(${open} AND NOT ${normal} AND ${fitsMinimum} AND ${overrideDue})`;
-  const drains=`(${soft}=0 AND MIN(w.fixed+w.minimum*w.perjob,${cap})<=${drainedRoom} AND ${drainedLoad===null?"1":`w.minimum*w.cpu<=${drainedLoad}`})`,bypassed="(SELECT COUNT(*) FROM grants g WHERE g.admitted>=w.arrived)",limit=policy.wait.maximumBypasses;
+  const drains=`(${soft}=0 AND MIN(w.fixed+w.minimum*w.perjob,${cap})<=${drainedRoom} AND w.minimum*w.cpu<=${ceiling})`,bypassed="(SELECT COUNT(*) FROM grants g WHERE g.admitted>=w.arrived)",limit=policy.wait.maximumBypasses;
   const waiting=`(NOT (${normal} OR ${forced}) AND ${open} AND (NOT ${fitsMinimum} OR ${soft}=0) AND ${drains})`,patient=`(${item.nowMs}-w.arrived>=${policy.wait.bypassMilliseconds} OR ${bypassed}>=${limit})`;
   const jobs=`CASE WHEN ${normal} THEN ${count} WHEN ${forced} THEN w.minimum ELSE 0 END`,admit=`(${normal} OR ${forced})`;
   const sql=`WITH RECURSIVE
    w AS (SELECT row_number() OVER (ORDER BY CASE WHEN priority='interactive' OR ${item.nowMs}-arrived>=${policy.wait.agingMilliseconds} THEN 0 ELSE 1 END, arrived, id) AS ord, * FROM waiters),
-   step(ord,id,verdict,jobs,reserved,reason,room,load,blocked,admitted,heads) AS (
-    SELECT 0,'','',0,0,'',${room},${load===null?"NULL":load},0,0,NULL
+   step(ord,id,verdict,jobs,reserved,reason,room,load,blocked,admitted,heads,own) AS (
+    SELECT 0,'','',0,0,'',${room},${load===null?"NULL":load},0,0,NULL,${totals.cpu}
     UNION ALL
     SELECT w.ord,w.id,CASE WHEN ${admit} THEN 'admit' ELSE 'wait' END,${jobs},CASE WHEN ${admit} THEN MIN(w.fixed+(${jobs})*w.perjob,${cap}) ELSE 0 END,
      CASE WHEN ${quoted} IS NOT NULL THEN ${quoted} WHEN s.blocked=1 THEN 'queue-order' WHEN ${normal} THEN CASE WHEN ${count}<w.pref THEN 'reduced' ELSE 'fits' END WHEN NOT ${fitsMinimum} THEN 'memory' WHEN ${overrideDue} THEN 'override' WHEN ${soft}=1 THEN '${softReason}' ELSE 'load' END,
@@ -42,7 +43,8 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
      CASE WHEN s.load IS NULL THEN NULL ELSE s.load-(${jobs})*w.cpu END,
      CASE WHEN s.blocked=1 THEN 1 WHEN ${admit} THEN CASE WHEN s.heads IS NOT NULL AND s.heads+1>=${limit} THEN 1 ELSE 0 END WHEN ${waiting} AND ${patient} THEN 1 ELSE 0 END,
      s.admitted+CASE WHEN ${admit} THEN 1 ELSE 0 END,
-     CASE WHEN s.blocked=1 THEN s.heads WHEN ${admit} THEN CASE WHEN s.heads IS NULL THEN NULL ELSE s.heads+1 END WHEN ${waiting} AND NOT ${patient} THEN MAX(COALESCE(s.heads,-1),${bypassed}) ELSE s.heads END
+     CASE WHEN s.blocked=1 THEN s.heads WHEN ${admit} THEN CASE WHEN s.heads IS NULL THEN NULL ELSE s.heads+1 END WHEN ${waiting} AND NOT ${patient} THEN MAX(COALESCE(s.heads,-1),${bypassed}) ELSE s.heads END,
+     s.own+(${jobs})*w.cpu
     FROM step s JOIN w ON w.ord=s.ord+1)
    SELECT id,verdict,jobs,reserved,reason FROM step WHERE ord>0 ORDER BY ord`;
   const decisions=(database.query(sql).all() as {id:string;verdict:"admit"|"wait";jobs:number;reserved:number;reason:HostDecisionV1["reason"]}[]).map(row=>({id:row.id,verdict:row.verdict,jobs:row.jobs,reservedMegabytes:row.reserved,reason:row.reason}));

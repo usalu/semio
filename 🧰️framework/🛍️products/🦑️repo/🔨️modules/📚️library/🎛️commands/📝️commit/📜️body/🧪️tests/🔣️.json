@@ -1,0 +1,163 @@
+{
+ "version": 1,
+ "valid": {
+  "text": "# comment\n🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🧪️add tests\n🚀ship it\n🎆️26🌙️10☀️22📊️metric📃uloc💯️1k\n🔥hot fix\n\n🥅️framework\n🎆️26🌙️10☀️21\n🧰️tool box\n📊️metric📃uloc\nSigned-off-by: someone\n",
+  "expected": [
+   {
+    "label": "🏘️compose✍️sketchpad",
+    "dates": [
+     {
+      "dateLine": "🎆️26🌙️10☀️21",
+      "bullets": [
+       "🧪️add tests",
+       "🚀ship it"
+      ]
+     },
+     {
+      "dateLine": "🎆️26🌙️10☀️22",
+      "bullets": [
+       "🔥hot fix"
+      ]
+     }
+    ]
+   },
+   {
+    "label": "🥅️framework",
+    "dates": [
+     {
+      "dateLine": "🎆️26🌙️10☀️21",
+      "bullets": [
+       "🧰️tool box"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "errors": [
+  {
+   "name": "empty text",
+   "text": "",
+   "message": "commit.body.at-least-one-emoji-bundle"
+  },
+  {
+   "name": "only comments",
+   "text": "# a\n\n# b",
+   "message": "commit.body.at-least-one-emoji-bundle"
+  },
+  {
+   "name": "a date before any scope",
+   "text": "🎆️26🌙️10☀️21\n🚀x",
+   "message": "commit.body.date-section-before-bundle-scope"
+  },
+  {
+   "name": "a bullet before a date section",
+   "text": "🏘️compose✍️sketchpad\n🚀x",
+   "message": "commit.body.expected-yy-mm-dd-date"
+  },
+  {
+   "name": "a non-scope first line",
+   "text": "plain text",
+   "message": "commit.body.expected-emoji-bundle-scope-got"
+  },
+  {
+   "name": "a bundle without a date section",
+   "text": "🏘️compose✍️sketchpad",
+   "message": "commit.body.bundle-needs-at-least-one"
+  },
+  {
+   "name": "a date section without bullets",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21",
+   "message": "commit.body.in-needs-at-least-one"
+  },
+  {
+   "name": "a bullet with a space after a plain emoji",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🚀 x",
+   "message": "commit.body.bullet-must-start-with-then"
+  },
+  {
+   "name": "a reserved bullet emoji",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🔢️x",
+   "message": "commit: 🔢️ is reserved"
+  },
+  {
+   "name": "a path where a scope belongs",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🚀a\na/b",
+   "message": "commit.body.bullet-must-start-with-then"
+  },
+  {
+   "name": "a scope with a reserved emoji",
+   "text": "🏘️compose✍️sketchpad🔀️\n🎆️26🌙️10☀️21\n🚀x",
+   "message": "bundle scope must not include"
+  },
+  {
+   "name": "a second bundle without bullets",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🚀x\n🥅️framework",
+   "message": "commit.body.bundle-needs-at-least-one"
+  },
+  {
+   "name": "a date-like line is read as a new scope, leaving the day empty",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🎆️26🌙️10☀️22x",
+   "message": "commit.body.in-needs-at-least-one"
+  }
+ ],
+ "bodyErrors": [
+  {
+   "name": "a bundle subject",
+   "text": "🐙️ueli🎆️26🌙️10☀️21🔀️\nrest",
+   "message": "must not include the bundle subject"
+  },
+  {
+   "name": "a micro-commit subject",
+   "text": "🐙️ueli🎆️26🌙️10☀️21🚩️5\nrest",
+   "message": "must not include micro-commit subject lines"
+  },
+  {
+   "name": "a metric footer",
+   "text": "🏘️compose✍️sketchpad\n📊️metric📃uloc",
+   "message": "must not include the 📊️metric footer"
+  },
+  {
+   "name": "a per-day metric",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21📊️metric📃uloc",
+   "message": "per-day"
+  },
+  {
+   "name": "a clean body",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🧪️add tests\n🚀ship it\n🎆️26🌙️10☀️22\n🔥hot fix\n\n🥅️framework\n🎆️26🌙️10☀️21\n🧰️tool box\n",
+   "message": null
+  },
+  {
+   "name": "an empty body",
+   "text": "",
+   "message": null
+  }
+ ],
+ "defects": [
+  {
+   "name": "a one-word bullet is a bullet, not a bundle scope",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🧪️tests\n",
+   "expected": [
+    {
+     "label": "🏘️compose✍️sketchpad",
+     "dates": [
+      {
+       "dateLine": "🎆️26🌙️10☀️21",
+       "bullets": [
+        "🧪️tests"
+       ]
+      }
+     ]
+    }
+   ],
+   "message": "",
+   "defect": "📜️body/🟦️.ts:parseCommitBundleBody tests isBundleScopeLine before validating a bullet, so a bullet that is one emoji plus one lowercase word (`🧪️tests`, `🔧️fix`) is read as a new bundle scope and the day fails with \"needs at least one bullet\""
+  },
+  {
+   "name": "a bullet with a space after an emoji carrying a variation selector is refused",
+   "text": "🏘️compose✍️sketchpad\n🎆️26🌙️10☀️21\n🧪️ add tests",
+   "message": "commit.body.bullet-must-start-with-then",
+   "defect": "📜️body/🟦️.ts:validateBulletLine relies on MICRO_COMMIT_BULLET_RE, whose `\\S` can match the variation selector, so `🧪️ add tests` (space after the emoji) is admitted"
+  }
+ ]
+}

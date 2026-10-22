@@ -12,7 +12,7 @@ async fn relay_session_with_tokens(
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
     let instance = Arc::new(Mutex::new(GuestInstanceSlot::Available(instance)));
     let gate = mock.script_pending_job_step(actor, step).await;
-    let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async::Semaphore::new(1)), pool, relay_cancel, 1, ("semio.infer".to_string(), b"request".to_vec()));
+    let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async_sync::Semaphore::new(1)), pool, relay_cancel, 1, ("semio.infer".to_string(), b"request".to_vec()));
     let params = semio_framework_job_worker_authority::BatchJobParams {
         operation: semio_framework_job::OperationId(actor.0),
         generation: semio_framework_job::Generation(1),
@@ -88,7 +88,7 @@ async fn wait_for_cancel_admission(pool: &WorkerPool, mock: &MockGuestRuntime) {
         if mock.cancel_admissions() == 1 {
             return;
         }
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
         pool.submit_at(
             pool.now_ms().saturating_add(1),
             Lane::UserVisible,
@@ -106,7 +106,7 @@ async fn wait_for_quarantine(pool: &WorkerPool, instance: &Arc<Mutex<GuestInstan
         if instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined() {
             return;
         }
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
         pool.submit_at(
             pool.now_ms().saturating_add(1),
             Lane::UserVisible,
@@ -124,7 +124,7 @@ async fn wait_for_available_instance(pool: &WorkerPool, instance: &Arc<Mutex<Gue
         if instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available() {
             return;
         }
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
         pool.submit_at(
             pool.now_ms().saturating_add(1),
             Lane::UserVisible,
@@ -142,7 +142,7 @@ async fn wait_for_release_barrier(pool: &WorkerPool, barrier: &MockJobStepGate) 
         if barrier.is_waiting() {
             return;
         }
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
         pool.submit_at(
             pool.now_ms().saturating_add(1),
             Lane::UserVisible,
@@ -155,8 +155,8 @@ async fn wait_for_release_barrier(pool: &WorkerPool, barrier: &MockJobStepGate) 
     panic!("guest relay did not reach its post-release barrier");
 }
 
-fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, request: &'static [u8]) -> semio_framework_async::oneshot::Receiver<Result<Vec<u8>, PluginHostError>> {
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, request: &'static [u8]) -> semio_framework_async_sync::oneshot::Receiver<Result<Vec<u8>, PluginHostError>> {
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     GuestRelayPoolFuture::spawn_recoverable(
         pool,
         Lane::UserVisible,
@@ -169,7 +169,7 @@ fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, requ
 }
 
 async fn pool_timer_barrier(pool: &WorkerPool) {
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit_at(
         pool.now_ms().saturating_add(1),
         Lane::Maintenance,

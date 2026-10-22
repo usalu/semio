@@ -36,7 +36,7 @@ use semio_framework_value::{DslValue, ValueError};
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::kernel::{HybridLogicalTimestamp, InvocationResult};
-use store::{Mutation, MutationDiff};
+use store::{ColdMutation, Mutation, MutationDiff};
 use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
@@ -46,24 +46,25 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
-use semio_framework_plugin_window_config::{WindowConfigMutation, WindowConfigSnapshot};
+use semio_framework_plugin_window_config::WindowConfigMutation;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_ui_contract::*;
 use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger};
-use std::collections::BTreeMap;
 use std::sync::Arc;
 #[doc(hidden)]
 #[path="🖐️gesture/🎟️issuer/🦀️.rs"]
 pub mod gesture_issuer;
+#[path="🪞️window-preview/🦀️.rs"]
+pub mod window_preview;
 use crate::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
 /// is skipped); the displaced intermediate joins `displaced`, which the caller retires through its store, never plainly.
-fn fold_leaf<P: Clone, M: Mutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
+fn fold_leaf<P: Clone, M: Mutation<P> + ColdMutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
     let base: &P = running.as_deref().unwrap_or(committed.as_ref());
     let outcome = leaf.diff(base);
     let applicable = outcome.is_applicable(protocol::MergePolicy::default());
@@ -197,7 +198,7 @@ pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = 
     pub pending_config_aliases: Option<Vec<Arc<C>>>,
     pub config_alias_retirement: Option<ToolOriginalAliasBatch<C>>,
     pub refold_owed: bool,
-    pub window_overlays: BTreeMap<String, WindowConfigSnapshot>,
+    pub window_preview: window_preview::WindowPreviewRun,
     pub ingress: Option<ToolTag>,
     pub operations: Vec<(u64, ToolTag)>,
     pub tick: u64,
@@ -224,7 +225,7 @@ impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, 
             pending_config_aliases: None,
             config_alias_retirement: None,
             refold_owed: false,
-            window_overlays: BTreeMap::new(),
+            window_preview: Default::default(),
             ingress: None,
             operations: Vec::new(),
             tick: 0,
@@ -234,7 +235,7 @@ impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, 
     }
 }
 
-impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static> ToolMachineRuntime<P, M, C, CM> {
+impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, CM: Mutation<C> + ColdMutation<C> + Clone + 'static> ToolMachineRuntime<P, M, C, CM> {
     /// 🔎️ The open typing runs.
     pub fn typing(&self) -> &TypingLedger<M> {
         &self.typing
@@ -284,7 +285,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
         self.operations.push((operation, tag));
     }
 
-    pub(crate) fn operation_tag(&self,operation:u64)->Option<&ToolTag>{self.operations.iter().find(|(owner,_)|*owner==operation).map(|(_,tag)|tag)}
+    pub fn operation_tag(&self,operation:u64)->Option<&ToolTag>{self.operations.iter().find(|(owner,_)|*owner==operation).map(|(_,tag)|tag)}
 
     pub fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
         let index = self.operations.iter().position(|(owner, _)| *owner == operation)?;
@@ -328,12 +329,6 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
     /// 🪞️ The app config every render seam reads: committed with every held press's config mutations, else `committed`.
     pub fn config_overlay_or<'a>(&'a self, committed: &'a Arc<C>) -> &'a Arc<C> {
         self.config_overlay.as_ref().unwrap_or(committed)
-    }
-
-    /// 🪞️ The window config a render seam reads for `committed`'s window: the held presses' window-config mutations folded
-    /// on that very base, else `committed` (a base that moved is refolded on the next refresh).
-    pub fn window_config_overlay_or<'a>(&'a self, committed: &'a WindowConfigSnapshot) -> &'a WindowConfigSnapshot {
-        self.window_overlays.get(committed.window_id()).filter(|overlay| overlay.window_kind_id() == committed.window_kind_id() && overlay.generation() == committed.generation()).unwrap_or(committed)
     }
 
     /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the

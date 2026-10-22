@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -57,7 +58,7 @@ function digestHex(hex: string): { size: number; digest: string } {
 /** 📥️ Runs the standalone codec's `project` subcommand and turns its raw pixel hex payload into the
  *  profile's own size+digest projection — never raw pixel bytes past this function. */
 function readPng(path: string): PngDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`png-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   const raw = JSON.parse(result.stdout) as RawDoc;
   const { pixelsHex, ...rest } = raw;
@@ -145,7 +146,7 @@ else:
 `;
 
 function chunkRun(paths: readonly string[]): unknown {
-  const result = spawnSync("python3", ["-c", CHUNK_READER, ...paths], { encoding: "utf8" });
+  const result = runToolSyncV1("python", ["-c", CHUNK_READER, ...paths], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`pillow chunk reader failed: ${result.stderr}`);
   return JSON.parse(result.stdout);
 }

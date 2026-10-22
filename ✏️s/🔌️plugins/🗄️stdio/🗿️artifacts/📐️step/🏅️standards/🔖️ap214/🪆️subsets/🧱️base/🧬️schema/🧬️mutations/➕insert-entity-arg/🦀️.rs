@@ -17,6 +17,15 @@ pub struct InsertEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity-arg", kind: "insert-entity-arg", record: "InsertEntityArg" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepMutation> for InsertEntityArg {
     fn diff(&self, _base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { id, arg_index, value } = self;
         protocol::MutationOutcome::new(StepDiff {
@@ -30,12 +39,6 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntityArg {
     fn inverse(&self, _base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         let Self { id, arg_index, .. } = self;
         Ok(vec![StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, arg_index: *arg_index })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

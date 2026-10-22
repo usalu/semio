@@ -1,0 +1,631 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "sorted, deduplicated and always carrying the required files",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/b/Z.rs",
+       "{workspaceRoot}/a/a.rs",
+       "{workspaceRoot}/a/a.rs"
+      ]
+     }
+    ],
+    "engineInputs": [
+     "{workspaceRoot}/A.ts"
+    ]
+   },
+   "paths": [
+    "A.ts",
+    "a/a.rs",
+    "b/Z.rs",
+    "nx.json",
+    "package.json",
+    "📋️project.json"
+   ],
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "the same path from a task and the engine is kept once",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     }
+    ],
+    "engineInputs": [
+     "{workspaceRoot}/x.rs"
+    ]
+   },
+   "paths": [
+    "nx.json",
+    "package.json",
+    "x.rs",
+    "📋️project.json"
+   ],
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a task with no unit makes the whole request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "aggregate",
+      "inputs": []
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an aggregate that lists inputs makes the request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     },
+     {
+      "kind": "aggregate",
+      "inputs": [
+       "{workspaceRoot}/y.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an unclassified task makes the request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     },
+     {
+      "kind": "other",
+      "inputs": []
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an unresolved input list makes the request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     },
+     {
+      "kind": "unit",
+      "inputs": null
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an input that is not a workspace path makes the request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs",
+       "default"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an engine input that is not a workspace path makes the request fall back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     }
+    ],
+    "engineInputs": [
+     "named"
+    ]
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a glob star falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/crate/*.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a glob question mark falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/crate/?.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a brace group falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/crate/{a,b}.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a character class falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/crate/[ab].rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a negation falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/!crate/a.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a parent segment is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/../outside.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an empty path is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an empty segment is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/a//b.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a dot segment is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/a/./b.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a backslash is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/a\\b.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a colon is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/C:b.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a NUL byte is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/a\u0000b.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a trailing slash is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/a/"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a path of exactly 256 characters is kept",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "nx.json",
+    "package.json",
+    "📋️project.json"
+   ],
+   "error": "",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a path of 257 characters is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Original literal Native Source path required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "exactly the maximum of distinct inputs is kept",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/seed.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": {
+    "prefix": "f",
+    "suffix": ".rs",
+    "count": 8188
+   },
+   "count": 8192
+  },
+  {
+   "id": "one more distinct input than the maximum falls back",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/seed.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "",
+   "expand": {
+    "prefix": "f",
+    "suffix": ".rs",
+    "count": 8189
+   },
+   "count": null
+  },
+  {
+   "id": "a request with another version is refused",
+   "request": {
+    "version": 2,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an extra property is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     }
+    ],
+    "engineInputs": [],
+    "extra": 1
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "no tasks are refused",
+   "request": {
+    "version": 1,
+    "tasks": [],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a missing engine list is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/x.rs"
+      ]
+     }
+    ]
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "a task with an unknown kind is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "wild",
+      "inputs": []
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  },
+  {
+   "id": "an input longer than 512 characters is refused",
+   "request": {
+    "version": 1,
+    "tasks": [
+     {
+      "kind": "unit",
+      "inputs": [
+       "{workspaceRoot}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+     }
+    ],
+    "engineInputs": []
+   },
+   "paths": null,
+   "error": "Closed selected Rust Native request required",
+   "expand": null,
+   "count": null
+  }
+ ]
+}

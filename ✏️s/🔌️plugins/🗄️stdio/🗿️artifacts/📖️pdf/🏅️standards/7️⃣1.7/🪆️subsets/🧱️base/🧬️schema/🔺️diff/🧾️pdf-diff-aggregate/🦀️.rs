@@ -209,16 +209,9 @@ fn absorb_option<T>(slot: &mut Option<T>, other: Option<T>, merge: impl FnOnce(T
     };
 }
 
-impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<PdfSnapshot> {
-        validate_pdf_diff(self, base)?;
-        let mut next = apply_pdf_diff_unchecked(self, base);
-        let replacements: Vec<_> = self.admitted_stream_roles.iter().flat_map(|roles| roles.modified.iter().chain(&roles.added)).map(|item| item.value.clone()).collect();
-        validate_role_transition(&base.objects,&next.objects,&base.admitted_stream_roles,&next.admitted_stream_roles,&replacements).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?;
-        if self.graph_edit || self.admitted_stream_roles.is_some() { carry_graph_edit(base, &mut next).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?; }
-        Ok(next)
-    }
+impl MutationDiff<PdfSnapshot> for PdfDiff {}
 
+impl protocol::ColdMutationDiff<PdfSnapshot> for PdfDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce absorb (`## Absorb` contract).
     /// Scalars and tri-states: LWW. Triples: composed via their own key/index-transported absorb.
     fn absorb(&mut self, other: Self) {
@@ -264,9 +257,26 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
         });
         self.graph_edit = (self.graph_edit || other.graph_edit) && (self.objects.is_some() || self.trailer.is_some());
     }
+
+    fn apply(&self, unpublished: &mut PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_pdf_diff(self, base)?;
+        let mut next = apply_pdf_diff_unchecked(self, base);
+        let replacements: Vec<_> = self.admitted_stream_roles.iter().flat_map(|roles| roles.modified.iter().chain(&roles.added)).map(|item| item.value.clone()).collect();
+        validate_role_transition(&base.objects,&next.objects,&base.admitted_stream_roles,&next.admitted_stream_roles,&replacements).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?;
+        if self.graph_edit || self.admitted_stream_roles.is_some() { carry_graph_edit(base, &mut next).map_err(|message| MutationApplyError::new("mutation.apply.stream-role-required", message))?; }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
+    fn is_empty(&self) -> bool {
+        self == &PdfDiff::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, built lane by lane from `base`: every lane this diff names is set back to what `base` holds, so
     /// the negative diff applied after `self` restores `base`. A graph edit's negative diff is a graph edit too.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
@@ -316,10 +326,6 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
             graph_edit: self.graph_edit,
             admitted_stream_roles,
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &PdfDiff::default()
     }
 }
 //#endregion 🔖️Diff

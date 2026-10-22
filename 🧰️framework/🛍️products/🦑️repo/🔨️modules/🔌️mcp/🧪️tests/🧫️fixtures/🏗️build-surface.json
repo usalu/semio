@@ -26,6 +26,10 @@
     "remote_execution_status",
     "run",
     "run_many",
+    "session_close",
+    "session_list",
+    "session_open",
+    "session_status",
     "show_project",
     "show_projects",
     "show_targets",
@@ -544,6 +548,118 @@
         "test_level": "huge"
       },
       "valid": false
+    },
+    {
+      "id": "session-open",
+      "tool": "session_open",
+      "arguments": {},
+      "valid": true,
+      "argv": [
+        "session",
+        "open",
+        "--json"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "session-open-weight",
+      "tool": "session_open",
+      "arguments": {
+        "weight": 3,
+        "agent": "planner"
+      },
+      "valid": true,
+      "argv": [
+        "session",
+        "open",
+        "--json",
+        "--weight=3"
+      ],
+      "environment": {},
+      "agent": "planner"
+    },
+    {
+      "id": "session-open-weight-too-heavy",
+      "tool": "session_open",
+      "arguments": {
+        "weight": 17
+      },
+      "valid": false
+    },
+    {
+      "id": "session-status",
+      "tool": "session_status",
+      "arguments": {
+        "id": "a3q5dv7obc"
+      },
+      "valid": true,
+      "argv": [
+        "session",
+        "status",
+        "a3q5dv7obc",
+        "--json"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "session-status-bad-id",
+      "tool": "session_status",
+      "arguments": {
+        "id": "A-1"
+      },
+      "valid": false
+    },
+    {
+      "id": "session-list-all",
+      "tool": "session_list",
+      "arguments": {
+        "all": true
+      },
+      "valid": true,
+      "argv": [
+        "session",
+        "list",
+        "--json",
+        "--all"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "session-close-dead",
+      "tool": "session_close",
+      "arguments": {
+        "dead": true
+      },
+      "valid": true,
+      "argv": [
+        "session",
+        "close",
+        "--json",
+        "--dead"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "session-close-one",
+      "tool": "session_close",
+      "arguments": {
+        "id": "a3q5dv7obc",
+        "force": true
+      },
+      "valid": true,
+      "argv": [
+        "session",
+        "close",
+        "a3q5dv7obc",
+        "--json",
+        "--force"
+      ],
+      "environment": {},
+      "agent": ""
     }
   ]
 }

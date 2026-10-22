@@ -30,7 +30,7 @@ test("artifact verification reruns for semantic provider, fixture, DDL and share
   const provider=JSON.parse(readFileSync("../../domain/provider.json","utf8"));const fixture=JSON.parse(readFileSync("../../🧫️fixtures/fixture.json","utf8"));const control=JSON.parse(readFileSync("../../../shared/control.json","utf8"));
   console.log(JSON.stringify({execution:count,value:provider.value,label:fixture.label,limit:control.limit,sql:readFileSync("../../domain/schema.sql","utf8")}));
   `);
-    const authored = { name: "artifact-source-probe", tags: ["role:artifact", "language:typescript"], targets: { test: { executor: "nx:run-commands", cache: true, inputs: fixture.declaredInputs, outputs: [], options: { command: "bun ./📜️script.ts test" } } } };
+    const authored = { name: "artifact-source-probe", tags: ["role:artifact", "language:typescript"], targets: { test: { executor: "nx:run-commands", cache: true, inputs: fixture.declaredInputs, outputs: [], options: { command: "repo ./📜️script.ts test" } } } };
     const config = `${fixture.packageRoot}/📋️project.json`; put(config, authored);
     const nodes = await plugin.createNodesV2[1]([config], {}, { workspaceRoot: root });
     const project = nodes.flatMap(([, value]) => Object.values(value.projects)).find(value => value.name === authored.name)!;

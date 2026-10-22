@@ -41,7 +41,7 @@ use semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState;
 use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework_plugin_job::reserved_jobs::HISTORY_ACTION_IDS;
 use semio_framework::{ActionKind, ViewModel, REVERT_TO_COMMAND_ACTION_ID};
-use store::{MemberFactory, SpaceMember};
+use store::{MemberFactory, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_decl_app::is_time_travel_action_id;
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 

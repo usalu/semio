@@ -8,6 +8,9 @@ import{randomBytes}from"node:crypto";
 import{acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{setTimeout as sleepV1}from"node:timers/promises";
+import{resolveLanguageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import{CATALOG_LANGUAGES_V1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 📐️ Physical initial headroom is independent from persistent logical compiler charges. */
@@ -16,6 +19,20 @@ type WriterScope={root:string;control:ResourceLeaseControl;lifetime:RetainedOper
 const writers=new AsyncLocalStorage<WriterScope>(),owners=new WeakMap<NativeStorageReservationV1,WriterScope>();
 function writerOperation<T>(scope:WriterScope,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{if(!scope.live)throw Error("Original compiler writer scope retired");return withRetainedOperationV1(scope.lifetime,control,body);}
 function workspaceOwner(storage:NativeStorageReservationV1,control:ResourceLeaseControl):WriterScope{requireIssuedResourceControlV1(control);requireNativeStorageReservationV1(storage,control);const owner=owners.get(storage);if(!owner?.live||storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace writer lifetime retired");requireNativeStorageReservationV1(storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);return owner;}
+type HeadroomAdmissionV1<T>=Readonly<{admitted:true;value:T}>|Readonly<{admitted:false;availableBytes:number}>;
+/** ⏳️ Queues a short image with progress and cancellation instead of failing while other compiles or maintenance still free it; only an impossible or long-expired requirement refuses. */
+async function admitCompilerHeadroomV1<T>(image:Pick<NativeImageStorageV1,"maximumPhysicalBytes">,control:ResourceLeaseControl,requiredBytes:number,request:Readonly<{wait:boolean}>,attempt:()=>Promise<HeadroomAdmissionV1<T>>):Promise<T>{
+ const pace=schema.definitions.Wait.const,language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,start=Date.now(),gib=(bytes:number)=>(bytes/1073741824).toFixed(1),format=(key:"waiting"|"refused",availableBytes:number,seconds:number)=>pace.messages[language][key].replace("{seconds}",String(seconds)).replace("{available}",gib(availableBytes)).replace("{required}",gib(requiredBytes));
+ let interval=pace.minimumMilliseconds,reported=-pace.reportMilliseconds;
+ for(;;){
+  const outcome=await attempt();if(outcome.admitted)return outcome.value;
+  const elapsed=Date.now()-start;
+  if(!request.wait||requiredBytes>image.maximumPhysicalBytes||elapsed>=pace.maximumMilliseconds)throw Error(format("refused",outcome.availableBytes,Math.round(elapsed/1000)));
+  const remaining=checkResourceLeaseControl(control);await control.publish({resource:schema.definitions.Protocol.const.resource+":headroom",mode:"shared",elapsedMs:elapsed});
+  if(elapsed-reported>=pace.reportMilliseconds){reported=elapsed;process.stderr.write(format("waiting",outcome.availableBytes,Math.round(elapsed/1000))+"\n");}
+  await sleepV1(Math.min(interval,remaining??interval),undefined,{signal:control.signal}).catch(error=>{control.signal.throwIfAborted();throw error;});interval=Math.min(interval*2,pace.maximumIntervalMilliseconds);
+ }
+}
 /** 🔒️ Serializes cold compiler growth and maintenance while artifact readers retain their separate custody. */
 export async function withCompilerWriterCustodyV1<T>(image:Pick<NativeImageStorageV1,"root"|"maximumPhysicalBytes"|"recheck">,leaseDirectory:string,control:ResourceLeaseControl,request:Readonly<{version:1;wait:boolean;mode?:"exclusive"|"shared"}>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlV1(control);if(validateJsonSchemaSubset(schema.definitions.WriterRequest,request,schema).length)throw Error("Closed compiler writer request required");checkResourceLeaseControl(control);const root=resolve(image.root),current=writers.getStore();if(current?.root===root)return writerOperation(current,control,body);await image.recheck();const options={directory:leaseDirectory,resource:schema.definitions.Protocol.const.resource+":"+root,mode:(request.mode??"exclusive") as "exclusive"|"shared",...(request.mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),control,signal:control.signal},lease=request.wait?await acquireQueuedResourceLease(options):await acquireResourceLease({...options,timeoutMs:0});
@@ -23,7 +40,7 @@ export async function withCompilerWriterCustodyV1<T>(image:Pick<NativeImageStora
 }
 /** 🏪️ Retains writer exclusion through the actual callback and refuses before compiler-side writes. */
 export function withCompilerInitialHeadroomV1<T>(image:Pick<NativeImageStorageV1,"root"|"maximumPhysicalBytes"|"recheck">,leaseDirectory:string,control:ResourceLeaseControl,requiredBytes:number,request:Readonly<{version:1;wait:boolean}>,body:(control:ResourceLeaseControl)=>Promise<T>,recover?:()=>Promise<void>):Promise<T>{
- return withCompilerWriterCustodyV1(image,leaseDirectory,control,request,async actual=>{let fs=await nativeStatfsV1(image.root,{bigint:true}),availableBytes=Number(fs.bavail*fs.bsize);checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();fs=await nativeStatfsV1(image.root,{bigint:true});availableBytes=Number(fs.bavail*fs.bsize);}checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})){throw Error("Insufficient physical compiler initial headroom");}return body(actual);});
+ return admitCompilerHeadroomV1(image,control,requiredBytes,request,()=>withCompilerWriterCustodyV1(image,leaseDirectory,control,request,async(actual):Promise<HeadroomAdmissionV1<T>>=>{let fs=await nativeStatfsV1(image.root,{bigint:true}),availableBytes=Number(fs.bavail*fs.bsize);checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();fs=await nativeStatfsV1(image.root,{bigint:true});availableBytes=Number(fs.bavail*fs.bsize);}checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes}))return{admitted:false,availableBytes};return{admitted:true,value:await body(actual)};}));
 }
 
 import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -39,8 +56,12 @@ export function withCompilerWorkspaceWriteV1<T>(storage:NativeStorageReservation
 /** 🏪️ Admits free headroom under a SHARED writer custody, so concurrent compiles never wait for each other, and escalates to an exclusive custody only to recover missing headroom; the body then runs shared. Cargo compiles use this; maintenance keeps the exclusive custody of `withCompilerInitialHeadroomV1`. */
 export async function withCompilerSharedHeadroomV1<T>(image:Pick<NativeImageStorageV1,"root"|"maximumPhysicalBytes"|"recheck">,leaseDirectory:string,control:ResourceLeaseControl,requiredBytes:number,request:Readonly<{version:1;wait:boolean}>,body:(control:ResourceLeaseControl)=>Promise<T>,recover?:()=>Promise<void>,measure?:()=>Promise<number>):Promise<T>{
  const available=measure??(async():Promise<number>=>{const fs=await nativeStatfsV1(image.root,{bigint:true});return Number(fs.bavail*fs.bsize);});
- const enough=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"shared"},async actual=>{checkResourceLeaseControl(actual);return compilerHeadroomAdmittedV1({version:1,availableBytes:await available(),requiredBytes});});
- if(!enough)await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"exclusive"},async actual=>{checkResourceLeaseControl(actual);let availableBytes=await available();if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();availableBytes=await available();}checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes}))throw Error("Insufficient physical compiler initial headroom");});
+ await admitCompilerHeadroomV1(image,control,requiredBytes,request,async():Promise<HeadroomAdmissionV1<void>>=>{
+  let availableBytes=0;const enough=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"shared"},async actual=>{checkResourceLeaseControl(actual);availableBytes=await available();return compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes});});
+  if(enough)return{admitted:true,value:undefined};
+  const recovered=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"exclusive"},async actual=>{checkResourceLeaseControl(actual);availableBytes=await available();if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();availableBytes=await available();}checkResourceLeaseControl(actual);return compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes});});
+  return recovered?{admitted:true,value:undefined}:{admitted:false,availableBytes};
+ });
  return withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"shared"},body);
 }
 /** 🎟️ Like `withCompilerWorkspaceWriteV1` for compilers that only grow private lanes and the content-addressed cache: concurrent compiles of one image hold the writer custody together. */

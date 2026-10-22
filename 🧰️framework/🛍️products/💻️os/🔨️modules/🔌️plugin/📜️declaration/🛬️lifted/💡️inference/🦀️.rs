@@ -75,6 +75,7 @@ impl From<ArtifactInferencePayloadContract> for semio_framework::InferencePayloa
 
 /// ⚠️ Structured failure returned by a type-erased inference execution boundary.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct ArtifactInferenceExecutionError {
     pub code: &'static str,
     pub message: String,

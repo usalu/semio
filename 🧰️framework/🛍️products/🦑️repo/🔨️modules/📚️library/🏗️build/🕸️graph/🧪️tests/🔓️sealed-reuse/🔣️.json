@@ -12,6 +12,10 @@
     "loadBuildGraphAttemptV1": {
       "start": "async function loadBuildGraphAttemptV1(",
       "end": "async function readSealedBuildGraphV1("
+    },
+    "generationHostV1": {
+      "start": "function generationHostV1(",
+      "end": "/** 🔍️ Names the first difference between a generation graph"
     }
   },
   "order": [
@@ -44,6 +48,12 @@
       "function": "loadBuildGraphAttemptV1",
       "before": "readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl))",
       "after": "await rename(temporary,path)"
+    },
+    {
+      "name": "recorded facts are verified only after the structural source parsers are registered",
+      "function": "generationHostV1",
+      "before": "await analysesPrepared();",
+      "after": "observationV1.observationsHold(plain,64"
     }
   ],
   "present": [

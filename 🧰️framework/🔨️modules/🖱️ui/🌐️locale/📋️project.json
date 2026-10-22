@@ -11,7 +11,7 @@
     "test-contract": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts test contract",
+        "command": "repo ./📜️script.ts test contract",
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",
         "forwardAllArgs": true
       },
@@ -31,7 +31,7 @@
     "check-types": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts check types",
+        "command": "repo ./📜️script.ts check types",
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",
         "forwardAllArgs": true
       },

@@ -17,7 +17,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔲️pixels",
-        "command": "bun ./📜️script.ts test typescript",
+        "command": "repo ./📜️script.ts test typescript",
         "forwardAllArgs": true
       },
       "inputs": [

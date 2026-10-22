@@ -35,7 +35,7 @@
       "expectedAvailable": 140
     },
     {
-      "id": "unknown-retained",
+      "id": "mixed-regular-metadata-retained",
       "available": 80,
       "minimum": 120,
       "busy": [],
@@ -43,9 +43,9 @@
         "a"
       ],
       "retire": [
-        "b"
+        "a"
       ],
-      "expectedAvailable": 140
+      "expectedAvailable": 130
     },
     {
       "id": "all-busy",
@@ -102,6 +102,30 @@
         "a"
       ],
       "expectedAvailable": 130
+    },
+    {
+      "id": "unsafe-namespace-retained",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [],
+      "unsafe": [
+        "a"
+      ],
+      "retire": [
+        "b"
+      ],
+      "expectedAvailable": 140
+    },
+    {
+      "id": "actual-image-reader-defers",
+      "available": 80,
+      "minimum": 120,
+      "busy": [],
+      "unknown": [],
+      "imageBusy": true,
+      "retire": [],
+      "expectedAvailable": 80
     }
   ],
   "native": {
@@ -110,7 +134,8 @@
     "leafBytes": 1048576,
     "requiredRecoveryBytes": 524288,
     "requestMinimum": 0,
-    "requestMaximum": 33554432
+    "requestMaximum": 33554432,
+    "retainedSibling": "publication.json"
   },
   "ancestorCases": [
     {
@@ -137,5 +162,10 @@
       "accepted": false,
       "checks": 4
     }
-  ]
+  ],
+  "ownReader": {
+    "id": "same-receiver-accepted-reader",
+    "refusal": "Cannot close Native image inside its cleanup reader",
+    "groupCalls": 0
+  }
 }

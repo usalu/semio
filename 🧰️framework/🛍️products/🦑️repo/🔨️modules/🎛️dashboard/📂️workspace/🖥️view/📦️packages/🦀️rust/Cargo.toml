@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-repo-dashboard-source-view"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-source-view"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 65536
+maxSourceFiles = 16
+maxActiveLines = 1500
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-filesystem-workspace = { path = "../../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
+dashboard_labels = { path = "../../../../🖥️terminal/🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_preferences = { path = "../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
+dashboard_feedback = { path = "../../../../🖥️terminal/📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
+ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
+semio-framework-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-framework-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-framework-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-ui-tui-widgets = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
+semio-framework-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

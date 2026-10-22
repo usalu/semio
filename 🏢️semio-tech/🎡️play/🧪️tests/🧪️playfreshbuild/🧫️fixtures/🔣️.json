@@ -29,7 +29,7 @@
   },
   "driver": {
     "target": "release",
-    "command": "bun ./📜️script.ts release",
+    "command": "repo ./📜️script.ts release",
     "generationEnvironment": "SEMIO_NATIVE_BUILD_GENERATION",
     "generationPrefix": "f",
     "owner": "buildReleasePipelineV1",
@@ -99,7 +99,7 @@
   ],
   "release": {
     "target": "build",
-    "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+    "command": "repo ./🔨️modules/📦️site/📜️script.ts build",
     "removedTargets": [
       "catalog-release",
       "prepare-release"
@@ -131,7 +131,7 @@
       "puzzle-wasm"
     ],
     "verifyTarget": "release-verify",
-    "verifyCommand": "bun ./🔨️modules/📦️site/📜️script.ts verify"
+    "verifyCommand": "repo ./🔨️modules/📦️site/📜️script.ts verify"
   },
   "arguments": [
     "run",

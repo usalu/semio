@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ wav TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import { resolve } from "node:path";
@@ -8,7 +8,7 @@ const command = process.argv[2] ?? "test";
 if (command === "test" && process.argv.slice(3).some((argument) => argument !== "--")) {
   throw new Error("This artifact test target runs its complete registered suite and accepts no test selectors.");
 }
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-wav", { bundleRuntime: "bun", suites: ["🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] ,afterTest:async original=>{
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-wav", { bundleRuntime: "runtime", suites: ["🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] ,afterTest:async original=>{
   const mutations = resolve(import.meta.dir, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
   const test = resolve(mutations, "🧪️tests/🟦️.ts");
   const audioEdit = resolve(import.meta.dir, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎮️commands/🔊️edit-audio");

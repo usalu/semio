@@ -1,0 +1,772 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "a clean bilingual catalog",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"version\": 1, \"languages\": [\"en\", \"de\"], \"messages\": {\"a\": {\"en\": \"A {x}\", \"de\": \"A {x}\"}}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "german first",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"languages\": [\"de\", \"en\"]}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "languages-not-en-de",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "upper case languages",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"nested\": {\"languages\": [\"EN\", \"DE\"]}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "languages-not-en-de",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/nested"
+    }
+   ]
+  },
+  {
+   "name": "implementation languages are not texts",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"languages\": [\"ts\", \"go\", \"rs\"]}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "a leaf without german",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"labels\": {\"k\": {\"en\": \"A\"}}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "leaf-missing-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/labels/k"
+    }
+   ]
+  },
+  {
+   "name": "a leaf with a third language",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"k\": {\"en\": \"A\", \"de\": \"A\", \"fr\": \"A\"}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "leaf-missing-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/k"
+    }
+   ]
+  },
+  {
+   "name": "a leaf with different placeholders",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"k\": {\"en\": \"A {x}\", \"de\": \"A {y}\"}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "placeholder-mismatch",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/k"
+    }
+   ]
+  },
+  {
+   "name": "a table with a missing key and a placeholder drift",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"t\": {\"en\": {\"a\": \"A {x}\", \"b\": \"B\"}, \"de\": {\"a\": \"A\", \"c\": \"C\"}}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "placeholder-mismatch",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/t/a"
+    },
+    {
+     "rule": "table-key-mismatch",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/t/b"
+    },
+    {
+     "rule": "table-key-mismatch",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "detail": "/t/c"
+    }
+   ]
+  },
+  {
+   "name": "a table that agrees",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"t\": {\"en\": {\"a\": \"A {x}\", \"n\": {\"b\": \"B\"}}, \"de\": {\"a\": \"A {x}\", \"n\": {\"b\": \"B\"}}}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "language keys of one other object are not leaves",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"k\": {\"en\": \"A\", \"de\": \"A\", \"other\": 1}}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "invalid json is skipped",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "an english fallback",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "const l = value ?? \"en\";\nconst m = value||'en';\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "1:en-fallback"
+    },
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "2:en-fallback"
+    }
+   ]
+  },
+  {
+   "name": "the first offered language",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.mjs",
+     "text": "return languages[0]!;\nreturn protocol.languages [ 0 ];\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.mjs",
+     "detail": "1:first-language"
+    },
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.mjs",
+     "detail": "2:first-language"
+    }
+   ]
+  },
+  {
+   "name": "a german-or-english ternary",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "return v.startsWith(\"de\")?\"de\":\"en\";\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "1:de-or-en"
+    }
+   ]
+  },
+  {
+   "name": "the dashboard locale",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "const n = [\"SEMIO_DASHBOARD_LOCALE\", \"LANG\"];\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "1:dashboard-locale"
+    }
+   ]
+  },
+  {
+   "name": "a returned english",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "function f() { return \"en\"; }\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "1:en-return"
+    }
+   ]
+  },
+  {
+   "name": "an assumed language within its allowance",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "const l = value ?? \"en\";\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 1,
+    "defaults": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 1
+    }
+   },
+   "expected": []
+  },
+  {
+   "name": "assumed languages above their allowance are all named",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "const l = value ?? \"en\";\nreturn \"en\";\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 1,
+    "defaults": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 1
+    }
+   },
+   "expected": [
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "1:en-fallback"
+    },
+    {
+     "rule": "default-language",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "2:en-return"
+    }
+   ]
+  },
+  {
+   "name": "an assumed-language allowance above the lines",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "export const a = 1;\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 2,
+    "defaults": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 2
+    }
+   },
+   "expected": [
+    {
+     "rule": "allowance-stale",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "defaults allowed=2 actual=0"
+    }
+   ]
+  },
+  {
+   "name": "an assumed-language allowance of a file that is gone",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/b.ts",
+     "text": "export const a = 1;\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 1,
+    "defaults": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/gone.ts": 1
+    }
+   },
+   "expected": [
+    {
+     "rule": "allowance-stale",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/gone.ts",
+     "detail": "defaults allowed=1 actual=0"
+    }
+   ]
+  },
+  {
+   "name": "an assumed-language ceiling that grew",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "const l = value ?? \"en\";\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 1
+    }
+   },
+   "expected": [
+    {
+     "rule": "ceiling-grown",
+     "path": "allowlist",
+     "detail": "defaults ceiling=0 total=1"
+    }
+   ]
+  },
+  {
+   "name": "comments never count",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "// value ?? \"en\"\n/* languages[0] */\n * SEMIO_DASHBOARD_LOCALE\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "the law's own directory is exempt from the default scan",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🟦️.ts",
+     "text": "const x = /\\?\\?\\s*[\"']en[\"']/u; value ?? \"en\";\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "an exact allowance",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.log(\"Hello brave world\");\nthrow new Error(`Unknown ${name} here`);\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 2,
+    "files": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 2
+    },
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "a literal above its allowance",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.error('Done with it');\nprocess.stderr.write(\"two words\\n\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 1,
+    "files": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 1
+    },
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "prose-literal",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "allowed=1 actual=2"
+    }
+   ]
+  },
+  {
+   "name": "a file that is not listed holds none",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "throw Error(\"Required thing missing\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "prose-literal",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "allowed=0 actual=1"
+    }
+   ]
+  },
+  {
+   "name": "an allowance above the literals",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.log(\"Only one here\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 3,
+    "files": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 3
+    },
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "allowance-stale",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "detail": "allowed=3 actual=1"
+    }
+   ]
+  },
+  {
+   "name": "an allowance of a file that is gone",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "export const a = 1;\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 2,
+    "files": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/gone.ts": 2
+    },
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "allowance-stale",
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/gone.ts",
+     "detail": "allowed=2 actual=0"
+    }
+   ]
+  },
+  {
+   "name": "a ceiling that grew",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.log(\"Hello brave world\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts": 1
+    },
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": [
+    {
+     "rule": "ceiling-grown",
+     "path": "allowlist",
+     "detail": "ceiling=0 total=1"
+    }
+   ]
+  },
+  {
+   "name": "code, identifiers and single words are not prose",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.log(\"ok\");\nthrow Error(\"E_CODE_ONE\");\nthrow new Error(`${a}`);\nconsole.log(\"[tag] x\");\nconsole.log(\"a=b c=d\");\nconsole.log(\"{\\\"a\\\": 1}\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "the call must start the literal",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.ts",
+     "text": "console.log(message, \"two words here\");\nconst x = format(\"two words here\");\n"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  },
+  {
+   "name": "tests and other json are not scanned for prose",
+   "sources": [
+    {
+     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/x/a.json",
+     "text": "{\"message\": \"two words here\"}"
+    }
+   ],
+   "allowlist": {
+    "version": 1,
+    "ceiling": 0,
+    "files": {},
+    "defaultsCeiling": 0,
+    "defaults": {}
+   },
+   "expected": []
+  }
+ ],
+ "prose": [
+  {
+   "text": "console.log(\"Hello world\");",
+   "count": 1
+  },
+  {
+   "text": "console.log('Hello world'); console.error(\"Another line\");",
+   "count": 2
+  },
+  {
+   "text": "throw new Error(\"Original thing required\");",
+   "count": 1
+  },
+  {
+   "text": "throw Error(\"Original thing required\");",
+   "count": 1
+  },
+  {
+   "text": "Error(\"single\")",
+   "count": 0
+  },
+  {
+   "text": "process.stdout.write(\"Two words\");",
+   "count": 1
+  },
+  {
+   "text": "const a = 1; // console.log(\"Hello world\");",
+   "count": 1
+  },
+  {
+   "text": "  // console.log(\"Hello world\");",
+   "count": 0
+  },
+  {
+   "text": "console.log(`Total ${count} files checked`);",
+   "count": 1
+  },
+  {
+   "text": "console.log(`${a} ${b}`);",
+   "count": 0
+  },
+  {
+   "text": "console.log(\"import x from y\");",
+   "count": 0
+  },
+  {
+   "text": "console.log(\"return the value here\");",
+   "count": 1
+  },
+  {
+   "text": "console.log(\"a (b) c\");",
+   "count": 0
+  },
+  {
+   "text": "console.log(\"Fertig mit der Arbeit\");",
+   "count": 1
+  }
+ ]
+}

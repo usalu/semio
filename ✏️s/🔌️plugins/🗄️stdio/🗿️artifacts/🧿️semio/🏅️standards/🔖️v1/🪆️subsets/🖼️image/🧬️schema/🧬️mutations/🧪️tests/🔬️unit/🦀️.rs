@@ -1,5 +1,5 @@
 use crate::{schema::snapshot::SemioColorspace, schema::snapshot::SemioImageFrame, schema::snapshot::SemioImageMetadataEntry, schema::snapshot::SemioImageSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::mutations::*;
 /// 🔧️ `DiffAlgebra` lives at `protocol::command::DiffAlgebra`, not `protocol::DiffAlgebra`
 /// (W2b closer fix — was an unresolved-import compile error).
@@ -39,7 +39,7 @@ async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
         let (__next, diff_from_apply) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
@@ -59,15 +59,15 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
-        for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        for inverse_mutation in <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let next = protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = protocol::apply_diff(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
+        let restored = protocol::apply_diff_cold(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }

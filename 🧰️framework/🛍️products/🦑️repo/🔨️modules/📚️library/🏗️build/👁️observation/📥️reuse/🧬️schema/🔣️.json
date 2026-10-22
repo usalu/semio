@@ -10,7 +10,8 @@
         "maximumMembers": 65536,
         "maximumTextBytes": 67108864,
         "maximumReferences": 65536,
-        "maximumInventoryBytes": 4294967296
+        "maximumInventoryBytes": 4294967296,
+        "maximumPathUnits": 256
       }
     },
     "Value": {
@@ -176,6 +177,155 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 65536
+        }
+      }
+    },
+    "PresenceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "outcome"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fault": {
+          "enum": [
+            "unchanged",
+            "exact-leaf-absent",
+            "ancestor-absent",
+            "ancestor-replaced",
+            "hash",
+            "contract",
+            "symlink",
+            "hardlink",
+            "leaf-disappears",
+            "absence-reappears",
+            "permission",
+            "prior-leaf-disappears",
+            "cold-fifo",
+            "cold-close",
+            "cold-utf8"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "reuse",
+            "recompute",
+            "refuse"
+          ]
+        }
+      }
+    },
+    "PresenceCorpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "validityMilliseconds",
+        "cases",
+        "primaryFailures",
+        "errorCases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "validityMilliseconds": {
+          "const": 600000
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 11,
+          "items": {
+            "$ref": "#/definitions/PresenceCase"
+          }
+        },
+        "primaryFailures": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "false",
+              "undefined"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "errorCases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "$ref": "#/definitions/ErrorClassificationCase"
+          }
+        }
+      }
+    },
+    "SourceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "LockRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "manifest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ErrorClassificationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "missing"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "ENOENT",
+            "ENOTDIR",
+            "EACCES",
+            "EPERM",
+            "EIO",
+            "ECANCELED",
+            "ETIMEDOUT"
+          ]
+        },
+        "missing": {
+          "type": "boolean"
         }
       }
     }

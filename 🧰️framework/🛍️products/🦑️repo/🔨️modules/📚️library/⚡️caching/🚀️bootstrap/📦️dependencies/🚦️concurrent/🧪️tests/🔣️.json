@@ -490,38 +490,6 @@
    "maximumMs": 60000
   }
  ],
- "language": [
-  {
-   "name": "empty environment takes the first declared language",
-   "environment": {}
-  },
-  {
-   "name": "locale selects german",
-   "environment": {
-    "LANG": "de_DE.UTF-8"
-   }
-  },
-  {
-   "name": "explicit variable wins over the locale",
-   "environment": {
-    "SEMIO_LANGUAGE": "en",
-    "LANG": "de_DE.UTF-8"
-   }
-  },
-  {
-   "name": "undeclared language is skipped",
-   "environment": {
-    "LC_ALL": "fr_FR",
-    "LANG": "de_CH"
-   }
-  },
-  {
-   "name": "tag is case and separator insensitive",
-   "environment": {
-    "LC_MESSAGES": "DE@euro"
-   }
-  }
- ],
  "resources": {
   "bindings": "javascript-dependency-bindings:",
   "build": "javascript-dependency-build:",

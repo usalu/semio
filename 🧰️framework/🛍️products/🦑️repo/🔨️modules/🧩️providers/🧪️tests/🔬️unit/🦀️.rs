@@ -69,23 +69,23 @@ fn archive_branch_is_zero_padded() {
 #[test]
 fn copilot_wraps_the_permission_decision_and_others_do_not() {
     let denied = HookResult::new(false, "blocked: git checkout");
-    let copilot = CopilotEditorProvider.format_hook_output("PreToolUse", &denied);
+    let copilot = CopilotAgentClientProvider.format_hook_output("PreToolUse", &denied);
     let parsed: Value = serde_json::from_str(&copilot).unwrap();
     assert_eq!(parsed["hookSpecificOutput"]["permissionDecision"], "deny");
     assert_eq!(parsed["hookSpecificOutput"]["permissionDecisionReason"], "blocked: git checkout");
-    let cursor: Value = serde_json::from_str(&CursorEditorProvider.format_hook_output("PreToolUse", &denied)).unwrap();
+    let cursor: Value = serde_json::from_str(&CursorAgentClientProvider.format_hook_output("PreToolUse", &denied)).unwrap();
     assert!(cursor.get("hookSpecificOutput").is_none());
 }
 
 #[test]
-fn every_editor_resolves_and_names_events() {
-    assert_eq!(all_editor_providers().len(), 8);
-    assert_eq!(get_editor_provider("kiro-cli").unwrap().kind(), "kiro-cli");
-    assert!(get_editor_provider("nope").is_none());
-    assert_eq!(CopilotEditorProvider.resolve_native_event("SubagentStart", ToolKind::Generic).unwrap(), (HookEvent::AgentStarted, "subagent".to_string()));
-    assert_eq!(CopilotEditorProvider.native_event_from_hook_event(HookEvent::AgentStarted, "subagent"), "SubagentStart");
-    assert_eq!(CursorEditorProvider.native_event_from_hook_event(HookEvent::AgentStarted, "subagent"), "");
-    assert!(KiroEditorProvider.resolve_native_event("SessionStart", ToolKind::Generic).is_err());
+fn every_agent_client_resolves_and_names_events() {
+    assert_eq!(all_agent_client_providers().len(), 8);
+    assert_eq!(get_agent_client_provider("kiro-cli").unwrap().kind(), "kiro-cli");
+    assert!(get_agent_client_provider("nope").is_none());
+    assert_eq!(CopilotAgentClientProvider.resolve_native_event("SubagentStart", ToolKind::Generic).unwrap(), (HookEvent::AgentStarted, "subagent".to_string()));
+    assert_eq!(CopilotAgentClientProvider.native_event_from_hook_event(HookEvent::AgentStarted, "subagent"), "SubagentStart");
+    assert_eq!(CursorAgentClientProvider.native_event_from_hook_event(HookEvent::AgentStarted, "subagent"), "");
+    assert!(KiroAgentClientProvider.resolve_native_event("SessionStart", ToolKind::Generic).is_err());
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn the_null_provider_never_reaches_a_process() {
 
 #[test]
 fn ports_are_reachable_from_the_provider_implementations() {
-    let formatter: &dyn HookFormatter = &EditorProviders::from(CursorEditorProvider);
+    let formatter: &dyn HookFormatter = &AgentClientProviders::from(CursorAgentClientProvider);
     assert_eq!(formatter.native_event_from_hook_event(HookEvent::AgentEnded, ""), "");
     assert_eq!(formatter.format_hook_output("PreToolUse", &HookResult::new(true, "")), "{\"allowed\":true}");
     let tracker = default_management_provider(recorded(Vec::new()));

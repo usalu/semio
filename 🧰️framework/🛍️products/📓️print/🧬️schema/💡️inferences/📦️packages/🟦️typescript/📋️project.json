@@ -27,7 +27,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*"
       ],
       "outputs": [],
-      "options": { "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts build" },
+      "options": { "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript", "command": "repo ./📜️script.ts build" },
       "metadata": {
         "semio": {
           "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
@@ -46,7 +46,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

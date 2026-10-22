@@ -15,7 +15,7 @@ import {
   useReducer,
   useRef,
   useState
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import {
   type ActionDispatchLifecycleV1,
   type AppDefinition,
@@ -93,11 +93,11 @@ import type { PluginCatalog } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import { resolveRequiredHostApps } from "../🪪️host-bootstrap/🟦️.tsx";
 import type { InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
-import type { ReactNode } from "react";
+import type { ReactNode } from "../../⚛️react-port/🟦️.ts";
 import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
 import { OPERATION_SETTLE_RING_SLOTS, OPERATION_SETTLE_WAITER_SLOTS, OPERATION_SETTLE_WATCHDOG_MS, operationSettleKeyV1 } from "../🏁️operation-settle/🟦️.ts";
 import { createBuiltNodeStoreCacheV1, logUnlessRetiredV1, requiredHostPanelLeafId, type SpawnedRefreshSlotV1 } from "../🧱️built-node-stores/🟦️.ts";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "../../⚛️react-port/🟦️.ts";
 import type { ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import type { SpaceArtifactCreationCatalogAuthorityV1 } from "../🧾️space-artifact-creation/🟦️.ts";
 import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";

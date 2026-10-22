@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
@@ -62,5 +62,5 @@ class OperationDiagnosticPublicationScript extends BundleScript {
     await runOperationDiagnosticPublicationScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-ownership",OwnershipScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript).register("test-operation-diagnostics",OperationDiagnosticPublicationScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-ownership",OwnershipScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript).register("test-operation-diagnostics",OperationDiagnosticPublicationScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

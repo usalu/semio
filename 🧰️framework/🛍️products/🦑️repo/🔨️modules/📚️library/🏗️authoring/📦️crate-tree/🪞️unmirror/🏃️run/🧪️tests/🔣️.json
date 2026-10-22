@@ -1,0 +1,369 @@
+{
+ "version": 1,
+ "facades": [
+  {
+   "name": "an artifact crate with a carved crate below it is a facade",
+   "crates": [
+    {
+     "name": "semio-s-artifact-foo",
+     "ident": "semio_s_artifact_foo",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-foo-mut-alpha",
+     "ident": "semio_s_artifact_foo_mut_alpha",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/foo/schema/alpha/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/foo/schema/alpha/📦️packages/🦀️rust/lib.rs"
+    }
+   ],
+   "expected": [
+    "semio_s_artifact_foo"
+   ]
+  },
+  {
+   "name": "a registry crate with a carved crate below it is a facade",
+   "crates": [
+    {
+     "name": "semio-s-artifact-stdio",
+     "ident": "semio_s_artifact_stdio",
+     "dir": "✏️s/🔌️plugins/p/📇️registry/stdio/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/📇️registry/stdio/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-stdio-core",
+     "ident": "semio_s_artifact_stdio_core",
+     "dir": "✏️s/🔌️plugins/p/📇️registry/stdio/core/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/📇️registry/stdio/core/📦️packages/🦀️rust/lib.rs"
+    }
+   ],
+   "expected": [
+    "semio_s_artifact_stdio"
+   ]
+  },
+  {
+   "name": "an artifact crate without carved crates is not",
+   "crates": [
+    {
+     "name": "semio-s-artifact-foo",
+     "ident": "semio_s_artifact_foo",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust/lib.rs"
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "a name prefix without the dash is not a carved crate",
+   "crates": [
+    {
+     "name": "semio-s-artifact-bar",
+     "ident": "semio_s_artifact_bar",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-barrel",
+     "ident": "semio_s_artifact_barrel",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/bar/x/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/bar/x/📦️packages/🦀️rust/lib.rs"
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "a carved crate in another directory does not count",
+   "crates": [
+    {
+     "name": "semio-s-artifact-bar",
+     "ident": "semio_s_artifact_bar",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-bar-x",
+     "ident": "semio_s_artifact_bar_x",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/other/x/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/other/x/📦️packages/🦀️rust/lib.rs"
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "crates outside the plugin tree are never facades",
+   "crates": [
+    {
+     "name": "semio-framework",
+     "ident": "semio_framework",
+     "dir": "🧰️framework/x",
+     "root": "🧰️framework/x/lib.rs"
+    },
+    {
+     "name": "semio-framework-core",
+     "ident": "semio_framework_core",
+     "dir": "🧰️framework/x/core",
+     "root": "🧰️framework/x/core/lib.rs"
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "several facades",
+   "crates": [
+    {
+     "name": "semio-s-artifact-foo",
+     "ident": "semio_s_artifact_foo",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/foo/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-foo-mut-alpha",
+     "ident": "semio_s_artifact_foo_mut_alpha",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/foo/schema/alpha/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/foo/schema/alpha/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-stdio",
+     "ident": "semio_s_artifact_stdio",
+     "dir": "✏️s/🔌️plugins/p/📇️registry/stdio/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/📇️registry/stdio/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-stdio-core",
+     "ident": "semio_s_artifact_stdio_core",
+     "dir": "✏️s/🔌️plugins/p/📇️registry/stdio/core/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/📇️registry/stdio/core/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-bar",
+     "ident": "semio_s_artifact_bar",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/bar/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-s-artifact-barrel",
+     "ident": "semio_s_artifact_barrel",
+     "dir": "✏️s/🔌️plugins/p/🗿️artifacts/bar/x/📦️packages/🦀️rust",
+     "root": "✏️s/🔌️plugins/p/🗿️artifacts/bar/x/📦️packages/🦀️rust/lib.rs"
+    },
+    {
+     "name": "semio-framework",
+     "ident": "semio_framework",
+     "dir": "🧰️framework/x",
+     "root": "🧰️framework/x/lib.rs"
+    }
+   ],
+   "expected": [
+    "semio_s_artifact_foo",
+    "semio_s_artifact_stdio"
+   ]
+  },
+  {
+   "name": "no crates",
+   "crates": [],
+   "expected": []
+  }
+ ],
+ "graphs": [
+  {
+   "name": "a DAG",
+   "edges": {
+    "a": [
+     "b",
+     "c"
+    ],
+    "b": [
+     "d"
+    ],
+    "c": [
+     "d"
+    ],
+    "d": []
+   },
+   "expected": []
+  },
+  {
+   "name": "a self loop",
+   "edges": {
+    "a": [
+     "a"
+    ]
+   },
+   "expected": [
+    "a -> a"
+   ]
+  },
+  {
+   "name": "two nodes",
+   "edges": {
+    "a": [
+     "b"
+    ],
+    "b": [
+     "a"
+    ]
+   },
+   "expected": [
+    "a -> b -> a"
+   ]
+  },
+  {
+   "name": "a triangle",
+   "edges": {
+    "a": [
+     "b"
+    ],
+    "b": [
+     "c"
+    ],
+    "c": [
+     "a"
+    ]
+   },
+   "expected": [
+    "a -> b -> c -> a"
+   ]
+  },
+  {
+   "name": "a cycle entered from a tail reports only the cycle",
+   "edges": {
+    "t": [
+     "a"
+    ],
+    "a": [
+     "b"
+    ],
+    "b": [
+     "a"
+    ]
+   },
+   "expected": [
+    "a -> b -> a"
+   ]
+  },
+  {
+   "name": "two disjoint cycles",
+   "edges": {
+    "a": [
+     "b"
+    ],
+    "b": [
+     "a"
+    ],
+    "c": [
+     "d"
+    ],
+    "d": [
+     "c"
+    ]
+   },
+   "expected": [
+    "a -> b -> a",
+    "c -> d -> c"
+   ]
+  },
+  {
+   "name": "edges to unknown nodes are ignored",
+   "edges": {
+    "a": [
+     "x",
+     "y"
+    ]
+   },
+   "expected": []
+  },
+  {
+   "name": "a diamond with a back edge reports the first cycle found",
+   "edges": {
+    "a": [
+     "b",
+     "c"
+    ],
+    "b": [
+     "d"
+    ],
+    "c": [
+     "d"
+    ],
+    "d": [
+     "a"
+    ]
+   },
+   "expected": [
+    "a -> b -> d -> a"
+   ]
+  },
+  {
+   "name": "an empty graph",
+   "edges": {},
+   "expected": []
+  },
+  {
+   "name": "a long chain closing on itself",
+   "edges": {
+    "n0": [
+     "n1"
+    ],
+    "n1": [
+     "n2"
+    ],
+    "n2": [
+     "n3"
+    ],
+    "n3": [
+     "n4"
+    ],
+    "n4": [
+     "n0"
+    ]
+   },
+   "expected": [
+    "n0 -> n1 -> n2 -> n3 -> n4 -> n0"
+   ]
+  },
+  {
+   "name": "a cycle behind a shared node",
+   "edges": {
+    "r": [
+     "x",
+     "y"
+    ],
+    "x": [
+     "z"
+    ],
+    "y": [
+     "z"
+    ],
+    "z": [
+     "w"
+    ],
+    "w": [
+     "z"
+    ]
+   },
+   "expected": [
+    "z -> w -> z"
+   ]
+  },
+  {
+   "name": "a cycle through a non-first start",
+   "edges": {
+    "p": [
+     "q"
+    ],
+    "q": [
+     "r"
+    ],
+    "r": [
+     "q"
+    ],
+    "s": [
+     "p"
+    ]
+   },
+   "expected": [
+    "q -> r -> q"
+   ]
+  }
+ ]
+}

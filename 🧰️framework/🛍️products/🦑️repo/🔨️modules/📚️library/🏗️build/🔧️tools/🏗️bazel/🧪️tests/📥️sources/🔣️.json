@@ -515,7 +515,7 @@
             "generate": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": true,
               "outputs": [
@@ -525,14 +525,14 @@
             "check": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": true
             },
             "lint": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "metadata": {
                 "semio": {
@@ -547,7 +547,7 @@
             "format": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": true,
               "outputs": []
@@ -555,7 +555,7 @@
             "serve": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "continuous": true,
               "cache": false
@@ -563,14 +563,14 @@
             "publish": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": false
             },
             "unknown": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               }
             }
           }
@@ -582,14 +582,14 @@
             "check": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": true
             },
             "build": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts run"
+                "command": "repo ./📜️script.ts run"
               },
               "cache": true,
               "outputs": [

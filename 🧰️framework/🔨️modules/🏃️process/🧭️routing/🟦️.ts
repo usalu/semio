@@ -72,8 +72,8 @@ export class ScriptRouter<Capabilities extends object = object> {
   /** 📋️Human-readable usage line for this router. */
   usage(): string {
     const names = [...this.commands.keys()];
-    if (names.length === 0) return "bun ./📜️script.ts policy";
-    return `bun ./📜️script.ts <${names.join("|")}> [args…]`;
+    if (names.length === 0) return "repo ./📜️script.ts policy";
+    return `repo ./📜️script.ts <${names.join("|")}> [args…]`;
   }
 
   /** 📊️Whether any subcommands are registered (policy-only bundles may have none). */

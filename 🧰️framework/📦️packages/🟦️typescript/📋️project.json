@@ -33,7 +33,7 @@
       "cache": true,
       "dependsOn": [],
       "outputs": [],
-      "options": { "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- bun ./📜️script.ts window-utility-check", "cwd": "🧰️framework" },
+      "options": { "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- repo ./📜️script.ts window-utility-check", "cwd": "🧰️framework" },
       "metadata": { "semio": { "workspaceCommand": ["verify", "window-utility-check"] } }
     },
     "test-artifact-reference": {
@@ -51,7 +51,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-artifact-reference",
+        "command": "repo ./📜️script.ts test-artifact-reference",
         "cwd": "{projectRoot}"
       }
     },
@@ -69,7 +69,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔌️ports/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-io-ports",
+        "command": "repo ./📜️script.ts test-io-ports",
         "cwd": "{projectRoot}"
       }
     },
@@ -88,7 +88,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-script-boundary",
+        "command": "repo ./📜️script.ts test-script-boundary",
         "cwd": "{projectRoot}"
       }
     },
@@ -105,7 +105,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -121,7 +121,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       }
     },
@@ -135,7 +135,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts installation-identity-check",
+        "command": "repo ./📜️script.ts installation-identity-check",
         "cwd": "🧰️framework/📦️packages/🟦️typescript"
       }
     },
@@ -151,7 +151,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test-polygon-mesh",
+        "command": "repo ./📜️script.ts test-polygon-mesh",
         "cwd": "{projectRoot}"
       }
     },
@@ -167,7 +167,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test-sdk-surface",
+        "command": "repo ./📜️script.ts test-sdk-surface",
         "cwd": "{projectRoot}"
       }
     },
@@ -183,7 +183,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test-module-package-surface",
+        "command": "repo ./📜️script.ts test-module-package-surface",
         "cwd": "{projectRoot}"
       }
     },
@@ -201,7 +201,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/🪪️scope/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-document-scope",
+        "command": "repo ./📜️script.ts test-document-scope",
         "cwd": "{projectRoot}"
       }
     },
@@ -219,7 +219,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/📖️source-text/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-source-text",
+        "command": "repo ./📜️script.ts test-source-text",
         "cwd": "{projectRoot}"
       }
     }

@@ -20,7 +20,7 @@ pub mod set_entry_data;
 
 #[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipMutation")]
+#[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipMutation", reference = ZipSnapshot, reference_diff = ZipDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipMutation {
     SetArchiveComment(set_archive_comment::SetArchiveComment),

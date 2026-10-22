@@ -11,7 +11,7 @@
     "./sqlite/bitmap/testing": "./🪶️sqlite/🎨️bitmap/🧪️testing/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/wfc-js:test"
+    "test": "repo run @semio-tech/wfc-js:test"
   },
   "dependencies": {},
   "devDependencies": {

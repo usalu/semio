@@ -1,3 +1,4 @@
+import {GlobV1} from "@@RUNTIME@@/🌐️glob/@@TS@@";
 import {mkdirSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import schema from "./@@SCHEMA@@/@@JSON@@" with {type:"json"};
@@ -102,7 +103,7 @@ export function conformanceReferenceOutputsV1(spec:StubSpecV1,files:readonly str
  const compute=(id:string):Record<string,string>=>{
   let known=done.get(id);
   if(!known){
-   const task=spec.tasks[id]!,selected=sorted(files.filter(path=>task.reads.some(pattern=>new Bun.Glob(pattern).match(path))));
+   const task=spec.tasks[id]!,selected=sorted(files.filter(path=>task.reads.some(pattern=>new GlobV1(pattern).match(path))));
    known=stubOutputsV1(task,selected,path=>{const owner=producer.get(path);return owner?compute(owner)[path]!:readSource(path);});
    done.set(id,known);
   }

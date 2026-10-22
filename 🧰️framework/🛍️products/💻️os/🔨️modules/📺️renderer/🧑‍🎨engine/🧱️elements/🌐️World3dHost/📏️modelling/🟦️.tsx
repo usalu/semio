@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useMemo, useRef, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, type CSSProperties, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 import {
   AlwaysStencilFunc,
   BackSide,

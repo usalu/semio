@@ -1,0 +1,338 @@
+{
+ "version": 1,
+ "split": [
+  {
+   "added": 5,
+   "removed": 3,
+   "edited": 3,
+   "netAdded": 2,
+   "netRemoved": 0
+  },
+  {
+   "added": 0,
+   "removed": 0,
+   "edited": 0,
+   "netAdded": 0,
+   "netRemoved": 0
+  },
+  {
+   "added": -1,
+   "removed": 4,
+   "edited": 0,
+   "netAdded": 0,
+   "netRemoved": 4
+  },
+  {
+   "added": 3,
+   "removed": 3,
+   "edited": 3,
+   "netAdded": 0,
+   "netRemoved": 0
+  },
+  {
+   "added": 2,
+   "removed": 9,
+   "edited": 2,
+   "netAdded": 0,
+   "netRemoved": 7
+  },
+  {
+   "added": 7,
+   "removed": 0,
+   "edited": 0,
+   "netAdded": 7,
+   "netRemoved": 0
+  }
+ ],
+ "prefix": [
+  {
+   "path": "a/b/c",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": true
+  },
+  {
+   "path": "a/bc",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": false
+  },
+  {
+   "path": "a/b",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": true
+  },
+  {
+   "path": "a/b/c",
+   "prefixes": [
+    "a/b/"
+   ],
+   "expected": true
+  },
+  {
+   "path": "x",
+   "prefixes": [],
+   "expected": true
+  },
+  {
+   "path": "x",
+   "prefixes": [
+    ""
+   ],
+   "expected": false
+  },
+  {
+   "path": "a\\b\\c",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": true
+  },
+  {
+   "path": "./a/b/c",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": true
+  },
+  {
+   "path": "a/b/c",
+   "prefixes": [
+    "z",
+    "a/b"
+   ],
+   "expected": true
+  },
+  {
+   "path": "a",
+   "prefixes": [
+    "a/b"
+   ],
+   "expected": false
+  },
+  {
+   "path": "a/b/c",
+   "prefixes": [
+    ".\\a\\b"
+   ],
+   "expected": true
+  }
+ ],
+ "paths": [
+  {
+   "field": "a.ts",
+   "expected": [
+    "a.ts"
+   ]
+  },
+  {
+   "field": "old.ts\tnew.ts",
+   "expected": [
+    "old.ts",
+    "new.ts"
+   ]
+  },
+  {
+   "field": "src/{a => b}/x.ts",
+   "expected": [
+    "src/a/x.ts",
+    "src/b/x.ts"
+   ]
+  },
+  {
+   "field": "old.ts => new.ts",
+   "expected": [
+    "old.ts",
+    "new.ts"
+   ]
+  },
+  {
+   "field": "",
+   "expected": []
+  },
+  {
+   "field": "  ",
+   "expected": []
+  },
+  {
+   "field": "a.ts\ta.ts",
+   "expected": [
+    "a.ts"
+   ]
+  },
+  {
+   "field": "{old => new}.ts",
+   "expected": [
+    "old.ts",
+    "new.ts"
+   ]
+  }
+ ],
+ "pathDefects": [
+  {
+   "field": "{ => sub}/x.ts",
+   "expected": [
+    "x.ts",
+    "sub/x.ts"
+   ],
+   "defect": "📊️metrics/🔀️deltas/🟦️.ts:pathsFromNumstatRow drops the old side when a brace rename has an empty half (`{ => sub}/x.ts` keeps only `sub/x.ts`)"
+  }
+ ],
+ "accumulate": {
+  "rows": [
+   {
+    "path": "a.ts",
+    "added": 3,
+    "removed": 1
+   },
+   {
+    "path": "b.py",
+    "added": 0,
+    "removed": 1
+   },
+   {
+    "path": "dist/skip.ts",
+    "added": 9,
+    "removed": 9
+   },
+   {
+    "path": "e.go",
+    "added": 1,
+    "removed": 0
+   },
+   {
+    "path": "notes.xyz",
+    "added": 5,
+    "removed": 5
+   },
+   {
+    "path": "lib/f.ts",
+    "added": 2,
+    "removed": 2
+   },
+   {
+    "path": "docs/x.md",
+    "added": 4,
+    "removed": 0
+   }
+  ],
+  "expected": {
+   "TypeScript": {
+    "added": 2,
+    "removed": 0,
+    "edited": 3
+   },
+   "Python": {
+    "added": 0,
+    "removed": 1,
+    "edited": 0
+   },
+   "Go": {
+    "added": 1,
+    "removed": 0,
+    "edited": 0
+   },
+   "Markdown": {
+    "added": 4,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  "prefix": [
+   "lib"
+  ],
+  "expectedPrefixed": {
+   "TypeScript": {
+    "added": 0,
+    "removed": 0,
+    "edited": 2
+   }
+  }
+ },
+ "repo": {
+  "commits": [
+   {
+    "a.ts": "l1\nl2\nl3\n",
+    "b.py": "x\n",
+    "d.md": "doc\n",
+    "dist/skip.ts": "q\n"
+   },
+   {
+    "a.ts": "l1\nL2\nl3\nl4\nl5\n",
+    "b.py": null,
+    "e.go": "package x\n",
+    "dist/skip.ts": "q2\n"
+   }
+  ],
+  "numstat": [
+   {
+    "path": "a.ts",
+    "added": 3,
+    "removed": 1
+   },
+   {
+    "path": "b.py",
+    "added": 0,
+    "removed": 1
+   },
+   {
+    "path": "dist/skip.ts",
+    "added": 1,
+    "removed": 1
+   },
+   {
+    "path": "e.go",
+    "added": 1,
+    "removed": 0
+   }
+  ],
+  "uloc": {
+   "TypeScript": {
+    "added": 2,
+    "removed": 0,
+    "edited": 1
+   },
+   "Python": {
+    "added": 0,
+    "removed": 1,
+    "edited": 0
+   },
+   "Go": {
+    "added": 1,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  "size": {
+   "TypeScript": {
+    "added": 6,
+    "removed": 0,
+    "edited": 9
+   },
+   "Python": {
+    "added": 0,
+    "removed": 2,
+    "edited": 0
+   },
+   "Go": {
+    "added": 10,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  "ulocPrefixed": {
+   "Go": {
+    "added": 1,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  "prefixes": [
+   "e.go"
+  ]
+ }
+}

@@ -14,7 +14,7 @@ extern crate semio_framework_value_derive as value_derive;
 //#endregion 📖️SemioGrammar
 use semio_s_artifact_block_5d_diff::Block5dDiff;
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_block_5d_mut_part_kind::{rename_part_kind::RenamePartKind, change_part_kind_label::ChangePartKindLabel, change_part_kind_variant::ChangePartKindVariant, change_part_kind_description::ChangePartKindDescription, change_part_kind_icon::ChangePartKindIcon, change_part_kind_unit::ChangePartKindUnit, update_part_2d::UpdatePart2d, update_part_3d::UpdatePart3d};
 use semio_s_artifact_block_5d_mut_representations::{create_representation::CreateRepresentation, delete_representation::DeleteRepresentation, change_representation_mesh_url::ChangeRepresentationMeshUrl, add_representation_attribute::AddRepresentationAttribute, remove_representation_attribute::RemoveRepresentationAttribute};
 use semio_s_artifact_block_5d_mut_grip_kinds::{create_grip_kind::CreateGripKind, delete_grip_kind::DeleteGripKind, rename_grip_kind::RenameGripKind, change_grip_kind_label::ChangeGripKindLabel, change_grip_kind_color::ChangeGripKindColor, change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind};
@@ -40,7 +40,7 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Block5dSnapshot, diff = Block5dDiff, schema = "block.block5d")]
+#[mutations(snapshot = Block5dSnapshot, diff = Block5dDiff, schema = "block.block5d", reference = Block5dSnapshot, reference_diff = Block5dDiff)]
 pub enum Block5dMutation {
     RenamePartKind(RenamePartKind),
     ChangePartKindLabel(ChangePartKindLabel),

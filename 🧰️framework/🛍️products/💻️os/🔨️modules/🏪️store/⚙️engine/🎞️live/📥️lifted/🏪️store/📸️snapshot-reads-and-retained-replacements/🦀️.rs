@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
     
@@ -52,7 +52,7 @@ where
     /// ⏭️ Steps sealed planning and replay against this store's actual immutable frontier.
     
 
-    fn step_history_read_plan(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, plan: &mut HistoryReadPlan, deadline: &mut dyn FnMut() -> bool) -> Result<bool, VcsError> {
+    pub fn step_history_read_plan(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, plan: &mut HistoryReadPlan, deadline: &mut dyn FnMut() -> bool) -> Result<bool, VcsError> {
         use std::ops::Bound::{Excluded, Unbounded};
         if plan.progress.total == 0 {
             let work = usize::from(plan.target.is_some()).saturating_add(plan.drafts.len()).saturating_add(if plan.report { store_log.applied_edit_ids.len().saturating_add(self.supersessions.len()).saturating_add(plan.drafts.len()) } else { 0 });

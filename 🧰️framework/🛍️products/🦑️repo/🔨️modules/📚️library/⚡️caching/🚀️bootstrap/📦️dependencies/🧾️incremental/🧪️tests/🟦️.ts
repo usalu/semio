@@ -1,4 +1,5 @@
 import {test,expect} from "bun:test";
+import {javascriptInstallSchemaV1 as materializedInstallSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
@@ -12,7 +13,7 @@ import * as glue from "../💾️storage/🟦️.ts";
 import {generationProtocolV1 as generation} from "../../🧾️generation/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 
 const protocol=core.incrementalProtocolV1,idle={check:()=>{},tick:async()=>{}};
 const recipeBackends=()=>(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Record<string,string>}).backends;
@@ -63,7 +64,7 @@ test("incremental contract: Ajv accepts sealed receipts, constants equal the fix
  validate("LockReceipt",core.sealLockReceiptV1({version:1,purpose:"dependency-lock-converged-receipt",scope:".",generation:"a".repeat(64),lockSha256:"b".repeat(64),recipeSha256:"c".repeat(64),runtimeSha256:"d".repeat(64)}));
  expect(fixture.retryPolicy).toEqual(protocol.retry);
  expect(protocol.directory).toBe(generation.directory);
- const suffixes=[protocol.installed.receiptSuffix,protocol.sync.receiptSuffix,protocol.ownership.receiptSuffix,protocol.lock.receiptSuffix,protocol.installed.evidenceSuffix,protocol.ownership.evidenceSuffix,generation.receiptSuffix,generation.frontierSuffix,generation.executionSuffix,generation.implementation.closureSuffix];
+ const suffixes=[protocol.installed.receiptSuffix,protocol.sync.receiptSuffix,protocol.ownership.receiptSuffix,protocol.lock.receiptSuffix,protocol.installed.evidenceSuffix,protocol.ownership.evidenceSuffix,generation.receiptSuffix,generation.frontierSuffix,generation.executionSuffix];
  for(const left of suffixes)for(const right of suffixes)if(left!==right)expect(left.endsWith(right),left+" vs "+right).toBe(false);
  expect(protocol.installed.stampFields).toEqual(generation.stampFields);
  expect(protocol.installed.settleMilliseconds).toBe(generation.settleMilliseconds);
@@ -319,5 +320,5 @@ test("incremental wiring laws over the storage module",async()=>{
  expect(text("scanJavascriptDependencyInstalledPathsV1")).toContain("ledger?.directory(portable,facts,");
  expect(text("readJavascriptDependencySourceOwnerScopeReadV1")).toContain("replayJavascriptDependencyExecutionV1(");
  expect(installFence()).toBeLessThanOrEqual(64);
- function installFence(){return(JSON.parse(readFileSync(new URL("../../💾️storage/🧬️schema/📥️install.json",import.meta.url),"utf8")).$defs.InstalledPathProtocol.const as {fullFenceInterval:number}).fullFenceInterval;}
+ function installFence(){return(materializedInstallSchema.$defs.InstalledPathProtocol.const as {fullFenceInterval:number}).fullFenceInterval;}
 });

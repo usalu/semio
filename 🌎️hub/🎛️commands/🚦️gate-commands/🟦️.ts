@@ -9,13 +9,15 @@ import { resolveTestLevel } from "@semio-tech/process/test-budget";
 import { buildBudgetMs } from "@semio-tech/process/budget";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import Ajv from "ajv";
 import { runCargo, runRepositoryCommand } from "@semio-tech/process/execution";
 import { runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "@semio-tech/process/routing";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { HUB_TEST_PACKAGES } from "../../🧪️testing/📖️source-readers/🟦️.ts";
+import { runToolSyncV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
 /** 🕸️ Supplies Hub's actual actor publication capability to the neutral runtime graph verifier. */
@@ -78,7 +80,7 @@ export class SetupScript extends BundleScript {
 
 /** 🗂️ The package-owned artifact root the descriptor-rooted hub laws demand when no ticket supplies one:
  * `fixture_root()` in the trusted-catalog, publication and browser-actor suites reads
- * `SEMIO_TEST_ARTIFACT_DIR` and panics without it, so a plain `bun repo run os-hub:test` would report panics
+ * `SEMIO_TEST_ARTIFACT_DIR` and panics without it, so a plain `repo run os-hub:test` would report panics
  * instead of assertions. */
 function hubTestArtifactRoot(root: string): string {
   const path = join(root, "../../🧪️tests/🗂️artifact-root/📦️packages/🦀️rust/🗑️generated/test-artifacts");
@@ -193,7 +195,7 @@ export class HostileInputCheckScript extends BundleScript {
     process.once("SIGINT", interrupt);
     await withAcceptanceRecord(this.repoRoot, "hub-hostile-input", async () => {
       const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
-      const oracle = spawnSync("bun", ["x", "vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
+      const oracle = runToolSyncV1(runtimeCommandNameV1(), ["x", "vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
       const law = ([owner, name]: readonly [string, string], seed?: number): Promise<{ status: number; lines: string[] }> =>
         runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
       const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));

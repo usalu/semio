@@ -26,7 +26,7 @@ async fn config_op_inverse_restores_exactly_the_fields_it_owns() {
     let operation = LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: "obj-2".into() });
     let diff = operation.diff(&base).into_parts().0;
     assert_eq!(diff, LowpolyConfigDiff { active_object_id: Some("obj-2".into()), ..Default::default() });
-    let after = protocol::apply_diff(&diff, &base).expect("valid config diff");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("valid config diff");
     assert_eq!(after.active_object_id, "obj-2");
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: "obj-1".into() })]);

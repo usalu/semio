@@ -1,0 +1,206 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "document",
+  "parsed",
+  "invalid",
+  "notDocuments",
+  "renderTs",
+  "renderTsOwners",
+  "renderTsSameModule",
+  "rust",
+  "ownerCases",
+  "ownerErrors",
+  "generation"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "document": {},
+  "parsed": {},
+  "invalid": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "patch",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "op",
+       "path",
+       "value",
+       "message"
+      ],
+      "properties": {
+       "op": {
+        "enum": [
+         "set",
+         "delete"
+        ]
+       },
+       "path": {
+        "type": "string"
+       },
+       "value": {},
+       "message": {
+        "type": "string"
+       }
+      }
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "notDocuments": {
+   "type": "array",
+   "items": {},
+   "minItems": 1
+  },
+  "renderTs": {
+   "type": "string"
+  },
+  "renderTsOwners": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "renderTsSameModule": {
+   "type": "string"
+  },
+  "rust": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    },
+    "minItems": 1
+   }
+  },
+  "ownerCases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "output",
+     "rows",
+     "files",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "output": {
+      "type": "string"
+     },
+     "rows": {
+      "type": "string"
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "ownerErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "output",
+     "rows",
+     "files",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "output": {
+      "type": "string"
+     },
+     "rows": {
+      "type": "string"
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "generation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "schemaPath",
+    "files",
+    "expectedStaleCount",
+    "tsPath",
+    "rustPaths"
+   ],
+   "properties": {
+    "schemaPath": {
+     "type": "string"
+    },
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "expectedStaleCount": {
+     "type": "integer"
+    },
+    "tsPath": {
+     "type": "string"
+    },
+    "rustPaths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

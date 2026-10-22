@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 
 //#endregion 🔌️Adapters
@@ -32,7 +32,7 @@ type JpgDoc = { dimensions: string; colorType: string; raster: { size: number; d
  *  profile's own opaque-payload projection (size+digest, never raw bytes; see that binary's own
  *  `project()` function), so nothing further happens to it here. */
 function readJpg(path: string): JpgDoc {
-  const result = spawnToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`jpeg-jfif-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   return JSON.parse(result.stdout) as JpgDoc;
 }
@@ -97,7 +97,7 @@ else:
 `;
 
 function markerRun(paths: readonly string[]): Record<string, unknown> {
-  const result = spawnToolSyncV1("python3", ["-c", MARKER_READER, ...paths], { encoding: "utf8" });
+  const result = runToolSyncV1("python", ["-c", MARKER_READER, ...paths], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`pillow marker reader failed: ${result.stderr}`);
   return JSON.parse(result.stdout) as Record<string, unknown>;
 }

@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-mark/🔗️adds/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-mark/🔗️adds/📸️snapshot/➡️after/🔣️.json"));
@@ -33,7 +33,7 @@ fn add_mark() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_link_mark_before_the_existing_bold_mark() {
     let base = before();
-    let produced = protocol::apply_diff(add_mark().diff(&base).diff(), &base).expect("add-mark applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(add_mark().diff(&base).diff(), &base).expect("add-mark applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "add-mark/adds-a-link-mark-ahead-of-the-bold-mark: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len(), "add-mark must never change the run sequence itself");
     assert_eq!(produced.runs[0].marks.len(), base.runs[0].marks.len() + 1, "the nested marks collection grows by exactly one");
@@ -51,9 +51,9 @@ async fn the_undo_remove_mark_detaches_the_link_again() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTextMutation::RemoveMark(semio_s_artifact_stdio_semio_text_mutations::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })], "add-mark at run #0/#0 must undo as remove-mark at run #0/#0");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-mark applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward add-mark applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-mark applies to the marked state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo remove-mark applies to the marked state");
     }
     assert_eq!(current, base, "add-mark/adds-a-link-mark-ahead-of-the-bold-mark: the undo did not restore the before-snapshot");
 }
@@ -88,7 +88,7 @@ async fn declared_outcome_holds_without_a_no_op_warning() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&add_mark(), &base);
+    let outcome = <SemioTextMutation as ColdMutation<SemioTextSnapshot>>::diff(&add_mark(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-mark/adds-a-link-mark-ahead-of-the-bold-mark: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -108,6 +108,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-mark diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed add-mark diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed add-mark diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-mark/adds-a-link-mark-ahead-of-the-bold-mark: committed diff did not carry before to after");
 }

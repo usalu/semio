@@ -25,7 +25,7 @@ pub fn d_matrix_solid(e: f64, nu: f64) -> MatD {
 
 /// 🧮️ Standard solid-mechanics B-matrix (6x3n) from per-node physical shape-function gradients —
 /// shared by `Tet4` (constant gradients, one row of blocks) and `Hex8` (per-Gauss-point gradients).
-fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
+pub fn solid_b_matrix(grads: &[[f64; 3]]) -> MatD {
     let mut b = MatD::zeros(6, grads.len() * 3);
     for (i, g) in grads.iter().enumerate() {
         let (bx, by, bz) = (g[0], g[1], g[2]);
@@ -152,14 +152,14 @@ impl Tet4 {
         SolidStress { sxx, syy, szz, sxy, syz, sxz, von_mises: von_mises_solid(sxx, syy, szz, sxy, syz, sxz) }
     }
     /// 🧭️ Signed volume via the scalar triple product of edge vectors from node 0.
-    fn volume(ctx: &ElementContext) -> f64 {
+    pub fn volume(ctx: &ElementContext) -> f64 {
         tet4_geometry(ctx).expect("non-degenerate tet4").volume
     }
 
     /// 🧭️ Constant per-node shape-function gradients `[∂Li/∂x, ∂Li/∂y, ∂Li/∂z]`. `Li(x,y,z) = a+bx+cy+dz`
     /// with `Li(node_j) = δij` for all j — solving `R·[a,b,c,d]ᵀ = e_i` per node (`R`'s row j is
     /// `[1,xj,yj,zj]`) gives node i's coefficients directly, gradient in components 1..4.
-    fn gradients(ctx: &ElementContext) -> [[f64; 3]; 4] {
+    pub fn gradients(ctx: &ElementContext) -> [[f64; 3]; 4] {
         tet4_geometry(ctx).expect("non-degenerate tet4").gradients
     }
 

@@ -13,9 +13,6 @@ members = []
 
 [dependency-groups]
 dev = [
-    "jupyter>=1.1.1",
-    "notebook>=7.6.0",
-    "ipykernel>=7.3.0",
     "ruff>=0.15.18",
     "black>=26.5.1",
     "pandas>=3.0.3",

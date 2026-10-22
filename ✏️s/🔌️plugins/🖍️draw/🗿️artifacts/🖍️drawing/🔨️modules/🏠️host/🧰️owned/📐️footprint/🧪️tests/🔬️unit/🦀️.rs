@@ -135,7 +135,7 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
     const DELTA: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json");
     let before: DrawingSnapshot = serde_json::from_str(BEFORE).unwrap();
     let mut delta: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DELTA).unwrap();
-    let after = protocol::apply_diff(&delta, &before).unwrap();
+    let after = protocol::apply_diff_cold(&delta, &before).unwrap();
     assert_eq!(serde_json::to_value(&after).unwrap(), serde_json::from_str::<serde_json::Value>(AFTER).unwrap());
     let segments = delta.layers.as_mut().unwrap().modified[0].patch.path_segments.take().unwrap();
     assert!(segments.allocated_bytes() > 0);

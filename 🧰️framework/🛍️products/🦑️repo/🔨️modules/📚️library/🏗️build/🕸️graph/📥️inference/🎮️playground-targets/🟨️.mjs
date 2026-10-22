@@ -115,7 +115,7 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
     inputs:["default",{dependentTasksOutputFiles:"**/*",transitive:true},...[...loaded.runtimeComponentClosure([...components.values()],[{id:row.pluginId,appScoped:row.app!==undefined}])].sort().flatMap(id=>["🛂️.descriptor.semio","🔣️.json"].map(name=>`{workspaceRoot}/${components.get(id).ownerRoot}/${name}`))],
     dependsOn:[row.buildCatalog.project+":"+row.buildCatalog.generateTarget],
     outputs:["{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/sessions/"+variant],
-    options:{command:"bun ./📜️script.ts session "+variant,env:{SEMIO_PLUGIN_CATALOG:join(workspaceRoot,row.buildCatalog.publication.outputRoot)}},
+    options:{command:"repo ./📜️script.ts session "+variant,env:{SEMIO_PLUGIN_CATALOG:join(workspaceRoot,row.buildCatalog.publication.outputRoot)}},
   }),"deterministic","pure-function-of-inputs")]));
 }
 
@@ -178,16 +178,16 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
     let admission=loaded.runtimeInputAdmissionV1(componentRows,[{id:request.component,appScoped:request.appScoped}],sources,path=>existsSync(join(workspaceRoot,path)));
     if(admission.status==="admitted")for(const id of admission.selected){try{await componentPrerequisites(id);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;const missing=buildPath(relative(workspaceRoot,error.manifest));sources.push(missing);admission={schemaVersion:1,status:"refused",missing:{kind:"source",value:missing}};break;}}
     if(admission.status==="refused") {
-      const command=`bun ${JSON.stringify(join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts"))} runtime-input-check ${Buffer.from(JSON.stringify(request)).toString("base64")}`;
+      const command=`repo ${JSON.stringify(join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts"))} runtime-input-check ${Buffer.from(JSON.stringify(request)).toString("base64")}`;
       const target=withCacheDecision(executionTargetV1("source",{cache:false,outputs:[],dependsOn:[],inputs:["{workspaceRoot}/**/Cargo.toml","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/**/*"],metadata:{semio:{runtimeInputAdmission:admission}},options:{command,forwardAllArgs:false}}),"diagnostic","admission-refusal");
       const names=[`runtime-input-admission-${playground.variant}`,`build-${playground.variant}-react-release`];
       for(const profile of ["prototype","release"]){for(const engine of ["react","wgpu"])for(const operation of ["prepare","activate","serve","dev"])names.push(`${operation}-${playground.variant}-${engine}-${profile}`);names.push(`prepare-${playground.variant}-native-${profile}`,`run-${playground.variant}-native-${profile}`,`smoke-${playground.variant}-native-${profile}`);if(playground.mcpHost)for(const transport of ["stdio","http"])names.push(`mcp-${playground.variant}-${transport}-${profile}`);}
       for(const name of names)result[name]=target;
       continue;
     }
-    const nativeHost=loaded.admitPlaygroundNativeHostV1(playground.nativeHost,nativeHostOwner);
-    const mcpHost=loaded.admitPlaygroundNativeHostV1(playground.mcpHost,nativeHostOwner);
-    if(mcpHost)for(const profile of ["prototype","release"])for(const transport of ["stdio","http"])result[`mcp-${playground.variant}-${transport}-${profile}`]=withCacheDecision({cache:false,continuous:true,outputs:[],dependsOn:[`${mcpHost.project}:${mcpHost.target}`],options:{command:`bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts mcp ${playground.variant} ${profile} ${transport}`,forwardAllArgs:true}},"continuous","serves-until-stopped");
+    const nativeHost=loaded.admitPlaygroundNativeHostV1(playground.nativeHost,nativeHostOwner,`playground ${playground.variant}, nativeHost`);
+    const mcpHost=loaded.admitPlaygroundNativeHostV1(playground.mcpHost,nativeHostOwner,`playground ${playground.variant}, mcpHost`);
+    if(mcpHost)for(const profile of ["prototype","release"])for(const transport of ["stdio","http"])result[`mcp-${playground.variant}-${transport}-${profile}`]=withCacheDecision({cache:false,continuous:true,outputs:[],dependsOn:[`${mcpHost.project}:${mcpHost.target}`],options:{command:`repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts mcp ${playground.variant} ${profile} ${transport}`,forwardAllArgs:true}},"continuous","serves-until-stopped");
     // 🏠️ Boot closure: host sessions must serve before the full catalog materializes. `appScoped: true`
     // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
     const bootSelected = loaded.runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
@@ -199,13 +199,13 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       return `${project.name}:wasm`;
     }));
     for (const profile of ["prototype", "release"]) {
-      const nativeScript = "bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts";
+      const nativeScript = "repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts";
       result[`prepare-${playground.variant}-native-${profile}`] = withCacheDecision({
         cache: true,
         outputs: [storeReceiptOutputV1(`prepare-${playground.variant}-native-${profile}`)],
         inputs: [transitiveOutputs],
         dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...selectedComponents],
-        options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
+        options: { command: `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
       }, "deterministic", "pure-function-of-inputs");
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = withCacheDecision({
         cache: false, continuous: false, outputs: [],
@@ -215,38 +215,38 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       // ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash
       // freshness inside ServeScript) in seconds. `dev` still depends on boot-only activate so the host is
       // materialized before Vite, then the activation Vite plugin prefetches the rest on demand.
-      result[`serve-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
-      result[`dev-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
+      result[`serve-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
+      result[`dev-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-react-${profile}`] = withCacheDecision({
       cache: true,
       parallelism: false,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/react/${playground.variant}`],
       inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-react-${profile}`],
-      options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` },
+      options: { command: `repo ./📜️script.ts activate ${playground.variant} react ${profile}` },
       }, "deterministic", "pure-function-of-inputs");
       result[`prepare-${playground.variant}-react-${profile}`] = withCacheDecision({
       cache: true,
       outputs: [],
       inputs: [transitiveOutputs],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", ...rendererEngines, ...engines, ...bootComponents],
-      options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
+      options: { command: `repo ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       }, "deterministic", "check-without-outputs");
-      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
+      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-wgpu-${profile}`] = withCacheDecision({
       cache: true,
       parallelism: false,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/wgpu/${playground.variant}`],
       inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
-      options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
+      options: { command: `repo ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
       }, "deterministic", "pure-function-of-inputs");
       result[`prepare-${playground.variant}-wgpu-${profile}`] = withCacheDecision({
       cache: true,
       outputs: [],
       inputs: [transitiveOutputs],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootComponents],
-      options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
+      options: { command: `repo ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       }, "deterministic", "check-without-outputs");
     }
     const name = `build-${playground.variant}-react-release`;
@@ -261,15 +261,15 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       // (`🏗️builder/🌐️vite/🟦️.ts:237`, `import.meta.env.VITE_S_HUB_URL`), so two bundles that differ
       // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
       // cache key ignores them and a cached bundle silently answers for the wrong hub.
-      inputs: ["production", "^production", "viteBundleSources", transitiveOutputs, ...ownerSources(selected), ...contributionSources, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
+      inputs: ["production", "^production", "viteBundleSources", transitiveOutputs, ...ownerSources(selected), ...contributionSources, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `repo ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedComponents, "@semio-tech/assets:build"],
-      options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
+      options: { command: `repo ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     }, "deterministic", "pure-function-of-inputs");
     result[`build-${playground.variant}-react`] = {
       ...result[name], outputs: [storeReceiptOutputV1(`build-${playground.variant}-react`)],
       configurations: {
-        prototype: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react prototype` },
-        release: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release` },
+        prototype: { command: `repo ../../🚚️distribution/📜️script.ts build ${playground.variant} react prototype` },
+        release: { command: `repo ../../🚚️distribution/📜️script.ts build ${playground.variant} react release` },
       },
     };
   }
@@ -293,7 +293,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       metadata: orchestrator,
       dependsOn: pluginSiteReleases,
       outputs: [],
-      options: { command: "bun ../../🚚️distribution/📜️script.ts complete", forwardAllArgs: false },
+      options: { command: "repo ../../🚚️distribution/📜️script.ts complete", forwardAllArgs: false },
     }, "side-effecting", "publishes-remote");
   }
   return Object.fromEntries(Object.entries(result).map(([name,target])=>{

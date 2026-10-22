@@ -32,7 +32,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -40,7 +40,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -49,7 +49,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -59,7 +59,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify generation3d-widget-inputs",
+        "command": "repo ./📜️script.ts verify generation3d-widget-inputs",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -77,7 +77,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify document-restoration-oracle",
+        "command": "repo ./📜️script.ts verify document-restoration-oracle",
         "forwardAllArgs": true
       }
     },
@@ -86,7 +86,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-io",
+        "command": "repo ./📜️script.ts canonical-io",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -104,7 +104,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify generation3d-document-io",
+        "command": "repo ./📜️script.ts verify generation3d-document-io",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -122,7 +122,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify generation3d-preview-window-transient",
+        "command": "repo ./📜️script.ts verify generation3d-preview-window-transient",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -159,7 +159,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify semantic-wire",
+        "command": "repo ./📜️script.ts verify semantic-wire",
         "forwardAllArgs": true
       }
     },
@@ -178,7 +178,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -197,7 +197,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -216,7 +216,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -231,7 +231,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify geometry-context",
+        "command": "repo ./📜️script.ts verify geometry-context",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -249,7 +249,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify generation3d-widget-inputs native",
+        "command": "repo ./📜️script.ts verify generation3d-widget-inputs native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -269,7 +269,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify original-widget-output",
+        "command": "repo ./📜️script.ts verify original-widget-output",
         "forwardAllArgs": true
       }
     },    "verify-original-widget-output-native": {
@@ -278,7 +278,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify original-widget-output native",
+        "command": "repo ./📜️script.ts verify original-widget-output native",
         "forwardAllArgs": true
       }
     }

@@ -1,5 +1,5 @@
 /** 🔶️ The window instance id phase of WasmGraphSurface. */
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { registerIntroductionSurfaceResolver, useCanvasAppearanceSync, useLabel, useShellScopeOptional } from "@semio-tech/ui-react";
 import { GestureRecognizer, windowElementId, type ActionDescriptor, type NodeGraphScene } from "@semio-tech/framework";

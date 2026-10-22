@@ -128,12 +128,18 @@ test("The heartbeat records what the owner's process tree holds",async()=>{
  });
 });
 
-test("When nothing of ours runs a high load alone cannot starve a request forever, but memory pressure at the hard level does",async()=>{
+test("Foreign load never makes a request wait: it scales jobs down, a request wider than the core ceiling still overrides when nothing of ours runs, and memory pressure at the hard level blocks",async()=>{
  const directory=fresh(),lines:string[]=[];
  const started=Date.now();
- await withHostCapacityV1(options(directory,{sample:sampler(()=>({load:30})),write:line=>lines.push(line)}),async handle=>expect(handle.jobs).toBe(1));
- expect(Date.now()-started).toBeGreaterThanOrEqual(140);
- expect(lines.at(-1)).toMatch(/admitted run after \d+s although the load is above its ceiling/u);
+ await withHostCapacityV1(options(directory,{sample:sampler(()=>({load:33})),write:line=>lines.push(line),request:request({fixedMegabytes:5120,cpuPerJob:2})}),async handle=>expect(handle).toMatchObject({jobs:1,reservedMegabytes:5120}));
+ expect(Date.now()-started).toBeLessThan(140);
+ expect(lines.at(-1)).toMatch(/^\[capacity\] admitted run: 1 job\(s\), 5120 MB reserved/u);
+ lines.length=0;
+ const wide=Date.now();
+ await withHostCapacityV1(options(directory,{sample:sampler(()=>({load:1})),write:line=>lines.push(line),request:request({cpuPerJob:25})}),async handle=>expect(handle.jobs).toBe(1));
+ expect(Date.now()-wide).toBeGreaterThanOrEqual(140);
+ expect(lines.some(line=>line.includes("waiting")&&line.includes("the cores are fully booked by our own running jobs"))).toBe(true);
+ expect(lines.at(-1)).toMatch(/admitted run after \d+s although the cores are fully booked by our own running jobs/u);
  const controller=new AbortController();setTimeout(()=>controller.abort(Error("gave up")),250);
  await expect(withHostCapacityV1(options(directory,{control:control(controller.signal).value,sample:sampler(()=>({pressure:"critical"}))}),async()=>"never")).rejects.toThrow("gave up");
 },30000);

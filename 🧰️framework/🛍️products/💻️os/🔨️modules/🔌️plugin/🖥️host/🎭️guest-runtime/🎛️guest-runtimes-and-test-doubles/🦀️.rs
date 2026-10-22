@@ -143,7 +143,7 @@ impl From<Arc<crate::RecordingRuntime>> for GuestRuntimes {
 //#endregion 🎭️GuestRuntime
 
 /// 🛂️ Generated concurrent imports forward the real inline admission slot to the original caller pump.
-impl semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::HostWithStore<ActorHostState> for wasmtime::component::HasSelf<ActorHostState> {
+impl semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::HostWithStore<ActorHostState> for wasm::component::HasSelf<ActorHostState> {
  async fn operation_begin(accessor:&Accessor<ActorHostState,Self>)->Result<u64,u32>{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Begin).await{semio_framework_plugin_host_operation::OperationReply::Begin(value)=>value,_=>Err(4)}}
  async fn operation_progress(accessor:&Accessor<ActorHostState,Self>,completed:u64,total:u64,owned:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Progress{completed,total,owned}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
  async fn operation_allocation(accessor:&Accessor<ActorHostState,Self>,bytes:u64,owned:u64,next:u64,maximum:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Allocation{bytes,owned,next,maximum}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
@@ -161,7 +161,7 @@ impl semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Ho
 #[cfg(any(test, feature = "testkit"))]
 pub struct RecordingRuntime {
     pub last_turn_budget: Mutex<Option<Budget>>,
-    pub last_job_budget: Mutex<Option<JobBudget>>,
+    pub last_job_budget: Mutex<Option<OriginalJobBudget>>,
 }
 
 #[cfg(any(test, feature = "testkit"))]
@@ -200,15 +200,24 @@ impl GuestRuntime for RecordingRuntime {
             ui_patch_receipt: None,
         })
     }
-    async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
-        Ok(())
+    async fn start_job(&self,_inst:&mut GuestInstance,_source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobStartReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, returned_source: None, refusal: None }))
     }
-    async fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+    async fn step_job(&self,_inst:&mut GuestInstance,_job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
         *self.last_job_budget.lock().expect("lock") = Some(budget);
-        Ok(JobStep::Running { progress: None })
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobStepReply { input: budget.input, spent: Default::default(), work_units_spent: 0, outcome: None, source_closed: false, refusal: None }))
     }
-    async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
-        Ok(())
+    async fn read_job_output(&self,_inst:&mut GuestInstance,_job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobOutputReply { input: budget.input, spent: Default::default(), work_units_spent: 0, chunk: None, source_closed: false, refusal: None }))
+    }
+    async fn acknowledge_job_output(&self,_inst:&mut GuestInstance,_job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobOutputAckReply { input: budget.input, spent: Default::default(), work_units_spent: 0, acknowledged: true, source_closed: true, refusal: None }))
+    }
+    async fn cancel_job(&self,_inst:&mut GuestInstance,_job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobCancelReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, refusal: None }))
+    }
+    async fn close_jobs(&self,_inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobCancelReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, refusal: None }))
     }
     async fn checkpoint(&self, _inst: &mut GuestInstance, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         Ok(vec![])

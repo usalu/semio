@@ -48,8 +48,8 @@ fn granted_trunk_identity_matches_the_cold_blake3_wire_oracle() {
         let document = ArtifactId(text.into());
         let expected = trunk_alternative_id(&document);
         let mut material = Vec::new();
-        crate::write_str(&mut material, "semio.history.trunk");
-        crate::write_str(&mut material, &document.0);
+        semio_framework_replication_wire_core::write_str(&mut material, "semio.history.trunk");
+        semio_framework_replication_wire_core::write_str(&mut material, &document.0);
         let oracle = format!("trunk-{}", &blake3::hash(&material).to_hex()[..16]);
         assert_eq!(expected, oracle);
         let actual = HistoryFoldJob::new(|control| async move { copy_history_trunk(&document, &control).await }).finish_cold().unwrap();

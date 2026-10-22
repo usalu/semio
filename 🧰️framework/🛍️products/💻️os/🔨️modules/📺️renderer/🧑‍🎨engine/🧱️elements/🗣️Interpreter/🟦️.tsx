@@ -14,7 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { memo, Profiler, useCallback, type ReactNode } from "react";
+import { memo, Profiler, useCallback, type ReactNode } from "../⚛️react-port/🟦️.ts";
 import { LocalDocumentOwnerContext, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "./🧭️local-document-owner/🟦️.ts";
 import { inputActionWithWindowV1, type ShellInputActionV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import {
@@ -89,7 +89,7 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, window
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerTests1: registerContinuousPressTests } = await import("./🧪️tests/🧪️continuous-presses/🟦️.tsx");
   await registerContinuousPressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerNumberKeyboardLawTests } = await import("./🧪️tests/🧪️number-keyboard-law/🟦️.tsx");

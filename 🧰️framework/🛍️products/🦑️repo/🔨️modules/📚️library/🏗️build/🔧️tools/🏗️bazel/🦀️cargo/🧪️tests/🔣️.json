@@ -12,7 +12,7 @@
   {
    "name": "build unquoted",
    "kind": "native",
-   "command": "bun a/script.ts native cargo build --manifest p/Cargo.toml",
+   "command": "repo a/script.ts native cargo build --manifest p/Cargo.toml",
    "expected": {
     "subcommand": "build",
     "manifest": "p/Cargo.toml"
@@ -36,7 +36,7 @@
   {
    "name": "component driver unquoted",
    "kind": "orchestration",
-   "command": "bun a/script.ts component --manifest p/Cargo.toml",
+   "command": "repo a/script.ts component --manifest p/Cargo.toml",
    "expected": { "subcommand": "build", "manifest": "p/Cargo.toml" }
   },
   {
@@ -66,7 +66,7 @@
   {
    "name": "other command",
    "kind": "native",
-   "command": "bun ./script.ts test",
+   "command": "repo ./script.ts test",
    "expected": null
   },
   {
@@ -334,7 +334,7 @@
       "lint": {
        "execution": {
         "kind": "command",
-        "command": "bun ./script.ts lint"
+        "command": "repo ./script.ts lint"
        },
        "cache": true,
        "outputs": [],

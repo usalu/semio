@@ -44,7 +44,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 #[test]
 fn tightens_the_active_policy() {
     let base = before();
-    let outcome = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &base);
+    let outcome = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::diff(&mutation(), &base);
     let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("change-merge-policy applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: the tightened setting differs from the committed after-snapshot");
     assert_eq!(applied.policy, protocol::MergePolicy::Vigilant, "change-merge-policy/tightens-the-authority-to-vigilant: the payload's policy must land verbatim on the setting");
@@ -56,14 +56,14 @@ fn tightens_the_active_policy() {
 #[test]
 fn restoring_the_prior_policy_restores_before() {
     let base = before();
-    let inverse = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-merge-policy/tightens-the-authority-to-vigilant: exactly one undo step");
     let MergePolicyConfigMutation::ChangeMergePolicy(undo) = &inverse[0];
     assert_eq!(undo.policy, protocol::MergePolicy::Normal, "change-merge-policy/tightens-the-authority-to-vigilant: the undo must carry BASE's own prior policy");
-    let forward = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &base);
+    let forward = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::diff(&mutation(), &base);
     let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward change-merge-policy applies");
     for step in &inverse {
-        let redo = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(step, &snapshot);
+        let redo = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::diff(step, &snapshot);
         snapshot = protocol::apply_diff_cold(redo.diff(), &snapshot).expect("the change-merge-policy inverse step applies");
     }
     assert_eq!(snapshot, base, "change-merge-policy/tightens-the-authority-to-vigilant: restoring Normal did not restore the before-setting");
@@ -90,7 +90,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-merge-policy/tightens-the-authority-to-vigilant: this fixture declares an applied outcome");
-    let produced = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &before());
+    let produced = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "change-merge-policy/tightens-the-authority-to-vigilant: changing to a different policy must not raise mutation.no-op");
     assert!(produced.messages().is_empty(), "change-merge-policy/tightens-the-authority-to-vigilant: an accepted policy change emits no diagnostics");
 }
@@ -98,7 +98,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &before());
+    let outcome = <MergePolicyConfigMutation as protocol::ColdMutation<MergePolicySetting>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-merge-policy/tightens-the-authority-to-vigilant: produced diff differs from the committed 🔺️diff/🔣️.json");

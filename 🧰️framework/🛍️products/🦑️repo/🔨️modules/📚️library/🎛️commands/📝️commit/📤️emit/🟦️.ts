@@ -4,6 +4,7 @@ import { spawnCapturedSync } from "../../../🏃️process/🔍️probe/🟦️.
 import { gitSpawnEnv } from "../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
 import { BUNDLE_DATE_SECTION_RE, BUNDLE_WIP_SUBJECT_RE, type CommitBundleSection } from "../🧾️bundle-model/🟦️.ts";
 import { normalizeBundleDateLine } from "../📅️dates/🟦️.ts";
+import {sayCommitV1,refuseCommitV1} from "../📖️texts/🟦️.ts";
 
 const COMMIT_DIFF_MAX_BYTES = 1_500_000;
 
@@ -57,7 +58,7 @@ export function validateBundleBulletsFresh(root: string, base: string, head: str
     for (const section of bundle.dates) {
       for (const bullet of section.bullets) {
         if (bulletMatchesCommitHistory(bullet, history)) {
-          throw new Error(`commit: bullet copies a prior commit message line — rewrite from git diff only: ${bullet}`);
+          throw refuseCommitV1("failed","emit.bullet-copies-a-prior-message",{bullet:String(bullet)});
         }
       }
     }
@@ -65,14 +66,14 @@ export function validateBundleBulletsFresh(root: string, base: string, head: str
 }
 
 function emitCommitBundleAttributionNote(): void {
-  console.error("commit: bundles and file→bundle mapping are NOT automatic — folder layout and bundle boundaries change between WIPs");
-  console.error("commit: you must (1) read log for last bundle/WIP state, (2) read diff --stat + full diff for every path, (3) decide scopes/dates/bullets, then prepare stdin");
-  console.error("commit: script only adds subject, uloc suffixes, sort order, footer, Signed-off-by — never invents bundles or bullets");
-  console.error("commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕️✏️➖️🟰️); run: bun ./📜️script.ts commit check");
+  sayCommitV1("emit.bundles-and-file-bundle-mapping",{},"error");
+  sayCommitV1("emit.you-must-read-log-for",{},"error");
+  sayCommitV1("emit.script-only-adds-subject-uloc",{},"error");
+  sayCommitV1("emit.prepare-check-fail-unless-days",{},"error");
 }
 
 function emitCommitAnalysisHint(): void {
-  console.error("commit: write NEW bundle scopes, dates, and bullets on prepare stdin after log + diff attribution");
+  sayCommitV1("emit.write-new-bundle-scopes-dates",{},"error");
 }
 
 /** 📜️Prior commit messages since last WIP (context for dates only — not for copying bullets). */
@@ -80,14 +81,14 @@ export function emitCommitLog(root: string): void {
   root = gitRepoRoot(root);
   const resolved = resolveCommitBundleRange(root);
   if (!resolved) {
-    console.error("commit: no prior bundle WIP commit (subject …🔀️) found in recent history");
+    sayCommitV1("emit.no-prior-bundle-wip-found",{},"error");
     process.exit(1);
   }
   const { wip, range } = resolved;
-  console.error(`Last bundle WIP: ${wip.subject} (${wip.sha.slice(0, 7)})`);
+  sayCommitV1("emit.last-bundle-wip",{subject:String(wip.subject),sha:String(wip.sha.slice(0, 7))},"error");
   console.error(`Range: ${range}\n`);
   emitCommitBundleAttributionNote();
-  console.error("\n=== prior commit messages (context only — do not copy bullets; old format may be wrong) ===\n");
+  sayCommitV1("emit.prior-messages",{},"error");
   const log = git(root, ["log", `--format=commit %h%n%s%n%b%n---`, range]);
   if (log.ok && log.out) console.error(log.out);
   emitCommitAnalysisHint();
@@ -98,18 +99,18 @@ export function emitCommitDiff(root: string): void {
   root = gitRepoRoot(root);
   const resolved = resolveCommitBundleRange(root);
   if (!resolved) {
-    console.error("commit: no prior bundle WIP commit (subject …🔀️) found in recent history");
+    sayCommitV1("emit.no-prior-bundle-wip-found",{},"error");
     process.exit(1);
   }
   const { wip, range } = resolved;
-  console.error(`Last bundle WIP: ${wip.subject} (${wip.sha.slice(0, 7)})`);
+  sayCommitV1("emit.last-bundle-wip",{subject:String(wip.subject),sha:String(wip.sha.slice(0, 7))},"error");
   console.error(`Range: ${range}\n`);
   const stat = git(root, ["diff", "--stat", range]);
   emitCommitBundleAttributionNote();
-  console.error("\n=== git diff --stat (overview) ===\n");
+  sayCommitV1("emit.git-diff-stat",{},"error");
   if (stat.ok && stat.out) console.error(`${stat.out}\n`);
   const patch = git(root, ["diff", range]);
-  console.error("=== git diff (write bullets from this — not from prior commit text) ===\n");
+  sayCommitV1("emit.git-diff",{},"error");
   if (!patch.ok || !patch.out) {
     console.error(patch.out || "(empty diff)\n");
     emitCommitAnalysisHint();
@@ -118,7 +119,7 @@ export function emitCommitDiff(root: string): void {
   const bytes = Buffer.byteLength(patch.out, "utf8");
   if (bytes > COMMIT_DIFF_MAX_BYTES) {
     console.error(patch.out.slice(0, COMMIT_DIFF_MAX_BYTES));
-    console.error(`\n[commit diff truncated at ${COMMIT_DIFF_MAX_BYTES} bytes of ${bytes} — inspect locally: git diff ${range}]\n`);
+    sayCommitV1("emit.diff-truncated-at-maximumbytes-bytes",{maximumBytes:String(COMMIT_DIFF_MAX_BYTES),bytes:String(bytes),range:String(range)},"error");
   } else {
     console.error(`${patch.out}\n`);
   }

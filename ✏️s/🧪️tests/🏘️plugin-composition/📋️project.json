@@ -10,7 +10,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🧪️tests/🏘️plugin-composition"
       },
       "inputs": [

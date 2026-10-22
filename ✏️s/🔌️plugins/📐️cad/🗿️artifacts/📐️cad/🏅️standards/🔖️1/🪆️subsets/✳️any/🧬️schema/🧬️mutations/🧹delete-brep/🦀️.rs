@@ -17,6 +17,15 @@ where
     Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_brep::CreateBrep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete topology child", "Topologie-Kind löschen") }
+    fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<CadSnapshot, Op> for DeleteBrep
+where
+    Op: protocol::ColdMutation<CadSnapshot, ReferenceDiff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_brep::CreateBrep>,
+{
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
         let Some(index) = base.breps.iter().position(|child| child.child_id == self.child_id) else {
             return protocol::MutationOutcome::error("mutation.target-missing", "topology sibling is absent", [self.child_id.clone()]);
@@ -28,6 +37,4 @@ where
         let index = u32::try_from(index).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "topology sibling position exceeds the portable u32 domain"))?;
         Ok(vec![Op::from(super::create_brep::CreateBrep { child_id: child.child_id.clone(), target: child.target.clone(), index })])
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete topology child", "Topologie-Kind löschen") }
-    fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
 }

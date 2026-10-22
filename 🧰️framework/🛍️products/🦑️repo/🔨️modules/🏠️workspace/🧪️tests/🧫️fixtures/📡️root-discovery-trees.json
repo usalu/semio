@@ -1,61 +1,35 @@
 {
-  "$comment": "🧫️ Immutable descriptions of the workspace trees the root-discovery case materialises inside its own work directory. A tree is described rather than committed because the marker a checkout is recognised by is a `.git` directory, which cannot be committed inside this repository.",
+  "$comment": "🧫️ Ordinary unmarked fixture directories inherit the actual nearest checkout, or remain the starting directory when none exists. No repository markers are fabricated.",
   "schema": "semio.repo.workspace.root-discovery-trees/1",
   "trees": [
     {
-      "name": "git-checkout-wins-over-an-outer-go-module",
+      "name": "nested",
       "directories": [
-        "outer",
-        "outer/inner",
-        "outer/inner/.git",
-        "outer/inner/a/b/c"
-      ],
-      "files": {
-        "outer/go.mod": "module outer\n"
-      },
-      "startAt": "outer/inner/a/b/c",
-      "expectedRoot": "outer/inner"
-    },
-    {
-      "name": "legacy-cli-entry-point-wins-over-a-nearer-checkout",
-      "directories": [
-        "mono",
-        "mono/repo/cli",
-        "mono/nested",
-        "mono/nested/.git",
-        "mono/nested/deep"
-      ],
-      "files": {
-        "mono/repo/cli/main.go": "package main\n"
-      },
-      "startAt": "mono/nested/deep",
-      "expectedRoot": "mono"
-    },
-    {
-      "name": "an-inner-go-module-does-not-beat-an-enclosing-checkout",
-      "directories": [
-        "plain",
-        "plain/a",
-        "plain/a/b"
-      ],
-      "files": {
-        "plain/a/go.mod": "module a\n"
-      },
-      "startAt": "plain/a/b",
-      "expectedRoot": "outside"
-    },
-    {
-      "name": "the-nearest-checkout-wins",
-      "directories": [
-        "deep",
-        "deep/.git",
-        "deep/one",
-        "deep/one/.git",
-        "deep/one/two"
+        "first/a/b"
       ],
       "files": {},
-      "startAt": "deep/one/two",
-      "expectedRoot": "deep/one"
+      "startAt": "first/a/b",
+      "expectedRoot": "nearest-checkout-or-start"
+    },
+    {
+      "name": "source",
+      "directories": [
+        "src/child"
+      ],
+      "files": {
+        "src/file.rs": "pub fn item() {}\n"
+      },
+      "startAt": "src/child",
+      "expectedRoot": "nearest-checkout-or-start"
+    },
+    {
+      "name": "empty",
+      "directories": [
+        "empty"
+      ],
+      "files": {},
+      "startAt": "empty",
+      "expectedRoot": "nearest-checkout-or-start"
     }
   ],
   "layout": {

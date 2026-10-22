@@ -13,7 +13,16 @@ pub struct RenameDocumentElement {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "document-element", kind: "rename-document-element", record: "RenameDocumentElement" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename document element", "Dokumentelement umbenennen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentElement {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::ColdMutation<XmlSnapshot>>::ReferenceDiff> {
         let Self { name } = self;
         match (document_element_name(base), base.doc.doctype.as_ref()) {
             (None, _) => rejected("rename-document-element: the document has no document element to rename".to_string()),
@@ -30,12 +39,6 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentEle
             Some(name) => vec![XmlValidMutation::RenameDocumentElement(RenameDocumentElement { name: name.to_string() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename document element", "Dokumentelement umbenennen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -18,7 +18,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric"
       }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds /private/tmp/polyglot-units/ov5 (the live build library with the operations directory copied and wired), regenerates the help snapshot fixture of the operations suite into wiring/help-fixture.json (plus its recorded base digest) and runs the operations suite on the wired copy. One bun process at a time."""
+"""🧰️ Builds /private/tmp/polyglot-units/ov5 (the live build library with the operations directory copied and wired), regenerates the help snapshot fixture of the operations suite into wiring/help-fixture.json (plus its recorded base digest) and runs the operations suite on the wired copy. One bun process at a time."""
 import hashlib, json, os, shutil, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import wiring

@@ -17,8 +17,8 @@ fn base_snapshot() -> StepSnapshot {
 /// and the returned diff equals `m.diff(base)`.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
-    let expected_diff = <StepMutation as Mutation<StepSnapshot>>::diff(&m, base);
-    let expected_state = protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff");
+    let expected_diff = <StepMutation as ColdMutation<StepSnapshot>>::diff(&m, base);
+    let expected_state = protocol::apply_diff_cold(expected_diff.diff(), base).expect("valid mutation diff");
     let mut actual_state = base.clone();
     let actual_diff = apply_step_mutation(&mut actual_state, &m);
     assert_eq!(actual_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
@@ -67,7 +67,7 @@ async fn inverse_law_mutation_level_round_trips_every_variant() {
     for m in variants {
         let mut state = base.clone();
         apply_step_mutation(&mut state, &m);
-        let inverses = <StepMutation as Mutation<StepSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+        let inverses = <StepMutation as ColdMutation<StepSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = state.clone();
         for inv in &inverses {
             apply_step_mutation(&mut restored, inv);
@@ -82,7 +82,7 @@ async fn inverse_law_mutation_level_round_trips_every_variant() {
 async fn removing_a_middle_row_is_restored_at_its_original_index() {
     let base = base_snapshot();
     let removal = StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: 2 });
-    let inverse = <StepMutation as Mutation<StepSnapshot>>::inverse(&removal, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <StepMutation as ColdMutation<StepSnapshot>>::inverse(&removal, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![StepMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: base.entities[1].clone() })]);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &base).await;
 }

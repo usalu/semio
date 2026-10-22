@@ -358,7 +358,7 @@ func FinishTicket(ticket *model.Ticket, summary string, files []string, noManage
 		Author:     contributors.GetGitAuthorAlias(),
 		System:     languages.GetSystem(),
 		Client:     closeClient,
-		Checkpoint: workspace.GetGitCheckpoint(),
+		Checkpoint: workspace.GetGitCheckpoint(workspace.GetRootDir()),
 		Date:       nowStr,
 		Summary:    summary,
 		Files:      interactionFiles,

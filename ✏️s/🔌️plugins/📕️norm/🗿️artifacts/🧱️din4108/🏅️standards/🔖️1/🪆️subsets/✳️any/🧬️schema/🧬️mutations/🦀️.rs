@@ -62,7 +62,7 @@ use semio_s_artifact_norm_din4108_mut_layers::change_layer_compressive_class;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = Din4108Snapshot, diff = Din4108Diff, schema = "s.norm.din4108")]
+#[mutations(snapshot = Din4108Snapshot, diff = Din4108Diff, schema = "s.norm.din4108", reference = Din4108Snapshot, reference_diff = Din4108Diff)]
 pub enum Din4108Mutation {
     ChangeClimateZone(change_climate_zone::ChangeClimateZone),
     ChangeUsage(change_usage::ChangeUsage),
@@ -172,15 +172,15 @@ pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_
 pub mod mutation_bridge {
 /// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
 pub fn apply_din4108_mutation(base: &semio_s_artifact_norm_din4108_model::Din4108Snapshot, mutation: &crate::Din4108Mutation) -> Result<(semio_s_artifact_norm_din4108_model::Din4108Snapshot, Vec<String>), String> {
-    let raised = <crate::Din4108Mutation as protocol::Mutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::diff(mutation, base);
+    let raised = <crate::Din4108Mutation as protocol::ColdMutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
 /// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
 pub fn inverse_din4108_mutation(mutation: &crate::Din4108Mutation, base: &semio_s_artifact_norm_din4108_model::Din4108Snapshot) -> Result<Vec<crate::Din4108Mutation>, semio_framework_value::ValueError> {
-    <crate::Din4108Mutation as protocol::Mutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::inverse(mutation, base)
+    <crate::Din4108Mutation as protocol::ColdMutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::inverse(mutation, base)
 }
 }
 pub use crate::mutation_bridge::*;

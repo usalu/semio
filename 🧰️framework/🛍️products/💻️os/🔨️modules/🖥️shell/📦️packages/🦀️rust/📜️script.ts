@@ -46,6 +46,6 @@ class SchemaCheckScript extends BundleScript {
 }
 //#endregion 🧬️SchemaCheck
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("schema-check", SchemaCheckScript).register("preview-generated", PreviewGeneratedScript);
+const router = new ScriptRouter(import.meta.dirname).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("schema-check", SchemaCheckScript).register("preview-generated", PreviewGeneratedScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "check" }));

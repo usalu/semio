@@ -11,8 +11,14 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteSupport> + From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "support", kind: "delete-support", record: "DeleteSupport" };
-fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_support::diff::diff(self, base) }
-fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::delete_support::inverse::inverse(self, base)) }
 fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("delete support", "Löschen Auflager") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for DeleteSupport
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<DeleteSupport> + From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>,
+{
+fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_support::diff::diff(self, base) }
+fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::delete_support::inverse::inverse(self, base)) }
 }

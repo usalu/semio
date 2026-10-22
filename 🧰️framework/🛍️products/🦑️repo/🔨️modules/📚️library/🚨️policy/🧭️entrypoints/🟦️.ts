@@ -20,7 +20,7 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
   const segments = process.argv.slice(2);
   if (await dispatchPolicyArgv(segments, scriptUrl)) return;
-  console.error("usage: bun ./📜️script.ts policy");
+  console.error("usage: repo ./📜️script.ts policy");
   process.exit(1);
 }
 

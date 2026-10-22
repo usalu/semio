@@ -20,9 +20,10 @@ pub mod actor_bindings {
     // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `📥️imports/🦀️.rs`'s 24
     // `host-async` implementations re-export this module rather than generating a second, nominally
     // distinct copy of every type (which is what the two-world split forced before the collapse).
-    wasmtime::component::bindgen!({
+    semio_framework_plugin_host_engine::wasm::component::bindgen!({
         world: "actor",
         path: "../../../../🧬️schema",
+        wasmtime_crate: ::semio_framework_plugin_host_engine::wasm::generated_code_support,
     });
 }
 

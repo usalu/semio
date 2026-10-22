@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().regions.is_some(), "create-region/appends-a-solid-d78275: the created region must surface in the regions delta");
     assert!(outcome.diff().materials.is_none(), "create-region/appends-a-solid-d78275: the material the region validates against is read-only");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

@@ -123,23 +123,9 @@ impl protocol::list_delta::RowPatch<FigureTileDraft> for PresentationTilePatch {
     }
 }
 
-impl MutationDiff<PresentationSnapshot> for PresentationDiff {
-    fn apply(&self, snapshot: &PresentationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PresentationSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(patch) = &self.source {
-            next.source = patch.fold(&next.source);
-        }
-        if let Some(delta) = &self.tiles {
-            next.tiles = delta.commit_onto(&next.tiles, capability).map_err(|error| error.under(["tiles"]))?;
-        }
-        if self.source.is_some() || self.tiles.is_some() {
-            next.presentation = crate::presentation_child_handle(&next.source, &next.tiles);
-        }
-        Ok(next)
-    }
+impl MutationDiff<PresentationSnapshot> for PresentationDiff {}
+
+impl protocol::ColdMutationDiff<PresentationSnapshot> for PresentationDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -156,18 +142,40 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut PresentationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(patch) = &self.source {
+            next.source = patch.fold(&next.source);
+        }
+        if let Some(delta) = &self.tiles {
+            next.tiles = delta.commit_onto(&next.tiles, capability).map_err(|error| error.under(["tiles"]))?;
+        }
+        if self.source.is_some() || self.tiles.is_some() {
+            next.presentation = crate::presentation_child_handle(&next.source, &next.tiles);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<PresentationSnapshot> for PresentationDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.source.as_ref().is_none_or(PresentationSourcePatch::is_empty) && self.tiles.as_ref().is_none_or(PresentationTilesDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PresentationSnapshot> for PresentationDiff {
     fn inverse(&self, base: &PresentationSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             source: self.source.as_ref().map(|patch| patch.inverse(&base.source)),
             tiles: self.tiles.as_ref().map(|delta| delta.inverse(&base.tiles)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.source.as_ref().is_none_or(PresentationSourcePatch::is_empty) && self.tiles.as_ref().is_none_or(PresentationTilesDelta::is_empty)
     }
 }
 

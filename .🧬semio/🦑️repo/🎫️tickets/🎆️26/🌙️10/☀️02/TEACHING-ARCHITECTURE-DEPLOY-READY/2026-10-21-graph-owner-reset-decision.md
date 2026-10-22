@@ -1,0 +1,5 @@
+# Graph Owner Reset Decision
+
+Actual12958 exited1/null without cancellation22:02:47Z. Frozen original47952B/SHA7bbfb6e0e4f78ce381eb9d8e8e097a7e1f5b6963aa73bf878b362c666ff6e828 again identifies strictv2 refusal of2d61v1snapshot124213751B/dependencies873, before any reset success receipt. The Source runtime early recovery branch exists, but does not establish that upstream Source/admission work can reach it without Graph proof; actualrun demonstrates this path still touches rejected cache content. Root assigned clean sameOriginal pre-runtime admission correction, preserving existing resetowner/strictconsumer and all ordinary guards. No retry or manualcacheaction.
+
+All16postSource observations readable/singlelink,0readerrors,3peercontentdeltas(reset runtime,formatowner,store). Host/43hardancestors stable. Mutablehostpostbodies are not loadedrevision proof. Rootledger now noactiveNative. Lowcausal/testcontract audits and Highimplementation continue. Source290metadata current; Source290sealpreview is now stale fornewSource deltas and remains DATAonly/unpublished. All28focusedtests,prefix,capturedneutral,controller,redeployartifact remainunproven.

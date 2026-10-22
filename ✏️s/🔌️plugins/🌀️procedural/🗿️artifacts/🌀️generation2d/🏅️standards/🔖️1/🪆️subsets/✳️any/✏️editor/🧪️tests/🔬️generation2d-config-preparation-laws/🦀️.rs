@@ -12,8 +12,8 @@ fn admitted_maximum_and_production_grant_make_bounded_progress() {
     let mut work = Generation2dConfigPreparation {
         owners: store::OneItemOwners::detached(
             maximum,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dConfigMutation>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<Generation2dConfig>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dConfigMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<Generation2dConfig>::default()),
         ),
         checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,

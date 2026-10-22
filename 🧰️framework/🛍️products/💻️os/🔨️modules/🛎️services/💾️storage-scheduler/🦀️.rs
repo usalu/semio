@@ -1,7 +1,8 @@
 //! 💾️ The storage scheduler: lane-ordered dispatch under a byte budget and an in-flight bound, with deadline races.
 
 use semio_framework_actor::PackageId;
-use semio_framework_async::{Either, HostAsyncRuntime, Lane, OperationContext, ScopeHandle, WorkerPool, oneshot, select2};
+use semio_framework_async::{Either, HostAsyncRuntime, Lane, OperationContext, ScopeHandle, WorkerPool, select2};
+use semio_framework_async_sync::{oneshot};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::future::Future;
 use std::sync::{Arc, Mutex};

@@ -1,0 +1,39 @@
+{
+  "title": "Fix Parent Connection Section Visibility",
+  "status": "closed",
+  "description": "Fix the parent connection section not appearing in the piece detail panel when a child piece is selected. The bidirectional connection lookup was already implemented but the React component is not rendering the parentConnection TreeItem. Debug and fix the root cause.",
+  "summary": "Research complete. ConnectionScopeProvider+useConnection+connection hooks pipeline is correctly implemented for parentConnection rendering. No bugs found in store resolution, reactivity or setter wiring. All hooks work correctly for same-design parent connections.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/684"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-24T08:26:48.23488087Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix the parent connection section not appearing in the piece detail panel when a child piece is selected. The bidirectional connection lookup was already implemented but the React component is not rendering the parentConnection TreeItem. Debug and fix the root cause.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-24T14:24:08.583861558Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "summary": "Research complete. ConnectionScopeProvider+useConnection+connection hooks pipeline is correctly implemented for parentConnection rendering. No bugs found in store resolution, reactivity or setter wiring. All hooks work correctly for same-design parent connections.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        }
+      ]
+    }
+  ]
+}

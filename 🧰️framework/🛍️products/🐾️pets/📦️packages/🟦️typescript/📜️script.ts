@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { typecheckAdmittedProjectV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🐾️ `@semio-tech/pets` router: `bun ./📜️script.ts <test [fundamental|quick|long|exhaustive] | typecheck>`. */
+/** 🐾️ `@semio-tech/pets` router: `repo ./📜️script.ts <test [fundamental|quick|long|exhaustive] | typecheck>`. */
 import { join } from "node:path";
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -24,6 +24,6 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("typecheck", TypecheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

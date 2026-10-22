@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the typed-operation twin of
     /// `dispatch_emit`'s inline interaction fold, for the ladder every app command
     /// (`dispatch_typed_command_inner`) and retained tool publishes through and that never enters
@@ -128,6 +128,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                 captured_child_content_generation: 0,
                 result_page: None,
+                diagnostics: None,
                 result_page_presented: false,
                 result_sequence: 0,
                 publication_progress: 0,

@@ -23,8 +23,9 @@ import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
-/** 🌊️ `bun ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
+/** 🌊️ `repo ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
  * ([[cargoStreamingStatus]]): exits with cargo's status, 1 when cargo was stopped (budget, signal), after its forwarded output drained. */
 export class CargoRelayScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -53,7 +54,7 @@ export class NativeScript extends BundleScript {
       retain();
       await advanceScriptInvocation(this.invocation,"native:owner-command","running");
       retain();
-      const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
+      const cargo = runtimeParseTomlV1(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
       const callerEnvironment={...transported.environment,SEMIO_BUILD_MODE:original.buildMode};
       const env: Record<string,string|undefined>={...callerEnvironment,...ownerEnvironmentV1(cwd,["process","cargo"],undefined,callerEnvironment)};

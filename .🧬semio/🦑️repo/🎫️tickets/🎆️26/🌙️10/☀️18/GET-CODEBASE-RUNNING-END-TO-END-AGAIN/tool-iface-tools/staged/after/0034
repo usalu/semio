@@ -4,7 +4,8 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -62,12 +63,12 @@ const DOCUMENT_COORDINATES: Readonly<Record<string, readonly [string, string]>> 
 
 //#region 🔨️Build
 function ensureLegacyBuilt(): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build (legacy engine) failed with status ${result.status}`);
 }
 
 function ensureReaderBuilt(): void {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--manifest-path", READER_MANIFEST], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", READER_MANIFEST], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build (tobj-obj-reader) failed with status ${result.status}`);
 }
 
@@ -205,7 +206,7 @@ async function main(argv: readonly string[]): Promise<number> {
     };
     const probes = join(HERE, "..", "🔬️probes", "📜️script.ts");
     const projectionOf = (path: string): string => {
-      const result = spawnToolSyncV1("bun", [probes, "obj-document-project", "--input", path], { encoding: "utf8" });
+      const result = runToolSyncV1(runtimeCommandNameV1(), [probes, "obj-document-project", "--input", path], { encoding: "utf8" });
       if (result.status !== 0) throw new Error(`document reader refused ${path}: ${result.stdout}${result.stderr}`);
       return JSON.stringify(JSON.parse(result.stdout).measurements);
     };

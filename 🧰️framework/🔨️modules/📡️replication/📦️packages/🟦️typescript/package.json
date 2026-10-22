@@ -17,7 +17,7 @@
     "./mutation/map/testing/shared-map-delta-source": "./🎮️mutation/🗂️map/🧪️testing/🧪️shared-map-delta-source/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication:test"
+    "test": "repo run @semio-tech/framework-replication:test"
   },
   "devDependencies": {
     "fast-check": "3.23.2",

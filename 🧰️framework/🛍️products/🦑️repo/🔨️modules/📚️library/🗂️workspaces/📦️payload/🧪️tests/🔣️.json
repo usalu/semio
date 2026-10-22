@@ -1,0 +1,332 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "a string export covering the payload directory",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/web/index.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist/web",
+    "name": "pkg"
+   },
+   "expected": true
+  },
+  {
+   "name": "a string export outside the payload directory",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/web/index.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/other",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "the names must be equal",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "other"
+   },
+   "expected": false
+  },
+  {
+   "name": "an owner without a name",
+   "owner": {
+    "absDir": "/w/pkg",
+    "exports": "./dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "subpath exports are all considered",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     ".": "./a.js",
+     "./x": "./dist/x/index.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist/x",
+    "name": "pkg"
+   },
+   "expected": true
+  },
+  {
+   "name": "a wildcard subpath makes the whole map unusable",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     ".": "./dist/a.js",
+     "./*": "./dist/*.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "conditions are walked in order up to default",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     "import": "./dist/m.js",
+     "default": "./dist/d.js",
+     "require": "./dist/r.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": true
+  },
+  {
+   "name": "a target after default is not considered",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     "default": "./a.js",
+     "require": "./other/r.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/other",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "arrays are flattened without subpaths",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": [
+     "./dist/a.js",
+     "./other/b.js"
+    ]
+   },
+   "payload": {
+    "absDir": "/w/pkg/other",
+    "name": "pkg"
+   },
+   "expected": true
+  },
+  {
+   "name": "a numeric key is not a condition map",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     "0": "./dist/a.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "an empty key is not a condition map",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     "": "./dist/a.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "targets must start with ./",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "a parent segment is refused",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./../pkg/dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "node_modules segments are refused",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./node_modules/dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/node_modules/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "special characters are refused",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/a%20b.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "an empty segment is refused",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist//a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "an owner without exports owns nothing",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "a null export owns nothing",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": null
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "a nested condition map under subpaths",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     ".": {
+      "import": "./dist/m.js"
+     },
+     "./x": {
+      "default": "./y/z.js"
+     }
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/y",
+    "name": "pkg"
+   },
+   "expected": true
+  },
+  {
+   "name": "a subpath key without a dot is refused wholesale",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": {
+     ".": "./dist/a.js",
+     "x": "./dist/b.js"
+    }
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "the payload outside the owner",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/elsewhere/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "a prefix that is only a string prefix",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist-extra/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": false
+  },
+  {
+   "name": "backslash paths in the payload relation",
+   "owner": {
+    "absDir": "/w/pkg",
+    "name": "pkg",
+    "exports": "./dist/a.js"
+   },
+   "payload": {
+    "absDir": "/w/pkg/dist",
+    "name": "pkg"
+   },
+   "expected": true
+  }
+ ]
+}

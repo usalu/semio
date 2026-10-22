@@ -14,6 +14,16 @@ pub struct SetCamera {
 
 impl protocol::MutationKind<WiresCanvasWindowConfig, WiresCanvasWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<WiresCanvasWindowConfig, WiresCanvasWindowConfigMutation> for SetCamera {
     fn diff(&self, base: &WiresCanvasWindowConfig) -> protocol::MutationOutcome<WiresCanvasWindowConfigDiff> {
         if base.camera == self.camera {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "Configuration field is unchanged.");
@@ -26,12 +36,6 @@ impl protocol::MutationKind<WiresCanvasWindowConfig, WiresCanvasWindowConfigMuta
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["camera".into()]
-    }
 }
 
 #[cfg(test)]

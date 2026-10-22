@@ -91,7 +91,7 @@ fn prepare_lowpoly_artifact(base: &LowpolySnapshot, mutation: &LowpolyMutation) 
     }
     let inverse = mutation.inverse(base)?;
     let diff = mutation.diff(base).into_parts().0;
-    let post = protocol::apply_diff(&diff, base).map_err(|_| lowpoly_refusal("Lowpoly Artifact preparation could not apply its exact sparse diff"))?;
+    let post = protocol::apply_diff_cold(&diff, base).map_err(|_| lowpoly_refusal("Lowpoly Artifact preparation could not apply its exact sparse diff"))?;
     if !lowpoly_snapshot_admitted(&post) || lowpoly_snapshot_retained_bytes(&post) > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err(lowpoly_refusal("Lowpoly Artifact result exceeds its fixed retained preparation envelope"));
     }
@@ -127,7 +127,7 @@ fn prepare_lowpoly_config(base: &LowpolyConfig, mutation: &LowpolyConfigMutation
         return Err(lowpoly_refusal("Lowpoly config base exceeds its fixed retained preparation envelope"));
     }
     let inverse = mutation.inverse(base)?;
-    let post = protocol::apply_diff(&<LowpolyConfigMutation as Mutation<LowpolyConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| lowpoly_refusal(error.to_string()))?;
+    let post = protocol::apply_diff_cold(&<LowpolyConfigMutation as ColdMutation<LowpolyConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| lowpoly_refusal(error.to_string()))?;
     if lowpoly_config_retained_bytes(&post) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
         return Err(lowpoly_refusal("Lowpoly config result exceeds its fixed retained preparation envelope"));
     }

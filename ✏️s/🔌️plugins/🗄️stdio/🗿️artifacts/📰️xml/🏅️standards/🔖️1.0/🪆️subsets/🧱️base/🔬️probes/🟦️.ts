@@ -1,5 +1,6 @@
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -36,7 +37,7 @@ type XDoc = { declaration: XDecl | null; doctype: XDoctype | null; prolog: XNode
 //#region 🔓️Read
 /** 📥️ Runs the standalone codec's `project` subcommand and parses its typed JSON. */
 function readXml(path: string): XDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`quick-xml-oracle-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   return JSON.parse(result.stdout) as XDoc;
 }

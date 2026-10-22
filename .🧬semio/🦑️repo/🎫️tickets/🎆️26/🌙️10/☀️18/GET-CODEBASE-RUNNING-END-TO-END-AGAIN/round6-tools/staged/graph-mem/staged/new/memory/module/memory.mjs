@@ -1,39 +1,29 @@
 import v8 from "node:v8";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
-/** 🧠️ The declared limits of the graph memory governor; the schema file declares the same constants and a law keeps both equal. */
-export const GRAPH_MEMORY_POLICY_V1=Object.freeze({
- version:1,
- defaultBudgetMegabytes:3072,minimumBudgetMegabytes:1024,grantShare:0.5,resumeRatio:0.85,
- pollMilliseconds:50,sampleMilliseconds:25,admitMinimumMilliseconds:100,collectMinimumMilliseconds:2000,retainedMilliseconds:30000,progressMilliseconds:5000,
- retainedImageBytes:33554432,minimumInternedLength:24,maximumInternedCharacters:67108864,
- budgetEnvironment:"SEMIO_GRAPH_MEMORY_MB",planEnvironment:"SEMIO_HOST_CAPACITY_PLAN",
-});
+/** 🧊️ Freezes a declaration recursively. */
+const freeze=value=>{if(value!==null&&typeof value==="object"){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
+
+/** 🧠️ The declared limits of the graph memory governor: the schema file is the single source. */
+export const GRAPH_MEMORY_POLICY_V1=freeze(structuredClone(schema.definitions.Policy.const));
 const P=GRAPH_MEMORY_POLICY_V1,MEGABYTE=1048576;
 
-/** 🗣️ The bilingual texts of the governor; the schema file declares the same table and a law keeps both equal. */
-export const GRAPH_MEMORY_MESSAGES_V1=Object.freeze({
- en:Object.freeze({
-  waiting:"graph: waiting for memory ({used} of {budget} MB in use, {running} projects running)",
-  serial:"graph: memory above the budget of {budget} MB ({used} MB in use), inferring one project at a time",
-  resumed:"graph: memory below the budget again ({used} of {budget} MB), resuming",
- }),
- de:Object.freeze({
-  waiting:"Graph: wartet auf Speicher ({used} von {budget} MB belegt, {running} Projekte laufen)",
-  serial:"Graph: Speicher über dem Budget von {budget} MB ({used} MB belegt), Projekte werden einzeln abgeleitet",
-  resumed:"Graph: Speicher wieder unter dem Budget ({used} von {budget} MB), es geht weiter",
- }),
-});
+/** 🗣️ The bilingual texts of the governor, read from the schema file. */
+export const GRAPH_MEMORY_MESSAGES_V1=freeze(structuredClone(schema.definitions.Messages.const));
 
-/** 🌐️ Picks the language of the process like every other progress text: dashboard locale, then the system locale, English first and German second. */
-export function selectGraphMemoryLanguageV1(environment){
- return["SEMIO_DASHBOARD_LOCALE","LC_ALL","LC_MESSAGES","LANG"].map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value==="en"||value==="de")??"en";
+/** 🌐️ The languages of the process: the one the environment names, else every supported language in declared order (English first, German second); there is no default language. */
+export function selectGraphMemoryLanguagesV1(environment){
+ const named=P.languageEnvironment.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>P.languages.includes(value));
+ return named===undefined?[...P.languages]:[named];
 }
 
-/** 🗣️ Renders one governor message in the language of the environment. */
-export function renderGraphMemoryMessageV1(key,fields,environment){
- const template=GRAPH_MEMORY_MESSAGES_V1[selectGraphMemoryLanguageV1(environment)][key];
- if(template===undefined)throw Error("Closed graph memory message required: "+key);
- return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
+/** 🗣️ Renders one governor message as one line per language of the environment. */
+export function renderGraphMemoryMessagesV1(key,fields,environment){
+ return selectGraphMemoryLanguagesV1(environment).map(language=>{
+  const template=GRAPH_MEMORY_MESSAGES_V1[language][key];
+  if(template===undefined)throw Error("Closed graph memory message required: "+key);
+  return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
+ });
 }
 
 /** 📏️ The managed memory budget of one graph construction in bytes: the explicit environment value, else a share of the host capacity grant the process inherited, else the declared default; never below the declared minimum and never above the declared default. */
@@ -86,7 +76,7 @@ export function createMemoryGovernorV1({budgetBytes,workers,sample,collect,sleep
  const defaults=createMemoryPortsV1(),read=sample??defaults.sample,collectNow=collect??defaults.collect;
  const queue=[],stats={waits:0,waitedMilliseconds:0,collections:0,peakBytes:0};
  let running=0,blocked=false,pumping=false,serialSaid=false,retained=false,lastCollect=-Infinity,lastReport=-Infinity,lastSampleAt=-Infinity,lastAdmit=-Infinity,lastRelease=0,lastUsed=0;
- const say=(key,fields)=>report?.(renderGraphMemoryMessageV1(key,{budget:Math.round(budgetBytes/MEGABYTE),running,...fields},environment));
+ const say=(key,fields)=>{for(const line of renderGraphMemoryMessagesV1(key,{budget:Math.round(budgetBytes/MEGABYTE),running,...fields},environment))report?.(line);};
  const observe=fresh=>{const at=now();if(fresh||at-lastSampleAt>=policy.sampleMilliseconds){lastUsed=read();lastSampleAt=at;if(lastUsed>stats.peakBytes)stats.peakBytes=lastUsed;}return lastUsed;};
  const settled=()=>lastCollect>=lastRelease||retained&&now()-lastCollect<policy.retainedMilliseconds;
  const mayCollect=()=>now()-lastCollect>=policy.collectMinimumMilliseconds&&!settled();

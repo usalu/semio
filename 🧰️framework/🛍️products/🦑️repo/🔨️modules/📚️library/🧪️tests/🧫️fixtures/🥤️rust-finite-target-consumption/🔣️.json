@@ -446,7 +446,7 @@
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
     "target": "test-rust-finite-target-consumption",
-    "command": "bun ./📜️script.ts test rust-finite-target-consumption",
+    "command": "repo ./📜️script.ts test rust-finite-target-consumption",
     "route": "rust-finite-target-consumption",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
     "cache": true

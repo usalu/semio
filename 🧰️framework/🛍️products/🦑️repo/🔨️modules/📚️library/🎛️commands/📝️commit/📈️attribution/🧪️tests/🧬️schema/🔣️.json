@@ -1,0 +1,653 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "repo",
+  "bundles",
+  "expected",
+  "rowMatch",
+  "validate",
+  "brief",
+  "header",
+  "commitErrors",
+  "pathMatch",
+  "sortReverse"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "repo": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "commits"
+   ],
+   "properties": {
+    "base": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "commits": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "subject",
+       "body",
+       "files"
+      ],
+      "properties": {
+       "subject": {
+        "type": "string"
+       },
+       "body": {
+        "type": "string"
+       },
+       "files": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "minItems": 2
+    }
+   }
+  },
+  "bundles": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "label",
+     "dates"
+    ],
+    "properties": {
+     "label": {
+      "type": "string"
+     },
+     "dates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "dateLine",
+        "bullets"
+       ],
+       "properties": {
+        "dateLine": {
+         "type": "string"
+        },
+        "bullets": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 2
+  },
+  "expected": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "prefixSets",
+    "assigned",
+    "infer",
+    "dateUloc",
+    "dateSize",
+    "partitionUloc",
+    "partitionSize"
+   ],
+   "properties": {
+    "prefixSets": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "assigned": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "infer": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "label",
+       "paths",
+       "expected"
+      ],
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "paths": {
+        "anyOf": [
+         {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "expected": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "dateUloc": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {},
+       "minItems": 2
+      }
+     }
+    },
+    "dateSize": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {},
+       "minItems": 2
+      }
+     }
+    },
+    "partitionUloc": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "bundleTotals",
+      "rangeTotal"
+     ],
+     "properties": {
+      "bundleTotals": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "added",
+         "removed",
+         "edited"
+        ],
+        "properties": {
+         "added": {
+          "type": "integer"
+         },
+         "removed": {
+          "type": "integer"
+         },
+         "edited": {
+          "type": "integer"
+         }
+        }
+       }
+      },
+      "rangeTotal": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "added",
+        "removed",
+        "edited"
+       ],
+       "properties": {
+        "added": {
+         "type": "integer"
+        },
+        "removed": {
+         "type": "integer"
+        },
+        "edited": {
+         "type": "integer"
+        }
+       }
+      }
+     }
+    },
+    "partitionSize": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "bundleTotals",
+      "rangeTotal"
+     ],
+     "properties": {
+      "bundleTotals": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "added",
+         "removed",
+         "edited"
+        ],
+        "properties": {
+         "added": {
+          "type": "integer"
+         },
+         "removed": {
+          "type": "integer"
+         },
+         "edited": {
+          "type": "integer"
+         }
+        }
+       }
+      },
+      "rangeTotal": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "added",
+        "removed",
+        "edited"
+       ],
+       "properties": {
+        "added": {
+         "type": "integer"
+        },
+        "removed": {
+         "type": "integer"
+        },
+        "edited": {
+         "type": "integer"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "rowMatch": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "field",
+     "expected"
+    ],
+    "properties": {
+     "field": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "validate": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "totals",
+     "days",
+     "additive",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "bundles": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "label",
+        "dates"
+       ],
+       "properties": {
+        "label": {
+         "type": "string"
+        },
+        "dates": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "dateLine",
+           "bullets"
+          ],
+          "properties": {
+           "dateLine": {
+            "type": "string"
+           },
+           "bullets": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           }
+          }
+         }
+        }
+       }
+      },
+      "minItems": 2
+     },
+     "totals": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "added",
+        "removed",
+        "edited"
+       ],
+       "properties": {
+        "added": {
+         "type": "integer"
+        },
+        "removed": {
+         "type": "integer"
+        },
+        "edited": {
+         "type": "integer"
+        }
+       }
+      }
+     },
+     "days": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {},
+        "minItems": 2
+       }
+      }
+     },
+     "additive": {
+      "type": "boolean"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "brief": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "delta",
+     "expected"
+    ],
+    "properties": {
+     "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "removed",
+       "edited"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "header": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "label",
+     "uloc",
+     "size",
+     "ulocBloc",
+     "sizeBloc",
+     "expected"
+    ],
+    "properties": {
+     "label": {
+      "type": "string"
+     },
+     "uloc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "removed",
+       "edited"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       }
+      }
+     },
+     "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "removed",
+       "edited"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       }
+      }
+     },
+     "ulocBloc": {
+      "type": "integer"
+     },
+     "sizeBloc": {
+      "type": "integer"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "commitErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "extra",
+     "bundles",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "extra": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "bundles": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "label",
+        "dates"
+       ],
+       "properties": {
+        "label": {
+         "type": "string"
+        },
+        "dates": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "dateLine",
+           "bullets"
+          ],
+          "properties": {
+           "dateLine": {
+            "type": "string"
+           },
+           "bullets": {
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           }
+          }
+         }
+        }
+       }
+      },
+      "minItems": 1
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "pathMatch": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "index",
+     "prefixSets",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "index": {
+      "type": "integer"
+     },
+     "prefixSets": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "sortReverse": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "expectedOrder"
+   ],
+   "properties": {
+    "expectedOrder": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

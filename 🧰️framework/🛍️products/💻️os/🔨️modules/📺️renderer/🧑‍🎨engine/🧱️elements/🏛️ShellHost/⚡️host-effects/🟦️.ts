@@ -4,7 +4,7 @@
  */
 
 import { shellDialogOriginIsCurrentV1, shellDialogSessionIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { useCallback } from "react";
+import { useCallback } from "../../⚛️react-port/🟦️.ts";
 import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 // #region 🔌️Adapters
 import {

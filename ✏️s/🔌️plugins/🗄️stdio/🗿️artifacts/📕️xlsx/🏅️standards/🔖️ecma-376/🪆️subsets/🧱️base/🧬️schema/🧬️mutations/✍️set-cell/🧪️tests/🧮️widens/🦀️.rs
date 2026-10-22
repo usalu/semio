@@ -65,7 +65,7 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn produces_a_diff_of_the_worksheet_part_only() {
     let base = snapshot_of(BEFORE);
-    let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation(&base), &base);
+    let raised = <XlsxMutation as protocol::ColdMutation<XlsxSnapshot>>::diff(&mutation(&base), &base);
     assert!(raised.diff().opc.is_none(), "set-cell/widens: a formula edit must never reach into the lossless OPC lane");
     let parts = raised.diff().xml_parts.as_ref().expect("set-cell/widens: the XML parts diff must be present");
     assert!(parts.removed.is_empty() && parts.inserted.is_empty() && parts.moved.is_empty(), "set-cell/widens: the worksheet is patched in place — no part is added or removed");
@@ -77,7 +77,7 @@ async fn produces_a_diff_of_the_worksheet_part_only() {
 async fn inverse_restores_before_and_satisfies_the_sum_law() {
     let base = snapshot_of(BEFORE);
     let mutation = mutation(&base);
-    let inverse = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <XlsxMutation as protocol::ColdMutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [XlsxMutation::SetCell(_)]), "set-cell/widens: undoing a cell edit is exactly one set-cell");
     let mut snapshot = base.clone();
     apply_xlsx_mutation(&mut snapshot, &mutation);

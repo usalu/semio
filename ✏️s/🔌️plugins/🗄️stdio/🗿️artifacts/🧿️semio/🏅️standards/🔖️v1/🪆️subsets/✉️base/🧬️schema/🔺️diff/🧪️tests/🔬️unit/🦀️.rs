@@ -107,7 +107,7 @@ async fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
 #[semio_framework_async_macros::async_test]
 async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
     let base = audio_snapshot(44_100);
-    let error = protocol::apply_diff(&SemioDiff::Flow(Default::default()), &base).unwrap_err();
+    let error = protocol::apply_diff_cold(&SemioDiff::Flow(Default::default()), &base).unwrap_err();
     assert_eq!(error.code, "mutation.apply.kind-mismatch");
     assert_eq!(error.target, vec!["subset"]);
 
@@ -117,7 +117,7 @@ async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() 
         panic!("cross-kind absorb must preserve a typed rejection");
     };
     assert_eq!(error.code, "mutation.apply.kind-mismatch");
-    assert!(protocol::apply_diff(&diff, &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
 
     let text = diff.print_diff();
     assert_eq!(SemioDiff::parse_diff(&text).expect("rejection text round-trip"), diff);

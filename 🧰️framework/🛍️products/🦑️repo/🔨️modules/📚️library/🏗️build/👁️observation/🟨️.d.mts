@@ -14,6 +14,7 @@ export type SourceObservationV1 =
  | Readonly<{kind:"file";path:string;fact:SourceFileFactV1|SourceReadFailureV1}>
  | Readonly<{kind:"analysis";path:string;fact:SourceAnalysisFactV1}>
  | Readonly<{kind:"exists"|"fileExists"|"directoryExists";path:string;fact:boolean}>
+ | Readonly<{kind:"stamp";path:string;fact:string}>
  | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath";path:string;fact:string}>;
 /** 🎟️ Names the immutable parser handle; structural copies remain refused by the runtime registry. */
 export type SourceAnalysisProviderV1 = Readonly<{id:string;revision:string}>;
@@ -37,8 +38,16 @@ export function observedSourceAnalysisV1(provider:SourceAnalysisProviderV1,path:
 export function observedSourceAnalysisAsyncV1(provider:SourceAnalysisProviderV1,path:fs.PathLike):Promise<unknown>;
 /** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */
 export function inferenceAuthorityDigestV1():string;
+/** 🪪️ The identity every persisted project record of this process is written under. */
+export function inferenceRecordIdentityV1():string;
+/** 🧊️ Registers a block a farm worker validated and the caller verified by its hash. */
+export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
-export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+/** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
+export function registerInferenceStampsV1(entries:Iterable<readonly [string,string]>,fragments?:readonly string[]):void;
+/** 📌️ Records the stamp of each named inferrer in the active inference scope. */
+export function observedInferenceStampsV1(paths:readonly string[]):void;
 /** 🧵️ Replays complete original observations into every receiving synchronous scope. */
 export function memoizedObservedComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>T):T;
 /** 🌊️ Replays original facts while checking the receiving caller's continuation. */
@@ -84,6 +93,11 @@ export function projectInferenceObservationsV1(cachePath:string):readonly Source
 /** 🪨️ Runs a partial inference in project scope without an all-or-nothing round. */
 export function observeInferenceSnapshotV1<T>(compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 📈️ Reports original Source and memo bookkeeping without exposing or discarding facts. */
-export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
+export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;projectImageBytes:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
 
 export function requireCurrentObservationV1():void;
+
+/** 📏️ Projects finite aggregate observation budget admission DATA. */
+export function observationBlockBudgetAdmitsV1(used:number,next:number,maximum:number):boolean;
+/** 🧱️ Names the canonical file of one persisted observation block below an inference directory. */
+export function inferenceObservationBlockPathV1(directory:string,digest:string):string;

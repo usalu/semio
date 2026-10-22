@@ -853,7 +853,7 @@
    "environment": {
     "LANG": "de_DE"
    },
-   "expected": "de"
+   "expected": null
   },
   {
    "flag": null,

@@ -261,6 +261,6 @@ export function drawingSceneFromPreviewPayload(payload: unknown): DrawingScene |
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts");
-  await registerTests1(import.meta.vitest, { canvasDrawingPngExportPort, drawingSceneFromPreviewPayload, isDrawingRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { canvasDrawingPngExportPort, drawingSceneFromPreviewPayload, isDrawingRef }, { directory: import.meta.dirname, url: import.meta.url });
 }
 // #endregion 🧪️Tests

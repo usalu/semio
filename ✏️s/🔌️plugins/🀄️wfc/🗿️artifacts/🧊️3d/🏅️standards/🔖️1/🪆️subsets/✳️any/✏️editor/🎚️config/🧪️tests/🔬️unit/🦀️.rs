@@ -2,7 +2,7 @@
 //! inverse, and the armed-tile fallback never names a tile the document does not declare.
 
 use crate::editor::wfc3d::config::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[test]
 fn the_config_round_trips_through_its_own_text_and_pack_envelopes() {

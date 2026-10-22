@@ -1,6 +1,6 @@
 //! 📥️ Items of `durable_group` that belong to `os-store-durable-group-wire` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`.
-#[path = "../../../🧵️planning/📐️budget/🦀️.rs"]
-mod planning_budget;
+#[path = "../../../🧵️planning/🦀️.rs"]
+pub mod planning;
 use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
 use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
@@ -42,6 +42,10 @@ pub use outcome_and_journal_receipt_types::{
     DurableStoreVerifiedOutcomeV1, DurableUnboundOneItemOutcomeV1,
 };
 
+#[path = "🪪️three-member-decision-record-and-codecs/🦀️.rs"]
+mod three_member_decision_record_and_codecs;
+pub use three_member_decision_record_and_codecs::DurableOwnedThreeMemberDecisionV1;
+
 #[path = "🏗️staged-root-retirement-and-commit-phases/🦀️.rs"]
 mod staged_root_retirement_and_commit_phases;
 pub use staged_root_retirement_and_commit_phases::{
@@ -56,7 +60,7 @@ pub use staged_root_retirement_and_commit_phases::{
 #[path = "📦️outcome-codecs-json-budget-and-map-handles/🦀️.rs"]
 mod outcome_codecs_json_budget_and_map_handles;
 pub use outcome_codecs_json_budget_and_map_handles::{
-    parse_canonical_json_value, valid_edit_identities, valid_hash, valid_identity, valid_reference,
+    parse_canonical_json_value, valid_edit_identities, valid_edit_identity_header, valid_edit_identity_metadata, valid_hash, valid_identity, valid_reference,
     validate_json_budget, DurableMemberRecoveryFrontier, DurableOwnedGroupMapFrontiersV1,
     DurableOwnedGroupMapHandlesV1,
 };

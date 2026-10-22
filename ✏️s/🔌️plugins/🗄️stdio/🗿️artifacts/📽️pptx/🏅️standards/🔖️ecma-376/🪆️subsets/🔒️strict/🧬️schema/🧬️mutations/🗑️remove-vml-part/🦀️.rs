@@ -13,19 +13,20 @@ pub struct RemoveVmlPart {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vml-part", kind: "remove-vml-part", record: "RemoveVmlPart" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(diff_remove_vml_part(base, &self.path))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(remove_vml_part_inverse(base, &self.path))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove VML part", "VML-Paketteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxStrictMutation> for RemoveVmlPart {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_remove_vml_part(base, &self.path))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(remove_vml_part_inverse(base, &self.path))
     }
 }
 //#endregion 🔖️Payload

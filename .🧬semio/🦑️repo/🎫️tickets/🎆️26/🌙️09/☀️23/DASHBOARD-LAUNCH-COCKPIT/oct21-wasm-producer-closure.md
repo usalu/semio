@@ -39,3 +39,39 @@ Completed static TS compiler-program references were released from Root analysis
 ## Owned Stop Attempt
 
 Root attempted ordinary Ctrl-C only through its exact owned exec session55876 after over40minutes of unchanged SDK output and intervening actual shared Source corrections. The execution API accepted the bytes but returned the still-live session, no terminal status or interruption diagnostic. This pipe-born session therefore has not established cancellation. No PID/group signal, other task action or forced store/lease intervention is justified. The current Source38 plan already retains this actual producer gate; no duplicate replacement producer was launched by Root. Keep the old process live in the ownership ledger until an actual whole result is observed.
+
+
+## Current Signal Ownership Readback
+
+The latest exact session55876 poll remains live without new output; the bounded log remains484582bytes and ends at SDK namespace preparation. Current source withScriptProcessEnvelope owns SIGINT/SIGTERM listeners and a monotonic Original deadline; its issued controls inherit that signal. Nx preparation passes the issued control through tooling and storage owners. The bootstrap local stopped flag alone therefore does not establish a cancellation defect. The running process captured source/envelope identity is not available from this log. No deadline, holder, deadlock or successful cancellation is inferred, and no foreign signal, store action or replacement producer was used.
+
+Root55876 exact owned session poll after the durable codec repair still returned the same live session with no new output and no terminal. No replacement producer or foreign termination was attempted.
+
+
+16:16 UTC exact owned session55876 poll remains live with no new output or actual terminal; no replacement producer, private inspection or guessed signal.
+
+17:15 UTC exact owned55876 poll again returned live, zero new output, no actual terminal. No successful cancellation, PID ownership or capacity attribution is established.
+
+## Bounded Native Control Interface Readback
+
+Read current cli README plus native entrypoint and declared command tree without executing a command. The current Rust entrypoint exposes domain/build/MCP selection; the declared native domain tree contains repository entities and auth status, with no identified external-process cancellation route. This readback does not establish the old installed Go executable has the same capabilities, identify session55876 PID/envelope, or authorize a signal. No guessed CLI route, process inspection command or store read was attempted. The real dashboard supervised stop/restart acceptance remains a separate pending owner gate.
+
+## Qualified Public Capacity Observation
+
+Root actual `repo --tool=nx --lang=en capacity status --json` terminated0; the unqualified capacity spelling earlier returned unknowncommand. The qualified public status includes exact grant IDs/PIDs, but the owned55876log contains no matching grant ID/PID or Original envelope binding. Similar operation/job counts or admission timing are insufficient ownership evidence. No process signal or private-store read followed. Exact status is retained at generated/e2e-capacity-qualified-status-root.log; actor and capacity causation remain unproved.
+
+18:09:53UTC exact owned55876poll remainslive/zero newoutput/noactualterminal. The publiccapacity count changed to1running inotherobservations, but this does notidentify its actor or prove55876ended. No signal/privateinspection/replacementwasmproducer.
+
+
+19:42:30UTC exact owned55876 poll remains live, zero output, no actual terminal. No process attribution or replacement producer.
+
+Root bounded full read of its own historical484582-byte/2125-line wpc1 log found zero structured pid/processId/original/invocationId/invocation/requestId/ownerId fields. Final log records only SDK-derived namespace preparation; the observed path is not process identity or permission to read the private store. The exact owned exec session remains the only handle; no foreign signal, process attribution, private-store read or replacement is inferred.
+
+The installed public repo --help command returned actual0 and documented native repository commands/MCP entry points. Its public help exposes no owned exec-session cancellation operation. Root did not invoke dashboard, IDE, raw ps/kill, OS MCP installation, private cache reads or foreign processes. This help result does not identify or terminate historical session55876.
+
+At20:19:00UTC the exact owned historical exec session55876 again returned live with zero new output on poll. Its last retained log size remains484582 bytes. No actual terminal, successful stop, known native PID or replacement producer is inferred.
+
+
+At2026-10-21 22:05:14UTC Root exactowned historical exec55876 again returned live with zero new output. No actual terminal, PID binding, successful stop or replacement producer is inferred. Current recovery work uses separate normal custody; no foreign action or private state inspection.
+
+Latest exact owned session observation: 2026-10-21 22:16:08 UTC, session55876 remains live and returned zero new bytes after a bounded poll. No actor/PID attribution, foreign signal, replacement or completion is inferred.

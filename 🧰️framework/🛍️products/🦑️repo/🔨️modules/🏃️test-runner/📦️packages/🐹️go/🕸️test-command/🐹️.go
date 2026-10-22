@@ -558,7 +558,7 @@ func unflattenTestName(flat string) string {
 
 // 🔻️runExternalCommand holds the data fields for a runExternalCommand record.
 func runExternalCommand(dir string, name string, args []string, cmd workspace.CommandStreams) error {
-	c := exec.Command(name, args...)
+	c := workspace.ToolCommand(name, args...)
 	c.Dir = dir
 	c.Stdout = cmd.OutOrStdout()
 	c.Stderr = cmd.ErrOrStderr()

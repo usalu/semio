@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { relative, resolve, sep } from "node:path";
+import physicalBudgetSchema from "./🧬️schema/📏️physical-budget.json" with { type: "json" };
 import type { FileObservationControlV1, FileObservationProgressV1 } from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
 
 /** 🧾️ Schema id of a completed Cargo invocation provenance receipt document.
@@ -14,8 +15,10 @@ export const CARGO_PROVENANCE_RECEIPT_SCHEMA_V1 = "semio.cargo.provenance-receip
 export const CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 = 128 * 1024 * 1024;
 
 /** 🧮️ Finite physical observation budget of one completed Cargo invocation: a full release graph digests several
- * hundred MiB of artifacts and tens of thousands of inputs once, then rechecks them before publication. */
-export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: 16 * 1024 * 1024 * 1024, maxWork: 4194304, chunkBytes: 1024 * 1024, deadlineMs: 600000 });
+ * hundred MiB of artifacts and tens of thousands of inputs once, then rechecks them before publication.
+ * @see ./🧬️schema/📏️physical-budget.json
+ */
+export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: physicalBudgetSchema.properties.maxBytes.const, maxWork: physicalBudgetSchema.properties.maxWork.const, chunkBytes: physicalBudgetSchema.properties.chunkBytes.const, deadlineMs: physicalBudgetSchema.properties.deadlineMs.const });
 
 /** 🔐️ Builds the one finite physical observation control every provenance producer hands to the receipt writer. `scale` is the number of
  * component invocations one invocation stands for (a release driver pass links many components at once); bytes, work and deadline grow with it. */

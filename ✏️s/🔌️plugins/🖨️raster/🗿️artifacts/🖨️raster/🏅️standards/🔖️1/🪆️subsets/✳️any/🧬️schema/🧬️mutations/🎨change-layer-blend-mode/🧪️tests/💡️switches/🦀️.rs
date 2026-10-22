@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "change-layer-blend-mode/switches-the-glow-layer-to-screen declares an applied outcome");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-layer-blend-mode/switches-the-glow-layer-to-screen: a genuinely different blend mode raises no diagnostic, got {:?}", produced.messages());
     assert!(apply_raster_mutation(&before(), &mutation()).is_ok(), "change-layer-blend-mode/switches-the-glow-layer-to-screen: declared applied but the mutation was rejected");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
 /// only patch field this verb may write.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &before());
     let encoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(produced.diff()));
     let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "change-layer-blend-mode/switches-the-glow-layer-to-screen: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-blend-mode/switches-the-glow-layer-to-screen: committed diff did not carry before to after");
 }
 

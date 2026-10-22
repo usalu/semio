@@ -1,8 +1,10 @@
 import { terminateOwnedProcessTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { join } from "node:path";
+import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 export const TRANSACTION_V2_DEFAULT_FILTER_WAVES: readonly (readonly string[])[] = [
   [
@@ -91,7 +93,7 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
       return path;
     });
     const startedAt = performance.now();
-    const child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, options.bundle, "-t", filter], {
+    const child = startToolV1(runtimeCommandNameV1(), ["test", `--max-concurrency=${concurrency}`, options.bundle, "-t", filter], {
       cwd: options.repoRoot,
       detached: process.platform !== "win32",
       env: {

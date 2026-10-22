@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyGraph`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_graph::ApplyGraph>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Graph(b) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyGraph { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Graph(b) => <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyGraph { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

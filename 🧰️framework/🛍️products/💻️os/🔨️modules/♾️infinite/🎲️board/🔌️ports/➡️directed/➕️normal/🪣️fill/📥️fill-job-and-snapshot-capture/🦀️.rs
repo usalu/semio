@@ -4,7 +4,7 @@ use super::*;
 
 /// 🧵️ Persistent worker-owned fill search over a Send board snapshot.
 pub struct BoardFillJob {
-        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+        pub(super) original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
 pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
     pub state: Option<BoardFillJobState>,

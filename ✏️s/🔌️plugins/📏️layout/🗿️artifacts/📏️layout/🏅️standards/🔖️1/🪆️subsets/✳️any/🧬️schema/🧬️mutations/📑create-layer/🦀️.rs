@@ -26,11 +26,7 @@ pub struct CreateLayer {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_layer::CreateLayer> + From<crate::update_layer::UpdateLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_layer(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ inverse_create_layer(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.remove {
             semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
@@ -39,6 +35,14 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLayer where Op: protocol::Mu
         }
     }
     fn target(&self) -> Vec<String> { vec![self.page_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for CreateLayer where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_layer::CreateLayer> + From<crate::update_layer::UpdateLayer> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_layer(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ inverse_create_layer(self, base)? 
+    })
+}
 }
 
 pub fn diff_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

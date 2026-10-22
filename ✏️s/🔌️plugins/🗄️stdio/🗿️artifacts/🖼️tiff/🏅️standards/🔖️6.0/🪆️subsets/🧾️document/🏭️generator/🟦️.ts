@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -38,7 +39,7 @@ function platformId(): string {
 
 /** 🦀️ Shells out to the standalone `tiff-ifd-codec` binary — the ONLY place this file touches it. */
 function codecBuild(recipe: Recipe, outDir: string): void {
-  const result = spawnSync("cargo", ["run", "--offline", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--offline", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`tiff-ifd-codec build ${recipe.id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -68,7 +69,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (tiff)", attribution: "Generated with tiff (MIT OR Apache-2.0) via the standalone tiff-ifd-codec binary in this same directory", privacy: "no-personal-data" },
@@ -81,8 +82,8 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
 
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
-  if (command === "test-oracle" || command === "test-conformance-oracle") return spawnSync("cargo", ["test", "--offline", "--manifest-path", join(import.meta.dir,"../../../../../🔮️oracles/📦️packages/🦀️rust/Cargo.toml"), "--features", "oracles", "--lib", command === "test-oracle" ? "oracle_owned" : "baseline::component::tests", "--", "--nocapture"], { stdio: "inherit" }).status ?? 1;
-  if (command === "test") return spawnSync("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
+  if (command === "test-oracle" || command === "test-conformance-oracle") return runToolSyncV1("cargo", ["test", "--offline", "--manifest-path", join(import.meta.dir,"../../../../../🔮️oracles/📦️packages/🦀️rust/Cargo.toml"), "--features", "oracles", "--lib", command === "test-oracle" ? "oracle_owned" : "baseline::component::tests", "--", "--nocapture"], { stdio: "inherit" }).status ?? 1;
+  if (command === "test") return runToolSyncV1("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
   const value = (flag: string): string | null => {
     const index = rest.indexOf(flag);
     return index === -1 ? null : (rest[index + 1] ?? null);

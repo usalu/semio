@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -19,4 +19,4 @@ class PortableScript extends BundleScript {
   await runRepositoryCommand(this.invocation,process.execPath,["test",resolve(this.root,"../../🧪️tests/🟦️.ts"),"--test-name-pattern=portable mounted ownership|all independent physical|runtime policy"],this.repoRoot,"mounted-portable-turn",{version:1,maximumElapsedMilliseconds:60000,output:{maximumBytes:134217728,maximumLines:65536}});
  }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("portable",PortableScript), { invocation: original }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test",TestScript).register("portable",PortableScript), { invocation: original }));

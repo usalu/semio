@@ -63,7 +63,7 @@ impl World3dSceneMeshEntry {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[derive(semio_framework_value_derive::RetireOwned)]
-struct World3dSceneComponentSource {
+pub struct World3dSceneComponentSource {
     pub handle: String,
     pub revision: String,
 }
@@ -157,7 +157,7 @@ impl World3dSceneCameraRecord {
 /// extent it wants framed (`world3d_fit_json`, `🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs`).
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct World3dSceneFitRecord {
+pub struct World3dSceneFitRecord {
     #[serde(default)]
     pub enabled: bool,
     #[serde(default)]
@@ -343,7 +343,7 @@ pub fn world3d_camera_fit_work_pending(camera_state: &WorldCameraState, scene_st
 /// (`granularity`/`componentIds`/`hoveredComponent`, the unconverted `worldPick` mechanism).
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct World3dSceneSelectionRecord {
+pub struct World3dSceneSelectionRecord {
     #[serde(default)]
     pub method: Option<String>,
     #[serde(default)]
@@ -383,7 +383,7 @@ struct World3dSceneSelectionRecord {
 /// 🎯️ `selection_json.hoveredComponent` — the vertex/edge/face under the pointer, if any.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct World3dSceneHoveredComponent {
+pub struct World3dSceneHoveredComponent {
     #[serde(default)]
     pub object_id: Option<String>,
     #[serde(default)]

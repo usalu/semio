@@ -90,9 +90,9 @@ describe("the messages", () => {
     const [english, german] = prototype.split("\n");
     expect(english).toContain("has not been built");
     expect(german).toContain("nicht gebaut");
-    expect(prototype).toContain("`bun repo run @teaching/proctor:build`");
-    expect(proctorProductMessage("missing", { mode: "release", path: "/w/receipt.json" }, {})).toContain("`bun repo run @teaching/proctor:build --configuration=release`");
-    expect(proctorProductMessage("missing", { mode: "prototype", path: "x" }, { SEMIO_BUILD_TOOL: "bazel" })).toContain("`bun repo --tool=bazel run @teaching/proctor:build`");
+    expect(prototype).toContain("`repo run @teaching/proctor:build`");
+    expect(proctorProductMessage("missing", { mode: "release", path: "/w/receipt.json" }, {})).toContain("`repo run @teaching/proctor:build --configuration=release`");
+    expect(proctorProductMessage("missing", { mode: "prototype", path: "x" }, { SEMIO_BUILD_TOOL: "bazel" })).toContain("`repo --tool=bazel run @teaching/proctor:build`");
     expect(prototype).not.toMatch(/\{\w+\}/u);
   });
 });
@@ -174,7 +174,7 @@ describe("the resolution of a built product", () => {
       const [english, german] = error.message.split("\n");
       expect(english).toMatch(/proctor/iu);
       expect(german).toMatch(/proctor/iu);
-      expect(error.message).toContain("bun repo run @teaching/proctor:build");
+      expect(error.message).toContain(`repo${process.env.SEMIO_BUILD_TOOL === "bazel" ? " --tool=bazel" : ""} run @teaching/proctor:build`);
       expect(readdirSync(root).filter(name => name !== "🎓️teaching")).toEqual([]);
     });
   }

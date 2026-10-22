@@ -1,6 +1,6 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 💤️ `@leutwiler/realparts-of-powers-z-n` task router: `bun ./📜️script.ts <deps|build|test> [lean|📯️notes|🏆️proof]`. */
+/** 💤️ `@leutwiler/realparts-of-powers-z-n` task router: `repo ./📜️script.ts <deps|build|test> [lean|📯️notes|🏆️proof]`. */
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withPrintExecutionV1}from"../../🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts";

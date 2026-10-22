@@ -5,6 +5,8 @@ import { createHash } from "node:crypto";
 import { scanRegistryCompilerImports } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { ecmaTokens, ecmaStringValue } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
 import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 export interface RuntimeGraphContextV1 {
   readonly read: (path: string) => string | undefined;
@@ -157,7 +159,7 @@ export function runtimeRustReferencesV1(source: string, path: string, context: R
 export function runtimeEcmaReferencesV1(source: string, path: string, context: RuntimeGraphContextV1 = { read: () => undefined }): readonly Reference[] {
   const physicalSource = source;
   const language = path.endsWith("tsx") ? "tsx" : /\.[mc]?ts$/u.test(path) ? "ts" : path.endsWith("jsx") ? "jsx" : "js";
-  if (context.productionTests === "excluded") source = new Bun.Transpiler({ loader: language, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true }).transformSync(source);
+  if (context.productionTests === "excluded") source = new TranspilerV1({ loader: language, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true }).transformSync(source);
   const references: Reference[] = scanRegistryCompilerImports(source, language).map(row => {
     const decoded = Buffer.from(row.path, "latin1").toString("utf8");
     return { path: decoded !== row.path && !decoded.includes("\ufffd") && (source.includes(decoded) || physicalSource.includes(decoded)) ? decoded : row.path, kind: "import" };
@@ -165,7 +167,7 @@ export function runtimeEcmaReferencesV1(source: string, path: string, context: R
   const tokens = ecmaTokens(source, 0, context.checkCancellation);
   const sourceSha256 = createHash("sha256").update(source).digest("hex");
   let callsiteIndex = 0;
-  const readers = new Set(["readFileSync", "readFile"]);
+  const readers = new Set(["readFileSync", "readFile", "runtimeFileV1"]);
   for (let index = 0; index < tokens.length; index++) {
     if (readers.has(tokens[index]!.text) && ["as", ":"].includes(tokens[index + 1]?.text ?? "") && tokens[index + 2]?.kind === "identifier") readers.add(tokens[index + 2]!.text);
   }
@@ -191,8 +193,7 @@ export function runtimeEcmaReferencesV1(source: string, path: string, context: R
       }
       if (comma >= 0 && tokens.slice(comma + 1, close).map(token => token.text).join("") === "import.meta.url") references.push({ path: comma === index + 3 ? literal(index + 2) : null, kind: "resource", base:"module-url" });
     }
-    if ((readers.has(name!) || name === "file") && tokens[index + 1]?.text === "(") {
-      if (name === "file" && tokens[index - 2]?.text !== "Bun") continue;
+    if (readers.has(name!) && tokens[index + 1]?.text === "(") {
       references.push({ path: [",", ")"].includes(tokens[index + 3]?.text ?? "") ? literal(index + 2) : null, kind: "resource", base: "cwd" });
     }
   }
@@ -261,7 +262,7 @@ export function inspectRuntimeGraphV1(roots: readonly string[], context: Runtime
         if (reference.kind === "import" && !target.startsWith(".")) {
           const mapped = context.aliases?.[target];
           if (mapped) target = mapped;
-          else if (target.startsWith("node:") || target === "bun" || target === "bun:test") continue;
+          else if (target.startsWith("node:") || isRuntimeBuiltinSpecifierV1(target)) continue;
           else { finding(path, `Package/virtual import ${target} has no resolved owner`); continue; }
         } else target = absolute(target) ? target : posix.normalize(posix.join(posix.dirname(path), target));
       }

@@ -61,7 +61,7 @@
   ],
   "execution": {
     "target": "test-preflight-reference-basis",
-    "command": "bun ./📜️script.ts test preflight-reference-basis",
+    "command": "repo ./📜️script.ts test preflight-reference-basis",
     "cache": false
   }
 }

@@ -234,7 +234,7 @@ impl GuestRuntime for WasmtimeRuntime {
                 let mut updates = Vec::with_capacity(wit_turn_result.presence.len());
                 for entry in wit_turn_result.presence {
                     let Ok(value) = store::pack_rt::decode_wire_value(&entry.update) else { continue };
-                    if let Ok(update) = serde_json::from_value::<semio_framework::kernel::PresenceUpdate>(serde_json::Value::from(&value)) {
+                    if let Ok(update) = <semio_framework::kernel::PresenceUpdate as semio_framework_value::FromValue>::from_value(value) {
                         updates.push(update);
                     }
                 }

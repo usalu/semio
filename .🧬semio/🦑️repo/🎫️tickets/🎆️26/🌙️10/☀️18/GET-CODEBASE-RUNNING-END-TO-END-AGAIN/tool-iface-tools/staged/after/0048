@@ -34,7 +34,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 import { dirname, join } from "node:path";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -88,7 +88,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 /** 🦀️ Shells `cargo run` in the crate directory — cargo needs to run FROM there, so every path this
  * file passes it (`--out`) is resolved to an absolute path first. */
 function runCodec(args: readonly string[]): { status: number | null; stderr: string } {
-  const run = spawnToolSyncV1("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
+  const run = runToolSyncV1("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
   return { status: run.status, stderr: (run.stderr ?? "").trim() };
 }
 

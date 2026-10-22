@@ -37,6 +37,8 @@ pub(super) enum Body {
     Files(semio_framework_filesystem_workspace::commands::BrowserState),
     Document(Option<Box<semio_framework_filesystem_workspace::commands::DocumentBuffer>>),
     Settings,
+    Diagnostics,
+    KeymapEditor(Box<dashboard_keymap_editor::Editor>),
     Help,
     Launcher(Box<LauncherState>),
     Output { session: Option<Box<SessionInfo>>, sent: Size },
@@ -44,7 +46,7 @@ pub(super) enum Body {
 
 /// 🧱️ Which body to build.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum Kind { Files, Document, Overview, Settings, Help, Launcher, Output }
+pub(super) enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, Help, Launcher, Output }
 
 /// 📍️ Where a new window goes among the others.
 #[derive(Clone, Copy)]
@@ -95,9 +97,8 @@ pub(super) enum Effect { Copy(String), OpenReady(String) }
 /// 🎛️ The whole native dashboard: preferences, keymap, windows, layout and the daemon link.
 pub(super) struct Dashboard {
     pub root: PathBuf,
-    pub source_job: Option<super::sources::Job>,
-    pub source_operation: u64,
-    pub source_pending: Option<(String, super::sources::Request)>,
+    pub source: dashboard_source_view::Controller,
+    pub source_effects: Vec<dashboard_source_view::Effect>,
     pub registry: Option<Arc<Registry>>,
     pub inventory: Option<Job>,
     pub phase: Option<Phase>,
@@ -105,7 +106,7 @@ pub(super) struct Dashboard {
     pub preferences: Preferences,
     pub preference_path: PathBuf,
     pub shared_preferences: bool,
-    pub saving_preferences: Option<std::sync::mpsc::Receiver<(Change, std::io::Result<u64>)>>,
+    pub saving_preferences: Option<super::panes::PreferenceJob>,
     pub opening_url: Option<dashboard_cli::browser::Job>,
     pub keymap: Keymap,
     pub locale: Locale,
@@ -121,6 +122,7 @@ pub(super) struct Dashboard {
     pub link: Link,
     pub state: LinkState,
     pub notice: Option<String>,
+    pub diagnostics: dashboard_feedback::History,
     pub sessions: BTreeMap<String, SessionInfo>,
     pub hidden: HashSet<String>,
     pub shutdown_since: Option<std::time::Instant>,
@@ -146,8 +148,8 @@ impl Dashboard {
         let (keymap, _) = preferences.keymap();
         let light = preferences.appearance == "light";
         let mut dashboard = Self {
-            root, source_job: None, source_operation: 0, source_pending: None, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
-            link: Link::default(), state: LinkState::Connecting, notice: None, sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
+            root, source: Default::default(), source_effects: Vec::new(), registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
+            link: Link::default(), state: LinkState::Connecting, notice: None, diagnostics: Default::default(), sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
         };
         let (id, chrome) = dashboard.shell.windows[0].clone();
         let window = dashboard.build_window(tui, id, chrome, Kind::Overview, None);
@@ -215,9 +217,8 @@ impl Dashboard {
         let mut tree_node = None;
         let (list, input, caption, body) = match kind {
             Kind::Files | Kind::Document => {
-                let caption = add_widget(tui, root, WidgetState::Label(LabelState { text: String::new(), align: Align::Left, role: semio_framework_ui_tui_core::theme::Role::MutedForeground }), Dimension::Cells(1));
-                let widget = if kind == Kind::Files { list_state() } else { let mut editor = semio_framework_ui_tui_widgets::widget::EditorState::new("", 1_048_576); editor.read_only = true; WidgetState::Editor(editor) };
-                let list = add_widget(tui, root, widget, Dimension::Weight(1));
+                let source_kind = if kind == Kind::Files { dashboard_source_view::Kind::Files } else { dashboard_source_view::Kind::Document };
+                let (list, caption) = dashboard_source_view::mount(tui, root, source_kind);
                 (list, None, Some(caption), if kind == Kind::Files { Body::Files(semio_framework_filesystem_workspace::commands::BrowserState::default()) } else { Body::Document(None) })
             }
             Kind::Output => {
@@ -238,7 +239,7 @@ impl Dashboard {
                 tree_node = Some(tree);
                 (list, Some(input), Some(caption), Body::Launcher(Box::new(launcher)))
             }
-            Kind::Overview | Kind::Settings | Kind::Help => (add_widget(tui, root, list_state(), Dimension::Weight(1)), None, None, match kind { Kind::Overview => Body::Overview, Kind::Settings => Body::Settings, _ => Body::Help }),
+            Kind::Overview | Kind::Settings | Kind::Diagnostics | Kind::KeymapEditor | Kind::Help => (add_widget(tui, root, list_state(), Dimension::Weight(1)), None, None, match kind { Kind::Overview => Body::Overview, Kind::Settings => Body::Settings, Kind::Diagnostics => Body::Diagnostics, Kind::KeymapEditor => Body::KeymapEditor(Box::new(dashboard_keymap_editor::Editor::new(&self.preferences))), _ => Body::Help }),
         };
         DashboardWindow { id, chrome, root, list, input, editor_slot: None, caption, tree: tree_node, body, pane: Pane::default() }
     }
@@ -389,6 +390,8 @@ impl Dashboard {
             Body::Overview => text.title_tasks.as_str().into(),
             Body::Settings => text.title_settings.as_str().into(),
             Body::Help => text.title_keyboard.as_str().into(),
+            Body::Diagnostics => text.diagnostics_title.as_str().into(),
+            Body::KeymapEditor(_) => text.keymap_title.as_str().into(),
             Body::Launcher(_) => text.title_commands.as_str().into(),
             Body::Output { session: Some(session), .. } => {
                 let title = dashboard_labels::window_title(&session.command.label, self.locale);

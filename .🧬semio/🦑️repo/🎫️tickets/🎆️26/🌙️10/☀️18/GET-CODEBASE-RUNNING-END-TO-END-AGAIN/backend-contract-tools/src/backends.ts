@@ -16,7 +16,7 @@ export type BackendCapabilityV1=typeof schema.definitions.Capability.enum[number
 /** 🌍️ A text in both supported languages. */
 export type BackendTextV1=Readonly<{en:string;de:string}>;
 /** 🗒️ One backend as the registry declares it. */
-export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
+export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;nativeCaller?:Readonly<{namespace:string;schema:string}>;cacheProof?:Readonly<{logMarker?:string;activity?:boolean;spawnMarker?:Readonly<{executed:string;completed:string}>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
 
 /** 📜️ Reads the authored registry once and refuses a row set that breaks its schema, repeats an id or names a missing default. */
 export function readBackendRegistryV1(value:unknown=registry):readonly BackendRowV1[]{
@@ -38,6 +38,10 @@ export function buildBackendIdsV1():readonly BuildBackendIdV1[]{return rows.map(
 export function buildBackendDefaultIdV1():BuildBackendIdV1{return rows.find(row=>row.default===true)!.id;}
 /** 🧾️ The ids as a help-text alternation such as `a|b|c`. */
 export function buildBackendAlternationV1():string{return buildBackendIdsV1().join("|");}
+/** 🏷️ The first launch argument of every backend that nests its own tool; neutral code admits these next to `repo`. */
+export function buildBackendNativeNamespacesV1():string[]{return rows.flatMap(row=>row.nativeCaller?[row.nativeCaller.namespace]:[]);}
+/** 🧭️ Where a registered backend's conformance driver module lives; the row path is relative to this module. */
+export function buildBackendDriverUrlV1(id:string):URL{return new URL(buildBackendRowV1(id).driver,import.meta.url);}
 /** 🔎️ Finds one registered backend or refuses an unknown name with the list of valid ones. */
 export function buildBackendRowV1(id:string):BackendRowV1{
  const row=rows.find(candidate=>candidate.id===id);
@@ -68,6 +72,7 @@ export interface BuildBackendV1{
  affectedProjects?(context:BackendExecutionContextV1,files:readonly string[]):Promise<readonly string[]>;
  bootstrapArguments?(args:readonly string[]):readonly string[]|undefined;
  cacheProbe?(context:Readonly<{root:string;invocation:ScriptInvocation}>):Promise<CacheProbeToolV1>;
+ collectCache?(context:Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;dryRun:boolean;signal:AbortSignal}>):Promise<string>;
 }
 
 const loaded=new Map<string,Promise<BuildBackendV1>>();
@@ -86,9 +91,12 @@ export async function loadBuildBackendV1(id:string):Promise<BuildBackendV1>{
  return pending;
 }
 
-/** 🧭️ The arguments a backend's own tool must be launched with for a command, asked of the backends the command concerns: the selected one, or the named one for `tools setup`; `undefined` when none launches anything. */
-export async function buildBackendBootstrapArgumentsV1(args:readonly string[],tool:string):Promise<readonly string[]|undefined>{
+/** 🧭️ The launch a backend's own tool needs for a command, asked of the backends the command concerns: the selected one, or the named one for `tools setup`; the namespace is the first argument the backend's nested launches carry. `undefined` when none launches anything. */
+export async function buildBackendBootstrapV1(args:readonly string[],tool:string):Promise<Readonly<{namespace:string;arguments:readonly string[]}>|undefined>{
  const target=args[0]==="tools"?args[2]??tool:tool,ids=target==="all"?buildBackendIdsV1():[requireBuildBackendIdV1(target)];
- for(const id of ids){const launch=(await loadBuildBackendV1(id)).bootstrapArguments?.(args);if(launch)return launch;}
+ for(const id of ids){
+  const launch=(await loadBuildBackendV1(id)).bootstrapArguments?.(args),namespace=buildBackendRowV1(id).nativeCaller?.namespace;
+  if(launch){if(!namespace)throw Error(`Build backend ${id} launches its tool and must declare nativeCaller`);return {namespace,arguments:launch};}
+ }
  return undefined;
 }

@@ -242,6 +242,10 @@
           "optLevel": "2"
         },
         {
+          "package": "semio-framework-pack-record-encode-cursor",
+          "optLevel": "2"
+        },
+        {
           "package": "semio-framework-pack-record-preflight",
           "optLevel": "2"
         },
@@ -561,6 +565,10 @@
         },
         {
           "package": "semio-framework-pack-record-encode",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-encode-cursor",
           "optLevel": "2"
         },
         {

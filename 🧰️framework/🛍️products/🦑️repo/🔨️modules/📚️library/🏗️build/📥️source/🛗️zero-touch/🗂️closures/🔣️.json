@@ -5,7 +5,13 @@
       "id": "repo-cli",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
       "mode": "full",
-      "reason": "bun repo boots without node_modules for help, preflight, tools setup and dependencies lock and sync"
+      "reason": "repo boots without node_modules for help, preflight, tools setup and dependencies lock and sync"
+    },
+    {
+      "id": "repo-door",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts",
+      "mode": "full",
+      "reason": "repo boots without node_modules for help, refusals and the light commands leases, capacity and doctor through the front door, and hands every other command to the build script"
     },
     {
       "id": "dependencies-js",
@@ -29,25 +35,25 @@
       "id": "bazel-bootstrap",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
       "mode": "full",
-      "reason": "bun repo tools setup bazel provisions Bazel before dependencies exist"
+      "reason": "repo tools setup bazel provisions Bazel before dependencies exist"
     },
     {
       "id": "nx-authorizer-runtime",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
       "mode": "full",
-      "reason": "bun repo tools setup nx captures this closure by source before any workspace link exists; a bare workspace specifier fails the capture"
+      "reason": "repo tools setup nx captures this closure by source before any workspace link exists; a bare workspace specifier fails the capture"
     },
     {
       "id": "nx-authorizer-compiler",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
       "mode": "full",
-      "reason": "bun repo tools setup nx captures and compiles this closure before any workspace link exists"
+      "reason": "repo tools setup nx captures and compiles this closure before any workspace link exists"
     },
     {
       "id": "cargo-compiler",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",
       "mode": "full",
-      "reason": "bun repo cargo captures this closure by source on a checkout whose workspace links are not installed yet"
+      "reason": "repo cargo captures this closure by source on a checkout whose workspace links are not installed yet"
     },
     {
       "id": "build-bootstrap",
@@ -65,7 +71,7 @@
       "id": "root-setup",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
       "mode": "full",
-      "reason": "bun ./📜️script.ts setup provisions the checkout and runs inside a half-installed workspace"
+      "reason": "repo ./📜️script.ts setup provisions the checkout and runs inside a half-installed workspace"
     },
     {
       "id": "root-entrypoints",
@@ -131,7 +137,19 @@
       "id": "root-policy",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts",
       "mode": "full",
-      "reason": "bun ./📜️script.ts policy loads this lint from a checkout whose dependencies may not be installed"
+      "reason": "repo ./📜️script.ts policy loads this lint from a checkout whose dependencies may not be installed"
+    },
+    {
+      "id": "catalog-provider",
+      "entry": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+      "mode": "full",
+      "reason": "The build graph imports the application's catalog provider while it infers projects, before any dependency is installed; it reaches the publication contract by relative path."
+    },
+    {
+      "id": "tectonic-toolchain",
+      "entry": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+      "mode": "full",
+      "reason": "`tools setup all` runs the Tectonic provisioning script on a fresh clone before any dependency is installed."
     }
   ],
   "seams": [

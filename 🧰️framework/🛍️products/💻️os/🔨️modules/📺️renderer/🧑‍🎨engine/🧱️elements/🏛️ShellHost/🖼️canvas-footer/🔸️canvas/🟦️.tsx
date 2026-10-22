@@ -1,5 +1,5 @@
 /** 🔸️ The canvas phase of useCanvasAndFooter. */
-import { useMemo } from "react";
+import { useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel } from "@semio-tech/framework";
 import { modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
 import { spawnedIdOfWindowInstanceV1, spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";

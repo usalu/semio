@@ -4,7 +4,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_diff::diff_patch_layer;
 use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::*;
-use protocol::{Mutation,MutationDiff,OpText,OpBinary};
+use protocol::{ColdMutation, Mutation,MutationDiff,OpText,OpBinary};
 fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
 fn adjustment_parameter_vectors_preserve_other_fields_and_exact_undo() {
@@ -35,9 +35,9 @@ fn adjustment_parameter_diff_composition_keeps_brightness_and_contrast() {
     let id=semio_s_artifact_raster_raster_model::layer_node_id(&layer).to_owned();before.layers.push(layer);
     let first=RasterMutation::ChangeLayerAdjustmentParameter(ChangeLayerAdjustmentParameter {layer_id:id.clone(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.2))});
     let second=RasterMutation::ChangeLayerAdjustmentParameter(ChangeLayerAdjustmentParameter {layer_id:id,parameter:"contrast".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(-0.3))});
-    let (mut combined,_)=first.diff(&before).into_parts();let middle=protocol::apply_diff(&combined, &before).unwrap();
-    let (tail,_)=second.diff(&middle).into_parts();let expected=protocol::apply_diff(&tail, &middle).unwrap();combined.absorb(tail);
-    let actual=protocol::apply_diff(&combined, &before).unwrap();assert_eq!(actual,expected);combined.retire_cold();
+    let (mut combined,_)=first.diff(&before).into_parts();let middle=protocol::apply_diff_cold(&combined, &before).unwrap();
+    let (tail,_)=second.diff(&middle).into_parts();let expected=protocol::apply_diff_cold(&tail, &middle).unwrap();combined.absorb(tail);
+    let actual=protocol::apply_diff_cold(&combined, &before).unwrap();assert_eq!(actual,expected);combined.retire_cold();
     for document in [before,middle,actual,expected] {retire(document);}
 }
 
@@ -51,7 +51,7 @@ fn adjustment_parameter_diff_can_replace_a_key_at_map_capacity() {
     for index in 1..semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {params.insert(format!("metadata-{index}"),semio_framework_value::DslValue::Bool(true)).unwrap();}
     before.layers.push(layer);
     let patch=RasterLayerPatch {adjustment_parameters:Some(vec![RasterAdjustmentParameter {parameter:"contrast".into(),value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.3))},RasterAdjustmentParameter {parameter:"brightness".into(),value:None}]),..Default::default()};
-    let diff=diff_patch_layer(&id,patch);let after=protocol::apply_diff(&diff, &before).unwrap();
+    let diff=diff_patch_layer(&id,patch);let after=protocol::apply_diff_cold(&diff, &before).unwrap();
     let RasterLayerNode::Adjustment {params,..}=&after.layers[0] else {panic!("adjustment")};
     assert_eq!(params.len(),semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY);assert!(!params.contains_key("brightness"));assert_eq!(params.get("contrast").and_then(semio_framework_value::DslValue::as_f64),Some(0.3));
     diff.retire_cold();retire(before);retire(after);
@@ -67,7 +67,7 @@ fn adjustment_parameter_patch_vectors_match_schema_acceptance() {
         before.layers.push(layer);
         let patch:RasterLayerPatch=semio_framework_pack_json::from_json_str(&serde_json::json!({"adjustmentParameters":row["parameters"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff=diff_patch_layer(&id,patch);
-        let result=protocol::apply_diff(&diff, &before);
+        let result=protocol::apply_diff_cold(&diff, &before);
         assert_eq!(result.is_ok(),row["valid"].as_bool().unwrap(),"{row}");
         if let Ok(after)=result {retire(after);}
         diff.retire_cold();retire(before);

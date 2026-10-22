@@ -102,29 +102,37 @@ pub struct Generation3dViewPresencePatch {
     pub show_mode: Option<String>,
 }
 
-impl protocol::MutationDiff<Generation3dViewPresence> for Generation3dViewPresencePatch {
-    fn apply(&self, base: &Generation3dViewPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dViewPresence> {
-        Ok(Generation3dViewPresence {
-            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
-            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
-            ..base.clone()
-        })
-    }
+impl protocol::MutationDiff<Generation3dViewPresence> for Generation3dViewPresencePatch {}
+
+impl protocol::ColdMutationDiff<Generation3dViewPresence> for Generation3dViewPresencePatch {
     fn absorb(&mut self, other: Self) {
         self.preview_camera = other.preview_camera.or_else(|| self.preview_camera.take());
         self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
     }
+
+    fn apply(&self, unpublished: &mut Generation3dViewPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = Generation3dViewPresence {
+            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            ..base.clone()
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Generation3dViewPresence> for Generation3dViewPresencePatch {
+    fn is_empty(&self) -> bool {
+        self.preview_camera.is_none() && self.show_mode.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dViewPresence> for Generation3dViewPresencePatch {
     fn inverse(&self, base: &Generation3dViewPresence) -> Self {
         Self {
             preview_camera: self.preview_camera.as_ref().map(|_| base.preview_camera.clone()),
             show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.preview_camera.is_none() && self.show_mode.is_none()
     }
 }
 

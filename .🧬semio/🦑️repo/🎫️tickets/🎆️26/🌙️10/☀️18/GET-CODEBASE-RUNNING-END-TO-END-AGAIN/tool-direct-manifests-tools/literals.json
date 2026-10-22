@@ -1,0 +1,171 @@
+{
+ "version": 1,
+ "rows": [
+  {
+   "id": "native-repo-input",
+   "group": "ci",
+   "path": ".github/actions/native-repo/action.yml",
+   "old": "inputs:\n  bun-version:\n    description: Repository Bun pin.\n    required: true\n  node-version:\n",
+   "new": "inputs:\n  node-version:\n",
+   "count": 1,
+   "note": {
+    "en": "The composite no longer takes a runtime pin: the launcher provisions it.",
+    "de": "Das Composite nimmt keinen Laufzeit-Pin mehr: Der Launcher richtet sie ein."
+   },
+   "witness": "inputs:\n  node-version:\n"
+  },
+  {
+   "id": "native-repo-launcher",
+   "group": "ci",
+   "path": ".github/actions/native-repo/action.yml",
+   "old": "    - uses: ./.github/actions/bun-repo\n      with:\n        bun-version: ${{ inputs.bun-version }}\n        node-version: ${{ inputs.node-version }}\n",
+   "new": "    - uses: ./.github/actions/repo-launcher\n      with:\n        node-version: ${{ inputs.node-version }}\n",
+   "count": 1,
+   "note": {
+    "en": "The repo-launcher set deletes the bun-repo composite; this one still used it.",
+    "de": "Das repo-launcher-Set löscht das bun-repo-Composite; dieses nutzte es noch."
+   }
+  },
+  {
+   "id": "dashboard-bun-pin",
+   "group": "ci",
+   "path": ".github/workflows/dashboard.yml",
+   "old": "  BUN_VERSION: 1.4.2\n",
+   "new": "",
+   "count": 1,
+   "witness": "  NODE_VERSION: 24.15.0"
+  },
+  {
+   "id": "dashboard-bun-input",
+   "group": "ci",
+   "path": ".github/workflows/dashboard.yml",
+   "old": "          bun-version: ${{ env.BUN_VERSION }}\n",
+   "new": "",
+   "count": 1,
+   "witness": "          node-version: ${{ env.NODE_VERSION }}"
+  },
+  {
+   "id": "launcher-node-check-remove",
+   "group": "ci",
+   "path": ".github/actions/repo-launcher/action.yml",
+   "old": "    - name: Check that the workflow Node pin equals the repository pin\n      if: ${{ inputs.node-version != '' }}\n      shell: bash\n      env:\n        NODE_VERSION: ${{ inputs.node-version }}\n      run: |\n        node -e \"const p=require('./package.json');if(p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins node '+p.engines.node+', the workflow pins '+process.env.NODE_VERSION)\"\n",
+   "new": "",
+   "count": 1,
+   "note": {
+    "en": "The pin check asks the registry's Node, so it runs after the launcher is installed.",
+    "de": "Die Pin-Prüfung fragt das Node der Registratur und läuft deshalb nach der Installation des Launchers."
+   },
+   "witness": "repo tools exec --light node -- -e"
+  },
+  {
+   "id": "launcher-node-check-insert",
+   "group": "ci",
+   "path": ".github/actions/repo-launcher/action.yml",
+   "old": "    - name: Print the launcher, runtime and implementation versions\n",
+   "new": "    - name: Check that the workflow Node pin equals the repository pin\n      if: ${{ inputs.node-version != '' }}\n      shell: bash\n      env:\n        NODE_VERSION: ${{ inputs.node-version }}\n      run: |\n        repo tools exec --light node -- -e \"const p=require('./package.json');if(p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins node '+p.engines.node+', the workflow pins '+process.env.NODE_VERSION)\"\n    - name: Print the launcher, runtime and implementation versions\n",
+   "count": 1
+  },
+  {
+   "id": "bench-workflow-test",
+   "group": "ci",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🟦️.ts",
+   "old": "for(const wanted of [\"bun repo preflight\",\"bun repo tools setup all\",\"bun repo dependencies sync --all\",\"bun repo bench list\",\"bun repo incremental prepare --fresh\",'bun repo bench run \"${args[@]}\"',",
+   "new": "for(const wanted of [\"repo preflight\",\"repo tools setup all\",\"repo dependencies sync --all\",\"repo bench list\",\"repo incremental prepare --fresh\",'repo bench run \"${args[@]}\"',",
+   "count": 1,
+   "note": {
+    "en": "The bench job of the build workflow runs `repo ...` after the declarations are swept, so its test expects the same.",
+    "de": "Der Bench-Job des Build-Workflows startet nach dem Abräumen der Deklarationen `repo ...`; sein Test erwartet dasselbe."
+   }
+  },
+  {
+   "id": "c1-synopsis-top",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"synopsis\": \"tools setup [{backends}|toolchains|all]|verify [tool...]|list [--json]|exec <tool> -- <arguments>\"",
+   "new": "\"synopsis\": \"tools setup [{backends}|toolchains|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>\"",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "id": "c1-synopsis-exec",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "synopsis\": \"tools exec [--cwd=<path>] [--light] <tool> -- <arguments>\", \"flags\": [\"--cwd\", \"--light\"],",
+   "new": "synopsis\": \"tools exec [--cwd=<path>] [--light] <tool|command> -- <arguments>\", \"flags\": [\"--cwd\", \"--light\"],",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "id": "c1-summary",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"summary\": { \"en\": \"Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation.\", \"de\": \"Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch.\" }",
+   "new": "\"summary\": { \"en\": \"Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation. <tool> is a registry id (cargo, node, uv) or an executable a registered tool owns (rustc, rustfmt, python3, bunx).\", \"de\": \"Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch. <tool> ist eine Id der Registratur (cargo, node, uv) oder ein Programm, das ein registriertes Werkzeug besitzt (rustc, rustfmt, python3, bunx).\" }",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "id": "c1-examples",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "\"de\": \"Führt Cargo über die Registratur aus, statt es direkt aufzurufen.\" } }\n      ],",
+   "new": "\"de\": \"Führt Cargo über die Registratur aus, statt es direkt aufzurufen.\" } },\n        { \"command\": \"repo tools exec --light rustc -- -vV\", \"description\": { \"en\": \"Ask an executable that a registered tool owns (rustc belongs to Cargo) for its version.\", \"de\": \"Fragt ein Programm, das ein registriertes Werkzeug besitzt (rustc gehört zu Cargo), nach seiner Version.\" } },\n        { \"command\": \"repo tools exec uv -- run python3 <script>.py\", \"description\": { \"en\": \"Run a Python script through uv without calling uv directly.\", \"de\": \"Führt ein Python-Skript über uv aus, ohne uv direkt aufzurufen.\" } }\n      ],",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "id": "c1-note",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "old": "und repo verify tool-spawns verweigert die Starts, die sie umgehen.\" }\n      ]",
+   "new": "und repo verify tool-spawns verweigert die Starts, die sie umgehen.\" },\n        { \"en\": \"A command after -- of exec, watch and capacity run is started as written: pass a repo command or repo tools exec <tool> -- ..., never a bare tool; repo verify tool-declarations refuses declarative files that do.\", \"de\": \"Ein Befehl nach -- von exec, watch und capacity run wird so gestartet, wie er geschrieben steht: Übergib einen repo-Befehl oder repo tools exec <tool> -- ..., niemals ein nacktes Werkzeug; repo verify tool-declarations verweigert deklarative Dateien, die es tun.\" }\n      ]",
+   "count": 1,
+   "requires": "tools exec [--cwd=<path>]"
+  },
+  {
+   "id": "c1-import",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "toolMessageV1, toolRootV1, ToolErrorV1,",
+   "new": "toolForCommandV1, toolMessageV1, toolRootV1, ToolErrorV1,",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "id": "c1-resolve",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "entry = id === undefined ? undefined : findToolV1(id);",
+   "new": "entry = id === undefined ? undefined : findToolV1(id) ?? toolForCommandV1(id);",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "id": "c1-run",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "await runToolV1(entry.id, tail, { root, cwd, env:",
+   "new": "await runToolV1(entry.id, tail, { root, cwd, command: entry.id === id ? undefined : id, env:",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "id": "c1-doc",
+   "group": "catalogue-tools-exec",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/⌨️command/🟦️.ts",
+   "old": "`repo tools exec [--cwd=<path>] [--light] <tool> -- <arguments>`. */\nasync function exec(",
+   "new": "`repo tools exec [--cwd=<path>] [--light] <tool|command> -- <arguments>` where the command is an executable a registered tool owns. */\nasync function exec(",
+   "count": 1,
+   "requires": "async function exec("
+  },
+  {
+   "id": "law-verify-dispatch",
+   "group": "law",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+   "old": "    if (segments[0] === \"zero-touch\") {\n      this.runZeroTouch(segments.slice(1));\n      return;\n    }\n",
+   "new": "    if (segments[0] === \"zero-touch\") {\n      this.runZeroTouch(segments.slice(1));\n      return;\n    }\n    if (segments[0] === \"tool-declarations\") {\n      const { runDirectToolDeclarationLawV1 } = await import(\"../../⚖️laws/🧰️direct-tool-declarations/⌨️command/🟦️.ts\");\n      process.exitCode = runDirectToolDeclarationLawV1(this.root, segments.slice(1));\n      return;\n    }\n",
+   "count": 1,
+   "requires": "zero-touch"
+  }
+ ]
+}

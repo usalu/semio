@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useId, useState, type FormEvent, type ReactElement } from "react";
+import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, PresenceBar, useLabel, type PresencePeer } from "@semio-tech/ui-react";
 import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 import {

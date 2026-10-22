@@ -1,7 +1,7 @@
 /** 🔶️ The host mode phase of useCheckInAndSync. */
 import { createAdmittedShellInstanceV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { type ScopedPresencePeerV1 } from "../../👥️presence-scope/🟦️.ts";

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-time-travel-rs:test",
-    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-time-travel-rs:check"
+    "test": "repo run @semio-tech/framework-time-travel-rs:test",
+    "check": "repo run @semio-tech/framework-time-travel-rs:check"
   },
   "bundleKind": "library",
   "devDependencies": {

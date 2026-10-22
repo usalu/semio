@@ -53,17 +53,23 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "point-positions", kind: "set-point-positions", record: "SetPointPositions" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} point(s)", self.positions.len()), &format!("Positionen von {} Punkt(en) setzen", self.positions.len()))
     }
     fn target(&self) -> Vec<String> {
         equation_point_targets(&self.indices())
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EquationSnapshot, Op> for SetPointPositions
+where
+    Op: protocol::ColdMutation<EquationSnapshot, ReferenceDiff = crate::EquationDiff> + From<SetPointPositions>,
+{
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<EquationSnapshot>>::ReferenceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
     }
 }
 //#endregion 🔖️Payload

@@ -1,5 +1,5 @@
 /** 🧰️ TiledMapHost state: the scene, shell scope and window instance, the container, canvas, renderer and popup refs, the marquee and context menu state, the labels, the parsed overlay index and hovered feature, the dispatchers and the camera, hit-query and container-size helpers. */
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { useLabel, useShellScopeOptional, screenRectFromPoints, type SelectionMarqueeCoverage, type SelectionMarqueePoint, type SelectionMarqueeMethod } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.

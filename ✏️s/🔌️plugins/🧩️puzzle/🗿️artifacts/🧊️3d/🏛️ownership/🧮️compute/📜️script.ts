@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🧮️ Runs this owner's compute source laws independently of native preparation. */
 import {runComputeOwnershipTest} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/🟦️.ts";

@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { renderPrintLatexTokenStylesheet } from "./🟦️.ts";
+import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(args: string[]): void {
@@ -22,5 +23,5 @@ export class PrintTokenPreviewScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PrintTokenPreviewScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));
+const router = new ScriptRouter(import.meta.dirname).register("generate", GenerateScript).register("preview-generated", PrintTokenPreviewScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

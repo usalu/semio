@@ -1,3 +1,4 @@
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 interface VersionV1 { readonly major: number; readonly minor: number; readonly patch: number; readonly pre: readonly (string | number)[] }
 type OperatorV1 = "<" | "<=" | ">" | ">=" | "=";
 interface ComparatorV1 { readonly operator: OperatorV1; readonly version: VersionV1 }
@@ -117,6 +118,6 @@ export function semverSatisfiesV1(version: string, range: string): boolean {
 /** 🔢️ Orders two plain versions by semantic-version precedence; invalid input throws. */
 export function semverOrderV1(left: string, right: string): -1 | 0 | 1 {
   const a = parseVersion(left), b = parseVersion(right);
-  if (a === undefined || b === undefined) throw new TypeError(`Invalid semantic version: ${a === undefined ? left : right}`);
+  if (a === undefined || b === undefined) throw new TypeError(runtimeMessageV1("semverInvalid", { version: a === undefined ? left : right }));
   return compareVersions(a, b);
 }

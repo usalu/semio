@@ -15,6 +15,16 @@ pub struct SetCamera {
 //#region ⚙️Behavior
 impl MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> for SetCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["cameraJson".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> for SetCamera {
     fn diff(&self, base: &GisTerrainWindowConfig) -> MutationOutcome<GisTerrainWindowConfigDiff> {
         if base.camera_json == self.camera_json {
             MutationOutcome::empty().warning("mutation.no-op", "Camera is already at the requested position.")
@@ -28,12 +38,6 @@ impl MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> for Se
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["cameraJson".into()]
-    }
 }
 //#endregion ⚙️Behavior
 //#region 🧪️Contracts

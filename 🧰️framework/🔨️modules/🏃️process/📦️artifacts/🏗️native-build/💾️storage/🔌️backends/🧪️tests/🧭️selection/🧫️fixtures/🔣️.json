@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "rows": [
+    {"id": "darwin-default", "selection": {"platform": "darwin"}, "expect": "mounted-image"},
+    {"id": "linux-default", "selection": {"platform": "linux"}, "expect": "directory-partition"},
+    {"id": "win32-default", "selection": {"platform": "win32"}, "expect": "directory-partition"},
+    {"id": "darwin-override-directory", "selection": {"platform": "darwin", "backend": "directory-partition"}, "expect": "directory-partition"},
+    {"id": "darwin-override-image", "selection": {"platform": "darwin", "backend": "mounted-image"}, "expect": "mounted-image"},
+    {"id": "darwin-require-unprivileged", "selection": {"platform": "darwin", "require": ["unprivileged"]}, "expect": "directory-partition"},
+    {"id": "darwin-require-quota", "selection": {"platform": "darwin", "require": ["kernel-quota"]}, "expect": "mounted-image"},
+    {"id": "darwin-prefer-envelope", "selection": {"platform": "darwin", "prefer": ["declared-envelope"]}, "expect": "directory-partition"},
+    {"id": "darwin-prefer-none-keeps-declaration-order", "selection": {"platform": "darwin", "prefer": []}, "expect": "mounted-image"},
+    {"id": "linux-prefer-quota-falls-back", "selection": {"platform": "linux", "prefer": ["kernel-quota"]}, "expect": "directory-partition"},
+    {"id": "darwin-conflicting-requirements", "selection": {"platform": "darwin", "require": ["kernel-quota", "unprivileged"]}, "refusal": "unsatisfied"},
+    {"id": "linux-require-quota", "selection": {"platform": "linux", "require": ["kernel-quota"]}, "refusal": "unsatisfied"},
+    {"id": "linux-override-image", "selection": {"platform": "linux", "backend": "mounted-image"}, "refusal": "unavailable"},
+    {"id": "win32-override-image", "selection": {"platform": "win32", "backend": "mounted-image"}, "refusal": "unavailable"},
+    {"id": "override-undeclared", "selection": {"platform": "darwin", "backend": "loop-mount"}, "refusal": "unavailable"},
+    {"id": "override-fails-requirement", "selection": {"platform": "darwin", "backend": "mounted-image", "require": ["unprivileged"]}, "refusal": "unsatisfied"},
+    {"id": "foreign-platform", "selection": {"platform": "freebsd"}, "refusal": "platform"},
+    {"id": "missing-platform", "selection": {}, "refusal": "platform"},
+    {"id": "undeclared-capability", "selection": {"platform": "darwin", "require": ["root-privilege"]}, "refusal": "capability"}
+  ],
+  "refusalText": {
+    "platform": "Declared native storage platform required",
+    "unavailable": "Declared native storage backend unavailable on this host",
+    "unsatisfied": "No declared native storage backend satisfies the requirements",
+    "capability": "Declared native storage capability required"
+  }
+}

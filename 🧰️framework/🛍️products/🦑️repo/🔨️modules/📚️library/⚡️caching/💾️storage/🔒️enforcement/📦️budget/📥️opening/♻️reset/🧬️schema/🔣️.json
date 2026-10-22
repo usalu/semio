@@ -1,32 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Inactive Recomputable Nx Namespace Reset",
+  "title": "Inactive Recomputable Cache Partition Reset",
   "$defs": {
     "Protocol": {
       "const": {
         "version": 1,
-        "partition": "nx",
+        "profiles": [
+          "graph",
+          "nx"
+        ],
         "platforms": [
-          "darwin"
+          "darwin",
+          "linux",
+          "win32"
         ],
-        "maximumMilliseconds": 600000,
-        "maximumAncestors": 64,
-        "maximumReceiptBytes": 4096,
-        "maximumInformationBytes": 4194304,
-        "maximumInformationLines": 65536,
-        "maximumMountBytes": 1048576,
-        "maximumMountLines": 16384,
-        "entries": [
-          "fixed.dmg",
-          "image.json",
-          "m"
-        ],
-        "receipt": "image.json",
-        "backing": "fixed.dmg",
-        "root": "m",
-        "intent": ".reset.json",
-        "maximumIntentBytes": 16384
+        "maximumMilliseconds": 600000
       }
+    },
+    "Partition": {
+      "enum": [
+        "rust",
+        "tools",
+        "graph",
+        "dependencies",
+        "products",
+        "diagnostics",
+        "nx",
+        "leases"
+      ]
     },
     "Entry": {
       "type": "object",
@@ -111,7 +112,7 @@
         "version",
         "partition",
         "operation",
-        "retiredFiles",
+        "retiredImages",
         "logicalBytes"
       ],
       "properties": {
@@ -119,20 +120,20 @@
           "const": 1
         },
         "partition": {
-          "const": "nx"
+          "$ref": "#/$defs/Profile"
         },
         "operation": {
           "const": "reset-inactive"
-        },
-        "retiredFiles": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 2
         },
         "logicalBytes": {
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "retiredImages": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
         }
       }
     },
@@ -203,10 +204,10 @@
           "const": 1
         },
         "kind": {
-          "const": "inactive-nx-reset-intent"
+          "const": "inactive-reset-intent"
         },
         "partition": {
-          "const": "nx"
+          "$ref": "#/$defs/Partition"
         },
         "namespace": {
           "$ref": "#/$defs/RecordedEntry"
@@ -387,6 +388,175 @@
         },
         "foreignReplacement": {
           "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Profile": {
+      "enum": [
+        "graph",
+        "nx"
+      ]
+    },
+    "InactivePublicationProtocol": {
+      "const": {
+        "version": 1,
+        "platforms": [
+          "darwin"
+        ],
+        "maximumMilliseconds": 600000,
+        "maximumAncestors": 64,
+        "maximumReceiptBytes": 4096,
+        "maximumInformationBytes": 4194304,
+        "maximumInformationLines": 65536,
+        "maximumMountBytes": 1048576,
+        "maximumMountLines": 16384,
+        "entries": [
+          "fixed.dmg",
+          "image.json",
+          "m"
+        ],
+        "receipt": "image.json",
+        "backing": "fixed.dmg",
+        "root": "m",
+        "intent": ".reset.json",
+        "maximumIntentBytes": 16384,
+        "ledger": "boot-recovery",
+        "maximumLedgerEntries": 64,
+        "texts": {
+          "en": {
+            "obsolete": "The cache image {partition} ({directory}) was published in an unsupported receipt format, for example before the boot-stable ancestry binding. Its contents are recomputable: it is retired and rebuilt automatically.",
+            "attached": "The cache image {partition} ({directory}) is attached and has an unsupported receipt format. Detach it (hdiutil detach <device>) and run the command again: it is then rebuilt automatically."
+          },
+          "de": {
+            "obsolete": "Das Cache-Image {partition} ({directory}) wurde in einem nicht unterstützten Quittungsformat veröffentlicht, zum Beispiel vor der bootstabilen Vorfahrenbindung. Sein Inhalt ist neu berechenbar: es wird ausgemustert und automatisch neu aufgebaut.",
+            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hängen Sie es ab (hdiutil detach <Gerät>) und führen Sie den Befehl erneut aus: es wird dann automatisch neu aufgebaut."
+          }
+        },
+        "attachedRefusal": "Original relative child volume required"
+      }
+    },
+    "InactivePublicationOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "partition",
+        "operation",
+        "retiredFiles",
+        "logicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partition": {
+          "$ref": "#/$defs/Partition"
+        },
+        "operation": {
+          "const": "reset-inactive"
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResetOwnerFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "profile",
+              "scenario",
+              "accepted",
+              "retiredImages"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "profile": {
+                "enum": [
+                  "graph",
+                  "nx",
+                  "products"
+                ]
+              },
+              "scenario": {
+                "enum": [
+                  "success",
+                  "absent",
+                  "resume",
+                  "copied-control",
+                  "capture-undefined",
+                  "close-failure",
+                  "retirement-failure",
+                  "retirement-false",
+                  "lease-close-false",
+                  "exclusive-refused"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "retiredImages": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "WorkspaceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "workspace",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         },
         "accepted": {
           "type": "boolean"

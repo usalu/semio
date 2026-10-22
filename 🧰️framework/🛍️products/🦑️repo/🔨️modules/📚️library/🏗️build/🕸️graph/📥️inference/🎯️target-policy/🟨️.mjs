@@ -123,8 +123,8 @@ export function targetWithDefaults(target, root, ownsScript) {
   return { ...target, executor, options: { cwd: root, ...(target.options ?? {}) } };
 }
 
-/** 🛠️ Exposes wasm-pack's immutable optimizer preparation to Nx before compiler execution. */
+/** 🛠️ Exposes the pinned wasm toolchain (wasm-pack, wasm-bindgen and the immutable Binaryen optimizer preparation) as a target dependency before compiler execution. */
 export function withWasmTooling(targets, required) {
   if (!targets.wasm || !required) return targets;
-  return { ...targets, wasm: { ...targets.wasm, options: { ...targets.wasm.options, env: { ...targets.wasm.options?.env, SEMIO_WASM_BUILD_REQUIRED: "1" } }, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm-opt"])] } };
+  return { ...targets, wasm: { ...targets.wasm, options: { ...targets.wasm.options, env: { ...targets.wasm.options?.env, SEMIO_WASM_BUILD_REQUIRED: "1" } }, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm"])] } };
 }

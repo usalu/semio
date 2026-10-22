@@ -14,7 +14,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts declarations",
+        "command": "repo ./📜️script.ts declarations",
         "cwd": "{projectRoot}"
       },
       "outputs": [],
@@ -35,7 +35,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
@@ -45,7 +45,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-browser",
+        "command": "repo ./📜️script.ts test-browser",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -60,7 +60,7 @@
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-browser-ownership",
+        "command": "repo ./📜️script.ts test-browser-ownership",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -117,7 +117,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-browser-clock",
+        "command": "repo ./📜️script.ts test-browser-clock",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -135,7 +135,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-source-read",
+        "command": "repo ./📜️script.ts test-source-read",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -157,7 +157,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-evaluation-work",
+        "command": "repo ./📜️script.ts test-evaluation-work",
         "cwd": "{projectRoot}"
       }
     },
@@ -172,7 +172,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-evaluation-seeds",
+        "command": "repo ./📜️script.ts test-evaluation-seeds",
         "cwd": "{projectRoot}"
       }
     },
@@ -189,7 +189,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-evaluation-source"
+        "command": "repo ./📜️script.ts test-evaluation-source"
       }
     },
     "test-session-source": {
@@ -202,7 +202,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-session-source",
+        "command": "repo ./📜️script.ts test-session-source",
         "cwd": "{projectRoot}"
       },
       "cache": true
@@ -212,7 +212,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -228,7 +228,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts preview-generated",
+        "command": "repo ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"
       },
       "inputs": [
@@ -242,7 +242,7 @@
     "wasm": {
       "executor": "repo:script",
       "options": {
-        "command": "bun \"../../🏗️build/📜️script.ts\" wasm",
+        "command": "repo \"../../🏗️build/📜️script.ts\" wasm",
         "cwd": "{projectRoot}",
         "forwardAllArgs": false
       },
@@ -280,7 +280,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -294,7 +294,7 @@
         "reads"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-geometry-ownership",
+        "command": "repo ./📜️script.ts test-geometry-ownership",
         "cwd": "{projectRoot}"
       },
       "cache": true,
@@ -312,7 +312,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-retained-grant-source",
+        "command": "repo ./📜️script.ts test-retained-grant-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -327,7 +327,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-host-source",
+        "command": "repo ./📜️script.ts test-host-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -335,7 +335,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-dag-source"
+        "command": "repo ./📜️script.ts test-dag-source"
       },
       "inputs": [
         "default",
@@ -356,7 +356,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-vcs-source",
+        "command": "repo ./📜️script.ts test-vcs-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -372,7 +372,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-retained-receipt-source"
+        "command": "repo ./📜️script.ts test-retained-receipt-source"
       }
     },
     "test-sdk-source": {
@@ -380,7 +380,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-sdk-source",
+        "command": "repo ./📜️script.ts test-sdk-source",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -405,7 +405,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun test \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts\"",
+        "command": "repo tools exec bun -- test \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts\"",
         "cwd": "{workspaceRoot}",
         "forwardAllArgs": false
       },

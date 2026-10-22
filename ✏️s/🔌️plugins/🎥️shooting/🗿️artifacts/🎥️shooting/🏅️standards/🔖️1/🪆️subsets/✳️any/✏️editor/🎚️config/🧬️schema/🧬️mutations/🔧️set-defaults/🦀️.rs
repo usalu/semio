@@ -15,6 +15,16 @@ pub struct SetDefaults {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetDefaults {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "defaults", kind: "set-defaults", record: "SetDefaults" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Defaults", "Standardwerte setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ShootingConfig, ShootingConfigMutation> for SetDefaults {
     fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
         let diff = ShootingConfigDiff {
             default_shot_format: (base.default_shot_format != self.shot_format).then(|| self.shot_format.clone()),
@@ -30,10 +40,4 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetDefau
     fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
     Ok(vec![ShootingConfigMutation::SetDefaults(Self { shot_format: base.default_shot_format.clone(), shot_shape: base.default_shot_shape.clone(), asset_format: base.default_asset_format.clone() })])
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Defaults", "Standardwerte setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()]
-    }
 }

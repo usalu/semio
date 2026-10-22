@@ -1764,6 +1764,306 @@
    }
   },
   {
+   "name": "equals-goal-passes",
+   "slo": {
+    "id": "a",
+    "title": {
+     "en": "a",
+     "de": "a"
+    },
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 300,
+    "gate": 1000,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "p",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 300.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 300.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 300.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "wallMs": {
+      "n": 3,
+      "min": 300.0,
+      "p50": 300.0,
+      "p95": 300.0,
+      "p99": 300.0,
+      "max": 300.0,
+      "mean": 300.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 0,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "a",
+    "tool": "nx",
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 300.0,
+    "goal": 300,
+    "gate": 1000,
+    "n": 3,
+    "status": "pass",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "equals-gate-warns",
+   "slo": {
+    "id": "a",
+    "title": {
+     "en": "a",
+     "de": "a"
+    },
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 300,
+    "gate": 1000,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "p",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 1000.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 1000.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 1000.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "wallMs": {
+      "n": 3,
+      "min": 1000.0,
+      "p50": 1000.0,
+      "p95": 1000.0,
+      "p99": 1000.0,
+      "max": 1000.0,
+      "mean": 1000.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 0,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "a",
+    "tool": "nx",
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 1000.0,
+    "goal": 300,
+    "gate": 1000,
+    "n": 3,
+    "status": "warn",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "equals-gate-only-passes",
+   "slo": {
+    "id": "g",
+    "title": {
+     "en": "g",
+     "de": "g"
+    },
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": null,
+    "gate": 400,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "p",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 400.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 400.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "wallMs": 400.0
+      },
+      "startKind": null,
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "wallMs": {
+      "n": 3,
+      "min": 400.0,
+      "p50": 400.0,
+      "p95": 400.0,
+      "p99": 400.0,
+      "max": 400.0,
+      "mean": 400.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 0,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "g",
+    "tool": "nx",
+    "probe": "p",
+    "metric": "wallMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 400.0,
+    "goal": null,
+    "gate": 400,
+    "n": 3,
+    "status": "pass",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
    "name": "fail-quiet",
    "slo": {
     "id": "a",
@@ -5691,6 +5991,906 @@
     "inflated": false,
     "enforcement": "advisory",
     "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-all-markers-pass",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "marker",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "marker",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "marker",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 100.0,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "max": 100.0,
+      "mean": 100.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 3,
+     "first-output": 0,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 100.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "pass",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-first-output-pass-is-unproven",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 100.0,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "max": 100.0,
+      "mean": 100.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 3,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 100.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "unproven",
+    "reason": "start-unobserved",
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-first-output-fail-is-fail",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 900.0,
+      "p50": 900.0,
+      "p95": 900.0,
+      "p99": 900.0,
+      "max": 900.0,
+      "mean": 900.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 3,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 900.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "fail",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-exit-pass-is-pass",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 100.0,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "max": 100.0,
+      "mean": 100.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 0,
+     "exit": 3
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 100.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "pass",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-exit-fail-is-unproven",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 900.0,
+      "p50": 900.0,
+      "p95": 900.0,
+      "p99": 900.0,
+      "max": 900.0,
+      "mean": 900.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 0,
+     "exit": 3
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 900.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "unproven",
+    "reason": "start-unobserved",
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-mixed-fail-is-unproven",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "marker",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 900.0,
+      "p50": 900.0,
+      "p95": 900.0,
+      "p99": 900.0,
+      "max": 900.0,
+      "mean": 900.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 1,
+     "first-output": 1,
+     "exit": 1
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 900.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "unproven",
+    "reason": "start-unobserved",
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-mixed-pass-is-unproven",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "marker",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 100.0
+      },
+      "startKind": "exit",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 100.0,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "max": 100.0,
+      "mean": 100.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 1,
+     "first-output": 1,
+     "exit": 1
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 100.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "unproven",
+    "reason": "start-unobserved",
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-first-output-recorded",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": null,
+    "gate": null,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 0.2
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 900.0,
+      "p50": 900.0,
+      "p95": 900.0,
+      "p99": 900.0,
+      "max": 900.0,
+      "mean": 900.0
+     }
+    },
+    "loadClass": "quiet",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 3,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 900.0,
+    "goal": null,
+    "gate": null,
+    "n": 3,
+    "status": "recorded",
+    "reason": null,
+    "inflated": false,
+    "enforcement": "advisory",
+    "loadClass": "quiet"
+   }
+  },
+  {
+   "name": "start-first-output-fail-saturated",
+   "slo": {
+    "id": "s",
+    "title": {
+     "en": "s",
+     "de": "s"
+    },
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "goal": 500,
+    "gate": 500,
+    "tools": [
+     "nx"
+    ],
+    "enforcement": "advisory",
+    "tolerance": {
+     "relative": 0.15,
+     "absolute": 25
+    },
+    "source": "provisional"
+   },
+   "series": {
+    "probe": "e",
+    "tool": "nx",
+    "lane": "oneshot",
+    "status": "measured",
+    "reason": null,
+    "samples": [
+     {
+      "index": 0,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 3.0
+     },
+     {
+      "index": 1,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 3.0
+     },
+     {
+      "index": 2,
+      "ok": true,
+      "exit": 0,
+      "values": {
+       "startMs": 900.0
+      },
+      "startKind": "first-output",
+      "loadPerCore": 3.0
+     }
+    ],
+    "failed": 0,
+    "stats": {
+     "startMs": {
+      "n": 3,
+      "min": 900.0,
+      "p50": 900.0,
+      "p95": 900.0,
+      "p99": 900.0,
+      "max": 900.0,
+      "mean": 900.0
+     }
+    },
+    "loadClass": "saturated",
+    "startKinds": {
+     "marker": 0,
+     "first-output": 3,
+     "exit": 0
+    }
+   },
+   "row": {
+    "slo": "s",
+    "tool": "nx",
+    "probe": "e",
+    "metric": "startMs",
+    "statistic": "p50",
+    "direction": "lower",
+    "unit": "ms",
+    "value": 900.0,
+    "goal": 500,
+    "gate": 500,
+    "n": 3,
+    "status": "unproven",
+    "reason": "host-saturated",
+    "inflated": true,
+    "enforcement": "advisory",
+    "loadClass": "saturated"
    }
   },
   {
@@ -15595,6 +16795,60 @@
      "statistic": "p50",
      "direction": "lower",
      "unit": "ms",
+     "value": 300.0,
+     "goal": 300,
+     "gate": 1000,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "a",
+     "tool": "nx",
+     "probe": "p",
+     "metric": "wallMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 1000.0,
+     "goal": 300,
+     "gate": 1000,
+     "n": 3,
+     "status": "warn",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "g",
+     "tool": "nx",
+     "probe": "p",
+     "metric": "wallMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 400.0,
+     "goal": null,
+     "gate": 400,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "a",
+     "tool": "nx",
+     "probe": "p",
+     "metric": "wallMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
      "value": 1600.0,
      "goal": 300,
      "gate": 1000,
@@ -15894,6 +17148,168 @@
      "loadClass": "quiet"
     },
     {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "unproven",
+     "reason": "start-unobserved",
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 900.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "fail",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 900.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "unproven",
+     "reason": "start-unobserved",
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 900.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "unproven",
+     "reason": "start-unobserved",
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "unproven",
+     "reason": "start-unobserved",
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 900.0,
+     "goal": null,
+     "gate": null,
+     "n": 3,
+     "status": "recorded",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 900.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "unproven",
+     "reason": "host-saturated",
+     "inflated": true,
+     "enforcement": "advisory",
+     "loadClass": "saturated"
+    },
+    {
      "slo": "a",
      "tool": "nx",
      "probe": "p",
@@ -16021,11 +17437,11 @@
     }
    ],
    "tally": {
-    "pass": 8,
-    "warn": 3,
-    "fail": 5,
-    "unproven": 9,
-    "recorded": 1,
+    "pass": 12,
+    "warn": 4,
+    "fail": 6,
+    "unproven": 14,
+    "recorded": 2,
     "blockingFailed": 2
    }
   },
@@ -16056,6 +17472,42 @@
      "goal": 300,
      "gate": 1000,
      "n": 5,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "a",
+     "tool": "nx",
+     "probe": "p",
+     "metric": "wallMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 300.0,
+     "goal": 300,
+     "gate": 1000,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "g",
+     "tool": "nx",
+     "probe": "p",
+     "metric": "wallMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 400.0,
+     "goal": null,
+     "gate": 400,
+     "n": 3,
      "status": "pass",
      "reason": null,
      "inflated": false,
@@ -16171,6 +17623,42 @@
      "loadClass": "quiet"
     },
     {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
+     "slo": "s",
+     "tool": "nx",
+     "probe": "e",
+     "metric": "startMs",
+     "statistic": "p50",
+     "direction": "lower",
+     "unit": "ms",
+     "value": 100.0,
+     "goal": 500,
+     "gate": 500,
+     "n": 3,
+     "status": "pass",
+     "reason": null,
+     "inflated": false,
+     "enforcement": "advisory",
+     "loadClass": "quiet"
+    },
+    {
      "slo": "m",
      "tool": "nx",
      "probe": "p",
@@ -16190,7 +17678,7 @@
     }
    ],
    "tally": {
-    "pass": 8,
+    "pass": 12,
     "warn": 0,
     "fail": 0,
     "unproven": 0,

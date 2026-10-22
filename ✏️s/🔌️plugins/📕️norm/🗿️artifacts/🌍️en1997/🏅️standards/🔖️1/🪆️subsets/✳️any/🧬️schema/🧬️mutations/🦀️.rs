@@ -44,7 +44,7 @@ use semio_s_artifact_norm_en1997_mut_foundations::remove_pile;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1997Snapshot, diff = En1997Diff, schema = "norm.en1997")]
+#[mutations(snapshot = En1997Snapshot, diff = En1997Diff, schema = "norm.en1997", reference = En1997Snapshot, reference_diff = En1997Diff)]
 pub enum En1997Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeGeotechnicalCategory(change_geotechnical_category::ChangeGeotechnicalCategory),
@@ -104,15 +104,15 @@ pub mod mutation_bridge {
 
     /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
     pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -> Result<(En1997Snapshot, Vec<String>), String> {
-        let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);
+        let raised = <En1997Mutation as protocol::ColdMutation<En1997Snapshot>>::diff(mutation, base);
         let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
         Ok((applied, messages))
     }
 
     /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
     pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
-        <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(mutation, base)
+        <En1997Mutation as protocol::ColdMutation<En1997Snapshot>>::inverse(mutation, base)
     }
 }
 pub use crate::mutation_bridge::*;

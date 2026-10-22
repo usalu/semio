@@ -1,0 +1,476 @@
+{
+ "version": 1,
+ "requestSha256": "1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047",
+ "otherSha256": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5",
+ "sets": [
+  {
+   "name": "tiny",
+   "files": [
+    {
+     "name": "source.js",
+     "content": {
+      "text": "export const a=1;\n"
+     }
+    },
+    {
+     "name": "metadata.json",
+     "content": {
+      "text": "{}"
+     }
+    }
+   ],
+   "chunks": 2,
+   "frames": [
+    "{\"type\":\"file\",\"name\":\"source.js\",\"byteLength\":18,\"sha256\":\"2771f7d184ef7d2d6e23c17b1f44fa2f86fbf9dd75921df5648b9f2b7e4b24e1\"}\n",
+    "{\"type\":\"chunk\",\"data\":\"ZXhwb3J0IGNvbnN0IGE9MTsK\"}\n",
+    "{\"type\":\"end\"}\n",
+    "{\"type\":\"file\",\"name\":\"metadata.json\",\"byteLength\":2,\"sha256\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\"}\n",
+    "{\"type\":\"chunk\",\"data\":\"e30=\"}\n",
+    "{\"type\":\"end\"}\n",
+    "{\"type\":\"complete\",\"requestSha256\":\"1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047\"}\n"
+   ]
+  },
+  {
+   "name": "three files with an empty map",
+   "files": [
+    {
+     "name": "source.js",
+     "content": {
+      "text": "a"
+     }
+    },
+    {
+     "name": "source.js.map",
+     "content": {
+      "text": ""
+     }
+    },
+    {
+     "name": "metadata.json",
+     "content": {
+      "text": "{\"inputs\":[]}"
+     }
+    }
+   ],
+   "chunks": 2,
+   "frames": null
+  },
+  {
+   "name": "exactly one chunk",
+   "files": [
+    {
+     "name": "source.js",
+     "content": {
+      "repeat": "ab",
+      "times": 16384
+     }
+    },
+    {
+     "name": "metadata.json",
+     "content": {
+      "text": "{}"
+     }
+    }
+   ],
+   "chunks": 2,
+   "frames": null
+  },
+  {
+   "name": "one byte past a chunk",
+   "files": [
+    {
+     "name": "source.js",
+     "content": {
+      "repeat": "ab",
+      "times": 16385
+     }
+    },
+    {
+     "name": "source.js.map",
+     "content": {
+      "repeat": "z",
+      "times": 1
+     }
+    },
+    {
+     "name": "metadata.json",
+     "content": {
+      "text": "{}"
+     }
+    }
+   ],
+   "chunks": 4,
+   "frames": null
+  },
+  {
+   "name": "three chunks with a short tail and multibyte text",
+   "files": [
+    {
+     "name": "source.js",
+     "content": {
+      "repeat": "é🧪",
+      "times": 20000
+     }
+    },
+    {
+     "name": "metadata.json",
+     "content": {
+      "text": "{}"
+     }
+    }
+   ],
+   "chunks": 5,
+   "frames": null
+  }
+ ],
+ "wire": [
+  {
+   "name": "the whole stream at once",
+   "sizes": []
+  },
+  {
+   "name": "one byte at a time",
+   "sizes": [
+    1
+   ]
+  },
+  {
+   "name": "irregular pieces",
+   "sizes": [
+    7,
+    64,
+    1000,
+    3
+   ]
+  }
+ ],
+ "generator": [
+  {
+   "name": "one file is not enough",
+   "files": [
+    "source.js"
+   ],
+   "error": "Complete bounded Bun output required"
+  },
+  {
+   "name": "the first file must be the source",
+   "files": [
+    "metadata.json",
+    "metadata.json"
+   ],
+   "error": "Complete bounded Bun output required"
+  },
+  {
+   "name": "the last file must be the metadata",
+   "files": [
+    "source.js",
+    "source.js.map"
+   ],
+   "error": "Complete bounded Bun output required"
+  },
+  {
+   "name": "an unknown name is refused",
+   "files": [
+    "source.js",
+    "other.js",
+    "metadata.json"
+   ],
+   "error": "Bun output file capacity refused"
+  },
+  {
+   "name": "a repeated name is refused",
+   "files": [
+    "source.js",
+    "source.js",
+    "metadata.json"
+   ],
+   "error": "Bun output file capacity refused"
+  },
+  {
+   "name": "more files than the maximum are refused",
+   "files": [
+    "source.js",
+    "source.js.map",
+    "source.js.map",
+    "metadata.json"
+   ],
+   "error": "Complete bounded Bun output required"
+  },
+  {
+   "name": "a malformed request digest is refused",
+   "files": [
+    "source.js",
+    "metadata.json"
+   ],
+   "error": "Complete bounded Bun output required",
+   "requestSha256": "not-a-digest"
+  }
+ ],
+ "hostile": [
+  {
+   "name": "chunk-before-file",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "drop",
+     "at": 0
+    }
+   ],
+   "error": "Bun chunk lacks an accepted file"
+  },
+  {
+   "name": "duplicate-file",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "insert",
+     "at": 3,
+     "frame": {
+      "type": "file",
+      "name": "source.js",
+      "byteLength": 18,
+      "sha256": "2771f7d184ef7d2d6e23c17b1f44fa2f86fbf9dd75921df5648b9f2b7e4b24e1"
+     }
+    }
+   ],
+   "error": "Bun file order or capacity refused"
+  },
+  {
+   "name": "bad-hash",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 0,
+     "frame": {
+      "type": "file",
+      "name": "source.js",
+      "byteLength": 18,
+      "sha256": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5"
+     }
+    }
+   ],
+   "error": "Bun file digest or completeness refused"
+  },
+  {
+   "name": "missing-complete",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "drop",
+     "at": 6
+    }
+   ],
+   "error": "Complete Bun output stream required",
+   "finish": true
+  },
+  {
+   "name": "overlong-partial",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "append-bytes",
+     "bytes": 70000
+    }
+   ],
+   "error": "Bun partial frame capacity exceeded"
+  },
+  {
+   "name": "wrong-request",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 6,
+     "frame": {
+      "type": "complete",
+      "requestSha256": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5"
+     }
+    }
+   ],
+   "error": "Bun request completion refused"
+  },
+  {
+   "name": "after-complete",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "insert",
+     "at": 7,
+     "frame": {
+      "type": "end"
+     }
+    }
+   ],
+   "error": "Bun output continued after completion"
+  },
+  {
+   "name": "metadata-too-large",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 3,
+     "frame": {
+      "type": "file",
+      "name": "metadata.json",
+      "byteLength": 16777217,
+      "sha256": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5"
+     }
+    }
+   ],
+   "error": "Bun file order or capacity refused"
+  },
+  {
+   "name": "metadata first is not a source",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 0,
+     "frame": {
+      "type": "file",
+      "name": "metadata.json",
+      "byteLength": 18,
+      "sha256": "2771f7d184ef7d2d6e23c17b1f44fa2f86fbf9dd75921df5648b9f2b7e4b24e1"
+     }
+    }
+   ],
+   "error": "Bun file order or capacity refused"
+  },
+  {
+   "name": "a file after the metadata is refused",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "insert",
+     "at": 6,
+     "frame": {
+      "type": "file",
+      "name": "source.js.map",
+      "byteLength": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     }
+    }
+   ],
+   "error": "Bun file order or capacity refused"
+  },
+  {
+   "name": "a frame with an unknown field is not closed",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 2,
+     "frame": {
+      "type": "end",
+      "extra": 1
+     }
+    }
+   ],
+   "error": "Closed Bun data frame required"
+  },
+  {
+   "name": "a frame of an unknown type is not closed",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 2,
+     "frame": {
+      "type": "flush"
+     }
+    }
+   ],
+   "error": "Closed Bun data frame required"
+  },
+  {
+   "name": "a chunk longer than its file is refused",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 1,
+     "frame": {
+      "type": "chunk",
+      "data": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+     }
+    }
+   ],
+   "error": "Bun chunk bytes refused"
+  },
+  {
+   "name": "a short file ends with the wrong digest",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "drop",
+     "at": 1
+    }
+   ],
+   "error": "Bun file digest or completeness refused"
+  },
+  {
+   "name": "a chunk that is not canonical base64 is not closed",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace",
+     "at": 1,
+     "frame": {
+      "type": "chunk",
+      "data": "!!!!"
+     }
+    }
+   ],
+   "error": "Closed Bun data frame required"
+  },
+  {
+   "name": "a line that is not JSON",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "replace-text",
+     "at": 2,
+     "text": "not json\n"
+    }
+   ],
+   "error": "SyntaxError"
+  },
+  {
+   "name": "a sink that is asynchronous is refused",
+   "set": "tiny",
+   "ops": [],
+   "error": "Synchronous Bun data sink required",
+   "sink": "async"
+  },
+  {
+   "name": "a stream that failed once refuses everything after",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "drop",
+     "at": 0
+    }
+   ],
+   "error": "Bun chunk lacks an accepted file",
+   "again": "Bun data stream already refused"
+  },
+  {
+   "name": "an unfinished stream cannot finish",
+   "set": "tiny",
+   "ops": [
+    {
+     "op": "drop",
+     "at": 5
+    },
+    {
+     "op": "drop",
+     "at": 5
+    }
+   ],
+   "error": "Complete Bun output stream required",
+   "finish": true
+  }
+ ]
+}

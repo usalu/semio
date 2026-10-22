@@ -5,10 +5,10 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-record-rs:test-ownership",
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-record-rs:test-native",
-    "test-refusals": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-record-rs:test-refusals",
-    "test-schema-storage-source": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-record-rs:test-schema-storage-source"
+    "test-ownership": "repo run @semio-tech/framework-pack-record-rs:test-ownership",
+    "test-native": "repo run @semio-tech/framework-pack-record-rs:test-native",
+    "test-refusals": "repo run @semio-tech/framework-pack-record-rs:test-refusals",
+    "test-schema-storage-source": "repo run @semio-tech/framework-pack-record-rs:test-schema-storage-source"
   },
   "devDependencies": {
     "@noble/hashes": "^2.4.0",

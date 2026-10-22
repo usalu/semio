@@ -20,7 +20,7 @@
         "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/coordinator"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "inputs": [
         "production",
@@ -36,7 +36,7 @@
         "build"
       ],
       "options": {
-        "command": "bun ./📜️script.ts dev",
+        "command": "repo ./📜️script.ts dev",
         "forwardAllArgs": true
       }
     },
@@ -44,7 +44,7 @@
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "cache": true,

@@ -5,6 +5,8 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -90,7 +92,7 @@ const READER_RECIPES: readonly ReaderRecipe[] = [
 //#region 🔨️Build
 /** ⚙️ Builds the reference-crate-backed generator binary if it is missing or stale. */
 function ensureBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 
@@ -127,7 +129,7 @@ async function manifests(): Promise<void> {
       packageVersion: "0.13",
       engineFamily: "gif",
       engineVersion: "0.13",
-      command: "bun 🏭️generator/📜️script.ts generate",
+      command: "repo 🏭️generator/📜️script.ts generate",
       platform: currentPlatform(),
     },
     reproducible: true,
@@ -147,7 +149,7 @@ function contentDigest(bytes: Buffer): string {
 
 /** 🦀️ Shells out to the standalone `reader` binary — the ONLY place this file touches it. */
 function readerBuild(id: string, outDir: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", ENGINE_MANIFEST, "--bin", "reader", "--", "build", id, outDir, FIXTURE_DIRECTORY_NAMES[id]!, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", ENGINE_MANIFEST, "--bin", "reader", "--", "build", id, outDir, FIXTURE_DIRECTORY_NAMES[id]!, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`reader build ${id} failed (exit ${result.status}): ${result.stderr}`);
 }
 
@@ -176,7 +178,7 @@ function readerManifestEntry(recipe: ReaderRecipe, outDir: string): Record<strin
       packageVersion: READER_ENGINE_VERSION,
       engineFamily: "gif",
       engineVersion: READER_ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (gif)", attribution: "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🧫️fixtures/📖️reader/🦀️.rs", security: "scanned-clean", privacy: "no-personal-data" },
@@ -299,7 +301,7 @@ print(kind + ': written')
 `;
     const KINDS = ["insert-comment", "remove-comment", "add-app-extension", "remove-app-extension"];
     const readerDir = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
-    const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
+    const built = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
     if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
     const readerBin = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "reader");
     const explicitRoot = flagValue(rest, "--out") ?? fixtureOutRoot ?? null;
@@ -308,7 +310,7 @@ print(kind + ': written')
       for (const kind of KINDS) {
         const directory = FIXTURE_DIRECTORY_NAMES[kind]!;
         const root = explicitRoot ?? committedFixtureRoot(kind);
-        const written = spawnSync("python3", ["-c", WRITER, root, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
+        const written = runToolSyncV1("python", ["-c", WRITER, root, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
         if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
         const cmp = spawnSync(readerBin, ["compare", join(root, directory, BEFORE_FILE), join(root, directory, AFTER_FILE)], { encoding: "utf8" });
         if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
@@ -335,7 +337,7 @@ print(kind + ': written')
         units: { length: "unitless", angle: "degree" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "gif-89a-extension-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions", platform: currentPlatform() },
+        generator: { oracle: "gif-89a-extension-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions", platform: currentPlatform() },
         comparisonProfile: "semantic-gif-89a-extension-v1",
         reproducible: true,
         family: "mechanical",
@@ -367,7 +369,7 @@ print(kind + ': written')
         if (built.status !== 0) throw new Error(`gifbuild failed for ${name}`);
         writeFileSync(join(dir, name), built.stdout);
       }
-      const cmp = spawnSync("bun", [probes, "gif-screen-compare", "--input", join(dir, BEFORE_FILE), "--input", join(dir, AFTER_FILE)], { encoding: "utf8" });
+      const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "gif-screen-compare", "--input", join(dir, BEFORE_FILE), "--input", join(dir, AFTER_FILE)], { encoding: "utf8" });
       if (cmp.status !== 0) throw new Error(`reader refused the pair: ${cmp.stdout}${cmp.stderr}`);
       const m = JSON.parse(cmp.stdout).measurements;
       if (m.equal === true) { console.error(`[generator] ${kind}: not observable in the screen projection`); return 1; }
@@ -392,7 +394,7 @@ print(kind + ': written')
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "bun 📜️script.ts aspect", platform: currentPlatform() },
+      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "repo 📜️script.ts aspect", platform: currentPlatform() },
       comparisonProfile: "semantic-gif-screen-v1",
       reproducible: true,
       family: "mechanical",

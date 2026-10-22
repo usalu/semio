@@ -25,7 +25,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

@@ -84,11 +84,11 @@ struct DbIoOperationCreditSlot {
     pub result_leases: u16,
     task_attached: bool,
     backend_owner: bool,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub owner: u64,
 }
 
-const EMPTY_DB_IO_OPERATION_CREDIT_SLOT: DbIoOperationCreditSlot = DbIoOperationCreditSlot { generation: 0, operation: 0, live: DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 0 }, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(test)] owner: 0 };
+const EMPTY_DB_IO_OPERATION_CREDIT_SLOT: DbIoOperationCreditSlot = DbIoOperationCreditSlot { generation: 0, operation: 0, live: DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 0 }, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(any(test, feature = "testkit"))] owner: 0 };
 
 #[cfg(any(test, feature = "testkit"))]
 pub static DB_IO_LEDGER_NEXT_OWNER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
@@ -188,7 +188,7 @@ pub fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     ledger.next_operation += 1;
     let generation = ledger.next_generation;
     ledger.next_generation += 1;
-    ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(test)] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
+    ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(any(test, feature = "testkit"))] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
     ledger.totals = totals;
     Ok(operation)
 }
@@ -211,7 +211,7 @@ pub fn db_io_backend_owner_reserve(initial: DbIoCredit) -> Result<u64, DbError> 
     ledger.next_operation += 1;
     let generation = ledger.next_generation;
     ledger.next_generation += 1;
-    ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: true, #[cfg(test)] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
+    ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: true, #[cfg(any(test, feature = "testkit"))] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
     ledger.totals = totals;
     Ok(operation)
 }

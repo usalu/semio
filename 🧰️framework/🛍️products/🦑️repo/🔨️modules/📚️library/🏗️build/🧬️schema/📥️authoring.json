@@ -118,7 +118,7 @@
     },
     "tool": {
       "type": "string",
-      "pattern": "^(nx|bazel)$"
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
     }
   }
 }

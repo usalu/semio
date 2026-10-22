@@ -28,6 +28,15 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "working-graph", kind: "edit-working-graph", record: "EditedWorkingGraph" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit working-graph", "Ausgangszustand bearbeiten")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RewritingSnapshot, Op> for EditWorkingGraph
+where
+    Op: protocol::ColdMutation<RewritingSnapshot, ReferenceDiff = RewritingDiff> + From<EditWorkingGraph>,
+{
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
@@ -37,8 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit working-graph", "Ausgangszustand bearbeiten")
-    }
 }
 //#endregion 🔖️Mutation

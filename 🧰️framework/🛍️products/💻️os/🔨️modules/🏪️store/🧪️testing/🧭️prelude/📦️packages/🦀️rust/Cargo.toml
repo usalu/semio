@@ -47,9 +47,11 @@ semio-framework-os-store-config = { path = "../../../../🎚️config/📦️pac
 semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-core = { path = "../../../../⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-member-group = { path = "../../../../🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
 semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-presence = { path = "../../../../👥️presence/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-initialization-replay = { path = "../../../../🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
@@ -64,6 +66,7 @@ semio-framework-os-store-owned-schema-decode = { path = "../../../../📦️code
 semio-framework-os-store-owned-schema-fields = { path = "../../../../📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-framework-os-store-replay-operation = { path = "../../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-space = { path = "../../../../📜️space-history/🏠️space/📦️packages/🦀️rust" }

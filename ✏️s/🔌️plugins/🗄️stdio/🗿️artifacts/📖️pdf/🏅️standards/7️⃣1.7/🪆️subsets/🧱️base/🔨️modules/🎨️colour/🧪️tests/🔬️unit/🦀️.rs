@@ -14,7 +14,7 @@ use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleVa
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfExtGState, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfSoftMask};
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use crate::standards::v1_7::subsets::base::modules::colour::*;
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfPage;
@@ -48,7 +48,7 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
     use crate::standards::v1_7::subsets::base::schema::mutations::set_shading::SetShading;
     use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-    use protocol::{DiffCodec,Mutation};
+    use protocol::{DiffCodec,ColdMutation, Mutation};
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
     let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
@@ -59,11 +59,11 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     let intent = PdfMutation::SetShading(SetShading {shading:shading.clone(),index:None});
     let outcome = intent.diff(&base);
     let delta = outcome.diff();
-    let target = protocol::apply_diff(delta,&base).unwrap();
+    let target = protocol::apply_diff_cold(delta,&base).unwrap();
     assert_eq!(target.shadings,vec![shading]);
-    assert_eq!(protocol::apply_diff(&delta.inverse(&base),&target).unwrap(),base);
+    assert_eq!(protocol::apply_diff_cold(&delta.inverse(&base),&target).unwrap(),base);
     let mut restored=target.clone();
-    for inverse in intent.inverse(&base).unwrap(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}
+    for inverse in intent.inverse(&base).unwrap(){restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}
     assert_eq!(restored,base);
     let native = io::export::encode_pdf(&target).unwrap();
     let streams=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_sampled_function_streams(&native).unwrap();

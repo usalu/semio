@@ -10,8 +10,9 @@ fails = []
 def tup(v): return tuple(v)
 for c in cases["rs"]:
     table = {tuple(k.split("::")): tup(v) for k, v in c["table"].items()}
-    def resolve(segs, table=table):
-        return table.get(tuple(segs), ("fail", "unresolved"))
+    mt = {tuple(k.split("::")): tup(v) for k, v in c.get("macro_table", {}).items()}
+    def resolve(segs, macro_ns=False, table=table, mt=mt):
+        return (mt if macro_ns and tuple(segs) in mt else table).get(tuple(segs), ("fail", "unresolved"))
     r = rewrite_file(c["input"], set(c["idents"]), resolve)
     if "error" in c:
         if not any(c["error"] in e for e in r.errors): fails.append((c["name"], "expected error", r.errors))
@@ -20,10 +21,22 @@ for c in cases["rs"]:
     elif shutil.which("rustfmt"):
         p = subprocess.run(["rustfmt", "--edition", "2021", "--emit", "stdout"], input=c["expected"], capture_output=True, text=True)
         if p.returncode != 0 and "expected" in p.stderr: fails.append((c["name"], "rustfmt rejects the expected text", p.stderr[:200]))
+from macro_fix import fix_macros
+for c in cases.get("macro", []):
+    table = {tuple(k.split("::")): tuple(v) for k, v in c["table"].items()}
+    def resolve(segs, table=table):
+        return table.get(tuple(segs), ("fail", "unresolved"))
+    ed, ids, err = fix_macros(c["input"], resolve, set(c.get("hub", [])), c["mode"], own_keep=lambda s, k=set(c["keep"]): "::".join(s) in k, explicit=(lambda i: True) if c["mode"] == "crate" else None)
+    out = c["input"]
+    for a, b, o, n in sorted(ed, reverse=True): out = out[:a] + n + out[b:]
+    if err or out != c["expected"] or sorted(ids) != sorted(c["idents"]): fails.append((c["name"], err, out, sorted(ids)))
 bun = shutil.which("bun")
 for c in cases["manifest"]:
     declared = set(c["declared"])
-    new, err = plan_manifest(c["input"], c["key"], c["prod"], c["test"], lambda p, d=declared: p in d, lambda p, c=c: c["rel"] + p)
+    fm = None
+    if "feat_map" in c:
+        fm = lambda fs, c=c: ({p: set(v) for f in fs for p, v in c["feat_map"][f].items()}, None)
+    new, err = plan_manifest(c["input"], c["key"], c["prod"], c["test"], lambda p, d=declared: p in d, lambda p, c=c: c["rel"] + p, (), (), fm)
     if "error" in c:
         if not (err and c["error"] in err): fails.append((c["name"], "expected error", err))
         continue
@@ -36,6 +49,6 @@ for c in cases["manifest"]:
         before, after = json.loads(p.stdout)
         if sorted(set(after) - set(before)) != sorted(c["added"]) or sorted(set(before) - set(after)) != sorted(c["removed"]) :
             if not (set(c["added"]) <= set(after) and set(c["removed"]) <= set(before)): fails.append((c["name"], "bun toml diff", before, after))
-print("cases", len(cases["rs"]) + len(cases["manifest"]), "failures", len(fails))
+print("cases", len(cases["rs"]) + len(cases["manifest"]) + len(cases.get("macro", [])), "failures", len(fails))
 for f in fails: print(" ", f)
 sys.exit(1 if fails else 0)

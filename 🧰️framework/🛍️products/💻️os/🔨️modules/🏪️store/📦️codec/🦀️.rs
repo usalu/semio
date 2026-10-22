@@ -453,3 +453,7 @@ pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssem
         guards.dialect_migrations.entry(key).or_insert(migration);
     }
 }
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

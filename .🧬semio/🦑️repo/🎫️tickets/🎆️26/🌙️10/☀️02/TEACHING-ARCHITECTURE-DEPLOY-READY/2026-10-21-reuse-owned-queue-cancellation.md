@@ -1,0 +1,3 @@
+# Reuse Owned Queue Cancellation
+
+Two read-only repo commands were incorrectly queued while trying to obtain filesystem reads. The show handle 92177 was canceled with SIGINT and returned actual exit 1 after a capacity wait. The filesystem-read exec handle 3672 was live-polled, then canceled with SIGINT and returned actual exit 1 after a 43-second capacity wait. Both terminal refusals were `Host capacity wait cancelled by SIGINT`; neither command passed capacity admission or evaluated Source. These were this agent’s handles only; no peer process was touched. Structured terminal facts are retained in `🗑️generated/2026-10-21-reuse-owned-canceled-reads.json`. Further inspection uses file APIs only.

@@ -16,27 +16,35 @@ pub struct PlaygroundDiff {
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
-    fn apply(&self, snapshot: &PlaygroundSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaygroundSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {}
+
+impl protocol::ColdMutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
         }
     }
+
+    fn apply(&self, unpublished: &mut PlaygroundSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<PlaygroundSnapshot> for PlaygroundDiff {
-    fn inverse(&self, base: &PlaygroundSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PlaygroundSnapshot> for PlaygroundDiff {
+    fn inverse(&self, base: &PlaygroundSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()) }
     }
 }
 

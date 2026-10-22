@@ -2,7 +2,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::FromValue;
 use crate::{editor::forms::modes::blueprint::windows::try_wizard::config::FormsTryWindowConfig, editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransient};
 use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::submit::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[test]
 fn submission_routes_errors_and_prevents_duplicate_responses() {
@@ -23,7 +23,7 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
             continue;
         }
         assert_eq!(emit.artifact_mutations.len(), 1);
-        spec = protocol::apply_diff(emit.artifact_mutations[0].diff(&spec).diff(), &spec).expect("valid mutation diff");
+        spec = protocol::apply_diff_cold(emit.artifact_mutations[0].diff(&spec).diff(), &spec).expect("valid mutation diff");
         assert_eq!(spec.responses.len(), 1);
         assert_eq!(next.submitted_response_id.as_deref(), Some(spec.responses[0].id.as_str()));
         let answers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec.responses[0].answers)).unwrap();

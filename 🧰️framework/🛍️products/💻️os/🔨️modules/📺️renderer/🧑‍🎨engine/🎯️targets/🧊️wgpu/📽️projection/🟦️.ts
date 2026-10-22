@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, resolveWorkspaceTaxonomyAuthority, type RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
+import { runtimeIdentityV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
 export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly entryIds?: readonly string[] } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[]; readonly entryInputs: readonly { readonly id: string; readonly outputPath: string; readonly inputs: readonly string[] }[] }> {
@@ -30,7 +33,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
     check();
     currentInputs = new Set<string>();
     const entryPath = profile.ownerPath + "/" + entry.sourceRelativePath, entryAbsolute = join(repoRoot, entryPath);
-    const result = await Bun.build({ root: repoRoot, entrypoints: [entryAbsolute], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "semantic-wgpu-owned-inputs", setup(builder) {
+    const result = await runtimeBundleV1({ root: repoRoot, entrypoints: [entryAbsolute], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "semantic-wgpu-owned-inputs", setup(builder) {
       builder.onResolve({ filter: /.*/u }, (request) => {
         check();
         const binding = profile.workspaceImports[request.path];
@@ -67,7 +70,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
 }
 
 /** 🥖️ Requires one exact root package-manager identity for all WGPU artifact commands. */
-export function assertWgpuPackageToolchain(packageManager: unknown, actualVersion: string = Bun.version): string {
+export function assertWgpuPackageToolchain(packageManager: unknown, actualVersion: string = runtimeIdentityV1().version): string {
   const expected = typeof packageManager === "string" ? /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1] : undefined;
   if (!expected || actualVersion !== expected) throw new Error("WGPU generation requires the exact root Bun packageManager identity");
   return expected;
@@ -101,7 +104,7 @@ export async function renderWgpuPackageArtifacts(repoRoot: string, options: { re
     const owner = parseCanonicalWgpuPackageCatalog(read(generation.catalogPath), generation.catalogSha256, generation.browserProfile, taxonomy);
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json");
     const cargoPackageRoot = owner.ownerPath + "/" + owner.packageRelativePath, nodePackageRoot = owner.ownerPath + "/" + owner.nodePackageRelativePath;
-    const cargo = Bun.TOML.parse(read(cargoPackageRoot + "/Cargo.toml")) as { package?: { name?: string; build?: string }; lib?: { path?: string }; bin?: { name?: string; path?: string }[] };
+    const cargo = runtimeParseTomlV1(read(cargoPackageRoot + "/Cargo.toml")) as { package?: { name?: string; build?: string }; lib?: { path?: string }; bin?: { name?: string; path?: string }[] };
     const node = JSON.parse(read(nodePackageRoot + "/package.json")), nx = JSON.parse(read(nodePackageRoot + "/📋️project.json"));
     const invalidCwd = Object.values(nx?.targets ?? {}).some((target: any) => target.options?.cwd !== undefined && ![nodePackageRoot, ".", "{projectRoot}"].includes(target.options.cwd));
     if (cargo.package?.name !== owner.identity.cargoPackageName || cargo.package?.build !== owner.entryPaths.cargoBuild || cargo.lib?.path !== owner.entryPaths.cargoLibrary || !cargo.bin?.some((entry) => entry.name === "semio-wgpu-native" && entry.path === owner.entryPaths.cargoBinary) || node.name !== owner.identity.nodePackageName || node.exports?.["."] !== "./" + owner.entryPaths.nodeLibrary || nx.name !== owner.identity.projectName || nx.sourceRoot !== owner.ownerPath || !nx.targets || invalidCwd) throw new Error("WGPU current package manifest identity drift");

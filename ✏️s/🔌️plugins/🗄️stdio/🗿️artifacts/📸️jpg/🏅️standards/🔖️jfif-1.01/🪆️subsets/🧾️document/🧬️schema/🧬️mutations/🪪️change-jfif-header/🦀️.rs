@@ -24,6 +24,16 @@ pub struct ChangeJfifHeaderMutation {
 //#region Semantics
 impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "jfif-header", kind: "change-jfif-header", record: "ChangeJfifHeader" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["change-jfif-header".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutation {
     fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
         let Self { version, density_units, x_density, y_density, thumbnail } = self;
         protocol::MutationOutcome::new(contribute(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()))
@@ -32,12 +42,6 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
         let image = &base.image;
         let unchanged = image.jfif_version == self.version && image.jfif_density_units == self.density_units && image.jfif_x_density == self.x_density && image.jfif_y_density == self.y_density && image.jfif_thumbnail == self.thumbnail;
         Ok((!unchanged).then(|| JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: image.jfif_version, density_units: image.jfif_density_units, x_density: image.jfif_x_density, y_density: image.jfif_y_density, thumbnail: image.jfif_thumbnail.clone() })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["change-jfif-header".into()]
     }
 }
 pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDensityUnits, x_density: u16, y_density: u16, thumbnail: Option<JfifThumbnail>) -> JpgDiff {

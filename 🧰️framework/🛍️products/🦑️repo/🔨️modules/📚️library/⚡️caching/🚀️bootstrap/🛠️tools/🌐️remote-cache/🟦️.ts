@@ -15,7 +15,7 @@ export function nxRemoteCacheV1(contract:RemoteCacheContractV1|undefined,environ
  return Object.freeze({environment:Object.freeze({[NX_REMOTE_CACHE_VARIABLES_V1.server]:server,[NX_REMOTE_CACHE_VARIABLES_V1.token]:token}),rendering});
 }
 
-/** 🔌️ Nx's side of `cache remote status`: it speaks the self-hosted cache API and proves reachability on the task archive route. */
+/** 🔌️ Nx's side of `remote-cache status`: it speaks the self-hosted cache API and proves reachability on the task archive route. */
 export function nxRemoteCacheToolV1():RemoteCacheToolV1{
  return Object.freeze<RemoteCacheToolV1>({tool:"nx",protocol:"nx-self-hosted",probePath:"/v1/cache/semio-probe",render:(contract,environment)=>nxRemoteCacheV1(contract,environment).rendering});
 }

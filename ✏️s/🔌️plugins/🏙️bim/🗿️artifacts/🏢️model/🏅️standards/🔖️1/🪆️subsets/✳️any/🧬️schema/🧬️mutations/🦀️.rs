@@ -30,7 +30,7 @@ mod fixture_cases;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model")]
+#[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model", reference = ModelSnapshot, reference_diff = ModelDiff)]
 pub enum ModelMutation {
     SetElementWorkset(semio_s_artifact_bim_model_mut_any_51::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset),
     SetElementOption(semio_s_artifact_bim_model_mut_any_50::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption),
@@ -482,7 +482,7 @@ pub fn apply_model_mutation(snapshot: &ModelSnapshot, mutation: &ModelMutation) 
 
 /// ↩️ Computes `mutation`'s concrete inverse mutations against `snapshot` (pre-state), in storage order.
 pub fn inverse_model_mutation(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-    <ModelMutation as protocol::Mutation<ModelSnapshot>>::inverse(mutation, snapshot)
+    <ModelMutation as protocol::ColdMutation<ModelSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
 

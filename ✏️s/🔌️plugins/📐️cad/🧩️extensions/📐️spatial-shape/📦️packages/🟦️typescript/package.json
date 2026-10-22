@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/cad-js-module-spatial-shape:test"
+    "test": "repo run @semio-tech/cad-js-module-spatial-shape:test"
   },
   "dependencies": {
     "@semio-tech/cad-js": "workspace:*"

@@ -142,6 +142,9 @@ impl IssueTracker for NullIssueTracker {
         Ok(())
     }
 
+    fn update_issue_title(&self, _issue_url: &str, _title: &str) -> ProviderResult<()> { Ok(()) }
+    fn delete_issue(&self, _issue_url: &str) -> ProviderResult<()> { Ok(()) }
+
     fn get_issue_details(&self, _issue_url: &str) -> ProviderResult<Option<ManagementIssue>> {
         Ok(None)
     }

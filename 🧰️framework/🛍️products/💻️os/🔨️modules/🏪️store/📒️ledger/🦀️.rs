@@ -348,6 +348,12 @@ pub struct PendingCommandReport {
 }
 
 impl PendingCommandReport {
+    /// 📨️ Installs the diagnostic rows and worst level a prepared publication transferred, replacing nothing the command already authored.
+    pub fn install_prepared_messages(&mut self, messages: Vec<semio_framework_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
+        self.messages = messages;
+        self.worst = worst;
+    }
+
     /// 🫙️ Whether the report carries no receipt state and no unannounced event.
     pub fn is_idle(&self) -> bool {
         self.edit_ids.is_none() && self.messages.is_empty() && self.outbound.is_empty() && self.worst.is_none()
@@ -692,3 +698,7 @@ pub fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Edit<Muta
 pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
 }
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/puzzle-3d-rs-compute-ownership:test"
+    "test": "repo run @semio-tech/puzzle-3d-rs-compute-ownership:test"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

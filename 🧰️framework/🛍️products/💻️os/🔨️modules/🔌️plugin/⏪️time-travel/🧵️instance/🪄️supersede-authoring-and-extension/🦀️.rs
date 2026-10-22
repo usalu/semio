@@ -7,7 +7,7 @@ use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
 use semio_framework::InvocationResult;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ✍️ Authors `inputs` within `scope` (unscoped: every line) resumably (design §16.6) — the restore of an undo or the
     /// re-authoring of a redo: a Report replay of the inputs over the applied history, stepped within this turn's budget and
     /// then per reactor turn, finalized by `commit_finished_replay` without replaying again. Answers whether it landed, is
@@ -153,7 +153,7 @@ impl InstanceExtension for TimeTravelExtension {
         action == HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID
     }
 
-    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    async fn dispatch_action<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let mut ctx = TimeTravelCtx::of_extension(ctx);
         ctx.as_render().freeze_tool_machines();
         ctx.dispatch_time_travel_action(action, args, meta, identity, cx).await
@@ -175,7 +175,7 @@ impl InstanceExtension for TimeTravelExtension {
         time_travel.freezes_local_emits().then(|| MediaTransfers::<A>::transaction_fault(FaultOrigin::Framework, semio_framework_time_travel::TIME_TRAVEL_FROZEN_CODE, format!("transaction {txn_id:?} would change the document while a history edit is open on this instance")))
     }
 
-    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
+    fn has_pending_work<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
         TimeTravelRef::of_extension_ref(ctx).time_travel_has_pending_work()
     }
 
@@ -187,12 +187,12 @@ impl InstanceExtension for TimeTravelExtension {
         time_travel.terminal_is_empty()
     }
 
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut ctx = TimeTravelCtx::of_extension(ctx);
         if !ctx.shared().time_travel_has_pending_work() {
             return Ok(false);
         }
-        let grant = semio_framework_plugin_reactor_app::original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained);
+        let grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained);
         ctx.drive_time_travel_turn(grant, identity, cx).await?;
         Ok(ctx.time_travel.has_command_receipt())
     }

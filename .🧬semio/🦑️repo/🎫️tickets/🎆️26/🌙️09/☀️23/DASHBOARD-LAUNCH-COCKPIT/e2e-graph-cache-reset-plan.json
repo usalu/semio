@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "status": "actual-whole0-awaiting-independent-reconciliation",
+  "executable": "repo",
+  "args": [
+    "--tool=nx",
+    "--lang=en",
+    "run",
+    "repo:cache-reset-graph",
+    "--output=stream"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000",
+    "RUST_MIN_STACK": "134217728"
+  },
+  "preconditions": [
+    "Frozen coherent Native whole-retirement, Repo closed reset/format gate and pregraph CLI routes with exact import resolution and independent source review.",
+    "Actual current Original, normal capacity and canonical exclusive custody; no other producer or private inspection launched by this ticket beside reset.",
+    "Native durable continuation preserves truthful partial effects without adopting allocation DATA; no uncharge before physical removal."
+  ],
+  "acceptance": [
+    "Actual whole command terminal, closed outcome and normal custody evidence.",
+    "Retain actual refusal or partial result; no unchanged retry or stage-complete substitution.",
+    "Before/after current selected Source/control/manifest/lock observations retained; owned generated storage effects remain distinct."
+  ],
+  "afterActualReset": [
+    "Fresh Source0 with all retained80 plus exactly one mounted selected Rust Native pinned-record publication law (81 total); actual named bodies and whole independently reconciled.",
+    "Root-owned genuine cold-start before any dashboard/CLI canonical build/install/receipt inspection."
+  ],
+  "prohibited": [
+    "repo dashboard",
+    "Raw or private cache deletion, forced detach/custody, foreign signals, fabricated receipts or token adoption",
+    "Old graph decoder, opaque legacy acceptance or migration scripts",
+    "Dashboard/CLI canonical publication before cold"
+  ],
+  "dispatch": null,
+  "attempts": [
+    {
+      "version": 1,
+      "id": "gr1",
+      "sessionId": 62672,
+      "exitCode": 1,
+      "startedAt": "2026-10-21T22:21:03.277Z",
+      "terminalObservedAt": "2026-10-21T22:21:26.022Z",
+      "log": "🗑️generated/e2e-graph-cache-reset-gr1.log",
+      "logBytes": 8067,
+      "actualCommand": [
+        "repo",
+        "--tool=nx",
+        "--lang=en",
+        "run",
+        "repo:cache-reset-graph",
+        "--output=stream"
+      ],
+      "phase": "captured-command-owner-selection-before-reset",
+      "primary": "Undeclared compiler-captured physical Source read refused",
+      "refusal": {
+        "version": 1,
+        "scope": "workspace",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+        "sourceCount": 1021
+      },
+      "resetBodyObserved": false,
+      "closedResetOutcome": null,
+      "parentOutcome": {
+        "version": 1,
+        "status": 1,
+        "signal": null
+      },
+      "runtime": "Bun v1.3.14 (macOS arm64)",
+      "post": {
+        "count": 67,
+        "errors": [],
+        "shaChanges": [],
+        "identityChanges": []
+      },
+      "lastLogWriteAt": "2026-10-21T22:21:20.621Z",
+      "observedElapsedMilliseconds": 22745,
+      "elapsedQualification": "Dispatch-to-terminal-observation upper bound includes owner observation latency; log activity time is not an exact exit timestamp.",
+      "terminalObservationSource": "Owned write_stdin returned exit1 immediately before same-cell static log-tail timestamp22:21:26.022Z; not an exact OS exit timestamp.",
+      "postObservedAt": "2026-10-21T22:21:55.498Z"
+    },
+    {
+      "version": 1,
+      "id": "gr2",
+      "sessionId": 77248,
+      "exitCode": 0,
+      "startedAt": "2026-10-21T22:30:53.333Z",
+      "terminalObservedAt": "2026-10-21T22:31:23.778Z",
+      "terminalObservationSource": "Owned write_stdin returned exit0 immediately before same-cell tail timestamp; not exact OS exit timestamp.",
+      "lastLogWriteAt": "2026-10-21T22:31:17.361Z",
+      "observedElapsedMilliseconds": 30445,
+      "elapsedQualification": "Dispatch-to-terminal-observation upper bound includes owner observation latency.",
+      "log": "🗑️generated/e2e-graph-cache-reset-gr2.log",
+      "logBytes": 7866,
+      "actualCommand": [
+        "repo",
+        "--tool=nx",
+        "--lang=en",
+        "run",
+        "repo:cache-reset-graph",
+        "--output=stream"
+      ],
+      "resetBodyObserved": true,
+      "closedResetOutcome": {
+        "version": 1,
+        "partition": "graph",
+        "operation": "reset-inactive",
+        "retiredImages": 1,
+        "logicalBytes": 4293918720
+      },
+      "progress": [
+        {
+          "version": 1,
+          "kind": "repository-cache-reset-progress",
+          "partition": "graph",
+          "phase": "quarantine",
+          "entries": 4,
+          "maximumEntries": 131072
+        },
+        {
+          "version": 1,
+          "kind": "repository-cache-reset-progress",
+          "partition": "graph",
+          "phase": "remove",
+          "entries": 1,
+          "maximumEntries": 131072
+        },
+        {
+          "version": 1,
+          "kind": "repository-cache-reset-progress",
+          "partition": "graph",
+          "phase": "remove",
+          "entries": 4,
+          "maximumEntries": 131072
+        }
+      ],
+      "parentOutcome": {
+        "version": 1,
+        "status": 0,
+        "signal": null
+      },
+      "host": "macOS arm64",
+      "nativeLawsPassed": false,
+      "source0Acceptance": false,
+      "post": {
+        "count": 74,
+        "observedAt": "2026-10-21T22:31:50.511Z",
+        "errors": [],
+        "shaChanges": [],
+        "identityChanges": []
+      }
+    }
+  ]
+}

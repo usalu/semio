@@ -45,8 +45,7 @@ pub use target_regions::{append_target_region_paint, begin_region_paint, cancel_
 
 #[path = "🧬️gesture-state-records/🦀️.rs"]
 mod gesture_state_records;
-pub(crate) use gesture_state_records::BoardDeleteOperation;
-pub use gesture_state_records::{BoardBrushState, BoardClosingState, BoardCommitState, BoardEntityRetirement, BoardGesturesState, BoardHostClosePhase, BoardPointerCommitOperation, BoardPointerPublication, BoardRemovedEntity};
+pub use gesture_state_records::{BoardDeleteOperation, BoardBrushState, BoardClosingState, BoardCommitState, BoardEntityRetirement, BoardGesturesState, BoardHostClosePhase, BoardPointerCommitOperation, BoardPointerPublication, BoardRemovedEntity};
 use gesture_state_records::{BoardPropertyContainer, BoardPropertyRetirement};
 
 #[path = "🧰️commit-operation-and-retirements/🦀️.rs"]

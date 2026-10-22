@@ -10,7 +10,8 @@ export type BazelMemoryPolicyV1=Readonly<{floorBasisPoints:number;floorMinimumMe
 export type BazelServerHostV1=Readonly<{cores:number;memoryMegabytes:number}>;
 export type BazelSlotKindV1="build"|"service";
 export type BazelServerPlanV1=Readonly<{slots:number;services:number;heapMegabytes:number;residentMegabytes:number;budgetMegabytes:number;cpuPerServer:number;memoryPerServerMegabytes:number;limit:"memory"|"cores"|"policy"|"floor"}>;
-export type BazelSlotStateV1=Readonly<{version:1;slot:string;key:string;keys:readonly string[];usedAt:number}>;
+export type BazelSlotStateV1=Readonly<{version:1;slot:string;key:string;keys:readonly string[];usedAt:number;session?:string;agent?:string}>;
+export type BazelSessionOwnerV1=Readonly<{session:string;agent:string}>;
 export type BazelInventoryV1=Readonly<{slots:readonly Readonly<{slot:string;outputBase:boolean;state?:BazelSlotStateV1;packages:readonly Readonly<{key:string;modifiedAt:number}>[]}>[];foreign:readonly string[]}>;
 export type BazelGarbageV1=Readonly<{packages:readonly Readonly<{slot:string;key:string;reason:"capacity"|"count"|"age"}>[];outputBases:readonly Readonly<{slot:string;reason:"capacity"|"idle"}>[];foreign:readonly string[]}>;
 export type BazelLanguageV1="en"|"de";
@@ -44,15 +45,15 @@ export function bazelSessionWorkspaceV1(workspaces:string,slot:string,key:string
  const path=join(workspaces,requireBazelSlotV1(slot),requireBazelKeyV1(key));if(path.length>256)throw Error("Bazel storage path exceeds 256 characters");return path;
 }
 
-/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, warm package), then slots that still keep its package, then slots never used, then the least recently used; ties keep the slot number order. */
-export function rankBazelSlotsV1(slots:readonly string[],states:Readonly<Record<string,BazelSlotStateV1|undefined>>,key:string):readonly string[]{
- const tier=(slot:string)=>{const state=states[slot];return state===undefined?2:state.key===key?0:state.keys.includes(key)?1:3;},index=(slot:string)=>Number(slot.slice(1)),recency=(left:string,right:string)=>{const first=tier(left);return first<2?states[right]!.usedAt-states[left]!.usedAt:first===3?states[left]!.usedAt-states[right]!.usedAt:0;};
+/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, warm package), then slots that still keep its package, then slots never used, then the least recently used; ties go to the slot the agent session prefers (its preference modulo the slot count) and then keep the slot number order, so concurrent agents start on different slots. */
+export function rankBazelSlotsV1(slots:readonly string[],states:Readonly<Record<string,BazelSlotStateV1|undefined>>,key:string,preference?:number):readonly string[]{
+ const tier=(slot:string)=>{const state=states[slot];return state===undefined?2:state.key===key?0:state.keys.includes(key)?1:3;},index=(slot:string)=>preference===undefined?Number(slot.slice(1)):(slots.indexOf(slot)-preference%slots.length+slots.length)%slots.length,recency=(left:string,right:string)=>{const first=tier(left);return first<2?states[right]!.usedAt-states[left]!.usedAt:first===3?states[left]!.usedAt-states[right]!.usedAt:0;};
  return Object.freeze([...slots].sort((left,right)=>tier(left)-tier(right)||(tier(left)===tier(right)?recency(left,right):0)||index(left)-index(right)));
 }
 
 /** 📝️ The state a slot remembers after a session: the key first, older keys behind it, bounded by the packages a slot keeps. */
-export function nextBazelSlotStateV1(slot:string,previous:BazelSlotStateV1|undefined,key:string,now:number,rules:BazelSessionPolicyV1=policy):BazelSlotStateV1{
- const state={version:1 as const,slot:requireBazelSlotV1(slot),key:requireBazelKeyV1(key),keys:[key,...(previous?.keys??[]).filter(value=>value!==key)].slice(0,rules.retention.packagesPerSlot),usedAt:now};
+export function nextBazelSlotStateV1(slot:string,previous:BazelSlotStateV1|undefined,key:string,now:number,rules:BazelSessionPolicyV1=policy,owner?:BazelSessionOwnerV1):BazelSlotStateV1{
+ const state={version:1 as const,slot:requireBazelSlotV1(slot),key:requireBazelKeyV1(key),keys:[key,...(previous?.keys??[]).filter(value=>value!==key)].slice(0,rules.retention.packagesPerSlot),usedAt:now,...owner===undefined?{}:{session:owner.session,agent:owner.agent}};
  if(validateJsonSchemaSubset(schema.definitions.SlotState,state,schema).length)throw Error("Closed Bazel slot state required");return Object.freeze(state);
 }
 
@@ -66,13 +67,9 @@ export type BazelSlotPortV1=Readonly<{
  now():number;
  progress(line:string):void|Promise<void>;
 }>;
-export type BazelSessionRequestV1=Readonly<{key:string;signal:AbortSignal;kind?:BazelSlotKindV1;timeoutMilliseconds?:number;language?:BazelLanguageV1}>;
+export type BazelSessionRequestV1=Readonly<{key:string;signal:AbortSignal;kind?:BazelSlotKindV1;timeoutMilliseconds?:number;language:BazelLanguageV1;preference?:number;owner?:BazelSessionOwnerV1}>;
 export type BazelSessionV1=Readonly<{slot:string;key:string;mode:"warm"|"switch"|"fresh";previous?:BazelSlotStateV1;release():Promise<void>}>;
 
-/** 🌐️ Chooses the language of progress lines: an explicit `SEMIO_LANGUAGE`, else the locale, else English. */
-export function bazelSessionLanguageV1(environment:Readonly<Record<string,string|undefined>>):BazelLanguageV1{
- const value=(environment.SEMIO_LANGUAGE??environment.LC_ALL??environment.LC_MESSAGES??environment.LANG??"").toLowerCase();return value.startsWith("de")?"de":"en";
-}
 /** 💬️ Renders one authored message. */
 export function bazelSessionMessageV1(id:string,values:Readonly<Record<string,string|number>>,language:BazelLanguageV1):string{
  const text=(schema.definitions.Messages.const[language] as Readonly<Record<string,string>>)[id];if(text===undefined)throw Error(`Unknown Bazel session message: ${id}`);
@@ -81,17 +78,17 @@ export function bazelSessionMessageV1(id:string,values:Readonly<Record<string,st
 
 /** 🎫️ Claims one slot of the requested class (build by default, service for sessions that launch long-running tasks) for one selection: behind the fair gate of that class it tries the slots in the order of their fitness, takes the first free one and holds it until `release`; when every slot is claimed it reports progress and polls until one frees, the signal aborts or the timeout passes. A slot has exactly one holder, so two sessions can never meet in one Bazel server lock. */
 export async function acquireBazelSessionV1(port:BazelSlotPortV1,plan:Pick<BazelServerPlanV1,"slots"|"services">,request:BazelSessionRequestV1,rules:BazelSessionPolicyV1=policy):Promise<BazelSessionV1>{
- requireBazelKeyV1(request.key);const kind=request.kind??"build",slots=bazelSlotIdsV1(plan,kind),language=request.language??"en",started=port.now(),signal=request.signal;let nextProgress=0,releaseGate:(()=>void)|undefined=await port.gate(signal,kind);
+ requireBazelKeyV1(request.key);const kind=request.kind??"build",slots=bazelSlotIdsV1(plan,kind),language=request.language,started=port.now(),signal=request.signal;let nextProgress=0,releaseGate:(()=>void)|undefined=await port.gate(signal,kind);
  const openGate=()=>{const done=releaseGate;releaseGate=undefined;done?.();};
  try{
   while(true){
    signal.throwIfAborted();
    const states:Record<string,BazelSlotStateV1|undefined>={};for(const slot of slots)states[slot]=await port.read(slot);
-   for(const slot of rankBazelSlotsV1(slots,states,request.key)){
+   for(const slot of rankBazelSlotsV1(slots,states,request.key,request.preference)){
     const claimed=await port.claim(slot,signal);if(claimed===undefined)continue;
     let released=false,before:BazelSlotStateV1|undefined;
     try{before=await port.read(slot);openGate();const mode:BazelSessionV1["mode"]=before===undefined?"fresh":before.key===request.key?"warm":"switch";await port.progress(bazelSessionMessageV1("claimed",{slot,mode:bazelSessionMessageV1(mode,{},language)},language));
-     return Object.freeze({slot,key:request.key,mode,...(before?{previous:before}:{}),async release(){if(released)return;released=true;try{await port.write(slot,nextBazelSlotStateV1(slot,before,request.key,port.now(),rules));}finally{claimed();}}});
+     return Object.freeze({slot,key:request.key,mode,...(before?{previous:before}:{}),async release(){if(released)return;released=true;try{await port.write(slot,nextBazelSlotStateV1(slot,before,request.key,port.now(),rules,request.owner));}finally{claimed();}}});
     }catch(error){if(!released){released=true;claimed();}throw error;}
    }
    const waited=port.now()-started;if(request.timeoutMilliseconds!==undefined&&waited>=request.timeoutMilliseconds)throw Error("Bazel session slot timed out");

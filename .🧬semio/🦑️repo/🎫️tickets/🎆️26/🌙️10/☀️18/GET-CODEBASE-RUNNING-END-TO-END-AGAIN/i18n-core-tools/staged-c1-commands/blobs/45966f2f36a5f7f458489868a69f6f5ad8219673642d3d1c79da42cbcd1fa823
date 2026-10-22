@@ -1,0 +1,138 @@
+/** 📖️ `examples` command: lists and verifies plugin example units.
+ * @see 📜️script.ts
+ */
+import { loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { policySurfaceRoots } from "../../🔍️discovery/🗺️surface/🟦️.ts";
+import { policyStripEmoji } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { policyDiscoverCrateDirs } from "../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
+import { policyDeadExampleLeafBreaches, policyEmptyExampleBreaches } from "../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
+import { policySemioArtifactExamplesBreaches } from "../../⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/📚️examples/🟦️.ts";
+import { taxonomyMappedFilename } from "../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
+import {sayCommandsV1} from "../📖️texts/🟦️.ts";
+
+//#region 🔖️ExamplesScript
+/** 📚️Lists and verifies plugin example units against the emoji-slug assets/tests shape. */
+export class ExamplesScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0];
+    if (!sub || sub === "help") {
+      console.error("[examples] usage: repo ./📜️script.ts examples <list|verify> [plugin]");
+      process.exit(sub ? 0 : 1);
+    }
+    if (sub === "list") {
+      this.listExamples(segments[1]);
+      return;
+    }
+    if (sub === "verify") {
+      this.verifyExamples(segments[1]);
+      return;
+    }
+    sayCommandsV1("examples.unknown-subcommand",{sub:String(JSON.stringify(sub))},"error");
+    process.exit(1);
+  }
+
+  private listExamples(pluginFilter?: string): void {
+    const taxonomy = loadTaxonomy();
+    const roots = this.collectExampleRoots(pluginFilter);
+    if (roots.length === 0) {
+      console.log("[examples.list] (none)");
+      return;
+    }
+    for (const root of roots) {
+      const slug = root.split("/").pop() ?? root;
+      const hasAssets = existsSync(join(this.root, root, taxonomy.exampleAssetsDirName));
+      const hasTests = existsSync(join(this.root, root, taxonomy.exampleTestsDirName));
+      const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
+      const hasLeaf = existsSync(join(this.root, root, rustLeaf));
+      console.log(`${root}  leaf=${hasLeaf ? "yes" : "no"} assets=${hasAssets ? "yes" : "no"} tests=${hasTests ? "yes" : "no"} slug=${slug}`);
+    }
+    sayCommandsV1("examples.list-example-unit",{roots:roots.length});
+  }
+
+  private verifyExamples(pluginFilter?: string): void {
+    const crateDirs = policyDiscoverCrateDirs(this.root);
+    const filtered = pluginFilter
+      ? crateDirs.filter((crate) => {
+          const id = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
+          const ascii = policyStripEmoji(pluginFilter);
+          return id === pluginFilter || id === ascii || crate.ownerRel.endsWith(`/${pluginFilter}`) || policyStripEmoji(crate.ownerRel).includes(ascii);
+        })
+      : crateDirs;
+    const ownerAllow = new Set(filtered.map((crate) => crate.ownerRel));
+    const inScope = (scope: string): boolean => {
+      if (!pluginFilter) return true;
+      const ascii = policyStripEmoji(pluginFilter);
+      if (scope.includes(pluginFilter) || policyStripEmoji(scope).includes(ascii)) return true;
+      for (const owner of ownerAllow) {
+        if (scope.startsWith(`${owner}/`) || scope === owner) return true;
+      }
+      return false;
+    };
+    const breaches = [
+      ...policySemioArtifactExamplesBreaches(this.root, filtered),
+      ...policyDeadExampleLeafBreaches(this.root, filtered).filter((breach) => inScope(breach.scope)),
+      ...policyEmptyExampleBreaches(this.root).filter((breach) => inScope(breach.scope)),
+    ];
+    if (breaches.length === 0) {
+      console.log(`[examples.verify] ok${pluginFilter ? ` (${pluginFilter})` : ""}`);
+      return;
+    }
+    for (const breach of breaches) {
+      console.error(`[examples.verify] ${breach.priority} ${breach.kind}: ${breach.summary}`);
+    }
+    console.error(`[examples.verify] ${breaches.length} breach(es)`);
+    process.exit(1);
+  }
+
+  private collectExampleRoots(pluginFilter?: string): string[] {
+    const taxonomy = loadTaxonomy();
+    const roots: string[] = [];
+    const pluginsRoot = "✏️s/🔌️plugins";
+    let plugins: string[] = [];
+    try {
+      plugins = readdirSync(join(this.root, pluginsRoot)).filter((name) => {
+        const abs = join(this.root, pluginsRoot, name);
+        return existsSync(abs) && statSync(abs).isDirectory();
+      });
+    } catch {
+      return roots;
+    }
+    if (pluginFilter) {
+      const ascii = policyStripEmoji(pluginFilter);
+      plugins = plugins.filter((name) => name === pluginFilter || policyStripEmoji(name) === ascii || name.includes(pluginFilter));
+    }
+    for (const plugin of plugins) {
+      const owner = `${pluginsRoot}/${plugin}`;
+      const container = join(this.root, owner, taxonomy.artifactsDirName);
+      if (existsSync(container)) {
+        for (const child of readdirSync(container)) {
+          const examplesRel = `${owner}/${taxonomy.artifactsDirName}/${child}/📚️examples`;
+          const examplesAbs = join(this.root, examplesRel);
+          if (!existsSync(examplesAbs) || !statSync(examplesAbs).isDirectory()) continue;
+          for (const slug of readdirSync(examplesAbs)) {
+            const slugRel = `${examplesRel}/${slug}`;
+            if (!statSync(join(this.root, slugRel)).isDirectory()) continue;
+            roots.push(slugRel);
+          }
+        }
+      }
+      // 👁️✏️ Surface examples nest under 🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/{👁️viewer,✏️editor}/,
+      // deeper than the flat <kind>/<child> shape 🎛️apps used — walked via the shared surface finder.
+      for (const surfaceRel of policySurfaceRoots(this.root, owner, taxonomy)) {
+        const examplesRel = `${surfaceRel}/📚️examples`;
+        const examplesAbs = join(this.root, examplesRel);
+        if (!existsSync(examplesAbs) || !statSync(examplesAbs).isDirectory()) continue;
+        for (const slug of readdirSync(examplesAbs)) {
+          const slugRel = `${examplesRel}/${slug}`;
+          if (!statSync(join(this.root, slugRel)).isDirectory()) continue;
+          roots.push(slugRel);
+        }
+      }
+    }
+    return roots.sort();
+  }
+}
+//#endregion 🔖️ExamplesScript

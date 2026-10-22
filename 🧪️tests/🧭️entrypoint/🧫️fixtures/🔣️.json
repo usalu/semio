@@ -4,7 +4,7 @@
   "registry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🔣️.json",
   "helpArguments": [["--help", "--lang=en"], ["-h", "--lang=en"], ["--lang=en"]],
   "commandHelpArguments": [["verify", "--help", "--lang=en"], ["scale-fixture", "-h", "--lang=en"], ["lint", "--help", "--lang=de"]],
-  "helpFirstLinePrefix": "bun ./📜️script.ts - ",
+  "helpFirstLinePrefix": "repo ./📜️script.ts - ",
   "helpLegendPrefix": "* ",
   "backendHelpArguments": [["repo", "--tool=nx", "--help"], ["repo", "--tool=bazel", "--help"]],
   "isolatedCommandModules": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts"],

@@ -20,17 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-rotation", kind: "set-page-rotation", record: "Set" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_rotation(self.index, self.rotation as i32))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.pages.get(self.index).map(|page| Op::from(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Drehung von Seite {} auf {} setzen", self.index, self.rotation))
     }
@@ -38,6 +27,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageRotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageRotation>,
+{
+    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::diff_set_page_rotation(self.index, self.rotation as i32))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.pages.get(self.index).map(|page| Op::from(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

@@ -47,7 +47,7 @@ func HostPlanRoots() PlanRoots {
 	return PlanRoots{RepoRoot: workspace.GetRootDir(), HomeDir: home}
 }
 
-// 🗺️ResolvePlanSource resolves a plan or spec id to a store path, per IDE.
+// 🗺️ResolvePlanSource resolves a plan or spec id to a store path, per agent client. A ticket owns the `*.plan.md` files of its own folder; no plan is read from a client directory inside the repository.
 func ResolvePlanSource(store TicketStore, roots PlanRoots, kind providers.McpClientKind, id string) (PlanSource, error) {
 	id = strings.TrimSpace(id)
 	if id == "" {
@@ -58,23 +58,6 @@ func ResolvePlanSource(store TicketStore, roots PlanRoots, kind providers.McpCli
 		return PlanSource{}, errInvalid("repository root is not set")
 	}
 	switch kind {
-	case providers.McpClientCursor:
-		directory := JoinPath(root, ".cursor/plans")
-		suffix := "_" + id + ".plan.md"
-		entries, _ := store.Entries(directory)
-		matches := make([]string, 0)
-		for _, entry := range entries {
-			if entry.Kind == NodeFile && strings.HasSuffix(entry.Name, suffix) {
-				matches = append(matches, JoinPath(directory, entry.Name))
-			}
-		}
-		switch len(matches) {
-		case 0:
-			return PlanSource{}, errTicketNotFound(fmt.Sprintf("no Cursor plan matches id %q (glob %s/*%s)", id, directory, suffix))
-		case 1:
-			return PlanSource{Path: matches[0]}, nil
-		}
-		return PlanSource{}, errConflict(fmt.Sprintf("ambiguous Cursor plan id %q: %d matches", id, len(matches)))
 	case providers.McpClientKiro:
 		directory := JoinPath(root, ".kiro/specs/"+id)
 		metadata, found := store.Metadata(directory)

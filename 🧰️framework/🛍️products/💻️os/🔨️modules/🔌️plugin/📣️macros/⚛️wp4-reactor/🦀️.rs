@@ -276,13 +276,12 @@ macro_rules! __semio_owned_core_exports {
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub unsafe extern "C" fn semio_owned_start_job_v1(pointer: u32, length: u32) -> u64 {
-            let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::StartJobInput>(pointer, length) };
+            let input = unsafe { $crate::owned_abi::take_actor_start_job_input(pointer, length) };
             $ensure();
-            let result: Result<(), Vec<u8>> = match input {
-                Ok(input) => $runtime.with(|runtime| $crate::reactor::jobs::abi::start(runtime, input.job, input.kind, input.input)).map_err(|fault| $crate::encode_fault_bytes(&fault)),
-                Err(error) => Err(error),
-            };
-            $crate::owned_abi::return_json(&result)
+            match input {
+                Ok(input) => $crate::reactor::original_actor_context::exports::start_job_owned(input.source, input.budget),
+                Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
+            }
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]

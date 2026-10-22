@@ -1,6 +1,6 @@
 use crate::editor::home::config::{HomeConfigPreparation, HomeConfigByteCounter};
 use crate::editor::home::config::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_dsl_text_round_trips() {
@@ -34,8 +34,8 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     let mut preparation = HomeConfigPreparation {
         owners: store::OneItemOwners::detached(
             HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<HomeConfigMutation>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HomeConfig>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<HomeConfigMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<HomeConfig>::default()),
         ),
         serialized_bytes: None,
         checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
@@ -78,13 +78,13 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
 async fn local_studio_tombstones_are_exact_point_invertible_events() {
     let base = HomeConfig { retired_local_studio_ids: vec!["studio-b".into()], ..HomeConfig::default() };
     let retire = HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() });
-    let retired = protocol::apply_diff(retire.diff(&base).diff(), &base).expect("the retirement applies");
+    let retired = protocol::apply_diff_cold(retire.diff(&base).diff(), &base).expect("the retirement applies");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&retire, &base).await;
     assert_eq!(retired.retired_local_studio_ids, vec!["studio-a".to_string(), "studio-b".to_string()]);
     assert!(retired.is_local_studio_retired("studio-a") && !base.is_local_studio_retired("studio-a"));
     let inverse = retire.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id: "studio-a".into() })]);
-    assert_eq!(protocol::apply_diff(inverse[0].diff(&retired).diff(), &retired).expect("the restoration applies"), base);
+    assert_eq!(protocol::apply_diff_cold(inverse[0].diff(&retired).diff(), &retired).expect("the restoration applies"), base);
     let again = retire.diff(&retired);
     assert!(protocol::DiffAlgebra::<HomeConfig>::is_empty(again.diff()));
     assert!(again.messages().iter().any(|message| format!("{message:?}").contains("mutation.no-op")));

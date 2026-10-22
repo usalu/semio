@@ -1,3 +1,5 @@
+import"../📥️auxiliary/🧪️tests/🟦️.ts";
+import"../📥️capture/📡️channel/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";

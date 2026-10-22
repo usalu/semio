@@ -62,9 +62,9 @@ let sharedMacrotaskPost: ((run: () => void) => void) | null = null;
  * immediates keep an awaited continuation alive until it runs. */
 const macrotaskPort = (): ((run: () => void) => void) => {
   if (sharedMacrotaskPost) return sharedMacrotaskPost;
-  const host = globalThis as { process?: { versions?: { node?: string; bun?: string } }; setImmediate?: (run: () => void) => unknown };
+  const host = globalThis as { process?: { versions?: { node?: string } }; setImmediate?: (run: () => void) => unknown };
   const immediate = host.setImmediate;
-  if ((host.process?.versions?.node || host.process?.versions?.bun) && typeof immediate === "function") {
+  if (host.process?.versions?.node && typeof immediate === "function") {
     sharedMacrotaskPost = (run) => { immediate(run); };
     return sharedMacrotaskPost;
   }

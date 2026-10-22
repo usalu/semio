@@ -6,10 +6,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun --cwd \"../../../../..\" repo run @teaching/architecture-course:build",
-    "test": "bun --cwd \"../../../../..\" repo run @teaching/architecture-course:test",
-    "test:e2e": "bun --cwd \"../../../../..\" repo run @teaching/architecture-course:test-e2e",
-    "typecheck": "bun --cwd \"../../../../..\" repo run @teaching/architecture-course:typecheck"
+    "build": "repo run @teaching/architecture-course:build",
+    "test": "repo run @teaching/architecture-course:test",
+    "test:e2e": "repo run @teaching/architecture-course:test-e2e",
+    "typecheck": "repo run @teaching/architecture-course:typecheck"
   },
   "dependencies": {
     "@semio-tech/pets": "workspace:*",

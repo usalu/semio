@@ -26,7 +26,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -45,7 +45,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-absence",
+        "command": "repo ./📜️script.ts test-absence",
         "forwardAllArgs": true
       }
     },
@@ -64,7 +64,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-path-literals",
+        "command": "repo ./📜️script.ts test-path-literals",
         "forwardAllArgs": true
       }
     },
@@ -83,7 +83,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-module-tree",
+        "command": "repo ./📜️script.ts test-module-tree",
         "forwardAllArgs": true
       }
     }

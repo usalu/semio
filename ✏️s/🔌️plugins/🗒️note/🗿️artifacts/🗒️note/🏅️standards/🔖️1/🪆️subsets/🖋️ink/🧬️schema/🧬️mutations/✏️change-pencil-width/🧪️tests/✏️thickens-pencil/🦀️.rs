@@ -9,7 +9,7 @@ use crate::schema::find_block;
 use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
 use crate::{NoteBlockNode, NoteSnapshot};
 use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖋️ink/🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/📸️snapshot/⬅️before/🔣️.json"));
@@ -81,7 +81,7 @@ async fn declared_outcome_holds() {
 /// state, whereas this pins WHICH collections and fields this mutation is allowed to touch.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <NoteMutation as Mutation<NoteSnapshot>>::diff(&mutation(), &before());
+    let outcome = <NoteMutation as ColdMutation<NoteSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-pencil-width/thickens-pencil: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -102,7 +102,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-pencil-width/thickens-pencil: committed diff did not carry before to after");
 }
 

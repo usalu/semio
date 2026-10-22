@@ -229,3 +229,212 @@ HighCargo launched soleowned Native TTY96421 at07:18:00Z after immediate101pin/2
 ## 2026-10-21T07:26:37.430Z Fresh0842 Actual Terminal1
 
 ActualHigh-ownedTTY96421 exited1 withoutcancellation beforeprefixentry: authenticatedgraphcachecannotfundrequiredphysicalheadroom available973414400/min1073741824 retired0/0. Fullfrozenlog553845B/SHAc8fd78a3956388d65b638de69fd98e69afe42efd2c2c2cdb60f0126f9bd1347b independentlymatchesRoot/Low/High, initialdevino stable. All5markerfamilies0/all22futureeffectsabsent perHigh; no unit/sample/capture/build proof. Ledgerlane removed. Read-onlyowner-recoverydiagnosis underway; no retry/cleanup/Sourcechangesauthorized.
+
+
+## 2026-10-21T07:41:36.467Z Graph Recovery Implementation Authorized
+
+Actual0842refusalpreserved; noNativeisrunning. Read-onlyauditsfoundsharedclosurecoveragegapandvolatileinference10minpresenceassumption, withnoappropriatedeclaredgraphmaintenanceport. Rootapproved7498B/6390432b… conservativefullreference-retentioncontract afterbothindependentprewritereviews. Highauthorsschema/corpusandactualtestsfirst, thenownerrecovery+strictreusepresencefix; noactualcacheeffect/Native/controlmetadatachangesyet. Newdedicatedneutralphase20required; controller21unchanged. See2026-10-21-graph-recovery-neutral20-integration-plan.md. Actualcourse/build/exportproofremainpending.
+
+
+## 2026-10-21T08:51:14.351Z Recovery Source Still in Progress
+
+Actualprefix0842 remains knownexit1 beforeentry on graph-image physicalheadroom973414400<1073741824, retired0/0. Root ledgerlanes[]; no live Native operation, unit gate or course/build proof. Two High Source lanes implement independently reviewed conservative closure reference-proof recovery/durable optional-group invalidation and physical inference-inventory/block revalidation with fixed genuine Graph fixtures. One Light independently reviews both; second Light is paused only for4active-slotlimit. No agent touches83controls/guest/prefix metadata yet.
+
+Root approved boundedplans with strict missingreferencedblock refusal, genuine atomicgroup invalidation before optional absent-header recompute, complete proof lifetime, all-inventory retention for authenticated known-incomplete groups until intent-last terminal, and an explicit unindexed-pack fail-closed limitation. Source role audit establishes literal worker/staticchild automatic actualparseradmission without runtimeSourceEntries checkbox. Final selectedtitles/directread inventory and honest phaseceilings remain pending. Preserved historicalSource81/f37/d09/cdd/0842 data unchanged. Nextstep is final sourceaudit, Root metadata integration/newcohort, independent finalreview/physicalpreflight, then single realNative prefix.
+
+Current detailed records: 2026-10-21-graph-recovery-neutral20-integration-plan.md; 2026-10-21-neutral-extension-budget-and-admission-review.md; 2026-10-21-literal-child-source-role-audit.md. No completionclaim.
+
+
+## 2026-10-21T10:05:57.367Z Neutral27 Metadata Prepared; Peer Receiver Delta Under Review
+
+Root report2026-10-21-recovery-neutral27-preliminary-integration.md records7actualcontrol edits:27phases/66collectionvectors, preliminary141Source/176critical, parent9210000/worker10020000. NOT DISPATCHABLE until finalSourcecohort/fixturewitness additions andnewown7/template/own6/guesthardguard/newintent. GC own11clear86b1 handoff; reuse finalheld peer storage/schema consumedreceiver delta requiresnarrowcoherentreview/callerfixtures. CargoHighpausedforsecondLightmetadataaudit; oneHigh+twoLight+Rootactive. Lanes[] and allactualunit/course/build gates stillUNRUN;0842actualstartuprefusalunchanged.
+
+
+## 2026-10-21T10:25:59.976Z Source152/Critical187; Fixture Renewal in Progress
+
+Rootcurrentintermediatecontrolschema152Source/187critical/27phases66vectors; budgets9210000parent/10020000workerstillpendingupdatedconsumedadapterphaseDATA. Exactcontrolhistoryin2026-10-21-recovery-neutral27-preliminary-integration.md. Seals/guestguard/template/newintentNOTdone, NOTDISPATCHABLE. Native lanes[];0842startupfailurestilllastactualcourseGoalattempt.
+
+HighReceiverfix usesSAME fundedchild retainedcallbackepochs, recover SAMEallocationperacceptedStoreOwner/newport/no commit/newfunding, originalbirthanchor/creatorloan unchanged, finite4096epochs, false/true maintenanceconsumesrenewed, fixedsiblingSHdeferralprobe andfirstfalseyprimaryfailureclosed. ActualNativeterminalcaptureprovenphysicalfacts/cleanupauthoritywithoutoldport, contractpathsadded5. OneHigh+2Light+Rootcollaborate;Cargoown11GCheld/hashboundclear86b1butdirectSourcecohortchangeswillresample. Allunit/capturedneutral/controller21/course/deploy/export/finalgatesremainUNRUN; noartifact.
+
+## Current Handoff 2026-10-21T11:05Z
+
+Supersedes prior Source153/154/164 and critical188/198 intermediate integration notes: final Source168 /critical202 /27phases /99selectedtitles /66vectors. GC39@4620000; phase9480000+90000=parent9570000; guestworker10380000; firstsix5610000 and controller21 unchanged. Final source GC48104/dd6d71 plus reuse34+25 held and independently reviewed. All269physicalinput+Source rows/232ancestor fences cleared, plus Source168 second Rootpass. See2026-10-21-recovery-neutral27-preliminary-integration.md and final-source168-seal-independent-review.md for finalseals.
+
+Fresh cohort1fa374593a62393681224004ef46bb94, tagarchitecture-1fa374593a62, intent8829/f515767beb1ab95fcc7555fb36d53030182d1b0604ffbc2b692daa9f3b98207c, prefixown31d393358a5e722f64c31b57d08033bc30e0dc97e81d708f990e9141cf81bb58, guestownf95162f8064ab6760e267750803d901c8ae0a77ae04c08fa7aef77851694032a, template3de33bfb798a034111d2f71f46379a89b97b332352583efb2a93c77f80b7dcb3.
+
+Actual sole NativeTTY46021 launched11:02:15Z, owner/root/cargo_facade_integration ONLYpolls. Rawlog2026-10-21-native-prefix-1fa3.log originaldev16777229/ino484808951/0600/nlink1. Rootcommonledger hasoneactive46021. Actual ownerlivepoll11:05:35Z reportscapacitywait5ahead/6running, no unit/prefixentry/lateSource/terminal or receipt. No cancellation, peer interference, capacityoverride or automaticretry. Never inferterminalfromlog.
+
+After actualprefixouter0 and accepted genuine6stage+2units+cleanup receipt, follow captured-neutral-readiness-field-map.md for closed7fieldplan from authentic5refs, freshoperation, existing guest prepare/run ownf951; worker10380000 requireshost>=10500000 underactualremainingOriginal. NoSourcehelpersmaybeevaluatedthroughNode. Then actualneutral27 outer0 before existing4owner controller21/facts/export/final flow. No course/build/redeploy pass or artifact exists yet.
+
+At2026-10-21T11:45:53.700Z the actual sole-owner60000ms poll returned46021live. Nativecapacitystillunadmitted:2611seconds,0ahead/7running,3584MiBrequest notfunded. Rawlog66282B; no units/lateSource/ownerstage/terminal. Command, inputs and ownedlog unchanged; no additional commands, cancellation, capacityoverride or peer effects.
+
+## Actual Native Capacity Admission
+
+At11:48:46Z Cargo actualpoll46021live confirms hostcapacityadmission. Native repository startup now waits for shared Graphimage lease .cache/b/g, diagnosticposition8of8. Queue request metadata is not verified kernelholder/process ownership and authorizes no peer action. Low rawlog observer independently captured the stage append; Low Source/control observer resampled all269rows after this real transition with zero pin drift. Prefixunits/lateSource/ownerstages/terminal remain unproven.
+
+At11:54:50Z actualownerpoll46021live shows Graphimage requested mode changed fromshared8of8 toEXCLUSIVE5of5. This proves a newrequestedmode, not acquiredkernelEX, completedrecovery or anyunit/ownerstage. Low transitionobserveragainmatchesall269Source/controlpins. No retry, cancellation, lease intervention or newNativeoperation.
+
+## Actual1fa Terminal and Next Repair
+
+At12:23:16.709Z actual46021exit1/no cancellation. No live Native lane or retry; final217762/f53d266804ea194f50079480d535852be1c25153475d6a76d6a6b0c1b1bed4a6 frozen. All269Source/inputpins unchanged;25futurepaths absent;zero prefix/unit/lateSource/complete/closure markers. Final generic resource-loan deadline error is in pre-acquisition maintenance catch; independent audits prove catch/controlcheck masking defects so original caught failure and expired ancestor are unknown. See2026-10-21-prefix1fa-terminal-review.md. High repairs first-failure preservation schema/test-first; no deadline increase or retry authorized. Source168/critical202/neutral27 seals remain historical current1fa until reviewed new Source/phase metadata integration.
+
+
+## 2026-10-21T12:58:21.348Z — Successor Maintenance Metadata
+
+The prior 1fa run remains terminal exit 1 before every prefix marker. Root integrated the held failure-preservation repair into a 28-phase plan: Source173, critical207, 103 literal titles, 71 collection vectors; parent10,110,000ms and guest10,920,000ms. All three phase copies, both critical roster owners, guest IDs and exact unit summaries now align. A missed prefix roster array was found by the independent auditor and corrected before sealing. See `2026-10-21-successor-maintenance-metadata-integration.md`. Current graph/generation peer contracts are under concurrent semantic repair/review; old 1fa Source and own-input seals are revoked. No Native retry authorized and no live native session. Actual units, prefix, neutral, controller and artifact gates remain unrun.
+
+
+## 2026-10-21T13:37:34.301Z — Current Concurrent Integration
+
+The unexecuted9966 Source195 candidate is revoked. Current graph extraction needed a new generation-files helper in its explicit implementation authority roster. Current storage fixture extraction exposed a plain-object authority bridge, stale selected imports and a consumed-image repeat loop; High execution and Low independent review are repairing that coherent ownership boundary. Root authored causal window/primary tests and five new witnesses, corrected control-before-partial and best-effort failure metadata, and wired the eleven inference decoder cases into the existing genuine selected fixture law. See `2026-10-21-retirement-window-inference-integration-repair.md`. Source/tests remain unrun; no Native session or new dispatch exists. Root will reseal only the coherent current contracts; all course/artifact gates remain mandatory.
+
+
+## 2026-10-21T14:09:01.727Z — Final Source201 Seals
+
+Root refreshed the unexecuted9966 cohort after all current semantic repairs. Source201/critical234/34phases/121titles/101vectors; parent12090000ms,guest12900000ms,laterhostminimum13020000ms actual Original. Prefixown e09aa23b…,guest e57822ca…,template f49dd8e7…,intent f19742dc…. See `2026-10-21-source201-final-prefix-cohort.md`. Root strictAjv and83aliasjoins clear; final independent302-leaf physical and semantic seal audits are in progress. No Native session, new log reservation or dispatch yet. Actual unit,prefix,neutral,controller21 and artifact/final gates remain mandatory and unrun.
+
+
+## 2026-10-21T14:11:40.099Z — Sole Prefix Dispatch Authorized
+
+Finalsemantic/alias and302-leaf/two-passphysicalauditsclear forSource2019966cohort;zero drift. RootauthorizedexactlyoneCargo-ownedNativeprefixafterimmediateprecheck/exclusive0600logreservation. ActualTTYnotyetreported;Rootmustnotinvent/pollhandle. No neutral/controller/retry authorized. Actual unit,prefix,Source/provision,neutral,course/controller and artifact gates remain unrun.
+
+## Source204 Prefix Redispatch Checkpoint — 2026-10-21T14:43:57.960Z
+
+Goal/ticket remain active. No final artifact or actualcourse/test/deploy/export verdict yet.9966 has had two prelaunch Source refusals and zero actualNative sessions/log reservations so far; the latest Source pin set is204, critical237, phases35, selectedtitles122, collectionvectors106. Prefix5610000 and controller21 unchanged; neutralworker13020000, realhostremainingminimum13140000.
+
+Current authoritative rawseals: guestown995/8c585e85087d5ce190b189b6c8a7cba04744809ada5d1d94367e0a9f8e6fd5bf; core14728/c6a0cf42852cd9a42af2378c0d76e44b60aebf1623c6bff97653a2a21c632583; combinedtemplate67702/64fa5a30e02ae60f46c8e770debce28bb3f56925ff1e763aae87b2d5e05bb9d9; prefixown14224/1a98b91dab15f394097ba1ac31afd8483d7ba9aa9c1379e9f3f99ff24bfdb4b8; authored/generatedintent8829/7546a3208fb8b8322353ef04dbf59e9238ac4d75bb9f00f4cb4699764b101909.
+
+Root actual305leaf2fullstream64KiBepochs and finalnamed/ancestryfences0drift. Contentdigest d2c11aa926900afb14403ffd5b5e1c4266aca49d81080e4c745af1d37b8556a8; epochdigest e3e9d657ed7a251a69f4bda79947940da0fb3aa54b12b13148282acaadc3df53. HighCargo explicitly authorized sole immediatepreflight+ONE Native prefix with current1a98/7546command in2026-10-21-source204-final-prefix-cohort.md, no implicitretry/suffix/controller. HighONLYTTYpoll, RootONLYcommonledger. Lowrecoveryreadonlyobserver awaits actualNative/logidentity.
+
+Latest boundedrepairs: generationstream suite1title120000 and3witnesses; exactinference helper/policy/schema andpackedSHAnegativefilenames; actualgraphdelegate→generationloadconsumer has no caught replay; storage maintenance metadata declares real fourthGCtestentry. Independentreports retained. CurrentSource/template are tooling metadata only, actualcapturedguestSource stillrequires actualauthenticatedmanifest.
+
+## Actual9966 Native Launch — 2026-10-21T14:46:58.336Z
+
+HighCargo actualNative invocation returned live owned TTY47370 after1000ms at14:45:54.450Z. Root ledger records this actual session; HighONLYpoll47370. Final immediate305leaf2fullpass+finalepoch/266ancestry, bothbinaries and25futureabsences clear. Fresh exclusive0600nlink1 log 🗑️generated/2026-10-21-native-prefix-9966.log dev16777229/ino499150547 was0bytes atreservation. Currentprefixown1a98/template64fa/intent7546. No terminal, capacityadmission, collection or futureproof yet observed. No retries/neutral/controller authorized.
+
+### Actual9966 Graph Wait Observation
+
+14:51:09Z: Highactual47370poll live. Lowcourseoriginallog499150547sequential77033B observed Graph-image SH wait(last156s), units/prefix/stage/sample/complete markerfamilies0 throughreadextent. No body or outerterminal proof. Rootledger updated stage; no capacity/guard/setting changes or otherNative command.
+
+### Live Goal Continuation Checkpoint — 2026-10-21T14:56:49.718Z
+
+LatestactualHighpoll14:56:12Z:47370liveafter60000ms, no outerterminal/output. No otherNative/cancellation/Source orcontrols edits. Keepgoal/ticketactive; noartifact. HighONLYpoll47370continues, LowcourseONLYrawlog499150547watch, LowrecoveryONLYdeclaredreceiptobserver. RootONLYcommonledger. Next act onactualmilestone/terminal; ifprefixactual6+units+cleanup+outer0then constructclosed7fieldneutralplan fromactual5rawroles and runexistingguestowner prepare/run; otherwise fix actualcausalerror before freshattempt. Afterneutral35genuinepasses+outer0, existingcontroller21→facts→export→final actualofflineartifact. Currentfinalseals and exactcommand are source204cohort report latestrow; no oldSource201/a393/e09a command.
+
+Practicaldeliveryrunbook andcoursebrowseracceptancesmokemap prepared, explicitlynotproof. Downstreamcontroller12hdeclaredmaximumclampsactualparentOriginal throughrealissuer; no renewal or newfundinggate. All generatedoutputs retained untilactualobjectivecomplete; do notclosegoal/ticket or deleteownedliveoutputs.
+
+## Goal Continuation Evidence Classification — 2026-10-21T14:58:10.132Z
+
+Previous goalturn: progress, because actualschema/testrepairs, selectedgenerationphase/3Sourcewitnesses and reviewedcustodymetadata were committed to authoritativefilesystem, and actualNative47370launched after fresh305leaf2pass admission. Currentcontinuation: verifiedwait via Highsoleactual47370poll14:57:34.189Z completed60000msLIVE, no outerterminal/output. This is not a missinghandle or terminal; no restart/cancellation authorized. Worktree/executionreport/ledger re-read; Source/publicationtests/receipts/artifactstillunproven. Keepfullgoalactive and sameprocess under observation.
+
+### Verified Wait Continuation — 2026-10-21T15:01:21.210Z
+
+Currentgoalturnclassifiedverifiedwait: Highactualowned47370bounded60000mspolls14:57:34.189Z and14:59:04.699Z LIVE, noouterterminal/output. Same1a98/7546/64fa invocation; no restart/cancellation/inputchange. Lowcoursecurrentsequential0–251605Blogoriginal499150547observesGraphSHwait~715s and fiveunit/prefix/stage/sample/completefamilies0 inthatextent. No actualtest/receipt/artifactsuccess. Highexecutionreport andLowwatchreport currentleads now correctlyidentifyactual47370/Source204/critical237/35phases/122titles withhistoricalrefusalsretained.
+
+Nextavailablesafeaction remains observe same actualNative47370 toterminal/milestone, then useactualgatedreceipts only forclosedneutralplan andallremainingcontroller21/facts/export/final. Specificlivejobwait is slowexecution, notanimpasse orpermissionrequest. Fullgoal/ticketstayactive; noGeneratedcleanup/goalcompletion.
+
+### Actual47370 Verified Wait — 2026-10-21T15:05:31.956Z
+
+Previousgoalturnverifiedwait, currentturnrevalidatedspecificactual47370LIVE15:01:52.530Z and15:04:23.306Z afterowned60000mspolls. Same1a98/7546Nativecommand; no terminal/output/retry/cancellation/settingschange. AvailableRepoMCPsurfaceinventoryrecorded8resources/0templates/6lifecycletools, no dedicated liveleaseinspector inthatsurface; no broaderabsenceclaim. CurrentexecutionMDlead isactualLIVE, ancestrycounts261sealed-input versus266all-launch(binary/future)scope clarified. Allthreeagentscontinueassignedsolepoll/log/receiptroles. Fullcourse/controller/offlineartifactscope remainsunproven; keepgoal/ticketactive andsameprocess.
+
+### Actual9966 Shared→Exclusive Request Transition — 2026-10-21T15:17:11.652Z
+
+Previousturnverifiedwait; currentturnfreshactual47370polls15:06:51.948Z,15:10:00.165Z,15:12:27.255Z,15:14:57.779Z and15:16:25.450Z LIVEafterbounded60000ms. Independentoriginal499150547boundedsequential542769–545924BshowsNativeGraph-imageEXrequestafterlongSHwait. Queue2of2 and5364/sharedrequest arediagnostics, notacquiredEX/kernelholderproof; EX~31s. Fiveunit/prefix/stage/sample/completemarkerfamilies0throughthatobservedextent. Samecommand/handle, no otherNative/restart/cancel/Sourcecontrolchanges. Rootledgerstageupdated; Highsolepoll/Lowcourselog/Lowrecoveryreceiptrolescontinue.
+
+Goal-scopeprimaryevidence independentlyre-read byRoot: README83278/d8f67c051405fad7024266a65c2c81d4c8fede9aa440327585daa73658b0bf9e lines10–12explicitlydefinesfiveEnergyquizzesandfiveothernon-runnabletopicplaceholders. Lowboundedrequirementreportretained; do notclaimallsixsubjectsfullyauthoredpedagogy. Currentdocumentedcourseendtoendandactualofflinebuild/redeploy/fullgatesstillrequiredandunproven.
+
+## Actual9966 Terminal Failure — 2026-10-21T15:23:33.838Z
+
+Highactual47370 returnedexit1/noCancellation15:21:56.064Z; nohandlelive. Rootremovedactivelane andretainedterminal. Original560745B/cb677de406b323451777cb278dd592feab0f7a13a0ae68706dde0fc22b77caeb log, inode499150547/fullstamp16777229:499150547:33152:1:560745:1792596067151206426:1792596067151206426. Lowfullstream5proofmarkerfamilies0;25futurecoordinatesincludingclosure/receiptabsent. FailureactualOriginalclosurereadchildstatus1/signalnull/stderrEmpty atcaptureClosureProof closures/🟦️.ts64:1958 afteractualnodeprogress. No prefixunits/6stages/lateSource/successreceipt established. InputpostfencespendingHigh.
+
+Currentturnhasnewconcretefailureevidence; waitingconditionended. Highfinishpostfences thenownsTDDcausalrepair. Lowcourseinspectsactualcapturestderrtransport, Lowrecoveryactualworkerbootstrap/import/schema silentexitroutes. Rootownsledger/metadata/freshcohort. No retry/neutral/controller/Sourcecopies/goalcompletion. Keepfullgoal/ticketactive; donotpollterminal47370.
+
+### Actual9966 Post-Terminal Settlement and Current Repair Scope
+
+Highmetadataevidence165100/801e72dfb4eea37fe0cce224d4ec9541385624ca8853dc28580aad6443991c87 verifiedRoot:101Ticketinputs/controlsunchangedbytes+fullidentities,204Sourceobserved14peerdrifts,0readfailures,25futureabsentand5proofmarkerfamilies0. Commonterminalsettled;noactiveNativehandle. Source14includesregistry/storage/generation/graph/capturepublicproviderandGCworker/runtime/schema/tests. Do notattributeactualchildfailuretocurrentSourcefromthosepost-pins.
+
+Historicalone-shotcalleromittedcapturedstdout/fullcapturewhenreportingnonzero; currentseparatedproviderhasnofoundstderr-lossbranch. Frozenactualreasonremainschild1/null/emptystderr, underlyingprimaryunrecoverable. CurrentpeerSourcealreadyreplacesone-shotwith📡session+ReadFailuresemanticstdoutframes+ownedduplexproviderandnewcausaltests. Highaudits/fixescurrentcoherentcontract, nosecondprotocol/compatibility/parserorbudgetguess. Lowcoursecurrentnon-GCruntime/provider/registry14drifts; LowrecoveryGCsession/schema/testclosure/newwitnesses. Rootmetadata/seals/freshIDsafterclear. Current204combinedsealrevoked;9966actualhistoricalinputsretainrawidentity. Goal/ticketactive,noartifact.
+
+## Current Protocol Repair Coordination — 2026-10-21T15:41:58.038Z
+
+Actual9966terminal1isfullysettled, noNativehandlelive; donotpoll47370. ThreeexactauthoredJSONinputcopiesretained: 📦️fresh/source204-9966.inputs.json64fa5a30, 🚀️prefix/9966.inputs.json1a98b91d, 🧪️guest/source204-9966.inputs.json8c585e85. Sourcecopiesnone. Nextunexecuted16fieldidentitycandidatecb37fb2500e87070c8b17ab93a5e15d6, tagarchitecture-cb37fb2500e8, variablesnextIntentRoot201Now/nextAuthIntentRelRoot201Now/nextGeneratedIntentNameRoot201Now;10freshIDs. NO runnableintentfile/logreserved, finalcontrolhashespending.
+
+Currentpeercandidate usesGC📡session closedsemanticstdoutfailures/ownedduplex API. Oldactualone-shotcalleromittedstdout; actualinnercausecannotbereconstructed. Avoidhistoricalfalsecauseandsecondprotocol/legacyfallback. Highowns currentSessionclosednegativeframecorpus+SQLite+genuineOriginal regressionstrengthening, staticOriginalbirthchildconversion forchanneltestandactualowner/mainregistration, andportablethirdlawstrictno-fallbackadaptation28cases. Currentgraphhasnogenerationfallback; doNOTrestoreoldcatch. PureNode-e stdioprobes remaingeneric, onlySource-importingrealOriginalbirth-e becomesbarestaticchild. BothLowagentsawaitexactfinalhandoffforindependentreview.
+
+PreliminaryLowSource213proposal=old204+9directwitnesses(session5/channel3/lean1), critical246,37phases126titles. Session3CLI150k/510k andchannel1CLI90k/150k yieldphaseSum12780000,parent12870000,worker13680000,hostminimum13800000. CountsarePRELIMINARY: Highnewstaticchildandownerproject/mainSourcewitnessesmayadd; finalimports/selectedportableliteralpending. Rootmustintegrateonecoherent7metadataupdateandfreshsealsafterclear, preservethreephasecopies/order/allpreviouscoverage. No newNative/neutral/controller untilreviewedexplicitredispatch.
+
+RegistryCargoBuiltin derive-resources correctionstillcurrent, removedprivatefixtureownersabsent. Newlean schemaexplicitwitnessneeded. CurrentSourcefullphysicalpinrefreshmustcover14peerdrifts+finalHighchanges; old204combinedsealrevoked. Fullcourse/browser/offlineexport/finalartifactgoalunchanged/unproven.
+
+
+### Successor Policy Prepared; Native Unlaunched (Before 2026-10-21T16:04:23.556Z)
+
+Source222/critical255 successor metadata now written and independently strictAjv reviewed.37phases126titles116vectors; phase12600000,parent12690000,worker13500000,minimumhost13620000milliseconds. Prefix first6fixed5610000. Current protocol repairs include readiness/residual budget and selected packet test alignment; Low found one more selected main transportlaw hardcoded2-argument capture assertion while real session passes(worker,control,selection), High narrowly repairing existing schema/corpus/test. No Native live or launched. Preserved101historical input pins remain in original evidence; new schema inputs intentionally supersede them. Fresh cb37 identity DATA only, no runnableintent/log. Exactpolicy joins in2026-10-21-source222-independent-policy-review.md. Current handoffc189 is reviewinput only and will be superseded for mainlaw repair.
+
+
+### 2026-10-21T16:06:42.515Z Actual CB37 Native Launch
+
+High executor returned actual owned TTY97506 live after exact authorized Native repo command, launchreported16:06:08Z; Root recorded oneactive lane and isnotpollingTTY. Executor independently passed323leaves2passes,278ancestryepochs,bothbinaries,25futureabsences at16:06:04.770Z. Current intent8829/c32ef5f6,own14224/76bf9cdd,template72476/da158f09,guestown995/be15db36. Original0600singlelink logdev16777229/ino505345431. Prior47370 remainsfrozenexit1; norepoll. No prefixunits,6capture stages,capturedneutral,controller21,coursegatesorartifactyetestablished. Highalonepolls97506; Lowagentsobserveboundedlog/receipts and Rootalonewritescommonledger. Currentneutralfieldmap2026-10-21-cb37-captured-neutral-field-map.md suppliesonlyfutureclosed5rolejoins.
+
+
+### 2026-10-21T16:18:56.215Z CB37 Still In Dependency Admission
+
+Actual97506 remainslive per sole executor16:16:36Z; independentbounded logextent19717B16:16:41Z keeps originaldev16777229/ino505345431/0600singlelink and9ancestorcustody. Latestcomplete diagnostic dependency-concurrency resourcebuildwait607668ms; this diagnostic does not establish a Native lease holder or queue. All5proofmarkerfamilies0; no units/stages/receipts/neutral/controller/artifact. Nootherinvocation/retry/suffixorpeeraction occurred. Commonledger Rootupdatedsameoneownedlane.
+
+
+### 2026-10-21T16:41:41.277Z CB37 Native Image Queue
+
+Sole executor reports actual97506LIVE16:40:19Z. Independent observer16:40:58Z completed original521646B log extent; all5prefix marker families remain0. Latest diagnostic is Native fixed-image Graph EX queue2of2 behind shared request49472 queued886s, ownwait422198ms. This is diagnostic request metadata, not a kernel lease-holder inspection or a test result. No prefix unit, capture receipt, neutral result, controller or artifact is established. Same heldinputs and soleattempt remain unchanged.
+
+Current-host peer preparation identified additional test imports and a point-in-time capture-argument assertion mismatch, separately recorded in2026-10-21-cb37-current-host-session-preparation.md. No heldinput or Source was edited. Static captured-authority review confirms actual lateSource/manifest projection handles host drift independently; it does not establish any actual97506loadedSource. Sourceclosure/batch read-onlyreview is scoped in2026-10-21-cb37-active-closure-batch-static-review.md.
+
+
+### 2026-10-21T16:51:37.238Z CB37 Queue Checkpoint
+
+Actualowned97506LIVE per executor16:49:44Z. Independent16:51:08Z original556956B complete sequentialextent retains5markerfamiliesall0. LastNativefixed-image Graph EX diagnostic remainsqueue2of2 behindsharedrequest49472 queued1489s; ownwait1025630ms. No terminal, unit, capture, neutral, controller orartifact evidence. No retry, Source/control change, deadline/settings change or peer action occurred.
+
+
+### 2026-10-21T17:06:24.683Z Actual CB37 Terminal1; Funding Investigation
+
+Soleexecutorjoined97506actualexit1/noCancellation17:04:23Z. Independentfrozenfullrawlog604778B/SHA6fc08aa0bb086c7edc78e32ce0cec3fe6209b9632fe5d6793ac8f76f0b3210b2 retainsoriginal505345431; all5markerfamilies0. Actualerror Original resource loan deadline exhausted atprocess/invocation remaining214:643→arm229:58. All25futurepathsabsent/rootidentityunchanged; nounits/capture/neutral/controller/artifact. Rootcommonledgernowactive[]; Highpostfencespending. Neverpoll97506again. No retry or suffixauthorized.
+
+SeparateauthorizedNative--helpmetadatareturned0; cache--helpreturned1afterenteringSourceadmission, Live Original resource control issuance required. Neitherisproductionproof. No furtherquery. Rootbuildskill+LowNativeCLI/schema+Lowprocessissuanceinspectactualfundingcontract; distinguishcurrentSourcefromhistoricallyloadedbodiesanddono deadlineextension/guessedflags. Goalremainsactive, no newcohortsealed. Currenthostfutureproposalnotadopted.
+
+
+### 2026-10-21T17:10:32.530Z CB37 Final Post-fences and Current Repair Scope
+
+Highfullterminalevidence243108/ec73d416d6598a3d0c46464ed7812b7474750577bd5134a134c24eb356b61e19 confirms323postrows,0readerrors; all101Ticket/controlcontentandfullepochunchanged,22currenthostSourcepeerdriftsamong222(notloadedcodeattribution). Rootsettled97506terminalrow; active[] remains.
+
+Currentdefiniteprojectioncallerbug: Sourceclosurecommand15 passes(original,control,environment) to scriptResourceProcessEnvironmentV1, whose actualpublicsignatureis(control,environment); Original is separatelyauthenticated. RootauthorizedHighnarrowtest-firstschema/corpus/regression+callrepair, no Nativeyet. It explainscurrentmetadatarefusalifthatbodyexecuted; itdoesnotidentifytheexpiredhistorical97506ancestor. Currentdocumentedupfront SEMIO_BUILD_BUDGET_MS policyisunderreviewforanewfreshbirth; notaguessedflagorOriginalrenewal. Existingpreparationchildcapcurrent21600000cannotbeexpandedbyouterenv. Goalactive; pipelineallgatesunrun.
+
+
+## Fresh4d38 Final Preparation — 2026-10-21T17:54:31.678Z
+
+See `2026-10-21-source240-policy-preparation.md`, `2026-10-21-prefix4d38-independent-final-seal-review.md`, `2026-10-21-prefix4d38-root-preflight.md` and `2026-10-21-4d38-independent-physical-preflight.md`. Source240/critical273,39phases/140titles/126vectors. Exact sealed intent4056eec0/prefixownf473dd01. SoleHighexplicitonce-launch dispatch issued; no actualhandle yet. Previous97506terminal1 remains historical. No course/runtime/build proof.
+
+Actual fresh4d38 session90521 live from2026-10-21T17:55:52Z; Highsolepoller, no implicitretry/suffix. Rootcommonledger updated.
+
+
+## Actual4d38 Terminal — 2026-10-21T17:58:37.955Z
+
+90521exit1/signalnull/no cancellation17:56:52Z; no activeNativehandle. Frozen13,685B/6f1a0c96log,all5markers0/all25futurepathsabsent. Uncaptured ui-axes implementation require failedcurrentbootstrapSourceadmissionbeforeprefixunits. Highauxrepair+Lowrecoveryauditnow; no retry/suffixauthorized. See current-active-run and finalwatchreport. Executorpostfencespending.
+
+
+## Fresh a668 Final Preparation — 2026-10-21T18:12:39.352Z
+
+Concretebootstraprepairindependentlyclear; Source252/critical285/40phases/141titles/131vectors. Own/template/intentaliasesclear;353hostinputs2passes,bothbinaries,25absencesandnamed/ancestorcustodiesclear. RootexplicitsoleHigha668ONCElaunchdispatchissued; noactualhandleatthiswrite. Intent8829/e503342d420b520e317712d777879c732c47c728eddf84885f2a5cd24a98fe4f;prefixown14225/b63ee9709c4da87ab2e16845d72a72ade36ea8293b5a89d0d6cf490b708e9791. No course/runtime/buildproof.
+
+Actual a668 process37493 launched once at2026-10-21T18:14:46Z and is live. Executor repeated353 inputs twice,297 ancestor hard identities, both binary headers/hash/epochs,25 absences and exact original empty log. Root recorded its live lane; High alone polls. No suffix or retry authorized.
+
+
+## Actual a668 Terminal — 2026-10-21T18:17:54.892Z
+
+37493 exited1/null/no cancellation at18:15:18Z. Captured CJS workspace named export createBunWorkspaceOwnershipV1 was absent before prefix units. Frozen6401/d9d1df29 log;5 markers0;25 future paths absent.353 post reads had0 errors and one post Sourceclosure/schema drift. Terminal evidence208139/f1f18a36. No active handle/retry/suffix. High repair plus Low causal and bounded schema-delta audits continue; see current-active-run.
+
+
+## Focused Native CJS Regression — 2026-10-21T18:35:59.967Z
+
+Actual80593 launched once18:34:53Z and is live; High alone polls. Twelve Source pins repeated physical checks, host binary and exclusive artifact/log checked. This local regression is separate from release gates. Root prepared guarded Source260/critical293/41/144/136 policy metadata concurrently; no successor runnable intent. No prefix/course/build proof.
+
+
+## Focused CJS Actual Terminal — 2026-10-21T18:58:58.276Z
+
+80593 exited1/null/no cancellation18:50:40Z before all3 selected tests. Exact primary declaring-module guard at bootstrap witness115→151. Frozen467304/6f3be80b log;12 Source+hostbinary unchanged;artifact directory empty. Evidence10963/e5b6e029. No activeNative/retry. High narrow caller repair and Low causal/inventory audits now. Source260 metadata/preview remains static; successor buffers not published. No release proof.

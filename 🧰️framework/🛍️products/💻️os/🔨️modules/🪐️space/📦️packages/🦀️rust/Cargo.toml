@@ -35,4 +35,5 @@ semio-framework-os-host-registry = { path = "../../../../🖥️host/🗂️regi
 semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }

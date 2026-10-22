@@ -2136,5 +2136,102 @@
   "currentModeFixtures": [
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🧫️fixtures/🏗️native/🔣️.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🧫️fixtures/🔣️.json"
+  ],
+  "nextestModeFlags": [
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "run",
+        "--profile",
+        "fundamental"
+      ],
+      "head": [
+        "nextest",
+        "run",
+        "--profile",
+        "fundamental",
+        "--cargo-profile",
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "run",
+        "--cargo-profile",
+        "prototype",
+        "--profile",
+        "quick"
+      ],
+      "head": [
+        "nextest",
+        "run",
+        "--cargo-profile",
+        "prototype",
+        "--profile",
+        "quick"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "args": [
+        "nextest",
+        "run",
+        "--release"
+      ],
+      "head": [
+        "nextest",
+        "run",
+        "--cargo-profile",
+        "release"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "run",
+        "--release"
+      ],
+      "head": [],
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "run",
+        "--cargo-profile",
+        "release"
+      ],
+      "head": [],
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "run",
+        "--binaries-metadata",
+        "/m.json",
+        "--profile",
+        "fundamental"
+      ],
+      "head": [
+        "nextest",
+        "run",
+        "--binaries-metadata",
+        "/m.json",
+        "--profile",
+        "fundamental"
+      ],
+      "accept": true,
+      "prebuilt": true
+    }
   ]
 }

@@ -8,8 +8,8 @@
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use store::os_store::store_schema::ArtifactEnvelope;

@@ -18,7 +18,7 @@ Headless architectural programming technology: [architect/plugin](plugin/rs/lib.
 
 - Docstrings start with a unique emoji; no comments inside definitions
 - Regions in `lib.rs` and `src/` modules
-- `bun ./script.ts test` via nx `@semio-tech/architect-spine`
+- `repo ./script.ts test` via nx `@semio-tech/architect-spine`
 - Do not depend on coda, compose, puzzle, or geometry crates
 
 ## Stack

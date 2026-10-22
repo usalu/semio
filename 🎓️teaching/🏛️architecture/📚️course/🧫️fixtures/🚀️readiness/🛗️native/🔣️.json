@@ -17,7 +17,7 @@
       "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"",
       "native_repo_bin=\"$native_repo_dir/repo\"",
       "if ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then",
-      "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run repo-mcp:build --skip-cache",
+      "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache",
       "fi",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help",
       "printf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\""

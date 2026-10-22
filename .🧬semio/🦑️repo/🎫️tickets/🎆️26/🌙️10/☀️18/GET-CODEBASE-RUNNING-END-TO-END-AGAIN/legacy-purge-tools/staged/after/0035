@@ -1,0 +1,137 @@
+{
+  "title": "Fix Design App Element Dragging",
+  "status": "closed",
+  "description": "Fix drag of elements in design app diagram; currently elements cannot be dragged.",
+  "summary": "Finalized command normalization and drag-center stabilization assertions for persisted piece positions.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-17T11:03:47.116926223Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Fix drag of elements in design app diagram; currently elements cannot be dragged.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17 11:19:20",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-17 14:19:08",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Continue task: add/extend design app dragging test coverage within existing structure",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17 14:26:32",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-17 14:39:42",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "User reports node dragging still broken in sketchpad diagram; fix runtime drag and harden existing tests",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17 17:11:16",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-24 17:07:16",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Design app: dragged piece snaps back to origin after drop; persist final coordinates in state and verify with existing sketchpad tests",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-24 17:21:04",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-24 17:22:41",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Finalize drag persistence assertion lines in sketchpad test after follow-up edit.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-24T17:22:59.447450738Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "summary": "Finalized command normalization and drag-center stabilization assertions for persisted piece positions.",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    }
+  ]
+}

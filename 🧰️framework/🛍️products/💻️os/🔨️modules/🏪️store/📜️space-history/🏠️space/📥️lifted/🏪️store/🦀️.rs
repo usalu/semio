@@ -33,7 +33,7 @@ use semio_framework_os_store_space_schema::space_history_document::{SpaceAlterna
 use semio_framework_os_store_space_schema::space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 use semio_framework_os_store_space_member::lifted_store::MemberDirectory;
 use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_space_member::lifted_store::SpaceMember;
+use semio_framework_os_store_space_member::lifted_store::{ReferenceSpaceMember, SpaceMember};
 use semio_framework_os_store_space_member::lifted_store::NoMembers;
 //#region 🔖️Composition
 impl MemberDirectory for SpaceHost {
@@ -65,8 +65,8 @@ impl MemberDirectory for SpaceHost {
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation, G, C>(schema: &str, id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -90,8 +90,8 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation, G, C>(schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -107,8 +107,8 @@ where
 /// 🔐️ Installs a completed catalog and retires it exactly when the store refuses its transfer.
 pub fn install_unscheduled_catalog<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, owners: Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<(), VcsError>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     let owners = owners.map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
     store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) })
@@ -117,8 +117,8 @@ where
 /// 🔐️ Installs a self-funded member catalog and leaves the store retaining every original owner on refusal.
 pub fn install_funded_member_store_owners<P, Mutation, C>(store: &mut ArtifactStore<P, Mutation>,producer:&C) -> Result<(), VcsError>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
     C:MemberStoreProducer<P,Mutation>,
 {
     install_unscheduled_catalog(store, funded_member_store_owners::<P, Mutation,C>(producer))

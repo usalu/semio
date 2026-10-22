@@ -1,0 +1,20 @@
+# Run39792 Graph Format Causal Review
+
+Owner-attributed actualexit1/noCancel21:18:05Z. Independent two bounded fullstream nofollow ordinary single-link FD/name passes freeze log144644/217374d0083df5556bd0a7a4e82434d0a37a35a8c7412ae0c43ea623c8675125 with stableidentity16777229:509459996. Terminal evidence51758/e44fb89f37fd286d55a13ef6e300238b471e722a94b49b908116631858f815b5 matches. Worker semantic reply Closed graph record manifest required establishes startup advanced beyond readiness into worker processing; no21selectedtests completed. Current postdrift Source pins do not identify historical loaded worker bodies.
+
+Current producer contract: records policyversion2, actual encodeGraphRecordsV1 splits real version1 BuildGraph into outermanifestversion2, graphrest,projectname/digesttuples,dependencydigestchunks and optionalexternaldigestchunks. Actual graph artifact owner passes readBuildGraphV1 to encoder. Current worker SnapshotManifest matches that outerv2/graphrestv1 contract; explicit tuple checks supplement the subset validator. No concrete mismatch between current producer and inspected current worker was proved.
+
+Current22formats fixture validates strict Ajv. Positive rows use actual encoder, so compressed records/manifests are genuine current producer data rather than hand-made v2 mocks. Independent fflategunzip plus SQLite key/value reference union and mandatorygzipdigestlinks compare expected closures; fullpackedSHA/filename,manifestSHA and cumulative packed+inflatedbyte debit are asserted. Exactcredit passes and onebyte-short refuses. Negatives includeoldwholegraph,manifestextra,invalid/traversaldigest,tupletypes,duplicates,missingrecord,gzip/json/scalar/digest/refinvalid. Generic SnapshotRecord object-or-array remains conservative closure evidence, not complete per-slot wholegraph semantic validation.
+
+Coverage limit: fixture starts from a small valid graph and explicitly rejects oldwholegraph. Actualfailure log does not name offendingmanifest,path,version or fieldreason, so it cannot distinguish legacy persistedwholegraph, malformedcurrentdata or another validationcause. Current peerworker adds snapshot refusal metadata(version/project/dependencycounts), but that postterminal fact is not attributed to the failed process. Need genuine offendingDATA context before changing admission; do not allow arbitraryv1 ascurrentv2 or ignoreunknownshape. High/Low notified. No Source edit, runtimeevaluation, Native,DB or peeraction occurred.
+
+Current pins:
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs — 5890/09961c96fdc365a44609bd237c37acdb1e411c287fd9dc066cc7650db7f7a024
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json — 305/cb2e9a9c55e5bf9b6014fedbc4f10052756c0f3eebc41661f4a1e154844add48
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts — 90098/ee387b378991c03df0e95ba22c31af0ea84683c648699cbbf72569ab47130ddf
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs — 30947/cdde033b347f76a9986dafcd03cd0d7d38fc5457e0b9eaa005ce8b454e88e188
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json — 51057/78c82c9e35fd90aebcce2660207b3cf1d2a929536002d67624724c5bb3f3f9d1
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts — 22585/2145a368498b8be4f732423a8f8e91cf6ac7a4e175c69c1f0144183374c25115
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🧫️cases.json — 9424/a2c442a892b5fe083fb5499e068be7d77fc341fac46a7666f8c6e5561ad8a403
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🧬️schema/🔣️.json — 4741/ed556735d00252d68489fa47bd0b3f55e5db0cb47fc5e9a7f28a39b1bcba933e

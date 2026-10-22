@@ -10,7 +10,7 @@ use crate::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // (`.🧬semio/🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 
@@ -224,12 +224,9 @@ pub struct CsvDiff {
     pub records: Option<CsvRecordsDiff>,
 }
 
-impl MutationDiff<CsvSnapshot> for CsvDiff {
-    fn apply(&self, base: &CsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<CsvSnapshot> {
-        validate_csv_diff(self, base)?;
-        Ok(apply_csv_diff_unchecked(self, base))
-    }
+impl MutationDiff<CsvSnapshot> for CsvDiff {}
 
+impl protocol::ColdMutationDiff<CsvSnapshot> for CsvDiff {
     fn absorb(&mut self, other: Self) {
         if other.has_header.is_some() {
             self.has_header = other.has_header;
@@ -246,6 +243,13 @@ impl MutationDiff<CsvSnapshot> for CsvDiff {
             Some(d1) => d1,
         };
         self.records = Some(absorb_records(d1, d2));
+    }
+
+    fn apply(&self, unpublished: &mut CsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_csv_diff(self, base)?;
+        *unpublished = apply_csv_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -436,12 +440,14 @@ fn inverse_records(diff: &CsvRecordsDiff, base: &[CsvRecord]) -> CsvRecordsDiff 
 }
 
 impl DiffAlgebra<CsvSnapshot> for CsvDiff {
-    fn inverse(&self, base: &CsvSnapshot) -> Self {
-        Self { has_header: self.has_header.map(|_| base.has_header), records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()) }
-    }
-
     fn is_empty(&self) -> bool {
         self.has_header.is_none() && self.records.as_ref().is_none_or(CsvRecordsDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CsvSnapshot> for CsvDiff {
+    fn inverse(&self, base: &CsvSnapshot) -> Self {
+        Self { has_header: self.has_header.map(|_| base.has_header), records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()) }
     }
 }
 

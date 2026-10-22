@@ -12,15 +12,19 @@ pub struct ChangeZoneAirSpeed {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneAirSpeed where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_air_speed::ChangeZoneAirSpeed> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-air-speed", kind: "change-zone-air-speed", record: "ChangeZoneAirSpeed" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_zone_air_speed::diff::diff(self, base) }
-    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ crate::change_zone_air_speed::inverse::inverse(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change air speed in the zone", "Luftgeschwindigkeit der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeZoneAirSpeed where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_air_speed::ChangeZoneAirSpeed> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_zone_air_speed::diff::diff(self, base) }
+    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_zone_air_speed::inverse::inverse(self, base)? 
+    })
+}
 }
 
 //#region 🪢️Mounts

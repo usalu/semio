@@ -2,7 +2,7 @@
 use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
 use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
 use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
-use protocol::{Mutation, MutationDiff, MutationLeaf};
+use protocol::{ColdMutation, Mutation, MutationDiff, MutationLeaf};
 use store::OpBinary;
 
 #[doc(hidden)]

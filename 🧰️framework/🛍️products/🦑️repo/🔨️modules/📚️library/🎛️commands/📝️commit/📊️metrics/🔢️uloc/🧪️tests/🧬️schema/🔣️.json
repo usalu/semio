@@ -1,0 +1,150 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "keys",
+  "diff",
+  "loc",
+  "locDefects"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "keys": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "diff": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "before",
+     "after",
+     "expected"
+    ],
+    "properties": {
+     "before": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "after": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "added",
+         "removed",
+         "edited"
+        ],
+        "properties": {
+         "added": {
+          "type": "integer"
+         },
+         "removed": {
+          "type": "integer"
+         },
+         "edited": {
+          "type": "integer"
+         }
+        }
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "loc": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "data",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "data": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "locDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "data",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "data": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "integer"
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

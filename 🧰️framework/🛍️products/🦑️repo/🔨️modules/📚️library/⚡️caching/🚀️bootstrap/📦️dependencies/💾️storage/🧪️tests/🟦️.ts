@@ -12,7 +12,7 @@ import schema from "../🧬️schema/🔣️.json";
 import bindingsSchema from "../🧬️schema/📥️bindings.json";
 import corpus from "./🔣️.json";
 import {javascriptDependencyBindingsV1,javascriptDependencyInstallManifestV1,type classifyJavascriptDependencyInstallerFailureV1} from "../🟦️.ts";
-import installSchema from "../🧬️schema/📥️install.json";
+import {javascriptInstallSchemaV1 as installSchema} from "../🧱️schemas/🟦️.ts";
 import installCorpus from "./📥️install.json";
 
 /** 🧷️ A cache link refusal fixture row whose authored `expected` is read as the classification the implementation returns. */
@@ -58,7 +58,7 @@ test("installed dependency path preflight precedes every binding publication",as
 
 test("closed dependency scopes agree with independent SQLite identities and schema",()=>{const validate=new Ajv({strict:true}).compile(schema),oracle=new Database(":memory:");try{for(const row of corpus.cases){if(row.accepted){expect(validate({version:1,scope:row.scope,members:row.members,generation:"a".repeat(64)})).toBe(true);const actual=javascriptDependencyBindingsV1("/r","/d",row.scope,row.members,"a".repeat(64));expect(actual.length).toBe(row.count!);for(const [index,binding]of actual.entries()){const identity="a".repeat(20),expected=oracle.query("SELECT ?1 || ?3 || 'j' || ?3 || ?2 || ?3 || ?4 AS path").get(resolve("/d"),identity,sep,index===0?"node_modules":"w"+sep+(index-1)+sep+"node_modules") as {path:string};expect(binding.targetDirectory).toBe(expected.path);}}else expect(()=>javascriptDependencyBindingsV1("/r","/d",row.scope,row.members,"a".repeat(64))).toThrow();}}finally{oracle.close();}});
 
-test("closed binding receipts agree with Ajv and independent SQLite projection",()=>{const validate=new Ajv({strict:true}).addSchema(installSchema,"install.json").compile(bindingsSchema),receipt={version:2,purpose:"current-dependency-source-owner-ready",scope:".",ownerRelationSha256:"b".repeat(64),groupSha256:"c".repeat(64),recipeSha256:"d".repeat(64),executionSha256:"e".repeat(64),ownerReferences:[],members:corpus.bindingPublication.members.map((member,slot)=>({path:member,member,slot,owner:".",ownerGeneration:"a".repeat(64)})),generation:"a".repeat(64),bindings:javascriptDependencyBindingsV1("/r","/d",".",corpus.bindingPublication.members,"a".repeat(64))},database=new Database(":memory:");try{expect(validate(receipt)).toBe(true);expect((database.query("SELECT json_array_length(?, '$.bindings') AS count").get(JSON.stringify(receipt)) as {count:number}).count).toBe(corpus.bindingPublication.resumedBindings);for(const value of [{...receipt,extra:true},{...receipt,generation:"wrong"},{...receipt,bindings:[]},{...receipt,bindings:[{sourceDirectory:"/r"}]}])expect(validate(value)).toBe(false);}finally{database.close();}});
+test("closed binding receipts agree with Ajv and independent SQLite projection",()=>{const validate=new Ajv({strict:true}).addSchema(installSchema,"install.json").compile(bindingsSchema),receipt={version:3,purpose:"current-dependency-source-owner-ready",scope:".",ownerRelationSha256:"b".repeat(64),groupSha256:"c".repeat(64),recipeSha256:"d".repeat(64),ownerReferences:[],members:corpus.bindingPublication.members.map((member,slot)=>({path:member,member,slot,owner:".",ownerGeneration:"a".repeat(64)})),generation:"a".repeat(64),bindings:javascriptDependencyBindingsV1("/r","/d",".",corpus.bindingPublication.members,"a".repeat(64))},database=new Database(":memory:");try{expect(validate(receipt)).toBe(true);expect((database.query("SELECT json_array_length(?, '$.bindings') AS count").get(JSON.stringify(receipt)) as {count:number}).count).toBe(corpus.bindingPublication.resumedBindings);for(const value of [{...receipt,extra:true},{...receipt,generation:"wrong"},{...receipt,bindings:[]},{...receipt,bindings:[{sourceDirectory:"/r"}]}])expect(validate(value)).toBe(false);}finally{database.close();}});
 
 test("portable install material excludes only top-level task metadata against independent SQLite and Ajv",()=>{
  const ajv=new Ajv({strict:true}),manifest=ajv.compile({$schema:installSchema.$schema,$defs:installSchema.$defs,$ref:"#/$defs/InstallManifest"}),mutation=ajv.compile({$schema:installSchema.$schema,$defs:installSchema.$defs,$ref:"#/$defs/Mutation"}),database=new Database(":memory:");
@@ -235,6 +235,26 @@ test("projected workspace edges beyond the descriptor binding bound are all rewr
   const oracle=spawnSync(testPythonV1()??"python3",["-I","-c","import os,sys,json;h=sys.argv[1];print(json.dumps({n:os.readlink(os.path.join(h,n)) for n in sorted(os.listdir(h))}))",holder],{encoding:"utf8"});expect(oracle.status).toBe(0);
   const observed=JSON.parse(oracle.stdout)as Record<string,string>;expect(Object.keys(observed).length).toBe(count-1);
   for(let index=1;index<count;index++){expect(observed["p"+index]).toBe(join(workspace,"s","p"+index));expect(readlinkSync(join(holder,"p"+index))).toBe(observed["p"+index]);}
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("projected workspace edges are found in every directory of the generation, however deep, and only there",async()=>{
+ const storage=await import("../🟦️.ts"),descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor"),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original dependency path artifact root required");
+ const {readlinkSync,symlinkSync:link}=await import("node:fs"),{spawnSync}=await import("node:child_process"),base=mkdtempSync(join(artifacts,"wd-")),generation="b".repeat(20),generationRoot=join(base,"j",generation),workspace=join(base,"ws"),members=["p0","p1","p2"],depth=Array.from({length:12},(_,index)=>"d"+index);
+ try{
+  mkdirSync(join(generationRoot,"node_modules"),{recursive:true});
+  for(const[index,member]of members.entries()){const directory=join(workspace,"s",member);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"package.json"),JSON.stringify({name:"@t/"+member}));mkdirSync(join(generationRoot,"w",String(index),"node_modules"),{recursive:true});}
+  const places=[join(generationRoot,"node_modules","@t"),join(generationRoot,"node_modules",".bun","x@1","node_modules","@t"),join(generationRoot,"w","1","node_modules","@t"),join(generationRoot,...depth,"node_modules","@t")];
+  for(const place of places){mkdirSync(place,{recursive:true});link(join(generationRoot,"w","2"),join(place,"p2"));writeFileSync(join(place,"file.txt"),"x");}
+  link("elsewhere",join(places[0]!,"other"));
+  const row={scope:"s",plan:{generation,directory:generationRoot,members,sources:members.map(member=>({path:join(workspace,"s",member,"package.json"),kind:"file",bytes:readFileSync(join(workspace,"s",member,"package.json"))}))}};
+  const control={publish:async()=>{},yieldContinuation:async()=>{}};
+  await descriptors.withArtifactRelativeDirectoryV1(base,()=>{},async directory=>storage.publishJavascriptDependencyExportsDescriptorV1(directory,workspace,base,row as never,control as never,()=>{}));
+  const oracle=spawnSync(testPythonV1()??"python3",["-I","-c","import os,sys,json;root=sys.argv[1];print(json.dumps({os.path.relpath(os.path.join(d,n),root):os.readlink(os.path.join(d,n)) for d,ds,fs in os.walk(root) for n in ds+fs if os.path.islink(os.path.join(d,n))}))",generationRoot],{encoding:"utf8"});expect(oracle.status).toBe(0);
+  const observed=JSON.parse(oracle.stdout)as Record<string,string>;
+  for(const place of places)expect(observed[join(place,"p2").slice(generationRoot.length+1)],place).toBe(join(workspace,"s","p2"));
+  expect(observed[join(places[0]!,"other").slice(generationRoot.length+1)]).toBe("elsewhere");
+  for(const place of places)expect(readlinkSync(join(place,"p2"))).toBe(join(workspace,"s","p2"));
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 

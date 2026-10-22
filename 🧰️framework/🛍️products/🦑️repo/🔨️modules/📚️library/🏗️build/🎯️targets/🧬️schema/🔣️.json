@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Canonical Dashboard Build Leaves",
+  "type": "string",
+  "enum": [
+    "assets",
+    "repo-cli",
+    "repo-server"
+  ],
+  "$defs": {
+    "Targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assets",
+        "repo-cli",
+        "repo-server"
+      ],
+      "properties": {
+        "assets": {
+          "const": "@semio-tech/assets:build"
+        },
+        "repo-cli": {
+          "const": "@semio-tech/repo-client:build"
+        },
+        "repo-server": {
+          "const": "@semio-tech/repo-coordinator:build"
+        }
+      }
+    }
+  }
+}

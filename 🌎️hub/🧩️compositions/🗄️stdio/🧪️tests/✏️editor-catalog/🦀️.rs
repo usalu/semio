@@ -1,7 +1,7 @@
 //! ✏️ Every catalog editor declares, parses, and replays the complete editing contract.
 
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_value::{DslValue, ToValue};
 use semio_framework_plugin::app::EditorSurfaceApp;
 use semio_framework_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition, ArtifactEditor, EditorApp, InteractiveJobClassification, PluginApp};

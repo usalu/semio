@@ -15,105 +15,35 @@ import (
 )
 
 // 🟨️extractFileAndSectionsFromUri extracts the file path and section names from a URI.
-// 🆕️Supports new format repo://section/{{id}} where ID encodes file+sections as emojis.
+// 🆕️Reads repo://section/{{id}} and repo://file/{{id}}, whose ID encodes file and sections as emojis; the `repo://` prefix may be stripped.
 func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []string) {
-	// New format: repo://section/{{id}}
-	if strings.HasPrefix(uri, "repo://section/") || strings.HasPrefix(uri, "repo://file/") {
-		id := UriToId(uri)
-		if id == "" {
-			return "", nil
-		}
-		filePath = IdToPath(id)
-		sectionSlugs = IdToSectionPath(id)
-		return filePath, sectionSlugs
+	if !strings.HasPrefix(uri, "repo://") {
+		uri = "repo://" + uri
 	}
-	// Try the raw string as an ID (for cases where "repo://" was already stripped)
-	prefixStripped := strings.TrimPrefix(uri, "repo://")
-	if strings.HasPrefix(prefixStripped, "section/") || strings.HasPrefix(prefixStripped, "file/") {
-		fullUri := "repo://" + prefixStripped
-		id := UriToId(fullUri)
-		if id != "" {
-			return IdToPath(id), IdToSectionPath(id)
-		}
+	if !strings.HasPrefix(uri, "repo://section/") && !strings.HasPrefix(uri, "repo://file/") {
+		return "", nil
 	}
-	// Legacy fallback: parse old /f/ and /s/ format
-	p := prefixStripped
-	var sectionParts []string
-	remaining := p
-	for {
-		idx := strings.Index(remaining, "/s/")
-		if idx < 0 {
-			break
-		}
-		after := remaining[idx+3:]
-		nextS := strings.Index(after, "/s/")
-		nextD := strings.Index(after, "/d/")
-		endIdx := len(after)
-		if nextS >= 0 && nextS < endIdx {
-			endIdx = nextS
-		}
-		if nextD >= 0 && nextD < endIdx {
-			endIdx = nextD
-		}
-		sectionParts = append(sectionParts, PathFromUriPath(after[:endIdx]))
-		remaining = after[endIdx:]
+	id := UriToId(uri)
+	if id == "" {
+		return "", nil
 	}
-	fIdx := strings.Index(p, "/f/")
-	if fIdx >= 0 {
-		rest := p[fIdx+3:]
-		nextSlash := strings.Index(rest, "/")
-		if nextSlash < 0 {
-			filePath = PathFromUriPath(rest)
-		} else {
-			filePath = PathFromUriPath(rest[:nextSlash])
-		}
-	}
-	return filePath, sectionParts
+	return IdToPath(id), IdToSectionPath(id)
 }
 
 // 🟩️extractFileAndDefinitionFromUri extracts the file path and definition name from a URI.
-// ▶️Supports new format repo://definition/{{id}} where ID encodes file+sections+definition as emojis.
+// ▶️Reads repo://definition/{{id}}, whose ID encodes file, sections and definition as emojis; the `repo://` prefix may be stripped.
 func extractFileAndDefinitionFromUri(uri string) (filePath string, defName string) {
-	// New format: repo://definition/{{id}}
-	if strings.HasPrefix(uri, "repo://definition/") {
-		id := UriToId(uri)
-		if id == "" {
-			return "", ""
-		}
-		filePath = IdToPath(id)
-		defName = IdToDefinitionName(id)
-		return filePath, defName
+	if !strings.HasPrefix(uri, "repo://") {
+		uri = "repo://" + uri
 	}
-	// Try with the raw string (for cases where "repo://" was already stripped)
-	prefixStripped := strings.TrimPrefix(uri, "repo://")
-	if strings.HasPrefix(prefixStripped, "definition/") {
-		fullUri := "repo://" + prefixStripped
-		id := UriToId(fullUri)
-		if id != "" {
-			return IdToPath(id), IdToDefinitionName(id)
-		}
+	if !strings.HasPrefix(uri, "repo://definition/") {
+		return "", ""
 	}
-	// Legacy fallback: parse old /f/ and /d/ format
-	p := prefixStripped
-	fIdx := strings.Index(p, "/f/")
-	if fIdx >= 0 {
-		rest := p[fIdx+3:]
-		nextSlash := strings.Index(rest, "/")
-		if nextSlash < 0 {
-			filePath = PathFromUriPath(rest)
-		} else {
-			filePath = PathFromUriPath(rest[:nextSlash])
-		}
+	id := UriToId(uri)
+	if id == "" {
+		return "", ""
 	}
-	dIdx := strings.LastIndex(p, "/d/")
-	if dIdx >= 0 {
-		rest := p[dIdx+3:]
-		dParts := strings.SplitN(rest, "/", 2)
-		if len(dParts) >= 2 {
-			defName = PathFromUriPath(dParts[1])
-		}
-	}
-	return filePath, defName
+	return IdToPath(id), IdToDefinitionName(id)
 }
 
 // 🟦️ArtifactRef holds the data fields for a artifact ref record.

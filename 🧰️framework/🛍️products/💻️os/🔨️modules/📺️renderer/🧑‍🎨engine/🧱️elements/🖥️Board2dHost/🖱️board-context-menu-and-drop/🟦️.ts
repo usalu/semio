@@ -1,5 +1,5 @@
 /** 🖱️ Board2dHost context menu and drop: the context menu handler, the catalogue drop preview and drop handlers, the host registration, the pointer tracking and the tool-run trace lanes. */
-import { useCallback, useEffect, useMemo, type DragEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, type DragEvent, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
 import { type CanvasPickTarget, pickMostSpecificCanvasTarget, CATALOGUE_DRAG_MIME, getActiveCatalogueDragPayload, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 import { suggestionSubmenuTarget } from "../../🎣️suggestion-submenu/🟦️.ts";
 import { parseSelectionIds } from "../../🖋️InkCanvasHost/🧾️ink-model/🟦️.ts";

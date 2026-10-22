@@ -9,8 +9,8 @@ use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puz
 use crate::standards::v1::subsets::any::schema::mutations::delete_node;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 use std::sync::Arc;

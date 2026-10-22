@@ -415,7 +415,7 @@ func GraphQLRoundtrip(recordsJSON string, query string, variablesJSON string) (s
 
 // 🤝️McpVerbConversation serves the recorded stdio conversation with the server the `mcp` verb
 // builds, and returns the response lines the client would have read.
-func McpVerbConversation(profile string, requests []string) ([]string, error) {
+func McpVerbConversation(rootDir, profile string, requests []string) ([]string, error) {
 	kind := providers.McpClientGeneric
 	if profile != "" {
 		parsed, err := providers.ParseMcpClientKind(profile)
@@ -425,7 +425,8 @@ func McpVerbConversation(profile string, requests []string) ([]string, error) {
 		kind = parsed
 	}
 	var out strings.Builder
-	if err := Serve(CreateMcpServer(kind, DefaultCommandTimeout), strings.NewReader(strings.Join(requests, "\n")+"\n"), &out); err != nil {
+	server,err:=CreateMcpServer(rootDir,kind,DefaultCommandTimeout);if err!=nil { return nil,err }
+	if err := Serve(context.Background(),server,io.NopCloser(strings.NewReader(strings.Join(requests, "\n")+"\n")),&out); err != nil {
 		return nil, err
 	}
 	lines := []string{}

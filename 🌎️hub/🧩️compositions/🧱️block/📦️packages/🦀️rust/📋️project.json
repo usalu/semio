@@ -9,7 +9,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],

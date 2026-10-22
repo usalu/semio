@@ -80,10 +80,10 @@ callable by the agent — a tool like that would let the agent approve itself.
 One binary, `semio-os-mcp`, in two profiles:
 
 ```bash
-bun run dashboard run @semio-tech/framework-os-mcp-rs:build
+repo run @semio-tech/framework-os-mcp-rs:build
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp          (debug — the dev loop)
 
-bun run dashboard run @semio-tech/framework-os-mcp-rs:build-release
+repo run @semio-tech/framework-os-mcp-rs:build-release
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp  (release — use this one)
 ```
 
@@ -141,7 +141,7 @@ agent's next frame is closed.
 offers **Set up MCP client** right after the delegation is created: the dev server installs the
 credential `0600` in a `0700` directory (`~/.semio/agent/credentials/semio-agent-<delegation id>.json`,
 overridable with `S_AGENT_CREDENTIALS_DIR`) and the pane shows a complete `mcpServers` entry — this
-checkout's launcher (`bun <repo>/📜️script.ts dev mcp stdio os`, which stages the binary itself and which the MCP client starts, not a developer), the
+checkout's launcher (`repo <repo>/📜️script.ts dev mcp stdio os`, which stages the binary itself and which the MCP client starts, not a developer), the
 delegation's `--hub`/`--space`, the installed `--credential-file`, and the scopes its audience admits —
 with a **Copy MCP configuration** control. The entry names the file, never the token. Withdrawing
 the delegation removes the installed file as well. Contract: `📇️directory/🧬️schema`
@@ -212,7 +212,7 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
 }
 ```
 
-`cwd` matters: `bun ./📜️script.ts` resolves against the repo root.
+`cwd` matters: `repo ./📜️script.ts` resolves against the repo root.
 
 **Claude Code, bound to a hub space instead of a folder.** `--folder` and `--hub` are mutually
 exclusive, so a hub-bound agent is a *different* config file, not an extra flag on the one above —
@@ -279,7 +279,7 @@ also why a plausible-looking typo costs you a whole tool family with no error: w
 `PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 28
 tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
-Run `bun run dashboard run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
+Run `repo run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
 Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji
 directory names are literal and must be copied exactly.
 
@@ -538,7 +538,7 @@ schema of its own.
 
 `🧬️schema/🔣️.json` (draft-07, `$id: https://json.schemas.assets.semio-tech.com/os/mcp/component.json`) and
 `🧬️schema/🟦️.ts` (types plus a dependency-free `parse<ExportId>` per export) are **generated** from
-that registry by `bun run dashboard run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
+that registry by `repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
 own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and the Rust law
 `the_json_mirror_publishes_exactly_the_registry_exports` asserts the two key sets agree.
 

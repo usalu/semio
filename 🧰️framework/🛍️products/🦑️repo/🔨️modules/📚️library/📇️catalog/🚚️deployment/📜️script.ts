@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { runCmd } from "../../🏃️process/🟦️.ts";
@@ -9,8 +9,8 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 class ContractCheckScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("contract-check accepts no arguments");
-    runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", join(import.meta.dirname, "🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("contract-check", ContractCheckScript);
+const router = new ScriptRouter(import.meta.dirname).register("contract-check", ContractCheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "contract-check" }) }));

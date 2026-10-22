@@ -19,22 +19,26 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "struct-tree-root", kind: "remove-struct-tree-root", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "StructTreeRoot")))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::catalog_entry(base, "StructTreeRoot").map(|entry| Op::from(SetStructTreeRoot { placements: entry.as_ref().map(|root| support::placements_of(base, &[root])).unwrap_or_default(), entry_index: support::catalog_entry_position(base, "StructTreeRoot") })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel entfernen")
     }
 
     fn target(&self) -> Vec<String> {
         vec!["StructTreeRoot".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveStructTreeRoot
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveStructTreeRoot> + From<crate::standards::v1_7::subsets::ua::schema::mutations::set_struct_tree_root::SetStructTreeRoot>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "StructTreeRoot")))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::catalog_entry(base, "StructTreeRoot").map(|entry| Op::from(SetStructTreeRoot { placements: entry.as_ref().map(|root| support::placements_of(base, &[root])).unwrap_or_default(), entry_index: support::catalog_entry_position(base, "StructTreeRoot") })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

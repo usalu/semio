@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "maximumEntries": 262144,
+  "metadataMaximumBytes": 1610612736,
+  "cases": [
+    {
+      "id": "former-file-bound",
+      "files": 131072,
+      "directories": 0,
+      "accepted": true
+    },
+    {
+      "id": "former-file-bound-plus-one",
+      "files": 131073,
+      "directories": 0,
+      "accepted": true
+    },
+    {
+      "id": "observed-production-cardinality",
+      "files": 136474,
+      "directories": 23737,
+      "accepted": true
+    },
+    {
+      "id": "complete-entry-bound",
+      "files": 262144,
+      "directories": 0,
+      "accepted": true
+    },
+    {
+      "id": "complete-entry-bound-plus-one",
+      "files": 262145,
+      "directories": 0,
+      "accepted": false
+    }
+  ]
+}

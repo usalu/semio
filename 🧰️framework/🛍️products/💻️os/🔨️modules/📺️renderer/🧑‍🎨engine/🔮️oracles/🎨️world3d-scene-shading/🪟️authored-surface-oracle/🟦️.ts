@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { renderWgpuTextured } from "../🧊️wgpu-shading-renderers/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -96,7 +98,7 @@ export async function runAuthoredSurfaceOracle(repoRoot: string, output: string)
   fixture.textureCases = oracleSurfaceCasesV1(surface).map(row => ({ ...row, preserveVertexColor: true, emissiveIntensity: 0 }));
   const shaderDirectory = join(output, "native-shader");
   await mkdir(shaderDirectory, { recursive: true });
-  await runOwnedCommand("bun", ["repo", "run", "@semio-tech/ui-rs:test", "--", "wgpu-engine", "long", "--offline", "a_native_gpu_context_creates_every_pipeline_without_a_validation_error"], repoRoot, "authored-surface-native-shader", 1200000, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: shaderDirectory, NEXTEST_SUCCESS_OUTPUT: "immediate" } });
+  await runOwnedCommand("repo", ["run", "@semio-tech/ui-rs:test", "--", "wgpu-engine", "long", "--offline", "a_native_gpu_context_creates_every_pipeline_without_a_validation_error"], repoRoot, "authored-surface-native-shader", 1200000, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: shaderDirectory, NEXTEST_SUCCESS_OUTPUT: "immediate" } });
   const shader = await readFile(join(shaderDirectory, "world3d-authored.wgsl"), "utf8");
   const mipShader=await readFile(join(shaderDirectory,"raster-mip.wgsl"),"utf8");
   const typescript = await import("typescript");
@@ -105,9 +107,9 @@ export async function runAuthoredSurfaceOracle(repoRoot: string, output: string)
   const declarations = syntax.statements.filter((statement) => typescript.isFunctionDeclaration(statement) && ["surfaceTuple", "worldSurfaceMaterial"].includes(statement.name?.text ?? ""));
   if (declarations.length !== 2) throw new Error("Production material constructor declarations were not found");
   const source = oracleBrowserDataPreludeV1()+'import * as THREE from "three";\nconst {MeshStandardMaterial, DoubleSide, FrontSide} = THREE;\n' + declarations.map((declaration) => declaration.getText(syntax)).join("\n") + '\nglobalThis.renderReference = ' + renderAuthoredSurfaceReference.toString() + ';\nglobalThis.renderNative = ' + renderWgpuTextured.toString();
-  const build = await Bun.build({ entrypoints: ["semio-authored-surface"], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "authored-surface", setup(builder) {
+  const build = await runtimeBundleV1({ entrypoints: ["semio-authored-surface"], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "authored-surface", setup(builder) {
     builder.onResolve({ filter: /^semio-authored-surface$/ }, () => ({ path: "semio-authored-surface", namespace: "oracle" }));
-    builder.onResolve({ filter: /^three$/ }, () => ({ path: Bun.resolveSync("three", repoRoot) }));
+    builder.onResolve({ filter: /^three$/ }, () => ({ path: runtimeResolveV1("three", repoRoot) }));
     builder.onLoad({ filter: /.*/, namespace: "oracle" }, () => ({ contents: source, loader: "tsx" }));
   } }] });
   if (!build.success) throw new Error(build.logs.map(String).join("\n"));

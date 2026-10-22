@@ -534,10 +534,10 @@ impl EditAudioWork {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
 
     fn apply_all(base: &WavSnapshot, mutations: &[WavMutation]) -> WavSnapshot {
-        mutations.iter().fold(base.clone(), |snapshot, mutation| protocol::apply_diff(<WavMutation as Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("planned mutation applies"))
+        mutations.iter().fold(base.clone(), |snapshot, mutation| protocol::apply_diff_cold(<WavMutation as ColdMutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("planned mutation applies"))
     }
 
     #[test]
@@ -551,7 +551,7 @@ mod tests {
         let mut edited = base.clone();
         let mut inverses = Vec::new();
         for mutation in &mutations {
-            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
+            inverses.push(<WavMutation as ColdMutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
             edited = apply_all(&edited, std::slice::from_ref(mutation));
         }
         let expected_data = fixture["insertChannel"]["expectedData"].as_array().expect("expected data").iter().map(|value| value.as_i64().expect("sample") as i16).collect::<Vec<_>>();
@@ -695,7 +695,7 @@ mod tests {
         let mut edited = base.clone();
         let mut inverses = Vec::new();
         for mutation in &mutations {
-            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
+            inverses.push(<WavMutation as ColdMutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
             edited = apply_all(&edited, std::slice::from_ref(mutation));
         }
         assert_eq!(edited.data, WavData::Pcm16(vec![2; channels]));

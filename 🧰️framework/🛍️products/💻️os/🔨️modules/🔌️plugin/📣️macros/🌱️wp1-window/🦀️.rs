@@ -167,8 +167,8 @@ macro_rules! window_transient_owners {
                 type Mutation = $mutation;
 
                 fn build_owners() -> $crate::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-                    let state = std::sync::Arc::new($crate::__value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-                    let mutation = std::sync::Arc::new($crate::__value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                    let state = std::sync::Arc::new($crate::__value::OwnedValueRetirementFactory::<Self::State>::default());
+                    let mutation = std::sync::Arc::new($crate::__value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                     let preparation = std::sync::Arc::new($crate::__kernel::ArtifactEphemeralTransferPreparationFactory::new($mutation::footprint, $mutation::into_state, state.clone(), mutation.clone()));
                     $crate::WindowTransientOwnerBundle::new(preparation, state, mutation)
                 }

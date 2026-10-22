@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyAnimation`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_animation::ApplyAnimation>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Animation(b) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyAnimation { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Animation(b) => <SemioAnimationMutation as ColdMutation<SemioAnimationSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyAnimation { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

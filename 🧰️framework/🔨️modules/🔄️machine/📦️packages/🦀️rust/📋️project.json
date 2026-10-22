@@ -23,7 +23,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

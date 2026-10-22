@@ -11,7 +11,6 @@ package contributors
 import (
 	context "context"
 	fmt "fmt"
-	exec "os/exec"
 	strings "strings"
 
 	model "github.com/usalu/semio/repo/model"
@@ -104,7 +103,7 @@ func (source *FsCheckpointSource) Log(limit *int) string {
 	if limit != nil {
 		args = append(args, fmt.Sprintf("-n%d", *limit))
 	}
-	command := exec.Command("git", args...)
+	command := workspace.ToolCommand("git", args...)
 	command.Dir = source.root
 	out, err := command.Output()
 	if err != nil {

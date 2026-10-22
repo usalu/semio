@@ -291,14 +291,6 @@ impl SubspaceWork {
     }
 }
 
-/// 📏️ Every dense subspace owner (`x`, `rhs`, `solved`, `b_basis`, `candidate_x`) is one
-/// `n × m` page of `f64`, and the narrowest admitted subspace is `m = p + 8 ≥ 9` columns, so this
-/// is the largest order any admitted problem can page — `reserve_matrix_owner` still prices the
-/// exact `n × m` product per owner. The fem3d demo hall alone is 132 free DOFs.
-const SUBSPACE_MINIMUM_COLUMNS: usize = 9;
-pub(super) const SUBSPACE_MAXIMUM_ORDER: usize = NUMERICAL_OWNER_PAGE_BYTES / size_of::<f64>() / SUBSPACE_MINIMUM_COLUMNS;
-pub(super) const SUBSPACE_MAXIMUM_COLUMNS: usize = 40;
-
 pub struct SubspaceIterationJob {
     pub(super) operation: Operation,
     pub(super) state: SubspaceCheckpoint,

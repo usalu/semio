@@ -1,8 +1,8 @@
 # 🪝️ Hooks
 
-The agent hook surface: the native events each IDE emits, their normalisation into one shape, the
+The agent hook surface: the native events each agent client emits, their normalisation into one shape, the
 tool-blocking policy, the plan and spec source resolution, the session log and the hook result
-formatting every editor reads back.
+formatting every agent client reads back.
 
 ## 📦️ Packages
 

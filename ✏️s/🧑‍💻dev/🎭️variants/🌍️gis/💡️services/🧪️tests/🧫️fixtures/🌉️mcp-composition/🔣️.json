@@ -9,49 +9,49 @@
       "target": "live-agent-loop-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts",
-      "command": "bun ./📜️script.ts live-agent-loop-check"
+      "command": "repo ./📜️script.ts live-agent-loop-check"
     },
     {
       "target": "hub-agent-participant-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️hub-agent-participant/🟦️.ts",
-      "command": "bun ./📜️script.ts hub-agent-participant-check"
+      "command": "repo ./📜️script.ts hub-agent-participant-check"
     },
     {
       "target": "plugin-coverage-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧩️plugin-coverage/🟦️.ts",
-      "command": "bun ./📜️script.ts plugin-coverage-check"
+      "command": "repo ./📜️script.ts plugin-coverage-check"
     },
     {
       "target": "user-path-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚶️user-path/🟦️.ts",
-      "command": "bun ./📜️script.ts user-path-check"
+      "command": "repo ./📜️script.ts user-path-check"
     },
     {
       "target": "inference-quartet-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💼️inference-quartet/🟦️.ts",
-      "command": "bun ./📜️script.ts inference-quartet-check"
+      "command": "repo ./📜️script.ts inference-quartet-check"
     },
     {
       "target": "security-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🛡️security/🟦️.ts",
-      "command": "bun ./📜️script.ts security-check"
+      "command": "repo ./📜️script.ts security-check"
     },
     {
       "target": "agent-reply-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts",
-      "command": "bun ./📜️script.ts agent-reply-check"
+      "command": "repo ./📜️script.ts agent-reply-check"
     },
     {
       "target": "untrusted-content-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧷️untrusted-content/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧷️untrusted-content/🟦️.ts",
-      "command": "bun ./📜️script.ts untrusted-content-check"
+      "command": "repo ./📜️script.ts untrusted-content-check"
     }
   ]
 }

@@ -83,7 +83,7 @@ export function readCargoLeafV1(value: unknown): CargoLeafV1 {
 /** 🗣️ The text of one message in a language, with its `{name}` holes filled. */
 export function cargoResolutionTextV1(policy: Pick<CargoResolutionPolicyV1, "messages">, key: keyof CargoResolutionMessagesV1["texts"], language: string, values: Readonly<Record<string, string>>): string {
   const texts = policy.messages.texts[key];
-  return (texts[language] ?? texts[policy.messages.languages[0]!] ?? "").replace(/\{(\w+)\}/gu, (_, name: string) => values[name] ?? "");
+  return (texts[language] as string).replace(/\{(\w+)\}/gu, (_, name: string) => values[name] ?? "");
 }
 /** 🌐️ The language of a message: the user's own when the document has it, else its first. */
 export const cargoResolutionLanguageV1 = (policy: Pick<CargoResolutionPolicyV1, "messages">, environment: Readonly<Record<string, string | undefined>>): string => resolveBuildHelpLanguageV1(policy.messages.languages, [], environment);

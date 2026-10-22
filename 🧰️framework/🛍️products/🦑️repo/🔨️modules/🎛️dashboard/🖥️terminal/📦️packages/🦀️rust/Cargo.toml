@@ -22,6 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+dashboard_source_view = { path = "../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view" }
+dashboard_feedback = { path = "../../📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
+dashboard_keymap_editor = { path = "../../⚙️settings/⌨️keymap/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-keymap-editor" }
 semio-framework-filesystem-workspace = { path = "../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
 dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 dashboard_cli = { path = "../../../🧭️cli/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-cli" }
@@ -43,6 +46,7 @@ semio-framework-ui-tui-vt = { path = "../../../../../../../🔨️modules/🖱�
 semio-framework-ui-tui-widgets = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+dashboard_source_view = { path = "../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view", features = ["testkit"] }
 dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

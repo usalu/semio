@@ -12,7 +12,7 @@
       "cache": false,
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
-        "command": "bun ./📜️script.ts deps"
+        "command": "repo ./📜️script.ts deps"
       },
       "metadata": {
         "semio": {
@@ -34,7 +34,7 @@
       "outputs": [],
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
-        "command": "bun ./📜️script.ts build lean"
+        "command": "repo ./📜️script.ts build lean"
       },
       "metadata": {
         "semio": {
@@ -58,7 +58,7 @@
       ],
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
-        "command": "bun ./📜️script.ts build 📯️notes"
+        "command": "repo ./📜️script.ts build 📯️notes"
       }
     },
     "build-proof": {
@@ -77,7 +77,7 @@
       ],
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
-        "command": "bun ./📜️script.ts build 🏆️proof"
+        "command": "repo ./📜️script.ts build 🏆️proof"
       }
     },
     "build": {
@@ -102,7 +102,7 @@
       "outputs": [],
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

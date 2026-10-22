@@ -27,4 +27,5 @@ semio-framework-trace = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
-semio-framework-job = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }

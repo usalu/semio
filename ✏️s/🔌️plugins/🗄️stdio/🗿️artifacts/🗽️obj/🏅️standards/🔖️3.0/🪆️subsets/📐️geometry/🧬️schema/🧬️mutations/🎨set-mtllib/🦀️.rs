@@ -20,18 +20,21 @@ pub struct SetMtllib {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetMtllib {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "mtllib", kind: "set-mtllib", record: "SetMtllib" };
 
-    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        let Self { mtllib } = self;
-        protocol::MutationOutcome::new(diff_set_mtllib(mtllib.clone()))
-    }
-    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-        Ok(vec![ObjMutation::SetMtllib(SetMtllib { mtllib: base.mtllib.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set mtllib", "mtllib setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetMtllib {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
+        let Self { mtllib } = self;
+        protocol::MutationOutcome::new(diff_set_mtllib(mtllib.clone()))
+    }
+    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
+        Ok(vec![ObjMutation::SetMtllib(SetMtllib { mtllib: base.mtllib.clone() })])
     }
 }
 //#endregion 🔖️Payload

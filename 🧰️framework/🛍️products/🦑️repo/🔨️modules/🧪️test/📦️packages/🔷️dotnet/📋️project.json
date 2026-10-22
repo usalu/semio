@@ -10,7 +10,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts deps"
+        "command": "repo ./📜️script.ts deps"
       },
       "metadata": {
         "semio": {
@@ -32,7 +32,7 @@
         "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       }
     }
   }

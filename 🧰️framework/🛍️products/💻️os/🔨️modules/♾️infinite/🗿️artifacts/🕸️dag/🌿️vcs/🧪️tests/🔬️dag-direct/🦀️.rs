@@ -1,8 +1,8 @@
 
 //! 🧬️ Direct DAG mutation leaves: roster, wire witnesses, codecs, inverses and wire index exactness through the artifact facade.
 use super::*;
-use crate::os_spr::Mutation;
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use crate::os_spr::{ColdMutation, Mutation};
+use crate::os_spr::{ColdMutationDiff,ColdDiffAlgebra};
 use crate::os_store::store_schema::ArtifactCommand;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};

@@ -68,7 +68,7 @@ test("defining clone contract bounds zero-sized runs and retains only initialize
 
 test("bulk native selector reaches the defining retained clone crate",()=>{
   const project=JSON.parse(readFileSync(new URL("../../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8"));
-  expect(project.targets["test-bulk-vec-retained-native"].options.command).toBe("bun ./📜️script.ts test-bulk-vec-retained native");
+  expect(project.targets["test-bulk-vec-retained-native"].options.command).toBe("repo ./📜️script.ts test-bulk-vec-retained native");
   const router=readFileSync(new URL("../../../📦️packages/🦀️rust/📜️script.ts",import.meta.url),"utf8");
   expect(router).toContain('.register("test-bulk-vec-retained",BulkVecRetainedCheckScript)');
   const start=router.indexOf("class BulkVecRetainedCheckScript"),owner=router.slice(start,router.indexOf("\nclass ",start+1));

@@ -9,7 +9,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type RefObject
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import { INPUT_COMMIT_CAPACITY_V1, inputCommitLaneV1 } from "../🎯️commit-lane/🟦️.ts";
 import { inputCommitReceiptMatchesPublicationV1, type InputOutcomeV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import {

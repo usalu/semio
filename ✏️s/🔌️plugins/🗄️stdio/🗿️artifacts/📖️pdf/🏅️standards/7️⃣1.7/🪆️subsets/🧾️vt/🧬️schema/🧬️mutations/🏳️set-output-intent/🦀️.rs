@@ -28,10 +28,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intent", kind: "set-output-intent", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT output intent \"{}\"", self.identifier), &format!("PDF/VT-Ausgabebedingung \"{}\" setzen", self.identifier))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.identifier.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetOutputIntent
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetOutputIntent> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_output_intent::RemoveOutputIntent>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::output_intent_rows(base, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE, &self.placements, self.entry_index)))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::output_intent_identifier(base) {
@@ -39,14 +51,6 @@ where
                 None => vec![Op::from(RemoveOutputIntent {})],
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT output intent \"{}\"", self.identifier), &format!("PDF/VT-Ausgabebedingung \"{}\" setzen", self.identifier))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.identifier.clone()]
     }
 }
 //#endregion 🔖️Mutation

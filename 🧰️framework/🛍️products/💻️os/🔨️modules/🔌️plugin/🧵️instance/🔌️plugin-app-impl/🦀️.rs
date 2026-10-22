@@ -1,6 +1,6 @@
 //! 🔌️ The `PluginApp` implementation of the mounted artifact instance with the framework-reserved settle helpers and the maintenance stage constants.
 
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
 use semio_framework_plugin_decl_views::media_contract::{ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework::{ActionKind, AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, Media, MediaClass, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, ViewModel};
 use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
@@ -31,7 +31,7 @@ use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use semio_framework::manifest::CommandAddress as ManifestCommandAddress;
 use std::mem::ManuallyDrop;
 use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_mounted_owner::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
 use protocol::OpText;
 use semio_framework_plugin_command::PURE_HISTORY_UNAVAILABLE_CODE;
@@ -45,7 +45,7 @@ use semio_framework_plugin_window_transient::built_to_component_tree;
 use store::os_store::document_materialize::create_document_envelope;
 use semio_framework_plugin_instance_dispatch::dispatch_emit;
 use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job_counted;
 use semio_framework_plugin_window_kits::{merge_ui_values, validate_ui_dispatch_classification};
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
@@ -82,7 +82,7 @@ mod render_surface;
 mod media_transfer;
 
 /// 🧪 Guest laws in dependent crates (puzzle 3d) settle Isolated reserved admits the host would.
-pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<InvocationResult,semio_framework_job::OriginalTurnFailure> {
+pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<InvocationResult,semio_framework_job::OriginalTurnFailure> {
     let Some((job, input)) = admitted.requested_effects.iter().find_map(|effect| match effect {
         Effect::SpawnJob { job, kind, input, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
         _ => None,
@@ -100,12 +100,12 @@ pub const FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS: usize = 4_096;
 /// 🪜️ Hands a finished reserved spawn-job to `app`'s commit queue and drives the commit one unit
 /// per call — the same units the reactor's typed-operation continuation runs across turns — to its
 /// outcome.
-pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, job: u64, output: Result<Vec<u8>, Fault>) -> Result<InvocationResult, Fault> {
+pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, job: u64, output: Result<Vec<u8>, Fault>) -> Result<InvocationResult, Fault> {
     if !app.pending.admit_framework_reserved_commit(&mut app.history, job, output)? {
         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"));
     }
     for _ in 0..FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS {
-        app.step_framework_reserved_commit().await?;
+        app.command_ctx().step_framework_reserved_commit().await?;
         if let Some(outcome) = app.pending.take_framework_reserved_commit_outcome() {
             return outcome;
         }
@@ -116,7 +116,7 @@ pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: SpaceMember + M
 /// 🧪 Browser `driveSpawnedJob` contract: the isolated reserved dummy job is admitted from its original request and driven
 /// by funded `step_job` turns to its terminal output, which is then settled through the reserved commit; the turn count is returned.
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub async fn drive_framework_reserved_spawn_like_host<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<(InvocationResult,u32),semio_framework_job::OriginalTurnFailure> {
+pub async fn drive_framework_reserved_spawn_like_host<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<(InvocationResult,u32),semio_framework_job::OriginalTurnFailure> {
     let Some((job, input)) = admitted.requested_effects.iter().find_map(|effect| match effect {
         Effect::SpawnJob { job, kind, input, .. } if kind == FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
         _ => None,
@@ -138,7 +138,7 @@ fn loaded_with_app_dialect<A: ArtifactApp>(mut envelope: ArtifactEnvelope<A::Sna
     envelope
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
     fn admit_cancellation_issuer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let parent=cx.original_source_parent()?;self.tools.tool_cancellations.admit_step(parent,cx)}
 
     fn mounted_owner_maintenance_phase(&self) -> Result<MountedOwnerPhaseV1, Fault> {
@@ -224,7 +224,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         let mut retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if self.interaction.local_interaction_query_receipt.is_some(){return Ok(())}
         if self.constructor.has_constructor_receipt() { return Ok(()); }
-        if self.constructor.store_constructor_is_pending() { ({ let __a0 = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, __a0) })?; return Ok(()); }
+        if self.constructor.store_constructor_is_pending() { ({ let __a0 = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, __a0) })?; return Ok(()); }
         if InstanceExtensions::holds_receipt(&self.time_travel, &self.tool_runs) || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tools.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
         if !self.pending.reserved_commits.is_empty() && self.pending.reserved_commit_outcome.is_none() {
             self.command_ctx().step_framework_reserved_commit().await?;
@@ -345,16 +345,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
 
     fn publish_local_interaction_query_reply(&mut self, frames: &mut Vec<Vec<u8>>, maximum_frames: usize) -> bool { self.publish_local_interaction_query_reply(frames, maximum_frames) }
 
+    fn typed_operation_result_page_demands(&self, receiver: u32) -> Result<RetirementDemand, Fault> {
+        let Some((_, operation_id)) = self.selected_typed_result_page(receiver) else { return Ok(Default::default()) };
+        let mut demand = self.tools.tool_operations.get(operation_id).expect("selected result owner remains mounted").result_page_presentation_demands().map_err(plugin_retirement_fault)?;
+        demand.copy_bytes = demand.copy_bytes.checked_add(std::mem::size_of::<usize>()).ok_or_else(|| plugin_sdk_fault("original result page cursor quote overflows"))?;
+        Ok(demand)
+    }
+
     fn take_typed_operation_result_page(&mut self, receiver: u32,grant:RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage> ,RetainedCloneProgress),Fault>{
-        let selected = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
-            let index = (self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            self.tools.tool_operations.entry(index).filter(|(_, operation)| operation.meta.instance_id == receiver && !operation.result_page_presented && operation.result_page.is_some()).map(|(id, _)| (index, *id))
-        });
+        let selected = self.selected_typed_result_page(receiver);
         let Some((index,operation_id))=selected else{return Ok((None,Default::default()))};let demand=self.typed_operation_result_page_demands(receiver)?;
         if !plugin_turn_admitted(demand,grant)?{return Ok((None,Default::default()))}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<usize>(),..grant};let(page,mut progress)=self.tools.tool_operations.get_mut(operation_id).expect("selected result owner remains mounted").take_result_page(child)?;
         if page.is_some(){self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-        progress.tools.copied_bytes+=std::mem::size_of::<usize>()
+        progress.copied_bytes+=std::mem::size_of::<usize>()
     ;}Ok((page,progress))
     }
 
@@ -430,11 +434,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> { self.handle_action_invocation(address, source_args, original_fault, active_mode_id, meta, identity, cx).await }
 
     async fn handle_response_action(&mut self, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
-        if !self.tool_machines.ingress.action_source_capture_ready(action, cx){return Ok(None)}
+        if !self.ingress.action_source_capture_ready(action, cx){return Ok(None)}
         let definition = self.tools.registry.app_command(action).await.ok_or_else(|| plugin_sdk_fault(format!("continuation command '{action}' is not owned by the receiving app")))?;
         validate_ui_dispatch_classification("receiving app", action, definition.semantics.execution.interactive_job)?;
         let kind = definition.kind;
-        let Some(command) = self.tool_machines.ingress.receive_action_command(action, args, original_fault, cx).await? else { return Ok(None) };
+        let Some(command) = self.ingress.receive_action_command::<A>(action, args, original_fault, cx).await? else { return Ok(None) };
         let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
         let admission = self.tools.admit_command_wire(&self.stores, action, &wire, 1).await?;
         self.media.require_complete_tool_operation_pipeline(&admission)?;
@@ -470,9 +474,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             return Err((Fault::new(FaultOrigin::App, FaultCode::new("app.intent.version-mismatch"), format!("intent action '{verb}' targets version {} but the intent bridge only resolves version-1 actions", intent.action.version))).into());
         }
         let _ = self.tools.qualified_tool_proof(&self.stores, verb)?;
-        if !self.tool_machines.ingress.action_source_capture_ready(verb, cx){return Ok(None)}
-        let mut merged = if self.tool_machines.ingress.action_source_pending(){None}else{merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?};
-        let Some(command)=self.tool_machines.ingress.receive_action_command(verb, &mut merged, &mut None, cx).await?else{return Ok(None)};
+        if !self.ingress.action_source_capture_ready(verb, cx){return Ok(None)}
+        let mut merged = if self.ingress.action_source_pending(){None}else{merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?};
+        let Some(command)=self.ingress.receive_action_command::<A>(verb, &mut merged, &mut None, cx).await?else{return Ok(None)};
         self.dispatch_ctx().dispatch_typed(command, meta, identity, cx).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
@@ -748,7 +752,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         A::app_catalogue_json().await
     }
 
-    async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> { self.pending_effects(view).await }
+    async fn pending_effects(&mut self, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<Effect>, Fault> { self.pending_effects(view, cx).await }
 
     async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> { self.context_menu(request, view_state).await }
 
@@ -781,10 +785,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         }
         self.render_ctx().refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);let parent_document_id=self.stores.store.envelope().id.clone();
-        let VcsArtifactApp{app:_,cache,child_content_root,transient_store,instance_operation_owner,..}=self;
-        let(_,snapshot,config,history)=cache.as_ref().expect("cache refreshed above");
-        let doc=ArtifactView::with_render_context(snapshot.as_ref(),history.as_ref(),ChildContentView::clone(child_content_root),render_operation,parent_document_id,None).await.with_instance(instance_operation_owner.clone());let _cfg=ConfigView{snapshot:config.as_ref(),window:None};let transient=transient_store.current_root();
-        match A::export_media_with_request_context(instance_operation_owner,port,&doc,&TransientView{snapshot:transient.as_ref(),window:None}).await{Ok(media)=>Ok(Some(media)),Err(source)=>self.media.retain_media_submission_refusal(source, cx)}
+        let VcsArtifactApp{app:_,history:command_history,child_composition,stores,tools,..}=self;
+        let(_,snapshot,config,history)=command_history.cache.as_ref().expect("cache refreshed above");
+        let doc=ArtifactView::with_render_context(snapshot.as_ref(),history.as_ref(),ChildContentView::clone(&child_composition.child_content_root),render_operation,&parent_document_id,None).await.with_instance(tools.instance_operation_owner.clone());let _cfg=ConfigView{snapshot:config.as_ref(),window:None};let transient=stores.transient_store.current_root();
+        match A::export_media_with_request_context(&tools.instance_operation_owner,port,&doc,&TransientView{snapshot:transient.as_ref(),window:None}).await{Ok(media)=>Ok(Some(media)),Err(source)=>self.media.retain_media_submission_refusal(source, cx)}
     }
 
     async fn submit_media_export(&mut self,port:&str,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -832,10 +836,19 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.render_ctx().refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, cache, child_content_root, instance_operation_owner, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await.with_instance(instance_operation_owner.clone());
+        let VcsArtifactApp { app: _, history: command_history, child_composition, tools, .. } = self;
+        let (_, snapshot, config, history) = command_history.cache.as_ref().expect("cache refreshed above");
+        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&child_composition.child_content_root), render_operation, &parent_document_id, None).await.with_instance(tools.instance_operation_owner.clone());
         let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
         A::media_fingerprint(port, &doc).await
+    }
+}
+
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    fn selected_typed_result_page(&self, receiver: u32) -> Option<(usize, u64)> {
+        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
+            let index = (self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            self.tools.tool_operations.entry(index).filter(|(_, operation)| operation.meta.instance_id == receiver && !operation.result_page_presented && operation.result_page.is_some()).map(|(id, _)| (index, *id))
+        })
     }
 }

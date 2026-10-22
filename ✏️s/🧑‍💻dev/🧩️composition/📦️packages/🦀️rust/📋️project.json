@@ -19,7 +19,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -29,7 +29,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -39,7 +39,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick",
+        "command": "repo ./📜️script.ts test quick",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -56,7 +56,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test generation2d-example-export",
+        "command": "repo ./📜️script.ts test quick --test generation2d-example-export",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -66,7 +66,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test sequence-runtime",
+        "command": "repo ./📜️script.ts test quick --test sequence-runtime",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -76,7 +76,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test generation3d-example-geometry",
+        "command": "repo ./📜️script.ts test quick --test generation3d-example-geometry",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -86,7 +86,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test generation3d-incremental-eval",
+        "command": "repo ./📜️script.ts test quick --test generation3d-incremental-eval",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -96,7 +96,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test generation3d-app-laws",
+        "command": "repo ./📜️script.ts test quick --test generation3d-app-laws",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -106,7 +106,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test retained-artifact-units",
+        "command": "repo ./📜️script.ts test quick --test retained-artifact-units",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },

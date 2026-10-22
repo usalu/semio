@@ -1,0 +1,107 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [],
+ "edited": [
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts",
+   "after": "f5cf4ef41f9336056492d5af4f2071826410c6d1807591e4899578f2b23139e7",
+   "base": "c5af6cf05f6cb6ab35ce6c56c62275acda742e6d4a6a3eb746fcc40722c87b5f"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🧪️tests/🟦️.ts",
+   "after": "190a7303071ed5ba464ae965f72f18942e9a2489746f8c2f238e6722fdbce72a",
+   "base": "965fe76e79ec30c60174cd5b3c3cfd91a9b1b85756e43eec6770e83795e1d75f"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🧪️tests/🟦️.ts",
+   "after": "ab10fd71fc22d7baf8c86636cf0e80c6479ce34248082146358da1db308d62fb",
+   "base": "f6d0fa452816a98d05069556db0a059e1fa199e9c0c74b852b35f8f40313a645"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts",
+   "after": "8be6cd484557fc02c9a4dda6668d0dd83b2a7a92f3437d7665cab07aa5814779",
+   "base": "7bea82b1b4ac452577e27fd8bfbf53c2f55e51bdd851a02759c270eef299b8e3"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts",
+   "after": "35620e561591150fdb5bdd0541533812ecec75eecd521b3761ee760dbaf9b356",
+   "base": "e0bea1ad7b26ff52e4e0e56ba24ca179f40f105e5e23750401afa93602f482cb"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts",
+   "after": "bf6ea95e1fca3bf3b1599868cc8700c7589d794db5c4c4aab5127164d049cf22",
+   "base": "e8353f43bcbee9951338e6e2373115ca2cf2af9a1edf648deb7720c37771902a"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🧪️tests/🟦️.ts",
+   "after": "14b2c846b3ca75ba3c181411dd9f409c97f47d97f5c3141d5becab636fd6c478",
+   "base": "ad4cf5512d406c3f3cf6319859af3ad8ce3dc75d23d0554237c5dd5a5735f175"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "d4da53cc24ed81e10d08b8fb4643fd4695ed82104ba572210b3e7b6e55e2dd94",
+   "base": "fd8c91e6907032b91584228aabab956b29e270f9c0ef05c52b4184c5e3e84a42"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts",
+   "after": "93cf4e254b09cb2633394ec7aed2336d31681091a4883013cffef2a0cc35d05e",
+   "base": "ce3a75d46e0336504928e51b0075e6aa28e992104aa22ee49e396cac80cb02a3"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts",
+   "after": "a90de803c52369be3307a88dfa299898e64edf4b18293d60d6f4cf03f90a398a",
+   "base": "d64bb39423113ce33386a1d386eceb09b85066de9785f73f8c433de4517b0a3f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/⌨️command/🟦️.ts",
+   "after": "852bffea8df4adf8109f02b20c1d6e52679c6bfdf41fd86de8c3ad5d934999d5",
+   "base": "486fc586595555117c363c76841f2268504cef6c857ab1834ba09d916f334377"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/⌨️command/🟨️.mjs",
+   "after": "9ea02449e99d4ab4436d50db4ef44e5cfa2a6128b84d7a8541688cf5035c73e2",
+   "base": "1f068c1f6b4eb26daa29fb9b010b52e3854584c186e0eee3c67e8d9460610626"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🟨️.mjs",
+   "after": "475e58f7aac7b67cc7ead73dde2e28897c530949a7feea80cc59d5c302c3bc23",
+   "base": "76da06fef22ebaeeaa31fd054ac01f49beb54540053e3a77d7adb6dcca445661"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/🎚️policy/🟨️.d.mts",
+   "after": "b05d2757b324a09bdee1a916666fb37f85db28307535cd00361166a52ca3a432",
+   "base": "ac0d9a4c2ec8bb152318d83437413cb298574af3eb7bb3997612a09ebc827c47"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/🎚️policy/🟨️.mjs",
+   "after": "13b24123c17050c7cf29a456361d9ca29de9ac25fbef92adbd3b79493d1bef47",
+   "base": "e565dfef937bae9f01ac4c7b458b14944944a090192aed4a442875090a70136c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🟨️.mjs",
+   "after": "ecf13450db6f0369ae8598f12c483c3433fcacd3ffb786875e1c8ba54355af34",
+   "base": "aa037fd7e6c8fdd7b87b51d24cdaf8e737bff7c5e6ba09ebbe5637d7d1a96121"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/⌨️command/🟦️.ts",
+   "after": "6edf20586e5c8a8606a21921b3036d861d8d8e88db1821645f12946eb3a66a38",
+   "base": "47a2b3ce91ca23e49e8f18685c5047a81222203e388a8341c2460dcad7430608"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🟦️.ts",
+   "after": "69f39b12360b61cfde8a6636dc321564c85dbf72fe0b5fde0d7b25cb1527ba83",
+   "base": "7d83b91bd3036af229c891eee344824fc80bf333c881d634f2b3349b4f7d9051"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/⌨️command/🟦️.ts",
+   "after": "0ececadcd1deeca9b1eb93bfb21ad3a6c9a07fb0c5970413132d1b20a5edc4a8",
+   "base": "26c1edb0cd4b42829573b55f0d8ea669dabb96755926d5e471b9fc6597d4f8f6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🟦️.ts",
+   "after": "50fe831d10f479e260e90b217f7d70c4e3f1535f9f0345a694a8596992ba9459",
+   "base": "9550c4df8da018a4d815a51cd916576807b6bbdc8ea3212537fd2484ebb0dc20"
+  }
+ ]
+}

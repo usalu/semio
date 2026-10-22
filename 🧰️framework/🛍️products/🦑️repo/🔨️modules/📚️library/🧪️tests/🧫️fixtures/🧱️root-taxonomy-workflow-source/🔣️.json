@@ -295,6 +295,6 @@
   ],
   "route": {
     "target": "test-root-taxonomy-workflow-source",
-    "command": "bun ./📜️script.ts test root-taxonomy-workflow-source"
+    "command": "repo ./📜️script.ts test root-taxonomy-workflow-source"
   }
 }

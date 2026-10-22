@@ -36,3 +36,7 @@ pub use payload_builder::{JobPayloadAuthority, OriginalPayloadBuilderIdentity, O
 #[path = "../../../../♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs"]
 mod payload_owner_retirement;
 pub use payload_owner_retirement::{close_ledger, ledger_demands};
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

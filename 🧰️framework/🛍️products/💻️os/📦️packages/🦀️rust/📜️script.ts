@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { StableIdentityCheckScript } from "./🎛️commands/📸️snapshot-checks/🟦️.ts";
 import { DiagnosticAdmissionCheckScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
 import { OwnedReplayCheckScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
@@ -26,7 +26,7 @@ import { SpaceHistorySqliteNativeTestScript, SpaceHistorySqliteSourceTestScript,
 import { CodecSendSourceScript, GroupVisibilitySourceScript, BackboneDetachSourceScript, MemberDialectSourceScript, MemberInputCensusSourceScript, MemberGroupPublicationSourceScript, MemberDialectCheckScript } from "./🎛️commands/👥️member-dialect-checks/🟦️.ts";
 import { ScalarWireSourceScript, PackSingleOwnerSourceScript, CanonicalArchitectureScript, CommandTransportSourceTestScript, CommandTransportNativeTestScript, ListRecordNativeTestScript, ComposedPackSchemaTestScript, IeeePayloadNativeTestScript, IeeePayloadSourceTestScript, IntrinsicRetirementNativeTestScript, BorrowedKeyIndexNativeTestScript, AssemblyLifetimeNativeTestScript, GenerateJcoPackageAdapterScript, PreviewGeneratedScript, CheckJcoPackageAdapterScript, CommandIngressConsumerScript, DslArchitectureProofScript, ArtifactKindNativeScript, ReturnedReadCustodyScript, ReturnedReadFactoryMountScript, NativeEditMetadataSourceScript, SyncActorIdentitySourceScript, CanonicalPreparationControlSourceScript, ConfigPagedSourceScript, OriginalCleanupContextNativeScript, CrateBoundariesSourceScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
 
-const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-consumer",CommandIngressConsumerScript)
+const router = new ScriptRouter(import.meta.dirname).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("check", CheckScript)
   .register("retained-clone-check", RetainedCloneCheckScript)
   .register("test", TestScript)

@@ -1,0 +1,9 @@
+# Prospective Source311 Policy Review
+
+One concrete count correction is required: the proposal declares344 critical paths, but its actual criticalPaths list contains341 unique paths. Adding21 new Source witnesses to290 yields311, while only18 are new to critical custody. The other three were already critical: MCP project.json, build/📜️script.ts and native storage/🍎️image/🟦️.ts. No duplicate or dropped path exists; the correct current critical count is341 unless three additional genuine witnesses are intentionally added. All roster schema copies consistently contain341, so this is a summary/count declaration discrepancy, not missing new witness joins.
+
+All four strict Ajv schemas compile. Combined/derive case DATA validate through exact definitions/$ref wrappers; derive Source has zero parse diagnostics. All21 new Source witnesses occur in both rosters, every Source path is critical, required/properties and derive criticalPaths agree, and no prior Source, critical member or phase was dropped.
+
+The47 phases total14,995,000 with162 Source titles and166 collection vectors. The new two-law phase180,000/CLI60,000 retains60,000 margin. Parent15,085,000, worker15,895,000 and host minimum16,015,000 preserve90,000/810,000/120,000 margins. Prefix5,610,000/public21,600,000/historical285 negative remain unchanged. Those checks are clear; final prospective clearance is pending the critical count correction. No Source, metadata or Native action occurred. Exact audit facts are in `🗑️generated/2026-10-22-source311-policy-independent-review.json`.
+
+The corrected same-path proposal now declares341 critical paths, matching341 unique actual entries and schema lists. This resolves the sole count discrepancy; prior schema/case/phase/budget checks stand. Source311/critical341 is prospectively clear, without assuming a fixed Source-to-critical offset or publishing runnable metadata.

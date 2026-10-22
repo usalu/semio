@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph farm law fixture / Gesetz der Arbeitsprozesse",
+  "description": "EN: Closed tables of the farm sizing, the language choice, the rendered texts, the worker heap environment and the intern tables, with the answers of an independent model. DE: Geschlossene Tabellen der Dimensionierung, Sprachwahl, Texte, Heap-Umgebung und Verweistabellen mit den Antworten eines unabhängigen Modells.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "policy", "messages", "plan", "languages", "messageCases", "runtime", "tables", "expect"],
+  "properties": {
+    "version": { "const": 1 },
+    "policy": { "type": "object" },
+    "messages": { "type": "object" },
+    "plan": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input"], "properties": { "name": { "type": "string" }, "input": { "type": "object", "additionalProperties": false, "required": ["projects", "host"], "properties": { "projects": { "type": "integer", "minimum": 0 }, "host": { "type": "object", "additionalProperties": false, "required": ["cores", "totalMegabytes"], "properties": { "cores": { "type": "integer", "minimum": 1 }, "totalMegabytes": { "type": "integer", "minimum": 1 }, "availableMegabytes": { "type": "integer", "minimum": 0 } } }, "parentMegabytes": { "type": "number", "minimum": 0 }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } } } } } },
+    "languages": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "environment"], "properties": { "name": { "type": "string" }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } } } },
+    "messageCases": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "key", "fields", "environment"], "properties": { "name": { "type": "string" }, "key": { "enum": ["starting", "serial", "fallback", "recycled", "finished"] }, "fields": { "type": "object", "additionalProperties": { "type": ["string", "number"] } }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } } } },
+    "runtime": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "runtime", "megabytes"], "properties": { "name": { "type": "string" }, "runtime": { "type": "string" }, "megabytes": { "type": "integer", "minimum": 1 } } } },
+    "tables": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "batches"], "properties": { "name": { "type": "string" }, "batches": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } } } } },
+    "expect": { "type": "object", "additionalProperties": false, "required": ["plan", "languages", "messages", "runtime", "tables"], "properties": { "plan": { "type": "array" }, "languages": { "type": "array" }, "messages": { "type": "array" }, "runtime": { "type": "array" }, "tables": { "type": "array" } } }
+  }
+}

@@ -47,14 +47,14 @@ pub use tasks_results_and_census::{DbIoBackendControl, DbIoLeaseResult, DbIoResu
 #[path = "🚦️executor-driver-and-faults/🦀️.rs"]
 mod executor_driver_and_faults;
 pub use executor_driver_and_faults::{
-    db_io_backend_parts, DbIoAsyncDriverFuture, DbIoAsyncDriverOutput, DbIoAsyncDriverRuntime, DbIoExecutionStep, DbIoExecutorMode, DbIoFault, DbIoFaultCause, DbIoFaultKind,
-    DbIoTaskExecutor, DbIoTerminal, DbIoWriterReleaseStep,
+    db_io_backend_parts, DbIoAsyncDriverFuture, DbIoAsyncDriverOutput, DbIoAsyncDriverRuntime, DbIoExecutionStep, DbIoExecutorMode, DbIoFault, DbIoFaultCause, DbIoFaultCustody, DbIoFaultKind,
+    db_io_fault_custody_reserve, db_io_fault_custody_take, DB_IO_FAULT_CUSTODY, DB_IO_FAULT_CUSTODY_SLOTS, DB_IO_FAULT_CUSTODY_STATIC_BACKING_BYTES, DbIoFaultCustodyArena, DbIoFaultCustodyCell, DbIoTaskExecutor, DbIoTerminal, DbIoWriterReleaseStep,
 };
 
 #[path = "🧺️task-slots-lost-owners-and-admission/🦀️.rs"]
 mod task_slots_lost_owners_and_admission;
 pub use task_slots_lost_owners_and_admission::{
-    db_io_admission_released, db_io_enqueue_close, db_io_error_text, db_io_park_lost_owner, db_io_result_handback, db_io_result_lease_credit, db_io_slot_matches, db_io_task_arena,
+    db_io_admission_released, db_io_enqueue_close, db_io_error_text, db_io_park_lost_owner, db_io_request_lost_owner_maintenance, db_io_result_handback, db_io_result_lease_credit, db_io_slot_matches, db_io_task_arena,
     db_io_text_literal, db_io_try_park_lost_owner, DbIoLostOwner, DbIoResultHandback, DbIoResultLease, DbIoTaskHandle, DbIoTaskSlot, DB_IO_ADMISSION_EPOCH,
     DB_IO_ADMISSION_WAITER_TABLE, DB_IO_ADMISSION_WAITING, DB_IO_BACKEND_CREDIT_EXHAUSTED, DB_IO_LOST_OWNERS, DB_IO_LOST_OWNER_OVERFLOW, DB_IO_LOST_OWNER_OVERFLOW_SLOTS,
     DB_IO_LOST_OWNER_QUARANTINE, DB_IO_LOST_OWNER_SLOTS, DB_IO_LOST_OWNER_WAKE_REQUESTED, DB_IO_PROCESS_CREDIT_EXHAUSTED, DB_IO_PROCESS_PAGES_EXHAUSTED,

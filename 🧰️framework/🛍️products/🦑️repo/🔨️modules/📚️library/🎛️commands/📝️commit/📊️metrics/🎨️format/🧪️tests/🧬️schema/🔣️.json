@@ -1,0 +1,302 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "constants",
+  "count",
+  "ratio",
+  "slug",
+  "round",
+  "body",
+  "suffix",
+  "bundle"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "constants": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "header",
+    "tokens",
+    "symbols"
+   ],
+   "properties": {
+    "header": {
+     "type": "string"
+    },
+    "tokens": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "uloc",
+      "size"
+     ],
+     "properties": {
+      "uloc": {
+       "type": "string"
+      },
+      "size": {
+       "type": "string"
+      }
+     }
+    },
+    "symbols": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "count": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "n",
+     "loc",
+     "size"
+    ],
+    "properties": {
+     "n": {
+      "type": "number"
+     },
+     "loc": {
+      "type": "string"
+     },
+     "size": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "ratio": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "n",
+     "expected"
+    ],
+    "properties": {
+     "n": {
+      "type": "number"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "slug": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "lang",
+     "expected"
+    ],
+    "properties": {
+     "lang": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "round": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "n",
+     "digits",
+     "expected"
+    ],
+    "properties": {
+     "n": {
+      "type": "number"
+     },
+     "digits": {
+      "type": "integer"
+     },
+     "expected": {
+      "type": "number"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "body": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "code",
+     "added",
+     "edited",
+     "removed",
+     "expected"
+    ],
+    "properties": {
+     "kind": {
+      "enum": [
+       "uloc",
+       "size"
+      ]
+     },
+     "code": {
+      "type": "number"
+     },
+     "added": {
+      "type": "integer"
+     },
+     "edited": {
+      "type": "integer"
+     },
+     "removed": {
+      "type": "integer"
+     },
+     "langEmoji": {
+      "type": "string"
+     },
+     "langSlug": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "suffix": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "delta",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "edited",
+       "removed"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "bundle": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "ulocDelta",
+     "sizeDelta",
+     "ulocBloc",
+     "sizeBloc",
+     "expected"
+    ],
+    "properties": {
+     "ulocDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "edited",
+       "removed"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "sizeDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "edited",
+       "removed"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "ulocBloc": {
+      "type": "number"
+     },
+     "sizeBloc": {
+      "type": "number"
+     },
+     "langEmoji": {
+      "type": "string"
+     },
+     "langSlug": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

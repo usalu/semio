@@ -2,7 +2,7 @@
 use semio_framework_plugin_window_config::{WindowConfigReplaceEdit, WindowConfigReplaceMutation};
 use crate::window_config_tests::retained_pack_load_tests::{RetainedLoadCameraConfig as State, RetainedLoadCameraConfigMutation as Mutation};
 use semio_framework_os_kernel as store;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
+use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use std::sync::Arc;
 use semio_framework_os_kernel::snapshot_clone_preparation::{drive_one_item_preparation_law, RetainedCloneEdit, CONFIG_EDIT_RETAINED_BASELINE_BYTES};
 

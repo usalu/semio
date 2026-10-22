@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "parse": [
+  {
+   "name": "a document with workspaces",
+   "source": "{\"name\":\"root\",\"version\":\"1.0.0\",\"workspaces\":[\"a\",\"b\"],\"scripts\":{\"x\":\"y\"}}",
+   "workspaces": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "name": "a document without workspaces",
+   "source": "{\"name\":\"root\"}",
+   "workspaces": []
+  },
+  {
+   "name": "unrelated fields keep their order",
+   "source": "{\"z\":1,\"workspaces\":[\"q\"],\"a\":{\"deep\":[1,2,{\"k\":null}]},\"m\":\"é\"}",
+   "workspaces": [
+    "q"
+   ]
+  }
+ ],
+ "rejects": [
+  {
+   "name": "an array",
+   "source": "[]",
+   "message": "Root package.json must contain an object"
+  },
+  {
+   "name": "null",
+   "source": "null",
+   "message": "Root package.json must contain an object"
+  },
+  {
+   "name": "a string",
+   "source": "\"x\"",
+   "message": "Root package.json must contain an object"
+  },
+  {
+   "name": "a number",
+   "source": "7",
+   "message": "Root package.json must contain an object"
+  },
+  {
+   "name": "workspaces as an object",
+   "source": "{\"workspaces\":{\"a\":1}}",
+   "message": "workspaces must be a string array"
+  },
+  {
+   "name": "workspaces with a number",
+   "source": "{\"workspaces\":[\"a\",1]}",
+   "message": "workspaces must be a string array"
+  },
+  {
+   "name": "workspaces as a string",
+   "source": "{\"workspaces\":\"a\"}",
+   "message": "workspaces must be a string array"
+  },
+  {
+   "name": "invalid JSON",
+   "source": "{",
+   "message": ""
+  }
+ ],
+ "render": [
+  {
+   "source": "{\"name\":\"root\",\"version\":\"1.0.0\"}",
+   "workspaces": [
+    "a",
+    "b/c"
+   ],
+   "expected": "{\n  \"name\": \"root\",\n  \"version\": \"1.0.0\",\n  \"workspaces\": [\n    \"a\",\n    \"b/c\"\n  ]\n}\n"
+  },
+  {
+   "source": "{\"workspaces\":[\"old\"],\"x\":1}",
+   "workspaces": [],
+   "expected": "{\n  \"workspaces\": [],\n  \"x\": 1\n}\n"
+  },
+  {
+   "source": "{\"a\":{\"b\":[1,{\"c\":true}]},\"workspaces\":[\"x\"],\"é\":\"ü\"}",
+   "workspaces": [
+    "y",
+    "z"
+   ],
+   "expected": "{\n  \"a\": {\n    \"b\": [\n      1,\n      {\n        \"c\": true\n      }\n    ]\n  },\n  \"workspaces\": [\n    \"y\",\n    \"z\"\n  ],\n  \"é\": \"ü\"\n}\n"
+  }
+ ]
+}

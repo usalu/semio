@@ -7,7 +7,7 @@
     "test-command-composition-source": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts test command-composition-source",
+        "command": "repo ./📜️script.ts test command-composition-source",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -19,7 +19,7 @@
     "test-discover": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts discover",
+        "command": "repo ./📜️script.ts discover",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -46,7 +46,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts contract",
+        "command": "repo ./📜️script.ts contract",
         "forwardAllArgs": true
       }
     },
@@ -55,7 +55,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts oracle",
+        "command": "repo ./📜️script.ts oracle",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -75,7 +75,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts subject",
+        "command": "repo ./📜️script.ts subject",
         "forwardAllArgs": true
       }
     },
@@ -84,7 +84,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts parity",
+        "command": "repo ./📜️script.ts parity",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -98,14 +98,14 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts report",
+        "command": "repo ./📜️script.ts report",
         "forwardAllArgs": true
       },
       "inputs": [
         "default",
         "^default",
         {
-          "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📤️results.jsonl"
+          "runtime": "repo tools exec --light node -- -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📤️results.jsonl"
         }
       ],
       "outputs": [
@@ -116,7 +116,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean",
+        "command": "repo ./📜️script.ts clean",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -135,7 +135,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts dependency",
+        "command": "repo ./📜️script.ts dependency",
         "forwardAllArgs": true
       }
     },
@@ -143,7 +143,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts doctor",
+        "command": "repo ./📜️script.ts doctor",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -156,7 +156,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts inventory",
+        "command": "repo ./📜️script.ts inventory",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -169,7 +169,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test schema",
+        "command": "repo ./📜️script.ts test schema",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -193,7 +193,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-inputs",
+        "command": "repo ./📜️script.ts schema mutation-inputs",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -208,7 +208,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-inputs --census",
+        "command": "repo ./📜️script.ts schema mutation-inputs --census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -223,7 +223,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-payloads",
+        "command": "repo ./📜️script.ts schema mutation-payloads",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -238,7 +238,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-payloads --census",
+        "command": "repo ./📜️script.ts schema mutation-payloads --census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -253,7 +253,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-labels",
+        "command": "repo ./📜️script.ts schema mutation-labels",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -268,7 +268,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-labels --census",
+        "command": "repo ./📜️script.ts schema mutation-labels --census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -283,7 +283,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema fault-notices",
+        "command": "repo ./📜️script.ts schema fault-notices",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -298,7 +298,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema fault-notices --census",
+        "command": "repo ./📜️script.ts schema fault-notices --census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -313,7 +313,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-editability",
+        "command": "repo ./📜️script.ts schema mutation-editability",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -328,7 +328,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts schema mutation-editability --census",
+        "command": "repo ./📜️script.ts schema mutation-editability --census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -343,7 +343,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts test mutation-payload-parity",
+        "command": "repo ./📜️script.ts test mutation-payload-parity",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -358,7 +358,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts test fault-notices-gate",
+        "command": "repo ./📜️script.ts test fault-notices-gate",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -373,7 +373,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts test mutation-history-gates",
+        "command": "repo ./📜️script.ts test mutation-history-gates",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -383,7 +383,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts fixture verify",
+        "command": "repo ./📜️script.ts fixture verify",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -403,7 +403,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts fixture audit",
+        "command": "repo ./📜️script.ts fixture audit",
         "forwardAllArgs": true
       }
     },
@@ -411,7 +411,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts fixture reproduce",
+        "command": "repo ./📜️script.ts fixture reproduce",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -424,7 +424,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts fixture generate",
+        "command": "repo ./📜️script.ts fixture generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -437,7 +437,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts probe",
+        "command": "repo ./📜️script.ts probe",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -455,7 +455,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts matrix",
+        "command": "repo ./📜️script.ts matrix",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -464,7 +464,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts gc",
+        "command": "repo ./📜️script.ts gc",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -478,7 +478,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts run",
+        "command": "repo ./📜️script.ts run",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -526,7 +526,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts acceptance goal",
+        "command": "repo ./📜️script.ts acceptance goal",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -540,7 +540,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts acceptance plan",
+        "command": "repo ./📜️script.ts acceptance plan",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -560,14 +560,14 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts inventory-provider-check"
+        "command": "repo ./📜️script.ts inventory-provider-check"
       }
     },
     "test-artifact-root-source": {
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test artifact-root-source",
+        "command": "repo ./📜️script.ts test artifact-root-source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -585,7 +585,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test oracle-source-ownership",
+        "command": "repo ./📜️script.ts test oracle-source-ownership",
         "forwardAllArgs": true
       },
       "inputs": [

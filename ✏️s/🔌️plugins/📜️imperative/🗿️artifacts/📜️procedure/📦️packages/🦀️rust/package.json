@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-procedure-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/imperative-procedure-rs:verify-procedure-document-contract"
+    "verify-procedure-document-contract": "repo run @semio-tech/imperative-procedure-rs:verify-procedure-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

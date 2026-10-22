@@ -5,8 +5,8 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-json-rs:test-ownership",
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-pack-json-rs:test-native"
+    "test-ownership": "repo run @semio-tech/framework-pack-json-rs:test-ownership",
+    "test-native": "repo run @semio-tech/framework-pack-json-rs:test-native"
   },
   "devDependencies": {
     "@semio-tech/pack-json-decode-ts": "workspace:*",

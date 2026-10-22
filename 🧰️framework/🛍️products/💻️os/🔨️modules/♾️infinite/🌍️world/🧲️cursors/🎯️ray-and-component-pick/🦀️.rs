@@ -22,7 +22,7 @@ pub enum WorldRayPickPurpose {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct WorldRayHitRef {
+pub struct WorldRayHitRef {
     pub mesh: WorldInteractionMeshToken,
     pub draw: u16,
     pub instance: u16,

@@ -6,8 +6,9 @@ import {requireIssuedScriptInvocationV1,receiveScriptProcessInvocation,scriptInv
 import type {ScriptInvocation} from "../../../🧭️routing/📥️invocation/🟦️.ts";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {acquireCompilerCapacityLeaseV1} from "../🟦️.ts";
-import { spawnToolV1 } from "../../../📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { startToolV1 } from "../../../📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📋️ Declares a finite paid process plan before its custodian acquires actual host capacity. */
 export type PaidProcessCustodianPlanV1=Readonly<{version:1;coverage:"direct-child";directory:string;parallelism:number;jobs:readonly Readonly<{program:string;args:readonly string[];cwd:string;parallelism:number;output:Readonly<{maximumBytes:number;maximumLines:number}>}>[]}>;
@@ -64,7 +65,7 @@ export async function servePaidProcessCustodianV1():Promise<void>{
 export function withPaidProcessCustodianV1<T>(original:ScriptInvocation,declaration:PaidProcessCustodianPlanV1,run:(port:PaidProcessCustodianPortV1)=>Promise<T>):Promise<T>{
  requireIssuedScriptInvocationV1(original);const plan=readPaidProcessCustodianPlanV1(declaration);
  return withIssuedResourceControlV1(original,"process:paid-custodian-client",0,control=>withIssuedResourceOperationV1(control,async()=>{
-  const child=spawnToolV1(process.execPath,[fileURLToPath(new URL("./📜️script.ts",import.meta.url))],{cwd:process.cwd(),env:scriptInvocationEnvironment(original,process.env),stdio:["ignore","pipe","pipe","ipc"],detached:process.platform!=="win32",windowsHide:true}),requests=new Map<number,{resolve:(value:OwnedCommandCaptureV1)=>void;reject:(error:unknown)=>void}>();let accepting=true,readyResolve!:()=>void,readyReject!:(error:unknown)=>void,diagnostics="",settled=false,closed=false;
+  const child=startToolV1(runtimeCommandNameV1(),[fileURLToPath(new URL("./📜️script.ts",import.meta.url))],{cwd:process.cwd(),env:scriptInvocationEnvironment(original,process.env),stdio:["ignore","pipe","pipe","ipc"],detached:process.platform!=="win32",windowsHide:true}),requests=new Map<number,{resolve:(value:OwnedCommandCaptureV1)=>void;reject:(error:unknown)=>void}>();let accepting=true,readyResolve!:()=>void,readyReject!:(error:unknown)=>void,diagnostics="",settled=false,closed=false;
   const ready=new Promise<void>((resolve,reject)=>{readyResolve=resolve;readyReject=reject;}),send=(value:object)=>{if(child.connected)try{child.send(value,()=>{});}catch{}},stop=(cancel:boolean)=>{accepting=false;send({version:1,kind:cancel?"cancel":"drain"});},abort=()=>stop(true);
   for(const stream of[child.stdout,child.stderr])stream!.on("data",chunk=>{diagnostics=(diagnostics+String(chunk)).slice(-65536);});
   const close=new Promise<void>(resolve=>{child.once("error",error=>readyReject(error));child.once("close",()=>{closed=true;readyReject(Error("Paid process custodian closed: "+diagnostics));for(const request of requests.values())request.reject(Error("Paid process custodian closed"));requests.clear();resolve();});});

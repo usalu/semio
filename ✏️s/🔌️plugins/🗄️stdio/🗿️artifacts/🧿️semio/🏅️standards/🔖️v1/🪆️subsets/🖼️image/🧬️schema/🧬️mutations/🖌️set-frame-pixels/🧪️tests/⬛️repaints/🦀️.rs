@@ -9,7 +9,7 @@ use crate::schema::diff::SemioImageDiff;
 use crate::schema::mutations::set_frame_pixels;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-frame-pixels/⬛️repaints/📸️snapshot/⬅️before/🔣️.json"));
@@ -28,14 +28,14 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-frame-pixels mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Only the pixel buffer changes; the frame's animation delay survives.
 #[semio_framework_async_macros::async_test]
 async fn repaints_the_frame_without_changing_its_delay() {
     let base = before();
-    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-frame-pixels applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(leaf_outcome().diff(), &base).expect("set-frame-pixels applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-frame-pixels/repaints-the-only-frame-black: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames[0].rgba8.len(), produced.width as usize * produced.height as usize * 4, "the new buffer must satisfy the width*height*4 invariant the leaf enforces");
     assert_ne!(produced.frames[0].rgba8, base.frames[0].rgba8, "the buffer really must have changed");
@@ -51,7 +51,7 @@ async fn the_undo_set_frame_pixels_restores_the_captured_buffer() {
     let base = before();
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, rgba8: base.frames[0].rgba8.clone() })], "the undo must recapture BASE's own pixel buffer");
     let mut current = before();
     current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
@@ -111,6 +111,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-frame-pixels diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-frame-pixels diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed set-frame-pixels diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-frame-pixels/repaints-the-only-frame-black: committed diff did not carry before to after");
 }

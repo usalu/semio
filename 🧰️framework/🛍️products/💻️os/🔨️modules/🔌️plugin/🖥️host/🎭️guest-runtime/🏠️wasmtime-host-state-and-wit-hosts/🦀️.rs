@@ -33,7 +33,7 @@ pub(crate) struct ActorHostState {
     pub(super) wasi_ctx: WasiCtx,
     /// 🩺️ The guest's own stderr, retained in memory, when diagnostics are armed — see
     /// [`guest_wasi_ctx`] and [`GuestInstance::guest_diagnostics_text`].
-    pub(super) diagnostics: Option<wasmtime_wasi::p2::pipe::MemoryOutputPipe>,
+    pub(super) diagnostics: Option<wasm::wasi::p2::pipe::MemoryOutputPipe>,
     pub(super) resource_table: ResourceTable,
 }
 
@@ -63,12 +63,12 @@ impl WasiView for ActorHostState {
 /// 🩺️ A guest whose traces are armed must also have somewhere to write them: the sandboxed
 /// default ctx drops `wasi:cli/stderr` on the floor, which is why a wasmtime-hosted guest's
 /// `eprintln!` has never been readable the way the browser console reads it.
-pub(super) fn guest_wasi_ctx() -> (WasiCtx, Option<wasmtime_wasi::p2::pipe::MemoryOutputPipe>) {
+pub(super) fn guest_wasi_ctx() -> (WasiCtx, Option<wasm::wasi::p2::pipe::MemoryOutputPipe>) {
     let mut builder = WasiCtxBuilder::new();
     if !semio_framework_job::runtime_diagnostics_enabled() {
         return (builder.build(), None);
     }
-    let diagnostics = wasmtime_wasi::p2::pipe::MemoryOutputPipe::new(GUEST_DIAGNOSTICS_CAPACITY_BYTES);
+    let diagnostics = wasm::wasi::p2::pipe::MemoryOutputPipe::new(GUEST_DIAGNOSTICS_CAPACITY_BYTES);
     builder.env(semio_framework_job::RUNTIME_DIAGNOSTICS_ENV, "1").stderr(diagnostics.clone());
     (builder.build(), Some(diagnostics))
 }
@@ -106,7 +106,7 @@ pub const GUEST_JOB_WATCHDOG_MS: u64 = 30_000;
 
 /// ⛽️ Grants `fuel` on a metered engine; an unmetered engine has no fuel to grant and bounds the
 /// call by its epoch deadline alone — see [`SharedEngineConfig::fuel_metering`].
-pub(super) fn arm_store_fuel(store: &mut Store<ActorHostState>, fuel_metering: bool, fuel: u64) -> wasmtime::Result<()> {
+pub(super) fn arm_store_fuel(store: &mut Store<ActorHostState>, fuel_metering: bool, fuel: u64) -> wasm::Result<()> {
     if fuel_metering {
         store.set_fuel(fuel)?;
     }
@@ -183,7 +183,7 @@ impl wit_lifetime::Host for ActorHostState {}
 impl wit_ui::HostSurface for ActorHostState {
     /// 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
     /// when a guest handle goes out of scope); it is not chosen by this repo. See R9/R2 E1.
-    fn drop(&mut self, _rep: wasmtime::component::Resource<wit_ui::Surface>) -> wasmtime::Result<()> {
+    fn drop(&mut self, _rep: wasm::component::Resource<wit_ui::Surface>) -> wasm::Result<()> {
         Ok(())
     }
 }
@@ -229,7 +229,7 @@ async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
 
 /// ⏳️ The 24 awaitable imports. Every one delegates to [`poll_backed_direct_await_fault`] — see its
 /// doc for why that is the correct behaviour here rather than a gap.
-impl wit_host_async::HostWithStore<ActorHostState> for wasmtime::component::HasSelf<ActorHostState> {
+impl wit_host_async::HostWithStore<ActorHostState> for wasm::component::HasSelf<ActorHostState> {
     async fn storage_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::StorageReadParams) -> Result<Option<Vec<u8>>, Vec<u8>> {
         Err(poll_backed_direct_await_fault("storage-read").await)
     }
@@ -250,7 +250,7 @@ impl wit_host_async::HostWithStore<ActorHostState> for wasmtime::component::HasS
         Err(poll_backed_direct_await_fault("blob-write").await)
     }
 
-    async fn blob_read(_accessor: &Accessor<ActorHostState, Self>, _hash: String) -> Result<wasmtime::component::StreamReader<u8>, Vec<u8>> {
+    async fn blob_read(_accessor: &Accessor<ActorHostState, Self>, _hash: String) -> Result<wasm::component::StreamReader<u8>, Vec<u8>> {
         Err(poll_backed_direct_await_fault("blob-read").await)
     }
 

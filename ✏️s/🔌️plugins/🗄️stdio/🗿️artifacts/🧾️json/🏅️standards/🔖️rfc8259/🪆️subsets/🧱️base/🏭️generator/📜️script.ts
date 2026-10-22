@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -31,6 +31,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -49,7 +50,7 @@ const KINDS = [
 
 //#region 🏭️Generate
 const generate = (): void => {
-  const built = spawnSync("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
+  const built = runToolSyncV1("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error("engine build failed");
   const run = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate"), [fixtures], { stdio: "inherit" });
   if (run.status !== 0) throw new Error("fixture generation failed");
@@ -82,7 +83,7 @@ const manifests = (): void => {
         packageVersion: "1",
         engineFamily: "serde_json",
         engineVersion: "1",
-        command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`,
+        command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`,
         platform: `${process.platform}-${process.arch}`,
       },
       provenance: {

@@ -1,6 +1,6 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 68249714688,
+  "expectedPartitionBytes": 70397198336,
   "expectedHeadroomBytes": 468713472,
   "cases": [
     {

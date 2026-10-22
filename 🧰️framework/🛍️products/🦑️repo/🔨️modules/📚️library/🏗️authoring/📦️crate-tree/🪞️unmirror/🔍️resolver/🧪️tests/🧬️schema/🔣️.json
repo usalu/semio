@@ -1,0 +1,419 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases",
+  "merge",
+  "texts",
+  "keywords",
+  "universe"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "crates",
+     "files",
+     "cut",
+     "api",
+     "queries"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "crates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "name",
+        "dir",
+        "root"
+       ],
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "dir": {
+         "type": "string"
+        },
+        "root": {
+         "type": "string"
+        }
+       }
+      },
+      "minItems": 1
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "cut": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "api": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "queries": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "op",
+        "at",
+        "name",
+        "path",
+        "from",
+        "ignoreVisibility",
+        "file",
+        "needle",
+        "expect",
+        "expectHits",
+        "expectFlag",
+        "expectNode"
+       ],
+       "properties": {
+        "op": {
+         "enum": [
+          "path",
+          "member",
+          "opaque",
+          "nodeAt"
+         ]
+        },
+        "at": {
+         "type": "string"
+        },
+        "name": {
+         "type": "string"
+        },
+        "path": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "from": {
+         "type": "string"
+        },
+        "ignoreVisibility": {
+         "type": "boolean"
+        },
+        "file": {
+         "type": "string"
+        },
+        "needle": {
+         "type": "string"
+        },
+        "expect": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "consumed",
+            "hits"
+           ],
+           "properties": {
+            "consumed": {
+             "type": "integer"
+            },
+            "hits": {
+             "type": "array",
+             "items": {
+              "type": "string"
+             }
+            }
+           }
+          }
+         ]
+        },
+        "expectHits": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "expectFlag": {
+         "type": "boolean"
+        },
+        "expectNode": {
+         "type": "string"
+        }
+       }
+      },
+      "minItems": 1
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "merge": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "inner",
+     "outer",
+     "segment",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "inner": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "ident",
+         "segs",
+         "cut"
+        ],
+        "properties": {
+         "ident": {
+          "type": "string"
+         },
+         "segs": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "cut": {
+          "type": "boolean"
+         }
+        }
+       }
+      ]
+     },
+     "outer": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "ident",
+         "segs",
+         "cut"
+        ],
+        "properties": {
+         "ident": {
+          "type": "string"
+         },
+         "segs": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "cut": {
+          "type": "boolean"
+         }
+        }
+       }
+      ]
+     },
+     "segment": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "ident",
+         "segs",
+         "cut"
+        ],
+        "properties": {
+         "ident": {
+          "type": "string"
+         },
+         "segs": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "cut": {
+          "type": "boolean"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "texts": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "rep",
+     "expected"
+    ],
+    "properties": {
+     "rep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "ident",
+       "segs",
+       "cut"
+      ],
+      "properties": {
+       "ident": {
+        "type": "string"
+       },
+       "segs": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "cut": {
+        "type": "boolean"
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "keywords": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "head",
+     "expected"
+    ],
+    "properties": {
+     "head": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "universe": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "crates",
+    "overlay",
+    "reads",
+    "missingRoot",
+    "unknownRoot"
+   ],
+   "properties": {
+    "crates": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "ident"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "ident": {
+        "type": "string"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "overlay": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "reads": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "expected"
+      ],
+      "properties": {
+       "path": {
+        "type": "string"
+       },
+       "expected": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "string"
+         }
+        ]
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "missingRoot": {
+     "type": "string"
+    },
+    "unknownRoot": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

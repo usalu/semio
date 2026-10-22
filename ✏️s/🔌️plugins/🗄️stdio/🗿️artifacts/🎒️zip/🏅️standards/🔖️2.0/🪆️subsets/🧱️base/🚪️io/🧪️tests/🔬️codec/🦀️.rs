@@ -470,9 +470,9 @@ async fn deterministic_logical_round_trip() {
 
     let self_diff = ZipDiff::default();
     let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).expect("parse logical ZIP diff");
-    assert_eq!(protocol::apply_diff(&text_diff, &logical).unwrap(), logical);
+    assert_eq!(protocol::apply_diff_cold(&text_diff, &logical).unwrap(), logical);
     let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
-    assert_eq!(protocol::apply_diff(&binary_diff, &logical).unwrap(), logical);
+    assert_eq!(protocol::apply_diff_cold(&binary_diff, &logical).unwrap(), logical);
 
     let operations: Vec<ZipMutation> = std::iter::once(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: logical.comment.clone(), comment_utf8: logical.comment_utf8 }))
         .chain(logical.entries.iter().map(|entry| ZipMutation::AddEntry(add_entry::AddEntry { entry: entry.clone(), before: None })))
@@ -541,7 +541,7 @@ fn logical_diff_does_not_require_native_comment_encoding(){
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
     let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
     let diff=crate::standards::v2_0::subsets::base::schema::diff::ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..crate::standards::v2_0::subsets::base::schema::diff::ZipDiff::default()};
-    let after=protocol::apply_diff(&diff,&base).expect("logical comment edit must not materialize native ZIP");
+    let after=protocol::apply_diff_cold(&diff,&base).expect("logical comment edit must not materialize native ZIP");
     let actual=serde_json::json!({"comment":after.comment,"commentUtf8":after.comment_utf8});
     let mut reference=fixture["before"].clone();reference["comment"]=fixture["mutation"]["comment"].clone();
     assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);

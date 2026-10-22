@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "kind": "captured-neutral-interface-inputs",
+  "files": {
+    "schema.json": {
+      "bytes": 46162,
+      "sha256": "1bfd92b126bc1cfc5840d0ce049bd696d943d859530952ab8805325668aa6465"
+    },
+    "cases.json": {
+      "bytes": 7297,
+      "sha256": "3d060f22f969b1601d886245ba01809b86e927030f7acf191f2d20d57f40a825"
+    },
+    "core.ts": {
+      "bytes": 13502,
+      "sha256": "d7632ccddb32435d9369dc8e84898bf23167a2224ed3eed33b17ef819a239653"
+    },
+    "guest.py": {
+      "bytes": 20695,
+      "sha256": "86f0957445bf5f5a13dba50059c01e56dde70d65355306a5a0d45ecbb9b97499"
+    },
+    "entry.ts": {
+      "bytes": 11867,
+      "sha256": "8f05146298e5b561aa964751810955208bb581686ff25b255da66f4d6ade1e1d"
+    },
+    "tests.ts": {
+      "bytes": 8439,
+      "sha256": "9bbaab5eeb85c304a411899b4b67271448e5fd667bff882b9b25ff8bf56c36ed"
+    },
+    "oracle.py": {
+      "bytes": 3259,
+      "sha256": "75fb2f0b74be2ee8d0095167667ac48362da07d6740d2795f0d37c22ee2dd823"
+    }
+  }
+}

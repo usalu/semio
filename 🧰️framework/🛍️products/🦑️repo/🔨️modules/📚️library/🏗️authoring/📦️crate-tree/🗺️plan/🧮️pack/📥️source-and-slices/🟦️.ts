@@ -13,6 +13,7 @@ import { convertMutationLeaves } from "../../../🧬️mutation-families/🟦️
 import { buildSlices, type CarveSlice, collectDecls, type ModuleDecl } from "../../../🧱️decl-tree/🟦️.ts";
 import { crateRelativeChains, qualifyModuleHeads, rootAliasModules } from "../../🧭️module-chains/🟦️.ts";
 import { testOnlyGate } from "../../../🧰️testkit/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 📖 Reads the manifest and the crate root source, folds the mount trees and applies the test, lift and inline transforms. */
 export function readCrateSource({ options, repoRoot, packageDirRel }: { readonly options: PlanOptions; readonly repoRoot: string; readonly packageDirRel: string }) {
@@ -20,7 +21,7 @@ export function readCrateSource({ options, repoRoot, packageDirRel }: { readonly
   const hard = options.hard ?? CRATE_HARD_BUDGET;
   const manifestPath = resolve(repoRoot, packageDirRel, "Cargo.toml");
   const lib = readCargoLib(manifestPath);
-  const manifest = Bun.TOML.parse(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string } };
+  const manifest = runtimeParseTomlV1(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string } };
   const oldRootDir = dirname(lib.entry);
   const artifactDir = resolve(dirname(manifestPath), manifest.package?.workspace ?? ".");
   const folded = inlineMountTreeFiles(lib.entry, readFileSync(lib.entry, "utf8"), (absolute) => (existsSync(absolute) ? readFileSync(absolute, "utf8") : null));

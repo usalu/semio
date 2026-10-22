@@ -92,15 +92,6 @@
       "mode": "verify"
     },
     {
-      "id": "vscode-extension-test",
-      "tool": "vscode-test",
-      "previousPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscode-test.mjs",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
-      "effectiveRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
-      "loader": "vscode-test",
-      "mode": "test"
-    },
-    {
       "id": "ui-react-postcss",
       "tool": "postcss",
       "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
@@ -195,7 +186,7 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
       "tokens": [
-        "bun ./📜️script.ts lint",
+        "repo ./📜️script.ts lint",
         "\"./postcss.config\": \"./🟦️.mts\"",
         "\"@tailwindcss/postcss\"",
         "\"postcss\""
@@ -211,13 +202,6 @@
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
       "tokens": [
         "config: string;"
-      ]
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
-      "tokens": [
-        "../../🧪️tests/🎚️config/🟨️.mjs",
-        "../../../../🧹️lint/📐️source-policy/🟨️.mjs"
       ]
     },
     {
@@ -294,13 +278,6 @@
       "owners": [
         "ui-react-eslint",
         "ui-react-postcss"
-      ]
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
-      "owners": [
-        "vscode-extension-test",
-        "root-eslint"
       ]
     }
   ],

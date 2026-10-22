@@ -1,0 +1,562 @@
+{
+ "version": 1,
+ "workspaceRoot": "/ws",
+ "projects": {
+  "app": {
+   "root": "apps/app"
+  },
+  "lib": {
+   "root": "libs/lib"
+  },
+  "libx": {
+   "root": "libs/lib/x"
+  },
+  "root": {
+   "root": "."
+  },
+  "native": {
+   "root": "crates/n",
+   "metadata": {
+    "nativeRoot": "native/n"
+   }
+  },
+  "alpha": {
+   "root": "twin/dir"
+  },
+  "beta": {
+   "root": "other/beta",
+   "metadata": {
+    "nativeRoot": "twin/dir"
+   }
+  }
+ },
+ "byPackage": {
+  "@scope/lib": "lib",
+  "@scope/app": "app",
+  "lodash": "lodash-fork"
+ },
+ "locked": {
+  "keys": {
+   "left-pad": "left-pad@1.0.0",
+   "ghost": "ghost@2.0.0",
+   "@types/node": "@types/node@22.0.0"
+  },
+  "external": [
+   "npm:left-pad@1.0.0",
+   "npm:@types/node@22.0.0"
+  ]
+ },
+ "rows": [
+  {
+   "name": "a relative import resolves to the deepest owner",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../libs/lib/src/a.ts\";",
+   "imports": [
+    "../../../libs/lib/src/a.ts"
+   ],
+   "expected": [
+    "lib"
+   ]
+  },
+  {
+   "name": "a nested owner wins over its parent",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../libs/lib/x/y.ts\";",
+   "imports": [
+    "../../../libs/lib/x/y.ts"
+   ],
+   "expected": [
+    "libx"
+   ]
+  },
+  {
+   "name": "an import inside the same project names the project",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"./util.ts\";",
+   "imports": [
+    "./util.ts"
+   ],
+   "expected": [
+    "app"
+   ]
+  },
+  {
+   "name": "a file owned by the workspace root names nobody",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../tools/x.ts\";",
+   "imports": [
+    "../../../tools/x.ts"
+   ],
+   "expected": []
+  },
+  {
+   "name": "a path outside the workspace names nobody",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../../outside/x.ts\";",
+   "imports": [
+    "../../../../outside/x.ts"
+   ],
+   "expected": []
+  },
+  {
+   "name": "a declared native root is an owner root",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../native/n/glue.ts\";",
+   "imports": [
+    "../../../native/n/glue.ts"
+   ],
+   "expected": [
+    "native"
+   ]
+  },
+  {
+   "name": "two projects on one directory resolve to the lower name",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../twin/dir/a.ts\";",
+   "imports": [
+    "../../../twin/dir/a.ts"
+   ],
+   "expected": [
+    "alpha"
+   ]
+  },
+  {
+   "name": "a root name is not a prefix match",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"../../../libs/library/a.ts\";",
+   "imports": [
+    "../../../libs/library/a.ts"
+   ],
+   "expected": []
+  },
+  {
+   "name": "a directory import names its project",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"..\";",
+   "imports": [
+    ".."
+   ],
+   "expected": [
+    "app"
+   ]
+  },
+  {
+   "name": "the current directory names its project",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \".\";",
+   "imports": [
+    "."
+   ],
+   "expected": [
+    "app"
+   ]
+  },
+  {
+   "name": "a bare workspace package",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"@scope/lib\";",
+   "imports": [
+    "@scope/lib"
+   ],
+   "expected": [
+    "lib"
+   ],
+   "queried": []
+  },
+  {
+   "name": "a deep path into a scoped workspace package",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"@scope/lib/sub/path.js\";",
+   "imports": [
+    "@scope/lib/sub/path.js"
+   ],
+   "expected": [
+    "lib"
+   ],
+   "queried": []
+  },
+  {
+   "name": "a deep path into an unscoped workspace package",
+   "file": "apps/app/src/main.ts",
+   "text": "import {a} from \"lodash/fp/get\";",
+   "imports": [
+    "lodash/fp/get"
+   ],
+   "expected": [
+    "lodash-fork"
+   ],
+   "queried": []
+  },
+  {
+   "name": "a package of the lock file",
+   "file": "apps/app/src/main.ts",
+   "text": "import pad from \"left-pad\";",
+   "imports": [
+    "left-pad"
+   ],
+   "expected": [
+    "npm:left-pad@1.0.0"
+   ],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "left-pad"
+    ]
+   ]
+  },
+  {
+   "name": "a deep path into a locked package asks for the package",
+   "file": "apps/app/src/main.ts",
+   "text": "import pad from \"left-pad/lib/x\";",
+   "imports": [
+    "left-pad/lib/x"
+   ],
+   "expected": [
+    "npm:left-pad@1.0.0"
+   ],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "left-pad"
+    ]
+   ]
+  },
+  {
+   "name": "a locked package that has no external node is dropped",
+   "file": "apps/app/src/main.ts",
+   "text": "import g from \"ghost\";",
+   "imports": [
+    "ghost"
+   ],
+   "expected": [],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "ghost"
+    ]
+   ]
+  },
+  {
+   "name": "an unknown package is dropped",
+   "file": "apps/app/src/main.ts",
+   "text": "import g from \"nobody\";",
+   "imports": [
+    "nobody"
+   ],
+   "expected": [],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "nobody"
+    ]
+   ]
+  },
+  {
+   "name": "a scoped locked package",
+   "file": "apps/app/src/main.ts",
+   "text": "import type {T} from \"@types/node/fs\";",
+   "imports": [
+    "@types/node/fs"
+   ],
+   "expected": [
+    "npm:@types/node@22.0.0"
+   ],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "@types/node"
+    ]
+   ]
+  },
+  {
+   "name": "a bare scope alone is not a package",
+   "file": "apps/app/src/main.ts",
+   "text": "import g from \"@scope\";",
+   "imports": [
+    "@scope"
+   ],
+   "expected": [],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "@scope"
+    ]
+   ]
+  },
+  {
+   "name": "core modules are never packages",
+   "file": "apps/app/src/main.ts",
+   "text": "import a from \"node:fs\";\nimport b from \"fs\";\nimport c from \"fs/promises\";\nimport d from \"node:path\";\nimport e from \"path\";",
+   "imports": [
+    "node:fs",
+    "fs",
+    "fs/promises",
+    "node:path",
+    "path"
+   ],
+   "expected": [],
+   "queried": []
+  },
+  {
+   "name": "dynamic imports, require and re-exports count",
+   "file": "apps/app/src/main.ts",
+   "text": "const m = await import(\"./b.ts\");\nconst c = require(\"./c.ts\");\nexport * from \"../../../libs/lib/d.ts\";\nexport {z} from \"@scope/lib\";",
+   "imports": [
+    "./b.ts",
+    "./c.ts",
+    "../../../libs/lib/d.ts",
+    "@scope/lib"
+   ],
+   "expected": [
+    "app",
+    "lib"
+   ],
+   "queried": []
+  },
+  {
+   "name": "type only imports count for project ownership",
+   "file": "apps/app/src/main.ts",
+   "text": "import type {T} from \"../../../libs/lib/types.ts\";\nimport {type U} from \"../../../libs/lib/more.ts\";",
+   "imports": [
+    "../../../libs/lib/types.ts",
+    "../../../libs/lib/more.ts"
+   ],
+   "expected": [
+    "lib"
+   ]
+  },
+  {
+   "name": "duplicates collapse and the result is sorted",
+   "file": "apps/app/src/main.ts",
+   "text": "import a from \"@scope/lib\";\nimport b from \"./b.ts\";\nimport c from \"../../../libs/lib/c.ts\";\nimport d from \"@scope/app\";\nimport e from \"left-pad\";",
+   "imports": [
+    "@scope/lib",
+    "./b.ts",
+    "../../../libs/lib/c.ts",
+    "@scope/app",
+    "left-pad"
+   ],
+   "expected": [
+    "app",
+    "lib",
+    "npm:left-pad@1.0.0"
+   ],
+   "queried": [
+    [
+     "apps/app/src/main.ts",
+     "left-pad"
+    ]
+   ]
+  },
+  {
+   "name": "a declaration file imports like any module",
+   "file": "apps/app/types/shape.d.ts",
+   "text": "import {A} from \"../../../libs/lib/a\";",
+   "imports": [
+    "../../../libs/lib/a"
+   ],
+   "expected": [
+    "lib"
+   ]
+  },
+  {
+   "name": "a json file has no imports",
+   "file": "apps/app/data.json",
+   "text": "{\"import\": \"x\", \"from\": \"./y\"}",
+   "imports": [],
+   "expected": []
+  },
+  {
+   "name": "an empty file has no imports",
+   "file": "apps/app/src/main.ts",
+   "text": "",
+   "imports": [],
+   "expected": []
+  },
+  {
+   "name": "the lock file is asked about the importing file",
+   "file": "libs/lib/src/deep/f.ts",
+   "text": "import pad from \"left-pad\";",
+   "imports": [
+    "left-pad"
+   ],
+   "expected": [
+    "npm:left-pad@1.0.0"
+   ],
+   "queried": [
+    [
+     "libs/lib/src/deep/f.ts",
+     "left-pad"
+    ]
+   ]
+  },
+  {
+   "name": "a relative import climbs from a nested file",
+   "file": "libs/lib/x/z/q.ts",
+   "text": "import {a} from \"../../a.ts\";",
+   "imports": [
+    "../../a.ts"
+   ],
+   "expected": [
+    "lib"
+   ]
+  }
+ ],
+ "tracked": [
+  {
+   "name": "the preferred file exists",
+   "files": [
+    "a/x.ts"
+   ],
+   "map": {
+    "p": [
+     "a/x.ts",
+     "b/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "a/x.ts"
+  },
+  {
+   "name": "a moved file is found by its base name",
+   "files": [
+    "b/x.ts"
+   ],
+   "map": {
+    "p": [
+     "a/x.ts",
+     "b/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "b/x.ts"
+  },
+  {
+   "name": "two existing candidates keep the preferred path",
+   "files": [
+    "b/x.ts",
+    "c/x.ts"
+   ],
+   "map": {
+    "p": [
+     "b/x.ts",
+     "c/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "a/x.ts"
+  },
+  {
+   "name": "a candidate that does not exist does not count",
+   "files": [
+    "c/x.ts"
+   ],
+   "map": {
+    "p": [
+     "b/x.ts",
+     "c/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "c/x.ts"
+  },
+  {
+   "name": "without a file map the preferred path stays",
+   "files": [
+    "c/x.ts"
+   ],
+   "map": null,
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "a/x.ts"
+  },
+  {
+   "name": "a project missing from the map keeps the preferred path",
+   "files": [
+    "c/x.ts"
+   ],
+   "map": {
+    "q": [
+     "c/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "a/x.ts"
+  },
+  {
+   "name": "an empty file list keeps the preferred path",
+   "files": [
+    "c/x.ts"
+   ],
+   "map": {
+    "p": []
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "a/x.ts"
+  },
+  {
+   "name": "an explicit hint selects another base name",
+   "files": [
+    "c/y.ts"
+   ],
+   "map": {
+    "p": [
+     "c/y.ts",
+     "c/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "hint": "y.ts",
+   "expected": "c/y.ts"
+  },
+  {
+   "name": "a root level file matches its own name",
+   "files": [
+    "x.ts"
+   ],
+   "map": {
+    "p": [
+     "x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "a/x.ts",
+   "expected": "x.ts"
+  },
+  {
+   "name": "a longer base name is not a match",
+   "files": [
+    "a/ax.ts"
+   ],
+   "map": {
+    "p": [
+     "a/ax.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "z/x.ts",
+   "expected": "z/x.ts"
+  },
+  {
+   "name": "the hint is the last path segment of the preferred path",
+   "files": [
+    "m/deep/x.ts"
+   ],
+   "map": {
+    "p": [
+     "m/deep/x.ts"
+    ]
+   },
+   "project": "p",
+   "preferred": "old/place/x.ts",
+   "expected": "m/deep/x.ts"
+  }
+ ]
+}

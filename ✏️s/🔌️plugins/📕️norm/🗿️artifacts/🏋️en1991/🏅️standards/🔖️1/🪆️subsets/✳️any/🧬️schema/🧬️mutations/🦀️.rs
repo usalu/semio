@@ -100,7 +100,7 @@ use semio_s_artifact_norm_en1991_mut_general::remove_accidental_cases;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991")]
+#[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991", reference = En1991Snapshot, reference_diff = En1991Diff)]
 pub enum En1991Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeSnowZone(change_snow_zone::ChangeSnowZone),
@@ -284,15 +284,15 @@ pub mod mutation_bridge {
 
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1991_mutation(base: &En1991Snapshot, mutation: &En1991Mutation) -> Result<(En1991Snapshot, Vec<String>), String> {
-    let raised = <En1991Mutation as protocol::Mutation<En1991Snapshot>>::diff(mutation, base);
+    let raised = <En1991Mutation as protocol::ColdMutation<En1991Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
 pub fn inverse_en1991_mutation(mutation: &En1991Mutation, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
     Ok({
-    <En1991Mutation as protocol::Mutation<En1991Snapshot>>::inverse(mutation, base)?
+    <En1991Mutation as protocol::ColdMutation<En1991Snapshot>>::inverse(mutation, base)?
 
     })
 }

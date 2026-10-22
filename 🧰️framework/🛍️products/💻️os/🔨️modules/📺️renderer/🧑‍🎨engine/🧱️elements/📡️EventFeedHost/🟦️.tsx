@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "../⚛️react-port/🟦️.ts";
 import { type ComponentSceneHostProps, type EventFeedEntry, type MutationMessage } from "@semio-tech/framework";
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";

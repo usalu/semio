@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/schema-source-closure-ts:test"
+    "test": "repo run @semio-tech/schema-source-closure-ts:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

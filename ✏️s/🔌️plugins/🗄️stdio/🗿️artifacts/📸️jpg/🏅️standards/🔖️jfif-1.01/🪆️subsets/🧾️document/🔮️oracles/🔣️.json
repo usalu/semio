@@ -214,7 +214,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "jpg-import"
       ],
@@ -258,7 +258,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "jpg-project"
       ],
@@ -302,7 +302,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "jpg-compare"
       ],
@@ -346,7 +346,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "jpg-marker-project"
       ],
@@ -404,7 +404,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔬️probes/📜️script.ts",
         "jpg-marker-compare"
       ],
@@ -651,7 +651,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only change-jfif-header-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only change-jfif-header-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -701,7 +701,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only insert-other-segment-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only insert-other-segment-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -751,7 +751,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-other-segment-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only remove-other-segment-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -801,7 +801,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -855,7 +855,7 @@
         "packageVersion": "11.3.0",
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-marker-v1",
@@ -899,7 +899,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-image-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only replace-image-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

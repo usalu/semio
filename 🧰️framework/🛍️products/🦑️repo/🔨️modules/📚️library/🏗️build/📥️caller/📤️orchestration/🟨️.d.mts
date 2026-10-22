@@ -11,7 +11,7 @@ export interface BuildOrchestrationProjectV1 {readonly targets?:Readonly<Record<
 /** 🧭️ Captures and validates the declared bounded task closure from an admitted graph. */
 export function buildOrchestrationContextV1(projects:Readonly<Record<string,BuildOrchestrationProjectV1>>,selection:Readonly<{project:string;target:string;configuration?:string}>):BuildOrchestrationContextV1|undefined;
 /** 📤️ Validates carried data and projects child capabilities without issuing an Original. */
-export function projectBuildOrchestrationCapabilitiesV1(envelope:unknown,workspaceRoot:string,tool:"nx"|"bazel",value:unknown,now:number):NativeBuildCallerCapabilitiesV1;
+export function projectBuildOrchestrationCapabilitiesV1(envelope:unknown,workspaceRoot:string,tool:string,value:unknown,now:number):NativeBuildCallerCapabilitiesV1;
 
 /** 🔏️ Requires the complete carried closure to match its immutable admitted graph. */
 export function requireBuildOrchestrationContextV1(projects:Readonly<Record<string,BuildOrchestrationProjectV1>>,value:unknown):BuildOrchestrationContextV1;

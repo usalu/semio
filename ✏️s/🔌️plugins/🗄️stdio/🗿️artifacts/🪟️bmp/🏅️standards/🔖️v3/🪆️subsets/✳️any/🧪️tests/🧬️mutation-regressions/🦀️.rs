@@ -1,6 +1,6 @@
 use crate::apply_mutation;
 use crate::schema::mutations::{BmpMutation, PaintDirectRegion, PaintIndexedRegion};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_bytes;
 
 fn direct() -> crate::BmpSnapshot {

@@ -9,9 +9,9 @@ async fn insert_then_remove_before_matches_canonical_shape() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
-    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff_cold(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff_cold(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&BinaryDiff { splices: merged }, &base).unwrap(), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -21,9 +21,9 @@ async fn insert_insert_same_offset_both_survive() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
-    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff_cold(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff_cold(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&BinaryDiff { splices: merged }, &base).unwrap(), after);
     assert!(after.bytes.windows(2).any(|w| w == [0xBB, 0xAA]) || after.bytes.contains(&0xAA) && after.bytes.contains(&0xBB));
 }
 
@@ -34,9 +34,9 @@ async fn modify_then_remove_drops_the_modify() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
-    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
-    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff_cold(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff_cold(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&BinaryDiff { splices: merged }, &base).unwrap(), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -55,29 +55,29 @@ async fn absorb_associative_over_a_triple() {
     let mut right = d1.clone();
     right.absorb(mid);
 
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap());
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), protocol::apply_diff_cold(&right, &base).unwrap());
     let sequential = {
-        let s1 = protocol::apply_diff(&d1, &base).unwrap();
-        let s2 = protocol::apply_diff(&d2, &s1).unwrap();
-        protocol::apply_diff(&d3, &s2).unwrap()
+        let s1 = protocol::apply_diff_cold(&d1, &base).unwrap();
+        let s2 = protocol::apply_diff_cold(&d2, &s1).unwrap();
+        protocol::apply_diff_cold(&d3, &s2).unwrap()
     };
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diff_level_roundtrip() {
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
     let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };
-    let next = protocol::apply_diff(&d, &base).unwrap();
+    let next = protocol::apply_diff_cold(&d, &base).unwrap();
     let inv = d.inverse(&base);
-    assert_eq!(protocol::apply_diff(&inv, &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&inv, &next).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn apply_rejects_invalid_splice_without_mutating_base() {
     let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
     let diff = BinaryDiff { splices: vec![ByteSplice { offset: 2, remove_len: 2, insert: vec![9] }] };
-    assert!(protocol::apply_diff(&diff, &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
     assert_eq!(base.bytes, vec![1, 2, 3]);
 }
 

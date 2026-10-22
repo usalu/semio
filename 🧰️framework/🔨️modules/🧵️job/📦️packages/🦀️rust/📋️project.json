@@ -36,7 +36,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving source"
+        "command": "repo ./📜️script.ts test-original-receiving source"
       }
     },
     "test-original-receiving-native": {
@@ -52,7 +52,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving native"
+        "command": "repo ./📜️script.ts test-original-receiving native"
       }
     },
     "test-retained-work-source": {
@@ -68,7 +68,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-retained-work source"
+        "command": "repo ./📜️script.ts test-retained-work source"
       }
     },
     "test-retained-work-native": {
@@ -84,7 +84,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-retained-work native"
+        "command": "repo ./📜️script.ts test-retained-work native"
       }
     },
     "test": {
@@ -100,7 +100,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-close-demand-source": {
@@ -116,7 +116,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-close-demand-source"
+        "command": "repo ./📜️script.ts test-close-demand-source"
       }
     },
     "canonical-architecture": {
@@ -124,7 +124,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture"
+        "command": "repo ./📜️script.ts canonical-architecture"
       },
       "outputs": [],
       "inputs": [
@@ -148,7 +148,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-session-return source"
+        "command": "repo ./📜️script.ts test-session-return source"
       }
     },
     "test-session-return-native": {
@@ -164,7 +164,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-session-return native"
+        "command": "repo ./📜️script.ts test-session-return native"
       }
     },
     "test-original-close-context-source": {
@@ -180,7 +180,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-close-context-source"
+        "command": "repo ./📜️script.ts test-original-close-context-source"
       }
     },
     "test-original-close-context-native": {
@@ -196,7 +196,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-close-context-native"
+        "command": "repo ./📜️script.ts test-original-close-context-native"
       }
     },
     "test-original-retained-loan-native": {
@@ -212,7 +212,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-retained-loan-native"
+        "command": "repo ./📜️script.ts test-original-retained-loan-native"
       }
     },
     "test-original-turn-failure-source": {
@@ -228,7 +228,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-turn-failure source"
+        "command": "repo ./📜️script.ts test-original-turn-failure source"
       }
     },
     "test-original-turn-failure-native": {
@@ -244,7 +244,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-turn-failure native"
+        "command": "repo ./📜️script.ts test-original-turn-failure native"
       }
     },
     "test-original-page-return-source": {
@@ -259,7 +259,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-page-return source"
+        "command": "repo ./📜️script.ts test-original-page-return source"
       },
       "cache": true
     },
@@ -275,7 +275,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-page-return native"
+        "command": "repo ./📜️script.ts test-original-page-return native"
       },
       "cache": true
     }

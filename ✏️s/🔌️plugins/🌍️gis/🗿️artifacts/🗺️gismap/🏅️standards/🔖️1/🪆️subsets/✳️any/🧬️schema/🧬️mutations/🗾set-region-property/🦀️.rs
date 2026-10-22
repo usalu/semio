@@ -33,16 +33,20 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "region-property", kind: "set-region-property", record: "RegionPropertySet" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" setzen", self.key, self.feature))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GisMapSnapshot, Op> for SetRegionProperty
+where
+    Op: protocol::ColdMutation<GisMapSnapshot, ReferenceDiff = GisMapDiff> + From<SetRegionProperty> + From<crate::standards::v1::subsets::any::schema::mutations::remove_region_property::RemoveRegionProperty>,
+{
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" setzen", self.key, self.feature))
     }
 }
 //#endregion 🔹Payload

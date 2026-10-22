@@ -2,7 +2,7 @@ use crate::*;
 use crate::mutation_bridge::apply_iso16757_mutation;
 use semio_s_artifact_norm_iso16757_model::{part_1, part_4, part_5, Cardinality, Names};
 use semio_s_plugin_norm_compliance::LocalizedText;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 /// ↩️ Applies `operation` to `base`, then replays its inverse ON TOP OF the forward document —
 /// never against `base` again: an inverse `change-<field>` recomputed against `base` sees the

@@ -34,9 +34,9 @@ where
     /// decision whose `mutation_id` no longer matched the approval target the WAL verifies.
     pub fn fold_batch_item(&mut self, store_log: &mut StoreLog<P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
         
-        let amend_identity=self.batch_amend_target_ref(publication.transaction.as_ref());
-        let diagnostic_source=amend_identity.and_then(|id|self.envelope.edit_messages.get_by_id(id)).map(|entry|entry.messages.as_slice());
-        let diagnostic_offset:usize = amend_identity.and_then(|id|self.envelope.vcs.edits.iter().find(|edit|edit.id==id)).map_or(0, |edit| edit.forwards.len());
+        let amend_identity=store_log.batch_amend_target_ref(publication.transaction.as_ref());
+        let diagnostic_source=amend_identity.and_then(|id|store_log.envelope.edit_messages.get_by_id(id)).map(|entry|entry.messages.as_slice());
+        let diagnostic_offset:usize = amend_identity.and_then(|id|store_log.envelope.vcs.edits.iter().find(|edit|edit.id==id)).map_or(0, |edit| edit.forwards.len());
 let authority=publication.authority.as_ref().ok_or_else(||VcsError::ValidationFailed("batched fold lost its original authority".into()))?;
         let control=size_of::<usize>();
         if grant.maximum_depth==0||grant.maximum_copy_bytes<control{return Ok(ArtifactStoreOneItemAdvance::Blocked);}

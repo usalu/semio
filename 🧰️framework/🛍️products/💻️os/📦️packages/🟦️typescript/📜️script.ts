@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { createIssuedResourceControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { typecheckAdmittedProjectV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
@@ -13,6 +13,7 @@ import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️
 import { advanceScriptInvocation, scriptInvocationBudget } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📦️publication/🟦️.ts";
 import { InstalledServiceCheckScript, DocumentOpeningAttemptCheckScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
@@ -20,7 +21,7 @@ class InstalledServiceSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("installed-service-source accepts no arguments");
     const source=join(this.repoRoot,"🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts");
-    await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
+    await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
     await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"installed-service-source",TEST_LEVEL_BUDGET_MS.long);
   }
 }
@@ -75,7 +76,7 @@ class TestScript extends BundleScript {
     if(segments[0]==="original-inference-caller"){
       if(segments.length!==1)throw new Error("original-inference-caller accepts no arguments");
       const source=join(this.root,"../../🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts");
-      for(const args of [[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],["test",source]])await runOwnedCommand(process.execPath,args,this.repoRoot,"original-inference-caller-source",scriptInvocationBudget(this.invocation,0),{signal:this.invocation.control.signal});return;
+      for(const args of [[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],["test",source]])await runOwnedCommand(process.execPath,args,this.repoRoot,"original-inference-caller-source",scriptInvocationBudget(this.invocation,0),{signal:this.invocation.control.signal});return;
     }
     const { rest } = resolveTestLevel(segments, "quick");
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
@@ -116,7 +117,7 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("test", TestScript)
   .register("test-media-transport", MediaTransportTestScript)
   .register("test-scene-wire-source",SceneWireSourceScript)

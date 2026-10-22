@@ -97,7 +97,7 @@ test("the schema pins intact locale laws, original witnesses and canonical neutr
   const project = JSON.parse(read(corpus.project));
   expect(project.name).toBe(corpus.target.slice(0, corpus.target.lastIndexOf(":")));
   const target = project.targets[corpus.target.slice(corpus.target.lastIndexOf(":") + 1)];
-  expect(target.options.command).toBe("bun ./📜️script.ts test localized-label");
+  expect(target.options.command).toBe("repo ./📜️script.ts test localized-label");
   expect(target.cache).toBe(false);
   expect(read(corpus.script)).toContain('segments[0] === "localized-label"');
 });

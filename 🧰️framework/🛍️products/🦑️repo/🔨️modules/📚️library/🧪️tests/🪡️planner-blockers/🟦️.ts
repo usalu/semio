@@ -49,7 +49,7 @@ test("embedded argv candidates never span an escape, never partially overlap, an
   const next = random(23), pieces = [" ", "\"", "\\", "${workspaceFolder}/", "a/b", "./c", "../d", "/e", "{", "}", ":", ",", "=", "--x=", "file:", "q.toml", "😀/f", "\t"];
   let checked = 0;
   for (let round = 0; round < 5_000; round++) {
-    const command = `bun ${Array.from({ length: 1 + Math.floor(next() * 14) }, () => pieces[Math.floor(next() * pieces.length)]!).join("")}`;
+    const command = `repo ${Array.from({ length: 1 + Math.floor(next() * 14) }, () => pieces[Math.floor(next() * pieces.length)]!).join("")}`;
     const content = JSON.stringify({ command }), tokens = argv(command);
     let words: string[];
     try { words = parseArgsStringToArgv(command); } catch { words = [command]; }

@@ -1,3 +1,4 @@
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeImportRecordV1, RuntimeLoaderV1, RuntimeTranspilerOptionsV1, RuntimeTranspilerV1 } from "../../📋️contract/🟦️.ts";
 
 const REGEX_PREVIOUS = /[(,=:[!&|?{};+\-*%<>~^]$/u;
@@ -151,9 +152,9 @@ function removeDeadBranches(code: string): string {
 export function createPortableTranspilerV1(options: RuntimeTranspilerOptionsV1 = {}): RuntimeTranspilerV1 {
   const stripper = (process.getBuiltinModule("node:module") as { stripTypeScriptTypes?: (code: string, options?: { mode?: string }) => string } | undefined)?.stripTypeScriptTypes;
   const transformSync = (source: string, loader: RuntimeLoaderV1 = options.loader ?? "js"): string => {
-    if (loader === "jsx" || loader === "tsx") throw new Error(`The portable transpiler does not support the ${loader} loader`);
+    if (loader === "jsx" || loader === "tsx") throw new Error(runtimeMessageV1("loaderUnsupported", { loader }));
     let code = source;
-    if (loader === "ts") { if (stripper === undefined) throw new Error("The host provides no TypeScript stripper"); code = warningFree(() => stripper(code, { mode: "transform" })); }
+    if (loader === "ts") { if (stripper === undefined) throw new Error(runtimeMessageV1("stripperMissing", {})); code = warningFree(() => stripper(code, { mode: "transform" })); }
     if (options.define !== undefined) code = replaceDefines(code, options.define);
     if (options.deadCodeElimination === true) code = removeDeadBranches(code);
     return code;

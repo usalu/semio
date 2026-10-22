@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "status": "prepared-unrun",
+  "executable": "repo",
+  "args": [
+    "run",
+    "@semio-tech/repo-dashboard-rs:test-cold-start",
+    "--skip-cache",
+    "--output=stream"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000",
+    "RUST_MIN_STACK": "134217728"
+  },
+  "prerequisites": [
+    "Genuine current-root-package dependency lock --all actual whole 0 (Lock4 session 76126), followed by dependency sync --all actual whole 0 (session 79571), independently reconciled with all selected 373/26/package/lock/Source0 metadata hash and physical identities unchanged across Sync.",
+    "All current Source/provider edits remain frozen.",
+    "High/Root explicitly release singular Source+Native lanes.",
+    "No preceding dashboard/CLI binary build/install/publication."
+  ],
+  "requiredBody": "canonical cold launch rebuilds real absent or stale installation then warm replay retains publication",
+  "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json#test-cold-start",
+  "runtimeEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/❄️cold-start/🟦️.ts",
+  "conditionalChildren": {
+    "version": 1,
+    "kind": "orchestration",
+    "children": [
+      {
+        "project": "@semio-tech/repo-dashboard-rs",
+        "target": "build"
+      }
+    ]
+  },
+  "acceptance": [
+    "Actual named Bun body and actual whole 0; no stage-complete substitution.",
+    "The body itself establishes natural absent/invalid/stale precondition and refuses current installation.",
+    "Real lazy launch native commands --check returns 0 and publishes authenticated immutable binary evidence.",
+    "Warm replay retains exact physical receipt stamp and bytes."
+  ],
+  "prohibited": [
+    "No current receipt inspection or cold-state manufacture during preparation.",
+    "No synthetic installation or private binary.",
+    "No dashboard/CLI build/install/publication before this gate."
+  ],
+  "orderingAfterCold": [
+    "canonical-build-and-install",
+    "installed authority/execution/MCP/journeys/load/smoke/windows/deadline owners remain separately required"
+  ],
+  "currentDirectTui": {
+    "session": 72467,
+    "whole": 0,
+    "passed": 395,
+    "registeredWindowsWhole": false
+  },
+  "currentDependencyAcceptance": {
+    "lock": {
+      "session": 76126,
+      "whole": 0
+    },
+    "sync": {
+      "session": 79571,
+      "whole": 0,
+      "terminalObservedAt": "2026-10-21T18:47:01.866Z"
+    },
+    "independentReconciliation": "accepted",
+    "source0": {
+      "session": 49940,
+      "status": "failed-before-test-bodies",
+      "whole": 1,
+      "requiredNamedBodies": 74,
+      "explicitInputs": 27,
+      "runtimeEntries": 6,
+      "backendAdmission": false,
+      "completedTestBodies": 0,
+      "primary": "Original closure read child refused: Closed graph record manifest required",
+      "context": {
+        "kind": "snapshot",
+        "check": "snapshot-manifest",
+        "manifestVersion": 1,
+        "manifestProjects": null,
+        "manifestDependencies": 873,
+        "packedBytes": 124213751,
+        "path": "snapshots/2d61db03258b7af9601a3b5896c190710d0579138ea3123de459355e2c1eadd9.json"
+      },
+      "postReconciliation": {
+        "selected": 955,
+        "controls": 26,
+        "metadata": 7,
+        "changed": 0,
+        "missing": 0,
+        "extra": 0,
+        "errors": 0,
+        "independentlyAccepted": true
+      },
+      "previousRecordedAttempt": {
+        "session": 96118,
+        "status": "failed-before-test-bodies",
+        "whole": 1,
+        "requiredNamedBodies": 65,
+        "explicitInputs": 27,
+        "runtimeEntries": 6,
+        "backendAdmission": false,
+        "completedTestBodies": 0,
+        "primary": "Uncaptured implementation import refused",
+        "context": {
+          "kind": "import",
+          "importer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures",
+          "specifier": "../../../../../../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
+          "declaringImage": false,
+          "declared": false,
+          "targetImage": false
+        },
+        "previousAttempts": [
+          {
+            "session": 36712,
+            "status": "failed-before-test-bodies",
+            "requiredNamedBodies": 61,
+            "explicitInputs": 27,
+            "runtimeEntries": 6,
+            "whole": 1,
+            "primary": "Captured require declaring module required",
+            "backendAdmission": false
+          }
+        ]
+      }
+    },
+    "coldRuntime": "unrun"
+  },
+  "currentSemanticCargoResolution": {
+    "session": 24917,
+    "whole": 0,
+    "independentReconciliation": "accepted",
+    "root": {
+      "packages": 1568,
+      "registry": 706,
+      "beforeAfterUnchanged": true
+    },
+    "framework": {
+      "packages": 1068,
+      "registry": 612,
+      "beforeAfterUnchanged": true
+    },
+    "qualification": "Successful actual resolver and exact current manifest/lock tuples; current shared Core Source freeze and Source0 are separate pending gates."
+  },
+  "source0CurrentRequirements": {
+    "requiredNamedBodies": 81,
+    "explicitInputs": 27,
+    "runtimeEntries": 6,
+    "liveUncached": true,
+    "status": "pending-current-format-recovery-and-genuine-source0"
+  }
+}

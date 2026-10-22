@@ -133,8 +133,8 @@ use crate::editor::puzzle2d::retained::*;
 use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::testkit::*;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 
 fn board() -> Value {
     json!({

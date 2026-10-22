@@ -12,7 +12,8 @@
     "invalidRows",
     "interactionQuantum",
     "ownedWrapperCuts",
-    "bodyReservations"
+    "bodyReservations",
+    "childCustody"
   ],
   "properties": {
     "version": {
@@ -107,6 +108,81 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "childCustody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storage",
+        "rows"
+      ],
+      "properties": {
+        "storage": {
+          "const": "stable-owned-allocation"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "childBytes",
+              "pointerBytes",
+              "metadataBytes",
+              "childCopyBytes",
+              "copyBytes",
+              "capacityBytes",
+              "releaseBytes"
+            ],
+            "properties": {
+              "event": {
+                "enum": [
+                  "birth",
+                  "terminal-release"
+                ]
+              },
+              "childBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "pointerBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "metadataBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "childCopyBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "copyBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "capacityBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "releaseBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
           }
         }
       }

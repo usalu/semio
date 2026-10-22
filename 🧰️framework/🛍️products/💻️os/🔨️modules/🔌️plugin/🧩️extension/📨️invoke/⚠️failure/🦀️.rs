@@ -23,9 +23,16 @@ pub enum Node<'a>{Root(OriginalCauseLoan<'a>),Scope(&'a FaultScope),Progress(Ret
 #[doc(hidden)]
 pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original invocation diagnostic ordinal changed")}
 fn fault_loan<'a>(cause:OriginalCauseLoan<'a>)->Option<(&'a Fault,[Option<&'a ValueError>;2])>{match cause{OriginalCauseLoan::Fault(fault)=>Some((fault,[None,None])),OriginalCauseLoan::Turn(error)=>error.primary_fault().map(|fault|(fault,[error.receipt_refusal.as_ref(),error.context_refusal.as_ref()])),_=>None}}
-fn domain_loan<'a>(cause:OriginalCauseLoan<'a>)->Option<&'a dyn FieldProjectionSource>{
- if let Some((fault,_))=fault_loan(cause){return fault.domain.as_ref().map(|domain|domain as &dyn FieldProjectionSource)}
- match cause{OriginalCauseLoan::Turn(error)=>if let Some(receiving)=error.primary_receiving(){Some(receiving as &dyn FieldProjectionSource)}else{error.primary_domain().map(|domain|domain.projection())},OriginalCauseLoan::Inference(error)=>match &error.primary{crate::artifact_inference::ArtifactInferenceGatewayFailure::Execution(original)=>Some(original),_=>None},_=>None}
+#[derive(Clone,Copy)]
+enum DomainLoan<'a>{Source(&'a dyn FieldProjectionSource),Receiving(&'a OriginalTurnFailure)}
+const RECEIVING_PREFIX:[usize;2]=[0,1];
+impl<'a> DomainLoan<'a>{
+ fn projection_view(self,path:&[usize])->Result<V<'a>,ValueError>{match self{Self::Source(source)=>source.projection_view(path),Self::Receiving(error)=>error.projection_view(&[&RECEIVING_PREFIX[..],path].concat())}}
+ fn projection_key(self,path:&[usize],index:usize)->Result<&'a str,ValueError>{match self{Self::Source(source)=>source.projection_key(path,index),Self::Receiving(error)=>error.projection_key(&[&RECEIVING_PREFIX[..],path].concat(),index)}}
+}
+fn domain_loan<'a>(cause:OriginalCauseLoan<'a>)->Option<DomainLoan<'a>>{
+ if let Some((fault,_))=fault_loan(cause){return fault.domain.as_ref().map(|domain|DomainLoan::Source(domain as &dyn FieldProjectionSource))}
+ match cause{OriginalCauseLoan::Turn(error)=>if error.primary_receiving().is_some(){Some(DomainLoan::Receiving(error))}else{error.primary_domain().map(|domain|DomainLoan::Source(domain.projection()))},OriginalCauseLoan::Inference(error)=>match &error.primary{crate::artifact_inference::ArtifactInferenceGatewayFailure::Execution(original)=>Some(DomainLoan::Source(original)),_=>None},_=>None}
 }
 #[doc(hidden)]
 pub fn extras(cause:OriginalCauseLoan<'_>)->[(bool,&'static str);5]{
@@ -35,7 +42,7 @@ pub fn extras(cause:OriginalCauseLoan<'_>)->[(bool,&'static str);5]{
 fn root_fields(cause:OriginalCauseLoan<'_>)->usize{7+extras(cause).into_iter().filter(|(present,_)|*present).count()}
 #[doc(hidden)]
 pub fn root_key(cause:OriginalCauseLoan<'_>,index:usize)->Result<&'static str,ValueError>{if index<6{return Ok(["origin","code","severity","message","scope","retainedProgress"][index])}let extras=extras(cause);let count=extras.iter().filter(|(present,_)|*present).count();if index==6+count{return Ok("retryable")}extras.into_iter().filter(|(present,_)|*present).nth(index-6).map(|(_,key)|key).ok_or_else(invalid)}
-fn domain_path<'a>(cause:OriginalCauseLoan<'a>,path:&[usize])->Option<&'a dyn FieldProjectionSource>{let first=path.first()?;(root_key(cause,*first).ok()==Some("domain")).then(||domain_loan(cause)).flatten()}
+fn domain_path<'a>(cause:OriginalCauseLoan<'a>,path:&[usize])->Option<DomainLoan<'a>>{let first=path.first()?;(root_key(cause,*first).ok()==Some("domain")).then(||domain_loan(cause)).flatten()}
 impl<'a> Node<'a>{
  fn fault_child(fault:&'a Fault,secondary:[Option<&'a ValueError>;2],key:&str)->Result<Self,ValueError>{Ok(match key{"origin"=>Self::Text(match fault.origin{FaultOrigin::Edge=>"edge",FaultOrigin::Renderer=>"renderer",FaultOrigin::Os=>"os",FaultOrigin::Module=>"module",FaultOrigin::Plugin=>"plugin",FaultOrigin::App=>"app",FaultOrigin::Extension=>"extension",FaultOrigin::Framework=>"framework"}),"code"=>Self::Text(&fault.code.0),"severity"=>Self::Text(match fault.severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"}),"message"=>Self::Text(&fault.message),"scope"=>Self::Scope(&fault.scope),"retainedProgress"=>Self::Progress(fault.retained_progress),"source"=>Self::Source(fault.source.ok_or_else(invalid)?),"span"=>Self::Span(fault.span.as_ref().ok_or_else(invalid)?),"causes"=>Self::Causes(&fault.causes,secondary),"params"=>Self::Params(fault.params.as_deref().ok_or_else(invalid)?),"retryable"=>Self::Bool(fault.retryable),_=>return Err(invalid())})}
 

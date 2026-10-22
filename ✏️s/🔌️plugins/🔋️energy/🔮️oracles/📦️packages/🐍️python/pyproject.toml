@@ -1,7 +1,7 @@
 # 🔮️ Test-only oracle venv for the 🔋️energy plugin: Honeybee → OpenStudio → EnergyPlus.
 #
 # Every pin lives in the `test` dependency group, never in `[project] dependencies`: the repository's
-# own dependency-truth gate (`bun ./📜️script.ts verify dependencies literal-external`) classifies a
+# own dependency-truth gate (`repo ./📜️script.ts verify dependencies literal-external`) classifies a
 # `dependencies = [...]` list as production-runtime and a `test = [...]` list as test-only, and none
 # of this is reachable from a shipped semio artifact. `default-groups` keeps `uv sync`/`uv run`
 # zero-touch without a `--group` flag at every call site.

@@ -22,20 +22,21 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ReplaceElements where 
         record: "ReplacedElements",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace envelope elements", "Hüllbauteile ersetzen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din18599Snapshot, Op> for ReplaceElements where Op: protocol::ColdMutation<Din18599Snapshot, ReferenceDiff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::replace_elements::ReplaceElements> {
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::replace_elements::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::replace_elements::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace envelope elements", "Hüllbauteile ersetzen")
-    }
 }
 
 //#region 🪢️Mounts

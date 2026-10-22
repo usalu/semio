@@ -121,7 +121,7 @@ test("queued requests that close a cycle are detected too",async()=>{
 
 test("a waiter does not hold the directory admission gate while it waits, so openers and retirement are never blocked behind it; the old behaviour is the negative control",async()=>{
  const probe=async(releaseWhileWaiting:boolean):Promise<number>=>{
-  const {directory,env}=scenario({gate:{releaseWhileWaiting,pollInitialMilliseconds:20,pollMaximumMilliseconds:40}});configure(env);
+  const {directory,env}=scenario({gate:{releaseWhileWaiting,pollInitialMilliseconds:20,pollMaximumMilliseconds:40,admissionPatienceMilliseconds:0,claimSweepIntervalMilliseconds:0,claimSweepPressureFreeRatio:0,claimSweepPressureIntervalMilliseconds:0}});configure(env);
   const holder=start({mode:"hold",directory,resource:"free:R",access:"exclusive"},env);await holder.next("HELD");
   const waiting=acquireResourceLease({directory,resource:"free:R",mode:"exclusive",signal:signal(),timeoutMs:2500}).then(()=>"acquired",error=>String(error));
   await tick(300);
@@ -211,6 +211,34 @@ test("sibling tasks of one process that hold one lease each and wait for the oth
  const outcomes=await Promise.all([flow("free:A","free:B"),flow("free:B","free:A")]);
  void gate;
  expect(outcomes.sort()).toEqual(["cycle","ok"]);
+});
+
+const holdGate=async(directory:string,milliseconds:number)=>{
+ const database=new Database(resourceLeasePathV1(directory,admissionResource));database.exec("PRAGMA busy_timeout=0");database.exec("BEGIN EXCLUSIVE");
+ return {release:()=>{try{database.exec("ROLLBACK");}finally{database.close();}},milliseconds};
+};
+
+test("a queued request that must not wait for its resource still waits for a busy admission gate; a raw try-lock stays a single attempt; patience 0 is the negative control",async()=>{
+ for(const patient of [true,false]){
+  const {directory,env}=scenario({gate:{releaseWhileWaiting:true,pollInitialMilliseconds:5,pollMaximumMilliseconds:40,admissionPatienceMilliseconds:patient?3000:0,claimSweepIntervalMilliseconds:0,claimSweepPressureFreeRatio:0,claimSweepPressureIntervalMilliseconds:0}});configure(env);
+  (await acquireResourceLease({directory,resource:"free:warm",mode:"shared",signal:signal()})).release();
+  for(const queued of [false,true]){
+   const gate=await holdGate(directory,800),release=setTimeout(()=>gate.release(),800),started=Date.now();
+   const options={directory,resource:"free:try",mode:"exclusive" as const,signal:signal(),timeoutMs:0};
+   const outcome=await (queued?acquireQueuedResourceLease({...options,owner:"try"+counter}):acquireResourceLease(options)).then(lease=>{lease.release();return "granted";},error=>String(error));
+   clearTimeout(release);try{gate.release();}catch{}
+   if(patient&&queued){expect(outcome).toBe("granted");expect(Date.now()-started).toBeGreaterThanOrEqual(600);}
+   else{expect(outcome).toContain("timed out");expect(Date.now()-started).toBeLessThan(700);}
+  }
+ }
+});
+
+test("a request that must not wait still fails promptly when its resource is busy, even with a patient gate",async()=>{
+ const {directory,env}=scenario();configure(env);
+ const holder=start({mode:"hold",directory,resource:"free:busy",access:"exclusive"},env);await holder.next("HELD");
+ const started=Date.now(),outcome=await acquireResourceLease({directory,resource:"free:busy",mode:"exclusive",signal:signal(),timeoutMs:0}).then(()=>"granted",error=>String(error));
+ expect(outcome).toContain("Resource lease timed out: free:busy");expect(Date.now()-started).toBeLessThan(1500);
+ holder.send("release");await holder.next("DONE");
 });
 
 const wedge=async(reentrantShared:boolean)=>{

@@ -21,23 +21,24 @@ pub struct SetContentType {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "content-type", kind: "set-content-type", record: "SetContentType" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set content type", "Inhaltstyp setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["opc".to_string(), "contentTypes".to_string(), if self.is_override { "overrides" } else { "defaults" }.to_string(), self.name.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for SetContentType {
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
         opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::content_type_write_diff(opc, self.is_override, &self.name, &self.content_type, self.index)))
     }
-
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
         let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(match previous {
             Some((at, content_type)) => vec![XlsxMutation::SetContentType(Self { is_override: self.is_override, name: self.name.clone(), content_type, index: Some(at) })],
             None => vec![XlsxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override: self.is_override, name: self.name.clone() })],
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set content type", "Inhaltstyp setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["opc".to_string(), "contentTypes".to_string(), if self.is_override { "overrides" } else { "defaults" }.to_string(), self.name.clone()]
     }
 }
 //#endregion 🔖️Payload

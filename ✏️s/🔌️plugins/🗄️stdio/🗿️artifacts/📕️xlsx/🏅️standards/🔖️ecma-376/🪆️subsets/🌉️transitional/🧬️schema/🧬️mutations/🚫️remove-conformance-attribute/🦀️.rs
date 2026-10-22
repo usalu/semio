@@ -11,19 +11,20 @@ pub struct RemoveConformanceAttribute {}
 impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for RemoveConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "conformance-attribute", kind: "remove-conformance-attribute", record: "RemoveConformanceAttribute" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        protocol::MutationOutcome::new(diff_conformance_attribute(base, None))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxTransitionalMutation>, semio_framework_value::ValueError> {
-        Ok(if conformance_attribute(base).is_some() { conformance_attribute_inverse(base, false) } else { Vec::new() })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxTransitionalMutation> for RemoveConformanceAttribute {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        protocol::MutationOutcome::new(diff_conformance_attribute(base, None))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxTransitionalMutation>, semio_framework_value::ValueError> {
+        Ok(if conformance_attribute(base).is_some() { conformance_attribute_inverse(base, false) } else { Vec::new() })
     }
 }
 //#endregion 🔖️Payload

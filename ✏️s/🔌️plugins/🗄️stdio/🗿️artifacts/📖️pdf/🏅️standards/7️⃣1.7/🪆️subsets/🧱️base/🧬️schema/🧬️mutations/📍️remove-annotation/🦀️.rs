@@ -20,19 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "annotation", kind: "remove-annotation", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_annotation(self.index, self.at))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove annotation {} on page {}", self.at, self.index), &format!("Anmerkung {} auf Seite {} entfernen", self.at, self.index))
     }
@@ -40,6 +27,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string(), self.at.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveAnnotation
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveAnnotation> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_remove_annotation(self.index, self.at))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

@@ -39,6 +39,7 @@ import { auditSchemaFormatsAndFacets } from "../📘️audit-schema-formats-and-
 import { auditMutationVocabulary } from "../💉️audit-mutation-vocabulary/🟦️.ts";
 import { auditRepresentationAndChildDirectories } from "../🛖️audit-representation-and-child-dirs/🟦️.ts";
 import { createTaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 📇️ Validates catalog vocabulary without reading unrelated generator outputs or workspace diagnostics. */
 export function loadCatalogTaxonomy(): Taxonomy {
@@ -348,8 +349,8 @@ export function semanticPackageSourceOutputPhase(repoRoot: string, generatorId: 
     const contract = taxonomy.generatorContracts[generatorId], row = semanticPackageProjectionCatalog(repoRoot, taxonomy)?.packages.find((entry) => entry.id === "wgpu-renderer");
     if (!row || contract?.packageGeneration?.kind !== "wgpu-package-artifacts" || contract.projectionActivation?.packageId !== row.id) return [];
     const root = resolve(repoRoot), gitOptions = { cwd: root, encoding: "utf8" as const, timeout: 5_000, maxBuffer: 1_048_576, stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"] };
-    if (resolve(execFileSync("git", ["rev-parse", "--show-toplevel"], gitOptions).trim()) !== root) return [];
-    const admitted = execFileSync("git", ["--literal-pathspecs", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", row.sourceRoot], gitOptions).split("\0").filter(Boolean).sort(projectionByteCompare);
+    if (resolve(runToolSyncV1("git", ["rev-parse", "--show-toplevel"], { ...gitOptions, check: true }).stdout.trim()) !== root) return [];
+    const admitted = runToolSyncV1("git", ["--literal-pathspecs", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", row.sourceRoot], { ...gitOptions, check: true }).stdout.split("\0").filter(Boolean).sort(projectionByteCompare);
     const expected = row.mappings.map((mapping) => mapping.sourcePath).sort(projectionByteCompare);
     if (JSON.stringify(admitted) !== JSON.stringify(expected) || admitted.some((path) => exactOwnerRegularFile(root, path) !== "file")) return [];
     const view = registryCatalogInputView(root, taxonomy);
@@ -407,7 +408,7 @@ export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, tax
               if (project.name !== previewProject || !preview) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget ${JSON.stringify(contract.previewTarget)} is absent from its owner project.`);
               else {
                 try { generatorPreviewExecution(contract, preview); }
-                catch { problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget must route exactly to its declared script invocation in its owner project.`); }
+                catch (cause) { problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget must route exactly to its declared script invocation in its owner project: ${cause instanceof Error ? cause.message : String(cause)}`); }
               }
             }
             if (contract.checkTarget) {

@@ -9,7 +9,7 @@ use create_step::CreateStep;
 use delete_machine::DeleteMachine;
 use delete_step::DeleteStep;
 use move_stock::MoveStock;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use protocol::SemanticMutation;
 use rename_machine::RenameMachine;
 use rename_step::RenameStep;

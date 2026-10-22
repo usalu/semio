@@ -17,11 +17,11 @@
     "@semio-tech/puzzle-2d": "workspace:*"
   },
   "scripts": {
-    "build": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:build",
-    "test": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:test",
-    "test:e2e": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:test-e2e",
-    "test:release": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:test-release",
-    "test:release:routing": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:test-release-routing"
+    "build": "repo run @semio-tech/semio-tech-play:build",
+    "test": "repo run @semio-tech/semio-tech-play:test",
+    "test:e2e": "repo run @semio-tech/semio-tech-play:test-e2e",
+    "test:release": "repo run @semio-tech/semio-tech-play:test-release",
+    "test:release:routing": "repo run @semio-tech/semio-tech-play:test-release-routing"
   },
   "devDependencies": {
     "@semio-tech/assets": "workspace:*",

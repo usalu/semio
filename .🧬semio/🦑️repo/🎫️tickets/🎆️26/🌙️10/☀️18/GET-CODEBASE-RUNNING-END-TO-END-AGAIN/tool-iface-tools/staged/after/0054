@@ -39,9 +39,9 @@ import { requireIssuedScriptInvocationV1, type ScriptInvocation } from "@semio-t
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 import { type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
-import { spawnToolSyncV1, spawnToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import course from "../🔣️.json" with { type: "json" };
 import deployment from "./🔣️.json" with { type: "json" };
+import { runToolSyncV1, startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🔣️Constants
 /** 🌐️ The host the CDN serves the site at. */
@@ -173,7 +173,7 @@ export const COURSE_DEPLOY_CLEANUP_MS = 45_000;
 export function docker(args: readonly string[], options: Readonly<{ signal?: AbortSignal; env?: NodeJS.ProcessEnv; input?: string | Uint8Array; cwd?: string }> = {}): Promise<DockerAnswer> {
   return new Promise((accept, reject) => {
     if (options.signal?.aborted) return reject(new Error("cancelled"));
-    const child = spawnToolV1("docker", [...args], { shell: false, cwd: options.cwd, env: Object.fromEntries(Object.entries({ ...process.env, ...options.env }).filter(([, value]) => value !== undefined)), stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
+    const child = startToolV1("docker", [...args], { shell: false, cwd: options.cwd, env: Object.fromEntries(Object.entries({ ...process.env, ...options.env }).filter(([, value]) => value !== undefined)), stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
     const written: Buffer[] = [];
     let stderr = "";
     child.stdout!.on("data", (chunk: Buffer) => written.push(chunk));
@@ -217,7 +217,7 @@ export async function dockerServerVersion(signal?: AbortSignal): Promise<string>
  * its time; `unknown` outside a git checkout. */
 export function sourceRevision(repoRoot: string): Readonly<{ revision: string; created: string }> {
   const git = (...args: string[]): string | undefined => {
-    const run = spawnToolSyncV1("git", args, { cwd: repoRoot, encoding: "utf8", windowsHide: true });
+    const run = runToolSyncV1("git", args, { cwd: repoRoot, encoding: "utf8", windowsHide: true });
     return run.status === 0 ? run.stdout.trim() : undefined;
   };
   const head = git("rev-parse", "HEAD");

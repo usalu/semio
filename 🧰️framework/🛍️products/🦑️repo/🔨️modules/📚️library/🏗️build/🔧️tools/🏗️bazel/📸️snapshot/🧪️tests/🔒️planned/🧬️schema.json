@@ -1,0 +1,94 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "files",
+  "planned",
+  "afterPlanning",
+  "replanned"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "planned": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "output",
+    "inputs"
+   ],
+   "properties": {
+    "output": {
+     "type": "string"
+    },
+    "inputs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    }
+   }
+  },
+  "afterPlanning": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "op",
+     "path"
+    ],
+    "properties": {
+     "op": {
+      "enum": [
+       "write",
+       "remove"
+      ]
+     },
+     "path": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "replanned": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "output",
+    "vanished",
+    "inputs"
+   ],
+   "properties": {
+    "output": {
+     "type": "string"
+    },
+    "vanished": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "inputs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    }
+   }
+  }
+ }
+}

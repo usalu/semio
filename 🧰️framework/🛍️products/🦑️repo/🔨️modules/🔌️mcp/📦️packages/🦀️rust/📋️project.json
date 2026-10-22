@@ -28,7 +28,7 @@
       "outputs": ["{projectRoot}/.🧾️store/build.json"],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       }
     },
     "test": {
@@ -44,7 +44,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "run": {
@@ -52,7 +52,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts run",
+        "command": "repo ./📜️script.ts run",
         "forwardAllArgs": true
       },
       "continuous": true,

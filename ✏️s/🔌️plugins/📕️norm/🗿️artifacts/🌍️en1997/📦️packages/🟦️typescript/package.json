@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1997:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1997:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1997:test"
+    "build": "repo run @semio-tech/norm-en1997:build",
+    "check": "repo run @semio-tech/norm-en1997:check",
+    "test": "repo run @semio-tech/norm-en1997:test"
   },
   "dependencies": {
     "@semio-tech/norm-js": "workspace:*"

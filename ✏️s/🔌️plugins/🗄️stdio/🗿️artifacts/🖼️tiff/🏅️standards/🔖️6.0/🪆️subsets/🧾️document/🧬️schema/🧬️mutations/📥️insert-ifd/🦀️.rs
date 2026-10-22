@@ -20,6 +20,16 @@ pub struct InsertIfdMutation {
 //#region Semantics
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "ifd", kind: "insert-ifd", record: "InsertIfd" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert IFD", "IFD einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["insert-ifd".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
         let Self { index, ifd } = self;
         protocol::MutationOutcome::new(contribute(base, *index, ifd.clone()))
@@ -27,12 +37,6 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(vec![TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert IFD", "IFD einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["insert-ifd".into()]
     }
 }
 pub fn contribute(base: &TiffSnapshot, index: usize, ifd: TiffIfd) -> TiffDiff {

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📥️ Purpose: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
 import{createHash}from"node:crypto";
 import{resolve,join,sep}from"node:path";

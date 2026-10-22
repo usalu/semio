@@ -3,7 +3,7 @@
 @comparison-semantic-pdf-v1
 Feature: Create a PDF document
   The reference implementation is used only by the test oracle. Production implementations must not
-  depend on it — `bun ./📜️script.ts dependency` proves `pdf-writer` is never production-reachable.
+  depend on it — `repo ./📜️script.ts dependency` proves `pdf-writer` is never production-reachable.
   Both the oracle's and this repository's bytes are read back by an INDEPENDENT parser before they
   are compared, so no producer is ever checked against its own reading of what it wrote.
 

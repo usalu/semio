@@ -48,7 +48,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-hairline-height",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-hairline-height",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -114,7 +114,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-sliver-outline",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only degenerate-sliver-outline",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -180,7 +180,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-l-shape",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-l-shape",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -246,7 +246,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-triangle",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only polygon-triangle",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -312,7 +312,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-roof-slab",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-roof-slab",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -378,7 +378,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-thin-plate",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-thin-plate",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -444,7 +444,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-unit-cube",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only rect-unit-cube",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -510,7 +510,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e-3",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e-3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -576,7 +576,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e3",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -642,7 +642,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e6",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only scale-one-hole-1e6",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -708,7 +708,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -774,7 +774,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-high",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-high",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -840,7 +840,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-low",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-low",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -906,7 +906,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-negative",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-one-hole-elevated-negative",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -972,7 +972,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-two-holes",
+      "command": "repo ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts generate --only solid-two-holes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },

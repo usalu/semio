@@ -72,7 +72,7 @@ fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: &Sourci
         return Err(refusal_of(format!("Sourcing Curation mutation was refused by its own vocabulary: {}", message.message)));
     }
     let inverse = protocol::Mutation::inverse(mutation, base)?;
-    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| refusal_of(format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message)))?;
+    let post = protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| refusal_of(format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message)))?;
     sourcing_curation_document_bytes(&post).map_err(refusal_of)?;
     Ok((post, inverse))
 }

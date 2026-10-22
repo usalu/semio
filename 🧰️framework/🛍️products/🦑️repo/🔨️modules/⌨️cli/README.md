@@ -2,7 +2,7 @@
 
 The repo command surface: the command framework and its verb tree, the engine and its event stream,
 the NDJSON / human / markdown renderers, the usage text, and the `mcp` verb that serves the protocol.
-Both native implementations expose one executable, `repo`. Repository verbs stay native; build verbs enter the owned build implementation through its tool-independent process port. `repo mcp` serves stdio with the profile selected by `SEMIO_REPO_MCP_CLIENT`. Human developers open `repo dashboard`; agents run declared owner targets and never start the dashboard. The terminal viewer remains a separately built implementation owned by `🎛️dashboard` and is prepared lazily through its authored target.
+Both native implementations expose one executable, `repo`. Repository verbs stay native; build verbs enter the owned build implementation through its tool-independent process port, which is the `🚀️launcher` module: it provisions the pinned JavaScript runtime from its registry, so no runtime has to be installed, and `repo --version` names the launcher, the runtime and the implementation. `repo mcp` serves stdio with the profile selected by `SEMIO_REPO_MCP_CLIENT`. Human developers open `repo dashboard`; agents run declared owner targets and never start the dashboard. The terminal viewer remains a separately built implementation owned by `🎛️dashboard` and is prepared lazily through its authored target.
 
 ## 📦️ Packages
 

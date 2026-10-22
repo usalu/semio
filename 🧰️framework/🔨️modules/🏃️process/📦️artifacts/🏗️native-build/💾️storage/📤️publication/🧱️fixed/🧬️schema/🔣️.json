@@ -12,6 +12,7 @@
           "verify"
         ],
         "platforms": [
+          "darwin",
           "linux",
           "win32"
         ]
@@ -79,6 +80,7 @@
         },
         "platform": {
           "enum": [
+            "darwin",
             "linux",
             "win32"
           ]
@@ -113,6 +115,7 @@
         },
         "platform": {
           "enum": [
+            "darwin",
             "linux",
             "win32"
           ]

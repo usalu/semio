@@ -231,7 +231,10 @@ impl ExtensionBundle {
     }
 }
 semio_framework_plugin_abi::component_persistent_local! {
-    static EXTENSION_BUNDLE: RefCell<ExtensionBundleRegistry> = RefCell::new(ExtensionBundleRegistry::new());
+    static EXTENSION_BUNDLE: RefCell<ExtensionBundleRegistry> = RefCell::new({
+        semio_framework_plugin_plugin_program::install_extension_inference_hooks(semio_framework_plugin_plugin_program::ExtensionInferenceHooks { cancel: cancel_extension_inference, with_context: extension_inference_context_erased });
+        ExtensionBundleRegistry::new()
+    });
 }
 /// 📤️ Admits one replacement while retaining the current owner; refusal leaves the candidate untouched.
 pub async fn install_extension_bundle(candidate: &mut Option<ExtensionBundle>) -> Result<bool, Fault> {
@@ -323,6 +326,9 @@ pub(crate) fn with_original_extension_inference_context<T>(run:impl FnOnce(Optio
         if bundle.is_some_and(|bundle|bundle.closing){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"extension inference owner is closing"));}
         run(bundle.and_then(|bundle|bundle.resource_owner.as_ref()).and_then(|owner|owner.inference_context()))
     })
+}
+fn extension_inference_context_erased(run: &mut dyn FnMut(Option<&dyn std::any::Any>) -> Result<(), semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError>) -> Result<(), semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
+    with_extension_inference_context(|context| run(context))
 }
 #[doc(hidden)]
 pub fn with_extension_inference_context<T>(run: impl FnOnce(Option<&dyn std::any::Any>) -> Result<T, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError>) -> Result<T, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {

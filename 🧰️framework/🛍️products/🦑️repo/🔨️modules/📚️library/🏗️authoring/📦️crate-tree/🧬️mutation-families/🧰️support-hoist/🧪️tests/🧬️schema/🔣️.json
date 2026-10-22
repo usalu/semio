@@ -1,0 +1,125 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "hoists",
+  "impls"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "hoists": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "aggregate",
+     "eff",
+     "isComponent",
+     "leaves",
+     "taken",
+     "defect",
+     "expect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "aggregate": {
+      "type": "string"
+     },
+     "eff": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "isComponent": {
+      "type": "boolean"
+     },
+     "leaves": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "taken": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "defect": {
+      "type": "string"
+     },
+     "expect": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "aggregateText",
+         "supportFile",
+         "supportText",
+         "moved"
+        ],
+        "properties": {
+         "aggregateText": {
+          "type": "string"
+         },
+         "supportFile": {
+          "type": "string"
+         },
+         "supportText": {
+          "type": "string"
+         },
+         "moved": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "impls": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "head",
+     "expected"
+    ],
+    "properties": {
+     "head": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "null"
+       },
+       {
+        "type": "string"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

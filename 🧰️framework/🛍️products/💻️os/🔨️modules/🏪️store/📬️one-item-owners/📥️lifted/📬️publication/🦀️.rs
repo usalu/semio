@@ -161,6 +161,8 @@ impl<Mutation> ArtifactStoreBatchAdmissionRejected<Mutation> {
 /// is ONE undo step. It carries its own retirement authority: a cancelled batch retires the staged
 /// forwards, inverses, metadata and post root one owner per bounded turn.
 pub struct ArtifactStoreBatchStage<P, Mutation> {
+    pub diagnostics: semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
+    pub diagnostic_row: usize,
     pub unit_flags: Vec<(usize, bool)>,
     pub folding: Option<Box<ArtifactStorePreparedRetirement<P, Mutation>>>,
     pub fold_phase: u8,
@@ -285,7 +287,12 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     pub refused_issuers: [Option<semio_framework_value::FactoryAuthority>; 2],
     pub phase: ArtifactStoreOneItemPublicationPhase,
     pub verb: Option<String>,
-    pub transaction: Option<protocol::TransactionRef>,
+    pub transaction: std::mem::ManuallyDrop<Option<protocol::TransactionRef>>,
+    pub transaction_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::TransactionRef>>,
+    pub lane_insert: Option<protocol::HistoryFoldIndexInsert<String, HistoryLane>>,
+    pub lane_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
+    pub original_registry: std::mem::ManuallyDrop<Option<semio_framework_value_snapshot_read::snapshot_read_registry_handle::SnapshotReadRegistryHandle>>,
+    pub registry_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
     pub outbound: bool,
     pub announce_from: usize,
     pub announce_items: usize,
@@ -518,6 +525,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             && self.refused_issuers.iter().all(Option::is_none)
             && self.fault.is_none()
             && self.verb.is_none()
+            && self.transaction.is_none()
+            && self.transaction_close.is_none()
+            && self.lane_insert.is_none()
+            && self.lane_close.is_none()
+            && self.registry_retirement.is_none()
+            && self.original_registry.is_none()
     }
 
     /// 🔬️ The first owner `close_step` would try to retire, in its exact drain order, plus whether

@@ -138,6 +138,7 @@ impl<T: Send + 'static> ArtifactStoreHistoryLedgerRetirement<T> {
         Self { ledger: std::mem::ManuallyDrop::new(Some(ledger)), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), visibility: std::mem::ManuallyDrop::new(None), factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if let Some(closing) = self.closing_factory.as_ref() { return closing.demands(copy); }
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
         if self.visibility.is_some() { return retirement_owner_demands(&self.visibility, copy); }
         if let Some(ledger) = self.ledger.as_ref() {
@@ -164,6 +165,12 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history ledger exceeds admitted original owner depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let grant = RetainedCloneGrant { maximum_items: 1, ..grant };
+        if let Some(closing) = self.closing_factory.as_mut() {
+            let step = closing.step(grant)?;
+            if closing.terminal_is_empty() { self.closing_factory.take(); }
+            let progress = step.progress();
+            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) });
+        }
         if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant); }
         if self.visibility.is_some() { return retirement_owner_close(&mut self.visibility, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(ledger) = self.ledger.as_mut() {

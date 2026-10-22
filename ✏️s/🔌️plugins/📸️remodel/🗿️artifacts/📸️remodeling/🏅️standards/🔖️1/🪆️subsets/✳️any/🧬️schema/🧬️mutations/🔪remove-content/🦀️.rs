@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "content", kind: "remove-content", record: "RemovedContent" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.content_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<RemodelingSnapshot, Op> for RemoveContent
+where
+    Op: protocol::ColdMutation<RemodelingSnapshot, ReferenceDiff = RemodelingDiff> + From<AppendContent>,
+{
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +52,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.content_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

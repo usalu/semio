@@ -5,7 +5,7 @@
 use crate::diff::GisMapDiff;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::GisMapSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
@@ -17,7 +17,7 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 /// `derivation-rules.md`'s per-id-keyed-collection recipe.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap")]
+#[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap", reference = GisMapSnapshot, reference_diff = GisMapDiff)]
 pub enum GisMapMutation {
     CreatePosition(create_position::CreatePosition),
     DeletePosition(delete_position::DeletePosition),

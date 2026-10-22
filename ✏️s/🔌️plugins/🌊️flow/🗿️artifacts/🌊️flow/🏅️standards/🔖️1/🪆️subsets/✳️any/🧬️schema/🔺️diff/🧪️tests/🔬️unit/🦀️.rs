@@ -1,5 +1,5 @@
 use crate::FlowSnapshot;
-use protocol::DiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::FlowContentChild;
@@ -32,17 +32,17 @@ fn flow_diff_codecs_preserve_the_neutral_schema_and_child_handles() {
 #[semio_framework_async_macros::async_test]
 async fn a_diff_applies_slot_wise_inverts_exactly_and_absorbs_later_slots_over_earlier_ones() {
     use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};
-    use protocol::DiffAlgebra;
+    use protocol::{ColdDiffAlgebra, DiffAlgebra};
     let base = FlowSnapshot::default();
     let renamed = FlowDiff { schema: Some("flow.renamed".into()), ..Default::default() };
     let rescened = diff_replace_content(Vec::new(), Vec::new(), Default::default());
     let mut sum = renamed.clone();
     sum.absorb(rescened.clone());
     sum.absorb(FlowDiff { schema: Some("flow.final".into()), ..Default::default() });
-    let after = protocol::apply_diff(&sum, &base).expect("valid parent diff");
+    let after = protocol::apply_diff_cold(&sum, &base).expect("valid parent diff");
     assert_eq!(after.schema, "flow.final");
     assert_eq!(Some(&after.content), rescened.content.as_ref());
     assert_diff_algebra_inverse_law(&base, &sum).await;
-    assert_eq!(protocol::apply_diff(&sum.inverse(&base), &after).expect("valid inverse diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum.inverse(&base), &after).expect("valid inverse diff"), base);
     assert!(FlowDiff::default().is_empty() && !renamed.is_empty());
 }

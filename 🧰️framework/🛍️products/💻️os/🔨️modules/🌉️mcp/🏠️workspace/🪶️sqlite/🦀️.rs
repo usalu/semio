@@ -15,7 +15,7 @@ use crate::probe_json::{validate_with, write};
 
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
-struct NumberWord{pub bytes:[u8;32],pub length:usize}
+pub(crate) struct NumberWord{pub bytes:[u8;32],pub length:usize}
 
 impl NumberWord{pub fn text(&self)->&str{std::str::from_utf8(&self.bytes[..self.length]).expect("formatted Probe numeric ASCII")}}
 

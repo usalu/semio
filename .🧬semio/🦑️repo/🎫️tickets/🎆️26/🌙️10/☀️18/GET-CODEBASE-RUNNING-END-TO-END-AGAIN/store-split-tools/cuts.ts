@@ -1,0 +1,5 @@
+import {readRustSourceClosureV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readFileSync} from "node:fs";import {readFile} from "node:fs/promises";import {resolve} from "node:path";
+const os="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os",corpus=JSON.parse(readFileSync(resolve(os,"🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json"),"utf8")),cuts=JSON.parse(readFileSync(resolve(os,"🧪️tests/🧫️fixtures/📦️crate-boundaries/🧬️cuts.json"),"utf8"));
+const cfg=["target_arch=aarch64","target_os=macos","target_env=","target_pointer_width=64","unix","test"];
+for(const law of cuts.cuts){const p=corpus.crates.find((r:any)=>r.package===law.producer);const rows=await readRustSourceClosureV1([resolve(os,p.entry)],"/Users/ueli/Documents/semio",cfg,async x=>await readFile(x).catch((e:any)=>e.code==="ENOENT"?null:Promise.reject(e)));const b=rows.reduce((s,r)=>s+r.bytes,0);if(b>230000)console.log(law.producer,b,rows.length);}

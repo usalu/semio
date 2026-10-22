@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
+import { createContext, useContext, useMemo, useSyncExternalStore } from "../../⚛️react-port/🟦️.ts";
 import { guestPresenceTableV1, subscribeGuestPresenceV1 } from "../../📃️UiDocumentStore/🟦️.tsx";
 
 //#region 🔖️UiInterpreter

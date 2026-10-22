@@ -44,7 +44,7 @@ type Page = import("playwright").Page;
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/♨️hot-update.json", import.meta.url), "utf8")) as HotUpdateFixture;
 const longLevel = ["long", "exhaustive"].includes(process.env.SEMIO_TEST_LEVEL ?? "");
-const runtime = process.versions.bun ? `bun ${process.versions.bun}` : `node ${process.versions.node}`;
+const runtime = process.versions.bun ? `repo ${process.versions.bun}` : `node ${process.versions.node}`;
 
 const WRITES: Readonly<Record<HotUpdateFixture["writeStyles"][number], (path: string, content: string) => void>> = {
   "in-place": (path, content) => writeFileSync(path, content),

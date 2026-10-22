@@ -7,10 +7,7 @@ pub mod tests;
 pub mod paged_one_item;
 #[path = "../🧩️composition/📨️emission/📦️owned/🦀️.rs"]
 pub mod member_owned_batch;
-#[path = "../🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
-pub mod ephemeral_transfer;
-#[path = "../🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs"]
-pub mod ephemeral_preparation;
+pub use semio_framework_os_store_ephemeral::{ephemeral_preparation, ephemeral_transfer};
 #[path = "📥️lifted/📬️publication/🦀️.rs"]
 pub mod lifted_one_item_publication;
 #[path = "📥️lifted/🚦️native/🦀️.rs"]

@@ -21,7 +21,7 @@ pub mod central_apply;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = WriterSnapshot, diff = WriterDiff, schema = "writer.writer")]
+#[mutations(snapshot = WriterSnapshot, diff = WriterDiff, schema = "writer.writer", reference = WriterSnapshot, reference_diff = WriterDiff)]
 pub enum WriterMutation {
     RenameWriter(RenameWriter),
     ChangeUri(ChangeUri),

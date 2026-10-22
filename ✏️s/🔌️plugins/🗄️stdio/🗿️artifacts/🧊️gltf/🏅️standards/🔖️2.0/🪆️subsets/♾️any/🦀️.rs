@@ -104,7 +104,7 @@ pub mod derived_construction {
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
                 }
@@ -115,7 +115,7 @@ pub mod derived_construction {
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -421,7 +421,7 @@ pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: 
     let mutation = semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::gltf_row_mutation(kind, params_json)?;
     let base = gltf_bridge_read(document)?;
     let mut restored = semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::gltf_bridge_apply(kind, "mutation", &mutation, &base)?;
-    for step in <semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation as protocol::Mutation<semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
+    for step in <semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation as protocol::ColdMutation<semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
         restored = semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::gltf_bridge_apply(kind, "inverse", &step, &restored)?;
     }
     gltf_bridge_write(&restored)

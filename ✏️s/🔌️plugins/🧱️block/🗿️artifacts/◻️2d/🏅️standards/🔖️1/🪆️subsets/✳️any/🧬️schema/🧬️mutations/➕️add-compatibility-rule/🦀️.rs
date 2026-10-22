@@ -32,6 +32,15 @@ pub fn add_compatibility_rule_at<Op: From<crate::add_compatibility_rule::AddComp
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for AddCompatibilityRule where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::remove_compatibility_rule::RemoveCompatibilityRule> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "compatibility-rule", kind: "add-compatibility-rule", record: "AddedCompatibilityRule" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add compatibility rule \"{}\"", self.rule.id), &format!("Kompatibilitätsregel \"{}\" hinzufügen", self.rule.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.rule.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for AddCompatibilityRule where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::remove_compatibility_rule::RemoveCompatibilityRule> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::add_compatibility_rule::diff::diff(self, base)
     }
@@ -41,12 +50,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for AddCompatibilityRule wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add compatibility rule \"{}\"", self.rule.id), &format!("Kompatibilitätsregel \"{}\" hinzufügen", self.rule.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.rule.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

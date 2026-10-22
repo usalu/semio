@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "ext-g-state", kind: "set-ext-g-state", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_ext_g_state(base, self.state.clone(), self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![Op::from(SetExtGState { state: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set ext-g-state {}", self.state.id), &format!("ExtGState {} setzen", self.state.id))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.state.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetExtGState
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetExtGState> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_ext_g_state(base, self.state.clone(), self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![Op::from(SetExtGState { state: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

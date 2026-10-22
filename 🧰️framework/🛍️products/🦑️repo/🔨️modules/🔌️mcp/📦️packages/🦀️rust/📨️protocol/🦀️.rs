@@ -174,6 +174,8 @@ pub struct Schema {
     pub items: Option<Box<Schema>>,
     pub additional_properties: Option<bool>,
     pub enumeration: Vec<String>,
+    pub min_length: u64,
+    pub pattern: String,
 }
 
 impl Schema {
@@ -207,6 +209,8 @@ impl Schema {
             ("required", (!self.required.is_empty()).then(|| J::Arr(self.required.iter().map(|name| J::Str(name.clone())).collect()))),
             ("items", self.items.as_ref().map(|items| items.json())),
             ("additionalProperties", self.additional_properties.map(J::Bool)),
+            ("minLength", (self.min_length > 0).then(|| J::UInt(self.min_length))),
+            ("pattern", (!self.pattern.is_empty()).then(|| J::Str(self.pattern.clone()))),
             ("enum", (!self.enumeration.is_empty()).then(|| J::Arr(self.enumeration.iter().map(|value| J::Str(value.clone())).collect()))),
         ])
     }
@@ -351,7 +355,7 @@ impl Content {
     pub(super) fn json(&self) -> J {
         J::object(vec![
             ("type", Some(J::Str(self.kind.clone()))),
-            ("text", self.blob.is_empty().then(|| J::Str(self.text.clone()))),
+            ("text", (!self.text.is_empty()).then(|| J::Str(self.text.clone()))),
             ("data", (!self.data.is_empty()).then(|| J::Str(self.data.clone()))),
             ("mimeType", (!self.mime_type.is_empty()).then(|| J::Str(self.mime_type.clone()))),
             ("uri", (!self.uri.is_empty()).then(|| J::Str(self.uri.clone()))),

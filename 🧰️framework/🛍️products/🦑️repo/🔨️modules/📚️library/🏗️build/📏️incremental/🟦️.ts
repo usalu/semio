@@ -1,9 +1,10 @@
+import {buildBackendRowV1} from "../🔌️backends/🟦️.ts";
 import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🛠️ The build implementations behind the tool-neutral interface that the harness judges. */
-export type IncrementalToolV1="nx"|"bazel";
+export type IncrementalToolV1=string;
 /** 🚦️ The phases of one scenario run: a warm re-run, the edited run and the reverted run. */
 export type IncrementalPhaseV1="warm"|"edit"|"revert";
 /** ✏️ The six kinds of edit every scenario applies. */
@@ -82,7 +83,7 @@ export function incrementalEffectV1(rows:readonly IncrementalSensitivityRowV1[],
 export function incrementalExpectedV1(sliceValue:unknown,tool:IncrementalToolV1,edit:IncrementalEditV1,sensitivity:readonly IncrementalSensitivityRowV1[]):IncrementalExpectedV1{
  const slice=incrementalSliceV1(sliceValue);closed("Edit",edit,"Closed incremental edit required");
  const ids=sorted(Object.keys(slice.tasks)),files=new Set(edit.files),dependents=new Map<string,string[]>();
- for(const id of ids)for(const other of tool==="bazel"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes)dependents.set(other,[...dependents.get(other)??[],id]);
+ for(const id of ids)for(const other of buildBackendRowV1(tool).dependencyModel==="all"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes)dependents.set(other,[...dependents.get(other)??[],id]);
  const direct=ids.filter(id=>slice.tasks[id]!.inputs.some(file=>files.has(file))),always=ids.filter(id=>!slice.tasks[id]!.cache);
  const effect=(id:string)=>incrementalEffectV1(sensitivity,slice.tasks[id]!.family,edit.kind,slice.tasks[id]!.outputs);
  const closure=(follows:(id:string)=>boolean):Set<string>=>{
@@ -91,7 +92,7 @@ export function incrementalExpectedV1(sliceValue:unknown,tool:IncrementalToolV1,
   return ran;
  };
  const must=closure(id=>effect(id)==="changed"),may=closure(id=>effect(id)!=="identical");
- const cutoff=ids.filter(id=>!may.has(id)&&(tool==="bazel"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes).some(other=>may.has(other)));
+ const cutoff=ids.filter(id=>!may.has(id)&&(buildBackendRowV1(tool).dependencyModel==="all"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes).some(other=>may.has(other)));
  return Object.freeze({direct:sorted(direct),must:sorted(must),may:sorted(may),cutoff});
 }
 
@@ -167,7 +168,7 @@ export function incrementalComparisonsV1(rows:readonly IncrementalRowV1[]):Incre
 export function incrementalRdepsPackageV1(sliceValue:unknown,tool:IncrementalToolV1,files:readonly string[]):string{
  const slice=incrementalSliceV1(sliceValue),quote=(value:string)=>JSON.stringify(value),edited=new Set(files),lines:string[]=[];
  for(const id of sorted(Object.keys(slice.tasks))){
-  const task=slice.tasks[id]!,sources=sorted([...(tool==="bazel"?task.dependsOn:task.consumes).map(other=>":"+incrementalLabelV1("t",other)),...task.inputs.filter(file=>edited.has(file)).map(file=>":"+incrementalLabelV1("f",file))]);
+  const task=slice.tasks[id]!,sources=sorted([...(buildBackendRowV1(tool).dependencyModel==="all"?task.dependsOn:task.consumes).map(other=>":"+incrementalLabelV1("t",other)),...task.inputs.filter(file=>edited.has(file)).map(file=>":"+incrementalLabelV1("f",file))]);
   lines.push(`filegroup(name = ${quote(incrementalLabelV1("t",id))}, srcs = [${sources.map(quote).join(", ")}])`);
  }
  for(const file of sorted(edited))lines.push(`filegroup(name = ${quote(incrementalLabelV1("f",file))})`);

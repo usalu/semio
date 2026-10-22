@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
   gumballHandleKindToTransformMode,

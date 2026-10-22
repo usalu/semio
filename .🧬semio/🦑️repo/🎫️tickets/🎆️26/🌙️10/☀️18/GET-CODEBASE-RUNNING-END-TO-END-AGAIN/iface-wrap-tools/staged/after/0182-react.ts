@@ -1,266 +1,137 @@
-/** 💡️ Board2dHost suggestions and events: the suggestion menu and its rows, the hover paint and dispatch and the buffered board event drain, flush, snapshot and selection application with the peer gesture end and camera interaction settle. */
-import { useCallback, useEffect, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
-import { type Board2dScene } from "@semio-tech/framework";
-import { createCoalescingActionDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
-import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";
-import { board2dGranularityById, board2dHoverActionArgs, board2dKindDomainById, board2dKindHoverFromElementId, board2dSuggestionMenuItems, board2dSuggestionMenuOwnsWindow, type BoardEventRow, latestBoard2dHoverId, parseBoard2dSuggestionMenu } from "../🔬️board-parsing/🟦️.ts";
-import { coalesceBoard2dEvents, collectBoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
-import { applySnapshotToSession, applyToSession, boardPeerOwnsGesture, pushBoardLiveMirrorMutations } from "../🔄️session-sync/🟦️.ts";
-import type { BoardCore1 } from "../🧰️board-session-state/🟦️.ts";
-import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
+/** 🧰️ Board2dHost session state: the scene, peer scope and window instance, the container, canvas, session and scheduler refs, the pending lanes, the gesture recognizer, the selection, epoch, error, context menu and suggestion state, the labels, the dispatchers, the vitals publishing, the render scheduler and the container size reader. */
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
+import { useLabel, useShellScopeOptional, registerIntroductionSurfaceResolver, windowElementId } from "@semio-tech/ui-react";
+import { type DemandFrameSchedulerV1, type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
+import { GestureRecognizer, type ComponentSceneHostProps, type Board2dScene } from "@semio-tech/framework";
+import { type Board2dPeer, BoardSessionFactoryContext, createBoardPeerScope } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { type Board2dStatus, board2dStatusJson, type BoardCamera, type BoardEventRow } from "../🔬️board-parsing/🟦️.ts";
+import { boardWorldToScreen } from "../📍️drop-and-camera/🟦️.ts";
 
 // #region Board2dHost
-/** 💡️ Wires the suggestion menu, hover and the buffered board event flush. */
-export function useBoardSuggestionsAndEvents(core: BoardCore1) {
-  const { boardStatusRef, cameraInteractionActiveRef, cameraSettleTimeoutRef, containerRef, contextMenu, dispatch, dispatchSettled, dispatchSuggestion, mapSuggestionMenu, node, onPeerGestureEndedRef, peerScope, pendingCameraDispatchRef, pendingEventRowsRef, pendingSelectionJsonRef, pendingSnapshotSceneRef, publishBoardVitals, scene, sessionEpoch, sessionRef, setLocalSelectionJson, setSuggestionFocus, suggestionCheckingPlacementLabel, suggestionNoPlacementLabel, windowInstanceId } = core;
-  //#region SuggestionMenu
-  const suggestionMenu = useMemo(() => parseBoard2dSuggestionMenu(scene?.suggestionMenuJson), [scene?.suggestionMenuJson]);
-  const suggestionMenuOwnsThisWindow = board2dSuggestionMenuOwnsWindow(suggestionMenu, windowInstanceId ?? undefined);
-  const suggestionPopupOwnsThisWindow = suggestionPopupOwnsWindow(suggestionMenu, windowInstanceId ?? undefined);
-  const suggestionMenuOwnsThisWindowRef = useRef(false);
-  suggestionMenuOwnsThisWindowRef.current = suggestionMenuOwnsThisWindow;
-  useSuggestionSubmenuSearch(contextMenu?.suggestTarget ?? null, { x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 }, windowInstanceId ?? undefined, dispatch, () => setSuggestionFocus(null));
-  useEffect(() => {
-    if (!suggestionMenuOwnsThisWindow) setSuggestionFocus(null);
-  }, [suggestionMenuOwnsThisWindow]);
-  /** 📂️ The candidate rows one suggestion menu lists — the context menu's "suggest" submenu and the floating
-   * popup share them. A submenu whose search has not echoed back yet lists the pending row. */
-  const suggestionRows = useMemo(() => {
-    const listed = suggestionMenuOwnsThisWindow && suggestionMenu ? suggestionMenu : { open: true, x: 0, y: 0, hoveredIndex: 0, submenu: true, pending: true, candidates: [] };
-    const rows = mapSuggestionMenu(board2dSuggestionMenuItems(listed, { checkingPlacement: suggestionCheckingPlacementLabel, noPlacement: suggestionNoPlacementLabel }));
-    return suggestionRowsWithFocus(rows, listed, setSuggestionFocus);
-  }, [mapSuggestionMenu, suggestionCheckingPlacementLabel, suggestionMenu, suggestionMenuOwnsThisWindow, suggestionNoPlacementLabel]);
-  const closeSuggestionMenu = useCallback(() => dispatchSuggestion("closeHandleSuggestions"), [dispatchSuggestion]);
+/** 🧰️ Holds the refs, state, labels, dispatchers and render scheduling of the board window. */
+export function useBoardSessionState({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
+  const scene = node.board2d;
+  const factory = useContext(BoardSessionFactoryContext);
+  const emptyPeerScope = useMemo(createBoardPeerScope, []);
+  const peerScope = factory?.scope ?? emptyPeerScope;
+  const peerRef = useRef<Board2dPeer | null>(null);
+  const board2dHostShellScope = useShellScopeOptional();
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sessionRef = useRef<Board2dWasmSession | null>(null);
+  const rawSessionRef = useRef<Board2dWasmSession | null>(null);
+  const schedulerRef = useRef<DemandFrameSchedulerV1 | null>(null);
+  const bootSyncedRef = useRef(false);
+  const pendingSnapshotSceneRef = useRef<Board2dScene | null>(null);
+  const pendingEventRowsRef = useRef<BoardEventRow[]>([]);
+  const hoverActiveRef = useRef(false);
+  const cameraInteractionActiveRef = useRef(false);
+  const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const vitalsPendingRef = useRef(false);
+  const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const pendingSelectionJsonRef = useRef<string | null>(null);
+  const onPeerGestureEndedRef = useRef<(flushed: boolean) => void>(() => {});
+  const boardStatusRef = useRef<Board2dStatus>({ snapshotParsed: null, snapshotChars: 0, refusalReason: "", pendingEvents: 0, guestRevision: 0 });
+  const [localSelectionJson, setLocalSelectionJson] = useState<string | null>(null);
+  const [sessionEpoch, setSessionEpoch] = useState(0);
+  const [sessionError, setSessionError] = useState<Error | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number; readonly suggestTarget: string | null }) | null>(null);
+  /** 🔦️ The trace record of the suggestion row under the pointer — the board paints only that placement. */
+  const [suggestionFocus, setSuggestionFocus] = useState<bigint | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.board");
+  const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
+  const suggestionCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
+  const suggestionNoPlacementLabel = useLabel("ui.host.noPlacement");
 
-  useEffect(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    if (!suggestionPopupOwnsThisWindow || !suggestionMenu?.handleId) {
-      applyToSession(session, (s) => s.brushCancelSlot?.());
-      return;
-    }
-    applyToSession(session, (s) => {
-      s.brushOpenSlot?.(suggestionMenu.handleId!);
-      s.brushSetCandidateIndex?.(suggestionMenu.hoveredIndex);
-    });
-  }, [sessionEpoch, suggestionMenu?.handleId, suggestionMenu?.hoveredIndex, suggestionPopupOwnsThisWindow]);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [peerScope, node.controllerId, node.surfaceId, onAction],
+  );
 
-  useEffect(() => {
-    if (!suggestionMenu?.open || suggestionMenuOwnsThisWindow) return undefined;
-    const onKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if (event.key === "Escape") closeSuggestionMenu();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeSuggestionMenu, suggestionMenu?.open, suggestionMenuOwnsThisWindow]);
-  //#endregion SuggestionMenu
+  /** 🏁️ `dispatch`'s awaitable twin — the only shape {@link createCoalescingActionDispatcher}'s
+   * "at most one round trip outstanding" gate can actually arm, since `dispatch` throws `onAction`'s
+   * promise away (World3dHost wave B33: 72 hover turns enqueued by one 70-move storm, 11 settled). */
+  const dispatchSettled = useCallback(
+    (action: string, args?: Record<string, unknown>) => Promise.resolve(onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } })),
+    [node.controllerId, node.surfaceId, onAction],
+  );
 
-  //#region Hover
-  const granularityById = useMemo(() => board2dGranularityById(scene?.snapshotJson ?? ""), [scene?.snapshotJson]);
-  const granularityByIdRef = useRef(granularityById);
-  granularityByIdRef.current = granularityById;
-  const interactionDomainId = scene?.domainId;
-  /** 🩺️ Imperative mirror of the painted hover — no React state, so a pointermove never re-renders the host. */
-  const publishHoverPaint = useCallback((id: string | null) => {
+  /** 💡️ The popup is a per-window surface, so the verbs that open, preview, place or close it
+   * carry the exact window instance they belong to — a sibling pane must not adopt another pane's menu. */
+  const dispatchSuggestion = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      dispatch(action, { windowId: windowInstanceId ?? undefined, ...args });
+    },
+    [dispatch, windowInstanceId],
+  );
+
+  const mapContextMenu = useMapContextMenuSpecs(
+    useCallback((action: string, args?: Record<string, unknown>) => (action === "openHandleSuggestions" ? dispatchSuggestion(action, args) : dispatch(action, args)), [dispatch, dispatchSuggestion]),
+  );
+  const mapSuggestionMenu = useMapContextMenuSpecs(dispatchSuggestion);
+  const shellContextMenuFallback = useShellContextMenuFallback();
+
+  /** 🩺️ Republishes the live probe vitals straight onto the container, the way
+   * `data-board-snapshot-parsed` already is: a gumball drag and a marquee update these every frame, and
+   * routing that through React state would re-render the whole pane on each pointer move. */
+  const publishBoardVitals = useCallback((): void => {
     const container = containerRef.current;
     if (!container) return;
-    if (id === null) container.removeAttribute("data-board-hover-paint-id");
-    else container.setAttribute("data-board-hover-paint-id", id);
+    const session = rawSessionRef.current;
+    try {
+      container.setAttribute("data-board-interaction-json", session?.interactionJson?.() ?? "{}");
+      container.setAttribute("data-board-transform-json", session?.transformGumballJson?.() ?? "{}");
+      container.setAttribute("data-board-target-regions-json", session?.targetRegionsJson?.() ?? "[]");
+      container.setAttribute("data-board-handle-positions-json", session?.handlePositionsJson?.() ?? "{}");
+    } catch {}
+    container.setAttribute("data-board-status-json", board2dStatusJson(boardStatusRef.current));
   }, []);
 
-  /** 🖱️ Transitive KIND hover: pointing at a catalogue kind row anywhere in the chrome paints every
-   * node/handle/edge of that kind on EVERY board pane, the 2d twin of puzzle 3d's `hoveredKindId`. The
-   * engine already owns the whole mechanism (`set_hovered_kind_silent` → `ids_matching_kind_hover` →
-   * `hovered_style_kind`); nothing called it, which is why 2B had to leave the catalogue rows unbound.
-   *
-   * 🧲️ It listens on the document rather than taking a per-row action, for two reasons: a hover is not a
-   * document verb (it must never cost a guest round trip or a repaint), and a per-row `UiValue` arg map
-   * is exactly the tree-row cost that starves sibling panels. The row is recognised by ITS OWN kind id
-   * matched against this board's catalogs, so no panel id scheme and no plugin name is hard-coded here. */
-  const kindDomainById = useMemo(() => board2dKindDomainById(scene?.glyphCatalogsJson ?? ""), [scene?.glyphCatalogsJson]);
-  const kindDomainByIdRef = useRef(kindDomainById);
-  kindDomainByIdRef.current = kindDomainById;
-  useEffect(() => {
+  const publishBoardVitalsRef = useRef(publishBoardVitals);
+  publishBoardVitalsRef.current = publishBoardVitals;
+
+  /** 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in
+   * between, through the one shared demand scheduler — the paint also republishes the probe vitals. */
+  const scheduleRender = useCallback((): void => {
+    vitalsPendingRef.current = true;
+    schedulerRef.current?.invalidate();
+  }, []);
+
+  const readContainerSize = useCallback((): { w: number; h: number } => {
     const container = containerRef.current;
-    let painted: string | null = null;
-    const paint = (hover: { readonly domain: string; readonly kindId: string } | null): void => {
-      const next = hover ? `${hover.domain}:${hover.kindId}` : null;
-      if (next === painted) return;
-      painted = next;
-      applyToSession(sessionRef.current, (session) => session.setHoveredKindSilent?.(hover?.domain ?? null, hover?.kindId ?? null));
-      if (!container) return;
-      if (next === null) container.removeAttribute("data-board-hovered-kind");
-      else container.setAttribute("data-board-hovered-kind", next);
+    if (!container) return { w: 1, h: 1 };
+    const rect = container.getBoundingClientRect();
+    return {
+      w: Math.max(1, Math.round(rect.width || container.clientWidth)),
+      h: Math.max(1, Math.round(rect.height || container.clientHeight)),
     };
-    const onPointerOver = (event: globalThis.PointerEvent): void => {
-      const target = event.target instanceof globalThis.Element ? event.target.closest<globalThis.HTMLElement>("[id]") : null;
-      paint(board2dKindHoverFromElementId(target?.id, kindDomainByIdRef.current));
-    };
-    globalThis.document.addEventListener("pointerover", onPointerOver, true);
-    return () => {
-      globalThis.document.removeEventListener("pointerover", onPointerOver, true);
-      paint(null);
-    };
-  }, [sessionEpoch]);
-  /** 🐁️ At most one `interactionHover` round trip outstanding, the rest coalesced onto the latest
-   * target — the board twin of `World3dHost`'s `dispatchInstanceHover`. An app declaring no interaction
-   * domain publishes nothing rather than dispatching a verb no window kind owns. */
-  const dispatchBoardHover = useMemo(
-    () =>
-      createCoalescingActionDispatcher<string | null>((id) => {
-        if (!interactionDomainId) return undefined;
-        return dispatchSettled("interactionHover", board2dHoverActionArgs(interactionDomainId, (id && granularityByIdRef.current.get(id)) || "node", id));
-      }),
-    [dispatchSettled, interactionDomainId],
-  );
-  //#endregion Hover
+  }, []);
 
-  //#region BoardEventFlush
-  const drainIntoBuffer = useCallback((): void => {
-    const session = sessionRef.current;
-    if (!session) return;
-    try {
-      const json = session.drainEventsJson();
-      if (!json || json === "[]") return;
-      const rows = JSON.parse(json) as BoardEventRow[];
-      pendingEventRowsRef.current.push(...rows);
-      const hovered = latestBoard2dHoverId(rows);
-      if (hovered !== undefined) {
-        publishHoverPaint(hovered);
-        dispatchBoardHover(hovered);
-      }
-      const mutations = collectBoardLiveMirrorMutations(rows);
-      pushBoardLiveMirrorMutations(peerScope, node.controllerId, node.surfaceId, mutations);
-      if (mutations.selectionIds) setLocalSelectionJson(JSON.stringify(mutations.selectionIds));
-      boardStatusRef.current.pendingEvents = pendingEventRowsRef.current.length;
-      publishBoardVitals();
-    } catch {}
-  }, [dispatchBoardHover, peerScope, node.controllerId, node.surfaceId, publishBoardVitals, publishHoverPaint]);
-
-  const dispatchBufferedEvents = useCallback((): void => {
-    if (pendingEventRowsRef.current.length === 0) return;
-    const { eventsJson, camera } = coalesceBoard2dEvents(pendingEventRowsRef.current);
-    pendingEventRowsRef.current = [];
-    boardStatusRef.current.pendingEvents = 0;
-    publishBoardVitals();
-    if (camera) dispatch("setCamera", { camera });
-    if (eventsJson !== "[]") dispatch("applyBoardEvents", { eventsJson });
-  }, [dispatch, publishBoardVitals]);
-
-  const drainAndMaybeFlush = useCallback((): void => {
-    drainIntoBuffer();
-    if (pendingEventRowsRef.current.length === 0) return;
-    const { flushNow } = coalesceBoard2dEvents(pendingEventRowsRef.current);
-    if (flushNow) dispatchBufferedEvents();
-  }, [drainIntoBuffer, dispatchBufferedEvents]);
-
-  const flushBoardEvents = useCallback((): void => {
-    drainIntoBuffer();
-    dispatchBufferedEvents();
-  }, [drainIntoBuffer, dispatchBufferedEvents]);
-
-  /** 🩺️ Records one snapshot-apply verdict into the status vitals and republishes them, so a
-   * refused snapshot names itself in the DOM instead of only in the console. */
-  const recordSnapshotVerdict = useCallback(
-    (applied: Board2dScene, parsed: boolean): void => {
-      boardStatusRef.current.snapshotParsed = parsed;
-      boardStatusRef.current.snapshotChars = applied.snapshotJson.length;
-      boardStatusRef.current.refusalReason = parsed ? "" : "engine refused the snapshot";
-      boardStatusRef.current.guestRevision += 1;
-      containerRef.current?.setAttribute("data-board-snapshot-parsed", String(parsed));
-      publishBoardVitals();
-    },
-    [publishBoardVitals],
-  );
-
-  const applyPendingSnapshotIfReady = useCallback(
-    (session: Board2dWasmSession): void => {
-      const pendingScene = pendingSnapshotSceneRef.current;
-      if (!pendingScene) return;
-      if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || boardPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) return;
-      pendingSnapshotSceneRef.current = null;
-      applyToSession(session, (s) => recordSnapshotVerdict(pendingScene, applySnapshotToSession(s, pendingScene)));
-    },
-    [peerScope, node.controllerId, node.surfaceId, recordSnapshotVerdict],
-  );
-
-  /** 🐢️ Mirror of `applyPendingSnapshotIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
-  const applyPendingSelectionIfReady = useCallback(
-    (session: Board2dWasmSession): void => {
-      const pendingSelectionJson = pendingSelectionJsonRef.current;
-      if (pendingSelectionJson === null) return;
-      if (boardPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) return;
-      pendingSelectionJsonRef.current = null;
-      applyToSession(session, (s) => {
-        if (s.setSelectionIdsJsonSilent) s.setSelectionIdsJsonSilent(pendingSelectionJson);
-        else s.setSelectionIdsJson(pendingSelectionJson);
-      });
-    },
-    [peerScope, node.controllerId, node.surfaceId],
-  );
-
-  onPeerGestureEndedRef.current = (flushed: boolean): void => {
-    const session = sessionRef.current;
-    if (!session) return;
-    if (flushed) {
-      pendingSnapshotSceneRef.current = null;
-      pendingSelectionJsonRef.current = null;
-      return;
-    }
-    applyPendingSnapshotIfReady(session);
-    applyPendingSelectionIfReady(session);
-  };
-
-  /**
-   * 🫧️ Call when a gesture on this pane ends, right before flushing. Drains first so we know
-   * whether a commit is about to go out; if so, drops any pending snapshot/selection stashed mid-gesture
-   * instead of applying it — that stashed snapshot is stale (a guest echo that landed while the gesture was
-   * live) and the flush response due back in a moment will supersede it anyway, so applying it here would
-   * flicker: correct live state -> stale snapshot -> correct committed state. Returns whether a flush is
-   * pending, so the caller can pass it on to peers.
-   */
-  const settleGestureEnd = useCallback(
-    (session: Board2dWasmSession): boolean => {
-      drainIntoBuffer();
-      const flushed = pendingEventRowsRef.current.length > 0;
-      if (flushed) {
-        pendingSnapshotSceneRef.current = null;
-        pendingSelectionJsonRef.current = null;
-      } else {
-        applyPendingSnapshotIfReady(session);
-        applyPendingSelectionIfReady(session);
-      }
-      return flushed;
-    },
-    [applyPendingSnapshotIfReady, applyPendingSelectionIfReady, drainIntoBuffer],
-  );
-
-  /** 🐁️ Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
-  const beginCameraInteraction = useCallback((): void => {
-    cameraInteractionActiveRef.current = true;
-    if (cameraSettleTimeoutRef.current) clearTimeout(cameraSettleTimeoutRef.current);
-    cameraSettleTimeoutRef.current = setTimeout(() => {
-      cameraInteractionActiveRef.current = false;
-      cameraSettleTimeoutRef.current = null;
-      const session = sessionRef.current;
-      if (session) applyPendingSnapshotIfReady(session);
-      const pendingCamera = pendingCameraDispatchRef.current;
-      if (pendingCamera) {
-        pendingCameraDispatchRef.current = null;
-        dispatch("setCamera", pendingCamera);
-      }
-    }, 350);
-  }, [applyPendingSnapshotIfReady, dispatch]);
-
-  useEffect(
-    () => () => {
-      if (cameraSettleTimeoutRef.current) clearTimeout(cameraSettleTimeoutRef.current);
-    },
-    [],
-  );
-  //#endregion BoardEventFlush
-  return { applyPendingSelectionIfReady, applyPendingSnapshotIfReady, beginCameraInteraction, closeSuggestionMenu, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, flushBoardEvents, interactionDomainId, publishHoverPaint, recordSnapshotVerdict, settleGestureEnd, suggestionMenu, suggestionMenuOwnsThisWindowRef, suggestionPopupOwnsThisWindow, suggestionRows };
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
+      canvasPoint: (x, y) => {
+        const cameraJson = sceneRef.current?.cameraJson;
+        if (!cameraJson) return null;
+        const screen = boardWorldToScreen(cameraJson, readContainerSize(), { x, y });
+        if (!screen) return null;
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return null;
+        return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+      },
+    });
+  }, [windowInstanceId, readContainerSize]);
+  return { board2dHostShellScope, boardStatusRef, bootSyncedRef, cameraInteractionActiveRef, cameraSettleTimeoutRef, canvasRef, containerRef, contextMenu, contextMenuTitleLabel, dispatch, dispatchSettled, dispatchSuggestion, emptySceneLabel, factory, gestureRecognizer, hoverActiveRef, localSelectionJson, mapContextMenu, mapSuggestionMenu, node, onPeerGestureEndedRef, peerRef, peerScope, pendingCameraDispatchRef, pendingEventRowsRef, pendingSelectionJsonRef, pendingSnapshotSceneRef, publishBoardVitals, publishBoardVitalsRef, rawSessionRef, readContainerSize, requestContextMenu, scene, sceneRef, scheduleRender, schedulerRef, sessionEpoch, sessionError, sessionRef, setContextMenu, setLocalSelectionJson, setSessionEpoch, setSessionError, setSuggestionFocus, shellContextMenuFallback, suggestionCheckingPlacementLabel, suggestionFocus, suggestionMenuTitleLabel, suggestionNoPlacementLabel, vitalsPendingRef, windowInstanceId };
 }
 
-export type BoardCore2 = BoardCore1 & ReturnType<typeof useBoardSuggestionsAndEvents>;
+export type BoardCore1 = ReturnType<typeof useBoardSessionState>;
 // #endregion Board2dHost

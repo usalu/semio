@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -12,10 +14,10 @@ const HERE = import.meta.dir;
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 
 const REFERENCE_ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
-const LEGACY_RECIPE = "pattern-shell";
-const LEGACY_DIRECTORY = "🐚️pattern-shell";
-const LEGACY_FIXTURE_FILE = "🐚️pattern-shell.obj";
+const PATTERN_SHELL_ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
+const PATTERN_SHELL_RECIPE = "pattern-shell";
+const PATTERN_SHELL_DIRECTORY = "🐚️pattern-shell";
+const PATTERN_SHELL_FIXTURE_FILE = "🐚️pattern-shell.obj";
 
 const READER_MANIFEST = join(HERE, "📖️reader", "📦️packages", "🦀️rust", "Cargo.toml");
 const READER_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
@@ -60,13 +62,13 @@ const DOCUMENT_COORDINATES: Readonly<Record<string, readonly [string, string]>> 
 //#endregion 🧬️Contract
 
 //#region 🔨️Build
-function ensureLegacyBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`cargo build (legacy engine) failed with status ${result.status}`);
+function ensurePatternShellEngineBuilt(): void {
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build (pattern-shell engine) failed with status ${result.status}`);
 }
 
 function ensureReaderBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", READER_MANIFEST], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", READER_MANIFEST], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build (tobj-obj-reader) failed with status ${result.status}`);
 }
 
@@ -78,12 +80,12 @@ async function sha256(path: string): Promise<string> {
 //#endregion 🔨️Build
 
 //#region 🚪️Generate
-async function generateLegacy(outDir: string): Promise<void> {
-  ensureLegacyBuilt();
+async function generatePatternShell(outDir: string): Promise<void> {
+  ensurePatternShellEngineBuilt();
   mkdirSync(outDir, { recursive: true });
-  const outPath = join(outDir, LEGACY_FIXTURE_FILE);
-  const result = spawnSync(LEGACY_ENGINE_BIN, [outPath], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`legacy generator binary failed with status ${result.status}`);
+  const outPath = join(outDir, PATTERN_SHELL_FIXTURE_FILE);
+  const result = spawnSync(PATTERN_SHELL_ENGINE_BIN, [outPath], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`pattern-shell generator binary failed with status ${result.status}`);
   const digest = await sha256(outPath);
   console.log(`${outPath}\n${digest}`);
 }
@@ -96,21 +98,21 @@ function generateReaderRecipe(recipe: ReaderRecipe, fixturesRoot: string): void 
 }
 
 /** 🚪️ `--only <id>` dispatches to whichever family owns that id; NO `--only` rebuilds ONLY the
- *  legacy `pattern-shell` recipe — the exact behavior its own committed `testEvidence` entry's
- *  `generator.command` (`generate`, no flags) has always invoked, unchanged. The 20 reader-oracle
+ *  `pattern-shell` recipe — the one invocation its committed `testEvidence` entry's
+ *  `generator.command` (`generate`, no flags) records. The 20 reader-oracle
  *  corpus recipes are only ever built when named explicitly via `--only` (each carries its own
  *  `testEvidence` entry whose `generator.command` always names one), so a bare `generate` never
  *  grows to rebuild the whole corpus underneath the one recorded pattern-shell invocation. */
 async function generate(outFlagDir: string | null, only: string | null): Promise<void> {
   const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
   const root = outFlagDir ?? (fixtureOutRoot !== undefined && fixtureOutRoot.length > 0 ? fixtureOutRoot : FIXTURES_DIR);
-  if (only === null || only === LEGACY_RECIPE) {
-    await generateLegacy(join(root, LEGACY_DIRECTORY));
+  if (only === null || only === PATTERN_SHELL_RECIPE) {
+    await generatePatternShell(join(root, PATTERN_SHELL_DIRECTORY));
     return;
   }
   const recipe = READER_RECIPES.find((entry) => entry.id === only);
   if (recipe === undefined) {
-    throw new Error(`unknown recipe ${JSON.stringify(only)} — known: ${[LEGACY_RECIPE, ...READER_RECIPES.map((r) => r.id)].join(", ")}`);
+    throw new Error(`unknown recipe ${JSON.stringify(only)} — known: ${[PATTERN_SHELL_RECIPE, ...READER_RECIPES.map((r) => r.id)].join(", ")}`);
   }
   generateReaderRecipe(recipe, root);
 }
@@ -122,17 +124,17 @@ async function fileEntry(role: string, dir: string, filename: string, recipeId: 
   return { role, path: `../🧫️fixtures/${recipeId}/${filename}`, mediaType: "model/obj", sha256: await sha256(abs), bytes: statSync(abs).size };
 }
 
-async function manifestForLegacy(): Promise<Record<string, unknown>> {
-  const dir = join(FIXTURES_DIR, LEGACY_DIRECTORY);
-  const outPath = join(dir, LEGACY_FIXTURE_FILE);
+async function manifestForPatternShell(): Promise<Record<string, unknown>> {
+  const dir = join(FIXTURES_DIR, PATTERN_SHELL_DIRECTORY);
+  const outPath = join(dir, PATTERN_SHELL_FIXTURE_FILE);
   if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
   return {
-    id: LEGACY_RECIPE,
+    id: PATTERN_SHELL_RECIPE,
     class: "third-party-generated",
     target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
     units: { length: "unitless", angle: "degree" },
-    files: [await fileEntry("primary-obj", dir, LEGACY_FIXTURE_FILE, LEGACY_DIRECTORY)],
-    generator: { oracle: "tobj-obj-3-0-mutate", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate`, platform: `${process.platform}-${process.arch}` },
+    files: [await fileEntry("primary-obj", dir, PATTERN_SHELL_FIXTURE_FILE, PATTERN_SHELL_DIRECTORY)],
+    generator: { oracle: "tobj-obj-3-0-mutate", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate`, platform: `${process.platform}-${process.arch}` },
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
     comparisonProfile: "semantic-obj-3-0-v1",
     reproducible: true,
@@ -152,7 +154,7 @@ async function manifestForReaderRecipe(recipe: ReaderRecipe): Promise<Record<str
     target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
     units: { length: "unitless", angle: "degree" },
     files,
-    generator: { oracle: "tobj-obj-3-0-mutate-reader", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: `${process.platform}-${process.arch}` },
+    generator: { oracle: "tobj-obj-3-0-mutate-reader", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: `${process.platform}-${process.arch}` },
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
     comparisonProfile: "semantic-obj-3-0-v1",
     reproducible: true,
@@ -162,7 +164,7 @@ async function manifestForReaderRecipe(recipe: ReaderRecipe): Promise<Record<str
 
 async function manifests(only: string | null): Promise<void> {
   const entries: Record<string, unknown>[] = [];
-  if (only === null || only === LEGACY_RECIPE) entries.push(await manifestForLegacy());
+  if (only === null || only === PATTERN_SHELL_RECIPE) entries.push(await manifestForPatternShell());
   const readerTargets = only === null ? READER_RECIPES : READER_RECIPES.filter((recipe) => recipe.id === only);
   for (const recipe of readerTargets) entries.push(await manifestForReaderRecipe(recipe));
   console.log(JSON.stringify(only === null ? entries : entries[0], null, 2));
@@ -185,7 +187,7 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
   if (command === "list-recipes") {
-    console.log([LEGACY_RECIPE, ...READER_RECIPES.map((r) => r.id)].join("\n"));
+    console.log([PATTERN_SHELL_RECIPE, ...READER_RECIPES.map((r) => r.id)].join("\n"));
     return 0;
   }
   if (command === "document" || command === "document-manifests") {
@@ -204,7 +206,7 @@ async function main(argv: readonly string[]): Promise<number> {
     };
     const probes = join(HERE, "..", "🔬️probes", "📜️script.ts");
     const projectionOf = (path: string): string => {
-      const result = spawnSync("bun", [probes, "obj-document-project", "--input", path], { encoding: "utf8" });
+      const result = runToolSyncV1(runtimeCommandNameV1(), [probes, "obj-document-project", "--input", path], { encoding: "utf8" });
       if (result.status !== 0) throw new Error(`document reader refused ${path}: ${result.stdout}${result.stderr}`);
       return JSON.stringify(JSON.parse(result.stdout).measurements);
     };
@@ -241,7 +243,7 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "unitless", angle: "radian" },
         files,
         provenance: { source: "handcrafted", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "three-obj-3-0-document-reader", packageVersion: "0.182.0", engineFamily: "threejs", engineVersion: "0.182.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document", platform: currentPlatform() },
+        generator: { oracle: "three-obj-3-0-document-reader", packageVersion: "0.182.0", engineFamily: "threejs", engineVersion: "0.182.0", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document", platform: currentPlatform() },
         comparisonProfile: "semantic-obj-document-v1",
         reproducible: true,
         family: "mechanical",

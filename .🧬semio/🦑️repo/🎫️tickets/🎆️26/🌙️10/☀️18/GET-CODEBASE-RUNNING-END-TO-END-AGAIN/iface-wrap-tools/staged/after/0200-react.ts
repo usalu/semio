@@ -1,85 +1,123 @@
-/** 🗺️ The element-host registry: the one contract the generic React renderer reads to find the concrete element hosts it mounts.
- *
- * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}. The Interpreter knows only this contract; the composition root (`🪢️ElementHosts`) registers the concrete scene hosts, the extension hosts and the document-selection port, so no host is imported by the Interpreter.
- */
+// #region 🧲️Header
+/** 🧭️ Shell-local owner identities for transient document interaction state. */
+// #endregion 🧲️Header
 
-import type { ComponentKind, ComponentSceneHostProps } from "@semio-tech/framework";
-import type { ComponentType } from "../../⚛️react-port/🟦️.ts";
-import type { ComponentSceneHostResolverV1, ExtensionHostPropsV1, ExtensionHostResolverV1 } from "../🧩️host-contract/🟦️.ts";
+import { createContext, useContext } from "../../⚛️react-port/🟦️.ts";
 
-//#region ComponentSceneHostRegistry
-const componentSceneHosts = new Map<ComponentKind, ComponentSceneHostResolverV1>();
+export type LocalDocumentOwnerIdentityV1 = Readonly<{
+  pluginId: string;
+  appId: string;
+  sessionInstanceId: number;
+  runtimeKey: string;
+  clientInstanceId: string;
+}>;
 
-/** 🧭️ Registers the host that renders one `ComponentKind`; the returned function retires exactly this registration. */
-export function registerComponentSceneHostV1(kind: ComponentKind, resolve: ComponentSceneHostResolverV1): () => void {
-  componentSceneHosts.set(kind, resolve);
-  return () => {
-    if (componentSceneHosts.get(kind) === resolve) componentSceneHosts.delete(kind);
+export type LocalDocumentSessionIdentityV1 = Readonly<{ pluginId: string; appId: string; sessionInstanceId: number }>;
+export type LocalDocumentAttachmentIdentityV1 = Readonly<{ runtimeKey: string; clientInstanceId: string }>;
+
+export type LocalDocumentOwnerV1 = Readonly<{
+  id: string;
+  identity: LocalDocumentOwnerIdentityV1;
+  active: boolean;
+  subscribeRetirement(listener: () => void): () => void;
+}>;
+
+const ownerPart = (value: string): string => `${new TextEncoder().encode(value).byteLength}:${value}`;
+
+/** 🪪️ Encodes every exact document authority component without delimiter ambiguity. */
+export function localDocumentOwnerIdV1(identity: LocalDocumentOwnerIdentityV1): string {
+  return [identity.pluginId, identity.appId, String(identity.sessionInstanceId), identity.runtimeKey, identity.clientInstanceId].map(ownerPart).join("");
+}
+
+/** 🐣️ Gives a native/demo session a real transient owner before it is attached to a catalog document, then resolves the
+ * exact document authority once attachment supplies its runtime and client identities. */
+export function localDocumentOwnerIdentityForSessionV1(session: LocalDocumentSessionIdentityV1, attachment?: LocalDocumentAttachmentIdentityV1): LocalDocumentOwnerIdentityV1 {
+  return {
+    ...session,
+    runtimeKey: attachment?.runtimeKey ?? "shell.primary-session",
+    clientInstanceId: attachment?.clientInstanceId ?? "shell.primary-session",
   };
 }
 
-/** 🧭️ The scene host registered for `kind` as the component this lane mounts, or `undefined` when the composition root supplied none; the one place a registered host becomes a React component. */
-export function resolveComponentSceneHost(kind: ComponentKind): ComponentType<ComponentSceneHostProps> | undefined {
-  return componentSceneHosts.get(kind)?.() as ComponentType<ComponentSceneHostProps> | undefined;
-}
-//#endregion ComponentSceneHostRegistry
+class LocalDocumentOwnerRecordV1 implements LocalDocumentOwnerV1 {
+  readonly id: string;
+  readonly identity: LocalDocumentOwnerIdentityV1;
+  #active = true;
+  readonly #retirement = new Set<() => void>();
 
-//#region ExtensionHostRegistry
-const extensionHostResolvers = new Set<ExtensionHostResolverV1>();
-
-/** 🧩️ Registers a resolver of extension hosts; the returned function retires exactly this registration. */
-export function registerExtensionHostV1(resolve: ExtensionHostResolverV1): () => void {
-  extensionHostResolvers.add(resolve);
-  return () => {
-    extensionHostResolvers.delete(resolve);
-  };
-}
-
-/** 🧩️ The extension host the first registered resolver owns for `extensionId` as the component this lane mounts, or `undefined` when none does; the one place a registered host becomes a React component. */
-export function resolveExtensionHost(extensionId: string): ComponentType<ExtensionHostPropsV1> | undefined {
-  for (const resolve of extensionHostResolvers) {
-    const host = resolve(extensionId);
-    if (host !== undefined) return host as ComponentType<ExtensionHostPropsV1>;
+  constructor(identity: LocalDocumentOwnerIdentityV1) {
+    this.identity = Object.freeze({ ...identity });
+    this.id = localDocumentOwnerIdV1(identity);
   }
-  return undefined;
-}
-//#endregion ExtensionHostRegistry
 
-//#region LeftoverSelectionPort
-/** 🌲️ The document-scoped selection a guest's leftover publication leaves behind, as far as a retained tree reads it. */
-export type LeftoverSelectionOverlayV1 = { readonly ids: readonly string[] };
+  get active(): boolean { return this.#active; }
 
-/** 🌲️ The document selection a tree row reads: its subscription, its current overlay and its row predicate. */
-export type LeftoverSelectionPortV1 = {
-  readonly subscribe: (listener: () => void) => () => void;
-  readonly overlay: () => LeftoverSelectionOverlayV1 | null;
-  readonly itemSelected: (itemId: string, leftoverIds: readonly string[] | undefined) => boolean;
-};
+  subscribeRetirement(listener: () => void): () => void {
+    if (!this.#active) {
+      listener();
+      return () => {};
+    }
+    this.#retirement.add(listener);
+    return () => { this.#retirement.delete(listener); };
+  }
 
-const NO_LEFTOVER_SELECTION: LeftoverSelectionPortV1 = { subscribe: () => () => {}, overlay: () => null, itemSelected: () => false };
-
-let leftoverSelectionPort: LeftoverSelectionPortV1 = NO_LEFTOVER_SELECTION;
-
-/** 🌲️ Supplies the document selection every retained tree reads; the returned function retires exactly this port. */
-export function registerLeftoverSelectionPortV1(port: LeftoverSelectionPortV1): () => void {
-  leftoverSelectionPort = port;
-  return () => {
-    if (leftoverSelectionPort === port) leftoverSelectionPort = NO_LEFTOVER_SELECTION;
-  };
+  retire(): void {
+    if (!this.#active) return;
+    this.#active = false;
+    const listeners = [...this.#retirement];
+    this.#retirement.clear();
+    for (const listener of listeners) listener();
+  }
 }
 
-/** 🌲️ Subscribes to the registered document selection; a stable function, so a store hook never resubscribes. */
-export function subscribeLeftoverSelectionV1(listener: () => void): () => void {
-  return leftoverSelectionPort.subscribe(listener);
-}
+export const LOCAL_DOCUMENT_OWNER_CAPACITY_V1 = 256;
 
-/** 🌲️ The registered document selection's current overlay, `null` while none is published or registered. */
-export function leftoverSelectionOverlayV1(): LeftoverSelectionOverlayV1 | null {
-  return leftoverSelectionPort.overlay();
-}
+export const LocalDocumentOwnerContext = createContext<LocalDocumentOwnerV1 | null>(null);
+export const LocalDocumentWindowContext = createContext<string | null>(null);
 
-/** 🌲️ Whether the registered document selection marks the tree row `itemId` selected. */
-export function leftoverItemSelectedV1(itemId: string, leftoverIds: readonly string[] | undefined): boolean {
-  return leftoverSelectionPort.itemSelected(itemId, leftoverIds);
+/** 🧩️ Reads the exact shell-owned document lifetime of the interpreted window. */
+export function useLocalDocumentOwnerV1(): LocalDocumentOwnerV1 | null { return useContext(LocalDocumentOwnerContext); }
+
+/** 🪟️ Reads the interpreted window lane inside the exact local document owner. */
+export function useLocalDocumentWindowV1(): string | null { return useContext(LocalDocumentWindowContext); }
+
+/** 🧺️ Owns stable transient identities for one shell and retires them with their exact document. */
+export class LocalDocumentOwnerRegistryV1 {
+  readonly #owners = new Map<string, LocalDocumentOwnerRecordV1>();
+
+  constructor(readonly capacity: number = LOCAL_DOCUMENT_OWNER_CAPACITY_V1) {
+    if (!Number.isSafeInteger(capacity) || capacity < 1) throw new RangeError("local document owner capacity must be a positive safe integer");
+  }
+
+  acquire(identity: LocalDocumentOwnerIdentityV1): LocalDocumentOwnerV1 {
+    const id = localDocumentOwnerIdV1(identity);
+    const current = this.#owners.get(id);
+    if (current?.active) return current;
+    if (this.#owners.size >= this.capacity) throw new RangeError("local document owner capacity is exhausted");
+    const owner = new LocalDocumentOwnerRecordV1(identity);
+    this.#owners.set(id, owner);
+    return owner;
+  }
+
+  retire(identity: LocalDocumentOwnerIdentityV1): void { this.retireId(localDocumentOwnerIdV1(identity)); }
+
+  retireId(id: string): void {
+    const owner = this.#owners.get(id);
+    if (!owner) return;
+    this.#owners.delete(id);
+    owner.retire();
+  }
+
+  retain(identities: readonly LocalDocumentOwnerIdentityV1[]): void {
+    const active = new Set(identities.map(localDocumentOwnerIdV1));
+    for (const id of [...this.#owners.keys()]) if (!active.has(id)) this.retireId(id);
+  }
+
+  retireAll(): void {
+    const owners = [...this.#owners.values()];
+    this.#owners.clear();
+    for (const owner of owners) owner.retire();
+  }
+
+  get size(): number { return this.#owners.size; }
 }
-//#endregion LeftoverSelectionPort

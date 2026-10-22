@@ -57,7 +57,8 @@ impl<PA: PluginApp> Drop for HostInstanceGuard<'_, PA> {
 }
 /// 🔧️ A background maintenance or close turn's hold on one app, counted while it lives so a
 /// host crossing can tell a transient hold from one it must refuse.
-struct BackgroundInstanceGuard<'a, PA: PluginApp> {
+#[doc(hidden)]
+pub struct BackgroundInstanceGuard<'a, PA: PluginApp> {
     pub cell: &'a RuntimeAppCell<PA>,
     pub instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
 }
@@ -87,6 +88,7 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     pub mounted_policy: MountedOwnerPolicyV1,
     pub instance: std::sync::Mutex<AppInstance<PA>>,
     pub maintenance_pump: std::sync::Mutex<RuntimeLiveCleanupPump<PA>>,
+    pub result_pages: std::sync::Mutex<result_publication::NativeResultPages>,
     pub maintenance_status: AtomicU8,
     pub maintenance_fault_us: AtomicU64,
     pub maintenance_generation: AtomicU64,

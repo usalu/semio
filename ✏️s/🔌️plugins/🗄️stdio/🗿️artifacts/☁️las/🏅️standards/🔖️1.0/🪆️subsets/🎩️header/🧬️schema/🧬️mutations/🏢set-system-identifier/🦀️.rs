@@ -15,18 +15,21 @@ pub struct SetSystemIdentifier {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSystemIdentifier {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "system-identifier", kind: "set-system-identifier", record: "SetSystemIdentifier" };
 
-    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        let Self { system_identifier } = self;
-        protocol::MutationOutcome::new(diff::diff_set_system_identifier(system_identifier))
-    }
-    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetSystemIdentifier(SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set system identifier", "Systembezeichner setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<LasSnapshot, LasMutation> for SetSystemIdentifier {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::ColdMutation<LasSnapshot>>::ReferenceDiff> {
+        let Self { system_identifier } = self;
+        protocol::MutationOutcome::new(diff::diff_set_system_identifier(system_identifier))
+    }
+    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
+        Ok(vec![LasMutation::SetSystemIdentifier(SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() })])
     }
 }
 //#endregion 🔖️Payload

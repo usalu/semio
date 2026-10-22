@@ -1,8 +1,11 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runVitest } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📦️ Verifies owner-supplied deployment inventory without compiled component prerequisites. */
 class DeploymentContractTestScript extends BundleScript {
@@ -38,7 +41,7 @@ class ComponentOwnerContractTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("test-component-owners has no arguments");
     const { spawnSync } = await import("node:child_process");
-    const result = spawnSync(process.execPath, ["test", "./🔎️discovery/🧪️tests/🟦️.ts"], { cwd: this.root, stdio: "inherit", env: process.env });
+    const result = runToolSyncV1(runtimeCommandNameV1(), ["test", "./🔎️discovery/🧪️tests/🟦️.ts"], { cwd: this.root, stdio: "inherit", env: process.env });
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error("Component owner contract failed");
   }
@@ -63,7 +66,7 @@ class RebuildContractTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .registerLazy("generate", async () => (await import("./📽️projection/🟦️.ts")).GenerateScript)
   .registerLazy("session", async () => (await import("./🎮️playground/🧭️session/🟦️.ts")).SessionScript)
   .registerLazy("preview-generated", async () => (await import("./📽️projection/🟦️.ts")).PreviewGeneratedScript)
@@ -86,4 +89,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "generate" }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "generate" }));

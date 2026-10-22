@@ -23,17 +23,6 @@ pub struct SetActiveExample {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetActiveExample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "active-example", kind: "set-active-example", record: "SetActiveExample" };
 
-    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
-        protocol::MutationOutcome::new(Generation3dViewConfigPatch { active_example_id: Some(Generation3dActiveExampleChange { id: self.value.clone() }), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { value: base.active_example_id.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Active Example", "Aktives Beispiel setzen")
     }
@@ -41,4 +30,16 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
     fn target(&self) -> Vec<String> {
         vec!["activeExampleId".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetActiveExample {
+    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { active_example_id: Some(Generation3dActiveExampleChange { id: self.value.clone() }), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { value: base.active_example_id.clone() }.into()]
+    
+    })())
+}
 }

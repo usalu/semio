@@ -21,13 +21,17 @@ pub struct SetDrawingText {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetDrawingText where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_drawing_text::SetDrawingText> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "drawing-text", kind: "set-drawing-text", record: "SetDrawingText" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set drawing text to \"{}\"", self.text), &format!("Zeichnungstext auf \"{}\" setzen", self.text)) }
+    fn target(&self) -> Vec<String> { vec!["background-drawing".into()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for SetDrawingText where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_drawing_text::SetDrawingText> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_drawing_text(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_drawing_text(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set drawing text to \"{}\"", self.text), &format!("Zeichnungstext auf \"{}\" setzen", self.text)) }
-    fn target(&self) -> Vec<String> { vec!["background-drawing".into()] }
 }
 
 pub fn is_drawing_kind(kind: &str) -> bool {

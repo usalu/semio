@@ -58,8 +58,8 @@ production mode when you want a server.
 ## Build
 
 ```bash
-bun repo run os-hub:build        # cargo build --release --bin os-hub → dist/build
-bun repo run os-hub:build-dev    # dev profile, what the dev launcher execs
+repo run os-hub:build        # cargo build --release --bin os-hub → dist/build
+repo run os-hub:build-dev    # dev profile, what the dev launcher execs
 ```
 
 `build` is the release target (`🎛️commands/🏗️build-and-dev/🟦️.ts`, `BuildScript` →
@@ -111,8 +111,8 @@ The startup line reports the three postures it resolved:
 ### As the dev loop (development mode)
 
 ```bash
-bun repo run os-hub:dev --detach --wait-ready               # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
-bun repo run os-hub:dev-secure-suite --detach --wait-ready  # hub + React `s` + native + MCP children, one credential each
+repo run os-hub:dev --detach --wait-ready               # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
+repo run os-hub:dev-secure-suite --detach --wait-ready  # hub + React `s` + native + MCP children, one credential each
 ```
 
 `dev` publishes a trusted catalog into the data root on first run if none is there yet (it
@@ -210,11 +210,11 @@ Chosen independently of the document store.
 | `OS_HUB_DIRECTORY_NEO4J_USER` | `neo4j` | Neo4j user. |
 | `OS_HUB_DIRECTORY_NEO4J_PASSWORD` | empty string | Neo4j password. |
 
-Launching both halves on PostgreSQL in development: `bun repo run os-hub:dev-postgres --detach --wait-ready` (dashboard
-commands `os-hub:dev-postgres` / `os-hub:build-dev-postgres`; `semio …` is `bun run dashboard …`). It stages its own binary with the
+Launching both halves on PostgreSQL in development: `repo run os-hub:dev-postgres --detach --wait-ready` (dashboard
+commands `os-hub:dev-postgres` / `os-hub:build-dev-postgres`; `semio …` is `repo dashboard …`). It stages its own binary with the
 `postgres,neo4j` features into `dist/build-dev-postgres`, requires `OS_HUB_DATABASE_URL`, and points the
 directory at the same database unless `OS_HUB_DIRECTORY_BACKEND`/`OS_HUB_DIRECTORY_DATABASE_URL` say
-otherwise. The live lanes behind `bun repo run os-hub:directory-live-lanes` exercise both databases for
+otherwise. The live lanes behind `repo run os-hub:directory-live-lanes` exercise both databases for
 real (they start their own containers and need a running Docker daemon).
 
 The SQLite directory path is **not** configurable: it is always `{OS_HUB_DATA}/directory.db`, and
@@ -552,8 +552,8 @@ docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
 ```
 
 Both steps are permanent `os-hub-ts` verbs (`🌎️hub/🧪️tests/🐳️docker-image`), each publishing an acceptance record:
-`bun repo run os-hub-ts:docker-image-build -- [--tag <t>] [--jobs <n>]` is the cold build (full client output in
-`🗑️generated/docker-image-build.log`), and `bun repo run os-hub-ts:docker-image-check -- [--tag <t>] [--catalog-root <root>]
+`repo run os-hub-ts:docker-image-build -- [--tag <t>] [--jobs <n>]` is the cold build (full client output in
+`🗑️generated/docker-image-build.log`), and `repo run os-hub-ts:docker-image-check -- [--tag <t>] [--catalog-root <root>]
 [--kind <kindId>]` runs that image in the posture above on a fresh volume — the catalog goes in with `docker cp` and the
 credential on stdin, nothing is bind-mounted — behind a loopback stand-in for the TLS terminator
 (`hubForwardingProxy`), then requires `/readyz`, `/healthz`, the cleartext refusal, a two-client relay over one new
@@ -573,7 +573,7 @@ carry; and a `HEALTHCHECK` that sends `X-Forwarded-Proto: https`, because with
 refuses `/healthz` and `/readyz` too. `OS_HUB_DATA` is the single writable volume and the whole
 backup unit.
 
-An earlier revision of this file carried the whole repository and ran `bun repo run os-hub:dev`,
+An earlier revision of this file carried the whole repository and ran `repo run os-hub:dev`,
 because production mode was then unreachable and development mode needs the launcher's inherited
 fd 3. That is still the right shape for a *development* container and the wrong one for a server.
 
@@ -587,7 +587,7 @@ clients, and each needs one thing from you: the origin `s` is served from (which
 
 Give them the URL of the `s` bundle, not of the hub. `s` asks for the hub URL on first run and signs
 in against `POST /auth/sessions` with the email and password `os-hub credential set` minted. Serve
-the release bundle (`bun repo run @semio-tech/framework-os-dev:build-s-react-release`, output
+the release bundle (`repo run @semio-tech/framework-os-dev:build-s-react-release`, output
 `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/build-s-react-release`)
 from any static web server, put its origin in `OS_HUB_ALLOWED_ORIGINS`, and put both behind the same
 TLS-terminating proxy.
@@ -603,7 +603,7 @@ pays for is the model.
 Build the binary once:
 
 ```bash
-bun repo run @semio-tech/framework-os-mcp-rs:build-release
+repo run @semio-tech/framework-os-mcp-rs:build-release
 # → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp
 ```
 
@@ -664,8 +664,8 @@ restart, stop and cancellation; named repository checks use their registered tar
 ## Distribution tarball
 
 ```bash
-bun repo run workspace:publish -- os-hub     # → 🌎️hub/📦️packages/🦀️rust/dist/publish/…tar.gz + .sha256
-bun repo run workspace:publish -- os-mcp     # the end-user MCP binary, same shape
+repo run workspace:publish -- os-hub     # → 🌎️hub/📦️packages/🦀️rust/dist/publish/…tar.gz + .sha256
+repo run workspace:publish -- os-mcp     # the end-user MCP binary, same shape
 ```
 
 Each slice runs its project's `publish` target, which depends on that project's release build and

@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
 semio-framework-onboarding = { path = "../../../../../../../🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }

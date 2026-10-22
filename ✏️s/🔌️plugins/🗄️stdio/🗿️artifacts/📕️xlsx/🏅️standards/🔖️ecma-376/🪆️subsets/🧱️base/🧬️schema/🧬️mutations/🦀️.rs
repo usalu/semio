@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 #[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
@@ -63,7 +63,7 @@ pub mod set_shared_string;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxMutation")]
+#[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxMutation", reference = XlsxSnapshot, reference_diff = XlsxDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XlsxMutation {
     /// ➕️ Inserts a brand-new sheet (possibly pre-populated with cells).
@@ -107,7 +107,7 @@ pub const KINDS: &[&str] = &["insert-sheet", "remove-sheet", "rename-sheet", "se
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

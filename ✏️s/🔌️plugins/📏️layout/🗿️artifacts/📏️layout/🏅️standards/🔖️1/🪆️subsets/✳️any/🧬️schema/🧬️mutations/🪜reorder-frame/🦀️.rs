@@ -22,11 +22,7 @@ pub struct ReorderFrame {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_frame::ReorderFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "frame", kind: "reorder-frame", record: "ReorderFrame" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_reorder_frame(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ inverse_reorder_frame(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.forward {
             semio_framework_ui_locale::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
@@ -35,6 +31,14 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderFrame where Op: protocol::M
         }
     }
     fn target(&self) -> Vec<String> { vec![self.frame_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for ReorderFrame where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_frame::ReorderFrame> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_reorder_frame(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ inverse_reorder_frame(self, base)? 
+    })
+}
 }
 
 pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

@@ -1,0 +1,256 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "crdt-vocabulary-is-forbidden",
+   "rule": "policyNoCrdtVocabularyBreaches",
+   "files": {
+    "a/x.rs": [
+     "fn ok() {}",
+     "let s = merge_strategy(1); let t = ConflictRule::A;",
+     "use MergeStrategyKind;",
+     "fn assert_crdt_x() {}",
+     "// ResolutionPlanning mentions"
+    ],
+    "a/y.ts": [
+     "merge_strategy"
+    ],
+    "a/z.rs": [
+     "notmerge_strategy",
+     "merge_concurrent_diffs"
+    ]
+   },
+   "expect": [
+    [
+     "no-crdt-vocabulary-a/x.rs-2",
+     "mutation-migration/no-crdt-vocabulary",
+     "high",
+     2
+    ],
+    [
+     "no-crdt-vocabulary-a/x.rs-3",
+     "mutation-migration/no-crdt-vocabulary",
+     "high",
+     3
+    ],
+    [
+     "no-crdt-vocabulary-a/x.rs-4",
+     "mutation-migration/no-crdt-vocabulary",
+     "high",
+     4
+    ],
+    [
+     "no-crdt-vocabulary-a/x.rs-5",
+     "mutation-migration/no-crdt-vocabulary",
+     "high",
+     5
+    ],
+    [
+     "no-crdt-vocabulary-a/z.rs-2",
+     "mutation-migration/no-crdt-vocabulary",
+     "high",
+     2
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "leaf-mutations-do-not-override-validate",
+   "rule": "policyNoValidateOverrideBreaches",
+   "files": {
+    "a/🧬️mutations/🔹️m/🦀️.rs": [
+     "impl X {",
+     "    fn validate(&self) -> bool { true }",
+     "}",
+     "fn validate(&self, x: u8) {}",
+     "fn validate(&mut self) {}"
+    ],
+    "a/b/🦀️.rs": [
+     "fn validate(&self) {}",
+     "impl CompositeMutationKind<D> for C {",
+     "    fn other(&self) {}",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "no-validate-override-a/🧬️mutations/🔹️m/🦀️.rs-2",
+     "mutation-migration/no-validate-override",
+     "high",
+     2
+    ],
+    [
+     "no-validate-override-a/🧬️mutations/🔹️m/🦀️.rs-4",
+     "mutation-migration/no-validate-override",
+     "high",
+     4
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "validate-overrides-inside-mutation-kind-impls-are-located-at-the-override",
+   "rule": "policyNoValidateOverrideBreaches",
+   "git": true,
+   "files": {
+    "a/b/🦀️.rs": [
+     "fn first() {}",
+     "impl<T> MutationKind<D> for K {",
+     "    fn validate(&self) {}",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "no-validate-override-a/b/🦀️.rs-3",
+     "mutation-migration/no-validate-override",
+     "high",
+     3
+    ]
+   ],
+   "defect": "🟦️.ts:94 adds the override offset, which is relative to the impl body, to the offset of the impl header, so the breach points at the header line instead of the validate line"
+  },
+  {
+   "id": "severity-hint-is-retired",
+   "rule": "policySeverityInfoBreaches",
+   "files": {
+    "a/x.rs": [
+     "let s = Severity::Hint;",
+     "let t = Severity.Hint;",
+     "let u = \"hint\"; // plain",
+     "let v = (\"hint\", Severity::Warning);",
+     "const level = \"hint\";"
+    ],
+    "a/y.ts": [
+     "const s = { severity: 'hint' };",
+     "const hint = 1;"
+    ],
+    "a/z.py": [
+     "Severity.Hint"
+    ]
+   },
+   "expect": [
+    [
+     "severity-hint-a/x.rs-1",
+     "mutation-migration/no-severity-hint",
+     "high",
+     1
+    ],
+    [
+     "severity-hint-a/x.rs-2",
+     "mutation-migration/no-severity-hint",
+     "high",
+     2
+    ],
+    [
+     "severity-hint-literal-a/x.rs-4",
+     "mutation-migration/no-severity-hint",
+     "high",
+     4
+    ],
+    [
+     "severity-hint-literal-a/x.rs-5",
+     "mutation-migration/no-severity-hint",
+     "high",
+     5
+    ],
+    [
+     "severity-hint-literal-a/y.ts-1",
+     "mutation-migration/no-severity-hint",
+     "high",
+     1
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "merge-policy-spellings-match-on-every-surface",
+   "rule": "policyMergePolicyParityBreaches",
+   "files": {
+    "🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs": [
+     "LaissezFaire",
+     "Normal",
+     "Vigilant"
+    ],
+    "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts": [
+     "laissezFaire",
+     "normal",
+     "vigilant"
+    ],
+    "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx": [
+     "LaissezFaire",
+     "Normal"
+    ]
+   },
+   "expect": [
+    [
+     "merge-policy-parity-🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+     "mutation-migration/merge-policy-parity",
+     "high",
+     0
+    ],
+    [
+     "merge-policy-parity-🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🤝️collaboration/🟦️.ts",
+     "mutation-migration/merge-policy-parity",
+     "high",
+     0
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "derive-glue-only-mounts-its-owner",
+   "rule": "policyDeriveGlueMountBreaches",
+   "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs": [
+     "pub fn expand_x() {}"
+    ],
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🦀️.rs\"] mod component;"
+    ]
+   },
+   "expect": [],
+   "git": true
+  },
+  {
+   "id": "derive-glue-must-not-expand",
+   "rule": "policyDeriveGlueMountBreaches",
+   "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs": [
+     "x"
+    ],
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🦀️.rs\"] mod component;",
+     "fn expand_helper() {}"
+    ]
+   },
+   "expect": [
+    [
+     "derive-glue-mount-🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+     "mutation-migration/derive-glue-mount",
+     "high",
+     0
+    ]
+   ],
+   "git": true
+  },
+  {
+   "id": "derive-glue-without-its-owner",
+   "rule": "policyDeriveGlueMountBreaches",
+   "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🦀️.rs\"] mod component;"
+    ]
+   },
+   "expect": [
+    [
+     "derive-glue-mount-🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+     "mutation-migration/derive-glue-mount",
+     "high",
+     0
+    ]
+   ],
+   "git": true
+  }
+ ]
+}

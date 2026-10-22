@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🪞️ Delegates to [`StoreWire::ensure_durable_group_idle`].
     #[inline] pub fn ensure_durable_group_idle(&self) -> Result<(), VcsError> { self.wire.ensure_durable_group_idle() }
@@ -169,6 +169,12 @@ where
 
     /// 🪞️ Delegates to [`StoreOwners::owned_mutation_retirement_birth_bytes`].
     #[inline] pub fn owned_mutation_retirement_birth_bytes(&self)->Result<usize,ValueError> { self.owners.owned_mutation_retirement_birth_bytes() }
+
+    /// 🪞️ Delegates to [`StoreLog::history_read_retirement_birth_bytes`].
+    #[inline] pub fn history_read_retirement_birth_bytes()->usize { StoreLog::<P,Mutation>::history_read_retirement_birth_bytes() }
+
+    /// 🪞️ Delegates to [`StoreLog::snapshot_alias_retirement_birth_bytes`].
+    #[inline] pub fn snapshot_alias_retirement_birth_bytes()->usize { StoreLog::<P,Mutation>::snapshot_alias_retirement_birth_bytes() }
 
     /// 🪞️ Delegates to [`StoreOwners::retire_owned_mutation`].
     #[inline] pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError> { self.owners.retire_owned_mutation(owner, grant) }

@@ -15,7 +15,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify note-document-contract",
+        "command": "repo ./📜️script.ts verify note-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {

@@ -16,7 +16,7 @@ use super::*;
 
 type MutationDomainOperations = Vec<(String, String)>;
 
-/// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`bun repo run
+/// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`repo run
 /// @semio-tech/dsl-derive-rs:generate`), the only authority file an expansion reads and tracks, so an edit elsewhere in the taxonomy,
 /// `package.json` or any `📋️project.json` never invalidates a crate that derives mutations.
 #[doc(hidden)] pub const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json";
@@ -24,7 +24,7 @@ type MutationDomainOperations = Vec<(String, String)>;
 /// 🪪️ Schema id the projection must declare (`MutationSourceAuthorityProjectionV1` in `🧬️schema/🔣️.json`).
 #[doc(hidden)] pub const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
 
-/// 🗂️ Workspace-relative locator of the generated schema-document index (`bun repo run @semio-tech/dsl-derive-rs:generate-schema-index`).
+/// 🗂️ Workspace-relative locator of the generated schema-document index (`repo run @semio-tech/dsl-derive-rs:generate-schema-index`).
 #[doc(hidden)] pub const MUTATION_SCHEMA_INDEX_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json";
 
 /// 🪪️ Schema id the index must declare (`MutationSchemaDocumentIndexV1` in `🧬️schema/🔣️.json`).
@@ -64,7 +64,7 @@ pub struct MutationAggregateSourceAuthority {
     let workspace_root = mutation_authority_workspace_root(&source_path)?;
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
     let taxonomy_path = mutation_authority_locator(&workspace_root, MUTATION_AUTHORITY_LOCATOR)?;
-    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run bun repo run @semio-tech/dsl-derive-rs:generate"))?;
+    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run repo run @semio-tech/dsl-derive-rs:generate"))?;
     let authority: serde_json::Value = serde_json::from_slice(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
     if authority.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_AUTHORITY_SCHEMA) { return Err("mutation authority projection declares another schema".to_string()); }
     let source_filename = mutation_authority_segment(&authority, "sourceFilename")?;
@@ -254,6 +254,7 @@ fn mutation_authority_raw_lexical(path: &Path) -> Result<(), String> {
         if !matches!(package.get("workspaces"), Some(serde_json::Value::Array(_) | serde_json::Value::Object(_))) { continue; }
         match mutation_authority_node(&ancestor.join("📋️project.json")) {
             "file" => return Ok(ancestor.to_path_buf()),
+            "missing" if mutation_authority_node(&ancestor.join("bun.lock")) == "file" => continue,
             "missing" => return Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),
             "symlink" => return Err("workspace 📋️project.json marker is a symlink".to_string()),
             _ => return Err("workspace 📋️project.json marker is not a regular file".to_string()),

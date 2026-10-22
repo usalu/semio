@@ -7,7 +7,7 @@ use directory::os_directory::{DirectoryPresenceActor, DirectoryStreamMessage, Do
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use futures::{SinkExt, StreamExt};
 use protocol::ServerFrame;
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_framework_trace::record::{Span, TraceOutcome, TraceRecord, Tracer};
 use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkCasStorage, ArtifactChunkCasStores};
 use semio_hub_artifact_creation_service::ArtifactCreationServiceV1;

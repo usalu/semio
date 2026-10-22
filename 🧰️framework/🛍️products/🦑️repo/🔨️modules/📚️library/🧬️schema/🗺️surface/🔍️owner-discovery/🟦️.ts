@@ -2,7 +2,7 @@ import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authorit
 import { policySurfaceRoots } from "../../../🔍️discovery/🗺️surface/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, policySourceText, type PolicySourceOperations } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME } from "../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
-import { POLICY_APP_CONFIG_DIR, POLICY_APP_CONFIG_LEGACY_DIR, POLICY_APP_PRESENCE_DIR, policyAppPresenceTypeName, type PolicyAppSchemaOwner } from "../🧱️contract/🟦️.ts";
+import { POLICY_APP_CONFIG_DIR, POLICY_APP_PRESENCE_DIR, policyAppPresenceTypeName, type PolicyAppSchemaOwner } from "../🧱️contract/🟦️.ts";
 
 /** 🗂️ Discovers canonical config and presence schema owners from authored surface Config bindings. */
 export function policyDiscoverAppSchemaOwners(repoRoot: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): PolicyAppSchemaOwner[] {
@@ -25,17 +25,11 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string, operations: Poli
       if (!match) continue;
       const configType = match[1]!,
         sliderRel = `${surfaceRel}/${POLICY_APP_CONFIG_DIR}`,
-        legacyRel = `${surfaceRel}/${POLICY_APP_CONFIG_LEGACY_DIR}`,
         pluginConfigRel = `${pluginRel}/${POLICY_APP_CONFIG_DIR}`;
       let ownerRel: string | null = null;
-      for (const candidate of [sliderRel, legacyRel]) {
-        const source = policySourceDirectory(repoRoot, candidate, operations);
-        if (source.state === "directory") {
-          ownerRel = candidate;
-          break;
-        }
-        if (source.state !== "missing") throw new Error(`Surface owner source directory ${candidate} is ${source.state}.`);
-      }
+      const sliderSource = policySourceDirectory(repoRoot, sliderRel, operations);
+      if (sliderSource.state === "directory") ownerRel = sliderRel;
+      else if (sliderSource.state !== "missing") throw new Error(`Surface owner source directory ${sliderRel} is ${sliderSource.state}.`);
       if (!ownerRel) {
         const pluginConfigComponent = `${pluginConfigRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`,
           source = policySourceText(repoRoot, pluginConfigComponent, operations);

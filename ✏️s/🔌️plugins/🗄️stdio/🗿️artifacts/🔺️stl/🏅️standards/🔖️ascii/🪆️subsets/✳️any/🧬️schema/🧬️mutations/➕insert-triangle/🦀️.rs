@@ -15,7 +15,16 @@ pub struct InsertTriangle {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for InsertTriangle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "triangle", kind: "insert-triangle", record: "InsertTriangle" };
 
-    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert triangle", "Dreieck einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StlSnapshot, StlMutation> for InsertTriangle {
+    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as protocol::ColdMutation<StlSnapshot>>::ReferenceDiff> {
         let Self { index, triangle } = self;
         protocol::MutationOutcome::new(diff::diff_insert_triangle(*index, *triangle))
     }
@@ -26,12 +35,6 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for InsertTriangle {
                 vec![StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: (*index).min(base.triangles.len()) })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert triangle", "Dreieck einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -54,7 +54,7 @@ func (e TicketStatus) String() string {
 	return string(e)
 }
 
-// 🧷️TicketPlan records an IDE-native plan or spec file to archive into the ticket folder on close.
+// 🧷️TicketPlan records a client-native plan or spec file to archive into the ticket folder on close.
 type TicketPlan struct {
 	Client string `json:"client,omitempty" yaml:"client,omitempty"`
 	ID     string `json:"id,omitempty" yaml:"id,omitempty"`
@@ -75,11 +75,11 @@ type Ticket struct {
 	Summary       string                `json:"summary,omitempty" yaml:"summary,omitempty"`
 	Management    *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
 	Goal          string                `json:"goal,omitempty" yaml:"goal,omitempty"`
-	Parent        string                `json:"-" yaml:"-"`
+	Parent        string                `json:"parent,omitempty" yaml:"parent,omitempty"`
 	Plan          *TicketPlan           `json:"plan,omitempty" yaml:"plan,omitempty"`
 	Sessions      []string              `json:"sessions,omitempty" yaml:"sessions,omitempty"`
 	Interactions  []Interaction         `json:"interactions,omitempty" yaml:"interactions,omitempty"`
-	Agents        []TicketAgent         `json:"-" yaml:"-"`
+	Agents        []TicketAgent         `json:"agents,omitempty" yaml:"agents,omitempty"`
 	FolderPath    string                `json:"-" yaml:"-"`
 	JsonPath      string                `json:"-" yaml:"-"`
 	ImportantPath string                `json:"-" yaml:"-"`
@@ -114,23 +114,18 @@ func isTicketInteractionKind(kind string, expected string) bool {
 // the document states it: the goal reference, the summary and every contributor reference stay the
 // text `🧬️schema/🔣️.json` declares, so a decode never depends on the developer's own checkout.
 func (t *Ticket) UnmarshalJSON(data []byte) error {
-	type TicketAlias struct {
-		Title       string                `json:"title"`
-		Emoji       string                `json:"emoji,omitempty"`
-		Description string                `json:"description,omitempty"`
-		Status      TicketStatus          `json:"status"`
-		Summary     string                `json:"summary,omitempty"`
-		Management  *TicketManagementData `json:"github,omitempty"`
-		Goal        string                `json:"goal,omitempty"`
-		Parent      string                `json:"parent,omitempty"`
-	}
 	aux := &struct {
-		TicketAlias
-		Plan               *TicketPlan     `json:"plan,omitempty"`
-		PromptLegacy       string          `json:"prompt"`
-		InteractionsLegacy []Interaction   `json:"interactions"`
-		AgentsLegacy       []TicketAgent   `json:"agents"`
-		SessionsRaw        json.RawMessage `json:"sessions"`
+		Title        string                `json:"title"`
+		Emoji        string                `json:"emoji,omitempty"`
+		Description  string                `json:"description,omitempty"`
+		Status       TicketStatus          `json:"status"`
+		Summary      string                `json:"summary,omitempty"`
+		Management   *TicketManagementData `json:"github,omitempty"`
+		Goal         string                `json:"goal,omitempty"`
+		Parent       string                `json:"parent,omitempty"`
+		Plan         *TicketPlan           `json:"plan,omitempty"`
+		Sessions     []string              `json:"sessions"`
+		Interactions []Interaction         `json:"interactions"`
 	}{}
 	if err := json.Unmarshal(data, aux); err != nil {
 		return err
@@ -149,35 +144,11 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 		Parent:      aux.Parent,
 		Plan:        aux.Plan,
 	}
-	if t.Description == "" && aux.PromptLegacy != "" {
-		t.Description = aux.PromptLegacy
+	if len(aux.Interactions) > 0 {
+		t.Interactions = aux.Interactions
 	}
-	if len(aux.InteractionsLegacy) > 0 {
-		t.Interactions = aux.InteractionsLegacy
-	}
-	if len(aux.AgentsLegacy) > 0 {
-		t.Agents = aux.AgentsLegacy
-	}
-	if len(aux.SessionsRaw) > 0 {
-		var sessionIDs []string
-		if err := json.Unmarshal(aux.SessionsRaw, &sessionIDs); err == nil {
-			for _, sessionID := range sessionIDs {
-				AppendTicketSessionID(t, sessionID)
-			}
-		} else {
-			var legacyAgents []TicketAgent
-			if err := json.Unmarshal(aux.SessionsRaw, &legacyAgents); err == nil {
-				for _, legacyAgent := range legacyAgents {
-					AppendTicketSessionID(t, legacyAgent.Session)
-				}
-				if len(t.Agents) == 0 {
-					t.Agents = legacyAgents
-				}
-			}
-		}
-	}
-	for _, agent := range t.Agents {
-		AppendTicketSessionID(t, agent.Session)
+	for _, sessionID := range aux.Sessions {
+		AppendTicketSessionID(t, sessionID)
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -8,6 +8,7 @@ import { mutationSchemaDocumentIndexProjection } from "../../🗂️schema-index
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { GenerateScript, PreviewGeneratedScript, CheckGeneratedScript, GenerateSchemaIndexScript, PreviewSchemaIndexScript, ColdReferenceTestScript, SCHEMA_INDEX_PATH } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 
 class TestScript extends BundleScript {
@@ -34,7 +35,7 @@ class SourceAuthorityTestScript extends BundleScript {
 /** ✅️ Fails when the committed schema document index is not the index of the current schemas. */
 class CheckSchemaIndexScript extends BundleScript {
   async run(): Promise<void> {
-    if (readFileSync(SCHEMA_INDEX_PATH, "utf8") !== mutationSchemaDocumentIndexProjection(this.repoRoot)) throw new Error("schema document index is stale; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index");
+    if (readFileSync(SCHEMA_INDEX_PATH, "utf8") !== mutationSchemaDocumentIndexProjection(this.repoRoot)) throw new Error("schema document index is stale; run repo run @semio-tech/dsl-derive-rs:generate-schema-index");
     console.log("schema-document-index: fresh");
   }
 }
@@ -44,5 +45,5 @@ class SchemaIndexSourceTestScript extends BundleScript {
 }
 
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("generate-schema-index", GenerateSchemaIndexScript).register("schema-index", PreviewSchemaIndexScript).register("check-schema-index", CheckSchemaIndexScript).register("test-schema-index-source", SchemaIndexSourceTestScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript).register("test-cold-reference",ColdReferenceTestScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));
+const router = new ScriptRouter(import.meta.dirname).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("generate-schema-index", GenerateSchemaIndexScript).register("schema-index", PreviewSchemaIndexScript).register("check-schema-index", CheckSchemaIndexScript).register("test-schema-index-source", SchemaIndexSourceTestScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript).register("test-cold-reference",ColdReferenceTestScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

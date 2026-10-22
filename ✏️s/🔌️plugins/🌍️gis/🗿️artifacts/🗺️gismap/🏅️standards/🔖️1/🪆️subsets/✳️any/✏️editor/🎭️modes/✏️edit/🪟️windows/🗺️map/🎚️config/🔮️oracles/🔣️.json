@@ -206,35 +206,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:c2fbe624d0c9c4bc9f7b76437def8e5b6bbb68884924a94e977aaee1a4e2d848",
           "bytes": 84
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
           "bytes": 230
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a067dc4c4937a00326ba63ebf1ba71d4ea8f54259e5306b87d3920621350cde1",
           "bytes": 225
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -270,35 +270,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6dc9fc80351295cd9d877b619c294b8c985f4b62ec704c1524bbab3cc2bcb43b",
           "bytes": 83
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
           "bytes": 233
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:c450703613c84d568b17dd03c6c58f647f2ef0879ffea0a67d2f1de0517ab130",
           "bytes": 223
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -334,35 +334,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e268ce231fca64b7e9807de6dfcd2edf897ec31d4cccea8e4d3219f8ee6161a3",
           "bytes": 56
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
           "bytes": 227
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:21110ed07f56608a8c2f9dd4758257286530eb3e031057afb5858e4804ab92da",
           "bytes": 197
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -398,35 +398,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:784dd820b0f532dcb4ec5d1624d7cfa0c7e8a0c27a7203ee722041a5a6792d95",
           "bytes": 63
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
           "bytes": 234
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:31a2c41d06f3ac901318dbc4277651cf2a3189a16e5c815ab856619dadaa07f6",
           "bytes": 203
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -462,35 +462,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6d0db858a8228681d79d630e9193c26d77bdef896590048ac54b7e9d28522887",
           "bytes": 51
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
           "bytes": 224
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:37f505b264e813ee4c81c64399c82f6f32376481963fb1336c2123d4da3a26c1",
           "bytes": 195
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -526,35 +526,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:351cc1860187a25b4585deda6a9b67780edbc736ad8883327fb6894374c1cae4",
           "bytes": 81
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
           "bytes": 229
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e53bec0c1115ebf58dbfb9058762c264379201adff16fa99f2562eefde971379",
           "bytes": 223
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -590,35 +590,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
           "bytes": 230
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:c2fbe624d0c9c4bc9f7b76437def8e5b6bbb68884924a94e977aaee1a4e2d848",
           "bytes": 84
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
           "bytes": 230
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -654,35 +654,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
           "bytes": 233
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎥️set-camera/🟰️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6dc9fc80351295cd9d877b619c294b8c985f4b62ec704c1524bbab3cc2bcb43b",
           "bytes": 83
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
           "bytes": 233
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎥️set-camera/🟰️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎥️set-camera/🟰️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -718,35 +718,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
           "bytes": 227
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e268ce231fca64b7e9807de6dfcd2edf897ec31d4cccea8e4d3219f8ee6161a3",
           "bytes": 56
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
           "bytes": 227
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -782,35 +782,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
           "bytes": 234
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:784dd820b0f532dcb4ec5d1624d7cfa0c7e8a0c27a7203ee722041a5a6792d95",
           "bytes": 63
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
           "bytes": 234
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -846,35 +846,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
           "bytes": 224
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6d0db858a8228681d79d630e9193c26d77bdef896590048ac54b7e9d28522887",
           "bytes": 51
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
           "bytes": 224
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -910,35 +910,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
           "bytes": 229
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:351cc1860187a25b4585deda6a9b67780edbc736ad8883327fb6894374c1cae4",
           "bytes": 81
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
           "bytes": 229
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
           "bytes": 18
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114

@@ -111,13 +111,13 @@ async fn image_window_exposes_bilingual_profile_specific_paint_controls() {
 
 #[test]
 fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let before = direct_snapshot();
     let mutations = drive(&direct_command(), &before, paint_region::DIRECT_ACTION_ID);
     assert_eq!(mutations.len(), 1);
     let BmpMutation::PaintDirectRegion(payload) = &mutations[0] else { panic!("typed direct paint intent publication") };
     assert_eq!(payload.revision,crate::schema::operations::bmp_revision(&before));
-    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).expect("apply direct paint");
+    let after = protocol::apply_diff_cold(mutations[0].diff(&before).diff(), &before).expect("apply direct paint");
     assert_eq!(after.image.opaque_gap,before.image.opaque_gap);assert_eq!(after.image.opaque_trailer,before.image.opaque_trailer);
     let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&before).unwrap();
     for row in 0..2 {
@@ -130,14 +130,14 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
 
 #[test]
 fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let before = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
     let command =
         bmp_editor_command_from_action(paint_region::INDEXED_ACTION_ID, Some(&semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)), ("paletteIndex".into(), number(1))])))
             .unwrap();
     let preview = crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&before).unwrap();
     let mutations = drive(&command, &before, paint_region::INDEXED_ACTION_ID);
-    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).unwrap();
+    let after = protocol::apply_diff_cold(mutations[0].diff(&before).diff(), &before).unwrap();
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&after).unwrap(), preview);
     assert_ne!(crate::standards::v_v3::subsets::any::io::encode_bmp(&after).unwrap(), crate::standards::v_v3::subsets::any::io::encode_bmp(&before).unwrap(), "the equal-color palette entry remains a distinct authored index");
 }

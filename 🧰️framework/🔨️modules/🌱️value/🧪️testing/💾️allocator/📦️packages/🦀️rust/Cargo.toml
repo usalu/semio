@@ -23,3 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

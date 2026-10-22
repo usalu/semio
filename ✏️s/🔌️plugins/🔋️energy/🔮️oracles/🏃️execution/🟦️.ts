@@ -5,6 +5,7 @@ import { runCmd } from "@semio-tech/framework/process/execution";
 import { runProbe } from "@semio-tech/framework/process/execution";
 import { runRepositoryTestCommand } from "@semio-tech/framework/process/test-execution";
 import { BundleScript } from "@semio-tech/framework/process/routing";
+import { provisionedToolPathV1, pythonEnvironmentOfProjectV1 } from "@semio-tech/process/toolchains";
 import { ensureOracleTool, oracleEnvironment, oracleManifest, oracleToolDirectory } from "../🛠️toolchain/🟦️.ts";
 
 const PYTHON_OWNER = "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution";
@@ -20,15 +21,18 @@ function oraclePythonModule(packageRoot: string): string {
 export function runOraclePython(repoRoot: string, packageRoot: string, args: string[], budgetMs?: number): Promise<void> {
   const module = oraclePythonModule(packageRoot);
   const inline = `import sys; from importlib import import_module; sys.exit(import_module(${JSON.stringify(module)}).main(sys.argv[1:]))`;
-  const env = oracleEnvironment(repoRoot);
+  const env = { ...provisionedToolPathV1(oracleEnvironment(repoRoot), repoRoot) };
   env.PYTHONPATH = [join(repoRoot, PYTHON_OWNER), env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter);
   env.PYTHONDONTWRITEBYTECODE = "1";
+  Object.assign(env, pythonEnvironmentOfProjectV1(repoRoot, "energy-oracle").variables);
   return runRepositoryTestCommand("uv", ["run", "--locked", "--no-sync", "--project", packageRoot, "python", "-c", inline, ...args], { cwd: packageRoot, env, budgetMs });
 }
 
 export class DepsScript extends BundleScript {
   run(): void {
-    runCmd("uv", ["sync", "--locked", "--project", this.root], { cwd: this.root });
+    const plan = pythonEnvironmentOfProjectV1(this.repoRoot, "energy-oracle"), env = { ...provisionedToolPathV1({ ...process.env, ...plan.variables }, this.repoRoot) };
+    runCmd("uv", [...plan.installArguments], { cwd: this.repoRoot, env });
+    runCmd("uv", [...plan.syncArguments], { cwd: this.repoRoot, env });
   }
 }
 

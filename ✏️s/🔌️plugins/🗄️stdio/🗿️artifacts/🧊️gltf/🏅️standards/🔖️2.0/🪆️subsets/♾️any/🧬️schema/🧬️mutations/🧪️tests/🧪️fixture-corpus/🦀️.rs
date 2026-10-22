@@ -152,7 +152,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
         snapshots.push(snapshot);
     }
     let [before, after] = <[GltfSnapshot; 2]>::try_from(snapshots).expect("two sides");
-    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, &before);
+    let outcome = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::diff(mutation, &before);
     let declared = json(&read(&case.join("🎯️outcome/🔣️.json")));
     match declared["status"].as_str() {
         Some("applied") => {
@@ -161,7 +161,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
             assert_valid((*DIFF_SCHEMA), &committed, &format!("{name} diff"));
             assert!(same(&wire(outcome.diff()), &json(&committed)), "{name}: the produced diff differs from the committed one:\n{}", semio_framework_pack_json::to_json_string(outcome.diff()));
             let decoded: GltfDiff = semio_framework_pack_json::from_json_str(&committed, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-            assert_eq!(protocol::apply_diff(&decoded, &before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
+            assert_eq!(protocol::apply_diff_cold(&decoded, &before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
             Some(before)
         }
         Some("rejected") => {
@@ -182,7 +182,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
 /// ↩️ The computed inverse is a row list of concrete, editable kinds the aggregate admits on the wire, and its diffs sum to the
 /// negative of the forward diff ([`protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law`]).
 fn assert_inverse_restores(name: &str, mutation: &GltfMutation, before: &GltfSnapshot) {
-    let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(mutation, before).expect("valid retained mutation inverse fixture");
+    let inverse = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::inverse(mutation, before).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "{name}: an applied change has an inverse");
     for step in &inverse {
         let text = semio_framework_pack_json::to_json_string(step);

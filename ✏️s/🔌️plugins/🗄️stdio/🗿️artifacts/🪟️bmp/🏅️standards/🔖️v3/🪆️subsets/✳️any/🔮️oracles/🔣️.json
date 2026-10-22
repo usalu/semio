@@ -166,7 +166,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "bmp-import"
       ],
@@ -210,7 +210,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "bmp-project"
       ],
@@ -254,7 +254,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "bmp-compare"
       ],
@@ -298,7 +298,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "bmp-header-project"
       ],
@@ -361,7 +361,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
         "bmp-header-compare"
       ],
@@ -550,7 +550,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-palette-entry-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-palette-entry-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -598,7 +598,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-palette-entry-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-palette-entry-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -646,7 +646,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-palette-entry-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-palette-entry-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -694,7 +694,7 @@
         "packageVersion": "0.25.10",
         "engineFamily": "image-rs",
         "engineVersion": "0.25.10",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-pixel-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-pixel-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -746,7 +746,7 @@
         "packageVersion": "11.3.0",
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts header",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts header",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-bmp-header-v1",

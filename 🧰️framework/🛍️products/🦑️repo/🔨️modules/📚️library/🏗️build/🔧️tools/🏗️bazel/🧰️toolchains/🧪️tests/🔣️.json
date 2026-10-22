@@ -1,0 +1,102 @@
+{
+  "classes": [
+    {
+      "name": "styling Python build",
+      "project": "@semio-tech/ui-styling-py",
+      "target": "build",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+      "kind": "command",
+      "command": "repo ../../🏗️builder/🐍️python/📜️script.ts build",
+      "expected": "python"
+    },
+    {
+      "name": "energy oracle Python test",
+      "project": "@semio-tech/energy-oracle-py",
+      "target": "test",
+      "root": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+      "kind": "command",
+      "command": "repo ./📜️script.ts test",
+      "expected": "python"
+    },
+    {
+      "name": "styling .NET build",
+      "project": "@semio-tech/ui-styling-dotnet",
+      "target": "build",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+      "kind": "command",
+      "command": "repo ./📜️script.ts build",
+      "expected": "dotnet"
+    },
+    {
+      "name": "test support .NET build",
+      "project": "@semio-tech/repo-test-dotnet",
+      "target": "build",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet",
+      "kind": "command",
+      "command": "repo ./📜️script.ts build",
+      "expected": "dotnet"
+    },
+    {
+      "name": "CMake custody",
+      "project": "workspace",
+      "target": "cpp-custody",
+      "root": ".",
+      "kind": "command",
+      "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp custody",
+      "expected": "cmake"
+    },
+    {
+      "name": "CMake toolchain test",
+      "project": "workspace",
+      "target": "cpp-test-toolchain",
+      "root": ".",
+      "kind": "command",
+      "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test-toolchain",
+      "expected": "cmake"
+    },
+    {
+      "name": "CMake configure",
+      "project": "workspace",
+      "target": "cpp-configure",
+      "root": ".",
+      "kind": "command",
+      "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
+      "expected": "cmake"
+    },
+    {
+      "name": "ordinary root script",
+      "project": "workspace",
+      "target": "verify-x",
+      "root": ".",
+      "kind": "command",
+      "command": "repo ./📜️script.ts verify x",
+      "expected": null
+    },
+    {
+      "name": "Go service test",
+      "project": "@semio-tech/repo-coordinator-go",
+      "target": "test",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+      "kind": "command",
+      "command": "repo ./📜️script.ts test",
+      "expected": null
+    },
+    {
+      "name": "Rust test",
+      "project": "os-hub",
+      "target": "test",
+      "root": "🌎️hub/📦️packages/🦀️rust",
+      "kind": "command",
+      "command": "repo ./📜️script.ts test",
+      "expected": null
+    },
+    {
+      "name": "CMake aggregate",
+      "project": "workspace",
+      "target": "cpp",
+      "root": ".",
+      "kind": "noop",
+      "expected": null
+    }
+  ]
+}

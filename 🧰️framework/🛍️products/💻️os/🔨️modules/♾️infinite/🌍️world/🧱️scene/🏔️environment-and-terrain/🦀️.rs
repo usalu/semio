@@ -190,7 +190,7 @@ pub enum WorldTerrainMeshPhase {
 
 /// 🏔️ The terrain tile source buffers a retiring mesh cursor releases through one controlled owner.
 #[derive(semio_framework_value::RetireOwned)]
-struct WorldTerrainSource {
+pub struct WorldTerrainSource {
     pub id: String,
     pub positions: Vec<f32>,
     pub normals: Vec<f32>,

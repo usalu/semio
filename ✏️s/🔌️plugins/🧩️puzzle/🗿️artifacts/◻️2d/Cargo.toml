@@ -33,7 +33,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
-  "🤖️generated/📇️registry/📦️packages/🦀️rust",
+  "🛂️manifest/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",

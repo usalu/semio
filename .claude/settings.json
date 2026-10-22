@@ -1,11 +1,6 @@
 {
   "enabledPlugins": {
-    "csharp-lsp@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
-    "mcp-apps@mcp-apps": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "mcp-apps@mcp-apps": true
   },
   "hooks": {},
   "permissions": {

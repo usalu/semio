@@ -187,10 +187,15 @@
       "$ref": "#/definitions/Environment"
      },
      "expect": {
-      "enum": [
-       "en",
-       "de"
-      ]
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+       "enum": [
+        "en",
+        "de"
+       ]
+      }
      }
     }
    }
@@ -222,7 +227,12 @@
       "$ref": "#/definitions/Environment"
      },
      "expect": {
-      "type": "string"
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+       "type": "string"
+      }
      }
     }
    }
@@ -279,7 +289,8 @@
      "language": {
       "enum": [
        "en",
-       "de"
+       "de",
+       "none"
       ]
      },
      "tasks": {

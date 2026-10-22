@@ -5,7 +5,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📕delete-story/📍️removes-a-middle-row/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📕delete-story/📍️removes-a-middle-row/📸️snapshot/➡️after/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> LayoutMutation {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
-    let applied = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-story/removes-a-middle-row: applies to its committed before-snapshot");
+    let applied = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-story/removes-a-middle-row: applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-story/removes-a-middle-row: applied state differs from the committed after-snapshot");
     assert_ne!(applied, base, "delete-story/removes-a-middle-row: the forward mutation left the model untouched, so nothing was proved");
 }
@@ -37,9 +37,9 @@ async fn inverse_restores_the_middle_position() {
     let base = before();
     let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "delete-story/removes-a-middle-row: a changing mutation must have a non-empty inverse");
-    let mut snapshot = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-story/removes-a-middle-row: forward applies");
+    let mut snapshot = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-story/removes-a-middle-row: forward applies");
     for step in inverse.iter().rev() {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-story/removes-a-middle-row: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("delete-story/removes-a-middle-row: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-story/removes-a-middle-row: inverse did not restore the before-snapshot, row order included");
 }

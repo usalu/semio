@@ -64,7 +64,7 @@ pub mod splice_source;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = MdSnapshot, diff = MdDiff, schema = "MdMutation")]
+#[mutations(snapshot = MdSnapshot, diff = MdDiff, schema = "MdMutation", reference = MdSnapshot, reference_diff = MdDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum MdMutation {
     /// ➕️ Inserts `block` at `index` within the container addressed by `path`.

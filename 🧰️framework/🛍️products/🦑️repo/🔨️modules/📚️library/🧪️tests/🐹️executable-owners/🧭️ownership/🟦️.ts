@@ -20,7 +20,7 @@ test("repository Go executable integration has one Specific owner and leaves the
     const actual = project.targets[target].metadata.semio.execution;
     expect(validate(actual)).toBe(true);
     expect(actual).toEqual(expected);
-    expect(project.targets[target].options.command.startsWith("bun ./📜️script.ts test ")).toBe(true);
+    expect(project.targets[target].options.command.startsWith("repo ./📜️script.ts test ")).toBe(true);
   }
   expect(existsSync(resolve(root, vectors.general.source))).toBe(false);
   expect(existsSync(resolve(root, vectors.repository.source))).toBe(true);

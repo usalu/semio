@@ -85,7 +85,7 @@ test("a path cycle, a path leaving the repository and a workspace without a tabl
     let message: string | undefined;
     try { await crateIdentityV1(context(row.trees), row.crate, row.tests); } catch (error) { expect(error).toBeInstanceOf(CargoResolutionErrorV1); message = (error as Error).message; }
     expect(message, row.id).toBeDefined();
-    expect({cycle: /cycle/u, escape: /escapes the repository/u, workspace: /names no \[workspace\]/u}[row.error].test(message!), `${row.id}: ${message}`).toBe(true);
+    expect({cycle: /cycle/u, escape: /escapes the repository/u, workspace: /names no \[workspace\]/u}[row.error]!.test(message!), `${row.id}: ${message}`).toBe(true);
     expect(oracle.refusals[row.id]).toBe(row.error);
   }
 });

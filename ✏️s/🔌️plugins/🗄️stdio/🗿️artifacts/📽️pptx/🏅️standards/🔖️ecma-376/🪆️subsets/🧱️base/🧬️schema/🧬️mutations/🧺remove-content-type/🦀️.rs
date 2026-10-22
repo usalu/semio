@@ -17,20 +17,21 @@ pub struct RemoveContentType {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "content-type", kind: "remove-content-type", record: "RemoveContentType" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::content_type_removal_diff(opc, self.is_override, &self.name)))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
-        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
-        Ok(previous.map(|(at, content_type)| PptxMutation::SetContentType(set_content_type::SetContentType { is_override: self.is_override, name: self.name.clone(), content_type, index: Some(at) })).into_iter().collect())
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove content type", "Inhaltstyp entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["opc".to_string(), "contentTypes".to_string(), if self.is_override { "overrides" } else { "defaults" }.to_string(), self.name.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxMutation> for RemoveContentType {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::content_type_removal_diff(opc, self.is_override, &self.name)))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        Ok(previous.map(|(at, content_type)| PptxMutation::SetContentType(set_content_type::SetContentType { is_override: self.is_override, name: self.name.clone(), content_type, index: Some(at) })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

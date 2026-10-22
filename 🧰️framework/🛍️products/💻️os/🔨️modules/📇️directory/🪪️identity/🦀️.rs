@@ -63,7 +63,7 @@ impl IdentityEnv {
 
 //#region 🔖️Bootstrap
 #[cfg(not(target_arch = "wasm32"))]
-struct ClaimedLocalHubCredential {
+pub struct ClaimedLocalHubCredential {
     client_class: String,
     result: Result<Arc<LocalHubCredential>, IdentityError>,
 }

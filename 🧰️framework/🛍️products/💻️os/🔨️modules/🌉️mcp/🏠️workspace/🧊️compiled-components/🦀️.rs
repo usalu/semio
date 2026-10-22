@@ -283,7 +283,7 @@ struct CompileFlight {
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) struct CompileFlightState {
     pub requesters: usize,
-    waiters: Vec<semio_framework_async::oneshot::Sender<Result<(), String>>>,
+    waiters: Vec<semio_framework_async_sync::oneshot::Sender<Result<(), String>>>,
     worker: Option<std::process::Child>,
     pub outcome: Option<Result<(), String>>,
 }
@@ -309,7 +309,7 @@ impl CompileFlight {
                     flight
                 }
             };
-            let (sender, answer) = semio_framework_async::oneshot::channel();
+            let (sender, answer) = semio_framework_async_sync::oneshot::channel();
             let mut state = flight.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             state.requesters += 1;
             match &state.outcome {

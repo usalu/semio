@@ -1,10 +1,12 @@
+import{retireBuildGraphClosureHeadroomV1}from"./🧾️closures/🟦️.ts";
+export{retireBuildGraphClosureHeadroomV1}from"./🧾️closures/🟦️.ts";
 import {createHash} from "node:crypto";
 import {constants,lstatSync,opendirSync,unlinkSync,type BigIntStats} from "node:fs";
 import {nativeImageSpaceV1,type NativeImageMaintenanceCustodyV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {open} from "node:fs/promises";
 import {join} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {openNativePlatformStorageV1,requireNativeStoragePathV1,requireNativePlatformImageBindingV1,withNativePlatformImageOperationV1,type NativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {openNativePlatformStorageV1,requireNativeStoragePathV1,requireNativePlatformImageBindingV1,requireNativePlatformImageWriterV1,withNativePlatformImageOperationV1,type NativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import type {NativeFixedPlatformOptionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import {acquireResourceLease,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -13,6 +15,7 @@ import {repositoryCacheBudgetV1} from "../../🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../📂️paths/🟦️.ts";
 import {buildGraphPublicationWriterResourceV1} from "../../../../../../🏗️build/📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
 import authoritySchema from "../../../../../../🏗️build/🧬️schema/📥️authority.json" with { type: "json" };
+import { runtimeExecutableForV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 const protocol=schema.definitions.Protocol.const,authorityKindsV1=authoritySchema.properties.observations.items.properties.kind.enum;
 /** 📋️ Names the required physical floor and whether recovery queues behind concurrent readers or defers to them, without granting cleanup custody. */
 export interface BuildGraphHeadroomRequestV1{readonly minimumAvailableBytes:number;readonly wait:boolean}
@@ -32,7 +35,7 @@ async function digest(image:NativeImageStorageV1,row:LeafV1,control:ResourceLeas
 }
 const authorityProgramV1=`const fs=require('node:fs'),workerData=JSON.parse(process.argv[1]),file=fs.openSync(workerData.path,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW||0)),stamp=row=>[row.dev,row.ino,row.size,row.nlink,row.mtimeNs,row.ctimeNs].join(':');try{if(stamp(fs.fstatSync(file,{bigint:true}))!==workerData.stamp)throw Error('Original graph receipt descriptor changed');const bytes=fs.readFileSync(file);if(stamp(fs.fstatSync(file,{bigint:true}))!==workerData.stamp)throw Error('Original graph receipt descriptor changed');const value=JSON.parse(bytes.toString()),shape=(v,keys)=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join(',')===keys,hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);if(!shape(value,'graph,membership,module,observations,version')||value.version!==3||!hash(value.graph)||!hash(value.membership)||!shape(value.module,'implementation,publication')||!hash(value.module.implementation)||!hash(value.module.publication)||!Array.isArray(value.observations)||value.observations.some(row=>!shape(row,'fact,kind,path')||!workerData.kinds.includes(row.kind)||typeof row.path!=='string'||row.path.length===0))throw Error('Current graph publication identity changed');console.log(JSON.stringify({graph:value.graph}));}finally{fs.closeSync(file);}`;
 async function publicationGraphV1(image:NativeImageStorageV1,row:LeafV1,control:ResourceLeaseControl):Promise<string>{
- checkResourceLeaseControl(control);unchanged(image,row);await control.publish({resource:"repository:graph-receipt-authentication",mode:"exclusive",elapsedMs:0});const output=await captureOwnedCommandV1(process.versions.bun?"node":process.execPath,["--max-old-space-size="+protocol.receiptHeapMiB,"-e",authorityProgramV1,JSON.stringify({path:row.path,stamp:row.stamp,kinds:authorityKindsV1})],image.root,{control,output:{maximumBytes:8192,maximumLines:64}}),value=JSON.parse(output.trim());if(!value||Object.keys(value).join()!=="graph"||typeof value.graph!=="string"||!/^[a-f0-9]{64}$/u.test(value.graph))throw Error("Closed graph receipt child result required");checkResourceLeaseControl(control);unchanged(image,row);return value.graph;
+ checkResourceLeaseControl(control);unchanged(image,row);await control.publish({resource:"repository:graph-receipt-authentication",mode:"exclusive",elapsedMs:0});const output=await captureOwnedCommandV1(runtimeExecutableForV1("node"),["--max-old-space-size="+protocol.receiptHeapMiB,"-e",authorityProgramV1,JSON.stringify({path:row.path,stamp:row.stamp,kinds:authorityKindsV1})],image.root,{control,output:{maximumBytes:8192,maximumLines:64}}),value=JSON.parse(output.trim());if(!value||Object.keys(value).join()!=="graph"||typeof value.graph!=="string"||!/^[a-f0-9]{64}$/u.test(value.graph))throw Error("Closed graph receipt child result required");checkResourceLeaseControl(control);unchanged(image,row);return value.graph;
 }
 function selectedPublicationScopeV1(name:string):string|undefined{return new RegExp(schema.definitions.SelectedPublicationFile.pattern,"u").exec(name)?.[1];}
 function inventoryV1(image:NativeImageStorageV1,directory:string,control:ResourceLeaseControl):string[]{
@@ -44,8 +47,18 @@ export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatfo
  const request=readBuildGraphHeadroomRequestV1(value),control=options.control;let retiredBytes=0,retiredFiles=0;for(let revalidations=0;;){checkResourceLeaseControl(control);const image=await openNativePlatformStorageV1(options);let failed=false;
  try{
   await image.recheck();checkResourceLeaseControl(control);const initialAvailableBytes=available(image);if(initialAvailableBytes>=request.minimumAvailableBytes)return Object.freeze({acquired:true,availableBytes:initialAvailableBytes,retiredBytes,retiredFiles});
-  const result=await image.withExclusiveMaintenance({version:1,wait:request.wait},async(_port,custody)=>{
-   checkResourceLeaseControl(control);if(retireOptional){const optional=await retireOptional(image,custody);if(validateJsonSchemaSubset(schema.definitions.OptionalRetirement,optional,schema).length)throw Error("Closed optional graph retirement result required");retiredBytes+=optional.retiredBytes;retiredFiles+=optional.retiredFiles;}await image.recheck();if(available(image)>=request.minimumAvailableBytes)return available(image);
+  const result=await image.withExclusiveMaintenance({version:1,wait:request.wait},async(_port,custody)=>recoverBuildGraphImageHeadroomHeldV1(image,custody,request,retireOptional),request.wait?observation=>observation.availableBytes>=request.minimumAvailableBytes:undefined);
+  checkResourceLeaseControl(control);if(!result.acquired&&"withdrawn"in result&&result.withdrawn===true){if(++revalidations>protocol.maximumRevalidations)throw Error("Concurrent graph capacity keeps changing during guarded admission");continue;}
+  return Object.freeze({acquired:result.acquired,availableBytes:result.acquired?result.value.availableBytes:initialAvailableBytes,retiredBytes:retiredBytes+(result.acquired?result.value.retiredBytes:0),retiredFiles:retiredFiles+(result.acquired?result.value.retiredFiles:0)});
+ }catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}
+ }
+}
+
+/** 🏦️ Funds graph headroom through the actual exclusive callback after authenticating its complete shared references. */
+export async function recoverBuildGraphImageHeadroomHeldV1(image:NativeImageStorageV1,custody:NativeImageMaintenanceCustodyV1,value:unknown,retireOptional?:(image:NativeImageStorageV1,custody:NativeImageMaintenanceCustodyV1)=>Promise<Readonly<{retiredBytes:number;retiredFiles:number}>>):Promise<Readonly<{availableBytes:number;retiredBytes:number;retiredFiles:number}>>{
+ requireNativePlatformImageWriterV1(image,custody);if(custody.kind!=="kernel-ex")throw Error("Actual graph headroom image exclusive custody required");const request=readBuildGraphHeadroomRequestV1(value),control=custody.control;let retiredBytes=0,retiredFiles=0;const result=()=>Object.freeze({availableBytes:available(image),retiredBytes,retiredFiles});
+ checkResourceLeaseControl(control);await image.recheck();if(available(image)>=request.minimumAvailableBytes)return result();const closures=await retireBuildGraphClosureHeadroomV1(image,custody,{minimumAvailableBytes:request.minimumAvailableBytes});retiredBytes+=closures.retiredBytes;retiredFiles+=closures.retiredFiles;await image.recheck();if(available(image)>=request.minimumAvailableBytes)return result();
+ if(retireOptional){const optional=await retireOptional(image,custody);if(validateJsonSchemaSubset(schema.definitions.OptionalRetirement,optional,schema).length)throw Error("Closed optional graph retirement result required");retiredBytes+=optional.retiredBytes;retiredFiles+=optional.retiredFiles;}await image.recheck();if(available(image)>=request.minimumAvailableBytes)return result();const freshClosures=await retireBuildGraphClosureHeadroomV1(image,custody,{minimumAvailableBytes:request.minimumAvailableBytes});retiredBytes+=freshClosures.retiredBytes;retiredFiles+=freshClosures.retiredFiles;await image.recheck();if(available(image)>=request.minimumAvailableBytes)return result();
    const publications:(readonly LeafV1[])[]=[],directory=join(image.root,"snapshots");
    for(const name of inventoryV1(image,directory,control)){checkResourceLeaseControl(control);if(!/^[a-f0-9]{64}\.json$/u.test(name))continue;const row=leaf(image,join(directory,name),protocol.maximumSnapshotBytes);if(await digest(image,row,control)!==name.slice(0,64))throw Error("Graph snapshot content identity changed");publications.push([row]);}
    const selected=join(image.root,protocol.selectedDirectory),names=new Set(inventoryV1(image,selected,control)),scopes=new Set([...names].map(selectedPublicationScopeV1).filter((scope):scope is string=>scope!==undefined));
@@ -54,12 +67,8 @@ export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatfo
    const remove=async(rows:readonly LeafV1[])=>{checkResourceLeaseControl(control);await image.recheck();for(const row of rows)unchanged(image,row);for(const row of rows){unlinkSync(row.path);retiredBytes+=row.allocated;retiredFiles++;}await control.publish({resource:"repository:graph-headroom-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();};
    const modified=(rows:readonly LeafV1[])=>rows.reduce((latest,row)=>row.modified>latest?row.modified:latest,0n);
    for(const rows of publications.sort((a,b)=>modified(a)<modified(b)?-1:modified(a)>modified(b)?1:Buffer.compare(Buffer.from(a[0]!.path),Buffer.from(b[0]!.path)))){if(available(image)>=request.minimumAvailableBytes)break;await remove(rows);}
-   const availableBytes=available(image);if(availableBytes<request.minimumAvailableBytes)throw Error("Authenticated graph cache cannot fund required physical headroom: "+JSON.stringify({availableBytes,minimumAvailableBytes:request.minimumAvailableBytes,retiredBytes,retiredFiles}));return availableBytes;
-  },request.wait?observation=>observation.availableBytes>=request.minimumAvailableBytes:undefined);
-  checkResourceLeaseControl(control);if(!result.acquired&&"withdrawn"in result&&result.withdrawn===true){if(++revalidations>protocol.maximumRevalidations)throw Error("Concurrent graph capacity keeps changing during guarded admission");continue;}
-  return Object.freeze({acquired:result.acquired,availableBytes:result.acquired?result.value:initialAvailableBytes,retiredBytes,retiredFiles});
- }catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}
- }
+   const availableBytes=available(image);if(availableBytes<request.minimumAvailableBytes)throw Error("Authenticated graph cache cannot fund required physical headroom: "+JSON.stringify({availableBytes,minimumAvailableBytes:request.minimumAvailableBytes,retiredBytes,retiredFiles}));return result();
+  
 }
 
 function selectedDirectoryIdentityV1(image:NativeImageStorageV1,directory:string):string{requireNativeStoragePathV1(image.root,directory);const row=lstatSync(directory,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==lstatSync(image.root,{bigint:true}).dev)throw Error("Original selected publication directory required");return[row.dev,row.ino].join(":");}

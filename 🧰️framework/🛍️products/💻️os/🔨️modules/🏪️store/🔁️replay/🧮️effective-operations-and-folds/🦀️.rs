@@ -159,7 +159,7 @@ where
 
     fn advance(&mut self, next: P) {
         match Arc::try_unwrap(std::mem::replace(self, Arc::new(next))) {
-            Ok(original) => <Mutation::ReferenceDiff as ColdMutationDiff<P>>::retire_projection(original),
+            Ok(original) => <Mutation::ReferenceDiff as MutationDiff<P>>::retire_projection(original),
             Err(alias) => drop(alias),
         }
     }

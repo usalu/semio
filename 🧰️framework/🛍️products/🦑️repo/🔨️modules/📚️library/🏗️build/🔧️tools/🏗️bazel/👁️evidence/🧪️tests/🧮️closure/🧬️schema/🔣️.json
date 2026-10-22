@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:bazel-evidence-corpus:v1",
+  "title": "Bazel Evidence Corpus",
+  "description": "Language-agnostic cases for the evidence directory selection and the closure evidence document: environment in, directory out; a task plan and a query answer in, the closure document out.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "directories", "closures"],
+  "properties": {
+    "version": { "const": 1 },
+    "directories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "env", "expected", "error"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "env": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": { "kind": { "enum": ["unset", "empty", "absolute", "relative"] }, "name": { "type": "string" }, "padTo": { "type": "integer", "minimum": 1 } }
+          },
+          "expected": { "enum": ["none", "same"] },
+          "error": { "type": "string" }
+        }
+      }
+    },
+    "closures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "plan", "answer", "expression"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "plan": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tasks", "selected"],
+            "properties": {
+              "tasks": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "object", "additionalProperties": false, "required": ["label", "env"], "properties": { "label": { "type": "string", "minLength": 1 }, "env": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "string" } }] } } } },
+              "selected": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+            }
+          },
+          "answer": { "type": "string" },
+          "expression": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

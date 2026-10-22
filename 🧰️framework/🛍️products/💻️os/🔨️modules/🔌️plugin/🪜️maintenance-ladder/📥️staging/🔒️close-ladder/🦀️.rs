@@ -14,7 +14,7 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_framework_plugin_decl_views::PeerPresenceRoot;
@@ -48,7 +48,7 @@ pub fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant }
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// ♻️ Releases exactly one retained field owner under the caller's unchanged grant; a grant below the quote yields.
     pub fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
@@ -200,7 +200,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 📏️ Quotes the next retained-field turn on every independent axis; nothing is owed once every field is empty.
     pub fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.history.history_view.is_some() || self.history.cache.is_some() {
@@ -266,7 +266,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🪹️ Every field owner the retained-field rung releases is empty.
     pub fn retained_fields_own_terminal_is_empty(&self) -> bool {
         self.history.cache.is_none()
@@ -399,7 +399,7 @@ impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::Prese
     fn closing_terminal_is_empty(&self) -> bool { store::os_store::presence::PresencePeersRetirement::terminal_is_empty(self) }
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     pub fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=self.tools.close_typed_operation_demands(&*self.child_composition, grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
@@ -458,7 +458,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🩺️ The ladder frontier a stalled close is parked on, named for deadline reports.
     pub fn close_rung_name(&self) -> String {
         format!("{:?}", self.close_rung())
@@ -520,7 +520,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     pub fn retained_fields_terminal_is_empty(&self) -> bool {
         self.retained_fields_own_terminal_is_empty() && self.child_composition.children.is_empty() && self.interaction.local_interaction_query.is_none() && self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)
     }

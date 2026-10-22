@@ -15,7 +15,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-openable-identity-check",
+        "command": "repo ./📜️script.ts native-openable-identity-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -25,7 +25,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-check",
+        "command": "repo ./📜️script.ts native-codec-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -34,7 +34,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -46,7 +46,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-oracle",
+        "command": "repo ./📜️script.ts native-codec-oracle",
         "forwardAllArgs": true
       },
       "outputs": []

@@ -55,8 +55,8 @@ fn own14_diff_signed_zero_and_sparse_nan_text_are_exact() {
     let base=PdfSnapshot{schema:"stdio.pdf".into(),pages:vec![PageDoc{width:0.0,height:1.0,text:"same".into()}]};let mut next=base.clone();next.pages[0].width=-0.0;
     assert_ne!(base,next,"own14 publication equality must distinguish owner words");
     let width_diff=|width:f64|PdfDiff {pages:Some(crate::standards::v1_4::subsets::base::schema::diff::PdfPagesDiff {modified:vec![crate::standards::v1_4::subsets::base::schema::diff::PdfPageModified {index:0,diff:crate::standards::v1_4::subsets::base::schema::diff::PdfPageDiff {width:Some(width),..Default::default()}}],..Default::default()})};
-    let diff=width_diff(-0.0);assert!(!diff.is_empty());let applied=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=protocol::apply_diff(&diff.inverse(&base), &applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
-    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=width_diff(f64::from_bits(0x7ff8000000000042));let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(protocol::apply_diff(&parsed, &base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
+    let diff=width_diff(-0.0);assert!(!diff.is_empty());let applied=protocol::apply_diff_cold(&diff, &base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=protocol::apply_diff_cold(&diff.inverse(&base), &applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
+    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=width_diff(f64::from_bits(0x7ff8000000000042));let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(protocol::apply_diff_cold(&parsed, &base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
     assert!(PdfDiff::default().is_empty(),"unchanged NaN owner word is no mutation");
 }
 #[test]

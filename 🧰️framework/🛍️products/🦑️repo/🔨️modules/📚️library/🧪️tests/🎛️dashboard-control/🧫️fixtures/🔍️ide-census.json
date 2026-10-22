@@ -13,7 +13,12 @@
     "nbproject",
     ".emacs.d",
     ".vim",
-    ".kateproject.d"
+    ".kateproject.d",
+    ".cursor",
+    ".windsurf"
+  ],
+  "directoryPaths": [
+    ".github/hooks"
   ],
   "files": [
     ".editorconfig",
@@ -522,6 +527,41 @@
       "path": "unknown/ignored/tasks.vs.json",
       "kind": "file",
       "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.cursor",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.cursor/plans",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.windsurf",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.github/hooks",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.github/hooks/repo.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.github/workflows",
+      "kind": "directory",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/.github/hooks-notes",
+      "kind": "directory",
+      "expected": "accepted"
     }
   ],
   "manifestCases": [
@@ -699,7 +739,7 @@
               "{projectRoot}/**/*.csproj"
             ],
             "options": {
-              "command": "bun ./📜️script.ts build"
+              "command": "repo ./📜️script.ts build"
             }
           }
         }

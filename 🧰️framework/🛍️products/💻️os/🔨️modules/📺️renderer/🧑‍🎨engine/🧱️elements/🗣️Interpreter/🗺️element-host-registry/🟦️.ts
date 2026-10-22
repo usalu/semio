@@ -3,13 +3,11 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}. The Interpreter knows only this contract; the composition root (`🪢️ElementHosts`) registers the concrete scene hosts, the extension hosts and the document-selection port, so no host is imported by the Interpreter.
  */
 
-import type { ComponentType } from "react";
 import type { ComponentKind, ComponentSceneHostProps } from "@semio-tech/framework";
+import type { ComponentType } from "../../⚛️react-port/🟦️.ts";
+import type { ComponentSceneHostResolverV1, ExtensionHostPropsV1, ExtensionHostResolverV1 } from "../🧩️host-contract/🟦️.ts";
 
 //#region ComponentSceneHostRegistry
-/** 🧭️ Resolves a scene host at render time: modules form a cycle with the hosts' own helpers, so a captured component can still be `undefined` at registration and only a live read is ready by first paint. */
-export type ComponentSceneHostResolverV1 = () => ComponentType<ComponentSceneHostProps> | undefined;
-
 const componentSceneHosts = new Map<ComponentKind, ComponentSceneHostResolverV1>();
 
 /** 🧭️ Registers the host that renders one `ComponentKind`; the returned function retires exactly this registration. */
@@ -20,19 +18,13 @@ export function registerComponentSceneHostV1(kind: ComponentKind, resolve: Compo
   };
 }
 
-/** 🧭️ The scene host registered for `kind`, or `undefined` when the composition root supplied none. */
+/** 🧭️ The scene host registered for `kind` as the component this lane mounts, or `undefined` when the composition root supplied none; the one place a registered host becomes a React component. */
 export function resolveComponentSceneHost(kind: ComponentKind): ComponentType<ComponentSceneHostProps> | undefined {
-  return componentSceneHosts.get(kind)?.();
+  return componentSceneHosts.get(kind)?.() as ComponentType<ComponentSceneHostProps> | undefined;
 }
 //#endregion ComponentSceneHostRegistry
 
 //#region ExtensionHostRegistry
-/** 🧩️ What a `Component::Extension` host receives: the authored props and the identity of the node that carries them. */
-export type ExtensionHostPropsV1 = { readonly value: unknown; readonly nodeId: string | number; readonly nodeKey: string };
-
-/** 🧩️ Answers the host for an extension id at render time, or `undefined` for an id it does not own; reading the id and the host only then keeps a registration safe while the host modules are still evaluating. */
-export type ExtensionHostResolverV1 = (extensionId: string) => ComponentType<ExtensionHostPropsV1> | undefined;
-
 const extensionHostResolvers = new Set<ExtensionHostResolverV1>();
 
 /** 🧩️ Registers a resolver of extension hosts; the returned function retires exactly this registration. */
@@ -43,11 +35,11 @@ export function registerExtensionHostV1(resolve: ExtensionHostResolverV1): () =>
   };
 }
 
-/** 🧩️ The extension host the first registered resolver owns for `extensionId`, or `undefined` when none does. */
+/** 🧩️ The extension host the first registered resolver owns for `extensionId` as the component this lane mounts, or `undefined` when none does; the one place a registered host becomes a React component. */
 export function resolveExtensionHost(extensionId: string): ComponentType<ExtensionHostPropsV1> | undefined {
   for (const resolve of extensionHostResolvers) {
     const host = resolve(extensionId);
-    if (host !== undefined) return host;
+    if (host !== undefined) return host as ComponentType<ExtensionHostPropsV1>;
   }
   return undefined;
 }

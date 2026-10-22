@@ -1,0 +1,129 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "scalar",
+  "property",
+  "extract"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "scalar": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "schema",
+     "expected"
+    ],
+    "properties": {
+     "schema": {},
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "property": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "schema",
+     "cardinality",
+     "scalar"
+    ],
+    "properties": {
+     "schema": {},
+     "cardinality": {
+      "type": "string"
+     },
+     "scalar": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "extract": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "expected",
+     "ajv"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "typeName",
+       "fields"
+      ],
+      "properties": {
+       "typeName": {
+        "type": "string"
+       },
+       "fields": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "optional",
+          "cardinality",
+          "scalar",
+          "state"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "optional": {
+           "type": "boolean"
+          },
+          "cardinality": {
+           "enum": [
+            "scalar",
+            "list",
+            "fixedList",
+            "map"
+           ]
+          },
+          "scalar": {
+           "type": "string"
+          },
+          "state": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "ajv": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

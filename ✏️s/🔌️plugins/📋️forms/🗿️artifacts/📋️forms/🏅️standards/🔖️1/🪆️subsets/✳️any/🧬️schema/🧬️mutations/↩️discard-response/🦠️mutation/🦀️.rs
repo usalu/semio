@@ -15,11 +15,18 @@ where
     Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<DiscardResponse>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "discard", entity: "response", kind: "discard-response", record: "DiscardedResponse" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Retract Response", "Antwort zurückziehen") }
+    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for DiscardResponse
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<DiscardResponse>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> { crate::standards::v1::subsets::any::schema::mutations::component::discard_response::diff::diff(self, base) }
     fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::standards::v1::subsets::any::schema::mutations::component::discard_response::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Retract Response", "Antwort zurückziehen") }
-    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

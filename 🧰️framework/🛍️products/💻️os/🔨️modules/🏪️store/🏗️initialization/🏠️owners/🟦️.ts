@@ -7,12 +7,13 @@ import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🏃️ Runs the `SharedSemanticSourceScript` command under the caller's roots and invocation. */
 export async function runSharedSemanticSourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {
 if(args.length!==1||!['source','native'].includes(args[0]!))throw new Error('shared-semantic-source requires source or native');
 const source=resolve(context.repoRoot,'🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🧪️tests/🟦️.ts');
-await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(context.root),'--noEmit','--strict','--noUncheckedIndexedAccess','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',source],context.repoRoot,'store:semantic-source:types',scriptInvocationBudget(context.invocation,120000),{signal:context.invocation.control.signal});
+await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(context.root),'--noEmit','--strict','--noUncheckedIndexedAccess','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types',runtimeTypeEnvironmentV1(),source],context.repoRoot,'store:semantic-source:types',scriptInvocationBudget(context.invocation,120000),{signal:context.invocation.control.signal});
 await runOwnedCommand(process.execPath,['test',source],context.repoRoot,'store:semantic-source:oracle',scriptInvocationBudget(context.invocation,120000),{signal:context.invocation.control.signal});
 if(args[0]==='source')return;
 const packageName='semio-framework-os-kernel',manifest=resolve(context.repoRoot,'🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml'),policy=readCargoTestPolicyV1(process.env);

@@ -13,7 +13,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_block::BlockCamera3d;
 use semio_s_artifact_block_3d_model::Block3dWindowView;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_plugin_block::{BlockOptionalText, BlockPatch};
 
 //#region 🔖️Config
@@ -159,30 +159,9 @@ fn lift(error: semio_s_plugin_block::BlockPatchError) -> protocol::MutationApply
     protocol::MutationApplyError::new(error.code, error.message).at(error.target)
 }
 
-impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
-    fn apply(&self, base: &Block3dConfig, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.active_representation_id {
-            next.active_representation_id.clone_from(&value.value);
-        }
-        if let Some(tags) = &self.wanted_tags {
-            next.wanted_tags.clone_from(tags);
-        }
-        next.windows = self.windows.commit_onto(&base.windows, capability).map_err(|error| error.under(["windows"]))?;
-        if let Some(value) = &self.brush_vortex_kind_id {
-            next.brush_vortex_kind_id.clone_from(&value.value);
-        }
-        if let Some(radius) = self.brush_radius {
-            next.brush_radius = radius;
-        }
-        if let Some(flip) = self.brush_flip {
-            next.brush_flip = flip;
-        }
-        if let Some(value) = &self.camera {
-            next.camera.clone_from(&value.value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {}
+
+impl protocol::ColdMutationDiff<Block3dConfig> for Block3dConfigDiff {
     fn absorb(&mut self, later: Self) {
         if later.active_representation_id.is_some() {
             self.active_representation_id = later.active_representation_id;
@@ -204,9 +183,41 @@ impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
             self.camera = later.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut Block3dConfig, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.active_representation_id {
+            next.active_representation_id.clone_from(&value.value);
+        }
+        if let Some(tags) = &self.wanted_tags {
+            next.wanted_tags.clone_from(tags);
+        }
+        next.windows = self.windows.commit_onto(&base.windows, capability).map_err(|error| error.under(["windows"]))?;
+        if let Some(value) = &self.brush_vortex_kind_id {
+            next.brush_vortex_kind_id.clone_from(&value.value);
+        }
+        if let Some(radius) = self.brush_radius {
+            next.brush_radius = radius;
+        }
+        if let Some(flip) = self.brush_flip {
+            next.brush_flip = flip;
+        }
+        if let Some(value) = &self.camera {
+            next.camera.clone_from(&value.value);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Block3dConfig> for Block3dConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.active_representation_id.is_none() && self.wanted_tags.is_none() && self.windows.is_empty() && self.brush_vortex_kind_id.is_none() && self.brush_radius.is_none() && self.brush_flip.is_none() && self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Block3dConfig> for Block3dConfigDiff {
     fn inverse(&self, base: &Block3dConfig) -> Self {
         Self {
             active_representation_id: self.active_representation_id.as_ref().map(|_| BlockOptionalText { value: base.active_representation_id.clone() }),
@@ -217,9 +228,6 @@ impl protocol::DiffAlgebra<Block3dConfig> for Block3dConfigDiff {
             brush_flip: self.brush_flip.map(|_| base.brush_flip),
             camera: self.camera.as_ref().map(|_| Block3dOptionalCamera { value: base.camera.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.active_representation_id.is_none() && self.wanted_tags.is_none() && self.windows.is_empty() && self.brush_vortex_kind_id.is_none() && self.brush_radius.is_none() && self.brush_flip.is_none() && self.camera.is_none()
     }
 }
 //#endregion 🔖️ConfigDiff
@@ -519,7 +527,10 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             Block3dConfigMutation::ClearCamera => &Self::DESCRIPTORS[10],
         }
     }
+}
 
+impl protocol::ColdMutation<Block3dConfig> for Block3dConfigMutation {
+    type ReferenceDiff = Block3dConfigDiff;
     fn diff(&self, base: &Block3dConfig) -> protocol::MutationOutcome<Block3dConfigDiff> {
         let unchanged = || protocol::MutationOutcome::empty().warning("mutation.no-op", "The config already holds that value.");
         let outcome = |diff: Block3dConfigDiff| protocol::MutationOutcome::new(diff);
@@ -558,7 +569,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             Block3dConfigMutation::ClearCamera => outcome(Block3dConfigDiff { camera: Some(Block3dOptionalCamera { value: None }), ..Default::default() }),
         }
     }
-
     fn inverse(&self, base: &Block3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Block3dConfigMutation::SetActiveRepresentation { .. } => Block3dConfigMutation::SetActiveRepresentation { representation_id: base.active_representation_id.clone() },

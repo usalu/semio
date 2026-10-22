@@ -10,7 +10,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/➡️after/🔣️.json"));
@@ -29,7 +29,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-link applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-link applies to its committed before-snapshot")
 }
 
 /// ▶️ `delete-link` removes the record only — there is no cascade into frames' `link_id`.
@@ -58,7 +58,7 @@ async fn inverse_recreates_link_2_with_its_hash() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-link/removes-link-2: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("delete-link/removes-link-2: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-link/removes-link-2: inverse did not restore the before-snapshot");
 }
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-link/removes-link-2: committed diff did not carry before to after");
 }
 

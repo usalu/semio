@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 import { Button, useLabel } from "@semio-tech/ui-react";
 import { useHubConnection } from "../🟦️.tsx";
 import { hubUiLabel } from "../🌐️ui-labels/🟦️.ts";

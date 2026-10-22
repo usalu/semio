@@ -7,8 +7,8 @@ def find(lines,prefix,start=0):
     return hits[0]
 def slices(text):
     lines=text.split("\n")
-    tools=find(lines,'    if(command==="tools"){');reset=find(lines,'    if(command==="reset"){',tools);cache=find(lines,'    if(command==="cache"){',reset)
-    setup_b=find(lines,'      if(tools!=="nx"){',tools);setup_n=find(lines,'      if(tools!=="bazel"){',setup_b)
+    tools=find(lines,'    if(command==="tools"){');reset=find(lines,'    if(command==="reset"){',tools);cache=find(lines,'    if(["graph","show"].includes(command)){',reset)
+    setup_b=find(lines,'      if(tools!=="nx"&&tools!=="toolchains"){',tools);setup_n=find(lines,'      if(tools!=="bazel"&&tools!=="toolchains"){',setup_b)
     nx=find(lines,'    if(selected.tool==="nx"){');inputs=find(lines,'    if(command==="inputs")throw',nx);end=find(lines,'    },additionalBytes=>prepareBuildToolStorageV1(',inputs)
     return {
      "tools":(tools,reset),"tools_bazel":(setup_b+1,setup_n-1),"tools_nx":(setup_n,setup_n+1),

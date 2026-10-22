@@ -20,23 +20,27 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "page", kind: "replace-page", record: "Replace" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        if self.index >= base.pages.len() {
-            return MutationOutcome::error("mutation.target-missing", format!("Page {} does not exist.", self.index), [self.index.to_string()]);
-        }
-        MutationOutcome::new(diff::diff_replace_page(base, self.index, &self.page))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok(base.pages.get(self.index).map(|page| Op::from(ReplacePage { index: self.index, page: page.clone() })).into_iter().collect())
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace page {}", self.index), &format!("Seite {} ersetzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for ReplacePage
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<ReplacePage>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        if self.index >= base.pages.len() {
+            return MutationOutcome::error("mutation.target-missing", format!("Page {} does not exist.", self.index), [self.index.to_string()]);
+        }
+        MutationOutcome::new(diff::diff_replace_page(base, self.index, &self.page))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(base.pages.get(self.index).map(|page| Op::from(ReplacePage { index: self.index, page: page.clone() })).into_iter().collect())
     }
 }
 

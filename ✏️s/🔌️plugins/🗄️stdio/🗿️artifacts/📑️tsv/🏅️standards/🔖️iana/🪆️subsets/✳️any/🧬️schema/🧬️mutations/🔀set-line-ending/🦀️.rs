@@ -14,18 +14,21 @@ pub struct SetLineEnding {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line-ending", kind: "set-line-ending", record: "SetLineEnding" };
 
-    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
-        let Self { line_ending } = self;
-        protocol::MutationOutcome::new(TsvDiff { line_ending: Some(*line_ending), ..TsvDiff::default() })
-    }
-    fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
-        Ok(vec![TsvMutation::SetLineEnding(SetLineEnding { line_ending: base.line_ending })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {
+    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as protocol::ColdMutation<TsvSnapshot>>::ReferenceDiff> {
+        let Self { line_ending } = self;
+        protocol::MutationOutcome::new(TsvDiff { line_ending: Some(*line_ending), ..TsvDiff::default() })
+    }
+    fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
+        Ok(vec![TsvMutation::SetLineEnding(SetLineEnding { line_ending: base.line_ending })])
     }
 }
 //#endregion 🔖️Payload

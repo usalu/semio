@@ -2,6 +2,7 @@ import{spawnSync}from"node:child_process";
 import{chmodSync,lstatSync,readdirSync}from"node:fs";
 import{join}from"node:path";
 import protocol from"./🔣️.json"with{type:"json"};
+import { runtimeWhichV1 } from "../../../⚙️runtime/🚀️process/🟦️.ts";
 
 type CandidateV1=Readonly<{command:string;arguments?:readonly string[];platforms?:readonly string[]}>;
 type ToolRowV1=Readonly<{candidates:readonly CandidateV1[];probe:readonly string[];pattern:string;locate?:readonly string[]}>;
@@ -12,7 +13,7 @@ export type TestToolchainPortV1=Readonly<{platform:NodeJS.Platform;which(command
 /** 🔎️ The outcome: an absolute program path, or null with the candidates that were tried. */
 export type TestToolResolutionV1=Readonly<{tool:TestToolNameV1;path:string|null;tried:readonly string[]}>;
 
-const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>Bun.which(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
+const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>runtimeWhichV1(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
 
 /** 🔎️ Resolves one tool: the first declared candidate that exists on PATH and answers its probe like the wanted program (a Windows Store stub or a Python 2 answers differently and is skipped); a launcher such as `py -3` is turned into the interpreter it starts, so the answer is always one program path. */
 export function resolveTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):TestToolResolutionV1{

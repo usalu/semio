@@ -11,7 +11,7 @@ import * as core from "../🟦️.ts";
 import * as glue from "../💾️storage/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import policy from "../../../../💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {readRepositoryCacheBudgetV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 
@@ -72,8 +72,6 @@ test("concurrent oracle: pointer chains, retention decisions, wait schedule and 
  for(const [index,row] of fixture.stale.entries())expect(core.concurrentStaleTemporariesV1(row.rows,row.nowMs,row.pressure),row.name).toEqual(expectedStale[index].stale);
  const expectedWait=oracle("wait",fixture.wait);
  for(const [index,row] of fixture.wait.entries())expect(core.concurrentWaitStepV1(row),row.name).toEqual({expired:expectedWait[index].expired,recheck:expectedWait[index].recheck,progress:expectedWait[index].progress});
- const expectedLanguage=oracle("language",fixture.language);
- for(const [index,row] of fixture.language.entries())expect(core.concurrentLanguageV1(row.environment),row.name).toBe(expectedLanguage[index].language);
 });
 
 /** 🛡️ Refuses a tampered, oversized or foreign pointer and never trusts a torn file. */
@@ -287,7 +285,7 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  const admit=slice(text,"async function admitJavascriptDependencyGenerationV1(","/** ♻️");
  expect(admit.indexOf("concurrentAdmissionV1(")).toBeLessThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
  expect(admit.lastIndexOf("concurrentAdmissionV1(")).toBeGreaterThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
- expect(admit).toContain('concurrentTextV1(concurrentLanguageV1(process.env),"admissionRefused"');expect(admit).toContain('event:"refused"');expect(admit).toContain("throw Error(");
+ expect(admit).toContain('concurrentTextV1(resolveLanguageV1(concurrentProtocolV1.languages,[],process.env).language,"admissionRefused"');expect(admit).toContain('event:"refused"');expect(admit).toContain("throw Error(");
  expect(slice(text,"async function readJavascriptDependencyGenerationElseV1<T>(","/** 📮️")).toContain("withConcurrentPinsV1(");
  expect(slice(text,"async function requireJavascriptDependencyBudgetV1(","/** 🛂️")).toContain("repositoryCacheBudgetV1(workspace).partitions.dependencies.usableBytes");
  expect(slice(text,"async function admitJavascriptDependencyGenerationV1(","/** ♻️").indexOf("requireJavascriptDependencyBudgetV1(workspace,control)")).toBeGreaterThan(0);

@@ -20,17 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "page", kind: "remove-page", record: "Remove" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_remove_page(self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.pages.get(self.index).cloned().map(|page| Op::from(InsertPage { index: self.index, page })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove page {}", self.index), &format!("Seite {} entfernen", self.index))
     }
@@ -38,6 +27,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemovePage
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemovePage> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_page::InsertPage>,
+{
+    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::diff_remove_page(self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.pages.get(self.index).cloned().map(|page| Op::from(InsertPage { index: self.index, page })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

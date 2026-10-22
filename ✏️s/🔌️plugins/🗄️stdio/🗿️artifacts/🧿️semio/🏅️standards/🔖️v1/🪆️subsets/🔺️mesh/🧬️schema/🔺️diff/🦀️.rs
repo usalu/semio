@@ -204,24 +204,9 @@ pub fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimiti
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
-impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
-    fn apply(&self, base: &SemioMeshSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
-        let mut next = base.clone();
-        if let Some(md) = &self.meshes {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
-            apply_named(&mut next.meshes, md, |m| m.id.clone(), apply_mesh);
-        }
-        if let Some(md) = &self.materials {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
-            apply_named(&mut next.materials, md, |m| m.id.clone(), apply_material);
-        }
-        if let Some(td) = &self.textures {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
-            apply_named(&mut next.textures, td, |t| t.id.clone(), apply_texture);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {}
 
+impl protocol::ColdMutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
     fn absorb(&mut self, other: Self) {
         self.meshes = match (self.meshes.take(), other.meshes) {
             (None, b) => b,
@@ -238,6 +223,25 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
             (a, None) => a,
             (Some(a), Some(b)) => Some(absorb_named(a, &b, |t: &NamedAdded<SemioTexture>| t.item.id.clone(), absorb_texture_diff, apply_texture_added)),
         };
+    }
+
+    fn apply(&self, unpublished: &mut SemioMeshSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(md) = &self.meshes {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
+            apply_named(&mut next.meshes, md, |m| m.id.clone(), apply_mesh);
+        }
+        if let Some(md) = &self.materials {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
+            apply_named(&mut next.materials, md, |m| m.id.clone(), apply_material);
+        }
+        if let Some(td) = &self.textures {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
+            apply_named(&mut next.textures, td, |t| t.id.clone(), apply_texture);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -324,6 +328,12 @@ fn apply_texture(tex: &mut SemioTexture, diff: &SemioTextureDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
+    fn is_empty(&self) -> bool {
+        self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
     /// 🔁️ Concrete negative diff: every added row is removed, every removed row returns at its BASE position, and every modified row
     /// inverts field by field against its base row.
     fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
@@ -332,10 +342,6 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
             materials: self.materials.as_ref().map(|diff| inverse_named(diff, &base.materials, |material| material.id.clone(), invert_material)),
             textures: self.textures.as_ref().map(|diff| inverse_named(diff, &base.textures, |texture| texture.id.clone(), invert_texture)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
     }
 }
 

@@ -47,8 +47,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+semio-framework-replication-edit = { path = "../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 
-[features]
-deflate = []

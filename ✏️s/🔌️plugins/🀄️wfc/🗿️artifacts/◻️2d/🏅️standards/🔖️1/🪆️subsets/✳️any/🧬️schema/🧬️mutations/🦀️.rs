@@ -11,13 +11,13 @@
 
 use crate::diff::Wfc2dDiff;
 use crate::schema::snapshot::Wfc2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Wfc2dSnapshot, diff = Wfc2dDiff, schema = "wfc2d")]
+#[mutations(snapshot = Wfc2dSnapshot, diff = Wfc2dDiff, schema = "wfc2d", reference = Wfc2dSnapshot, reference_diff = Wfc2dDiff)]
 pub enum Wfc2dMutation {
     ChangeSeed(crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed),
     CreateSlot(crate::standards::v1::subsets::any::schema::mutations::create_slot::CreateSlot),

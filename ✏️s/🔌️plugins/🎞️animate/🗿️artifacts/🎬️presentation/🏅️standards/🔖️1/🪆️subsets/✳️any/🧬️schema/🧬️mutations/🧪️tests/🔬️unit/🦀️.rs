@@ -11,7 +11,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::diff::PresentationDiff;
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};

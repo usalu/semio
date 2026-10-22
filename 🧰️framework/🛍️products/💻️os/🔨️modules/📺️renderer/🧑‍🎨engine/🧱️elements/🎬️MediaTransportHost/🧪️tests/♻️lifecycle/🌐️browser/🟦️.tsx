@@ -1,7 +1,8 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { mediaTransportLabels } from "@semio-tech/plugin-window-kits/media";
-import { MediaTransportHost, MediaTransportOwnerContext, type MediaTransportPort } from "../../../🟦️.tsx";
+import { MediaTransportHost, type MediaTransportPort } from "../../../🟦️.tsx";
+import { MediaTransportOwnerScope } from "../../../🔗️owner-scope/🟦️.tsx";
 
 /** 🧫️ The lifecycle fixture fields the Chromium oracle mounts, as `🧬️schema/♻️lifecycle/🔣️.json` admits them. */
 export type BrowserInput = {
@@ -44,7 +45,7 @@ window.mountMediaTransportOracle = async (input) => {
   const labels = mediaTransportLabels("en");
   const value = { schemaVersion: 1, kind: input.media.kind, mediaType: input.media.mediaType, revision: input.identity.revision, durationMs: input.media.durationMs, positionMs: input.media.positionMs, selectionStartMs: input.media.selection[0], selectionEndMs: input.media.selection[1], locale: "en", labels, resource: { kind: "artifact-media-export", controllerId: input.identity.controllerId, appInstanceId: input.identity.instanceId, parentDocumentId: input.identity.parentDocumentId, outputPort: input.identity.outputPort, revision: input.identity.revision, generation: input.identity.generation }, capability: { status: "ready", reason: null }, hostContentHeight: 240 };
   const root = createRoot(document.getElementById("root")!);
-  root.render(createElement(MediaTransportOwnerContext.Provider, { value: { instanceId: input.identity.instanceId, controllerId: input.identity.controllerId, windowId: input.identity.windowId, port } }, createElement(MediaTransportHost, { value, nodeId: 7, nodeKey: "media.transport" })));
+  root.render(createElement(MediaTransportOwnerScope, { owner: { instanceId: input.identity.instanceId, controllerId: input.identity.controllerId, windowId: input.identity.windowId, port } }, createElement(MediaTransportHost, { value, nodeId: 7, nodeKey: "media.transport" })));
   await new Promise<void>((resolve, reject) => {
     const timeout = window.setTimeout(() => reject(new Error("media-browser-timeout")), 5_000);
     const observer = new MutationObserver(() => {

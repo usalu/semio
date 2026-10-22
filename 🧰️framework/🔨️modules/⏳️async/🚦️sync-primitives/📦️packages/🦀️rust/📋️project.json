@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/async-sync-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

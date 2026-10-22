@@ -20,6 +20,16 @@ pub struct RemoveTagMutation {
 //#region Semantics
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "tag", kind: "remove-tag", record: "RemoveTag" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove tag", "Tag entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["remove-tag".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
         let Self { ifd_index, tag } = self;
         protocol::MutationOutcome::new(contribute(base, *ifd_index, *tag))
@@ -27,12 +37,6 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
         let Self { ifd_index, tag } = self;
         Ok(base.ifds.get(*ifd_index).and_then(|ifd| ifd.entries.iter().find(|entry| entry.tag == *tag)).map(|existing| TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, values: existing.values.clone() })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove tag", "Tag entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["remove-tag".into()]
     }
 }
 pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {

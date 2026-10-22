@@ -558,12 +558,12 @@ fn process3d_nested(mut demand: semio_framework_value::RetirementDemand) -> Resu
 
 /// 🏭️ Original owned-value issuer for Process3d snapshots.
 pub(crate) fn process3d_snapshot_value_factory() -> std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Process3dSnapshot>> {
-    std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Process3dSnapshot>::default())
+    std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Process3dSnapshot>::default())
 }
 
 /// 🏭️ Original owned-value issuer for Process3d mutations.
 pub(crate) fn process3d_mutation_value_factory() -> std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Process3dMutation>> {
-    std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Process3dMutation>::default())
+    std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Process3dMutation>::default())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

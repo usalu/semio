@@ -21,7 +21,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "node", kind: "rotate-node", record: "RotatedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} drehen", self.at.layer))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.at.layer.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for RotateNode
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<RotateNode>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,11 +42,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} drehen", self.at.layer))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.at.layer.to_string()]
-    }
 }
 //#endregion 🔖️Payload

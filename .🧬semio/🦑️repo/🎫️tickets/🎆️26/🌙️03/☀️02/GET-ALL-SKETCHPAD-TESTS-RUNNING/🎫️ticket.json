@@ -1,23 +1,28 @@
 {
   "title": "Get All Sketchpad Tests Running",
   "status": "closed",
-  "prompt": "get all sketchpad tests running",
+  "description": "get all sketchpad tests running",
   "summary": "Bulk close",
   "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
-  "started": "2026-03-02T10:51:11.625315368Z",
-  "finished": "2026-03-05T13:26:27.283475012Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-03-02 10:51:11",
-        "finished": "2026-03-05 13:26:27"
-      },
+      "kind": "ticket.open",
+      "date": "2026-03-02T10:51:11.625315368Z",
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",
       "client": "codex",
-      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "checkpoint": "",
       "prompt": "get all sketchpad tests running",
       "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-05T13:26:27.283475012Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Bulk close"
     }
   ]
 }

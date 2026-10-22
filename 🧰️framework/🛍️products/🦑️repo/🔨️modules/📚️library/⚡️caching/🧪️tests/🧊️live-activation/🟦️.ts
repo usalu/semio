@@ -32,7 +32,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   for (const profile of ["prototype", "release"]) assert.ok(testStringsV1(targetFor(`prepare-${fixture.variant}-wgpu-${profile}`).dependsOn).includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
   for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
     const target = targetFor(`${command}-${fixture.variant}-wgpu-${profile}`);
-    assert.equal(testRecordV1(target,"options").command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile} --port 4321`, "The server must consume the completed profile through its narrow leaf");
+    assert.equal(testRecordV1(target,"options").command, `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile} --port 4321`, "The server must consume the completed profile through its narrow leaf");
     assert.deepEqual(target.dependsOn, [`activate-${fixture.variant}-wgpu-${profile}`]);
     assert.equal(target.cache, false);
     assert.equal(target.continuous, true);
@@ -56,11 +56,11 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   put("nx.json", JSON.stringify({ useDaemonProcess: false, cacheDirectory: ".nx/cache" }));
   put(".gitignore", "node_modules\n.nx\nmodules\ndist\n.counts\n.🧬semio\n");
   put("project.json", JSON.stringify({ name: "fixture", targets: {
-    materialize: { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/📜️script.ts"], outputs: ["{workspaceRoot}/modules", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"], options: { command: "bun ./📜️script.ts materialize" } },
-    [prepare]: { ...targetFor(prepare), executor: "nx:run-commands", dependsOn: ["materialize"], inputs: ["{workspaceRoot}/📜️script.ts", { dependentTasksOutputFiles: "**/*" }], options: { command: "bun ./📜️script.ts prepare" } },
-    [activate]: { ...targetFor(activate), executor: "nx:run-commands", options: { command: "bun ./📜️script.ts activate" } },
-    cancel: { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: "bun ./📜️script.ts cancel" } },
-    ...Object.fromEntries(namespaces.map((row: any) => [`install-${row.variant}-${row.renderer}-${row.profile}`, { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: `bun ./📜️script.ts activate ${row.variant} ${row.renderer} ${row.profile}` } }]))
+    materialize: { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/📜️script.ts"], outputs: ["{workspaceRoot}/modules", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"], options: { command: "repo ./📜️script.ts materialize" } },
+    [prepare]: { ...targetFor(prepare), executor: "nx:run-commands", dependsOn: ["materialize"], inputs: ["{workspaceRoot}/📜️script.ts", { dependentTasksOutputFiles: "**/*" }], options: { command: "repo ./📜️script.ts prepare" } },
+    [activate]: { ...targetFor(activate), executor: "nx:run-commands", options: { command: "repo ./📜️script.ts activate" } },
+    cancel: { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: "repo ./📜️script.ts cancel" } },
+    ...Object.fromEntries(namespaces.map((row: any) => [`install-${row.variant}-${row.renderer}-${row.profile}`, { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: `repo ./📜️script.ts activate ${row.variant} ${row.renderer} ${row.profile}` } }]))
   } }));
   put("📜️script.ts", `import assert from "node:assert/strict";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";

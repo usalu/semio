@@ -11,7 +11,7 @@ fn layers(names: &[&str]) -> Vec<LowpolyPaintLayer> {
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_a_no_operation() {
     let base = LowpolySnapshot::default();
-    assert_eq!(protocol::apply_diff(&LowpolyDiff::default(), &base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&LowpolyDiff::default(), &base).expect("valid mutation diff"), base);
 }
 
 /// ⚖️ LAW: paint edits fold per layer and their negative sequence restores the list, including a middle layer.
@@ -83,12 +83,12 @@ fn positional_object_delta_sums_and_inverts_at_middle_rows() {
     let order = |snapshot: &LowpolySnapshot| snapshot.objects.iter().map(|row| row.id.clone()).collect::<Vec<_>>();
     let diff = |delta: LowpolyObjectsDelta| LowpolyDiff { objects: Some(delta), ..Default::default() };
     let insert = diff(LowpolyObjectsDelta::insertion(1, object("x")));
-    let inserted = protocol::apply_diff(&insert, &base).expect("valid insertion");
+    let inserted = protocol::apply_diff_cold(&insert, &base).expect("valid insertion");
     let relocate = diff(LowpolyObjectsDelta::relocation(&inserted.objects, 3, 0));
-    let moved = protocol::apply_diff(&relocate, &inserted).expect("valid relocation");
+    let moved = protocol::apply_diff_cold(&relocate, &inserted).expect("valid relocation");
     assert_eq!(order(&moved), ["c", "a", "x", "b"]);
     let mut sum = insert;
     sum.absorb(relocate);
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("valid sum"), moved);
-    assert_eq!(protocol::apply_diff(&protocol::DiffAlgebra::inverse(&sum, &base), &moved).expect("valid inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("valid sum"), moved);
+    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum, &base), &moved).expect("valid inverse"), base);
 }

@@ -10,7 +10,6 @@ package sandbox
 
 import (
 	os "os"
-	exec "os/exec"
 	filepath "path/filepath"
 
 	workspace "github.com/usalu/semio/repo/workspace"
@@ -43,7 +42,7 @@ func NewRepository(t T) string {
 	t.Helper()
 	repository := t.TempDir()
 	for _, arguments := range [][]string{{"init", "-q"}, {"config", "user.email", "test@test.com"}, {"config", "user.name", "Test"}, {"config", "commit.gpgsign", "false"}, {"commit", "-q", "--allow-empty", "-m", "initial"}} {
-		if output, err := exec.Command("git", append([]string{"-C", repository}, arguments...)...).CombinedOutput(); err != nil {
+		if output, err := workspace.ToolCommand("git", append([]string{"-C", repository}, arguments...)...).CombinedOutput(); err != nil {
 			t.Fatalf("git %v: %v\n%s", arguments, err, output)
 		}
 	}

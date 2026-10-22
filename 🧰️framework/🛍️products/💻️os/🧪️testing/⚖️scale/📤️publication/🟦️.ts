@@ -50,7 +50,7 @@ class ScaleFixturePreviewGeneratedScript extends BundleScript {
 class ScaleFixtureCheckScript extends BundleScript {
   run(): void {
     if (!checkScaleFixtureArtifacts(this.repoRoot)) {
-      throw new Error("scale-fixture check: 🤖️generated/{📇️registry,🗂️catalog}/🔣️.json are stale — run `bun ./📜️script.ts generate scale-fixture`");
+      throw new Error("scale-fixture check: 🤖️generated/{📇️registry,🗂️catalog}/🔣️.json are stale — run `repo ./📜️script.ts generate scale-fixture`");
     }
     console.log("scale-fixture check: fresh");
   }

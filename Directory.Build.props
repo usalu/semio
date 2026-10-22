@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath Condition="'$(ArtifactsPath)' == ''">$(MSBuildThisFileDirectory).cache/b/p/m/dotnet/raw/$(MSBuildProjectName)</ArtifactsPath>
+  </PropertyGroup>
+</Project>

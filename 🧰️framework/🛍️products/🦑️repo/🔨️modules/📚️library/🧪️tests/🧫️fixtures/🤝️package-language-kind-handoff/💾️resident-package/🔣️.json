@@ -72,7 +72,7 @@
         "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts test",
+          "command": "repo ./📜️script.ts test",
           "forwardAllArgs": true
         },
         "outputs": []
@@ -86,7 +86,7 @@
         ],
         "options": {
           "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
-          "command": "bun ./📜️script.ts check-wasm",
+          "command": "repo ./📜️script.ts check-wasm",
           "forwardAllArgs": true
         },
         "outputs": []

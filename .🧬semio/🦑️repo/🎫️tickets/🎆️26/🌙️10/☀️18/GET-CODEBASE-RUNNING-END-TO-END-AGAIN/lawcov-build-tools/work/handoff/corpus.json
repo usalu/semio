@@ -1,0 +1,150 @@
+{
+ "version": 1,
+ "envName": "SEMIO_NX_DAEMON_SERVICE_BIRTH",
+ "maximumBytes": 1048576,
+ "wires": [
+  {
+   "name": "a missing wire",
+   "wire": null,
+   "filler": null,
+   "error": "Bounded original daemon handoff required",
+   "kind": "bound"
+  },
+  {
+   "name": "an empty wire is not JSON",
+   "wire": "",
+   "filler": null,
+   "error": "SyntaxError",
+   "kind": "syntax"
+  },
+  {
+   "name": "text that is not JSON",
+   "wire": "not json",
+   "filler": null,
+   "error": "SyntaxError",
+   "kind": "syntax"
+  },
+  {
+   "name": "a truncated document",
+   "wire": "{\"birth\":",
+   "filler": null,
+   "error": "SyntaxError",
+   "kind": "syntax"
+  },
+  {
+   "name": "null is not a record",
+   "wire": "null",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "an array is not a record",
+   "wire": "[]",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a string is not a record",
+   "wire": "\"x\"",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a number is not a record",
+   "wire": "1",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "an empty record lacks both parts",
+   "wire": "{}",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a record with only a birth",
+   "wire": "{\"birth\":{}}",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a record with only a witness",
+   "wire": "{\"witness\":{}}",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a record with a third key",
+   "wire": "{\"birth\":{},\"witness\":{},\"extra\":1}",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "a record with other keys",
+   "wire": "{\"a\":1,\"b\":2}",
+   "filler": null,
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "an empty birth is not a descriptor",
+   "wire": "{\"birth\":{},\"witness\":{}}",
+   "filler": null,
+   "error": "Closed original daemon birth descriptor required",
+   "kind": "birth"
+  },
+  {
+   "name": "the key order does not matter",
+   "wire": "{\"witness\":{},\"birth\":{}}",
+   "filler": null,
+   "error": "Closed original daemon birth descriptor required",
+   "kind": "birth"
+  },
+  {
+   "name": "a birth that is null",
+   "wire": "{\"birth\":null,\"witness\":{}}",
+   "filler": null,
+   "error": "Closed original daemon birth descriptor required",
+   "kind": "birth"
+  },
+  {
+   "name": "exactly the byte bound is read as a document",
+   "wire": null,
+   "filler": {
+    "bytes": 1048576,
+    "wrapper": "{\"birth\":{},\"witness\":{},\"x\":\"%s\"}"
+   },
+   "error": "Closed original daemon handoff required",
+   "kind": "closed"
+  },
+  {
+   "name": "one byte more than the bound is refused unread",
+   "wire": null,
+   "filler": {
+    "bytes": 1048577,
+    "wrapper": "{\"birth\":{},\"witness\":{},\"x\":\"%s\"}"
+   },
+   "error": "Bounded original daemon handoff required",
+   "kind": "bound"
+  },
+  {
+   "name": "bytes are counted not characters",
+   "wire": null,
+   "filler": {
+    "bytes": 1048577,
+    "wrapper": "\"%s\"",
+    "multibyte": true
+   },
+   "error": "Bounded original daemon handoff required",
+   "kind": "bound"
+  }
+ ]
+}

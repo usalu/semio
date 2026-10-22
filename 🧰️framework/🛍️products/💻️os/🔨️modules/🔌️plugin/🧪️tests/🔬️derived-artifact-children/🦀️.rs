@@ -63,7 +63,7 @@ impl ArtifactBuilder for ChildrenTestConstruction {
         Ok(Self::empty())
     }
     fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-        let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.0);
+        let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.0);
         self.0 = protocol::apply_diff_cold(outcome.diff(), &self.0).expect("children test diff applies");
         (self, outcome)
     }

@@ -19,5 +19,6 @@ semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/�
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-snapshot-projection = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

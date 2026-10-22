@@ -14,13 +14,13 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use std::collections::HashSet;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_ui_contract::*;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ Every live child's TAIL applied edit id, plus whether any child has an edit on
     /// its redo stack — the composed-artifact halves of `can_undo`/`can_redo`/`revertible`. A
     /// `Child`-lane document verb (see `ArtifactToolPublicationLane::Child`) never touches the

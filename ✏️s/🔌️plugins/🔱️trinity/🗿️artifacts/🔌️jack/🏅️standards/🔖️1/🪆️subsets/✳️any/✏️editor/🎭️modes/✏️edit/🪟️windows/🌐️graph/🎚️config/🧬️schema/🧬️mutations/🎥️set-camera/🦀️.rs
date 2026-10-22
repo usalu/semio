@@ -14,20 +14,6 @@ pub struct SetCamera {
 impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfigDiff> {
-        if self.camera == base.camera {
-            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window camera is unchanged.");
-        }
-        protocol::MutationOutcome::new(JackGraphWindowConfigDiff { camera: Some(self.camera.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &JackGraphWindowConfig) -> Result<Vec<JackGraphWindowConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { camera: base.camera.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Window Camera", "Fensterkamera setzen")
     }
@@ -35,4 +21,19 @@ impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]
     }
+}
+
+impl protocol::ColdMutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetCamera {
+    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfigDiff> {
+        if self.camera == base.camera {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window camera is unchanged.");
+        }
+        protocol::MutationOutcome::new(JackGraphWindowConfigDiff { camera: Some(self.camera.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &JackGraphWindowConfig) -> Result<Vec<JackGraphWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { camera: base.camera.clone() }.into()]
+    
+    })())
+}
 }

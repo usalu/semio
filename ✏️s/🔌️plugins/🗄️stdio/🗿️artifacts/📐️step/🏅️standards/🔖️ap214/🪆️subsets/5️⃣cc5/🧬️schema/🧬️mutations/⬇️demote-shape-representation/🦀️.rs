@@ -17,23 +17,24 @@ pub struct DemoteShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc5Mutation> for DemoteShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shape-representation", kind: "demote-shape-representation", record: "DemotedShapeRepresentation" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
-        match ladder::demotion_diff(base, CLASS, MAX_RUNG, self.id) {
-            Ok(diff) => protocol::MutationOutcome::new(diff),
-            Err(message) => rejected(message),
-        }
-    }
-
-    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc5Mutation>, semio_framework_value::ValueError> {
-        Ok(restored(ladder::restore_entity_rows(base, self.id)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen", self.id))
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepCc5Mutation> for DemoteShapeRepresentation {
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        match ladder::demotion_diff(base, CLASS, MAX_RUNG, self.id) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
+    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc5Mutation>, semio_framework_value::ValueError> {
+        Ok(restored(ladder::restore_entity_rows(base, self.id)))
     }
 }
 //#endregion 🔖️Payload

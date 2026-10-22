@@ -2,8 +2,8 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
         if mounted.reject_cancelled_publication()? {
             self.stores.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
@@ -50,16 +50,20 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
             let advance = match pending {
-                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, grant).map_err(store_publication_fault)?,
-                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(store_publication_fault)?,
+                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                 PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(), grant)?,
                 PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant)?,
             };
             return match advance {
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt) => {
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, ownership) => {
+                    if ownership!=RetainedCloneProgress::default(){
+                        assert!(mounted.publication_ownership_progress.is_none(),"typed publication cannot overwrite an unreturned original receipt");
+                        mounted.publication_ownership_progress=Some((retained,ownership));
+                    }
                     match pending_lane {
                         TypedOperationResultLane::Artifact => {
                             mounted.published_artifact = true;
@@ -219,8 +223,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         let mut running = self.stores.store.snapshot().map_err(|error| error.into_fault())?;
                         let foreign = Vec::new();
                         for op in emit.artifact_mutations.iter() {
-                            if op.foreign_step_source(&running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")); }
-                            let outcome = op.diff(&running);
+                            if ColdMutation::foreign_step_source(op, &running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")); }
+                            let outcome = ColdMutation::diff(op, &running);
                             if !outcome.is_applicable(protocol::MergePolicy::default()) {
                                 return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                             }

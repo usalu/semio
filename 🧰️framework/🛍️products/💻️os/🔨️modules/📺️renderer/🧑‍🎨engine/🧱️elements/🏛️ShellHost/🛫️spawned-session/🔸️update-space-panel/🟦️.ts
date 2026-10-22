@@ -1,5 +1,5 @@
 /** 🔸️ The update space panel phase of useSpawnedSession. */
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { shellHumanChangeRecoveryV1, type ShellHumanV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { renameLayoutWindowIdsV1, spawnedLayoutRenameV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type WindowLayoutNode } from "@semio-tech/ui-react";

@@ -1,12 +1,14 @@
 import { writeSync } from "node:fs";
 import { isAbsolute, join, sep } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import { buildMicroCommitMessage, clearStaleTemplatesBeforePrepare, handlePrepareCommitMsg, wipeAfterCommit, writeMicroCommitTemplates } from "../📄️prepared-message/🟦️.ts";
 import { git, gitDir, gitEmail, gitRepoRoot } from "../🌳️git/🟦️.ts";
 import { installMicroCommitGitHooks } from "../🪝️hooks/🟦️.ts";
 import { branchValidationError, currentBranch, findContributor, loadLevel } from "../👤️contributor/🟦️.ts";
 import { listCachedPaths, readDiffBulletsInput, validateBulletEmojis, validateBulletsAgainstStaged, validateBulletSpacing, writePreparedBullets } from "../🔸️bullets/🟦️.ts";
 import { gitSpawnEnv } from "../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {sayCommitV1,reportCommitErrorV1} from "../📖️texts/🟦️.ts";
 
 export function resetMicroCommitTemplates(root: string): void {
   wipeAfterCommit(root);
@@ -55,7 +57,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   }
   const contributor = findContributor(root);
   if (!contributor) {
-    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    sayCommitV1("micro.no-contributor-for-git-user",{email:String(gitEmail(root) || "(unset)")},"error");
     process.exit(1);
   }
   if (cmd === "stage") {
@@ -77,7 +79,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
     process.exit(0);
   }
   if (cmd !== "prepare") {
-    console.error("[micro-commit] usage: bun ./📜️script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]");
+    sayCommitV1("micro.usage-repo-script-ts-stage",{},"error");
     process.exit(1);
   }
 
@@ -95,7 +97,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   clearStaleTemplatesBeforePrepare(root);
   const stagedPaths = listCachedPaths(root);
   if (stagedPaths.length === 0) {
-    console.error("micro-commit: nothing is staged; stage the intended changes before prepare");
+    sayCommitV1("micro.nothing-is-staged-stage-the",{},"error");
     process.exit(1);
   }
 
@@ -105,7 +107,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
     console.error("");
     const patch = git(root, ["diff", "--cached"]);
     if (patch.out) console.error(patch.out);
-    console.error("\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆️ 📊️ 🔢️ 🚩️)");
+    sayCommitV1("micro.analyze-the-staged-paths-and",{},"error");
     process.exit(1);
   }
 
@@ -117,7 +119,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   try {
     message = buildMicroCommitMessage(root, contributor, diffBullets);
   } catch (e) {
-    console.error(e instanceof Error ? e.message : String(e));
+    reportCommitErrorV1(e);
     process.exit(1);
   }
   writeMicroCommitTemplates(root, message);
@@ -126,7 +128,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   if (level === "prepare-only") process.exit(0);
 
   const dir = gitDir(root);
-  const commit = spawnSync("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
+  const commit = runToolSyncV1("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (commit.status !== 0) {
     console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
     process.exit(commit.status ?? 1);
@@ -134,7 +136,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   wipeAfterCommit(root);
   if (level === "prepare-and-commit") process.exit(0);
 
-  const push = spawnSync("git", ["push"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
+  const push = runToolSyncV1("git", ["push"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (push.status !== 0) {
     console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
     process.exit(push.status ?? 1);

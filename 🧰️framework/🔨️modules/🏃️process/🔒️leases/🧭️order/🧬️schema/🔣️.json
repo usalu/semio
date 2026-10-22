@@ -134,6 +134,30 @@
               "minLength": 1
             }
           }
+        },
+        "binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "fromPrefix",
+            "toPrefix"
+          ],
+          "properties": {
+            "kind": {
+              "const": "same-directory-suffix"
+            },
+            "fromPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "toPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
         }
       }
     },
@@ -262,7 +286,11 @@
           "required": [
             "releaseWhileWaiting",
             "pollInitialMilliseconds",
-            "pollMaximumMilliseconds"
+            "pollMaximumMilliseconds",
+            "admissionPatienceMilliseconds",
+            "claimSweepIntervalMilliseconds",
+            "claimSweepPressureFreeRatio",
+            "claimSweepPressureIntervalMilliseconds"
           ],
           "properties": {
             "releaseWhileWaiting": {
@@ -277,6 +305,30 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 60000
+            },
+            "admissionPatienceMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600000,
+              "description": "How long a request that must not wait for its resource (timeout 0) still waits for the directory admission gate, which is held only for microseconds; 0 keeps the strict single attempt."
+            },
+            "claimSweepIntervalMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000,
+              "description": "The least time between two retirement sweeps of settled queue claims that one process starts from queue acquisitions; each sweep takes the directory admission gate exclusively for a moment, so a sweep per acquisition starves every other opener."
+            },
+            "claimSweepPressureFreeRatio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "The fraction of the lease store's filesystem that must stay free; below it a queue acquisition sweeps settled claims at the pressure interval instead of the ordinary one, because every queued acquisition leaves a settled claim database behind and a bounded lease volume otherwise fills faster than one sweep per interval retires them; 0 never applies pressure."
+            },
+            "claimSweepPressureIntervalMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000,
+              "description": "The least time between two claim sweeps of one process while the lease store is under pressure."
             }
           }
         },

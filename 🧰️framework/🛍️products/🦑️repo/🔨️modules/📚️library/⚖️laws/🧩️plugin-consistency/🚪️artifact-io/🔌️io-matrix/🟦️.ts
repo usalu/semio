@@ -34,7 +34,7 @@ function policyHasComponentUnder(repoRoot: string, rootRel: string): boolean {
  * REAL replacement for `policyIoSerializerMatrixBreaches`'s dead early-continue (see that
  * function's own comment — every owner is migrated now, so it has been a permanent no-op since
  * this session's Phase 1 completed the migration; confirmed via zero `stdio-artifacts/io-matrix`
- * breaches anywhere in a real `bun ./📜️script.ts policy` run). This checks the MIGRATED shape
+ * breaches anywhere in a real `repo ./📜️script.ts policy` run). This checks the MIGRATED shape
  * instead: for each catalog owner's curated import/export format list, at least one of that domain
  * artifact's own (standard, subset) dirs must carry a real io leaf for that format — searched
  * existence-anywhere-under its `🚪️io/<direction>/<facet>/🗿️artifacts/<format-dir>/` tree (not a

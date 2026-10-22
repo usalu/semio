@@ -25,7 +25,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "primitive-geometry", kind: "replace-primitive-geometry", record: "ReplacedPrimitiveGeometry" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace primitive \"{}\" geometry in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Geometrie von Primitiv \"{}\" in Netz \"{}\" ersetzen", self.primitive_id, self.mesh_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.primitive_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioMeshSnapshot, Op> for ReplacePrimitiveGeometry
+where
+    Op: protocol::ColdMutation<SemioMeshSnapshot, ReferenceDiff = crate::schema::diff::SemioMeshDiff> + From<ReplacePrimitiveGeometry>,
+{
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioMeshSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -34,11 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace primitive \"{}\" geometry in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Geometrie von Primitiv \"{}\" in Netz \"{}\" ersetzen", self.primitive_id, self.mesh_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.primitive_id.clone()]
-    }
 }
 //#endregion 🔖️Payload

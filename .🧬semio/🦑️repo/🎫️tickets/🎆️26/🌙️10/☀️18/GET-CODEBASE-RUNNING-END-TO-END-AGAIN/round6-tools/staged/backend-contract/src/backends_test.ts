@@ -9,7 +9,7 @@ import policy from "@@UP@@🔣️policy.json" with {type:"json"};
 import catalog from "@@UP@@@@OPERATIONS@@/🔣️catalog.json" with {type:"json"};
 import conformance from "@@UP@@@@CONF@@/@@SCENARIOS@@/@@JSON@@" with {type:"json"};
 import {validateJsonSchemaSubset} from "@@VALID@@";
-import {backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapArgumentsV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,readBackendRegistryV1,requireBuildBackendIdV1} from "../@@TS@@";
+import {buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,readBackendRegistryV1,requireBuildBackendIdV1} from "../@@TS@@";
 import {renderBuildHelpV1,type BuildHelpCatalogV1} from "@@UP@@@@OPERATIONS@@/@@HELP@@/@@TS@@";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),build=join(import.meta.dir,"../..");
@@ -36,7 +36,9 @@ test("every backend declares every capability and a claim for each scenario's ca
 });
 
 test("the policy default, the catalogue and the help derive from the registry",()=>{
- expect(buildBackendIdsV1()).toContain(policy.defaultTool);
+ expect(buildBackendIdsV1()).toContain(buildBackendDefaultIdV1());
+ expect(buildBackendRowsV1().filter(row=>row.default===true).length).toBe(1);
+ expect((policy as Record<string,unknown>).defaultTool).toBeUndefined();
  const names=new Set((catalog as any).operations.map((row:any)=>row.name));
  for(const row of buildBackendRowsV1())for(const operation of Object.keys(row.operations))expect(names.has(operation),`${row.id} ${operation}`).toBe(true);
  for(const operation of (catalog as any).operations)expect(operation.implementations,operation.name).toBeUndefined();
@@ -60,6 +62,23 @@ test("the native-snapshot protocol is declared by exactly one backend and carrie
  expect(buildNativeSnapshotProtocolV1()!.variable).toMatch(/^SEMIO_[A-Z0-9_]+$/u);
 });
 
+test("nested native launches and cache proofs are declared per backend, never by neutral code",async()=>{
+ const rows=buildBackendRowsV1(),namespaces=buildBackendNativeNamespacesV1();
+ expect(namespaces).toEqual(rows.flatMap(row=>row.nativeCaller?[row.nativeCaller.namespace]:[]));
+ expect(new Set(namespaces).size).toBe(namespaces.length);
+ for(const row of rows.filter(candidate=>candidate.nativeCaller)){
+  expect(existsSync(join(build,"@@BACKENDS@@",row.nativeCaller!.schema)),row.id).toBe(true);
+  const launch=await buildBackendBootstrapV1(["tools","setup",row.id],row.id);
+  if(launch)expect(launch.namespace).toBe(row.nativeCaller!.namespace);
+ }
+ for(const row of rows){
+  expect(row.cacheProof,row.id).toBeDefined();
+  if(row.cacheProof?.logMarker)expect(()=>new RegExp(row.cacheProof!.logMarker!,"u")).not.toThrow();
+  for(const source of Object.values(row.cacheProof?.spawnMarker??{}))expect(()=>new RegExp(source,"u")).not.toThrow();
+ }
+ expect(readBackendRegistryV1({version:1,backends:rows.map(row=>({...row,cacheProof:{logMarker:"("}}))}).length).toBe(rows.length);
+});
+
 test("every module and driver a row names exists, and the in-house backend loads with its own id",async()=>{
  for(const row of buildBackendRowsV1())for(const path of [row.module,row.driver])expect(existsSync(join(build,"@@BACKENDS@@",path)),`${row.id} ${path}`).toBe(true);
  const semio=await loadBuildBackendV1("semio");
@@ -69,13 +88,13 @@ test("every module and driver a row names exists, and the in-house backend loads
  expect((await semio.remoteCache()).tool).toBe("semio");
  expect(await loadBuildBackendV1("semio")).toBe(semio);
  await expect(loadBuildBackendV1("buck2")).rejects.toThrow("Unknown build tool");
- expect(await buildBackendBootstrapArgumentsV1(["run","a:b"],"semio")).toBeUndefined();
- expect(await buildBackendBootstrapArgumentsV1(["tools","setup","semio"],"nx")).toBeUndefined();
- await expect(buildBackendBootstrapArgumentsV1(["tools","setup","nobody"],"nx")).rejects.toThrow("Unknown build tool");
+ expect(await buildBackendBootstrapV1(["run","a:b"],"semio")).toBeUndefined();
+ expect(await buildBackendBootstrapV1(["tools","setup","semio"],"nx")).toBeUndefined();
+ await expect(buildBackendBootstrapV1(["tools","setup","nobody"],"nx")).rejects.toThrow("Unknown build tool");
 });
 
-const NEUTRAL_CLEAN=["🔌️backends/🟦️.ts","⚙️operations/🟦️.ts","🌐️remote-cache/⌨️command/🟦️.ts","🌐️remote-cache/🟦️.ts","🔧️tools/💾️storage/🟦️.ts","📥️inputs/🎯️selected/📦️snapshot/🟦️.ts","📥️inputs/🎯️selected/🦀️rust/🟦️.ts","⚙️operations/📖️help/🟦️.ts","⚙️operations/🔣️catalog.json","🧬️schema/🔣️.json","🏃️execution/🧬️schema/🌐️remote-cache.json","⚙️operations/🧬️schema/🔣️.json","📏️incremental/⌨️command/🟦️.ts","📏️incremental/🤝️concurrent/⌨️command/🟦️.ts","📐️conformance/🟦️.ts","📐️conformance/🏃️runner/🟦️.ts","📐️conformance/⌨️command/🟦️.ts","🧮️task-model/🟦️.ts"];
-const KNOWN_LEAKS:Record<string,number>={"🧭️invocation/🟦️.ts":1,"📥️caller/🟦️.ts":3,"📥️caller/📤️orchestration/🟨️.mjs":2,"📥️caller/📤️child/🟦️.ts":2,"📜️script.ts":1,"📏️incremental/🟦️.ts":2,"📏️incremental/🏃️runner/🟦️.ts":3,"📏️incremental/👁️observers/🟦️.ts":2,"📏️incremental/🤝️concurrent/🟦️.ts":4,"📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts":3,"🪞️parity/🟦️.ts":16,"🪞️parity/🏃️collect/🟦️.ts":3,"🧾️ci-report/🟦️.ts":1,"🌐️remote-cache/🖥️server/🟦️.ts":3};
+const NEUTRAL_CLEAN=["🔌️backends/🟦️.ts","⚙️operations/🟦️.ts","🌐️remote-cache/⌨️command/🟦️.ts","🌐️remote-cache/🟦️.ts","🔧️tools/💾️storage/🟦️.ts","📥️inputs/🎯️selected/📦️snapshot/🟦️.ts","📥️inputs/🎯️selected/🦀️rust/🟦️.ts","⚙️operations/📖️help/🟦️.ts","⚙️operations/🔣️catalog.json","🧬️schema/🔣️.json","🏃️execution/🧬️schema/🌐️remote-cache.json","⚙️operations/🧬️schema/🔣️.json","📏️incremental/⌨️command/🟦️.ts","📏️incremental/🤝️concurrent/⌨️command/🟦️.ts","📐️conformance/🟦️.ts","📐️conformance/🏃️runner/🟦️.ts","📐️conformance/⌨️command/🟦️.ts","🧮️task-model/🟦️.ts","🧭️invocation/🟦️.ts","📥️caller/🟦️.ts","📥️caller/📤️orchestration/🟨️.mjs","📥️caller/📤️child/🟦️.ts","🧾️ci-report/🟦️.ts","🧾️ci-report/📜️script.ts","🌐️remote-cache/💾️store/🟦️.ts","🌐️remote-cache/🖥️server/🟦️.ts","🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs","🚀️bootstrap/⌨️cli/🟦️.ts"];
+const KNOWN_LEAKS:Record<string,number>={"📜️script.ts":1,"🏃️execution/🔒️hermetic/🚪️entry/🟦️.ts":1,"📏️incremental/🟦️.ts":2,"📏️incremental/🏃️runner/🟦️.ts":3,"📏️incremental/👁️observers/🟦️.ts":2,"📏️incremental/🤝️concurrent/🟦️.ts":4,"📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts":3,"🪞️parity/🟦️.ts":16,"🪞️parity/🏃️collect/🟦️.ts":3};
 const literal=/(["'`])(nx|bazel)\1|\b(?:tool|selected\.tool)\s*[!=]==\s*["'](nx|bazel)["']/gu;
 test("neutral files never name a backend: the cleaned ones stay clean and the remaining ones may not grow",()=>{
  for(const path of NEUTRAL_CLEAN){

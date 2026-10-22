@@ -1,133 +1,249 @@
-/** 🧾️ Row actions: the tree and table row action builders, the table row action button and the admission controller.
- *
- * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
- */
+// #region 🧲️Header
+// 🎨️ framework/products/os/modules/renderer/engine/elements/🗺️WorldTerrainLayer/component.tsx
+/** ⛰️ `🗺️WorldTerrainLayer` — chunked-DEM-tile GIS terrain mesh mounted alongside `WorldInstancesLayer` inside the shared `World3d` viewport, driven by a wasm `TerrainSession`. */
+// #endregion 🧲️Header
 
-import {
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-  type ReactElement
-} from "../../⚛️react-port/🟦️.ts";
-import { rowActionAdmissionKeyV1, rowActionAdmissionRegistryV1, type RowActionAdmissionOwnerV1 } from "../🎬️row-action-admission/🟦️.ts";
-import { Button, DisabledReasonHint } from "@semio-tech/ui-react";
-import { type ActionBinding } from "@semio-tech/framework";
-import { rowActionBinding } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type Component, type RowAction, type RowTarget, type UiNodeRecord } from "@semio-tech/framework";
-import { wireLabel } from "../🌉️scene-host-contract/🟦️.ts";
-import { RowActionRefusalsContext } from "../👥️presence-overlay/🟦️.ts";
-import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
-import { resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
+// #region 🔌️Adapters
+import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
+import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
+import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "@semio-tech/ui-react";
+import { createTerrainSession, type TerrainWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
+// #endregion 🔌️Adapters
 
-//#region 🔖️UiInterpreter
-//#region ComponentRenderers
-//#region Tree
-/** 🎬️ A tree row's actions as `TreeDataItem` buttons — each its verb on the row's ONE target, dispatched exactly as a table
- * row with the same target dispatches it; a disabled action renders disabled and its dispatch is refused. */
-export function rowTreeActions(record: UiNodeRecord, props: Extract<Component, { type: "treeItem" }>, context: UiInterpreterContext, admission?: RowActionAdmissionControllerV1) {
-  const target = props.target;
-  if (!target || (props.rowActions ?? []).length === 0) return undefined;
-  return (props.rowActions ?? []).map((action, actionIndex) => {
-    const busy = admission?.isPending(target, action) ?? false;
-    const unavailable = admission ? !admission.active : false;
-    const refused = admission?.refusedBy(action);
-    return { kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", busy, disabled: action.disabled === true || refused !== undefined || busy || unavailable, reason: action.disabled && action.reason ? wireLabel(action.reason) : refused, onClick: () => admission ? admission.dispatch(record.id, record.key, actionIndex, rowActionAdmissionKeyV1(target, action)) : dispatchCurrentRowAction(record.id, record.key, actionIndex, context, rowActionAdmissionKeyV1(target, action)) };
-  });
-}
+//#region 🔖️WorldTerrainLayerHost
+//#region TerrainStyle
+export type WorldTerrainStyle = {
+  readonly tileUrlTemplate: string;
+  readonly projectOriginLon: number;
+  readonly projectOriginLat: number;
+  readonly exaggeration: number;
+  readonly colorRamp: string;
+  readonly minZoom: number;
+  readonly maxZoom: number;
+};
 
-/** 🎬️ One table row action, named `"<label>: <row name>"`. Only a retired document's action is natively disabled. A
- * disabled one — and one whose own dispatch is still pending, which is busy — stays focusable — `aria-disabled`, never run —
- * names its reason through `aria-describedby` and shows it as visible text while hovered, focused or pressed
- * (`DisabledReasonHint`), exactly as a tree row's action (`🌳️Tree`) and the wgpu renderer do (`💬️row-semantics`). */
-export function TableRowActionButton({ action, name, busy, unavailable, refused, onRun }: { readonly action: RowAction; readonly name: string; readonly busy: boolean; readonly unavailable: boolean; readonly refused: string | undefined; readonly onRun: () => void }): ReactElement {
-  const reasonId = `${useId()}-reason`;
-  const label = action.label ? `${wireLabel(action.label)}: ${name}` : name;
-  const reason = action.disabled === true && action.reason ? wireLabel(action.reason) : refused;
-  const disabled = action.disabled === true || refused !== undefined || busy || unavailable;
-  const button = (
-    <Button
-      type="button"
-      variant="ghost"
-      data-table-row-action=""
-      tabIndex={0}
-      icon={resolveControlIconNode(action.icon)}
-      aria-label={label}
-      title={reason ? undefined : label}
-      disabled={unavailable}
-      aria-disabled={disabled ? true : undefined}
-      aria-busy={busy || undefined}
-      aria-describedby={reason ? reasonId : undefined}
-      className={disabled ? "cursor-not-allowed opacity-50" : undefined}
-      onClick={() => {
-        if (!disabled) onRun();
-      }}
-    />
-  );
-  return (
-    <DisabledReasonHint id={reasonId} reason={reason}>
-      {button}
-    </DisabledReasonHint>
-  );
-}
-
-export type RowActionAdmissionControllerV1 = Readonly<{
-  active: boolean;
-  isPending(target: RowTarget, action: RowAction): boolean;
-  refusedBy(action: RowAction): string | undefined;
-  dispatch(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, authoredKey: string): void;
-}>;
-
-function currentRowAction(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, context: UiInterpreterContext, authoredKey?: string): { readonly record: UiNodeRecord; readonly target: RowTarget; readonly action: RowAction; readonly binding: ActionBinding } | null {
-  const current = context.store.getNodeSnapshot(recordId);
-  if (!current || current.disabled || current.key !== recordKey || (current.component.type !== "treeItem" && current.component.type !== "tableRow")) return null;
-  const target = current.component.target;
-  const action = current.component.rowActions?.[actionIndex];
-  if (!target || !action || (authoredKey !== undefined && rowActionAdmissionKeyV1(target, action) !== authoredKey)) return null;
-  const resolved = rowActionBinding(target, action);
-  return resolved.ok ? { record: current, target, action, binding: resolved.binding } : null;
-}
-
-/** 🎬️ Dispatches from the Store's current record, never the callback's rendered target/action snapshot. */
-function dispatchCurrentRowAction(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, context: UiInterpreterContext, authoredKey?: string): ReturnType<UiInterpreterContext["onIntent"]> | undefined {
-  const current = currentRowAction(recordId, recordKey, actionIndex, context, authoredKey);
-  return current ? context.onIntent(context.store.buildIntent(current.record, current.binding)) : undefined;
-}
-
-export function useRowActionAdmissionV1(context: UiInterpreterContext): RowActionAdmissionControllerV1 {
-  const fallback = useRef<(RowActionAdmissionOwnerV1 & { retire(): void }) | null>(null);
-  if (!fallback.current) {
-    const listeners = new Set<() => void>();
-    let active = true;
-    fallback.current = { get active() { return active; }, subscribeRetirement: (listener) => { if (!active) { listener(); return () => {}; } listeners.add(listener); return () => listeners.delete(listener); }, retire: () => { if (!active) return; active = false; for (const listener of [...listeners]) listener(); listeners.clear(); } };
+export function parseWorldTerrainStyle(json: string | undefined): WorldTerrainStyle | null {
+  if (!json) return null;
+  try {
+    const parsed = JSON.parse(json) as Partial<WorldTerrainStyle>;
+    if (typeof parsed.tileUrlTemplate !== "string") return null;
+    return {
+      tileUrlTemplate: parsed.tileUrlTemplate,
+      projectOriginLon: parsed.projectOriginLon ?? 0,
+      projectOriginLat: parsed.projectOriginLat ?? 0,
+      exaggeration: parsed.exaggeration ?? 1,
+      colorRamp: parsed.colorRamp ?? "hypsometric",
+      minZoom: parsed.minZoom ?? 6,
+      maxZoom: parsed.maxZoom ?? 14,
+    };
+  } catch {
+    return null;
   }
-  useEffect(() => () => fallback.current?.retire(), []);
-  const owner = context.localDocumentOwner ?? fallback.current;
-  const registry = useMemo(() => rowActionAdmissionRegistryV1(owner, context.store), [owner, context.store]);
-  const epoch = useSyncExternalStore(registry.subscribe, registry.snapshot, registry.snapshot);
-  const refusals = useContext(RowActionRefusalsContext);
-  return useMemo(() => ({
-    active: registry.active,
-    isPending: (target: RowTarget, action: RowAction) => registry.isPending(rowActionAdmissionKeyV1(target, action)),
-    refusedBy: (action: RowAction) => refusals?.get(action.verb),
-    dispatch: (recordId, recordKey, actionIndex, authoredKey) => {
-      const current = currentRowAction(recordId, recordKey, actionIndex, context, authoredKey);
-      if (!current || !registry.active || refusals?.has(current.action.verb)) return;
-      const token = registry.begin(rowActionAdmissionKeyV1(current.target, current.action));
-      if (!token) return;
-      try {
-        const completion = context.onIntent(context.store.buildIntent(current.record, current.binding));
-        if (completion && typeof (completion as PromiseLike<unknown>).then === "function") void Promise.resolve(completion).then(token.finish, token.finish);
-        else token.finish();
-      } catch (error) {
-        token.finish();
-        throw error;
-      }
-    },
-  }), [context, epoch, registry, refusals]);
 }
-//#endregion Tree
-//#endregion ComponentRenderers
-//#endregion 🔖️UiInterpreter
+//#endregion TerrainStyle
+
+//#region TerrainMesh
+type TerrainTileMeshPayload = {
+  readonly positions: number[];
+  readonly normals: number[];
+  readonly indices: number[];
+  readonly uvs: number[];
+};
+
+function geometryFromTerrainMesh(mesh: TerrainTileMeshPayload): BufferGeometry {
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.positions), 3));
+  geometry.setAttribute("normal", new BufferAttribute(new Float32Array(mesh.normals), 3));
+  geometry.setAttribute("uv", new BufferAttribute(new Float32Array(mesh.uvs), 2));
+  geometry.setIndex(mesh.indices);
+  return geometry;
+}
+
+/** 🎨️ A vertical hypsometric ramp (low -> green/tan, high -> grey rock, peak -> white) sampled by
+ * each terrain vertex's normalized-elevation `uv.y` — generated once client-side rather than
+ * round-tripped through Rust, since it's a pure display convenience. */
+let hypsometricTexture: CanvasTexture | null = null;
+function getHypsometricTexture(): CanvasTexture {
+  if (hypsometricTexture) return hypsometricTexture;
+  const canvas = document.createElement("canvas");
+  canvas.width = 2;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+    gradient.addColorStop(0, "#4b6b3a");
+    gradient.addColorStop(0.5, "#a68a5b");
+    gradient.addColorStop(0.85, "#8f8f8f");
+    gradient.addColorStop(1, "#ffffff");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  hypsometricTexture = new CanvasTexture(canvas);
+  hypsometricTexture.wrapS = ClampToEdgeWrapping;
+  hypsometricTexture.wrapT = ClampToEdgeWrapping;
+  hypsometricTexture.needsUpdate = true;
+  return hypsometricTexture;
+}
+//#endregion TerrainMesh
+
+//#region TerrainTileRenderer
+const TERRAIN_TILE_REFRESH_DEBOUNCE_MS = 150;
+const MAX_CONCURRENT_TERRAIN_TILE_FETCHES = 8;
+
+type TerrainTileRow = { readonly z: number; readonly x: number; readonly y: number; readonly key: string };
+
+function parseVisibleTerrainTilesJson(raw: string): TerrainTileRow[] {
+  try {
+    const rows = JSON.parse(raw) as TerrainTileRow[];
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 🧵️ Owns a `TerrainSession`, fetches/uploads/evicts DEM tiles as the camera moves, and reports
+ * the current set of tile geometries back to React — the 3D analog of `tiled-map-host.tsx`'s
+ * `MapRenderer`, except it hands back mesh buffers for three.js instead of driving a canvas. */
+class TerrainTileRenderer {
+  private disposed = false;
+  private session: TerrainWasmSession | null = null;
+  private readonly tileMiss = new Set<string>();
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshInFlight: Promise<void> | null = null;
+  private readonly geometries = new Map<string, BufferGeometry>();
+
+  private readonly style: WorldTerrainStyle;
+  private readonly onGeometriesChanged: (geometries: Map<string, BufferGeometry>) => void;
+
+  constructor(
+    style: WorldTerrainStyle,
+    onGeometriesChanged: (geometries: Map<string, BufferGeometry>) => void,
+  ) {
+    this.style = style;
+    this.onGeometriesChanged = onGeometriesChanged;
+  }
+
+  async init(): Promise<void> {
+    const session = await createTerrainSession();
+    if (this.disposed) return;
+    session.set_project_origin(this.style.projectOriginLon, this.style.projectOriginLat);
+    session.set_exaggeration(this.style.exaggeration);
+    this.session = session;
+  }
+
+  scheduleRefresh(cameraJson: string): void {
+    if (this.disposed) return;
+    if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      void this.refresh(cameraJson);
+    }, TERRAIN_TILE_REFRESH_DEBOUNCE_MS);
+  }
+
+  private async refresh(cameraJson: string): Promise<void> {
+    if (this.disposed || !this.session) return;
+    if (this.refreshInFlight) await this.refreshInFlight;
+    if (this.disposed) return;
+    this.refreshInFlight = this.doRefresh(cameraJson).finally(() => {
+      this.refreshInFlight = null;
+    });
+    return this.refreshInFlight;
+  }
+
+  private async doRefresh(cameraJson: string): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    const rows = parseVisibleTerrainTilesJson(session.visible_terrain_tiles_json(cameraJson));
+    const visibleKeys = new Set(rows.map((row) => row.key));
+    for (const key of [...this.geometries.keys()]) {
+      if (visibleKeys.has(key)) continue;
+      this.geometries.get(key)?.dispose();
+      this.geometries.delete(key);
+      const [z, x, y] = key.split("/").map(Number);
+      if (z !== undefined && x !== undefined && y !== undefined) session.evict_terrain_tile(z, x, y);
+    }
+    const missing = rows.filter((row) => !this.geometries.has(row.key) && !this.tileMiss.has(row.key));
+    const uploadOne = async (row: TerrainTileRow): Promise<void> => {
+      const url = publishedPageUrl(this.style.tileUrlTemplate).replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
+      let response: Response;
+      try {
+        response = await fetch(url);
+      } catch {
+        this.tileMiss.add(row.key);
+        return;
+      }
+      if (!response.ok) {
+        this.tileMiss.add(row.key);
+        return;
+      }
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (this.disposed) return;
+      if (!session.upload_elevation_tile(row.z, row.x, row.y, bytes)) {
+        this.tileMiss.add(row.key);
+        return;
+      }
+      const meshJson = session.terrain_tile_mesh_json(row.z, row.x, row.y);
+      if (meshJson === "null" || this.disposed) return;
+      const mesh = JSON.parse(meshJson) as TerrainTileMeshPayload;
+      this.geometries.set(row.key, geometryFromTerrainMesh(mesh));
+    };
+    for (let i = 0; i < missing.length; i += MAX_CONCURRENT_TERRAIN_TILE_FETCHES) {
+      await Promise.all(missing.slice(i, i + MAX_CONCURRENT_TERRAIN_TILE_FETCHES).map((row) => uploadOne(row)));
+    }
+    if (!this.disposed) this.onGeometriesChanged(new Map(this.geometries));
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
+    for (const geometry of this.geometries.values()) geometry.dispose();
+    this.geometries.clear();
+  }
+}
+//#endregion TerrainTileRenderer
+
+//#region WorldTerrainLayer
+/** ⛰️ Renders GIS 3D terrain as chunked DEM-tile meshes inside the shared `World3d` viewport —
+ * mounted alongside `WorldInstancesLayer` when `scene.terrainJson` is present. */
+export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget }: { readonly terrainJson: string | undefined; readonly cameraPosition: readonly [number, number, number]; readonly cameraTarget: readonly [number, number, number] }) {
+  const style = useMemo(() => parseWorldTerrainStyle(terrainJson), [terrainJson]);
+  const rendererRef = useRef<TerrainTileRenderer | null>(null);
+  const [geometries, setGeometries] = useState<Map<string, BufferGeometry>>(new Map());
+  const material = useMemo(() => new MeshStandardMaterial({ map: getHypsometricTexture(), side: DoubleSide, roughness: 1, metalness: 0 }), []);
+
+  useEffect(() => {
+    if (!style) {
+      rendererRef.current?.dispose();
+      rendererRef.current = null;
+      setGeometries(new Map());
+      return undefined;
+    }
+    const renderer = new TerrainTileRenderer(style, setGeometries);
+    rendererRef.current = renderer;
+    void renderer.init().then(() => {
+      if (rendererRef.current === renderer) renderer.scheduleRefresh(JSON.stringify({ position: cameraPosition, target: cameraTarget }));
+    });
+    return () => {
+      renderer.dispose();
+      if (rendererRef.current === renderer) rendererRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- camera changes are handled by the effect below; this one only (re)creates the session when the terrain source itself changes.
+  }, [style?.tileUrlTemplate, style?.projectOriginLon, style?.projectOriginLat, style?.exaggeration]);
+
+  useEffect(() => {
+    if (!style) return;
+    rendererRef.current?.scheduleRefresh(JSON.stringify({ position: cameraPosition, target: cameraTarget }));
+  }, [style, cameraPosition, cameraTarget]);
+
+  if (!style) return null;
+
+  return (
+    <group>
+      {[...geometries.entries()].map(([key, geometry]) => (
+        <mesh key={key} geometry={geometry} material={material} receiveShadow />
+      ))}
+    </group>
+  );
+}
+//#endregion WorldTerrainLayer
+//#endregion 🔖️WorldTerrainLayerHost

@@ -19,7 +19,6 @@ export function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly Po
   const taxonomy = loadTaxonomy();
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const ownerRoot = crate.ownerRel;
     const scopeId = crate.pluginId || policyStripEmoji(ownerRoot.split("/").pop() ?? "");
 
@@ -245,7 +244,6 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
   const componentFilenames = new Set(Object.values(taxonomy.componentFileKinds).map((fileKindId) => canonicalPrimaryFilenameForKind(fileKindId, taxonomy)));
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const scopeId = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
     const walk = (relDir: string): void => {
       for (const entry of policyReaddirSafe(repoRoot, relDir).filter((candidate) => candidate.isDirectory)) {
@@ -353,7 +351,6 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
   const breaches: BreachRecord[] = [];
   if (required.length === 0) return breaches;
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const scopeId = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
     const walk = (relDir: string): void => {
       for (const entry of policyReaddirSafe(repoRoot, relDir).filter((candidate) => candidate.isDirectory)) {

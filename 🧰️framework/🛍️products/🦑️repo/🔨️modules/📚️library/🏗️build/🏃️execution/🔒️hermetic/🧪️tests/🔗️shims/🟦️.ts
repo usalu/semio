@@ -17,7 +17,7 @@ test("only an absent .bin and an entry that is not a link mean no shim; every ot
  for(const row of fixture.cases){
   expect(check(row),row.name+JSON.stringify(check.errors)).toBe(true);
   const call=()=>hermeticShimsV1("/modules",port(row as never));
-  if("throws" in row)expect(call,row.name).toThrow(row.throws!);else expect(call(),row.name).toEqual(row.expect);
+  if("throws" in row)expect(call,row.name).toThrow(row.throws!);else expect<unknown>(call(),row.name).toEqual(row.expect);
  }
 });
 

@@ -70,19 +70,26 @@ impl store::ConfigRecord for Block5dConfig {}
 pub struct Block5dConfigDiff {}
 
 impl protocol::DiffAlgebra<Block5dConfig> for Block5dConfigDiff {
-    fn inverse(&self, _base: &Block5dConfig) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl protocol::MutationDiff<Block5dConfig> for Block5dConfigDiff {
-    fn apply(&self, base: &Block5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dConfig> {
-        Ok(base.clone())
+impl protocol::ColdDiffAlgebra<Block5dConfig> for Block5dConfigDiff {
+    fn inverse(&self, _base: &Block5dConfig) -> Self {
+        Self {}
     }
+}
+
+impl protocol::MutationDiff<Block5dConfig> for Block5dConfigDiff {}
+
+impl protocol::ColdMutationDiff<Block5dConfig> for Block5dConfigDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut Block5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 //#endregion 🔖️Config
@@ -100,11 +107,13 @@ impl protocol::Mutation<Block5dConfig> for Block5dConfigMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
 
+impl protocol::ColdMutation<Block5dConfig> for Block5dConfigMutation {
+    type ReferenceDiff = Block5dConfigDiff;
     fn diff(&self, _base: &Block5dConfig) -> protocol::MutationOutcome<Block5dConfigDiff> {
         match *self {}
     }
-
     fn inverse(&self, _base: &Block5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         match *self {}
     }

@@ -5,15 +5,15 @@ use crate::Din16798Mutation;
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 fn apply(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Din16798Snapshot {
-    let outcome = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
+    let outcome = <Din16798Mutation as protocol::ColdMutation<Din16798Snapshot>>::diff(mutation, base);
     assert_eq!(outcome.worst_level(), None, "mutation should apply cleanly: {mutation:?}");
-    protocol::apply_diff(outcome.diff(), base).expect("applies")
+    protocol::apply_diff_cold(outcome.diff(), base).expect("applies")
 }
 
 fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: Din16798Mutation) {
     let after = apply(&mutation, base);
     assert_ne!(&after, base, "{label} must change the snapshot");
-    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
+    let inverse = <Din16798Mutation as protocol::ColdMutation<Din16798Snapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = after;
     for step in &inverse {
         restored = apply(step, &restored);

@@ -10,6 +10,8 @@ package workspace
 
 import (
 	"os"
+ "fmt"
+ "unicode/utf16"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -86,6 +88,19 @@ func FindRepoRoot(startDir string) string {
 	return resolved
 }
 
+
+// 🪟️normalizeRootPath preserves rooted UNC paths while removing the Windows verbatim namespace.
+func normalizeRootPath(value string) string { if strings.HasPrefix(value, `\\?\UNC\`) { return `\\` + strings.TrimPrefix(value, `\\?\UNC\`) }; return strings.TrimPrefix(value, `\\?\`) }
+
+// 🎯️SelectRepoRoot validates an explicit directory itself, discovering only when it is absent.
+func SelectRepoRoot(start string, explicit *string) (string, error) {
+ selected := ""
+ if explicit == nil { selected = FindRepoRoot(start) } else { if *explicit == "" { return "", fmt.Errorf("repository directory required / Repository-Verzeichnis erforderlich") }; selected = *explicit; if !filepath.IsAbs(selected) { selected = strings.TrimRight(start, string(os.PathSeparator)) + string(os.PathSeparator) + selected } }
+ if len(utf16.Encode([]rune(selected))) > 256 { return "", fmt.Errorf("repository path exceeds 256 units / Repository-Pfad ueberschreitet 256 Einheiten") }
+ selected, err := filepath.EvalSymlinks(selected); if err != nil { return "", err }; selected, err = filepath.Abs(selected); if err != nil { return "", err }; selected = normalizeRootPath(selected); info, err := os.Stat(selected); if err != nil { return "", err }
+ if !info.IsDir() || len(utf16.Encode([]rune(selected))) > 256 { return "", fmt.Errorf("bounded repository directory required / begrenztes Repository-Verzeichnis erforderlich") }; return selected, nil
+}
+
 // 🔍️ResolveRepoRoot walks upwards from startDir and returns the first monorepo root it recognises without reporting it.
 func ResolveRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
@@ -99,21 +114,10 @@ func ResolveRepoRoot(startDir string) string {
 	if err != nil {
 		return startDir
 	}
+	if physical, canonicalErr := filepath.EvalSymlinks(dir); canonicalErr == nil { dir = physical }
 	if found, ok := ascend(dir, func(candidate string) bool {
-		info, statErr := os.Stat(filepath.Join(candidate, "repo", "cli", "main.go"))
-		return statErr == nil && !info.IsDir()
-	}); ok {
-		return found
-	}
-	if found, ok := ascend(dir, func(candidate string) bool {
-		_, statErr := os.Stat(filepath.Join(candidate, ".git"))
-		return statErr == nil
-	}); ok {
-		return found
-	}
-	if found, ok := ascend(dir, func(candidate string) bool {
-		_, statErr := os.Stat(filepath.Join(candidate, "go.mod"))
-		return statErr == nil
+		info, statErr := os.Stat(filepath.Join(candidate, ".git"))
+		return statErr == nil && (info.IsDir() || info.Mode().IsRegular())
 	}); ok {
 		return found
 	}

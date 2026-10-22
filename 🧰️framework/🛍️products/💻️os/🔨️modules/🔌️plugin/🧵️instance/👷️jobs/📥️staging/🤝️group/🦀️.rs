@@ -5,7 +5,7 @@ use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SL
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_emission::Emit;
 use store::MemberFactory;
-use store::SpaceMember;
+use store::ReferenceSpaceMember;
 use semio_framework::FaultFrom;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -28,5 +28,5 @@ impl<A: ArtifactApp> ToolOperations<A> {
         Some((emit.artifact_mutations.len(),emit.owned_child_emits.len(),emit.owned_child_emits.as_ptr() as usize,mounted.terminal_fault.is_some(),mounted.cancellation_lease.as_ref()?.token.is_cancelled_now()))
     }
 
-    pub fn next_closing_private_child_group<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>)->Option<u64>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|child_composition.private_child_groups.entry(index).and_then(|(operation,owner)|(owner.closing&&self.tool_operations.get(*operation).is_none_or(|mounted|!mounted.owned_child_result_pending)).then_some(*operation)))}
+    pub fn next_closing_private_child_group<M: ReferenceSpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>)->Option<u64>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|child_composition.private_child_groups.entry(index).and_then(|(operation,owner)|(owner.closing&&self.tool_operations.get(*operation).is_none_or(|mounted|!mounted.owned_child_result_pending)).then_some(*operation)))}
 }

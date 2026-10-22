@@ -93,7 +93,7 @@ pub mod mutation_bridge {
 
     /// ▶️ Applies the authoritative leaf diff.
     pub fn apply_h_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfHMutation) -> protocol::MutationOutcome<PdfDiff> {
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
         let outcome = mutation.diff(snapshot);
         crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_outcome(outcome, snapshot)
     }
@@ -164,7 +164,7 @@ pub mod derived_construction {
         }
 
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
 

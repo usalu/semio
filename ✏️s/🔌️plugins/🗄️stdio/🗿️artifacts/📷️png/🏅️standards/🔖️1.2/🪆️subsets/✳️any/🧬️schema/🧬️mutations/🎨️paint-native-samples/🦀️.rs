@@ -19,24 +19,25 @@ pub struct PaintNativeSamplesMutation {
 impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "native-sample-region", kind: "paint-native-samples", record: "PaintNativeSamples" };
 
-    fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        match crate::schema::operations::paint_native_rect(base, &self.revision, self.region, self.paint) {
-            Ok(rect) => protocol::MutationOutcome::new(PngDiff { rects: rect.into_iter().collect(), ..PngDiff::default() }),
-            Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["native-sample-region"]),
-        }
-    }
-
-    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
-        let changed = crate::schema::operations::native_rect(base, self.region, self.paint);
-        Ok(changed.and_then(|rect| base.image.region_samples(rect.region)).map(|samples| PngMutation::ReplaceSamples(ReplaceSamples { region: self.region, samples })).into_iter().collect())
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Paint native PNG samples", "Native PNG-Abtastwerte malen")
     }
 
     fn target(&self) -> Vec<String> {
         vec![format!("native-region:{},{},{},{}", self.region.x, self.region.y, self.region.width, self.region.height)]
+    }
+}
+
+impl protocol::ColdMutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMutation {
+    fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
+        match crate::schema::operations::paint_native_rect(base, &self.revision, self.region, self.paint) {
+            Ok(rect) => protocol::MutationOutcome::new(PngDiff { rects: rect.into_iter().collect(), ..PngDiff::default() }),
+            Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["native-sample-region"]),
+        }
+    }
+    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
+        let changed = crate::schema::operations::native_rect(base, self.region, self.paint);
+        Ok(changed.and_then(|rect| base.image.region_samples(rect.region)).map(|samples| PngMutation::ReplaceSamples(ReplaceSamples { region: self.region, samples })).into_iter().collect())
     }
 }
 

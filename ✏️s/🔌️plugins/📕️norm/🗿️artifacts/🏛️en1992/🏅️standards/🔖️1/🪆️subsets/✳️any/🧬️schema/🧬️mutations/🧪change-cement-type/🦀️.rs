@@ -16,14 +16,18 @@ pub struct ChangeCementType {
 
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeCementType where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_cement_type::ChangeCementType> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cement-type", kind: "change-cement-type", record: "ChangedCementType" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cement type to {}", self.new_cement_type), &format!("Zementart auf {} ändern", self.new_cement_type))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1992Snapshot, Op> for ChangeCementType where Op: protocol::ColdMutation<En1992Snapshot, ReferenceDiff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_cement_type::ChangeCementType> {
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_cement_type::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_cement_type::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cement type to {}", self.new_cement_type), &format!("Zementart auf {} ändern", self.new_cement_type))
-    }
 }
 
 //#region 🪢️Mounts

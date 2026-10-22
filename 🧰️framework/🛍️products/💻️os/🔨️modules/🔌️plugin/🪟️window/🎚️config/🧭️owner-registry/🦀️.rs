@@ -82,30 +82,59 @@ impl WindowConfigOwnerRegistry {
         self.owners.get(window_kind_id)?.borrow(window_id)
     }
 
-    /// 🪞️ Window `window_id`'s committed config with `mutations` folded on it and never published — a press's provisional
-    /// window config (design §20.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); `None` when none applies or the window
-    /// has no partition yet. Hand it back to [`Self::retire_preview`], never drop it plainly.
+    /// 📏️ Quotes the next retained window press input of `window` under `epoch`.
     #[doc(hidden)]
-    pub fn preview(&mut self, window_kind_id: &str, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot> {
-        self.owners.get_mut(window_kind_id)?.preview(window_id, mutations)
+    pub fn preview_input_demands(&self,window_kind_id:&str,window_id:&str,epoch:u64,body:usize)->Result<RetirementDemand,ValueError>{self.preview_owner(window_kind_id)?.preview_input_demands(window_id,epoch,body)}
+    /// 🪞️ Moves one retained press operation toward window `window_id`'s provisional config of `epoch`; `Some` carries the progress of the catalog, birth or input step, `None` a refusal that waits for its owners.
+    #[doc(hidden)]
+    pub fn preview_input(&mut self,input:&semio_framework_value::retained_clone::RetainedOwnedProjection<WindowConfigMutation>,epoch:u64,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let kind=input.borrow()?.get().window_kind_id;self.preview_owner_mut(kind)?.preview_input(input,epoch,grant)}
+    /// ✅️ Whether the press operations admitted for `epoch` are completely applied to window `window_id`'s provisional config.
+    #[doc(hidden)]
+    pub fn preview_leaf_ready(&self,window_kind_id:&str,window_id:&str,epoch:u64)->bool{self.owners.get(window_kind_id).is_some_and(|owner|owner.preview_leaf_ready(window_id,epoch))}
+    /// 🔒️ Whether window `window_id` still holds an admitted press operation of `epoch`.
+    #[doc(hidden)]
+    pub fn preview_input_held(&self,window_kind_id:&str,window_id:&str,epoch:u64)->bool{self.owners.get(window_kind_id).is_some_and(|owner|owner.preview_input_held(window_id,epoch))}
+    /// 🔢️ The generation of window `window_id`'s published provisional config.
+    #[doc(hidden)]
+    pub fn preview_generation(&self,window_kind_id:&str,window_id:&str)->Option<u64>{self.owners.get(window_kind_id)?.preview_generation(window_id)}
+    /// 🗂️ Every live partition of every window kind, the frontier a retained preview pass walks.
+    #[doc(hidden)]
+    pub fn preview_partition_count(&self)->usize{self.owners.values().map(|owner|owner.preview_partition_count()).sum()}
+    /// 🧭️ The position of window `window_id`'s partition in the pass, absent before its first capture.
+    #[doc(hidden)]
+    pub fn preview_partition_index(&self,window_kind_id:&str,window_id:&str)->Option<usize>{
+        let mut before=0;
+        for(kind,owner)in self.owners.iter(){if *kind==window_kind_id{return owner.preview_partition_index(window_id).map(|index|before+index);}before+=owner.preview_partition_count();}
+        None
     }
-
-    /// 🧹️ Retires a [`Self::preview`] through its partition's store.
     #[doc(hidden)]
-    pub fn retire_preview(&mut self,preview:&mut Option<WindowConfigSnapshot>)->bool{
-        let Some(original)=preview.as_ref()else{return true;};
-        self.owners.get_mut(original.window_kind_id).is_some_and(|owner|owner.retire_preview(preview))
+    pub fn preview_partition_demands(&self,index:usize,epoch:u64,closing:bool,body:usize)->Result<RetirementDemand,ValueError>{
+        let Some((owner,local))=self.preview_locate(index)else{return Ok(Default::default());};
+        self.owners.get_index(owner).expect("located preview owner remains registered").preview_partition_demands(local,epoch,closing,body)
     }
+    /// ⏯️ Advances partition `index` of the pass: finishing publishes its provisional config of `epoch` and retires the previous one, closing cancels the unfinished source and keeps the published config. The flag answers whether the partition has nothing left for this pass.
     #[doc(hidden)]
-    pub fn preview_available(&self,kind:&str,window:&str)->bool{self.owners.get(kind).is_some_and(|owner|owner.preview_available(window))}
+    pub fn preview_partition_step(&mut self,index:usize,epoch:u64,closing:bool,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
+        let Some((owner,local))=self.preview_locate(index)else{return Ok((true,Default::default()));};
+        let mut proceed=|_|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut proceed);
+        self.owners.get_index_mut(owner).expect("located preview owner remains registered").preview_partition_step(local,epoch,closing,grant,&mut receiving)
+    }
+    /// 🪞️ The window config a render seam reads for `committed`'s window: its published provisional config when it was folded on that very generation, else `committed`.
     #[doc(hidden)]
-    pub fn can_retire_preview(&self,preview:&WindowConfigSnapshot)->bool{self.owners.get(preview.window_kind_id).is_some_and(|owner|owner.can_retire_preview(preview))}
+    pub fn preview_or<'a>(&'a self,committed:&'a WindowConfigSnapshot)->&'a WindowConfigSnapshot{self.owners.get(committed.window_kind_id).map_or(committed,|owner|owner.preview_or(committed))}
     #[doc(hidden)]
     pub fn preview_retirement_pending(&self)->bool{self.owners.values().any(|owner|owner.preview_retirement_pending())}
     #[doc(hidden)]
-    pub fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>{self.owners.values().find(|owner|owner.preview_retirement_pending()).map_or(Ok(Default::default()),|owner|owner.preview_retirement_demand())}
+    pub fn preview_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owners.values().find(|owner|owner.preview_retirement_pending()).map_or(Ok(Default::default()),|owner|owner.preview_retirement_demand(body))}
     #[doc(hidden)]
     pub fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.owners.values_mut().find(|owner|owner.preview_retirement_pending()).map_or(Ok(RetainedCloneStep::Complete(Default::default())),|owner|owner.preview_retirement_step(grant))}
+    fn preview_owner(&self,window_kind_id:&str)->Result<&dyn ErasedWindowConfigStoreOwner,ValueError>{self.owners.get(window_kind_id).map(|owner|owner.as_ref()).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original window preview has no installed native owner"))}
+    fn preview_owner_mut(&mut self,window_kind_id:&str)->Result<&mut Box<dyn ErasedWindowConfigStoreOwner>,ValueError>{self.owners.get_mut(window_kind_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original window preview has no installed native owner"))}
+    fn preview_locate(&self,index:usize)->Option<(usize,usize)>{
+        let mut rest=index;
+        for(position,owner)in self.owners.values().enumerate(){let count=owner.preview_partition_count();if rest<count{return Some((position,rest));}rest-=count;}
+        None
+    }
 
     /// ⏯️ The values `pointers` (RFC 6901) name in every window config partition of `window_kind_id`, by window id
     /// in window id order — what a tool run's declared window config reads compare across publications.
@@ -155,7 +184,10 @@ impl WindowConfigOwnerRegistry {
 
     #[doc(hidden)]
     pub fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
-        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, grant)
+        let body = grant.maximum_copy_bytes;
+        let mut proceed = |_| true;
+        let mut receiving = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut proceed);
+        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, body, grant, &mut receiving)
     }
 
     #[doc(hidden)]

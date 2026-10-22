@@ -54,7 +54,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-positions", kind: "set-node-positions", record: "SetNodePositions" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} node(s)", self.positions.len()), &format!("Positionen von {} Knoten setzen", self.positions.len()))
+    }
+    fn target(&self) -> Vec<String> {
+        self.ids()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EquationSnapshot, Op> for SetNodePositions
+where
+    Op: protocol::ColdMutation<EquationSnapshot, ReferenceDiff = crate::EquationDiff> + From<SetNodePositions>,
+{
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<EquationSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -63,12 +75,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} node(s)", self.positions.len()), &format!("Positionen von {} Knoten setzen", self.positions.len()))
-    }
-    fn target(&self) -> Vec<String> {
-        self.ids()
-    }
 }
 //#endregion 🔖️Payload
 

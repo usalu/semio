@@ -10,7 +10,7 @@
 use crate::CadMutation;
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/⬅️before/🔣️.json").leak());
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/➡️after/🔣️.json").leak());
@@ -29,7 +29,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-reference applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("move-reference applies to its committed before-snapshot")
 }
 
 /// ▶️ `move-reference` writes all three origin components at once; orientation and scale are untouched.
@@ -59,7 +59,7 @@ async fn inverse_moves_the_reference_back_to_the_origin() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("move-reference/moves-the-shape-reference-off-origin: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("move-reference/moves-the-shape-reference-off-origin: inverse step applies");
     }
     assert_eq!(snapshot, base, "move-reference/moves-the-shape-reference-off-origin: inverse did not restore the before-snapshot");
 }
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-reference/moves-the-shape-reference-off-origin: committed diff did not carry before to after");
 }
 

@@ -1,0 +1,1078 @@
+{
+ "version": 1,
+ "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "identity": [
+  {
+   "name": "reading before binding fails",
+   "ops": [
+    {
+     "op": "read",
+     "error": "Revision identity is not bound yet"
+    }
+   ]
+  },
+  {
+   "name": "binding is idempotent for one revision and final",
+   "ops": [
+    {
+     "op": "bind",
+     "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "op": "read",
+     "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "op": "bind",
+     "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "op": "bind",
+     "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "error": "Revision identity is already bound"
+    },
+    {
+     "op": "read",
+     "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+   ]
+  },
+  {
+   "name": "an invalid revision binds nothing",
+   "ops": [
+    {
+     "op": "bind",
+     "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+     "error": "Revision graph requires a lowercase sha256 revision"
+    },
+    {
+     "op": "read",
+     "error": "Revision identity is not bound yet"
+    },
+    {
+     "op": "bind",
+     "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "op": "read",
+     "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+   ]
+  },
+  {
+   "name": "a revision that is not a string is refused",
+   "ops": [
+    {
+     "op": "bind",
+     "value": 5,
+     "error": "Revision graph requires a lowercase sha256 revision"
+    },
+    {
+     "op": "bind",
+     "value": null,
+     "error": "Revision graph requires a lowercase sha256 revision"
+    },
+    {
+     "op": "read",
+     "error": "Revision identity is not bound yet"
+    }
+   ]
+  },
+  {
+   "name": "an invalid revision is reported before an already bound one",
+   "ops": [
+    {
+     "op": "bind",
+     "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "op": "bind",
+     "value": "x",
+     "error": "Revision graph requires a lowercase sha256 revision"
+    }
+   ]
+  }
+ ],
+ "imports": [
+  {
+   "name": "every component is imported under the revision token, in roster order",
+   "paths": [
+    "./a.mjs",
+    "./deep/b.mjs"
+   ],
+   "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "calls": [
+    "./a.mjs?revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "./deep/b.mjs?revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "error": null
+  },
+  {
+   "name": "an invalid revision imports nothing",
+   "paths": [
+    "./a.mjs"
+   ],
+   "revision": "nope",
+   "calls": [],
+   "error": "Revision graph requires a lowercase sha256 revision"
+  },
+  {
+   "name": "a failing import rejects the whole load",
+   "paths": [
+    "./a.mjs",
+    "./b.mjs",
+    "./c.mjs"
+   ],
+   "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "failOn": "./b.mjs",
+   "calls": [
+    "./a.mjs?revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "./b.mjs?revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "./c.mjs?revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "error": "load refused: ./b.mjs"
+  }
+ ],
+ "revisions": [
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "valid": true
+  },
+  {
+   "value": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+   "valid": true
+  },
+  {
+   "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "valid": false
+  },
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "valid": false
+  },
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "valid": false
+  },
+  {
+   "value": "",
+   "valid": false
+  },
+  {
+   "value": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+   "valid": false
+  },
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+   "valid": false
+  },
+  {
+   "value": " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "valid": false
+  },
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "valid": false
+  }
+ ],
+ "keys": [
+  {
+   "name": "a",
+   "key": "a"
+  },
+  {
+   "name": "source-analyses",
+   "key": "sourceAnalyses"
+  },
+  {
+   "name": "a-b-c",
+   "key": "aBC"
+  },
+  {
+   "name": "a1-2b",
+   "key": "a12b"
+  },
+  {
+   "name": "x-1",
+   "key": "x1"
+  },
+  {
+   "name": "revision-graph",
+   "key": "revisionGraph"
+  },
+  {
+   "name": "a-bc-d",
+   "key": "aBcD"
+  }
+ ],
+ "rosters": [
+  {
+   "name": "one component",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "name": "later components need earlier ones",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     },
+     {
+      "name": "b",
+      "path": "./b.mjs",
+      "needs": [
+       "a"
+      ]
+     },
+     {
+      "name": "c",
+      "path": "./c.mjs",
+      "needs": [
+       "a",
+       "b"
+      ]
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "name": "names with digits and dashes",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a1-2b",
+      "path": "./a1-2b.mjs",
+      "needs": []
+     },
+     {
+      "name": "x-1",
+      "path": "./x-1.mjs",
+      "needs": [
+       "a1-2b"
+      ]
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "name": "nested relative paths and emoji path names",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./📍️coordinates/🟨️.mjs",
+      "needs": []
+     },
+     {
+      "name": "b",
+      "path": "./deep/er/file.mjs",
+      "needs": []
+     },
+     {
+      "name": "c",
+      "path": "./a b/c d.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "name": "a dot inside a segment is fine",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.b/c.d.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "name": "a missing manifest",
+   "manifest": null,
+   "error": "Component roster version 1 with components required"
+  },
+  {
+   "name": "a wrong version",
+   "manifest": {
+    "version": 2,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Component roster version 1 with components required"
+  },
+  {
+   "name": "no components",
+   "manifest": {
+    "version": 1
+   },
+   "error": "Component roster version 1 with components required"
+  },
+  {
+   "name": "empty components",
+   "manifest": {
+    "version": 1,
+    "components": []
+   },
+   "error": "Component roster version 1 with components required"
+  },
+  {
+   "name": "components that are not a list",
+   "manifest": {
+    "version": 1,
+    "components": {
+     "a": 1
+    }
+   },
+   "error": "Component roster version 1 with components required"
+  },
+  {
+   "name": "an entry that is not an object",
+   "manifest": {
+    "version": 1,
+    "components": [
+     null
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an entry that is a string",
+   "manifest": {
+    "version": 1,
+    "components": [
+     "a"
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an uppercase name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "Bad",
+      "path": "./Bad.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an underscore name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a_b",
+      "path": "./a_b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a name starting with a dash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "-a",
+      "path": "./-a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a name ending with a dash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a-",
+      "path": "./a-.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a name with a double dash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a--b",
+      "path": "./a--b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a name starting with a digit",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "1a",
+      "path": "./1a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an empty name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "",
+      "path": "./.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a path without the leading dot slash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an absolute path",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "/a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a parent segment",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a/../b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a hidden segment",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./.hidden/a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a hidden file",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./.a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a backslash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a\\b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a query",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs?x",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a fragment",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs#x",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a trailing slash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a/",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "only the dot slash",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an empty segment",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a//b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a path that is not a string",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": 5,
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "needs that are not a list",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": "b"
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "missing needs",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs"
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an entry without a name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a null name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": null,
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "a boolean name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": true,
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "an array entry",
+   "manifest": {
+    "version": 1,
+    "components": [
+     []
+    ]
+   },
+   "error": "Invalid component roster entry 0"
+  },
+  {
+   "name": "the second entry is the invalid one",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     },
+     {
+      "name": "Bad",
+      "path": "./Bad.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 1"
+  },
+  {
+   "name": "a duplicate name",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     },
+     {
+      "name": "a",
+      "path": "./other.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Duplicate component a"
+  },
+  {
+   "name": "a repeated need",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     },
+     {
+      "name": "b",
+      "path": "./b.mjs",
+      "needs": [
+       "a",
+       "a"
+      ]
+     }
+    ]
+   },
+   "error": "Component b repeats a need"
+  },
+  {
+   "name": "a need on a later component",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": [
+       "b"
+      ]
+     },
+     {
+      "name": "b",
+      "path": "./b.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Component a needs b, which is not an earlier component"
+  },
+  {
+   "name": "a need on itself",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": [
+       "a"
+      ]
+     }
+    ]
+   },
+   "error": "Component a needs a, which is not an earlier component"
+  },
+  {
+   "name": "a need on an unknown component",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": [
+       "ghost"
+      ]
+     }
+    ]
+   },
+   "error": "Component a needs ghost, which is not an earlier component"
+  },
+  {
+   "name": "the invalid entry is reported before a later duplicate",
+   "manifest": {
+    "version": 1,
+    "components": [
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     },
+     {
+      "name": "Bad",
+      "path": "./Bad.mjs",
+      "needs": []
+     },
+     {
+      "name": "a",
+      "path": "./a.mjs",
+      "needs": []
+     }
+    ]
+   },
+   "error": "Invalid component roster entry 1"
+  }
+ ],
+ "wiring": [
+  {
+   "name": "components see only their needs plus the shared services",
+   "components": [
+    {
+     "name": "coordinates",
+     "needs": []
+    },
+    {
+     "name": "bootstrap",
+     "needs": [
+      "coordinates"
+     ]
+    },
+    {
+     "name": "source-analyses",
+     "needs": [
+      "coordinates",
+      "bootstrap"
+     ]
+    },
+    {
+     "name": "leaf",
+     "needs": []
+    }
+   ],
+   "attempts": [
+    {
+     "fail": null,
+     "error": null,
+     "order": [
+      "coordinates",
+      "bootstrap",
+      "source-analyses",
+      "leaf"
+     ],
+     "visible": {
+      "coordinates": [],
+      "bootstrap": [
+       "coordinates"
+      ],
+      "source-analyses": [
+       "coordinates",
+       "bootstrap"
+      ],
+      "leaf": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "a failed wiring leaves every module free to be wired again, a complete one does not",
+   "components": [
+    {
+     "name": "a",
+     "needs": []
+    },
+    {
+     "name": "b",
+     "needs": [
+      "a"
+     ]
+    },
+    {
+     "name": "c",
+     "needs": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "attempts": [
+    {
+     "fail": "c",
+     "error": "wire refused: c",
+     "order": [
+      "a",
+      "b",
+      "c"
+     ],
+     "visible": null
+    },
+    {
+     "fail": null,
+     "error": null,
+     "order": [
+      "a",
+      "b",
+      "c"
+     ],
+     "visible": {
+      "a": [],
+      "b": [
+       "a"
+      ],
+      "c": [
+       "a",
+       "b"
+      ]
+     }
+    },
+    {
+     "fail": null,
+     "error": "Component a is already wired into another revision",
+     "order": [],
+     "visible": null
+    }
+   ]
+  },
+  {
+   "name": "a module that fails first is not marked and nothing after it is wired",
+   "components": [
+    {
+     "name": "a",
+     "needs": []
+    },
+    {
+     "name": "b",
+     "needs": [
+      "a"
+     ]
+    }
+   ],
+   "attempts": [
+    {
+     "fail": "a",
+     "error": "wire refused: a",
+     "order": [
+      "a"
+     ],
+     "visible": null
+    },
+    {
+     "fail": null,
+     "error": null,
+     "order": [
+      "a",
+      "b"
+     ],
+     "visible": {
+      "a": [],
+      "b": [
+       "a"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a module that names another component is refused before any wiring",
+   "components": [
+    {
+     "name": "a",
+     "needs": []
+    },
+    {
+     "name": "b",
+     "needs": [
+      "a"
+     ],
+     "component": "other"
+    }
+   ],
+   "attempts": [
+    {
+     "fail": null,
+     "error": "Component b does not match its roster entry",
+     "order": [],
+     "visible": null
+    }
+   ]
+  },
+  {
+   "name": "a module without a wire function is refused before any wiring",
+   "components": [
+    {
+     "name": "a",
+     "needs": []
+    },
+    {
+     "name": "b",
+     "needs": [
+      "a"
+     ],
+     "wire": false
+    }
+   ],
+   "attempts": [
+    {
+     "fail": null,
+     "error": "Component b does not match its roster entry",
+     "order": [],
+     "visible": null
+    }
+   ]
+  },
+  {
+   "name": "a missing module is refused",
+   "components": [
+    {
+     "name": "a",
+     "needs": []
+    },
+    {
+     "name": "b",
+     "needs": [
+      "a"
+     ],
+     "absent": true
+    }
+   ],
+   "attempts": [
+    {
+     "fail": null,
+     "error": "Component modules differ from the roster",
+     "order": [],
+     "visible": null
+    }
+   ]
+  }
+ ]
+}

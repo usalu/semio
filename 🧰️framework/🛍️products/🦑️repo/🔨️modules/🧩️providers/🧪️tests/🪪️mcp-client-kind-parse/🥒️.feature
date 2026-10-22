@@ -2,7 +2,7 @@
 @no-oracle-repo-mcp-client-identity
 @comparison-ordered-json-v1
 Feature: Which IDE is talking is one closed vocabulary with one spelling rule
-  A repo MCP entry point, a hook client slug and an editor provider all name the same eight IDEs, and
+  A repo MCP entry point, a hook client slug and an agent-client provider all name the same eight agent clients, and
   the mapping between those three spellings is this repository's own. Nothing outside it implements
   the mapping, so there is no reference to compare against — see the recorded no-oracle decision
   `repo-mcp-client-identity`. Two independently written implementations, Rust and Go, answer for

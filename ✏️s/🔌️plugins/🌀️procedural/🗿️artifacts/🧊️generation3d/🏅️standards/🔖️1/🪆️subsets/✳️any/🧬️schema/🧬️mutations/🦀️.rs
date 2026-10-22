@@ -38,7 +38,7 @@ use semio_framework_os_flow::FlowHost;
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value::RetireOwned)]
-#[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d")]
+#[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d", reference = Generation3dSnapshot, reference_diff = Generation3dDiff)]
 pub enum Generation3dMutation {
     CreateWidget(semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget),
     UpdateWidget(semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget),

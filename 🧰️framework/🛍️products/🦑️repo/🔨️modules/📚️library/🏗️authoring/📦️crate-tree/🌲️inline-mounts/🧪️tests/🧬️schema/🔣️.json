@@ -1,0 +1,102 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "rootFile",
+  "cases",
+  "defects"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "rootFile": {
+   "type": "string"
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "root",
+     "files",
+     "expected",
+     "deletes",
+     "notes",
+     "valid"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "root": {
+      "type": "string"
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     },
+     "deletes": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "notes": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "valid": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "defects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "root",
+     "files",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "root": {
+      "type": "string"
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

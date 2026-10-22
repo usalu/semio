@@ -33,19 +33,19 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
     }
     let (mut typed_output, mut typed_leftover) = with_instances_original_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((PluginExchangeOutput::default(),None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+        let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((PluginExchangeOutput::default(),None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())};
         advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx)
     })
     .await?;
     if let Some(operation) = flags.started_typed_operation {
         let mut pumps = 0;
-        while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_results.is_empty() && !typed_output.ownership_receipt_pending() {
+        while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_pages == 0 && !typed_output.ownership_receipt_pending() {
             let (more, leftover) = with_instances_original_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
                 if !instance.app.has_runnable_typed_operations() {
                     return Ok((None, None));
                 }
-                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((None,None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((None,None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())};
                 advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx).map(|(output, leftover)| (Some(output), leftover))
             })
             .await?;

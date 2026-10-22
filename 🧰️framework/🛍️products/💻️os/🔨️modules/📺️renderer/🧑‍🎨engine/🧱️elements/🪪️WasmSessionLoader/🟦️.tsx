@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import { createWasmModuleLoader, type AppSurfaceSessionFactory, type Board2dWasmSession, type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
-import { createContext } from "react";
+import { createContext } from "../⚛️react-port/🟦️.ts";
 import { installPageRuntimeAssets } from "@semio-tech/framework/canvas/runtime-assets";
 import { openNodeGraphSessionV1, type NodeGraphSessionV1 } from "../🕸️NodeGraph/📦️packages/🦀️rust/🟦️.ts";
 import type { FlowBrowserRuntimeV1, FlowWasmSession } from "./🌊️flow-session/🟦️.ts";

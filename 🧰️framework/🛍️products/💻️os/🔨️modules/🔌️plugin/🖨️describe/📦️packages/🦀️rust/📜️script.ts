@@ -1,9 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */
@@ -23,4 +24,4 @@ class CanonicalDescriptorPackCheckScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));

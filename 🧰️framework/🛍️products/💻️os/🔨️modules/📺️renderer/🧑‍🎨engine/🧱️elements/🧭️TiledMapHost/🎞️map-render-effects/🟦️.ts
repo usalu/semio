@@ -1,5 +1,5 @@
 /** 🎞️ TiledMapHost render effects: the layout effect that creates the renderer and session, the scene-sync effects that feed the renderer, the popup placement effect and the wheel zoom handler. */
-import { useCallback, useEffect, useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "../../⚛️react-port/🟦️.ts";
 import { useCanvasAppearanceSync } from "@semio-tech/ui-react";
 import { createMapSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { DEFAULT_CAMERA_JSON, type MapRenderMode, parseCameraJson, parseMapScreenPoint } from "../📐️map-parsing/🟦️.ts";

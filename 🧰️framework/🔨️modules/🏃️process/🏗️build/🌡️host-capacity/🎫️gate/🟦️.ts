@@ -27,7 +27,7 @@ export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;rese
 /** 🔌️ The ports of one gate: time, process identity, host samples and process-tree observation; tests replace them. */
 export type HostCapacityPortsV1=Readonly<{now?:()=>number;pid?:number;sample?:(previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>)=>Promise<HostSampleRecordV1>;observe?:(pid:number)=>Promise<number|null>}>;
 /** ⚙️ Everything one admission needs. */
-export type HostCapacityOptionsV1=HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>;write?:(line:string)=>void}>;
+export type HostCapacityOptionsV1=HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>;write?:(line:string)=>void;session?:Readonly<{address:string;weight:number}>}>;
 /** 📋️ What the gate currently knows. */
 export type HostCapacityStatusV1=Readonly<{host:HostSampleV1;grants:readonly HostGrantV1[];waiters:readonly HostWaiterV1[];evaluation:HostEvaluationV1}>;
 
@@ -122,7 +122,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
   return body(Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.reservedMegabytes,plan,inherited:true,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:grant.id,[protocol.planEnvironment]:JSON.stringify(plan)})}));
  }
  if(names(directory,"queue").length>=policy.wait.maximumWaiters)throw Error(schema.definitions.Messages.const[language].errors.queueFull);
- const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid};
+ const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity;
  try{
@@ -136,7 +136,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
      if(!waiters.some(row=>row.request.id===request.id)){writeJson(waiterPath,record);waiters.push(record);}
      const evaluation=evaluateHostCapacityV1(policy,host,ledger,waiters,at),mine=evaluation.decisions.find(row=>row.id===request.id)!;
      if(mine.verdict==="admit"){
-      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:bootAt(at)});
+      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:bootAt(at),...options.session===undefined?{}:{session:options.session.address}});
       writeJson(grantPath(directory,request.id),grant);remove(waiterPath);admittedHost=host;
       const seconds=Math.round((at-arrivedAtMs)/1000);
       if(mine.reason==="override")write(formatHostCapacityV1(language,"override",{operation:request.operation,seconds,reason:describeHostReasonV1(language,softHostReasonV1(policy,host)??"load")}));

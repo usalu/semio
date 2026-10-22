@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").removed.iter().map(|entry| entry.id.clone()).collect::<Vec<_>>(), vec!["e2".to_string()], "delete-element/removes-bar-e2-and-3c0260: exactly e2 may be removed");
     assert!(outcome.diff().nodes.is_none(), "delete-element/removes-bar-e2-and-3c0260: no node may be swept up with the element");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

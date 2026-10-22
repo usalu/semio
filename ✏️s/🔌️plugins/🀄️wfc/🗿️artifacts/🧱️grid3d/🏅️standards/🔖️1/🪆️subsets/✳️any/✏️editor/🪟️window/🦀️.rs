@@ -64,6 +64,12 @@ pub struct Grid3dWindowConfigDiff {
 }
 
 impl protocol::DiffAlgebra<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_z.is_none() && self.target_x.is_none() && self.target_y.is_none() && self.target_z.is_none() && self.camera_zoom.is_none() && self.active_tile_id.is_none() && self.show_masked.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
     fn inverse(&self, base: &Grid3dWindowConfig) -> Self {
         Self {
             camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
@@ -77,43 +83,11 @@ impl protocol::DiffAlgebra<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
             show_masked: self.show_masked.as_ref().map(|_| base.show_masked.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_z.is_none() && self.target_x.is_none() && self.target_y.is_none() && self.target_z.is_none() && self.camera_zoom.is_none() && self.active_tile_id.is_none() && self.show_masked.is_none()
-    }
 }
 
-impl protocol::MutationDiff<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
-    fn apply(&self, base: &Grid3dWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Grid3dWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera_x {
-            next.camera_x.clone_from(value);
-        }
-        if let Some(value) = &self.camera_y {
-            next.camera_y.clone_from(value);
-        }
-        if let Some(value) = &self.camera_z {
-            next.camera_z.clone_from(value);
-        }
-        if let Some(value) = &self.target_x {
-            next.target_x.clone_from(value);
-        }
-        if let Some(value) = &self.target_y {
-            next.target_y.clone_from(value);
-        }
-        if let Some(value) = &self.target_z {
-            next.target_z.clone_from(value);
-        }
-        if let Some(value) = &self.camera_zoom {
-            next.camera_zoom.clone_from(value);
-        }
-        if let Some(value) = &self.active_tile_id {
-            next.active_tile_id.clone_from(value);
-        }
-        if let Some(value) = &self.show_masked {
-            next.show_masked.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Grid3dWindowConfig> for Grid3dWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
     fn absorb(&mut self, later: Self) {
         if later.camera_x.is_some() {
             self.camera_x = later.camera_x;
@@ -142,6 +116,40 @@ impl protocol::MutationDiff<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
         if later.show_masked.is_some() {
             self.show_masked = later.show_masked;
         }
+    }
+
+    fn apply(&self, unpublished: &mut Grid3dWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x.clone_from(value);
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y.clone_from(value);
+        }
+        if let Some(value) = &self.camera_z {
+            next.camera_z.clone_from(value);
+        }
+        if let Some(value) = &self.target_x {
+            next.target_x.clone_from(value);
+        }
+        if let Some(value) = &self.target_y {
+            next.target_y.clone_from(value);
+        }
+        if let Some(value) = &self.target_z {
+            next.target_z.clone_from(value);
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom.clone_from(value);
+        }
+        if let Some(value) = &self.active_tile_id {
+            next.active_tile_id.clone_from(value);
+        }
+        if let Some(value) = &self.show_masked {
+            next.show_masked.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -271,6 +279,10 @@ impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
             Self::SetShowMasked(_) => &Self::DESCRIPTORS[2],
         }
     }
+}
+
+impl protocol::ColdMutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
+    type ReferenceDiff = Grid3dWindowConfigDiff;
     fn diff(&self, base: &Grid3dWindowConfig) -> protocol::MutationOutcome<Grid3dWindowConfigDiff> {
         let diff = match self {
             Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id }) => Grid3dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
@@ -374,9 +386,8 @@ macro_rules! config_owner {
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
             }
-            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-                semio_framework_plugin::bounded_window_config_store_owners::<Self>()
-            }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
                 semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
             }

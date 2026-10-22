@@ -25,7 +25,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts source-check",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "forwardAllArgs": true
       }
@@ -35,7 +35,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts test",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "forwardAllArgs": true
       }
@@ -50,7 +50,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "forwardAllArgs": true
       }
@@ -59,7 +59,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "forwardAllArgs": false
       },

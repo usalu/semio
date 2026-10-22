@@ -77,7 +77,7 @@ use semio_s_artifact_norm_en1996_mut_loads::change_hk_earth;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1996Snapshot, diff = En1996Diff, schema = "s.norm.en1996")]
+#[mutations(snapshot = En1996Snapshot, diff = En1996Diff, schema = "s.norm.en1996", reference = En1996Snapshot, reference_diff = En1996Diff)]
 pub enum En1996Mutation {
     ChangeConcentratedBearingLength(change_concentrated_bearing_length::ChangeConcentratedBearingLength),
     ChangeSlabSpan(change_slab_span::ChangeSlabSpan),
@@ -219,15 +219,15 @@ pub mod mutation_bridge {
 
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1996_mutation(base: &En1996Snapshot, mutation: &En1996Mutation) -> Result<(En1996Snapshot, Vec<String>), String> {
-    let raised = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(mutation, base);
+    let raised = <En1996Mutation as protocol::ColdMutation<En1996Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
 pub fn inverse_en1996_mutation(mutation: &En1996Mutation, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
     Ok({
-    <En1996Mutation as protocol::Mutation<En1996Snapshot>>::inverse(mutation, base)?
+    <En1996Mutation as protocol::ColdMutation<En1996Snapshot>>::inverse(mutation, base)?
 
     })
 }

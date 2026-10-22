@@ -12,7 +12,7 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { ReactElement } from "react";
+import type { ReactElement } from "../../⚛️react-port/🟦️.ts";
 
 import { WorldTerrainLayer } from "@semio-tech/framework-renderer-react";
 import { ThreeCanvas } from "@semio-tech/ui-react";

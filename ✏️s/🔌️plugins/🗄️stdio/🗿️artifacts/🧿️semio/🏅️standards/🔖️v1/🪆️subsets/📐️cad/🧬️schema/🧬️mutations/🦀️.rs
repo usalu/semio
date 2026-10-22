@@ -26,7 +26,7 @@ use crate::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_d
 
 use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Mutations
 pub use semio_s_artifact_stdio_semio_cad_examples::schema::mutations::support;
@@ -57,7 +57,7 @@ pub mod set_layer;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioCadSnapshot, diff = SemioCadDiff, schema = "SemioCadMutation")]
+#[mutations(snapshot = SemioCadSnapshot, diff = SemioCadDiff, schema = "SemioCadMutation", reference = SemioCadSnapshot, reference_diff = SemioCadDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioCadMutation {
     AddLayer(add_layer::AddLayer),
@@ -102,7 +102,7 @@ pub const KINDS: &[&str] = &[
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> protocol::MutationOutcome<SemioCadDiff> {
-    <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, base)
+    <SemioCadMutation as ColdMutation<SemioCadSnapshot>>::diff(mutation, base)
 }
 
 
@@ -114,7 +114,7 @@ pub fn diff_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnaps
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, base)?
+    <SemioCadMutation as ColdMutation<SemioCadSnapshot>>::inverse(mutation, base)?
 
     })
 }

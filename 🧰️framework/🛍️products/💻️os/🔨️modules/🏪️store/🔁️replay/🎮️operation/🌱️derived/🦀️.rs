@@ -111,7 +111,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
                 self.ready=matches!(step,ArtifactReplayPreparationStep::Prepared(_));step.progress()
             }
         }else if let Some(close)=self.task_close.as_mut(){
-            if close.terminal_is_empty(){drop(self.task_close.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{close.close_step(grant)?.progress()}
+            if close.terminal_is_empty(){drop(self.task_close.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{let DerivedOperationTurn::Advance(control,_)=turn else{return Err(refusal("derived preparation retirement requires its original decoder"));};control.with_retirement(grant,|receiving|close.close_step(grant,receiving))?.progress()}
         }else if self.retirement.is_some(){semio_framework_value::close_factory_ticket(&mut self.retirement,grant)?.progress()
         }else if let Some(input)=self.failed_input.as_mut(){if input.terminal_is_empty(){self.failed_input.take();RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}else{input.close_step(grant)?.progress()}
         }else if let Some(read)=self.failed_read.as_mut(){let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};let(frame,mut p)=read.admit_retirement(self.registry.as_ref().unwrap(),self.snapshots.as_ref().unwrap(),child)?;*self.retirement=Some(frame);self.failed_read.take();p.copied_bytes+=demand.copy_bytes;p

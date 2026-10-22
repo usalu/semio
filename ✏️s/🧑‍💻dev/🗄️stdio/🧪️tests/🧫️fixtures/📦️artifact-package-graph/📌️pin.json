@@ -1,13 +1,103 @@
 {
-  "graph": {"version":1,"projects":{"fixture":{"name":"fixture","root":"fixture","targets":{"check":{"execution":{"kind":"noop"}}}}},"dependencies":[]},
+  "graph": {
+    "version": 1,
+    "projects": {
+      "fixture": {
+        "name": "fixture",
+        "root": "fixture",
+        "targets": {
+          "check": {
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": []
+  },
   "cases": [
-    {"name":"original","change":"none","accepted":true,"schemaAccepted":true},
-    {"name":"missing-path","change":"missing-path","accepted":false,"schemaAccepted":false},
-    {"name":"missing-digest","change":"missing-digest","accepted":false,"schemaAccepted":false},
-    {"name":"relative-path","change":"relative-path","accepted":false,"schemaAccepted":true},
-    {"name":"invalid-digest","change":"invalid-digest","accepted":false,"schemaAccepted":false},
-    {"name":"changed-bytes","change":"changed-bytes","accepted":false,"schemaAccepted":true},
-    {"name":"malformed-json","change":"malformed-json","accepted":false,"schemaAccepted":true},
-    {"name":"invalid-graph","change":"invalid-graph","accepted":false,"schemaAccepted":true}
-  ]
+    {
+      "name": "original",
+      "change": "none",
+      "accepted": true,
+      "schemaAccepted": true
+    },
+    {
+      "name": "missing-path",
+      "change": "missing-path",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "name": "missing-digest",
+      "change": "missing-digest",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "name": "relative-path",
+      "change": "relative-path",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "invalid-digest",
+      "change": "invalid-digest",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "name": "changed-bytes",
+      "change": "changed-bytes",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "malformed-json",
+      "change": "malformed-json",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "invalid-graph",
+      "change": "invalid-graph",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "wrong-absolute-path",
+      "change": "wrong-path",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "whole-graph-is-not-manifest",
+      "change": "whole-graph",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "wrong-manifest-version",
+      "change": "manifest-version",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "missing-record",
+      "change": "missing-record",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "name": "changed-record",
+      "change": "changed-record",
+      "accepted": false,
+      "schemaAccepted": true
+    }
+  ],
+  "publication": {
+    "manifestVersion": 2,
+    "graphVersion": 1
+  }
 }

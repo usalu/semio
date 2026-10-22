@@ -97,27 +97,37 @@ struct PagedBranch {
 #[test]
 fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
-    let depth = law["treeDepth"].as_u64().unwrap() as usize;
     assert!(std::mem::size_of::<<PagedTree as RetainedCloneTrait>::Cursor>() <= law["maximumCursorBytes"].as_u64().unwrap() as usize);
-    let mut tree = PagedTree::Leaf;
-    for _ in 0..depth { tree = PagedTree::Branch(PagedBranch { label: "Grundstück🧬".into(), children: [tree].into_iter().collect() }); }
-    let oracle = serde_json::to_value(&tree).unwrap();
-    let source = admit_source(tree);
-    let mut cursor = PagedTree::retained_clone_cursor();
-    for turn in 0..100000 {
-        let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
-        let step = cursor.advance(source.borrow(), 4096, grant).unwrap();
-        let progress = step.progress();
-        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
-        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+    let per_level = law["cloneFrames"]["perLevel"].as_u64().unwrap() as usize;
+    let base_frames = law["cloneFrames"]["base"].as_u64().unwrap() as usize;
+    for depth in [1usize, 2, 3, law["treeDepth"].as_u64().unwrap() as usize] {
+        let frames = per_level * depth + base_frames;
+        let mut tree = PagedTree::Leaf;
+        for _ in 0..depth { tree = PagedTree::Branch(PagedBranch { label: "Grundstück🧬".into(), children: [tree].into_iter().collect() }); }
+        let oracle = serde_json::to_value(&tree).unwrap();
+        let source = admit_source(tree);
+        let mut cursor = PagedTree::retained_clone_cursor();
+        let mut deepest = 0;
+        for turn in 0..100000 {
+            let quote = cursor.advance_demands(source.borrow(), 4096).unwrap_or_default();
+            deepest = deepest.max(quote.depth);
+            let rotation = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, frames), 1 => RetainedCloneGrant::one_payload_turn(4096, frames), _ => RetainedCloneGrant::one_release_turn(4096, frames) };
+            let grant = RetainedCloneGrant { maximum_copy_bytes: rotation.maximum_copy_bytes.max(quote.copy_bytes), maximum_capacity_bytes: rotation.maximum_capacity_bytes.max(quote.capacity_bytes), maximum_release_bytes: rotation.maximum_release_bytes.max(quote.release_bytes), ..rotation };
+            let step = cursor.advance(source.borrow(), 4096, grant).unwrap();
+            let progress = step.progress();
+            assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
+            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        }
+        assert_eq!(deepest, frames, "every tree level quotes exactly its authored frames");
+        assert!(cursor.output_ready(), "paged clone exceeded its authored turn bound; next quote {:?}", cursor.advance_demands(source.borrow(), 4096));
+        let output = cursor.take().unwrap();
+        assert_eq!(serde_json::to_value(&output).unwrap(), oracle);
+        cursor.begin_close();
+        close_complete(&mut cursor, 4096);
+        assert!(cursor.terminal_is_empty());
+        retire(output, 4096);
+        drain_source(source);
     }
-    let output = cursor.take().unwrap();
-    assert_eq!(serde_json::to_value(&output).unwrap(), oracle);
-    cursor.begin_close();
-    close_complete(&mut cursor, 4096);
-    assert!(cursor.terminal_is_empty());
-    retire(output, 4096);
-    drain_source(source);
 }
 
 #[test]
@@ -166,7 +176,7 @@ fn neutral_record_vectors_match_independent_serde() {
             assert_eq!(serde_json::Value::from(actual.to_value()), serde_json::to_value(&oracle).unwrap());
             let source = admit_source(actual);
             let turn = &corpus["grant"];
-            let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize + RetainedCloneBorrowAuthority::<()>::constructor_copy_bytes(), maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
+            let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize + std::mem::size_of::<Record>(), maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
             let mut cursor = Record::retained_clone_cursor();
             let mut turns = 0;
             loop {
@@ -193,11 +203,16 @@ fn neutral_record_vectors_match_independent_serde() {
 fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
     let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
     let turn = &corpus["grant"];
-    let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize + RetainedCloneBorrowAuthority::<()>::constructor_copy_bytes(), maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
+    let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize + std::mem::size_of::<Record>(), maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
     for row in corpus["vectors"].as_array().unwrap().iter().filter(|row| row["accepted"] == true) {
         let authority = admit_authority(serde_json::from_value::<Record>(row["input"].clone()).unwrap());
         let mut cursor = Record::retained_clone_cursor();
-        loop { if matches!(cursor.advance(authority.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
+        let mut turns = 0;
+        loop {
+            turns += 1;
+            assert!(turns < 10000, "borrowed record clone did not complete");
+            if matches!(cursor.advance(authority.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap(), RetainedCloneStep::Complete(_)) { break; }
+        }
         let copied = cursor.take().unwrap();
         assert_eq!(serde_json::to_value(&copied).unwrap(), row["input"]);
         assert_eq!(serde_json::to_value(authority.borrow(0, |source| source).get()).unwrap() == row["input"], corpus["borrowAuthority"]["sourceUnchanged"].as_bool().unwrap());

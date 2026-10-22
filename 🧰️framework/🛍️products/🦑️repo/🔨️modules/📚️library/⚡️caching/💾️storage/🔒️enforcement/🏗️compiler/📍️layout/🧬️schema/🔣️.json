@@ -8,7 +8,9 @@
     "maximumPublishedPathCodeUnits",
     "cases",
     "rejected",
-    "targetNamespace"
+    "targetNamespace",
+    "hosts",
+    "registry"
   ],
   "properties": {
     "version": {
@@ -76,6 +78,71 @@
     },
     "targetNamespace": {
       "const": "t"
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "repositoryRoot",
+          "workspace",
+          "host",
+          "reason"
+        ],
+        "properties": {
+          "platform": {
+            "enum": [
+              "posix",
+              "win32"
+            ]
+          },
+          "repositoryRoot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "workspace": {
+            "type": "string",
+            "minLength": 1
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryRoot",
+        "workspaces",
+        "home"
+      ],
+      "properties": {
+        "repositoryRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workspaces": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "home": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   },
   "$defs": {

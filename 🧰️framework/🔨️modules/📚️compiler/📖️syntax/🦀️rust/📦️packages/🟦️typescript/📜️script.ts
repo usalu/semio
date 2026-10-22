@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -33,4 +33,4 @@ class ModuleTreeScript extends BundleScript {
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../../🌳️module-tree/🧪️tests/🟦️.ts")], this.root, "compiler:syntax:module-tree", 60000);
   }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-absence", AbsenceScript).register("test-path-literals", PathLiteralsScript).register("test-module-tree", ModuleTreeScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-absence", AbsenceScript).register("test-path-literals", PathLiteralsScript).register("test-module-tree", ModuleTreeScript), { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -69,6 +69,13 @@
         },
         "command": {
           "type": "string"
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "agent": {
+          "type": "string"
         }
       }
     },
@@ -146,6 +153,13 @@
           }
         },
         "command": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "agent": {
           "type": "string"
         }
       }
@@ -414,6 +428,10 @@
         "directories": {
           "en": "Lease directories with registered processes:",
           "de": "Lease-Verzeichnisse mit registrierten Prozessen:"
+        },
+        "sessionTag": {
+          "en": "  session {session} ({agent})",
+          "de": "  Sitzung {session} ({agent})"
         }
       }
     },

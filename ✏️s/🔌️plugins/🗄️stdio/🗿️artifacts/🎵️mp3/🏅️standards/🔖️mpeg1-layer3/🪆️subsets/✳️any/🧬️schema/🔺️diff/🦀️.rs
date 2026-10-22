@@ -24,8 +24,23 @@ pub struct Mp3Diff {
     pub id3v1: Option<Option<Id3v1Tag>>,
 }
 
-impl MutationDiff<Mp3Snapshot> for Mp3Diff {
-    fn apply(&self, base: &Mp3Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Mp3Snapshot> {
+impl MutationDiff<Mp3Snapshot> for Mp3Diff {}
+
+impl protocol::ColdMutationDiff<Mp3Snapshot> for Mp3Diff {
+    fn absorb(&mut self, other: Self) {
+        if other.id3v2.is_some() {
+            self.id3v2 = other.id3v2;
+        }
+        if other.frames.is_some() {
+            self.frames = other.frames;
+        }
+        if other.id3v1.is_some() {
+            self.id3v1 = other.id3v1;
+        }
+    }
+
+    fn apply(&self, unpublished: &mut Mp3Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(Some(tag))=&self.id3v2{for frame in &tag.frames{crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3_frame(frame).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-metadata",message).at(["id3v2"]))?;}}
         if let Some(Some(tag))=&self.id3v1{crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::validate_id3v1_tag(tag).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-metadata",message).at(["id3v1"]))?;}
         let mut next = base.clone();
@@ -38,27 +53,20 @@ impl MutationDiff<Mp3Snapshot> for Mp3Diff {
         if let Some(v) = &self.id3v1 {
             next.id3v1 = v.clone();
         }
-        Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        if other.id3v2.is_some() {
-            self.id3v2 = other.id3v2;
-        }
-        if other.frames.is_some() {
-            self.frames = other.frames;
-        }
-        if other.id3v1.is_some() {
-            self.id3v1 = other.id3v1;
-        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
-    fn inverse(&self, base: &Mp3Snapshot) -> Self {
-        Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.id3v2.is_none() && self.frames.is_none() && self.id3v1.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Mp3Snapshot> for Mp3Diff {
+    fn inverse(&self, base: &Mp3Snapshot) -> Self {
+        Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
     }
 }
 

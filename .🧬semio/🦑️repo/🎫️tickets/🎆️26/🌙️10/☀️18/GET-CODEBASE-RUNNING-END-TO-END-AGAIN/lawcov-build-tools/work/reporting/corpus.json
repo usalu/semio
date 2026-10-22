@@ -1,0 +1,131 @@
+{
+ "version": 1,
+ "names": [
+  {
+   "name": "a.json",
+   "accepted": true
+  },
+  {
+   "name": "A0._-.json",
+   "accepted": true
+  },
+  {
+   "name": "9.json",
+   "accepted": true
+  },
+  {
+   "name": "report-1.2.3.json",
+   "accepted": true
+  },
+  {
+   "name": "a..json",
+   "accepted": true
+  },
+  {
+   "name": "a-.json",
+   "accepted": true
+  },
+  {
+   "name": "a_b.json",
+   "accepted": true
+  },
+  {
+   "name": "",
+   "accepted": false
+  },
+  {
+   "name": ".json",
+   "accepted": false
+  },
+  {
+   "name": ".a.json",
+   "accepted": false
+  },
+  {
+   "name": "-a.json",
+   "accepted": false
+  },
+  {
+   "name": "_a.json",
+   "accepted": false
+  },
+  {
+   "name": "a.JSON",
+   "accepted": false
+  },
+  {
+   "name": "a.json ",
+   "accepted": false
+  },
+  {
+   "name": " a.json",
+   "accepted": false
+  },
+  {
+   "name": "a.json\n",
+   "accepted": false
+  },
+  {
+   "name": "a\n.json",
+   "accepted": false
+  },
+  {
+   "name": "a/b.json",
+   "accepted": false
+  },
+  {
+   "name": "a\\b.json",
+   "accepted": false
+  },
+  {
+   "name": "a:b.json",
+   "accepted": false
+  },
+  {
+   "name": "é.json",
+   "accepted": false
+  },
+  {
+   "name": "a.jsonl",
+   "accepted": false
+  },
+  {
+   "name": "a",
+   "accepted": false
+  },
+  {
+   "name": "a.json.json",
+   "accepted": true
+  },
+  {
+   "name": "a b.json",
+   "accepted": false
+  },
+  {
+   "name": "a\u0000.json",
+   "accepted": false
+  },
+  {
+   "name": "..\\a.json",
+   "accepted": false
+  },
+  {
+   "name": "../a.json",
+   "accepted": false
+  }
+ ],
+ "lengths": {
+  "stem": "a",
+  "from": 60,
+  "to": 72,
+  "maximumAccepted": 69
+ },
+ "notStrings": [
+  1,
+  null,
+  true,
+  {},
+  [],
+  1.5
+ ]
+}

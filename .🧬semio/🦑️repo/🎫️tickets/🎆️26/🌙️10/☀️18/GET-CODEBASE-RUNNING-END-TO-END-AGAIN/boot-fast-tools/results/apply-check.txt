@@ -1,0 +1,24 @@
+ok   dry run exits 0 and says dry run
+ok   dry run writes nothing
+ok   write applies 23 changes
+ok   second run is all already
+ok   second write changes nothing
+ok   group door alone applies 10
+ok   group validator alone applies 3
+ok   group caller alone applies 2
+ok   group taxonomy alone applies 2
+ok   group slo alone applies 3
+ok   launcher alone is refused without the door script
+ok   launcher after door applies
+ok   manifest after door applies and names the door
+ok   drift refused: caller anchor gone
+ok   drift refused: caller anchor twice
+ok   drift refused: invocation taxonomy read changed
+ok   drift refused: launcher entry is something else
+ok   drift refused: launcher registry layout changed
+ok   drift refused: Go entry-contract line changed
+ok   drift refused: package.json repo script is bun form
+ok   drift refused: closures row repo-cli missing
+ok   drift refused: slo table lacks cli-help-p95
+ok   a create target with other content is refused
+ALL OK

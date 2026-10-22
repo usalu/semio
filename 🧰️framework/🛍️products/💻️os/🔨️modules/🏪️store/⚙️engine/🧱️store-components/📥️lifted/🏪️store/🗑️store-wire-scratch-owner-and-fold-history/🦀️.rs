@@ -213,7 +213,7 @@ impl<T> Drop for ScratchOwner<T> {
 pub async fn fold_history<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone,
-    Mutation: super::Mutation<P> + OpBinary,
+    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {

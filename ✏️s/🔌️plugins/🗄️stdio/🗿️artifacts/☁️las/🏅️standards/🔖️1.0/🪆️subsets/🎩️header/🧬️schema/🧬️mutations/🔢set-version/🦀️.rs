@@ -16,18 +16,21 @@ pub struct SetVersion {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVersion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version", kind: "set-version", record: "SetVersion" };
 
-    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        let Self { major, minor } = self;
-        protocol::MutationOutcome::new(diff::diff_set_version(*major, *minor))
-    }
-    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetVersion(SetVersion { major: base.header.version_major, minor: base.header.version_minor })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set version", "Version setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<LasSnapshot, LasMutation> for SetVersion {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::ColdMutation<LasSnapshot>>::ReferenceDiff> {
+        let Self { major, minor } = self;
+        protocol::MutationOutcome::new(diff::diff_set_version(*major, *minor))
+    }
+    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
+        Ok(vec![LasMutation::SetVersion(SetVersion { major: base.header.version_major, minor: base.header.version_minor })])
     }
 }
 //#endregion 🔖️Payload

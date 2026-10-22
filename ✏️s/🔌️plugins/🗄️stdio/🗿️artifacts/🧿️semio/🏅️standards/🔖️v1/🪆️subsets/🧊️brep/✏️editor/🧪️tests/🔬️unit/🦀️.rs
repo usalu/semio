@@ -113,10 +113,10 @@ async fn set_vertex_is_visible_with_required_localized_arguments() {
 /// `MutationDiff::apply`, the exact production `mutate()` path, not a hand-rolled shortcut.
 #[semio_framework_async_macros::async_test]
 async fn applying_the_move_vertex_mutation_actually_moves_the_vertex() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let snapshot = one_vertex_snapshot();
     let mutation = move_vertex_mutation(&snapshot, "v1", [9.0, 8.0, 7.0]).expect("unique target").expect("changed point");
-    let applied = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("apply succeeds for a well-formed fixture");
+    let applied = protocol::apply_diff_cold(mutation.diff(&snapshot).diff(), &snapshot).expect("apply succeeds for a well-formed fixture");
     assert_eq!(applied.vertices[0].point, SemioPoint3 { x: 9.0, y: 8.0, z: 7.0 });
 }
 

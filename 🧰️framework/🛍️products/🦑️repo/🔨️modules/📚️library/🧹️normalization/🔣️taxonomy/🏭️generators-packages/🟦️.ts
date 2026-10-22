@@ -16,6 +16,7 @@ export interface GeneratorContractSpec {
   readonly target: string | null;
   readonly previewTarget?: string;
   readonly previewArguments?: readonly string[];
+  readonly previewScript?: string;
   readonly previewProgress?: GeneratorPreviewProgressPolicyV1;
   readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
   readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };

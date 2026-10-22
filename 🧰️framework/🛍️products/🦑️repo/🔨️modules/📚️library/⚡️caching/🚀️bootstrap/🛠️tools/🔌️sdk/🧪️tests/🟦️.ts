@@ -52,13 +52,13 @@ function productionFiles(directory:string):string[]{
 
 test("the Nx SDK port policy is a closed, schema-valid catalogue that the installed Nx can resolve",()=>{
  expect(validateJsonSchemaSubset(schema,policy)).toEqual([]);
- const installed=createRequire(join(root,"package.json")),port=readFileSync(join(import.meta.dir,"../🟦️.ts"),"utf8");
+ const installed=createRequire(join(root,".nx/installation/package.json")),port=readFileSync(join(import.meta.dir,"../🟦️.ts"),"utf8");
  for(const name of policy.modules){expect(()=>installed.resolve(name),name).not.toThrow();expect(port.includes(JSON.stringify(name)),name).toBe(true);}
  for(const path of [...policy.adapterRoots,...policy.scanned])expect(existsSync(join(root,path)),path).toBe(true);
 });
 
 test("the Nx SDK port opens exactly the doors Node itself resolves and refuses everything else",()=>{
- const base=join(root,"package.json"),installed=createRequire(base),sdk=openNxSdkV1(base);
+ const base=join(root,".nx/installation/package.json"),installed=createRequire(base),sdk=openNxSdkV1(base);
  expect(sdk.packageDirectory()).toBe(dirname(installed.resolve(fixture.ports.packageDirectory)));
  expect(sdk.cli()).toBe(installed.resolve(fixture.ports.cli));
  expect(sdk.workspaceRoot).toBeInstanceOf(Function);

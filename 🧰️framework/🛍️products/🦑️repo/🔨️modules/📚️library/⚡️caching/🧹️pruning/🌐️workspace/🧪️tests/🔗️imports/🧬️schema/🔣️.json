@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "subject",
+    "routes",
+    "forbidden"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "forbidden": {
+      "type": "string",
+      "minLength": 1
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "symbol",
+          "owner"
+        ],
+        "properties": {
+          "symbol": {
+            "enum": [
+              "collectGarbage",
+              "formatGcReport",
+              "loadOracleRegistry"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

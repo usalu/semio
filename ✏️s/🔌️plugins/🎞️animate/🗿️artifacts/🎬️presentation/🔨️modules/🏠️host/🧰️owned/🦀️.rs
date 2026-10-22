@@ -66,15 +66,15 @@ const PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::os_store::owned_
 /// 📦️ Installs Presentation's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
 pub fn presentation_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<PresentationSnapshot, PresentationMutation> {
-    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(PresentationEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationMutation>::default()))
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(PresentationEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default()), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationMutation>::default()))
 }
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationMutation>::default()),
             self.edit_history_decoder(),
         )
         .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>)
@@ -245,7 +245,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         }
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
-                let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default();
+                let factory = semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default();
                 return match store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value, grant) {
                     Ok((retirement, progress)) => {
                         *self.retirement = Some(retirement);

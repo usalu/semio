@@ -158,6 +158,9 @@ impl IssueTracker for RecordedIssueTracker {
         self.fails("reopen_issue").map_or(Ok(()), Err)
     }
 
+    fn update_issue_title(&self, issue_url: &str, title: &str) -> ProviderResult<()> { self.record(format!("update_issue_title|{issue_url}|{title}")); self.fails("update_issue_title").map_or(Ok(()), Err) }
+    fn delete_issue(&self, issue_url: &str) -> ProviderResult<()> { self.record(format!("delete_issue|{issue_url}")); self.fails("delete_issue").map_or(Ok(()), Err) }
+
     fn get_issue_details(&self, issue_url: &str) -> Result<Option<ManagementIssue>, ProviderError> {
         self.record(format!("get_issue_details|{issue_url}"));
         if let Some(error) = self.fails("get_issue_details") {

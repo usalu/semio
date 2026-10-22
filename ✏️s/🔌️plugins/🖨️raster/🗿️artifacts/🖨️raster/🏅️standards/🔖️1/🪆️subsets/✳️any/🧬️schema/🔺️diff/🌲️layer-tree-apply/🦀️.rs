@@ -366,6 +366,46 @@ fn validate_assets_delta<T>(assets: &semio_s_artifact_raster_raster_model::Raste
 }
 
 impl MutationDiff<RasterSnapshot> for RasterDiff {
+    fn retire_cold(self) {
+        let RasterDiff { schema: _, id: _, title: _, layers, assets: _, pixels: _ } = self;
+        if let Some(layers) = layers {
+            for insertion in layers.inserted {
+                semio_s_artifact_raster_raster_model::retire_raster_layer(insertion.layer);
+            }
+        }
+    }
+    fn retire_projection(projection: RasterSnapshot) {
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(projection);
+    }
+}
+
+impl protocol::ColdMutationDiff<RasterSnapshot> for RasterDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(id);
+        take!(title);
+        match (&mut self.layers, other.layers) {
+            (Some(dst), Some(src)) => absorb_layers_delta(dst, src),
+            (None, Some(src)) => self.layers = Some(src),
+            _ => {}
+        }
+        match (&mut self.assets, other.assets) {
+            (Some(dst), Some(src)) => {
+                dst.entries.extend(src.entries);
+            }
+            (None, Some(src)) => self.assets = Some(src),
+            _ => {}
+        }
+        self.pixels.extend(other.pixels);
+    }
+
     /// 🧬️ Applies the sparse delta to a snapshot, POPULATED maps included. `RasterOwnedMap::clone` is
     /// a real deep copy bounded by construction (64 entries over 8 pages) and needs no retained page
     /// authority, so the blanket "populated Raster maps require the retained initialization
@@ -375,7 +415,8 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
     /// document (🖨️raster's redo clause, measured 2026-09-20). Asset REMOVAL is not retained either:
     /// the map hands back its exact `(key, child)` pair and the emptied page backing is released
     /// explicitly, so the history arithmetic can undo and redo `remove-layer-asset` like any verb.
-    fn apply(&self, snapshot: &RasterSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterSnapshot> {
+    fn apply(&self, unpublished: &mut RasterSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let applied = (|snapshot: &RasterSnapshot| -> protocol::MutationApplyResult<RasterSnapshot> {
         Ok({
             if let Some(assets) = &self.assets {
                 validate_assets_delta(&snapshot.assets, assets).map_err(|error| error.under(["assets"]))?;
@@ -435,44 +476,10 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             }
             next
         })
-    }
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(schema);
-        take!(id);
-        take!(title);
-        match (&mut self.layers, other.layers) {
-            (Some(dst), Some(src)) => absorb_layers_delta(dst, src),
-            (None, Some(src)) => self.layers = Some(src),
-            _ => {}
-        }
-        match (&mut self.assets, other.assets) {
-            (Some(dst), Some(src)) => {
-                dst.entries.extend(src.entries);
-            }
-            (None, Some(src)) => self.assets = Some(src),
-            _ => {}
-        }
-        self.pixels.extend(other.pixels);
-    }
-
-    fn retire_cold(self) {
-        let RasterDiff { schema: _, id: _, title: _, layers, assets: _, pixels: _ } = self;
-        if let Some(layers) = layers {
-            for insertion in layers.inserted {
-                semio_s_artifact_raster_raster_model::retire_raster_layer(insertion.layer);
-            }
-        }
-    }
-
-    fn retire_projection(projection: RasterSnapshot) {
-        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(projection);
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 

@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/fem-3d:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/fem-3d:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/fem-3d:test"
+    "build": "repo run @semio-tech/fem-3d:build",
+    "check": "repo run @semio-tech/fem-3d:check",
+    "test": "repo run @semio-tech/fem-3d:test"
   },
   "exports": {
     ".": {

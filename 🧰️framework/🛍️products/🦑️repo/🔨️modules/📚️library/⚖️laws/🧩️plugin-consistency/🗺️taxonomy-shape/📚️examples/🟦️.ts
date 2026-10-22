@@ -163,7 +163,6 @@ export function policySemioArtifactExamplesBreaches(repoRoot: string, crates: re
   const rustExampleLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const ownerRoot = crate.ownerRel;
     const scopeId = crate.pluginId || policyStripEmoji(ownerRoot.split("/").pop() ?? "");
     const priority = policyNewSurfacePriority(crate, "medium");
@@ -251,7 +250,6 @@ export function policyComponentFileBreaches(repoRoot: string, crates: readonly P
   const artifactFacetDirs = new Set(taxonomy.artifactComponentDirs ?? []);
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const ownerRoot = crate.ownerRel;
 
     const walk = (relDir: string): void => {

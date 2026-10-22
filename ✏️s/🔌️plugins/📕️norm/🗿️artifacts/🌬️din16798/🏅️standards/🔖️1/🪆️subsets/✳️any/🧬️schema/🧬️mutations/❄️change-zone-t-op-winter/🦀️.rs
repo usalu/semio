@@ -12,15 +12,19 @@ pub struct ChangeZoneTOpWinter {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneTOpWinter where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_t_op_winter::ChangeZoneTOpWinter> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-t-op-winter", kind: "change-zone-t-op-winter", record: "ChangeZoneTOpWinter" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_zone_t_op_winter::diff::diff(self, base) }
-    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ crate::change_zone_t_op_winter::inverse::inverse(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change winter operative temperature of the zone", "Operative Temperatur im Winter für die Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeZoneTOpWinter where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_t_op_winter::ChangeZoneTOpWinter> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_zone_t_op_winter::diff::diff(self, base) }
+    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_zone_t_op_winter::inverse::inverse(self, base)? 
+    })
+}
 }
 
 //#region 🪢️Mounts

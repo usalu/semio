@@ -1,0 +1,315 @@
+import { existsSync, lstatSync, readFileSync } from "node:fs";
+import { join, posix } from "node:path";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { policyReaddirSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { POLICY_RS_COMPONENT_LEAF_NAME, policyLeadingEmojiPrefix, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { createFixedContractResolver, fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { type PathEmojiEntry, pathEmojiStatuteFindings } from "../../../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
+import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
+
+const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
+
+const POLICY_BANNED_STEM_SCAN_ROOTS = ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"] as const;
+
+const POLICY_VS16 = "\uFE0F";
+
+/**
+ * 🚫️ Bans emoji-stripped directory/file stems listed in `taxonomy.bannedNameStems` (e.g. `core`, `shared`).
+ * Medium during migration; Wave 4 flips to high once cores are dissolved.
+ * Stems in `taxonomy.bannedNameStemExemptions.subsetDirectories` stay legal as a direct child directory of a `subsetsDirName` owner; the files in `taxonomy.bannedNameStemExemptions.vendoredFiles` are installed third-party modules and never count.
+ */
+export function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const stems = new Set((taxonomy.bannedNameStems ?? []).map((s) => s.toLowerCase()));
+  if (stems.size === 0) return [];
+  const subsetExempt = new Set(taxonomy.bannedNameStemExemptions.subsetDirectories.map((s) => s.toLowerCase()));
+  const vendored = new Set(taxonomy.bannedNameStemExemptions.vendoredFiles);
+  const breaches: BreachRecord[] = [];
+  const walk = (relDir: string): void => {
+    const subsetOwner = relDir.split("/").at(-1) === taxonomy.subsetsDirName;
+    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
+      const childRel = `${relDir}/${entry.name}`;
+      const stem = policyStripEmoji(entry.name.replace(/\.(rs|ts|tsx|js|mjs|cjs|go|py|cs)$/, "")).toLowerCase();
+      if (stems.has(stem) && !(subsetOwner && entry.isDirectory && subsetExempt.has(stem)) && !vendored.has(childRel)) {
+        breaches.push({
+          id: `banned-name-stem-${childRel}`,
+          summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,
+          kind: "taxonomy/banned-name-stem",
+          scope: childRel,
+          priority: "high",
+          reason: "Clean mechanism: bannedNameStems forbids vague grab-bag folders (core/shared/util/…).",
+          solution: `Rename "${entry.name}" to a domain-specific concept folder and update #[path]/imports.`,
+        });
+      }
+      if (entry.isDirectory) walk(childRel);
+    }
+  };
+  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
+  return breaches;
+}
+
+/** 🧷️Whether an exact filename contract applies at this precise scope. */
+function policyFilenameContractApplies(repoRoot: string, relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>, resolver?: ReturnType<typeof createFixedContractResolver>): boolean {
+  const segments = relDir.split("/").filter(Boolean);
+  let packagesIndex = -1;
+  for (let index = segments.length - 1; index >= 0; index--) {
+    if (semanticDirectoryKindId(segments[index]!, taxonomy) === "packages") {
+      packagesIndex = index;
+      break;
+    }
+  }
+  const adjacentEcosystem = ([
+    ["Cargo.toml", "🦀️rust"],
+    ["go.mod", "🐹️go"],
+    ["package.json", "🟦️typescript"],
+  ] as const).find(([manifest]) => name === manifest || existsSync(join(repoRoot, relDir, manifest)))?.[1];
+  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : adjacentEcosystem;
+  const packageRoot = packagesIndex === segments.length - 2 || adjacentEcosystem !== undefined;
+  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["build-project-manifest"] : undefined;
+  for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
+    if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
+  }
+  const path = relDir ? `${relDir}/${name}` : name;
+  return (resolver?.filenameIdsForPath(path, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  }) ?? fixedFilenameContractIdsForPath(path, taxonomy, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  })).length > 0;
+}
+
+/** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
+function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: string): boolean {
+  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__";
+}
+
+/** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
+function policyEmojiEntryIsRenamable(repoRoot: string, relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
+  if (isDirectory) return true;
+  return !policyFilenameContractApplies(repoRoot, relDir, name, taxonomy);
+}
+
+/** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
+function policyHasLeadingEmoji(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  return prefix.length > 0 && /[^\x00-\x7f]/u.test(prefix);
+}
+
+/** 🎨️Whether a Latin-stemmed emoji identity is missing the required emoji presentation selector. */
+function policyEmojiPrefixNeedsVs16(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  const first = [...prefix][0] ?? "";
+  return policyHasLeadingEmoji(name) && /^[A-Za-z]/.test(name.slice(prefix.length)) && !/\p{Emoji_Presentation}/u.test(first) && !prefix.includes(POLICY_VS16);
+}
+
+/** ✅️Every Git-visible, non-reserved entry has a semantic canonical emoji identity unique among all siblings. */
+export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const result = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
+  if (result.exitCode !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
+  const inventory = result.stdout.toString().split("\0").filter(Boolean)
+    .map((path) => path.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC"))
+    .flatMap((path) => {
+      try { return [{ path, directory: lstatSync(join(repoRoot, path)).isDirectory() }]; } catch { return []; }
+    });
+  const files = inventory.filter((entry) => !entry.directory).map((entry) => entry.path);
+  const directories = new Set<string>();
+  for (const entry of inventory) {
+    if (entry.directory) directories.add(entry.path);
+    for (let parent = posix.dirname(entry.path); parent !== "." && parent !== ""; parent = posix.dirname(parent)) directories.add(parent);
+  }
+  const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => name.normalize("NFC").replaceAll(POLICY_VS16, "")));
+  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(policyStripEmoji(name));
+  const resolver = createFixedContractResolver(taxonomy);
+  const fixedDirectoryIds = new Map([...directories].map((path) => [path, resolver.directoryIdsForPath(path, {
+    parentDirectoryKindId: semanticDirectoryKindId(posix.basename(posix.dirname(path)), taxonomy) ?? undefined,
+  })] as const));
+  const fixedReservedSubtreeRoots = [...fixedDirectoryIds].filter(([, ids]) => ids.some((id) => taxonomy.fixedDirectoryContracts[id]?.descendants === "reserved")).map(([path]) => path);
+  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName) || fixedReservedSubtreeRoots.some((reservedRoot) => path.startsWith(`${reservedRoot}/`));
+  const directoryReserved = (path: string): boolean => (fixedDirectoryIds.get(path) ?? []).length > 0;
+  const entries: PathEmojiEntry[] = [
+    ...[...directories].map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(name) || directoryReserved(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, true, taxonomy) };
+    }),
+    ...files.map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "file", reserved: underReservedSubtree(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, false, taxonomy) || policyFilenameContractApplies(repoRoot, relDir, name, taxonomy, resolver) };
+    }),
+  ].filter((entry) => !taxonomyRelativePathIsExcluded(entry.path, taxonomy));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return pathEmojiStatuteFindings(entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities).map((finding): BreachRecord => {
+    const entity = byPath.get(finding.path)?.nodeKind === "directory" ? "folder" : "file";
+    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique", multiple: "multiple-emojis", "reserved-emoji": "reserved-name-has-emoji" }[finding.kind];
+    const detail = finding.kind === "duplicate" ? ` duplicates sibling "${finding.sibling}"` : finding.emoji ? ` uses "${finding.emoji}"` : "";
+    return {
+      id: `path-emoji-${finding.kind}-${finding.path}`,
+      summary: `"${finding.path}" breaches ${label}${detail}`,
+      kind: `${entity}/name/${label}`,
+      scope: finding.path,
+      priority: "high",
+      reason: "Every non-reserved file and folder has exactly one handpicked, meaningful emoji, unique among siblings. Reserved filenames remain literal and unprefixed.",
+      solution: finding.kind === "reserved-emoji" ? `Restore the literal reserved basename of "${posix.basename(finding.path)}" and update its exact references.` : `Handpick one meaningful sibling-unique emoji for "${posix.basename(finding.path)}" and update only resolved path references.`,
+    };
+  });
+}
+
+/**
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and every REQUIRED facet directly
+ * at its root. `pluginChildDirs` is the ADMITTED set (`policyPluginClosedShapeBreaches` reads it, and it now
+ * admits the plugin-root `🧬️schema` scope); `pluginRequiredChildDirs` is the set every plugin owes.
+ */
+export function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const children = taxonomy.pluginRequiredChildDirs;
+  const pluginsRoot = "✏️s/🔌️plugins";
+  const breaches: BreachRecord[] = [];
+  for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!entry.isDirectory) continue;
+    const ownerRel = `${pluginsRoot}/${entry.name}`;
+    const nestedContractRel = `${ownerRel}/🔌️plugin`;
+    if (existsSync(join(repoRoot, nestedContractRel))) {
+      breaches.push({
+        id: `plugin-root-nested-${ownerRel}`,
+        summary: `"${ownerRel}" contains a redundant 🔌️plugin/ directory`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "Plugin contracts and facets are direct children of the plugin root.",
+        solution: `Move ${nestedContractRel}/${POLICY_RS_COMPONENT_LEAF_NAME} and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
+      });
+    }
+    if (!existsSync(join(repoRoot, ownerRel, (POLICY_RS_COMPONENT_LEAF_NAME)))) {
+      breaches.push({
+        id: `plugin-root-leaf-${ownerRel}`,
+        summary: `"${ownerRel}" is missing root ${POLICY_RS_COMPONENT_LEAF_NAME}`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "The plugin root must have a leaf component that returns Plugin via Plugin::builder.",
+        solution: `Add ${ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME} exporting pub fn plugin() -> Plugin.`,
+      });
+    }
+    for (const child of children) {
+      const childLeaf = join(repoRoot, ownerRel, child, (POLICY_RS_COMPONENT_LEAF_NAME));
+      if (!existsSync(childLeaf)) {
+        breaches.push({
+          id: `plugin-root-child-${ownerRel}/${child}`,
+          summary: `"${ownerRel}" is missing direct facet ${child}/${POLICY_RS_COMPONENT_LEAF_NAME}`,
+          kind: "taxonomy/plugin-root-shape",
+          scope: ownerRel,
+          priority: "high",
+          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginRequiredChildDirs).`,
+          solution: `Add ${ownerRel}/${child}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🏗️ Bans `semio_plugin!` and `PluginBundle::new` outside the SDK; prefers `Plugin::builder(`.
+ * Medium until Wave 3 finishes migrating all plugins.
+ */
+export function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const sdkRel = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/";
+  for (const crate of crates) {
+    if (crate.role !== "plugin" && crate.role !== "extension") continue;
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    if (crate.libRelPath.replaceAll("\\", "/").startsWith(sdkRel)) continue;
+    const content = readFileSync(abs, "utf8");
+    if (content.includes("semio_plugin!")) {
+      breaches.push({
+        id: `plugin-builder-macro-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder at the plugin root`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: ("semio_plugin! is retired; plugin identity lives in the root " + POLICY_RS_COMPONENT_LEAF_NAME + " via typestate PluginBuilder."),
+        solution: ("Move registration into the plugin-root " + POLICY_RS_COMPONENT_LEAF_NAME + " using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin)."),
+      });
+    }
+    if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {
+      breaches.push({
+        id: `plugin-builder-bundle-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still references PluginBundle — use Plugin::builder / Plugin::new`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: "PluginBundle was renamed to Plugin; registration goes through Plugin::builder.",
+        solution: "Replace PluginBundle with Plugin::builder(...).",
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type`
+ * identifier fragment named "protocol" may exist under a migrated plugin — `📡️spr` is the only accepted
+ * name for that concept going forward. Scoped to `role = "plugin"` owners on purpose: the rename is a
+ * plugin-tree contract today, while the framework's own `📡️protocol` kernel module is renamed by the
+ * os-kernel merge (plan wave W8c) — flagging it here would report a rename that is scheduled, not late.
+ */
+export function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const crate of crates) {
+    if (crate.role !== "plugin") continue;
+    const ownerRoot = crate.ownerRel;
+    const pluginId = crate.pluginId;
+
+    const walk = (relDir: string): void => {
+      for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+        const childRel = `${relDir}/${entry.name}`;
+        const stem = policyStripEmoji(entry.name.replace(/\.rs$/, ""));
+        if (POLICY_PROTOCOL_SEGMENT_RE.test(stem)) {
+          breaches.push({
+            id: `spr-naming-path-${childRel}`,
+            summary: `"${childRel}" uses the retired "protocol" name — the taxonomy concept is "spr" (state patch representation)`,
+            kind: "taxonomy/spr-naming",
+            scope: pluginId,
+            priority: "medium",
+            reason: "Discovery contract: no 📡️protocol path segment may remain under a migrated plugin; 📡️spr is the only accepted name.",
+            solution: `Rename "${entry.name}" to its 📡️spr equivalent.`,
+          });
+        }
+        if (entry.isDirectory) walk(childRel);
+      }
+    };
+    walk(ownerRoot);
+
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    const content = readFileSync(abs, "utf8");
+    const identRe = /\b(?:mod|struct|enum|type)\s+(\w*[Pp]rotocol\w*)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = identRe.exec(content))) {
+      breaches.push({
+        id: `spr-naming-ident-${crate.libRelPath}-${m.index}`,
+        summary: `"${crate.libRelPath}" declares "${m[1]}" — identifiers naming the protocol concept must say "Spr"/"spr" instead`,
+        kind: "taxonomy/spr-naming",
+        scope: pluginId,
+        line: policyLineOfIndex(content, m.index),
+        priority: "medium",
+        reason: "Discovery contract: no protocol-named identifier fragment tied to the app protocol module may remain under a migrated plugin.",
+        solution: `Rename "${m[1]}" to its 📡️spr equivalent.`,
+      });
+    }
+  }
+  return breaches;
+}

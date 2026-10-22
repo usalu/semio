@@ -534,28 +534,20 @@ func TestPurgeAllOversizedTicketArtifacts(t *testing.T) {
 	}
 }
 
-func TestResolvePlanSourceCursorPlanID(t *testing.T) {
+func TestResolvePlanSourceRefusesCursorPlanID(t *testing.T) {
 	tmp := t.TempDir()
 	planDir := filepath.Join(tmp, ".cursor", "plans")
 	if err := os.MkdirAll(planDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	id := "fe75d494"
-	planFile := filepath.Join(planDir, "kit_store_"+id+".plan.md")
-	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(planDir, "kit_store_"+id+".plan.md"), []byte("plan"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	sandbox.BindRoot(t, tmp)
 
-	got, err := ResolvePlanSource(NewFileTicketStore(), HostPlanRoots(), providers.McpClientCursor, id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.IsDirectory {
-		t.Fatal("expected file")
-	}
-	if filepath.Clean(got.Path) != filepath.Clean(planFile) {
-		t.Fatalf("got %q want %q", got.Path, planFile)
+	if got, err := ResolvePlanSource(NewFileTicketStore(), HostPlanRoots(), providers.McpClientCursor, id); err == nil {
+		t.Fatalf("a client directory of the repository must not resolve a plan, got %q", got.Path)
 	}
 }
 
@@ -646,28 +638,16 @@ func TestMoveTicketPlanIntoFolderSpecDir(t *testing.T) {
 	}
 }
 
-func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
+func TestApplyTicketPlanFromIDsRefusesCursor(t *testing.T) {
 	tmp := t.TempDir()
-	planDir := filepath.Join(tmp, ".cursor", "plans")
-	if err := os.MkdirAll(planDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	id := "fe75d494"
-	planFile := filepath.Join(planDir, "kit_store_backbone_generalization_"+id+".plan.md")
-	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	sandbox.BindRoot(t, tmp)
 
 	ticket := &model.Ticket{}
-	if err := ApplyTicketPlanFromIDs(NewFileTicketStore(), HostPlanRoots(), ticket, providers.McpClientCursor, id, ""); err != nil {
-		t.Fatal(err)
+	if err := ApplyTicketPlanFromIDs(NewFileTicketStore(), HostPlanRoots(), ticket, providers.McpClientCursor, "fe75d494", ""); err == nil {
+		t.Fatal("cursor carries no plan attachment")
 	}
-	if ticket.Plan == nil || ticket.Plan.ID != id || ticket.Plan.Client != "cursor" {
+	if ticket.Plan != nil {
 		t.Fatalf("plan: %+v", ticket.Plan)
-	}
-	if filepath.Clean(ticket.Plan.Source) != filepath.Clean(planFile) {
-		t.Fatalf("source %q want %q", ticket.Plan.Source, planFile)
 	}
 }
 
@@ -780,7 +760,7 @@ func TestPostTicketPlanCommentLive(t *testing.T) {
 	if os.Getenv("REPO_LIVE_GH") != "1" {
 		t.Skip("set REPO_LIVE_GH=1 to run live GitHub plan comment test")
 	}
-	planFile := filepath.Join(workspace.GetRootDir(), ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")
+	planFile := filepath.Join(workspace.GetRootDir(), filepath.FromSlash(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️22/ARCHIVED-CURSOR-PLANS-WITHOUT-TICKET/post_plan_to_issue_c256e28e.plan.md"))
 	if _, err := os.Stat(planFile); err != nil {
 		t.Skip("plan file missing")
 	}
@@ -807,5 +787,26 @@ func TestPostTicketPlanCommentLive(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "post_plan_to_issue_c256e28e.plan.md") {
 		t.Fatalf("issue comment missing plan filename: %q", stdout)
+	}
+}
+
+func TestTicketDocumentsAreReadOnlyInTheCurrentSchema(t *testing.T) {
+	text := `{"title":"T","status":"closed","prompt":"retired description","agents":[{"session":"agent-session"}],"sessions":["kept",{"session":"object-session","client":"x"}],"interactions":[{"kind":"ticket.open","date":"2026-02-11 20:37:49","author":"a","system":"mac","client":"c","checkpoint":""}]}`
+	ticket, err := DecodeTicketDocument(text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ticket.Description != "" || len(ticket.Agents) != 0 {
+		t.Fatalf("a retired prompt or agents member must not be read: %+v", ticket)
+	}
+	if len(ticket.Sessions) != 1 || ticket.Sessions[0] != "kept" {
+		t.Fatalf("only text session ids are read, got %v", ticket.Sessions)
+	}
+	if len(ticket.Interactions) != 1 || ticket.Interactions[0].Date != "2026-02-11 20:37:49" {
+		t.Fatalf("interactions are read as written, got %+v", ticket.Interactions)
+	}
+	var decoded model.Ticket
+	if err := json.Unmarshal([]byte(text), &decoded); err == nil {
+		t.Fatalf("the model decoder must refuse an object session, got %+v", decoded)
 	}
 }

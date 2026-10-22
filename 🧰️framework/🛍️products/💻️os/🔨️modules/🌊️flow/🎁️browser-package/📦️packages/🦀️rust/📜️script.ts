@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -48,27 +48,27 @@ class TestScript extends BundleScript {
 /** 🎟️ Runs original session custody examples with independent UTF8 and patch oracles. */
 class SessionSourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryTestCommand(process.execPath, ["test", join(import.meta.dir, "../../../🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
+    await runRepositoryTestCommand(process.execPath, ["test", join(import.meta.dirname, "../../../🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
   }
 }
 /** 📥️ Preserves original Host source semantics before normal producer mutation. */
 class EvaluationSourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryTestCommand(process.execPath, ["test", join(import.meta.dir, "../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
+    await runRepositoryTestCommand(process.execPath, ["test", join(import.meta.dirname, "../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
   }
 }
 
 /** 🌱️ Verifies original builtin seeds with independent immutable source oracles. */
-class EvaluationSeedsTestScript extends BundleScript {async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+class EvaluationSeedsTestScript extends BundleScript {async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dirname,"../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
 /** 🧵️ Validates original source/snapshot/Work custody with independent semantic oracles. */
-class EvaluationWorkTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",... ["../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts","../../../../🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts"].map(path=>join(import.meta.dir,path))],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+class EvaluationWorkTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",... ["../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts","../../../../🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts"].map(path=>join(import.meta.dirname,path))],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
 /** 🔎️ Validates original read, preview wire and normal tick intake against independent neutral oracles. */
 /** 🧯️ Tests the defining original extension SDK typed source and whole failure contract. */
-class SdkSourceTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../../../🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+class SdkSourceTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dirname,"../../../🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
-class SourceReadTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../../../🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+class SourceReadTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dirname,"../../../🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
@@ -125,6 +125,6 @@ class OriginalVcsClosureScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-evaluation-seeds",EvaluationSeedsTestScript).register("test-evaluation-work",EvaluationWorkTestScript).register("test-source-read",SourceReadTestScript).register("test-sdk-source",SdkSourceTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
+const router = new ScriptRouter(import.meta.dirname).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-evaluation-seeds",EvaluationSeedsTestScript).register("test-evaluation-work",EvaluationWorkTestScript).register("test-source-read",SourceReadTestScript).register("test-sdk-source",SdkSourceTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

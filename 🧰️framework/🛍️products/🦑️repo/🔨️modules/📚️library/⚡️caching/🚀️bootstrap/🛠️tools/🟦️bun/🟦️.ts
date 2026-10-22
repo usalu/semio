@@ -15,6 +15,7 @@ import {readNativeCallerAuthorityV1} from "../../../../📦️packages/🟦️ty
 import manifestSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 const manifest=manifestSchema.definitions.Release.const;
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { runtimeExecutableV1, runtimeIdentityV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };
 
@@ -53,10 +54,10 @@ export function bunArchiveExecutable(archive: Buffer, member: string): Buffer {
 export function prepareBun(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>prepareBunOwnedV1(workspace,version,store,actual,publisher));}
 async function prepareBunOwnedV1(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=control.signal;signal.throwIfAborted();
-  if (process.versions.bun === version) return process.execPath;
+  if (runtimeIdentityV1().id === manifest.runtime && runtimeIdentityV1().version === version) return runtimeExecutableV1();
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
   const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && !report?.header?.glibcVersionRuntime);
-  const base = requireNativeStoragePathV1(store.root,join(store.root,"bun")), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? "bun.exe" : "bun");
+  const base = requireNativeStoragePathV1(store.root,join(store.root,manifest.runtime)), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? manifest.runtime + ".exe" : manifest.runtime);
   for (let current = base; ; current = dirname(current)) {
     try { const stat = lstatSync(current); if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Invalid Bun directory: ${current}`); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
@@ -84,7 +85,7 @@ async function prepareBunOwnedV1(workspace:string,version:string,store:Repositor
       try { for (let read = await reader.read(); !read.done; read = await reader.read()) { checkResourceLeaseControl(control); size += read.value.length; if (size > row.bytes) throw new Error("Bun archive exceeds its pinned size"); const chunk = Buffer.from(read.value); chunks.push(chunk); hash.update(chunk); } }
       catch (error) { await reader.cancel().catch(() => undefined); throw error; }
       if (size !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Bun archive checksum mismatch");
-      const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/bun${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? "bun.exe" : "bun");
+      const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/${manifest.runtime}${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? manifest.runtime + ".exe" : manifest.runtime);
       writeFileSync(staged, payload, { flag: "wx" }); chmodSync(staged, 0o755);
       if ((await captureOwnedCommandV1(staged,["--version"],staging,{control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun release version mismatch");
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));

@@ -25,7 +25,7 @@ pub fn print_expr(expr: &ExprValue) -> String {
 
 fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
     let (body, own_prec) = match expr {
-        ExprValue::Num(v) => (format_f64(*v), 255),
+        ExprValue::Num(v) => (format_f64(*v), if v.is_sign_negative() && !v.is_nan() { 3 } else { 255 }),
         ExprValue::Var(name) => (expression_name(name), 255),
         ExprValue::Call(name, args) => {
             let joined = args.iter().map(|a| print_expr_prec(a, 0)).collect::<Vec<_>>().join(", ");

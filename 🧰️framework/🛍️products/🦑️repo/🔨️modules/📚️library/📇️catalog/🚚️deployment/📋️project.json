@@ -12,7 +12,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment",
-        "command": "bun ./📜️script.ts contract-check"
+        "command": "repo ./📜️script.ts contract-check"
       }
     }
   }

@@ -1,0 +1,100 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "rows",
+  "refusals"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "rows": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "cls"
+    ],
+    "properties": {
+     "path": {
+      "type": "string",
+      "minLength": 1
+     },
+     "cls": {
+      "enum": [
+       "keep",
+       "drop"
+      ]
+     }
+    }
+   }
+  },
+  "refusals": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "mutate",
+     "expected"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "expected": {
+      "enum": [
+       "ok",
+       "error"
+      ]
+     },
+     "mutate": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "path"
+       ],
+       "properties": {
+        "path": {
+         "type": "array",
+         "items": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "integer"
+           }
+          ]
+         }
+        },
+        "value": {},
+        "fromPath": {
+         "type": "array",
+         "items": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "integer"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

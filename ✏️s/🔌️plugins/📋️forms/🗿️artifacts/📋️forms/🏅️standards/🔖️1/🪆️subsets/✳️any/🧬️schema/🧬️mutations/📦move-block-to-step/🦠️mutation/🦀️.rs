@@ -28,6 +28,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-step", record: "MovedBlockToStep" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.step_id.clone(), self.block_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for MoveBlockToStep
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<MoveBlockToStep>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         crate::standards::v1::subsets::any::schema::mutations::move_block_to_step::diff::diff_move_block_to_step(self, base)
     }
@@ -37,11 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.step_id.clone(), self.block_id.clone()]
-    }
 }
 //#endregion 🚚️MoveBlockToStep

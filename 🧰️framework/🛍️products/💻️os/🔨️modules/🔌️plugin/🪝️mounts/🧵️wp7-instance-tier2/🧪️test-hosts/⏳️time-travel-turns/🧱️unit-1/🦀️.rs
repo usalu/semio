@@ -17,7 +17,7 @@ use store::Mutation;
 use store::MutationDiff;
 use protocol::OpBinary;
 use protocol::OpText;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_time_travel::TimeTravelOwners;
 use semio_framework_value_derive::ToValue;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;

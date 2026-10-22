@@ -2,11 +2,11 @@
   "name": "@semio-tech/framework-rs",
   "private": true,
   "scripts": {
-    "test-source-projection": "bun --cwd \"../../..\" repo run @semio-tech/framework-rs:test-source-projection",
-    "test-snapshot-receiving-source": "bun --cwd \"../../..\" repo run @semio-tech/framework-rs:test-snapshot-receiving-source",
-    "test-snapshot-receiving-native": "bun --cwd \"../../..\" repo run @semio-tech/framework-rs:test-snapshot-receiving-native",
-    "test-directory-discovery": "bun --cwd \"../../..\" repo run @semio-tech/framework-rs:test-directory-discovery",
-    "test-command-ingress-consumer": "bun --cwd \"../../..\" repo run @semio-tech/framework-rs:test-command-ingress-consumer"
+    "test-source-projection": "repo run @semio-tech/framework-rs:test-source-projection",
+    "test-snapshot-receiving-source": "repo run @semio-tech/framework-rs:test-snapshot-receiving-source",
+    "test-snapshot-receiving-native": "repo run @semio-tech/framework-rs:test-snapshot-receiving-native",
+    "test-directory-discovery": "repo run @semio-tech/framework-rs:test-directory-discovery",
+    "test-command-ingress-consumer": "repo run @semio-tech/framework-rs:test-command-ingress-consumer"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

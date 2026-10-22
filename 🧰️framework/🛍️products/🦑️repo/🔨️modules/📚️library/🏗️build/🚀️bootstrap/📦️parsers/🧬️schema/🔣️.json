@@ -189,6 +189,140 @@
           }
         }
       }
+    },
+    "InstalledParserEntries": {
+      "const": [
+        {
+          "name": "typescript",
+          "entry": "lib/typescript.js"
+        },
+        {
+          "name": "@iarna/toml",
+          "entry": "toml.js"
+        }
+      ]
+    },
+    "InstalledParserEntryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "parser",
+        "manifest",
+        "accepted",
+        "entry"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "parser": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "main": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "entry": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "InstalledParserPhysicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "parser",
+        "kind",
+        "accepted",
+        "stable",
+        "inside"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "parser": {
+          "enum": [
+            "typescript",
+            "@iarna/toml"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "missing",
+            "symlink"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "stable": {
+          "type": "boolean"
+        },
+        "inside": {
+          "type": "boolean"
+        }
+      }
+    },
+    "InstalledParserBirthWitness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "ingress",
+        "owner",
+        "maximumElapsedMilliseconds",
+        "deadlineEpochMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "ingress": {
+          "const": "birth-owning-program"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   }
 }

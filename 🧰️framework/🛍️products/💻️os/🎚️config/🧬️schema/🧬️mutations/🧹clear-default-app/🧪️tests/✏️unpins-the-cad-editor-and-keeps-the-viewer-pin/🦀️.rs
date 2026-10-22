@@ -43,7 +43,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 #[test]
 fn unpins_the_editor_and_leaves_the_viewer_pin_standing() {
     let base = before();
-    let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
+    let outcome = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::diff(&mutation(), &base);
     let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("clear-default-app applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the unpinned preferences differ from the committed after-snapshot");
     assert_eq!(applied.defaults.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: exactly one pin is dropped");
@@ -56,13 +56,13 @@ fn unpins_the_editor_and_leaves_the_viewer_pin_standing() {
 #[test]
 fn repinning_the_cleared_app_restores_before() {
     let base = before();
-    let inverse = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: clearing an occupied coordinate proposes exactly one undo step");
     assert!(matches!(inverse[0], OpeningConfigMutation::SetDefaultApp(_)), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the undo of a clear is a set, carrying the prior app back");
-    let forward = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
+    let forward = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::diff(&mutation(), &base);
     let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward clear-default-app applies");
     for step in &inverse {
-        let undo = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(step, &snapshot);
+        let undo = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::diff(step, &snapshot);
         snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the set-default-app inverse step applies");
     }
     assert_eq!(snapshot, base, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: re-pinning the cleared editor did not restore the before-preferences");
@@ -89,7 +89,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: this fixture declares an applied outcome");
-    let produced = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
+    let produced = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: clearing a real pin must not raise mutation.no-op");
     assert!(produced.messages().is_empty(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: an accepted clear emits no diagnostics");
 }
@@ -97,7 +97,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
+    let outcome = <OpeningConfigMutation as protocol::ColdMutation<OpeningPreferences>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: produced diff differs from the committed 🔺️diff/🔣️.json");

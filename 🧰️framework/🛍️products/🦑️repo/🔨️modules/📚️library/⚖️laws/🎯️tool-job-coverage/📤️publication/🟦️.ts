@@ -36,7 +36,7 @@ export function toolJobStoreSource(root: string): string {
     "⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs",
     "⚙️engine/🧱️store-components/📥️lifted/🏪️store/📒️store-log-operations/🦀️.rs",
     "🫧️ephemeral/📤️ephemeral-one-item-publication/🦀️.rs",
-    "🫧️ephemeral/👥️presence-store-and-peers-publication/🦀️.rs",
+    "👥️presence/👥️presence-store-and-peers-publication/🦀️.rs",
     "🫧️ephemeral/🌫️transient-and-interaction-stores/🦀️.rs",
   ].map((file) => policyReadFileSafe(root, `${STORE}/${file}`)).join("\n");
 }

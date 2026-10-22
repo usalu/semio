@@ -7,14 +7,15 @@
     "abortFreeDiskGb": 20,
     "minAvailableMemoryGb": 6,
     "loadWarnPerCore": 2,
-    "loadFailPerCore": 10,
     "heartbeatSeconds": 60,
     "snapshotSeconds": 1800,
     "snapshotTimeoutSeconds": 900,
     "staggerSeconds": 20,
     "terminateGraceSeconds": 30,
     "deadlineHours": 14,
-    "cliProbeSeconds": 120
+    "cliProbeSeconds": 120,
+    "failAvailableMemoryGb": 2,
+    "verifyTargetSeconds": 1800
   },
   "playwright": {
     "expectedChromium": "1248",
@@ -112,7 +113,12 @@
             "timeoutSeconds": 10800
           }
         ]
-      }
+      },
+      "verifyTargets": [
+        "@semio-tech/semio-tech-play:serve",
+        "@semio-tech/semio-tech-play:test-e2e",
+        "@semio-tech/semio-tech-play:prepare-prototype"
+      ]
     },
     "demo": {
       "label": "Mit Bestand Demonstrator",
@@ -255,7 +261,12 @@
             "timeoutSeconds": 3600
           }
         ]
-      }
+      },
+      "verifyTargets": [
+        "@semio-tech/mit-bestand-demonstrator:serve",
+        "@semio-tech/mit-bestand-demonstrator:test-e2e",
+        "@semio-tech/mit-bestand-demonstrator:prepare-prototype"
+      ]
     },
     "course": {
       "label": "Architecture Course",
@@ -394,7 +405,12 @@
           }
         ],
         "probe": []
-      }
+      },
+      "verifyTargets": [
+        "@teaching/architecture-course:test-e2e",
+        "@teaching/architecture-course:dev",
+        "@teaching/architecture-course:dev-site"
+      ]
     }
   }
 }

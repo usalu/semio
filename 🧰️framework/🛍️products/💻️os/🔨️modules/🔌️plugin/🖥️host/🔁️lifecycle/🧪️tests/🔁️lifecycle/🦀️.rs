@@ -43,7 +43,7 @@ fn structured_guest_fault_survives_wit_owned_and_async_channels() {
             assert_eq!(decoded.code, fault.code);
             assert_eq!(decoded.retryable, fault.retryable);
             assert_eq!(retryable_lifecycle_turn(&transported, &events), expected, "{}", row["id"]);
-            let (sender, mut receiver) = semio_framework_async::oneshot::channel::<Result<TurnResult, TurnFault>>();
+            let (sender, mut receiver) = semio_framework_async_sync::oneshot::channel::<Result<TurnResult, TurnFault>>();
             sender.send(Err(transported)).expect("typed poll oneshot");
             let received = receiver.try_recv().unwrap().unwrap_err();
             assert_eq!(retryable_lifecycle_turn(&received, &events), expected);

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyDrawing`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_drawing::ApplyDrawing>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Drawing(b) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyDrawing { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Drawing(b) => <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyDrawing { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

@@ -47,7 +47,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-staged-payload-funding"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-staged-payload-funding"
       },
       "metadata": {
         "semio": {
@@ -71,7 +71,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-retained-pack-encoding"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-retained-pack-encoding"
       },
       "metadata": {
         "semio": {
@@ -95,7 +95,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-window-utility-native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-window-utility-native"
       },
       "metadata": {
         "semio": {
@@ -112,7 +112,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-source-projection",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-source-projection",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -131,7 +131,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-directory-discovery",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-directory-discovery",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -157,7 +157,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-action-choices"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-action-choices"
       }
     },
     "test-tool-run-actions": {
@@ -173,7 +173,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-tool-run-actions"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-tool-run-actions"
       }
     },
     "test-history-edit-actions": {
@@ -189,7 +189,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-edit-actions"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-history-edit-actions"
       }
     },
     "test-mutation-inputs": {
@@ -205,7 +205,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-mutation-inputs"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-mutation-inputs"
       }
     },
     "test-host-effect-invocation": {
@@ -221,7 +221,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-host-effect-invocation"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-host-effect-invocation"
       }
     },
     "test-snapshot-sqlite": {
@@ -237,7 +237,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-snapshot-sqlite"
       }
     },
     "test-snapshot-sqlite-native": {
@@ -253,7 +253,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-snapshot-sqlite native"
       }
     },
     "test-core-modules": {
@@ -269,7 +269,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-core-modules",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-core-modules",
         "forwardAllArgs": true
       }
     },
@@ -286,7 +286,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-deflate-encoding",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-deflate-encoding",
         "forwardAllArgs": true
       }
     },
@@ -303,7 +303,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-wire-retirement-source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-wire-retirement-source"
       }
     },
     "test-wire-retirement-native": {
@@ -319,7 +319,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-wire-retirement-native",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-wire-retirement-native",
         "forwardAllArgs": true
       }
     },
@@ -336,7 +336,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -353,7 +353,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-package-descriptor-value-codec"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-package-descriptor-value-codec"
       }
     },
     "lint": {
@@ -368,7 +368,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts lint",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts lint",
         "forwardAllArgs": true
       }
     },
@@ -377,7 +377,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts generate",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -397,7 +397,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -406,7 +406,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts check",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -423,7 +423,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-fixture-ownership-source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-fixture-ownership-source"
       }
     },
     "test-snapshot-sqlite-source": {
@@ -439,7 +439,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-snapshot-sqlite source"
       }
     },
     "test-artifact-kind-source": {
@@ -455,7 +455,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-artifact-kind-source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-artifact-kind-source"
       }
     },
     "test-command-ingress-consumer": {
@@ -464,7 +464,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-command-ingress-consumer",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-command-ingress-consumer",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -494,7 +494,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-progress"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-history-progress"
       }
     },
     "test-snapshot-receiving-source": {
@@ -510,7 +510,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-snapshot-receiving-source",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-snapshot-receiving-source",
         "forwardAllArgs": true
       }
     },
@@ -527,7 +527,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-argument-retirement-native",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-argument-retirement-native",
         "forwardAllArgs": true
       }
     },
@@ -546,7 +546,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-original-factory-admission"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-original-factory-admission"
       }
     },
     "test-original-factory-admission-source": {
@@ -564,7 +564,7 @@
       ],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-original-factory-admission source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- repo ./📜️script.ts test-original-factory-admission source"
       }
     }
   }

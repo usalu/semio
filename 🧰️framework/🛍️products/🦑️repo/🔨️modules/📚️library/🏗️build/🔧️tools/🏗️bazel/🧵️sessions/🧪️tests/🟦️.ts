@@ -8,8 +8,10 @@ import {join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
 import fixtureSchema from "./🧫️fixtures/🧬️schema.json";
 import componentSchema from "../🧬️schema/🔣️.json";
-import {BAZEL_SESSION_POLICY_V1 as policy,acquireBazelSessionV1,bazelNestedServersV1,bazelRepositoryContentsV1,bazelRestoreResourcesV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionLanguageV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionStatusV1,bazelSessionWorkspaceV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServersV1,planBazelSessionGarbageV1,rankBazelSlotsV1,renderBazelSessionStatusV1,withBazelSessionV1,type BazelSlotPortV1,type BazelSlotStateV1} from "../🟦️.ts";
+import {BAZEL_SESSION_POLICY_V1 as policy,acquireBazelSessionV1,bazelNestedServersV1,bazelRepositoryContentsV1,bazelRestoreResourcesV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionStatusV1,bazelSessionWorkspaceV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServersV1,planBazelSessionGarbageV1,rankBazelSlotsV1,renderBazelSessionStatusV1,withBazelSessionV1,type BazelSlotPortV1,type BazelSlotStateV1} from "../🟦️.ts";
 import {bazelSlotPortV1,collectBazelSessionsV1,readBazelInventoryV1,removeBazelTreeV1,stopBazelServerV1} from "../🔌️port/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(componentSchema,"sessions.json");
 const key=(index:number)=>index.toString(16).padStart(16,"0"),abort=()=>new AbortController().signal;
@@ -57,22 +59,22 @@ test("the number of servers can be overridden explicitly and anything unreadable
 test("a nested session gets overflow slots so it never waits for the slot its parent holds",async()=>{
  const base=planBazelServersV1(fixture.plans[0]!.host,fixture.plans[0]!.memory),nested=bazelNestedServersV1(base,true);
  expect(bazelNestedServersV1(base,false)).toBe(base);expect(nested.slots).toBe(base.slots+policy.servers.nestedExtra);expect(Math.min(99,nested.slots)).toBe(nested.slots);
- const memory=memoryPort(),parents=await Promise.all(Array.from({length:base.slots},(_,index)=>acquireBazelSessionV1(memory.port,base,{key:key(index),signal:abort()})));
- const child=await acquireBazelSessionV1(memory.port,nested,{key:key(99),signal:abort(),timeoutMilliseconds:0});expect(parents.some(row=>row.slot===child.slot)).toBe(false);expect(Number(child.slot.slice(1))).toBeGreaterThanOrEqual(base.slots);
+ const memory=memoryPort(),parents=await Promise.all(Array.from({length:base.slots},(_,index)=>acquireBazelSessionV1(memory.port,base,{language:"en",key:key(index),signal:abort()})));
+ const child=await acquireBazelSessionV1(memory.port,nested,{language:"en",key:key(99),signal:abort(),timeoutMilliseconds:0});expect(parents.some(row=>row.slot===child.slot)).toBe(false);expect(Number(child.slot.slice(1))).toBeGreaterThanOrEqual(base.slots);
  await child.release();for(const parent of parents)await parent.release();
 });
 
 test("long-running service sessions pin service slots only: any number of dev servers up to the service bound never block a build, and the two queues are independent",async()=>{
  const memory=memoryPort(),plan={slots:3,services:4};
- const services=await Promise.all(Array.from({length:plan.services},(_,index)=>acquireBazelSessionV1(memory.port,plan,{key:key(index),signal:abort(),kind:"service",timeoutMilliseconds:0})));
+ const services=await Promise.all(Array.from({length:plan.services},(_,index)=>acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(index),signal:abort(),kind:"service",timeoutMilliseconds:0})));
  expect(services.map(row=>row.slot)).toEqual(["d0","d1","d2","d3"]);
- const builds=await Promise.all(Array.from({length:plan.slots},(_,index)=>acquireBazelSessionV1(memory.port,plan,{key:key(10+index),signal:abort(),timeoutMilliseconds:0})));
+ const builds=await Promise.all(Array.from({length:plan.slots},(_,index)=>acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(10+index),signal:abort(),timeoutMilliseconds:0})));
  expect(builds.map(row=>row.slot)).toEqual(["s0","s1","s2"]);expect(memory.lines.some(line=>line.includes("waiting"))).toBe(false);
- const controller=new AbortController(),fifth=acquireBazelSessionV1(memory.port,plan,{key:key(20),signal:controller.signal,kind:"service"});void fifth.catch(()=>undefined);
- await builds[0]!.release();const next=await acquireBazelSessionV1(memory.port,plan,{key:key(21),signal:abort(),timeoutMilliseconds:0});expect(next.slot).toBe("s0");
+ const controller=new AbortController(),fifth=acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(20),signal:controller.signal,kind:"service"});void fifth.catch(()=>undefined);
+ await builds[0]!.release();const next=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(21),signal:abort(),timeoutMilliseconds:0});expect(next.slot).toBe("s0");
  expect(memory.lines.some(line=>line==="[bazel] all 4 Bazel service slots are in use; waiting for one (0 s)")).toBe(true);expect(bazelSessionMessageV1("waiting-service",{slots:4,seconds:1},"de")).toBe("[bazel] alle 4 Bazel-Dienst-Slots sind belegt; warte auf einen freien Slot (1 s)");
  controller.abort(Error("stop waiting"));await expect(fifth).rejects.toThrow("stop waiting");expect(memory.gates()).toBe(0);
- await services[0]!.release();const sixth=await acquireBazelSessionV1(memory.port,plan,{key:key(22),signal:abort(),kind:"service",timeoutMilliseconds:0});expect(sixth.slot).toBe("d0");
+ await services[0]!.release();const sixth=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(22),signal:abort(),kind:"service",timeoutMilliseconds:0});expect(sixth.slot).toBe("d0");
  for(const row of [...services.slice(1),...builds.slice(1),next,sixth])await row.release();expect(memory.held.size).toBe(0);
  expect(new Set([...bazelSlotIdsV1(plan,"build"),...bazelSlotIdsV1(plan,"service")]).size).toBe(plan.slots+plan.services);
 });
@@ -108,15 +110,15 @@ test("package paths are short, slot-scoped and refuse every shape outside the au
 test("messages render in English and German exactly like str.format and the language follows the environment",()=>{
  for(const row of fixture.messages){expect(bazelSessionMessageV1(row.id,row.values as Record<string,string|number>,"en")).toBe(row.en);expect(bazelSessionMessageV1(row.id,row.values as Record<string,string|number>,"de")).toBe(row.de);}
  expect(()=>bazelSessionMessageV1("nope",{},"en")).toThrow("Unknown");expect(()=>bazelSessionMessageV1("waiting",{slots:1,services:4},"en")).toThrow("Missing");
- for(const row of fixture.languages)expect(bazelSessionLanguageV1(row.environment) as string,JSON.stringify(row.environment)).toBe(row.expected);
+ for(const row of fixture.languages){const pick=()=>resolveLanguageV1(CATALOG_LANGUAGES_V1,[],row.environment,()=>[]).language as string;if(row.expected===null)expect(pick,JSON.stringify(row.environment)).toThrow("--lang=en|de");else expect(pick(),JSON.stringify(row.environment)).toBe(row.expected);}
  expect(Object.keys(componentSchema.definitions.Messages.const.en).sort()).toEqual(Object.keys(componentSchema.definitions.Messages.const.de).sort());
 });
 
 test("three sessions claim three slots at once, a fourth waits behind the fair gate with progress and takes the slot a session frees",async()=>{
  const memory=memoryPort(async count=>{if(count===2)await first.release();}),plan={slots:3,services:4};
- const first=await acquireBazelSessionV1(memory.port,plan,{key:key(1),signal:abort()}),second=await acquireBazelSessionV1(memory.port,plan,{key:key(2),signal:abort()}),third=await acquireBazelSessionV1(memory.port,plan,{key:key(3),signal:abort()});
+ const first=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(1),signal:abort()}),second=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(2),signal:abort()}),third=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(3),signal:abort()});
  expect([first.slot,second.slot,third.slot]).toEqual(["s0","s1","s2"]);expect(new Set([first.mode,second.mode,third.mode])).toEqual(new Set(["fresh"]));expect(memory.gates()).toBe(0);
- const fourth=await acquireBazelSessionV1(memory.port,plan,{key:key(4),signal:abort()});
+ const fourth=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(4),signal:abort()});
  expect(fourth.slot).toBe("s0");expect(fourth.mode).toBe("switch");expect(fourth.previous?.key).toBe(key(1));
  expect(memory.lines.some(line=>line==="[bazel] all 3 Bazel server slots are in use; waiting for one (0 s)")).toBe(true);expect(memory.gates()).toBe(0);
  await second.release();await third.release();await fourth.release();expect(memory.held.size).toBe(0);
@@ -124,8 +126,8 @@ test("three sessions claim three slots at once, a fourth waits behind the fair g
 
 test("a selection returns to the slot of its warm server and the same selection twice at once lands in two slots",async()=>{
  const memory=memoryPort(),plan={slots:3,services:4};
- const a=await acquireBazelSessionV1(memory.port,plan,{key:key(1),signal:abort()}),b=await acquireBazelSessionV1(memory.port,plan,{key:key(2),signal:abort()});await a.release();await b.release();
- const again=await acquireBazelSessionV1(memory.port,plan,{key:key(2),signal:abort()}),twice=await acquireBazelSessionV1(memory.port,plan,{key:key(2),signal:abort()});
+ const a=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(1),signal:abort()}),b=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(2),signal:abort()});await a.release();await b.release();
+ const again=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(2),signal:abort()}),twice=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(2),signal:abort()});
  expect(again.slot).toBe("s1");expect(again.mode).toBe("warm");expect(twice.slot).not.toBe(again.slot);expect(twice.mode).toBe(twice.slot==="s0"?"switch":"fresh");
  expect(bazelSessionWorkspaceV1("/w",again.slot,key(2))).not.toBe(bazelSessionWorkspaceV1("/w",twice.slot,key(2)));
  await again.release();await twice.release();
@@ -133,15 +135,15 @@ test("a selection returns to the slot of its warm server and the same selection 
 });
 
 test("waiting honours the timeout and the cancellation, and a failed or cancelled session never leaks a slot or the gate",async()=>{
- const full=memoryPort(),plan={slots:2,services:4},sessions=[await acquireBazelSessionV1(full.port,plan,{key:key(1),signal:abort()}),await acquireBazelSessionV1(full.port,plan,{key:key(2),signal:abort()})];
- await expect(acquireBazelSessionV1(full.port,plan,{key:key(3),signal:abort(),timeoutMilliseconds:1000})).rejects.toThrow("timed out");expect(full.gates()).toBe(0);
- const controller=new AbortController(),waiting=acquireBazelSessionV1(full.port,plan,{key:key(3),signal:controller.signal});controller.abort(Error("cancelled by the caller"));await expect(waiting).rejects.toThrow("cancelled by the caller");expect(full.gates()).toBe(0);expect(full.held.size).toBe(2);
+ const full=memoryPort(),plan={slots:2,services:4},sessions=[await acquireBazelSessionV1(full.port,plan,{language:"en",key:key(1),signal:abort()}),await acquireBazelSessionV1(full.port,plan,{language:"en",key:key(2),signal:abort()})];
+ await expect(acquireBazelSessionV1(full.port,plan,{language:"en",key:key(3),signal:abort(),timeoutMilliseconds:1000})).rejects.toThrow("timed out");expect(full.gates()).toBe(0);
+ const controller=new AbortController(),waiting=acquireBazelSessionV1(full.port,plan,{language:"en",key:key(3),signal:controller.signal});controller.abort(Error("cancelled by the caller"));await expect(waiting).rejects.toThrow("cancelled by the caller");expect(full.gates()).toBe(0);expect(full.held.size).toBe(2);
  for(const session of sessions)await session.release();expect(full.held.size).toBe(0);
- const failing=memoryPort();await expect(withBazelSessionV1(failing.port,plan,{key:key(1),signal:abort()},async()=>{throw Error("body failed");})).rejects.toThrow("body failed");expect(failing.held.size).toBe(0);expect(failing.writes).toEqual(["s0"]);
+ const failing=memoryPort();await expect(withBazelSessionV1(failing.port,plan,{language:"en",key:key(1),signal:abort()},async()=>{throw Error("body failed");})).rejects.toThrow("body failed");expect(failing.held.size).toBe(0);expect(failing.writes).toEqual(["s0"]);
  const broken=memoryPort(),brokenPort:BazelSlotPortV1={...broken.port,async write(){throw Error("disk full");}};
- await expect(withBazelSessionV1(brokenPort,plan,{key:key(1),signal:abort()},async()=>1)).rejects.toThrow("disk full");expect(broken.held.size).toBe(0);
- await expect(withBazelSessionV1(brokenPort,plan,{key:key(1),signal:abort()},async()=>{throw Error("body first");})).rejects.toThrow("body first");expect(broken.held.size).toBe(0);
- const session=await acquireBazelSessionV1(memoryPort().port,plan,{key:key(1),signal:abort()});await session.release();await session.release();
+ await expect(withBazelSessionV1(brokenPort,plan,{language:"en",key:key(1),signal:abort()},async()=>1)).rejects.toThrow("disk full");expect(broken.held.size).toBe(0);
+ await expect(withBazelSessionV1(brokenPort,plan,{language:"en",key:key(1),signal:abort()},async()=>{throw Error("body first");})).rejects.toThrow("body first");expect(broken.held.size).toBe(0);
+ const session=await acquireBazelSessionV1(memoryPort().port,plan,{language:"en",key:key(1),signal:abort()});await session.release();await session.release();
 });
 
 test("progress lines are German when the language says so and the status table lists held and free slots",async()=>{
@@ -197,8 +199,8 @@ test("the production port keeps one fair queue per slot class",async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")};
  try{
   const port=bazelSlotPortV1(directories,{write:()=>undefined}),signal=abort(),buildGate=await port.gate(signal,"build");
-  const service=await acquireBazelSessionV1(port,{slots:2,services:2},{key:key(1),signal,kind:"service",timeoutMilliseconds:20000});expect(service.slot).toBe("d0");await service.release();
-  buildGate();const build=await acquireBazelSessionV1(port,{slots:2,services:2},{key:key(2),signal,timeoutMilliseconds:20000});expect(build.slot).toBe("s0");await build.release();
+  const service=await acquireBazelSessionV1(port,{slots:2,services:2},{language:"en",key:key(1),signal,kind:"service",timeoutMilliseconds:20000});expect(service.slot).toBe("d0");await service.release();
+  buildGate();const build=await acquireBazelSessionV1(port,{slots:2,services:2},{language:"en",key:key(2),signal,timeoutMilliseconds:20000});expect(build.slot).toBe("s0");await build.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);
 
@@ -206,8 +208,8 @@ test("two sessions through the production port end in two slots and a third wait
  const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},lines:string[]=[];
  try{
   const port=bazelSlotPortV1(directories,{write:line=>lines.push(line)}),plan={slots:2,services:4},signal=abort();
-  const one=await acquireBazelSessionV1(port,plan,{key:key(1),signal}),two=await acquireBazelSessionV1(port,plan,{key:key(2),signal});expect(new Set([one.slot,two.slot]).size).toBe(2);
-  let third:string|undefined;const waiting=acquireBazelSessionV1(port,plan,{key:key(3),signal,timeoutMilliseconds:20000}).then(async session=>{third=session.slot;await session.release();});
+  const one=await acquireBazelSessionV1(port,plan,{language:"en",key:key(1),signal}),two=await acquireBazelSessionV1(port,plan,{language:"en",key:key(2),signal});expect(new Set([one.slot,two.slot]).size).toBe(2);
+  let third:string|undefined;const waiting=acquireBazelSessionV1(port,plan,{language:"en",key:key(3),signal,timeoutMilliseconds:20000}).then(async session=>{third=session.slot;await session.release();});
   await new Promise(done=>setTimeout(done,700));expect(third).toBeUndefined();await one.release();await waiting;expect(third).toBe(one.slot);await two.release();
   expect(lines.some(line=>line.includes("waiting for one"))).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}

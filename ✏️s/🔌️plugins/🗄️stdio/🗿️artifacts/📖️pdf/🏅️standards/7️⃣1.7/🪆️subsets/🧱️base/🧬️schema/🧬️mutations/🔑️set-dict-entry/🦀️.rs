@@ -25,10 +25,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dict-entry", kind: "set-dict-entry", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dictionary entry {}", self.key), &format!("Wörterbucheintrag {} setzen", self.key))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("{} {}", self.id.num, self.id.gen), self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetDictEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetDictEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_dict_entry::RemoveDictEntry>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(diff::diff_set_dict_entry(base, self.id, &self.path, &self.key, self.value.clone(), self.index)))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         match original_dict_value(base, self.id, &self.path, &self.key) {
@@ -38,14 +50,6 @@ where
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dictionary entry {}", self.key), &format!("Wörterbucheintrag {} setzen", self.key))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("{} {}", self.id.num, self.id.gen), self.key.clone()]
-    }
 }
 
 fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<(usize, PdfObject)> {

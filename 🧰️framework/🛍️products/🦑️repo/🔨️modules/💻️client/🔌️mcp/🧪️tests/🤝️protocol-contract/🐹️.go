@@ -119,7 +119,7 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 				if hasPlan || !hasSpec {
 					t.Fatalf("kiro ticket schema plan=%v spec=%v", hasPlan, hasSpec)
 				}
-			} else if profile.Kind == "generic" {
+			} else if profile.Kind == "generic" || profile.Kind == "cursor" {
 				if hasPlan || hasSpec {
 					t.Fatalf("generic ticket schema plan=%v spec=%v", hasPlan, hasSpec)
 				}

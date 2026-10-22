@@ -34,7 +34,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -42,7 +42,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test oracle",
+        "command": "repo ./📜️script.ts test oracle",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -62,7 +62,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test oracle python",
+        "command": "repo ./📜️script.ts test oracle python",
         "forwardAllArgs": true
       },
       "cache": true,

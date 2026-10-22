@@ -16,15 +16,6 @@ pub struct UpdateTowerInputs {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateTowerInputs where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_tower_inputs::UpdateTowerInputs> + From<crate::remove_tower_leg::RemoveTowerLeg> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "towerLeg", kind: "update-tower-inputs", record: "UpdatedTowerLeg" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
-        crate::update_tower_inputs::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::update_tower_inputs::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update tower leg {}", self.tower_leg.id),
@@ -34,6 +25,18 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateTowerInputs where 
     fn target(&self) -> Vec<String> {
         vec![self.tower_leg.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<En1993Snapshot, Op> for UpdateTowerInputs where Op: protocol::ColdMutation<En1993Snapshot, ReferenceDiff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_tower_inputs::UpdateTowerInputs> + From<crate::remove_tower_leg::RemoveTowerLeg> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1993Snapshot>>::ReferenceDiff> {
+        crate::update_tower_inputs::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::update_tower_inputs::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Payload
 

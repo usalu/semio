@@ -24,6 +24,7 @@ import (
 type CodebaseContext struct {
 	RootDir  string
 	RootURI  string
+	Technologies []model.Technology
 	Bundles  []model.Bundle
 	Files    []string
 	Breachs  []model.Breach
@@ -33,10 +34,10 @@ type CodebaseContext struct {
 
 // 📝️NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
 // 🆕️NewCodebaseContext creates and returns a new CodebaseContext instance.
-func NewCodebaseContext() *CodebaseContext {
-	rootURI := "file://" + workspace.NormalizePath(workspace.GetRootDir())
+func NewCodebaseContext(rootDir string) *CodebaseContext {
+	rootURI := "file://" + workspace.NormalizePath(rootDir)
 	return &CodebaseContext{
-		RootDir: workspace.GetRootDir(),
+		RootDir: rootDir,
 		RootURI: rootURI,
 	}
 }
@@ -44,13 +45,15 @@ func NewCodebaseContext() *CodebaseContext {
 // ⚙️LoadBundles MUST read from the configured storage path.
 // 📖️LoadBundles loads the bundles from storage.
 func (ctx *CodebaseContext) LoadBundles() {
-	ctx.Bundles = GetTechnologies()
+	ctx.Technologies = loadTechnologiesInternal(ctx.RootDir)
+	ctx.Bundles = nil
+	for _, technology := range ctx.Technologies { ctx.Bundles = append(ctx.Bundles, technology.Bundles...) }
 }
 
 // 📄️LoadFiles MUST read from the configured storage path.
 // 📄️LoadFiles loads the files from storage.
 func (ctx *CodebaseContext) LoadFiles() error {
-	files, err := model.ScopeToFiles(workspace.Scope{Kind: workspace.ScopeRepo}, ctx.Bundles)
+	files, err := model.ScopeToFiles(ctx.RootDir, workspace.Scope{Kind: workspace.ScopeRepo}, ctx.Bundles)
 	if err != nil {
 		return err
 	}
@@ -124,13 +127,13 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 // 🔷️GetFileID MUST return the stored value without modification.
 // 🔑️GetFileID returns the file i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFileID(file string) string {
-	return model.BuildFileID(file, nil)
+	return (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).BuildFileID(file, nil)
 }
 
 // 📁️GetFolderID MUST return the stored value without modification.
 // 🔹️GetFolderID returns the folder i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
-	return model.BuildFolderID(folder, nil)
+	return (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).BuildFolderID(folder, nil)
 }
 
 // 📁️ParentFolderID MUST return the artifact id of the folder holding the path, nil at the root.
@@ -145,7 +148,7 @@ func (ctx *CodebaseContext) ParentFolderID(path string) *string {
 
 // 📦️OwningBundleID MUST return the artifact id of the deepest bundle owning the path, nil for none.
 func (ctx *CodebaseContext) OwningBundleID(path string) *string {
-	bundle := model.GetBundleByPath(workspace.NormalizePath(path))
+	bundle := (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).GetBundleByPath(workspace.NormalizePath(path))
 	if bundle == nil {
 		return nil
 	}
@@ -155,7 +158,7 @@ func (ctx *CodebaseContext) OwningBundleID(path string) *string {
 
 // 📥️FileURI MUST operate on the CodebaseContext receiver and return consistent results.
 func (ctx *CodebaseContext) FileURI(path string) string {
-	return model.BuildFileUriFromPath(workspace.NormalizePath(path))
+	return "repo://file/"+ctx.GetFileID(workspace.NormalizePath(path))
 }
 
 // 🔗️FolderURI MUST operate on the CodebaseContext receiver and return consistent results.

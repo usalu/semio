@@ -6,7 +6,7 @@
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 use semio_framework_diagnostic::Severity;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use std::path::{Path, PathBuf};
@@ -129,7 +129,7 @@ pub fn outcome(case: &Case) {
 pub fn applies(case: &Case) {
     let base = before(case);
     let (diff, _) = mutation(case).diff(&base).into_parts();
-    let next = protocol::apply_diff(&diff, &base).expect("the produced diff applies");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("the produced diff applies");
     if status(case) == "applied" && blessing() {
         bless(case, AFTER, &to_json_string(&next));
         return;
@@ -150,7 +150,7 @@ pub fn produces_diff(case: &Case) {
     assert_eq!(json(&produced), json(&case.diff), "{}: produced diff differs from the committed diff", case.dir);
     let committed: ModelDiff = from_json_str(&case.diff, JsonMemberPolicy::Reject).expect("committed diff decodes");
     let expected: ModelSnapshot = from_json_str(&case.after, JsonMemberPolicy::Reject).expect("after snapshot decodes");
-    assert_eq!(protocol::apply_diff(&committed, &base).expect("committed diff applies"), expected, "{}: committed diff does not carry before to after", case.dir);
+    assert_eq!(protocol::apply_diff_cold(&committed, &base).expect("committed diff applies"), expected, "{}: committed diff does not carry before to after", case.dir);
 }
 
 /// ↩️ Replaying the concrete inverse (storage-reversed, as the store does) restores the before snapshot.
@@ -161,11 +161,11 @@ pub fn inverse_restores(case: &Case) {
     let base = before(case);
     let forward = mutation(case);
     let (diff, _) = forward.diff(&base).into_parts();
-    let mut state = protocol::apply_diff(&diff, &base).expect("forward applies");
+    let mut state = protocol::apply_diff_cold(&diff, &base).expect("forward applies");
     for undo in forward.inverse(&base).expect("inverse builds").iter().rev() {
         let (step, messages) = undo.diff(&state).into_parts();
         assert!(!rejected(&messages), "{}: an inverse step was rejected: {messages:?}", case.dir);
-        state = protocol::apply_diff(&step, &state).expect("inverse step applies");
+        state = protocol::apply_diff_cold(&step, &state).expect("inverse step applies");
     }
     assert_eq!(state, base, "{}: inverse did not restore the before snapshot", case.dir);
 }

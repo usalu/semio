@@ -1,0 +1,54 @@
+{
+  "title": "Add Backspace Key to Delete Selected in Design App",
+  "status": "closed",
+  "description": "Add backspace keyboard shortcut alongside existing delete key shortcut for deleting selected connections and pieces in the sketchpad Design app",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/764"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T21:11:18.220056671Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Add backspace keyboard shortcut alongside existing delete key shortcut for deleting selected connections and pieces in the sketchpad Design app",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02 21:13:23",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-03-02 21:37:07",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Connections cannot be deleted after being selected in the Design app. Fix the deleteSelected command/flow and add test coverage to existing test structure.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-05T13:26:27.17992986Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Bulk close"
+    }
+  ]
+}

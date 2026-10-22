@@ -951,8 +951,8 @@
         "pattern": "^(closed divergence|shared callback|candidate-only callback)",
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-source",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-source",
-        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-source"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-source",
+        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-source"
       },
       {
         "phase": "native",
@@ -960,8 +960,8 @@
         "pattern": "^actual rustc",
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-native",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-native",
-        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-native"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-native",
+        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-native"
       },
       {
         "phase": "syn",
@@ -969,8 +969,8 @@
         "pattern": "^independent syn callback",
         "budgetMs": 120000,
         "target": "test-rust-divergence-callback-syn",
-        "command": "bun ./📜️script.ts test rust-divergence-callback-syn",
-        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
+        "command": "repo ./📜️script.ts test rust-divergence-callback-syn",
+        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
       }
     ]
   },

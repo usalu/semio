@@ -21,7 +21,7 @@ test("the neutral cache probe specification is schema-valid and renders the exac
 });
 
 test("the rendered Nx workspace is accepted by the schemas shipped with Nx itself",()=>{
- const directory=openNxSdkV1(join(root,"package.json")).packageDirectory(),read=(name:string)=>JSON.parse(readFileSync(join(directory,"schemas",name),"utf8")),rendered=nxCacheProbeV1(root).files(probeSpecification) as Record<string,any>;
+ const directory=openNxSdkV1(join(root,".nx/installation/package.json")).packageDirectory(),read=(name:string)=>JSON.parse(readFileSync(join(directory,"schemas",name),"utf8")),rendered=nxCacheProbeV1(root).files(probeSpecification) as Record<string,any>;
  for(const [file,name] of [["nx.json","nx-schema.json"],["project.json","project-schema.json"]] as const){
   const ajv=new Ajv({strict:false,allErrors:true,validateFormats:false}),validate=ajv.compile({...read(name),$schema:"http://json-schema.org/draft-07/schema#"});
   expect(validate(rendered[file]),file+" "+JSON.stringify(validate.errors)).toBe(true);
@@ -32,8 +32,8 @@ test("the Nx probe invocation pins the sandboxed runtime and strips ambient task
  const row=fixture.invocation,tool=nxCacheProbeV1(root),invocation=tool.invocation(probeSpecification,row.task,row.fixture,row.environment);
  expect(invocation.command).toBe(row.command);
  expect(invocation.arguments.slice(1)).toEqual(row.arguments);
- expect(invocation.arguments[0]).toBe(createRequire(join(root,"package.json")).resolve("nx/bin/nx.js"));
+ expect(invocation.arguments[0]).toBe(createRequire(join(root,".nx/installation/package.json")).resolve("nx/bin/nx.js"));
  expect(invocation.environment).toEqual(row.expectedEnvironment);
  for(const key of row.absentEnvironment)expect(key in invocation.environment,key).toBe(false);
- expect(tool.version()).toBe(JSON.parse(readFileSync(createRequire(join(root,"package.json")).resolve("nx/package.json"),"utf8")).version);
+ expect(tool.version()).toBe(JSON.parse(readFileSync(createRequire(join(root,".nx/installation/package.json")).resolve("nx/package.json"),"utf8")).version);
 });

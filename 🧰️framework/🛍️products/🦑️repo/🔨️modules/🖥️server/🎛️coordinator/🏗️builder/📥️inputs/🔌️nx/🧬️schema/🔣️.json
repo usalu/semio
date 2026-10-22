@@ -25,7 +25,7 @@
       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
     },
     "command": {
-      "const": "bun ../../🏗️builder/🏃️execution/📜️script.ts build"
+      "const": "repo ../../🏗️builder/🏃️execution/📜️script.ts build"
     },
     "output": {
       "const": "{workspaceRoot}/.cache/b/p/m/next/{options.env.SEMIO_BUILD_MODE}/out"

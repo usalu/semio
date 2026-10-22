@@ -65,6 +65,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "primitive-indices", kind: "unbind-primitive-indices", record: "UnboundPrimitiveIndices" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind Primitive Indices", "Bindung der Primitivindizes aufheben")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["unbind-primitive-indices".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for UnbindPrimitiveIndicesMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindPrimitiveIndicesMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -73,19 +86,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Primitive Indices", "Bindung der Primitivindizes aufheben")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["unbind-primitive-indices".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

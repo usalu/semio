@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "scope": "authored-design-vectors-no-production-execution",
+  "policyCases": [
+    {
+      "name": "small",
+      "packedBytes": 1048576,
+      "canonicalBytes": 1048576,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": true,
+      "expectedAgreedProducer": true,
+      "role": "generation-index"
+    },
+    {
+      "name": "closure-exact-boundary",
+      "packedBytes": 1048576,
+      "canonicalBytes": 134217728,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": true,
+      "expectedAgreedProducer": true,
+      "role": "generation-frontier"
+    },
+    {
+      "name": "writer-allows-reader-refusal",
+      "packedBytes": 1048576,
+      "canonicalBytes": 135266304,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-index"
+    },
+    {
+      "name": "own-reader-exact-boundary",
+      "packedBytes": 1048576,
+      "canonicalBytes": 536870912,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-frontier"
+    },
+    {
+      "name": "writer-can-publish-own-unreadable",
+      "packedBytes": 1048576,
+      "canonicalBytes": 537919488,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": false,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-index"
+    },
+    {
+      "name": "packed-exact-boundary",
+      "packedBytes": 536870912,
+      "canonicalBytes": 536870912,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-frontier"
+    },
+    {
+      "name": "packed-over-boundary",
+      "packedBytes": 537919488,
+      "canonicalBytes": 537919488,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 134217728,
+      "expectedPackedOnlyWriter": false,
+      "expectedOwnReader": false,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-index"
+    },
+    {
+      "name": "observed-generation-branch-within512",
+      "packedBytes": 1048576,
+      "canonicalBytes": 135266304,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 536870912,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": true,
+      "expectedClosureReader": true,
+      "expectedAgreedProducer": true,
+      "role": "generation-frontier"
+    },
+    {
+      "name": "observed-generation-branch-over512",
+      "packedBytes": 1048576,
+      "canonicalBytes": 537919488,
+      "packedLimit": 536870912,
+      "ownExpandedLimit": 536870912,
+      "closureExpandedLimit": 536870912,
+      "expectedPackedOnlyWriter": true,
+      "expectedOwnReader": false,
+      "expectedClosureReader": false,
+      "expectedAgreedProducer": false,
+      "role": "generation-index"
+    }
+  ],
+  "pageScenarios": [
+    {
+      "name": "complete-three-page-document",
+      "complete": true,
+      "authentic": true,
+      "cancelled": false,
+      "expectedPublish": true,
+      "expectedCoverage": "complete",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 512,
+      "pagesUnits": [
+        64,
+        64,
+        1
+      ]
+    },
+    {
+      "name": "exact-total-boundary",
+      "complete": true,
+      "authentic": true,
+      "cancelled": false,
+      "expectedPublish": true,
+      "expectedCoverage": "complete",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 128,
+      "pagesUnits": [
+        64,
+        64
+      ]
+    },
+    {
+      "name": "one-page-over-budget",
+      "complete": true,
+      "authentic": true,
+      "cancelled": false,
+      "expectedPublish": false,
+      "expectedCoverage": "refused",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 512,
+      "pagesUnits": [
+        65
+      ]
+    },
+    {
+      "name": "aggregate-over-budget",
+      "complete": true,
+      "authentic": true,
+      "cancelled": false,
+      "expectedPublish": false,
+      "expectedCoverage": "refused",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 128,
+      "pagesUnits": [
+        64,
+        64,
+        1
+      ]
+    },
+    {
+      "name": "missing-required-page",
+      "complete": false,
+      "authentic": true,
+      "cancelled": false,
+      "expectedPublish": false,
+      "expectedCoverage": "refused",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 512,
+      "pagesUnits": [
+        64,
+        1
+      ]
+    },
+    {
+      "name": "bad-child-digest",
+      "complete": true,
+      "authentic": false,
+      "cancelled": false,
+      "expectedPublish": false,
+      "expectedCoverage": "refused",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 512,
+      "pagesUnits": [
+        64,
+        1
+      ]
+    },
+    {
+      "name": "cancel-before-cas",
+      "complete": true,
+      "authentic": true,
+      "cancelled": true,
+      "expectedPublish": false,
+      "expectedCoverage": "refused",
+      "pageBudgetUnits": 64,
+      "totalBudgetUnits": 512,
+      "pagesUnits": [
+        64,
+        1
+      ]
+    }
+  ],
+  "stringCase": {
+    "value": "α🙂",
+    "canonicalUtf8Bytes": 8,
+    "canonicalUtf16Units": 5,
+    "budgetBytes": 7,
+    "expectedPublish": false
+  },
+  "pageUnit": "abstract-counter-units-not-wire-bytes"
+}

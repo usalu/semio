@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
 import { type ActionArgDef } from "@semio-tech/framework";
 import { UIDialog, type UIDialogProps } from "@semio-tech/ui-react";
 import { type ShellDialogV1, type ShellDialogOriginV1 } from "../🟦️.ts";

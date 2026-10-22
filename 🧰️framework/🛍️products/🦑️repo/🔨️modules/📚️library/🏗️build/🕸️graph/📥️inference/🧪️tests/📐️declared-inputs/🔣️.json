@@ -20,7 +20,7 @@
     "app/src/schema2.json": "{\"schema\":2}\n"
   },
   "projectRoot": "app",
-  "command": "bun ./📜️script.ts check",
+  "command": "repo ./📜️script.ts check",
   "modules": {
     "metadata": {
       "semio": {

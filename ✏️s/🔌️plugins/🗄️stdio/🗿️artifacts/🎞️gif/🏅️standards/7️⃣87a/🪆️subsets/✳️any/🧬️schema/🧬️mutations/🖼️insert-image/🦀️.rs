@@ -17,6 +17,15 @@ pub struct InsertImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "image", kind: "insert-image", record: "InsertImage" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert image", "Bild einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for InsertImage {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let screen = (base.width, base.height);
         let Self { index, image } = self;
@@ -33,12 +42,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertImage {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(vec![GifMutation::RemoveImage(remove_image::RemoveImage { index: (*index).min(base.images.len()) })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert image", "Bild einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

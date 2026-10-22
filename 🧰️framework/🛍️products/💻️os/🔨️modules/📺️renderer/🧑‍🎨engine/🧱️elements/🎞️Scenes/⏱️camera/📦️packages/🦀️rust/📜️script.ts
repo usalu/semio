@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { createIssuedResourceControlV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1 } from "@semio-tech/framework/process/cargo-test";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
@@ -28,4 +28,4 @@ class NodeKeyScript extends BundleScript {
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"camera:node-key-source",scriptInvocationBudget(this.invocation,120000),{env:process.env,signal:this.invocation.control.signal});
  }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("node-key",NodeKeyScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test", TestScript).register("node-key",NodeKeyScript), { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {join} from "node:path";
 import {BundleScript,ScriptRouter,runScriptMain,receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";

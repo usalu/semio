@@ -30,17 +30,20 @@ pub fn replace_layer_fill<Op: From<ReplaceLayerFill>>(layer_id: semio_framework_
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ReplaceLayerFill where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReplaceLayerFill> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-fill", record: "ReplacedLayerFill" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace layer \"{}\" fill", self.layer_id), &format!("Füllung von Ebene \"{}\" ersetzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for ReplaceLayerFill where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReplaceLayerFill> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

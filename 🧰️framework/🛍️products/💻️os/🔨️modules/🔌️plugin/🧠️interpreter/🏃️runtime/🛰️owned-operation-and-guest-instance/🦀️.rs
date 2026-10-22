@@ -14,6 +14,8 @@ pub(super) enum OwnedOperation {
     StepJob,
     ReadJobOutput,
     AcknowledgeJobOutput,
+    BorrowJobOutput,
+    AcknowledgeJobOutputChunk,
     CancelJob,
     CloseJobs,
     Checkpoint,
@@ -44,6 +46,8 @@ impl OwnedOperation {
             Self::StepJob => OwnedSemioExport::StepJob,
             Self::ReadJobOutput => OwnedSemioExport::ReadJobOutput,
             Self::AcknowledgeJobOutput => OwnedSemioExport::AcknowledgeJobOutput,
+            Self::BorrowJobOutput => OwnedSemioExport::BorrowJobOutput,
+            Self::AcknowledgeJobOutputChunk => OwnedSemioExport::AcknowledgeJobOutputChunk,
             Self::CancelJob => OwnedSemioExport::CancelJob,
             Self::CloseJobs => OwnedSemioExport::CloseJobs,
             Self::Checkpoint => OwnedSemioExport::Checkpoint,
@@ -168,7 +172,7 @@ impl OwnedGuestInstance {
         let bytes = input.as_ref().ok_or_else(|| identity_turn_fault(operation_authority::refusal(4)))?;
         let length = i32::try_from(bytes.len()).map_err(|_| identity_turn_fault(operation_authority::refusal(2)))?;
         self.pending = Some(OwnedPending { retained_input: None, operation: operation.operation(), stage: OwnedStage::Allocate { input: input.take().unwrap_or_default() }, fuel_used: 0 });
-        self.actor.as_mut().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(length)])?;
+        self.actor.as_mut().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(length)]).map_err(core_fault)?;
         Ok(())
     }
 

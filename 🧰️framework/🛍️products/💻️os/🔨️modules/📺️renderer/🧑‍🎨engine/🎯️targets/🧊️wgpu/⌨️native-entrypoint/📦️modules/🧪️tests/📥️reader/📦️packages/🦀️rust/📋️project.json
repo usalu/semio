@@ -22,7 +22,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧪️tests/📥️reader/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "metadata": {
         "semio": {

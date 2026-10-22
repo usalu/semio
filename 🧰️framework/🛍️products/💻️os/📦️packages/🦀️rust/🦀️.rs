@@ -128,7 +128,7 @@ pub use crate::os_dsl::*;
 pub use crate::os_inference::*;
 pub use crate::os_pack::*;
 /// 🎯️ The replication protocol's central applier, exported by this kernel's protocol facade for every crate that reaches the protocol through it (`extern crate semio_framework_os_kernel as protocol`): the function itself, not an `os_spr` alias.
-pub use protocol::{apply_diff_cold, apply_diff_cold_into, ColdMutation, ColdMutationDiff, ColdDiffAlgebra, retained_row_patch};
+pub use protocol::{apply_diff_cold, apply_diff_cold_into, ColdMutation, ColdMutationDiff, ColdDiffAlgebra, retained_row_patch, protocol_error_retirement_demand, close_protocol_error_one};
 pub use crate::os_spr::*;
 pub use crate::os_store::test_support;
 pub use crate::os_store::*;

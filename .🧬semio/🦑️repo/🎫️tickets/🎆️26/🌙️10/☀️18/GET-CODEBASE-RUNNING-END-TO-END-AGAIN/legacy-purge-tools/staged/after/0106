@@ -1,0 +1,36 @@
+{
+  "title": "Ring Shows All Orbs With Greyed Out Unselected",
+  "status": "closed",
+  "description": "Type app Ring must show all connector orbs at all times. Unselected orbs are greyed out (disabled). The Ring provides an overview of all connector T values and allows adjusting T for the selected connector only.",
+  "summary": "Both ConnectorsListSection and ConnectorSection Rings now show all connector orbs. Unselected orbs are disabled and greyed out. Selected connector T is adjustable. Build passes, 14 unit tests green.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/763"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T21:00:20.329930999Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Type app Ring must show all connector orbs at all times. Unselected orbs are greyed out (disabled). The Ring provides an overview of all connector T values and allows adjusting T for the selected connector only.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02T21:04:45.16649321Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Both ConnectorsListSection and ConnectorSection Rings now show all connector orbs. Unselected orbs are disabled and greyed out. Selected connector T is adjustable. Build passes, 14 unit tests green.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        }
+      ]
+    }
+  ]
+}

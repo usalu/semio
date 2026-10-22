@@ -21,7 +21,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts conformance"
+        "command": "repo ./📜️script.ts conformance"
       }
     },
     "test-native": {
@@ -38,7 +38,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "conformance-process": {
@@ -54,7 +54,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts conformance-process"
+        "command": "repo ./📜️script.ts conformance-process"
       }
     },
     "conformance-command": {
@@ -70,7 +70,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts conformance-command"
+        "command": "repo ./📜️script.ts conformance-command"
       }
     }
   },

@@ -7,6 +7,11 @@
       "needs": []
     },
     {
+      "name": "stamps",
+      "path": "./🔖️stamps/🟨️.mjs",
+      "needs": []
+    },
+    {
       "name": "bootstrap",
       "path": "./🔁️bootstrap/🟨️.mjs",
       "needs": [
@@ -18,6 +23,7 @@
       "path": "./🧬️source-analyses/🟨️.mjs",
       "needs": [
         "coordinates",
+        "stamps",
         "bootstrap"
       ]
     },
@@ -117,6 +123,7 @@
       "path": "./📦️project-nodes/🟨️.mjs",
       "needs": [
         "coordinates",
+        "stamps",
         "bootstrap",
         "source-analyses",
         "bun-lock",

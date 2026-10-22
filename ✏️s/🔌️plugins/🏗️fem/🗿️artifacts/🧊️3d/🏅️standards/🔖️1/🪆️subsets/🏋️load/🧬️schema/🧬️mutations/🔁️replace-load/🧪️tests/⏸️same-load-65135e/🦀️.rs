@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 /// address — `MutationOutcome::empty().warning(..)` is the 2-arg builder, which attaches none.
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-load/same-load-65135e: a no-op must carry the identity diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-load/same-load-65135e: exactly one diagnostic is expected, got {messages:?}");
@@ -74,7 +74,7 @@ fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "replace-load/same-load-65135e: a no-op declares a no-op outcome");
     let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("the declared outcome carries messages");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(declared.len(), produced.messages().len(), "replace-load/same-load-65135e: the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(semio_framework_value::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "replace-load/same-load-65135e: the declared code must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "replace-load/same-load-65135e: the declared level must name the Warning the builder raises");
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced delta is exactly the committed all-null `🔺️diff/🔣️.json`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let outcome = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-load/same-load-65135e: produced diff differs from the committed 🔺️diff/🔣️.json");

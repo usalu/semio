@@ -377,8 +377,8 @@
     "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/package.json",
     "packageScript": "test:browser-ownership",
     "previewPackageScript": "preview:browser-package",
-    "packageCommand": "bun repo run semio-framework-os-flow-browser-package:test-browser-ownership",
-    "previewPackageCommand": "bun repo run semio-framework-os-flow-browser-package:preview-generated"
+    "packageCommand": "repo run semio-framework-os-flow-browser-package:test-browser-ownership",
+    "previewPackageCommand": "repo run semio-framework-os-flow-browser-package:preview-generated"
   },
   "bootstrap": {
     "registry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json",

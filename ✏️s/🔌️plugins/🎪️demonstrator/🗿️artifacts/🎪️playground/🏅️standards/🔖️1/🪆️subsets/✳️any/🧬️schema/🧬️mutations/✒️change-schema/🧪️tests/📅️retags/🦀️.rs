@@ -35,14 +35,14 @@ fn mutation() -> PlaygroundMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-schema mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<PlaygroundDiff> {
-    <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation(), &before())
+    <PlaygroundMutation as protocol::ColdMutation<PlaygroundSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Retagging the document moves its one and only field from `playground.playground` to
 /// `playground.experiment`.
 #[test]
 fn retags_the_only_persistent_field() {
-    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("change-schema applies to its committed before-document");
+    let applied = protocol::apply_diff_cold(built_outcome().diff(), &before()).expect("change-schema applies to its committed before-document");
     assert_eq!(applied, expected_after(), "change-schema/retags-the-playground-document-schema: the retagged document differs from the committed after-snapshot");
     assert_eq!(applied.schema, "playground.experiment", "change-schema/retags-the-playground-document-schema: the schema tag must land on the payload's value");
 }
@@ -52,12 +52,12 @@ fn retags_the_only_persistent_field() {
 #[test]
 fn retagging_back_restores_before() {
     let base = before();
-    let mut snapshot = protocol::apply_diff(built_outcome().diff(), &base).expect("forward change-schema applies");
-    let inverse = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let mut snapshot = protocol::apply_diff_cold(built_outcome().diff(), &base).expect("forward change-schema applies");
+    let inverse = <PlaygroundMutation as protocol::ColdMutation<PlaygroundSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-schema/retags-the-playground-document-schema: the inverse of one retag is exactly one retag back");
     for step in &inverse {
-        let undo = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the change-schema inverse step applies");
+        let undo = <PlaygroundMutation as protocol::ColdMutation<PlaygroundSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the change-schema inverse step applies");
     }
     assert_eq!(snapshot, base, "change-schema/retags-the-playground-document-schema: retagging back to playground.playground did not restore the before-document");
 }
@@ -110,7 +110,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-schema/retags-the-playground-document-schema: committed diff did not carry before to after");
 }
 

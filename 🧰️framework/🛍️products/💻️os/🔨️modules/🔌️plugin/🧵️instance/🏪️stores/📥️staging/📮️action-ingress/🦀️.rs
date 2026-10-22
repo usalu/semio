@@ -103,6 +103,7 @@ pub enum OriginalParsedCommandKind{Command,Artifact}
 
 /// 📦️ Fixed original receiving slots keep complete source bodies beside their declared typed projections.
 #[derive(RetireOwned)]
+#[value(send_only)]
 pub struct OriginalParsedCommandSource{
  pub kind:OriginalParsedCommandKind,
  pub envelope:Option<DslValue>,

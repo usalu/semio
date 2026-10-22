@@ -32,7 +32,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

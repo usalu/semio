@@ -1,162 +1,164 @@
-/** 📐️ The pure presentation props of a node: layout spec to CSS, style spec data attributes and the accessibility ARIA props.
+/** 🔤️ The display-only retained views: text, button, key-value list, image, progress, extension and unknown component, the busy shell and the activity border.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { type CSSProperties, type ReactNode } from "../../⚛️react-port/🟦️.ts";
-import { uiSpacingLen } from "@semio-tech/ui-styling";
+import { useEffect, useRef, useState, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import {
-  type AbsoluteLayout,
-  type AccessibilitySpec,
-  type EdgeSpace,
-  type GridLayout,
-  type GridTrack,
-  type LayoutSpec,
-  type LeafLayout,
-  type OverlayLayout,
-  type ScrollLayout,
-  type Sizing,
-  type SpaceToken,
-  type StackLayout,
-  type StyleSpec
-} from "@semio-tech/framework";
+  Button,
+  cn,
+  elementSkeleton,
+  loadingBorderElementClass,
+  waitingBorderElementClass,
+  type ElementSkeletonKind
+} from "@semio-tech/ui-react";
+import { type Component, type UiNodeRecord } from "@semio-tech/framework";
+import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/ui-contract/presentation/accessibility";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
+import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";
+import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
+import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";
+import { dispatchTrigger, resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
+import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";
 
 //#region 🔖️UiInterpreter
-//#region LayoutAndStyle
-const SPACE_TOKEN_MULTIPLIER: Record<SpaceToken, number> = { none: 0, xs: 1, sm: 2, md: 4, lg: 6, xl: 8, xxl: 12 };
-
-/** 📐️ Resolves a closed `SpaceToken` against the theme's own `--ui-spacing` ramp
- * (`@semio-tech/ui-styling`'s `uiSpacingLen`) — never a raw pixel value shipped over the wire. The
- * per-token multiplier is the one place this renderer decides "how big is `md`"; it can be retuned
- * without touching the contract, which only ever carries the token name. */
-function spaceTokenRem(token: SpaceToken): string {
-  return uiSpacingLen(SPACE_TOKEN_MULTIPLIER[token]);
-}
-
-function edgeSpaceToPadding(edge: EdgeSpace): string {
-  if ("all" in edge) return spaceTokenRem(edge.all);
-  if ("symmetric" in edge) return `${spaceTokenRem(edge.symmetric.vertical)} ${spaceTokenRem(edge.symmetric.horizontal)}`;
-  return `${spaceTokenRem(edge.each.top)} ${spaceTokenRem(edge.each.right)} ${spaceTokenRem(edge.each.bottom)} ${spaceTokenRem(edge.each.left)}`;
-}
-
-function sizingToCss(sizing: Sizing): string | undefined {
-  if (sizing === "hug") return undefined;
-  if (sizing === "fill") return "100%";
-  if (typeof sizing === "object" && "fixed" in sizing) return spaceTokenRem(sizing.fixed);
+//#region ComponentRenderers
+export function activityBorderClass(record: UiNodeRecord): string | undefined {
+  if (record.activity === "loading") return loadingBorderElementClass;
+  if (record.activity === "waiting") return waitingBorderElementClass;
   return undefined;
 }
 
-const ALIGN_CSS: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", stretch: "stretch", baseline: "baseline" };
-const JUSTIFY_CSS: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", spaceBetween: "space-between", spaceAround: "space-around", spaceEvenly: "space-evenly" };
-
-function gridTrackToCss(track: GridTrack): string {
-  if (track === "auto") return "auto";
-  if (track === "minContent") return "min-content";
-  if (track === "maxContent") return "max-content";
-  if (typeof track === "object" && "fraction" in track) return `${track.fraction}fr`;
-  if (typeof track === "object" && "fixed" in track) return spaceTokenRem(track.fixed);
-  return "auto";
+export function TextView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "text" }>;
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  return (
+    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} data-ui-node-key={record.key} {...aria}>
+      {describedBy}
+      {component.value}
+    </p>
+  );
 }
 
-/** 🧬️ Resolves one `LayoutSpec` variant into inline flex/grid/overflow CSS — the renderer-neutral
- * vocabulary's React reading. Every metric traces back to a closed enum; nothing here is a value that
- * came off the wire directly. */
-export function layoutSpecStyle(layout: LayoutSpec): CSSProperties {
-  switch (layout.kind) {
-    case "leaf": {
-      const l = layout as LeafLayout & { kind: "leaf" };
-      return { width: sizingToCss(l.width), height: sizingToCss(l.height), minWidth: 0, minHeight: 0 };
-    }
-    case "stack": {
-      const l = layout as StackLayout & { kind: "stack" };
-      return {
-        display: "flex",
-        flexDirection: l.axis === "horizontal" ? "row" : "column",
-        gap: spaceTokenRem(l.gap),
-        padding: edgeSpaceToPadding(l.padding),
-        alignItems: ALIGN_CSS[l.align],
-        justifyContent: JUSTIFY_CSS[l.justify],
-        flex: l.grow ? "1 1 auto" : undefined,
-        flexWrap: l.wrap ? "wrap" : "nowrap",
-        minWidth: 0,
-        minHeight: 0,
-      };
-    }
-    case "grid": {
-      const l = layout as GridLayout & { kind: "grid" };
-      return {
-        display: "grid",
-        gridTemplateColumns: l.columns.map(gridTrackToCss).join(" ") || undefined,
-        gridTemplateRows: l.rows.map(gridTrackToCss).join(" ") || undefined,
-        columnGap: spaceTokenRem(l.columnGap),
-        rowGap: spaceTokenRem(l.rowGap),
-        padding: edgeSpaceToPadding(l.padding),
-        alignItems: ALIGN_CSS[l.align],
-        justifyContent: JUSTIFY_CSS[l.justify],
-        minWidth: 0,
-        minHeight: 0,
-      };
-    }
-    case "overlay": {
-      const l = layout as OverlayLayout & { kind: "overlay" };
-      return { position: "relative", padding: edgeSpaceToPadding(l.inset) };
-    }
-    case "scroll": {
-      const l = layout as ScrollLayout & { kind: "scroll" };
-      const axes = l.axes;
-      return {
-        overflowX: axes === "horizontal" || axes === "both" ? "auto" : "hidden",
-        overflowY: axes === "vertical" || axes === "both" ? "auto" : "hidden",
-        padding: edgeSpaceToPadding(l.padding),
-        width: sizingToCss(l.sizing),
-        minWidth: 0,
-        minHeight: 0,
-      };
-    }
-    case "absolute": {
-      const l = layout as AbsoluteLayout & { kind: "absolute" };
-      return { position: "absolute", width: sizingToCss(l.sizingWidth), height: sizingToCss(l.sizingHeight) };
-    }
-    default:
-      return { minWidth: 0, minHeight: 0 };
-  }
-}
-
-/** 🎨️ `StyleSpec` is token-only — never a raw color/pixel. This renderer's first-pass reading exposes
- * every token as a `data-*` attribute rather than guessing a color mapping tokens.json does not yet
- * define a ramp for (flagged by this contract's own upstream packet reports); a theme stylesheet
- * targets `[data-tone="danger"]` etc. Swapping this for direct CSS-variable resolution later is a
- * pure addition, not a wire change. */
-export function styleSpecDataAttributes(style: StyleSpec): Record<string, string> {
-  return {
-    "data-variant": style.variant ?? "solid",
-    "data-size": style.size ?? "md",
-    "data-density": style.density ?? "standard",
-    "data-tone": style.tone ?? "neutral",
-    "data-emphasis": style.emphasis ?? "regular",
+export function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "button" }>;
+  const id = nodeDomId(context.store, record, context.domScope);
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
+  const [, render] = useState(0);
+  const mounted = useRef(true);
+  const pending = useRef({ store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false });
+  if (pending.current.store !== context.store || pending.current.owner !== context.localDocumentOwner || pending.current.key !== record.key) pending.current = { store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false };
+  const state = pending.current;
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const activate = () => {
+    const current = context.store.getNodeSnapshot(record.id);
+    if (state.busy || !current || current.key !== record.key || current.component.type !== "button" || current.disabled) return;
+    state.busy = true;
+    render((value) => value + 1);
+    const finish = () => { if (pending.current !== state || !mounted.current) return; state.busy = false; render((value) => value + 1); };
+    try { const completion = dispatchTrigger(context, current, "activate"); if (completion instanceof Promise) void completion.then(finish, finish); else finish(); }
+    catch (error) { finish(); throw error; }
   };
+  return (
+    <>
+      <Button
+        id={id}
+        data-ui-node-id={record.id} data-ui-node-key={record.key}
+        data-tone={record.style.tone ?? undefined}
+        text={component.label}
+        icon={resolveControlIconNode(component.icon)}
+        disabled={record.disabled || state.busy}
+        aria-label={record.accessibility.label ?? undefined}
+        aria-describedby={aria["aria-describedby"] as string | undefined}
+        className={activityBorderClass(record)}
+        aria-busy={state.busy || record.activity === "loading" || record.activity === "waiting" || undefined}
+        onClick={activate}
+      />
+      {describedBy}
+    </>
+  );
 }
-//#endregion LayoutAndStyle
 
-//#region Accessibility
-/** ♿️ `AccessibilitySpec` → real ARIA props, plus an optional rendered visually-hidden description
- * span (its id feeds `aria-describedby`) — no `role` here, the semantic role comes from `Component`
- * itself (a `Component::Button` is a button on every renderer; see `🦀️accessibility.rs`'s own doc). */
-export function accessibilityAriaProps(spec: AccessibilitySpec, idBase: string): { readonly props: Record<string, unknown>; readonly describedBy?: ReactNode } {
-  const describedById = spec.description ? `${idBase}-desc` : undefined;
-  const props: Record<string, unknown> = {
-    "aria-label": spec.label ?? undefined,
-    "aria-describedby": describedById,
-    "aria-live": spec.live && spec.live !== "off" ? spec.live : undefined,
-    "aria-keyshortcuts": spec.shortcut ?? undefined,
-    "aria-hidden": spec.hidden ? true : undefined,
-  };
-  const describedBy = describedById ? (
-    <span id={describedById} className="sr-only">
-      {spec.description}
-    </span>
-  ) : undefined;
-  return { props, describedBy };
+export function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "keyValueList" }>;
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
+      {component.entries.map((entry, index) => (
+        <div key={`${entry.label}:${index}`} className="contents">
+          <dt className="text-muted-foreground">{entry.label}</dt>
+          <dd className="tabular-nums">{entry.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
-//#endregion Accessibility
+
+export function ImageView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "image" }>;
+  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
+}
+
+/** 📶️ `Component::Progress` → a real `role="progressbar"`. Determinate bars carry
+ * `aria-valuemin`/`max`/`now`/`valuetext` and a fill sized by the shared fraction law; indeterminate bars
+ * carry only `aria-busy` and a centred sweep that pulses only when the user has not asked for reduced
+ * motion (`motion-safe:`). */
+export function ProgressView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "progress" }>;
+  const value = uiAccessibilityValueV1(component);
+  const fraction = uiProgressFractionV1(component.completed, component.total);
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  return (
+    <div
+      role="progressbar"
+      data-ui-node-id={record.id}
+      data-ui-node-key={record.key}
+      aria-valuemin={value.valueMin ?? undefined}
+      aria-valuemax={value.valueMax ?? undefined}
+      aria-valuenow={value.valueNow ?? undefined}
+      aria-valuetext={value.valueText ?? undefined}
+      aria-busy={value.busy ? true : undefined}
+      {...aria}
+      className="bg-muted h-tiny w-full min-w-0 overflow-hidden rounded-full"
+    >
+      {describedBy}
+      <div data-slot="progress-fill" className={fraction === null ? "bg-accent mx-auto h-full w-1/3 motion-safe:animate-pulse" : "bg-accent h-full"} style={fraction === null ? undefined : { width: `${fraction * 100}%` }} />
+    </div>
+  );
+}
+
+export function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "extension" }>;
+  const Host = resolveExtensionHost(component.extension);
+  if (Host) return <Host value={component.props} nodeId={record.id} nodeKey={record.key} />;
+  return (
+    <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+      <p className="text-muted-foreground text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
+        Extension unavailable: {component.extension}
+      </p>
+    </ShellFaultBoundary>
+  );
+}
+
+/** 🚧️ An unregistered/unknown `Component::type` — never renders nothing (a silent blank is the
+ * failure mode that makes a missing renderer look like a broken document, per the packet brief). */
+export function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
+  const kind = (record.component as { readonly type: string }).type;
+  console.error(`Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
+  return (
+    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key} data-unknown-component={kind}>
+      Unrecognized component: {kind}
+    </div>
+  );
+}
+//#endregion ComponentRenderers
+
+export function interpretUiNodeBusyShell(record: UiNodeRecord): ReactNode | null {
+  if (record.component.type === "progress" || (record.activity !== "loading" && record.activity !== "waiting")) return null;
+  return (
+    <div data-ui-node-id={record.id} data-ui-node-key={record.key} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
+      {elementSkeleton(record.component.type as ElementSkeletonKind)}
+    </div>
+  );
+}
 //#endregion 🔖️UiInterpreter

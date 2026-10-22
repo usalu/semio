@@ -24,11 +24,23 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trim-box", kind: "set-trim-box", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} setzen", self.page_index))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.page_index.to_string(), "TrimBox".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetTrimBox
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetTrimBox> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_trim_box::RemoveTrimBox>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let rows = support::page_objects(base).get(self.page_index).copied().map_or_else(PdfDiff::default, |page| support::set_entry_rows(base, page, "TrimBox", support::box_object(self.trim_box), self.entry_index));
         MutationOutcome::new(diff::graph_edit(rows))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox")) {
@@ -36,14 +48,6 @@ where
                 None => vec![Op::from(RemoveTrimBox { page_index: self.page_index })],
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} setzen", self.page_index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.page_index.to_string(), "TrimBox".to_string()]
     }
 }
 //#endregion 🔖️Mutation

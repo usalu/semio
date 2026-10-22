@@ -132,7 +132,7 @@
   "firstPartyFeaturesAllowed": [
     {"package":"semio-framework-artifact-flow-flow","feature":"protocol-laws","classification":"test-only","reason":"protocol laws for dependents' tests; extraction into a law crate pending"},
     {"package":"semio-framework-async","feature":"entrypoint","classification":"peer-blocked","reason":"block_on gate enabled by peer-owned crates (os-kernel, os-run, ui, plugin-host, renderer); an entrypoint crate replaces it once they move"},
-    {"package":"semio-framework-async","feature":"testkit","classification":"test-only","reason":"ManualRuntime test double for dependents' tests; peer crates enable it in their dev-dependencies"},
+    {"package":"semio-framework-async","feature":"testkit","classification":"test-only","reason":"pool and cancellation test hooks for dependents' tests; peer crates enable it in their dev-dependencies, the ManualRuntime double lives in semio-framework-async-testkit"},
     {"package":"semio-framework-graph-layout-run","feature":"testing","classification":"test-only","reason":"fdg-sim reference oracle for dependents' layout tests"},
     {"package":"semio-framework-job","feature":"testkit","classification":"test-only","reason":"forwards the async test double; peer crates enable it in their dev-dependencies"},
     {"package":"semio-framework-os-command","feature":"mutation-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},

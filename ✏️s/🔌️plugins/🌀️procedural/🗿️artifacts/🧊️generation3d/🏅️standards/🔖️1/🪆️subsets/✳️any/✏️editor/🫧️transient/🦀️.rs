@@ -82,25 +82,33 @@ pub struct Generation3dPreviewTextChange {
     pub text: Option<String>,
 }
 
-impl protocol::MutationDiff<Generation3dTransient> for Generation3dTransientPatch {
-    fn apply(&self, base: &Generation3dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dTransient> {
-        Ok(Generation3dTransient {
-            generation_preview_text: self.generation_preview_text.clone().map_or_else(|| base.generation_preview_text.clone(), |change| change.text),
-            ..base.clone()
-        })
-    }
+impl protocol::MutationDiff<Generation3dTransient> for Generation3dTransientPatch {}
+
+impl protocol::ColdMutationDiff<Generation3dTransient> for Generation3dTransientPatch {
     fn absorb(&mut self, other: Self) {
         self.generation_preview_text = other.generation_preview_text.or_else(|| self.generation_preview_text.take());
+    }
+
+    fn apply(&self, unpublished: &mut Generation3dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = Generation3dTransient {
+            generation_preview_text: self.generation_preview_text.clone().map_or_else(|| base.generation_preview_text.clone(), |change| change.text),
+            ..base.clone()
+        };
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<Generation3dTransient> for Generation3dTransientPatch {
+    fn is_empty(&self) -> bool {
+        self.generation_preview_text.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dTransient> for Generation3dTransientPatch {
     fn inverse(&self, base: &Generation3dTransient) -> Self {
         Self {
             generation_preview_text: self.generation_preview_text.as_ref().map(|_| Generation3dPreviewTextChange { text: base.generation_preview_text.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.generation_preview_text.is_none()
     }
 }

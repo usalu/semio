@@ -97,7 +97,7 @@ test("actual owner literals and existing GUI source/native routes identify the s
   expect(containsTokens(await sourceTokens(join(store,"🧬️schema/📜️space-history/🦀️.rs")), ["pub", "const", "S_SPACE_HISTORY_SCHEMA", ":", "&", "str", "=", JSON.stringify(corpus.owner), ";"])).toBe(true);
   const project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
   for (const command of ["test-space-history-sqlite-source", "test-space-history-sqlite-native"]) {
-    expect(project.targets[command].options.command).toBe(`bun ./📜️script.ts ${command}`);
+    expect(project.targets[command].options.command).toBe(`repo ./📜️script.ts ${command}`);
     expect(project.targets[command].cache).toBe(true);expect(project.targets[command].inputs).toContain("cargoToolchain");
   }
 });

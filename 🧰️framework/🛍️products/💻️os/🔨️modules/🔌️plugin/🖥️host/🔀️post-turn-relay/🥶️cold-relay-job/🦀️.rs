@@ -6,7 +6,7 @@ use super::*;
 pub(super) struct GuestColdRelayJob {
     pub(super) runtime: Arc<GuestRuntimes>,
     pub(super) instance: Arc<Mutex<GuestInstanceSlot>>,
-    pub(super) instance_gate: Arc<semio_framework_async::Semaphore>,
+    pub(super) instance_gate: Arc<semio_framework_async_sync::Semaphore>,
     pub(super) pool: WorkerPool,
     pub(super) cancel: semio_framework_async::CancelToken,
     pub(super) cancel_scheduled: Arc<AtomicBool>,
@@ -210,7 +210,7 @@ impl Drop for GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
-    pub(crate) fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, start: (String, Vec<u8>)) -> Self {
+    pub(crate) fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async_sync::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, start: (String, Vec<u8>)) -> Self {
         Self {
             runtime,
             instance,

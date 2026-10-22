@@ -49,7 +49,7 @@ test("generated Bazel cache flags agree with the fixture, the closed schema and 
   const options={environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache,skipRemoteCache:(row as {skipRemoteCache?:boolean}).skipRemoteCache},flags=bazelCacheFlagsV1(layout,slot,options);
   expect(validate(flags),row.name+JSON.stringify(validate.errors)).toBe(true);
   expect(flags.command,row.name).toEqual(row.command.map(flag=>flag.replace("{actions}",layout.actions).replace("{helper}",helperPath)));expect(flags.remote,row.name).toBe(row.remote);expect(flags.startup).toEqual(["--output_base="+bazelServerBaseV1(layout,slot)]);
-  expect(flags.environment,row.name).toEqual(row.tokenEnvironment);expect(flags.helper?.path,row.name).toBe(row.helper?helperPath:undefined);
+  expect<unknown>(flags.environment,row.name).toEqual(row.tokenEnvironment);expect(flags.helper?.path,row.name).toBe(row.helper?helperPath:undefined);
   expect(flags.command.some(flag=>flag.startsWith("--remote_cache=")),row.name).toBe(row.remote);
   expect(JSON.stringify(flags.command)+JSON.stringify(flags.helper??{}),row.name+" keeps the token out of flags and helper").not.toContain("tok-123");
  }

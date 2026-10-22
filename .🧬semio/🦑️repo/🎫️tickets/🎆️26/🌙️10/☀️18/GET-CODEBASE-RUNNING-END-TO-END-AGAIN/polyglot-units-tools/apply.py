@@ -6,6 +6,7 @@ group 2: one anchored edit of the live TypeScript units engine: its private Tarj
   --undo      remove created files that still equal the staged bytes and restore the engine if it still equals the edited bytes
   group 3 (default): a dependent TypeScript unit keys the declaration CLOSURE of its dependencies instead of their own declaration digest (sound when a re-exported type changes two units away); --no-ts-closure skips it
   group 4 (default): wires `repo units`: the operation in the catalogue and its schema, the router branch and the regenerated help snapshot (wiring.py, wiring/help-fixture.json); --no-wiring skips it
+  group 4 needs the tool-interface set (C/tool-iface-tools): `repo units` lists files through its git adapter (`🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️git`); without it group 4 is refused unless --without-tool-iface is given (for mirrors)
   --no-dedupe skip group 2
   --root DIR  operate on a mirror of the repository (verification overlay)"""
 import hashlib, os, shutil, sys
@@ -61,8 +62,14 @@ WIRING = [("🏗️build/⚙️operations/🔣️catalog.json", wiring.catalog_e
 HELP = "🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json"
 
 
+ADAPTER = os.path.join(ROOT, "🧰️framework", "🔨️modules", "🏃️process", "🧰️tools", "🌿️git", "🟦️.ts")
+
+
 def plan(dedupe, closure, wire):
     ops, refused = [], []
+    if wire and "--without-tool-iface" not in sys.argv and not os.path.exists(ADAPTER):
+        print("REFUSED: the tool-interface git adapter is not applied yet (apply C/tool-iface-tools first, or pass --without-tool-iface / --no-wiring)")
+        return ops, [ADAPTER]
     for rel in sorted(staged_files()):
         source, destination = os.path.join(STAGED, rel), os.path.join(TARGET, rel)
         data = open(source, "rb").read()

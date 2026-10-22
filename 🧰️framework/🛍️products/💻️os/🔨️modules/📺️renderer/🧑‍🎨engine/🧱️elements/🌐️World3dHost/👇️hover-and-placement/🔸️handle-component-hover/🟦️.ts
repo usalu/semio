@@ -1,5 +1,5 @@
 /** 🔸️ The handle component hover phase of useWorldHoverAndPlacement. */
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type MergeMode } from "@semio-tech/framework";
 import { world3dComponentInteractionTarget, world3dMarkerInteractionTarget } from "../../🔗️instance-selection/🟦️.ts";
 import { MARQUEE_DRAG_THRESHOLD_PX, raycastGroundPoint, resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";

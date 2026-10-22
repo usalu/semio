@@ -1,0 +1,166 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases",
+  "fits",
+  "property"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "floor",
+     "excluded",
+     "parts",
+     "totals"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "floor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "files",
+       "bytes",
+       "lines"
+      ],
+      "properties": {
+       "files": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       },
+       "lines": {
+        "type": "integer"
+       }
+      }
+     },
+     "excluded": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "parts": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {},
+        "minItems": 3
+       }
+      }
+     },
+     "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "files",
+       "bytes",
+       "lines"
+      ],
+      "properties": {
+       "files": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       },
+       "lines": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "fits": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "totals",
+     "budget",
+     "expected"
+    ],
+    "properties": {
+     "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "files",
+       "bytes",
+       "lines"
+      ],
+      "properties": {
+       "files": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       },
+       "lines": {
+        "type": "integer"
+       }
+      }
+     },
+     "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "files",
+       "bytes",
+       "lines"
+      ],
+      "properties": {
+       "files": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       },
+       "lines": {
+        "type": "integer"
+       }
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "property": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "runs",
+    "seed"
+   ],
+   "properties": {
+    "runs": {
+     "type": "integer"
+    },
+    "seed": {
+     "type": "integer"
+    }
+   }
+  }
+ }
+}

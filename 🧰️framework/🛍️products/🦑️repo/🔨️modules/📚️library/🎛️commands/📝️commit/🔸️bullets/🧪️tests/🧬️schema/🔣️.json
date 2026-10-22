@@ -1,0 +1,260 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "lead",
+  "format",
+  "normalize",
+  "reserved",
+  "validate",
+  "tokens",
+  "staged",
+  "stagedDefects",
+  "tickets",
+  "prepared"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "lead": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "format": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "line",
+     "expected"
+    ],
+    "properties": {
+     "line": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "normalize": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "expected",
+    "capText",
+    "capExpected"
+   ],
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "capText": {
+     "type": "string"
+    },
+    "capExpected": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "reserved": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "lead",
+     "bullet"
+    ],
+    "properties": {
+     "lead": {
+      "type": "string"
+     },
+     "bullet": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "validate": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "bullets",
+     "reserved"
+    ],
+    "properties": {
+     "bullets": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "reserved": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "tokens": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "staged": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "bullets",
+     "staged",
+     "expected"
+    ],
+    "properties": {
+     "bullets": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "staged": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "stagedDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "bullets",
+     "staged",
+     "expected",
+     "defect"
+    ],
+    "properties": {
+     "bullets": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "staged": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "tickets": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "staged",
+    "expected"
+   ],
+   "properties": {
+    "staged": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "prepared": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

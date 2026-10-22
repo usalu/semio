@@ -24,12 +24,12 @@
 //! detached driver holds the backend's executor for the length of its turn, so tearing the runtime
 //! down under it would destroy state the backend registry owns.
 //!
-//! 🌉️ The bridge handed back to `Lane::Io` is a `semio_framework_async::oneshot` receiver — a repo
+//! 🌉️ The bridge handed back to `Lane::Io` is a `semio_framework_async_sync::oneshot` receiver — a repo
 //! primitive whose `poll` reads a value and registers a waker, which is safe on any thread.
 #![cfg(not(target_arch = "wasm32"))]
 
 use db_io_core::{DbIoAsyncDriverFuture, DbIoAsyncDriverOutput, DbIoAsyncDriverRuntime};
-use semio_framework_async::oneshot;
+use semio_framework_async_sync::oneshot;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::OnceLock;

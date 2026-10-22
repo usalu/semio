@@ -1,0 +1,14 @@
+== nx
+[nx] {inventory} strukturelle Sammlungsmanifeste zugelassen
+[nx] Aktuelle Eigentümer-Obhut wird geprüft ({visited} Verzeichnisse, {admitted} Manifeste)
+[nx] Warte auf Quell-Watcher und Projektgraph ({seconds} s); Strg+C bricht ab ¦ seconds
+[nx] Aktuelle echte Projekteigentümer werden zugelassen ({directories} Verzeichnisse)
+[nx] Bootstrap phases admissionMs={admissionMs} provisioningMs={provisioningMs} activationMs={activationMs} ¦ admissionMs,provisioningMs,activationMs
+Nx-Nachkommen konnten für den Abbruch nicht erfasst werden
+Nx-Nachkommen konnten nicht geprüft werden; eigene Startprozesse werden beendet: {error}
+[nx] Graph- und Hash-Vorbereitung läuft elapsedMs={elapsedMs} ¦ elapsedMs
+[nx] Rückfall bei der Graph-Mitgliedschaft: {reason} ¦ reason
+[nx] Graph observation selected={selected} sealed={sealed} elapsedMs={elapsedMs} ¦ selected,sealed,elapsedMs
+[nx] Quellautorität hat sich geändert; der aktuelle Graph wird erneut zugelassen ({attempt}/3)
+[nx] Generations-Quittung abgelehnt: {reason} ¦ reason
+[nx] Generations-Quittung written={written}

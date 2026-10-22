@@ -659,8 +659,32 @@ impl NoteDiff {
 //#endregion 🔖️Builders
 
 //#region 🔖️Apply
-impl MutationDiff<NoteSnapshot> for NoteDiff {
-    fn apply(&self, base: &NoteSnapshot, _capability: ApplyCapability) -> MutationApplyResult<NoteSnapshot> {
+impl MutationDiff<NoteSnapshot> for NoteDiff {}
+
+impl protocol::ColdMutationDiff<NoteSnapshot> for NoteDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($($field:ident),+) => {
+                $(if other.$field.is_some() {
+                    self.$field = other.$field;
+                })+
+            };
+        }
+        take!(schema, id, title, grid_visible, grid_spacing, grid_subdivisions, grid_opacity, snap_enabled, snap_grid_spacing, pencil_width, eraser_radius, linked_artifact);
+        match (self.blocks.as_mut(), other.blocks) {
+            (Some(prior), Some(later)) => prior.absorb(later),
+            (None, Some(later)) => self.blocks = Some(later),
+            _ => {}
+        }
+        match (self.assets.as_mut(), other.assets) {
+            (Some(prior), Some(later)) => prior.absorb(later),
+            (None, Some(later)) => self.assets = Some(later),
+            _ => {}
+        }
+    }
+
+    fn apply(&self, unpublished: &mut NoteSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -688,32 +712,18 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
         if let Some(link) = &self.linked_artifact {
             next.linked_artifact = link.value.clone();
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($($field:ident),+) => {
-                $(if other.$field.is_some() {
-                    self.$field = other.$field;
-                })+
-            };
-        }
-        take!(schema, id, title, grid_visible, grid_spacing, grid_subdivisions, grid_opacity, snap_enabled, snap_grid_spacing, pencil_width, eraser_radius, linked_artifact);
-        match (self.blocks.as_mut(), other.blocks) {
-            (Some(prior), Some(later)) => prior.absorb(later),
-            (None, Some(later)) => self.blocks = Some(later),
-            _ => {}
-        }
-        match (self.assets.as_mut(), other.assets) {
-            (Some(prior), Some(later)) => prior.absorb(later),
-            (None, Some(later)) => self.assets = Some(later),
-            _ => {}
-        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<NoteSnapshot> for NoteDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<NoteSnapshot> for NoteDiff {
     fn inverse(&self, base: &NoteSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -731,10 +741,6 @@ impl DiffAlgebra<NoteSnapshot> for NoteDiff {
             assets: self.assets.as_ref().map(|delta| delta.inverse_rows(&base.assets)),
             linked_artifact: self.linked_artifact.as_ref().map(|_| NoteAssigned::new(base.linked_artifact.clone())),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔖️Apply

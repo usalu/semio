@@ -19,7 +19,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeMortarType where O
         kind: "change-mortar-type",
         record: "ChangedMortarType",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change mortar type", "Mörtelart ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeMortarType where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_mortar_type::ChangeMortarType> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_mortar_type::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeMortarType where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change mortar type", "Mörtelart ändern")
-    }
 }
 
 //#region 🪢️Mounts

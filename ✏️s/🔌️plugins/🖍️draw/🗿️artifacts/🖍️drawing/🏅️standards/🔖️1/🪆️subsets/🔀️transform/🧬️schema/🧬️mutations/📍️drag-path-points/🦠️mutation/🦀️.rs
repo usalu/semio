@@ -40,12 +40,6 @@ pub fn drag_path_points<Op: From<DragPathPoints>>(targets: semio_framework_value
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for DragPathPoints where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_path_geometry::mutation::UpdatePathGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "path-points", kind: "drag-path-points", record: "DraggedPathPoints" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (drawing_label_number(self.dx), drawing_label_number(self.dy));
         let (en, de) = match self.targets.len() {
@@ -56,6 +50,15 @@ impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for DragPathPoints where Op
     }
     fn target(&self) -> Vec<String> {
         drag_path_points_layers(&self.targets).iter().map(|id| id.to_string_owner()).collect()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for DragPathPoints where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_path_geometry::mutation::UpdatePathGeometry> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 

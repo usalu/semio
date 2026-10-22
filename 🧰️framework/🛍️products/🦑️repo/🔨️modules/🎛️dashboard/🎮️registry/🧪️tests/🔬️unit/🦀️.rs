@@ -1,5 +1,5 @@
 use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
-use dashboard_registry::{graph_file, verb_of, verb_rank, CommandId, Facts, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, Request, RunPolicy, TargetFacts, FALLBACK_VERB, GRAPH_REUSE};
+use dashboard_registry::{graph_file, verb_of, verb_rank, CommandId, Facts, GraphBasis, Origin, PlaygroundFacts, Problem, ProjectFacts, Registry, Request, RunPolicy, TargetFacts, TicketFacts, FALLBACK_VERB, GRAPH_REUSE};
 use dashboard_repo_domain::{RepoAction, RepoImplementation};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};

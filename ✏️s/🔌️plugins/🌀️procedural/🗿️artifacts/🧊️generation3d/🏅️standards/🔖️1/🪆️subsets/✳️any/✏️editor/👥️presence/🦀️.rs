@@ -50,32 +50,40 @@ pub struct Generation3dPresencePatch {
     pub show_mode: Option<String>,
 }
 
-impl protocol::MutationDiff<Generation3dPresence> for Generation3dPresencePatch {
-    fn apply(&self, base: &Generation3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dPresence> {
-        Ok(Generation3dPresence {
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
-            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
-            ..base.clone()
-        })
-    }
+impl protocol::MutationDiff<Generation3dPresence> for Generation3dPresencePatch {}
+
+impl protocol::ColdMutationDiff<Generation3dPresence> for Generation3dPresencePatch {
     fn absorb(&mut self, other: Self) {
         self.camera = other.camera.or_else(|| self.camera.take());
         self.preview_camera = other.preview_camera.or_else(|| self.preview_camera.take());
         self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
     }
+
+    fn apply(&self, unpublished: &mut Generation3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = Generation3dPresence {
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            ..base.clone()
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Generation3dPresence> for Generation3dPresencePatch {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.preview_camera.is_none() && self.show_mode.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dPresence> for Generation3dPresencePatch {
     fn inverse(&self, base: &Generation3dPresence) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             preview_camera: self.preview_camera.as_ref().map(|_| base.preview_camera.clone()),
             show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none() && self.preview_camera.is_none() && self.show_mode.is_none()
     }
 }
 
@@ -214,7 +222,10 @@ impl Mutation<Generation3dPresence> for Generation3dPresenceMutation {
     }
 
     type Diff = Generation3dPresencePatch;
+}
 
+impl protocol::ColdMutation<Generation3dPresence> for Generation3dPresenceMutation {
+    type ReferenceDiff = Generation3dPresencePatch;
     fn diff(&self, base: &Generation3dPresence) -> protocol::MutationOutcome<Generation3dPresencePatch> {
         let patch = match self {
             Self::SetCamera { camera } => (camera != &base.camera).then(|| Generation3dPresencePatch { camera: Some(camera.clone()), ..Default::default() }),
@@ -226,7 +237,6 @@ impl Mutation<Generation3dPresence> for Generation3dPresenceMutation {
             None => protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds that value."),
         }
     }
-
     fn inverse(&self, base: &Generation3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetCamera { .. } => Self::SetCamera { camera: base.camera.clone() },

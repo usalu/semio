@@ -5,7 +5,7 @@ use semio_framework_ui_tui_core::theme::Theme;
 use semio_framework_ui_tui_frame::layout::{Constraint,Dimension};
 use semio_framework_ui_tui_frame::scene::{Node,NodeContent};
 use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_terminal::backend::{NativeTerminal,TerminalBackend};
+use semio_framework_ui_tui_terminal::backend::{TerminalBackend};
 use ui_locale::Locale;
 use std::path::Path;
 #[derive(Default)]
@@ -43,17 +43,17 @@ fn action(event:&Event)->&'static str {
     }
 }
 /// 🎛️ Keeps the host responsive while an explicit selection becomes a durable preference event.
-pub(super) fn run(term:&mut NativeTerminal,path:&Path,theme:Theme)->std::io::Result<Option<Locale>> {
+pub(super) fn run<B:TerminalBackend>(term:&mut B,path:&Path,theme:Theme)->Result<Option<Locale>,dashboard_feedback::Failure> {
     let mut choice=Choice::default();let mut tui=Tui::new(term.size().unwrap_or(Size{width:80,height:24}),theme);tui.set_width_mode(term.width_mode());
     let root=tui.scene.root();let node=tui.scene.add(root,Node::new(NodeContent::Text(String::new())));
     tui.scene.node_mut(node).set_constraint(Constraint{width:Dimension::Weight(1),height:Dimension::Weight(1),..Default::default()});
     let mut pending:Option<(Locale,std::sync::Arc<std::sync::atomic::AtomicBool>,std::sync::mpsc::Receiver<std::io::Result<u64>>)>=None;let mut problem=String::new();
     loop {
-        if let Some((locale,_,receiver))=&pending {match receiver.try_recv(){Ok(Ok(_))=>return Ok(Some(*locale)),Ok(Err(error))=>{problem=if error.kind()==std::io::ErrorKind::Interrupted{dashboard_preferences::language::declared().message("cancelled").into()}else{format!("{}: {error}",dashboard_preferences::language::declared().message("saveFailed"))};pending=None;},Err(std::sync::mpsc::TryRecvError::Disconnected)=>return Err(std::io::Error::other(dashboard_preferences::language::declared().message("disconnected"))),Err(std::sync::mpsc::TryRecvError::Empty)=>{}}}
+        if let Some((locale,_,receiver))=&pending {match receiver.try_recv(){Ok(Ok(_))=>return Ok(Some(*locale)),Ok(Err(error))=>{problem=if error.kind()==std::io::ErrorKind::Interrupted{dashboard_preferences::language::declared().message("cancelled").into()}else{format!("{}: {error}",dashboard_preferences::language::declared().message("saveFailed"))};pending=None;},Err(std::sync::mpsc::TryRecvError::Disconnected)=>return Err(dashboard_feedback::Failure::io(dashboard_feedback::Operation::Preferences,std::io::Error::other(dashboard_preferences::language::declared().message("disconnected")))),Err(std::sync::mpsc::TryRecvError::Empty)=>{}}}
         let mut text=choice.text();if pending.is_some(){text.push('\n');text.push_str(dashboard_preferences::language::declared().message("saving"));}if !problem.is_empty(){text.push('\n');text.push_str(&problem);}
         if !matches!(&tui.scene.node(node).content,NodeContent::Text(current) if current==&text){tui.scene.node_mut(node).set_text(text);}
-        let patch=tui.render();term.present(&patch,tui.cursor())?;
-        for event in term.wait(Some(std::time::Instant::now()+std::time::Duration::from_millis(80)))? {
+        let patch=tui.render();term.present(&patch,tui.cursor()).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Present,error))?;
+        for event in term.wait(Some(std::time::Instant::now()+std::time::Duration::from_millis(80))).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Wait,error))? {
             if let Event::Resize(size)=event {tui.resize(size);continue;}
             if let Some((_,cancel,_))=&pending {if action(&event)=="escape"{cancel.store(true,std::sync::atomic::Ordering::Release);}continue;}
             match choice.action(action(&event)) {

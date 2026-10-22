@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ pdf TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
@@ -11,7 +11,7 @@ class OwnedVerifyScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { bundleRuntime: "bun", suites: [
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { bundleRuntime: "runtime", suites: [
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🧪️tests/🟦️.ts",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️cos/🟦️.ts",

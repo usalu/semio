@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_value::retirement::OwnedValueRetirementFactory;
-use semio_framework_value::retirement::SharedValueRetirementFactory;
+use semio_framework_value::OwnedValueRetirementFactory;
+use semio_framework_value::SharedValueRetirementFactory;
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation;
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
 

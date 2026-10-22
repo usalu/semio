@@ -7,9 +7,9 @@ use super::*;
 impl PluginArtifactChannel {
     /// 💡️ Opens (once) this plugin's real inference route: a fresh `GuestRuntimes` over the SAME
     /// compiled component, one `PluginInstanceHandle`, and an `ArtifactInferenceRouter` registered
-    /// with the plugin's own declared roster — byte-for-byte the `serde_json` roster
-    /// `🏃️run/🦀️.rs` builds (`contributions.inference_services` chained with every
-    /// `artifact_contributions[].inferences`). A plugin that declares no inference at all is a
+    /// with the plugin's own declared roster — the same rows `🏃️run/🦀️.rs` builds
+    /// (`contributions.inference_services` chained with every
+    /// `artifact_contributions[].inferences`), written by the owned JSON codec. A plugin that declares no inference at all is a
     /// typed refusal here rather than an empty registration that would fail later with a worse
     /// message.
     ///
@@ -19,19 +19,18 @@ impl PluginArtifactChannel {
     /// ownership of the instance it drives — it just shares the engine and the compiled code.
     fn ensure_inference_route(&mut self) -> Result<&PluginInferenceRoute, Fault> {
         if self.inference.is_none() {
-            let roster: Vec<serde_json::Value> = self
+            let roster: Vec<_> = self
                 .descriptor
                 .contributions
                 .inference_services
                 .iter()
                 .chain(self.descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
-                .map(serde_json::to_value)
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(|error| Self::not_wired("inference roster", error))?;
+                .cloned()
+                .collect();
             if roster.is_empty() {
                 return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.plugin_id) });
             }
-            let roster_bytes = serde_json::to_vec(&roster).map_err(|error| Self::not_wired("inference roster", error))?;
+            let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
             let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
             let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
                 self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
@@ -99,10 +98,11 @@ impl PluginArtifactChannel {
                 None => Vec::new(),
             },
         };
-        let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
+        let request_bytes = semio_framework_pack_json::to_json_string(&request).into_bytes();
         let route = self.ensure_inference_route()?;
         let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0)).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
-        serde_json::from_slice(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))
+        let result_text = std::str::from_utf8(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))?;
+        semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
 
     /// 🎯️ The owner-qualified address a typed command frame needs, resolved out of the plugin's OWN
@@ -120,7 +120,7 @@ impl PluginArtifactChannel {
     /// `sessionWindowInstances` mints for a freshly opened app (`app.windowKinds.map(kind => ({id:
     /// kind.id, …}))`) — an agent therefore addresses the very pane a human's first window is,
     /// rather than a synthetic id no shell would ever produce.
-    pub(crate) fn addressed_action_invocation(&self, capability_id: &str, input: &serde_json::Value) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
+    pub(crate) fn addressed_action_invocation(&self, capability_id: &str, arguments: impl FnOnce() -> Result<std::collections::BTreeMap<String, semio_framework_value::DslValue>, String>) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
         let plugin_id = self.plugin_id.as_str();
         let mut address: Option<semio_framework::manifest::ActionAddress> = None;
         'apps: for app in self.descriptor.manifest.apps.iter() {
@@ -161,11 +161,7 @@ impl PluginArtifactChannel {
             code: "capability.not-found".to_string(),
             message: format!("plugin `{plugin_id}` declares no app action named by capability `{capability_id}` — its committed manifest publishes {} app(s)", self.descriptor.manifest.apps.len()),
         })?;
-        let arguments = match input {
-            serde_json::Value::Object(map) => map.iter().map(|(key, value)| (key.clone(), semio_framework_value::DslValue::from(value))).collect(),
-            serde_json::Value::Null => std::collections::BTreeMap::new(),
-            other => return Err(Self::not_wired("PureCommand", format!("an action's input is a named argument object; this call carried {other}"))),
-        };
+        let arguments = arguments().map_err(|detail| Self::not_wired("PureCommand", detail))?;
         Ok(semio_framework::manifest::ActionInvocation { address, arguments })
     }
 

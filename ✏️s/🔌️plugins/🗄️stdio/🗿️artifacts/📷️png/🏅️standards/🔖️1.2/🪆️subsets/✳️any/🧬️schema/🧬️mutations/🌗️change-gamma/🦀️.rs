@@ -17,23 +17,24 @@ pub struct ChangeGammaMutation {
 impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma", kind: "change-gamma", record: "ChangeGamma" };
 
-    fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        match crate::schema::operations::gamma_change(base, &self.revision, self.gama) {
-            Ok(gamma) => protocol::MutationOutcome::new(PngDiff { gamma, ..PngDiff::default() }),
-            Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["gAMA"]),
-        }
-    }
-
-    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
-        Ok((base.image.gamma != self.gama).then(|| PngMutation::SetGamma(SetGamma { gama: base.image.gamma })).into_iter().collect())
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change gamma", "Gamma ändern")
     }
 
     fn target(&self) -> Vec<String> {
         vec!["chunk:gAMA".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
+    fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
+        match crate::schema::operations::gamma_change(base, &self.revision, self.gama) {
+            Ok(gamma) => protocol::MutationOutcome::new(PngDiff { gamma, ..PngDiff::default() }),
+            Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["gAMA"]),
+        }
+    }
+    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
+        Ok((base.image.gamma != self.gama).then(|| PngMutation::SetGamma(SetGamma { gama: base.image.gamma })).into_iter().collect())
     }
 }
 

@@ -14,17 +14,6 @@ pub struct InsertTableRow {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertTableRow" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        addressed_outcome(&DocxMutation::InsertTableRow(self.clone()), base)
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-    Ok({
-        addressed_inverse(&DocxMutation::InsertTableRow(self.clone()), base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert table row", "Tabellenzeile einfügen")
     }
@@ -32,4 +21,16 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.index.to_string())).collect()
     }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::ColdMutation<DocxSnapshot>>::ReferenceDiff> {
+        addressed_outcome(&DocxMutation::InsertTableRow(self.clone()), base)
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+    Ok({
+        addressed_inverse(&DocxMutation::InsertTableRow(self.clone()), base)?
+    
+    })
+}
 }

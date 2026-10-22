@@ -11,7 +11,7 @@ use crate::io::text::mutations::decode_semio_brep_mutation_json;
 use crate::schema::snapshot::SemioBrepSnapshot;
 use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-vertex/🏔️adds/📸️snapshot/⬅️before/🔣️.json"));
@@ -34,7 +34,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_apex_vertex_without_touching_any_other_collection() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-vertex applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("create-vertex applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-vertex/adds-an-apex-vertex-above-the-square: applied state differs from the committed after-snapshot");
     assert_eq!(produced.vertices.len(), base.vertices.len() + 1, "create-vertex adds exactly one vertex");
     let created = produced.vertices.last().expect("the created vertex is appended — id-keyed collections have no insertion index");
@@ -52,9 +52,9 @@ async fn the_undo_delete_vertex_removes_the_apex_again() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "creating a vertex nothing references undoes as exactly one delete-vertex");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-vertex applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward create-vertex applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-vertex applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo delete-vertex applies");
     }
     assert_eq!(current, base, "create-vertex/adds-an-apex-vertex-above-the-square: the undo did not restore the before-snapshot");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioBrepMutation as ColdMutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
     let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-vertex/adds-an-apex-vertex-above-the-square: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -96,7 +96,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed create-vertex diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-vertex diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed create-vertex diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-vertex/adds-an-apex-vertex-above-the-square: committed diff did not carry before to after");
 }
 

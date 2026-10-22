@@ -3,7 +3,7 @@ import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../.
 //
 // Discovery is every taxonomy-declared kind-only feature beneath `🧪️tests/*`. There are no hand-authored `📋️project.json` files
 // for tests, so a case can never be silently omitted. An owner project carries exactly two targets: `lint` (the contract phase
-// over every case) and `test`, whose level, facet and case are ARGUMENTS (`bun repo run <owner>:test -- long --facet oracle --case x`),
+// over every case) and `test`, whose level, facet and case are ARGUMENTS (`repo run <owner>:test -- long --facet oracle --case x`),
 // never separate targets; Nx caches every argument combination on its own.
 //
 // The exclusion set, the case slug rule, the adapter filenames and the location of the testing
@@ -21,10 +21,12 @@ const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
 const inputModule = new URL("../📚️library/🏗️build/📥️inputs/🟨️.mjs", import.meta.url);
+/** 🧲️ Loads the inference producer: a literal import in a captured closure so the capture reaches it, the plain URL otherwise. */
+const loadInferenceModuleV1 = () => import.meta.semioCapturedPhysicalSources ? import("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs") : import(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url).href);
 const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
 const inputRevision = createHash("sha256").update(readAuthoritySource(inputModule)).digest("hex");
 let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner, compactSourceInputs;
-const testBootstrap = Promise.all([import(`${dependencyModule.href}?revision=${dependencyRevision}`), import(`${inputModule.href}?revision=${inputRevision}`)]).then(([deps, inputs]) => {
+const testBootstrap = Promise.all(import.meta.semioCapturedPhysicalSources ? [import("./🕸️dependencies/🟨️.mjs"), import("../📚️library/🏗️build/📥️inputs/🟨️.mjs")] : [import(`${dependencyModule.href}?revision=${dependencyRevision}`), import(`${inputModule.href}?revision=${inputRevision}`)]).then(([deps, inputs]) => {
   cargoPackage = deps.cargoPackage;
   localPackagePath = deps.localPackagePath;
   rustSubjectPackage = deps.rustSubjectPackage;
@@ -207,7 +209,7 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs = false) {
   return targetBuildModes(scope.split("/").at(-1), {
     executor: "repo:script",
-    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
+    options: { cwd: domain, command: `repo ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
     configurations: Object.fromEntries(["prototype", "release"].map(mode => [mode, { env: { SEMIO_TEST_OUTPUT_SCOPE: `${scope}/${mode}` } }])),
     outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/tasks/${scope}/{options.env.SEMIO_BUILD_MODE}/${child}`),
@@ -229,8 +231,7 @@ async function testCaseProjects(configFiles, _options, context) {
   if (!authority.file(policyPath)) throw new Error("Test discovery requires real no-follow cache policy authority");
   const policy = JSON.parse(readFileSync(join(workspaceRoot, policyPath), "utf8"));
   if (featureCandidates.length === 0) return results;
-  const libraryModule = new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url);
-  const { cacheInternals: native, libraryBootstrap, createScriptInputCache } = await (await import(libraryModule.href)).loadCurrentImplementationV1();
+  const { cacheInternals: native, libraryBootstrap, createScriptInputCache } = await (await loadInferenceModuleV1()).loadCurrentImplementationV1();
   await libraryBootstrap;
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
@@ -292,12 +293,25 @@ async function testCaseProjects(configFiles, _options, context) {
   return results;
 }
 
-/** 🕸️ Makes native source changes select their inferred consumer cases in Nx affected runs. */
+/**
+ * 🚧️ Names the test projects whose `nativeSources` input names a project the given inventory does not hold, with the missing names in code point order.
+ * Test inference reads project names from the live disk while the inventory is the snapshot of one graph run, so a project created or removed during the run is a dangling name here, never a reason to abort the graph.
+ */
+export function danglingTestDependenciesV1(projects) {
+  return Object.entries(projects).flatMap(([source, project]) => {
+    if (!project.tags?.includes("type:test")) return [];
+    const names = new Set(Object.values(project.targets ?? {}).flatMap((target) => (target.inputs ?? []).flatMap((input) => input.input === "nativeSources" ? input.projects : [])));
+    const missing = [...names].filter((name) => !Object.hasOwn(projects, name)).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+    return missing.length ? [{ source, root: project.root, missing }] : [];
+  });
+}
+
+/** 🕸️ Makes native source changes select their inferred consumer cases in Nx affected runs; a name the inventory does not hold yields no edge, the portable assembly withholds that test project through {@link danglingTestDependenciesV1}. */
 function testCaseDependencies(_options, context) {
   const vocabulary = taxonomy(context.workspaceRoot);
   return Object.entries(context.projects).flatMap(([source, project]) => {
     if (!project.tags?.includes("type:test")) return [];
-    const targets = new Set(Object.values(project.targets ?? {}).flatMap((target) => (target.inputs ?? []).flatMap((input) => input.input === "nativeSources" ? input.projects : [])));
+    const targets = new Set(Object.values(project.targets ?? {}).flatMap((target) => (target.inputs ?? []).flatMap((input) => input.input === "nativeSources" ? input.projects : [])).filter((target) => Object.hasOwn(context.projects, target)));
     const featureName = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
     const preferred = `${project.root}/${featureName}`;
     const files = context.fileMap?.projectFileMap?.[source];
@@ -305,10 +319,7 @@ function testCaseDependencies(_options, context) {
       ?? files?.find((entry) => entry.file.endsWith(`/${featureName}`))?.file
       ?? preferred;
     if (!existsSync(join(context.workspaceRoot, sourceFile))) return [];
-    return [...targets].map((target) => {
-      if (!context.projects[target]) throw new Error(`Test dependency has no build project: ${source} → ${target}`);
-      return { source, target, sourceFile, type: "static" };
-    });
+    return [...targets].map((target) => ({ source, target, sourceFile, type: "static" }));
   });
 }
 
@@ -325,7 +336,7 @@ async function invokeCurrentImplementationV1(kind, args) {
   const revision = implementationRevision();
   if (revision === loadedRevision) {
     if (kind !== "nodes") return observeDependencies({ receiptPath: join(repositoryBuildGraphWriterDirectoryV1(resolve(args[1].workspaceRoot),"inference"), "test-cases.receipt.json") }, () => testCaseDependencies(...args));
-    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = (await import(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url).href)).currentImplementationRevisionV1();
+    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = (await loadInferenceModuleV1()).currentImplementationRevisionV1();
     return observeInference({ cachePath: join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"inference"), "test-cases.json"), key: [revision, libraryRevision, args[0], args[1] ?? null, workspaceRoot] }, () => testCaseProjects(...args));
   }
   const url = new URL(import.meta.url);

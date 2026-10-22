@@ -18,7 +18,7 @@ fn diff_of(mutation: &En1999Mutation, base: &En1999Snapshot) -> En1999Diff {
 
 async fn law(base: &En1999Snapshot, first: &En1999Mutation, second: impl Fn(&En1999Snapshot) -> En1999Mutation) -> En1999Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -60,7 +60,7 @@ async fn add_then_remove_cancels_and_remove_then_add_replaces() {
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");
     let existing = base.members[0].clone();
     let sum = law(&base, &En1999Mutation::RemoveMember(RemoveMember { id: existing.id.clone() }), |_| En1999Mutation::AddMember(AddMember { index: 0, member: existing.clone() })).await;
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("replace"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("replace"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -74,8 +74,8 @@ async fn a_list_setter_names_every_row_and_inverts() {
     members.pop();
     let mutation = En1999Mutation::ChangeMembers(ChangeMembers { members: members.clone() });
     let forward = diff_of(&mutation, &base);
-    let after = protocol::apply_diff(&forward, &base).expect("apply");
+    let after = protocol::apply_diff_cold(&forward, &base).expect("apply");
     assert_eq!(after.members, members);
-    assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }

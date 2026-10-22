@@ -13,7 +13,7 @@ export async function testNxBootstrap(workspace: string, output: string): Promis
   for (const source of fixture.unrelatedSources) { const path = join(root, source.path); mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, source.content); }
   for (const source of fixture.eagerSources) { const path = join(root, source); mkdirSync(dirname(path), { recursive: true }); copyFileSync(join(workspace, source), path); }
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
-  const entry = JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).scripts.nx.match(/^bun (\.\/[^\s]*📜️script\.ts) nx$/)?.[1];
+  const entry = JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).scripts.nx.match(/^repo (\.\/[^\s]*📜️script\.ts) nx$/)?.[1];
   assert.ok(entry, "The public Nx alias must select one repository bootstrap script");
   const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [entry], bundle: true, write: false, metafile: true, packages: "external", platform: "node", format: "esm", logLevel: "silent" });
   assert.deepEqual(Object.keys(graph.metafile.inputs).map(path => relative(workspace, resolve(workspace, path)).replaceAll("\\", "/")).sort(), [...fixture.eagerSources].sort());

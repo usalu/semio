@@ -1,0 +1,46 @@
+package tickets
+
+import (
+	"encoding/json"
+	"os"
+	"testing"
+)
+
+func TestConvertedTicketsRoundTripThroughTheGoCodec(t *testing.T) {
+	var files []string
+	raw, err := os.ReadFile(os.Getenv("LEGACY_PURGE_CONVERTED"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(raw, &files); err != nil {
+		t.Fatal(err)
+	}
+	if len(files) == 0 {
+		t.Fatal("no converted ticket listed")
+	}
+	for _, file := range files {
+		text, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ticket, err := DecodeTicketDocument(string(text))
+		if err != nil {
+			t.Errorf("%s: %v", file, err)
+			continue
+		}
+		if again := EncodeTicketDocument(ticket); again != string(text) {
+			t.Errorf("%s: decode then encode differs", file)
+		}
+		var members map[string]interface{}
+		if err := json.Unmarshal(text, &members); err != nil {
+			t.Errorf("%s: %v", file, err)
+			continue
+		}
+		for _, retired := range []string{"prompt", "agents", "started", "finished", "dates"} {
+			if _, found := members[retired]; found {
+				t.Errorf("%s: still carries %q", file, retired)
+			}
+		}
+	}
+	t.Logf("%d converted tickets are fixed points of decode then encode", len(files))
+}

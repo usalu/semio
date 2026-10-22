@@ -24,7 +24,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts build"
+        "command": "repo ../../🏗️builder/🐍️python/📜️script.ts build"
       },
       "cache": true,
       "outputs": [
@@ -45,7 +45,7 @@
           "env": "SOURCE_DATE_EPOCH"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         }
       ]
     },
@@ -54,7 +54,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "outputs": [],
       "dependsOn": [
@@ -73,7 +73,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps",
+        "command": "repo ../../🏗️builder/🐍️python/📜️script.ts deps",
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python"
       },
       "metadata": {

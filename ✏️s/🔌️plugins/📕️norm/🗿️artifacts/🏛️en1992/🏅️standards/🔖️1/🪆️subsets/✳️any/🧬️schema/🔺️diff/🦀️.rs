@@ -470,42 +470,9 @@ pub struct En1992Diff {
     pub anchors: Option<En1992AnchorsRows>,
 }
 
-impl protocol::MutationDiff<En1992Snapshot> for En1992Diff {
-    fn apply(&self, base: &En1992Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1992Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.title {
-            next.title = value.clone();
-        }
-        if let Some(value) = &self.design_working_life_years {
-            next.design_working_life_years = value.clone();
-        }
-        if let Some(value) = &self.delta_c_dev {
-            next.delta_c_dev = value.clone();
-        }
-        if let Some(value) = &self.cement_type {
-            next.cement_type = value.clone();
-        }
-        if let Some(rows) = &self.concrete_grades {
-            next.concrete_grades = rows.commit_onto(&base.concrete_grades, capability).map_err(|error| error.under(["concrete_grades"]))?;
-        }
-        if let Some(rows) = &self.reinforcement_grades {
-            next.reinforcement_grades = rows.commit_onto(&base.reinforcement_grades, capability).map_err(|error| error.under(["reinforcement_grades"]))?;
-        }
-        if let Some(rows) = &self.prestress_steels {
-            next.prestress_steels = rows.commit_onto(&base.prestress_steels, capability).map_err(|error| error.under(["prestress_steels"]))?;
-        }
-        if let Some(rows) = &self.members {
-            next.members = rows.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
-        }
-        if let Some(rows) = &self.anchors {
-            next.anchors = rows.commit_onto(&base.anchors, capability).map_err(|error| error.under(["anchors"]))?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<En1992Snapshot> for En1992Diff {}
 
+impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -558,9 +525,52 @@ impl protocol::MutationDiff<En1992Snapshot> for En1992Diff {
             self.anchors = self.anchors.take().filter(|rows| !rows.is_empty());
         }
     }
+
+    fn apply(&self, unpublished: &mut En1992Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(value) = &self.title {
+            next.title = value.clone();
+        }
+        if let Some(value) = &self.design_working_life_years {
+            next.design_working_life_years = value.clone();
+        }
+        if let Some(value) = &self.delta_c_dev {
+            next.delta_c_dev = value.clone();
+        }
+        if let Some(value) = &self.cement_type {
+            next.cement_type = value.clone();
+        }
+        if let Some(rows) = &self.concrete_grades {
+            next.concrete_grades = rows.commit_onto(&base.concrete_grades, capability).map_err(|error| error.under(["concrete_grades"]))?;
+        }
+        if let Some(rows) = &self.reinforcement_grades {
+            next.reinforcement_grades = rows.commit_onto(&base.reinforcement_grades, capability).map_err(|error| error.under(["reinforcement_grades"]))?;
+        }
+        if let Some(rows) = &self.prestress_steels {
+            next.prestress_steels = rows.commit_onto(&base.prestress_steels, capability).map_err(|error| error.under(["prestress_steels"]))?;
+        }
+        if let Some(rows) = &self.members {
+            next.members = rows.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
+        }
+        if let Some(rows) = &self.anchors {
+            next.anchors = rows.commit_onto(&base.anchors, capability).map_err(|error| error.under(["anchors"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<En1992Snapshot> for En1992Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none() && self.title.is_none() && self.design_working_life_years.is_none() && self.delta_c_dev.is_none() && self.cement_type.is_none() && self.concrete_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.reinforcement_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.prestress_steels.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.anchors.as_ref().map_or(true, |rows| rows.is_empty())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1992Snapshot> for En1992Diff {
     fn inverse(&self, base: &En1992Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex.clone()),
@@ -574,10 +584,6 @@ impl protocol::DiffAlgebra<En1992Snapshot> for En1992Diff {
             members: self.members.as_ref().map(|rows| rows.inverse(&base.members)).filter(|rows| !rows.is_empty()),
             anchors: self.anchors.as_ref().map(|rows| rows.inverse(&base.anchors)).filter(|rows| !rows.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.title.is_none() && self.design_working_life_years.is_none() && self.delta_c_dev.is_none() && self.cement_type.is_none() && self.concrete_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.reinforcement_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.prestress_steels.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.anchors.as_ref().map_or(true, |rows| rows.is_empty())
     }
 }
 

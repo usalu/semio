@@ -17,7 +17,7 @@
     "./testing/tool-job-fem-numerical-microcursor": "./🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/fem-js:test"
+    "test": "repo run @semio-tech/fem-js:test"
   },
   "devDependencies": {
     "manifold-3d": "^3.5.1",

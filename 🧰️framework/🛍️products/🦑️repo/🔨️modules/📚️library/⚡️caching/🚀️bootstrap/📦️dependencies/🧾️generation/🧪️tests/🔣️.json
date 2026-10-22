@@ -83,7 +83,8 @@
   {
    "name": "untouched tree matches",
    "mutations": [],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
    "name": "directory touched without change matches",
@@ -104,7 +105,8 @@
      "text": "notes"
     }
    ],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
    "name": "hidden directory added matches",
@@ -139,7 +141,8 @@
      "text": "export const a=2;\n"
     }
    ],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
    "name": "new package falls back",
@@ -178,14 +181,79 @@
    "expect": "mismatch:manifest-changed"
   },
   {
-   "name": "source directory removed falls back",
+   "name": "source directory without manifests removed matches",
    "mutations": [
     {
      "op": "remove",
      "path": "pkgs/a/src"
     }
    ],
-   "expect": "mismatch:membership-changed"
+   "expect": "match"
+  },
+  {
+   "name": "empty directory added under a source directory matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/src/tests/fresh"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "directory with a source file added matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/tests/case.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "directory with a nested package manifest added falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/tests/deep/package.json",
+     "text": "{\"name\":\"deep\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed",
+   "reason": {
+    "path": "pkgs/a/src",
+    "detail": "listing"
+   }
+  },
+  {
+   "name": "symlink added to a source directory falls back",
+   "mutations": [
+    {
+     "op": "symlink",
+     "path": "pkgs/a/src/linked",
+     "target": "@STORE@/j/g1"
+    }
+   ],
+   "expect": "mismatch:membership-changed",
+   "reason": {
+    "path": "pkgs/a/src",
+    "detail": "listing"
+   }
+  },
+  {
+   "name": "source directory removed and recreated empty matches",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    },
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/src"
+    }
+   ],
+   "expect": "match"
   },
   {
    "name": "source directory replaced by symlink falls back",
@@ -222,7 +290,39 @@
      "text": "{\"name\":\"b\",\"version\":\"2.0.0\"}"
     }
    ],
-   "expect": "mismatch:manifest-changed"
+   "expect": "mismatch:manifest-changed",
+   "reason": {
+    "path": "pkgs/b/package.json",
+    "detail": "bytes"
+   },
+   "oracle": true
+  },
+  {
+   "name": "walk protocol stamp changed falls back",
+   "mutations": [],
+   "reseal": "walkStamp",
+   "expect": "mismatch:protocol-changed",
+   "reason": {
+    "detail": "semio.dependency-generation-walk/0"
+   },
+   "oracle": true
+  },
+  {
+   "name": "tool source entry and a transitive import edited together matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/entry.ts",
+     "text": "export const changed=1;\n"
+    },
+    {
+     "op": "write",
+     "path": "impl/deep/later.ts",
+     "text": "export const later=2;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
   },
   {
    "name": "lock edited falls back",
@@ -233,7 +333,12 @@
      "text": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"x\":1}}"
     }
    ],
-   "expect": "mismatch:input-changed"
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bun.lock",
+    "detail": "bytes"
+   },
+   "oracle": true
   },
   {
    "name": "lock replaced by equal bytes falls back",
@@ -243,7 +348,12 @@
      "path": "bun.lock"
     }
    ],
-   "expect": "mismatch:input-changed"
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bun.lock",
+    "detail": "identity"
+   },
+   "oracle": true
   },
   {
    "name": "bunfig appears falls back",
@@ -254,7 +364,12 @@
      "text": "[install]\n"
     }
    ],
-   "expect": "mismatch:input-changed"
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bunfig.toml",
+    "detail": "appeared"
+   },
+   "oracle": true
   },
   {
    "name": "binding retargeted falls back",
@@ -341,16 +456,13 @@
    "tamper": "execution"
   },
   {
-   "name": "entry list changed falls back",
-   "mutations": [],
-   "expect": "mismatch:implementation-changed",
-   "port": "entries"
-  },
-  {
    "name": "runtime changed falls back",
    "mutations": [],
    "expect": "mismatch:runtime-changed",
-   "port": "runtime"
+   "port": "runtime",
+   "reason": {
+    "detail": "manager"
+   }
   },
   {
    "name": "open conditions fall back",
@@ -382,7 +494,7 @@
    "reseal": "scopeReadSha256"
   },
   {
-   "name": "closure entry edited falls back",
+   "name": "tool source entry edited matches",
    "mutations": [
     {
      "op": "write",
@@ -390,10 +502,11 @@
      "text": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n// changed\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure transitive import edited falls back",
+   "name": "tool source transitive import edited matches",
    "mutations": [
     {
      "op": "write",
@@ -401,10 +514,11 @@
      "text": "export const fence=(rules:unknown)=>({...rules as object});\nexport const later=()=>import(\"./later.ts\");\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure dynamic import target edited falls back",
+   "name": "tool source dynamic import target edited matches",
    "mutations": [
     {
      "op": "write",
@@ -412,10 +526,11 @@
      "text": "export const later=2;\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure commonjs asset edited falls back",
+   "name": "tool source commonjs asset edited matches",
    "mutations": [
     {
      "op": "write",
@@ -423,10 +538,11 @@
      "text": "module.exports=Object.freeze({maximum:5});\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure json asset edited falls back",
+   "name": "tool source json asset edited matches",
    "mutations": [
     {
      "op": "write",
@@ -434,10 +550,11 @@
      "text": "{\"limit\":5}\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure module-owned schema edited falls back",
+   "name": "tool source module-owned schema edited matches",
    "mutations": [
     {
      "op": "write",
@@ -445,20 +562,22 @@
      "text": "{\"type\":\"array\"}\n"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure file removed falls back",
+   "name": "tool source file removed matches",
    "mutations": [
     {
      "op": "remove",
      "path": "impl/deep/later.ts"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure file replaced by symlink falls back",
+   "name": "tool source file replaced by symlink matches",
    "mutations": [
     {
      "op": "remove",
@@ -470,30 +589,33 @@
      "target": "@STORE@/../impl/unrelated.ts"
     }
    ],
-   "expect": "mismatch:implementation-changed"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure file rewritten with identical bytes matches",
+   "name": "tool source file rewritten with identical bytes matches",
    "mutations": [
     {
      "op": "replace",
      "path": "impl/deep/fence.ts"
     }
    ],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "closure file touched without change matches",
+   "name": "tool source file touched without change matches",
    "mutations": [
     {
      "op": "touch",
      "path": "impl/rules.json"
     }
    ],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "file outside the closure edited matches",
+   "name": "file next to the tool source edited matches",
    "mutations": [
     {
      "op": "write",
@@ -501,10 +623,11 @@
      "text": "export const unrelated=false;\n"
     }
    ],
-   "expect": "match"
+   "expect": "match",
+   "oracle": true
   },
   {
-   "name": "file added next to the closure matches",
+   "name": "file added next to the tool source matches",
    "mutations": [
     {
      "op": "write",
@@ -512,19 +635,17 @@
      "text": "export const extra=1;\n"
     }
    ],
-   "expect": "match"
-  },
-  {
-   "name": "closure evidence tampered falls back",
-   "mutations": [],
-   "expect": "mismatch:evidence-invalid",
-   "tamper": "closure"
+   "expect": "match",
+   "oracle": true
   },
   {
    "name": "bun revision changed falls back",
    "mutations": [],
    "expect": "mismatch:runtime-changed",
-   "port": "revision"
+   "port": "revision",
+   "reason": {
+    "detail": "revision"
+   }
   },
   {
    "name": "workspace npmrc appears falls back",
@@ -535,7 +656,11 @@
      "text": "registry=https://registry.example.test/\n"
     }
    ],
-   "expect": "mismatch:configuration-changed"
+   "expect": "mismatch:configuration-changed",
+   "reason": {
+    "path": "w:.npmrc"
+   },
+   "oracle": true
   },
   {
    "name": "home npmrc appears falls back",
@@ -546,7 +671,8 @@
      "text": "//registry.example.test/:_authToken=x\n"
     }
    ],
-   "expect": "mismatch:configuration-changed"
+   "expect": "mismatch:configuration-changed",
+   "oracle": true
   },
   {
    "name": "home bunfig appears falls back",
@@ -750,37 +876,61 @@
    "expect": "mismatch:configuration-changed"
   }
  ],
- "implementation": {
-  "entries": [
-   "impl/entry.ts"
-  ]
- },
  "environment": {
   "PATH": "/usr/bin",
   "NPM_CONFIG_USER_AGENT": "bun/1.3.14 fixture",
   "HOME_DIRECTORY": "unrelated"
  },
- "fences": [
-  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
-  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
-  "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/🔣️.json",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
- ],
- "legacyImplementationFiles": [
-  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
-  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
-  "🗂️workspaces/🟦️bun/🟨️.cjs",
-  "🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
-  "🗂️workspaces/📦️payload/🟨️.cjs",
-  "🗂️workspaces/🟨️.cjs",
-  "🗂️workspaces/🔣️policy.json"
+ "reasons": [
+  {
+   "class": "input-changed",
+   "path": "w:bun.lock",
+   "detail": "bytes",
+   "en": "An installer input changed its content: w:bun.lock.",
+   "de": "Eine Installer-Eingabe hat ihren Inhalt geändert: w:bun.lock."
+  },
+  {
+   "class": "input-changed",
+   "path": "w:bunfig.toml",
+   "detail": "appeared",
+   "en": "An installer input appeared that the receipt recorded as missing: w:bunfig.toml.",
+   "de": "Eine Installer-Eingabe ist aufgetaucht, die der Beleg als fehlend festgehalten hatte: w:bunfig.toml."
+  },
+  {
+   "class": "manifest-changed",
+   "path": "pkgs/b/package.json",
+   "detail": "bytes",
+   "en": "A workspace manifest changed its content: pkgs/b/package.json.",
+   "de": "Ein Workspace-Manifest hat seinen Inhalt geändert: pkgs/b/package.json."
+  },
+  {
+   "class": "runtime-changed",
+   "detail": "manager",
+   "en": "The package manager version changed.",
+   "de": "Die Version des Paketmanagers hat sich geändert."
+  },
+  {
+   "class": "protocol-changed",
+   "detail": "semio.dependency-generation-walk/0",
+   "en": "The dependency generation protocol changed: the receipt was sealed with semio.dependency-generation-walk/0, this tool declares semio.dependency-generation-walk/2.",
+   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Der Beleg wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/2."
+  },
+  {
+   "class": "configuration-changed",
+   "path": "w:.npmrc",
+   "en": "The installer configuration changed: w:.npmrc.",
+   "de": "Die Installer-Konfiguration hat sich geändert: w:.npmrc."
+  },
+  {
+   "class": "membership-churn",
+   "path": "pkgs/a",
+   "en": "More than 4096 directories changed since the receipt, the first at pkgs/a.",
+   "de": "Seit dem Beleg haben sich mehr als 4096 Verzeichnisse geändert, das erste bei pkgs/a."
+  },
+  {
+   "class": "sha-changed",
+   "en": "The combined read of the scope no longer equals the receipt.",
+   "de": "Das kombinierte Lesen des Bereichs entspricht nicht mehr dem Beleg."
+  }
  ]
 }

@@ -25,7 +25,7 @@ pub trait TimeTravelOwners: Send {
 /// its finished result and replayed head, the retirements of the snapshots they displaced (taken from the store at once,
 /// so they retire without it) and the operations a draft discarded.
 #[doc(hidden)]
-pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+Send+'static> {
+pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::ColdMutation<P>+Send+'static> {
     pub(super) preview_base:Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) preview_original:Option<Mu>,
     pub(super) preview_source:Option<store::os_store::ArtifactMutationSource<Mu>>,
@@ -56,7 +56,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+Send+'static> {
     pub(super) discarded_factory_close: Option<semio_framework_value::FactoryAuthority>,
 }
 
-impl<P,Mu:Mutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
+impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
     fn drop(&mut self){
         let empty=self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
         assert!(std::thread::panicking()||empty,"original derived snapshot custody requires granted retirement");
@@ -64,7 +64,7 @@ impl<P,Mu:Mutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
     }
 }
 
-impl<P,Mu:Mutation<P>+Send+'static> TimeTravelStoreState<P,Mu>{
+impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> TimeTravelStoreState<P,Mu>{
     /// 🎟️ Whether discarded operations wait for an issuer the store has not yet lent.
     pub fn discard_issuer_missing(&self)->bool{self.discarded_factory.is_none()&&(!self.discarded.is_empty()||self.discarded_pending.is_some())}
     /// 🎟️ Adopts the store's operation retirement issuer for the discarded operations.
@@ -149,10 +149,10 @@ pub enum TimeTravelQueryOutput {
 impl<P, Mu> TimeTravelStoreState<P, Mu>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
-    fn discarded_has_physical_capacity(&self)->bool{size_of::<Mu>()!=0&&self.discarded.capacity()!=0}
-    fn discarded_terminal_is_empty(&self)->bool{self.discarded.is_empty()&&!self.discarded_has_physical_capacity()}
+    pub(super) fn discarded_has_physical_capacity(&self)->bool{size_of::<Mu>()!=0&&self.discarded.capacity()!=0}
+    pub(super) fn discarded_terminal_is_empty(&self)->bool{self.discarded.is_empty()&&!self.discarded_has_physical_capacity()}
 
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {

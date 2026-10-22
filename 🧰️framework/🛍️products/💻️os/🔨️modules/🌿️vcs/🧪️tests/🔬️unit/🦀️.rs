@@ -65,12 +65,12 @@ async fn fixed_history_ledger_vacancies_count_every_admissible_insert() {
 /// 🐍 The live order after the fixture's pushes, logical removal, and tail replacement equals a Python list.
 #[semio_framework_async_macros::async_test]
 async fn paged_history_ledger_matches_the_python_list_oracle() {
-    let fixture = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-ledger/🔣️.json");
+    let fixture = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧬️schema/📸️paged-history-ledger/🔣️.json");
     let law: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture).expect("paged ledger fixture")).expect("paged ledger fixture json");
     let pushes = law["pushes"].as_u64().expect("pushes") as usize;
     let remove_logical = law["removeLogical"].as_u64().expect("removeLogical") as usize;
     let replacement = law["replacement"].as_str().expect("replacement").to_string();
-    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🌿️vcs/🧪️tests/🔬️paged-ledger/📜️oracle.py");
+    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️paged-ledger/📜️oracle.py");
     let output = std::process::Command::new("python3").arg(script).output().expect("python3 list oracle");
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let expected: Vec<String> = serde_json::from_slice(&output.stdout).expect("python list oracle json");

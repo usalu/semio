@@ -1,8 +1,9 @@
 /** 🔌️ The interface-import census: which packages a test domain may import and where it imports an interface-owned package directly. */
-import { spawnSync } from "node:child_process";
+
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🧮️SourceCensus
 /** 🧱️ The JavaScript libraries reachable only through their interface module, package → owning directory (the dependency
@@ -39,7 +40,7 @@ export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, 
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
   const testDomain = dependencyTestDomain(taxonomy);
   const pathspec = ["--", "*.ts", "*.tsx", "*.js", "*.jsx", "*.mjs", "*.cjs", ":!.🧬semio"];
-  const listed = spawnSync("git", ["ls-files", "-z", ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const listed = runToolSyncV1("git", ["ls-files", "-z", ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
   const sources = listed.stdout.split("\0").filter((path) => path && !isTestDomainPath(path, testDomain));
   const hits: InterfaceImportHit[] = [];
@@ -57,7 +58,7 @@ export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, 
   const names = Object.keys(INTERFACE_OWNED_PACKAGES).map((name) => name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|");
   const production = new Set(sources);
   const oracle = new Set(
-    spawnSync("git", ["grep", "-n", "-E", `(from|import|require)[[:space:]]*\\(?[[:space:]]*["'](${names})(/[^"']*)?["']`, ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 })
+    runToolSyncV1("git", ["grep", "-n", "-E", `(from|import|require)[[:space:]]*\\(?[[:space:]]*["'](${names})(/[^"']*)?["']`, ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 })
       .stdout.split("\n")
       .filter(Boolean)
       .map((row) => row.split(":").slice(0, 2))

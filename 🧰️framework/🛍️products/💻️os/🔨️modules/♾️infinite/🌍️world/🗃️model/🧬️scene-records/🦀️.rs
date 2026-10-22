@@ -240,7 +240,7 @@ const WORLD_PICK_TARGET_PRIORITY_EPSILON: f32 = 1e-4;
 #[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-struct WorldPickTargetStyleRecord {
+pub struct WorldPickTargetStyleRecord {
     #[value(default)]
     pub color: Option<String>,
     #[value(default)]
@@ -462,7 +462,7 @@ pub struct WorldEnvironmentSunRecord {
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-struct WorldEnvironmentAmbientRecord {
+pub struct WorldEnvironmentAmbientRecord {
     #[value(default)]
     pub intensity: Option<f64>,
     #[value(default)]
@@ -487,7 +487,7 @@ pub struct WorldEnvironmentShadowRecord {
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-struct WorldEnvironmentMaterialRecord {
+pub struct WorldEnvironmentMaterialRecord {
     #[value(default)]
     pub color: Option<String>,
     #[value(default)]

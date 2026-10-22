@@ -17,7 +17,7 @@ use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use crate::render_bundle::RenderCtx;
@@ -78,7 +78,7 @@ pub(crate) fn leftover_interaction_view_from(state: &protocol::InteractionState,
     )])
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     /// 🌳️ Resolves `def`'s `DomainTopology` for the current document — the CLOSURE/RANGE-ARITHMETIC
     /// use (always a concrete, possibly-empty topology; safe for `next_selection`/`next_hover`, which
     /// degrade gracefully to single-target over an empty one). `HierarchyProvider::Topology` calls the
@@ -109,7 +109,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             let render_operation = self.tools.live_render_operation(&self.mounted_policy, &*self.stores);
             let parent_document_id = self.stores.store.envelope().id.clone();
             let (_, snapshot, config, history) = self.history.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_composition.child_content_root), render_operation, parent_document_id, None).await.with_instance(self.tools.instance_operation_owner.clone());
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_composition.child_content_root), render_operation, &parent_document_id, None).await.with_instance(self.tools.instance_operation_owner.clone());
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             let topology = A::interaction_topology(&doc, &cfg).await.map_err(|error| plugin_sdk_fault(error.into_message()))?;
             self.interaction.interaction_topology_memo = Some((key, topology));

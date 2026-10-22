@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 
 [dev-dependencies]
 semio-framework-async = { path = "../../../../../../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
+semio-framework-async-slots = { path = "../../../../../../../../⏳️async/🧱️boxed-slots/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

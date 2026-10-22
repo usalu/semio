@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-store-engine-member-group"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Common-decision publication of one store's member group over the StoreParts bundle"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-engine-member-group"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-batch = { path = "../../../../../📬️one-item-owners/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-os-store-engine-stage = { path = "../../../../../⚙️engine/🗄️stage/📦️packages/🦀️rust" }
+semio-framework-os-store-durable-group-wire = { path = "../../../../🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-live = { path = "../../../../../⚙️engine/🎞️live/📦️packages/🦀️rust" }

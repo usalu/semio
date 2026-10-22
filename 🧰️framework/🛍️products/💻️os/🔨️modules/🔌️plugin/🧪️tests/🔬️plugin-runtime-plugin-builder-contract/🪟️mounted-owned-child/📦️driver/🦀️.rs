@@ -1,6 +1,6 @@
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 #[doc(hidden)]
-pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
+pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
     let revision = app.stores.store.content_revision_now();
     let command_count = app.history.command_log.len();
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
@@ -70,7 +70,7 @@ mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifac
 }
 
 /// 🎟️ Polls the actual mounted publisher once under its transaction's original paid fixture caller.
-fn test_mounted_publication_original_turn<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
+fn test_mounted_publication_original_turn<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
     let grant=if closing{app.mounted_policy.close}else{app.mounted_policy.maintenance};
     caller.turn(grant,|cx|{let mut task=std::task::Context::from_waker(std::task::Waker::noop());
         if closing{let mut turn=std::pin::pin!(app.typed_ctx().publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}

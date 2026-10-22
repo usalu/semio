@@ -1,11 +1,13 @@
 //! 🧪️ Original ordered sparse decisions share SQLite output and genuine typed source custody.
 use protocol::{RetainedDiffSequence,RetainedDiff,RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,RetainedDiffPreflightStep,RetainedFieldPreparation,RetainedDiagnosticPreparation,RetainedDiagnosticSpec,MutationDiff,DiffAlgebra,MutationMessage,ApplyCapability};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FromValue,retained_clone::{RetainedCloneRef,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor,OwnedFieldProjection},retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FromValue,retained_clone::{RetainedCloneRef,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor,OwnedFieldProjection};
 use std::mem::{ManuallyDrop,size_of};
 use std::sync::atomic::{AtomicUsize,Ordering};
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 static PROJECTIONS:AtomicUsize=AtomicUsize::new(0);
+static PROJECTION_GATE:std::sync::Mutex<()>=std::sync::Mutex::new(());
 #[derive(Debug,PartialEq,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::ToValue,semio_framework_value::FromValue)]
 struct Snapshot{a:i64,b:i64,text:String}
 impl Clone for Snapshot{fn clone(&self)->Self{panic!("ordered native candidate must use actual SnapshotProjection")}}
@@ -99,7 +101,7 @@ fn source<T:RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{let d=RetainedClo
 fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let d=source.next_close_demand(4096).unwrap();exact(||source.close_step(grant(d)).unwrap(),|step|step.progress());}}
 fn drain<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();exact(||owner.step(grant(d)).unwrap(),|step|step.progress());}}
 fn decode<T:FromValue>(value:&serde_json::Value)->T{semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
-fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usize>,commit_cut:Option<usize>){let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);
+fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usize>,commit_cut:Option<usize>){let _projections=PROJECTION_GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);
  PROJECTIONS.store(0,Ordering::Relaxed);let mut original=source(decode::<Snapshot>(base));let mut post=decode::<Snapshot>(base);let pointer=post.text.as_ptr();let mut diff=source(Sequence{edits:decode(&row["edits"])});let(mut owner,_)=exact(||protocol::begin_retained_diff::<Snapshot,Sequence>(grant(protocol::retained_diff_birth_demand::<Snapshot,Sequence>())).unwrap(),|value|value.1);let mut turns=0;let mut settled=None;
  while cut.is_none_or(|cut|turns<cut){
   let d=owner.preflight_demand(diff.borrow(),original.borrow(),&post,body).unwrap();for denied in denied(grant(d),d){let step=exact(||protocol::preflight_retained_diff(&mut owner,diff.borrow(),original.borrow(),&post,body,denied,&mut receiving).unwrap(),|step|step.progress());assert_eq!(step.progress(),Default::default());assert_eq!(owner.preflight_demand(diff.borrow(),original.borrow(),&post,body).unwrap(),d);}

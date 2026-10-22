@@ -6,7 +6,7 @@ export { createTestSandboxV1, withTestSandboxV1, testSandboxEnvironmentV1, testS
 export type { TestSandboxV1, TestSandboxOptionsV1, TestGuardModeV1 } from "./📁️root/🟦️.ts";
 export { reserveTestPortV1, releaseTestPortV1, readTestPortLeaseV1 } from "./🔌️ports/🟦️.ts";
 export type { TestPortLeaseV1 } from "./🔌️ports/🟦️.ts";
-export { reclaimAbandonedTestSandboxesV1, abandonedTestSandboxV1, listTestSandboxesV1 } from "./♻️reclaim/🟦️.ts";
+export { reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, abandonedTestSandboxV1, listTestSandboxesV1, listSessionSandboxesV1 } from "./♻️reclaim/🟦️.ts";
 export { guardContextFromEnvironmentV1, decideWriteV1, decideSpawnV1, decideListenV1, summarizeGuardReportV1, guardArgumentsV1, testCheckoutRootV1 } from "./🛡️guard/🟦️.ts";
 export type { GuardContextV1, GuardViolationV1, GuardViolationKindV1 } from "./🛡️guard/🟦️.ts";
 export { compileLawV1, scanSourceV1, scanOwnerV1, scanTestsV1, scanLanguageV1, scanIsTestPathV1, scanIsSuiteV1 } from "./🔍️scan/🟦️.ts";

@@ -14,6 +14,16 @@ pub struct ReplaceConfig {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceConfig {
     fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
         let diff = ShootingConfigDiff {
             default_shot_format: (base.default_shot_format != self.config.default_shot_format).then(|| self.config.default_shot_format.clone()),
@@ -48,10 +58,4 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceC
     }
     Ok(undo)
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["config".into()]
-    }
 }

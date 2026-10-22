@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-plugin-host-test-component-compute-ownership:test"
+    "test": "repo run @semio-tech/framework-plugin-host-test-component-compute-ownership:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

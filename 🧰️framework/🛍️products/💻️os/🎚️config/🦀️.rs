@@ -28,7 +28,8 @@ pub mod opening_config {
         pub mod admit_local_document;
         #[path = "🧬️schema/🧬️mutations/📎️attach-local-folder/🦀️.rs"]
         pub mod attach_local_folder;
-        pub use semio_framework_os_config_merge_policy as change_merge_policy;
+        #[path = "🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs"]
+        pub mod change_merge_policy;
         #[path = "🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs"]
         pub mod clear_default_app;
         #[path = "🧬️schema/🧬️mutations/✂️detach-local-folder/🦀️.rs"]

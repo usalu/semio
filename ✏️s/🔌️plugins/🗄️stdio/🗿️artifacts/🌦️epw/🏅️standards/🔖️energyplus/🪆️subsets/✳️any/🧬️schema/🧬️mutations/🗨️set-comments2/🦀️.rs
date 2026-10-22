@@ -14,18 +14,21 @@ pub struct SetComments2 {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comments2", kind: "set-comments2", record: "SetComments2" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        let Self { value } = self;
-        protocol::MutationOutcome::new(EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() })
-    }
-    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetComments2(SetComments2 { value: base.comments_2.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set comments 2", "Kommentare 2 setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetComments2 {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() })
+    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+        Ok(vec![EpwMutation::SetComments2(SetComments2 { value: base.comments_2.clone() })])
     }
 }
 //#endregion 🔖️Payload

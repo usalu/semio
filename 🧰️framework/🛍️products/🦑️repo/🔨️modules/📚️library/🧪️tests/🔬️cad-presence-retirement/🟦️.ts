@@ -131,7 +131,7 @@ function cadPresenceRetirementChecks(): number {
   ];
   for (const hostile of readHostiles) if (hostile === readSource || exactReadReturn(hostile)) throw new Error("opaque snapshot read source guard accepted a premature return or lost retained lease");
   const presenceSource = readFileSync(join(storeBase, "🦀️.rs"), "utf8");
-  const ephemeralSource = readFileSync(join(storeFolder, "🫧️ephemeral/👥️presence-store-and-peers-publication/🦀️.rs"), "utf8");
+  const ephemeralSource = readFileSync(join(storeBase, "👥️presence-store-and-peers-publication/🦀️.rs"), "utf8");
   const oneItemSource = readFileSync(join(storeFolder, "🫧️ephemeral/📤️ephemeral-one-item-publication/🦀️.rs"), "utf8");
   const publicationSource = readFileSync(join(storeBase, "🚪️io/📬️publication/🦀️.rs"), "utf8");
   const rejectionSource = readFileSync(join(storeBase, "🚫️rejection/🦀️.rs"), "utf8");

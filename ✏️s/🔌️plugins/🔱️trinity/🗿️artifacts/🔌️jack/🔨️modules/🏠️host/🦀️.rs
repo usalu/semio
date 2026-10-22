@@ -9,7 +9,8 @@ use semio_framework_graph_manifest::{PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_diagnostic::TextError;
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::retirement::{controlled::ControlledRetirement, OwnedValueRetirementFactory, SharedValueRetirementFactory};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, decode_op};

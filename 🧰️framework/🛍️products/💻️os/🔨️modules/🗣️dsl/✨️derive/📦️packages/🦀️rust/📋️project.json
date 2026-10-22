@@ -21,7 +21,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate"
+        "command": "repo ./📜️script.ts generate"
       },
       "outputs": []
     },
@@ -36,7 +36,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -45,7 +45,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-generated"
+        "command": "repo ./📜️script.ts check-generated"
       },
       "outputs": []
     },
@@ -54,7 +54,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate-schema-index"
+        "command": "repo ./📜️script.ts generate-schema-index"
       },
       "outputs": []
     },
@@ -69,7 +69,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts schema-index preview"
+        "command": "repo ./📜️script.ts schema-index preview"
       },
       "outputs": []
     },
@@ -78,7 +78,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-schema-index"
+        "command": "repo ./📜️script.ts check-schema-index"
       },
       "outputs": []
     },
@@ -95,7 +95,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-schema-index-source",
+        "command": "repo ./📜️script.ts test-schema-index-source",
         "forwardAllArgs": true
       }
     },
@@ -105,7 +105,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source-authority-source",
+        "command": "repo ./📜️script.ts test-source-authority-source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -125,7 +125,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-exports-source",
+        "command": "repo ./📜️script.ts test-exports-source",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -145,7 +145,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-exports",
+        "command": "repo ./📜️script.ts test-exports",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -165,7 +165,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -185,7 +185,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-cold-reference",
+        "command": "repo ./📜️script.ts test-cold-reference",
         "forwardAllArgs": true
       },
       "inputs": [

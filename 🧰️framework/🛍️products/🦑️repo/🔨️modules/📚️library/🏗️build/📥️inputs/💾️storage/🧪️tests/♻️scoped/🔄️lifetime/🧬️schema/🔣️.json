@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "nativeCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    },
+    "nativeCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "retainedReader",
+          "filesystemBytes",
+          "maximumPhysicalBytes",
+          "scratchBytes"
+        ],
+        "properties": {
+          "retainedReader": {
+            "type": "boolean"
+          },
+          "filesystemBytes": {
+            "const": 33554432
+          },
+          "maximumPhysicalBytes": {
+            "const": 35651584
+          },
+          "scratchBytes": {
+            "const": 4194304
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "acquired",
+        "failure",
+        "closeFails",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acquired": {
+          "type": "boolean"
+        },
+        "failure": {
+          "enum": [
+            "none",
+            "undefined",
+            "identity"
+          ]
+        },
+        "closeFails": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

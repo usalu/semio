@@ -1,113 +1,170 @@
-/** 🪛️ Window panes, utility bar options: the options of the selection utility and the utility bar node. */
-import { type ActionDescriptor, type MergeMode, SET_ACTIVE_UTILITY_ACTION_ID, type UtilityNode } from "@semio-tech/framework";
-import { Icon, RibbonDivider, ToggleGroup, useLabel, useShellScope } from "@semio-tech/ui-react";
-import { type ReactNode, useState } from "../../../⚛️react-port/🟦️.ts";
-import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../../../🎛️UtilityTree/🟦️.tsx";
+// #region 🧲️Header
+// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧩️BlockListHost/📖️stories/🧪️.story.tsx
+// Specs: Host the framework renderer's `🧩️BlockListHost` with zero WASM engine — the Blockly-like step/block
+// editor is pure `dnd-kit` + declarative JSON, so a story-local reducer round-trips `addStep`/`removeStep`/
+// `moveStep`/`addBlock`/`removeBlock`/`moveBlock` for real.
+// Summary: `reduceStoryBlockListAction` mirrors `🧩️BlockListHost`'s dispatched actions (`framework/os/renderer/js/react/index.tsx`).
+// Clicking a palette entry's `addBlock` carries the exact current `stepId` resolved by the host.
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// #endregion 🧲️Header
 
-//#region ShellHelpers
-/** 🔢️ `generation` is the window's utility register generation this picker rendered — stamped as `expectedGeneration` on its `setActiveUtility` press (`🎯️input-ledger` L3); absent, the press is an unconditional write (a legacy call site). */
-export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, generation }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void; readonly generation?: number }) {
-  const methodLabel = useLabel("ui.selection.method");
-  const modeLabel = useLabel("ui.selection.mode");
-  const rectangleLabel = useLabel("ui.selection.rectangle");
-  const lassoLabel = useLabel("ui.selection.lasso");
-  const selectiveLabel = useLabel("ui.selection.selective");
-  const additiveLabel = useLabel("ui.selection.additive");
-  const subtractiveLabel = useLabel("ui.selection.subtractive");
-  const invertiveLabel = useLabel("ui.selection.invertive");
-  const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
-  const selectionStore = useShellScope().selection;
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 
-  const [selectionMode, setSelectionMode] = useState<MergeMode>(() => selectionStore.get());
+import { BlockListHost } from "@semio-tech/framework-renderer-react";
+import type { ActionDescriptor, BlockListScene, UiComponentSceneNode } from "@semio-tech/framework";
 
-  const handleModeChange = (mode: MergeMode) => {
-    selectionStore.set(mode);
-    setSelectionMode(mode);
-  };
+//#region StoryTypes
+type StoryBlock = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };
+type StoryStep = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly StoryBlock[] };
+type StoryPaletteEntry = { readonly blockKind: string; readonly label: string; readonly iconId: string };
+type StoryBlockListState = { readonly steps: readonly StoryStep[]; readonly palette: readonly StoryPaletteEntry[]; readonly stepCounter: number; readonly blockCounter: number };
+//#endregion StoryTypes
 
-  const handleMethodChange = (method: "rectangle" | "lasso") => {
-    onAction({
-      controllerId: "window",
-      action: SET_ACTIVE_UTILITY_ACTION_ID,
-      args: { windowId, utilityId: method === "lasso" ? "selectLasso" : "selectMarquee", ...(generation === undefined ? {} : { expectedGeneration: generation }) },
-    });
-  };
+//#region Fixtures
+const STORY_PALETTE: readonly StoryPaletteEntry[] = [
+  { blockKind: "move", label: "Move", iconId: "move" },
+  { blockKind: "wait", label: "Wait", iconId: "clock" },
+  { blockKind: "say", label: "Say", iconId: "message-circle" },
+];
+
+const STORY_INITIAL_STEPS: readonly StoryStep[] = [
+  { id: "step-1", title: "Step 1", description: "Initial setup", blocks: [{ id: "step-1-block-1", label: "Move", kind: "move" }] },
+  { id: "step-2", title: "Step 2", blocks: [] },
+];
+//#endregion Fixtures
+
+//#region Reducer
+const STORY_BLOCK_LIST_CONTROLLER_ID = "block-list-story";
+
+function storyPaletteLabel(palette: readonly StoryPaletteEntry[], kind: string): string {
+  return palette.find((entry) => entry.blockKind === kind)?.label ?? kind;
+}
+
+/** 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `🧩️BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
+function reduceStoryBlockListAction(state: StoryBlockListState, descriptor: ActionDescriptor): StoryBlockListState {
+  const args = (descriptor.args ?? {}) as Record<string, unknown>;
+  switch (descriptor.action) {
+    case "addStep": {
+      const stepCounter = state.stepCounter + 1;
+      const step: StoryStep = { id: `step-${stepCounter}`, title: `Step ${stepCounter}`, blocks: [] };
+      return { ...state, steps: [...state.steps, step], stepCounter };
+    }
+    case "removeStep": {
+      const stepId = String(args.stepId ?? "");
+      return { ...state, steps: state.steps.filter((step) => step.id !== stepId) };
+    }
+    case "moveStep": {
+      const stepId = String(args.stepId ?? "");
+      const index = Number(args.index ?? 0);
+      const steps = [...state.steps];
+      const from = steps.findIndex((step) => step.id === stepId);
+      if (from < 0) return state;
+      const [moved] = steps.splice(from, 1);
+      steps.splice(Math.max(0, Math.min(steps.length, index)), 0, moved);
+      return { ...state, steps };
+    }
+    case "addBlock": {
+      const kind = String(args.kind ?? "");
+      const targetStepId = typeof args.stepId === "string" ? args.stepId : undefined;
+      if (!targetStepId || !kind) return state;
+      const blockCounter = state.blockCounter + 1;
+      const block: StoryBlock = { id: `block-${blockCounter}`, label: storyPaletteLabel(state.palette, kind), kind };
+      return { ...state, blockCounter, steps: state.steps.map((step) => (step.id === targetStepId ? { ...step, blocks: [...step.blocks, block] } : step)) };
+    }
+    case "removeBlock": {
+      const stepId = String(args.stepId ?? "");
+      const blockId = String(args.blockId ?? "");
+      return { ...state, steps: state.steps.map((step) => (step.id === stepId ? { ...step, blocks: step.blocks.filter((block) => block.id !== blockId) } : step)) };
+    }
+    case "moveBlock": {
+      const blockId = String(args.blockId ?? "");
+      const fromStepId = String(args.fromStepId ?? "");
+      const toStepId = String(args.toStepId ?? fromStepId);
+      const index = Number(args.index ?? 0);
+      const source = state.steps.find((step) => step.id === fromStepId);
+      const block = source?.blocks.find((entry) => entry.id === blockId);
+      if (!block) return state;
+      return {
+        ...state,
+        steps: state.steps.map((step) => {
+          if (step.id === fromStepId && step.id === toStepId) {
+            const blocks = step.blocks.filter((entry) => entry.id !== blockId);
+            blocks.splice(Math.max(0, Math.min(blocks.length, index)), 0, block);
+            return { ...step, blocks };
+          }
+          if (step.id === fromStepId) return { ...step, blocks: step.blocks.filter((entry) => entry.id !== blockId) };
+          if (step.id === toStepId) {
+            const blocks = [...step.blocks];
+            blocks.splice(Math.max(0, Math.min(blocks.length, index)), 0, block);
+            return { ...step, blocks };
+          }
+          return step;
+        }),
+      };
+    }
+    default:
+      return state;
+  }
+}
+//#endregion Reducer
+
+//#region StoryHost
+function BlockListStoryHost({ initialSteps }: { readonly initialSteps: readonly StoryStep[] }): ReactElement {
+  const [state, setState] = useState<StoryBlockListState>(() => ({ steps: initialSteps, palette: STORY_PALETTE, stepCounter: initialSteps.length, blockCounter: 0 }));
+
+  const onAction = useCallback((descriptor: ActionDescriptor): void => {
+    setState((current) => reduceStoryBlockListAction(current, descriptor));
+  }, []);
+
+  const scene: BlockListScene = useMemo(() => ({ steps: state.steps, palette: state.palette }), [state]);
+  const node: UiComponentSceneNode = useMemo(() => ({ type: "componentScene", surfaceId: "block-list.story.overview", controllerId: STORY_BLOCK_LIST_CONTROLLER_ID, componentKind: "block-list", blockList: scene }), [scene]);
+  const debug = useMemo(() => JSON.stringify({ steps: state.steps.map((step) => ({ id: step.id, blocks: step.blocks.map((block) => block.id) })) }), [state]);
 
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-double">
-      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
-        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{methodLabel}</span>
-        <ToggleGroup
-          kind="single"
-          semantics="radio"
-          aria-label={methodLabel}
-          className="h-auto max-w-full flex-wrap"
-          value={selectionMethod}
-          onValueChange={(val) => {
-            if (val === "rectangle" || val === "lasso") {
-              handleMethodChange(val);
-            }
-          }}
-          items={[
-            { value: "rectangle", icon: <Icon icon="square-dashed" size="small" />, text: rectangleLabel },
-            { value: "lasso", icon: <Icon icon="lasso" size="small" />, text: lassoLabel },
-          ]}
-        />
+    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+        <BlockListHost node={node} onAction={onAction} />
       </div>
-      <RibbonDivider />
-      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
-        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{modeLabel}</span>
-        <ToggleGroup
-          kind="single"
-          semantics="radio"
-          aria-label={modeLabel}
-          className="h-auto max-w-full flex-wrap"
-          value={selectionMode}
-          onValueChange={(val) => {
-            if (val === "replace" || val === "additive" || val === "subtractive" || val === "invertive") {
-              handleModeChange(val);
-            }
-          }}
-          items={[
-            { value: "replace", icon: "mouse-pointer", text: selectiveLabel },
-            { value: "additive", icon: "plus", text: additiveLabel },
-            { value: "subtractive", icon: "minus", text: subtractiveLabel },
-            { value: "invertive", icon: { kind: "emoji", emoji: "🔄" }, text: invertiveLabel },
-          ]}
-        />
-      </div>
+      <pre data-testid="block-list-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
+        {debug}
+      </pre>
     </div>
   );
 }
 
-/** 🎓️ Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
- * to decide if this window's utility bar is the one an introduction step's `Utility` anchor targets. */
-export function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
-  return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
+/** 🕳️ `🧩️BlockListHost` with an absent `blockList` scene — exercises the `emptyLabel` fallback path with zero fixture setup. */
+function BlockListStoryEmptyHost(): ReactElement {
+  const node: UiComponentSceneNode = { type: "componentScene", surfaceId: "block-list.story.empty", controllerId: STORY_BLOCK_LIST_CONTROLLER_ID, componentKind: "block-list" };
+  return (
+    <div style={{ height: "100%", width: "100%" }}>
+      <BlockListHost node={node} onAction={() => undefined} />
+    </div>
+  );
 }
+//#endregion StoryHost
 
-export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null, utilityOptions?: ReactNode): ReactNode {
-  if (!utilities?.length && !utilityOptions) return undefined;
-  const categories = groupUtilityNodesByCategory(utilities ?? [], UTILITY_CATEGORIES);
-  if (!categories.length && !utilityOptions) return undefined;
-  const grouped: UtilityNode[] = [];
-  for (const node of categories) {
-    if (node.kind === "collection" && (node.category === "utilities" || node.category === "selection")) {
-      if (node.id === "group:Select" || node.id === "group:selection" || node.label === "Select" || node.text === "Select") {
-        grouped.push(...node.children);
-      } else {
-        for (const child of node.children) {
-          if (child.kind === "collection" && (child.id === "group:Select" || child.id === "group:selection" || child.label === "Select" || child.text === "Select")) {
-            grouped.push(...child.children);
-          } else {
-            grouped.push(child);
-          }
-        }
-      }
-    } else {
-      grouped.push(node);
-    }
-  }
-  return <UtilityTree id={`ui.utilities.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} renderSelectionOptions={({ activeUtilityId, windowId: selectionWindowId, generation }) => <SelectionUtilityOptions activeUtilityId={activeUtilityId} windowId={selectionWindowId} onAction={onAction} generation={generation} />} />;
-}
-//#endregion ShellHelpers
+const meta = {
+  title: "🛠️framework🔌️hosts/BlockListHost",
+  component: BlockListStoryHost,
+  // 🧭️ The host's props are required, so every story — including the `render`-only ones that mount a
+  // different host entirely — has to carry them. Declaring them once here is what lets a story state
+  // only what it changes.
+  args: { initialSteps: STORY_INITIAL_STEPS },
+  parameters: { layout: "fullscreen" },
+  tags: ["autodocs"],
+} satisfies Meta<typeof BlockListStoryHost>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** 🧩️ Two steps, a palette of three block kinds — "Add Step" (`addStep`), a palette click (`addBlock`, targets the first current step), a block's delete button (`removeBlock`), and drag-reorder (`moveStep`/`moveBlock`) all round-trip. */
+export const Editable: Story = {
+  args: { initialSteps: STORY_INITIAL_STEPS },
+};
+
+/** 🕳️ No `blockList` scene — the `emptyLabel` fallback. */
+export const EmptyScene: Story = {
+  render: () => <BlockListStoryEmptyHost />,
+};

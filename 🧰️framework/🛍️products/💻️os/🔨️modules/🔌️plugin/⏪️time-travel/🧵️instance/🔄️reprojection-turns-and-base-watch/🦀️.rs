@@ -3,7 +3,7 @@
 use super::*;
 use semio_framework::Fault;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ⏭️ One budget of the waiting reprojection (design §16.6, gap N17), a remote change or this replica's own history
     /// step: progress refreshes the history at most every [`TIME_TRAVEL_PROGRESS_REFRESH_MS`]; the adoption swaps the
     /// document in, delivers `BaseMoved` and refreshes every body; a refused adoption (the store drops the change) keeps its

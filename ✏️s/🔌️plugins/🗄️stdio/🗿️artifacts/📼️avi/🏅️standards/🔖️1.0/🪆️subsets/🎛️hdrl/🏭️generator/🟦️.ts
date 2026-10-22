@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -65,7 +66,7 @@ function fixtureRoot(recipe: Recipe, override: string | null): string {
 
 /** 🦀️ Shells out to the standalone `riff-avi-codec` binary — the ONLY place this file touches it. */
 function codecBuild(id: string, fixtureDir: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, fixtureDir], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, fixtureDir], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`riff-avi-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -101,7 +102,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT (riff)", attribution: "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },

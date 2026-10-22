@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import iconv from "iconv-lite";
-import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {join,relative} from "node:path";
@@ -101,27 +101,6 @@ test("a Windows host never needs machine-wide long paths for the aliased closure
 
 const prepare=(directory:string,paths:string[])=>{const checkout=join(directory,"checkout");for(const path of paths){mkdirSync(join(checkout,path,".."),{recursive:true});writeFileSync(join(checkout,path),path);}return checkout;};
 
-test("the alias farm links each directory once, idempotently, prunes stale aliases and refuses an alias collision",async()=>{
- const directory=mkdtempSync(join(tmpdir(),"bazel-alias-")),space=join(directory,"workspace");
- try{
-  const paths=fixture.closure.files.filter(path=>!path.includes("ü")||process.platform!=="win32"),checkout=prepare(directory,paths);mkdirSync(space);
-  const directories=[...new Set(paths.map(path=>path.includes("/")?path.slice(0,path.lastIndexOf("/")):""))].sort(),farm=join(space,rule.alias.link);
-  const linked=await api.linkBazelSourceAliasesV1(checkout,space,directories);
-  expect(new Set(readdirSync(farm))).toEqual(new Set(directories.map(name=>api.bazelSourceAliasV1(name))));expect(linked.size).toBe(directories.length);
-  for(const name of directories){const alias=api.bazelSourceAliasV1(name);expect(linked.get(alias)).toBe(name);expect(realpathSync(join(farm,alias))).toBe(realpathSync(join(checkout,name)));}
-  for(const path of paths)expect(readFileSync(join(space,api.bazelSourceAliasLabelV1(path)),"utf8"),path).toBe(path);
-  const kind=bazelPlatformRulesV1(process.platform).sourceLink,first=api.bazelSourceAliasV1(directories[0]!),inode=lstatSync(join(farm,first)).ino;
-  expect(lstatSync(join(farm,first)).isSymbolicLink()).toBe(true);if(kind==="dir")expect(readlinkSync(join(farm,first))).toBe(join(checkout,directories[0]!));
-  await api.linkBazelSourceAliasesV1(checkout,space,directories);expect(lstatSync(join(farm,first)).ino).toBe(inode);
-  const keep=directories.slice(0,2);await api.linkBazelSourceAliasesV1(checkout,space,keep);expect(new Set(readdirSync(farm))).toEqual(new Set(keep.map(name=>api.bazelSourceAliasV1(name))));
-  writeFileSync(join(farm,"stale.txt"),"x");await api.linkBazelSourceAliasesV1(checkout,space,keep);expect(existsSync(join(farm,"stale.txt"))).toBe(false);
-  const other=join(directory,"other");mkdirSync(join(other,keep[0]!),{recursive:true});await api.linkBazelSourceAliasesV1(other,space,keep);expect(realpathSync(join(farm,api.bazelSourceAliasV1(keep[0]!)))).toBe(realpathSync(join(other,keep[0]!)));
-  const many=Array.from({length:40},(_value,index)=>"d"+index);for(const name of many)mkdirSync(join(checkout,name));
-  await expect(api.linkBazelSourceAliasesV1(checkout,space,many,1)).rejects.toThrow("alias collision");
-  await api.linkBazelSourceAliasesV1(checkout,space,[]);expect(readdirSync(farm)).toEqual([]);
- }finally{rmSync(directory,{recursive:true,force:true});}
-});
-
 test.skipIf(!python)("alias source groups render alias labels, keep repository labels for the hermetic view and never share a group name between views",()=>{
  const paths=fixture.labels.map(row=>row.path).sort(),alias=api.bazelSourceCoverV1(paths,"alias"),real=api.bazelSourceCoverV1(paths),all=Array.from({length:paths.length},()=>1);
  const aliasCover=alias.cover(all),realCover=real.cover(all),aliasName=alias.compose(aliasCover,"i")!,realName=real.compose(realCover,"i")!;
@@ -135,7 +114,7 @@ test.skipIf(!python)("alias source groups render alias labels, keep repository l
  expect(expand(realName,new Set())).toEqual(new Set(paths.map(path=>api.bazelSourceLabelV1(path))));
 });
 
-test.skipIf(!python)("the generated workspace names aliased sources for host-state actions and repository paths for hermetic ones, links the farm, records the closure and every label resolves",async()=>{
+test.skipIf(!python)("the generated workspace names aliased sources for host-state and hermetic actions alike, links the farm, records the closure and every label resolves",async()=>{
  const directory=mkdtempSync(join(tmpdir(),"bazel-gen-")),checkout=join(directory,"checkout"),workspace=join(directory,"workspace"),host=bazelExecutionPlatformV1(process.platform,process.arch);
  const deep="deep/"+Array.from({length:9},(_value,index)=>"🏗️native-build-"+index+"-unit").join("/"),files:Record<string,string>={
   "lib/src/a.txt":"alpha\n","lib/gen.ts":"export {};\n","app/build.ts":"export {};\n","app/src/c.txt":"gamma\n",["app/"+deep+"/🟦️.ts"]:"export {};\n"
@@ -151,15 +130,15 @@ test.skipIf(!python)("the generated workspace names aliased sources for host-sta
    await api.generateBazelWorkspaceV1(checkout,graph,request,planned,workspace,original,createIssuedResourceControlV1(original,"bazel:paths-law",0),implementation,()=>{},undefined,{host:host.id,tools:{[host.id]:process.execPath}});
   });
   const build=readFileSync(join(workspace,"BUILD.bazel"),"utf8"),labels=[...build.matchAll(/"((?:a|s)\/[^"]+)"/gu)].map(match=>match[1]!),deepFile="app/"+deep+"/🟦️.ts",aliasLabel=api.bazelSourceAliasLabelV1(deepFile);
-  expect(labels).toContain(aliasLabel);expect(labels).toContain(api.bazelSourceLabelV1("lib/src/a.txt"));expect(labels).toContain(api.bazelSourceAliasLabelV1("app/src/c.txt"));
-  expect(build).not.toContain(api.bazelSourceLabelV1(deepFile));expect(labels.filter(label=>label.startsWith("s/")).every(label=>label.startsWith("s/lib/"))).toBe(true);
+  expect(labels).toContain(aliasLabel);expect(labels).toContain(api.bazelSourceAliasLabelV1("lib/src/a.txt"));expect(labels).toContain(api.bazelSourceAliasLabelV1("app/src/c.txt"));
+  expect(build).not.toContain(api.bazelSourceLabelV1(deepFile));expect(labels.filter(label=>label.startsWith("s/"))).toEqual([]);
   for(const label of labels)expect(existsSync(join(workspace,label)),label).toBe(true);
   const sources=JSON.parse(readFileSync(join(workspace,"sources.json"),"utf8")) as {version:number;link:string;hexLength:number;directories:Record<string,string>};
-  expect(sources.link).toBe(rule.alias.link);expect(sources.hexLength).toBe(rule.alias.hexLength);expect(sources.directories[api.bazelSourceAliasV1("app/"+deep)]).toBe("app/"+deep);expect(realpathSync(join(workspace,aliasLabel))).toBe(realpathSync(join(checkout,deepFile)));
+  expect(sources.link).toBe(rule.alias.link);expect(sources.hexLength).toBe(rule.alias.hexLength);expect(sources.directories[api.bazelSourceAliasV1("app/"+deep)]).toBe("app/"+deep);expect(lstatSync(join(workspace,aliasLabel)).isSymbolicLink()).toBe(false);expect(lstatSync(join(workspace,aliasLabel)).nlink).toBe(1);expect(readFileSync(join(workspace,aliasLabel),"utf8")).toBe("export {};\n");
   for(const[alias,name]of Object.entries(sources.directories))expect(alias).toBe(api.bazelSourceAliasV1(name));
   const measured=JSON.parse(readFileSync(join(workspace,"paths.json"),"utf8")),admit=new Ajv({strict:true}).addSchema(component,"component").compile({$ref:"component#/definitions/PathMeasurement"});
   expect(admit(measured),JSON.stringify(admit.errors)).toBe(true);
-  const aliasLabels=labels.filter(label=>label.startsWith("a/")),repositoryLabels=labels.filter(label=>label.startsWith("s/lib/"));
+  const aliasLabels=labels.filter(label=>label.startsWith("a/")),repositoryLabels:string[]=[];
   expect(measured.closure.alias.units).toBeGreaterThanOrEqual(Math.max(...aliasLabels.map(units)));expect(measured.closure.real).toEqual(bazelPathClosureV1([],repositoryLabels).real);
   expect(measured.closure.alias.units).toBeLessThan(units(api.bazelSourceLabelV1(deepFile)));
   const fit=bazelPathBudgetV1({platform:process.platform as "darwin",arch:process.arch as "arm64",outputBase:join(directory,"base"),longPaths:"unprobed",closure:measured.closure});expect(fit.families.length).toBeGreaterThan(0);
@@ -174,8 +153,8 @@ test.skipIf(!binary)("real Bazel: aliased sources of a deep emoji checkout build
  const bazel=(args:string[])=>spawnSync(binary!,[`--output_base=${base}`,`--install_base=${install}`,"--nosystem_rc","--nohome_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"--max_idle_secs=60",...args],{cwd:space,encoding:"utf8",timeout:240000,env:{...process.env,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})}});
  try{
   const paths=fixture.closure.files.filter(path=>process.platform!=="win32"||!path.includes("ü")),checkout=prepare(directory,paths);mkdirSync(space);
-  const directories=[...new Set(paths.map(path=>path.includes("/")?path.slice(0,path.lastIndexOf("/")):""))],sources=paths.map(path=>api.bazelSourceAliasLabelV1(path));
-  writeFileSync(join(space,"MODULE.bazel"),'module(name="paths")\n');await api.linkBazelSourceAliasesV1(checkout,space,directories);
+  const sources=paths.map(path=>api.bazelSourceAliasLabelV1(path));
+  writeFileSync(join(space,"MODULE.bazel"),'module(name="paths")\n');await (await import("../../📸️snapshot/🟦️.ts")).captureBazelSourceSnapshotV1({root:checkout,directory:space,files:paths,views:{alias:rule.alias.link,real:"s"},alias:directory=>api.bazelSourceAliasV1(directory),check:()=>{},progress:async()=>{}});
   writeFileSync(join(space,"BUILD.bazel"),`genrule(\n    name = "gen",\n    srcs = ${JSON.stringify(sources)},\n    outs = ["out.txt"],\n    cmd = "cat $(SRCS) > $@",\n)\n`);
   const flags=["--lockfile_mode=off",`--disk_cache=${disk}`,"--sandbox_debug"],cold=bazel(["build",...flags,"//:gen"]);expect(cold.status,cold.stderr).toBe(0);
   const bin=bazel(["info","bazel-bin"]).stdout.trim().split("\n").at(-1)!,output=readFileSync(join(bin,"out.txt"),"utf8");for(const path of paths)expect(output).toContain(path);

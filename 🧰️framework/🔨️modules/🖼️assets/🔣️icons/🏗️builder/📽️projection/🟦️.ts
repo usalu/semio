@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 
-const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
+const assetsRoot = (): string => join(import.meta.dirname, "..", "..", "..");
 
 export type AssetArtifact = { path: string; content: string };
 
@@ -415,5 +415,5 @@ export function renderCatalogArtifacts(target: string): readonly AssetArtifact[]
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../../🧪️tests/🧪️metabolism-icon-codegen/🟦️.ts");
-  await registerTests1(import.meta.vitest, { iconIdToRustVariant }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { iconIdToRustVariant }, { directory: import.meta.dirname, url: import.meta.url });
 }

@@ -20,7 +20,16 @@ pub struct AppendBytes {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "bytes", kind: "append-bytes", record: "AppendBytes" };
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Append bytes", "Bytes anhängen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::ReferenceDiff> {
         let Self { data } = self;
         protocol::MutationOutcome::new(BinaryDiff { splices: vec![ByteSplice { offset: base.bytes.len(), remove_len: 0, insert: data.clone() }] })
     }
@@ -28,12 +37,6 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
         Ok({
             vec![BinaryMutation::TruncateAt(truncate_at::TruncateAt { offset: base.bytes.len() })]
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Append bytes", "Bytes anhängen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

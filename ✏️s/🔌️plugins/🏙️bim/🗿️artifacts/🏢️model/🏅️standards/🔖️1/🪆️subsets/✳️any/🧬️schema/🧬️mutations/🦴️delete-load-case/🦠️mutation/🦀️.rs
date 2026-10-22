@@ -11,8 +11,14 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteLoadCase> + From<crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "load-case", kind: "delete-load-case", record: "DeleteLoadCase" };
-fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_load_case::diff::diff(self, base) }
-fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::delete_load_case::inverse::inverse(self, base)) }
 fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("delete load-case", "Löschen Lastfall") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for DeleteLoadCase
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<DeleteLoadCase> + From<crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase>,
+{
+fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_load_case::diff::diff(self, base) }
+fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::delete_load_case::inverse::inverse(self, base)) }
 }

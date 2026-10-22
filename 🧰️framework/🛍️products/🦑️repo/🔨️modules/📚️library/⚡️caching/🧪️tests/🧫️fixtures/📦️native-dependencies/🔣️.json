@@ -1,4 +1,10 @@
 {
+  "python": {
+    "files": {
+      "pyproject.toml": "[project]\nname = \"probe\"\nversion = \"0.0.0\"\nrequires-python = \">=3.14,<3.15\"\ndependencies = []\n",
+      "uv.lock": "version = 1\nrequires-python = \"==3.14.*\"\n"
+    }
+  },
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
   "environments": [
     {
@@ -6,12 +12,28 @@
       "commands": [
         [
           "uv",
+          "python",
+          "install",
+          "3.14"
+        ],
+        [
+          "uv",
           "sync",
           "--locked",
-          "--all-packages",
-          "--all-groups"
+          "--project",
+          ".",
+          "--group",
+          "dev",
+          "--group",
+          "test"
         ]
-      ]
+      ],
+      "environment": {
+        "UV_NO_CONFIG": "1",
+        "UV_PYTHON": "3.14",
+        "UV_PYTHON_DOWNLOADS": "manual",
+        "UV_PYTHON_PREFERENCE": "only-managed"
+      }
     },
     {
       "kind": "cargo",
@@ -42,6 +64,7 @@
         ]
       ],
       "environment": {
+        "GOTOOLCHAIN": "local",
         "GOWORK": "{workspace}/go.work"
       }
     },

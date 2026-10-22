@@ -1,5 +1,8 @@
 use super::*;
-use super::*;
+use semio_s_fem_mesh::MeshOpts;
+use semio_s_fem_mesh::PlanarDomain;
+use semio_s_fem_mesh::owned_triangulate;
+use semio_s_fem_mesh::triangulate;
 use std::collections::HashSet;
 
 fn shoelace_area(points: &[[f64; 2]]) -> f64 {

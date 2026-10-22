@@ -51,7 +51,7 @@ fn expected_diff() -> EquationDiff {
 }
 
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Inserting at index 0 of an empty cloud carries `before` to exactly the committed `after`: one
@@ -60,7 +60,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert!(base.geometry.points.is_empty(), "seeds-the-empty-cloud-with-its-first-point's base cloud must be empty for `index: 0` to be the exact end of the cloud");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("insert-point applies to its committed before-snapshot");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("insert-point applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "insert-point/seeds-the-empty-cloud-with-its-first-point: applied state differs from committed after-snapshot");
     assert_eq!(applied.geometry.points, after_geometry().points, "the inserted point must land verbatim at the payload's coordinates");
     assert_eq!(applied.equation, base.equation, "insert-point is geometry-scoped — it never touches the inline equation slot");
@@ -71,12 +71,12 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::RemovePoint(RemovePoint { index: 0 })], "insert-point inverts to a remove-point at the same index, got {inverse:?}");
-    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff_cold(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "insert-point/seeds-the-empty-cloud-with-its-first-point: inverse did not restore the before-snapshot");
 }
@@ -136,7 +136,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the insert, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let produced_snapshot = protocol::apply_diff(&expected_diff(), &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff_cold(&expected_diff(), &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed diff did not carry before to after");
 }
 
@@ -147,12 +147,12 @@ async fn committed_diff_applies_to_after() {
 async fn an_out_of_range_index_clamps_instead_of_rejecting() {
     let base = before();
     let past_the_end = EquationMutation::InsertPoint(InsertPoint { index: 9, x: payload().x, y: payload().y });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&past_the_end, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&past_the_end, &base);
     let messages = outcome.messages();
     assert_eq!(messages.len(), 1, "a clamped insert raises exactly one diagnostic, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.clamped", "an out-of-range insert index is clamped, never reported as target-missing");
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "clamping is a Warning — insert-point has no Error or Fatal branch at all");
-    let clamped = protocol::apply_diff(outcome.diff(), &base).expect("a clamped insert still applies");
+    let clamped = protocol::apply_diff_cold(outcome.diff(), &base).expect("a clamped insert still applies");
     assert_eq!(clamped.geometry.points, after_geometry().points, "clamping lands the point at the end of the cloud — here the same single slot index 0 names");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("insert", "point", "insert-point", "InsertedPoint"), "the fixture must be bound to insert-point's own descriptor");
@@ -200,7 +200,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `remove-point` leaves the document byte-identical to the committed `after`.
@@ -208,7 +208,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.geometry.points.is_empty(), "rejects-removing-a-point-from-an-empty-cloud's before-snapshot must hold a point-less cloud");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "remove-point/rejects-removing-a-point-from-an-empty-cloud: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected remove must not mint a fresh notation/results/computed triple");
 }
@@ -239,7 +239,7 @@ async fn a_base_state_index_past_the_end_is_reported_as_a_decimal_string() {
 /// payload-derived.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_point_to_reinsert() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "remove-point/rejects-removing-a-point-from-an-empty-cloud: a rejected remove must have no inverse steps, got {inverse:?}");
 }
 
@@ -311,7 +311,7 @@ fn committed_diff() -> EquationDiff {
     semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &snapshot((*BEFORE)))
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &snapshot((*BEFORE)))
 }
 
 /// ▶️ The drag carries `before` to exactly the committed `after` through exactly the committed diff, with a clean `applied`.
@@ -320,7 +320,7 @@ async fn applies_the_committed_diff_to_the_committed_after() {
     let outcome = produced();
     assert!(outcome.messages().is_empty(), "an in-range drag raises no diagnostic, got {:?}", outcome.messages());
     assert_eq!(outcome.diff(), &committed_diff(), "move-points/translates: produced diff differs from the committed 🔺️diff");
-    let applied = protocol::apply_diff(outcome.diff(), &snapshot((*BEFORE))).expect("the drag applies");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &snapshot((*BEFORE))).expect("the drag applies");
     assert_eq!(applied, snapshot((*AFTER)), "move-points/translates: applied state differs from the committed after-snapshot");
     let declared = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"));
@@ -330,13 +330,13 @@ async fn applies_the_committed_diff_to_the_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_is_one_absolute_row_that_restores_before() {
     let base = snapshot((*BEFORE));
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     let expected = SetPointPositions { positions: [0, 2].map(|index| EquationPointPosition { index, x: base.geometry.points[index].x, y: base.geometry.points[index].y }).to_vec() };
     assert_eq!(inverse, vec![EquationMutation::SetPointPositions(expected)]);
     let mut state = snapshot((*AFTER));
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &state);
-        state = protocol::apply_diff(outcome.diff(), &state).expect("the inverse applies");
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &state);
+        state = protocol::apply_diff_cold(outcome.diff(), &state).expect("the inverse applies");
     }
     assert_eq!(state, base, "move-points/translates: the inverse did not restore the before-snapshot");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation()).await;
@@ -387,7 +387,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &snapshot((*BEFORE)))
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &snapshot((*BEFORE)))
 }
 
 /// ▶️ The row carries `before` to exactly the committed `after` through exactly the committed diff, with a clean `applied`.
@@ -397,7 +397,7 @@ async fn applies_the_committed_diff_to_the_committed_after() {
     assert!(outcome.messages().is_empty(), "an in-range placement raises no diagnostic, got {:?}", outcome.messages());
     let committed: EquationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(outcome.diff(), &committed, "set-point-positions/restores: produced diff differs from the committed 🔺️diff");
-    let applied = protocol::apply_diff(outcome.diff(), &snapshot((*BEFORE))).expect("the placement applies");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &snapshot((*BEFORE))).expect("the placement applies");
     assert_eq!(applied, snapshot((*AFTER)), "set-point-positions/restores: applied state differs from the committed after-snapshot");
 }
 
@@ -405,7 +405,7 @@ async fn applies_the_committed_diff_to_the_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn it_mirrors_the_drag_and_is_point_invertible() {
     assert_eq!((snapshot((*BEFORE)), snapshot((*AFTER))), (snapshot((*DRAG_AFTER)), snapshot((*DRAG_BEFORE))), "set-point-positions/restores undoes exactly move-points/translates");
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &snapshot((*BEFORE))).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &snapshot((*BEFORE))).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [EquationMutation::SetPointPositions(_)]), "the inverse is ONE absolute row, got {inverse:?}");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&snapshot((*BEFORE)), &mutation()).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &snapshot((*BEFORE))).await;

@@ -1,7 +1,7 @@
 import { type TaxonomyProgress, report } from "../🏃️operation/🟦️.ts";
 import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { sha256, assertLexicalInputOutsideOpaque, createLexicalInputSession, lstatOrNull } from "../📁️input/🟦️.ts";
-import { execFileSync, spawnSync } from "node:child_process";
+
 import { lstatSync, readFileSync, readlinkSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { dirname, posix, relative, resolve } from "node:path";
@@ -16,6 +16,7 @@ import { isFrozenSourceCoordinateToken, validateObservedFrozenEvidenceNodes } fr
 import { referencePathIndex, resolveReferenceTokenPath } from "../🧭️reference-resolution/🟦️.ts";
 import { referenceDigestMayResolveInto, referenceTokenStore, textualPath } from "../🧮️reference-digests/🟦️.ts";
 import { referenceTokensIncludingUnsupported, storedReferenceAnalysis } from "../🔬️reference-analysis/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, taxonomy: LoadedTaxonomy, cancelFile?: string, observe?: (path: string, stat: Stats | null, bytes?: Uint8Array) => void, progress?: TaxonomyPlanOptions["progress"], operation: TaxonomyProgress["operation"] = "plan"): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
@@ -39,14 +40,14 @@ export function referenceCoordinateRoots(repoRoot: string, paths: Iterable<strin
       const gitdirStat = lstatOrNull(gitdir);
       observe?.(relative(repoRoot, gitdir).replaceAll("\\", "/"), gitdirStat);
       if (!gitdirStat?.isDirectory()) throw new Error(`Reference repository gitdir is not a local directory: ${path}/.git`);
-      callingGitDirectory ??= resolve(repoRoot, execFileSync("git", ["rev-parse", "--absolute-git-dir"], { cwd: repoRoot, encoding: "utf8" }).trim());
+      callingGitDirectory ??= resolve(repoRoot, runToolSyncV1("git", ["rev-parse", "--absolute-git-dir"], { check: true, cwd: repoRoot, encoding: "utf8" }).stdout.trim());
       if (resolve(gitdir) === callingGitDirectory) continue;
     } else {
       observe?.(`${path}/.git`, stat);
       if (!stat.isDirectory()) continue;
     }
     const parent = assertLexicalInputOutsideOpaque(repoRoot, path, "Reference repository owner", true);
-    const result = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: parent, encoding: "utf8" });
+    const result = runToolSyncV1("git", ["rev-parse", "--show-toplevel"], { cwd: parent, encoding: "utf8" });
     if (result.status === 0 && resolve(result.stdout.trim()) === resolve(parent)) roots.add(path);
   }
   checkCancellation(repoRoot, cancelFile);

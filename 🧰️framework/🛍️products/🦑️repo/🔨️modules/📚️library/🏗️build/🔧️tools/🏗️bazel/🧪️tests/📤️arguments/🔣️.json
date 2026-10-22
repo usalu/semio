@@ -16,7 +16,7 @@
       "forwardAllArgs": false,
       "commands": [
         {
-          "command": "bun ./📜️script.ts",
+          "command": "repo ./📜️script.ts",
           "forwardAllArgs": true
         }
       ],
@@ -37,10 +37,10 @@
       "forwardAllArgs": true,
       "commands": [
         {
-          "command": "bun ./📜️script.ts",
+          "command": "repo ./📜️script.ts",
           "forwardAllArgs": false
         },
-        "bun ./📜️script.ts"
+        "repo ./📜️script.ts"
       ],
       "expected": [
         [],
@@ -59,9 +59,9 @@
       "name": "Mixed Commands Override Disabled Target",
       "forwardAllArgs": false,
       "commands": [
-        "bun ./📜️script.ts",
+        "repo ./📜️script.ts",
         {
-          "command": "bun ./📜️script.ts",
+          "command": "repo ./📜️script.ts",
           "forwardAllArgs": true
         }
       ],
@@ -83,7 +83,7 @@
       "forwardAllArgs": false,
       "commands": [
         {
-          "command": "bun ./📜️script.ts",
+          "command": "repo ./📜️script.ts",
           "forwardAllArgs": false
         }
       ],
@@ -95,7 +95,7 @@
       "name": "Omitted Target Flag Forwards Literal Arguments",
       "forwardAllArgs": null,
       "commands": [
-        "bun ./📜️script.ts"
+        "repo ./📜️script.ts"
       ],
       "expected": [
         [

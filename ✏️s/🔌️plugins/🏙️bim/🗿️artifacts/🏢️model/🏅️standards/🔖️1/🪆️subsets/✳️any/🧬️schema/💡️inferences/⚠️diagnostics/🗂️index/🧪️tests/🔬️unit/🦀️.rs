@@ -211,7 +211,7 @@ mod graph {
         assert!(session.inference().diagnostic_index.elements.contains_key("w-missing-type"));
         let known = model.wall_types.keys().next().expect("a wall type").clone();
         let fix = ModelDiff::walls("w-missing-type", Entry::Patched(WallPatch { wall_type: Some(known), ..Default::default() }));
-        let fixed = protocol::apply_diff(&fix, &model).expect("the fix applies");
+        let fixed = protocol::apply_diff_cold(&fix, &model).expect("the fix applies");
         let updated = session.update(&fixed, &fix).clone();
         assert!(session.report().computed_by_kind.get("diagnostic-index").copied().unwrap_or(0) <= 1, "{:?}", session.report());
         assert!(updated.diagnostic_index.elements.get("w-missing-type").is_none_or(|entry| !entry.codes.contains(&DiagnosticCode::RefWallType)), "the reference finding is gone from the index");

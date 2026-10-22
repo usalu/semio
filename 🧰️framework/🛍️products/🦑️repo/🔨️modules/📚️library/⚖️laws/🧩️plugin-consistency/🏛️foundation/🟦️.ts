@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type PolicyModSpan, policyMaskLiterals } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import { discoverOwners, discoverPackages } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { discoverPackages } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
 import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { type PackageRole } from "../../../🔍️discovery/🪧️owner-markers/🟦️.ts";
@@ -16,7 +16,7 @@ import { taxonomyEcosystemEntryFilenames } from "../../../🧹️normalization/�
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * the repo build inference into the synthetic `breach-script_ts` lint task (`bun ./📜️script.ts policy`).
+ * the repo build inference into the synthetic `breach-script_ts` lint task (`repo ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -54,8 +54,7 @@ function policyPluginOwnerDirs(repoRoot: string): readonly string[] {
 
 /**
  * 🔑Canonical `<pluginId>` scope key for a path inside a discovered plugin owner — the ASCII plugin slug,
- * stable across the legacy per-module-crate layout AND the Shape V2 one-package-per-plugin layout, so
- * allowlists keyed off it survive the crate move untouched (see the master ticket's discovery contract).
+ * stable across crate moves, so allowlists keyed off it survive them untouched (see the master ticket's discovery contract).
  * Returns `""` for a path outside every plugin owner (framework and hub trees keep their own scope
  * identity — this function is deliberately plugin-scoped, matching every allowlist that uses it).
  */
@@ -81,11 +80,8 @@ function policyFileSuffix(tailSegments: readonly string[], defaultFile: string):
 }
 
 /**
- * 🔑Canonical `<pluginId>/<component>` key for a *source file path* under `✏️s/🔌️plugins/` — collapses
- * both the legacy per-module-crate layout (`…/🔨️modules/<module>/⚡️implementations/🦀️rust/📦️lib.rs`,
- * `…/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs`) and the future taxonomy layout
- * (`…/🗿️artifacts/<artifact>/<module>/🦀️.rs`) onto the same string, so a completeness
- * allowlist written today still matches the same logical component after a plugin migrates. Widens to
+ * 🔑Canonical `<pluginId>/<component>` key for a *source file path* under `✏️s/🔌️plugins/` — maps the taxonomy
+ * layout (`…/🗿️artifacts/<artifact>/<module>/🦀️.rs`) onto a string that stays stable when a component moves. Widens to
  * `<pluginId>/<appOrArtifact>/<component>` only when that disambiguator differs from the plugin id
  * itself (most plugins are single-app/single-artifact, where it doesn't — the 2-part key is the common
  * case, matching the discovery contract's `<pluginId>/<component>` shape). Falls back to the path
@@ -96,29 +92,6 @@ export function policyNormalizeRelPath(relPath: string): string {
   const norm = relPath.startsWith(".") ? relPath.slice(2) : relPath;
   const segments = norm.split("/");
 
-  // Legacy shape: <owner...>/🔨️modules/<module>/⚡️implementations/<lang>/<file>, and the manifest/artifact
-  // variant <owner...>/🛂️manifest/🗿️artifact/⚡️implementations/<lang>/<file> (🛂️manifest collapses the
-  // same way 🔨️modules does — both are structural markers stripped from the owner chain).
-  const implIdx = segments.indexOf("⚡️implementations");
-  if (implIdx > 1) {
-    const moduleSeg = segments[implIdx - 1]!;
-    const suffix = policyFileSuffix(segments.slice(implIdx + 2), "🦀️.rs");
-    const ownerChain = segments.slice(0, implIdx - 1).filter((s) => s !== "🔨️modules" && s !== "🛂️manifest");
-    const pluginsIdx = ownerChain.indexOf("🔌️plugins");
-    if (pluginsIdx >= 0 && ownerChain.length > pluginsIdx + 1) {
-      const pluginId = policyStripEmoji(ownerChain[pluginsIdx + 1]!);
-      const appsIdx = ownerChain.indexOf("🎛️apps");
-      const appId = appsIdx >= 0 && ownerChain.length > appsIdx + 1 ? policyStripEmoji(ownerChain[appsIdx + 1]!) : undefined;
-      const component = policyCanonicalComponent(moduleSeg);
-      return (appId && appId !== pluginId ? `${pluginId}/${appId}/${component}` : `${pluginId}/${component}`) + suffix;
-    }
-    // Non-plugin owner: best-effort <ownerId>/<component>, not this rename's
-    // primary target this wave, but kept collision-free via the same file suffix.
-    const ownerId = policyStripEmoji(ownerChain[ownerChain.length - 1] ?? "");
-    if (ownerId) return `${ownerId}/${policyCanonicalComponent(moduleSeg)}${suffix}`;
-  }
-
-  // Future taxonomy shape: <owner>/🗿️artifacts/<artifact>/<module>/🦀️.rs (+ sibling 🦀️<topic>.rs).
   const artifactsIdx = segments.indexOf("🗿️artifacts");
   if (artifactsIdx > 0 && segments.length > artifactsIdx + 2) {
     const pluginId = policyStripEmoji(segments[artifactsIdx - 1] ?? "");
@@ -134,15 +107,12 @@ export function policyNormalizeRelPath(relPath: string): string {
 /**
  * 🏗️One discovered rust crate. `dir` is its `Cargo.toml`-containing directory (repo-relative),
  * `libRelPath` its crate-root source file as the manifest itself declares it (`[lib]`/`[[bin]]`
- * `path`) — never assumed, because the two shapes disagree: Shape V2 keeps the entry beside the
- * manifest (`📦️packages/🦀️rust/🦀️.rs`) while the Shape V1 leftovers still point two levels up
- * (`path = "../../🦀️.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
+ * `path`) — never assumed. `role`/`ownerRel` come straight from the shared discovery contract;
  * `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
  */
 export type PolicyCrateRef = {
   dir: string;
   libRelPath: string;
-  shape: "legacy" | "taxonomy";
   role: PackageRole | "";
   ownerRel: string;
   pluginId: string;
@@ -175,19 +145,12 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
 
 /**
  * 🔎️Discovers every rust crate these rules can see, driven by the shared package catalog
- * (`discoverPackages`/`discoverOwners` over `🔣️taxonomy.json`) rather than by a hardcoded area path.
- * PRIMARY: every `📦️packages/🦀️rust[/🎯️targets/<target>]/Cargo.toml` carrying a semio role marker —
- * plugins AND, for the first time (mechanism step M4), framework/hub/s-module/tool packages, which the
- * previous Shape-V1-only matcher could never see. SECONDARY (burn-down, deleted at the finalization
- * flip): residual `⚡️implementations/🦀️rust` sandwiches *inside* an already-discovered owner, so a
- * half-migrated owner keeps being checked; an owner that has not adopted `📦️packages` at all is
- * pre-contract and stays out of scope until it does.
+ * (`discoverPackages` over `🔣️taxonomy.json`) rather than by a hardcoded area path: every
+ * `📦️packages/🦀️rust[/🎯️targets/<target>]/Cargo.toml` carrying a semio role marker — plugins and
+ * framework/hub/s-module/tool packages alike; an owner that has not adopted `📦️packages` stays out of scope.
  */
 export function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
   const taxonomy = loadTaxonomy();
-  const forbiddenSegments = new Set<string>(taxonomy.forbiddenPathSegments);
-  const legacyEntryFilename = taxonomyEcosystemEntryFilenames(taxonomy, "🦀️rust")[0];
-  if (!legacyEntryFilename) throw new Error("[taxonomy] Rust ecosystem declares no configurable entry contract.");
   const found = new Map<string, PolicyCrateRef>();
 
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
@@ -195,42 +158,10 @@ export function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
     found.set(pkg.packageRel, {
       dir: pkg.packageRel,
       libRelPath: policyCrateEntryPath(repoRoot, pkg.packageRel, pkg.ownerRel),
-      shape: "taxonomy",
       role: pkg.role,
       ownerRel: pkg.ownerRel,
       pluginId: policyScopeKey(repoRoot, pkg.ownerRel),
     });
-  }
-
-  for (const owner of discoverOwners(repoRoot, taxonomy)) {
-    const pluginId = policyScopeKey(repoRoot, owner.ownerRel);
-    const walkLegacy = (relDir: string): void => {
-      let entries: Dirent[];
-      try {
-        entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const ent of entries) {
-        if (!ent.isDirectory() || POLICY_SKIP_DIRS.has(ent.name) || ent.name === taxonomy.packagesDirName) continue;
-        const childRel = `${relDir}/${ent.name}`;
-        if (ent.name === "🦀️rust" && forbiddenSegments.has(relDir.split("/").pop() ?? "")) {
-          if (!found.has(childRel) && existsSync(join(repoRoot, childRel, legacyEntryFilename)) && existsSync(join(repoRoot, childRel, "Cargo.toml"))) {
-            found.set(childRel, {
-              dir: childRel,
-              libRelPath: `${childRel}/${legacyEntryFilename}`,
-              shape: "legacy",
-              role: pluginId ? "plugin" : (owner.roles[0] ?? ""),
-              ownerRel: owner.ownerRel,
-              pluginId,
-            });
-          }
-          continue;
-        }
-        walkLegacy(childRel);
-      }
-    };
-    walkLegacy(owner.ownerRel);
   }
 
   return [...found.values()].sort((a, b) => a.dir.localeCompare(b.dir));

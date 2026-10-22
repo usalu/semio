@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().sections.as_ref().expect("sections delta").modified.len(), 1, "replace-section/stiffens-ipe200-with-5e9c08: exactly one profile may be patched");
     assert!(outcome.diff().sections.as_ref().expect("sections delta").removed.is_empty(), "replace-section/stiffens-ipe200-with-5e9c08: a replacement is never a removal");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

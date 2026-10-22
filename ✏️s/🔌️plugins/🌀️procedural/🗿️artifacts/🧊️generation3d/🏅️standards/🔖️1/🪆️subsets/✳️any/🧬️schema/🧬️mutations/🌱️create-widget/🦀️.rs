@@ -20,17 +20,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::create_widget::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::create_widget::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         use semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name;
         use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
@@ -47,5 +36,20 @@ where
     fn target(&self) -> Vec<String> {
         vec![semio_s_artifact_procedural_3d_model::widget_id(&self.widget).to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for CreateWidget
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<crate::delete_widget::DeleteWidget>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::create_widget::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::create_widget::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️CreateWidget

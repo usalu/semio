@@ -1,0 +1,479 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "bun-repo",
+   "command": "bun repo run x",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "sudo-env-repo",
+   "command": "sudo --non-interactive env PATH=$PATH HOME=$HOME repo preflight",
+   "tools": []
+  },
+  {
+   "id": "cd-and-bun",
+   "command": "cd \"x\" && bun ./📜️script.ts build",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "env-prefix-cargo",
+   "command": "FOO=1 cargo test",
+   "tools": [
+    "cargo"
+   ]
+  },
+  {
+   "id": "repo-cargo",
+   "command": "repo cargo --store=shared -- test",
+   "tools": []
+  },
+  {
+   "id": "repo-tools-exec",
+   "command": "repo tools exec --light node -- -p \"x\"",
+   "tools": []
+  },
+  {
+   "id": "repo-exec-payload-bun",
+   "command": "repo exec --projects=a -- bun test",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "repo-capacity-payload-repo",
+   "command": "repo capacity run --memory=1 -- repo run a:test",
+   "tools": []
+  },
+  {
+   "id": "repo-watch-payload",
+   "command": "repo watch --projects=x -- bun repo run y",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "pipe-python",
+   "command": "echo hi | python3 -c \"print(1)\"",
+   "tools": [
+    "python"
+   ]
+  },
+  {
+   "id": "sh-c-cargo",
+   "command": "sh -c \"cargo check && echo ok\"",
+   "tools": [
+    "cargo"
+   ]
+  },
+  {
+   "id": "bash-lc-node",
+   "command": "bash -lc 'node --version'",
+   "tools": [
+    "node"
+   ]
+  },
+  {
+   "id": "alternation-not-pipe",
+   "command": "repo --tool=nx|bazel run <target>",
+   "tools": []
+  },
+  {
+   "id": "placeholder-brackets",
+   "command": "repo tools setup [nx|bazel|all]",
+   "tools": []
+  },
+  {
+   "id": "command-subst",
+   "command": "x=$(bun --version)",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "command-v-then-uv",
+   "command": "if command -v uv >/dev/null 2>&1; then uv sync; fi",
+   "tools": [
+    "uv"
+   ]
+  },
+  {
+   "id": "quoted-word",
+   "command": "echo \"bun is great\"",
+   "tools": []
+  },
+  {
+   "id": "go-test",
+   "command": "go test ./...",
+   "tools": [
+    "go"
+   ]
+  },
+  {
+   "id": "nx-run",
+   "command": "nx run a:b",
+   "tools": [
+    "nx"
+   ]
+  },
+  {
+   "id": "ps-call-operator",
+   "command": "& powershell.exe -NoProfile -File x.ps1",
+   "tools": []
+  },
+  {
+   "id": "cmd-c-npm",
+   "command": "cmd /c \"npm ci\"",
+   "tools": [
+    "npm"
+   ]
+  },
+  {
+   "id": "bunx",
+   "command": "bunx vitest run",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "local-bin",
+   "command": "./node_modules/.bin/vite build",
+   "tools": [
+    "vite"
+   ]
+  },
+  {
+   "id": "windows-exe",
+   "command": "C:\\tools\\bun.exe repo run x",
+   "tools": [
+    "bun"
+   ]
+  },
+  {
+   "id": "uvx",
+   "command": "uvx ruff check",
+   "tools": [
+    "uv"
+   ]
+  },
+  {
+   "id": "comment-only",
+   "command": "# bun comment",
+   "tools": []
+  },
+  {
+   "id": "docker-observed",
+   "command": "docker build .",
+   "tools": []
+  },
+  {
+   "id": "git-observed",
+   "command": "git clone x && cd x",
+   "tools": []
+  },
+  {
+   "id": "rustc-and-fmt",
+   "command": "rustfmt --check a.rs; rustc -vV",
+   "tools": [
+    "cargo"
+   ]
+  },
+  {
+   "id": "python-after-timeout",
+   "command": "nice -n 10 python3 -I x.py",
+   "tools": [
+    "python"
+   ]
+  },
+  {
+   "id": "dotnet-cmake",
+   "command": "dotnet build && cmake --build .",
+   "tools": [
+    "dotnet",
+    "cmake"
+   ]
+  },
+  {
+   "id": "playwright-and-jco",
+   "command": "playwright install chromium; jco transpile x",
+   "tools": [
+    "playwright",
+    "wasm"
+   ]
+  },
+  {
+   "id": "repo-script-route",
+   "command": "repo ./📜️script.ts verify x",
+   "tools": []
+  },
+  {
+   "id": "windows-path-repo",
+   "command": "C:\\bin\\repo.exe run x",
+   "tools": []
+  }
+ ],
+ "files": [
+  {
+   "id": "md-fence-and-inline",
+   "path": "README.md",
+   "text": "# T\n\nRun `bun install` once.\nNever call `cargo build` yourself.\nThe adapter runs `bazel test` for a test task.\n\n```bash\nbun repo run x\nrepo run y\n```\n\n```json\n{\"command\": \"bun x\"}\n```\n\n```\ncargo test -p a\n```\n",
+   "findings": [
+    [
+     "bun",
+     3
+    ],
+    [
+     "bun",
+     8
+    ],
+    [
+     "cargo",
+     17
+    ]
+   ]
+  },
+  {
+   "id": "md-repo-payload-inline",
+   "path": "docs/a.md",
+   "text": "| exec | `repo exec --projects=a -- bun test` |\n| cap | `repo capacity run -- repo run a:test` |\n",
+   "findings": [
+    [
+     "bun",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "md-german-imperative",
+   "path": "docs/de.md",
+   "text": "Führe `cargo test` aus.\nNutze nie `nx run` direkt.\n",
+   "findings": [
+    [
+     "cargo",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "yaml-run-block",
+   "path": "wf.yml",
+   "text": "jobs:\n  a:\n    steps:\n      - run: bun repo --help\n      - name: x\n        run: |\n          set -e\n          repo preflight\n          cargo test\n          if [ -z \"$A\" ]; then\n            node -e \"1\"\n          fi\n      - run: repo run a:b\n",
+   "findings": [
+    [
+     "bun",
+     4
+    ],
+    [
+     "cargo",
+     9
+    ],
+    [
+     "node",
+     11
+    ]
+   ]
+  },
+  {
+   "id": "dockerfile-run",
+   "path": "Dockerfile",
+   "text": "FROM a\nRUN apt-get update \\\n && npm ci\nCMD [\"node\", \"server.js\"]\nENTRYPOINT [\"/usr/bin/tini\", \"--\", \"/usr/local/bin/os-hub\"]\n",
+   "findings": [
+    [
+     "npm",
+     2
+    ],
+    [
+     "node",
+     4
+    ]
+   ]
+  },
+  {
+   "id": "json-keys",
+   "path": "x.json",
+   "text": "{\n  \"scripts\": { \"a\": \"bun ./x.ts\", \"b\": \"repo run y\" },\n  \"command\": [\"uv\", \"run\", \"x.py\"],\n  \"nested\": { \"command\": \"repo tools exec uv -- run x.py\", \"runtime\": \"node -p 1\", \"other\": \"bun x\" },\n  \"inputs\": [{ \"runtime\": \"node\" }, { \"runtime\": \"bun --version\" }],\n  \"program\": \"bun\"\n}\n",
+   "findings": [
+    [
+     "bun",
+     2
+    ],
+    [
+     "uv",
+     3
+    ],
+    [
+     "node",
+     4
+    ],
+    [
+     "bun",
+     5
+    ],
+    [
+     "bun",
+     6
+    ]
+   ]
+  },
+  {
+   "id": "shell-script",
+   "path": "a.sh",
+   "text": "#!/bin/sh\n# bun in a comment\nset -eu\nrepo --help\ncargo build \\\n  --release\nif true; then bun x; fi\n",
+   "findings": [
+    [
+     "cargo",
+     5
+    ],
+    [
+     "bun",
+     7
+    ]
+   ]
+  },
+  {
+   "id": "toml-cargo-config",
+   "path": "x/.cargo/config.toml",
+   "text": "[build]\nrustc-wrapper = \"bun\"\nrustc = \"scripts/rustc.ts\"\n[alias]\nb = \"build\"\nt = \"bun test\"\n",
+   "findings": [
+    [
+     "bun",
+     2
+    ],
+    [
+     "bun",
+     6
+    ]
+   ]
+  },
+  {
+   "id": "bazel-genrule",
+   "path": "BUILD.bazel",
+   "text": "genrule(\n    name = \"a\",\n    cmd = \"cargo build\",\n)\n",
+   "findings": [
+    [
+     "cargo",
+     3
+    ]
+   ]
+  },
+  {
+   "id": "json-names-versus-lines",
+   "path": "y.json",
+   "text": "{\n  \"commands\": [\"bun\", \"bunx\"],\n  \"other\": { \"commands\": [\"bun --version\"] },\n  \"program\": \"repo\"\n}\n",
+   "findings": [
+    [
+     "bun",
+     3
+    ]
+   ]
+  }
+ ],
+ "paths": [
+  {
+   "id": "ticket-excluded",
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/a/README.md",
+   "expect": {
+    "excluded": "tickets"
+   }
+  },
+  {
+   "id": "fixture-excluded",
+   "path": "x/🧫️fixtures/a.json",
+   "expect": {
+    "excluded": "fixtures"
+   }
+  },
+  {
+   "id": "tests-excluded",
+   "path": "x/🧪️tests/a.json",
+   "expect": {
+    "excluded": "fixtures"
+   }
+  },
+  {
+   "id": "module-named-tickets-not-excluded",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📋️project.json",
+   "expect": {
+    "excluded": null,
+    "kind": "json-config"
+   }
+  },
+  {
+   "id": "kind-markdown",
+   "path": "a/b.md",
+   "expect": {
+    "kind": "markdown"
+   }
+  },
+  {
+   "id": "kind-script",
+   "path": "a/b.ps1",
+   "expect": {
+    "kind": "shell-script"
+   }
+  },
+  {
+   "id": "kind-dockerfile",
+   "path": "a/Dockerfile",
+   "expect": {
+    "kind": "container-file"
+   }
+  },
+  {
+   "id": "kind-cargo-config",
+   "path": ".cargo/config.toml",
+   "expect": {
+    "kind": "cargo-config"
+   }
+  },
+  {
+   "id": "bootstrap-allowed",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+   "tool": "rustup",
+   "context": "line",
+   "expect": {
+    "allowed": "launcher-bootstrap"
+   }
+  },
+  {
+   "id": "devcontainer-node-allowed",
+   "path": ".devcontainer/Dockerfile",
+   "tool": "node",
+   "context": "line",
+   "expect": {
+    "allowed": "image-definition"
+   }
+  },
+  {
+   "id": "devcontainer-bun-not-allowed",
+   "path": ".devcontainer/Dockerfile",
+   "tool": "bun",
+   "context": "line",
+   "expect": {
+    "allowed": null
+   }
+  },
+  {
+   "id": "hub-dockerfile-bun",
+   "path": "🌎️hub/Dockerfile",
+   "tool": "bun",
+   "context": "line",
+   "expect": {
+    "allowed": "image-build-stages"
+   }
+  },
+  {
+   "id": "hub-readme-bun-not-allowed",
+   "path": "🌎️hub/README.md",
+   "tool": "bun",
+   "context": "fence",
+   "expect": {
+    "allowed": null
+   }
+  }
+ ]
+}

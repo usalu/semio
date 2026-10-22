@@ -25,6 +25,15 @@ pub fn change_vortex_kind_default_cable_kind<Op: From<crate::change_vortex_kind_
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexKindDefaultCableKind where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_kind_default_cable_kind::ChangeVortexKindDefaultCableKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex-kind", kind: "change-vortex-kind-default-cable-kind", record: "ChangedVortexKindDefaultCableKind" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change vortex kind \"{}\" default cable kind to \"{}\"", self.id, self.new_default_cable_kind), &format!("Standardkabelart von Wirbelart \"{}\" auf \"{}\" ändern", self.id, self.new_default_cable_kind))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for ChangeVortexKindDefaultCableKind where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_kind_default_cable_kind::ChangeVortexKindDefaultCableKind> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::change_vortex_kind_default_cable_kind::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexKindDefault
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change vortex kind \"{}\" default cable kind to \"{}\"", self.id, self.new_default_cable_kind), &format!("Standardkabelart von Wirbelart \"{}\" auf \"{}\" ändern", self.id, self.new_default_cable_kind))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

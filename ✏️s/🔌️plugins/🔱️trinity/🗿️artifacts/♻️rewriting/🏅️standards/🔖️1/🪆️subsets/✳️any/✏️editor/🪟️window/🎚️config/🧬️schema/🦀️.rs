@@ -34,17 +34,9 @@ pub struct RewritingWindowConfigDiff {
     pub lod_mode: Option<String>,
 }
 
-impl protocol::MutationDiff<RewritingWindowConfig> for RewritingWindowConfigDiff {
-    fn apply(&self, base: &RewritingWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RewritingWindowConfig> {
-        let mut next = base.clone();
-        if let Some(camera) = &self.camera {
-            next.camera.clone_from(camera);
-        }
-        if let Some(lod_mode) = &self.lod_mode {
-            next.lod_mode.clone_from(lod_mode);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<RewritingWindowConfig> for RewritingWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<RewritingWindowConfig> for RewritingWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
@@ -53,13 +45,29 @@ impl protocol::MutationDiff<RewritingWindowConfig> for RewritingWindowConfigDiff
             self.lod_mode = other.lod_mode;
         }
     }
+
+    fn apply(&self, unpublished: &mut RewritingWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(camera) = &self.camera {
+            next.camera.clone_from(camera);
+        }
+        if let Some(lod_mode) = &self.lod_mode {
+            next.lod_mode.clone_from(lod_mode);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RewritingWindowConfig> for RewritingWindowConfigDiff {
-    fn inverse(&self, base: &RewritingWindowConfig) -> Self {
-        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.lod_mode.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RewritingWindowConfig> for RewritingWindowConfigDiff {
+    fn inverse(&self, base: &RewritingWindowConfig) -> Self {
+        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()) }
     }
 }

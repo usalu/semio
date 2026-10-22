@@ -38,7 +38,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     },
     "test": {
@@ -54,7 +54,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "typegen": {
@@ -67,7 +67,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts typegen"
+        "command": "repo ./📜️script.ts typegen"
       },
       "inputs": ["schemaModule"],
       "outputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated"]
@@ -77,7 +77,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts schema-check"
+        "command": "repo ./📜️script.ts schema-check"
       },
       "inputs": [
         "default",
@@ -100,7 +100,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     }

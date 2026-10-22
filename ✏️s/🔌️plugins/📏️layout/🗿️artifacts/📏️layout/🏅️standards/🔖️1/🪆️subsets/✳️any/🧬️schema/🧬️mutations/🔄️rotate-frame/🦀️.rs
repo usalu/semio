@@ -23,6 +23,16 @@ pub struct RotateFrame {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for RotateFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rotate_frame::RotateFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "frame", kind: "rotate-frame", record: "RotatedFrame" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" drehen", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for RotateFrame where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rotate_frame::RotateFrame> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rotate_frame(self, base)
     }
@@ -32,12 +42,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for RotateFrame where Op: protocol::Mu
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" drehen", self.frame_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.frame_id.clone()]
-    }
 }
 //#endregion 🔄️RotateFrame
 

@@ -6,7 +6,7 @@
         "platform": "posix",
         "root": "/workspace/repo",
         "package": "packages/space owner",
-        "command": "bun --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"",
+        "command": "repo --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"",
         "arguments": [
           "--tool=bazel",
           "run",
@@ -20,7 +20,7 @@
         "platform": "win32",
         "root": "C:\\workspace\\repo",
         "package": "packages/space owner",
-        "command": "bun --cwd \"../..\" repo run fixture:test -- \"literal$()\"",
+        "command": "repo --cwd \"../..\" repo run fixture:test -- \"literal$()\"",
         "arguments": [
           "run",
           "fixture:test",
@@ -32,7 +32,7 @@
         "platform": "posix",
         "root": "/workspace/🧪 repo",
         "package": "a/b/c",
-        "command": "bun --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache",
+        "command": "repo --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache",
         "arguments": [
           "--tool=nx",
           "run",
@@ -44,13 +44,12 @@
     "sourceCaller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
   },
   "scripts": {
-    "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
-    "setup": "bun repo run workspace:setup",
-    "dashboard": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream",
-    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
+    "setup": "repo run workspace:setup",
+    "dashboard": "repo run @semio-tech/repo-dashboard-rs:run --output=stream",
+    "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
   },
   "postCreateCommand": [
-    "bun",
     "repo",
     "run",
     "workspace:setup"
@@ -193,7 +192,7 @@
         "en": "👁️ Build Sources · Watch",
         "de": "👁️ Build-Quellen · Beobachten"
       },
-      "args": "--tool=${input:repoBuildTool} watch --projects=\"${input:repoBuildProjects}\" -- bun repo run \"${input:repoBuildTask}\" --output=stream",
+      "args": "--tool=${input:repoBuildTool} watch --projects=\"${input:repoBuildProjects}\" -- repo run \"${input:repoBuildTask}\" --output=stream",
       "group": "4_build",
       "order": 21.4
     },
@@ -401,7 +400,7 @@
       "name": "implicit-command",
       "target": {
         "options": {
-          "command": "bun ./📜️script.ts test",
+          "command": "repo ./📜️script.ts test",
           "args": [
             "literal value"
           ],
@@ -443,7 +442,7 @@
       "target": {
         "executor": "repo:script",
         "options": {
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         },
         "configurations": {
           "release": {

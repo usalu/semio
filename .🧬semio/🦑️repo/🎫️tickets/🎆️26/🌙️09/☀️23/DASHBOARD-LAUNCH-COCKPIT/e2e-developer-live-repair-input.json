@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "status": "source-ready-runtime-unrun",
+  "changed": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📜️script.ts",
+      "bytes": 4938,
+      "sha256": "4ec124d8d323137acb59f0b7ced4f50c3a161d0b0135a1b543800f2cfafc87b7",
+      "utf16PathLength": 113,
+      "parseErrors": 0
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧪️tests/🟦️.ts",
+      "bytes": 27584,
+      "sha256": "24a28d4c048d6c9de183d72978264cda36a461151939757619702c1e62144392",
+      "utf16PathLength": 116,
+      "parseErrors": 0
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧫️fixtures/🔣️.json",
+      "bytes": 37709,
+      "sha256": "fcb427e2fd41c8f140aa5a730d9b3458468742861e499029ed523379c1b52f04",
+      "utf16PathLength": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧬️schema/🔣️.json",
+      "bytes": 16251,
+      "sha256": "9c2c2699ae6fe70849a27fb63ddc8d0b651ad3bfae8a916ff48f132744e6cb9f",
+      "utf16PathLength": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🏃️process/🟦️.ts",
+      "bytes": 15636,
+      "sha256": "55af6dd2670438be4cd897f3ab9d67e9a631a0c3921c78af7c0888430064904e",
+      "utf16PathLength": 118,
+      "parseErrors": 0
+    }
+  ],
+  "target": "@semio-tech/repo-developer-tools:test",
+  "policy": {
+    "mandatory": [
+      "node-inspect",
+      "python-pdb",
+      "lldb"
+    ],
+    "qualified": "gdb",
+    "portableProtocolCases": 16,
+    "portableUtf8Cases": 3,
+    "existingTargetMaximumMilliseconds": 300000,
+    "installedPtySeparate": true
+  },
+  "requiredNewTests": [
+    "live protocol obligations agree with closed schema and independent SQLite",
+    "system shell uses the production owned process with bounded input output and exit"
+  ],
+  "runtime": "Only after parent releases the owning target; current lock custody is High24430. No command executed by Controls."
+}

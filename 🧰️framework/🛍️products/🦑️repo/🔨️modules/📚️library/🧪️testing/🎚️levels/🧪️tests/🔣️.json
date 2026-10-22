@@ -1,0 +1,173 @@
+{
+ "version": 1,
+ "levels": [
+  {
+   "level": "fundamental",
+   "go": [
+    "-timeout",
+    "15s",
+    "-short",
+    "-skip",
+    "^Test(Quick|Long|Exhaustive)"
+   ],
+   "vitest": [
+    "--testTimeout",
+    "15000",
+    "--hookTimeout",
+    "15000",
+    "--teardownTimeout",
+    "15000"
+   ],
+   "bun": [
+    "--timeout",
+    "15000"
+   ],
+   "pytest": [
+    "-m",
+    "not quick and not long and not exhaustive",
+    "--timeout=15",
+    "--timeout-method=thread"
+   ],
+   "dotnet": [
+    "--filter",
+    "Category!=quick&Category!=long&Category!=exhaustive",
+    "--blame-hang",
+    "--blame-hang-timeout",
+    "15000"
+   ],
+   "playwright": 15000
+  },
+  {
+   "level": "quick",
+   "go": [
+    "-timeout",
+    "300s",
+    "-short",
+    "-skip",
+    "^Test(Long|Exhaustive)"
+   ],
+   "vitest": [
+    "--testTimeout",
+    "300000",
+    "--hookTimeout",
+    "300000",
+    "--teardownTimeout",
+    "300000"
+   ],
+   "bun": [
+    "--timeout",
+    "300000"
+   ],
+   "pytest": [
+    "-m",
+    "not long and not exhaustive",
+    "--timeout=300",
+    "--timeout-method=thread"
+   ],
+   "dotnet": [
+    "--filter",
+    "Category!=long&Category!=exhaustive",
+    "--blame-hang",
+    "--blame-hang-timeout",
+    "300000"
+   ],
+   "playwright": 300000
+  },
+  {
+   "level": "long",
+   "go": [
+    "-timeout",
+    "900s",
+    "-skip",
+    "^Test(Exhaustive)"
+   ],
+   "vitest": [
+    "--testTimeout",
+    "900000",
+    "--hookTimeout",
+    "900000",
+    "--teardownTimeout",
+    "900000"
+   ],
+   "bun": [
+    "--timeout",
+    "900000"
+   ],
+   "pytest": [
+    "-m",
+    "not exhaustive",
+    "--timeout=900",
+    "--timeout-method=thread"
+   ],
+   "dotnet": [
+    "--filter",
+    "Category!=exhaustive",
+    "--blame-hang",
+    "--blame-hang-timeout",
+    "900000"
+   ],
+   "playwright": 900000
+  },
+  {
+   "level": "exhaustive",
+   "go": [
+    "-timeout",
+    "1800s"
+   ],
+   "vitest": [
+    "--testTimeout",
+    "1800000",
+    "--hookTimeout",
+    "1800000",
+    "--teardownTimeout",
+    "1800000"
+   ],
+   "bun": [
+    "--timeout",
+    "1800000"
+   ],
+   "pytest": [
+    "--timeout=1800",
+    "--timeout-method=thread"
+   ],
+   "dotnet": [
+    "--blame-hang",
+    "--blame-hang-timeout",
+    "1800000"
+   ],
+   "playwright": 1800000
+  }
+ ],
+ "override": {
+  "budgetMs": "2500",
+  "go": [
+   "-timeout",
+   "3s",
+   "-short",
+   "-skip",
+   "^Test(Quick|Long|Exhaustive)"
+  ],
+  "pytest": [
+   "-m",
+   "not quick and not long and not exhaustive",
+   "--timeout=3",
+   "--timeout-method=thread"
+  ],
+  "bun": [
+   "--timeout",
+   "2500"
+  ],
+  "playwright": 2500
+ },
+ "default": {
+  "env": "long",
+  "expectedBun": [
+   "--timeout",
+   "900000"
+  ]
+ },
+ "invalidEnvDefaultsToFundamental": [
+  "--timeout",
+  "15000"
+ ]
+}

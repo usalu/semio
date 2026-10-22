@@ -30,7 +30,7 @@ PHASE_ORDER = ["cold", "warm", "e2e", "probe"]
 ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
 SUMMARY = re.compile(r"(\d+) process(?:es)?:\s*(.+?)\.?\s*$")
 SLOT = re.compile(r"\bslot ([sd]\d+)\b")
-WAIT = re.compile(r"(?i)(slots? (?:are|is) in use|waiting for access|waiting for one|position \d+ of \d+|\[capacity\].*waiting|host capacity.*wait)")
+WAIT = re.compile(r"(?i)(slots? (?:are|is) in use|waiting for access|waiting for one|position \d+ of \d+|\[capacity\].*(?:waiting|queue)|host capacity.*(?:wait|queue))")
 EVIDENCE = re.compile(r"^\s*(Compiling \S+ v\d|.*\bBundling\b)")
 PLAYWRIGHT_RESULT = re.compile(r"^\s*(\d+) (passed|failed|flaky|skipped)\b")
 CACHED_RUNNERS = ("disk cache hit", "remote cache hit")
@@ -213,11 +213,11 @@ def pid_alive(pid: int) -> bool:
         return False
 
 
-def capture(argv, timeout, cwd=None, env=None):
-    """📥 Runs a short command; returns (rc, output) with rc 124 on timeout and 127 when missing."""
+def capture(argv, timeout, cwd=None, env=None, machine=False):
+    """📥 Runs a short command; returns (rc, output) with rc 124 on timeout and 127 when missing. A `machine` command (`--json`) keeps its result stream apart: stdout is the document, stderr the progress."""
     try:
-        done = subprocess.run(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=timeout)
-        return done.returncode, done.stdout.decode("utf-8", "replace")
+        done = subprocess.run(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE if machine else subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=timeout)
+        return done.returncode, done.stdout.decode("utf-8", "replace") + (done.stderr.decode("utf-8", "replace") if machine and done.returncode != 0 else "")
     except subprocess.TimeoutExpired as error:
         return 124, (error.stdout or b"").decode("utf-8", "replace")
     except OSError as error:
@@ -684,6 +684,76 @@ class Orchestrator:
                     ok = False
             self.check(checks, "OK" if ok else "WARN", "applied: " + marker["id"], "present" if ok else "NOT in the tree: warm assertions for %s will probably fail" % product)
 
+    def verify_targets(self, checks: list, products: list) -> None:
+        """🎯 Every project and target the plan runs must exist in the published graph: one `show targets --json` with SEMIO_BUILD_GRAPH_POLICY=current (the CLI caller parser refuses the flag form; the env form never waits for a rebuild; it queues at the capacity gate, 5 GB). A failed read is a WARN, a listed generation without a name is a FAIL."""
+        wanted = {}
+        for product in products:
+            spec = self.plan["products"][product]
+            names = list(spec.get("verifyTargets", []))
+            for phase in ("cold", "e2e", "probe"):
+                for step in spec["steps"][phase]:
+                    if step["kind"] == "repo" and len(step["args"]) > 1 and step["args"][0] == "run" and ":" in step["args"][1]:
+                        names.append(step["args"][1])
+            for name in names:
+                project, target = name.rsplit(":", 1)
+                wanted.setdefault(project, set()).add(target)
+        cli = ["bun", "repo", "--tool=%s" % self.plan["tool"], "show"]
+        env = self.child_env("")
+        env["SEMIO_BUILD_GRAPH_POLICY"] = "current"
+        token = r"(?<![\w-])%s(?![\w-])"
+
+        def candidates(text):
+            try:
+                data = json.loads(text)
+            except ValueError:
+                return text.splitlines()
+            found = []
+            def walk(node):
+                if isinstance(node, str):
+                    found.append(node)
+                elif isinstance(node, dict):
+                    for key, value in node.items():
+                        found.append(str(key))
+                        walk(value)
+                elif isinstance(node, list):
+                    for value in node:
+                        walk(value)
+            walk(data)
+            return found
+
+        def json_part(text):
+            lines = [l for l in text.splitlines() if not l.startswith("[script]") and not l.startswith("[capacity]") and not l.startswith("$ ")]
+            starts = [i for i, l in enumerate(lines) if l in ("[", "{") or l.startswith('["') or l.startswith('{"')]
+            ends = [i for i, l in enumerate(lines) if l in ("]", "}")]
+            if starts and ends and ends[-1] >= starts[0]:
+                return "\n".join(lines[starts[0]:ends[-1] + 1])
+            return "\n".join(lines)
+
+        for _ in range(3):
+            rc, out = capture(cli + ["targets", "--json"], self.th["verifyTargetSeconds"], cwd=str(self.root), env=env, machine=True)
+            if rc == 0 and candidates(json_part(strip_ansi(out))):
+                break
+        if rc != 0:
+            tail = " ".join(l.strip() for l in strip_ansi(out).splitlines() if l.strip() and not l.startswith("[script]") and not l.startswith("[capacity]"))[-240:]
+            return self.check(checks, "WARN", "graph targets", "could not read the published generation (exit %d: %s); target names not verified, the run itself will show a missing name" % (rc, tail))
+        rows = candidates(json_part(strip_ansi(out)))
+        if rows and not any(":" in r for r in rows):
+            for _ in range(3):
+                rc, out = capture(cli + ["projects", "--json"], self.th["verifyTargetSeconds"], cwd=str(self.root), env=env, machine=True)
+                if rc == 0 and candidates(json_part(strip_ansi(out))):
+                    break
+            if rc != 0:
+                return self.check(checks, "WARN", "graph targets", "could not read the published projects (exit %d); target names not verified" % rc)
+            projects, names = set(candidates(json_part(strip_ansi(out)))), set(rows)
+            missing = sorted("%s:%s" % (project, target) for project, targets in wanted.items() for target in targets if project not in projects or target not in names)
+            if missing:
+                return self.check(checks, "FAIL", "graph targets", "%d of %d target(s) missing from the generation: %s" % (len(missing), sum(len(v) for v in wanted.values()), ", ".join(missing)))
+            return self.check(checks, "OK", "graph targets", "%d project(s) and their %d target name(s) found in lean `show projects|targets --json` (SEMIO_BUILD_GRAPH_POLICY=current)" % (len(wanted), sum(len(v) for v in wanted.values())))
+        missing = sorted("%s:%s" % (project, target) for project, targets in wanted.items() for target in targets if not any(re.search(token % re.escape(project), r) and re.search(token % re.escape(target), r) for r in rows))
+        if missing:
+            return self.check(checks, "FAIL", "graph targets", "%d of %d target(s) missing from the generation: %s" % (len(missing), sum(len(v) for v in wanted.values()), ", ".join(missing)))
+        self.check(checks, "OK", "graph targets", "%d target(s) of %d project(s) found in one `show targets --json` (SEMIO_BUILD_GRAPH_POLICY=current)" % (sum(len(v) for v in wanted.values()), len(wanted)))
+
     def preflight(self, products: list, phases: list) -> dict:
         """🛫 Prerequisite checks: tools, pins, ports, disk, memory, load, capacity, slots, applied sets."""
         checks = []
@@ -724,12 +794,12 @@ class Orchestrator:
         if available is None:
             self.check(checks, "WARN", "memory", "not measurable on %s; the host capacity gate decides" % platform.system())
         else:
-            self.check(checks, "OK" if available >= self.th["minAvailableMemoryGb"] else "FAIL", "memory", "%.1f GB available of %.1f GB (need %s)" % (available, total, self.th["minAvailableMemoryGb"]))
+            low = available < self.th["failAvailableMemoryGb"]
+            self.check(checks, "FAIL" if low else "OK" if available >= self.th["minAvailableMemoryGb"] else "WARN", "memory", "%.1f GB available of %.1f GB (the live capacity gate queues heavy commands below its floor; FAIL only under %s GB)" % (available, total, self.th["failAvailableMemoryGb"]))
         cores = os.cpu_count() or 1
         load = load_average()
         if load is not None:
-            status = "FAIL" if load > self.th["loadFailPerCore"] * cores else "WARN" if load > self.th["loadWarnPerCore"] * cores else "OK"
-            self.check(checks, status, "load", "%.1f on %d cores (warn above %s, fail above %s)" % (load, cores, self.th["loadWarnPerCore"] * cores, self.th["loadFailPerCore"] * cores))
+            self.check(checks, "INFO" if load > self.th["loadWarnPerCore"] * cores else "OK", "load", "%.1f on %d cores (informational: foreign load no longer blocks, the capacity gate admits by memory and its own grants)" % (load, cores))
         slots = lane_slots(int((total or 0) * 1024), cores) if total else 1
         override = os.environ.get("SEMIO_BAZEL_SERVERS")
         if override and override.isdigit():
@@ -755,7 +825,11 @@ class Orchestrator:
             self.check(checks, "OK" if rc == 0 else "FAIL", "bun repo --help", "exit %d" % rc)
             rc, out = capture(["bun", "repo", "capacity", "status"], self.th["cliProbeSeconds"], cwd=str(self.root), env=self.child_env(""))
             first = [l for l in strip_ansi(out).splitlines() if l.startswith("[capacity]")][:1]
-            self.check(checks, "OK" if rc == 0 else "WARN", "bun repo capacity status", first[0][:200] if first else "exit %d (governor not applied or queued)" % rc)
+            pressure = re.search(r"pressure (\w+)", first[0]) if first else None
+            hot = bool(pressure and pressure.group(1) in ("warn", "critical"))
+            self.check(checks, "OK" if rc == 0 and not hot else "WARN", "bun repo capacity status", (first[0][:200] if first else "exit %d (governor not applied or queued)" % rc) + ("; steps will queue at the gate (progress lines are recorded as waits)" if hot else ""))
+        if shutil.which("bun") and (self.args.verify_targets or (mutating and not self.args.skip_preflight and not self.args.no_verify_targets)) and not self.args.no_cli_probe:
+            self.verify_targets(checks, products)
         verdict = "FAIL" if any(c["status"] == "FAIL" for c in checks) else "WARN" if any(c["status"] == "WARN" for c in checks) else "OK"
         return {"time": now_iso(), "verdict": verdict, "checks": checks}
 
@@ -889,6 +963,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
     parser.add_argument("--skip-preflight", action="store_true")
     parser.add_argument("--no-cli-probe", action="store_true", help="preflight: skip the bun repo --help and capacity status probes")
+    parser.add_argument("--verify-targets", action="store_true", help="preflight: check every project and target name in the published graph (show project --graph-policy=current); on by default before heavy phases")
+    parser.add_argument("--no-verify-targets", action="store_true")
     parser.add_argument("--no-snapshots", action="store_true", help="skip cache/capacity/lease snapshots")
     parser.add_argument("--no-stagger", dest="stagger", action="store_false", help="start all products at once")
     parser.add_argument("--force-lock", action="store_true")

@@ -12,15 +12,19 @@ pub struct ChangeVentSfp {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeVentSfp where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_sfp::ChangeVentSfp> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-sfp", kind: "change-vent-sfp", record: "ChangeVentSfp" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_vent_sfp::diff::diff(self, base) }
-    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ crate::change_vent_sfp::inverse::inverse(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change specific fan power", "Spezifische Ventilatorleistung ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeVentSfp where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_sfp::ChangeVentSfp> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_vent_sfp::diff::diff(self, base) }
+    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_vent_sfp::inverse::inverse(self, base)? 
+    })
+}
 }
 
 //#region 🪢️Mounts

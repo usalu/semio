@@ -30,7 +30,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -38,7 +38,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -47,7 +47,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -68,7 +68,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-media-adoption-source"
+        "command": "repo ./📜️script.ts test-media-adoption-source"
       },
       "metadata": {
         "semio": {
@@ -85,7 +85,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify layout-window-ownership",
+        "command": "repo ./📜️script.ts verify layout-window-ownership",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -103,7 +103,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify layout-document-contract",
+        "command": "repo ./📜️script.ts verify layout-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -121,7 +121,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify layout-frame-selection",
+        "command": "repo ./📜️script.ts verify layout-frame-selection",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -146,7 +146,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       }
     },
     "test-snapshot-sqlite-source": {
@@ -162,7 +162,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       }
     },
     "test-snapshot-sqlite-native": {
@@ -178,7 +178,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       }
     },
     "verify-physical-codecs": {
@@ -187,7 +187,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify physical-codecs"
+        "command": "repo ./📜️script.ts verify physical-codecs"
       }
     }
   }

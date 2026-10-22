@@ -1,6 +1,7 @@
 import { spawn, spawnSync, type ChildProcess, type StdioOptions } from "node:child_process";
 import { constants } from "node:os";
 import { Readable } from "node:stream";
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeByteStreamV1, RuntimeChildV1, RuntimeSpawnOptionsV1, RuntimeSpawnSyncResultV1, RuntimeStdioV1 } from "../../📋️contract/🟦️.ts";
 
 function environment(source: RuntimeSpawnOptionsV1["env"]): NodeJS.ProcessEnv {
@@ -20,7 +21,7 @@ function exitNumber(code: number | null, signal: NodeJS.Signals | null): number 
 
 /** 🚀️ Starts one child process over `node:child_process` with web streams; defaults are stdin ignored, stdout piped, stderr inherited. */
 export function spawnV1(command: readonly string[], options: RuntimeSpawnOptionsV1 = {}): RuntimeChildV1 {
-  if (command.length === 0) throw new TypeError("A command is required");
+  if (command.length === 0) throw new TypeError(runtimeMessageV1("commandRequired", {}));
   const input = typeof options.stdin === "string" && !["pipe", "inherit", "ignore"].includes(options.stdin) || options.stdin instanceof Uint8Array ? options.stdin : undefined;
   const stdio: StdioOptions = [wire(options.stdin, "ignore"), wire(options.stdout, "pipe"), wire(options.stderr, "inherit")];
   const child: ChildProcess = spawn(command[0]!, command.slice(1), { cwd: options.cwd, env: environment(options.env), stdio, detached: options.detached, signal: options.signal, windowsHide: true });
@@ -45,7 +46,7 @@ export function spawnV1(command: readonly string[], options: RuntimeSpawnOptions
 
 /** 🚀️ Runs one child to completion over `node:child_process`; output is unbounded and defaults pipe both streams. */
 export function spawnSyncV1(command: readonly string[], options: RuntimeSpawnOptionsV1 = {}): RuntimeSpawnSyncResultV1 {
-  if (command.length === 0) throw new TypeError("A command is required");
+  if (command.length === 0) throw new TypeError(runtimeMessageV1("commandRequired", {}));
   const input = typeof options.stdin === "string" && !["pipe", "inherit", "ignore"].includes(options.stdin) || options.stdin instanceof Uint8Array ? options.stdin : undefined;
   const result = spawnSync(command[0]!, command.slice(1), { cwd: options.cwd, env: environment(options.env), stdio: [input === undefined ? wire(options.stdin, "ignore") : "pipe", wire(options.stdout, "pipe"), wire(options.stderr, "pipe")], input, timeout: options.timeout, maxBuffer: Infinity, windowsHide: true });
   if (result.error !== undefined && (result.error as NodeJS.ErrnoException).code === "ENOENT") throw result.error;

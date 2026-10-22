@@ -3,7 +3,7 @@ use crate::apply_mutation;
 use crate::standards::v_utf_8::subsets::any::schema::mutations::{TxtMutation};
 use crate::standards::v_utf_8::subsets::any::schema::mutations::set_trailing_newline::*;
 use crate::schema::snapshot::LineEnding;
-use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
@@ -26,7 +26,7 @@ fn semantic_identity_matches_descriptor() {
 fn inverse_and_root_codecs_restore_a_visible_terminator() {
     let base = TxtSnapshot { lines: vec!["a".into()], trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
     let mutation = TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true });
-    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <TxtMutation as ColdMutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false })]);
     let mut after = base.clone();
     assert!(apply_mutation(&mut after, &mutation).messages().is_empty());

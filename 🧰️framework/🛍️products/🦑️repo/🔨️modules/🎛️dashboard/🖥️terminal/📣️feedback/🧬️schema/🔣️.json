@@ -1,0 +1,142 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumEvents",
+    "maximumDetailBytes",
+    "terminalCases",
+    "history",
+    "locales"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumEvents": {
+      "const": 64
+    },
+    "maximumDetailBytes": {
+      "const": 8192
+    },
+    "terminalCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "fail",
+          "leaveFails",
+          "expected",
+          "detachFails"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "fail": {
+            "enum": [
+              null,
+              "enter",
+              "present",
+              "wait"
+            ]
+          },
+          "leaveFails": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "primary",
+              "cleanup",
+              "exit"
+            ],
+            "properties": {
+              "primary": {
+                "enum": [
+                  null,
+                  "enter",
+                  "present",
+                  "wait",
+                  "detach",
+                  "leave"
+                ]
+              },
+              "cleanup": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "enum": [
+                    "detach",
+                    "leave"
+                  ]
+                }
+              },
+              "exit": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          },
+          "detachFails": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "retained",
+        "first"
+      ],
+      "properties": {
+        "count": {
+          "const": 70
+        },
+        "retained": {
+          "const": 64
+        },
+        "first": {
+          "const": 6
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "language",
+          "stop",
+          "diagnostics"
+        ],
+        "properties": {
+          "language": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "stop": {
+            "type": "string"
+          },
+          "diagnostics": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

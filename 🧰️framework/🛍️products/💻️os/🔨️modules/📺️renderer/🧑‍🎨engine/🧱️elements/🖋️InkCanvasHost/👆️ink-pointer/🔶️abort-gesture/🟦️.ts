@@ -1,5 +1,6 @@
 /** 🔶️ The abort gesture phase of useInkPointer. */
-import React, { useCallback } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { type InkResizeHandle } from "../../🧾️ink-model/🟦️.ts";
 import { eraseInkStrokeEventsAtPoint, eraseInkStrokePointEventsNearPoint, findInkItem, inkItemsAtPoint, inkMaybeSnapWorldPoint, screenToWorld } from "../../📐️ink-geometry/🟦️.ts";
 import { createInkItemByKind } from "../../🌳️ink-document-ops/🟦️.ts";

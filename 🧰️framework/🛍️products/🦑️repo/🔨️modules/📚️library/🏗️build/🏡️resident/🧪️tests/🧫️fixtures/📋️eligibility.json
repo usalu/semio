@@ -1,0 +1,258 @@
+{
+ "eligibility": [
+  {
+   "args": [
+    "run",
+    "p:build"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--output=stream"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "test",
+    "suite",
+    "--service=auto",
+    "--lang=de"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "run-many",
+    "a",
+    "b",
+    "--no-color"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "--service=auto",
+    "run",
+    "p:build"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "--service=off",
+    "run",
+    "p:build"
+   ],
+   "eligible": true
+  },
+  {
+   "args": [
+    "run"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "--output=stream"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--skip-cache"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--configuration=prod"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--",
+    "--watch"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "graph"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "watch",
+    "p:build"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "dependencies",
+    "sync"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--lang",
+    "de"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--tool=bazel"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "--tool=bazel",
+    "run",
+    "p:build"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "run",
+    "p:build",
+    "--service="
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "--service=auto"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [],
+   "eligible": false
+  },
+  {
+   "args": [
+    "affected"
+   ],
+   "eligible": false
+  },
+  {
+   "args": [
+    "exec",
+    "x"
+   ],
+   "eligible": false
+  }
+ ],
+ "modes": [
+  {
+   "args": [
+    "run",
+    "x"
+   ],
+   "environment": {},
+   "mode": "auto"
+  },
+  {
+   "args": [
+    "run",
+    "x"
+   ],
+   "environment": {
+    "SEMIO_BUILD_SERVICE": "off"
+   },
+   "mode": "off"
+  },
+  {
+   "args": [
+    "run",
+    "x",
+    "--service=require"
+   ],
+   "environment": {
+    "SEMIO_BUILD_SERVICE": "off"
+   },
+   "mode": "require"
+  },
+  {
+   "args": [
+    "--service=off",
+    "run",
+    "x"
+   ],
+   "environment": {},
+   "mode": "off"
+  },
+  {
+   "args": [
+    "run",
+    "x",
+    "--",
+    "--service=off"
+   ],
+   "environment": {},
+   "mode": "auto"
+  },
+  {
+   "args": [
+    "run",
+    "x",
+    "--service=sometimes"
+   ],
+   "environment": {},
+   "mode": "invalid"
+  }
+ ],
+ "agents": [
+  {
+   "value": "",
+   "fallback": "launcher",
+   "agent": "launcher"
+  },
+  {
+   "value": "",
+   "fallback": "default",
+   "agent": "default"
+  },
+  {
+   "value": "codex-1",
+   "fallback": "launcher",
+   "agent": "codex-1"
+  },
+  {
+   "value": "claude:session.7_a",
+   "fallback": "launcher",
+   "agent": "claude:session.7_a"
+  },
+  {
+   "value": "ü ñ/x y",
+   "fallback": "launcher",
+   "agent": "____x_y"
+  },
+  {
+   "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "fallback": "launcher",
+   "agent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+ ]
+}

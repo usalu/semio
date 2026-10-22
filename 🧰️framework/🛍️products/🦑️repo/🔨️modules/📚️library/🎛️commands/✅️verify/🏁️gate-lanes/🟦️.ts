@@ -6,6 +6,7 @@ import { canonicalArchitectureEnvironment } from "../../../⚡️caching/🦀️
 import { repoTaxonomy } from "../../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
 import { checkStorybookFreshness } from "../🎨️storybook-freshness/🟦️.ts";
 import { policyIndexedGeneratedOutputBreaches } from "../../../⚖️laws/📇️indexed-generated-output/🟦️.ts";
+import { policyRawProcessSpawnBreaches } from "../../../⚖️laws/🚷️raw-process-spawn/🟦️.ts";
 import { policyDocumentAppShapeBreaches, policyOsStateAuthorityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts";
 import { policyStandardsCoverageBreaches, policyStandardSubsetVocabularyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧾️standards/🟦️.ts";
 import { policyHandcraftedSpecP3Breaches } from "../../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
@@ -20,6 +21,8 @@ import { policyInferenceFamilyBreaches } from "../../../🧬️schema/💡️inf
 import { policyMutationOutcomeMergePolicyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/📐️merge-policy-law/🟦️.ts";
 import { policyHistoryClosureBreaches } from "../../../⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 import { VerifyToolJobLane } from "../🎯️tool-job-lane/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 /** 🏁️ Dependency-freeze, layering, canonical-architecture and whole-gate verification lanes. */
 export abstract class VerifyGateLanes extends VerifyToolJobLane {
@@ -33,14 +36,14 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
 
   /** 🧱️ Enforces dependency direction through the repository library's taxonomy-owned graph rule. */
   protected runLayering(segments: string[]): void {
-    if (segments.length) throw new Error("Expected verify layering");
-    runCmd("bun", ["repo", "run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+    if (segments.length) throw refuseVerifyV1("usage","gates.expected-layering");
+    runCmd("repo", ["run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🏛️ Executes architecture contract checks contributed by their owning build projects. */
   protected runCanonicalArchitecture(): void {
-    console.log("[verify canonical-architecture] checking owner-contributed dependency, state and I/O contracts…");
-    runCmd("bun", ["repo", "run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-cache", ...semioBuildParallelFlag()], {
+    sayVerifyV1("gates.canonical-architecture-checking-owner-contributed");
+    runCmd("repo", ["run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-cache", ...semioBuildParallelFlag()], {
       cwd: this.root,
       ...orchestratorBudgetOpts(canonicalArchitectureEnvironment(this.root, process.env)),
     });
@@ -48,46 +51,56 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
 
   protected async runGate(): Promise<void> {
     this.runCanonicalArchitecture();
-    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`bun repo run-many --targets=lint --all`:
+    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`repo run-many --targets=lint --all`:
     // several unrelated projects have pre-existing broken eslint configs,
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
-    console.log("[verify] dependency-cruiser boundaries…");
+    sayVerifyV1("gates.dependency-cruiser-boundaries");
     runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
-    console.log("[verify] generated catalog freshness…");
-    runCmd("bun", ["repo", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] region/host-contract script lints…");
-    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["repo", "run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] framework owned-schema binding freshness…");
-    runCmd("bun", ["repo", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] schema parser projection freshness…");
-    runCmd("bun", ["repo", "run", "workspace:schema-parsers-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] ui locale/terminology axes freshness…");
-    runCmd("bun", ["repo", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] chrome i18n literal scan…");
-    runCmd("bun", ["repo", "run", "@semio-tech/repo-lib:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] TypeScript/JavaScript dependency direction…");
+    sayVerifyV1("gates.generated-catalog-freshness");
+    runCmd("repo", ["run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.region-host-contract-script-lints");
+    runCmd("repo", ["run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.framework-owned-schema-binding-freshness");
+    runCmd("repo", ["run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.schema-parser-projection-freshness");
+    runCmd("repo", ["run", "workspace:schema-parsers-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.ui-locale-terminology-axes-freshness");
+    runCmd("repo", ["run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.chrome-i18n-literal-scan");
+    runCmd("repo", ["run", "@semio-tech/repo-lib:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    sayVerifyV1("gates.typescript-javascript-dependency-direction");
     this.runLayering([]);
-    console.log("[verify] owner-root test taxonomy and feature contract…");
+    sayVerifyV1("gates.owner-root-test-taxonomy-and");
     {
       const domain = String(repoTaxonomy(this.root).testDomainPath ?? "");
-      if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
+      if (domain !== "") runCmd(runtimeExecutableV1(), [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
     }
-    console.log("[verify] storybook scope freshness…");
+    sayVerifyV1("gates.storybook-scope-freshness");
     await checkStorybookFreshness(this.root);
-    console.log("[verify] indexed generated output (wasm/jco/wasm-pack)…");
+    sayVerifyV1("gates.indexed-generated-output");
     {
       const generatedBreaches = policyIndexedGeneratedOutputBreaches(this.root);
       if (generatedBreaches.length > 0) {
         for (const b of generatedBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${generatedBreaches.length} indexed generated-output breach(es)`);
+        throw refuseVerifyV1("breach","gates.indexed-generated-output-breach",{breaches:generatedBreaches.length});
       }
     }
-    console.log("[verify] OS exclusive state authority policies…");
+    sayVerifyV1("gates.raw-process-spawns");
+    {
+      const spawnBreaches = policyRawProcessSpawnBreaches(this.root);
+      if (spawnBreaches.length > 0) {
+        for (const b of spawnBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw refuseVerifyV1("breach","gates.raw-process-spawn-breach",{breaches:spawnBreaches.length});
+      }
+    }
+    sayVerifyV1("gates.os-exclusive-state-authority-policies");
     {
       const osBreaches = [
         ...policyOsStateAuthorityBreaches(this.root),
@@ -97,10 +110,10 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
         for (const b of osBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${osBreaches.length} OS exclusive state authority policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.os-exclusive-state-authority-policy",{breaches:osBreaches.length});
       }
     }
-    console.log("[verify] standards/subsets vocabulary…");
+    sayVerifyV1("gates.standards-subsets-vocabulary");
     {
       const subsetVocabBreaches = [
         ...policyStandardsCoverageBreaches(this.root),
@@ -110,54 +123,54 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
         for (const b of subsetVocabBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${subsetVocabBreaches.length} standards/subsets vocabulary policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.standards-subsets-vocabulary-policy-breach",{breaches:subsetVocabBreaches.length});
       }
     }
-    console.log("[verify] handcrafted grammar P3/M4 policies…");
+    sayVerifyV1("gates.handcrafted-grammar-p3-m4-policies");
     {
       const handcraftedBreaches = policyHandcraftedSpecP3Breaches(this.root);
       if (handcraftedBreaches.length > 0) {
         for (const b of handcraftedBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${handcraftedBreaches.length} handcrafted-grammar P3/M4 policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.handcrafted-grammar-p3-m4-policy",{breaches:handcraftedBreaches.length});
       }
     }
-    console.log("[verify] artifact-schema facet policies…");
+    sayVerifyV1("gates.artifact-schema-facet-policies");
     {
       const artifactSchemaBreaches = policyArtifactSchemaBreaches(this.root);
       if (artifactSchemaBreaches.length > 0) {
         for (const b of artifactSchemaBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${artifactSchemaBreaches.length} artifact-schema policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.artifact-schema-policy-breach",{breaches:artifactSchemaBreaches.length});
       }
     }
-    console.log("[verify] app-schema facet policies…");
+    sayVerifyV1("gates.app-schema-facet-policies");
     {
       const appSchemaBreaches = policyAppSchemaBreaches(this.root);
       if (appSchemaBreaches.length > 0) {
         for (const b of appSchemaBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${appSchemaBreaches.length} app-schema policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.app-schema-policy-breach",{breaches:appSchemaBreaches.length});
       }
     }
-    console.log("[verify] build owner registry…");
+    sayVerifyV1("gates.build-owner-registry");
     this.runBuildOwners([]);
-    console.log("[verify] zero-touch closures…");
+    sayVerifyV1("gates.zero-touch-closures");
     this.runZeroTouch([]);
-    console.log("[verify] package language purity…");
+    sayVerifyV1("gates.package-language-purity");
     {
       const packagePurityBreaches = policyPackageLanguagePurityBreaches(this.root).filter((b) => b.priority === "high");
       if (packagePurityBreaches.length > 0) {
         for (const b of packagePurityBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${packagePurityBreaches.length} package language purity breach(es)`);
+        throw refuseVerifyV1("breach","gates.package-language-purity-breach",{breaches:packagePurityBreaches.length});
       }
     }
-    console.log("[verify] dissolve-core / plugin-root policies…");
+    sayVerifyV1("gates.dissolve-core-plugin-root-policies");
     {
       const dissolveBreaches = [
         ...policyBannedNameStemBreaches(this.root),
@@ -171,42 +184,42 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
         for (const b of dissolveBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${dissolveBreaches.length} dissolve-core / plugin-root policy breach(es)`);
+        throw refuseVerifyV1("breach","gates.dissolve-core-plugin-root-policy",{breaches:dissolveBreaches.length});
       }
     }
-    console.log("[verify] window capability taxonomy…");
+    sayVerifyV1("gates.window-capability-taxonomy");
     {
       const crateDirs = policyDiscoverCrateDirs(this.root);
       const windowBreaches = [...policyWindowCompletenessBreaches(this.root, crateDirs), ...policyModeCompletenessBreaches(this.root, crateDirs)];
       if (windowBreaches.length > 0) {
         for (const breach of windowBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
-        throw new Error(`[verify] ${windowBreaches.length} window/mode capability taxonomy breach(es)`);
+        throw refuseVerifyV1("breach","gates.window-mode-capability-taxonomy-breach",{breaches:windowBreaches.length});
       }
     }
-    console.log("[verify] mutation-outcome / merge-policy law…");
+    sayVerifyV1("gates.mutation-outcome-merge-policy-law");
     {
       const mutationOutcomeBreaches = policyMutationOutcomeMergePolicyBreaches(this.root).filter((b) => b.priority === "high");
       if (mutationOutcomeBreaches.length > 0) {
         for (const b of mutationOutcomeBreaches) {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
-        throw new Error(`[verify] ${mutationOutcomeBreaches.length} mutation-outcome/merge-policy law breach(es)`);
+        throw refuseVerifyV1("breach","gates.mutation-outcome-merge-policy-law-2",{breaches:mutationOutcomeBreaches.length});
       }
     }
-    console.log("[verify] history closure…");
+    sayVerifyV1("gates.history-closure");
     {
-      if (this.lanes.historyClosurePolicySelfTests() === 0) throw new Error("[verify] history-closure self-test executed no cases");
+      if (this.lanes.historyClosurePolicySelfTests() === 0) throw refuseVerifyV1("failed","gates.history-closure-self-test-executed");
       const historyClosureBreaches = policyHistoryClosureBreaches(this.root);
       if (historyClosureBreaches.length > 0) {
         for (const breach of historyClosureBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
-        throw new Error(`[verify] ${historyClosureBreaches.length} history-closure breach(es)`);
+        throw refuseVerifyV1("breach","gates.history-closure-breach",{breaches:historyClosureBreaches.length});
       }
     }
-    console.log("[verify] dsl fixture laws…");
+    sayVerifyV1("gates.dsl-fixture-laws");
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/s-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioBuildParallelFlag(), "--", "quick"], {
+    runCmd("repo", ["run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioBuildParallelFlag(), "--", "quick"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
@@ -218,8 +231,8 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
     // Scoped to the actor kernel because it is small, fast, purity-critical, and the one crate whose
     // wasm glue every renderer depends on — the fleet-wide wasip2/native sweeps stay opt-in via
     // `verify rust-warnings --target <triple>`, which is far too slow for a pre-close gate.
-    console.log("[verify] actor kernel wasm32 bindings…");
+    sayVerifyV1("gates.actor-kernel-wasm32-bindings");
     await this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
-    console.log("[verify] gate passed.");
+    sayVerifyV1("gates.gate-passed");
   }
 }

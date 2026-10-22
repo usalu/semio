@@ -16,17 +16,20 @@ pub struct SetSummary {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetSummary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "summary", kind: "set-summary", record: "SetSummary" };
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
-        protocol::MutationOutcome::new(DwgDiff { summary: (base.summary != self.summary).then(|| self.summary.clone()), ..DwgDiff::default() })
-    }
-    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.summary != self.summary).then(|| DwgMutation::SetSummary(SetSummary { summary: base.summary.clone() })).into_iter().collect())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set summary info", "Zusammenfassung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DwgSnapshot, DwgMutation> for SetSummary {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as protocol::ColdMutation<DwgSnapshot>>::ReferenceDiff> {
+        protocol::MutationOutcome::new(DwgDiff { summary: (base.summary != self.summary).then(|| self.summary.clone()), ..DwgDiff::default() })
+    }
+    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
+        Ok((base.summary != self.summary).then(|| DwgMutation::SetSummary(SetSummary { summary: base.summary.clone() })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

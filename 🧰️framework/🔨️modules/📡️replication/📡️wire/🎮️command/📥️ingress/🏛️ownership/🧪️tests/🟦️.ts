@@ -141,8 +141,8 @@ test("canonical package membership and executable routes retain the complete nat
   expect(workspace.workspaces.some((pattern: string) => pattern.startsWith("!") && new Bun.Glob(pattern.slice(1)).match(pkg))).toBe(false);
   expect(registration.name).toBe(project.name);
   for (const gate of ["test-command-ingress-ownership", "test-command-ingress-native"]) {
-    expect(project.targets[gate].options.command).toBe(`bun ./📜️script.ts ${gate}`);
-    expect(registration.scripts[gate]).toBe(`bun --cwd "../../../../.." repo run ${project.name}:${gate}`);
+    expect(project.targets[gate].options.command).toBe(`repo ./📜️script.ts ${gate}`);
+    expect(registration.scripts[gate]).toBe(`repo --cwd "../../../../.." repo run ${project.name}:${gate}`);
     expect(project.targets[gate].cache).toBe(true);
     const inputs = project.targets[gate].inputs as string[];
     expect(inputs).toContain(`{workspaceRoot}/${owner}/**/*`);

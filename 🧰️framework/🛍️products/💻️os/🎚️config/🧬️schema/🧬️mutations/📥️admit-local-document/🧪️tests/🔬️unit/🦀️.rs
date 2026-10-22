@@ -4,7 +4,7 @@ use semio_framework_os_kernel::ColdDiffAlgebra;
 use crate::io::text::snapshot::{decode_local_catalog_json, encode_local_catalog_json};
 use super::*;
 use super::super::{apply_local_catalog_config_mutation, apply_local_catalog_config_mutation_reporting};
-use protocol::Mutation;
+use protocol::{Mutation};
 
 fn document(document_id: &str, name: &str) -> LocalDocument {
     LocalDocument { document_id: document_id.to_string(), schema: "s.space".to_string(), name: name.to_string(), storage: LocalDocumentStorage::Folder, target: format!("/data/os/local-documents/{document_id}"), admitted_at_ms: 7 }

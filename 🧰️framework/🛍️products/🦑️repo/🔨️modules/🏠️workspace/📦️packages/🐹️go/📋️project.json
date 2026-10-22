@@ -23,10 +23,10 @@
         "testEnv",
         "goToolchain"
       ],
-      "outputs": [],
+      "outputs": ["{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-workspace-go-a36015c2/test/test.xml"],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

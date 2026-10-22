@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 /// the refolded overlay is whole: a retract refold waits for the job's next checkpoint, completion or close,
 /// so a retract followed by re-appends spread over several ticks never renders a half re-appended overlay —
 /// the previous overlay stays rendered until then.
-pub(crate) struct ToolRunRefold<P> {
+pub struct ToolRunRefold<P> {
     pub running: Option<P>,
     pub cursor: usize,
     pub boundary: bool,

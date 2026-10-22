@@ -1,9 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {verifyCapturedCargoArtifactsV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🖥️ `semio-framework-server` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
+/** 🖥️ `semio-framework-server` task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]`.
  *
  * `test` runs the crate's own suite, the companion suite `semio-framework-server-tests` (which
  * enables the `conformance` feature on its dependency, as every instance crate does) **and** a
@@ -30,6 +30,6 @@ class BuildScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("build", BuildScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

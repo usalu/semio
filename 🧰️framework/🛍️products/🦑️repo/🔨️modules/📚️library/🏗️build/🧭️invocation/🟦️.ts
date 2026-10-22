@@ -1,10 +1,14 @@
+import {buildBackendNativeNamespacesV1} from "../🔌️backends/🟦️.ts";
+import {buildBackendDefaultIdV1} from "../🔌️backends/🟦️.ts";
+import {requireBuildBackendIdV1} from "../🔌️backends/🟦️.ts";
+import { canonicalBuildTargetV1 } from "../🎯️targets/🟦️.ts";
 import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{extractGraphPolicyV1}from"../🕸️graph/🕰️generations/🔌️load/🟨️.mjs";
 import dependencySchema from "../🧬️schema/📥️dependencies.json" with { type: "json" };
 import authoringSchema from "../🧬️schema/📥️authoring.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {readFileSync} from "node:fs";
+import {readFileSync,statSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
 import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
@@ -16,10 +20,21 @@ import {fixedTargetBuildMode} from "../🎚️mode/🟨️.mjs";
 import policy from "../🔣️policy.json" with { type: "json" };
 import projectSchema from "../🧬️schema/📋️project/🔣️.json" with { type: "json" };
 import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
+import {declaredCapabilitiesV1} from "../📥️caller/🛰️service/🟦️.ts";
 
 /** 📖️ Admits public help before storage while preserving an opaque child argument tail. */
 export function buildInvocationRequestsHelpV1(args:readonly string[]):boolean {
  const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary);return head.length===0||head.some(argument=>argument==="--help"||argument==="-h");
+}
+const testTaxonomyV1=new Map<string,Readonly<{identity:string;value:Readonly<{testPhases?:readonly string[];testLevellessPhases?:readonly string[]}>}>>();
+
+/** 🧊️ Reads the two test phase lists of the taxonomy once per file identity, so the several selections of one invocation do not parse the whole taxonomy again; a replaced or edited file has another identity and is read anew. */
+function readTestTaxonomyV1(root:string):Readonly<{testPhases?:readonly string[];testLevellessPhases?:readonly string[]}> {
+  const path=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),row=statSync(path,{bigint:true}),identity=[row.dev,row.ino,row.size,row.mtimeNs,row.ctimeNs].join(":"),prior=testTaxonomyV1.get(path);
+  if(prior?.identity===identity)return prior.value;
+  const taxonomy=JSON.parse(readFileSync(path,"utf8")) as {testPhases?:readonly string[];testLevellessPhases?:readonly string[]},value=Object.freeze({testPhases:taxonomy.testPhases,testLevellessPhases:taxonomy.testLevellessPhases});
+  testTaxonomyV1.set(path,{identity,value});
+  return value;
 }
 /** 🧭️ Resolves public selections before shared task graph admission. */
 export function resolveBuildSelectionV1(root:string,segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
@@ -83,14 +98,12 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
     const { level, rest } = resolveTestLevel(selected);
     if (!rest.length) return { args: ["run", "workspace:test", ...options, "--", level], env: { SEMIO_TEST_LEVEL: level } };
     if (rest[0] === "repo-client" || rest[0] === "repo-mcp") return { args: ["run", `${rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp"}:test`, ...options, "--", level, ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
-    const taxonomy = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
+    const taxonomy = readTestTaxonomyV1(root);
     if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0]??"" )) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]??"" ) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
   }
   if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   if (target === "workspace:build" && selected.length) {
-    const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
-    const resolved = targets[selected[0]!];
-    if (!resolved) throw new Error(`Unknown build selection: ${selected[0]}`);
+    const resolved = selected[0] === "storybook" ? "workspace:build-storybook" : canonicalBuildTargetV1(selected[0]!);
     return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   }
   return { args: segments, env: {} };
@@ -100,11 +113,22 @@ type Selection = { args: string[]; env: NodeJS.ProcessEnv; watch?: string };
 /** 📑️ Carries only authored compiler intent from one exact selected owner declaration. */
 export interface SelectedBuildTargetModeV1 { readonly project:string;readonly target:string;readonly fixed?:"prototype"|"release";readonly default?:"prototype"|"release" }
 
+const buildOwnerRegistries=new Map<string,{readonly signature:string;readonly registry:ReturnType<typeof readBuildOwnerRegistryV1>}>();
+function readBuildFileV1(path:string):string{return readFileSync(path,"utf8");}
+
+/** 🗄️ Reads and validates the build owner registry once per file state: the key is size, modification time and inode, and a file written in the last two seconds is never trusted, so a resident process pays the parse once and every edit is seen. */
+function readBuildOwnerRegistryOnceV1(root:string,read:(path:string)=>string):ReturnType<typeof readBuildOwnerRegistryV1>{
+ const path=join(root,"📋️build-owners.json");let signature:string|undefined;
+ if(read===readBuildFileV1)try{const status=statSync(path);if(Date.now()-status.mtimeMs>2000)signature=status.size+":"+status.mtimeMs+":"+status.ino;}catch{}
+ const hit=signature===undefined?undefined:buildOwnerRegistries.get(path);if(hit!==undefined&&hit.signature===signature)return hit.registry;
+ const registry=readBuildOwnerRegistryV1(JSON.parse(read(path)));if(signature!==undefined)buildOwnerRegistries.set(path,{signature,registry});return registry;
+}
+
 /** 🗂️ Reads one exact canonical run declaration before issuing original compiler authority. */
-export function readSelectedBuildTargetModesV1(root:string,args:readonly string[],read:(path:string)=>string=path=>readFileSync(path,"utf8")):readonly SelectedBuildTargetModeV1[]{
+export function readSelectedBuildTargetModesV1(root:string,args:readonly string[],read:(path:string)=>string=readBuildFileV1):readonly SelectedBuildTargetModeV1[]{
  const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary);if(head[0]!=="run"||head.some(value=>value==="--help"||value==="-h"))return [];
  const [project,target]=head[1]?.split(":")??[];if(!project||!target||/[*?{}\[\]!]/u.test(project+target))return [];
- const registry=readBuildOwnerRegistryV1(JSON.parse(read(join(root,"📋️build-owners.json")))),owner=registry.owners.find(row=>row.name===project);if(!owner||!owner.manifest.endsWith("/📋️project.json")&&owner.manifest!=="📋️project.json")return [];
+ const registry=readBuildOwnerRegistryOnceV1(root,read),owner=registry.owners.find(row=>row.name===project);if(!owner||!owner.manifest.endsWith("/📋️project.json")&&owner.manifest!=="📋️project.json")return [];
  const manifest=JSON.parse(read(join(root,owner.manifest)));if(!manifest||manifest.name!==owner.name)throw Error("Canonical selected build owner declaration required: "+project);if(!manifest.targets||!Object.hasOwn(manifest.targets,target))return [];
  const row=manifest.targets[target],declaration=row.metadata?.semio?.buildMode;if(declaration!==undefined&&validateJsonSchemaSubset({$defs:projectSchema.$defs,$ref:"#/$defs/BuildModeDeclaration"},declaration).length)throw Error("Closed selected target build mode required: "+project+":"+target);
  return Object.freeze([Object.freeze({project,target,...(declaration?.fixed===undefined?{}:{fixed:readBuildMode(declaration.fixed)}),...(row.defaultConfiguration===undefined?{}:{default:readBuildMode(row.defaultConfiguration)})})]);
@@ -146,8 +170,8 @@ export function resolveBuildModeV1(selection: Selection, environment: NodeJS.Pro
 }
 
 /** 🛠️ Selects a configured implementation without consuming task arguments after the separator. */
-export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:"nx"|"bazel";args:string[];workers?:"on"|"off";graphPolicy?:"fresh"|"current"} {
-  let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool,workers=environment.SEMIO_BUILD_WORKERS;
+export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS.ProcessEnv=process.env):{tool:string;args:string[];workers?:"on"|"off";graphPolicy?:"fresh"|"current"} {
+  let tool=environment.SEMIO_BUILD_TOOL??buildBackendDefaultIdV1(),workers=environment.SEMIO_BUILD_WORKERS;
   const graph=extractGraphPolicyV1(args,environment),selected:string[]=[];
   args=graph.args;
   for(let index=0;index<args.length;index++){
@@ -157,9 +181,11 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
     if(argument.startsWith("--tool=")){tool=argument.slice(7);continue;}
     if(argument==="--workers"){workers=args[++index]??"";continue;}
     if(argument.startsWith("--workers=")){workers=argument.slice(10);continue;}
+    if(argument==="--service"){index++;continue;}
+    if(argument.startsWith("--service=")){continue;}
     selected.push(argument);
   }
-  if(tool!=="nx"&&tool!=="bazel")throw Error(`Unknown build tool: ${tool}`);
+  requireBuildBackendIdV1(tool);
   readWorkerSwitchV1(workers);
   return {tool,args:buildOperationArgumentsV1(selected),...(graph.explicit?{graphPolicy:graph.policy}:{}),...(workers?{workers:workers as "on"|"off"}:{})};
 }
@@ -189,26 +215,15 @@ export function resolveBuildInvocationV1(root:string,args:readonly string[],envi
 
 /** 🧬️ Resolves an original declared caller without deriving authority from ambient task fields. */
 export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):BuildGraphSelectionV1|undefined{
- const caller=value as {workspaceRoot?:unknown;native?:unknown;arguments?:string[];selection?:string[];launches?:string[][];buildMode?:string;tool?:string}|undefined;
+ const caller=(value===null||typeof value!=="object"?value:declaredCapabilitiesV1(value)) as {workspaceRoot?:unknown;native?:unknown;arguments?:string[];selection?:string[];launches?:string[][];buildMode?:string;tool?:string}|undefined;
  if(!caller||caller.native===undefined&&caller.selection===undefined)return undefined;
  if(validateJsonSchemaSubset(authoringSchema,caller).length||typeof caller.workspaceRoot!=="string"||!isAbsolute(caller.workspaceRoot)||resolve(caller.workspaceRoot)!==resolve(root))throw Error("Original nested build caller authority required");
- const namespace=caller.arguments![0];if(!["repo","nx"].includes(namespace!)||caller.selection![0]!==namespace||!caller.launches!.some(launch=>JSON.stringify(launch)===JSON.stringify(caller.selection)))throw Error("Original nested build launch authority required");
- const selection=(args:readonly string[])=>{if(args[0]!==namespace)throw Error("Original nested build namespace changed");const parsed=parseBuildInvocationV1(args.slice(1),{SEMIO_BUILD_TOOL:caller.tool??"nx"});return buildInvocationGraphSelectionV1(resolveBuildInvocationV1(root,parsed.args,{SEMIO_BUILD_MODE:caller.buildMode}).args);},ancestor=selection(caller.arguments!);
+ const namespace=caller.arguments![0];if(!["repo",...buildBackendNativeNamespacesV1()].includes(namespace!)||caller.selection![0]!==namespace||!caller.launches!.some(launch=>JSON.stringify(launch)===JSON.stringify(caller.selection)))throw Error("Original nested build launch authority required");
+ const selection=(args:readonly string[])=>{if(args[0]!==namespace)throw Error("Original nested build namespace changed");const parsed=parseBuildInvocationV1(args.slice(1),{SEMIO_BUILD_TOOL:caller.tool??buildBackendDefaultIdV1()});return buildInvocationGraphSelectionV1(resolveBuildInvocationV1(root,parsed.args,{SEMIO_BUILD_MODE:caller.buildMode}).args);},ancestor=selection(caller.arguments!);
  if(!caller.launches!.some(launch=>launch[0]===namespace&&JSON.stringify(selection(launch))===JSON.stringify(ancestor)))throw Error("Original nested build request is undeclared");
  return ancestor;
 }
 
-/** 🪆️ Validates an inherited original pin before genuinely publishing a different nested selection. */
-export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,phaseControl:ResourceLeaseControl,reuse:boolean,read?:(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse:boolean})=>Promise<BuildGraphV1>):Promise<BuildGraphV1>{
- requireIssuedResourceControlInvocationV1(phaseControl,current);checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);if(current.control!==original.control||current.policy!==original.policy)throw Error("Original nested build process control changed");
- const selection=buildInvocationGraphSelectionV1(args),load=read??(await import("../🕸️graph/🟦️.ts")).loadBuildGraphV1,ancestor=reuse?readBuildGraphAncestorSelectionV1(root,original.capabilities):undefined;
- if(ancestor&&JSON.stringify(ancestor)!==JSON.stringify(selection)){
-  if((current.capabilities as {native?:unknown}).native!==(original.capabilities as {native?:unknown}).native)throw Error("Original nested build native resources changed");
-  await load(root,original,phaseControl,{selection:ancestor,reuse:true});checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);await advanceScriptInvocation(original,"build:nested-selection","running");checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);
-  const graph=await load(root,current,phaseControl,{selection,reuse:false});checkResourceLeaseControl(phaseControl);return graph;
- }
- const graph=await load(root,current,phaseControl,{selection,reuse});checkResourceLeaseControl(phaseControl);return graph;
-}
 
 
 /** 📥️ An explicit dependency selection enters its original owner before any installed graph tool. */

@@ -11,14 +11,18 @@ pub struct ChangeCellarArea {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeCellarArea where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_cellar_area::ChangeCellarArea> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cellar-area", kind: "change-cellar-area", record: "ChangeCellarArea" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_cellar_area::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change cellar floor area", "Kellergrundfläche ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeCellarArea where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_cellar_area::ChangeCellarArea> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_cellar_area::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_cellar_area::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change cellar floor area", "Kellergrundfläche ändern")
-    }
 }
 
 //#region 🪢️Mounts

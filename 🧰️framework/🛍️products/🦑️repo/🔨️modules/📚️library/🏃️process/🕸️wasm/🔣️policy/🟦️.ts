@@ -4,10 +4,11 @@ import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifac
 import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoCompilerInputsV1,repositoryCargoNetworkV1} from "../../🦀️cargo/📥️dependencies/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../⚡️caching/📦️artifacts/🟦️.ts";
 import {repositoryWasmPackageRequestV1} from "../../../⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
 import {wasmCompilerSelectionArgumentsV1,withProducedWasmPackageTaskV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import {readFileSync,realpathSync} from "node:fs";
+import {existsSync,readFileSync,realpathSync} from "node:fs";
 import {join,resolve,relative,dirname,basename} from "node:path";
 import {spawnSync} from "node:child_process";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
@@ -22,19 +23,22 @@ import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/
 import {requestedCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {buildBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import {buildWasmWebV1,type WasmPackWebBuildOptions,type WasmBuildPolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { runtimeSupportsV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 /** 📦️ Resolves the caller-selected pinned binding generator. */
 export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
   const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
   if (env.WASM_BINDGEN_VERSION && env.WASM_BINDGEN_VERSION !== version) throw new Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
-  const runtime = (globalThis as { readonly Bun?: unknown }).Bun;
-  const which = typeof runtime === "object" && runtime !== null ? (runtime as { readonly which?: unknown }).which : undefined;
-  if (!env.SEMIO_WASM_BINDGEN_BIN && typeof which !== "function") throw new Error("wasm-bindgen resolution requires Bun.which.");
+  if (!env.SEMIO_WASM_BINDGEN_BIN && !runtimeSupportsV1("which")) throw new Error("wasm-bindgen resolution requires a runtime executable lookup.");
+  const pinned = join(repositoryCachePartitionRootV1(repoRoot, "rust"), "cargo", "home", "bin", process.platform === "win32" ? "wasm-bindgen.exe" : "wasm-bindgen"),
+    installed = existsSync(pinned) && spawnSync(pinned, ["--version"], { env, encoding: "utf8" }).stdout?.trim() === `wasm-bindgen ${version}`;
   const command = env.SEMIO_WASM_BINDGEN_BIN
     ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)
-    : (which as (name: string, options: { readonly PATH?: string }) => string | null)("wasm-bindgen", { PATH: env.PATH });
-  if (!command) throw new Error("Run bun repo run workspace:deps-wasm to provision wasm-bindgen");
+    : installed ? pinned : runtimeWhichV1("wasm-bindgen", { PATH: env.PATH });
+  if (!command) throw new Error("Run repo run workspace:deps-wasm to provision wasm-bindgen");
   const probe = spawnSync(command, ["--version"], { env,encoding:"utf8" });
-  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun repo run workspace:deps-wasm`);
+  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run repo run workspace:deps-wasm`);
   return command;
 }
 
@@ -49,7 +53,7 @@ export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Node
   if (optimizer && basename(optimizer) !== (process.platform === "win32" ? "wasm-opt.exe" : "wasm-opt")) throw new Error("SEMIO_WASM_OPT_BIN must name a wasm-opt executable");
   const environment = { ...env, PATH: [dirname(bindgen), ...(optimizer ? [dirname(optimizer)] : []), env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":") };
   if (optimizer) {
-    const selected = Bun.which("wasm-opt", { PATH: environment.PATH });
+    const selected = runtimeWhichV1("wasm-opt", { PATH: environment.PATH });
     if (!selected || realpathSync(selected) !== realpathSync(optimizer)) throw new Error("Selected wasm-opt is missing or shadowed by another tool");
   }
   return environment;
@@ -58,7 +62,7 @@ export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Node
 /** 🧭️ Authors tools and compiler stores from one explicit child environment. */
 export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Readonly<Record<string,string|undefined>> = process.env): WasmBuildPolicyV1 {
   const mode = readBuildMode(compilerEnvironment.SEMIO_BUILD_MODE), root = getWorkspaceRoot(compilerEnvironment), bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
-  const cargo = Bun.TOML.parse(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
+  const cargo = runtimeParseTomlV1(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
   if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
   return { version: 1, workspaceRoot:root,sourceBoundary:repositoryStrictStorageV1(root).sourceBoundary,compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: join(root,".cache","b","l","m","data"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
 }

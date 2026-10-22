@@ -267,6 +267,81 @@
           }
         }
       }
+    },
+    "AdmissionTimeout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "directory",
+        "resource",
+        "requestedMode",
+        "mode",
+        "elapsedMs",
+        "admissionElapsedMs",
+        "timeoutMs",
+        "remainingMsAtEntry"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "open",
+            "queue-publish",
+            "queue-sweep",
+            "claims-read",
+            "resource-retirement",
+            "claims-retirement"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "requestedMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admissionElapsedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeoutMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "remainingMsAtEntry": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
     }
   }
 }

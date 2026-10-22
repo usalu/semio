@@ -57,7 +57,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-bore-scale-1e3",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-bore-scale-1e3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -132,7 +132,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-bored-box-through",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-bored-box-through",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -207,7 +207,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-box-across-cylinder-seam",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-box-across-cylinder-seam",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -282,7 +282,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-box-across-sphere-pole",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-box-across-sphere-pole",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -364,7 +364,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-order-b-then-c",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-order-b-then-c",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -446,7 +446,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-order-c-then-b",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-order-c-then-b",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -514,7 +514,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-ten-sequential",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-chain-ten-sequential",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -589,7 +589,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-coincident-faces",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-coincident-faces",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -664,7 +664,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-compound-spheres-from-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-compound-spheres-from-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -739,7 +739,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-cone-from-cylinder",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-cone-from-cylinder",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -814,7 +814,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-contained-operand",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-contained-operand",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -889,7 +889,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-coplanar-face-cutter",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-coplanar-face-cutter",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -964,7 +964,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-disconnected-result",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-disconnected-result",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1039,7 +1039,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-disjoint-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-disjoint-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1114,7 +1114,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-edge-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-edge-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1189,7 +1189,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-face-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-face-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1264,7 +1264,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-filleted-boss-pocket",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-filleted-boss-pocket",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1325,7 +1325,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-full-subtraction",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-full-subtraction",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1400,7 +1400,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-helical-coil-groove",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-helical-coil-groove",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1475,7 +1475,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-high-aspect-ratio-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-high-aspect-ratio-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1536,7 +1536,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1611,7 +1611,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-large-coordinate-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-large-coordinate-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1686,7 +1686,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-lofted-funnel-from-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-lofted-funnel-from-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1761,7 +1761,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-micro-scale-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-micro-scale-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1836,7 +1836,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-narrow-channel",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-narrow-channel",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1911,7 +1911,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-nearly-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-nearly-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1972,7 +1972,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-open-shell-accepted-as-empty",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-open-shell-accepted-as-empty",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2047,7 +2047,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-partial-revolved-ring-groove",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-partial-revolved-ring-groove",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2122,7 +2122,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-pentagon-prism-from-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-pentagon-prism-from-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2197,7 +2197,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-self-intersecting-tool",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-self-intersecting-tool",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2272,7 +2272,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-skewed-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-skewed-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2347,7 +2347,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-sliver-intersection",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-sliver-intersection",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2422,7 +2422,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-sphere-from-box",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-sphere-from-box",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2497,7 +2497,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-spline-bounded-pocket",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-spline-bounded-pocket",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2572,7 +2572,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2647,7 +2647,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2722,7 +2722,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2797,7 +2797,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangential-sphere-contact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tangential-sphere-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2872,7 +2872,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-thin-wall-shell",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-thin-wall-shell",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2947,7 +2947,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-through-shelled-box",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-through-shelled-box",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3022,7 +3022,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tiny-bore-far-from-origin",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tiny-bore-far-from-origin",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3097,7 +3097,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tiny-edge-below-tolerance",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-tiny-edge-below-tolerance",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3172,7 +3172,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-torus-groove-from-cylinder",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-torus-groove-from-cylinder",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3247,7 +3247,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-unit-boundary-slot",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-unit-boundary-slot",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3322,7 +3322,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-valid-no-op",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-valid-no-op",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3397,7 +3397,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-vertex-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-vertex-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3472,7 +3472,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-wedge-from-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cut-wedge-from-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3547,7 +3547,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cutall-many-cutters",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only cutall-many-cutters",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3622,7 +3622,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-chamfered-boss-to-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-chamfered-boss-to-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3697,7 +3697,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3772,7 +3772,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3847,7 +3847,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coaxial-cylinders-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3922,7 +3922,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coincident-faces",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coincident-faces",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3997,7 +3997,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-contained-operand",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-contained-operand",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4072,7 +4072,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-cutter-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-cutter-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4147,7 +4147,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4222,7 +4222,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4297,7 +4297,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-coplanar-partial-face-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4372,7 +4372,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-cylinder-cross",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-cylinder-cross",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4447,7 +4447,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-disjoint-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-disjoint-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4522,7 +4522,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-disjoint-result",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-disjoint-result",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4597,7 +4597,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-double-rotated-skewed-box",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-double-rotated-skewed-box",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4672,7 +4672,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4747,7 +4747,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4822,7 +4822,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-on-face-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4897,7 +4897,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-edge-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4972,7 +4972,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-face-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-face-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5047,7 +5047,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5122,7 +5122,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-near-coplanar-faces-1e-9-radians",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-near-coplanar-faces-1e-9-radians",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5197,7 +5197,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nearly-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nearly-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5272,7 +5272,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nested-void-in-void",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nested-void-in-void",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5347,7 +5347,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nonmanifold-vertex-compound",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-nonmanifold-vertex-compound",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5422,7 +5422,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-partial-overlap-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-partial-overlap-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5497,7 +5497,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5572,7 +5572,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5647,7 +5647,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-sphere-tangent-plane-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5722,7 +5722,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-swept-rib-to-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-swept-rib-to-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5797,7 +5797,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-tangential-sphere-contact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-tangential-sphere-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5872,7 +5872,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-thickened-shell-into-block",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-thickened-shell-into-block",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5947,7 +5947,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-torus-torus-interlock",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-torus-torus-interlock",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6022,7 +6022,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6097,7 +6097,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-epsilon-above",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-epsilon-above",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6172,7 +6172,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-epsilon-below",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-epsilon-below",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6247,7 +6247,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-exact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only fuse-vertex-touching-boxes-exact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6322,7 +6322,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-coincident-faces",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-coincident-faces",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6397,7 +6397,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-contained-operand",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-contained-operand",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6472,7 +6472,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-coplanar-cutter-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-coplanar-cutter-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6533,7 +6533,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-disjoint-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-disjoint-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6594,7 +6594,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-disjoint-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-disjoint-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6655,7 +6655,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-edge-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-edge-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6716,7 +6716,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-empty-valid-result",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-empty-valid-result",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6777,7 +6777,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-face-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-face-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6852,7 +6852,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -6927,7 +6927,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-nearly-identical-operands",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-nearly-identical-operands",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7002,7 +7002,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-overlapping-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-overlapping-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7077,7 +7077,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-sphere-sphere-lens",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-sphere-sphere-lens",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7152,7 +7152,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-splits-into-several-bodies",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-splits-into-several-bodies",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7213,7 +7213,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-tangential-sphere-contact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-tangential-sphere-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7274,7 +7274,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-vertex-touching-boxes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only intersect-vertex-touching-boxes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7342,7 +7342,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-block-fifteen-cuts",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-block-fifteen-cuts",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7410,7 +7410,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-enclosure-boss-vented",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-enclosure-boss-vented",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7478,7 +7478,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-filleted-bracket",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-filleted-bracket",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7546,7 +7546,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-fixture-plate",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-fixture-plate",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7614,7 +7614,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-fixture-plate-slotted",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-fixture-plate-slotted",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7682,7 +7682,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-gearbox-cover",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-gearbox-cover",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7750,7 +7750,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-heatsink-fins",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-heatsink-fins",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7818,7 +7818,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-housing-threaded-boss",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-housing-threaded-boss",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7886,7 +7886,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-lightening-bracket-grid",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-lightening-bracket-grid",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -7954,7 +7954,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-multi-union-trim-drilled",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-multi-union-trim-drilled",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8022,7 +8022,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-nested-shell-channels",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-nested-shell-channels",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8090,7 +8090,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-pipe-manifold",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-pipe-manifold",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8158,7 +8158,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-pipe-manifold-reducer-branch",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-pipe-manifold-reducer-branch",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8226,7 +8226,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-ribbed-enclosure",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-ribbed-enclosure",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8294,7 +8294,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-skewed-bracket-gusseted",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-skewed-bracket-gusseted",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8362,7 +8362,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-valve-body",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only mechanical-valve-body",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8437,7 +8437,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-ellipse-structured-error",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-ellipse-structured-error",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8512,7 +8512,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-negative-box-width",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-negative-box-width",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8587,7 +8587,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-open-shell-fuse",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-open-shell-fuse",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -8662,7 +8662,7 @@
       "packageVersion": "18.119.8",
       "engineFamily": "opencascade",
       "engineVersion": "0.15.6",
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-zero-height-cylinder",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts generate --only reject-zero-height-cylinder",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },

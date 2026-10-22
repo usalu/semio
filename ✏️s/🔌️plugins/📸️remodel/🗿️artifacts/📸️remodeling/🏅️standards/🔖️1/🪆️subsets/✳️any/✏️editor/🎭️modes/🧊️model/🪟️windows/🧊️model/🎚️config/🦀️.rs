@@ -84,7 +84,11 @@ impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowCo
             Self::SetLayers { .. } => &Self::DESCRIPTORS[1],
         }
     }
-    fn diff(&self, base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<RemodelingModelWindowConfig> for RemodelingModelWindowConfigMutation {
+    type ReferenceDiff = RemodelingModelWindowConfigDiff;
+    fn diff(&self, base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let diff = match self {
             Self::SetCamera { camera } => RemodelingModelWindowConfigDiff { camera: (&base.camera != camera).then(|| camera.clone()), ..Default::default() },
             Self::SetLayers { layers } => RemodelingModelWindowConfigDiff { layers: (&base.layers != layers).then(|| layers.clone()), ..Default::default() },
@@ -179,7 +183,8 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingModelWindowConfigOw
     type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RemodelingModelWindowConfig, RemodelingModelWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
@@ -209,18 +214,9 @@ pub struct RemodelingModelWindowConfigDiff {
     pub layers: Option<RemodelingLayerVisibility>,
 }
 
-impl protocol::MutationDiff<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
-    fn apply(&self, base: &RemodelingModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RemodelingModelWindowConfig> {
-        let mut next = base.clone();
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
-        if let Some(layers) = &self.layers {
-            next.layers = layers.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
@@ -229,18 +225,33 @@ impl protocol::MutationDiff<RemodelingModelWindowConfig> for RemodelingModelWind
             self.layers = other.layers;
         }
     }
+
+    fn apply(&self, unpublished: &mut RemodelingModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(layers) = &self.layers {
+            next.layers = layers.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
     fn inverse(&self, base: &RemodelingModelWindowConfig) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             layers: self.layers.as_ref().map(|_| base.layers.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔺️Diff

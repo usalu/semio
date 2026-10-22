@@ -13,6 +13,7 @@ import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 /** ↔️ Admits portable paged traversal and independently checks array/deque ordering. */
 export class PagedHistoryStackScript extends BundleScript {
@@ -68,7 +69,7 @@ export class DatabaseHistoryCompletionCheckScript extends BundleScript {
     
     
     assert.deepEqual(fixture.publication.map((row: { name: string }) => row.name), ["before-poll", "before-registration", "after-pending"].flatMap(stage => ["success", "cancelled"].map(outcome => stage + "-" + outcome)));
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const oracle = new Database(":memory:");
     try {
       oracle.run("CREATE TABLE handoff (payload TEXT, location TEXT, waiter INTEGER, wakes INTEGER, admission INTEGER, registry INTEGER)");
@@ -130,7 +131,7 @@ export class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     assert.deepEqual(fixture.transfers.map((row: { phase: string }) => row.phase), ["Handoff", "RetainWork", "Poll"]);
     assert.deepEqual(fixture.completion.map((row: { name: string }) => row.name), ["synchronous", "before-wake", "after-finalizer-check", "refused-finalizer"].flatMap(stage => ["pages", "backend-fault"].map(outcome => stage + "-" + outcome)));
     assert.deepEqual(fixture.recovery.map((row: { name: string }) => row.name), ["retry", "terminal-completion", "terminal-result", "spent-work"].flatMap(path => ["pages", "backend-fault"].map(outcome => path + "-" + outcome)));
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const oracle = new Database(":memory:");
     try {
       oracle.run("CREATE TABLE ownership (active INTEGER, location TEXT, admission INTEGER, waiter INTEGER, releases INTEGER, payload TEXT)");
@@ -236,7 +237,7 @@ export class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     );
     assert.deepEqual(fixture.driveOwnership.map((row: { phase: string }) => row.phase), ["Handoff", "RetainWork", "Poll"]);
     assert.deepEqual(fixture.leaseCompletion.map((row: { publication: string }) => row.publication), ["synchronous", "active-publisher", "after-finalizer-check", "after-finalizer-check-refused"]);
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const oracle = new Database(":memory:");
     try {
       oracle.run("CREATE TABLE handoff (id INTEGER PRIMARY KEY, completion TEXT, waiter INTEGER NOT NULL, wakes INTEGER NOT NULL, admission INTEGER NOT NULL)");

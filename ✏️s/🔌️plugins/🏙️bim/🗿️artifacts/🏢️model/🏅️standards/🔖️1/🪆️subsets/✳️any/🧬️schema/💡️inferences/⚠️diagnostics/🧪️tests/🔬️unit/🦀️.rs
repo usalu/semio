@@ -288,7 +288,7 @@ async fn diagnostics_determinism_default_and_gating_laws() {
     assert_eq!(first, untouched, "a diff outside the reads serves the stored result");
     assert!(session.report().gated);
     let height = ModelDiff::storeys("st-far", Entry::Patched(StoreyPatch { height: Some(0.0), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).diagnostics.clone();
     let on = |found: &[Diagnostic], storey: &str| found.iter().filter(|row| row.storey.as_deref() == Some(storey)).cloned().collect::<Vec<_>>();
     assert_eq!(on(&first, "st-ground"), on(&recomputed, "st-ground"), "an edit of another storey leaves the findings of this storey");

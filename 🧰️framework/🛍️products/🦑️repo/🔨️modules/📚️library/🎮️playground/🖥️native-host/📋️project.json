@@ -16,7 +16,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts contract-check",
+        "command": "repo ./📜️script.ts contract-check",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host"
       }
     }

@@ -29,6 +29,9 @@ test("original fixture caller spends one source stock and CPU balance through al
     return permit;
   });
   expect(admitted).toEqual([true, false, true]);
+  const root = fixture.rootRetirement;
+  expect(root.allocationHeaderBytes + root.aliasCounterBytes + root.rootsBytes).toBe(root.releasedBytes);
+  expect(root.clockFree).toBe(true);
   const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
   expect(source).toContain("stock:RetainedCloneGrant");
   expect(source).toContain("spent:RetainedCloneProgress");

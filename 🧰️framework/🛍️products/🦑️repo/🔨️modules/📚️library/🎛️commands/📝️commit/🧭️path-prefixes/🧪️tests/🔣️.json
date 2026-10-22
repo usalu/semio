@@ -1,0 +1,215 @@
+{
+ "version": 1,
+ "repo": {
+  "base": {
+   "README.md": "readme\n"
+  },
+  "commits": [
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️21🚩️1",
+    "body": "🎆️26🌙️10☀️21⏰️10⌚️00⏱️00",
+    "files": {
+     "framework/core/a.ts": "l1\nl2\nl3\n",
+     "ui/button/b.ts": "m1\nm2\n"
+    }
+   },
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️22🚩️2",
+    "body": "🎆️26🌙️10☀️22⏰️10⌚️00⏱️00",
+    "files": {
+     "framework/core/a.ts": "l1\nl2\nl3\nl4\nl5\n"
+    }
+   }
+  ]
+ },
+ "bundles": [
+  {
+   "label": "🏘️framework🧰️core",
+   "dates": [
+    {
+     "dateLine": "🎆️26🌙️10☀️21",
+     "bullets": [
+      "🚀x"
+     ]
+    },
+    {
+     "dateLine": "🎆️26🌙️10☀️22",
+     "bullets": [
+      "🚀x"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "🖱️ui🧩️button",
+   "dates": [
+    {
+     "dateLine": "🎆️26🌙️10☀️21",
+     "bullets": [
+      "🚀x"
+     ]
+    }
+   ]
+  }
+ ],
+ "rowMatch": [
+  {
+   "field": "framework/core/a.ts",
+   "expected": [
+    0
+   ]
+  },
+  {
+   "field": "ui/button/b.ts",
+   "expected": [
+    1
+   ]
+  },
+  {
+   "field": "docs/x.md",
+   "expected": []
+  },
+  {
+   "field": "old/x.ts\tframework/core/a.ts",
+   "expected": [
+    0
+   ]
+  },
+  {
+   "field": "framework/core/a.ts\tui/button/b.ts",
+   "expected": [
+    0,
+    1
+   ]
+  },
+  {
+   "field": "{ui => framework}/core/a.ts",
+   "expected": [
+    0
+   ]
+  }
+ ],
+ "pathMatch": [
+  {
+   "path": "framework/core/a.ts",
+   "index": 0,
+   "prefixSets": [
+    [
+     "framework/core"
+    ],
+    [
+     "ui"
+    ]
+   ],
+   "expected": true
+  },
+  {
+   "path": "framework/core/a.ts",
+   "index": 1,
+   "prefixSets": [
+    [
+     "framework/core"
+    ],
+    [
+     "ui"
+    ]
+   ],
+   "expected": false
+  },
+  {
+   "path": "framework/core/a.ts",
+   "index": 0,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": true
+  },
+  {
+   "path": "ui/button/z.ts",
+   "index": 0,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": false
+  },
+  {
+   "path": "ui/button/z.ts",
+   "index": 1,
+   "prefixSets": [
+    [],
+    []
+   ],
+   "expected": true
+  }
+ ],
+ "expected": {
+  "prefixSets": [
+   [
+    "framework/core/a.ts",
+    "framework/core"
+   ],
+   [
+    "ui/button/b.ts",
+    "ui/button"
+   ]
+  ],
+  "assigned": [
+   [
+    "framework/core/a.ts"
+   ],
+   [
+    "ui/button/b.ts"
+   ]
+  ],
+  "infer": [
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": null,
+    "expected": [
+     "framework/core/a.ts"
+    ]
+   },
+   {
+    "label": "🖱️ui🧩️button",
+    "paths": null,
+    "expected": [
+     "ui/button/b.ts"
+    ]
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "framework/core/a.ts",
+     "framework/core/c.ts"
+    ],
+    "expected": [
+     "framework/core"
+    ]
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "docs/x.md"
+    ],
+    "expected": []
+   },
+   {
+    "label": "🏘️",
+    "paths": null,
+    "expected": []
+   },
+   {
+    "label": "🏘️framework🧰️core",
+    "paths": [
+     "Framework/Core/Z.ts",
+     "framework/core/y.ts"
+    ],
+    "expected": [
+     "Framework"
+    ]
+   }
+  ]
+ }
+}

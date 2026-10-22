@@ -10,6 +10,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 
 /// 📬️ A pending invocation publishes no payload and preserves the actual original caller receipt.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct ExtensionInvokeStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<semio_framework_job::OriginalTurnFailure>}
 
 impl ExtensionInvokeStep{

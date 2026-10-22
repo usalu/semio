@@ -22,6 +22,7 @@ type Flag struct {
 	Shorthand    string
 	Usage        string
 	Changed      bool
+	Single       bool
 	Value        Value
 	value        any
 	defaultValue any
@@ -252,6 +253,7 @@ func (set *FlagSet) get(name string) (*Flag, error) {
 }
 
 func (set *FlagSet) set(flag *Flag, raw string) error {
+ if flag.Single && flag.Changed { return fmt.Errorf("flag --%s may only occur once",flag.Name) }
 	switch flag.value.(type) {
 	case string:
 		flag.value = raw

@@ -73,23 +73,18 @@ func isTicketInteractionKind(kind string, expected string) bool {
 
 // 📋️UnmarshalJSON MUST require an explicit valid ticket status.
 func (t *Ticket) UnmarshalJSON(data []byte) error {
-	type TicketAlias struct {
-		Title       string                `json:"title"`
-		Emoji       string                `json:"emoji,omitempty"`
-		Description string                `json:"description,omitempty"`
-		Status      TicketStatus          `json:"status"`
-		Summary     string                `json:"summary,omitempty"`
-		Management  *TicketManagementData `json:"github,omitempty"`
-		Goal        string                `json:"goal,omitempty"`
-		Parent      string                `json:"parent,omitempty"`
-	}
 	aux := &struct {
-		TicketAlias
-		Plan               *TicketPlan     `json:"plan,omitempty"`
-		PromptLegacy       string          `json:"prompt"`
-		InteractionsLegacy []Interaction   `json:"interactions"`
-		AgentsLegacy       []TicketAgent   `json:"agents"`
-		SessionsRaw        json.RawMessage `json:"sessions"`
+		Title        string                `json:"title"`
+		Emoji        string                `json:"emoji,omitempty"`
+		Description  string                `json:"description,omitempty"`
+		Status       TicketStatus          `json:"status"`
+		Summary      string                `json:"summary,omitempty"`
+		Management   *TicketManagementData `json:"github,omitempty"`
+		Goal         string                `json:"goal,omitempty"`
+		Parent       string                `json:"parent,omitempty"`
+		Plan         *TicketPlan           `json:"plan,omitempty"`
+		Sessions     []string              `json:"sessions"`
+		Interactions []Interaction         `json:"interactions"`
 	}{}
 	if err := json.Unmarshal(data, aux); err != nil {
 		return err
@@ -108,32 +103,11 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 		Parent:      aux.Parent,
 		Plan:        aux.Plan,
 	}
-	if t.Description == "" && aux.PromptLegacy != "" {
-		t.Description = aux.PromptLegacy
+	if len(aux.Interactions) > 0 {
+		t.Interactions = aux.Interactions
 	}
-	if len(aux.InteractionsLegacy) > 0 {
-		t.Interactions = aux.InteractionsLegacy
-	}
-	if len(aux.AgentsLegacy) > 0 {
-		t.Agents = aux.AgentsLegacy
-	}
-	if len(aux.SessionsRaw) > 0 {
-		var sessionIDs []string
-		if err := json.Unmarshal(aux.SessionsRaw, &sessionIDs); err == nil {
-			for _, sessionID := range sessionIDs {
-				appendTicketSessionID(t, sessionID)
-			}
-		} else {
-			var legacyAgents []TicketAgent
-			if err := json.Unmarshal(aux.SessionsRaw, &legacyAgents); err == nil {
-				for _, legacyAgent := range legacyAgents {
-					appendTicketSessionID(t, legacyAgent.Session)
-				}
-				if len(t.Agents) == 0 {
-					t.Agents = legacyAgents
-				}
-			}
-		}
+	for _, sessionID := range aux.Sessions {
+		appendTicketSessionID(t, sessionID)
 	}
 	if t.Summary == "" {
 		for i := len(t.Interactions) - 1; i >= 0; i-- {

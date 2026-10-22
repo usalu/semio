@@ -5,6 +5,8 @@ import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readExactSourceInventoryV1,withManagedGraphSourceReadBatchV1} from "../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
+import {withRepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=schema.definitions.Policy.const,marker=new RegExp(policy.markerPattern,"u");
@@ -87,11 +89,11 @@ export function filesystemBazelClosureFetchV1(directory:string):BazelClosureFetc
  };
 }
 
-/** 🏪️ Reads the manifests through the graph store consumer the Nx hasher uses, under the caller's carried control. */
-export function managedBazelClosureFetchV1(root:string,control:ResourceLeaseControl):BazelClosureFetchV1{
- return (kind,keys)=>withManagedGraphSourceReadBatchV1(root,control,async batch=>{
+/** 🏪️ Reads the manifests through a graph store reader opened under the caller's invocation and carried control, then through the graph store consumer the Nx hasher uses. */
+export function managedBazelClosureFetchV1(root:string,control:ResourceLeaseControl,invocation:ScriptInvocation):BazelClosureFetchV1{
+ return (kind,keys)=>withRepositoryCacheStoreV1(root,"graph",invocation,control,(_store,reader)=>withManagedGraphSourceReadBatchV1(root,reader,async batch=>{
   const rows=new Map<string,unknown>();
   for(const key of keys){const file=await readExactSourceInventoryV1(batch,policy.namespaces[kind] as Parameters<typeof readExactSourceInventoryV1>[1],key);if(!file||file.sha256!==key)throw new Error("Exact Source inventory identity changed");rows.set(key,file.value);}
   return rows;
- });
+ }));
 }

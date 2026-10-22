@@ -32,7 +32,7 @@ fn assert_map_mutation(base_map:Option<crate::schema::imported_map::ImportedMap>
  let(_,mut base)=fixture();base.imported_map=base_map;
  let payload=crate::mutations::change_imported_features::ChangeImportedFeatures{new_imported_map:requested.clone()};
  let outcome=payload.diff(&base);assert_eq!(outcome.diff().imported_map.is_some(),changed,"actual mutation must compare complete tags and raw words");
- let actual=protocol::apply_diff(outcome.diff(), &base).unwrap();let mut expected=base.clone();expected.imported_map=requested;literal_equal(&actual,&expected);assert_eq!(actual.mesh,base.mesh);assert_eq!(actual.exaggeration.to_bits(),base.exaggeration.to_bits());
+ let actual=protocol::apply_diff_cold(outcome.diff(), &base).unwrap();let mut expected=base.clone();expected.imported_map=requested;literal_equal(&actual,&expected);assert_eq!(actual.mesh,base.mesh);assert_eq!(actual.exaggeration.to_bits(),base.exaggeration.to_bits());
 }
 #[test]
 fn sqlite_snapshot_terrain_map_mutation_preserves_zero_word_change(){

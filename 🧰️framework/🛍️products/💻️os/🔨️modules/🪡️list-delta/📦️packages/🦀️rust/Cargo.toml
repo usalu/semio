@@ -30,4 +30,5 @@ semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

@@ -54,10 +54,6 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   const catalogApi=await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),contributions=await testMethodV1(catalogApi.cacheInternals,"workspaceCatalogBuildContributionsV1",workspace);assert.ok(Array.isArray(contributions));const contribution=contributions[0],catalogOutput=testRecordV1(contribution,"publication").outputRoot;assert.equal(typeof catalogOutput,"string");if(typeof catalogOutput!=="string")throw Error("Actual catalog output DATA required");await testContainerRuntimeBootstrap(workspace,invocation);
   await testDevcontainerLifecycle(workspace, output);
   await testDerivedConfig(workspace);
-  const { testExtensionHostBuild } = await import("repo-vscode/testing/host-build");
-  await testExtensionHostBuild(output);
-  const { testExtensionPackage } = await import("repo-vscode/testing/package");
-  await testExtensionPackage(output);
   await testCommandImportClosure(workspace, output);
   await testImportEdgeEquality(workspace, output);
   await testTrunkLockfile(workspace,invocation,phaseControl);
@@ -235,7 +231,7 @@ export async function testBunDependencies(workspace: string, output: string): Pr
   for (const path of cases.nativeInputs.excluded) assert.equal(native.includes(path), false);
   const { HashPlanner, transferProjectGraph } = require("nx/src/native"), { transformProjectGraphForRust } = require("nx/src/native/transform-objects");
   const plan = (model: any, key: string): string[] => {
-    const project = { name: "probe", type: "lib", data: { root: "probe", targets: { build: { executor: "nx:run-commands", inputs: [{ externalDependencies: ["npm:" + key] }], options: { command: "bun ./📜️script.ts build" } } } } };
+    const project = { name: "probe", type: "lib", data: { root: "probe", targets: { build: { executor: "nx:run-commands", inputs: [{ externalDependencies: ["npm:" + key] }], options: { command: "repo ./📜️script.ts build" } } } } };
     const graph = { nodes: { probe: project }, externalNodes: model.externalNodes, dependencies: { probe: [], ...Object.fromEntries(Object.keys(model.externalNodes).map((id) => [id, model.dependencies.filter((edge: any) => edge.source === id)])) } };
     const task = { id: "probe:build", target: { project: "probe", target: "build" }, projectRoot: "probe", overrides: {}, outputs: [], cache: true, parallelism: true };
     return new HashPlanner({}, transferProjectGraph(transformProjectGraphForRust(graph))).getPlans([task.id], { roots: [task.id], tasks: { [task.id]: task }, dependencies: { [task.id]: [] }, continuousDependencies: {} })[task.id].filter((value: string) => value.startsWith("npm:")).sort();

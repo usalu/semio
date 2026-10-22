@@ -6,7 +6,7 @@ import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typ
 import { seedGeneratedFile } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { actorTypegenPlan, actorTypegenTarget } from "../📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../📤️publication/🟦️.ts";
-import { bunSpawnToolV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 export const ACTOR_TYPEGEN_PREVIEW_DEADLINE_MS = 600_000;
@@ -49,13 +49,12 @@ function cancellationRequested(): boolean {
 /** 🦀️ Executes the authoritative native exporter into an isolated output path. */
 export async function exportActorTypegen(packageRoot: string, outputPath: string, targetDir?: string, deadlineMs = buildBudgetMs()): Promise<void> {
   if (cancellationRequested()) throw new Error("actor typegen export cancelled");
-  const child = bunSpawnToolV1(["cargo", "test", "--locked", "--test", "typegen", TYPEGEN_TEST_FILTER], {
+  const child = startToolV1("cargo", ["test", "--locked", "--test", "typegen", TYPEGEN_TEST_FILTER], {
     cwd: packageRoot,
     env: { ...process.env, ...(targetDir ? { CARGO_TARGET_DIR: targetDir } : {}), SEMIO_TYPEGEN_OUT: outputPath },
-    stdout: "inherit",
-    stderr: "inherit",
+    stdio: ["ignore", "inherit", "inherit"],
   });
-  const code = await waitForActorTypegenProcess(child, { deadlineMs, isCancelled: cancellationRequested });
+  const code = await waitForActorTypegenProcess({ exited: toolExitV1(child), kill: () => { child.kill(); } }, { deadlineMs, isCancelled: cancellationRequested });
   if (code !== 0) throw new Error(`framework-actor typegen exporter exited with status ${code}`);
   if (!existsSync(outputPath)) throw new Error(`framework-actor typegen exporter did not write ${outputPath}`);
 }

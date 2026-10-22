@@ -17,19 +17,23 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.new_schema), &format!("Schema auf \"{}\" ändern", self.new_schema))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for ChangeSchema
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<ChangeSchema>,
+{
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_schema::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_schema::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.new_schema), &format!("Schema auf \"{}\" ändern", self.new_schema))
-    }
 }
 //#endregion 🔖️ChangeSchema

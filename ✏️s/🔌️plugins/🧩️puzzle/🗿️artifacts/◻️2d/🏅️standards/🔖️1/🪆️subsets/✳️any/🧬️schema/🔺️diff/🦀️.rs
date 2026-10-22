@@ -4,8 +4,8 @@ use crate::standards::v1::subsets::any::schema::Puzzle2dArtifact;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
 use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::DiffAlgebra;
-use protocol::ColdDiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
+
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;

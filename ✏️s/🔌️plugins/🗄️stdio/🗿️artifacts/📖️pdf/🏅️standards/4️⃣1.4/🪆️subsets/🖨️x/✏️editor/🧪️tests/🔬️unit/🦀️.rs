@@ -57,7 +57,7 @@ fn own14_declared_document_and_mutation_owners_are_exact() {
 
 #[test]
 fn own14_typed_page_command_uses_the_own_mutation_codec() {
-    use protocol::{OpBinary, OpText, Mutation, MutationDiff};
+    use protocol::{OpBinary, OpText, ColdMutation, Mutation, MutationDiff};
     let args = semio_framework_value::DslValue::Object(vec![("page".into(), semio_framework_value::DslValue::float(0.0)), ("width".into(), semio_framework_value::DslValue::float(8.0)), ("height".into(), semio_framework_value::DslValue::float(9.0))]);
     let command = <Pdf14XEditor as ArtifactEditor>::command_from_action("set-page-size", Some((args).clone()), None).unwrap();
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = command else { panic!("own native page command"); };
@@ -68,12 +68,12 @@ fn own14_typed_page_command_uses_the_own_mutation_codec() {
     let emit = page::emit_page_edit(&original, &action, &payload).unwrap();
     assert_eq!(emit.artifact_mutations.len(), 1);
     let op = &emit.artifact_mutations[0];
-    let next = protocol::apply_diff(op.diff(&original).diff(), &original).unwrap();
+    let next = protocol::apply_diff_cold(op.diff(&original).diff(), &original).unwrap();
     assert_eq!(next.pages[0].width.to_bits(), 8.0f64.to_bits());
     assert_eq!(next.pages[0].height.to_bits(), 9.0f64.to_bits());
     assert_eq!(next.pages[0].text, original.pages[0].text);
     let mut restored = next;
-    for inverse in op.inverse(&original).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
+    for inverse in op.inverse(&original).unwrap() { restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
     assert_eq!(restored, original);
 }
 

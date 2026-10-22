@@ -42,9 +42,9 @@ test.skipIf(!binary||catalogOf()===undefined)("concurrent sessions build disjoin
  try{
   const prime=spawnSync(binary!,["--batch",`--install_base=${install}`,`--output_base=${join(root,"prime")}`,"--nosystem_rc","--nohome_rc","--noworkspace_rc","version"],{cwd:root,encoding:"utf8"});expect(prime.status,prime.stderr).toBe(0);
 
-  for(let index=0;index<scenario.pinnedServices;index++)pinned.push(await acquireBazelSessionV1(port,plan,{key:key(200+index),signal,kind:"service",timeoutMilliseconds:0}));
+  for(let index=0;index<scenario.pinnedServices;index++)pinned.push(await acquireBazelSessionV1(port,plan,{language:"en",key:key(200+index),signal,kind:"service",timeoutMilliseconds:0}));
   expect(pinned.map(row=>row.slot),"dev servers hold service slots, not build slots").toEqual(Array.from({length:scenario.pinnedServices},(_,index)=>"d"+index));
-  const started=Date.now(),sessions=await Promise.all(scenario.sessions.map((name,index)=>withBazelSessionV1(port,plan,{key:key(index),signal},async session=>{
+  const started=Date.now(),sessions=await Promise.all(scenario.sessions.map((name,index)=>withBazelSessionV1(port,plan,{language:"en",key:key(index),signal},async session=>{
    const workspace=bazelSessionWorkspaceV1(layout.workspace,session.slot,key(index));generate(workspace,[name]);
    const result=await run([...startup(session.slot),"build",...command(session.slot),"//:"+name],workspace);return {name,slot:session.slot,mode:session.mode,result,workspace};
   })));
@@ -56,7 +56,7 @@ test.skipIf(!binary||catalogOf()===undefined)("concurrent sessions build disjoin
   await stopAll();
 
   const fourthPlan={...plan,slots:scenario.servers+1},first=sessions[scenario.warmIndex]!;
-  const fourth=await withBazelSessionV1(port,fourthPlan,{key:key(100),signal},async session=>{
+  const fourth=await withBazelSessionV1(port,fourthPlan,{language:"en",key:key(100),signal},async session=>{
    const workspace=bazelSessionWorkspaceV1(layout.workspace,session.slot,key(100));generate(workspace,[first.name]);
    return {slot:session.slot,mode:session.mode,workspace,result:await run([...startup(session.slot),"build",...command(session.slot),"//:"+first.name],workspace)};
   });
@@ -65,7 +65,7 @@ test.skipIf(!binary||catalogOf()===undefined)("concurrent sessions build disjoin
   expect(executions(first.name),"the action was not executed again").toBe(1);report.fourth={slot:fourth.slot,ms:fourth.result.ms,spawns:spawns(fourth.result.stderr)};
   await stopAll();
 
-  const again=await withBazelSessionV1(port,fourthPlan,{key:key(scenario.warmIndex),signal},async session=>({slot:session.slot,mode:session.mode,result:await run([...startup(session.slot),"build",...command(session.slot),"//:"+first.name],bazelSessionWorkspaceV1(layout.workspace,session.slot,key(scenario.warmIndex)))}));
+  const again=await withBazelSessionV1(port,fourthPlan,{language:"en",key:key(scenario.warmIndex),signal},async session=>({slot:session.slot,mode:session.mode,result:await run([...startup(session.slot),"build",...command(session.slot),"//:"+first.name],bazelSessionWorkspaceV1(layout.workspace,session.slot,key(scenario.warmIndex)))}));
   report.warm={slot:again.slot,mode:again.mode,ms:again.result.ms,spawns:spawns(again.result.stderr)};
   expect(again.slot,"the selection returns to the slot of its warm package").toBe(first.slot);expect(again.mode).toBe("warm");expect(again.result.status,again.result.stderr).toBe(0);expect(executions(first.name)).toBe(1);for(const runner of spawns(again.result.stderr))expect(scenario.allowedSpawnRunners).toContain(runner);
   await stopAll();

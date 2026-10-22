@@ -1,7 +1,7 @@
 {
   "version": 1,
   "target": "test-toolkit-outputs",
-  "command": "bun ./📜️script.ts test toolkit-outputs",
+  "command": "repo ./📜️script.ts test toolkit-outputs",
   "source": "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
   "languages": [
     "EN",

@@ -18,7 +18,13 @@ pub struct ChangeColumnActionForceN {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnActionForceN where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_action_force_n::ChangeColumnActionForceN> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-action-force-n", kind: "change-column-action-force-n", record: "ChangedColumnActionForceN" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic axial action on the column", "Charakteristische Normalkraft der Stütze ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for ChangeColumnActionForceN where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_action_force_n::ChangeColumnActionForceN> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::change_column_action_force_n::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,9 +33,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnActionForceN
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic axial action on the column", "Charakteristische Normalkraft der Stütze ändern")
-    }
 }
 //#endregion 🔖️Payload
 

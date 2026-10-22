@@ -79,6 +79,7 @@ semio-framework-os-store-durable-group-wire = { path = "../../🔨️modules/�
 semio-framework-os-store-engine = { path = "../../🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-member-group = { path = "../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-replay = { path = "../../🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
@@ -105,6 +106,7 @@ semio-framework-os-store-one-item-publication = { path = "../../🔨️modules/�
 semio-framework-os-store-operation-wire = { path = "../../🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-replay-operation = { path = "../../🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-pack-source = { path = "../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
@@ -118,6 +120,7 @@ semio-framework-mutation-diff={path="../../../../🔨️modules/📡️replicati
 semio-framework-io-control = { path = "../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-one-item = { path = "../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-framework-os-store-envelope = { path = "../../🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust" }
@@ -252,6 +255,7 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+blake3 = "1.8.2"
 semio-framework-os-store-testing-fixtures = { path = "../../🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

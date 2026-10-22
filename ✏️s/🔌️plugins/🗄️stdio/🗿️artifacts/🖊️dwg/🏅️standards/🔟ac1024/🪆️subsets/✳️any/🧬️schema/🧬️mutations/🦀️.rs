@@ -38,7 +38,7 @@ pub mod set_application_history;
 /// approved semantic verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = DwgSnapshot, diff = DwgDiff, schema = "DwgMutation")]
+#[mutations(snapshot = DwgSnapshot, diff = DwgDiff, schema = "DwgMutation", reference = DwgSnapshot, reference_diff = DwgDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DwgMutation {
     SetVersionInfo(set_version_info::SetVersionInfo),

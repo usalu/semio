@@ -5,9 +5,10 @@ use semio_framework::Fault;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
 use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 📨️ Runs one typed command on the store the session edits: the document's own, or the composed member's through
     /// its typed visitor (design §12).
     pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
@@ -107,7 +108,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.time_travel.has_command_receipt(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.time_travel.closing{
-            let demand=self.time_travel_close_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+            let demand=self.shared().time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
             if !protocol::retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
             self.time_travel.begin_close();
             self.time_travel.document.cancel_prepared_command();if let Some(owners)=self.time_travel.member.as_mut().and_then(|member|member.owners.as_deref_mut()){owners.cancel_prepared_command()}

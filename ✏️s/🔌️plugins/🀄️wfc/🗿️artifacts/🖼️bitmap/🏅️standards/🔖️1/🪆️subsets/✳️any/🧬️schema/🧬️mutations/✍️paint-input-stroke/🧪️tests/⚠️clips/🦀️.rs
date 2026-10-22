@@ -73,7 +73,7 @@ fn declared_outcome_holds() {
         .and_then(serde_json::Value::as_array)
         .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
         .unwrap_or_default();
-    let raised = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation(), &before());
+    let raised = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -99,7 +99,7 @@ fn declared_outcome_holds() {
 /// pins WHICH lanes `paint-input-stroke` is allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {
-    let raised = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation(), &before());
+    let raised = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "paint-input-stroke/⚠️clips: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -119,7 +119,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*DIFF)).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "paint-input-stroke/⚠️clips: committed diff did not carry before to after");
 }
 

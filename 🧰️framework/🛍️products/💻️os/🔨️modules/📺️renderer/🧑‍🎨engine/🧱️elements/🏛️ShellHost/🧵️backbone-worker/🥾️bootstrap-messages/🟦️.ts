@@ -7,7 +7,7 @@ import { type ActiveSession } from "../../../🐚️Shell/📦️program-session
 import { reduceBootstrapUiState, type BootstrapUiState } from "../../🪪️host-bootstrap/🟦️.tsx";
 import { scopeRuntimeKey } from "../../🔐️identity-binding/🟦️.ts";
 import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🚚️ Folds bootstrap progress, failure and rebootstrap requests into the document ui state. */
 export function handleArtifactBootstrapMessage({ openDocumentSessionsRef, failDocumentBackbone, retireBrowserActorUi, cancelSpaceArtifactCreationsForRuntime, sessionRef, message, setBootstrapUiByDocument, worker, rebootstrapDiscardedSessionsRef }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "openDocumentSessionsRef" | "failDocumentBackbone" | "retireBrowserActorUi" | "cancelSpaceArtifactCreationsForRuntime" | "sessionRef"> & {

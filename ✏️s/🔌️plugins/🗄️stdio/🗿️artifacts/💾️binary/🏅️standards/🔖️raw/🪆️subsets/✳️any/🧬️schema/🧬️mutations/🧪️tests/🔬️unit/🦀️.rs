@@ -1,7 +1,7 @@
 use crate::BinarySnapshot;
 use crate::apply_mutation;
 use crate::standards::v_raw::subsets::any::schema::mutations::*;
-use protocol::os_spr::command::DiffAlgebra;
+use protocol::os_spr::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -17,7 +17,7 @@ async fn mutation_diff_law() {
         let returned = apply_mutation(&mut via_apply, &m);
         let expected_diff = m.diff(&b);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(via_apply, protocol::apply_diff(expected_diff.diff(), &b).unwrap(), "apply mismatch for {m:?}");
+        assert_eq!(via_apply, protocol::apply_diff_cold(expected_diff.diff(), &b).unwrap(), "apply mismatch for {m:?}");
     }
 }
 
@@ -34,9 +34,9 @@ async fn inverse_law() {
     }
     for m in demo_mutation_cases() {
         let d = m.diff(&b);
-        let next = protocol::apply_diff(d.diff(), &b).unwrap();
+        let next = protocol::apply_diff_cold(d.diff(), &b).unwrap();
         let inv = d.diff().inverse(&b);
-        assert_eq!(protocol::apply_diff(&inv, &next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&inv, &next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
     }
 }
 
@@ -48,16 +48,16 @@ async fn absorb_law_cartesian() {
     let mut rejected_compositions = 0;
     for m1 in &variants {
         let d1 = m1.diff(&b);
-        let mid = protocol::apply_diff(d1.diff(), &b).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &b).unwrap();
         for m2 in &variants {
             let d2 = m2.diff(&mid);
-            let Ok(after) = protocol::apply_diff(d2.diff(), &mid) else {
+            let Ok(after) = protocol::apply_diff_cold(d2.diff(), &mid) else {
                 rejected_compositions += 1;
                 continue;
             };
             let mut merged = d1.diff().clone();
             merged.absorb(d2.diff().clone());
-            assert_eq!(protocol::apply_diff(&merged, &b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
+            assert_eq!(protocol::apply_diff_cold(&merged, &b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
             valid_compositions += 1;
         }
     }

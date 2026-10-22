@@ -74,7 +74,7 @@ pub mod set_shape_representation;
 /// ceiling, so undoing a repair can re-introduce the violation the repair removed.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc6")]
+#[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc6", reference = StepSnapshot, reference_diff = StepDiff)]
 pub enum StepCc6Mutation {
     SetFileSchema(set_file_schema::SetFileSchema),
     SetProductIdentity(set_product_identity::SetProductIdentity),
@@ -108,8 +108,8 @@ impl StepCc6Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(test)]
 pub fn apply_step_cc6_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc6Mutation) -> protocol::MutationOutcome<StepDiff> {
-    let outcome = <StepCc6Mutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <StepCc6Mutation as ColdMutation<StepSnapshot>>::diff(mutation, snapshot);
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

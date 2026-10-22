@@ -25,7 +25,7 @@ impl RetireOwned for Box<dyn InferenceOwnedValue>{
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-struct CacheEntry {
+pub(super) struct CacheEntry {
     pub(super) value: Box<dyn InferenceOwnedValue>,
     byte_len: usize,
     tick: u64,

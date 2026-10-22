@@ -2,7 +2,7 @@
 //! round trip, and the cascade every collection mutation owes its own inverse.
 
 use crate::schema::snapshot::Grid2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d};
 
@@ -44,7 +44,7 @@ fn the_kind_roster_matches_the_enum_in_declaration_order() {
     assert_eq!(every.len(), KINDS.len());
     for (mutation, kind) in every.iter().zip(KINDS) {
         assert_eq!(<Grid2dMutation as Mutation<Grid2dSnapshot>>::descriptor(mutation).semantic_kind, *kind);
-        let _ = <Grid2dMutation as Mutation<Grid2dSnapshot>>::diff(mutation, &scene);
+        let _ = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(mutation, &scene);
     }
 }
 
@@ -103,28 +103,28 @@ fn masking_a_pinned_cell_cascades_its_pin_and_the_inverse_restores_it() {
 
 #[test]
 fn a_pin_on_a_masked_cell_is_refused_outright() {
-    let outcome = <Grid2dMutation as Mutation<Grid2dSnapshot>>::diff(&pin_cell(2, 1, "a".into()), &scene());
+    let outcome = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(&pin_cell(2, 1, "a".into()), &scene());
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant"));
 }
 
 #[test]
 fn a_rule_naming_an_unknown_tile_is_refused_outright() {
     let rule = WfcAdjacencyRule2d { id: "r-ghost".into(), tile_a_id: "a".into(), tile_b_id: "ghost".into(), direction: WfcDirection2d::Top, allowed: true };
-    let outcome = <Grid2dMutation as Mutation<Grid2dSnapshot>>::diff(&create_rule(rule), &scene());
+    let outcome = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(&create_rule(rule), &scene());
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant"));
 }
 
 #[test]
 fn a_second_rule_on_the_same_pair_and_direction_is_refused() {
     let duplicate = WfcAdjacencyRule2d { id: "r-other".into(), tile_a_id: "a".into(), tile_b_id: "c".into(), direction: WfcDirection2d::Right, allowed: false };
-    let outcome = <Grid2dMutation as Mutation<Grid2dSnapshot>>::diff(&create_rule(duplicate), &scene());
+    let outcome = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(&create_rule(duplicate), &scene());
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant"));
 }
 
 #[test]
 fn a_non_positive_tile_weight_is_refused() {
     for weight in [0.0, -1.0, f64::NAN] {
-        let outcome = <Grid2dMutation as Mutation<Grid2dSnapshot>>::diff(&change_tile_weight("a".into(), weight), &scene());
+        let outcome = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(&change_tile_weight("a".into(), weight), &scene());
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant"), "weight {weight} must be refused");
     }
 }

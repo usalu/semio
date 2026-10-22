@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↕️scale-assets/📏️doubles/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("scale-assets diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("scale-assets diff applies")
 }
 
 /// ▶️ `scale-assets` MULTIPLIES each factor into the asset's existing scale rather than replacing
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_and_a_non_positive_factor_is_fatal() {
     assert_eq!(rejected.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "scale-assets/doubles-asset-hero-scale: collapsing an axis to zero must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "scale-assets/doubles-asset-hero-scale: the positivity guard's frozen code");
     assert_eq!(rejected.messages()[0].target, vec!["asset-hero".to_string()], "scale-assets/doubles-asset-hero-scale: the invariant is reported against the whole addressed selection");
-    let unchanged = protocol::apply_diff(&rejected.into_parts().0, &before()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff_cold(&rejected.into_parts().0, &before()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, before(), "scale-assets/doubles-asset-hero-scale: a Fatal scale must leave the snapshot untouched");
 }
 
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-assets/doubles-asset-hero-scale: committed diff did not carry before to after");
 }
 

@@ -20,7 +20,14 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeZoneNightVentilat
         kind: "change-zone-night-ventilation",
         record: "ChangedZoneNightVentilation",
     };
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change night ventilation of the zone", "Nachtlüftung der Zone ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeZoneNightVentilation where Op: protocol::ColdMutation<Din4108Snapshot, ReferenceDiff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::change_zone_night_ventilation::ChangeZoneNightVentilation> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din4108Snapshot>>::ReferenceDiff> {
         crate::change_zone_night_ventilation::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,9 +36,6 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeZoneNightVentilat
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change night ventilation of the zone", "Nachtlüftung der Zone ändern")
-    }
 }
 
 //#region 🪢️Mounts

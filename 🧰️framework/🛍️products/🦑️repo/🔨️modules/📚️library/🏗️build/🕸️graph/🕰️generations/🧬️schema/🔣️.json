@@ -2,6 +2,9 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "title": "Graph generation store",
  "definitions": {
+  "Identity": {
+   "const": "graph-generations-v3"
+  },
   "Policy": {
    "const": {
     "version": 1,
@@ -32,18 +35,7 @@
     "compactionFloor": 1024,
     "brotliQuality": 5,
     "brotliWindow": 22,
-    "implementation": {
-     "none": [
-      "🏗️build/📥️inputs/💾️storage/📒️ledger/"
-     ],
-     "projects": [
-      "🏗️build/🕸️graph/📥️inference/📦️project-nodes/",
-      "🏗️build/🕸️graph/📥️inference/🎯️target-policy/",
-      "🏗️build/🕸️graph/📥️inference/🎮️playground-targets/",
-      "🏗️build/🕸️graph/📥️inference/🧩️component-targets/",
-      "🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/"
-     ]
-    }
+    "reasonRows": 16
    }
   },
   "Messages": {
@@ -56,7 +48,21 @@
      "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
      "closure": "graph: {count} projects of the closure verified, no other project read",
      "cold": "graph: no usable generation ({reason}), building the first one",
-     "stale": "graph: serving generation {generation} built by another implementation (graph policy current)"
+     "stale": "graph: serving generation {generation} built by another implementation (graph policy current)",
+     "reason": "graph: {project} is stale: {why}",
+     "reasonStamp": "the inference protocol of {inferrer} changed from {recorded} to {current}",
+     "reasonInput": "the input file {path} changed",
+     "reasonListing": "the entries of the directory {path} changed",
+     "reasonData": "the declared data file {path} changed",
+     "reasonAnalysis": "the source analysis of {path} changed",
+     "reasonFact": "the recorded {kind} fact of {path} changed",
+     "reasonMembership": "the workspace file {path} was {change}",
+     "reasonMore": "graph: {count} more stale inputs are not listed",
+     "withheldDependency": "graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
+     "withheldSource": "graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
+     "changeAdded": "added",
+     "changeRemoved": "removed",
+     "changeChanged": "changed"
     },
     "de": {
      "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -66,7 +72,21 @@
      "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
      "closure": "Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
      "cold": "Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
-     "stale": "Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)"
+     "stale": "Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
+     "reason": "Graph: {project} ist veraltet: {why}",
+     "reasonStamp": "das Inferenzprotokoll von {inferrer} wechselte von {recorded} zu {current}",
+     "reasonInput": "die Eingabedatei {path} hat sich geändert",
+     "reasonListing": "die Einträge des Verzeichnisses {path} haben sich geändert",
+     "reasonData": "die deklarierte Datendatei {path} hat sich geändert",
+     "reasonAnalysis": "die Quellanalyse von {path} hat sich geändert",
+     "reasonFact": "der aufgezeichnete Fakt {kind} von {path} hat sich geändert",
+     "reasonMembership": "die Arbeitsbereichsdatei {path} wurde {change}",
+     "reasonMore": "Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
+     "withheldDependency": "Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
+     "withheldSource": "Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
+     "changeAdded": "hinzugefügt",
+     "changeRemoved": "entfernt",
+     "changeChanged": "geändert"
     }
    }
   },
@@ -467,6 +487,11 @@
      }
     }
    }
+  },
+  "DocumentByteLimit": {
+   "type": "integer",
+   "minimum": 1,
+   "maximum": 536870912
   }
  }
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -29,8 +29,9 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { spawnSync } from "node:child_process";
+
 import { isAbsolute, join, resolve } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -70,7 +71,7 @@ function main(argv: readonly string[]): number {
     return 2;
   }
   const resolved = argv.map((argument, index) => (index > 0 && argv[index - 1] === "--input" && !isAbsolute(argument) ? resolve(process.cwd(), argument) : argument));
-  const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...resolved], {
+  const run = runToolSyncV1("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...resolved], {
     cwd: CRATE_DIR,
     encoding: "utf8",
   });

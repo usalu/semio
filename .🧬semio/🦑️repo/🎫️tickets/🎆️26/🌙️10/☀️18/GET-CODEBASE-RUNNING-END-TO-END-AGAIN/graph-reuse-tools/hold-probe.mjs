@@ -1,0 +1,10 @@
+import{readFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const idx=JSON.parse(brotliDecompressSync(readFileSync(process.argv[2])).toString());
+const rows=idx.rows.filter(r=>r.kind==="analysis").filter((_,i)=>i%Number(process.argv[3]??500)===0);
+const count=async()=>{let ok=0;for(const r of rows)if(await obs.observationsHold([r],1,new Set(),new Set()))ok++;return ok;};
+console.log("rows",rows.length,"holding before prepare",await count());
+inference.prepareSourceAnalysesV1();
+console.log("holding after prepare",await count());

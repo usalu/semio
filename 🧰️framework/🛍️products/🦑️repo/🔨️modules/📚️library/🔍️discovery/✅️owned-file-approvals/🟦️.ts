@@ -1,14 +1,16 @@
 import { parseGeneratorPreviewLiteralCommandV1 } from "../../🏭️generator/👁️preview/🔤️arguments/🟦️.ts";
 import { reservedDocumentationBasename } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
-import { execFileSync } from "node:child_process";
+
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
 import type { CurrentSourceApproval, CurrentSourceApprovalResult, CurrentSourceApprovalSnapshot, SemanticExactOwnedFileProjectionContract, SemanticOwnedDocumentCorrection, SemanticOwnedInputFileSnapshot } from "../📜️taxonomy-contracts/🟦️.ts";
 import { type GeneratorContract, type OwnerProjectionEntry, type OwnerProjectionPolicy, exactOwnerPath, semanticOwnedSourceBasename } from "../📦️package-projection-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
-import { generatorPreviewScriptArguments } from "../🛠️generator-commands/🟦️.ts";
+import { generatorPreviewScriptArguments, generatorPreviewScriptPath } from "../🛠️generator-commands/🟦️.ts";
+import { runtimeCommandNameV1, runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 📐️ Parses stable source identities in a closed current approval registry without reading any path. */
 export function parseCurrentSourceApprovals(input: unknown): Readonly<Record<string, CurrentSourceApproval>> {
@@ -141,7 +143,7 @@ function gitIndexFileModes(repoRoot: string): ReadonlyMap<string, number> {
   if (cached) return cached;
   const modes = new Map<string, number>();
   try {
-    const stdout = execFileSync("git", ["ls-files", "--stage", "-z"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    const stdout = runToolSyncV1("git", ["ls-files", "--stage", "-z"], { check: true, cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }).stdout;
     for (const row of stdout.split("\0")) {
       if (!row) continue;
       const tab = row.indexOf("\t");
@@ -314,18 +316,21 @@ export function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string
   return posixRegularFileMode(repoRoot, entry.sourcePath, stat.mode) === Number.parseInt(entry.preimage.mode, 8) && bytes.byteLength === entry.preimage.size && createHash("sha256").update(bytes).digest("hex") === entry.preimage.sha256;
 }
 
+const previewCommandRefusal = (cause: unknown): Error => new Error(`Generator target is not the exact owner JSON preview command: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
+
 /** 🚦 Resolves an exact preview invocation with its required native owner policy. */
-export function generatorPreviewExecution(contract: Pick<GeneratorContract, "ownership" | "ownerPath" | "target" | "previewTarget" | "previewArguments">, target: { executor?: unknown; options?: Record<string, unknown> }): { command: string; args: string[]; cwd: string } {
+export function generatorPreviewExecution(contract: Pick<GeneratorContract, "ownership" | "ownerPath" | "target" | "previewTarget" | "previewArguments" | "previewScript">, target: { executor?: unknown; options?: Record<string, unknown> }): { command: string; args: string[]; cwd: string } {
   const owner = contract.ownerPath, options = target.options;
   if (!owner || target.executor !== "repo:script" || !options) throw new Error("Generator target is not the exact owner JSON preview command");
-  const direct = ["./📜️script.ts", ...generatorPreviewScriptArguments(contract)];
-  const native = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "owner-command", "--manifest", `${owner}/Cargo.toml`, "--cwd", owner, "--", "bun", ...direct];
+  let direct: string[];
+  try { direct = ["./" + generatorPreviewScriptPath(contract), ...generatorPreviewScriptArguments(contract)]; } catch (cause) { throw previewCommandRefusal(cause); }
+  const native = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "owner-command", "--manifest", `${owner}/Cargo.toml`, "--cwd", owner, "--", runtimeCommandNameV1(), ...direct];
   const framework = "🧰️framework", frameworkOwner = owner.startsWith(`${framework}/`) && !/[\\\s]/u.test(owner) && owner.split("/").every(part => part && part !== "." && part !== "..") ? owner.slice(framework.length + 1) : null;
-  const configured = frameworkOwner ? ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", frameworkOwner, "--manifest", `${frameworkOwner}/Cargo.toml`, "--", "bun", ...direct] : null;
+  const configured = frameworkOwner ? ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", frameworkOwner, "--manifest", `${frameworkOwner}/Cargo.toml`, "--", runtimeCommandNameV1(), ...direct] : null;
   const args = options.cwd === owner ? direct : options.cwd === "." ? native : options.cwd === framework ? configured : null;
   let declared: readonly string[];
-  try { declared = parseGeneratorPreviewLiteralCommandV1(options.command); } catch { throw new Error("Generator target is not the exact owner JSON preview command"); }
-  const expected = ["bun", ...(args ?? [])];
+  try { declared = parseGeneratorPreviewLiteralCommandV1(options.command); } catch (cause) { throw previewCommandRefusal(cause); }
+  const expected = [runtimeCommandNameV1(), ...(args ?? [])];
   if (!args || declared.length !== expected.length || declared.some((value, index) => value !== expected[index])) throw new Error("Generator target is not the exact owner JSON preview command");
-  return { command: "bun", args, cwd: options.cwd as string };
+  return { command: runtimeExecutableV1(), args, cwd: options.cwd as string };
 }

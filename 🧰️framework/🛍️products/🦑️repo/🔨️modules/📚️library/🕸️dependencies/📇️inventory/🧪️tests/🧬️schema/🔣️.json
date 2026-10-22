@@ -1,0 +1,578 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "taxonomyPath",
+  "taxonomy",
+  "freeze",
+  "freezeErrors",
+  "classify",
+  "testDomain",
+  "composition",
+  "goModule",
+  "lockMismatches"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "taxonomyPath": {
+   "type": "string"
+  },
+  "taxonomy": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "freeze": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "oracle",
+     "files",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "oracle": {
+      "enum": [
+       "ts",
+       "python"
+      ]
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ecosystem",
+        "name",
+        "version",
+        "kinds",
+        "users",
+        "productionReachable",
+        "declarations"
+       ],
+       "properties": {
+        "ecosystem": {
+         "enum": [
+          "rust",
+          "js",
+          "go",
+          "python",
+          "dotnet"
+         ]
+        },
+        "name": {
+         "type": "string"
+        },
+        "version": {
+         "type": "string"
+        },
+        "kinds": {
+         "type": "array",
+         "items": {
+          "enum": [
+           "production-runtime",
+           "production-build",
+           "test-runner",
+           "repository-tooling",
+           "test-oracle"
+          ]
+         }
+        },
+        "users": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "productionReachable": {
+         "type": "boolean"
+        },
+        "declarations": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "user",
+           "version",
+           "kind"
+          ],
+          "properties": {
+           "user": {
+            "type": "string"
+           },
+           "version": {
+            "type": "string"
+           },
+           "kind": {
+            "enum": [
+             "production-runtime",
+             "production-build",
+             "test-runner",
+             "repository-tooling",
+             "test-oracle"
+            ]
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "freezeErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "files",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "files": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "classify": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "entry",
+     "oracleIds",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "ecosystem",
+       "name",
+       "version",
+       "kinds",
+       "users",
+       "productionReachable",
+       "declarations"
+      ],
+      "properties": {
+       "ecosystem": {
+        "enum": [
+         "rust",
+         "js",
+         "go",
+         "python",
+         "dotnet"
+        ]
+       },
+       "name": {
+        "type": "string"
+       },
+       "version": {
+        "type": "string"
+       },
+       "kinds": {
+        "type": "array",
+        "items": {
+         "enum": [
+          "production-runtime",
+          "production-build",
+          "test-runner",
+          "repository-tooling",
+          "test-oracle"
+         ]
+        }
+       },
+       "users": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "productionReachable": {
+        "type": "boolean"
+       },
+       "declarations": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "user",
+          "version",
+          "kind"
+         ],
+         "properties": {
+          "user": {
+           "type": "string"
+          },
+          "version": {
+           "type": "string"
+          },
+          "kind": {
+           "enum": [
+            "production-runtime",
+            "production-build",
+            "test-runner",
+            "repository-tooling",
+            "test-oracle"
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     "oracleIds": {
+      "anyOf": [
+       {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "ecosystem",
+       "name",
+       "version",
+       "kinds",
+       "users",
+       "productionReachable",
+       "declarations"
+      ],
+      "properties": {
+       "ecosystem": {
+        "enum": [
+         "rust",
+         "js",
+         "go",
+         "python",
+         "dotnet"
+        ]
+       },
+       "name": {
+        "type": "string"
+       },
+       "version": {
+        "type": "string"
+       },
+       "kinds": {
+        "type": "array",
+        "items": {
+         "enum": [
+          "production-runtime",
+          "production-build",
+          "test-runner",
+          "repository-tooling",
+          "test-oracle"
+         ]
+        }
+       },
+       "users": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "productionReachable": {
+        "type": "boolean"
+       },
+       "declarations": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "user",
+          "version",
+          "kind"
+         ],
+         "properties": {
+          "user": {
+           "type": "string"
+          },
+          "version": {
+           "type": "string"
+          },
+          "kind": {
+           "enum": [
+            "production-runtime",
+            "production-build",
+            "test-runner",
+            "repository-tooling",
+            "test-oracle"
+           ]
+          }
+         }
+        }
+       },
+       "oracleIds": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "oracleConflictUsers": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "testDomain": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "taxonomy",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "taxonomy": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "directoryNames",
+         "domainPath"
+        ],
+        "properties": {
+         "directoryNames": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "domainPath": {
+          "type": "string"
+         }
+        }
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "composition": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "goModule": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "content",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "content": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "localReplaces",
+       "requirements"
+      ],
+      "properties": {
+       "module": {
+        "type": "string"
+       },
+       "localReplaces": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "requirements": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "version",
+          "kind"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "version": {
+           "type": "string"
+          },
+          "kind": {
+           "enum": [
+            "production-runtime",
+            "production-build"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "lockMismatches": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "manifests",
+     "workspaces",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "manifests": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {}
+      }
+     },
+     "workspaces": {},
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "kind",
+        "manifest"
+       ],
+       "properties": {
+        "dependency": {
+         "type": "string"
+        },
+        "kind": {
+         "enum": [
+          "invalid-lockfile",
+          "missing-in-lock",
+          "stale-in-lock",
+          "version-mismatch",
+          "workspace-missing"
+         ]
+        },
+        "lockVersion": {
+         "type": "string"
+        },
+        "manifest": {
+         "type": "string"
+        },
+        "manifestVersion": {
+         "type": "string"
+        },
+        "section": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

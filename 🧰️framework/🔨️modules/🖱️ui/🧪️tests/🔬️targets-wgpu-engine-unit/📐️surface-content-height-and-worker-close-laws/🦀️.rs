@@ -11,13 +11,13 @@
 #[test]
 fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
-    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+    let declared: Vec<semio_framework_async_slots::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "ui::wgpu_engine")
         .map(|table| {
-            semio_framework_async::FixedSlotTableBudget::new(
+            semio_framework_async_slots::FixedSlotTableBudget::new(
                 table["owner"].as_str().expect("owner"),
                 table["capacity"].as_u64().expect("capacity") as usize,
                 table["elementSizeBytes"].as_u64().expect("element bytes") as usize,
@@ -25,8 +25,8 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
             )
         })
         .collect();
-    let measured = vec![semio_framework_async::FixedSlotTableBudget::new("wgpu::engine::UiSurfaceRegistry", UI_LAYOUT_SURFACE_SLOTS, size_of::<Option<UiSurfaceSlot>>(), size_of::<UiSurfaceRegistry>())];
-    semio_framework_async::assert_fixed_slot_tables(
+    let measured = vec![semio_framework_async_slots::FixedSlotTableBudget::new("wgpu::engine::UiSurfaceRegistry", UI_LAYOUT_SURFACE_SLOTS, size_of::<Option<UiSurfaceSlot>>(), size_of::<UiSurfaceRegistry>())];
+    semio_framework_async_slots::assert_fixed_slot_tables(
         "ui::wgpu_engine",
         fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
         fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,

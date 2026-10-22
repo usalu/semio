@@ -18,19 +18,19 @@
       "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "outputs": [],
-      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite"}
+      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite"}
     },
     "test-snapshot-sqlite-source": {
       "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "outputs": [],
-      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source"}
+      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite source"}
     },
     "test-snapshot-sqlite-native": {
       "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "outputs": [],
-      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native"}
+      "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-snapshot-sqlite native"}
     },
     "build": {
       "executor": "repo:script",
@@ -44,7 +44,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -52,7 +52,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -61,7 +61,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

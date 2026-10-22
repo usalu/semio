@@ -4,7 +4,6 @@ use super::{join_numstat_chunks, numstat_log_args, numstat_log_range_args, numst
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 
@@ -34,7 +33,7 @@ impl SystemGit {
 
     /// 🖥️ Runs git in the bound repository and returns stdout, or the trimmed stderr as an error.
     fn run(&self, args: &[String]) -> Result<Vec<u8>, String> {
-        let output = Command::new("git").args(args).current_dir(&self.repo).output().map_err(|error| error.to_string())?;
+        let output = semio_framework_repo_workspace::spawn_command("git").args(args).current_dir(&self.repo).output().map_err(|error| error.to_string())?;
         if !output.status.success() {
             return Err(format!("git {}: {}", args.join(" "), String::from_utf8_lossy(&output.stderr).trim()));
         }

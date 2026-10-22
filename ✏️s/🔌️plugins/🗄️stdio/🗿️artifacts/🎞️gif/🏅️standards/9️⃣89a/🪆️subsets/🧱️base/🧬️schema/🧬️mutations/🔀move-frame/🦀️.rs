@@ -16,6 +16,15 @@ pub struct MoveFrame {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "frame", kind: "move-frame", record: "MoveFrame" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move frame", "Einzelbild verschieben")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for MoveFrame {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { from, to } = self;
         let Some(frame) = base.frames.get(*from) else { return protocol::MutationOutcome::new(GifDiff::default()) };
@@ -32,12 +41,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveFrame {
         }
         let at = (*to).min(base.frames.len() - 1);
         Ok(if at == *from { Vec::new() } else { vec![GifMutation::MoveFrame(MoveFrame { from: at, to: *from })] })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move frame", "Einzelbild verschieben")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

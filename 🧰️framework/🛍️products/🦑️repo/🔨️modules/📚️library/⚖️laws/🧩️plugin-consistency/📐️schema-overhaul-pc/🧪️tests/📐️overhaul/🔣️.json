@@ -1,0 +1,272 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "grammar-dialects-must-be-parseable",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio": [
+     "dialect grammar",
+     "grammar g",
+     "start s",
+     "rule = x"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio": [
+     "; abnf comment",
+     "dialect grammar",
+     "grammar g",
+     "start s"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio": [
+     "# note",
+     "grammar g",
+     "start s"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio": [
+     "bad"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️bar/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio": [
+     "bad"
+    ]
+   },
+   "expect": [
+    [
+     "grammar-parseability-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio",
+     "stdio-artifacts/grammar-parseability",
+     "medium",
+     0
+    ],
+    [
+     "grammar-parseability-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio",
+     "stdio-artifacts/grammar-parseability",
+     "medium",
+     0
+    ]
+   ],
+   "kindFilter": "stdio-artifacts/grammar-parseability"
+  },
+  {
+   "id": "protocol-dialects-must-be-parseable",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio": [
+     "dialect protocol",
+     "protocol p",
+     "start s"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/📡️.protocol.semio": [
+     "dialect protocol",
+     "protocol p",
+     "start s",
+     "x = %x41"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio": [
+     "dialect grammar",
+     "grammar p",
+     "start s"
+    ]
+   },
+   "expect": [
+    [
+     "protocol-parseability-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/📡️.protocol.semio",
+     "stdio-artifacts/protocol-parseability",
+     "medium",
+     0
+    ],
+    [
+     "protocol-parseability-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio",
+     "stdio-artifacts/protocol-parseability",
+     "medium",
+     0
+    ]
+   ],
+   "kindFilter": "stdio-artifacts/protocol-parseability"
+  },
+  {
+   "id": "stdio-fixtures-are-honest-demos",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️mine/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio": [
+     "semio stdio.mine v1"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️mine/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️bad/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️badtwo/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio": [
+     "semio stdio.other"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️badtwo/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️avi/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️html/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio": [
+     "semio stdio.html v1"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️html/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio": []
+   },
+   "expect": [
+    [
+     "fixture-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️bad",
+     "stdio-artifacts/fixture-honesty",
+     "medium",
+     0
+    ],
+    [
+     "fixture-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️badtwo",
+     "stdio-artifacts/fixture-honesty",
+     "medium",
+     0
+    ],
+    [
+     "fixture-honesty-stale-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️html",
+     "stdio-artifacts/fixture-honesty",
+     "low",
+     0
+    ]
+   ],
+   "kindFilter": "stdio-artifacts/fixture-honesty"
+  },
+  {
+   "id": "every-stdio-standard-registers-its-languages",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️lang/🏅️standards/🔖️3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️lang/🏅️standards/🔖️3/🪆️subsets/✳️other/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️lang/🏅️standards/🔖️3/⚙️engine/🦀️.rs": [
+     "register_language(0);",
+     "register_language(1);",
+     "register_language(2);",
+     "register_language(3);"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/⚙️engine/🦀️.rs": [
+     "register_language(0);",
+     "register_language(1);",
+     "register_language(2);",
+     "register_language(3);",
+     "register_language(4);",
+     "register_language(0);",
+     "register_language(1);"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️avi/🏅️standards/🔖️1.0/⚙️engine/🦀️.rs": [
+     "register_language(0);",
+     "register_language(1);",
+     "register_language(2);",
+     "register_language(3);",
+     "register_language(4);"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️none/🏅️standards/🔖️9/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": []
+   },
+   "expect": [
+    [
+     "language-registration-stdio/lang/standards#3",
+     "stdio-artifacts/language-registration",
+     "medium",
+     0
+    ],
+    [
+     "language-registration-stale-stdio/avi/standards#1.0",
+     "stdio-artifacts/language-registration",
+     "low",
+     0
+    ],
+    [
+     "language-registration-stdio/none/standards#9",
+     "stdio-artifacts/language-registration",
+     "medium",
+     0
+    ]
+   ],
+   "kindFilter": "stdio-artifacts/language-registration"
+  },
+  {
+   "id": "stdio-codecs-do-not-transfer-through-json",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/⚙️engine/🦀️.rs": [
+     "impl ArtifactPack for X {",
+     "    fn pack(&self) -> Vec<u8> { serde_json::to_vec(self).unwrap() }",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/⚙️engine/ok.rs": [
+     "impl OpBinary for Y {",
+     "    fn a(&self) { binary() }",
+     "}",
+     "fn free() { serde_json::to_vec(1); }"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/🚪️io/🦀️.rs": [
+     "fn x() { serde_json::to_string(&1); }"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/🚪️io/clean.rs": [
+     "fn x() { binary(); }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/⚙️engine/🦀️.rs": [
+     "impl ArtifactPack for X {",
+     "    fn pack(&self) { serde_json::to_vec(self) }",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "stdio-json-transfer-ban-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/⚙️engine/🦀️.rs",
+     "stdio-artifacts/json-transfer-ban",
+     "medium",
+     0
+    ],
+    [
+     "stdio-json-transfer-ban-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️j/🚪️io/🦀️.rs",
+     "stdio-artifacts/json-transfer-ban",
+     "medium",
+     0
+    ]
+   ],
+   "kindFilter": "stdio-artifacts/json-transfer-ban"
+  },
+  {
+   "id": "unfiltered-aggregate-of-one-schema-owning-artifact",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio": [
+     "bad"
+    ]
+   },
+   "expect": [
+    [
+     "grammar-parseability-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio",
+     "stdio-artifacts/grammar-parseability",
+     "medium",
+     0
+    ],
+    [
+     "fixture-honesty-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo",
+     "stdio-artifacts/fixture-honesty",
+     "medium",
+     0
+    ],
+    [
+     "language-registration-stdio/foo/standards#2",
+     "stdio-artifacts/language-registration",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "allowlisted-avi-diff-grammar-is-exempt",
+   "rule": "policySchemaOverhaulPCBreaches",
+   "kindFilter": "stdio-artifacts/grammar-parseability",
+   "oracle": false,
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/📖️.grammar.semio": [
+     "garbage"
+    ]
+   },
+   "expect": [],
+   "defect": "🟦️.ts:70-131 and 175-236 and 437-468 key their allowlists on the legacy leaf name ending in -component.* while the checked leaf normalises to a bare trailing dash, so no allowlist entry can ever match or go stale"
+  }
+ ]
+}

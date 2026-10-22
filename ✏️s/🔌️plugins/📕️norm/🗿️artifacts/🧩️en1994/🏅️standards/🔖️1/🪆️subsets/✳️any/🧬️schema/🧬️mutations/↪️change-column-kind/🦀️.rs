@@ -17,7 +17,13 @@ pub struct ChangeColumnKind {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnKind where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_kind::ChangeColumnKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-kind", kind: "change-column-kind", record: "ChangedColumnKind" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change column type", "Stützentyp ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for ChangeColumnKind where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_kind::ChangeColumnKind> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::change_column_kind::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,9 +32,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnKind where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column type", "Stützentyp ändern")
-    }
 }
 //#endregion 🔖️Payload
 

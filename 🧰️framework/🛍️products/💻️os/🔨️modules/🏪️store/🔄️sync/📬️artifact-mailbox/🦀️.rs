@@ -29,7 +29,7 @@ struct ArtifactMailboxSlot {
     pub message: ArtifactActorMsg,
 }
 
-struct ArtifactMailboxState {
+pub struct ArtifactMailboxState {
     pub slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS],
     pub head: usize,
     pub len: usize,
@@ -47,7 +47,7 @@ impl ArtifactMailboxState {
     }
 }
 
-struct ArtifactMailboxAuthority {
+pub struct ArtifactMailboxAuthority {
     pub state: std::sync::Mutex<ArtifactMailboxState>,
 }
 

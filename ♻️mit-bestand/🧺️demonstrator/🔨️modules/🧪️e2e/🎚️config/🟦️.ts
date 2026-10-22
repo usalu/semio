@@ -20,7 +20,7 @@ const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {
   return url.endsWith("/") ? url : `${url}/`;
 }
-if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through bun repo");
+if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through repo");
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL);
 
 /** 🖥️ Every one of the demonstrator's eight panes drives a GPU surface, and one of them only boots on a real adapter.

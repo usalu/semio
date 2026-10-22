@@ -1,0 +1,5 @@
+# Receipt Parser Source Custody
+
+The current precision and Cargo receipt serializers use standalone Brotli JSON. Their exact owned schema/validator/name dependencies now participate in storage consumer captures, Graph implementation facts and inference revision authority, alongside the closure owner/schema/worker. Four producer dependencies are each below the existing 65,536-byte capture bound. The storage fixture remains at index 5; pin semantics and current-source refusal are unchanged.
+
+The closed neutral schema and fixture were extended first from three to seven defining sources and from seven to fifteen fresh/changed/pinned states. The existing actual TypeScript AST, Ajv, SQLite, Node SHA-256 and Bun CryptoHasher comparisons cover every new dependency. Source code edits then appended only the defining roster entries. Native assertions remain pending the combined worker review and fresh normal Source invocation. No mounted cache payload, foreign process, provider guard or runtime floor was changed.

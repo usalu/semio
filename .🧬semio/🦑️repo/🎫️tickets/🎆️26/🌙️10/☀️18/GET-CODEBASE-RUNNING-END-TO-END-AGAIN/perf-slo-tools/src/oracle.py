@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent Python oracle of the performance SLO table and bench: statistics (the standard library's `statistics.quantiles`, inclusive method, and with `stats-numpy` NumPy's linear percentile), host load classes, verdicts, series, baseline comparison, objective selection, source edits, tool marker lines and process-tree memory, from the same schema and fixture, using only the standard library (NumPy only for `stats-numpy`). Reads one JSON request on stdin, writes one JSON answer on stdout."""
+"""📐 Independent Python oracle of the performance SLO table and bench: statistics (the standard library's `statistics.quantiles`, inclusive method, and with `stats-numpy` NumPy's linear percentile), host load classes, verdicts, series, baseline comparison, objective selection, source edits, tool marker lines and process-tree memory, from the same schema and fixture, using only the standard library (NumPy only for `stats-numpy`). Reads one JSON request on stdin, writes one JSON answer on stdout."""
 import json,re,statistics,sys
 
 def key(text): return text.encode("utf-16-be","surrogatepass")
@@ -51,10 +51,14 @@ def judge(slo,tool,s):
     lower=slo["direction"]=="lower"
     def within(limit): return v<=limit if lower else v>=limit
     goal,gate=slo["goal"],slo["gate"]
+    k=s["startKinds"];seen=sum(k.values())
+    bound="exact" if slo["metric"]!="startMs" or k["marker"]==seen else "lower" if k["first-output"]==seen else "upper" if k["exit"]==seen else "mixed"
     if goal is None and gate is None: status="recorded"
     elif goal is not None and within(goal): status="pass"
     elif gate is not None and within(gate): status="pass" if goal is None else "warn"
     else: status="fail"
+    if bound!="exact" and status!="recorded" and not ((bound=="lower" and status=="fail") or (bound=="upper" and status!="fail")):
+        row["status"]="unproven";row["reason"]="start-unobserved";return row
     if status=="fail" and inflated:
         row["status"]="unproven";row["reason"]="host-saturated";row["inflated"]=True;return row
     row["status"]=status;row["inflated"]=bool(inflated and status not in("pass","recorded"));return row

@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use protocol::{Inference, Mutation};
+use protocol::{Inference, ColdMutation, Mutation};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
@@ -23,7 +23,7 @@ fn building() -> ModelSnapshot {
 fn step(snapshot: &ModelSnapshot, mutation: ModelMutation) -> (ModelSnapshot, ModelDiff) {
     let (diff, messages) = mutation.diff(snapshot).into_parts();
     assert!(messages.iter().all(|message| !matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "{messages:?}");
-    (protocol::apply_diff(&diff, snapshot).expect("the diff applies"), diff)
+    (protocol::apply_diff_cold(&diff, snapshot).expect("the diff applies"), diff)
 }
 
 fn rephase(id: &str, phase: Phase) -> ModelMutation {

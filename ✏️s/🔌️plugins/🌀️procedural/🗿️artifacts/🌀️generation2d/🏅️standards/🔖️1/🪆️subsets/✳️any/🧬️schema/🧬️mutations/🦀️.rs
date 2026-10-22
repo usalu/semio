@@ -20,7 +20,7 @@ extern crate self as semio_s_artifact_procedural_2d_mutations;
 use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
 use semio_s_artifact_procedural_2d_model::widget_id;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowHost;
 #[cfg(test)]
@@ -32,7 +32,7 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Generation2dSnapshot, diff = Generation2dDiff, schema = "generation.2d")]
+#[mutations(snapshot = Generation2dSnapshot, diff = Generation2dDiff, schema = "generation.2d", reference = Generation2dSnapshot, reference_diff = Generation2dDiff)]
 pub enum Generation2dMutation {
     CreateWidget(semio_s_artifact_procedural_2d_mut_widgets::create_widget::CreateWidget),
     ReplaceWidget(semio_s_artifact_procedural_2d_mut_widgets::replace_widget::ReplaceWidget),

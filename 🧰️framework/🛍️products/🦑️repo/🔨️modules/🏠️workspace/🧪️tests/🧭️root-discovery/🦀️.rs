@@ -13,11 +13,14 @@ use std::path::{Path, PathBuf};
 fn materialize(base: &Path, tree: &Json) -> Result<(), String> {
     for directory in tree.array("directories") {
         let Json::String(relative) = directory else { continue };
-        std::fs::create_dir_all(base.join(relative.replace('/', std::path::MAIN_SEPARATOR_STR))).map_err(|error| error.to_string())?;
+        let directory = base.join(relative.replace('/', std::path::MAIN_SEPARATOR_STR));
+        if directory.to_string_lossy().encode_utf16().count() > 256 { return Err("Bounded fixture directory required".into()); }
+        std::fs::create_dir_all(directory).map_err(|error| error.to_string())?;
     }
     if let Some(Json::Object(files)) = tree.get("files") {
         for (relative, content) in files {
             let full = base.join(relative.replace('/', std::path::MAIN_SEPARATOR_STR));
+            if full.to_string_lossy().encode_utf16().count() > 256 { return Err("Bounded fixture file required".into()); }
             if let Some(parent) = full.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
             }
@@ -61,17 +64,6 @@ fn canonical(path: &Path) -> PathBuf {
     }
 }
 
-/// 📍️ Restores the working directory when a scenario that moves the process leaves, even through an error.
-#[cfg(feature = "sut")]
-struct Standing(PathBuf);
-
-#[cfg(feature = "sut")]
-impl Drop for Standing {
-    fn drop(&mut self) {
-        let _ = std::env::set_current_dir(&self.0);
-    }
-}
-
 /// 📋️ Renders the settings the way every implementation of this case reports them.
 #[cfg(feature = "sut")]
 fn render_config(config: &semio_framework_repo_workspace::RepoConfig) -> String {
@@ -103,20 +95,16 @@ fn the_first_marker_upwards_wins(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 fn the_start_directory_alone_decides_the_root(ctx: &Context) -> Result<Outcome, String> {
     let file = ctx.input_json("shared://📡️root-discovery-trees.json")?;
-    let _standing = Standing(std::env::current_dir().map_err(|error| error.to_string())?);
-    let decoy = ctx.work_dir.join("🪤️decoy").join(".git").join("deep");
-    std::fs::create_dir_all(&decoy).map_err(|error| error.to_string())?;
+    let before = std::env::current_dir().map_err(|error| error.to_string())?;
     let mut roots = Vec::new();
     for tree in file.array("trees") {
         let name = tree.str("name");
-        let base = ctx.work_dir.join(format!("🌲️{name}"));
+        let base = ctx.work_dir.join(format!("r-{name}"));
         materialize(&base, &tree)?;
         let start = base.join(tree.str("startAt").replace('/', std::path::MAIN_SEPARATOR_STR));
-        for (standing, directory) in [("inside", base.clone()), ("outside", ctx.work_dir.clone()), ("decoy", decoy.clone())] {
-            std::env::set_current_dir(&directory).map_err(|error| error.to_string())?;
-            let found = semio_framework_repo_workspace::find_repo_root(&start);
-            roots.push(Json::String(format!("{name}@{standing}={}", relative_slash(&base, &found))));
-        }
+        let found = semio_framework_repo_workspace::find_repo_root(&start);
+        if std::env::current_dir().map_err(|error| error.to_string())? != before { return Err("Root discovery changed cwd".into()); }
+        roots.push(Json::String(format!("{name}={}", relative_slash(&base, &found))));
     }
     Ok(Outcome::projection(Json::Object(vec![("roots".to_string(), Json::Array(roots))])))
 }

@@ -17,6 +17,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 //#region 🧬️RetainedCloneFixtures
 /** 🎭️ One example payload for retained-clone choice behavior. */
@@ -285,7 +287,7 @@ export class RetainedLaneScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-retained-lane source|native");
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🛤️lane/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
   const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-os-kernel":manifest},nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::tests::original_side_lane_comparison_uses_granted_utf8_chunks","os_store::tests::original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs","os_store::tests::interaction_store_apply_updates_hover_and_bumps_generation","os_store::tests::interaction_store_reset_discards_hover_and_bumps_generation","os_store::tests::interaction_store_default_seeds_from_hover_default"]}]});
@@ -314,7 +316,7 @@ export class OriginalIoRetirementScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-io-retirement source|native");
   const source=join(this.repoRoot,"🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
   const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["io::control::retirement_tests::original_io_retirement_keeps_canceled_decoder_and_remaining_physical_wallet","io::control::retirement_tests::original_io_retirement_preserves_active_encoder_and_refuses_encoder_only_authority"]}]});

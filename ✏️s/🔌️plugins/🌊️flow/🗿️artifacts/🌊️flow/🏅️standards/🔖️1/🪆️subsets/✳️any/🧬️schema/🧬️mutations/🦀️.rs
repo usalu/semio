@@ -20,6 +20,10 @@ impl protocol::Mutation<FlowSnapshot> for FlowMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
+
+impl protocol::ColdMutation<FlowSnapshot> for FlowMutation {
+    type ReferenceDiff = FlowDiff;
     fn diff(&self, _base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         match *self {}
     }

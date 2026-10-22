@@ -2156,7 +2156,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2166,7 +2166,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2187,9 +2187,9 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "build": "bun repo run @semio-test/command-owner:build",
-          "check": "bun repo run @semio-test/command-owner:check",
-          "test": "bun repo run @semio-test/command-owner:test"
+          "build": "repo run @semio-test/command-owner:build",
+          "check": "repo run @semio-test/command-owner:check",
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"build\", OwnedCommand);\nrouter.register(\"check\", OwnedCommand);\nrouter.register(\"test\", OwnedCommand);",
@@ -2199,19 +2199,19 @@
           "build": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts build"
+              "command": "repo ./📜️script.ts build"
             }
           },
           "check": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts check"
+              "command": "repo ./📜️script.ts check"
             }
           },
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2229,7 +2229,7 @@
         "name": "@semio-test/command-owner",
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2239,7 +2239,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2258,7 +2258,7 @@
         "private": false,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2268,7 +2268,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2287,7 +2287,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2297,7 +2297,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2316,7 +2316,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         },
         "exports": {}
       },
@@ -2327,7 +2327,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2346,7 +2346,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         },
         "main": "./entry.js"
       },
@@ -2357,7 +2357,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2376,7 +2376,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         },
         "module": "./entry.js"
       },
@@ -2387,7 +2387,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2406,7 +2406,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         },
         "types": "./entry.js"
       },
@@ -2417,7 +2417,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2436,7 +2436,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2446,7 +2446,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2473,7 +2473,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2492,8 +2492,8 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test",
-          "build": "bun repo run @semio-test/command-owner:build"
+          "test": "repo run @semio-test/command-owner:test",
+          "build": "repo run @semio-test/command-owner:build"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2503,7 +2503,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2522,7 +2522,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun ./📜️script.ts test"
+          "test": "repo ./📜️script.ts test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2532,7 +2532,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2551,7 +2551,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"build\", OwnedCommand);",
@@ -2561,7 +2561,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2580,7 +2580,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "// router.register(\"test\", OwnedCommand);",
@@ -2590,7 +2590,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             }
           }
         }
@@ -2609,7 +2609,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2631,7 +2631,7 @@
         "private": true,
         "type": "module",
         "scripts": {
-          "test": "bun repo run @semio-test/command-owner:test"
+          "test": "repo run @semio-test/command-owner:test"
         }
       },
       "scriptSource": "router.register(\"test\", OwnedCommand);",
@@ -2641,7 +2641,7 @@
           "test": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "bun ./other.ts test"
+              "command": "repo ./other.ts test"
             }
           }
         }

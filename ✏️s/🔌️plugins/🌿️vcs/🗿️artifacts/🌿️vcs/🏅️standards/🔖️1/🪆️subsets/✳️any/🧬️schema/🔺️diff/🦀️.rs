@@ -37,29 +37,9 @@ protocol::plain_list_delta! {
 use crate::VcsSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<VcsSnapshot> for VcsDiff {
-    fn apply(&self, snapshot: &VcsSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<VcsSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(counter) = self.counter {
-            next.counter = counter;
-        }
-        if let Some(notes) = &self.notes {
-            next.notes = notes.clone();
-        }
-        if let Some(status) = &self.status {
-            next.status = status.clone();
-        }
-        if let Some(delta) = &self.tags {
-            next.tags = delta.commit_onto(&next.tags, capability).map_err(|error| error.under(["tags"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<VcsSnapshot> for VcsDiff {}
+
+impl protocol::ColdMutationDiff<VcsSnapshot> for VcsDiff {
     fn absorb(&mut self, other: Self) {
         if let Some(later) = other.tags {
             match &mut self.tags {
@@ -83,9 +63,40 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
         take!(notes);
         take!(status);
     }
+
+    fn apply(&self, unpublished: &mut VcsSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(counter) = self.counter {
+            next.counter = counter;
+        }
+        if let Some(notes) = &self.notes {
+            next.notes = notes.clone();
+        }
+        if let Some(status) = &self.status {
+            next.status = status.clone();
+        }
+        if let Some(delta) = &self.tags {
+            next.tags = delta.commit_onto(&next.tags, capability).map_err(|error| error.under(["tags"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<VcsSnapshot> for VcsDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.title.is_none() && self.counter.is_none() && self.notes.is_none() && self.status.is_none() && self.tags.as_ref().is_none_or(VcsTagsDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<VcsSnapshot> for VcsDiff {
     fn inverse(&self, base: &VcsSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -95,9 +106,6 @@ impl protocol::DiffAlgebra<VcsSnapshot> for VcsDiff {
             status: self.status.as_ref().map(|_| base.status.clone()),
             tags: self.tags.as_ref().map(|delta| delta.inverse(&base.tags)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.title.is_none() && self.counter.is_none() && self.notes.is_none() && self.status.is_none() && self.tags.as_ref().is_none_or(VcsTagsDelta::is_empty)
     }
 }
 

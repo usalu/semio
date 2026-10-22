@@ -13,6 +13,13 @@ use semio_framework_async::{ProcessKind, WorkerPool, WorkerPoolConfig};
 #[path = "../⏱️deadline/🦀️.rs"]
 pub mod original_deadline;
 
+#[path = "🔌️wasm-port/🦀️.rs"]
+pub mod wasm;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔌️wasm-port/🦀️.rs"]
+mod wasm_port_tests;
+
 //#region 🔧️SharedWasmtimeEngine
 /// 🚧️ Staged for packet `B1-host-native` (`📓️design-runtime.md` §2, `//#region 🦀️WasmtimeRuntime`).
 /// The blocked pieces — the `GuestRuntime` trait, the `WasmtimeRuntime` impl that closes over it,

@@ -92,29 +92,37 @@ pub struct PlaybookConfigDiff {
     pub contributions_json: Option<String>,
 }
 
-impl protocol::MutationDiff<PlaybookConfig> for PlaybookConfigDiff {
-    fn apply(&self, base: &PlaybookConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaybookConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<PlaybookConfig> for PlaybookConfigDiff {}
+
+impl protocol::ColdMutationDiff<PlaybookConfig> for PlaybookConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.contributions_json.is_some() {
             self.contributions_json = other.contributions_json;
         }
     }
+
+    fn apply(&self, unpublished: &mut PlaybookConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<PlaybookConfig> for PlaybookConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.contributions_json.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PlaybookConfig> for PlaybookConfigDiff {
     fn inverse(&self, base: &PlaybookConfig) -> Self {
         Self {
             contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.contributions_json.is_none()
     }
 }
 

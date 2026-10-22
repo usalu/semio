@@ -1,9 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
+/** 🪐️ `@semio-tech/space-plugin` router: `repo ./📜️script.ts test`. */
 import { join } from "node:path";
 import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import assert from "node:assert/strict";

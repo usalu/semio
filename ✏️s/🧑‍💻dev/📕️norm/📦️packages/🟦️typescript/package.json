@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "verify-norm-document-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/s-norm-composition-tests:verify-norm-document-contract",
-    "verify-norm-results-window-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/s-norm-composition-tests:verify-norm-results-window-ownership"
+    "verify-norm-document-contract": "repo run @semio-tech/s-norm-composition-tests:verify-norm-document-contract",
+    "verify-norm-results-window-ownership": "repo run @semio-tech/s-norm-composition-tests:verify-norm-results-window-ownership"
   },
   "semio": {
     "role": "test",

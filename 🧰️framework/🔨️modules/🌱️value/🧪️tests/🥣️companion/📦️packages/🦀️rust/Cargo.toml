@@ -41,3 +41,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-io-base64 = { path = "../../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../📋️list/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../🗂️ordered/📦️packages/🦀️rust" }

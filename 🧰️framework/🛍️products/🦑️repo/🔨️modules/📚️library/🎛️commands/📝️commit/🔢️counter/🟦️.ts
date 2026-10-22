@@ -1,6 +1,7 @@
 import type { Contributor } from "../👤️contributor/🟦️.ts";
 import { normalizeEmojiPresentation } from "../🔣️emoji-presentation/🟦️.ts";
 import { git } from "../🌳️git/🟦️.ts";
+import {refuseCommitV1} from "../📖️texts/🟦️.ts";
 
 const COUNTER_RE = /^(.+🎆️[\uFE0E\uFE0F]?\d{2}🌙️[\uFE0E\uFE0F]?\d{2}☀️[\uFE0E\uFE0F]?\d{2})🚩️[\uFE0E\uFE0F]?(\d+)$/u;
 
@@ -92,7 +93,7 @@ export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributo
     const epochPrefix = normalizeEmojiPresentation(`${contributor.emoji}${contributor.alias}🎆️`);
     return normalized.startsWith(epochPrefix) && /🚩\d+$/u.test(normalized) && !extractCounterFromSubject(subject);
   });
-  if (unparsedPrior) throw new Error(`micro-commit: refusing to reset counter to 001 because prior subject could not be parsed: ${unparsedPrior}`);
+  if (unparsedPrior) throw refuseCommitV1("failed","counter.refusing-to-reset-to-because",{subject:String(unparsedPrior)});
   return { line1Base: epoch, nnn: "001" };
 }
 

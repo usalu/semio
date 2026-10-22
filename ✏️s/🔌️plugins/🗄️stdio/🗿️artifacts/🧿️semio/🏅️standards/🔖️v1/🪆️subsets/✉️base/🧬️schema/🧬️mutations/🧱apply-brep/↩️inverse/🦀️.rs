@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyBrep`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_brep::ApplyBrep>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Brep(b) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyBrep { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Brep(b) => <SemioBrepMutation as ColdMutation<SemioBrepSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyBrep { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

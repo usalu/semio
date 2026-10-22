@@ -14,7 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useId, useState, type FormEvent, type ReactElement } from "react";
+import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, useLabel } from "@semio-tech/ui-react";
 import {
   AGENT_DELEGATION_TTL_CHOICES_SECS_V1,

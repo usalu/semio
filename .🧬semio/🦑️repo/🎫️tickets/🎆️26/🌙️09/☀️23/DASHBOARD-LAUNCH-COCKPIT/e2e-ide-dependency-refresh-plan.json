@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "state": "lock-passed-quiet-corrections-before-sync",
+  "purpose": "Genuine declared JavaScript lock and synchronization after active IDE packaging dependency retirement; no compiler/publication or Git setup.",
+  "steps": [
+    {
+      "id": "dependency-lock",
+      "argv": [
+        "dependencies",
+        "lock",
+        "--all"
+      ],
+      "log": "🗑️generated/e2e-ide-dependencies-lock.log",
+      "artifacts": "🗑️generated/idl1",
+      "state": "passed",
+      "sessionId": 37397,
+      "before": "🗑️generated/e2e-ide-dependencies-lock-before.json",
+      "observedLiveAt": "2026-10-21T15:31:54.989Z",
+      "exitCode": 0,
+      "after": "🗑️generated/e2e-ide-dependencies-lock-after-whole.json"
+    },
+    {
+      "id": "dependency-sync",
+      "argv": [
+        "dependencies",
+        "sync",
+        "--all"
+      ],
+      "log": "🗑️generated/e2e-ide-dependencies-sync.log",
+      "artifacts": "🗑️generated/ids1",
+      "state": "pending",
+      "requires": "dependency-lock actual whole0"
+    }
+  ],
+  "constraints": [
+    "sole producer sequential; no concurrent provider edits",
+    "real native repo ingress and Original/prototype budget",
+    "all actual changes/failures and whole statuses retained",
+    "no generic setup, Git hooks, cache/custody bypass",
+    "canonical Dashboard cold precedes any Dashboard publication"
+  ],
+  "continuation": "Fresh formatter48 only after material fixes and accepted genuine dependency generation; then four Go owners15. Canonical cold owner remains before Dashboard publish/rebuild-capable gates."
+}

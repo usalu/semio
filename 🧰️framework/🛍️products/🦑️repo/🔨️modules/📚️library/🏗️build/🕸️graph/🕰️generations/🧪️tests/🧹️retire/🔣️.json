@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "retention": {
+    "generations": 4,
+    "graceMilliseconds": 600000,
+    "unprovedReferences": "refuse-before-remove"
+  },
+  "cases": [
+    {
+      "id": "healthy-latest",
+      "fault": "none",
+      "current": "latest",
+      "expected": "retire"
+    },
+    {
+      "id": "healthy-old-pointer",
+      "fault": "none",
+      "current": "oldest",
+      "expected": "retire"
+    },
+    {
+      "id": "manifest-read-error",
+      "fault": "error",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-read-undefined",
+      "fault": "undefined",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-read-null",
+      "fault": "null",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-read-false",
+      "fault": "false",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-read-zero",
+      "fault": "zero",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-read-empty",
+      "fault": "empty",
+      "current": "latest",
+      "expected": "primary"
+    },
+    {
+      "id": "manifest-listed-missing",
+      "fault": "listed-missing",
+      "current": "latest",
+      "expected": "refuse"
+    },
+    {
+      "id": "manifest-pointer-missing",
+      "fault": "pointer-missing",
+      "current": "latest",
+      "expected": "refuse"
+    },
+    {
+      "id": "manifest-hash",
+      "fault": "hash",
+      "current": "latest",
+      "expected": "refuse"
+    },
+    {
+      "id": "manifest-json",
+      "fault": "json",
+      "current": "latest",
+      "expected": "refuse"
+    },
+    {
+      "id": "manifest-shape",
+      "fault": "shape",
+      "current": "latest",
+      "expected": "refuse"
+    },
+    {
+      "id": "manifest-old-hash",
+      "fault": "old-hash",
+      "current": "latest",
+      "expected": "refuse"
+    }
+  ]
+}

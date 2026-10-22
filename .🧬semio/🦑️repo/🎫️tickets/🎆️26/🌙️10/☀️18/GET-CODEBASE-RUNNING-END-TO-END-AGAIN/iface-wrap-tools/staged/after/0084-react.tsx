@@ -1,107 +1,190 @@
-// #region 🧲️Header
-/** 📁️ The device's remembered folder bindings — `os.config.local-folders`, an event-sourced, persisted local-only config
- * facet kept in this shell's own storage (never shared, never in a URL) — and the accessible offer to reconnect one. When a
- * program boots holding a document this device once attached to a folder, the shell offers "Reconnect folder"; the person's
- * own action reattaches it, and the folder's archive is restored like a fresh load (`restoreDocumentArchiveV1`). Ticket
- * 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 4.
- * @see ../../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧬️schema/🔣️.json */
-// #endregion 🧲️Header
+/** 🔶️ The scope phase of useCommandBar. */
+import { useCallback, useLayoutEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
+import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, resolveWindowActions } from "@semio-tech/framework";
+import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
+import { spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { ButtonGroup, ButtonGroupItem, cn, ariaKeyshortcutsText, type IconName, interactiveActiveFillClass, NavbarExampleSelect } from "@semio-tech/ui-react";
+import { sharedDocumentRoleSwitchRefusedV1 } from "../../🧭️opening/🟦️.ts";
+import { actionStageKey } from "../../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { buildActiveExampleAction, appOffersRegisteredExamples } from "../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { commandAddressKey, commandCategories, resolveCommands } from "../../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { resolveAppLabel, resolveManifestLabel, surfaceRoleGroupText, appModeGroupText } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { isMutationKindDefinition } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { sessionWindowInstances } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { replayRefusalNoticeTextV1 } from "../../📣️replay-refusal/🟦️.ts";
+import { type ArtifactKindChoiceDraftDefinitionV1, artifactKindChoiceDraftRetirementsV1, SURFACE_ROLE_ICON_IDS } from "../../🧾️space-artifact-creation/🟦️.ts";
+import type { ShellCoreAfterCheckInAndSync } from "../../✅️check-in-sync/🟦️.tsx";
 
-// #region 🔌️Adapters
-import * as React from "../../⚛️react-port/🟦️.ts";
-import { OsShellConfig, type StoragePort } from "@semio-tech/framework";
-import { applyLocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFolderBindings, type LocalFoldersConfigMutation } from "@semio-tech/framework/config/mutations";
-// #endregion 🔌️Adapters
+/** 🔷 Builds scope, hostMode, mobile, locks of useCommandBar. */
+export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAndSync }) {
+  const {
+    scope, hostMode, mobile, locks, dispatch, historyStore, exampleOptionsRef, lastDispatchedExampleIdRef, loadedPlugins,
+    session, localPrograms, uiLocale, uiTerminology, applyHistoryPatch, applyLeftoverInteractionView, landingAppId,
+    appLabelsOverlay, actionPaneStagedArgsByKey, commandStagedArgsByCommandId, activeExampleId, extraWindowInstances,
+    surfaceSwitchBusy, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
+    isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, sharedSpaceAccessRef, sharedSpaceAccessVersion,
+    navigateHistory, dockLayoutStore, dockUiStateStore, panel, focusedProgram, focusedApp, focusedModeId,
+    toolMeasuresByToolIdRef, startTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef, tutorialRecordingRef,
+    tutorialRecorderRef, expandedCommandIdRef, commandStagedArgsByCommandIdRef, injectActiveUtility,
+    directBrowserActorForSession, dispatchDirectBrowserActorCommand, applyHostEffects, onAction, noteShellCommand,
+    onActionStable, applyModeChange, switchToSessionRole, showTransientNotice, isViewerReadOnlyFault,
+    isMutationRejectedFault, showMutationRejectedNotice, controlKeybindings, osCommands, commitUiPreference,
+    selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef
+  } = core;
+  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
+  const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
-//#region 🔖️EventLog
-/** 🫙️ No binding remembered. */
-export const EMPTY_LOCAL_FOLDER_BINDINGS_V1: LocalFolderBindings = { bindings: [] };
+  const focusedPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram?.pluginId)?.manifest, [loadedPlugins, focusedProgram?.pluginId]);
+  const exampleOptions = useMemo(() => {
+    const app = focusedApp;
+    const examples = app ? examplesForApp(focusedPluginManifest?.examples ?? [], app) : [];
+    if (!app || !appOffersRegisteredExamples(app, examples.length)) return [];
+    return examples.map((example) => ({
+      id: example.id,
+      label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
+      icon: "file" as IconName,
+    }));
+  }, [focusedPluginManifest, focusedApp, appLabelsOverlay, uiTerminology, uiLocale]);
+  exampleOptionsRef.current = exampleOptions;
 
-/** 🧾️ The persisted event log of the facet: every mutation this device committed, in order. */
-export type LocalFoldersEventLogV1 = { readonly version: 1; readonly events: readonly LocalFoldersConfigMutation[] };
-
-const text = (value: unknown, maximum: number): value is string => typeof value === "string" && value.length > 0 && value.length <= maximum;
-
-/** 🔎️ One persisted event read against the payload schemas (`📎️attach-local-folder`, `✂️detach-local-folder`); `null` when
- * it is not one. */
-export function localFoldersMutationOfValueV1(value: unknown): LocalFoldersConfigMutation | null {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
-  const row = value as Record<string, unknown>;
-  const keys = Object.keys(row).sort().join(",");
-  if (row.mutation === "detachLocalFolder") return keys === "documentId,mutation" && text(row.documentId, 512) ? { mutation: "detachLocalFolder", documentId: row.documentId } : null;
-  if (row.mutation !== "attachLocalFolder" || keys !== "appId,documentId,folder,mutation,pluginId" || !text(row.documentId, 512) || !text(row.pluginId, 256) || !text(row.appId, 256)) return null;
-  const folder = row.folder as Record<string, unknown> | null;
-  if (typeof folder !== "object" || folder === null || Object.keys(folder).sort().join(",") !== "kind,path" || folder.kind !== "path" || !text(folder.path, 4096)) return null;
-  return { mutation: "attachLocalFolder", documentId: row.documentId, pluginId: row.pluginId, appId: row.appId, folder: { kind: "path", path: folder.path } };
-}
-
-/** 📖️ The facet's committed events; a log that does not read as one is empty — nothing is reattached from it. */
-export function readLocalFolderEventsV1(storage: StoragePort): readonly LocalFoldersConfigMutation[] {
-  const raw = new OsShellConfig(storage).getPreference(LOCAL_FOLDERS_CONFIG_SCHEMA);
-  if (raw === undefined) return [];
-  try {
-    const value = JSON.parse(raw) as { readonly version?: unknown; readonly events?: unknown };
-    if (value.version !== 1 || !Array.isArray(value.events)) return [];
-    const events = value.events.map(localFoldersMutationOfValueV1);
-    return events.every((event) => event !== null) ? (events as LocalFoldersConfigMutation[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-/** 🧮️ The bindings the committed events fold to. */
-export function replayLocalFolderEventsV1(events: readonly LocalFoldersConfigMutation[]): LocalFolderBindings {
-  return events.reduce(applyLocalFoldersConfigMutation, EMPTY_LOCAL_FOLDER_BINDINGS_V1);
-}
-
-/** 📚️ This device's remembered folder bindings. */
-export function readLocalFolderBindingsV1(storage: StoragePort): LocalFolderBindings {
-  return replayLocalFolderEventsV1(readLocalFolderEventsV1(storage));
-}
-
-/** ✍️ Appends one mutation to the facet's local-only log and answers the bindings it folds to. A mutation that changes
- * nothing is not recorded. */
-export function commitLocalFoldersConfigMutationV1(storage: StoragePort, mutation: LocalFoldersConfigMutation): LocalFolderBindings {
-  const events = readLocalFolderEventsV1(storage);
-  const before = replayLocalFolderEventsV1(events);
-  const after = applyLocalFoldersConfigMutation(before, mutation);
-  if (after === before) return before;
-  new OsShellConfig(storage).setPreference(LOCAL_FOLDERS_CONFIG_SCHEMA, JSON.stringify({ version: 1, events: [...events, mutation] } satisfies LocalFoldersEventLogV1));
-  return after;
-}
-//#endregion 🔖️EventLog
-
-//#region 🔖️Reconnect
-/** 🪪️ The program and the document identity a booted session holds. */
-export type LocalFolderIdentityV1 = Readonly<{ documentId: string; pluginId: string; appId: string }>;
-
-/** 📎️ The binding to offer for reconnection: the one remembered for this document in this program, unless the document is
- * attached already. */
-export function localFolderReconnectOfferV1(bindings: LocalFolderBindings, identity: LocalFolderIdentityV1 | null, attachedDocumentIds: ReadonlySet<string>): LocalFolderBinding | null {
-  if (identity === null || attachedDocumentIds.has(identity.documentId)) return null;
-  return bindings.bindings.find((binding) => binding.documentId === identity.documentId && binding.pluginId === identity.pluginId && binding.appId === identity.appId) ?? null;
-}
-
-/** 🏷️ The name a person knows a folder by: its last path segment. */
-export function localFolderNameV1(path: string): string {
-  const segments = path.split(/[\\/]+/u).filter((segment) => segment.length > 0);
-  return segments.at(-1) ?? path;
-}
-
-/** 🛎️ The accessible offer to reconnect a remembered folder: a polite status naming the folder, with "Reconnect folder"
- * (the person's own gesture reattaches it) and "Forget folder". Texts arrive localized. */
-export function LocalFolderReconnectBand(props: Readonly<{ message: string; reconnect: string; forget: string; label: string; busy: boolean; onReconnect: () => void; onForget: () => void }>): React.ReactElement {
-  const { message, reconnect, forget, label, busy, onReconnect, onForget } = props;
-  return (
-    <div role="status" aria-live="polite" aria-label={label} data-semio-folder-reconnect={busy ? "reconnecting" : "offered"} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
-      <span id="s-folder-reconnect-message">{message}</span>
-      <button type="button" id="s-folder-reconnect" className="min-h-medium px-tiny underline" disabled={busy} aria-busy={busy} onClick={onReconnect}>
-        {reconnect}
-      </button>
-      <button type="button" id="s-folder-forget" className="min-h-medium px-tiny underline" disabled={busy} onClick={onForget}>
-        {forget}
-      </button>
-    </div>
+  const dispatchActiveExample = useCallback(
+    (exampleId: string) => {
+      if (!session || !focusedApp || !focusedProgram) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
+      if (!plugin) return;
+      return onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
+    },
+    [loadedPlugins, onAction, session, focusedApp, focusedProgram],
   );
+
+  /** 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  const exampleSelectElement = useMemo(() => {
+    if (!session || !focusedApp || exampleOptions.length === 0 || locks.exampleId || (hostMode && focusedApp.id === landingAppId)) return null;
+    return (
+      <NavbarExampleSelect
+        key="fixture"
+        id="playground.navbar.fixture"
+        value={activeExampleId}
+        options={exampleOptions}
+        onValueChange={(exampleId) => {
+          if (exampleId) lastDispatchedExampleIdRef.current = exampleId;
+          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+          dispatchActiveExample(exampleId || "");
+        }}
+      />
+    );
+  }, [session, focusedApp, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
+
+  /** 🧮️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`).
+   * `aria-keyshortcuts` republishes the two framework mode-cycling chords on the GROUP, which is where
+   * they belong: the chords step through the group rather than addressing any one button. */
+  const modeSwitcherElement = useMemo(() => {
+    if (!session || session.app.modes.length <= 1) return null;
+    const stepShortcuts = ariaKeyshortcutsText([controlKeybindings.get(MODE_STEP_CONTROL_IDS.next), controlKeybindings.get(MODE_STEP_CONTROL_IDS.previous)].filter(Boolean).join(","));
+    return (
+      <ButtonGroup key="modes" id="playground.navbar.modes" role="group" aria-label={appModeGroupText(uiLocale)} aria-keyshortcuts={stepShortcuts}>
+        {session.app.modes.map((mode) => {
+          const isActive = activeModeId === mode.id;
+          return (
+            <ButtonGroupItem
+              key={mode.id}
+              id={`playground.navbar.modes.${mode.id}`}
+              className={cn(isActive && interactiveActiveFillClass)}
+              data-state={isActive ? "on" : undefined}
+              aria-pressed={isActive}
+              onClick={() => applyModeChange(mode.id)}
+              icon={mode.iconId}
+              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label as LocalizedLabel | string, uiTerminology, uiLocale))}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }, [session, activeModeId, applyModeChange, appLabelsOverlay, controlKeybindings, uiTerminology, uiLocale]);
+
+  /** 👁️✏️ The plugin's editor/viewer pair for the OPEN document's dialect, or `null` when it declares
+   * fewer than two surfaces for it — which is exactly when the role group must not render. */
+  const sessionRoleApps = useMemo((): Readonly<Record<AppRole, AppDefinition>> | null => {
+    if (!session) return null;
+    const apps = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.manifest.apps ?? [];
+    return surfaceRoleAppsV1(apps, session.app.dialect);
+  }, [loadedPlugins, session]);
+
+  /** 🔸️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
+   * reload (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 2). Labels come from each target
+   * `AppDefinition`'s OWN localized label, so en/de follow the plugin rather than a shell dictionary.
+   * Shares the mode switcher's placement in both the desktop navbar cluster and the mobile "App" tab. */
+  const roleSwitcherElement = useMemo(() => {
+    if (!session || sessionRoleApps === null) return null;
+    const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId)?.scope;
+    const access = scope === undefined ? null : (sharedSpaceAccessRef.current.get(scope.spaceId) ?? null);
+    const refused = (role: AppRole, isActive: boolean): boolean => !isActive && sharedDocumentRoleSwitchRefusedV1(access, role);
+    return (
+      <ButtonGroup key="roles" id="playground.navbar.roles" role="group" aria-label={surfaceRoleGroupText(uiLocale)} aria-busy={surfaceSwitchBusy || undefined}>
+        {SURFACE_ROLE_ORDER.map((role) => {
+          const app = sessionRoleApps[role];
+          const isActive = session.app.role === role;
+          return (
+            <ButtonGroupItem
+              key={role}
+              id={SURFACE_ROLE_CONTROL_IDS[role]}
+              className={cn(isActive && interactiveActiveFillClass)}
+              data-state={isActive ? "on" : undefined}
+              data-role={role}
+              aria-pressed={isActive}
+              disabled={(surfaceSwitchBusy && !isActive) || refused(role, isActive)}
+              aria-description={refused(role, isActive) ? replayRefusalNoticeTextV1("view-only-access", uiLocale) : undefined}
+              aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
+              onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`role switch to ${role} failed`, switchError))}
+              icon={SURFACE_ROLE_ICON_IDS[role]}
+              text={resolveManifestLabel(app.label as LocalizedLabel | string, uiTerminology, uiLocale)}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
+
+  const resolvedCommands = useMemo(() => {
+    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
+    return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
+  }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins, selectedSpaceArtifactKinds]);
+
+  useLayoutEffect(() => {
+    const revision = selectedSpaceArtifactCreationCatalog?.choiceRevision;
+    if (artifactCreationChoiceRevisionRef.current === revision) return;
+    artifactCreationChoiceRevisionRef.current = revision;
+    const choiceArgs = (args: readonly { readonly id: string; readonly schema: { readonly kind: string; readonly format?: { readonly kind: string } } }[]) =>
+      args.map((arg) => ({ id: arg.id, artifactKind: arg.schema.kind === "string" && arg.schema.format?.kind === "artifactKind" }));
+    const actionDefinitions: ArtifactKindChoiceDraftDefinitionV1[] = [];
+    if (session !== null) {
+      for (const instance of sessionWindowInstances(session.app, extraWindowInstances)) {
+        const kind = session.app.windowKinds.find((candidate) => candidate.id === instance.windowKindId);
+        if (kind === undefined) continue;
+        for (const definition of resolveWindowActions(session.app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
+      }
+    }
+    for (const spawned of panel?.spawnedApps ?? []) {
+      const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (app === undefined) continue;
+      for (const instance of spawnedProgramWindowInstancesV1(spawned.id, app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds))) {
+        const kind = app.windowKinds.find((candidate) => candidate.id === instance.windowKindId);
+        if (kind === undefined) continue;
+        for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
+      }
+    }
+    for (const retirement of artifactKindChoiceDraftRetirementsV1(actionPaneStagedArgsByKey, actionDefinitions)) {
+      const split = retirement.ownerId.lastIndexOf(":");
+      if (split < 1) continue;
+      dispatch({ type: "STAGE_ACTION_ARG", windowId: retirement.ownerId.slice(0, split), actionId: retirement.ownerId.slice(split + 1), argId: retirement.argId, value: undefined });
+    }
+    const commandDefinitions = resolvedCommands.map((entry) => ({ ownerId: commandAddressKey(entry.address), args: choiceArgs(entry.definition.args) }));
+    for (const retirement of artifactKindChoiceDraftRetirementsV1(commandStagedArgsByCommandId, commandDefinitions)) {
+      dispatch({ type: "STAGE_COMMAND_ARG", commandId: retirement.ownerId, argId: retirement.argId, value: undefined });
+    }
+  }, [actionPaneStagedArgsByKey, commandStagedArgsByCommandId, extraWindowInstances, loadedPlugins, panel?.spawnedApps, resolvedCommands, selectedSpaceArtifactCreationCatalog?.choiceRevision, session]);
+
+  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
+  return { resolvedCommands, expandedCommandIdRef, dispatch, commandStagedArgsByCommandIdRef, startTutorialRef, toggleTutorialRecordingRef, scope, navigateHistory, commitUiPreference, dockLayoutStore, dockUiStateStore, locks, noteShellCommand, uiTerminology, session, tutorialRecordingRef, tutorialDrivenRef, tutorialRecorderRef, loadedPlugins, showTransientNotice, uiLocale, injectActiveUtility, captureDialogOrigin, isCurrentDialogOrigin, directBrowserActorForSession, dispatchDirectBrowserActorCommand, captureEffectOwner, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, isViewerReadOnlyFault, isMutationRejectedFault, showMutationRejectedNotice, historyStore, uiTerminologyRef, replayShellOwnedCommandRef, mobile, commandCategoryList, focusedApp, focusedModeId, toolMeasuresByToolIdRef, onActionStable, focusedPluginManifest, exampleOptions, dispatchActiveExample, exampleSelectElement, modeSwitcherElement, roleSwitcherElement };
 }
-//#endregion 🔖️Reconnect

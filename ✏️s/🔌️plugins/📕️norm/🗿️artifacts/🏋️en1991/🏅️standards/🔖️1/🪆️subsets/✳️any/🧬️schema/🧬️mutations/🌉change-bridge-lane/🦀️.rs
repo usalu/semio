@@ -21,7 +21,13 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeBridgeLane where O
         record: "ChangedBridgeLane",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change number of notional lanes", "Anzahl der rechnerischen Fahrstreifen ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1991Snapshot, Op> for ChangeBridgeLane where Op: protocol::ColdMutation<En1991Snapshot, ReferenceDiff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::change_bridge_lane::ChangeBridgeLane> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1991Snapshot>>::ReferenceDiff> {
         crate::change_bridge_lane::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,9 +36,6 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeBridgeLane where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change number of notional lanes", "Anzahl der rechnerischen Fahrstreifen ändern")
-    }
 }
 //#endregion 🔖️Payload
 

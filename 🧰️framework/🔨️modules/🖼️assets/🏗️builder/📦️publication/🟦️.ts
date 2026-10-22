@@ -3,7 +3,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { renderCatalogArtifacts, type AssetArtifact } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builder/📽️projection/🟦️.ts";
 
-const assetsRoot = (): string => join(import.meta.dir, "..", "..");
+const assetsRoot = (): string => join(import.meta.dirname, "..", "..");
 
 function assetOutputRoots(): readonly string[] {
   const root = assetsRoot();

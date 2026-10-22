@@ -8,7 +8,7 @@
  * file keeps the scene-less fallback and the JSX. */
 // #endregion 🧲️Header
 
-import { Suspense } from "react";
+import { Suspense } from "../⚛️react-port/🟦️.ts";
 
 // #region 🔌️Adapters
 import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";

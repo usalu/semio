@@ -59,3 +59,12 @@ test("the platform-keyed gates of the directory partition read the declared plat
  expect(gate.length).toBe(3);
  for(const row of gate)expect(JSON.parse("["+row.slice(2,row.indexOf("]"))+"]")).toEqual([...declared]);
 });
+
+test("every name the explicit public facade of the platform contract re-exports still exists in the contract",()=>{
+ const facade=readFileSync(join(processRoot,"📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),"utf8"),contract=readFileSync(join(storageRoot,"🌐️platform/📋️contract/🟦️.ts"),"utf8"),statfs=readFileSync(join(storageRoot,"🌐️platform/📋️contract/📐️statfs/🟦️.ts"),"utf8");
+ const exported=new Set([...(contract+statfs).matchAll(/export\s+(?:async\s+)?(?:function|const|interface|type)\s+([A-Za-z0-9_]+)/gu)].map(match=>match[1]!));
+ for(const block of (contract+statfs).matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/gu))for(const item of block[1]!.split(","))if(item.trim())exported.add(item.trim().replace(/^type\s+/u,""));
+ const wanted=[...facade.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/gu)].flatMap(block=>block[1]!.split(",").map(item=>item.trim().replace(/^type\s+/u,"")).filter(Boolean));
+ expect(wanted.length).toBeGreaterThan(30);
+ expect(wanted.filter(name=>!exported.has(name))).toEqual([]);
+});

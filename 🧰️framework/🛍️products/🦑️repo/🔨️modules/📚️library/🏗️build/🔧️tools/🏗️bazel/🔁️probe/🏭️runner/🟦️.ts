@@ -5,6 +5,7 @@ import {dirname,join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {bazelProbeArgumentsV1,bazelProbeDigestsV1,bazelProbeWorkspacePrefixV1,bazelProbeWorkspaceV1,renderBazelProbeV1,type BazelProbeOptionsV1} from "../🟦️.ts";
 import type {CacheProbeSpecV1} from "../../../../⚙️operations/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🏃️ The wire of one probe run, written by `bazelCacheProbeV1` and read here. */
 export type BazelProbeRunV1=Readonly<{options:BazelProbeOptionsV1;specification:CacheProbeSpecV1;task:string;fixture:string;environment:Readonly<Record<string,string|undefined>>}>;
@@ -38,4 +39,4 @@ export function runBazelProbeV1(run:BazelProbeRunV1,base:string=tmpdir()):number
  return 0;
 }
 
-if(import.meta.main)process.exit(runBazelProbeV1(JSON.parse(process.env.SEMIO_BAZEL_PROBE!) as BazelProbeRunV1));
+if(isMainModuleV1(import.meta.url))process.exit(runBazelProbeV1(JSON.parse(process.env.SEMIO_BAZEL_PROBE!) as BazelProbeRunV1));

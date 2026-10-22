@@ -76,6 +76,7 @@ def pattern_schema(t):
         raise Drift("caller schema: pattern not found")
     return t.replace('"pattern": "^(nx|bazel)$"','"pattern": "^[a-z][a-z0-9-]{0,31}$"')
 def remote_schema(t):
+    if '"tool"' not in t:return t
     old='"tool": { "enum": ["nx", "bazel"] }'
     new='"tool": '+ID
     if old not in t and new in t:return t
@@ -118,7 +119,7 @@ def incr_command(depth):
         return t
     return edit
 def child(t):
-    pat=r'command==="tools"\?\(tools!=="bazel"\?\["--version"\]:undefined\):command==="reset"\?\(selected\.tool==="nx"\?\["reset"\]:undefined\):selected\.tool==="nx"&&(?:!\[[^\]]*\]\.includes\(command\?\?""\)|command!=="watch"&&!buildOperationHasNeutralBootstrapV1\(command\?\?""\))\?nxOperationArgumentsV1\(invocation\.args\):undefined'
+    pat=r'command==="tools"\?\(tools!=="bazel"\?\["--version"\]:undefined\):command==="reset"\?\(selected\.tool==="nx"\?\["reset"\]:undefined\):selected\.tool==="nx"&&.*?\?nxOperationArgumentsV1\(invocation\.args\):undefined'
     new='await(await import("../../'+BK+'/'+TS+'")).buildBackendBootstrapArgumentsV1(invocation.args,selected.tool)'
     if new in t and not re.search(pat,t):return t
     if len(re.findall(pat,t))!=1:raise Drift("child: bootstrap expression not found once")
@@ -179,7 +180,7 @@ def conformance_child(t):
     if 'resolved.args[0]==="conformance"' in t:return t
     anchor='  if(resolved.args[0]==="concurrency"){'
     if t.count(anchor)!=1:raise Drift("child: concurrency validation not found once")
-    add='  if(resolved.args[0]==="conformance"){const {buildInvocationRequestsHelpV1}=await import("../../%s/%s");if(!buildInvocationRequestsHelpV1(resolved.args)){const {conformanceArgumentsV1}=await import("../../%s/%s/%s");conformanceArgumentsV1(resolved.args.slice(1));}}\n'%(T["INVOCATION"],TS,T["CONF"],T["COMMAND"],TS)
+    add='  if(resolved.args[0]==="conformance"){const {buildInvocationRequestsHelpV1}=await import("../../%s/%s");if(!buildInvocationRequestsHelpV1(resolved.args)){const {conformanceRequestV1}=await import("../../%s/%s/%s");conformanceRequestV1(resolved.args);}}\n'%(T["INVOCATION"],TS,T["CONF"],T["COMMAND"],TS)
     return t.replace(anchor,add+anchor,1)
 
 def operations_test(t):
@@ -201,6 +202,21 @@ def incr_test(depth):
         t=t.replace('expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});','expect((row as {implementations?:unknown}).implementations).toBeUndefined();')
         return t
     return edit
+
+def operations_bootstrap(t):
+    old='return operation?.requires==="none"&&operation.implementations.nx==="neutral"&&operation.implementations.bazel==="neutral";'
+    new='return operation?.requires==="none"&&buildBackendIdsV1().every(id=>(buildBackendRowV1(id).operations[name]??"neutral")==="neutral");'
+    if "buildOperationHasNeutralBootstrapV1" not in t:return t
+    t=sub(t,old,new,"operations neutral bootstrap")
+    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../{BK}/{TS}";',"operations bootstrap import")
+def birth_test(t):
+    if "implementations.nx" not in t:return t
+    sql_old="select coalesce((select json_extract(value,'$.requires')='none' and json_extract(value,'$.implementations.nx')='neutral' and json_extract(value,'$.implementations.bazel')='neutral' from json_each(?1,'$.operations') where json_extract(value,'$.name')=?2),0) value"
+    sql_new="select coalesce((select json_extract(o.value,'$.requires')='none' and not exists (select 1 from json_each(json_extract(o.value,'$.implementations')) i where i.value!='neutral') from json_each(?1,'$.operations') o where json_extract(o.value,'$.name')=?2),0) value"
+    if sql_old not in t:raise Drift("birth test: oracle query not found")
+    t=t.replace(sql_old,sql_new)
+    t=t.replace('.get(JSON.stringify(operations),row.operation)','.get(JSON.stringify({...operations,operations:operations.operations.map((operation:{name:string})=>({...operation,implementations:Object.fromEntries(buildBackendIdsV1().map((id:string)=>[id,buildBackendRowV1(id).operations[operation.name]??"neutral"]))}))}),row.operation)')
+    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../../../{BK}/{TS}";',"birth test import")
 def p(*parts):return "/".join(parts)
 SC=T["SCHEMA"]
 EDITS=[
@@ -208,6 +224,7 @@ EDITS=[
  (p(B,T["INVOCATION"],TS),invocation),
  (p(B,T["CALLER"],n(0x1F4E4,"child"),TS),child),
  (p(B,T["OPERATIONS"],TS),operations),
+ (p(B,T["OPERATIONS"],TS),operations_bootstrap),
  (p(B,T["CALLER"],TS),caller),
  (p(B,T["CALLER"],T["ORCH"],MJS),orchestration),
  (p(B,T["CALLER"],T["ORCH"],n(0x1F7E8,".d.mts")),orchestration_types),
@@ -228,6 +245,7 @@ EDITS=[
  (p(B,names.SCRIPT),conformance_script),
  (p(B,T["CALLER"],n(0x1F4E4,"child"),TS),conformance_child),
  (p(B,T["OPERATIONS"],T["TESTS"],TS),operations_test),
+ (p(B,T["CALLER"],T["TESTS"],n(0x1F4E5,"birth"),TS),birth_test),
  (p(B,T["INVOCATION"],T["TESTS"],TS),invocation_test),
  (p(B,T["INCR"],T["TESTS"],TS),incr_test(2)),
  (p(B,T["INCR"],n(0x1F91D,"concurrent"),T["TESTS"],TS),incr_test(3)),
@@ -247,12 +265,14 @@ def script(t):
         if S.digest(S.part(s,k))!=v:raise Drift(f"script: slice {k} changed since the adapters were cut; run gen-backends.py again")
     lines=s["lines"]
     BKI='./'+BK+'/'+TS
+    toolchains=lines[S.find(lines,'      if(tools==="toolchains"||tools==="all"){')]
     tools=f'''    if(command==="tools"){{
       const {{buildBackendIdsV1,buildBackendAlternationV1,loadBuildBackendV1,requireBuildBackendIdV1}}=await import("{BKI}");
-      if(resolved.args[1]!=="setup"||resolved.args.length>3)throw new Error(`Expected repo tools setup [${{buildBackendAlternationV1()}}|all]`);
+      if(resolved.args[1]!=="setup"||resolved.args.length>3)throw new Error(`Expected repo tools setup [${{buildBackendAlternationV1()}}|toolchains|all] or repo tools verify [tool...]`);
       const tools=resolved.args[2]??selected.tool;
-      if(tools!=="all")requireBuildBackendIdV1(tools);
-      for(const id of tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({{root,invocation,phase:phaseControl,args:resolved.args,tool:id}});
+      if(!["toolchains","all"].includes(tools))requireBuildBackendIdV1(tools);
+{toolchains}
+      for(const id of tools==="toolchains"?[]:tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({{root,invocation,phase:phaseControl,args:resolved.args,tool:id}});
       return;
     }}'''
     reset=f'''    if(command==="reset"){{
@@ -274,3 +294,10 @@ def script_edit(t):
     return script(t)
 EDITS[0]=(EDITS[0][0],script_edit)
 def storage_fix(t):return storage(t)
+
+import wire2
+EDITS+=wire2.EDITS
+import wire3
+EDITS+=wire3.EDITS
+POST=wire3.POST
+REQUIRES=wire3.REQUIRES

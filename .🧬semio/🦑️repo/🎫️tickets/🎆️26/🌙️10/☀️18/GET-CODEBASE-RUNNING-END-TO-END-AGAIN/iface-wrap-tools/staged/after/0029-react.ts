@@ -1,260 +1,185 @@
-import type { InteractionTarget } from "@semio-tech/framework";
-/** 🏗️ World3dHost brush meshes and menus: the brush mesh queue and registration, the mesh re-upload, the frame and zoom handlers, the context menu dispatch and the suggestion rows and submenu search. */
-import { useCallback, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
-import { Box3, Vector3 } from "@semio-tech/ui-react";
-import {
-  createCoalescingActionDispatcher,
-  type Puzzle3dBrushMeshPage,
-  puzzle3dAnnounceableBrushMeshUrls,
-  puzzle3dBrushMeshDigest,
-  puzzle3dBrushMeshPages,
-  drainPuzzle3dBrushMeshQueue,
-  PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES,
-  puzzle3dBrushMeshRegistry
-} from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
-import { suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";
-import { world3dBoundsRadius, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances } from "../🔭️scene-schema/🟦️.ts";
-import { world3dRetainLocalVortexHover } from "../🔗️instance-selection/🟦️.ts";
-import { suggestionMenuItems } from "../🎯️marquee-and-bridges/🟦️.tsx";
-import { useShellContextMenuFallback, useMapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import type { WorldCore2 } from "../🧭️fit-and-presence/🟦️.ts";
+/** 🔶️ The attractions phase of useWorldFitAndPresence. */
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
+import type { ThreeCamera } from "@semio-tech/ui-react";
+import { useChromePanelSafeArea, useLabel, uiSpacingPx, type SelectionMarqueePoint, Group } from "@semio-tech/ui-react";
+import { useToolRunTraceCursorEcho, useToolRunTraceStore } from "../../⏯️tool-run-trace/🟦️.tsx";
+import { world3dComputeStatusV1 } from "@semio-tech/framework";
+import { DEFAULT_MANUAL_LOD } from "@semio-tech/framework/infinite/world/r3f";
+import { declareSurfaceCancelAction } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
+import { useLocalPresenceActorIdV1, usePresenceRuntimeKeyV1 } from "../../../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../../👕️canvas-presence/🟦️.ts";
+import { type WorldVortexRecord } from "../../🔭️scene-schema/🟦️.ts";
+import { getWorldGumballTransformPreview, getWorldGumballTransformPreviewServerSnapshot, subscribeWorldGumballTransformPreview, worldAttractionsWithGumballPreview, worldGumballOwnerPoses, worldVorticesWithGumballPreview } from "../../🧮️gumball-math/🟦️.ts";
+import { getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, subscribeWorldCatalogueDropPreview, subscribeWorldSelectionPreview } from "../../🗂️catalogue-drop/🟦️.tsx";
+import { type SurfaceContextMenuResult } from "../../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import type { WorldCore1 } from "../../🌍️scene-lanes/🟦️.ts";
 
-// #region World3dHost
-/** 🏗️ Runs the brush mesh queue and builds the world context menu and suggestion rows. */
-export function useWorldBrushMeshAndMenus(core: WorldCore2) {
-  const { adoptViewportCamera, autoFitBounds, brushMode, cameraState, contextMenu, dispatch, dispatchSettled, hostRef, instances, instancesGroupRef, interaction, meshes, node, noteUserMovedCamera, onAction, selection, setConnectDragHoverPosition, setConnectDragSource, setSuggestionFocus, setVortexPointerArm, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow, windowInstanceId } = core;
-  const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
-  const brushMeshRunsRef = useRef(new Map<string, string>());
-  const brushMeshDrainingRef = useRef(false);
-  const brushMeshLiveRef = useRef(true);
-  const [brushMeshRevisions, setBrushMeshRevisions] = useState<{ readonly generation: number; readonly urls: Readonly<Record<string, number>> }>({ generation: 0, urls: {} });
-  /** 🥽️ `dispatch`'s awaitable twin for the one lane that needs back pressure — same envelope, but the
-   * caller can wait for the page to be IN before it queues the next one. */
-  const dispatchBrushMesh = useCallback(
-    (args: Record<string, unknown>): Promise<unknown> =>
-      Promise.resolve(
-        onAction({
-          controllerId: node.controllerId,
-          action: "registerBrushMesh",
-          args: { surfaceId: node.surfaceId, windowId: windowInstanceId ?? node.surfaceId, ...args },
-        }),
-      ),
-    [node.controllerId, node.surfaceId, onAction, windowInstanceId],
-  );
-  const drainBrushMeshQueue = useCallback(async () => {
-    if (brushMeshDrainingRef.current) return;
-    brushMeshDrainingRef.current = true;
-    try {
-      await drainPuzzle3dBrushMeshQueue(
-        brushMeshQueueRef.current,
-        {
-          holdsDigest: (digest) => puzzle3dBrushMeshRegistry.holdsDigest(digest),
-          mayAlias: (url) => puzzle3dBrushMeshRegistry.mayAlias(url),
-          alias: (url, digest) => {
-            brushMeshRunsRef.current.delete(url);
-            puzzle3dBrushMeshRegistry.alias(url, digest);
-          },
-          confirm: (url, digest) => {
-            brushMeshRunsRef.current.delete(url);
-            puzzle3dBrushMeshRegistry.confirm(url, digest);
-          },
-        },
-        dispatchBrushMesh,
-        () => brushMeshLiveRef.current,
-      );
-    } finally {
-      brushMeshDrainingRef.current = false;
+/** 🔷 Builds attractions, cameraState, contentBounds, fit of useWorldFitAndPresence. */
+export function useAttractionsState({ core }: { readonly core: WorldCore1 }) {
+  const { attractions, cameraState, contentBounds, fit, instances, interaction, interactionDomainId, lastDispatchedWorldCameraRef, liveFitRevisionRef, lod, meshes, node, onAction, persistentSelectionMode, references, retainViewport, scene, sceneCamera, selection, setDetachEpoch, setViewportCamera, setViewportOwned, targetVolumes, vortices, windowInstanceId } = core;
+  /** 📦️ The producer's OWN delivered extent, when it published one — the single thing this pane frames,
+   * for the boot framing AND for the `Frame visible` button.
+   *
+   * ⚖️ Measured 2026-09-15 on the served generation3d preview: `Frame visible` left the camera on its seed
+   * pose because `Box3.setFromObject(instancesGroupRef)` came back empty for a payload whose geometry rides
+   * inline `data` buffers, and the instance fallback then framed a table of instances that all sit at the
+   * origin (the geometry is baked into the mesh, not into the instance transform). A pane can only frame
+   * what it can measure — so the producer publishes what it delivered
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
+  const autoFitBounds = useMemo<readonly [readonly number[], readonly number[]] | null>(() => {
+    const minimum = fit?.boundsMin;
+    const maximum = fit?.boundsMax;
+    if (!Array.isArray(minimum) || !Array.isArray(maximum) || minimum.length < 3 || maximum.length < 3) return null;
+    if (!minimum.every((value) => Number.isFinite(value)) || !maximum.every((value) => Number.isFinite(value))) return null;
+    if ((minimum as number[]).every((value, axis) => value === (maximum as number[])[axis])) return null;
+    return [minimum, maximum];
+  }, [fit?.boundsMin, fit?.boundsMax]);
+  /** ✂️ Half the side of the section cap plane: twice the delivered extent's diagonal, so the cap covers the cut wherever the plane origin sits. */
+  const sectionExtent = useMemo(() => {
+    if (autoFitBounds) return Math.max(1, 2 * Math.hypot(autoFitBounds[1][0]! - autoFitBounds[0][0]!, autoFitBounds[1][1]! - autoFitBounds[0][1]!, autoFitBounds[1][2]! - autoFitBounds[0][2]!));
+    if (contentBounds) return Math.max(1, 4 * Math.hypot(contentBounds.halfExtent[0], contentBounds.halfExtent[1], contentBounds.halfExtent[2]));
+    return 100;
+  }, [autoFitBounds, contentBounds]);
+  liveFitRevisionRef.current = fit?.revision ?? 0;
+  const computeStatus = useMemo(() => world3dComputeStatusV1(scene?.statusJson), [scene?.statusJson]);
+  const computing = computeStatus.computing;
+  const toolRunTrace = useToolRunTraceStore(scene?.toolRunTrace, useToolRunTraceCursorEcho(windowInstanceId));
+  const cancelActionId = computeStatus.cancellable ? computeStatus.cancelAction : "";
+  useEffect(() => declareSurfaceCancelAction(cancelActionId), [cancelActionId]);
+  const activeUtility = interaction.activeUtility ?? "select";
+  const brushMode = activeUtility === "brush";
+  const volumeBrushMode = activeUtility === "volumeBrush";
+  const relocateMode = activeUtility === "worldRelocate";
+  const volumeLayersInteractive = !brushMode && !volumeBrushMode;
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const presencePublishAtRef = useRef(0);
+  const presencePointerRef = useRef<{ point: readonly [number, number, number]; ray: readonly [number, number, number] } | null>(null);
+  const presenceRuntimeKey = usePresenceRuntimeKeyV1();
+  const presenceWindowId = windowInstanceId || node.surfaceId || "world";
+  const localPresenceActor = useLocalPresenceActorIdV1(presenceRuntimeKey);
+  const presenceObjectWorldPositions = useMemo(() => {
+    const map: Record<string, readonly [number, number, number]> = {};
+    for (const instance of instances) {
+      if (!instance.id) continue;
+      const position =
+        instance.position ??
+        ([instance.x ?? 0, instance.y ?? 0, instance.z ?? 0] as [number, number, number]);
+      map[instance.id] = position;
     }
-  }, [dispatchBrushMesh]);
-  const handleRegisterBrushMesh = useCallback(
-    (url: string, positions: number[], indices: number[]) => {
-      const digest = puzzle3dBrushMeshDigest(positions, indices);
-      if (puzzle3dBrushMeshRegistry.holds(url, digest)) {
-        void dispatchBrushMesh({ url, digest });
-        return;
-      }
-      if (puzzle3dBrushMeshRegistry.mayAlias(url) && puzzle3dBrushMeshRegistry.holdsDigest(digest)) {
-        puzzle3dBrushMeshRegistry.alias(url, digest);
-        void dispatchBrushMesh({ url, digest });
-        return;
-      }
-      if (brushMeshRunsRef.current.get(url) === digest) return;
-      const pages = puzzle3dBrushMeshPages(url, node.surfaceId, positions, indices);
-      if (pages.length === 0 || brushMeshQueueRef.current.length + pages.length > PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES) return;
-      brushMeshRunsRef.current.set(url, digest);
-      brushMeshQueueRef.current.push(...pages);
-      void drainBrushMeshQueue();
-    },
-    [dispatchBrushMesh, drainBrushMeshQueue, node.surfaceId],
-  );
-  useEffect(
-    () => () => {
-      brushMeshLiveRef.current = false;
-      for (const page of brushMeshQueueRef.current.splice(0)) {
-        brushMeshRunsRef.current.delete(page.url);
-        puzzle3dBrushMeshRegistry.forget(page.url);
-      }
-    },
-    [],
-  );
-  const meshResidency = interaction.meshResidency;
-  const meshReuploadUrls = interaction.meshReuploadUrls;
-  useEffect(() => {
-    if (meshResidency === undefined) return;
-    const restarted = puzzle3dBrushMeshRegistry.observeResidency(meshResidency);
-    const claimed = (meshReuploadUrls ?? []).filter((url) => puzzle3dBrushMeshRegistry.claimReupload(url));
-    if (!restarted && claimed.length === 0) return;
-    setBrushMeshRevisions((previous) => {
-      const urls: Record<string, number> = { ...previous.urls };
-      for (const url of claimed) urls[url] = (previous.urls[url] ?? 0) + 1;
-      return { generation: previous.generation + (restarted ? 1 : 0), urls };
-    });
-  }, [meshResidency, meshReuploadUrls]);
+    return map;
+  }, [instances]);
 
-  const brushMeshUrls = useMemo(() => puzzle3dAnnounceableBrushMeshUrls(meshResidency, meshes), [meshResidency, meshes]);
-
-  const handleFrameVisibleInstances = useCallback(() => {
-    noteUserMovedCamera();
-    const aspect = hostRef.current ? Math.max(hostRef.current.clientWidth, 1) / Math.max(hostRef.current.clientHeight, 1) : 1;
-    if (autoFitBounds) {
-      const [minimum, maximum] = autoFitBounds;
-      const center: [number, number, number] = [((minimum[0] ?? 0) + (maximum[0] ?? 0)) * 0.5, ((minimum[1] ?? 0) + (maximum[1] ?? 0)) * 0.5, ((minimum[2] ?? 0) + (maximum[2] ?? 0)) * 0.5];
-      adoptViewportCamera(world3dFrameCameraFromBounds(center, world3dBoundsRadius(minimum, maximum), cameraState, undefined, aspect), true);
-      return;
-    }
-    const group = instancesGroupRef.current;
-    if (group) {
-      const box = new Box3().setFromObject(group);
-      if (!box.isEmpty()) {
-        const center = box.getCenter(new Vector3());
-        const radius = world3dBoundsRadius([box.min.x, box.min.y, box.min.z], [box.max.x, box.max.y, box.max.z]);
-        if (radius > 1e-6) {
-          adoptViewportCamera(world3dFrameCameraFromBounds([center.x, center.y, center.z], radius, cameraState, undefined, aspect), true);
-          return;
-        }
-      }
-    }
-    adoptViewportCamera(world3dFrameCameraFromInstances(instances, cameraState), true);
-  }, [adoptViewportCamera, autoFitBounds, noteUserMovedCamera, cameraState, instances]);
-
-  const handleZoomToSelection = useCallback(() => {
-    const selectedIds = new Set(selection.ids ?? []);
-    if (selectedIds.size === 0) {
-      handleFrameVisibleInstances();
-      return;
-    }
-    const selected = instances.filter((instance) => selectedIds.has(instance.id));
-    if (selected.length === 0) {
-      handleFrameVisibleInstances();
-      return;
-    }
-    let centerX = 0;
-    let centerY = 0;
-    let centerZ = 0;
-    for (const instance of selected) {
-      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-      centerX += position[0];
-      centerY += position[1];
-      centerZ += position[2];
-    }
-    const count = selected.length;
-    centerX /= count;
-    centerY /= count;
-    centerZ /= count;
-    let maxDistance = 1;
-    for (const instance of selected) {
-      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
-      const dx = position[0] - centerX;
-      const dy = position[1] - centerY;
-      const dz = position[2] - centerZ;
-      maxDistance = Math.max(maxDistance, Math.hypot(dx, dy, dz));
-    }
-    const distance = maxDistance * 3 + 2;
-    adoptViewportCamera(
-      {
-        position: [centerX + distance * 0.6, centerY - distance * 0.6, centerZ + distance * 0.5],
-        target: [centerX, centerY, centerZ],
-        zoom: cameraState.zoom,
-        up: cameraState.up,
-        projection: cameraState.projection,
+  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
+  const publishWorldPresenceView = useCallback((pointer?: readonly [number, number, number] | null, rayOrigin?: readonly [number, number, number]) => {
+    if (pointer !== undefined) presencePointerRef.current = pointer === null ? null : { point: pointer, ray: rayOrigin ?? cameraState.position as [number, number, number] };
+    const now = Date.now();
+    if (pointer !== null && now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    presencePublishAtRef.current = now;
+    const rect = hostRef.current?.getBoundingClientRect();
+    const size: [number, number] = [Math.max(1, rect?.width ?? 1), Math.max(1, rect?.height ?? 1)];
+    const cursor = presencePointerRef.current;
+    if (!presenceRuntimeKey) return;
+    publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
+      windowId: presenceWindowId,
+      space: "world",
+      kind: {
+        kind: "orbit",
+        position: cameraState.position as [number, number, number],
+        target: cameraState.target as [number, number, number],
+        up: (cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1],
+        fov: cameraState.fov ?? 45,
       },
-      true,
-    );
-  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, handleFrameVisibleInstances, instances, selection.ids]);
-
-  const handleWorldMenuDispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      if (action === "zoomToSelection") {
-        handleZoomToSelection();
-        return;
-      }
-      dispatch(action, args);
-    },
-    [dispatch, handleZoomToSelection],
-  );
-
-  const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
-  const shellContextMenuFallback = useShellContextMenuFallback();
-  const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
-    if (action === "acceptSuggestion") {
-      setVortexPointerArm(null);
-      setConnectDragSource(null);
-      setConnectDragHoverPosition(null);
-    }
-    dispatch(action, args);
-  });
-  useSuggestionSubmenuSearch(contextMenu?.suggestTarget ?? null, { x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 }, windowInstanceId ?? undefined, dispatch, () => setSuggestionFocus(null));
-  useEffect(() => {
-    if (!suggestionMenuOwnsThisWindow) setSuggestionFocus(null);
-  }, [suggestionMenuOwnsThisWindow]);
-  /** 📂️ The candidate rows one suggestion menu lists — the context menu's "suggest" submenu and the floating
-   * popup share them. A submenu whose search has not echoed back yet lists the pending row. */
-  const suggestionRows = useMemo(() => {
-    const menu = interaction.suggestionMenu?.open && suggestionMenuOwnsThisWindow ? interaction.suggestionMenu : null;
-    const listed = menu ?? { pending: true, candidates: [] };
-    const rows = mapSuggestionContextMenuSpecs(
-      suggestionMenuItems(listed, interaction.brushCandidateIndex ?? 0, { checkingPlacement: suggestionMenuCheckingPlacementLabel, noPlacement: suggestionMenuNoPlacementLabel }),
-    );
-    return suggestionRowsWithFocus(rows, listed, setSuggestionFocus);
-  }, [interaction.brushCandidateIndex, interaction.suggestionMenu, mapSuggestionContextMenuSpecs, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow]);
-
-  const hoveredVortexFullIdRef = useRef<string | null>(null);
-  /** 🎯️ The interaction target this pane's OWN raycast last resolved under the pointer — see
-   * {@link hoveredInteractionTargetV1}. Null whenever the pointer left every instance. */
-  const hoveredInstanceInteractionTargetRef = useRef<InteractionTarget | null>(null);
-  const altHeldRef = useRef(false);
-  useEffect(() => {
-    hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
-  }, [interaction.hoveredVortexFullId]);
-  /** 🎣️ The armed brush points the read-only brush suggestions run at the vortex under the pointer, and at
-   * nothing once it leaves every vortex or the brush is disarmed. Only a CHANGE travels, through one
-   * single-flight lane (at most one `targetBrushSuggestions` outstanding plus the latest follow-up), so a hover
-   * storm never queues guest turns; the command only writes the target, and the run's own trace lane paints
-   * every candidate it tests. */
-  const brushSuggestionsTarget = brushMode ? interaction.hoveredVortexFullId ?? null : null;
-  const brushSuggestionsTargetSentRef = useRef<string | null>(null);
-  const sendBrushSuggestionsTarget = useMemo(() => createCoalescingActionDispatcher<string | null>((fullId) => dispatchSettled("targetBrushSuggestions", fullId ? { fullId } : {})), [dispatchSettled]);
-  useEffect(() => {
-    if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;
-    brushSuggestionsTargetSentRef.current = brushSuggestionsTarget;
-    sendBrushSuggestionsTarget(brushSuggestionsTarget);
-  }, [brushSuggestionsTarget, sendBrushSuggestionsTarget]);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Alt" || event.key === "AltGraph") altHeldRef.current = event.type === "keydown";
-    };
-    window.addEventListener("keydown", onKey, true);
-    window.addEventListener("keyup", onKey, true);
-    window.addEventListener("blur", () => {
-      altHeldRef.current = false;
+      size,
+      ...(cursor ? { pointer: cursor.point, rayOrigin: cursor.ray } : {}),
     });
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("keyup", onKey, true);
-    };
-  }, []);
-  return { altHeldRef, brushMeshRevisions, brushMeshUrls, handleRegisterBrushMesh, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, mapWorldContextMenuSpecs, shellContextMenuFallback, suggestionRows };
-}
+    publishLocalActiveToolV1(presenceRuntimeKey, activeUtility);
+  }, [presenceWindowId, presenceRuntimeKey, cameraState, activeUtility]);
 
-export type WorldCore3 = WorldCore2 & ReturnType<typeof useWorldBrushMeshAndMenus>;
-// #endregion World3dHost
+  useEffect(() => {
+    const timer = setTimeout(() => publishWorldPresenceView(), PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [publishWorldPresenceView]);
+
+  useEffect(() => {
+    if (presenceRuntimeKey) publishLocalActiveToolV1(presenceRuntimeKey, activeUtility);
+  }, [activeUtility, presenceRuntimeKey]);
+
+  const overlayRailRef = useRef<HTMLDivElement | null>(null);
+  const overlayRailSafeArea = useChromePanelSafeArea({ hostRef, affordanceRef: overlayRailRef, anchor: "top-right", yieldAxis: "either", gapPx: uiSpacingPx(1) });
+  const instancesGroupRef = useRef<Group | null>(null);
+  const lodRef = useRef(DEFAULT_MANUAL_LOD);
+  const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
+  const [marqueeModifiers, setMarqueeModifiers] = useState<{ readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }>({ shiftKey: false, ctrlKey: false, metaKey: false });
+  const [gumballDragActive, setGumballDragActive] = useState(false);
+  const [faceDragSession, setFaceDragSession] = useState<{
+    readonly objectId: string;
+    readonly faceId: number;
+    readonly normal: readonly [number, number, number];
+    readonly startPoint: readonly [number, number, number];
+    readonly faceExtent?: readonly [number, number];
+  } | null>(null);
+  const [connectDragSource, setConnectDragSource] = useState<{
+    readonly fullId: string;
+    readonly position: readonly [number, number, number];
+    readonly record?: WorldVortexRecord;
+  } | null>(null);
+  const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
+  const displayVortices = useMemo(() => {
+    if (!connectDragSource) return vortices;
+    if (vortices.some((vortex) => vortex.fullId === connectDragSource.fullId)) return vortices;
+    const retained =
+      connectDragSource.record ??
+      ({
+        fullId: connectDragSource.fullId,
+        position: connectDragSource.position,
+      } satisfies WorldVortexRecord);
+    return [...vortices, retained];
+  }, [connectDragSource, vortices]);
+  const [vortexPointerArm, setVortexPointerArm] = useState<{
+    readonly fullId: string;
+    readonly position: readonly [number, number, number];
+    readonly clientX: number;
+    readonly clientY: number;
+    readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean };
+  } | null>(null);
+  const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
+  const catalogueDropPreview = useSyncExternalStore(
+    subscribeWorldCatalogueDropPreview,
+    () => getWorldCatalogueDropPreview(node.controllerId),
+    () => getWorldCatalogueDropPreviewServerSnapshot(node.controllerId),
+  );
+  const sharedSelectionPreview = useSyncExternalStore(
+    subscribeWorldSelectionPreview,
+    () => getWorldSelectionPreview(node.controllerId),
+    () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
+  );
+  const sharedGumballTransformPreview = useSyncExternalStore(
+    subscribeWorldGumballTransformPreview,
+    () => getWorldGumballTransformPreview(node.controllerId),
+    () => getWorldGumballTransformPreviewServerSnapshot(node.controllerId),
+  );
+  const gumballOwnerPoses = useMemo(() => worldGumballOwnerPoses(instances), [instances]);
+  const previewVortices = useMemo(
+    () => worldVorticesWithGumballPreview(displayVortices, sharedGumballTransformPreview, gumballOwnerPoses),
+    [displayVortices, sharedGumballTransformPreview, gumballOwnerPoses],
+  );
+  const previewAttractions = useMemo(
+    () => worldAttractionsWithGumballPreview(attractions, displayVortices, sharedGumballTransformPreview, gumballOwnerPoses),
+    [attractions, displayVortices, sharedGumballTransformPreview, gumballOwnerPoses],
+  );
+  const gumballTransformPreviewSourceId = windowInstanceId ?? node.surfaceId;
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number; readonly suggestTarget: string | null }) | null>(null);
+  const contextMenuOpenEpochRef = useRef(0);
+  const dismissContextMenu = useCallback(() => {
+    contextMenuOpenEpochRef.current += 1;
+    setContextMenu(null);
+  }, []);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.scene");
+  const cameraRef = useRef<ThreeCamera | null>(null);
+  const catalogueDragDepthRef = useRef(0);
+  const catalogueDragEncodedRef = useRef<string | null>(null);
+  /** 🎉️ Pre-drop instance ids — when the scene gains new ids after {@link commitCatalogueDropAt}, those objects celebrate. */
+  const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
+  const instancesRef = useRef(instances);
+  return { instancesRef, instances, meshes, vortices, references, selection, lod, interaction, windowInstanceId, marqueePath, marqueeModifiers, persistentSelectionMode, onAction, node, setViewportCamera, sceneCamera, retainViewport, setViewportOwned, setDetachEpoch, lastDispatchedWorldCameraRef, activeUtility, interactionDomainId, targetVolumes, autoFitBounds, brushMode, cameraRef, catalogueDragDepthRef, catalogueDragEncodedRef, catalogueDropPreview, computeStatus, connectDragHoverPosition, connectDragSource, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, faceDragSession, gumballDragActive, gumballTransformPreviewSourceId, hostRef, instancesGroupRef, localPresenceActor, lodRef, overlayRailRef, overlayRailSafeArea, pendingCelebrateCatalogueDropIdsRef, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, publishWorldPresenceView, relocateMode, sectionExtent, setConnectDragHoverPosition, setConnectDragSource, setContextMenu, setFaceDragSession, setGumballDragActive, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, sharedGumballTransformPreview, sharedSelectionPreview, toolRunTrace, volumeBrushMode, volumeLayersInteractive, voxelHoverOrigin, presenceRuntimeKey };
+}

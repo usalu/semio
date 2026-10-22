@@ -13,7 +13,7 @@ export type { LayeredDirection };
 /** 🥞️ A layered landing: every page on a strip of container-sized cells, ONE `ui-veil` glass above it whose `clip-path` punches a hole over the
  * revealed page, and the cards above the glass — in `strip` mode the app's card grid, fixed; in `swipe` mode a card layer of the strip's own
  * grid that moves with the strip, each card centred on its page and scrolling inside its cell when taller. It fills its positioned parent.
- * Hovering (mouse) or keyboard-focusing a card glides the strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card
+ * Hovering (mouse) the card's explore control, or keyboard-focusing the card, glides the strip to that page (500 ms, cubic) and shows it clear; leaving that control or blurring the card
  * restores the glass and the pointer pan (12 % of the gap per 60 Hz frame, by elapsed time). A pointer hover also fades every other card out
  * (its slot and hit target kept, so the pointer can move onto another card) and tints the hovered card with the veil, so the page behind it is the only crisp surface, until the pointer leaves; keyboard focus leaves every card fully visible. In `swipe` mode a touch carries the strip along
  * the axis it takes first and settles it on the neighbouring cell (320 ms, cubic ease-out); past an edge the index wraps while the motion goes

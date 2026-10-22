@@ -10,7 +10,7 @@
 //! and the binary op codec unchanged, every kind is covered by an applied vector or a wire witness, and every leaf
 //! descriptor declares exactly the outcome classes production dispatch reaches from its vectors.
 
-use semio_framework_os_kernel::{apply_diff, Mutation, OpBinary, SemanticMutation};
+use semio_framework_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, SemanticMutation};
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
@@ -57,7 +57,7 @@ where
 {
     let raised = mutation.diff(base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 

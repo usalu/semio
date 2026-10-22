@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "id": "bun",
+  "ecosystem": "javascript",
+  "toolchain": "javascript",
+  "executable": "bun",
+  "runtime": {
+    "hostVersionKey": "bun",
+    "probe": {
+      "arguments": [
+        "--version"
+      ],
+      "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
+    }
+  },
+  "manifests": [
+    "package.json"
+  ],
+  "manifestIdentity": {
+    "excludedTopLevelFields": [
+      "scripts",
+      "semio"
+    ],
+    "bootstrapFields": [
+      "dependencies",
+      "devDependencies",
+      "optionalDependencies",
+      "patchedDependencies"
+    ]
+  },
+  "locks": [
+    {
+      "name": "bun.lock",
+      "role": "primary",
+      "format": "bun-lock"
+    }
+  ],
+  "configurations": {
+    "scope": [
+      "bunfig.toml"
+    ],
+    "home": [
+      ".bunfig.toml",
+      ".npmrc"
+    ],
+    "config": [
+      ".bunfig.toml"
+    ]
+  },
+  "environment": {
+    "set": {
+      "HOME": "role:home",
+      "USERPROFILE": "role:home",
+      "XDG_CONFIG_HOME": "role:config",
+      "XDG_CACHE_HOME": "role:cache",
+      "TMPDIR": "role:temporary",
+      "TMP": "role:temporary",
+      "TEMP": "role:temporary",
+      "NODE_ENV": "literal:{nodeEnvironment}",
+      "BUN_INSTALL_CACHE_DIR": "role:cache",
+      "BUN_INSTALL_GLOBAL_DIR": "role:global",
+      "BUN_INSTALL_BIN": "role:bin"
+    }
+  },
+  "recipe": {
+    "version": 6,
+    "kind": "javascript-install-projection",
+    "backends": {
+      "darwin": "clonefile",
+      "linux": "copyfile",
+      "win32": "copyfile"
+    },
+    "lifecycle": "ignore-scripts",
+    "linker": "isolated",
+    "cache": "bun-cache",
+    "global": "bun-global",
+    "bin": "bun-bin",
+    "temporary": "tmp",
+    "home": "bun-home",
+    "config": "bun-config",
+    "clearEnvironmentPrefixes": [
+      "BUN_",
+      "NPM_CONFIG_"
+    ],
+    "clearEnvironmentKeys": [
+      "HOME",
+      "USERPROFILE",
+      "XDG_CONFIG_HOME",
+      "XDG_CACHE_HOME",
+      "TMPDIR",
+      "TMP",
+      "TEMP",
+      "NODE_ENV",
+      "NODE_OPTIONS"
+    ],
+    "directoryRoles": [
+      "bun-cache",
+      "bun-global",
+      "bun-bin",
+      "tmp",
+      "bun-home",
+      "bun-config"
+    ],
+    "nodeEnvironment": "development",
+    "maximumEnvironmentEntries": 512,
+    "maximumEnvironmentBytes": 65536,
+    "maximumEnvironmentValueUnits": 32768,
+    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
+  },
+  "backendKinds": {
+    "clonefile": "clone",
+    "copyfile": "copy",
+    "hardlink": "alias",
+    "symlink": "alias"
+  },
+  "operations": {
+    "lock": {
+      "arguments": [
+        "install",
+        "--lockfile-only",
+        "--{lifecycle}",
+        "--linker={linker}",
+        "--backend={backend}",
+        "--cache-dir",
+        "{cache}"
+      ]
+    },
+    "sync": {
+      "arguments": [
+        "install",
+        "--frozen-lockfile",
+        "--{lifecycle}",
+        "--linker={linker}",
+        "--backend={backend}",
+        "--cache-dir",
+        "{cache}"
+      ]
+    },
+    "verify": {
+      "arguments": [
+        "install",
+        "--frozen-lockfile",
+        "--dry-run",
+        "--{lifecycle}",
+        "--linker={linker}",
+        "--backend={backend}",
+        "--cache-dir",
+        "{cache}"
+      ]
+    }
+  },
+  "installed": {
+    "containers": [
+      "node_modules/.bun"
+    ],
+    "entry": "{name}@{version}",
+    "match": "listed",
+    "nameTransform": "identity",
+    "nameEscape": {
+      "/": "+"
+    },
+    "fold": "identity",
+    "suffix": "^(\\+[0-9a-f]{16})?$",
+    "sourcePrefix": null
+  },
+  "resolution": {
+    "profiles": [
+      "bun-import",
+      "bun-require"
+    ],
+    "strictPrefix": "bun-"
+  },
+  "generationDirectory": "j",
+  "graphComponent": "bun-lock"
+}

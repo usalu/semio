@@ -83,7 +83,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "replace-position-data/rewrites-harbor-position-payload: this fixture pins an applied outcome");
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "replace-position-data/rewrites-harbor-position-payload: an applied outcome with no declared messages must emit none, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_gis_map_mutation(&mut snapshot, &mutation()).expect("replace-position-data/rewrites-harbor-position-payload: declared applied but the mutation was rejected");
@@ -95,7 +95,7 @@ async fn declared_outcome_holds() {
 /// mutation is allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let outcome = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-position-data/rewrites-harbor-position-payload: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisMapDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-position-data/rewrites-harbor-position-payload: committed diff did not carry before to after");
 }
 
@@ -128,7 +128,7 @@ async fn committed_diff_applies_to_after() {
 async fn patches_only_the_harbor_payload_and_inverts_to_the_base_payload() {
     let base = before();
     let after = expected_after();
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "replace-position-data/rewrites-harbor-position-payload: a genuinely different payload must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().positions.as_ref().expect("replace-position-data writes a positions delta");
     assert_eq!(delta.modified.len(), 1, "replace-position-data/rewrites-harbor-position-payload: exactly one feature is patched, got {delta:?}");

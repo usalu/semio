@@ -1,5 +1,5 @@
 /** 🧰️ Board2dHost session state: the scene, peer scope and window instance, the container, canvas, session and scheduler refs, the pending lanes, the gesture recognizer, the selection, epoch, error, context menu and suggestion state, the labels, the dispatchers, the vitals publishing, the render scheduler and the container size reader. */
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { useLabel, useShellScopeOptional, registerIntroductionSurfaceResolver, windowElementId } from "@semio-tech/ui-react";
 import { type DemandFrameSchedulerV1, type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Board2dScene } from "@semio-tech/framework";

@@ -332,7 +332,7 @@ pub async fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBind
 
 /// 🌉️ Whether `parameter`'s type is compatible with a registered app parameter-field's declared
 /// `OsParameterType` — the inspector panel's single call site for this bridge.
-pub async fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, target: &semio_framework_os::OsParameterType) -> bool {
+pub async fn workflow_parameter_fits_os_type(parameter: &WorkflowParameter, target: &semio_framework_os::OsParameterType) -> bool {
     let kind = match parameter {
         WorkflowParameter::Numeric { .. } => WorkflowParameterType::Numeric,
         WorkflowParameter::Categorical { .. } => WorkflowParameterType::Categorical,

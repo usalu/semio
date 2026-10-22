@@ -186,7 +186,8 @@ impl Drop for CapturedRootRetirement {
 
 //#region 📖️BoundedCapture
 /// 📖️ Writes caller-owned pages without cloning the state or allocating a complete encoded document.
-pub(crate) struct LocalInteractionCaptureCursor {
+#[doc(hidden)]
+pub struct LocalInteractionCaptureCursor {
     reader: ArtifactCanonicalJsonReader<CapturedRoot>,
     identity: LocalInteractionIdentity,
 }

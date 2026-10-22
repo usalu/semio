@@ -68,6 +68,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "morph-target-attribute", kind: "bind-morph-target-attribute", record: "BoundMorphTargetAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Bind Morph Target Attribute", "Morphzielattribut binden")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["bind-morph-target-attribute".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for BindMorphTargetAttributeMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<BindMorphTargetAttributeMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -76,19 +89,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Bind Morph Target Attribute", "Morphzielattribut binden")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["bind-morph-target-attribute".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

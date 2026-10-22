@@ -13,6 +13,16 @@ use semio_framework_os_store_command::retire_scratch_operations;
 use semio_framework_os_store_projection::retire_shared_projection;
 use semio_framework_value::{FactoryAuthority, RetirementDemand, ValueRefusalKind, retirement::controlled::ControlledRetirement};
 
+/// ♻️ A cancelled replay holds no decoder, so its operation preparation retires through a local ledger bounded by the paid capacity grant.
+fn close_operation_retirement<P, M>(owner: &mut crate::replay_preparation::ArtifactReplayPreparationRetirement<P, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeDecodeProgress, NativeDecodeRetirementRecipient};
+    let mut callback = |_: NativeDecodeProgress| true;
+    let mut recipient = NativeDecodeRetirementRecipient::new();
+    let mut control = NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut callback);
+    control.install_retirement_recipient(&mut recipient)?;
+    control.with_retirement(grant, |receiving| owner.close_step(grant, receiving))
+}
+
 impl<P, M: Mutation<P>> EditReplay<P, M> {
     pub fn begin_retirement(&mut self) { self.retiring = true; }
     pub fn cold_authority(&self) -> bool { self.original.operation_preparation_factory.is_none() && self.original.replay_retirement_factory.is_none() }
@@ -82,7 +92,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if let Some(owner) = s.replay_retirement.as_mut() { close_child!(s.replay_retirement, owner.close_step(child)); }
         if let Some(owner) = s.prefix_message_retirement.as_mut() { close_child!(s.prefix_message_retirement, owner.close_step(child)); }
         if let Some(owner) = s.operation_preparation.take() { s.operation_retirement = Some(owner.into_retirement()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); }
-        if let Some(owner) = s.operation_retirement.as_mut() { close_child!(s.operation_retirement, owner.close_step(child)); }
+        if let Some(owner) = s.operation_retirement.as_mut() { close_child!(s.operation_retirement, close_operation_retirement(owner, child)); }
         if let Some(owner) = s.message_settlement.as_mut() { owner.begin_close(); close_child!(s.message_settlement, owner.close_step(child)); }
         if let Some(owner) = s.operation_message_settlement.as_mut() { owner.begin_close(); close_child!(s.operation_message_settlement, owner.close_step(child)); }
         if !s.edit_messages.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(s.edit_messages.close_step(child)?)); }

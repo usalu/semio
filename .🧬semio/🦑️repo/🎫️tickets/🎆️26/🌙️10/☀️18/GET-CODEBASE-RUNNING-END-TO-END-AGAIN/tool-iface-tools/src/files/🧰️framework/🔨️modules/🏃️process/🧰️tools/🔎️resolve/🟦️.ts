@@ -2,11 +2,12 @@ import { accessSync, constants, existsSync, readdirSync, statSync } from "node:f
 import { homedir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, basename } from "node:path";
 import { findToolV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolLocatorV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
 import { readToolPinV1, systemToolPinPortV1, toolDigestForHostV1, type ToolPinPortV1, type ToolPinV1 } from "../📌️pin/🟦️.ts";
 
 /** 🔌️ What resolving a tool touches on the host; tests replace it so every platform is testable on any host. */
 export type ToolHostV1 = Readonly<{
-  platform: NodeJS.Platform; architecture: string; environment: Readonly<Record<string, string | undefined>>; root: string; home: string; execPath: string; bun: boolean;
+  platform: NodeJS.Platform; architecture: string; environment: Readonly<Record<string, string | undefined>>; root: string; home: string; execPath: string; runtimeCommand: string;
   isExecutable(path: string): boolean; exists(path: string): boolean; list(directory: string): readonly string[]; pins: ToolPinPortV1;
 }>;
 
@@ -16,7 +17,7 @@ export type ToolResolutionV1 = Readonly<{ id: string; command: string | null; pr
 /** 🖥️ The real host of this process rooted at a repository checkout. */
 export function systemToolHostV1(root: string, environment: Readonly<Record<string, string | undefined>> = process.env): ToolHostV1 {
   return Object.freeze({
-    platform: process.platform, architecture: process.arch, environment, root, home: homedir(), execPath: process.execPath, bun: typeof process.versions.bun === "string",
+    platform: process.platform, architecture: process.arch, environment, root, home: homedir(), execPath: process.execPath, runtimeCommand: runtimeCommandNameV1(),
     isExecutable: path => { try { if (!statSync(path).isFile()) return false; if (process.platform !== "win32") accessSync(path, constants.X_OK); return true; } catch { return false; } },
     exists: path => existsSync(path), list: directory => { try { return readdirSync(directory); } catch { return []; } }, pins: systemToolPinPortV1,
   });
@@ -40,8 +41,8 @@ const expandWildcard = (pattern: string, host: ToolHostV1): readonly string[] =>
 
 const packageRoots = (registry: ToolRegistryV1, host: ToolHostV1): readonly string[] => registry.packageRoots.flatMap(root => expandWildcard(isAbsolute(root) ? root : join(host.root, root), host));
 
-/** 🧱️ Finds one tool on a host by trying its locators in order; a missing tool answers `source: "missing"` with what was tried. */
-export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: ToolRegistryV1 = TOOL_REGISTRY_V1, depth = 0): ToolResolutionV1 {
+/** 🧱️ Finds one tool on a host by trying its locators in order; a missing tool answers `source: "missing"` with what was tried. A `command` that is not the first executable name of the tool (`rustc` of the Rust toolchain) is only looked up on the path. */
+export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: ToolRegistryV1 = TOOL_REGISTRY_V1, depth = 0, command?: string): ToolResolutionV1 {
   const pin = readToolPinV1(entry, host.root, host.pins), tried: string[] = [];
   const found = (command: string, source: ToolLocatorV1["kind"], prefix: readonly string[] = []): ToolResolutionV1 => Object.freeze({ id: entry.id, command, prefix, source, tried, pin });
   const through = (via: string): ToolResolutionV1 | undefined => {
@@ -51,17 +52,19 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
     return inner.command === null ? undefined : inner;
   };
   if (!entry.platforms.includes(host.platform as never)) return Object.freeze({ id: entry.id, command: null, prefix: [], source: "missing", tried: [`platform ${host.platform}`], pin });
+  const secondary = command !== undefined && command !== entry.commands[0];
   for (const locator of entry.locate) {
+    if (secondary && locator.kind !== "path") continue;
     if (locator.kind === "environment") {
       const value = host.environment[locator.name] ?? host.environment[`SEMIO_TOOL_${entry.id.toUpperCase().replace(/-/gu, "_")}`];
       tried.push(locator.name);
       if (value !== undefined && value !== "" && host.exists(value)) return found(value, "environment");
     } else if (locator.kind === "runtime") {
       tried.push("runtime");
-      if (entry.commands.includes(basename(host.execPath).replace(/\.exe$/iu, "")) || entry.id === "bun" && host.bun) return found(host.execPath, "runtime");
+      if (entry.commands.includes(basename(host.execPath).replace(/\.exe$/iu, "")) || entry.commands.includes(host.runtimeCommand)) return found(host.execPath, "runtime");
     } else if (locator.kind === "provisioned") {
       const partition = host.root + "/" + (registry.partitions[locator.partition] ?? locator.partition);
-      const digest = toolDigestForHostV1(pin, host.platform, host.architecture, entry.id === "bun" ? { musl: false } : {});
+      const digest = toolDigestForHostV1(pin, host.platform, host.architecture, entry.pin.digests?.hostExtras ?? {});
       const segments = locator.segments.map(segment => segment.replace(/\{sha256(?::(\d+))?\}/gu, (_, length?: string) => digest === undefined ? "" : length ? digest.sha256.slice(0, Number(length)) : digest.sha256).replace("{version}", pin.version ?? "").replace("{host}", `${host.platform}-${host.architecture}`));
       tried.push(join(partition, ...segments, locator.executable));
       if (digest !== undefined) { const hit = withSuffix(join(partition, ...segments, locator.executable), host); if (hit !== undefined) return found(hit, "provisioned"); }
@@ -79,7 +82,7 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
     } else {
       const directories = [...(host.environment.PATH ?? host.environment.Path ?? "").split(delimiter).filter(Boolean), ...locator.directories.map(directory => expand(directory, host))];
       tried.push(`PATH ${entry.commands[0]}`);
-      const hit = pathHit(locator.names ?? [entry.commands[0]!], directories, host);
+      const hit = pathHit(secondary ? [command] : locator.names ?? [entry.commands[0]!], directories, host);
       if (hit !== undefined) return found(hit, "path");
     }
   }

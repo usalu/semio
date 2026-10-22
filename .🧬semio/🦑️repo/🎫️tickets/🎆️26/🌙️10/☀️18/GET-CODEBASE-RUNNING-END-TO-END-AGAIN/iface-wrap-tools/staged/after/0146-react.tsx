@@ -1,297 +1,368 @@
-// #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/ShellSync/component.tsx
-/** 🔗️ `ShellSync` — `SyncAttachCard`, the footer popover for attaching/detaching a document's
- * backbone sync connection (file/folder/remote), rendering the sync-scoped `UtilityTree` above a
- * draft-path input and status badge (`useSyncStatusLabel`), plus `HubConnectionIndicator`, the
- * always-visible shell-chrome badge for the hub link itself.
- *
- * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1 (audit `📓️g5-ux-completeness-audit.md`
- * ranked items 4 and 8): every status word used to be a hard-coded English literal inside
- * `syncStatusLabel`, and the only place a human could learn the hub was unreachable was this popover,
- * per document. Both are fixed here — the words go through `useLabel` (en + de, compile-checked by
- * `UiTranslationSchema`), and the aggregate lives in the footer beside the presence bar.
- */
-// #endregion 🧲️Header
+/** 📒️ The hub connection book state and the hub command callbacks of the hub connection hook. */
+import { useCallback, useEffect, useReducer, useRef, useState } from "../../⚛️react-port/🟦️.ts";
+import type { DirectoryCommand, DirectoryCommandReceiptV1 } from "@semio-tech/framework/directory/schema";
+import { hubSessionInitialStateV1, readHubConnectionBookV1, reduceHubSessionV1, removeHubConnectionV1, runHubSessionAuthorityV1, runHubSignInV1, selectHubConnectionV1, selectedHubConnectionV1, upsertHubConnectionV1, writeHubConnectionBookV1, hubConnectionIdForOriginV1, parseHubOriginV1, type HubConnectionBookV1, type HubSessionAuthorityV1, type HubSignInCredentialV1, type HubSignInErrorCodeV1 } from "@semio-tech/framework/directory/sign-in";
+import { spaceRowsAfterEventsV1, spaceRowsV1, type SpaceBrowserPhaseV1, type SpaceRowV1 } from "@semio-tech/framework/directory/spaces";
+import { type AgentDelegationErrorCodeV1, type AgentDelegationPhaseV1, type AgentDelegationSummaryV1 } from "@semio-tech/framework/directory/delegations";
+import { AgentDelegationRefusalV1, HUB_SESSION_AUTHORITY_RECHECK_MAX_MS, type HubAgentCredentialV1, hubConnectionOperationOwnerCurrentV1, type HubConnectionOperationOwnerV1, type HubConnectionPortV1, type HubInviteCapabilityV1, type HubRedemptionStateV1, type HubSpaceMemberRowV1 } from "../🔌️connection-contract/🟦️.ts";
+import { useLiveRef } from "../🧰️hub-connection-helpers/🟦️.tsx";
 
-// #region 🔌️Adapters
-import { type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
-import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
-import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework/backbone";
-import { type SyncCardKind } from "../🐚️Shell/👥️peer-interaction/🟦️.ts";
-import { UtilityTree, groupUtilityNodesByCategory } from "../🎛️UtilityTree/🟦️.tsx";
-// #endregion 🔌️Adapters
+/** 📖 Binds the hub connection book state, its readers and the space member watchers. */
+export function useHubConnectionBook({ port }: { readonly port: HubConnectionPortV1 }) {
+  const [book, setBook] = useState<HubConnectionBookV1>(() => readHubConnectionBookV1(port.storage, port.bootstrapOrigin));
+  const connection = selectedHubConnectionV1(book);
+  const [session, dispatchSession] = useReducer(reduceHubSessionV1, connection.id, hubSessionInitialStateV1);
+  const [rows, setRows] = useState<readonly SpaceRowV1[]>([]);
+  const [spacesPhase, setSpacesPhase] = useState<SpaceBrowserPhaseV1>("loading");
+  const [search, setSearch] = useState("");
+  const [invite, setInvite] = useState<HubInviteCapabilityV1 | null>(null);
+  const [redemption, setRedemption] = useState<HubRedemptionStateV1>({ phase: "idle", error: null });
+  const [authority, setAuthority] = useState<HubSessionAuthorityV1 | null>(null);
+  const [memberRows, setMemberRows] = useState<readonly HubSpaceMemberRowV1[]>([]);
+  const [watchedSpaceId, setWatchedSpaceId] = useState<string | null>(null);
+  const [delegationSummaries, setDelegationSummaries] = useState<readonly AgentDelegationSummaryV1[]>([]);
+  const [delegationPhase, setDelegationPhase] = useState<AgentDelegationPhaseV1>("idle");
+  const [delegationError, setDelegationError] = useState<AgentDelegationErrorCodeV1 | null>(null);
+  const [agentCredential, setAgentCredential] = useState<HubAgentCredentialV1 | null>(null);
+  const delegationAbort = useRef<AbortController | null>(null);
+  const rebootstrapped = useRef(false);
+  const signInAbort = useRef<AbortController | null>(null);
+  const authorityAbort = useRef<AbortController | null>(null);
+  const membersAbort = useRef<AbortController | null>(null);
+  const spacesAbort = useRef<AbortController | null>(null);
+  const commandAbort = useRef<AbortController | null>(null);
+  const signOutAbort = useRef<AbortController | null>(null);
+  const redemptionAbort = useRef<AbortController | null>(null);
+  const operationGeneration = useRef(1);
+  const operationConnectionId = useRef(connection.id);
+  const portRef = useLiveRef(port);
+  const connectionRef = useLiveRef(connection);
+  const watchedSpaceIdRef = useLiveRef(watchedSpaceId);
 
-//#region 🔖️sync-attach-card
-
-/** 🎯️ What the sync card attaches, typed end to end (never a URI the host parses back): a folder, a file (its folder
- * backs the document), or a hub space's document — `documentId: null` names the session's own document. */
-export type SyncAttachTargetV1 =
-  | { readonly kind: "folder"; readonly path: string }
-  | { readonly kind: "file"; readonly path: string; readonly folder: string }
-  | { readonly kind: "remote"; readonly hostPort: string; readonly spaceId: string; readonly documentId: string | null };
-
-/** ✍️ The card's draft as a {@link SyncAttachTargetV1}, `null` for an empty draft. A local path is made absolute; a
- * remote draft is `host:port/space/document`, and a bare `host:port/document` names that document in the `default`
- * space. Law: `🧫️fixtures/🎯️sync-attach-target.json`. */
-export function syncAttachTargetV1(kind: SyncCardKind, draftPath: string): SyncAttachTargetV1 | null {
-  const draft = draftPath.trim();
-  if (!draft) return null;
-  if (kind === "remote") {
-    const [hostPort = "", ...rest] = draft.split("/");
-    return rest.length >= 2 ? { kind, hostPort, spaceId: rest[0]!, documentId: rest.slice(1).join("/") } : { kind, hostPort, spaceId: "default", documentId: rest[0] || null };
+  if (operationConnectionId.current !== connection.id) {
+    operationGeneration.current++;
+    operationConnectionId.current = connection.id;
   }
-  const path = draft.startsWith("/") ? draft : `/${draft}`;
-  return kind === "folder" ? { kind, path } : { kind, path, folder: path.replace(/\/[^/]*$/u, "") || "/" };
+
+  const captureOperationOwner = useCallback((): HubConnectionOperationOwnerV1 => ({ generation: operationGeneration.current, connectionId: connectionRef.current.id, origin: connectionRef.current.origin }), [connectionRef]);
+  const operationOwnerCurrent = useCallback((owner: HubConnectionOperationOwnerV1): boolean => hubConnectionOperationOwnerCurrentV1(owner, operationGeneration.current, operationConnectionId.current), []);
+
+  const retireOperationsForConnection = useCallback((connectionId: string) => {
+    if (operationConnectionId.current === connectionId) return;
+    operationGeneration.current++;
+    operationConnectionId.current = connectionId;
+    signInAbort.current?.abort();
+    signOutAbort.current?.abort();
+    commandAbort.current?.abort();
+    authorityAbort.current?.abort();
+    membersAbort.current?.abort();
+    spacesAbort.current?.abort();
+    redemptionAbort.current?.abort();
+    delegationAbort.current?.abort();
+    signInAbort.current = null;
+    signOutAbort.current = null;
+    commandAbort.current = null;
+    authorityAbort.current = null;
+    membersAbort.current = null;
+    spacesAbort.current = null;
+    redemptionAbort.current = null;
+    delegationAbort.current = null;
+  }, []);
+
+  const persist = useCallback((next: HubConnectionBookV1) => {
+    writeHubConnectionBookV1(portRef.current.storage, next);
+    setBook(next);
+  }, [portRef]);
+
+  const loadSpaces = useCallback((owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
+    spacesAbort.current?.abort();
+    const abort = new AbortController();
+    spacesAbort.current = abort;
+    setSpacesPhase((current) => (current === "ready" || current === "stale" ? current : "loading"));
+    void portRef.current
+      .listSpaces(owner.origin, abort.signal)
+      .then((entries) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setRows(spaceRowsV1(entries));
+        setSpacesPhase("ready");
+        dispatchSession({ kind: "connectivity", offline: false });
+      })
+      .catch(() => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setSpacesPhase((current) => (current === "loading" ? "failed" : "stale"));
+        dispatchSession({ kind: "connectivity", offline: true });
+      });
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  /** 🪪️ Reads `GET /auth/sessions/me`. This is the only source of `expiresAtMs` — AU1 §1.1 keeps the
+   * expiry out of the mint response precisely so the two can never disagree — and a `401` here is
+   * the hub's own statement that the capability is gone, which is what drives re-authentication. */
+  const readAuthority = useCallback((owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
+    authorityAbort.current?.abort();
+    const abort = new AbortController();
+    authorityAbort.current = abort;
+    void runHubSessionAuthorityV1(portRef.current.signIn, owner.origin, abort.signal).then((outcome) => {
+      if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+      if (outcome.kind === "authority") {
+        setAuthority(outcome.authority);
+        dispatchSession({ kind: "minted", userId: outcome.authority.userId, expiresAtMs: outcome.authority.expiresAtMs });
+        dispatchSession({ kind: "connectivity", offline: false });
+        return;
+      }
+      if (outcome.kind === "expired") {
+        setAuthority(null);
+        dispatchSession({ kind: "expired" });
+        return;
+      }
+      if (outcome.code === "unreachable") dispatchSession({ kind: "connectivity", offline: true });
+    });
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  const loadMembers = useCallback((spaceId: string | null, owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
+    membersAbort.current?.abort();
+    if (spaceId === null) {
+      setMemberRows([]);
+      return;
+    }
+    const abort = new AbortController();
+    membersAbort.current = abort;
+    void portRef.current
+      .readSpaceMembers(owner.origin, spaceId, abort.signal)
+      .then((rows) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setMemberRows(rows);
+      })
+      .catch(() => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setMemberRows([]);
+      });
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  /** 🤖️ Reads `GET /auth/agent-delegations?space=<id>`. `null` clears the lane without a round trip:
+   * a delegation belongs to exactly one space, so there is nothing to show until one is open. */
+  const loadDelegations = useCallback((spaceId: string | null, owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
+    delegationAbort.current?.abort();
+    if (spaceId === null) {
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+      return;
+    }
+    const abort = new AbortController();
+    delegationAbort.current = abort;
+    setDelegationPhase((current) => (current === "ready" ? current : "loading"));
+    void portRef.current
+      .listAgentDelegations(owner.origin, spaceId, abort.signal)
+      .then((summaries) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationSummaries(summaries);
+        setDelegationPhase("ready");
+        setDelegationError(null);
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationPhase("failed");
+        setDelegationError(error instanceof AgentDelegationRefusalV1 ? error.code : "unreachable");
+      });
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  /** 👥️ Follows the space the shell has open. The one-time credential belongs to its delegation's space and is dropped
+   * only when a DIFFERENT space opens: a session re-established under the pane passes through "no space" and back, and
+   * clearing it there threw away a credential the human had not saved yet, mid "Set up MCP client" (G10 S4 relay). */
+  const watchSpaceMembers = useCallback((spaceId: string | null) => {
+    setWatchedSpaceId(spaceId);
+    loadMembers(spaceId);
+    setAgentCredential((value) => (value === null || spaceId === null || value.receipt.spaceId === spaceId ? value : null));
+    loadDelegations(spaceId);
+  }, [loadDelegations, loadMembers]);
+  return { captureOperationOwner, commandAbort, setSpacesPhase, portRef, operationOwnerCurrent, session, setRows, loadSpaces, loadMembers, watchedSpaceIdRef, spacesAbort, connection, rebootstrapped, dispatchSession, readAuthority, operationGeneration, signInAbort, signOutAbort, authorityAbort, membersAbort, redemptionAbort, delegationAbort, book, operationConnectionId, retireOperationsForConnection, setAuthority, setMemberRows, setInvite, setRedemption, setAgentCredential, setDelegationSummaries, setDelegationPhase, setDelegationError, persist, setSearch, connectionRef, invite, loadDelegations, agentCredential, rows, search, memberRows, delegationSummaries, authority, spacesPhase, redemption, delegationPhase, delegationError, watchSpaceMembers };
 }
 
-type SyncAttachCardProps = {
-  readonly activeUri: string | null;
-  readonly cardKind: SyncCardKind | null;
-  readonly draftPath: string;
-  readonly syncUtilities: readonly FrameworkSyncUtilityLeaf[];
-  readonly status: ArtifactSyncStatus | null;
-  /** ⚖️ Open `Quarantined` conflicts (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-
-   * AND-FIRST-CLASS-CONFLICTS` §C6/§C9) — non-empty means a peer batch is being held back by this
-   * authority's merge policy rather than applied; see `Shell`'s `selectQuarantinedConflicts`. */
-  readonly quarantinedConflicts: readonly Conflict[];
-  readonly onAction: (action: ActionDescriptor) => void;
-  readonly onDraftPathChange: (value: string) => void;
-  readonly onClose: () => void;
-  readonly onAttach: (target: SyncAttachTargetV1) => void;
-  readonly onDetach: () => void;
-  readonly onBrowsePath?: () => void | Promise<void>;
-};
-
-/** 🌐️ Every string {@link syncStatusLabelV1} composes, already resolved for the active locale and
- * label tier. Kept as an explicit argument (rather than resolved inside the composer) so the composer
- * stays a pure, React-free function a unit test can drive with either locale's real bundle values. */
-export interface SyncStatusTextsV1 {
-  readonly live: string;
-  readonly connecting: string;
-  readonly reconnecting: string;
-  readonly offline: string;
-  /** 👥️ Already interpolated with the live peer count (`ui.sync.peerOne`/`ui.sync.peerMany`). */
-  readonly peers: string;
-  readonly saved: string;
-  readonly unsaved: string;
-  /** 📮️ Already interpolated with `pendingMutations` (`ui.sync.pending`). */
-  readonly pending: string;
-}
-
-/** 🚦️ Minimal status label for an `ArtifactSyncStatus` — matches this file's small-badge-text style
- * (see the `activeUri` line right below it), not a new component system. Pure: {@link useSyncStatusLabel}
- * is the only place the `ui.sync.*` keys are read. */
-export function syncStatusLabelV1(status: ArtifactSyncStatus | null, texts: SyncStatusTextsV1): string | null {
-  if (!status) return null;
-  const remote = status.remote.kind === "live" ? `${texts.live} · ${texts.peers}` : status.remote.kind === "connecting" ? texts.connecting : status.remote.kind === "backoff" ? texts.reconnecting : texts.offline;
-  const persisted = status.persisted ? texts.saved : texts.unsaved;
-  return `${remote} · ${persisted}${status.pendingMutations > 0 ? ` · ${texts.pending}` : ""}`;
-}
-
-/** 🌐️ Resolves every `ui.sync.*` status word for the active locale. Both counted keys are resolved
- * unconditionally with the live counts (hooks may not run behind a branch), and the composer picks
- * which words the current state actually needs. */
-export function useSyncStatusTexts(status: ArtifactSyncStatus | null): SyncStatusTextsV1 {
-  const peerCount = status?.remote.kind === "live" ? status.remote.peerCount : 0;
-  const peerOne = useLabel("ui.sync.peerOne", { count: peerCount });
-  const peerMany = useLabel("ui.sync.peerMany", { count: peerCount });
-  return {
-    live: useLabel("ui.sync.live"),
-    connecting: useLabel("ui.sync.connecting"),
-    reconnecting: useLabel("ui.sync.reconnecting"),
-    offline: useLabel("ui.sync.offline"),
-    peers: peerCount === 1 ? peerOne : peerMany,
-    saved: useLabel("ui.sync.saved"),
-    unsaved: useLabel("ui.sync.unsaved"),
-    pending: useLabel("ui.sync.pending", { count: status?.pendingMutations ?? 0 }),
-  };
-}
-
-/** 🚦️ The localized status line for one document's backbone connection. */
-export function useSyncStatusLabel(status: ArtifactSyncStatus | null): string | null {
-  return syncStatusLabelV1(status, useSyncStatusTexts(status));
-}
-
-export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status, quarantinedConflicts, onAction, onDraftPathChange, onClose, onAttach, onDetach, onBrowsePath }: SyncAttachCardProps): ReactElement {
-  const open = cardKind != null;
-  const attachLabel = useLabel("ui.sync.attach");
-  const detachLabel = useLabel("ui.sync.detach");
-  const browseLabel = useLabel("ui.sync.browse");
-  const quarantinedLabel = useLabel("ui.conflict.quarantined");
-  const statusAccessibleLabel = useLabel("ui.sync.statusLabel");
-  const statusLine = useSyncStatusLabel(status);
-  const backboneTitles: Readonly<Record<SyncCardKind, string>> = {
-    file: useLabel("ui.sync.backboneFile"),
-    folder: useLabel("ui.sync.backboneFolder"),
-    remote: useLabel("ui.sync.backboneRemote"),
-  };
-  const placeholder = cardKind === "remote" ? "127.0.0.1:8787/studio-1/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
-
-  const attachFromDraft = () => {
-    const target = cardKind ? syncAttachTargetV1(cardKind, draftPath) : null;
-    if (target) onAttach(target);
-  };
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
-    >
-      <PopoverAnchor asChild>
-        <div>
-          <UtilityTree utilities={groupUtilityNodesByCategory(syncUtilities as readonly UtilityNode[], ["sync"])} onAction={onAction} />
-        </div>
-      </PopoverAnchor>
-      {open ? (
-        <PopoverContent side="top" align="center" className="w-80 space-y-3 p-3">
-          <div className="space-y-1">
-            <p id={`framework.sync.${cardKind}.title`} className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
-            {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
-            {activeUri && statusLine ? (
-              <p role="status" aria-live="polite" aria-label={statusAccessibleLabel} data-semio-sync-status="" className="text-xs text-muted-foreground">
-                {statusLine}
-              </p>
-            ) : null}
-            {quarantinedConflicts.length > 0 ? (
-              <p className="rounded-sm border border-warning bg-warning/10 px-single py-0.5 text-xs text-warning" role="status" data-semio-sync-quarantined="">
-                {quarantinedLabel} ({quarantinedConflicts.length})
-              </p>
-            ) : null}
-          </div>
-          {cardKind === "remote" ? (
-            <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} className="min-w-0 flex-1" value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
-              <Button icon="folder-open" type="button" data-semio-sync-browse="" aria-label={browseLabel} title={browseLabel} onClick={() => void onBrowsePath?.()} />
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <Button icon="link" type="button" onClick={attachFromDraft}>
-              {attachLabel}
-            </Button>
-            {activeUri ? (
-              <Button icon="x" type="button" onClick={onDetach}>
-                {detachLabel}
-              </Button>
-            ) : null}
-          </div>
-        </PopoverContent>
-      ) : null}
-    </Popover>
+/**
+ * ⌨ Builds the hub command runner and the sign in cancellation callbacks.
+ *
+ * ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a
+ * sign-in), so it is presumed live only until the hub's own `me` answer confirms or refuses it. Mount-only — a later
+ * sign-out must not resurrect the session it just ended.
+ *
+ * ♻️ Re-authentication without a round trip per render: once the locally known deadline has
+ * passed, one `me` read confirms it with the hub (which may have extended or revoked it) instead
+ * of the shell deciding from its own clock.
+ */
+export function useHubCommandCallbacks({ captureOperationOwner, commandAbort, setSpacesPhase, portRef, operationOwnerCurrent, session, setRows, loadSpaces, loadMembers, watchedSpaceIdRef, spacesAbort, connection, rebootstrapped, dispatchSession, readAuthority, operationGeneration, signInAbort, signOutAbort, authorityAbort, membersAbort, redemptionAbort, delegationAbort, book, operationConnectionId, retireOperationsForConnection, setAuthority, setMemberRows, setInvite, setRedemption, setAgentCredential, setDelegationSummaries, setDelegationPhase, setDelegationError, persist }: Pick<ReturnType<typeof useHubConnectionBook>, "captureOperationOwner" | "commandAbort" | "setSpacesPhase" | "portRef" | "operationOwnerCurrent" | "session" | "setRows" | "loadSpaces" | "loadMembers" | "watchedSpaceIdRef" | "spacesAbort" | "connection" | "rebootstrapped" | "dispatchSession" | "readAuthority" | "operationGeneration" | "signInAbort" | "signOutAbort" | "authorityAbort" | "membersAbort" | "redemptionAbort" | "delegationAbort" | "book" | "operationConnectionId" | "retireOperationsForConnection" | "setAuthority" | "setMemberRows" | "setInvite" | "setRedemption" | "setAgentCredential" | "setDelegationSummaries" | "setDelegationPhase" | "setDelegationError" | "persist">) {
+  const runCommand = useCallback(
+    (command: DirectoryCommand, onReceipt: (receipt: DirectoryCommandReceiptV1) => void) => {
+      const owner = captureOperationOwner();
+      commandAbort.current?.abort();
+      const abort = new AbortController();
+      commandAbort.current = abort;
+      setSpacesPhase("submitting");
+      void portRef.current
+        .submitCommand(owner.origin, command, abort.signal)
+        .then((receipt) => {
+          if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+          onReceipt(receipt);
+          const userId = session.userId;
+          if (userId !== null) setRows((current) => spaceRowsAfterEventsV1(current, receipt.events, userId));
+          setSpacesPhase("ready");
+          loadSpaces(owner);
+          loadMembers(watchedSpaceIdRef.current, owner);
+        })
+        .catch(() => {
+          if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+          setSpacesPhase("failed");
+        });
+    },
+    [captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, portRef, session.userId, watchedSpaceIdRef],
   );
+
+  useEffect(() => {
+    loadSpaces();
+    return () => spacesAbort.current?.abort();
+  }, [connection.id, loadSpaces]);
+
+  useEffect(() => {
+    const held = portRef.current.heldCapability?.() ?? null;
+    if (held === null || rebootstrapped.current) return;
+    rebootstrapped.current = true;
+    dispatchSession({ kind: "minted", userId: held.userId, expiresAtMs: null });
+    readAuthority();
+  }, [portRef, readAuthority, rebootstrapped]);
+
+  useEffect(() => {
+    const online = (): void => dispatchSession({ kind: "connectivity", offline: false });
+    const offline = (): void => dispatchSession({ kind: "connectivity", offline: true });
+    const target = typeof globalThis.addEventListener === "function" ? globalThis : null;
+    target?.addEventListener("online", online);
+    target?.addEventListener("offline", offline);
+    return () => {
+      target?.removeEventListener("online", online);
+      target?.removeEventListener("offline", offline);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    operationGeneration.current++;
+    signInAbort.current?.abort();
+    signOutAbort.current?.abort();
+    commandAbort.current?.abort();
+    authorityAbort.current?.abort();
+    membersAbort.current?.abort();
+    spacesAbort.current?.abort();
+    redemptionAbort.current?.abort();
+    delegationAbort.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    if (session.phase !== "signed-in" || session.expiresAtMs === null) return undefined;
+    const remaining = session.expiresAtMs - Date.now();
+    if (remaining <= 0) {
+      readAuthority();
+      return undefined;
+    }
+    const timer = setTimeout(readAuthority, Math.min(remaining, HUB_SESSION_AUTHORITY_RECHECK_MAX_MS));
+    return () => clearTimeout(timer);
+  }, [readAuthority, session.expiresAtMs, session.phase]);
+
+  const selectConnection = useCallback((id: string) => {
+    const next = selectHubConnectionV1(book, id);
+    if (next.selectedId === operationConnectionId.current) return;
+    retireOperationsForConnection(next.selectedId);
+    setAuthority(null);
+    setMemberRows([]);
+    setInvite(null);
+    setRedemption({ phase: "idle", error: null });
+    setRows([]);
+    setSpacesPhase("loading");
+    setAgentCredential(null);
+    setDelegationSummaries([]);
+    setDelegationPhase("idle");
+    setDelegationError(null);
+    dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
+    persist(next);
+  }, [book, persist, retireOperationsForConnection]);
+
+  const addRemoteHub = useCallback((typed: string, label: string): HubSignInErrorCodeV1 | "invalid-origin" | null => {
+    let origin: string;
+    try {
+      origin = parseHubOriginV1(typed);
+    } catch {
+      return "invalid-origin";
+    }
+    const trimmed = label.trim();
+    const next = upsertHubConnectionV1(book, { id: hubConnectionIdForOriginV1(origin), label: trimmed.length > 0 ? trimmed.slice(0, 128) : origin, origin, kind: "remote", lastUserId: null });
+    const changed = next.selectedId !== operationConnectionId.current;
+    retireOperationsForConnection(next.selectedId);
+    if (changed) {
+      setAuthority(null);
+      setMemberRows([]);
+      setInvite(null);
+      setRedemption({ phase: "idle", error: null });
+      setRows([]);
+      setSpacesPhase("loading");
+      setAgentCredential(null);
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+    }
+    dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
+    persist(next);
+    return null;
+  }, [book, persist, retireOperationsForConnection]);
+
+  const forgetHub = useCallback((id: string) => {
+    const next = removeHubConnectionV1(book, id);
+    const changed = next.selectedId !== operationConnectionId.current;
+    retireOperationsForConnection(next.selectedId);
+    if (changed) {
+      setAuthority(null);
+      setMemberRows([]);
+      setInvite(null);
+      setRedemption({ phase: "idle", error: null });
+      setRows([]);
+      setSpacesPhase("loading");
+      setAgentCredential(null);
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+    }
+    dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
+    persist(next);
+  }, [book, persist, retireOperationsForConnection]);
+
+  const signIn = useCallback((input: Readonly<{ email: string; password: string }>) => {
+    const owner = captureOperationOwner();
+    signInAbort.current?.abort();
+    const abort = new AbortController();
+    signInAbort.current = abort;
+    dispatchSession({ kind: "submit" });
+    const active = portRef.current;
+    const credential: HubSignInCredentialV1 = { email: input.email, password: input.password, deviceInstanceId: active.deviceInstanceId, clientClass: active.clientClass };
+    void runHubSignInV1(active.signIn, owner.origin, credential, abort.signal).then((outcome) => {
+      if (!operationOwnerCurrent(owner)) return;
+      if (outcome.kind === "failed") {
+        dispatchSession({ kind: "failed", code: outcome.code, retryAfterSeconds: outcome.retryAfterSeconds });
+        if (outcome.code === "unreachable") dispatchSession({ kind: "connectivity", offline: true });
+        return;
+      }
+      dispatchSession({ kind: "minted", userId: outcome.result.userId, expiresAtMs: null });
+      dispatchSession({ kind: "connectivity", offline: false });
+      const target = book.connections.find((entry) => entry.id === owner.connectionId);
+      if (target) persist(upsertHubConnectionV1(book, { ...target, lastUserId: outcome.result.userId }));
+      readAuthority(owner);
+      loadSpaces(owner);
+      loadMembers(watchedSpaceIdRef.current, owner);
+    });
+  }, [book, captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, persist, portRef, readAuthority, watchedSpaceIdRef]);
+
+  const cancelSignIn = useCallback(() => {
+    signInAbort.current?.abort();
+    signInAbort.current = null;
+    dispatchSession({ kind: "failed", code: "cancelled", retryAfterSeconds: null });
+  }, []);
+  return { runCommand, selectConnection, addRemoteHub, forgetHub, signIn, cancelSignIn };
 }
-//#endregion 🔖️sync-attach-card
-
-//#region 🔖️hub-connection-indicator
-/** 🔐️ Whether this shell holds a hub session. `"none"` means this shell runs without any hub configured
- * (purely local-first), which is NOT the same as being signed out of one — only `"signedOut"` is a state
- * the human can act on, and only it offers the sign-in entry point. */
-export type HubSessionPresenceV1 = "signedIn" | "signedOut" | "none";
-
-/** 🔗️ What the shell's own session revalidation last learned about the hub link, independent of any
- * document: still `verifying` a remembered session, `reachable`, or `unreachable` — a short shortage the
- * refresh loop is riding out on a bounded backoff while it keeps the authority it already verified. */
-export type HubLinkV1 = "verifying" | "reachable" | "unreachable";
-
-/** 📶️ What the always-visible chrome badge reports about the hub link as a whole. */
-export type HubConnectionIndicatorStateV1 = "local" | "signedOut" | "live" | "online" | "connecting" | "reconnecting";
-
-/** 📶️ The aggregate a single badge can honestly show for however many documents are attached. */
-export interface HubConnectionSummaryV1 {
-  readonly state: HubConnectionIndicatorStateV1;
-  /** 👥️ Peers on the busiest live document — `0` for every non-`live` state. A sum across documents
-   * would double-count a peer who has two of them open, which no reader could interpret. */
-  readonly peerCount: number;
-  /** 📄️ How many attached documents this aggregate was folded from; `0` means nothing is attached. */
-  readonly documentCount: number;
-}
-
-/** 📶️ Folds the shell's own hub link and every attached document's `RemoteState` into ONE aggregate, best
- * state first. No hub configured is `local`; no session is `signedOut`, because no transport state means
- * anything without one. A live document means the hub answers right now, so `live` wins over everything
- * else; an unreachable session link is a shortage in progress (`reconnecting`), which outranks a document
- * still dialling; a verified, reachable link with no live document is `online`. The three link states are exhaustive, so
- * there is no further "offline" state (the hub projection schema's twin, `🧬️schema/🔗️hub-projection`, dropped it too).
- * Pure — the indicator below is the only place this is rendered. */
-export function hubConnectionSummaryV1(statuses: readonly ArtifactSyncStatus[], session: HubSessionPresenceV1, link: HubLinkV1): HubConnectionSummaryV1 {
-  const documentCount = statuses.length;
-  if (session === "none") return { state: "local", peerCount: 0, documentCount };
-  if (session === "signedOut") return { state: "signedOut", peerCount: 0, documentCount };
-  const peerCount = statuses.reduce((best, status) => (status.remote.kind === "live" ? Math.max(best, status.remote.peerCount) : best), 0);
-  if (statuses.some((status) => status.remote.kind === "live")) return { state: "live", peerCount, documentCount };
-  if (link === "unreachable") return { state: "reconnecting", peerCount: 0, documentCount };
-  if (link === "verifying" || statuses.some((status) => status.remote.kind === "connecting")) return { state: "connecting", peerCount: 0, documentCount };
-  if (statuses.some((status) => status.remote.kind === "backoff")) return { state: "reconnecting", peerCount: 0, documentCount };
-  return { state: "online", peerCount: 0, documentCount };
-}
-
-/** 🎨️ One icon per state — the badge carries icon AND text, never colour alone, so it survives a
- * monochrome theme and a colour-vision deficiency exactly as it survives a screen reader. */
-const HUB_CONNECTION_ICON: Readonly<Record<HubConnectionIndicatorStateV1, IconName>> = {
-  local: "link-2-off",
-  signedOut: "user",
-  live: "cloud",
-  online: "cloud",
-  connecting: "loader-2",
-  reconnecting: "rotate-ccw",
-};
-
-const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string>> = {
-  local: "text-muted-foreground",
-  signedOut: "text-muted-foreground",
-  live: "text-emphasized",
-  online: "text-emphasized",
-  connecting: "text-muted-foreground",
-  reconnecting: "text-warning",
-};
-
-export interface HubConnectionIndicatorProps {
-  readonly statuses: readonly ArtifactSyncStatus[];
-  readonly session: HubSessionPresenceV1;
-  readonly link: HubLinkV1;
-  /** 🔐️ Entry point into the sign-in surface, offered only while `session` is `"signedOut"`. Absent
-   * means no such surface is mounted yet, and the badge then reports the state without offering an
-   * action it cannot perform. */
-  readonly onSignIn?: () => void;
-}
-
-/** 📶️ The persistent hub-connection badge. Lives in the shell footer beside the presence bar,
- * so "the hub is unreachable" is readable without opening any one document's sync popover — audit
- * `📓️g5-ux-completeness-audit.md` §5's last gap. `role="status"` + `aria-live="polite"` announce a
- * transition once; the accessible name is the localized state text, never a colour. It only renders:
- * a shortage never blocks the shell, it just reads `reconnecting` until the link answers again. */
-export function HubConnectionIndicator({ statuses, session, link, onSignIn }: HubConnectionIndicatorProps): ReactElement {
-  const summary = hubConnectionSummaryV1(statuses, session, link);
-  const hubLabel = useLabel("ui.sync.hubLabel");
-  const signInLabel = useLabel("ui.sync.hubSignIn");
-  const peerOne = useLabel("ui.sync.peerOne", { count: summary.peerCount });
-  const peerMany = useLabel("ui.sync.peerMany", { count: summary.peerCount });
-  const stateText: Readonly<Record<HubConnectionIndicatorStateV1, string>> = {
-    local: useLabel("ui.sync.localOnly"),
-    signedOut: useLabel("ui.sync.signedOut"),
-    live: useLabel("ui.sync.live"),
-    online: useLabel("ui.sync.online"),
-    connecting: useLabel("ui.sync.connecting"),
-    reconnecting: useLabel("ui.sync.reconnecting"),
-  };
-  const text = summary.state === "live" ? `${stateText.live} · ${summary.peerCount === 1 ? peerOne : peerMany}` : stateText[summary.state];
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={`${hubLabel}: ${text}`}
-      data-semio-hub-connection={summary.state}
-      data-hub-connection-documents={summary.documentCount}
-      className={`flex items-center gap-single px-single text-2xs ${HUB_CONNECTION_TONE[summary.state]}`}
-    >
-      <Icon icon={HUB_CONNECTION_ICON[summary.state]} size="small" />
-      <span>{text}</span>
-      {summary.state === "signedOut" && onSignIn ? <Button id="framework.hub.signIn" type="button" variant="ghost" icon="user" data-semio-hub-sign-in="" text={signInLabel} onClick={onSignIn} /> : null}
-    </div>
-  );
-}
-//#endregion 🔖️hub-connection-indicator

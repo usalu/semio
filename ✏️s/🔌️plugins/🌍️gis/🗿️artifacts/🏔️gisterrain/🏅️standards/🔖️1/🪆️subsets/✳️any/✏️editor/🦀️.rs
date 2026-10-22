@@ -289,7 +289,7 @@ fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: &GisTerrainMutati
     }
     let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
     let inverse = mutation.inverse(base)?;
-    let post = protocol::apply_diff(&mutation.diff(base).into_parts().0, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact mutation could not produce its post root"))?;
+    let post = protocol::apply_diff_cold(&mutation.diff(base).into_parts().0, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact mutation could not produce its post root"))?;
     Ok((post, inverse, retained_bytes))
 }
 

@@ -20,17 +20,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "trailer-entry", kind: "remove-trailer-entry", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(diff::diff_remove_trailer_entry(base, &self.key)))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.trailer.iter().position(|entry| entry.key == self.key).map(|position| Op::from(SetTrailerEntry { key: self.key.clone(), value: base.trailer[position].value.clone(), index: Some(position) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Trailer-Eintrag {} entfernen", self.key))
     }
@@ -38,6 +27,21 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveTrailerEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveTrailerEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_trailer_entry::SetTrailerEntry>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(diff::diff_remove_trailer_entry(base, &self.key)))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.trailer.iter().position(|entry| entry.key == self.key).map(|position| Op::from(SetTrailerEntry { key: self.key.clone(), value: base.trailer[position].value.clone(), index: Some(position) })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

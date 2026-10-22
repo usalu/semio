@@ -7,7 +7,7 @@
 
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 
@@ -156,12 +156,9 @@ pub struct TsvDiff {
     pub records: Option<TsvRowsDiff>,
 }
 
-impl MutationDiff<TsvSnapshot> for TsvDiff {
-    fn apply(&self, base: &TsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TsvSnapshot> {
-        validate_tsv_diff(self, base)?;
-        Ok(apply_tsv_diff_unchecked(self, base))
-    }
+impl MutationDiff<TsvSnapshot> for TsvDiff {}
 
+impl protocol::ColdMutationDiff<TsvSnapshot> for TsvDiff {
     fn absorb(&mut self, other: Self) {
         if other.trailing_newline.is_some() {
             self.trailing_newline = other.trailing_newline;
@@ -181,6 +178,13 @@ impl MutationDiff<TsvSnapshot> for TsvDiff {
             Some(d1) => d1,
         };
         self.records = Some(absorb_records(d1, d2));
+    }
+
+    fn apply(&self, unpublished: &mut TsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_tsv_diff(self, base)?;
+        *unpublished = apply_tsv_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -361,16 +365,18 @@ fn inverse_rows(diff: &TsvRowsDiff, base: &[Vec<String>]) -> TsvRowsDiff {
 }
 
 impl DiffAlgebra<TsvSnapshot> for TsvDiff {
+    fn is_empty(&self) -> bool {
+        self.trailing_newline.is_none() && self.line_ending.is_none() && self.records.as_ref().is_none_or(TsvRowsDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<TsvSnapshot> for TsvDiff {
     fn inverse(&self, base: &TsvSnapshot) -> Self {
         Self {
             trailing_newline: self.trailing_newline.map(|_| base.trailing_newline),
             line_ending: self.line_ending.map(|_| base.line_ending),
             records: self.records.as_ref().map(|records| inverse_rows(records, &base.records)).filter(|records| !records.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.trailing_newline.is_none() && self.line_ending.is_none() && self.records.as_ref().is_none_or(TsvRowsDiff::is_empty)
     }
 }
 

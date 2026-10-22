@@ -62,7 +62,7 @@
     "preimageDrift": "reject",
     "newIncomingReferences": "reject-or-rollback",
     "ordering": "utf8-byte",
-    "historicalDocumentEvidence": "ticket-report-workspace-cursor-plan-snapshot-and-dev-prompt-log-whole-document-excluded"
+    "historicalDocumentEvidence": "ticket-report-workspace-and-dev-prompt-log-whole-document-excluded"
   },
   "frozenMarkdownCoordinateEvidenceContracts": {
     "energy-history-reloc-g6": {
@@ -605,7 +605,7 @@
       ]
     },
     "frozen-ticket-plans-puzzle-5d-design-parity-61aab236-plan": {
-      "path": ".cursor/plans/puzzle_5d_design_parity_61aab236.plan.md",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/PUZZLE-DESIGN-PARITY/puzzle_5d_design_parity_61aab236.plan.md",
       "grammar": "frozen-markdown-source-coordinates-v1",
       "sha256": "0ada45edaeada3f56211448d2fe17fd66a14b2ce8ebe03b323a3b04f0c050460",
       "coordinates": [
@@ -1499,12 +1499,6 @@
       "directoryPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**",
       "leafPattern": "^.+$",
       "reason": "Any descendant of a ticket root, at any nesting depth, that is not itself a registered fixedFilenameContracts file is ticket workspace — evidence snapshots (e.g. *.pre-patch.rs), scratch scripts, census/log output, working notes (📌️*.md), and their own nested subfolders (e.g. 📥️worker-bootstrap/, 🧪️run-*/) — never a live reference. Depth was never the safety property: it is exempted only when it is not itself a fixedFilenameContracts match AND no ancestor directory up to the ticket root owns a package-root manifest (Cargo.toml/package.json/go.mod/…, any fixedFilenameContracts entry with scope.kind===\"package-root\"); a ticket-embedded package, and any fixed-filename contract file wherever it sits (e.g. 📜️script.ts, matched by root-script's own **/📜️script.ts pattern regardless of location), keeps its normal live-reference treatment."
-    },
-    "cursor-plan-snapshot": {
-      "grammar": "historical-document-evidence-v1",
-      "directoryPattern": ".cursor/plans/*",
-      "leafPattern": "^.+\\.plan\\.md$",
-      "reason": "Cursor IDE plan snapshots are historical planning narrative authored by a separate tool with no ticket-lifecycle concept; they are never live references and are unconditionally excluded from reference-candidate scanning."
     },
     "dev-prompt-log": {
       "grammar": "historical-document-evidence-v1",
@@ -12458,7 +12452,7 @@
         "🔭️provider-interfaces",
         "🎄️github-provider",
         "🔒️git-devcontainer-providers",
-        "🎆️editor-providers",
+        "🎆️agent-client-providers",
         "⚙️scope-todo-breach-types",
         "🎽️language-base",
         "🪶️language-comment-scan",
@@ -12595,7 +12589,7 @@
         "🙈️ignore",
         "🧱️results",
         "🎄️github",
-        "🎆️editors",
+        "🎆️agent-clients",
         "🎯️github-goals",
         "🏃️process",
         "🔒️git",
@@ -12768,7 +12762,18 @@
         "🛡️root-guard",
         "🚧️sandboxed-run",
         "🩺️sandbox-audit",
-        "🌱️fixture-repository"
+        "🌱️fixture-repository",
+        "🗂️runtime-registry",
+        "🧭️workspace-root",
+        "🗣️language",
+        "📥️runtime-provision",
+        "🏗️entry",
+        "🛰️resident",
+        "🛰️resident-unix",
+        "🛰️resident-windows",
+        "🐚️unix-host",
+        "🪟️windows-host",
+        "🛎️command"
       ],
       "source": "registry"
     },
@@ -12927,7 +12932,6 @@
         "🧠️lsp",
         "🧠️runtime",
         "🧩️extension_sdk",
-        "🧩️vscode",
         "🧪️conformance",
         "🧰️fixtures",
         "🧹️fixture-sweep",
@@ -18428,7 +18432,7 @@
               "endByte": 2097,
               "oldValue": "script.ts",
               "newValue": "📜️script.ts",
-              "linePreimage": "bun path/to/script.ts policy"
+              "linePreimage": "repo path/to/script.ts policy"
             },
             {
               "line": 40,
@@ -18436,7 +18440,7 @@
               "endByte": 2150,
               "oldValue": "script.ts",
               "newValue": "📜️script.ts",
-              "linePreimage": "bun repo/lib/js/bin/lint.ts path/to/script.ts"
+              "linePreimage": "repo repo/lib/js/bin/lint.ts path/to/script.ts"
             },
             {
               "line": 43,
@@ -24721,7 +24725,7 @@
       "scope": {
         "kind": "path-pattern"
       },
-      "verification": "bun repo show project",
+      "verification": "repo show project",
       "expires": null
     },
     "build-owned-node-package-manifest": {
@@ -24733,7 +24737,7 @@
         "kind": "sibling-fixed-filename-contract",
         "fixedFilenameContractId": "build-project-manifest"
       },
-      "verification": "bun repo show project and bun pm",
+      "verification": "repo show project and bun pm",
       "expires": null
     },
     "build-owned-typescript-config": {
@@ -24745,7 +24749,7 @@
         "kind": "sibling-fixed-filename-contract",
         "fixedFilenameContractId": "build-project-manifest"
       },
-      "verification": "bun repo show project and tsc --showConfig",
+      "verification": "repo show project and tsc --showConfig",
       "expires": null
     },
     "python-project-manifest": {
@@ -24883,7 +24887,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo graph",
+      "verification": "repo graph",
       "expires": null
     },
     "root-bazel-configuration": {
@@ -24894,7 +24898,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo tools setup bazel",
+      "verification": "repo tools setup bazel",
       "expires": null
     },
     "root-bazel-version": {
@@ -24905,7 +24909,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo tools setup bazel",
+      "verification": "repo tools setup bazel",
       "expires": null
     },
     "root-bazel-module": {
@@ -24916,7 +24920,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo tools setup bazel",
+      "verification": "repo tools setup bazel",
       "expires": null
     },
     "root-script": {
@@ -24938,7 +24942,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo show projects",
+      "verification": "repo show projects",
       "expires": null
     },
     "root-package": {
@@ -25180,7 +25184,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "bun repo graph",
+      "verification": "repo graph",
       "expires": null
     },
     "prettierignore": {
@@ -29923,6 +29927,7 @@
       "previewArguments": [
         "preview"
       ],
+      "previewScript": "🧩️catalog/📣️publication/📜️script.ts",
       "checkTarget": "@semio-tech/s-dev-composition:check-generated",
       "inputPatterns": [
         "nx.json",
@@ -32335,7 +32340,7 @@
       "🔣️jsonschema": "jsonschema",
       "🛰️protobuf": "protobuf"
     },
-    "generator": "bun ./📜️script.ts schema generate",
+    "generator": "repo ./📜️script.ts schema generate",
     "idBase": "https://json.schemas.assets.semio-tech.com/",
     "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
     "mutationAggregateFacetFilename": "mutations.json",

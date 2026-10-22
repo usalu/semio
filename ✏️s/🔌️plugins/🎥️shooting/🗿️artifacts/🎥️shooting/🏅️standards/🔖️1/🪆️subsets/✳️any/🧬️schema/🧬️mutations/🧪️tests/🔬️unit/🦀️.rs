@@ -5,7 +5,7 @@ use crate::diff::ShootingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 fn sample_asset(id: &str) -> ShootingAsset {
     ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
@@ -299,7 +299,7 @@ async fn create_asset_obeys_the_inverse_and_absorb_laws() {
     let create = ShootingMutation::CreateAsset(crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset { asset: sample_asset("a9"), index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).into_parts().0;
-    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = ShootingMutation::RenameAsset(crate::standards::v1::subsets::any::schema::mutations::rename_asset::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

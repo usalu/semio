@@ -1,0 +1,146 @@
+{
+ "version": 1,
+ "tree": {
+  "a/package.json": "{\"name\": \"a\"}",
+  "b/c/package.json": "{\"name\": \"c\"}",
+  "skip/node_modules/x/package.json": "{\"name\": \"x\"}"
+ },
+ "expected": [
+  "a",
+  "b/c"
+ ],
+ "rootDocument": {
+  "name": "root",
+  "version": "1.0.0",
+  "workspaces": [
+   "a"
+  ],
+  "scripts": {
+   "t": "x"
+  }
+ },
+ "rendered": "{\n  \"name\": \"root\",\n  \"version\": \"1.0.0\",\n  \"workspaces\": [\n    \"a\",\n    \"b/c\"\n  ],\n  \"scripts\": {\n    \"t\": \"x\"\n  }\n}\n",
+ "scenarios": {
+  "stale": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "a"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "check",
+   "throws": "Root workspace membership is stale",
+   "stderr": [
+    "root package.json workspaces is stale (2 expected, 1 current).",
+    "  missing: b/c",
+    "run `repo ./📜️script.ts workspaces --write` to refresh."
+   ],
+   "stdout": []
+  },
+  "stalePlusStaleEntries": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "a",
+     "old/gone"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "check",
+   "throws": "Root workspace membership is stale",
+   "stderr": [
+    "  missing: b/c",
+    "  stale:   old/gone"
+   ],
+   "stdout": []
+  },
+  "reordered": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "b/c",
+     "a"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "check",
+   "throws": "Root workspace membership is stale",
+   "stderr": [
+    "  (same set, different order)"
+   ],
+   "stdout": []
+  },
+  "fresh": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "a",
+     "b/c"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "check",
+   "throws": null,
+   "stderr": [],
+   "stdout": [
+    "root package.json workspaces is fresh (2 packages)."
+   ],
+   "written": false,
+   "fresh": true
+  },
+  "writeStale": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "a"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "write",
+   "throws": null,
+   "stderr": [],
+   "stdout": [
+    "root package.json workspaces regenerated -> 2 packages."
+   ],
+   "written": true,
+   "fresh": false
+  },
+  "writeFresh": {
+   "document": {
+    "name": "root",
+    "version": "1.0.0",
+    "workspaces": [
+     "a",
+     "b/c"
+    ],
+    "scripts": {
+     "t": "x"
+    }
+   },
+   "mode": "write",
+   "throws": null,
+   "stderr": [],
+   "stdout": [
+    "root package.json workspaces already fresh (2 packages) — no write needed."
+   ],
+   "written": false,
+   "fresh": true
+  }
+ }
+}

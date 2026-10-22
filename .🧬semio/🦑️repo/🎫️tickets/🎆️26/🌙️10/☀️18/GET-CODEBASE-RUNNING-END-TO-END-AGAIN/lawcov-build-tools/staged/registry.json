@@ -1,0 +1,193 @@
+{
+ "version": 1,
+ "tests": [
+  {
+   "path": "⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/📦️bundle/🟦️bun/📤️stream/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🧮️handoff/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🧮️arguments/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🧮️settings/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🧮️mapping/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts",
+   "group": "fixes"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts",
+   "group": "fixes"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧮️matrix/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🦀️cargo/📦️units/🏗️compiler/📍️workspace/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🧹️pruning/⏱️recency/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🧹️pruning/🧪️tests/🧮️plan/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🌡️host-capacity/🧪️tests/🧮️arguments/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/📊️reporting/🧪️tests/🧮️names/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/📥️inputs/🎯️selected/🦀️rust/🧪️tests/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🧮️resources/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🔧️tools/🏗️bazel/👁️evidence/🧪️tests/🧮️closure/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🧮️digest/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧮️arguments/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "🏗️build/🧹️cache-gc/⌨️command/🧪️tests/🧮️arguments/🟦️.ts",
+   "group": "cache-gc"
+  },
+  {
+   "path": "🏗️build/🧹️cache-gc/🏃️runner/🧪️tests/🟦️.ts",
+   "group": "cache-gc"
+  },
+  {
+   "path": "🏗️build/🩺️preflight/🧪️tests/🧮️matrix/🟦️.ts",
+   "group": "main"
+  },
+  {
+   "path": "⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/📤️arguments/🧪️tests/⚖️contracts/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/📥️inputs/🎯️precision/🧪️tests/🔣️glob-dialects/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/📥️inputs/🧊️stable-file/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🎯️target-policy/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/📜️toml/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️cargo-go/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🟦️.ts",
+   "group": "tests"
+  },
+  {
+   "path": "🏗️build/🕸️graph/📥️inference/🪢️revision-graph/🧪️tests/⚖️roster/🟦️.ts",
+   "group": "tests"
+  }
+ ]
+}

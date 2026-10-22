@@ -1,5 +1,5 @@
 /** ☁️ World3d instance layers, point cloud: the point cloud layer visual and the layer that draws it. */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { BufferAttribute, BufferGeometry, PointsMaterial } from "@semio-tech/ui-react";
 import { base64ToBytes } from "../../../🖌️Paint2dHost/🟦️.tsx";
 import { type WorldPointCloudLayerRecord } from "../../🔭️scene-schema/🟦️.ts";

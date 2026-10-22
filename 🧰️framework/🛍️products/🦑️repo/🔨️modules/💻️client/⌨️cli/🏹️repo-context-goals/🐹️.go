@@ -12,8 +12,8 @@ import (
 	"encoding/json"
 	"fmt"
 	repopkg "github.com/usalu/semio/repo/go"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -135,7 +135,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 
 // 🌐️getGhRepoUrl holds the data fields for a getGhRepoUrl record.
 func getGhRepoUrl() (string, error) {
-	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	out, err := workspace.ToolCommand("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
 		return "", err
 	}

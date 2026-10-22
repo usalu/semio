@@ -352,22 +352,9 @@ pub fn wrap_viewpoint_diff(base: &BcfSnapshot, topic_guid: &str, viewpoint_guid:
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
-impl MutationDiff<BcfSnapshot> for BcfDiff {
-    fn apply(&self, base: &BcfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<BcfSnapshot> {
-        validate_bcf_diff(self, base)?;
-        let mut next = base.clone();
-        if let Some(v) = &self.version {
-            next.version = v.clone();
-        }
-        if let Some(td) = &self.topics {
-            next.topics = apply_indexed(&base.topics, td, apply_topic_cloned);
-        }
-        if let Some(pd) = &self.parts {
-            next.parts = apply_indexed(&base.parts, pd, apply_part_cloned);
-        }
-        Ok(next)
-    }
+impl MutationDiff<BcfSnapshot> for BcfDiff {}
 
+impl protocol::ColdMutationDiff<BcfSnapshot> for BcfDiff {
     fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
@@ -388,6 +375,23 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
                 Some(a)
             }
         };
+    }
+
+    fn apply(&self, unpublished: &mut BcfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_bcf_diff(self, base)?;
+        let mut next = base.clone();
+        if let Some(v) = &self.version {
+            next.version = v.clone();
+        }
+        if let Some(td) = &self.topics {
+            next.topics = apply_indexed(&base.topics, td, apply_topic_cloned);
+        }
+        if let Some(pd) = &self.parts {
+            next.parts = apply_indexed(&base.parts, pd, apply_part_cloned);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -508,16 +512,18 @@ fn apply_part_cloned(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfRawPart {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<BcfSnapshot> for BcfDiff {
+    fn is_empty(&self) -> bool {
+        self.version.is_none() && self.topics.is_none() && self.parts.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BcfSnapshot> for BcfDiff {
     fn inverse(&self, base: &BcfSnapshot) -> Self {
         BcfDiff {
             version: self.version.as_ref().map(|_| base.version.clone()),
             topics: self.topics.as_ref().map(|d| inverse_indexed(d, &base.topics, |diff, topic| inverse_topic(topic, diff))).filter(|d| !d.is_empty()),
             parts: self.parts.as_ref().map(|d| inverse_indexed(d, &base.parts, |diff, part| inverse_part(part, diff))).filter(|d| !d.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.version.is_none() && self.topics.is_none() && self.parts.is_none()
     }
 }
 

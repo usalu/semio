@@ -128,7 +128,7 @@ pub mod testing {
     pub fn raised(snapshot: &ModelSnapshot, storey: &str, delta: f64) -> ModelSnapshot {
         let height = snapshot.storeys[storey].height + delta;
         let diff = ModelDiff::storeys(storey.into(), Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() }));
-        protocol::apply_diff(&diff, snapshot).expect("the height edit applies")
+        protocol::apply_diff_cold(&diff, snapshot).expect("the height edit applies")
     }
 
     /// ⚖️ `true` when `got` is within `tolerance` of `want`.

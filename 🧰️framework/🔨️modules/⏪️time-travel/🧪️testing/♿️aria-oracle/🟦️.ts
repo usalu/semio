@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { evalSafe } from "../🔬️probe/🟦️.ts";
 import { page, renderer } from "../🧠️state/🟦️.ts";
 import { log, verdict } from "../🧾️report/🟦️.ts";
+import { runtimeBundleV1 } from "../../../⚙️runtime/🔬️source/🟦️.ts";
 
 //#region 🔖️Band
 //#region 🔖️AriaOracle
@@ -19,8 +20,8 @@ let ariaOracleBundle: string | null = null;
  * copies answer); cached for the run. */
 const ariaOracle = async () => {
   if (ariaOracleBundle !== null) return ariaOracleBundle;
-  const entry = join(import.meta.dir, "aria-oracle.ts");
-  const built = await Bun.build({
+  const entry = join(import.meta.dirname, "aria-oracle.ts");
+  const built = await runtimeBundleV1({
     entrypoints: [entry],
     target: "browser",
     format: "iife",

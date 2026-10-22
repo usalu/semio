@@ -115,7 +115,8 @@
     "git clean",
     "git stash",
     "rm -rf /var/lib",
-    "DETACH DELETE"
+    "DETACH DELETE",
+    "micro-commit install-hooks"
   ],
   "dashboardOnly": {
     "removedPaths": [
@@ -143,7 +144,9 @@
     "forbiddenArgs": [
       "--install-extension",
       "--list-extensions",
-      "@semio-tech/repo-vscode:build-vsix"
+      "@semio-tech/repo-vscode:build-vsix",
+      "install-hooks",
+      "core.hooksPath"
     ],
     "nativeBootstrap": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
@@ -174,6 +177,67 @@
       ".gitkraken",
       ".local/share/GitKrakenCLI",
       ".local/share/gk"
-    ]
+    ],
+    "automaticHooks": {
+      "version": 1,
+      "automaticInstallation": false,
+      "forbiddenArguments": [
+        "install-hooks",
+        "core.hooksPath"
+      ],
+      "cases": [
+        {
+          "id": "bootstrap-installer",
+          "argv": [
+            "bun",
+            "./📜️script.ts",
+            "micro-commit",
+            "install-hooks"
+          ],
+          "allowed": false
+        },
+        {
+          "id": "native-installer",
+          "argv": [
+            "repo",
+            "micro-commit",
+            "install-hooks"
+          ],
+          "allowed": false
+        },
+        {
+          "id": "alternate-hooks-root",
+          "argv": [
+            "git",
+            "config",
+            "core.hooksPath",
+            ".githooks"
+          ],
+          "allowed": false
+        },
+        {
+          "id": "explicit-preparation",
+          "argv": [
+            "repo",
+            "run",
+            "workspace:setup-git"
+          ],
+          "allowed": true
+        },
+        {
+          "id": "optional-viewer-probe",
+          "argv": [
+            "which",
+            "f3d"
+          ],
+          "allowed": true
+        },
+        {
+          "id": "empty-attach",
+          "argv": [],
+          "allowed": true
+        }
+      ]
+    }
   }
 }

@@ -8,7 +8,7 @@ import { checkResourceLeaseControl } from "../../../../../../../🔨️modules/�
 import { terminateOwnedChildTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { spawn } from "node:child_process";
+
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -33,6 +33,7 @@ import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from
 import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** ⏱️ Upper bound of one guest `describe()` probe over a transpiled module. */
 const DESCRIPTOR_PROBE_BUDGET_MS = 120_000;
@@ -59,7 +60,7 @@ export class SupportScript extends BundleScript {
 async function probeModuleDescriptor(module: string, repoRoot: string, control: CompilerAdmissionControl, environment: Readonly<Record<string, string | undefined>> = process.env): Promise<Uint8Array> {
   const phase = requestedCompilerAdmissionControlV1(control, DESCRIPTOR_PROBE_BUDGET_MS);
   const budget = compilerAdmissionBudgetV1(phase);
-  const child = spawn("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, "--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, module], { cwd: repoRoot, env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, signal: control.signal, timeout: budget, killSignal: "SIGTERM", stdio: ["ignore", "pipe", "pipe"] });
+  const child = startToolV1("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, "--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, module], { cwd: repoRoot, env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, signal: control.signal, timeout: budget, killSignal: "SIGTERM", stdio: ["ignore", "pipe", "pipe"] });
   const terminate = (): void => terminateOwnedChildTree(child);
   control.signal.addEventListener("abort", terminate, { once: true });
   const deadline = setTimeout(terminate, budget);

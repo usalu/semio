@@ -1,10 +1,11 @@
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
+import { SqliteDatabaseV1 } from "../../⚙️runtime/🗃️sqlite/🟦️.ts";
 
 /** 🧮️ Checks closed wire grammar and copied UTF-8 independently of native allocation widths. */
 export async function proveWireValueMaterializationFixture(repoRoot:string):Promise<void>{
     const assert:typeof import("node:assert/strict")=(await import("node:assert/strict")).default;const equal=(await import("fast-deep-equal")).default;
-    const {Database}=await import("bun:sqlite"),root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
+    const {Database}={ Database: SqliteDatabaseV1 },root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
     const fixture=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
     assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
     const database=new Database(":memory:");

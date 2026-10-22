@@ -33,7 +33,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-extension-registry",
+        "command": "repo ./📜️script.ts test-extension-registry",
         "forwardAllArgs": true
       }
     },
@@ -49,7 +49,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-form-producer",
+        "command": "repo ./📜️script.ts test-form-producer",
         "forwardAllArgs": true
       }
     },
@@ -65,7 +65,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-form-source",
+        "command": "repo ./📜️script.ts test-form-source",
         "forwardAllArgs": true
       }
     }

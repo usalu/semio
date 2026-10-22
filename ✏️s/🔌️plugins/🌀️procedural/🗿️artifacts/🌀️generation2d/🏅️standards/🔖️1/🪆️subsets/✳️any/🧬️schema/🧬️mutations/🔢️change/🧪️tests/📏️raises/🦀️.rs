@@ -33,7 +33,7 @@ fn mutation() -> Generation2dMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn raised_diff(base: &Generation2dSnapshot) -> (Generation2dDiffRead, Vec<protocol::MutationMessage>) {
-    let (diff, messages) = <Generation2dMutation as protocol::Mutation<Generation2dSnapshot>>::diff(&mutation(), base).into_parts();
+    let (diff, messages) = <Generation2dMutation as protocol::ColdMutation<Generation2dSnapshot>>::diff(&mutation(), base).into_parts();
     (Generation2dDiffRead::new(diff), messages)
 }
 
@@ -132,7 +132,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation2dSnapshotRead::new(
-        protocol::apply_diff(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
+        protocol::apply_diff_cold(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );
     assert_eq!(produced, expected_after(), "change-generation-value/raises-the-height-answer-in-generation-1: committed diff did not carry before to after");
 }

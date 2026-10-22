@@ -1,506 +1,189 @@
-// #region 🧲️Header
+/** 📝️ The docstring censuses (openers, emoji reuse) and the debug-tag census of the tracked sources. */
 
-// 2026 Ueli Saluz <ueli@semio-tech.com>
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-// 🥅️goals carries the goal mutations of the repository context.
+//#region 🧮️SourceCensus
+/** 🏷️ One docstring line that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
+ * an opener with no emoji at all (a symbol glyph such as `⊕` or `√` counts as the marker). */
+export type DocstringHit = Readonly<{ path: string; line: number; rule: "at-emoji" | "no-emoji"; text: string }>;
 
-// #endregion 🧲️Header
+const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]️?⃣)/u;
+const AT_EMOJI_LINE = /(?:\/\/\/|\/\/!|\/\*\*)\s*@emoji|^\s*\*\s*@emoji/u;
+const RUST_LINE_DOC = /^\/\/[/!](?!\/)/u;
 
-package graphql
-
-import (
-	json "encoding/json"
-	fmt "fmt"
-	os "os"
-	filepath "path/filepath"
-	strings "strings"
-
-	contributorspkg "github.com/usalu/semio/repo/contributors"
-	events "github.com/usalu/semio/repo/events"
-	goalspkg "github.com/usalu/semio/repo/goals"
-	model "github.com/usalu/semio/repo/model"
-	providers "github.com/usalu/semio/repo/providers"
-	workspace "github.com/usalu/semio/repo/workspace"
-)
-
-// #region 🥅️Goals
-
-// 🆕️GoalCreate MUST return a non-nil error when the operation fails.
-// ◽GoalCreate performs the goal create operation on the repo context.
-func (c *RepoContext) GoalCreate(input model.GoalCreateInput) (*model.Goal, error) {
-
-	if input.Title == "" {
-		return nil, fmt.Errorf("missing title")
-	}
-	if input.Description == "" {
-		return nil, fmt.Errorf("missing description")
-	}
-	if input.Prompt == "" {
-		return nil, fmt.Errorf("missing prompt")
-	}
-	if input.DueDate == "" {
-		return nil, fmt.Errorf("missing due date")
-	}
-	if input.LLM == "" {
-		return nil, fmt.Errorf("missing llm")
-	}
-	if input.Client == "" {
-		return nil, fmt.Errorf("missing client")
-	}
-
-	llmSlug, err := model.ResolveAllowedLLM(input.LLM)
-	if err != nil {
-		return nil, err
-	}
-	var effortSlug string
-	if input.Effort != "" {
-		effortSlug, err = model.ResolveAllowedEffort(input.Effort)
-		if err != nil {
-			return nil, err
-		}
-	}
-	uiSlug, err := model.ResolveAllowedClient(input.Client)
-	if err != nil {
-		return nil, err
-	}
-
-	slug := workspace.Slugify(input.Title)
-	id := slug
-	if input.Parent != "" {
-		id = input.Parent + "/" + slug
-	}
-
-	dir := workspace.GetRepoGoalsDir()
-	path := filepath.Join(dir, filepath.FromSlash(id), "🎯️goal.json")
-	if workspace.FileExists(path) {
-		return nil, fmt.Errorf("goal with id %s already exists", id)
-	}
-
-	goal := model.Goal{
-		ID:          id,
-		Title:       input.Title,
-		Parent:      input.Parent,
-		Description: input.Description,
-		Prompt:      input.Prompt,
-		Status:      "open",
-		Dates:       model.GoalDates{Due: input.DueDate},
-		Client:      uiSlug,
-		LLM:         llmSlug,
-		Effort:      effortSlug,
-	}
-
-	if !input.NoManagement {
-		if goalspkg.IsRootGoal(goal.ID) {
-			if input.Milestone != "" {
-				goal.Management = &model.GoalManagementData{Milestone: input.Milestone}
-			} else {
-				milestoneNumber, err := c.managementProvider.CreateMilestone(input.Title, input.Description)
-				if err != nil {
-					return nil, err
-				}
-				if input.DueDate != "" {
-					_ = c.managementProvider.UpdateMilestone(milestoneNumber, "", "", "", input.DueDate)
-				}
-				repoUrl, _ := getGhRepoUrl()
-				goal.Management = &model.GoalManagementData{
-					Milestone: fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber),
-				}
-			}
-		} else if goalspkg.IsFirstGenGoal(goal.ID) {
-			milestone, _ := goalspkg.GetRootGoalMilestone(id)
-			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, milestone)
-			if err != nil {
-				return nil, err
-			}
-			goal.Management = &model.GoalManagementData{Issue: issueURL}
-		} else {
-			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, nil)
-			if err != nil {
-				return nil, err
-			}
-			goal.Management = &model.GoalManagementData{Issue: issueURL}
-			parentID := goalspkg.GetParentGoalID(id)
-			parentGoal, parentErr := goalspkg.ReadGoal(parentID)
-			if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
-				if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
-					workspace.WriteWarningf("Failed to link sub-issue to parent goal %s: %v", parentID, err)
-				}
-			}
-		}
-	}
-
-	if err := goalspkg.SaveGoal(goal); err != nil {
-		return nil, err
-	}
-	events.Emit(events.EventGoalOpenEnded, "repo-cli", events.GoalOpenPayload{
-		GoalPayload: events.GoalPayload{ID: goal.ID},
-		Title:       goal.Title, Description: goal.Description, LLM: llmSlug, Effort: effortSlug, Parent: goal.Parent, Author: contributorspkg.GetGitAuthorAlias(),
-	})
-	return &goal, nil
+/** 🧷️ Every docstring opener of one source, by 1-based line with its trimmed content: a Rust `///` or `//!` run's first non-empty
+ * line (a run ends where its doc kind changes) and a `/** … *\/` block's first non-empty content line (Rust and TypeScript; `/**\/` and `/***` are no docstrings, and a `/**`
+ * behind `//` or a quote is text), in line order. */
+export function docstringOpenersOfText(path: string, text: string): { readonly line: number; readonly content: string }[] {
+  const lines = text.split("\n");
+  const openers: { readonly line: number; readonly content: string }[] = [];
+  const opener = (index: number, content: string): void => {
+    openers.push({ line: index + 1, content: content.trim() });
+  };
+  if (path.endsWith(".rs")) {
+    let run: string | null = null;
+    let opened = false;
+    lines.forEach((raw, index) => {
+      const line = raw.trimStart();
+      if (!RUST_LINE_DOC.test(line)) {
+        run = null;
+        return;
+      }
+      if (run !== line.slice(0, 3)) opened = false;
+      run = line.slice(0, 3);
+      if (opened || line.slice(3).trim().length === 0) return;
+      opened = true;
+      opener(index, line.slice(3));
+    });
+  }
+  let open = false;
+  lines.forEach((raw, index) => {
+    if (!open) {
+      const start = raw.indexOf("/**");
+      if (start < 0 || raw[start + 3] === "/" || raw[start + 3] === "*" || /\/\/|["'`]/u.test(raw.slice(0, start))) return;
+      const rest = raw.slice(start + 3);
+      const closeAt = rest.indexOf("*/");
+      const content = closeAt >= 0 ? rest.slice(0, closeAt) : rest;
+      if (content.trim().length > 0) {
+        opener(index, content);
+        return;
+      }
+      open = closeAt < 0;
+      return;
+    }
+    const closeAt = raw.indexOf("*/");
+    const content = (closeAt >= 0 ? raw.slice(0, closeAt) : raw).replace(/^\s*\*?/u, "");
+    if (content.trim().length > 0) {
+      open = false;
+      opener(index, content);
+      return;
+    }
+    if (closeAt >= 0) open = false;
+  });
+  return openers.sort((left, right) => left.line - right.line);
 }
 
-// 🌐️getGhRepoUrl holds the data fields for a getGhRepoUrl record.
-func getGhRepoUrl() (string, error) {
-	out, err := workspace.ToolCommand("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
+/** 🔖️ Every docstring finding of one source. `at-emoji`: each line where a doc opener (`///`, `//!`, `/**`) or a block
+ * continuation (` * `) is followed by the `@emoji` token — wherever it stands, so an `@emoji` paragraph inside a run and a
+ * generator's emitted doc line count too. `no-emoji`: each docstring opener ({@link docstringOpenersOfText}) that starts with
+ * neither an emoji nor a symbol glyph. */
+export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
+  const hits: DocstringHit[] = [];
+  text.split("\n").forEach((raw, index) => {
+    if (AT_EMOJI_LINE.test(raw)) hits.push({ path, line: index + 1, rule: "at-emoji", text: raw.trim().slice(0, 80) });
+  });
+  const flagged = new Set(hits.map((hit) => hit.line));
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!flagged.has(line) && !content.startsWith("@emoji") && !DOCSTRING_MARKER.test(content)) hits.push({ path, line, rule: "no-emoji", text: content.slice(0, 80) });
+  }
+  return hits.sort((left, right) => left.line - right.line);
 }
 
-// 🔁️UpdateGoalTitle MUST apply the update and return an error if the target is missing.
-// ❓️UpdateGoalTitle modifies an existing goal title entry.
-func UpdateGoalTitle(goal *model.Goal, title string) error {
-	title = strings.TrimSpace(title)
-	if title == "" {
-		return fmt.Errorf("goal title is required")
-	}
-	newSlug := workspace.Slugify(title)
-	if title == newSlug {
-		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
-	}
-	if title == strings.ToLower(newSlug) {
-		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
-	}
+/** 🪞️ One marker that opens more than one docstring of a source (AGENTS.md: every docstring starts with a unique emoji; design
+ * §21.2 holds that per file): the marker's grapheme without its variation selector, and every opener line it starts. */
+export type DocstringEmojiReuse = Readonly<{ path: string; emoji: string; lines: readonly number[] }>;
 
-	var newID string
-	if goal.Parent != "" {
-		newID = goal.Parent + "/" + newSlug
-	} else {
-		newID = newSlug
-	}
+const DOCSTRING_GRAPHEMES = new Intl.Segmenter("en", { granularity: "grapheme" });
 
-	if newID != goal.ID {
-		dir := workspace.GetRepoGoalsDir()
-		oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
-		newPath := filepath.Join(dir, filepath.FromSlash(newID))
-		if workspace.FileExists(newPath) {
-			return fmt.Errorf("goal folder already exists: %s", newPath)
-		}
-		if err := os.Rename(oldPath, newPath); err != nil {
-			return err
-		}
-		goal.ID = newID
-	}
-	goal.Title = title
-	return nil
+/** 🔁️ Every marker of one source that opens more than one docstring ({@link docstringOpenersOfText}; an opener without a marker or
+ * behind the `@emoji` residue is the `docstrings` census's own finding), in the order of each marker's first opener. */
+export function docstringEmojiReuseOfText(path: string, text: string): DocstringEmojiReuse[] {
+  const openers = new Map<string, number[]>();
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!DOCSTRING_MARKER.test(content)) continue;
+    const emoji = DOCSTRING_GRAPHEMES.segment(content)[Symbol.iterator]().next().value!.segment.replaceAll("\uFE0F", "");
+    openers.set(emoji, [...(openers.get(emoji) ?? []), line]);
+  }
+  return [...openers].filter(([, lines]) => lines.length > 1).map(([emoji, lines]) => ({ path, emoji, lines }));
 }
 
-// ♻️GoalChange MUST return a non-nil error when the operation fails.
-// 📐️GoalChange performs the goal change operation on the repo context.
-func (c *RepoContext) GoalChange(input model.GoalChangeInput) (*model.Goal, error) {
-	dir := workspace.GetRepoGoalsDir()
-	path := filepath.Join(dir, input.ID, "🎯️goal.json")
-	content, err := workspace.ReadTextFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var goal model.Goal
-	if err := json.Unmarshal([]byte(content), &goal); err != nil {
-		return nil, err
-	}
-	goal.ID = input.ID
-
-	if input.Title != nil {
-		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
-			return nil, err
-		}
-	}
-	if input.Description != nil {
-		goal.Description = *input.Description
-	}
-	if input.DueDate != nil {
-		goal.Dates.Due = *input.DueDate
-	}
-	if input.LLM != nil {
-		llmSlug, err := model.ResolveAllowedLLM(*input.LLM)
-		if err != nil {
-			return nil, err
-		}
-		goal.LLM = llmSlug
-	}
-	if input.Effort != nil {
-		effortSlug, err := model.ResolveAllowedEffort(*input.Effort)
-		if err != nil {
-			return nil, err
-		}
-		goal.Effort = effortSlug
-	}
-	if input.Parent != nil {
-		goal.Parent = *input.Parent
-
-		slug := goal.ID
-		if idx := strings.LastIndex(goal.ID, "/"); idx != -1 {
-			slug = goal.ID[idx+1:]
-		}
-
-		var newID string
-		if goal.Parent != "" {
-			newID = goal.Parent + "/" + slug
-		} else {
-			newID = slug
-		}
-
-		if newID != goal.ID {
-			oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
-			newPath := filepath.Join(dir, filepath.FromSlash(newID))
-
-			if workspace.FileExists(newPath) {
-				return nil, fmt.Errorf("goal folder already exists: %s", newPath)
-			}
-
-			if err := os.MkdirAll(filepath.Dir(newPath), 0755); err != nil {
-				return nil, err
-			}
-
-			if err := os.Rename(oldPath, newPath); err != nil {
-				return nil, err
-			}
-			goal.ID = newID
-		}
-	}
-
-	if goal.Management != nil && !input.NoManagement {
-		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
-			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
-			if err == nil {
-				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, goal.Status, goal.Dates.Due); err != nil {
-					return nil, err
-				}
-			}
-		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
-			if err := c.managementProvider.UpdateGoalIssue(goal.Management.Issue, goal.Title, goal.Description); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if err := goalspkg.SaveGoal(goal); err != nil {
-		return nil, err
-	}
-	events.Emit(events.EventGoalChangeEnded, "repo-cli", events.GoalChangePayload{
-		GoalPayload: events.GoalPayload{ID: goal.ID},
-		Title:       input.Title, Description: input.Description, LLM: input.LLM, Effort: input.Effort, Parent: input.Parent, Author: contributorspkg.GetGitAuthorAlias(),
-	})
-	return &goal, nil
+/** 📚️ Every tracked Rust / TypeScript source the docstring censuses read: outside the ticket tree, generated trees and declaration files. */
+function docstringSources(repoRoot: string): string[] {
+  const listed = runToolSyncV1("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
+  return listed.stdout.split("\0").filter(Boolean);
 }
 
-// 📪️GoalClose MUST return a non-nil error when the operation fails.
-// 🏁️GoalClose performs the goal close operation on the repo context.
-func (c *RepoContext) GoalClose(input model.GoalCloseInput) (*model.Goal, error) {
-	dir := workspace.GetRepoGoalsDir()
-	path := filepath.Join(dir, input.ID, "🎯️goal.json")
-	content, err := workspace.ReadTextFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var goal model.Goal
-	if err := json.Unmarshal([]byte(content), &goal); err != nil {
-		return nil, err
-	}
-	goal.ID = input.ID
-
-	if goal.Status == "closed" {
-		return nil, fmt.Errorf("goal is already closed")
-	}
-
-	goal.Status = "closed"
-	goal.Summary = input.Summary
-
-	if goal.Management != nil && !input.NoManagement {
-		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
-			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
-			if err == nil {
-				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "closed", ""); err != nil {
-					return nil, err
-				}
-			}
-		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
-			if err := c.managementProvider.CloseIssue(goal.Management.Issue); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if err := goalspkg.SaveGoal(goal); err != nil {
-		return nil, err
-	}
-	events.Emit(events.EventGoalCloseEnded, "repo-cli", events.GoalClosePayload{
-		GoalPayload: events.GoalPayload{ID: goal.ID},
-		Summary:     goal.Summary, Author: contributorspkg.GetGitAuthorAlias(),
-	})
-	return &goal, nil
+/** 🗳️ The docstring census over every source {@link docstringSources} lists, with its `@emoji` findings cross-checked line for line
+ * against `git grep` (the oracle). */
+export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const sources = docstringSources(repoRoot);
+  const hits: DocstringHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...docstringHitsOfText(path, text));
+  }
+  const grep = (pattern: string): string[] => runToolSyncV1("git", ["grep", "-n", "-E", pattern, "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":"));
+  const oracle = new Set([...grep("(///|//!|/\\*\\*)[[:space:]]*@emoji"), ...grep("^[[:space:]]*\\*[[:space:]]*@emoji")]);
+  const scanned = new Set(hits.filter((hit) => hit.rule === "at-emoji").map((hit) => `${hit.path}:${hit.line}`));
+  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, hits, disagreements };
 }
 
-// 🔓️GoalReopen MUST return a non-nil error when the operation fails.
-// 🔄️GoalReopen performs the goal reopen operation on the repo context.
-func (c *RepoContext) GoalReopen(input model.GoalReopenInput) (*model.Goal, error) {
-	dir := workspace.GetRepoGoalsDir()
-	path := filepath.Join(dir, input.ID, "🎯️goal.json")
-	content, err := workspace.ReadTextFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var goal model.Goal
-	if err := json.Unmarshal([]byte(content), &goal); err != nil {
-		return nil, err
-	}
-	goal.ID = input.ID
+/** 🧮️ The per-file docstring-emoji census over `paths` (repository-relative Rust / TypeScript sources; every source
+ * {@link docstringSources} lists when absent): each marker reused within one file, see {@link docstringEmojiReuseOfText}. */
+export function runDocstringEmojiCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void, paths?: readonly string[]) {
+  const sources = (paths ?? docstringSources(repoRoot)).filter((path) => /\.(?:rs|tsx?)$/u.test(path) && !path.endsWith(".d.ts"));
+  const reuse: DocstringEmojiReuse[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring emoji census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    reuse.push(...docstringEmojiReuseOfText(path, text));
+  }
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, reuse };
+}
+/** 🐞️ One line carrying the `[DEBUG]` tag, which AGENTS.md reserves for temporary logs removed before a change lands. */
+export type DebugTagHit = Readonly<{ path: string; line: number; text: string }>;
 
-	if goal.Status == "open" {
-		return nil, fmt.Errorf("goal is already open")
-	}
-
-	goal.Status = "open"
-
-	if input.Title != nil {
-		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
-			return nil, err
-		}
-	}
-	if input.Description != nil {
-		goal.Description = *input.Description
-	}
-	if input.DueDate != nil {
-		goal.Dates.Due = *input.DueDate
-	}
-	if input.Parent != nil {
-		goal.Parent = *input.Parent
-	}
-	goal.Prompt = input.Prompt
-	goal.LLM = input.LLM
-	goal.Client = input.Client
-	if input.Effort != "" {
-		effortSlug, err := model.ResolveAllowedEffort(input.Effort)
-		if err != nil {
-			return nil, err
-		}
-		goal.Effort = effortSlug
-	}
-
-	if goal.Management != nil && !input.NoManagement {
-		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
-			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
-			if err == nil {
-				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "open", goal.Dates.Due); err != nil {
-					return nil, err
-				}
-			}
-		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
-			if err := c.managementProvider.ReopenIssue(goal.Management.Issue); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if err := goalspkg.SaveGoal(goal); err != nil {
-		return nil, err
-	}
-	events.Emit(events.EventGoalReopenEnded, "repo-cli", events.GoalReopenPayload{
-		GoalPayload: events.GoalPayload{ID: goal.ID},
-		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Effort: goal.Effort, Author: contributorspkg.GetGitAuthorAlias(),
-	})
-	return &goal, nil
+/** 🐞️ Every line of one source that carries the `[DEBUG]` tag. */
+export function debugTagHitsOfText(path: string, text: string): DebugTagHit[] {
+  return text.split("\n").flatMap((line, index) => (line.includes("[DEBUG]") ? [{ path, line: index + 1, text: line.trim().slice(0, 120) }] : []));
 }
 
-// 🗑️GoalDelete MUST return a non-nil error when the operation fails.
-// ◼GoalDelete performs the goal delete operation on the repo context.
-func (c *RepoContext) GoalDelete(input model.GoalDeleteInput) (bool, error) {
-	dir := workspace.GetRepoGoalsDir()
-	path := filepath.Join(dir, input.ID, "🎯️goal.json")
-	content, err := workspace.ReadTextFile(path)
-	if err != nil {
-		return false, err
-	}
-	var goal model.Goal
-	if err := json.Unmarshal([]byte(content), &goal); err != nil {
-		return false, err
-	}
+/** 🐞️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
+export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧫️fixtures/🧮️source-census/🔣️.json"];
 
-	if !input.NoManagement && goal.Management != nil {
-		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
-			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
-			if err == nil {
-				if err := c.managementProvider.DeleteMilestone(number); err != nil {
-					return false, err
-				}
-			}
-		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
-			parts := strings.Split(goal.Management.Issue, "/")
-			number := parts[len(parts)-1]
-			if err := c.managementProvider.DeleteIssue(number); err != nil {
-				return false, err
-			}
-		}
-	}
-
-	if err := os.RemoveAll(filepath.Dir(path)); err != nil {
-		return false, err
-	}
-	return true, nil
+/** 🐞️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
+ * {@link DEBUG_TAG_CENSUS_EXEMPT}, cross-checked file by file against `git grep -c` (the oracle). Progress every 5000
+ * files; the signal stops the walk. */
+export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const scope = ["--", ":!.🧬semio", ":!*.md", ":!.cursor", ...DEBUG_TAG_CENSUS_EXEMPT.map((path) => `:!${path}`)];
+  const listed = runToolSyncV1("git", ["grep", "-l", "-z", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const sources = listed.stdout.split("\0").filter(Boolean);
+  const hits: DebugTagHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("debug-tag census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} tagged sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...debugTagHitsOfText(path, text));
+  }
+  const oracle = new Map(runToolSyncV1("git", ["grep", "-c", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));
+  const scanned = new Map<string, number>();
+  for (const hit of hits) scanned.set(hit.path, (scanned.get(hit.path) ?? 0) + 1);
+  const disagreements = [...new Set([...oracle.keys(), ...scanned.keys()])].filter((path) => (oracle.get(path) ?? 0) !== (scanned.get(path) ?? 0));
+  onProgress(`${sources.length}/${sources.length} tagged sources scanned`);
+  return { files: sources.length, hits, disagreements };
 }
-
-func updateGoalMilestone(goal *model.Goal, number int) (int, error) {
-	repoUrl, err := getGhRepoUrl()
-	if err != nil {
-		return number, err
-	}
-	if goal.Management == nil {
-		goal.Management = &model.GoalManagementData{}
-	}
-	milestoneUrl := fmt.Sprintf("%s/milestone/%d", repoUrl, number)
-	if goal.Management.Milestone != milestoneUrl {
-		goal.Management.Milestone = milestoneUrl
-		if err := goalspkg.SaveGoal(*goal); err != nil {
-			return number, err
-		}
-	}
-	return number, nil
-}
-
-// ◻ensureGoalMilestone holds the data fields for a ensureGoalMilestone record.
-func ensureGoalMilestone(goal *model.Goal) (*providers.ManagementMilestone, error) {
-	if goal == nil {
-		return nil, nil
-	}
-	if strings.TrimSpace(goal.Title) == "" {
-		return nil, nil
-	}
-	if !goalspkg.IsRootGoal(goal.ID) {
-		return nil, nil
-	}
-	if goal.Management != nil && goal.Management.Milestone != "" {
-		if n, err := model.ParseMilestoneNumber(goal.Management.Milestone); err == nil && n > 0 {
-			if milestone, err := providers.GetManagementProvider().GetMilestone(n); err == nil {
-				return milestone, nil
-			}
-		}
-	}
-	found, err := providers.GetManagementProvider().FindMilestoneByTitle(goal.Title)
-	if err != nil {
-		return nil, err
-	}
-	if found != nil {
-		if _, err := updateGoalMilestone(goal, found.Number); err != nil {
-			return nil, err
-		}
-		return found, nil
-	}
-	n, err := providers.GetManagementProvider().CreateMilestone(goal.Title, goal.Description)
-	if err != nil {
-		return nil, err
-	}
-	if goal.Dates.Due != "" {
-		_ = providers.GetManagementProvider().UpdateMilestone(n, "", "", "", goal.Dates.Due)
-	}
-	if _, err := updateGoalMilestone(goal, n); err != nil {
-		return nil, err
-	}
-	milestone, err := providers.GetManagementProvider().GetMilestone(n)
-	if err != nil {
-		return &providers.ManagementMilestone{Number: n, Title: goal.Title, Description: goal.Description}, nil
-	}
-	return milestone, nil
-}
-
-// #endregion 🥅️Goals
+//#endregion 🧮️SourceCensus

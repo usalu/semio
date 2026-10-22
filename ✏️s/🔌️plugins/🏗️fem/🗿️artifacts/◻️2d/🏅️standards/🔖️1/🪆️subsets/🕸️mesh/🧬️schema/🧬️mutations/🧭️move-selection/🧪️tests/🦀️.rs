@@ -3,12 +3,12 @@
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
-use protocol::DiffAlgebra;
-use protocol::Mutation;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutation, Mutation};
 use protocol::MutationDiff;
-use protocol::ColdMutation;
+
 use protocol::ColdMutationDiff;
-use protocol::ColdDiffAlgebra;
+
 
 fn decode<T: semio_framework_value::FromValue>(value: &serde_json::Value) -> T {
     semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed wire fixture")

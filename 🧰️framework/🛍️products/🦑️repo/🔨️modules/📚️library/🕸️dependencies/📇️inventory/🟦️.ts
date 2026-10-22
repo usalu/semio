@@ -1,9 +1,13 @@
 import { cargoWorkspaceForManifest } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import { builtinModules } from "node:module";
 import { existsSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, extname, join } from "node:path";
 import { runProbe } from "../../🏃️process/🔍️probe/🟦️.ts";
 import { canonicalFilenameForKind } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 const DEPENDENCY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".cache", ".lake", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
@@ -226,7 +230,6 @@ type DependencyJsLockMismatch = { dependency?: string; kind: DependencyJsLockMis
 export type DependencyJsParityReport = { manifests: number; externalRows: number; evidencedRows: number; unownedRows: DependencyJsParityRow[]; undeclaredImports: DependencyJsParityImport[]; lockMismatches: DependencyJsLockMismatch[]; lockFixtureChecks: number; lockWorkspaces: number };
 
 const DEPENDENCY_JS_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".css", ".mdx"]);
-const DEPENDENCY_JS_BUILTIN_PREFIXES = ["node:", "bun:"];
 const DEPENDENCY_JS_BUILTINS = new Set(builtinModules.flatMap((name) => [name, name.replace(/^node:/, "")]));
 const DEPENDENCY_JS_MANIFEST_SECTIONS: readonly DependencyJsManifestSection[] = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
 
@@ -267,18 +270,18 @@ export function dependencyJsLockWorkspaceMismatches(manifestValues: ReadonlyMap<
 
 /** 🔒️ Reads Bun's lockfile and audits configured in-scope workspace snapshots against their manifests. */
 function dependencyJsLockMismatches(repoRoot: string, manifests: readonly string[]): { mismatches: DependencyJsLockMismatch[]; workspaces: number } {
-  const contents = dependencyReadFileSafe(repoRoot, "bun.lock");
-  if (!contents) return { mismatches: [{ kind: "invalid-lockfile", manifest: "bun.lock" }], workspaces: 0 };
+  const contents = dependencyReadFileSafe(repoRoot, javascriptLockV1);
+  if (!contents) return { mismatches: [{ kind: "invalid-lockfile", manifest: javascriptLockV1 }], workspaces: 0 };
   try {
-    const lock = Bun.JSONC.parse(contents) as { workspaces?: unknown };
-    const rootManifest = Bun.JSONC.parse(dependencyReadFileSafe(repoRoot, "package.json")) as { workspaces?: unknown };
+    const lock = javascriptManagerV1.parseLockDocument(contents) as { workspaces?: unknown };
+    const rootManifest = runtimeParseJsoncV1(dependencyReadFileSafe(repoRoot, "package.json")) as { workspaces?: unknown };
     const configuredWorkspaces = new Set(Array.isArray(rootManifest.workspaces) ? rootManifest.workspaces.filter((value): value is string => typeof value === "string").map((value) => value.replaceAll("\\", "/").replace(/\/$/u, "")) : []);
     const auditedManifests = manifests.filter((manifest) => manifest === "package.json" || configuredWorkspaces.has(manifest.replaceAll("\\", "/").replace(/\/package\.json$/u, "")));
     const manifestValues = new Map<string, unknown>();
-    for (const manifest of auditedManifests) manifestValues.set(manifest, Bun.JSONC.parse(dependencyReadFileSafe(repoRoot, manifest)));
+    for (const manifest of auditedManifests) manifestValues.set(manifest, runtimeParseJsoncV1(dependencyReadFileSafe(repoRoot, manifest)));
     return { mismatches: dependencyJsLockWorkspaceMismatches(manifestValues, lock.workspaces), workspaces: auditedManifests.length };
   } catch {
-    return { mismatches: [{ kind: "invalid-lockfile", manifest: "bun.lock" }], workspaces: 0 };
+    return { mismatches: [{ kind: "invalid-lockfile", manifest: javascriptLockV1 }], workspaces: 0 };
   }
 }
 
@@ -457,7 +460,7 @@ function dependencyJsImports(contents: string): { dependency: string; line: numb
   const record = (token: DependencyJsToken | undefined): void => {
     if (!token || token.kind !== "string") return;
     const specifier = token.value;
-    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || DEPENDENCY_JS_BUILTIN_PREFIXES.some((prefix) => specifier.startsWith(prefix)) || DEPENDENCY_JS_BUILTINS.has(specifier)) return;
+    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || isRuntimeBuiltinSpecifierV1(specifier) || DEPENDENCY_JS_BUILTINS.has(specifier)) return;
     const dependency = dependencyJsPackageName(specifier);
     if (dependencyJsIsPackageName(dependency)) imports.push({ dependency, line: token.line });
   };
@@ -492,7 +495,7 @@ function dependencyJsImports(contents: string): { dependency: string; line: numb
     const statement = sourceLine.match(/^\s*(?:import|export)\b.*\bfrom\s+["']([^"']+)["']\s*;?(?:\s*\/\/.*)?$/u) ?? sourceLine.match(/^\s*import\s+["']([^"']+)["']\s*;?(?:\s*\/\/.*)?$/u);
     if (!statement) continue;
     const specifier = statement[1]!;
-    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || DEPENDENCY_JS_BUILTIN_PREFIXES.some((prefix) => specifier.startsWith(prefix)) || DEPENDENCY_JS_BUILTINS.has(specifier)) continue;
+    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || isRuntimeBuiltinSpecifierV1(specifier) || DEPENDENCY_JS_BUILTINS.has(specifier)) continue;
     const dependency = dependencyJsPackageName(specifier);
     const sourceLineNumber = lineIndex + 1;
     if (dependencyJsIsPackageName(dependency) && !imports.some((item) => item.dependency === dependency && item.line === sourceLineNumber)) imports.push({ dependency, line: sourceLineNumber });
@@ -657,7 +660,7 @@ export function dependencyIsCompositionManifest(relPath: string): boolean {
  * A manifest inside the taxonomy's test domain never ships, so its runtime/build sections are recorded as `test-runner` inputs. */
 /** 🧰️ The Nx bootstrap recipe: the manifest that installs the runner before the workspace exists, audited against its own
  * lockfile; every section of it is repository tooling. */
-export const DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS: ReadonlyMap<string, string> = new Map([["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock"]]);
+export const DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS: ReadonlyMap<string, string> = new Map([["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/" + javascriptLockV1]]);
 
 export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaselineEntry[] {
   const byKey = new Map<string, DependencyBaselineEntry>();

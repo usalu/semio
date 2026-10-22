@@ -1,0 +1,3 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📖️taxonomy-loading/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/📖️taxonomy-loading/🔸️requires-owned-generator-expose/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/♻️taxonomy-pattern-compiler-reuse/🟦️.ts

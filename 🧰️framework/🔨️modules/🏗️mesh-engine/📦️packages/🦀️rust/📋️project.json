@@ -38,7 +38,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     }
   }

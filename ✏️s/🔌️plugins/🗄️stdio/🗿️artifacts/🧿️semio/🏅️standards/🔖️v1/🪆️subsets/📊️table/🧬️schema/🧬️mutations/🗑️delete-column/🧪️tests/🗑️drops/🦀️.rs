@@ -10,7 +10,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops/📸️snapshot/➡️after/🔣️.json"));
@@ -32,7 +32,7 @@ fn delete_column() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn deletes_the_city_column_and_its_cell_in_every_row() {
     let base = before();
-    let produced = protocol::apply_diff(delete_column().diff(&base).diff(), &base).expect("delete-column applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(delete_column().diff(&base).diff(), &base).expect("delete-column applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-column/drops-the-middle-column-and-cascades-into-every-row: applied state differs from the committed after-snapshot");
     assert!(!produced.columns.iter().any(|column| column.name == "city"), "the named column must be gone");
     assert_eq!(produced.rows.len(), base.rows.len(), "delete-column must not drop whole rows");
@@ -51,9 +51,9 @@ async fn the_undo_recreates_the_column_and_restores_every_captured_cell() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1 + base.rows.len(), "the undo is one create-column plus one edit-cell per row that carried a cell");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-column applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-column applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-column/drops-the-middle-column-and-cascades-into-every-row: the undo did not restore the before-snapshot");
 }
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_including_the_cascade_note() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&delete_column(), &base);
+    let outcome = <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::diff(&delete_column(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-column/drops-the-middle-column-and-cascades-into-every-row: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -110,6 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-column diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-column diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff did not carry before to after");
 }

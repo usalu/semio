@@ -21,7 +21,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -40,7 +40,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test neutrality",
+        "command": "repo ./📜️script.ts test neutrality",
         "forwardAllArgs": true
       }
     }

@@ -164,3 +164,30 @@ agents-fix (2 gate edits adapted; the `rust-non-repo-join-bases` file pruned bec
 
 ## Still open (not mine to decide)
 build-surfaces 18/3 vs 20/1 (isolate with a pre-round-3 copy), source-demand 21/5, birth under load, publication-schema `BootSession` reference, the round-3 open conflicts (put-gate self-deadlock rule, course deploy law).
+
+
+## ROUND 6 (planning and overlay simulation, 13:20) - CHAIN APPLIES, LAW PASS RED (BLOCKED)
+See `round6-plan.md`: 30 ordered steps (runtime-seam before tool-iface, legacy-purge right after it, pm-seam before sync-incr-3, cache-gc staged3, agent-session, perf-slo, docs-1021a), 26 conflicts resolved with merged copies. Law pass: 5 owner items (tool registry vs schema messages, storage export used by the cache-gc test, rcache-server server tests after the seam rewrite, ratchets of pm-seam/backend-contract/runtime-seam, langs-conc go-plan-env). Nothing applied live.
+
+## ROUND 7 QUEUE (after round 6; nothing here is in `round6-tools/steps.py`; add each as one step plus its collisions, then sim like round 6)
+| set | apply command (dry run first) | prerequisites | status |
+|---|---|---|---|
+| bzl-hermetic staged-paths | `python3 C/bzl-hermetic-tools/staged-paths/apply.py --write` (`--rebase` re-derives from current text, `--undo`) | round 6 applied (13 files: 8 edited, 5 new, drift refusal against bases.json); result-bzl-paths.md | READY |
+| gran-hubs carves | `python3 C/gran-hubs-tools/staged/apply.py --plan umbrella-dead,umbrella --write` (then `job-dead,os-kernel-dead,plugin-dead`) | after cargo-fix's compile window, before `lockref/all.sh`; re-plan pending (1,256 sources + 1,125 manifests, 606 rebasable) | PENDING RE-PLAN |
+| tool-direct-code | `python3 C/tool-direct-code-tools/apply.py apply --write` | after round 6 (tool-iface + runtime-seam + legacy-purge); dry run first | STAGED |
+| tool-direct-manifests | `python3 C/tool-direct-manifests-tools/apply.py apply --write [--group a,b] [--allow-frozen]` | applies AFTER round 6 (its own header) | STAGED |
+| boot-fast | `python3 C/boot-fast-tools/staged/apply.py` then `--write` | after round 6: groups door/caller/taxonomy resolve now, launcher/slo refuse until their sets (repo-launcher, perf-slo) are live | READY (stage only) |
+| i18n-core | `python3 C/i18n-core-tools/apply.py --root <root> --yes` (`--undo`; backup in `C/🗑️generated/i18n-core-apply`) | round 6 (33 new + 57 edited; verify/commit/bootstrap migrated) | READY (17:27) |
+| lawcov-build | `python3 C/lawcov-build-tools/staged/apply.py` then `--apply` | excluded-unit registry patches; after round 6 | READY |
+| lawcov-cli | `python3 C/lawcov-cli-tools/staged/apply.py` (verifies the manifest, writes nothing) | none | READY (tests only) |
+| lawcov-laws | registry patches under `C/lawcov-laws-tools/staged` | after round 6 | STAGED |
+| audit-fix #7/#8 | per `C/result-audit-fix.md` (preview-routes test under `audit-fix-tools/`) | after round 6 | STAGED |
+| cache-gc staged4 / graph-parallel round 2 | `python3 C/cache-gc-tools/apply4.py --write` is IN round 6; graph-parallel round 2 (F1/F2) follows it | blocked until its fixes + overlay laws | BLOCKED |
+
+Round-7 queue, additions of 17:50 (same table): 
+| tool-direct-manifests | `sh C/tool-direct-manifests-tools/regen.sh <final tree>` then `python3 C/tool-direct-manifests-tools/apply.py apply --write` (adds `repo tools exec` for arbitrary tools and the `repo verify tool-declarations` law) | after round 6 finished (re-generated from the final tree) | STAGED |
+| backend-contract READY4 (is IN round 6) | order runtime-seam -> tool-iface -> backend-contract; then `sh C/backend-contract-tools/recut.sh <root>` at the END of the chain (step `backend-contract-recut`) | tool-iface git adapter, runtime-seam GlobV1 | READY4 |
+| lawcov-build | `python3 C/lawcov-build-tools/staged/apply.py` then `--apply` (registry patch for excluded units) | after round 6 | READY |
+| bzl-hermetic staged-paths | `python3 C/bzl-hermetic-tools/staged-paths/apply.py --write` | after round 6 | READY |
+| boot-fast | `python3 C/boot-fast-tools/staged/apply.py` then `--write`: groups door, caller (manifest/taxonomy) resolve now; `launcher` and `slo` wait for repo-launcher and perf-slo (both in round 6) | after round 6 | READY (stage only) |
+| i18n-core | `python3 C/i18n-core-tools/apply.py --root <root> --yes` (`--undo`) | after round 6 | READY |

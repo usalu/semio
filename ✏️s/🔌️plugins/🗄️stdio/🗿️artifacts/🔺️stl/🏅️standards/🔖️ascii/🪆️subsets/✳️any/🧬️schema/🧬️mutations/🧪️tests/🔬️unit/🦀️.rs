@@ -4,8 +4,8 @@ use crate::StlSnapshot;
 use crate::apply_mutation;
 use crate::standards::v_ascii::subsets::any::schema::mutations::*;
 use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
-use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutationDiff, MutationDiff};
 use semio_framework_test_fixtures::fixture_path;
 
 //#region Fixtures
@@ -24,7 +24,7 @@ async fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff_cold(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -58,9 +58,9 @@ async fn inverse_law() {
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
         let d = m.diff(&base);
-        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
+        let mutated = protocol::apply_diff_cold(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -68,13 +68,13 @@ async fn inverse_law() {
 //#region 🔖️absorb_law
 async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
     let d1 = m1.diff(base);
-    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let sequential = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff_cold(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -115,9 +115,9 @@ async fn absorb_law() {
 async fn absorb_law_associativity() {
     let base = base_snapshot().await;
     let d1 = StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "one".into() }).diff(&base);
-    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid1 = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 50.0).await }).diff(&mid1);
-    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).expect("valid second diff");
     let d3 = StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -129,8 +129,8 @@ async fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), protocol::apply_diff_cold(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid associated diff"), protocol::apply_diff_cold(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️between_roundtrip_law
 
@@ -191,10 +191,10 @@ async fn insert_then_remove_before_matches_canonical_shape() {
 
     let base = base_snapshot().await;
     let sequential = {
-        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
-        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("valid first diff");
+        protocol::apply_diff_cold(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -205,10 +205,10 @@ async fn insert_insert_same_index_both_survive() {
     merged.absorb(d2.clone());
     let base = base_snapshot().await;
     let sequential = {
-        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
-        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("valid first diff");
+        protocol::apply_diff_cold(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), sequential);
     assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
 }
 
@@ -225,10 +225,10 @@ async fn add_then_set_field_patches_into_added() {
 
     let base = base_snapshot().await;
     let sequential = {
-        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
-        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("valid first diff");
+        protocol::apply_diff_cold(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), sequential);
 }
 //#endregion 🔖️CanonicalCases
 

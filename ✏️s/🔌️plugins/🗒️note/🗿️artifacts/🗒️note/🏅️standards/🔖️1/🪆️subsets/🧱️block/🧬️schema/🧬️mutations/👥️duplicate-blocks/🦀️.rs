@@ -31,6 +31,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "blocks", kind: "duplicate-blocks", record: "DuplicatedBlocks" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
+    }
+    fn target(&self) -> Vec<String> {
+        self.source_ids.clone()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<NoteSnapshot, Op> for DuplicateBlocks
+where
+    Op: protocol::ColdMutation<NoteSnapshot, ReferenceDiff = NoteDiff> + From<DuplicateBlocks> + From<crate::standards::v1::subsets::block::schema::mutations::delete_blocks::DeleteBlocks>,
+{
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
@@ -40,12 +52,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
-    }
-    fn target(&self) -> Vec<String> {
-        self.source_ids.clone()
-    }
 }
 //#endregion 🔖️Mutation
 

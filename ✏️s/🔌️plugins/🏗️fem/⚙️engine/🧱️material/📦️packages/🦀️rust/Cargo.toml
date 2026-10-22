@@ -19,5 +19,6 @@ semio-framework-value-native-owned = { path = "../../../../../../../🧰️frame
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 [dev-dependencies]
+semio-framework-value-snapshot-projection = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 serde_json = "1"
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

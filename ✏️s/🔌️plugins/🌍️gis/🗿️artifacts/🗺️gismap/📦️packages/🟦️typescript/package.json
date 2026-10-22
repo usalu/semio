@@ -9,10 +9,10 @@
     "@semio-tech/framework-os": "workspace:*"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:test",
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:check",
-    "inference-service-receiving-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:inference-service-receiving-check"
+    "test": "repo run @semio-tech/gis-gismap-js:test",
+    "build": "repo run @semio-tech/gis-gismap-js:build",
+    "check": "repo run @semio-tech/gis-gismap-js:check",
+    "inference-service-receiving-check": "repo run @semio-tech/gis-gismap-js:inference-service-receiving-check"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*",

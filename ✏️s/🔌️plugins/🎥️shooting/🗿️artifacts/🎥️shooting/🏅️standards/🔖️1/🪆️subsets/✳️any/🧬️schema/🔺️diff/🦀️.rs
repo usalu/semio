@@ -384,8 +384,33 @@ scene_patch_algebra! {
 //#endregion 🔖️SceneAlgebra
 
 //#region 🔖️Apply
-impl MutationDiff<ShootingSnapshot> for ShootingDiff {
-    fn apply(&self, base: &ShootingSnapshot, _capability: ApplyCapability) -> MutationApplyResult<ShootingSnapshot> {
+impl MutationDiff<ShootingSnapshot> for ShootingDiff {}
+
+impl protocol::ColdMutationDiff<ShootingSnapshot> for ShootingDiff {
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(active_shot_id);
+        take!(active_asset_id);
+        take!(emblem);
+        absorb_list(&mut self.assets, other.assets);
+        absorb_list(&mut self.saved_cameras, other.saved_cameras);
+        absorb_list(&mut self.shots, other.shots);
+        match (self.scene.as_mut(), other.scene) {
+            (Some(prior), Some(later)) => prior.merge(later),
+            (None, Some(later)) => self.scene = Some(later),
+            _ => {}
+        }
+    }
+
+    fn apply(&self, unpublished: &mut ShootingSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -411,33 +436,18 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         if let Some(emblem) = &self.emblem {
             next.emblem = emblem.value.clone();
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(schema);
-        take!(active_shot_id);
-        take!(active_asset_id);
-        take!(emblem);
-        absorb_list(&mut self.assets, other.assets);
-        absorb_list(&mut self.saved_cameras, other.saved_cameras);
-        absorb_list(&mut self.shots, other.shots);
-        match (self.scene.as_mut(), other.scene) {
-            (Some(prior), Some(later)) => prior.merge(later),
-            (None, Some(later)) => self.scene = Some(later),
-            _ => {}
-        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<ShootingSnapshot> for ShootingDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ShootingSnapshot> for ShootingDiff {
     fn inverse(&self, base: &ShootingSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -449,10 +459,6 @@ impl DiffAlgebra<ShootingSnapshot> for ShootingDiff {
             active_asset_id: self.active_asset_id.as_ref().map(|_| base.active_asset_id.clone()),
             emblem: self.emblem.as_ref().map(|_| ShootingAssigned::new(base.emblem.clone())),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔖️Apply

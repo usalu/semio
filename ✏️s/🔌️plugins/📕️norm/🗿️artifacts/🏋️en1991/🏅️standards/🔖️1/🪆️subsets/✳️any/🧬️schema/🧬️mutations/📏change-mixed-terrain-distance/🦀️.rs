@@ -21,7 +21,13 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeMixedTerrainDistan
         record: "ChangedMixedTerrainDistance",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change distance to the terrain category change", "Abstand zum Geländekategoriewechsel ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1991Snapshot, Op> for ChangeMixedTerrainDistance where Op: protocol::ColdMutation<En1991Snapshot, ReferenceDiff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::change_mixed_terrain_distance::ChangeMixedTerrainDistance> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1991Snapshot>>::ReferenceDiff> {
         crate::change_mixed_terrain_distance::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,9 +36,6 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeMixedTerrainDistan
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change distance to the terrain category change", "Abstand zum Geländekategoriewechsel ändern")
-    }
 }
 //#endregion 🔖️Payload
 

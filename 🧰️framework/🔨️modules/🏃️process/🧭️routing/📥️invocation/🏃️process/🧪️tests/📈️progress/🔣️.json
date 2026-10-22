@@ -5948,11 +5948,10 @@
       ],
       "expected": [
         0,
+        1,
         2,
-        3,
         4,
         5,
-        6,
         7,
         8
       ]
@@ -5994,8 +5993,7 @@
         }
       ],
       "expected": [
-        0,
-        3
+        0
       ]
     },
     {
@@ -6405,10 +6403,803 @@
         7,
         8,
         9,
+        10,
         11,
         12,
-        14,
+        13,
         15
+      ]
+    },
+    {
+      "name": "slow-rotation-does-not-republish-known-stages",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "heartbeat-publishes-only-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 14999,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15002,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15003,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30002,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30003,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        6,
+        9
+      ]
+    },
+    {
+      "name": "fourteen-first-observations-one-heartbeat",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:projects",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:modules",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-normalization",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-preparation",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-inputs",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 12,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:command-source-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 13,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:project-assembly",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15013,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15014,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15015,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        16,
+        18
+      ]
+    },
+    {
+      "name": "terminal-flushes-only-different-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "name": "property-order-does-not-defeat-deduplication",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 250,
+          "progress": {
+            "stage": "running",
+            "owner": "repository:build",
+            "command": "build:selected-declaration"
+          }
+        },
+        {
+          "at": 1000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "nonfinite-clock-flushes-only-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": null,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "identical-stage-heartbeat",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        3
       ]
     }
   ]

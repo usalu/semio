@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // 🟪️FormatSecond MUST complete the operation and return consistent results.
@@ -161,7 +163,7 @@ func ExecCommandContext(ctx context.Context, command string, args []string, cwd 
 	if cwd == "" {
 		cwd = rootDir
 	}
-	cmd := exec.CommandContext(ctx, command, args...)
+	cmd := workspace.ToolCommandContext(ctx, command, args...)
 	cmd.Dir = cwd
 	var stdoutBuf, stderrBuf strings.Builder
 	cmd.Stdout = &stdoutBuf

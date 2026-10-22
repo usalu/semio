@@ -1,0 +1,410 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "cargo-manifests-skip-generated-and-dependency-directories",
+   "rule": "policyDiscoverCargoTomlFiles",
+   "files": {
+    "Cargo.toml": [],
+    "a/Cargo.toml": [],
+    "a/b/Cargo.toml": [],
+    "node_modules/x/Cargo.toml": [],
+    "target/y/Cargo.toml": [],
+    "a/Cargo.lock": []
+   },
+   "expectList": [
+    "Cargo.toml",
+    "a/Cargo.toml",
+    "a/b/Cargo.toml"
+   ]
+  },
+  {
+   "id": "db-crates-are-server-only",
+   "rule": "policyDbServerOnlyBreaches",
+   "files": {
+    "app/Cargo.toml": [
+     "[dependencies]",
+     "db_core = { path = \"../db/core\" }",
+     "db = { path = \"../db\", features = [\"x\"] }",
+     "dbx = { path = \"../dbx\" }",
+     "db_store = { version = \"1\" }",
+     "db_net_v2 = { path = \"../n\" }"
+    ],
+    "Cargo.toml": [
+     "db_root = { path = \"db/root\" }"
+    ],
+    "db/core/Cargo.toml": [
+     "db_core = { path = \"../x\" }"
+    ],
+    "hub/app/Cargo.toml": [
+     "db_core = { path = \"../x\" }"
+    ]
+   },
+   "expect": [
+    [
+     "db-server-only-app/Cargo.toml-db_core",
+     "protocol-migration/db-server-only",
+     "high",
+     0
+    ],
+    [
+     "db-server-only-app/Cargo.toml-db",
+     "protocol-migration/db-server-only",
+     "high",
+     0
+    ],
+    [
+     "db-server-only-app/Cargo.toml-db_net_v2",
+     "protocol-migration/db-server-only",
+     "high",
+     0
+    ],
+    [
+     "db-server-only-Cargo.toml-db_root",
+     "protocol-migration/db-server-only",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "os-state-authority-globals-ids-and-authority-maps",
+   "rule": "policyOsStateAuthorityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs": [
+     "static mut COUNTER: u32 = 0;",
+     "thread_local! { static X: u8 = 0; }",
+     "lazy_static! {",
+     "    static ref M: Mutex<u8> = Mutex::new(0);",
+     "}",
+     "static CACHE: Mutex<Vec<u8>> = Mutex::new(Vec::new());",
+     "const LAZY: OnceLock<u8> = OnceLock::new();",
+     "static NAMES: &[&str] = &[];",
+     "pub struct SessionStore {",
+     "    seq: u32,",
+     "    items: HashMap<u32, String>,",
+     "    ids: AtomicU64,",
+     "}",
+     "pub struct Plain {",
+     "    items: HashMap<u32, String>,",
+     "}",
+     "fn f() {",
+     "    static LOCAL: Mutex<u8> = Mutex::new(0);",
+     "    let seq: u32 = 1;",
+     "}",
+     "#[cfg(test)]",
+     "mod tests {",
+     "    static mut T: u8 = 0;",
+     "}"
+    ],
+    "🌎️hub/x.rs": [
+     "static mut H: u8 = 0;"
+    ],
+    "compose/y.rs": [
+     "static mut H: u8 = 0;"
+    ],
+    "🧰️framework/🛍️products/💻️os/z.rs": [
+     "static mut H: u8 = 0;"
+    ],
+    "🧰️framework/other/w.rs": [
+     "static mut W: u8 = 0;"
+    ]
+   },
+   "expect": [
+    [
+     "os-state-authority-static-mut-✏️s/🔌️plugins/🔭️p/🦀️.rs-1",
+     "os-state-authority/item-scope-global",
+     "high",
+     1
+    ],
+    [
+     "os-state-authority-thread-local-✏️s/🔌️plugins/🔭️p/🦀️.rs-2",
+     "os-state-authority/item-scope-global",
+     "high",
+     2
+    ],
+    [
+     "os-state-authority-lazy-static-✏️s/🔌️plugins/🔭️p/🦀️.rs-3",
+     "os-state-authority/item-scope-global",
+     "high",
+     3
+    ],
+    [
+     "os-state-authority-static-Mutex-✏️s/🔌️plugins/🔭️p/🦀️.rs-6",
+     "os-state-authority/item-scope-global",
+     "high",
+     6
+    ],
+    [
+     "os-state-authority-static-OnceLock-✏️s/🔌️plugins/🔭️p/🦀️.rs-7",
+     "os-state-authority/item-scope-global",
+     "high",
+     7
+    ],
+    [
+     "os-state-authority-id-mint-✏️s/🔌️plugins/🔭️p/🦀️.rs-10",
+     "os-state-authority/id-minting",
+     "high",
+     10
+    ],
+    [
+     "os-state-authority-map-field-✏️s/🔌️plugins/🔭️p/🦀️.rs-11-SessionStore",
+     "os-state-authority/authority-struct-map",
+     "high",
+     11
+    ],
+    [
+     "os-state-authority-id-mint-✏️s/🔌️plugins/🔭️p/🦀️.rs-12",
+     "os-state-authority/id-minting",
+     "high",
+     12
+    ],
+    [
+     "os-state-authority-static-mut-🧰️framework/other/w.rs-1",
+     "os-state-authority/item-scope-global",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "document-apps-carry-no-state",
+   "rule": "policyDocumentAppShapeBreaches",
+   "files": {
+    "a/stateful.rs": [
+     "pub struct Counter { value: u32 }",
+     "impl DocumentApp for Counter {",
+     "    type Snapshot = S;",
+     "    type Mutation = M;",
+     "}"
+    ],
+    "a/unit.rs": [
+     "pub struct Unit;",
+     "impl DocumentApp for Unit {",
+     "    type Snapshot = S;",
+     "    type Mutation = M;",
+     "}"
+    ],
+    "a/tuple.rs": [
+     "",
+     "pub struct T(u8);",
+     "impl DocumentApp for T {",
+     "    type Snapshot = S;",
+     "    type Mutation = M;",
+     "}"
+    ],
+    "a/empty.rs": [
+     "struct Empty { /* none */ }",
+     "impl DocumentApp for Empty {",
+     "    type Snapshot = S;",
+     "    type Mutation = M;",
+     "}"
+    ],
+    "a/nomutation.rs": [
+     "struct Half { a: u8 }",
+     "impl DocumentApp for Half {",
+     "    type Snapshot = S;",
+     "}"
+    ],
+    "a/tested.rs": [
+     "#[cfg(test)]",
+     "mod tests {",
+     "    struct X { a: u8 }",
+     "    impl DocumentApp for X {",
+     "        type Snapshot = S;",
+     "        type Mutation = M;",
+     "    }",
+     "}"
+    ],
+    "🌎️hub/stateful.rs": [
+     "pub struct Counter { value: u32 }",
+     "impl DocumentApp for Counter {",
+     "    type Snapshot = S;",
+     "    type Mutation = M;",
+     "}"
+    ]
+   },
+   "expect": [
+    [
+     "document-app-shape-a/stateful.rs-Counter",
+     "os-state-authority/document-app-shape",
+     "high",
+     1
+    ],
+    [
+     "document-app-shape-a/tuple.rs-T",
+     "os-state-authority/document-app-shape",
+     "high",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "pack-files-are-forbidden",
+   "rule": "policyNoPackFilesBreaches",
+   "files": {
+    "x.pack": [],
+    "a/b.pack": [],
+    "a/c.txt": [],
+    "node_modules/d.pack": []
+   },
+   "expect": [
+    [
+     "no-pack-file-x.pack",
+     "pack-migration/no-pack-file",
+     "high",
+     0
+    ],
+    [
+     "no-pack-file-a/b.pack",
+     "pack-migration/no-pack-file",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "raw-spawn-ignores-comments-and-strings",
+   "rule": "policyRawSpawnBreaches",
+   "files": {
+    "📜️script.ts": [
+     "import { spawnSync } from \"node:child_process\";",
+     "const r = spawnSync(\"git\", [\"x\"]);",
+     "execSync(\"ls\"); Bun.spawn([\"a\"]); spawn(\"b\")",
+     "// spawnSync(\"x\")",
+     "const s = \"spawnSync(x)\";",
+     "const t = `spawn(${x})`;",
+     "child.spawn(a);"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/x/🟦️.ts": [
+     "spawnSync(1);"
+    ],
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/y/🟦️.ts": [
+     "execSync(2);"
+    ],
+    "other/🟦️.ts": [
+     "spawnSync(1);"
+    ],
+    "sub/📜️script.ts": [
+     "spawn(1);"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/x/🧪️tests/🟦️.ts": [
+     "spawnSync(1);"
+    ]
+   },
+   "expect": [
+    [
+     "no-raw-spawn-📜️script.ts-2",
+     "budget/no-raw-spawn",
+     "high",
+     2
+    ],
+    [
+     "no-raw-spawn-📜️script.ts-3",
+     "budget/no-raw-spawn",
+     "high",
+     3
+    ],
+    [
+     "no-raw-spawn-📜️script.ts-7",
+     "budget/no-raw-spawn",
+     "high",
+     7
+    ],
+    [
+     "no-raw-spawn-🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/x/🟦️.ts-1",
+     "budget/no-raw-spawn",
+     "high",
+     1
+    ],
+    [
+     "no-raw-spawn-🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/y/🟦️.ts-1",
+     "budget/no-raw-spawn",
+     "high",
+     1
+    ],
+    [
+     "no-raw-spawn-sub/📜️script.ts-1",
+     "budget/no-raw-spawn",
+     "high",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "raw-spawn-line-numbers-survive-block-comments",
+   "rule": "policyRawSpawnBreaches",
+   "files": {
+    "📜️script.ts": [
+     "/* c */",
+     "spawnSync(1);"
+    ]
+   },
+   "expect": [
+    [
+     "no-raw-spawn-📜️script.ts-2",
+     "budget/no-raw-spawn",
+     "high",
+     2
+    ]
+   ],
+   "defect": "🟦️.ts:365-369 drops the comment delimiters from the stripped text, so offsets taken from it no longer index the original content and the reported line shifts"
+  },
+  {
+   "id": "budget-null-literals",
+   "rule": "policyBudgetNullBreaches",
+   "files": {
+    "📜️script.ts": [
+     "run({ budgetMs: null });",
+     "run({ budgetMs:null, budgetMs: null });",
+     "run({ budgetMs: 5 });"
+    ],
+    "other/🟦️.ts": [
+     "budgetMs: null"
+    ]
+   },
+   "expect": [
+    [
+     "no-budget-null-📜️script.ts-1",
+     "budget/no-budget-null",
+     "high",
+     1
+    ],
+    [
+     "no-budget-null-📜️script.ts-2",
+     "budget/no-budget-null",
+     "high",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "strip-line-comments-strings-and-templates-are-blanked",
+   "rule": "policyStripTsCommentsAndStrings",
+   "files": {},
+   "input": "a // c\nb \"x\" 'y' `z${1}` c",
+   "expectList": [
+    "a     \nb                 c"
+   ]
+  },
+  {
+   "id": "strip-escapes-stay-inside-their-string",
+   "rule": "policyStripTsCommentsAndStrings",
+   "files": {},
+   "input": "p \"a\\\"b\" q",
+   "expectList": [
+    "p        q"
+   ]
+  },
+  {
+   "id": "strip-block-comments-keep-their-length",
+   "rule": "policyStripTsCommentsAndStrings",
+   "files": {},
+   "input": "a /* c */ b",
+   "expectList": [
+    "a         b"
+   ],
+   "defect": "🟦️.ts:363-370 skips the two delimiter characters on both sides without emitting blanks, so a one-line block comment shrinks by four characters"
+  }
+ ]
+}

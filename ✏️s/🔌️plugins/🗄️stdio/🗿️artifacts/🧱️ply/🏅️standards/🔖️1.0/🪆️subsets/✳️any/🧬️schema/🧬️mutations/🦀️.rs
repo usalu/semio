@@ -74,7 +74,7 @@ pub mod set_row_property;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = PlySnapshot, diff = PlyDiff, schema = "PlyMutation")]
+#[mutations(snapshot = PlySnapshot, diff = PlyDiff, schema = "PlyMutation", reference = PlySnapshot, reference_diff = PlyDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PlyMutation {
     SetFormat(set_format::SetFormat),

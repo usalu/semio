@@ -29,13 +29,13 @@ fn mutation() -> SourcingMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-curated-item mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<CurationDiff> {
-    <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(&mutation(), &before())
+    <SourcingMutation as protocol::ColdMutation<CurationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Un-curating `panel-clt-3000` filters that one row out; the glulam beam keeps its count of 12.
 #[semio_framework_async_macros::async_test]
 async fn filters_the_named_pick_out_of_the_curation() {
-    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("delete-curated-item applies to its committed before-document");
+    let applied = protocol::apply_diff_cold(built_outcome().diff(), &before()).expect("delete-curated-item applies to its committed before-document");
     assert_eq!(applied, expected_after(), "delete-curated-item/removes-the-clt-panel-from-the-curation: the shortened curation differs from the committed after-snapshot");
     assert!(!applied.curated.iter().any(|item| item.object_id == "panel-clt-3000"), "delete-curated-item/removes-the-clt-panel-from-the-curation: the CLT panel survived its own removal");
 }
@@ -45,12 +45,12 @@ async fn filters_the_named_pick_out_of_the_curation() {
 #[semio_framework_async_macros::async_test]
 async fn recreating_the_removed_pick_restores_its_count() {
     let base = before();
-    let mut snapshot = protocol::apply_diff(built_outcome().diff(), &base).expect("forward delete-curated-item applies");
-    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let mut snapshot = protocol::apply_diff_cold(built_outcome().diff(), &base).expect("forward delete-curated-item applies");
+    let inverse = <SourcingMutation as protocol::ColdMutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-curated-item/removes-the-clt-panel-from-the-curation: the inverse of one delete is exactly one create");
     for step in &inverse {
-        let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the create-curated-item inverse step applies");
+        let undo = <SourcingMutation as protocol::ColdMutation<CurationSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the create-curated-item inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-curated-item/removes-the-clt-panel-from-the-curation: re-curating the CLT panel did not restore the before-document, count and all");
 }
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "delete-curated-item/removes-the-clt-panel-from-the-curation: committed diff did not carry before to after");
 }
 

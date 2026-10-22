@@ -19,7 +19,7 @@ export class PublishScript extends Script {
       "os-mcp": "@semio-tech/framework-os-mcp-rs:publish",
     };
     if (!slice) {
-      console.error(`[publish] usage: bun ./📜️script.ts publish <${Object.keys(map).join(" | ")}>`);
+      console.error(`[publish] usage: repo ./📜️script.ts publish <${Object.keys(map).join(" | ")}>`);
       process.exit(1);
     }
     const target = map[slice];
@@ -27,7 +27,7 @@ export class PublishScript extends Script {
       console.error(`[publish] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["repo", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run", target], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 //#endregion 🔖️PublishScript

@@ -104,6 +104,19 @@
         }
       }
     },
+    "firstFailure": {
+      "maximumReasonCharacters": 400,
+      "systemVariables": [
+        "SEMIO_LANGUAGE",
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "labels": {
+        "en": "First failure: {first} (the later refusal \"{masked}\" is only its consequence.)",
+        "de": "Erster Fehler: {first} (die spätere Ablehnung \"{masked}\" ist nur seine Folge.)"
+      }
+    },
     "queueWait": {
       "resourcePrefix": "lease-queue:",
       "maximumResourceCharacters": 1024,
@@ -442,13 +455,15 @@
         "build:command-source-imports",
         "build:project-assembly"
       ],
-      "minimumPublicationMilliseconds": 250,
-      "maximumPendingRows": 14,
-      "clockReversal": "drain-and-rebase",
-      "clockNonfinite": "drain-and-await-finite-observation",
-      "ordering": "latest-observation-order",
-      "scope": "presentation-only",
-      "maximumObservationRank": 13
+      "maximumDistinctStages": 14,
+      "maximumPendingRows": 1,
+      "heartbeatMilliseconds": 15000,
+      "firstObservation": "each-distinct-stage",
+      "heartbeat": "latest-stage-only",
+      "terminal": "latest-stage-unless-already-published",
+      "clockReversal": "flush-latest-and-rebase",
+      "clockNonfinite": "flush-latest-and-await-finite-observation",
+      "scope": "presentation-only"
     }
   },
   "definitions": {
@@ -1002,7 +1017,8 @@
                   "maxProperties": 5
                 }
               }
-            }
+            },
+            "maxItems": 256
           },
           "expected": {
             "type": "array",
@@ -1010,10 +1026,12 @@
               "type": "integer",
               "minimum": 0
             },
-            "uniqueItems": true
+            "uniqueItems": true,
+            "maxItems": 256
           }
         }
-      }
+      },
+      "maxItems": 32
     }
   }
 }

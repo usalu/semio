@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sources",
+    "fixtureIndex",
+    "physicalEntries",
+    "states"
+  ],
+  "properties": {
+    "sources": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "path",
+          "storage",
+          "graph",
+          "maximumBytes"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "owner",
+              "schema",
+              "worker",
+              "precision-schema",
+              "resolution-owner",
+              "resolution-schema",
+              "cargo-receipt",
+              "generation-owner",
+              "generation-schema",
+              "session-owner",
+              "session-protocol",
+              "immutable-node-loader",
+              "source-capture-owner",
+              "source-capture-schema",
+              "store-format-schema"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "storage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "graph": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximumBytes": {
+            "const": 65536
+          }
+        }
+      }
+    },
+    "fixtureIndex": {
+      "const": 5
+    },
+    "physicalEntries": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "states": {
+      "type": "array",
+      "minItems": 31,
+      "maxItems": 31,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pinned",
+          "changed",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "changed": {
+            "enum": [
+              null,
+              "owner",
+              "schema",
+              "worker",
+              "precision-schema",
+              "resolution-owner",
+              "resolution-schema",
+              "cargo-receipt",
+              "generation-owner",
+              "generation-schema",
+              "session-owner",
+              "session-protocol",
+              "immutable-node-loader",
+              "source-capture-owner",
+              "source-capture-schema",
+              "store-format-schema"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

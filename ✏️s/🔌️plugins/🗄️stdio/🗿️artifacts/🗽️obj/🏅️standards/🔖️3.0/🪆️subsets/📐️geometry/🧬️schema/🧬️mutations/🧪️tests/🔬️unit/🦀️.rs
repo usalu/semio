@@ -3,7 +3,7 @@ use crate::{schema::snapshot::ObjFaceVertex, schema::snapshot::ObjGroup, schema:
 use crate::ObjSnapshot;
 use crate::apply_mutation;
 use crate::standards::v3_0::subsets::any::schema::mutations::*;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 
 //#region 🔖️MutationDiffLaw
 #[semio_framework_async_macros::async_test]
@@ -11,7 +11,7 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     for m in demo_mutation_cases() {
         let diff = m.diff(&base);
-        let expected = protocol::apply_diff(diff.diff(), &base).expect("valid mutation diff");
+        let expected = protocol::apply_diff_cold(diff.diff(), &base).expect("valid mutation diff");
 
         let mut via_apply = base.clone();
         let returned_diff = apply_mutation(&mut via_apply, &m);
@@ -35,8 +35,8 @@ async fn inverse_law() {
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
         let d = m.diff(&base);
-        let mid = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
-        let back = protocol::apply_diff(&d.diff().inverse(&base), &mid).expect("valid inverse diff");
+        let mid = protocol::apply_diff_cold(d.diff(), &base).expect("valid forward diff");
+        let back = protocol::apply_diff_cold(&d.diff().inverse(&base), &mid).expect("valid inverse diff");
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }
@@ -48,55 +48,55 @@ async fn absorb_law() {
     let base = base_snapshot();
 
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 8.0, y: 8.0, z: 8.0, w: None } }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 0 }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
 
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: None } }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.vertices.len(), base.vertices.len() + 2, "both inserts must survive");
 
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 1, vertex: ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::SetVertex(set_vertex::SetVertex { index: 1, vertex: ObjVertex { x: 42.0, y: 0.0, z: 0.0, w: Some(1.0) } }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
     assert_eq!(after.vertices[1].x, 42.0);
 
     let d1 = ObjMutation::SetVertex(set_vertex::SetVertex { index: 1, vertex: ObjVertex { x: 7.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 1 }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
     let d1 = ObjMutation::SetGroup(set_group::SetGroup { name: "Fresh".into(), faces: vec![0], index: None }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: "Fresh".into() }).diff(&mid);
-    let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+    let after = protocol::apply_diff_cold(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
+    assert_eq!(protocol::apply_diff_cold(&composed, &base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
     assert_eq!(after.groups, base.groups, "add-then-remove of the same name must be a full no-op");
 
     let base = base_snapshot();
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 0, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
-    let s1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let s1 = protocol::apply_diff_cold(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::SetVertex(set_vertex::SetVertex { index: 0, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: Some(1.0) } }).diff(&s1);
-    let s2 = protocol::apply_diff(d2.diff(), &s1).expect("valid second diff");
+    let s2 = protocol::apply_diff_cold(d2.diff(), &s1).expect("valid second diff");
     let d3 = ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 2 }).diff(&s2);
-    let s3 = protocol::apply_diff(d3.diff(), &s2).expect("valid third diff");
+    let s3 = protocol::apply_diff_cold(d3.diff(), &s2).expect("valid third diff");
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -107,9 +107,9 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), s3);
-    assert_eq!(protocol::apply_diff(&right, &base).expect("valid right diff"), s3);
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must be associative");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), s3);
+    assert_eq!(protocol::apply_diff_cold(&right, &base).expect("valid right diff"), s3);
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), protocol::apply_diff_cold(&right, &base).expect("valid right diff"), "absorb must be associative");
 }
 //#endregion 🔖️FieldSweep
 

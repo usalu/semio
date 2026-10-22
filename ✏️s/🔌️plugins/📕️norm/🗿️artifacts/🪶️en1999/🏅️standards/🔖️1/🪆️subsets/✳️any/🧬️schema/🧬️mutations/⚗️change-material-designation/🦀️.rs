@@ -23,20 +23,21 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMaterialDesignatio
         record: "ChangedMaterialDesignation",
     };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change alloy designation", "Legierungsbezeichnung ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for ChangeMaterialDesignation where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_material_designation::ChangeMaterialDesignation> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::change_material_designation::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_material_designation::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change alloy designation", "Legierungsbezeichnung ändern")
-    }
 }
 
 //#region 🪢️Mounts

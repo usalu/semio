@@ -21,7 +21,7 @@ use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreChangeRetirem
 use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_replay::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
+use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
 use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -125,27 +125,27 @@ where
     }
 
     /// 🎟️ Funds the original semantic producer before transferring its retained request from initialization custody.
-    pub fn admit_native_replay_preparation(&self,request:&mut Option<semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<P,Mutation>>,task:&mut Option<semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationTask<P,Mutation>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>
+    pub fn admit_native_replay_preparation(&self,request:&mut Option<semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>,task:&mut Option<semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>
     where Mutation:Sync,
     {
         if task.is_some()||request.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay admission requires its original request and empty producer slot"));}
         let context=request.as_ref().unwrap().context;if context.generation!=cx.generation().0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay request belongs to another original Job generation"));}
         let factory=self.replay_preparation.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its installed semantic producer"))?;
-        let birth=factory.preparation_birth_demand();let overhead=size_of::<Option<semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<P,Mutation>>>()+size_of::<Option<semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationTask<P,Mutation>>>();let mut demand=birth;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native replay request movement overflow"))?;
+        let birth=factory.preparation_birth_demand();let overhead=size_of::<Option<semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>>()+size_of::<Option<semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>>();let mut demand=birth;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native replay request movement overflow"))?;
         let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant};
-        let result=cx.with_native_receiving(|control|{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;if birth.capacity_bytes!=0{control.charge(birth.capacity_bytes)?;}let original=request.take().unwrap();match factory.begin(original,child){Ok((cursor,mut p))=>{*task=Some(semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationTask::new(context,cursor));p.copied_bytes=p.copied_bytes.checked_add(overhead).expect("native replay preflight movement");if !p.fits(grant)||p.retained_capacity_bytes!=birth.capacity_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay issuer changed its original birth receipt").with_retained_progress(p));}Ok(RetainedCloneStep::Progress(p))},Err((error,original))=>{*request=Some(original);Err(error)}}});
+        let result=cx.with_native_receiving(|control|{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;if birth.capacity_bytes!=0{control.charge(birth.capacity_bytes)?;}let original=request.take().unwrap();match factory.begin(original,child){Ok((cursor,mut p))=>{*task=Some(semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask::new(context,cursor));p.copied_bytes=p.copied_bytes.checked_add(overhead).expect("native replay preflight movement");if !p.fits(grant)||p.retained_capacity_bytes!=birth.capacity_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay issuer changed its original birth receipt").with_retained_progress(p));}Ok(RetainedCloneStep::Progress(p))},Err((error,original))=>{*request=Some(original);Err(error)}}});
         let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }
     /// ⏯️ Loans only the actual initializer context to its installed original semantic task.
-    pub fn advance_native_replay_preparation(&self,task:&mut semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationTask<P,Mutation>,generation:u64,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationStep,ValueError>{
+    pub fn advance_native_replay_preparation(&self,task:&mut semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>,generation:u64,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep,ValueError>{
         if generation!=cx.generation().0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay continuation belongs to another original Job generation"));}
-        let body=cx.retained_grant().maximum_copy_bytes;let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,task.demands(generation,revision,body)?){return Ok(semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationStep::Blocked);}
+        let body=cx.retained_grant().maximum_copy_bytes;let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,task.demands(generation,revision,body)?){return Ok(semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep::Blocked);}
         let clock=cx.clock_source();let deadline=cx.deadline_us();let result=cx.with_native_receiving(|control|task.step(generation,revision,body,semio_framework_os_store_one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},control,&mut||clock().is_none_or(|now|now>=deadline)));
         let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }
     /// ♻️ Closes the same native producer through the initializer's original cleanup authority.
-    pub fn close_native_replay_preparation(&self,owner:&mut semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationRetirement<P,Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_native_replay_preparation(&self,owner:&mut semio_framework_os_store_replay_operation::ArtifactReplayPreparationRetirement<P,Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=cx.retained_grant();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,owner.next_demand(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         let result=cx.with_native_retirement(|control|owner.close_step(grant,control));let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }
@@ -608,8 +608,8 @@ pub const UNSCHEDULED_CATALOG_STEPS: usize = 1 << 12;
 /// 🏗️ Funds one complete member catalog from its own quoted demands for async construction that no scheduler grants.
 pub fn funded_member_store_owners<P, Mutation, C>(producer:&C) -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
 where
-    P: ToValue,
-    Mutation: ToValue + FromValue + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
     C:MemberStoreProducer<P,Mutation>,
 {
     let birth = producer.member_store_owners_birth_demand()?;
@@ -760,7 +760,7 @@ where
 
 /// 🧬️ Prices a shared concrete native issuer once, with distinct publication and replay retirement authorities.
 pub fn funded_bounded_artifact_store_owners_with_semantic_preparation<P,Mutation,F>(preparation:Arc<F>)->Result<DocumentStoreOwners<P,Mutation>,ValueError>
-where P:ToValue+ArtifactPack+semio_framework_value::retirement::RetireOwned+Sync,Mutation:ToValue+FromValue+self::Mutation<P>+OpBinary+OpText+semio_framework_value::retirement::RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static,F:ArtifactStoreOneItemPreparationFactory<P,Mutation>+ArtifactReplayPreparationFactory<P,Mutation>+semio_framework_value::FactoryPayloadRetirement+'static{
+where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_value::retirement::RetireOwned+Sync,Mutation:Clone+ToValue+FromValue+self::Mutation<P>+OpBinary+OpText+semio_framework_value::retirement::RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static,F:ArtifactStoreOneItemPreparationFactory<P,Mutation>+ArtifactReplayPreparationFactory<P,Mutation>+semio_framework_value::FactoryPayloadRetirement+'static{
     let overflow=||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic issuer source extent overflow");let arc=semio_framework_value::factory_arc_birth_bytes::<F>();let tickets=preparation.factory_retirement_birth_bytes().checked_mul(2).ok_or_else(overflow)?;let extra=RetainedCloneBirthDemand{capacity_bytes:arc.checked_add(tickets).ok_or_else(overflow)?,depth:preparation.factory_retirement_depth_demand()};let base=bounded_artifact_store_owners_birth_demand::<P,Mutation>()?;let birth=RetainedCloneBirthDemand{capacity_bytes:base.capacity_bytes.checked_add(extra.capacity_bytes).ok_or_else(overflow)?,depth:base.depth.max(extra.depth)};
     fund_document_store_owners(birth,move|grant|bounded_artifact_store_owners_with_semantic_preparations(grant,extra,move||{let replay:Arc<dyn ArtifactReplayPreparationFactory<P,Mutation>>=Arc::clone(&preparation)as Arc<dyn ArtifactReplayPreparationFactory<P,Mutation>>;(preparation,replay)}))
 }

@@ -11,8 +11,8 @@ use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, D
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 use semio_s_artifact_stdio_contract::kernel::list_delta::{BuildList, ItemList, RowPatch};
 use semio_s_artifact_stdio_contract::list_delta::compose_optional;
 use semio_s_artifact_stdio_xml::schema::diff::XmlDiff;
@@ -206,21 +206,9 @@ fn rewind_xml_parts(base: &DocxXmlParts, diff: &DocxXmlPartsDelta) -> DocxXmlPar
 //#endregion 🔖️XmlPartDiffLogic
 
 //#region 🔖️Apply
-impl MutationDiff<DocxSnapshot> for DocxDiff {
-    fn apply(&self, base: &DocxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<DocxSnapshot> {
-        let mut next = base.clone();
-        if let Some(diff) = &self.opc {
-            let mut opc = next.opc.materialize_package_exact().map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
-            diff.commit_into(&mut opc, capability).map_err(|error| error.under(["opc"]))?;
-            next.opc = RetainedOpcPackage::try_from_package(opc).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
-        }
-        if let Some(diff) = &self.xml_parts {
-            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
-        }
-        next.validate_authority().and_then(|()| next.project_document().map(|_| ())).map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
-        Ok(next)
-    }
+impl MutationDiff<DocxSnapshot> for DocxDiff {}
 
+impl protocol::ColdMutationDiff<DocxSnapshot> for DocxDiff {
     fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, value) | (value, None) => value,
@@ -231,11 +219,33 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
         };
         self.xml_parts = compose_optional(self.xml_parts.take(), other.xml_parts);
     }
+
+    fn apply(&self, unpublished: &mut DocxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(diff) = &self.opc {
+            let mut opc = next.opc.materialize_package_exact().map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
+            diff.commit_into(&mut opc, capability).map_err(|error| error.under(["opc"]))?;
+            next.opc = RetainedOpcPackage::try_from_package(opc).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
+        }
+        if let Some(diff) = &self.xml_parts {
+            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
+        }
+        next.validate_authority().and_then(|()| next.project_document().map(|_| ())).map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<DocxSnapshot> for DocxDiff {
+    fn is_empty(&self) -> bool {
+        self.opc.is_none() && self.xml_parts.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DocxSnapshot> for DocxDiff {
     fn inverse(&self, base: &DocxSnapshot) -> Self {
         DocxDiff {
             opc: self.opc.as_ref().map(|diff| {
@@ -244,10 +254,6 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
             }),
             xml_parts: self.xml_parts.as_ref().map(|diff| rewind_xml_parts(&base.xml_parts, diff)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.opc.is_none() && self.xml_parts.is_none()
     }
 }
 //#endregion 🔖️DiffAlgebra

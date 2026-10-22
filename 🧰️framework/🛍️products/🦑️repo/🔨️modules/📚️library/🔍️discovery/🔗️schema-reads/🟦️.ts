@@ -52,7 +52,7 @@ class SchemaReadInspector {
   private global(name: string, scope: ReadScope): ReadValue {
     const binding = scope.binding(name);
     if (binding) return binding.value;
-    return ["JSON", "Bun", "URL", "import"].includes(name) ? { kind: "namespace", name } : unresolvedValue;
+    return ["JSON", "URL", "import"].includes(name) ? { kind: "namespace", name } : unresolvedValue;
   }
   private document(path: string): ReadValue {
     let document = this.documents.get(path);
@@ -113,6 +113,7 @@ class SchemaReadInspector {
   private imported(module: string, name: string): ReadValue {
     if (["ajv", "ajv/dist/2020", "ajv/dist/2020.js"].includes(module)) return name === "*" ? { kind: "namespace", name: module } : ["default", "Ajv"].includes(name) ? { kind: "constructor" } : unresolvedValue;
     if (["node:fs", "fs"].includes(module)) return { kind: "namespace", name: name === "*" ? "fs" : `fs.${name}` };
+    if (/\/⚙️runtime\/(?:🌍️serve\/)?🟦️\.ts$/u.test(module) && name === "runtimeFileV1") return { kind: "namespace", name: "runtime.file" };
     if (module.endsWith(".json") && module.startsWith(".")) return this.document(posix.normalize(posix.join(posix.dirname(this.readerPath), module)));
     return unresolvedValue;
   }
@@ -187,12 +188,11 @@ class SchemaReadInspector {
       }
       if (property === "compile") { this.issue(node, "validator-owner-unresolved"); return unresolvedValue; }
       if (owner?.kind === "namespace" && owner.name === "JSON" && property === "parse" && args[0]?.kind === "text") return this.document(args[0].name!);
-      if (owner?.kind === "namespace" && owner.name === "Bun" && property === "file" && args[0]?.kind === "url") return { kind: "text", name: args[0].name };
       if (owner?.kind === "text" && property === "json") return { kind: "promise", settled: this.document(owner.name!) };
     }
     if (callee.kind === "validator") return this.validate(node, callee.schema!, args[0] ?? unresolvedValue);
     if (callee.kind === "helper") return this.invoke(callee, args);
-    if (callee.kind === "namespace" && callee.name === "fs.readFileSync" && args[0]?.kind === "url") return { kind: "text", name: args[0].name };
+    if (callee.kind === "namespace" && (callee.name === "fs.readFileSync" || callee.name === "runtime.file") && args[0]?.kind === "url") return { kind: "text", name: args[0].name };
     for (const value of args) {
       if (value.kind === "helper") this.deferred.push(value);
       else this.invalidate(value);

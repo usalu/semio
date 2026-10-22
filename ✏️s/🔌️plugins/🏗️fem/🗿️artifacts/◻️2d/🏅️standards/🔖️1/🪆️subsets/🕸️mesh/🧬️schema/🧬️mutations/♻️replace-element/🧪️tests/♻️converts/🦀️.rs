@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").modified.len(), 1, "replace-element/converts-beam-e1-into-a-5d21f5: exactly one element may be patched");
     assert!(outcome.diff().elements.as_ref().expect("elements delta").removed.is_empty(), "replace-element/converts-beam-e1-into-a-5d21f5: a replacement must never be encoded as a remove-then-add");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

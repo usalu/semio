@@ -48,7 +48,7 @@ pub fn mermaid_contributors(invocation: &mut Invocation<'_>) -> Result<(), CliEr
     let root = invocation.root();
     let mut authors: BTreeMap<String, i64> = BTreeMap::new();
     for (path, _) in counted_files(&root) {
-        let Ok(output) = std::process::Command::new("git").args(["blame", "--line-porcelain"]).arg(root.join(&path)).current_dir(&root).output() else { continue };
+        let Ok(output) = semio_framework_repo_workspace::spawn_command("git").args(["blame", "--line-porcelain"]).arg(root.join(&path)).current_dir(&root).output() else { continue };
         if !output.status.success() {
             continue;
         }

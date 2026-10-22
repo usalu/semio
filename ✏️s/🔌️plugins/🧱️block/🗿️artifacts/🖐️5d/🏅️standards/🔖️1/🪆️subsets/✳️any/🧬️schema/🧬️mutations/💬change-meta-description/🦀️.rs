@@ -24,6 +24,12 @@ pub fn change_meta_description<Op: From<crate::change_meta_description::ChangeMe
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeMetaDescription where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_meta_description::ChangeMetaDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "meta", kind: "change-meta-description", record: "ChangedMetaDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change meta description", "Metabeschreibung ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ChangeMetaDescription where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_meta_description::ChangeMetaDescription> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::change_meta_description::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeMetaDescription w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change meta description", "Metabeschreibung ändern")
-    }
 }
 //#endregion 🔖️Mutation
 

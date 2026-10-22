@@ -12,7 +12,7 @@ use semio_framework_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Back }
+pub(super) enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Diagnostics, Diagnostic(usize), EditKeymap, EditPrefix, Editor(dashboard_keymap_editor::Action), CancelPreference, Back }
 
 /// 🪧️ The rows of one list window and where the selection and the visible slice are.
 #[derive(Default)]
@@ -32,12 +32,61 @@ impl Pane {
     pub fn current(&self) -> Option<&RowAction> { self.rows.get(self.selected).map(|(_, action)| action) }
 }
 
+pub(super) struct PreferenceJob { pub receiver:std::sync::mpsc::Receiver<(Change,std::io::Result<u64>)>, pub cancel:std::sync::Arc<std::sync::atomic::AtomicBool> }
+
 impl Dashboard {
-    fn pane_rows(&self, index: usize) -> Vec<(String, RowAction)> {
+    pub fn record_failure(&mut self,failure:dashboard_feedback::Failure) {
+        self.notice=Some(failure.display(self.text()));self.diagnostics.push(failure);
+    }
+
+    pub fn record_io(&mut self,operation:dashboard_feedback::Operation,error:std::io::Error) {
+        self.record_failure(dashboard_feedback::Failure::io(operation,error));
+    }
+
+    pub fn editor_action(&mut self,tui:&mut Tui,index:usize,action:dashboard_keymap_editor::Action) {
+        use dashboard_keymap_editor::{Action,Target};
+        if action==Action::Cancel {self.set_body(tui,index,Kind::Settings,None);return;}
+        if action==Action::Save {
+            if self.saving_preferences.is_some(){self.notice=Some(self.text().prefs_busy.as_str().into());return;}
+            let result=match &self.windows[index].body{Body::KeymapEditor(editor)=>editor.change(),_=>return};
+            match result{
+                Ok(Some(change))=>{self.queue_preference(change);self.set_body(tui,index,Kind::Settings,None);}
+                Ok(None)=>self.set_body(tui,index,Kind::Settings,None),
+                Err(problem)=>if let Body::KeymapEditor(editor)=&mut self.windows[index].body{editor.problem=Some(problem);}
+            }
+        }else if let Body::KeymapEditor(editor)=&mut self.windows[index].body{
+            match action{
+                Action::Edit(target)=>editor.begin(target),
+                Action::Add(id)=>{let index=editor.bindings.get(&id).map_or(0,Vec::len);editor.begin(Target::Alias(id,index));}
+                Action::Remove(id,index)=>if let Some(keys)=editor.bindings.get_mut(&id){if keys.len()>1&&index<keys.len(){keys.remove(index);}},
+                Action::Reset(id)=>editor.reset(Some(&id)),
+                Action::ResetAll=>editor.reset(None),
+                Action::Save|Action::Cancel=>{}
+            }
+        }
+        self.refresh_pane(tui,index);
+    }
+
+    pub fn editor_key(&mut self,tui:&mut Tui,index:usize,key:&semio_framework_ui_tui_core::event::KeyEvent)->bool {
+        use semio_framework_ui_tui_core::event::{Key,mods};
+        let Body::KeymapEditor(editor)=&mut self.windows[index].body else{return false};
+        if editor.editing.is_none(){return false;}
+        match key.key{
+            Key::Esc=>{editor.editing=None;editor.problem=None;}
+            Key::Enter=>if let Err(problem)=editor.commit(){editor.problem=Some(problem);},
+            Key::Backspace=>{editor.input.pop();}
+            Key::Char('u') if key.mods&mods::CTRL!=0=>editor.input.clear(),
+            Key::Char(c) if key.mods&(mods::CTRL|mods::ALT)==0=>editor.push(&c.to_string()),
+            _=>{}
+        }
+        self.refresh_pane(tui,index);true
+    }
+
+    fn pane_rows(&self, index: usize, width:u16) -> Vec<(String, RowAction)> {
         let text = self.text();
         match &self.windows[index].body {
             Body::Overview => {
-                let mut rows = vec![(text.action_show_files.as_str().into(), RowAction::Files), (text.row_new_task.as_str().into(), RowAction::NewTask), (text.row_settings.as_str().into(), RowAction::Settings), (text.row_keyboard.as_str().into(), RowAction::Help), (text.row_refresh.as_str().into(), RowAction::Refresh), (text.row_cancel_discovery.as_str().into(), RowAction::CancelDiscovery)];
+                let mut rows = vec![(text.action_show_files.as_str().into(), RowAction::Files), (text.row_new_task.as_str().into(), RowAction::NewTask), (text.row_settings.as_str().into(), RowAction::Settings), (text.row_keyboard.as_str().into(), RowAction::Help), (text.row_refresh.as_str().into(), RowAction::Refresh), (text.row_cancel_discovery.as_str().into(), RowAction::CancelDiscovery), (text.diagnostics_title.as_str().into(),RowAction::Diagnostics)];
                 if self.sessions.is_empty() { rows.push((text.row_no_tasks.as_str().into(), RowAction::None)); }
                 if self.opening_url.is_some() { rows.push((text.action_cancel_open_ready.as_str().into(), RowAction::CancelOpenReady)); }
                 for session in self.sessions.values() {
@@ -56,11 +105,27 @@ impl Dashboard {
                     setting(text.setting_renderer.as_str(), &self.preferences.renderer, RowAction::Renderer),
                     setting(text.setting_layout.as_str(), &self.preferences.layout, RowAction::Layout),
                     setting(text.setting_scope.as_str(), scope.as_str(), RowAction::SaveScope),
-                    setting(text.setting_prefix.as_str(), &self.keymap.prefix().label(), RowAction::None),
+                    setting(text.setting_prefix.as_str(), &self.keymap.prefix().label(), RowAction::EditPrefix),
+                    (text.keymap_bindings.as_str().into(),RowAction::EditKeymap),
+                    (text.keymap_cancel_save.as_str().into(),RowAction::CancelPreference),
                     (text.row_back.as_str().into(), RowAction::Back),
-                ]
+                ].into_iter().filter(|(_,action)|*action!=RowAction::CancelPreference||self.saving_preferences.is_some()).collect()
             }
             Body::Help => self.help_rows(),
+            Body::KeymapEditor(editor)=>editor.rows(text).into_iter().map(|(label,action)|(label,RowAction::Editor(action))).collect(),
+            Body::Diagnostics=>{
+                let mut rows=vec![(text.diagnostics_hint.as_str().into(),RowAction::None)];
+                for (index,failure) in self.diagnostics.events().enumerate().rev(){
+                    let mut line=String::new();
+                    for cluster in semio_framework_ui_tui_core::text::clusters(&failure.display(text)){
+                        if cluster=="\n"||semio_framework_ui_tui_core::text::display_width(&(line.clone()+cluster))>width.max(1){if !line.is_empty(){rows.push((std::mem::take(&mut line),RowAction::Diagnostic(index)));}}
+                        if cluster!="\n"{line.push_str(cluster);}
+                    }
+                    if !line.is_empty(){rows.push((line,RowAction::Diagnostic(index)));}
+                }
+                if self.diagnostics.len()==0{rows.push((text.diagnostics_empty.as_str().into(),RowAction::None));}
+                rows.push((text.row_back.as_str().into(),RowAction::Back));rows
+            },
             _ => Vec::new(),
         }
     }
@@ -105,8 +170,8 @@ impl Dashboard {
     pub fn refresh_panes(&mut self, tui: &mut Tui) { for index in 0..self.windows.len() { self.refresh_pane(tui, index); } }
 
     pub fn refresh_pane(&mut self, tui: &mut Tui, index: usize) {
-        if !matches!(self.windows[index].body, Body::Overview | Body::Settings | Body::Help) { return; }
-        let rows = self.pane_rows(index);
+        if !matches!(self.windows[index].body, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_)) { return; }
+        let rows = self.pane_rows(index,tui.scene.rect(self.windows[index].list).width);
         let page = usize::from(tui.scene.rect(self.windows[index].list).height).max(1);
         let window = &mut self.windows[index];
         let keep = window.pane.current().cloned();
@@ -133,6 +198,11 @@ impl Dashboard {
     pub fn activate_row(&mut self, tui: &mut Tui, index: usize) {
         let Some(action) = self.windows[index].pane.current().cloned() else { return };
         match action {
+            RowAction::Diagnostics=>self.set_body(tui,index,Kind::Diagnostics,None),
+            RowAction::Diagnostic(event)=>if let Some(failure)=self.diagnostics.get(event){self.effects.push(super::windows::Effect::Copy(failure.display(self.text())));},
+            RowAction::EditKeymap|RowAction::EditPrefix=>{self.set_body(tui,index,Kind::KeymapEditor,None);if action==RowAction::EditPrefix{if let Body::KeymapEditor(editor)=&mut self.windows[index].body{editor.begin(dashboard_keymap_editor::Target::Prefix);}}}
+            RowAction::Editor(action)=>self.editor_action(tui,index,action),
+            RowAction::CancelPreference=>{if let Some(job)=&self.saving_preferences{job.cancel.store(true,std::sync::atomic::Ordering::Release);}self.notice=Some(self.text().prefs_cancel_requested.as_str().into());}
             RowAction::None => {}
             RowAction::Files => self.open_files(tui),
             RowAction::NewTask => self.set_body(tui, index, Kind::Launcher, None),
@@ -161,8 +231,10 @@ impl Dashboard {
         if self.saving_preferences.is_some() { self.notice = Some(self.text().prefs_busy.as_str().into()); return; }
         let path = if self.shared_preferences { dashboard_preferences::shared_path(&self.root) } else { self.preference_path.clone() };
         let (sender, receiver) = std::sync::mpsc::channel();
-        std::thread::spawn(move || { let result = dashboard_preferences::append(&path, &change); let _ = sender.send((change, result)); });
-        self.saving_preferences = Some(receiver);
+        let cancel=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let writer_cancel=cancel.clone();
+        std::thread::spawn(move || { let result = dashboard_preferences::append_cancellable(&path, &change,&writer_cancel); let _ = sender.send((change, result)); });
+        self.saving_preferences = Some(PreferenceJob{receiver,cancel});
         self.notice = Some(self.text().prefs_saving.as_str().into());
     }
 

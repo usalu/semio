@@ -2,7 +2,7 @@ use semio_framework_os_kernel::ColdMutation;
 use semio_framework_os_kernel::ColdMutationDiff;
 use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
-use protocol::Mutation;
+use protocol::{Mutation};
 
 fn identity(user_id: &str) -> Identity {
     Identity { user_id: user_id.to_string(), email: format!("{user_id}@example.test"), display_name: user_id.to_string(), hub_base_url: "https://hub.example.test".to_string(), issued_at_ms: 42 }

@@ -11,7 +11,7 @@ bad, pre_bad = [], 0
 for f in plan["files"]:
     old = open(os.path.join(root, f["path"]), encoding="utf-8").read()
     new = old
-    for a, b, o, n, _k, _t in sorted(f["edits"], key=lambda e: e[0], reverse=True):
+    for a, b, o, n in [e[:4] for e in sorted(f["edits"], key=lambda e: e[0], reverse=True)]:
         new = new[:a] + n + new[b:]
     if ok(new): continue
     if ok(old): bad.append(f["path"])

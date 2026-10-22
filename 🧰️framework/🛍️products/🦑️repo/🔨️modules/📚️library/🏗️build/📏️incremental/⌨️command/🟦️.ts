@@ -1,19 +1,22 @@
-import {spawn} from "node:child_process";
-import {access,mkdir,mkdtemp,rm} from "node:fs/promises";
-import {tmpdir} from "node:os";
+import {buildBackendAlternationV1,buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
+
+import {access,mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
+import {homedir,tmpdir} from "node:os";
 import {join,posix,win32} from "node:path";
 import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
 import {incrementalExpectedV1,incrementalReportV1,incrementalScenarioIssuesV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalPhaseV1,type IncrementalScenarioSetV1,type IncrementalToolV1} from "../🟦️.ts";
-import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDiscardV1,incrementalRunV1,incrementalSelectV1,type IncrementalAdapterV1,type IncrementalHostV1} from "../🏃️runner/🟦️.ts";
+import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDiscardV1,incrementalRefreshV1,incrementalRunV1,incrementalSelectV1,type IncrementalAdapterV1,type IncrementalHostV1} from "../🏃️runner/🟦️.ts";
+import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
-const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=["nx","bazel"],operations=["list","plan","prepare","run","discard"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=buildBackendIdsV1(),operations=["list","plan","prepare","run","discard"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
 
 /** 📝️ The closed arguments of `repo incremental`. */
 export type IncrementalArgumentsV1=Readonly<{operation:typeof operations[number];scenarios:readonly string[]|"all";tools:readonly IncrementalToolV1[];root:string|undefined;phases:readonly IncrementalPhaseV1[];file:string|undefined;json:boolean;fresh:boolean;language:"en"|"de"|undefined}>;
 
-const both=(english:string,german:string)=>`${english}\n${german}`,incrementalRootLimit=100,valuedOptions=Object.freeze(["--scenario","--implementations","--root","--phases","--file","--lang"]),plainOptions=Object.freeze(["--json","--fresh"]);
+const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--scenario","--implementations","--root","--phases","--file","--lang"]),plainOptions=Object.freeze(["--json","--fresh"]);
 
 /** 🚩️ The option names `repo incremental` accepts, so the operations catalogue can be checked against the parser. */
 export function incrementalOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
@@ -33,18 +36,17 @@ export function incrementalArgumentsV1(args:readonly string[]):IncrementalArgume
  }
  const list=(name:string)=>values[name]?.split(",").filter(Boolean);
  const chosen=list("--implementations")??[...tools],phases=list("--phases")??[...policy.phases],language=values["--lang"];
- for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
+ for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (${buildBackendAlternationV1()})`,`Unbekannte Implementierung: ${tool} (${buildBackendAlternationV1()})`));
  for(const phase of phases)if(!policy.phases.includes(phase))throw Error(both(`Unknown phase: ${phase} (${policy.phases.join("|")})`,`Unbekannte Phase: ${phase} (${policy.phases.join("|")})`));
  if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
  const picked=list("--scenario");
  return Object.freeze({operation,scenarios:picked===undefined||picked.includes("all")?"all":picked,tools:[...new Set(chosen)] as IncrementalToolV1[],root:values["--root"],phases:[...new Set(phases)] as IncrementalPhaseV1[],file:values["--file"],json:flags.has("--json"),fresh:flags.has("--fresh"),language:language as "en"|"de"|undefined});
 }
 
-/** 📍️ The default location of the disposable root: the folder `sinc` in the temporary directory of the process (inside a test sandbox that is the sandbox directory), refused when its path leaves no room for the repository paths below the 255-character budget. */
-export function incrementalDefaultRootV1(platform:string,temporaryDirectory:string):string{
- const root=(platform==="win32"?win32:posix).join(temporaryDirectory,"sinc");
- if(root.length>incrementalRootLimit)throw Error(both(`The temporary directory is too long for the disposable root (${root.length} > ${incrementalRootLimit} characters): pass --root with a short path`,`Das temporäre Verzeichnis ist zu lang für das Wegwerf-Verzeichnis (${root.length} > ${incrementalRootLimit} Zeichen): --root mit einem kurzen Pfad übergeben`));
- return root;
+/** 📍️ The default location of the disposable root: the folder `.sinc` in the home directory (outside the scratch directories whose idle cache images the boot recovery detaches), else the folder `sinc` in the temporary directory of the process (inside a test sandbox that is the sandbox directory), each while its path keeps `maximumRootLength` units so the longest product path still fits the 255-unit budget; otherwise the short `sinc` folder at the top of the temporary volume (`/tmp`, or the drive root of the temporary directory on Windows). */
+export function incrementalDefaultRootV1(platform:string,temporaryDirectory:string,home:string):string{
+ const flavour=platform==="win32"?win32:posix,candidates=platform==="win32"?[flavour.join(temporaryDirectory,"sinc")]:[flavour.join(home,".sinc"),flavour.join(temporaryDirectory,"sinc")];
+ return candidates.find(root=>root.length<=policy.maximumRootLength)??flavour.join(platform==="win32"?flavour.parse(temporaryDirectory).root||"C:\\":"/tmp","sinc");
 }
 
 /** 🎛️ Everything the command needs from the host process, so the command itself is testable without a build CLI. */
@@ -56,6 +58,7 @@ export type IncrementalCommandPortsV1=Readonly<{
  environment:Readonly<Record<string,string|undefined>>;
  platform:string;
  tmpdir():string;
+ home():string;
  now():number;
  run(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,signal:AbortSignal):Promise<string>;
  report(file:string,value:unknown):Promise<void>;
@@ -79,27 +82,26 @@ export function renderIncrementalPlanV1(set:IncrementalScenarioSetV1,rows:readon
  return out.join("\n");
 }
 
-const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"]];
+const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"],["tools","setup","all"]];
 
 /** 🚀️ Runs `repo incremental`: lists the scenarios, plans their expected sets, prepares the disposable root, runs the scenarios in it with every implementation and judges minimality, or discards the root. Progress is published per stage and every stage checks for cancellation. */
 export async function runIncrementalCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
  const parsed=incrementalArgumentsV1(args.slice(args[0]==="incremental"?1:0)),set=scenarios as IncrementalScenarioSetV1,issues=incrementalScenarioIssuesV1(set);
  if(issues.length)throw Error(`Closed incremental scenarios required: ${issues.join("; ")}`);
- const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir());
+ const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir(),ports.home());
  if(parsed.operation==="list"){ports.write(renderIncrementalScenariosV1(set,lang));return;}
- if(parsed.operation==="discard"){await ports.progress("discard");await incrementalDiscardV1(live,root);ports.write(`${text(set,"progress",lang)}: ${root}`);return;}
+ if(parsed.operation==="discard"){await ports.progress("discard");await incrementalDiscardV1(live,root,ports.signal);ports.write(`${text(set,"progress",lang)}: ${root}`);return;}
  const scratch=await ports.scratch(),exists=await ports.exists(join(root,script));
  const host=(files?:readonly string[]):IncrementalHostV1=>({live,root,script,executable:process.execPath,scratch,signal:ports.signal,environment:ports.environment,run:ports.run,nxRecord:ports.nxRecord,adapter:ports.adapter,inventory:async()=>files??await ports.files(live,ports.signal),now:ports.now,check:ports.check,progress:ports.progress});
  try{
   if(parsed.operation==="prepare"){
    ports.check();
-   if(parsed.fresh)await incrementalDiscardV1(live,root);
-   if(!exists||parsed.fresh){
-    const files=await ports.files(live,ports.signal);
-    await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
-   }
+   if(parsed.fresh)await incrementalDiscardV1(live,root,ports.signal);
+   const files=await ports.files(live,ports.signal);
+   if(!exists||parsed.fresh)await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
+   else await incrementalRefreshV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`refresh:${done}/${total}`);}});
    const pre=host();
-   for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,"nx",step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
+   for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,tools[0]!,step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
    ports.write(`${text(set,"progress",lang)}: ${root}`);
    return;
   }
@@ -126,16 +128,17 @@ export async function runIncrementalCommandV1(live:string,args:readonly string[]
 export async function incrementalCommandPortsV1(root:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<IncrementalCommandPortsV1>{
  const nx=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),execution=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
  return Object.freeze({
-  write:line=>console.log(line),
+  write:writeResultLineV1,
   progress:stage=>routing.advanceScriptInvocation(invocation,"incremental:"+stage,"running"),
   check:()=>routing.checkScriptInvocation(invocation),
   signal:invocation.control.signal,
   environment:process.env,
   platform:process.platform,
   tmpdir:()=>tmpdir(),
+  home:()=>homedir(),
   now:()=>Date.now(),
   run:(command,args,cwd,env,signal)=>execution.captureOwnedCommandV1(command,args,cwd,{env,signal}),
-  report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{console.log(artifact.path);});},
+  report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{writeResultLineV1(artifact.path);});},
   files:(directory,signal)=>incrementalTrackedFilesV1(directory,signal),
   adapter:async()=>await import("../../🔧️tools/🏗️bazel/📜️script.ts") as unknown as IncrementalAdapterV1,
   nxRecord:directory=>join(nx.nxCacheDirectoryV1(directory),"run.json"),
@@ -144,14 +147,31 @@ export async function incrementalCommandPortsV1(root:string,invocation:import(".
  });
 }
 
-/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout, read-only, bounded and cancellable. */
-export function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
+/** 📜️ Runs one read-only, bounded and cancellable `git ls-files` and returns its NUL separated paths. */
+function incrementalGitListV1(directory:string,arguments_:readonly string[],signal:AbortSignal):Promise<readonly string[]>{
  return new Promise((accept,reject)=>{
-  const child=spawn("git",["-C",directory,"ls-files","-z","-co","--exclude-standard"],{stdio:["ignore","pipe","pipe"],windowsHide:true,signal}),chunks:Buffer[]=[];let bytes=0;
+  const child=startToolV1("git",["-C",directory,"ls-files","-z",...arguments_],{stdio:["ignore","pipe","pipe"],windowsHide:true,signal}),chunks:Buffer[]=[];let bytes=0;
   child.stdout.on("data",(chunk:Buffer)=>{bytes+=chunk.length;if(bytes>policy.maximumLogBytes){child.kill();reject(Error("Bounded file inventory required"));}else chunks.push(chunk);});
   child.on("error",reject);
   child.on("close",code=>code===0?accept(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean)):reject(Error(`git ls-files failed (${code})`)));
  });
+}
+
+/** 🤖️ Expands the ignored entries a copy still needs (generated outputs the build graph reads) into files: a listed directory is walked, a link stays a link. */
+async function incrementalIgnoredFilesV1(directory:string,entries:readonly string[]):Promise<readonly string[]>{
+ const rule=policy.includedIgnored,found:string[]=[],walk=async(relativePath:string):Promise<void>=>{for(const entry of await readdir(join(directory,relativePath),{withFileTypes:true})){const child=posix.join(relativePath,entry.name);if(entry.isDirectory())await walk(child);else found.push(child);}};
+ for(const entry of entries){
+  const directoryEntry=entry.endsWith("/"),name=posix.basename(directoryEntry?entry.slice(0,-1):entry);
+  if(directoryEntry?rule.directoryNames.includes(name):rule.filePrefixes.some(prefix=>name.startsWith(prefix))||rule.files.includes(entry))directoryEntry?await walk(entry.slice(0,-1)):found.push(entry);
+ }
+ return found;
+}
+
+/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout plus its ignored generated outputs, without the ticket workspace, read-only, bounded and cancellable. */
+export async function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
+ const [listed,ignored]=await Promise.all([incrementalGitListV1(directory,["-co","--exclude-standard"],signal),incrementalGitListV1(directory,["-o","-i","--exclude-standard","--directory"],signal)]);
+ const files=new Set([...listed,...await incrementalIgnoredFilesV1(directory,ignored)]);
+ return [...files].filter(file=>!policy.excludedPrefixes.some(prefix=>file.startsWith(prefix))).sort();
 }
 
 /** 🚪️ The entry the build CLI calls for `repo incremental`. */

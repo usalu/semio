@@ -51,6 +51,7 @@ impl RetireOwned for ChannelsLease{
  fn controlled_retirement_supported()->bool{true}
 }
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct EvalOwners{
  topology:Option<BudgetedEvalTopology>,seeds:SeedsLease,dirty:HistoryFoldIndex<String,()>,infos:InfosLease,registry:SharedRegistry,previous:Option<ChannelsLease>,channels:Option<EvalChannels>,input:Option<Dictionary>,seed:Option<Dictionary>,merge:Option<BudgetedInputMerge>,displaced:Option<ControlledRetirement<EvalDisplaced>>,entry:Option<BudgetedOwnedEntry>,port_value:Option<SharedOwner<Value>>,staged_value:Option<Value>,staged_key:Option<String>,staged_dictionary:Option<Dictionary>,buffer:Vec<u8>,plan:OperatorPlanCursor,finish:OperatorFinishCursor,wave:Option<wave::PendingWaveCursor>,pending_stage:Option<crate::PendingExtensionEval>,pending:Vec<crate::PendingExtensionEval>,remaining:Vec<String>,remaining_key:Option<String>,
 }

@@ -60,7 +60,7 @@ export function registerResidentNativeMetadataRouterTests(): void {
       expect(body.startsWith("#!")).toBe(false);
       await new AsyncFunction(...Object.keys(dependencies), body)(...Object.values(dependencies));
       expect(router).toBeInstanceOf(ScriptRouter);
-      expect(router!.usage()).toBe("bun ./📜️script.ts <test|check-wasm> [args…]");
+      expect(router!.usage()).toBe("repo ./📜️script.ts <test|check-wasm> [args…]");
       await router!.run(["test"], routerInvocation("workspace-contract"));
       expect(calls).toEqual([[{manifestPath:join(packageRoot,"Cargo.toml"),packages:[expected.cargo.package.name],cwd:packageRoot,extraArgs:["--lib"]},{version:1}]]);
       calls.length = 0;

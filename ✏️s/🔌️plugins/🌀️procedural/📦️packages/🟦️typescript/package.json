@@ -14,7 +14,7 @@
     "./foundation/generation/sqlite/testing/support": "./🫀️foundation/🧬️generation/🪶️sqlite/🧪️testing/🧰️support/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/procedural-js:test"
+    "test": "repo run @semio-tech/procedural-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

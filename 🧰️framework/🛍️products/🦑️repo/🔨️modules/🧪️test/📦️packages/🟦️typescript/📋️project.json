@@ -20,7 +20,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test fixture-isolation"
+        "command": "repo ./📜️script.ts test fixture-isolation"
       }
     },
     "test-discovery-boundaries": {
@@ -29,7 +29,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test discovery-boundaries"
+        "command": "repo ./📜️script.ts test discovery-boundaries"
       },
       "inputs": [
         "sharedGlobals",
@@ -59,7 +59,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test platform-discovery-contract"
+        "command": "repo ./📜️script.ts test platform-discovery-contract"
       }
     },
     "test-platform-comparison-profiles": {
@@ -78,7 +78,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test platform-comparison-profiles"
+        "command": "repo ./📜️script.ts test platform-comparison-profiles"
       }
     },
     "test-platform-oracle-governance": {
@@ -97,7 +97,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test platform-oracle-governance"
+        "command": "repo ./📜️script.ts test platform-oracle-governance"
       }
     },
     "test-platform-mutation-catalogs": {
@@ -116,7 +116,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test platform-mutation-catalogs"
+        "command": "repo ./📜️script.ts test platform-mutation-catalogs"
       }
     },
     "lint": {
@@ -130,7 +130,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint"
+        "command": "repo ./📜️script.ts lint"
       }
     },
     "test": {
@@ -139,7 +139,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "inputs": [
         "default",

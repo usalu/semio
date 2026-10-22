@@ -1,0 +1,137 @@
+{
+  "pressureVectors": [
+    {
+      "name": "far below the high-water mark and just maintained",
+      "input": {
+        "volumeBytes": 51539607552,
+        "freeBytes": 42949672960,
+        "emergencyBytes": 4294967296,
+        "nowMs": 1000000,
+        "lastLaunchMs": 999000
+      },
+      "decision": "enough"
+    },
+    {
+      "name": "far below the high-water mark and not maintained for ten minutes",
+      "input": {
+        "volumeBytes": 51539607552,
+        "freeBytes": 42949672960,
+        "emergencyBytes": 4294967296,
+        "nowMs": 1000000,
+        "lastLaunchMs": 399999
+      },
+      "decision": "maintain"
+    },
+    {
+      "name": "never collected before",
+      "input": {
+        "volumeBytes": 51539607552,
+        "freeBytes": 42949672960,
+        "emergencyBytes": 4294967296,
+        "nowMs": 1000000,
+        "lastLaunchMs": null
+      },
+      "decision": "maintain"
+    },
+    {
+      "name": "exactly at the high-water mark",
+      "input": {
+        "volumeBytes": 1000,
+        "freeBytes": 200,
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "lastLaunchMs": 999999
+      },
+      "decision": "enough"
+    },
+    {
+      "name": "one byte above the high-water mark launches the collector",
+      "input": {
+        "volumeBytes": 1000,
+        "freeBytes": 199,
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "lastLaunchMs": null
+      },
+      "decision": "launch"
+    },
+    {
+      "name": "above the high-water mark but launched a minute ago",
+      "input": {
+        "volumeBytes": 1000,
+        "freeBytes": 199,
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "lastLaunchMs": 940000
+      },
+      "decision": "throttled"
+    },
+    {
+      "name": "above the high-water mark and launched exactly one interval ago",
+      "input": {
+        "volumeBytes": 1000,
+        "freeBytes": 199,
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "lastLaunchMs": 700000
+      },
+      "decision": "launch"
+    },
+    {
+      "name": "less free than one compile needs collects inline even when throttled",
+      "input": {
+        "volumeBytes": 51539607552,
+        "freeBytes": 4294967295,
+        "emergencyBytes": 4294967296,
+        "nowMs": 1000000,
+        "lastLaunchMs": 999999
+      },
+      "decision": "collect-now"
+    },
+    {
+      "name": "exactly what one compile needs is still the background collector",
+      "input": {
+        "volumeBytes": 51539607552,
+        "freeBytes": 4294967296,
+        "emergencyBytes": 4294967296,
+        "nowMs": 1000000,
+        "lastLaunchMs": null
+      },
+      "decision": "launch"
+    }
+  ],
+  "outOfSpaceVectors": [
+    {
+      "text": "error: could not write output to /m/u/l/a/t/debug/deps/libx.rlib: No space left on device (os error 28)",
+      "outOfSpace": true
+    },
+    {
+      "text": "error: failed to write `/m/b/foo.rmeta` (os error 28)",
+      "outOfSpace": true
+    },
+    {
+      "text": "error: linking with `cc` failed\n  = note: ld: write() failed, errno=28 ENOSPC",
+      "outOfSpace": true
+    },
+    {
+      "text": "error: There is not enough space on the disk. (os error 112)",
+      "outOfSpace": true
+    },
+    {
+      "text": "   Compiling semio-framework v0.1.0\nerror[E0432]: unresolved import `crate::missing`",
+      "outOfSpace": false
+    },
+    {
+      "text": "error: could not compile `x` (lib) due to 1 previous error; 2 warnings emitted",
+      "outOfSpace": false
+    },
+    {
+      "text": "thread 'main' panicked: failed with os error 2",
+      "outOfSpace": false
+    },
+    {
+      "text": "",
+      "outOfSpace": false
+    }
+  ]
+}

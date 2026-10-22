@@ -3,7 +3,7 @@ use semio_framework_os_kernel::ColdMutationDiff;
 use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
 use crate::opening_config::mutations::{apply_local_folders_config_mutation_reporting, LocalFolderBinding, LocalFolderRef};
-use protocol::Mutation;
+use protocol::{Mutation};
 
 fn binding(document_id: &str) -> LocalFolderBinding {
     LocalFolderBinding { document_id: document_id.to_string(), plugin_id: "cad".to_string(), app_id: "s.cad.drawing@1/*#editor".to_string(), folder: LocalFolderRef::Path { path: format!("/data/{document_id}") } }

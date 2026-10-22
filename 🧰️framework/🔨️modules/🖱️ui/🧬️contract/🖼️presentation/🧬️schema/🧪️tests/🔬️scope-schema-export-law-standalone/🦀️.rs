@@ -10,7 +10,7 @@ fn registers_and_resolves_exactly_the_declared_formats() {
             assert_eq!(resolved.is_ok(), super::DECLARED_FORMATS.contains(&format), "{export} resolves {format} but x-semio-formats declares {:?}", super::DECLARED_FORMATS);
         }
         assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::JsonSchema).is_ok_and(|leaf| leaf.contains("framework/ui/contract/schema.json")));
-        assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::Rust).is_ok_and(|leaf| leaf.contains("register_scope_exports")));
+        assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::Rust).is_ok_and(|leaf| leaf.contains(export)));
     }
     assert!(resolve_schema_export("framework.ui.contract", "NotAnExport", SchemaFormat::JsonSchema).is_err());
 }

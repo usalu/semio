@@ -30,7 +30,7 @@ pub type DbIoAsyncDriverFuture = Pin<Box<dyn Future<Output = DbIoAsyncDriverOutp
 /// (`this functionality requires a Tokio context`). A backend whose driver has that requirement
 /// therefore owns a bounded runtime of its own and returns it here; [`DbIoAsyncTaskLease::start_on_lane_io`]
 /// then never puts the driver's future in the slot at all. What the slot gets instead is the
-/// **bridge** this returns: a repo-owned rendezvous (`semio_framework_async::oneshot`) that is safe
+/// **bridge** this returns: a repo-owned rendezvous (`semio_framework_async_sync::oneshot`) that is safe
 /// to poll anywhere, because the only thing it does is read a value and register a waker.
 ///
 /// This is an interface, not an implementation: nothing in `db_storage` names a concrete runtime.
@@ -174,14 +174,15 @@ DbError::Io(_) => Self::Io,
     }
 }
 
-const DB_IO_FAULT_CUSTODY_SLOTS: usize = DB_IO_TOTAL_PAGES + DB_IO_PROCESS_CONTROL_CREDIT + 4 * DB_IO_OPERATION_ITEMS + DB_IO_BACKEND_CONTROLS;
+pub const DB_IO_FAULT_CUSTODY_SLOTS: usize = DB_IO_TOTAL_PAGES + DB_IO_PROCESS_CONTROL_CREDIT + 4 * DB_IO_OPERATION_ITEMS + DB_IO_BACKEND_CONTROLS;
 
-struct DbIoFaultCustodyCell { generation: u64, reserved: bool, owner: Option<DbIoFault> }
-struct DbIoFaultCustodyArena { next_generation: u64, cells: [DbIoFaultCustodyCell; DB_IO_FAULT_CUSTODY_SLOTS] }
-static DB_IO_FAULT_CUSTODY: std::sync::Mutex<DbIoFaultCustodyArena> = std::sync::Mutex::new(DbIoFaultCustodyArena { next_generation: 1, cells: [const { DbIoFaultCustodyCell { generation: 0, reserved: false, owner: None } }; DB_IO_FAULT_CUSTODY_SLOTS] });
+pub struct DbIoFaultCustodyCell { pub generation: u64, pub reserved: bool, pub owner: Option<DbIoFault> }
+pub struct DbIoFaultCustodyArena { pub next_generation: u64, pub cells: [DbIoFaultCustodyCell; DB_IO_FAULT_CUSTODY_SLOTS] }
+pub static DB_IO_FAULT_CUSTODY: std::sync::Mutex<DbIoFaultCustodyArena> = std::sync::Mutex::new(DbIoFaultCustodyArena { next_generation: 1, cells: [const { DbIoFaultCustodyCell { generation: 0, reserved: false, owner: None } }; DB_IO_FAULT_CUSTODY_SLOTS] });
 pub const DB_IO_FAULT_CUSTODY_STATIC_BACKING_BYTES: u64 = size_of::<std::sync::Mutex<DbIoFaultCustodyArena>>() as u64;
 
-pub struct DbIoFaultCustody { slot: usize, generation: u64 }
+#[derive(Debug)]
+pub struct DbIoFaultCustody { pub slot: usize, pub generation: u64 }
 
 pub fn db_io_fault_custody_reserve() -> Result<DbIoFaultCustody, DbError> {
     let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -209,7 +210,7 @@ fn db_io_fault_custody_release(slot: usize, generation: u64) -> Result<(), DbErr
     Ok(())
 }
 
-fn db_io_fault_custody_take(arena: &mut DbIoFaultCustodyArena, slot: usize, generation: u64) -> Result<Option<DbIoFault>, DbError> {
+pub fn db_io_fault_custody_take(arena: &mut DbIoFaultCustodyArena, slot: usize, generation: u64) -> Result<Option<DbIoFault>, DbError> {
     let cell = &mut arena.cells[slot];
     if !cell.reserved || cell.generation != generation { return Err(DbError::StaleGeneration { expected: GenerationId(generation), actual: GenerationId(if cell.reserved { cell.generation } else { 0 }) }); }
     Ok(cell.owner.take())
@@ -221,6 +222,7 @@ pub struct DbIoFault {
     pub detail: DbIoText,
         pub structured: Option<DbError>,
 pub result_handback: Option<DbIoResultHandback>,
+    pub custody: Option<DbIoFaultCustody>,
 }
 
 impl std::fmt::Debug for DbIoFault {

@@ -10,11 +10,61 @@
         "parameters": [
           {
             "id": "build-tool",
-            "title": { "en": "Build tool", "de": "Build-Werkzeug" },
-            "description": { "en": "Select the same build backend for this task and its nested commands.", "de": "Dasselbe Build-Werkzeug für diese Aufgabe und ihre verschachtelten Befehle auswählen." },
+            "title": {
+              "en": "Build tool",
+              "de": "Build-Werkzeug"
+            },
+            "description": {
+              "en": "Select the same build backend for this task and its nested commands.",
+              "de": "Dasselbe Build-Werkzeug für diese Aufgabe und ihre verschachtelten Befehle auswählen."
+            },
             "kind": "choice",
-            "appliesTo": { "verbs": ["test", "check", "build", "verify", "lint", "serve", "activate", "task", "run", "dev", "clean", "generate", "reset", "inspect", "watch", "setup", "start", "prepare", "package", "typecheck", "smoke", "gate", "format", "publish", "deploy", "preview", "bench"], "playground": true },
-            "values": [{ "id": "nx", "env": { "SEMIO_BUILD_TOOL": "nx" } }, { "id": "bazel", "env": { "SEMIO_BUILD_TOOL": "bazel" } }]
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "check",
+                "build",
+                "verify",
+                "lint",
+                "serve",
+                "activate",
+                "task",
+                "run",
+                "dev",
+                "clean",
+                "generate",
+                "reset",
+                "inspect",
+                "watch",
+                "setup",
+                "start",
+                "prepare",
+                "package",
+                "typecheck",
+                "smoke",
+                "gate",
+                "format",
+                "publish",
+                "deploy",
+                "preview",
+                "bench"
+              ],
+              "playground": true
+            },
+            "values": [
+              {
+                "id": "nx",
+                "env": {
+                  "SEMIO_BUILD_TOOL": "nx"
+                }
+              },
+              {
+                "id": "bazel",
+                "env": {
+                  "SEMIO_BUILD_TOOL": "bazel"
+                }
+              }
+            ]
           },
           {
             "id": "cache",
@@ -255,188 +305,579 @@
         "tools": [
           {
             "id": "build-task",
-            "title": { "en": "Run or preview a build task", "de": "Build-Aufgabe starten oder vorprüfen" },
-            "description": { "en": "Select an owner target, backend and optional dry run; the dashboard retains its progress and output.", "de": "Eigentümerziel, Werkzeug und optionalen Probelauf auswählen; das Dashboard hält Fortschritt und Ausgabe fest." },
+            "title": {
+              "en": "Run or preview a build task",
+              "de": "Build-Aufgabe starten oder vorprüfen"
+            },
+            "description": {
+              "en": "Select an owner target, backend and optional dry run; the dashboard retains its progress and output.",
+              "de": "Eigentümerziel, Werkzeug und optionalen Probelauf auswählen; das Dashboard hält Fortschritt und Ausgabe fest."
+            },
             "verb": "run",
-            "command": ["bun", "repo", "run", "{task}", "--output=stream"],
+            "command": [
+              "repo",
+              "run",
+              "{task}",
+              "--output=stream"
+            ],
             "parameters": [
-              { "id": "task", "title": { "en": "Project and target", "de": "Projekt und Ziel" }, "kind": "text", "required": true },
-              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "values": [{ "id": "prototype", "args": ["--configuration=prototype"] }, { "id": "release", "args": ["--configuration=release"] }] },
-              { "id": "dry-run", "title": { "en": "Preview execution plan", "de": "Ausführungsplan anzeigen" }, "kind": "flag", "args": ["--dry-run"] }
+              {
+                "id": "task",
+                "title": {
+                  "en": "Project and target",
+                  "de": "Projekt und Ziel"
+                },
+                "kind": "text",
+                "required": true
+              },
+              {
+                "id": "mode",
+                "title": {
+                  "en": "Build mode",
+                  "de": "Build-Modus"
+                },
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "prototype",
+                    "args": [
+                      "--configuration=prototype"
+                    ]
+                  },
+                  {
+                    "id": "release",
+                    "args": [
+                      "--configuration=release"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "dry-run",
+                "title": {
+                  "en": "Preview execution plan",
+                  "de": "Ausführungsplan anzeigen"
+                },
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
             ]
           },
           {
             "id": "build-help",
-            "title": { "en": "Build command help", "de": "Hilfe zu Build-Befehlen" },
+            "title": {
+              "en": "Build command help",
+              "de": "Hilfe zu Build-Befehlen"
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "--help"]
+            "command": [
+              "repo",
+              "--help"
+            ]
           },
           {
             "id": "build-affected",
-            "title": { "en": "Run affected project targets", "de": "Ziele betroffener Projekte ausführen" },
-            "description": { "en": "Run selected targets only for projects affected by current changes, using the chosen backend and build mode.", "de": "Ausgewählte Ziele nur für von aktuellen Änderungen betroffene Projekte mit gewähltem Werkzeug und Build-Modus ausführen." },
+            "title": {
+              "en": "Run affected project targets",
+              "de": "Ziele betroffener Projekte ausführen"
+            },
+            "description": {
+              "en": "Run selected targets only for projects affected by current changes, using the chosen backend and build mode.",
+              "de": "Ausgewählte Ziele nur für von aktuellen Änderungen betroffene Projekte mit gewähltem Werkzeug und Build-Modus ausführen."
+            },
             "verb": "test",
-            "command": ["bun", "repo", "affected", "--targets={targets}", "--output=stream"],
+            "command": [
+              "repo",
+              "affected",
+              "--targets={targets}",
+              "--output=stream"
+            ],
             "parameters": [
-              { "id": "targets", "title": { "en": "Targets", "de": "Ziele" }, "description": { "en": "Comma-separated target names, such as test or check,typecheck.", "de": "Kommagetrennte Zielnamen, etwa test oder check,typecheck." }, "kind": "text", "required": true, "default": "test" },
-              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "values": [{ "id": "prototype", "args": ["--configuration=prototype"] }, { "id": "release", "args": ["--configuration=release"] }] },
-              { "id": "dry-run", "title": { "en": "Preview execution plan", "de": "Ausführungsplan anzeigen" }, "kind": "flag", "args": ["--dry-run"] }
+              {
+                "id": "targets",
+                "title": {
+                  "en": "Targets",
+                  "de": "Ziele"
+                },
+                "description": {
+                  "en": "Comma-separated target names, such as test or check,typecheck.",
+                  "de": "Kommagetrennte Zielnamen, etwa test oder check,typecheck."
+                },
+                "kind": "text",
+                "required": true,
+                "default": "test"
+              },
+              {
+                "id": "mode",
+                "title": {
+                  "en": "Build mode",
+                  "de": "Build-Modus"
+                },
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "prototype",
+                    "args": [
+                      "--configuration=prototype"
+                    ]
+                  },
+                  {
+                    "id": "release",
+                    "args": [
+                      "--configuration=release"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "dry-run",
+                "title": {
+                  "en": "Preview execution plan",
+                  "de": "Ausführungsplan anzeigen"
+                },
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
             ]
           },
           {
             "id": "build-graph",
-            "title": { "en": "Inspect the build graph", "de": "Build-Graph prüfen" },
+            "title": {
+              "en": "Inspect the build graph",
+              "de": "Build-Graph prüfen"
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "graph"]
+            "command": [
+              "repo",
+              "graph"
+            ]
           },
           {
             "id": "build-projects",
-            "title": { "en": "List build projects", "de": "Build-Projekte auflisten" },
+            "title": {
+              "en": "List build projects",
+              "de": "Build-Projekte auflisten"
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "show", "projects"]
+            "command": [
+              "repo",
+              "show",
+              "projects"
+            ]
           },
           {
             "id": "build-targets",
-            "title": { "en": "List build targets", "de": "Build-Ziele auflisten" },
+            "title": {
+              "en": "List build targets",
+              "de": "Build-Ziele auflisten"
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "show", "targets"]
+            "command": [
+              "repo",
+              "show",
+              "targets"
+            ]
           },
           {
             "id": "build-project",
-            "title": { "en": "Inspect one build project", "de": "Ein Build-Projekt prüfen" },
+            "title": {
+              "en": "Inspect one build project",
+              "de": "Ein Build-Projekt prüfen"
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "show", "project", "{project}"],
-            "parameters": [{ "id": "project", "title": { "en": "Project", "de": "Projekt" }, "kind": "text", "required": true }]
+            "command": [
+              "repo",
+              "show",
+              "project",
+              "{project}"
+            ],
+            "parameters": [
+              {
+                "id": "project",
+                "title": {
+                  "en": "Project",
+                  "de": "Projekt"
+                },
+                "kind": "text",
+                "required": true
+              }
+            ]
           },
           {
             "id": "build-watch",
-            "title": { "en": "Watch sources and run a task", "de": "Quellen beobachten und Aufgabe starten" },
+            "title": {
+              "en": "Watch sources and run a task",
+              "de": "Quellen beobachten und Aufgabe starten"
+            },
             "verb": "watch",
-            "command": ["bun", "repo", "watch", "--projects={projects}", "--", "bun", "repo", "run", "{task}", "--output=stream"],
+            "command": [
+              "repo",
+              "watch",
+              "--projects={projects}",
+              "--",
+              "repo",
+              "run",
+              "{task}",
+              "--output=stream"
+            ],
             "continuous": true,
             "parameters": [
-              { "id": "projects", "title": { "en": "Projects", "de": "Projekte" }, "kind": "text", "required": true },
-              { "id": "task", "title": { "en": "Project and target", "de": "Projekt und Ziel" }, "kind": "text", "required": true }
+              {
+                "id": "projects",
+                "title": {
+                  "en": "Projects",
+                  "de": "Projekte"
+                },
+                "kind": "text",
+                "required": true
+              },
+              {
+                "id": "task",
+                "title": {
+                  "en": "Project and target",
+                  "de": "Projekt und Ziel"
+                },
+                "kind": "text",
+                "required": true
+              }
             ]
           },
           {
             "id": "build-reset",
-            "title": { "en": "Reset the selected build cache", "de": "Ausgewählten Build-Cache zurücksetzen" },
+            "title": {
+              "en": "Reset the selected build cache",
+              "de": "Ausgewählten Build-Cache zurücksetzen"
+            },
             "verb": "reset",
-            "command": ["bun", "repo", "reset"]
+            "command": [
+              "repo",
+              "reset"
+            ]
           },
           {
             "id": "build-cache-status",
-            "title": { "en": "Show the selected build cache", "de": "Ausgewählten Build-Cache anzeigen" },
-            "description": { "en": "Report directory, file count and size of the cache of the chosen backend without changing it.", "de": "Verzeichnis, Dateianzahl und Größe des Caches des gewählten Werkzeugs melden, ohne ihn zu ändern." },
+            "title": {
+              "en": "Show the selected build cache",
+              "de": "Ausgewählten Build-Cache anzeigen"
+            },
+            "description": {
+              "en": "Report directory, file count and size of the cache of the chosen backend without changing it.",
+              "de": "Verzeichnis, Dateianzahl und Größe des Caches des gewählten Werkzeugs melden, ohne ihn zu ändern."
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "cache", "status"]
+            "command": [
+              "repo",
+              "cache",
+              "status"
+            ]
           },
           {
             "id": "build-cache-clear",
-            "title": { "en": "Clear the selected build cache", "de": "Ausgewählten Build-Cache leeren" },
-            "description": { "en": "Remove only the task results of the chosen backend; toolchains and sources stay.", "de": "Nur die Aufgabenergebnisse des gewählten Werkzeugs entfernen; Werkzeuge und Quellen bleiben." },
+            "title": {
+              "en": "Clear the selected build cache",
+              "de": "Ausgewählten Build-Cache leeren"
+            },
+            "description": {
+              "en": "Remove only the task results of the chosen backend; toolchains and sources stay.",
+              "de": "Nur die Aufgabenergebnisse des gewählten Werkzeugs entfernen; Werkzeuge und Quellen bleiben."
+            },
             "verb": "reset",
-            "command": ["bun", "repo", "cache", "clear"]
+            "command": [
+              "repo",
+              "cache",
+              "clear"
+            ]
           },
           {
-            "id": "build-cache-remote-status",
+            "id": "build-remote-cache-status",
             "title": { "en": "Show the remote build cache", "de": "Remote-Build-Cache anzeigen" },
-            "description": { "en": "Report the remote cache contract, how the chosen backend uses it and whether the endpoint answers; nothing is stored.", "de": "Den Remote-Cache-Vertrag, die Umsetzung im gewählten Werkzeug und die Erreichbarkeit des Endpunkts melden; es wird nichts gespeichert." },
+            "description": { "en": "Report the remote cache contract, how Nx and Bazel use it, whether the server answers and what the local store holds; nothing is stored.", "de": "Den Remote-Cache-Vertrag, die Umsetzung in Nx und Bazel, die Erreichbarkeit des Servers und den Inhalt des lokalen Speichers melden; es wird nichts gespeichert." },
             "verb": "inspect",
-            "command": ["bun", "repo", "cache", "remote", "status"]
+            "command": ["repo", "remote-cache", "status"]
           },
           {
-            "id": "build-cache-serve",
+            "id": "build-remote-cache-serve",
             "title": { "en": "Serve the local remote build cache", "de": "Lokalen Remote-Build-Cache bereitstellen" },
             "description": { "en": "Serve a bounded remote cache for Bazel and Nx on this machine until stopped; clients point SEMIO_REMOTE_CACHE_ENDPOINT at it.", "de": "Einen begrenzten Remote-Cache für Bazel und Nx auf diesem Rechner bereitstellen, bis er gestoppt wird; Clients richten SEMIO_REMOTE_CACHE_ENDPOINT darauf." },
             "verb": "serve",
-            "command": ["bun", "repo", "cache", "serve", "--port", "{port}"],
+            "command": ["repo", "remote-cache", "serve", "--port", "{port}"],
             "continuous": true,
             "ready": { "port": 6090, "portEnv": "SEMIO_REMOTE_CACHE_PORT", "path": "/healthz" }
           },
           {
-            "id": "build-remote-execution-status",
-            "title": { "en": "Show the local remote execution cluster", "de": "Lokalen Remote-Execution-Cluster anzeigen" },
-            "description": { "en": "Report whether the container runtime answers, the containers of the optional local cluster and whether its frontend answers; nothing is started.", "de": "Melden, ob die Container-Laufzeit antwortet, welche Container der optionale lokale Cluster hat und ob sein Frontend antwortet; es wird nichts gestartet." },
+            "id": "build-remote-cache-gc",
+            "title": { "en": "Plan the collection of the remote build cache", "de": "Einsammeln des Remote-Build-Caches planen" },
+            "description": { "en": "List which unusable, idle and least recently used entries the remote cache store would lose; nothing is removed.", "de": "Auflisten, welche unbrauchbaren, ungenutzten und am längsten ungenutzten Einträge der Remote-Cache-Speicher verlieren würde; es wird nichts entfernt." },
             "verb": "inspect",
-            "command": ["bun", "repo", "remote-execution", "status"]
+            "command": ["repo", "remote-cache", "gc", "--dry-run"]
+          },
+          {
+            "id": "build-remote-execution-status",
+            "title": { "en": "Show the remote execution service", "de": "Remote-Execution-Dienst anzeigen" },
+            "description": { "en": "Report the remote execution contract, whether the gRPC endpoint answers and which workers, queues and counters the scheduler reports; nothing is started.", "de": "Den Remote-Execution-Vertrag, die Erreichbarkeit des gRPC-Endpunkts und die Worker, Warteschlangen und Zähler des Schedulers melden; es wird nichts gestartet." },
+            "verb": "inspect",
+            "command": ["repo", "remote-execution", "status"]
           },
           {
             "id": "build-remote-execution-serve",
-            "title": { "en": "Run the local remote execution cluster", "de": "Lokalen Remote-Execution-Cluster betreiben" },
-            "description": { "en": "Run an optional container cluster on this machine until stopped so hermetic Bazel actions can run remotely; clients set the variables printed at start.", "de": "Einen optionalen Container-Cluster auf diesem Rechner bis zum Stopp betreiben, damit hermetische Bazel-Actions entfernt laufen können; Clients setzen die beim Start ausgegebenen Variablen." },
+            "title": { "en": "Run the remote execution service", "de": "Remote-Execution-Dienst betreiben" },
+            "description": { "en": "Run the in-house execution service with the shared store and a local worker on this machine until stopped so hermetic Bazel actions can run remotely; clients set the variables printed at start.", "de": "Den hauseigenen Ausführungsdienst mit dem gemeinsamen Speicher und einem lokalen Worker auf diesem Rechner bis zum Stopp betreiben, damit hermetische Bazel-Actions remote laufen können; Clients setzen die beim Start ausgegebenen Variablen." },
             "verb": "serve",
-            "command": ["bun", "repo", "remote-execution", "serve", "--diagnostics-port", "{port}"],
+            "command": ["repo", "remote-execution", "serve", "--worker-port", "{port}"],
             "continuous": true,
-            "ready": { "port": 8981, "portEnv": "SEMIO_RBE_DIAGNOSTICS_PORT", "path": "/-/healthy" }
+            "ready": { "port": 8981, "portEnv": "SEMIO_REMOTE_EXECUTION_WORKER_PORT", "path": "/healthz" }
           },
           {
             "id": "build-exec",
-            "title": { "en": "Run a command in projects or preview it", "de": "Befehl in Projekten ausführen oder vorprüfen" },
-            "description": { "en": "Select projects, backend and optional dry run, then enter the command words in Arguments; the dry run prints the per-project plan and runs nothing.", "de": "Projekte, Werkzeug und optionalen Probelauf auswählen, dann die Befehlswörter unter Argumente eingeben; der Probelauf zeigt den Plan je Projekt und führt nichts aus." },
+            "title": {
+              "en": "Run a command in projects or preview it",
+              "de": "Befehl in Projekten ausführen oder vorprüfen"
+            },
+            "description": {
+              "en": "Select projects, backend and optional dry run, then enter the command words in Arguments; the dry run prints the per-project plan and runs nothing.",
+              "de": "Projekte, Werkzeug und optionalen Probelauf auswählen, dann die Befehlswörter unter Argumente eingeben; der Probelauf zeigt den Plan je Projekt und führt nichts aus."
+            },
             "verb": "run",
-            "command": ["bun", "repo", "exec", "--projects={projects}", "--dry-run={dry-run}", "--"],
+            "command": [
+              "repo",
+              "exec",
+              "--projects={projects}",
+              "--dry-run={dry-run}",
+              "--"
+            ],
             "parameters": [
-              { "id": "projects", "title": { "en": "Projects", "de": "Projekte" }, "description": { "en": "Comma-separated project names or patterns.", "de": "Kommagetrennte Projektnamen oder Muster." }, "kind": "text", "default": "", "required": true, "suggestions": { "source": "projects" } },
-              { "id": "dry-run", "title": { "en": "Preview execution plan", "de": "Ausführungsplan anzeigen" }, "kind": "choice", "default": "false", "values": [{ "id": "false" }, { "id": "true" }] }
+              {
+                "id": "projects",
+                "title": {
+                  "en": "Projects",
+                  "de": "Projekte"
+                },
+                "description": {
+                  "en": "Comma-separated project names or patterns.",
+                  "de": "Kommagetrennte Projektnamen oder Muster."
+                },
+                "kind": "text",
+                "default": "",
+                "required": true,
+                "suggestions": {
+                  "source": "projects"
+                }
+              },
+              {
+                "id": "dry-run",
+                "title": {
+                  "en": "Preview execution plan",
+                  "de": "Ausführungsplan anzeigen"
+                },
+                "kind": "choice",
+                "default": "false",
+                "values": [
+                  {
+                    "id": "false"
+                  },
+                  {
+                    "id": "true"
+                  }
+                ]
+              }
             ]
           },
           {
             "id": "build-tools",
-            "title": { "en": "Set up pinned build tools", "de": "Festgelegte Build-Werkzeuge einrichten" },
+            "title": {
+              "en": "Set up pinned build tools",
+              "de": "Festgelegte Build-Werkzeuge einrichten"
+            },
             "verb": "setup",
-            "command": ["bun", "repo", "tools", "setup", "{tool}"],
-            "parameters": [{ "id": "tool", "title": { "en": "Tool selection", "de": "Werkzeugauswahl" }, "kind": "choice", "default": "all", "values": [{ "id": "all" }, { "id": "nx" }, { "id": "bazel" }] }]
+            "command": [
+              "repo",
+              "tools",
+              "setup",
+              "{tool}"
+            ],
+            "parameters": [
+              {
+                "id": "tool",
+                "title": {
+                  "en": "Tool selection",
+                  "de": "Werkzeugauswahl"
+                },
+                "kind": "choice",
+                "default": "all",
+                "values": [
+                  {
+                    "id": "all"
+                  },
+                  {
+                    "id": "nx"
+                  },
+                  {
+                    "id": "bazel"
+                  }
+                ]
+              }
+            ]
           },
           {
             "id": "build-preflight",
-            "title": { "en": "Check the host before provisioning", "de": "Rechner vor der Bereitstellung prüfen" },
-            "description": { "en": "Check architecture, free space, required tools and directory exchange of this host; nothing is provisioned.", "de": "Architektur, freien Platz, nötige Werkzeuge und Verzeichnisaustausch dieses Rechners prüfen; es wird nichts bereitgestellt." },
+            "title": {
+              "en": "Check the host before provisioning",
+              "de": "Rechner vor der Bereitstellung prüfen"
+            },
+            "description": {
+              "en": "Check architecture, free space, required tools and directory exchange of this host; nothing is provisioned.",
+              "de": "Architektur, freien Platz, nötige Werkzeuge und Verzeichnisaustausch dieses Rechners prüfen; es wird nichts bereitgestellt."
+            },
             "verb": "inspect",
-            "command": ["bun", "repo", "preflight"]
+            "command": [
+              "repo",
+              "preflight"
+            ]
           },
           {
             "id": "verify-build-parity",
-            "title": { "en": "Verify Nx and Bazel parity", "de": "Parität von Nx und Bazel prüfen" },
-            "description": { "en": "Run the sample targets with both build tools into separate output roots and compare task graph, declared outputs, exit codes, test results and inputs; every difference that no documented rule explains fails.", "de": "Die Stichproben mit beiden Build-Werkzeugen in getrennte Ausgabewurzeln ausführen und Aufgabengraph, deklarierte Ausgaben, Exit-Codes, Testergebnisse und Eingaben vergleichen; jede Abweichung ohne dokumentierte Regel schlägt fehl." },
+            "title": {
+              "en": "Verify Nx and Bazel parity",
+              "de": "Parität von Nx und Bazel prüfen"
+            },
+            "description": {
+              "en": "Run the sample targets with both build tools into separate output roots and compare task graph, declared outputs, exit codes, test results and inputs; every difference that no documented rule explains fails.",
+              "de": "Die Stichproben mit beiden Build-Werkzeugen in getrennte Ausgabewurzeln ausführen und Aufgabengraph, deklarierte Ausgaben, Exit-Codes, Testergebnisse und Eingaben vergleichen; jede Abweichung ohne dokumentierte Regel schlägt fehl."
+            },
             "verb": "verify",
-            "command": ["bun", "repo", "verify", "build-parity", "--only={only}"],
+            "command": [
+              "repo",
+              "verify",
+              "build-parity",
+              "--only={only}"
+            ],
             "parameters": [
-              { "id": "only", "title": { "en": "Samples", "de": "Stichproben" }, "description": { "en": "Comma list of sample ids or area:<area>; empty verifies every sample.", "de": "Kommaliste von Stichproben-IDs oder area:<Bereich>; leer prüft jede Stichprobe." }, "kind": "text", "default": "" },
-              { "id": "plans-only", "title": { "en": "Compare only the planned task graphs", "de": "Nur die geplanten Aufgabengraphen vergleichen" }, "kind": "flag", "args": ["--plans-only"] }
+              {
+                "id": "only",
+                "title": {
+                  "en": "Samples",
+                  "de": "Stichproben"
+                },
+                "description": {
+                  "en": "Comma list of sample ids or area:<area>; empty verifies every sample.",
+                  "de": "Kommaliste von Stichproben-IDs oder area:<Bereich>; leer prüft jede Stichprobe."
+                },
+                "kind": "text",
+                "default": ""
+              },
+              {
+                "id": "plans-only",
+                "title": {
+                  "en": "Compare only the planned task graphs",
+                  "de": "Nur die geplanten Aufgabengraphen vergleichen"
+                },
+                "kind": "flag",
+                "args": [
+                  "--plans-only"
+                ]
+              }
             ]
           },
           {
             "id": "build-deps-sync",
-            "title": { "en": "Install workspace dependencies", "de": "Abhängigkeiten des Workspace installieren" },
-            "description": { "en": "Install the locked dependencies of every owner into the dependencies partition.", "de": "Die gesperrten Abhängigkeiten jedes Eigentümers in die Abhängigkeits-Partition installieren." },
+            "title": {
+              "en": "Install workspace dependencies",
+              "de": "Abhängigkeiten des Workspace installieren"
+            },
+            "description": {
+              "en": "Install the locked dependencies of every owner into the dependencies partition.",
+              "de": "Die gesperrten Abhängigkeiten jedes Eigentümers in die Abhängigkeits-Partition installieren."
+            },
             "verb": "setup",
-            "command": ["bun", "repo", "dependencies", "sync", "--all"]
+            "command": [
+              "repo",
+              "dependencies",
+              "sync",
+              "--all"
+            ]
           },
           {
             "id": "build-deps-lock",
-            "title": { "en": "Lock workspace dependencies", "de": "Abhängigkeiten des Workspace sperren" },
-            "description": { "en": "Regenerate bun.lock after a manifest edit; run the install afterwards.", "de": "bun.lock nach einer Manifest-Änderung neu erzeugen; danach die Installation ausführen." },
+            "title": {
+              "en": "Lock workspace dependencies",
+              "de": "Abhängigkeiten des Workspace sperren"
+            },
+            "description": {
+              "en": "Regenerate bun.lock after a manifest edit; run the install afterwards.",
+              "de": "bun.lock nach einer Manifest-Änderung neu erzeugen; danach die Installation ausführen."
+            },
             "verb": "setup",
-            "command": ["bun", "repo", "dependencies", "lock", "--all"]
+            "command": [
+              "repo",
+              "dependencies",
+              "lock",
+              "--all"
+            ]
           },
           {
             "id": "cargo",
-            "title": { "en": "Run an issued Cargo operation", "de": "Ausgestellten Cargo-Vorgang starten" },
-            "description": { "en": "Choose store and build mode, then enter the Cargo subcommand and its words in Arguments.", "de": "Speicher und Build-Modus auswählen, dann Cargo-Unterbefehl und seine Wörter unter Argumente eingeben." },
+            "title": {
+              "en": "Run an issued Cargo operation",
+              "de": "Ausgestellten Cargo-Vorgang starten"
+            },
+            "description": {
+              "en": "Choose store and build mode, then enter the Cargo subcommand and its words in Arguments.",
+              "de": "Speicher und Build-Modus auswählen, dann Cargo-Unterbefehl und seine Wörter unter Argumente eingeben."
+            },
             "verb": "run",
-            "command": ["bun", "repo", "cargo", "--store={store}", "--configuration={mode}", "--"],
+            "command": [
+              "repo",
+              "cargo",
+              "--store={store}",
+              "--configuration={mode}",
+              "--"
+            ],
             "parameters": [
-              { "id": "store", "title": { "en": "Target store", "de": "Zielspeicher" }, "kind": "choice", "default": "shared", "values": [{ "id": "shared" }, { "id": "isolated" }] },
-              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "default": "prototype", "values": [{ "id": "prototype" }, { "id": "release" }] }
+              {
+                "id": "store",
+                "title": {
+                  "en": "Target store",
+                  "de": "Zielspeicher"
+                },
+                "kind": "choice",
+                "default": "shared",
+                "values": [
+                  {
+                    "id": "shared"
+                  },
+                  {
+                    "id": "isolated"
+                  }
+                ]
+              },
+              {
+                "id": "mode",
+                "title": {
+                  "en": "Build mode",
+                  "de": "Build-Modus"
+                },
+                "kind": "choice",
+                "default": "prototype",
+                "values": [
+                  {
+                    "id": "prototype"
+                  },
+                  {
+                    "id": "release"
+                  }
+                ]
+              }
             ]
           },
           {
             "id": "repo-mcp",
             "verb": "dev",
             "command": [
-              "bun",
+              "repo",
               "./📜️script.ts",
               "dev",
               "mcp",
@@ -471,7 +912,7 @@
             "id": "os-mcp-stdio",
             "verb": "dev",
             "command": [
-              "bun",
+              "repo",
               "./📜️script.ts",
               "dev",
               "mcp",
@@ -495,7 +936,6 @@
             "id": "os-mcp-http",
             "verb": "dev",
             "command": [
-              "bun",
               "repo",
               "run",
               "@semio-tech/framework-os-mcp-rs:dev",
@@ -514,7 +954,11 @@
             "id": "mcp-inspector-os",
             "verb": "dev",
             "command": [
+              "repo",
+              "tools",
+              "exec",
               "bun",
+              "--",
               "x",
               "@modelcontextprotocol/inspector",
               "--config",
@@ -533,7 +977,7 @@
             "id": "storybook-static",
             "verb": "dev",
             "command": [
-              "bun",
+              "repo",
               "./📜️script.ts",
               "dev",
               "storybook-static"
@@ -556,13 +1000,16 @@
             },
             "verb": "test",
             "command": [
-              "bun",
               "repo",
               "exec",
               "--projects={project}",
               "--dry-run={dry-run}",
               "--",
+              "repo",
+              "tools",
+              "exec",
               "bun",
+              "--",
               "test"
             ],
             "parameters": [
@@ -579,7 +1026,9 @@
                 "kind": "text",
                 "default": "",
                 "required": true,
-                "suggestions": { "source": "projects" }
+                "suggestions": {
+                  "source": "projects"
+                }
               },
               {
                 "id": "file",
@@ -594,7 +1043,10 @@
                 "kind": "text",
                 "required": true,
                 "valuePositional": true,
-                "suggestions": { "source": "tests", "projectParameter": "project" }
+                "suggestions": {
+                  "source": "tests",
+                  "projectParameter": "project"
+                }
               },
               {
                 "id": "build-mode",
@@ -647,25 +1099,32 @@
             },
             "verb": "run",
             "command": [
-              "bun",
               "repo",
               "exec",
               "--projects={project}",
               "--dry-run={dry-run}",
               "--",
-              "bun",
+              "repo",
               "{workspace}/{script}"
             ],
             "cwd": "{directory}",
             "parameters": [
               {
                 "id": "project",
-                "title": { "en": "Build owner project", "de": "Build-Projekt" },
-                "description": { "en": "Select an owner or choose a discovered script to fill it automatically.", "de": "Eigentümer auswählen oder durch Auswahl eines entdeckten Skripts automatisch ausfüllen." },
+                "title": {
+                  "en": "Build owner project",
+                  "de": "Build-Projekt"
+                },
+                "description": {
+                  "en": "Select an owner or choose a discovered script to fill it automatically.",
+                  "de": "Eigentümer auswählen oder durch Auswahl eines entdeckten Skripts automatisch ausfüllen."
+                },
                 "kind": "text",
                 "default": "",
                 "required": true,
-                "suggestions": { "source": "projects" }
+                "suggestions": {
+                  "source": "projects"
+                }
               },
               {
                 "id": "script",
@@ -679,7 +1138,11 @@
                 },
                 "kind": "text",
                 "required": true,
-                "suggestions": { "source": "scripts", "projectParameter": "project", "directoryParameter": "directory" }
+                "suggestions": {
+                  "source": "scripts",
+                  "projectParameter": "project",
+                  "directoryParameter": "directory"
+                }
               },
               {
                 "id": "directory",
@@ -725,7 +1188,6 @@
             },
             "verb": "run",
             "command": [
-              "bun",
               "repo",
               "run-many",
               "--targets={targets}",
@@ -848,19 +1310,34 @@
             "id": "native-cargo",
             "verb": "run",
             "command": [
-              "bun",
               "repo",
               "exec",
               "--projects=workspace",
               "--dry-run={dry-run}",
               "--",
-              "bun",
+              "repo",
               "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
               "native",
               "cargo"
             ],
             "parameters": [
-              { "id": "dry-run", "title": { "en": "Preview execution plan", "de": "Ausführungsplan anzeigen" }, "kind": "choice", "default": "false", "values": [{ "id": "false" }, { "id": "true" }] }
+              {
+                "id": "dry-run",
+                "title": {
+                  "en": "Preview execution plan",
+                  "de": "Ausführungsplan anzeigen"
+                },
+                "kind": "choice",
+                "default": "false",
+                "values": [
+                  {
+                    "id": "false"
+                  },
+                  {
+                    "id": "true"
+                  }
+                ]
+              }
             ]
           },
           {
@@ -1073,20 +1550,63 @@
       "sharedGlobals",
       "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts"
+    ],
+    "cmakeSources": [
+      "{workspaceRoot}/CMakeLists.txt",
+      "{workspaceRoot}/CMakePresets.json",
+      "{workspaceRoot}/**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,ixx}"
+    ],
+    "cmakeToolchain": [
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint cmake" },
+      { "env": "CC" },
+      { "env": "CFLAGS" },
+      { "env": "CMAKE_GENERATOR" },
+      { "env": "CMAKE_TOOLCHAIN_FILE" },
+      { "env": "CXX" },
+      { "env": "CXXFLAGS" },
+      { "env": "DEVELOPER_DIR" },
+      { "env": "LDFLAGS" },
+      { "env": "MACOSX_DEPLOYMENT_TARGET" },
+      { "env": "SDKROOT" }
     ]
   },
   "targets": {
     "test-workspace-build": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
-        "{workspaceRoot}/📋️project.json"
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📋️plan/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📽️projection/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📖️parse/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/⌛️queries/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🔁️lifecycle/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🧬️schema/🔣️.json",
+        "{workspaceRoot}/.devcontainer/devcontainer.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+        "{workspaceRoot}/.vscode/**/*",
+        "{workspaceRoot}/.cursor/mcp.json",
+        "{workspaceRoot}/.cursor/hooks.json",
+        "{workspaceRoot}/.devcontainer/editor-overlay.json",
+        "{workspaceRoot}/Monorepo.sln",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/⌨️commands/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🌐️workspace/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗑️retention/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🤝️contributions/🟦️.ts",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts"
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test"
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test"
       },
       "metadata": {
         "semio": {
@@ -1096,8 +1616,14 @@
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts"
-          ]
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts"
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -1105,7 +1631,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts agents check"
+        "command": "repo ./📜️script.ts agents check"
       },
       "outputs": [],
       "inputs": [
@@ -1119,11 +1645,15 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts agents write"
+        "command": "repo ./📜️script.ts agents write"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -1131,7 +1661,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners"
+        "command": "repo ./📜️script.ts verify fem-pcg-publication-owners"
       },
       "outputs": [],
       "inputs": [
@@ -1142,7 +1672,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners native"
+        "command": "repo ./📜️script.ts verify fem-pcg-publication-owners native"
       },
       "outputs": [],
       "inputs": [
@@ -1153,7 +1683,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners"
+        "command": "repo ./📜️script.ts verify fem-assembly-physical-owners"
       },
       "outputs": [],
       "inputs": [
@@ -1164,7 +1694,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners native"
+        "command": "repo ./📜️script.ts verify fem-assembly-physical-owners native"
       },
       "outputs": [],
       "inputs": [
@@ -1175,7 +1705,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-numerical-page-owners"
+        "command": "repo ./📜️script.ts verify fem-numerical-page-owners"
       },
       "outputs": [],
       "inputs": [
@@ -1186,7 +1716,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-numerical-page-owners native"
+        "command": "repo ./📜️script.ts verify fem-numerical-page-owners native"
       },
       "outputs": [],
       "inputs": [
@@ -1197,7 +1727,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners"
+        "command": "repo ./📜️script.ts verify fem-mesh-preparation-owners"
       },
       "outputs": [],
       "inputs": [
@@ -1208,7 +1738,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners native"
+        "command": "repo ./📜️script.ts verify fem-mesh-preparation-owners native"
       },
       "outputs": [],
       "inputs": [
@@ -1219,7 +1749,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem-scalar-owners-native"
+        "command": "repo ./📜️script.ts verify fem-scalar-owners-native"
       },
       "outputs": [],
       "inputs": [
@@ -1230,7 +1760,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership oracle"
+        "command": "repo ./📜️script.ts verify generation2d-window-camera-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1241,7 +1771,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership native"
+        "command": "repo ./📜️script.ts verify generation2d-window-camera-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1252,7 +1782,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-config-provisioning-lifecycle"
+        "command": "repo ./📜️script.ts verify window-config-provisioning-lifecycle"
       },
       "outputs": [],
       "inputs": [
@@ -1263,7 +1793,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-config-retained-pack-load native"
+        "command": "repo ./📜️script.ts verify window-config-retained-pack-load native"
       },
       "outputs": [],
       "inputs": [
@@ -1274,7 +1804,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify architect-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify architect-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1285,7 +1815,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify architect-window-ownership native"
+        "command": "repo ./📜️script.ts verify architect-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1296,7 +1826,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify home-host-panel-owner oracle"
+        "command": "repo ./📜️script.ts verify home-host-panel-owner oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1307,7 +1837,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify home-host-panel-owner native"
+        "command": "repo ./📜️script.ts verify home-host-panel-owner native"
       },
       "outputs": [],
       "inputs": [
@@ -1318,7 +1848,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-config-pack-identity"
+        "command": "repo ./📜️script.ts verify window-config-pack-identity"
       },
       "outputs": [],
       "inputs": [
@@ -1329,7 +1859,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-config-pack-identity native"
+        "command": "repo ./📜️script.ts verify window-config-pack-identity native"
       },
       "outputs": [],
       "inputs": [
@@ -1340,7 +1870,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-document-contract native all"
+        "command": "repo ./📜️script.ts verify forms-document-contract native all"
       },
       "outputs": [],
       "inputs": [
@@ -1351,7 +1881,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify dag-document-contract native all"
+        "command": "repo ./📜️script.ts verify dag-document-contract native all"
       },
       "outputs": [],
       "inputs": [
@@ -1362,7 +1892,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify semio-envelope-identity"
+        "command": "repo ./📜️script.ts verify semio-envelope-identity"
       },
       "outputs": [],
       "inputs": [
@@ -1373,7 +1903,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify semio-envelope-identity native"
+        "command": "repo ./📜️script.ts verify semio-envelope-identity native"
       },
       "outputs": [],
       "inputs": [
@@ -1384,7 +1914,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify dag-document-contract native"
+        "command": "repo ./📜️script.ts verify dag-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1395,7 +1925,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-document-contract native"
+        "command": "repo ./📜️script.ts verify forms-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1406,7 +1936,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify stdio-document-contract"
+        "command": "repo ./📜️script.ts verify stdio-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1417,7 +1947,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify stdio-document-contract native"
+        "command": "repo ./📜️script.ts verify stdio-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1428,7 +1958,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify host-ownership native"
+        "command": "repo ./📜️script.ts verify host-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1439,7 +1969,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify owned-document-closure"
+        "command": "repo ./📜️script.ts verify owned-document-closure"
       },
       "outputs": [],
       "inputs": [
@@ -1450,7 +1980,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify owned-document-closure native"
+        "command": "repo ./📜️script.ts verify owned-document-closure native"
       },
       "outputs": [],
       "inputs": [
@@ -1461,7 +1991,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify map-document-contract"
+        "command": "repo ./📜️script.ts verify map-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1472,7 +2002,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify map-document-contract native"
+        "command": "repo ./📜️script.ts verify map-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1483,7 +2013,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify terrain-document-contract"
+        "command": "repo ./📜️script.ts verify terrain-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1494,7 +2024,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify terrain-document-contract native"
+        "command": "repo ./📜️script.ts verify terrain-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1505,7 +2035,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify program-document-contract"
+        "command": "repo ./📜️script.ts verify program-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1516,7 +2046,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify program-document-contract native"
+        "command": "repo ./📜️script.ts verify program-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1527,7 +2057,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify layout-document-contract"
+        "command": "repo ./📜️script.ts verify layout-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1538,7 +2068,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify layout-document-contract native"
+        "command": "repo ./📜️script.ts verify layout-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1549,7 +2079,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify cad-document-contract"
+        "command": "repo ./📜️script.ts verify cad-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -1560,7 +2090,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify cad-document-contract native"
+        "command": "repo ./📜️script.ts verify cad-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -1571,7 +2101,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify media-export-encoding"
+        "command": "repo ./📜️script.ts verify media-export-encoding"
       },
       "outputs": [],
       "inputs": [
@@ -1582,7 +2112,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify media-export-encoding native"
+        "command": "repo ./📜️script.ts verify media-export-encoding native"
       },
       "outputs": [],
       "inputs": [
@@ -1593,7 +2123,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify file-open-import"
+        "command": "repo ./📜️script.ts verify file-open-import"
       },
       "outputs": [],
       "inputs": [
@@ -1604,7 +2134,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify file-open-import native"
+        "command": "repo ./📜️script.ts verify file-open-import native"
       },
       "outputs": [],
       "inputs": [
@@ -1615,7 +2145,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify ui-dirty-scope"
+        "command": "repo ./📜️script.ts verify ui-dirty-scope"
       },
       "outputs": [],
       "inputs": [
@@ -1626,7 +2156,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify ui-dirty-scope native"
+        "command": "repo ./📜️script.ts verify ui-dirty-scope native"
       },
       "outputs": [],
       "inputs": [
@@ -1637,7 +2167,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify spawned-job-drive"
+        "command": "repo ./📜️script.ts verify spawned-job-drive"
       },
       "outputs": [],
       "inputs": [
@@ -1648,7 +2178,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify spawned-job-drive native"
+        "command": "repo ./📜️script.ts verify spawned-job-drive native"
       },
       "outputs": [],
       "inputs": [
@@ -1659,7 +2189,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation3d-document-io"
+        "command": "repo ./📜️script.ts verify generation3d-document-io"
       },
       "outputs": [],
       "inputs": [
@@ -1670,7 +2200,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation3d-document-io native"
+        "command": "repo ./📜️script.ts verify generation3d-document-io native"
       },
       "outputs": [],
       "inputs": [
@@ -1681,7 +2211,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation3d-preview-window-transient"
+        "command": "repo ./📜️script.ts verify generation3d-preview-window-transient"
       },
       "outputs": [],
       "inputs": [
@@ -1692,7 +2222,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify generation3d-preview-window-transient native"
+        "command": "repo ./📜️script.ts verify generation3d-preview-window-transient native"
       },
       "outputs": [],
       "inputs": [
@@ -1703,7 +2233,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify gis-terrain-window-config"
+        "command": "repo ./📜️script.ts verify gis-terrain-window-config"
       },
       "outputs": [],
       "inputs": [
@@ -1714,7 +2244,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify gis-terrain-window-config native"
+        "command": "repo ./📜️script.ts verify gis-terrain-window-config native"
       },
       "outputs": [],
       "inputs": [
@@ -1725,7 +2255,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify flow-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify flow-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1736,7 +2266,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify flow-window-ownership check"
+        "command": "repo ./📜️script.ts verify flow-window-ownership check"
       },
       "outputs": [],
       "inputs": [
@@ -1747,7 +2277,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify flow-window-ownership native"
+        "command": "repo ./📜️script.ts verify flow-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1758,7 +2288,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-try-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify forms-try-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1769,7 +2299,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-try-window-ownership native"
+        "command": "repo ./📜️script.ts verify forms-try-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1780,7 +2310,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify note-empty-config-ownership oracle"
+        "command": "repo ./📜️script.ts verify note-empty-config-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1791,7 +2321,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify note-empty-config-ownership native"
+        "command": "repo ./📜️script.ts verify note-empty-config-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1802,7 +2332,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify layout-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify layout-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1813,7 +2343,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify layout-window-ownership native"
+        "command": "repo ./📜️script.ts verify layout-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1824,7 +2354,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify sequence-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify sequence-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1835,7 +2365,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify sequence-window-ownership native"
+        "command": "repo ./📜️script.ts verify sequence-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1846,7 +2376,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify gis-map-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify gis-map-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1857,7 +2387,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify gis-map-window-ownership native"
+        "command": "repo ./📜️script.ts verify gis-map-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1868,7 +2398,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify remodel-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify remodel-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1879,7 +2409,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify remodel-window-ownership native"
+        "command": "repo ./📜️script.ts verify remodel-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1890,7 +2420,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify norm-results-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify norm-results-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1901,7 +2431,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify norm-results-window-ownership native"
+        "command": "repo ./📜️script.ts verify norm-results-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1912,7 +2442,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify drawing-canvas-window-ownership oracle"
+        "command": "repo ./📜️script.ts verify drawing-canvas-window-ownership oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1923,7 +2453,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify drawing-canvas-window-ownership native"
+        "command": "repo ./📜️script.ts verify drawing-canvas-window-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -1934,7 +2464,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify store-reload-publication native"
+        "command": "repo ./📜️script.ts verify store-reload-publication native"
       },
       "outputs": [],
       "inputs": [
@@ -1945,7 +2475,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify writer-window-state oracle"
+        "command": "repo ./📜️script.ts verify writer-window-state oracle"
       },
       "outputs": [],
       "inputs": [
@@ -1956,7 +2486,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify writer-window-state native"
+        "command": "repo ./📜️script.ts verify writer-window-state native"
       },
       "outputs": [],
       "inputs": [
@@ -1967,7 +2497,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify block3d-window-transient native"
+        "command": "repo ./📜️script.ts verify block3d-window-transient native"
       },
       "outputs": [],
       "inputs": [
@@ -1978,7 +2508,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify ephemeral-transfer-preparation native"
+        "command": "repo ./📜️script.ts verify ephemeral-transfer-preparation native"
       },
       "outputs": [],
       "inputs": [
@@ -1989,7 +2519,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify presentation-document-contract"
+        "command": "repo ./📜️script.ts verify presentation-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -2000,7 +2530,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify presentation-document-contract native"
+        "command": "repo ./📜️script.ts verify presentation-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -2011,7 +2541,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify procedure-document-contract"
+        "command": "repo ./📜️script.ts verify procedure-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -2022,7 +2552,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify procedure-document-contract native"
+        "command": "repo ./📜️script.ts verify procedure-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -2033,7 +2563,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify dag-demo-ownership"
+        "command": "repo ./📜️script.ts verify dag-demo-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -2044,7 +2574,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify note-document-contract native"
+        "command": "repo ./📜️script.ts verify note-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -2055,7 +2585,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify note-document-contract"
+        "command": "repo ./📜️script.ts verify note-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -2066,7 +2596,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify norm-document-contract"
+        "command": "repo ./📜️script.ts verify norm-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -2078,7 +2608,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts verify reset-document-ownership"
+        "command": "repo ./📜️script.ts verify reset-document-ownership"
       }
     },
     "scale-fixture-check": {
@@ -2086,7 +2616,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts scale-fixture check",
+        "command": "repo ./📜️script.ts scale-fixture check",
         "forwardAllArgs": true
       }
     },
@@ -2094,7 +2624,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup"
+        "command": "repo ./📜️script.ts setup"
       },
       "outputs": [],
       "dependsOn": [
@@ -2115,7 +2645,11 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -2133,7 +2667,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook",
+        "command": "repo ./📜️script.ts dev storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2154,7 +2688,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook ui",
+        "command": "repo ./📜️script.ts dev storybook ui",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2175,7 +2709,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle",
+        "command": "repo ./📜️script.ts dev storybook puzzle",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2196,7 +2730,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 2d",
+        "command": "repo ./📜️script.ts dev storybook puzzle 2d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2217,7 +2751,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook styling",
+        "command": "repo ./📜️script.ts dev storybook styling",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2238,7 +2772,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 3d",
+        "command": "repo ./📜️script.ts dev storybook puzzle 3d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2259,7 +2793,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook puzzle 5d",
+        "command": "repo ./📜️script.ts dev storybook puzzle 5d",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2280,7 +2814,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework",
+        "command": "repo ./📜️script.ts dev storybook framework",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2301,7 +2835,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework hosts",
+        "command": "repo ./📜️script.ts dev storybook framework hosts",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2322,7 +2856,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook framework os",
+        "command": "repo ./📜️script.ts dev storybook framework os",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2343,7 +2877,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook infinite",
+        "command": "repo ./📜️script.ts dev storybook infinite",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2364,7 +2898,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook cad",
+        "command": "repo ./📜️script.ts dev storybook cad",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2385,7 +2919,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev storybook animate",
+        "command": "repo ./📜️script.ts dev storybook animate",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2407,7 +2941,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev mcp",
+        "command": "repo ./📜️script.ts dev mcp",
         "forwardAllArgs": true
       }
     },
@@ -2426,7 +2960,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts dev mcp repo",
+        "command": "repo ./📜️script.ts dev mcp repo",
         "forwardAllArgs": true
       }
     },
@@ -2434,12 +2968,16 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts generate config"
+        "command": "repo ./📜️script.ts generate config"
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2447,7 +2985,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate config --check"
+        "command": "repo ./📜️script.ts generate config --check"
       },
       "outputs": []
     },
@@ -2455,7 +2993,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate taxonomy census",
+        "command": "repo ./📜️script.ts generate taxonomy census",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2464,7 +3002,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts generate taxonomy duplicates",
+        "command": "repo ./📜️script.ts generate taxonomy duplicates",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2478,7 +3016,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts schema generate",
+        "command": "repo ./📜️script.ts schema generate",
         "forwardAllArgs": true
       },
       "cache": true
@@ -2492,7 +3030,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md"
       ],
       "options": {
-        "command": "bun ./📜️script.ts schema docs"
+        "command": "repo ./📜️script.ts schema docs"
       },
       "cache": true
     },
@@ -2503,7 +3041,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts schema check",
+        "command": "repo ./📜️script.ts schema check",
         "forwardAllArgs": true
       },
       "cache": true
@@ -2516,7 +3054,7 @@
         "schemaSources"
       ],
       "options": {
-        "command": "bun ./📜️script.ts schema check --fixture-boundary"
+        "command": "repo ./📜️script.ts schema check --fixture-boundary"
       },
       "outputs": []
     },
@@ -2528,7 +3066,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts schema verify",
+        "command": "repo ./📜️script.ts schema verify",
         "forwardAllArgs": true
       },
       "cache": true
@@ -2537,7 +3075,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema audit",
+        "command": "repo ./📜️script.ts schema audit",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2546,7 +3084,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema oracle"
+        "command": "repo ./📜️script.ts schema oracle"
       },
       "outputs": []
     },
@@ -2554,7 +3092,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema compile",
+        "command": "repo ./📜️script.ts schema compile",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2563,7 +3101,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema entries",
+        "command": "repo ./📜️script.ts schema entries",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2572,7 +3110,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema test",
+        "command": "repo ./📜️script.ts schema test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2581,7 +3119,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema parsers report",
+        "command": "repo ./📜️script.ts schema parsers report",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2590,13 +3128,17 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript",
+        "command": "repo ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2604,13 +3146,17 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript --restate all",
+        "command": "repo ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript --restate all",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2618,7 +3164,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema parsers check",
+        "command": "repo ./📜️script.ts schema parsers check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2635,7 +3181,7 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts lint",
+        "command": "repo ./📜️script.ts lint",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -2653,7 +3199,7 @@
         }
       ],
       "options": {
-        "command": "bun ./📜️script.ts lint repo"
+        "command": "repo ./📜️script.ts lint repo"
       },
       "cache": true,
       "outputs": []
@@ -2662,11 +3208,15 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts format"
+        "command": "repo ./📜️script.ts format"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2685,7 +3235,7 @@
         "@semio-tech/repo-test-domain:test-contract"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -2697,7 +3247,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test discover",
+        "command": "repo ./📜️script.ts test discover",
         "forwardAllArgs": true
       }
     },
@@ -2706,12 +3256,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts test doctor",
+        "command": "repo ./📜️script.ts test doctor",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -2719,7 +3273,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test contract",
+        "command": "repo ./📜️script.ts test contract",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -2729,7 +3283,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test oracle",
+        "command": "repo ./📜️script.ts test oracle",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -2739,7 +3293,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test subject",
+        "command": "repo ./📜️script.ts test subject",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -2749,7 +3303,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test parity",
+        "command": "repo ./📜️script.ts test parity",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -2760,14 +3314,14 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test metrics",
+        "command": "repo ./📜️script.ts test metrics",
         "forwardAllArgs": true
       },
       "inputs": [
         "default",
         "^default",
         {
-          "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📈️metrics.json"
+          "runtime": "repo tools exec --light node -- -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📈️metrics.json"
         }
       ],
       "outputs": []
@@ -2777,13 +3331,13 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test metrics --enforce"
+        "command": "repo ./📜️script.ts test metrics --enforce"
       },
       "inputs": [
         "default",
         "^default",
         {
-          "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📈️metrics.json"
+          "runtime": "repo tools exec --light node -- -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📈️metrics.json"
         }
       ],
       "outputs": []
@@ -2793,12 +3347,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts test report",
+        "command": "repo ./📜️script.ts test report",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2807,12 +3365,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean test",
+        "command": "repo ./📜️script.ts clean test",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2821,12 +3383,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean coverage",
+        "command": "repo ./📜️script.ts clean coverage",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2835,12 +3401,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean marker-only-folders",
+        "command": "repo ./📜️script.ts clean marker-only-folders",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2849,12 +3419,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy inventory",
+        "command": "repo ./📜️script.ts clean taxonomy inventory",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2863,12 +3437,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy plan",
+        "command": "repo ./📜️script.ts clean taxonomy plan",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2877,12 +3455,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy apply",
+        "command": "repo ./📜️script.ts clean taxonomy apply",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2891,12 +3473,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts clean taxonomy verify",
+        "command": "repo ./📜️script.ts clean taxonomy verify",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2905,12 +3491,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts new mutation",
+        "command": "repo ./📜️script.ts new mutation",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -2919,7 +3509,7 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test storybook",
+        "command": "repo ./📜️script.ts test storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2932,12 +3522,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts bench plugins",
+        "command": "repo ./📜️script.ts bench plugins",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -2946,13 +3540,17 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts os",
+        "command": "repo ./📜️script.ts os",
         "forwardAllArgs": true
       },
       "continuous": true,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
         }
       }
     },
@@ -2961,13 +3559,17 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts semio",
+        "command": "repo ./📜️script.ts semio",
         "forwardAllArgs": true
       },
       "continuous": true,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
         }
       }
     },
@@ -2976,7 +3578,7 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts examples",
+        "command": "repo ./📜️script.ts examples",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2985,7 +3587,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts stdio quick"
+        "command": "repo ./📜️script.ts stdio quick"
       },
       "outputs": [],
       "cache": true
@@ -2996,7 +3598,7 @@
         "stdio-quick"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio long"
+        "command": "repo ./📜️script.ts stdio long"
       },
       "outputs": [],
       "cache": true
@@ -3007,7 +3609,7 @@
         "stdio-long"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio exhaustive"
+        "command": "repo ./📜️script.ts stdio exhaustive"
       },
       "outputs": [],
       "cache": true
@@ -3018,7 +3620,7 @@
         "stdio-quick"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio schema-parity"
+        "command": "repo ./📜️script.ts stdio schema-parity"
       },
       "outputs": [],
       "cache": true
@@ -3029,7 +3631,7 @@
         "stdio-schema-parity"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio standards-coverage"
+        "command": "repo ./📜️script.ts stdio standards-coverage"
       },
       "outputs": [],
       "cache": true
@@ -3040,7 +3642,7 @@
         "stdio-standards-coverage"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio codec"
+        "command": "repo ./📜️script.ts stdio codec"
       },
       "outputs": [],
       "cache": true
@@ -3051,7 +3653,7 @@
         "stdio-codec"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio mutation-law"
+        "command": "repo ./📜️script.ts stdio mutation-law"
       },
       "outputs": [],
       "cache": true
@@ -3060,7 +3662,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test outcome-law-gate"
+        "command": "repo ./📜️script.ts test outcome-law-gate"
       },
       "outputs": [],
       "cache": true
@@ -3071,7 +3673,7 @@
         "test-outcome-law-gate"
       ],
       "options": {
-        "command": "bun ./📜️script.ts verify mutation-outcome-law"
+        "command": "repo ./📜️script.ts verify mutation-outcome-law"
       },
       "outputs": [],
       "cache": true
@@ -3080,7 +3682,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify semantic-vocabulary"
+        "command": "repo ./📜️script.ts verify semantic-vocabulary"
       },
       "outputs": [],
       "cache": true
@@ -3091,7 +3693,7 @@
         "stdio-mutation-law"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio inference"
+        "command": "repo ./📜️script.ts stdio inference"
       },
       "outputs": [],
       "cache": true
@@ -3102,7 +3704,7 @@
         "stdio-inference"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio runtime"
+        "command": "repo ./📜️script.ts stdio runtime"
       },
       "outputs": [],
       "cache": true
@@ -3113,12 +3715,16 @@
         "stdio-runtime"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio fuzz"
+        "command": "repo ./📜️script.ts stdio fuzz"
       },
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -3128,7 +3734,7 @@
         "stdio-fuzz"
       ],
       "options": {
-        "command": "bun ./📜️script.ts stdio cross-platform"
+        "command": "repo ./📜️script.ts stdio cross-platform"
       },
       "outputs": [],
       "cache": true
@@ -3150,7 +3756,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify",
+        "command": "repo ./📜️script.ts verify",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -3163,11 +3769,15 @@
         "mutation-outcome-law"
       ],
       "options": {
-        "command": "bun ./📜️script.ts verify gate"
+        "command": "repo ./📜️script.ts verify gate"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
         }
       }
     },
@@ -3176,13 +3786,17 @@
       "cache": false,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify build-parity",
+        "command": "repo ./📜️script.ts verify build-parity",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
         }
       }
     },
@@ -3191,7 +3805,7 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rust-warnings",
+        "command": "repo ./📜️script.ts verify rust-warnings",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -3200,7 +3814,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy report",
+        "command": "repo ./📜️script.ts verify taxonomy report",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -3211,7 +3825,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy enforce",
+        "command": "repo ./📜️script.ts verify taxonomy enforce",
         "forwardAllArgs": true
       }
     },
@@ -3219,7 +3833,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy implementation report"
+        "command": "repo ./📜️script.ts verify taxonomy implementation report"
       },
       "cache": true,
       "outputs": []
@@ -3229,14 +3843,14 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify taxonomy implementation enforce"
+        "command": "repo ./📜️script.ts verify taxonomy implementation enforce"
       }
     },
     "verify-package-purity": {
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify package-purity",
+        "command": "repo ./📜️script.ts verify package-purity",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -3246,7 +3860,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify generated-corruption",
+        "command": "repo ./📜️script.ts verify generated-corruption",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -3256,7 +3870,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify build-owners"
+        "command": "repo ./📜️script.ts verify build-owners"
       },
       "outputs": [],
       "cache": true
@@ -3265,7 +3879,7 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify zero-touch"
+        "command": "repo ./📜️script.ts verify zero-touch"
       },
       "outputs": [],
       "cache": true,
@@ -3283,12 +3897,16 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify build-owners sync"
+        "command": "repo ./📜️script.ts verify build-owners sync"
       },
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
         }
       }
     },
@@ -3297,12 +3915,16 @@
       "cache": false,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify typescript project",
+        "command": "repo ./📜️script.ts verify typescript project",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -3311,7 +3933,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify typescript check",
+        "command": "repo ./📜️script.ts verify typescript check",
         "forwardAllArgs": true
       }
     },
@@ -3320,7 +3942,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify interactivity"
+        "command": "repo ./📜️script.ts verify interactivity"
       }
     },
     "verify-dependencies-freeze": {
@@ -3328,7 +3950,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify dependencies"
+        "command": "repo ./📜️script.ts verify dependencies"
       }
     },
     "verify-dependencies-literal-external": {
@@ -3336,7 +3958,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify dependencies literal-external"
+        "command": "repo ./📜️script.ts verify dependencies literal-external"
       }
     },
     "verify-dependencies-freeze-write-baseline": {
@@ -3347,14 +3969,14 @@
         "{workspaceRoot}/🔒️dependencies.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts verify dependencies write-baseline"
+        "command": "repo ./📜️script.ts verify dependencies write-baseline"
       }
     },
     "verify-abstraction-ownership": {
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify abstraction-ownership",
+        "command": "repo ./📜️script.ts verify abstraction-ownership",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -3363,7 +3985,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach artifact-builder"
+        "command": "repo ./📜️script.ts verify policy-breach artifact-builder"
       },
       "outputs": []
     },
@@ -3371,7 +3993,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach artifact-decomposer"
+        "command": "repo ./📜️script.ts verify policy-breach artifact-decomposer"
       },
       "outputs": []
     },
@@ -3379,7 +4001,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach schema-representation"
+        "command": "repo ./📜️script.ts verify policy-breach schema-representation"
       },
       "outputs": []
     },
@@ -3387,7 +4009,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach io-serializer-matrix"
+        "command": "repo ./📜️script.ts verify policy-breach io-serializer-matrix"
       },
       "outputs": []
     },
@@ -3395,7 +4017,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach io-terminality"
+        "command": "repo ./📜️script.ts verify policy-breach io-terminality"
       },
       "outputs": []
     },
@@ -3403,7 +4025,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach codec-fidelity"
+        "command": "repo ./📜️script.ts verify policy-breach codec-fidelity"
       },
       "outputs": []
     },
@@ -3411,7 +4033,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach standards-coverage"
+        "command": "repo ./📜️script.ts verify policy-breach standards-coverage"
       },
       "outputs": []
     },
@@ -3419,7 +4041,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach artifact-analyzer"
+        "command": "repo ./📜️script.ts verify policy-breach artifact-analyzer"
       },
       "outputs": []
     },
@@ -3427,7 +4049,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach artifact-composer"
+        "command": "repo ./📜️script.ts verify policy-breach artifact-composer"
       },
       "outputs": []
     },
@@ -3435,7 +4057,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach artifact-builder-migrated"
+        "command": "repo ./📜️script.ts verify policy-breach artifact-builder-migrated"
       },
       "outputs": []
     },
@@ -3443,7 +4065,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach plugin-dependency-parity"
+        "command": "repo ./📜️script.ts verify policy-breach plugin-dependency-parity"
       },
       "outputs": []
     },
@@ -3451,7 +4073,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify policy-breach contribution-target"
+        "command": "repo ./📜️script.ts verify policy-breach contribution-target"
       },
       "outputs": []
     },
@@ -3459,7 +4081,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify resolved-host-context"
+        "command": "repo ./📜️script.ts verify resolved-host-context"
       },
       "outputs": []
     },
@@ -3467,7 +4089,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify surface-view-context"
+        "command": "repo ./📜️script.ts verify surface-view-context"
       },
       "outputs": []
     },
@@ -3475,7 +4097,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify view-context-integer-carriers"
+        "command": "repo ./📜️script.ts verify view-context-integer-carriers"
       },
       "outputs": []
     },
@@ -3483,7 +4105,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify view-context-integer-carriers native"
+        "command": "repo ./📜️script.ts verify view-context-integer-carriers native"
       },
       "outputs": []
     },
@@ -3491,7 +4113,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-view-context"
+        "command": "repo ./📜️script.ts verify window-view-context"
       },
       "outputs": []
     },
@@ -3499,7 +4121,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-view-context native"
+        "command": "repo ./📜️script.ts verify window-view-context native"
       },
       "outputs": []
     },
@@ -3507,7 +4129,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify abstraction-ownership test"
+        "command": "repo ./📜️script.ts verify abstraction-ownership test"
       },
       "outputs": []
     },
@@ -3515,11 +4137,15 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts verify canonical-architecture"
+        "command": "repo ./📜️script.ts verify canonical-architecture"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
         }
       }
     },
@@ -3528,11 +4154,15 @@
       "cache": false,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify layering"
+        "command": "repo ./📜️script.ts verify layering"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "reenters-build-tool" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
         }
       }
     },
@@ -3551,7 +4181,11 @@
       "metadata": {
         "semio": {
           "orchestrator": true,
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       }
     },
@@ -3565,10 +4199,23 @@
             "parameters": [
               {
                 "id": "generation",
-                "title": { "en": "Native build generation", "de": "Native Build-Generation" },
-                "description": { "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.", "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden." },
+                "title": {
+                  "en": "Native build generation",
+                  "de": "Native Build-Generation"
+                },
+                "description": {
+                  "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.",
+                  "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden."
+                },
                 "kind": "choice",
-                "values": [{ "id": "fresh", "env": { "SEMIO_NATIVE_BUILD_GENERATION": "fresh" } }]
+                "values": [
+                  {
+                    "id": "fresh",
+                    "env": {
+                      "SEMIO_NATIVE_BUILD_GENERATION": "fresh"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -3589,7 +4236,7 @@
                 "id": "describe-tool",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "build",
                   "--host-platform={hostPlatform}"
@@ -3607,7 +4254,7 @@
                 "id": "font-assets",
                 "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "build"
                 ],
@@ -3624,7 +4271,7 @@
                 "id": "fonts",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "fonts"
                 ],
@@ -3643,7 +4290,7 @@
                 "id": "support",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
                 "command": [
-                  "bun",
+                  "repo",
                   "./📜️script.ts",
                   "support"
                 ],
@@ -3659,11 +4306,15 @@
               }
             ]
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "publishes-remote"
+          }
         }
       },
       "options": {
-        "command": "bun ./📜️script.ts release",
+        "command": "repo ./📜️script.ts release",
         "forwardAllArgs": false
       },
       "cache": false,
@@ -3676,14 +4327,18 @@
         "@semio-tech/framework-plugin-web:support"
       ],
       "options": {
-        "command": "bun ./📜️script.ts components",
+        "command": "repo ./📜️script.ts components",
         "forwardAllArgs": true
       },
       "cache": false,
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -3691,11 +4346,15 @@
       "executor": "repo:script",
       "dependsOn": [],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
-        "env": { "STORYBOOK_PORT": "6010" }
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
       },
       "cache": true,
-      "outputs": ["{projectRoot}/.🧾️store/build-storybook.json"],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build-storybook.json"
+      ],
       "inputs": [
         "production",
         "^production",
@@ -3719,7 +4378,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "pure-function-of-inputs"
+          }
         }
       }
     },
@@ -3733,7 +4396,11 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       }
     },
@@ -3741,13 +4408,17 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp setup",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp setup",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3758,13 +4429,17 @@
       ],
       "cache": false,
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "cache": {
+            "version": 1,
+            "class": "managed-output",
+            "reason": "outputs-in-managed-store"
+          }
         }
       }
     },
@@ -3778,13 +4453,17 @@
       ],
       "cache": false,
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp build",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp build",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "cache": {
+            "version": 1,
+            "class": "managed-output",
+            "reason": "outputs-in-managed-store"
+          }
         }
       }
     },
@@ -3798,13 +4477,17 @@
       ],
       "cache": false,
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test",
         "forwardAllArgs": true
       },
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -3813,8 +4496,9 @@
       "cache": true,
       "dependsOn": [],
       "outputs": [],
+      "inputs": ["cmakeSources", "cmakeToolchain", "sharedGlobals"],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp custody",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp custody",
         "forwardAllArgs": true
       },
       "defaultConfiguration": "prototype",
@@ -3835,7 +4519,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup prepare"
+        "command": "repo ./📜️script.ts setup prepare"
       },
       "dependsOn": [
         "deps-browsers"
@@ -3843,7 +4527,11 @@
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3851,12 +4539,16 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts publish",
+        "command": "repo ./📜️script.ts publish",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "publishes-remote"
+          }
         }
       }
     },
@@ -3865,11 +4557,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3878,7 +4574,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync python"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync python"
       },
       "dependsOn": [
         "@semio-tech/ui-styling-py:deps",
@@ -3890,7 +4586,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3899,7 +4599,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo"
       },
       "metadata": {
         "semio": {
@@ -3907,7 +4607,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3916,7 +4620,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync go"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync go"
       },
       "metadata": {
         "semio": {
@@ -3924,7 +4628,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3933,7 +4641,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync dotnet"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync dotnet"
       },
       "dependsOn": [
         "@semio-tech/repo-test-dotnet:deps"
@@ -3944,7 +4652,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3953,7 +4665,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cpp"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cpp"
       },
       "dependsOn": [
         "cpp-setup"
@@ -3964,7 +4676,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3973,7 +4689,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browsers"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browsers"
       },
       "dependsOn": [],
       "metadata": {
@@ -3982,7 +4698,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -3991,7 +4711,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync wasm"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync wasm"
       },
       "dependsOn": [
         "deps-wasm-opt",
@@ -4003,7 +4723,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4013,7 +4737,7 @@
       "outputs": [],
       "parallelism": false,
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk"
       },
       "metadata": {
         "semio": {
@@ -4021,7 +4745,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4030,11 +4758,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" prepare"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" prepare"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4043,7 +4775,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync tools"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync tools"
       },
       "metadata": {
         "semio": {
@@ -4051,7 +4783,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4066,7 +4802,11 @@
       ],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       }
     },
@@ -4075,11 +4815,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup git"
+        "command": "repo ./📜️script.ts setup git"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4088,11 +4832,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup native"
+        "command": "repo ./📜️script.ts setup native"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4100,7 +4848,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify browser-actor-host-context"
+        "command": "repo ./📜️script.ts verify browser-actor-host-context"
       },
       "outputs": []
     },
@@ -4108,7 +4856,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify browser-actor-host-context worker"
+        "command": "repo ./📜️script.ts verify browser-actor-host-context worker"
       },
       "outputs": []
     },
@@ -4116,7 +4864,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify surface-view-context menu"
+        "command": "repo ./📜️script.ts verify surface-view-context menu"
       },
       "outputs": []
     },
@@ -4124,7 +4872,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-query-ownership oracle"
+        "command": "repo ./📜️script.ts verify jack-query-ownership oracle"
       },
       "outputs": []
     },
@@ -4132,7 +4880,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-query-ownership"
+        "command": "repo ./📜️script.ts verify jack-query-ownership"
       },
       "outputs": []
     },
@@ -4140,7 +4888,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-document-contract"
+        "command": "repo ./📜️script.ts verify jack-document-contract"
       },
       "outputs": []
     },
@@ -4148,7 +4896,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify dag-document-contract"
+        "command": "repo ./📜️script.ts verify dag-document-contract"
       },
       "outputs": []
     },
@@ -4156,7 +4904,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-action-context"
+        "command": "repo ./📜️script.ts verify window-action-context"
       },
       "outputs": []
     },
@@ -4164,7 +4912,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify window-action-context oracle"
+        "command": "repo ./📜️script.ts verify window-action-context oracle"
       },
       "outputs": []
     },
@@ -4172,7 +4920,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-contract-ownership"
+        "command": "repo ./📜️script.ts verify artifact-contract-ownership"
       },
       "outputs": []
     },
@@ -4180,7 +4928,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-contract-ownership test"
+        "command": "repo ./📜️script.ts verify artifact-contract-ownership test"
       },
       "outputs": []
     },
@@ -4188,7 +4936,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-window-config"
+        "command": "repo ./📜️script.ts verify rewriting-window-config"
       },
       "outputs": []
     },
@@ -4196,7 +4944,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-window-config oracle"
+        "command": "repo ./📜️script.ts verify rewriting-window-config oracle"
       },
       "outputs": []
     },
@@ -4204,7 +4952,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify retained-window-input"
+        "command": "repo ./📜️script.ts verify retained-window-input"
       },
       "outputs": []
     },
@@ -4212,7 +4960,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify retained-window-input oracle"
+        "command": "repo ./📜️script.ts verify retained-window-input oracle"
       },
       "outputs": []
     },
@@ -4220,7 +4968,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify publication-retirement-authority"
+        "command": "repo ./📜️script.ts verify publication-retirement-authority"
       },
       "outputs": []
     },
@@ -4228,7 +4976,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify publication-retirement-authority oracle"
+        "command": "repo ./📜️script.ts verify publication-retirement-authority oracle"
       },
       "outputs": []
     },
@@ -4236,7 +4984,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-window-transient"
+        "command": "repo ./📜️script.ts verify wires-window-transient"
       },
       "outputs": []
     },
@@ -4244,7 +4992,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-artifact-addressing"
+        "command": "repo ./📜️script.ts verify shared-artifact-addressing"
       },
       "outputs": []
     },
@@ -4252,7 +5000,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-artifact-addressing oracle"
+        "command": "repo ./📜️script.ts verify shared-artifact-addressing oracle"
       },
       "outputs": []
     },
@@ -4260,7 +5008,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-document-contract"
+        "command": "repo ./📜️script.ts verify wires-document-contract"
       },
       "outputs": []
     },
@@ -4268,7 +5016,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-document-contract oracle"
+        "command": "repo ./📜️script.ts verify wires-document-contract oracle"
       },
       "outputs": []
     },
@@ -4277,7 +5025,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity test"
+        "command": "repo ./📜️script.ts verify artifact-field-parity test"
       }
     },
     "artifact-field-parity-report": {
@@ -4285,14 +5033,14 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity report"
+        "command": "repo ./📜️script.ts verify artifact-field-parity report"
       }
     },
     "artifact-field-parity-enforce": {
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify artifact-field-parity enforce"
+        "command": "repo ./📜️script.ts verify artifact-field-parity enforce"
       },
       "outputs": []
     },
@@ -4300,7 +5048,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-map-ownership"
+        "command": "repo ./📜️script.ts verify rewriting-map-ownership"
       },
       "outputs": []
     },
@@ -4308,7 +5056,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-map-ownership oracle"
+        "command": "repo ./📜️script.ts verify rewriting-map-ownership oracle"
       },
       "outputs": []
     },
@@ -4316,7 +5064,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-dynamic-value"
+        "command": "repo ./📜️script.ts verify shared-dynamic-value"
       },
       "outputs": []
     },
@@ -4324,7 +5072,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify rewriting-document-contract"
+        "command": "repo ./📜️script.ts verify rewriting-document-contract"
       },
       "outputs": []
     },
@@ -4332,7 +5080,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify forms-document-contract"
+        "command": "repo ./📜️script.ts verify forms-document-contract"
       },
       "outputs": []
     },
@@ -4340,7 +5088,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify playbook-document-contract"
+        "command": "repo ./📜️script.ts verify playbook-document-contract"
       },
       "outputs": []
     },
@@ -4348,7 +5096,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-map-delta"
+        "command": "repo ./📜️script.ts verify shared-map-delta"
       },
       "outputs": []
     },
@@ -4356,7 +5104,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-map-delta oracle"
+        "command": "repo ./📜️script.ts verify shared-map-delta oracle"
       },
       "outputs": []
     },
@@ -4364,7 +5112,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify jack-results-window-transient"
+        "command": "repo ./📜️script.ts verify jack-results-window-transient"
       },
       "outputs": []
     },
@@ -4372,7 +5120,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-value-clone"
+        "command": "repo ./📜️script.ts verify shared-value-clone"
       },
       "outputs": []
     },
@@ -4380,7 +5128,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify shared-value-canonical-json"
+        "command": "repo ./📜️script.ts verify shared-value-canonical-json"
       },
       "outputs": []
     },
@@ -4388,7 +5136,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify wires-pointer-move"
+        "command": "repo ./📜️script.ts verify wires-pointer-move"
       },
       "outputs": []
     },
@@ -4396,7 +5144,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify snapshot-read-retirement"
+        "command": "repo ./📜️script.ts verify snapshot-read-retirement"
       },
       "outputs": [],
       "inputs": [
@@ -4407,7 +5155,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify snapshot-read-retirement native"
+        "command": "repo ./📜️script.ts verify snapshot-read-retirement native"
       },
       "outputs": [],
       "inputs": [
@@ -4418,7 +5166,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify curation-document-contract"
+        "command": "repo ./📜️script.ts verify curation-document-contract"
       },
       "outputs": [],
       "inputs": [
@@ -4429,7 +5177,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify curation-document-contract native"
+        "command": "repo ./📜️script.ts verify curation-document-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -4440,7 +5188,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem2d-window-config-contract"
+        "command": "repo ./📜️script.ts verify fem2d-window-config-contract"
       },
       "outputs": [],
       "inputs": [
@@ -4451,7 +5199,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem2d-window-config-contract native"
+        "command": "repo ./📜️script.ts verify fem2d-window-config-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -4462,7 +5210,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem3d-window-config-contract"
+        "command": "repo ./📜️script.ts verify fem3d-window-config-contract"
       },
       "outputs": [],
       "inputs": [
@@ -4473,7 +5221,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem3d-window-config-contract native"
+        "command": "repo ./📜️script.ts verify fem3d-window-config-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -4484,7 +5232,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-job-physical-close"
+        "command": "repo ./📜️script.ts verify framework-job-physical-close"
       },
       "outputs": [],
       "inputs": [
@@ -4495,7 +5243,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-ui-protocol-ownership"
+        "command": "repo ./📜️script.ts verify framework-ui-protocol-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -4506,7 +5254,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -4517,7 +5265,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -4528,7 +5276,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership outer-native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership outer-native"
       },
       "outputs": [],
       "inputs": [
@@ -4539,7 +5287,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership catalog-native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership catalog-native"
       },
       "outputs": [],
       "inputs": [
@@ -4550,7 +5298,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership value"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership value"
       },
       "outputs": [],
       "inputs": [
@@ -4561,7 +5309,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership value-native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership value-native"
       },
       "outputs": [],
       "inputs": [
@@ -4572,7 +5320,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership diagnostic"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership diagnostic"
       },
       "outputs": [],
       "inputs": [
@@ -4583,7 +5331,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership diagnostic-native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership diagnostic-native"
       },
       "outputs": [],
       "inputs": [
@@ -4594,7 +5342,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership inflater"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership inflater"
       },
       "outputs": [],
       "inputs": [
@@ -4605,7 +5353,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership inflater-native"
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership inflater-native"
       },
       "outputs": [],
       "inputs": [
@@ -4616,7 +5364,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-flow-physical-retirement"
+        "command": "repo ./📜️script.ts verify framework-flow-physical-retirement"
       },
       "outputs": [],
       "inputs": [
@@ -4627,7 +5375,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-flow-physical-retirement native"
+        "command": "repo ./📜️script.ts verify framework-flow-physical-retirement native"
       },
       "outputs": [],
       "inputs": [
@@ -4638,7 +5386,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-paged-list-ownership"
+        "command": "repo ./📜️script.ts verify framework-paged-list-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -4649,7 +5397,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-viewport-ownership"
+        "command": "repo ./📜️script.ts verify framework-viewport-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -4660,7 +5408,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-viewport-ownership native"
+        "command": "repo ./📜️script.ts verify framework-viewport-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -4671,7 +5419,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-viewport-projection"
+        "command": "repo ./📜️script.ts verify framework-viewport-projection"
       },
       "outputs": [],
       "inputs": [
@@ -4682,7 +5430,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-viewport-projection native"
+        "command": "repo ./📜️script.ts verify framework-viewport-projection native"
       },
       "outputs": [],
       "inputs": [
@@ -4693,7 +5441,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify node-graph-viewport-ownership"
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership"
       },
       "outputs": [],
       "inputs": [
@@ -4704,7 +5452,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify node-graph-viewport-ownership native"
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native"
       },
       "outputs": [],
       "inputs": [
@@ -4715,7 +5463,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify node-graph-viewport-ownership native renderer-host"
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native renderer-host"
       },
       "outputs": [],
       "inputs": [
@@ -4726,7 +5474,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify node-graph-viewport-ownership native consumers"
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native consumers"
       },
       "outputs": [],
       "inputs": [
@@ -4737,7 +5485,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-variant-field-casing"
+        "command": "repo ./📜️script.ts verify framework-variant-field-casing"
       },
       "outputs": [],
       "inputs": [
@@ -4748,7 +5496,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-empty-state-contract"
+        "command": "repo ./📜️script.ts verify framework-empty-state-contract"
       },
       "outputs": [],
       "inputs": [
@@ -4759,7 +5507,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify framework-empty-state-contract native"
+        "command": "repo ./📜️script.ts verify framework-empty-state-contract native"
       },
       "outputs": [],
       "inputs": [
@@ -4770,7 +5518,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem3d-numerical-child-native"
+        "command": "repo ./📜️script.ts verify fem3d-numerical-child-native"
       },
       "outputs": [],
       "inputs": [
@@ -4782,7 +5530,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo-lock"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo-lock"
       },
       "metadata": {
         "semio": {
@@ -4790,7 +5538,11 @@
             "version": 1,
             "kind": "orchestration"
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4799,11 +5551,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" lock"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" lock"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4812,11 +5568,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" contract-check"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" contract-check"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4825,25 +5585,33 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync --all"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync --all"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
     "cargo-prepare": {
       "executor": "repo:script",
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts\" prepare"
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts\" prepare"
       },
       "cache": false,
       "outputs": [],
       "dependsOn": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4851,7 +5619,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts schema runtime-graph",
+        "command": "repo ./📜️script.ts schema runtime-graph",
         "env": {
           "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
           "CARGO_BUILD_BUILD_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
@@ -4859,7 +5627,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -4868,12 +5640,16 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build canvas fonts",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build canvas fonts",
         "forwardAllArgs": true
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -4882,7 +5658,7 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test canvas native",
+        "command": "repo ./📜️script.ts test canvas native",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -4904,7 +5680,7 @@
       "dependsOn": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test canvas react",
+        "command": "repo ./📜️script.ts test canvas react",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -4926,11 +5702,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts repo tools setup all"
+        "command": "repo ./📜️script.ts repo tools setup all"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -4939,7 +5719,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test entrypoint",
+        "command": "repo ./📜️script.ts test entrypoint",
         "forwardAllArgs": false
       }
     },
@@ -4950,31 +5730,94 @@
       "metadata": {
         "semio": {
           "dashboard": {
-            "title": { "en": "Bazel build contracts", "de": "Bazel-Build-Verträge" },
-            "description": { "en": "Run every contract or choose one bounded runtime phase through its issued build owner.", "de": "Alle Verträge oder eine begrenzte Laufzeitphase über ihren ausgestellten Build-Eigentümer prüfen." },
-            "parameters": [{
-              "id": "phase",
-              "title": { "en": "Runtime phase", "de": "Laufzeitphase" },
-              "description": { "en": "Leave unselected for the complete suite; select one phase for focused verification.", "de": "Für die vollständige Prüfung leer lassen; für eine gezielte Prüfung eine Phase auswählen." },
-              "kind": "choice",
-              "values": [
-                { "id": "cache", "args": ["cache"] },
-                { "id": "nested", "args": ["nested"] },
-                { "id": "uncached", "args": ["uncached"] },
-                { "id": "birth", "args": ["birth"] },
-                { "id": "services", "args": ["services"] },
-                { "id": "refusals", "args": ["refusals"] },
-                { "id": "cancellation", "args": ["cancellation"] },
-                { "id": "configuration", "args": ["configuration"] },
-                { "id": "offline", "args": ["offline"] }
-              ]
-            }]
+            "title": {
+              "en": "Bazel build contracts",
+              "de": "Bazel-Build-Verträge"
+            },
+            "description": {
+              "en": "Run every contract or choose one bounded runtime phase through its issued build owner.",
+              "de": "Alle Verträge oder eine begrenzte Laufzeitphase über ihren ausgestellten Build-Eigentümer prüfen."
+            },
+            "parameters": [
+              {
+                "id": "phase",
+                "title": {
+                  "en": "Runtime phase",
+                  "de": "Laufzeitphase"
+                },
+                "description": {
+                  "en": "Leave unselected for the complete suite; select one phase for focused verification.",
+                  "de": "Für die vollständige Prüfung leer lassen; für eine gezielte Prüfung eine Phase auswählen."
+                },
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "cache",
+                    "args": [
+                      "cache"
+                    ]
+                  },
+                  {
+                    "id": "nested",
+                    "args": [
+                      "nested"
+                    ]
+                  },
+                  {
+                    "id": "uncached",
+                    "args": [
+                      "uncached"
+                    ]
+                  },
+                  {
+                    "id": "birth",
+                    "args": [
+                      "birth"
+                    ]
+                  },
+                  {
+                    "id": "services",
+                    "args": [
+                      "services"
+                    ]
+                  },
+                  {
+                    "id": "refusals",
+                    "args": [
+                      "refusals"
+                    ]
+                  },
+                  {
+                    "id": "cancellation",
+                    "args": [
+                      "cancellation"
+                    ]
+                  },
+                  {
+                    "id": "configuration",
+                    "args": [
+                      "configuration"
+                    ]
+                  },
+                  {
+                    "id": "offline",
+                    "args": [
+                      "offline"
+                    ]
+                  }
+                ]
+              }
+            ]
           },
-          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       },
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel",
         "forwardAllArgs": true
       }
     },
@@ -4983,11 +5826,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel-bootstrap"
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel-bootstrap"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -4996,7 +5843,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test runtime-build-producer",
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test runtime-build-producer",
         "cwd": ".",
         "forwardAllArgs": false
       }
@@ -5004,8 +5851,9 @@
     "cpp-test-toolchain": {
       "executor": "repo:script",
       "cache": true,
+      "inputs": ["cmakeSources", "cmakeToolchain", "sharedGlobals"],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test-toolchain"
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test-toolchain"
       },
       "outputs": []
     },
@@ -5013,11 +5861,15 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup devcontainer start"
+        "command": "repo ./📜️script.ts setup devcontainer start"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -5025,11 +5877,15 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts setup devcontainer attach"
+        "command": "repo ./📜️script.ts setup devcontainer attach"
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -5037,7 +5893,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify fem3d-numerical-child-source"
+        "command": "repo ./📜️script.ts verify fem3d-numerical-child-source"
       },
       "outputs": [],
       "inputs": [

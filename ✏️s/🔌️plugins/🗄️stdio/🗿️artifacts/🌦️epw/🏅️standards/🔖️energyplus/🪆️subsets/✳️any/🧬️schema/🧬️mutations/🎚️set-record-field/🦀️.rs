@@ -16,7 +16,16 @@ pub struct SetRecordField {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "record-field", kind: "set-record-field", record: "SetRecordField" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
         let Self { record_index, field_index, value } = self;
         protocol::MutationOutcome::new({
             let mut fdiff = EpwRecordDiff::default();
@@ -32,12 +41,6 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

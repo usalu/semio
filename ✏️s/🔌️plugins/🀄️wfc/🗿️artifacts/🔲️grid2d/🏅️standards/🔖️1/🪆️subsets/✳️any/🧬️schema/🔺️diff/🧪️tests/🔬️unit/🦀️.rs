@@ -28,9 +28,9 @@ fn absorbed(first: Grid2dDiff, second: Grid2dDiff) -> Grid2dDiff {
 
 fn assert_absorb_law(base: &Grid2dSnapshot, first: &Grid2dDiff, second: &Grid2dDiff) -> Grid2dDiff {
     let sigma = absorbed(first.clone(), second.clone());
-    let mid = protocol::apply_diff(first, base).expect("first applies");
-    let sequential = protocol::apply_diff(second, &mid).expect("second applies");
-    assert_eq!(protocol::apply_diff(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
+    let mid = protocol::apply_diff_cold(first, base).expect("first applies");
+    let sequential = protocol::apply_diff_cold(second, &mid).expect("second applies");
+    assert_eq!(protocol::apply_diff_cold(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
     sigma
 }
 
@@ -38,7 +38,7 @@ fn assert_absorb_law(base: &Grid2dSnapshot, first: &Grid2dDiff, second: &Grid2dD
 #[test]
 fn empty_diff_is_the_identity() {
     let base = base();
-    assert_eq!(protocol::apply_diff(&Grid2dDiff::default(), &base).expect("identity applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&Grid2dDiff::default(), &base).expect("identity applies"), base);
     assert!(DiffAlgebra::<Grid2dSnapshot>::is_empty(&Grid2dDiff::default()));
 }
 
@@ -47,7 +47,7 @@ fn empty_diff_is_the_identity() {
 fn inserted_rows_take_their_after_indices() {
     assert_eq!(Grid2dRow::insert_at(&base().tiles, &tile("c", 3.0)), 1);
     let diff = rows(Grid2dTilesDelta { inserted: vec![Grid2dTilesInsertion { index: 0, row: tile("a", 4.0) }, Grid2dTilesInsertion { index: 2, row: tile("c", 3.0) }], ..Default::default() });
-    let after = protocol::apply_diff(&diff, &base()).expect("inserts apply");
+    let after = protocol::apply_diff_cold(&diff, &base()).expect("inserts apply");
     let ids: Vec<&str> = after.tiles.iter().map(|tile| tile.id.as_str()).collect();
     assert_eq!(ids, ["a", "b", "c", "d"]);
 }
@@ -101,9 +101,9 @@ fn create_then_patch_folds_into_the_row() {
 fn inverse_restores_the_base() {
     let base = base();
     let diff = rows(Grid2dTilesDelta { removed: vec![Grid2dTilesRemoval { id: "b".into(), index: 0 }], inserted: vec![Grid2dTilesInsertion { index: 0, row: tile("a", 5.0) }], modified: vec![reweigh("d", 6.0)], ..Default::default() });
-    let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
     let inverse = DiffAlgebra::<Grid2dSnapshot>::inverse(&diff, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
 /// 🎯️ Removing, inserting and moving a MIDDLE row are each undone by the inverse diff at the row's original position.
@@ -118,16 +118,16 @@ fn inverse_restores_middle_rows() {
         Grid2dTilesDelta { moved: vec![Grid2dTilesRelocation { id: "c".into(), from: 1, to: 3 }], ..Default::default() },
     ] {
         let diff = rows(delta);
-        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
         let inverse = DiffAlgebra::<Grid2dSnapshot>::inverse(&diff, &base);
-        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+        assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }
 
 /// 🚫️ Removing a row that is not at its stated base index is refused, not silently ignored.
 #[test]
 fn apply_refuses_a_missing_removal() {
-    assert!(protocol::apply_diff(&rows(Grid2dTilesDelta { removed: vec![Grid2dTilesRemoval { id: "ghost".into(), index: 0 }], ..Default::default() }), &base()).is_err());
+    assert!(protocol::apply_diff_cold(&rows(Grid2dTilesDelta { removed: vec![Grid2dTilesRemoval { id: "ghost".into(), index: 0 }], ..Default::default() }), &base()).is_err());
 }
 
 /// 📌️ Cells are keyed by their own coordinates and inserted at their stated row-major indices.
@@ -136,9 +136,9 @@ fn cells_are_keyed_by_their_coordinates_and_land_row_major() {
     assert_eq!(cell_id(3, 7), "3,7");
     let pin = |x: u32, y: u32| WfcPinnedCell2d { x, y, tile_id: "b".into() };
     let diff = Grid2dDiff { pinned: Grid2dPinnedDelta { inserted: vec![Grid2dPinnedInsertion { index: 2, row: pin(2, 1) }, Grid2dPinnedInsertion { index: 0, row: pin(0, 0) }, Grid2dPinnedInsertion { index: 1, row: pin(1, 1) }], ..Default::default() }, ..Default::default() };
-    let next = protocol::apply_diff(&diff, &base()).expect("pins apply");
+    let next = protocol::apply_diff_cold(&diff, &base()).expect("pins apply");
     let order: Vec<(u32, u32)> = next.pinned.iter().map(|cell| (cell.x, cell.y)).collect();
     assert_eq!(order, [(0, 0), (1, 1), (2, 1)]);
     let removal = Grid2dDiff { pinned: Grid2dPinnedDelta::removal(&next.pinned, 1), ..Default::default() };
-    assert_eq!(protocol::apply_diff(&removal, &next).expect("unpin applies").pinned.len(), 2);
+    assert_eq!(protocol::apply_diff_cold(&removal, &next).expect("unpin applies").pinned.len(), 2);
 }

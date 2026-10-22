@@ -1,5 +1,6 @@
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -54,7 +55,7 @@ function projectNode(node: RawNode): ProjectedNode {
 /** 📥️ Runs the standalone codec's `project` subcommand and turns its raw, source-order
  *  attributes into the profile's own name-sorted projection. */
 function readSvg(path: string): SvgDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`quick-xml-svg-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
   const raw = JSON.parse(result.stdout) as RawDoc;
   return { declaration: raw.declaration, doctype: raw.doctype, root: raw.root === null ? null : projectNode(raw.root) };

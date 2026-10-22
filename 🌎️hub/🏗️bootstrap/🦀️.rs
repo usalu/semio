@@ -12,7 +12,7 @@
 //! catalog (`{space_id}:{document_id}`), not hub-internal state.
 
 use futures::{SinkExt, StreamExt};
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord, Tracer};
 use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage};
 use semio_hub_artifact_creation_service::ArtifactCreationServiceV1;

@@ -1,0 +1,310 @@
+{
+ "version": 1,
+ "lead": [
+  {
+   "line": "🧪️🔥x",
+   "expected": 2
+  },
+  {
+   "line": "🧪️ x",
+   "expected": 1
+  },
+  {
+   "line": "x🧪️",
+   "expected": 0
+  },
+  {
+   "line": "  🚀🚀🚀 y",
+   "expected": 3
+  },
+  {
+   "line": "👩‍💻🚀",
+   "expected": 2
+  },
+  {
+   "line": "",
+   "expected": 0
+  },
+  {
+   "line": "🏘️compose✍️sketchpad",
+   "expected": 1
+  }
+ ],
+ "anywhere": [
+  {
+   "line": "a🧪️b🚀c",
+   "expected": 2
+  },
+  {
+   "line": "no",
+   "expected": 0
+  },
+  {
+   "line": "🧪️🧪️",
+   "expected": 2
+  },
+  {
+   "line": "👩‍💻 and 🚀",
+   "expected": 2
+  },
+  {
+   "line": "",
+   "expected": 0
+  }
+ ],
+ "normalize": [
+  {
+   "line": "  🏘️compose📊️metric📃uloc💯️1k",
+   "expected": "🏘️compose"
+  },
+  {
+   "line": "🔀️🏘️x🚩️",
+   "expected": "🏘️x"
+  },
+  {
+   "line": "plain",
+   "expected": "plain"
+  },
+  {
+   "line": "  spaced  ",
+   "expected": "spaced"
+  },
+  {
+   "line": "a🔀️b🚩️c",
+   "expected": "abc"
+  },
+  {
+   "line": "🔀x",
+   "expected": "🔀x"
+  }
+ ],
+ "tokens": [
+  {
+   "label": "🏘️compose✍️sketchpad",
+   "expected": [
+    "compose",
+    "sketchpad"
+   ]
+  },
+  {
+   "label": "🥅️framework",
+   "expected": [
+    "framework"
+   ]
+  },
+  {
+   "label": "🖱️ui⚛️react",
+   "expected": [
+    "ui",
+    "react"
+   ]
+  },
+  {
+   "label": "🏗️a-b c2",
+   "expected": [
+    "c2"
+   ]
+  },
+  {
+   "label": "🏘️Compose",
+   "expected": [
+    "compose"
+   ]
+  },
+  {
+   "label": "🏘️café",
+   "expected": [
+    "caf"
+   ]
+  },
+  {
+   "label": "🏘️the repo and uloc keep",
+   "expected": [
+    "keep"
+   ]
+  },
+  {
+   "label": "🏘️Repo📊️metric📃uloc",
+   "expected": []
+  },
+  {
+   "label": "",
+   "expected": []
+  },
+  {
+   "label": "🏘️x1 y_z",
+   "expected": [
+    "x1"
+   ]
+  }
+ ],
+ "scopeErrors": [
+  {
+   "name": "a path with a slash",
+   "line": "🏘️compose/x",
+   "message": "commit: bundle scope must be emoji + area name only — no paths or `|`"
+  },
+  {
+   "name": "a pipe",
+   "line": "🏘️a|b",
+   "message": "commit: bundle scope must be emoji + area name only — no paths or `|`"
+  },
+  {
+   "name": "the bundle subject emoji",
+   "line": "🏘️compose🔀️",
+   "message": "commit: bundle scope must not include"
+  },
+  {
+   "name": "the tag emoji",
+   "line": "🏘️compose🚩️",
+   "message": "commit: bundle scope must not include"
+  },
+  {
+   "name": "a metric footer",
+   "line": "🏘️compose📊️metric",
+   "message": "commit: bundle scope must not include"
+  },
+  {
+   "name": "the total emoji",
+   "line": "🔢️x",
+   "message": "commit: bundle scope must not include"
+  },
+  {
+   "name": "an empty line",
+   "line": "   ",
+   "message": "commit: empty bundle scope after removing reserved emojis"
+  },
+  {
+   "name": "only emojis",
+   "line": "🏘️🥅️",
+   "message": "commit: bundle scope needs an area name after emojis"
+  },
+  {
+   "name": "a single emoji with an uppercase slug",
+   "line": "🥅️Framework",
+   "message": "commit: invalid bundle scope"
+  },
+  {
+   "name": "a single emoji with a too short slug",
+   "line": "🥅️ab",
+   "message": "commit: invalid bundle scope: 🥅️ab"
+  },
+  {
+   "name": "a single emoji with two words",
+   "line": "🥅️framework x",
+   "message": "commit: invalid bundle scope"
+  },
+  {
+   "name": "a hyphenated slug",
+   "line": "🥅️frame-work",
+   "message": "commit: invalid bundle scope"
+  },
+  {
+   "name": "two emojis and an area",
+   "line": "🏘️compose✍️sketchpad",
+   "message": null
+  },
+  {
+   "name": "one emoji and a lowercase slug",
+   "line": "🥅️framework",
+   "message": null
+  },
+  {
+   "name": "three characters slug",
+   "line": "🥅️abc",
+   "message": null
+  },
+  {
+   "name": "a 25 character slug",
+   "line": "🥅️aaaaaaaaaaaaaaaaaaaaaaaaa",
+   "message": null
+  },
+  {
+   "name": "a 26 character slug",
+   "line": "🥅️aaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "message": "commit: invalid bundle scope"
+  }
+ ],
+ "scopeLine": [
+  {
+   "line": "🏘️compose✍️sketchpad",
+   "expected": true
+  },
+  {
+   "line": "🥅️framework",
+   "expected": true
+  },
+  {
+   "line": "🥅️abc",
+   "expected": true
+  },
+  {
+   "line": "🥅️aaaaaaaaaaaaaaaaaaaaaaaaa",
+   "expected": true
+  },
+  {
+   "line": "🥅️aaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "expected": false
+  },
+  {
+   "line": "🥅️ab",
+   "expected": false
+  },
+  {
+   "line": "🥅️Framework",
+   "expected": false
+  },
+  {
+   "line": "🥅️framework x",
+   "expected": false
+  },
+  {
+   "line": "🥅️frame-work",
+   "expected": false
+  },
+  {
+   "line": "🏘️compose🔀️",
+   "expected": true
+  },
+  {
+   "line": "🏘️compose🚩️",
+   "expected": true
+  },
+  {
+   "line": "🏘️compose📊️metric",
+   "expected": true
+  },
+  {
+   "line": "🏘️🥅️",
+   "expected": true
+  },
+  {
+   "line": "🔢️x",
+   "expected": false
+  },
+  {
+   "line": "🎆️26🌙️10☀️21",
+   "expected": false
+  },
+  {
+   "line": "a/b",
+   "expected": false
+  },
+  {
+   "line": "plain words",
+   "expected": false
+  },
+  {
+   "line": "",
+   "expected": false
+  },
+  {
+   "line": "🏘️a/b✍️c",
+   "expected": false
+  },
+  {
+   "line": "🏘️a|b✍️c",
+   "expected": false
+  }
+ ]
+}

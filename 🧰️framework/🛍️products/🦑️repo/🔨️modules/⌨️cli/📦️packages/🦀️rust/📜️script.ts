@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/�
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScript, runMcpScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
-const crates = ["semio-framework-repo-cli-event-stream", "semio-framework-repo-cli-command-framework", "semio-framework-repo-cli-mcp-verb", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs", "semio-framework-repo-cli"];
+const crates = ["semio-framework-repo-cli-event-stream", "semio-framework-repo-cli-command-framework", "semio-framework-repo-cli-mcp-verb", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs", "semio-framework-repo-cli", "semio-framework-repo-workspace"];
 
 class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,segments);}
@@ -20,6 +20,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest);
+    await (await import("../../🔌️mcp-verb/📁️root-scope/🧪️installed/🏃️.ts")).runInstalledRepoScopeTestsV1(this.repoRoot, this.invocation);
   }
 }
 
@@ -42,6 +43,6 @@ class McpScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("build-cli", BuildCliScript).register("test", TestScript).register("mcp", McpScript).register("repo", RepoScript);
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("build-cli", BuildCliScript).register("test", TestScript).register("mcp", McpScript).register("repo", RepoScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

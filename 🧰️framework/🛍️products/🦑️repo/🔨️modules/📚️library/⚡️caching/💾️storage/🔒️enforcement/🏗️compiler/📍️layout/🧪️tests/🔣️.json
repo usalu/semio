@@ -35,5 +35,93 @@
     "debug",
     "custom"
   ],
-  "targetNamespace": "t"
+  "targetNamespace": "t",
+  "hosts": [
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents/semio",
+      "host": "/Users/ueli/Documents/semio",
+      "reason": "workspace equals the repository root"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents/semio/🧰️framework",
+      "host": "/Users/ueli/Documents/semio",
+      "reason": "nested package workspace shares the root host"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust",
+      "host": "/Users/ueli/Documents/semio",
+      "reason": "deeply nested directory shares the root host"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents/semio/..hidden",
+      "host": "/Users/ueli/Documents/semio",
+      "reason": "a name that merely starts with two dots is inside"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents/semio-other",
+      "host": "/Users/ueli/Documents/semio-other",
+      "reason": "a sibling sharing a name prefix hosts itself"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/Users/ueli/Documents",
+      "host": "/Users/ueli/Documents",
+      "reason": "a parent of the repository root hosts itself"
+    },
+    {
+      "platform": "posix",
+      "repositoryRoot": "/Users/ueli/Documents/semio",
+      "workspace": "/private/tmp/standalone",
+      "host": "/private/tmp/standalone",
+      "reason": "a standalone checkout hosts itself"
+    },
+    {
+      "platform": "win32",
+      "repositoryRoot": "C:\\work\\semio",
+      "workspace": "C:\\work\\semio",
+      "host": "C:\\work\\semio",
+      "reason": "workspace equals the repository root"
+    },
+    {
+      "platform": "win32",
+      "repositoryRoot": "C:\\work\\semio",
+      "workspace": "C:\\work\\semio\\🧰️framework",
+      "host": "C:\\work\\semio",
+      "reason": "nested package workspace shares the root host"
+    },
+    {
+      "platform": "win32",
+      "repositoryRoot": "C:\\work\\semio",
+      "workspace": "C:\\work\\semio-other",
+      "host": "C:\\work\\semio-other",
+      "reason": "a sibling sharing a name prefix hosts itself"
+    },
+    {
+      "platform": "win32",
+      "repositoryRoot": "C:\\work\\semio",
+      "workspace": "D:\\work\\semio\\🧰️framework",
+      "host": "D:\\work\\semio\\🧰️framework",
+      "reason": "another drive hosts itself"
+    }
+  ],
+  "registry": {
+    "repositoryRoot": "/Users/ueli/Documents/semio",
+    "workspaces": [
+      "",
+      "🧰️framework",
+      "🧰️framework/📦️packages/🦀️rust"
+    ],
+    "home": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/home"
+  }
 }

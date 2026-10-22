@@ -40,7 +40,7 @@ use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapsh
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
 
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Mutations
 #[path = "➕️insert-sample/🦀️.rs"]
@@ -69,7 +69,7 @@ pub mod set_stream_meta;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioVideoSnapshot, diff = SemioVideoDiff, schema = "SemioVideoMutation")]
+#[mutations(snapshot = SemioVideoSnapshot, diff = SemioVideoDiff, schema = "SemioVideoMutation", reference = SemioVideoSnapshot, reference_diff = SemioVideoDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioVideoMutation {
     /// ➕️ Inserts `stream` at `index` (FINAL state).
@@ -99,7 +99,7 @@ pub const KINDS: &[&str] = &["insert-stream", "remove-stream", "set-stream-meta"
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<SemioVideoDiff> {
-    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(mutation, base)
+    <SemioVideoMutation as ColdMutation<SemioVideoSnapshot>>::diff(mutation, base)
 }
 
 
@@ -111,7 +111,7 @@ pub fn diff_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVide
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)?
+    <SemioVideoMutation as ColdMutation<SemioVideoSnapshot>>::inverse(mutation, base)?
 
     })
 }

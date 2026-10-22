@@ -10,7 +10,7 @@
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-3d-js:test"
+    "test": "repo run @semio-tech/framework-3d-js:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

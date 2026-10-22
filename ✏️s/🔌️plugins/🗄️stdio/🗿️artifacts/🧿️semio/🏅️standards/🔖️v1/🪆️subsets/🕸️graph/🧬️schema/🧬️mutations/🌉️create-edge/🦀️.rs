@@ -30,7 +30,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.value.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for CreateEdge
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<CreateEdge> + From<crate::schema::mutations::delete_edge::DeleteEdge>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.value.clone()]
-    }
 }
 //#endregion 🔖️Payload

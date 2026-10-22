@@ -116,7 +116,7 @@ impl HookContext {
         self
     }
 
-    /// 🧰️ Sets the tool name and raw argument string the IDE reported.
+    /// 🧰️ Sets the tool name and raw argument string the agent client reported.
     pub fn with_tool(mut self, tool_name: impl Into<String>, tool_args: impl Into<String>) -> HookContext {
         self.tool_name = tool_name.into();
         self.tool_args = tool_args.into();
@@ -129,7 +129,7 @@ impl HookContext {
         self
     }
 
-    /// 📨️ Attaches the native payload the IDE wrote to stdin.
+    /// 📨️ Attaches the native payload the agent client wrote to stdin.
     pub fn with_input(mut self, input: Value) -> HookContext {
         self.input = Some(input);
         self

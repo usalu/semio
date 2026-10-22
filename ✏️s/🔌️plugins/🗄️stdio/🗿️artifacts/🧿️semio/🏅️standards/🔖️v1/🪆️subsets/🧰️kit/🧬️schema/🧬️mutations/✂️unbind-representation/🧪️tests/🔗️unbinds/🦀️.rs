@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️unbind-representation/🔗️unbinds/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 async fn unbinds_the_link_at_index_zero() {
     let base = before();
     assert_eq!(base.representations.len(), 2, "the fixture needs a sibling link for the renumbering to be observable");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("unbind-representation applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("unbind-representation applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert_eq!(produced.representations.len(), base.representations.len() - 1, "unbind-representation removes exactly one link");
     assert_eq!(produced.representations[0], base.representations[1], "the trailing link slides down into index 0");
@@ -57,9 +57,9 @@ fn the_undo_restores_the_captured_link_at_its_own_index() {
     let SemioKitMutation::BindRepresentation(rebind) = &undo[1] else { panic!("the escrowed link is re-declared first, as a bind-representation") };
     assert_eq!(rebind.target, base.representations[0].target, "the undo must recapture the unbound link's own target");
     assert_eq!(rebind.role, base.representations[0].role, "and its own role");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward unbind-representation applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward unbind-representation applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("every undo step applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("every undo step applies");
     }
     assert_eq!(current, base, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: the undo did not restore the before-snapshot");
     assert_eq!(current.representations[0], base.representations[0], "and it put the escrowed link back at index 0, not at the end");
@@ -92,7 +92,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -113,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unbind-representation diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed unbind-representation diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed unbind-representation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

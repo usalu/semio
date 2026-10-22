@@ -7,7 +7,7 @@ if not out.startswith("/private/tmp/storage-seam/"):
     raise SystemExit("output must live under /private/tmp/storage-seam/")
 F = "🧰️framework"
 P = F + "/🔨️modules/🏃️process"
-DIRS = [P, F + "/🔨️modules/📁️filesystem", F + "/🔨️modules/🧬️schema"]
+DIRS = [P, F + "/🔨️modules/📁️filesystem", F + "/🔨️modules/🧬️schema", F + "/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc"]
 FILES = [".devcontainer/devcontainer.json", ".devcontainer/docker-compose.yml", "package.json", "bunfig.toml"]
 NODE = ["ajv", "fast-deep-equal", "fast-uri", "json-schema-traverse", "require-from-string", "typescript"]
 if os.path.exists(out):

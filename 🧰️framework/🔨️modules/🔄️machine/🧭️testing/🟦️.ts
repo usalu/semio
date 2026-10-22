@@ -103,6 +103,6 @@ export function runConformance<M extends MachineSpec>(machine: Machine<M>, input
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../🧪️tests/🧪️semio-tech-machine/🟦️.ts");
-  await registerTests1(import.meta.vitest, { EventId, GuardId, NodeId, ROOT, init, runConformance }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { EventId, GuardId, NodeId, ROOT, init, runConformance }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️Tests

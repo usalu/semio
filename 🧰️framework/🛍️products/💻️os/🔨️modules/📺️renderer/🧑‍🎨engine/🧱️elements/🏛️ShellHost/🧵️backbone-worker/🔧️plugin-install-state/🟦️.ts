@@ -1,7 +1,7 @@
 /** 🔧️ The plugin module url, rebuilt-at, in-flight and install progress state of the backbone worker hook.
  *
  * 🧱️ Child hook module of {@link ../🟦️.ts | useBackboneWorker}: runs the original hook statements in order. */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
 
 /** 🧰️ Holds the plugin module url, rebuilt-at, in-flight and install progress state. */

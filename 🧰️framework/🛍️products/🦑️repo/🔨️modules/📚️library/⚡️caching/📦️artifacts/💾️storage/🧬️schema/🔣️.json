@@ -31,9 +31,9 @@
         "version": 1,
         "namespace": "a/ts",
         "maximumFiles": 16384,
-        "maximumOutputBytes": 536870912,
+        "maximumOutputBytes": 2147483648,
         "maximumPathUnits": 256,
-        "maximumManifestBytes": 1048576,
+        "maximumManifestBytes": 2097152,
         "maximumElapsedMilliseconds": 120000,
         "writerShards": 64,
         "files": [

@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/lowpoly-js:test"
+    "test": "repo run @semio-tech/lowpoly-js:test"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

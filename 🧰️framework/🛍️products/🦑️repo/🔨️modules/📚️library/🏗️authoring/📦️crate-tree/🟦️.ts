@@ -12,6 +12,7 @@ import { buildTestkitCrate, cfgFeatures, declaredNames, externalDependencies, op
 import { addWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export { planArtifactCrates } from "./🗺️plan/🧮️pack/🟦️.ts";
 export type { ArtifactCratePlan, PlannedCrate } from "./🗺️plan/🧾️model/🟦️.ts";
@@ -104,7 +105,7 @@ export type ManifestFeature = Readonly<{ name: string; entries: readonly string[
 
 /** 🚩️ The features of a package manifest in declaration order; a feature that enables optional dependencies (`testkit = ["dep:serde_json"]`) keeps those entries in every carved crate, which carries the same dependency rows. */
 export function forwardableFeatures(manifestText: string): ManifestFeature[] {
-  const table = (Bun.TOML.parse(manifestText) as { features?: Record<string, unknown> }).features ?? {};
+  const table = (runtimeParseTomlV1(manifestText) as { features?: Record<string, unknown> }).features ?? {};
   return Object.entries(table).filter(([, entries]) => Array.isArray(entries)).map(([name, entries]) => ({ name, entries: (entries as unknown[]).map(String) }));
 }
 
@@ -275,8 +276,8 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
   const lockPath = resolve(plan.artifactDir, "Cargo.lock");
   if (existsSync(lockPath)) {
     const memberNames = new Set<string>();
-    for (const member of ((Bun.TOML.parse(readFileSync(workspaceManifestPath, "utf8")) as { workspace?: { members?: string[] } }).workspace?.members ?? [])) {
-      try { memberNames.add((Bun.TOML.parse(readFileSync(resolve(plan.artifactDir, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name); } catch { continue; }
+    for (const member of ((runtimeParseTomlV1(readFileSync(workspaceManifestPath, "utf8")) as { workspace?: { members?: string[] } }).workspace?.members ?? [])) {
+      try { memberNames.add((runtimeParseTomlV1(readFileSync(resolve(plan.artifactDir, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name); } catch { continue; }
     }
     writes.push({ path: relativePosix(plan.repoRoot, lockPath), action: "update", content: patchCargoLock(readFileSync(lockPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => ({ name: crate.name, dependsOn: crate.dependsOn.map((id) => crateById.get(id)!.name) })), memberNames) });
   }
@@ -295,7 +296,7 @@ type CargoDependencySpec = { path?: string; workspace?: boolean };
 
 /** 🔍️ The directory of the dependency `key` of the package manifest at `manifestPath`: the `path` of its row, or, for an inherited row, the `path` of the workspace dependency of the workspace root the package belongs to. */
 function dependencyDirectory(manifestPath: string, key: string): string | null {
-  const parsed = Bun.TOML.parse(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string }; dependencies?: Record<string, CargoDependencySpec | string>; "dev-dependencies"?: Record<string, CargoDependencySpec | string> };
+  const parsed = runtimeParseTomlV1(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string }; dependencies?: Record<string, CargoDependencySpec | string>; "dev-dependencies"?: Record<string, CargoDependencySpec | string> };
   const spec = parsed.dependencies?.[key] ?? parsed["dev-dependencies"]?.[key];
   if (spec === undefined || typeof spec === "string") return null;
   if (typeof spec.path === "string") return resolve(dirname(manifestPath), spec.path);
@@ -304,7 +305,7 @@ function dependencyDirectory(manifestPath: string, key: string): string | null {
   for (;;) {
     const candidate = join(cursor, "Cargo.toml");
     if (existsSync(candidate) && candidate !== manifestPath) {
-      const root = Bun.TOML.parse(readFileSync(candidate, "utf8")) as { workspace?: { dependencies?: Record<string, CargoDependencySpec> } };
+      const root = runtimeParseTomlV1(readFileSync(candidate, "utf8")) as { workspace?: { dependencies?: Record<string, CargoDependencySpec> } };
       const inherited = root.workspace?.dependencies?.[key]?.path;
       if (root.workspace !== undefined) return inherited === undefined ? null : resolve(cursor, inherited);
     }
@@ -323,7 +324,7 @@ async function featureGatedNames(repoRoot: string, dir: string, feature: string,
   if (cached !== undefined) return cached === null ? null : new Set(cached);
   try {
     const manifestPath = join(dir, "Cargo.toml");
-    const table = (Bun.TOML.parse(readFileSync(manifestPath, "utf8")) as { features?: Record<string, string[]> }).features ?? {};
+    const table = (runtimeParseTomlV1(readFileSync(manifestPath, "utf8")) as { features?: Record<string, string[]> }).features ?? {};
     const implied = new Set<string>([feature]);
     const forwarded: [string, string][] = [];
     for (const name of implied) for (const entry of table[name] ?? []) {
@@ -366,7 +367,7 @@ function externalCrateDir(external: ExternalDependency, artifactPackageDir: stri
 
 /** 🔍️ Reads, for every feature that a dev-dependency row adds to an external dependency, the names the dependency declares behind that feature (the features it implies and the dependency features it forwards), so the wiring forwards a feature only when the gated code names something the feature adds. A dependency whose sources cannot be read maps to `null` and its features are forwarded. */
 export async function loadExternalGates(repoRoot: string, artifactPackageDir: string, artifactDir: string, externals: readonly ExternalDependency[]): Promise<ExternalGateReader> {
-  const workspace = (Bun.TOML.parse(readFileSync(join(artifactDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
+  const workspace = (runtimeParseTomlV1(readFileSync(join(artifactDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
   const found = new Map<string, ReadonlySet<string> | null>();
   for (const external of externals) for (const feature of external.devFeatures) {
     const dir = externalCrateDir(external, artifactPackageDir, artifactDir, workspace);
@@ -400,7 +401,7 @@ async function planCarveWiring(plan: ArtifactCratePlan, originalManifest: string
   const requiredFeatures = new Map<string, readonly string[]>();
   const facadeNames = crates.get(plan.artifactCrate)?.gatedNames ?? new Map<string, ReadonlySet<string>>();
   if (facadeNames.size) {
-    const targets = ((Bun.TOML.parse(originalManifest) as { test?: { name?: string; path?: string }[] }).test ?? []).filter((target) => target.name && target.path);
+    const targets = ((runtimeParseTomlV1(originalManifest) as { test?: { name?: string; path?: string }[] }).test ?? []).filter((target) => target.name && target.path);
     for (const target of targets) {
       const entry = resolve(artifactPackageDir, target.path!);
       const measure = await measureRustCrate(plan.repoRoot, entry, true, full, artifactPackageDir).catch(() => null);

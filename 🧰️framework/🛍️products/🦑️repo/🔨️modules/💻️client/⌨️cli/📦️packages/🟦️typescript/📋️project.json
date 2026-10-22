@@ -6,7 +6,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts dev",
+        "command": "repo ./📜️script.ts dev",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -25,7 +25,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -53,7 +53,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -64,7 +64,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate-entity-kinds"
+        "command": "repo ./📜️script.ts generate-entity-kinds"
       },
       "cache": true,
       "outputs": [
@@ -79,7 +79,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "cache": true,
       "outputs": []
@@ -88,7 +88,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check-entity-kinds"
+        "command": "repo ./📜️script.ts check-entity-kinds"
       },
       "cache": true,
       "outputs": []
@@ -103,7 +103,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-entity-kinds"
+        "command": "repo ./📜️script.ts test-entity-kinds"
       },
       "cache": true,
       "outputs": [],

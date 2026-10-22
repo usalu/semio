@@ -40,6 +40,24 @@
         "maximumOperations": 1024
       }
     },
+    "Wait": {
+      "const": {
+        "minimumMilliseconds": 250,
+        "maximumIntervalMilliseconds": 15000,
+        "reportMilliseconds": 15000,
+        "maximumMilliseconds": 1800000,
+        "messages": {
+          "en": {
+            "waiting": "[repo cargo] waiting {seconds} s for compiler image space: {available} GiB free of the {required} GiB a compile needs; other compiles or maintenance may still free it",
+            "refused": "Insufficient physical compiler initial headroom: {available} GiB free of the {required} GiB a compile needs after {seconds} s"
+          },
+          "de": {
+            "waiting": "[repo cargo] wartet seit {seconds} s auf Platz im Compiler-Image: {available} GiB frei von den {required} GiB, die ein Compile braucht; andere Compiles oder die Wartung geben vielleicht noch Platz frei",
+            "refused": "Unzureichender physischer Compiler-Startplatz: {available} GiB frei von den {required} GiB, die ein Compile braucht, nach {seconds} s"
+          }
+        }
+      }
+    },
     "WriterRequest": {
       "type": "object",
       "additionalProperties": false,

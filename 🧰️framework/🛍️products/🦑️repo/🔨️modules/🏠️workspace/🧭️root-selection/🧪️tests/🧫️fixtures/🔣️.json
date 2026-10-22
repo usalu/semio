@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "absent-discovers",
+      "cwd": "first/child",
+      "explicit": null,
+      "expected": "discovery"
+    },
+    {
+      "name": "explicit-current-stays",
+      "cwd": "first/child",
+      "explicit": ".",
+      "expected": "first/child"
+    },
+    {
+      "name": "explicit-parent-stays",
+      "cwd": "first/child",
+      "explicit": "..",
+      "expected": "first"
+    },
+    {
+      "name": "explicit-sibling",
+      "cwd": "first/child",
+      "explicit": "../../second",
+      "expected": "second"
+    },
+    {
+      "name": "absolute-sibling",
+      "cwd": "first",
+      "explicit": "{second}",
+      "expected": "second"
+    },
+    {
+      "name": "missing-refused",
+      "cwd": "first",
+      "explicit": "missing",
+      "expected": null
+    },
+    {
+      "name": "file-refused",
+      "cwd": "first",
+      "explicit": "file.rs",
+      "expected": null
+    },
+    {
+      "name": "empty-refused",
+      "cwd": "first",
+      "explicit": "",
+      "expected": null
+    },
+    {
+      "name": "long-refused",
+      "cwd": "first",
+      "explicit": "{long}",
+      "expected": null
+    },
+    {
+      "name": "normalized-directory",
+      "cwd": "first",
+      "explicit": "./child/..",
+      "expected": "first"
+    }
+  ],
+  "optionCases": [
+    {
+      "args": [],
+      "root": null,
+      "accepted": true
+    },
+    {
+      "args": [
+        "--repo",
+        "first"
+      ],
+      "root": "first",
+      "accepted": true
+    },
+    {
+      "args": [
+        "--repo=second"
+      ],
+      "root": "second",
+      "accepted": true
+    },
+    {
+      "args": [
+        "--repo"
+      ],
+      "root": null,
+      "accepted": false
+    },
+    {
+      "args": [
+        "--repo="
+      ],
+      "root": null,
+      "accepted": false
+    },
+    {
+      "args": [
+        "--repo",
+        ""
+      ],
+      "root": null,
+      "accepted": false
+    },
+    {
+      "args": [
+        "--repo",
+        "first",
+        "--repo",
+        "second"
+      ],
+      "root": null,
+      "accepted": false
+    },
+    {
+      "args": [
+        "first"
+      ],
+      "root": null,
+      "accepted": false
+    },
+    {
+      "args": [
+        "--unknown"
+      ],
+      "root": null,
+      "accepted": false
+    }
+  ],
+  "prefixCases": [
+    {
+      "path": "C:\\work\\repo",
+      "expected": "C:\\work\\repo"
+    },
+    {
+      "path": "\\\\?\\C:\\work\\repo",
+      "expected": "C:\\work\\repo"
+    },
+    {
+      "path": "\\\\?\\UNC\\server\\share\\repo",
+      "expected": "\\\\server\\share\\repo"
+    },
+    {
+      "path": "\\\\server\\share\\repo",
+      "expected": "\\\\server\\share\\repo"
+    },
+    {
+      "path": "relative/repo",
+      "expected": "relative/repo"
+    }
+  ]
+}

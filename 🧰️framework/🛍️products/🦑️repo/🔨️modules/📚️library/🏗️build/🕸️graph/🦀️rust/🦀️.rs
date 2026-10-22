@@ -26,7 +26,13 @@ pub fn build_policy_path(root: &std::path::Path) -> std::path::PathBuf {
 
 /// 🧭️ Validates a selected backend against the shared neutral tool definition.
 pub fn is_build_tool(value: &str) -> bool {
-    build_policy_contract()["$defs"]["BuildTool"]["enum"].as_array().is_some_and(|tools| tools.iter().any(|tool| tool.as_str() == Some(value)))
+    build_backend_registry()["backends"].as_array().is_some_and(|rows| rows.iter().any(|row| row["id"].as_str() == Some(value)))
+}
+
+/// 🔌️ Reads the authored registry of build backends, the only place that lists them.
+fn build_backend_registry() -> &'static serde_json::Value {
+    static REGISTRY: OnceLock<serde_json::Value> = OnceLock::new();
+    REGISTRY.get_or_init(|| serde_json::from_str(include_str!("../../🔌️backends/📋️registry/🔣️.json")).expect("neutral build backend registry"))
 }
 
 /// 🚧️ Rejects Windows policy reparse attributes through the neutral authority contract.
@@ -72,7 +78,7 @@ pub fn default_build_tool(root: &std::path::Path) -> std::io::Result<String> {
     if bytes.len() as u64 > maximum || !named.is_file() || named.is_symlink() || stamp(&file.metadata()?) != stamp(&before) || stamp(&named) != stamp(&before) { return Err(std::io::Error::other("workspace build policy changed")); }
     let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
     if value["version"].as_f64() != build_policy_contract()["$defs"]["BuildPolicy"]["properties"]["version"]["const"].as_f64() { return Err(std::io::Error::other("workspace build policy version required")); }
-    value["defaultTool"].as_str().filter(|tool| is_build_tool(tool)).map(str::to_string).ok_or_else(|| std::io::Error::other("workspace neutral default tool required"))
+    build_backend_registry()["backends"].as_array().and_then(|rows| rows.iter().find(|row| row["default"].as_bool() == Some(true))).and_then(|row| row["id"].as_str()).filter(|tool| is_build_tool(tool)).map(str::to_string).ok_or_else(|| std::io::Error::other("neutral default build backend required"))
 }
 
 /// 🚪️ Resolves only schema-owned neutral build launcher paths in the actual workspace.

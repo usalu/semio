@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::inferences::SearchQuery;
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use protocol::MutationDiff;
 use crate::editor::architect::config::*;
@@ -11,7 +11,7 @@ async fn set_config_diffs_only_the_named_fields_that_differ_and_inverts_to_their
     let base = ArchitectConfig { last_result_json: "[]".into(), ..ArchitectConfig::default() };
     let operation = ArchitectConfigMutation::SetConfig(SetConfig { search_query: Some("hall".into()), last_result_json: Some("[]".into()), ..SetConfig { search_query: None, search_history_json: None, last_result_json: None, last_analysis_json: None } });
     assert_eq!(operation.diff(&base).diff(), &ArchitectConfigDiff { search_query: Some("hall".into()), ..Default::default() }, "unchanged and unnamed fields stay out of the diff");
-    assert_eq!(protocol::apply_diff(operation.diff(&base).diff(), &base).expect("valid diff"), ArchitectConfig { search_query: "hall".into(), last_result_json: "[]".into(), ..ArchitectConfig::default() });
+    assert_eq!(protocol::apply_diff_cold(operation.diff(&base).diff(), &base).expect("valid diff"), ArchitectConfig { search_query: "hall".into(), last_result_json: "[]".into(), ..ArchitectConfig::default() });
     let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![ArchitectConfigMutation::SetConfig(SetConfig { search_query: Some(String::new()), search_history_json: None, last_result_json: None, last_analysis_json: None })], "the inverse sets exactly the touched field back to its base value");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base).await;

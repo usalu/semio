@@ -55,7 +55,7 @@ unsafe impl Send for CommandAppend{}
 impl Drop for CommandAppend{fn drop(&mut self){assert!(std::thread::panicking()||self.closed,"command append requires exact transfer or funded page cancellation");}}
 impl Drop for CommandPrune{fn drop(&mut self){assert!(std::thread::panicking()||self.closed,"command prune requires a checked decision or explicit cancellation");}}
 
-pub(crate) struct CommandLogIter<'a>{pub front:*const CommandSlot,pub back:*const CommandSlot,pub lane:usize,pub remaining:usize,pub owner:std::marker::PhantomData<&'a PagedCommandLog>}
+pub struct CommandLogIter<'a>{pub front:*const CommandSlot,pub back:*const CommandSlot,pub lane:usize,pub remaining:usize,pub owner:std::marker::PhantomData<&'a PagedCommandLog>}
 impl<'a> Iterator for CommandLogIter<'a>{type Item=&'a CommandLogEntry;fn next(&mut self)->Option<Self::Item>{if self.remaining==0{return None;}unsafe{let slot=&*self.front;self.front=slot.links[self.lane][1];self.remaining-=1;Some(slot.record.assume_init_ref())}}fn size_hint(&self)->(usize,Option<usize>){(self.remaining,Some(self.remaining))}}
 impl DoubleEndedIterator for CommandLogIter<'_>{fn next_back(&mut self)->Option<Self::Item>{if self.remaining==0{return None;}unsafe{let slot=&*self.back;self.back=slot.links[self.lane][0];self.remaining-=1;Some(slot.record.assume_init_ref())}}}
 impl ExactSizeIterator for CommandLogIter<'_>{}

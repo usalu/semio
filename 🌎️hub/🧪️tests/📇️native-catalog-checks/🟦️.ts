@@ -314,9 +314,9 @@ function proveHeadlessStdioCommandIsolation(repoRoot: string): void {
   const targets = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8")).targets as Record<string, { options?: Declared; configurations?: Record<string, Declared> }>;
   const provider = targets["native-openable-catalog-provider-check"], stdioOnly = provider?.configurations?.["stdio-only"], selection = targets["native-catalog-selection-check"], cache = repoCacheDirectory(repoRoot);
   const rows = ([
-    ["os-hub:native-openable-catalog-provider-check", provider?.options?.command === "bun ./📜️script.ts native-openable-catalog-provider-check", provider?.options?.env],
+    ["os-hub:native-openable-catalog-provider-check", provider?.options?.command === "repo ./📜️script.ts native-openable-catalog-provider-check", provider?.options?.env],
     ["os-hub:native-openable-catalog-provider-check:stdio-only", stdioOnly?.command === undefined && stdioOnly?.args === "--stdio-only", stdioOnly?.env],
-    ["os-hub:native-catalog-selection-check", selection?.options?.command === "bun ./📜️script.ts native-catalog-selection-check", selection?.options?.env],
+    ["os-hub:native-catalog-selection-check", selection?.options?.command === "repo ./📜️script.ts native-catalog-selection-check", selection?.options?.env],
   ] as const).map(([name, declared, env]) => {
     const artifactRoot = env?.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = env?.CARGO_TARGET_DIR, cached = artifactRoot ? relative(cache, resolve(repoRoot, artifactRoot)) : "";
     if (!declared || !artifactRoot || !cargoTargetDir || isAbsolute(artifactRoot) || !artifactRoot.split("/").includes("🗑️generated") || !cached || cached.startsWith("..") || isAbsolute(cached) || cargoTargetDir !== `${artifactRoot}/cargo-target`) throw new Error(`headless Stdio command is not privately isolated: ${name}`);

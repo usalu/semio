@@ -25,7 +25,7 @@ export async function verifyMathematicalPublicationAuthority(repoRoot: string, p
   const scripts = manifest.scripts as Record<string, unknown>;
   const devDependencies = manifest.devDependencies as Record<string, unknown> | undefined;
   if (manifest.name !== "@semio-tech/mathematical-js" || typeof manifest.description !== "string" || !manifest.description.startsWith("@semio-tech/mathematical-js ")) throw new Error("Mathematical package identity is not domain-scoped");
-  if (JSON.stringify(scripts) !== JSON.stringify({ test: "bun repo run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
+  if (JSON.stringify(scripts) !== JSON.stringify({ test: "repo run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
   if (manifest.dependencies !== undefined || devDependencies?.ajv !== "^8.20.0") throw new Error("Mathematical package has runtime dependencies or lacks its Ajv test dependency");
   const plugin = resolve(packageRoot, "../..");
   const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");

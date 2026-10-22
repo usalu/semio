@@ -46,7 +46,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-text-receiving-source"
+        "command": "repo ./📜️script.ts test-text-receiving-source"
       },
       "inputs": [
         "production",
@@ -62,7 +62,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-text-receiving-native"
+        "command": "repo ./📜️script.ts test-text-receiving-native"
       },
       "inputs": [
         "production",
@@ -77,7 +77,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -95,7 +95,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -113,7 +113,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",
@@ -144,7 +144,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -152,7 +152,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -170,7 +170,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -191,7 +191,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify stdio-document-contract",
+        "command": "repo ./📜️script.ts verify stdio-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -208,7 +208,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition prepare",
+        "command": "repo ./📜️script.ts composition prepare",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -221,7 +221,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture"
+        "command": "repo ./📜️script.ts canonical-architecture"
       },
       "cache": true,
       "outputs": [],
@@ -242,7 +242,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
+        "command": "repo ./📜️script.ts test quick",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -269,7 +269,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition check"
+        "command": "repo ./📜️script.ts composition check"
       }
     }
   }

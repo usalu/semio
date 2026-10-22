@@ -5,6 +5,7 @@ import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPl
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { routeRegisteredCommandV1, runToolSyncV1, startToolV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
  * the `spawnSync` runners built on them, workspace-aware `.bin`
@@ -12,7 +13,7 @@ import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️
  * consumer that only spawns a tool (the plugin package's jco/wasm-opt steps, and through them the
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import {homedir} from "node:os";
@@ -32,6 +33,7 @@ import {cargoArtifactArgumentsV1,readCargoArtifactBuildPolicyV1,type CargoArtifa
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { RunCmdOpts } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { isHostRuntimeCommandV1, runtimeCommandNameV1, runtimeExecutableV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
 export function defaultBudgetMs(cmd: string): number {
@@ -81,7 +83,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
   const lease=compiles?await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:directories.build,targetDirectory:directories.target,args,signal:control.signal,control}):undefined;
   try{
   checkResourceLeaseControl(control);
-  const child = spawn("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
   const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
   child.stdout!.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });
@@ -131,7 +133,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const formattedArgs = [...args];
-  if (cmd === "bun" || cmd === process.execPath) {
+  if (isHostRuntimeCommandV1(cmd)) {
     if (formattedArgs[0] && !formattedArgs[0].startsWith("-") && !formattedArgs[0].includes("/") && !formattedArgs[0].includes("\\") && !workspaceScriptExists(formattedArgs[0])) {
       const resolved = resolveWorkspaceBin(formattedArgs[0], opts.cwd ?? process.cwd());
       if (resolved) {
@@ -139,20 +141,23 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
       }
     }
   }
-  const relayed = cmd === "cargo";
+  const relayed = cmd === "cargo", where = opts.cwd ?? process.cwd();
+  const routed = relayed
+    ? routeRegisteredCommandV1(runtimeCommandNameV1(), [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], where, { ...(opts.env ?? process.env), [CARGO_RELAY_BUDGET_ENV]: String(budgetMs) })
+    : opts.shell ? { command: cmd, arguments: formattedArgs, environment: opts.env ?? process.env } : routeRegisteredCommandV1(cmd, formattedArgs, where, opts.env ?? process.env);
   const result = relayed
-    ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
+    ? spawnSync(routed.command, [...routed.arguments], {
         stdio: "inherit",
         cwd: opts.cwd,
-        env: { ...(opts.env ?? process.env), [CARGO_RELAY_BUDGET_ENV]: String(budgetMs) },
+        env: routed.environment as NodeJS.ProcessEnv,
         timeout: budgetMs > 0 ? budgetMs + 60_000 : 0,
         killSignal: "SIGTERM",
         shell: false,
       })
-    : spawnSync(cmd, formattedArgs, {
+    : spawnSync(routed.command, [...routed.arguments], {
         stdio: "inherit",
         cwd: opts.cwd,
-        env: opts.env ?? process.env,
+        env: routed.environment as NodeJS.ProcessEnv,
         timeout: budgetMs,
         killSignal: "SIGKILL",
         shell: opts.shell ?? false,
@@ -229,7 +234,7 @@ export function runNodeBinStatus(args: string[], cwd: string = process.cwd(), en
   const binName = args[0]!;
   const resolved = resolveWorkspaceBin(binName, cwd);
   const executable = resolved ?? binName;
-  const result = spawnSync("node", [executable, ...args.slice(1)], { cwd, env, shell: false, stdio: "inherit" });
+  const result = runToolSyncV1("node", [executable, ...args.slice(1)], { cwd, env, shell: false, stdio: "inherit" });
   if (result.error) {
     console.error(result.error);
     return 1;

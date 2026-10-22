@@ -16,7 +16,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Condvar, Mutex, PoisonError};
 use std::time::Duration;
 
-struct ParkState {
+#[doc(hidden)]
+pub struct ParkState {
     sleepers: usize,
     keeper: bool,
     closed: bool,
@@ -25,14 +26,14 @@ struct ParkState {
 /// 🛌️ Why [`WorkerParking::park`] returned. `Signalled` covers a signal that arrived before the
 /// worker slept, so the caller rescans without having waited at all.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum ParkWake {
+#[doc(hidden)] pub enum ParkWake {
     Signalled,
     Woken,
     TimerDue,
     Closed,
 }
 
-pub(super) struct WorkerParking {
+#[doc(hidden)] pub struct WorkerParking {
     signal: AtomicU64,
     pub idle: AtomicUsize,
     keeper: AtomicBool,

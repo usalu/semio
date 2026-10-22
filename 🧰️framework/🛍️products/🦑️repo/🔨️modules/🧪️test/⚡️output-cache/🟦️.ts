@@ -9,6 +9,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { repositoryTestArtifactRootV1, repositoryTestArtifactPathV1 } from "../💾️storage/🟦️.ts";
 import { testFilenameForKind, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { digest } from "../🔢️digests/🟦️.ts";
+import { agentId as sessionAgentId } from "../🔐️run-lease/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region ⚡️Cache
@@ -31,7 +32,7 @@ export function testCacheDir(repoRoot: string, child: string): string {
 }
 
 /** 🏷️ Agent-scoped scratch root for non-Cargo per-agent state (e.g. Python's pycache); Cargo output lives in the one shared cargo cache instead. */
-export function agentCacheRoot(repoRoot: string, agentId = process.env.SEMIO_AGENT_ID ?? "local"): string {
+export function agentCacheRoot(repoRoot: string, agentId = sessionAgentId()): string {
   return repositoryTestArtifactPathV1(repoRoot,"agents",digest(agentId).slice(0,24));
 }
 

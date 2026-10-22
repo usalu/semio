@@ -19,7 +19,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test heap-owner",
+        "command": "repo ./📜️script.ts test heap-owner",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🌱️value"
       }
@@ -27,7 +27,7 @@
     "test-neutral-owner": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts test neutral-owner",
+        "command": "repo ./📜️script.ts test neutral-owner",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🌱️value"
       },
@@ -45,7 +45,7 @@
     "test-controlled-construction-source": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts test controlled-construction",
+        "command": "repo ./📜️script.ts test controlled-construction",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🌱️value"
       },
@@ -71,7 +71,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test shared-unique"
+        "command": "repo ./📜️script.ts test shared-unique"
       }
     },
     "test-dynamic-retained-source": {
@@ -86,7 +86,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test dynamic-retained",
+        "command": "repo ./📜️script.ts test dynamic-retained",
         "forwardAllArgs": true
       }
     },
@@ -102,7 +102,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test bulk-vec-retained",
+        "command": "repo ./📜️script.ts test bulk-vec-retained",
         "forwardAllArgs": true
       }
     },
@@ -118,7 +118,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test uncontrolled-owners",
+        "command": "repo ./📜️script.ts test uncontrolled-owners",
         "forwardAllArgs": true
       }
     },
@@ -134,7 +134,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test scalar-retained",
+        "command": "repo ./📜️script.ts test scalar-retained",
         "forwardAllArgs": true
       }
     },
@@ -150,7 +150,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test std-copy-selection",
+        "command": "repo ./📜️script.ts test std-copy-selection",
         "forwardAllArgs": true
       }
     },
@@ -166,7 +166,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value",
-        "command": "bun ./📜️script.ts test clone-source-custody",
+        "command": "repo ./📜️script.ts test clone-source-custody",
         "forwardAllArgs": true
       }
     }

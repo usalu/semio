@@ -255,7 +255,7 @@ async fn a_ceiling_edit_re_infers_only_the_take_off_of_the_spaces_it_hangs_over(
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::ceilings("ce-kitchen", Entry::Patched(CeilingPatch { holes: Some(Vec::new()), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     let ceiling = session.update(&edited, &diff).quantities.elements["sp-east"].finishes[2].area;
     assert!((ceiling - quantity(&infer(&snapshot), "sp-east").net_area / 0.1f64.cos()).abs() < 1e-9, "without the hole the ceiling covers the whole kitchen floor");
     let computed = &session.report().computed_by_kind;
@@ -271,7 +271,7 @@ async fn a_finish_edit_re_infers_only_the_take_off_of_its_space() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::spaces("sp-west", Entry::Patched(SpacePatch { wall_finish: Some(Assigned::new(Some("m-wood".into()))), ..Default::default() }));
-    let edited = protocol::apply_diff(&diff, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&diff, &snapshot).expect("applies");
     let wall = session.update(&edited, &diff).quantities.elements["sp-west"].finishes.clone();
     assert_eq!(wall[1].material, "m-wood");
     let computed = &session.report().computed_by_kind;

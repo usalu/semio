@@ -17,7 +17,7 @@ import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib/testing";
 
 const playDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const playwrightTimeoutMs = playwrightTestTimeoutMs();
-if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target: bun repo run @semio-tech/semio-tech-play:test-e2e");
+if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target: repo run @semio-tech/semio-tech-play:test-e2e");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL.endsWith("/") ? process.env.PLAYWRIGHT_BASE_URL : `${process.env.PLAYWRIGHT_BASE_URL}/`;
 
 /** 🖥️ Map and wgpu panes need a real adapter; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one. */

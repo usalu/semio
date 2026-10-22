@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "slice": "assets",
+      "target": "@semio-tech/assets:build"
+    },
+    {
+      "slice": "repo-cli",
+      "target": "@semio-tech/repo-client:build"
+    },
+    {
+      "slice": "repo-server",
+      "target": "@semio-tech/repo-coordinator:build"
+    },
+    {
+      "slice": "repo-vscode",
+      "target": null
+    },
+    {
+      "slice": "build-vsix",
+      "target": null
+    },
+    {
+      "slice": "constructor",
+      "target": null
+    },
+    {
+      "slice": "__proto__",
+      "target": null
+    },
+    {
+      "slice": "",
+      "target": null
+    }
+  ]
+}

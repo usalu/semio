@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().combinations.as_ref().expect("combinations delta").removed.iter().map(|entry| entry.id.clone()).collect::<Vec<_>>(), vec!["uls".to_string()], "delete-combination/removes-a-middle-row: exactly uls may be removed");
     assert!(outcome.diff().load_cases.is_none(), "delete-combination/removes-a-middle-row: no load-case delta may be opened");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

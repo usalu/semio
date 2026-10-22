@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 
 const CONDITIONS = ["import", "node", "default"];
 const EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json"];
@@ -64,7 +65,7 @@ function resolveUnresolvedV1(specifier: string, from: string): string {
   if (specifier.startsWith("node:")) return specifier;
   if (specifier.startsWith(".") || isAbsolute(specifier)) {
     const path = resolve(base, specifier), found = probeFile(path) ?? probeDirectory(path);
-    if (found === undefined) throw new Error(`Cannot find module '${specifier}' from '${base}'`);
+    if (found === undefined) throw new Error(runtimeMessageV1("moduleNotFound", { specifier, from: base }));
     return found;
   }
   const parts = specifier.split("/"), name = specifier.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0]!, rest = specifier.slice(name.length), subpath = rest === "" ? "." : `.${rest}`;
@@ -74,7 +75,7 @@ function resolveUnresolvedV1(specifier: string, from: string): string {
       const manifest = readJson(join(root, "package.json"));
       if (manifest?.exports !== undefined) {
         const target = resolveExports(manifest.exports, subpath);
-        if (target === undefined) throw new Error(`Package subpath '${subpath}' is not exported by '${name}'`);
+        if (target === undefined) throw new Error(runtimeMessageV1("packageSubpath", { subpath, name }));
         return resolve(root, target);
       }
       if (subpath === ".") { const found = probeDirectory(root); if (found !== undefined) return found; }
@@ -82,5 +83,5 @@ function resolveUnresolvedV1(specifier: string, from: string): string {
     }
     if (dirname(directory) === directory) break;
   }
-  throw new Error(`Cannot find module '${specifier}' from '${base}'`);
+  throw new Error(runtimeMessageV1("moduleNotFound", { specifier, from: base }));
 }

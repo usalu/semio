@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -41,7 +43,7 @@ function platformId(): string {
 
 /** 🦀️ Shells out to the standalone `image-bmp-codec` binary — the ONLY place this file touches it. */
 function codecBuild(id: string, outDir: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`image-bmp-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -72,7 +74,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (image)", attribution: "Generated with image (MIT OR Apache-2.0) via the standalone image-bmp-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
@@ -122,9 +124,9 @@ print(kind + ': written')
       if (command === "header") {
         const failures: string[] = [];
         for (const kind of KINDS) {
-          const written = spawnSync("python3", ["-c", WRITER, outDir, kind.id, kind.directoryName], { stdio: "inherit" });
+          const written = runToolSyncV1("python", ["-c", WRITER, outDir, kind.id, kind.directoryName], { stdio: "inherit" });
           if (written.status !== 0) { failures.push(`${kind.id}: writer failed`); continue; }
-          const cmp = spawnSync("bun", [probes, "bmp-header-compare", "--input", join(outDir, kind.directoryName, "⬅️before.bmp"), "--input", join(outDir, kind.directoryName, "➡️after.bmp")], { encoding: "utf8" });
+          const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "bmp-header-compare", "--input", join(outDir, kind.directoryName, "⬅️before.bmp"), "--input", join(outDir, kind.directoryName, "➡️after.bmp")], { encoding: "utf8" });
           if (cmp.status !== 0) { failures.push(`${kind.id}: reader refused the pair`); continue; }
           if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind.id}: not observable in the header projection`);
         }
@@ -147,7 +149,7 @@ print(kind + ': written')
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "pillow-bmp-v3-header-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts header", platform: currentPlatform() },
+          generator: { oracle: "pillow-bmp-v3-header-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts header", platform: currentPlatform() },
           comparisonProfile: "semantic-bmp-header-v1",
           reproducible: true,
           family: "mechanical",

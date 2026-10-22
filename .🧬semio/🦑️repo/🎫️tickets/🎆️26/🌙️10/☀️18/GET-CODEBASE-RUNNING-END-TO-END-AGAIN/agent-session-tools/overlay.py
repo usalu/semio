@@ -6,7 +6,7 @@ import ctypes, ctypes.util, os, shutil, subprocess, sys
 LIVE = "/Users/ueli/Documents/semio"
 args = sys.argv[1:]
 TAG = args[args.index("--tag") + 1] if "--tag" in args else "a"
-PATHS = [args[i + 1] for i, a in enumerate(args) if a == "--path"] or ["🧰️framework"]
+PATHS = [args[i + 1] for i, a in enumerate(args) if a == "--path"] or ["🧰️framework", ":(glob)*"]
 OV = f"/private/tmp/agent-session/ov-{TAG}"
 libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
 clone = libc.clonefile
@@ -35,10 +35,13 @@ def main():
             if clone(src.encode("utf8"), dst.encode("utf8"), 0) != 0:
                 shutil.copy2(src, dst)
             n += 1
-    for name in ("node_modules", "package.json", "bunfig.toml", "tsconfig.json", "tsconfig.base.json", "AGENTS.md"):
+    for name in ("package.json", "bunfig.toml", "tsconfig.json", "tsconfig.base.json", "AGENTS.md"):
         s = os.path.join(LIVE, name)
-        if os.path.exists(s) and not os.path.lexists(os.path.join(OV, name)):
-            os.symlink(s, os.path.join(OV, name))
+        if os.path.isfile(s) and not os.path.lexists(os.path.join(OV, name)):
+            if clone(s.encode("utf8"), os.path.join(OV, name).encode("utf8"), 0) != 0:
+                shutil.copy2(s, os.path.join(OV, name))
+    if os.path.exists(os.path.join(LIVE, "node_modules")) and not os.path.lexists(os.path.join(OV, "node_modules")):
+        os.symlink(os.path.join(LIVE, "node_modules"), os.path.join(OV, "node_modules"))
     print("cloned", n, "files", file=sys.stderr)
     print(OV)
 

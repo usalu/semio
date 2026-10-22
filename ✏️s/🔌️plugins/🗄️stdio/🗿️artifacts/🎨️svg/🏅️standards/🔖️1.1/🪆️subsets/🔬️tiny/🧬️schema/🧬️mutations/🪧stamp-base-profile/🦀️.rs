@@ -36,6 +36,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "base-profile", kind: "stamp-base-profile", record: "StampBaseProfile" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Stamp base profile", "Basisprofil kennzeichnen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for StampBaseProfile
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<StampBaseProfile>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { base_profile, version, base_profile_index, version_index } = self;
         protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone().map(SvgAttributeValue::Text), *base_profile_index), ("version", version.clone().map(SvgAttributeValue::Text), *version_index)]))
@@ -45,12 +57,6 @@ where
         let (base_profile, base_profile_index) = prior_attribute(base, &[], "baseProfile");
         let (version, version_index) = prior_attribute(base, &[], "version");
         Ok(vec![Op::from(StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index, version_index })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Stamp base profile", "Basisprofil kennzeichnen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

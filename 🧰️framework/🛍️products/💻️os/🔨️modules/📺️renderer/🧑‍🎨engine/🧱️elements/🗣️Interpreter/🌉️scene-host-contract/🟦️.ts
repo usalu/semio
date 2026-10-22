@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}, which re-exports its public names; `NodeGraph`, `ShellHost` and `World3dHost` read these declarations here so none of them has to import another element's barrel for them.
  */
 
-import { createContext, useContext } from "react";
+import { createContext, useContext } from "../../⚛️react-port/🟦️.ts";
 import type { UiLabel } from "@semio-tech/ui-react";
 import type { AppCatalogue, PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import { decodeScenePackField } from "@semio-tech/framework/packs";

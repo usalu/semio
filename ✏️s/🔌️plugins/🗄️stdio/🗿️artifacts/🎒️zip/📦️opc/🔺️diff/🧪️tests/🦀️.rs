@@ -1,32 +1,38 @@
 //! 🧪️ The OPC package diff through the central applier: positions are exact, the rewind restores the base, and a diff absorbed with its rewind is the identity.
 
 use super::*;
-use semio_s_artifact_stdio_contract::kernel::command::DiffAlgebra;
-use semio_s_artifact_stdio_contract::kernel::{apply_diff, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_contract::kernel::command::{ColdDiffAlgebra, DiffAlgebra};
+use semio_s_artifact_stdio_contract::kernel::{apply_diff_cold, MutationApplyResult, MutationDiff};
 
 #[derive(Clone, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(transparent)]
 struct PackageDiff(OpcDiff);
 
-impl MutationDiff<OpcPackage> for PackageDiff {
-    fn apply(&self, base: &OpcPackage, capability: ApplyCapability) -> MutationApplyResult<OpcPackage> {
-        let mut next = base.clone();
-        self.0.commit_into(&mut next, capability)?;
-        Ok(next)
-    }
+impl MutationDiff<OpcPackage> for PackageDiff {}
 
+impl protocol::ColdMutationDiff<OpcPackage> for PackageDiff {
     fn absorb(&mut self, other: Self) {
         self.0.absorb(other.0);
+    }
+
+    fn apply(&self, unpublished: &mut OpcPackage, capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        self.0.commit_into(&mut next, capability)?;
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<OpcPackage> for PackageDiff {
-    fn inverse(&self, base: &OpcPackage) -> Self {
-        Self(self.0.rewind(base))
-    }
-
     fn is_empty(&self) -> bool {
         self.0 == OpcDiff::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<OpcPackage> for PackageDiff {
+    fn inverse(&self, base: &OpcPackage) -> Self {
+        Self(self.0.rewind(base))
     }
 }
 
@@ -73,7 +79,7 @@ fn diff() -> PackageDiff {
 
 #[test]
 fn every_row_lands_at_the_position_its_coordinate_names() {
-    let after = apply_diff(&diff(), &package()).expect("the diff applies");
+    let after = apply_diff_cold(&diff(), &package()).expect("the diff applies");
     assert_eq!(after.comment, "edited");
     assert_eq!(after.content_types.defaults.first().map(|(name, _)| name.as_str()), Some("png"));
     assert_eq!(after.content_types.overrides, vec![("/b.xml".to_string(), "application/b".to_string())]);
@@ -87,22 +93,22 @@ fn every_row_lands_at_the_position_its_coordinate_names() {
 fn the_rewind_restores_the_base_and_a_diff_absorbed_with_its_rewind_is_the_identity() {
     let base = package();
     let forward = diff();
-    let after = apply_diff(&forward, &base).expect("the diff applies");
+    let after = apply_diff_cold(&forward, &base).expect("the diff applies");
     let backward = forward.inverse(&base);
-    assert_eq!(apply_diff(&backward, &after).expect("the rewind applies"), base);
+    assert_eq!(apply_diff_cold(&backward, &after).expect("the rewind applies"), base);
     let mut summed = diff();
     summed.absorb(backward);
-    assert_eq!(apply_diff(&summed, &base).expect("the sum applies"), base);
+    assert_eq!(apply_diff_cold(&summed, &base).expect("the sum applies"), base);
 }
 
 #[test]
 fn an_owner_delta_that_breaks_the_owner_order_is_refused() {
     let broken = PackageDiff(OpcDiff { relationships: Some(OpcOwnersDelta { inserted: vec![OpcOwnerInsertion { index: 0, row: OpcOwnerRow { owner: "z.xml".into(), relationships: vec![relationship("rId1", "c.bin")] } }], ..Default::default() }), ..Default::default() });
-    assert_eq!(apply_diff(&broken, &package()).unwrap_err().code, "mutation.apply.invalid-order");
+    assert_eq!(apply_diff_cold(&broken, &package()).unwrap_err().code, "mutation.apply.invalid-order");
 }
 
 #[test]
 fn a_removal_must_name_the_row_at_its_base_index() {
     let wrong = PackageDiff(OpcDiff { parts: Some(OpcPartsDelta { removed: vec![OpcPartRemoval { id: "a.xml".into(), index: 1 }], ..Default::default() }), ..Default::default() });
-    assert_eq!(apply_diff(&wrong, &package()).unwrap_err().code, "mutation.apply.missing-target");
+    assert_eq!(apply_diff_cold(&wrong, &package()).unwrap_err().code, "mutation.apply.missing-target");
 }

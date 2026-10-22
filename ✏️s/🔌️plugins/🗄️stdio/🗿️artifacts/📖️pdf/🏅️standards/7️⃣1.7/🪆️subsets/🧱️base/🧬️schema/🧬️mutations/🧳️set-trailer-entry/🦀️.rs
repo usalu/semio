@@ -23,10 +23,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trailer-entry", kind: "set-trailer-entry", record: "Set" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Trailer-Eintrag {} setzen", self.key))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetTrailerEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetTrailerEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_trailer_entry::RemoveTrailerEntry>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(diff::diff_set_trailer_entry(base, &self.key, self.value.clone(), self.index)))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.trailer.iter().find(|entry| entry.key == self.key) {
@@ -36,14 +48,6 @@ where
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Trailer-Eintrag {} setzen", self.key))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.key.clone()]
-    }
 }
 
 //#endregion 🔖️Mutation

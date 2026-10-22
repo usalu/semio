@@ -52,7 +52,7 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
 	}
-	files, err := model.ScopeToFiles(ctx.Scope, ctx.Bundles)
+	files, err := model.ScopeToFiles(workspace.GetRootDir(), ctx.Scope, ctx.Bundles)
 	if err != nil {
 		return nil, err
 	}

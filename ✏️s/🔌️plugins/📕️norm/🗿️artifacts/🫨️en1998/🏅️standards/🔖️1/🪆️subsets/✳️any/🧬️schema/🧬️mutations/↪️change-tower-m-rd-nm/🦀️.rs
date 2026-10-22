@@ -21,7 +21,16 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTowerMRdNm where O
         record: "ChangeTowerMRdNm",
     };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1998Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change design bending resistance of the tower", "Bemessungswert der Biegetragfähigkeit des Turms ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["change-tower-m-rd-nm".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1998Snapshot, Op> for ChangeTowerMRdNm where Op: protocol::ColdMutation<En1998Snapshot, ReferenceDiff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_tower_m_rd_nm::ChangeTowerMRdNm> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1998Snapshot>>::ReferenceDiff> {
         crate::change_tower_m_rd_nm::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,12 +39,6 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTowerMRdNm where O
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design bending resistance of the tower", "Bemessungswert der Biegetragfähigkeit des Turms ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["change-tower-m-rd-nm".into()]
-    }
 }
 
 //#region 🪢️Mounts

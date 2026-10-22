@@ -565,23 +565,9 @@ fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
 //#endregion 🔖️ScalarAlgebra
 
 //#region 🔖️Apply
-impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
-    fn apply(&self, base: &SemioDrawingSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
-        let mut next = base.clone();
-        if let Some(cd) = &self.canvas {
-            next.canvas = apply_canvas_diff(&next.canvas, cd);
-        }
-        if let Some(sd) = &self.styles {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
-            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
-        }
-        if let Some(ld) = &self.layers {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
-            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {}
 
+impl protocol::ColdMutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
     fn absorb(&mut self, other: Self) {
         self.canvas = match (self.canvas.take(), other.canvas) {
             (None, x) => x,
@@ -599,21 +585,41 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
             (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_layer_diff, apply_layer_diff)),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioDrawingSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(cd) = &self.canvas {
+            next.canvas = apply_canvas_diff(&next.canvas, cd);
+        }
+        if let Some(sd) = &self.styles {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
+            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
+        }
+        if let Some(ld) = &self.layers {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
+            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
+    fn is_empty(&self) -> bool {
+        self.canvas.is_none() && self.styles.is_none() && self.layers.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Self {
         SemioDrawingDiff {
             canvas: self.canvas.as_ref().map(|cd| inverse_canvas_diff(&base.canvas, cd)),
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s: &DrawStyle| s.name.clone(), inverse_style_diff)),
             layers: self.layers.as_ref().map(|ld| inverse_indexed(&base.layers, ld, inverse_layer_diff)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.canvas.is_none() && self.styles.is_none() && self.layers.is_none()
     }
 }
 

@@ -11,14 +11,18 @@ pub struct ChangeEnvelopeN50 {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeEnvelopeN50 where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_envelope_n50::ChangeEnvelopeN50> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "envelope-n50", kind: "change-envelope-n50", record: "ChangeEnvelopeN50" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_envelope_n50::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change envelope air change rate n50", "Luftwechselrate n50 der Gebäudehülle ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeEnvelopeN50 where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_envelope_n50::ChangeEnvelopeN50> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_envelope_n50::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_envelope_n50::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change envelope air change rate n50", "Luftwechselrate n50 der Gebäudehülle ändern")
-    }
 }
 
 //#region 🪢️Mounts

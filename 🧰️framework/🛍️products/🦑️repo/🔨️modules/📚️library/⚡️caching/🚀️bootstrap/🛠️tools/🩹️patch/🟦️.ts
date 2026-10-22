@@ -21,7 +21,7 @@ export function assertToolingPatchV1(patch:string):void{
   let before=0,after=0;
   while(index+1<lines.length&&!lines[index+1]!.startsWith("diff --git ")&&!lines[index+1]!.startsWith("@@")){
    const row=lines[++index]!;
-   if(row.startsWith(" ")){before++;after++;}else if(row.startsWith("-"))before++;else if(row.startsWith("+"))after++;else if(row.startsWith("\\ No newline at end of file"))continue;else if(row===""&&before===oldCount&&after===newCount)continue;else throw Error("Tooling patch unprefixed hunk line");
+   if(row.startsWith(" ")){before++;after++;}else if(row.startsWith("-"))before++;else if(row.startsWith("+"))after++;else if(row.startsWith("\\ No newline at end of file"))continue;else if(row===""&&(index+1===lines.length||before===oldCount&&after===newCount))continue;else throw Error("Tooling patch unprefixed hunk line");
   }
   if(before!==oldCount||after!==newCount)throw Error("Tooling patch hunk counts changed");
   oldEnd=oldStart+oldCount;newEnd=newStart+newCount;delta+=newCount-oldCount;hunks++;

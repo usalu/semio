@@ -1,11 +1,13 @@
 import {createHash} from "node:crypto";
-import {spawnSync} from "node:child_process";
+
 import {cp,copyFile,lstat,mkdir,readFile,readdir,readlink,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {globMatchV1,parityNormalizedDigestsV1,parityTaskKeyV1,resolveParityOutputPatternsV1,type ParityFileV1,type ParityNxInputsV1,type ParityObservationV1,type ParityOutputsV1,type ParityPlanV1,type ParityResolvedSampleV1,type ParityRulesV1,type ParityRunV1,type ParityRunnerV1,type ParityToolV1} from "../🟦️.ts";
 import {groupParityBazelSpawnsV1,parseParityBazelEventsV1,parseParityBazelExecutionLogV1,parseParityJsonObjectsV1,parseParityNxInputsV1,parseParityPlanV1,parityBazelRunV1,parityNxRunV1} from "../📥️evidence/🟦️.ts";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧰️ Everything the live runner needs: the checkout, the caller's authority, where evidence goes and how results are read. */
 export type ParityLiveContextV1=Readonly<{root:string;invocation:ScriptInvocation;out:string;environment:NodeJS.ProcessEnv;rules:ParityRulesV1;progress:(label:string)=>Promise<void>}>;
@@ -40,7 +42,7 @@ export async function captureParityOutputsV1(root:string,roots:Readonly<Record<s
 /** 🛟️ How one output root was set aside before a run and how it returns afterwards. */
 export type ParityAsideV1=Readonly<{path:string;how:"absent"|"move"|"copy"}>;
 
-const tracked=(root:string,path:string):boolean=>{const result=spawnSync("git",["ls-files","-z","--",path],{cwd:root,encoding:"utf8"});return result.status===0&&result.stdout.length>0;};
+const tracked=(root:string,path:string):boolean=>{const result=runToolSyncV1("git",["ls-files","-z","--",path],{cwd:root,encoding:"utf8"});return result.status===0&&result.stdout.length>0;};
 const move=async(from:string,to:string):Promise<void>=>{await mkdir(dirname(to),{recursive:true});try{await rename(from,to);}catch(error){if((error as NodeJS.ErrnoException).code!=="EXDEV")throw error;await cp(from,to,{recursive:true,verbatimSymlinks:true,preserveTimestamps:true});await rm(from,{recursive:true,force:true});}};
 
 /** 🧳️ Sets the declared output roots aside so a run starts without stale products: untracked roots move, tracked ones stay in place and are copied; the journal makes an interrupted run recoverable. */
@@ -126,7 +128,7 @@ export function createParityRunnerV1(context:ParityLiveContextV1):ParityRunnerV1
      const patterns=Array.isArray(definition.outputs)?definition.outputs.filter((row):row is string=>typeof row==="string"):[];
      if(!patterns.length)continue;
      const resolved=resolveParityOutputPatternsV1(patterns,{project:target.project,root:String(owner.root??"."),execution},{SEMIO_BUILD_MODE:sample.configuration??"prototype"}),expanded:string[]=[];
-     for(const path of resolved){if(/[*?[{]/u.test(path)){for await(const match of new Bun.Glob(path).scan({cwd:root,onlyFiles:false,dot:true}))expanded.push(slash(match));}else expanded.push(path);}
+     for(const path of resolved){if(/[*?[{]/u.test(path)){for await(const match of new GlobV1(path).scan({cwd:root,onlyFiles:false,dot:true}))expanded.push(slash(match));}else expanded.push(path);}
      if(expanded.length)roots[key]=expanded.sort();
     }catch(error){errors.push(`${key}: ${(error as Error).message}`);}
    }

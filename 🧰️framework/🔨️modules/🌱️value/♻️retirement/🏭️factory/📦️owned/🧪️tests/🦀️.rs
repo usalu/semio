@@ -68,7 +68,7 @@ fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
         let demand=RetainedCloneSource::<String>::borrowed_constructor_demand::<FactoryOwnedSourceAuthority<String>>();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<String>::borrowed_constructor_copy_bytes::<FactoryOwnedSourceAuthority<String>>(),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};
         for axis in law["sourceRefusals"].as_array().unwrap() {
-            let denied=match axis.as_str().unwrap() { "items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant},"capacity"=>RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!() };
+            let denied=match axis.as_str().unwrap() { "items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy" if grant.maximum_copy_bytes>0=>RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant},"capacity" if grant.maximum_capacity_bytes>0=>RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},"copy"|"capacity"=>continue,_=>unreachable!() };
             let(result,heap)=observe_retirement_allocations(||RetainedCloneSource::admit_borrowed(authority,|owner|owner.get(),denied));
             let(_,returned)=result.err().expect("denied constructor retains exact source pair");authority=returned;assert_eq!(heap,(0,0));assert_eq!(authority.get().as_ptr(),pointer);assert!(std::ptr::addr_eq(Arc::as_ptr(authority.factory()),issuer));
         }
@@ -80,7 +80,7 @@ fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
         let project_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_value_clone_source::RetainedCloneBinding::alias_copy_bytes(),maximum_depth:1,..Default::default()};
         let visits=std::cell::Cell::new(0);
         for axis in law["projectionRefusals"].as_array().unwrap() {
-            let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..project_grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:project_grant.maximum_copy_bytes-1,..project_grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..project_grant},_=>unreachable!()};
+            let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..project_grant},"copy" if project_grant.maximum_copy_bytes>0=>RetainedCloneGrant{maximum_copy_bytes:project_grant.maximum_copy_bytes-1,..project_grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..project_grant},"copy"=>continue,_=>unreachable!()};
             let(result,heap)=observe_retirement_allocations(||source.project_owned(1,|original|{visits.set(visits.get()+1);original.as_str()},denied));
             assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(visits.get(),0,"denied grant must not invoke projection code");
         }
@@ -88,7 +88,7 @@ fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
         if row["route"]=="transfer" {
             let(mut projection,progress)=source.project_owned(2,|original|original.as_str(),project_grant).unwrap();assert!(progress.fits(project_grant));assert_eq!(projection.borrow().unwrap().get().as_ptr(),pointer);
             for axis in law["projectionRefusals"].as_array().unwrap(){
-                let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..project_grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:project_grant.maximum_copy_bytes-1,..project_grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..project_grant},_=>unreachable!()};
+                let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..project_grant},"copy" if project_grant.maximum_copy_bytes>0=>RetainedCloneGrant{maximum_copy_bytes:project_grant.maximum_copy_bytes-1,..project_grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..project_grant},"copy"=>continue,_=>unreachable!()};
                 let(result,heap)=observe_retirement_allocations(||projection.project(3,|original|{visits.set(visits.get()+1);original},denied));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(visits.get(),0,"denied nested projection must not invoke callback");
             }
             for turn in 0..10_000{

@@ -13,6 +13,8 @@ import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 export class CodecSendSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -125,7 +127,7 @@ export class MemberDialectCheckScript extends BundleScript {
 
 export class MemberFacetsScript extends BundleScript {
  async run(args:string[]):Promise<void>{
-  const mode=args[0];if(args.length!==1||(mode!=="source"&&mode!=="native"))throw Error("member-facets requires source or native");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧪️tests/🟦️.ts");await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,30000),throwOnFailure:true});await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,30000),throwOnFailure:true});if(mode==="source")return;
+  const mode=args[0];if(args.length!==1||(mode!=="source"&&mode!=="native"))throw Error("member-facets requires source or native");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧪️tests/🟦️.ts");await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,30000),throwOnFailure:true});await runBudgetedTestCommand(process.execPath,[runtimeResolveV1("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,30000),throwOnFailure:true});if(mode==="source")return;
   const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::member_facet_tests::native_member_facet_admits_non_clone_non_reference_types","os_store::component::member_facet_tests::original_member_profiles_match_explicit_authority_selection","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs"]}]});
  }
 }

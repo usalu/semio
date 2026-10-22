@@ -13,7 +13,6 @@ use semio_framework_plugin_window_config::window_mutation::ErasedWindowMutationV
 use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use semio_framework_plugin_window_config::WindowConfigAuthorityIdentity;
 
 fn next_key<K: Ord + Clone, V>(map: &BTreeMap<K, V>, cursor: Option<&K>) -> Option<K> {
     cursor.and_then(|cursor| map.range((std::ops::Bound::Excluded(cursor), std::ops::Bound::Unbounded)).next().map(|(key, _)| key.clone())).or_else(|| map.keys().next().cloned())
@@ -39,7 +38,7 @@ fn demand_fault(error: ValueError) -> Fault {
 pub trait WindowTransientOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
+    type Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<Self::State> + protocol::ColdMutation<Self::State> + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation>;
@@ -93,7 +92,7 @@ impl WindowTransientMutation {
     }
 
     #[doc(hidden)]
-    pub fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
+    pub fn from_issued<T:Clone+Send+Sync+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id
@@ -144,6 +143,7 @@ impl WindowTransientSnapshot {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 #[doc(hidden)]
 pub struct WindowTransientAuthority {
     pub window_id: String,
@@ -173,8 +173,7 @@ pub trait ErasedWindowTransientPublication: Send {
 
 struct TypedWindowTransientPublication<O: WindowTransientOwner> {
     address_retirement:Option<ControlledRetirement<String>>,
-    authority: WindowConfigAuthorityIdentity,
-    window_id: semio_framework_value::SharedUtf8,
+    window_id: String,
     pub(crate) document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
     ingress:ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
@@ -505,11 +504,13 @@ impl WindowTransientOwnerRegistry {
             publication.begin_close();
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient publication belongs to a replaced document"));
         }
+        let mut proceed = |_| true;
+        let mut receiving = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut proceed);
         self.owners
             .get_mut(publication.window_kind_id())
             .and_then(Option::as_mut)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication lost its registered concrete window owner"))?
-            .advance(publication, grant,receiving)
+            .advance(publication, grant, &mut receiving)
     }
 
     #[doc(hidden)]

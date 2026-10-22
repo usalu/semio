@@ -72,7 +72,7 @@ use axum::routing::{get, post};
 use axum::serve::ListenerExt;
 use axum::{Json, Router};
 use futures::{Sink, SinkExt, Stream, StreamExt};
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, oneshot, watch, Mutex, Notify};
 use tokio::time::{Instant, MissedTickBehavior};

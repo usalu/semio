@@ -124,7 +124,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🪪️Declaration
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 
 /// 📸️ Persisted snapshot defined by the artifact's standard and subset.
 

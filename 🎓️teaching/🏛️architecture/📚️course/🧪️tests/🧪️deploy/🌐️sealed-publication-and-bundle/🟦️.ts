@@ -128,7 +128,7 @@ export function registerSealedPublicationAndBundleTests(): void {
   });
   it("reaches the compiler and the site through the graph before the readiness gate starts, and ends with the end-to-end gate", () => {
     const project = JSON.parse(readFileSync(join(site, "📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { options?: { command?: string }; dependsOn?: string[] }> };
-    expect(project.targets.typecheck?.options?.command).toBe("bun ./📜️script.ts typecheck");
+    expect(project.targets.typecheck?.options?.command).toBe("repo ./📜️script.ts typecheck");
     expect(project.targets["deploy-check"]?.dependsOn).toContain(readiness.sourceProducer);
     expect(project.targets.typecheck?.dependsOn).toEqual(["@semio-tech/framework-rs:generate", "@semio-tech/ui-contract-rs:generate", "@semio-tech/ui-rs:generate", "@semio-tech/framework-actor-rs:typegen", "@semio-tech/ui-styling-tokens:generate", "@semio-tech/assets:build"]);
     const steps = deployCheckSteps(project.targets);

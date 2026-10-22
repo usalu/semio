@@ -18,11 +18,36 @@ use crate::artifact_inference::validate_inference_execution;
 use crate::artifact_inference::validate_wire_request_metadata;
 use crate::artifact_inference::validate_wire_request_resources;
 use semio_framework_pack_json::JsonMemberPolicy;
-use crate::plugin_runtime::cancel_extension_inference;
-use crate::plugin_runtime::with_extension_inference_context;
 pub async fn wire_artifact_infer_cold(request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
     let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
     wire_artifact_infer_from_cold(&registry, request,operation,generation,cx)
+}
+
+/// 🔌️ Accessors of the current extension's retained inference context; the extension runtime sits above this crate and installs them once.
+pub struct ExtensionInferenceHooks {
+    pub cancel: fn(&str) -> bool,
+    pub with_context: fn(&mut dyn FnMut(Option<&dyn std::any::Any>) -> Result<(), ArtifactInferenceExecutionError>) -> Result<(), ArtifactInferenceExecutionError>,
+}
+
+static EXTENSION_INFERENCE_HOOKS: std::sync::OnceLock<ExtensionInferenceHooks> = std::sync::OnceLock::new();
+
+pub fn install_extension_inference_hooks(hooks: ExtensionInferenceHooks) {
+    let _ = EXTENSION_INFERENCE_HOOKS.set(hooks);
+}
+
+fn cancel_extension_inference(cancellation_id: &str) -> bool {
+    EXTENSION_INFERENCE_HOOKS.get().is_some_and(|hooks| (hooks.cancel)(cancellation_id))
+}
+
+fn with_extension_inference_context<T>(run: impl FnOnce(Option<&dyn std::any::Any>) -> Result<T, ArtifactInferenceExecutionError>) -> Result<T, ArtifactInferenceExecutionError> {
+    let Some(hooks) = EXTENSION_INFERENCE_HOOKS.get() else { return run(None) };
+    let mut run = Some(run);
+    let mut output = None;
+    (hooks.with_context)(&mut |context| {
+        output = Some(run.take().expect("extension inference context runs once")(context)?);
+        Ok(())
+    })?;
+    output.ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.context-lost", "extension inference context returned no result"))
 }
 
 pub fn wire_artifact_infer_from_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
@@ -41,7 +66,7 @@ fn wire_artifact_infer_from_context_cold(registry: &ArtifactInferenceServiceRegi
         .copied()
         .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
     if context.is_none() && matches!(service.infer, ArtifactInferenceExecutable::Contextual(_, _)) {
-        crate::plugin_runtime::with_extension_inference_context(|context| wire_artifact_infer_with_service_cold(request, service, context,operation,generation,cx))
+        with_extension_inference_context(|context| wire_artifact_infer_with_service_cold(request, service, context,operation,generation,cx))
     } else {
         wire_artifact_infer_with_service_cold(request, service, context,operation,generation,cx)
     }
@@ -71,7 +96,7 @@ fn wire_artifact_infer_with_service_cold(request: WireArtifactInferenceRequest, 
         None => service.infer(&execution_request,cx),
     }?.execution.ok_or_else(||ArtifactInferenceExecutionError::new("artifact-inference.pending","cold inference inspection has no completed execution"))?;
     if inference_cancelled(&request.cancellation_id)? {
-        crate::plugin_runtime::cancel_extension_inference(&request.cancellation_id);
+        cancel_extension_inference(&request.cancellation_id);
         return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancelled", "inference was cancelled during execution"));
     }
     validate_inference_execution(&request, &execution)?;

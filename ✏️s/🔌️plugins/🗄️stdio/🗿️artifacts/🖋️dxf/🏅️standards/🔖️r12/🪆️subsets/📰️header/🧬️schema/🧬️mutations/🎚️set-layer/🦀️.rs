@@ -14,7 +14,16 @@ pub struct SetLayer {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer", record: "SetLayer" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set layer", "Layer setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetLayer {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { name, layer } = self;
         protocol::MutationOutcome::new({
             let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
@@ -29,12 +38,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
                 None => vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.clone() })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set layer", "Layer setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

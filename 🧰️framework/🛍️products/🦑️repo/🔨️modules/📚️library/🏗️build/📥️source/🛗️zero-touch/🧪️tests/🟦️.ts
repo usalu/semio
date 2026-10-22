@@ -26,6 +26,19 @@ test("every declared bootstrap source has a full zero-touch closure", () => {
  for(const source of declaration.sources)expect(roster.closures.some(closure=>closure.entry===source.module&&closure.mode==="full"),source.id).toBe(true);
 });
 
+test("every tool setup script has a full zero-touch closure", () => {
+ const tree=diskZeroTouchTreeV1(repoRoot),roster=readZeroTouchRosterV1(tree.read(ZERO_TOUCH_CLOSURES_FILE)!),setup=JSON.parse(tree.read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json")!);
+ const scripts=new Set<string>(setup.tools.map((tool:{setup?:{script?:string}})=>tool.setup?.script).filter(Boolean));
+ expect(scripts.size).toBeGreaterThan(1);
+ for(const script of scripts)expect(roster.closures.some(closure=>closure.entry===script&&closure.mode==="full"),script).toBe(true);
+});
+
+test("every catalog provider the build graph imports has a full zero-touch closure", () => {
+ const tree=diskZeroTouchTreeV1(repoRoot),roster=readZeroTouchRosterV1(tree.read(ZERO_TOUCH_CLOSURES_FILE)!),owners=JSON.parse(tree.read("📋️build-owners.json")!);
+ expect(owners.catalogProviders.length).toBeGreaterThan(0);
+ for(const provider of owners.catalogProviders)expect(roster.closures.some(closure=>closure.entry===provider.sourcePath&&closure.mode==="full"),provider.sourcePath).toBe(true);
+});
+
 test("every native repository recovery owner has a full zero-touch closure", () => {
  const roster=readZeroTouchRosterV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_CLOSURES_FILE)!);
  for(const entry of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts"])expect(roster.closures.some(closure=>closure.entry===entry&&closure.mode==="full"),entry).toBe(true);

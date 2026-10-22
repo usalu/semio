@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, useLabel } from "@semio-tech/ui-react";
 import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";
 import { type PendingAgentApproval } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";

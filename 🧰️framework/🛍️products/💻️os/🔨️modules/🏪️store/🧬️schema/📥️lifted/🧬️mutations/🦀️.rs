@@ -31,7 +31,11 @@ macro_rules! record_tree {
 }
 
 use crate::space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, SetActiveSpaceAlternative, SwitchSpaceAlternative};
-record_tree!(CommitSpaceCheckpoint{0=>checkpoint "checkpoint"});
+impl Tree for CommitSpaceCheckpoint {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(1+usize::from(self.index.is_some())))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn Tree,ValueError>{match(ordinal,self.index.as_ref()){(0,_)=>Ok(&self.checkpoint),(1,Some(index))=>Ok(index),_=>Err(canonical_ordinal())}}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<Text<'_>,ValueError>{match(ordinal,self.index.is_some()){(0,_)=>Ok("checkpoint".into()),(1,true)=>Ok("index".into()),_=>Err(canonical_ordinal())}}
+}
 record_tree!(CreateSpaceAlternative{0=>alternative "alternative"});
 record_tree!(SwitchSpaceAlternative{0=>alternative_id "alternativeId"});
 record_tree!(RemoveSpaceCheckpoint{0=>checkpoint_id "checkpointId"});

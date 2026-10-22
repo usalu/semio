@@ -1,161 +1,255 @@
 
-import {access,mkdir,mkdtemp,rm} from "node:fs/promises";
-import {tmpdir} from "node:os";
-import {join,posix,win32} from "node:path";
-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
-import {incrementalExpectedV1,incrementalReportV1,incrementalScenarioIssuesV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalPhaseV1,type IncrementalScenarioSetV1,type IncrementalToolV1} from "../🟦️.ts";
-import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDiscardV1,incrementalRunV1,incrementalSelectV1,type IncrementalAdapterV1,type IncrementalHostV1} from "../🏃️runner/🟦️.ts";
-import { spawnToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import cachingPolicy from "../../../⚡️caching/🔣️policy.json" with { type: "json" };
+import ownershipPolicy from "../../../🗂️workspaces/🔣️policy.json" with { type: "json" };
+import { readBuildOwnerRegistryV1, type BuildOwnerRegistryV1 } from "../🚪️admission/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=["nx","bazel"],operations=["list","plan","prepare","run","discard"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+/** 📋️ One row of the build owner registry. */
+export type OwnerRow = BuildOwnerRegistryV1["owners"][number];
 
-/** 📝️ The closed arguments of `repo incremental`. */
-export type IncrementalArgumentsV1=Readonly<{operation:typeof operations[number];scenarios:readonly string[]|"all";tools:readonly IncrementalToolV1[];root:string|undefined;phases:readonly IncrementalPhaseV1[];file:string|undefined;json:boolean;fresh:boolean;language:"en"|"de"|undefined}>;
+/** 🚫️ The example-collection and generated-directory names the owner discovery excludes, as read from the workspace and caching policies. */
+export type OwnerTreePolicy = Readonly<{ collections: readonly string[]; moduleMember: string; generated: readonly string[] }>;
 
-const both=(english:string,german:string)=>`${english}\n${german}`,incrementalRootLimit=100,valuedOptions=Object.freeze(["--scenario","--implementations","--root","--phases","--file","--lang"]),plainOptions=Object.freeze(["--json","--fresh"]);
+/** 🧾️ The finding kinds of `findOwnerFindings`, mirrored by the `Finding` pattern of `🧬️schema/🧾️owner-consistency.json`. */
+export type OwnerFindingKind = "registry-invalid" | "missing-root" | "missing-manifest" | "missing-native-root" | "cargo-row-shadows-project" | "row-in-excluded-tree" | "manifest-not-file" | "name-mismatch" | "package-missing" | "package-stale" | "provider-owner-root" | "provider-source" | "provider-consumer-root" | "project-without-row" | "cargo-without-row";
 
-/** 🚩️ The option names `repo incremental` accepts, so the operations catalogue can be checked against the parser. */
-export function incrementalOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
+/** 🔎️ One inconsistency between the registry and the workspace tree. */
+export type OwnerFinding = Readonly<{ kind: OwnerFindingKind; detail: string; owner?: string; path?: string }>;
 
-/** 🧷️ Reads `incremental list|plan|prepare|run|discard` with its options; every unknown or repeated option is refused in both languages. */
-export function incrementalArgumentsV1(args:readonly string[]):IncrementalArgumentsV1{
- const operation=args[0] as typeof operations[number];
- if(!operations.includes(operation)||args.length>1&&args[1]!.startsWith("-")===false)throw Error(both("Expected repo incremental list|plan|prepare|run|discard [options]","Erwartet: repo incremental list|plan|prepare|run|discard [Optionen]"));
- const seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>(),valued=new Set(valuedOptions),plain=new Set(plainOptions);
- for(let index=1;index<args.length;index++){
-  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
-  if(seen.has(name))throw Error(both(`Repeated option: ${name}`,`Wiederholte Option: ${name}`));
-  seen.add(name);
-  if(valued.has(name)){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both(`Option ${name} needs a value`,`Option ${name} braucht einen Wert`));values[name]=value;}
-  else if(plain.has(name)&&cut<0)flags.add(name);
-  else throw Error(both(`Unknown incremental option: ${argument}`,`Unbekannte Option für incremental: ${argument}`));
- }
- const list=(name:string)=>values[name]?.split(",").filter(Boolean);
- const chosen=list("--implementations")??[...tools],phases=list("--phases")??[...policy.phases],language=values["--lang"];
- for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
- for(const phase of phases)if(!policy.phases.includes(phase))throw Error(both(`Unknown phase: ${phase} (${policy.phases.join("|")})`,`Unbekannte Phase: ${phase} (${policy.phases.join("|")})`));
- if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
- const picked=list("--scenario");
- return Object.freeze({operation,scenarios:picked===undefined||picked.includes("all")?"all":picked,tools:[...new Set(chosen)] as IncrementalToolV1[],root:values["--root"],phases:[...new Set(phases)] as IncrementalPhaseV1[],file:values["--file"],json:flags.has("--json"),fresh:flags.has("--fresh"),language:language as "en"|"de"|undefined});
+/** 🌲️ The workspace as the consistency law sees it: manifest candidates, file reads, existence and ignore state. */
+export interface OwnerTree {
+  readonly manifests: readonly string[];
+  exists(path: string): boolean;
+  file(path: string): boolean;
+  tracked(path: string): boolean;
+  read(path: string): string | undefined;
+  ignored(path: string): boolean;
 }
 
-/** 📍️ The default location of the disposable root: the folder `sinc` in the temporary directory of the process (inside a test sandbox that is the sandbox directory), refused when its path leaves no room for the repository paths below the 255-character budget. */
-export function incrementalDefaultRootV1(platform:string,temporaryDirectory:string):string{
- const root=(platform==="win32"?win32:posix).join(temporaryDirectory,"sinc");
- if(root.length>incrementalRootLimit)throw Error(both(`The temporary directory is too long for the disposable root (${root.length} > ${incrementalRootLimit} characters): pass --root with a short path`,`Das temporäre Verzeichnis ist zu lang für das Wegwerf-Verzeichnis (${root.length} > ${incrementalRootLimit} Zeichen): --root mit einem kurzen Pfad übergeben`));
- return root;
-}
+/** 🎯️ One path prefix or several path prefixes that restrict a check or sync to subtrees. */
+export type OwnerScope = string | readonly string[];
 
-/** 🎛️ Everything the command needs from the host process, so the command itself is testable without a build CLI. */
-export type IncrementalCommandPortsV1=Readonly<{
- write(line:string):void;
- progress(stage:string):Promise<void>;
- check():void;
- signal:AbortSignal;
- environment:Readonly<Record<string,string|undefined>>;
- platform:string;
- tmpdir():string;
- now():number;
- run(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,signal:AbortSignal):Promise<string>;
- report(file:string,value:unknown):Promise<void>;
- files(root:string,signal:AbortSignal):Promise<readonly string[]>;
- adapter():Promise<IncrementalAdapterV1>;
- nxRecord(root:string):string;
- exists(path:string):Promise<boolean>;
- scratch():Promise<string>;
+/** 🔧️ What `syncOwnerRegistry` changed. */
+export type OwnerSync = Readonly<{
+  registry: BuildOwnerRegistryV1;
+  removed: { name: string; root: string; nativeRoots: string[] }[];
+  added: string[];
+  renamed: { from: string; to: string }[];
+  relocated: { name: string; from: string; to: string }[];
+  repackaged: string[];
 }>;
 
-const text=(set:IncrementalScenarioSetV1,key:string,language:"en"|"de")=>set.labels[key]![language];
-/** 🗣️ The language of the output: the requested one, else the shared rule of the CLI; no language is assumed. */
-export function incrementalLanguageV1(requested:"en"|"de"|undefined,environment:Readonly<Record<string,string|undefined>>):"en"|"de"{return requested??resolveLanguageV1(["en","de"],[],environment).language as "en"|"de";}
+export const BUILD_OWNER_REGISTRY_FILE = "📋️build-owners.json";
+export const OWNER_TREE_POLICY: OwnerTreePolicy = { collections: ownershipPolicy.collections.names, moduleMember: ownershipPolicy.collections.moduleMember, generated: cachingPolicy.generatedDirectories };
 
-const languageOf=(parsed:IncrementalArgumentsV1,ports:IncrementalCommandPortsV1):"en"|"de"=>incrementalLanguageV1(parsed.language,ports.environment);
+const PROJECT = "📋️project.json";
+const CARGO = "Cargo.toml";
+const at = (root: string, name: string): string => (root === "." ? name : `${root}/${name}`);
+const compareBytes = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+const scopesOf = (scope?: OwnerScope): readonly string[] | undefined => (scope === undefined ? undefined : typeof scope === "string" ? [scope] : scope);
+const within = (path: string, scope?: OwnerScope): boolean => scopesOf(scope)?.some((prefix) => prefix === "." || path === prefix || path.startsWith(`${prefix}/`)) ?? true;
 
-/** 🗺️ Renders the expected re-execution sets of a plan, one block per scenario and tool. */
-export function renderIncrementalPlanV1(set:IncrementalScenarioSetV1,rows:readonly Readonly<{scenario:string;tool:IncrementalToolV1;expected:IncrementalExpectedV1}>[],lang:"en"|"de"):string{
- const out:string[]=[];
- for(const row of rows)out.push(`${row.scenario} / ${row.tool}: ${text(set,"must",lang)} ${row.expected.must.length}, ${text(set,"may",lang)} ${row.expected.may.length}, ${text(set,"cutoff",lang)} ${row.expected.cutoff.length}`,...row.expected.must.map(id=>`  ${id}`));
- return out.join("\n");
+/** 🚫️ Mirrors the discovery exclusions: the ticket tree, generated directories and example collections outside a module member. */
+export function excludedFromOwners(path: string, policy: OwnerTreePolicy): boolean {
+  const parts = path.split("/");
+  return path.startsWith(".🧬semio/") || parts.some((part, index) => policy.generated.includes(part) || (policy.collections.includes(part) && parts[index - 1] !== policy.moduleMember));
 }
 
-const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"]];
+/** 🦀️ Reads `[package] name` of a Cargo manifest, or undefined for virtual manifests. */
+export function cargoPackageName(text: string): string | undefined {
+  const section = /^\[package\]\s*$([\s\S]*?)(?=^\[|(?![\s\S]))/m.exec(text);
+  return section ? /^name\s*=\s*"([^"]+)"/m.exec(section[1] ?? "")?.[1] : undefined;
+}
 
-/** 🚀️ Runs `repo incremental`: lists the scenarios, plans their expected sets, prepares the disposable root, runs the scenarios in it with every implementation and judges minimality, or discards the root. Progress is published per stage and every stage checks for cancellation. */
-export async function runIncrementalCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
- const parsed=incrementalArgumentsV1(args.slice(args[0]==="incremental"?1:0)),set=scenarios as IncrementalScenarioSetV1,issues=incrementalScenarioIssuesV1(set);
- if(issues.length)throw Error(`Closed incremental scenarios required: ${issues.join("; ")}`);
- const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir());
- if(parsed.operation==="list"){ports.write(renderIncrementalScenariosV1(set,lang));return;}
- if(parsed.operation==="discard"){await ports.progress("discard");await incrementalDiscardV1(live,root);ports.write(`${text(set,"progress",lang)}: ${root}`);return;}
- const scratch=await ports.scratch(),exists=await ports.exists(join(root,script));
- const host=(files?:readonly string[]):IncrementalHostV1=>({live,root,script,executable:process.execPath,scratch,signal:ports.signal,environment:ports.environment,run:ports.run,nxRecord:ports.nxRecord,adapter:ports.adapter,inventory:async()=>files??await ports.files(live,ports.signal),now:ports.now,check:ports.check,progress:ports.progress});
- try{
-  if(parsed.operation==="prepare"){
-   ports.check();
-   if(parsed.fresh)await incrementalDiscardV1(live,root);
-   if(!exists||parsed.fresh){
-    const files=await ports.files(live,ports.signal);
-    await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
-   }
-   const pre=host();
-   for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,"nx",step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
-   ports.write(`${text(set,"progress",lang)}: ${root}`);
-   return;
+/** 🪪️ Reads the name a manifest declares, or undefined when it is absent, unreadable or virtual. */
+export function ownerManifestName(tree: OwnerTree, manifest: string): string | undefined {
+  const text = tree.read(manifest);
+  if (text === undefined) return undefined;
+  if (manifest.endsWith(CARGO)) return cargoPackageName(text);
+  try { return (JSON.parse(text) as { name?: unknown }).name as string | undefined; } catch { return undefined; }
+}
+
+/** 📦️ Reads the npm package name declared beside an owner root. */
+export function ownerPackageName(tree: OwnerTree, root: string): string | undefined {
+  const text = tree.read(at(root, "package.json"));
+  if (text === undefined) return undefined;
+  try { return (JSON.parse(text) as { name?: string }).name; } catch { return undefined; }
+}
+
+/** ✅️ Returns every inconsistency between the registry rows and the tree below `scope`; a scope skips the catalog providers. */
+export function findOwnerFindings(registry: BuildOwnerRegistryV1, tree: OwnerTree, policy: OwnerTreePolicy, scope?: OwnerScope): OwnerFinding[] {
+  const out: OwnerFinding[] = [];
+  const add = (kind: OwnerFindingKind, detail: string, owner?: string, path?: string): void => { out.push({ kind, detail, owner, path }); };
+  const covered = new Set(registry.owners.flatMap((owner) => [owner.root, ...(owner.nativeRoots ?? [])]));
+  for (const owner of registry.owners.filter((row) => within(row.root, scope))) {
+    for (const native of owner.nativeRoots ?? []) if (!tree.exists(at(native, CARGO)) && !tree.ignored(native)) add("missing-native-root", `${native}/${CARGO} absent`, owner.name, native);
+    if (!tree.exists(owner.root) || !tree.exists(owner.manifest)) {
+      if (!tree.ignored(owner.manifest)) add(tree.exists(owner.root) ? "missing-manifest" : "missing-root", tree.exists(owner.root) ? "manifest absent" : "root directory absent", owner.name, tree.exists(owner.root) ? owner.manifest : owner.root);
+      continue;
+    }
+    if (!tree.file(owner.manifest)) add("manifest-not-file", "manifest is not an ordinary file", owner.name, owner.manifest);
+    if (owner.manifest.endsWith(CARGO) && tree.exists(at(owner.root, PROJECT))) add("cargo-row-shadows-project", `${PROJECT} beside the Cargo row is ignored by admission`, owner.name, at(owner.root, PROJECT));
+    if (excludedFromOwners(owner.manifest, policy)) add("row-in-excluded-tree", "manifest sits in an excluded tree", owner.name, owner.manifest);
+    const actual = ownerManifestName(tree, owner.manifest);
+    if (actual !== owner.name) add("name-mismatch", `manifest declares ${actual ?? "(unreadable)"}`, owner.name, owner.manifest);
+    const declared = ownerPackageName(tree, owner.root);
+    if (declared && !owner.packages.includes(declared)) add("package-missing", `package.json declares ${declared}`, owner.name, at(owner.root, "package.json"));
+    for (const name of owner.packages) if (name !== declared) add("package-stale", `${name} not declared by package.json`, owner.name, at(owner.root, "package.json"));
   }
-  if(!exists)throw Error(both(`Prepare the disposable root first: repo incremental prepare --root=${root}`,`Bereite zuerst das Wegwerf-Verzeichnis vor: repo incremental prepare --root=${root}`));
-  const selected=incrementalSelectV1(set,parsed.scenarios),files=await ports.files(live,ports.signal),port=incrementalCliPortsV1(host(files));
-  if(parsed.operation==="plan"){
-   const rows=[];
-   for(const scenario of selected)for(const tool of parsed.tools.filter(candidate=>!scenario.tools||scenario.tools.includes(candidate))){
-    ports.check();await ports.progress(`${scenario.id}:${tool}:plan`);
-    const slice=await port.slice(scenario,tool);
-    rows.push({scenario:scenario.id,tool,expected:incrementalExpectedV1(slice,tool,{kind:scenario.kind,files:[scenario.mutation.file]},[...(scenario.effects??[]),...set.sensitivity])});
-   }
-   if(parsed.json)ports.write(JSON.stringify(rows,null,2));else ports.write(renderIncrementalPlanV1(set,rows,lang));
-   return;
+  if (scope === undefined) for (const provider of registry.catalogProviders) {
+    if (!tree.exists(provider.ownerRoot)) add("provider-owner-root", "absent", undefined, provider.ownerRoot);
+    if (!tree.exists(provider.sourcePath)) add("provider-source", "absent", undefined, provider.sourcePath);
+    for (const consumer of provider.consumerRoots) if (!tree.exists(consumer)) add("provider-consumer-root", "absent", undefined, consumer);
   }
-  const rows=await incrementalRunV1(set,selected,parsed.tools,parsed.phases,port),report=incrementalReportV1(rows);
-  if(parsed.file)await ports.report(parsed.file,report);
-  ports.write(parsed.json?JSON.stringify(report,null,2):renderIncrementalReportV1(report,set,lang));
-  if(report.failed)throw Error(both(`Incremental conformance failed in ${report.failed} of ${report.rows.length} runs`,`Inkrementelle Konformität verletzt in ${report.failed} von ${report.rows.length} Läufen`));
- }finally{await rm(scratch,{recursive:true,force:true});}
+  const projectDirs = new Set(tree.manifests.filter((path) => basename(path) === PROJECT).map(dirname));
+  for (const path of tree.manifests.filter((candidate) => within(candidate, scope) && !excludedFromOwners(candidate, policy))) {
+    const directory = dirname(path);
+    if (basename(path) === PROJECT) {
+      if (!registry.owners.some((owner) => owner.root === directory && owner.manifest === path)) add("project-without-row", "project manifest has no owner row", undefined, path);
+    } else if (!projectDirs.has(directory) && !covered.has(directory) && ownerManifestName(tree, path) !== undefined) add("cargo-without-row", "package manifest has no owner row or native root", undefined, path);
+  }
+  return out;
 }
 
-/** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, its owned process execution, its report store and the live Bazel adapter. */
-export async function incrementalCommandPortsV1(root:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<IncrementalCommandPortsV1>{
- const nx=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),execution=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
- return Object.freeze({
-  write:line=>console.log(line),
-  progress:stage=>routing.advanceScriptInvocation(invocation,"incremental:"+stage,"running"),
-  check:()=>routing.checkScriptInvocation(invocation),
-  signal:invocation.control.signal,
-  environment:process.env,
-  platform:process.platform,
-  tmpdir:()=>tmpdir(),
-  now:()=>Date.now(),
-  run:(command,args,cwd,env,signal)=>execution.captureOwnedCommandV1(command,args,cwd,{env,signal}),
-  report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{console.log(artifact.path);});},
-  files:(directory,signal)=>incrementalTrackedFilesV1(directory,signal),
-  adapter:async()=>await import("../../🔧️tools/🏗️bazel/📜️script.ts") as unknown as IncrementalAdapterV1,
-  nxRecord:directory=>join(nx.nxCacheDirectoryV1(directory),"run.json"),
-  exists:async path=>access(path).then(()=>true,()=>false),
-  scratch:async()=>{const directory=join(tmpdir(),"sinc-run");await mkdir(directory,{recursive:true});return mkdtemp(join(directory,"r-"));}
- });
+/** 🔧️ Brings the rows below `scope` in line with the tree: rows of vanished modules are dropped only when no manifest exists and git tracks no file at the missing path (a tracked path that is merely absent is a concurrent move in progress), the Cargo packages under their native roots become rows of their own, rows whose module moved follow it, rows take the name and package list their manifest declares, Cargo rows beside a project manifest hand over to it, and every unregistered module gets a row at its byte-order position. */
+export function syncOwnerRegistry(registry: BuildOwnerRegistryV1, tree: OwnerTree, policy: OwnerTreePolicy, scope?: OwnerScope): OwnerSync {
+  const findings = findOwnerFindings(registry, tree, policy, scope);
+  const owners = structuredClone(registry.owners);
+  const missing = findings.filter((finding) => finding.kind === "missing-root" || finding.kind === "missing-manifest");
+  const gone = new Set(missing.map((finding) => finding.owner));
+  const absent = new Set(missing.filter((finding) => !tree.tracked(finding.path!)).map((finding) => finding.owner));
+  const found: { path: string; root: string; name: string }[] = findings.filter((finding) => finding.kind === "project-without-row" || finding.kind === "cargo-without-row").map((finding) => ({ path: finding.path!, root: dirname(finding.path!), name: ownerManifestName(tree, finding.path!) })).filter((entry): entry is { path: string; root: string; name: string } => entry.name !== undefined);
+  const claimed = new Set<string>();
+  const removed: OwnerSync["removed"] = [], relocated: OwnerSync["relocated"] = [], renamed: OwnerSync["renamed"] = [], repackaged: string[] = [], added: string[] = [];
+  const place = (row: OwnerRow): void => {
+    const index = owners.findIndex((other) => compareBytes(other.name, row.name) > 0);
+    owners.splice(index < 0 ? owners.length : index, 0, row);
+  };
+  const taken = (name: string, except: OwnerRow): boolean => owners.some((other) => other !== except && other.name === name);
+  for (const owner of [...owners]) {
+    if (!gone.has(owner.name)) continue;
+    const target = found.find((entry) => entry.name === owner.name && !claimed.has(entry.path));
+    if (!target) {
+      if (!absent.has(owner.name)) continue;
+      owners.splice(owners.indexOf(owner), 1);
+      removed.push({ name: owner.name, root: owner.root, nativeRoots: [...owner.nativeRoots ?? []] });
+      for (const native of owner.nativeRoots ?? []) for (const manifest of [at(native, PROJECT), at(native, CARGO)]) {
+        const name = tree.exists(manifest) ? ownerManifestName(tree, manifest) : undefined;
+        if (name !== undefined) { found.push({ path: manifest, root: native, name }); break; }
+      }
+      continue;
+    }
+    claimed.add(target.path);
+    const from = owner.root;
+    owner.root = target.root;
+    owner.manifest = target.path;
+    if (owner.nativeRoots) owner.nativeRoots = owner.nativeRoots.map((native) => (native === from ? target.root : native.startsWith(`${from}/`) ? at(target.root, native.slice(from.length + 1)) : native));
+    relocated.push({ name: owner.name, from, to: target.root });
+  }
+  for (const owner of [...owners].filter((row) => within(row.root, scope) && tree.exists(row.manifest))) {
+    const sibling = owner.manifest.endsWith(CARGO) ? at(owner.root, PROJECT) : undefined;
+    const handover = sibling !== undefined ? ownerManifestName(tree, sibling) : undefined;
+    if (sibling !== undefined && handover !== undefined && !taken(handover, owner)) owner.manifest = sibling;
+    const name = ownerManifestName(tree, owner.manifest);
+    if (name !== undefined && name !== owner.name && !taken(name, owner)) {
+      const from = owner.name;
+      owners.splice(owners.indexOf(owner), 1);
+      owner.name = name;
+      place(owner);
+      renamed.push({ from, to: name });
+    }
+    const declared = ownerPackageName(tree, owner.root);
+    const packages = declared && !owners.some((other) => other !== owner && other.packages.includes(declared)) ? [declared] : declared ? owner.packages : [];
+    if (JSON.stringify(packages) !== JSON.stringify(owner.packages)) { owner.packages = packages; repackaged.push(owner.name); }
+  }
+  for (const entry of found) {
+    if (claimed.has(entry.path) || owners.some((owner) => owner.name === entry.name || owner.root === entry.root || owner.nativeRoots?.includes(entry.root))) continue;
+    const declared = ownerPackageName(tree, entry.root);
+    place({ name: entry.name, root: entry.root, manifest: entry.path, packages: declared && !owners.some((owner) => owner.packages.includes(declared)) ? [declared] : [] });
+    added.push(entry.name);
+  }
+  return { registry: readBuildOwnerRegistryV1({ ...registry, owners }), removed, added, renamed, relocated, repackaged };
 }
 
-/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout, read-only, bounded and cancellable. */
-export function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
- return new Promise((accept,reject)=>{
-  const child=spawnToolV1("git",["-C",directory,"ls-files","-z","-co","--exclude-standard"],{stdio:["ignore","pipe","pipe"],windowsHide:true,signal}),chunks:Buffer[]=[];let bytes=0;
-  child.stdout.on("data",(chunk:Buffer)=>{bytes+=chunk.length;if(bytes>policy.maximumLogBytes){child.kill();reject(Error("Bounded file inventory required"));}else chunks.push(chunk);});
-  child.on("error",reject);
-  child.on("close",code=>code===0?accept(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean)):reject(Error(`git ls-files failed (${code})`)));
- });
+/** 🧠️ Builds an in-memory tree from a path-to-text map, a list of ignored path prefixes and a list of path prefixes that git tracks even when the file is absent; the language-agnostic fixtures run on it. */
+export function memoryOwnerTree(files: Readonly<Record<string, string>>, policy: OwnerTreePolicy, ignored: readonly string[] = [], tracked: readonly string[] = []): OwnerTree {
+  const paths = Object.keys(files);
+  const under = (path: string, prefix: string): boolean => path === prefix || path.startsWith(`${prefix}/`);
+  return {
+    manifests: paths.filter((path) => [PROJECT, CARGO].includes(basename(path)) && !excludedFromOwners(path, policy)).sort(compareBytes),
+    exists: (path) => path === "." || path in files || paths.some((candidate) => candidate.startsWith(`${path}/`)),
+    file: (path) => path in files,
+    tracked: (path) => tracked.some((prefix) => under(prefix, path) || under(path, prefix)),
+    read: (path) => files[path],
+    ignored: (path) => ignored.some((prefix) => under(path, prefix)),
+  };
 }
 
-/** 🚪️ The entry the build CLI calls for `repo incremental`. */
-export async function runIncrementalV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void>{
- await runIncrementalCommandV1(root,args,await incrementalCommandPortsV1(root,invocation));
+function listManifests(root: string, policy: OwnerTreePolicy, scope?: OwnerScope): string[] {
+  const scopes = scopesOf(scope);
+  const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "-o", "--exclude-standard", ...(scopes && !scopes.includes(".") ? ["--", ...scopes.map((prefix) => `:(literal)${prefix}`)] : [])], { cwd: root, maxBuffer: 1 << 29 });
+  const names = [PROJECT, CARGO];
+  if (listed.status === 0) return listed.stdout.toString("utf8").split("\0").filter((path) => names.includes(basename(path)) && !excludedFromOwners(path, policy) && existsSync(join(root, path))).sort(compareBytes);
+  const found: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(join(root, directory), { withFileTypes: true })) {
+      const path = at(directory, entry.name);
+      if (entry.isDirectory()) { if (!policy.generated.includes(entry.name) && !excludedFromOwners(`${path}/`, policy)) walk(path); } else if (names.includes(entry.name) && !excludedFromOwners(path, policy)) found.push(path);
+    }
+  };
+  for (const prefix of scopes ?? ["."]) walk(prefix);
+  return [...new Set(found)].sort(compareBytes);
+}
+
+/** 💽️ Reads the workspace below `root` from the file system; git lists the manifest candidates and decides ignore state, and a directory without git is walked instead. */
+export function readOwnerTree(root: string, policy: OwnerTreePolicy = OWNER_TREE_POLICY, scope?: OwnerScope): OwnerTree {
+  const ignoredCache = new Map<string, boolean>();
+  const trackedCache = new Map<string, boolean>();
+  return {
+    manifests: listManifests(root, policy, scope),
+    exists: (path) => existsSync(join(root, path)),
+    file: (path) => { const facts = lstatSync(join(root, path), { throwIfNoEntry: false }); return facts !== undefined && facts.isFile(); },
+    tracked: (path) => {
+      if (!trackedCache.has(path)) { const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "--", `:(literal)${path}`], { cwd: root, maxBuffer: 1 << 29 }); trackedCache.set(path, listed.status === 0 && listed.stdout.length > 0); }
+      return trackedCache.get(path)!;
+    },
+    read: (path) => { try { return readFileSync(join(root, path), "utf8"); } catch { return undefined; } },
+    ignored: (path) => {
+      if (!ignoredCache.has(path)) ignoredCache.set(path, runToolSyncV1("git", ["check-ignore", "-q", "--", path], { cwd: root }).status === 0);
+      return ignoredCache.get(path)!;
+    },
+  };
+}
+
+/** ⚖️ Checks the registry file below `repoRoot` and returns its findings; an invalid registry is the one finding. */
+export function checkBuildOwnerRegistry(repoRoot: string, scope?: OwnerScope, policy: OwnerTreePolicy = OWNER_TREE_POLICY): { owners: number; findings: OwnerFinding[] } {
+  let registry: BuildOwnerRegistryV1;
+  try { registry = readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(repoRoot, BUILD_OWNER_REGISTRY_FILE), "utf8"))); } catch (error) { return { owners: 0, findings: [{ kind: "registry-invalid", detail: (error as Error).message, path: BUILD_OWNER_REGISTRY_FILE }] }; }
+  return { owners: registry.owners.length, findings: findOwnerFindings(registry, readOwnerTree(repoRoot, policy, scope), policy, scope) };
+}
+
+/** 🚚️ Names the subtrees an applied move plan can have changed owners in: the directories of every moved owner or package manifest on either side, collapsed to the outermost ones, or the whole workspace when more than `limit` remain. */
+export function moveOwnerScopes(moves: readonly Readonly<{ sourcePath: string; destinationPath: string }>[], limit = 256): string[] {
+  const names = [PROJECT, CARGO, "package.json"];
+  const directories = [...new Set(moves.flatMap((move) => [move.sourcePath, move.destinationPath]).filter((path) => names.includes(basename(path))).map(dirname))].sort(compareBytes);
+  const outermost = directories.filter((path, index) => !directories.slice(0, index).some((prefix) => prefix === "." || path.startsWith(`${prefix}/`)));
+  return outermost.length > limit ? ["."] : outermost;
+}
+
+/** 🔄️ Re-reads the registry file at call time because peers edit it concurrently, syncs the rows below `scope`, replaces the file atomically when anything changed, and lists the findings that remain (catalog providers are authored, not synced; native roots follow their row). */
+export function reconcileBuildOwnerRegistry(repoRoot: string, options: { scope?: OwnerScope; write: boolean }, policy: OwnerTreePolicy = OWNER_TREE_POLICY): OwnerSync & { changed: boolean; findings: OwnerFinding[] } {
+  const file = join(repoRoot, BUILD_OWNER_REGISTRY_FILE);
+  const registry = readBuildOwnerRegistryV1(JSON.parse(readFileSync(file, "utf8")));
+  const tree = readOwnerTree(repoRoot, policy, options.scope);
+  const result = syncOwnerRegistry(registry, tree, policy, options.scope);
+  const text = `${JSON.stringify(result.registry, null, 2)}\n`;
+  const changed = JSON.stringify(result.registry) !== JSON.stringify(registry);
+  if (changed && options.write) {
+    const pending = `${file}.${process.pid}.tmp`;
+    writeFileSync(pending, text);
+    renameSync(pending, file);
+  }
+  return { ...result, changed, findings: findOwnerFindings(result.registry, tree, policy, options.scope) };
 }

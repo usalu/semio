@@ -150,7 +150,7 @@ impl FrameEnginePackets {
         let bytes = std::mem::size_of::<FrameEnginePacketPage>();
         if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_capacity_bytes < bytes { return Ok(false); }
         if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original frame packet page birth requires depth").into()); }
-        self.slots[index] = Some(semio_framework_async::boxed_fixed_slots(|| None));
+        self.slots[index] = Some(semio_framework_async_slots::boxed_fixed_slots(|| None));
         cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: bytes, ..Default::default() })?;
         cx.consume_fuel(1);
         Ok(index + 1 == FRAME_ENGINE_PACKET_PAGES)

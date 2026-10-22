@@ -2,11 +2,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "runtime",
     "version",
     "release",
     "distributions"
   ],
   "properties": {
+    "runtime": {
+      "type": "string",
+      "pattern": "^[a-z]+$"
+    },
     "version": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
@@ -68,6 +73,7 @@
   "definitions": {
     "Release": {
       "const": {
+        "runtime": "bun",
         "version": "1.4.2",
         "release": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2",
         "distributions": [

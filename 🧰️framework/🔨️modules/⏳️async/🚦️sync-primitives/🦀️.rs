@@ -1,5 +1,10 @@
 //! 🚦️ `Notify` and the owned-permit `Semaphore`: the repo-owned wait primitives.
 
+//#region 🪢️Oneshot
+#[path = "../🪢️oneshot/🦀️.rs"]
+pub mod oneshot;
+//#endregion 🪢️Oneshot
+
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -9,17 +14,17 @@ use std::task::{Context, Poll, Waker};
 //#region 🔔️Notify
 struct NotifyState {
     permit: bool,
-    pub(super) waker: Option<Waker>,
+    pub(crate) waker: Option<Waker>,
 }
 
 /// 🔔️ Single-permit wake signal — the repo-owned replacement for `tokio::sync::Notify`
-/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for [`TimerWheel`]'s sole consumer
+/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for `TimerWheel`'s sole consumer
 /// shape in the services crate: [`Notify::notify_one`] posts one early-wake permit that
 /// [`Notify::notified`] consumes, whether the notify arrives before or after the wait starts. Only
 /// ever has ONE real waiter in this repo (a timer driver loop) — multi-waiter fairness was
 /// deliberately not built, since nothing here needs it.
 pub struct Notify {
-    pub(super) state: Mutex<NotifyState>,
+    pub(crate) state: Mutex<NotifyState>,
 }
 
 impl Notify {
@@ -71,13 +76,13 @@ impl Future for Notified<'_> {
 //#region 🚦️Semaphore
 struct SemaphoreState {
     permits: usize,
-    pub(super) next_id: u64,
+    pub(crate) next_id: u64,
     wakers: HashMap<u64, Waker>,
 }
 
 /// 🚦️ Counting admission gate — the repo-owned replacement for `tokio::sync::Semaphore`
-/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for [`ComputePool`]'s (services
-/// crate) local admission bound independent of [`WorkerPool`]'s own worker count. Never `close`s —
+/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for `ComputePool`'s (services
+/// crate) local admission bound independent of `WorkerPool`'s own worker count. Never `close`s —
 /// nothing in this repo needs a closeable semaphore, so [`Semaphore::acquire_owned`] returns an
 /// [`OwnedPermit`] directly rather than a `Result`, unlike `tokio::sync::Semaphore`. Broadcast-wake
 /// on release (every pending waiter is woken and re-attempts the grab), not a fair queue — correct
@@ -85,7 +90,7 @@ struct SemaphoreState {
 /// [`Waker`] is tracked by id and removed on drop, so a cancelled (raced-away) acquire never leaks a
 /// stale waker.
 pub struct Semaphore {
-    pub(super) state: Mutex<SemaphoreState>,
+    pub(crate) state: Mutex<SemaphoreState>,
 }
 
 impl Semaphore {
@@ -119,7 +124,7 @@ impl Drop for OwnedPermit {
 /// 🚦️ Future returned by [`Semaphore::acquire_owned`].
 pub struct AcquireOwned {
     semaphore: Arc<Semaphore>,
-    pub(super) id: Option<u64>,
+    pub(crate) id: Option<u64>,
 }
 
 impl Future for AcquireOwned {

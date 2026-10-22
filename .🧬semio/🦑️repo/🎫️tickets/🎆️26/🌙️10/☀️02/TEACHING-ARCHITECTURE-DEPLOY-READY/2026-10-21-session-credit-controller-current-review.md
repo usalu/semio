@@ -1,0 +1,12 @@
+# Current Session Credit And Controller Delta Review
+
+Read-only current-own-merits review; retained historical bodies unavailable, so no exact textual delta is claimed. Current two files match Root pins and parse without TS syntax diagnostics. All three selected literals remain unchanged, each explicit60000ms. No Source functions/helpers/tests evaluated and no Native action.
+
+Credit SQL independently computes remaining output after actual diagnostic consumption, reserves first-failure/defer and terminal input allowance, validates closed ReadCredit/ReadDeferred with Ajv and compares the first-party subset validator. The changed fresh bootstrap structural expectation now counts actual Binary frames, matching the framing repair instead of stale one-frame assumption. Source read uses physicalSourceOrigin and actual preparation function/argument AST.
+
+Controller law extracts actual runClosureReadCohortsV1 and terminal-retention body with explicit controlled channel ports. Ports now reconstruct raw Binary/Text bytes through newline, enforce canonical Binary encoding plus input frame/byte limits, produce readiness only after complete bootstrap, validate credit schema and require credit before request. Existing terminal-defer→join→debit→exact retry ordering, bounded repeats, over-credit refusal and falsy undefined debit-primary identity remain asserted. SQLite independently checks request multiplicity. Fixed BOOT fixture is a controlled short bootstrap, not a real large Source capture or actual Native process; new framing helper law separately covers boundary bytes.
+
+No concrete current regression or additional direct Source witness was found: input schema and framing helper are already admitted current dependencies. Future actual21-law outcome remains separate.
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/💳️.ts — 5513/0ca2f4b7bacd9f3d9820614e70edc5dd74d5b7d825970fd72653c7f4272247d1; actual reply credit and deferred read debit match closed schema and SQLite [60000]; captured Source bootstrap reserves credit request and terminal through the actual policy [60000]
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🔄️.ts — 7446/0b41dc46ee277a9d9d1e071145ae8b52dcfb69cddeb15ce7e333a5de05220655; actual cohort controller joins terminal defer before debit and exact retry [60000]

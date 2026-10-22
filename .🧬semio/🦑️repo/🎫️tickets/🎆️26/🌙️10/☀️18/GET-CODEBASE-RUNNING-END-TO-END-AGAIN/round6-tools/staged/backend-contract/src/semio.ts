@@ -1,3 +1,4 @@
+import {GlobV1} from "@@RUNTIME@@/🌐️glob/@@TS@@";
 import {createHash} from "node:crypto";
 import schema from "./@@SCHEMA@@/@@JSON@@" with {type:"json"};
 
@@ -54,9 +55,9 @@ export function semioPatternPrefixV1(pattern:string):string{
 
 /** 📚️ Selects the inventory files that match include patterns and none of the exclude patterns. */
 export function semioSelectFilesV1(inventory:readonly string[],includes:readonly string[],excludes:readonly string[]):string[]{
- const chosen=new Set<string>(),excluded=excludes.map(pattern=>new Bun.Glob(pattern));
+ const chosen=new Set<string>(),excluded=excludes.map(pattern=>new GlobV1(pattern));
  for(const pattern of includes){
-  const glob=/[?*{[(]/u.test(pattern)?new Bun.Glob(pattern):undefined,prefix=semioPatternPrefixV1(pattern);
+  const glob=/[?*{[(]/u.test(pattern)?new GlobV1(pattern):undefined,prefix=semioPatternPrefixV1(pattern);
   if(!glob){if(inventory[semioLowerBoundV1(inventory,pattern)]===pattern)chosen.add(pattern);continue;}
   for(let at=semioLowerBoundV1(inventory,prefix);at<inventory.length&&inventory[at]!.startsWith(prefix);at++)if(glob.match(inventory[at]!))chosen.add(inventory[at]!);
  }

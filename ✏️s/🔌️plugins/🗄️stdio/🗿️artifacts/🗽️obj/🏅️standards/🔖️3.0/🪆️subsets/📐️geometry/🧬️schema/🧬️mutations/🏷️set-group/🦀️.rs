@@ -22,7 +22,16 @@ pub struct SetGroup {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group", kind: "set-group", record: "SetGroup" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set group", "Gruppe setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetGroup {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { name, faces, index } = self;
         protocol::MutationOutcome::new({
             let current = base.groups.iter().find(|entry| &entry.name == name);
@@ -41,12 +50,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
                 None => vec![ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: name.clone() })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set group", "Gruppe setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

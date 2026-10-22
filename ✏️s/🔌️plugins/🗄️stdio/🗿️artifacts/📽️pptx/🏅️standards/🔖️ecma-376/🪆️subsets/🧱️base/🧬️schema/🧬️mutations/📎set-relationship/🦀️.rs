@@ -36,23 +36,24 @@ impl SetRelationship {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetRelationship {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationship", kind: "set-relationship", record: "SetRelationship" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set relationship", "Beziehung setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["opc".to_string(), "relationships".to_string(), self.owner.clone(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxMutation> for SetRelationship {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
         opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::relationship_write_diff(opc, &self.owner, &self.relationship(), self.index)))
     }
-
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
         let previous = opc_layer::with_package(base, |opc| opc_layer::relationship_at(opc, &self.owner, &self.id)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(match previous {
             Some((at, existing)) => vec![PptxMutation::SetRelationship(Self::of(&self.owner, &existing, Some(at)))],
             None => vec![PptxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: self.owner.clone(), id: self.id.clone() })],
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set relationship", "Beziehung setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["opc".to_string(), "relationships".to_string(), self.owner.clone(), self.id.clone()]
     }
 }
 //#endregion 🔖️Payload

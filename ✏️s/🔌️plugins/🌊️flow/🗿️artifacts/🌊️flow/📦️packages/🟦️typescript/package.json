@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/flow-flow:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/flow-flow:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/flow-flow:test"
+    "build": "repo run @semio-tech/flow-flow:build",
+    "check": "repo run @semio-tech/flow-flow:check",
+    "test": "repo run @semio-tech/flow-flow:test"
   },
   "exports": {
     ".": {

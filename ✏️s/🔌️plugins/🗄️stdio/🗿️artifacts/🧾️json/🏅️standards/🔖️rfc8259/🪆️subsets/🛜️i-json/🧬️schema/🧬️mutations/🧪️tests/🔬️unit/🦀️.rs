@@ -1,6 +1,6 @@
 use crate::{standards::v_rfc8259::subsets::base::schema::mutations::InsertArrayElementPayload, standards::v_rfc8259::subsets::base::schema::mutations::JsonMutation, standards::v_rfc8259::subsets::base::schema::mutations::JsonPath, standards::v_rfc8259::subsets::base::schema::mutations::JsonPathSegment, standards::v_rfc8259::subsets::base::schema::mutations::RemoveArrayElementPayload, standards::v_rfc8259::subsets::base::schema::mutations::RemoveMemberPayload, standards::v_rfc8259::subsets::base::schema::mutations::SetMemberPayload};
 use crate::{standards::v_rfc8259::subsets::base::schema::snapshot::JsonMember, standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot, standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{CODE_INVARIANT, resolve};
 use crate::apply_mutation;
 use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::*;
@@ -130,7 +130,7 @@ fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {
     ];
     for mutation in mutations {
         let mut snapshot = original.clone();
-        let undo = <JsonIJsonMutation as Mutation<JsonSnapshot>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
+        let undo = <JsonIJsonMutation as ColdMutation<JsonSnapshot>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
         apply_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_mutation(&mut snapshot, step);
@@ -146,7 +146,7 @@ fn the_four_inherited_verbs_mean_what_their_any_counterparts_mean() {
     let snapshot = base();
     let path = key("tags");
     let lowered = |ijson: JsonIJsonMutation, any: JsonMutation| {
-        assert_eq!(<JsonIJsonMutation as Mutation<JsonSnapshot>>::diff(&ijson, &snapshot), <JsonMutation as Mutation<JsonSnapshot>>::diff(&any, &snapshot), "{ijson:?} must mean what {any:?} means");
+        assert_eq!(<JsonIJsonMutation as ColdMutation<JsonSnapshot>>::diff(&ijson, &snapshot), <JsonMutation as ColdMutation<JsonSnapshot>>::diff(&any, &snapshot), "{ijson:?} must mean what {any:?} means");
     };
     lowered(
         JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9"), index: None }),

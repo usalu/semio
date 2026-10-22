@@ -26,6 +26,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "hostSnapshot", kind: "change-schema", record: "ChangedSchema" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.schema), &format!("Schema auf \"{}\" ändern", self.schema))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for ChangeSchema
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<ChangeSchema>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::change_schema::diff::diff(self, base)
     }
@@ -35,8 +44,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.schema), &format!("Schema auf \"{}\" ändern", self.schema))
-    }
 }
 //#endregion 🔖️ChangeSchema

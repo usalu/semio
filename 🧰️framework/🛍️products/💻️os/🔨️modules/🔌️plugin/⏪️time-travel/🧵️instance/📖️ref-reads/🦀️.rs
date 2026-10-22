@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_plugin_child::ChildContentRetirement;
 use semio_framework::MutationId;
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelRef<'v, A, M, X> {
     /// 🧭️ The store state a session observes — of the store it edits; `None` when that composed member is gone.
     pub(super) fn time_travel_base(&self) -> Option<TimeTravelBase> {
         match self.time_travel_query(TimeTravelStoreQuery::Base)? {

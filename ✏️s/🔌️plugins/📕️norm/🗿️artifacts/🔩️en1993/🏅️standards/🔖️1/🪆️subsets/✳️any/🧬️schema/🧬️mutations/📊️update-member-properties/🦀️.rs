@@ -16,15 +16,6 @@ pub struct UpdateMemberProperties {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateMemberProperties where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_member_properties::UpdateMemberProperties> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "member", kind: "update-member-properties", record: "UpdatedMember" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
-        crate::update_member_properties::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::update_member_properties::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update member {}", self.member.id),
@@ -34,6 +25,18 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateMemberProperties w
     fn target(&self) -> Vec<String> {
         vec![self.member.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<En1993Snapshot, Op> for UpdateMemberProperties where Op: protocol::ColdMutation<En1993Snapshot, ReferenceDiff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_member_properties::UpdateMemberProperties> + From<crate::remove_member::RemoveMember> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1993Snapshot>>::ReferenceDiff> {
+        crate::update_member_properties::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::update_member_properties::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Payload
 

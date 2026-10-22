@@ -634,69 +634,9 @@ pub struct Din18599Diff {
     pub climate: Option<Din18599ClimatePatch>,
 }
 
-impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
-    fn apply(&self, base: &Din18599Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din18599Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.building_category {
-            next.building_category = value.clone();
-        }
-        if let Some(value) = &self.attachment {
-            next.attachment = value.clone();
-        }
-        if let Some(value) = &self.use_class {
-            next.use_class = value.clone();
-        }
-        if let Some(value) = &self.method {
-            next.method = value.clone();
-        }
-        if let Some(value) = &self.net_floor_area_m2 {
-            next.net_floor_area_m2 = value.clone();
-        }
-        if let Some(value) = &self.heated_volume_m3 {
-            next.heated_volume_m3 = value.clone();
-        }
-        if let Some(value) = &self.geg_qp_factor {
-            next.geg_qp_factor = value.clone();
-        }
-        if let Some(value) = &self.delta_u_wb_w_m2k {
-            next.delta_u_wb_w_m2k = value.clone();
-        }
-        if let Some(value) = &self.automation_class {
-            next.automation_class = value.clone();
-        }
-        if let Some(rows) = &self.zones {
-            next.zones = rows.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
-        }
-        if let Some(rows) = &self.elements {
-            next.elements = rows.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
-        }
-        if let Some(patch) = &self.heating {
-            patch.apply_to_row(&mut next.heating).map_err(|error| error.under(["heating"]))?;
-        }
-        if let Some(patch) = &self.dhw {
-            patch.apply_to_row(&mut next.dhw).map_err(|error| error.under(["dhw"]))?;
-        }
-        if let Some(patch) = &self.ventilation {
-            patch.apply_to_row(&mut next.ventilation).map_err(|error| error.under(["ventilation"]))?;
-        }
-        if let Some(patch) = &self.cooling {
-            patch.apply_to_row(&mut next.cooling).map_err(|error| error.under(["cooling"]))?;
-        }
-        if let Some(patch) = &self.lighting {
-            patch.apply_to_row(&mut next.lighting).map_err(|error| error.under(["lighting"]))?;
-        }
-        if let Some(patch) = &self.renewables {
-            patch.apply_to_row(&mut next.renewables).map_err(|error| error.under(["renewables"]))?;
-        }
-        if let Some(patch) = &self.climate {
-            patch.apply_to_row(&mut next.climate).map_err(|error| error.under(["climate"]))?;
-        }
-        if self.climate.is_some() {
-            next.climate_table = semio_s_artifact_norm_din18599_model::din18599_climate_table_child(&next.climate);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {}
 
+impl protocol::ColdMutationDiff<Din18599Snapshot> for Din18599Diff {
     fn absorb(&mut self, other: Self) {
         if other.building_category.is_some() {
             self.building_category = other.building_category;
@@ -782,9 +722,79 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
             }
         }
     }
+
+    fn apply(&self, unpublished: &mut Din18599Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.building_category {
+            next.building_category = value.clone();
+        }
+        if let Some(value) = &self.attachment {
+            next.attachment = value.clone();
+        }
+        if let Some(value) = &self.use_class {
+            next.use_class = value.clone();
+        }
+        if let Some(value) = &self.method {
+            next.method = value.clone();
+        }
+        if let Some(value) = &self.net_floor_area_m2 {
+            next.net_floor_area_m2 = value.clone();
+        }
+        if let Some(value) = &self.heated_volume_m3 {
+            next.heated_volume_m3 = value.clone();
+        }
+        if let Some(value) = &self.geg_qp_factor {
+            next.geg_qp_factor = value.clone();
+        }
+        if let Some(value) = &self.delta_u_wb_w_m2k {
+            next.delta_u_wb_w_m2k = value.clone();
+        }
+        if let Some(value) = &self.automation_class {
+            next.automation_class = value.clone();
+        }
+        if let Some(rows) = &self.zones {
+            next.zones = rows.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
+        }
+        if let Some(rows) = &self.elements {
+            next.elements = rows.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
+        }
+        if let Some(patch) = &self.heating {
+            patch.apply_to_row(&mut next.heating).map_err(|error| error.under(["heating"]))?;
+        }
+        if let Some(patch) = &self.dhw {
+            patch.apply_to_row(&mut next.dhw).map_err(|error| error.under(["dhw"]))?;
+        }
+        if let Some(patch) = &self.ventilation {
+            patch.apply_to_row(&mut next.ventilation).map_err(|error| error.under(["ventilation"]))?;
+        }
+        if let Some(patch) = &self.cooling {
+            patch.apply_to_row(&mut next.cooling).map_err(|error| error.under(["cooling"]))?;
+        }
+        if let Some(patch) = &self.lighting {
+            patch.apply_to_row(&mut next.lighting).map_err(|error| error.under(["lighting"]))?;
+        }
+        if let Some(patch) = &self.renewables {
+            patch.apply_to_row(&mut next.renewables).map_err(|error| error.under(["renewables"]))?;
+        }
+        if let Some(patch) = &self.climate {
+            patch.apply_to_row(&mut next.climate).map_err(|error| error.under(["climate"]))?;
+        }
+        if self.climate.is_some() {
+            next.climate_table = semio_s_artifact_norm_din18599_model::din18599_climate_table_child(&next.climate);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Din18599Snapshot> for Din18599Diff {
+    fn is_empty(&self) -> bool {
+        self.building_category.is_none() && self.attachment.is_none() && self.use_class.is_none() && self.method.is_none() && self.net_floor_area_m2.is_none() && self.heated_volume_m3.is_none() && self.geg_qp_factor.is_none() && self.delta_u_wb_w_m2k.is_none() && self.automation_class.is_none() && self.zones.as_ref().map_or(true, |rows| rows.is_empty()) && self.elements.as_ref().map_or(true, |rows| rows.is_empty()) && self.heating.is_none() && self.dhw.is_none() && self.ventilation.is_none() && self.cooling.is_none() && self.lighting.is_none() && self.renewables.is_none() && self.climate.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Din18599Snapshot> for Din18599Diff {
     fn inverse(&self, base: &Din18599Snapshot) -> Self {
         Self {
             building_category: self.building_category.as_ref().map(|_| base.building_category.clone()),
@@ -806,10 +816,6 @@ impl protocol::DiffAlgebra<Din18599Snapshot> for Din18599Diff {
             renewables: self.renewables.as_ref().map(|patch| patch.inverse_from_row(&base.renewables)),
             climate: self.climate.as_ref().map(|patch| patch.inverse_from_row(&base.climate)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.building_category.is_none() && self.attachment.is_none() && self.use_class.is_none() && self.method.is_none() && self.net_floor_area_m2.is_none() && self.heated_volume_m3.is_none() && self.geg_qp_factor.is_none() && self.delta_u_wb_w_m2k.is_none() && self.automation_class.is_none() && self.zones.as_ref().map_or(true, |rows| rows.is_empty()) && self.elements.as_ref().map_or(true, |rows| rows.is_empty()) && self.heating.is_none() && self.dhw.is_none() && self.ventilation.is_none() && self.cooling.is_none() && self.lighting.is_none() && self.renewables.is_none() && self.climate.is_none()
     }
 }
 

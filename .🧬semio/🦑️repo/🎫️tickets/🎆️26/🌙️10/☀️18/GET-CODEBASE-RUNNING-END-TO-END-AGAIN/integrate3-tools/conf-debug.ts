@@ -1,0 +1,17 @@
+import {mkdtempSync,readFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import scenarios from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/📋️scenarios/🔣️.json" with {type:"json"};
+import {writeConformanceWorkspaceV1,conformanceGraphV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🟦️.ts";
+import {SemioStoreV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts";
+import {semioLocalExecutorV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🚀️exec/🟦️.ts";
+import {runSemioTasksV1,semioInventoryV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🏁️scheduler/🟦️.ts";
+const set:any=scenarios;
+const dir=mkdtempSync(join(tmpdir(),"i3conf-"));
+const stubFile="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🎭️stub/🟦️.ts";
+const written:any=writeConformanceWorkspaceV1(set.workspace,join(dir,"ws"),readFileSync(stubFile,"utf8"),join(dir,"markers.log"));
+const graph=conformanceGraphV1(set.workspace,join(dir,"ws"),process.execPath,written.stub,written.specPath);
+const store=new SemioStoreV1(join(dir,"cache"));
+const exec=semioLocalExecutorV1(join(dir,"ws"),()=>({...process.env}));
+const record=await runSemioTasksV1(graph,{tasks:["app:build"]},{workspace:join(dir,"ws"),store,inventory:()=>semioInventoryV1(join(dir,"ws")),execute:(t:any,s:any,w:any,st:any)=>exec(t,s,(c:string)=>{console.error("OUT",t.id,c);w(c);},st),environment:process.env,now:Date.now,write:(c:string)=>console.error("W",c)} as any,{signal:new AbortController().signal,onEvent:()=>{}});
+console.error(JSON.stringify(record).slice(0,1500));

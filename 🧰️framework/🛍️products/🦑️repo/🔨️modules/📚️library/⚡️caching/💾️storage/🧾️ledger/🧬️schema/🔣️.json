@@ -18,6 +18,7 @@
       }
     },
     "areas": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/area" } },
+    "needs": { "type": "array", "maxItems": 16, "items": { "$ref": "#/$defs/need" } },
     "retirements": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/retirement" } }
   },
   "$defs": {
@@ -62,7 +63,7 @@
       "additionalProperties": false,
       "required": ["owner"],
       "properties": {
-        "owner": { "enum": ["image", "control", "cargo", "nx", "bazel", "test-evidence", "dashboard"] }
+        "owner": { "enum": ["image", "control", "cargo", "nx", "bazel", "semio", "test-evidence", "dashboard", "graph", "remote-cache", "remote-execution"] }
       }
     },
     "collect": {
@@ -89,9 +90,44 @@
         "partition": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
         "budget": { "$ref": "#/$defs/budget" },
         "managed": { "$ref": "#/$defs/managed" },
+        "recreate": { "enum": ["derived", "carried"] },
+        "carry": { "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/directory" } },
+        "reclaim": { "$ref": "#/$defs/reclaim" },
         "collect": { "$ref": "#/$defs/collect" },
         "writers": { "type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 240 } },
         "purpose": { "$ref": "#/$defs/bilingual" }
+      }
+    },
+    "reclaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["softAvailableBytes", "targetAvailableBytes"],
+      "properties": {
+        "softAvailableBytes": { "$ref": "#/$defs/bytes" },
+        "targetAvailableBytes": { "$ref": "#/$defs/bytes" }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "measuredBytes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+        "area": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+        "bytes": { "$ref": "#/$defs/bytes" },
+        "measuredBytes": { "$ref": "#/$defs/bytes" }
+      }
+    },
+    "need": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partition", "measuredOn", "headroomPercent", "floorBytes", "components"],
+      "properties": {
+        "partition": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+        "measuredOn": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "headroomPercent": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "floorBytes": { "$ref": "#/$defs/bytes" },
+        "components": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/component" } }
       }
     },
     "retirement": {
@@ -113,7 +149,32 @@
         "checkEvery": 128,
         "removeBatch": 32,
         "sqliteProbesPerUnit": 5000,
-        "progressIntervalMs": 250
+        "progressIntervalMs": 250,
+        "sizeLedgerFile": "🧭️size-ledger.json",
+        "maximumSizeRecords": 4096,
+        "imageOverheadBytes": 268435456
+      }
+    },
+    "sizeLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "records"],
+      "properties": {
+        "version": { "const": 1 },
+        "records": {
+          "type": "object",
+          "propertyNames": { "type": "string", "minLength": 1, "maxLength": 400 },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["usedBytes", "partial", "atMs"],
+            "properties": {
+              "usedBytes": { "$ref": "#/$defs/bytes" },
+              "partial": { "type": "boolean" },
+              "atMs": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
       }
     }
   }

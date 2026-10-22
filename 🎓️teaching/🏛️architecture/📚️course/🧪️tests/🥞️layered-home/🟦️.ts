@@ -55,7 +55,7 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     expect(await veil.evaluate((glass) => getComputedStyle(glass).backdropFilter)).toContain("blur(");
     await expect.poll(() => strip.getAttribute("style")).not.toBe(before);
     const id = scope.pages[1]!;
-    await card(learner.page, id).locator("[data-overview-card]").hover();
+    await card(learner.page, id).locator("[data-layered-zoom]").hover();
     await expect(card(learner.page, id)).toHaveAttribute("data-revealed", "");
     await expect.poll(() => displacement(learner, id)).toBeLessThan(0.5);
     const preview = await boxOf(pane(learner.page, id));

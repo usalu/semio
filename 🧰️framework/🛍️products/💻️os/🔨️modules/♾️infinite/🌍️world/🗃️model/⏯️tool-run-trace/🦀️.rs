@@ -60,7 +60,7 @@ pub struct ToolRunTraceBatch {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct ToolRunTraceSlot {
+pub struct ToolRunTraceSlot {
     batch: ToolRunTraceBatchKey,
     index: usize,
 }

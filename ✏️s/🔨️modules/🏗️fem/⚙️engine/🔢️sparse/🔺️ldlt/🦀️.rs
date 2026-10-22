@@ -114,6 +114,9 @@ mod run_and_close;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_LDLT_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 // #endregion 🔖️Tests
 
 fn ldlt_checkpoint_retirement_demand(state: &LdltCheckpoint) -> Result<Option<RetirementDemand>, ValueError> {

@@ -42,7 +42,7 @@ fn every_profile_advertises_its_own_surface() {
     for (profile, name) in [(Profile::Generic, "repo"), (Profile::Cursor, "repo"), (Profile::Kiro, "repo"), (Profile::Copilot, "repo"), (Profile::Claude, "repo"), (Profile::Codex, "repo")] {
         assert_eq!(profile.server_name(), name);
         let open = &tool_schemas(profile).into_iter().find(|tool| tool.name == "ticket_open").expect("ticket_open").input_schema;
-        assert_eq!(open.properties.contains_key("plan_id"), matches!(profile, Profile::Cursor | Profile::Copilot | Profile::Claude | Profile::Codex));
+        assert_eq!(open.properties.contains_key("plan_id"), matches!(profile, Profile::Copilot | Profile::Claude | Profile::Codex));
         assert_eq!(open.properties.contains_key("spec_id"), profile == Profile::Kiro);
     }
 }

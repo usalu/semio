@@ -724,10 +724,22 @@ name = "semio-framework-async"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-async-timer",
  "semio-framework-trace",
  "semio-framework-value",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "semio-framework-async-slots"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-async-timer"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-course"
@@ -1208,6 +1220,7 @@ dependencies = [
  "axum",
  "futures",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-dispatch-macros",
  "semio-framework-replication",
  "semio-framework-server-authority",
@@ -1255,6 +1268,7 @@ name = "semio-framework-server-presence"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-server-contract",
  "semio-framework-server-throttle",
  "serde",
@@ -1304,6 +1318,7 @@ dependencies = [
  "semio-framework-value-retained-map",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-snapshot-projection",
  "serde",
  "serde_json",
 ]

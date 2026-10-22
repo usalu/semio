@@ -14,18 +14,21 @@ pub struct SetLocation {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetLocation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "location", kind: "set-location", record: "SetLocation" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        let Self { location } = self;
-        protocol::MutationOutcome::new(EpwDiff { location: Some(location.clone()), ..EpwDiff::default() })
-    }
-    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetLocation(SetLocation { location: base.location.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set location", "Standort setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetLocation {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
+        let Self { location } = self;
+        protocol::MutationOutcome::new(EpwDiff { location: Some(location.clone()), ..EpwDiff::default() })
+    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+        Ok(vec![EpwMutation::SetLocation(SetLocation { location: base.location.clone() })])
     }
 }
 //#endregion 🔖️Payload

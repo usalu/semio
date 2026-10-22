@@ -10,28 +10,29 @@ import {forwardCommandV1} from "../resident/client/index.mjs";
 import {createDelegatedExecutionPortV1} from "../resident/delegate/index.mjs";
 import {createExecutorPoolV1} from "../resident/delegate/executor.mjs";
 import {buildWorkspace} from "./workspace.mjs";
+import {benchTemporaryDirectoryV1,benchLanguagesV1,nativeDirectoryV1,nativeToolV1} from "./environment.mjs";
 import {createCustodyPort,createGraphPort} from "./ports.mjs";
 import {clearStamps,closureOf,load,nowUs,percentiles,readStamps,round,timed} from "./lib.mjs";
 
 const flags=process.argv.slice(2),flag=(name,fallback)=>{const at=flags.indexOf(name);return at>=0?flags[at+1]:fallback;};
-const overlay=realpathSync(flag("--overlay")),bin=realpathSync(flag("--bin")),owners=Number(flag("--owners","400")),count=Number(flag("--n","30")),size=Number(flag("--executors","4")),mode=flag("--mode","both");
-const here=fileURLToPath(new URL(".",import.meta.url)),scratch=mkdtempSync("/tmp/hb-"),stamps=join(scratch,"stamps");
+const overlay=realpathSync(flag("--overlay")),bin=realpathSync(nativeDirectoryV1(flag("--bin"))),owners=Number(flag("--owners","400")),count=Number(flag("--n","30")),size=Number(flag("--executors","4")),mode=flag("--mode","both"),languages=benchLanguagesV1(flag("--languages"));
+const here=fileURLToPath(new URL(".",import.meta.url)),scratch=benchTemporaryDirectoryV1("hb-"),stamps=join(scratch,"stamps");
 process.env.XDG_RUNTIME_DIR=join(scratch,"run");mkdirSync(process.env.XDG_RUNTIME_DIR,{recursive:true,mode:0o700});
 const generated=join(scratch,"ws"),graph=buildWorkspace({root:generated,owners,filesPerOwner:10,layers:6});
 cpSync(join(generated,"pkgs"),join(overlay,"pkgs"),{recursive:true});copyFileSync(join(generated,"graph.json"),join(overlay,"graph.json"));
 for(const file of["package.json","tsconfig.base.json","bun.lock"])if(!existsSync(join(overlay,file)))copyFileSync(join(generated,file),join(overlay,file));
 mkdirSync(join(overlay,".out"),{recursive:true});
 const root=overlay,runtime=endpointsV1(root),target="p"+String(owners-1).padStart(4,"0")+":build",closure=closureOf(graph,target.split(":")[0]);
-const environment={...process.env,BENCH_ROOT:root,BENCH_OVERLAY:overlay,BENCH_TOOL:bin+"/faketool",BENCH_STAMPS:stamps,BENCH_WORK:"30"};
+const environment={...process.env,BENCH_ROOT:root,BENCH_OVERLAY:overlay,BENCH_TOOL:nativeToolV1(bin,"faketool"),BENCH_STAMPS:stamps,BENCH_WORK:"30"};
 const executors=createExecutorPoolV1({command:["bun",join(here,"executor.mjs")],environment,cwd:root,size,readyTimeoutMilliseconds:60000});
 const execution=createDelegatedExecutionPortV1({pool:{take:()=>undefined},executors,coldCommand:["false"],argvFor:id=>["repo","run",id],environment,cwd:root});
-const service=createResidentServiceV1({root,runtime,implementation:"0".repeat(64),backend:"auto",watcherBinary:bin+"/semio-repo-watch",exclude:{rooted:[".git",".cache"],names:["node_modules","target"]},fenceDirectory:".semio-fence",
- ports:{graph:createGraphPort({root,scanBinary:bin+"/semio-repo-watch"}),execution,custody:createCustodyPort()},log:(kind,detail)=>{if(flags.includes("--verbose"))process.stderr.write("[service] "+kind+" "+detail+"\n");}});
+const service=createResidentServiceV1({root,runtime,implementation:"0".repeat(64),backend:"auto",watcherBinary:nativeToolV1(bin,"semio-repo-watch"),exclude:{rooted:[".git",".cache"],names:["node_modules","target"]},fenceDirectory:".semio-fence",
+ ports:{graph:createGraphPort({root,scanBinary:nativeToolV1(bin,"semio-repo-watch")}),execution,custody:createCustodyPort()},log:(kind,detail)=>{if(flags.includes("--verbose"))process.stderr.write("[service] "+kind+" "+detail+"\n");}});
 const started=await service.start();
 executors.top();
 const run=async()=>{
  const out=[],err=[];
- const result=await forwardCommandV1({root,command:"run",args:[target],cwd:root,languages:["en"],environment:process.env,stdout:{write:text=>out.push(String(text))},stderr:{write:text=>err.push(String(text))}});
+ const result=await forwardCommandV1({root,command:"run",args:[target],cwd:root,languages,environment:process.env,stdout:{write:text=>out.push(String(text))},stderr:{write:text=>err.push(String(text))}});
  return{...result,out:out.join(""),err:err.join("")};
 };
 const report=row=>process.stdout.write(JSON.stringify({load:load(),...row})+"\n");

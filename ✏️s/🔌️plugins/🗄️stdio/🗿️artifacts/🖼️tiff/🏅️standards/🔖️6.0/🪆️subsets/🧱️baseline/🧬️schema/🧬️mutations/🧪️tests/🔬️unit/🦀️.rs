@@ -1,4 +1,4 @@
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::apply_mutation;
 use crate::standards::v6_0::subsets::baseline::schema::mutations::*;
 use crate::schema::diff::*;
@@ -63,10 +63,10 @@ fn each_kind_moves_exactly_the_axis_its_diagnostic_reports() {
 fn a_no_op_is_empty_and_an_absent_axis_is_refused() {
     let base = conforming();
     let same = TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 2 });
-    assert_eq!(<TiffBaselineMutation as Mutation<TiffSnapshot>>::diff(&same, &base).diff(), &TiffDiff::default());
+    assert_eq!(<TiffBaselineMutation as ColdMutation<TiffSnapshot>>::diff(&same, &base).diff(), &TiffDiff::default());
     let mut bare = base.clone();
     bare.ifds[0].entries.retain(|entry| entry.tag != TAG_PHOTOMETRIC);
-    assert!(!<TiffBaselineMutation as Mutation<TiffSnapshot>>::diff(&same, &bare).is_applicable(Default::default()));
+    assert!(!<TiffBaselineMutation as ColdMutation<TiffSnapshot>>::diff(&same, &bare).is_applicable(Default::default()));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -19,7 +19,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "primitive", kind: "create-primitive", record: "CreatedPrimitive" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create primitive \"{}\" in mesh \"{}\"", self.primitive.id, self.mesh_id), &format!("Primitiv \"{}\" in Netz \"{}\" erstellen", self.primitive.id, self.mesh_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.primitive.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioMeshSnapshot, Op> for CreatePrimitive
+where
+    Op: protocol::ColdMutation<SemioMeshSnapshot, ReferenceDiff = crate::schema::diff::SemioMeshDiff> + From<CreatePrimitive> + From<crate::schema::mutations::delete_primitive::DeletePrimitive>,
+{
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioMeshSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,11 +40,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create primitive \"{}\" in mesh \"{}\"", self.primitive.id, self.mesh_id), &format!("Primitiv \"{}\" in Netz \"{}\" erstellen", self.primitive.id, self.mesh_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.primitive.id.clone()]
-    }
 }
 //#endregion 🔖️Payload

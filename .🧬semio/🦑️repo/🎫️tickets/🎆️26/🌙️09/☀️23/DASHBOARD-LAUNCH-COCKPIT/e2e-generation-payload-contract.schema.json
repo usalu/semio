@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "policyCases",
+    "pageScenarios",
+    "stringCase",
+    "pageUnit"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "authored-design-vectors-no-production-execution"
+    },
+    "policyCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "packedBytes",
+          "canonicalBytes",
+          "packedLimit",
+          "ownExpandedLimit",
+          "closureExpandedLimit",
+          "expectedPackedOnlyWriter",
+          "expectedOwnReader",
+          "expectedClosureReader",
+          "expectedAgreedProducer",
+          "role"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packedBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "canonicalBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "packedLimit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "ownExpandedLimit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "closureExpandedLimit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "expectedPackedOnlyWriter": {
+            "type": "boolean"
+          },
+          "expectedOwnReader": {
+            "type": "boolean"
+          },
+          "expectedClosureReader": {
+            "type": "boolean"
+          },
+          "expectedAgreedProducer": {
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "generation-index",
+              "generation-frontier"
+            ]
+          }
+        }
+      }
+    },
+    "pageScenarios": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "pageBudgetUnits",
+          "totalBudgetUnits",
+          "pagesUnits",
+          "complete",
+          "authentic",
+          "cancelled",
+          "expectedPublish",
+          "expectedCoverage"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "authentic": {
+            "type": "boolean"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "expectedPublish": {
+            "type": "boolean"
+          },
+          "expectedCoverage": {
+            "enum": [
+              "complete",
+              "refused"
+            ]
+          },
+          "pageBudgetUnits": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "totalBudgetUnits": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17179869184
+          },
+          "pagesUnits": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 17179869184
+            }
+          }
+        }
+      }
+    },
+    "stringCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "canonicalUtf8Bytes",
+        "canonicalUtf16Units",
+        "budgetBytes",
+        "expectedPublish"
+      ],
+      "properties": {
+        "value": {
+          "const": "α🙂"
+        },
+        "canonicalUtf8Bytes": {
+          "const": 8
+        },
+        "canonicalUtf16Units": {
+          "const": 5
+        },
+        "budgetBytes": {
+          "const": 7
+        },
+        "expectedPublish": {
+          "const": false
+        }
+      }
+    },
+    "pageUnit": {
+      "const": "abstract-counter-units-not-wire-bytes"
+    }
+  }
+}

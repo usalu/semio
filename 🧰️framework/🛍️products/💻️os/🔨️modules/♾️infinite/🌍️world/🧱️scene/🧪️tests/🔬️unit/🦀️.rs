@@ -308,8 +308,13 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_eq!(input.raster_producers.len(), 0);
     assert_eq!(input.evictions.len(), 1);
     assert_eq!(input.evictions.get(0), Some(&PreparedRenderEviction::Mesh { key: "stale".into() }));
-    while !input.close_step() {}
-    assert!(input.close_step());
+    for _ in 0..4096 {
+        let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..input.next_close_demands(16 * 1024).expect("prepared input close demand") };
+        if matches!(input.close_step(grant).expect("prepared input close step"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
+            break;
+        }
+    }
+    assert!(input.terminal_is_empty());
 }
 
 #[test]

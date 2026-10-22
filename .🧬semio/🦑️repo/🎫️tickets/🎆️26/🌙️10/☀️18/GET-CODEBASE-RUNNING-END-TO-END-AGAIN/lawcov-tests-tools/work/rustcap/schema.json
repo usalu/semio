@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:rust-compiler-capacity-corpus:v1",
+  "title": "Rust Compiler Capacity Corpus",
+  "description": "Language-agnostic cases for the capacity a Rust compilation asks of the host: a resolved compiler profile in, a resource class and a capacity request out, or a refusal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "classes", "profiles", "refused"],
+  "properties": {
+    "version": { "const": 1 },
+    "classes": { "type": "object", "additionalProperties": false, "required": ["bounded", "exclusive"], "properties": { "bounded": { "type": "string", "minLength": 1 }, "exclusive": { "type": "string", "minLength": 1 } } },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile", "resourceClass", "request"],
+        "properties": {
+          "profile": { "type": "object", "required": ["codegen_backend", "codegen_units", "lto"], "properties": { "codegen_backend": { "type": ["string", "null"] }, "codegen_units": { "type": ["integer", "null"] }, "lto": { "enum": ["false", "off", "thin", "fat"] } } },
+          "resourceClass": { "type": "string", "minLength": 1 },
+          "request": { "oneOf": [{ "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "whole-host" } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "maximumParallelism"], "properties": { "kind": { "const": "available" }, "maximumParallelism": { "type": "integer", "minimum": 2 } } }] }
+        }
+      }
+    },
+    "refused": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "profile"], "properties": { "name": { "type": "string", "minLength": 1 }, "profile": { "type": "object" } } } }
+  }
+}

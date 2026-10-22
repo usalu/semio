@@ -22,6 +22,16 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceMeta>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "meta", kind: "replace-meta", record: "ReplacedMeta" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace document metadata \"{}\"", self.new_meta.title), &format!("Dokumentmetadaten \"{}\" ersetzen", self.new_meta.title))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for ReplaceMeta
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<ReplaceMeta>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -31,7 +41,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace document metadata \"{}\"", self.new_meta.title), &format!("Dokumentmetadaten \"{}\" ersetzen", self.new_meta.title))
-    }
 }

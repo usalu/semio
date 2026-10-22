@@ -70,11 +70,12 @@ pub mod record {
     pub use semio_framework_pack_record::{DecodeOptions, DecodeReport, EncodeOptions, decode_document, decode_document_controlled, decode_record_body, decode_record_body_exact, decode_record_body_exact_controlled, decode_record_body_span_exact_controlled, decode_value_record_body_exact, decode_value_record_body_exact_controlled, decode_value_record_body_span_exact_controlled, encode_document, encode_record_body, intrinsic, scalar_witness};
     pub use semio_framework_pack_record_schema::{PackSchemaField, PackSchemaGraph, PackSchemaShape, schema_hash, schema_hash_controlled};
     pub use semio_framework_pack_record_retained::{RetainedRecordBodyAllocationError, RetainedRecordBodyAllocationStep, RetainedRecordBodyCursor, RetainedRecordBodyReadLimits, RetainedRecordBodySourceDecode, RetainedRecordBodySourceStep, RetainedRecordBodyToken, RetainedRecordReceiving, RetainedValueAllocationError, RetainedValueAllocationStep, RetainedValueContainer, RetainedValueCursor, RetainedValueProgress, RetainedValueRole, RetainedValueToken};
-    pub use semio_framework_pack_record_encode::{BorrowedPackSource, BorrowedProjectedPackCursor, BorrowedProjectedPackFailure, BorrowedProjectedPackOperation, BorrowedProjectedPackProgress, OwnedProjectedPackWireCursor, OwnedProjectedPackWireReady, OwnedProjectedPackWireStep, OwnedVariantPackSource, ProjectedSymbolScratch, SourceTextKind, SourceTextLocator, encode_document_controlled, encode_projected_record_body_into, encode_record_body_controlled, encode_record_body_into, encode_value_record_body_controlled, encode_value_record_body_into};
+    pub use semio_framework_pack_record_encode::{BorrowedPackSource, BorrowedProjectedPackOperation, OwnedVariantPackSource, ProjectedSymbolScratch, SourceTextKind, SourceTextLocator, encode_document_controlled, encode_projected_record_body_into, encode_record_body_controlled, encode_record_body_into, encode_value_record_body_controlled, encode_value_record_body_into};
+    pub use semio_framework_pack_record_encode_cursor::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure, BorrowedProjectedPackProgress, OwnedProjectedPackWireCursor, OwnedProjectedPackWireReady, OwnedProjectedPackWireStep};
     pub use semio_framework_pack_record_preflight::{measure_document_borrowed,BorrowedSchemaHashCursor,BorrowedSchemaHashStep};
-    pub use semio_framework_pack_record_encode::BorrowedPackSection;
+    pub use semio_framework_pack_record_encode_cursor::BorrowedPackSection;
     #[cfg(feature="deflate")]
-    pub use semio_framework_pack_record_encode::{BorrowedPackDocumentCursor,BorrowedPackDocumentProgress,BorrowedPackDocumentFailure};
+    pub use semio_framework_pack_record_encode_cursor::{BorrowedPackDocumentCursor,BorrowedPackDocumentProgress,BorrowedPackDocumentFailure};
 }
 
 pub mod intrinsic {

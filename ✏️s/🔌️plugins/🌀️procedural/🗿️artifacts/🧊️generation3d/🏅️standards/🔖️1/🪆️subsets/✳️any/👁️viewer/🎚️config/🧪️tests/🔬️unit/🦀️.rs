@@ -1,5 +1,5 @@
 use super::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// 🔁️ Every leaf must round-trip: `diff` forward, `inverse` back, landing exactly on the base.
 fn config_round_trip(base: &Generation3dViewConfig, operation: &Generation3dViewConfigMutation) -> Generation3dViewConfig {

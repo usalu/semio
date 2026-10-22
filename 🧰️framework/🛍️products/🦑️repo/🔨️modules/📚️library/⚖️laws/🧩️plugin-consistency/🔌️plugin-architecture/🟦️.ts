@@ -862,7 +862,7 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
  * measured regression — are promoted to `priority: "high"`, which `VerifyScript.runGate`'s
  * `dissolveBreaches` block already filters on. Ceilings MAY be lowered freely as debt burns down; RAISING
  * one requires a ticket citation in a comment beside the changed entry, or the ratchet is meaningless.
- * Measured `bun ./📜️script.ts policy` against `.🧬semio/🦑️repo/⚡️cache/breaches/compose.json`, three runs
+ * Measured `repo ./📜️script.ts policy` against `.🧬semio/🦑️repo/⚡️cache/breaches/compose.json`, three runs
  * 2026-08-13 ~00:12/00:14/00:16 (~90-100s apart) — see `📓️w5-ratchet-report.md`.
  *
  * Four of eight APA ratchet keys are intentionally ABSENT below — no ceiling, permanently `medium` — not

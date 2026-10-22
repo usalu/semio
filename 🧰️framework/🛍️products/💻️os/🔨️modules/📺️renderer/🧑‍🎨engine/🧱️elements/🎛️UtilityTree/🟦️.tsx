@@ -8,7 +8,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "../⚛️react-port/🟦️.ts";
 import {
   ButtonGroup,
   ButtonGroupItem,

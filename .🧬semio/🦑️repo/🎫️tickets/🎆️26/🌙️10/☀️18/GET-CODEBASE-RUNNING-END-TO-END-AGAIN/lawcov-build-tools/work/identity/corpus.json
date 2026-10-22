@@ -1,0 +1,230 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "an installation of two files",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    },
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "c9f5a306d67f0f50e1724c6467137ace244afd6f1b2d4f179285550b05dc1a3d"
+  },
+  {
+   "name": "no files",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [],
+   "expected": "73e6ffd553e33853487325052ea2fc68f1d79bebd2b2360a22c019c66316dae5"
+  },
+  {
+   "name": "macOS on arm64",
+   "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "libc": "none"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "ed3294d177a715e6dd323f6ecb6197b5dd1db058085b5d10ac968ef0c1636a4a"
+  },
+  {
+   "name": "windows",
+   "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "libc": "none"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "bb9b28b72833a96cf109743cb7de5d369715df122f9f2d6b2316f86c13ab1c3f"
+  },
+  {
+   "name": "musl is another key than glibc",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "musl"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "ee19db35e35715339b275eac23016815f281d6c19c36365dfe69b821b314d8b4"
+  },
+  {
+   "name": "an empty file",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "empty",
+     "text": ""
+    }
+   ],
+   "expected": "65d1e4f96d3d195e36c6d8150f62809b100b9af97971c0a27d3c0b4dcc3bb738"
+  },
+  {
+   "name": "unicode names and bytes",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "é/🧪.json",
+     "text": "é🧪\n"
+    }
+   ],
+   "expected": "b551c9019e31bb227b6adc3009a2ebbd4203086d65a96c4b49784ea8e1b97352"
+  },
+  {
+   "name": "the order of files is part of the key",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    },
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "b361514e86d70ba2ccf3e30715f481b81336bc764c80282dc032cb80bed626fd"
+  },
+  {
+   "name": "a patch beside the dependencies",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    },
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    },
+    {
+     "name": "patches/current.patch",
+     "text": "diff\n"
+    }
+   ],
+   "expected": "fecc50e7b0143c336efeb7e3269b921a1ca8607744439b7cd63dba58e9560740"
+  }
+ ],
+ "boundaries": [
+  {
+   "name": "a byte moved from the name into the content",
+   "left": [
+    [
+     "ab",
+     "c"
+    ]
+   ],
+   "right": [
+    [
+     "a",
+     "bc"
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "an empty name is not no file",
+   "left": [
+    [
+     "",
+     ""
+    ]
+   ],
+   "right": [],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  }
+ ],
+ "knownDefects": [
+  {
+   "name": "a content holding NUL bytes cannot impersonate two files",
+   "left": [
+    [
+     "a",
+     "x"
+    ],
+    [
+     "b",
+     "y"
+    ]
+   ],
+   "right": [
+    [
+     "a",
+     "x\u0000b\u0000y"
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  }
+ ],
+ "environments": {
+  "platforms": [
+   "linux",
+   "darwin",
+   "win32"
+  ],
+  "architectures": [
+   "x64",
+   "arm64"
+  ],
+  "libcs": [
+   "glibc",
+   "musl",
+   "none"
+  ]
+ }
+}

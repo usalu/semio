@@ -15,7 +15,7 @@ pub use crate::standards::v1_1::subsets::base::schema::mutations::set_view_box::
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
-#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg")]
+#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg", reference = SvgSnapshot, reference_diff = SvgDiff)]
 pub enum SvgMutation {
     SetDeclaration(SetDeclarationPayload),
     SetDoctype(SetDoctypePayload),
@@ -30,8 +30,8 @@ pub enum SvgMutation {
 
 #[cfg(test)]
 pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {
-    let outcome = <SvgMutation as protocol::Mutation<SvgSnapshot>>::diff(mutation, snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    let outcome = <SvgMutation as protocol::ColdMutation<SvgSnapshot>>::diff(mutation, snapshot);
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome

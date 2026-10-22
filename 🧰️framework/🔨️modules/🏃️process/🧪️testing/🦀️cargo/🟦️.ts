@@ -13,6 +13,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../🔒️
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "../../📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1} from "../../📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1,type CargoBuildLeaseIdentityV1} from "../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../⚙️runtime/🧲️native/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"../../📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 
 /** 🦀️ Binds a Cargo invocation to its exact caller-owned execution policy. */
@@ -38,7 +39,7 @@ function admitPolicy(value:unknown):CargoTestPolicyV1 { const errors=validateJso
 
 /** 🪟️ Resolves Windows' system-owned short name without relocating the caller's profile directory. */
 async function nativeCoverageDirectoryV1(directory:string):Promise<string>{
- const {dlopen,ptr,FFIType}=await import("bun:ffi"),library=dlopen("kernel32.dll",{GetShortPathNameW:{args:[FFIType.ptr,FFIType.ptr,FFIType.u32],returns:FFIType.u32}}),input=Buffer.from(directory+"\0","utf16le");
+ const {dlopen,ptr,FFIType}=runtimeNativeSystemV1(),library=dlopen("kernel32.dll",{GetShortPathNameW:{args:[FFIType.ptr,FFIType.ptr,FFIType.u32],returns:FFIType.u32}}),input=Buffer.from(directory+"\0","utf16le");
  try{const required=library.symbols.GetShortPathNameW(ptr(input),null,0);if(required===0)throw Error("Windows coverage directory has no native identity");const output=Buffer.alloc((required+1)*2),length=library.symbols.GetShortPathNameW(ptr(input),ptr(output),required+1);if(length===0||length>required)throw Error("Windows coverage directory identity changed");const native=output.subarray(0,length*2).toString("utf16le");const original=statSync(directory,{bigint:true}),aliased=statSync(native,{bigint:true});if(original.ino===0n||original.ino!==aliased.ino||original.dev!==aliased.dev)throw Error("Windows coverage directory custody changed");return native;}finally{library.close();}
 }
 

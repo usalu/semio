@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import ts from "typescript";
 import {Database} from "bun:sqlite";
-import schema from "../../🧬️schema/📥️install.json";
+import {javascriptInstallSchemaV1 as schema} from "../../🧱️schemas/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 

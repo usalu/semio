@@ -77,7 +77,7 @@ pub fn document_input_commit_findings(projection: &serde_json::Value, is_documen
 
 /// ⌨️ [`document_input_commit_findings`] of `body_key` rendered under `view`; a document verb is one declared with the
 /// `Mutation` kind.
-pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: store::SpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, semio_framework_job::OriginalTurnFailure> {
+pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, semio_framework_job::OriginalTurnFailure> {
     let projected = render_registered_fixture_app(app, body_key, view,cx).await?;
     let projection: serde_json::Value = serde_json::from_str(&projected).map_err(|error| semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault(error.to_string()))?;
     Ok(document_input_commit_findings(&projection, &|verb| app.tools.registry.get(verb).is_some_and(|definition| definition.kind == semio_framework::ActionKind::Mutation)))

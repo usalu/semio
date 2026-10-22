@@ -32,4 +32,5 @@ semio-framework-value-factory = { path = "../../../../🌱️value/♻️retirem
 [dev-dependencies]
 semio-framework-value-shared-issuance = { path = "../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

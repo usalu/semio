@@ -70,6 +70,12 @@ pub struct Grid2dWindowConfigDiff {
 }
 
 impl protocol::DiffAlgebra<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.active_tile_id.is_none() && self.solve_json.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
     fn inverse(&self, base: &Grid2dWindowConfig) -> Self {
         Self {
             camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
@@ -82,40 +88,11 @@ impl protocol::DiffAlgebra<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
             solve_json: self.solve_json.as_ref().map(|_| base.solve_json.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.active_tile_id.is_none() && self.solve_json.is_none()
-    }
 }
 
-impl protocol::MutationDiff<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
-    fn apply(&self, base: &Grid2dWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Grid2dWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera_x {
-            next.camera_x.clone_from(value);
-        }
-        if let Some(value) = &self.camera_y {
-            next.camera_y.clone_from(value);
-        }
-        if let Some(value) = &self.camera_zoom {
-            next.camera_zoom.clone_from(value);
-        }
-        if let Some(value) = &self.grid_visible {
-            next.grid_visible.clone_from(value);
-        }
-        if let Some(value) = &self.grid_snap_enabled {
-            next.grid_snap_enabled.clone_from(value);
-        }
-        if let Some(value) = &self.grid_factor {
-            next.grid_factor.clone_from(value);
-        }
-        if let Some(value) = &self.active_tile_id {
-            next.active_tile_id.clone_from(value);
-        }
-        if let Some(value) = &self.solve_json {
-            next.solve_json.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Grid2dWindowConfig> for Grid2dWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
     fn absorb(&mut self, later: Self) {
         if later.camera_x.is_some() {
             self.camera_x = later.camera_x;
@@ -141,6 +118,37 @@ impl protocol::MutationDiff<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
         if later.solve_json.is_some() {
             self.solve_json = later.solve_json;
         }
+    }
+
+    fn apply(&self, unpublished: &mut Grid2dWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x.clone_from(value);
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y.clone_from(value);
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom.clone_from(value);
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible.clone_from(value);
+        }
+        if let Some(value) = &self.grid_snap_enabled {
+            next.grid_snap_enabled.clone_from(value);
+        }
+        if let Some(value) = &self.grid_factor {
+            next.grid_factor.clone_from(value);
+        }
+        if let Some(value) = &self.active_tile_id {
+            next.active_tile_id.clone_from(value);
+        }
+        if let Some(value) = &self.solve_json {
+            next.solve_json.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -350,6 +358,10 @@ impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
             Self::SetSolveJson(_) => &Self::DESCRIPTORS[5],
         }
     }
+}
+
+impl protocol::ColdMutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
+    type ReferenceDiff = Grid2dWindowConfigDiff;
     fn diff(&self, base: &Grid2dWindowConfig) -> protocol::MutationOutcome<Grid2dWindowConfigDiff> {
         let diff = match self {
             Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { tile_id }) => Grid2dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
@@ -460,9 +472,8 @@ macro_rules! owners {
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
             }
-            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-                semio_framework_plugin::bounded_window_config_store_owners::<Self>()
-            }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
                 semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
             }
@@ -476,8 +487,8 @@ macro_rules! owners {
             type State = Grid2dWindowTransient;
             type Mutation = Grid2dWindowTransientMutation;
             fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-                let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-                let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(Grid2dWindowTransientMutation::footprint, Grid2dWindowTransientMutation::into_state, state.clone(), mutation.clone()));
                 semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }

@@ -1,0 +1,472 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "totalEmoji",
+  "sum",
+  "linesCases",
+  "lineFormat",
+  "deltaSums",
+  "repo",
+  "count"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "totalEmoji": {
+   "type": "string"
+  },
+  "sum": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "rows",
+    "expected"
+   ],
+   "properties": {
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "lang",
+       "emoji",
+       "code",
+       "edited",
+       "added",
+       "removed"
+      ],
+      "properties": {
+       "lang": {
+        "type": "string"
+       },
+       "emoji": {
+        "type": "string"
+       },
+       "code": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "expected": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "lang",
+      "emoji",
+      "code",
+      "edited",
+      "added",
+      "removed"
+     ],
+     "properties": {
+      "lang": {
+       "type": "string"
+      },
+      "emoji": {
+       "type": "string"
+      },
+      "code": {
+       "type": "integer"
+      },
+      "edited": {
+       "type": "integer"
+      },
+      "added": {
+       "type": "integer"
+      },
+      "removed": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  },
+  "linesCases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "bundle",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "uloc",
+       "size"
+      ],
+      "properties": {
+       "uloc": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "lang",
+          "emoji",
+          "code",
+          "edited",
+          "added",
+          "removed"
+         ],
+         "properties": {
+          "lang": {
+           "type": "string"
+          },
+          "emoji": {
+           "type": "string"
+          },
+          "code": {
+           "type": "integer"
+          },
+          "edited": {
+           "type": "integer"
+          },
+          "added": {
+           "type": "integer"
+          },
+          "removed": {
+           "type": "integer"
+          }
+         }
+        }
+       },
+       "size": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "lang",
+          "emoji",
+          "code",
+          "edited",
+          "added",
+          "removed"
+         ],
+         "properties": {
+          "lang": {
+           "type": "string"
+          },
+          "emoji": {
+           "type": "string"
+          },
+          "code": {
+           "type": "integer"
+          },
+          "edited": {
+           "type": "integer"
+          },
+          "added": {
+           "type": "integer"
+          },
+          "removed": {
+           "type": "integer"
+          }
+         }
+        }
+       }
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "lineFormat": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "row",
+     "expected"
+    ],
+    "properties": {
+     "kind": {
+      "enum": [
+       "uloc",
+       "size"
+      ]
+     },
+     "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "lang",
+       "emoji",
+       "code",
+       "edited",
+       "added",
+       "removed"
+      ],
+      "properties": {
+       "lang": {
+        "type": "string"
+       },
+       "emoji": {
+        "type": "string"
+       },
+       "code": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "deltaSums": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "a",
+     "b",
+     "expected"
+    ],
+    "properties": {
+     "a": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "edited",
+       "removed"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "b": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "added",
+       "edited",
+       "removed"
+      ],
+      "properties": {
+       "added": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "repo": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "commits",
+    "ulocByLang",
+    "sizeByLang",
+    "uloc",
+    "size"
+   ],
+   "properties": {
+    "commits": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "minItems": 2
+    },
+    "ulocByLang": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "sizeByLang": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "uloc": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "lang",
+       "emoji",
+       "code",
+       "edited",
+       "added",
+       "removed"
+      ],
+      "properties": {
+       "lang": {
+        "type": "string"
+       },
+       "emoji": {
+        "type": "string"
+       },
+       "code": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "size": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "lang",
+       "emoji",
+       "code",
+       "edited",
+       "added",
+       "removed"
+      ],
+      "properties": {
+       "lang": {
+        "type": "string"
+       },
+       "emoji": {
+        "type": "string"
+       },
+       "code": {
+        "type": "integer"
+       },
+       "edited": {
+        "type": "integer"
+       },
+       "added": {
+        "type": "integer"
+       },
+       "removed": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   }
+  },
+  "count": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "files",
+    "untracked",
+    "cases"
+   ],
+   "properties": {
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "untracked": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "prefixes",
+       "lines",
+       "bytes"
+      ],
+      "properties": {
+       "prefixes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "lines": {
+        "type": "integer"
+       },
+       "bytes": {
+        "type": "integer"
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

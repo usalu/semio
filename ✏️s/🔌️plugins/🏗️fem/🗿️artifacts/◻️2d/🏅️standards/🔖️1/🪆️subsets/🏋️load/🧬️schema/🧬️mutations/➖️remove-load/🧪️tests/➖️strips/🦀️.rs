@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "remove-load/strips-the-trailing-member-133914: the owning case must be patched exactly once");
     assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed.is_empty(), "remove-load/strips-the-trailing-member-133914: detaching a load must never remove the case");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

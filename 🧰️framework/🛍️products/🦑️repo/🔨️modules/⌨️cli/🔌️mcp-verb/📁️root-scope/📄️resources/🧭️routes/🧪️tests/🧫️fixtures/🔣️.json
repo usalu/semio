@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "name": "file",
+      "template": "repo://file/{id}",
+      "uri": "repo://file/abc",
+      "expected": true
+    },
+    {
+      "name": "empty",
+      "template": "repo://file/{id}",
+      "uri": "repo://file/",
+      "expected": false
+    },
+    {
+      "name": "foreign-prefix",
+      "template": "repo://file/{id}",
+      "uri": "repo://folder/abc",
+      "expected": false
+    },
+    {
+      "name": "nested-id",
+      "template": "repo://ticket/{id}",
+      "uri": "repo://ticket/26/10/21/ONE",
+      "expected": true
+    },
+    {
+      "name": "suffix",
+      "template": "repo://file/{id}/body",
+      "uri": "repo://file/abc/body",
+      "expected": true
+    },
+    {
+      "name": "suffix-with-empty-id",
+      "template": "repo://file/{id}/body",
+      "uri": "repo://file//body",
+      "expected": false
+    }
+  ]
+}

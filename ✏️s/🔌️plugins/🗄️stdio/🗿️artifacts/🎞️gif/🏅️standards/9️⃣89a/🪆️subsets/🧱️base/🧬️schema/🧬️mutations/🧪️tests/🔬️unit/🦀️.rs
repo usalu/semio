@@ -39,12 +39,12 @@ fn base_snapshot() -> GifSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 async fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
     let diff = mutation.diff(base);
-    let mutated = protocol::apply_diff(diff.diff(), base).expect("diff must apply to base");
+    let mutated = protocol::apply_diff_cold(diff.diff(), base).expect("diff must apply to base");
     let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in &inverses {
         let inv_diff = inv.diff(&restored);
-        restored = protocol::apply_diff(inv_diff.diff(), &restored).expect("inverse diff must apply to restored");
+        restored = protocol::apply_diff_cold(inv_diff.diff(), &restored).expect("inverse diff must apply to restored");
     }
     assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, base).await;
@@ -79,7 +79,7 @@ async fn mutation_diff_law() {
         let returned_diff = apply_gif_mutation(&mut snap, &mutation);
         let expected_diff = mutation.diff(&base);
         assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("diff must apply to base"), "apply_gif_mutation must match protocol::apply_diff(diff.diff(), base) for {mutation:?}");
+        assert_eq!(snap, protocol::apply_diff_cold(expected_diff.diff(), &base).expect("diff must apply to base"), "apply_gif_mutation must match protocol::apply_diff_cold(diff.diff(), base) for {mutation:?}");
     }
 }
 

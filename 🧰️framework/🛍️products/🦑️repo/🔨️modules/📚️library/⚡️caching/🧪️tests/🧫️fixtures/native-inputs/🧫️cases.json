@@ -13,7 +13,7 @@
   "commandRouter": {
     "entry": "domain/📦️packages/🦀️rust/📜️script.ts",
     "cwd": "domain/📦️packages/🦀️rust",
-    "command": "bun ./📜️script.ts test",
+    "command": "repo ./📜️script.ts test",
     "files": {
       "domain/📦️packages/🦀️rust/📜️script.ts": "import { run } from \"../../../shared/📜️script.ts\";\nrun();\n",
       "shared/📜️script.ts": "import { execute } from \"./🟦️.ts\";\nexport const run = (): void => execute();\n",

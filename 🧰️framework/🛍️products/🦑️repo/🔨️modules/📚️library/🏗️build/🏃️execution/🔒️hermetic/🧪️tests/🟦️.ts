@@ -91,3 +91,29 @@ test("the class table points at its sibling schema through $schema and validates
  expect(validate(HERMETIC_TABLE_V1),JSON.stringify(validate.errors)).toBe(true);
  expect(validate({...HERMETIC_TABLE_V1,$schema:1})).toBe(false);
 });
+
+test("the non-TypeScript classes name a provisioned or a pending toolchain and every pending member keeps host state keyed by its pin",()=>{
+ const toolchains=new Map(HERMETIC_TABLE_V1.toolchains.map(row=>[row.id,row]));
+ expect(toolchains.size).toBe(HERMETIC_TABLE_V1.toolchains.length);
+ for(const row of HERMETIC_TABLE_V1.classes)expect(toolchains.has(row.toolchain),row.id).toBe(true);
+ for(const row of HERMETIC_TABLE_V1.toolchains){
+  expect(row.provisioned||"pending" in row,row.id).toBe(true);
+  expect(row.provisioned&&row.covered.length>0).toBe(false);
+  for(const source of row.covered)expect(()=>new RegExp(source,"u")).not.toThrow();
+ }
+ expect(HERMETIC_TABLE_V1.classes.filter(row=>row.toolchain==="bun").every(row=>row.dependencies!=="toolchain")).toBe(true);
+ expect(HERMETIC_TABLE_V1.classes.filter(row=>row.toolchain!=="bun").every(row=>row.dependencies==="toolchain"&&row.providers&&Object.keys(row.providers).length===0)).toBe(true);
+ const command=(kind:string,tail="")=>`repo "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts" fingerprint ${kind}${tail}`;
+ expect(hermeticInputsV1([{runtime:command("python",' "a/b"')}],{},"python")).toEqual({env:{},packages:[]});
+ expect(hermeticInputsV1([{runtime:command("go")}],{},"go")).toEqual({env:{},packages:[]});
+ expect("refused" in hermeticInputsV1([{runtime:command("go")}],{},"python")).toBe(true);
+ expect("refused" in hermeticInputsV1([{runtime:command("go")}],{})).toBe(true);
+ expect("refused" in hermeticInputsV1([{runtime:"go version"}],{},"go")).toBe(true);
+ expect("refused" in hermeticInputsV1([{runtime:command("go","; rm -rf /")}],{},"go")).toBe(true);
+ for(const [project,target,id] of [["@semio-tech/repo-tickets-go","test","go-test"],["@semio-tech/repo-cli-go","build","go-build"],["@semio-tech/ui-styling-py","test","python-test"],["@semio-tech/ui-styling-py","build","python-build"],["@semio-tech/ui-styling-dotnet","build","dotnet-build"],["workspace","cpp-custody","cmake-check"],["workspace","cpp-test-toolchain","cmake-check"]] as const){
+  const selected=hermeticSelectV1({project,target,root:"x"});
+  expect({project,target,kind:selected.kind,class:selected.kind==="class"?selected.class.id:undefined}).toEqual({project,target,kind:"class",class:id});
+ }
+ expect(hermeticSelectV1({project:"@semio-tech/repo-tickets-go",target:"dev",root:"x"}).kind).toBe("unselected");
+ expect(hermeticSelectV1({project:"workspace",target:"cpp-build",root:"x"}).kind).toBe("unselected");
+});

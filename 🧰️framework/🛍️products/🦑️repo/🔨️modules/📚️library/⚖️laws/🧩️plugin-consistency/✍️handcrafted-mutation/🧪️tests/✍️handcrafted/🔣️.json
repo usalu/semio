@@ -1,0 +1,574 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "distinctness-normalizes-names-and-start",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "✏️s/📚️lib/a.grammar.semio": [
+     "grammar alpha",
+     "start root",
+     "body = IDENT"
+    ],
+    "✏️s/📚️lib/b.grammar.semio": [
+     "grammar beta",
+     "start top",
+     "body = IDENT"
+    ],
+    "🧰️framework/📚️lib/c.protocol.semio": [
+     "protocol gamma",
+     "body = IDENT"
+    ],
+    "🧰️framework/📚️lib/d.protocol.semio": [
+     "protocol delta",
+     "body = IDENT"
+    ],
+    "🧰️framework/📚️lib/e.protocol.semio": [
+     "protocol eps",
+     "body = OTHER"
+    ]
+   },
+   "expect": [
+    [
+     "spec-distinctness-a9164715d526-✏️s/📚️lib/a.grammar.semio-✏️s/📚️lib/b.grammar.semio",
+     "handcrafted-grammar/spec-distinctness",
+     "high",
+     0
+    ],
+    [
+     "spec-distinctness-20a923a0bb87-🧰️framework/📚️lib/c.protocol.semio-🧰️framework/📚️lib/d.protocol.semio",
+     "handcrafted-grammar/spec-distinctness",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "generic-spec-shapes",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "✏️s/📚️lib/g1.grammar.semio": [
+     "grammar g1",
+     "prop = IDENT \"=\" (value)"
+    ],
+    "✏️s/📚️lib/g2.grammar.semio": [
+     "grammar g2",
+     "list = item*",
+     "prop = other"
+    ],
+    "✏️s/📚️lib/g3.grammar.semio": [
+     "grammar g3",
+     "field-json = STRING"
+    ],
+    "✏️s/📚️lib/g4.grammar.semio": [
+     "grammar g4",
+     "stmt = IDENT assign* block?"
+    ],
+    "✏️s/📚️lib/g5.grammar.semio": [
+     "grammar g5",
+     "node = IDENT",
+     "list = node*"
+    ],
+    "🧰️framework/📚️lib/g6.grammar.semio": [
+     "grammar g6",
+     "field-json = OTHER"
+    ]
+   },
+   "expect": [
+    [
+     "generic-spec-✏️s/📚️lib/g1.grammar.semio",
+     "handcrafted-grammar/generic-spec",
+     "high",
+     0
+    ],
+    [
+     "generic-spec-✏️s/📚️lib/g2.grammar.semio",
+     "handcrafted-grammar/generic-spec",
+     "high",
+     0
+    ],
+    [
+     "generic-spec-✏️s/📚️lib/g3.grammar.semio",
+     "handcrafted-grammar/generic-spec",
+     "high",
+     0
+    ],
+    [
+     "generic-spec-✏️s/📚️lib/g4.grammar.semio",
+     "handcrafted-grammar/generic-spec",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "declared-use-missing-and-unreferenced-family",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📖️family-core.grammar.semio": [
+     "grammar family-core",
+     "core-rule = IDENT",
+     "start x"
+    ],
+    "✏️s/📚️lib/u1.grammar.semio": [
+     "grammar u1",
+     "use family-nope",
+     "start m"
+    ],
+    "✏️s/📚️lib/u2.grammar.semio": [
+     "grammar u2",
+     "use family-core",
+     "m = other"
+    ]
+   },
+   "expect": [
+    [
+     "declared-use-missing-✏️s/📚️lib/u1.grammar.semio-family-nope",
+     "handcrafted-grammar/declared-use",
+     "high",
+     0
+    ],
+    [
+     "declared-use-✏️s/📚️lib/u2.grammar.semio-family-core",
+     "handcrafted-grammar/declared-use",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "declared-use-referenced-production-is-clean",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📖️family-core.grammar.semio": [
+     "grammar family-core",
+     "core-rule = IDENT",
+     "start x"
+    ],
+    "✏️s/📚️lib/u3.grammar.semio": [
+     "grammar u3",
+     "use family-core",
+     "m = core-rule"
+    ]
+   },
+   "expect": [],
+   "defect": "🟦️.ts:177 builds the word-boundary RegExp inside a template literal, where the backslash-b escape is a backspace character, so a referenced production is never found"
+  },
+  {
+   "id": "spec-wiring-include-and-register",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🗣️dsl/📖️.grammar.semio": [
+     "grammar a1",
+     "w1 = IDENT"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🗣️dsl/🦀️.rs": [
+     "pub fn x() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/📖️.grammar.semio": [
+     "grammar a1op",
+     "start mutation",
+     "w2 = IDENT"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/📡️.protocol.semio": [
+     "protocol a1op",
+     "w3 = IDENT"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/🦀️.rs": [
+     "const G: &str = include_str!(\"📖️.grammar.semio\");"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📡️spr/📡️.protocol.semio": [
+     "protocol a1spr",
+     "w4 = IDENT"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🗣️dsl/📖️.grammar.semio": [
+     "grammar b1",
+     "w5 = IDENT"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🗣️dsl/🦀️.rs": [
+     "include_str!(\"📖️.grammar.semio\"); register_language(\"b\");"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️c/🦀️.rs": [
+     "pub fn nothing() {}"
+    ]
+   },
+   "expect": [
+    [
+     "spec-wiring-include-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🗣️dsl/🦀️.rs-📖️.grammar.semio",
+     "handcrafted-grammar/spec-wiring-include",
+     "high",
+     0
+    ],
+    [
+     "spec-wiring-include-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/🦀️.rs-📡️.protocol.semio",
+     "handcrafted-grammar/spec-wiring-include",
+     "high",
+     0
+    ],
+    [
+     "spec-wiring-register-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a",
+     "handcrafted-grammar/spec-wiring-register",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "empty-example-assets-at-most-64-bytes",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/tiny.semio": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/exact64.semio": [
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/big.semio": [
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/other/tiny.semio": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/notes/🖼️assets/tiny.semio": [
+     "x"
+    ],
+    "📚️examples/🖼️assets/root.semio": [
+     "y"
+    ]
+   },
+   "expect": [
+    [
+     "empty-example-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/tiny.semio",
+     "handcrafted-grammar/empty-example",
+     "high",
+     0
+    ],
+    [
+     "empty-example-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/exact64.semio",
+     "handcrafted-grammar/empty-example",
+     "high",
+     0
+    ],
+    [
+     "empty-example-📚️examples/🖼️assets/root.semio",
+     "handcrafted-grammar/empty-example",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "generic-codec-runtime-calls",
+   "rule": "policyHandcraftedSpecP3Breaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "use dsl::__rt::parse_document_record;",
+     "let a = dsl::op_rt::encode(x);",
+     "let b = store::op_rt::decode(y); let c = dsl::__rt::print_inline_record(z);",
+     "let fine = dsl::typed::decode(y);"
+    ],
+    "✏️s/🔌️plugins/🔭️p/other/🦀️.rs": [
+     "let a = dsl::op_rt::encode(x);"
+    ]
+   },
+   "expect": [
+    [
+     "generic-codec-runtime-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs-1",
+     "handcrafted-grammar/generic-codec-derive",
+     "high",
+     1
+    ],
+    [
+     "generic-codec-runtime-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs-2",
+     "handcrafted-grammar/generic-codec-derive",
+     "high",
+     2
+    ],
+    [
+     "generic-codec-runtime-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs-3",
+     "handcrafted-grammar/generic-codec-derive",
+     "high",
+     3
+    ],
+    [
+     "generic-codec-runtime-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs-3",
+     "handcrafted-grammar/generic-codec-derive",
+     "high",
+     3
+    ]
+   ]
+  },
+  {
+   "id": "empty-example-direct",
+   "rule": "policyEmptyExampleBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/tiny.semio": [
+     "x"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/big.semio": [
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ]
+   },
+   "expect": [
+    [
+     "empty-example-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/🖼️assets/tiny.semio",
+     "handcrafted-grammar/empty-example",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "plugin-dependency-parity-between-code-and-metadata",
+   "rule": "policyPluginDependencyParityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🦀️.rs": [
+     ".depends_on(\"beta\")",
+     ".depends_on(\"gamma\")"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️x/🦀️.rs": [
+     ".depends_on(\"beta\")"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust/Cargo.toml": [
+     "[package]",
+     "name = \"alpha\"",
+     "",
+     "[package.metadata.semio]",
+     "extends = \"gamma\"",
+     "depends-on = [\"beta\", \"delta\", \"alpha\"]"
+    ],
+    "✏️s/🔌️plugins/🔭️beta/🦀️.rs": [
+     ".depends_on(\"zeta\")"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🧩️extensions/🔸️ext/🦀️.rs": [
+     ".depends_on(\"alpha\")"
+    ],
+    "✏️s/🔌️plugins/🔭️alpha/🧩️extensions/🔸️ext/📦️packages/🦀️rust/Cargo.toml": [
+     "[package.metadata.semio]",
+     "depends-on = []"
+    ],
+    "✏️s/🔌️plugins/.hidden/🦀️.rs": [
+     ".depends_on(\"ghost\")"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-dependency-undeclared-runtime-✏️s/🔌️plugins/🔭️alpha-delta",
+     "plugin-dependency/parity",
+     "high",
+     0
+    ],
+    [
+     "plugin-dependency-undeclared-metadata-✏️s/🔌️plugins/🔭️beta-zeta",
+     "plugin-dependency/parity",
+     "high",
+     0
+    ],
+    [
+     "plugin-dependency-undeclared-metadata-✏️s/🔌️plugins/🔭️alpha/🧩️extensions/🔸️ext-alpha",
+     "plugin-dependency/parity",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "contribution-targets-must-be-declared-and-canonical",
+   "rule": "policyContributionTargetBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️gamma/🦀️.rs": [
+     ".depends_on(\"alpha\")",
+     "ArtifactContribution::builder(\"s.alpha.kind\")",
+     "ArtifactContribution::builder(\"s.zzz.kind\")",
+     "ArtifactContribution::builder(\"nodots\")"
+    ]
+   },
+   "expect": [
+    [
+     "contribution-target-undeclared-✏️s/🔌️plugins/🔭️gamma-s.zzz.kind",
+     "plugin-dependency/contribution-target",
+     "high",
+     0
+    ],
+    [
+     "contribution-target-ungrammatical-✏️s/🔌️plugins/🔭️gamma/🦀️.rs-nodots",
+     "plugin-dependency/contribution-target",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "semantic-vocabulary-banned-and-bare-set",
+   "rule": "policySemanticVocabularyBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️mutations/🔹️m/🦀️.rs": [
+     "pub enum E { SetSnapshot(S), NoMutation }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️mutations/🔹️n/🦀️.rs": [
+     "pub enum E { SetColor, SetSize }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️c/🦀️.rs": [
+     "CollectionMutation<T> and SetSnapshotX"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️mutations/🔹️m/notes.txt": [
+     "NoMutation"
+    ],
+    "🌎️hub/🎮️commands/x/🦀️.rs": [
+     "NoMutation"
+    ],
+    "other/🎮️commands/x/🦀️.rs": [
+     "NoMutation"
+    ]
+   },
+   "expect": [
+    [
+     "semantic-vocabulary-banned-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️mutations/🔹️m/🦀️.rs",
+     "mutation-migration/semantic-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "semantic-vocabulary-bare-set-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧬️mutations/🔹️n/🦀️.rs",
+     "mutation-migration/semantic-vocabulary",
+     "medium",
+     0
+    ],
+    [
+     "semantic-vocabulary-banned-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️c/🦀️.rs",
+     "mutation-migration/semantic-vocabulary",
+     "high",
+     0
+    ],
+    [
+     "semantic-vocabulary-bare-set-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️c/🦀️.rs",
+     "mutation-migration/semantic-vocabulary",
+     "medium",
+     0
+    ],
+    [
+     "semantic-vocabulary-banned-🌎️hub/🎮️commands/x/🦀️.rs",
+     "mutation-migration/semantic-vocabulary",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "dead-example-leaves-follow-glue-path-declarations",
+   "rule": "policyDeadExampleLeafBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs": [
+     "#[path = \"🗿️artifacts/🔸️a/📚️examples/ref.rs\"]",
+     "mod ref_example;",
+     "#[path = \"🗿️artifacts/🔸️a/📚️examples\"]",
+     "mod examples {",
+     "    mod nested;",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/ref.rs": [
+     "fn a() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/nested.rs": [
+     "fn b() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/dead.rs": [
+     "fn c() {}"
+    ],
+    "🧰️framework/📚️examples/fw.rs": [
+     "fn d() {}"
+    ]
+   },
+   "expect": [
+    [
+     "dead-example-leaf-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/dead.rs",
+     "taxonomy/dead-example-leaf",
+     "high",
+     0
+    ],
+    [
+     "dead-example-leaf-🧰️framework/📚️examples/fw.rs",
+     "taxonomy/dead-example-leaf",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "owner-own-component-files-skip-extension-owners",
+   "rule": "policyOwnerOwnComponentFiles",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🧩️extensions/🔸️e/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/lib.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧩️extensions/y/🦀️.rs": []
+   },
+   "ownerRel": "✏️s/🔌️plugins/🔭️p",
+   "expectList": [
+    "✏️s/🔌️plugins/🔭️p/🦀️.rs",
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs"
+   ]
+  },
+  {
+   "id": "op-grammar-start-and-command-folder-verbs-in-a-git-admitted-tree",
+   "rule": "policyMutationArtifactEngineBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/📖️.grammar.semio": [
+     "grammar g",
+     "start operation"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/🔸️x/📖️.grammar.semio": [
+     "grammar h"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/🔹️ok/📖️.grammar.semio": [
+     "grammar i",
+     "start mutation"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🗣️dsl/📖️.grammar.semio": [
+     "grammar j",
+     "start operation"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️create-node/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️frobnicate/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️Create/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/plain-add/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️set-title/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "op-grammar-start-mutation-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/📖️.grammar.semio",
+     "mutation-migration/op-grammar-start",
+     "high",
+     0
+    ],
+    [
+     "op-grammar-start-mutation-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔧️op/🔸️x/📖️.grammar.semio",
+     "mutation-migration/op-grammar-start",
+     "high",
+     0
+    ],
+    [
+     "command-folder-semantic-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️frobnicate",
+     "taxonomy/command-folder-semantic",
+     "medium",
+     0
+    ],
+    [
+     "command-folder-semantic-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/🔹️Create",
+     "taxonomy/command-folder-semantic",
+     "medium",
+     0
+    ],
+    [
+     "command-folder-semantic-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎮️commands/plain-add",
+     "taxonomy/command-folder-semantic",
+     "medium",
+     0
+    ]
+   ],
+   "git": true
+  }
+ ]
+}

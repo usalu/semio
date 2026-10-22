@@ -31,7 +31,7 @@
       "outputs": [],
       "metadata": {"semio":{"execution":{"version":1,"kind":"source"}}},
       "options": {
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust"
       },
       "cache": true,

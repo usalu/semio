@@ -47,7 +47,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
     use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
     use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let root = manifest_dir!();
     let fixtures = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
     let mut regenerated = 0usize;
@@ -81,7 +81,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
 
             let raised = Mutation::<Vdi3805Snapshot>::diff(&mutation, &before);
             let diff = raised.diff().clone();
-            let after = protocol::apply_diff(&diff, &before).unwrap_or_else(|e| panic!("apply {}: {e}", case_dir.display()));
+            let after = protocol::apply_diff_cold(&diff, &before).unwrap_or_else(|e| panic!("apply {}: {e}", case_dir.display()));
             let diff_canon = serde_json::to_string_pretty(&diff).expect("encode diff") + "\n";
             let after_canon = serde_json::to_string_pretty(&after).expect("encode after") + "\n";
             std::fs::write(&diff_path, &diff_canon).expect("write diff");

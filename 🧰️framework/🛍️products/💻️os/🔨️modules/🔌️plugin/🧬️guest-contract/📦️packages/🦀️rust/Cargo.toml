@@ -37,6 +37,7 @@ semio-framework-trace = { workspace = true, optional = true }
 original-actor-context-testing = ["dep:semio-framework-trace"]
 
 [dev-dependencies]
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 

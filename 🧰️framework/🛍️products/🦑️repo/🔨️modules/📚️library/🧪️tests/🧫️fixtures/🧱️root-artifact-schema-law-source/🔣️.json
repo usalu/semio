@@ -163,7 +163,7 @@
   ],
   "route": {
     "target": "test-root-artifact-schema-law-source",
-    "command": "bun ./📜️script.ts test root-artifact-schema-law-source",
+    "command": "repo ./📜️script.ts test root-artifact-schema-law-source",
     "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts"]
   }
 }

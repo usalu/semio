@@ -41,7 +41,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-idx1-present-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-idx1-present-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

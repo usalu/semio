@@ -34,22 +34,22 @@ async fn declared_actions_bridge_to_commands() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
 }
 
-/// 🧵️ LAW (design L4 / §2 D): a legacy `{x, y}` `canvasPointerMove` wire folds into one sample, a
-/// batched wire keeps every `[x, y]` pair in order, and `canvasPointerUp` without `cancelled` is a
-/// real release. Generation2d keeps no canvas drag gesture, so both handlers stay no-ops either way.
+/// 🧵️ LAW (design L4 / §2 D): a `canvasPointerMove` wire carries its `samples` batch in order (a bare
+/// `{x, y}` pair is no batch and yields none), and `canvasPointerUp` without `cancelled` is a real
+/// release. Generation2d keeps no canvas drag gesture, so both handlers stay no-ops either way.
 #[test]
-fn canvas_pointer_wire_defaults_samples_and_cancelled() {
+fn canvas_pointer_wire_reads_only_a_samples_batch_and_defaults_cancelled() {
     let bridge = |action: &str, args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some((args).clone()), None).expect("declared pointer action bridges");
     let f = semio_framework_value::DslValue::float;
-    let legacy = semio_framework_value::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
-    assert_eq!(bridge("canvasPointerMove", legacy.clone()), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[5.0, 6.0]] }), "an absent `samples` is the single (x, y)");
+    let bare_point = semio_framework_value::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
+    assert_eq!(bridge("canvasPointerMove", bare_point.clone()), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }), "a bare (x, y) pair is not a sample batch");
     assert_eq!(bridge("canvasPointerMove", semio_framework_value::DslValue::Object(Vec::new())), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }), "no coordinates at all is an empty batch");
     let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
-    let batched = semio_framework_value::DslValue::object([("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
+    let batched = semio_framework_value::DslValue::object([("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
     let Generation2dCommand::CanvasPointerMove(moved) = bridge("canvasPointerMove", batched) else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
-    assert_eq!(bridge("canvasPointerUp", legacy), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
+    assert_eq!(bridge("canvasPointerUp", bare_point), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
     assert_eq!(bridge("canvasPointerUp", semio_framework_value::DslValue::object([("cancelled".into(), semio_framework_value::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
     let document = Generation2dPlayApp::initial_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();

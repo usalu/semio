@@ -1,6 +1,7 @@
 import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export type CargoDirectionDependency = Readonly<{ name: string; alias: string; owner: string | null; kind: "normal" | "dev" | "build"; optional: boolean; platform: string | null }>;
 export type CargoDirectionPackage = Readonly<{ name: string; owner: string; role: string | null; dependencies: readonly CargoDirectionDependency[] }>;
@@ -30,7 +31,7 @@ const role = (manifest: Record<string, any>): string | null => manifest.package?
 
 /** 🧾️ Inventories all authored Cargo members and declaration kinds independently of the Cargo graph. */
 export function cargoDirectionInventory(root: string): readonly CargoDirectionPackage[] {
-  const read = (path: string): Record<string, any> => object(Bun.TOML.parse(readFileSync(path, "utf8")));
+  const read = (path: string): Record<string, any> => object(runtimeParseTomlV1(readFileSync(path, "utf8")));
   const members = cargoRepositoryPackages(root).map(member => member.directory);
   const found: CargoDirectionPackage[] = [], pending = [...members], visited = new Set<string>();
   for (let index = 0; index < pending.length; index++) {

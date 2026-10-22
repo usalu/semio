@@ -483,7 +483,7 @@ type HookOutput struct {
 	ExitCode int    `json:"exitCode"`
 }
 
-// 🧾️FormatPlainHookOutput renders the bare record every non-VS-Code editor reads.
+// 🧾️FormatPlainHookOutput renders the bare record every non-VS-Code agent client reads.
 func FormatPlainHookOutput(result HookResult) string {
 	document, err := json.Marshal(result)
 	if err != nil {
@@ -497,7 +497,7 @@ func FormatPlainHookOutput(result HookResult) string {
 // allowed. JSON mode prints the plain record for every other client; otherwise a refusal goes to
 // stderr with exit code 2 and an allowed result prints only its message.
 func RenderHookOutput(client string, event model.HookEvent, parentInfo string, nativeEventName string, result HookResult, jsonMode bool) HookOutput {
-	if provider := providers.GetEditorProvider(client); provider != nil && provider.Kind() == "copilot-chat" {
+	if provider := providers.GetAgentClientProvider(client); provider != nil && provider.Kind() == "copilot-chat" {
 		hookEventName := nativeEventName
 		if hookEventName == "" {
 			hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
@@ -518,16 +518,16 @@ func ResolveNativeEventName(client string, event model.HookEvent, parentInfo str
 	if named := ExtractHookEventName(input); named != "" {
 		return named
 	}
-	provider := providers.GetEditorProvider(client)
+	provider := providers.GetAgentClientProvider(client)
 	if provider == nil {
 		return ""
 	}
 	return provider.NativeEventFromHookEvent(event, parentInfo)
 }
 
-// 🎆️EditorForClient answers the editor provider for a client slug.
-func EditorForClient(client string) providers.EditorProvider {
-	return providers.GetEditorProvider(client)
+// 🎆️AgentClientFor answers the agent-client provider for a client slug.
+func AgentClientFor(client string) providers.AgentClientProvider {
+	return providers.GetAgentClientProvider(client)
 }
 
 // #endregion 🖨️Formatting

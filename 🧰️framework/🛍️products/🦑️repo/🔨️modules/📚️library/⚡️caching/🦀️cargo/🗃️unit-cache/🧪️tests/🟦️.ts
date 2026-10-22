@@ -11,10 +11,12 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseDepInfoV1,parseRustcUnitV1,rustcBypassV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
-import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,resolveLaneIdV1} from "../🧵️lane/🟦️.ts";
-import {listObjectsV1} from "../💾️store/🟦️.ts";
+import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,readLaneV1} from "../🧵️lane/🟦️.ts";
+import {listObjectsV1,lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
-import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneLanguageV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
+import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 /** 🏁️ Every Cargo child runs with the scratch workspace as its working directory, so no repository `.cargo/config.toml` can leak in. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../📜️script.ts"),worker=resolve(here,"📥️worker/🟦️.ts"),slow=resolve(here,"⏳️slow/🟦️.ts"),policy=UNIT_CACHE_POLICY_V1;
@@ -62,11 +64,11 @@ test("the first-level key equals an independent Python serialisation and moves w
  expect(keyEnvironmentV1({CARGO_PKG_NAME:"foo",CARGO_MANIFEST_DIR:"/lane/x",HOME:"/h",PATH:"/p",CARGO_TARGET_DIR:"/lane/t"},"/lane")).toEqual([["CARGO_MANIFEST_DIR","@@semio-lane@@/x"],["CARGO_PKG_NAME","foo"]]);
 });
 
-test("lane resolution follows the vectors and refuses malformed identifiers", () => {
- for(const row of fixture.laneVectors)expect(resolveLaneIdV1({...(("flag" in row)?{flag:row.flag as string}:{}),environment:row.environment as Record<string,string>,ancestry:()=>row.ancestry}),row.name).toBe(row.lane);
- const client=[{pid:77,started:"Mon Oct 20 10:00:00 2026",command:"/Applications/Claude.app/claude"}],first=resolveLaneIdV1({environment:{},ancestry:()=>client}),second=resolveLaneIdV1({environment:{},ancestry:()=>[...client]}),other=resolveLaneIdV1({environment:{},ancestry:()=>[{...client[0]!,pid:78}]});
- expect(first).toBe(second);expect(first).not.toBe(other);expect(first).toMatch(/^[a-z0-9]{1,12}$/u);
- for(const bad of fixture.invalidLanes)expect(()=>resolveLaneIdV1({flag:bad,environment:{},ancestry:()=>[]}),bad).toThrow();
+test("lane identifiers are validated, and a lane records the session and agent that own it", () => {
+ for(const bad of fixture.invalidLanes)expect(()=>acquireLaneV1(scratch(),bad),bad).toThrow();
+ const cache=scratch(),lane=acquireLaneV1(cache,"a1b2",{session:"0123456789ab.a1b2",agent:"reviewer"});
+ try{expect(readLaneV1(cache,"a1b2")).toMatchObject({id:"a1b2",session:"0123456789ab.a1b2",agent:"reviewer"});}finally{lane.release();}
+ const plain=acquireLaneV1(cache,"plain");try{expect(readLaneV1(cache,"plain")?.session).toBeUndefined();}finally{plain.release();}
 });
 
 function oracleShares(input:GcInputV1,rules:typeof policy.gc){
@@ -92,7 +94,7 @@ test("cleanup plans follow the vectors, agree with a SQLite window oracle on the
   const capacityBytes=1_000_000+Math.floor(random()*9_000_000),now=1_000_000_000,pick=(limit:number)=>Math.floor(random()*limit);
   const lanes=Array.from({length:pick(12)},(_,index)=>{const bytes=pick(400_000);return{id:"l"+index.toString(36),bytes,incrementalBytes:pick(bytes+1),lastUsedMs:now-pick(3_000_000),live:random()<0.25};});
   const objects=Array.from({length:pick(40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:pick(300_000),lastUsedMs:now-pick(3_000_000)}));
-  const calm:GcInputV1={capacityBytes,freeBytes:capacityBytes,nowMs:now,lanes,objects},plan=planGcV1(calm),oracle=oracleShares(calm,rules);
+  const calm:GcInputV1={capacityBytes,volumeBytes:capacityBytes,freeBytes:capacityBytes,nowMs:now,lanes,objects},plan=planGcV1(calm),oracle=oracleShares(calm,rules);
   expect(plan.removeLanes,"lanes "+round).toEqual(oracle.removeLanes);expect(plan.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)),"incremental "+round).toEqual(oracle.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)));expect(plan.removeObjects,"objects "+round).toEqual(oracle.removeObjects);
   const pressured:GcInputV1={...calm,freeBytes:pick(Math.floor(capacityBytes*0.05)),lanes:lanes.map((lane,index)=>index%3===0?{...lane,lastUsedMs:0}:lane)},hard=planGcV1(pressured),live=new Set(lanes.filter(row=>row.live).map(row=>row.id));
   for(const id of[...hard.removeLanes,...hard.removeIncremental])expect(live.has(id),"live lane removed "+round).toBe(false);
@@ -301,7 +303,7 @@ test("an admission memo holds until a probed path changes, appears, vanishes or 
 });
 
 test("operator messages exist in English and German and fill every placeholder", () => {
- expect(laneLanguageV1({SEMIO_LANGUAGE:"de"})).toBe("de");expect(laneLanguageV1({LANG:"de_DE.UTF-8"})).toBe("de");expect(laneLanguageV1({LANG:"en_US.UTF-8"})).toBe("en");expect(laneLanguageV1({})).toBe("en");
+ const pick=(environment:Record<string,string>)=>resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment,()=>[]).language;expect(pick({SEMIO_LANGUAGE:"de"})).toBe("de");expect(pick({LANG:"de_DE.UTF-8"})).toBe("de");expect(pick({LANG:"en_US.UTF-8"})).toBe("en");expect(()=>pick({})).toThrow("--lang=en|de");
  for(const kind of["overflow","collected"] as const)for(const language of["en","de"] as const){const text=laneMessageV1(kind,{base:"a",lane:"a1",lanes:1,incremental:2,objects:3},language);expect(text).not.toMatch(/\{\w+\}/u);expect(text.length).toBeGreaterThan(20);}
  expect(laneMessageV1("overflow",{base:"a",lane:"a1"},"de")).toContain("Überlauf-Lane a1");
 });
@@ -368,6 +370,16 @@ test("build script runs are shared between lanes: one run per distinct input, de
  const entries=readdirSync(join(cache,"r")).flatMap(shard=>readdirSync(join(cache,"r",shard)).flatMap(key=>readdirSync(join(cache,"r",shard,key)).map(file=>JSON.parse(readFileSync(join(cache,"r",shard,key,file),"utf8")))));
  expect(entries.length).toBeGreaterThan(3);for(const entry of entries)expect(validator("BuildEntry")(entry),JSON.stringify(entry)).toBe(true);
 },240000);
+
+test("a build script run that lost the object of a stream it replays is a miss and cleanup drops it",()=>{
+ const root=scratch(),cwd=join(root,"package"),outDir=join(root,"out");mkdirSync(join(cwd,"src"),{recursive:true});mkdirSync(outDir,{recursive:true});writeFileSync(join(cwd,"src","lib.rs"),"");
+ const key="ab"+"c".repeat(62),context={cwd,laneRoot:undefined,environment:{},stampDirectory:undefined};
+ const entry=publishBuildRunV1(root,{key,package:"fixture",cwd,laneRoot:undefined,directives:{files:[],variables:[]},environment:{},outDir,stdout:'cargo:rustc-cfg=fast_arithmetic="64"\n',stderr:"",stampDirectory:undefined});
+ expect(typeof entry?.stdout).toBe("string");expect(lookupBuildRunV1(root,key,context)?.stdout).toBe(entry!.stdout);
+ rmSync(join(root,"o",entry!.stdout!.slice(0,2),entry!.stdout!),{force:true});
+ expect(lookupBuildRunV1(root,key,context),"an empty replay would drop every cargo: directive").toBeUndefined();
+ expect(pruneEntriesV1(root,Date.now()).entries).toBe(1);expect(existsSync(join(root,"r",key.slice(0,2),key))).toBe(false);
+});
 
 const schedulerManifest=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"),brokerModule=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");
 

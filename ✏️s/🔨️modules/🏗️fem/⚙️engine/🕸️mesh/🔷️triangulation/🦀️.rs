@@ -75,7 +75,7 @@ pub(super) struct TriangulationFinishCursor {
 }
 
 #[derive(Clone, Debug)]
-struct PointInsertion {
+pub(super) struct PointInsertion {
     pub(super) point_index: usize,
     phase: PointInsertionPhase,
     pub(super) cursor: usize,

@@ -21,7 +21,13 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveSelfWeightElements
         record: "RemovedSelfWeightElements",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove self-weight element", "Eigenlastbauteil entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1991Snapshot, Op> for RemoveSelfWeightElements where Op: protocol::ColdMutation<En1991Snapshot, ReferenceDiff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::insert_self_weight_elements::InsertSelfWeightElements> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1991Snapshot>>::ReferenceDiff> {
         crate::remove_self_weight_elements::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,9 +36,6 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveSelfWeightElements
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove self-weight element", "Eigenlastbauteil entfernen")
-    }
 }
 //#endregion 🔖️Payload
 

@@ -18,7 +18,7 @@
 //! outside this facet's edit boundary and would otherwise fail to compile.
 
 use crate::{FormQuestion, FormsDiff, FormsSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[path = "📨️commit-response/🦀️.rs"]
 pub mod commit_response;
@@ -31,7 +31,7 @@ pub mod discard_response;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
+#[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms", reference = FormsSnapshot, reference_diff = FormsDiff)]
 pub enum FormMutation {
     CreateStep(crate::standards::v1::subsets::any::schema::mutations::create_step::mutation::CreateStep),
     DeleteStep(crate::standards::v1::subsets::any::schema::mutations::delete_step::mutation::DeleteStep),
@@ -97,7 +97,7 @@ pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rena
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
     Ok({
-    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)?
+    <FormMutation as ColdMutation<FormsSnapshot>>::inverse(mutation, base)?
 
     })
 }

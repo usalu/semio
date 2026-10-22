@@ -6,9 +6,10 @@ import {cargoRepositoryPackageSelections,cargoWorkspaceForManifest,prepareCargoW
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {repositoryCargoTestPolicyV1} from "../🔣️policy/🟦️.ts";
 import {packageTestBudgetMs} from "../⏱️budget/🟦️.ts";
-import {TEST_LEVELS,testLevelBudgetMs,type TestLevel} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {TEST_LEVELS,type TestLevel} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {scriptInvocationEnvironment,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
+import {buildPreparationBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {OwnedCommandFailure} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1} from "../🚪️launcher/🟦️.ts";
@@ -49,7 +50,7 @@ export async function runRepositoryCargoTests(packages:string[],cwd:string,invoc
   for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
   for(const manifests of scopes.values()){
     const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
-    await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,scriptInvocationEnvironment(invocation,env),createRequestedIssuedResourceControlV1(phaseControl,testLevelBudgetMs()));
+    await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,scriptInvocationEnvironment(invocation,env),createRequestedIssuedResourceControlV1(phaseControl,buildPreparationBudgetMs(env)));
     checkResourceLeaseControl(phaseControl);
     const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
     await runRepositoryCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets},repository,invocation,phaseControl);checkResourceLeaseControl(phaseControl);

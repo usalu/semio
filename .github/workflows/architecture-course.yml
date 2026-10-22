@@ -71,9 +71,7 @@ jobs:
         with:
           node-version: 24.15.0
           package-manager-cache: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: package.json
+      - uses: ./.github/actions/repo-launcher
       - name: Provision the native repository frontend
         id: native-repo
         shell: bash
@@ -81,7 +79,7 @@ jobs:
           native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
           native_repo_bin="$native_repo_dir/repo"
           if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
-            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run repo-mcp:build --skip-cache
           fi
           sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
           printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
@@ -111,9 +109,7 @@ jobs:
         with:
           node-version: 24.15.0
           package-manager-cache: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: package.json
+      - uses: ./.github/actions/repo-launcher
       - name: Provision the native repository frontend
         id: native-repo
         shell: bash
@@ -121,7 +117,7 @@ jobs:
           native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
           native_repo_bin="$native_repo_dir/repo"
           if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
-            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run repo-mcp:build --skip-cache
           fi
           sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
           printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
@@ -165,9 +161,7 @@ jobs:
         with:
           node-version: 24.15.0
           package-manager-cache: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: package.json
+      - uses: ./.github/actions/repo-launcher
       - name: Provision the native repository frontend
         id: native-repo
         shell: bash
@@ -175,7 +169,7 @@ jobs:
           native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo"
           native_repo_bin="$native_repo_dir/repo"
           if ! sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help; then
-            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run repo-mcp:build --skip-cache
+            sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true repo run repo-mcp:build --skip-cache
           fi
           sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true "$native_repo_bin" --help
           printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"

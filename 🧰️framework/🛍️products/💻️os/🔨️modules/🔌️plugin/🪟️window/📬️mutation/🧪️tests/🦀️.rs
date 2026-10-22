@@ -1,6 +1,7 @@
 //! 🧪️ Actual window wrapper backing stays in custody until independently funded retirement.
 use semio_framework_value::RetainedCloneGrant;
-use semio_framework_value::retirement::{RetireOwned, OwnedValueRetirementFactory};
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::OwnedValueRetirementFactory;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::sync::Arc;
 #[doc(hidden)]
@@ -19,7 +20,7 @@ impl semio_framework_plugin_window_config::window_mutation::refresh::WindowRefre
 fn original_window_refresh_admits_displaced_snapshot_under_actual_currencies(){
  let law:serde_json::Value=serde_json::from_str(include_str!("../🔄️refresh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
-  let((mut current,mut pending,mut retired),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(RefreshSnapshot{window_id:law["windowId"].as_str().unwrap().into(),payload:law["before"].as_str().unwrap().into()},Some(RefreshSnapshot{window_id:String::new(),payload:law["after"].as_str().unwrap().into()}),semio_framework_value::retirement_queue::RetirementQueue::default()));
+  let((mut current,mut pending,mut retired),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(RefreshSnapshot{window_id:law["windowId"].as_str().unwrap().into(),payload:law["before"].as_str().unwrap().into()},Some(RefreshSnapshot{window_id:String::new(),payload:law["after"].as_str().unwrap().into()}),semio_framework_value_retirement_queue::RetirementQueue::default()));
   let held=heap.requested_bytes-heap.released_bytes;let address=current.window_id.as_ptr();let payload=pending.as_ref().unwrap().payload.as_ptr();let(mut born,mut released,mut ready)=(0usize,0usize,false);
   for _ in 0..law["maximumTurns"].as_u64().unwrap(){
    let demand=semio_framework_plugin_window_config::window_mutation::refresh::refresh_demands(&pending,&retired).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};

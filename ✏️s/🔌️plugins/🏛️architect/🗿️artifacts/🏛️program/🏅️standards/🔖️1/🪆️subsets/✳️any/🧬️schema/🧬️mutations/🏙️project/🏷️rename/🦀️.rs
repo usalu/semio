@@ -21,6 +21,16 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<RenameProject>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "project", kind: "rename-project", record: "RenamedProject" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for RenameProject
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<RenameProject>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -30,7 +40,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
-    }
 }

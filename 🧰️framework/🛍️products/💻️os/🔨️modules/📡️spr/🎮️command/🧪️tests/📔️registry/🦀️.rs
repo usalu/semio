@@ -50,8 +50,8 @@ pub use mutations::*;
 
 #[test]
 fn mini_diff_rename_matches_neutral_names() {
-    use protocol::DiffAlgebra;
-use protocol::{ColdDiffAlgebra};
+    use protocol::{ColdDiffAlgebra, DiffAlgebra};
+
     let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap();
     for row in fixture["rename"].as_array().unwrap() {
         let base: MiniDoc = serde_json::from_value(serde_json::json!({"name": row["base"].as_str().unwrap()})).unwrap();

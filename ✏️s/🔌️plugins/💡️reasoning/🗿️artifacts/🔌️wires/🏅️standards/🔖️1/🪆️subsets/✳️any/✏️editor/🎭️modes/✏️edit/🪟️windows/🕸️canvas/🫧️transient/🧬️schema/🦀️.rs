@@ -44,29 +44,9 @@ pub struct WiresCanvasTransientDiff {
     pub drag_zoom: Option<f64>,
 }
 
-impl protocol::MutationDiff<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
-    fn apply(&self, base: &super::WiresCanvasTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<super::WiresCanvasTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.drag_node_id {
-            next.drag_node_id = value.value.clone();
-        }
-        if let Some(value) = &self.drag_start_x {
-            next.drag_start_x = value.clone();
-        }
-        if let Some(value) = &self.drag_start_y {
-            next.drag_start_y = value.clone();
-        }
-        if let Some(value) = &self.drag_last_x {
-            next.drag_last_x = value.clone();
-        }
-        if let Some(value) = &self.drag_last_y {
-            next.drag_last_y = value.clone();
-        }
-        if let Some(value) = &self.drag_zoom {
-            next.drag_zoom = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<super::WiresCanvasTransient> for WiresCanvasTransientDiff {}
+
+impl protocol::ColdMutationDiff<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.drag_node_id.is_some() {
             self.drag_node_id = other.drag_node_id;
@@ -87,9 +67,40 @@ impl protocol::MutationDiff<super::WiresCanvasTransient> for WiresCanvasTransien
             self.drag_zoom = other.drag_zoom;
         }
     }
+
+    fn apply(&self, unpublished: &mut super::WiresCanvasTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.drag_node_id {
+            next.drag_node_id = value.value.clone();
+        }
+        if let Some(value) = &self.drag_start_x {
+            next.drag_start_x = value.clone();
+        }
+        if let Some(value) = &self.drag_start_y {
+            next.drag_start_y = value.clone();
+        }
+        if let Some(value) = &self.drag_last_x {
+            next.drag_last_x = value.clone();
+        }
+        if let Some(value) = &self.drag_last_y {
+            next.drag_last_y = value.clone();
+        }
+        if let Some(value) = &self.drag_zoom {
+            next.drag_zoom = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.drag_node_id.is_none() && self.drag_start_x.is_none() && self.drag_start_y.is_none() && self.drag_last_x.is_none() && self.drag_last_y.is_none() && self.drag_zoom.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
     fn inverse(&self, base: &super::WiresCanvasTransient) -> Self {
         Self {
             drag_node_id: self.drag_node_id.as_ref().map(|_| WiresCanvasOptionalNode { value: base.drag_node_id.clone() }),
@@ -99,8 +110,5 @@ impl protocol::DiffAlgebra<super::WiresCanvasTransient> for WiresCanvasTransient
             drag_last_y: self.drag_last_y.as_ref().map(|_| base.drag_last_y.clone()),
             drag_zoom: self.drag_zoom.as_ref().map(|_| base.drag_zoom.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.drag_node_id.is_none() && self.drag_start_x.is_none() && self.drag_start_y.is_none() && self.drag_last_x.is_none() && self.drag_last_y.is_none() && self.drag_zoom.is_none()
     }
 }

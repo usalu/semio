@@ -64,5 +64,6 @@ semio-framework-server-presence = { path = "../../../../../../../🖥️server/�
 semio-framework-repo-cli-event-stream = { path = "../../../../../../../🦑️repo/🔨️modules/⌨️cli/📡️event-stream/📦️packages/🦀️rust" }
 semio-framework-os-store-command = { path = "../../../../../🏪️store/📬️command/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust" }
+semio-framework-value-paged-text = { path = "../../../../../../../../🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 
 [dev-dependencies]

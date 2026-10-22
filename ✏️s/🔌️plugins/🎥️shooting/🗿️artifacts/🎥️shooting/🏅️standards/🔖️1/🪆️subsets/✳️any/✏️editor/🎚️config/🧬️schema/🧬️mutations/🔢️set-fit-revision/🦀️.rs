@@ -13,6 +13,16 @@ pub struct SetFitRevision {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRevision {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "fit-revision", kind: "set-fit-revision", record: "SetFitRevision" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["fit_revision".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRevision {
     fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
         match base.fit_revision == self.value {
             true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Fit revision is unchanged."),
@@ -22,10 +32,4 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRe
     fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
     Ok(vec![ShootingConfigMutation::SetFitRevision(Self { value: base.fit_revision })])
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["fit_revision".into()]
-    }
 }

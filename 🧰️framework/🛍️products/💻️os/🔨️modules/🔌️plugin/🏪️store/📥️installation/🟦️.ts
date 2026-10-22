@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🏪 Runtime-installable extension store — unpack `.semio` packages, materialize for native/web, dev-server install + the
  * `extension-modules.watch` stream route. */
 import { createHash } from "node:crypto";

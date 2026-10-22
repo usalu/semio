@@ -21,13 +21,17 @@ pub struct UpdateSpread {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateSpread where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_spread::UpdateSpread> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "spread", kind: "update-spread", record: "UpdatedSpread" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update spread \"{}\"", self.name), &format!("Druckbogen \"{}\" aktualisieren", self.name)) }
+    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdateSpread where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_spread::UpdateSpread> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_spread(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_update_spread(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update spread \"{}\"", self.name), &format!("Druckbogen \"{}\" aktualisieren", self.name)) }
-    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 
 pub fn diff_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

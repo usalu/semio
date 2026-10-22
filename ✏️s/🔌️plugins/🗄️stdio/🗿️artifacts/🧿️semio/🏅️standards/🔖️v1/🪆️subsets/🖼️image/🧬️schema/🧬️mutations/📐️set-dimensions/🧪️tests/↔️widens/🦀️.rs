@@ -10,7 +10,7 @@ use crate::schema::diff::SemioImageDiff;
 use crate::schema::mutations::set_dimensions;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/⬅️before/🔣️.json"));
@@ -29,14 +29,14 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Both dimensions change; colorspace, bit depth and metadata ride along untouched.
 #[semio_framework_async_macros::async_test]
 async fn widens_and_heightens_the_canvas() {
     let base = before();
-    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-dimensions applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(leaf_outcome().diff(), &base).expect("set-dimensions applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-dimensions/widens-the-frameless-canvas-to-four-by-two: applied state differs from the committed after-snapshot");
     assert_eq!((produced.width, produced.height), (4, 2), "both dimensions must take the payload's absolute values");
     assert_eq!(produced.colorspace, base.colorspace, "set-dimensions must not touch the recorded source colorspace");
@@ -52,7 +52,7 @@ async fn the_undo_set_dimensions_restores_the_original_canvas() {
     let base = before();
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 2, height: 1 })], "the undo must carry BASE's own dimensions, not a delta");
     let mut current = before();
     current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
@@ -97,7 +97,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-dimensions diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-dimensions diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed set-dimensions diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed diff did not carry before to after");
 }
 

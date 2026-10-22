@@ -48,5 +48,8 @@ pub use checkpoint_pages::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_SPARSE_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 // #endregion 🔖️Tests

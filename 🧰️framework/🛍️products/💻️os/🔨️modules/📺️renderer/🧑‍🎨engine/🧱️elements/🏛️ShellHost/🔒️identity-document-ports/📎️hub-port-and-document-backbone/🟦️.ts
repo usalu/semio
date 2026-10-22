@@ -2,7 +2,7 @@
 import { shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { replaceAttachedDocumentV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "@semio-tech/framework/directory/delegations";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRole, type AppCatalogue, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
 import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, encodeDocumentArchiveBytes, type DocumentArchivePack, type DocumentArchiveLoadStatus } from "@semio-tech/framework/wire-contracts";

@@ -16,7 +16,7 @@
 import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, historyEntryLabelText, historyReprojectionStatus, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryReprojection, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage, type ShellLocale } from "@semio-tech/framework";
 import type { ArtifactPresenceHistoryEdit } from "@semio-tech/framework/replication";
 import { ariaKeyshortcutsText, DisabledReasonHint, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, Surface, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
-import { useEffect, useId, useRef, type ReactElement } from "react";
+import { useEffect, useId, useRef, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 import type { ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1 } from "../🛣️route-and-chrome/🟦️.tsx";
 import { shellLabel } from "../🏷️labels/🟦️.tsx";

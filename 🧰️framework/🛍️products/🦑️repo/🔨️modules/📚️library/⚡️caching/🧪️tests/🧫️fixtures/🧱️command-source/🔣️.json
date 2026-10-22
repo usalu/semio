@@ -246,7 +246,7 @@
               "{projectRoot}/dist"
             ],
             "options": {
-              "command": "bun ./📜️script.ts build"
+              "command": "repo ./📜️script.ts build"
             }
           }
         }
@@ -268,7 +268,7 @@
               }
             ],
             "options": {
-              "command": "bun ./📜️script.ts package"
+              "command": "repo ./📜️script.ts package"
             }
           },
           "broken": {
@@ -296,7 +296,7 @@
       "consumer/package.json"
     ],
     "texts": {
-      "package.json": "{\"scripts\":{\"nx\":\"bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx\"},\"nx\":{\"includedScripts\":[]}}",
+      "package.json": "{\"scripts\":{\"nx\":\"repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx\"},\"nx\":{\"includedScripts\":[]}}",
       "producer/package.json": "{\"scripts\":{},\"nx\":{\"includedScripts\":[]}}",
       "consumer/package.json": "{\"scripts\":{},\"nx\":{\"includedScripts\":[]}}",
       "producer/📋️project.json": "{\"targets\":{\"build\":{}}}",
@@ -314,7 +314,7 @@
   },
   "route": {
     "target": "test-cache-command-source",
-    "command": "bun ./📜️script.ts test cache-command-source",
+    "command": "repo ./📜️script.ts test cache-command-source",
     "namedInput": "cacheCommandSources"
   },
   "coordinates": {

@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-dispatch-panels = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }

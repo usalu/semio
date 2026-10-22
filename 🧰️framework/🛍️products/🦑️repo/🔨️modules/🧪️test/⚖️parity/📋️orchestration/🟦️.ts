@@ -11,6 +11,7 @@ import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/
 import { Script,withIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { runtimeWhichV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /**
  * 🎭️ The case's oracle decision: which implementation serves the oracle role, or the recorded no-oracle decision. A
@@ -28,7 +29,7 @@ export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, lev
   if (mapped === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: native oracle ${entry.id} names no hostImplementation to drive it from`, unavailable: null };
   if ((discovered.adapters as Record<string, string | undefined>)[mapped] === undefined)
     return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in`, unavailable: null };
-  const missing = (entry.executables ?? []).filter((command) => Bun.which(command) === null);
+  const missing = (entry.executables ?? []).filter((command) => runtimeWhichV1(command) === null);
   return { implementation: mapped, hostedByCase: entry.hostPath === discovered.caseDir, noOracleDecision: null, comparison: plan.comparison, problem: null, unavailable: missing.length === 0 ? null : { oracle: entry.id, missing } };
 }
 

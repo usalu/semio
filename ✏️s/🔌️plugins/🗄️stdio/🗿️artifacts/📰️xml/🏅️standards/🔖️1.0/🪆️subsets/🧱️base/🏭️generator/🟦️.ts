@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 //#endregion 🔌️Adapters
 
@@ -53,7 +54,7 @@ function platformId(): string {
 /** 🦀️ Shells out to the standalone `quick-xml-oracle-codec` binary — the ONLY place this file
  *  touches it. */
 function codecBuild(id: string, outDir: string, directory: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir, directory, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", id, outDir, directory, BEFORE_FILE, AFTER_FILE], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`quick-xml-oracle-codec build ${id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -85,7 +86,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (quick-xml)", attribution: "Generated with quick-xml (MIT OR Apache-2.0) via the standalone quick-xml-oracle-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },

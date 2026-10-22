@@ -64,7 +64,7 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff;
+    use semio_framework_os_kernel::apply_diff_cold;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_brep::schema::mutations::{diff_semio_brep_mutation, inverse_semio_brep_mutation, SemioBrepMutation};
     use semio_s_artifact_stdio_semio_brep::io::text::mutations::decode_semio_brep_mutation_json;
@@ -88,7 +88,7 @@ mod subject {
         let outcome = diff_semio_brep_mutation(mutation, snapshot);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
-            *snapshot = apply_diff(outcome.diff(), snapshot).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
+            *snapshot = apply_diff_cold(outcome.diff(), snapshot).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{scenario}: the mutation was rejected: {refusals:?}"))

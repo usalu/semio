@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Automatic Devcontainer Hook Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "automaticInstallation",
+    "forbiddenArguments",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "automaticInstallation": {
+      "const": false
+    },
+    "forbiddenArguments": {
+      "const": [
+        "install-hooks",
+        "core.hooksPath"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "argv",
+          "allowed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argv": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,7 +17,7 @@ use super::*;
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🟰️ Lets every Report replay of this store stop where its state meets the live projection's state after the same
     /// prefix (`Arc::ptr_eq`, then `PartialEq`), splicing the unchanged tail instead of replaying it.

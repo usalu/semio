@@ -35,7 +35,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
+    let outcome = <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::diff(&mutation(), &base);
     let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("set-layout applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "set-layout/keeps-layout: the applied preferences differ from the committed after-snapshot");
 }
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "set-layout/keeps-layout: this fixture declares a no-op outcome");
-    let produced = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
+    let produced = <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "set-layout/keeps-layout: an unchanged preference is a warned no-op, never a refusal");
     assert_eq!(produced.messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>(), vec!["mutation.no-op".to_string()], "set-layout/keeps-layout: the only diagnostic is mutation.no-op");
     assert_eq!(protocol::apply_diff_cold(produced.diff(), &before()).expect("no-op applies"), before(), "set-layout/keeps-layout: a no-op leaves the preferences untouched");
@@ -54,7 +54,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
+    let outcome = <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::diff(&mutation(), &before());
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "set-layout/keeps-layout: produced diff differs from the committed 🔺️diff");
     let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
@@ -65,10 +65,10 @@ fn produces_committed_diff() {
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let forward = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
+    let forward = <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::diff(&mutation(), &base);
     let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward set-layout applies");
-    for step in <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
-        let undo = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&step, &snapshot);
+    for step in <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
+        let undo = <UiPreferencesConfigMutation as protocol::ColdMutation<UiPreferences>>::diff(&step, &snapshot);
         snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("set-layout inverse step applies");
     }
     assert_eq!(snapshot, base, "set-layout/keeps-layout: the inverse did not restore the before-preferences");

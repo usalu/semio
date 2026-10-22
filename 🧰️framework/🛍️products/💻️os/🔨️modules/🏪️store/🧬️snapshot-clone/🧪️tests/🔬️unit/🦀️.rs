@@ -97,7 +97,7 @@ impl RetainedCloneEdit<u64, BirthMutation> for BirthEdit {
 impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
     fn foreign_step_presence(&self)->bool{false}
     fn advance_demands(&self, _: RetainedCloneRef<'_, u64>, _: &u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { unreachable!() }
-    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }
+    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }
     fn take_inverse(&mut self) -> Option<Vec<BirthMutation>> { None }
     fn cancel(&mut self) {}
     fn begin_close(&mut self) -> bool { true }

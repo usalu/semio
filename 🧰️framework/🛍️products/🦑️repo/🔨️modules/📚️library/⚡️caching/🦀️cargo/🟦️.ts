@@ -8,6 +8,7 @@ import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGen
 import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🌱️environment/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 
 //#region 🧩️ReleaseComponentPlan
@@ -24,7 +25,7 @@ export type ComponentWorkspaceV1 = Readonly<{ manifest: string; packages: readon
  * `workspaces` restricts the result to those workspace directories. */
 export function componentWorkspacesV1(repoRoot: string, workspaces?: readonly string[]): ComponentWorkspaceV1[] {
   const skipped = new Set<string>([...(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"), "utf8")).generatedDirectories as string[]), ".🧬semio", "temp"]);
-  const owners = new Map<string, Map<string, string>>(), pluginIds = new Map<string, string>(), toml = (path: string): any => Bun.TOML.parse(readFileSync(path, "utf8"));
+  const owners = new Map<string, Map<string, string>>(), pluginIds = new Map<string, string>(), toml = (path: string): any => runtimeParseTomlV1(readFileSync(path, "utf8"));
   const workspaceOf = (manifest: string, declared: unknown): string => {
     if (typeof declared === "string") return resolve(dirname(manifest), declared, "Cargo.toml");
     for (let directory = dirname(manifest); ; directory = dirname(directory)) {

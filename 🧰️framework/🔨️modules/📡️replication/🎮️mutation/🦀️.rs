@@ -194,3 +194,7 @@ mod owned_retirement {
     use super::*;
     semio_framework_value::artifact_retire_struct!(MutationMessage { level, code, message, target, op_index });
 }
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

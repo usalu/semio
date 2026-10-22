@@ -14,6 +14,9 @@ test("one owned Pack source returns its exact business tree after codec scaffold
   const transferred = applyPatch<{ original?: typeof original; pending: typeof original | null }>({ original, pending: null }, [{ op: "move", from: "/original", path: "/pending" }], true, false).newDocument;
   expect(transferred.pending).toEqual(original);
   expect(BigInt(original.nodeHashLiteral)).toBe((1n << 64n) - 3n);
+  const lease = fixture.leaseElection;
+  expect(lease.handleBytes + lease.payloadMoves * lease.optionalPayloadBytes).toBe(lease.copyBytes);
+  expect(lease.copyBytes).toBeLessThan(8 * 64);
   for (const copy of fixture.copyGrants) {
     const input = new TextEncoder().encode(original.title);
     const output: number[] = [];

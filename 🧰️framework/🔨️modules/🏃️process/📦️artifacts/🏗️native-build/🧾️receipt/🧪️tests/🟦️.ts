@@ -100,6 +100,15 @@ test("the stream refuses out-of-order sections and conflicting input observation
   await expect(witnessed.buildResource({ package_id: "p", out_dir: "/o", path: "/o/x", sha256: "1".repeat(64), observedAtMs: 1, resources: [{ input: { kind: "read", path: 7 } }] })).rejects.toThrow("must be a string");
 });
 
+test("the physical budget is the schema-declared finite law and the deadline covers the slowest measured observation", () => {
+  const schema = JSON.parse(readFileSync(new URL("../🧬️schema/📏️physical-budget.json", import.meta.url), "utf8"));
+  const budget = { version: 1, ...CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 };
+  expect(new Ajv({ strict: true }).validate(schema, budget)).toBe(true);
+  expect(new Ajv({ strict: true }).validate(schema, { ...budget, deadlineMs: 1 })).toBe(false);
+  const slowestMeasuredMs = 600000;
+  expect(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs).toBeGreaterThanOrEqual(3 * slowestMeasuredMs);
+});
+
 test("the physical control is finite, owner-validated and bounded by the caller's own deadline", () => {
   const rows: unknown[] = [];
   const control = cargoProvenancePhysicalControlV1({ cancelled: () => false, remainingMs: () => 5, onProgress: (row) => rows.push(row) });

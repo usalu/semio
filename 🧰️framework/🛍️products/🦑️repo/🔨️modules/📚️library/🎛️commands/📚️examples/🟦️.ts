@@ -18,7 +18,7 @@ export class ExamplesScript extends Script {
   run(segments: string[]): void {
     const sub = segments[0];
     if (!sub || sub === "help") {
-      console.error("[examples] usage: bun ./📜️script.ts examples <list|verify> [plugin]");
+      console.error("[examples] usage: repo ./📜️script.ts examples <list|verify> [plugin]");
       process.exit(sub ? 0 : 1);
     }
     if (sub === "list") {

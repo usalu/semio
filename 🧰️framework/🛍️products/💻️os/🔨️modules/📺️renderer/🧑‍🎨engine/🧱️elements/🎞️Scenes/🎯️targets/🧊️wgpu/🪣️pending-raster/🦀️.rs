@@ -26,7 +26,7 @@ pub struct PendingRasterQueueToken {
 
 impl Default for PendingRasterQueue {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; RASTER_UPLOADS_PER_SURFACE_CAPACITY], head: 0, len: 0, checked_out: None }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; RASTER_UPLOADS_PER_SURFACE_CAPACITY], head: 0, len: 0, checked_out: None }
     }
 }
 

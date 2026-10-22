@@ -3,24 +3,24 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillShape {
+pub enum BoardFillShape {
     Circle,
     Rectangle,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardFillNodeSnapshot {
+pub struct BoardFillNodeSnapshot {
     pub id: BoardFillText,
     pub bounds: [f64; 4],
 }
 
-pub(super) struct BoardFillNodeCapture {
+pub struct BoardFillNodeCapture {
     pub id: BoardFillText,
     pub bounds: Option<[f64; 4]>,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardFillHandleSnapshot {
+pub struct BoardFillHandleSnapshot {
     pub id: BoardFillText,
     pub node_kind: BoardFillText,
     pub handle_kind: BoardFillText,
@@ -33,7 +33,7 @@ pub(super) struct BoardFillHandleSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillHandleCaptureStage {
+pub enum BoardFillHandleCaptureStage {
     NodeKind,
     HandleKind,
     Slot,
@@ -45,14 +45,14 @@ pub(super) enum BoardFillHandleCaptureStage {
     Publish,
 }
 
-pub(super) struct BoardFillHandleCapture {
+pub struct BoardFillHandleCapture {
     pub handle: BoardFillHandleSnapshot,
     pub(super) edge_key: Option<BoardFillText>,
     pub stage: BoardFillHandleCaptureStage,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardFillTemplateSnapshot {
+pub struct BoardFillTemplateSnapshot {
     pub handle_kind: BoardFillText,
     pub wire_kind: BoardFillText,
     pub edge_kind: BoardFillText,
@@ -62,7 +62,7 @@ pub(super) struct BoardFillTemplateSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillTemplateCaptureStage {
+pub enum BoardFillTemplateCaptureStage {
     HandleKind,
     WireKind,
     EdgeKind,
@@ -72,12 +72,12 @@ pub(super) enum BoardFillTemplateCaptureStage {
     Publish,
 }
 
-pub(super) struct BoardFillTemplateCapture {
+pub struct BoardFillTemplateCapture {
     pub value: BoardFillTemplateSnapshot,
     pub stage: BoardFillTemplateCaptureStage,
 }
 
-pub(super) struct BoardFillKindSnapshot {
+pub struct BoardFillKindSnapshot {
     pub id: BoardFillText,
     pub shape: BoardFillShape,
     pub radius: f64,
@@ -89,7 +89,7 @@ pub(super) struct BoardFillKindSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillKindCaptureStage {
+pub enum BoardFillKindCaptureStage {
     Icon,
     Shape,
     Radius,
@@ -100,14 +100,14 @@ pub(super) enum BoardFillKindCaptureStage {
     Publish,
 }
 
-pub(super) struct BoardFillKindCapture {
+pub struct BoardFillKindCapture {
     pub value: BoardFillKindSnapshot,
     pub stage: BoardFillKindCaptureStage,
     pub(super) template: Option<BoardFillTemplateCapture>,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardFillRuleSnapshot {
+pub struct BoardFillRuleSnapshot {
     pub source: BoardFillText,
     pub target: BoardFillText,
     pub bidirectional: bool,
@@ -115,21 +115,21 @@ pub(super) struct BoardFillRuleSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillRuleCaptureStage {
+pub enum BoardFillRuleCaptureStage {
     Target,
     Bidirectional,
     Specificity,
     Publish,
 }
 
-pub(super) struct BoardFillRuleCapture {
+pub struct BoardFillRuleCapture {
     pub value: BoardFillRuleSnapshot,
     pub stage: BoardFillRuleCaptureStage,
 }
 
 /// 📸️ Fixed-page immutable input transferred after staged board capture.
 pub struct BoardFillSnapshot {
-        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+        pub(super) original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
 pub nodes: BoardFillFixedPages<BoardFillNodeSnapshot, { BOARD_FILL_NODE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
     pub handles: BoardFillFixedPages<BoardFillHandleSnapshot, { BOARD_FILL_HANDLE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
     pub(super) kinds: BoardFillFixedPages<BoardFillKindSnapshot, { BOARD_FILL_KIND_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
@@ -145,7 +145,7 @@ impl Drop for BoardFillSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillCapturePhase {
+pub enum BoardFillCapturePhase {
     Nodes,
     Handles,
     Kinds,

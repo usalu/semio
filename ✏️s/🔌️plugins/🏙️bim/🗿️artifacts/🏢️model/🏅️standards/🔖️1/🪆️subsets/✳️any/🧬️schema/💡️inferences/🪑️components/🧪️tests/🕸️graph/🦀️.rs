@@ -30,7 +30,7 @@ fn count(session: &ModelInferenceSession, kind: &str) -> usize {
 }
 
 fn edited(session: &mut ModelInferenceSession, before: &ModelSnapshot, diff: ModelDiff) -> (ModelSnapshot, ModelInference) {
-    let after = protocol::apply_diff(&diff, before).expect("applies");
+    let after = protocol::apply_diff_cold(&diff, before).expect("applies");
     let incremental = session.update(&after, &diff).clone();
     assert_eq!(incremental, ModelInference::infer(&after).expect("infers"), "an incremental update equals a fresh inference");
     (after, incremental)
@@ -111,7 +111,7 @@ fn an_unrelated_edit_and_a_rename_compute_no_component_and_no_run() {
     settle(&mut session, &snapshot);
     let before = session.inference().clone();
     let renamed = ModelDiff { project: Some(ProjectPatch { name: Some("Renamed".into()), ..Default::default() }), ..Default::default() };
-    let after = protocol::apply_diff(&renamed, &snapshot).expect("applies");
+    let after = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
     let served = session.update(&after, &renamed).clone();
     assert!(session.report().gated && session.report().computed == 0, "{:?}", session.report());
     assert_eq!(served, before);

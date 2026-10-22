@@ -36,7 +36,7 @@ pub mod set_trailing_newline;
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = TsvSnapshot, diff = TsvDiff, schema = "TsvMutation")]
+#[mutations(snapshot = TsvSnapshot, diff = TsvDiff, schema = "TsvMutation", reference = TsvSnapshot, reference_diff = TsvDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum TsvMutation {
     /// ↩️ Toggles whether the encoded text ends with a line terminator.

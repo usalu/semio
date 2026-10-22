@@ -797,39 +797,9 @@ pub struct En1999Diff {
     pub shells: Option<En1999ShellsRows>,
 }
 
-impl protocol::MutationDiff<En1999Snapshot> for En1999Diff {
-    fn apply(&self, base: &En1999Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1999Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(rows) = &self.materials {
-            next.materials = rows.commit_onto(&base.materials, capability).map_err(|error| error.under(["materials"]))?;
-        }
-        if let Some(rows) = &self.sections {
-            next.sections = rows.commit_onto(&base.sections, capability).map_err(|error| error.under(["sections"]))?;
-        }
-        if let Some(rows) = &self.members {
-            next.members = rows.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
-        }
-        if let Some(rows) = &self.connections {
-            next.connections = rows.commit_onto(&base.connections, capability).map_err(|error| error.under(["connections"]))?;
-        }
-        if let Some(rows) = &self.fire_scenarios {
-            next.fire_scenarios = rows.commit_onto(&base.fire_scenarios, capability).map_err(|error| error.under(["fire_scenarios"]))?;
-        }
-        if let Some(rows) = &self.fatigue_details {
-            next.fatigue_details = rows.commit_onto(&base.fatigue_details, capability).map_err(|error| error.under(["fatigue_details"]))?;
-        }
-        if let Some(rows) = &self.cold_formed {
-            next.cold_formed = rows.commit_onto(&base.cold_formed, capability).map_err(|error| error.under(["cold_formed"]))?;
-        }
-        if let Some(rows) = &self.shells {
-            next.shells = rows.commit_onto(&base.shells, capability).map_err(|error| error.under(["shells"]))?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<En1999Snapshot> for En1999Diff {}
 
+impl protocol::ColdMutationDiff<En1999Snapshot> for En1999Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -891,9 +861,49 @@ impl protocol::MutationDiff<En1999Snapshot> for En1999Diff {
             self.shells = self.shells.take().filter(|rows| !rows.is_empty());
         }
     }
+
+    fn apply(&self, unpublished: &mut En1999Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.annex {
+            next.annex = value.clone();
+        }
+        if let Some(rows) = &self.materials {
+            next.materials = rows.commit_onto(&base.materials, capability).map_err(|error| error.under(["materials"]))?;
+        }
+        if let Some(rows) = &self.sections {
+            next.sections = rows.commit_onto(&base.sections, capability).map_err(|error| error.under(["sections"]))?;
+        }
+        if let Some(rows) = &self.members {
+            next.members = rows.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
+        }
+        if let Some(rows) = &self.connections {
+            next.connections = rows.commit_onto(&base.connections, capability).map_err(|error| error.under(["connections"]))?;
+        }
+        if let Some(rows) = &self.fire_scenarios {
+            next.fire_scenarios = rows.commit_onto(&base.fire_scenarios, capability).map_err(|error| error.under(["fire_scenarios"]))?;
+        }
+        if let Some(rows) = &self.fatigue_details {
+            next.fatigue_details = rows.commit_onto(&base.fatigue_details, capability).map_err(|error| error.under(["fatigue_details"]))?;
+        }
+        if let Some(rows) = &self.cold_formed {
+            next.cold_formed = rows.commit_onto(&base.cold_formed, capability).map_err(|error| error.under(["cold_formed"]))?;
+        }
+        if let Some(rows) = &self.shells {
+            next.shells = rows.commit_onto(&base.shells, capability).map_err(|error| error.under(["shells"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<En1999Snapshot> for En1999Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none() && self.materials.as_ref().map_or(true, |rows| rows.is_empty()) && self.sections.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.connections.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_scenarios.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_details.as_ref().map_or(true, |rows| rows.is_empty()) && self.cold_formed.as_ref().map_or(true, |rows| rows.is_empty()) && self.shells.as_ref().map_or(true, |rows| rows.is_empty())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1999Snapshot> for En1999Diff {
     fn inverse(&self, base: &En1999Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex.clone()),
@@ -906,10 +916,6 @@ impl protocol::DiffAlgebra<En1999Snapshot> for En1999Diff {
             cold_formed: self.cold_formed.as_ref().map(|rows| rows.inverse(&base.cold_formed)).filter(|rows| !rows.is_empty()),
             shells: self.shells.as_ref().map(|rows| rows.inverse(&base.shells)).filter(|rows| !rows.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.materials.as_ref().map_or(true, |rows| rows.is_empty()) && self.sections.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.connections.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_scenarios.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_details.as_ref().map_or(true, |rows| rows.is_empty()) && self.cold_formed.as_ref().map_or(true, |rows| rows.is_empty()) && self.shells.as_ref().map_or(true, |rows| rows.is_empty())
     }
 }
 

@@ -26,3 +26,10 @@ pub mod schema_metadata;
 #[path="♿️accessibility/🦀️.rs"]
 mod accessibility_projection;
 pub use accessibility_projection::*;
+
+#[cfg(test)]
+/// 🚧️ Serializes the tests that open, assemble or compare through the process-wide retained arena and resident ledger.
+pub(crate) fn arena_test_gate() -> std::sync::MutexGuard<'static, ()> {
+    static GATE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}

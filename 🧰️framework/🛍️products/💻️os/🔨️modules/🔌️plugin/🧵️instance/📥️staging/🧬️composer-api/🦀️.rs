@@ -4,7 +4,7 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
+use store::{ArtifactStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_plugin_child::{ChildMemberRegistrationError, OwnedDocumentMemberIngress};
@@ -21,7 +21,7 @@ use crate::VcsArtifactApp;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
 use semio_framework_ui_contract::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📸️ Materializes and returns the current snapshot — the typed counterpart to
     /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
     /// need direct structural access to document state instead of a rendered node.
@@ -262,7 +262,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 }
 
 //#region 🔖️Driver
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🧪️ The committed generations of the config lanes — the app config, and window `window_id` of kind `window_kind_id` once
     /// its partition exists — so a law counts the config edits a press published.
     #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -279,7 +279,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 }
 //#endregion 🔖️Driver
 
-impl<A:ArtifactApp,M:store::SpaceMember+store::MemberFactory+'static> VcsArtifactApp<A,M>{
+impl<A:ArtifactApp,M:store::ReferenceSpaceMember+store::MemberFactory+'static> VcsArtifactApp<A,M>{
  #[cfg(any(test,feature="artifact-app-testing"))]
  pub fn test_parent_store_mut(&mut self)->&mut store::ArtifactStore<A::Snapshot,A::Mutation> {
         self.stores.test_parent_store_mut()

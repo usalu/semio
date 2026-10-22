@@ -21,7 +21,7 @@ fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse()
     let mutation = PngMutation::ReplaceImage(ReplaceImage { image: edited.image.clone() });
     let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
     assert_eq!(*law.post, expected);
@@ -47,7 +47,7 @@ fn publication_preparation_edits_an_image_beyond_the_one_item_cap() {
     let mutation = PngMutation::PaintNativeSamples(PaintNativeSamplesMutation { revision: png_revision(&base), region, paint: PngNativePaint::rgba(200, 100, 50, 255) });
     let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
     assert_eq!(*law.post, expected);
@@ -75,7 +75,7 @@ fn publication_preparation_turns_are_bounded_by_pages_at_real_image_size() {
         let region = PngRegion { x: 3, y: 5, width: 2, height: 2 };
         let mutation = PngMutation::PaintNativeSamples(PaintNativeSamplesMutation { revision: png_revision(&base), region, paint: PngNativePaint::rgba(200, 100, 50, 255) });
         let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
-        let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+        let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
         let mut expected = base.clone();
         apply_mutation(&mut expected, &mutation);
         assert_eq!(*law.post, expected);
@@ -109,7 +109,7 @@ fn publication_preparation_turns_of_a_large_paint_region_are_bounded_by_pages_th
     let region_samples = region.width as usize * region.height as usize * 4;
     let mutation = PngMutation::PaintNativeSamples(PaintNativeSamplesMutation { revision: png_revision(&base), region, paint: PngNativePaint::rgba(200, 100, 50, 255) });
     let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
-    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
     assert_eq!(*law.post, expected);

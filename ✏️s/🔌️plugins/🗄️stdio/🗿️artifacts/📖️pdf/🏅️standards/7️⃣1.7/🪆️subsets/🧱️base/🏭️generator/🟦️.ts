@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -88,7 +89,7 @@ const AFTER_FILENAME = "➡️after.pdf";
 
 //#region 🔨️Build
 function build(dir: string): void {
-  const result = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(dir, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(dir, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed for ${dir} with status ${result.status}`);
 }
 
@@ -118,7 +119,7 @@ async function manifests(): Promise<void> {
     units: { length: "unitless", angle: "degree" },
     files: [{ role: "seed-pdf", path: `../🧫️fixtures/${ASSET_DIRECTORY}/${ASSET_FILE}`, mediaType: "application/pdf", sha256: await sha256(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)), bytes: readFileSync(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)).length }],
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
+    generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
     comparisonProfile: COMPARISON_PROFILE,
     reproducible: true,
     family: "mechanical",
@@ -142,7 +143,7 @@ async function manifests(): Promise<void> {
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
+      generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
       comparisonPipeline: "pdf-1-7-base-lopdf-compare-v1",
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,

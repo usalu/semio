@@ -186,7 +186,7 @@ impl<P, Mutation: super::Mutation<P>> std::ops::DerefMut for EditReplay<P, Mutat
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.original }
 }
 
-impl<P, Mutation: super::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
+impl<P: Clone, Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
     pub fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
     pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
     pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }

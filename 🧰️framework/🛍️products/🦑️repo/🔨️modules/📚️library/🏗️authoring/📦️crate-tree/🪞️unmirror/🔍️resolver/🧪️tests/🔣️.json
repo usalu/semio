@@ -1,0 +1,2019 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "keywords and nesting",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub fn f() {} pub struct S; pub mod b { pub fn g() {} } }\nfn private() {}\npub mod p2 {}\nmod hidden_mod { pub fn q() {} }\n",
+    "b/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "a",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "a",
+      "b"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "module a_crate::a::b"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate::a::b",
+     "name": "",
+     "path": [
+      "super",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate::a::b",
+     "name": "",
+     "path": [
+      "super",
+      "super",
+      "a"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "module a_crate::a"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate::a",
+     "name": "",
+     "path": [
+      "crate",
+      "a",
+      "b",
+      "g"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 4,
+      "hits": [
+       "item a_crate::a::b::g"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate::a",
+     "name": "",
+     "path": [
+      "self",
+      "b"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "module a_crate::a::b"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "super"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "nosuch"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "private"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "item a_crate::private"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "private"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate => a_crate"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "a",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "item a_crate::a::f => a_crate::a::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "hidden_mod",
+      "q"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate => a_crate"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "hidden_mod",
+      "q"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::hidden_mod::q"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "a",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "item a_crate::a::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "private",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::private"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "private",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "private",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": true,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::private"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "visibility restrictions",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod m { pub(crate) fn hidden() {} pub fn shown() {} }\nmod p { pub fn q() {} }\n",
+    "b/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "m",
+      "hidden"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::hidden"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "m",
+      "hidden"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "module a_crate::m => a_crate::m"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "m",
+      "shown"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "item a_crate::m::shown => a_crate::m::shown"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "b_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "p"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate => a_crate"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::m",
+     "name": "hidden",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": true,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::hidden"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::m",
+     "name": "hidden",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "explicit imports and aliases",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod m { pub fn f() {} pub struct T; }\nuse m::f as g;\nuse m::T;\nuse self::m::f as h;\nuse crate::m as mm;\npub use m::T as Pub;\n",
+    "b/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "g",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "T",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::T"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "h",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "mm",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "module a_crate::m"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "f",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "g",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Pub",
+     "path": [],
+     "from": "b_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::T"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "mm",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "g"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "item a_crate::m::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "re-exports cross the crate boundary",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub fn f() {} pub mod inner { pub fn z() {} } }\n",
+    "b/lib.rs": "pub use a_crate::a::f;\npub use a_crate::a as alias;\npub use a_crate::a::inner::z as zed;\n",
+    "c/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::f => a_crate::a::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "alias",
+      "inner",
+      "z"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 4,
+      "hits": [
+       "item a_crate::a::inner::z => a_crate::a::inner::z"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "zed"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::inner::z => a_crate::a::inner::z"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "b_crate",
+     "name": "f",
+     "path": [],
+     "from": "c_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::a::f => a_crate::a::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "b_crate",
+     "name": "alias",
+     "path": [],
+     "from": "c_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "module a_crate::a => a_crate::a"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "a cut edge marks the foreign path",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub fn f() {} }\n",
+    "b/lib.rs": "pub use a_crate::a::f;\n",
+    "c/lib.rs": ""
+   },
+   "cut": [
+    "a_crate::a::f"
+   ],
+   "api": [],
+   "queries": [
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::f => a_crate::a::f cut"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "b_crate",
+     "name": "f",
+     "path": [],
+     "from": "c_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::a::f => a_crate::a::f cut"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "an api leaf is addressed through its re-exporting crate",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub fn f() {} }\n",
+    "b/lib.rs": "pub use a_crate::a::f;\n",
+    "c/lib.rs": ""
+   },
+   "cut": [],
+   "api": [
+    "a_crate::a::f"
+   ],
+   "queries": [
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "f"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::a::f => b_crate::f"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "b_crate",
+     "name": "f",
+     "path": [],
+     "from": "c_crate",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::a::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "globs, shadowing and foreign globs",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod m { pub fn f() {} pub fn g() {} pub mod n {} }\npub use m::*;\npub fn f() {}\n",
+    "b/lib.rs": "pub use a_crate::m::*;\n",
+    "c/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "f",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "g",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::g"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "n",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "module a_crate::m::n"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "nothing",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "g"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::g => a_crate::m::g"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "n"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "module a_crate::m::n => a_crate::m::n"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "a_crate",
+      "g"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::g => a_crate::g"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "glob cycles terminate",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub use super::b::*; pub fn fa() {} }\npub mod b { pub use super::a::*; pub fn fb() {} }\n"
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "member",
+     "at": "a_crate::a",
+     "name": "fb",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::b::fb"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::b",
+     "name": "fa",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::a::fa"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::b",
+     "name": "zz",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::a",
+     "name": "fa",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::a::fa"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate::a",
+     "name": "",
+     "path": [
+      "fb"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "item a_crate::b::fb"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "external imports and macros",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "use std::collections::HashMap;\nuse serde::Serialize as Ser;\nmake!(Alpha, Beta);\npub mod m {}\nmacro_rules! decl { () => { pub fn made() {} pub struct Made; } }\ndecl!();\npub mod plain { pub fn x() {} }\n"
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "HashMap",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::HashMap"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Ser",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::Ser"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Alpha",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::Alpha"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Beta",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::Beta"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Gamma",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "made",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::made"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "Made",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::Made"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": true,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate::m",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate::plain",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "opaque follows glob imports",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod filled { gen!(Z); }\npub mod user { pub use super::filled::*; }\npub mod clean { pub fn c() {} }\npub mod viaclean { pub use super::clean::*; }\n"
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "opaque",
+     "at": "a_crate::filled",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": true,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate::user",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": true,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate::clean",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "opaque",
+     "at": "a_crate::viaclean",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate::user",
+     "name": "Z",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::filled::Z"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "path attributes, missing files and inline path scope",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "#[path = \"x/y.rs\"]\npub mod m;\nmod z;\npub mod inl { #[path = \"w.rs\"] pub mod q; }\n#[path = \"nope.rs\"]\npub mod gone;\n",
+    "a/x/y.rs": "pub fn deep() {}\npub mod sub { pub fn s() {} }\n",
+    "a/inl/w.rs": "pub fn wq() {}\n"
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "m",
+      "deep"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::deep"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "m",
+      "sub",
+      "s"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "item a_crate::m::sub::s"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "z"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate::z"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "z",
+      "x"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate::z"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "inl",
+      "q",
+      "wq"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 3,
+      "hits": [
+       "item a_crate::inl::q::wq"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "gone"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate::gone"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "a_crate",
+     "name": "",
+     "path": [
+      "gone",
+      "x"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 1,
+      "hits": [
+       "module a_crate::gone"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "enum variants and nested items complete the leaf",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod m { pub enum E { V } pub fn f() {} }\nuse m::E::V;\nuse m::f::extra;\n",
+    "b/lib.rs": "pub use a_crate::m::E::V;\n",
+    "c/lib.rs": ""
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "V",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::E"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "member",
+     "at": "a_crate",
+     "name": "extra",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": null,
+     "expectHits": [
+      "item a_crate::m::f"
+     ],
+     "expectFlag": false,
+     "expectNode": ""
+    },
+    {
+     "op": "path",
+     "at": "c_crate",
+     "name": "",
+     "path": [
+      "b_crate",
+      "V"
+     ],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "",
+     "needle": "",
+     "expect": {
+      "consumed": 2,
+      "hits": [
+       "item a_crate::m::E => a_crate::m::E::V"
+      ]
+     },
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": ""
+    }
+   ]
+  },
+  {
+   "name": "offsets map to the innermost module",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod a { pub fn f() {} pub mod b { pub fn g() {} } }\nfn tail() {}\n"
+   },
+   "cut": [],
+   "api": [],
+   "queries": [
+    {
+     "op": "nodeAt",
+     "at": "",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "a/lib.rs",
+     "needle": "fn g",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": "a_crate::a::b"
+    },
+    {
+     "op": "nodeAt",
+     "at": "",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "a/lib.rs",
+     "needle": "fn f",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": "a_crate::a"
+    },
+    {
+     "op": "nodeAt",
+     "at": "",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "a/lib.rs",
+     "needle": "fn tail",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": "a_crate"
+    },
+    {
+     "op": "nodeAt",
+     "at": "",
+     "name": "",
+     "path": [],
+     "from": "",
+     "ignoreVisibility": false,
+     "file": "a/lib.rs",
+     "needle": "pub mod a",
+     "expect": null,
+     "expectHits": [],
+     "expectFlag": false,
+     "expectNode": "a_crate"
+    }
+   ]
+  }
+ ],
+ "merge": [
+  {
+   "name": "nothing found anywhere",
+   "inner": null,
+   "outer": null,
+   "segment": "s",
+   "expected": null
+  },
+  {
+   "name": "the way in extends the path",
+   "inner": null,
+   "outer": {
+    "ident": "x",
+    "segs": [
+     "a"
+    ],
+    "cut": false
+   },
+   "segment": "b",
+   "expected": {
+    "ident": "x",
+    "segs": [
+     "a",
+     "b"
+    ],
+    "cut": false
+   }
+  },
+  {
+   "name": "the way in keeps its cut flag when extended",
+   "inner": null,
+   "outer": {
+    "ident": "x",
+    "segs": [],
+    "cut": true
+   },
+   "segment": "b",
+   "expected": {
+    "ident": "x",
+    "segs": [
+     "b"
+    ],
+    "cut": true
+   }
+  },
+  {
+   "name": "a path found inside wins and takes the cut of the way in",
+   "inner": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": false
+   },
+   "outer": {
+    "ident": "x",
+    "segs": [
+     "a"
+    ],
+    "cut": true
+   },
+   "segment": "b",
+   "expected": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": true
+   }
+  },
+  {
+   "name": "a cut inner path stays cut",
+   "inner": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": true
+   },
+   "outer": {
+    "ident": "x",
+    "segs": [
+     "a"
+    ],
+    "cut": false
+   },
+   "segment": "b",
+   "expected": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": true
+   }
+  },
+  {
+   "name": "an inner path without a way in is kept",
+   "inner": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": false
+   },
+   "outer": null,
+   "segment": "b",
+   "expected": {
+    "ident": "y",
+    "segs": [
+     "q"
+    ],
+    "cut": false
+   }
+  },
+  {
+   "name": "both cut",
+   "inner": {
+    "ident": "y",
+    "segs": [],
+    "cut": true
+   },
+   "outer": {
+    "ident": "x",
+    "segs": [],
+    "cut": true
+   },
+   "segment": "b",
+   "expected": {
+    "ident": "y",
+    "segs": [],
+    "cut": true
+   }
+  }
+ ],
+ "texts": [
+  {
+   "rep": {
+    "ident": "a_crate",
+    "segs": [],
+    "cut": false
+   },
+   "expected": "a_crate"
+  },
+  {
+   "rep": {
+    "ident": "a_crate",
+    "segs": [
+     "m",
+     "f"
+    ],
+    "cut": true
+   },
+   "expected": "a_crate::m::f"
+  }
+ ],
+ "keywords": [
+  {
+   "head": "crate",
+   "expected": true
+  },
+  {
+   "head": "self",
+   "expected": true
+  },
+  {
+   "head": "super",
+   "expected": true
+  },
+  {
+   "head": "Self",
+   "expected": false
+  },
+  {
+   "head": "a",
+   "expected": false
+  },
+  {
+   "head": "",
+   "expected": false
+  },
+  {
+   "head": "crate_",
+   "expected": false
+  }
+ ],
+ "universe": {
+  "crates": [
+   {
+    "name": "my-crate",
+    "ident": "my_crate"
+   },
+   {
+    "name": "plain",
+    "ident": "plain"
+   },
+   {
+    "name": "a-b-c",
+    "ident": "a_b_c"
+   }
+  ],
+  "overlay": {
+   "x/lib.rs": "pub mod m {}"
+  },
+  "reads": [
+   {
+    "path": "x/lib.rs",
+    "expected": "pub mod m {}"
+   },
+   {
+    "path": "x/missing.rs",
+    "expected": null
+   }
+  ],
+  "missingRoot": "ghost",
+  "unknownRoot": "nobody"
+ }
+}

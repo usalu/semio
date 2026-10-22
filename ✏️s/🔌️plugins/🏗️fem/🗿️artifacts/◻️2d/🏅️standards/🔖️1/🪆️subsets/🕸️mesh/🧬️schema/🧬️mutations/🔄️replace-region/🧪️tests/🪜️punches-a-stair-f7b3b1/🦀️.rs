@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().regions.as_ref().expect("regions delta").modified.len(), 1, "replace-region/punches-a-stair-f7b3b1: exactly one region may be patched");
     assert!(outcome.diff().regions.as_ref().expect("regions delta").inserted.is_empty(), "replace-region/punches-a-stair-f7b3b1: a replacement is never an addition");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

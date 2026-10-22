@@ -5,7 +5,7 @@ use crate::schema::diff::BmpDiff;
 use crate::standards::v_v3::subsets::any::schema::mutations::top_level::canonical::*;
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
-use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+use semio_framework_value::{FromValue,ToValue,retirement::RetireOwned,SharedValueRetirementFactory,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
 fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
@@ -49,7 +49,7 @@ fn schema_owned_bmp_canonical_sealing_preserves_neutral_snapshot_and_diff() {
 }
 #[test]
 fn schema_owned_bmp_replacement_diff_and_inverse_preserve_neutral_native_words(){
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let base=BmpSnapshot::default();
     for case in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
@@ -58,8 +58,8 @@ fn schema_owned_bmp_replacement_diff_and_inverse_preserve_neutral_native_words()
         let text=protocol::OpText::print_op(&mutation);assert_eq!(<BmpMutation as protocol::OpText>::parse_op(&text).unwrap(),mutation);
         let binary=protocol::OpBinary::encode_op(&mutation).unwrap();assert_eq!(<BmpMutation as protocol::OpBinary>::decode_op(&binary).unwrap(),mutation);
         verify(mutation.clone(),serde_json::json!({"mutation":"replace-image","payload":{"image":case["snapshot"]["image"]}}));
-        let actual=protocol::apply_diff(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
-        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
+        let actual=protocol::apply_diff_cold(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
+        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
         let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&actual).unwrap();assert_eq!(crate::standards::v_v3::subsets::any::io::decode_bmp(&bytes).unwrap(),actual);
         if case["name"]=="bitfields32-ten-bit-513-exact-image-replacement"{let(offset_width,offset_height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((offset_width,offset_height),(actual.image.width,actual.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&actual).unwrap());let offset=u32::from_le_bytes(bytes[10..14].try_into().unwrap())as usize;let word=u32::from_le_bytes(bytes[offset..offset+4].try_into().unwrap());assert_eq!((word&1072693248)>>20,513);}
     }

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "contractId": "tracked-path-budget-v1",
+  "semantics": {
+    "policy": "The product limits of path-budget-v1: a path may have at most maxPathUtf16Units UTF-16 code units (Windows MAX_PATH semantics, U+FE0F counts one unit, an astral emoji two) and every component at most maxComponentUtf8Bytes UTF-8 bytes.",
+    "checkoutRoots": "Absolute checkout roots a Windows developer really uses; utf16Units is the unit count of the root text including its trailing backslash.",
+    "treeRoot": "The checkout root every tracked product path must fit under: units(root) + units(repo-relative path) stay within maxPathUtf16Units. The slash of a repo-relative path becomes one backslash of the same length.",
+    "ticketPrefix": "Paths below this prefix are ticket workspace; they are held to the repo-relative limit only, because a ticket may never carry source copies.",
+    "tracked": "Every path that git lists as indexed, plus every untracked path that is not ignored, and that still exists on disk.",
+    "parts": "The repo-relative path is the concatenation of every part text repeated count times."
+  },
+  "policy": {
+    "maxPathUtf16Units": 256,
+    "maxComponentUtf8Bytes": 255
+  },
+  "checkoutRoots": [
+    {
+      "id": "windows-short",
+      "root": "C:\\Users\\abcdefgh\\semio\\",
+      "utf16Units": 24
+    },
+    {
+      "id": "windows-src",
+      "root": "C:\\Users\\firstname\\src\\semio\\",
+      "utf16Units": 29
+    }
+  ],
+  "treeRoot": "windows-src",
+  "ticketPrefix": ".🧬semio/",
+  "cases": [
+    {
+      "id": "short-root-231-fits",
+      "root": "windows-short",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 231,
+      "fits": true
+    },
+    {
+      "id": "short-root-232-boundary",
+      "root": "windows-short",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 232,
+      "fits": true
+    },
+    {
+      "id": "short-root-233-over",
+      "root": "windows-short",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 233,
+      "fits": false
+    },
+    {
+      "id": "src-root-226-fits",
+      "root": "windows-src",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 226,
+      "fits": true
+    },
+    {
+      "id": "src-root-227-boundary",
+      "root": "windows-src",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 227,
+      "fits": true
+    },
+    {
+      "id": "src-root-228-over",
+      "root": "windows-src",
+      "parts": [
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/", "count": 4 },
+        { "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "count": 1 }
+      ],
+      "relativeUtf16Units": 228,
+      "fits": false
+    },
+    {
+      "id": "emoji-vs16-src-root-227-boundary",
+      "root": "windows-src",
+      "parts": [
+        { "text": "🦀️/", "count": 56 },
+        { "text": "🦀️", "count": 1 }
+      ],
+      "relativeUtf16Units": 227,
+      "fits": true
+    },
+    {
+      "id": "emoji-vs16-src-root-228-over",
+      "root": "windows-src",
+      "parts": [
+        { "text": "🦀️/", "count": 56 },
+        { "text": "🦀️a", "count": 1 }
+      ],
+      "relativeUtf16Units": 228,
+      "fits": false
+    }
+  ]
+}

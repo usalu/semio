@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "verify-puzzle-fill-policy-self-tests": "bun --cwd \"../../../../..\" repo run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
-    "verify-browser-contribution": "bun --cwd \"../../../../..\" repo run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"
+    "verify-puzzle-fill-policy-self-tests": "repo run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
+    "verify-browser-contribution": "repo run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"
   },
   "semio": {
     "role": "test",

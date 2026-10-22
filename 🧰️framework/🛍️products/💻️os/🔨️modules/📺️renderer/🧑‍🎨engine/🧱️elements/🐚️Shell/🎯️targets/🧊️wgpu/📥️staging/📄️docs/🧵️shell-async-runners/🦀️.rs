@@ -66,7 +66,7 @@ pub struct ShellDocumentRetirementRegistry {
 
 impl Default for ShellDocumentRetirementRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], occupied: [0; SHELL_DOCUMENT_RETIREMENT_WORDS], occupied_count: 0, cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], occupied: [0; SHELL_DOCUMENT_RETIREMENT_WORDS], occupied_count: 0, cursor: 0 }
     }
 }
 

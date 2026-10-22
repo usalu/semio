@@ -1,0 +1,350 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "nested package paths are never classified further",
+   "observation": {
+    "path": "node_modules/a/b.js",
+    "present": false,
+    "links": 0,
+    "archive": false,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "nested",
+   "error": ""
+  },
+  {
+   "name": "a nested path wins over an unknown hardlink",
+   "observation": {
+    "path": "node_modules/a.js",
+    "present": true,
+    "links": 9,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "nested",
+   "error": ""
+  },
+  {
+   "name": "a file called node_modules itself is an ordinary file",
+   "observation": {
+    "path": "node_modules",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "replace",
+   "error": ""
+  },
+  {
+   "name": "a path that merely contains node_modules deeper is ordinary",
+   "observation": {
+    "path": "a/node_modules/b.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "replace",
+   "error": ""
+  },
+  {
+   "name": "a path starting with node_modules but no slash is ordinary",
+   "observation": {
+    "path": "node_modules.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "replace",
+   "error": ""
+  },
+  {
+   "name": "a shared exact binary keeps its link",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 2,
+    "archive": true,
+    "shared": true,
+    "matches": true
+   },
+   "expected": "preserve",
+   "error": ""
+  },
+  {
+   "name": "a shared file linked once is refused",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": true,
+    "matches": true
+   },
+   "expected": null,
+   "error": "Exact shared binary registry bytes required"
+  },
+  {
+   "name": "a missing archive source is refused",
+   "observation": {
+    "path": "source.js",
+    "present": false,
+    "links": 0,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Registry source must replace an existing regular file"
+  },
+  {
+   "name": "a missing non-archive file is refused too",
+   "observation": {
+    "path": "source.js",
+    "present": false,
+    "links": 0,
+    "archive": false,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Registry source must replace an existing regular file"
+  },
+  {
+   "name": "two links to an unshared file are refused",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 2,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Unknown shared package inode refused"
+  },
+  {
+   "name": "zero links to a present file are refused",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 0,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Unknown shared package inode refused"
+  },
+  {
+   "name": "an absolute path is not canonical",
+   "observation": {
+    "path": "/etc/passwd",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "a parent segment is not canonical",
+   "observation": {
+    "path": "a/../b.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "a dot segment is not canonical",
+   "observation": {
+    "path": "./a.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "an empty segment is not canonical",
+   "observation": {
+    "path": "a//b.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "a trailing slash is not canonical",
+   "observation": {
+    "path": "a/",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "a backslash is not canonical",
+   "observation": {
+    "path": "a\\b.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Canonical pristine package path required"
+  },
+  {
+   "name": "an empty path is not closed",
+   "observation": {
+    "path": "",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "a 257 character path is not closed",
+   "observation": {
+    "path": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "a 256 character path is accepted",
+   "observation": {
+    "path": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": "replace",
+   "error": ""
+  },
+  {
+   "name": "negative links are not closed",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": -1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "a fractional link count is not closed",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 1.5,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "a string where a flag belongs is not closed",
+   "observation": {
+    "path": "source.js",
+    "present": "yes",
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "an unknown field is not closed",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false,
+    "matches": false,
+    "extra": 1
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  },
+  {
+   "name": "a missing field is not closed",
+   "observation": {
+    "path": "source.js",
+    "present": true,
+    "links": 1,
+    "archive": true,
+    "shared": false
+   },
+   "expected": null,
+   "error": "Closed pristine file observation required"
+  }
+ ],
+ "truthTable": {
+  "paths": [
+   "source.js",
+   "node_modules/x/y.js"
+  ],
+  "present": [
+   true,
+   false
+  ],
+  "links": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "flags": [
+   true,
+   false
+  ]
+ }
+}

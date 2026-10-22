@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "admissionResource": "resource-directory-admission:v1",
+  "maximumElapsedMs": 6000,
+  "cases": [
+    {
+      "name": "zero-probe",
+      "queued": false,
+      "timeoutMs": 0,
+      "action": "timeout",
+      "operation": "open",
+      "projected": true
+    },
+    {
+      "name": "queued-timeout",
+      "queued": true,
+      "timeoutMs": 120,
+      "action": "timeout",
+      "operation": "queue-publish",
+      "projected": false
+    },
+    {
+      "name": "release-before-deadline",
+      "queued": true,
+      "timeoutMs": 2000,
+      "action": "release",
+      "operation": "queue-publish",
+      "projected": false
+    },
+    {
+      "name": "observer-primary",
+      "queued": true,
+      "timeoutMs": 2000,
+      "action": "observer-error",
+      "operation": "queue-publish",
+      "projected": false
+    },
+    {
+      "name": "caller-cancellation",
+      "queued": true,
+      "timeoutMs": 2000,
+      "action": "cancel",
+      "operation": "queue-publish",
+      "projected": false
+    },
+    {
+      "name": "observer-existing-context",
+      "queued": true,
+      "timeoutMs": 2000,
+      "action": "observer-context",
+      "operation": "queue-publish",
+      "projected": false
+    }
+  ]
+}

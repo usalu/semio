@@ -29,6 +29,8 @@ mod original_preparation_tests;
 #[doc(hidden)]
 #[path = "../../../../🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs"]
 pub mod tests;
+#[path = "../../../../🪟️window/🎚️config/🧪️tests/📷️camera-owner/🦀️.rs"]
+mod camera_owner;
 #[path = "../../../../🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🦀️.rs"]
 mod pack_identity_tests;
 #[path = "../../../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs"]

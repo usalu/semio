@@ -13,14 +13,6 @@ pub struct RemoveCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cell", kind: "remove-cell", record: "RemoveCell" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::remove_cell_plan(base, &self.address))
-    }
-
-    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::remove_cell_plan(base, &self.address)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove cell", "Zelle entfernen")
     }
@@ -28,6 +20,15 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
         let mut target = vec!["xmlParts".into(), self.address.part_path.clone(), "document".into(), "root".into()];
         target.extend(self.address.node_path.iter().map(usize::to_string));
         target
+    }
+}
+
+impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::remove_cell_plan(base, &self.address))
+    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+        Ok(plan_inverse(canonical_edit::remove_cell_plan(base, &self.address)))
     }
 }
 //#endregion 🔖️Payload

@@ -39,20 +39,9 @@ pub struct SourcingCurationPresenceDiff {
     pub world_camera_fov: Option<f64>,
 }
 
-impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresenceDiff {
-    fn apply(&self, base: &SourcingCurationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SourcingCurationPresence> {
-        let mut next = base.clone();
-        if let Some(value) = &self.world_camera_position {
-            next.world_camera_position = value.clone();
-        }
-        if let Some(value) = &self.world_camera_target {
-            next.world_camera_target = value.clone();
-        }
-        if let Some(value) = &self.world_camera_fov {
-            next.world_camera_fov = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresenceDiff {}
+
+impl protocol::ColdMutationDiff<SourcingCurationPresence> for SourcingCurationPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.world_camera_position.is_some() {
             self.world_camera_position = other.world_camera_position;
@@ -64,18 +53,37 @@ impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresen
             self.world_camera_fov = other.world_camera_fov;
         }
     }
+
+    fn apply(&self, unpublished: &mut SourcingCurationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.world_camera_position {
+            next.world_camera_position = value.clone();
+        }
+        if let Some(value) = &self.world_camera_target {
+            next.world_camera_target = value.clone();
+        }
+        if let Some(value) = &self.world_camera_fov {
+            next.world_camera_fov = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SourcingCurationPresence> for SourcingCurationPresenceDiff {
+    fn is_empty(&self) -> bool {
+        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SourcingCurationPresence> for SourcingCurationPresenceDiff {
     fn inverse(&self, base: &SourcingCurationPresence) -> Self {
         Self {
             world_camera_position: self.world_camera_position.as_ref().map(|_| base.world_camera_position.clone()),
             world_camera_target: self.world_camera_target.as_ref().map(|_| base.world_camera_target.clone()),
             world_camera_fov: self.world_camera_fov.as_ref().map(|_| base.world_camera_fov.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none()
     }
 }
 
@@ -159,13 +167,15 @@ impl Mutation<SourcingCurationPresence> for SourcingCurationPresenceMutation {
             Self::SetWorldCamera { .. } => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<SourcingCurationPresence> for SourcingCurationPresenceMutation {
+    type ReferenceDiff = SourcingCurationPresenceDiff;
     fn diff(&self, base: &SourcingCurationPresence) -> protocol::MutationOutcome<SourcingCurationPresenceDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetWorldCamera { position, target, fov } => SourcingCurationPresenceDiff { world_camera_position: (base.world_camera_position != *position).then_some(*position), world_camera_target: (base.world_camera_target != *target).then_some(*target), world_camera_fov: (base.world_camera_fov != *fov).then_some(*fov), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &SourcingCurationPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetWorldCamera { .. } => Self::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },

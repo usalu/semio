@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ ply Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-ply", { packages: ["semio-s-artifact-stdio-ply", "semio-s-artifact-stdio-ply-inferences", "semio-s-artifact-stdio-ply-inferences-tests", "semio-s-artifact-stdio-ply-io-registry", "semio-s-artifact-stdio-ply-mutations", "semio-s-artifact-stdio-ply-schema"], snapshotSqliteTests: ["../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

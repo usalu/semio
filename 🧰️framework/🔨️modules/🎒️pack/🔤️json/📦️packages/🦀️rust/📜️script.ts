@@ -8,6 +8,7 @@ import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packag
 import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runPersistentCanonicalCheckScript, runReadPolicyScript, runNativeScript, runTreeWireSourceScript, runImmutableTreeScript, runOriginalReceivingScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📋️ Verifies original persistent canonical arrays and sealed payloads through actual native traversal. */
 class PersistentCanonicalCheckScript extends BundleScript {
@@ -27,7 +28,7 @@ class ReferenceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-reference accepts no arguments");
     const test = resolve(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
     await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true});
   }
 }
@@ -37,7 +38,7 @@ class OwnershipScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-ownership accepts no arguments");
     const tests = [resolve(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts"), resolve(this.root, "../../🧪️tests/🚮️absence/🟦️.ts")];
-    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), ...tests], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
     await runBudgetedTestCommand(process.execPath, ["test", "--timeout", "30000", ...tests], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: {...process.env, SEMIO_TEST_ARTIFACT_DIR: readCargoTestPolicyV1(process.env).artifactDirectory}, throwOnFailure: true});
   }
 }
@@ -71,5 +72,5 @@ class OriginalReceivingScript extends BundleScript {
     await runOriginalReceivingScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test-tree-wire-source",TreeWireSourceScript).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-immutable-tree",ImmutableTreeScript).register("test-persistent-canonical",PersistentCanonicalCheckScript).register("test-original-receiving",OriginalReceivingScript);
+const router = new ScriptRouter(import.meta.dirname).register("test-tree-wire-source",TreeWireSourceScript).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-immutable-tree",ImmutableTreeScript).register("test-persistent-canonical",PersistentCanonicalCheckScript).register("test-original-receiving",OriginalReceivingScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

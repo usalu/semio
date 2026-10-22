@@ -15,7 +15,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -32,7 +32,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts value-admission-check"
+        "command": "repo ./📜️script.ts value-admission-check"
       },
       "executor": "repo:script",
       "inputs": [
@@ -57,7 +57,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts value-admission-check --native"
+        "command": "repo ./📜️script.ts value-admission-check --native"
       },
       "executor": "repo:script",
       "inputs": [

@@ -1,0 +1,7 @@
+# a668 Source Schema Delta Review
+
+Exact terminal evidence has one post-read Source drift: closure schema9459/c85b2f40203e8dac7afbe83367b322be6801c8c63e624c3e9d8611e8e8f0f448 →10011/40b2c24fb93b98c59568920770020b09e41c6b6c911912884302bad0d8ce6f35. Current parsed schema minus only definitions.CommonJsBoundaryCase, serialized with existing2-space JSON and final newline, reconstructs the exact historical9459-byte SHA. Thus the552-byte delta is precisely that one definition; no other old contract field differs. No prior Source body was copied into Ticket.
+
+New CommonJsBoundaryCase is closed object requiring name/owner/member; name1..96, owner bun|payload, member createBunWorkspaceOwnershipV1|ownsPayload. Both whole schema and isolated definition compile strict Ajv; representative row accepts, extra field and unknown owner refuse. It does not constrain owner/member pairing, so it permits four combinations; tests must select intended cases explicitly. Existing snapshot policy, captured imports, Original funding and command transport definitions are unchanged.
+
+This is schema-only new regression DATA, relevant by member name to actual CJS boundary failure but not a runtime export repair. It cannot itself cause or fix missing named exports, and post-read drift does not establish which bytes the active/failed Original loaded. Actuala668 primary remains frozen6401/d9d1df29ecb3d967559ae444eef719e46ac9d8f2a16107722b179d02e35d8654. No Source evaluation, Native, edits or retry occurred.

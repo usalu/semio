@@ -41,6 +41,10 @@ impl protocol::Mutation<DagSnapshot> for DagMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
+
+impl protocol::ColdMutation<DagSnapshot> for DagMutation {
+    type ReferenceDiff = DagDiff;
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         match *self {}
     }

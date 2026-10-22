@@ -1,5 +1,5 @@
 /** 🔄️ The plugin reload, space extension operation and extension install, uninstall and enable callbacks. */
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type ProgramHotSwapEvent, retireContributorInstances, panelViewContext } from "@semio-tech/framework";
 import { loadPluginModuleResilient } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";

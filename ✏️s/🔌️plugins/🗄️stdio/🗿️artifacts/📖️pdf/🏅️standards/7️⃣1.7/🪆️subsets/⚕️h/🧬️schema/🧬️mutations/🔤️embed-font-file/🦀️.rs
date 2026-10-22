@@ -25,11 +25,23 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "font-file", kind: "embed-font-file", record: "Embed" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} in Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.descriptor_ordinal.to_string(), self.key.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for EmbedFontFile
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<EmbedFontFile> + From<crate::standards::v1_7::subsets::h::schema::mutations::remove_font_file::RemoveFontFile>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let rows = support::font_descriptors(base).get(self.descriptor_ordinal).copied().map_or_else(PdfDiff::default, |id| support::embed_font_file_rows(base, id, &self.key, self.program, self.entry_index));
         MutationOutcome::new(diff::graph_edit(rows))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Ok(Vec::new()) };
@@ -38,14 +50,6 @@ where
                 None => vec![Op::from(RemoveFontFile { descriptor_ordinal: self.descriptor_ordinal })],
             }
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} in Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.descriptor_ordinal.to_string(), self.key.clone()]
     }
 }
 //#endregion 🔖️Mutation

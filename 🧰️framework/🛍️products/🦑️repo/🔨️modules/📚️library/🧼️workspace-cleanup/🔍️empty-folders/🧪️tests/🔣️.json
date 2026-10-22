@@ -1,0 +1,165 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "path": "a/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "b/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "b/real.txt",
+   "kind": "file",
+   "text": "x"
+  },
+  {
+   "path": "c/inner/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "c/inner/deep/🚫️.absent",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "d/🔺️diff/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "🔺️diff/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "e",
+   "kind": "directory"
+  },
+  {
+   "path": "e2/e3",
+   "kind": "directory"
+  },
+  {
+   "path": "f/📌️.empty.md",
+   "kind": "file",
+   "text": "1"
+  },
+  {
+   "path": "g/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "node_modules/h/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "target/i/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "j/📝️.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "k/other.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "l/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "l/empty-sub",
+   "kind": "directory"
+  },
+  {
+   "path": "m/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "m/n/📌️.empty.md",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "m/n/o/not-marker.txt",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "p/q/r",
+   "kind": "directory"
+  }
+ ],
+ "empty": {
+  "dirs": [
+   {
+    "path": "e",
+    "expected": true
+   },
+   {
+    "path": "e2",
+    "expected": false
+   },
+   {
+    "path": "e2/e3",
+    "expected": true
+   },
+   {
+    "path": "a",
+    "expected": false
+   },
+   {
+    "path": "nothing",
+    "expected": false
+   },
+   {
+    "path": "a/📌️.empty.md",
+    "expected": false
+   }
+  ],
+  "collect": [
+   {
+    "prefixes": [],
+    "expected": [
+     "l/empty-sub",
+     "e2/e3",
+     "p/q/r",
+     "e"
+    ]
+   },
+   {
+    "prefixes": [
+     "e2"
+    ],
+    "expected": [
+     "l/empty-sub",
+     "p/q/r",
+     "e"
+    ]
+   },
+   {
+    "prefixes": [
+     "p/q"
+    ],
+    "expected": [
+     "l/empty-sub",
+     "e2/e3",
+     "e"
+    ]
+   }
+  ]
+ }
+}

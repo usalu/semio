@@ -158,8 +158,8 @@ impl<O: WindowTransientOwner<State = FemResultsWindowTransient, Mutation = FemRe
 
 /// 🧰️ The bounded preparation and retirement owners every FEM results-window kind registers for the clock.
 pub fn owners() -> WindowTransientOwnerBundle<FemResultsWindowTransient, FemResultsWindowTransientMutation> {
-    let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<FemResultsWindowTransient>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<FemResultsWindowTransient>::default());
-    let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<FemResultsWindowTransientMutation>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<FemResultsWindowTransientMutation>::default());
+    let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<FemResultsWindowTransient>> = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<FemResultsWindowTransient>::default());
+    let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<FemResultsWindowTransientMutation>> = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<FemResultsWindowTransientMutation>::default());
     let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(clock_footprint, clock_transfer, state.clone(), mutation.clone()));
     WindowTransientOwnerBundle::new(preparation, state, mutation)
 }

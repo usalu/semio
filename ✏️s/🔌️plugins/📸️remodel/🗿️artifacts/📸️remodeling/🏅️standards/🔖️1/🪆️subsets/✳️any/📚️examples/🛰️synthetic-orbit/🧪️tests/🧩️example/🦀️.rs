@@ -858,7 +858,7 @@ fn frame_asset_id(index: usize) -> String {
     format!("synthetic-orbit-frame-{index}")
 }
 
-/// 🛠️ Rewrites `🖼️assets/` from the constants above — `bun ./📜️script.ts regenerate-example`, or
+/// 🛠️ Rewrites `🖼️assets/` from the constants above — `repo ./📜️script.ts regenerate-example`, or
 /// `cargo test -p semio-s-plugin-remodel --lib synthetic_orbit -- --ignored --exact
 /// artifacts::remodeling::…::regenerates_the_synthetic_orbit_example`. Deterministic: running it twice
 /// leaves the tree byte-identical.

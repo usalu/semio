@@ -9,7 +9,7 @@ use semio_framework_plugin_decl_emission::HostEvent;
 use semio_framework::MutationId;
 use semio_framework::Effect;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 🖼️ The editing preview on the store the session edits: the state before `target` with the accepted upstream
     /// drafts, then `replacement` folded exactly as the store's replay folds it; the draft's own messages stay on the
     /// editor.

@@ -29,10 +29,10 @@ async fn change_catalog_generation_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn change_catalog_generation_diff_absorb_law() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let base = SHomeSnapshot::default();
     let d1 = change_catalog_generation(3).diff(&base).diff().clone();
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = change_catalog_generation(9).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "state": "source-frozen-runtime-unrun",
+  "sourceHashes": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts",
+      "bytes": 58021,
+      "sha256": "69c97bafb2e3dcc02d7926b3a61fdc21edb4cf563faae77ae359cfb4387ed2af",
+      "absoluteUtf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts",
+      "bytes": 8844,
+      "sha256": "b78485eea66d4aaacb2c0baa4942fb04e2e16df50b24a6d2b07234716be01e24",
+      "absoluteUtf16": 140
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🧬️schema/🔣️.json",
+      "bytes": 1608,
+      "sha256": "cb892ecd253000eab01ab859613a3b8f98793afa33fb6fddc4673103c29dbb0c",
+      "absoluteUtf16": 152
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+      "bytes": 200902,
+      "sha256": "1dd3231718f3ac0e8d3f61668e02d34aa228fb65807974e30fee3f9af873d3c7",
+      "absoluteUtf16": 130
+    }
+  ],
+  "testNames": {
+    "dashboard": [
+      "the authored compiler project form uses the closed current diagnostic contract",
+      "native owner controls conserve build selections and all four supervised compounds",
+      "exec preview words and cache words declared by the registry are accepted by the build command line and the Nx translation",
+      "dashboard control regression is admitted by our schema compiler and Ajv",
+      "generation and authoring expose neutral controls without IDE projections",
+      "retired generate launch invocations fail before producing editor configuration",
+      "source and registration regressions read neutral declarations without IDE documents",
+      "setup instruction aliases retain only the current headless client contract",
+      "build source inputs depend on neutral policies without retired IDE assets",
+      "ordinary build entry launches native dashboard commands before install and backend validation",
+      "shared developer tooling declarations and all lock scopes retain canonical providers",
+      "all-command axes match neutral vectors and SQLite without enumerating the verb vocabulary",
+      "selected process deadlines share numeric grammar and immutable elapsed-time vectors",
+      "dashboard tool commands refuse secondary developer GUI handoffs while retaining domain tools",
+      "physical IDE census and manifest references refuse unknown ignored owner controls"
+    ],
+    "dependency": [
+      "build bootstrap receives the defining dependency module while its executable preserves the original header",
+      "original direct dependency CLI admits explicit whole or scoped selections and refuses installer overrides",
+      "registered JavaScript dependency initial callers enter direct finite online preparation before graph bootstrap"
+    ]
+  },
+  "preserved": {
+    "dashboardRoutes": 16,
+    "dashboardHelp": 5,
+    "existingNames": 18,
+    "unchangedBodyTexts": 15,
+    "allThreeCommandExports": true,
+    "otherGraphFixtureEqual": true
+  },
+  "producer": false
+}

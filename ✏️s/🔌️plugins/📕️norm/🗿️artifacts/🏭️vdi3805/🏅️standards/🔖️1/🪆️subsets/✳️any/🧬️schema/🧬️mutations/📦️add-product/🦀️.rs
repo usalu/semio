@@ -18,7 +18,16 @@ pub struct AddProduct {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddProduct where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_product::RemoveProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "product", kind: "add-product", record: "AddedProduct" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.identity.article_number), &format!("Produkt \"{}\" erstellen", self.product.identity.article_number))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.product.identity.article_number.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for AddProduct where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_product::RemoveProduct> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::add_product::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,12 +36,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddProduct where Op: pr
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.identity.article_number), &format!("Produkt \"{}\" erstellen", self.product.identity.article_number))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.product.identity.article_number.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

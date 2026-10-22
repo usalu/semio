@@ -22,6 +22,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:net";
 import { repoTaxonomy } from "../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
@@ -92,12 +93,12 @@ export class TestScript extends Script {
     const phase = rest[0] ?? "";
     if (domain !== "" && phases.includes(phase)) {
       const { level: phaseLevel, rest: phaseArgs } = resolveTestLevel(rest.slice(1));
-      runCmd("bun", [join(this.root, domain, "📜️script.ts"), phase, ...(levelless.includes(phase) ? [] : [phaseLevel]), ...phaseArgs], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
+      runCmd(runtimeExecutableV1(), [join(this.root, domain, "📜️script.ts"), phase, ...(levelless.includes(phase) ? [] : [phaseLevel]), ...phaseArgs], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
 
     if (rest.length) throw new Error(`Unknown workspace test selection: ${rest.join(" ")}`);
-    if (process.env.SEMIO_TASK_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as build prerequisites; run \`bun repo run workspace:test -- ${level}\``);
+    if (process.env.SEMIO_TASK_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as build prerequisites; run \`repo run workspace:test -- ${level}\``);
     if (testLevelRank(level) >= testLevelRank("long")) await this.runStorybookPlaywright();
     if (level === "exhaustive" && coverageEnabled()) this.enforceCoverageGate();
     console.log(`[test] ${level} build prerequisites completed`);
@@ -162,7 +163,7 @@ export class TestScript extends Script {
 
   /** ⏱️`goLevelTestArgs` keeps `-short` (skipping the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go`) through `quick` and adds a cumulative `-skip` above the requested level. */
   private async runRepoGoTest(module: string, level: TestLevel, extraArgs: string[]): Promise<void> {
-    await runCanonicalGoTests(join(this.root, module), [...goLevelTestArgs(level), ...goCoverageArgs(this.root, module), ...extraArgs], {
+    await runCanonicalGoTests(join(this.root, module), [...goLevelTestArgs(level), ...goCoverageArgs(this.root, module), ...extraArgs], this.invocation, {
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
     });
   }
@@ -171,8 +172,8 @@ export class TestScript extends Script {
     const preferred = Number(process.env.STORYBOOK_PORT ?? 6010);
     const storybookPort = String(await this.pickStorybookStaticPort(preferred, 50));
     const baseUrl = `http://127.0.0.1:${storybookPort}/`;
-    runCmd("bun", [join(this.root, "📜️script.ts"), "build", "storybook"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    const server = spawnDaemon("bun", [join(this.root, "📜️script.ts"), "dev", "storybook-static"], {
+    runCmd(runtimeExecutableV1(), [join(this.root, "📜️script.ts"), "build", "storybook"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    const server = spawnDaemon(runtimeExecutableV1(), [join(this.root, "📜️script.ts"), "dev", "storybook-static"], {
       cwd: this.root,
       env: { ...process.env, STORYBOOK_PORT: storybookPort },
     });
@@ -206,7 +207,7 @@ export class TestScript extends Script {
  */
 export class BenchScript extends Script {
   run(): void {
-    throw new Error("Select the benchmark through bun repo run workspace:bench -- plugins");
+    throw new Error("Select the benchmark through repo run workspace:bench -- plugins");
   }
 }
 //#endregion 🔖️BenchScript

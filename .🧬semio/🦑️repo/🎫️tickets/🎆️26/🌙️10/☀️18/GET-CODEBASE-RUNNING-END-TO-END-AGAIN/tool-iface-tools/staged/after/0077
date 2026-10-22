@@ -1,74 +1,78 @@
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
-import { existsSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import registryDocument from "../../🔣️.json" with { type: "json" };
-import registrySchema from "../../🧬️schema/🔣️.json" with { type: "json" };
-import { findToolV1, readToolPinV1, readToolRegistryV1, toolCallerAllowedV1, toolForCommandV1, toolGlobMatchesV1, toolMessageV1, toolRawSpawnAllowedV1, TOOL_REGISTRY_V1 } from "../../🟦️.ts";
+import ts from "typescript";
+import fixtures from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import { maskCommentsV1, readArgumentV1, scanToolCallsV1, scanToolSpawnsV1, shellCommandsV1, toolScanLanguageV1, toolSpawnScopeV1 } from "../../🟦️.ts";
+import { testRipgrepV1 } from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
+import { spawnSync } from "node:child_process";
 
-const root = (() => { for (let directory = dirname(fileURLToPath(import.meta.url)); ; directory = dirname(directory)) { if (existsSync(join(directory, "MODULE.bazel"))) return directory; if (dirname(directory) === directory) return process.cwd(); } })();
-const clone = (): any => JSON.parse(JSON.stringify(registryDocument));
+describe("direct spawn scanner", () => {
+  for (const row of fixtures.cases) {
+    test(`finds exactly the starts of registered tools in ${row.path}`, () => {
+      const found = scanToolSpawnsV1(row.path, row.text).map(site => `${site.line} ${site.form} ${site.tool}`).sort();
+      expect(found).toEqual([...row.expected].sort());
+      if ("scope" in row) expect(scanToolSpawnsV1(row.path, row.text).every(site => site.scope === row.scope)).toBe(true);
+    });
+  }
+  test("counts a Rust spawn after #[cfg(test)] as test code and ignores a two-argument Command::new of a command builder", () => {
+    const sites = scanToolSpawnsV1("a/z.rs", fixtures.cases.find(row => row.path === "a/z.rs")!.text);
+    expect(sites.map(site => `${site.tool}:${site.scope}`)).toEqual(["git:prod", "bun:test"]);
+  });
+  test("reads the first argument across nested brackets, strings and templates", () => {
+    expect(readArgumentV1("f(a(b, c), d)", 2)).toEqual({ text: "a(b, c)", end: 9 });
+    expect(readArgumentV1("f(`x${y(1, 2)}`, 3)", 2).text).toBe("`x${y(1, 2)}`");
+    expect(readArgumentV1("f([1, 2], 3)", 2).text).toBe("[1, 2]");
+    expect(readArgumentV1("f(\"a,b\", 3)", 2).text).toBe("\"a,b\"");
+  });
+  test("separates the commands of a shell line and skips wrappers and assignments", () => {
+    expect(shellCommandsV1("A=1 sudo cargo build && cd x; bun test | tee out")).toEqual(["cargo", "cd", "bun", "tee"]);
+    expect(shellCommandsV1("exec nice -n 5 go test")).toEqual(["go"]);
+  });
+  test("classifies scope and language", () => {
+    expect(toolSpawnScopeV1("a/🧪️tests/b.ts")).toBe("test");
+    expect(toolSpawnScopeV1("a/b.test.ts")).toBe("test");
+    expect(toolSpawnScopeV1("a/b_test.go")).toBe("test");
+    expect(toolSpawnScopeV1("a/🏭️generator/b.ts")).toBe("prod");
+    expect(toolScanLanguageV1("x/📋️project.json")).toBe("declared");
+    expect(toolScanLanguageV1("x/🐚️.sh")).toBe("shell");
+    expect(toolScanLanguageV1("x/readme.md")).toBeUndefined();
+  });
+  test("finds the calls of the tool interface with a literal tool id", () => {
+    const text = "// runToolV1(\"cargo\")\nawait runToolV1('bun', []);\nrunToolSyncV1(\"git\", a);\nrunToolV1(id, []);\nconst s = `runToolV1(\"go\")`;";
+    expect(scanToolCallsV1("a/x.ts", text).map(call => `${call.line} ${call.callee} ${call.tool}`)).toEqual(["2 runToolV1 bun", "3 runToolSyncV1 git"]);
+  });
+  test("counts the same Rust and Go spawns as ripgrep", () => {
+    const rg = testRipgrepV1();
+    if (rg === null) return;
+    const text = fixtures.cases.filter(row => row.path === "a/x.rs" || row.path === "a/x.go").map(row => row.text).join("\n");
+    const count = spawnSync(rg, ["-o", "--no-config", "-e", "Command::new\\(\"[a-z]+\"|exec\\.Command(?:Context)?\\([^\"]*\"[a-z]+\""], { input: text, encoding: "utf8" }).stdout.trim().split("\n").filter(Boolean).length;
+    const mine = fixtures.cases.filter(row => row.path === "a/x.rs" || row.path === "a/x.go").flatMap(row => scanToolSpawnsV1(row.path, row.text)).length;
+    expect(mine).toBe(count - 1);
+  });
+});
 
-describe("tool registry document", () => {
-  test("validates against its schema with a third-party validator", () => {
-    const ajv = new (Ajv as any)({ strict: false, allErrors: true });
-    expect(ajv.validate(registrySchema, registryDocument)).toBe(true);
-    expect(TOOL_REGISTRY_V1.tools.length).toBe(registryDocument.tools.length);
-  });
-  test("registers every tool the repository leans on", () => {
-    for (const id of ["repo", "bun", "bazel", "nx", "cargo", "go", "uv", "python", "dotnet", "cmake", "ninja", "tsc", "vite", "vitest", "playwright", "tectonic", "wasm-opt", "jco", "hdiutil", "docker", "git", "gh"]) expect(findToolV1(id)).toBeDefined();
-  });
-  test("gives every command one owner and resolves aliases", () => {
-    expect(toolForCommandV1("bunx")?.id).toBe("bun");
-    expect(toolForCommandV1("/usr/bin/python3")?.id).toBe("python");
-    expect(toolForCommandV1("cargo.exe")?.id).toBe("cargo");
-    expect(toolForCommandV1("unknown")).toBeUndefined();
-  });
-  test("refuses duplicate ids, shared commands and unknown via tools", () => {
-    const duplicate = clone(); duplicate.tools.push(duplicate.tools[1]);
-    expect(() => readToolRegistryV1(duplicate)).toThrow("duplicate tool");
-    const shared = clone(); shared.tools[2].commands.push("bun");
-    expect(() => readToolRegistryV1(shared)).toThrow("belongs to");
-    const via = clone(); via.tools.find((tool: any) => tool.id === "tsc").locate[1].via = "nope";
-    expect(() => readToolRegistryV1(via)).toThrow("unknown tool nope");
-    const bad = clone(); bad.tools[0].id = "Bad Id";
-    expect(() => readToolRegistryV1(bad)).toThrow("invalid");
-  });
-  test("points at files that exist: adapters, installers and pin sources", () => {
-    for (const tool of TOOL_REGISTRY_V1.tools) {
-      expect(existsSync(join(root, tool.adapter)) || tool.adapter.includes("🧰️tools/")).toBe(true);
-      if (tool.provision.installer !== undefined) expect(existsSync(join(root, tool.provision.installer))).toBe(true);
-      const pin = readToolPinV1(tool, root);
-      if (tool.pin.state === "pinned" || tool.pin.state === "constrained") expect(pin.version).not.toBeNull();
-      if (tool.pin.digests !== undefined) expect(pin.digests.length).toBeGreaterThan(0);
-      if (tool.pin.state === "floating") expect(tool.pin.gap).toBeDefined();
+describe("comment masking", () => {
+  const directory = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+  const sources = (() => { const out: string[] = []; for (const name of ["📖️registry", "📌️pin", "🔎️resolve", "🏃️run", "🔍️scan", "🛡️guard", "🌿️environment"]) { try { for (const file of readdirSync(join(directory, name))) if (file.endsWith(".ts")) out.push(join(directory, name, file)); } catch { continue; } } return out; })();
+  test("blanks exactly the comments the TypeScript compiler finds and nothing else", () => {
+    expect(sources.length).toBeGreaterThan(3);
+    for (const path of sources) {
+      const text = readFileSync(path, "utf8"), file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true), ranges = new Map<number, number>();
+      const note = (found: ts.CommentRange[] | undefined): void => { for (const range of found ?? []) ranges.set(range.pos, range.end); };
+      const visit = (node: ts.Node): void => { note(ts.getLeadingCommentRanges(text, node.getFullStart())); note(ts.getTrailingCommentRanges(text, node.getEnd())); ts.forEachChild(node, visit); };
+      visit(file);
+      note(ts.getLeadingCommentRanges(text, 0));
+      const masked = maskCommentsV1(text, "ts"), expected = text.split("");
+      for (const [from, to] of ranges) for (let index = from; index < to; index++) if (expected[index] !== "\n") expected[index] = " ";
+      expect(masked).toBe(expected.join(""));
     }
   });
-  test("reads the pins from the existing pin files instead of copying them", () => {
-    const bun = readToolPinV1(findToolV1("bun")!, root), go = readToolPinV1(findToolV1("go")!, root);
-    const bunFile = JSON.parse(readFileSync(join(root, findToolV1("bun")!.pin.digests!.file), "utf8")).definitions.Release.const;
-    expect(bun.version).toBe(bunFile.version);
-    expect(bun.digests.map(row => row.sha256).sort()).toEqual(bunFile.distributions.map((row: any) => row.sha256).sort());
-    expect(go.digests.every(row => /^[a-f0-9]{64}$/u.test(row.sha256))).toBe(true);
-    expect(new Set(go.digests.map(row => `${row.platform}-${row.architecture}`)).size).toBe(6);
-  });
-  test("renders every message in both languages with placeholders filled", () => {
-    for (const key of Object.keys(TOOL_REGISTRY_V1.messages) as Array<keyof typeof TOOL_REGISTRY_V1.messages>) {
-      const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/gu)].map(match => match[1]).sort();
-      expect(placeholders(TOOL_REGISTRY_V1.messages[key].en)).toEqual(placeholders(TOOL_REGISTRY_V1.messages[key].de));
-    }
-    expect(toolMessageV1("unknownTool", { tool: "x", known: "a, b" }, "de")).toBe("Unbekanntes Werkzeug x. Registrierte Werkzeuge: a, b.");
-    expect(toolMessageV1("unknownTool", { tool: "x", known: "a" }, "en")).toContain("Unknown tool x");
-  });
-  test("matches globs and decides callers and raw spawns", () => {
-    expect(toolGlobMatchesV1("a/**/c.ts", "a/b/d/c.ts")).toBe(true);
-    expect(toolGlobMatchesV1("a/*/c.ts", "a/b/d/c.ts")).toBe(false);
-    expect(toolGlobMatchesV1("**/🧪️tests/**", "x/🧪️tests/y.ts")).toBe(true);
-    const cargo = findToolV1("cargo")!;
-    expect(toolCallerAllowedV1(cargo, "✏️s/🔌️plugins/x/🏭️generator/🟦️.ts")).toBe(false);
-    expect(toolCallerAllowedV1(cargo, "✏️s/🔌️plugins/x/🧪️tests/🟦️.ts")).toBe(true);
-    expect(toolRawSpawnAllowedV1(cargo, cargo.adapter)).toBe(true);
-    expect(toolRawSpawnAllowedV1(cargo, "✏️s/x/🟦️.ts")).toBe(false);
+  test("keeps strings in view and blanks them on request", () => {
+    const text = "const a = \"// not a comment\"; // real\nconst b = `x ${1} y`;";
+    expect(maskCommentsV1(text, "ts")).toBe("const a = \"// not a comment\";        \nconst b = `x ${1} y`;");
+    expect(maskCommentsV1(text, "ts", true)).toBe("const a = \"                \";        \nconst b = `        `;");
+    expect(maskCommentsV1("let r = r#\"// x\"#; /* a /* b */ c */ Command::new(\"go\")", "rust", true)).toContain("Command::new(\"  \")");
   });
 });

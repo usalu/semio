@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { noFollowDirectoryAncestry, workspaceAuthorityPath } from "../🧭️workspace-taxonomy-locator/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧾️ Repository-owned TOML boundary for pure Cargo provider manifest projections. */
 export interface CargoProviderTomlParser {
@@ -49,10 +50,7 @@ export interface CargoProviderManifestProjection {
 /** 🧯️ Bun's parser is hidden behind repository-owned syntax input/output types. */
 export const cargoProviderTomlParser: CargoProviderTomlParser = {
   parse(source: string): unknown {
-    const runtime = (globalThis as { readonly Bun?: unknown }).Bun;
-    const toml = typeof runtime === "object" && runtime !== null ? (runtime as { readonly TOML?: unknown }).TOML : undefined;
-    if (typeof toml !== "object" || toml === null || typeof (toml as { readonly parse?: unknown }).parse !== "function") throw new Error("Cargo provider TOML projection requires Bun.TOML.parse.");
-    return (toml as { readonly parse: (input: string) => unknown }).parse(source);
+    return runtimeParseTomlV1(source);
   },
 };
 

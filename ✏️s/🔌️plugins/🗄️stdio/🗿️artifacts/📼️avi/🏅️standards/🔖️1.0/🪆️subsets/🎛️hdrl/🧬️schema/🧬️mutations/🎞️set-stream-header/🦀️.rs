@@ -15,7 +15,16 @@ pub struct SetStreamHeader {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-header", kind: "set-stream-header", record: "SetStreamHeader" };
 
-    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set stream header", "Datenstrom-Header setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::ColdMutation<AviSnapshot>>::ReferenceDiff> {
         let Self { stream_index, strh } = self;
         protocol::MutationOutcome::new(stream_diff_for(*stream_index, AviStreamDiff { strh: Some(strh.clone()), ..AviStreamDiff::default() }))
     }
@@ -27,12 +36,6 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set stream header", "Datenstrom-Header setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

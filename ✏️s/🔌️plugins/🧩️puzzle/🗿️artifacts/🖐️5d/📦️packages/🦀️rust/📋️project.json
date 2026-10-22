@@ -28,7 +28,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -39,7 +39,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -51,7 +51,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -63,7 +63,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-generate"
+        "command": "repo ./📜️script.ts graph-generate"
       },
       "inputs": [
         "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/**/*manifest.json",
@@ -91,7 +91,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-wire-check"
+        "command": "repo ./📜️script.ts graph-wire-check"
       },
       "outputs": []
     },
@@ -101,7 +101,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -111,7 +111,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-source"
       }
     },
     "test-snapshot-sqlite": {
@@ -120,7 +120,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -130,7 +130,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -145,7 +145,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       }
     },
     "verify-original-work-construction": {
@@ -153,7 +153,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify original-work-construction",
+        "command": "repo ./📜️script.ts verify original-work-construction",
         "forwardAllArgs": true
       }
     }

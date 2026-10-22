@@ -1,9 +1,11 @@
 //! 🎭️ `ManualRuntime`: an injected-clock `HostAsyncRuntime` test double that needs no tokio.
 
-use super::*;
+use semio_framework_async::{CancelToken, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64};
-use std::sync::{Condvar, Mutex, Weak};
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Condvar, Mutex, Weak};
 use std::task::{Context, Poll, Wake, Waker};
 use std::time::Duration;
 

@@ -338,7 +338,7 @@
   },
   "execution": {
     "target": "test-rust-physical-reference-context",
-    "command": "bun ./📜️script.ts test rust-physical-reference-context long",
+    "command": "repo ./📜️script.ts test rust-physical-reference-context long",
     "cache": true,
     "artifactRoute": "rust-physical-reference-context"
   },

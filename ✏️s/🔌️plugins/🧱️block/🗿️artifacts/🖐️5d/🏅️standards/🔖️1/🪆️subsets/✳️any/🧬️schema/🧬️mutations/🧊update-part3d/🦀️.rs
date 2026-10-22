@@ -25,6 +25,12 @@ pub fn update_part_3d<Op: From<crate::update_part_3d::UpdatePart3d>>(new_orienta
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart3d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_3d::UpdatePart3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-3d", kind: "update-part3d", record: "UpdatedPart3d" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update part 3D pose", "3D-Lage des Bauteils aktualisieren")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for UpdatePart3d where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_3d::UpdatePart3d> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::update_part_3d::diff::diff(self, base)
     }
@@ -34,9 +40,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart3d where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update part 3D pose", "3D-Lage des Bauteils aktualisieren")
-    }
 }
 //#endregion 🔖️Mutation
 

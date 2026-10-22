@@ -9,7 +9,7 @@ import { reduceBootstrapUiState, reduceExecutionTargetUiState, type BootstrapUiS
 import { retainDirectoryCommandResult } from "../../🧾️space-artifact-creation/🟦️.ts";
 import { copyDirectoryInviteCapabilityV1, reduceShellSpaceAdministrationState, shellSpaceAdministrationCapabilityAllowed } from "../../🏠️space-administration/🟦️.ts";
 import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🚫️ Retires every document, creation and ui state of a revoked directory scope. */
 export function handleDirectoryScopeRevokedMessage({ directoryScopedOwnersRef, cancelSpaceArtifactCreationsForRuntime, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, openDocumentSessionsRef, closeDocumentRef, retireBrowserActorUi, setInferenceHistoryByRuntimeKey, message, worker, rebootstrapDiscardedSessionsRef, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "directoryScopedOwnersRef" | "cancelSpaceArtifactCreationsForRuntime" | "setSpaceArtifactCreationCatalog" | "setSpaceArtifactCreationCatalogUi" | "openDocumentSessionsRef" | "closeDocumentRef" | "retireBrowserActorUi" | "setInferenceHistoryByRuntimeKey"> & {

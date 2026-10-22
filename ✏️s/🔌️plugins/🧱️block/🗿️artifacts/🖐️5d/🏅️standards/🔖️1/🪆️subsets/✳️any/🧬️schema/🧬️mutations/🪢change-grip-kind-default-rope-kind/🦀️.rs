@@ -25,6 +25,15 @@ pub fn change_grip_kind_default_rope_kind<Op: From<crate::change_grip_kind_defau
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripKindDefaultRopeKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-default-rope-kind", record: "ChangedGripKindDefaultRopeKind" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" default rope kind to \"{}\"", self.id, self.new_default_rope_kind), &format!("Standardseilart von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_default_rope_kind))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ChangeGripKindDefaultRopeKind where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::change_grip_kind_default_rope_kind::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripKindDefaultRo
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" default rope kind to \"{}\"", self.id, self.new_default_rope_kind), &format!("Standardseilart von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_default_rope_kind))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

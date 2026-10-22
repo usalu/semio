@@ -1,0 +1,421 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "subset-directories-follow-the-subset-naming-law",
+   "rule": "policyListTopLevelSubsetDirs",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️fem-2d/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️Bad/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/plain/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/v1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️z/🏅️standards/🔖️1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️q/🗿️artifacts/🔸️a/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️q/🗿️artifacts/🔸️a/🏅️standards/🔖️2/📚️stray/x": []
+   },
+   "expectList": [
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️fem-2d",
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️z/🏅️standards/🔖️1/🪆️subsets/✳️any"
+   ]
+  },
+  {
+   "id": "subset-facets-must-all-exist",
+   "rule": "policySubsetFacetTotalityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": []
+   },
+   "expect": [
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "engines-do-not-live-at-owner-levels",
+   "rule": "policyArtifactEngineFacetForbiddenBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": []
+   },
+   "expect": [
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ],
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ],
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "examples-belong-to-subsets",
+   "rule": "policyExampleNotAtArtifactLevelBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": []
+   },
+   "expect": [
+    [
+     "artifact-examples-remaining-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️examples",
+     "subset-conformance/example-placement",
+     "medium",
+     0
+    ],
+    [
+     "standard-examples-remaining-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/📚️examples",
+     "subset-conformance/example-placement",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "phantom-standards-directories",
+   "rule": "policyPhantomStandardsBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准/🔖️1/标准x/y": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/x": []
+   },
+   "expect": [
+    [
+     "phantom-standards-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准",
+     "subset-conformance/phantom-standards",
+     "medium",
+     0
+    ],
+    [
+     "phantom-standards-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准/🔖️1/标准x",
+     "subset-conformance/phantom-standards",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "subset-ts-meta-stub-length",
+   "rule": "policySubsetTsParityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": [
+     "l0",
+     "l1",
+     "l2",
+     "l3",
+     "l4",
+     "l5"
+    ],
+    "✏️s/🔌️plugins/🔭️q/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": [
+     "l0",
+     "l1",
+     "l2",
+     "l3",
+     "l4",
+     "l5",
+     "l6"
+    ]
+   },
+   "expect": [
+    [
+     "subset-ts-meta-stub-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "subset-conformance/ts-parity",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "glue-shim-blocks",
+   "rule": "policyNoGlueShimBlocksBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "// Shims: keep pre-migration paths"
+    ],
+    "✏️s/🔌️plugins/🔭️q/📦️packages/🦀️rust/🦀️.rs": [
+     "// PRE-MIGRATION MODULE PATHS"
+    ],
+    "✏️s/🔌️plugins/🔭️r/📦️packages/🦀️rust/🦀️.rs": [
+     "// clean glue"
+    ]
+   },
+   "expect": [
+    [
+     "glue-shim-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs",
+     "subset-conformance/no-glue-shim-blocks",
+     "medium",
+     0
+    ],
+    [
+     "glue-shim-✏️s/🔌️plugins/🔭️q/📦️packages/🦀️rust/🦀️.rs",
+     "subset-conformance/no-glue-shim-blocks",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "aggregate-runs-every-conformance-rule",
+   "rule": "policySubsetConformanceBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "// Shims: keep pre-migration paths"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": [
+     "l0"
+    ]
+   },
+   "expect": [
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "subset-facet-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+     "subset-conformance/facet-totality",
+     "medium",
+     0
+    ],
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ],
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ],
+    [
+     "artifact-engine-forbidden-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "subset-conformance/engine-forbidden",
+     "low",
+     0
+    ],
+    [
+     "phantom-standards-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准",
+     "subset-conformance/phantom-standards",
+     "medium",
+     0
+    ],
+    [
+     "subset-ts-meta-stub-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "subset-conformance/ts-parity",
+     "medium",
+     0
+    ],
+    [
+     "glue-shim-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs",
+     "subset-conformance/no-glue-shim-blocks",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "surfaces-need-a-complete-window",
+   "rule": "policySubsetSurfaceCompletenessBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🦀️.rs": [
+     "fn a() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🟦️.ts": [
+     "// SCAFFOLD"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🦀️.rs": [
+     "fn a() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️c/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": []
+   },
+   "expect": [
+    [
+     "subset-surface-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+     "taxonomy/surface-completeness",
+     "medium",
+     0
+    ],
+    [
+     "subset-surface-scaffold-residue-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "taxonomy/surface-scaffold-residue",
+     "medium",
+     0
+    ],
+    [
+     "subset-surface-window-incomplete-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "taxonomy/surface-completeness",
+     "medium",
+     0
+    ],
+    [
+     "subset-surface-window-incomplete-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+     "taxonomy/surface-completeness",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "viewer-surfaces-do-not-mutate",
+   "rule": "policyViewerPurityBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/a.rs": [
+     "doc.mutation(x);",
+     "Emit::mutations(y);"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/b/c.txt": [
+     "see artifact_mutations and ::editor::run"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/d.rs": [
+     "doc.mutation(x);"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/clean.rs": [
+     "fn ok() {}"
+    ]
+   },
+   "expect": [
+    [
+     "viewer-purity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/a.rs-.mutation(",
+     "taxonomy/viewer-purity",
+     "high",
+     0
+    ],
+    [
+     "viewer-purity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/a.rs-Emit::mutations",
+     "taxonomy/viewer-purity",
+     "high",
+     0
+    ],
+    [
+     "viewer-purity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/b/c.txt-artifact_mutations",
+     "taxonomy/viewer-purity",
+     "high",
+     0
+    ],
+    [
+     "viewer-purity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/b/c.txt-::editor::",
+     "taxonomy/viewer-purity",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "contributed-surfaces-must-declare-their-owner",
+   "rule": "policyContributedSurfaceTargetBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
+    "✏️s/🔌️plugins/🔭️beta/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/x": [],
+    "✏️s/🔌️plugins/🔭️gamma/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/x": [],
+    "✏️s/🔌️plugins/🔭️gamma/🦀️.rs": [
+     ".depends_on(\"alpha\")"
+    ],
+    "✏️s/🔌️plugins/🔭️delta/🗿️artifacts/🔸️z/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/x": []
+   },
+   "expect": [
+    [
+     "contributed-surface-target-undeclared-✏️s/🔌️plugins/🔭️beta/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "plugin-dependency/contributed-surface-target",
+     "high",
+     0
+    ],
+    [
+     "contributed-surface-unknown-owner-✏️s/🔌️plugins/🔭️delta/🗿️artifacts/🔸️z/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+     "plugin-dependency/contributed-surface-target",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "os-config-requires-its-schema",
+   "rule": "policyOsConfigShapeBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": [
+    [
+     "os-config-shape-missing-schema",
+     "taxonomy/os-config-shape",
+     "high",
+     0
+    ]
+   ]
+  }
+ ]
+}

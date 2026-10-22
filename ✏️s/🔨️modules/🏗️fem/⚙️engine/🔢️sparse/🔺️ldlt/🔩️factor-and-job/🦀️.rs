@@ -239,7 +239,7 @@ impl LdltJob {
     }
 
     #[cfg(test)]
-    fn factor(&self) -> Option<LdltFactor> {
+    pub(super) fn factor(&self) -> Option<LdltFactor> {
         (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, columns: self.state.columns.clone(), d: self.state.d.clone() })
     }
 
@@ -251,8 +251,16 @@ impl LdltJob {
     }
 
     fn reserve_owner<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        Self::reserve_extent(owner, target, target, context)
+    }
+
+    fn reserve_open_owner<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        Self::reserve_extent(owner, target, SPARSE_INDEX_SPACE, context)
+    }
+
+    fn reserve_extent<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, limit: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
         if owner.capacity() >= target { return Ok(true); }
-        let progress = owner.reserve_capacity_one_funded(target, context.retained_grant()).map_err(|_| SparseError::DimensionMismatch)?;
+        let progress = owner.reserve_capacity_one_funded(limit, context.retained_grant()).map_err(|_| SparseError::DimensionMismatch)?;
         context.consume_retained(progress).map_err(|_| SparseError::DimensionMismatch)?;
         Ok(false)
     }
@@ -266,8 +274,8 @@ impl LdltJob {
 
     fn owner_depth<T>(owner: &PagedList<T, SPARSE_INDEX_SPACE>, index: usize) -> Result<usize, SparseError> { owner.next_get_depth_demand(index).map_err(|_| SparseError::DimensionMismatch) }
 
-    fn initialize_owner<T: Copy>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, value: T, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
-        if !Self::reserve_owner(owner, target, context)? { return Ok(false); }
+    fn initialize_owner<T: Copy>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, open: bool, value: T, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        if !(if open { Self::reserve_open_owner(owner, target, context)? } else { Self::reserve_owner(owner, target, context)? }) { return Ok(false); }
         if owner.len() == target { return Ok(true); }
         let depth = owner.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
         if !Self::admit_work(context, depth, size_of::<T>())? { return Ok(false); }
@@ -278,12 +286,12 @@ impl LdltJob {
     fn advance_reservation(&mut self, context: &mut StepContext<'_>) -> Result<(), SparseError> {
         let n = self.state.a.n;
         let complete = match self.state.reserve_lane {
-            0 => Self::initialize_owner(&mut self.state.contributors.heads, n, u64::MAX, context)?,
-            1 => Self::initialize_owner(&mut self.state.contributors.tails, n, u64::MAX, context)?,
-            2 => Self::initialize_owner(&mut self.state.d, n, 0.0, context)?,
-            3 => Self::initialize_owner(&mut self.state.workspace.values, n, 0.0, context)?,
-            4 => Self::initialize_owner(&mut self.state.workspace.marks, n, 0, context)?,
-            5 => Self::initialize_owner(&mut self.state.columns.offsets, 1, 0, context)?,
+            0 => Self::initialize_owner(&mut self.state.contributors.heads, n, false, u64::MAX, context)?,
+            1 => Self::initialize_owner(&mut self.state.contributors.tails, n, false, u64::MAX, context)?,
+            2 => Self::initialize_owner(&mut self.state.d, n, false, 0.0, context)?,
+            3 => Self::initialize_owner(&mut self.state.workspace.values, n, false, 0.0, context)?,
+            4 => Self::initialize_owner(&mut self.state.workspace.marks, n, false, 0, context)?,
+            5 => Self::initialize_owner(&mut self.state.columns.offsets, 1, true, 0, context)?,
             _ => true,
         };
         if complete && Self::admit_work(context, 1, 1)? { self.state.reserve_lane = if self.state.reserve_lane < 5 { self.state.reserve_lane + 1 } else { 9 }; }
@@ -294,7 +302,7 @@ impl LdltJob {
         if row >= self.state.a.n { return Err(SparseError::DimensionMismatch); }
         if self.state.workspace.marks[row] == self.state.workspace.generation { return Ok(true); }
         let target = self.state.workspace.touched.len().checked_add(1).ok_or(SparseError::DimensionMismatch)?;
-        Self::reserve_owner(&mut self.state.workspace.touched, target, context)
+        Self::reserve_open_owner(&mut self.state.workspace.touched, target, context)
     }
 
     pub(super) fn workspace_depth(&self, row: usize) -> Result<usize, SparseError> {
@@ -465,7 +473,7 @@ impl LdltJob {
                     let row = self.state.workspace.touched[touched_index] as usize;
                     let value = self.workspace_get(row);
                     let target = self.state.workspace.candidate.len() + 1;
-                    if row > column && value != 0.0 && !Self::reserve_owner(&mut self.state.workspace.candidate, target, context)? { return Ok(()); }
+                    if row > column && value != 0.0 && !Self::reserve_open_owner(&mut self.state.workspace.candidate, target, context)? { return Ok(()); }
                     let mut depth = Self::owner_depth(&self.state.workspace.touched, touched_index)? + self.workspace_depth(row)?;
                     if row > column && value != 0.0 { depth += self.state.workspace.candidate.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?; }
                     if !Self::admit_work(context, depth, 32)? { return Ok(()); }
@@ -481,9 +489,9 @@ impl LdltJob {
                 if self.state.cursor.entry < self.state.workspace.candidate.len() {
                     let pair = self.state.workspace.candidate[self.state.cursor.entry];
                     let target = self.state.columns.entries.len() + 1;
-                    if !Self::reserve_owner(&mut self.state.columns.entries, target, context)? { return Ok(()); }
+                    if !Self::reserve_open_owner(&mut self.state.columns.entries, target, context)? { return Ok(()); }
                     let target = self.state.contributors.links.len() + 1;
-                    if !Self::reserve_owner(&mut self.state.contributors.links, target, context)? { return Ok(()); }
+                    if !Self::reserve_open_owner(&mut self.state.contributors.links, target, context)? { return Ok(()); }
                     let row = pair.0 as usize;
                     let tail = self.state.contributors.tails[row];
                     let mut depth = Self::owner_depth(&self.state.workspace.candidate, self.state.cursor.entry)? + Self::owner_depth(&self.state.contributors.tails, row)? + self.state.columns.entries.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)? + self.state.contributors.links.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
@@ -499,7 +507,7 @@ impl LdltJob {
             }
             LdltColumnStage::CompleteColumn => {
                 if self.state.columns.offsets.len() == column + 1 {
-                    if !Self::reserve_owner(&mut self.state.columns.offsets, column + 2, context)? { return Ok(()); }
+                    if !Self::reserve_open_owner(&mut self.state.columns.offsets, column + 2, context)? { return Ok(()); }
                     let depth = self.state.columns.offsets.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
                     if !Self::admit_work(context, depth, size_of::<usize>())? { return Ok(()); }
                     self.state.columns.offsets.push_reserved(self.state.columns.entries.len()).map_err(|_| SparseError::DimensionMismatch)?;

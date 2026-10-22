@@ -27,7 +27,7 @@ pub mod set_preset_dictionary;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = DeflateSnapshot, diff = DeflateDiff, schema = "DeflateMutation")]
+#[mutations(snapshot = DeflateSnapshot, diff = DeflateDiff, schema = "DeflateMutation", reference = DeflateSnapshot, reference_diff = DeflateDiff)]
 pub enum DeflateMutation {
     /// 🧮️ Sets CMF's compression method/window bits and FLG's compression-level hint together
     /// (they're written to the same two-byte header, so one mutation covers all three).

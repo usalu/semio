@@ -1,6 +1,6 @@
 use crate::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn every_mutation() -> Vec<En1990Mutation> {
     let base = En1990Snapshot::default();

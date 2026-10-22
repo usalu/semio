@@ -90,7 +90,7 @@ pub mod set_vertex;
 /// is not an approved semantic verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = ObjSnapshot, diff = ObjDiff, schema = "ObjMutation")]
+#[mutations(snapshot = ObjSnapshot, diff = ObjDiff, schema = "ObjMutation", reference = ObjSnapshot, reference_diff = ObjDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ObjMutation {
 

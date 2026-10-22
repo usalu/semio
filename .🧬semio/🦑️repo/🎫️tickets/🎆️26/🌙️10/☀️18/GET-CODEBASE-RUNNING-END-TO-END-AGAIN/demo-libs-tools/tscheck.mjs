@@ -1,0 +1,7 @@
+import{createRequire}from"node:module";import{readdirSync,statSync}from"node:fs";import{join,resolve}from"node:path";
+const root=resolve(process.argv[2]);const ts=createRequire(join(process.cwd(),"♻️mit-bestand/package.json"))("typescript");
+const files=[];(function walk(d){for(const e of readdirSync(d)){if(["node_modules","dist","test-results",".cache","🌐️public"].includes(e))continue;const p=join(d,e);if(statSync(p).isDirectory())walk(p);else if(/\.(ts|tsx)$/.test(e)&&!e.endsWith(".d.ts"))files.push(p);}})(root);
+const program=ts.createProgram(files,{noEmit:true,allowJs:false,skipLibCheck:true,module:ts.ModuleKind.ESNext,moduleResolution:ts.ModuleResolutionKind.Bundler,target:ts.ScriptTarget.ESNext,jsx:ts.JsxEmit.ReactJSX,allowImportingTsExtensions:true,resolveJsonModule:true,esModuleInterop:true,strict:false,noImplicitAny:false,types:[]});
+const bad=new Set([2305,2307,2306,2724,2614,2459,2300,2304,2552,2554,2339,2345,2322,2551]);
+let n=0;for(const sf of program.getSourceFiles()){if(!sf.fileName.includes("♻️mit-bestand")||sf.fileName.includes("node_modules"))continue;for(const d of program.getSyntacticDiagnostics(sf).concat(program.getSemanticDiagnostics(sf))){if(!bad.has(d.code))continue;n++;const{line}=sf.getLineAndCharacterOfPosition(d.start??0);console.log(sf.fileName.replace(process.cwd()+"/","")+":"+(line+1),"TS"+d.code,ts.flattenDiagnosticMessageText(d.messageText,"\n").split("\n")[0].slice(0,220));}}
+console.log("files",files.length,"errors",n);

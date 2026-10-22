@@ -69,7 +69,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "change-imported-features/imports-harbor-position-descriptor: this fixture pins an applied outcome");
-    let produced = <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::diff(&mutation(), &before());
+    let produced = <GisTerrainMutation as protocol::ColdMutation<GisTerrainSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-imported-features/imports-harbor-position-descriptor: an applied outcome with no declared messages must emit none, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_gis_terrain_mutation(&mut snapshot, &mutation()).expect("change-imported-features/imports-harbor-position-descriptor: declared applied but the mutation was rejected");
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
 /// terrain's two artifact-lane fields the mutation is allowed to touch, not merely the end state.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::diff(&mutation(), &before());
+    let outcome = <GisTerrainMutation as protocol::ColdMutation<GisTerrainSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-imported-features/imports-harbor-position-descriptor: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisTerrainDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-imported-features/imports-harbor-position-descriptor: committed diff did not carry before to after");
 }
 
@@ -108,7 +108,7 @@ async fn committed_diff_applies_to_after() {
 async fn changes_only_the_imported_descriptor_string_and_inverts_to_the_base_string() {
     let base = before();
     let after = expected_after();
-    let produced = <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::diff(&mutation(), &base);
+    let produced = <GisTerrainMutation as protocol::ColdMutation<GisTerrainSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "change-imported-features/imports-harbor-position-descriptor: a genuinely different import must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     assert_eq!(produced.diff().imported_map.as_ref().map(|change|&change.value), Some(&after.imported_map), "change-imported-features/imports-harbor-position-descriptor: the delta carries the payload's own descriptor string verbatim");
     assert!(produced.diff().exaggeration.is_none(), "change-imported-features/imports-harbor-position-descriptor: the terrain's OTHER artifact-lane field must stay out of the delta");

@@ -3,7 +3,8 @@
 use crate::tasks_fixed_slots::{PLUGIN_REACTOR_INSTANCE_SLOTS, ReactorFixedSlots};
 const PLUGIN_REACTOR_APP_ID_BYTES: usize = 256;
 
-struct InstanceMetadata {
+#[doc(hidden)]
+pub struct InstanceMetadata {
     pub instance: u32,
     pub app_id: String,
     pub quota: semio_framework::kernel::QuotaSchema,

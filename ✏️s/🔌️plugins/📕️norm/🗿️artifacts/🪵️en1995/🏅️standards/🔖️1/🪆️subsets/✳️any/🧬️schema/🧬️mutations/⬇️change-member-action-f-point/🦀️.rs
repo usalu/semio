@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 pub struct ChangeMemberActionFPoint { pub member_id: String, pub action_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberActionFPoint where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_action_f_point::ChangeMemberActionFPoint> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-action-fPointN", kind: "change-member-action-f-point", record: "ChangedMemberActionFPoint" };
-    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1995Snapshot>>::Diff> { crate::change_member_action_f_point::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Point load F_k of action {} on member {}", self.action_id, self.member_id), &format!("Einzellast F_k der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
+    fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeMemberActionFPoint where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_action_f_point::ChangeMemberActionFPoint> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_member_action_f_point::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_member_action_f_point::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Point load F_k of action {} on member {}", self.action_id, self.member_id), &format!("Einzellast F_k der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
-    fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }
 
 //#region 🪢️Mounts

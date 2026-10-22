@@ -24,7 +24,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -46,7 +46,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -56,14 +56,14 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check-generated"
+        "command": "repo ./📜️script.ts check-generated"
       }
     },
     "logo": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts export-logo",
+        "command": "repo ./📜️script.ts export-logo",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -94,7 +94,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun --watch ./📜️script.ts generate-logo",
+        "command": "repo --watch ./📜️script.ts generate-logo",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -117,7 +117,7 @@
         "{projectRoot}/../../🪧️logos/🎞️animation/⚡️animated.svg"
       ],
       "options": {
-        "command": "bun ./📜️script.ts generate-logo",
+        "command": "repo ./📜️script.ts generate-logo",
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"
       }
     },
@@ -133,7 +133,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-mesh-contract"
+        "command": "repo ./📜️script.ts test-mesh-contract"
       }
     },
     "test-tile-proxy-contract": {
@@ -148,7 +148,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-tile-proxy-contract"
+        "command": "repo ./📜️script.ts test-tile-proxy-contract"
       }
     },
     "test-dispatch-contract": {
@@ -163,7 +163,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-dispatch-contract"
+        "command": "repo ./📜️script.ts test-dispatch-contract"
       }
     },
     "test-svg-video-contract": {
@@ -178,7 +178,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-svg-video-contract"
+        "command": "repo ./📜️script.ts test-svg-video-contract"
       }
     }
   }

@@ -16,7 +16,7 @@ export type ToolSourceV1 =
   | Readonly<{ file: string; format: "text" }>
   | Readonly<{ file: string; format: "rows"; pointer: string; where: Readonly<Record<string, string | number | boolean>>; field: string }>;
 /** 🔐️ Where the per-platform digests of a pinned tool are read from, and which row fields carry them: `platform` and `architecture`, or one `host` field such as `darwin-arm64`. */
-export type ToolDigestSourceV1 = Readonly<{ file: string; pointer: string; where: Readonly<Record<string, string | number | boolean>>; platform?: string; architecture?: string; host?: string; sha256: string; name: string; bytes?: string; extras?: readonly string[] }>;
+export type ToolDigestSourceV1 = Readonly<{ file: string; pointer: string; where: Readonly<Record<string, string | number | boolean>>; platform?: string; architecture?: string; host?: string; sha256: string; name: string; bytes?: string; extras?: readonly string[]; hostExtras?: Readonly<Record<string, string | number | boolean>> }>;
 /** 📌️ How a tool is pinned. */
 export type ToolPinSpecV1 = Readonly<{ state: "pinned" | "constrained" | "floating" | "system" | "internal"; version?: ToolSourceV1; minimum?: ToolSourceV1; digests?: ToolDigestSourceV1; gap?: ToolTextV1 }>;
 /** 🧰️ How a tool is provisioned. */
@@ -48,7 +48,7 @@ export type ToolRegistryV1 = Readonly<{
   tools: readonly ToolEntryV1[];
 }>;
 /** 🧱️ The names of every registry message. */
-export type ToolMessageKeyV1 = "unknownTool" | "toolMissing" | "callerRefused" | "versionMismatch" | "cancelled" | "failed" | "execUsage" | "listHeader" | "verifyOk" | "verifyProblem" | "admitting" | "running" | "finished" | "guardRefused" | "guardWarned";
+export type ToolMessageKeyV1 = "unknownTool" | "toolMissing" | "callerRefused" | "versionMismatch" | "cancelled" | "failed" | "execUsage" | "listHeader" | "verifyOk" | "verifyProblem" | "admitting" | "running" | "finished";
 
 const freeze = <T>(value: T): T => {
   if (typeof value === "object" && value !== null && !Object.isFrozen(value)) { Object.freeze(value); for (const child of Object.values(value)) freeze(child); }

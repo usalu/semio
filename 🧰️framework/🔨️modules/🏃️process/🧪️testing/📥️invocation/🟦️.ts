@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {relative} from "node:path";
-import {afterAll,test} from "bun:test";
+import { afterAll, test } from "../../../⚙️runtime/🧪️test/🟦️.ts";
 import {receiveScriptProcessInvocation,requireIssuedScriptInvocationV1,withScriptInvocationSignalV1,withIssuedResourceControlV1,createIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../🎛️owned-execution/📥️capture/🟦️.ts";
 /** 🧫️ Retains genuinely issued suite resources without exposing the receiver Original through a law alias. */

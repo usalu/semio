@@ -16,7 +16,7 @@ use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, Anim
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 
 //#region 🔖️Mutation
@@ -44,7 +44,7 @@ pub mod set_timeline_name;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioAnimationSnapshot, diff = SemioAnimationDiff, schema = "SemioAnimationMutation")]
+#[mutations(snapshot = SemioAnimationSnapshot, diff = SemioAnimationDiff, schema = "SemioAnimationMutation", reference = SemioAnimationSnapshot, reference_diff = SemioAnimationDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAnimationMutation {
     InsertTimeline(insert_timeline::InsertTimeline),
@@ -77,7 +77,7 @@ pub const KINDS: &[&str] =
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<SemioAnimationDiff> {
-    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, base)
+    <SemioAnimationMutation as ColdMutation<SemioAnimationSnapshot>>::diff(mutation, base)
 }
 
 
@@ -89,7 +89,7 @@ pub fn diff_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &S
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Result<Vec<SemioAnimationMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)?
+    <SemioAnimationMutation as ColdMutation<SemioAnimationSnapshot>>::inverse(mutation, base)?
 
     })
 }

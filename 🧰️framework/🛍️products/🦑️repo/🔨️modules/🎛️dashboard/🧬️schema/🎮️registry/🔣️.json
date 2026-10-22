@@ -403,11 +403,17 @@
       },
       "anyOf": [
         {
+          "properties": {
+            "port": true
+          },
           "required": [
             "port"
           ]
         },
         {
+          "properties": {
+            "portEnv": true
+          },
           "required": [
             "portEnv"
           ]
@@ -435,7 +441,7 @@
         "claude-code",
         "codex"
       ],
-      "description": "🤖️ An agent client whose MCP configuration file `bun ./📜️script.ts agents write` derives: `.mcp.json` or `.codex/config.toml`."
+      "description": "🤖️ An agent client whose MCP configuration file `repo ./📜️script.ts agents write` derives: `.mcp.json` or `.codex/config.toml`."
     },
     "McpExposure": {
       "type": "object",

@@ -14,7 +14,16 @@ pub struct InsertRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "record", kind: "insert-record", record: "InsertRecord" };
 
-    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::ColdMutation<CsvSnapshot>>::ReferenceDiff> {
         let Self { index, record } = self;
         protocol::MutationOutcome::new(CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) })
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
                 vec![CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

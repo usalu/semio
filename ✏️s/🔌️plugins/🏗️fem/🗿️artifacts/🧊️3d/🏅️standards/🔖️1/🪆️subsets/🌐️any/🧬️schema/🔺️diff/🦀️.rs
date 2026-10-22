@@ -17,12 +17,12 @@ use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::list_delta::RowPatch;
 use protocol::ApplyCapability;
-use protocol::DiffAlgebra;
+use protocol::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationApplyError;
 use protocol::MutationApplyResult;
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
-use protocol::ColdDiffAlgebra;
+
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 

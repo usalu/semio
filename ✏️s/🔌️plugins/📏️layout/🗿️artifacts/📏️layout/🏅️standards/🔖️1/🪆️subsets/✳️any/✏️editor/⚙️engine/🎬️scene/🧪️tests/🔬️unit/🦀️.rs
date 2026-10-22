@@ -338,10 +338,10 @@ async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
     use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
     use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
     use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
-    let mut doc = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
+    let created = protocol::apply_diff_cold(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
+    let mut doc = protocol::apply_diff_cold(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     doc.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();

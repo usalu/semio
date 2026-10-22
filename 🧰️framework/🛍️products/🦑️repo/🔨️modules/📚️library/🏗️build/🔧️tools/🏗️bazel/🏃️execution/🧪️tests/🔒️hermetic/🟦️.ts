@@ -11,6 +11,7 @@ import {createNativeBuildCallerCapabilitiesV1} from "../../../../../📥️calle
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as execution from "../../🟦️.ts";
 
+const adapter=await import("../../../📜️script.ts");
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY,sha=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),contract=schema.definitions.Contract.const;
 const host=execution.bazelExecutionPlatformV1(process.platform,process.arch);
 
@@ -60,7 +61,7 @@ test.skipIf(!binary)("law: hermetic actions read only declared inputs, hold the 
   expect(spawns.map(row=>row.targetLabel).sort()).toEqual(["lib:generate","app:build"].map(id=>"//:"+label(id)).sort());
   for(const spawn of spawns){
    const id=Object.keys(planned.tasks).find(key=>"//:"+planned.tasks[key]!.label===spawn.targetLabel)!,tool=`tools/bun/${host.id}/${execution.bazelBunExecutableNameV1(host)}`;
-   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...(declared as Record<string,string[]>)[id]!.map(path=>"s/"+path),"hermetic-runner.mjs",label(id)+".json"],tool,properties:host.properties}),`hermetic violations of ${id}`).toEqual([]);
+   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...(declared as Record<string,string[]>)[id]!.map(path=>adapter.bazelSourceAliasLabelV1(path)),"hermetic-runner.mjs",label(id)+".json"],tool,properties:host.properties}),`hermetic violations of ${id}`).toEqual([]);
   }
   const outputs=bin("base-a"),treeA=treeDigest(join(outputs,label("app:build")+".snapshot")),libA=treeDigest(join(outputs,label("lib:generate")+".snapshot"));
   const snapshot=JSON.parse(readFileSync(join(outputs,label("app:build")+".snapshot/snapshot.json"),"utf8"));

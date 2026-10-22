@@ -1,6 +1,6 @@
 /** 🪞️ Node twin for `🧪️tests/🧫️fixtures/🔁️animation-scope/🔣️.json` — the SAME cases with no test framework, so
  * `analyzeCssAnimationScope`/`cssAnimationScopeViolations` are checked by a second runner that shares
- * nothing with the bun suite but the fixture file. Run with `bun ./📜️script.ts twin`. */
+ * nothing with the bun suite but the fixture file. Run with `repo ./📜️script.ts twin`. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { analyzeCssAnimationScope, cssAnimationScopeUnclockedPaints, cssAnimationScopeViolations } from "../../📦️packages/🟦️typescript/🟦️.ts";

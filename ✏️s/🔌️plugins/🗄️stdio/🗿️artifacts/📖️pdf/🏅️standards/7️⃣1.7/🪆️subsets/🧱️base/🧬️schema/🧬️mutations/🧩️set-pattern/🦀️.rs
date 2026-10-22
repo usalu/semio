@@ -21,21 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "pattern", kind: "set-pattern", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        match unresolved_reference(&self.pattern, base) {
-            Some((resource, id)) => MutationOutcome::error("mutation.target-missing", format!("Pattern \"{}\" names the {resource} \"{id}\", which the document does not hold.", self.pattern.id), [self.pattern.id.clone()]),
-            None => MutationOutcome::new(diff::diff_set_pattern(base, self.pattern.clone(), self.index)),
-        }
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.patterns.iter().find(|item| item.id == self.pattern.id) { Some(previous) => vec![Op::from(SetPattern { pattern: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_pattern::RemovePattern { id: self.pattern.id.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set pattern {}", self.pattern.id), &format!("Muster {} setzen", self.pattern.id))
     }
@@ -43,6 +28,25 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.pattern.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPattern
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPattern> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_pattern::RemovePattern>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        match unresolved_reference(&self.pattern, base) {
+            Some((resource, id)) => MutationOutcome::error("mutation.target-missing", format!("Pattern \"{}\" names the {resource} \"{id}\", which the document does not hold.", self.pattern.id), [self.pattern.id.clone()]),
+            None => MutationOutcome::new(diff::diff_set_pattern(base, self.pattern.clone(), self.index)),
+        }
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.patterns.iter().find(|item| item.id == self.pattern.id) { Some(previous) => vec![Op::from(SetPattern { pattern: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_pattern::RemovePattern { id: self.pattern.id.clone() })] }
+    
+    })())
+}
 }
 
 /// 🧷️ The first resource a shading pattern names that `base` does not hold — its `/Shading`, then its

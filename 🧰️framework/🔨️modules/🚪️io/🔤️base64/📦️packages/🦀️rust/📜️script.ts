@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
@@ -10,6 +10,7 @@ import {resolveTestLevel,testLevelBudgetMs} from "../../../../🏃️process/�
 import {cmdBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 import { resolveTypescriptCompilerV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
 /** 🔤️ Runs every standard, URL and controlled allocation law in the defining native owner. */
 class NativeScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
@@ -30,8 +31,8 @@ class SourceScript extends BundleScript {
 class StrictScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-strict accepts no arguments");
-  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",resolve(this.root,"../../🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),resolve(this.root,"../../🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
  }
 }
-const router=new ScriptRouter(import.meta.dir).register("test-native",NativeScript).register("test-source",SourceScript).register("test-strict",StrictScript);
+const router=new ScriptRouter(import.meta.dirname).register("test-native",NativeScript).register("test-source",SourceScript).register("test-strict",StrictScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-native" }));

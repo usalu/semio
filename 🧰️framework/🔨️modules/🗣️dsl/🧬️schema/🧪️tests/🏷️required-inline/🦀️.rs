@@ -1,5 +1,6 @@
 //! 🏷️ Required single variants preserve the actual inline native owner.
 use semio_framework_dsl_record::*;
+use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
 use semio_framework_test_fixtures::fixture_text;
 #[derive(Debug,PartialEq,serde::Deserialize,semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag="kind",rename_all="lowercase",deny_unknown_fields)]

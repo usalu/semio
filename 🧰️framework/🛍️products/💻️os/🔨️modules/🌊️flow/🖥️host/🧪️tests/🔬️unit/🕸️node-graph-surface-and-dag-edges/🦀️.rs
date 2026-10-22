@@ -81,10 +81,10 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::new() },
         ],
-        synapses: vec![SynapseSpec { id: "wire-height".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "in".into() }],
+        synapses: vec![SynapseSpec { id: "wire-height".into(), from: "height".into(), to: "result".into(), from_port: String::new(), to_port: String::new() }],
         layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
-    assert_eq!(wired.dag.graph.host_snapshot.edges.len(), 1, "legacy out/in synapse becomes one workflow edge");
+    assert_eq!(wired.dag.graph.host_snapshot.edges.len(), 1, "an empty-port synapse becomes one workflow edge");
     assert_eq!(wired.dag.graph.host_snapshot.edges[0].source, "height@number");
     assert_eq!(wired.dag.graph.host_snapshot.edges[0].target, "result@");
     assert_eq!(wired.dag.graph.engine.edges.len(), 1);
@@ -97,7 +97,7 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: semio_framework_value_ordered::ordered::OrderedSet::new() },
         ],
-        synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "missing".into() }],
+        synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: String::new(), to_port: "missing".into() }],
         layout: semio_framework_value_ordered::ordered::OrderedMap::new(),
     });
     assert_eq!(refused.dag.graph.host_snapshot.edges.iter().map(|edge| edge.target.as_str()).collect::<Vec<_>>(), ["result@missing"], "an unresolved port stays in the document, unjoined, until it can be joined");
@@ -106,16 +106,28 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
 }
 
 #[test]
-fn legacy_out_in_synapse_joins_canonical_ports_and_paints_an_engine_edge() {
+fn empty_synapse_ports_join_the_first_port_of_each_side_and_paint_an_engine_edge() {
     let mut host = host_with_test_fixture();
     let mut snapshot = host.host_snapshot.clone();
     snapshot.synapses.clear();
-    snapshot.synapses.push(SynapseSpec { id: "legacy-wire".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "in".into() });
+    snapshot.synapses.push(SynapseSpec { id: "default-wire".into(), from: "slider".into(), to: "add".into(), from_port: String::new(), to_port: String::new() });
     host.replace_host_snapshot(snapshot);
-    let edge = host.dag.graph.host_snapshot.edges.iter().find(|edge| edge.id == "legacy-wire").expect("legacy synapse");
+    let edge = host.dag.graph.host_snapshot.edges.iter().find(|edge| edge.id == "default-wire").expect("default synapse");
     assert_eq!(edge.source, "slider@number");
     assert_eq!(edge.target, "add@a");
     assert_eq!(host.dag.graph.engine.edges.len(), 1);
+    host.retire_cold();
+}
+
+#[test]
+fn retired_out_in_port_ids_no_longer_resolve_and_create_no_engine_edge() {
+    let mut host = host_with_test_fixture();
+    let mut snapshot = host.host_snapshot.clone();
+    snapshot.synapses.clear();
+    snapshot.synapses.push(SynapseSpec { id: "retired-wire".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "in".into() });
+    host.replace_host_snapshot(snapshot);
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "retired-wire"), "an unresolved port stays in the document until it can be joined");
+    assert!(host.dag.graph.engine.edges.is_empty());
     host.retire_cold();
 }
 
@@ -124,7 +136,7 @@ fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
     let mut host = host_with_test_fixture();
     let mut snapshot = host.host_snapshot.clone();
     snapshot.synapses.clear();
-    snapshot.synapses.push(SynapseSpec { id: "dangling".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "missing".into() });
+    snapshot.synapses.push(SynapseSpec { id: "dangling".into(), from: "slider".into(), to: "add".into(), from_port: String::new(), to_port: "missing".into() });
     host.replace_host_snapshot(snapshot);
     assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "dangling"), "an unresolved port stays in the document until it can be joined");
     assert!(host.dag.graph.engine.edges.is_empty());

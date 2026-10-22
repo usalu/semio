@@ -6,7 +6,6 @@
     {
       "id": "neutral",
       "command": [
-        "bun",
         "repo",
         "run",
         "fixture:generate"
@@ -46,7 +45,6 @@
     {
       "id": "wrong-operation",
       "command": [
-        "bun",
         "repo",
         "exec",
         "fixture:generate"
@@ -56,7 +54,6 @@
     {
       "id": "extra-argument",
       "command": [
-        "bun",
         "repo",
         "run",
         "fixture:generate",
@@ -67,7 +64,6 @@
     {
       "id": "missing-target",
       "command": [
-        "bun",
         "repo",
         "run"
       ],
@@ -76,7 +72,6 @@
     {
       "id": "non-string-target",
       "command": [
-        "bun",
         "repo",
         "run",
         7

@@ -184,7 +184,7 @@ test("cooperative roster and answers", async ({ device }) => {
   await expect(who.locator("li", { hasText: benName })).toBeVisible();
   await expect(who.locator("li", { hasText: annaName })).toBeVisible();
 
-  await card(ben.page, "board").locator("[data-overview-card]").hover({ position: { x: 12, y: 12 } });
+  await card(ben.page, "board").locator("[data-layered-zoom]").hover({ position: { x: 12, y: 12 } });
   const onBoard = peerCursor(anna, "home:board");
   await expectInside(anna, onBoard, "home:board");
   await expect(onBoard).toContainText(benName);
@@ -281,7 +281,7 @@ test("cooperative footer, cursors and pages", async ({ device }) => {
     return Math.abs(next.x - first.x) + Math.abs(next.y - first.y);
   }).toBeGreaterThan(1);
 
-  await card(ben.page, "board").locator("[data-overview-card]").hover({ position: { x: 12, y: 12 } });
+  await card(ben.page, "board").locator("[data-layered-zoom]").hover({ position: { x: 12, y: 12 } });
   await expectInside(anna, peerCursor(anna, "home:board"), "home:board");
   await expect(card(anna.page, "board").locator("[data-card-presence]")).toContainText(benName);
   await follow(anna, benName);

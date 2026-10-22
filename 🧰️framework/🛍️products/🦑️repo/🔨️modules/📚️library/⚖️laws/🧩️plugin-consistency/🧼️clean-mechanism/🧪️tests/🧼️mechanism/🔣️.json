@@ -1,0 +1,451 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "clean-base-tree",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "missing-owner-root-files",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ]
+   },
+   "expect": [
+    [
+     "owner-mounts-children-missing-root-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "taxonomy/owner-shape/owner-mounts-children",
+     "medium",
+     0
+    ],
+    [
+     "owner-mounts-children-missing-root-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "taxonomy/owner-shape/owner-mounts-children",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "owner-with-children-must-mount-them",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "pub fn nothing() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ]
+   },
+   "expect": [
+    [
+     "owner-mounts-children-not-self-mounting-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1",
+     "taxonomy/owner-shape/owner-mounts-children",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "plugin-glue-scope-and-shim",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod deep;",
+     "pub use crate::artifacts::a::standards::v1;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ]
+   },
+   "expect": [
+    [
+     "owner-mounts-children-glue-scope-✏️s/🔌️plugins/🔭️p",
+     "taxonomy/owner-shape/owner-mounts-children",
+     "medium",
+     0
+    ],
+    [
+     "owner-mounts-children-glue-shim-✏️s/🔌️plugins/🔭️p",
+     "taxonomy/owner-shape/owner-mounts-children",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "subset-isolation-across-subsets-standards-and-ts-climbs",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs": [
+     "use crate::artifacts::a::standards::v1::subsets::other::X;",
+     "use crate::artifacts::a::standards::v2::thing::Y;",
+     "use crate::artifacts::a::standards::v1::subsets::any::Z;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️.ts": [
+     "import x from \"../../🧱️x/y\";",
+     "import m from \"../../🔨️modules/y\";",
+     "import d from \"./local\";",
+     "import u from \"../up\";"
+    ]
+   },
+   "expect": [
+    [
+     "subset-isolation-cross-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs-11",
+     "taxonomy/owner-shape/subset-isolation",
+     "medium",
+     1
+    ],
+    [
+     "subset-isolation-cross-standard-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs-70",
+     "taxonomy/owner-shape/subset-isolation",
+     "medium",
+     2
+    ],
+    [
+     "subset-isolation-ts-climb-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️.ts-9",
+     "taxonomy/owner-shape/subset-isolation",
+     "medium",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "module-units-need-two-consumers",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🔨️modules/🔸️util/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🔨️modules/🔸️lonely/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🔨️modules/🔸️once/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🔨️modules/🔸️inner/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs": [
+     "use modules::util::a;",
+     "use modules::once::b;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️runtime/🦀️.rs": [
+     "use modules::util::c;"
+    ]
+   },
+   "expect": [
+    [
+     "module-consumer-count-✏️s/🔌️plugins/🔭️p/🔨️modules/🔸️once",
+     "taxonomy/owner-shape/module-consumer-count",
+     "medium",
+     0
+    ],
+    [
+     "module-consumer-count-✏️s/🔌️plugins/🔭️p/🔨️modules/🔸️lonely",
+     "taxonomy/owner-shape/module-consumer-count",
+     "medium",
+     0
+    ],
+    [
+     "module-consumer-subset-level-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🔨️modules/🔸️inner",
+     "taxonomy/owner-shape/module-consumer-count",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "io-calls-outside-the-io-owner",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs": [
+     "fn a() { parse_dsl(x); }",
+     "fn b() { let _ = std::fs::read(p); }",
+     "const D: &[u8] = include_bytes!(\"x\");",
+     "use semio_s_plugin_other::foo::io;",
+     "#[cfg(test)]",
+     "mod t {",
+     "    fn z() { encode_pack(1); }",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🚪️io/x.rs": [
+     "fn a() { parse_dsl(x); }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🧪️tests/t.rs": [
+     "fn a() { parse_dsl(x); }"
+    ]
+   },
+   "expect": [
+    [
+     "io-exclusivity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs-parse_dsl(",
+     "taxonomy/owner-shape/io-exclusivity",
+     "medium",
+     1
+    ],
+    [
+     "io-exclusivity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs-std::fs::",
+     "taxonomy/owner-shape/io-exclusivity",
+     "medium",
+     2
+    ],
+    [
+     "io-exclusivity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs-include_bytes!",
+     "taxonomy/owner-shape/io-exclusivity",
+     "medium",
+     3
+    ],
+    [
+     "io-exclusivity-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🦀️.rs-semio_s_plugin_<other>::…::io",
+     "taxonomy/owner-shape/io-exclusivity",
+     "medium",
+     4
+    ]
+   ]
+  },
+  {
+   "id": "io-leaves-must-be-declared-and-have-a-ts-twin",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs": [
+     "mod 🔸️leafa;",
+     "mod 🔸️leafc;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafa/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafb/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafb/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafc/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafc/🟦️.ts": []
+   },
+   "expect": [
+    [
+     "io-declaration-missing-ts-twin-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafa",
+     "taxonomy/owner-shape/io-declaration",
+     "medium",
+     0
+    ],
+    [
+     "io-declaration-unreachable-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️leafb/🦀️.rs",
+     "taxonomy/owner-shape/io-declaration",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "subset-schema-must-stand-alone",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "#[path = \"🏅️standards/🔖️1/🦀️.rs\"]",
+     "mod s;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "#[path = \"🪆️subsets/✳️any/🦀️.rs\"]",
+     "mod u;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "#[path = \"🧬️schema/🦀️.rs\"]",
+     "mod schema;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub use crate::artifacts::a::standards::v1::subsets::other::*;",
+     "pub use crate::artifacts::a::standards::v1::subsets::any::*;"
+    ]
+   },
+   "expect": [
+    [
+     "subset-standalone-bare-reexport-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs-0",
+     "taxonomy/owner-shape/subset-standalone",
+     "medium",
+     1
+    ],
+    [
+     "subset-standalone-no-own-snapshot-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "taxonomy/owner-shape/subset-standalone",
+     "medium",
+     0
+    ],
+    [
+     "subset-isolation-cross-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs-15",
+     "taxonomy/owner-shape/subset-isolation",
+     "medium",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "declaration-tree-must-name-its-children",
+   "rule": "policyCleanArtifactStandardSubsetMechanismBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "#[path = \"../../🗿️artifacts/🔸️a/🦀️.rs\"]",
+     "mod a;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
+     "pub fn artifact() -> ArtifactDeclaration {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🦀️.rs": [
+     "pub fn standard() -> StandardDeclaration {}",
+     "#[path = \"🪆️subsets/✳️x/🦀️.rs\"]"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs": [
+     "pub fn subset() -> SubsetDeclaration {}",
+     "#[path = \"🧬️schema/🦀️.rs\"]"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "pub struct ASnapshot {}"
+    ]
+   },
+   "expect": [
+    [
+     "declaration-tree-artifact-missing-standard-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a-v1",
+     "taxonomy/owner-shape/declaration-tree",
+     "medium",
+     0
+    ],
+    [
+     "declaration-tree-standard-missing-subset-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1-any",
+     "taxonomy/owner-shape/declaration-tree",
+     "medium",
+     0
+    ],
+    [
+     "declaration-tree-plugin-missing-artifact-✏️s/🔌️plugins/🔭️p-a",
+     "taxonomy/owner-shape/declaration-tree",
+     "medium",
+     0
+    ]
+   ]
+  }
+ ]
+}

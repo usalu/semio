@@ -120,7 +120,7 @@ async fn folds_visibility_and_members_for_this_space_into_config() {
     let events_json = semio_framework_pack_json::to_json_string(&events);
     let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
     assert_eq!(result.config_mutations.len(), 1);
-    let config = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
+    let config = protocol::apply_diff_cold(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.visibility, "public");
     assert_eq!(config.members.len(), 1);
     assert_eq!(config.members[0].email, "a@example.com");
@@ -161,7 +161,7 @@ async fn folds_directory_indexed_documents_into_read_only_space_rows() {
         indexed,
     ];
     let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold indexed document");
-    let config = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
+    let config = protocol::apply_diff_cold(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.indexed_artifacts.len(), 1);
     assert_eq!(config.indexed_artifacts[0].id, descriptor.document_id);
     assert_eq!(config.indexed_artifacts[0].name, "Shared Map");
@@ -201,7 +201,7 @@ async fn an_index_without_a_space_id_folds_the_one_space_its_history_names() {
     ];
     let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold");
     let [mutation] = result.config_mutations.as_slice() else { panic!("one config mutation, got {:?}", result.config_mutations) };
-    let config = protocol::apply_diff(mutation.diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
+    let config = protocol::apply_diff_cold(mutation.diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.visibility, "private");
     assert_eq!(config.members.iter().map(|member| member.email.as_str()).collect::<Vec<_>>(), ["a@example.com"]);
 }
@@ -325,7 +325,7 @@ async fn heartbeat_sets_presence_for_a_new_artifact() {
     let result = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }, &doc, &cfg).expect("heartbeat");
     assert_eq!(result.config_mutations.len(), 1);
     assert_eq!(result.config_mutations[0], SpaceIndexConfigMutation::SetArtifactPresence(crate::editor::space_index::config::ArtifactPresenceSetting { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }));
-    let after = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the heartbeat applies");
+    let after = protocol::apply_diff_cold(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the heartbeat applies");
     assert_eq!(after.presence_for("artifact-1"), vec!["user:1", "user:2"]);
 }
 
@@ -336,7 +336,7 @@ async fn heartbeat_replaces_an_existing_artifacts_presence() {
     let seeded = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }], ..Default::default() };
     let cfg = ConfigView { snapshot: &seeded, window: None };
     let result = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:2".into() }, &doc, &cfg).expect("heartbeat");
-    let config = protocol::apply_diff(result.config_mutations[0].diff(&seeded).diff(), &seeded).expect("the heartbeat applies");
+    let config = protocol::apply_diff_cold(result.config_mutations[0].diff(&seeded).diff(), &seeded).expect("the heartbeat applies");
     assert_eq!(config.presence.len(), 1, "replaces, does not append, an existing artifact's row");
     assert_eq!(config.presence_for("artifact-1"), vec!["user:2"]);
 }

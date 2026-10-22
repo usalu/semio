@@ -1,5 +1,5 @@
 /** 🧵️ The pane of LayeredOverview: mounting, error boundary, placeholder and the card host. */
-import { type LayeredLifecycle, type LayeredRevealSource, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { type LayeredLifecycle, type LayeredRevealSource, type LayeredZoomHold, layeredZoomOut, layeredZoomOver, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -189,22 +189,32 @@ export const LayeredPaneView = /* @__PURE__ */ React.memo(function LayeredPaneVi
   );
 });
 
-/** 🃏️ The `display: contents` host of one card: pointer enter (mouse) or keyboard focus reveals its page, pointer leave or focus leaving the card
- * conceals it; the card itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer hover conceals
+/** 🎯 The explore control inside `host`, when `node` is that control or something inside it. */
+function zoomTrigger(node: EventTarget | null, host: HTMLElement): Element | null {
+  const element = node instanceof Element ? node : node instanceof Text ? node.parentElement : null;
+  if (element === null) return null;
+  const trigger = element.closest("[data-layered-zoom]");
+  return trigger !== null && host.contains(trigger) ? trigger : null;
+}
+
+/** 🃏️ The `display: contents` host of one card: the pointer zooms its page only while it is over the card's explore control
+ * (`data-layered-zoom`); keyboard focus anywhere in the card reveals the page, and leaving that focus conceals it. The card
+ * itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer hover conceals
  * the other hosts without rendering them again, and marks each one `data-concealed`: the slot and the hit target stay,
  * and a survey of the page treats the host as unseen, so a pet that stood on that card falls. The hovered card is marked `data-tinted` and wears the veil's wash. */
 export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHost(props: {
   readonly pane: LayeredPane;
   readonly mode: LayeredMode;
   readonly revealed: boolean;
-    readonly source: LayeredRevealSource | null;
-readonly onOpen: (id: string) => void;
+  readonly source: LayeredRevealSource | null;
+  readonly zoomHold: React.MutableRefObject<LayeredZoomHold | null>;
+  readonly onOpen: (id: string) => void;
   readonly onReveal: (id: string, source: LayeredRevealSource) => void;
   readonly onConceal: (id: string) => void;
   readonly onElement: (id: string, element: HTMLElement | null) => void;
   readonly renderCard: LayeredOverviewProps["renderCard"];
 }): React.ReactElement {
-  const { pane, onOpen, onElement, onReveal, onConceal } = props;
+  const { pane, onOpen, onElement, onReveal, onConceal, zoomHold } = props;
   const open = React.useCallback(() => onOpen(pane.id), [onOpen, pane.id]);
   const ref = React.useCallback((element: HTMLDivElement | null) => onElement(pane.id, element), [onElement, pane.id]);
   return (
@@ -212,10 +222,26 @@ readonly onOpen: (id: string) => void;
       ref={ref}
       data-layered-card={pane.id}
       data-revealed={props.revealed ? "" : undefined}
-            data-reveal={props.source ?? undefined}
-className="contents"
-      onPointerEnter={(event) => event.pointerType === "mouse" && onReveal(pane.id, "pointer")}
-      onPointerLeave={(event) => event.pointerType === "mouse" && onConceal(pane.id)}
+      data-reveal={props.source ?? undefined}
+      className="contents"
+      onPointerOver={(event) => {
+        if (event.pointerType !== "mouse" || zoomTrigger(event.target, event.currentTarget) === null) return;
+        const decision = layeredZoomOver(zoomHold.current);
+        zoomHold.current = decision.hold;
+        if (decision.reveal) onReveal(pane.id, "pointer");
+      }}
+      onPointerOut={(event) => {
+        if (event.pointerType !== "mouse") return;
+        const host = event.currentTarget;
+        const next = event.relatedTarget;
+        const leavingHost = !(next instanceof Node) || !host.contains(next);
+        const from = zoomTrigger(event.target, host);
+        const to = zoomTrigger(next, host);
+        if (!leavingHost && (from === null || to !== null)) return;
+        const decision = layeredZoomOut(zoomHold.current);
+        zoomHold.current = decision.hold;
+        if (decision.conceal) onConceal(pane.id);
+      }}
       onFocus={(event) => focusVisible(event.target) && onReveal(pane.id, "focus")}
       onBlur={(event) => !event.currentTarget.contains(event.relatedTarget as Node | null) && onConceal(pane.id)}
     >

@@ -112,12 +112,9 @@ fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2
     Ifc2x3Snapshot { schema: diff.schema.clone().unwrap_or_else(|| base.schema.clone()), document, edm_preamble: diff.edm_preamble.clone().unwrap_or_else(|| base.edm_preamble.clone()) }
 }
 
-impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
-    fn apply(&self, base: &Ifc2x3Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Ifc2x3Snapshot> {
-        validate_ifc2x3_diff(self, base)?;
-        Ok(apply_ifc2x3_diff_unchecked(self, base))
-    }
+impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {}
 
+impl protocol::ColdMutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
     /// index-keyed one): `other`'s removal of an id cancels any pending upsert of that id in
     /// `self` (and vice versa — a later upsert of a formerly-removed id un-removes it).
@@ -154,9 +151,22 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
             self.instance_order = other.instance_order;
         }
     }
+
+    fn apply(&self, unpublished: &mut Ifc2x3Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_ifc2x3_diff(self, base)?;
+        *unpublished = apply_ifc2x3_diff_unchecked(self, base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty() && self.edm_preamble.is_none() && self.instance_order.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// 🔁️ Diff-level undo: header, schema and preamble return to their base values, instances the diff created are removed, instances it
     /// removed or replaced return as they stood in `base`, and the base order is restored whenever the inverse alone would not land on it.
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
@@ -184,10 +194,6 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
             edm_preamble: self.edm_preamble.as_ref().map(|_| base.edm_preamble.clone()),
             instance_order: (after_order != base_order).then_some(base_order),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty() && self.edm_preamble.is_none() && self.instance_order.is_none()
     }
 }
 

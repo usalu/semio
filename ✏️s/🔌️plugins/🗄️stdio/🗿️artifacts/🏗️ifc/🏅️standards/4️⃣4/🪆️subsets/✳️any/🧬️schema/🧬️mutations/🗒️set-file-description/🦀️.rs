@@ -14,18 +14,21 @@ pub struct SetFileDescription {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-description", kind: "set-file-description", record: "SetFileDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<IfcSnapshot, IfcMutation> for SetFileDescription {
     fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { values } = self;
         protocol::MutationOutcome::new(diff::diff_set_file_description(values.clone()))
     }
     fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
         Ok(vec![IfcMutation::SetFileDescription(SetFileDescription { values: base.header.file_description.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

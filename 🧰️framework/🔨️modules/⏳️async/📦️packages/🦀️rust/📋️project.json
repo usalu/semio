@@ -15,8 +15,8 @@
     ]
   },
   "targets": {
-    "test-cancel-return-source": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":true},
-    "test-cancel-return-native": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":true},
+    "test-cancel-return-source": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"repo ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":true},
+    "test-cancel-return-native": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"repo ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":true},
     "worker-pool-use-check": {
       "executor": "repo:script",
       "cache": true,
@@ -26,7 +26,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-pool-use-check",
+        "command": "repo ./📜️script.ts worker-pool-use-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -40,7 +40,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-pool-use-check --native",
+        "command": "repo ./📜️script.ts worker-pool-use-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -54,7 +54,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-parking-check",
+        "command": "repo ./📜️script.ts worker-parking-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -68,7 +68,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-parking-check --native",
+        "command": "repo ./📜️script.ts worker-parking-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -82,7 +82,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-deferred-wake-check",
+        "command": "repo ./📜️script.ts worker-deferred-wake-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -96,7 +96,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-deferred-wake-check --native",
+        "command": "repo ./📜️script.ts worker-deferred-wake-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -110,7 +110,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-maintenance-check",
+        "command": "repo ./📜️script.ts worker-maintenance-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -124,7 +124,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts worker-maintenance-check --native",
+        "command": "repo ./📜️script.ts worker-maintenance-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -139,7 +139,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -156,7 +156,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-publication-docs": {
@@ -170,7 +170,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-publication-docs"
+        "command": "repo ./📜️script.ts test-publication-docs"
       },
       "outputs": []
     },
@@ -179,7 +179,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts typegen"
+        "command": "repo ./📜️script.ts typegen"
       },
       "outputs": [
         "{projectRoot}/../../🤖️generated/⏳️async"
@@ -195,7 +195,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     }

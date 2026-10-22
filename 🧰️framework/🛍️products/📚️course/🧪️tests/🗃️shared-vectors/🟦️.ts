@@ -357,7 +357,7 @@ describe("canonical Course build owners", () => {
     expect(project.namedInputs.default).toContain("{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/**/*");
     for (const target of Object.values(project.targets ?? {}) as { executor: string; options: { command: string } }[]) {
       expect(target.executor).toBe("repo:script");
-      expect(target.options.command).toMatch(/^bun \.\/📜️script\.ts /u);
+      expect(target.options.command).toMatch(/^repo \.\/📜️script\.ts /u);
     }
   });
 });

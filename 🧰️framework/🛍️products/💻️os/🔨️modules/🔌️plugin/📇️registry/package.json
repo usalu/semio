@@ -41,9 +41,9 @@
     "./publication/schema.json": "./📣️publication/🧬️schema/🔣️.json"
   },
   "scripts": {
-    "generate": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:generate",
-    "check": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:check",
-    "new": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:new"
+    "generate": "repo run @semio-tech/plugin-registry:generate",
+    "check": "repo run @semio-tech/plugin-registry:check",
+    "new": "repo run @semio-tech/plugin-registry:new"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

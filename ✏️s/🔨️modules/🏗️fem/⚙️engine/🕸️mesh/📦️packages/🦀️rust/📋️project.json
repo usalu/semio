@@ -12,7 +12,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }
@@ -22,7 +22,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }
@@ -32,7 +32,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-surface",
+        "command": "repo ./📜️script.ts test-surface",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }

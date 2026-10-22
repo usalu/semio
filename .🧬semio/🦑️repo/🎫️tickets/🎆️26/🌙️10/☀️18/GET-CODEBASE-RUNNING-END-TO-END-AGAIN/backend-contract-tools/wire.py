@@ -179,7 +179,7 @@ def conformance_child(t):
     if 'resolved.args[0]==="conformance"' in t:return t
     anchor='  if(resolved.args[0]==="concurrency"){'
     if t.count(anchor)!=1:raise Drift("child: concurrency validation not found once")
-    add='  if(resolved.args[0]==="conformance"){const {buildInvocationRequestsHelpV1}=await import("../../%s/%s");if(!buildInvocationRequestsHelpV1(resolved.args)){const {conformanceArgumentsV1}=await import("../../%s/%s/%s");conformanceArgumentsV1(resolved.args.slice(1));}}\n'%(T["INVOCATION"],TS,T["CONF"],T["COMMAND"],TS)
+    add='  if(resolved.args[0]==="conformance"){const {buildInvocationRequestsHelpV1}=await import("../../%s/%s");if(!buildInvocationRequestsHelpV1(resolved.args)){const {conformanceRequestV1}=await import("../../%s/%s/%s");conformanceRequestV1(resolved.args);}}\n'%(T["INVOCATION"],TS,T["CONF"],T["COMMAND"],TS)
     return t.replace(anchor,add+anchor,1)
 
 def operations_test(t):
@@ -210,9 +210,12 @@ def operations_bootstrap(t):
     return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../{BK}/{TS}";',"operations bootstrap import")
 def birth_test(t):
     if "implementations.nx" not in t:return t
-    t=t.replace("json_extract(value,'$.implementations.nx')='neutral' and json_extract(value,'$.implementations.bazel')='neutral'","not exists (select 1 from json_each(json_extract(value,'$.implementations')) where value!='neutral')")
-    t=t.replace('.get(JSON.stringify(operations),row.operation)','.get(JSON.stringify(operations.map((operation:{name:string})=>({...operation,implementations:Object.fromEntries(buildBackendIdsV1().map(id=>[id,buildBackendRowV1(id).operations[operation.name]??"neutral"]))}))),row.operation)')
-    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../../../../{BK}/{TS}";',"birth test import")
+    sql_old="select coalesce((select json_extract(value,'$.requires')='none' and json_extract(value,'$.implementations.nx')='neutral' and json_extract(value,'$.implementations.bazel')='neutral' from json_each(?1,'$.operations') where json_extract(value,'$.name')=?2),0) value"
+    sql_new="select coalesce((select json_extract(o.value,'$.requires')='none' and not exists (select 1 from json_each(json_extract(o.value,'$.implementations')) i where i.value!='neutral') from json_each(?1,'$.operations') o where json_extract(o.value,'$.name')=?2),0) value"
+    if sql_old not in t:raise Drift("birth test: oracle query not found")
+    t=t.replace(sql_old,sql_new)
+    t=t.replace('.get(JSON.stringify(operations),row.operation)','.get(JSON.stringify({...operations,operations:operations.operations.map((operation:{name:string})=>({...operation,implementations:Object.fromEntries(buildBackendIdsV1().map((id:string)=>[id,buildBackendRowV1(id).operations[operation.name]??"neutral"]))}))}),row.operation)')
+    return head(t,f'import {{buildBackendIdsV1,buildBackendRowV1}} from "../../../{BK}/{TS}";',"birth test import")
 def p(*parts):return "/".join(parts)
 SC=T["SCHEMA"]
 EDITS=[
@@ -291,3 +294,7 @@ def storage_fix(t):return storage(t)
 
 import wire2
 EDITS+=wire2.EDITS
+import wire3
+EDITS+=wire3.EDITS
+POST=wire3.POST
+REQUIRES=wire3.REQUIRES

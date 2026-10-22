@@ -26,7 +26,7 @@ fn move_commands_apply_the_requested_sibling_order() {
     use crate::editor::forms::commands::move_question::{handle, MoveQuestion};
     use crate::editor::forms::config::FormsConfig;
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../❓️questions/📍️placement/🧪️tests/🧫️fixtures/🔣️drop.json")).unwrap();
     let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = HistoryView::empty();
@@ -39,7 +39,7 @@ fn move_commands_apply_the_requested_sibling_order() {
         let result = handle(&command, &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &config, window: None });
         if case.get("error").is_some() { assert!(result.is_err(), "{}", case["name"]); }
         else {
-            for mutation in result.unwrap().artifact_mutations { snapshot = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff"); }
+            for mutation in result.unwrap().artifact_mutations { snapshot = protocol::apply_diff_cold(mutation.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff"); }
             let order: Vec<&str> = snapshot.definition.steps.iter().find(|step| step.id == command.to_step_id).unwrap().blocks.iter().map(|question| question.id.as_str()).collect();
             assert_eq!(serde_json::to_value(order).unwrap(), case["order"], "{}", case["name"]);
         }
@@ -48,7 +48,7 @@ fn move_commands_apply_the_requested_sibling_order() {
 
 #[test]
 fn question_placement_matches_shared_events() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../❓️questions/📍️placement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let input = &case["input"];
@@ -60,7 +60,7 @@ fn question_placement_matches_shared_events() {
             let expected: crate::FormMutation = semio_framework_pack_json::from_json_str(&case["event"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(result.unwrap(), expected, "{}", case["name"]);
             let mut snapshot = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "placement".into(), "1".into(), None, &definition.steps);
-            snapshot = protocol::apply_diff(expected.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff");
+            snapshot = protocol::apply_diff_cold(expected.diff(&snapshot).diff(), &snapshot).expect("valid mutation diff");
             assert_eq!(snapshot.definition.steps.iter().flat_map(|step| &step.blocks).filter(|question| question.id == "q").count(), 1);
         }
     }

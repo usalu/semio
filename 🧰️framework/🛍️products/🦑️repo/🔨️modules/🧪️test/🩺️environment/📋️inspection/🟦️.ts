@@ -4,6 +4,7 @@ import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️pack
 import { runProbe } from "@semio-tech/repo-lib/process";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative, sep } from "node:path";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🕸️ Emits the per-case Nx project graph the plugin generates, for inspection and for CI. */
 export class NxScript extends Script {
@@ -23,7 +24,7 @@ export class DoctorScript extends Script {
   run(): void {
     const taxonomy = testTaxonomy(this.repoRoot);
     const checks: [Implementation, string, string[]][] = [
-      ["typescript", "bun", ["--version"]],
+      ["typescript", runtimeCommandNameV1(), ["--version"]],
       ["rust", "cargo", ["--version"]],
       ["go", "go", ["version"]],
       ["python", oracleHostPython(this.repoRoot), ["--version"]],

@@ -54,7 +54,7 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
 fn every_listed_command_is_a_leaf_of_the_tree_and_a_row_of_the_launcher_and_names_a_registry_command() {
     let root = temp_root("workspace");
     fs::write(root.join("📋️project.json"), r#"{"name":"workspace","targets":{"build":{},"test":{}}}"#).unwrap();
-    fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"bun repo run quiz:test","dashboard":"bun repo run repo:run"}}"#).unwrap();
+    fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"repo run quiz:test","dashboard":"repo run repo:run"}}"#).unwrap();
     let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let (mut in_tree, rows) = (Vec::new(), launcher(&registry));
     leaves(&tree(&registry, false), &mut in_tree);

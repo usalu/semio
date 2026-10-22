@@ -1,0 +1,9 @@
+# Additional GC Fixture Schema Review
+
+Initial requested schema pin independently confirmed42,364/c440632001fe5e943b3f8e148eb94715adda54169b4aaa0c991f245480a985b1. Tool backend then stalled300s; reset recovered access. By recovery the live schema had advanced45,586/d6bba087757779f2d0d99b7f41da5e466536e0e8d33b0b595b7e978a1f38ce4c. Therefore no exact whole-byte attribution from prior40,766 is claimed, and these current observations do not identify active Native loaded bytes.
+
+Current-own-merits fixture review: ReadSessionFixture adds required closed eight-row startups DATA, covering EOF, malformed JSON, shape, version, wrong source, noncanonical, oversized UTF8 and unavailable diagnostics. Its finite observed/stderr bounds preserve controlled memory. Entire serialized current session fixture passes strict Ajv using same-realm DATA normalization. Existing inputFrames/lifecycle/credit/deferred fields remain required and closed. PayloadInflationCase remains closed with finite remaining/output limits and explicit producer-role enumeration.
+
+Current controller law consumes startups through actual extracted controller/retention functions with controlled before→close→after diagnostics, requires the original readiness refusal, closed startup witness and accepted-disposal terminal. Independent SQLite classifies JSON/UTF8 length/cause and checks byte lengths; hash projection uses node crypto. These are controlled causal tests, not actual Native startup passes. Current SnapshotManifest remains closedv2 outer with exact tuple positions/hex links and open legitimate graphrest version1; no blanket closed graph payload assumption introduced.
+
+No concrete schema-level regression found in inspected fields. This bounded evolving snapshot review does not replace final coherent pin reconciliation or claim exact-delta preservation. No Source evaluation, CLI, Native or Source mutation occurred.

@@ -51,7 +51,7 @@ fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) 
     eprintln!("[TRACE] typed-operation slots instance={instance} live={live}/{} peak={peak}", semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);
 }
 #[doc(hidden)]
-pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, pages: &mut semio_framework_plugin_reactor_lifecycle::result_publication::NativeResultPages, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut output=PluginExchangeOutput::default();output.collect_original_receipts(app);if output.ownership_receipt_pending(){return Ok((output,None))}
     let before=cx.retained_progress();let original=cx.retained_grant();let recipient=cx.original_recipient_identity();
     ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,cx))?;
@@ -119,8 +119,8 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
     Ok((output, leftover))
 }
 #[doc(hidden)]
-pub fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-    advance_typed_operation_output_with_leftover(app, instance, identity,cx).map(|(output, _)| output)
+pub fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, pages: &mut semio_framework_plugin_reactor_lifecycle::result_publication::NativeResultPages, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    advance_typed_operation_output_with_leftover(app, instance, pages, identity,cx).map(|(output, _)| output)
 }
 /// 🕹️ How many extra typed-operation units `plugin_exchange` drives for the operation a command
 /// of that exchange started, so the operation's inline interaction fold (and its leftover
@@ -211,7 +211,7 @@ impl TypedOperationGrant {
     /// never counts as reached, so a budget declaring zero frames still drives units rather than
     /// silently restoring the one-unit-per-turn pacing this grant exists to remove.
     pub fn spent(&self, output: &PluginExchangeOutput) -> bool {
-        output.original_receiving.is_some() || output.constructor_receipt.is_some() || output.preparation_receipt.is_some() || output.retirement_receipt.is_some() || output.history_command_receipt.is_some() || output.tool_run_receipt.is_some() || output.typed_operation_results.len() >= TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM || (!output.frames.is_empty() && output.frames.len() >= self.max_frames) || (!output.effects.is_empty() && output.effects.len() >= self.max_effects)
+        output.original_receiving.is_some() || output.constructor_receipt.is_some() || output.preparation_receipt.is_some() || output.retirement_receipt.is_some() || output.history_command_receipt.is_some() || output.tool_run_receipt.is_some() || output.typed_operation_pages >= TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM || (!output.frames.is_empty() && output.frames.len() >= self.max_frames) || (!output.effects.is_empty() && output.effects.len() >= self.max_effects)
     }
     pub fn expired(&self) -> bool {
         self.deadline_us.is_some_and(|deadline| (self.clock)().is_none_or(|now|now>=deadline))
@@ -259,7 +259,7 @@ pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRun
         let cell = runtime_instance_cell(runtime, instance)?;
         let output = match cell.instance.try_lock() {
             Ok(mut active) => {
-                let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((driven,TypedOperationScan{runnable:false,contended:true})),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((driven,TypedOperationScan{runnable:false,contended:true})),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())};
                 advance_typed_operation_output(&mut active.app, instance, &mut pages, identity,cx)?
             },
             Err(std::sync::TryLockError::WouldBlock) => return Ok((driven, TypedOperationScan { runnable: false, contended: true })),
@@ -445,7 +445,7 @@ pub async fn plugin_dispatch_response_action<PA: PluginApp>(runtime: &PluginRunt
         presence_pending: None,
         presence_terminal: None,
         presence_terminal_fault: None,
-        typed_operation_results: Vec::new(),
+        typed_operation_pages: 0,
     }))
 }
 /// 🕰️ Host-driven completion for one framework-reserved spawn-job: the job's output joins the app's
@@ -464,7 +464,7 @@ pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &Plugi
         Ok(true) => {
             with_instances_original_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok(PluginExchangeOutput::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok(PluginExchangeOutput::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())};
                 advance_typed_operation_output(&mut instance.app, instance_id, &mut pages, identity,cx)
             })
             .await
@@ -539,7 +539,7 @@ pub async fn plugin_dispatch_intents<PA: PluginApp, const N: usize>(runtime: &Pl
         presence_pending: None,
         presence_terminal: None,
         presence_terminal_fault: None,
-        typed_operation_results: Vec::new(),
+        typed_operation_pages: 0,
     }))
 }
 pub async fn plugin_reserve_presence_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, seq: u64) -> Result<PresenceRosterAdmission, Fault> {

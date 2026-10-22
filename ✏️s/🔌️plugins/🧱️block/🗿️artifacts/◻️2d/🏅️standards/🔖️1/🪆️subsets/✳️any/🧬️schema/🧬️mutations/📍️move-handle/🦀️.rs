@@ -26,6 +26,15 @@ pub fn move_handle<Op: From<crate::move_handle::MoveHandle>>(id: String, new_ang
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for MoveHandle where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::move_handle::MoveHandle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "handle", kind: "move-handle", record: "MovedHandle" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move handle \"{}\"", self.id), &format!("Griff \"{}\" verschieben", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for MoveHandle where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::move_handle::MoveHandle> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::move_handle::diff::diff(self, base)
     }
@@ -35,12 +44,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for MoveHandle where Op: pr
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move handle \"{}\"", self.id), &format!("Griff \"{}\" verschieben", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

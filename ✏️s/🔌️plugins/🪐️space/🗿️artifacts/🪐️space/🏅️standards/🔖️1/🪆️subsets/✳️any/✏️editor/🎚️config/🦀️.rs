@@ -4,7 +4,7 @@
 //! name/kind/visibility/members are directory-owned ... never duplicated into this document"). Local
 //! view state only, mirrors `DrawConfig`'s handcrafted DSL/pack codec shape.
 
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
 use semio_framework_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
@@ -204,23 +204,9 @@ impl protocol::list_delta::RowPatch<SpaceIndexArtifactPresence> for SpaceIndexPr
     }
 }
 
-impl protocol::MutationDiff<SpaceIndexConfig> for SpaceIndexConfigDiff {
-    fn apply(&self, base: &SpaceIndexConfig, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceIndexConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.visibility {
-            next.visibility = value.clone();
-        }
-        if let Some(value) = &self.members {
-            next.members = value.clone();
-        }
-        if let Some(value) = &self.indexed_artifacts {
-            next.indexed_artifacts = value.clone();
-        }
-        if let Some(delta) = &self.presence {
-            next.presence = delta.commit_onto(&next.presence, capability).map_err(|error| error.under(["presence"]))?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<SpaceIndexConfig> for SpaceIndexConfigDiff {}
+
+impl protocol::ColdMutationDiff<SpaceIndexConfig> for SpaceIndexConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.visibility.is_some() {
             self.visibility = other.visibility;
@@ -239,9 +225,34 @@ impl protocol::MutationDiff<SpaceIndexConfig> for SpaceIndexConfigDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut SpaceIndexConfig, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.visibility {
+            next.visibility = value.clone();
+        }
+        if let Some(value) = &self.members {
+            next.members = value.clone();
+        }
+        if let Some(value) = &self.indexed_artifacts {
+            next.indexed_artifacts = value.clone();
+        }
+        if let Some(delta) = &self.presence {
+            next.presence = delta.commit_onto(&next.presence, capability).map_err(|error| error.under(["presence"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.visibility.is_none() && self.members.is_none() && self.indexed_artifacts.is_none() && self.presence.as_ref().is_none_or(SpaceIndexPresenceDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
     fn inverse(&self, base: &SpaceIndexConfig) -> Self {
         Self {
             visibility: self.visibility.as_ref().map(|_| base.visibility.clone()),
@@ -249,9 +260,6 @@ impl protocol::DiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
             indexed_artifacts: self.indexed_artifacts.as_ref().map(|_| base.indexed_artifacts.clone()),
             presence: self.presence.as_ref().map(|delta| delta.inverse(&base.presence)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.visibility.is_none() && self.members.is_none() && self.indexed_artifacts.is_none() && self.presence.as_ref().is_none_or(SpaceIndexPresenceDelta::is_empty)
     }
 }
 //#endregion 🔖️Config
@@ -359,7 +367,10 @@ impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
             Self::ClearArtifactPresence(_) => &Self::DESCRIPTORS[2],
         }
     }
+}
 
+impl protocol::ColdMutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
+    type ReferenceDiff = SpaceIndexConfigDiff;
     fn diff(&self, base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfigDiff> {
         protocol::MutationOutcome::new(match self {
             Self::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection }) => SpaceIndexConfigDiff {
@@ -379,7 +390,6 @@ impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
             Self::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id }) => SpaceIndexConfigDiff { presence: base.presence.iter().position(|row| row.artifact_id == *artifact_id).map(|index| SpaceIndexPresenceDelta::removal(&base.presence, index)), ..Default::default() },
         })
     }
-
     fn inverse(&self, base: &SpaceIndexConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(match self {
             Self::ReplaceDirectoryProjection(_) => vec![Self::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection { visibility: base.visibility.clone(), members: base.members.clone(), indexed_artifacts: base.indexed_artifacts.clone() } })],

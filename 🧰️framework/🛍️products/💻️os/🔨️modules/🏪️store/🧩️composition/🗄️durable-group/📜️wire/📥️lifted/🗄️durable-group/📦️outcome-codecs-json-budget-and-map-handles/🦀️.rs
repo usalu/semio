@@ -158,13 +158,13 @@ where
     Ok(value)
 }
 
-pub fn validate_json_budget(bytes:&[u8])->Result<(),DurableOwnedGroupDecisionError>{if bytes.len()>DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES{return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);}let mut budget=planning_budget::DurableJsonBudgetV1::default();for byte in bytes{budget.advance_byte(*byte)?;}budget.finish()}
-pub(crate) fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
+pub fn validate_json_budget(bytes:&[u8])->Result<(),DurableOwnedGroupDecisionError>{if bytes.len()>DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES{return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);}let mut budget=planning::DurableJsonBudgetV1::default();for byte in bytes{budget.advance_byte(*byte)?;}budget.finish()}
+pub fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
     valid_edit_identity_header(edit)&&edit.mutation_meta.iter().all(|meta|valid_edit_identity_metadata(meta)&&meta.dependencies.iter().all(|id|valid_identity(&id.0)))
 }
 
 pub fn valid_edit_identity_header<Mutation>(edit:&Edit<Mutation>)->bool{valid_identity(&edit.id)&&edit.actor.as_deref().is_none_or(valid_identity)&&edit.line.as_deref().is_none_or(valid_identity)}
-fn valid_edit_identity_metadata(meta:&semio_framework_os_spr::MutationMeta)->bool{meta.mutation_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.author_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.semantic_kind.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.group_id.as_deref().is_none_or(valid_identity)}
+pub fn valid_edit_identity_metadata(meta:&semio_framework_os_spr::MutationMeta)->bool{meta.mutation_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.author_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.semantic_kind.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.group_id.as_deref().is_none_or(valid_identity)}
 
 impl DurableBoundOneItemOutcomeV1 {
     pub fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {

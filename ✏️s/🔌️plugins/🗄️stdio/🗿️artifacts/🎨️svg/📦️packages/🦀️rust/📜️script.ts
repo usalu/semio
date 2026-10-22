@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ svg Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-svg", { packages: ["semio-s-artifact-stdio-svg", "semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests", "semio-s-artifact-stdio-svg-mut-family", "semio-s-artifact-stdio-svg-mutations", "semio-s-artifact-stdio-svg-mutations-2", "semio-s-artifact-stdio-svg-schema", "semio-s-artifact-stdio-svg-schema-2", "semio-s-artifact-stdio-svg-schema-3", "semio-s-artifact-stdio-svg-snapshot", "semio-s-artifact-stdio-svg-tests"], snapshotSqliteTests: ["../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

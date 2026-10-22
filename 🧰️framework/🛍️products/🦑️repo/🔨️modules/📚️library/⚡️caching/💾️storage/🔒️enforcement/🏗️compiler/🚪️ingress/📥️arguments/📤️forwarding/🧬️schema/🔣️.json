@@ -1,1 +1,156 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Intent":{"oneOf":[{"type":"object","additionalProperties":false,"required":["version","kind","command"],"properties":{"version":{"const":1},"kind":{"const":"program"},"command":{"enum":["run","test","bench"]}}},{"type":"object","additionalProperties":false,"required":["version","kind","command"],"properties":{"version":{"const":1},"kind":{"const":"compiler"},"command":{"enum":["rustc","rustdoc"]}}}]},"Case":{"type":"object","additionalProperties":false,"required":["name","args","accepted"],"properties":{"name":{"type":"string"},"args":{"type":"array","maxItems":512,"items":{"type":"string","maxLength":4096}},"accepted":{"type":"boolean"}}},"Protocol":{"const":{"version":1,"maximumArguments":512,"delimiter":"--","programCommands":["run","test","bench"],"compilerCommands":["rustc","rustdoc"],"globalValueFlags":["--config","--color","--manifest-path","--target-dir","--target","--profile","--package","-p","--bin","--example","--test","--bench","--features"],"readOnlyFlags":["--version","-V","--help","-h"],"rustdocFlags":["--document-private-items","--document-hidden-items"],"valueFlags":["--cfg","--check-cfg","--edition","--print","-C"],"printValues":["cfg","target-list","target-features","sysroot","target-libdir","file-names"],"codegenValues":["opt-level=0","opt-level=1","opt-level=2","opt-level=3","opt-level=s","opt-level=z","debuginfo=0","debuginfo=1","debuginfo=2","debug-assertions=true","debug-assertions=false","overflow-checks=true","overflow-checks=false","panic=abort","panic=unwind"]}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Intent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "command"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "program"
+            },
+            "command": {
+              "enum": [
+                "run",
+                "test",
+                "bench",
+                "nextest"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "command"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "compiler"
+            },
+            "command": {
+              "enum": [
+                "rustc",
+                "rustdoc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumArguments": 512,
+        "delimiter": "--",
+        "programCommands": [
+          "run",
+          "test",
+          "bench",
+          "nextest"
+        ],
+        "compilerCommands": [
+          "rustc",
+          "rustdoc"
+        ],
+        "globalValueFlags": [
+          "--config",
+          "--color",
+          "--manifest-path",
+          "--target-dir",
+          "--target",
+          "--profile",
+          "--package",
+          "-p",
+          "--bin",
+          "--example",
+          "--test",
+          "--bench",
+          "--features"
+        ],
+        "readOnlyFlags": [
+          "--version",
+          "-V",
+          "--help",
+          "-h"
+        ],
+        "rustdocFlags": [
+          "--document-private-items",
+          "--document-hidden-items"
+        ],
+        "valueFlags": [
+          "--cfg",
+          "--check-cfg",
+          "--edition",
+          "--print",
+          "-C"
+        ],
+        "printValues": [
+          "cfg",
+          "target-list",
+          "target-features",
+          "sysroot",
+          "target-libdir",
+          "file-names"
+        ],
+        "codegenValues": [
+          "opt-level=0",
+          "opt-level=1",
+          "opt-level=2",
+          "opt-level=3",
+          "opt-level=s",
+          "opt-level=z",
+          "debuginfo=0",
+          "debuginfo=1",
+          "debuginfo=2",
+          "debug-assertions=true",
+          "debug-assertions=false",
+          "overflow-checks=true",
+          "overflow-checks=false",
+          "panic=abort",
+          "panic=unwind"
+        ]
+      }
+    }
+  }
+}

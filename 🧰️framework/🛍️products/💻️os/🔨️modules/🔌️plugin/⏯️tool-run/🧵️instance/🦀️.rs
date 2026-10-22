@@ -31,7 +31,7 @@ use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework::{ActionKind, ViewModel};
 use store::os_store::store_schema::HistoryLane;
-use store::{MemberFactory, SpaceMember};
+use store::{MemberFactory, ReferenceSpaceMember, SpaceMember};
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;

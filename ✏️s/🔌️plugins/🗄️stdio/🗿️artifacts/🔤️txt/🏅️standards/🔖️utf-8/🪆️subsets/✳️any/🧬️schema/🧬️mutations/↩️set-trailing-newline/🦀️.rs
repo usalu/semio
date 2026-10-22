@@ -42,6 +42,15 @@ impl SetTrailingNewlineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewlineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "trailing-newline", kind: "set-trailing-newline", record: "SetTrailingNewline" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Trailing Newline", "Abschließenden Zeilenumbruch setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-trailing-newline".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewlineMutation {
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
@@ -49,16 +58,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewl
             Ok(true) => protocol::MutationOutcome::new(TxtDiff { trailing_newline: Some(self.value), ..Default::default() }),
         }
     }
-
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
         Ok(if self.plan(base) == Ok(true) { vec![super::TxtMutation::SetTrailingNewline(Self { value: base.trailing_newline })] } else { Vec::new() })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Trailing Newline", "Abschließenden Zeilenumbruch setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-trailing-newline".to_string()]
     }
 }
 //#endregion ⚙️Semantics

@@ -14,7 +14,7 @@ pub enum DbIoPagePhase {
     Closing,
 }
 
-struct DbIoPageBacking(std::cell::UnsafeCell<[u8; DB_IO_PAGE_BYTES]>);
+pub struct DbIoPageBacking(std::cell::UnsafeCell<[u8; DB_IO_PAGE_BYTES]>);
 
 impl DbIoPageBacking {
     pub const fn new() -> Self {
@@ -27,7 +27,7 @@ unsafe impl Sync for DbIoPageBacking {}
 static DB_IO_PAGE_BACKINGS: [DbIoPageBacking; DB_IO_TOTAL_PAGES] = [const { DbIoPageBacking::new() }; DB_IO_TOTAL_PAGES];
 
 #[derive(Clone, Copy)]
-struct DbIoPageSlot {
+pub struct DbIoPageSlot {
     pub generation: u64,
     pub operation: u64,
     pub phase: DbIoPagePhase,

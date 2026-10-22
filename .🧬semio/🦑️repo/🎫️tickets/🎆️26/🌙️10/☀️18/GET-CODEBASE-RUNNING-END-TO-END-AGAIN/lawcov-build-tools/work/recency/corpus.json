@@ -1,0 +1,575 @@
+{
+ "version": 1,
+ "summaries": [
+  {
+   "name": "no files have no maximum",
+   "rows": [],
+   "error": ""
+  },
+  {
+   "name": "rows are ordered by path whatever order they come in",
+   "rows": [
+    {
+     "path": "b",
+     "device": "1",
+     "inode": "1",
+     "bytes": "2",
+     "atimeNs": "5",
+     "mtimeNs": "5",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "3",
+     "atimeNs": "5",
+     "mtimeNs": "5",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "name": "the change time never counts as use",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "1",
+     "mtimeNs": "2",
+     "ctimeNs": "999"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "name": "at most eight sources are named",
+   "rows": [
+    {
+     "path": "f00",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f01",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f02",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f03",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f04",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f05",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f06",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f07",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f08",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "f09",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "7",
+     "mtimeNs": "7",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "name": "nanosecond values beyond 64 bits keep exact precision",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "18446744073709551615",
+     "atimeNs": "99999999999999999999999999999999",
+     "mtimeNs": "1",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "b",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "99999999999999999999999999999998",
+     "mtimeNs": "1",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "name": "more than 4096 rows are refused",
+   "rows": [],
+   "generate": 4097,
+   "error": "Bounded recency metadata required"
+  },
+  {
+   "name": "exactly 4096 rows are summarized",
+   "rows": [],
+   "generate": 4096,
+   "error": ""
+  },
+  {
+   "name": "an empty path is refused",
+   "rows": [
+    {
+     "path": "",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a path of 257 bytes is refused",
+   "rows": [
+    {
+     "path": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a path of 256 bytes is kept",
+   "rows": [
+    {
+     "path": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "name": "a multibyte path is measured in bytes",
+   "rows": [
+    {
+     "path": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a repeated path is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    },
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "2",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a negative time is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "-1",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a fractional byte count is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1.5",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a 33 digit value is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "111111111111111111111111111111111",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "an empty value is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a value with a leading plus is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "+1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a value with a space is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": " 1",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  },
+  {
+   "name": "a device that is not decimal is refused",
+   "rows": [
+    {
+     "path": "a",
+     "device": "0x1",
+     "inode": "1",
+     "bytes": "1",
+     "atimeNs": "0",
+     "mtimeNs": "0",
+     "ctimeNs": "0"
+    }
+   ],
+   "error": "Exact bounded regular file facts required"
+  }
+ ],
+ "funding": [
+  {
+   "used": 0,
+   "bytes": 1,
+   "expected": true
+  },
+  {
+   "used": 1048575,
+   "bytes": 1,
+   "expected": true
+  },
+  {
+   "used": 1048576,
+   "bytes": 1,
+   "expected": false
+  },
+  {
+   "used": 0,
+   "bytes": 2048,
+   "expected": true
+  },
+  {
+   "used": 0,
+   "bytes": 2049,
+   "expected": false
+  },
+  {
+   "used": 1046528,
+   "bytes": 2048,
+   "expected": true
+  },
+  {
+   "used": 1046529,
+   "bytes": 2048,
+   "expected": false
+  },
+  {
+   "used": -1,
+   "bytes": 1,
+   "expected": false
+  },
+  {
+   "used": 0,
+   "bytes": -1,
+   "expected": false
+  },
+  {
+   "used": 0.5,
+   "bytes": 1,
+   "expected": false
+  },
+  {
+   "used": 0,
+   "bytes": 1.5,
+   "expected": false
+  },
+  {
+   "used": 9007199254740992,
+   "bytes": 1,
+   "expected": false
+  }
+ ],
+ "describe": [
+  {
+   "name": "a vanished unit is reported as missing",
+   "root": "/cache",
+   "expected": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false
+   },
+   "current": null
+  },
+  {
+   "name": "nothing changed except a lock",
+   "root": "/cache",
+   "expected": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false
+   },
+   "current": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": true
+   }
+  },
+  {
+   "name": "bytes and recency changed",
+   "root": "/cache",
+   "expected": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false,
+    "recencySource": {
+     "path": "a/b",
+     "device": "1",
+     "inode": "1",
+     "bytes": "4",
+     "atimeNs": "5",
+     "mtimeNs": "1",
+     "ctimeNs": "9",
+     "field": "atimeNs"
+    }
+   },
+   "current": {
+    "path": "u",
+    "bytes": 11,
+    "recencyMs": 200,
+    "lockHeld": false,
+    "recencySource": {
+     "path": "a/b",
+     "device": "1",
+     "inode": "1",
+     "bytes": "4",
+     "atimeNs": "5",
+     "mtimeNs": "1",
+     "ctimeNs": "9",
+     "field": "atimeNs"
+    }
+   }
+  },
+  {
+   "name": "the captured source is kept while the report is small",
+   "root": "/cache",
+   "expected": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false,
+    "recencySource": {
+     "path": "a/b",
+     "device": "1",
+     "inode": "1",
+     "bytes": "4",
+     "atimeNs": "5",
+     "mtimeNs": "1",
+     "ctimeNs": "9",
+     "field": "atimeNs"
+    }
+   },
+   "current": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false
+   }
+  },
+  {
+   "name": "an oversized report drops the sources",
+   "root": "/cache",
+   "expected": {
+    "path": "u",
+    "bytes": 10,
+    "recencyMs": 100,
+    "lockHeld": false,
+    "recencySource": {
+     "path": "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
+     "device": "1",
+     "inode": "1",
+     "bytes": "4",
+     "atimeNs": "5",
+     "mtimeNs": "1",
+     "ctimeNs": "9",
+     "field": "atimeNs"
+    }
+   },
+   "current": {
+    "path": "u",
+    "bytes": 11,
+    "recencyMs": 100,
+    "lockHeld": false,
+    "recencySource": {
+     "path": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+     "device": "1",
+     "inode": "1",
+     "bytes": "4",
+     "atimeNs": "5",
+     "mtimeNs": "1",
+     "ctimeNs": "9",
+     "field": "atimeNs"
+    }
+   }
+  },
+  {
+   "name": "long names are cut to 256 characters",
+   "root": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+   "expected": {
+    "path": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+    "bytes": 1,
+    "recencyMs": 1,
+    "lockHeld": false
+   },
+   "current": {
+    "path": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+    "bytes": 1,
+    "recencyMs": 1,
+    "lockHeld": false
+   }
+  }
+ ]
+}

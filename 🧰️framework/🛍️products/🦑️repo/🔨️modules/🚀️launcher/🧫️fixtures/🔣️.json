@@ -1,0 +1,306 @@
+{
+ "version": 1,
+ "selection": [
+  {
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-windows-x64-baseline.zip"
+  },
+  {
+   "platform": "win32",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-windows-aarch64.zip"
+  },
+  {
+   "platform": "darwin",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-darwin-x64-baseline.zip"
+  },
+  {
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-darwin-aarch64.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-linux-x64-baseline.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "archive": "bun-linux-x64-musl-baseline.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-linux-aarch64.zip"
+  },
+  {
+   "platform": "linux",
+   "arch": "arm64",
+   "musl": true,
+   "archive": "bun-linux-aarch64-musl.zip"
+  },
+  {
+   "platform": "darwin",
+   "arch": "x64",
+   "musl": true,
+   "archive": "bun-darwin-x64-baseline.zip"
+  },
+  {
+   "platform": "freebsd",
+   "arch": "x64",
+   "musl": false,
+   "archive": null
+  },
+  {
+   "platform": "linux",
+   "arch": "riscv64",
+   "musl": false,
+   "archive": null
+  }
+ ],
+ "scriptArguments": [
+  {
+   "name": "plain script",
+   "args": [
+    "./📜️script.ts",
+    "build"
+   ],
+   "flags": [],
+   "script": "./📜️script.ts",
+   "rest": [
+    "build"
+   ]
+  },
+  {
+   "name": "watch before script",
+   "args": [
+    "--watch",
+    "./x.ts",
+    "a",
+    "--watch"
+   ],
+   "flags": [
+    "--watch"
+   ],
+   "script": "./x.ts",
+   "rest": [
+    "a",
+    "--watch"
+   ]
+  },
+  {
+   "name": "cwd with value",
+   "args": [
+    "--cwd",
+    "dir with space",
+    "./x.ts"
+   ],
+   "flags": [
+    "--cwd",
+    "dir with space"
+   ],
+   "script": "./x.ts",
+   "rest": []
+  },
+  {
+   "name": "cwd with equals",
+   "args": [
+    "--cwd=a/b",
+    "--watch",
+    "y.mjs",
+    "z"
+   ],
+   "flags": [
+    "--cwd",
+    "a/b",
+    "--watch"
+   ],
+   "script": "y.mjs",
+   "rest": [
+    "z"
+   ]
+  },
+  {
+   "name": "not a script",
+   "args": [
+    "run",
+    "x.ts"
+   ],
+   "flags": null,
+   "script": null,
+   "rest": null
+  }
+ ],
+ "launch": [
+  {
+   "name": "build entry",
+   "executable": "/r/bun",
+   "before": [],
+   "flags": [],
+   "script": "/c/build.ts",
+   "prefix": [
+    "repo"
+   ],
+   "args": [
+    "run",
+    "a:b",
+    "--",
+    "--x"
+   ],
+   "argv": [
+    "/r/bun",
+    "/c/build.ts",
+    "repo",
+    "run",
+    "a:b",
+    "--",
+    "--x"
+   ]
+  },
+  {
+   "name": "runtime with fixed arguments",
+   "executable": "/r/node",
+   "before": [
+    "--experimental-strip-types"
+   ],
+   "flags": [
+    "--watch"
+   ],
+   "script": "s.ts",
+   "prefix": [],
+   "args": [
+    "x"
+   ],
+   "argv": [
+    "/r/node",
+    "--experimental-strip-types",
+    "--watch",
+    "s.ts",
+    "x"
+   ]
+  }
+ ],
+ "path": [
+  {
+   "name": "prepend and dedupe-free",
+   "platform": "posix",
+   "environ": [
+    "A=1",
+    "PATH=/usr/bin:/bin",
+    "HOME=/h"
+   ],
+   "directories": [
+    "/r"
+   ],
+   "fixed": {},
+   "expected": [
+    "A=1",
+    "PATH=/r:/usr/bin:/bin",
+    "HOME=/h"
+   ]
+  },
+  {
+   "name": "no PATH present",
+   "platform": "posix",
+   "environ": [
+    "A=1"
+   ],
+   "directories": [
+    "/r",
+    "/s"
+   ],
+   "fixed": {},
+   "expected": [
+    "A=1",
+    "PATH=/r:/s"
+   ]
+  },
+  {
+   "name": "fixed variables replace and append",
+   "platform": "posix",
+   "environ": [
+    "PATH=/bin",
+    "X=old"
+   ],
+   "directories": [
+    "/r"
+   ],
+   "fixed": {
+    "X": "new"
+   },
+   "expected": [
+    "PATH=/r:/bin",
+    "X=new"
+   ]
+  }
+ ],
+ "provisioning": [
+  {
+   "name": "honest archive",
+   "mutation": "none",
+   "outcome": "installed"
+  },
+  {
+   "name": "one flipped byte",
+   "mutation": "flip",
+   "outcome": "integrityFailed",
+   "what": "SHA-256"
+  },
+  {
+   "name": "truncated archive",
+   "mutation": "truncate",
+   "outcome": "integrityFailed",
+   "what": "size"
+  },
+  {
+   "name": "archive larger than pinned",
+   "mutation": "extend",
+   "outcome": "integrityFailed",
+   "what": "size"
+  },
+  {
+   "name": "archive without the executable",
+   "mutation": "member",
+   "outcome": "extractFailed"
+  },
+  {
+   "name": "executable of another version",
+   "mutation": "version",
+   "outcome": "probeFailed"
+  },
+  {
+   "name": "server answers 404",
+   "mutation": "missing",
+   "outcome": "downloadFailed"
+  }
+ ],
+ "texts": {
+  "help": [
+   "helpNative",
+   "helpDashboard",
+   "helpOsMcp"
+  ],
+  "version": [
+   "versionRuntimeReady",
+   "versionRuntimeAbsent",
+   "versionImplementation",
+   "versionImplementationUnknown"
+  ]
+ },
+ "cacheIsolation": {
+  "launchEnvironment": {
+   "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+  },
+  "paddingLines": 900
+ }
+}

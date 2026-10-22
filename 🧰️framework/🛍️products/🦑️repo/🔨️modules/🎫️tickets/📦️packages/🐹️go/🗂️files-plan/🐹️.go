@@ -55,7 +55,7 @@ func normalizeTicketFileInput(filePath string) string {
 			}
 		}
 	}
-	ctx := codebase.NewCodebaseContext()
+	ctx := codebase.NewCodebaseContext(workspace.GetRootDir())
 	ctx.LoadBundles()
 	if err := ctx.LoadFiles(); err == nil {
 		for _, file := range ctx.Files {
@@ -159,8 +159,8 @@ func ComputeTicketFiles(ticket *model.Ticket, files []string) (*model.TicketDiff
 	if ticket != nil && ticket.FolderPath != "" {
 		files = FilterTicketWorkspaceFiles(workspace.NormalizeRepoPath(ticket.FolderPath), files)
 	}
-	files = model.FilterConsideredFiles(files)
-	files = model.FilterGitIgnored(files)
+	files = model.FilterConsideredFiles(workspace.GetRootDir(), files)
+	files = model.FilterGitIgnored(workspace.GetRootDir(), files)
 	if len(files) == 0 {
 		return nil, fmt.Errorf("at least one file is required")
 	}

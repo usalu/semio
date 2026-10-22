@@ -54,7 +54,7 @@ use semio_s_artifact_norm_en1990_mut_members::remove_effect;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm.en1990")]
+#[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm.en1990", reference = En1990Snapshot, reference_diff = En1990Diff)]
 pub enum En1990Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeProjectId(change_project_id::ChangeProjectId),
@@ -138,15 +138,15 @@ pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_
 pub mod mutation_bridge {
 /// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
 pub fn apply_en1990_mutation(base: &semio_s_artifact_norm_en1990_model::En1990Snapshot, mutation: &crate::En1990Mutation) -> Result<(semio_s_artifact_norm_en1990_model::En1990Snapshot, Vec<String>), String> {
-    let raised = <crate::En1990Mutation as protocol::Mutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::diff(mutation, base);
+    let raised = <crate::En1990Mutation as protocol::ColdMutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff_cold(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
 /// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
 pub fn inverse_en1990_mutation(mutation: &crate::En1990Mutation, base: &semio_s_artifact_norm_en1990_model::En1990Snapshot) -> Result<Vec<crate::En1990Mutation>, semio_framework_value::ValueError> {
-    <crate::En1990Mutation as protocol::Mutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::inverse(mutation, base)
+    <crate::En1990Mutation as protocol::ColdMutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::inverse(mutation, base)
 }
 }
 pub use crate::mutation_bridge::*;

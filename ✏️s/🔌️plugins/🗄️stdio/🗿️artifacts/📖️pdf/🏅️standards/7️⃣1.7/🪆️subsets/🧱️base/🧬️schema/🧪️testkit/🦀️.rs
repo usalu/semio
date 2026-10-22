@@ -71,10 +71,10 @@ pub fn placed(num: u32, index: usize) -> ObjectPlacement {
 
 /// 🧪️ `base` after the `rows` of one edit, applied through the central applier as a graph edit.
 pub fn after_rows(base: &PdfSnapshot, rows: PdfDiff) -> PdfSnapshot {
-    protocol::apply_diff(&graph_edit(rows), base).expect("the fixture rows apply")
+    protocol::apply_diff_cold(&graph_edit(rows), base).expect("the fixture rows apply")
 }
 
 /// 🧪️ `base` after `mutation`, applied through the central applier.
 pub fn applied<M: protocol::Mutation<PdfSnapshot, Diff = PdfDiff>>(base: &PdfSnapshot, mutation: &M) -> PdfSnapshot {
-    protocol::apply_diff(mutation.diff(base).diff(), base).expect("the fixture mutation applies")
+    protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("the fixture mutation applies")
 }

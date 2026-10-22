@@ -354,15 +354,15 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<ProgramSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            let outcome = <ProgramMutation as protocol::ColdMutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
@@ -446,8 +446,8 @@ pub mod mutation_bridge {
     /// empty outcome and leaves the snapshot unchanged.
     // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
     pub fn apply_program_mutation_outcome(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, mutation: &crate::standards::v1::subsets::any::schema::mutations::ProgramMutation) -> (crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::ProgramDiff>) {
-        let outcome = <crate::standards::v1::subsets::any::schema::mutations::ProgramMutation as protocol::Mutation<crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot>>::diff(mutation, snapshot);
-        match protocol::apply_diff(outcome.diff(), snapshot) {
+        let outcome = <crate::standards::v1::subsets::any::schema::mutations::ProgramMutation as protocol::ColdMutation<crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot>>::diff(mutation, snapshot);
+        match protocol::apply_diff_cold(outcome.diff(), snapshot) {
             Ok(next) => (next, outcome),
             Err(error) => {
                 let (_, mut messages) = outcome.into_parts();

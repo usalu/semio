@@ -7,7 +7,7 @@ export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => 
 /** 📦️ Declares the packages, twins and extra commands of an independently owned Rust artifact package. */
 export type ArtifactRustPackageOptions = { readonly packages?: readonly string[]; readonly testPackages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: ScriptRouter; readonly testCommands?: ScriptRouter; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] };
 /** 🧪️ Declares artifact-owned suites and commands under the actual package Source owner. */
-export interface ArtifactTypeScriptPackageOptions { readonly suites?: readonly string[]; readonly bundleRuntime?: "javascript" | "bun"; readonly afterTest?: (invocation: ScriptInvocation) => Promise<void>; readonly commands?: ScriptRouter }
+export interface ArtifactTypeScriptPackageOptions { readonly suites?: readonly string[]; readonly bundleRuntime?: "javascript" | "runtime"; readonly afterTest?: (invocation: ScriptInvocation) => Promise<void>; readonly commands?: ScriptRouter }
 
 /** 🔌️ Runs the build, check and test commands of independently owned artifact packages under the repository's compiler admission. */
 export interface ArtifactPackageProviderV1 {

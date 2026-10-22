@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-author", kind: "set-info-author", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let wanted = (!self.author.is_empty()).then(|| self.author.clone());
-        let change = (base.info.author != wanted).then(|| PdfInfoDiff { author: Some(PdfSet::from_option(&wanted)), ..Default::default() });
-        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(SetInfoAuthor { author: base.info.author.clone().unwrap_or_default() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/H-Autor \"{}\" setzen", self.author))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec!["Info.Author".to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetInfoAuthor
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetInfoAuthor>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let wanted = (!self.author.is_empty()).then(|| self.author.clone());
+        let change = (base.info.author != wanted).then(|| PdfInfoDiff { author: Some(PdfSet::from_option(&wanted)), ..Default::default() });
+        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(SetInfoAuthor { author: base.info.author.clone().unwrap_or_default() })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

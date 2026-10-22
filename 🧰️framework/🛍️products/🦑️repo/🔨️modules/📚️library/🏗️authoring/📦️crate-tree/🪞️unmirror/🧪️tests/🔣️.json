@@ -1,0 +1,677 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "a glob mirror module is removed and consumers are re-pointed",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; }\nuse crate::schema::Item;\npub fn f() -> Item { crate::schema::make(); crate::schema::inner::deep(); Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\nuse a_crate::schema::Item;\npub fn f() -> Item { a_crate::schema::make(); a_crate::schema::inner::deep(); Item }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 1,
+     "repointedChains": 2,
+     "addedImports": 0,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "an explicit re-export is removed and kept private when used locally",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::schema::Item;\npub use a_crate::schema::make;\npub fn f() -> Item { make(); Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "use a_crate::schema::Item;\nuse a_crate::schema::make;\npub fn f() -> Item { make(); Item }\n"
+    },
+    "report": {
+     "removedLeaves": 2,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "api roots keep their root-level explicit re-exports",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::schema::Item;\npub use a_crate::schema::make;\npub fn f() -> Item { make(); Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [
+    "b_crate"
+   ],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {},
+    "report": {
+     "removedLeaves": 0,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "a consumer crate re-points paths that start in a target",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    },
+    {
+     "name": "c-crate",
+     "dir": "c",
+     "root": "c/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; }\n",
+    "c/lib.rs": "use b_crate::schema::Item;\npub fn g() -> Item { b_crate::schema::make(); Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\n",
+     "c/lib.rs": "use a_crate::schema::Item;\npub fn g() -> Item { a_crate::schema::make(); Item }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 1,
+     "repointedChains": 1,
+     "addedImports": 0,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "multi-mounted files are reported with every mounting module and left alone",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "#[path = \"shared.rs\"]\nmod one;\n#[path = \"shared.rs\"]\nmod two;\n",
+    "b/shared.rs": "pub use a_crate::schema::Item;\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "F35",
+   "expect": {
+    "edits": {},
+    "report": {
+     "removedLeaves": 0,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [
+      "b/shared.rs <- b_crate:/one, b_crate:/two"
+     ],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "files that are not editable stay untouched",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::schema::Item;\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": [],
+   "defect": "",
+   "expect": {
+    "edits": {},
+    "report": {
+     "removedLeaves": 0,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "an unresolvable foreign re-export is reported",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::missing::Item;\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {},
+    "report": {
+     "removedLeaves": 0,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [
+      "b/lib.rs: a_crate::missing::Item"
+     ],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {
+     "b/lib.rs": [
+      "use a_crate::missing::Item"
+     ]
+    }
+   }
+  },
+  {
+   "name": "a renamed re-export keeps its alias",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::schema::Item as Thing;\npub fn f() -> Thing { Thing }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "use a_crate::schema::Item as Thing;\npub fn f() -> Thing { Thing }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "glob imports of a mirror gain the names they used",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; }\nmod user {\n    use crate::schema::*;\n    pub fn f() -> Item { make(); Item }\n}\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\nmod user {\n    use a_crate::schema::{Item, make};\n    pub fn f() -> Item { make(); Item }\n}\n"
+    },
+    "report": {
+     "removedLeaves": 2,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 2,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "a mirror module with its own items stays",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; pub fn own() {} }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "pub mod schema { pub fn own() {} }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "names that are not visible are reported",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; struct Hidden; }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; }\nmod user {\n    use crate::schema::*;\n    fn f(_: Hidden, _: Item) {}\n}\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\nmod user {\n    use a_crate::schema::Item;\n    fn f(_: Hidden, _: Item) {}\n}\n"
+    },
+    "report": {
+     "removedLeaves": 2,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 1,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": [
+      "b/lib.rs: Hidden is not visible from b_crate (defined in a_crate a/lib.rs)"
+     ]
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "unresolved leaves and paths are audited",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "use crate::gone::X;\nuse crate::schema::Item;\npub mod schema { pub struct Item; }\nfn f() { crate::nope::f(); }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {},
+    "report": {
+     "removedLeaves": 0,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {
+     "b/lib.rs": [
+      "use crate::gone::X",
+      "path crate::nope::f"
+     ]
+    }
+   }
+  },
+  {
+   "name": "a mirror in a nested inline module is removed with its emptied parents",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod outer {\n    pub mod schema {\n        pub use a_crate::schema::*;\n    }\n}\npub fn f() -> a_crate::schema::Item { a_crate::schema::Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\npub fn f() -> a_crate::schema::Item { a_crate::schema::Item }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 0,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "paths inside macro arguments are re-pointed like any other",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub mod schema { pub use a_crate::schema::*; }\npub fn f() { println!(\"{}\", crate::schema::make()); let _ = crate::schema::inner::deep(); }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "\npub fn f() { println!(\"{}\", a_crate::schema::make()); let _ = a_crate::schema::inner::deep(); }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 2,
+     "addedImports": 0,
+     "removedModules": 1,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "a public glob re-export of a foreign module keeps the names the file itself uses (mounted file)",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "#[path = \"m/mod.rs\"]\npub mod m;\n",
+    "b/m/mod.rs": "pub use a_crate::schema::*;\npub fn f() -> Item { Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "F34",
+   "expect": {
+    "edits": {
+     "b/m/mod.rs": "use a_crate::schema::Item;\npub fn f() -> Item { Item }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 1,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  },
+  {
+   "name": "a public glob re-export of a foreign module keeps the names the file itself uses (crate root)",
+   "crates": [
+    {
+     "name": "a-crate",
+     "dir": "a",
+     "root": "a/lib.rs"
+    },
+    {
+     "name": "b-crate",
+     "dir": "b",
+     "root": "b/lib.rs"
+    }
+   ],
+   "files": {
+    "a/lib.rs": "pub mod schema { pub struct Item; pub fn make() {} pub mod inner { pub fn deep() {} } }\n",
+    "b/lib.rs": "pub use a_crate::schema::*;\npub fn f() -> Item { make(); Item }\n"
+   },
+   "targets": [
+    "b_crate"
+   ],
+   "apiRoots": [],
+   "editable": null,
+   "defect": "F34",
+   "expect": {
+    "edits": {
+     "b/lib.rs": "use a_crate::schema::{Item, make};\npub fn f() -> Item { make(); Item }\n"
+    },
+    "report": {
+     "removedLeaves": 1,
+     "repointedLeaves": 0,
+     "repointedChains": 0,
+     "addedImports": 2,
+     "removedModules": 0,
+     "unresolvedMirrors": [],
+     "multiMounted": [],
+     "invisible": []
+    },
+    "audit": {}
+   }
+  }
+ ]
+}

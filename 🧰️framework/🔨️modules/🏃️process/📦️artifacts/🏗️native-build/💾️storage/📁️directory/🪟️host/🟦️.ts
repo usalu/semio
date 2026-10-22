@@ -1,3 +1,5 @@
+import { runtimeSupportsV1 } from "../../../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../⚙️runtime/🧲️native/🟦️.ts";
 import{win32}from"node:path";
 import{createRequire}from"node:module";
 import{nativeDirectoryProtocolV1}from"../📋️contract/🟦️.ts";
@@ -63,8 +65,8 @@ export function requireNativeWindowsCaseStatusV1(result:Readonly<{opened:boolean
 
 /** 🔓️ Loads kernel32 and ntdll through bun:ffi; anything but Windows x64 or arm64 under Bun is a precise refusal. */
 export function openNativeWindowsBindingV1():NativeWindowsBindingV1{
- if(process.platform!=="win32"||!process.versions.bun)throw Error("Actual Windows Bun receiver required");
- const{dlopen,FFIType:f}=createRequire(import.meta.url)("bun:ffi")as typeof import("bun:ffi"),kernel=dlopen(windows.libraries.kernel,{MoveFileExW:{args:[f.ptr,f.ptr,f.u32],returns:f.i32},CreateFileW:{args:[f.ptr,f.u32,f.u32,f.ptr,f.u32,f.u32,f.u64],returns:f.u64},FlushFileBuffers:{args:[f.u64],returns:f.i32},CloseHandle:{args:[f.u64],returns:f.i32},GetLastError:{args:[],returns:f.u32},GetDiskFreeSpaceExW:{args:[f.ptr,f.ptr,f.ptr,f.ptr],returns:f.i32}}),nt=(()=>{try{return dlopen(windows.libraries.nt,{NtSetInformationFile:{args:[f.u64,f.ptr,f.ptr,f.u32,f.u32],returns:f.i32}});}catch(error){kernel.close();throw error;}})();
+ if(process.platform!=="win32"||!runtimeSupportsV1("ffi"))throw Error("Actual Windows Bun receiver required");
+ const{dlopen,FFIType:f}=runtimeNativeSystemV1(),kernel=dlopen(windows.libraries.kernel,{MoveFileExW:{args:[f.ptr,f.ptr,f.u32],returns:f.i32},CreateFileW:{args:[f.ptr,f.u32,f.u32,f.ptr,f.u32,f.u32,f.u64],returns:f.u64},FlushFileBuffers:{args:[f.u64],returns:f.i32},CloseHandle:{args:[f.u64],returns:f.i32},GetLastError:{args:[],returns:f.u32},GetDiskFreeSpaceExW:{args:[f.ptr,f.ptr,f.ptr,f.ptr],returns:f.i32}}),nt=(()=>{try{return dlopen(windows.libraries.nt,{NtSetInformationFile:{args:[f.u64,f.ptr,f.ptr,f.u32,f.u32],returns:f.i32}});}catch(error){kernel.close();throw error;}})();
  const k=kernel.symbols as unknown as Record<string,(...args:unknown[])=>unknown>,n=nt.symbols as unknown as Record<string,(...args:unknown[])=>unknown>;
  return Object.freeze({
   moveFileEx:(from,to,flags)=>Number(k.MoveFileExW!(from,to,flags)),
@@ -84,7 +86,7 @@ export function nativeWindowsSystemHostPortV1():NativeWindowsHostPortV1{return s
 /** 📏️ Reads machine-wide LongPathsEnabled through RegGetValueW; an absent value means disabled. */
 export function readNativeWindowsLongPathsEnabledV1(call?:(hive:bigint,key:Buffer,value:Buffer,flags:number,data:Buffer,size:Buffer)=>number):boolean{
  const policy=windows.longPaths;let library:{close():void}|undefined;
- if(!call){if(process.platform!=="win32"||!process.versions.bun)throw Error("Actual Windows Bun registry receiver required");const{dlopen,FFIType:f}=createRequire(import.meta.url)("bun:ffi")as typeof import("bun:ffi"),opened=dlopen(windows.libraries.registry,{RegGetValueW:{args:[f.i64,f.ptr,f.ptr,f.u32,f.ptr,f.ptr,f.ptr],returns:f.i32}});library=opened;call=(hive,key,value,flags,data,size)=>Number((opened.symbols as unknown as Record<string,(...args:unknown[])=>unknown>).RegGetValueW!(hive,key,value,flags,null,data,size));}
+ if(!call){if(process.platform!=="win32"||!runtimeSupportsV1("ffi"))throw Error("Actual Windows Bun registry receiver required");const{dlopen,FFIType:f}=runtimeNativeSystemV1(),opened=dlopen(windows.libraries.registry,{RegGetValueW:{args:[f.i64,f.ptr,f.ptr,f.u32,f.ptr,f.ptr,f.ptr],returns:f.i32}});library=opened;call=(hive,key,value,flags,data,size)=>Number((opened.symbols as unknown as Record<string,(...args:unknown[])=>unknown>).RegGetValueW!(hive,key,value,flags,null,data,size));}
  let result:boolean|undefined,failed=false,failure:unknown;
  try{const data=Buffer.alloc(policy.dataBytes),size=Buffer.alloc(4);size.writeUInt32LE(policy.dataBytes,0);const status=call(BigInt(policy.hive),nativeWindowsUtf16V1(policy.key),nativeWindowsUtf16V1(policy.value),policy.flags,data,size);if(status===policy.notFound)result=false;else if(status!==0||size.readUInt32LE(0)!==policy.dataBytes)throw Error("Windows LongPathsEnabled registry read failed: "+status);else result=data.readUInt32LE(0)===1;}catch(error){failed=true;failure=error;}
  try{library?.close();}catch(error){if(!failed){failed=true;failure=error;}}

@@ -1,0 +1,17 @@
+== cargo
+[repo cargo] Isolierter Store {nonce} eines beendeten Eigentümers aufgeräumt
+[repo cargo] {store}-Store, {tokens} von {availableParallelism} Kernen zugelassen, rustc-Speicherbudget {budgetBytes} GiB
+== storybook
+[storybook] Schutz der UI-Erkennung bestanden ({stories} Stories, {docs} Dokumente, {inputs} TS/TSX-Eingaben, 0 MDX). ¦ stories,docs,inputs
+== build
+[build] Der Build-Graph des Workspaces ({mode}) ist abgeschlossen.
+[build] Projekt {row} nicht verfügbar: {source} lässt sich nicht parsen ({sha256})
+[bazel] Keine betroffenen Tasks
+== tools operations
+[bazel] Cache-Aktivität nicht aufgezeichnet: {message}
+== tools script
+[bazel] Der feste eingebettete Modulkatalog wird vorbereitet
+[bazel] Fester Modulkatalog bereit blobs={files}
+[bazel] Sitzungsabfall nicht eingesammelt: {message}
+== tools results
+[bazel] Testergebnisse nicht exportiert: {message}

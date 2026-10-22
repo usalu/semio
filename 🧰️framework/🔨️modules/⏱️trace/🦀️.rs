@@ -93,6 +93,13 @@ pub use watchdog_tail::WatchdogAdmission;
 
 //#region 🧪️Tests
 #[cfg(test)]
+/// 🚧️ Serializes every test that reads, holds or counts the process-wide telemetry rings, which share one static registry.
+pub(crate) fn telemetry_test_gate() -> std::sync::MutexGuard<'static, ()> {
+    static GATE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(test)]
 #[path = "⏱️clock/🧪️tests/🔬️standalone/🦀️.rs"]
 mod microsecond_clock_tests;
 

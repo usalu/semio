@@ -84,7 +84,7 @@ async fn a_diff_outside_the_reads_serves_the_stored_solids_and_a_storey_edit_re_
     let untouched = session.update(&snapshot, &colour).element_solids.clone();
     assert_eq!(first, untouched, "a material edit leaves every solid alone");
     let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).element_solids.clone();
     assert!(close(recomputed["c-rect"].bounds.max.z - first["c-rect"].bounds.max.z, 0.4, 1e-9), "a storey height edit re-infers the columns that follow it");
 }

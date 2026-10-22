@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
-/** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
+/** 🌊️ `@semio-tech/flow-plugin` router: `repo ./📜️script.ts test`. */
 
 
 

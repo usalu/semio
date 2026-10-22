@@ -31,8 +31,14 @@ export interface NativeHostSourceFactsV1 extends NativeHostOwnerFactsV1 {
   readonly outputs: Readonly<Record<string, Readonly<Record<"prototype" | "release", readonly string[] | undefined>>>>;
 }
 
-/** 🔏️ Admits the exact declaration against the selected owner. */
-export function admitPlaygroundNativeHostV1(value: unknown, resolveOwner: (cratePath: string) => NativeHostOwnerFactsV1): PlaygroundNativeHostV1 | undefined;
+/** 🔏️ Admits the exact declaration against the selected owner; a refusal names the declared project, its crate and every disagreeing identity, prefixed by the optional context. */
+export function admitPlaygroundNativeHostV1(value: unknown, resolveOwner: (cratePath: string) => NativeHostOwnerFactsV1, context?: string): PlaygroundNativeHostV1 | undefined;
+/** 🌐️ Selects the refusal languages from the environment; both declared languages when none is chosen. */
+export function nativeHostLanguagesV1(environment?: Readonly<Record<string, string | undefined>>): readonly ("en" | "de")[];
+/** 🔎️ Lists each identity as [field, declared, authored] where the declaration disagrees with the owner facts. */
+export function nativeHostMismatchesV1(host: PlaygroundNativeHostV1, facts: NativeHostOwnerFactsV1): readonly (readonly [string, string, string])[];
+/** 💬️ Renders the refusal text per requested language, joined by line breaks. */
+export function nativeHostMismatchTextV1(host: PlaygroundNativeHostV1, facts: NativeHostOwnerFactsV1, context?: string, languages?: readonly ("en" | "de")[]): string;
 /** 📜️ Parses an optional complete nativeHost or mcpHost inline table. */
 export function parsePlaygroundNativeHostV1(block: string, fieldName?: "nativeHost" | "mcpHost"): PlaygroundNativeHostV1 | undefined;
 /** 🧾️ Reads validated Cargo and project source facts. */

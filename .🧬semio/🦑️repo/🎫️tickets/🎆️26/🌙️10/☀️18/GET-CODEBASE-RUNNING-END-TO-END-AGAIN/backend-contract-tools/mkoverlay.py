@@ -27,11 +27,23 @@ def put(rel,text):
     open(path,"w",encoding="utf8").write(text)
 if "--physical" in sys.argv:
     # physical APFS clones of the library and the process framework: the revision capture refuses symlinked ancestors
-    for rel in (names.L,f"{names.FRAMEWORK}/{names.MODULES}"):
+    for rel in (names.L,f"{names.FRAMEWORK}/{names.MODULES}",f"{names.FRAMEWORK}/{names.PRODUCTS}/{names.REPO}/{names.MODULES}/{names.n(0x1F4BB,'client')}"):
         realize(os.path.dirname(rel))
         target=os.path.join(ov,rel)
         if os.path.islink(target):os.remove(target)
         subprocess.run(["cp","-cR",os.path.join(live,rel),target],check=True)
+if "--with-tool-iface" in sys.argv:
+    # the staged tool interface (git adapter and runToolV1) is a dependency of the engine's inventory
+    source=os.path.join(os.path.dirname(here),"tool-iface-tools","src","files",names.FRAMEWORK,names.MODULES,names.n(0x1F3C3,"process"),names.n(0x1F9F0,"tools"))
+    target=os.path.join(ov,names.FRAMEWORK,names.MODULES,names.n(0x1F3C3,"process"),names.n(0x1F9F0,"tools"))
+    realize(os.path.dirname(os.path.relpath(target,ov)))
+    shutil.rmtree(target,ignore_errors=True);shutil.copytree(source,target)
+if "--with-tool-iface" in sys.argv:
+    # the staged runtime seam (glob, identity) is a dependency of the engine and of the tool interface
+    runtime=names.n(0x2699,"runtime");source=os.path.join(os.path.dirname(here),"runtime-seam-tools","staged","new",names.FRAMEWORK,names.MODULES,runtime)
+    target=os.path.join(ov,names.FRAMEWORK,names.MODULES,runtime)
+    realize(os.path.dirname(os.path.relpath(target,ov)))
+    shutil.rmtree(target,ignore_errors=True);shutil.copytree(source,target)
 manifest=json.load(open(os.path.join(here,"staged","manifest.json"),encoding="utf8"))
 for flat,row in manifest.items():put(row["destination"],open(os.path.join(here,"staged",flat),encoding="utf8").read())
 import wire

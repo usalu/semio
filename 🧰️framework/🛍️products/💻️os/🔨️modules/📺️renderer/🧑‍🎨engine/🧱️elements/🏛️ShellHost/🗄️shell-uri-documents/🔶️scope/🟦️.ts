@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useShellUriAndDocuments. */
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { spaceIndexOf, resolveUiDirtyScope } from "@semio-tech/framework";
 import { shellSessionRouteV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";

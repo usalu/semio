@@ -17,23 +17,24 @@ pub struct RestoreEntities {
 impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for RestoreEntities {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entities", kind: "restore-entities", record: "RestoredEntities" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
-        match ladder::restore_diff(base, &self.entities) {
-            Ok(diff) => protocol::MutationOutcome::new(diff),
-            Err(message) => rejected(message),
-        }
-    }
-
-    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc3Mutation>, semio_framework_value::ValueError> {
-        Ok(restored(self.entities.iter().flat_map(|row| ladder::restore_entity_rows(base, row.id)).collect()))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Restore entities", "Entitäten wiederherstellen")
     }
 
     fn target(&self) -> Vec<String> {
         self.entities.iter().map(|row| row.id.to_string()).collect()
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepCc3Mutation> for RestoreEntities {
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        match ladder::restore_diff(base, &self.entities) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
+    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc3Mutation>, semio_framework_value::ValueError> {
+        Ok(restored(self.entities.iter().flat_map(|row| ladder::restore_entity_rows(base, row.id)).collect()))
     }
 }
 //#endregion 🔖️Payload

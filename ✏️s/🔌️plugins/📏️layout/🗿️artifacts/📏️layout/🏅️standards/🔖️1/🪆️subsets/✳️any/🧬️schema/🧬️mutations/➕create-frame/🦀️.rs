@@ -26,6 +26,16 @@ pub struct CreateFrame {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_frame::DeleteFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "frame", kind: "create-frame", record: "CreatedFrame" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create frame \"{}\"", self.frame.id()), &format!("Rahmen \"{}\" erstellen", self.frame.id()))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame.id().to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for CreateFrame where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_frame::DeleteFrame> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_frame(self, base)
     }
@@ -35,12 +45,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for CreateFrame where Op: protocol::Mu
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create frame \"{}\"", self.frame.id()), &format!("Rahmen \"{}\" erstellen", self.frame.id()))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.frame.id().to_string()]
-    }
 }
 //#endregion ➕️CreateFrame
 

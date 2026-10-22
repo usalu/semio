@@ -1,5 +1,7 @@
 import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
 
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 const POLICY_INDEXED_GENERATED_RULES: readonly { id: string; reason: string; test: (path: string) => boolean }[] = [
   { id: "wasm-binary", reason: "WASM binaries are build output (`**/*.wasm`).", test: (path) => /\.(wasm|cwasm)$/u.test(path) },
   { id: "wasm-bindgen-types", reason: "wasm-bindgen emits `*_bg.wasm.d.ts` beside the JS glue.", test: (path) => /_bg\.wasm\.d\.ts$/u.test(path) },
@@ -11,8 +13,8 @@ const POLICY_INDEXED_GENERATED_RULES: readonly { id: string; reason: string; tes
 ];
 
 function policyIndexedGeneratedPaths(repoRoot: string): string[] {
-  const result = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: repoRoot });
-  if (result.exitCode !== 0) throw new Error(`git ls-files failed: ${result.stderr.toString()}`);
+  const result = runToolSyncV1("git", ["ls-files", "-z"], { cwd: repoRoot });
+  if (result.status !== 0) throw new Error(`git ls-files failed: ${result.stderr.toString()}`);
   return result.stdout
     .toString()
     .split("\0")

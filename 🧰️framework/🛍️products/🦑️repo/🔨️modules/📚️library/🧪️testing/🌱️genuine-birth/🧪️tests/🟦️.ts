@@ -35,7 +35,7 @@ test("genuine birth escalation follows the declared failure signatures", () => {
 /** 🌱️ Every declared birth is a real repository request that the build bootstrap admits. */
 test("every declared birth resolves to genuine build bootstrap capabilities", async () => {
   for (const birth of policy.births) {
-    const capabilities = await createBuildBootstrapCapabilitiesV1(root, birth.arguments, { ...process.env, SEMIO_BUILD_MODE: policy.buildMode, ...birth.environment }) as { arguments: string[]; selection: string[]; tool: string };
+    const capabilities = await createBuildBootstrapCapabilitiesV1(root, birth.arguments, { ...process.env, SEMIO_BUILD_MODE: policy.buildMode, ...birth.environment });
     expect(capabilities.arguments, birth.id).toEqual(["repo", ...birth.arguments]);
     expect(capabilities.selection, birth.id).toEqual(["repo", ...birth.arguments]);
   }

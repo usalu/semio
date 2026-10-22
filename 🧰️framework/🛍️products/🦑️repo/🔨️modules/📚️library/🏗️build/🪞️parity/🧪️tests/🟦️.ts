@@ -242,7 +242,7 @@ test("path patterns agree with Bun.Glob where it defines the same language, and 
  for(const[index,row]of cases.globCases.entries()){
   expect(globMatchV1(row.glob,row.path),`${row.glob} ${row.path}`).toBe(row.match);
   expect(answers[index],`python ${row.glob} ${row.path}`).toBe(row.match);
-  if(row.bun)expect(new Bun.Glob(row.glob).match(row.path),`bun ${row.glob} ${row.path}`).toBe(row.match);
+  if(row.bun)expect(new Bun.Glob(row.glob).match(row.path),`repo ${row.glob} ${row.path}`).toBe(row.match);
  }
  expect(["b","a","é","𝒜","z"].sort(parityCompareV1)).toEqual(["a","b","z","é","𝒜"]);
 });
@@ -284,11 +284,11 @@ test("tool output is read into the neutral records",()=>{
 
 const plan=(...targets:string[])=>({roots:[targets[0]!],tasks:Object.fromEntries(targets.map(id=>[id,{id,target:{project:id.split(":")[0]!,target:id.split(":")[1]!}}])),dependencies:Object.fromEntries(targets.map((id,index)=>[id,targets.slice(index+1,index+2)]))});
 const files={dist:{kind:"directory" as const,mode:0o755},"dist/a.js":{kind:"file" as const,mode:0o644,size:3,sha256:"a".repeat(64)}};
-const observation=(sample:string,tool:"nx"|"bazel",overrides:Partial<ParityObservationV1>={}):ParityObservationV1=>({version:1,sample,tool,phase:"fresh",plan:plan("p:build","q:gen"),run:{exit:0,reason:"exit",failedTasks:[],tests:{}},outputs:{roots:{"p:build":["dist"]},files},inputs:tool==="nx"?{"p:build":{files:["a.ts"],environment:[],runtime:[],depOutputs:[],external:[]}}:null,spawns:tool==="bazel"?{"p:build":{inputs:["s/a.ts"],env:[],exit:0}}:null,closure:tool==="bazel"?{queried:["p:build","q:gen"]}:null,errors:[],...overrides});
+const observation=(sample:string,tool:string,overrides:Partial<ParityObservationV1>={}):ParityObservationV1=>({version:1,sample,tool,phase:"fresh",plan:plan("p:build","q:gen"),run:{exit:0,reason:"exit",failedTasks:[],tests:{}},outputs:{roots:{"p:build":["dist"]},files},inputs:tool==="nx"?{"p:build":{files:["a.ts"],environment:[],runtime:[],depOutputs:[],external:[]}}:null,spawns:tool==="bazel"?{"p:build":{inputs:["s/a.ts"],env:[],exit:0}}:null,closure:tool==="bazel"?{queried:["p:build","q:gen"]}:null,errors:[],...overrides});
 
 test("a whole verification reports equal samples, diverging samples and failed observations, and counts the rules it applied",async()=>{
  const rules=readParityRulesV1({...rulesData,rules:rulesData.rules.filter(row=>row.id==="bazel-source-link")}),samples=readParitySamplesV1({...samplesData,samples:[{id:"one",area:"hub",target:"p:build",note:{en:"a",de:"b"},checks:["graph","closure","outputs","results","inputs"]},{id:"two",area:"hub",target:"p:build",note:{en:"a",de:"b"},checks:["graph","outputs","results"]},{id:"three",area:"hub",target:"p:build",note:{en:"a",de:"b"},checks:["results"]}]});
- const table:Record<string,Partial<Record<"nx"|"bazel",Partial<ParityObservationV1>>>>={two:{bazel:{outputs:{roots:{"p:build":["dist"]},files:{...files,"dist/a.js":{...files["dist/a.js"],sha256:"b".repeat(64)}}}}},three:{bazel:{errors:["no evidence"],run:null}}};
+ const table:Record<string,Partial<Record<string,Partial<ParityObservationV1>>>>={two:{bazel:{outputs:{roots:{"p:build":["dist"]},files:{...files,"dist/a.js":{...files["dist/a.js"],sha256:"b".repeat(64)}}}}},three:{bazel:{errors:["no evidence"],run:null}}};
  const progress:string[]=[],runner:ParityRunnerV1={
   async plan(sample){return {plan:plan("p:build","q:gen"),errors:[]};},
   async roots(){return {roots:{"p:build":["dist"]},errors:[]};},
@@ -412,8 +412,8 @@ test("the command reads a closed grammar, selects samples and speaks both langua
  const en=renderParityReportV1(report,rules,"en"),de=renderParityReportV1(report,rules,"de");
  expect(en).toContain("The output files differ byte for byte.");expect(de).toContain("Die Ausgabedateien unterscheiden sich Byte für Byte.");expect(en).toContain("a\\|b");
  await envelope(async invocation=>{
-  const lines:string[]=[],original=console.log;console.log=(...parts:unknown[])=>{lines.push(parts.join(" "));};
-  try{await runBuildParityV1(process.cwd(),["--help","--lang=de"],invocation,{});}finally{console.log=original;}
+  const lines:string[]=[],original=process.stdout.write;process.stdout.write=((chunk:unknown)=>{lines.push(String(chunk));return true;}) as typeof process.stdout.write;
+  try{await runBuildParityV1(process.cwd(),["--help","--lang=de"],invocation,{});}finally{process.stdout.write=original;}
   expect(lines.join("\n")).toContain("Führt jede Stichprobe");
  });
 });

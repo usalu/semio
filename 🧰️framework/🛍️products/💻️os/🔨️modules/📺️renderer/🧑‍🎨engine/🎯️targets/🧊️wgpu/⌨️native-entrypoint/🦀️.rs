@@ -153,7 +153,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
     let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
         Ok(value) if !value.trim().is_empty() => PathBuf::from(value),
         _ => {
-            eprintln!("SEMIO_PLUGIN_MODULES is unset: run through `bun repo run @semio-tech/framework-os-dev:run-<variant>-native-<profile>`");
+            eprintln!("SEMIO_PLUGIN_MODULES is unset: run through `repo run @semio-tech/framework-os-dev:run-<variant>-native-<profile>`");
             std::process::exit(2);
         }
     };

@@ -14,7 +14,7 @@ import {selectCargoArtifactsV1} from "../🏃️action/🟦️.ts";
 const api=await import("../../📜️script.ts"),python=testPythonV1(),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
 
 test("native Cargo commands classify by their authored command and execution kind",()=>{
- for(const row of corpus.classes)expect(cargo.bazelCargoClassV1({definition:{execution:{command:row.command},metadata:{semio:{execution:{kind:row.kind}}}}}) ?? null,row.name).toEqual(row.expected);
+ for(const row of corpus.classes)expect<unknown>(cargo.bazelCargoClassV1({definition:{execution:{command:row.command},metadata:{semio:{execution:{kind:row.kind}}}}}) ?? null,row.name).toEqual(row.expected);
 });
 
 test("actions render the ingress argument vector exactly like an independent implementation and refuse everything outside the closed schema",()=>{

@@ -1907,7 +1907,7 @@
             ],
             "outputs": [],
             "options": {
-              "command": "bun ./📜️script.ts lint --fix"
+              "command": "repo ./📜️script.ts lint --fix"
             },
             "metadata": {
               "semio": {
@@ -1966,7 +1966,7 @@
             ],
             "outputs": [],
             "options": {
-              "command": "bun ./📜️script.ts lint --fix --check"
+              "command": "repo ./📜️script.ts lint --fix --check"
             },
             "metadata": {
               "semio": {

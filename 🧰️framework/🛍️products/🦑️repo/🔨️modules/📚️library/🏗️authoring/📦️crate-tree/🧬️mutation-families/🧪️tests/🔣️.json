@@ -1,0 +1,783 @@
+{
+ "version": 1,
+ "convert": [
+  {
+   "name": "two leaves convert and one stays concrete",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n        #[path = \".\"]\n        pub mod alpha {\n            #[path = \"schema/mutations/alpha/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/alpha/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/alpha/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/alpha/tests/mod.rs\"]\n            mod tests_alpha;\n        }\n        #[path = \".\"]\n        pub mod beta {\n            #[path = \"schema/mutations/beta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/beta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/beta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/beta/tests/mod.rs\"]\n            mod tests_beta;\n        }\n        #[path = \".\"]\n        pub mod gamma {\n            #[path = \"schema/mutations/gamma/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/gamma/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/gamma/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::{alpha, Alpha};\npub use crate::schema::mutations::beta::{beta, Beta};\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n",
+    "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha(id: String) -> DemoMutation {\n    DemoMutation::Alpha(Alpha { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Alpha {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/alpha/diff/mod.rs": "use super::Alpha;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Alpha, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Alpha, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+    "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta(id: String) -> DemoMutation {\n    DemoMutation::Beta(Beta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Beta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/beta/diff/mod.rs": "use super::Beta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Beta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Beta, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Beta(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+    "schema/mutations/gamma/mod.rs": "//! gamma leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Gamma { pub id: String }\n\npub fn gamma(id: String) -> DemoMutation {\n    DemoMutation::Gamma(Gamma { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Gamma {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n#[cfg(test)]\nmod inline_tests {\n    use super::*;\n    #[test]\n    fn builds() { let _ = gamma(String::new()); let _: DemoMutation = gamma(String::new()); }\n}\n",
+    "schema/mutations/gamma/diff/mod.rs": "use super::Gamma;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Gamma, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/gamma/inverse/mod.rs": "use super::Gamma;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Gamma, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Gamma(Gamma { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/beta/tests/mod.rs": "use super::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+    "schema/mutations/alpha/tests/mod.rs": "use crate::schema::mutations::{alpha, DemoMutation};\n#[test]\nfn builds() { let _: DemoMutation = alpha(String::new()); }\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Alpha",
+     "Beta"
+    ],
+    "hand": [
+     {
+      "payload": "Gamma",
+      "reason": "the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+     }
+    ],
+    "notes": [
+     "mutation aggregate DemoMutation: 2/3 leaves converted to generic leaves, 2 concrete builder(s) kept on the aggregate",
+     "mutation leaf Gamma stays concrete: the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Alpha, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+     "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Op::from(Alpha { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Alpha\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Beta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha> + From<crate::schema::mutations::beta::Beta>,\n{\n    Ok(vec![Op::from(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+     "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::beta::Beta>,\n{\n    Op::from(Beta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Beta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Beta> + From<crate::schema::mutations::alpha::Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/tests/mod.rs": "use crate::schema::mutations::beta::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+     "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::Alpha;\npub use crate::schema::mutations::beta::Beta;\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n\n//#region 🔖️ConcreteBuilders\n/// 🏗️ Builder of the `alpha` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn alpha(id: String) -> DemoMutation {\n    crate::schema::mutations::alpha::alpha::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `beta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn beta(id: String) -> DemoMutation {\n    crate::schema::mutations::beta::beta::<DemoMutation>(id)\n}\n//#endregion 🔖️ConcreteBuilders\n"
+    },
+    "creates": {}
+   }
+  },
+  {
+   "name": "a companion already generic over its aggregate keeps its bounds",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n        #[path = \".\"]\n        pub mod alpha {\n            #[path = \"schema/mutations/alpha/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/alpha/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/alpha/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/alpha/tests/mod.rs\"]\n            mod tests_alpha;\n        }\n        #[path = \".\"]\n        pub mod beta {\n            #[path = \"schema/mutations/beta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/beta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/beta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/beta/tests/mod.rs\"]\n            mod tests_beta;\n        }\n        #[path = \".\"]\n        pub mod gamma {\n            #[path = \"schema/mutations/gamma/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/gamma/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/gamma/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n        #[path = \".\"]\n        pub mod delta {\n            #[path = \"schema/mutations/delta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/delta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/delta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n    Delta(Delta),\n}\n\npub use crate::schema::mutations::alpha::{alpha, Alpha};\npub use crate::schema::mutations::beta::{beta, Beta};\npub use crate::schema::mutations::gamma::{gamma, Gamma};\npub use crate::schema::mutations::delta::{delta, Delta};\n",
+    "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha(id: String) -> DemoMutation {\n    DemoMutation::Alpha(Alpha { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Alpha {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/alpha/diff/mod.rs": "use super::Alpha;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Alpha, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Alpha, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+    "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta(id: String) -> DemoMutation {\n    DemoMutation::Beta(Beta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Beta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/beta/diff/mod.rs": "use super::Beta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Beta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Beta, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Beta(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+    "schema/mutations/gamma/mod.rs": "//! gamma leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Gamma { pub id: String }\n\npub fn gamma(id: String) -> DemoMutation {\n    DemoMutation::Gamma(Gamma { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Gamma {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n#[cfg(test)]\nmod inline_tests {\n    use super::*;\n    #[test]\n    fn builds() { let _ = gamma(String::new()); let _: DemoMutation = gamma(String::new()); }\n}\n",
+    "schema/mutations/gamma/diff/mod.rs": "use super::Gamma;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Gamma, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/gamma/inverse/mod.rs": "use super::Gamma;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Gamma, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Gamma(Gamma { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/beta/tests/mod.rs": "use super::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+    "schema/mutations/alpha/tests/mod.rs": "use crate::schema::mutations::{alpha, DemoMutation};\n#[test]\nfn builds() { let _: DemoMutation = alpha(String::new()); }\n",
+    "schema/mutations/delta/mod.rs": "//! delta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\npub fn delta(id: String) -> DemoMutation {\n    DemoMutation::Delta(Delta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Delta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/delta/diff/mod.rs": "use super::Delta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Delta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/delta/inverse/mod.rs": "use super::Delta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Delta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: crate::schema::Restoring + From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(crate::schema::mutations::alpha::Alpha { id: payload.id.clone() })])\n}\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Alpha",
+     "Beta",
+     "Delta"
+    ],
+    "hand": [
+     {
+      "payload": "Gamma",
+      "reason": "the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+     }
+    ],
+    "notes": [
+     "mutation aggregate DemoMutation: 3/4 leaves converted to generic leaves, 3 concrete builder(s) kept on the aggregate",
+     "mutation leaf Gamma stays concrete: the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha",
+       "Beta",
+       "Gamma",
+       "Delta"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Alpha, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+     "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Op::from(Alpha { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Alpha\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Beta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha> + From<crate::schema::mutations::beta::Beta>,\n{\n    Ok(vec![Op::from(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+     "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::beta::Beta>,\n{\n    Op::from(Beta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Beta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Beta> + From<crate::schema::mutations::alpha::Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/tests/mod.rs": "use crate::schema::mutations::beta::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+     "schema/mutations/delta/mod.rs": "//! delta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\npub fn delta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::delta::Delta>,\n{\n    Op::from(Delta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Delta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Delta> + From<crate::schema::mutations::alpha::Alpha> + crate::schema::Restoring,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n    Delta(Delta),\n}\n\npub use crate::schema::mutations::alpha::Alpha;\npub use crate::schema::mutations::beta::Beta;\npub use crate::schema::mutations::gamma::{gamma, Gamma};\npub use crate::schema::mutations::delta::Delta;\n\n//#region 🔖️ConcreteBuilders\n/// 🏗️ Builder of the `alpha` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn alpha(id: String) -> DemoMutation {\n    crate::schema::mutations::alpha::alpha::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `beta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn beta(id: String) -> DemoMutation {\n    crate::schema::mutations::beta::beta::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `delta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn delta(id: String) -> DemoMutation {\n    crate::schema::mutations::delta::delta::<DemoMutation>(id)\n}\n//#endregion 🔖️ConcreteBuilders\n"
+    },
+    "creates": {}
+   }
+  },
+  {
+   "name": "a private aggregate module stays concrete",
+   "files": {
+    "lib.rs": "#[path = \"agg/mod.rs\"]\nmod mutations;\n",
+    "agg/mod.rs": "use crate::{Diff, Snap};\n#[path = \"leaf/mod.rs\"]\nmod leaf;\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(leaf::Alpha),\n}\n",
+    "agg/leaf/mod.rs": "use super::*;\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [],
+    "hand": [],
+    "notes": [
+     "mutation aggregate DemoMutation stays concrete: its module is private, so no absolute path can name its leaves"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha"
+      ]
+     }
+    ],
+    "edits": {},
+    "creates": {}
+   }
+  },
+  {
+   "name": "a sibling builder is imported from its leaf",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n        #[path = \".\"]\n        pub mod alpha {\n            #[path = \"schema/mutations/alpha/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/alpha/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/alpha/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/alpha/tests/mod.rs\"]\n            mod tests_alpha;\n        }\n        #[path = \".\"]\n        pub mod beta {\n            #[path = \"schema/mutations/beta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/beta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/beta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/beta/tests/mod.rs\"]\n            mod tests_beta;\n        }\n        #[path = \".\"]\n        pub mod gamma {\n            #[path = \"schema/mutations/gamma/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/gamma/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/gamma/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::{alpha, Alpha};\npub use crate::schema::mutations::beta::{beta, Beta};\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n",
+    "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha(id: String) -> DemoMutation {\n    DemoMutation::Alpha(Alpha { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Alpha {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/alpha/diff/mod.rs": "use super::Alpha;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Alpha, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Alpha, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+    "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta(id: String) -> DemoMutation {\n    DemoMutation::Beta(Beta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Beta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/beta/diff/mod.rs": "use super::Beta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Beta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::{alpha, DemoMutation};\nuse crate::schema::Snap;\npub fn inverse(payload: &Beta, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    let _ = alpha::Alpha { id: String::new() };\n    Ok(vec![DemoMutation::Beta(Beta { id: payload.id.clone() }), alpha(base.id.clone())])\n}\n",
+    "schema/mutations/gamma/mod.rs": "//! gamma leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Gamma { pub id: String }\n\npub fn gamma(id: String) -> DemoMutation {\n    DemoMutation::Gamma(Gamma { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Gamma {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n#[cfg(test)]\nmod inline_tests {\n    use super::*;\n    #[test]\n    fn builds() { let _ = gamma(String::new()); let _: DemoMutation = gamma(String::new()); }\n}\n",
+    "schema/mutations/gamma/diff/mod.rs": "use super::Gamma;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Gamma, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/gamma/inverse/mod.rs": "use super::Gamma;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Gamma, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Gamma(Gamma { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/beta/tests/mod.rs": "use super::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+    "schema/mutations/alpha/tests/mod.rs": "use crate::schema::mutations::{alpha, DemoMutation};\n#[test]\nfn builds() { let _: DemoMutation = alpha(String::new()); }\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Alpha",
+     "Beta"
+    ],
+    "hand": [
+     {
+      "payload": "Gamma",
+      "reason": "the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+     }
+    ],
+    "notes": [
+     "mutation aggregate DemoMutation: 2/3 leaves converted to generic leaves, 2 concrete builder(s) kept on the aggregate",
+     "mutation leaf Gamma stays concrete: the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Alpha, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+     "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Op::from(Alpha { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Alpha\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::alpha::{self, alpha};\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Beta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha> + From<crate::schema::mutations::beta::Beta>,\n{\n    let _ = alpha::Alpha { id: String::new() };\n    Ok(vec![Op::from(Beta { id: payload.id.clone() }), alpha(base.id.clone())])\n}\n",
+     "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::beta::Beta>,\n{\n    Op::from(Beta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Beta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Beta> + From<crate::schema::mutations::alpha::Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/tests/mod.rs": "use crate::schema::mutations::beta::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+     "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::Alpha;\npub use crate::schema::mutations::beta::Beta;\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n\n//#region 🔖️ConcreteBuilders\n/// 🏗️ Builder of the `alpha` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn alpha(id: String) -> DemoMutation {\n    crate::schema::mutations::alpha::alpha::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `beta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn beta(id: String) -> DemoMutation {\n    crate::schema::mutations::beta::beta::<DemoMutation>(id)\n}\n//#endregion 🔖️ConcreteBuilders\n"
+    },
+    "creates": {}
+   }
+  },
+  {
+   "name": "sibling super paths become absolute",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n        #[path = \".\"]\n        pub mod alpha {\n            #[path = \"schema/mutations/alpha/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/alpha/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/alpha/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/alpha/tests/mod.rs\"]\n            mod tests_alpha;\n        }\n        #[path = \".\"]\n        pub mod beta {\n            #[path = \"schema/mutations/beta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/beta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/beta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/beta/tests/mod.rs\"]\n            mod tests_beta;\n        }\n        #[path = \".\"]\n        pub mod gamma {\n            #[path = \"schema/mutations/gamma/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/gamma/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/gamma/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::{alpha, Alpha};\npub use crate::schema::mutations::beta::{beta, Beta};\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n",
+    "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha(id: String) -> DemoMutation {\n    DemoMutation::Alpha(Alpha { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Alpha {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/alpha/diff/mod.rs": "use super::Alpha;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Alpha, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Alpha, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+    "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta(id: String) -> DemoMutation {\n    DemoMutation::Beta(Beta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Beta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/beta/diff/mod.rs": "use super::Beta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Beta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Beta, _base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(super::super::alpha::Alpha { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/gamma/mod.rs": "//! gamma leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Gamma { pub id: String }\n\npub fn gamma(id: String) -> DemoMutation {\n    DemoMutation::Gamma(Gamma { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Gamma {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n#[cfg(test)]\nmod inline_tests {\n    use super::*;\n    #[test]\n    fn builds() { let _ = gamma(String::new()); let _: DemoMutation = gamma(String::new()); }\n}\n",
+    "schema/mutations/gamma/diff/mod.rs": "use super::Gamma;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Gamma, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/gamma/inverse/mod.rs": "use super::Gamma;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Gamma, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Gamma(Gamma { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/beta/tests/mod.rs": "use super::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+    "schema/mutations/alpha/tests/mod.rs": "use crate::schema::mutations::{alpha, DemoMutation};\n#[test]\nfn builds() { let _: DemoMutation = alpha(String::new()); }\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Alpha",
+     "Beta"
+    ],
+    "hand": [
+     {
+      "payload": "Gamma",
+      "reason": "the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+     }
+    ],
+    "notes": [
+     "mutation aggregate DemoMutation: 2/3 leaves converted to generic leaves, 2 concrete builder(s) kept on the aggregate",
+     "mutation leaf Gamma stays concrete: the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Alpha, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+     "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Op::from(Alpha { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Alpha\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Beta, _base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(crate::schema::mutations::alpha::Alpha { id: payload.id.clone() })])\n}\n",
+     "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::beta::Beta>,\n{\n    Op::from(Beta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Beta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Beta> + From<crate::schema::mutations::alpha::Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/tests/mod.rs": "use crate::schema::mutations::beta::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+     "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n}\n\npub use crate::schema::mutations::alpha::Alpha;\npub use crate::schema::mutations::beta::Beta;\npub use crate::schema::mutations::gamma::{gamma, Gamma};\n\n//#region 🔖️ConcreteBuilders\n/// 🏗️ Builder of the `alpha` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn alpha(id: String) -> DemoMutation {\n    crate::schema::mutations::alpha::alpha::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `beta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn beta(id: String) -> DemoMutation {\n    crate::schema::mutations::beta::beta::<DemoMutation>(id)\n}\n//#endregion 🔖️ConcreteBuilders\n"
+    },
+    "creates": {}
+   }
+  },
+  {
+   "name": "associated diff types and glob variants",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n        #[path = \".\"]\n        pub mod alpha {\n            #[path = \"schema/mutations/alpha/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/alpha/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/alpha/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/alpha/tests/mod.rs\"]\n            mod tests_alpha;\n        }\n        #[path = \".\"]\n        pub mod beta {\n            #[path = \"schema/mutations/beta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/beta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/beta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n            #[cfg(test)]\n            #[path = \"schema/mutations/beta/tests/mod.rs\"]\n            mod tests_beta;\n        }\n        #[path = \".\"]\n        pub mod gamma {\n            #[path = \"schema/mutations/gamma/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/gamma/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/gamma/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n        #[path = \".\"]\n        pub mod delta {\n            #[path = \"schema/mutations/delta/mod.rs\"]\n            mod component;\n            #[path = \"schema/mutations/delta/diff/mod.rs\"]\n            pub mod diff;\n            #[path = \"schema/mutations/delta/inverse/mod.rs\"]\n            pub mod inverse;\n            pub use component::*;\n        }\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n    Delta(Delta),\n}\n\npub use crate::schema::mutations::alpha::{alpha, Alpha};\npub use crate::schema::mutations::beta::{beta, Beta};\npub use crate::schema::mutations::gamma::{gamma, Gamma};\npub use crate::schema::mutations::delta::{delta, Delta};\n",
+    "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha(id: String) -> DemoMutation {\n    DemoMutation::Alpha(Alpha { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Alpha {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/alpha/diff/mod.rs": "use super::Alpha;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Alpha, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Alpha, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Alpha(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+    "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta(id: String) -> DemoMutation {\n    DemoMutation::Beta(Beta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Beta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/beta/diff/mod.rs": "use super::Beta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Beta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Beta, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Beta(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+    "schema/mutations/gamma/mod.rs": "//! gamma leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Gamma { pub id: String }\n\npub fn gamma(id: String) -> DemoMutation {\n    DemoMutation::Gamma(Gamma { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Gamma {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n#[cfg(test)]\nmod inline_tests {\n    use super::*;\n    #[test]\n    fn builds() { let _ = gamma(String::new()); let _: DemoMutation = gamma(String::new()); }\n}\n",
+    "schema/mutations/gamma/diff/mod.rs": "use super::Gamma;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Gamma, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/gamma/inverse/mod.rs": "use super::Gamma;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Gamma, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    Ok(vec![DemoMutation::Gamma(Gamma { id: payload.id.clone() })])\n}\n",
+    "schema/mutations/beta/tests/mod.rs": "use super::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+    "schema/mutations/alpha/tests/mod.rs": "use crate::schema::mutations::{alpha, DemoMutation};\n#[test]\nfn builds() { let _: DemoMutation = alpha(String::new()); }\n",
+    "schema/mutations/delta/mod.rs": "//! delta leaf\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{Mutation, MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\npub fn delta(id: String) -> DemoMutation {\n    DemoMutation::Delta(Delta { id })\n}\n\nimpl MutationKind<Snap, DemoMutation> for Delta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<<DemoMutation as Mutation<Snap>>::Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+    "schema/mutations/delta/diff/mod.rs": "use super::Delta;\nuse crate::schema::{Diff, Snap};\npub fn diff(_payload: &Delta, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n",
+    "schema/mutations/delta/inverse/mod.rs": "use super::Delta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::Snap;\npub fn inverse(payload: &Delta, base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n    use DemoMutation::*;\n    Ok(vec![Delta(Delta { id: payload.id.clone() })])\n}\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Alpha",
+     "Beta",
+     "Delta"
+    ],
+    "hand": [
+     {
+      "payload": "Gamma",
+      "reason": "the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+     }
+    ],
+    "notes": [
+     "mutation aggregate DemoMutation: 3/4 leaves converted to generic leaves, 3 concrete builder(s) kept on the aggregate",
+     "mutation leaf Gamma stays concrete: the aggregate is mentioned outside a top-level item at line 28 (inline test module?)"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Alpha",
+       "Beta",
+       "Gamma",
+       "Delta"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/alpha/inverse/mod.rs": "use super::Alpha;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Alpha, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(vec![Op::from(Alpha { id: format!(\"{}-{}\", payload.id, base.id) })])\n}\n",
+     "schema/mutations/alpha/mod.rs": "//! alpha leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n\npub fn alpha<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha>,\n{\n    Op::from(Alpha { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Alpha\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/inverse/mod.rs": "use super::Beta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Beta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::alpha::Alpha> + From<crate::schema::mutations::beta::Beta>,\n{\n    Ok(vec![Op::from(Beta { id: payload.id.clone() }), crate::schema::mutations::alpha::alpha(base.id.clone())])\n}\n",
+     "schema/mutations/beta/mod.rs": "//! beta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Beta { pub id: String }\n\npub fn beta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::beta::Beta>,\n{\n    Op::from(Beta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Beta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Beta> + From<crate::schema::mutations::alpha::Alpha>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/beta/tests/mod.rs": "use crate::schema::mutations::beta::*;\nuse crate::schema::mutations::DemoMutation;\n#[test]\nfn builds() { let _: DemoMutation = beta(String::new()); }\n",
+     "schema/mutations/delta/inverse/mod.rs": "use super::Delta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Delta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: From<crate::schema::mutations::delta::Delta>,\n{\n    \n    Ok(vec![Op::from(Delta { id: payload.id.clone() })])\n}\n",
+     "schema/mutations/delta/mod.rs": "//! delta leaf\nuse crate::schema::{Diff, Snap};\nuse protocol::{Mutation, MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\npub fn delta<Op>(id: String) -> Op\nwhere\n    Op: From<crate::schema::mutations::delta::Delta>,\n{\n    Op::from(Delta { id })\n}\n\nimpl<Op> MutationKind<Snap, Op> for Delta\nwhere\n    Op: protocol::Mutation<Snap, Diff = crate::schema::Diff> + From<Delta>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, base: &Snap) -> protocol::MutationOutcome<<Op as Mutation<Snap>>::Diff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base)?)\n    }\n}\n\n",
+     "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Alpha(Alpha),\n    Beta(Beta),\n    Gamma(Gamma),\n    Delta(Delta),\n}\n\npub use crate::schema::mutations::alpha::Alpha;\npub use crate::schema::mutations::beta::Beta;\npub use crate::schema::mutations::gamma::{gamma, Gamma};\npub use crate::schema::mutations::delta::Delta;\n\n//#region 🔖️ConcreteBuilders\n/// 🏗️ Builder of the `alpha` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn alpha(id: String) -> DemoMutation {\n    crate::schema::mutations::alpha::alpha::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `beta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn beta(id: String) -> DemoMutation {\n    crate::schema::mutations::beta::beta::<DemoMutation>(id)\n}\n\n/// 🏗️ Builder of the `delta` leaf for this aggregate; the leaf builder stays generic over its aggregate.\npub fn delta(id: String) -> DemoMutation {\n    crate::schema::mutations::delta::delta::<DemoMutation>(id)\n}\n//#endregion 🔖️ConcreteBuilders\n"
+    },
+    "creates": {}
+   }
+  },
+  {
+   "name": "leaves reaching each other through super are decoupled",
+   "files": {
+    "lib.rs": "//! demo root.\nextern crate semio_framework_os_kernel as protocol;\n#[path = \".\"]\npub mod schema {\n    #[path = \"schema/mod.rs\"]\n    mod component;\n    pub use component::*;\n    #[path = \".\"]\n    pub mod mutations {\n        #[path = \"schema/mutations/mod.rs\"]\n        mod component;\n        pub use component::*;\n    }\n}\n",
+    "schema/mod.rs": "//! schema\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Snap { pub id: String }\n#[derive(Clone, Debug, Default, PartialEq)]\npub struct Diff { pub id: String }\n",
+    "schema/mutations/delta/mod.rs": "//! delta leaf\nuse super::epsilon::Epsilon;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\nimpl MutationKind<Snap, DemoMutation> for Delta {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n    fn inverse(&self, _base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(vec![DemoMutation::Epsilon(Epsilon { id: self.id.clone() })])\n    }\n}\n",
+    "schema/mutations/epsilon/mod.rs": "//! epsilon leaf\nuse super::delta::Delta;\nuse crate::schema::mutations::DemoMutation;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Epsilon { pub id: String }\n\nimpl MutationKind<Snap, DemoMutation> for Epsilon {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n    fn inverse(&self, _base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {\n        Ok(vec![DemoMutation::Delta(Delta { id: self.id.clone() })])\n    }\n}\n",
+    "schema/mutations/mod.rs": "//! aggregate\nuse crate::schema::{Diff, Snap};\n\n#[path = \"delta/mod.rs\"]\npub mod delta;\n#[path = \"epsilon/mod.rs\"]\npub mod epsilon;\npub use delta::Delta;\npub use epsilon::Epsilon;\n\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]\npub enum DemoMutation {\n    Delta(Delta),\n    Epsilon(Epsilon),\n}\n"
+   },
+   "root": "lib.rs",
+   "expect": {
+    "converted": [
+     "Delta",
+     "Epsilon"
+    ],
+    "hand": [],
+    "notes": [
+     "mutation aggregate DemoMutation: 2/2 leaves converted to generic leaves, 0 concrete builder(s) kept on the aggregate"
+    ],
+    "aggregates": [
+     {
+      "name": "DemoMutation",
+      "snapshot": "Snap",
+      "diff": "Diff",
+      "variants": [
+       "Delta",
+       "Epsilon"
+      ]
+     }
+    ],
+    "edits": {
+     "schema/mutations/delta/mod.rs": "//! delta leaf\nuse crate::schema::mutations::epsilon::Epsilon;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Delta { pub id: String }\n\nimpl<Op> MutationKind<Snap, Op> for Delta\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Delta> + From<crate::schema::mutations::epsilon::Epsilon>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n    fn inverse(&self, _base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(vec![Op::from(Epsilon { id: self.id.clone() })])\n    }\n}\n",
+     "schema/mutations/epsilon/mod.rs": "//! epsilon leaf\nuse crate::schema::mutations::delta::Delta;\nuse crate::schema::{Diff, Snap};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Epsilon { pub id: String }\n\nimpl<Op> MutationKind<Snap, Op> for Epsilon\nwhere\n    Op: protocol::Mutation<Snap, Diff = Diff> + From<Epsilon> + From<crate::schema::mutations::delta::Delta>,\n{\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };\n    fn diff(&self, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }\n    fn inverse(&self, _base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError> {\n        Ok(vec![Op::from(Delta { id: self.id.clone() })])\n    }\n}\n"
+    },
+    "creates": {}
+   }
+  }
+ ],
+ "aggregates": [
+  {
+   "name": "one aggregate with options and paths",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(Clone, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = crate::Diff, schema = \"k\")]\npub enum One { A(a::A), B(B) }\n"
+   },
+   "expect": [
+    {
+     "name": "One",
+     "file": "a.rs",
+     "effPath": [
+      "a"
+     ],
+     "snapshot": "Snap",
+     "diff": "crate::Diff",
+     "variants": [
+      {
+       "variant": "A",
+       "payload": "A",
+       "path": "a::A"
+      },
+      {
+       "variant": "B",
+       "payload": "B",
+       "path": "B"
+      }
+     ]
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "derive order and attributes on variants",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(dsl::Mutations, Clone)]\npub enum Two {\n    #[allow(dead_code)]\n    A(crate::x::A),\n    #[doc = \"b\"] B(B),\n}\n"
+   },
+   "expect": [
+    {
+     "name": "Two",
+     "file": "a.rs",
+     "effPath": [
+      "a"
+     ],
+     "snapshot": null,
+     "diff": null,
+     "variants": [
+      {
+       "variant": "A",
+       "payload": "A",
+       "path": "crate::x::A"
+      },
+      {
+       "variant": "B",
+       "payload": "B",
+       "path": "B"
+      }
+     ]
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a variant with two fields makes the enum unsupported",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(dsl::Mutations)]\npub enum Bad { A(X, Y) }\n"
+   },
+   "expect": [],
+   "defect": "F29"
+  },
+  {
+   "name": "struct and unit variants make the enum unsupported",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(dsl::Mutations)]\npub enum Bad { A { x: u8 } }\n#[derive(dsl::Mutations)]\npub enum Unit { A, B(B) }\n"
+   },
+   "expect": [],
+   "defect": ""
+  },
+  {
+   "name": "two aggregates in one file",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(dsl::Mutations)]\npub enum First { A(A) }\n#[derive(dsl::Mutations)]\n#[mutations(snapshot = S2)]\npub enum Second { B(B), C(c::C) }\n"
+   },
+   "expect": [
+    {
+     "name": "First",
+     "file": "a.rs",
+     "effPath": [
+      "a"
+     ],
+     "snapshot": null,
+     "diff": null,
+     "variants": [
+      {
+       "variant": "A",
+       "payload": "A",
+       "path": "A"
+      }
+     ]
+    },
+    {
+     "name": "Second",
+     "file": "a.rs",
+     "effPath": [
+      "a"
+     ],
+     "snapshot": "S2",
+     "diff": null,
+     "variants": [
+      {
+       "variant": "B",
+       "payload": "B",
+       "path": "B"
+      },
+      {
+       "variant": "C",
+       "payload": "C",
+       "path": "c::C"
+      }
+     ]
+    }
+   ],
+   "defect": ""
+  },
+  {
+   "name": "a Mutations word outside a derive is ignored",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "// Mutations are great\n#[derive(Debug)]\npub enum E { A(A) }\nfn f() { dsl::Mutations::new(); }\n#[derive(dsl::Mutations::Other)]\npub enum F { A(A) }\n"
+   },
+   "expect": [],
+   "defect": ""
+  },
+  {
+   "name": "an aggregate in a test-only module is skipped",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n#[cfg(test)]\n#[path = \"t.rs\"]\nmod t;\n",
+    "a.rs": "pub fn nothing() {}\n",
+    "t.rs": "#[derive(dsl::Mutations)]\npub enum T { A(A) }\n"
+   },
+   "expect": [],
+   "defect": ""
+  },
+  {
+   "name": "an empty enum yields nothing",
+   "files": {
+    "lib.rs": "#[path = \"a.rs\"]\npub mod a;\n",
+    "a.rs": "#[derive(dsl::Mutations)]\npub enum Empty {}\n"
+   },
+   "expect": [],
+   "defect": ""
+  }
+ ],
+ "scope": [
+  {
+   "name": "imports, modules and items",
+   "text": "use crate::a::B;\nuse super::C;\nuse self::d::E;\nuse f::G as H;\npub mod sub;\nmod hidden;\nfn helper() {}\nstruct S;\nmacro_rules! m { () => {} }\nimpl S {}\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "expect": {
+    "names": {
+     "B": {
+      "kind": "import",
+      "statement": "use crate::a::B;"
+     },
+     "C": {
+      "kind": "import",
+      "statement": "use crate::x::C;"
+     },
+     "E": {
+      "kind": "import",
+      "statement": "use crate::x::agg::d::E;"
+     },
+     "H": {
+      "kind": "import",
+      "statement": "use f::G as H;"
+     },
+     "S": {
+      "kind": "item"
+     },
+     "helper": {
+      "kind": "item"
+     },
+     "hidden": {
+      "kind": "item"
+     },
+     "sub": {
+      "kind": "module",
+      "statement": "use crate::x::agg::sub;"
+     }
+    },
+    "glob": false
+   }
+  },
+  {
+   "name": "a component aggregate resolves super from its own path",
+   "text": "use super::C;\nuse self::d::E;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": true,
+   "expect": {
+    "names": {
+     "C": {
+      "kind": "import",
+      "statement": "use crate::x::agg::C;"
+     },
+     "E": {
+      "kind": "import",
+      "statement": "use crate::x::agg::d::E;"
+     }
+    },
+    "glob": false
+   }
+  },
+  {
+   "name": "a glob import is flagged",
+   "text": "use crate::a::*;\nuse crate::b::B;\n",
+   "eff": [
+    "x"
+   ],
+   "isComponent": false,
+   "expect": {
+    "names": {
+     "B": {
+      "kind": "import",
+      "statement": "use crate::b::B;"
+     }
+    },
+    "glob": true
+   }
+  },
+  {
+   "name": "test-gated uses are skipped and a component re-export counts as a glob",
+   "text": "#[cfg(test)]\nuse crate::t::T;\n#[cfg(test)]\nmod tests;\n#[path = \"c.rs\"]\nmod component;\npub use component::*;\nstruct Real;\n",
+   "eff": [
+    "x"
+   ],
+   "isComponent": false,
+   "expect": {
+    "names": {
+     "Real": {
+      "kind": "item"
+     }
+    },
+    "glob": true
+   }
+  },
+  {
+   "name": "a double super cannot be named",
+   "text": "use super::super::X;\nuse crate::{p::Q, r::{s::T as U}};\n",
+   "eff": [
+    "x",
+    "y",
+    "agg"
+   ],
+   "isComponent": false,
+   "expect": {
+    "names": {
+     "Q": {
+      "kind": "import",
+      "statement": "use crate::p::Q;"
+     },
+     "U": {
+      "kind": "import",
+      "statement": "use crate::r::s::T as U;"
+     },
+     "X": {
+      "kind": "item"
+     }
+    },
+    "glob": false
+   }
+  }
+ ],
+ "decouple": [
+  {
+   "name": "imports replace the glob",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nuse crate::z::Z;\nfn f(_: B) -> sub::T { Renamed::new() }\n",
+   "depth": 1,
+   "expect": {
+    "text": "#[allow(unused_imports)]\nuse crate::a::B;\n#[allow(unused_imports)]\nuse crate::q::Item as Renamed;\n#[allow(unused_imports)]\nuse crate::x::agg::sub;\nuse crate::z::Z;\nfn f(_: B) -> sub::T { Renamed::new() }\n",
+    "coupled": []
+   }
+  },
+  {
+   "name": "a used item keeps the leaf coupled",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nfn f() { helper(); }\n",
+   "depth": 1,
+   "expect": {
+    "text": "use super::*;\nfn f() { helper(); }\n",
+    "coupled": [
+     "helper"
+    ]
+   }
+  },
+  {
+   "name": "names the leaf declares itself are not imported",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nfn B() {}\nfn f() { B(); }\n",
+   "depth": 1,
+   "expect": {
+    "text": "fn B() {}\nfn f() { B(); }\n",
+    "coupled": []
+   }
+  },
+  {
+   "name": "a leaf without the glob is untouched",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use crate::a::B;\nfn f(_: B) {}\n",
+   "depth": 1,
+   "expect": null
+  },
+  {
+   "name": "a deeper leaf matches the glob depth",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::super::*;\nfn f(_: B) {}\n",
+   "depth": 2,
+   "expect": {
+    "text": "#[allow(unused_imports)]\nuse crate::a::B;\nfn f(_: B) {}\n",
+    "coupled": []
+   }
+  },
+  {
+   "name": "the wrong glob depth is not decoupled",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nfn f(_: B) {}\n",
+   "depth": 2,
+   "expect": null
+  },
+  {
+   "name": "an aggregate that imports through a glob keeps every leaf coupled",
+   "aggregate": "use crate::a::*;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nfn f() {}\n",
+   "depth": 1,
+   "expect": {
+    "text": "use super::*;\nfn f() {}\n",
+    "coupled": [
+     "the aggregate imports through a glob"
+    ]
+   }
+  },
+  {
+   "name": "no used name means the glob is just removed",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "use super::*;\nfn f() {}\n",
+   "depth": 1,
+   "expect": {
+    "text": "fn f() {}\n",
+    "coupled": []
+   }
+  },
+  {
+   "name": "a pub glob is not the aggregate glob",
+   "aggregate": "use crate::a::B;\nuse crate::q::Item as Renamed;\npub mod sub;\nfn helper() {}\nstruct Hidden;\n",
+   "eff": [
+    "x",
+    "agg"
+   ],
+   "isComponent": false,
+   "leaf": "pub use super::*;\nfn f(_: B) {}\n",
+   "depth": 1,
+   "expect": null
+  }
+ ]
+}

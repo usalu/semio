@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "id": "admitted-resolution-same",
+      "mutation": "same",
+      "accepted": true
+    },
+    {
+      "id": "admitted-resolution-absent",
+      "mutation": "absent",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-missing",
+      "mutation": "missing",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-root",
+      "mutation": "root",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-hash",
+      "mutation": "hash",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-declaring-directory",
+      "mutation": "declaring-directory",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-undeclared",
+      "mutation": "undeclared",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-target",
+      "mutation": "target",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-order",
+      "mutation": "order",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-duplicate",
+      "mutation": "duplicate",
+      "accepted": false
+    },
+    {
+      "id": "admitted-resolution-extra",
+      "mutation": "extra",
+      "accepted": false
+    }
+  ],
+  "nodeProgram": {
+    "version": 1,
+    "form": "literal-owned-program",
+    "cases": [
+      {
+        "specifier": "node:crypto",
+        "parentAlias": null
+      },
+      {
+        "specifier": "node:module",
+        "parentAlias": "./.semio-captured-module"
+      },
+      {
+        "specifier": "node:path",
+        "parentAlias": null
+      },
+      {
+        "specifier": "node:url",
+        "parentAlias": null
+      },
+      {
+        "specifier": "node:fs",
+        "parentAlias": "./.semio-captured-fs"
+      },
+      {
+        "specifier": "node:fs/promises",
+        "parentAlias": "./.semio-captured-fs-promises"
+      }
+    ]
+  }
+}

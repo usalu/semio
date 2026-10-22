@@ -13,6 +13,6 @@ export function policyBuildOwnerRegistryBreaches(repoRoot: string): BreachRecord
     priority: "high",
     autofixable: !AUTHORED.includes(finding.kind),
     reason: "The build graph admits only modules that have exactly one registry row, so a stale or missing row drops targets or breaks admission.",
-    solution: AUTHORED.includes(finding.kind) ? `Fix ${BUILD_OWNER_REGISTRY_FILE} by hand.` : "Run `bun repo run workspace:verify-build-owners-sync`.",
+    solution: AUTHORED.includes(finding.kind) ? `Fix ${BUILD_OWNER_REGISTRY_FILE} by hand.` : "Run `repo run workspace:verify-build-owners-sync`.",
   }));
 }

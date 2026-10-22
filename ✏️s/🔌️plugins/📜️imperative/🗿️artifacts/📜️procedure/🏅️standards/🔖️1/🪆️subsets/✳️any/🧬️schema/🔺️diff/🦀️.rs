@@ -35,20 +35,9 @@ pub struct ProcedureStringList {
 use crate::ProcedureSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<ProcedureSnapshot> for ProcedureDiff {
-    fn apply(&self, snapshot: &ProcedureSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ProcedureSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(handle) = &self.flow {
-            next.flow = handle.clone();
-        }
-        if let Some(handle) = &self.text {
-            next.text = handle.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<ProcedureSnapshot> for ProcedureDiff {}
+
+impl protocol::ColdMutationDiff<ProcedureSnapshot> for ProcedureDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -61,14 +50,33 @@ impl MutationDiff<ProcedureSnapshot> for ProcedureDiff {
         take!(flow);
         take!(text);
     }
+
+    fn apply(&self, unpublished: &mut ProcedureSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(handle) = &self.flow {
+            next.flow = handle.clone();
+        }
+        if let Some(handle) = &self.text {
+            next.text = handle.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ProcedureSnapshot> for ProcedureDiff {
-    fn inverse(&self, base: &ProcedureSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), flow: self.flow.as_ref().map(|_| base.flow.clone()), text: self.text.as_ref().map(|_| base.text.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.flow.is_none() && self.text.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ProcedureSnapshot> for ProcedureDiff {
+    fn inverse(&self, base: &ProcedureSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), flow: self.flow.as_ref().map(|_| base.flow.clone()), text: self.text.as_ref().map(|_| base.text.clone()) }
     }
 }
 

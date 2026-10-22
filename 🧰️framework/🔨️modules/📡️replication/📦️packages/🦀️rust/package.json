@@ -2,16 +2,16 @@
   "name": "@semio-tech/framework-replication-rs",
   "private": true,
   "scripts": {
-    "test-command-ingress-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
-    "test-command-ingress-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-command-ingress-native",
-    "test-retained-diagnostic-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-diagnostic-source",
-    "test-retained-diagnostic-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-diagnostic-native",
-    "test-retained-field-change-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-field-change-source",
-    "test-retained-field-change-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-field-change-native",
-    "test-retained-record-change-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-record-change-source",
-    "test-retained-record-change-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-record-change-native",
-    "test-retained-indexed-replacement-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-indexed-replacement-source",
-    "test-retained-indexed-replacement-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-retained-indexed-replacement-native"
+    "test-command-ingress-ownership": "repo run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
+    "test-command-ingress-native": "repo run @semio-tech/framework-replication-rs:test-command-ingress-native",
+    "test-retained-diagnostic-source": "repo run @semio-tech/framework-replication-rs:test-retained-diagnostic-source",
+    "test-retained-diagnostic-native": "repo run @semio-tech/framework-replication-rs:test-retained-diagnostic-native",
+    "test-retained-field-change-source": "repo run @semio-tech/framework-replication-rs:test-retained-field-change-source",
+    "test-retained-field-change-native": "repo run @semio-tech/framework-replication-rs:test-retained-field-change-native",
+    "test-retained-record-change-source": "repo run @semio-tech/framework-replication-rs:test-retained-record-change-source",
+    "test-retained-record-change-native": "repo run @semio-tech/framework-replication-rs:test-retained-record-change-native",
+    "test-retained-indexed-replacement-source": "repo run @semio-tech/framework-replication-rs:test-retained-indexed-replacement-source",
+    "test-retained-indexed-replacement-native": "repo run @semio-tech/framework-replication-rs:test-retained-indexed-replacement-native"
   },
   "devDependencies": {
     "@semio-tech/framework-hash": "workspace:*",

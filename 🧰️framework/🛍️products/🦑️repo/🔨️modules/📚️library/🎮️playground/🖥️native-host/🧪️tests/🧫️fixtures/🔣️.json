@@ -1,6 +1,9 @@
 {
   "schema": "semio.playground.native-host-laws/v1",
-  "outputOracles": {"portable":"lodash/template","nxTool":"nx"},
+  "outputOracles": {
+    "portable": "lodash/template",
+    "nxTool": "nx"
+  },
   "owner": {
     "cratePath": "owners/alpha/📦️packages/🦀️rust",
     "project": "@fixture/alpha-native",
@@ -185,5 +188,35 @@
     "invalidUtf8": [
       255
     ]
+  },
+  "mismatch": {
+    "context": "playground alpha, nativeHost",
+    "host": {
+      "cratePath": "owners/alpha/📦️packages/🦀️rust",
+      "project": "@fixture/alpha-native",
+      "package": "alpha-native",
+      "binary": "alpha-native",
+      "target": "native-build"
+    },
+    "facts": {
+      "package": "beta-native",
+      "project": "@fixture/alpha-native",
+      "binaries": [
+        "alpha-native",
+        "alpha-tool"
+      ],
+      "targets": [
+        "native-build"
+      ],
+      "modes": {
+        "native-build": [
+          "prototype"
+        ]
+      }
+    },
+    "expected": {
+      "en": "Native host does not match its authored producer (playground alpha, nativeHost): declared project @fixture/alpha-native at owners/alpha/📦️packages/🦀️rust; package: declared \"alpha-native\", authored \"beta-native\"; modes: declared \"prototype, release\", authored [prototype].",
+      "de": "Der native Host passt nicht zu seinem verfassten Erzeuger (playground alpha, nativeHost): deklariertes Projekt @fixture/alpha-native unter owners/alpha/📦️packages/🦀️rust; Paket: deklariert \"alpha-native\", verfasst \"beta-native\"; Modi: deklariert \"prototype, release\", verfasst [prototype]."
+    }
   }
 }

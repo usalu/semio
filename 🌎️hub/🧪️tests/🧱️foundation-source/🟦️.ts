@@ -314,7 +314,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
     project: readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };
   expect(nativeCredentialSourceOrderConforms(native)).toBe(true);
-  expect(nativeCredentialSourceOrderConforms({ ...native, project: native.project.replace('"bun ./📜️script.ts dev secure-native"', '"bun ./📜️script.ts dev secure-suite"') })).toBe(false);
+  expect(nativeCredentialSourceOrderConforms({ ...native, project: native.project.replace('"repo ./📜️script.ts dev secure-native"', '"repo ./📜️script.ts dev secure-suite"') })).toBe(false);
   expect(nativeCredentialSourceOrderConforms({ ...native, runner: native.runner.replace("await runNativeSession(", "await staleNativeSession(") })).toBe(false);
   expect(() => proveNativeCredentialSourceOrder(repoRoot)).not.toThrow();
 
@@ -327,7 +327,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
     project: native.project,
   };
   expect(mcpCredentialSourceOrderConforms(mcp)).toBe(true);
-  expect(mcpCredentialSourceOrderConforms({ ...mcp, project: mcp.project.replace('"bun ./📜️script.ts dev secure-mcp"', '"bun ./📜️script.ts dev secure-suite"') })).toBe(false);
+  expect(mcpCredentialSourceOrderConforms({ ...mcp, project: mcp.project.replace('"repo ./📜️script.ts dev secure-mcp"', '"repo ./📜️script.ts dev secure-suite"') })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, project: "{" })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("surface: Some(PROBE_SURFACE_ID.to_string()) },", "surface: Some(PROBE_SURFACE_ID.to_string()) }, _ if lease.is_some() => unreachable!(),") })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("pub fn open_hub(", "fn stale_probe_claim(&self) { self.artifact_host.set_document_execution_target_lease(&key, probe); }\n    pub fn open_hub(") })).toBe(false);
@@ -376,7 +376,7 @@ test("package, target and input registrations bind only the moved owners", () =>
   const project = JSON.parse(readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   expect(project.namedInputs.hubFoundationSources).toEqual(fixture.route.inputs);
   expect(project.targets[fixture.route.target]?.inputs).toEqual(["hubFoundationSources"]);
-  expect(project.targets[fixture.route.target]?.options?.command).toBe("bun ./📜️script.ts foundation-source-check");
+  expect(project.targets[fixture.route.target]?.options?.command).toBe("repo ./📜️script.ts foundation-source-check");
 }, 600_000);
 
 test("neutral Hub absent production ledger refuses bytes and actor Source selects genuine state custody",async()=>{

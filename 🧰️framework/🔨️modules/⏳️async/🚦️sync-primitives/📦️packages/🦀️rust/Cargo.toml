@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-async-sync"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Runtime-independent wait primitives: Notify, owned-permit Semaphore and the oneshot channel"
+
+[package.metadata.semio]
+role = "framework"
+id = "async-sync"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

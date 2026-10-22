@@ -24,17 +24,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tiles", kind: "delete-tiles", record: "DeletedTiles" };
 
-    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete {} tiles", self.ids.len()), &format!("{} Kacheln löschen", self.ids.len()))
     }
@@ -44,5 +33,20 @@ where
         target.extend(self.ids.iter().cloned());
         target
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PresentationSnapshot, Op> for DeleteTiles
+where
+    Op: protocol::ColdMutation<PresentationSnapshot, ReferenceDiff = PresentationDiff> + From<DeleteTiles> + From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile>,
+{
+    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔹Payload

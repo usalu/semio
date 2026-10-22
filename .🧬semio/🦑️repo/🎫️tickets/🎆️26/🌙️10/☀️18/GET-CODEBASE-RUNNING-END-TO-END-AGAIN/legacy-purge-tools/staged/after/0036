@@ -1,0 +1,36 @@
+{
+  "title": "Fix Left Panel Add Piece Placement in Sketchpad",
+  "status": "closed",
+  "description": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend compose/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
+  "summary": "Fixed Design workbench + actions to place type/design as pieces and extended Design e2e coverage for left panel add-piece flow.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-17T00:34:28.632459992Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend compose/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17T00:48:08.929496278Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "summary": "Fixed Design workbench + actions to place type/design as pieces and extended Design e2e coverage for left panel add-piece flow.",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        }
+      ]
+    }
+  ]
+}

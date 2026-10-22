@@ -6,7 +6,7 @@
 //! `🔺️diff/🚫️.absent` marker (rejected). Every law reports every failing case, never only the first.
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_path;
 use std::path::{Path, PathBuf};
 
@@ -101,7 +101,7 @@ async fn every_case_applies_to_its_committed_after() {
             .iter()
             .filter(|case| {
                 let base = case.base();
-                protocol::apply_diff(case.mutation().diff(&base).diff(), &base).ok() != Some(case.expected())
+                protocol::apply_diff_cold(case.mutation().diff(&base).diff(), &base).ok() != Some(case.expected())
             })
             .map(|case| case.name.clone())
             .collect(),
@@ -122,9 +122,9 @@ async fn every_case_inverse_restores_before() {
             continue;
         }
         undo.reverse();
-        let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).unwrap_or_else(|error| panic!("{}: forward applies: {error:?}", case.name));
+        let mut state = protocol::apply_diff_cold(forward.diff(&base).diff(), &base).unwrap_or_else(|error| panic!("{}: forward applies: {error:?}", case.name));
         for step in &undo {
-            state = protocol::apply_diff(step.diff(&state).diff(), &state).unwrap_or_else(|error| panic!("{}: inverse step applies: {error:?}", case.name));
+            state = protocol::apply_diff_cold(step.diff(&state).diff(), &state).unwrap_or_else(|error| panic!("{}: inverse step applies: {error:?}", case.name));
         }
         if state != base {
             failures.push(case.name.clone());
@@ -194,7 +194,7 @@ async fn every_committed_diff_is_canonical_and_complete() {
         let holds = match &case.diff {
             Some(committed) => {
                 let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(committed, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{}: committed diff decodes: {error}", case.name));
-                canonical(committed, semio_framework_pack_json::to_json_string(&decoded)) && protocol::apply_diff(&decoded, &case.base()).ok() == Some(case.expected())
+                canonical(committed, semio_framework_pack_json::to_json_string(&decoded)) && protocol::apply_diff_cold(&decoded, &case.base()).ok() == Some(case.expected())
             }
             None => case.absent.as_deref() == Some("") && case.before == case.after,
         };

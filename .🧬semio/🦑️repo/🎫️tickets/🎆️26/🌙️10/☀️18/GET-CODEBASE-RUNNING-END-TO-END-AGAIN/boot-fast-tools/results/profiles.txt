@@ -1,0 +1,49 @@
+== door repo --help
+#repo-profile	version=1	pid=7714	unit=ms
+#seq	depth	phase	start	duration	self
+1	0	boot.main	61.1	0.0	0.0
+2	0	door.plan	62.5	1.0	1.0
+#total	64.8	covered	1.0	uncovered	63.8
+== door repo leases status
+#repo-profile	version=1	pid=7715	unit=ms
+#seq	depth	phase	start	duration	self
+1	0	boot.main	43.9	0.0	0.0
+2	0	door.plan	44.6	0.8	0.8
+3	0	door.light-load	45.5	34.3	34.3
+#total	97.3	covered	35.2	uncovered	62.1
+== script repo --help (before)
+#repo-profile	version=1	pid=7717	unit=ms
+#seq	depth	phase	start	duration	self
+1	0	boot.loaded	176.3	0.0	0.0
+2	0	boot.main	176.5	0.0	0.0
+3	0	cli.run	176.6	195.6	41.3
+4	1	door.load	217.8	15.3	15.3
+5	1	door.capacity	233.1	139.0	0.4
+6	2	door.admitted	233.5	138.7	3.2
+7	3	door.capabilities	235.2	121.3	121.3
+8	3	door.script	358.0	14.2	12.3
+9	4	invocation.gate-load	370.2	0.0	0.0
+10	4	invocation.gate	370.2	1.8	0.1
+11	5	invocation.admitted	370.3	1.7	1.4
+12	6	invocation.load	371.0	0.0	0.0
+13	6	invocation.read	371.0	0.3	0.3
+14	6	invocation.parse-load	371.3	0.0	0.0
+#total	372.3	covered	195.6	uncovered	176.7
+== script repo --help (lazy caller)
+#repo-profile	version=1	pid=7721	unit=ms
+#seq	depth	phase	start	duration	self
+1	0	boot.loaded	141.6	0.0	0.0
+2	0	boot.main	141.9	0.0	0.0
+3	0	cli.run	141.9	375.1	245.8
+4	1	door.load	387.6	28.8	28.8
+5	1	door.capacity	416.5	100.5	1.4
+6	2	door.admitted	417.8	99.1	10.1
+7	3	door.capabilities	426.0	69.1	69.1
+8	3	door.script	496.9	19.9	13.7
+9	4	invocation.gate-load	510.4	0.0	0.0
+10	4	invocation.gate	510.5	6.2	0.1
+11	5	invocation.admitted	510.6	6.2	5.8
+12	6	invocation.load	514.1	0.1	0.1
+13	6	invocation.read	514.1	0.3	0.3
+14	6	invocation.parse-load	514.4	0.0	0.0
+#total	517.1	covered	375.1	uncovered	142.0

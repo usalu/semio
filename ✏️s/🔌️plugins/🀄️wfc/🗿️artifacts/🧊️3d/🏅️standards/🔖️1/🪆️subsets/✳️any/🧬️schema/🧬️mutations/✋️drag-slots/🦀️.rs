@@ -56,15 +56,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "slots", kind: "drag-slots", record: "DraggedSlots" };
 
-    fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de), (dz_en, dz_de)) = (wfc3d_offset_text(self.dx), wfc3d_offset_text(self.dy), wfc3d_offset_text(self.dz));
         let (items_en, items_de) = match self.targets.len() {
@@ -76,5 +67,20 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc3dSnapshot, Op> for DragSlots
+where
+    Op: protocol::ColdMutation<Wfc3dSnapshot, ReferenceDiff = Wfc3dDiff> + From<DragSlots> + From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
+    fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️DragSlots

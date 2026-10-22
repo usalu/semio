@@ -660,7 +660,7 @@ pub struct GovernanceEdit {
 
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use protocol::list_delta::RowPatch;
-use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
+use protocol::{ApplyCapability, ColdDiffAlgebra, DiffAlgebra, MutationApplyResult, MutationDiff};
 
 //#region 🔖️SectionEdits
 macro_rules! impl_section_edit {
@@ -835,8 +835,31 @@ macro_rules! empty_collection {
     };
 }
 
-impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    fn apply(&self, base: &ProgramSnapshot, capability: ApplyCapability) -> MutationApplyResult<ProgramSnapshot> {
+impl MutationDiff<ProgramSnapshot> for ProgramDiff {}
+
+impl protocol::ColdMutationDiff<ProgramSnapshot> for ProgramDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.schema.is_some() {
+            self.schema = other.schema;
+        }
+        self.meta = compose_edit(self.meta.take(), other.meta, ProgramMetaEdit::compose);
+        self.project = compose_edit(self.project.take(), other.project, ProjectDefinitionEdit::compose);
+        self.governance = compose_edit(self.governance.take(), other.governance, GovernanceEdit::compose);
+        program_collections!(absorb_collection, self, other,);
+        if let Some(delta) = other.knowledge {
+            let mut merged = self.knowledge.take().unwrap_or_default();
+            merged.absorb(delta);
+            self.knowledge = (!merged.is_empty()).then_some(merged);
+        }
+        if let Some(delta) = other.benchmarks {
+            let mut merged = self.benchmarks.take().unwrap_or_default();
+            merged.absorb(delta);
+            self.benchmarks = (!merged.is_empty()).then_some(merged);
+        }
+    }
+
+    fn apply(&self, unpublished: &mut ProgramSnapshot, capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
@@ -859,31 +882,20 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
             next.benchmarks_payload = delta.commit_onto(&next.benchmarks_payload, capability).map_err(|error| error.under(["benchmarks"]))?;
             next.benchmarks = crate::standards::v1::subsets::any::schema::snapshot::benchmarks_child_from_records(&next.benchmarks_payload);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.schema.is_some() {
-            self.schema = other.schema;
-        }
-        self.meta = compose_edit(self.meta.take(), other.meta, ProgramMetaEdit::compose);
-        self.project = compose_edit(self.project.take(), other.project, ProjectDefinitionEdit::compose);
-        self.governance = compose_edit(self.governance.take(), other.governance, GovernanceEdit::compose);
-        program_collections!(absorb_collection, self, other,);
-        if let Some(delta) = other.knowledge {
-            let mut merged = self.knowledge.take().unwrap_or_default();
-            merged.absorb(delta);
-            self.knowledge = (!merged.is_empty()).then_some(merged);
-        }
-        if let Some(delta) = other.benchmarks {
-            let mut merged = self.benchmarks.take().unwrap_or_default();
-            merged.absorb(delta);
-            self.benchmarks = (!merged.is_empty()).then_some(merged);
-        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<ProgramSnapshot> for ProgramDiff {
+    fn is_empty(&self) -> bool {
+        let mut verdict = self.schema.is_none() && self.meta.as_ref().is_none_or(ProgramMetaEdit::is_empty) && self.project.as_ref().is_none_or(ProjectDefinitionEdit::is_empty) && self.governance.as_ref().is_none_or(GovernanceEdit::is_empty);
+        program_collections!(empty_collection, self, verdict,);
+        verdict && self.knowledge.as_ref().is_none_or(|delta| delta.is_empty()) && self.benchmarks.as_ref().is_none_or(|delta| delta.is_empty())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ProgramSnapshot> for ProgramDiff {
     fn inverse(&self, base: &ProgramSnapshot) -> Self {
         let mut undo = Self::default();
         undo.schema = self.schema.as_ref().map(|_| base.schema.clone());
@@ -900,12 +912,6 @@ impl DiffAlgebra<ProgramSnapshot> for ProgramDiff {
             undo.benchmarks = (!inverse.is_empty()).then_some(inverse);
         }
         undo
-    }
-
-    fn is_empty(&self) -> bool {
-        let mut verdict = self.schema.is_none() && self.meta.as_ref().is_none_or(ProgramMetaEdit::is_empty) && self.project.as_ref().is_none_or(ProjectDefinitionEdit::is_empty) && self.governance.as_ref().is_none_or(GovernanceEdit::is_empty);
-        program_collections!(empty_collection, self, verdict,);
-        verdict && self.knowledge.as_ref().is_none_or(|delta| delta.is_empty()) && self.benchmarks.as_ref().is_none_or(|delta| delta.is_empty())
     }
 }
 //#endregion 🔖️ProgramDiffAlgebra

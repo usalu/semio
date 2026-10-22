@@ -12,7 +12,7 @@ use semio_framework_plugin_instance_extension::{ExtensionCtx, ExtensionRef, Inst
 use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -24,7 +24,7 @@ use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
 
 /// 🧺️ The exclusive borrows the `tr-turns` use cases need; built by the composer (`VcsArtifactApp::tool_run_ctx`) or reborrowed by a higher bundle.
-pub struct ToolRunCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct ToolRunCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
@@ -41,7 +41,7 @@ pub struct ToolRunCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'st
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> ToolRunCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> ToolRunCtx<'ctx, A, M, X> {
     /// 🔍️ The shared twin over the same borrows, for the `&self` members.
     pub fn shared(&self) -> ToolRunRef<'_, A, M, X> {
         ToolRunRef { stores: &*self.stores, child_composition: &*self.child_composition, tool_runs: &*self.tool_runs, extension: PhantomData }
@@ -59,22 +59,22 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> ToolRunC
 }
 
 /// 🔍️ The shared borrows the `tr-turns` `&self` use cases need (`Copy`: every field is a shared reference).
-pub struct ToolRunRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct ToolRunRef<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub stores: &'v InstanceStores<A>,
     pub child_composition: &'v ChildComposition<M>,
     pub tool_runs: &'v ToolRunLedger<A>,
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Clone for ToolRunRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Clone for ToolRunRef<'v, A, M, X> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Copy for ToolRunRef<'v, A, M, X> {}
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Copy for ToolRunRef<'v, A, M, X> {}
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> ToolRunRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> ToolRunRef<'v, A, M, X> {
     /// 🔌️ The shared bundle of this extension, shared from the extension seam's view.
     pub fn of_extension_ref<'e>(ext: &'e ExtensionRef<'_, A, M, X>) -> ToolRunRef<'e, A, M, X> {
         ToolRunRef { stores: ext.stores, child_composition: ext.child_composition, tool_runs: ext.tool_runs, extension: PhantomData }

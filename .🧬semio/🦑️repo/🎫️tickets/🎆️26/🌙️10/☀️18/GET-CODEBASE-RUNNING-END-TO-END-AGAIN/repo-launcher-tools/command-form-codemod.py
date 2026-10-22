@@ -1,8 +1,9 @@
 """Rewrites the runtime-naming command form in tracked sources, tests and docs to the launcher's script route, so no source names the JavaScript runtime in a command: `bun ./x.ts a` -> `repo ./x.ts a`, `bun "p/📜️script.ts" a` -> `repo "p/📜️script.ts" a`, `bun repo run X` -> `repo run X`, `bun --watch x.ts` -> `repo --watch x.ts`, regex sources `^bun ` -> `^repo `, argv arrays ["bun", "repo", ...] -> ["repo", ...]. Spawns of the runtime by name, `bun test`, `bun install`, `bun -e` and package names are never touched.
-Usage: command-form-codemod.py [--root DIR] [--pathspec P ...] [--apply] [--report FILE]. Dry run by default; run together with manifest-neutral.py (same wave) because the consumers parse the form the manifests carry."""
+Also: the shebang `#!/usr/bin/env bun` of scripts becomes `#!/usr/bin/env repo` (the kernel then runs `repo <script> args`, the launcher's script route), the JSON process records `"program": "bun"` that run a script become `"program": "repo"`, and help or usage text such as `usage: bun ./📜️script.ts x` becomes `repo ./📜️script.ts x`.
+Usage: command-form-codemod.py [--root DIR] [--pathspec P ...] [--apply] [--check] [--report FILE]. --check exits 1 while any rule still matches (the law). Dry run by default; run together with manifest-neutral.py (same wave) because the consumers parse the form the manifests carry."""
 import argparse, json, os, re, subprocess, sys
 parser = argparse.ArgumentParser()
-parser.add_argument("--root", default=os.getcwd()); parser.add_argument("--pathspec", action="append", default=[]); parser.add_argument("--apply", action="store_true"); parser.add_argument("--report")
+parser.add_argument("--root", default=os.getcwd()); parser.add_argument("--pathspec", action="append", default=[]); parser.add_argument("--apply", action="store_true"); parser.add_argument("--check", action="store_true"); parser.add_argument("--report")
 args = parser.parse_args()
 root = os.path.abspath(args.root)
 files = subprocess.run(["git", "-C", root, "ls-files", "-z", "--", *(args.pathspec or ["."])], capture_output=True, check=True).stdout.decode("utf-8").split("\0")
@@ -10,12 +11,15 @@ suffixes = (".ts", ".mjs", ".json", ".md", ".yml", ".yaml", ".feature", ".rs", "
 skip = ("node_modules", "🎫️tickets", ".cursor/", ".codex/plans/", "bun.lock", ".lock", "/💾️development/", "/🖼️assets/📽️")
 skip_names = {"📋️project.json", "package.json"}
 rules = [
- (re.compile(r"(?<=[`\"'])bun (?=\./|\"|'|\$\{|[^\s\"'`]*📜️script\.ts|[^\s\"'`]*/script\.ts|repo\b|--watch|--cwd)"), "repo "),
+ (re.compile(r"(?<=[`\"'])bun (?=\./|\"|'|\$\{|[^\s\"'`]*📜️script\.ts|[^\s\"'`]*/script\.ts|--watch|--cwd)"), "repo "),
  (re.compile(r"\^bun(?=[ (\\])"), "^repo"),
  (re.compile(r"(\[\s*)\"bun\",\s*\"repo\""), r'\1"repo"'),
  (re.compile(r"\bbun repo\b(?=[ `'\")]|$)"), "repo"),
  (re.compile(r"requires one Bun script command"), "requires one script command"),
+ (re.compile(r"(?<![\w/-])bun (?=\.{1,2}/[^\s\"'`]*script\.ts)"), "repo "),
 ]
+shebang = re.compile(r"\A#!/usr/bin/env bun\n")
+program = re.compile(r'("program"\s*:\s*)"bun"(?=\s*,\s*"(?:arguments|args)"\s*:\s*\[\s*"[^"]*\.(?:ts|mjs|js)")')
 changed, total = {}, 0
 for rel in files:
     if not rel or not rel.endswith(suffixes) or any(s in rel for s in skip) or os.path.basename(rel) in skip_names: continue
@@ -23,6 +27,10 @@ for rel in files:
     try: text = open(full, encoding="utf-8", newline="").read()
     except Exception: continue
     after, count = text, 0
+    if rel.endswith((".ts", ".mjs", ".js")):
+        after, n = shebang.subn("#!/usr/bin/env repo\n", after); count += n
+    if rel.endswith(".json"):
+        after, n = program.subn(r'\1"repo"', after); count += n
     for pattern, repl in rules:
         after, n = pattern.subn(repl, after); count += n
     if count:
@@ -33,3 +41,4 @@ for rel, n in changed.items(): top[rel.split("/")[0] + "/" + (rel.split("/")[1] 
 summary = {"dryRun": not args.apply, "filesChanged": len(changed), "replacements": total, "byTopDirectory": dict(sorted(top.items(), key=lambda kv: -kv[1])[:12])}
 if args.report: json.dump({**summary, "files": changed}, open(args.report, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print(json.dumps(summary, ensure_ascii=False, indent=1))
+if args.check and changed: sys.exit(1)

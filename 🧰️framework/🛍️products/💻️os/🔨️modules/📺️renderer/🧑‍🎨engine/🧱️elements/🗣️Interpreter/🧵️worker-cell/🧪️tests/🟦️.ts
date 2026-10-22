@@ -76,7 +76,7 @@ test("actual Shell and Ui locale updates retain the existing engine and Scenes c
 test("the owning worker-cell target supplies its explicit caller-owned lifecycle output", () => {
   const repoRoot = resolve(import.meta.dir, "../../../../../../../../../.."), packageRoot = resolve(import.meta.dir, "../../../../🎯️targets/🧊️wgpu/📦️packages/🟦️typescript");
   const target = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8")).targets["test-worker-cell"];
-  expect(target.options.command).toBe("bun ./📜️script.ts test worker-cell");
+  expect(target.options.command).toBe("repo ./📜️script.ts test worker-cell");
   expect(target.options.env).toEqual({ SEMIO_TEST_ARTIFACT_DIR: ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated" });
   expect(resolve(repoRoot, target.options.env.SEMIO_TEST_ARTIFACT_DIR)).toBe(repoCacheDirectory(repoRoot, "tests", "worker-cell", "🗑️generated"));
   const script = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");

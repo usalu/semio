@@ -38,7 +38,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-native-payload-enum source",
+        "command": "repo ./📜️script.ts test-native-payload-enum source",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       }
     },
@@ -54,7 +54,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-native-payload-enum native",
+        "command": "repo ./📜️script.ts test-native-payload-enum native",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       }
     },
@@ -71,7 +71,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-immutable-root-clone source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-immutable-root-clone source"
       },
       "metadata": {
         "semio": {
@@ -95,7 +95,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-immutable-root-clone native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-immutable-root-clone native"
       },
       "metadata": {
         "semio": {
@@ -119,7 +119,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-close-demand source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-close-demand source"
       },
       "metadata": {
         "semio": {
@@ -147,7 +147,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-close-demand native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-close-demand native"
       },
       "metadata": {
         "semio": {
@@ -171,7 +171,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-slice-equality source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-slice-equality source"
       },
       "metadata": {
         "semio": {
@@ -195,7 +195,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-slice-equality native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-slice-equality native"
       },
       "metadata": {
         "semio": {
@@ -219,7 +219,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-edit source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-named-edit source"
       },
       "metadata": {
         "semio": {
@@ -243,7 +243,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-named-edit native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-named-edit native"
       },
       "metadata": {
         "semio": {
@@ -267,7 +267,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-exact-key-lookup source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-exact-key-lookup source"
       },
       "metadata": {
         "semio": {
@@ -291,7 +291,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-exact-key-lookup native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-exact-key-lookup native"
       },
       "metadata": {
         "semio": {
@@ -315,7 +315,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-indexed-edit source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-indexed-edit source"
       },
       "metadata": {
         "semio": {
@@ -339,7 +339,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-indexed-edit native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-indexed-edit native"
       },
       "metadata": {
         "semio": {
@@ -363,7 +363,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-fixed-request-owners source"
+        "command": "repo ./📜️script.ts test-fixed-request-owners source"
       },
       "metadata": {
         "semio": {
@@ -387,7 +387,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-fixed-request-owners native"
+        "command": "repo ./📜️script.ts test-fixed-request-owners native"
       },
       "metadata": {
         "semio": {
@@ -411,7 +411,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-fixed-key-slots source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-fixed-key-slots source"
       },
       "metadata": {
         "semio": {
@@ -435,7 +435,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-fixed-key-slots native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-fixed-key-slots native"
       },
       "metadata": {
         "semio": {
@@ -461,7 +461,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-owned-projection source"
+        "command": "repo ./📜️script.ts test-owned-projection source"
       },
       "metadata": {
         "semio": {
@@ -489,7 +489,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-owned-projection native"
+        "command": "repo ./📜️script.ts test-owned-projection native"
       },
       "metadata": {
         "semio": {
@@ -513,7 +513,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-literal-refusal-source",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-native-literal-refusal-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -538,7 +538,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long --lib original_native_refusal_ --success-output immediate -- --nocapture",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test long --lib original_native_refusal_ --success-output immediate -- --nocapture",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -564,7 +564,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native-recipient-source"
+        "command": "repo ./📜️script.ts test-native-recipient-source"
       },
       "metadata": {
         "semio": {
@@ -588,7 +588,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native-recipient"
+        "command": "repo ./📜️script.ts test-native-recipient"
       },
       "metadata": {
         "semio": {
@@ -613,7 +613,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ordered-retirement-source"
+        "command": "repo ./📜️script.ts test-ordered-retirement-source"
       },
       "metadata": {
         "semio": {
@@ -636,7 +636,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -662,7 +662,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-controlled-construction",
+        "command": "repo ./📜️script.ts test-controlled-construction",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -688,7 +688,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-controlled-encoding",
+        "command": "repo ./📜️script.ts test-controlled-encoding",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -717,7 +717,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test portable"
+        "command": "repo ./📜️script.ts test portable"
       },
       "metadata": {
         "semio": {
@@ -742,7 +742,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-type-ownership"
+        "command": "repo ./📜️script.ts test-type-ownership"
       },
       "metadata": {
         "semio": {
@@ -767,7 +767,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-decode-ownership"
+        "command": "repo ./📜️script.ts test-decode-ownership"
       },
       "metadata": {
         "semio": {
@@ -792,7 +792,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-refusal-codec"
+        "command": "repo ./📜️script.ts test-refusal-codec"
       },
       "metadata": {
         "semio": {
@@ -817,7 +817,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-refusal-portable"
+        "command": "repo ./📜️script.ts test-refusal-portable"
       },
       "metadata": {
         "semio": {
@@ -842,7 +842,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-graphql-int64-source"
+        "command": "repo ./📜️script.ts test-graphql-int64-source"
       },
       "metadata": {
         "semio": {
@@ -866,7 +866,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-shared-factory-retirement"
+        "command": "repo ./📜️script.ts test-shared-factory-retirement"
       },
       "metadata": {
         "semio": {
@@ -899,7 +899,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture",
+        "command": "repo ./📜️script.ts test long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture",
         "forwardAllArgs": false
       }
     },
@@ -925,7 +925,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long --lib --success-output immediate -- --nocapture",
+        "command": "repo ./📜️script.ts test long --lib --success-output immediate -- --nocapture",
         "forwardAllArgs": false
       }
     },
@@ -942,7 +942,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-factory-owned-source"
+        "command": "repo ./📜️script.ts test-factory-owned-source"
       }
     },
     "test-factory-owned-source-native": {
@@ -958,7 +958,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib factory_owned_source_preserves_actual_payload_and_custom_issuer --no-fail-fast --success-output immediate"
+        "command": "repo ./📜️script.ts test --lib factory_owned_source_preserves_actual_payload_and_custom_issuer --no-fail-fast --success-output immediate"
       }
     },
     "test-compound-demands": {
@@ -974,7 +974,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-compound-demands"
+        "command": "repo ./📜️script.ts test-compound-demands"
       }
     },
     "test-compound-demands-native": {
@@ -990,7 +990,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test --lib retained_clone_normal_demand_generic_compounds --no-fail-fast --success-output immediate"
+        "command": "repo ./📜️script.ts test --lib retained_clone_normal_demand_generic_compounds --no-fail-fast --success-output immediate"
       }
     },
     "test-bulk-vec-retained-native": {
@@ -1006,7 +1006,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-bulk-vec-retained native"
+        "command": "repo ./📜️script.ts test-bulk-vec-retained native"
       }
     },
     "test-original-retirement-demand": {
@@ -1022,7 +1022,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-retirement-demand source"
+        "command": "repo ./📜️script.ts test-original-retirement-demand source"
       }
     },
     "test-original-retirement-demand-native": {
@@ -1038,7 +1038,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-retirement-demand native"
+        "command": "repo ./📜️script.ts test-original-retirement-demand native"
       }
     },
     "test-persistent-traversal": {
@@ -1054,7 +1054,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-persistent-traversal source"
+        "command": "repo ./📜️script.ts test-persistent-traversal source"
       }
     },
     "test-persistent-traversal-native": {
@@ -1070,7 +1070,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-persistent-traversal native"
+        "command": "repo ./📜️script.ts test-persistent-traversal native"
       }
     },
     "test-immutable-projection": {
@@ -1088,7 +1088,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-immutable-projection"
+        "command": "repo ./📜️script.ts test-immutable-projection"
       },
       "metadata": {
         "semio": {
@@ -1112,7 +1112,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-immutable-projection native"
+        "command": "repo ./📜️script.ts test-immutable-projection native"
       }
     },
     "test-retained-utf8-source": {
@@ -1127,7 +1127,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-retained-utf8 source",
+        "command": "repo ./📜️script.ts test-retained-utf8 source",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -1144,7 +1144,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-retained-utf8 native",
+        "command": "repo ./📜️script.ts test-retained-utf8 native",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -1162,7 +1162,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-sealed-frontier source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-sealed-frontier source"
       },
       "metadata": {
         "semio": {
@@ -1186,7 +1186,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-sealed-frontier native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-sealed-frontier native"
       },
       "metadata": {
         "semio": {
@@ -1209,7 +1209,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-vector-concat source",
+        "command": "repo ./📜️script.ts test-original-vector-concat source",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       }
     },
@@ -1225,7 +1225,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-vector-concat native",
+        "command": "repo ./📜️script.ts test-original-vector-concat native",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       }
     },
@@ -1243,7 +1243,7 @@
         }
       },
       "options": {
-        "command": "bun ./📜️script.ts test-borrowed-observations source",
+        "command": "repo ./📜️script.ts test-borrowed-observations source",
         "cwd": "{projectRoot}"
       },
       "cache": true,
@@ -1259,7 +1259,7 @@
     },
     "test-borrowed-observations-native": {
       "options": {
-        "command": "bun ./📜️script.ts test-borrowed-observations native",
+        "command": "repo ./📜️script.ts test-borrowed-observations native",
         "cwd": "{projectRoot}"
       },
       "cache": true,
@@ -1294,7 +1294,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-receiving-original-source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-native-receiving-original-source"
       }
     },
     "test-persistent-build-source": {
@@ -1310,7 +1310,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-persistent-build source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-persistent-build source"
       },
       "metadata": {
         "semio": {
@@ -1334,7 +1334,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-persistent-build native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-persistent-build native"
       },
       "metadata": {
         "semio": {
@@ -1358,7 +1358,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-retained-equality source"
       },
       "metadata": {
         "semio": {
@@ -1383,7 +1383,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-retained-equality native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-retained-equality native"
       },
       "metadata": {
         "semio": {
@@ -1408,7 +1408,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-persistent-receive source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-native-persistent-receive source"
       },
       "metadata": {
         "semio": {
@@ -1432,7 +1432,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-native-persistent-receive native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-native-persistent-receive native"
       },
       "metadata": {
         "semio": {
@@ -1445,7 +1445,7 @@
     },
     "test-native-shared-receive-source": {
       "options": {
-        "command": "bun ./📜️script.ts test-native-shared-receive source",
+        "command": "repo ./📜️script.ts test-native-shared-receive source",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -1469,7 +1469,7 @@
     },
     "test-native-shared-receive-native": {
       "options": {
-        "command": "bun ./📜️script.ts test-native-shared-receive native",
+        "command": "repo ./📜️script.ts test-native-shared-receive native",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
       },
       "cache": true,
@@ -1504,7 +1504,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-root-receive source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-named-root-receive source"
       },
       "metadata": {
         "semio": {
@@ -1528,7 +1528,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-root-receive native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-named-root-receive native"
       },
       "metadata": {
         "semio": {
@@ -1552,7 +1552,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-key-index source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-named-key-index source"
       },
       "metadata": {
         "semio": {
@@ -1576,7 +1576,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-named-key-index native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-named-key-index native"
       },
       "metadata": {
         "semio": {
@@ -1600,7 +1600,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-retirement-loan source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-native-retirement-loan source"
       },
       "metadata": {
         "semio": {
@@ -1624,7 +1624,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-native-retirement-loan native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test-native-retirement-loan native"
       },
       "metadata": {
         "semio": {
@@ -1648,7 +1648,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-plain-element-retirement-source",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- repo ./📜️script.ts test-plain-element-retirement-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -1673,7 +1673,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-bulk-vec-retained source"
+        "command": "repo ./📜️script.ts test-bulk-vec-retained source"
       }
     },
     "test-paged-reservation-source": {
@@ -1699,7 +1699,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-paged-reservation-source",
+        "command": "repo ./📜️script.ts test-paged-reservation-source",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -1737,6 +1737,10 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs",
         {
           "env": "SEMIO_TEST_LEVEL"
         },
@@ -1750,7 +1754,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-exclusive-retirement-source",
+        "command": "repo ./📜️script.ts test-exclusive-retirement-source",
         "forwardAllArgs": false
       },
       "metadata": {

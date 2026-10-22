@@ -13,15 +13,14 @@ use semio_framework_os_kernel::os_directory::{
     DocumentView,
     MemberSpaceViewV1,
     MemberView,
-    descriptor_digest_v1,
-    hex_lower,
 };
+use semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
+use semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use semio_framework_os_kernel::os_directory::client::{DirectoryClient, DirectoryTransport};
 use semio_framework_os_mcp_foundation::errors::GatewayError;
 use semio_framework_os_mcp_hub_pair::pair;
 use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
 use semio_framework_os_mcp_wire::notify::publish_call_progress;
-use semio_framework_ui_contract_validation::validate_snapshot;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};

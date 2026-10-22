@@ -15,7 +15,7 @@ async fn changes_only_alpha_mode_and_rejects_identity() {
     let mut snapshot = GltfSnapshot::default();
     snapshot.document.materials.push(Default::default());
     let payload = GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask };
-    snapshot = protocol::apply_diff(&plan(&payload, &snapshot).unwrap(), &snapshot).unwrap();
+    snapshot = protocol::apply_diff_cold(&plan(&payload, &snapshot).unwrap(), &snapshot).unwrap();
     assert_eq!(snapshot.document.materials[0].alpha_mode, GltfAlphaMode::Mask);
     assert!(plan(&payload, &snapshot).is_err());
 }

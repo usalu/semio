@@ -25,7 +25,7 @@ fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: &Generat
     admit_generation2d_artifact_mutation(mutation).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "generation2d-artifact-mutation-envelope"))?;
     let inverse = protocol::Mutation::inverse(mutation, base)?;
     let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
-    let applied = protocol::apply_diff(&diff, base);
+    let applied = protocol::apply_diff_cold(&diff, base);
     diff.retire_cold();
     match applied {
         Ok(post) => Ok((post, inverse)),

@@ -1,0 +1,39 @@
+{
+  "title": "Fix CreateContext Not Defined in Type Tsx",
+  "status": "closed",
+  "description": "Fix createContext is not defined runtime error at Type.tsx:1184 in the sketchpad. The import is present on line 26 but createContext is not resolved at runtime.",
+  "summary": "Fixed two issues: (1) Added missing createContext named import to the React import in Type.tsx line 26 - another developer removed it causing ReferenceError at runtime on line 1184. (2) Fixed broken import paths in compose/sketchpad/index.tsx - changed ../compose/sketchpad/ to ../js/sketchpad/ since the component files live under compose/js/sketchpad/, not compose/compose/sketchpad/.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/645"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-22T15:06:21.634059278Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix createContext is not defined runtime error at Type.tsx:1184 in the sketchpad. The import is present on line 26 but createContext is not resolved at runtime.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-22T15:13:18.846924822Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3f0ee8c7d56cf758b50565ca1e0295282c7d8dd2",
+      "summary": "Fixed two issues: (1) Added missing createContext named import to the React import in Type.tsx line 26 - another developer removed it causing ReferenceError at runtime on line 1184. (2) Fixed broken import paths in compose/sketchpad/index.tsx - changed ../compose/sketchpad/ to ../js/sketchpad/ since the component files live under compose/js/sketchpad/, not compose/compose/sketchpad/.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        },
+        {
+          "path": "💻️compose/sketchpad/index.tsx"
+        }
+      ]
+    }
+  ]
+}

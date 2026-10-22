@@ -1,7 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /**
- * 🧭️ Monorepo command router: `bun ./📜️script.ts <command> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
- * The commands, what each needs before it starts and its help live in the registry `🎛️commands/🗂️registry/🔣️.json`; a command that needs the locked dependencies gets them installed through `bun repo dependencies ensure` before its module is loaded, and `<command> --help` never loads a command.
+ * 🧭️ Monorepo command router: `repo ./📜️script.ts <command> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
+ * The commands, what each needs before it starts and its help live in the registry `🎛️commands/🗂️registry/🔣️.json`; a command that needs the locked dependencies gets them installed through `repo dependencies ensure` before its module is loaded, and `<command> --help` never loads a command.
  */
 import type { TechnologyLinter } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
 import { type BreachRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔖️breach/🟦️.ts";
@@ -44,7 +44,7 @@ const router = registerRootCommandsV1(new ScriptRouter(WORKSPACE_ROOT, WORKSPACE
 }, dependencyGateV1(WORKSPACE_ROOT, registry));
 //#endregion 🔖️Dispatch
 
-/** ⚖️ The Wave 4 app-plugin consistency lint the policy runner loads from this script (`bun ./📜️script.ts policy`). */
+/** ⚖️ The Wave 4 app-plugin consistency lint the policy runner loads from this script (`repo ./📜️script.ts policy`). */
 export const policy = async (_l: TechnologyLinter): Promise<BreachRecord[]> => {
   const { policyBreaches } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts");
   return policyBreaches();

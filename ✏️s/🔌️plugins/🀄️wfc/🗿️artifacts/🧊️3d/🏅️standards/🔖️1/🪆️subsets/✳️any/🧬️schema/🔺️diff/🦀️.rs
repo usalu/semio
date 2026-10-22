@@ -134,21 +134,9 @@ pub struct Wfc3dDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
-impl protocol::MutationDiff<Wfc3dSnapshot> for Wfc3dDiff {
-    fn apply(&self, base: &Wfc3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc3dSnapshot> {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema.clone_from(schema);
-        }
-        if let Some(seed) = self.seed {
-            next.seed = seed;
-        }
-        next.slots = self.slots.commit_onto(&base.slots, capability).map_err(|error| error.under(["slots"]))?;
-        next.edges = self.edges.commit_onto(&base.edges, capability).map_err(|error| error.under(["edges"]))?;
-        next.tiles = self.tiles.commit_onto(&base.tiles, capability).map_err(|error| error.under(["tiles"]))?;
-        next.rules = self.rules.commit_onto(&base.rules, capability).map_err(|error| error.under(["rules"]))?;
-        Ok(next)
-    }
+impl protocol::MutationDiff<Wfc3dSnapshot> for Wfc3dDiff {}
+
+impl protocol::ColdMutationDiff<Wfc3dSnapshot> for Wfc3dDiff {
     fn absorb(&mut self, later: Self) {
         if later.schema.is_some() {
             self.schema = later.schema;
@@ -161,9 +149,37 @@ impl protocol::MutationDiff<Wfc3dSnapshot> for Wfc3dDiff {
         self.tiles.absorb(later.tiles);
         self.rules.absorb(later.rules);
     }
+
+    fn apply(&self, unpublished: &mut Wfc3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema.clone_from(schema);
+        }
+        if let Some(seed) = self.seed {
+            next.seed = seed;
+        }
+        next.slots = self.slots.commit_onto(&base.slots, capability).map_err(|error| error.under(["slots"]))?;
+        next.edges = self.edges.commit_onto(&base.edges, capability).map_err(|error| error.under(["edges"]))?;
+        next.tiles = self.tiles.commit_onto(&base.tiles, capability).map_err(|error| error.under(["tiles"]))?;
+        next.rules = self.rules.commit_onto(&base.rules, capability).map_err(|error| error.under(["rules"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Wfc3dSnapshot> for Wfc3dDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && self.seed.is_none()
+            && self.slots.is_empty()
+            && self.edges.is_empty()
+            && self.tiles.is_empty()
+            && self.rules.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Wfc3dSnapshot> for Wfc3dDiff {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -173,14 +189,6 @@ impl protocol::DiffAlgebra<Wfc3dSnapshot> for Wfc3dDiff {
             tiles: self.tiles.inverse(&base.tiles),
             rules: self.rules.inverse(&base.rules),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && self.seed.is_none()
-            && self.slots.is_empty()
-            && self.edges.is_empty()
-            && self.tiles.is_empty()
-            && self.rules.is_empty()
     }
 }
 //#endregion 🔖️Apply

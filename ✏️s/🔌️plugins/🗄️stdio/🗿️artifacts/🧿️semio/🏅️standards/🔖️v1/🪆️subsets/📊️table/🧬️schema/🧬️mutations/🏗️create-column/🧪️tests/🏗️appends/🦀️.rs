@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableM
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/➡️after/🔣️.json"));
@@ -35,7 +35,7 @@ fn create_column() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn creates_the_area_column_and_pads_each_row_with_null() {
     let base = before();
-    let produced = protocol::apply_diff(create_column().diff(&base).diff(), &base).expect("create-column applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(create_column().diff(&base).diff(), &base).expect("create-column applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-column/appends-a-float-column-and-null-pads-every-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.columns.len(), base.columns.len() + 1, "create-column adds exactly one column");
     assert_eq!(produced.columns[1].name, "area", "the new column must land at the requested FINAL index");
@@ -56,9 +56,9 @@ async fn the_undo_delete_column_removes_the_column_and_its_padding() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-column undoes as exactly one delete-column");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-column applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward create-column applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-column applies to the widened table");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo delete-column applies to the widened table");
     }
     assert_eq!(current, base, "create-column/appends-a-float-column-and-null-pads-every-row: the undo did not restore the before-snapshot");
 }
@@ -94,7 +94,7 @@ async fn declared_outcome_holds_without_a_duplicate_id_rejection() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&create_column(), &base);
+    let outcome = <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::diff(&create_column(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-column/appends-a-float-column-and-null-pads-every-row: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -115,6 +115,6 @@ async fn committed_diff_is_canonical_and_carries_both_slots() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-column diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-column diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed create-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-column/appends-a-float-column-and-null-pads-every-row: committed diff did not carry before to after");
 }

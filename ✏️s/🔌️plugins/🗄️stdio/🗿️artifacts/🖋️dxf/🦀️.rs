@@ -69,7 +69,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
 /// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<DxfSnapshot, DxfMutation>(...))`.
 /// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
-/// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
+/// owned rows) by its full path through the `engine` re-export (`🦀️.rs`'s `pub mod engine { pub use
 /// super::standards::v_r12::engine::*; }`) — deliberately NOT this file's own `io_registry` module
 /// below, whose `entries()` returns `&'static [&'static ComposerEntry]` (references) and would
 /// silently rebind under a bare call (this ticket's "SILENT REBIND" hazard). dxf's own
@@ -211,7 +211,7 @@ pub mod text {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 pub mod schema {
     pub use super::standards::v_r12::subsets::any::schema::*;
 }

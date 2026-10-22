@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
-import {buildBackendAlternationV1,buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
+import {buildBackendAlternationV1,buildBackendDriverUrlV1,buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
 import {conformanceIssuesV1,renderConformanceReportV1,type ConformanceSetV1} from "../🟦️.ts";
 import type {ConformanceDriverV1,ConformanceHostV1} from "../🏃️runner/🟦️.ts";
 
@@ -37,6 +37,12 @@ export function conformanceArgumentsV1(args:readonly string[]):ConformanceArgume
  return Object.freeze({operation,backends:!backends||backends.includes("all")?"all":backends,scenarios:!chosenScenarios||chosenScenarios.includes("all")?"all":chosenScenarios,file:values["--file"],json:flags.has("--json"),keep:flags.has("--keep"),language:language as "en"|"de"|undefined});
 }
 
+/** 🧾️ Reads a whole `repo conformance` request, which the build CLI hands over led by the command name. */
+export function conformanceRequestV1(args:readonly string[]):ConformanceArgumentsV1{
+ if(args[0]!=="conformance")throw Error(both("Expected the conformance command","Erwartet: der Befehl conformance"));
+ return conformanceArgumentsV1(args.slice(1));
+}
+
 /** 📋️ Lists the scenarios and what each backend claims for them. */
 export function renderConformanceListV1(set:ConformanceSetV1,language:"en"|"de"):string{
  const ids=buildBackendIdsV1(),lines=[["scenario","capability",...ids].join(" | ")];
@@ -44,9 +50,9 @@ export function renderConformanceListV1(set:ConformanceSetV1,language:"en"|"de")
  return lines.join("\n")+"\n";
 }
 
-/** 🚪️ The entry the build CLI calls for `repo conformance`. */
+/** 🚪️ The entry the build CLI calls for `repo conformance`; `args` are the whole request, led by the command name. */
 export async function runConformanceCommandV1(root:string,args:readonly string[],invocation:ScriptInvocation):Promise<void>{
- const parsed=conformanceArgumentsV1(args),set=scenarios as unknown as ConformanceSetV1,issues=conformanceIssuesV1(set);
+ const parsed=conformanceRequestV1(args),set=scenarios as unknown as ConformanceSetV1,issues=conformanceIssuesV1(set);
  if(issues.length)throw Error(both("The conformance scenarios are inconsistent:\n","Die Konformitätsszenarien sind widersprüchlich:\n")+issues.join("\n"));
  const language=parsed.language??(resolveLanguageV1(["en","de"],args,process.env).language as "en"|"de");
  if(parsed.operation==="list"){console.log(renderConformanceListV1(set,language));return;}
@@ -55,7 +61,7 @@ export async function runConformanceCommandV1(root:string,args:readonly string[]
  const base=join(tmpdir(),"conformance-run");await mkdir(base,{recursive:true});
  const scratch=await mkdtemp(join(base,"r-")),remotes:{stop():Promise<void>}[]=[];
  const host:ConformanceHostV1={scratch,runtime:process.execPath,stubSource:await readStub(),signal:invocation.control.signal,
-  loadDriver:async id=>{const row=buildBackendRowV1(id);const module=await import(new URL(row.driver,import.meta.url).href) as {driver:ConformanceDriverV1};return module.driver;},
+  loadDriver:async id=>{const module=await import(buildBackendDriverUrlV1(id).href) as {driver:ConformanceDriverV1};return module.driver;},
   startRemote:async()=>{
    const {startRemoteCacheServerV1}=await import("../../🌐️remote-cache/🖥️server/🟦️.ts"),server=await startRemoteCacheServerV1({directory:join(scratch,"remote-"+remotes.length),host:"127.0.0.1",port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:1,defaultInstance:"main",tokens:{}});
    remotes.push(server);return {url:server.url+"/main",stop:()=>server.stop()};

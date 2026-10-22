@@ -13,12 +13,13 @@
     "./modules/simulation/engine/site/chronology/testing": "./🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️testing/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/energy-js:test"
+    "test": "repo run @semio-tech/energy-js:test"
   },
   "dependencies": {},
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/process": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

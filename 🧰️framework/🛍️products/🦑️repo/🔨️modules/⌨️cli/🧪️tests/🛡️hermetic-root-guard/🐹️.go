@@ -6,11 +6,12 @@ import (
 	os "os"
 	testing "testing"
 
+	launcher "github.com/usalu/semio/repo/launcher"
 	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(sandbox.Run("cli", nil, m.Run))
+	os.Exit(sandbox.Run("cli", nil, func() int { launcher.BindRoot(sandbox.Origin()); return m.Run() }))
 }
 
 func TestTestsRunAgainstAnOwnedRoot(t *testing.T) {

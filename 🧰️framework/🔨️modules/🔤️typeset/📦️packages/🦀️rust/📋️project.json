@@ -27,7 +27,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -42,7 +42,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts lint"
+        "command": "repo ./📜️script.ts lint"
       }
     }
   }

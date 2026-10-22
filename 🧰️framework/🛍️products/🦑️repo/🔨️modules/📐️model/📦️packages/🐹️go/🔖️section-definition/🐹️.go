@@ -83,6 +83,7 @@ func (s *Section) IsNode() {}
 // 💝️GetID MUST return the stored value without modification.
 // ❤️GetID returns the i d of the Section.
 func (s *Section) GetID() string {
+ if s.ID!="" { return s.ID }
 	if s.FilePath != "" {
 		fileID := BuildFileID(s.FilePath, nil)
 		if s.Path != "" {
@@ -128,6 +129,7 @@ func (d *Definition) IsNode() {}
 // 🔖️GetID MUST return the stored value without modification.
 // 🤎️GetID returns the i d of the Definition.
 func (d *Definition) GetID() string {
+ if d.ID!="" { return d.ID }
 	if d.FilePath != "" {
 		fileID := BuildFileID(d.FilePath, nil)
 		var sectionParts []string

@@ -12,8 +12,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -37,7 +37,7 @@ type SystemGit struct {
 
 // 🖥️run executes git in the bound repository and returns stdout.
 func (source SystemGit) run(args []string) ([]byte, error) {
-	command := exec.Command("git", args...)
+	command := workspace.ToolCommand("git", args...)
 	command.Dir = source.Repo
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout

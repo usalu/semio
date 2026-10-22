@@ -4,7 +4,8 @@
  */
 
 import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
-import React, { useEffect, useLayoutEffect, useMemo } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useEffect, useLayoutEffect, useMemo } from "../../⚛️react-port/🟦️.ts";
 import { meshAssetTransportUrl } from "@semio-tech/framework/assets/mesh";
 import { MESH_DELIVERY_CATALOG } from "@semio-tech/framework/assets/mesh";
 // #region 🔌️Adapters

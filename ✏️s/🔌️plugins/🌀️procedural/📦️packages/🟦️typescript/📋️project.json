@@ -12,7 +12,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -42,7 +42,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
+        "command": "repo ./📜️script.ts test renderer-contract",
         "forwardAllArgs": true
       }
     },
@@ -57,7 +57,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test renderer-contract",
+        "command": "repo ./📜️script.ts test renderer-contract",
         "forwardAllArgs": true
       },
       "cache": true,

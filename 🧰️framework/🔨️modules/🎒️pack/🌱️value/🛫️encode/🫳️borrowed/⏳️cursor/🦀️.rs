@@ -1,11 +1,34 @@
 //! 🎒️ Retained canonical record symbols and ordinal emission from an immutable original source.
-use super::*;
+use semio_framework_value::{Number, ValueError, ValueRefusalKind};
+use std::cmp::Ordering;
+use std::mem::size_of;
+use semio_framework_pack_record_schema::{ELEM_BOOL, ELEM_ENUM, ELEM_F64, ELEM_FALLBACK, ELEM_INT, ELEM_STR, ELEM_UINT, TAG_ABSENT, TAG_BLOCK, TAG_BYTES, TAG_BYTES_CHUNKED, TAG_ENUM, TAG_EXPR, TAG_F64, TAG_FALSE, TAG_INT, TAG_LIST, TAG_MAP, TAG_NULL, TAG_PACKED_F64, TAG_PACKED_VARINT, TAG_RECORD, TAG_STATEMENTS, TAG_STR, TAG_STR_INLINE, TAG_TABLE_SOA, TAG_TRUE, TAG_TUPLE, TAG_UINT, TAG_VALUE, TAG_WIRE};
+#[cfg(test)]
+use semio_framework_value::{DslValue, native_encoding::NativeEncodeControl};
 use semio_framework_dsl_record::{BorrowedRecordSpec, BorrowedShape as B};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V};
 use semio_framework_dsl_record::native_encoding::RetainedExpressionCursor;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_paged_text::paged_text::TextReadView;
+
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+
+//#region 🎒️BorrowedDocumentCursor
+#[cfg(feature = "deflate")]
+#[path = "../🎒️document/⏳️cursor/🦀️.rs"]
+mod borrowed_document;
+#[cfg(feature = "deflate")]
+pub use borrowed_document::{BorrowedPackDocumentCursor, BorrowedPackDocumentFailure, BorrowedPackDocumentProgress};
+//#endregion 🎒️BorrowedDocumentCursor
+
+//#region 📨️OwnedWireCursor
+#[path = "../📨️wire/🦀️.rs"]
+mod owned_wire;
+pub use owned_wire::{OwnedProjectedPackWireCursor, OwnedProjectedPackWireReady, OwnedProjectedPackWireStep};
+//#endregion 📨️OwnedWireCursor
 
 const SYMBOL_LIMIT: usize = isize::MAX as usize;
 
@@ -32,6 +55,11 @@ impl Symbol {
 
 #[derive(Clone, Copy, Default)]
 struct Frame { phase: u8, index: usize, count: usize, ordinal: usize, previous: u32, candidate: u32, flags: u8, packed: u8, length: usize, offset: usize, rank: usize, shape: Option<B>, record: Option<BorrowedRecordSpec>, table_row: bool, force_text: bool, intrinsic:bool,bare_record:bool }
+impl semio_framework_value::retirement::RetireOwned for Frame{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase { Initialize, Discover, Find, Reserve, Insert, Select, SymbolsCount, Symbols, SymbolBytes, Reset, Body, Expression, ChunkReserve, Complete, Closing, Closed }
@@ -562,9 +590,13 @@ impl Drop for BorrowedProjectedPackCursor {
     fn drop(&mut self) { assert!(self.symbols.terminal_is_empty()&&self.frames.terminal_is_empty()&&self.chunks.terminal_is_empty(), "borrowed Pack symbol/frame backing requires its exact terminal-empty close witness"); }
 }
 
+/// ♻️ Every paged owner of an interrupted cursor retires in one physical sequence: expression frames, symbols, frames and chunks.
+#[derive(semio_framework_value::RetireOwned)]
+struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedList<Symbol,SYMBOL_LIMIT>,frames:PagedList<Frame,64>,chunks:PagedList<ChunkLocator,{isize::MAX as usize}>}
+
 impl semio_framework_value::retirement::RetireOwned for BorrowedProjectedPackCursor{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let symbols=unsafe{std::ptr::read(&owner.symbols)};semio_framework_value::retirement::RetireOwned::retirement(symbols)}
-    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.symbols)}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let physical=unsafe{PhysicalBorrowedPack{expression:std::ptr::read(&owner.expression),symbols:std::ptr::read(&owner.symbols),frames:std::ptr::read(&owner.frames),chunks:std::ptr::read(&owner.chunks)}};semio_framework_value::retirement::RetireOwned::retirement(physical)}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.expression),deferred_birth_bytes_for(&self.symbols),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.chunks)])}
     fn controlled_retirement_supported()->bool{true}
 }
 

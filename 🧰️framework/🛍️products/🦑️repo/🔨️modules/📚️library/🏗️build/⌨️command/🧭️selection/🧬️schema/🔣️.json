@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kernels",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kernels": {
+      "const": {
+        "preflight": "🩺️preflight/🟦️.ts",
+        "dependencies": "📦️dependencies/🟦️.ts",
+        "runtime": "⚙️runtime/🟦️.ts",
+        "cache": "💾️cache/🟦️.ts",
+        "cache-ledger": "💾️cache/📋️ledger/🟦️.ts"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "kind"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "preflight",
+              "dependencies",
+              "runtime",
+              "cache",
+              "cache-ledger"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

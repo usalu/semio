@@ -68,7 +68,7 @@ impl DagHost {
             },
             paint: DagPaintState {
                 dimmed: HistoryFoldSet::new(),
-                icon_paint_cache: graph::IconPaintCache::new(),
+                icon_paint_cache: semio_framework_os_infinite_board_engine::IconPaintCache::new(),
                 computing_active: None,
                 computing_stale: NumericSet::new(),
                 computing_active_anim_phase: Cell::new(0.0),

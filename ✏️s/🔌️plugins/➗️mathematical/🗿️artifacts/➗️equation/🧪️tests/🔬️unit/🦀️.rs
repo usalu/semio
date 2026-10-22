@@ -81,7 +81,7 @@ async fn applying_a_state_diff_re_derives_the_handles() {
     let moved = moved_geometry();
     let edits = vec![crate::diff::EquationPointEdit::Set { at: 0, point: moved.points[0].clone() }];
     let diff = EquationDiff { points: Some(crate::diff::EquationPointsDelta { edits }), ..Default::default() };
-    let applied = protocol::apply_diff(&diff, &base).expect("a state diff applies");
+    let applied = protocol::apply_diff_cold(&diff, &base).expect("a state diff applies");
     let mut expected = equation_snapshot_with_state(&base.graph, &moved);
     expected.equation = base.equation.clone();
     assert_eq!(applied, expected);

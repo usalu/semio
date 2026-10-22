@@ -13,19 +13,20 @@ pub struct SetDrawingNamespace {
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetDrawingNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing-namespace", kind: "set-drawing-namespace", record: "SetDrawingNamespace" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(diff_retarget_namespace(base, DRAWING_NAMESPACES, &self.namespace))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
-        Ok(drawing_namespace_inverse(base))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set drawing namespace", "Zeichnungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxTransitionalMutation> for SetDrawingNamespace {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_namespace(base, DRAWING_NAMESPACES, &self.namespace))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
+        Ok(drawing_namespace_inverse(base))
     }
 }
 //#endregion 🔖️Payload

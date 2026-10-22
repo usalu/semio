@@ -1,7 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runStylingPythonGenerateScript, runStylingPythonTestScript } from "../../🧪️tests/🔬️python-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🎨️ Confirms that the shared styling generator dependency completed. */
 export class StylingPythonGenerateScript extends BundleScript {
@@ -17,4 +18,4 @@ export class StylingPythonTestScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("generate", StylingPythonGenerateScript).register("test", StylingPythonTestScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("generate", StylingPythonGenerateScript).register("test", StylingPythonTestScript)).run(process.argv.slice(2), original));

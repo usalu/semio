@@ -6,7 +6,7 @@ use super::*;
 
 //#region 🗄️Repository
 
-/// 🪪️ The per-IDE surface selected by `SEMIO_REPO_MCP_CLIENT`.
+/// 🪪️ The per-agent-client surface selected by `SEMIO_REPO_MCP_CLIENT`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Profile {
     #[default]
@@ -202,7 +202,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
         ("no_management", Schema::boolean("Skip management integration.")),
     ];
     match profile {
-        Profile::Cursor | Profile::Copilot | Profile::Claude | Profile::Codex => {
+        Profile::Copilot | Profile::Claude | Profile::Codex => {
             open.push(("plan_id", Schema::string(&describe(profile, "arg_plan_id"))));
             reopen.push(("plan_id", Schema::string(&describe(profile, "arg_plan_id"))));
         }
@@ -210,7 +210,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
             open.push(("spec_id", Schema::string(&describe(profile, "arg_spec_id"))));
             reopen.push(("spec_id", Schema::string(&describe(profile, "arg_spec_id"))));
         }
-        Profile::Generic => {}
+        Profile::Cursor | Profile::Generic => {}
     }
     let tool = |name: &str, schema: Schema| Tool { name: name.to_string(), title: String::new(), description: describe(profile, &format!("tool_{name}")), input_schema: schema, output_schema: Some(Tool::result_output_schema()) };
     vec![
@@ -273,7 +273,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
 pub fn resource_schemas(profile: Profile) -> Vec<Resource> {
     [("repo://", "repo", "res_root"), ("repo://bundles", "bundles", "res_bundles"), ("repo://folders", "folders", "res_folders"), ("repo://files", "files", "res_files"), ("repo://tickets", "tickets", "res_tickets"), ("repo://goals", "goals", "res_goals"), ("repo://policies", "policies", "res_policies"), ("repo://contributors", "contributors", "res_contributors")]
         .into_iter()
-        .map(|(uri, name, key)| Resource { uri: uri.to_string(), name: name.to_string(), title: String::new(), description: describe(profile, key), mime_type: "text/plain".to_string() })
+        .map(|(uri, name, key)| Resource { uri: uri.to_string(), name: name.to_string(), title: String::new(), description: describe(profile, key), mime_type: if matches!(uri, "repo://files" | "repo://folders") { "application/json" } else { "text/plain" }.to_string() })
         .collect()
 }
 

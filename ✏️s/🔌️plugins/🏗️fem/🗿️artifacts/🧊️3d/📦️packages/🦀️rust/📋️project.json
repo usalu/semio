@@ -22,6 +22,7 @@
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎯️positive-spectrum/**/*",
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️pencil/**/*",
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️shape/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔄️shift-operator/**/*",
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-ldlt/**/*",
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🧮️triplet-csr/**/*",
       "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/**/*",
@@ -36,7 +37,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-results source"
+        "command": "repo ./📜️script.ts verify fem3d-results source"
       },
       "metadata": {
         "semio": {
@@ -54,7 +55,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-results native"
+        "command": "repo ./📜️script.ts verify fem3d-results native"
       },
       "metadata": {
         "semio": {
@@ -78,7 +79,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -86,7 +87,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -95,7 +96,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -105,7 +106,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-transform-intent native",
+        "command": "repo ./📜️script.ts verify fem3d-transform-intent native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -124,7 +125,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-transform-intent source"
+        "command": "repo ./📜️script.ts verify fem3d-transform-intent source"
       },
       "metadata": {
         "semio": {
@@ -142,7 +143,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-numerical-child-native",
+        "command": "repo ./📜️script.ts verify fem3d-numerical-child-native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -160,7 +161,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem3d-numerical-child-source"
+        "command": "repo ./📜️script.ts verify fem3d-numerical-child-source"
       },
       "metadata": {
         "semio": {
@@ -176,7 +177,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -185,7 +186,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -194,7 +195,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -210,7 +211,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-material source"
+        "command": "repo ./📜️script.ts test-material source"
       },
       "cache": true,
       "outputs": [],
@@ -228,7 +229,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-material native"
+        "command": "repo ./📜️script.ts test-material native"
       },
       "cache": true,
       "outputs": [],

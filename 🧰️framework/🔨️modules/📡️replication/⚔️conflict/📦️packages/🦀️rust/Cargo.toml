@@ -31,6 +31,7 @@ semio-framework-replication-wire-core = { path = "../../../🧾️wire/📦️pa
 semio-framework-value.workspace = true
 
 [dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-replication-edit = { path = "../../../🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }

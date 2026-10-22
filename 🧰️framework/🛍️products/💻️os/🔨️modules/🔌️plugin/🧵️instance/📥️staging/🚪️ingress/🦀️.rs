@@ -9,7 +9,7 @@ use store::os_store::store_schema::ArtifactCommand;
 use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember, create_config_envelope};
+use store::{ArtifactStore, ConfigStore, create_config_envelope, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, ArtifactToolPublicContract, ArtifactToolPublicationLane};
 use std::collections::BTreeMap;
 use semio_framework_plugin_instance_children::children_components::ChildComposition;
@@ -38,7 +38,7 @@ use semio_framework_plugin_job::reserved_jobs::register_framework_reserved_facto
 use semio_framework_ui_contract::*;
 use semio_framework_plugin_time_travel as time_travel;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🧬️ Constructs a store-only wrapper with an empty registry. Every action and typed
     /// command fails closed before decoding until a registry-backed wrapper is constructed.
     pub async fn new(app: A, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {

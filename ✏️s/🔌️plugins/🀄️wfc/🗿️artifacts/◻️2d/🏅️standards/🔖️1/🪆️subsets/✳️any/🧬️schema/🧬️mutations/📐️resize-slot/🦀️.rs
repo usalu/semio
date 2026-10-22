@@ -31,6 +31,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "slot", kind: "resize-slot", record: "ResizedSlot" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Resize Slot", "Größe des Slots ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc2dSnapshot, Op> for ResizeSlot
+where
+    Op: protocol::ColdMutation<Wfc2dSnapshot, ReferenceDiff = Wfc2dDiff> + From<ResizeSlot>,
+{
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
@@ -40,8 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Resize Slot", "Größe des Slots ändern")
-    }
 }
 //#endregion 🔖️ResizeSlot

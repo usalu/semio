@@ -41,7 +41,7 @@ use crate::schema::mutations::ungroup_node;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing")]
+#[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing", reference = SemioDrawingSnapshot, reference_diff = SemioDrawingDiff)]
 pub enum SemioDrawingMutation {
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),
@@ -90,7 +90,7 @@ pub const KINDS: &[&str] = &["create-layer",
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    <SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::diff(mutation, base)
+    <SemioDrawingMutation as protocol::ColdMutation<SemioDrawingSnapshot>>::diff(mutation, base)
 }
 
 
@@ -103,8 +103,8 @@ pub fn diff_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Semio
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::inverse(mutation, base)?
 
     })
 }

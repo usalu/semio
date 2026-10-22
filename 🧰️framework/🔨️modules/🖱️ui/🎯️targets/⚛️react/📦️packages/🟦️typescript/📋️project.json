@@ -36,7 +36,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint",
+        "command": "repo ./📜️script.ts lint",
         "forwardAllArgs": true
       }
     },
@@ -52,7 +52,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -67,7 +67,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       }
     },
@@ -76,7 +76,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts canonical-architecture"
+        "command": "repo ./📜️script.ts canonical-architecture"
       },
       "outputs": [],
       "inputs": [

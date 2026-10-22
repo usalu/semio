@@ -32,7 +32,7 @@ fn mutation() -> Generation3dMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn raised_diff(base: &Generation3dSnapshot) -> (Generation3dDiffRead, Vec<protocol::MutationMessage>) {
-    let (diff, messages) = <Generation3dMutation as protocol::Mutation<Generation3dSnapshot>>::diff(&mutation(), base).into_parts();
+    let (diff, messages) = <Generation3dMutation as protocol::ColdMutation<Generation3dSnapshot>>::diff(&mutation(), base).into_parts();
     (Generation3dDiffRead::new(diff), messages)
 }
 
@@ -131,7 +131,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded = Generation3dDiffRead::new(semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation3dSnapshotRead::new(
-        protocol::apply_diff(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
+        protocol::apply_diff_cold(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );
     assert_eq!(produced, expected_after(), "rotate-transforms/turns-the-rotate-operator-half-a-radian-about-z: committed diff did not carry before to after");
 }

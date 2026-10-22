@@ -216,28 +216,21 @@ export function policySubsetTsParityBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🚫 Glue compatibility shims keeping pre-migration module paths must be deleted. */
+/** 🚫 A crate-root `🦀️.rs` under `🗿️artifacts` must not carry a block that keeps pre-migration module paths alive. */
 export function policyNoGlueShimBlocksBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
-  if (!existsSync(pluginsRoot)) return breaches;
-  for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
-    if (!plugin.isDirectory()) continue;
-    const glue = join(pluginsRoot, plugin.name, "📦️packages/🦀️rust/🦀️.rs");
-    if (!existsSync(glue)) continue;
-    const content = readFileSync(glue, "utf8");
-    if (/Shims:\s*keep pre-migration|pre-migration module paths/i.test(content)) {
-      const rel = join("✏️s/🔌️plugins", plugin.name, "📦️packages/🦀️rust/🦀️.rs").replaceAll("\\", "/");
-      breaches.push({
-        id: `glue-shim-${rel}`,
-        summary: `"${rel}" still contains pre-migration shim blocks`,
-        kind: "subset-conformance/no-glue-shim-blocks",
-        scope: rel,
-        priority: "medium",
-        reason: "Greenfield forbids compatibility shims.",
-        solution: "Delete shim blocks after generated subset registration lands.",
-      });
-    }
+  for (const artifactRel of policyListPluginArtifactDirs(repoRoot)) {
+    const rel = `${artifactRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    if (!/Shims:\s*keep pre-migration|pre-migration module paths/i.test(policyReadFileSafe(repoRoot, rel))) continue;
+    breaches.push({
+      id: `glue-shim-${rel}`,
+      summary: `"${rel}" still contains pre-migration shim blocks`,
+      kind: "subset-conformance/no-glue-shim-blocks",
+      scope: rel,
+      priority: "medium",
+      reason: "Greenfield forbids compatibility shims; the crate-root module paths are the crate's public surface and are named so.",
+      solution: "Name the block after what it is (the crate's public surface) and delete any path nothing uses.",
+    });
   }
   return breaches;
 }
@@ -292,7 +285,7 @@ export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): Breac
           scope: subRel,
           priority: "medium",
           reason: `Every owned subset carries both ${taxonomy.subsetRequiredSurfaceDirs.join(", ")}.`,
-          solution: `cd 📇️registry && bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> ${role} (or "new surface --all" to batch every missing surface).`,
+          solution: `cd 📇️registry && repo ./📜️script.ts new surface <plugin> <kind> <standard> <subset> ${role} (or "new surface --all" to batch every missing surface).`,
         });
         continue;
       }

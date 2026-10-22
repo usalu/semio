@@ -7,13 +7,13 @@ impl GpuContext {
     pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {
         let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
         let complete = match upload {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
                 self.atlas_upload = None;
                 self.pipelines.upload_glyph_atlas(&self.roots.queue, pixels, *width, *height);
                 true
             }
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             PreparedRenderUpload::IconAtlas { pixels, width, height } => {
                 self.atlas_upload = None;
                 self.pipelines.upload_icon_atlas(&self.roots.queue, pixels, *width, *height);
@@ -57,7 +57,7 @@ impl GpuContext {
                     false
                 }
             }
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             PreparedRenderUpload::Raster { key, pixels, width, height } => {
                 let identity = RasterContentIdentity::test_pixels(*width, *height, pixels).ok_or_else(|| "raster test identity overflowed".to_string())?;
                 if !self.raster_store.prepare_admission_step(key, *width, *height,1, identity, candidate).map_err(str::to_owned)? {
@@ -82,6 +82,8 @@ impl GpuContext {
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Scene(lease), descriptor.width, descriptor.height, candidate, expected).map_err(str::to_owned)?
             }
             PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh_step(key, *version, *lease).map_err(str::to_owned)?,
+            #[allow(unreachable_patterns)]
+            _ => return Err("raw glyph, icon and raster uploads are testkit-only".to_string()),
         };
         Ok(complete)
     }

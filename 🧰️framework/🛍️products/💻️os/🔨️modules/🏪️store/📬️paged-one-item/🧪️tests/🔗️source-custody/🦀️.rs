@@ -111,12 +111,12 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
     use std::io::Write;oracle.stdin.take().unwrap().write_all(json!({"schema":schema,"law":law}).to_string().as_bytes()).unwrap();let result=oracle.wait_with_output().unwrap();assert!(result.status.success());let independent:Value=serde_json::from_slice(&result.stdout).unwrap();assert_eq!(independent,law["base"]["nodes"]);
     for row in law["cases"].as_array().unwrap(){
         CALLS.set(0);SNAPSHOT_CALLS.set(0);EDIT_CALLS.set(0);REFUSE_EDIT.set(row["refuseEdit"].as_bool().unwrap());REFUSE_ISSUER.set(row["refuseIssuerOnce"].as_bool().unwrap());
-        let(mut owner,root,mutations,snapshots)=original_owner(&law);let mut prepared=None;let mut refused=false;
+        let(mut owner,root,mutations,snapshots)=original_owner(&law);let mut receiver=Receiver::new(policy(&law).retained_grant());let mut prepared=None;let mut refused=false;
         for _ in 0..maximum{
             let calls=EDIT_CALLS.get();
-            let(result,heap)=observe(||owner.advance(ArtifactStoreOneItemGrant{maximum_items:0,..policy(&law)}));
+            let(result,heap)=receiver.run(policy(&law).retained_grant(),|control|Ok(observe(||owner.advance(policy(&law).maximum_copy_bytes,ArtifactStoreOneItemGrant{maximum_items:0,..policy(&law)},control)))).unwrap();
             assert!(matches!(result.unwrap(),ArtifactStoreOneItemPreparationStep::Blocked));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(EDIT_CALLS.get(),calls);
-            match owner.advance(policy(&law)){
+            match receiver.run(policy(&law).retained_grant(),|control|owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control)){
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(..))=>{prepared=owner.take_prepared();break;}
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(_,receipt))=>assert!(receipt.fits(policy(&law).retained_grant())),
                 Ok(ArtifactStoreOneItemPreparationStep::Blocked)=>panic!("funded original source action stalled"),
@@ -129,14 +129,14 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
             let(mut ticket,receipt)=prepared.admit_retirement(Arc::clone(&mutations),Arc::clone(&snapshots),policy(&law).retained_grant()).unwrap_or_else(|_|panic!("exact source candidate retirement"));assert!(receipt.fits(policy(&law).retained_grant()));
             for _ in 0..maximum{if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(grant).unwrap().progress().fits(grant));}assert!(ticket.terminal_is_empty());
         }
-        close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),row["expectedMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),row["expectedSnapshotCalls"].as_u64().unwrap() as usize);assert_eq!(observe(||drop(owner)).1.released_bytes,0);
+        close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),row["expectedMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),row["expectedSnapshotCalls"].as_u64().unwrap() as usize);assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();
         drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
     }
     for stop in law["cancelAt"].as_array().unwrap(){
         CALLS.set(0);SNAPSHOT_CALLS.set(0);EDIT_CALLS.set(0);REFUSE_EDIT.set(false);REFUSE_ISSUER.set(false);
-        let(mut owner,root,mutations,snapshots)=original_owner(&law);
-        for _ in 0..stop.as_u64().unwrap(){assert!(!matches!(owner.advance(policy(&law)).unwrap(),ArtifactStoreOneItemPreparationStep::Prepared(..)));}
-        owner.cancel();close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),1);assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),law["base"]);assert_eq!(observe(||drop(owner)).1.released_bytes,0);
+        let(mut owner,root,mutations,snapshots)=original_owner(&law);let mut receiver=Receiver::new(policy(&law).retained_grant());
+        for _ in 0..stop.as_u64().unwrap(){assert!(!matches!(receiver.run(policy(&law).retained_grant(),|control|owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control)).unwrap(),ArtifactStoreOneItemPreparationStep::Prepared(..)));}
+        owner.cancel();close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),1);assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),law["base"]);assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();
         drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
     }
 }      
@@ -189,8 +189,8 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
     assert!(close_returned_post(&mut retained_post,&retained_snapshots,&mut post_close,grant).unwrap().unwrap().progress().fits(grant));
     for _ in 0..maximum{
         let Some(ticket)=post_close.as_ref()else{break;};
-        let copy=ticket.next_copy_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};
+        let demand=semio_framework_value_snapshot_read::artifact_retirement_box_demands(ticket,4096).unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
         assert!(semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut post_close,grant).unwrap().progress().fits(grant));
     }
     assert!(post_close.is_none()&&retained_post.is_none());assert_eq!(CALLS.get(),law["expected"]["failedSealMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),law["expected"]["failedSealSnapshotCalls"].as_u64().unwrap() as usize);

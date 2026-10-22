@@ -1,5 +1,5 @@
 /** 👥️ Text editor session, presence and caret: the session epoch and sync effect, the canvas appearance sync, the local and peer caret presence, the selection emission and the caret cadence effects. */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { useCanvasAppearanceSync, useShellScopeOptional } from "@semio-tech/ui-react";
 import { TEXT_EDITOR_TYPING_HOST_SIGNALS } from "@semio-tech/framework";

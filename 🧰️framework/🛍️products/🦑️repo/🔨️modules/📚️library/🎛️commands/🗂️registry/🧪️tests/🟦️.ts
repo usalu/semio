@@ -82,7 +82,7 @@ for (const row of fixture.languages) {
   test(`help language ${JSON.stringify(row.environment)} ${JSON.stringify(row.argv)}`, () => {
     const help = row.refusal === undefined ? rootCommandHelpV1(registry, [...row.argv, "--help"], row.environment, () => [])! : undefined;
     if (row.refusal !== undefined) return void expect(() => rootCommandHelpV1(registry, [...row.argv, "--help"], row.environment, () => [])).toThrow(row.refusal);
-    expect(help!.split("\n")[0]).toBe(`bun ./📜️script.ts - ${registry.labels.tagline![row.language!]}`);
+    expect(help!.split("\n")[0]).toBe(`repo ./📜️script.ts - ${registry.labels.tagline![row.language!]}`);
   });
 }
 

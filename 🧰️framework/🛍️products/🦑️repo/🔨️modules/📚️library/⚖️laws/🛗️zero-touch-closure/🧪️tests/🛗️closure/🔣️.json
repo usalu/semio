@@ -1,0 +1,190 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "external-packages-are-refused-through-the-relative-closure",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": []}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"full\", \"reason\": \"x\"}], \"seams\": []}"
+    ],
+    "e.ts": [
+     "import fs from \"node:fs\";",
+     "import p from \"path\";",
+     "import left from \"left-pad\";",
+     "import x from \"./b\";"
+    ],
+    "b.ts": [
+     "const l = require(\"lodash\");",
+     "export * from \"./c.js\";"
+    ],
+    "c.js": [
+     "import \"chalk\";"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-c1-external-package-b.ts-lodash",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "b.ts"
+    ],
+    [
+     "zero-touch-c1-external-package-c.js-chalk",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "c.js"
+    ],
+    [
+     "zero-touch-c1-external-package-e.ts-left-pad",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ]
+   ]
+  },
+  {
+   "id": "a-missing-closure-entry-is-reported",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": []}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"full\", \"reason\": \"x\"}], \"seams\": []}"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-c1-missing-entry-e.ts-e.ts",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ]
+   ]
+  },
+  {
+   "id": "seam-modules-may-only-be-imported-dynamically",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": []}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"full\", \"reason\": \"x\"}], \"seams\": [{\"module\": \"seam.ts\", \"reason\": \"post-install\"}]}"
+    ],
+    "e.ts": [
+     "import s from \"./seam\";",
+     "const d = await import(\"./seam\");"
+    ],
+    "seam.ts": [
+     "import \"never-scanned\";"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-c1-seam-static-e.ts-./seam",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ]
+   ]
+  },
+  {
+   "id": "a-missing-seam-module-is-reported",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": []}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"full\", \"reason\": \"x\"}], \"seams\": [{\"module\": \"gone.ts\", \"reason\": \"post-install\"}]}"
+    ],
+    "e.ts": [
+     "export {};"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-seams-missing-entry-gone.ts-gone.ts",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "gone.ts"
+    ]
+   ]
+  },
+  {
+   "id": "static-closures-ignore-dynamic-and-require-imports",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": []}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"static\", \"reason\": \"x\"}], \"seams\": []}"
+    ],
+    "e.ts": [
+     "import a from \"static-dep\";",
+     "const b = await import(\"dynamic-dep\");",
+     "const c = require(\"required-dep\");"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-c1-external-package-e.ts-static-dep",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ]
+   ]
+  },
+  {
+   "id": "workspace-package-specifiers-must-be-relative",
+   "rule": "policyZeroTouchClosureBreaches",
+   "files": {
+    "package.json": [
+     "{\"workspaces\": [\"pkgs/p\"]}"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": [
+     "{\"version\": 1, \"closures\": [{\"id\": \"c1\", \"entry\": \"e.ts\", \"mode\": \"full\", \"reason\": \"x\"}], \"seams\": []}"
+    ],
+    "e.ts": [
+     "import a from \"@x/p\";",
+     "import b from \"@x/p/sub\";"
+    ],
+    "pkgs/p/package.json": [
+     "{\"name\": \"@x/p\", \"exports\": {\".\": \"./index.ts\"}}"
+    ],
+    "pkgs/p/index.ts": [
+     "export {};"
+    ]
+   },
+   "expect": [
+    [
+     "zero-touch-c1-workspace-specifier-e.ts-@x/p",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ],
+    [
+     "zero-touch-c1-workspace-specifier-e.ts-@x/p/sub",
+     "repo/zero-touch-closure",
+     "high",
+     false,
+     "e.ts"
+    ]
+   ]
+  }
+ ]
+}

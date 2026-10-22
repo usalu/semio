@@ -397,12 +397,12 @@ fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) -> Result<usi
 fn prepare_process3d_document(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Result<(Process3dSnapshot, Vec<Process3dMutation>), String> {
     process3d_mutation_retained_bytes(mutation).map_err(semio_framework_value::ValueError::into_message)?;
     process3d_document_bytes(base).map_err(semio_framework_value::ValueError::into_message)?;
-    let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(mutation, base);
+    let outcome = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::diff(mutation, base);
     if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         return Err(format!("Process3d document mutation was refused by its own vocabulary: {}", message.message));
     }
-    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
+    let inverse = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::inverse(mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
+    let post = protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
     process3d_document_bytes(&post).map_err(semio_framework_value::ValueError::into_message)?;
     Ok((post, inverse))
 }

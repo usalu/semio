@@ -19,6 +19,19 @@ where
     Op: protocol::Mutation<Wfc2dTransient, Diff = Wfc2dTransientDiff> + From<SetSolve>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solve", kind: "set-solve", record: "SetSolve" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["assignments".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc2dTransient, Op> for SetSolve
+where
+    Op: protocol::ColdMutation<Wfc2dTransient, ReferenceDiff = Wfc2dTransientDiff> + From<SetSolve>,
+{
     fn diff(&self, base: &Wfc2dTransient) -> protocol::MutationOutcome<Wfc2dTransientDiff> {
         let diff = Wfc2dTransientDiff { assignments: (base.assignments != self.assignments).then(|| self.assignments.clone()), contradiction: (base.contradiction != self.contradiction).then_some(self.contradiction) };
         if protocol::DiffAlgebra::<Wfc2dTransient>::is_empty(&diff) {
@@ -32,10 +45,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["assignments".into()]
-    }
 }

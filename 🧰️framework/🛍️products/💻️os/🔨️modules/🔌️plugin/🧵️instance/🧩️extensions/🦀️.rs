@@ -20,7 +20,7 @@ use semio_framework::{Fault, FaultFrom, ViewModel};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
 use semio_framework::kernel::InvocationResult;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -36,7 +36,7 @@ use semio_framework_ui_contract::BuiltNode;
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 
 /// 🔌️ The exclusive borrows an extension's context hooks (`dispatch_action`, `drive_turn`, `render_body`, `after_app_render`) run over; the union of what the time-travel and tool-run bundles borrow.
-pub struct ExtensionCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct ExtensionCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
@@ -57,7 +57,7 @@ pub struct ExtensionCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + '
 }
 
 /// 🔍️ The shared borrows an extension's `has_pending_work` reads.
-pub struct ExtensionRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
+pub struct ExtensionRef<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub stores: &'v InstanceStores<A>,
     pub txn: &'v Transactions<A>,
     pub child_composition: &'v ChildComposition<M>,
@@ -66,13 +66,13 @@ pub struct ExtensionRef<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'st
     pub extension: PhantomData<fn() -> X>,
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Clone for ExtensionRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Clone for ExtensionRef<'v, A, M, X> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> Copy for ExtensionRef<'v, A, M, X> {}
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> Copy for ExtensionRef<'v, A, M, X> {}
 
 /// 🧱️ One feature's contribution to every mounted instance. Every hook defaults to "no contribution", so an extension
 /// overrides only what it owns. A registered list is a right-nested tuple `(First, (Second, ()))`: earlier entries are
@@ -95,7 +95,7 @@ pub trait InstanceExtension {
     }
 
     /// 🚦️ Dispatches one action this extension claims.
-    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, _args: Option<&DslValue>, _meta: &ActionMeta, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    async fn dispatch_action<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, _args: Option<&DslValue>, _meta: &ActionMeta, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         Err(plugin_sdk_fault(format!("no instance extension claims action '{action}'")))
     }
 
@@ -128,7 +128,7 @@ pub trait InstanceExtension {
     fn window_config_published<A: ArtifactApp>(_time_travel: &mut TimeTravelLedger<A>, _tool_runs: &mut ToolRunLedger<A>) {}
 
     /// 🏃️ Whether this extension owes maintenance work.
-    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &ExtensionRef<'_, A, M, X>) -> bool {
+    fn has_pending_work<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &ExtensionRef<'_, A, M, X>) -> bool {
         false
     }
 
@@ -144,17 +144,17 @@ pub trait InstanceExtension {
 
     /// 🔁️ Drives one maintenance turn under the caller's current retained grant; `true` ends the instance's maintenance
     /// turn here.
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _retained: &mut RetainedCloneGrant, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _retained: &mut RetainedCloneGrant, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(false)
     }
 
     /// 🖼️ The framework body this extension renders for `body_key`.
-    fn render_body<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _body_key: &str, _view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
+    fn render_body<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _body_key: &str, _view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
         None
     }
 
     /// 🖌️ Decorates the app's own rendered body for `body_key` after it is retained.
-    fn after_app_render<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _body_key: &str, _view_state: &ViewModel) -> Result<(), Fault> {
+    fn after_app_render<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _body_key: &str, _view_state: &ViewModel) -> Result<(), Fault> {
         Ok(())
     }
 }
@@ -176,7 +176,7 @@ impl<First: InstanceExtension, Rest: InstanceExtension> InstanceExtension for (F
         First::admitted_while_loading(action) || Rest::admitted_while_loading(action)
     }
 
-    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    async fn dispatch_action<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         if First::claims_action(action) {
             First::dispatch_action(ctx, action, args, meta, identity, cx).await
         } else {
@@ -209,7 +209,7 @@ impl<First: InstanceExtension, Rest: InstanceExtension> InstanceExtension for (F
         Rest::window_config_published(time_travel, tool_runs);
     }
 
-    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
+    fn has_pending_work<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
         First::has_pending_work(ctx) || Rest::has_pending_work(ctx)
     }
 
@@ -221,7 +221,7 @@ impl<First: InstanceExtension, Rest: InstanceExtension> InstanceExtension for (F
         First::terminal_is_empty(time_travel, tool_runs) && Rest::terminal_is_empty(time_travel, tool_runs)
     }
 
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         *retained = cx.retained_grant();
         if First::drive_turn(ctx, retained, identity, cx).await? {
             return Ok(true);
@@ -229,14 +229,14 @@ impl<First: InstanceExtension, Rest: InstanceExtension> InstanceExtension for (F
         Rest::drive_turn(ctx, retained, identity, cx).await
     }
 
-    fn render_body<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
+    fn render_body<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
         match First::render_body(ctx, body_key, view_state) {
             Some(body) => Some(body),
             None => Rest::render_body(ctx, body_key, view_state),
         }
     }
 
-    fn after_app_render<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
+    fn after_app_render<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
         First::after_app_render(ctx, body_key, view_state)?;
         Rest::after_app_render(ctx, body_key, view_state)
     }

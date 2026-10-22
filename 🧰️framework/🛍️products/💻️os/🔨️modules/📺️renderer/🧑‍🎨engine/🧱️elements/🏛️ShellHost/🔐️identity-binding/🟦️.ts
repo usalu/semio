@@ -26,7 +26,7 @@ import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { PluginCatalog } from "@semio-tech/framework";
 import type { InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
-import type { ReactNode } from "react";
+import type { ReactNode } from "../../⚛️react-port/🟦️.ts";
 import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
 import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 

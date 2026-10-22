@@ -25,7 +25,7 @@ export function proveCachePolicy(workspace: string, internals: { targetPolicy(na
   const policy = JSON.parse(readFileSync(join(root, "🔣️policy.json"), "utf8"));
   const { isCacheableTask } = require("nx/src/tasks-runner/utils");
   for (const row of vectors.policies) for (const authored of [true, false]) {
-    const target = internals.targetPolicy(row.target, { cache: authored, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
+    const target = internals.targetPolicy(row.target, { cache: authored, options: { command: row.command ?? `repo ./📜️script.ts ${row.target}` } }, policy);
     const expected = authored ? row.cache : row.disabledCache;
     assert.deepEqual({ cache: target.cache, continuous: target.continuous ?? false }, { cache: expected, continuous: row.continuous }, `${row.target}: authored cache ${authored}`);
     assert.equal(isCacheableTask({ cache: target.cache, continuous: target.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), expected, `${row.target}: installed Nx cache semantics`);
@@ -122,8 +122,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(cacheInternals.liveName("admin-live-journey-check"), true, "a genuine live-browser/live-server journey stays uncached");
     assert.equal(cacheInternals.liveName("collab-e2e"), true);
     for (const row of vectors.policies) {
-      const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
-      const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
+      const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: row.command ?? `repo ./📜️script.ts ${row.target}` } }, policy);
+      const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: row.command ?? `repo ./📜️script.ts ${row.target}` } }, policy);
       assert.deepEqual({ cache: enabled.cache, continuous: enabled.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
       assert.equal(disabled.cache, row.disabledCache, `${row.target}: owner cache refusal precedes automatic cache families`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
@@ -258,7 +258,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.equal(server.cache, false);
           assert.deepEqual(server.outputs, []);
           assert.deepEqual(server.dependsOn, [`@semio-tech/plugin-registry:session-${playground.variant}`]);
-          assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
+          assert.equal(server.options.command, `repo ./📜️script.ts serve ${playground.variant} react ${profile}`);
         }
         {
           const serverName = `dev-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
@@ -267,7 +267,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.equal(server.cache, false);
           assert.deepEqual(server.outputs, []);
           assert.deepEqual(server.dependsOn, [activationName]);
-          assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
+          assert.equal(server.options.command, `repo ./📜️script.ts serve ${playground.variant} react ${profile}`);
         }
         const hostLauncher = componentLaunchers.find((entry) => entry.pluginId === playground.pluginId);
         if (!hostLauncher) throw new Error(`${playground.variant}: host plugin must launch`);
@@ -353,7 +353,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
     for (const name of ["test", "lint", "build", "verify"]) assert.equal(workspace.targets[name]?.cache, true, name);
     assert.equal(workspace.targets.dev, undefined, "the playground variant switch is dissolved: playgrounds are dashboard commands");
-    assert.equal((await cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root)).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
+    assert.equal((await cacheInternals.nativeTargetCommandInputs({ options: { command: "repo ./x.ts", cwd: "." } }, root)).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
     const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);
@@ -525,7 +525,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     writeFileSync(join(fixture, graph.leaf.directory, "📜️script.ts"), graph.leaf.script);
     writeFileSync(join(fixture, "other", "📋️project.json"), JSON.stringify({ name: graph.leaf.name }));
     writeFileSync(join(fixture, "📜️script.ts"), graph.workspaceRoot.script);
-    writeFileSync(join(fixture, "📋️project.json"), JSON.stringify({ name: graph.workspaceRoot.name, targets: Object.fromEntries(graph.workspaceRoot.targets.map((name: string) => [name, { options: { command: `bun ./📜️script.ts ${name}` } }])) }));
+    writeFileSync(join(fixture, "📋️project.json"), JSON.stringify({ name: graph.workspaceRoot.name, targets: Object.fromEntries(graph.workspaceRoot.targets.map((name: string) => [name, { options: { command: `repo ./📜️script.ts ${name}` } }])) }));
     const goManifest = vectors.go.manifest;
     writeFileSync(join(fixture, "go.mod"), goManifest);
     const goOracle = Bun.spawnSync(["go", "mod", "edit", "-json", `-modfile=${join(fixture, "go.mod")}`], { cwd: fixture, env: { ...process.env, GOWORK: "off" }, stdout: "pipe", stderr: "pipe" });

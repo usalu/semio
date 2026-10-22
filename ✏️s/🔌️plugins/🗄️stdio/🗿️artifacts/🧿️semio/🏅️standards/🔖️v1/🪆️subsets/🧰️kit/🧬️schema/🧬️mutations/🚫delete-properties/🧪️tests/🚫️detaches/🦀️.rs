@@ -15,7 +15,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/⬅️before/🔣️.json"));
@@ -40,7 +40,7 @@ fn mutation() -> SemioKitMutation {
 async fn clears_the_properties_slot_and_leaves_every_other_slot_alone() {
     let base = before();
     assert!(base.properties.is_some(), "the fixture needs a populated properties slot");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-properties applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-properties applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: applied state differs from the committed after-snapshot");
     assert!(produced.properties.is_none(), "the properties slot must be empty afterwards");
     assert_eq!((produced.types, produced.designs), (base.types, base.designs), "types and designs must survive untouched");
@@ -57,9 +57,9 @@ async fn the_undo_create_properties_reattaches_the_captured_handle() {
     assert_eq!(undo.len(), 1, "deleting an existing properties child undoes as exactly one create-properties");
     let SemioKitMutation::CreateProperties(recreate) = &undo[0] else { panic!("delete-properties must undo as create-properties") };
     assert_eq!(recreate.child_id, "props-1", "the undo must recapture the ORIGINAL child id from base");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-properties applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-properties applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-properties applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo create-properties applies");
     }
     assert_eq!(current, base, "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: the undo did not restore the before-snapshot");
 }
@@ -98,7 +98,7 @@ async fn declared_outcome_holds_without_a_target_missing_rejection() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     assert!(matches!(outcome.diff().properties, Some(None)), "the in-memory diff must be Some(None) — write the slot, clear it");
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
@@ -131,9 +131,9 @@ async fn committed_diff_json_pins_the_option_option_collapse() {
 #[semio_framework_async_macros::async_test]
 async fn authored_diff_applies_to_after_while_the_decoded_one_is_inert() {
     let authored = SemioKitDiff { properties: Some(None), ..Default::default() };
-    let produced = protocol::apply_diff(&authored, &before()).expect("the Some(None) diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&authored, &before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: the Some(None) diff did not carry before to after");
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
-    let inert = protocol::apply_diff(&decoded, &before()).expect("the collapsed diff still applies, it just does nothing");
+    let inert = protocol::apply_diff_cold(&decoded, &before()).expect("the collapsed diff still applies, it just does nothing");
     assert_eq!(inert, before(), "the JSON-decoded diff is inert — that is exactly the limitation being pinned");
 }

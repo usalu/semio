@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
   type DragEvent
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import {
   CATALOGUE_DRAG_MIME,
   cn,

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -11,6 +11,7 @@ import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builde
 import { assetOutputManifest, checkAssetArtifacts, publishAssetArtifacts, writeAssetArtifacts } from "../../🏗️builder/📦️publication/🟦️.ts";
 import { generateLogoAnimation } from "../../🪧️logos/🏗️builder/🎞️animation/🟦️.ts";
 import { runGenerateCatalogScript, runExportLogoScript, runPreviewGeneratedScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 
 class GenerateCatalogScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -90,7 +91,7 @@ class CheckGeneratedScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("generate", GenerateCatalogScript)
   .register("test-mesh-contract", MeshContractScript)
   .register("test-tile-proxy-contract", TileProxyContractScript)
@@ -103,4 +104,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "build" }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "build" }));

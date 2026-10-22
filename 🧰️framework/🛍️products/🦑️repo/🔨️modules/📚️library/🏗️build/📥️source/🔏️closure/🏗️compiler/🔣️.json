@@ -1,0 +1,31 @@
+{
+  "cases": [
+    {
+      "id": "dormant-source-literal",
+      "files": {
+        "entry.ts": "import{value}from\"./helper.ts\";import policy from\"./schema.json\";export const result=value+policy.delta;const dormant=\"./dormant.ts\";export{dormant};",
+        "helper.ts": "export const value=40;",
+        "schema.json": "{\"delta\":2}",
+        "dormant.ts": "import unavailable from\"never-runtime-dependency\";export{unavailable};"
+      },
+      "expected": [
+        "entry.ts",
+        "helper.ts",
+        "schema.json"
+      ]
+    },
+    {
+      "id": "literal-program-data",
+      "files": {
+        "entry.ts": "import{value}from\"./helper.ts\";export const result=value;export const arguments_=[\"./test.ts\",\"./fixture.json\"];",
+        "helper.ts": "export const value=42;",
+        "test.ts": "import unavailable from\"never-runtime-test\";export{unavailable};",
+        "fixture.json": "{\"dormant\":true}"
+      },
+      "expected": [
+        "entry.ts",
+        "helper.ts"
+      ]
+    }
+  ]
+}

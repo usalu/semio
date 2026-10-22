@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "profiles": [
+    "generic",
+    "codex"
+  ],
+  "protocolVersion": "2025-11-25",
+  "cases": [
+    {
+      "name": "first",
+      "files": [
+        {
+          "path": "local.rs",
+          "text": "pub fn local() {}\n"
+        },
+        {
+          "path": "src/child.ts",
+          "text": "export const child = 1;\n"
+        }
+      ],
+      "folders": [
+        "src"
+      ]
+    },
+    {
+      "name": "second",
+      "files": [
+        {
+          "path": "foreign.rs",
+          "text": "pub fn foreign() {}\n"
+        },
+        {
+          "path": "outside/hidden.ts",
+          "text": "export const hidden = 2;\n"
+        }
+      ],
+      "folders": [
+        "outside"
+      ]
+    },
+    {
+      "name": "empty",
+      "files": [],
+      "folders": []
+    }
+  ],
+  "reads": [
+    {
+      "id": 11,
+      "uri": "repo://files",
+      "field": "files"
+    },
+    {
+      "id": 12,
+      "uri": "repo://folders",
+      "field": "folders"
+    }
+  ],
+  "mimeType": "application/json",
+  "bridgeCases": [
+    {
+      "name": "malformed-wire-preserves-parser-cause",
+      "mode": "malformed",
+      "expected": "syntax"
+    },
+    {
+      "name": "unsolicited-response-preserves-protocol-cause",
+      "mode": "unsolicited",
+      "expected": "unsolicited"
+    },
+    {
+      "name": "reader-undefined-preserves-primary-identity",
+      "mode": "reader-undefined",
+      "expected": "undefined"
+    }
+  ]
+}

@@ -91,7 +91,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-layer-boolean-operation/union-to-subtract declares an applied outcome");
-    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let produced = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-layer-boolean-operation/union-to-subtract: subtract differs from union, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-boolean-operation's diff pins a layers delta");
     assert_eq!(delta.modified[0].id, "boolean-a", "the patch is addressed to the boolean layer");
@@ -103,7 +103,7 @@ async fn declared_outcome_holds() {
 /// diff at all — only the Boolean layer is touched.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let outcome = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-layer-boolean-operation/union-to-subtract: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -130,7 +130,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-layer-boolean-operation/union-to-subtract: committed diff did not carry before to after");
 }
 

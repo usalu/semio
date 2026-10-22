@@ -1,7 +1,8 @@
 //! 🛠️ Binding helpers: delegated session exchange, origin and resource URIs, canonical checkpoint text and error mapping.
 
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::{DocumentScope, hex_lower};
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
 use semio_framework_os_kernel::os_directory::client::{DirectoryClientError, DirectoryTransport};
 use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_os_mcp_foundation::percent_codec::{percent_decode, percent_encode};

@@ -23,6 +23,12 @@
   "fieldId": 1,
   "sourceReturned": true,
   "headerCopyBytes": 0,
+  "leaseElection": {
+    "handleBytes": 16,
+    "optionalPayloadBytes": 32,
+    "payloadMoves": 2,
+    "copyBytes": 80
+  },
   "terminalDrop": 0,
   "stock": {
     "items": 100000,

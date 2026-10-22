@@ -43,6 +43,7 @@ def build_install(doc):
     assert "bun\\.lock" in pattern and "bunfig\\.toml" in pattern
     s["ProducerStageFile"]["properties"]["path"]["pattern"] = pattern.replace("bun\\.lock", "{{lockFile|re}}").replace("bunfig\\.toml", "{{scopeConfig|re}}")
     s["SourceOwnerLockProtocol"]["const"]["mutableStagePath"] = "{{lockFile}}"
+    s["ProducerConfigurationProtocol"]["const"]["text"] = "{{stagedConfiguration}}"
     s["ManagerProtocol"] = {"const": {"$manager": "managerProtocol"}}
     return doc
 def build_generation(doc):

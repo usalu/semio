@@ -5,6 +5,7 @@ import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-auth
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../../🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../🔍️discovery/📖️source-access/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 export type ArtifactIoArchitectureBreach = Readonly<{ id: string; summary: string; kind: string; scope: string; priority: "high"; reason: string; solution: string }>;
 export type ArtifactIoArchitectureOptions = Readonly<{ cancelled?: () => boolean; progress?: (event: Readonly<{ phase: "inventory" | "checking" | "complete"; path: string }>) => void }>;
@@ -81,12 +82,12 @@ export function schemaRustWireDependencies(source: string): string[] {
 
 /** 🧵️ Finds physical TypeScript APIs through the platform parser without interpreting comments or literals. */
 export function schemaTypeScriptWireSymbols(source: string): string[] {
-  return new Bun.Transpiler({loader: "ts"}).scan(source).exports.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^floatLexeme$|^jsonGeometry$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^decodeRemodeling(?:Snapshot|Diff|Mutation|Artifact)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort();
+  return new TranspilerV1({loader: "ts"}).scan(source).exports.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^floatLexeme$|^jsonGeometry$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^decodeRemodeling(?:Snapshot|Diff|Mutation|Artifact)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort();
 }
 
 /** 🧱️ Finds implemented exports while retaining separately owned public facades. */
 function typeScriptImplementedExports(source: string): string[] {
-  const parser = new Bun.Transpiler({ loader: "ts" });
+  const parser = new TranspilerV1({ loader: "ts" });
   const code = parser.transformSync(source).replace(/^export\s+(?:\*\s*(?:as\s+\w+\s*)?|\{[^}]*\})\s+from\s+[^;\n]+;?\s*$/gmu, "");
   return parser.scan(code).exports.sort();
 }
@@ -94,7 +95,7 @@ function typeScriptImplementedExports(source: string): string[] {
 /** 🧭️ Reads actual TypeScript module dependencies, including type-only declarations. */
 function schemaTypeScriptModules(source:string):string[]{
   const admitted=source.replace(/^#![^\r\n]*/u,"").replace(/\bimport(\s+)type(?=\s*[{*]|\s+\w)/gu,"import$1").replace(/\bexport\s+type(?=\s*[{*])/gu,"export").replace(/\b(?:import|export)\s*\{[^}]*\}\s*from(?=\s*["'])/gu,declaration=>declaration.replace(/\btype\s+(?=\w)/gu,""));
-  const modules=new Bun.Transpiler({loader:"ts"}).scanImports(admitted).map(row=>{
+  const modules=new TranspilerV1({loader:"ts"}).scanImports(admitted).map(row=>{
     if([...row.path].some(scalar=>scalar.charCodeAt(0)>255))return row.path;
     try{return new TextDecoder("utf-8",{fatal:true}).decode(Uint8Array.from(row.path,scalar=>scalar.charCodeAt(0)));}catch{return row.path;}
   });

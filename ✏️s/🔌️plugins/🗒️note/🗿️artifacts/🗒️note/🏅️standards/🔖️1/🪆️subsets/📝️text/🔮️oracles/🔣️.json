@@ -114,7 +114,7 @@
         "packageVersion": "0.44",
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only edits-the-intro-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only edits-the-intro-paragraph",
         "seed": 0,
         "platform": "darwin-arm64"
       },

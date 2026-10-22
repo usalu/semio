@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Inference Closure Refusal Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "path",
+    "packedSha256",
+    "packedBytes",
+    "expandedBytes",
+    "check"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "inference"
+    },
+    "path": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^inference/(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000\\\\]+$"
+    },
+    "packedSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "packedBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 536870912
+    },
+    "expandedBytes": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 134217728
+    },
+    "check": {
+      "enum": [
+        "inflation",
+        "utf8",
+        "header-boundary",
+        "header-json",
+        "header-authentication",
+        "body-json"
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_repo_model::File;
+use std::fs::File;
 use semio_framework_job::StepContext;
 use semio_framework_job::OriginalTurnFailure;
 

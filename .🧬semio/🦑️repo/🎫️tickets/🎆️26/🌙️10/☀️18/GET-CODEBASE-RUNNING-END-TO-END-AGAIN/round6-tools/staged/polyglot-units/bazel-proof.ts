@@ -24,7 +24,8 @@ const go: Record<string, string> = {
   "b/b.go": "package b\n\nimport \"example.com/lab/a\"\n\nfunc Use() string { return a.Big(\"q\") }\n",
   "c/c.go": "package main\n\nimport \"example.com/lab/b\"\n\nfunc main() { println(b.Use()) }\n",
 };
-const files = which === "python" ? python : go;
+const cpp: Record<string, string> = JSON.parse(readFileSync(join(moduleDir, "🧪️tests/🌐️languages/🔣️.json"), "utf8")).cpp.workspace;
+const files = which === "python" ? python : which === "cpp" ? cpp : go;
 const write = (path: string, text: string): void => {mkdirSync(dirname(join(workspace, path)), {recursive: true}); writeFileSync(join(workspace, path), text);};
 for (const [path, text] of Object.entries(files)) write(path, text);
 write("WORKSPACE", "");
@@ -40,7 +41,8 @@ const ports = {
   run: async (argv: readonly string[], options: {cwd: string; env: Readonly<Record<string, string>>}) => {const r = spawnSync(argv[0]!, argv.slice(1), {cwd: options.cwd, env: {...process.env, ...options.env}, encoding: "utf8"}); return {code: r.status ?? 1, output: (r.stdout ?? "") + (r.stderr ?? "")};},
   files: async () => Object.keys(files),
 };
-await units.runUnitsCommandV1(workspace, ["units", "emit", "bazel", `--for=${which}`, "--out=.", "--lang=en"], ports);
+const generalPorts = {...ports, run: ports.run};
+await units.runUnitsCommandV1(workspace, ["units", "emit", "bazel", `--for=${which}`, "--out=.", "--lang=en"], generalPorts);
 
 const build = (label: string): {executed: string[]; code: number; tail: string} => {
   rmSync(trace, {force: true}); writeFileSync(trace, "");
@@ -56,7 +58,17 @@ const build = (label: string): {executed: string[]; code: number; tail: string} 
 const results: Record<string, {executed: string[]; code: number}> = {};
 const step = (label: string, edit?: () => void): void => {edit?.(); const r = build(label); results[label] = r; if (r.code !== 0) console.log(r.tail);};
 
-if (which === "python") {
+if (which === "cpp") {
+  step("cold");
+  step("again");
+  step("comment edit of foo/api.h", () => write("foo/include/foo/api.h", files["foo/include/foo/api.h"]!.replace("// public API of foo", "// public API of foo, documented")));
+  step("declaration edit of foo/api.h", () => write("foo/include/foo/api.h", files["foo/include/foo/api.h"]!.replace("// public API of foo", "// public API of foo, documented").replace("int foo_value(int x);", "int foo_value(int x);\nint foo_extra(void);")));
+  const expect = (label: string, ids: string[], code = 0): void => {const r = results[label]!; const ok = JSON.stringify(r.executed) === JSON.stringify(ids.sort()) && r.code === code; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); if (!ok) process.exitCode = 1;};
+  expect("cold", ["cpp:app", "cpp:bar", "cpp:foo"]);
+  expect("again", []);
+  expect("comment edit of foo/api.h", ["cpp:app", "cpp:foo"]);
+  expect("declaration edit of foo/api.h", ["cpp:app", "cpp:bar", "cpp:foo"]);
+} else if (which === "python") {
   step("cold");
   step("again");
   step("body edit of lab.a", () => write("lab/a.py", files["lab/a.py"]!.replace("x + 1", "x + 2")));
@@ -74,9 +86,12 @@ if (which === "python") {
   step("cold");
   step("again");
   step("body edit of a", () => write("a/a.go", files["a/a.go"]!.replace("ToUpper", "ToLower")));
+  step("signature edit of a", () => write("a/a.go", files["a/a.go"]!.replace("ToUpper", "ToLower").replace("func Big(s string) string", "func Big(s string, n int) string")));
   const expect = (label: string, ids: string[], code = 0): void => {const r = results[label]!; const ok = JSON.stringify(r.executed) === JSON.stringify(ids.sort()) && r.code === code; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); if (!ok) process.exitCode = 1;};
   expect("cold", ["go:example.com/lab/a", "go:example.com/lab/a#test", "go:example.com/lab/b", "go:example.com/lab/c"]);
   expect("again", []);
-  console.log("go body edit executes (sources mode, no build-tool cutoff):", results["body edit of a"]!.executed.join(", "));
+  expect("body edit of a", ["go:example.com/lab/a", "go:example.com/lab/a#test", "go:example.com/lab/c"]);
+  const signature = results["signature edit of a"]!;
+  console.log(`${signature.code !== 0 ? "PASS" : "FAIL"} signature edit breaks b (Use calls Big with one argument): exit ${signature.code}; executed ${signature.executed.join(", ")}`);
 }
 void existsSync; void appendFileSync;

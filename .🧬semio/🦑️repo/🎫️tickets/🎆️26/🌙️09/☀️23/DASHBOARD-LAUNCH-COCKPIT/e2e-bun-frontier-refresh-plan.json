@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "status": "source-frozen-runtime-unrun",
+  "productionOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+  "changes": [
+    "Preserve cumulative physical budget and stable observation object captured by native operations.",
+    "Retain original semantic shape/raw overlap/nonroot disappearance checks.",
+    "Authenticate full fresh frontier and union required/new decision texts after the last awaited continuation, then no-await final fence.",
+    "Adopt complete maps/order/frontier and union text evidence only after both checks succeed."
+  ],
+  "source0": {
+    "command": "repo run workspace:test-workspace-build --skip-cache --output=stream",
+    "isolatedEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/♻️refresh/🟦️.ts",
+    "newFreshnessInputs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json"
+    ],
+    "requiredNames": [
+      "semantic frontier refresh outcomes match the independent SQLite contract",
+      "actual semantic frontier refresh: equivalent-empty-directory-is-adopted-once",
+      "actual semantic frontier refresh: new-nonmember-decision-is-adopted-once",
+      "actual semantic frontier refresh: new-decision-raw-bytes-remain-required",
+      "actual semantic frontier refresh: new-decision-disappearance-remains-required",
+      "actual semantic frontier refresh: last-fresh-continuation-directory-change-refuses",
+      "actual semantic frontier refresh: last-fresh-continuation-manifest-change-refuses",
+      "actual semantic frontier refresh: last-fresh-continuation-cancellation-retains-reason",
+      "actual semantic frontier refresh: last-fresh-continuation-undefined-error-retains-primary",
+      "actual semantic frontier refresh: membership-change-remains-refused",
+      "actual semantic frontier refresh: required-manifest-removal-remains-refused",
+      "actual semantic frontier refresh: required-raw-manifest-rewrite-remains-refused",
+      "actual semantic frontier refresh: authored-pattern-change-remains-refused",
+      "actual semantic frontier refresh: authored-owner-change-remains-refused",
+      "actual semantic frontier refresh: unrelated-source-change-still-uses-current-frontier"
+    ],
+    "cache": false
+  },
+  "existingOwnershipOwner": {
+    "command": "repo run repo:test-workspace-ownership --skip-cache --output=stream",
+    "originalRosterIndex": 17,
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+    "coverage": "existing Bun/**/* input and literal runtime main entry; new leaf imported there"
+  },
+  "sourceHashes": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "bytes": 44383,
+      "sha256": "85f73389453e2b7c9c3e49f6d449e074ccad4d3c4639fdd7090d19dbd4548a29"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+      "bytes": 21564,
+      "sha256": "7bfc0057e6e22c6a8b19a989ba216b5f50a91579eb2120e7dd93d8edd55de7e1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 35222,
+      "sha256": "f7f69c701b14866845be4f08c4e090e5594a6e76f1d27969f2f6148cc73a07c1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "bytes": 64845,
+      "sha256": "a27529d4035ae08955bbe85ff1e837123727dda13d1def91baf618f130563f21"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/♻️refresh/🟦️.ts",
+      "bytes": 6691,
+      "sha256": "5e5cb861ffe711a4cd5cd7a982c520d502116922ec914ed724a42b7e1ee52170"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/⚡️frontier.feature",
+      "bytes": 1578,
+      "sha256": "7f08d8744aee9a2184044f604d92e2530d20dc0cdbec479dc3917a98e2b4a9cc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+      "bytes": 6212,
+      "sha256": "442c4674831719b0571a6034ee5b36568e9a22084bd659e90cd53e88c2dae916"
+    },
+    {
+      "path": "📋️project.json",
+      "bytes": 165422,
+      "sha256": "3c4555df69e7a7559ce7199a50c7eff6b5b81ef235e0dfc6c308aa9078ad1917"
+    }
+  ],
+  "requiredRefusals": [
+    "scope/pattern/package membership drift",
+    "required raw manifest byte drift or disappearance",
+    "new nonmember decision text drift or disappearance on later recheck",
+    "last fresh continuation topology/manifest mutation",
+    "same Original cancellation and thrown undefined"
+  ],
+  "limitations": [
+    "No runtime test or timing claim.",
+    "Physical quotas conservatively retain previous charged observations until custody ends, so churn may produce a bounded refusal.",
+    "Not evidence about the cause of prior cumulative producer progress counters."
+  ]
+}

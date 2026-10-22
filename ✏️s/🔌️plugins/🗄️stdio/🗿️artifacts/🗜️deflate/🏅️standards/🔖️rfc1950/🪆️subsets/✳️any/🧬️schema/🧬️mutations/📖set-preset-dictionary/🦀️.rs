@@ -19,7 +19,16 @@ pub struct SetPresetDictionary {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDictionary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preset-dictionary", kind: "set-preset-dictionary", record: "SetPresetDictionary" };
 
-    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set preset dictionary", "Voreingestelltes Wörterbuch setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDictionary {
+    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as protocol::ColdMutation<DeflateSnapshot>>::ReferenceDiff> {
         let Self { dict_id } = self;
         protocol::MutationOutcome::new( diff_set_preset_dictionary(*dict_id) )
     }
@@ -27,12 +36,6 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDicti
         Ok({
             vec![DeflateMutation::SetPresetDictionary(SetPresetDictionary { dict_id: base.dict_id })]
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set preset dictionary", "Voreingestelltes Wörterbuch setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

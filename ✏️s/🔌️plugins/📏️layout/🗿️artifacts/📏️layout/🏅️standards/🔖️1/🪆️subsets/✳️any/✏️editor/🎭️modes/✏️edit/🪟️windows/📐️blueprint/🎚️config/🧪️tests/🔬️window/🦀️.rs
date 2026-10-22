@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::*;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 fn block_on_layout_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -122,16 +122,16 @@ fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let base_transient: LayoutWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
         let mutation: LayoutWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = protocol::apply_diff(mutation.diff(&base_config).diff(), &base_config).unwrap();
-        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&base_config).diff(), &base_config).unwrap();
+        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_config);
         assert_eq!(LayoutWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(LayoutWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
         let mutation: LayoutWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let after = protocol::apply_diff(mutation.diff(&base_transient).diff(), &base_transient).unwrap();
-        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&base_transient).diff(), &base_transient).unwrap();
+        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_transient);
         assert_eq!(LayoutWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(LayoutWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

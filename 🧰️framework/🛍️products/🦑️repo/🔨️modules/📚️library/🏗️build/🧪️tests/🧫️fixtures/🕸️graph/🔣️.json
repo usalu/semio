@@ -210,14 +210,14 @@
           "test": {
             "executor": "repo:script",
             "options": {
-              "command": "bun ./📜️script.ts test",
+              "command": "repo ./📜️script.ts test",
               "cwd": "c"
             }
           },
           "generate": {
             "executor": "repo:script",
             "options": {
-              "command": "bun ./📜️script.ts generate",
+              "command": "repo ./📜️script.ts generate",
               "cwd": "c"
             }
           }
@@ -233,14 +233,14 @@
           "test": {
             "executor": "repo:script",
             "options": {
-              "command": "bun ./📜️script.ts test",
+              "command": "repo ./📜️script.ts test",
               "cwd": "p"
             }
           },
           "generate": {
             "executor": "repo:script",
             "options": {
-              "command": "bun ./📜️script.ts generate",
+              "command": "repo ./📜️script.ts generate",
               "cwd": "p"
             }
           }
@@ -700,7 +700,7 @@
         "build-alpha-react": {
           "executor": "repo:script",
           "options": {
-            "command": "bun ./📜️script.ts build alpha react",
+            "command": "repo ./📜️script.ts build alpha react",
             "cwd": "d"
           },
           "configurations": {
@@ -1188,7 +1188,7 @@
             "{projectRoot}/entry.ts"
           ],
           "options": {
-            "command": "bun ./entry.ts",
+            "command": "repo ./entry.ts",
             "cwd": "a"
           },
           "metadata": {
@@ -1314,7 +1314,7 @@
       "targets": {
         "test-source": {
           "options": {
-            "command": "bun ./📜️script.ts",
+            "command": "repo ./📜️script.ts",
             "cwd": "owner"
           },
           "cache": true,
@@ -1324,7 +1324,7 @@
         },
         "generate": {
           "options": {
-            "command": "bun ./missing/📜️script.ts",
+            "command": "repo ./missing/📜️script.ts",
             "cwd": "owner"
           },
           "cache": true
@@ -1706,7 +1706,7 @@
     "wire": ".🧬semio/🦑️repo/⚡️cache/build/nx-commands/wire.json"
   },
   "nxCommandBridge": {
-    "command": "bun ./📜️script.ts probe",
+    "command": "repo ./📜️script.ts probe",
     "args": [
       "two words",
       "",
@@ -1832,12 +1832,12 @@
         "name": "commandAndCwd",
         "options": {
           "cwd": "owner",
-          "command": "bun ./📜️script.ts base"
+          "command": "repo ./📜️script.ts base"
         },
         "configurations": {
           "release": {
             "cwd": "alternate",
-            "command": "bun ./📜️script.ts configured"
+            "command": "repo ./📜️script.ts configured"
           }
         }
       },
@@ -1845,7 +1845,7 @@
         "name": "cwdOnly",
         "options": {
           "cwd": "owner",
-          "command": "bun ./📜️script.ts"
+          "command": "repo ./📜️script.ts"
         },
         "configurations": {
           "release": {
@@ -1857,11 +1857,11 @@
         "name": "commandOnly",
         "options": {
           "cwd": "owner",
-          "command": "bun ./📜️script.ts"
+          "command": "repo ./📜️script.ts"
         },
         "configurations": {
           "release": {
-            "command": "bun ../alternate/📜️script.ts"
+            "command": "repo ../alternate/📜️script.ts"
           }
         }
       },
@@ -1870,9 +1870,9 @@
         "options": {
           "cwd": "owner",
           "commands": [
-            "bun ./📜️script.ts",
+            "repo ./📜️script.ts",
             {
-              "command": "bun ./📜️script.ts",
+              "command": "repo ./📜️script.ts",
               "forwardAllArgs": false
             }
           ]
@@ -1882,7 +1882,7 @@
             "cwd": "alternate",
             "commands": [
               {
-                "command": "bun ./📜️script.ts",
+                "command": "repo ./📜️script.ts",
                 "forwardAllArgs": true
               }
             ]
@@ -1910,7 +1910,7 @@
         "name": "placeholders",
         "options": {
           "cwd": "{projectRoot}",
-          "command": "bun ./📜️script.ts"
+          "command": "repo ./📜️script.ts"
         },
         "configurations": {
           "release": {
@@ -1927,7 +1927,7 @@
         "configurations": {
           "release": {
             "cwd": "alternate",
-            "command": "bun ./📜️script.ts"
+            "command": "repo ./📜️script.ts"
           }
         },
         "expectedSources": [
@@ -1942,14 +1942,14 @@
           "cwd": "owner",
           "commands": [
             "echo base",
-            "bun ./📜️script.ts"
+            "repo ./📜️script.ts"
           ]
         },
         "configurations": {
           "release": {
             "cwd": "alternate",
             "commands": [
-              "bun ./📜️script.ts"
+              "repo ./📜️script.ts"
             ]
           }
         },
@@ -1959,7 +1959,7 @@
         "name": "argumentData",
         "options": {
           "cwd": "owner",
-          "command": "bun ./📜️script.ts",
+          "command": "repo ./📜️script.ts",
           "args": [
             "../alternate/📜️script.ts"
           ]
@@ -1975,7 +1975,7 @@
         "options": {
           "cwd": "owner",
           "commands": [
-            "bun ./📜️script.ts",
+            "repo ./📜️script.ts",
             {
               "command": "bun",
               "forwardAllArgs": false
@@ -1999,11 +1999,11 @@
     },
     "configuredLocks": {
       "options": {
-        "command": "bun owner/📜️script.ts build"
+        "command": "repo owner/📜️script.ts build"
       },
       "configurations": {
         "release": {
-          "command": "bun alternate/📜️script.ts native cargo metadata --locked"
+          "command": "repo alternate/📜️script.ts native cargo metadata --locked"
         }
       }
     },
@@ -2294,7 +2294,7 @@
               "^build"
             ],
             "options": {
-              "command": "bun ./📜️script.ts",
+              "command": "repo ./📜️script.ts",
               "cwd": "a/prototype"
             },
             "configurations": {
@@ -2335,7 +2335,7 @@
             "cache": false,
             "inputs": [],
             "options": {
-              "command": "bun ./📜️script.ts",
+              "command": "repo ./📜️script.ts",
               "cwd": "l/prototype"
             },
             "configurations": {
@@ -2433,7 +2433,7 @@
           "build": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts build",
+              "command": "repo ./📜️script.ts build",
               "cwd": "apps/app",
               "env": {
                 "BASE": "yes"
@@ -2456,7 +2456,7 @@
           "test": {
             "execution": {
               "kind": "command",
-              "command": "bun ./📜️script.ts test"
+              "command": "repo ./📜️script.ts test"
             },
             "dependsOn": [
               "^build"
@@ -2562,17 +2562,28 @@
     "moduleReceiving": {
       "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
       "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
-      "commandModule": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
       "operation": "prepareJavascriptDependencies",
       "scriptHeader": "#!/usr/bin/env bun",
       "operationExports": [
         "javascriptDependencyProducerArgumentsV1",
         "prepareJavascriptDependencies"
       ],
-      "commands": [
-        "SyncScript",
-        "RefreshLockScript",
-        "ContractCheckScript"
+      "commandOwners": [
+        {
+          "module": "⚡️caching/🚀️bootstrap/📦️dependencies/⌨️commands/🟦️.ts",
+          "commands": [
+            "SyncScript",
+            "RefreshLockScript"
+          ],
+          "production": true
+        },
+        {
+          "module": "⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
+          "commands": [
+            "ContractCheckScript"
+          ],
+          "production": false
+        }
       ]
     }
   },
@@ -2790,7 +2801,7 @@
   },
   "topCommand": {
     "target": {
-      "command": "bun ./📜️script.ts build",
+      "command": "repo ./📜️script.ts build",
       "options": {
         "cwd": "app",
         "env": {
@@ -2799,7 +2810,7 @@
       },
       "configurations": {
         "release": {
-          "command": "bun ./📜️script.ts build release"
+          "command": "repo ./📜️script.ts build release"
         }
       }
     },
@@ -2839,7 +2850,7 @@
     "original": {
       "execution": {
         "kind": "command",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "cache": true,
       "inputs": [
@@ -3083,7 +3094,7 @@
         "kind": "native-owner-command",
         "manifest": "app/Cargo.toml",
         "workingDirectory": "app",
-        "program": "bun",
+        "program": "repo",
         "arguments": [
           "./📜️script.ts",
           "native"
@@ -3266,7 +3277,7 @@
     "launches": [
       {
         "name": "📥️deps javascript",
-        "command": "bun repo dependencies sync --all",
+        "command": "repo dependencies sync --all",
         "policy": {
           "version": 1,
           "owner": "repo:dependencies:javascript:sync",
@@ -3275,7 +3286,7 @@
       },
       {
         "name": "📥️deps javascript lock",
-        "command": "bun repo dependencies lock --all",
+        "command": "repo dependencies lock --all",
         "policy": {
           "version": 1,
           "owner": "repo:dependencies:javascript:lock",
@@ -3347,7 +3358,7 @@
       ]
     },
     "files": {
-      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[],\"options\":{\"cwd\":\"app\",\"command\":\"bun ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[],\"options\":{\"cwd\":\"app\",\"command\":\"repo ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
       "app/📜️script.ts": "import type {Thing} from '../library/api.mjs'; export const current:Thing={value:1};\n",
       "library/📋️project.json": "{\"name\":\"lib\",\"targets\":{}}",
       "library/api.mjs": "export const runtime=1;\n",
@@ -3452,7 +3463,7 @@
       ]
     },
     "files": {
-      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"dependsOn\":[\"^build\"],\"inputs\":[\"{workspaceRoot}/Cargo.toml\",\"^api\",{\"input\":\"types\",\"projects\":[\"lib\"]}],\"options\":{\"command\":\"bun ./📜️script.ts test\",\"cwd\":\"app\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"dependsOn\":[\"^build\"],\"inputs\":[\"{workspaceRoot}/Cargo.toml\",\"^api\",{\"input\":\"types\",\"projects\":[\"lib\"]}],\"options\":{\"command\":\"repo ./📜️script.ts test\",\"cwd\":\"app\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
       "app/📜️script.ts": "import type {Thing} from '../library/api.ts'; import raw from '../raw/data.ts?raw'; export const current:Thing = {value:1};\n",
       "raw/data.ts": "import './missing.ts'; export default 'raw';\n",
       "library/📋️project.json": "{\"name\":\"lib\",\"namedInputs\":{\"api\":[\"{projectRoot}/api-data/**/*\"],\"types\":[\"{projectRoot}/types/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\",\"cache\":false,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
@@ -6697,7 +6708,7 @@
         "importer": "🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
         "symbol": "viewContextWithIntegerCarriers",
         "source": "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
-        "specifier": "@semio-tech/framework-manifest/view-state-and-public-invocation"
+        "specifier": "../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
@@ -6715,7 +6726,7 @@
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "symbol": "parseSurfaceAppId",
         "source": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
-        "specifier": "@semio-tech/framework-manifest/schema"
+        "specifier": "../../🛂️manifest/🧬️schema/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
@@ -6942,7 +6953,7 @@
         "sharedGlobals",
         "schemaSources",
         "production",
-        "cargo",
+        "cargoToolchain",
         "go",
         "uv",
         "dotnet",

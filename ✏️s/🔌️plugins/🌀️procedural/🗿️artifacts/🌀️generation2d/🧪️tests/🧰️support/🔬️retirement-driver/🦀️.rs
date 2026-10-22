@@ -50,7 +50,7 @@ pub fn retire_owned_for_test<T: semio_framework_value::retirement::RetireOwned>(
 
 /// 🔗️ Admits `value` as a shared (`Arc`) retirement under a grant that pays exactly its frame birth.
 pub fn retire_shared_for_test<T: semio_framework_value::retirement::RetireOwned + Sync>(value: std::sync::Arc<T>, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
-    let factory = semio_framework_value::retirement::SharedValueRetirementFactory::<T>::default();
+    let factory = semio_framework_value::SharedValueRetirementFactory::<T>::default();
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: store::SnapshotRetirementFactory::retirement_birth_bytes(&factory, &value), maximum_release_bytes: 0, maximum_depth: 2 };
     match store::SnapshotRetirementFactory::retire(&factory, value, birth) {
         Ok((owner, _)) => owner,

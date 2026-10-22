@@ -68,7 +68,7 @@ pub fn input_schema_resolution_failures<A: ArtifactApp>(withdraw_only: &BTreeSet
 pub async fn assert_input_schemas_resolve<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path) -> (usize, usize)
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
@@ -86,7 +86,7 @@ where
 pub(super) fn acceptance_applied_ids<A, M>(app: &VcsArtifactApp<A, M>) -> Result<Vec<String>, AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     Ok(app.stores.store.mutation_ops().map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?.iter().map(|op| op.mutation_id.0.clone()).collect())
 }
@@ -102,7 +102,7 @@ pub(super) fn acceptance_blocks(worst: Option<semio_framework_diagnostic::Severi
 pub(super) fn acceptance_classified<A, M>(app: &VcsArtifactApp<A, M>, expected: &[String]) -> Result<(Vec<(String, Option<semio_framework_diagnostic::Severity>)>, bool), AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let status = app.time_travel.status().ok_or_else(|| AcceptanceVerdict::Fail("the replay closed the session".into()))?;
     if status.stage != HistoryTimeTravelStage::Reviewing {
@@ -131,7 +131,7 @@ where
 pub(super) async fn acceptance_withdraw_accept<A, M>(app: &mut VcsArtifactApp<A, M>, id: &str,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     match acceptance_verb(app, HISTORY_EDIT_WITHDRAW_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(id.to_string()))],cx).await {
         Ok(()) => {}
@@ -149,7 +149,7 @@ where
 pub(super) async fn acceptance_resolve<A, M>(app: &mut VcsArtifactApp<A, M>, expected: &[String],cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut resolved: Vec<String> = Vec::new();
     loop {
@@ -176,7 +176,7 @@ where
 pub(super) async fn acceptance_overwrite_folds<A, M>(app: &mut VcsArtifactApp<A, M>, manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, kept: &[&A::Mutation],cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     acceptance_verb(app, HISTORY_EDIT_FINALIZE_ACTION_ID, Vec::new(),cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not finalize".into())))?;
     acceptance_verb(app, HISTORY_EDIT_COMMIT_ACTION_ID, vec![("choice", DslValue::String(HISTORY_EDIT_CHOICE_OVERWRITE.to_string()))],cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not commit".into())))?;

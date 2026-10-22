@@ -10,7 +10,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags/📸️snapshot/⬅️before/🔣️.json"));
@@ -33,7 +33,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn shifts_both_nodes_by_the_same_relative_offset() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("drag-nodes applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("drag-nodes applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "drag-nodes/drags-the-text-node-and-the-nested-group-by-the-same-offset: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Text { at, .. } = &children[1] else { panic!("child #1 is the text node") };
@@ -61,9 +61,9 @@ async fn the_undo_drag_nodes_negates_the_offset() {
     let SemioDrawingMutation::DragNodes(back) = &undo[0] else { panic!("drag-nodes must undo as drag-nodes") };
     assert_eq!((back.offset.x, back.offset.y), (-2.0, 1.0), "the undo negates the offset rather than capturing origins");
     assert_eq!(back.ats.len(), 2, "and addresses exactly the same paths");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward drag-nodes applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward drag-nodes applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo drag-nodes applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo drag-nodes applies");
     }
     assert_eq!(current, base, "drag-nodes/drags-the-text-node-and-the-nested-group-by-the-same-offset: the undo did not restore the before-snapshot");
 }
@@ -95,7 +95,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "drag-nodes/drags-the-text-node-and-the-nested-group-by-the-same-offset: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -130,6 +130,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed drag-nodes diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed drag-nodes diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed drag-nodes diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "drag-nodes/drags-the-text-node-and-the-nested-group-by-the-same-offset: committed diff did not carry before to after");
 }

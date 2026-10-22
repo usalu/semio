@@ -7,6 +7,7 @@ class Node:
         s.file=file;s.name=name;s.parent=parent;s.text=text;s.sk=sk;s.items=items;s.children={};s.defs={};s.uses=[];s.base=None;s.aliases={}
 class Model:
     world=None
+    macro_last=False
     def __init__(s,lib,ident=None,depmap=None):
         s.lib=lib;s.ident=ident;s.depmap=depmap or {};s.nodes=[];s.root=s.load(lib,None,'crate',None)
     def load(s,file,parent,name,inline=None,base=None):
@@ -63,7 +64,9 @@ class Model:
             elif kw=='extern crate':
                 m2=re.match(r'^(pub\s+)?\s*(\w+)\s+as\s+(\w+)\s*$',it.get('ec',''))
                 m3=re.match(r'^(\w+)\s+as\s+(\w+)\s*$',it.get('ec',''))
-                if m3: n.aliases[m3.group(2)]=m3.group(1)
+                if m3:
+                    n.aliases[m3.group(2)]=m3.group(1)
+                    if n.parent is not None: n.uses.append((it['vis'] or 'pub(crate)',('crate',) if m3.group(1)=='self' else (m3.group(1),),m3.group(2),it))
     def lines(s,node,it): return it.get('_text',node.text).count('\n',it['start'],it['end'])+1
     def resolve_in(s,node,segs,pub_only,seen=None,from_outside=True):
         """resolve segs relative to node's scope; returns ('def',node,item)|('mod',node)|('ext',segs)|None"""
@@ -77,12 +80,14 @@ class Model:
         while root.parent is not None: root=root.parent
         if h in root.aliases and h not in node.children and h not in node.defs:
             tgt=root.aliases[h]
-            if tgt=='self': return s.resolve_in(s.root,rest,False,seen) if rest else ('mod',s.root)
-            return ('ext',s.tr((tgt,)+tuple(rest)))
+            if tgt=='self' or (s.ident and tgt==s.ident): return s.resolve_in(s.root,rest,False,seen) if rest else ('mod',s.root)
+            q=s.tr((tgt,)+tuple(rest))
+            if s.ident and q[0]==s.ident: return None
+            return ('ext',q)
         if h=='crate': return s.resolve_in(s.root,rest,False,seen) if rest else ('mod',s.root)
         if h=='self': return s.resolve_in(node,rest,False,seen) if rest else ('mod',node)
         if h=='super': return s.resolve_in(node.parent,rest,False,seen) if node.parent and rest else (('mod',node.parent) if node.parent else None)
-        if h in node.children and (not pub_only or node.children[h].vis.startswith('pub')):
+        if h in node.children and (not pub_only or node.children[h].vis.startswith('pub')) and not (not rest and Model.macro_last):
             c=node.children[h]
             return s.resolve_in(c,rest,pub_only,seen) if rest else ('mod',c)
         if h in node.defs and (not pub_only or any(i['pub'] or i.get('export') for i in node.defs[h])):
@@ -91,9 +96,13 @@ class Model:
         for vis,p,al,it in node.uses:
             if pub_only and not vis.startswith('pub'): continue
             nm=al or p[-1]
-            if nm==h and p[-1]!='*':
+            if nm==h and p[-1]!='*' and not (not rest and Model.macro_last and len(p)==1):
                 r=s.resolve_in(node,list(p),False,seen) if p[0] in('crate','self','super') or p[0] in node.children or p[0] in node.defs else s.ext_or_local(node,p,seen)
-                if r is None: r=('ext',s.tr(p))
+                if r is None:
+                    rt=node
+                    while rt.parent is not None: rt=rt.parent
+                    if rt.aliases.get(p[0])=='self': continue
+                    r=('ext',s.tr(p))
                 if r[0]=='mod' and rest: return s.resolve_in(r[1],rest,pub_only,seen)
                 if rest and r[0]=='ext': return ('ext',tuple(r[1])+tuple(rest))
                 return r
@@ -109,15 +118,28 @@ class Model:
                     if s.world.exists(cand): return ('ext',cand)
         return None
     def ext_or_local(s,node,p,seen):
+        rt=node
+        while rt.parent is not None: rt=rt.parent
+        if rt.aliases.get(p[0]) in ('self',s.ident) and rt.aliases.get(p[0]) is not None and p[0] not in node.children and p[0] not in node.defs:
+            return s.resolve_in(s.root,list(p[1:]),False,seen) if len(p)>1 else ('mod',s.root)
         if p[0] in node.children or p[0] in node.defs: return s.resolve_in(node,list(p),False,seen)
         for vis,q,al,it in node.uses:
             nm=al or q[-1]
             if nm==p[0] and q[-1]!='*' and tuple(q)!=tuple(p) and len(q)>=1:
                 r=s.resolve_in(node,list(q)+list(p[1:]),False,seen) if q[0] in('crate','self','super') or q[0] in node.children or q[0] in node.defs else s.ext_or_local(node,tuple(q)+tuple(p[1:]),seen)
                 if r is not None: return r
-        return ('ext',s.tr(p))
+        if p[0] not in s.depmap and not p[0].startswith('semio_') and p[0] not in ('std','core','alloc'):
+            r0=s.resolve_in(node,[p[0]],False,seen)
+            if r0 is not None:
+                if r0[0]=='mod': return s.resolve_in(r0[1],list(p[1:]),True,seen) if len(p)>1 else r0
+                if r0[0]=='ext': return ('ext',tuple(r0[1])+tuple(p[1:]))
+        q=s.tr(p)
+        if s.ident and q and q[0]==s.ident: return None
+        return ('ext',q)
+    GLOBAL_ALIAS={'protocol':'replication'}
     def tr(s,p):
         p=tuple(p)
+        if p and p[0] in s.GLOBAL_ALIAS and p[0] not in s.depmap and s.GLOBAL_ALIAS[p[0]] in s.depmap.values(): return (s.GLOBAL_ALIAS[p[0]],)+p[1:]
         if p and p[0] in s.depmap and s.depmap[p[0]]!=p[0]: return (s.depmap[p[0]],)+p[1:]
         return p
     def public_names(s):

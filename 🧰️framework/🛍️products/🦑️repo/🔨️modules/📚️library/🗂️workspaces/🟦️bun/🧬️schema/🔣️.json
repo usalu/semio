@@ -38,7 +38,13 @@
     "FrontierReplayProtocol": {
       "const": {
         "version": 1,
-        "stamp": ["dev", "ino", "mode", "mtimeNs", "ctimeNs"],
+        "stamp": [
+          "dev",
+          "ino",
+          "mode",
+          "mtimeNs",
+          "ctimeNs"
+        ],
         "settlement": "before-complete-listing",
         "negativeStates": "all-original-decisions",
         "unsettled": "exact-projected-relist-before-and-after-continuation",
@@ -49,24 +55,67 @@
     "FrontierReplayCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "before", "after", "settled", "expected"],
+      "required": [
+        "name",
+        "before",
+        "after",
+        "settled",
+        "expected"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1},
-        "before": {"type": ["string", "null"]},
-        "after": {"type": ["string", "null"]},
-        "settled": {"type": "boolean"},
-        "expected": {"enum": ["reuse", "relist", "derive"]}
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settled": {
+          "type": "boolean"
+        },
+        "expected": {
+          "enum": [
+            "reuse",
+            "relist",
+            "derive"
+          ]
+        }
       }
     },
     "FrontierStateCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["dev", "ino", "mode", "expected"],
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "expected"
+      ],
       "properties": {
-        "dev": {"type":"string","pattern":"^[0-9]+$"},
-        "ino": {"type":"string","pattern":"^[0-9]+$"},
-        "mode": {"type":"integer","minimum":0},
-        "expected": {"$ref":"#/$defs/PhysicalObservationRecord/properties/state"}
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expected": {
+          "$ref": "#/$defs/PhysicalObservationRecord/properties/state"
+        }
       }
     },
     "RecheckFenceCase": {
@@ -710,6 +759,82 @@
         "fault",
         "accepted"
       ]
+    },
+    "FrontierRefreshCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "action",
+        "finalMutation",
+        "laterMutation",
+        "first",
+        "later",
+        "adopted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "enum": [
+            "empty-directory",
+            "nonmember-decision",
+            "source",
+            "member",
+            "remove-required",
+            "manifest-bytes",
+            "patterns",
+            "owner"
+          ]
+        },
+        "finalMutation": {
+          "enum": [
+            "none",
+            "directory",
+            "manifest",
+            "cancel",
+            "undefined"
+          ]
+        },
+        "laterMutation": {
+          "enum": [
+            "none",
+            "decision-bytes",
+            "decision-removal"
+          ]
+        },
+        "first": {
+          "enum": [
+            "accepted",
+            "rejected",
+            "canceled",
+            "failed"
+          ]
+        },
+        "later": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "adopted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FrontierRefreshProtocol": {
+      "const": {
+        "version": 1,
+        "semanticShape": "complete-scopes-patterns-packages",
+        "manifestBytes": "all-required-and-fresh-decisions",
+        "nonrootDisappearance": "refuse",
+        "physicalBudget": "same-cumulative-budget",
+        "observations": "same-object-complete-frontier",
+        "authentication": "complete-replay-then-no-await-final-fence",
+        "failure": "refuse-without-adoption"
+      }
     }
   }
 }

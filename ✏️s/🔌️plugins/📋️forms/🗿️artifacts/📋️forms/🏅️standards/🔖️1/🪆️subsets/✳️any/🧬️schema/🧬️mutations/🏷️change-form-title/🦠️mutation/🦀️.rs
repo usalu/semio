@@ -22,15 +22,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "form-title", kind: "change-form-title", record: "ChangedFormTitle" };
 
-    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::change_form_title::diff::diff_change_form_title(self, base)
-    }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::standards::v1::subsets::any::schema::mutations::change_form_title::inverse::inverse_change_form_title(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_title {
@@ -44,5 +35,20 @@ where
         }
         })
     }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for ChangeFormTitle
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<ChangeFormTitle>,
+{
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+        crate::standards::v1::subsets::any::schema::mutations::change_form_title::diff::diff_change_form_title(self, base)
+    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::standards::v1::subsets::any::schema::mutations::change_form_title::inverse::inverse_change_form_title(self, base)?
+    
+    })
+}
 }
 //#endregion 🖋️ChangeFormTitle

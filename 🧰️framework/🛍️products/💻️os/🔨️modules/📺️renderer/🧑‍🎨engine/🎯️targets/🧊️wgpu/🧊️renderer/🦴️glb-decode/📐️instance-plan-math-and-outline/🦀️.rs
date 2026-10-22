@@ -7,7 +7,7 @@ impl GlbInstancePlanCursor {
     pub(super) fn new(schema: &GlbSchemaOutput) -> Self {
         let scene = schema.default_scene.or((schema.scene_len != 0).then_some(0));
         let mode = if schema.node_len == 0 { GlbPlanMode::Fallback { primitive: 0 } } else { GlbPlanMode::Roots { scene, index: 0 } };
-        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false,has_tangents:false, has_colors: false, face_id_instances: 0, vertex_id_instances: 0, output_bytes: 0 }
+        Self { instances: semio_framework_async_slots::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async_slots::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false,has_tangents:false, has_colors: false, face_id_instances: 0, vertex_id_instances: 0, output_bytes: 0 }
     }
 
     /// 🎯️ Whether EVERY instantiated primitive carries `_FACE_ID`; a table with gaps would mix producer ids with anonymous ones, so a mixed bank publishes none.

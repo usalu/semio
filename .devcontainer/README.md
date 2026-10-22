@@ -20,7 +20,7 @@ The service declares no `privileged`, capability or device; the `docker-in-docke
 
 ## Dockerfile
 
-Ubuntu 24.04 devcontainer base with the build toolchain, the generated `en_US.UTF-8` locale (`LANG`/`LC_ALL`, the locale the Bazel adapter also sets on darwin), fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.4.2 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. The pinned build tools (Nx by default, Bazel on request) are provisioned by `repo tools setup all`, which `repo run workspace:setup` runs. The platform matrix (macOS, Linux, devcontainer, Windows), the Bazel host path rules and the recovery steps for the cache partitions are in the chapter "Build and run" of `🧰️framework/🛍️products/🦑️repo/README.md`.
+Ubuntu 24.04 devcontainer base with the build toolchain, the generated `en_US.UTF-8` locale (`LANG`/`LC_ALL`, the locale the Bazel adapter also sets on darwin), fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Node 24.15.0 (the JavaScript runtime is provisioned by the `repo` launcher from its pinned registry, not installed in the image) from pinned, checksum-verified Linux x64/arm64 archives. The pinned build tools (Nx by default, Bazel on request) are provisioned by `repo tools setup all`, which `repo run workspace:setup` runs. The platform matrix (macOS, Linux, devcontainer, Windows), the Bazel host path rules and the recovery steps for the cache partitions are in the chapter "Build and run" of `🧰️framework/🛍️products/🦑️repo/README.md`.
 
 ## Lifecycle
 
@@ -31,7 +31,7 @@ Each lifecycle hook declares an explicit program argv. Cold creation invokes the
 | `onCreateCommand` | `sudo chown vscode:vscode` of the three checkout volumes | Docker creates them root-owned |
 | `postCreateCommand` | `bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup` | installs and verifies native `repo`, then prepares language environments, generated sources, agent instruction aliases and MCP binaries |
 | `postStartCommand` | `repo run workspace:setup-devcontainer-start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
-| `postAttachCommand` | `repo run workspace:setup-devcontainer-attach` | prepares the optional F3D product viewer and reinstalls repository hooks |
+| `postAttachCommand` | `repo run workspace:setup-devcontainer-attach` | prepares the optional F3D product viewer; automatic Git hooks remain disabled |
 
 Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` skips optional product-viewer installation.
 
@@ -67,7 +67,7 @@ Named volumes retain CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/opena
 
 Cold creation MUST install and verify the native `repo` frontend before invoking setup. Subsequent lifecycle commands MUST be explicit `repo` argv through registered repository targets. Developers choose `workspace:setup-native`, `workspace:setup-devcontainer-start` or `workspace:setup-devcontainer-attach` in the dashboard to rerun preparation.
 
-Devcontainer attach MUST prepare repository tools and hooks without installing editors or extensions.
+Devcontainer attach MUST prepare the optional product viewer without installing Git hooks, editors or extensions.
 
 Devcontainer start MUST NOT run destructive source-control or database commands and MUST NOT append duplicate git `safe.directory` entries.
 

@@ -12,7 +12,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -22,7 +22,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts guest-instance-check"
+        "command": "repo ./\ud83d\udcdc\ufe0fscript.ts guest-instance-check"
       },
       "dependsOn": [
         {

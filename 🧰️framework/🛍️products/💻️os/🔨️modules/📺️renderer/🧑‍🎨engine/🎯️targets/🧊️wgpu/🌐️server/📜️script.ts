@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {frameworkOsViteArtifactInputsV1} from "../../../../../🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
@@ -8,12 +8,13 @@ import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { serveVite } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🌐️ Owns one browser listener consuming build-completed WGPU artifacts. */
 class ServeScript extends BundleScript {
   async run([variant, profile, ...args]: string[]): Promise<void> {
     if (variant === undefined || (profile !== "prototype" && profile !== "release")) throw new Error("serve <variant> <prototype|release> [--port <port>] [--host <host>]");
-    let composition = process.env.SEMIO_WGPU_COMPOSITION_PATH === undefined ? join(import.meta.dir, "🎚️config/🟦️.ts") : resolve(this.repoRoot, playgroundCompositionPathV1(process.env.SEMIO_WGPU_COMPOSITION_PATH));
+    let composition = process.env.SEMIO_WGPU_COMPOSITION_PATH === undefined ? join(import.meta.dirname, "🎚️config/🟦️.ts") : resolve(this.repoRoot, playgroundCompositionPathV1(process.env.SEMIO_WGPU_COMPOSITION_PATH));
     let port = Number(process.env.S_OS_PORT), host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     for (let index = 0; index < args.length; index += 2) {
       const value = args[index + 1];
@@ -32,9 +33,9 @@ class ServeScript extends BundleScript {
     process.once("SIGINT", cancel);
     process.once("SIGTERM", cancel);
     try {
-      await serveVite({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(profile), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(profile),renderer:"wgpu",command:"serve",engines:"none"}), root: import.meta.dir, config: composition, configLoader: "native", host, port, signal: this.invocation.control.signal, ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
+      await serveVite({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(profile), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(profile),renderer:"wgpu",command:"serve",engines:"none"}), root: import.meta.dirname, config: composition, configLoader: "native", host, port, signal: this.invocation.control.signal, ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
     } finally { process.off("SIGINT", cancel); process.off("SIGTERM", cancel); }
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("serve", ServeScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("serve", ServeScript)).run(process.argv.slice(2), original));

@@ -1,7 +1,7 @@
 //! 🫴️ Typed fields retain every partial destination inside the original native receiving owner.
 use crate::{FieldValue,RecordValue};
 pub use semio_framework_io_control::NativeSnapshotDecodeOwner;
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::RetireOwned};
+use semio_framework_value::{DslValue,FromValue,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::RetireOwned};
 #[path="📥️owned/🦀️.rs"]
 pub mod owned;
 pub use owned::{DslOwnedReceivingField,DslOwnedReceivingRecord,DslOwnedReceivingVariants,OwnedFieldReceiving,OwnedSlot};
@@ -35,6 +35,9 @@ integer!(UInt;u8,u16,u32,u64,usize);
 impl DslReceivingField for bool{fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{work(owner,size_of::<Self>(),1)?;match value{FieldValue::Bool(value)=>Ok(*value),_=>Err(invalid())}}}
 impl DslReceivingField for f64{fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{work(owner,size_of::<Self>(),1)?;match value{FieldValue::Float(value)=>Ok(*value),_=>Err(invalid())}}}
 impl DslReceivingField for f32{fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{work(owner,size_of::<Self>(),1)?;let FieldValue::Float(value)=value else{return Err(invalid())};let bits=value.to_bits();if bits&0x7ff0000000000000==0x7ff0000000000000&&bits&0xfffffffffffff!=0{if bits&0x1fffffff!=0{return Err(invalid())}Ok(Self::from_bits(((bits>>32)as u32&0x80000000)|0x7f800000|((bits>>29)as u32&0x7fffff)))}else{Ok(*value as Self)}}}
+impl DslReceivingField for DslValue{
+ fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{let FieldValue::Value(inner)=value else{return Err(invalid())};owner.receive::<DslValue,DslValue>(|_,native,_|DslValue::from_value_controlled(inner,native))}
+}
 impl DslReceivingField for String{
  fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{let FieldValue::Text(text)=value else{return Err(invalid())};owner.receive::<String,String>(|slot,native,body|{*slot=Some(String::new());body.copy_text_into(native,text,slot.as_mut().unwrap(),1)?;Ok(slot.take().unwrap())})}
 }
@@ -66,6 +69,3 @@ impl<T:DslReceivingField> DslReceivingField for Box<T>{
 #[derive(semio_framework_value::RetireOwned)]
 struct BoxFrame<T:RetireOwned>{child:Option<T>,output:Option<Box<T>>}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

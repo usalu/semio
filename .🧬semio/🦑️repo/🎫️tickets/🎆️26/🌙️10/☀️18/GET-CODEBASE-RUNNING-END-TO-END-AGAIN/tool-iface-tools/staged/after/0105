@@ -1,220 +1,177 @@
-// #region 🧲️Header
 
-// 2026 Ueli Saluz <ueli@semio-tech.com>
+import { existsSync, readFileSync } from "node:fs";
+import { join, posix } from "node:path";
+import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
+import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
+import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
+import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-// 🔌️gitsource carries the git log source seam: the system git and the recorded transcript.
+const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
 
-// #endregion 🧲️Header
+/** 🔒️ The closed set of cache-correctness rules; every finding names exactly one. */
+export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] as const;
+export type CacheRuleV1 = (typeof CACHE_RULES_V1)[number];
 
-package metrics
-
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	workspace "github.com/usalu/semio/repo/workspace"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"sync"
-	"sync/atomic"
-)
-
-// #region 🔌️GitSource
-
-// 🔌️GitLogSource is the only door this package has to git.
-type GitLogSource interface {
-	NumstatLog(gitRef string) (string, error)
-	TrackedPaths(gitRef string) ([]string, error)
-	TrackedBytes(gitRef, rel string) ([]byte, error)
+/** 🎯️ The resolved target facts a rule reads: the shape the inference gives a target after its cache policy. */
+export interface CacheTargetV1 {
+  cache?: boolean;
+  executor?: string;
+  inputs?: unknown[];
+  outputs?: string[];
+  options?: { command?: string; commands?: unknown[]; env?: Record<string, string> };
+  configurations?: Record<string, { env?: Record<string, string>; command?: string }>;
+  metadata?: { semio?: Record<string, any> };
 }
 
-// 🖥️SystemGit is the real git, reached through os/exec.
-type SystemGit struct {
-	Repo string
+/** 🧾️ One resolved target together with the names its inputs may reference. */
+export interface CacheRecordV1 { id: string; root: string; authoredCache: boolean | null; target: CacheTargetV1; namedInputs: Record<string, unknown[]> }
+
+/** 🚩️ One violated rule on one target (or, for overlaps, on one pair). */
+export interface CacheFindingV1 { id: string; rule: CacheRuleV1; detail: string }
+
+const MANIFEST = "📋️project.json";
+const MUTATING = /(?:--fix(?![\w-])|--write(?![\w-])|\bpublish\b|\bdeploy\b|\bgit\s+(?:commit|push|add|checkout|stash|reset)\b)/u;
+const MUTATING_EXEMPT = /(?:--check\b|--dry-run\b|\bverify\b)/u;
+const NETWORK = /\b(?:curl|wget|git clone|git fetch|npm install|bun install|bun add|bunx|npx|cargo fetch|cargo install|pip install|uv sync|uv pip|apt-get|brew install|go get|go mod download)(?![-\w])/u;
+
+/** 🧷️ Matches a workspace-relative path against one input glob (`*`, `**`, `?`, `{a,b}`); the independent `minimatch` oracle checks it. */
+export function globMatchesV1(pattern: string, path: string): boolean {
+  const source = pattern.replace(/[.+^$()|\\[\]]/gu, "\\$&").replace(/\{([^{}]*)\}/gu, (_, alternatives: string) => `(?:${alternatives.split(",").join("|")})`).replace(/\*\*\/|\*\*|\*|\?/gu, (token) => token === "**/" ? "(?:.*/)?" : token === "**" ? ".*" : token === "*" ? "[^/]*" : "[^/]");
+  return new RegExp(`^${source}$`, "u").test(path);
 }
 
-// 🖥️run executes git in the bound repository and returns stdout.
-func (source SystemGit) run(args []string) ([]byte, error) {
-	command := workspace.ToolCommand("git", args...)
-	command.Dir = source.Repo
-	var stdout, stderr bytes.Buffer
-	command.Stdout = &stdout
-	command.Stderr = &stderr
-	if err := command.Run(); err != nil {
-		return nil, fmt.Errorf("git %s: %s", strings.Join(args, " "), strings.TrimSpace(stderr.String()))
-	}
-	return stdout.Bytes(), nil
+const ALWAYS_HASHED_ENV = new Set(["SEMIO_BUILD_MODE"]);
+const WORD = /^[A-Za-z][A-Za-z0-9_-]*$/u;
+const expandInputs = (inputs: readonly unknown[], names: Record<string, unknown[]>, seen: ReadonlySet<string> = new Set()): unknown[] => inputs.flatMap((input) => {
+  if (typeof input !== "string") return [input];
+  const word = input.startsWith("^") ? input.slice(1) : input;
+  if (!WORD.test(word)) return [input];
+  if (input.startsWith("^") || seen.has(word) || !Object.hasOwn(names, word)) return [];
+  return expandInputs(names[word]!, names, new Set([...seen, word]));
+});
+
+const projectPath = (pattern: string, root: string): string => pattern.replace(/^\{workspaceRoot\}\//u, "").replaceAll("{projectRoot}/", root === "." ? "" : `${root}/`).replaceAll("{projectRoot}", root);
+const coversManifest = (leaves: readonly unknown[], root: string): boolean => {
+  const path = root === "." ? MANIFEST : `${root}/${MANIFEST}`, patterns = leaves.filter((leaf): leaf is string => typeof leaf === "string");
+  return patterns.some((pattern) => !pattern.startsWith("!") && globMatchesV1(projectPath(pattern, root), path)) && !patterns.some((pattern) => pattern.startsWith("!") && globMatchesV1(projectPath(pattern.slice(1), root), path));
+};
+
+const commandOf = (target: CacheTargetV1): string => target.options?.command ?? (Array.isArray(target.options?.commands) ? target.options.commands.map((operation) => typeof operation === "string" ? operation : (operation as { command?: string })?.command ?? "").join(" && ") : "");
+const outputPath = (output: string, root: string): string | undefined => {
+  const tokens = output.replaceAll(/\{options\.env\.(\w+)\}/gu, "<$1>");
+  if (tokens.includes("{options.")) return undefined;
+  return tokens.startsWith("/") ? tokens : posix.normalize(projectPath(tokens, root) || ".");
+};
+
+/** 🔎️ Runs every per-target rule (the inference appends `{ env: SEMIO_BUILD_MODE }` to every replayed target, so the build mode is always hashed) on one resolved target; a target that never replays only answers for its classification and its authored cache. */
+export function cacheCorrectnessFindingsV1(record: CacheRecordV1): CacheFindingV1[] {
+  const { id, root, target } = record, findings: CacheFindingV1[] = [], found = (rule: CacheRuleV1, detail: string) => findings.push({ id, rule, detail });
+  const decision = target.metadata?.semio?.cache, semio = target.metadata?.semio ?? {};
+  if (decision?.class === "unclassified") found("unclassified-target", "no policy row, declaration or verifying command classifies this target");
+  if (target.cache === false && decision === undefined) found("uncached-without-reason", "cache false records no decision: declare metadata.semio.cache with the class and reason that forbid replay");
+  if (record.authoredCache === true && target.cache === false && decision?.class !== "continuous") found("authored-cache-overridden", `authored cache true, resolved ${decision ? `${decision.class}/${decision.reason}` : "uncached"}`);
+  if (target.cache !== true) return findings;
+  const leaves = expandInputs(target.inputs ?? ["default", "^default"], record.namedInputs);
+  if (leaves.some((leaf) => typeof leaf === "string" && !leaf.startsWith("!") && globSelectsRepositoryV1(projectPath(leaf, root))) && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-repository-input", "declares the whole repository as input and no input precision rule bounds it: add a rule to the input precision document that names what the task reads (traced, static or bound), or record why every file is read (whole, assumed)");
+  const wholeKeys = workspaceKeyViolationsV1(RESOLUTION, leaves, commandOf(target), id);
+  if (wholeKeys.length && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-workspace-rust-key", cargoResolutionTextV1(RESOLUTION, "workspaceKey", cargoResolutionLanguageV1(RESOLUTION, process.env), { subject: id, keys: wholeKeys.join(", ") }));
+  if (Array.isArray(target.inputs) && target.inputs.length === 0 && target.executor !== "repo:noop") found("empty-inputs", "inputs [] hashes nothing but the results of dependencies");
+  const declaredOutputs = Array.isArray(target.outputs) && target.outputs.length > 0;
+  if (decision?.class === "deterministic" && decision.reason === "pure-function-of-inputs" && !declaredOutputs && semio.rustBuildIntent === undefined && semio.rustUnitAggregate === undefined && semio.hostPlatformOutputsV1 === undefined && target.executor !== "repo:noop") found("producer-without-outputs", "a replayed producer declares no output, so a hit restores nothing");
+  const environment = new Set([...Object.keys(target.options?.env ?? {}), ...Object.values(target.configurations ?? {}).flatMap((configuration) => Object.keys(configuration.env ?? {}))]), hashed = new Set(leaves.flatMap((leaf) => typeof leaf === "object" && leaf !== null && typeof (leaf as { env?: unknown }).env === "string" ? [(leaf as { env: string }).env] : []));
+  if (environment.size && !coversManifest(leaves, root)) for (const key of [...environment].sort()) if (!hashed.has(key) && !ALWAYS_HASHED_ENV.has(key)) found("env-unhashed", `options.env.${key} is neither an {env} input nor covered by hashing the declaring manifest`);
+  for (const input of target.inputs ?? []) if (typeof input === "string") { const word = input.startsWith("^") ? input.slice(1) : input; if (WORD.test(word) && !Object.hasOwn(record.namedInputs, word)) found("named-input-undeclared", `input ${input} names no declared named input`); }
+  for (const output of target.outputs ?? []) { const path = outputPath(output, root); if (path !== undefined && (path.startsWith("/") || path === ".." || path.startsWith("../"))) found("output-escapes", `${output} resolves outside the workspace (${path})`); }
+  const command = commandOf(target);
+  if (MUTATING.test(command) && !MUTATING_EXEMPT.test(command)) found("command-mutating", command.slice(0, 160));
+  if (NETWORK.test(command)) found("command-network", command.slice(0, 160));
+  return findings;
 }
 
-// 🧵️MinimumChunkedCommits is the shortest history a numstat walk splits; below it the split would
-// cost more than it saves.
-const MinimumChunkedCommits = 32
+const segments = (path: string) => path.replace(/\/(?:\*\*(?:\/\*)?)?$/u, "").split("/").filter(Boolean);
+const nests = (left: string[], right: string[]) => left.length <= right.length ? left.every((part, index) => part === right[index]) : right.every((part, index) => part === left[index]);
 
-// 🧵️MaximumNumstatWorkers is the most concurrent `git log` processes a numstat walk starts.
-const MaximumNumstatWorkers = 16
-
-// 🧵️NumstatChunksPerWorker gives every worker several ranges, so one that draws a cheap range picks
-// up another instead of idling.
-const NumstatChunksPerWorker = 4
-
-// 🧵️firstParentChain lists the first-parent chain of a ref, newest commit first, and nothing when
-// git cannot name one.
-func (source SystemGit) firstParentChain(gitRef string) []string {
-	ref := strings.TrimSpace(gitRef)
-	if ref == "" {
-		ref = "HEAD"
-	}
-	out, err := source.run([]string{"rev-list", "--first-parent", ref})
-	if err != nil {
-		return nil
-	}
-	chain := []string{}
-	for _, line := range strings.Split(string(out), "\n") {
-		if trimmed := strings.TrimSpace(line); trimmed != "" {
-			chain = append(chain, trimmed)
-		}
-	}
-	return chain
+/** 🧱️ Two replayed targets that declare the same output tree (or one inside the other) overwrite each other's restore. */
+export function cacheOutputOverlapFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
+  const owners: { id: string; path: string; parts: string[] }[] = [], findings: CacheFindingV1[] = [];
+  for (const record of records) if (record.target.cache === true) for (const output of new Set(record.target.outputs ?? [])) { const path = outputPath(output, record.root); if (path !== undefined && !path.startsWith("/") && !path.startsWith("..")) owners.push({ id: record.id, path, parts: segments(path) }); }
+  const byHead = new Map<string, typeof owners>();
+  for (const owner of owners) { const head = owner.parts[0] ?? ""; (byHead.get(head) ?? byHead.set(head, []).get(head)!).push(owner); }
+  for (const group of byHead.values()) for (let left = 0; left < group.length; left++) for (let right = left + 1; right < group.length; right++) {
+    const a = group[left]!, b = group[right]!;
+    if (a.id !== b.id && a.parts.length && b.parts.length && nests(a.parts, b.parts)) findings.push({ id: a.id, rule: "output-overlap", detail: `${a.path} overlaps ${b.id}: ${b.path}` });
+  }
+  return findings;
 }
 
-// 🧵️numstatChunks is how many ranges a chain of that length is split into.
-func numstatChunks(commits int) int {
-	if commits <= MinimumChunkedCommits {
-		return 1
-	}
-	workers := runtime.NumCPU()
-	if workers < 1 {
-		workers = 1
-	}
-	if workers > MaximumNumstatWorkers {
-		workers = MaximumNumstatWorkers
-	}
-	chunks := workers * NumstatChunksPerWorker
-	if chunks > commits {
-		chunks = commits
-	}
-	return chunks
+/** 🪜️ The exempt targets that no longer declare a whole-workspace Rust key (or no longer exist): the exemption list is a ratchet, so an owner who derives a narrower key must delete the entry. */
+export function staleRustKeyExemptionsV1(records: readonly CacheRecordV1[]): string[] {
+  const open = { ...RESOLUTION, workspaceKeys: { ...RESOLUTION.workspaceKeys, exemptTargets: [] } }, byId = new Map(records.map((record) => [record.id, record]));
+  return RESOLUTION.workspaceKeys.exemptTargets.flatMap((row) => row.targets).filter((id) => {
+    const record = byId.get(id);
+    return !record || record.target.cache !== true || workspaceKeyViolationsV1(open, expandInputs(record.target.inputs ?? ["default", "^default"], record.namedInputs), commandOf(record.target)).length === 0;
+  }).sort();
 }
 
-// 📜️NumstatLog is the raw `git log --numstat` stream for a ref, walked in parallel over contiguous
-// ranges of the first-parent chain and joined back into the single stream the parser reads.
-func (source SystemGit) NumstatLog(gitRef string) (string, error) {
-	chain := source.firstParentChain(gitRef)
-	chunks := numstatChunks(len(chain))
-	if chunks < 2 {
-		out, err := source.run(NumstatLogArgs(gitRef))
-		if err != nil {
-			return "", err
-		}
-		return string(out), nil
-	}
-	ranges := NumstatLogRanges(chain, chunks)
-	outputs := make([]string, len(ranges))
-	failures := make([]error, len(ranges))
-	workers := len(ranges)
-	if workers > MaximumNumstatWorkers {
-		workers = MaximumNumstatWorkers
-	}
-	next := int64(0)
-	group := sync.WaitGroup{}
-	for worker := 0; worker < workers; worker++ {
-		group.Add(1)
-		go func() {
-			defer group.Done()
-			for {
-				index := int(atomic.AddInt64(&next, 1)) - 1
-				if index >= len(ranges) {
-					return
-				}
-				out, err := source.run(NumstatLogRangeArgs(ranges[index]))
-				outputs[index], failures[index] = string(out), err
-			}
-		}()
-	}
-	group.Wait()
-	for _, failure := range failures {
-		if failure != nil {
-			return "", failure
-		}
-	}
-	return JoinNumstatChunks(outputs), nil
+/** 🧮️ Every finding of every rule over a set of resolved targets. */
+export function cacheCorrectnessRepositoryFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
+  return [...records.flatMap(cacheCorrectnessFindingsV1), ...cacheOutputOverlapFindingsV1(records)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : a.detail < b.detail ? -1 : 1);
 }
 
-// 🧾️TrackedPaths lists the repository-relative tracked paths at a ref.
-func (source SystemGit) TrackedPaths(gitRef string) ([]string, error) {
-	args := []string{"ls-files", "-z"}
-	if strings.TrimSpace(gitRef) != "" {
-		args = []string{"ls-tree", "-r", "--name-only", "-z", gitRef}
-	}
-	out, err := source.run(args)
-	if err != nil {
-		return nil, err
-	}
-	paths := make([]string, 0)
-	for _, entry := range strings.Split(string(out), "\x00") {
-		if entry == "" {
-			continue
-		}
-		paths = append(paths, filepath.ToSlash(entry))
-	}
-	return paths, nil
+type PolicyV1 = { targetDefaults?: Record<string, Record<string, unknown>> };
+export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any, policy?: any): any }
+
+/** 📚️ Resolves every authored target of the tracked manifests through the production cache policy (targetDefaults, generator-contract outputs, classification) into the records the rules read. Inference-only projects have no manifest target and are covered by the production outputs gate. */
+const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
+const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
+
+/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
+function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
+  const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
+  if (!rule) return target;
+  const metadata = { ...target.metadata, semio: { ...target.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
+  if (BROAD_EVIDENCE.has(rule.evidence)) return { ...target, metadata };
+  return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
 }
 
-// 📄️TrackedBytes reads the bytes of one tracked path at a ref.
-func (source SystemGit) TrackedBytes(gitRef, rel string) ([]byte, error) {
-	if strings.TrimSpace(gitRef) == "" {
-		return os.ReadFile(filepath.Join(source.Repo, filepath.FromSlash(rel)))
-	}
-	return source.run([]string{"show", gitRef + ":" + rel})
+/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
+export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
+  const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
+  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;
+  const document = precision ?? (existsSync(join(repoRoot, library, PRECISION_FILE)) ? readInputPrecisionV1(read(`${library}/${PRECISION_FILE}`)) : undefined);
+  const injected = new Map<string, string[]>();
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned") continue;
+    if (!injected.has(contract.target)) injected.set(contract.target, []);
+    for (const output of contract.outputRoots) { const target = output.producer?.target ?? contract.target; (injected.get(target) ?? injected.set(target, []).get(target)!).push(`{workspaceRoot}/${output.path}`); }
+  }
+  const manifests = (tracked ?? runToolSyncV1("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { check: true, cwd: repoRoot, maxBuffer: 1 << 28 }).stdout.toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
+  const records: CacheRecordV1[] = [];
+  for (const manifest of manifests.sort()) {
+    let json: any;
+    try { json = read(manifest); } catch { continue; }
+    const root = posix.dirname(manifest), names: Record<string, unknown[]> = { ...nx, ...json.namedInputs, ...Object.fromEntries(Object.keys(json.metadata?.sourceInputs ?? {}).map((key) => [key, []])) };
+    for (const [name, authored] of Object.entries<any>(json.targets ?? {})) {
+      const id = `${json.name ?? root}:${name}`, base = { ...(policy.targetDefaults?.[name] ?? {}), ...authored, ...(authored.cache === false && authored.inputs === undefined ? { inputs: ["default"] } : {}), options: { ...authored.options, ...(typeof authored.command === "string" && authored.options?.command === undefined ? { command: authored.command } : {}) } } as any;
+      const outputs = injected.get(id);
+      if (outputs?.length) base.outputs = outputs;
+      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: narrowedTargetV1(document, json.name ?? root, name, internals.targetPolicy(name, structuredClone(base))), namedInputs: names });
+    }
+  }
+  return records;
 }
 
-// 🎞️GitTranscript is a recorded git session: exactly what the real CLI answered, keyed by ref.
-type GitTranscript struct {
-	ID      string              `json:"id"`
-	Logs    map[string]string   `json:"logs"`
-	Tracked map[string][]string `json:"tracked"`
-	Blobs   map[string]string   `json:"blobs"`
+/** 🚨️ Turns the findings into policy breaches the verification lanes print. */
+export function policyCacheCorrectnessBreaches(findings: readonly CacheFindingV1[]): BreachRecord[] {
+  return findings.map((finding) => ({
+    id: `cache-correctness-${finding.rule}-${finding.id}`,
+    summary: `${finding.rule} ${finding.id}: ${finding.detail}`,
+    kind: "repo/cache-correctness",
+    scope: finding.id,
+    priority: "high",
+    autofixable: false,
+    reason: "A replayed task whose key omits an input, an environment value or an output restores a stale or empty result for every later build, and a shared remote cache would spread it to every machine.",
+    solution: "Declare the missing inputs or outputs on the target, classify it in `⚡️caching/🔣️policy.json` `targetClasses`, or set `cache: false` with the decision that names why it cannot replay.",
+  }));
 }
-
-// 🔑️TranscriptBlobKey is the blob key for a ref and path pair.
-func TranscriptBlobKey(gitRef, rel string) string {
-	return gitRef + "\x01" + rel
-}
-
-// 📥️ParseGitTranscript parses a transcript from its JSON encoding.
-func ParseGitTranscript(text []byte) (*GitTranscript, error) {
-	transcript := &GitTranscript{}
-	if err := json.Unmarshal(text, transcript); err != nil {
-		return nil, err
-	}
-	return transcript, nil
-}
-
-// 📜️NumstatLog replays the recorded log for a ref.
-func (transcript *GitTranscript) NumstatLog(gitRef string) (string, error) {
-	if value, ok := transcript.Logs[gitRef]; ok {
-		return value, nil
-	}
-	return "", fmt.Errorf("transcript has no log for ref %q", gitRef)
-}
-
-// 🧾️TrackedPaths replays the recorded tracked path list for a ref.
-func (transcript *GitTranscript) TrackedPaths(gitRef string) ([]string, error) {
-	if value, ok := transcript.Tracked[gitRef]; ok {
-		return value, nil
-	}
-	return nil, fmt.Errorf("transcript has no tracked path list for ref %q", gitRef)
-}
-
-// 📄️TrackedBytes replays the recorded body of one path at a ref.
-func (transcript *GitTranscript) TrackedBytes(gitRef, rel string) ([]byte, error) {
-	if value, ok := transcript.Blobs[TranscriptBlobKey(gitRef, rel)]; ok {
-		return []byte(value), nil
-	}
-	return nil, fmt.Errorf("transcript has no blob for %q:%s", gitRef, rel)
-}
-
-// #endregion 🔌️GitSource

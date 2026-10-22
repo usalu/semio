@@ -84,7 +84,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-counter/sets-counter-to-seven declares an applied outcome");
-    let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let produced = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-counter/sets-counter-to-seven: 7 differs from 3, so no no-op warning is expected, got {:?}", produced.messages());
     assert_eq!(produced.diff().counter, Some(7), "change-counter's sparse diff must pin exactly the counter field");
 }
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// value 7, never a delta of +4 — the wire format has no increment shape to express one in.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let outcome = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-counter/sets-counter-to-seven: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-counter/sets-counter-to-seven: committed diff did not carry before to after");
 }
 

@@ -1,3 +1,4 @@
+import "../../🎛️control-policy/🧩️products/🧪️tests/🟦️.ts";
 import "../🔎️source-discovery/🟦️.ts";
 import "../🧭️journeys/🧩️sources/🟦️.ts";
 import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts";
@@ -30,11 +31,11 @@ const allowedPath = (path: string) => {
   const normalized = path.replaceAll("\\", "/").toLowerCase();
   const parts = normalized.split("/");
   const file = parts.at(-1)!;
-  return !parts.some(part => fixture.forbiddenDirectories.includes(part)) && !fixture.forbiddenExtensions.some((extension: string) => file.endsWith(extension)) && !fixture.forbiddenFiles.includes(file) && !fixture.forbiddenPaths.includes(parts.slice(-2).join("/")) && !parts.some((part, index) => part === ".cursor" && parts[index + 1] !== undefined && parts[index + 1] !== "plans");
+  return !parts.some(part => fixture.forbiddenDirectories.includes(part)) && !fixture.forbiddenExtensions.some((extension: string) => file.endsWith(extension)) && !fixture.forbiddenFiles.includes(file) && !fixture.forbiddenPaths.includes(parts.slice(-2).join("/"));
 };
 
 const object = (value: unknown): value is Record<string, any> => typeof value === "object" && value !== null && !Array.isArray(value);
-const ownerCommand = /^bun (?:--watch )?(?:"((?:[^"\r\n]*[/\\])?📜️script\.ts)"|((?:[^\s"\r\n]*[/\\])?📜️script\.ts)) [a-z][a-z0-9-]*(?: (?:[^\s"';&|<>\r\n]+|"[^"\r\n]*"|'[^'\r\n]*')+)*$/;
+const ownerCommand = /^repo (?:--watch )?(?:"((?:[^"\r\n]*[/\\])?📜️script\.ts)"|((?:[^\s"\r\n]*[/\\])?📜️script\.ts)) [a-z][a-z0-9-]*(?: (?:[^\s"';&|<>\r\n]+|"[^"\r\n]*"|'[^'\r\n]*')+)*$/;
 const acceptsOwnerCommand = (command: unknown) => typeof command === "string" && ownerCommand.test(command) && !/[$`]/.test(command);
 const acceptsOwnerOptions = (options: unknown) => object(options) && (!Object.hasOwn(options, "command") || acceptsOwnerCommand(options.command)) && (!Object.hasOwn(options, "commands") || Array.isArray(options.commands) && options.commands.length > 0 && options.commands.every((command: unknown) => acceptsOwnerCommand(object(command) ? command.command : command)));
 const acceptsOwnerTarget = (target: unknown) => object(target) && (!Object.hasOwn(target, "executor") || ["repo:script", "repo:noop"].includes(target.executor)) && (!Object.hasOwn(target, "command") || acceptsOwnerCommand(target.command)) && (!Object.hasOwn(target, "options") || acceptsOwnerOptions(target.options)) && (!Object.hasOwn(target, "configurations") || object(target.configurations) && Object.values(target.configurations).every(acceptsOwnerOptions)) && (target.executor === "repo:noop" || Object.hasOwn(target, "command") || object(target.options) && (Object.hasOwn(target.options, "command") || Object.hasOwn(target.options, "commands")));
@@ -63,7 +64,7 @@ const inventory = (workspace: string, policy: unknown, list = (path: string) => 
   };
 };
 const activeRepositoryPaths = inventory(root, fixture.inventoryPolicy);
-const acceptsInstructions = (text: string) => !/(?:\.(?:vscode(?:-insiders)?|idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)[/\\]|\.cursor[/\\](?!plans(?:[/\\]|$))|\.(?:cursorrules|windsurfrules)\b|\.sublime-(?:project|workspace|build)\b|cmakesettings\.json|launch\.json|🧩️launch\.seed\.jsonc|ide startup|reopen in vs code|all required vs code extensions|dev containers: reopen in container|vs code.*with.*dev containers extension)/.test(text.toLowerCase());
+const acceptsInstructions = (text: string) => !/(?:\.(?:vscode(?:-insiders)?|idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)[/\\]|\.cursor[/\\]|\.(?:cursorrules|windsurfrules)\b|\.sublime-(?:project|workspace|build)\b|cmakesettings\.json|launch\.json|🧩️launch\.seed\.jsonc|ide startup|reopen in vs code|all required vs code extensions|dev containers: reopen in container|vs code.*with.*dev containers extension)/.test(text.toLowerCase());
 
 test("active inventory fails closed and only excludes declared generated roots and dependency boundaries", () => {
   expect(inventoryPolicy(fixture.inventoryPolicy)).toBe(true);
@@ -144,7 +145,7 @@ test("runtime devcontainer lifecycle uses build owners and provisions no IDE cus
   expect(bootstrap).not.toContain(".codeium");
   expect(lifecycle).not.toContain('".codeium"');
   const owner = read(join(root, "📋️project.json"));
-  for (const phase of ["start", "attach"]) expect(owner.targets[`setup-devcontainer-${phase}`]?.options.command).toBe(`bun ./📜️script.ts setup devcontainer ${phase}`);
+  for (const phase of ["start", "attach"]) expect(owner.targets[`setup-devcontainer-${phase}`]?.options.command).toBe(`repo ./📜️script.ts setup devcontainer ${phase}`);
   console.log(`[DEBUG] authority checked ${fixture.devcontainerCases.length} runtime container vectors and all three build lifecycle owners`);
 });
 test("exclusive dashboard paths agree with the independent schema validator", () => {
@@ -377,25 +378,12 @@ test("the dashboard has no editor projection route or implementation", () => {
   expect(readFileSync(join(dashboard, "README.md"), "utf8")).not.toContain("VSCode Launch Projection");
 });
 
-test("the editor extension exposes source navigation without developer operations", () => {
-  const extension = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode");
-  const contract = read(join(extension, "🧫️fixtures/🎛️dashboard-only/🔣️.json"));
-  const manifest = read(join(extension, "📦️packages/🟦️typescript/package.json"));
-  const source = readFileSync(join(extension, "🟦️.ts"), "utf8");
-  const contributions = JSON.stringify(manifest.contributes);
-  for (const command of contract.forbiddenCommands) {
-    expect(contributions, command).not.toContain(JSON.stringify(command));
-    expect(source, command).not.toContain(JSON.stringify(command));
-    expect(source, command).not.toContain(`'${command}'`);
-  }
-  for (const symbol of contract.forbiddenSymbols) expect(source, symbol).not.toContain(symbol);
-});
 
 test("authored scripts use one declarative build entry", () => {
   const manifest = read(join(root, "📋️project.json"));
   const tool = manifest.metadata.semio.dashboard.tools.find((tool: { id: string }) => tool.id === "run-script");
   expect(tool).toBeDefined();
-  expect(tool.command).toEqual(["bun", "repo", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"]);
+  expect(tool.command).toEqual(["repo", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"]);
   expect(tool.cwd).toBe("{directory}");
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "script")).toMatchObject({ id: "script", kind: "text", required: true });
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "project")).toMatchObject({ required: true, default: "", suggestions: { source: "projects" } });
@@ -481,7 +469,7 @@ test("the native dashboard resolves retained live controls with typed inputs and
 test("workspace startup never waits for Nx analytics consent", () => {
   const config = read(join(root, "nx.json"));
   expect(config.analytics).toBe(false);
-  const schema = read(join(root, "node_modules/nx/schemas/nx-schema.json"));
+  const schema = read(join(root, ".nx/installation/node_modules/nx/schemas/nx-schema.json"));
   const validateAnalytics = new Ajv2020({ strict: false }).compile(schema.properties.analytics);
   expect(validateAnalytics(config.analytics)).toBe(true);
 });

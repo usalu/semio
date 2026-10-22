@@ -1,5 +1,5 @@
 /** 🟢️ The spawn program phase of useShellUriAndDocuments. */
-import { useCallback } from "react";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type SpawnProgramRefusalReasonV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type SpaceProgramEntry } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";

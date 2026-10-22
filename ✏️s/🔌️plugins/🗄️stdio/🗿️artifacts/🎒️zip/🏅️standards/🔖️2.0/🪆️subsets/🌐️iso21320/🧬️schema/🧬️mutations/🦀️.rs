@@ -58,7 +58,7 @@ pub mod set_entry_data;
 /// variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipIso21320Mutation")]
+#[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipIso21320Mutation", reference = ZipSnapshot, reference_diff = ZipDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipIso21320Mutation {
     /// 💬️ Sets the archive-level (EOCD) comment.

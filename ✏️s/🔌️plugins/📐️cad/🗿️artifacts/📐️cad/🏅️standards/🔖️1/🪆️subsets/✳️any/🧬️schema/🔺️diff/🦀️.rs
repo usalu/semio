@@ -243,50 +243,9 @@ fn invert_reference_patch(patch: &CadReferencePatch, base: &CadReference) -> Cad
 //#endregion 🔖️Rows
 
 //#region 🔖️Apply
-impl MutationDiff<CadSnapshot> for CadDiff {
-    fn apply(&self, snapshot: &CadSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(slot) = &self.shape_model {
-            next.shape_model = slot.child.clone();
-        }
-        if let Some(slot) = &self.building_model {
-            next.building_model = slot.child.clone();
-        }
-        if let Some(slot) = &self.energy_model {
-            next.energy_model = slot.child.clone();
-        }
-        if let Some(slot) = &self.structure_classic_model {
-            next.structure_classic_model = slot.child.clone();
-        }
-        if let Some(delta) = &self.drawings {
-            next.drawings = delta.commit_onto(&next.drawings, capability).map_err(|error| error.under(["drawings"]))?;
-        }
-        if let Some(delta) = &self.breps {
-            next.breps = delta.commit_onto(&next.breps, capability).map_err(|error| error.under(["breps"]))?;
-        }
-        if let Some(models) = &self.references_by_model_definition_id {
-            for (model, delta) in models {
-                let existing = next.references_by_model_definition_id.get(model).cloned().unwrap_or_default();
-                let rows = delta.commit_onto(&existing, capability).map_err(|error| error.under(["referencesByModelDefinitionId".to_string(), model.clone()]))?;
-                if rows.is_empty() {
-                    next.references_by_model_definition_id.remove(model);
-                } else {
-                    next.references_by_model_definition_id.insert(model.clone(), rows);
-                }
-            }
-        }
-        if let Some(delta) = &self.nodes {
-            next.nodes = delta.commit_onto(&next.nodes, capability).map_err(|error| error.under(["nodes"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<CadSnapshot> for CadDiff {}
 
+impl protocol::ColdMutationDiff<CadSnapshot> for CadDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -343,9 +302,69 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             }
         }
     }
+
+    fn apply(&self, unpublished: &mut CadSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(slot) = &self.shape_model {
+            next.shape_model = slot.child.clone();
+        }
+        if let Some(slot) = &self.building_model {
+            next.building_model = slot.child.clone();
+        }
+        if let Some(slot) = &self.energy_model {
+            next.energy_model = slot.child.clone();
+        }
+        if let Some(slot) = &self.structure_classic_model {
+            next.structure_classic_model = slot.child.clone();
+        }
+        if let Some(delta) = &self.drawings {
+            next.drawings = delta.commit_onto(&next.drawings, capability).map_err(|error| error.under(["drawings"]))?;
+        }
+        if let Some(delta) = &self.breps {
+            next.breps = delta.commit_onto(&next.breps, capability).map_err(|error| error.under(["breps"]))?;
+        }
+        if let Some(models) = &self.references_by_model_definition_id {
+            for (model, delta) in models {
+                let existing = next.references_by_model_definition_id.get(model).cloned().unwrap_or_default();
+                let rows = delta.commit_onto(&existing, capability).map_err(|error| error.under(["referencesByModelDefinitionId".to_string(), model.clone()]))?;
+                if rows.is_empty() {
+                    next.references_by_model_definition_id.remove(model);
+                } else {
+                    next.references_by_model_definition_id.insert(model.clone(), rows);
+                }
+            }
+        }
+        if let Some(delta) = &self.nodes {
+            next.nodes = delta.commit_onto(&next.nodes, capability).map_err(|error| error.under(["nodes"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && self.id.is_none()
+            && self.shape_model.is_none()
+            && self.building_model.is_none()
+            && self.energy_model.is_none()
+            && self.structure_classic_model.is_none()
+            && self.drawings.as_ref().is_none_or(CadDrawingsDelta::is_empty)
+            && self.breps.as_ref().is_none_or(CadBrepsDelta::is_empty)
+            && self.references_by_model_definition_id.as_ref().is_none_or(|models| models.values().all(CadReferencesDelta::is_empty))
+            && self.nodes.as_ref().is_none_or(CadNodesDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CadSnapshot> for CadDiff {
     fn inverse(&self, base: &CadSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -368,19 +387,6 @@ impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
             }),
             nodes: self.nodes.as_ref().map(|delta| delta.inverse(&base.nodes)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && self.id.is_none()
-            && self.shape_model.is_none()
-            && self.building_model.is_none()
-            && self.energy_model.is_none()
-            && self.structure_classic_model.is_none()
-            && self.drawings.as_ref().is_none_or(CadDrawingsDelta::is_empty)
-            && self.breps.as_ref().is_none_or(CadBrepsDelta::is_empty)
-            && self.references_by_model_definition_id.as_ref().is_none_or(|models| models.values().all(CadReferencesDelta::is_empty))
-            && self.nodes.as_ref().is_none_or(CadNodesDelta::is_empty)
     }
 }
 //#endregion 🔖️Apply

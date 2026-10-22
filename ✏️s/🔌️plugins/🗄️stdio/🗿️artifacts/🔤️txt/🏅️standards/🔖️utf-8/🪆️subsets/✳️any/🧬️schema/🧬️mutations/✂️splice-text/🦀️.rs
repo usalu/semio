@@ -183,25 +183,26 @@ impl SpliceTextMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SpliceTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "text", kind: "splice-text", record: "EditedText" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit Text", "Text bearbeiten")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["splice-text".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<TxtSnapshot, super::TxtMutation> for SpliceTextMutation {
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
             Ok(diff) => protocol::MutationOutcome::new(diff),
         }
     }
-
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
         Ok(match self.plan(base) {
             Ok(diff) if diff != TxtDiff::default() => vec![super::TxtMutation::SpliceText(Self { splices: self.undo(&base.to_body().chars().collect::<Vec<char>>()) })],
             _ => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit Text", "Text bearbeiten")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["splice-text".to_string()]
     }
 }
 //#endregion ⚙️Semantics

@@ -125,14 +125,14 @@ fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
             };
             let mut build = assembly_physical_empty_build(Some(matrix));
             let first = build.close_step(bytes);
-            let after = build.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
+            let after = build.csr.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
             let mut released = first.2;
             let mut exact = allocated == after.into_iter().sum::<usize>() + first.2;
             let mut terminal = first.0;
             for _ in 0..100 {
-                let before_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                let before_step = build.csr.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
                 let step = build.close_step(MOUNTED_OWNER_PAGE_BYTES);
-                let after_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                let after_step = build.csr.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
                 exact &= step.1 <= 1 && step.2 <= MOUNTED_OWNER_PAGE_BYTES && before_step == after_step + step.2;
                 released += step.2;
                 if step.0 { terminal = true; break; }

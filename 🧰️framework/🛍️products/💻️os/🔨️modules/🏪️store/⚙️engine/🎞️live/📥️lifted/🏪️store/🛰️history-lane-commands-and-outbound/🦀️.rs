@@ -18,7 +18,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️HistoryLane
     /// 👁 Moves this replica onto `alternative_id` at its tip. Registration stays the shared log;
@@ -243,7 +243,7 @@ where
                 return Err(error);
             }
         };
-        let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&self.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
+        let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&store_log.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
         let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
             Ok(mut replay) => {
                 let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());

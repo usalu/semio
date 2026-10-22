@@ -4,6 +4,7 @@ import shutil, subprocess
 tag, hub = sys.argv[1], sys.argv[2]
 N = int(sys.argv[3]) if len(sys.argv) > 3 else 14
 plan = json.load(open(os.path.normpath(T + "/../staged/plans/%s.json" % tag)))
+import re
 world, I2L, I2D, LIB = make_world()
 HD = hubdir(hub) if hub != "umbrella" else byname["semio-framework"]
 O = "/private/tmp/gran-hubs"
@@ -15,9 +16,16 @@ def files_of(d):
         fs |= set(module_tree(os.path.normpath(os.path.join(ROOT, d, m.group(1)))))
     return fs
 import re
+CENSUS = json.load(open(OUT + "/census-%s.json" % hub))["deps"]
+OWNM = set(json.load(open(OUT + "/own-map.json")).get(hub, {})) if os.path.exists(OUT + "/own-map.json") else set()
 cands = []
 for name, c in plan["crates"].items():
+    cd = CENSUS.get(c["dir"], {})
+    if cd.get("macros") or any(p.split("/")[0] in OWNM for p in cd.get("prod", {})):
+        continue
     d = c["dir"]
+    if any(i not in I2D for i in c["owners_prod"] + c["owners_test"]):
+        continue
     n = len(files_of(d))
     if n <= 40:
         cands.append((name, d, n, {I2D[i] for i in c["owners_prod"] + c["owners_test"]}))

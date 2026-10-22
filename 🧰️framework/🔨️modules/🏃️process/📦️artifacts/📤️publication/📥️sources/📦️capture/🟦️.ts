@@ -13,7 +13,7 @@ type Options=Readonly<{owner?:string;control?:ResourceLeaseControl;signal?:Abort
 type Identity=Readonly<{dev:bigint;ino:bigint;size:bigint;mode:bigint;mtimeNs:bigint;ctimeNs:bigint;nlink:bigint}>;
 type Row={entry:ArtifactSourceEntryV1;identity:Identity};
 type Scope={inventory:ArtifactSourceInventoryV1;plannedDirectories:ReadonlySet<string>;root:string;destination:string;live:boolean;accepting:boolean;committed:boolean;options:Options;files:Map<string,Row>;directories:Map<string,Identity>;createdFiles:Map<string,Identity>;parents:Map<string,Identity>;pending:Set<Promise<unknown>>;failures:unknown[];drain?:Promise<void>;checkWriter:()=>void;operations:number;started:number};
-const maximumFiles=policy.properties.maximumFiles.const,maximumBytes=policy.properties.maximumBytes.const,maximumManifestBytes=policy.properties.maximumManifestBytes.const;
+const maximumFiles=policy.properties.maximumFiles.const,maximumBytes=policy.properties.maximumPublicationBytes.const,maximumManifestBytes=policy.properties.maximumManifestBytes.const;
 const captures=new WeakMap<ArtifactSourceCaptureV1,Scope>();
 function check(scope:Scope){scope.options.signal?.throwIfAborted();if(scope.options.control)checkResourceLeaseControl(scope.options.control);scope.checkWriter();}
 async function advance(scope:Scope){if(++scope.operations%64===0&&scope.options.control){check(scope);await scope.options.control.publish({resource:"artifact-capture:"+scope.destination,mode:"exclusive",elapsedMs:Date.now()-scope.started});check(scope);await scope.options.control.yieldContinuation();check(scope);}}

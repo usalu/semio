@@ -324,7 +324,7 @@ fn exclusive_owned_replay_preserves_refusal_and_immutable_readers_without_step_c
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️replay-retirement/🔣️.json")).unwrap();
     for row in corpus["ownedReplay"].as_array().unwrap() {
         let base = row["base"].as_i64().unwrap() as i32;
-        let mut owned = ColdReplayProjection::<DemoSnapshot, FailClosedOp>::new(DemoSnapshot { n: Some(base) });
+        let mut owned = ledger::ColdReplayProjection::<DemoSnapshot, FailClosedOp>::new(DemoSnapshot { n: Some(base) });
         let mut shared = Arc::new(DemoSnapshot { n: Some(base) });
         let reader = Arc::clone(&shared);
         let forwards = row["operations"].as_array().unwrap().iter().map(|operation| FailClosedOp::of(DemoMutation::SetN(SetN { n: operation["value"].as_i64().unwrap() as i32 }), match operation["fault"].as_str().unwrap() { "none" => Fault::None, "apply" => Fault::Apply, "message" => Fault::Message, _ => unreachable!() })).collect();

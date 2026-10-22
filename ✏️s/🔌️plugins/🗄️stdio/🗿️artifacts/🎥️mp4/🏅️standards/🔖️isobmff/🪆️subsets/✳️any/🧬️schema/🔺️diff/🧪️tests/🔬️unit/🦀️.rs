@@ -94,16 +94,16 @@ fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
 
     let empty = Mp4Diff::default();
     assert!(empty.is_empty());
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&empty, &base).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff_cold(&empty, &base).unwrap()), bytes);
 
     let track = Mp4TrackDiff { width: Some(base.tracks[0].width + 1), ..Default::default() };
     let diff = Mp4Diff { tracks: Some(IndexedDiff { removed: Vec::new(), modified: vec![IndexedModified { index: 0, diff: track }], added: Vec::new() }), ..Default::default() };
-    let after = protocol::apply_diff(&diff, &base).unwrap();
+    let after = protocol::apply_diff_cold(&diff, &base).unwrap();
     let inverse = diff.inverse(&base);
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&inverse, &after).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff_cold(&inverse, &after).unwrap()), bytes);
 
     let mut absorbed = diff;
     absorbed.absorb(inverse);
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&absorbed, &base).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff_cold(&absorbed, &base).unwrap()), bytes);
 }
 //#endregion

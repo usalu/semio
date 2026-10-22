@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "clock": {
+    "year": 26,
+    "month": 10,
+    "day": 21,
+    "stamp": "2026-10-21 00:00:00"
+  },
+  "roots": [
+    {
+      "name": "a",
+      "draft": "alpha\n"
+    },
+    {
+      "name": "b",
+      "draft": "beta\n"
+    }
+  ],
+  "open": {
+    "emoji": "🎫️",
+    "title": "Scoped Ticket",
+    "prompt": "Open Prompt",
+    "client": "codex",
+    "goal": "SCOPED",
+    "draft": "seed",
+    "noIssue": true,
+    "noManagement": true
+  },
+  "change": {
+    "title": "Renamed Ticket",
+    "description": "Changed Prompt",
+    "llm": "",
+    "effort": "",
+    "client": "codex",
+    "noManagement": true
+  },
+  "close": {
+    "summary": "Done",
+    "files": [
+      "source.txt"
+    ],
+    "noManagement": true
+  },
+  "reopen": {
+    "prompt": "Reopen Prompt",
+    "client": "codex",
+    "draft": "again",
+    "noManagement": true
+  },
+  "expected": {
+    "slug": "RENAMED-TICKET",
+    "status": "open",
+    "prompt": "Changed Prompt",
+    "kinds": [
+      "ticket.open",
+      "ticket.close",
+      "ticket.reopen"
+    ],
+    "originalSlug": "SCOPED-TICKET",
+    "otherStatus": "open",
+    "otherPrompt": "Open Prompt",
+    "otherKinds": [
+      "ticket.open"
+    ],
+    "draftFiles": [
+      "note.md",
+      "note_2.md"
+    ]
+  },
+  "invalidSegments": [
+    ".",
+    "..",
+    "a/b",
+    "a\\b",
+    "a:b",
+    "a.",
+    "a ",
+    "CON",
+    "con.txt",
+    "AUX",
+    "NUL",
+    "PRN",
+    "COM1",
+    "LPT9",
+    "a?b",
+    "a*b",
+    "a|b",
+    "a<b",
+    "a>b",
+    "a\"b",
+    "a\u0000b",
+    "a\u001fb",
+    "COM¹",
+    "COM².txt",
+    "COM³",
+    "LPT¹",
+    "LPT².log",
+    "LPT³"
+  ],
+  "validSegments": [
+    "note.md",
+    "note_2.md",
+    "folder",
+    "🚀️.md",
+    "COM10",
+    "console.txt"
+  ],
+  "projectedPathSegment": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "separatorCases": [
+    {
+      "input": "\\\\server\\share\\folder\\",
+      "normalized": "//server/share/folder",
+      "parent": "//server/share"
+    },
+    {
+      "input": "//server/share//folder",
+      "normalized": "//server/share/folder",
+      "parent": "//server/share"
+    },
+    {
+      "input": "///var//tmp/",
+      "normalized": "/var/tmp",
+      "parent": "/var"
+    },
+    {
+      "input": "C:\\work\\repo\\",
+      "normalized": "C:/work/repo",
+      "parent": "C:/work"
+    },
+    {
+      "input": "C:\\",
+      "normalized": "C:/",
+      "parent": "C:/"
+    },
+    {
+      "input": "C:/folder",
+      "normalized": "C:/folder",
+      "parent": "C:/"
+    },
+    {
+      "input": "//server/share",
+      "normalized": "//server/share",
+      "parent": "//server/share"
+    }
+  ]
+}

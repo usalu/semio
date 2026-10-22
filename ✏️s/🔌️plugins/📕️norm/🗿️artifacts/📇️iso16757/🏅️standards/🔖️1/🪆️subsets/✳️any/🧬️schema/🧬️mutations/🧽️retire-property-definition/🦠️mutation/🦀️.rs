@@ -18,7 +18,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RetirePropertyDefiniti
 
         protocol::SemanticDescriptor { verb: "remove", entity: "propertyDefinition", kind: "retire-property-definition", record: "RetiredPropertyDefinition" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete property definition \"{}\"", self.id), &format!("Eigenschaftsdefinition \"{}\" löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for RetirePropertyDefinition where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::introduce_property_definition::mutation::IntroducePropertyDefinition> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::retire_property_definition::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,11 +36,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RetirePropertyDefiniti
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete property definition \"{}\"", self.id), &format!("Eigenschaftsdefinition \"{}\" löschen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Payload

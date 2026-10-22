@@ -305,13 +305,13 @@ async fn a_density_edit_recomputes_only_the_quantities_that_use_the_material_and
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).quantities.clone();
     let wool = ModelDiff::materials("m-wool", Entry::Patched(MaterialPatch { density: Some(80.0), ..Default::default() }));
-    let edited = protocol::apply_diff(&wool, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&wool, &snapshot).expect("applies");
     let second = session.update(&edited, &wool).quantities.clone();
     assert!(second.elements["w"].mass > first.elements["w"].mass, "the wall has a wool layer");
     assert_eq!(second.elements["c"], first.elements["c"], "the concrete column does not");
     assert_eq!(session.report().computed_by_kind.get("quantity"), Some(&3), "the wall, the window and the door (all wool); no column, no slab");
     let height = ModelDiff::storeys("st-0", Entry::Patched(StoreyPatch { height: Some(3.0), ..Default::default() }));
-    let raised = protocol::apply_diff(&height, &edited).expect("applies");
+    let raised = protocol::apply_diff_cold(&height, &edited).expect("applies");
     let third = session.update(&raised, &height).quantities.clone();
     assert!(close(third.elements["w"].height, 3.0) && close(third.elements["c"].height, 3.0), "the take-off follows the storey height");
 }

@@ -5,7 +5,7 @@ use super::*;
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
 {
     /// 🔄 Hydrates the change records.
     pub(super) fn step_hydrate_changes(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {

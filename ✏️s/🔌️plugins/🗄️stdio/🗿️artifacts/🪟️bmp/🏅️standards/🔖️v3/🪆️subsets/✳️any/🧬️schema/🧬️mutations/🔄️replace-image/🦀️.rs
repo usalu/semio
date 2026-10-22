@@ -9,10 +9,14 @@ pub struct ReplaceImage {#[dsl(block)] pub image:BmpImage}
 
 impl protocol::MutationKind<BmpSnapshot,BmpMutation> for ReplaceImage {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"replace",entity:"image",kind:"replace-image",record:"ReplaceImage"};
+
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Replace native image","Natives Bild ersetzen")}
+    fn target(&self)->Vec<String>{vec!["image".into()]}
+}
+
+impl protocol::ColdMutationKind<BmpSnapshot,BmpMutation> for ReplaceImage {
     fn diff(&self,_base:&BmpSnapshot)->protocol::MutationOutcome<BmpDiff>{
         match self.image.validate(){Ok(())=>protocol::MutationOutcome::new(BmpDiff{image:Some(self.image.clone()),..BmpDiff::default()}),Err(message)=>protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch,message,["image"])}
     }
     fn inverse(&self,base:&BmpSnapshot)->Result<Vec<BmpMutation>,semio_framework_value::ValueError>{Ok(vec![BmpMutation::ReplaceImage(Self{image:base.image.clone()})])}
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Replace native image","Natives Bild ersetzen")}
-    fn target(&self)->Vec<String>{vec!["image".into()]}
 }

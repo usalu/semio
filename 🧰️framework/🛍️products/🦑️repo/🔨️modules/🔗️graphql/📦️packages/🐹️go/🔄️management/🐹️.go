@@ -10,13 +10,12 @@ package graphql
 
 import (
 	fmt "fmt"
+	os "os"
 	sort "sort"
 	strings "strings"
 
-	codebase "github.com/usalu/semio/repo/codebase"
 	goalspkg "github.com/usalu/semio/repo/goals"
 	model "github.com/usalu/semio/repo/model"
-	ticketspkg "github.com/usalu/semio/repo/tickets"
 	workspace "github.com/usalu/semio/repo/workspace"
 )
 
@@ -25,9 +24,9 @@ import (
 // ◼SyncManagement MUST return a non-nil error when the operation fails.
 // 💖️SyncManagement performs the sync github operation on the repo context.
 func (c *RepoContext) SyncManagement() (bool, error) {
-	fmt.Println("Syncing local tickets and goals with GitHub...")
+	fmt.Fprintln(os.Stderr, "Syncing local tickets and goals with GitHub...")
 
-	technologies := codebase.LoadTechnologies()
+	technologies := c.codebase.Technologies
 	validLabels := make(map[string]bool)
 	for _, p := range technologies {
 		technologyLabel := "@" + strings.TrimPrefix(p.Name, "@")
@@ -41,7 +40,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 		workspace.WriteWarningf("Failed to sync GitHub label catalog: %v", err)
 	}
 
-	goals, err := goalspkg.ListGoals()
+	goals, err := c.goals.List()
 	if err != nil {
 		workspace.WriteWarningf("Failed to list goals: %v", err)
 	} else {
@@ -53,10 +52,10 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 			if goalspkg.IsRootGoal(goal.ID) {
 
 				if goal.Management != nil && goal.Management.Issue != "" {
-					fmt.Printf("Migrating root goal %s: removing issue reference\n", goal.ID)
+					fmt.Fprintf(os.Stderr, "Migrating root goal %s: removing issue reference\n", goal.ID)
 					goal.Management.Issue = ""
 				}
-				milestone, err := ensureGoalMilestone(goal)
+				milestone, err := c.ensureGoalMilestone(goal)
 				if err != nil {
 					workspace.WriteWarningf("Failed to ensure milestone for root goal %s: %v", goal.ID, err)
 				} else if milestone != nil {
@@ -72,7 +71,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 
 				if goal.Management != nil && goal.Management.Milestone != "" {
 
-					fmt.Printf("Migrating child goal %s: removing milestone\n", goal.ID)
+					fmt.Fprintf(os.Stderr, "Migrating child goal %s: removing milestone\n", goal.ID)
 					number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
 					if err == nil {
 						if err := c.managementProvider.DeleteMilestone(number); err != nil {
@@ -87,7 +86,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 
 					var milestone *int
 					if goalspkg.IsFirstGenGoal(goal.ID) {
-						milestone, _ = goalspkg.GetRootGoalMilestone(goal.ID)
+						milestone, _ = c.rootGoalMilestone(goal.ID)
 					}
 					issueURL, err := c.managementProvider.CreateGoalIssue(goal.Title, goal.Description, milestone)
 					if err != nil {
@@ -99,7 +98,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 					}
 					goal.Management.Issue = issueURL
 					needsSave = true
-					fmt.Printf("Created issue for child goal %s: %s\n", goal.ID, issueURL)
+					fmt.Fprintf(os.Stderr, "Created issue for child goal %s: %s\n", goal.ID, issueURL)
 
 					if goal.Status == "closed" {
 						_ = c.managementProvider.CloseIssue(issueURL)
@@ -107,12 +106,12 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 
 					if goalspkg.IsDeeperGoal(goal.ID) {
 						parentID := goalspkg.GetParentGoalID(goal.ID)
-						parentGoal, parentErr := goalspkg.ReadGoal(parentID)
+						parentGoal, parentErr := c.goals.Read(parentID)
 						if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
 							if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
 								workspace.WriteWarningf("Failed to link sub-issue %s to parent %s: %v", goal.ID, parentID, err)
 							} else {
-								fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
+								fmt.Fprintf(os.Stderr, "Linked sub-issue %s to parent %s\n", goal.ID, parentID)
 							}
 						}
 					}
@@ -128,9 +127,9 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 							_ = c.managementProvider.ReopenIssue(goal.Management.Issue)
 						}
 						if goalspkg.IsFirstGenGoal(goal.ID) {
-							milestone, _ := goalspkg.GetRootGoalMilestone(goal.ID)
+							milestone, _ := c.rootGoalMilestone(goal.ID)
 							if milestone != nil {
-								rootGoal, _ := goalspkg.ReadGoal(goalspkg.GetRootGoalID(goal.ID))
+								rootGoal, _ := c.goals.Read(goalspkg.GetRootGoalID(goal.ID))
 								if rootGoal != nil && (remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != rootGoal.Title) {
 									_ = c.managementProvider.UpdateIssueMilestone(goal.Management.Issue, rootGoal.Title)
 								}
@@ -142,7 +141,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 								}
 							}
 							parentID := goalspkg.GetParentGoalID(goal.ID)
-							parentGoal, parentErr := goalspkg.ReadGoal(parentID)
+							parentGoal, parentErr := c.goals.Read(parentID)
 							if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
 								parentURL, parentErr := c.managementProvider.GetIssueParentURL(goal.Management.Issue)
 								if parentErr != nil {
@@ -151,7 +150,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 									if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, goal.Management.Issue); err != nil {
 										workspace.WriteWarningf("Failed to link sub-issue %s to parent %s: %v", goal.ID, parentID, err)
 									} else {
-										fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
+										fmt.Fprintf(os.Stderr, "Linked sub-issue %s to parent %s\n", goal.ID, parentID)
 									}
 								}
 							}
@@ -172,7 +171,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 				}
 
 				if needsSave {
-					if err := goalspkg.SaveGoal(*goal); err != nil {
+					if err := c.saveManagementGoal(goal); err != nil {
 						workspace.WriteWarningf("Failed to save goal %s: %v", goal.ID, err)
 					}
 				}
@@ -180,13 +179,13 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 		}
 	}
 
-	tickets, err := ticketspkg.ListTickets(nil, nil, nil)
+	tickets, err := c.tickets.List(nil, nil, nil)
 	if err != nil {
 		return false, err
 	}
 
 	for i := range tickets {
-		t := &tickets[i]
+		t := tickets[i]
 		if t.Management == nil || t.Management.Issue == "" {
 			continue
 		}
@@ -200,7 +199,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 		}
 
 		if t.Status == model.TicketStatusClosed && strings.ToUpper(remoteIssue.State) == "OPEN" {
-			fmt.Printf("Closing GitHub issue %s (Ticket is closed locally)\n", issueURL)
+			fmt.Fprintf(os.Stderr, "Closing GitHub issue %s (Ticket is closed locally)\n", issueURL)
 			if err := c.managementProvider.CloseIssue(issueURL); err != nil {
 				workspace.WriteWarningf("Failed to close GitHub issue %s: %v", issueURL, err)
 			}
@@ -208,14 +207,14 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 
 		if t.Goal != "" {
 			rootID := goalspkg.GetRootGoalID(t.Goal)
-			rootGoal, err := goalspkg.ReadGoal(rootID)
+			rootGoal, err := c.goals.Read(rootID)
 			if err == nil {
-				milestone, err := ensureGoalMilestone(rootGoal)
+				milestone, err := c.ensureGoalMilestone(rootGoal)
 				if err != nil {
 					workspace.WriteWarningf("Failed to resolve goal milestone for issue %s: %v", issueURL, err)
 				} else if milestone != nil && milestone.Title != "" {
 					if remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != milestone.Title {
-						fmt.Printf("Updating milestone for issue %s to %s...\n", issueURL, milestone.Title)
+						fmt.Fprintf(os.Stderr, "Updating milestone for issue %s to %s...\n", issueURL, milestone.Title)
 						if err := c.managementProvider.UpdateIssueMilestone(issueURL, milestone.Title); err != nil {
 							workspace.WriteWarningf("Failed to update milestone for GitHub issue %s: %v", issueURL, err)
 						}
@@ -233,7 +232,7 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 			}
 		}
 		if len(labelsToRemove) > 0 {
-			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issueURL, labelsToRemove)
+			fmt.Fprintf(os.Stderr, "Removing invalid technology labels from issue %s: %v\n", issueURL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issueURL, labelsToRemove); err != nil {
 				workspace.WriteWarningf("Failed to remove labels from GitHub issue %s: %v", issueURL, err)
 			}
@@ -254,14 +253,14 @@ func (c *RepoContext) SyncManagement() (bool, error) {
 			if len(labelsToRemove) == 0 {
 				continue
 			}
-			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issue.URL, labelsToRemove)
+			fmt.Fprintf(os.Stderr, "Removing invalid technology labels from issue %s: %v\n", issue.URL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issue.URL, labelsToRemove); err != nil {
 				workspace.WriteWarningf("Failed to remove labels from GitHub issue %s: %v", issue.URL, err)
 			}
 		}
 	}
 
-	fmt.Println("GitHub sync completed.")
+	fmt.Fprintln(os.Stderr, "GitHub sync completed.")
 	return true, nil
 }
 

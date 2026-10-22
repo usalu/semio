@@ -1,10 +1,12 @@
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runtimeCommandNamesV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeSpawnSyncV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 export class DoctorScript extends BundleScript {
   run(): void {
-    for (const command of ["bun", "node", "cargo", "rustc", "go", "uv", "dotnet", "cmake"]) {
+    for (const command of [...runtimeCommandNamesV1(), "cargo", "rustc", "go", "uv", "dotnet", "cmake"]) {
       try {
-        const result = (globalThis as any).Bun.spawnSync([command, command === "go" ? "version" : "--version"], { stdout: "pipe", stderr: "pipe" });
+        const result = runtimeSpawnSyncV1([command, command === "go" ? "version" : "--version"], { stdout: "pipe", stderr: "pipe" });
         console.log(`[nx-doctor] ${command}: ${result.exitCode === 0 ? result.stdout.toString().split("\n")[0] : "unavailable"}`);
       } catch {
         console.log(`[nx-doctor] ${command}: unavailable`);

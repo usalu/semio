@@ -1,8 +1,9 @@
 // 🫙️ Child semantic text and encoded source owners retain their independent physical lifetimes.
+use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource};
 use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels,nested_grant,grant_funds,deeper,quote,handoff,yielded,settle,pop_demand,release_demand,release_page};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
 use semio_framework_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
-use semio_framework_value::{ValueError, ValueRefusalKind, paged_text::{PagedText, TextReadSource}, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_ui_locale::{Terminology,Locale};
@@ -14,9 +15,9 @@ pub(super) fn child_demands(owner:&dyn ErasedSnapshotRetirement,copy:usize)->Res
 pub(super) fn close_child(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child requires enclosing depth"))}let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original typed child").map_err(|error|error.with_retained_progress(step.progress()))?;Ok(RetainedCloneStep::Progress(step.progress()))}
 
 /// 🔤️ A finite intrinsic semantic cell and genuine long pages have distinct complete borrows.
-struct Text{inline:semio_framework_value::paged_text::InlineTextBuffer,complete:bool,paged:PagedText<CAPACITY>,long:bool}
+struct Text{inline:semio_framework_value_paged_text::paged_text::InlineTextBuffer,complete:bool,paged:PagedText<CAPACITY>,long:bool}
 impl Text{
-    fn empty()->Self{Self{inline:semio_framework_value::paged_text::InlineTextBuffer::empty(),complete:false,paged:PagedText::empty(),long:false}}
+    fn empty()->Self{Self{inline:semio_framework_value_paged_text::paged_text::InlineTextBuffer::empty(),complete:false,paged:PagedText::empty(),long:false}}
     fn allocated_bytes(&self)->usize{self.paged.allocated_bytes()}
     fn view(&self)->Result<ChildTextView<'_>,ValueError>{if self.long{self.paged.borrow()?;return Ok(ChildTextView::Paged(&self.paged))}if !self.complete{return Err(invalid("child intrinsic text lacks complete UTF8 authority"))}Ok(ChildTextView::Literal(self.inline.borrow()?))}
     fn read_from_source(&mut self,source:&Source<'_>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
@@ -24,7 +25,7 @@ impl Text{
         if source.byte_len()>128{self.long=true;return self.paged.read_from_source(source,control)}
         self.inline.read_from_source(source,control)?;self.complete=true;Ok(())
     }
-    fn encode_label_with(&mut self,maximum_payload_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),ValueError>{
+    fn encode_label_with(&mut self,maximum_payload_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),ValueError>{
         if self.complete||self.long||!self.inline.terminal_is_empty(){return Err(invalid("child semantic label requires an empty owner"))}
         self.paged.encode_with_inline(&mut self.inline,&mut self.long,maximum_payload_bytes,control,producer)?;self.complete=true;Ok(())
     }
@@ -235,7 +236,7 @@ impl PagedChildOwner{
 
 impl ChildOperationSourceReceipt<'_>{
     /// 🏷️ The authored producer writes into the retained locale cell under the same full caller policy.
-    pub fn produce_label(&mut self,terminology:Terminology,locale:Locale,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),PackRefusal>{
+    pub fn produce_label(&mut self,terminology:Terminology,locale:Locale,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),PackRefusal>{
         let maximum=self.options.limits.max_segment_len.min(usize::MAX as u64)as usize;
         semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child label producer lacks its retained cell owner"))?.cell_mut(terminology,locale).encode_label_with(maximum,control,producer).map_err(Into::into))
     }

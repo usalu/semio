@@ -1,3 +1,4 @@
+import { runtimeCommandNameV1, runtimeCommandNamesV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
 import { toolForCommandV1, TOOL_REGISTRY_V1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 
 /** 🚩️ One place in a source file that starts a registered tool without the registry. */
@@ -105,13 +106,13 @@ function resolveExpression(expression: string, masked: string, registry: ToolReg
   const trimmed = expression.trim().replace(/^&/u, "").replace(/\.to_string\(\)$|\.as_str\(\)$/u, "");
   const direct = literalOf(trimmed);
   if (direct !== undefined) return { value: direct };
-  if (registry.scan.selfExpressions.includes(trimmed)) return { value: "bun", self: true };
+  if (registry.scan.selfExpressions.includes(trimmed)) return { value: runtimeCommandNameV1(), self: true };
   if (IDENTIFIER.test(trimmed)) {
     const declaration = language === "rust" ? new RegExp(`\\b(?:const|static|let)\\s+(?:mut\\s+)?${trimmed.replace(/\$/gu, "\\$")}\\s*(?::[^=]+)?=\\s*([^;\\n]+)`, "u") : language === "go" ? new RegExp(`\\b(?:const|var)?\\s*${trimmed}\\s*(?::=|=)\\s*([^\\n]+)`, "u") : new RegExp(`\\b(?:const|let|var)\\s+${trimmed.replace(/\$/gu, "\\$")}\\s*(?::[^=]+)?=\\s*([^;\\n]+)`, "u");
     const found = declaration.exec(masked);
     if (found !== null) {
       const right = found[1]!.trim();
-      if (registry.scan.selfExpressions.includes(right)) return { value: "bun", self: true };
+      if (registry.scan.selfExpressions.includes(right)) return { value: runtimeCommandNameV1(), self: true };
       const first = /"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'/u.exec(right);
       if (first !== null && !/[(]/u.test(right.slice(0, first.index))) return { value: first[1] ?? first[2] };
     }
@@ -158,7 +159,7 @@ function classify(command: string | undefined, registry: ToolRegistryV1, followi
   if (command === undefined) return null;
   const entry = toolForCommandV1(command, registry);
   if (entry === undefined) return null;
-  return entry.id === "bun" && following === "repo" ? "repo" : entry.id;
+  return runtimeCommandNamesV1().includes(entry.commands[0]!) && following === "repo" ? "repo" : entry.id;
 }
 
 function shellOf(command: string, argumentsText: string, registry: ToolRegistryV1): string | undefined {

@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "graph",
+      "profile": "graph",
+      "scenario": "success",
+      "accepted": true,
+      "retiredImages": 1
+    },
+    {
+      "id": "nx",
+      "profile": "nx",
+      "scenario": "success",
+      "accepted": true,
+      "retiredImages": 1
+    },
+    {
+      "id": "absent",
+      "profile": "graph",
+      "scenario": "absent",
+      "accepted": true,
+      "retiredImages": 0
+    },
+    {
+      "id": "resume",
+      "profile": "graph",
+      "scenario": "resume",
+      "accepted": true,
+      "retiredImages": 1
+    },
+    {
+      "id": "foreign-profile",
+      "profile": "products",
+      "scenario": "success",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "copied-control",
+      "profile": "graph",
+      "scenario": "copied-control",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "capture-undefined",
+      "profile": "graph",
+      "scenario": "capture-undefined",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "close-failure",
+      "profile": "nx",
+      "scenario": "close-failure",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "retirement-failure",
+      "profile": "graph",
+      "scenario": "retirement-failure",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "retirement-false",
+      "profile": "graph",
+      "scenario": "retirement-false",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "lease-close-false",
+      "profile": "nx",
+      "scenario": "lease-close-false",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "exclusive-refused",
+      "profile": "graph",
+      "scenario": "exclusive-refused",
+      "accepted": false,
+      "retiredImages": 0
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Admitted Subclosure Resolution
+
+Source0 attempt 96118 ended with whole status 1 before any test bodies. Its bounded diagnostic identified a directory-shaped importer at a Bun.resolveSync query inside child Source capture. This establishes the refusing query boundary, not a historical source author or a passing parser witness. The original 26 observations, package, lock and Source0 metadata stayed unchanged; three previously observed Source paths changed during that attempt and are retained without attribution in its before/after evidence.
+
+The canonical capture now closes over a separate compiler-injected resolution projection containing version, root and sorted path/hash/import records. The physical-source map keeps its existing shape. The projection is produced from the actual validated compiler snapshot or immutable loader snapshot; it cannot be supplied as a capture argument. The actual issued Original is required. Complete unique canonical records and exact hashes must match the evaluated physical-source selection, and every import target must be selected.
+
+Child capture uses actual declaring filenames and exact specifier edges. It never calls Bun.resolveSync or accepts a directory as an executable importer. All no-follow physical reads must match the admitted hashes. Sibling schemas and literal DATA can enter only when already admitted. No ambient resolution, mutable source fallback, generic require fallback, source copy, renewed authority or increased bound was added. The strict original loader declaring-map predicate remains unchanged.
+
+The import projection implementation is shared with the branded authorizer capture rather than duplicated. Canonical physical and resolution strings are serialized once per snapshot. Bun compiler defines emit a projection only where its import.meta field occurs; the Node adapter conditionally inserts the relevant private fields only into modules using them. This avoids an unconditional full-map prefix in every compiled module.
+
+Eleven closed neutral cases compare the actual private validator/resolver with Ajv and an independent SQLite identity/order/edge oracle. They cover complete, absent, empty, foreign-root, changed-hash, directory-declaring, undeclared-edge, missing-target, unordered, duplicate and extra-field inputs. A genuine compiler-to-immutable-child test captures a nested worker/helper/JSON subclosure under the actual child Original, checks its exact edges, refuses a copied Original and refuses physically changed admitted bytes. A focused actual Node child checks the exact validated resolution projection; the existing Node image law also checks it. These runtime bodies remain unrun.
+
+Source0 literally mounts the three focused laws and now requires 68 named bodies, retaining 27 explicit freshness inputs, six runtime entries, live cache:false, and the registered 42-target roster. Dynamic test subject reads are already inside the existing build glob. The bounded caller census covers build and caching source owners: production worker sessions, dependency generation storage and Bazel use the same mandatory capture API. Root owns conversion of the two existing raw Bazel fixture laws to genuine compiler/child admission. There is no compatibility branch for raw callers.
+
+Static parsing of the nine selected source/JSON paths reports no syntax diagnostics or missing relative static imports. This is DATA verification only; no typecheck, compiler, child, test body or Source0 acceptance is claimed. Exact hashes and path bounds are retained in generated/e2e-admitted-resolution-inputs.json. No new producer has been launched.
+
+
+## Independent Source Review
+
+Low independently accepted the fresh production, schema and Node projection slice: complete sorted physical/hash alignment, exact target closure, and declaring-file/specifier lookup are coherent, with no ambient resolver or guard relaxation. The changed-byte regression uses physical no-follow open/lstat and therefore reaches the intended admitted-hash refusal. Runtime and typechecking remain unrun. A fresh recheck found changes in the authorizer owner and existing Node test leaf compared with the saved nine-path evidence. Those current bytes are preserved for bounded reconciliation; no actor, evaluated-byte or causal attribution is made. The other seven hashes, including the strict declaring-map guard, are unchanged.
+
+
+## Concurrent Discovery Boundary
+
+A later source recheck found a new authorizer runtimeDataDiscoveryV1 outside the reviewed map projection. Low independently confirmed that its schema readdir occurs without prior no-follow directory/ancestor validation, and recursive materialization occurs before file-count and path bounds; literal JSON lstat also precedes path validation. Later guarded Source reads cannot undo that enumeration. Current authorizer producer acceptance is held until this separate capture contract is reconciled. The admitted-map resolution correction itself remains source-coherent. Current bytes are preserved, with no author or evaluated-byte attribution.

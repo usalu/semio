@@ -82,14 +82,14 @@ fn inverse_restores_before() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"), "create-section/hall-new-beam-251a92: this vector declares an applied outcome");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "create-section/hall-new-beam-251a92: a clean application raises no diagnostic, got {:?}", produced.messages());
 }
 
 /// 🔺️ The produced delta is exactly the committed sparse `🔺️diff/🔣️.json`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let outcome = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-section/hall-new-beam-251a92: produced diff differs from the committed 🔺️diff/🔣️.json");

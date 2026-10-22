@@ -1,164 +1,105 @@
-/** 🔤️ The display-only retained views: text, button, key-value list, image, progress, extension and unknown component, the busy shell and the activity border.
+/** 🗄️ The virtual-file-system surface host: its navigation action and the host that renders the file tree.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "../../⚛️react-port/🟦️.ts";
+import { useContext, useMemo, useState } from "../../⚛️react-port/🟦️.ts";
 import {
-  Button,
-  cn,
-  elementSkeleton,
-  loadingBorderElementClass,
-  waitingBorderElementClass,
-  type ElementSkeletonKind
+  ContextMenuController,
+  VirtualFileSystem,
+  buildVirtualFileSystemSceneRows,
+  useLabel,
+  type VirtualFileSystemNode
 } from "@semio-tech/ui-react";
-import { type Component, type UiNodeRecord } from "@semio-tech/framework";
-import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/ui-contract/presentation/accessibility";
-import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
-import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";
-import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
-import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";
-import { dispatchTrigger, resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
-import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";
+import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { useMapContextMenuSpecs, openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🖱️surface-menu/🟦️.ts";
+import { parseSceneJsonField, wireLabel, WindowInstanceIdContext } from "../🌉️scene-host-contract/🟦️.ts";
 
 //#region 🔖️UiInterpreter
-//#region ComponentRenderers
-export function activityBorderClass(record: UiNodeRecord): string | undefined {
-  if (record.activity === "loading") return loadingBorderElementClass;
-  if (record.activity === "waiting") return waitingBorderElementClass;
-  return undefined;
+//#region VirtualFileSystemHost
+export function virtualFileSystemNavigation(row: Pick<VirtualFileSystemNode, "navigateUri">): { readonly action: string; readonly args: Readonly<Record<string, string>> } | null {
+  const uri = row.navigateUri;
+  if (!uri) return null;
+  if (uri.startsWith("os://instance/")) {
+    const instanceId = uri.slice("os://instance/".length);
+    return instanceId ? { action: "openInstance", args: { instanceId } } : null;
+  }
+  if (uri.startsWith("os://export/")) {
+    const [instanceId, format, ...rest] = uri.slice("os://export/".length).split("/");
+    return instanceId && format && rest.length === 0 ? { action: "exportMedia", args: { instanceId, format } } : null;
+  }
+  if (uri.startsWith("/spaces/")) {
+    const [spaceId, ...rest] = uri.slice("/spaces/".length).split("/");
+    return spaceId && rest.length === 0 ? { action: "navigateVirtualFileSystemNode", args: { spaceId } } : null;
+  }
+  if (uri.startsWith("studio:")) {
+    const spaceId = uri.slice("studio:".length);
+    return spaceId ? { action: "navigateVirtualFileSystemNode", args: { spaceId } } : null;
+  }
+  return null;
 }
 
-export function TextView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "text" }>;
-  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
-  return (
-    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} data-ui-node-key={record.key} {...aria}>
-      {describedBy}
-      {component.value}
-    </p>
-  );
-}
-
-export function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
-  const component = record.component as Extract<Component, { type: "button" }>;
-  const id = nodeDomId(context.store, record, context.domScope);
-  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
-  const [, render] = useState(0);
-  const mounted = useRef(true);
-  const pending = useRef({ store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false });
-  if (pending.current.store !== context.store || pending.current.owner !== context.localDocumentOwner || pending.current.key !== record.key) pending.current = { store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false };
-  const state = pending.current;
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  const activate = () => {
-    const current = context.store.getNodeSnapshot(record.id);
-    if (state.busy || !current || current.key !== record.key || current.component.type !== "button" || current.disabled) return;
-    state.busy = true;
-    render((value) => value + 1);
-    const finish = () => { if (pending.current !== state || !mounted.current) return; state.busy = false; render((value) => value + 1); };
-    try { const completion = dispatchTrigger(context, current, "activate"); if (completion instanceof Promise) void completion.then(finish, finish); else finish(); }
-    catch (error) { finish(); throw error; }
+export function VirtualFileSystemHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
+  const scene = node.virtualFileSystem;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.file");
+  const dispatch = (action: string, args?: Record<string, unknown>): void => {
+    onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
   };
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
+  const rawRows = useMemo(() => scene ? parseSceneJsonField<VirtualFileSystemNode[]>(scene.rowsJson) : [], [scene?.rowsJson]);
+  const [expandedRowIds, setExpandedRowIds] = useState<ReadonlySet<string>>(() => new Set(rawRows.filter((row) => row.hasChildren).map((row) => row.id)));
+  const rows = useMemo(() => buildVirtualFileSystemSceneRows(rawRows, expandedRowIds), [expandedRowIds, rawRows]);
+  if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
+  const schema = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["schema"]>(scene.schemaJson);
+  const selectedRowIds = scene.selectedRowIdsJson ? parseSceneJsonField<string[]>(scene.selectedRowIdsJson) : undefined;
   return (
     <>
-      <Button
-        id={id}
-        data-ui-node-id={record.id} data-ui-node-key={record.key}
-        data-tone={record.style.tone ?? undefined}
-        text={component.label}
-        icon={resolveControlIconNode(component.icon)}
-        disabled={record.disabled || state.busy}
-        aria-label={record.accessibility.label ?? undefined}
-        aria-describedby={aria["aria-describedby"] as string | undefined}
-        className={activityBorderClass(record)}
-        aria-busy={state.busy || record.activity === "loading" || record.activity === "waiting" || undefined}
-        onClick={activate}
+      <VirtualFileSystem
+        className="min-h-0 flex-1"
+        schema={schema}
+        rows={rows}
+        selectedRowIds={selectedRowIds}
+        emptyMessage={scene.emptyMessage !== undefined ? wireLabel(scene.emptyMessage) : undefined}
+        dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
+        onToggleExpand={(rowId) => setExpandedRowIds((current) => {
+          const next = new Set(current);
+          if (next.has(rowId)) next.delete(rowId);
+          else next.add(rowId);
+          return next;
+        })}
+        onRowDoubleClick={(row) => {
+          const navigation = virtualFileSystemNavigation(row);
+          if (navigation) dispatch(navigation.action, { ...navigation.args });
+        }}
+        onSelectionChange={(ids) => onAction({ controllerId: node.controllerId, action: "selectRows", args: { surfaceId: node.surfaceId, ids } })}
+        onRowContextMenu={(row, index, event) => {
+          if (!requestContextMenu) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const rowId = String(row.id ?? index);
+          void (async () => {
+            const menu = await openSurfaceContextMenu(
+              requestContextMenu,
+              {
+                menu: { id: "virtualFileSystem", args: null },
+                surface: { surfaceId: node.surfaceId, kind: "virtualFileSystem", hits: [{ domain: "row", id: rowId }], selection: selectedRowIds && selectedRowIds.length > 0 ? [{ domain: "row", ids: selectedRowIds }] : [] },
+                windowInstanceId: windowInstanceId ?? undefined,
+                point: { x: event.clientX, y: event.clientY },
+              },
+              mapContextMenu,
+              shellContextMenuFallback,
+            );
+            setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
+          })();
+        }}
       />
-      {describedBy}
+      <ContextMenuController title={contextMenuTitleLabel} open={contextMenu != null} position={contextMenu ?? { x: 0, y: 0 }} items={contextMenu?.items ?? []} onOpenChange={(open) => { if (!open) setContextMenu(null); }} />
     </>
   );
 }
-
-export function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "keyValueList" }>;
-  return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
-      {component.entries.map((entry, index) => (
-        <div key={`${entry.label}:${index}`} className="contents">
-          <dt className="text-muted-foreground">{entry.label}</dt>
-          <dd className="tabular-nums">{entry.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-export function ImageView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "image" }>;
-  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
-}
-
-/** 📶️ `Component::Progress` → a real `role="progressbar"`. Determinate bars carry
- * `aria-valuemin`/`max`/`now`/`valuetext` and a fill sized by the shared fraction law; indeterminate bars
- * carry only `aria-busy` and a centred sweep that pulses only when the user has not asked for reduced
- * motion (`motion-safe:`). */
-export function ProgressView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "progress" }>;
-  const value = uiAccessibilityValueV1(component);
-  const fraction = uiProgressFractionV1(component.completed, component.total);
-  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
-  return (
-    <div
-      role="progressbar"
-      data-ui-node-id={record.id}
-      data-ui-node-key={record.key}
-      aria-valuemin={value.valueMin ?? undefined}
-      aria-valuemax={value.valueMax ?? undefined}
-      aria-valuenow={value.valueNow ?? undefined}
-      aria-valuetext={value.valueText ?? undefined}
-      aria-busy={value.busy ? true : undefined}
-      {...aria}
-      className="bg-muted h-tiny w-full min-w-0 overflow-hidden rounded-full"
-    >
-      {describedBy}
-      <div data-slot="progress-fill" className={fraction === null ? "bg-accent mx-auto h-full w-1/3 motion-safe:animate-pulse" : "bg-accent h-full"} style={fraction === null ? undefined : { width: `${fraction * 100}%` }} />
-    </div>
-  );
-}
-
-export function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "extension" }>;
-  const Host = resolveExtensionHost(component.extension);
-  if (Host) return <Host value={component.props} nodeId={record.id} nodeKey={record.key} />;
-  return (
-    <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-      <p className="text-muted-foreground text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key}>
-        Extension unavailable: {component.extension}
-      </p>
-    </ShellFaultBoundary>
-  );
-}
-
-/** 🚧️ An unregistered/unknown `Component::type` — never renders nothing (a silent blank is the
- * failure mode that makes a missing renderer look like a broken document, per the packet brief). */
-export function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
-  const kind = (record.component as { readonly type: string }).type;
-  console.error(`Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
-  return (
-    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key} data-unknown-component={kind}>
-      Unrecognized component: {kind}
-    </div>
-  );
-}
-//#endregion ComponentRenderers
-
-export function interpretUiNodeBusyShell(record: UiNodeRecord): ReactNode | null {
-  if (record.component.type === "progress" || (record.activity !== "loading" && record.activity !== "waiting")) return null;
-  return (
-    <div data-ui-node-id={record.id} data-ui-node-key={record.key} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
-      {elementSkeleton(record.component.type as ElementSkeletonKind)}
-    </div>
-  );
-}
+//#endregion VirtualFileSystemHost
 //#endregion 🔖️UiInterpreter

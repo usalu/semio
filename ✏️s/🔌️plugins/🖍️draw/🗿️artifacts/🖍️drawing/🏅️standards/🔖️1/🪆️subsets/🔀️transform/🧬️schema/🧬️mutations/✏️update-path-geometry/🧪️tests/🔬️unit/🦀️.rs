@@ -5,7 +5,7 @@ use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, PathSegment};
 
 #[test]
 fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let before: DrawingSnapshot = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after: DrawingSnapshot = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json")).unwrap();
     let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
@@ -13,7 +13,7 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     let result = mutation.diff(&before);
     assert!(result.messages().is_empty());
     assert_eq!(*result.diff(), serde_json::from_value::<semio_s_artifact_draw_drawing_diff::DrawingDiff>(expected).unwrap());
-    assert_eq!(protocol::apply_diff(result.diff(), &before).unwrap(), after);
+    assert_eq!(protocol::apply_diff_cold(result.diff(), &before).unwrap(), after);
     let mut restored = after;
     for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
@@ -21,7 +21,7 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
 
 #[test]
 fn path_geometry_mutation_roundtrip_fixture() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json")).unwrap();
     let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();

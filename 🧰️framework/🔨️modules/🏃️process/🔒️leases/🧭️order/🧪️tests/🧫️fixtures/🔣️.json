@@ -26,7 +26,11 @@
   "gate": {
    "releaseWhileWaiting": true,
    "pollInitialMilliseconds": 5,
-   "pollMaximumMilliseconds": 40
+   "pollMaximumMilliseconds": 40,
+   "admissionPatienceMilliseconds": 2000,
+   "claimSweepIntervalMilliseconds": 0,
+   "claimSweepPressureFreeRatio": 0,
+   "claimSweepPressureIntervalMilliseconds": 0
   },
   "classes": [
    {

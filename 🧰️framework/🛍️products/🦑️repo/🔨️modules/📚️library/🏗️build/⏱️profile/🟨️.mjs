@@ -111,7 +111,7 @@ export function repoProfileSpawnLabelV1(command){
 }
 
 let census=false;
-/** 🐚️ Counts every child process started through `Bun.spawn`, `Bun.spawnSync` and the callable members of `node:child_process` that are bound after this call, as `spawn` events named after the program; consumers that bound a named import earlier are only visible to a `--preload` census. */
+/** 🐚️ Counts every child process started through the owned runtime spawn family and the callable members of `node:child_process` that are bound after this call, as `spawn` events named after the program; consumers that bound a named import earlier are only visible to a `--preload` census. */
 export function installRepoProfileSpawnCensusV1(profile){
  if(census||!profile.enabled)return;census=true;
  const emit=(command,start)=>{try{profile.event(repoProfileSpawnLabelV1(command),performance.now()-start);}catch{}};
@@ -121,6 +121,6 @@ export function installRepoProfileSpawnCensusV1(profile){
   const require=createRequire(import.meta.url),cp=require("node:child_process");
   for(const name of ["spawnSync","execFileSync","execSync"])wrapSync(cp,name,args=>args[0]);
   for(const name of ["spawn","execFile","exec"])wrapAsync(cp,name,args=>args[0]);
-  if(typeof Bun!=="undefined"){wrapSync(Bun,"spawnSync",args=>args[0]?.cmd??args[0]);wrapAsync(Bun,"spawn",args=>args[0]?.cmd??args[0]);}
+  require("../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts").runtimeObserveSpawnV1((command,milliseconds)=>{try{profile.event(repoProfileSpawnLabelV1(command),milliseconds);}catch{}});
  }catch{}
 }

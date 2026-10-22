@@ -8,6 +8,23 @@ pub use semio_framework_os_store_one_item_publication::lifted_text::{ArtifactOpe
 
 
 
+/// 🖼️ Owned exact bytes of one opaque image operation, authored verbatim as a single byte leaf.
+pub struct ArtifactOperationImage { bytes: Vec<u8> }
+
+impl ArtifactOperationImage {
+    pub fn from_bytes(bytes: Vec<u8>) -> Self { Self { bytes } }
+    pub fn as_bytes(&self) -> &[u8] { &self.bytes }
+}
+
+impl ArtifactOperationText for ArtifactOperationImage {
+    fn operation_text_node(&self, path: &[usize]) -> Result<ArtifactOperationTextNode<'_>, ValueError> {
+        if path.is_empty() { Ok(ArtifactOperationTextNode::Bytes(&self.bytes)) } else { Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "operation image has no child nodes")) }
+    }
+    fn operation_text_scalar(&self, _path: &[usize], _offset: usize, _output: &mut [u8]) -> Result<(usize, bool), ArtifactPreparedOperationError> {
+        Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "operation image has no scalar leaves").into())
+    }
+}
+
 #[derive(Clone, Copy, Default)]
 struct Frame { phase: u8, offset: usize, child: usize }
 

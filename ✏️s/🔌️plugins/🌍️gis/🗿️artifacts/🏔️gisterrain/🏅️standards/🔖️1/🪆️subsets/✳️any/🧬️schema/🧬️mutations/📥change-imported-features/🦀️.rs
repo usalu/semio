@@ -27,19 +27,20 @@ pub struct ChangeImportedFeatures {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "imported-features", kind: "change-imported-features", record: "ChangedImportedFeatures" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change imported terrain features", "Importierte Geländemerkmale ändern")
+    }
+}
+
+impl protocol::ColdMutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {
     fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &GisTerrainSnapshot) -> Result<Vec<GisTerrainMutation>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change imported terrain features", "Importierte Geländemerkmale ändern")
-    }
 }
 //#endregion 🔹Payload

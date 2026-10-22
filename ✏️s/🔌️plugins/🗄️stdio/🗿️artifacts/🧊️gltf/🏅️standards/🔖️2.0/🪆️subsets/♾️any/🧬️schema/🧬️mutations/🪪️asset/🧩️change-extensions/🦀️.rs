@@ -64,6 +64,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-extension-data", kind: "change-asset-extension-data", record: "ChangedAssetExtensionData" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Asset Extension Data", "Erweiterungsdaten des Assets ändern")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["change-asset-extension-data".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for ChangeAssetExtensionDataMutation
+where
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<ChangeAssetExtensionDataMutation>,
+{
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
@@ -72,19 +85,10 @@ where
             },
         }
     }
-
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Asset Extension Data", "Erweiterungsdaten des Assets ändern")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["change-asset-extension-data".to_string()]
     }
 }
 //#endregion 🧬️DirectMutation

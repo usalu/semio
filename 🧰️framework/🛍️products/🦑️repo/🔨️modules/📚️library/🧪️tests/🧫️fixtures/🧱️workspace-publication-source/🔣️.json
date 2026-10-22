@@ -104,15 +104,15 @@
   "routes": {
     "source": {
       "target": "test-workspace-publication-source",
-      "command": "bun ./📜️script.ts test workspace-publication-source"
+      "command": "repo ./📜️script.ts test workspace-publication-source"
     },
     "check": {
       "target": "workspaces-check",
-      "command": "bun ./📜️script.ts workspaces --check"
+      "command": "repo ./📜️script.ts workspaces --check"
     },
     "write": {
       "target": "workspaces-write",
-      "command": "bun ./📜️script.ts workspaces --write"
+      "command": "repo ./📜️script.ts workspaces --write"
     }
   },
   "inputs": {
@@ -184,7 +184,7 @@
       "name": "workspace",
       "private": true,
       "scripts": {
-        "test": "bun repo run-many -t test"
+        "test": "repo run-many -t test"
       },
       "custom": {
         "preserved": [

@@ -21,7 +21,13 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeSupervisionLevel w
         record: "ChangedSupervisionLevel",
     };
 
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change design supervision level", "Überwachungsstufe der Planung ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1990Snapshot, Op> for ChangeSupervisionLevel where Op: protocol::ColdMutation<En1990Snapshot, ReferenceDiff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::change_supervision_level::ChangeSupervisionLevel> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1990Snapshot>>::ReferenceDiff> {
         crate::change_supervision_level::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,9 +36,6 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeSupervisionLevel w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design supervision level", "Überwachungsstufe der Planung ändern")
-    }
 }
 //#endregion 🔖️Payload
 

@@ -76,7 +76,7 @@ pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -
     if path.is_file() {
         return Ok(path);
     }
-    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s shipped component is missing at {}; build it with `bun repo run <its crate project>:describe`", entry.plugin_id, path.display())))
+    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s shipped component is missing at {}; build it with `repo run <its crate project>:describe`", entry.plugin_id, path.display())))
 }
 
 //#endregion 🔖️PluginPaths

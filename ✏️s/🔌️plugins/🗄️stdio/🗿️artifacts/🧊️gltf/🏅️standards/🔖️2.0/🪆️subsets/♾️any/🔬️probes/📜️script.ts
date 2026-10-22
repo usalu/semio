@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -33,21 +33,10 @@ import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { NodeIO } from "@gltf-transform/core";
+import { installOffBrowserGlobals } from "../../../../../../../🔮️oracles/🧊️mesh/🟦️.ts";
 //#endregion 🔌️Adapters
 
-//#region 🩹️Shims
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).ProgressEvent ??= class ShimProgressEvent extends Event {
-  lengthComputable = false;
-  loaded = 0;
-  total = 0;
-};
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).requestAnimationFrame ??= (cb: () => void) => {
-  cb();
-  return 0;
-};
-//#endregion 🩹️Shims
+installOffBrowserGlobals();
 
 //#region 🧬️Contract
 type ProbeReport = {

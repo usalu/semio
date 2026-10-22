@@ -1,0 +1,167 @@
+{
+  "cases": [
+    {
+      "name": "typescript-canonical-main",
+      "parser": "typescript",
+      "manifest": {
+        "name": "typescript",
+        "main": "lib/typescript.js"
+      },
+      "accepted": true,
+      "entry": "lib/typescript.js"
+    },
+    {
+      "name": "typescript-relative-main",
+      "parser": "typescript",
+      "manifest": {
+        "name": "typescript",
+        "main": "./lib/typescript.js"
+      },
+      "accepted": true,
+      "entry": "lib/typescript.js"
+    },
+    {
+      "name": "toml-canonical-main",
+      "parser": "@iarna/toml",
+      "manifest": {
+        "name": "@iarna/toml",
+        "main": "toml.js"
+      },
+      "accepted": true,
+      "entry": "toml.js"
+    },
+    {
+      "name": "toml-relative-main",
+      "parser": "@iarna/toml",
+      "manifest": {
+        "name": "@iarna/toml",
+        "main": "./toml.js"
+      },
+      "accepted": true,
+      "entry": "toml.js"
+    },
+    {
+      "name": "unknown-parser",
+      "parser": "other",
+      "manifest": {
+        "name": "other",
+        "main": "toml.js"
+      },
+      "accepted": false,
+      "entry": null
+    },
+    {
+      "name": "foreign-package-name",
+      "parser": "typescript",
+      "manifest": {
+        "name": "@iarna/toml",
+        "main": "lib/typescript.js"
+      },
+      "accepted": false,
+      "entry": null
+    },
+    {
+      "name": "escaping-entry",
+      "parser": "typescript",
+      "manifest": {
+        "name": "typescript",
+        "main": "../typescript.js"
+      },
+      "accepted": false,
+      "entry": null
+    },
+    {
+      "name": "changed-entry",
+      "parser": "typescript",
+      "manifest": {
+        "name": "typescript",
+        "main": "lib/other.js"
+      },
+      "accepted": false,
+      "entry": null
+    },
+    {
+      "name": "missing-entry",
+      "parser": "typescript",
+      "manifest": {
+        "name": "typescript"
+      },
+      "accepted": false,
+      "entry": null
+    }
+  ],
+  "physicalCases": [
+    {
+      "name": "typescript-ordinary-entry",
+      "parser": "typescript",
+      "kind": "file",
+      "accepted": true,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "toml-ordinary-entry",
+      "parser": "@iarna/toml",
+      "kind": "file",
+      "accepted": true,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "typescript-directory-entry",
+      "parser": "typescript",
+      "kind": "directory",
+      "accepted": false,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "toml-directory-entry",
+      "parser": "@iarna/toml",
+      "kind": "directory",
+      "accepted": false,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "typescript-missing-entry",
+      "parser": "typescript",
+      "kind": "missing",
+      "accepted": false,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "toml-missing-entry",
+      "parser": "@iarna/toml",
+      "kind": "missing",
+      "accepted": false,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "symbolic-entry",
+      "parser": "typescript",
+      "kind": "symlink",
+      "accepted": false,
+      "stable": true,
+      "inside": true
+    },
+    {
+      "name": "replaced-entry-identity",
+      "parser": "typescript",
+      "kind": "file",
+      "accepted": false,
+      "stable": false,
+      "inside": true
+    },
+    {
+      "name": "foreign-canonical-entry",
+      "parser": "typescript",
+      "kind": "file",
+      "accepted": false,
+      "stable": true,
+      "inside": false
+    }
+  ]
+}

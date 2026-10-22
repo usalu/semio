@@ -336,7 +336,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -386,7 +386,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -436,7 +436,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -486,7 +486,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -536,7 +536,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -586,7 +586,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -636,7 +636,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -686,7 +686,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -736,7 +736,7 @@
         "packageVersion": "0.1",
         "engineFamily": "steputils",
         "engineVersion": "0.1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-step-generate.py",
         "platform": "darwin-arm64"
       },
       "provenance": {

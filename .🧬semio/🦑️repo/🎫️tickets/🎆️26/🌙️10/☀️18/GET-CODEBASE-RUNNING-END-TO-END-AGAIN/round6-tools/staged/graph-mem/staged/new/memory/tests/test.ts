@@ -55,12 +55,13 @@ test("the admission decision equals the recorded verdicts and the independent mo
    if("error" in row.expect){expect(run,row.name).toThrow();expect(expected.budgets[index],row.name).toEqual({error:true});}
    else{expect(run(),row.name).toBe(row.expect.bytes);expect(expected.budgets[index],row.name).toEqual({bytes:row.expect.bytes});}
   });
-  fixture.languages.forEach((row,index)=>{expect(memory.selectGraphMemoryLanguageV1(row.environment),row.name).toBe(row.expect as "en"|"de");expect(expected.languages[index],row.name).toBe(row.expect);});
+  fixture.languages.forEach((row,index)=>{expect(memory.selectGraphMemoryLanguagesV1(row.environment),row.name).toEqual(row.expect as ("en"|"de")[]);expect(expected.languages[index],row.name).toEqual(row.expect);});
   fixture.messageCases.forEach((row,index)=>{
-   const actual=memory.renderGraphMemoryMessageV1(row.key as "waiting",row.fields as Record<string,number>,row.environment);
-   expect(actual).toBe(row.expect);expect(actual).toBe(expected.messages[index]);
+   const actual=memory.renderGraphMemoryMessagesV1(row.key as "waiting",row.fields as Record<string,number>,row.environment);
+   expect(actual).toEqual(row.expect);expect(actual).toEqual(expected.messages[index]);
   });
-  expect(()=>memory.renderGraphMemoryMessageV1("unknown" as "waiting",{},{})).toThrow();
+  expect(()=>memory.renderGraphMemoryMessagesV1("unknown" as "waiting",{},{LANG:"de_DE"})).toThrow();
+  expect(Object.isFrozen(memory.GRAPH_MEMORY_POLICY_V1)&&Object.isFrozen(memory.GRAPH_MEMORY_MESSAGES_V1.de)).toBe(true);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
@@ -87,7 +88,7 @@ class FakeTime{
 
 /** 🧪️ Runs one scenario of the fixture against the real governor over a modeled heap and returns the recorded trace. */
 async function run(scenario:typeof fixture.governor[number]){
- const time=new FakeTime(),controller=new AbortController(),environment={LANG:(scenario as {language?:string}).language==="de"?"de_DE.UTF-8":"en_US.UTF-8"};
+ const time=new FakeTime(),controller=new AbortController(),language=(scenario as {language?:string}).language,environment:Record<string,string>=language==="none"?{}:{LANG:language==="de"?"de_DE.UTF-8":"en_US.UTF-8"};
  let live=0,garbage=0,running=0,collections=0,finishedCount=0,rejected=0;
  const base=scenario.baseMegabytes*MEGABYTE,sample=()=>base+live+garbage,collect=()=>{garbage=0;collections++;};
  const lines:{at:number;text:string}[]=[],starts:{task:number;at:number;runningBefore:number;usedBytes:number}[]=[],finished:{task:number;at:number}[]=[];
@@ -101,7 +102,8 @@ async function run(scenario:typeof fixture.governor[number]){
  await time.drive(()=>finishedCount+rejected>=scenario.tasks.length);
  const settled=await Promise.all(results);
  const keyOf=(text:string)=>(["waiting","serial","resumed"] as const).find(key=>(["en","de"] as const).some(language=>new RegExp("^"+memory.GRAPH_MEMORY_MESSAGES_V1[language][key].replace(/[.*+?^${}()|[\]\\]/gu,"\\$&").replace(/\\\{[a-z]+\\\}/gu,".*")+"$","u").test(text)))??"unknown";
- return{scenario:scenario.name,starts,finished,completed:settled.filter(value=>typeof value==="number"),rejected,expectRejected:scenario.abortAtMilliseconds===undefined?0:scenario.tasks.length-scenario.workers,collections,durationMilliseconds:time.clock,messages:lines.map(row=>({at:row.at,key:keyOf(row.text),text:row.text})),stats:governor.stats()};
+ const all=lines.map(row=>({at:row.at,key:keyOf(row.text),text:row.text})),unique=all.filter((row,index)=>all.findIndex(other=>other.at===row.at&&other.key===row.key)===index);
+ return{scenario:scenario.name,starts,finished,completed:settled.filter(value=>typeof value==="number"),rejected,expectRejected:scenario.abortAtMilliseconds===undefined?0:scenario.tasks.length-scenario.workers,collections,durationMilliseconds:time.clock,messages:unique,lines:lines.map(row=>row.text),stats:governor.stats()};
 }
 
 test("the governor keeps the laws of every scenario, checked by the independent model",async()=>{
@@ -117,6 +119,10 @@ test("the governor keeps the laws of every scenario, checked by the independent 
     for(const row of trace.messages)expect(row.text.startsWith("Graph: ")).toBe(true);
    }
    if(scenario.name==="unconstrained")expect(trace.collections).toBe(0);
+   if(scenario.name==="unresolved-language-prints-both"){
+    expect(trace.messages.length).toBeGreaterThan(0);expect(trace.lines.length).toBe(2*trace.messages.length);
+    trace.lines.forEach((line,index)=>expect(line.startsWith(index%2===0?"graph: ":"Graph: "),line).toBe(true));
+   }
   }
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

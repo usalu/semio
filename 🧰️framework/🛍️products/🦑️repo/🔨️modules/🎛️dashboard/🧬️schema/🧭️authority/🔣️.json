@@ -17,20 +17,20 @@
       ],
       "additionalProperties": {
         "type": "string",
-        "pattern": "^bun repo run [@A-Za-z0-9][@A-Za-z0-9_./-]*:[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)?(?: [A-Za-z0-9_./:@=,+-]+)*(?![\\s\\S])"
+        "pattern": "^repo run [@A-Za-z0-9][@A-Za-z0-9_./-]*:[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)?(?: [A-Za-z0-9_./:@=,+-]+)*(?![\\s\\S])"
       },
       "properties": {
         "repo": {
-          "const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"
+          "const": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"
         },
         "setup": {
-          "const": "bun repo run workspace:setup"
+          "const": "repo run workspace:setup"
         },
         "dashboard": {
-          "const": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream"
+          "const": "repo run @semio-tech/repo-dashboard-rs:run --output=stream"
         },
         "dashboard:install": {
-          "const": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+          "const": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
         }
       }
     }
@@ -66,7 +66,6 @@
       "properties": {
         "postCreateCommand": {
           "const": [
-            "bun",
             "repo",
             "run",
             "workspace:setup"
@@ -74,7 +73,6 @@
         },
         "postStartCommand": {
           "const": [
-            "bun",
             "repo",
             "run",
             "workspace:setup-devcontainer-start"
@@ -82,7 +80,6 @@
         },
         "postAttachCommand": {
           "const": [
-            "bun",
             "repo",
             "run",
             "workspace:setup-devcontainer-attach"
@@ -105,7 +102,7 @@
       "not": {
         "pattern": "[$`]"
       },
-      "pattern": "^bun (?:--watch )?(?:\"(?:[^\"\\r\\n]*[/\\\\])?📜️script\\.ts\"|(?:[^\\s\"\\r\\n]*[/\\\\])?📜️script\\.ts) [a-z][a-z0-9-]*(?: (?:[^\\s\"';&|<>\\r\\n]+|\"[^\"\\r\\n]*\"|'[^'\\r\\n]*')+)*$"
+      "pattern": "^repo (?:--watch )?(?:\"(?:[^\"\\r\\n]*[/\\\\])?📜️script\\.ts\"|(?:[^\\s\"\\r\\n]*[/\\\\])?📜️script\\.ts) [a-z][a-z0-9-]*(?: (?:[^\\s\"';&|<>\\r\\n]+|\"[^\"\\r\\n]*\"|'[^'\\r\\n]*')+)*$"
     },
     "OwnerTarget": {
       "type": "object",
@@ -211,7 +208,7 @@
             "pattern": "\\.cursor[/\\\\](?:mcp|hooks|settings)\\.json|\\.cursor[/\\\\]rules(?:[/\\\\]|$)|\\.(cursorrules|windsurfrules)\\b|\\.sublime-(project|workspace|build)\\b|cmakesettings\\.json"
           },
           {
-            "pattern": "\\.cursor[/\\\\](?!plans(?:[/\\\\]|$))"
+            "pattern": "\\.cursor[/\\\\]"
           },
           {
             "pattern": "ide startup|reopen in vs code|all required vs code extensions|dev containers: reopen in container|vs code.*with.*dev containers extension"
@@ -221,7 +218,7 @@
     },
     "ActiveRepositoryPath": {
       "type": "string",
-      "description": "🚫️ A normalized lowercase active repository path. IDE directories, workspace/solution files and Cursor MCP/hooks/settings/rules have no authority; compiler project files and historical Cursor plans remain valid.",
+      "description": "🚫️ A normalized lowercase active repository path. IDE directories, workspace/solution files and Cursor directories, .github/hooks and every other client directory have no authority; compiler project files remain valid.",
       "not": {
         "anyOf": [
           {
@@ -240,7 +237,7 @@
             "pattern": "(^|/)\\.cursor/(mcp|hooks|settings)\\.json$"
           },
           {
-            "pattern": "(^|/)\\.cursor/(?!plans(?:/|$))"
+            "pattern": "(^|/)\\.cursor(/|$)"
           },
           {
             "pattern": "(^|/)\\.devcontainer/editor-overlay\\.json$"

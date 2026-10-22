@@ -215,8 +215,8 @@ fn reference_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
         let first = command.dispatch(&ArtifactView::new(&scene, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(first.artifact_mutations.len(), 1, "{verb} with the inverse value is exactly one reference edit");
-        let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&first.artifact_mutations[0], &scene);
-        let edited = protocol::apply_diff(outcome.diff(), &scene).expect("the reference edit applies");
+        let outcome = <CadMutation as protocol::ColdMutation<CadSnapshot>>::diff(&first.artifact_mutations[0], &scene);
+        let edited = protocol::apply_diff_cold(outcome.diff(), &scene).expect("the reference edit applies");
         let flagged = edited.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.iter().find(|entry| entry.id == reference.id)).expect("the reference survives its flag edit");
         assert_eq!(state(flagged), !state(&reference), "{verb} reaches the value the row asked for");
         let replay = command.dispatch(&ArtifactView::new(&edited, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));

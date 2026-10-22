@@ -18,13 +18,14 @@ import { createHash } from "node:crypto";
 import { dirname, basename, join, relative, resolve, isAbsolute } from "node:path";
 import { spawn } from "node:child_process";
 import { terminateOwnedChildTree } from "../../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 const cache=(root:string)=>join(root,".🧬semio/🦑️repo/⚡️cache");
 const manifest=(root:string,mode:BuildMode)=>join(cache(root),"🎛️dashboard",readBuildMode(mode),"installed.json");
 const slashes=(path:string)=>path.replaceAll("\\","/");
 
 /** 📦️ The crate directory of the dashboard executable; its sources live in the sibling modules of `🎛️dashboard`. */
-export const dashboardPackageRoot=resolve(import.meta.dir,installationSchema.definitions.PackageOwner.const.installationRelative);
+export const dashboardPackageRoot=resolve(import.meta.dirname,installationSchema.definitions.PackageOwner.const.installationRelative);
 
 /** 🧾️ The source trees an installation was built from and the cheap digest they had at that moment. */
 export type DashboardSources={readonly roots:readonly string[];readonly manifests:readonly string[];readonly digest:string};
@@ -65,7 +66,7 @@ const cargoTable=(value:unknown):CargoTable=>value!==null&&typeof value==="objec
 function sourceInputs(packageRoot:string,workspace:string):Pick<DashboardSources,"roots"|"manifests"> {
   workspace=resolve(workspace);const cache=new Map<string,CargoTable>(),seen=new Set<string>(),pending=[resolve(packageRoot)],roots=new Set<string>(),manifests=new Set<string>();
   const inside=(path:string)=>{const local=relative(workspace,path);if(local===".."||local.startsWith("../")||local.startsWith("..\\")||isAbsolute(local))throw Error("Dashboard Cargo source must belong to the workspace");return path;};
-  const read=(directory:string)=>{const file=join(inside(directory),"Cargo.toml");let value=cache.get(file);if(!value){value=cargoTable(Bun.TOML.parse(readFileSync(file,"utf8")));cache.set(file,value);}return value;};
+  const read=(directory:string)=>{const file=join(inside(directory),"Cargo.toml");let value=cache.get(file);if(!value){value=cargoTable(runtimeParseTomlV1(readFileSync(file,"utf8")));cache.set(file,value);}return value;};
   const owner=(directory:string,manifest:CargoTable)=>{const declared=cargoTable(manifest.package).workspace;if(declared!==undefined){if(typeof declared!=="string")throw Error("Declared Cargo workspace path required");const actual=inside(resolve(directory,declared));if(!("workspace" in read(actual)))throw Error("Declared Cargo workspace manifest required");return actual;}for(let candidate=directory;;candidate=dirname(candidate)){if(existsSync(join(candidate,"Cargo.toml"))&&"workspace" in read(candidate))return candidate;if(candidate===workspace)break;}return directory;};
   const selected=inside(resolve(packageRoot));manifests.add(slashes(relative(workspace,join(owner(selected,read(selected)),installationSchema.definitions.SourceInputProtocol.const.selectedWorkspaceLock))));
   while(pending.length){

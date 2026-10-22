@@ -2,7 +2,7 @@
 
 use semio_framework::{UiRefreshSection, ViewModel};
 
-pub(crate) struct SurfaceContext {
+pub struct SurfaceContext {
     pub body_key: String,
     pub view_state: ViewModel,
 }
@@ -45,7 +45,9 @@ struct SurfaceBinding {
     pub view_state: ViewModel,
 }
 
-pub(crate) struct SurfaceContexts {
+#[doc(hidden)]
+
+pub struct SurfaceContexts {
     slots: [Option<SurfaceBinding>; semio_framework_ui_contract::UI_RESIDENT_SLOTS],
     /// 🪟️ The last host view this INSTANCE was mounted or refreshed with — diagnostics and
     /// window-scoped background work only (`ArtifactApp::pending_effects`). Never the source a body

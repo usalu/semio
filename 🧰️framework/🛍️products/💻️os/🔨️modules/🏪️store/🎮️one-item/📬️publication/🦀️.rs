@@ -735,18 +735,6 @@ pub use semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
 
 pub use semio_framework_os_store_one_item::ArtifactStoreOneItemAdvance;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

@@ -16,6 +16,15 @@ pub struct DeleteColumn {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for DeleteColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "column", kind: "delete-column", record: "DeletedColumn" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete column {}", self.name), &format!("Spalte {} löschen", self.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.name.clone()]
+    }
+}
+
+impl<Op: SemioTableOp> protocol::ColdMutationKind<SemioTableSnapshot, Op> for DeleteColumn {
     fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
@@ -25,11 +34,5 @@ impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for Delete
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete column {}", self.name), &format!("Spalte {} löschen", self.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.name.clone()]
-    }
 }
 //#endregion 🔖️Payload

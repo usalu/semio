@@ -1,6 +1,6 @@
 
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🪄️ `@semio-tech/value-derive-rs` router: `bun ./📜️script.ts test`. */
+/** 🪄️ `@semio-tech/value-derive-rs` router: `repo ./📜️script.ts test`. */
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -18,6 +18,6 @@ class ValueAdmissionScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("value-admission-check", ValueAdmissionScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("value-admission-check", ValueAdmissionScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

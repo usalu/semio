@@ -1,0 +1,3 @@
+# Framing Oracle Dependency Check
+
+Root read bounded JSON metadata only. The existing workspace package.json declares base64-js1.5.1. Its actual installed manifest resolves within held dependency generation22d1461ddc6b5f4d1305 and is1115bytes /9758f3ab8c45e07bb9a368e32f9a8b3729623bbf47cbbb205b32d674ab2a91f0, namebase64-js/version1.5.1. The framing test therefore reuses an existing material-resolvable test library. No production runtime dependency, package change, package import/evaluation, CLI or Native invocation was introduced. The optional.agents/package.json path is absent and was not used.

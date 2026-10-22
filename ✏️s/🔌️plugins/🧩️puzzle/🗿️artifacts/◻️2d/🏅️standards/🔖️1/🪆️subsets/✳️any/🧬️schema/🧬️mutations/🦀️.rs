@@ -14,8 +14,8 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
-use protocol::DiffAlgebra;
-use protocol::Mutation;
+use protocol::{DiffAlgebra};
+use protocol::{Mutation};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 

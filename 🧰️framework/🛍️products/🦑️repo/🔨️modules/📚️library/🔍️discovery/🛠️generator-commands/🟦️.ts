@@ -18,15 +18,23 @@ export interface TaxonomyCliAttemptPreparationFacts {
 }
 
 /** ⚙️ Derives the only runnable generator command shape admitted by v7. */
-export function generatorBuildCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] {
+export function generatorBuildCommand(contract: GeneratorContract): readonly ["repo", "run", string] {
   if (contract.ownership !== "owned" || !contract.target) throw new Error("Only owned generator contracts are runnable.");
-  return ["bun", "repo", "run", contract.target];
+  return ["repo", "run", contract.target];
 }
 
 /** 👁️ Derives an owned generator's mandatory read-only preview command. */
-export function generatorBuildPreviewCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] {
+export function generatorBuildPreviewCommand(contract: GeneratorContract): readonly ["repo", "run", string] {
   if (contract.ownership !== "owned" || !contract.previewTarget) throw new Error("Only owned generator contracts have preview targets.");
-  return ["bun", "repo", "run", contract.previewTarget];
+  return ["repo", "run", contract.previewTarget];
+}
+
+/** 📜️ Names the owner-relative script a preview invocation runs: the owner's own `📜️script.ts`, or the explicit `previewScript` of a generator whose commands live in a nested script (owner-relative POSIX path ending in `📜️script.ts`, only beside explicit `previewArguments`). */
+export function generatorPreviewScriptPath(contract: Pick<GeneratorContract, "previewArguments" | "previewScript">): string {
+  if (contract.previewScript === undefined) return "📜️script.ts";
+  const parts = contract.previewScript.split("/");
+  if (contract.previewArguments === undefined || /[\\\s\u0000]/u.test(contract.previewScript) || parts.some((part) => !part || part === "." || part === "..") || parts.at(-1) !== "📜️script.ts") throw new Error("previewScript must be an owner-relative path to a 📜️script.ts beside explicit previewArguments");
+  return contract.previewScript;
 }
 
 /** 👓️ Admits an exact read-only script invocation without sharing another generator's preview. */
@@ -51,7 +59,7 @@ export function generatorPreviewResourceLimits(contract: Pick<GeneratorContract,
 }
 
 /** ✅️ Derives an owned generator's exact optional freshness command. */
-export function generatorBuildCheckCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] | null {
+export function generatorBuildCheckCommand(contract: GeneratorContract): readonly ["repo", "run", string] | null {
   if (contract.ownership !== "owned" || !contract.checkTarget) return null;
-  return ["bun", "repo", "run", contract.checkTarget];
+  return ["repo", "run", contract.checkTarget];
 }

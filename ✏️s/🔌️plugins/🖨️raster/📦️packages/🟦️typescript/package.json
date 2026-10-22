@@ -12,7 +12,7 @@
     "./artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image": "./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/raster-js:test"
+    "test": "repo run @semio-tech/raster-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"

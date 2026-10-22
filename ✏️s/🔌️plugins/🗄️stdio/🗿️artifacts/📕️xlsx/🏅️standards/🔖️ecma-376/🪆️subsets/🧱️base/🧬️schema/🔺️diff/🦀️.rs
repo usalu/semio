@@ -12,8 +12,8 @@ use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxXmlPart}
 use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{element_matches, expanded_element_name, namespace_scope, SML_NS, SML_NS_STRICT};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::diff::XmlDiff;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
@@ -144,20 +144,9 @@ fn refresh_unique_counts(next: &mut Vec<XlsxXmlPart>, base: &[XlsxXmlPart], diff
 //#endregion 🔖️XmlPartDiffLogic
 
 //#region 🔖️Apply
-impl MutationDiff<XlsxSnapshot> for XlsxDiff {
-    fn apply(&self, base: &XlsxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<XlsxSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.opc {
-            d.commit_into(&mut next.opc, capability).map_err(|error| error.under(["opc"]))?;
-        }
-        if let Some(diff) = &self.xml_parts {
-            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
-            refresh_unique_counts(&mut next.xml_parts, &base.xml_parts, diff);
-        }
-        next.validate_authority().map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
-        Ok(next)
-    }
+impl MutationDiff<XlsxSnapshot> for XlsxDiff {}
 
+impl protocol::ColdMutationDiff<XlsxSnapshot> for XlsxDiff {
     fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, value) | (value, None) => value,
@@ -168,17 +157,34 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
         };
         self.xml_parts = compose_optional(self.xml_parts.take(), other.xml_parts);
     }
+
+    fn apply(&self, unpublished: &mut XlsxSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.opc {
+            d.commit_into(&mut next.opc, capability).map_err(|error| error.under(["opc"]))?;
+        }
+        if let Some(diff) = &self.xml_parts {
+            apply_xml_parts(&mut next.xml_parts, diff, capability).map_err(|error| error.under(["xmlParts"]))?;
+            refresh_unique_counts(&mut next.xml_parts, &base.xml_parts, diff);
+        }
+        next.validate_authority().map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
-    fn inverse(&self, base: &XlsxSnapshot) -> Self {
-        XlsxDiff { opc: self.opc.as_ref().map(|d| d.rewind(&base.opc)), xml_parts: self.xml_parts.as_ref().map(|diff| rewind_xml_parts(&base.xml_parts, diff)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.opc.is_none() && self.xml_parts.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<XlsxSnapshot> for XlsxDiff {
+    fn inverse(&self, base: &XlsxSnapshot) -> Self {
+        XlsxDiff { opc: self.opc.as_ref().map(|d| d.rewind(&base.opc)), xml_parts: self.xml_parts.as_ref().map(|diff| rewind_xml_parts(&base.xml_parts, diff)) }
     }
 }
 //#endregion 🔖️DiffAlgebra

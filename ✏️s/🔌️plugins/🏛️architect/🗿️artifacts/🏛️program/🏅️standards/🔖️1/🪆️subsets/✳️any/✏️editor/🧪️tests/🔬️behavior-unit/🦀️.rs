@@ -7,8 +7,8 @@ mod tests {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::tsv::v_iana::any::export_registers_tsv;
 
     fn fold(program: &ProgramSnapshot, mutations: &[ProgramMutation]) -> ProgramSnapshot {
-        use protocol::Mutation;
-        mutations.iter().fold(program.clone(), |state, mutation| protocol::apply_diff(mutation.diff(&state).diff(), &state).expect("mutation applies through the central applier"))
+        use protocol::{ColdMutation, Mutation};
+        mutations.iter().fold(program.clone(), |state, mutation| protocol::apply_diff_cold(mutation.diff(&state).diff(), &state).expect("mutation applies through the central applier"))
     }
 
     #[semio_framework_async_macros::async_test]

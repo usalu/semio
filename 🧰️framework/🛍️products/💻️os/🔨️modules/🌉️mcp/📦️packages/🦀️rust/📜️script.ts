@@ -1,10 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <build|check|test|dev>`. */
+/** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `repo ./📜️script.ts <build|check|test|dev>`. */
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
@@ -20,6 +20,7 @@ import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️co
 
 import { workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { runtimeExecutableV1, runtimeTypeEnvironmentV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as {
   cargoPackage: string;
@@ -111,7 +112,7 @@ class BuildReleaseScript extends BundleScript {
 
 /** 🚚️ Packages the staged release binary as a versioned, checksummed tarball under `dist/publish`.
  * Local artifact only — nothing is uploaded or pushed anywhere. Reached through the root
- * `bun ./📜️script.ts publish os-mcp`. */
+ * `repo ./📜️script.ts publish os-mcp`. */
 class PublishScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length) throw new Error("MCP publish has a fixed deliverable contract");
@@ -145,7 +146,7 @@ class OriginalInferenceSourceScript extends BundleScript {
     if (segments.length) throw new Error("Original inference source law has no arguments");
     const source = join(this.root, "..", "..", "💡️inference", "🧪️tests", "💼️inference-service-law", "🟦️.ts");const originalCaller = join(this.root, "..", "..", "💡️inference", "🧪️tests", "🔬️inference-jobs", "🟦️.ts");
     const budget = {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null} as const;
-    await runRepositoryCommand(this.invocation, process.execPath, [resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,originalCaller], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
+    await runRepositoryCommand(this.invocation, process.execPath, [resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source,originalCaller], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
     await runRepositoryCommand(this.invocation, process.execPath, ["test",source,originalCaller], this.repoRoot, "mcp:original-inference:source", budget, {env:process.env});
   }
 }
@@ -162,7 +163,7 @@ class ProbeSqliteSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite source law has no arguments");
     const source=join(this.root,"..","..","🏠️workspace","🪶️sqlite","🧪️tests","🟦️.ts");
-    await runRepositoryCommand(this.invocation,process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
+    await runRepositoryCommand(this.invocation,process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],this.repoRoot,"mcp:probe-sqlite-types",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
     await runRepositoryCommand(this.invocation,process.execPath,["test",source],this.repoRoot,"mcp:probe-sqlite-source",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
   }
 }
@@ -197,7 +198,7 @@ class CanonicalPairCheckScript extends BundleScript {
     });
     console.log(`canonical-pair-laws: ${laws.join(" ")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
-    runCmd("bun", [oracle], { cwd: this.root, budgetMs: 120_000 });
+    runCmd(runtimeExecutableV1(), [oracle], { cwd: this.root, budgetMs: 120_000 });
     runCargo(["check", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--all-features"], this.root);
   }
 }
@@ -243,7 +244,7 @@ class HubLiveCatalogOracleScript extends BundleScript {
 /** 🧪 Runs source/neutral checks without claiming native transport execution. */
 class HubLiveCatalogCheckScript extends BundleScript {
   run(): void {
-    runCmd("bun", ["./📜️script.ts", "hub-live-catalog-oracle"], { cwd: this.root, budgetMs: 60_000 });
+    runCmd(runtimeExecutableV1(), ["./📜️script.ts", "hub-live-catalog-oracle"], { cwd: this.root, budgetMs: 60_000 });
     const workspace = readMcpGatewaySource(this.repoRoot);
     const remote = readModuleTreeSource(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), { crates: false });
     const inference = readFileSync(join(this.root, "..", "..", "💡️inference", "🦀️.rs"), "utf8");
@@ -310,7 +311,7 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
 
 class CanonicalCheckpointResourceCheckScript extends BundleScript {
   run(): void {
-    runCmd("bun", ["./📜️script.ts", "canonical-checkpoint-resource-oracle"], { cwd: this.root, budgetMs: 60_000 });
+    runCmd(runtimeExecutableV1(), ["./📜️script.ts", "canonical-checkpoint-resource-oracle"], { cwd: this.root, budgetMs: 60_000 });
     const workspace = readMcpGatewaySource(this.repoRoot);
     const remote = readModuleTreeSource(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), { crates: false });
     const pair = readMcpGatewaySource(this.repoRoot);
@@ -366,8 +367,8 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 
 
 
-/** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
- *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
+/** ▶️ `repo ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
+ *  smoke testing (`printf '<json-rpc line>' | repo ./📜️script.ts dev -- stdio | ...`). Defaults to
  *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
@@ -404,7 +405,7 @@ class CapabilityAuditCheckScript extends BundleScript {
   }
 }
 
-/** 🪞️ `bun ./📜️script.ts schema-mirror [--check]` — regenerates (or verifies) the `os.mcp` scope's
+/** 🪞️ `repo ./📜️script.ts schema-mirror [--check]` — regenerates (or verifies) the `os.mcp` scope's
  *  two language mirrors from the ONE Rust registry, by running the built binary's own
  *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
  *  mirror is a red gate rather than a silently divergent contract. */
@@ -425,7 +426,7 @@ class SchemaMirrorScript extends BundleScript {
         [jsonPath, json],
         [typescriptPath, typescript],
       ] as const) {
-        if (readFileSync(path, "utf8") !== expected) throw new Error(`${path} is stale — run \`bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror\``);
+        if (readFileSync(path, "utf8") !== expected) throw new Error(`${path} is stale — run \`repo run @semio-tech/framework-os-mcp-rs:schema-mirror\``);
       }
     } else {
       writeFileSync(jsonPath, json);
@@ -514,7 +515,7 @@ ${parsers.join("\n")}
 }
 
 const GENERATED_PRELUDE = `/** 🧬️ \`@generated\` — do NOT edit. Regenerate with
- * \`bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror\`, which runs \`semio-os-mcp schemas\`
+ * \`repo run @semio-tech/framework-os-mcp-rs:schema-mirror\`, which runs \`semio-os-mcp schemas\`
  * over \`🌉️mcp/🧬️schema/🦀️.rs\`'s \`schemas()\` — the single registry every \`os.mcp\` schema lives in.
  *
  * This file validates against the committed \`./🔣️.json\` with its own walker rather than an
@@ -611,7 +612,7 @@ function parseExport(exportId: string, value: unknown): unknown {
 `;
 
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("build", BuildScript)
   .register("build-release", BuildReleaseScript)
   .register("publish", PublishScript)

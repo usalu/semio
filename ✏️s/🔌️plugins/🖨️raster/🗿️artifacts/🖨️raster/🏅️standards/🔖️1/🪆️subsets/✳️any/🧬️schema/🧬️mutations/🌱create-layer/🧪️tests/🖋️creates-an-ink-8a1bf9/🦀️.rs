@@ -78,7 +78,7 @@ async fn declared_outcome_holds() {
     let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "create-layer/creates-an-ink-layer-inside-the-artwork-group declares an applied outcome");
     assert!(find_layer(&before().layers, "ink").is_none(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: the before-snapshot must not already carry the new id, or the duplicate-id fatal would fire");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: a fresh id under a real group raises no diagnostic, got {:?}", produced.messages());
     assert!(apply_raster_mutation(&before(), &mutation()).is_ok(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: declared applied but the mutation was rejected");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
 /// `layers.inserted` insertion carrying its own tree address, never a whole-snapshot capture.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &before());
     let encoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(produced.diff()));
     let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "create-layer/creates-an-ink-layer-inside-the-artwork-group: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: committed diff did not carry before to after");
 }
 

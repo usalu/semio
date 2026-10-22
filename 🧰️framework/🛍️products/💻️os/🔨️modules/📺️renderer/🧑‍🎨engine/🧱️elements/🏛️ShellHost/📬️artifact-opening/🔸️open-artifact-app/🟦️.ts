@@ -2,7 +2,7 @@
 import { createAdmittedShellInstanceV1, shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { runArtifactCreationReadyOpeningV1 } from "../../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, type ArtifactDialect, type Conflict } from "@semio-tech/framework";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { selectOpenConflicts } from "../../../🐚️Shell/🕹️shell-store/🟦️.ts";

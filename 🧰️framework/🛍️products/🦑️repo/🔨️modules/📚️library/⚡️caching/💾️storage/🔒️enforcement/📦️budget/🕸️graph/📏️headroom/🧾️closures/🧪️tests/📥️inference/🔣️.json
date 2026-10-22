@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "role": "inference",
+  "path": "inference/fixture/np/000000000000000000000000.json",
+  "cases": [
+    {
+      "id": "fixture-publication-roundtrip",
+      "mutation": "none",
+      "expectedCheck": null
+    },
+    {
+      "id": "missing-header-boundary",
+      "mutation": "remove-newline",
+      "expectedCheck": "header-boundary"
+    },
+    {
+      "id": "empty-header",
+      "mutation": "empty-header",
+      "expectedCheck": "header-boundary"
+    },
+    {
+      "id": "invalid-header-json",
+      "mutation": "header-json",
+      "expectedCheck": "header-json"
+    },
+    {
+      "id": "wrong-body-digest",
+      "mutation": "body-digest",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-observation-shape",
+      "mutation": "observations",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-block-shape",
+      "mutation": "blocks",
+      "expectedCheck": "header-authentication"
+    },
+    {
+      "id": "invalid-body-json-with-matching-digest",
+      "mutation": "body-json",
+      "expectedCheck": "body-json"
+    },
+    {
+      "id": "invalid-utf8",
+      "mutation": "utf8",
+      "expectedCheck": "utf8"
+    },
+    {
+      "id": "invalid-compressed-bytes",
+      "mutation": "compression",
+      "expectedCheck": "inflation"
+    },
+    {
+      "id": "malformed-closure-reference",
+      "mutation": "references",
+      "expectedCheck": "references"
+    }
+  ],
+  "compressedCases": [
+    {
+      "id": "inference-output-bound",
+      "kind": "inference",
+      "path": "inference/fixture/np/aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "precision-output-bound",
+      "kind": "precision",
+      "path": "inference/fixture/ip/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "cargo-receipt-output-bound",
+      "kind": "cargo-receipt",
+      "path": "inference/fixture/rr/cccccccccccccccccccccccc.json",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "generation-fragment-output-bound",
+      "kind": "generation-fragment",
+      "path": "generations/o/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd.json.br",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "generation-index-output-bound",
+      "kind": "generation-index",
+      "path": "generations/x/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.json.br",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "generation-frontier-output-bound",
+      "kind": "generation-frontier",
+      "path": "generations/f/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.json.br",
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "observation-output-bound",
+      "kind": "observation",
+      "path": "inference/fixture/ob/1111111111111111111111111111111111111111111111111111111111111111.br",
+      "maximumOutputBytes": 1
+    }
+  ],
+  "generationBasename": "packed-sha256",
+  "inflationCaps": [
+    {
+      "id": "fragment-exact",
+      "kind": "generation-fragment",
+      "remainingBytes": 67108864,
+      "maximumOutputBytes": 67108864
+    },
+    {
+      "id": "fragment-plus-one",
+      "kind": "generation-fragment",
+      "remainingBytes": 67108865,
+      "maximumOutputBytes": 67108864
+    },
+    {
+      "id": "fragment-proof-short",
+      "kind": "generation-fragment",
+      "remainingBytes": 1,
+      "maximumOutputBytes": 1
+    },
+    {
+      "id": "index-exact",
+      "kind": "generation-index",
+      "remainingBytes": 536870912,
+      "maximumOutputBytes": 536870912
+    },
+    {
+      "id": "index-plus-one",
+      "kind": "generation-index",
+      "remainingBytes": 536870913,
+      "maximumOutputBytes": 536870912
+    },
+    {
+      "id": "index-proof-short",
+      "kind": "generation-index",
+      "remainingBytes": 67108864,
+      "maximumOutputBytes": 67108864
+    },
+    {
+      "id": "frontier-plus-one",
+      "kind": "generation-frontier",
+      "remainingBytes": 536870913,
+      "maximumOutputBytes": 536870912
+    },
+    {
+      "id": "inference-plus-one",
+      "kind": "inference",
+      "remainingBytes": 268435457,
+      "maximumOutputBytes": 268435456
+    },
+    {
+      "id": "precision-plus-one",
+      "kind": "precision",
+      "remainingBytes": 268435457,
+      "maximumOutputBytes": 268435456
+    },
+    {
+      "id": "cargo-plus-one",
+      "kind": "cargo-receipt",
+      "remainingBytes": 268435457,
+      "maximumOutputBytes": 268435456
+    },
+    {
+      "id": "observation-plus-one",
+      "kind": "observation",
+      "remainingBytes": 268435457,
+      "maximumOutputBytes": 268435456
+    }
+  ]
+}

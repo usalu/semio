@@ -294,7 +294,7 @@ async fn a_height_edit_recomputes_the_plans_of_the_storeys_it_reaches_and_a_dens
     assert_eq!(first, untouched);
     assert_eq!(session.report().computed_by_kind.get("plan"), None, "a density edit recomputes no plan");
     let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).plan_linework.clone();
     assert!(close(recomputed["st-first"].cut_elevation - first["st-first"].cut_elevation, 0.4));
 }
@@ -336,7 +336,7 @@ fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let edit = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { cut_height: Some(Assigned::new(Some(0.5))), ..Default::default() }));
-    let edited = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&edit, &snapshot).expect("applies");
     let incremental = session.update(&edited, &edit).clone();
     let report = session.report().clone();
     assert!(!report.gated, "the diff touches the storeys the graph reads");
@@ -441,7 +441,7 @@ async fn a_ramp_edit_redraws_the_plan_of_its_storey_only() {
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();
     let wider = ModelDiff::ramps("r-straight", Entry::Patched(RampPatch { width: Some(2.0), ..Default::default() }));
-    let edited = protocol::apply_diff(&wider, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&wider, &snapshot).expect("applies");
     let incremental = session.update(&edited, &wider).plan_linework.clone();
     assert_eq!(session.report().computed_by_kind.get("plan"), Some(&1), "exactly the plan of the ramp's storey is redrawn: {:?}", session.report());
     assert_eq!(incremental["st-first"], first["st-first"], "the other storey keeps its sheet");

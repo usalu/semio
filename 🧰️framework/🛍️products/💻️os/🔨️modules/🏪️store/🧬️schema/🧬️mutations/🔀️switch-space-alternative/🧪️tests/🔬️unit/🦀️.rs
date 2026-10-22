@@ -9,8 +9,8 @@ fn metadata_and_target_subregion_are_leaf_owned() {
     assert_eq!(payload.target(), vec!["activeAlternativeId"]);
 }
 
-fn alternative(id: &str) -> super::super::super::SpaceAlternative {
-    super::super::super::SpaceAlternative { id: id.into(), name: id.into(), checkpoint_ids: Vec::new() }
+fn alternative(id: &str) -> crate::space_history_document::SpaceAlternative {
+    crate::space_history_document::SpaceAlternative { id: id.into(), name: id.into(), checkpoint_ids: Vec::new() }
 }
 
 /// ➕️ L3: switching to another and to the already active alternative sums to the negative diff.

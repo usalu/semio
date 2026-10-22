@@ -176,6 +176,11 @@ def simulate(initial, steps):
 def check(path):
     fixture = json.load(open(path, encoding="utf8"))
     bad = 0
+    for row in fixture["documentSizes"]:
+        size = len(canon(row["value"]).encode("utf8"))
+        if size != row["expandedBytes"] or (size > row["maximumBytes"]) != (row["refusal"] == "expanded"):
+            bad += 1
+            print("DIFF document bytes", row["name"])
     for scenario in fixture["scenarios"]:
         expected = simulate(scenario["initial"], scenario["steps"])
         for step, row in zip(scenario["steps"], expected):

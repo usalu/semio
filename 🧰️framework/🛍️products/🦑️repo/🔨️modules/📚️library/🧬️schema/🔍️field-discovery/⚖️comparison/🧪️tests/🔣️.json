@@ -1,0 +1,98 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "reference": [],
+   "candidate": [],
+   "missing": [],
+   "extra": []
+  },
+  {
+   "reference": [
+    "a",
+    "b"
+   ],
+   "candidate": [
+    "b",
+    "a"
+   ],
+   "missing": [],
+   "extra": []
+  },
+  {
+   "reference": [
+    "a",
+    "b",
+    "c"
+   ],
+   "candidate": [
+    "b"
+   ],
+   "missing": [
+    "a",
+    "c"
+   ],
+   "extra": []
+  },
+  {
+   "reference": [
+    "a"
+   ],
+   "candidate": [
+    "a",
+    "z",
+    "y"
+   ],
+   "missing": [],
+   "extra": [
+    "y",
+    "z"
+   ]
+  },
+  {
+   "reference": [
+    "b",
+    "a"
+   ],
+   "candidate": [
+    "c",
+    "d"
+   ],
+   "missing": [
+    "a",
+    "b"
+   ],
+   "extra": [
+    "c",
+    "d"
+   ]
+  },
+  {
+   "reference": [
+    "a",
+    "a"
+   ],
+   "candidate": [
+    "a"
+   ],
+   "missing": [],
+   "extra": []
+  },
+  {
+   "reference": [
+    "Z",
+    "a"
+   ],
+   "candidate": [
+    "z"
+   ],
+   "missing": [
+    "Z",
+    "a"
+   ],
+   "extra": [
+    "z"
+   ]
+  }
+ ]
+}

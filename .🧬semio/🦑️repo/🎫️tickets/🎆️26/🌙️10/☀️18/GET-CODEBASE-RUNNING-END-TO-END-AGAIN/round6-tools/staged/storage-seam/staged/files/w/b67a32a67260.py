@@ -1,4 +1,4 @@
-"""Independent oracle of the native storage backend selection: reads only the schema JSON and the language-agnostic rows, shares no code with the TypeScript implementation, prints one JSON object per row id -> chosen backend id or refusal key."""
+"""🧮️ Independent oracle of the native storage backend selection: reads only the schema JSON and the language-agnostic rows, shares no code with the TypeScript implementation, prints one JSON object per row id -> chosen backend id or refusal key."""
 import json, sys
 schema = json.load(open(sys.argv[1]))
 rows = json.load(open(sys.argv[2]))["rows"]

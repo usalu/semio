@@ -82,5 +82,50 @@
       "metadataBytes": 8,
       "childBytes": 471
     }
-  ]
+  ],
+  "childCustody": {
+    "storage": "stable-owned-allocation",
+    "rows": [
+      {
+        "event": "birth",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "metadataBytes": 33,
+        "childCopyBytes": 1024,
+        "copyBytes": 2097,
+        "capacityBytes": 1024,
+        "releaseBytes": 0
+      },
+      {
+        "event": "terminal-release",
+        "childBytes": 1024,
+        "pointerBytes": 8,
+        "metadataBytes": 33,
+        "childCopyBytes": 0,
+        "copyBytes": 49,
+        "capacityBytes": 0,
+        "releaseBytes": 1024
+      },
+      {
+        "event": "birth",
+        "childBytes": 0,
+        "pointerBytes": 8,
+        "metadataBytes": 33,
+        "childCopyBytes": 0,
+        "copyBytes": 49,
+        "capacityBytes": 0,
+        "releaseBytes": 0
+      },
+      {
+        "event": "terminal-release",
+        "childBytes": 0,
+        "pointerBytes": 8,
+        "metadataBytes": 33,
+        "childCopyBytes": 0,
+        "copyBytes": 49,
+        "capacityBytes": 0,
+        "releaseBytes": 0
+      }
+    ]
+  }
 }

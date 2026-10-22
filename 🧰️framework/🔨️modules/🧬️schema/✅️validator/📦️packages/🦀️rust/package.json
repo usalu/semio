@@ -6,7 +6,7 @@
     "./index": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-validator-rs:test"
+    "test": "repo run @semio-tech/schema-validator-rs:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

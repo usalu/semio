@@ -1,0 +1,124 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "nodes",
+  "marker"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "nodes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "kind"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "directory",
+       "file"
+      ]
+     },
+     "text": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "marker": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "expectedNames",
+    "files",
+    "trees",
+    "collect"
+   ],
+   "properties": {
+    "expectedNames": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "expected"
+      ],
+      "properties": {
+       "path": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "trees": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "expected"
+      ],
+      "properties": {
+       "path": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "collect": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "prefixes",
+       "expected"
+      ],
+      "properties": {
+       "prefixes": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "expected": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

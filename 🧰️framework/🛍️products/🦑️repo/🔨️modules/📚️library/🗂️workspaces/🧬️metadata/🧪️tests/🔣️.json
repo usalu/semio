@@ -1,0 +1,44 @@
+{
+ "version": 1,
+ "constants": {
+  "SEMIO_ROOT_DIR": ".🧬semio",
+  "REPO_META_DIR_NAME": "🦑️repo",
+  "HUB_DATA_DIR_NAME": "🌐hub",
+  "SPACE_DATA_DIR_NAME": "🔗space",
+  "MAP_CACHE_DIR_NAME": "🗺️map",
+  "TICKET_GENERATED_OUTPUT_DIRECTORY": "🗑️temp"
+ },
+ "roots": [
+  "/repo",
+  "/a b/c",
+  "rel/root"
+ ],
+ "semio": [
+  {
+   "root": "/repo",
+   "expected": "/repo/.🧬semio"
+  },
+  {
+   "root": "/a b/c",
+   "expected": "/a b/c/.🧬semio"
+  },
+  {
+   "root": "rel/root",
+   "expected": "rel/root/.🧬semio"
+  }
+ ],
+ "repo": [
+  {
+   "root": "/repo",
+   "expected": "/repo/.🧬semio/🦑️repo"
+  },
+  {
+   "root": "/a b/c",
+   "expected": "/a b/c/.🧬semio/🦑️repo"
+  },
+  {
+   "root": "rel/root",
+   "expected": "rel/root/.🧬semio/🦑️repo"
+  }
+ ]
+}

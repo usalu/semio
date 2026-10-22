@@ -1,7 +1,7 @@
 /** 🏗️ Canonical 🚪️source-admission source service. */
 import { resolve, relative, isAbsolute, join, sep, basename, parse } from "node:path";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
-import { execFileSync } from "node:child_process";
+
 import { type Stats, readdirSync, lstatSync } from "node:fs";
 import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { loadTaxonomy, TAXONOMY_RELATIVE_PATH } from "../../🔣️taxonomy/🟦️.ts";
@@ -10,6 +10,7 @@ import { type TaxonomySourceAdmission, taxonomyScopedGitPathspec, sourceAdmissio
 import { report, TaxonomyCancellationError, type TaxonomyProgress } from "../../🏃️operation/🟦️.ts";
 import { inScope, normalizeRelative } from "../../🛣️path/🟦️.ts";
 import { sha256, lstatOrNull, noFollowDirectoryChain, verifyNoFollowDirectoryChain, UnsafeDirectoryAncestorError } from "../../📁️input/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export interface TaxonomySourceInventoryOptions { readonly repoRoot: string; readonly scope?: string; readonly ticketDir?: string; readonly cancelFile?: string; readonly structuralDirectoryNames?: readonly string[]; readonly progress?: (progress: TaxonomyProgress) => void; readonly taxonomyPath?: string }
 
@@ -203,7 +204,7 @@ function sourceAdmissionIndexObservation(repoRoot: string): string | undefined {
 export function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec): SourceAdmissionIndexRows {
   const key = canonicalJson({ repoRoot, pathspec }), receipt = sourceAdmissionIndexObservation(repoRoot), cached = sourceAdmissionIndexObservations.get(key);
   if (receipt && cached?.receipt === receipt) return cached.rows;
-  const bytes = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  const bytes = runToolSyncV1("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { check: true, cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 }).stdout;
   const rows = sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
     const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
     const path = row.slice(tab + 1);
@@ -221,7 +222,7 @@ function sourceAdmissionUntrackedRows(repoRoot: string, pathspec: TaxonomyScoped
   const literal = (path: string): string => path.replace(/[\\*?\[\]#! ]/gu, "\\$&");
   const exclusions = [...taxonomy.exclusions.map((entry) => entry.path), ...repositoryFences].map((path) => `--exclude=/${literal(path)}`);
   const boundaries = repositoryFences.map((path) => `:(exclude,top,literal)${path}`);
-  const bytes = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec), ...boundaries], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  const bytes = runToolSyncV1("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec), ...boundaries], { check: true, cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 }).stdout;
   return sourceAdmissionGitRecords(bytes, "Git untracked output").map((record) => {
     const directoryMarker = record.endsWith("/"), path = directoryMarker ? record.slice(0, -1) : record;
     if (!sourceAdmissionSafePath(path)) throw new Error("Git untracked output has an invalid source path");

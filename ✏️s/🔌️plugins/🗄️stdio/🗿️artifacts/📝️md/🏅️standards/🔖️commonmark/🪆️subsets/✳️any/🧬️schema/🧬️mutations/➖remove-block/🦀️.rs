@@ -14,7 +14,16 @@ pub struct RemoveBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemoveBlock" };
 
-    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<MdSnapshot, MdMutation> for RemoveBlock {
+    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::ColdMutation<MdSnapshot>>::ReferenceDiff> {
         let Self { path, index } = self;
         protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Removed))
     }
@@ -24,12 +33,6 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for RemoveBlock {
             Some(block) => vec![MdMutation::InsertBlock(insert_block::InsertBlock { path: path.clone(), index: *index, block })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

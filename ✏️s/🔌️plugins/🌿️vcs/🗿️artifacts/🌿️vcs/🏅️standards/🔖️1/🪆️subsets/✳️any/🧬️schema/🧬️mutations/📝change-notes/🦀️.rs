@@ -23,6 +23,12 @@ pub fn change_notes(new_notes: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-notes", record: "ChangedVcsNotes" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change notes to \"{}\"", self.new_notes), &format!("Notizen auf \"{}\" ändern", self.new_notes))
+    }
+}
+
+impl protocol::ColdMutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
@@ -32,8 +38,5 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change notes to \"{}\"", self.new_notes), &format!("Notizen auf \"{}\" ändern", self.new_notes))
-    }
 }
 //#endregion 🔖️Mutation

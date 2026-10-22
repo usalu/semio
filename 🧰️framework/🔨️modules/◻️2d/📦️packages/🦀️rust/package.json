@@ -2,8 +2,8 @@
   "name": "semio-framework-2d",
   "private": true,
   "scripts": {
-    "test-compute": "bun --cwd \"../../../../..\" repo run semio-framework-2d:test-compute",
-    "test-compute-keys": "bun --cwd \"../../../../..\" repo run semio-framework-2d:test-compute-keys"
+    "test-compute": "repo run semio-framework-2d:test-compute",
+    "test-compute-keys": "repo run semio-framework-2d:test-compute-keys"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

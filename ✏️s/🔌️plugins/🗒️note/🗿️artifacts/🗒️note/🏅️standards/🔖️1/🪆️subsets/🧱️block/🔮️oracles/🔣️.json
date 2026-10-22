@@ -504,7 +504,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only creates-an-ink-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only creates-an-ink-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -571,7 +571,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only deletes-the-intro-text-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only deletes-the-intro-text-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -652,7 +652,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only deletes-the-ink-and-text-blocks",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only deletes-the-ink-and-text-blocks",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -719,7 +719,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only duplicates-the-ink-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only duplicates-the-ink-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -800,7 +800,7 @@
         "packageVersion": "0.6",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only duplicates-the-ink-and-text-blocks",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only duplicates-the-ink-and-text-blocks",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -853,7 +853,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only drags-the-callout-group-subtree",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only drags-the-callout-group-subtree",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -906,7 +906,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only moves-the-math-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only moves-the-math-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -959,7 +959,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only resizes-the-image-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only resizes-the-image-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1012,7 +1012,7 @@
         "packageVersion": "0.42",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42",
-        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only hides-the-intro-text-block",
+        "command": "repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only hides-the-intro-text-block",
         "seed": 0,
         "platform": "darwin-arm64"
       },

@@ -23,7 +23,7 @@ use semio_hub_state::HubState;
 use semio_hub_inference_runtime_contract::{GisMapApprovalIngressAuthorityV1, InferenceRouteErrorV1, UnavailableGisMapApprovalCommitterV1};
 use semio_hub_native_openable::NativeCodecProviderSetV1;
 use semio_framework_hash::Sha256;
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use std::net::SocketAddr;
 use semio_hub_ledgers::socket_grants::SocketBindingKeyV1;
 use semio_hub_runtime::startup::{StartupArtifactAuthority, StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, artifact_authority_closed_reason, configured_artifact_authority};

@@ -832,7 +832,7 @@
         "packageVersion": "0.13",
         "engineFamily": "gif",
         "engineVersion": "0.13",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -877,7 +877,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only no-mutation-no-op",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only no-mutation-no-op",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -927,7 +927,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-screen-size-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-screen-size-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -977,7 +977,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-global-color-table-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-global-color-table-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1027,7 +1027,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-background-color-index-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-background-color-index-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1077,7 +1077,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only insert-frame-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only insert-frame-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1127,7 +1127,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only remove-frame-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only remove-frame-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1177,7 +1177,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only move-frame-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only move-frame-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1227,7 +1227,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-geometry-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-geometry-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1277,7 +1277,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-pixels-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-pixels-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1327,7 +1327,7 @@
         "packageVersion": "0.13.3",
         "engineFamily": "gif",
         "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-interlace-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-interlace-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1381,7 +1381,7 @@
         "packageVersion": "6.1",
         "engineFamily": "giflib",
         "engineVersion": "6.1",
-        "command": "bun 📜️script.ts aspect",
+        "command": "repo 📜️script.ts aspect",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-screen-v1",
@@ -1430,7 +1430,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "gif-import"
       ],
@@ -1474,7 +1474,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "gif-project"
       ],
@@ -1523,7 +1523,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "gif-compare"
       ],
@@ -1691,7 +1691,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "gif-screen-project"
       ],
@@ -1754,7 +1754,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "gif-screen-compare"
       ],

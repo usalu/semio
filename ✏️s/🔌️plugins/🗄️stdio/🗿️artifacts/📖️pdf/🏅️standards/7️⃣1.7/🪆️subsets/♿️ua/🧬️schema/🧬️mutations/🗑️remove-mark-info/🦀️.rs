@@ -19,22 +19,26 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "mark-info", kind: "remove-mark-info", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "MarkInfo")))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::catalog_flag(base, "MarkInfo", "Marked").map(|marked| Op::from(SetMarkInfo { marked, entry_index: support::catalog_entry_position(base, "MarkInfo") })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA marked flag", "PDF/UA-Markierungskennung entfernen")
     }
 
     fn target(&self) -> Vec<String> {
         vec!["MarkInfo".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveMarkInfo
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveMarkInfo> + From<crate::standards::v1_7::subsets::ua::schema::mutations::set_mark_info::SetMarkInfo>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "MarkInfo")))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::catalog_flag(base, "MarkInfo", "Marked").map(|marked| Op::from(SetMarkInfo { marked, entry_index: support::catalog_entry_position(base, "MarkInfo") })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

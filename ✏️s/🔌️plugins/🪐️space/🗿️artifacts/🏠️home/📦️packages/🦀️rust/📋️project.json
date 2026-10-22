@@ -35,7 +35,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -43,7 +43,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -52,7 +52,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -62,7 +62,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify home-host-panel-owner",
+        "command": "repo ./📜️script.ts verify home-host-panel-owner",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -78,7 +78,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -96,7 +96,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -114,7 +114,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",
@@ -139,7 +139,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
-        "command": "bun ./📜️script.ts list-mutations",
+        "command": "repo ./📜️script.ts list-mutations",
         "forwardAllArgs": true
       }
     },
@@ -154,7 +154,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": false
       }
     },
@@ -164,7 +164,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": false
       }
     }

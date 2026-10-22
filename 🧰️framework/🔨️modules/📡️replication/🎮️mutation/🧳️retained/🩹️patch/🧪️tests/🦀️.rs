@@ -23,12 +23,12 @@ fn retained_row_patch_inverse_and_owned_exchange_match_neutral_sparse_fields(){
  for case in corpus.as_array().unwrap(){
   let mut original=source(row(&case["before"]));let mut authored=source(serde_json::from_value::<Patch>(case["patch"].clone()).unwrap());let mut inverse=inverse_fields::Fields::new(RetainedPatchSource::Inverse);let mut turns=0;
   loop{turns+=1;assert!(turns<1000);let quote=grant(inverse.demand(authored.borrow(),original.borrow(),4).unwrap());
-   let(step,heap)=observe(||inverse.advance(authored.borrow(),original.borrow(),RetainedCloneGrant::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());
-   let(step,heap)=observe(||inverse.advance(authored.borrow(),original.borrow(),quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){break;}
+   let(step,heap)=observe(||inverse.advance(authored.borrow(),original.borrow(),4,RetainedCloneGrant::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());
+   let(step,heap)=observe(||inverse.advance(authored.borrow(),original.borrow(),4,quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){break;}
   }
   let quote=grant(RetirementDemand{copy_bytes:std::mem::size_of::<Patch>()*2,depth:1,..Default::default()});let(mut undo,progress)=inverse.take(quote).unwrap();assert!(progress.fits(quote));assert_eq!(undo.as_ref().unwrap(),&serde_json::from_value::<Patch>(case["inverse"].clone()).unwrap());
   let mut authored_fields=inverse_fields::Fields::new(RetainedPatchSource::Authored);
-  loop{let quote=grant(authored_fields.demand(authored.borrow(),original.borrow(),4).unwrap());let(step,heap)=observe(||authored_fields.advance(authored.borrow(),original.borrow(),quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){break;}}
+  loop{let quote=grant(authored_fields.demand(authored.borrow(),original.borrow(),4).unwrap());let(step,heap)=observe(||authored_fields.advance(authored.borrow(),original.borrow(),4,quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){break;}}
   let(mut forward,receipt)=authored_fields.take(quote).unwrap();assert!(receipt.fits(quote));let mut forward=forward.take().unwrap();assert_eq!(forward,serde_json::from_value::<Patch>(case["patch"].clone()).unwrap());
   let mut post=row(&case["before"]);let pointer=post.untouched.as_ptr();let name=post.name.as_ptr();
   for field in 0..Patch::FIELD_COUNT{let quote=grant(forward.exchange_demand(field).unwrap());assert!(retained_mutation_demand_fits(forward.exchange_demand(field).unwrap(),quote));let(progress,heap)=observe(||forward.exchange_field(&mut post,field,semio_framework_mutation_diff::testing_apply_capability(),quote).unwrap());assert!(progress.fits(quote));assert_eq!(heap,(0,0));}
@@ -47,7 +47,7 @@ fn retained_row_patch_inverse_and_owned_exchange_match_neutral_sparse_fields(){
 fn retained_row_patch_inverse_cancellation_closes_every_original_field(){
  for cancel in 0..24{
   let mut original=source(Row{name:"original🧱".into(),value:1.,untouched:vec![]});let mut authored=source(Patch{name:Some("new".into()),value:Some(2.)});let mut inverse=inverse_fields::Fields::new(RetainedPatchSource::Inverse);
-  for _ in 0..cancel{let quote=grant(inverse.demand(authored.borrow(),original.borrow(),4).unwrap());if matches!(inverse.advance(authored.borrow(),original.borrow(),quote).unwrap(),RetainedCloneStep::Complete(_)){break;}}
+  for _ in 0..cancel{let quote=grant(inverse.demand(authored.borrow(),original.borrow(),4).unwrap());if matches!(inverse.advance(authored.borrow(),original.borrow(),4,quote).unwrap(),RetainedCloneStep::Complete(_)){break;}}
   close(&mut inverse);let(_,heap)=observe(||drop(inverse));assert_eq!(heap,(0,0));close_source(&mut authored);close_source(&mut original);
  }
 }
@@ -62,9 +62,9 @@ fn retained_row_patch_apply_preserves_portable_rows_and_every_cancelled_frontier
    let(mut apply,heap)=observe(||RetainedRowPatchApply::<Row,Patch>::new());assert_eq!(heap,(0,0));let mut turns=0;
    while !apply.staged()&&cut.is_none_or(|limit|turns<limit){
     let quote=grant(apply.stage_demand(authored.borrow(),original.borrow(),4).unwrap());
-    for denied in[RetainedCloneGrant{maximum_items:0,..quote},RetainedCloneGrant{maximum_copy_bytes:quote.maximum_copy_bytes.saturating_sub(1),..quote},RetainedCloneGrant{maximum_depth:0,..quote}]{let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
-    if quote.maximum_capacity_bytes>0{let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),RetainedCloneGrant{maximum_capacity_bytes:0,..quote}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
-    let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<1000);assert_eq!(post.name,case["before"]["name"].as_str().unwrap());assert_eq!(post.value,case["before"]["value"].as_f64().unwrap());
+    for denied in[RetainedCloneGrant{maximum_items:0,..quote},RetainedCloneGrant{maximum_copy_bytes:quote.maximum_copy_bytes.saturating_sub(1),..quote},RetainedCloneGrant{maximum_depth:0,..quote}]{let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),4,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
+    if quote.maximum_capacity_bytes>0{let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),4,RetainedCloneGrant{maximum_capacity_bytes:0,..quote}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
+    let(step,heap)=observe(||apply.stage(authored.borrow(),original.borrow(),4,quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<1000);assert_eq!(post.name,case["before"]["name"].as_str().unwrap());assert_eq!(post.value,case["before"]["value"].as_f64().unwrap());
    }
    while apply.staged()&&!apply.complete()&&cut.is_none_or(|limit|turns<limit){
     let quote=grant(apply.exchange_demand().unwrap());let before=(post.name.clone(),post.value);for denied in[RetainedCloneGrant{maximum_items:0,..quote},RetainedCloneGrant{maximum_copy_bytes:quote.maximum_copy_bytes.saturating_sub(1),..quote},RetainedCloneGrant{maximum_depth:0,..quote}]{let(step,heap)=observe(||apply.exchange(&mut post,semio_framework_mutation_diff::testing_apply_capability(),denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!((&post.name,post.value),(&before.0,before.1));}

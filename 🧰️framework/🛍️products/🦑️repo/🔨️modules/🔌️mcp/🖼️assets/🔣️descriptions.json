@@ -10,7 +10,6 @@
   ],
   "descriptions": {
     "arg_plan_id": {
-      "cursor": "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
       "copilot": "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
       "claude": "Set when a `.claude/plan/<id>.md` file exists and must be archived into the ticket on close.",
       "codex": "Set when a `.codex/memory/<repo>/<id>.md` file exists and must be archived into the ticket on close."

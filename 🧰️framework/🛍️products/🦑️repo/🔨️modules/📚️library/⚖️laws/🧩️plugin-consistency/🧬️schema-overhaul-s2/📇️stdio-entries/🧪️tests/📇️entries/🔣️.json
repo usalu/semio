@@ -1,0 +1,68 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "schema-owning-stdio-subsets-are-listed",
+   "rule": "policyListStdioSchemaOwningEntries",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️fem-2d/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️plain/🧬️schema/🔺️diff/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️bad/🏅️standards/std/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": []
+   },
+   "expect": [
+    {
+     "artRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi",
+     "artifactId": "avi",
+     "standardSlug": "1.0",
+     "subsetRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+     "subsetId": "*"
+    },
+    {
+     "artRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi",
+     "artifactId": "avi",
+     "standardSlug": "1.0",
+     "subsetRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️fem-2d",
+     "subsetId": "fem-2d"
+    },
+    {
+     "artRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️wav",
+     "artifactId": "wav",
+     "standardSlug": "riff-pcm",
+     "subsetRel": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+     "subsetId": "*"
+    }
+   ]
+  },
+  {
+   "id": "no-stdio-plugin-lists-nothing",
+   "rule": "policyListStdioSchemaOwningEntries",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "standard-key-plain",
+   "rule": "policyStdioStandardKey",
+   "args": [
+    "avi",
+    "1.0"
+   ],
+   "expect": "stdio/avi/standards#1.0"
+  },
+  {
+   "id": "standard-key-slug-with-hash-free-text",
+   "rule": "policyStdioStandardKey",
+   "args": [
+    "semio",
+    "v1"
+   ],
+   "expect": "stdio/semio/standards#v1"
+  }
+ ]
+}

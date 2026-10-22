@@ -2,9 +2,9 @@ use super::*;
 use crate::context::dispatch;
 use crate::context::fem3d_empty_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_os_command::SemanticMutation;
-use protocol::ColdMutation;
+
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::FromValue;
 #[cfg(test)] use semio_framework_plugin::component::ArtifactView;

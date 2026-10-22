@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-parameter-binding/retitles-the-caption-binding declares an applied outcome");
     let mut snapshot = before();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation()).expect("change-parameter-binding/retitles-the-caption-binding: declared applied but the mutation was rejected");
-    let produced = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &before());
+    let produced = <RewriteRuleMutation as protocol::ColdMutation<RewritingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-parameter-binding/retitles-the-caption-binding declares no diagnostics, but got {:?}", produced.messages());
     let semantics = <RewriteRuleMutation as protocol::SemanticMutation<RewritingSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "parameter-binding", "change-parameter-binding", "ChangedParameterBinding"), "the fixture must be bound to change-parameter-binding's own descriptor");
@@ -102,7 +102,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <RewriteRuleMutation as protocol::ColdMutation<RewritingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::diff::encode_rewriting_diff_json(outcome.diff()).expect("declared diff JSON encodes")).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-parameter-binding/retitles-the-caption-binding: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RewritingDiff = crate::standards::v1::subsets::any::io::text::diff::decode_rewriting_diff_json((*DIFF)).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-parameter-binding/retitles-the-caption-binding: committed diff did not carry before to after");
 }
 

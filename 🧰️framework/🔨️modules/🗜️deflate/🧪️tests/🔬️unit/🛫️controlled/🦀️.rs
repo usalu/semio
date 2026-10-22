@@ -2,6 +2,9 @@ use super::*;
 
 #[path="⚠️refusal/🦀️.rs"]
 mod refusal;
+static GATE:std::sync::Mutex<()>=std::sync::Mutex::new(());
+/// 🚧️ Serializes every test that deflates or measures the process-wide allocation observer.
+fn gate()->std::sync::MutexGuard<'static,()>{GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)}
 static DENY_ALLOCATION_SIZE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🛫️controlled/🔣️.json")).unwrap()}
@@ -15,6 +18,7 @@ fn samples()->Vec<Vec<u8>>{let f=fixture();let mut samples:Vec<_>=f["cases"].as_
 
 #[test]
 fn deflate_controlled_exact_stream_and_independent_zlib_oracles(){
+ let _gate=gate();
  use std::io::Write;use std::process::{Command,Stdio};
  let f=fixture();for raw in samples(){let mut control=Control::new(f["maximumBytes"].as_u64().unwrap() as usize);let stored=deflate_controlled(&raw,&mut control).unwrap();assert_eq!(stored,deflate(&raw));assert_eq!(btype_of(&stored),1);assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored,raw.len().max(1)).unwrap(),raw);
  let script="import{inflateRawSync}from'node:zlib';const input=new Uint8Array(await Bun.stdin.arrayBuffer());process.stdout.write(inflateRawSync(input));";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&stored).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));assert_eq!(result.stdout,raw);assert_eq!(control.events.last(),Some(&DeflateEncodeProgress{phase:DeflateEncodePhase::Finish,completed:stored.len(),total:stored.len()}));}
@@ -22,13 +26,15 @@ fn deflate_controlled_exact_stream_and_independent_zlib_oracles(){
 
 #[test]
 fn deflate_controlled_real_interior_phases_and_admission(){
+ let _gate=gate();
  let f=fixture();let raw=lcg_bytes(f["random"]["seed"].as_u64().unwrap(),f["random"]["length"].as_u64().unwrap() as usize);for phase in[DeflateEncodePhase::Initialize,DeflateEncodePhase::ScanInput,DeflateEncodePhase::MatchSearch,DeflateEncodePhase::WriteOutput]{let mut control=Control::new(f["maximumBytes"].as_u64().unwrap() as usize);control.cancel=Some(phase);control.cancel_at=f["cancelAt"].as_u64().unwrap() as usize;let error=deflate_controlled(&raw,&mut control).unwrap_err();assert!(error.message.contains("canceled"),"phase {phase:?}: {error}");let event=control.events.last().unwrap();assert_eq!(event.phase,phase);assert!(event.completed>=control.cancel_at);if phase==DeflateEncodePhase::ScanInput{assert_eq!(event.total,raw.len());}}
  let mut denied=Control::new(f["deniedBytes"].as_u64().unwrap() as usize);assert!(deflate_controlled(&raw,&mut denied).unwrap_err().message.contains("admission"));assert_eq!(denied.owned,0);
  let mut success=Control::new(f["maximumBytes"].as_u64().unwrap() as usize);deflate_controlled(&raw,&mut success).unwrap();let mut exact=Control::new(success.owned);deflate_controlled(&raw,&mut exact).unwrap();let mut short=Control::new(success.owned-1);assert!(deflate_controlled(&raw,&mut short).is_err());
 }
 
 #[test]
-fn deflate_controlled_fixed_huffman_capacity_proof(){let lit=fixed_literal_length_lengths();let dist=fixed_distance_lengths();for length in MIN_MATCH..=MAX_MATCH{let index=length_index_for(length as u16);for distance in 1..=WINDOW_SIZE{let di=distance_index_for(distance as u32);assert!((lit[257+index]+LENGTH_EXTRA[index]+dist[di]+DIST_EXTRA[di]) as usize<=9*length);}}for raw in samples(){let output=deflate(&raw);assert!(output.len()<=(9*raw.len()+17)/8);}}
+fn deflate_controlled_fixed_huffman_capacity_proof(){
+ let _gate=gate();let lit=fixed_literal_length_lengths();let dist=fixed_distance_lengths();for length in MIN_MATCH..=MAX_MATCH{let index=length_index_for(length as u16);for distance in 1..=WINDOW_SIZE{let di=distance_index_for(distance as u32);assert!((lit[257+index]+LENGTH_EXTRA[index]+dist[di]+DIST_EXTRA[di]) as usize<=9*length);}}for raw in samples(){let output=deflate(&raw);assert!(output.len()<=(9*raw.len()+17)/8);}}
 
 struct ObservedAllocator;
 thread_local! { static BACKING: std::cell::Cell<(bool, usize, usize)> = const { std::cell::Cell::new((false, 0, 0)) }; }
@@ -52,6 +58,7 @@ fn observe_allocation(bytes:usize){if OBSERVE_ALLOCATIONS.load(std::sync::atomic
 static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
 #[test]
 fn deflate_controlled_actual_allocation_observes_refusal_before_large_buffers(){
+ let _gate=gate();
  let f=fixture();let raw=lcg_bytes(f["random"]["seed"].as_u64().unwrap(),f["random"]["length"].as_u64().unwrap() as usize);
  for canceled in[false,true]{let mut control=Control::new(if canceled{f["maximumBytes"].as_u64().unwrap() as usize}else{f["deniedBytes"].as_u64().unwrap() as usize});if canceled{control.cancel=Some(DeflateEncodePhase::Initialize);control.cancel_at=f["cancelAt"].as_u64().unwrap() as usize;}
  LARGEST_ALLOCATION.store(0,std::sync::atomic::Ordering::Relaxed);OBSERVE_ALLOCATIONS.store(true,std::sync::atomic::Ordering::Relaxed);let result=deflate_controlled(&raw,&mut control);OBSERVE_ALLOCATIONS.store(false,std::sync::atomic::Ordering::Relaxed);
@@ -60,6 +67,7 @@ fn deflate_controlled_actual_allocation_observes_refusal_before_large_buffers(){
 
 #[test]
 fn deflate_controlled_output_phase_refusal_precedes_output_reservation(){
+ let _gate=gate();
  let f=fixture();let raw=lcg_bytes(f["random"]["seed"].as_u64().unwrap(),f["random"]["length"].as_u64().unwrap() as usize);let mut control=Control::new(f["maximumBytes"].as_u64().unwrap() as usize);control.cancel=Some(DeflateEncodePhase::WriteOutput);control.cancel_at=0;
  WATCHED_SIZE.store((9*raw.len()+17)/8,std::sync::atomic::Ordering::Relaxed);WATCHED_ALLOCATIONS.store(0,std::sync::atomic::Ordering::Relaxed);OBSERVE_ALLOCATIONS.store(true,std::sync::atomic::Ordering::Relaxed);let result=deflate_controlled(&raw,&mut control);OBSERVE_ALLOCATIONS.store(false,std::sync::atomic::Ordering::Relaxed);
  assert!(result.unwrap_err().message.contains("canceled"));assert_eq!(WATCHED_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed),0);assert_eq!(control.events.last().unwrap().phase,DeflateEncodePhase::WriteOutput);assert_eq!(control.events.last().unwrap().completed,0);

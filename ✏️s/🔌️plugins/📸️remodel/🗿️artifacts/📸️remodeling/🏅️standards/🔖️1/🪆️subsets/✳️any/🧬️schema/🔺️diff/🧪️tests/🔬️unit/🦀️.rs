@@ -27,7 +27,7 @@ fn frame(index: u32) -> FrameRef {
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
     let scene = default_remodeling_scene();
-    assert_eq!(protocol::apply_diff(&RemodelingDiff::default(), &scene).expect("valid identity diff"), scene);
+    assert_eq!(protocol::apply_diff_cold(&RemodelingDiff::default(), &scene).expect("valid identity diff"), scene);
 
     let mut diff = RemodelingDiff::default();
     diff.absorb(RemodelingDiff::gcp_rows(Vec::new()));
@@ -43,7 +43,7 @@ async fn rows_apply_at_their_ordered_position() {
     let mut diff = RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: stream("c") }]);
     diff.absorb(RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: stream("a") }]));
     diff.absorb(sync("d", 5.0));
-    let next = protocol::apply_diff(&diff, &base).expect("diff applies");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
     assert_eq!(next.streams.iter().map(|stream| stream.id.as_str()).collect::<Vec<_>>(), vec!["a", "b", "c", "d"]);
     assert_eq!(next.streams[3].sync_offset_ms, 5.0);
 }
@@ -60,7 +60,7 @@ async fn malformed_rows_are_rejected() {
         frames("b", vec![frame(9)], Vec::new()),
         RemodelingDiff::content_rows(vec![RemodelingContentRow::Truncate { id: "ghost".into(), from: 0 }]),
     ] {
-        assert!(protocol::apply_diff(&diff, &base).is_err(), "{diff:?} must be rejected");
+        assert!(protocol::apply_diff_cold(&diff, &base).is_err(), "{diff:?} must be rejected");
     }
 }
 
@@ -108,9 +108,9 @@ async fn absorb_equals_sequential_application() {
         RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: stream("a") }]),
     ];
     for d1 in &firsts {
-        let mid = protocol::apply_diff(d1, &base).expect("first diff applies");
+        let mid = protocol::apply_diff_cold(d1, &base).expect("first diff applies");
         for d2 in &seconds {
-            if protocol::apply_diff(d2, &mid).is_ok() {
+            if protocol::apply_diff_cold(d2, &mid).is_ok() {
                 assert_mutation_diff_absorb_law(&base, d1.clone(), d2.clone()).await;
             }
         }

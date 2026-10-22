@@ -14,18 +14,21 @@ pub struct SetHasHeader {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "has-header", kind: "set-has-header", record: "SetHasHeader" };
 
-    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
-        let Self { has_header } = self;
-        protocol::MutationOutcome::new(CsvDiff { has_header: Some(*has_header), records: None })
-    }
-    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
-        Ok(vec![CsvMutation::SetHasHeader(SetHasHeader { has_header: base.has_header })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::ColdMutation<CsvSnapshot>>::ReferenceDiff> {
+        let Self { has_header } = self;
+        protocol::MutationOutcome::new(CsvDiff { has_header: Some(*has_header), records: None })
+    }
+    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+        Ok(vec![CsvMutation::SetHasHeader(SetHasHeader { has_header: base.has_header })])
     }
 }
 //#endregion 🔖️Payload

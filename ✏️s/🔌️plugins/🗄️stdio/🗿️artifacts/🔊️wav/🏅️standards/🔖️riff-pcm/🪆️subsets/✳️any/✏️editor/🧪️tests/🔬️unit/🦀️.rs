@@ -88,7 +88,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
     assert_eq!(next.data, WavData::Pcm8(vec![1, 2]));
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("data discriminator edit emits");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("data discriminator edit must emit one mutation") };
-    let published = protocol::apply_diff(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("data discriminator mutation applies");
+    let published = protocol::apply_diff_cold(<WavMutation as protocol::ColdMutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("data discriminator mutation applies");
     assert_eq!(published.data, WavData::Pcm8(vec![1, 2]));
     let native = crate::standards::riff_pcm::subsets::any::io::encode_wav(&published);
     let reopened = crate::standards::riff_pcm::subsets::any::io::decode_wav(&native).expect("edited WAV reopens");
@@ -138,7 +138,7 @@ async fn sample_edit_patch_data_replays_and_inverts_without_losing_siblings() {
     let mut replayed = base.clone();
     crate::apply_mutation(&mut replayed, &decoded);
     assert_eq!(replayed, next);
-    for inverse in <WavMutation as protocol::Mutation<WavSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture") {
+    for inverse in <WavMutation as protocol::ColdMutation<WavSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture") {
         crate::apply_mutation(&mut replayed, &inverse);
     }
     assert_eq!(replayed, base);

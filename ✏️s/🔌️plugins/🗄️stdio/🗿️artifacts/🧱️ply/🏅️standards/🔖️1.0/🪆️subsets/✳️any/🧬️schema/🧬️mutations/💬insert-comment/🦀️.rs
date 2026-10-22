@@ -14,7 +14,16 @@ pub struct InsertComment {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "comment", kind: "insert-comment", record: "InsertComment" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PlySnapshot, PlyMutation> for InsertComment {
+    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::ColdMutation<PlySnapshot>>::ReferenceDiff> {
         let Self { index, comment } = self;
         protocol::MutationOutcome::new(diff_insert_comment((*index).min(base.comments.len()), comment.clone()))
     }
@@ -26,12 +35,6 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertComment {
                 vec![PlyMutation::RemoveComment(remove_comment::RemoveComment { index: at })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

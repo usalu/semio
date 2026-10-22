@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -33,7 +33,7 @@ fn mutation() -> SemioGraphMutation {
 async fn deletes_the_sink_node_and_severs_the_edge_that_referenced_it() {
     let base = before();
     assert!(base.edges.iter().any(|edge| edge.target.value == "b"), "the fixture needs an edge INTO the deleted node for the cascade to mean anything");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: applied state differs from the committed after-snapshot");
     assert!(!produced.nodes.iter().any(|node| node.id.value == "b"), "the named node must be gone");
     assert!(produced.edges.is_empty(), "the only edge referenced the deleted node, so it must have been severed");
@@ -51,9 +51,9 @@ async fn the_undo_recreates_the_node_then_every_severed_edge_in_place() {
     assert_eq!(undo.len(), 2, "one create-node plus one create-edge for the single severed edge");
     assert!(matches!(&undo[1], SemioGraphMutation::CreateNode(node) if node.at.is_some()), "rows are stored reversed: the node row comes last and is replayed first, at its index — create-edge rejects an unknown endpoint");
     assert!(matches!(&undo[0], SemioGraphMutation::CreateEdge(edge) if edge.at.is_some()), "the severed edge row is replayed after its endpoint exists again, at its index");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-node applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-node applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: the undo did not restore the before-snapshot");
 }
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_including_the_cascade_note() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -109,6 +109,6 @@ async fn committed_diff_is_canonical_and_carries_both_slots() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-node diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed diff did not carry before to after");
 }

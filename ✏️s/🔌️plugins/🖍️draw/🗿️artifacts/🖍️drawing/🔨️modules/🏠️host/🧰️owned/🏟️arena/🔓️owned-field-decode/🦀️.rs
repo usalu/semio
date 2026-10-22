@@ -5,10 +5,10 @@ use super::*;
 pub const DRAWING_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🏭️ Framework-owned retirement issuer for decoded Drawing snapshots.
-pub type DrawingSnapshotRetirementFactory = semio_framework_value::retirement::OwnedValueRetirementFactory<DrawingSnapshot>;
+pub type DrawingSnapshotRetirementFactory = semio_framework_value::OwnedValueRetirementFactory<DrawingSnapshot>;
 
 /// 🏭️ Framework-owned retirement issuer for decoded Drawing mutations.
-pub type DrawingMutationRetirementFactory = semio_framework_value::retirement::OwnedValueRetirementFactory<DrawingMutation>;
+pub type DrawingMutationRetirementFactory = semio_framework_value::OwnedValueRetirementFactory<DrawingMutation>;
 
 fn decode_drawing_snapshot_pack(bytes: &[u8]) -> Result<DrawingSnapshot, ()> {
     <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())

@@ -123,25 +123,9 @@ pub struct SemioValueTreeDiff {
     pub nodes: Option<NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>>,
 }
 
-impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
-    fn apply(&self, base: &SemioValueSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioValueSnapshot> {
-        let mut next = base.clone();
-        if let Some(diff) = &self.root {
-            validate_value_diff(diff, &base.root, vec!["root".to_string()])?;
-            next.root = apply_value_diff(diff, &base.root);
-        }
-        if let Some(diff) = &self.nodes {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
-            validate_added_positions(diff.added.iter().map(|added| added.index), base.nodes.len() - diff.removed.len(), ["nodes"])?;
-            for modified in &diff.modified {
-                let node = base.nodes.iter().find(|node| node.id == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-node", format!("node {:?} is absent", modified.key)).at(["nodes"]))?;
-                validate_value_diff(&modified.diff, &node.value, vec!["nodes".to_string(), format!("{:?}", modified.key)])?;
-            }
-            next.nodes = apply_nodes_diff(diff, &base.nodes);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {}
 
+impl protocol::ColdMutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
     /// ➕️ Structural, total, base-free, sequential-coalesce absorb — same shape `json`'s `JsonDiff`
     /// uses: a composed diff that ends up structurally empty (e.g. an insert immediately cancelled
     /// by a matching remove) collapses back to `None` rather than surviving as a no-op wrapper.
@@ -173,17 +157,39 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
             }
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioValueSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(diff) = &self.root {
+            validate_value_diff(diff, &base.root, vec!["root".to_string()])?;
+            next.root = apply_value_diff(diff, &base.root);
+        }
+        if let Some(diff) = &self.nodes {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
+            validate_added_positions(diff.added.iter().map(|added| added.index), base.nodes.len() - diff.removed.len(), ["nodes"])?;
+            for modified in &diff.modified {
+                let node = base.nodes.iter().find(|node| node.id == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-node", format!("node {:?} is absent", modified.key)).at(["nodes"]))?;
+                validate_value_diff(&modified.diff, &node.value, vec!["nodes".to_string(), format!("{:?}", modified.key)])?;
+            }
+            next.nodes = apply_nodes_diff(diff, &base.nodes);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
+    fn is_empty(&self) -> bool {
+        self.root.is_none() && self.nodes.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
     /// 🔁️ Concrete negative diff: the root restores the base node (kind-stable scalars restore their base value, lists and maps
     /// restore row by row with the base positions), the graph restores row by row.
     fn inverse(&self, base: &SemioValueSnapshot) -> Self {
         SemioValueTreeDiff { root: self.root.as_ref().map(|diff| inverse_value_diff(diff, &base.root)), nodes: self.nodes.as_ref().map(|diff| inverse_nodes_diff(diff, &base.nodes)) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.root.is_none() && self.nodes.is_none()
     }
 }
 

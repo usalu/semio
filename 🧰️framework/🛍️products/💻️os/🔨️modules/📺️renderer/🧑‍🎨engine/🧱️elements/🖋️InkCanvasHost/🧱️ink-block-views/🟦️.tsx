@@ -1,5 +1,5 @@
 /** 🧱️ InkCanvasHost block views: the math renderer port with its KaTeX default and the text, table, image, math and stroke block views. */
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { cn, useLabel } from "@semio-tech/ui-react";
 import type { InkBounds, InkCamera, InkImageAsset, InkItem, InkResizeHandle, InkTextItem, InkTextRun } from "../🧾️ink-model/🟦️.ts";
 import { inkItemBounds, inkPositiveMod, worldToScreen } from "../📐️ink-geometry/🟦️.ts";

@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "tags": [
+  "🐙️ueli🎆️26🌙️10☀️21🚩️",
+  "plain",
+  "it's quoted",
+  "a b",
+  "x$(y)`z`",
+  "",
+  "'",
+  "\\ back"
+ ],
+ "cases": [
+  {
+   "tagName": "🐙️ueli🎆️26🌙️10☀️21🚩️",
+   "wipSha": "abc1234",
+   "expected": "```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/compose-commit-message'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD && git reset --soft abc1234 && git commit -S -F '.git/compose-commit-message' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "🐙️ueli🎆️26🌙️10☀️21🚩️",
+   "wipSha": "abc1234",
+   "messageFile": ".git/my message.txt",
+   "expected": "```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/my message.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD && git reset --soft abc1234 && git commit -S -F '.git/my message.txt' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "🐙️ueli🎆️26🌙️10☀️21🚩️",
+   "wipSha": "abc1234",
+   "messageFile": "it's.txt",
+   "expected": "```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m '🐙️ueli🎆️26🌙️10☀️21🚩️' '🐙️ueli🎆️26🌙️10☀️21🚩️' HEAD && git reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "plain",
+   "wipSha": "abc1234",
+   "expected": "```\ngit tag -s -m 'plain' 'plain' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/compose-commit-message'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'plain' 'plain' HEAD && git reset --soft abc1234 && git commit -S -F '.git/compose-commit-message' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "plain",
+   "wipSha": "abc1234",
+   "messageFile": ".git/my message.txt",
+   "expected": "```\ngit tag -s -m 'plain' 'plain' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/my message.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'plain' 'plain' HEAD && git reset --soft abc1234 && git commit -S -F '.git/my message.txt' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "plain",
+   "wipSha": "abc1234",
+   "messageFile": "it's.txt",
+   "expected": "```\ngit tag -s -m 'plain' 'plain' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'plain' 'plain' HEAD && git reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "it's quoted",
+   "wipSha": "abc1234",
+   "expected": "```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/compose-commit-message'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD && git reset --soft abc1234 && git commit -S -F '.git/compose-commit-message' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "it's quoted",
+   "wipSha": "abc1234",
+   "messageFile": ".git/my message.txt",
+   "expected": "```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F '.git/my message.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD && git reset --soft abc1234 && git commit -S -F '.git/my message.txt' && git push --follow-tags\n```\n"
+  },
+  {
+   "tagName": "it's quoted",
+   "wipSha": "abc1234",
+   "messageFile": "it's.txt",
+   "expected": "```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD\n```\n\n```\ngit reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt'\n```\n\n```\ngit push --follow-tags\n```\n\n```\ngit tag -s -m 'it'\"'\"'s quoted' 'it'\"'\"'s quoted' HEAD && git reset --soft abc1234 && git commit -S -F 'it'\"'\"'s.txt' && git push --follow-tags\n```\n"
+  }
+ ],
+ "reply": {
+  "tagName": "  🐙️ueli🎆️26🌙️10☀️21🚩️ ",
+  "wipSha": "f00",
+  "commitMessage": "line one\nline two\n\n",
+  "messageFile": "m.txt"
+ }
+}

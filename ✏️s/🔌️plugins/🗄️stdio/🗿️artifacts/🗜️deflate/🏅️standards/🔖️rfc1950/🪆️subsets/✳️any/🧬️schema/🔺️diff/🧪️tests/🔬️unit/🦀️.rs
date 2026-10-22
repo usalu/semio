@@ -5,7 +5,7 @@ use crate::standards::v_rfc1950::subsets::any::schema::diff::*;
 use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary, DeflateMutation};
 use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
 use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-use protocol::{DiffBinary,DiffCodec,DiffText, Mutation};
+use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation};
 
 //#region Fixtures
 /// 🌱 A real RFC1950 zlib stream (CMF=0x78 CINFO=7/CM=8, FLG=0x9c FLEVEL=Default/FDICT=0,
@@ -40,7 +40,7 @@ async fn mutation_diff_law_every_variant() {
         let returned = apply_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
-        assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
     }
 }
 //#endregion mutation_diff_law
@@ -63,8 +63,8 @@ async fn inverse_law_mutation_and_diff_level() {
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
         let d = m.diff(&base);
-        let applied = protocol::apply_diff(d.diff(), &base).unwrap();
-        let undone = protocol::apply_diff(&d.diff().inverse(&base), &applied).unwrap();
+        let applied = protocol::apply_diff_cold(d.diff(), &base).unwrap();
+        let undone = protocol::apply_diff_cold(&d.diff().inverse(&base), &applied).unwrap();
         assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
     }
 }
@@ -82,8 +82,8 @@ async fn absorb_law_scalar_lww_and_associativity() {
     let d2 = diff_set_payload(b"absorbed-payload".to_vec());
     let mut absorbed = d1.clone();
     absorbed.absorb(d2.clone());
-    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
-    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), sequential);
+    let sequential = protocol::apply_diff_cold(&d2, &protocol::apply_diff_cold(&d1, &base).unwrap()).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &base).unwrap(), sequential);
     assert_eq!(absorbed.compression_method, Some(8));
     assert_eq!(absorbed.payload, Some(b"absorbed-payload".to_vec()));
 
@@ -92,7 +92,7 @@ async fn absorb_law_scalar_lww_and_associativity() {
     let mut lww = d3.clone();
     lww.absorb(d4.clone());
     assert_eq!(lww.payload, Some(b"second".to_vec()));
-    assert_eq!(protocol::apply_diff(&lww, &base).unwrap(), protocol::apply_diff(&d4, &protocol::apply_diff(&d3, &base).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff_cold(&lww, &base).unwrap(), protocol::apply_diff_cold(&d4, &protocol::apply_diff_cold(&d3, &base).unwrap()).unwrap());
 
     let da = diff_set_compression_params(9, 6, DeflateLevelHint::Maximum);
     let db = diff_set_preset_dictionary(Some(11));
@@ -108,7 +108,7 @@ async fn absorb_law_scalar_lww_and_associativity() {
     right.absorb(right_tail);
 
     assert_eq!(left, right);
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&dc, &protocol::apply_diff(&db, &protocol::apply_diff(&da, &base).unwrap()).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), protocol::apply_diff_cold(&dc, &protocol::apply_diff_cold(&db, &protocol::apply_diff_cold(&da, &base).unwrap()).unwrap()).unwrap());
 }
 //#endregion between_roundtrip_law
 

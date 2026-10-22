@@ -14,6 +14,15 @@ pub struct SetFileDescription {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-description", kind: "set-file-description", record: "SetFileDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepMutation> for SetFileDescription {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { file_description } = self;
         protocol::MutationOutcome::new(StepDiff { file_description: (base.header.file_description != *file_description).then(|| file_description.clone()), ..Default::default() })
@@ -22,12 +31,6 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileDescription {
         Ok({
             vec![StepMutation::SetFileDescription(SetFileDescription { file_description: base.header.file_description.clone() })]
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

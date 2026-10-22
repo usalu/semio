@@ -123,6 +123,7 @@ use semio_framework_os_spr::ArtifactId;
 
 #[cfg(any(test, feature = "testing"))]
 pub mod fixtures {
+use super::*;
 //#region 🔖️Fixtures
 /// 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
 /// Each fixture drives inbound events at a document actor and asserts the resulting `ArtifactEvent`

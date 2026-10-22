@@ -1,223 +1,234 @@
 // #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/📌️ChromePanels/component.tsx
-/** 🖼️ `📌️ChromePanels` — the framework-owned panel tabs of the OS shell's chrome. This file keeps the
- * Settings panel tab that assembles the tab trees, the named-layout host hook, the chat and task manager
- * panel tabs and the small standalone route-not-found and plugin-recovery affordances. The Display panel
- * (`🖥️display-panel`), the Settings tab trees (`⚙️settings-general`, `🎨️settings-theme`,
- * `⌨️settings-keybindings`, `📱️settings-defaults-and-conflicts`), the Marketplace panel
- * (`🏪️marketplace-panel`) and the panel ids (`🆔️panel-ids`) live in the child folders beside it.
- * Each panel's `*HostApi` type is the read/write surface `ShellHost` implements to drive it.
+// 🎨️ framework/products/os/modules/renderer/engine/elements/🔎️ShellSearch/component.tsx
+/** 🔎️ `🔎️ShellSearch` — the OS shell's two fuzzy-search command surfaces: `UISearch` (the global
+ * command palette over an arbitrary `UISearchItem[]`) and `UIFind`/`UIFindProvider` (an in-document
+ * find-in-content surface a window registers `UIFindItem[]` into via `useUIFind`). Both share one
+ * owned fuzzy-ranked grouped-results layout on top of `CommandDialog`.
  */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, type IconName, type PanelTabBranch, type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
-import { type NamedLayout, type WindowLayout } from "@semio-tech/framework";
-import { defaultAppsSettingsTabLabel, shellLabel, shellTabIcon } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { FRAMEWORK_CHAT_PANEL_ID, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_THEME_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID } from "./🆔️panel-ids/🟦️.ts";
-import type { DisplayHostApi } from "./🖥️display-panel/🟦️.tsx";
-import { buildSettingsGeneralTree, type SettingsHostApi } from "./⚙️settings-general/🟦️.tsx";
-import { buildSettingsThemeTree } from "./🎨️settings-theme/🟦️.tsx";
-import { buildSettingsKeybindingsTree } from "./⌨️settings-keybindings/🟦️.tsx";
-import { buildConflictsTree, buildSettingsDefaultAppsTree, type ConflictsHostApi, type DefaultAppsHostApi } from "./📱️settings-defaults-and-conflicts/🟦️.tsx";
-
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "../⚛️react-port/🟦️.ts";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, rankFuzzyItems, useLabel, useShellScopeOptional, type FuzzySearchResult } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-//#region 🔖️os-chrome-panels
-//#region SettingsPanel
-export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null, getConflictsHost?: () => ConflictsHostApi | null): PanelTabBranch {
-  const children: PanelTabNode[] = [
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
-      icon: shellTabIcon("framework.settings.general"),
-      name: shellLabel("ui.settings.tab.general"),
-      order: 0,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-        },
-      },
-    }),
-    ...(getHost()?.locks.themeId
-      ? []
-      : [
-          singleTreeLeaf({
-            id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
-            icon: shellTabIcon("paintbrush"),
-            name: shellLabel("ui.settings.tab.theme"),
-            order: 1,
-            tree: {
-              resolveTree: () => {
-                const host = getHost();
-                return host ? buildSettingsThemeTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-              },
-            },
-          }),
-        ]),
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
-      icon: shellTabIcon("keyboard"),
-      name: shellLabel("ui.settings.tab.keybindings"),
-      order: 2,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildSettingsKeybindingsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-        },
-      },
-    }),
-    ...(getDefaultAppsHost
-      ? [
-          singleTreeLeaf({
-            id: FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID,
-            icon: shellTabIcon("app-window"),
-            name: defaultAppsSettingsTabLabel(getDefaultAppsHost?.()?.locale ?? "en"),
-            order: 3,
-            tree: {
-              resolveTree: () => {
-                const host = getDefaultAppsHost();
-                return host ? buildSettingsDefaultAppsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-              },
-            },
-          }),
-        ]
-      : []),
-    ...(getConflictsHost
-      ? [
-          singleTreeLeaf({
-            id: FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID,
-            icon: shellTabIcon("triangle-alert"),
-            name: shellLabel("ui.conflict.panel"),
-            order: 4,
-            tree: {
-              resolveTree: () => {
-                const host = getConflictsHost();
-                return host ? buildConflictsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-              },
-            },
-          }),
-        ]
-      : []),
-  ];
-  return {
-    kind: "branch",
-    id: FRAMEWORK_SETTINGS_PANEL_ID,
-    icon: shellTabIcon("settings"),
-    name: shellLabel("ui.panelToggle.settings"),
-    order: 0,
-    children,
-  };
-}
 
-/** 🗂️ The Display host's layouts: the app's built-in ones and the user's own, which are a projection of the user's
- * `setNamedLayout` preference events — saving and deleting commit one such event (`onSaveUserLayout` /
- * `onDeleteUserLayout`), so a saved layout follows the user to every device like any other shared preference. */
-export function useNamedLayoutHost(options: {
-  readonly appId: string;
-  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly iconId: IconName; readonly surfaceKind?: string }[];
-  readonly builtinLayouts: readonly NamedLayout[];
-  readonly userLayouts: readonly NamedLayout[];
-  readonly currentLayout: WindowLayout | undefined;
-  readonly onApplyLayout: (layout: WindowLayout) => void;
-  readonly onSaveUserLayout: (layoutId: string, label: string, layout: WindowLayout) => void;
-  readonly onDeleteUserLayout: (layoutId: string) => void;
-}): DisplayHostApi {
-  const [layoutSaveLabel, setLayoutSaveLabel] = useState("");
-  return useMemo(
-    (): DisplayHostApi => ({
-      windowKinds: options.windowKinds,
-      namedLayouts: options.builtinLayouts,
-      userLayouts: options.userLayouts,
-      saveCurrentLayout: (label) => {
-        if (!options.currentLayout) return;
-        options.onSaveUserLayout(`user-${Date.now()}`, label, options.currentLayout);
-      },
-      applyNamedLayout: (layoutId) => {
-        const layout = [...options.builtinLayouts, ...options.userLayouts].find((entry) => entry.id === layoutId);
-        if (layout) options.onApplyLayout(layout.layout);
-      },
-      deleteUserLayout: (layoutId) => options.onDeleteUserLayout(layoutId),
-      layoutSaveLabel,
-      setLayoutSaveLabel,
-    }),
-    [options, layoutSaveLabel],
-  );
-}
+//#region 🔖️ui-search-find
 
-//#endregion SettingsPanel
-//#region MarketplacePanel
-/** 🧭️ Canvas fallback when studio history resolves to an unknown route. */
-export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string; readonly onHome: () => void }) {
-  return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-double p-double" role="alert" data-shell-route-not-found={path}>
-      <p className="text-sm text-muted-foreground">{shellLabel("ui.common.routeNotFound", { path })}</p>
-      <Button icon="home" text={shellLabel("ui.common.home")} onClick={onHome} />
-    </div>
-  );
-}
+//#region UISearch
+export type UISearchItem = {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly icon?: ReactNode;
+  readonly category?: string;
+  readonly onSelect: () => void;
+};
 
-/** 🩺️ Plugin crash/quarantine recovery affordances — mirrors `ui_wgpu::ui_recovery_panel`. */
-export function PluginRecoveryPanel({
-  pluginId,
-  quarantined,
-  onRestart,
-  onDisable,
+export function UISearch({
+  items,
+  open,
+  onOpenChange,
+  placeholder,
+  emptyMessage,
 }: {
-  readonly pluginId: string;
-  readonly quarantined: boolean;
-  readonly onRestart: () => void;
-  readonly onDisable: () => void;
+  readonly items: readonly UISearchItem[];
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly placeholder?: string;
+  readonly emptyMessage?: string;
 }) {
-  const message = quarantined ? shellLabel("ui.plugins.recovery.quarantined") : shellLabel("ui.plugins.recovery.crashed");
+  const scope = useShellScopeOptional();
+  const title = useLabel("ui.search.title");
+  const description = useLabel("ui.search.description");
+  const localizedPlaceholder = useLabel("ui.search.placeholder");
+  const localizedEmpty = useLabel("ui.search.empty");
+  const [query, setQuery] = useState("");
+  const results = useMemo(
+    () =>
+      rankFuzzyItems(items, query, {
+        fields: [
+          { read: (item) => item.label, weight: 2 },
+          { read: (item) => item.description, weight: 1 },
+          { read: (item) => item.category, weight: 0.5 },
+        ],
+        threshold: 0.4,
+        limit: 20,
+      }),
+    [items, query],
+  );
+  const grouped = useMemo(() => {
+    const groups: Record<string, FuzzySearchResult<UISearchItem>[]> = {};
+    for (const result of results) {
+      const category = result.item.category || "";
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(result);
+    }
+    return groups;
+  }, [results]);
+  const handleSelect = useCallback(
+    (item: UISearchItem) => {
+      onOpenChange(false);
+      setQuery("");
+      item.onSelect();
+    },
+    [onOpenChange],
+  );
+
   return (
-    <div className="flex h-full min-h-0 flex-col gap-double p-double" data-plugin-recovery={pluginId}>
-      <p className="text-sm font-medium">{shellLabel("ui.plugins.recovery.title")}</p>
-      <p className="text-sm text-muted-foreground">{message}</p>
-      <div className="flex flex-wrap gap-single">
-        <Button icon="rotate-ccw" text={shellLabel("ui.plugins.recovery.restartApp")} onClick={onRestart} />
-        <Button icon="eye-off" text={shellLabel("ui.plugins.recovery.disablePlugin")} onClick={onDisable} />
-      </div>
-    </div>
+    <CommandDialog title={title} description={description} isolationRoot={scope && !scope.ownsPage ? scope.rootRef.current : undefined} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id={scope ? `${scope.shellId}.ui.search.input` : "ui.search.input"} placeholder={placeholder ?? localizedPlaceholder} value={query} onValueChange={setQuery} />
+      <CommandList>
+        <CommandEmpty>{emptyMessage ?? localizedEmpty}</CommandEmpty>
+        {Object.entries(grouped).map(([category, categoryResults]) => (
+          <CommandGroup key={category || "__default"} heading={category || undefined}>
+            {categoryResults.map((result, idx) => (
+              <CommandItem key={`${result.item.id}-${idx}`} data-command-item-id={result.item.id} value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()} onSelect={() => handleSelect(result.item)}>
+                <div className="flex items-center gap-single">
+                  {result.item.icon}
+                  <div className="flex flex-col">
+                    <span>{result.item.label}</span>
+                    {result.item.description ? <span className="text-xs text-muted-foreground">{result.item.description}</span> : null}
+                  </div>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </CommandDialog>
   );
 }
+//#endregion UISearch
 
-export function createFrameworkChatPanelTab(renderPanel: () => ReactElement): PanelTabNode {
-  return singleTreeLeaf({
-    id: FRAMEWORK_CHAT_PANEL_ID,
-    icon: shellTabIcon("message-square"),
-    name: shellLabel("ui.panelToggle.chat"),
-    order: 100,
-    tree: {
-      resolveTree: () => ({
-        sections: [],
-        emptyState: renderPanel(),
-        className: "min-h-0 min-w-0 w-full",
-        sortableSections: false,
-      }),
-    },
-  });
+//#region UIFind
+export type UIFindItem = {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly category?: string;
+};
+
+export type UIFindContextValue = {
+  readonly findItems: readonly UIFindItem[];
+  readonly setFindItems: (items: readonly UIFindItem[]) => void;
+  readonly setOnFindItem: (callback: ((itemId: string) => void) | undefined) => void;
+  readonly triggerFindItem: (itemId: string) => void;
+};
+
+const UIFindContext = createContext<UIFindContextValue | null>(null);
+
+function areFindItemsShallowEqual(previousItems: readonly UIFindItem[], nextItems: readonly UIFindItem[]): boolean {
+  if (previousItems === nextItems) return true;
+  if (previousItems.length !== nextItems.length) return false;
+  for (let index = 0; index < nextItems.length; index += 1) {
+    const previous = previousItems[index];
+    const next = nextItems[index];
+    if (!previous || !next || previous.id !== next.id || previous.label !== next.label || previous.description !== next.description || previous.category !== next.category) {
+      return false;
+    }
+  }
+  return true;
 }
 
-/** 🧵️ The `os.task-manager` window: one row per actor with suspend/resume/cancel. Built exactly like
- * the chat leaf above (an `emptyState`-hosted panel inside a `singleTreeLeaf`) so it docks, drags,
- * folds and reaches the mobile stack with every other chrome tab rather than inventing a second
- * window system. */
-export function createFrameworkTaskManagerPanelTab(renderPanel: () => ReactElement): PanelTabNode {
-  return singleTreeLeaf({
-    id: FRAMEWORK_TASK_MANAGER_PANEL_ID,
-    icon: shellTabIcon("cpu"),
-    name: shellLabel("ui.panelToggle.taskManager"),
-    order: 2,
-    tree: {
-      resolveTree: () => ({
-        sections: [],
-        emptyState: renderPanel(),
-        className: "min-h-0 min-w-0 w-full",
-        sortableSections: false,
-      }),
-    },
-  });
+export function UIFindProvider({ children }: { readonly children: ReactNode }) {
+  const [findItems, setFindItemsState] = useState<readonly UIFindItem[]>([]);
+  const onFindItemCallbackRef = useRef<((itemId: string) => void) | undefined>(undefined);
+  const setFindItems = useCallback((items: readonly UIFindItem[]) => {
+    setFindItemsState((previousItems) => (areFindItemsShallowEqual(previousItems, items) ? previousItems : items));
+  }, []);
+  const setOnFindItem = useCallback((callback: ((itemId: string) => void) | undefined) => {
+    onFindItemCallbackRef.current = callback;
+  }, []);
+  const triggerFindItem = useCallback((itemId: string) => {
+    onFindItemCallbackRef.current?.(itemId);
+  }, []);
+  const contextValue = useMemo(() => ({ findItems, setFindItems, setOnFindItem, triggerFindItem }), [findItems, setFindItems, setOnFindItem, triggerFindItem]);
+  return <UIFindContext.Provider value={contextValue}>{children}</UIFindContext.Provider>;
 }
-//#endregion MarketplacePanel
-//#endregion 🔖️os-chrome-panels
+
+export function useUIFind(): UIFindContextValue {
+  const context = useContext(UIFindContext);
+  if (!context) throw new Error("useUIFind must be used within UIFindProvider");
+  return context;
+}
+
+export function useUIFindSafe(): UIFindContextValue | null {
+  return useContext(UIFindContext);
+}
+
+export function UIFind({
+  open,
+  onOpenChange,
+  placeholder,
+  emptyMessage,
+}: {
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly placeholder?: string;
+  readonly emptyMessage?: string;
+}) {
+  const scope = useShellScopeOptional();
+  const title = useLabel("ui.find.title");
+  const description = useLabel("ui.find.description");
+  const localizedPlaceholder = useLabel("ui.find.placeholder");
+  const localizedEmpty = useLabel("ui.find.empty");
+  const [query, setQuery] = useState("");
+  const findContext = useContext(UIFindContext);
+  const findItems = findContext?.findItems ?? [];
+  const triggerFindItem = findContext?.triggerFindItem;
+  const results = useMemo(
+    () =>
+      rankFuzzyItems(findItems, query, {
+        fields: [
+          { read: (item) => item.label, weight: 2 },
+          { read: (item) => item.description, weight: 1 },
+          { read: (item) => item.category, weight: 0.5 },
+        ],
+        threshold: 0.4,
+        limit: 20,
+      }),
+    [findItems, query],
+  );
+  const grouped = useMemo(() => {
+    const groups: Record<string, FuzzySearchResult<UIFindItem>[]> = {};
+    for (const result of results) {
+      const category = result.item.category || "";
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(result);
+    }
+    return groups;
+  }, [results]);
+  const handleSelect = useCallback(
+    (item: UIFindItem) => {
+      onOpenChange(false);
+      setQuery("");
+      triggerFindItem?.(item.id);
+    },
+    [onOpenChange, triggerFindItem],
+  );
+
+  if (!findContext) return null;
+
+  return (
+    <CommandDialog title={title} description={description} isolationRoot={scope && !scope.ownsPage ? scope.rootRef.current : undefined} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id={scope ? `${scope.shellId}.ui.find.input` : "ui.find.input"} placeholder={placeholder ?? localizedPlaceholder} value={query} onValueChange={setQuery} />
+      <CommandList>
+        <CommandEmpty>{emptyMessage ?? localizedEmpty}</CommandEmpty>
+        {Object.entries(grouped).map(([category, categoryResults]) => (
+          <CommandGroup key={category || "__default"} heading={category || undefined}>
+            {categoryResults.map((result, idx) => (
+              <CommandItem key={`${result.item.id}-${idx}`} value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()} onSelect={() => handleSelect(result.item)}>
+                <div className="flex flex-col">
+                  <span>{result.item.label}</span>
+                  {result.item.description ? <span className="text-xs text-muted-foreground">{result.item.description}</span> : null}
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </CommandDialog>
+  );
+}
+//#endregion UIFind
+//#endregion 🔖️ui-search-find

@@ -15,7 +15,7 @@ pub use set_page_size::{CONFORMANT_HEIGHT, CONFORMANT_WIDTH};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
-#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.x")]
+#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.x", reference = PdfSnapshot, reference_diff = PdfDiff)]
 pub enum PdfX1Mutation {
     SetPageSize(SetPageSize),
     CollapsePageSize(CollapsePageSize),

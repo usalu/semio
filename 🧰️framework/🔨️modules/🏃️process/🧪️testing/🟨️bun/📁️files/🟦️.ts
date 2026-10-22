@@ -9,6 +9,8 @@ import type{ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import { runtimeSupportsV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeTestArgumentsV1 } from "../../../../⚙️runtime/🚀️process/🟦️.ts";
 const contract=structuredClone(schema);
 
 /** 🧮️ Bounds actual file concurrency and both per-child and complete-cohort output. */
@@ -31,7 +33,7 @@ export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<reado
   const invocation=options.invocation,control=options.control;requireIssuedResourceControlInvocationV1(control,invocation);
   const onFileResult=options.onFileResult;if(typeof onFileResult!=="function")throw Error("Actual owned Bun terminal result sink required");
   const policy=readOwnedBunFilesPolicyV1(options.policy),selection=Object.freeze({version:1,cwd:options.cwd,files:Object.freeze([...options.files]),arguments:Object.freeze([...options.arguments])}),environment=Object.freeze({...options.environment});
-  if(validateJsonSchemaSubset(contract.definitions.Selection,selection,contract).length||!process.versions.bun||!isAbsolute(selection.cwd)||[selection.cwd,...selection.files].some(path=>path.length>contract.definitions.Protocol.const.maximumPathCodeUnits||path.includes("\0")))throw Error("Explicit finite owned Bun file selection required");
+  if(validateJsonSchemaSubset(contract.definitions.Selection,selection,contract).length||!runtimeSupportsV1("test")||!isAbsolute(selection.cwd)||[selection.cwd,...selection.files].some(path=>path.length>contract.definitions.Protocol.const.maximumPathCodeUnits||path.includes("\0")))throw Error("Explicit finite owned Bun file selection required");
   const cwd=resolve(selection.cwd),files=selection.files.map(file=>{const local=relative(cwd,file);if(!isAbsolute(file)||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bun file must belong to the actual working directory");return resolve(file);});
   if(new Set(files).size!==files.length)throw Error("Unique actual Bun files required");
   return withIssuedResourceOperationV1(control,async()=>{
@@ -39,7 +41,7 @@ export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<reado
    const cancellation=new AbortController();return withRequestedIssuedResourceControlV1(control,0,async phase=>{
     const results=new Array<OwnedBunFileResultV1>(files.length),started=performance.now();let next=0,total=0,failed=false,failure:unknown;
     const worker=async()=>{while(!failed&&next<files.length){const index=next++,file=files[index];try{if(file===undefined)throw Error("Exact admitted Bun file required");
-     checkResourceLeaseControl(phase);const capture=await captureOwnedCommandResultV1(process.execPath,["test",file,...selection.arguments],cwd,{control:phase,env:scriptInvocationEnvironment(invocation,environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines}});
+     checkResourceLeaseControl(phase);const capture=await captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file]),...selection.arguments],cwd,{control:phase,env:scriptInvocationEnvironment(invocation,environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines}});
      total+=Buffer.byteLength(capture.stdout)+Buffer.byteLength(capture.stderr);if(total>policy.maximumTotalOutputBytes)throw Error("Owned Bun cohort output limit exceeded");const result=Object.freeze({file,capture});results[index]=result;
      await withRequestedIssuedResourceControlV1(phase,0,actual=>onFileResult(result,index,actual));
      await phase.publish({resource:"bun:test:file:"+index,mode:"shared",elapsedMs:performance.now()-started});await phase.yieldContinuation();checkResourceLeaseControl(phase);

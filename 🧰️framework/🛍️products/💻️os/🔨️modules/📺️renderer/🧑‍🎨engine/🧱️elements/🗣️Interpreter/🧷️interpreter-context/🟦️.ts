@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { createContext, useContext } from "react";
+import { createContext, useContext } from "../../⚛️react-port/🟦️.ts";
 import { type LocalDocumentOwnerV1 } from "../🧭️local-document-owner/🟦️.ts";
 import { type InputOutcomeV1, type ShellInputActionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { type UiLabel, type UiTranslationKey } from "@semio-tech/ui-react";

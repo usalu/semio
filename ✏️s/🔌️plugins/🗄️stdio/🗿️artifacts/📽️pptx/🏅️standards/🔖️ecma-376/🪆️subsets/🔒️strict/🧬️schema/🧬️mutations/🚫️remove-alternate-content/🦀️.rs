@@ -15,19 +15,20 @@ pub struct RemoveAlternateContent {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "alternate-content", kind: "remove-alternate-content", record: "RemoveAlternateContent" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-        protocol::MutationOutcome::new(diff_remove_alternate_content(base, &self.path, self.index))
-    }
-
-    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(remove_alternate_content_inverse(base, &self.path, self.index))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove alternate content", "Alternativen Inhalt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<PptxSnapshot, PptxStrictMutation> for RemoveAlternateContent {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_remove_alternate_content(base, &self.path, self.index))
+    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(remove_alternate_content_inverse(base, &self.path, self.index))
     }
 }
 //#endregion 🔖️Payload

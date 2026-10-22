@@ -5,7 +5,7 @@ use semio_framework_pixels::png_encoding::PngEncodeJob;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::RasterImageAsset;
 use semio_s_artifact_raster_raster_editor::commands::flatten_layers::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[test]
 fn flatten_preserves_the_composite_and_restores_every_original_layer() {
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/🥞️flatten-layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

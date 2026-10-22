@@ -7,13 +7,13 @@ async function warnWhenHubIsUnreachable(): Promise<void> {
   try {
     const response = await fetch(`${hubUrl}/admin/api/overview`, { signal: AbortSignal.timeout(2_000) });
     if (response.ok) {
-      console.log(`[admin] hub reachable at ${hubUrl}; use bun repo run os-hub:dev-secure-admin for authenticated administration`);
+      console.log(`[admin] hub reachable at ${hubUrl}; use repo run os-hub:dev-secure-admin for authenticated administration`);
       return;
     }
-    console.warn(`[admin] hub at ${hubUrl} answered ${response.status}; use bun repo run os-hub:dev-secure-admin for the authenticated relay.`);
+    console.warn(`[admin] hub at ${hubUrl} answered ${response.status}; use repo run os-hub:dev-secure-admin for the authenticated relay.`);
   } catch {
     console.warn(`[admin] no hub reachable at ${hubUrl}; this Vite surface is static-only and has no administrator credential.`);
-    console.warn(`[admin] start the protected surface with: bun repo run os-hub:dev-secure-admin`);
+    console.warn(`[admin] start the protected surface with: repo run os-hub:dev-secure-admin`);
   }
 }
 

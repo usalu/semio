@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "../../⚛️react-port/🟦️.ts";
 import {
   ContextMenuController,
   VirtualFileSystem,

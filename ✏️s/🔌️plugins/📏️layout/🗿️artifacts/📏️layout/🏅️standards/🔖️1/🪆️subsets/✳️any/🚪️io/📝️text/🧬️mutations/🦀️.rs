@@ -51,10 +51,10 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bridge_step(snapshot: &LayoutSnapshot, mutation: &LayoutMutation) -> Result<(LayoutSnapshot, Vec<String>), String> {
-    use protocol::Mutation;
-    let outcome = <LayoutMutation as Mutation<LayoutSnapshot>>::diff(mutation, snapshot);
+    use protocol::{ColdMutation, Mutation};
+    let outcome = <LayoutMutation as ColdMutation<LayoutSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }
@@ -109,10 +109,10 @@ pub fn apply_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 /// state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <LayoutMutation as Mutation<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
+    for undo in <LayoutMutation as ColdMutation<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);

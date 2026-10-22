@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "expectedNode": "24.15.0",
+  "command": [
+    "--tool=nx",
+    "--lang=en",
+    "capacity",
+    "run",
+    "--memory=256",
+    "--cpu=1",
+    "--",
+    "node",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/e2e-generation-pack-probe.mjs",
+    "/Users/ueli/Documents/semio"
+  ],
+  "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+  "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🔣️.json",
+  "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+      "sha256": "74e917c7530f019e4a49a22f610989a8c341e4e78e996970b0e65c3fe2ee0d1b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🟨️.mjs",
+      "sha256": "3bb9984791ce7bac1c0f6ceebaf9ee999b82e7cd45bce8ffacbf0fb9bb026ed0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🔣️.json",
+      "sha256": "919d5306f673311a205ef4e93685e4b8c7cb583f6df805fc20630a9aa4ee7ccf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+      "sha256": "cc5d059714e6e172714daf3f517d60193310d05a4bc2c15abc6f125001190f63"
+    }
+  ],
+  "scope": {
+    "artifact": "🗑️generated/e2e-lock-24430-after-developer-freeze-check.json",
+    "selected": 349,
+    "diagnostic": 26,
+    "ownTicketSelected": false
+  },
+  "qualification": "Isolated pure helper; no publication/store/Original/worker call; not registered Source0 acceptance",
+  "execution": {
+    "whole": 0,
+    "log": "🗑️generated/e2e-generation-pack-probe-gp2.log",
+    "route": "explicit --tool=nx --lang=en",
+    "capacity": {
+      "requestedMemoryMiB": 256,
+      "requestedCpu": 1,
+      "observedAdmittedJobs": 1,
+      "observedReservedMiB": 256
+    },
+    "nodePin": {
+      "version": 1,
+      "phase": "public-node-pin",
+      "actual": "24.15.0",
+      "status": "passed"
+    },
+    "fixtureCases": 10,
+    "invalidLimits": 7,
+    "sqlite": "3.53.4",
+    "status": "isolated-helper-passed",
+    "source0": "Eleven Bun law bodies and whole remain required"
+  },
+  "previousExecution": {
+    "whole": 1,
+    "log": "🗑️generated/e2e-generation-pack-probe-gp1.log",
+    "primary": "unknown flag: --memory=256",
+    "capacityGranted": false,
+    "nodePinObserved": false,
+    "helperBodies": 0,
+    "status": "blocked-before-public-node",
+    "retry": "None; no raw Node/private executable/tool setup/ambient fallback"
+  }
+}

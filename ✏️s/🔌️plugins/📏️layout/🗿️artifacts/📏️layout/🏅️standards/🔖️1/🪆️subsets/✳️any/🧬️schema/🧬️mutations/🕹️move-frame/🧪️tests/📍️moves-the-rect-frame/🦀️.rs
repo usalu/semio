@@ -10,7 +10,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/➡️after/🔣️.json"));
@@ -29,7 +29,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-frame applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("move-frame applies to its committed before-snapshot")
 }
 
 /// ▶️ `move-frame` writes `bounds.x`/`bounds.y`; width, height and rotation are untouched.
@@ -60,7 +60,7 @@ async fn inverse_moves_the_rect_frame_back() {
     }
     let mut snapshot = applied();
     for step in inverse.iter().rev() {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("move-frame/moves-the-rect-frame: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("move-frame/moves-the-rect-frame: inverse step applies");
     }
     assert_eq!(snapshot, base, "move-frame/moves-the-rect-frame: inverse did not restore the before-snapshot");
 }
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-frame/moves-the-rect-frame: committed diff did not carry before to after");
 }
 

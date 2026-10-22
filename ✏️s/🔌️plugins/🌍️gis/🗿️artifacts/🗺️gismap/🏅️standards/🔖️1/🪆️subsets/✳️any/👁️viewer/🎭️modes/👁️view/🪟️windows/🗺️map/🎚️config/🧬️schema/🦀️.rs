@@ -56,22 +56,30 @@ pub struct GisMapViewerWindowConfigDiff {
     pub camera: Option<GisMapViewerCamera>,
 }
 
-impl protocol::MutationDiff<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
-    fn apply(&self, base: &GisMapViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisMapViewerWindowConfig> {
-        Ok(GisMapViewerWindowConfig { camera: self.camera.unwrap_or(base.camera) })
-    }
+impl protocol::MutationDiff<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut GisMapViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = GisMapViewerWindowConfig { camera: self.camera.unwrap_or(base.camera) };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
-    fn inverse(&self, base: &GisMapViewerWindowConfig) -> Self {
-        Self { camera: self.camera.map(|_| base.camera) }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
+    fn inverse(&self, base: &GisMapViewerWindowConfig) -> Self {
+        Self { camera: self.camera.map(|_| base.camera) }
     }
 }

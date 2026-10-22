@@ -8,7 +8,44 @@ hub = sys.argv[1]
 HD = hubdir(hub) if hub != "umbrella" else byname["semio-framework"]
 HP = C[HD]["name"]
 MAN = json.load(open(OUT + "/manifests.json"))
+byname_dir = {c["name"]: d for d, c in C.items()}
 cl = classify(hub)
+HFEAT = MAN[HD]["features"]
+KEY2PKG = {x["key"]: x["pkg"] for x in MAN[HD]["deps"]}
+
+
+def feat_map(features):
+    out, seen = {}, set()
+
+    def go(f):
+        if f in seen:
+            return None
+        seen.add(f)
+        if f not in HFEAT:
+            return f"unknown hub feature {f}"
+        for e in HFEAT[f]:
+            if e.startswith("dep:"):
+                if e[4:] not in KEY2PKG:
+                    return f"external dependency {e[4:]}"
+                out.setdefault(KEY2PKG[e[4:]], set())
+            elif "/" in e:
+                k, sub = e.split("/", 1)
+                k = k.rstrip("?")
+                if k not in KEY2PKG or not KEY2PKG[k].startswith("semio-"):
+                    return f"external feature {e}"
+                out.setdefault(KEY2PKG[k], set()).add(sub)
+            else:
+                r = go(e)
+                if r:
+                    return r
+        return None
+
+    for f in features:
+        r = go(f)
+        if r:
+            return None, r
+    return out, None
+
 def sha(b): return hashlib.sha256(b).hexdigest()
 out, rej = [], collections.Counter()
 for d, c in sorted(cl.items()):
@@ -18,7 +55,9 @@ for d, c in sorted(cl.items()):
     keys = sorted({x["key"] for x in MAN[d]["deps"] if x["pkg"] == HP and x["kind"] in ("normal", "build", "dev")})
     new, err = text, None
     for k in keys:
-        new, err = plan_manifest(new, k, [], [], lambda p: False, lambda p: "", set(), set())
+        hn = {x["pkg"] for x in MAN[d]["deps"] if x["kind"] in ("normal", "build")}
+        hd = {x["pkg"] for x in MAN[d]["deps"] if x["kind"] == "dev"}
+        new, err = plan_manifest(new, k, [], [], lambda p: False, lambda p, d=d: os.path.relpath(os.path.join(ROOT, byname_dir[p]), os.path.join(ROOT, d)).replace(os.sep, "/"), hn, hd, feat_map)
         if err: break
     if err or not keys:
         rej[err or "no key"] += 1; continue

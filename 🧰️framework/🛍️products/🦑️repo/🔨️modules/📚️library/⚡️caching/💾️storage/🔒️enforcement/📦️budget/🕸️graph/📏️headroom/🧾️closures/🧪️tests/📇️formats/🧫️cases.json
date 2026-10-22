@@ -1,0 +1,445 @@
+{
+  "version": 1,
+  "precision": {
+    "version": 1,
+    "tsconfig": "tsconfig.json",
+    "compiler": "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "chain": [],
+    "facts": [],
+    "files": {}
+  },
+  "cargo": {
+    "version": 1,
+    "crate": "crate",
+    "b": {
+      "id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "root": "crate",
+      "reads": [
+        {
+          "path": "crate/Cargo.toml",
+          "sha": null
+        }
+      ],
+      "own": {
+        "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": true
+      },
+      "fixed": null,
+      "children": []
+    }
+  },
+  "cases": [
+    {
+      "id": "np-header",
+      "scope": "canonical",
+      "directory": "np",
+      "format": "inference",
+      "kind": "inference",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "top-header",
+      "scope": "canonical",
+      "directory": "top",
+      "format": "inference",
+      "kind": "inference",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "canonical-precision",
+      "scope": "canonical",
+      "directory": "ip",
+      "format": "precision",
+      "kind": "precision",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "selected-precision",
+      "scope": "selection",
+      "directory": "ip",
+      "format": "precision",
+      "kind": "precision",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "dataset-precision",
+      "scope": "dataset",
+      "directory": "ip",
+      "format": "precision",
+      "kind": "precision",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "canonical-cargo",
+      "scope": "canonical",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "selected-cargo",
+      "scope": "selection",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "dataset-cargo",
+      "scope": "dataset",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "precision-extra",
+      "scope": "canonical",
+      "directory": "ip",
+      "format": "precision",
+      "kind": "precision",
+      "fault": "extra",
+      "accepted": false
+    },
+    {
+      "id": "cargo-seal",
+      "scope": "canonical",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "seal",
+      "accepted": false
+    },
+    {
+      "id": "cargo-filename",
+      "scope": "canonical",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "filename",
+      "accepted": false
+    },
+    {
+      "id": "np-requires-header",
+      "scope": "canonical",
+      "directory": "np",
+      "format": "precision",
+      "kind": "inference",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "id": "inference-body-hash",
+      "scope": "canonical",
+      "directory": "np",
+      "format": "inference",
+      "kind": "inference",
+      "fault": "body-hash",
+      "accepted": false
+    },
+    {
+      "id": "cargo-cannot-use-inference-role",
+      "scope": "canonical",
+      "directory": "rr",
+      "format": "cargo",
+      "kind": "cargo-receipt",
+      "fault": "kind",
+      "accepted": false
+    },
+    {
+      "id": "precision-cannot-use-inference-role",
+      "scope": "canonical",
+      "directory": "ip",
+      "format": "precision",
+      "kind": "precision",
+      "fault": "kind",
+      "accepted": false
+    }
+  ],
+  "memberAdmission": [
+    {
+      "kind": "inference",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": true
+    },
+    {
+      "kind": "precision",
+      "group": "ip",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": true
+    },
+    {
+      "kind": "cargo-receipt",
+      "group": "rr",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": true
+    },
+    {
+      "kind": "observation",
+      "group": "np",
+      "leaf": "ob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.br",
+      "accepted": true
+    },
+    {
+      "kind": "pack",
+      "group": "mr",
+      "leaf": "0-0-aaaaaaaaaaaaaaaa.pack",
+      "accepted": true
+    },
+    {
+      "kind": "index",
+      "group": "mr",
+      "leaf": "0-0-aaaaaaaaaaaaaaaa.idx",
+      "accepted": true
+    },
+    {
+      "kind": "source",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "lock",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "authority",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "receipt",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "publication",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "retired",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    },
+    {
+      "kind": "unknown",
+      "group": "np",
+      "leaf": "aaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "accepted": false
+    }
+  ],
+  "coordinates": [
+    {
+      "path": "",
+      "result": "none"
+    },
+    {
+      "path": "inference/np",
+      "result": "candidate"
+    },
+    {
+      "path": "inference/ip",
+      "result": "candidate"
+    },
+    {
+      "path": "build-input-closures",
+      "result": "none"
+    },
+    {
+      "path": "../inference/ip",
+      "result": "refused"
+    },
+    {
+      "path": "inference/contexts/bad/ip",
+      "result": "none"
+    },
+    {
+      "path": "inference/../ip",
+      "result": "refused"
+    },
+    {
+      "path": "inference//np",
+      "result": "refused"
+    }
+  ],
+  "snapshotGraph": {
+    "version": 1,
+    "projects": {
+      "alpha": {
+        "name": "alpha",
+        "root": "alpha",
+        "targets": {
+          "check": {
+            "reference": "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      },
+      "beta": {
+        "name": "beta",
+        "root": "beta",
+        "targets": {}
+      }
+    },
+    "dependencies": [
+      {
+        "source": "alpha",
+        "target": "beta",
+        "sourceFile": "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "namedInputs": {
+      "reference": [
+        "SEMIO_SOURCE_CLOSURE_cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      ],
+      "SEMIO_CARGO_LOCK_ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff": [
+        "neutral-input"
+      ]
+    },
+    "externalNodes": {
+      "external": {
+        "name": "SEMIO_CARGO_LOCK_dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    }
+  },
+  "snapshots": [
+    {
+      "id": "complete",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "id": "empty",
+      "fault": "empty",
+      "accepted": true
+    },
+    {
+      "id": "external-absent",
+      "fault": "external-absent",
+      "accepted": true
+    },
+    {
+      "id": "external-empty",
+      "fault": "external-empty",
+      "accepted": true
+    },
+    {
+      "id": "shared-record",
+      "fault": "shared-record",
+      "accepted": true
+    },
+    {
+      "id": "manifest-extra",
+      "fault": "manifest-extra",
+      "accepted": false
+    },
+    {
+      "id": "old-whole-graph",
+      "fault": "old-whole-graph",
+      "accepted": false
+    },
+    {
+      "id": "manifest-digest",
+      "fault": "manifest-digest",
+      "accepted": false
+    },
+    {
+      "id": "invalid-digest",
+      "fault": "invalid-digest",
+      "accepted": false
+    },
+    {
+      "id": "traversal-digest",
+      "fault": "traversal-digest",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-project",
+      "fault": "duplicate-project",
+      "accepted": false
+    },
+    {
+      "id": "missing-record",
+      "fault": "missing-record",
+      "accepted": false
+    },
+    {
+      "id": "record-digest",
+      "fault": "record-digest",
+      "accepted": false
+    },
+    {
+      "id": "gzip-corrupt",
+      "fault": "gzip-corrupt",
+      "accepted": false
+    },
+    {
+      "id": "record-json",
+      "fault": "record-json",
+      "accepted": false
+    },
+    {
+      "id": "record-scalar",
+      "fault": "record-scalar",
+      "accepted": false
+    },
+    {
+      "id": "expanded-budget",
+      "fault": "expanded-budget",
+      "accepted": false
+    },
+    {
+      "id": "expanded-exact",
+      "fault": "expanded-exact",
+      "accepted": true
+    },
+    {
+      "id": "reference-invalid",
+      "fault": "reference-invalid",
+      "accepted": false
+    },
+    {
+      "id": "unreferenced-record",
+      "fault": "unreferenced-record",
+      "accepted": true
+    },
+    {
+      "id": "project-name-type",
+      "fault": "project-name-type",
+      "accepted": false
+    },
+    {
+      "id": "project-digest-type",
+      "fault": "project-digest-type",
+      "accepted": false
+    },
+    {
+      "id": "project-short",
+      "fault": "project-short",
+      "accepted": false
+    },
+    {
+      "id": "project-extra",
+      "fault": "project-extra",
+      "accepted": false
+    }
+  ]
+}

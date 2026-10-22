@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-diagnostic-rs:test-native",
-    "test-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-diagnostic-rs:test-source"
+    "test-native": "repo run @semio-tech/framework-diagnostic-rs:test-native",
+    "test-source": "repo run @semio-tech/framework-diagnostic-rs:test-source"
   },
   "bundleKind": "library",
   "devDependencies": {

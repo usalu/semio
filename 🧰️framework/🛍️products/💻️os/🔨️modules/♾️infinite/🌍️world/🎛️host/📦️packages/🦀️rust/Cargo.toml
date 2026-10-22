@@ -68,6 +68,12 @@ semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️mo
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
+semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

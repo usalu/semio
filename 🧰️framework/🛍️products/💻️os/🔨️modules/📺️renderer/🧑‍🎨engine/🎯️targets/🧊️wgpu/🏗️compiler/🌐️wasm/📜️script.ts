@@ -19,6 +19,8 @@ import { prepareCargoWorkspaceInvocation } from "../../../../../../../../🦑️
 
 import { cargoDirectories, repoCacheDirectory } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export interface TrunkRendererObservationV1 {
   readonly version:1; readonly kind:"wgpu-trunk"; readonly profile:string; readonly manifest:string; readonly outputDirectory:string; readonly builtAtMs:number; readonly observedAtMs:number;
@@ -44,8 +46,8 @@ async function compileTrunkRenderer(options: TrunkRendererBuild&Readonly<{storag
   const { rustPackageRoot: owner, componentRoot: root, workspace, profile } = options, output = publication.directory, toolWorkspace = options.toolWorkspace ?? workspace;
   const signal = options.signal!;
   const runTool=async(command:string,args:string[],cwd:string,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>):Promise<string>=>{compilerAdmissionBudgetV1(options.control);if(command==="cargo")await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(workspace),workspace,args,cwd,environment,options.control);let output="";await runOwnedCommand(command,args,cwd,"wgpu:"+command,compilerAdmissionBudgetV1(options.control),{env:environment,signal,output:{maximumBytes:134217728,maximumLines:65536},stdout:capture==="ignore"?"ignore":capture===true?"stderr":"inherit",onLine:line=>{if(capture===true)output+=line+"\n";},onProgress:async()=>{await options.control.publish({resource:"wgpu:"+command,mode:"exclusive",elapsedMs:Date.now()-builtAtMs});await options.control.yieldContinuation();}});return output;};
-  const manifest = Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as { package: { name: string } };
-  const lock = Bun.TOML.parse(readFileSync(join(toolWorkspace, "Cargo.lock"), "utf8")) as { package: { name: string; version: string }[] };
+  const manifest = runtimeParseTomlV1(readFileSync(join(root, "Cargo.toml"), "utf8")) as { package: { name: string } };
+  const lock = runtimeParseTomlV1(readFileSync(join(toolWorkspace, "Cargo.lock"), "utf8")) as { package: { name: string; version: string }[] };
   const bindgen = [...new Set(lock.package.filter(row => row.name === "wasm-bindgen").map(row => row.version))];
   if (bindgen.length !== 1) throw new Error("Renderer tooling requires one locked wasm-bindgen version");
   const optimizer = preparedBinaryen(toolWorkspace), environment:Record<string,string|undefined> = { ...(options.environment??process.env),SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(repositoryCargoPreparationStorageV1(workspace)) };
@@ -58,7 +60,7 @@ async function compileTrunkRenderer(options: TrunkRendererBuild&Readonly<{storag
   environment[pathKey] = `${dirname(optimizer)}${delimiter}${environment[pathKey] ?? ""}`;
   const version = await runTool("wasm-bindgen", ["--version"], root, true, environment);
   if (version.trim() !== `wasm-bindgen ${bindgen[0]}`) throw new Error(`Prepared wasm-bindgen must match Cargo.lock: ${bindgen[0]}`);
-  const binaryenVersion=(await runTool(optimizer,["--version"],root,true,environment)).trim(),trunkVersion=(await runTool("trunk",["--version"],root,true,environment)).trim(),ownerSha256=hash(import.meta.path);
+  const binaryenVersion=(await runTool(optimizer,["--version"],root,true,environment)).trim(),trunkVersion=(await runTool("trunk",["--version"],root,true,environment)).trim(),ownerSha256=hash(import.meta.filename);
   const staging = join(resolve(workspace, options.stateRoot ?? repoCacheDirectory(workspace, "trunk")), "staging");
   mkdirSync(staging, { recursive: true });
   const temporary = mkdtempSync(join(staging, `${profile}-`)), dist = join(temporary, "dist");
@@ -86,8 +88,8 @@ async function compileTrunkRenderer(options: TrunkRendererBuild&Readonly<{storag
     }
     for (const name of [`${manifest.package.name}.js`, `${manifest.package.name}_bg.wasm`]) if (!files.has(name)) throw new Error(`Trunk omitted its renderer artifact: ${name}`);
     await withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:options.products.storage,control:options.products.control,phaseControl:options.control,directory:output},destination=>stageRepositoryArtifacts(destination,publication.owner,files));
-    if(hash(import.meta.path)!==ownerSha256)throw new Error("Trunk producer source changed during actual build");
-    const receipt:TrunkRendererObservationV1={version:1,kind:"wgpu-trunk",profile,manifest:join(root,"Cargo.toml"),outputDirectory:output,builtAtMs,observedAtMs:Date.now(),owner:{path:import.meta.path,sha256:ownerSha256},configuration:{html:readFileSync(join(temporary,"index.html"),"utf8"),toml:readFileSync(join(temporary,"Trunk.toml"),"utf8")},toolVersions:{bindgen:version.trim(),binaryen:binaryenVersion,trunk:trunkVersion},compiler:{path:compiler,sha256:hash(compiler)},raw:{path:raw,sha256:rawSha256},outputs:[...files].map(([name,path])=>{const stagedPath=join(output,name);if(hash(path)!==hash(stagedPath))throw new Error("Staged Trunk artifact differs from completed transformation");return{path:stagedPath,sha256:hash(stagedPath)}})};
+    if(hash(import.meta.filename)!==ownerSha256)throw new Error("Trunk producer source changed during actual build");
+    const receipt:TrunkRendererObservationV1={version:1,kind:"wgpu-trunk",profile,manifest:join(root,"Cargo.toml"),outputDirectory:output,builtAtMs,observedAtMs:Date.now(),owner:{path:import.meta.filename,sha256:ownerSha256},configuration:{html:readFileSync(join(temporary,"index.html"),"utf8"),toml:readFileSync(join(temporary,"Trunk.toml"),"utf8")},toolVersions:{bindgen:version.trim(),binaryen:binaryenVersion,trunk:trunkVersion},compiler:{path:compiler,sha256:hash(compiler)},raw:{path:raw,sha256:rawSha256},outputs:[...files].map(([name,path])=>{const stagedPath=join(output,name);if(hash(path)!==hash(stagedPath))throw new Error("Staged Trunk artifact differs from completed transformation");return{path:stagedPath,sha256:hash(stagedPath)}})};
     writeFileSync(join(observationRoot,"trunk.json"),JSON.stringify(receipt,null,2)+"\n");
     console.log(`[nx-trunk] Published ${files.size} renderer files: ${output}; provenance ${join(observationRoot,"trunk.json")}`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
@@ -103,4 +105,4 @@ class BuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🦀️rust")).register("build", BuildScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dirname, "../../📦️packages/🦀️rust")).register("build", BuildScript)).run(process.argv.slice(2), original));

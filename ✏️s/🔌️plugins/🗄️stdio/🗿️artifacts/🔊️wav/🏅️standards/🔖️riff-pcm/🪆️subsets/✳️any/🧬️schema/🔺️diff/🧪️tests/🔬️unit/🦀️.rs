@@ -35,7 +35,7 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     let d2 = diff_set_data(WavData::Raw(vec![9, 9]));
     let mut absorbed = d1.clone();
     absorbed.absorb(d2.clone());
-    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &base).unwrap(), protocol::apply_diff_cold(&d2, &protocol::apply_diff_cold(&d1, &base).unwrap()).unwrap());
     assert_eq!(absorbed.fmt, d1.fmt);
     assert_eq!(absorbed.data, d2.data);
 
@@ -56,7 +56,7 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     let mut right = da.clone();
     right.absorb(right_tail);
     assert_eq!(left, right);
-    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&dc, &protocol::apply_diff(&db, &protocol::apply_diff(&da, &base).unwrap()).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), protocol::apply_diff_cold(&dc, &protocol::apply_diff_cold(&db, &protocol::apply_diff_cold(&da, &base).unwrap()).unwrap()).unwrap());
 }
 //#endregion inverse_law
 

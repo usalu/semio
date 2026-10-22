@@ -1,6 +1,6 @@
 import { lstatSync } from "node:fs";
 import { openNativePlatformStorageV1, requireNativeStoragePathV1 } from "../🟦️.ts";
-import type { NativeFixedPlatformOptionsV1 } from "../../🧱️fixed/🟦️.ts";
+import type { NativeFixedPlatformOptionsV1 } from "../../🔌️port/🟦️.ts";
 import type { NativeImageStorageV1 } from "../📋️contract/🟦️.ts";
 import { requireIssuedResourceControlV1, withIssuedResourceOperationV1 } from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 

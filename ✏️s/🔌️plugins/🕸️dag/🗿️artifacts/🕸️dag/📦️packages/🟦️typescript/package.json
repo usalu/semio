@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/dag-dag:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/dag-dag:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/dag-dag:test"
+    "build": "repo run @semio-tech/dag-dag:build",
+    "check": "repo run @semio-tech/dag-dag:check",
+    "test": "repo run @semio-tech/dag-dag:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"

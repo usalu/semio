@@ -202,24 +202,9 @@ pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRec
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
-impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
-    fn apply(&self, base: &SemioCadSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioCadSnapshot> {
-        let mut next = base.clone();
-        if let Some(ld) = &self.layers {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |added| added.item.name.clone(), ["layers"])?;
-            apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
-        }
-        if let Some(bd) = &self.blocks {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |added| added.item.name.clone(), ["blocks"])?;
-            apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
-        }
-        if let Some(ed) = &self.entities {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |added| added.item.handle.clone(), ["entities"])?;
-            apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {}
 
+impl protocol::ColdMutationDiff<SemioCadSnapshot> for SemioCadDiff {
     fn absorb(&mut self, other: Self) {
         self.layers = match (self.layers.take(), other.layers) {
             (None, b) => b,
@@ -236,6 +221,25 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
             (a, None) => a,
             (Some(a), Some(b)) => Some(absorb_named(a, &b, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
         };
+    }
+
+    fn apply(&self, unpublished: &mut SemioCadSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(ld) = &self.layers {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |added| added.item.name.clone(), ["layers"])?;
+            apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
+        }
+        if let Some(bd) = &self.blocks {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |added| added.item.name.clone(), ["blocks"])?;
+            apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
+        }
+        if let Some(ed) = &self.entities {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |added| added.item.handle.clone(), ["entities"])?;
+            apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -313,16 +317,18 @@ fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff)
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
+    fn is_empty(&self) -> bool {
+        self.layers.is_none() && self.blocks.is_none() && self.entities.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
     fn inverse(&self, base: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
             layers: self.layers.as_ref().map(|d| inverse_named(&base.layers, d, |l| l.name.clone(), inverse_layer)),
             blocks: self.blocks.as_ref().map(|d| inverse_named(&base.blocks, d, |b| b.name.clone(), inverse_block)),
             entities: self.entities.as_ref().map(|d| inverse_named(&base.entities, d, |e| e.handle.clone(), inverse_entity_record)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.layers.is_none() && self.blocks.is_none() && self.entities.is_none()
     }
 }
 

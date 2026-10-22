@@ -22,7 +22,13 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertFloors where Op: p
         record: "InsertedFloors",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert floor", "Decke einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1991Snapshot, Op> for InsertFloors where Op: protocol::ColdMutation<En1991Snapshot, ReferenceDiff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::remove_floors::RemoveFloors> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1991Snapshot>>::ReferenceDiff> {
         crate::insert_floors::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -31,9 +37,6 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertFloors where Op: p
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert floor", "Decke einfügen")
-    }
 }
 //#endregion 🔖️Payload
 

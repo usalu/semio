@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:tool-patch-corpus:v1",
+  "title": "Tool Patch Corpus",
+  "description": "Language-agnostic cases for the original-file tool patch: admission of hunks, owned additions, post-image receipts and exact application.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "validate", "additions", "receipt", "apply"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "validate": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "patch", "accept", "error"], "properties": { "name": { "type": "string", "minLength": 1 }, "patch": { "type": "string" }, "accept": { "type": "boolean" }, "error": { "type": "string" } } } },
+    "additions": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "patch", "expected", "error"], "properties": { "name": { "type": "string", "minLength": 1 }, "patch": { "type": "string" }, "expected": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }] }, "error": { "type": "string" } } } },
+    "receipt": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "files", "patch", "error"], "properties": { "name": { "type": "string", "minLength": 1 }, "files": { "type": "object", "additionalProperties": { "type": "string" } }, "patch": { "type": "string" }, "error": { "type": "string" } } } },
+    "apply": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "before", "patch", "after", "accept", "library"], "properties": { "name": { "type": "string", "minLength": 1 }, "before": { "type": "string" }, "patch": { "type": "string" }, "after": { "type": "string" }, "accept": { "type": "boolean" }, "library": { "type": "boolean" } } } }
+  }
+}

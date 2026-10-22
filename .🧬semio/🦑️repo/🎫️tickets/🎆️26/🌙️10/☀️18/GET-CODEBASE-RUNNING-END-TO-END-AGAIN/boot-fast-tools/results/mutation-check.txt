@@ -1,0 +1,25 @@
+23 seeded defects
+KILLED tool value not validated
+KILLED unknown command accepted
+KILLED closed subcommand set ignored
+KILLED dashboard target not passed through
+KILLED short help flag ignored
+KILLED graph policy value kept
+KILLED worker switch not validated
+KILLED passthrough routes planned
+KILLED refusal exit code ignored
+KILLED placeholder not replaced
+KILLED light command not routed
+KILLED language ignored in help
+KILLED root found from the wrong directory
+KILLED door statically imports the graph
+KILLED door statically imports the invocation parser
+KILLED door loads a light command eagerly
+KILLED caller loads cargo execution statically
+KILLED caller declared selection ignores global options
+KILLED caller declared selection keeps the graph policy
+KILLED linear path pattern drops the NUL exclusion
+KILLED linear path pattern allows dotdot segments
+KILLED taxonomy parsed on every selection
+KILLED taxonomy keyed by path only
+23 of 23 killed

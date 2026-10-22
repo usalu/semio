@@ -33,7 +33,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Re-asserting the direction the graph already has carries `before` to exactly the committed
@@ -42,7 +42,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert!(base.graph.directed, "change-graph-directed/keeps-an-already-directed-graph-directed: the base graph must already be directed for this fixture to reach the no-op guard");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "change-graph-directed/keeps-an-already-directed-graph-directed: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a no-op change-graph-directed must not mint a fresh notation/results/computed triple");
 }
@@ -53,12 +53,12 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: true })], "change-graph-directed inverts to the flag BASE carried, got {inverse:?}");
-    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff_cold(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-graph-directed/keeps-an-already-directed-graph-directed: inverse did not restore the before-snapshot");
 }
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-graph-directed/keeps-an-already-directed-graph-directed: committed diff did not carry before to after");
 }
 
@@ -133,7 +133,7 @@ async fn committed_diff_applies_to_after() {
 async fn flipping_the_flag_the_other_way_regenerates_the_whole_child_triple() {
     let base = before();
     let flip = EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&flip, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&flip, &base);
     assert!(outcome.messages().is_empty(), "flipping to undirected is a real change, not a no-op, got {:?}", outcome.messages());
     let diff = outcome.diff();
     assert!(diff.notation.is_some() && diff.results.is_some() && diff.computed.is_some(), "a graph-scoped equation mutation regenerates notation/results/computed together");
@@ -187,7 +187,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Restating both inseparable facets — algorithm AND seed — carries `before` to exactly the
@@ -197,7 +197,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let graph = base.graph.clone();
     assert_eq!((graph.algorithm.as_str(), graph.algorithm_seed.as_deref()), ("", None), "restates-the-unset-algorithm-and-its-absent-seed's base scene must carry the unset algorithm pair this payload restates");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: applied state differs from committed after-snapshot");
     assert_eq!(applied.results, base.results, "a no-op update-graph-algorithm must not mint a fresh composed results child");
 }
@@ -207,12 +207,12 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: String::new(), new_algorithm_seed: None })], "update-graph-algorithm inverts to BASE's own (algorithm, seed) pair, got {inverse:?}");
-    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff_cold(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: inverse did not restore the before-snapshot");
 }
@@ -274,7 +274,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff did not carry before to after");
 }
 
@@ -285,7 +285,7 @@ async fn committed_diff_applies_to_after() {
 async fn attaching_a_seed_alone_is_not_a_no_op() {
     let base = before();
     let seeded = EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: String::new(), new_algorithm_seed: Some("seed-1".into()) });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&seeded, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&seeded, &base);
     assert!(outcome.messages().is_empty(), "changing the seed alone is a real change, not a no-op, got {:?}", outcome.messages());
     assert!(outcome.diff().notation.is_some() && outcome.diff().results.is_some() && outcome.diff().computed.is_some(), "a graph-scoped equation mutation regenerates notation/results/computed together");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
@@ -353,7 +353,7 @@ fn expected_after() -> EquationSnapshot {
     semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `create-node` leaves the document byte-identical to the committed `after`.
@@ -361,7 +361,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert_eq!(base.graph, colliding_graph(), "rejects-a-duplicate-node-id's before-snapshot holds exactly the payload's node");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "create-node/rejects-a-duplicate-node-id: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected create must not mint a fresh notation/results/computed triple");
 }
@@ -388,7 +388,7 @@ async fn a_colliding_id_is_a_fatal_duplicate_id() {
 /// delete of the requested id.
 #[semio_framework_async_macros::async_test]
 async fn an_already_present_id_leaves_nothing_to_undo() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "create-node/rejects-a-duplicate-node-id: a create whose id BASE already holds must have no inverse steps, got {inverse:?}");
 }
 

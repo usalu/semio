@@ -116,7 +116,7 @@ pub use crate::Generation3dArtifact;
 
 use crate::widget_id;
 use crate::snapshot::Generation3dSnapshot;
-use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
 //#region 🔖️RowAlgebra
@@ -645,7 +645,41 @@ impl Generation3dDiff {
 }
 
 impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
-    fn apply(&self, snapshot: &Generation3dSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<Generation3dSnapshot> {
+    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
+    /// delta and throw it away; an inhabited widget row owns a fail-closed root, so the contract routes here.
+    fn retire_cold(self) {
+        Generation3dDiff::retire_cold(self);
+    }
+    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
+    fn retire_projection(projection: Generation3dSnapshot) {
+        projection.retire_cold();
+    }
+}
+
+impl protocol::ColdMutationDiff<Generation3dSnapshot> for Generation3dDiff {
+    /// ➕️ Sequential coalesce: same-key rows fold (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace). Every
+    /// value this displaces is RETIRED, never dropped: owned widgets and answers reject a bare drop.
+    fn absorb(&mut self, other: Self) {
+        if other.schema.is_some() {
+            self.schema = other.schema;
+        }
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+        absorb_rows!(self.widgets, other.widgets);
+        absorb_rows!(self.synapses, other.synapses);
+        absorb_optional(&mut self.layout, other.layout);
+        absorb_rows!(self.generations, other.generations);
+        if other.selected_generation.is_some() {
+            self.selected_generation = other.selected_generation;
+        }
+        if other.preview_text.is_some() {
+            self.preview_text = other.preview_text;
+        }
+    }
+
+    fn apply(&self, unpublished: &mut Generation3dSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let applied = (|snapshot: &Generation3dSnapshot| -> MutationApplyResult<Generation3dSnapshot> {
         let mut next = snapshot.clone();
         let applied = (|| {
             if let Some(schema) = &self.schema {
@@ -672,42 +706,27 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
                 Err(error)
             }
         }
-    }
-
-    /// ➕️ Sequential coalesce: same-key rows fold (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace). Every
-    /// value this displaces is RETIRED, never dropped: owned widgets and answers reject a bare drop.
-    fn absorb(&mut self, other: Self) {
-        if other.schema.is_some() {
-            self.schema = other.schema;
-        }
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
-        absorb_rows!(self.widgets, other.widgets);
-        absorb_rows!(self.synapses, other.synapses);
-        absorb_optional(&mut self.layout, other.layout);
-        absorb_rows!(self.generations, other.generations);
-        if other.selected_generation.is_some() {
-            self.selected_generation = other.selected_generation;
-        }
-        if other.preview_text.is_some() {
-            self.preview_text = other.preview_text;
-        }
-    }
-
-    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
-    /// delta and throw it away; an inhabited widget row owns a fail-closed root, so the contract routes here.
-    fn retire_cold(self) {
-        Generation3dDiff::retire_cold(self);
-    }
-
-    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
-    fn retire_projection(projection: Generation3dSnapshot) {
-        projection.retire_cold();
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 
 impl DiffAlgebra<Generation3dSnapshot> for Generation3dDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && self.camera.is_none()
+            && self.widgets.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.synapses.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.layout.as_ref().is_none_or(is_empty_delta)
+            && self.generations.as_ref().is_none_or(|delta| delta.is_empty())
+            && self.selected_generation.is_none()
+            && self.preview_text.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dSnapshot> for Generation3dDiff {
     fn inverse(&self, base: &Generation3dSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.host_snapshot.schema.clone()),
@@ -719,16 +738,6 @@ impl DiffAlgebra<Generation3dSnapshot> for Generation3dDiff {
             selected_generation: self.selected_generation.as_ref().map(|_| Generation3dSelectionChange { id: base.generation.selected_generation_id.clone() }),
             preview_text: self.preview_text.as_ref().map(|_| Generation3dPreviewChange { text: base.generation.preview_text.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && self.camera.is_none()
-            && self.widgets.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.synapses.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.layout.as_ref().is_none_or(is_empty_delta)
-            && self.generations.as_ref().is_none_or(|delta| delta.is_empty())
-            && self.selected_generation.is_none()
-            && self.preview_text.is_none()
     }
 }
 

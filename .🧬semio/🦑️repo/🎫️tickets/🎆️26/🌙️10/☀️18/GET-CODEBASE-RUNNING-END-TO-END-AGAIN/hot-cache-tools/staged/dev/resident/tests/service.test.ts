@@ -14,7 +14,7 @@ import coreSchema from "../../core/service.schema.json" with {type:"json"};
 import {createFilterV1} from "../state/index.mjs";
 import {residentGraphSeamsV1} from "../graph-hooks/host/index.mjs";
 import {taskClosureV1} from "../ports/graph.mjs";
-import {WATCHER,cleanup,haveBinary,pick,rng,sleep,snapshot,tempRoot,waitFor,writeTree} from "./common.ts";
+import {WATCHER,cleanup,haveBinary,pick,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "./common.ts";
 
 const native=haveBinary(WATCHER);
 const cleanups:(()=>Promise<void>|void)[]=[];
@@ -35,7 +35,7 @@ type Options={emit?:(id:string,out:(stream:"stdout"|"stderr",text:string)=>Promi
 async function startService(options:Options={}){
  const root=options.root??tempRoot("svc-");if(!options.root)cleanups.push(()=>cleanup(root));
  if(!options.root)writeTree(root,{"package.json":"{}","pkgs/a/src/x.ts":"a","pkgs/b/src/x.ts":"b","pkgs/c/src/x.ts":"c","pkgs/d/src/x.ts":"d","pkgs/e/src/x.ts":"e","pkgs/f/src/x.ts":"f","pkgs/g/src/x.ts":"g","pkgs/h/src/x.ts":"h"});
- const base=mkdtempSync("/tmp/sr-");cleanups.push(()=>cleanup(base));
+ const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
  const runtime=endpointsV1(root,{XDG_RUNTIME_DIR:base},process.platform);
  const executed:string[]=[],aborted:string[]=[],clients:any[]=[];
  const filter=createFilterV1({rooted:[".git"],names:["node_modules"]});
@@ -206,7 +206,7 @@ describe("large output",()=>{
   s.ports.execution.run=async({id,onSpawn,onOutput}:any)=>{onSpawn?.();await onOutput("stdout",big);mkdirSync(join(s.root,".out/d"),{recursive:true});writeFileSync(join(s.root,".out/d/o.txt"),"x");return{exit:0};};
   const first=await s.run("run",["d:build"]);expect(first.out).toBe(big);
   const again=await s.run("run",["d:build"]);expect(again.served).toBe("memo");
-  const done=await new Promise<{status:number|null;stdout:string}>(resolve=>{const c=spawn("bun",[join(import.meta.dir,"..","client","main.mjs"),"--root",s.root,"--","status"],{env:{...process.env,XDG_RUNTIME_DIR:s.base}});let stdout="";c.stdout.on("data",d=>stdout+=d);c.on("exit",status=>resolve({status,stdout}));});
+  const done=await new Promise<{status:number|null;stdout:string}>(resolve=>{const c=spawn("bun",[join(import.meta.dir,"..","client","main.mjs"),"--root",s.root,"--languages","en","--","status"],{env:{...process.env,XDG_RUNTIME_DIR:s.base}});let stdout="";c.stdout.on("data",d=>stdout+=d);c.on("exit",status=>resolve({status,stdout}));});
   expect(done.status).toBe(0);expect(JSON.parse(done.stdout).state.files).toBeGreaterThan(0);
  },30000);
 });
@@ -468,7 +468,7 @@ describe.skipIf(!native)("process level crash safety",()=>{
   const root=tempRoot("svc-crash-");cleanups.push(()=>cleanup(root));
   writeTree(root,{"package.json":"{}","tsconfig.base.json":"{}","bun.lock":"l","pkgs/a/src/x.ts":"a"});
   writeFileSync(root+"/graph.json",JSON.stringify({generation:1,owners:[owners[0]],env:{paths:["package.json"],prefixes:[]}}));
-  const base=mkdtempSync("/tmp/sr-");cleanups.push(()=>cleanup(base));
+  const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
   const serve=join(import.meta.dir,"..","..","bench","serve.mjs");
   const env={...process.env,XDG_RUNTIME_DIR:base};
   const first=spawn("bun",[serve,root,"--bin",join(WATCHER,".."),"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});

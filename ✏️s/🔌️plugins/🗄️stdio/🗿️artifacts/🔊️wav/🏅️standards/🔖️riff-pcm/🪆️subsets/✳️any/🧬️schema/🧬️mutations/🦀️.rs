@@ -26,7 +26,7 @@ pub mod set_pad_bytes;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = WavSnapshot, diff = WavDiff, schema = "WavMutation")]
+#[mutations(snapshot = WavSnapshot, diff = WavDiff, schema = "WavMutation", reference = WavSnapshot, reference_diff = WavDiff)]
 pub enum WavMutation {
     /// 🎚️ Replaces the `fmt ` chunk's typed fields wholesale.
     SetFmt(set_fmt::SetFmt),

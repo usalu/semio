@@ -237,7 +237,7 @@ fn a_session_update_equals_a_fresh_inference_after_every_kind_of_edit() {
     ];
     let mut current = snapshot;
     for edit in edits {
-        current = protocol::apply_diff(&edit, &current).expect("the edit applies");
+        current = protocol::apply_diff_cold(&edit, &current).expect("the edit applies");
         let incremental = session.update(&current, &edit).clone();
         assert_eq!(incremental, ModelInference::infer(&current).expect("infers"), "the incremental inference equals a fresh one");
     }
@@ -268,7 +268,7 @@ fn moving_one_wall_recomputes_only_its_neighbourhood() {
     let first = session.report().clone();
     assert!(first.computed_by_kind["wall-layout"] == walls && first.computed_by_kind["band"] == walls, "the first run computes every wall once");
     let moved = ModelDiff::walls("h-005-005", Entry::Patched(WallPatch { axis: Some(line((20.0, 20.4), (24.0, 20.4))), ..Default::default() }));
-    let edited = protocol::apply_diff(&moved, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&moved, &snapshot).expect("applies");
     let incremental = session.update(&edited, &moved).clone();
     let report = session.report().clone();
     assert_eq!(report.computed_by_kind.get("band"), Some(&1), "only the moved wall's band is recomputed: {report:?}");
@@ -288,7 +288,7 @@ fn moving_a_window_recomputes_its_frame_its_host_wall_and_filler_only() {
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let moved = ModelDiff::openings("o-win-1", Entry::Patched(OpeningPatch { offset: Some(2.5), ..Default::default() }));
-    let edited = protocol::apply_diff(&moved, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&moved, &snapshot).expect("applies");
     let incremental = session.update(&edited, &moved).clone();
     let report = session.report().clone();
     assert_eq!(report.computed_by_kind.get("wall-layout"), None, "a moved opening does not touch any layout");

@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "restore", entity: "cell", kind: "unmask-cell", record: "Restored" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell {}", cell_key(self.x, self.y, self.z)), &format!("Zelle {} demaskieren", cell_key(self.x, self.y, self.z)))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![cell_key(self.x, self.y, self.z)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid3dSnapshot, Op> for UnmaskCell
+where
+    Op: protocol::ColdMutation<Grid3dSnapshot, ReferenceDiff = Grid3dDiff> + From<UnmaskCell> + From<crate::standards::v1::subsets::any::schema::mutations::mask_cell::MaskCell>,
+{
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell {}", cell_key(self.x, self.y, self.z)), &format!("Zelle {} demaskieren", cell_key(self.x, self.y, self.z)))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![cell_key(self.x, self.y, self.z)]
-    }
 }
 //#endregion 🔖️UnmaskCell

@@ -20,7 +20,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductGroup 
 
         protocol::SemanticDescriptor { verb: "insert", entity: "productGroup", kind: "introduce-product-group", record: "IntroducedProductGroup" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product group \"{}\"", self.product_group.names.preferred.text), &format!("Produktgruppe \"{}\" erstellen", self.product_group.names.preferred.text))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.product_group.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for IntroduceProductGroup where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_product_group::mutation::RetireProductGroup> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::introduce_product_group::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,11 +38,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductGroup 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product group \"{}\"", self.product_group.names.preferred.text), &format!("Produktgruppe \"{}\" erstellen", self.product_group.names.preferred.text))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.product_group.id.clone()]
-    }
 }
 //#endregion 🔖️Payload

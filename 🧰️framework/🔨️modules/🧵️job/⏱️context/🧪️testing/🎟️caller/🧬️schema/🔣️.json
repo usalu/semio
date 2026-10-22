@@ -11,6 +11,7 @@
     "stock",
     "actions",
     "terminalDrop",
+    "rootRetirement",
     "clockRegression",
     "workLoans"
   ],
@@ -89,6 +90,38 @@
     },
     "terminalDrop": {
       "const": 0
+    },
+    "rootRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clockFree",
+        "allocationHeaderBytes",
+        "aliasCounterBytes",
+        "rootsBytes",
+        "releasedBytes",
+        "copiedItems"
+      ],
+      "properties": {
+        "clockFree": {
+          "const": true
+        },
+        "allocationHeaderBytes": {
+          "const": 16
+        },
+        "aliasCounterBytes": {
+          "const": 8
+        },
+        "rootsBytes": {
+          "const": 16
+        },
+        "releasedBytes": {
+          "const": 40
+        },
+        "copiedItems": {
+          "const": 1
+        }
+      }
     },
     "clockRegression": {
       "const": [

@@ -322,7 +322,7 @@ impl<S> ArtifactChildren for NoChildren<S> {
 pub trait DerivedArtifactSpec: Sized + 'static {
     type Snapshot;
     type Mutation: protocol::ColdMutation<Self::Snapshot, ReferenceDiff = Self::Diff>;
-    type Diff: MutationDiff<Self::Snapshot>;
+    type Diff: protocol::ColdMutationDiff<Self::Snapshot>;
     type Construction: ArtifactBuilder<Snapshot = Self::Snapshot, Mutation = Self::Mutation, Diff = Self::Diff>;
     type Analysis: ArtifactAnalysis;
     type Composition: ArtifactComposition<Snapshot = Self::Snapshot>;

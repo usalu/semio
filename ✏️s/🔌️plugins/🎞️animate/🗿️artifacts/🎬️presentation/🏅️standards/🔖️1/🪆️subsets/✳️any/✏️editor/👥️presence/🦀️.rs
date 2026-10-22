@@ -22,19 +22,26 @@ impl store::ArtifactPresenceSnapshot for PresentationPresence {}
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationPresenceDiff {}
 
-impl protocol::MutationDiff<PresentationPresence> for PresentationPresenceDiff {
-    fn apply(&self, base: &PresentationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PresentationPresence> {
-        Ok(base.clone())
-    }
+impl protocol::MutationDiff<PresentationPresence> for PresentationPresenceDiff {}
+
+impl protocol::ColdMutationDiff<PresentationPresence> for PresentationPresenceDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut PresentationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<PresentationPresence> for PresentationPresenceDiff {
-    fn inverse(&self, _base: &PresentationPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PresentationPresence> for PresentationPresenceDiff {
+    fn inverse(&self, _base: &PresentationPresence) -> Self {
+        Self {}
     }
 }
 

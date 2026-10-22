@@ -94,7 +94,11 @@ impl Mutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowT
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::Text, protocol::MutationLanguageSurface::Binary, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &Generation3dPreviewWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientMutation {
+    type ReferenceDiff = Generation3dPreviewWindowTransientDiff;
+    fn diff(&self, base: &Generation3dPreviewWindowTransient) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SetPreviewEval { eval_text } = self;
         protocol::MutationOutcome::new(Generation3dPreviewWindowTransientDiff { preview_eval_text: (base.preview_eval_text != *eval_text).then(|| Generation3dPreviewEvalText { value: eval_text.clone() }) })
     }
@@ -119,29 +123,37 @@ pub struct Generation3dPreviewWindowTransientDiff {
     pub preview_eval_text: Option<Generation3dPreviewEvalText>,
 }
 
-impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
-    fn apply(&self, base: &Generation3dPreviewWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dPreviewWindowTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.preview_eval_text {
-            next.preview_eval_text = value.value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {}
+
+impl protocol::ColdMutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.preview_eval_text.is_some() {
             self.preview_eval_text = other.preview_eval_text;
         }
     }
+
+    fn apply(&self, unpublished: &mut Generation3dPreviewWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.preview_eval_text {
+            next.preview_eval_text = value.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.preview_eval_text.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
     fn inverse(&self, base: &Generation3dPreviewWindowTransient) -> Self {
         Self {
             preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalText { value: base.preview_eval_text.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.preview_eval_text.is_none()
     }
 }
 
@@ -166,8 +178,8 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dPreviewWindowT
     type State = Generation3dPreviewWindowTransient;
     type Mutation = Generation3dPreviewWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

@@ -12,7 +12,7 @@ use semio_s_artifact_cad_cad_config::{CadDislocateOptions, CadSunConfig};
 use semio_s_artifact_cad_cad_modes::{windows::building, windows::energy, windows::shape, windows::structure_classic};
 use semio_s_artifact_cad_cad_model::snapshot::CadCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
-use protocol::{Mutation, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 
 fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -37,9 +37,9 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     let expected = serde_json::json!({ "Set": { "config": serde_json::Value::from(&semio_framework_value::ToValue::to_value(&next)) } });
     assert_eq!(serde_json::Value::from(&semio_framework_value::ToValue::to_value(&mutation)), expected, "set-mutation wire stays the externally tagged `{Set:{config}}` form");
     assert_eq!(<CadWorldWindowConfigMutation as semio_framework_value::FromValue>::from_value(expected.into()).expect("neutral wire decodes"), mutation);
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("window config diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("window config diff");
     assert_eq!(after, next);
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("window config inverse"));
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).expect("window config inverse"));
     assert_eq!(restored, base);
     assert_eq!(CadWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
     assert_eq!(CadWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("decoded mutation"), mutation);

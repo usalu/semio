@@ -206,21 +206,21 @@ export const DOCUMENT_BACKBONE_RETENTION_LIMITS = {
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ArtifactBootstrapAssembler, artifactBootstrapAggregateHash, artifactBootstrapSha256, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { ArtifactBootstrapAssembler, artifactBootstrapAggregateHash, artifactBootstrapSha256, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerTests2 } = await import("./🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts");
-  await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact, encodeClientCommandsFrameExact, encodeClientFrame }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact, encodeClientCommandsFrameExact, encodeClientFrame }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerTests3 } = await import("./🧪️tests/🧪️history-transition/🟦️.ts");
-  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA, { historyTransitionId, trunkAlternativeId, historyShapeAdmits, HISTORY_TRANSITION_KINDS });
+  await registerTests3(import.meta.vitest, { directory: import.meta.dirname, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA, { historyTransitionId, trunkAlternativeId, historyShapeAdmits, HISTORY_TRANSITION_KINDS });
   const { registerTests: registerDurableCollaborativeRedoTests } = await import("./🧪️tests/🗄️durable-collaborative-redo/🟦️.ts");
-  await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+  await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dirname, url: import.meta.url });
   const { registerSupersedeFoldTests } = await import("./🧪️tests/🧪️supersede-fold/🟦️.ts");
-  await registerSupersedeFoldTests(import.meta.vitest, { foldSupersessions }, { directory: import.meta.dir, url: import.meta.url });
+  await registerSupersedeFoldTests(import.meta.vitest, { foldSupersessions }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerTransactionRefTests } = await import("./🧪️tests/🧪️transaction-ref/🟦️.ts");
-  await registerTransactionRefTests(import.meta.vitest, { mintTransactionRef, writeVecEnvelope, readVecEnvelope }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTransactionRefTests(import.meta.vitest, { mintTransactionRef, writeVecEnvelope, readVecEnvelope }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerReplayReportTests } = await import("./🧪️tests/🧪️replay-report/🟦️.ts");
-  await registerReplayReportTests(import.meta.vitest, { replayReportBlocksFinalize, REPLAY_SEVERITIES }, { directory: import.meta.dir, url: import.meta.url });
+  await registerReplayReportTests(import.meta.vitest, { replayReportBlocksFinalize, REPLAY_SEVERITIES }, { directory: import.meta.dirname, url: import.meta.url });
   const { registerOutcomeCodeTests } = await import("./🧪️tests/🧪️outcome-code/🟦️.ts");
-  await registerOutcomeCodeTests(import.meta.vitest, { OUTCOME_CODES, APPLY_OUTCOME_CODE_PREFIX, outcomeCodeLevel }, { directory: import.meta.dir, url: import.meta.url });
+  await registerOutcomeCodeTests(import.meta.vitest, { OUTCOME_CODES, APPLY_OUTCOME_CODE_PREFIX, outcomeCodeLevel }, { directory: import.meta.dirname, url: import.meta.url });
 
 }
 

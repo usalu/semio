@@ -1,19 +1,24 @@
 import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../🚪️admission/🟦️.ts";
+import {createRequire} from "node:module";
+const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 /** 📦️ Infers every project node of one workspace snapshot with bounded concurrency and settlement. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { availableParallelism } from "node:os";
 import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";
 import { inferenceInventoryReferencesHoldV1 } from "../../../../🏗️build/👁️observation/📥️reuse/🟨️.mjs";
-import { observeProjectInferenceV1, observedFs, projectInferenceObservationsV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { observeInferenceSnapshotV1, observeProjectInferenceV1, observedFs, projectInferenceObservationsV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { statSync as rawStatSync } from "node:fs";
 const { existsSync, readFileSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-nodes";
 import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";
+import { createMemoryGovernorV1, graphMemoryBudgetBytesV1, measureMemoryBaselineV1 } from "../../../🧠️memory/🟨️.mjs";
 import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";
-let inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
+import { openProjectFarmV1 } from "./🏊️project-farm/🟨️.mjs";
+import { awaitGrowingV1 } from "./🏊️project-farm/🏊️pool/🟨️.mjs";
+let inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
@@ -28,7 +33,7 @@ export function wire(registry) {
   ({ projectWithDefaults } = registry.projectAssembly);
   ({ loaded } = registry.bootstrap);
   ({ readBunLockGraph } = registry.bunLock);
-  ({ revisionIdentity } = registry);
+  ({ projectStampPathsV1 } = registry.stamps);
 }
 
 /** ⏱️ A source modified this recently may be half-written, so its parse failure is retried by settlement instead of withholding its project (the observation racy rule). */
@@ -60,6 +65,38 @@ export function settlementOptionsV1(context) {
   return { signal: context.phaseControl?.signal, onRound: async round => { writeGraphSettleRowV1(round); await yieldInferenceV1(context,"build:settle",0,true); } };
 }
 
+/** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes. */
+export function createProjectInferenceEnvironmentV1(session) {
+  const { workspaceRoot, registry, commandInputs, projectsByRoot, componentRoots } = session, context = { workspaceRoot, registry }, scripts = createScriptInputCache(context);
+  const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+  const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
+  scripts.generatedOutput = path => readBuildGeneratedCompileOutputV1(path, workspaceRoot, contracts, registry);
+  return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context };
+}
+
+/** 🧱️ Infers the node of one project: its defaults, its native or release preparation and its build modes; a source that does not parse withholds the project instead of failing the graph. */
+export async function inferProjectBodyV1(environment, job, admission) {
+  const { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context } = environment, { name, root, json, native, pipeline, selectedTargets, selectedInputs } = job;
+  try {
+    await yieldInferenceV1(context, "build:project-assembly", 0);
+    const project = await projectWithDefaults(json, root, join(workspaceRoot, root), workspaceRoot, contracts, new Map(), commandInputs, scripts, undefined, "hash", admission ? selectedTargets ?? [] : undefined, selectedInputs);
+    const prepare = (apply, predicate) => { const preparing = admission ? { ...project, targets: Object.fromEntries(Object.entries(project.targets).filter(([, target]) => predicate(target))) } : project; apply(preparing); project.targets = { ...project.targets, ...preparing.targets }; if (preparing.metadata !== undefined) project.metadata = preparing.metadata; };
+    if (native) prepare(project => withNativePreparation(project, workspaceRoot, contracts, nativeCache, projectsByRoot, nativeClosures), target => target.metadata?.semio?.execution?.kind !== "source");
+    if (pipeline) prepare(project => withReleasePipelinePreparation(project, workspaceRoot, contracts, componentRoots, nativeCache, nativeClosures), target => Boolean(target.metadata?.semio?.release));
+    for (const [targetName, target] of Object.entries(project.targets)) project.targets[targetName] = loaded.targetBuildModes(targetName, target);
+    return project;
+  } catch (error) { if (error?.code !== "BUILD_SOURCE_UNPARSEABLE") throw error; return { unavailable: unavailableProjectV1(root, name, workspaceRoot, error) }; }
+}
+
+/** 🔑️ The key a project record is stored under: what the graph shares across projects, then everything the project itself is made of. */
+export const projectRecordKeyV1 = (head, root, json, selectedTargets, selectedInputs) => [...head, root, json, selectedTargets ?? null, selectedInputs];
+
+/** 🧾️ Writes the persisted record of one project into the graph directories the running body is staged to, under the key and the observation scope the parent uses, so the parent finds it valid once it adopted the leaves. */
+export async function produceProjectRecordV1(environment, job) {
+  const cachePath = join(workspaceDataDirectory(environment.workspaceRoot), "np", job.cacheKey + ".json");
+  await observeInferenceSnapshotV1(() => observeProjectInferenceV1({ cachePath, key: projectRecordKeyV1(job.head, job.root, job.json, undefined, job.selectedInputs), owner: job.root, stamps: projectStampPathsV1({ native: job.native }), reusable: () => true }, () => inferProjectBodyV1(environment, job, undefined)));
+}
+
 /** 🛡️ Infers the project nodes of every authored emoji-named project config. Nx's native walker sometimes hands back lossy paths with U+FFFD where a multi-byte emoji used to be: those are unopenable duplicates of a real file and are skipped. */
 export async function emojiProjectJsonNodes(configFiles, options, context) {
   const { workspaceRoot } = context, unavailable = new Map(), wantedRoots = options?.ownerRoots, wanted = root => !wantedRoots || wantedRoots.has(root);
@@ -73,7 +110,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
   const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await nativeCommandInputs(workspaceRoot, scripts) : undefined;
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");
-  const projectAuthority=createHash("sha256").update(JSON.stringify([revisionIdentity.revision,contracts])).digest("hex");
+  const projectAuthority=createHash("sha256").update(JSON.stringify([contracts])).digest("hex");
   const commandRevision=createHash("sha256").update(JSON.stringify(commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(context.registry??null)).digest("hex");
   const playgroundCatalog = collectPlaygroundCatalog(configFiles, workspaceRoot,catalogContributions);
 
@@ -140,6 +177,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const projects = results.flatMap(([, result]) => Object.values(result.projects));
   const projectsByRoot = new Map(projects.flatMap(project=>[[project.root,project.name],...(project.metadata?.nativeRoot?[[project.metadata.nativeRoot,project.name]]:[])]));
   const componentRoots = componentCrateRoots(configFiles, workspaceRoot);
+  const projectEnvironment = { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context };
 
   const jobs=results.flatMap(([,result])=>Object.entries(result.projects).map(([name,json])=>({result,name,json}))).filter(job=>wanted(job.json.root));let projectIndex=0,cursor=0,stopped=false;
   const inferProject=async({result,name,json})=>{
@@ -151,30 +189,24 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
     const root=json.root,nativeRoot=json.metadata?.nativeRoot??root,nativeTargets=Object.entries(activeJson.targets??{}).filter(([,target])=>target.metadata?.semio?.execution?.kind!=="source"),nativeCandidate=existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))||nativeTargets.some(([,target])=>target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")),native=options?.ownerAdmission?buildNativeSourceObservationV1({selectedSource:Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.execution?.kind==="source"),selectedNative:nativeCandidate&&nativeTargets.length>0,requestedInputs:selectedInputs.length>0,dependencyInputs:false,inputRole:buildInputSourceRoleV1(Object.keys(activeJson.targets??{}).length>0,false,Object.values(activeJson.targets??{}).map(target=>target.metadata?.semio?.sourceInputObservation))})==="compile":nativeCandidate,pipeline=Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.release);
     const assemblyAuthority=native||pipeline?projectAssemblyAuthorityV1(workspaceRoot,native?nativeRoot:undefined,projectsByRoot,pipeline?componentRoots:undefined,nativeCache,nativeClosures):null;
     const authorityMilliseconds=performance.now()-started;
-    const cachePath=join(workspaceDataDirectory(workspaceRoot),"np",createHash("sha256").update(root).digest("hex").slice(0,24)+".json");
-    result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,key:[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,root,json,selectedTargets??null,selectedInputs],owner:root,reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl)},async()=>{
-      try{
-      await yieldInferenceV1(context,"build:project-assembly",0);
-      const project=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),commandInputs,scripts,undefined,"hash",options?.ownerAdmission?selectedTargets??[]:undefined,selectedInputs),preparationCache=nativeCache,dependencyRootsCache=nativeClosures;
-      const prepare=(apply,predicate)=>{const preparing=options?.ownerAdmission?{...project,targets:Object.fromEntries(Object.entries(project.targets).filter(([,target])=>predicate(target)))}:project;apply(preparing);project.targets={...project.targets,...preparing.targets};if(preparing.metadata!==undefined)project.metadata=preparing.metadata;};
-      if(native)prepare(project=>withNativePreparation(project,workspaceRoot,contracts,preparationCache,projectsByRoot,dependencyRootsCache),target=>target.metadata?.semio?.execution?.kind!=="source");
-      if(pipeline)prepare(project=>withReleasePipelinePreparation(project,workspaceRoot,contracts,componentRoots,preparationCache,dependencyRootsCache),target=>Boolean(target.metadata?.semio?.release));
-      for(const[name,target]of Object.entries(project.targets))project.targets[name]=loaded.targetBuildModes(name,target);
-      return project;
-      }catch(error){if(error?.code!=="BUILD_SOURCE_UNPARSEABLE")throw error;return {unavailable:unavailableProjectV1(root,name,workspaceRoot,error)};}
-    }));
+    const cacheKey=createHash("sha256").update(root).digest("hex").slice(0,24),cachePath=join(workspaceDataDirectory(workspaceRoot),"np",cacheKey+".json"),head=[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null];
+    result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,key:projectRecordKeyV1(head,root,json,selectedTargets,selectedInputs),owner:root,stamps:projectStampPathsV1({native}),reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl),prepare:farm?()=>farm.prepare({name,root,json,native,pipeline,nativeRoot,selectedInputs,head,cacheKey}):undefined},()=>inferProjectBodyV1(projectEnvironment,{name,root,json,native,pipeline,nativeRoot,selectedTargets,selectedInputs},options?.ownerAdmission)));
     options?.onOwnerObservations?.(name,projectInferenceObservationsV1(cachePath)??[]);
     if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}
     result.projects[name].targets={...inactive,...result.projects[name].targets};
   };
   const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:"build:projects",stage:"running",activity:{resource,mode:"shared",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;
   await phases?.begin("inference",jobs.length);
-  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);}await phases?.advance("inference",++finished);}});
-  await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});
-  await phases?.end("inference",{projects:jobs.length});
+  const farm=options?.ownerAdmission?undefined:openProjectFarmV1({workspaceRoot,context,projects:jobs.length,commandInputs,projectsByRoot,componentRoots,signal:context.invocation?.control.signal,processed:()=>projectIndex});
+  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),baselineBytes:measureMemoryBaselineV1(),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\n"),environment:process.env}):undefined;
+  const loop=async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++],run=async()=>{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);};await (governor?governor.run(run):run());}await phases?.advance("inference",++finished);}};
+  const workers=Array.from({length:limit},loop);
+  farm?.onReady(loops=>{for(let extra=loops-workers.length;extra>0&&!stopped&&cursor<jobs.length;extra--)workers.push(loop());});
+  try{await awaitGrowingV1(workers);}catch(error){stopped=true;await Promise.allSettled(workers);throw error;}finally{await farm?.close();}
+  await phases?.end("inference",{projects:jobs.length,...(governor?{memory:governor.stats()}:{})});
   if (collector) await collector.finish({ projects: jobs.length });
   if(wantedRoots)for(const entry of results)entry[1].projects=Object.fromEntries(Object.entries(entry[1].projects??{}).filter(([,project])=>wanted(project.root)));
   for(const row of [...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0))results.push([row.source,{projects:{},unavailable:[row]}]);
-  if (options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock"))) results.push(["bun.lock", { externalNodes: readBunLockGraph(workspaceRoot).externalNodes }]);
+  if (options?.analyzeLockfile && existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName))) results.push([javascriptManagerV1.primaryLockName, { externalNodes: readBunLockGraph(workspaceRoot).externalNodes }]);
   return results;
 }

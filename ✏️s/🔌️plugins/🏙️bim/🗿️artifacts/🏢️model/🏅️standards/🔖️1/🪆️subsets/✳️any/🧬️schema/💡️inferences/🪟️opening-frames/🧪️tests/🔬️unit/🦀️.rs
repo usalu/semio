@@ -62,7 +62,7 @@ fn vec3(value: &Vec3, x: f64, y: f64, z: f64) -> bool {
 }
 
 fn edited(snapshot: &ModelSnapshot, diff: &ModelDiff) -> ModelSnapshot {
-    protocol::apply_diff(diff, snapshot).expect("the diff applies")
+    protocol::apply_diff_cold(diff, snapshot).expect("the diff applies")
 }
 
 fn raise_storey(snapshot: &ModelSnapshot, id: &str, height: f64) -> ModelSnapshot {

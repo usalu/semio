@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "validityMilliseconds": 600000,
+  "cases": [
+    {
+      "id": "surviving-identity",
+      "fault": "unchanged",
+      "outcome": "reuse"
+    },
+    {
+      "id": "only-exact-leaf-miss",
+      "fault": "exact-leaf-absent",
+      "outcome": "recompute"
+    },
+    {
+      "id": "ancestor-absent",
+      "fault": "ancestor-absent",
+      "outcome": "refuse"
+    },
+    {
+      "id": "ancestor-replaced",
+      "fault": "ancestor-replaced",
+      "outcome": "refuse"
+    },
+    {
+      "id": "hash",
+      "fault": "hash",
+      "outcome": "refuse"
+    },
+    {
+      "id": "contract",
+      "fault": "contract",
+      "outcome": "refuse"
+    },
+    {
+      "id": "symlink",
+      "fault": "symlink",
+      "outcome": "refuse"
+    },
+    {
+      "id": "hardlink",
+      "fault": "hardlink",
+      "outcome": "refuse"
+    },
+    {
+      "id": "leaf-disappears",
+      "fault": "leaf-disappears",
+      "outcome": "refuse"
+    },
+    {
+      "id": "absence-reappears",
+      "fault": "absence-reappears",
+      "outcome": "refuse"
+    },
+    {
+      "id": "permission",
+      "fault": "permission",
+      "outcome": "refuse"
+    },
+    {
+      "id": "earlier-present-leaf-disappears-during-later-yield",
+      "fault": "prior-leaf-disappears",
+      "outcome": "refuse"
+    },
+    {
+      "id": "cold-inventory-file-replaced-by-fifo",
+      "fault": "cold-fifo",
+      "outcome": "refuse"
+    },
+    {
+      "id": "cold-inventory-primary-survives-secondary-close",
+      "fault": "cold-close",
+      "outcome": "refuse"
+    },
+    {
+      "id": "cold-inventory-correct-hash-invalid-utf8",
+      "fault": "cold-utf8",
+      "outcome": "refuse"
+    }
+  ],
+  "primaryFailures": [
+    "false",
+    "undefined"
+  ],
+  "errorCases": [
+    {
+      "code": "ENOENT",
+      "missing": true
+    },
+    {
+      "code": "ENOTDIR",
+      "missing": false
+    },
+    {
+      "code": "EACCES",
+      "missing": false
+    },
+    {
+      "code": "EPERM",
+      "missing": false
+    },
+    {
+      "code": "EIO",
+      "missing": false
+    },
+    {
+      "code": "ECANCELED",
+      "missing": false
+    },
+    {
+      "code": "ETIMEDOUT",
+      "missing": false
+    }
+  ]
+}

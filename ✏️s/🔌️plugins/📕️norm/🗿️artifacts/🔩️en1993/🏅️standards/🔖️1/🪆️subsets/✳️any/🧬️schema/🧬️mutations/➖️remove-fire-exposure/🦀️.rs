@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 pub struct RemoveFireExposure { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveFireExposure where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_fire_exposure::InsertFireExposure> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "fire-exposure", kind: "remove-fire-exposure", record: "RemovedFireExposure" };
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> { crate::remove_fire_exposure::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove fire exposure #{}", self.index), &format!("Brandbeanspruchung #{} entfernen", self.index)) }
+    fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1993Snapshot, Op> for RemoveFireExposure where Op: protocol::ColdMutation<En1993Snapshot, ReferenceDiff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_fire_exposure::InsertFireExposure> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1993Snapshot>>::ReferenceDiff> { crate::remove_fire_exposure::diff::diff(self, base) }
     fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::remove_fire_exposure::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove fire exposure #{}", self.index), &format!("Brandbeanspruchung #{} entfernen", self.index)) }
-    fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 
 //#region 🪢️Mounts

@@ -4,7 +4,7 @@ import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inf
 import { prepareDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
 import { createAdmittedShellInstanceV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { quiesceSessionWorkV1, surfaceSwitchBusyTextV1 } from "../../🔀️surface-switch/🟦️.ts";

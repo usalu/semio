@@ -32,3 +32,13 @@ fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact
   while !owner.terminal_is_empty(){owner.close_step(grant).unwrap();}while !payload.terminal_is_empty(){payload.close_step(grant).unwrap();}let mut root=semio_framework_async::CancelTokenRetirement::from_token(cancel);while !root.terminal_is_empty(){root.close_step(grant).unwrap();}
  }eprintln!("[DEBUG] original StepContext retirement closes born Unicode custody after cancel, preserves ledger/recipient, rejects expired deadline and empty fuel, every physical receipt matches System heap");
 }
+
+#[test]
+fn original_receiving_ready_scope_settles_a_ready_step_and_refuses_a_suspended_one(){
+ use crate::{CancelToken,StepContext,StepBudget,OperationId,Generation};use semio_framework_job_payload::JobPayloadAuthority;
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let(cancel,_)=CancelToken::admit_root(grant).unwrap().unwrap();let(mut payload,_)=JobPayloadAuthority::admit(OperationId(76),Generation(5),grant).unwrap().unwrap();let mut owner=OriginalJobDecodeOwner::empty();let mut sequence=0;let mut spent=RetainedCloneProgress::default();
+ {let mut cx=StepContext::with_payload_authority(OperationId(76),Generation(5),StepBudget::new(4,u64::MAX,grant),&cancel,crate::logical_now_us,&mut sequence,&mut spent,&payload).unwrap().with_original_decoder(&mut owner);
+  assert_eq!(cx.with_native_receiving_ready(async|_|7u8).unwrap(),7);assert!(cx.receiving_issued_grant().is_none());assert_eq!(cx.receiving_child_progress(),RetainedCloneProgress::default());
+  let refused=cx.with_native_receiving_ready(async|_|std::future::pending::<()>().await).unwrap_err();assert_eq!(refused.kind,ValueRefusalKind::InvariantViolated);}
+ while !owner.terminal_is_empty(){owner.close_step(grant).unwrap();}while !payload.terminal_is_empty(){payload.close_step(grant).unwrap();}let mut root=semio_framework_async::CancelTokenRetirement::from_token(cancel);while !root.terminal_is_empty(){root.close_step(grant).unwrap();}
+}

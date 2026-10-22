@@ -45,7 +45,7 @@ impl semio_framework_value::FromValue for DagSnapshot {
         Ok(result.take())
     }
     fn retire_decoded(self) {
-        let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<DagContentChild>::default();
+        let factory = semio_framework_value::OwnedValueRetirementFactory::<DagContentChild>::default();
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, &self.content), maximum_depth: 2, ..Default::default() };
         let (mut cursor, _) = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, self.content, grant).unwrap_or_else(|(error, _)| panic!("DAG child retirement admission refused: {error}"));
         store::test_support::drive_retirement(cursor.as_mut()).expect("DAG child closes with its exact owner");

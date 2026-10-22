@@ -17,6 +17,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // 🪝️repoManagedGitHooks lists git hook filenames this repo may install and must never leave enabled.
@@ -147,12 +149,12 @@ func microCommitCommand(factory EngineFactory, config *Config) *command.Command 
 }
 
 func runMicroCommitScript(ctx context.Context, repoRoot string, args []string) error {
-	bun, err := resolveBunBinary(repoRoot)
+	repo, err := repoExecutable()
 	if err != nil {
 		return err
 	}
 	cmdArgs := append([]string{"./📜️script.ts", "micro-commit"}, args...)
-	c := exec.CommandContext(ctx, bun, cmdArgs...)
+	c := workspace.ToolCommandContext(ctx, repo, cmdArgs...)
 	c.Dir = repoRoot
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -167,36 +169,5 @@ func runMicroCommitScript(ctx context.Context, repoRoot string, args []string) e
 	return nil
 }
 
-func resolveBunBinary(repoRoot string) (string, error) {
-	if pinned := strings.TrimSpace(os.Getenv("COMPOSE_BUN")); pinned != "" {
-		if _, err := os.Stat(pinned); err == nil {
-			return pinned, nil
-		}
-	}
-	pinPath := filepath.Join(RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun")
-	if data, err := os.ReadFile(pinPath); err == nil {
-		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
-			if _, statErr := os.Stat(line); statErr == nil {
-				return line, nil
-			}
-		}
-	}
-	if bunInstall := strings.TrimSpace(os.Getenv("BUN_INSTALL")); bunInstall != "" {
-		for _, name := range []string{"bun", "bun.exe"} {
-			candidate := filepath.Join(bunInstall, "bin", name)
-			if _, err := os.Stat(candidate); err == nil {
-				return candidate, nil
-			}
-		}
-	}
-	for _, rel := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
-		candidate := filepath.Join(repoRoot, rel)
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
-		}
-	}
-	if path, err := exec.LookPath("bun"); err == nil {
-		return path, nil
-	}
-	return "", fmt.Errorf("bun not found — install bun or set COMPOSE_BUN")
-}
+// 🚀️repoExecutable is the running repo command: the micro-commit script starts through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here.
+func repoExecutable() (string, error) { return os.Executable() }

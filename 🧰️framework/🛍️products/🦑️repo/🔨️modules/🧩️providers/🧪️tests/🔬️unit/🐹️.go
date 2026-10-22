@@ -97,7 +97,7 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := vsCodeEventFromHookEvent(tc.event, tc.parentInfo)
+			result := copilotEventFromHookEvent(tc.event, tc.parentInfo)
 			if result != tc.expect {
 				t.Errorf("expected %q, got %q", tc.expect, result)
 			}
@@ -105,9 +105,9 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 	}
 }
 
-func TestFormatVSCodeHookOutput(t *testing.T) {
+func TestFormatCopilotHookOutput(t *testing.T) {
 	t.Run("PreToolUse allow", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("PreToolUse", model.HookResultAgentToolStarting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
+		out := FormatCopilotHookOutput("PreToolUse", model.HookResultAgentToolStarting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -124,7 +124,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("PreToolUse deny", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("PreToolUse", model.HookResultAgentToolStarting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: false, Message: "blocked: git checkout"}}})
+		out := FormatCopilotHookOutput("PreToolUse", model.HookResultAgentToolStarting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: false, Message: "blocked: git checkout"}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -141,7 +141,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("SessionStart with message", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("SessionStart", model.HookResultAgentStarted{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true, Message: "agent.started acknowledged"}}})
+		out := FormatCopilotHookOutput("SessionStart", model.HookResultAgentStarted{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true, Message: "agent.started acknowledged"}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -155,7 +155,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("Stop always has hookSpecificOutput", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("Stop", model.HookResultAgentEnded{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
+		out := FormatCopilotHookOutput("Stop", model.HookResultAgentEnded{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -169,7 +169,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("UserPromptSubmit always has hookSpecificOutput", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("UserPromptSubmit", model.HookResultAgentPromptSubmitting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
+		out := FormatCopilotHookOutput("UserPromptSubmit", model.HookResultAgentPromptSubmitting{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -183,7 +183,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("PostToolUse always has hookSpecificOutput", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("PostToolUse", model.HookResultAgentToolEnded{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
+		out := FormatCopilotHookOutput("PostToolUse", model.HookResultAgentToolEnded{HookResultAgentBase: model.HookResultAgentBase{HookResultBase: model.HookResultBase{Allowed: true}}})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -197,7 +197,7 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 		}
 	})
 	t.Run("unknown event empty output", func(t *testing.T) {
-		out := FormatVSCodeHookOutput("", model.HookResultBase{Allowed: true, Message: "test"})
+		out := FormatCopilotHookOutput("", model.HookResultBase{Allowed: true, Message: "test"})
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
 			t.Fatalf("expected valid JSON, got: %v", err)
@@ -417,37 +417,37 @@ func TestNullManagementProvider(t *testing.T) {
 	}
 }
 
-func TestAllEditorProviders(t *testing.T) {
-	providers := AllEditorProviders()
+func TestAllAgentClientProviders(t *testing.T) {
+	providers := AllAgentClientProviders()
 	if len(providers) == 0 {
-		t.Fatal("AllEditorProviders() returned empty")
+		t.Fatal("AllAgentClientProviders() returned empty")
 	}
 	kinds := make(map[string]bool)
 	for _, p := range providers {
 		if p.Kind() == "" {
-			t.Error("editor provider has empty Kind()")
+			t.Error("agent-client provider has empty Kind()")
 		}
 		kinds[p.Kind()] = true
 	}
 	for _, expected := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
 		if !kinds[expected] {
-			t.Errorf("missing editor provider for %s", expected)
+			t.Errorf("missing agent-client provider for %s", expected)
 		}
 	}
 }
 
-func TestGetEditorProvider(t *testing.T) {
+func TestGetAgentClientProvider(t *testing.T) {
 	for _, client := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
-		p := GetEditorProvider(client)
+		p := GetAgentClientProvider(client)
 		if p == nil {
-			t.Errorf("GetEditorProvider(%s) returned nil", client)
+			t.Errorf("GetAgentClientProvider(%s) returned nil", client)
 			continue
 		}
 		if p.Kind() != client {
 			t.Errorf("expected Kind()=%s, got %s", client, p.Kind())
 		}
 	}
-	if p := GetEditorProvider("nonexistent"); p != nil {
+	if p := GetAgentClientProvider("nonexistent"); p != nil {
 		t.Errorf("expected nil for unknown client, got %v", p)
 	}
 }

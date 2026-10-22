@@ -24,13 +24,17 @@ pub struct CreateCharacterStyle {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_character_style::DeleteCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "character-style", kind: "create-character-style", record: "CreatedCharacterStyle" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Create character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" erstellen", self.id)) }
+    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for CreateCharacterStyle where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_character_style::DeleteCharacterStyle> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_character_style(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_create_character_style(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Create character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" erstellen", self.id)) }
-    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 
 pub fn diff_create_character_style(payload: &CreateCharacterStyle, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

@@ -4,7 +4,7 @@ import{createHash}from"node:crypto";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import installSchema from"../../🧬️schema/📥️install.json";
+import {javascriptInstallSchemaV1 as installSchema} from"../../🧱️schemas/🟦️.ts";
 import corpus from"./🔣️.json";
 
 test("Actual installer failures retain bounded redacted child diagnostics under the original output sink",async()=>{

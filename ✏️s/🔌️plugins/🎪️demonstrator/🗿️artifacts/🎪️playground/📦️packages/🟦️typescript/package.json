@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/demonstrator-playground:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/demonstrator-playground:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/demonstrator-playground:test"
+    "build": "repo run @semio-tech/demonstrator-playground:build",
+    "check": "repo run @semio-tech/demonstrator-playground:check",
+    "test": "repo run @semio-tech/demonstrator-playground:test"
   },
   "dependencies": {},
   "bundleKind": "library",

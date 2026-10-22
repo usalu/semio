@@ -58,6 +58,7 @@ fn held_watchdog(id: &str) {
 //#region 🔒️Contention
 #[test]
 fn microsecond_telemetry_contention_timer_site_does_not_wait() {
+    let _gate = crate::telemetry_test_gate();
     let law = case("timer-site-held");
     let timer = StepTimer::start("test.contention.timer");
     let guard = site_registry().try_lock().expect("original static telemetry fixture gate is available");
@@ -67,16 +68,19 @@ fn microsecond_telemetry_contention_timer_site_does_not_wait() {
 
 #[test]
 fn microsecond_telemetry_contention_watchdog_site_preserves_fault_without_waiting() {
+    let _gate = crate::telemetry_test_gate();
     held_watchdog("watchdog-site-held");
 }
 
 #[test]
 fn microsecond_telemetry_contention_watchdog_violation_preserves_fault_without_waiting() {
+    let _gate = crate::telemetry_test_gate();
     held_watchdog("watchdog-violation-held");
 }
 
 #[test]
 fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() {
+    let _gate = crate::telemetry_test_gate();
     let law = case("event-ring-held");
     let operation = allocate_operation_id();
     let generation = Generation(37);
@@ -93,6 +97,7 @@ fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() 
 
 #[test]
 fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
+    let _gate = crate::telemetry_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(51);
@@ -123,6 +128,7 @@ fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
 //#region 📒️SustainedOverrun
 #[test]
 fn microsecond_sustained_overrun_ledger_quarantines_only_attributable_steps() {
+    let _gate = crate::telemetry_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     assert_eq!(fixture["sustainedOverrunSteps"].as_u64().unwrap(), u64::from(SUSTAINED_OVERRUN_QUARANTINE_STEPS));
     let operation = allocate_operation_id();
@@ -162,6 +168,7 @@ fn microsecond_sustained_overrun_ledger_quarantines_only_attributable_steps() {
 
 #[test]
 fn microsecond_unusable_clock_reading_stays_terminal_and_resets_the_overrun_run() {
+    let _gate = crate::telemetry_test_gate();
     let operation = allocate_operation_id();
     let generation = Generation(84);
     let guard = Watchdog { site: "test.sustained-overrun.clock", operation, generation, stage: InteractiveStage::InteractiveStep, start_us: Some(100), finished: true };

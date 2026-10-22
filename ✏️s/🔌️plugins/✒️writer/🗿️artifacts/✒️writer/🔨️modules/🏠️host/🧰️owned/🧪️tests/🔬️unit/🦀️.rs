@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget;
 #[allow(unused_imports)]
-use semio_framework_value::retirement::OwnedValueRetirementFactory;
+use semio_framework_value::OwnedValueRetirementFactory;
 use crate::host::owned::{WRITER_ENVELOPE_FIELD_BYTES};
 use crate::host::owned::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;

@@ -1,0 +1,46 @@
+{
+ "version": 1,
+ "contributor": {
+  "alias": "ueli",
+  "emoji": "🐙️",
+  "name": "U",
+  "email": "u@e.x"
+ },
+ "names": [
+  {
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expectedTag": "🐙️ueli🎆️26🌙️10☀️21🚩️",
+   "expectedSubject": "🐙️ueli🎆️26🌙️10☀️21🔀️"
+  },
+  {
+   "now": [
+    2105,
+    1,
+    2
+   ],
+   "expectedTag": "🐙️ueli🎆️05🌙️01☀️02🚩️",
+   "expectedSubject": "🐙️ueli🎆️05🌙️01☀️02🔀️"
+  }
+ ],
+ "repo": {
+  "commits": [
+   "start",
+   "🐙️ueli🎆️26🌙️10☀️20🔀️",
+   "middle",
+   "🐙️ueli🎆️26🌙️10☀️21🔀️",
+   "latest"
+  ],
+  "expectedIndex": 3,
+  "none": [
+   "a",
+   "b"
+  ],
+  "lookback": {
+   "wipAt": 0
+  }
+ }
+}

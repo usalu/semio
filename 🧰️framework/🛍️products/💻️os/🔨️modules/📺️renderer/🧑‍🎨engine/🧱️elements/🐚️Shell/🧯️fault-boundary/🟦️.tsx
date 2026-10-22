@@ -1,5 +1,6 @@
 /** 🧯️ Scoped React fault boundary of the shell: logs the fault and renders a localized fallback with optional retry. Leaf module below the shell composition root, so hosts can import it without importing the root. */
-import React, { Component, type ReactNode } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { Component, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { Button, type UiLabel } from "@semio-tech/ui-react";
 import { SemioFaultError, type Fault } from "@semio-tech/framework";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";

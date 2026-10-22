@@ -23,7 +23,7 @@ use crate::ShootingSnapshot;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = ShootingSnapshot, diff = ShootingDiff, schema = "shooting.shooting")]
+#[mutations(snapshot = ShootingSnapshot, diff = ShootingDiff, schema = "shooting.shooting", reference = ShootingSnapshot, reference_diff = ShootingDiff)]
 pub enum ShootingMutation {
     CreateAsset(crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset),
     DeleteAsset(crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset),
@@ -110,7 +110,7 @@ pub fn apply_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingM
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
 pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
     Ok({
-    <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::inverse(mutation, snapshot)?
+    <ShootingMutation as protocol::ColdMutation<ShootingSnapshot>>::inverse(mutation, snapshot)?
 
     })
 }

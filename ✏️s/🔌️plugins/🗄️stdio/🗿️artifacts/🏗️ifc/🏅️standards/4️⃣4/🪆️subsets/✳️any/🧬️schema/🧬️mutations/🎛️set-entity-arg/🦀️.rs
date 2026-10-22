@@ -16,6 +16,15 @@ pub struct SetEntityArg {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-arg", kind: "set-entity-arg", record: "SetEntityArg" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<IfcSnapshot, IfcMutation> for SetEntityArg {
     fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id, index, value } = self;
         protocol::MutationOutcome::new(diff::diff_set_entity_arg(*id, *index, value.clone()))
@@ -27,12 +36,6 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityArg {
             Some(v) => IfcMutation::SetEntityArg(SetEntityArg { id: *id, index: *index, value: v.clone() }),
             None => return Ok(Vec::new()),
         }])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

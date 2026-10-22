@@ -358,6 +358,10 @@ pack = { path = "../🧰️framework/🔨️modules/🎒️pack/📦️packages/
 semio-framework-server = { path = "../🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-async-testkit = { path = "../🧰️framework/🔨️modules/⏳️async/🎭️testkit/📦️packages/🦀️rust" }
+semio-framework-async-slots = { path = "../🧰️framework/🔨️modules/⏳️async/🧱️boxed-slots/📦️packages/🦀️rust" }
+semio-framework-async-sync = { path = "../🧰️framework/🔨️modules/⏳️async/🚦️sync-primitives/📦️packages/🦀️rust" }
+semio-framework-async-timer = { path = "../🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }

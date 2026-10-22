@@ -1,0 +1,1539 @@
+{
+ "version": 1,
+ "groups": [
+  "seam2",
+  "schemas",
+  "storage2",
+  "generation2",
+  "glue",
+  "graph2",
+  "tools2",
+  "policy2",
+  "ratchet2"
+ ],
+ "requires": "round 1 applied",
+ "files": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-graph-const",
+     "group": "graph2",
+     "old": "import{selectPackageManagerV1}from\"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";",
+     "new": "import{selectPackageManagerV1}from\"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-graph-members",
+     "group": "graph2",
+     "old": "file===\"bun.lock\"",
+     "new": "javascriptManagerV1.lockFileNames().includes(file)",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "literals-graph-environment",
+     "group": "graph2",
+     "old": "lock:\"bun.lock\"",
+     "new": "lock:javascriptManagerV1.primaryLockName()",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts.pre",
+   "postSha256": "40c4b7c075e038ba6e2e70cb8b3a3dc167e5134f7c9d6f3b9f87d7aabe7e1d26"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-verification-head",
+     "group": "graph2",
+     "old": "import assert from \"node:assert/strict\";",
+     "new": "import assert from \"node:assert/strict\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-verification-members",
+     "group": "graph2",
+     "old": "file===\"bun.lock\"",
+     "new": "javascriptManagerV1.lockFileNames().includes(file)",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🟦️.ts.pre",
+   "postSha256": "00e388f864c0ab59f76890782d7ba638db39d65b321a039438646f46f3cb2164"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-selection-head",
+     "group": "graph2",
+     "old": "import {createHash} from \"node:crypto\";",
+     "new": "import {createHash} from \"node:crypto\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptLocksV1=packageManagerRegistryV1.forEcosystem(\"javascript\").flatMap(manager=>manager.lockFileNames()),javascriptScopeConfigsV1=packageManagerRegistryV1.forEcosystem(\"javascript\").flatMap(manager=>manager.configurationNames(\"scope\"));",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-selection-locks",
+     "group": "graph2",
+     "old": "\"uv.lock\",\"bun.lock\",\"package-lock.json\",\"yarn.lock\"",
+     "new": "\"uv.lock\",...javascriptLocksV1,\"yarn.lock\"",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-selection-config",
+     "group": "graph2",
+     "old": "\".gitignore\",\"bunfig.toml\",\"rust-toolchain.toml\"",
+     "new": "\".gitignore\",...javascriptScopeConfigsV1,\"rust-toolchain.toml\"",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts.pre",
+   "postSha256": "81111f6afa2de5ac5a6825062de444cc92e717dafbfc2d3886d00253b9ba3750"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-truth-head",
+     "group": "graph2",
+     "old": "import { existsSync } from \"node:fs\";",
+     "new": "import { existsSync } from \"node:fs\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-truth-name",
+     "group": "graph2",
+     "old": "dependencyReadFileSafe(repoRoot, \"bun.lock\")",
+     "new": "dependencyReadFileSafe(repoRoot, javascriptLockV1)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-truth-text",
+     "group": "graph2",
+     "old": "same bun.lock workspace snapshot",
+     "new": "same ${javascriptLockV1} workspace snapshot",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-truth-mismatch",
+     "group": "graph2",
+     "old": "package manifest / bun.lock workspace snapshot",
+     "new": "package manifest / ${javascriptLockV1} workspace snapshot",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts.pre",
+   "postSha256": "37cd30e0bee5774375563a8eeef0ac460fe396105dd0cb50333a15255d258973"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-inventory-head",
+     "group": "graph2",
+     "old": "import { cargoWorkspaceForManifest } from \"../../🗂️workspaces/🦀️cargo/🟦️.ts\";",
+     "new": "import { cargoWorkspaceForManifest } from \"../../🗂️workspaces/🦀️cargo/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-inventory-lock",
+     "group": "graph2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      3
+     ]
+    },
+    {
+     "id": "literals-inventory-recipe",
+     "group": "graph2",
+     "old": "tools/bun.lock\"]",
+     "new": "tools/\" + javascriptLockV1]",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-inventory-document",
+     "group": "graph2",
+     "old": "Bun.JSONC.parse(contents)",
+     "new": "javascriptManagerV1.parseLockDocument(contents)",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts.pre",
+   "postSha256": "207880c9a39911665f6c4e9d356323d761ff9f5a56733a9e0288262771b7054b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🛤️path-rules/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-metrics-head",
+     "group": "graph2",
+     "old": "//#region Constants\n",
+     "new": "//#region Constants\nimport {packageManagerRegistryV1} from \"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-metrics-locks",
+     "group": "graph2",
+     "old": "\"uv.lock\", \"bun.lockb\", \"cargo.lock\"]",
+     "new": "\"uv.lock\", \"cargo.lock\", ...packageManagerRegistryV1.all().flatMap(manager => manager.descriptor.locks.filter(lock => lock.format.endsWith(\"-lockb\")).map(lock => lock.name))]",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🛤️path-rules/🟦️.ts.pre",
+   "postSha256": "f423fa36281d30aa5884d820c28e8d6048db56fe46d07ad3344e179db7d3bc95"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-nodes-head",
+     "group": "graph2",
+     "old": "import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from\"../../🚪️admission/🟦️.ts\";",
+     "new": "import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from\"../../🚪️admission/🟦️.ts\";\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-nodes-lock",
+     "group": "graph2",
+     "old": "existsSync(join(workspaceRoot, \"bun.lock\"))) results.push([\"bun.lock\",",
+     "new": "existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName()))) results.push([javascriptManagerV1.primaryLockName(),",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs.pre",
+   "postSha256": "ec5b943276814f50a5788f10b9abe175b2fd2ed659e24fb6f144dc4032d41e57"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-edges-head",
+     "group": "graph2",
+     "old": "/** 🕸️ Derives project dependency edges and publishes the complete module facts of one graph. */",
+     "new": "/** 🕸️ Derives project dependency edges and publishes the complete module facts of one graph. */\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-edges-lock",
+     "group": "graph2",
+     "old": "existsSync(join(workspaceRoot, \"bun.lock\"))",
+     "new": "existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName()))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs.pre",
+   "postSha256": "129a3c42567a16a7385c40ce2e809ca94563b6795d8d1912e1145e2d778a66e0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-scripts-head",
+     "group": "graph2",
+     "old": "import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from \"../../🚪️admission/🟦️.ts\";",
+     "new": "import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from \"../../🚪️admission/🟦️.ts\";\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-scripts-filter",
+     "group": "graph2",
+     "old": "![\"package.json\", \"bun.lock\"].includes(file)",
+     "new": "![\"package.json\", javascriptManagerV1.primaryLockName()].includes(file)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-scripts-fallback",
+     "group": "graph2",
+     "old": "\"{workspaceRoot}/bun.lock\"",
+     "new": "`{workspaceRoot}/${javascriptManagerV1.primaryLockName()}`",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "literals-scripts-graph",
+     "group": "graph2",
+     "old": "existsSync(join(workspaceRoot, \"bun.lock\"))",
+     "new": "existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName()))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs.pre",
+   "postSha256": "23f73644dec32769c5724d0194808088432968f4e9c5bb98b3e289faafb5736e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-revision-head",
+     "group": "graph2",
+     "old": "/** ♻️ Identifies the complete authored graph implementation, its policy authority and its dependency resolution authority. */",
+     "new": "/** ♻️ Identifies the complete authored graph implementation, its policy authority and its dependency resolution authority. */\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-revision-recipe",
+     "group": "graph2",
+     "old": "join(recipe, \"bun.lock\")",
+     "new": "join(recipe, javascriptManagerV1.primaryLockName())",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-revision-lock",
+     "group": "graph2",
+     "old": "existsSync(join(workspaceRoot, \"bun.lock\"))",
+     "new": "existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName()))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs.pre",
+   "postSha256": "b20dc9d987f8452e11277f2a407df843aadcfd49c593143b50da897a4197f492"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-targets-head",
+     "group": "graph2",
+     "old": "/** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */",
+     "new": "/** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-targets-config",
+     "group": "graph2",
+     "old": "\"{workspaceRoot}/bunfig.toml\"",
+     "new": "`{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs.pre",
+   "postSha256": "a9ab55f176b85fca987bcdc984c854fab6197e2acf00cc15ecb361a23031a720"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-inputs-head",
+     "group": "graph2",
+     "old": "import{physicalSourceOriginV1}from\"./🔏️revision/🟨️.mjs\";",
+     "new": "import{physicalSourceOriginV1}from\"./🔏️revision/🟨️.mjs\";\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-inputs-config",
+     "group": "graph2",
+     "old": "`{workspaceRoot}/bunfig.toml`",
+     "new": "`{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs.pre",
+   "postSha256": "27e6e5d7968e5e050eface5d08142f0e9fe520d1c5f9acfeccbb539a98779f3c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "edits": [
+    {
+     "id": "literals-index-glob",
+     "group": "graph2",
+     "old": "Cargo.toml,bun.lock,*.patch}`",
+     "new": "Cargo.toml,${javascriptManagerV1.lockFileNames.join(\",\")},*.patch}`",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-index-sources",
+     "group": "graph2",
+     "old": "...roster.map((entry) => new URL(entry.path, import.meta.url))].map((url) => fileURLToPath(url)));",
+     "new": "...roster.map((entry) => new URL(entry.path, import.meta.url))].map((url) => fileURLToPath(url)).concat(createManagerRequireV1(import.meta.url)(\"../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").sourceFilesV1()));",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-index-head",
+     "group": "graph2",
+     "old": "/** 🕸️ Assembles the build inference plugin from its revisioned components and loads a complete new component graph whenever any authored Source of the module changes. */",
+     "new": "/** 🕸️ Assembles the build inference plugin from its revisioned components and loads a complete new component graph whenever any authored Source of the module changes. */\nimport {createRequire as createManagerRequireV1} from \"node:module\";\nconst javascriptManagerV1 = createManagerRequireV1(import.meta.url)(\"../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\");",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs.pre",
+   "postSha256": "cb0fc8e123270eee479195cbe83bfc1a3cdc1074555486223e5dba6cd0685146"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-🛠️tools-head",
+     "group": "tools2",
+     "old": "import {readManagedNxActivationTargetV1} from \"./🔗️activation/🟦️.ts\";",
+     "new": "import {readManagedNxActivationTargetV1} from \"./🔗️activation/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-🛠️tools",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      3
+     ]
+    },
+    {
+     "id": "literals-tools-install",
+     "group": "tools2",
+     "old": "bun,[\"install\",\"--frozen-lockfile\",\"--ignore-scripts\",\"--cache-dir\",downloadCache,\"--backend\",\"copyfile\"]",
+     "new": "bun,[...selectPackageManagerV1(\"javascript\").render(\"install-pinned\",{platform:process.platform,cache:downloadCache}).arguments]",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts.pre",
+   "postSha256": "b158551ebf7cbed957ee7eff216606f35feba9e266a798984178e87e18bbe069"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-📊️material-head",
+     "group": "tools2",
+     "old": "import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from\"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "new": "import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from\"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-📊️material",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts.pre",
+   "postSha256": "5806961860ba3482b0d8e41af05773e7e15ddc1aa29572fd35a72aa95feab4e9"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-📥️snapshot-head",
+     "group": "tools2",
+     "old": "import{verifyNxSdkSharedSourcesV1}from\"../📥️source/🔗️derivative/🔏️index/🟦️.ts\";",
+     "new": "import{verifyNxSdkSharedSourcesV1}from\"../📥️source/🔗️derivative/🔏️index/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-📥️snapshot",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      2
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts.pre",
+   "postSha256": "9bd0cbf0282881535405c77aca2df990c4719c08f3f9150f24c8744e4ea100a1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-🧊️pristine-head",
+     "group": "tools2",
+     "old": "import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from\"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "new": "import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from\"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-🧊️pristine",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      3
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts.pre",
+   "postSha256": "d4e1bc8f05898a5d531a82a79586198c764eb8da851c7ccdf08bc3884cbd4a90"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-📥️reader-head",
+     "group": "tools2",
+     "old": "import{withRequestedIssuedResourceControlV1}from\"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
+     "new": "import{withRequestedIssuedResourceControlV1}from\"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-📥️reader",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      2
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts.pre",
+   "postSha256": "a542be9b1743795f18c2e4f10fb2e4c527fa4dba77a15fbb29e0369dbe2f779b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-📐️projection-head",
+     "group": "tools2",
+     "old": "import{validateJsonSchemaSubset}from\"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\";",
+     "new": "import{validateJsonSchemaSubset}from\"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-📐️projection",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts.pre",
+   "postSha256": "12139edc79e5be01b17b593ce914853f8fc53e99590b318454aa787283e57135"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-tools-📥️physical-head",
+     "group": "tools2",
+     "old": "import{types}from\"node:util\";",
+     "new": "import{types}from\"node:util\";\nimport {selectPackageManagerV1,packageManagerRegistryV1} from \"../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\";\nconst javascriptManagerV1=selectPackageManagerV1(\"javascript\"),javascriptLockV1=javascriptManagerV1.primaryLockName();",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-tools-lock-📥️physical",
+     "group": "tools2",
+     "old": "\"bun.lock\"",
+     "new": "javascriptLockV1",
+     "counts": [
+      2
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts.pre",
+   "postSha256": "a82ef0296f02f3b03d9831f674c4a37a64b8087442f335df3febc37eb540c773"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-publication-known",
+     "group": "storage2",
+     "old": "known=new Set([\"node_modules\",\"w\",\"patches\",\"package.json\",\"bun.lock\",\"bunfig.toml\",\"bindings.json\",\"retained.json\"])",
+     "new": "known=new Set([...dependencyInstallSchema.$defs.SelectedRetirementProtocol.const.directoryRoles,...dependencyInstallSchema.$defs.SelectedRetirementProtocol.const.fileRoles,\"retained.json\"])",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-publication-roles",
+     "group": "storage2",
+     "old": "[[dependencyInstallSchema.$defs.ProducerRecipeProtocol.const.home,[\".bunfig.toml\",\".npmrc\"]],[dependencyInstallSchema.$defs.ProducerRecipeProtocol.const.config,[\".bunfig.toml\"]]]as const",
+     "new": "[[dependencyInstallSchema.$defs.ProducerRecipeProtocol.const.home,dependencyInstallSchema.$defs.ManagerProtocol.manager.configurationNames(\"home\")],[dependencyInstallSchema.$defs.ProducerRecipeProtocol.const.config,dependencyInstallSchema.$defs.ManagerProtocol.manager.configurationNames(\"config\")]]as const",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-publication-cache",
+     "group": "storage2",
+     "old": "environment.BUN_INSTALL_CACHE_DIR!",
+     "new": "environment[dependencyInstallSchema.$defs.ManagerProtocol.const.cacheVariable]!",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "literals-publication-config",
+     "group": "storage2",
+     "old": "===\"bunfig.toml\"",
+     "new": "===dependencyInstallSchema.$defs.ManagerProtocol.const.scopeConfig",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "schemas-import-📤️publication",
+     "group": "storage2",
+     "old": "import dependencyInstallSchema from\"../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json\"with{type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as dependencyInstallSchema} from\"../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-stamp-fields",
+     "group": "storage2",
+     "old": "SelectedRetirementCaptureProtocol.const.stampFields.map(key=>String(value[key as keyof ArtifactReadFileIdentityV1]))",
+     "new": "SelectedRetirementCaptureProtocol.const.stampFields.map((key:string)=>String(value[key as keyof ArtifactReadFileIdentityV1]))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts.pre",
+   "postSha256": "eca346e443eecc713e96b8b6c73ad7ea4137516a5e5c463c09d7899e1fc4520a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "literals-storage-cache",
+     "group": "storage2",
+     "old": "environment.BUN_INSTALL_CACHE_DIR!",
+     "new": "environment[installSchema.$defs.ManagerProtocol.const.cacheVariable]!",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "literals-storage-purge",
+     "group": "storage2",
+     "old": "dependencies:purge-bun-cache:",
+     "new": "dependencies:purge-manager-cache:",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "schemas-import-💾️storage",
+     "group": "storage2",
+     "old": "import installSchema from\"./🧬️schema/📥️install.json\"with{type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from\"./🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-imports",
+     "group": "storage2",
+     "old": "import {currentHostV1,selectPackageManagerV1} from \"../🔌️managers/📚️catalog/🟦️.ts\";\nimport {parseJsoncV1} from \"../🔌️managers/📖️formats/🟦️.ts\";\nconst packageManagerV1=selectPackageManagerV1(\"javascript\"),lockNameV1=packageManagerV1.primaryLockName(),scopeConfigV1=packageManagerV1.configurationNames(\"scope\")[0]!,generationDirectoryV1=packageManagerV1.generationDirectory(),packageManagerRuntimeV1=()=>packageManagerV1.runtimeIdentity(currentHostV1()),readLockDocumentV1=(text:string):any=>parseJsoncV1(text);\n/** 📁️ Names the store directory every generation of the selected JavaScript manager lives in. */\nexport const javascriptDependencyGenerationDirectoryV1=generationDirectoryV1;",
+     "new": "/** 📁️ Names the store directory every generation of the selected JavaScript manager lives in. */\nexport const javascriptDependencyGenerationDirectoryV1:string=installSchema.$defs.ManagerProtocol.const.generationDirectory;",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-lock-name",
+     "group": "storage2",
+     "old": "lockNameV1",
+     "new": "installSchema.$defs.ManagerProtocol.const.lockFile",
+     "counts": [
+      17
+     ]
+    },
+    {
+     "id": "driver-scope-configuration",
+     "group": "storage2",
+     "old": "scopeConfigV1",
+     "new": "installSchema.$defs.ManagerProtocol.const.scopeConfig",
+     "counts": [
+      3
+     ]
+    },
+    {
+     "id": "driver-manager",
+     "group": "storage2",
+     "old": "packageManagerV1.",
+     "new": "installSchema.$defs.ManagerProtocol.manager.",
+     "counts": [
+      6
+     ]
+    },
+    {
+     "id": "driver-runtime-key",
+     "group": "storage2",
+     "old": "sourceRoot,packageManagerRuntimeV1(),process.platform,process.arch",
+     "new": "sourceRoot,installSchema.$defs.ManagerProtocol.const.runtime,process.platform,process.arch",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-runtime-tier",
+     "group": "storage2",
+     "old": "protocol.ambientFallback,process.versions.bun,process.versions.node",
+     "new": "protocol.ambientFallback,installSchema.$defs.ManagerProtocol.const.runtime,process.versions.node",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-lock-project",
+     "group": "storage2",
+     "old": "const project=(lock:any,reverse:boolean)=>{const links=reverse?new Map([...mapping].map(([source,target])=>[target,source])):mapping;if(lock.patchedDependencies)lock.patchedDependencies=Object.fromEntries([...patchIdentities].map(([name,row])=>[name,reverse?posix.relative(scope,row.source):row.target]));lock.workspaces=Object.fromEntries(Object.entries(lock.workspaces??{}).filter(([path])=>reverse||path===\"\"||links.has(path)).map(([path,value])=>[links.get(path)??path,value]));for(const[key,row]of Object.entries(lock.packages??{}) as [string,any][]){if(!Array.isArray(row)||typeof row[0]!==\"string\")continue;const marker=row[0].indexOf(\"@workspace:\");if(marker<0)continue;const path=row[0].slice(marker+11),target=links.get(path);if(!target){if(reverse)throw Error(\"Locked workspace package lacks original admitted Source\");delete lock.packages[key];continue;}row[0]=row[0].slice(0,marker+11)+target;}return JSON.stringify(lock,null,2)+\"\\n\";};",
+     "new": "const project=(lock:string,reverse:boolean)=>installSchema.$defs.ManagerProtocol.manager.projectLock(lock,{reverse,mapping,patches:[...patchIdentities].map(([name,row])=>({name,forward:row.target,reverse:posix.relative(scope,row.source)}))});",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-lock-project-forward",
+     "group": "storage2",
+     "old": "project(readLockDocumentV1(lockBytes.toString()),false)",
+     "new": "project(lockBytes.toString(),false)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-lock-project-reverse",
+     "group": "storage2",
+     "old": "project(readLockDocumentV1(bytes),true)",
+     "new": "project(bytes,true)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-lock-document",
+     "group": "storage2",
+     "old": "readLockDocumentV1(projected)",
+     "new": "installSchema.$defs.ManagerProtocol.manager.parseLockDocument(projected)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-generation-directory",
+     "group": "storage2",
+     "old": "\"j\"",
+     "new": "installSchema.$defs.ManagerProtocol.const.generationDirectory",
+     "counts": [
+      36
+     ]
+    },
+    {
+     "id": "driver-generation-root",
+     "group": "storage2",
+     "old": "roots:[\"j/\"+plan.generation.slice(0,20)]",
+     "new": "roots:[installSchema.$defs.ManagerProtocol.const.generationDirectory+\"/\"+plan.generation.slice(0,20)]",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-profiles",
+     "group": "storage2",
+     "old": "for(const profile of[\"bun-import\",\"bun-require\"]as const){",
+     "new": "for(const profile of installSchema.$defs.ManagerProtocol.manager.resolutionProfiles()){",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-strict-profile",
+     "group": "storage2",
+     "old": "profile.startsWith(\"bun-\")",
+     "new": "(strict=>strict!==\"\"&&profile.startsWith(strict))(installSchema.$defs.ManagerProtocol.const.strictProfilePrefix)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-prefix",
+     "group": "storage2",
+     "old": "recipe.clearEnvironmentPrefixes.some(prefix=>upper.startsWith(prefix))",
+     "new": "recipe.clearEnvironmentPrefixes.some((prefix:string)=>upper.startsWith(prefix))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-ancestor",
+     "group": "storage2",
+     "old": "protocol.ancestorFields.map(key=>String(row[key as keyof BigIntStats]))",
+     "new": "protocol.ancestorFields.map((key:string)=>String(row[key as keyof BigIntStats]))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-selected-identity",
+     "group": "storage2",
+     "old": "protocol.selectedFields.map(key=>String(row[key as keyof ArtifactReadFileIdentityV1]))",
+     "new": "protocol.selectedFields.map((key:string)=>String(row[key as keyof ArtifactReadFileIdentityV1]))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-selected-facts",
+     "group": "storage2",
+     "old": "limits.selectedFields.map(key=>String(facts[key as keyof BigIntStats]))",
+     "new": "limits.selectedFields.map((key:string)=>String(facts[key as keyof BigIntStats]))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-home-config",
+     "group": "storage2",
+     "old": ".map(name=>path.join(home,name))",
+     "new": ".map((name:string)=>path.join(home,name))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-config-config",
+     "group": "storage2",
+     "old": ".map(name=>path.join(config,name))",
+     "new": ".map((name:string)=>path.join(config,name))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts.pre",
+   "postSha256": "ae30118c021b8a39d68f7975ded6ebd46880ac11f24c5e9504617760c2c7f48c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "edits": [
+    {
+     "id": "literals-catalog-lock-en",
+     "group": "tools2",
+     "old": "\"en\": \"Regenerate bun.lock after a manifest edit.\"",
+     "new": "\"en\": \"Regenerate the lock file of the selected package manager after a manifest edit.\"",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "literals-catalog-lock-de",
+     "group": "tools2",
+     "old": "\"de\": \"Erzeugt bun.lock nach einer Manifest-Änderung neu.\"",
+     "new": "\"de\": \"Erzeugt die Sperrdatei des gewählten Paketmanagers nach einer Manifest-Änderung neu.\"",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json.pre",
+   "postSha256": "bba9a7b86b063aec3af6a8c7fec1cb9187a20ab4e0dd6387d0417eb8697b31c0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json",
+   "edits": [
+    {
+     "id": "literals-help-lock-en",
+     "group": "tools2",
+     "old": "Regenerate bun.lock after a manifest edit.",
+     "new": "Regenerate the lock file of the selected package manager after a manifest edit.",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "literals-help-lock-de",
+     "group": "tools2",
+     "old": "Erzeugt bun.lock nach einer Manifest-Änderung neu.",
+     "new": "Erzeugt die Sperrdatei des gewählten Paketmanagers nach einer Manifest-Änderung neu.",
+     "counts": [
+      2
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json.pre",
+   "postSha256": "73518c52b98d5bc80fecdcde9e0d8c0d178f00ae4cf610b059cde59b3a619daf"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+   "edits": [
+    {
+     "id": "native-import",
+     "group": "glue",
+     "old": "import { wasmBindgenVersion } from \"../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts\";\n",
+     "new": "import { wasmBindgenVersion } from \"../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts\";\nimport { selectPackageManagerV1 } from \"../🔌️managers/📚️catalog/🟦️.ts\";\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "native-render",
+     "group": "glue",
+     "old": "  const run = async (command: string, args: string[], capture = false, environment?: NodeJS.ProcessEnv): Promise<string> => {",
+     "new": "  const render = (ecosystem: string, operation: \"lock\" | \"sync\" | \"provision\", request: Record<string, unknown> = {}): [string, string[]] => {\n    const invocation = selectPackageManagerV1(ecosystem).render(operation, { platform: process.platform, ...request });\n    return [invocation.executable, [...invocation.arguments]];\n  };\n  const run = async (command: string, args: string[], capture = false, environment?: NodeJS.ProcessEnv): Promise<string> => {",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "native-rust-lock",
+     "group": "glue",
+     "old": "await run(\"cargo\", [\"update\", \"--workspace\", \"--manifest-path\", owner.manifest])",
+     "new": "await run(...render(\"rust\", \"lock\", { manifest: owner.manifest }))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "native-go",
+     "group": "glue",
+     "old": "await run(\"go\", [\"mod\", \"download\"], false,",
+     "new": "await run(...render(\"go\", \"sync\"), false,",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "native-python",
+     "group": "glue",
+     "old": "  if (kind === \"python\") await run(\"uv\", [\"sync\", \"--locked\", \"--all-packages\", \"--all-groups\"]);\n",
+     "new": "  if (kind === \"python\") await run(...render(\"python\", \"sync\", { scope: \"all\" }));\n",
+     "counts": [
+      1
+     ],
+     "alt": "native-python"
+    },
+    {
+     "id": "native-python-planned",
+     "group": "glue",
+     "old": "    await run(\"uv\", [...plan.installArguments], false, planned);\n    await run(\"uv\", [...plan.syncArguments], false, planned);\n",
+     "new": "    await run(...render(\"python\", \"provision\", { settings: { series: plan.series } }), false, planned);\n    await run(...render(\"python\", \"sync\", { settings: { project: plan.root }, lists: { groups: plan.groups } }), false, planned);\n",
+     "counts": [
+      1
+     ],
+     "alt": "native-python"
+    }
+   ]
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌐️platform/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🌐️platform",
+     "group": "storage2",
+     "old": "import schema from \"../../🧬️schema/📥️install.json\";",
+     "new": "import {javascriptInstallSchemaV1 as schema} from \"../../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌐️platform/🟦️.ts.pre",
+   "postSha256": "30b0a6052c10366f5623b9f4eeac97afbb9d8296d3129d8381e14b789ade9b19"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-👓️reading",
+     "group": "storage2",
+     "old": "import schema from\"../../🧬️schema/📥️install.json\"with{type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as schema} from\"../../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-clone-schema",
+     "group": "storage2",
+     "old": "contractData=structuredClone(schema)",
+     "new": "contractData=(await import(\"../../🧱️schemas/🟦️.ts\")).cloneJavascriptInstallSchemaV1(schema)",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts.pre",
+   "postSha256": "2f4486663c669753fcb8a7270ad729c6c953bb49ae7359ff4bcb8e855f4ef7f4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-📏️paths",
+     "group": "storage2",
+     "old": "import installSchema from \"../../🧬️schema/📥️install.json\";",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts.pre",
+   "postSha256": "b6e01703d272d92e000cb1907634ac111f79b28d7841f000c4d2df24db688024"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📤️diagnostics/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-📤️diagnostics",
+     "group": "storage2",
+     "old": "import installSchema from\"../../🧬️schema/📥️install.json\";",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from\"../../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📤️diagnostics/🟦️.ts.pre",
+   "postSha256": "272c18d138d76318369fb663612e7b81dbd4ca7e32b0b181c461d7d45f90bdbf"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🚧️fence",
+     "group": "storage2",
+     "old": "import installSchema from \"../../🧬️schema/📥️install.json\";",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts.pre",
+   "postSha256": "6dd160e9bae80bf07c1dc4715348f554eae1d6a503dbb581243a8825c5e3193c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🧪️tests",
+     "group": "storage2",
+     "old": "import installSchema from \"../🧬️schema/📥️install.json\";",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts.pre",
+   "postSha256": "6a3acc9ce36577db0a5197cde0a0e2df8eeb8fa00b7b16f6fa25b1ed816dc296"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🧪️tests",
+     "group": "storage2",
+     "old": "import installSchema from \"../../💾️storage/🧬️schema/📥️install.json\" with {type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts.pre",
+   "postSha256": "0e8b53b159e1b0a0627ef38609960d4257d25fa3571e5293ca29d240950883be"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🧪️tests",
+     "group": "storage2",
+     "old": "import dependencyInstallSchema from \"../💾️storage/🧬️schema/📥️install.json\"with{type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as dependencyInstallSchema} from \"../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "driver-bundle-prelude",
+     "group": "storage2",
+     "old": "\";const packageManagerV1=selectPackageManagerV1(\\\"javascript\\\");const installSchema=\"+JSON.stringify(dependencyInstallSchema)+\";\"+operation.getText(source)",
+     "new": "\";const installSchema=\"+JSON.stringify(dependencyInstallSchema)+\";Object.defineProperty(installSchema.$defs.ManagerProtocol,\\\"manager\\\",{value:selectPackageManagerV1(\\\"javascript\\\")});\"+operation.getText(source)",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts.pre",
+   "postSha256": "11bca3e4a323b9ce15a6b55a895dfb9e58f8d0fe6d1cbb84be0a5e51cccaed60"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-💾️storage",
+     "group": "generation2",
+     "old": "import installSchema from \"../../💾️storage/🧬️schema/📥️install.json\" with {type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "generation-runtime",
+     "group": "generation2",
+     "old": "bun:String(process.versions.bun)",
+     "new": "manager:String(installSchema.$defs.ManagerProtocol.const.runtime)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-store-roles",
+     "group": "generation2",
+     "old": "for(const[role,names]of Object.entries(policy.storeRoleFiles))for(const name of names)",
+     "new": "for(const[role,names]of Object.entries(policy.storeRoleFiles)as [string,string[]][])for(const name of names)",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-environment-prefix",
+     "group": "generation2",
+     "old": "policy.environmentPrefixes.some(prefix=>upper.startsWith(prefix))",
+     "new": "policy.environmentPrefixes.some((prefix:string)=>upper.startsWith(prefix))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts.pre",
+   "postSha256": "29d9b4db9972de598026d600369ea4f9e2e8cd7e61ff47ef67bd1f06dff0c564"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-💾️storage",
+     "group": "storage2",
+     "old": "import installSchema from \"../../💾️storage/🧬️schema/📥️install.json\" with {type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-selected-name",
+     "group": "storage2",
+     "old": "policy.selectedFields.map(name=>String(facts[name as keyof typeof facts]))",
+     "new": "policy.selectedFields.map((name:string)=>String(facts[name as keyof typeof facts]))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "types-ancestor-name",
+     "group": "storage2",
+     "old": "policy.ancestorFields.map(name=>String(facts[name as keyof typeof facts]))",
+     "new": "policy.ancestorFields.map((name:string)=>String(facts[name as keyof typeof facts]))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts.pre",
+   "postSha256": "ff481648bc4e268ca2d7887bcee9727ff178285ba9626f23a841f3f009604512"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🧪️tests",
+     "group": "storage2",
+     "old": "import installSchema from \"../../💾️storage/🧬️schema/📥️install.json\" with {type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as installSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-import-materialized",
+     "group": "storage2",
+     "old": "import {test,expect} from \"bun:test\";",
+     "new": "import {test,expect} from \"bun:test\";\nimport {javascriptInstallSchemaV1 as materializedInstallSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-materialized-schema",
+     "group": "storage2",
+     "old": "JSON.parse(readFileSync(new URL(\"../../💾️storage/🧬️schema/📥️install.json\",import.meta.url),\"utf8\"))",
+     "new": "materializedInstallSchema",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts.pre",
+   "postSha256": "f6d36d2b848785e94baba80b1d9ba0f8ff424aa948b6194957ff5e5413cd6e22"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-import-🚀️bootstrap",
+     "group": "storage2",
+     "old": "import dependencyInstallSchema from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json\"with{type:\"json\"};",
+     "new": "import {javascriptInstallSchemaV1 as dependencyInstallSchema} from \"../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts.pre",
+   "postSha256": "db8739ad920bef07e36d30ef0a9ad2f0dbc0d430660457a209e6da3722ba8c30"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts",
+   "edits": [
+    {
+     "id": "schemas-generation-core",
+     "group": "generation2",
+     "old": "import schema from \"./🧬️schema/🔣️.json\" with {type:\"json\"};",
+     "new": "import {javascriptGenerationSchemaV1 as schema} from \"../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "generation-runtime-type",
+     "group": "generation2",
+     "old": "readonly bun:string;readonly revision:string",
+     "new": "readonly manager:string;readonly revision:string",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "generation-runtime-compare",
+     "group": "generation2",
+     "old": "left.bun===right.bun",
+     "new": "left.manager===right.manager",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts.pre",
+   "postSha256": "85f0e0890572eb165960daf15d55094bbe2c4531b021ca806bf50722ead78404"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "tests-runtime-fixture",
+     "group": "generation2",
+     "old": "const runtime:GenerationRuntimeV1={bun:\"0.0.0\"",
+     "new": "const runtime:GenerationRuntimeV1={manager:\"0.0.0\"",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-runtime-moved",
+     "group": "generation2",
+     "old": "{...runtime,bun:\"9.9.9\"}",
+     "new": "{...runtime,manager:\"9.9.9\"}",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-import-materialized",
+     "group": "generation2",
+     "old": "import {test,expect} from \"bun:test\";",
+     "new": "import {test,expect} from \"bun:test\";\nimport {javascriptInstallSchemaV1 as materializedInstallSchema} from \"../../💾️storage/🧱️schemas/🟦️.ts\";",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-materialized-schema",
+     "group": "generation2",
+     "old": "JSON.parse(readFileSync(new URL(\"../../💾️storage/🧬️schema/📥️install.json\",import.meta.url),\"utf8\"))",
+     "new": "materializedInstallSchema",
+     "counts": [
+      2
+     ]
+    },
+    {
+     "id": "tests-pin-manager-path",
+     "group": "generation2",
+     "old": "packageManagerV1.configurationNames(",
+     "new": "installSchema.$defs.ManagerProtocol.manager.configurationNames(",
+     "counts": [
+      4
+     ]
+    },
+    {
+     "id": "tests-pin-home-annotation",
+     "group": "generation2",
+     "old": ".map(name=>path.join(home,name))",
+     "new": ".map((name:string)=>path.join(home,name))",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "tests-pin-config-annotation",
+     "group": "generation2",
+     "old": ".map(name=>path.join(config,name))",
+     "new": ".map((name:string)=>path.join(config,name))",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts.pre",
+   "postSha256": "c99a4c427ff11d6e774c5bf832e6107da99d938977846207ac7c3353ade2a278"
+  }
+ ],
+ "rewrites": [
+  {
+   "id": "rewrite-dd9252a0",
+   "group": "schemas",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+   "oldSha256": "43e96367d960e7c03d56f134833312fdae7d5df08508890860cea6708c66a716",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json.r2"
+  },
+  {
+   "id": "rewrite-f378a2c5",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json",
+   "oldSha256": "6d6a504141938046ba2bb07a37d01f197c823a1f5c2cebd2d244f50ca0d283f1",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-4cf8678f",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts",
+   "oldSha256": "62cf2bf8e0ecaee356be83e786d930d5ef914e7fe3ead93672e1d6212b4f8b2b",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts.r2"
+  },
+  {
+   "id": "rewrite-898c48a0",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json",
+   "oldSha256": "df077e7ed07e56e73ad2fbe6f64e055303b9650029c67944de9b1c5f898ca883",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-6824c15f",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json",
+   "oldSha256": "1e05051974ade321e74e347a1b93e8d1b09653058a98338f77d434edb13af61f",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-142d21ef",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json",
+   "oldSha256": "5a02c4f0cc02406d422d697d1675de9a3329e65c78d8f6274d70b83713e54ed6",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-3165162e",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts",
+   "oldSha256": "f0b56b029d8eb1ee0d9d7c89ac9852177c2885bea31680c6159a8a33fd9fcdf5",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts.r2"
+  },
+  {
+   "id": "rewrite-68ee0149",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json",
+   "oldSha256": "78a9a80c3abed1a5fa8c1a939154cf54bc33657b6260e35d345f01ca9c48c967",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-c1318bbf",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts",
+   "oldSha256": "b08a94ca658f770d7f1b1637faef852f0c3bd204ab737096a27dbc102aea5196",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts.r2"
+  },
+  {
+   "id": "rewrite-5f9b0527",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json",
+   "oldSha256": "d6f768ea680e688dd525d491afb466f3185f1958ee7d20c00baa1d337676007c",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-79c7e5ed",
+   "group": "ratchet2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json",
+   "oldSha256": "875082fa5a5b36bf74f558481dcd86ce22f690cdded9767e936c409914a463d5",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-46504f1b",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py",
+   "oldSha256": "70e0725e6e987026a37395115d3fb6af3cfc5c17a5f2f3b9812df390aee22aae",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py.r2"
+  },
+  {
+   "id": "rewrite-1a3f22cf",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json",
+   "oldSha256": "e236d5a55c7d7575afb91d12ee857e4a2c574a9d253c4845834f91f5a724b6a0",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-dba25ea5",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts",
+   "oldSha256": "79c85e1c7e86c322dc3ec798afcc2f5d0d7fc80675acace49f908f0b6085ed94",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts.r2"
+  },
+  {
+   "id": "rewrite-6394eb6b",
+   "group": "seam2",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json",
+   "oldSha256": "0960a1d0a753e22532f7957278bb9d9464235840ef901e07ea43c07b9584277d",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-7a4a818c",
+   "group": "schemas",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json",
+   "oldSha256": "e10f8486089e7ae94201c5b83c3290caf441e09d261cfe97d92f75994c90f996",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json.r2"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts",
+   "group": "schemas"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️catalog.json",
+   "group": "seam2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️owned.json",
+   "group": "seam2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs",
+   "group": "seam2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧩️materialize/🟦️.ts",
+   "group": "seam2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/📥️install.original.json",
+   "group": "seam2"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🧾️generation.original.json",
+   "group": "seam2"
+  }
+ ]
+}

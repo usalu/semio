@@ -553,6 +553,148 @@
         ],
         "privilegeEnvironmentCommand": "env"
       }
+    },
+    "LiveProcessPolicy": {
+      "const": {
+        "version": 1,
+        "platforms": [
+          "darwin",
+          "linux",
+          "win32"
+        ],
+        "requiredProfiles": [
+          "node-inspect",
+          "python-pdb",
+          "lldb"
+        ],
+        "qualifiedProfile": "gdb",
+        "maximumInputBytes": 4096,
+        "maximumOutputBytes": 16777216,
+        "maximumOutputLines": 200000,
+        "shellToken": "DEVELOPER_SHELL_42",
+        "shellInputs": [
+          {
+            "platform": "darwin",
+            "input": "printf 'DEVELOPER_SHELL_42\\n'\nexit 0\n"
+          },
+          {
+            "platform": "linux",
+            "input": "printf 'DEVELOPER_SHELL_42\\n'\nexit 0\n"
+          },
+          {
+            "platform": "win32",
+            "input": "[Console]::WriteLine('DEVELOPER_SHELL_42')\r\nexit 0\r\n"
+          }
+        ],
+        "requiredEvidence": {
+          "node-inspect": "inspector",
+          "python-pdb": "pdb",
+          "lldb": "native"
+        }
+      }
+    },
+    "LiveProtocolFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "inputCases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "platform",
+              "profile",
+              "available",
+              "executed",
+              "disposition",
+              "evidence"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "platform": {
+                "enum": [
+                  "darwin",
+                  "linux",
+                  "win32"
+                ]
+              },
+              "profile": {
+                "enum": [
+                  "node-inspect",
+                  "python-pdb",
+                  "lldb",
+                  "gdb"
+                ]
+              },
+              "available": {
+                "type": "boolean"
+              },
+              "executed": {
+                "type": "boolean"
+              },
+              "disposition": {
+                "enum": [
+                  "passed",
+                  "unmet",
+                  "qualified"
+                ]
+              },
+              "evidence": {
+                "enum": [
+                  "none",
+                  "inspector",
+                  "pdb",
+                  "native",
+                  "frontend"
+                ]
+              }
+            }
+          }
+        },
+        "inputCases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "text",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 4097
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

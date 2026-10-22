@@ -49,7 +49,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-fixture-close-source"
+        "command": "repo ./📜️script.ts test-original-fixture-close-source"
       }
     },
     "test-original-command-receiving-source": {
@@ -66,7 +66,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-command-receiving-source"
+        "command": "repo ./📜️script.ts test-original-command-receiving-source"
       }
     },
     "test-original-command-receiving-native": {
@@ -83,7 +83,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-command-receiving-native"
+        "command": "repo ./📜️script.ts test-original-command-receiving-native"
       }
     },
     "test-original-pending-worker-source": {
@@ -100,7 +100,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-pending-worker-source"
+        "command": "repo ./📜️script.ts test-original-pending-worker-source"
       },
       "metadata": {
         "description": "Original pending worker source and Store-issued command read donation"
@@ -120,7 +120,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-pending-worker-native"
+        "command": "repo ./📜️script.ts test-original-pending-worker-native"
       },
       "metadata": {
         "description": "Original pending worker source and Store-issued command read donation"
@@ -138,7 +138,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-original-lifecycle-source",
+        "command": "repo ./📜️script.ts test-original-lifecycle-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -154,7 +154,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-original-lifecycle-native",
+        "command": "repo ./📜️script.ts test-original-lifecycle-native",
         "cwd": "{projectRoot}"
       }
     },
@@ -176,7 +176,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-job-native"
+        "command": "repo ./📜️script.ts test-original-job-native"
       }
     },
     "test-media-turn-source": {
@@ -196,7 +196,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-media-turn-source"
+        "command": "repo ./📜️script.ts test-media-turn-source"
       },
       "metadata": {
         "semio": {
@@ -224,7 +224,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-media-turn-native"
+        "command": "repo ./📜️script.ts test-media-turn-native"
       }
     },
     "test-extension-invoke-source": {
@@ -243,7 +243,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-extension-invoke-source"
+        "command": "repo ./📜️script.ts test-extension-invoke-source"
       }
     },
     "test-window-registry-source": {
@@ -263,7 +263,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-window-registry source"
+        "command": "repo ./📜️script.ts test-window-registry source"
       }
     },
     "test-window-registry-native": {
@@ -285,7 +285,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-window-registry native"
+        "command": "repo ./📜️script.ts test-window-registry native"
       }
     },
     "test-retained-metadata": {
@@ -305,7 +305,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-retained-metadata"
+        "command": "repo ./📜️script.ts test-retained-metadata"
       }
     },
     "test-retained-structural-refusal-source": {
@@ -323,7 +323,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-retained-structural-refusal source"
+        "command": "repo ./📜️script.ts test-retained-structural-refusal source"
       }
     },
     "test-retained-structural-refusal-native": {
@@ -341,7 +341,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-retained-structural-refusal native"
+        "command": "repo ./📜️script.ts test-retained-structural-refusal native"
       }
     },
     "test-output-retirement-native": {
@@ -357,7 +357,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-output-retirement-native"
+        "command": "repo ./📜️script.ts test-output-retirement-native"
       },
       "outputs": []
     },
@@ -374,7 +374,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-composed-child-history-source"
+        "command": "repo ./📜️script.ts test-composed-child-history-source"
       }
     },
     "test-snapshot-sqlite-admission": {
@@ -390,14 +390,14 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite-admission"
       }
     },
     "canonical-architecture": {
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "cwd": "{projectRoot}"
       },
       "outputs": [],
@@ -420,7 +420,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-backbone-binding-check",
+        "command": "repo ./📜️script.ts document-backbone-binding-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -435,7 +435,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts document-backbone-binding-check --native",
+        "command": "repo ./📜️script.ts document-backbone-binding-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -450,7 +450,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cold-document-pair-ingress-check",
+        "command": "repo ./📜️script.ts cold-document-pair-ingress-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -465,7 +465,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native",
+        "command": "repo ./📜️script.ts cold-document-pair-ingress-check --native",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -480,7 +480,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts artifact-admission-check",
+        "command": "repo ./📜️script.ts artifact-admission-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -497,7 +497,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -512,7 +512,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts guest-lifecycle-check",
+        "command": "repo ./📜️script.ts guest-lifecycle-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -528,7 +528,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test --retained-child-close-exact",
+        "command": "repo ./📜️script.ts test --retained-child-close-exact",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -538,7 +538,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -562,7 +562,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-codec-send-source",
+        "command": "repo ./📜️script.ts test-codec-send-source",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -578,7 +578,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts schema-document-authority-check",
+        "command": "repo ./📜️script.ts schema-document-authority-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -588,7 +588,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-fixture-channel-interfaces",
+        "command": "repo ./📜️script.ts test-fixture-channel-interfaces",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -612,7 +612,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-command-ingress-consumer",
+        "command": "repo ./📜️script.ts test-command-ingress-consumer",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -642,7 +642,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite-refusal source"
       }
     },
     "test-snapshot-sqlite-refusal-native": {
@@ -658,7 +658,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite-refusal native"
       }
     },
     "test-snapshot-sqlite-refusal-host-native": {
@@ -674,7 +674,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal host-native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite-refusal host-native"
       }
     },
     "test-retained-raw-source": {
@@ -692,7 +692,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-retained-raw source"
+        "command": "repo ./📜️script.ts test-retained-raw source"
       }
     },
     "test-retained-raw-native": {
@@ -710,7 +710,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-retained-raw native"
+        "command": "repo ./📜️script.ts test-retained-raw native"
       }
     },
     "test-mounted-receiving": {
@@ -727,7 +727,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-mounted-receiving"
+        "command": "repo ./📜️script.ts test-mounted-receiving"
       }
     },
     "test-original-failure-debit-source": {
@@ -736,7 +736,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-failure-debit-source"
+        "command": "repo ./📜️script.ts test-original-failure-debit-source"
       },
       "inputs": [
         "default",
@@ -756,7 +756,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-failure-debit-native"
+        "command": "repo ./📜️script.ts test-original-failure-debit-native"
       },
       "inputs": [
         "default",
@@ -784,7 +784,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-paged-output-source"
+        "command": "repo ./📜️script.ts test-original-paged-output-source"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement source"
@@ -804,7 +804,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-paged-output-native"
+        "command": "repo ./📜️script.ts test-original-paged-output-native"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
@@ -824,7 +824,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-inference-close-source"
+        "command": "repo ./📜️script.ts test-original-inference-close-source"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
@@ -844,7 +844,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-inference-close-native"
+        "command": "repo ./📜️script.ts test-original-inference-close-native"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
@@ -864,7 +864,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun 📜️script.ts test-original-media-custody-source"
+        "command": "repo 📜️script.ts test-original-media-custody-source"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
@@ -884,7 +884,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun 📜️script.ts test-original-media-custody-native"
+        "command": "repo 📜️script.ts test-original-media-custody-native"
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
@@ -904,7 +904,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-reactor-receiving-source"
+        "command": "repo ./📜️script.ts test-original-reactor-receiving-source"
       },
       "metadata": {
         "semio": {
@@ -932,7 +932,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-reserved-producer-native"
+        "command": "repo ./📜️script.ts test-reserved-producer-native"
       },
       "metadata": {
         "semio": {
@@ -957,7 +957,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-window-catalog source"
+        "command": "repo ./📜️script.ts test-original-window-catalog source"
       }
     },
     "test-original-window-catalog-native": {
@@ -973,7 +973,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-window-catalog native"
+        "command": "repo ./📜️script.ts test-original-window-catalog native"
       }
     },
     "test-original-tick-payload-sources-source": {
@@ -990,7 +990,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-tick-payload-sources source"
+        "command": "repo ./📜️script.ts test-original-tick-payload-sources source"
       }
     },
     "test-original-tick-payload-sources-native": {
@@ -1007,7 +1007,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-original-tick-payload-sources native"
+        "command": "repo ./📜️script.ts test-original-tick-payload-sources native"
       }
     },
     "test-completion-rejection-close-source": {
@@ -1024,7 +1024,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-completion-rejection-close source"
+        "command": "repo ./📜️script.ts test-completion-rejection-close source"
       }
     },
     "test-completion-rejection-close-native": {
@@ -1040,7 +1040,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-completion-rejection-close native"
+        "command": "repo ./📜️script.ts test-completion-rejection-close native"
       }
     },
     "test-snapshot-builder-ownership-source": {
@@ -1057,7 +1057,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-snapshot-builder-ownership source"
+        "command": "repo ./📜️script.ts test-snapshot-builder-ownership source"
       }
     },
     "test-snapshot-builder-ownership-native": {
@@ -1073,7 +1073,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-snapshot-builder-ownership native"
+        "command": "repo ./📜️script.ts test-snapshot-builder-ownership native"
       }
     },
     "test-remote-ingest-prefix-source": {
@@ -1089,7 +1089,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-remote-ingest-prefix source"
+        "command": "repo ./📜️script.ts test-remote-ingest-prefix source"
       }
     },
     "test-remote-ingest-prefix-native": {
@@ -1105,7 +1105,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-remote-ingest-prefix native"
+        "command": "repo ./📜️script.ts test-remote-ingest-prefix native"
       }
     },
     "test-camera-presence-source": {
@@ -1121,7 +1121,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-camera-presence source"
+        "command": "repo ./📜️script.ts test-camera-presence source"
       },
       "metadata": {
         "semio": {
@@ -1145,7 +1145,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-camera-presence native"
+        "command": "repo ./📜️script.ts test-camera-presence native"
       },
       "metadata": {
         "semio": {
@@ -1170,7 +1170,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-snapshot-read-preparation source"
+        "command": "repo ./📜️script.ts test-snapshot-read-preparation source"
       }
     },
     "test-snapshot-read-preparation-native": {
@@ -1187,7 +1187,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-snapshot-read-preparation native"
+        "command": "repo ./📜️script.ts test-snapshot-read-preparation native"
       }
     },
     "test-result-publication-source": {
@@ -1204,7 +1204,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-result-publication source"
+        "command": "repo ./📜️script.ts test-result-publication source"
       },
       "metadata": {
         "semio": {
@@ -1229,7 +1229,7 @@
       "outputs": [],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-result-publication native"
+        "command": "repo ./📜️script.ts test-result-publication native"
       },
       "metadata": {
         "semio": {
@@ -1245,7 +1245,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-producer-source",
+        "command": "repo ./📜️script.ts test-original-producer-source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
       },
       "inputs": [
@@ -1268,7 +1268,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-document-receiving source",
+        "command": "repo ./📜️script.ts test-original-document-receiving source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
       },
       "inputs": [
@@ -1286,7 +1286,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-document-receiving native",
+        "command": "repo ./📜️script.ts test-original-document-receiving native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
       },
       "inputs": [
@@ -1312,7 +1312,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-reserved-registry source",
+        "command": "repo ./📜️script.ts test-reserved-registry source",
         "forwardAllArgs": false
       }
     },
@@ -1329,7 +1329,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-reserved-registry native",
+        "command": "repo ./📜️script.ts test-reserved-registry native",
         "forwardAllArgs": false
       }
     }

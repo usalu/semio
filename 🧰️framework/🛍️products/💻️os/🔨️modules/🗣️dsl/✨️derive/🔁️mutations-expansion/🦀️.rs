@@ -392,10 +392,10 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
     let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());
-        let cold_footprint = reference_ty.map(|wire| quote! {
-        let (footprint_failures, _) = ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
-        failures.extend(footprint_failures);
-    });
+    let footprint = match reference_ty {
+        Some(wire) => quote! { ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative)) },
+        None => quote! { (::std::vec::Vec::<::std::string::String>::new(), 0usize) },
+    };
 quote! {
         #[cfg(test)]
         #[test]
@@ -408,7 +408,7 @@ quote! {
             failures.extend(::semio_framework_os_command::mutation_label_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_store_one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_command::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
-            let (footprint_failures, cases) = ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+            let (footprint_failures, cases) = #footprint;
             failures.extend(footprint_failures);
             assert!(failures.is_empty(), "{} breaches of the editable-payload and fold-footprint laws over {} {} operations and {} fixture cases: {:#?}", failures.len(), count, ::core::stringify!(#name), cases, failures);
         }

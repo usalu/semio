@@ -14,7 +14,7 @@ struct DagSessionInner {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 pub struct DagSession {
-    pub state: Rc<RefCell<DagSessionInner>>,
+    pub(crate) state: Rc<RefCell<DagSessionInner>>,
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

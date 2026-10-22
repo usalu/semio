@@ -24,7 +24,7 @@ use crate::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesD
 
 
 use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code (was missing entirely, even test-gated) (W2b closer fix).
@@ -47,7 +47,7 @@ pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_me
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioImageSnapshot, diff = SemioImageDiff, schema = "SemioImageMutation")]
+#[mutations(snapshot = SemioImageSnapshot, diff = SemioImageDiff, schema = "SemioImageMutation", reference = SemioImageSnapshot, reference_diff = SemioImageDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioImageMutation {
     SetDimensions(set_dimensions::SetDimensions),
@@ -74,7 +74,7 @@ pub const KINDS: &[&str] = &["set-dimensions", "set-colorspace", "set-bit-depth"
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, base)
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(mutation, base)
 }
 
 
@@ -87,7 +87,7 @@ pub fn diff_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImag
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, base)?
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(mutation, base)?
 
     })
 }

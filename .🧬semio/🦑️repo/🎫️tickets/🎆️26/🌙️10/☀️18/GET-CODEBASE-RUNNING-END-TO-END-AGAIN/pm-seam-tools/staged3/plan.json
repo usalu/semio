@@ -1,0 +1,351 @@
+{
+ "version": 1,
+ "groups": [
+  "seam3",
+  "ratchet3"
+ ],
+ "requires": "rounds 1 and 2 applied on the combined round-6 tree",
+ "files": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧩️materialize/🟦️.ts",
+   "edits": [
+    {
+     "id": "round3-regions",
+     "group": "seam3",
+     "old": " return walk(base);\n}\n",
+     "new": " return walk(base);\n}\n\n/** 📍️ Lists the positions of a schema base that depend on the manager, each with the value it materializes to: the regression surface of a base, independent of every neutral edit around it (a list item that is itself such a position is addressed by its own text, any other by index). */\nexport function managerRegionsV1(base:unknown,view:SchemaViewV1):readonly (readonly [string,unknown])[]{\n const rows:(readonly [string,unknown])[]=[];\n const isRegion=(node:unknown):boolean=>isExpressionV1(node)||(typeof node===\"string\"&&new RegExp(tokenV1.source,\"u\").test(node));\n const visit=(node:unknown,path:string):void=>{\n  if(isRegion(node)){rows.push([path,materializeSchemaV1(node,view)]);return;}\n  if(Array.isArray(node)){node.forEach((item,index)=>visit(item,path+\"/[\"+(isExpressionV1(item)?\"$\"+item.$manager:isRegion(item)?String(item):String(index))+\"]\"));return;}\n  if(node!==null&&typeof node===\"object\")for(const [key,value] of Object.entries(node))visit(value,path+\"/\"+key);\n };\n visit(base,\"\");\n return rows;\n}\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧩️materialize/🟦️.ts.pre",
+   "postSha256": "0a620522f83a884dabbf712f67916b6f62fd2dbdced42a476b08c1a8b99e0a88"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py",
+   "edits": [
+    {
+     "id": "round3-oracle-regions",
+     "group": "seam3",
+     "old": "def schema_bases():\n",
+     "new": "def is_region(node):\n    return (\"$manager\" in node) if isinstance(node, dict) else isinstance(node, str) and TOKEN.search(node) is not None\n\n\ndef regions(node, view, path=\"\"):\n    if is_region(node):\n        return [[path, materialize(node, view)]]\n    rows = []\n    if isinstance(node, list):\n        for index, item in enumerate(node):\n            step = \"$\" + item[\"$manager\"] if isinstance(item, dict) and \"$manager\" in item else item if is_region(item) else str(index)\n            rows += regions(item, view, path + \"/[\" + step + \"]\")\n    elif isinstance(node, dict):\n        for key, value in node.items():\n            rows += regions(value, view, path + \"/\" + key)\n    return rows\n\n\ndef schema_bases():\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-oracle-digest",
+     "group": "seam3",
+     "old": "sha(canonical(materialize(base, view))) for key, base in schema_bases().items()",
+     "new": "sha(canonical(regions(base, view))) for key, base in schema_bases().items()",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py.pre",
+   "postSha256": "8fb631654b9296ece58a106694710f34aab56939e74399acaca0e757bb195ab8"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "id": "round3-test-import",
+     "group": "seam3",
+     "old": "materializeSchemaV1,schemaViewV1}",
+     "new": "managerRegionsV1,materializeSchemaV1,schemaViewV1}",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-neutrality-tokens",
+     "group": "seam3",
+     "old": "   if(manager.descriptor.runtime.hostVersionKey)tokens.add(manager.descriptor.runtime.hostVersionKey);\n",
+     "new": "   if(manager.descriptor.runtime.hostVersionKey)tokens.add(manager.descriptor.runtime.hostVersionKey);\n   for(const name of manager.hostEnvironment())tokens.add(name);\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-test-regions",
+     "group": "seam3",
+     "old": "test(\"the bun descriptor materializes the pre-seam install and generation schemas exactly, and its recipe keeps the hashed key order\",()=>{\n  const bun=packageManagerRegistryV1.get(\"bun\"),view=schemaViewV1(bun.descriptor),install=materializeSchemaV1(installBase,view) as any,generation=materializeSchemaV1(generationBase,view) as any;\n  const {ManagerProtocol,...rest}=install.$defs;\n  expect(core.canonicalJsonV1({...install,$defs:rest})).toBe(core.canonicalJsonV1(originalInstall));\n  expect(ManagerProtocol.const).toEqual({manager:\"bun\",label:\"Bun\",lockFile:\"bun.lock\",scopeConfig:\"bunfig.toml\",generationDirectory:\"j\",strictProfilePrefix:\"bun-\",hostVersionKey:\"bun\",cacheVariable:\"BUN_INSTALL_CACHE_DIR\"});\n  const expectedGeneration=structuredClone(originalGeneration) as any;\n  expectedGeneration.$defs.Runtime.required=expectedGeneration.$defs.Runtime.required.map((name:string)=>name===\"bun\"?\"manager\":name);\n  expectedGeneration.$defs.Runtime.properties=Object.fromEntries(Object.entries(expectedGeneration.$defs.Runtime.properties).map(([name,value])=>[name===\"bun\"?\"manager\":name,value]));\n  expect(core.canonicalJsonV1(generation)).toBe(core.canonicalJsonV1(expectedGeneration));\n  expect(JSON.stringify(install.$defs.ProducerRecipeProtocol.const)).toBe(JSON.stringify((originalInstall as any).$defs.ProducerRecipeProtocol.const));\n  expect(JSON.stringify(bun.recipe())).toBe(JSON.stringify((originalInstall as any).$defs.ProducerRecipeProtocol.const));\n  expect(installSchema.$defs.ManagerProtocol.manager).toBe(bun);\n  expect(installSchema.$defs.ManagerProtocol.const.runtime).toBe(process.versions.bun);\n });\n",
+     "new": "test(\"the bun descriptor materializes the pre-seam values at every manager-specific position of both schema bases, and its recipe keeps the hashed key order\",()=>{\n  const bun=packageManagerRegistryV1.get(\"bun\"),view=schemaViewV1(bun.descriptor),regions=(base:unknown)=>[...managerRegionsV1(base,view)];\n  const pinnedInstall=originalInstall as unknown as (readonly [string,unknown])[],pinnedGeneration=originalGeneration as unknown as (readonly [string,unknown])[];\n  const protocolPath=\"/$defs/ManagerProtocol/const\",installRegions=regions(installBase),generationRegions=regions(generationBase);\n  expect(installRegions.filter(([path])=>path!==protocolPath)).toEqual(pinnedInstall);\n  expect(generationRegions).toEqual(pinnedGeneration);\n  expect(installRegions.find(([path])=>path===protocolPath)![1]).toEqual({manager:\"bun\",label:\"Bun\",lockFile:\"bun.lock\",scopeConfig:\"bunfig.toml\",generationDirectory:\"j\",strictProfilePrefix:\"bun-\",hostVersionKey:\"bun\",cacheVariable:\"BUN_INSTALL_CACHE_DIR\"});\n  const recipePath=\"/$defs/ProducerRecipeProtocol/const\",original=pinnedInstall.find(([path])=>path===recipePath)![1];\n  expect(JSON.stringify(installRegions.find(([path])=>path===recipePath)![1])).toBe(JSON.stringify(original));\n  expect(JSON.stringify(bun.recipe())).toBe(JSON.stringify(original));\n  expect(installSchema.$defs.ManagerProtocol.manager).toBe(bun);\n  expect(installSchema.$defs.ManagerProtocol.const.runtime).toBe(process.versions.bun);\n });\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-test-digests",
+     "group": "seam3",
+     "old": "expect(core.sha256HexV1(core.canonicalJsonV1(value)),manager.id+\" \"+name).toBe(vectorsOf(manager.id).materialized[name]);",
+     "new": "expect(core.sha256HexV1(core.canonicalJsonV1(managerRegionsV1(name===\"install\"?installBase:generationBase,view))),manager.id+\" \"+name).toBe(vectorsOf(manager.id).materialized[name]);",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts.pre",
+   "postSha256": "07bfd64435cac6c695d5911974c32025af254815bc59ea3345a2362ffc320a65"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "edits": [
+    {
+     "id": "round3-script-manager",
+     "group": "seam3",
+     "old": ";process.exitCode=await runResidentCommandV1({root,args:selected.args.slice(1),",
+     "new": ";const javascriptManagerV1=(await import(\"../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts\")).selectPackageManagerV1(\"javascript\");process.exitCode=await runResidentCommandV1({root,args:selected.args.slice(1),",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-script-lock",
+     "group": "seam3",
+     "old": "environmentPaths:[\"package.json\",\"bun.lock\",\"nx.json\"",
+     "new": "environmentPaths:[\"package.json\",javascriptManagerV1.primaryLockName(),\"nx.json\"",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-script-configuration",
+     "group": "seam3",
+     "old": "\"go.work\",\"bunfig.toml\"]",
+     "new": "\"go.work\",...javascriptManagerV1.configurationNames(\"scope\")]",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts.pre",
+   "postSha256": "d2e26f9d15a0a51e436c2b1d72c9b9ebec27e165fbc4946f9ed3bdc59a8260ee"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
+   "edits": [
+    {
+     "id": "round3-launch-manager",
+     "group": "seam3",
+     "old": "import {spawn} from \"node:child_process\";\n",
+     "new": "import {spawn} from \"node:child_process\";\nimport {createRequire as createManagerRequireV1} from \"node:module\";\n",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-launch-keys",
+     "group": "seam3",
+     "old": "\"SEMIO_LANGUAGE\",\"BUN_INSTALL\"]);",
+     "new": "\"SEMIO_LANGUAGE\",...(createManagerRequireV1(import.meta.url)(\"../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs\").selectedManagerV1(\"javascript\").hostEnvironment as readonly string[])]);",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts.pre",
+   "postSha256": "641a6d398a8a037c370647d4b6bb64c78273978de5ba535758db3b2e49674c41"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts",
+   "edits": [
+    {
+     "id": "round3-interface-descriptor",
+     "group": "seam3",
+     "old": "readonly runtime:Readonly<{hostVersionKey:string|null;probe:",
+     "new": "readonly runtime:Readonly<{hostVersionKey:string|null;hostEnvironment:readonly string[];probe:",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-interface-manager",
+     "group": "seam3",
+     "old": "generationDirectory():string;\n backend(platform",
+     "new": "generationDirectory():string;hostEnvironment():readonly string[];\n backend(platform",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-implementation",
+     "group": "seam3",
+     "old": "generationDirectory:()=>descriptor.generationDirectory,\n  backend:requireBackend,",
+     "new": "generationDirectory:()=>descriptor.generationDirectory,hostEnvironment:()=>descriptor.runtime.hostEnvironment,\n  backend:requireBackend,",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts.pre",
+   "postSha256": "66652aa7b7081b547e182391d34ff38f0fab32b6625a8412d85096525e893dfe"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs",
+   "edits": [
+    {
+     "id": "round3-accessor",
+     "group": "seam3",
+     "old": "generationDirectory:descriptor.generationDirectory,",
+     "new": "generationDirectory:descriptor.generationDirectory,hostEnvironment:Object.freeze([...descriptor.runtime.hostEnvironment]),",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs.pre",
+   "postSha256": "45f17ef5b10439d4c7be5d7e0ff89e40b6de632552c412dce4d2546602adf544"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-schema-required",
+     "group": "seam3",
+     "old": "\"required\": [\n            \"hostVersionKey\",\n            \"probe\"\n          ],",
+     "new": "\"required\": [\n            \"hostVersionKey\",\n            \"hostEnvironment\",\n            \"probe\"\n          ],",
+     "counts": [
+      1
+     ]
+    },
+    {
+     "id": "round3-schema-property",
+     "group": "seam3",
+     "old": "            \"probe\": {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"required\": [\n                \"arguments\",",
+     "new": "            \"hostEnvironment\": {\n              \"type\": \"array\",\n              \"uniqueItems\": true,\n              \"items\": {\n                \"type\": \"string\",\n                \"pattern\": \"^[A-Z][A-Z0-9_]*$\"\n              }\n            },\n            \"probe\": {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"required\": [\n                \"arguments\",",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json.pre",
+   "postSha256": "f7feb4d46367e6c3469e8d4fa01e9791adfb9f3a1b94e98f0c4875ea16b09b4b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-🍞️bun",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": \"bun\",\n",
+     "new": "    \"hostVersionKey\": \"bun\",\n    \"hostEnvironment\": [\n      \"BUN_INSTALL\"\n    ],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json.pre",
+   "postSha256": "f1a339f4459214852af4fca555dc1b3d412034d63c25befd27c7bed1f73cad9c"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-📦️npm",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": null,\n",
+     "new": "    \"hostVersionKey\": null,\n    \"hostEnvironment\": [],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json.pre",
+   "postSha256": "ed7babfd8075a183ad44edffa6cecd0e0e58a12ce2654b141b0acf82d5dc27e4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-🦀️cargo",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": null,\n",
+     "new": "    \"hostVersionKey\": null,\n    \"hostEnvironment\": [],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json.pre",
+   "postSha256": "c7ca02b92cd2e861055de39ea5d2aeb7f4ca1cf74b935a1e1564ffa712316579"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-🐹️go",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": null,\n",
+     "new": "    \"hostVersionKey\": null,\n    \"hostEnvironment\": [],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json.pre",
+   "postSha256": "583572317f90c73650c94cb37bc12a582a68e8ced9fbefced8dffb4f0a90ff3d"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-🐍️uv",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": null,\n",
+     "new": "    \"hostVersionKey\": null,\n    \"hostEnvironment\": [],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json.pre",
+   "postSha256": "b79fa4db285379a70edeb1ecb8513054e3cdfbc434ccccb19259d97245c7f005"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json",
+   "edits": [
+    {
+     "id": "round3-descriptor-🔷️dotnet",
+     "group": "seam3",
+     "old": "    \"hostVersionKey\": null,\n",
+     "new": "    \"hostVersionKey\": null,\n    \"hostEnvironment\": [],\n",
+     "counts": [
+      1
+     ]
+    }
+   ],
+   "pre": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json.pre",
+   "postSha256": "f6c9b95174c13f090507a3f6f4a591ddadaaac2af147e442409356615edd7ce3"
+  }
+ ],
+ "rewrites": [
+  {
+   "id": "rewrite-1a3f22cf",
+   "group": "seam3",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json",
+   "oldSha256": "c24f27446c2a89c4f82c02bb65ed90b779bc24b9bd0cb79eef5d8790ab24ef03",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json.r2"
+  },
+  {
+   "id": "rewrite-8d09659b",
+   "group": "seam3",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/📥️install.original.json",
+   "oldSha256": "f3c2532d5c7c31a1148cca82a5e2072f43727fddb8cbd14f8bfff86e055c8860",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/📥️install.original.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/📥️install.original.json.r2"
+  },
+  {
+   "id": "rewrite-2c7da37e",
+   "group": "seam3",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🧾️generation.original.json",
+   "oldSha256": "49cf5cd41d1c28fef611854f6c6958ee0c87e87a336b78b13b09440137c49241",
+   "old": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🧾️generation.original.json.r1",
+   "new": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🧾️generation.original.json.r2"
+  }
+ ],
+ "newFiles": []
+}

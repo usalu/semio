@@ -1,0 +1,130 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "alias",
+  "files",
+  "real",
+  "scenarios"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "alias": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hexLength"
+   ],
+   "properties": {
+    "hexLength": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 64
+    }
+   }
+  },
+  "files": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "executable",
+     "sha256"
+    ],
+    "properties": {
+     "path": {
+      "type": "string",
+      "minLength": 1
+     },
+     "text": {
+      "type": "string"
+     },
+     "base64": {
+      "type": "string"
+     },
+     "executable": {
+      "type": "boolean"
+     },
+     "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    },
+    "oneOf": [
+     {
+      "required": [
+       "text"
+      ]
+     },
+     {
+      "required": [
+       "base64"
+      ]
+     }
+    ]
+   }
+  },
+  "real": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "scenarios": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "steps"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "object",
+       "required": [
+        "op"
+       ],
+       "properties": {
+        "op": {
+         "enum": [
+          "capture",
+          "write",
+          "remove",
+          "expect",
+          "identities",
+          "expect-identities",
+          "expect-counts",
+          "expect-vanished",
+          "expect-absent",
+          "expect-absent-real",
+          "legacy-links",
+          "expect-real-views",
+          "expect-live-untouched",
+          "expect-aliases",
+          "expect-real-tree"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

@@ -13,7 +13,7 @@ import {
   type ReactElement,
   type ReactNode,
   type MouseEvent as ReactMouseEvent
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import { rowActionAdmissionKeyV1 } from "../🎬️row-action-admission/🟦️.ts";
 import {
   Field,
@@ -354,7 +354,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
       target.focus({ preventScroll: true });
     }
   };
-  const onRowKeyDown = (event: import("react").KeyboardEvent<HTMLDivElement>, row: UiNodeRecord, index: number) => {
+  const onRowKeyDown = (event: import("../../⚛️react-port/🟦️.ts").KeyboardEvent<HTMLDivElement>, row: UiNodeRecord, index: number) => {
     if (event.target !== event.currentTarget) {
       const cell = (event.target as HTMLElement).closest<HTMLElement>("[data-table-column-index]");
       if (cell && (event.ctrlKey || event.metaKey)) {

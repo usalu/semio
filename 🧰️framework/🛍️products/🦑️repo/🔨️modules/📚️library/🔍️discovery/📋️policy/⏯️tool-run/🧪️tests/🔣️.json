@@ -1,0 +1,632 @@
+{
+ "version": 1,
+ "sources": [
+  {
+   "path": "✏️s/p1/a/🦀️.rs",
+   "text": "const TOOL_A: &str = \"tool.a\";\nconst TOOL_B: &str = \"tool.b\";\nconst TOOL_C: &str = \"tool.c\";\npub fn a() -> ToolDefinition {\n    ToolDefinition { run: Some(ToolRunDefinition::default()), ..ToolDefinition::new(TOOL_A, \"x\") }\n}\npub fn b() -> ToolDefinition { ToolDefinition::new(TOOL_B, \"y\") }\npub fn c() -> ToolDefinition { let mut d = ToolDefinition::new(TOOL_C, \"z\"); d.run = Some(ToolRunDefinition::default()); d }\npub fn u() -> UtilityDefinition { UtilityDefinition { run: Some(ToolRunDefinition::default()), ..UtilityDefinition::new(\"util.d\", \"q\") } }\n"
+  },
+  {
+   "path": "✏️s/p1/a/⚙️x/🦀️.rs",
+   "text": "fn go() { let s = \"startRun\"; }\nfn plugin_progress_measure() {}\nlet t = \"cancelFoo\";\nlet u = \"start-job\";\nlet v = \"a_progress\";\n// startRun in comment\n/* a_progress in block */ let w = 1;\n"
+  },
+  {
+   "path": "✏️s/p1/a/🦀️x.rs",
+   "text": "let z = \"cancelNow\";\nlet ok = \"nothing here\";\n"
+  },
+  {
+   "path": "✏️s/p3/legacy/🦀️.rs",
+   "text": "#[cfg(test)]\nmod tests {\n    fn t() { fill_build_preview(); let x = \"toolRunStart\"; }\n}\nfn live() { push_tried(1); }\n// FillTried in a comment\nlet s = \"WorldFillTried\";\nlet r = 1; /* FILL_PREVIEW_JSON */ let q = FILL_PREVIEW_JSON;\nconst MAX_TRIED_MAX: u8 = 3;\n"
+  },
+  {
+   "path": "✏️s/p2/🦀️.rs",
+   "text": "fn route() { match id { TOOL_RUN_START_ACTION_ID | TOOL_RUN_CANCEL_ACTION_ID => 1, _ => 2 } }\nlet a = ActionDefinition::new(TOOL_RUN_START_ACTION_ID, \"x\");\nlet b = ActionDefinition::new_catalog(demo::TOOL_RUN_X_ACTION_ID, \"x\");\nlet c = \"toolRunPause\";\nlet d = \"plain\";\n// \"toolRunHidden\"\n"
+  },
+  {
+   "path": "🧰️framework/🦀️.rs",
+   "text": "fn route() { match id { TOOL_RUN_START_ACTION_ID | TOOL_RUN_CANCEL_ACTION_ID => 1, _ => 2 } }\nlet a = ActionDefinition::new(TOOL_RUN_START_ACTION_ID, \"x\");\nlet b = ActionDefinition::new_catalog(demo::TOOL_RUN_X_ACTION_ID, \"x\");\nlet c = \"toolRunPause\";\nlet d = \"plain\";\n// \"toolRunHidden\"\n"
+  },
+  {
+   "path": "✏️s/p3/legacy/🟦️.ts",
+   "text": "const x = 'push_tried';\n"
+  }
+ ],
+ "declaration": [
+  {
+   "name": "declaring tools pass",
+   "requirements": [
+    {
+     "toolId": "tool.a",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    },
+    {
+     "toolId": "tool.c",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    },
+    {
+     "toolId": "util.d",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "a tool without run is reported at its declaration",
+   "requirements": [
+    {
+     "toolId": "tool.b",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a/🦀️.rs",
+     "line": 7,
+     "contains": [
+      "tool.b",
+      "declares no run: Some(ToolRunDefinition)",
+      "ToolDefinition"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a stale root",
+   "requirements": [
+    {
+     "toolId": "tool.a",
+     "root": "✏️s/p9/none",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p9/none",
+     "line": 0,
+     "contains": [
+      "requirement root has no sources (stale row)"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a duplicate row",
+   "requirements": [
+    {
+     "toolId": "tool.a",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    },
+    {
+     "toolId": "tool.a",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a",
+     "line": 0,
+     "contains": [
+      "duplicate requirement row"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a tool that is declared nowhere under the root",
+   "requirements": [
+    {
+     "toolId": "tool.zzz",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a",
+     "line": 0,
+     "contains": [
+      "tool.zzz",
+      "no Tool/UtilityDefinition"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a scope that no longer exists",
+   "requirements": [
+    {
+     "toolId": "tool.c",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "gone/"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a",
+     "line": 0,
+     "contains": [
+      "no scope entry exists"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a utility declared with a literal id",
+   "requirements": [
+    {
+     "toolId": "util.d",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": []
+  }
+ ],
+ "lifecycle": [
+  {
+   "name": "a declared tool must not keep verbs, measures or lifecycle states (unlisted declaring tools are governed in their directory)",
+   "requirements": [
+    {
+     "toolId": "tool.a",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a/⚙️x/🦀️.rs",
+     "line": 1,
+     "contains": [
+      "[⏯️ local-lifecycle]",
+      "tool.a",
+      "startRun survives next to a declared ToolRunDefinition"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/⚙️x/🦀️.rs",
+     "line": 2,
+     "contains": [
+      "fn plugin_progress_measure survives"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/⚙️x/🦀️.rs",
+     "line": 3,
+     "contains": [
+      "\"cancelFoo\" survives"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/⚙️x/🦀️.rs",
+     "line": 4,
+     "contains": [
+      "\"start-job\" survives"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/⚙️x/🦀️.rs",
+     "line": 5,
+     "contains": [
+      "a_progress survives"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "tool.c"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "util.d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "an undeclared listed tool is not governed, but unlisted declaring tools are",
+   "requirements": [
+    {
+     "toolId": "tool.b",
+     "root": "✏️s/p1/a",
+     "scope": [
+      "⚙️x"
+     ],
+     "verbs": [
+      "startRun"
+     ],
+     "measures": [
+      "a_progress"
+     ],
+     "lane": "L1",
+     "inventory": "inv1"
+    }
+   ],
+   "expected": [
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "tool.a"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "tool.c"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "util.d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a run-declaring tool nobody lists is governed within its own directory",
+   "requirements": [],
+   "expected": [
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "tool.a"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "tool.c"
+     ]
+    },
+    {
+     "file": "✏️s/p1/a/🦀️x.rs",
+     "line": 1,
+     "contains": [
+      "\"cancelNow\" survives",
+      "util.d"
+     ]
+    }
+   ]
+  }
+ ],
+ "legacy": [
+  {
+   "file": "✏️s/p3/legacy/🦀️.rs",
+   "line": 5,
+   "contains": [
+    "[⏯️ legacy-trace]",
+    "push_tried survives"
+   ]
+  },
+  {
+   "file": "✏️s/p3/legacy/🦀️.rs",
+   "line": 7,
+   "contains": [
+    "WorldFillTried survives"
+   ]
+  },
+  {
+   "file": "✏️s/p3/legacy/🦀️.rs",
+   "line": 8,
+   "contains": [
+    "FILL_PREVIEW_JSON survives"
+   ]
+  },
+  {
+   "file": "✏️s/p3/legacy/🦀️.rs",
+   "line": 9,
+   "contains": [
+    "MAX_TRIED_MAX survives"
+   ]
+  },
+  {
+   "file": "✏️s/p3/legacy/🟦️.ts",
+   "line": 1,
+   "contains": [
+    "push_tried survives"
+   ]
+  }
+ ],
+ "reserved": [
+  {
+   "file": "✏️s/p2/🦀️.rs",
+   "line": 1,
+   "contains": [
+    "[⏯️ reserved-action]",
+    "TOOL_RUN_START_ACTION_ID | TOOL_RUN_CANCEL_ACTION_ID =>"
+   ]
+  },
+  {
+   "file": "✏️s/p2/🦀️.rs",
+   "line": 2,
+   "contains": [
+    "ActionDefinition::new(TOOL_RUN_START_ACTION_ID"
+   ]
+  },
+  {
+   "file": "✏️s/p2/🦀️.rs",
+   "line": 3,
+   "contains": [
+    "ActionDefinition::new_catalog(demo::TOOL_RUN_X_ACTION_ID"
+   ]
+  },
+  {
+   "file": "✏️s/p2/🦀️.rs",
+   "line": 4,
+   "contains": [
+    "\"toolRunPause\""
+   ]
+  }
+ ],
+ "code": [
+  {
+   "path": "a.rs",
+   "text": "let a = 1; // trailing\nlet b = \"//not a comment\";\n/* block */ let c = 2;\n/* start\nmiddle */ let d = 3;\nlet e = 4; /* inline */ let f = 5;\n",
+   "expected": [
+    "let a = 1; ",
+    "let b = \"//not a comment\";",
+    " let c = 2;",
+    "",
+    " let d = 3;",
+    "let e = 4;  let f = 5;",
+    ""
+   ]
+  },
+  {
+   "path": "a.rs",
+   "text": "fn real() {}\n#[cfg(test)]\nmod tests {\n    fn hidden() {}\n}\nfn after() {}\n",
+   "expected": [
+    "fn real() {}",
+    "",
+    "",
+    "",
+    "",
+    "fn after() {}",
+    ""
+   ]
+  },
+  {
+   "path": "a.ts",
+   "text": "const a = 1; // c\n#[cfg(test)]\nmod tests {\n}\n",
+   "expected": [
+    "const a = 1; ",
+    "#[cfg(test)]",
+    "mod tests {",
+    "}",
+    ""
+   ]
+  },
+  {
+   "path": "a.rs",
+   "text": "a\r\nb\r\n",
+   "expected": [
+    "a",
+    "b",
+    ""
+   ]
+  }
+ ],
+ "within": [
+  {
+   "path": "a/b",
+   "prefix": "a/b",
+   "expected": true
+  },
+  {
+   "path": "a/b/c",
+   "prefix": "a/b",
+   "expected": true
+  },
+  {
+   "path": "a/bc",
+   "prefix": "a/b",
+   "expected": false
+  },
+  {
+   "path": "a",
+   "prefix": "a/b",
+   "expected": false
+  },
+  {
+   "path": "",
+   "prefix": "",
+   "expected": true
+  },
+  {
+   "path": "x/y",
+   "prefix": "",
+   "expected": false
+  }
+ ],
+ "scopePath": [
+  {
+   "root": "✏️s/p1/a",
+   "entry": "✏️s/p1/a/x",
+   "expected": "✏️s/p1/a/x"
+  },
+  {
+   "root": "root",
+   "entry": "🧰️framework/y",
+   "expected": "🧰️framework/y"
+  },
+  {
+   "root": "root",
+   "entry": "sub/z",
+   "expected": "root/sub/z"
+  },
+  {
+   "root": "root",
+   "entry": "✏s/not-emoji-variant",
+   "expected": "root/✏s/not-emoji-variant"
+  }
+ ],
+ "enclosing": [
+  {
+   "text": "a { b { c } d } e",
+   "at": 6,
+   "opener": "\\b\\w\\s*\\{",
+   "expected": "b { c }"
+  },
+  {
+   "text": "a { b { c } d } e",
+   "at": 4,
+   "opener": "\\b\\w\\s*\\{",
+   "expected": "a { b { c } d }"
+  },
+  {
+   "text": "a { b } z { y }",
+   "at": 12,
+   "opener": "\\b\\w\\s*\\{",
+   "expected": "z { y }"
+  },
+  {
+   "text": "x",
+   "at": -1,
+   "opener": "\\w\\{",
+   "expected": null
+  },
+  {
+   "text": "a { \"}\" b }",
+   "at": 8,
+   "opener": "\\b\\w\\s*\\{",
+   "expected": "a { \"}\" b }"
+  },
+  {
+   "text": "no opener here",
+   "at": 3,
+   "opener": "\\bzz\\s*\\{",
+   "expected": null
+  }
+ ]
+}

@@ -22,7 +22,16 @@ pub struct SetTexcoord {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "texcoord", kind: "set-texcoord", record: "SetTexcoord" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set texcoord", "Texturkoordinate setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { index, texcoord } = self;
         protocol::MutationOutcome::new({
             let old = base.texcoords.get(*index).cloned().unwrap_or_default();
@@ -37,12 +46,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set texcoord", "Texturkoordinate setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

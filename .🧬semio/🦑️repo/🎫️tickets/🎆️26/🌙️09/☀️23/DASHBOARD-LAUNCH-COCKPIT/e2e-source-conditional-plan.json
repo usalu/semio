@@ -63,6 +63,22 @@
       ],
       "qualification": "Physical closed noarg Source target/dispatcher independently accepted and included in registered42. Pack Native46746 passed48 laws including wire handback; independent two-body TS oracle remains unrun.",
       "command": "repo run @semio-tech/framework-pack-rs:test-inline-symbol-source --skip-cache --output=stream"
+    },
+    {
+      "id": "native-persistent-receive-source",
+      "mandatory": true,
+      "status": "pending-runtime",
+      "project": "@semio-tech/value-rs",
+      "target": "test-native-persistent-receive-source",
+      "command": "repo run @semio-tech/value-rs:test-native-persistent-receive-source --skip-cache --output=stream",
+      "declaration": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json",
+      "dispatcher": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sourceEntry": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🟦️.ts",
+      "requires": [
+        "actual strict TypeScript check and owned Bun oracle bodies through existing NativePersistentReceivingCheckScript",
+        "actual whole status and stable-child neutral law pass"
+      ],
+      "qualification": "Physical existing declaration and dispatcher verified. Source branch performs TSC then Bun with the actual Original signal and capped budgets; the native branch is separate. Excluded from the retained42 roster, and not reached merely by the Source0 support mount. No new target created or runtime acceptance inferred."
     }
   ]
 }

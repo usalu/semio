@@ -17,6 +17,19 @@ where
     Op: protocol::Mutation<ArchitectPresence, Diff = ArchitectPresenceDiff> + From<ReplacePresence>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ArchitectPresence, Op> for ReplacePresence
+where
+    Op: protocol::ColdMutation<ArchitectPresence, ReferenceDiff = ArchitectPresenceDiff> + From<ReplacePresence>,
+{
     fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresenceDiff> {
         if &self.presence == base {
             return protocol::MutationOutcome::new(ArchitectPresenceDiff::default()).warning("mutation.no-op", "Requested presence already matches.");
@@ -36,10 +49,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["presence".into()]
-    }
 }

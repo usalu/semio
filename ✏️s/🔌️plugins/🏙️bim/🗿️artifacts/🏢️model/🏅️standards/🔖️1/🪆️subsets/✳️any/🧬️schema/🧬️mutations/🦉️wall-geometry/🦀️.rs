@@ -258,7 +258,7 @@ pub mod testing {
     use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
     use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     use semio_framework_diagnostic::Severity;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

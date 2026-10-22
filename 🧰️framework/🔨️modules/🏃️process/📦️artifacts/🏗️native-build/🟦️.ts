@@ -1,10 +1,12 @@
 import {CargoCompilationSnapshotPoolV1,type CargoCompilationRetentionContextV1,type PendingCargoCompilationSnapshotV1,type CompletedCargoCompilationViewV1} from "./🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
+import { ensureCargoLockCurrentV1 } from "../../🦀️cargo-workspace/🟦️.ts";
 import {completedCargoOutputClaimsV1} from "./🧾️receipt/📦️retention/📋️inventory/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"./📥️inputs/🟦️.ts";
 import {withIssuedResourceOperationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {observePhysicalFileV1,readPhysicalFileV1} from "../../../📁️filesystem/🧾️observation/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../📤️publication/📥️sources/🟦️.ts";
 import captureSourceSchemaDocument from "../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};
+import { runToolSyncV1 } from "../../📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 const captureSourceSchema=structuredClone(captureSourceSchemaDocument);
 import {readCompletedCargoCaptureMetadataV1} from "./📥️capture/📋️contract/🟦️.ts";
 import {publishedCargoArtifactDirectoryV1} from "./📤️published/🟦️.ts";
@@ -51,6 +53,7 @@ import {
 
 export { cargoDepInfoChecksumsV1, cargoDepInfoSourcesV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } from "./🧾️receipt/🟦️.ts";
 
+import { sealMacExecutableV1 } from "./💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts";
 import { buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
 import { cargoRequestedProfileV1 } from "./🔒️lease/🟦️.ts";
 
@@ -64,9 +67,7 @@ import { cargoRequestedProfileV1 } from "./🔒️lease/🟦️.ts";
  * notarization: a binary signed this way still trips Gatekeeper when it arrives from the internet
  * on someone else's Mac, which needs a signing identity this repository does not have. */
 export function signExecutableForDistribution(binary: string): void {
-  if (process.platform !== "darwin") return;
-  const signed = spawnSync("codesign", ["--force", "--sign", "-", binary], { stdio: ["ignore", "inherit", "inherit"] });
-  if (signed.status !== 0) throw new Error(`codesign refused ${binary} (status ${signed.status ?? "unknown"})`);
+  sealMacExecutableV1(binary);
 }
 
 /** 📥️ Places an executable at `destination`: remove, copy, then sign — never an overwrite in place.
@@ -100,7 +101,7 @@ export function packageNativeRelease(options: { readonly binary: string; readonl
   try {
     installExecutable(options.binary, join(payload, `${options.name}-${options.version}`, options.name));
     rmSync(tarball, { force: true });
-    const archived = spawnSync("tar", ["-czf", tarball, "-C", payload, `${options.name}-${options.version}`], { stdio: ["ignore", "inherit", "inherit"] });
+    const archived = runToolSyncV1("tar", ["-czf", tarball, "-C", payload, `${options.name}-${options.version}`], { stdio: ["ignore", "inherit", "inherit"] });
     if (archived.status !== 0) throw new Error(`tar refused ${tarball} (status ${archived.status ?? "unknown"})`);
   } finally {
     rmSync(payload, { recursive: true, force: true });
@@ -199,7 +200,7 @@ export function cargoArtifactArgumentsV1(args:readonly string[],policy:Pick<Carg
 
 /** 📏️ Refuses the owned crate's longest known Cargo intermediate suffix before compiler writes. */
 export function requireCargoCompilerPathEnvelopeV1(manifest:string,args:readonly string[],policy:Pick<CargoArtifactBuildPolicyV1,"buildDirectory"|"mode">):void{
- const authored=Bun.TOML.parse(readFileSync(manifest,"utf8")) as {package?:{name?:string};lib?:{name?:string};bin?:{name?:string}[]},name=authored.package?.name;if(!name)throw Error("Bounded Cargo capture requires one declared package");
+ const authored=runtimeParseTomlV1(readFileSync(manifest,"utf8")) as {package?:{name?:string};lib?:{name?:string};bin?:{name?:string}[]},name=authored.package?.name;if(!name)throw Error("Bounded Cargo capture requires one declared package");
  const profile=cargoRequestedProfileV1(args)??buildModePolicy(policy.mode).cargoProfile,targets=[authored.lib?.name??name.replaceAll("-","_"),...(authored.bin??[]).flatMap(row=>row.name?[row.name]:[])],delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter);let target:string|undefined;
  for(let index=0;index<head.length;index++){const argument=head[index]!;if(argument==="--target")target=head[++index];else if(argument.startsWith("--target="))target=argument.slice(9);}
  const targetDirectory=target?(isAbsolute(target)?basename(target).replace(/\.json$/u,""):target):"";
@@ -214,6 +215,7 @@ export function requireCargoCompilerPathEnvelopeV1(manifest:string,args:readonly
  * of fresh units) then fails with `EAGAIN` as soon as a slow reader lets the 64 KiB pipe fill — the
  * build dies with its diagnostics cut mid-line (ticket 26/09/23 W4, `wp-w4/w4-nonblock-probe.ts`). */
 import observationOutputSchema from "./📦️observation/🧬️schema/🔣️.json" with {type:"json"};
+import { runtimeParseTomlV1 } from "../../../⚙️runtime/📄️parse/🟦️.ts";
 export type CargoObservationOutputV1=Readonly<{version:1;directory:string}>;
 /** 🧾️ Admits a fresh immutable compiler observation under its explicit storage owner. */
 export function cargoObservationOutputV1(value:unknown,buildDirectory:string):string{
@@ -264,7 +266,7 @@ async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[
 /** 🚦️ Retains exact recipe target and shared store custody through invocation capture and provenance under the original control. */
 export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
   const storage=requireNativeStorageReservationV1(options.storage,options.control);requireIssuedResourceControlV1(options.control);if(typeof options.consume!=="function"||!Number.isSafeInteger(options.maximumObservationBytes)||options.maximumObservationBytes<1||options.maximumObservationBytes>CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1)throw Error("Required finite completed Cargo consumer");if(storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await storage.recheck();
-  if(options.retainCompilationBytes!==undefined&&(!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>captureSourceSchema.properties.maximumBytes.const||options.retainCompilationBytes>storage.allocation.bytes))throw Error("Finite actual Native retained compilation extent required");
+  if(options.retainCompilationBytes!==undefined&&(!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>captureSourceSchema.properties.maximumRetainedCompilationBytes.const||options.retainCompilationBytes>storage.allocation.bytes))throw Error("Finite actual Native retained compilation extent required");
   policy = admitArtifactPolicy(policy);
   args = cargoArtifactArgumentsV1(args,policy);
   if(options.observationOutput&&options.output)throw Error("Compiler observations and source deliverables require separate output ownership");
@@ -282,7 +284,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   let lease:CargoTargetRecipeLeaseV1|undefined;
   try {
     options = { ...options, control };
-    const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:16777216},control,options.planningPort??actualCargoCompilerPlanningPortV1());
+    const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());
     await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));await storage.recheck();
     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
     lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
@@ -857,6 +859,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   await withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory:policy.leaseDirectory,control:options.control,environment:options.environment},async(facts,control)=>{
   const environment:Record<string,string|undefined>={...captureOptions.environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism)};delete environment.SEMIO_COMPILER_CAPACITY_HELD;const options={...captureOptions,control,environment},granted=compilerAdmissionBudgetV1(control);
   if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(facts.parallelism);
+  await ensureCargoLockCurrentV1({ workspaceRoot: policy.cwd, cwd: policy.cwd, program: commandPort.command, prefix: commandPort.args, args: [options.command ?? "build", "--manifest-path", path], environment, control, force: false });
   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: policy.cwd,
     env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR:targetDirectory, CARGO_BUILD_BUILD_DIR: policy.buildDirectory },

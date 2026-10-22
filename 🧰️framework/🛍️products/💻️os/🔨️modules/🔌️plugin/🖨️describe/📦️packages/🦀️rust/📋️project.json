@@ -12,7 +12,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build --host-platform={hostPlatform}",
+        "command": "repo ./📜️script.ts build --host-platform={hostPlatform}",
         "forwardAllArgs": false
       },
       "cache": true,
@@ -49,14 +49,14 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "describe": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
+        "command": "repo ./📜️script.ts describe",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -82,7 +82,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test-fresh-component",
+        "command": "repo ./📜️script.ts test-fresh-component",
         "cwd": "{projectRoot}"
       },
       "metadata": {
@@ -104,7 +104,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test-canonical-descriptor-pack",
+        "command": "repo ./📜️script.ts test-canonical-descriptor-pack",
         "cwd": "{projectRoot}"
       },
       "metadata": {

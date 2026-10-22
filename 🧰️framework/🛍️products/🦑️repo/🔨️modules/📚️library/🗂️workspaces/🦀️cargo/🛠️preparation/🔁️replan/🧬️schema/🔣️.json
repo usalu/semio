@@ -2,15 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Cargo Preparation Replanning",
   "definitions": {
-    "Policy": {"const": {"version": 1, "maximumAttempts": 4, "retryBoundary": "before-dependency-commands", "authority": "original", "implementationChanges": "refused", "publishedOutputChanges": "refused"}},
+    "Policy": {"const": {"version": 1, "maximumAttempts": 4, "retryBoundary": "before-receipt-publication", "authority": "original", "implementationChanges": "refused", "publishedOutputChanges": "refused"}},
     "Case": {
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "identityCalls", "dependencyCalls", "refused"],
       "properties": {
-        "kind": {"enum": ["identical", "changed-once", "always-changing", "changed-after-update", "expired"]},
+        "kind": {"enum": ["identical", "changed-once", "always-changing", "changed-after-update", "always-changing-after-update", "expired"]},
         "identityCalls": {"type": "integer", "minimum": 1, "maximum": 4},
-        "dependencyCalls": {"type": "integer", "minimum": 0, "maximum": 2},
+        "dependencyCalls": {"type": "integer", "minimum": 0, "maximum": 4},
         "refused": {"type": "boolean"}
       }
     }

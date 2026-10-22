@@ -76,7 +76,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-blind-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-blind-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -170,7 +170,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-countersink",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-countersink",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -264,7 +264,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-groove",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-groove",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -358,7 +358,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-single-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-single-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -452,7 +452,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-slot-through",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-slot-through",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -539,7 +539,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-three-bores",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-three-bores",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -626,7 +626,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-two-crossing-bores",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-cube-two-crossing-bores",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -720,7 +720,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-nested-cavity-box",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-nested-cavity-box",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -814,7 +814,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-nested-cavity-sphere",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-nested-cavity-sphere",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -908,7 +908,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-sphere-crescent",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-sphere-crescent",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -995,7 +995,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-torus-minus-cube",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-difference-torus-minus-cube",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1089,7 +1089,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-cube-sphere",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-cube-sphere",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1183,7 +1183,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-cylinder-cylinder",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-cylinder-cylinder",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1277,7 +1277,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-sphere-sphere-lens",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-intersection-sphere-sphere-lens",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1371,7 +1371,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-cube-cylinder-boss",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-cube-cylinder-boss",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1465,7 +1465,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-cube-sphere-tangent-contact",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-cube-sphere-tangent-contact",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1559,7 +1559,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-disjoint-spheres",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-disjoint-spheres",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1653,7 +1653,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-overlapping-spheres",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-overlapping-spheres",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1747,7 +1747,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-tangent-spheres",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-tangent-spheres",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1841,7 +1841,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-three-spheres-chain",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only boolean-union-three-spheres-chain",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -1935,7 +1935,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-coplanar-faces-union",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-coplanar-faces-union",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2022,7 +2022,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-hairline-groove",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-hairline-groove",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2102,7 +2102,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-high-tessellation-sphere",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-high-tessellation-sphere",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2196,7 +2196,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-near-coincident-union",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-near-coincident-union",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2276,7 +2276,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-needle-cone",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-needle-cone",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2356,7 +2356,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-sliver-thin-slab",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-sliver-thin-slab",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2443,7 +2443,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-thin-fin",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-thin-fin",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2523,7 +2523,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-tiny-bore-below-tolerance",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-tiny-bore-below-tolerance",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2610,7 +2610,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-tiny-boss-on-large-plate",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only degenerate-tiny-boss-on-large-plate",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2690,7 +2690,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-16",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-16",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2770,7 +2770,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-32",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-32",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2850,7 +2850,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-8",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cone-8",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -2930,7 +2930,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cube-rectangular",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cube-rectangular",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3010,7 +3010,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cube-unit",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cube-unit",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3090,7 +3090,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-16",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-16",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3170,7 +3170,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-32",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-32",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3250,7 +3250,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-64",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-64",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3330,7 +3330,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-8",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-cylinder-8",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3410,7 +3410,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-16",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-16",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3490,7 +3490,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-32",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-32",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3570,7 +3570,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-64",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-64",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3650,7 +3650,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-8",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-sphere-8",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3730,7 +3730,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-16",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-16",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3810,7 +3810,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-32",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-32",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3890,7 +3890,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-64",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only primitives-torus-64",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -3970,7 +3970,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4050,7 +4050,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e-3",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e-3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4130,7 +4130,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e3",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4210,7 +4210,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e6",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-bore-boss-1e6",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4290,7 +4290,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4370,7 +4370,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e-3",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e-3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4450,7 +4450,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e3",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e3",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4530,7 +4530,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e6",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only scale-torus-1e6",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4610,7 +4610,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-mixed-sizes",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-mixed-sizes",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4690,7 +4690,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-three-components",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-three-components",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4770,7 +4770,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-two-components",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-disconnected-two-components",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4850,7 +4850,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus0-sphere",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus0-sphere",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -4930,7 +4930,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus1-single-bore",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus1-single-bore",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5010,7 +5010,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus2-two-bores",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus2-two-bores",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5090,7 +5090,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus3-three-bores",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-genus3-three-bores",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5170,7 +5170,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-high-aspect-ratio-plate",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-high-aspect-ratio-plate",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5250,7 +5250,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-high-aspect-ratio-rod",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-high-aspect-ratio-rod",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5330,7 +5330,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-shell-box",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-shell-box",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5410,7 +5410,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-shell-sphere",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-shell-sphere",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },
@@ -5490,7 +5490,7 @@
         "implementation": "three.js exporters + loaders",
         "version": "0.182.0"
       },
-      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-wall-partition",
+      "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only topology-thin-wall-partition",
       "seed": 4815162342,
       "platform": "darwin-arm64"
     },

@@ -7,12 +7,12 @@
   "private": true,
   "bundleKind": "application",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:build",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:test",
-    "parity:journey": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:parity-journey",
-    "distribution-output-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:distribution-output-check",
-    "source-watch-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:source-watch-check",
-    "test-publication": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-os-dev:test-publication"
+    "build": "repo run @semio-tech/framework-os-dev:build",
+    "test": "repo run @semio-tech/framework-os-dev:test",
+    "parity:journey": "repo run @semio-tech/framework-os-dev:parity-journey",
+    "distribution-output-check": "repo run @semio-tech/framework-os-dev:distribution-output-check",
+    "source-watch-check": "repo run @semio-tech/framework-os-dev:source-watch-check",
+    "test-publication": "repo run @semio-tech/framework-os-dev:test-publication"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

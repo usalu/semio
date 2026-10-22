@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor } from "../✅️catalog-verification/🟦️.ts";
 import { boundedCatalogDiagnostic } from "../✅️catalog-verification/🛡️guards/🟦️.ts";
 import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
@@ -81,7 +81,7 @@ export function shippedComponentFindings(repoRoot: string, entry: Pick<DeployedR
   if (!existsSync(deliverable.receipt) || !existsSync(deliverable.wasm)) return { warnings: [`${entry.pluginId}: no shipped component and receipt under ${relative(repoRoot, deliverable.directory)} — the described component is not built`], errors: [] };
   try {
     const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: entry.pluginId, packageId: entry.packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), semanticPack);
-    return { warnings: [], errors: findings.map((finding) => `${entry.pluginId}: ${finding} (${relative(repoRoot, deliverable.receipt)}) — rebuild it with \`bun repo run <its crate project>:component\``) };
+    return { warnings: [], errors: findings.map((finding) => `${entry.pluginId}: ${finding} (${relative(repoRoot, deliverable.receipt)}) — rebuild it with \`repo run <its crate project>:component\``) };
   } catch (error) {
     return { warnings: [], errors: [`${entry.pluginId}: ${relative(repoRoot, deliverable.receipt)} does not decode: ${boundedCatalogDiagnostic(error)}`] };
   }
@@ -114,7 +114,7 @@ export function validateDescriptors(entries: readonly DeployedRegistryEntryV1[],
     const jsonExists = existsSync(join(repoRoot, descriptorPath));
     const packExists = existsSync(join(ownerRoot, CATALOG_DESCRIPTOR_PACK_FILENAME));
     if (!jsonExists || !packExists) {
-      errors.push(`${entry.pluginId}: owner-root descriptor ${jsonExists ? "pack 🛂️.descriptor.semio" : packExists ? "JSON 🔣️.json" : "pair"} is missing under ${relative(repoRoot, ownerRoot)} — run \`bun ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
+      errors.push(`${entry.pluginId}: owner-root descriptor ${jsonExists ? "pack 🛂️.descriptor.semio" : packExists ? "JSON 🔣️.json" : "pair"} is missing under ${relative(repoRoot, ownerRoot)} — run \`repo ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
       continue;
     }
     let pair: StrictCatalogDescriptor | undefined;

@@ -32,14 +32,8 @@ func (service *TicketService) Close(request TicketCloseRequest) (TicketOutcome, 
 		if summary == "" {
 			summary = "Bulk close"
 		}
-	} else {
-		if summary == "" {
-			return TicketOutcome{}, errInvalid("summary is required to finish a ticket")
-		}
-		if len(files) == 0 {
-			return TicketOutcome{}, errInvalid("at least one file is required to finish a ticket")
-		}
 	}
+	if err:=ValidateTicketCloseRequest(request);err!=nil {return TicketOutcome{},err}
 	journal := TransactionJournal{}
 	preimage, err := InspectImportantDocument(service.Store, ticket.ImportantPath, &journal)
 	if err != nil {
@@ -68,6 +62,7 @@ func (service *TicketService) Close(request TicketCloseRequest) (TicketOutcome, 
 	ticket.Interactions = append(ticket.Interactions, model.Interaction{
 		Kind: "ticket.close", Date: service.Clock.Stamp(), Client: lastClient, Summary: summary, Files: interactionFiles,
 	})
+	service.stampInteraction(&ticket.Interactions[len(ticket.Interactions)-1])
 	if err := service.Save(ticket); err != nil {
 		journal.Record("save", ticket.JsonPath, "failed")
 		if restore := RestoreImportantDocument(service.Store, preimage, &journal); restore != nil {
@@ -93,21 +88,8 @@ func (service *TicketService) Reopen(request TicketReopenRequest) (TicketOutcome
 	if ticket.Status != model.TicketStatusClosed {
 		return TicketOutcome{}, errConflict("ticket is already open")
 	}
-	if strings.TrimSpace(request.Client) == "" {
-		return TicketOutcome{}, errInvalid("client is required")
-	}
-	llm, err := resolveOptionalSlug(request.LLM, model.ResolveAllowedLLM)
-	if err != nil {
-		return TicketOutcome{}, err
-	}
-	effort, err := resolveOptionalSlug(request.Effort, model.ResolveAllowedEffort)
-	if err != nil {
-		return TicketOutcome{}, err
-	}
-	client, err := model.ResolveAllowedClient(request.Client)
-	if err != nil {
-		return TicketOutcome{}, errInvalid(err.Error())
-	}
+	llm,effort,client,err:=ResolveTicketInteraction(request.LLM,request.Effort,request.Client)
+	if err!=nil {return TicketOutcome{},err}
 	if strings.TrimSpace(request.Goal) != "" {
 		ticket.Goal = strings.TrimSpace(request.Goal)
 	}
@@ -117,11 +99,16 @@ func (service *TicketService) Reopen(request TicketReopenRequest) (TicketOutcome
 	if err := ApplyTicketPlanFromIDs(service.Store, service.Roots, ticket, service.McpClient, request.PlanID, request.SpecID); err != nil {
 		return TicketOutcome{}, err
 	}
+ transfer,err:=service.prepareDraft(ticket,request.Draft);if err!=nil {return TicketOutcome{},err}
 	journal := TransactionJournal{}
 	creation, err := EnsureImportantDocument(service.Store, ticket.ImportantPath, &journal)
 	if err != nil {
 		return TicketOutcome{}, err
 	}
+ if err=service.transferDraft(transfer);err!=nil {
+  if rollback:=RollbackImportantCreation(service.Store,creation,&journal);rollback!=nil {return TicketOutcome{},errStore(fmt.Sprintf("attach draft: %v; rollback important document: %v",err,rollback))}
+  return TicketOutcome{},err
+ }
 	previousTitle := ticket.Title
 	ticket.Status = model.TicketStatusOpen
 	ticket.Interactions = append(ticket.Interactions, model.Interaction{
@@ -138,6 +125,7 @@ func (service *TicketService) Reopen(request TicketReopenRequest) (TicketOutcome
 			}
 		}
 	}
+	service.stampInteraction(&ticket.Interactions[len(ticket.Interactions)-1])
 	if err := service.Save(ticket); err != nil {
 		journal.Record("save", ticket.JsonPath, "failed")
 		if rollback := RollbackImportantCreation(service.Store, creation, &journal); rollback != nil {
@@ -154,6 +142,15 @@ func (service *TicketService) Reopen(request TicketReopenRequest) (TicketOutcome
 
 // ♻️Change changes a ticket in place, renaming its folder when the title changes its slug.
 func (service *TicketService) Change(request TicketChangeRequest) (TicketOutcome, error) {
+ resolved:=map[string]string{}
+ for _,entry:=range []struct{key string;value *string;resolve func(string)(string,error)}{
+  {"llm",request.LLM,model.ResolveAllowedLLM},{"effort",request.Effort,model.ResolveAllowedEffort},{"client",request.Client,model.ResolveAllowedClient},
+ } {
+  if entry.value==nil {continue}
+  value,err:=resolveOptionalSlug(*entry.value,entry.resolve);if err!=nil {return TicketOutcome{},err}
+  if entry.key=="client"&&value=="" {return TicketOutcome{},errInvalid("client is required")}
+  resolved[entry.key]=value
+ }
 	id, err := ParseTicketID(request.ID)
 	if err != nil {
 		return TicketOutcome{}, err
@@ -179,9 +176,12 @@ func (service *TicketService) Change(request TicketChangeRequest) (TicketOutcome
 		nextID = NewTicketID(id.Year, id.Month, id.Day, slug)
 		if nextID.Slug != id.Slug {
 			target := service.Layout.TicketDir(nextID)
+			if err:=service.validateID(nextID);err!=nil {return TicketOutcome{},err}
 			if StoreExists(service.Store, target) {
 				return TicketOutcome{}, errConflict("ticket folder already exists: " + target)
 			}
+			nodes:=0
+			if err:=service.inspectProjection(service.Layout.TicketDir(id),target,0,&nodes);err!=nil {return TicketOutcome{},err}
 			if err := service.Store.Rename(service.Layout.TicketDir(id), target); err != nil {
 				return TicketOutcome{}, err
 			}
@@ -189,9 +189,16 @@ func (service *TicketService) Change(request TicketChangeRequest) (TicketOutcome
 		}
 		ticket.Title = title
 	}
-	if request.Description != nil {
-		ticket.Description = *request.Description
-	}
+ if request.Description != nil {
+  ticket.Description=*request.Description
+  if len(ticket.Interactions)>0 {ticket.Interactions[len(ticket.Interactions)-1].Prompt=*request.Description}
+ }
+ if len(ticket.Interactions)>0 {
+  interaction:=&ticket.Interactions[len(ticket.Interactions)-1]
+  if value,ok:=resolved["llm"];ok {interaction.LLM=value}
+  if value,ok:=resolved["effort"];ok {interaction.Effort=value}
+  if value,ok:=resolved["client"];ok {interaction.Client=value}
+ }
 	if request.Goal != nil {
 		ticket.Goal = *request.Goal
 	}
@@ -203,8 +210,12 @@ func (service *TicketService) Change(request TicketChangeRequest) (TicketOutcome
 		return TicketOutcome{}, err
 	}
 	journal.Record("save", ticket.JsonPath, "ok")
-	service.emitTicketEvent(string(events.EventTicketChangeEnded), nextID, map[string]interface{}{"title": ticket.Title, "goal": ticket.Goal})
-	return service.outcome(nextID, ticket, journal, make([]string, 0)), nil
+ warnings:=make([]string,0)
+ if request.Title!=nil&&!request.NoManagement&&ticket.Management!=nil&&ticket.Management.Issue!="" {
+  if err:=service.Tracker.UpdateIssueTitle(ticket.Management.Issue,ticket.Title);err!=nil {warnings=append(warnings,"Failed to update GitHub issue title: "+err.Error())}
+ }
+ service.emitTicketEvent(string(events.EventTicketChangeEnded),nextID,map[string]interface{}{"title":ticket.Title,"goal":ticket.Goal})
+ return service.outcome(nextID,ticket,journal,warnings),nil
 }
 
 // 🧹️PurgeArtifacts deletes oversized artifacts from one ticket folder, deepest folder first.
@@ -330,6 +341,7 @@ func (service *TicketService) emitTicketEvent(kind string, id TicketID, extra ma
 	for name, value := range extra {
 		payload[name] = value
 	}
+	if service.InteractionMetadata.Author!="" { payload["author"]=service.InteractionMetadata.Author }
 	service.Events.Emit(kind, TicketEventSource, canonicalTicketPayload(payload))
 }
 

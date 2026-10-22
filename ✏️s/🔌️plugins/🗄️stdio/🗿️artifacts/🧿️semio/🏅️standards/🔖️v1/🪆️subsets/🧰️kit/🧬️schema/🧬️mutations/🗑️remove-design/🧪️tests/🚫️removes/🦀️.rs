@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -33,7 +33,7 @@ fn mutation() -> SemioKitMutation {
 async fn removes_the_design_and_the_pieces_nested_inside_it() {
     let base = before();
     assert!(!base.designs[0].pieces.is_empty(), "the fixture needs a non-empty design for the two-step inverse to matter");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-design applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("remove-design applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: applied state differs from the committed after-snapshot");
     assert!(produced.designs.is_empty(), "the only design must be gone");
     assert_eq!(produced.types, base.types, "removing a design must not touch the type catalogue it referenced");
@@ -50,9 +50,9 @@ async fn the_undo_readds_the_design_then_refills_its_content() {
     assert!(matches!(undo[1], SemioKitMutation::AddDesign(_)), "rows are stored reversed: the shell is re-created first, so its row comes last");
     let SemioKitMutation::EditDesign(refill) = &undo[0] else { panic!("the first stored undo row must be edit-design") };
     assert_eq!(refill.pieces, base.designs[0].pieces, "the refill must recapture the removed design's own pieces");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-design applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward remove-design applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "remove-design/removes-the-only-design-together-with-its-pieces: the undo did not restore the before-snapshot");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-design/removes-the-only-design-together-with-its-pieces: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -105,6 +105,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-design diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-design diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed remove-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: committed diff did not carry before to after");
 }

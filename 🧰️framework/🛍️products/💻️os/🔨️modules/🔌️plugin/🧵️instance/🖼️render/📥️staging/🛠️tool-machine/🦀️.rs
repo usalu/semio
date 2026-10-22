@@ -28,7 +28,7 @@ use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework::kernel::ActorId;
-use store::{ArtifactStore, MemberFactory, SpaceMember};
+use store::{ArtifactStore, MemberFactory, ReferenceSpaceMember};
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
 use semio_framework::{FaultCode, FaultOrigin};
 use std::future::Future;
@@ -44,7 +44,6 @@ use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::iss
 use semio_framework_tool_machine::ToolAbortReason;
 use semio_framework_tool_machine::ToolStep;
 use semio_framework_tool_machine::TypingInput;
-use std::collections::BTreeMap;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_value::RetirementDemand;
@@ -55,12 +54,17 @@ use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_plugin_instance_jobs::jobs_close_ladder::handoff;
 
 //#region 🔖️Driver
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     /// 🧪️ Pins the continuous tools' clock (`None`: the wall clock again), so a law types, pauses and lapses deterministically
     /// however slowly its machine runs.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn set_tool_clock_ms(&mut self, now_ms: Option<u64>) {
         self.tool_machines.now_ms = now_ms;
+    }
+
+    /// 🛑️ The instance closes: the waiting window preview request is dropped and the open run cancels through its owners' bounded closure.
+    pub fn abandon_window_preview(&mut self) {
+        self.tool_machines.window_preview.abandon();
     }
 
     /// 🧊️ `frozen`: a history edit opens, so every open press and every run still open leaves zero trace (a run normally
@@ -152,10 +156,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// window config on its window's committed partition — retires every displaced alias through its store (a snapshot with
     /// retire-owned roots panics on a plain drop of its last owner), and drops every run the moved head conflicts with.
     pub fn follow_tool_machines(&mut self, changed: bool) {
-        if self.shared().tool_overlay_retirement_pending(){self.tool_machines.refold_owed=true;return;}
+        if self.shared().tool_overlay_alias_retirement_pending(){self.tool_machines.refold_owed=true;return;}
         self.tool_machines.refold_owed=false;
         let machines = &*self.tool_machines;
-        if machines.presses.is_empty() && machines.gestures.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
+        if machines.presses.is_empty() && machines.gestures.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && !machines.window_preview.holds() {
             return;
         }
         let committed = self.stores.store.snapshot_owner();
@@ -165,34 +169,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let committed_config = self.stores.config_store.snapshot_owner();
         let config_displaced=self.tool_machines.follow_config(&committed_config,self.stores.config_store.generation(),changed);
         if !config_displaced.is_empty()||config_displaced.capacity()!=0{self.tool_machines.pending_config_aliases=Some(config_displaced);}
-        let mut targets: BTreeMap<String, (String, Vec<&WindowConfigMutation>)> = BTreeMap::new();
-        for mutation in self.tool_machines.presses.provisional().filter_map(PressLeaf::window_config) {
-            targets.entry(mutation.window_id().to_string()).or_insert_with(|| (mutation.window_kind_id().to_string(), Vec::new())).1.push(mutation);
-        }
-        let stale: Vec<String> = self.tool_machines.window_overlays.keys().filter(|window| !targets.contains_key(*window)).cloned().collect();
-        for window in stale {
-            if let Some(overlay) = self.tool_machines.window_overlays.remove(&window) {
-                let mut original=Some(overlay);
-                if !self.stores.window_config_store.retire_preview(&mut original){self.tool_machines.window_overlays.insert(window,original.expect("refused original preview remains"));self.tool_machines.refold_owed=true;}
-            }
-        }
-        for (window, (kind, mutations)) in targets {
-            let committed_generation = self.stores.window_config_store.snapshot(&kind, &window).map(|snapshot| snapshot.generation());
-            let current = self.tool_machines.window_overlays.get(&window).map(|overlay| overlay.generation());
-            if !changed && current.is_some() && current == committed_generation {
-                continue;
-            }
-            if !self.stores.window_config_store.preview_available(&kind,&window)||self.tool_machines.window_overlays.get(&window).is_some_and(|original|!self.stores.window_config_store.can_retire_preview(original)){self.tool_machines.refold_owed=true;continue;}
-            let preview = self.stores.window_config_store.preview(&kind, &window, &mutations);
-            let displaced = match preview {
-                Some(preview) => self.tool_machines.window_overlays.insert(window, preview),
-                None => self.tool_machines.window_overlays.remove(&window),
-            };
-            if let Some(displaced) = displaced {
-                let mut original=Some(displaced);
-                assert!(self.stores.window_config_store.retire_preview(&mut original),"prevalidated original window preview remains admissible in its unchanged native partition");
-            }
-        }
+        let leaves: Vec<WindowConfigMutation> = self.tool_machines.presses.provisional().filter_map(PressLeaf::window_config).cloned().collect();
+        let registry = &self.stores.window_config_store;
+        let stale = changed || leaves.iter().any(|leaf| registry.borrow(leaf.window_kind_id(), leaf.window_id()).map(|committed| committed.generation) != registry.preview_generation(leaf.window_kind_id(), leaf.window_id()));
+        self.tool_machines.window_preview.request(leaves, stale);
     }
 
     /// 🎟️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
@@ -214,6 +194,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             return owner.advance(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes(),grant,|alias,child|self.stores.config_store.retire_snapshot_alias(alias,child));
         }
         if self.tool_machines.pending_config_aliases.is_some(){let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_config_aliases,grant)?.expect("admitted original config overlay batch");self.tool_machines.config_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
+        if self.tool_machines.window_preview.pending(){return self.tool_machines.window_preview.step(&mut self.stores.window_config_store,grant);}
         self.stores.window_config_store.preview_retirement_step(grant)
     }
 
@@ -300,7 +281,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderRef<'v, A, M, X> {
     /// 🧪️ The document every render seam reads now: the committed head with every open press's and typing run's provisional
     /// leaves.
     #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -322,8 +303,12 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         Ok(RetirementDemand{copy_bytes:size_of::<GestureOperation<A::Mutation>>(),depth:1,..Default::default()})
     }
 
+    fn tool_overlay_alias_retirement_pending(&self)->bool{
+        self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()
+    }
+
     pub fn tool_overlay_retirement_pending(&self)->bool{
-        self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()||self.stores.window_config_store.preview_retirement_pending()
+        self.tool_overlay_alias_retirement_pending()||self.tool_machines.window_preview.pending()||self.stores.window_config_store.preview_retirement_pending()
     }
 
     fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
@@ -334,6 +319,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}
         if let Some(owner)=self.tool_machines.config_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Config>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_config_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Config>::constructor_demand());}
+        if self.tool_machines.window_preview.pending(){return self.tool_machines.window_preview.demand(&self.stores.window_config_store,body);}
         self.stores.window_config_store.preview_retirement_demand(body)
     }
 }

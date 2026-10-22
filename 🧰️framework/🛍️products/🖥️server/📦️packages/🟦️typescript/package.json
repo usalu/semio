@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-server:test"
+    "test": "repo run @semio-tech/framework-server:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

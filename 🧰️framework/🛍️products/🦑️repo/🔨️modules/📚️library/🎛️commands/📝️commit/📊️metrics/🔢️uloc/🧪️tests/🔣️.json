@@ -1,0 +1,251 @@
+{
+ "version": 1,
+ "keys": [
+  {
+   "text": "",
+   "expected": 0
+  },
+  {
+   "text": "   ",
+   "expected": 0
+  },
+  {
+   "text": "{}",
+   "expected": 0
+  },
+  {
+   "text": "{\"a\":1,\"b\":{\"c\":2}}",
+   "expected": 3
+  },
+  {
+   "text": "[{\"a\":1},{\"b\":2,\"c\":3}]",
+   "expected": 3
+  },
+  {
+   "text": "not json",
+   "expected": 0
+  },
+  {
+   "text": "  {\"a\":1}  ",
+   "expected": 1
+  },
+  {
+   "text": "42",
+   "expected": 0
+  },
+  {
+   "text": "{\"a\":[{\"b\":1}]}",
+   "expected": 2
+  },
+  {
+   "text": "[]",
+   "expected": 0
+  },
+  {
+   "text": "{\"a\":null,\"b\":[1,2,[{\"c\":0}]]}",
+   "expected": 3
+  },
+  {
+   "text": "{\"x\":{\"y\":{\"z\":{}}}}",
+   "expected": 3
+  }
+ ],
+ "diff": [
+  {
+   "before": null,
+   "after": "{\"a\":1}",
+   "expected": {
+    "added": 1,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  {
+   "before": "{\"a\":1}",
+   "after": null,
+   "expected": {
+    "added": 0,
+    "removed": 1,
+    "edited": 0
+   }
+  },
+  {
+   "before": "{\"a\":1}",
+   "after": "{\"a\":1}",
+   "expected": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  {
+   "before": "{\"a\":1}",
+   "after": "{\"a\":2}",
+   "expected": {
+    "added": 0,
+    "removed": 0,
+    "edited": 1
+   }
+  },
+  {
+   "before": "{\"a\":{\"b\":1}}",
+   "after": "{\"a\":{\"b\":1,\"c\":2}}",
+   "expected": {
+    "added": 1,
+    "removed": 0,
+    "edited": 1
+   }
+  },
+  {
+   "before": "{\"a\":1,\"b\":2}",
+   "after": "{\"b\":2}",
+   "expected": {
+    "added": 0,
+    "removed": 1,
+    "edited": 0
+   }
+  },
+  {
+   "before": "[{\"a\":1}]",
+   "after": "[{\"a\":1},{\"a\":2}]",
+   "expected": {
+    "added": 1,
+    "removed": 0,
+    "edited": 0
+   }
+  },
+  {
+   "before": "{\"a\":[1,2]}",
+   "after": "{\"a\":[1,3]}",
+   "expected": {
+    "added": 0,
+    "removed": 0,
+    "edited": 1
+   }
+  },
+  {
+   "before": "{\"a\":{\"b\":1}}",
+   "after": "{\"a\":5}",
+   "expected": {
+    "added": 0,
+    "removed": 1,
+    "edited": 1
+   }
+  },
+  {
+   "before": "{\"a\":1}",
+   "after": "not json",
+   "expected": null
+  },
+  {
+   "before": "[]",
+   "after": "{\"a\":1}",
+   "expected": null
+  },
+  {
+   "before": null,
+   "after": "{}",
+   "expected": null
+  },
+  {
+   "before": "{\"a\":1}",
+   "after": "{\"b\":1}",
+   "expected": {
+    "added": 1,
+    "removed": 1,
+    "edited": 0
+   }
+  },
+  {
+   "before": null,
+   "after": null,
+   "expected": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   }
+  }
+ ],
+ "loc": [
+  {
+   "path": "a.ts",
+   "data": "a\nb",
+   "expected": 2
+  },
+  {
+   "path": "a.ts",
+   "data": "",
+   "expected": 0
+  },
+  {
+   "path": "a.ts",
+   "data": "a\r\nb\r\nc",
+   "expected": 3
+  },
+  {
+   "path": "a.json",
+   "data": "{\"a\":1,\"b\":2}",
+   "expected": 2
+  },
+  {
+   "path": "A.JSON",
+   "data": "{\"a\":1}",
+   "expected": 1
+  },
+  {
+   "path": "a.jsonc",
+   "data": "{}",
+   "expected": 1
+  },
+  {
+   "path": "a.json",
+   "data": "",
+   "expected": 0
+  },
+  {
+   "path": "a.json",
+   "data": "   \n",
+   "expected": 0
+  },
+  {
+   "path": "a.json",
+   "data": "{\n}",
+   "expected": 2
+  },
+  {
+   "path": "a.json",
+   "data": "not json\nline",
+   "expected": 2
+  },
+  {
+   "path": "Makefile",
+   "data": "x\ny",
+   "expected": 2
+  },
+  {
+   "path": "dir.d/file",
+   "data": "x",
+   "expected": 1
+  }
+ ],
+ "locDefects": [
+  {
+   "path": "a.ts",
+   "data": "a\nb\n",
+   "expected": 2,
+   "defect": "📊️metrics/🔢️uloc/🟦️.ts:physicalLineCount counts the empty segment after a final newline, so every newline-terminated file is one line larger than `wc -l` and git numstat"
+  },
+  {
+   "path": "a.ts",
+   "data": "\n",
+   "expected": 1,
+   "defect": "📊️metrics/🔢️uloc/🟦️.ts:physicalLineCount counts the empty segment after a final newline, so every newline-terminated file is one line larger than `wc -l` and git numstat"
+  },
+  {
+   "path": "a.json",
+   "data": "{}\n",
+   "expected": 1,
+   "defect": "📊️metrics/🔢️uloc/🟦️.ts:physicalLineCount counts the empty segment after a final newline, so every newline-terminated file is one line larger than `wc -l` and git numstat"
+  }
+ ]
+}

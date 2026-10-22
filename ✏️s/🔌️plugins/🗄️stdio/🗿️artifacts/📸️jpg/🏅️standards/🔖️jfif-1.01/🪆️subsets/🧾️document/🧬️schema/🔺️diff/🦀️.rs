@@ -276,8 +276,39 @@ pub struct JpgDiff {
     pub other_segments: Option<JpgOtherSegmentsDiff>,
 }
 
-impl MutationDiff<JpgSnapshot> for JpgDiff {
-    fn apply(&self, base: &JpgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<JpgSnapshot> {
+impl MutationDiff<JpgSnapshot> for JpgDiff {}
+
+impl protocol::ColdMutationDiff<JpgSnapshot> for JpgDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.width.is_some() {
+            self.width = other.width;
+        }
+        if other.height.is_some() {
+            self.height = other.height;
+        }
+        if other.pixels.is_some() {
+            self.pixels = other.pixels;
+        }
+        if other.jfif_version.is_some() {
+            self.jfif_version = other.jfif_version;
+        }
+        if other.jfif_density_units.is_some() {
+            self.jfif_density_units = other.jfif_density_units;
+        }
+        if other.jfif_x_density.is_some() {
+            self.jfif_x_density = other.jfif_x_density;
+        }
+        if other.jfif_y_density.is_some() {
+            self.jfif_y_density = other.jfif_y_density;
+        }
+        if other.jfif_thumbnail.is_some() {
+            self.jfif_thumbnail = other.jfif_thumbnail;
+        }
+        absorb_other_segments_opt(&mut self.other_segments, other.other_segments);
+    }
+
+    fn apply(&self, unpublished: &mut JpgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(segments) = &self.other_segments {
             validate_jpg_indexed(base.image.other_segments.len(), &segments.removed, segments.modified.iter().map(|entry| entry.index), segments.added.iter().map(|entry| entry.index), ["otherSegments"])?;
         }
@@ -309,35 +340,8 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
         if let Some(od) = &self.other_segments {
             next.image.other_segments = apply_other_segments(&next.image.other_segments, od);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.width.is_some() {
-            self.width = other.width;
-        }
-        if other.height.is_some() {
-            self.height = other.height;
-        }
-        if other.pixels.is_some() {
-            self.pixels = other.pixels;
-        }
-        if other.jfif_version.is_some() {
-            self.jfif_version = other.jfif_version;
-        }
-        if other.jfif_density_units.is_some() {
-            self.jfif_density_units = other.jfif_density_units;
-        }
-        if other.jfif_x_density.is_some() {
-            self.jfif_x_density = other.jfif_x_density;
-        }
-        if other.jfif_y_density.is_some() {
-            self.jfif_y_density = other.jfif_y_density;
-        }
-        if other.jfif_thumbnail.is_some() {
-            self.jfif_thumbnail = other.jfif_thumbnail;
-        }
-        absorb_other_segments_opt(&mut self.other_segments, other.other_segments);
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -389,6 +393,12 @@ pub fn jpg_image_diff(base: &crate::schema::snapshot::JpgImage, other: &crate::s
 }
 
 impl DiffAlgebra<JpgSnapshot> for JpgDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🔁️ Concrete diff-level undo: every replaced field takes the value `base` carries, removed segments return at their base index, added ones go away
     /// again and modified ones restore their base marker and data at the index they have after the diff.
     fn inverse(&self, base: &JpgSnapshot) -> Self {
@@ -404,10 +414,6 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
             jfif_thumbnail: self.jfif_thumbnail.as_ref().filter(|thumbnail| **thumbnail != image.jfif_thumbnail).map(|_| image.jfif_thumbnail.clone()),
             other_segments: self.other_segments.as_ref().map(|segments| inverse_other_segments(segments, &image.other_segments)).filter(|segments| !(segments.removed.is_empty() && segments.modified.is_empty() && segments.added.is_empty())),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 

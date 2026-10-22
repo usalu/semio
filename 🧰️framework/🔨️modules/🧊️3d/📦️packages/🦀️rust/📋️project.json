@@ -27,7 +27,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -35,7 +35,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts bench"
+        "command": "repo ./📜️script.ts bench"
       },
       "cache": false,
       "metadata": {
@@ -55,7 +55,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts lint"
+        "command": "repo ./📜️script.ts lint"
       }
     },
     "canonical-architecture": {
@@ -63,7 +63,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       },
       "outputs": [],

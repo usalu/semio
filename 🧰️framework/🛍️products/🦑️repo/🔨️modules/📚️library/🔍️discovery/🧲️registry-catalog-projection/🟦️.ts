@@ -6,6 +6,7 @@ import { type DiscoveredPackage, declaredComponentKind, isDiscoverySkipDirectory
 import { type GeneratorInputProjection, type RegistryCatalogInputView, type RegistryCatalogProjection, type RegistryCompilerInputDependencies, type RegistryCompilerInputRole, parseGeneratorInputProjection, parseRegistryCatalogProjection, parseRegistrySourceRoots, registryCatalogOwnerIndex, registryCompilerInputDependencies } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, loadTaxonomy, registryCatalogInputView } from "../🔐️taxonomy-authority/🟦️.ts";
 import { scanRepo } from "../🔭️repository-scan/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🌳️ Applies only authorized leaf operations and their required ancestor membership in memory. */
 export function registryCatalogProjectedInputView(repoRoot: string, taxonomy: Taxonomy, projection: RegistryCatalogProjection, base: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): RegistryCatalogInputView {
@@ -146,8 +147,9 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
     registryExampleCatalog(repoRoot, pkg.packageRel, taxonomy, view, inputs);
   }
   for (const path of renderOwnerPublications(repoRoot, packages, view).inputs) inputs.add(path);
-  const visited = new Map<string, { source: string; kind: RegistryCompilerInputDependencies["kind"] }>();
-  const visit = (path: string, role: RegistryCompilerInputRole): void => {
+  const visited = new Map<string, { source: string; kind: RegistryCompilerInputDependencies["kind"] }>(), importers = new Map<string, string>();
+  const visit = (path: string, role: RegistryCompilerInputRole, importer?: string): void => {
+    if (importer !== undefined && !importers.has(path)) importers.set(path, importer);
     const previous = visited.get(path);
     if (previous) {
       if (role === "implementation-entry" && previous.kind === "json-data") registryCompilerInputDependencies(previous.source, path, role);
@@ -158,17 +160,17 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
     visited.set(path, { source, kind: dependencies.kind });
     inputs.add(path);
     for (const specifier of dependencies.imports) {
-      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
+      if (specifier.startsWith("node:") || isRuntimeBuiltinSpecifierV1(specifier)) continue;
       if (specifier.startsWith(".")) {
-        visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"), "static-import");
+        visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"), "static-import", path);
         continue;
       }
       const binding = authority.workspaceImports[specifier];
-      if (!binding) throw new Error(`Registry implementation import is not schema-owned: ${specifier} in ${path}`);
+      if (!binding) { const chain = [path]; for (let at = importers.get(path); at !== undefined && chain.length < 32; at = importers.get(at)) chain.push(at); throw new Error(`Registry implementation import is not schema-owned: ${specifier} in ${path} (imported through ${chain.reverse().join(" -> ")})`); }
       const manifest = JSON.parse(view.readText(binding.manifestPath)) as { name?: string; exports?: Record<string, unknown> };
       if (manifest.name !== specifier || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
       inputs.add(binding.manifestPath);
-      visit(binding.entryPath, "implementation-entry");
+      visit(binding.entryPath, "implementation-entry", path);
     }
   };
   for (const path of authority.implementationEntryPaths) visit(path, "implementation-entry");

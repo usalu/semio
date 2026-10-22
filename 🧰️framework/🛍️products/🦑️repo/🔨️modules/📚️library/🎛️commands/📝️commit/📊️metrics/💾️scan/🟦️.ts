@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import type { MetricsRunner, UlocByLanguage, UlocRunner } from "../🏷️types/🟦️.ts";
+import type { MetricsRunner, UlocByLanguage } from "../🏷️types/🟦️.ts";
 import { gitDir, gitRepoRoot, gitTrackedPaths } from "../../🌳️git/🟦️.ts";
 import { spawnCapturedSync } from "../../../../🏃️process/🔍️probe/🟦️.ts";
 import { gitSpawnEnv } from "../../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
@@ -176,24 +176,10 @@ export function scanRepoSizeByLanguage(root: string): UlocByLanguage {
   return size;
 }
 
-/** 📊️Default uloc runner (tracked-file unified scan). */
-export function createDefaultUlocRunner(): UlocRunner {
-  return { countRepoByLanguage: scanRepoUnifiedLoc };
-}
-
 /** 📊️Default metrics runner (uloc + size scans). */
 export function createDefaultMetricsRunner(): MetricsRunner {
   return {
     countRepoUlocByLanguage: scanRepoUnifiedLoc,
-    countRepoSizeByLanguage: scanRepoSizeByLanguage,
-  };
-}
-
-/** 📊️Adapts legacy uloc-only runners; size bloc still comes from repo scan. */
-export function metricsRunnerFromUloc(ulocRunner?: UlocRunner): MetricsRunner {
-  const uloc = ulocRunner ?? createDefaultUlocRunner();
-  return {
-    countRepoUlocByLanguage: uloc.countRepoByLanguage,
     countRepoSizeByLanguage: scanRepoSizeByLanguage,
   };
 }

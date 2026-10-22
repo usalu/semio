@@ -59,8 +59,8 @@ pub(super) fn cad_refusal(message: impl Into<String>) -> semio_framework_value::
 fn prepare_cad_config(base: &CadConfig, mutation: &CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>), semio_framework_value::ValueError> {
     admit_cad_config(base).map_err(cad_refusal)?;
     admit_cad_config_mutation(mutation).map_err(cad_refusal)?;
-    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(mutation, base)?;
-    let post = protocol::apply_diff(&<CadConfigMutation as protocol::Mutation<CadConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| cad_refusal(error.to_string()))?;
+    let inverse = <CadConfigMutation as protocol::ColdMutation<CadConfig>>::inverse(mutation, base)?;
+    let post = protocol::apply_diff_cold(&<CadConfigMutation as protocol::ColdMutation<CadConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| cad_refusal(error.to_string()))?;
     admit_cad_config(&post).map_err(cad_refusal)?;
     Ok((post, inverse))
 }

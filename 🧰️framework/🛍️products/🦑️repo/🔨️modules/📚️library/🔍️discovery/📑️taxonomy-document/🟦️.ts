@@ -137,14 +137,14 @@ export interface HistoricalDocumentEvidencePopulation {
   readonly reason: string;
 }
 
-const HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS = ["ticket-report", "ticket-workspace", "cursor-plan-snapshot", "dev-prompt-log"] as const;
+const HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS = ["ticket-report", "ticket-workspace", "dev-prompt-log"] as const;
 
-/** 🧷️ Validates the exact, closed, four-population historical-document-evidence grammar without touching the filesystem. */
+/** 🧷️ Validates the exact, closed, three-population historical-document-evidence grammar without touching the filesystem. */
 export function validateHistoricalDocumentEvidencePopulations(value: unknown): string[] {
   const problems: string[] = [];
   const object = (entry: unknown): entry is Record<string, unknown> => entry !== null && typeof entry === "object" && !Array.isArray(entry);
   if (!object(value)) return ["historicalDocumentEvidencePopulations must be an object."];
-  if (Object.keys(value).join("\0") !== HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS.join("\0")) problems.push('historicalDocumentEvidencePopulations must contain exactly ordered "ticket-report", "ticket-workspace", "cursor-plan-snapshot" and "dev-prompt-log" populations.');
+  if (Object.keys(value).join("\0") !== HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS.join("\0")) problems.push('historicalDocumentEvidencePopulations must contain exactly ordered "ticket-report", "ticket-workspace" and "dev-prompt-log" populations.');
   for (const id of HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS) {
     const row = (value as Record<string, unknown>)[id];
     const label = `historicalDocumentEvidencePopulations.${id}`;
@@ -159,8 +159,6 @@ export function validateHistoricalDocumentEvidencePopulations(value: unknown): s
   if (object(ticketReport) && (ticketReport.directoryPattern !== "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**" || ticketReport.leafPattern !== "^📓️.+\\.md$")) problems.push("historicalDocumentEvidencePopulations.ticket-report must use the exact ticket-document scope and leaf grammar.");
   const ticketWorkspace = (value as Record<string, Record<string, unknown> | undefined>)["ticket-workspace"];
   if (object(ticketWorkspace) && (ticketWorkspace.directoryPattern !== "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**" || ticketWorkspace.leafPattern !== "^.+$")) problems.push("historicalDocumentEvidencePopulations.ticket-workspace must use the exact ticket-root nested-descendant scope and leaf grammar.");
-  const cursorPlanSnapshot = (value as Record<string, Record<string, unknown> | undefined>)["cursor-plan-snapshot"];
-  if (object(cursorPlanSnapshot) && (cursorPlanSnapshot.directoryPattern !== ".cursor/plans/*" || cursorPlanSnapshot.leafPattern !== "^.+\\.plan\\.md$")) problems.push("historicalDocumentEvidencePopulations.cursor-plan-snapshot must use the exact Cursor plan-snapshot scope.");
   const devPromptLog = (value as Record<string, Record<string, unknown> | undefined>)["dev-prompt-log"];
   if (object(devPromptLog) && (devPromptLog.directoryPattern !== "**/.🧬semio/🦑️repo/💬️prompts/**" || devPromptLog.leafPattern !== "^.+\\.md$")) problems.push("historicalDocumentEvidencePopulations.dev-prompt-log must use the exact prompt-log scope and leaf grammar.");
   return problems;
@@ -431,7 +429,7 @@ export interface Taxonomy {
     preimageDrift: "reject";
     newIncomingReferences: "reject-or-rollback";
     ordering: "utf8-byte";
-    historicalDocumentEvidence: "ticket-report-workspace-cursor-plan-snapshot-and-dev-prompt-log-whole-document-excluded";
+    historicalDocumentEvidence: "ticket-report-workspace-and-dev-prompt-log-whole-document-excluded";
   }>;
   readonly frozenCoordinateEvidenceContracts: Readonly<Record<string, FrozenCoordinateEvidenceContract>>;
   readonly frozenMarkdownCoordinateEvidenceContracts: Readonly<Record<string, FrozenMarkdownCoordinateEvidenceContract>>;

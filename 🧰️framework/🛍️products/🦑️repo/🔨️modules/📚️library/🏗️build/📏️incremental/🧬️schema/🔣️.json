@@ -23,6 +23,23 @@
         "maximumLogBytes": 268435456,
         "maximumLogEntries": 5000000,
         "maximumPathLength": 255,
+        "maximumRootLength": 28,
+        "excludedPrefixes": [
+          ".🧬semio/🦑️repo/🎫️tickets/"
+        ],
+        "includedIgnored": {
+          "directoryNames": [
+            "🤖️generated"
+          ],
+          "filePrefixes": [
+            "🤖️generated."
+          ],
+          "files": [
+            "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs",
+            "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py",
+            "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs"
+          ]
+        },
         "phases": [
           "warm",
           "edit",
@@ -33,12 +50,7 @@
         "copyConcurrency": 32
       }
     },
-    "Tool": {
-      "enum": [
-        "nx",
-        "bazel"
-      ]
-    },
+    "Tool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "Phase": {
       "enum": [
         "warm",

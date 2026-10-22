@@ -3,7 +3,8 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import React, { createContext } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { createContext } from "../../⚛️react-port/🟦️.ts";
 import { AppRouter, type Severity } from "@semio-tech/framework";
 import { dockSeedActiveWindowIdV1, modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
 import { type IconName, type UiTranslationKey, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";

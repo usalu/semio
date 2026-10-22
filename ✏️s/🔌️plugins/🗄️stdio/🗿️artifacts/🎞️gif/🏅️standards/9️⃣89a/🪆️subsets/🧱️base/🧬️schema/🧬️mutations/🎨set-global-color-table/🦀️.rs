@@ -16,6 +16,15 @@ pub struct SetGlobalColorTable {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "global-color-table", kind: "set-global-color-table", record: "SetGlobalColorTable" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { gct } = self;
         if let Some((message, target)) = base.frames.iter().enumerate().filter(|(_, frame)| frame.lct.is_none()).find_map(|(index, frame)| frame_colored(index, frame, gct.as_ref())) {
@@ -25,12 +34,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         Ok(vec![GifMutation::SetGlobalColorTable(SetGlobalColorTable { gct: base.gct.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

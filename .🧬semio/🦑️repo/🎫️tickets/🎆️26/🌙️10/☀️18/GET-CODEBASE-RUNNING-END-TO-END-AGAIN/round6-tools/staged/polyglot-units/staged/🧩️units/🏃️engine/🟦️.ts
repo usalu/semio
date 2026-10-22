@@ -33,7 +33,7 @@ export function fileUnitsStoreV1(root: string): UnitsStoreV1 {
   };
 }
 
-export type ExecuteRequestV1 = {readonly unit: UnitV1; readonly key: string; readonly dependencies: readonly {readonly unit: string; readonly use: "interface" | "implementation" | "declared"; readonly interfaceClosure: string | null; readonly outputClosure: string; readonly artifact?: string | null}[]; readonly signal: AbortSignal};
+export type ExecuteRequestV1 = {readonly unit: UnitV1; readonly key: string; readonly dependencies: readonly {readonly unit: string; readonly use: "interface" | "implementation" | "both" | "declared"; readonly interfaceClosure: string | null; readonly outputClosure: string; readonly artifact?: string | null}[]; readonly signal: AbortSignal};
 /** 🏭️ What the language executor reports: success, diagnostics replayed on hits, the digest of all outputs and the digest of the interface artifact (null for a unit without one). */
 export type ExecuteOutcomeV1 = {readonly ok: boolean; readonly diagnostics: string; readonly outputs: string; readonly interface: string | null; readonly exposes?: readonly string[] | null; readonly artifact?: string | null; readonly milliseconds?: number};
 /** 🧰️ The effects a run needs: content digests of workspace files and the language executor. The repository wires its stat-keyed digest memo and process runner here. */
@@ -59,7 +59,7 @@ export async function runUnitsV1(plan: UnitPlanV1, policy: UnitsPolicyV1, host: 
   const record = (row: UnitsRowV1): void => {rows.set(row.id, row); finished++; options.onProgress?.({unit: row.id, status: row.status, cutoff: row.cutoff, done: finished, total: order.length, milliseconds: row.milliseconds});};
   const run = (id: string): Promise<{facts: UnitResultFactsV1; ok: boolean} | undefined> => settled.get(id) ?? settled.set(id, (async () => {
     const unit = plan.byId.get(id)!, results = await Promise.all(unit.dependencies.map(async dependency => [dependency, await run(dependency.unit)] as const));
-    const blockedBy = results.find(([dependency, result]) => dependency.use !== "declared" && (result === undefined || (!result.ok && (dependency.use === "implementation" || result.facts.interfaceClosure === null))));
+    const blockedBy = results.find(([dependency, result]) => dependency.use !== "declared" && (result === undefined || (!result.ok && (dependency.use === "implementation" || dependency.use === "both" || result.facts.interfaceClosure === null))));
     if (blockedBy) {record({id, key: null, status: blockedBy[1] === undefined && options.signal.aborted ? "cancelled" : "blocked", cutoff: false, milliseconds: 0, diagnostics: blockedBy[0].unit}); return undefined;}
     if (options.signal.aborted) {record({id, key: null, status: "cancelled", cutoff: false, milliseconds: 0, diagnostics: ""}); return undefined;}
     const facts = new Map<string, UnitResultFactsV1>(results.filter(([, result]) => result !== undefined).map(([dependency, result]) => [dependency.unit, result!.facts] as const));

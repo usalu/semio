@@ -1,80 +1,33 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {mkdir} from "node:fs/promises";
-import {join,isAbsolute} from "node:path";
-import setupSchema from "./🧬️schema/🔣️.json" with { type: "json" };
-import {BundleScript,ScriptRouter,scriptInvocationBudget,advanceScriptInvocation,requireIssuedScriptInvocationV1,type ScriptCommand,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {join} from "node:path";
+import {BundleScript,ScriptRouter,scriptInvocationBudget,type ScriptCommand,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {runScriptMain} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
-import {executeDeveloperRequest,parseDeveloperArguments,developerDebuggers,nativeDebuggerLocations,type DeveloperPlan,type DeveloperProcess} from "./🟦️.ts";
+import {executeDeveloperRequest,parseDeveloperArguments,developerDebuggers} from "./🟦️.ts";
 
-const messages={setupPrivilege:{en:"Native debugger setup requires existing operating-system installation privileges (root or noninteractive sudo on Linux; an elevated host bootstrap for machine LLVM on Windows). Complete the host provisioning prerequisite, then retry Set Up Native Debugger.",de:"Die Einrichtung des nativen Debuggers erfordert vorhandene Installationsrechte des Betriebssystems (root oder nichtinteraktives sudo unter Linux; erhöhte Host-Einrichtung für maschinenweites LLVM unter Windows). Host-Voraussetzung erfüllen und Nativen Debugger Einrichten erneut ausführen."},setupManager:{en:"No supported host package manager is available. Complete the documented host provisioning, then retry Set Up Native Debugger.",de:"Kein unterstützter Host-Paketmanager verfügbar. Die dokumentierte Host-Einrichtung abschließen und Nativen Debugger Einrichten erneut ausführen."},setupProbe:{en:"LLDB must start successfully with its Python runtime and evaluate 42. Set Up Native Debugger could not establish that usable frontend.",de:"LLDB muss mit seiner Python-Laufzeit erfolgreich starten und 42 auswerten. Nativen Debugger Einrichten konnte diesen funktionsfähigen Start nicht nachweisen."},setupReady:{en:"Native debugger verified",de:"Nativer Debugger geprüft"},nativePath:{en:"This Windows GDB profile requires ASCII native program and working-directory paths; the installed MinGW build cannot launch Unicode target paths. Check the LLDB installation in Debugger Availability before selecting it for Unicode native targets; missing LLDB still needs setup.",de:"Dieses Windows-GDB-Profil erfordert ASCII-Pfade für natives Programm und Arbeitsverzeichnis; der installierte MinGW-Build kann Unicode-Zielpfade nicht starten. Vor der Wahl von LLDB für native Unicode-Ziele dessen Installation mit Debugger-Verfügbarkeit prüfen; fehlendes LLDB muss zuerst eingerichtet werden."},debugMissing:{en:"The debugger is unavailable on PATH. Run Debugger Availability, choose an available profile, or run Set Up Native Debugger for LLDB.",de:"Der Debugger ist auf PATH nicht verfügbar. Debugger-Verfügbarkeit ausführen, ein verfügbares Profil wählen oder Nativen Debugger Einrichten für LLDB ausführen."},available:{en:"Executable installed; target support depends on the selected program",de:"Programm installiert; Zielunterstützung hängt vom gewählten Programm ab"},unavailable:{en:"Unavailable: choose another profile; LLDB uses Set Up Native Debugger",de:"Nicht verfügbar: Anderes Profil wählen; LLDB verwendet Nativen Debugger Einrichten"},inventory:{en:"Installed debugger profiles",de:"Installierte Debugger-Profile"},argumentLimit:{en:"Program arguments must be a JSON list of up to 64 strings and 8192 characters in total.",de:"Programmargumente müssen eine JSON-Liste aus höchstens 64 Zeichenketten und insgesamt 8192 Zeichen sein."},invalid:{en:"Invalid or duplicate parameters. Check the required values and supported choices.",de:"Ungültige oder doppelte Parameter. Erforderliche Werte und unterstützte Optionen prüfen."},path:{en:"Choose an existing workspace-relative file or directory without traversal or symlink escape.",de:"Eine vorhandene workspace-relative Datei oder ein Verzeichnis ohne Pfadtraversierung oder Symlink-Ausbruch wählen."},revision:{en:"Choose a revision or range without leading options or command separators.",de:"Eine Revision oder einen Bereich ohne führende Optionen oder Befehlstrennzeichen wählen."},running:{en:"Running developer command",de:"Entwicklerbefehl wird ausgeführt"},missing:{en:"The selected program is unavailable. Choose an installed shell or program.",de:"Das gewählte Programm ist nicht verfügbar. Wähle eine installierte Shell oder ein installiertes Programm."}};
-function text(id:keyof typeof messages):string {const language=process.env.SEMIO_LOCALE;return language==="en"||language==="de"?messages[id][language]:`${messages[id].en} / ${messages[id].de}`;}
+import {createDeveloperProcessV1,developerMessageV1,probeNativeDebuggerV1,createNativeDebuggerSetupHostV1,SetupDebuggerScript} from "./🏃️process/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🛠️ Every developer operation keeps the original task's streamed output and cancellation. */
 function developerCommand(command:string):ScriptCommand {
  return class extends BundleScript {
   async run(segments:string[]):Promise<void>{
-   let request;try{request=parseDeveloperArguments([command,...segments]);}catch(error){throw new Error(text(error instanceof Error&&error.message==="developer.debug.arguments-too-large"?"argumentLimit":"invalid"));}const environment={...process.env};
-   if(command.startsWith("git-")){for(const key of Object.keys(environment))if(key.startsWith("GIT_"))delete environment[key];environment.GIT_OPTIONAL_LOCKS="0";environment.GIT_TERMINAL_PROMPT="0";}
-   const run=async(plan:DeveloperPlan,signal:AbortSignal):Promise<void>=>{if(request.command==="debug"&&request.profile==="lldb"){const path=await probeNativeDebuggerV1(this.repoRoot,this.invocation,createNativeDebuggerSetupHostV1(this.repoRoot,this.invocation));if(!path)throw Object.assign(Error("lldb"),{code:"ENOENT"});plan={...plan,command:path,environment:nativeDebuggerLocations(process.platform,environment).environment};}if(!Bun.which(plan.command,{PATH:environment.PATH??environment.Path??""}))throw Object.assign(Error(plan.command),{code:"ENOENT"});return runOwnedCommand(plan.command,plan.args,plan.cwd,"developer-tools",scriptInvocationBudget(this.invocation,(command==="terminal"||command==="debug")?0:30_000),{signal,env:plan.environment??environment,output:{maximumBytes:16*1024*1024,maximumLines:200_000},onProgress:command==="terminal"||command==="debug"?()=>{}:undefined});};
-   const port:DeveloperProcess={run};
-   console.log(`[developer-tools] ${text("running")}: ${command}`);
-   try{await executeDeveloperRequest(this.repoRoot,request,port,this.invocation.control.signal,process.platform,environment);}catch(error){if((error as {code?:string}).code==="ENOENT"&&request.command==="debug")throw new Error(`${text("debugMissing")} (${request.profile}: ${(error as Error).message})`);if((error as {code?:string}).code==="ENOENT")throw new Error(`${text("missing")} (${request.command==="terminal"?request.shell:"git"})`);if(error instanceof Error&&error.message==="developer.debug.windows-gdb-unicode")throw new Error(text("nativePath"));if(error instanceof Error&&error.message.startsWith("developer.path."))throw new Error(text("path"));if(error instanceof Error&&error.message==="developer.git.revision-invalid")throw new Error(text("revision"));throw error;}
+   let request;try{request=parseDeveloperArguments([command,...segments]);}catch(error){throw new Error(developerMessageV1(error instanceof Error&&error.message==="developer.debug.arguments-too-large"?"argumentLimit":"invalid"));}const environment={...process.env};
+   const port=createDeveloperProcessV1(this.repoRoot,this.invocation,request);
+   console.log(`[developer-tools] ${developerMessageV1("running")}: ${command}`);
+   try{await executeDeveloperRequest(this.repoRoot,request,port,this.invocation.control.signal,process.platform,environment);}catch(error){if((error as {code?:string}).code==="ENOENT"&&request.command==="debug")throw new Error(`${developerMessageV1("debugMissing")} (${request.profile}: ${(error as Error).message})`);if((error as {code?:string}).code==="ENOENT")throw new Error(`${developerMessageV1("missing")} (${request.command==="terminal"?request.shell:"git"})`);if(error instanceof Error&&error.message==="developer.debug.windows-gdb-unicode")throw new Error(developerMessageV1("nativePath"));if(error instanceof Error&&error.message.startsWith("developer.path."))throw new Error(developerMessageV1("path"));if(error instanceof Error&&error.message==="developer.git.revision-invalid")throw new Error(developerMessageV1("revision"));throw error;}
   }
  };
-}
-
-/** 🧰️ Closed provisioning inputs describe host facts without accepting arbitrary package commands. */
-export interface NativeDebuggerSetupSelectionV1 {readonly platform:string;readonly manager?:string;readonly privilege:"root"|"sudo"|"none";readonly environment:Readonly<Record<string,string|undefined>>;}
-/** 📋️ Each fixed package-manager step retains its original workspace and exact argv. */
-export interface NativeDebuggerSetupStepV1 extends DeveloperPlan {readonly id:"privilege"|"python"|"lldb";}
-/** 🎛️ Host effects use one process port and the exact original cancellation signal. */
-export interface NativeDebuggerSetupHostV1 extends NativeDebuggerSetupSelectionV1 {find(program:string):string|null;run(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;capture(plan:DeveloperPlan,signal:AbortSignal):Promise<string>;}
-
-/** 🧬️ Expands only schema-owned host plans and known absolute Windows installation roots. */
-export function planNativeDebuggerProvisionV1(host:NativeDebuggerSetupSelectionV1,cwd:string):NativeDebuggerSetupStepV1[]{
- const policy=setupSchema.$defs.NativeDebuggerSetupPolicy.const,installer=policy.installers.find(row=>row.platform===host.platform&&row.manager===host.manager);if(!installer)throw Error("developer.setup.manager-unavailable");
- if(host.platform==="linux"&&host.privilege!=="root"&&host.privilege!=="sudo")throw Error("developer.setup.privilege-required");const locations=nativeDebuggerLocations(host.platform,host.environment);if(host.platform==="win32"&&(!locations.llvmRoot||!locations.pythonRoot))throw Error("developer.setup.location-invalid");
- const steps:NativeDebuggerSetupStepV1[]=[];if(host.platform==="linux"&&host.privilege==="sudo")steps.push({id:"privilege",command:"sudo",args:[...policy.privilegeArguments],cwd,detached:false});
- for(const step of installer.steps){const args=step.args.map(word=>word.replace("{llvmRoot}",locations.llvmRoot??"").replace("{pythonRoot}",locations.pythonRoot??"")),sudo=host.platform==="linux"&&host.privilege==="sudo";steps.push({id:step.id as "python"|"lldb",command:sudo?"sudo":step.command,args:sudo?["-n",...("environment"in step?[policy.privilegeEnvironmentCommand,...Object.entries(step.environment??{}).sort(([a],[b])=>a.localeCompare(b)).map(([key,value])=>`${key}=${value}`)]:[]),step.command,...args]:args,cwd,detached:false,...("environment"in step?{environment:{...host.environment,...step.environment}}:{})});}return steps;
-}
-
-/** 🔌️ Adapts existing owned child execution to bounded LLDB probes and cancellable provisioning. */
-export function createNativeDebuggerSetupHostV1(cwd:string,invocation:ScriptInvocation):NativeDebuggerSetupHostV1{
- requireIssuedScriptInvocationV1(invocation);const environment={...process.env},platform=process.platform,find=(program:string)=>Bun.which(program,{PATH:environment.PATH??environment.Path??""}),manager=(platform==="linux"?["apt-get","dnf","pacman","zypper"]:platform==="darwin"?["brew"]:platform==="win32"?["winget"]:[]).find(program=>find(program)),privilege=platform==="linux"?(process.getuid?.()===0?"root":find("sudo")?"sudo":"none"):"none";
- const execute=async(plan:DeveloperPlan,signal:AbortSignal,capture:boolean):Promise<string>=>{requireIssuedScriptInvocationV1(invocation);signal.throwIfAborted();if(signal!==invocation.control.signal)throw Error("developer.setup.original-signal-required");const chunks:string[]=[];await runOwnedCommand(plan.command,plan.args,plan.cwd,"developer-tools:setup-debugger",scriptInvocationBudget(invocation,capture?setupSchema.$defs.NativeDebuggerSetupPolicy.const.probeMilliseconds:0),{signal,env:plan.environment??environment,stdout:capture?"ignore":"inherit",output:{maximumBytes:capture?262144:16*1024*1024,maximumLines:capture?4096:200000},...(capture?{outputConsumer:(bytes:Uint8Array)=>{chunks.push(Buffer.from(bytes).toString());}}:{}),onProgress:()=>advanceScriptInvocation(invocation,"setup-debugger","running")});requireIssuedScriptInvocationV1(invocation);return chunks.join("");};
- return{platform,environment,manager,privilege,find,run:async(plan,signal)=>{await execute(plan,signal,false);},capture:(plan,signal)=>execute(plan,signal,true)};
-}
-
-async function nativeCandidates(host:NativeDebuggerSetupHostV1,cwd:string,signal:AbortSignal):Promise<string[]>{
- const locations=nativeDebuggerLocations(host.platform,host.environment),candidates=[...locations.candidates,host.find(host.platform==="win32"?"lldb.exe":"lldb")].filter((path):path is string=>Boolean(path));
- if(host.platform==="darwin"&&host.find("brew")){try{const prefix=(await host.capture({command:"brew",args:["--prefix","lldb"],cwd,detached:false},signal)).trim();if(isAbsolute(prefix)&&prefix.length<240&&!/[\r\n\u0000]/u.test(prefix))candidates.push(join(prefix,"bin/lldb"));}catch{signal.throwIfAborted();}}return[...new Set(candidates)].filter(path=>host.find(path)!==null);
-}
-
-/** 🔬️ Proves an installed frontend can load its matching scripting runtime without installing packages. */
-export async function probeNativeDebuggerV1(cwd:string,invocation:ScriptInvocation,host:NativeDebuggerSetupHostV1):Promise<string|undefined>{
- requireIssuedScriptInvocationV1(invocation);const signal=invocation.control.signal,policy=setupSchema.$defs.NativeDebuggerSetupPolicy.const;for(const path of await nativeCandidates(host,cwd,signal)){signal.throwIfAborted();try{const output=await host.capture({command:path,args:[...policy.probeArguments],cwd,detached:false,environment:nativeDebuggerLocations(host.platform,host.environment).environment},signal);requireIssuedScriptInvocationV1(invocation);if(output.split(/\r?\n/u).some(line=>line.trim()===policy.probeExpectedLine))return path;}catch{requireIssuedScriptInvocationV1(invocation);signal.throwIfAborted();}}return undefined;
-}
-
-/** 🩺️ Verifies full scripting startup before repairing and after each admitted installation. */
-export async function setupNativeDebugger(cwd:string,invocation:ScriptInvocation,host:NativeDebuggerSetupHostV1=createNativeDebuggerSetupHostV1(cwd,invocation)):Promise<Readonly<{path:string;installed:boolean}>>{
- requireIssuedScriptInvocationV1(invocation);const signal=invocation.control.signal;signal.throwIfAborted();if(!["linux","darwin","win32"].includes(host.platform))throw Error("developer.setup.platform-unsupported");
- const probe=()=>probeNativeDebuggerV1(cwd,invocation,host),ready=await probe();if(ready)return{path:ready,installed:false};const steps=planNativeDebuggerProvisionV1(host,cwd);let installed=false;for(const step of steps){await advanceScriptInvocation(invocation,"setup-debugger","running");try{await host.run(step,signal);}catch(error){signal.throwIfAborted();if(step.id==="privilege")throw Error(text("setupPrivilege"),{cause:error});throw error;}requireIssuedScriptInvocationV1(invocation);signal.throwIfAborted();if(step.id!=="privilege")installed=true;if(host.platform==="win32"&&step.id==="python"){const repaired=await probe();if(repaired)return{path:repaired,installed};}}
- const path=await probe();if(!path)throw Error(text("setupProbe"));return{path,installed};
-}
-
-/** 🔧️ Exposes the fixed native debugger workflow under the dashboard's original operation. */
-export class SetupDebuggerScript extends BundleScript{
- constructor(root:string,repoRoot:string,invocation:ScriptInvocation,private readonly host?:NativeDebuggerSetupHostV1){super(root,repoRoot,invocation);}
- async run(segments:string[]):Promise<void>{parseDeveloperArguments(["setup-debugger",...segments]);try{const result=await setupNativeDebugger(this.repoRoot,this.invocation,this.host);console.log(`[developer-tools] ${text("setupReady")}: ${result.path}`);}catch(error){if(error instanceof Error&&error.message==="developer.setup.privilege-required")throw Error(text("setupPrivilege"),{cause:error});if(error instanceof Error&&error.message==="developer.setup.manager-unavailable")throw Error(text("setupManager"),{cause:error});throw error;}}
 }
 
 /** 🔎️ Lists fixed debugger profiles and their actual installed executable locations. */
 class DebuggersScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw new Error(text("invalid"));console.log(`[developer-tools] ${text("inventory")}`);const nativePath=await probeNativeDebuggerV1(this.repoRoot,this.invocation,createNativeDebuggerSetupHostV1(this.repoRoot,this.invocation));
-  for(const row of developerDebuggers(process.platform,program=>program.toLowerCase().includes("lldb")?nativePath??null:Bun.which(program,{PATH:process.env.PATH??process.env.Path??""}),process.env)){const language=process.env.SEMIO_LOCALE,title=language==="en"||language==="de"?row.title[language]:`${row.title.en} / ${row.title.de}`;console.log(`${row.profile}: ${title} — ${row.installed?text("available"):text("unavailable")} (${row.path??row.program})`);if(row.constraint&&row.installed)console.log(`  ${text("nativePath")}`);}
+  if(segments.length)throw new Error(developerMessageV1("invalid"));console.log(`[developer-tools] ${developerMessageV1("inventory")}`);const nativePath=await probeNativeDebuggerV1(this.repoRoot,this.invocation,createNativeDebuggerSetupHostV1(this.repoRoot,this.invocation));
+  for(const row of developerDebuggers(process.platform,program=>program.toLowerCase().includes("lldb")?nativePath??null:runtimeWhichV1(program,{PATH:process.env.PATH??process.env.Path??""}),process.env)){const language=process.env.SEMIO_LOCALE,title=language==="en"||language==="de"?row.title[language]:`${row.title.en} / ${row.title.de}`;console.log(`${row.profile}: ${title} — ${row.installed?developerMessageV1("available"):developerMessageV1("unavailable")} (${row.path??row.program})`);if(row.constraint&&row.installed)console.log(`  ${developerMessageV1("nativePath")}`);}
  }
 }
 
@@ -84,6 +37,7 @@ class TestScript extends BundleScript {
 
 /** 🚪️ The calling composition supplies its exact workspace and original operation authority. */
 export async function runDeveloperTools(root:string,argv:readonly string[],invocation:ScriptInvocation):Promise<void>{
- const router=new ScriptRouter(import.meta.dir,root);for(const command of ["git-status","git-diff","git-history","git-show","git-blame","terminal","debug"])router.register(command,developerCommand(command));router.register("debuggers",DebuggersScript).register("setup-debugger",SetupDebuggerScript).register("test",TestScript);await runScriptMain(router,{invocation,argv});
+ const router=new ScriptRouter(import.meta.dirname,root);for(const command of ["git-status","git-diff","git-history","git-show","git-blame","terminal","debug"])router.register(command,developerCommand(command));router.register("debuggers",DebuggersScript).register("setup-debugger",SetupDebuggerScript).register("test",TestScript);await runScriptMain(router,{invocation,argv});
 }
-if(import.meta.main){const root=new ScriptRouter(import.meta.dir).repoRoot;await receiveScriptProcessInvocation(process.env,invocation=>runDeveloperTools(root,process.argv.slice(2),invocation));}
+if(isMainModuleV1(import.meta.url)){const root=new ScriptRouter(import.meta.dirname).repoRoot;await receiveScriptProcessInvocation(process.env,invocation=>runDeveloperTools(root,process.argv.slice(2),invocation));}
+

@@ -19,6 +19,16 @@ pub struct ApplyDirectoryPage {
 
 impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirectoryPage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "directory-page", kind: "apply-directory-page", record: "ApplyDirectoryPage" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["directory".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<HomeTransient, HomeTransientMutation> for ApplyDirectoryPage {
     fn diff(&self, base: &HomeTransient) -> protocol::MutationOutcome<HomeTransientDiff> {
         let Ok(page) = store::os_directory::DirectoryEventPageV1::parse_canonical_json(&self.page_json) else {
             return protocol::MutationOutcome::new(HomeTransientDiff::default()).absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", "The directory page is not one canonical, receipt-sealed page.").at(["directory"])]);
@@ -35,10 +45,4 @@ impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirec
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["directory".into()]
-    }
 }

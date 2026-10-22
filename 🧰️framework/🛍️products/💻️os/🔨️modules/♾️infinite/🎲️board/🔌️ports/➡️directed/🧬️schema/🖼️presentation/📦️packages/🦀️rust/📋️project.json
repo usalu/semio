@@ -31,7 +31,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "forwardAllArgs": true
       }
     },
@@ -47,7 +47,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "forwardAllArgs": true
       }
     }

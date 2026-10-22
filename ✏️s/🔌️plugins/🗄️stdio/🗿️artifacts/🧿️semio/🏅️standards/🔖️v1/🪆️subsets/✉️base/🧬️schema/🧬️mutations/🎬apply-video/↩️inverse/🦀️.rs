@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyVideo`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use crate::schema::snapshot::SemioSnapshot;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_video::ApplyVideo>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Video(b) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyVideo { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Video(b) => <SemioVideoMutation as ColdMutation<SemioVideoSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyVideo { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

@@ -17,6 +17,18 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Doctype", "Dokumenttyp setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-doctype".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for SetDoctypePayload
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<SetDoctypePayload>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { doctype } = self;
         if *doctype == base.doc.doctype {
@@ -24,16 +36,8 @@ where
         }
         protocol::MutationOutcome::new(SvgDiff { doctype: Some(doctype.clone()), ..Default::default() })
     }
-
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(vec![Op::from(Self { doctype: base.doc.doctype.clone() })])
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Doctype", "Dokumenttyp setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-doctype".to_string()]
     }
 }
 

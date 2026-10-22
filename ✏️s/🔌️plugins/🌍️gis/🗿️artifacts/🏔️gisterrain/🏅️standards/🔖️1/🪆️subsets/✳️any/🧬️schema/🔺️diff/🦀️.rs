@@ -26,17 +26,9 @@ pub struct ImportedMapChange{
 use crate::GisTerrainSnapshot;
 use protocol::MutationDiff;
 
-impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
-    fn apply(&self, snapshot: &GisTerrainSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(value) = self.exaggeration {
-            next.exaggeration = value;
-        }
-        if let Some(value) = &self.imported_map {
-            next.imported_map = value.value.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {}
+
+impl protocol::ColdMutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -48,14 +40,30 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
         take!(exaggeration);
         take!(imported_map);
     }
+
+    fn apply(&self, unpublished: &mut GisTerrainSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(value) = self.exaggeration {
+            next.exaggeration = value;
+        }
+        if let Some(value) = &self.imported_map {
+            next.imported_map = value.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<GisTerrainSnapshot> for GisTerrainDiff {
-    fn inverse(&self, base: &GisTerrainSnapshot) -> Self {
-        Self { exaggeration: self.exaggeration.map(|_| base.exaggeration), imported_map: self.imported_map.as_ref().map(|_| ImportedMapChange { value: base.imported_map.clone() }) }
-    }
     fn is_empty(&self) -> bool {
         self.exaggeration.is_none() && self.imported_map.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<GisTerrainSnapshot> for GisTerrainDiff {
+    fn inverse(&self, base: &GisTerrainSnapshot) -> Self {
+        Self { exaggeration: self.exaggeration.map(|_| base.exaggeration), imported_map: self.imported_map.as_ref().map(|_| ImportedMapChange { value: base.imported_map.clone() }) }
     }
 }
 

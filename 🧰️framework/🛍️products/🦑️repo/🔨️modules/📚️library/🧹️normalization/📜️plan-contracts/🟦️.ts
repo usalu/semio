@@ -88,8 +88,8 @@ export interface TaxonomyRegeneration {
   readonly id: string;
   readonly contractId: string;
   readonly cwd: string;
-  readonly command: readonly ["bun", "repo", "run", string];
-  readonly verifyCommand?: readonly ["bun", "repo", "run", string];
+  readonly command: readonly ["repo", "run", string];
+  readonly verifyCommand?: readonly ["repo", "run", string];
   readonly outputRoots: readonly string[];
   readonly inputs: readonly TaxonomyGeneratorNodeRecord[];
   readonly preOutputs: readonly TaxonomyGeneratorNodeRecord[];

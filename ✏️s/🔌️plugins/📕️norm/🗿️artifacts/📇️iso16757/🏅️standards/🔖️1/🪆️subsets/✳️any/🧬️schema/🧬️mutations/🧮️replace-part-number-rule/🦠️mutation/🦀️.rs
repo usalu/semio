@@ -18,7 +18,13 @@ pub struct ReplacePartNumberRule {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ReplacePartNumberRule where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::replace_part_number_rule::mutation::ReplacePartNumberRule> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part-number-rule", kind: "replace-part-number-rule", record: "ReplacedPartNumberRule" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace part-number rule", "Artikelnummer-Regel ersetzen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for ReplacePartNumberRule where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::replace_part_number_rule::mutation::ReplacePartNumberRule> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::replace_part_number_rule::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,8 +33,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ReplacePartNumberRule 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace part-number rule", "Artikelnummer-Regel ersetzen")
-    }
 }
 //#endregion 🔖️Payload

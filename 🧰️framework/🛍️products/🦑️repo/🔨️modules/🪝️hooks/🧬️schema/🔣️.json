@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/hooks.json",
   "title": "🪝️ repo hooks",
-  "description": "🪝️ Wire shapes of the repo hooks module: the native payload each IDE writes to the hook binary's stdin, the neutral hook context it is normalised into, the hook result records that come back, and the session log the invocation is recorded in.",
+  "description": "🪝️ Wire shapes of the repo hooks module: the native payload each agent client writes to the hook binary's stdin, the neutral hook context it is normalised into, the hook result records that come back, and the session log the invocation is recorded in.",
   "type": "object",
   "$defs": {
     "HookEvent": {
@@ -44,7 +44,7 @@
       "description": "🏛️ The categorized execution kind a pre/post tool event is resolved against, derived from the tool name and, when the payload carries one, from the shell command itself.",
       "enum": ["generic", "plan", "code-search", "code-edit", "test", "build", "terminal"]
     },
-    "EditorClient": {
+    "AgentClient": {
       "description": "🎆️ The client slug that identifies which IDE is invoking the hook. Every one of these has a native event table in `🧩️providers`.",
       "enum": ["copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat", "kiro-cli"]
     },
@@ -52,12 +52,12 @@
       "description": "📨️ What an IDE writes to the hook binary's stdin. Every member is optional and every IDE spells the same fact differently, which is exactly why normalisation exists: `tool_input` may sit at the top level, under `event`, or under `native.event`; the session is any of eight spellings; the parent may name a session or the literal `subagent`.",
       "type": "object",
       "properties": {
-        "hook_event_name": { "type": "string", "description": "📡️ The native event name, when the IDE repeats it in the payload rather than only on the command line." },
+        "hook_event_name": { "type": "string", "description": "📡️ The native event name, when the agent client repeats it in the payload rather than only on the command line." },
         "session_id": { "type": "string" },
         "transcript_path": { "type": "string", "description": "🧾️ The transcript file; its basename is the session id of last resort." },
         "cwd": { "type": "string" },
         "tool_name": { "type": "string" },
-        "tool_input": { "type": "object", "description": "🧰️ The tool's arguments as the IDE passed them." },
+        "tool_input": { "type": "object", "description": "🧰️ The tool's arguments as the agent client passed them." },
         "tool_response": {},
         "tool_output": {},
         "event": { "type": "object", "description": "🪆️ One nesting level some IDEs wrap their payload in." },
@@ -71,7 +71,7 @@
       "required": ["event"],
       "properties": {
         "event": { "$ref": "#/$defs/HookEvent" },
-        "client": { "$ref": "#/$defs/EditorClient" },
+        "client": { "$ref": "#/$defs/AgentClient" },
         "second": { "type": "string", "description": "🕰️ The RFC 3339 second the invocation is stamped with." },
         "repoRoot": { "type": "string" },
         "toolName": { "type": "string" },
@@ -125,8 +125,8 @@
         "response": {}
       }
     },
-    "VsCodeHookOutput": {
-      "description": "💻️ How Copilot Chat and VS Code read a hook result: the record itself plus a `hookSpecificOutput` member carrying the permission decision for `PreToolUse` and additional context for every other event. Every other editor receives the record verbatim.",
+    "CopilotHookOutput": {
+      "description": "💻️ How Copilot Chat and VS Code read a hook result: the record itself plus a `hookSpecificOutput` member carrying the permission decision for `PreToolUse` and additional context for every other event. Every other agent client receives the record verbatim.",
       "type": "object",
       "required": ["allowed"],
       "properties": {

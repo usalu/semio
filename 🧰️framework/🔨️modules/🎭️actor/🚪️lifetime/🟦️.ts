@@ -133,7 +133,7 @@ export function actorInstanceCloseReceiptMatches(request: ActorInstanceCloseRequ
 //#region 🧪️WireLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️WireLaws
 //#endregion 🚪️InstanceLifecycleWire

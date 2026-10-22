@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-snapshot-sqlite-source": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-source",
-    "test-snapshot-sqlite-release-native": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-release-native",
-    "test-snapshot-sqlite-native": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-native"
+    "test-snapshot-sqlite-source": "repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-source",
+    "test-snapshot-sqlite-release-native": "repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-release-native",
+    "test-snapshot-sqlite-native": "repo run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*",

@@ -1,0 +1,219 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "facets-fall-back-without-taxonomy-dirs",
+   "rule": "policyStdioArtifactFacets",
+   "args": [
+    {}
+   ],
+   "expect": [
+    "🧬️schema",
+    "⚙️engine",
+    "🚪️io",
+    "🪓️decomposer"
+   ]
+  },
+  {
+   "id": "facets-skip-legacy-dirs-and-keep-new-ones",
+   "rule": "policyStdioArtifactFacets",
+   "args": [
+    {
+     "artifactComponentDirs": [
+      "🧬️schema",
+      "🚪️io",
+      "🗣️dsl",
+      "📚️examples",
+      "📸️snapshot",
+      "🎒️pack"
+     ]
+    }
+   ],
+   "expect": [
+    "🧬️schema",
+    "⚙️engine",
+    "🚪️io",
+    "🪓️decomposer",
+    "📚️examples",
+    "🎒️pack"
+   ]
+  },
+  {
+   "id": "schema-children-from-the-taxonomy",
+   "rule": "policyStdioSchemaChildDirs",
+   "args": [
+    {
+     "schemaChildDirs": [
+      "🔺️diff",
+      "💡️inferences"
+     ]
+    }
+   ],
+   "expect": [
+    "🔺️diff",
+    "💡️inferences"
+   ]
+  },
+  {
+   "id": "schema-children-fall-back-when-empty",
+   "rule": "policyStdioSchemaChildDirs",
+   "args": [
+    {
+     "schemaChildDirs": []
+    }
+   ],
+   "expect": [
+    "📸️snapshot",
+    "🔺️diff",
+    "🧬️mutations"
+   ]
+  },
+  {
+   "id": "representation-dirs-are-copied",
+   "rule": "policyStdioRepresentationDirs",
+   "args": [
+    {
+     "nativeRepresentationDirs": [
+      "📝️text",
+      "💾️binary"
+     ]
+    }
+   ],
+   "expect": [
+    "📝️text",
+    "💾️binary"
+   ]
+  },
+  {
+   "id": "format-directory-lookup",
+   "rule": "policyStdioFormatDir",
+   "args": [
+    {
+     "avi": {
+      "dir": "d/avi",
+      "depends": []
+     }
+    },
+    "avi"
+   ],
+   "expect": "d/avi"
+  },
+  {
+   "id": "unknown-format-has-no-directory",
+   "rule": "policyStdioFormatDir",
+   "args": [
+    {
+     "avi": {
+      "dir": "d/avi",
+      "depends": []
+     }
+    },
+    "wav"
+   ],
+   "expect": null
+  },
+  {
+   "id": "artifacts-directory-name",
+   "rule": "policyStdioArtifactsDirName",
+   "args": [],
+   "expect": "🗿️artifacts"
+  },
+  {
+   "id": "real-trait-impl-plain-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "impl Foo for Bar {}",
+    "Foo"
+   ],
+   "expect": true
+  },
+  {
+   "id": "real-trait-impl-generic-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "impl<T: X> Foo<T> for Bar<T> {}",
+    "Foo"
+   ],
+   "expect": true
+  },
+  {
+   "id": "real-trait-impl-commented-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "// impl Foo for Bar {}",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "real-trait-impl-block-commented-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "/* impl Foo for Bar {} */",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "real-trait-impl-string-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "let s = \"impl Foo for Bar\";",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "real-trait-impl-longer-trait-name",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "impl Foolish for Bar {}",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "real-trait-impl-prefix-trait-name",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "impl FooBar for X {}",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "real-trait-impl-inherent-impl",
+   "rule": "policyRustFileHasRealTraitImpl",
+   "args": [
+    "impl Bar { fn foo() {} }",
+    "Foo"
+   ],
+   "expect": false
+  },
+  {
+   "id": "spec-leaf-filenames-follow-the-file-kind-taxonomy",
+   "rule": "specLeaves",
+   "args": [],
+   "expect": {
+    "text": [
+     "📖️.grammar.semio",
+     "🔤️.ebnf",
+     "🅰️.g4",
+     "🔗️.graphql",
+     "🔣️.json",
+     "🛰️.proto",
+     "🦀️.rs",
+     "🟦️.ts"
+    ],
+    "binary": [
+     "📡️.protocol.semio",
+     "🔠️.abnf",
+     "🥋️.ksy",
+     "🌶️.spicy",
+     "🦀️.rs",
+     "🟦️.ts"
+    ]
+   }
+  }
+ ]
+}

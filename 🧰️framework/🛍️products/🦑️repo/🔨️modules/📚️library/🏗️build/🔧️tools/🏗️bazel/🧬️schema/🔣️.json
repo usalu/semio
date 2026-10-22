@@ -375,6 +375,12 @@
               "minLength": 1,
               "maxLength": 1024
             },
+            "authority": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
             "parallel": {
               "type": "integer",
               "minimum": 1,
@@ -393,6 +399,9 @@
               "type": "boolean"
             },
             "verbose": {
+              "type": "boolean"
+            },
+            "workers": {
               "type": "boolean"
             },
             "outputStyle": {

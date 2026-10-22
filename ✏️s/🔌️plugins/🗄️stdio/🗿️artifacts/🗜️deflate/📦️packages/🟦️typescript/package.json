@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-deflate:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-deflate:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-deflate:test"
+    "build": "repo run @semio-tech/stdio-deflate:build",
+    "check": "repo run @semio-tech/stdio-deflate:check",
+    "test": "repo run @semio-tech/stdio-deflate:test"
   },
   "exports": {
     ".": {

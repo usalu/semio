@@ -518,6 +518,15 @@
         "pid": {
           "type": "integer",
           "minimum": 1
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
         }
       }
     },
@@ -575,6 +584,10 @@
         "bootAtMs": {
           "type": "integer",
           "minimum": 0
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
         }
       }
     },
@@ -889,7 +902,7 @@
             "pressure-warn": "memory pressure is raised",
             "files": "the machine has too many open files",
             "attaches": "too many disk images are attached",
-            "load": "the load is above its ceiling",
+            "load": "the cores are fully booked by our own running jobs",
             "queue-order": "an earlier request is still waiting"
           },
           "errors": {
@@ -923,7 +936,7 @@
             "pressure-warn": "der Speicherdruck ist erhöht",
             "files": "der Rechner hat zu viele offene Dateien",
             "attaches": "zu viele Disk-Images sind eingehängt",
-            "load": "die Last liegt über ihrer Obergrenze",
+            "load": "die Kerne sind von unseren laufenden Jobs voll belegt",
             "queue-order": "eine frühere Anfrage wartet noch"
           },
           "errors": {

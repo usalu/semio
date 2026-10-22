@@ -5,7 +5,7 @@ use semio_s_artifact_procedural_2d_model::widget_id;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_s_artifact_procedural_2d_mutations::*;
 use semio_s_artifact_procedural_2d_model::empty_generation2d_snapshot;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{ColdMutation, Mutation, MutationDiff, SemanticMutation};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
@@ -211,7 +211,7 @@ async fn change_generation_value_diff_absorb_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
     let d1 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(1.0)).diff(&*base).into_parts().0;
-    let mid = Generation2dSnapshotRead::new(protocol::apply_diff(&d1, &*base).expect("valid mutation diff"));
+    let mid = Generation2dSnapshotRead::new(protocol::apply_diff_cold(&d1, &*base).expect("valid mutation diff"));
     let d2 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(2.0)).diff(&*mid).into_parts().0;
     assert_mutation_diff_absorb_law(&*base, d1, d2).await;
 }

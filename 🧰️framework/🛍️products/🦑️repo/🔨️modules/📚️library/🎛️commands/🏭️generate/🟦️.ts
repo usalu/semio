@@ -25,10 +25,10 @@ export class GenerateScript extends Script {
     }
     if (segments[0] === "scale-fixture") {
       const { runCmd } = await import("../../🏃️process/🟦️.ts");
-      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
+      runCmd("repo", ["run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
-    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
+    console.error("[generate] usage: repo ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
     process.exit(1);
   }
 
@@ -83,7 +83,7 @@ export class GenerateScript extends Script {
       if (pluginFilter && plugin !== pluginFilter && !plugin.includes(pluginFilter)) continue;
       const owned = policyListTopLevelSubsetDirs(this.root).filter((s) => s.split("/")[2] === plugin);
       const lines: string[] = [
-        `// GENERATED-BY: bun ./📜️script.ts generate plugin-glue ${plugin}`,
+        `// GENERATED-BY: repo ./📜️script.ts generate plugin-glue ${plugin}`,
         `// subsets=${owned.length} (registration body still hand-authored until serializer wave; this command validates discoverability)`,
       ];
       for (const sub of owned) {

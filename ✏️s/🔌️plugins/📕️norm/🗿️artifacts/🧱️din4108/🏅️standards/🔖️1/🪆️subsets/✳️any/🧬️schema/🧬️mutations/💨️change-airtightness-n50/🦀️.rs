@@ -20,7 +20,13 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeAirtightnessN50 w
         record: "ChangedAirtightnessN50",
     };
 
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeAirtightnessN50 where Op: protocol::ColdMutation<Din4108Snapshot, ReferenceDiff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::change_airtightness_n50::ChangeAirtightnessN50> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din4108Snapshot>>::ReferenceDiff> {
         crate::change_airtightness_n50::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,9 +35,6 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeAirtightnessN50 w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
-    }
 }
 
 //#region 🪢️Mounts

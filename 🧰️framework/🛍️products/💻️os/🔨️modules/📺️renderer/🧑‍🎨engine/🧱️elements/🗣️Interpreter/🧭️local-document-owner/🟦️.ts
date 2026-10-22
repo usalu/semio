@@ -2,7 +2,7 @@
 /** 🧭️ Shell-local owner identities for transient document interaction state. */
 // #endregion 🧲️Header
 
-import { createContext, useContext } from "react";
+import { createContext, useContext } from "../../⚛️react-port/🟦️.ts";
 
 export type LocalDocumentOwnerIdentityV1 = Readonly<{
   pluginId: string;

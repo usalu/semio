@@ -20,7 +20,7 @@ use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
 
 use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 
 //#region 🔖️FrameDiff
@@ -387,35 +387,9 @@ impl SemioImageDiff {
     }
 }
 
-impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
-    fn apply(&self, base: &SemioImageSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioImageSnapshot> {
-        let mut next = base.clone();
-        if let Some(v) = self.width {
-            next.width = v;
-        }
-        if let Some(v) = self.height {
-            next.height = v;
-        }
-        if let Some(v) = self.colorspace {
-            next.colorspace = v;
-        }
-        if let Some(v) = self.bit_depth {
-            next.bit_depth = v;
-        }
-        if let Some(v) = &self.icc {
-            next.icc = v.clone();
-        }
-        if let Some(d) = &self.frames {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
-            frames_apply(&mut next.frames, d);
-        }
-        if let Some(d) = &self.metadata {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |added| added.item.key.clone(), ["metadata"])?;
-            metadata_apply(&mut next.metadata, d);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {}
 
+impl protocol::ColdMutationDiff<SemioImageSnapshot> for SemioImageDiff {
     fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
@@ -441,9 +415,45 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
             (mine, theirs) => mine.or(theirs),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioImageSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(v) = self.width {
+            next.width = v;
+        }
+        if let Some(v) = self.height {
+            next.height = v;
+        }
+        if let Some(v) = self.colorspace {
+            next.colorspace = v;
+        }
+        if let Some(v) = self.bit_depth {
+            next.bit_depth = v;
+        }
+        if let Some(v) = &self.icc {
+            next.icc = v.clone();
+        }
+        if let Some(d) = &self.frames {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
+            frames_apply(&mut next.frames, d);
+        }
+        if let Some(d) = &self.metadata {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |added| added.item.key.clone(), ["metadata"])?;
+            metadata_apply(&mut next.metadata, d);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
     fn inverse(&self, base: &SemioImageSnapshot) -> Self {
         Self {
             width: self.width.map(|_| base.width),
@@ -454,10 +464,6 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
             frames: self.frames.as_ref().map(|d| frames_inverse(&base.frames, d)),
             metadata: self.metadata.as_ref().map(|d| metadata_inverse(&base.metadata, d)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 

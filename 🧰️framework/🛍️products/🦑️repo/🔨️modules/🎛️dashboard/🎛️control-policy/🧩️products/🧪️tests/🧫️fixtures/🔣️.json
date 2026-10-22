@@ -1,0 +1,37 @@
+{
+  "removedPaths": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscodeignore"
+  ],
+  "owners": [
+    {
+      "name": "@semio-tech/repo-vscode",
+      "active": false
+    },
+    {
+      "name": "@semio-tech/repo-graphql-rs",
+      "active": true
+    },
+    {
+      "name": "@semio-tech/repo-lib",
+      "active": true
+    },
+    {
+      "name": "@semio-tech/repo-dashboard-rs",
+      "active": true
+    }
+  ],
+  "retiredDependencies": [
+    "@types/vscode",
+    "@vscode/test-cli",
+    "@vscode/vsce"
+  ],
+  "dependencySections": [
+    "dependencies",
+    "devDependencies",
+    "optionalDependencies",
+    "peerDependencies"
+  ]
+}

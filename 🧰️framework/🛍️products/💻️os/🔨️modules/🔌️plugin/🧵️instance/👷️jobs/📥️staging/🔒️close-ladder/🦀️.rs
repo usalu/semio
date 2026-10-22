@@ -11,7 +11,7 @@ use semio_framework_plugin_instance_children::children_components::ChildComposit
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -87,7 +87,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         Ok(RetainedCloneStep::Progress(handoff()))
     }
 
-    pub fn close_typed_operation_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, body: usize) -> Result<RetirementDemand, Fault> {
+    pub fn close_typed_operation_demands<M: ReferenceSpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, body: usize) -> Result<RetirementDemand, Fault> {
         let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else { return Ok(RetirementDemand::default()) };
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
         if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.typed_operation_retirement_demands(child_composition, operation_id, body); }

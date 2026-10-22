@@ -150,7 +150,7 @@ async fn mutation_diff_law() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
+        let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let diff_from_apply = apply_xlsx_mutation(&mut via_apply, &mutation);
@@ -169,15 +169,15 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_xlsx_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <XlsxMutation as Mutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse_mutation in <XlsxMutation as ColdMutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_xlsx_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = protocol::apply_diff(diff.diff(), &base).unwrap();
+        let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = protocol::apply_diff(&inverse_diff, &next).unwrap();
+        let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -186,10 +186,10 @@ async fn inverse_law() {
 //#region 🔖️AbsorbLaw
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &XlsxDiff) -> XlsxDiff {
-    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff_cold(d2, &protocol::apply_diff_cold(d1, base).unwrap()).unwrap();
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(protocol::apply_diff(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff_cold(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -222,11 +222,11 @@ async fn absorb_law() {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
         let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Boolean(true)), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&remove_cell_at(&mid, "Sheet1", 1, 0), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
-        let result = protocol::apply_diff(&absorbed, &base).unwrap();
+        let result = protocol::apply_diff_cold(&absorbed, &base).unwrap();
         assert_eq!(cell_value(&result, 1, 0), None, "the modify of a since-removed cell must not survive absorb");
         assert_eq!(cell_value(&result, 1, 1), Some(XlsxCellValue::Number(2.0)), "the untouched neighbour survives");
     }
@@ -235,11 +235,11 @@ async fn absorb_law() {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
         let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 1, XlsxCellValue::InlineString("g".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
-        let result = protocol::apply_diff(&absorbed, &base).unwrap();
+        let result = protocol::apply_diff_cold(&absorbed, &base).unwrap();
         assert_eq!((cell_value(&result, 1, 0), cell_value(&result, 1, 1)), (Some(XlsxCellValue::InlineString("f".into())), Some(XlsxCellValue::InlineString("g".into()))), "both cell edits must survive absorb");
     }
 
@@ -247,21 +247,21 @@ async fn absorb_law() {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
         let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
-        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 0, XlsxCellValue::InlineString("patched".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
-        assert_eq!(cell_value(&protocol::apply_diff(&absorbed, &base).unwrap(), 1, 0), Some(XlsxCellValue::InlineString("patched".into())));
+        assert_eq!(cell_value(&protocol::apply_diff_cold(&absorbed, &base).unwrap(), 1, 0), Some(XlsxCellValue::InlineString("patched".into())));
     }
 
     {
         let base = two_cell_base();
         let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Number(10.0)), &base);
-        let mid1 = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&set_cell_at(&mid1, "Sheet1", 1, 1, XlsxCellValue::Number(20.0)), &mid1);
-        let mid2 = protocol::apply_diff(d2.diff(), &mid1).unwrap();
+        let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
         let d3 = Mutation::diff(&remove_cell_at(&mid2, "Sheet1", 1, 0), &mid2);
-        let sequential = protocol::apply_diff(d3.diff(), &mid2).unwrap();
+        let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
         MutationDiff::absorb(&mut left, d2.diff().clone());
@@ -272,8 +272,8 @@ async fn absorb_law() {
         let mut right = d1.diff().clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
-        assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff_cold(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff_cold(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 }
 //#endregion 🔖️BetweenRoundtripLaw

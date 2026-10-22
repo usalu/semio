@@ -1,6 +1,7 @@
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔒️hermetic-classes.json" with {type: "json"};
 import table from "./🔣️.json" with {type: "json"};
+import {runtimeCommandNameV1} from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 if (validateJsonSchemaSubset(schema, table, schema).length) throw new Error("Closed hermetic class table required");
 
@@ -43,9 +44,16 @@ export function hermeticSelectV1(facts: HermeticFactsV1, source: {readonly class
   return exception ? {kind: "excepted", reason: exception.reason as HermeticExceptionReasonV1} : {kind: "class", class: row};
 }
 
+/** 🧰️ One toolchain of the table by its id. */
+export function hermeticToolchainV1(id: string): (typeof table.toolchains)[number] {
+  const row = table.toolchains.find(entry => entry.id === id);
+  if (!row) throw new Error(`Unknown hermetic toolchain: ${id}`);
+  return row;
+}
+
 /** 🧮️ Reads the environment and package inputs of a target: a named environment value enters as declared, a runtime command the toolchain and platform already determine is dropped, `externalDependencies` names packages; any other host input refuses, as does an environment name the table does not admit. */
-export function hermeticInputsV1(inputs: readonly unknown[], environment: Readonly<Record<string, string | undefined>>): HermeticInputsV1 | {readonly refused: "host-inputs"} {
-  const env: Record<string, string> = {}, packages = new Set<string>(), admitted = new Set(table.environment.names), covered = new Set(table.runtime.covered);
+export function hermeticInputsV1(inputs: readonly unknown[], environment: Readonly<Record<string, string | undefined>>, toolchain: string = runtimeCommandNameV1()): HermeticInputsV1 | {readonly refused: "host-inputs"} {
+  const env: Record<string, string> = {}, packages = new Set<string>(), admitted = new Set(table.environment.names), covered = new Set(table.runtime.covered), patterns = hermeticToolchainV1(toolchain).covered.map(source => new RegExp(source, "u"));
   for (const input of inputs) {
     if (typeof input !== "object" || input === null) continue;
     const row = input as Record<string, unknown>;
@@ -54,7 +62,7 @@ export function hermeticInputsV1(inputs: readonly unknown[], environment: Readon
       const value = environment[row.env];
       if (value !== undefined) env[row.env] = value;
     } else if (typeof row.runtime === "string") {
-      if (!covered.has(row.runtime)) return {refused: "host-inputs"};
+      if (!covered.has(row.runtime) && !patterns.some(pattern => pattern.test(row.runtime as string))) return {refused: "host-inputs"};
     } else if (Array.isArray(row.externalDependencies)) for (const name of row.externalDependencies) if (typeof name === "string") packages.add(name);
   }
   return {env: Object.fromEntries(Object.entries(env).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)), packages: [...packages].sort()};

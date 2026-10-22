@@ -1,5 +1,6 @@
 import {describe,expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
+import {fileURLToPath} from "node:url";
 import {join} from "node:path";
 import {forwardRepoCommandV1,serviceEligibleV1,serviceModeV1} from "../client/repo.mjs";
 import {agentIdV1,launcherCapabilityV1} from "../client/index.mjs";
@@ -47,7 +48,7 @@ describe("forwarding decision",()=>{
   expect(await forwardRepoCommandV1({...base,args:["run","a:build","--service=require"],languageOf:()=>"fr",forward:never as any})).toBe(1);
  });
  test("the reference entry refuses to run without an explicit language and says so in both",()=>{
-  const run=Bun.spawnSync(["bun",new URL("../client/main.mjs",import.meta.url).pathname,"--root","/nowhere","--","ping"]);
+  const run=Bun.spawnSync(["bun",fileURLToPath(new URL("../client/main.mjs",import.meta.url)),"--root","/nowhere","--","ping"]);
   expect(run.exitCode).toBe(2);const text=run.stderr.toString();expect(text).toContain("None of the requested languages");expect(text).toContain("Keine der angeforderten Sprachen");
  });
  test("off, ineligible, unanswered and unresolved language fall back with undefined; require fails instead",async()=>{

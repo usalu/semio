@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-xlsx:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-xlsx:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-xlsx:test"
+    "build": "repo run @semio-tech/stdio-xlsx:build",
+    "check": "repo run @semio-tech/stdio-xlsx:check",
+    "test": "repo run @semio-tech/stdio-xlsx:test"
   },
   "exports": {
     ".": {

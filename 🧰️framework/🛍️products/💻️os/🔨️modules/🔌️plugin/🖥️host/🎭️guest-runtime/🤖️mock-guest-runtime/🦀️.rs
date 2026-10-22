@@ -28,9 +28,22 @@ enum ScriptedOutcome {
     DeadlineExceeded,
 }
 
+/// 📦️ The scripted body of one finished mock job step, offered once as a single page before its source closes.
+pub(super) struct MockJobOutput {
+    state: OriginalJobOutputState,
+    bytes: Vec<u8>,
+    offered: bool,
+}
+
+/// 🧾️ Wraps one scripted result into a submitted original guest call that spent no instructions.
+pub(super) fn mock_job_call<T>(execution: OriginalGuestExecutionBudget, original: Result<T, TurnFault>) -> OriginalGuestJobCall<T> {
+    OriginalGuestJobCall { original, execution: OriginalGuestExecutionReceipt { budget: execution, spent_fuel: Some(0), submitted: true }, returned_unsubmitted_source: None }
+}
+
 #[derive(Default)]
 pub struct MockInstanceState {
     pub actor_context:semio_framework_plugin_guest_contract::original_actor_context::OriginalActorGuestEntry,
+    pub(super) outputs: HashMap<u64, MockJobOutput>,
     #[allow(dead_code)]
     pub checkpoint: Option<Vec<u8>>,
 }
@@ -314,52 +327,98 @@ impl GuestRuntime for MockGuestRuntime {
 
     /// 🎬️ `start-job` has no interesting success payload, so normal outcomes do not consume
     /// `ScriptedOutcome`; dedicated one-shot failure/panic flags exercise relay recovery directly.
-    async fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
+    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
         self.start_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         assert!(!self.panic_start.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted start-job panic after guest instance acquisition");
         if self.fail_start.swap(false, std::sync::atomic::Ordering::AcqRel) {
-            return Err(TurnFault::Trapped("scripted start-job failure".to_string()));
+            return OriginalGuestJobCall::unsubmitted(execution, source, TurnFault::Trapped("scripted start-job failure".to_string()));
         }
-        if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
-            return Err(TurnFault::Exhausted);
+        match self.scripts.lock() {
+            Ok(scripts) if scripts.contains_key(&inst.actor.0) => {}
+            Ok(_) => return OriginalGuestJobCall::unsubmitted(execution, source, TurnFault::Exhausted),
+            Err(_) => return OriginalGuestJobCall::unsubmitted(execution, source, TurnFault::Host(PluginHostError::LockPoisoned("mock runtime"))),
         }
-        Ok(())
+        mock_job_call(execution, Ok(OriginalJobStartReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, returned_source: None, refusal: None }))
     }
 
-    async fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> Result<JobStep, TurnFault> {
+    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
         self.step_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         assert!(!self.panic_step.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted step-job panic after guest instance acquisition");
-        let scripted = {
-            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-            scripts.entry(inst.actor.0).or_default().pop_front()
+        let scripted = match self.scripts.lock() {
+            Ok(mut scripts) => scripts.entry(inst.actor.0).or_default().pop_front(),
+            Err(_) => return mock_job_call(execution, Err(TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))),
         };
-        match scripted {
-            Some(ScriptedOutcome::Job(step)) => Ok(step),
+        let step = match scripted {
+            Some(ScriptedOutcome::Job(step)) => step,
             Some(ScriptedOutcome::PendingJob { gate, step }) => {
                 gate.wait().await;
-                Ok(step)
+                step
             }
-            Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
-            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-            Some(ScriptedOutcome::GuestFault(fault)) => Err(TurnFault::Guest(fault)),
-            Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
-            None => Err(TurnFault::Exhausted),
-        }
+            Some(ScriptedOutcome::Turn(_)) => return mock_job_call(execution, Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string()))),
+            Some(ScriptedOutcome::Fault(message)) => return mock_job_call(execution, Err(TurnFault::Trapped(message))),
+            Some(ScriptedOutcome::GuestFault(fault)) => return mock_job_call(execution, Err(TurnFault::Guest(fault))),
+            Some(ScriptedOutcome::DeadlineExceeded) => return mock_job_call(execution, Err(TurnFault::DeadlineExceeded)),
+            None => return mock_job_call(execution, Err(TurnFault::Exhausted)),
+        };
+        let (state, bytes) = match step {
+            JobStep::Running { progress } => (OriginalJobOutputState::Running, progress.unwrap_or_default()),
+            JobStep::Done { output } => (OriginalJobOutputState::Done, output),
+            JobStep::Failed { error } => (OriginalJobOutputState::Failed, error),
+        };
+        let GuestInstanceState::Mock(mock) = &mut inst.state else {
+            return mock_job_call(execution, Err(TurnFault::Trapped("MockGuestRuntime::step_job called on a non-mock GuestInstance".to_string())));
+        };
+        let outcome = OriginalJobOutcome { job, operation: budget.input.operation, generation: budget.input.generation, state, byte_length: bytes.len() as u64 };
+        mock.outputs.insert(job, MockJobOutput { state, bytes, offered: false });
+        mock_job_call(execution, Ok(OriginalJobStepReply { input: budget.input, spent: Default::default(), work_units_spent: 0, outcome: Some(outcome), source_closed: false, refusal: None }))
+    }
+
+    /// 📦️ The scripted body is offered as one page, then the output reports itself closed.
+    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
+        let GuestInstanceState::Mock(mock) = &mut inst.state else {
+            return mock_job_call(execution, Err(TurnFault::Trapped("MockGuestRuntime::read_job_output called on a non-mock GuestInstance".to_string())));
+        };
+        let Some(output) = mock.outputs.get_mut(&job) else {
+            return mock_job_call(execution, Ok(OriginalJobOutputReply { input: budget.input, spent: Default::default(), work_units_spent: 0, chunk: None, source_closed: false, refusal: Some(OriginalJobCallFailure::Authority(semio_framework_value::ValueRefusalKind::OwnershipLimit)) }));
+        };
+        let chunk = if output.bytes.is_empty() || output.offered {
+            OriginalJobOutputChunk { offset: output.bytes.len() as u64, bytes: None, output_closed: true }
+        } else {
+            output.offered = true;
+            OriginalJobOutputChunk { offset: 0, bytes: Some(output.bytes.clone()), output_closed: false }
+        };
+        mock_job_call(execution, Ok(OriginalJobOutputReply { input: budget.input, spent: Default::default(), work_units_spent: 0, chunk: Some(chunk), source_closed: false, refusal: None }))
+    }
+
+    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
+        let GuestInstanceState::Mock(mock) = &mut inst.state else {
+            return mock_job_call(execution, Err(TurnFault::Trapped("MockGuestRuntime::acknowledge_job_output called on a non-mock GuestInstance".to_string())));
+        };
+        let output = mock.outputs.remove(&job);
+        let closed = output.as_ref().is_some_and(|output| output.state != OriginalJobOutputState::Running);
+        mock_job_call(execution, Ok(OriginalJobOutputAckReply { input: budget.input, spent: Default::default(), work_units_spent: 0, acknowledged: output.is_some(), source_closed: closed, refusal: None }))
     }
 
     /// 🛑️ Cancellation succeeds without consuming the step queue by default; dedicated
     /// one-shot failure/panic flags prove callers retain or retire uncertain guest state.
-    async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+    async fn cancel_job(&self,_inst:&mut GuestInstance,_job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
         self.cancel_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         assert!(!self.panic_cancel.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted cancel-job panic after guest instance acquisition");
         if self.fail_cancel.swap(false, std::sync::atomic::Ordering::AcqRel) {
-            return Err(TurnFault::Trapped("scripted cancel-job failure".to_string()));
+            return mock_job_call(execution, Err(TurnFault::Trapped("scripted cancel-job failure".to_string())));
         }
         let release = self.relay_cancel_release.lock().expect("mock cancel release lock poisoned").take();
         if let Some(release) = release {
             release.wait().await;
         }
-        Ok(())
+        mock_job_call(execution, Ok(OriginalJobCancelReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, refusal: None }))
+    }
+
+    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        if let GuestInstanceState::Mock(mock) = &mut inst.state {
+            mock.outputs.clear();
+        }
+        mock_job_call(execution, Ok(OriginalJobCancelReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, refusal: None }))
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {

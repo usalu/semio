@@ -71,16 +71,16 @@ pub fn s_home_mutation_report_json(base_json: &str, mutation_json: &str, after_j
     let expected = decode_snapshot(after_json)?;
     let mutation: SHomeMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
-    let forward = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &base);
-    if let Ok(next) = protocol::apply_diff(forward.diff(), &applied) {
+    let forward = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::diff(&mutation, &base);
+    if let Ok(next) = protocol::apply_diff_cold(forward.diff(), &applied) {
         applied = next;
     }
-    let inverse = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let inverse = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(step, &undone);
-        if let Ok(next) = protocol::apply_diff(outcome.diff(), &undone) {
+        let outcome = <SHomeMutation as protocol::ColdMutation<SHomeSnapshot>>::diff(step, &undone);
+        if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), &undone) {
             undone = next;
         }
         inverse_messages.extend(outcome.messages().iter().cloned());

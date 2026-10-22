@@ -18,7 +18,7 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
     writeFileSync(join(root, "entry/📜️script.ts"), 'import { inClosure } from "../closure.ts";\nexport function run() { return inClosure; }\n');
 
     const fallback = ["{workspaceRoot}/fallback-marker.ts"];
-    const target = { options: { cwd: "entry", command: "bun ./📜️script.ts run" } };
+    const target = { options: { cwd: "entry", command: "repo ./📜️script.ts run" } };
     const declarations: unknown[] = await cacheInternals.genericTargetCommandInputs(target, root, fallback), inputs = declarations.filter((input): input is string => typeof input === "string");
     assert.deepEqual(declarations.filter(input => typeof input !== "string"), [{ externalDependencies: [] }]);
 

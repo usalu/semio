@@ -14,6 +14,16 @@ pub struct SetCamera {
 
 impl protocol::MutationKind<GisMapViewerWindowConfig, GisMapViewerWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["camera".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<GisMapViewerWindowConfig, GisMapViewerWindowConfigMutation> for SetCamera {
     fn diff(&self, base: &GisMapViewerWindowConfig) -> protocol::MutationOutcome<GisMapViewerWindowConfigDiff> {
         if base.camera == self.camera {
             return protocol::MutationOutcome::new(GisMapViewerWindowConfigDiff::default()).warning("mutation.no-op", "The map window already holds this camera.");
@@ -22,11 +32,5 @@ impl protocol::MutationKind<GisMapViewerWindowConfig, GisMapViewerWindowConfigMu
     }
     fn inverse(&self, base: &GisMapViewerWindowConfig) -> Result<Vec<GisMapViewerWindowConfigMutation>, semio_framework_value::ValueError> {
         Ok((base.camera != self.camera).then(|| GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: base.camera })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["camera".into()]
     }
 }

@@ -10,7 +10,7 @@ export async function testDependencyBootstrap(workspace: string, output: string)
   const target = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets[fixture.target];
   assert.equal(target.cache, false);
   assert.deepEqual(target.outputs, []);
-  assert.equal(target.options.command, `bun "${fixture.entry}" ${fixture.command}`);
+  assert.equal(target.options.command, `repo "${fixture.entry}" ${fixture.command}`);
   const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.entry], bundle: true, write: false, metafile: true, platform: "node", packages: "external", format: "esm", logLevel: "silent" });
   for (const source of Object.keys(graph.metafile.inputs)) assert.notEqual(resolve(workspace, source), join(workspace, "📜️script.ts"));
   for (const value of Object.values(graph.metafile.outputs) as { imports: { path: string }[] }[]) for (const dependency of value.imports) assert.ok(dependency.path.startsWith("node:"), dependency.path);

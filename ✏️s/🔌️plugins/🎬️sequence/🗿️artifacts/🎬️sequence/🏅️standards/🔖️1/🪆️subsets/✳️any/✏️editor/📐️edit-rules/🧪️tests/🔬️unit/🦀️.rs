@@ -20,7 +20,7 @@ fn content(scene: &SequenceWorkingScene) -> SemioFlowSnapshot {
 fn forward(state: &SemioFlowSnapshot, leaf: &SemioFlowMutation) -> SemioFlowSnapshot {
     let outcome = diff_semio_flow_mutation(leaf, state);
     assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-    semio_framework_os_kernel::apply_diff(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
+    semio_framework_os_kernel::apply_diff_cold(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
 }
 
 fn assert_leaves_reproduce_the_scene_and_undo_restores_it(before: &SequenceWorkingScene, edit: &SceneEdit) {

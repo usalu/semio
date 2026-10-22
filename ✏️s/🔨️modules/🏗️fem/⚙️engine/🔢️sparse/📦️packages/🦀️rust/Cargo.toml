@@ -26,5 +26,6 @@ semio-framework-value-derive = { workspace = true }
 semio-s-fem-algebra = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-fem-test-support = { workspace = true }
 serde_json = { workspace = true }

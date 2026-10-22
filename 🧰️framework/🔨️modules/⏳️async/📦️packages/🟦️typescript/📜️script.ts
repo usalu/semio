@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
@@ -54,6 +54,6 @@ class SinglePollCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript).register("test-publication-contract", PublicationContractScript).register("single-poll-check", SinglePollCheckScript).register("test-api-contract", ApiContractScript);
+const router = new ScriptRouter(import.meta.dirname).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript).register("test-publication-contract", PublicationContractScript).register("single-poll-check", SinglePollCheckScript).register("test-api-contract", ApiContractScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "info" }) }));

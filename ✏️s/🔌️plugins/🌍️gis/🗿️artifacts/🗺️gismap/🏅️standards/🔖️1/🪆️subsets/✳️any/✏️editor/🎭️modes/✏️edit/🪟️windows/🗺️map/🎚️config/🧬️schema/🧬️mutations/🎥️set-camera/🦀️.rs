@@ -21,6 +21,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetCamera>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["cameraJson".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetCamera
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetCamera>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.camera_json == self.camera_json {
             return MutationOutcome::empty().warning("mutation.no-op", "Camera is already at the requested position.");
@@ -33,12 +46,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["cameraJson".into()]
-    }
 }
 //#endregion ⚙️Behavior
 

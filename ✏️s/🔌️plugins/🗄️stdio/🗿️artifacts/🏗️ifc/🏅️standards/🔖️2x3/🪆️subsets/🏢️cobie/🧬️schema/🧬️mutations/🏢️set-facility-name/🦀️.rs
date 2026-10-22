@@ -14,6 +14,16 @@ pub struct SetFacilityName {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFacilityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "facility-name", kind: "set-facility-name", record: "SetFacilityName" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set facility name", "Bauwerksname setzen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFacilityName {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         let Self { building, name } = self;
         match mvd::argument_diff(base, *building, &[BUILDING], NAME_INDEX, mvd::optional(name.clone().map(Part21Value::Str))) {
@@ -21,21 +31,12 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFacility
             Err(message) => rejected(message),
         }
     }
-
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3CobieMutation>, semio_framework_value::ValueError> {
         let Self { building, .. } = self;
         if !matches!(mvd::standing(base, *building, &[BUILDING]), mvd::Standing::Present { .. }) {
             return Ok(Vec::new());
         }
         Ok(vec![Ifc2x3CobieMutation::SetFacilityName(SetFacilityName { building: *building, name: mvd::argument(base, *building, NAME_INDEX).and_then(Part21Value::as_str).map(str::to_string) })])
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set facility name", "Bauwerksname setzen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -11,7 +11,7 @@
             "generate": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts generate"
+                "command": "repo ./📜️script.ts generate"
               },
               "cache": true,
               "outputs": [
@@ -47,7 +47,7 @@
             "publish": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts publish"
+                "command": "repo ./📜️script.ts publish"
               },
               "cache": false,
               "dependsOn": [
@@ -84,7 +84,7 @@
             "build": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts build"
+                "command": "repo ./📜️script.ts build"
               },
               "cache": false,
               "dependsOn": [
@@ -130,7 +130,7 @@
             "generate": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts generate"
+                "command": "repo ./📜️script.ts generate"
               },
               "cache": true,
               "outputs": [
@@ -149,7 +149,7 @@
             "publish": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts publish"
+                "command": "repo ./📜️script.ts publish"
               },
               "cache": false,
               "dependsOn": [
@@ -162,7 +162,7 @@
             "build": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts build"
+                "command": "repo ./📜️script.ts build"
               },
               "cache": false,
               "dependsOn": [
@@ -191,7 +191,7 @@
             "generate": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts generate"
+                "command": "repo ./📜️script.ts generate"
               },
               "cache": true,
               "outputs": [
@@ -221,7 +221,7 @@
             "dev": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts dev"
+                "command": "repo ./📜️script.ts dev"
               },
               "cache": false,
               "continuous": true,
@@ -263,7 +263,7 @@
             "publish": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts publish"
+                "command": "repo ./📜️script.ts publish"
               },
               "cache": false,
               "dependsOn": [
@@ -310,7 +310,7 @@
             "generate": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts generate"
+                "command": "repo ./📜️script.ts generate"
               },
               "cache": true,
               "outputs": [
@@ -339,7 +339,7 @@
             "publish": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts publish"
+                "command": "repo ./📜️script.ts publish"
               },
               "cache": false,
               "dependsOn": [
@@ -362,7 +362,7 @@
             "build": {
               "execution": {
                 "kind": "command",
-                "command": "bun ./📜️script.ts build"
+                "command": "repo ./📜️script.ts build"
               },
               "cache": false,
               "dependsOn": [

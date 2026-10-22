@@ -1,5 +1,6 @@
 /** 🎛️ World3dHost marquee and gumball: the marquee preview and its commit hold, the selection preview, the gumball gesture and handlers and the relocate drag. */
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
 import { type GumballHandleKind, type GumballPose, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { type WorldGumballEvent, worldGumballStep } from "../🧮️gumball-math/🟦️.ts";
 import { mergeIdSet, raycastGroundPoint, resolveClickInstanceId, resolveMarqueeComponentIds, resolveMarqueeInstanceIds } from "../🎯️marquee-and-bridges/🟦️.tsx";

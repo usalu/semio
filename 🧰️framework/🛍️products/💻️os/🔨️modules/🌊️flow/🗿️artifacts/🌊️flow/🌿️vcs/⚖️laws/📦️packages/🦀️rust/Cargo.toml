@@ -25,6 +25,8 @@ path = "../../🦀️.rs"
 semio-framework-artifact-flow-flow-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+protocol = { path = "../../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-async-macros = { path = "../../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

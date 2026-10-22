@@ -8,6 +8,7 @@
     "de": "Nx mit Bun"
    },
    "kind": "external",
+   "default": true,
    "module": "../@@TOOLS@@/@@NX@@/@@BACKEND@@/@@TS@@",
    "driver": "../@@TOOLS@@/@@NX@@/@@CONF@@/@@TS@@",
    "dependencyModel": "consumers",
@@ -19,6 +20,13 @@
     "environment": {
      "NX_DAEMON": "false"
     }
+   },
+   "nativeCaller": {
+    "namespace": "nx",
+    "schema": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"
+   },
+   "cacheProof": {
+    "logMarker": "read the output from the cache|\\[local cache\\]|\\[existing outputs match the cache\\]"
    },
    "operations": {
     "run": "native",
@@ -106,6 +114,14 @@
    "module": "../@@TOOLS@@/@@BAZEL@@/@@BACKEND@@/@@TS@@",
    "driver": "../@@TOOLS@@/@@BAZEL@@/@@CONF@@/@@TS@@",
    "dependencyModel": "all",
+   "cacheProof": {
+    "logMarker": "(?:disk|remote) cache hit",
+    "activity": true,
+    "spawnMarker": {
+     "executed": "[0-9]+ (?:linux-sandbox|darwin-sandbox|processwrapper-sandbox|windows-sandbox|local|worker)",
+     "completed": "Build completed successfully"
+    }
+   },
    "operations": {
     "run": "adapter",
     "run-many": "adapter",
@@ -192,6 +208,9 @@
    "module": "../@@TOOLS@@/@@SEMIO@@/@@BACKEND@@/@@TS@@",
    "driver": "../@@TOOLS@@/@@SEMIO@@/@@CONF@@/@@TS@@",
    "dependencyModel": "all",
+   "cacheProof": {
+    "activity": true
+   },
    "operations": {
     "run": "native",
     "run-many": "native",

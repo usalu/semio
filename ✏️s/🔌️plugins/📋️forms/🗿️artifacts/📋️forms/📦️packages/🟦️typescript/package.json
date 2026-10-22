@@ -15,9 +15,9 @@
     }
   },
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/forms-js:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/forms-js:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/forms-js:test"
+    "build": "repo run @semio-tech/forms-js:build",
+    "check": "repo run @semio-tech/forms-js:check",
+    "test": "repo run @semio-tech/forms-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

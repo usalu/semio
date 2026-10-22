@@ -1,0 +1,471 @@
+{
+ "version": 1,
+ "contributor": {
+  "alias": "ueli",
+  "emoji": "🐙️",
+  "name": "Ueli",
+  "email": "u@example.com"
+ },
+ "extract": [
+  {
+   "subject": "🐙️ueli🎆️26🌙️06☀️04🚩️700",
+   "expected": {
+    "nnn": 700,
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04"
+   }
+  },
+  {
+   "subject": "  🐙️ueli🎆️26🌙️06☀️04🚩️7  ",
+   "expected": {
+    "nnn": 7,
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04"
+   }
+  },
+  {
+   "subject": "🐙️ueli🎆️26🌙️06☀️04🚩️",
+   "expected": null
+  },
+  {
+   "subject": "plain subject",
+   "expected": null
+  },
+  {
+   "subject": "🐙️ueli🎆️26🌙️6☀️04🚩️1",
+   "expected": null
+  },
+  {
+   "subject": "🐙️ueli🎆️26🌙️06☀️04🚩️x",
+   "expected": null
+  },
+  {
+   "subject": "",
+   "expected": null
+  },
+  {
+   "subject": "🎆️26🌙️06☀️04🚩️5",
+   "expected": null
+  },
+  {
+   "subject": "🐙️ueli🎆️26🌙️06☀️04🚩️0",
+   "expected": {
+    "nnn": 0,
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04"
+   }
+  }
+ ],
+ "numeric": [
+  {
+   "subject": "152",
+   "expected": 152
+  },
+  {
+   "subject": " 299 ",
+   "expected": 299
+  },
+  {
+   "subject": "0",
+   "expected": null
+  },
+  {
+   "subject": "-5",
+   "expected": null
+  },
+  {
+   "subject": "12a",
+   "expected": null
+  },
+  {
+   "subject": "",
+   "expected": null
+  },
+  {
+   "subject": "007",
+   "expected": 7
+  }
+ ],
+ "tag": [
+  {
+   "tag": "🐙️ueli🎆️26🌙️06☀️04🚩️",
+   "expected": "🐙️ueli🎆️26🌙️06☀️04"
+  },
+  {
+   "tag": " 🐙️ueli🎆️26🌙️06☀️04🚩️ ",
+   "expected": "🐙️ueli🎆️26🌙️06☀️04"
+  },
+  {
+   "tag": "🐙️ueli🎆️26🌙️06☀️04",
+   "expected": null
+  },
+  {
+   "tag": "🐙️ueli🎆️26🌙️06☀️04🚩️1",
+   "expected": null
+  },
+  {
+   "tag": "v1.0.0",
+   "expected": null
+  }
+ ],
+ "bump": [
+  {
+   "name": "no history starts a fresh epoch at counter 001",
+   "subjects": [],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️10☀️21",
+    "nnn": "001"
+   }
+  },
+  {
+   "name": "the newest formatted subject keeps its epoch and the maximum counter wins",
+   "subjects": [
+    "🐙️ueli🎆️26🌙️06☀️04🚩️700",
+    "🐙️ueli🎆️26🌙️06☀️04🚩️699"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+    "nnn": "701"
+   }
+  },
+  {
+   "name": "the maximum over the whole history counts, not the newest",
+   "subjects": [
+    "🐙️ueli🎆️26🌙️06☀️04🚩️5",
+    "🐙️ueli🎆️26🌙️06☀️04🚩️12",
+    "🐙️ueli🎆️26🌙️06☀️04🚩️9"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+    "nnn": "013"
+   }
+  },
+  {
+   "name": "another contributor's counters are ignored",
+   "subjects": [
+    "🦑️bob🎆️26🌙️06☀️04🚩️900",
+    "🐙️ueli🎆️26🌙️06☀️04🚩️3"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+    "nnn": "004"
+   }
+  },
+  {
+   "name": "only another contributor's counters leave the fresh epoch at 001",
+   "subjects": [
+    "🦑️bob🎆️26🌙️06☀️04🚩️900"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️10☀️21",
+    "nnn": "001"
+   }
+  },
+  {
+   "name": "numeric GitKraken subjects continue the counter on the fresh epoch",
+   "subjects": [
+    "152",
+    "299",
+    "17"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    1,
+    2
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️01☀️02",
+    "nnn": "300"
+   }
+  },
+  {
+   "name": "a persisted WIP epoch replaces the fresh epoch",
+   "subjects": [
+    "152"
+   ],
+   "wip": "🐙️ueli🎆️25🌙️01☀️01",
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️25🌙️01☀️01",
+    "nnn": "153"
+   }
+  },
+  {
+   "name": "formatted history wins over the persisted WIP epoch",
+   "subjects": [
+    "🐙️ueli🎆️26🌙️06☀️04🚩️1"
+   ],
+   "wip": "🐙️ueli🎆️25🌙️01☀️01",
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+    "nnn": "002"
+   }
+  },
+  {
+   "name": "counters of 1000 and above keep growing past three digits",
+   "subjects": [
+    "🐙️ueli🎆️26🌙️06☀️04🚩️999"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+    "nnn": "1000"
+   }
+  }
+ ],
+ "bumpErrors": [
+  {
+   "name": "a prior subject that looks like a counter but does not parse refuses to reset to 001",
+   "subjects": [
+    "🐙️ueli🎆️26🌙️06☀️4🚩️7"
+   ],
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "message": "commit.counter.refusing-to-reset-to-because"
+  }
+ ],
+ "bumpDefects": [
+  {
+   "name": "subjects without emoji presentation selectors continue the counter",
+   "subjects": [
+    "🐙ueli🎆26🌙06☀04🚩700"
+   ],
+   "wip": null,
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "now": [
+    2026,
+    10,
+    21
+   ],
+   "expected": {
+    "line1Base": "🐙ueli🎆26🌙06☀04",
+    "nnn": "701"
+   },
+   "defect": "🔢️counter/🟦️.ts:5 COUNTER_RE spells each emoji with its selector and then an optional selector, so a subject without selectors never parses and bumpCounterFromHistory throws instead of continuing"
+  }
+ ],
+ "canonical": [
+  {
+   "base": "🐙️ueli🎆️26🌙️06☀️04",
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "expected": "🐙️ueli🎆️26🌙️06☀️04"
+  },
+  {
+   "base": "no epoch here",
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "expected": "no epoch here"
+  }
+ ],
+ "canonicalDefects": [
+  {
+   "base": "🦑️bob🎆️26🌙️06☀️04",
+   "contributor": {
+    "alias": "ueli",
+    "emoji": "🐙️",
+    "name": "Ueli",
+    "email": "u@example.com"
+   },
+   "expected": "🐙️ueli🎆️26🌙️06☀️04",
+   "defect": "🔢️counter/🟦️.ts:canonicalWipLine1Base applies a selector-carrying pattern to text whose selectors were just stripped, so it never matches and never rewrites the contributor prefix"
+  }
+ ],
+ "second": [
+  {
+   "now": [
+    2026,
+    10,
+    21,
+    5,
+    7,
+    9
+   ],
+   "expected": "🎆️26🌙️10☀️21⏰️05⌚️07⏱️09"
+  },
+  {
+   "now": [
+    2026,
+    1,
+    2,
+    23,
+    59,
+    59
+   ],
+   "expected": "🎆️26🌙️01☀️02⏰️23⌚️59⏱️59"
+  },
+  {
+   "now": [
+    2105,
+    12,
+    31,
+    0,
+    0,
+    0
+   ],
+   "expected": "🎆️05🌙️12☀️31⏰️00⌚️00⏱️00"
+  }
+ ],
+ "pad": [
+  {
+   "n": 0,
+   "expected": "00"
+  },
+  {
+   "n": 5,
+   "expected": "05"
+  },
+  {
+   "n": 12,
+   "expected": "12"
+  },
+  {
+   "n": 123,
+   "expected": "123"
+  }
+ ],
+ "repo": {
+  "commits": [
+   "🐙️ueli🎆️26🌙️06☀️04🚩️41",
+   "unrelated",
+   "🦑️bob🎆️26🌙️06☀️04🚩️90"
+  ],
+  "tags": [
+   "🐙️ueli🎆️25🌙️05☀️05🚩️"
+  ],
+  "expectedNext": {
+   "line1Base": "🐙️ueli🎆️26🌙️06☀️04",
+   "nnn": "042"
+  },
+  "expectedWip": "🐙️ueli🎆️26🌙️06☀️04",
+  "tagOnly": {
+   "commits": [
+    "unrelated"
+   ],
+   "tags": [
+    "🐙️ueli🎆️25🌙️05☀️05🚩️",
+    "v1"
+   ],
+   "expectedWip": "🐙️ueli🎆️25🌙️05☀️05"
+  },
+  "none": {
+   "commits": [
+    "unrelated"
+   ],
+   "tags": []
+  }
+ }
+}

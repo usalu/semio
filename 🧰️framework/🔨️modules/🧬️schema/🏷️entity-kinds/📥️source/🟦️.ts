@@ -6,7 +6,7 @@ import { dirname, join, relative } from "node:path";
 import { parseEntityKindCatalog, type EntityKindCatalog } from "../../🟦️.ts";
 
 export const GENERATOR_ID = "schema-entity-catalog";
-export const REFRESH_COMMAND = "bun repo run @semio-tech/framework-schema:generate";
+export const REFRESH_COMMAND = "repo run @semio-tech/framework-schema:generate";
 export type EntityCatalogSource = { readonly kinds: EntityKindCatalog; readonly sourceRel: string; readonly sha256: string };
 
 export function readEntityCatalog(repoRoot: string): EntityCatalogSource {

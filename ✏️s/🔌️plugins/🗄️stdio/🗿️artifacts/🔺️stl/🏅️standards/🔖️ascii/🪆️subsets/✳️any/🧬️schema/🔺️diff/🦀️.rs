@@ -336,14 +336,9 @@ pub struct StlDiff {
     pub triangles: Option<StlTrianglesDiff>,
 }
 
-impl MutationDiff<StlSnapshot> for StlDiff {
-    fn apply(&self, base: &StlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<StlSnapshot> {
-        if let Some(diff) = &self.triangles {
-            validate_triangles_diff(base.triangles.len(), diff)?;
-        }
-        Ok(apply_stl_diff_unchecked(self, base))
-    }
+impl MutationDiff<StlSnapshot> for StlDiff {}
 
+impl protocol::ColdMutationDiff<StlSnapshot> for StlDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalar
     /// `solid_name`: LWW. `triangles`: see `absorb_triangles`.
     fn absorb(&mut self, other: Self) {
@@ -351,6 +346,15 @@ impl MutationDiff<StlSnapshot> for StlDiff {
             self.solid_name = other.solid_name;
         }
         self.triangles = absorb_triangles(self.triangles.take(), other.triangles);
+    }
+
+    fn apply(&self, unpublished: &mut StlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.triangles {
+            validate_triangles_diff(base.triangles.len(), diff)?;
+        }
+        *unpublished = apply_stl_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -372,15 +376,17 @@ fn inverse_triangles(diff: &StlTrianglesDiff, base: &[StlTriangle]) -> StlTriang
 }
 
 impl DiffAlgebra<StlSnapshot> for StlDiff {
+    fn is_empty(&self) -> bool {
+        self.solid_name.is_none() && self.triangles.as_ref().is_none_or(StlTrianglesDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<StlSnapshot> for StlDiff {
     /// ↩️ Concrete diff-level undo: the name returns to the base name and the triangles triple turns into its negative rows (added
     /// rows become removals at their final index, removed rows return at their base index, modified rows restore their base fields
     /// at the index the row has after the diff).
     fn inverse(&self, base: &StlSnapshot) -> Self {
         StlDiff { solid_name: self.solid_name.as_ref().map(|_| base.solid_name.clone()), triangles: self.triangles.as_ref().map(|triangles| inverse_triangles(triangles, &base.triangles)).filter(|triangles| !triangles.is_empty()) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.solid_name.is_none() && self.triangles.as_ref().is_none_or(StlTrianglesDiff::is_empty)
     }
 }
 //#endregion 🔖️Diff

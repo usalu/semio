@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { repositoryCargoNetworkV1, runDeclaredRustBuildV1, runRepositoryCargoTestExecutableV1, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode,buildModeEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -13,10 +13,11 @@ import { captureDashboardSources, installedDashboard, installDashboard, staleDas
 import { devToolingEnv, repoTestArtifactEnvironment } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const crate = "semio-framework-repo-dashboard";
 /** 🦀️ The dashboard crates, bottom up: the producers carved along the layers of the dashboard, then the facade that owns the `semio` binary. */
-const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-dashboard-launch", "semio-framework-repo-dashboard-repo-domain", "semio-framework-repo-dashboard-registry", "semio-framework-repo-dashboard-inventory", "semio-framework-repo-dashboard-wire", "semio-framework-repo-dashboard-preferences", "semio-framework-repo-dashboard-labels", "semio-framework-repo-dashboard-launcher", "semio-framework-repo-dashboard-daemon", "semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-cli", crate];
+const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-dashboard-launch", "semio-framework-repo-dashboard-repo-domain", "semio-framework-repo-dashboard-registry", "semio-framework-repo-dashboard-inventory", "semio-framework-repo-dashboard-wire", "semio-framework-repo-dashboard-preferences", "semio-framework-repo-dashboard-labels", "semio-framework-repo-dashboard-feedback", "semio-framework-repo-dashboard-keymap-editor", "semio-framework-repo-dashboard-source-view", "semio-framework-repo-dashboard-launcher", "semio-framework-repo-dashboard-daemon", "semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-cli", crate];
 const dashboardOptions=(invocation:ScriptInvocation,workspace:string):DashboardExecutionOptions=>({invocation,workspace,network:repositoryCargoNetworkV1(invocation,workspace),mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
 
 class BuildScript extends BundleScript {
@@ -82,7 +83,7 @@ class TestScript extends BundleScript {
       const { rest } = resolveTestLevel(segments.slice(1), "quick");
       await this.bun([join(this.root,"../../🧪️tests/🪟️windows/🟦️.ts"),join(this.root,"../../🧪️tests/⌨️controls/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🟦️.ts")],"dashboard:windows-test",options,repoTestArtifactEnvironment(this.repoRoot,"dashboard-windows"));
       const selections = [
-        { packages: ["semio-framework-repo-dashboard-terminal"], extraArgs: ["--lib", "-E", "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_)"] },
+        { packages: ["semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-source-view"], extraArgs: ["--lib", "-E", "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_) | test(source_) | test(terminal_backend_failures_preserve_primary_and_cleanup_from_portable_cases) | test(unresolved_terminal_failure_reports_both_declared_languages_without_a_default) | test(clipboard_failure_is_recoverable_and_diagnostics_remain_inspectable_and_copyable) | test(local_control_failures_are_typed_translated_and_retained_under_a_bounded_history) | test(settings_keymap_drafts_match_portable_save_cancel_and_refusal_cases) | test(settings_prefix_is_editable_by_real_keys_and_cancel_never_queues_an_event) | test(keymap_alias_reset_and_durable_save_results_preserve_other_preferences)"] },
         { packages: ["semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine", "semio-framework-ui-tui-host", "semio-framework-ui-tui-unit-laws", "semio-framework-ui-tui-vt-laws", "semio-framework-ui-tui-laws"], extraArgs: ["--lib", "--features", "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"] },
       ];
       for (const selection of selections) await this.native(selection, rest);
@@ -162,7 +163,7 @@ export async function dashboardExecutable(packageRoot: string, workspace: string
   return installedDashboard(workspace,mode,options.workspace);
 }
 
-if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("compile",CompileScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
+if (isMainModuleV1(import.meta.url)) {
+  const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("compile",CompileScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

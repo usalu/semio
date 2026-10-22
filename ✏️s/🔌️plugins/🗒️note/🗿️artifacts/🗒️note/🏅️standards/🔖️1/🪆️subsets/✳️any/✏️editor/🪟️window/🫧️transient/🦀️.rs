@@ -21,7 +21,11 @@ impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTra
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<NoteCompositeWindowTransient> for NoteCompositeWindowTransientMutation {
+    type ReferenceDiff = NoteCompositeWindowTransientDiff;
+    fn diff(&self, base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         match self {
             Self::Snapshot { transient } => {
                 let diff = NoteCompositeWindowTransientDiff {

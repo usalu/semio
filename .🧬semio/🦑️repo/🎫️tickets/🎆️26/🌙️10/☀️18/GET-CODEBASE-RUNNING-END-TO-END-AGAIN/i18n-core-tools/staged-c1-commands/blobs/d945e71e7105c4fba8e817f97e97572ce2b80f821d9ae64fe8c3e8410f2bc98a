@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "id": "commands",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "generate.config-wrote": {
+      "en": "[generate config] wrote {path}",
+      "de": "[generate config] {path} geschrieben"
+    },
+    "generate.config": {
+      "en": "[generate config] {problem}",
+      "de": "[generate config] {problem}"
+    },
+    "generate.config-derived-configuration-is-current": {
+      "en": "[generate config] derived configuration is current",
+      "de": "[generate config] Die abgeleitete Konfiguration ist aktuell"
+    },
+    "generate.taxonomy-operation-components-findings": {
+      "en": "[generate taxonomy {operation}] {records} components, {problems} findings -> {value}",
+      "de": "[generate taxonomy {operation}] {records} Komponenten, {problems} Befunde -> {value}"
+    },
+    "generate.plugin-glue-skip-missing-glue": {
+      "en": "[generate plugin-glue] skip {plugin}: missing glue.rs",
+      "de": "[generate plugin-glue] {plugin} übersprungen: glue.rs fehlt"
+    },
+    "generate.plugin-glue-dry-subsets": {
+      "en": "[generate plugin-glue] dry {plugin}: {owned} subsets",
+      "de": "[generate plugin-glue] Trockenlauf {plugin}: {owned} Subsets"
+    },
+    "generate.plugin-glue-wrote": {
+      "en": "[generate plugin-glue] wrote {inventory}",
+      "de": "[generate plugin-glue] {inventory} geschrieben"
+    },
+    "generate.plugin-glue-dry-run-inventory": {
+      "en": "[generate plugin-glue] dry-run inventory for {emitted} subset refs",
+      "de": "[generate plugin-glue] Trockenlauf-Inventar für {emitted} Subset-Verweise"
+    },
+    "generate.plugin-glue-wrote-inventory-for": {
+      "en": "[generate plugin-glue] wrote inventory for {emitted} subset refs",
+      "de": "[generate plugin-glue] Inventar für {emitted} Subset-Verweise geschrieben"
+    },
+    "examples.unknown-subcommand": {
+      "en": "[examples] unknown subcommand {sub}",
+      "de": "[examples] Unbekannter Unterbefehl {sub}"
+    },
+    "examples.list-example-unit": {
+      "en": "[examples.list] {roots} example unit(s)",
+      "de": "[examples.list] {roots} Beispieleinheit(en)"
+    },
+    "setup.native-missing-expected-repo-native": {
+      "en": "[native] missing {ps1}; expected repo/native/bootstrap/🔵️.ps1.",
+      "de": "[native] {ps1} fehlt; erwartet wird repo/native/bootstrap/🔵️.ps1."
+    },
+    "setup.native-missing-expected-repo-native-2": {
+      "en": "[native] missing {sh}; expected repo/native/bootstrap/🐚️.sh.",
+      "de": "[native] {sh} fehlt; erwartet wird repo/native/bootstrap/🐚️.sh."
+    },
+    "setup.native-unsupported-platform": {
+      "en": "[native] unsupported platform {platform}",
+      "de": "[native] Nicht unterstützte Plattform {platform}"
+    },
+    "setup.prepare-build-prerequisites-completed": {
+      "en": "[prepare] Build prerequisites completed",
+      "de": "[prepare] Build-Voraussetzungen abgeschlossen"
+    },
+    "setup.windows-long-paths-are-disabled": {
+      "en": "[setup] Windows long paths are disabled: tracked fixtures and build outputs exceed 260 characters. Run once in an elevated PowerShell, then open a new terminal: New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force",
+      "de": "[setup] Lange Pfade sind unter Windows deaktiviert: Eingecheckte Fixtures und Build-Ausgaben überschreiten 260 Zeichen. Einmal in einer PowerShell mit erhöhten Rechten ausführen und danach ein neues Terminal öffnen: New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force"
+    },
+    "setup.locked-dependency-environments-are-ready": {
+      "en": "[setup] locked dependency environments are ready through the repository build graph",
+      "de": "[setup] Die gesperrten Abhängigkeitsumgebungen sind über den Repository-Build-Graphen bereit"
+    },
+    "setup.staging-semio-os-mcp-so": {
+      "en": "[setup] staging semio-os-mcp so `.mcp.json` initialize never waits on a cold build",
+      "de": "[setup] semio-os-mcp wird bereitgestellt, damit das Initialisieren von `.mcp.json` nie auf einen kalten Build wartet"
+    },
+    "dependency-lint.canonical-architecture-resolving-present-owner": {
+      "en": "[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; scope={scope}; inventoriedSources={inventoriedSources}; strictRules={strictRules}; ownershipPatterns={ownershipPatterns}",
+      "de": "[canonical-architecture] Abhängigkeiten der vorhandenen Eigentümer in TypeScript/JavaScript werden aufgelöst; scope={scope}; inventoriedSources={inventoriedSources}; strictRules={strictRules}; ownershipPatterns={ownershipPatterns}"
+    },
+    "dependency-lint.canonical-architecture-scope-present-owner": {
+      "en": "[canonical-architecture] scope={scope} present-owner TypeScript/JavaScript dependency direction passed",
+      "de": "[canonical-architecture] scope={scope} Abhängigkeitsrichtung der vorhandenen Eigentümer in TypeScript/JavaScript bestanden"
+    },
+    "dependency-lint.artifact-io-ownership-all-artifact": {
+      "en": "[artifact-io-ownership] all artifact schema and native codec ownership boundaries passed",
+      "de": "[artifact-io-ownership] Alle Eigentumsgrenzen von Artefakt-Schema und nativem Codec bestanden"
+    },
+    "dependency-lint.workspace-styling-current-source-ownership": {
+      "en": "[workspace-styling] {kind}: current source ownership passed",
+      "de": "[workspace-styling] {kind}: Aktuelle Quellen-Eigentümerschaft bestanden"
+    },
+    "release.publish-unknown-slice": {
+      "en": "[publish] unknown slice {slice}",
+      "de": "[publish] Unbekannter Slice {slice}"
+    },
+    "dev.unknown-route-expected-storybook-storybook": {
+      "en": "[dev] unknown route {segments}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: `repo dashboard run playground:<variant> --param renderer=react` (list them with `repo dashboard commands playground`).",
+      "de": "[dev] Unbekannte Route {segments}: erwartet wird storybook, storybook-static oder mcp. Playgrounds sind Dashboard-Befehle: `repo dashboard run playground:<variant> --param renderer=react` (auflisten mit `repo dashboard commands playground`)."
+    },
+    "dev.unknown-mcp-route-expected-stdio": {
+      "en": "[dev] unknown mcp route {segments}: expected stdio, repo or nothing (the inspector).",
+      "de": "[dev] Unbekannte MCP-Route {segments}: erwartet wird stdio, repo oder nichts (der Inspector)."
+    },
+    "dev.mcp-stdio-accepts-one-repo": {
+      "en": "[dev] `dev mcp stdio` accepts one repo client profile.",
+      "de": "[dev] `dev mcp stdio` akzeptiert ein Repo-Client-Profil."
+    },
+    "os.run-missing-built-plugin-artifact": {
+      "en": "[os.run] missing built plugin artifact(s): {missing}",
+      "de": "[os.run] Fehlende gebaute Plugin-Artefakte: {missing}"
+    },
+    "os.run-build-it-repo-run": {
+      "en": "[os.run]   build it: repo run workspace:components describe {pluginId}",
+      "de": "[os.run]   Zum Bauen: repo run workspace:components describe {pluginId}"
+    },
+    "os.unknown-subcommand": {
+      "en": "[os] unknown subcommand {sub}",
+      "de": "[os] Unbekannter Unterbefehl {sub}"
+    },
+    "test.build-prerequisites-completed": {
+      "en": "[test] {level} build prerequisites completed",
+      "de": "[test] {level} Build-Voraussetzungen abgeschlossen"
+    },
+    "schema.generate-is-stale-run-repo": {
+      "en": "[schema generate] {rel} is stale; run repo ./📜️script.ts schema generate.",
+      "de": "[schema generate] {rel} ist veraltet; führe repo ./📜️script.ts schema generate aus."
+    },
+    "schema.generate-is-current": {
+      "en": "[schema generate] {rel} is current ({scopes} scopes).",
+      "de": "[schema generate] {rel} ist aktuell ({scopes} Bereiche)."
+    },
+    "schema.generate-scopes-diagnostics": {
+      "en": "[schema generate] {rel}: {scopes} scopes, {diagnostics} diagnostics.",
+      "de": "[schema generate] {rel}: {scopes} Bereiche, {diagnostics} Diagnosen."
+    },
+    "schema.parsers-modules-at": {
+      "en": "[schema parsers] {seen} modules, at {module}",
+      "de": "[schema parsers] {seen} Module, bei {module}"
+    },
+    "schema.check-wrote-findings-to": {
+      "en": "[schema check] wrote {sorted} findings to {target}",
+      "de": "[schema check] {sorted} Befunde nach {target} geschrieben"
+    },
+    "schema.check-modules-scopes-findings": {
+      "en": "[schema check] modules={modules} scopes={scopes} findings={sorted}",
+      "de": "[schema check] modules={modules} scopes={scopes} findings={sorted}"
+    },
+    "schema.check": {
+      "en": "[schema check] {code}={count}",
+      "de": "[schema check] {code}={count}"
+    },
+    "schema.check-shared-code-table-unshared": {
+      "en": "[schema check] shared-code-table={size} unshared-codes={unshared}{unshared2}",
+      "de": "[schema check] shared-code-table={size} unshared-codes={unshared}{unshared2}"
+    },
+    "schema.stale-generated-output-run-repo": {
+      "en": "[schema verify] stale generated output: {stale}. Run repo ./📜️script.ts schema generate && repo ./📜️script.ts schema docs.",
+      "de": "[schema verify] Veraltete generierte Ausgabe: {stale}. Führe repo ./📜️script.ts schema generate && repo ./📜️script.ts schema docs aus."
+    },
+    "schema.catalog-and-index-are-current": {
+      "en": "[schema verify] catalog and index are current ({scopes} scopes, generator {generator}).",
+      "de": "[schema verify] Katalog und Index sind aktuell ({scopes} Bereiche, Generator {generator})."
+    },
+    "schema.rust-entries-scopes-of-catalogued": {
+      "en": "[schema verify] rust entries={entries} scopes={size} of {scopes} catalogued, findings={findings}",
+      "de": "[schema verify] rust entries={entries} scopes={size} von {scopes} katalogisiert, findings={findings}"
+    },
+    "schema.line": {
+      "en": "[schema verify] {code}={count}",
+      "de": "[schema verify] {code}={count}"
+    },
+    "schema.compile-cargo-test-p-test": {
+      "en": "[schema compile] cargo test -p {schemaRustCrate} --test {test} passed; report at {value}",
+      "de": "[schema compile] cargo test -p {schemaRustCrate} --test {test} bestanden; Bericht unter {value}"
+    },
+    "schema.test-harness-exit-draft-oracle": {
+      "en": "[schema test] harness exit={harness}, draft-07 oracle exit={oracle}",
+      "de": "[schema test] harness exit={harness}, draft-07 oracle exit={oracle}"
+    },
+    "schema.audit-modules-findings": {
+      "en": "[schema audit] {modules} modules, {findings} findings -> {target}",
+      "de": "[schema audit] {modules} Module, {findings} Befunde -> {target}"
+    },
+    "schema.docs-scopes": {
+      "en": "[schema docs] {rel}: {scopes} scopes.",
+      "de": "[schema docs] {rel}: {scopes} Bereiche."
+    },
+    "fixture-ownership.exact-native-laws-passed": {
+      "en": "fixture-ownership: {assertions} exact native laws passed",
+      "de": "fixture-ownership: {assertions} exakte native Gesetze bestanden"
+    },
+    "code-style.lint-completed-the-repository-lint": {
+      "en": "[lint] Completed the repository lint graph.",
+      "de": "[lint] Der Lint-Graph des Repositorys ist abgeschlossen."
+    }
+  }
+}

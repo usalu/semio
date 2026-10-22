@@ -10,7 +10,7 @@ pub use set_editor_settings::SetEditorSettings;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = WriterMainWindowConfig, diff = WriterMainWindowConfigDiff, schema = "writer.mainwindowconfig")]
+#[mutations(snapshot = WriterMainWindowConfig, diff = WriterMainWindowConfigDiff, schema = "writer.mainwindowconfig", reference = WriterMainWindowConfig, reference_diff = WriterMainWindowConfigDiff)]
 pub enum WriterMainWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

@@ -1,212 +1,135 @@
-/** 🎞️ TiledMapHost render effects: the layout effect that creates the renderer and session, the scene-sync effects that feed the renderer, the popup placement effect and the wheel zoom handler. */
-import { useCallback, useEffect, useLayoutEffect } from "../../⚛️react-port/🟦️.ts";
-import { useCanvasAppearanceSync } from "@semio-tech/ui-react";
-import { createMapSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { DEFAULT_CAMERA_JSON, type MapRenderMode, parseCameraJson, parseMapScreenPoint } from "../📐️map-parsing/🟦️.ts";
+/** 🧰️ TiledMapHost state: the scene, shell scope and window instance, the container, canvas, renderer and popup refs, the marquee and context menu state, the labels, the parsed overlay index and hovered feature, the dispatchers and the camera, hit-query and container-size helpers. */
+import { useCallback, useContext, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
+import { useLabel, useShellScopeOptional, screenRectFromPoints, type SelectionMarqueeCoverage, type SelectionMarqueePoint, type SelectionMarqueeMethod } from "@semio-tech/ui-react";
+import { type ComponentSceneHostProps } from "@semio-tech/framework";
+// 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
+import { useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { EMPTY_MAP_OVERLAY_INDEX, getTiledMapCameraLimits, type MapCamera, type MapHoveredFeature, type MapLayerIds, parseMapHoveredFeature, parseMapLayerIds, parseMapOverlayIndex } from "../📐️map-parsing/🟦️.ts";
 import { MapRenderer } from "../🖼️map-renderer/🟦️.ts";
-import type { MapCore1 } from "../🧰️map-state/🟦️.ts";
 
 // #region TiledMapHost
-/** 🎞️ Creates the renderer, keeps it in step with the scene lanes and installs the wheel zoom. */
-export function useMapRenderEffects(core: MapCore1) {
-  const { canvasRef, clampCamera, containerRef, dispatchCameraRef, mirrorSessionCameraToReact, mirrorSessionCameraToReactRef, panningRef, popupFeature, popupRef, readContainerSize, rendererRef, resolveMapPaneElement, scene, shellScope, userAdjustedCameraRef } = core;
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container || !scene) return;
-    let disposed = false;
-    let resizeRafId: number | null = null;
-    let resizeObserver: ResizeObserver | null = null;
-    const dpr = globalThis.devicePixelRatio || 1;
+/** 🧰️ Holds the refs, state, labels, parsed lanes and helper callbacks of the map window. */
+export function useMapState({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
+  const scene = node.tiledMap;
+  const shellScope = useShellScopeOptional();
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<MapRenderer | null>(null);
+  const panningRef = useRef(false);
+  const userAdjustedCameraRef = useRef(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [marqueeOverlay, setMarqueeOverlay] = useState<
+    { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } } | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] } | null
+  >(null);
+  const [contextMenu, setContextMenu] = useState<SurfaceContextMenuResult & {
+    open: boolean;
+    position: { x: number; y: number } | null;
+  }>({
+    open: false,
+    position: null,
+    items: [],
+    titleKey: "ui.surfaceContextMenu.map",
+  });
+  const contextMenuTitleLabel = useLabel(contextMenu.titleKey);
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
 
-    void createMapSession().then((session) => {
-      if (disposed) {
-        session.free();
-        return;
-      }
-      const renderer = new MapRenderer(scene.tileUrlTemplate, scene.vectorTileUrlTemplate, session);
-      renderer.setRenderMode(scene.renderMode as MapRenderMode);
-      renderer.setVectorStyle(scene.vectorStyle);
-      renderer.setLodMode(scene.lodMode);
-      renderer.setLayerVisibilityJson(scene.layerVisibilityJson);
-      renderer.setLayerStrokeScaleJson(scene.layerStrokeScaleJson);
-      rendererRef.current = renderer;
+  const overlayIndex = useMemo(() => (scene ? parseMapOverlayIndex(scene.mapDescriptorJson) : EMPTY_MAP_OVERLAY_INDEX), [scene?.mapDescriptorJson]);
+  const hoveredFeature = useMemo(() => (scene ? parseMapHoveredFeature(scene.hoverJson) : null), [scene?.hoverJson]);
+  const popupFeature = useMemo(() => (hoveredFeature && overlayIndex.layers.some((layer) => layer.granularity === hoveredFeature.kind && layer.geometry === "point") ? hoveredFeature : null), [hoveredFeature, overlayIndex]);
+  const selectionMethod = (scene?.selectionMethod ?? "rectangle") as SelectionMarqueeMethod;
 
-      const applySize = (): void => {
-        const nextDpr = globalThis.devicePixelRatio || 1;
-        const { w, h } = readContainerSize();
-        if (!renderer.setSize(w, h, nextDpr)) return;
-        mirrorSessionCameraToReactRef.current();
-        renderer.scheduleRefreshTiles();
-      };
-
-      resizeObserver =
-        typeof ResizeObserver === "undefined"
-          ? null
-          : new ResizeObserver(() => {
-              if (resizeRafId !== null) return;
-              const schedule =
-                typeof globalThis.requestAnimationFrame === "function"
-                  ? (fn: () => void) => {
-                      resizeRafId = globalThis.requestAnimationFrame(() => {
-                        resizeRafId = null;
-                        fn();
-                      });
-                    }
-                  : (fn: () => void) => {
-                      queueMicrotask(fn);
-                    };
-              schedule(() => {
-                if (disposed) return;
-                applySize();
-              });
-            });
-      const pane = resolveMapPaneElement(container);
-      resizeObserver?.observe(pane);
-      if (pane !== container) resizeObserver?.observe(container);
-
-      const boot = async (): Promise<void> => {
-        let { w, h } = readContainerSize();
-        for (let attempt = 0; attempt < 240 && (w < 64 || h < 64); attempt += 1) {
-          await new Promise<void>((resolve) => {
-            if (typeof globalThis.requestAnimationFrame === "function") globalThis.requestAnimationFrame(() => resolve());
-            else queueMicrotask(resolve);
-          });
-          if (disposed) return;
-          ({ w, h } = readContainerSize());
-        }
-        await renderer.attach(canvas, w, h, dpr);
-        if (disposed) {
-          renderer.dispose();
-          return;
-        }
-        applySize();
-        if (!userAdjustedCameraRef.current) {
-          if (scene.cameraJson === DEFAULT_CAMERA_JSON) {
-            renderer.session.fitWorldCamera();
-          } else {
-            const bootCamera = parseCameraJson(scene.cameraJson);
-            if (bootCamera) renderer.applyCameraToSession(clampCamera(bootCamera));
-          }
-          const bootCamera = renderer.readCameraFromSession();
-          if (bootCamera) {
-            renderer.applyCameraToSession(bootCamera);
-            const providedCamera = parseCameraJson(scene.cameraJson);
-            const isPhantomBootCamera = providedCamera != null && Math.abs(bootCamera.x - providedCamera.x) < 1e-6 && Math.abs(bootCamera.y - providedCamera.y) < 1e-6 && Math.abs(bootCamera.zoom - providedCamera.zoom) < 1e-6;
-            if (!isPhantomBootCamera) dispatchCameraRef.current(bootCamera);
-          }
-        }
-        renderer.syncDescriptor(scene.mapDescriptorJson);
-        renderer.syncInteraction(scene.selectionJson, scene.hoverJson);
-        await renderer.refreshTiles();
-        renderer.startLoop();
-      };
-
-      void boot();
-    });
-
-    return () => {
-      disposed = true;
-      resizeObserver?.disconnect();
-      if (resizeRafId !== null && typeof globalThis.cancelAnimationFrame === "function") {
-        globalThis.cancelAnimationFrame(resizeRafId);
-      }
-      rendererRef.current?.dispose();
-      rendererRef.current = null;
-    };
-  }, [clampCamera, readContainerSize, resolveMapPaneElement, scene?.tileUrlTemplate, scene?.vectorTileUrlTemplate]);
-
-  useCanvasAppearanceSync(() => rendererRef.current?.syncTheme(), true, shellScope?.rootRef.current ?? undefined);
-
-  useEffect(() => {
-    if (!scene) return;
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    renderer.setRenderMode(scene.renderMode as MapRenderMode);
-    renderer.scheduleRefreshTiles();
-  }, [scene?.renderMode]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.setVectorStyle(scene.vectorStyle);
-  }, [scene?.vectorStyle]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.setLodMode(scene.lodMode);
-  }, [scene?.lodMode]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.setLayerVisibilityJson(scene.layerVisibilityJson);
-  }, [scene?.layerVisibilityJson]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.setLayerStrokeScaleJson(scene.layerStrokeScaleJson);
-  }, [scene?.layerStrokeScaleJson]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.syncDescriptor(scene.mapDescriptorJson);
-    rendererRef.current?.scheduleRefreshTiles();
-  }, [scene?.mapDescriptorJson]);
-
-  useEffect(() => {
-    if (!scene || !rendererRef.current) return;
-    rendererRef.current.syncInteraction(scene.selectionJson, scene.hoverJson);
-  }, [scene?.selectionJson, scene?.hoverJson]);
-
-  useEffect(() => {
-    if (!scene || panningRef.current) return;
-    const camera = parseCameraJson(scene.cameraJson);
-    if (!camera) return;
-    rendererRef.current?.applyCameraToSession(clampCamera(camera));
-    rendererRef.current?.scheduleRefreshTiles();
-  }, [clampCamera, scene?.cameraJson]);
-
-  useEffect(() => {
-    if (!popupFeature) return undefined;
-    let raf = 0;
-    const tick = () => {
-      const screen = rendererRef.current?.session.featureScreenJson(popupFeature.kind, popupFeature.id);
-      const parsed = parseMapScreenPoint(screen ?? "null");
-      const popup = popupRef.current;
-      if (parsed && popup) {
-        popup.style.left = `${parsed.x}px`;
-        popup.style.top = `${parsed.y}px`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [popupFeature]);
-
-  const applyWheelZoom = useCallback(
-    (event: WheelEvent): void => {
-      event.preventDefault();
-      event.stopPropagation();
-      const r = rendererRef.current;
-      const canvas = canvasRef.current;
-      if (!r || !canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      let deltaY = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
-      if (event.ctrlKey) deltaY *= 2.5;
-      userAdjustedCameraRef.current = true;
-      r.session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, deltaY);
-      mirrorSessionCameraToReact();
-      r.scheduleRefreshTiles();
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [mirrorSessionCameraToReact],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element) return undefined;
-    element.addEventListener("wheel", applyWheelZoom, { passive: false });
-    return () => element.removeEventListener("wheel", applyWheelZoom);
-  }, [applyWheelZoom]);
+  const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
+
+  const dispatchCamera = useCallback(
+    (camera: MapCamera) => {
+      dispatch("setCamera", { camera });
+    },
+    [dispatch],
+  );
+
+  const clampMapZoom = useCallback((zoom: number): number => {
+    const { min, max } = getTiledMapCameraLimits(rendererRef.current?.session);
+    return Math.min(max, Math.max(min, zoom));
+  }, []);
+
+  const clampCamera = useCallback((next: MapCamera): MapCamera => ({ x: next.x, y: next.y, zoom: clampMapZoom(next.zoom) }), [clampMapZoom]);
+
+  const mirrorSessionCameraToReact = useCallback(() => {
+    const parsed = rendererRef.current?.readCameraFromSession();
+    if (!parsed) return;
+    rendererRef.current!.camera = parsed;
+    dispatchCamera(parsed);
+  }, [dispatchCamera]);
+
+  const clientToLocal = useCallback((clientX: number, clientY: number): SelectionMarqueePoint => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
+
+  const queryFeatureHits = useCallback(
+    (points: readonly SelectionMarqueePoint[], crossing: boolean): MapLayerIds => {
+      const session = rendererRef.current?.session;
+      if (!session) return {};
+      if (selectionMethod === "lasso" && points.length >= 3) {
+        return parseMapLayerIds(session.featuresInPolygonJson(JSON.stringify(points.map((point) => [point.x, point.y])), crossing));
+      }
+      const rect = screenRectFromPoints(points);
+      if (!rect) return {};
+      return parseMapLayerIds(session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing));
+    },
+    [selectionMethod],
+  );
+
+  const queryHitFeature = useCallback((point: SelectionMarqueePoint): MapHoveredFeature | null => {
+    const session = rendererRef.current?.session;
+    if (!session) return null;
+    return parseMapHoveredFeature(session.hitTestFeatureJson(point.x, point.y));
+  }, []);
+
+  const resolveMapPaneElement = useCallback((container: HTMLElement): HTMLElement => {
+    let el: HTMLElement | null = container;
+    while (el) {
+      const slot = el.dataset.slot;
+      if (slot === "window" || slot === "mode-dock-stack-body") return el;
+      el = el.parentElement;
+    }
+    return container;
+  }, []);
+
+  const readContainerSize = useCallback((): { w: number; h: number } => {
+    const container = containerRef.current;
+    if (!container) return { w: 1, h: 1 };
+    const pane = resolveMapPaneElement(container);
+    const rect = pane.getBoundingClientRect();
+    const style = globalThis.getComputedStyle(pane);
+    const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
+    const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom);
+    const innerW = rect.width - (Number.isFinite(padX) ? padX : 0);
+    const innerH = rect.height - (Number.isFinite(padY) ? padY : 0);
+    return {
+      w: Math.max(1, Math.round(innerW || pane.clientWidth || container.clientWidth)),
+      h: Math.max(1, Math.round(innerH || pane.clientHeight || container.clientHeight)),
+    };
+  }, [resolveMapPaneElement]);
+
+  const mirrorSessionCameraToReactRef = useRef(mirrorSessionCameraToReact);
+  mirrorSessionCameraToReactRef.current = mirrorSessionCameraToReact;
+  const dispatchCameraRef = useRef(dispatchCamera);
+  dispatchCameraRef.current = dispatchCamera;
+  return { canvasRef, clampCamera, clientToLocal, containerRef, contextMenu, contextMenuTitleLabel, dispatch, dispatchCameraRef, emptySceneLabel, mapTiledContextMenu, marqueeOverlay, mirrorSessionCameraToReact, mirrorSessionCameraToReactRef, node, overlayIndex, panningRef, popupFeature, popupRef, queryFeatureHits, queryHitFeature, readContainerSize, rendererRef, requestContextMenu, resolveMapPaneElement, scene, selectionMethod, setContextMenu, setMarqueeOverlay, shellContextMenuFallback, shellScope, sourceAvailableLabel, userAdjustedCameraRef };
 }
 
-export type MapCore2 = MapCore1 & ReturnType<typeof useMapRenderEffects>;
+export type MapCore1 = ReturnType<typeof useMapState>;
 // #endregion TiledMapHost

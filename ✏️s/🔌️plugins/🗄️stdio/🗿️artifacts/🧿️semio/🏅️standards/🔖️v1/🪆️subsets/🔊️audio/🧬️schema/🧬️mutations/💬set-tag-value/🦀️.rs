@@ -15,6 +15,15 @@ pub struct SetTagValue {
 impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetTagValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "tag-value", kind: "set-tag-value", record: "SetTagValue" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set tag value", "Tagwert setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op: SemioAudioOp> protocol::ColdMutationKind<SemioAudioSnapshot, Op> for SetTagValue {
     fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
@@ -24,12 +33,6 @@ impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetTag
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set tag value", "Tagwert setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

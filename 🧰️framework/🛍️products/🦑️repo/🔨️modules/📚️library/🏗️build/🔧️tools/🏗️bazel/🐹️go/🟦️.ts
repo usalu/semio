@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {readFile,realpath} from "node:fs/promises";
 import {delimiter,dirname,join} from "node:path";
 import {taskFamilyV1} from "../../../🏃️execution/🟦️.ts";
+import {nativeToolBinaryDirectoryV1,toolchainHostV1,toolchainRootsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import componentSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=componentSchema.definitions.Policy.const,hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
@@ -17,7 +18,7 @@ export function bazelGoClassV1(task:{project?:string;target:string;root:string;d
 
 /** 🧊️ Resolves the `go` binary like a shell would, without spawning it: `GOROOT` first, then the `PATH` entries in order; the first existing candidate wins and its links are resolved. */
 export async function bazelGoBinaryV1(environment:Readonly<Record<string,string|undefined>>,platform:string):Promise<string|undefined>{
- const name=platform.startsWith("win32")?policy.binary.windows:policy.binary.posix,candidates=[...(environment.GOROOT?[join(environment.GOROOT,"bin",name)]:[]),...(environment.PATH??"").split(delimiter).filter(Boolean).map(directory=>join(directory,name))];
+ const name=platform.startsWith("win32")?policy.binary.windows:policy.binary.posix,[system,architecture]=platform.split("-"),pinned=environment.SEMIO_WORKSPACE_ROOT===undefined?undefined:join(nativeToolBinaryDirectoryV1("go",toolchainHostV1(system,architecture),toolchainRootsV1(environment.SEMIO_WORKSPACE_ROOT).tools),name),candidates=pinned!==undefined?[pinned]:[...(environment.GOROOT?[join(environment.GOROOT,"bin",name)]:[]),...(environment.PATH??"").split(delimiter).filter(Boolean).map(directory=>join(directory,name))];
  for(const candidate of candidates)try{return await realpath(candidate);}catch(error){if(!["ENOENT","ENOTDIR","EACCES"].includes((error as NodeJS.ErrnoException).code??""))throw error;}
  return undefined;
 }

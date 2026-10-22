@@ -16,7 +16,7 @@ macro_rules! patch_through_table {
         let mut program = crate::standards::v1::subsets::any::schema::snapshot::empty_plugin();
         program.$payload.push($item.clone());
         let diff = crate::standards::v1::subsets::any::schema::diff::ProgramDiff { $field: Some(<$delta>::modification($item.header.id.0.clone(), $patch.clone())), ..Default::default() };
-        $item = protocol::apply_diff(&diff, &program).expect("the patch commits through the central applier").$payload.remove(0);
+        $item = protocol::apply_diff_cold(&diff, &program).expect("the patch commits through the central applier").$payload.remove(0);
     }};
 }
 
@@ -25,7 +25,7 @@ macro_rules! patch_through_program {
         let mut program = crate::standards::v1::subsets::any::schema::snapshot::empty_plugin();
         program.$field.push($item.clone());
         let diff = crate::standards::v1::subsets::any::schema::diff::ProgramDiff { $field: Some(<$delta>::modification($id, $patch.clone())), ..Default::default() };
-        $item = protocol::apply_diff(&diff, &program).expect("the patch commits through the central applier").$field.remove(0);
+        $item = protocol::apply_diff_cold(&diff, &program).expect("the patch commits through the central applier").$field.remove(0);
     }};
 }
 

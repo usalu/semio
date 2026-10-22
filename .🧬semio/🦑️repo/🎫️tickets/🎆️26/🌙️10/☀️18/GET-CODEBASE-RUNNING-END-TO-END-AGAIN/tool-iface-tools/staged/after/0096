@@ -1,82 +1,61 @@
-// #region 🧲️Header
+use super::*;
 
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-
-// 🚧️sandboxed-run runs a test binary against a temporary repository it owns and fails the run when anything resolved or still holds the checkout the binary was started in.
-
-// #endregion 🧲️Header
-
-package sandbox
-
-import (
-	fmt "fmt"
-	os "os"
-	filepath "path/filepath"
-	strings "strings"
-
-	workspace "github.com/usalu/semio/repo/workspace"
-)
-
-// #region 🚧️Sandboxed Run
-
-var (
-	origin string
-	root   string
-)
-
-// 🏠️Origin returns the working directory the sandboxed test binary was started in, which is the directory of the module under test.
-func Origin() string {
-	return origin
+#[test]
+fn double_star_spans_directories() {
+    assert!(glob_match("**/*.go", "a/b/two.go").unwrap());
+    assert!(glob_match("**/*.go", "root.go").unwrap());
+    assert!(!glob_match("*.go", "a/one.go").unwrap());
 }
 
-// 🧭️OriginPath joins parts onto the directory the sandboxed test binary was started in, which is how a test reads a fixture its module owns without locating the checkout.
-func OriginPath(parts ...string) string {
-	return filepath.Join(append([]string{origin}, parts...)...)
+#[test]
+fn ignore_precedence_is_last_rule_wins() {
+    let ignore = GitIgnore::compile_lines(["build/", "!build/keep.txt"]);
+    assert!(ignore.matches_path("build/out.o"));
+    assert!(!ignore.matches_path("build/keep.txt"));
 }
 
-// 🧪️Root returns the temporary git repository the sandboxed test binary is bound to.
-func Root() string {
-	return root
+#[test]
+fn missing_config_yields_defaults() {
+    let config = parse_repo_config("");
+    assert!(!config.logging.session);
+    assert!(config.logging.operations);
+    assert_eq!(config.logging.detail, "standard");
 }
 
-// 🧰️Run runs a test binary against a root it owns: a temporary git repository is bound as the workspace root and working directory, every resolution is observed, and the run fails when anything resolved or still holds the checkout the binary was started in. The held callback names extra roots the caller keeps, and it may be nil.
-func Run(name string, held func() map[string]string, run func() int) int {
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 2
-	}
-	repository, err := os.MkdirTemp("", name+"-sandbox-")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 2
-	}
-	defer os.RemoveAll(repository)
-	if output, err := workspace.ToolCommand("git", "-C", repository, "init", "-q").CombinedOutput(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialise the sandbox repository: %v\n%s", err, output)
-		return 2
-	}
-	origin = workspace.CanonicalPath(cwd)
-	guard := NewGuard(workspace.ResolveRepoRoot(cwd))
-	defer workspace.ObserveRootResolution(guard.Observe)()
-	workspace.SetRootDir(repository)
-	root = workspace.GetRootDir()
-	if err := os.Chdir(root); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 2
-	}
-	code := run()
-	extra := map[string]string(nil)
-	if held != nil {
-		extra = held()
-	}
-	if problems := guard.Report(extra); len(problems) > 0 {
-		fmt.Fprintf(os.Stderr, "FAIL: tests touched the real repository root %s:\n  %s\n", guard.real, strings.Join(problems, "\n  "))
-		if code == 0 {
-			code = 1
-		}
-	}
-	return code
+#[test]
+fn logging_section_overrides_defaults() {
+    let config = parse_repo_config("[logging]\nsession = on\ndetail = \"full\"\n");
+    assert!(config.logging.session);
+    assert!(config.logging.include_native());
 }
 
-// #endregion 🚧️Sandboxed Run
+#[test]
+fn tool_names_match_registry_patterns() {
+    assert!(tool_name_matches("VSCODE_*", "VSCODE_GIT_ASKPASS"));
+    assert!(tool_name_matches("LC_*", "LC_ALL"));
+    assert!(tool_name_matches("*_X_*", "A_X_B"));
+    assert!(tool_name_matches("NODE_OPTIONS", "NODE_OPTIONS"));
+    assert!(!tool_name_matches("NODE_OPTIONS", "NODE_OPTIONS2"));
+    assert!(!tool_name_matches("npm_config_*", "NPM"));
+}
+
+#[test]
+fn registry_rows_parse_into_tools_and_denied_names() {
+    let registry = parse_tool_registry(r#"{"environment":{"deny":["VSCODE_*"]},"tools":[{"id":"git","commands":["git"],"locate":[{"kind":"environment","name":"SEMIO_TOOL_GIT"},{"kind":"path","directories":["/opt/homebrew/bin"]}],"environment":{"deny":["GIT_DIR"],"set":{"A":"1"}}}]}"#).unwrap();
+    assert_eq!(registry.deny, vec!["VSCODE_*".to_string()]);
+    let git = &registry.tools[0];
+    assert_eq!((git.id.as_str(), git.commands.clone(), git.directories.clone(), git.deny.clone()), ("git", vec!["git".to_string()], vec!["/opt/homebrew/bin".to_string()], vec!["GIT_DIR".to_string()]));
+    assert_eq!(git.set, vec![("A".to_string(), "1".to_string())]);
+    assert!(parse_tool_registry("not json").is_none());
+}
+
+#[test]
+fn run_tool_runs_a_registered_tool_and_refuses_an_unknown_id() {
+    if !program_exists("git") {
+        return;
+    }
+    let result = run_tool("git", &["--version".to_string()], &ToolRunOptions::default()).unwrap();
+    assert_eq!(result.status, Some(0));
+    assert!(String::from_utf8_lossy(&result.stdout).starts_with("git version"));
+    assert!(run_tool("no-such-tool-for-the-registry", &[], &ToolRunOptions::default()).is_err());
+}

@@ -3,7 +3,7 @@
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff;
 use crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use protocol::{Mutation, MutationKind};
+use protocol::{ColdMutation, Mutation, MutationKind};
 use semio_framework_value::{FromValue, ToValue};
 use serde_json::Value;
 
@@ -46,9 +46,9 @@ pub(crate) fn assert_laws<K: MutationKind<GltfSnapshot, GltfMutation>>(mutation:
     let wire: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(outcome.diff())).unwrap();
     let diff: GltfDiff = decode(&wire);
     assert_eq!(&diff, outcome.diff());
-    let after = protocol::apply_diff(&diff, base).expect("typed diff applies");
+    let after = protocol::apply_diff_cold(&diff, base).expect("typed diff applies");
     assert_eq!(&after, expected);
-    assert_eq!(protocol::apply_diff(&diff, base).unwrap(), after);
+    assert_eq!(protocol::apply_diff_cold(&diff, base).unwrap(), after);
     let inverse = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty());
     let wire: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&inverse)).unwrap();
@@ -57,7 +57,7 @@ pub(crate) fn assert_laws<K: MutationKind<GltfSnapshot, GltfMutation>>(mutation:
     for mutation in inverse.into_iter().rev() {
         let outcome = mutation.diff(&restored);
         assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-        restored = protocol::apply_diff(outcome.diff(), &restored).expect("typed inverse applies");
+        restored = protocol::apply_diff_cold(outcome.diff(), &restored).expect("typed inverse applies");
     }
     assert_eq!(&restored, base);
 }

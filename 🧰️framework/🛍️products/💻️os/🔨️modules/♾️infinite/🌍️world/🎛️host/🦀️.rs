@@ -216,7 +216,7 @@ impl World3dState {
     /// 📤️ Creates an isolated render owner at the revision of the decoded asset handed to it.
     pub fn request_owned(surface_id: String, controller_id: String, revision: u64) -> Self {
         let mut state = Self::new(surface_id, controller_id);
-        state.interaction_revision = revision;
+        state.session.interaction_revision = revision;
         state
     }
 

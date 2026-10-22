@@ -1,7 +1,7 @@
 //! 📄️ PDF 1.4 page rendering and commands over its resolved page domain.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, InsertPage, RemovePage, MovePage, ResizePage, ReplacePageText};
-use protocol::{Mutation, OpText};
+use protocol::{ColdMutation, Mutation, OpText};
 use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, TreeWindows, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;

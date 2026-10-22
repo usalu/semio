@@ -1,42 +1,12 @@
 //! 🪪️ Persisted window configuration is admitted only to its exact generated partition identity.
 
-use std::sync::Arc;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
-use std::future::Future;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_value::ValueError;
-use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
 use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
 use crate::window_config_tests::retained_pack_load_tests;
 
-pub(super) struct IdentityWindowOwner;
-
-impl WindowConfigOwner for IdentityWindowOwner {
-    const WINDOW_KIND_ID: &'static str = "identity-window";
-    const SCHEMA: &'static str = "test.window.identity";
-    const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
-    type State = retained_pack_load_tests::RetainedLoadCameraConfig;
-    type Mutation = retained_pack_load_tests::RetainedLoadCameraConfigMutation;
-    type Edit=retained_pack_load_tests::CameraRetainedEdit;
-    const MAXIMUM_PREPARATION_DEPTH:usize=64;
-    fn build_retained_edit()->Arc<Self::Edit>{Arc::new(retained_pack_load_tests::CameraRetainedEdit)}
-
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
-    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>> {
-        bounded_window_config_store_owners::<Self>(grant)
-    }
-
-    fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        bounded_window_config_preparation_factory::<Self>()
-    }
-
-    fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        bounded_window_config_store_disposer::<Self>()
-    }
-}
+pub(super) use super::camera_owner::IdentityWindowOwner;
 
 #[test]
 fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_materializing_target() {

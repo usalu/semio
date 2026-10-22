@@ -126,7 +126,7 @@ pub struct WorldGumballGesture {
 }
 
 #[derive(Clone, Copy)]
-struct WorldGumballUpdate {
+pub struct WorldGumballUpdate {
     pub generation: u64,
     pub x: f32,
     pub y: f32,
@@ -422,7 +422,7 @@ impl WorldGumballPhase {
 const GUMBALL_MOTION_EPSILON: f32 = 1e-6;
 
 /// 🧮️ One gumball motion — offset, angle about the handle's axis, factors.
-type WorldGumballMotion = (Vec3, f32, Vec3);
+pub type WorldGumballMotion = (Vec3, f32, Vec3);
 
 /// 🫥️ The motion that moves nothing: what a live tail that moved nothing commits and what an abort names.
 pub fn world_gumball_identity_motion() -> WorldGumballMotion {
@@ -603,7 +603,7 @@ pub struct WorldGumballCommitJob {
 pub const WORLD_BRUSH_COPY_CHUNK_BYTES: usize = 256;
 
 #[derive(Clone, Copy)]
-enum WorldBrushScale {
+pub enum WorldBrushScale {
     Null,
     Number(f64),
     Array { values: [f64; 3], len: u8 },

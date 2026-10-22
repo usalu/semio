@@ -1,0 +1,220 @@
+// #region 🧲️Header
+
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+
+// 🔌️gitsource carries the git log source seam: the system git and the recorded transcript.
+
+// #endregion 🧲️Header
+
+package metrics
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	workspace "github.com/usalu/semio/repo/workspace"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
+	"sync/atomic"
+)
+
+// #region 🔌️GitSource
+
+// 🔌️GitLogSource is the only door this package has to git.
+type GitLogSource interface {
+	NumstatLog(gitRef string) (string, error)
+	TrackedPaths(gitRef string) ([]string, error)
+	TrackedBytes(gitRef, rel string) ([]byte, error)
+}
+
+// 🖥️SystemGit is the real git, reached through os/exec.
+type SystemGit struct {
+	Repo string
+}
+
+// 🖥️run executes git in the bound repository and returns stdout.
+func (source SystemGit) run(args []string) ([]byte, error) {
+	command := workspace.ToolCommand("git", args...)
+	command.Dir = source.Repo
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	if err := command.Run(); err != nil {
+		return nil, fmt.Errorf("git %s: %s", strings.Join(args, " "), strings.TrimSpace(stderr.String()))
+	}
+	return stdout.Bytes(), nil
+}
+
+// 🧵️MinimumChunkedCommits is the shortest history a numstat walk splits; below it the split would
+// cost more than it saves.
+const MinimumChunkedCommits = 32
+
+// 🧵️MaximumNumstatWorkers is the most concurrent `git log` processes a numstat walk starts.
+const MaximumNumstatWorkers = 16
+
+// 🧵️NumstatChunksPerWorker gives every worker several ranges, so one that draws a cheap range picks
+// up another instead of idling.
+const NumstatChunksPerWorker = 4
+
+// 🧵️firstParentChain lists the first-parent chain of a ref, newest commit first, and nothing when
+// git cannot name one.
+func (source SystemGit) firstParentChain(gitRef string) []string {
+	ref := strings.TrimSpace(gitRef)
+	if ref == "" {
+		ref = "HEAD"
+	}
+	out, err := source.run([]string{"rev-list", "--first-parent", ref})
+	if err != nil {
+		return nil
+	}
+	chain := []string{}
+	for _, line := range strings.Split(string(out), "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			chain = append(chain, trimmed)
+		}
+	}
+	return chain
+}
+
+// 🧵️numstatChunks is how many ranges a chain of that length is split into.
+func numstatChunks(commits int) int {
+	if commits <= MinimumChunkedCommits {
+		return 1
+	}
+	workers := runtime.NumCPU()
+	if workers < 1 {
+		workers = 1
+	}
+	if workers > MaximumNumstatWorkers {
+		workers = MaximumNumstatWorkers
+	}
+	chunks := workers * NumstatChunksPerWorker
+	if chunks > commits {
+		chunks = commits
+	}
+	return chunks
+}
+
+// 📜️NumstatLog is the raw `git log --numstat` stream for a ref, walked in parallel over contiguous
+// ranges of the first-parent chain and joined back into the single stream the parser reads.
+func (source SystemGit) NumstatLog(gitRef string) (string, error) {
+	chain := source.firstParentChain(gitRef)
+	chunks := numstatChunks(len(chain))
+	if chunks < 2 {
+		out, err := source.run(NumstatLogArgs(gitRef))
+		if err != nil {
+			return "", err
+		}
+		return string(out), nil
+	}
+	ranges := NumstatLogRanges(chain, chunks)
+	outputs := make([]string, len(ranges))
+	failures := make([]error, len(ranges))
+	workers := len(ranges)
+	if workers > MaximumNumstatWorkers {
+		workers = MaximumNumstatWorkers
+	}
+	next := int64(0)
+	group := sync.WaitGroup{}
+	for worker := 0; worker < workers; worker++ {
+		group.Add(1)
+		go func() {
+			defer group.Done()
+			for {
+				index := int(atomic.AddInt64(&next, 1)) - 1
+				if index >= len(ranges) {
+					return
+				}
+				out, err := source.run(NumstatLogRangeArgs(ranges[index]))
+				outputs[index], failures[index] = string(out), err
+			}
+		}()
+	}
+	group.Wait()
+	for _, failure := range failures {
+		if failure != nil {
+			return "", failure
+		}
+	}
+	return JoinNumstatChunks(outputs), nil
+}
+
+// 🧾️TrackedPaths lists the repository-relative tracked paths at a ref.
+func (source SystemGit) TrackedPaths(gitRef string) ([]string, error) {
+	args := []string{"ls-files", "-z"}
+	if strings.TrimSpace(gitRef) != "" {
+		args = []string{"ls-tree", "-r", "--name-only", "-z", gitRef}
+	}
+	out, err := source.run(args)
+	if err != nil {
+		return nil, err
+	}
+	paths := make([]string, 0)
+	for _, entry := range strings.Split(string(out), "\x00") {
+		if entry == "" {
+			continue
+		}
+		paths = append(paths, filepath.ToSlash(entry))
+	}
+	return paths, nil
+}
+
+// 📄️TrackedBytes reads the bytes of one tracked path at a ref.
+func (source SystemGit) TrackedBytes(gitRef, rel string) ([]byte, error) {
+	if strings.TrimSpace(gitRef) == "" {
+		return os.ReadFile(filepath.Join(source.Repo, filepath.FromSlash(rel)))
+	}
+	return source.run([]string{"show", gitRef + ":" + rel})
+}
+
+// 🎞️GitTranscript is a recorded git session: exactly what the real CLI answered, keyed by ref.
+type GitTranscript struct {
+	ID      string              `json:"id"`
+	Logs    map[string]string   `json:"logs"`
+	Tracked map[string][]string `json:"tracked"`
+	Blobs   map[string]string   `json:"blobs"`
+}
+
+// 🔑️TranscriptBlobKey is the blob key for a ref and path pair.
+func TranscriptBlobKey(gitRef, rel string) string {
+	return gitRef + "\x01" + rel
+}
+
+// 📥️ParseGitTranscript parses a transcript from its JSON encoding.
+func ParseGitTranscript(text []byte) (*GitTranscript, error) {
+	transcript := &GitTranscript{}
+	if err := json.Unmarshal(text, transcript); err != nil {
+		return nil, err
+	}
+	return transcript, nil
+}
+
+// 📜️NumstatLog replays the recorded log for a ref.
+func (transcript *GitTranscript) NumstatLog(gitRef string) (string, error) {
+	if value, ok := transcript.Logs[gitRef]; ok {
+		return value, nil
+	}
+	return "", fmt.Errorf("transcript has no log for ref %q", gitRef)
+}
+
+// 🧾️TrackedPaths replays the recorded tracked path list for a ref.
+func (transcript *GitTranscript) TrackedPaths(gitRef string) ([]string, error) {
+	if value, ok := transcript.Tracked[gitRef]; ok {
+		return value, nil
+	}
+	return nil, fmt.Errorf("transcript has no tracked path list for ref %q", gitRef)
+}
+
+// 📄️TrackedBytes replays the recorded body of one path at a ref.
+func (transcript *GitTranscript) TrackedBytes(gitRef, rel string) ([]byte, error) {
+	if value, ok := transcript.Blobs[TranscriptBlobKey(gitRef, rel)]; ok {
+		return []byte(value), nil
+	}
+	return nil, fmt.Errorf("transcript has no blob for %q:%s", gitRef, rel)
+}
+
+// #endregion 🔌️GitSource

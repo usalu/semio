@@ -16,17 +16,20 @@ pub struct SetApplication {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetApplication {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "application", kind: "set-application", record: "SetApplication" };
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
-        protocol::MutationOutcome::new(DwgDiff { application: (base.application != self.application).then(|| self.application.clone()), ..DwgDiff::default() })
-    }
-    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.application != self.application).then(|| DwgMutation::SetApplication(SetApplication { application: base.application.clone() })).into_iter().collect())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set application info", "Anwendungsinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DwgSnapshot, DwgMutation> for SetApplication {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as protocol::ColdMutation<DwgSnapshot>>::ReferenceDiff> {
+        protocol::MutationOutcome::new(DwgDiff { application: (base.application != self.application).then(|| self.application.clone()), ..DwgDiff::default() })
+    }
+    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
+        Ok((base.application != self.application).then(|| DwgMutation::SetApplication(SetApplication { application: base.application.clone() })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

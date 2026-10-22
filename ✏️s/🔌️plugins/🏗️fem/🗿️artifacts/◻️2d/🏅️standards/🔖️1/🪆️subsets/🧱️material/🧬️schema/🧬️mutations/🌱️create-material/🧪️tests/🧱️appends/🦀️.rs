@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().materials.is_some(), "create-material/appends-concrete-c30: the created material must surface in the materials delta");
     assert!(outcome.diff().regions.is_none() && outcome.diff().elements.is_none(), "create-material/appends-concrete-c30: no consumer collection may be touched when a material is coined");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

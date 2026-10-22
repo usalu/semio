@@ -13,7 +13,7 @@ fn raster_asset_capacity_matches_the_json_oracle() {
         let delta: RasterAssetsDelta = semio_framework_pack_json::from_json_str(&serde_json::json!({"entries":oracle}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party input");
         let diff = RasterDiff { assets: Some(delta), ..Default::default() };
         let base = RasterSnapshot::default();
-        match protocol::apply_diff(&diff, &base) {
+        match protocol::apply_diff_cold(&diff, &base) {
             Ok(snapshot) => {
                 let observed = snapshot.assets.keys().cloned().collect::<Vec<_>>();
                 retire_raster_value_cold(snapshot);

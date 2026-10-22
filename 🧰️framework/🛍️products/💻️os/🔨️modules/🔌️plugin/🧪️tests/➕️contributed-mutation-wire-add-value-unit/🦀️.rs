@@ -2,7 +2,7 @@ use crate::contributed_mutation_wire::mutations::add_value::AddValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::contributed_mutation_wire::mutations::WireTestMutation;
 use crate::contributed_mutation_wire::WireTestSnapshot;
-use protocol::{Mutation, MutationDiff, MutationLeaf};
+use protocol::{ColdMutation, Mutation, MutationDiff, MutationLeaf};
 
 #[test]
 fn direct_leaf_descriptor_and_inverse_law() {

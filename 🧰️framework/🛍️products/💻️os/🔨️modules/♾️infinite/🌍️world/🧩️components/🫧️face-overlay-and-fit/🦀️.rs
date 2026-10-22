@@ -178,7 +178,7 @@ pub enum WorldFaceOverlayPhase {
 }
 
 #[derive(Clone, Copy)]
-struct WorldFaceOverlayMatch {
+pub struct WorldFaceOverlayMatch {
     pub draw: u16,
     pub instance: u16,
     pub triangle: u32,
@@ -282,7 +282,7 @@ impl WorldFaceOverlayScan {
 }
 
 #[derive(Clone, Copy)]
-struct WorldFaceOverlayGeometry {
+pub struct WorldFaceOverlayGeometry {
     pub vertices: [Vec3; 3],
     pub normal: Vec3,
 }

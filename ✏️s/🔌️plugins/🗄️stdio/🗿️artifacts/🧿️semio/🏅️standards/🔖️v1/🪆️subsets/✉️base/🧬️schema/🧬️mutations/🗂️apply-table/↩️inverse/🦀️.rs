@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyTable`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use crate::schema::snapshot::SemioSnapshot;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_table::ApplyTable>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Table(b) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyTable { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Table(b) => <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyTable { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

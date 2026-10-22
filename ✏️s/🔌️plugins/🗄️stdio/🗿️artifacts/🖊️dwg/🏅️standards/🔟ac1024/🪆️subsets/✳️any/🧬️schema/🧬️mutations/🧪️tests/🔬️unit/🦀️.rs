@@ -1,6 +1,6 @@
 use semio_s_artifact_stdio_contract::apply_mutation;
 use super::*;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 use protocol::OpBinary;
 use protocol::OpText;
@@ -28,7 +28,7 @@ async fn logical_mutations_obey_diff_and_inverse_laws() {
     for mutation in demo_mutation_cases() {
         let mut applied = base.clone();
         let diff = apply_mutation(&mut applied, &mutation);
-        assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("diff must apply to base"), applied);
+        assert_eq!(protocol::apply_diff_cold(diff.diff(), &base).expect("diff must apply to base"), applied);
         for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply_mutation(&mut applied, &inverse);
         }

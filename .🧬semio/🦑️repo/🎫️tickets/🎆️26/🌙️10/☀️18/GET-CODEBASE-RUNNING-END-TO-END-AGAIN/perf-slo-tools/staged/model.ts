@@ -19,7 +19,7 @@ export type BenchStatisticV1="min"|"p50"|"p95"|"p99"|"max"|"mean";
 /** 🌷️ The verdict of an objective: `warn` met the gate but not the goal, `recorded` has neither. */
 export type BenchStatusV1="pass"|"warn"|"fail"|"unproven"|"recorded";
 /** 🌸️ Why an objective stays unproven or a comparison is not made. */
-export type BenchReasonV1="no-samples"|"too-few-samples"|"probe-failed"|"unavailable"|"not-cold"|"host-saturated"|"service-unavailable"|"unsupported"|"host-class"|"schema";
+export type BenchReasonV1="no-samples"|"too-few-samples"|"probe-failed"|"unavailable"|"not-cold"|"host-saturated"|"service-unavailable"|"unsupported"|"host-class"|"schema"|"start-unobserved";
 /** 🌹️ How busy the host was while a series was measured. */
 export type BenchLoadClassV1="quiet"|"busy"|"saturated"|"unknown";
 /** 🌺️ The verdict of one comparison row against the stored baseline. */
@@ -108,11 +108,13 @@ export function benchJudgeV1(slo:BenchSloV1,tool:BenchSloToolV1,series:BenchSeri
  if(n<policy.minimumSamples[slo.statistic])return unproven("too-few-samples",n,stats[slo.statistic]);
  const value=stats[slo.statistic],inflated=head.unit==="ms"&&series.loadClass==="saturated",lower=slo.direction==="lower";
  const within=(limit:number)=>lower?value<=limit:value>=limit;
+ const kinds=series.startKinds,seen=kinds.marker+kinds["first-output"]+kinds.exit,bound=slo.metric!=="startMs"||kinds.marker===seen?"exact":kinds["first-output"]===seen?"lower":kinds.exit===seen?"upper":"mixed";
  let status:BenchStatusV1;
  if(slo.goal===null&&slo.gate===null)status="recorded";
  else if(slo.goal!==null&&within(slo.goal))status="pass";
  else if(slo.gate!==null&&within(slo.gate))status=slo.goal===null?"pass":"warn";
  else status="fail";
+ if(bound!=="exact"&&status!=="recorded"&&!(bound==="lower"&&status==="fail"||bound==="upper"&&status!=="fail"))return unproven("start-unobserved",n,value);
  if(status==="fail"&&inflated)return Object.freeze({...head,value,n,status:"unproven" as const,reason:"host-saturated" as const,inflated:true});
  return Object.freeze({...head,value,n,status,reason:null,inflated:inflated&&status!=="pass"&&status!=="recorded"});
 }
@@ -195,6 +197,7 @@ export function benchSloIssuesV1(value:unknown):string[]{
   const yielded=(policy.metrics[probe.kind][probe.memory?"memory":"plain"] as readonly string[]);
   if(!yielded.includes(slo.metric))found.push(`${slo.id}: ${probe.id} does not yield ${slo.metric}`);
   if(policy.minimumSamples[slo.statistic]>probe.runs)found.push(`${slo.id}: ${slo.statistic} needs ${policy.minimumSamples[slo.statistic]} samples but ${probe.id} runs ${probe.runs}`);
+  if(slo.metric==="startMs"&&slo.direction!=="lower")found.push(`${slo.id}: a start time is judged downwards`);
   if(slo.goal!==null&&slo.gate===null)found.push(`${slo.id}: a goal needs a gate`);
   if(slo.goal!==null&&slo.gate!==null&&(slo.direction==="lower"?slo.goal>slo.gate:slo.goal<slo.gate))found.push(`${slo.id}: the goal lies beyond the gate`);
   if(slo.enforcement==="blocking"&&slo.gate===null)found.push(`${slo.id}: a blocking objective needs a gate`);
@@ -267,7 +270,7 @@ export function renderBenchReportV1(report:BenchReportV1,set:BenchSloSetV1,langu
  const kinds=report.series.filter(series=>series.status==="measured"&&(series.startKinds.marker+series.startKinds["first-output"]+series.startKinds.exit)>0);
  if(kinds.length){out.push("",heading(t("startKinds"),format));for(const series of kinds)out.push(`- ${series.probe} / ${toolName(set,series.tool,language)}: ${t("marker")} ${series.startKinds.marker}, ${t("first-output")} ${series.startKinds["first-output"]}, ${t("exit")} ${series.startKinds.exit}`);}
  if(report.comparison)out.push("",renderBenchComparisonV1(report.comparison,set,language,format));
- out.push("",`${t("note-load")}`,`${t("note-percentile")}`,`${t("note-start")}`,`${t("note-recorded")}`);
+ out.push("",`${t("note-marks")}`,`${t("note-load")}`,`${t("note-percentile")}`,`${t("note-start")}`,`${t("note-recorded")}`);
  return out.join("\n");
 }
 

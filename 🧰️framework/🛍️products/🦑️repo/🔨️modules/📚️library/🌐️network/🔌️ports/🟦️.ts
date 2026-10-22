@@ -1,4 +1,6 @@
-import {spawnSync} from "node:child_process";
+import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 /** 🔌️ True when host:port already accepts TCP (existing dev server). */
 export function isDevPortInUse(host: string, port: number): boolean {
   const probe = `
@@ -9,7 +11,7 @@ socket.once("connect", () => process.exit(0));
 socket.once("timeout", () => process.exit(1));
 socket.once("error", () => process.exit(1));
 `;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 500 });
+  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { timeout: 500 });
   return result.status === 0;
 }
 
@@ -28,7 +30,7 @@ const text = await res.text();
 const match = text.match(/PLAYGROUND_APP_KIND\\":\\s*\\"([^\\"]+)\\"/);
 process.stdout.write(match?.[1] ?? "");
 `;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
+  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
   const entry = result.stdout?.trim();
   return entry || undefined;
 }
@@ -51,7 +53,7 @@ export function canReuseDevPort(host: string, port: number, expectedPlayEntry?: 
   const url = devServerUrl(host, port);
   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
 process.exit(res.ok ? 0 : 1);`;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
+  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { timeout: 3000 });
   if (result.status !== 0) return false;
   if (!expectedPlayEntry) return true;
   return devServerPlayEntry(host, port) === expectedPlayEntry;

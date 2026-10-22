@@ -23,7 +23,7 @@ pub(super) enum AdmissionPhase {
 }
 
 #[derive(Clone, Copy)]
-struct WalkFrame {
+pub(super) struct WalkFrame {
     pub(super) next_child: Option<NodeId>,
     pub(super) node: usize,
 }

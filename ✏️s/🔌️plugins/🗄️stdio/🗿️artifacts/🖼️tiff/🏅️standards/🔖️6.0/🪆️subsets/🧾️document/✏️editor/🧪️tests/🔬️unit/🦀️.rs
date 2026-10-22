@@ -44,16 +44,16 @@ fn number(value: u64) -> semio_framework_value::DslValue {
 
 #[test]
 fn editor_page_selection_config_round_trips_and_has_an_exact_inverse() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     let before = TiffEditorConfig::default();
     let mutation = TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 1 };
     assert_eq!(TiffEditorConfigMutation::parse_op(&mutation.print_op()).expect("text config mutation"), mutation);
     assert_eq!(TiffEditorConfigMutation::decode_op(&mutation.encode_op().expect("binary config mutation")).expect("decoded config mutation"), mutation);
-    let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).expect("page selection applies");
+    let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).expect("page selection applies");
     assert_eq!(after.selected_ifd, 1);
     let inverse = mutation.inverse(&before).expect("page selection inverse");
     assert_eq!(inverse.len(), 1);
-    let restored = protocol::apply_diff(inverse[0].diff(&after).diff(), &after).expect("page selection inverse applies");
+    let restored = protocol::apply_diff_cold(inverse[0].diff(&after).diff(), &after).expect("page selection inverse applies");
     assert_eq!(restored, before);
 }
 
@@ -143,7 +143,7 @@ async fn image_window_exposes_bilingual_tiled_paint_controls() {
 
 #[test]
 fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     let before = tiled_editor_snapshot();
     let mutations = drive_paint(&paint_command(), &before, &TiffEditorConfig::default());
     assert_eq!(mutations.len(), 1);
@@ -151,17 +151,17 @@ fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
     assert_eq!(payload.revision, crate::standards::v6_0::subsets::document::schema::mutations::paint_region::samples::tiff_revision(&before));
     assert_eq!(TiffMutation::parse_op(&mutations[0].print_op()).expect("text paint round trip"), mutations[0]);
     assert_eq!(TiffMutation::decode_op(&mutations[0].encode_op().expect("binary paint encode")).expect("binary paint decode"), mutations[0]);
-    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).expect("apply TIFF paint");
+    let after = protocol::apply_diff_cold(mutations[0].diff(&before).diff(), &before).expect("apply TIFF paint");
     assert_eq!(&after.ifds[0].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
     assert_eq!(after.ifds[0].entries, before.ifds[0].entries);
     let inverse = mutations[0].inverse(&before).expect("paint inverse");
-    let restored = inverse.into_iter().fold(after, |current, mutation| protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("apply TIFF paint inverse"));
+    let restored = inverse.into_iter().fold(after, |current, mutation| protocol::apply_diff_cold(mutation.diff(&current).diff(), &current).expect("apply TIFF paint inverse"));
     assert_eq!(restored, before);
 }
 
 #[test]
 fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::{ColdMutation, Mutation, MutationDiff};
     let mut before = tiled_editor_snapshot();
     before.ifds.push(before.ifds[0].clone());
     let first_before = before.ifds[0].blocks.clone();
@@ -169,10 +169,10 @@ fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
     let [mutation] = drive_paint(&paint_command(), &before, &config).try_into().expect("one selected-page paint mutation");
     let TiffMutation::PaintRegion(payload) = &mutation else { panic!("selected-page paint mutation") };
     assert_eq!(payload.ifd_index, 1);
-    let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).expect("selected page paint applies");
+    let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).expect("selected page paint applies");
     assert_eq!(after.ifds[0].blocks, first_before);
     assert_eq!(&after.ifds[1].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
-    let restored = mutation.inverse(&before).expect("selected page inverse").into_iter().fold(after, |current, inverse| protocol::apply_diff(inverse.diff(&current).diff(), &current).expect("selected page inverse applies"));
+    let restored = mutation.inverse(&before).expect("selected page inverse").into_iter().fold(after, |current, inverse| protocol::apply_diff_cold(inverse.diff(&current).diff(), &current).expect("selected page inverse applies"));
     assert_eq!(restored, before);
     assert_eq!(config.selected_ifd, 1, "artifact history never rewrites local page selection");
 }
@@ -224,7 +224,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
         let emitted = <TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::apply_diff(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff_cold(<TiffMutation as protocol::ColdMutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
         *expected.pointer_mut(&payload_path).unwrap() = row["expected"].clone();

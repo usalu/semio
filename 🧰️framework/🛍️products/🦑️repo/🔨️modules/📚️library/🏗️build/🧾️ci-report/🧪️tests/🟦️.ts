@@ -7,8 +7,10 @@ import {dirname,join} from "node:path";
 import {parse as parseYaml} from "yaml";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {CI_TEXT_KEYS_V1,ciCacheDeltaV1,ciPlanSelectionV1,ciTargetMatcherV1,ciTextV1,compareCiPlansV1,extractJsonObjectsV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,resolveCiLanguageV1,summarizeCiJUnitV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiCacheStatusV1,type CiLanguageV1} from "../🟦️.ts";
+import {CI_TEXT_KEYS_V1,ciCacheDeltaV1,ciPlanSelectionV1,ciTargetMatcherV1,ciTextV1,compareCiPlansV1,extractJsonObjectsV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,summarizeCiJUnitV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiCacheStatusV1,type CiLanguageV1} from "../🟦️.ts";
 import {runCiReportV1} from "../📜️script.ts";
+import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),check=(definition:string,value:unknown)=>{
  const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
@@ -98,8 +100,9 @@ test("exported test results are summed per file and the index names the failed t
 
 test("the language is the flag, then SEMIO_LANGUAGE, then the locale; none resolved is refused",()=>{
  for(const row of fixture.languages){
-  if(row.expected===null)expect(()=>resolveCiLanguageV1(row.flag??undefined,row.environment),JSON.stringify(row)).toThrow("Language required");
-  else expect(resolveCiLanguageV1(row.flag??undefined,row.environment),JSON.stringify(row)).toBe(row.expected as CiLanguageV1);
+  const pick=()=>resolveLanguageV1(CATALOG_LANGUAGES_V1,row.flag===null?[]:["--lang",row.flag],row.environment,()=>[]).language;
+  if(row.expected===null)expect(pick,JSON.stringify(row)).toThrow("en|de");
+  else expect(pick(),JSON.stringify(row)).toBe(row.expected as CiLanguageV1);
  }
 });
 
@@ -161,7 +164,7 @@ test("the command line reads the files the neutral entry wrote and exits 0, 1 or
  expect(run("proof","--tool","maven").code).toBe(2);
  expect(run("plan","--bogus","x").code).toBe(2);
  expect(run("cache-delta","--tool").code).toBe(2);
- expect(runCiReportV1(["tests","--dir",root],{},()=>{})).toBe(2);
+ expect(runCiReportV1(["tests","--dir",root],{SEMIO_LANGUAGE:"fr"},()=>{})).toBe(2);
  expect(run("nothing").code).toBe(2);
  expect(run().code).toBe(0);
  expect(run("--help").code).toBe(0);
@@ -175,7 +178,7 @@ const repositoryRoot=(()=>{
 const workflowText=readFileSync(join(repositoryRoot,".github","workflows","build-system.yml"),"utf8");
 const workflow=parseYaml(workflowText) as {on:Record<string,unknown>;permissions:Record<string,string>;concurrency:{group:string;"cancel-in-progress":string};env:Record<string,string>;jobs:Record<string,{name?:string;needs?:string|string[];"runs-on"?:string;"timeout-minutes"?:number;env?:Record<string,string>;strategy?:{matrix:{include:Record<string,string>[]}};steps:Step[];outputs?:Record<string,string>}>};
 type Step={id?:string;name?:string;if?:string|boolean;uses?:string;with?:Record<string,string>;run?:string;shell?:string;env?:Record<string,string>;"continue-on-error"?:boolean};
-const actions=Object.fromEntries(["bun-repo","cache-proof"].map(name=>[name,parseYaml(readFileSync(join(repositoryRoot,".github","actions",name,"action.yml"),"utf8")) as {runs:{steps:Step[]}}]));
+const actions=Object.fromEntries(["repo-launcher","cache-proof"].map(name=>[name,parseYaml(readFileSync(join(repositoryRoot,".github","actions",name,"action.yml"),"utf8")) as {runs:{steps:Step[]}}]));
 
 type Scalar=string|number|boolean|null|undefined;
 type Context=Record<string,unknown>;
@@ -308,7 +311,7 @@ test("the workflow sets the language explicitly and exercises German once",()=>{
  expect(workflow.env.SEMIO_LANGUAGE).toBe("en");
  const german=workflow.jobs.smoke!.steps.filter(step=>step.env?.SEMIO_LANGUAGE==="de");
  expect(german.length).toBe(1);
- expect(german[0]!.run).toContain("bun repo preflight");
+ expect(german[0]!.run).toContain("repo preflight");
 });
 
 test("every action is pinned to a full commit SHA and every job is bounded",()=>{
@@ -336,10 +339,13 @@ test("the workflow calls only the neutral entry and the report; no step names an
  expect(new Set(tools)).toEqual(new Set(["nx","bazel",'"$BUILD_TOOL"','"$TOOL"']));
 });
 
-test("the pinned Bun hashes of the composite action equal the official release hashes",()=>{
- const action=readFileSync(join(repositoryRoot,".github","actions","bun-repo","action.yml"),"utf8");
- for(const [asset,hash] of Object.entries(fixture.pins.assets)){expect(action.includes(asset),asset).toBe(true);expect(action.includes(hash),asset).toBe(true);}
- expect(action.match(/[0-9a-f]{64}/gu)!.length).toBe(Object.keys(fixture.pins.assets).length);
- expect(workflow.env.BUN_VERSION).toBe(fixture.pins.bun);
- expect(String(workflow.env.BUN_VERSION)).toBe(String(JSON.parse(readFileSync(join(repositoryRoot,"package.json"),"utf8")).packageManager).replace("bun@",""));
+test("the launcher action holds no runtime pin and the registry pins the Bun of the package manager field",()=>{
+ const action=readFileSync(join(repositoryRoot,".github","actions","repo-launcher","action.yml"),"utf8"),registry=JSON.parse(readFileSync(join(repositoryRoot,"\u{1F9F0}\uFE0Fframework","\u{1F6CD}\uFE0Fproducts","\u{1F991}\uFE0Frepo","\u{1F528}\uFE0Fmodules","\u{1F680}\uFE0Flauncher","\u{1F5C2}\uFE0Fregistry","\u{1F523}\uFE0F.json"),"utf8"))as{runtimes:{bun:{version:string;distributions:{archive:string;sha256:string}[]}}};
+ expect(action.match(/[0-9a-f]{64}/gu)).toBeNull();expect(action).not.toMatch(/bun-version/u);expect(workflowText).not.toMatch(/BUN_VERSION|actions\/bun-repo/u);
+ expect(registry.runtimes.bun.version).toBe(String(JSON.parse(readFileSync(join(repositoryRoot,"package.json"),"utf8")).packageManager).replace("bun@",""));
+ expect(registry.runtimes.bun.version).toBe(fixture.pins.bun);
+ const pinned=new Map(registry.runtimes.bun.distributions.map(row=>[row.archive,row.sha256]));
+ for(const [asset,hash] of Object.entries(fixture.pins.assets)){const archive=asset+".zip";if(pinned.has(archive))expect(pinned.get(archive),asset).toBe(hash);}
+ expect(pinned.get("bun-darwin-aarch64.zip")).toBe(fixture.pins.assets["bun-darwin-aarch64"]);
+ expect(String(workflow.env.NODE_VERSION)).toBe(String(JSON.parse(readFileSync(join(repositoryRoot,"package.json"),"utf8")).engines.node));
 });

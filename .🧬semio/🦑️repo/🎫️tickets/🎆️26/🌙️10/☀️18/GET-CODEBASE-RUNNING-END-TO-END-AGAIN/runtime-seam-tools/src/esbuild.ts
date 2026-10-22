@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { RuntimeCapabilityMissingV1 } from "../../🚫️missing/🟦️.ts";
+import { RuntimeCapabilityMissingV1, runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeBundleOptionsV1, RuntimeBundleResultV1 } from "../../📋️contract/🟦️.ts";
 
 type EsbuildV1 = { build(options: Record<string, unknown>): Promise<{ errors: { text: string }[]; warnings: { text: string }[]; outputFiles?: { path: string; text: string; contents: Uint8Array }[]; metafile?: { inputs: Record<string, unknown> } }> };
@@ -9,7 +9,7 @@ function locate(root: string | undefined): EsbuildV1 {
   const explicit = process.env.SEMIO_RUNTIME_ESBUILD;
   const bases = [...(explicit === undefined ? [] : [explicit]), join(root ?? process.cwd(), "noop.js"), join(process.cwd(), "noop.js")];
   for (const base of bases) { try { return createRequire(base)(explicit === base ? base : "esbuild") as EsbuildV1; } catch { /* try the next base */ } }
-  throw new RuntimeCapabilityMissingV1("bundle", "node", "the esbuild provider is not installed; set SEMIO_RUNTIME_ESBUILD to its module or install it beside the workspace");
+  throw new RuntimeCapabilityMissingV1("bundle", "node", runtimeMessageV1("reasonEsbuild", {}));
 }
 
 function adaptPlugin(plugin: NonNullable<RuntimeBundleOptionsV1["plugins"]>[number]): Record<string, unknown> {

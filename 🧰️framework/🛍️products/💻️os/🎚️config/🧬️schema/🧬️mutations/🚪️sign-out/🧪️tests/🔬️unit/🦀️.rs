@@ -2,7 +2,7 @@ use semio_framework_os_kernel::ColdMutation;
 use semio_framework_os_kernel::ColdMutationDiff;
 use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
-use protocol::Mutation;
+use protocol::{Mutation};
 
 #[test]
 fn sign_out_serializes_like_the_typescript_projection() {

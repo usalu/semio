@@ -10,7 +10,7 @@ fn decoded_image_assets_preserve_every_field_without_a_carrier() {
         assert_eq!(semio_s_artifact_raster_raster_model::raster_image_content_id("image", &image), case["contentId"].as_str().unwrap());
         let base = RasterSnapshot::default();
         let diff = semio_s_artifact_raster_raster_diff::diff_add_asset("image", image.clone());
-        let after = protocol::apply_diff(&diff, &base).unwrap();
+        let after = protocol::apply_diff_cold(&diff, &base).unwrap();
         assert_eq!(semio_s_artifact_raster_raster_model::raster_image(&after.assets, "image"), Some(image.clone()));
         let inverse = semio_s_artifact_raster_raster_mutations::inverse_raster_mutation(&after, &semio_s_artifact_raster_raster_mutations::RasterMutation::RemoveLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "image".into() })).unwrap();
         assert!(matches!(&inverse[0], semio_s_artifact_raster_raster_mutations::RasterMutation::AddLayerAsset(payload) if payload.asset == image));

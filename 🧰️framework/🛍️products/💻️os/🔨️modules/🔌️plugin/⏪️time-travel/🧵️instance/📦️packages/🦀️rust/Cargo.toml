@@ -47,6 +47,7 @@ semio-framework-plugin-instance-render = { path = "../../../../🧵️instance/�
 semio-framework-plugin-instance-dispatch = { path = "../../../../🧵️instance/📨️dispatch/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-time-travel = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

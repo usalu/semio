@@ -10,7 +10,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/➡️after/🔣️.json"));
@@ -29,7 +29,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rotate-frame applies to its committed before-snapshot")
+    protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("rotate-frame applies to its committed before-snapshot")
 }
 
 /// ▶️ `rotate-frame` writes `bounds.rotation`; origin, width and height are untouched.
@@ -59,7 +59,7 @@ async fn inverse_turns_the_rect_frame_back() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("rotate-frame/rotates-the-rect-frame: inverse step applies");
+        snapshot = protocol::apply_diff_cold(step.diff(&snapshot).diff(), &snapshot).expect("rotate-frame/rotates-the-rect-frame: inverse step applies");
     }
     assert_eq!(snapshot, base, "rotate-frame/rotates-the-rect-frame: inverse did not restore the before-snapshot");
 }

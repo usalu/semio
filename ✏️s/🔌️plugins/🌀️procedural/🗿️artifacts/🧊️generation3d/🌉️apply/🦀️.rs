@@ -24,7 +24,7 @@ pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutati
         delta.retire_cold();
         return Err(messages);
     }
-    let applied = protocol::apply_diff(&delta, &*projection);
+    let applied = protocol::apply_diff_cold(&delta, &*projection);
     delta.retire_cold();
     match applied {
         Ok(next) => {

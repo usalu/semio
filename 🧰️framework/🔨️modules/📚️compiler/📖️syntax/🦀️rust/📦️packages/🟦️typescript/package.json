@@ -9,9 +9,9 @@
     "./paths": "./📁️paths/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test",
-    "test-path-literals": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test-path-literals",
-    "test-module-tree": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test-module-tree"
+    "test": "repo run @semio-tech/compiler-syntax-rust-ts:test",
+    "test-path-literals": "repo run @semio-tech/compiler-syntax-rust-ts:test-path-literals",
+    "test-module-tree": "repo run @semio-tech/compiler-syntax-rust-ts:test-module-tree"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

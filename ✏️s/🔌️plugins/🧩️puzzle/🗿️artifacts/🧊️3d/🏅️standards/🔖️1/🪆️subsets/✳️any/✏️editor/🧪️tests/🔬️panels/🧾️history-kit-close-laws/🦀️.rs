@@ -75,7 +75,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
 
     let mut next_projection = projection.typed().clone();
     for operation in &emit.artifact_mutations {
-        next_projection = protocol::apply_diff(protocol::Mutation::<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
+        next_projection = protocol::apply_diff_cold(protocol::Mutation::<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
     }
 
     let next_projection = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&next_projection));
@@ -114,7 +114,7 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let doc = ArtifactView::new(&doc_projection, &history);
         let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
         for operation in &emit.artifact_mutations {
-            current = protocol::apply_diff(protocol::Mutation::<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot>::diff(operation, &current).diff(), &current).expect("valid mutation diff");
+            current = protocol::apply_diff_cold(protocol::Mutation::<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot>::diff(operation, &current).diff(), &current).expect("valid mutation diff");
         }
     }
 

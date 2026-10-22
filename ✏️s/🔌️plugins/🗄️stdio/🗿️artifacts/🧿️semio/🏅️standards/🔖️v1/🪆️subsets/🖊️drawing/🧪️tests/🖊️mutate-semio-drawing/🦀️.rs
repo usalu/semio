@@ -41,7 +41,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff;
+    use semio_framework_os_kernel::apply_diff_cold;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_drawing::schema::mutations::{diff_semio_drawing_mutation, inverse_semio_drawing_mutation, SemioDrawingMutation};
@@ -91,7 +91,7 @@ mod subject {
         let outcome = diff_semio_drawing_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
-            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
+            *current = apply_diff_cold(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))

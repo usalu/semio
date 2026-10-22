@@ -4,6 +4,10 @@
   "payloadChunkBytes": 1024,
   "treeDepth": 17,
   "maximumCursorBytes": 4096,
+  "cloneFrames": {
+    "perLevel": 5,
+    "base": 3
+  },
   "controlledRetirement": {
     "depth": 80,
     "maximumItems": 1,

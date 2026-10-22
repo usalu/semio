@@ -1,521 +1,400 @@
-// #region 🧲️Header
-/** ⏪️ The React shell's time-travel chrome (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the persistent band a live
- * history-edit session raises from `HistoryPatch.timeTravel` whichever panel is open — stage, edited mutation, replay
- * progress with Cancel, review status, worst outcome and the stage's own verbs — the indicator every window of the editing program
- * wears, and the remappable `ui.timeTravel.accept|discard|exit` chords. The history rows and the input editor are the
- * guest's own `framework.body.history`, rendered by the interpreter; this chrome only reads the session and dispatches
- * the reserved `historyEdit*` verbs, each stamped with the session generation it was shown, so a stale press is refused
- * `timeTravel.stale` instead of acting on a session that moved on. Every text it shows is a row of the one `labels` table
- * of the shared band corpus (`🧫️time-travel-band`), to which the i18n catalogue is pinned and which the wgpu shell embeds;
- * the person reads "History editing" everywhere — the guest's section, the band, the indicator, the peer notes.
- * @see ../../../../../../../../../🔨️modules/🎠️kernel/🕰️history/🟦️.ts
- * @see ../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
-// #endregion 🧲️Header
+/** 🏷️ Shell label, command-id and manifest label resolution: the leaf every other `ShellHelpers` module reads translated text from.
+ *
+ * 🧱️ Child module of {@link ../🟦️.tsx | ShellHelpers}, which re-exports every public name below so import specifiers stay unchanged.
+ */
 
+import { isIconName } from "@semio-tech/framework/assets";
 // #region 🔌️Adapters
-import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, historyEntryLabelText, historyReprojectionStatus, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryReprojection, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage, type ShellLocale } from "@semio-tech/framework";
-import type { ArtifactPresenceHistoryEdit } from "@semio-tech/framework/replication";
-import { ariaKeyshortcutsText, DisabledReasonHint, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, Surface, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
-import { useEffect, useId, useRef, type ReactElement } from "../../⚛️react-port/🟦️.ts";
-import type { ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
-import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1 } from "../🛣️route-and-chrome/🟦️.tsx";
-import { shellLabel } from "../🏷️labels/🟦️.tsx";
-import type { UiPresenceOverlayEntry, UiPresenceOverlayValue } from "../../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
+import {
+  type ActionArgDef,
+  type ActionDefinition,
+  type AppCatalogue,
+  type AppRole,
+  type ArtifactKindChoice,
+  artifactKindChoices,
+  CONTEXT_MENU_GROUP_ID_PREFIX,
+  CONTEXT_MENU_OVERFLOW_CATEGORY,
+  type DialogDefinition,
+  encodeArtifactKindChoice,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+  FRAMEWORK_PANEL_TAB_HISTORY_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
+  type IntroductionDefinition,
+  type IntroductionStepDefinition,
+  type LocalizedLabel,
+  type PluginAppLabelsOverlay,
+  SHELL_LOCALES,
+  type ShellLocale,
+  type ToolDefinition
+} from "@semio-tech/framework";
 // #endregion 🔌️Adapters
+import {
+  Icon,
+  type IconName,
+  resolveTranslationLabel,
+  UI_RIBBON_PARENT_CATEGORIES,
+  type UiChromeTerminologyId,
+  uiI18n,
+  type UiLabel,
+  type UiTranslationKey
+} from "@semio-tech/ui-react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
-//#region ⏪️TimeTravelChrome
-/** 🎬️ The reserved `historyEdit*` verbs the chrome dispatches, by the control that dispatches them. */
-export const TIME_TRAVEL_VERBS = {
-  nextProblem: "historyEditBegin",
-  accept: "historyEditAccept",
-  discard: "historyEditDiscard",
-  cancelReplay: "historyEditCancelReplay",
-  rerun: "historyEditRerun",
-  finalize: "historyEditFinalize",
-  back: "historyEditBack",
-  exit: "historyEditExit",
-} as const satisfies Readonly<Record<string, HistoryEditActionId>>;
-
-/** 🎚️ One control of {@link TIME_TRAVEL_VERBS}. */
-export type TimeTravelControlV1 = keyof typeof TIME_TRAVEL_VERBS;
-
-/** ⌨️ The remappable chord of each control that has one — never Escape, so Escape never discards a draft. */
-export const TIME_TRAVEL_CHORD_IDS = {
-  accept: "ui.timeTravel.accept",
-  discard: "ui.timeTravel.discard",
-  exit: "ui.timeTravel.exit",
-} as const satisfies Partial<Record<TimeTravelControlV1, UiTranslationKey>>;
-
-/** 🆔️ The id of each control — the one the shared band corpus owns (`controls[].controlId`), the wgpu band mirrors and
- * the React button wears as its DOM id: a control with a chord wears its keybinding id ({@link TIME_TRAVEL_CHORD_IDS}). */
-export const TIME_TRAVEL_CONTROL_IDS = {
-  accept: "ui.timeTravel.accept",
-  discard: "ui.timeTravel.discard",
-  cancelReplay: "shell.time-travel.cancel-replay",
-  rerun: "shell.time-travel.rerun",
-  finalize: "shell.time-travel.finalize",
-  back: "shell.time-travel.back",
-  exit: "ui.timeTravel.exit",
-  nextProblem: "shell.time-travel.next-problem",
-} as const satisfies Readonly<Record<TimeTravelControlV1, string>>;
-
-/** 🔘️ One band control: its id, what it dispatches, its label, and why it is disabled (`null` when it is not). */
-export type TimeTravelBandControlStateV1 = { readonly control: TimeTravelControlV1; readonly controlId: string; readonly label: UiTranslationKey; readonly disabledBy: UiTranslationKey | null };
-
-const bandControl = (id: TimeTravelControlV1, disabledBy: UiTranslationKey | null = null): TimeTravelBandControlStateV1 => ({ control: id, controlId: TIME_TRAVEL_CONTROL_IDS[id], label: `ui.timeTravel.${id}`, disabledBy });
-
-/** 🚧️ Why Finalize is disabled in a review, read from the session's own `review` and never inferred from a missing
- * report: nothing accepted is `empty`, a replay still owed or a blocking report is `blocked`, a `ready` review is
- * finalizable, and a review the session does not state is not possible right now. */
-function finalizeDisabledBy(session: HistoryTimeTravel): UiTranslationKey | null {
-  if (session.review === "noChanges" || (session.acceptedCount ?? 0) === 0) return "ui.timeTravel.refusal.empty";
-  if (session.review === "needsReplay" || session.review === "blocked" || session.blocking === true) return "ui.timeTravel.refusal.blocked";
-  return session.review === "ready" ? null : "ui.timeTravel.refusal.illegal";
+//#region ShellHelpers
+export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
+  return function ShellTabIcon({ size = 16 }: { size?: number }) {
+    const iconName: IconName =
+      iconId === FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID
+        ? "file-text"
+        : iconId === FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID
+          ? "panel-catalogue"
+          : iconId === FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID
+            ? "panel-inspection"
+            : iconId === FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID
+              ? "panel-parameters"
+              : isIconName(iconId)
+                ? iconId
+                : "circle-dot";
+    return <Icon icon={iconName} size={size} />;
+  };
 }
 
-/** 🚦️ The controls a stage offers, in band order: a draft is accepted or discarded while editing, a replay can be
- * cancelled while it runs, a review leads with Next problem while the session names the first blocking mutation
- * (`nextProblem` — the session's own answer, never computed here), can replay again when the session says it would start
- * a replay (`rerunnable`) and finalize when its review is `ready` (else both stay visible and name what stops them), the
- * finalize prompt can be left for the review, and every stage but the commit itself can exit. */
-export function timeTravelBandControlsV1(session: HistoryTimeTravel): readonly TimeTravelBandControlStateV1[] {
-  switch (session.stage) {
-    case "editing":
-      return [bandControl("accept"), bandControl("discard"), bandControl("exit")];
-    case "replaying":
-      return [bandControl("cancelReplay"), bandControl("exit")];
-    case "reviewing":
-      return [...(session.nextProblem === undefined ? [] : [bandControl("nextProblem")]), bandControl("rerun", session.rerunnable === true ? null : "ui.timeTravel.refusal.illegal"), bandControl("finalize", finalizeDisabledBy(session)), bandControl("exit")];
-    case "choosing":
-      return [bandControl("back"), bandControl("exit")];
-    case "finalizing":
-      return [];
-  }
+/** 🌐️ Resolves a chrome translation key outside hook context (tree builders run there). Both bundles
+ * are guaranteed complete for every key via `satisfies UiTranslationSchema`, so `?? key` is unreachable in
+ * practice — kept only as a last-resort literal rather than a thrown error. `options` supports i18next
+ * interpolation for keys with `{{placeholders}}`. */
+export function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): UiLabel {
+  return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
 }
 
-/** 🧱️ The reserved verbs a history row offers as its own actions: Edit (`historyEditBegin`), Withdraw and Restore — the shared
- * band corpus's `rowActions.verbs`. */
-export const TIME_TRAVEL_ROW_ACTION_VERBS = ["historyEditBegin", "historyEditWithdraw", "historyEditRestore"] as const satisfies readonly HistoryEditActionId[];
-
-/** 🚥️ Per stage, the refusal every history row action names while the stage lasts; `null` where the rows' own published
- * state rules — the shared band corpus's `rowActions.stages`. A running replay and a commit under way admit no Begin,
- * Withdraw or Restore (the session answers `timeTravel.illegal`). The shell knows the stage from the session patch at
- * once; the guest's refreshed History body, which says the same on every row, arrives only after the work (live fault F3:
- * Edit read enabled for the first 170 ms of a replay and its reason reached the page after the replay had ended). */
-export const TIME_TRAVEL_ROW_ACTION_REFUSALS = { editing: null, replaying: "ui.timeTravel.refusal.illegal", reviewing: null, choosing: null, finalizing: "ui.timeTravel.refusal.illegal" } as const satisfies Readonly<Record<HistoryTimeTravel["stage"], UiTranslationKey | null>>;
-
-/** 🛑️ The row actions the shell itself refuses for `session`, by verb, each with the reason it names in the shell's
- * current language ({@link TIME_TRAVEL_ROW_ACTION_REFUSALS}); `null` when it refuses none — no session, or a stage whose
- * rows speak for themselves. */
-export function timeTravelRowActionRefusalsV1(session: Pick<HistoryTimeTravel, "stage"> | null): ReadonlyMap<string, string> | null {
-  const refusal = session === null ? null : TIME_TRAVEL_ROW_ACTION_REFUSALS[session.stage];
-  if (refusal === null) return null;
-  const reason = String(shellLabel(refusal));
-  return new Map(TIME_TRAVEL_ROW_ACTION_VERBS.map((verb) => [verb, reason]));
+/** 🌐️ {@link shellLabel} for a key the chrome bundles actually define, or `null` — for a caller holding an open
+ * id space (a control id) that only sometimes names a chrome label. */
+export function shellLabelIfDefined(key: string): UiLabel | null {
+  return uiI18n.exists(key) ? shellLabel(key as UiTranslationKey) : null;
 }
 
-/** 🎯️ The action a control dispatches for `session` on the program `controllerId` names: its reserved verb stamped with the
- * session generation — except Next problem, which opens (`historyEditBegin`) the mutation the session's `nextProblem` names,
- * in the member store it names, exactly as the guest's own row does. */
-export function timeTravelControlActionV1(controllerId: string, session: HistoryTimeTravel, id: TimeTravelControlV1): ActionDescriptor {
-  if (id !== "nextProblem") return { controllerId, action: TIME_TRAVEL_VERBS[id], args: { [HISTORY_EDIT_ARG_GENERATION]: session.generation } };
-  const problem = session.nextProblem;
-  return { controllerId, action: TIME_TRAVEL_VERBS[id], args: problem === undefined ? {} : { [HISTORY_EDIT_ARG_MUTATION_ID]: problem.mutationId, ...(problem.store === undefined ? {} : { [HISTORY_EDIT_ARG_STORE]: problem.store }) } };
+/**
+ * 🌐️ Points the shared port {@link shellLabel} reads at `locale`. A shell has TWO i18n ports: its own
+ * `ShellScope` instance, which `useUiTranslation`/`useLabel` resolve through, and this shared module port,
+ * which is the only thing a tree builder running outside hook context can read. Moving the scope instance
+ * alone relabels the hook-rendered chrome (fullscreen, the sync pill, the fold buttons) and pins every
+ * builder-produced label — the panel tab names, the Settings branch with its General/Theme/Hotkeys children,
+ * the Display/Tool/Command category names — at whatever language this module booted in, which renders one
+ * shell in two languages at once. Both ports move together or neither does.
+ */
+export function syncShellLabelLocale(locale: Parameters<typeof uiI18n.changeLanguage>[0]): void {
+  void uiI18n.changeLanguage(locale);
 }
 
-/** 📝️ The band's lines in the shell's current language; a line the session does not carry is `null`. */
-export type TimeTravelBandTextV1 = {
-  readonly stage: string;
-  readonly target: string | null;
-  readonly progress: string | null;
-  readonly review: string | null;
-  readonly outcome: string | null;
-  readonly fault: string | null;
-  readonly accepted: string | null;
+/** 🌐️ The language the shared port {@link shellLabel} reads is standing at RIGHT NOW. Every
+ * builder memo in `🏛️ShellHost` that calls `shellLabel` — the OS command catalogue, the command and
+ * tool category trees, the panel tab names — resolves its text during render, while
+ * {@link syncShellLabelLocale} used to be called only from a post-paint effect. So on the render in
+ * which `uiLocale` changed, each of those memos recomputed against the OLD language and, because
+ * `uiLocale` never changes again, kept that text forever: measured 2026-09-22 on the live `s` shell
+ * as a History row for `os.setLocale` still reading "Set Locale" in a German shell that has
+ * "Sprache festlegen" for it. Comparing this against the wanted locale during render is what lets a
+ * caller move the port BEFORE the memos read it, which is the discipline `initUiLocaleSync`'s own
+ * doc already demands for boot. */
+export function shellLabelLocale(): string {
+  return uiI18n.resolvedLanguage ?? uiI18n.language ?? "";
+}
+
+/** 🌍️ {@link shellLabelLocale} as a {@link ShellLocale}: the language framework-owned en/de texts (kernel notices, number
+ * refusals) are read in — the first shell locale until the port stands at one. */
+export function currentShellLocaleV1(): ShellLocale {
+  return SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale()) ?? SHELL_LOCALES[0];
+}
+
+/** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`
+ * chrome bundle the ribbon itself reads (`uiRibbonParentEn`/`uiRibbonParentDe`) — the TypeScript twin
+ * of `ui_wgpu::wgpu::ribbon_parent_label`. `undefined` for any id outside the closed 20-id taxonomy;
+ * callers fall back to whatever raw id or overlay label they hold. The one resolver behind every
+ * ribbon-parent lookup in this shell ({@link resolveUtilityGroupLabel}, `actionCategoryLabel`,
+ * {@link contextMenuGroupLabel}) so the taxonomy never grows a second string table. */
+export function ribbonParentLabel(category: string): UiLabel | undefined {
+  const known = UI_RIBBON_PARENT_CATEGORIES.find((value) => value === category);
+  return known === undefined ? undefined : shellLabel(`ui.ribbon.parent.${known}`);
+}
+
+/** 🗂️ Display label for a `menu.group.<category>` row, which the guest emits with `label: None` on
+ * purpose (the host owns the chrome vocabulary — see `plugin/🦀️.rs`'s `Menu::group` doc and the wgpu
+ * twin `shell_context_menu_item_from_spec`). Taxonomy categories resolve through
+ * {@link ribbonParentLabel}; the overflow row `organizeContextMenu` synthesizes (`menu.group.more`)
+ * is the one id outside the taxonomy and resolves through `ui.contextMenu.more`. `undefined` for any
+ * row that is not a group row, or a group row whose category is unknown. */
+export function contextMenuGroupLabel(id: string): UiLabel | undefined {
+  if (!id.startsWith(CONTEXT_MENU_GROUP_ID_PREFIX)) return undefined;
+  const category = id.slice(CONTEXT_MENU_GROUP_ID_PREFIX.length);
+  return category === CONTEXT_MENU_OVERFLOW_CATEGORY ? shellLabel("ui.contextMenu.more") : ribbonParentLabel(category);
+}
+
+//#region 👁️✏️SurfaceRoleLabels
+/** 👁️✏️ Frozen bilingual text pair (contract freeze §5) — English first, no default language. These
+ * strings are net-new chrome vocabulary and the domain-neutral `uiChromeTranslationBundles` dictionary
+ * they'd normally register into lives outside this lease (`🖱️ui/📦️packages/🟦️typescript/🎯️targets/
+ * ⚛️react/📦️component.tsx`), so they resolve directly off `uiLocale` here — the same
+ * `{ native: { en, de }, reuse: { en, de } }`-shaped idiom `resolveManifestLabel` already gives a
+ * plugin's own `LocalizedLabel`, just constructed locally instead of decoded off the wire. */
+export type FrozenLabel = { readonly en: string; readonly de: string };
+
+export function frozenLabelText(pair: FrozenLabel, locale: string): string {
+  return locale === "de" ? pair.de : pair.en;
+}
+
+/** 👁️✏️ Window title chip / read-only badge text — contract freeze §5. */
+const SURFACE_ROLE_CHIP_LABEL: Readonly<Record<AppRole, FrozenLabel>> = {
+  viewer: { en: "Viewer", de: "Betrachter" },
+  editor: { en: "Editor", de: "Editor" },
+};
+export function surfaceRoleChipText(role: AppRole, locale: string): string {
+  return frozenLabelText(SURFACE_ROLE_CHIP_LABEL[role], locale);
+}
+
+/** 👁️✏️ Accessible name of the navbar role `ButtonGroup` (`playground.navbar.roles`) — the group needs
+ * its OWN name because each button is named by the target app's own `AppDefinition.label`
+ * ("Editor"/"Viewer"), which says what you switch TO but not what axis the group controls. */
+const SURFACE_ROLE_GROUP_LABEL: FrozenLabel = { en: "Surface role", de: "Oberflächenrolle" };
+export function surfaceRoleGroupText(locale: string): string {
+  return frozenLabelText(SURFACE_ROLE_GROUP_LABEL, locale);
+}
+
+/** 🎛️ Accessible name of the navbar mode `ButtonGroup` (`playground.navbar.modes`) — same reasoning as
+ * {@link surfaceRoleGroupText}: the items are named by the plugin's own mode labels. */
+const APP_MODE_GROUP_LABEL: FrozenLabel = { en: "Mode", de: "Modus" };
+export function appModeGroupText(locale: string): string {
+  return frozenLabelText(APP_MODE_GROUP_LABEL, locale);
+}
+
+const OPEN_ARTIFACT_WITH_LABEL: FrozenLabel = { en: "Open with…", de: "Öffnen mit…" };
+export function openArtifactWithText(locale: string): string {
+  return frozenLabelText(OPEN_ARTIFACT_WITH_LABEL, locale);
+}
+
+const SET_AS_DEFAULT_LABEL: FrozenLabel = { en: "Set as default", de: "Als Standard festlegen" };
+export function setAsDefaultText(locale: string): string {
+  return frozenLabelText(SET_AS_DEFAULT_LABEL, locale);
+}
+
+const DEFAULT_APPS_SETTINGS_TAB_LABEL: FrozenLabel = { en: "Default apps", de: "Standard-Apps" };
+export function defaultAppsSettingsTabText(locale: string): string {
+  return frozenLabelText(DEFAULT_APPS_SETTINGS_TAB_LABEL, locale);
+}
+/** 👁️✏️ {@link defaultAppsSettingsTabText} as a {@link UiLabel} — for `PanelTabNode.name`, which
+ * (unlike a plain tree-item `label`) always takes the `wireLabel`-wrapped shape `shellLabel` returns. */
+export function defaultAppsSettingsTabLabel(locale: string): UiLabel {
+  return wireLabel(defaultAppsSettingsTabText(locale));
+}
+
+/** 👁️✏️ Not itself a contract-frozen string (the freeze pins the chip/"Open with…"/"Set as
+ * default"/"Default apps" vocabulary, not this one) — the text for the non-blocking notice contract
+ * freeze §2.3/§5 requires when a `"viewer.read-only"` fault surfaces, or a viewer-role dispatch is
+ * blocked client-side before it ever reaches the host. */
+const VIEWER_READ_ONLY_NOTICE_LABEL: FrozenLabel = { en: "This is a read-only viewer — editing is disabled.", de: "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert." };
+export function viewerReadOnlyNoticeText(locale: string): string {
+  return frozenLabelText(VIEWER_READ_ONLY_NOTICE_LABEL, locale);
+}
+
+/** 👁️✏️ The `SettingsDefaultApps` table's "no pin" option — no existing `ui.common.*` chrome key
+ * covers a bare "None" (checked: `ui.common.close`/`.none` are not registered), so this follows the
+ * same local-resolution idiom as the rest of this region rather than adding one to the out-of-lease
+ * chrome dictionary for a single call site. */
+const NONE_OPTION_LABEL: FrozenLabel = { en: "None", de: "Keine" };
+export function noneOptionText(locale: string): string {
+  return frozenLabelText(NONE_OPTION_LABEL, locale);
+}
+
+/** 👁️✏️ Palette command ids, frozen (contract freeze §5) — `owner: "os"`, no `os.` prefix (unlike the
+ * wire `AppCommand`s in `💻️os/🎮️commands/`, which these are NOT the same thing as: selecting either
+ * one opens the shell's own "Open with…" picker scoped to that role, it doesn't itself send
+ * `os.open-artifact-with` over the app channel — the picker's own row click does that). */
+export const OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID = "open-artifact-with-viewer";
+export const OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID = "open-artifact-with-editor";
+
+/** 🧵️ Reveals the `os.task-manager` window — the action-line half of audit
+ * `📓️g5-ux-completeness-audit.md` ranked item 1. Prefixed `os.` because it IS an os-owned command
+ * (`isOsCommandAddress`), unlike the two frozen artifact ids above. */
+export const OPEN_TASK_MANAGER_COMMAND_ID = "os.openTaskManager";
+
+/** 🔗️ The action-line/palette entry for the hub workspace (sign in, browse and switch spaces,
+ * invite, redeem). `ShellHost` owns the surface, so it handles this id in its own `onCommand`
+ * beside the other os commands that need more context than `dispatchOsCommand` has.
+ * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU3. */
+export const OPEN_HUB_COMMAND_ID = "os.openHub";
+//#endregion 👁️✏️SurfaceRoleLabels
+
+//#region 🔖️CheckInAndSyncStatus
+/** 📌️ The framework-reserved controller of the history body's explicit `#s-checkin` button (`🔌️plugin/🦀️.rs`
+ * `FRAMEWORK_CHECKIN_CONTROLLER_ID`): the shell answers its `submit` itself — no artifact app holds a check-in — with
+ * the message it carries, else `"check-in"`, exactly as the wgpu shell's `handle_checkin_action`. */
+export const FRAMEWORK_CHECKIN_CONTROLLER_ID = "framework.checkin";
+//#endregion 🔖️CheckInAndSyncStatus
+
+/** 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
+const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
+  [FRAMEWORK_PANEL_TAB_ARTIFACT_ID]: "ui.panel.artifact",
+  [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
+  [FRAMEWORK_PANEL_TAB_INSPECTION_ID]: "ui.panel.inspection",
+  [FRAMEWORK_PANEL_TAB_PARAMETERS_ID]: "ui.panel.parameters",
+  [FRAMEWORK_PANEL_TAB_HISTORY_ID]: "ui.panel.history",
 };
 
-const STAGE_LABEL_KEYS: Readonly<Record<HistoryTimeTravelStage, UiTranslationKey>> = {
-  editing: "ui.timeTravel.stage.editing",
-  replaying: "ui.timeTravel.stage.replaying",
-  reviewing: "ui.timeTravel.stage.reviewing",
-  choosing: "ui.timeTravel.stage.choosing",
-  finalizing: "ui.timeTravel.stage.finalizing",
-};
-
-const REVIEW_LABEL_KEYS: Readonly<Record<HistoryTimeTravelReview, UiTranslationKey>> = {
-  noChanges: "ui.timeTravel.review.noChanges",
-  needsReplay: "ui.timeTravel.review.needsReplay",
-  blocked: "ui.timeTravel.review.blocked",
-  ready: "ui.timeTravel.review.ready",
-};
-
-/** 🏷️ The edited mutation's label on the shell's axes, `""` when the session names none. */
-function timeTravelTargetText(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): string {
-  return session.targetLabel === undefined ? "" : historyEntryLabelText(session.targetLabel, axes.terminology, axes.locale);
+/** 🧭️ Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
+export function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
+  const chromeKey = FRAMEWORK_PANEL_TAB_LABEL_KEYS[tabId];
+  return chromeKey ? shellLabel(chromeKey) : resolveAppLabel(overlay, "panelTab", tabId, fallback);
 }
 
-/** 🖋️ {@link TimeTravelBandTextV1} of `session`: a review's status is the session's own `review`, never inferred from a
- * missing report; severity is always named in words (`ui.mutation.level.*`) and only when the session reports one,
- * never by colour alone; a fault code the shell knows (`timeTravel.cancelled`, the refusals) reads as its own text, any other
- * reads the replay-failed copy — the code itself is only the band's `data-semio-time-travel-fault`, never shown. */
-export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): TimeTravelBandTextV1 {
-  const target = timeTravelTargetText(session, axes);
-  const fault = session.fault === undefined ? null : historyRefusalCodeV1(session.fault);
-  const running = session.stage === "editing" || session.stage === "replaying";
-  const progress = running && session.total !== undefined ? String(shellLabel(session.stage === "editing" ? "ui.timeTravel.preparationProgress" : "ui.timeTravel.progress", { done: session.done ?? 0, total: session.total })) : null;
+/** 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
+  windowKindLabels: {},
+  panelTabLabels: {},
+  modeLabels: {},
+  actionLabels: {},
+  utilityLabels: {},
+  exampleLabels: {},
+  actionArgLabels: {},
+  dialogLabels: {},
+  introductionLabels: {},
+  groupLabels: {},
+};
+
+/** 🛍️ Stable empty catalogue reference so scene hosts depending on `AppCatalogueContext` don't
+ * re-render before the first `catalogue` section fetch resolves. */
+export const EMPTY_APP_CATALOGUE: AppCatalogue = Object.freeze({});
+
+/** 🗺️ Synthesizes a full `LocalizedLabel` matrix from a user-authored string by broadcasting it across all cells (native/reuse × en/de), matching Rust's `LocalizedLabel::data(...)`. Also accepts an existing `LocalizedLabel` idempotently. */
+export function synthesizeLocalizedLabel(label: string | LocalizedLabel): LocalizedLabel {
+  if (typeof label !== "string") return label;
   return {
-    stage: String(shellLabel(STAGE_LABEL_KEYS[session.stage])),
-    target: target === "" ? null : String(shellLabel("ui.timeTravel.target", { target })),
-    progress: progress !== null && session.processed !== undefined ? `${progress} · ${shellLabel("ui.timeTravel.processed", { processed: session.processed })}` : progress,
-    review: session.stage === "reviewing" && session.review !== undefined ? String(shellLabel(REVIEW_LABEL_KEYS[session.review])) : null,
-    outcome: session.worst === undefined ? null : String(shellLabel("ui.timeTravel.worst", { level: shellLabel(`ui.mutation.level.${session.worst}`) })),
-    fault: session.fault === undefined ? null : String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[fault ?? "timeTravel.replay-faulted"])),
-    accepted: (session.acceptedCount ?? 0) > 0 ? String(shellLabel("ui.timeTravel.accepted", { count: session.acceptedCount })) : null,
+    native: { en: label, de: label },
+    reuse: { en: label, de: label },
   };
 }
 
-/** 🔖️ What a window of the editing program says about itself: the document before the edited mutation while a draft
- * is edited, else the session's stage. */
-export function timeTravelIndicatorTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): string {
-  const target = timeTravelTargetText(session, axes);
-  return String(session.stage === "editing" && target !== "" ? shellLabel("ui.timeTravel.indicatorTarget", { target }) : shellLabel(STAGE_LABEL_KEYS[session.stage]));
+/** 🗺️ Resolves an exact manifest terminology/locale cell or already-resolved/user-authored text. Malformed cells remain unresolved; no language is selected implicitly. */
+export function resolveManifestLabel(label: unknown, terminology: string, locale: string): string {
+  if (typeof label === "string") return label;
+  if (!label || typeof label !== "object" || !("native" in label) || !("reuse" in label)) return "";
+  if (terminology !== "native" && terminology !== "reuse") return "";
+  if (locale !== "en" && locale !== "de") return "";
+  const row = label[terminology];
+  if (!row || typeof row !== "object" || !("en" in row) || !("de" in row)) return "";
+  const value = row[locale];
+  return typeof value === "string" ? value : "";
 }
 
-/** 🗝️ The node keys the framework history body gives a history row and a mutation child (`🔌️plugin/🦀️.rs`
- * `ui_history_panel`), which a peer's open history edit marks.
- * @see ../../../../../🔌️plugin/🦀️.rs */
-export const HISTORY_ROW_KEY_PREFIX = "framework.history.entry.";
-export const HISTORY_MUTATION_ROW_KEY_PREFIX = "framework.history.mutation.";
-
-const EMPTY_PEER_OVERLAY: UiPresenceOverlayValue = { byKey: new Map() };
-
-/** 👥️ Peers' open history edits, labelled from THIS replica's own history rows (the wire carries only the mutation id,
- * the stage and the draft count, never locale text): each editing peer's chip gets its activity ("Ada is editing Drag
- * selection in the history", the history in general when the mutation is not among the local rows), and the affected
- * mutation row and its history row get a note naming who edits it. */
-export function timeTravelPeerPresenceV1(
-  peers: readonly (PresencePeer & { readonly historyEdit?: ArtifactPresenceHistoryEdit })[],
-  entries: readonly HistoryEntry[],
-  axes: { readonly terminology: string; readonly locale: string },
-): { readonly peers: readonly PresencePeer[]; readonly overlay: UiPresenceOverlayValue } {
-  const notes = new Map<string, string[]>();
-  const note = (key: string, text: string) => notes.set(key, [...(notes.get(key) ?? []), text]);
-  const chips = peers.map(({ historyEdit, ...peer }): PresencePeer => {
-    if (historyEdit === undefined) return peer;
-    const row = entries.find((entry) => entry.mutations?.some((mutation) => mutation.mutationId === historyEdit.mutationId));
-    const mutation = row?.mutations?.find((candidate) => candidate.mutationId === historyEdit.mutationId);
-    const target = mutation === undefined ? "" : historyEntryLabelText(mutation.label, axes.terminology, axes.locale);
-    const rowNote = String(shellLabel("ui.timeTravel.peer.editingRow", { name: peer.label }));
-    note(`${HISTORY_MUTATION_ROW_KEY_PREFIX}${historyEdit.mutationId}`, rowNote);
-    if (row !== undefined) note(`${HISTORY_ROW_KEY_PREFIX}${row.seq}`, rowNote);
-    const text = target === "" ? shellLabel("ui.timeTravel.peer.editingHistory", { name: peer.label }) : shellLabel("ui.timeTravel.peer.editingTarget", { name: peer.label, target });
-    return { ...peer, activity: { text: String(text), badge: "⏪" } };
-  });
-  return { peers: chips, overlay: notes.size === 0 ? EMPTY_PEER_OVERLAY : { byKey: new Map([...notes].map(([key, lines]): [string, UiPresenceOverlayEntry] => [key, { notes: lines }])) } };
+/** 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
+  const map =
+    kind === "windowKind"
+      ? overlay.windowKindLabels
+      : kind === "panelTab"
+        ? overlay.panelTabLabels
+        : kind === "mode"
+          ? overlay.modeLabels
+          : kind === "action"
+            ? overlay.actionLabels
+            : kind === "utility"
+              ? overlay.utilityLabels
+              : kind === "example"
+                ? overlay.exampleLabels
+                : kind === "actionArg"
+                  ? overlay.actionArgLabels
+                  : kind === "dialog"
+                    ? overlay.dialogLabels
+                    : kind === "introduction"
+                      ? overlay.introductionLabels
+                      : overlay.groupLabels;
+  return map[id] ?? fallback;
 }
 
-/** 🔦️ Where keyboard focus belongs after a session change: the first input of the draft editor, the band, or the
- * finalize prompt. */
-export type TimeTravelFocusTargetV1 = "editor" | "band" | "dialog";
+/** 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
+export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema" | "description"> & {
+  readonly label: string;
+  readonly description?: string;
+  readonly schema: Exclude<ActionArgDef["schema"], { kind: "string" }> | (Omit<Extract<ActionArgDef["schema"], { kind: "string" }>, "options"> & { readonly options: { value: string; label: string }[] });
+};
 
-/** 🗺️ What one change of the focused program's session asks of the chrome: `reveal` opens the History panel, `focus`
- * moves keyboard focus, `scrollTo` names the history-body row (a node key) to bring into view. */
-export type TimeTravelTransitionV1 = { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null; readonly scrollTo: string | null };
+export type ResolvedActionDefinition = Omit<ActionDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
+export type ResolvedToolDefinition = Omit<ToolDefinition, "label"> & { readonly label: string };
 
-/** 🧭️ The chrome's answer to the session moving from `previous` to `next` (`null` = no session): the edge into a new
- * session reveals the History panel (whoever began it — a person, a chord or an agent); a draft that starts (Begin, Next
- * problem, another mutation) puts focus on its first input; a replay or a review puts it on the band; the edge into a
- * review that names its first blocking mutation (`nextProblem` — a replay that completed blocked) reveals the panel again
- * and scrolls to that mutation's row; the finalize prompt takes focus; a progress step, the commit and the close move
- * nothing. */
-export function timeTravelTransitionV1(previous: HistoryTimeTravel | null, next: HistoryTimeTravel | null): TimeTravelTransitionV1 {
-  if (next === null) return { reveal: false, focus: null, scrollTo: null };
-  const same = previous !== null && previous.sessionId === next.sessionId;
-  const moved = !same || previous.stage !== next.stage;
-  switch (next.stage) {
-    case "editing":
-      return { reveal: !same, focus: moved || previous?.target !== next.target ? "editor" : null, scrollTo: null };
-    case "replaying":
-      return { reveal: !same, focus: moved ? "band" : null, scrollTo: null };
-    case "reviewing": {
-      const problem = moved ? next.nextProblem : undefined;
-      return { reveal: !same || problem !== undefined, focus: moved ? "band" : null, scrollTo: problem === undefined ? null : `${HISTORY_MUTATION_ROW_KEY_PREFIX}${problem.mutationId}` };
-    }
-    case "choosing":
-      return { reveal: !same, focus: moved ? "dialog" : null, scrollTo: null };
-    case "finalizing":
-      return { reveal: !same, focus: null, scrollTo: null };
+/** 🎚️ A free-text string argument carries no choice list at all: the manifest wire form declares
+ * `options` `#[serde(default, skip_serializing_if = "Vec::is_empty")]`, so an absent field is exactly
+ * an empty option set rather than a malformed schema. */
+type ActionArgStringSchema = Extract<ActionArgDef["schema"], { kind: "string" }>;
+export function actionArgStringOptions<T>(schema: { readonly options?: readonly T[] }): readonly T[] {
+  return schema.options ?? [];
+}
+
+function resolveArtifactKindChoiceLabel(choice: { readonly kindId: string; readonly label: { readonly en: string; readonly de: string } }, locale: string): string {
+  if (locale === "en") return choice.label.en;
+  if (locale === "de") return choice.label.de;
+  return choice.kindId;
+}
+
+export function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[], selectedArtifactKinds?: readonly ArtifactKindChoice[]): ResolvedActionArgDef {
+  const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
+  const description = def.description === undefined ? undefined : resolveManifestLabel(def.description, terminology, locale);
+  if (def.schema.kind !== "string") return { ...def, label, description, schema: def.schema };
+  if (def.schema.format?.kind === "artifactKind") {
+    const choices = selectedArtifactKinds ?? artifactKindChoices(manifests, def.schema.format.roles);
+    const options = choices.map((choice) => ({ value: encodeArtifactKindChoice(choice), label: resolveArtifactKindChoiceLabel(choice, locale) }));
+    return { ...def, label, description, schema: { ...def.schema, options } };
   }
+  const options = actionArgStringOptions(def.schema).map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
+  return { ...def, label, description, schema: { ...def.schema, options } };
 }
 
-const FOCUSABLE_SELECTOR = 'input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"]),[contenteditable]:not([contenteditable="false"])';
-const EDITABLE_SELECTOR = 'input,select,textarea,[contenteditable]:not([contenteditable="false"])';
-const HISTORY_PANEL_ID_PART = "framework.panel.history";
-
-/** 🔎️ `element` itself when it takes focus, else its first focusable descendant. */
-function focusableWithin(element: Element): HTMLElement | null {
-  return element.matches(FOCUSABLE_SELECTOR) ? (element as HTMLElement) : element.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-}
-
-/** 🔍️ The element that takes focus for `target` under `root`: the first focusable control of the editor's input rows
- * (`…/framework.history.editor.input.<pointer>`), else its Accept (the button, or the activatable row a lone button
- * becomes); the band (`[data-semio-time-travel]`); the open dialog's first control. `null` while it is not mounted yet. */
-export function timeTravelFocusElementV1(root: ParentNode, target: TimeTravelFocusTargetV1): HTMLElement | null {
-  switch (target) {
-    case "band":
-      return root.querySelector<HTMLElement>("[data-semio-time-travel]");
-    case "dialog": {
-      const dialog = root.querySelector('[role="dialog"]');
-      return dialog === null ? null : focusableWithin(dialog);
-    }
-    case "editor": {
-      for (const element of root.querySelectorAll('[id*="/framework.history.editor.input."]')) {
-        const key = element.id.slice(element.id.lastIndexOf("/") + 1);
-        if (!key.startsWith("framework.history.editor.input.") || key.endsWith(".row")) continue;
-        const control = focusableWithin(element);
-        if (control !== null) return control;
-      }
-      const accept = root.querySelector('[id$="/framework.history.editor.accept"], [id$="/framework.history.editor.accept.row"]');
-      return accept === null ? null : focusableWithin(accept);
-    }
-  }
-}
-
-/** ✋️ Whether moving focus now would take it from someone typing elsewhere: an editable field outside the History
- * panel and the finalize prompt keeps its focus. */
-export function timeTravelFocusIsHeldV1(active: Element | null): boolean {
-  if (active === null || !active.matches(EDITABLE_SELECTOR)) return false;
-  return active.closest('[role="dialog"]') === null && !active.id.includes(HISTORY_PANEL_ID_PART) && active.closest(`[id*="${HISTORY_PANEL_ID_PART}"]`) === null;
-}
-
-/** ⏳️ Moves focus to `target` under the shell's `root` (the prompt anywhere in its document, being portalled) once it is
- * mounted, retried across animation frames while the panel or the prompt mounts. A person typing elsewhere keeps their
- * focus for the editor and the band; the modal prompt always takes it (focus returns when it closes), and a focus already
- * inside the prompt stays. Answers the cancel. */
-export function scheduleTimeTravelFocusV1(root: Element, target: TimeTravelFocusTargetV1, frames = 30): () => void {
-  const document = root.ownerDocument;
-  let handle = 0;
-  let remaining = frames;
-  const attempt = () => {
-    if (target !== "dialog" && timeTravelFocusIsHeldV1(document.activeElement)) return;
-    const element = timeTravelFocusElementV1(target === "dialog" ? document : root, target);
-    if (element !== null) {
-      if (!(target === "dialog" && element.closest('[role="dialog"]')?.contains(document.activeElement))) element.focus();
-      return;
-    }
-    if (remaining-- > 0) handle = requestAnimationFrame(attempt);
+/** 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/choices/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
+export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[] = [], selectedArtifactKinds?: readonly ArtifactKindChoice[]): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
+  return {
+    ...dialog,
+    title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, resolveManifestLabel(dialog.title, terminology, locale)),
+    body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, resolveManifestLabel(dialog.body, terminology, locale)) : dialog.body,
+    submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, resolveManifestLabel(dialog.submitLabel, terminology, locale)),
+    cancelLabel: dialog.cancelLabel ? resolveAppLabel(overlay, "dialog", `${dialog.id}.cancel`, resolveManifestLabel(dialog.cancelLabel, terminology, locale)) : dialog.cancelLabel,
+    ...(dialog.choices ? { choices: dialog.choices.map((choice) => ({
+      ...choice,
+      label: resolveAppLabel(overlay, "dialog", `${dialog.id}.choice.${choice.id}.label`, resolveManifestLabel(choice.label, terminology, locale)),
+      ...(choice.description ? { description: resolveAppLabel(overlay, "dialog", `${dialog.id}.choice.${choice.id}.description`, resolveManifestLabel(choice.description, terminology, locale)) } : {}),
+    })) } : {}),
+    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
   };
-  handle = requestAnimationFrame(attempt);
-  return () => cancelAnimationFrame(handle);
 }
 
-/** 🧷️ The element of the history-body node `key` under `root` — its DOM id is the node's path, ending `/<key>` — or
- * `null` while it is not mounted. */
-export function timeTravelRowElementV1(root: ParentNode, key: string): HTMLElement | null {
-  for (const element of root.querySelectorAll<HTMLElement>('[id*="/framework.history."]')) if (element.id.endsWith(`/${key}`)) return element;
-  return null;
-}
-
-/** 🧲️ Brings the history row `key` into view under the shell's `root` once it is mounted, retried across animation frames
- * while the panel opens and the guest's body arrives — the first blocking row after a replay that completed blocked. It
- * moves no focus (the band keeps it). Answers the cancel. */
-export function scheduleTimeTravelScrollV1(root: Element, key: string, frames = 30): () => void {
-  let handle = 0;
-  let remaining = frames;
-  const attempt = () => {
-    const row = timeTravelRowElementV1(root, key);
-    if (row !== null) {
-      row.scrollIntoView?.({ block: "nearest" });
-      return;
-    }
-    if (remaining-- > 0) handle = requestAnimationFrame(attempt);
+/** 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body labels from the
+ * overlay's `introductionLabels` map. `title`/`body` are manifest `LocalizedLabel` fields;
+ * `IntroductionInteraction.label` is a short checklist caption that is still a plain `String` on the Rust
+ * side (not part of the `LocalizedLabel` migration), so it is left as-is. */
+export function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): IntroductionDefinition {
+  return {
+    title: resolveAppLabel(overlay, "introduction", "intro.title", resolveManifestLabel(introduction.title, terminology, locale)),
+    steps: introduction.steps.map(
+      (step): IntroductionStepDefinition => ({
+        ...step,
+        title: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.title`, resolveManifestLabel(step.title, terminology, locale)),
+        body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, resolveManifestLabel(step.body, terminology, locale)),
+        interactions: (step.interactions ?? []).map((interaction, index) => ({
+          ...interaction,
+          label: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.interaction.${index}.label`, interaction.label),
+        })),
+        ordered: step.ordered ?? false,
+      }),
+    ),
   };
-  handle = requestAnimationFrame(attempt);
-  return () => cancelAnimationFrame(handle);
 }
 
-/** 🏠️ What the History reveal speaks to: the device, the dock (or the merged mobile panel's tabs), the shell's dispatch, the
- * root focus moves inside, and how many frames a focus waits for its target to mount. */
-export type TimeTravelRevealHostV1 = { readonly mobile: boolean; readonly dock: PanelDock; readonly mobilePanelTabs: readonly PanelTabNode[]; readonly dispatch: (action: ShellAction) => void; readonly root: Element | null; readonly frames?: number };
-
-/** 📂️ Opens the History panel where the shell keeps it — its own dock anchor, selected and shown, or on mobile the merged
- * panel on the History tab — and answers whether one was found; a shell without the History tab dispatches nothing. */
-export function revealHistoryPanelV1(host: Pick<TimeTravelRevealHostV1, "mobile" | "dock" | "mobilePanelTabs" | "dispatch">): boolean {
-  if (host.mobile) {
-    const path = findPanelTabPath(host.mobilePanelTabs, FRAMEWORK_PANEL_TAB_HISTORY_ID);
-    if (path === undefined) return false;
-    host.dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
-    host.dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
-    return true;
-  }
-  const located = findPanelTabInDock(host.dock, FRAMEWORK_PANEL_TAB_HISTORY_ID);
-  const path = located === null ? undefined : findPanelTabPath(host.dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_HISTORY_ID);
-  if (located === null || path === undefined) return false;
-  host.dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: path });
-  host.dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
-  return true;
+/** 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
+export function shellTerminologyLabel(id: string): string {
+  const isChromeKnown = id === "native" || id === "reuse";
+  return isChromeKnown ? shellLabel(`ui.settings.terminology.${id as UiChromeTerminologyId}`) : id;
 }
-
-/** 🛰️ The shell's answer to each change of the focused program's session ({@link timeTravelTransitionV1}): the edge into a
- * session — and into a review that names its first blocking mutation — reveals the History panel
- * ({@link revealHistoryPanelV1}), that mutation's row is scrolled into view ({@link scheduleTimeTravelScrollV1}) and every
- * focus move is scheduled under the host's root; a focus or a scroll still waiting for its target yields only to a newer
- * one or to the close — never to a progress step — and the unmount cancels both. The host is read at the change, so a dock
- * or device change alone never re-runs the effect. */
-export function useTimeTravelRevealV1(session: HistoryTimeTravel | null, host: TimeTravelRevealHostV1): void {
-  const hostRef = useRef(host);
-  hostRef.current = host;
-  const seenRef = useRef<HistoryTimeTravel | null>(null);
-  const cancelRef = useRef<(() => void) | null>(null);
-  const scrollCancelRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    const transition = timeTravelTransitionV1(seenRef.current, session);
-    seenRef.current = session;
-    if (transition.reveal) revealHistoryPanelV1(hostRef.current);
-    const root = hostRef.current.root;
-    if (transition.scrollTo !== null || session === null) {
-      scrollCancelRef.current?.();
-      scrollCancelRef.current = transition.scrollTo === null || root === null ? null : scheduleTimeTravelScrollV1(root, transition.scrollTo, hostRef.current.frames ?? 120);
-    }
-    if (transition.focus === null && session !== null) return;
-    cancelRef.current?.();
-    cancelRef.current = transition.focus === null || root === null ? null : scheduleTimeTravelFocusV1(root, transition.focus, hostRef.current.frames ?? 120);
-  }, [session]);
-  useEffect(
-    () => () => {
-      cancelRef.current?.();
-      scrollCancelRef.current?.();
-    },
-    [],
-  );
-}
-
-/** 🏳️ The props both chrome pieces read: the live session, the program it edits and the shell's label axes. */
-export type TimeTravelChromePropsV1 = { readonly session: HistoryTimeTravel; readonly terminology: string; readonly locale: string };
-
-/** 🪟️ The chip every window of the editing program wears while a session is live — an icon and "History editing" in words,
- * named by what the window shows ({@link timeTravelIndicatorTextV1}). It takes the stage and that text rather than the
- * session, so the window descriptors that carry it do not rebuild on every replay progress step. */
-export function TimeTravelWindowIndicator({ stage, description }: { readonly stage: HistoryTimeTravelStage; readonly description: string }): ReactElement {
-  return (
-    <span role="note" aria-label={description} title={description} data-semio-time-travel-indicator={stage} className="pointer-events-auto inline-flex items-center gap-tiny rounded-sm border border-accent bg-base px-single text-xs">
-      <Icon icon="clock" size="small" />
-      <span aria-hidden="true">{shellLabel("ui.timeTravel.indicator")}</span>
-    </span>
-  );
-}
-
-/** 🕹️ One control of the band. A refused one is never `disabled`: it stays in the Tab order as `aria-disabled`, dispatches
- * nothing, and names what stops it through {@link DisabledReasonHint} — always its description (`aria-describedby`), and
- * visible text while it is hovered, keyboard-focused or pressed — exactly as a refused row action does and as the wgpu band
- * mirrors it (parity audit gap 3: a `disabled` button with a `title` told neither a keyboard nor a screen-reader user why).
- * Every control is a touch target of the `large` size token on both axes (`--size-large` = 9 × `--ui-spacing`: 28.8 px at
- * compact density, 39.6 px at touch density — WCAG 2.5.8 asks 24 × 24; the control-height token `medium` is 22.4 px). */
-function TimeTravelBandControl({ entry, shortcut, onPress }: { readonly entry: TimeTravelBandControlStateV1; readonly shortcut: string | undefined; readonly onPress: () => void }): ReactElement {
-  const reasonId = `${useId()}-reason`;
-  const refused = entry.disabledBy !== null;
-  const button = (
-    <button
-      type="button"
-      id={entry.controlId}
-      className={refused ? "inline-flex min-h-large min-w-large cursor-not-allowed items-center justify-center px-tiny opacity-50" : "inline-flex min-h-large min-w-large items-center justify-center px-tiny underline"}
-      data-semio-time-travel-control={entry.control}
-      aria-disabled={refused ? true : undefined}
-      aria-describedby={refused ? reasonId : undefined}
-      aria-keyshortcuts={shortcut}
-      onClick={refused ? undefined : onPress}
-    >
-      {shellLabel(entry.label)}
-    </button>
-  );
-  return (
-    <DisabledReasonHint id={reasonId} reason={entry.disabledBy === null ? undefined : String(shellLabel(entry.disabledBy))}>
-      {button}
-    </DisabledReasonHint>
-  );
-}
-
-/** 📣️ The persistent history-editing band (`role=status`, polite): the stage, the edited mutation, the replay progress with
- * its Cancel, the review's own status, the worst outcome in words, and the stage's controls ({@link TimeTravelBandControl})
- * — a refused one focusable and telling its reason — with their chords published on `aria-keyshortcuts`. The controls sit
- * in an `aria-live="off"` group, so a reason revealed or hidden by focus never re-announces the status. The chords fire only
- * while their control is offered and enabled, never from a form field. The band paints its own opaque panel-level surface
- * and the shell mounts it in the layout's `subfooter` row — in flow, the last row of the shell, under the footer — so it never
- * lies over other text (live faults O1 / O5: an undefined `bg-menu` and an absolute overlay let it) nor under a docked panel's
- * cap (live fault F8: a row above the footer lay under the bottom-right tab bar at tablet width). */
-export function TimeTravelBand({ session, terminology, locale, controllerId, onAction }: TimeTravelChromePropsV1 & { readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
-  const bindings = useUiKeybindingsByControlId();
-  const text = timeTravelBandTextV1(session, { terminology, locale });
-  const controls = timeTravelBandControlsV1(session);
-  const dispatch = (id: TimeTravelControlV1) => onAction(timeTravelControlActionV1(controllerId, session, id));
-  const offered = (id: TimeTravelControlV1) => controls.some((entry) => entry.control === id && entry.disabledBy === null);
-  const chord = (id: TimeTravelControlV1): string | undefined => (id in TIME_TRAVEL_CHORD_IDS ? resolveControlKeybindingRaw(TIME_TRAVEL_CHORD_IDS[id as keyof typeof TIME_TRAVEL_CHORD_IDS], bindings) ?? SHELL_KEYBINDINGS[TIME_TRAVEL_CHORD_IDS[id as keyof typeof TIME_TRAVEL_CHORD_IDS]] : undefined);
-  useControlKeybinding(TIME_TRAVEL_CHORD_IDS.accept, () => dispatch("accept"), { enabled: offered("accept"), preventDefault: true }, [session, controllerId]);
-  useControlKeybinding(TIME_TRAVEL_CHORD_IDS.discard, () => dispatch("discard"), { enabled: offered("discard"), preventDefault: true }, [session, controllerId]);
-  useControlKeybinding(TIME_TRAVEL_CHORD_IDS.exit, () => dispatch("exit"), { enabled: offered("exit"), preventDefault: true }, [session, controllerId]);
-  return (
-    <Surface level="panel" role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent px-double py-single text-sm">
-      <Icon icon="clock" size="small" />
-      <strong data-semio-time-travel-stage="">{text.stage}</strong>
-      {text.target === null ? null : <span data-semio-time-travel-target="">{text.target}</span>}
-      {text.progress === null ? null : (
-        <>
-          <progress data-semio-time-travel-progress="" value={session.done ?? 0} max={session.total} aria-label={text.progress} />
-          <span aria-hidden="true">{text.progress}</span>
-        </>
-      )}
-      {text.review === null ? null : <span data-semio-time-travel-review={session.review}>{text.review}</span>}
-      {text.outcome === null ? null : <span data-semio-time-travel-outcome={session.worst}>{text.outcome}</span>}
-      {text.accepted === null ? null : <span data-semio-time-travel-accepted="">{text.accepted}</span>}
-      {text.fault === null ? null : <span data-semio-time-travel-fault={session.fault}>{text.fault}</span>}
-      <span className="contents" aria-live="off" data-semio-time-travel-controls="">
-        {controls.map((entry) => (
-          <TimeTravelBandControl key={entry.control} entry={entry} shortcut={ariaKeyshortcutsText(chord(entry.control))} onPress={() => dispatch(entry.control)} />
-        ))}
-      </span>
-    </Surface>
-  );
-}
-
-/** 🔁️ What the reprojection status offers while no history-edit session is open: Cancel replay while a remote change, a
- * history step or a document load replays (the history body's own control), Replay again while a remote change is paused,
- * nothing for a refused adoption — a session's band owns both controls while it is open. */
-export function historyReprojectionControlV1(reprojection: HistoryReprojection, sessionOpen: boolean): "cancelReplay" | "rerun" | null {
-  if (sessionOpen || reprojection.total === 0) return null;
-  return reprojection.paused === true && (reprojection.kind ?? "remote") === "remote" ? "rerun" : "cancelReplay";
-}
-
-/** 📡️ The polite status a history change replaying before adoption raises OUTSIDE the History panel (audit W1E-3) — another
- * replica's change, this replica's own deferred history step, a whole-document load — read from `HistoryPatch.reprojection`
- * through the kernel's one copy (`historyReprojectionStatus`, the same bytes the wgpu shell mirrors as
- * `shell.history.reprojection`): the kind's title, its progress (announced when it starts, then shown and carried by the
- * progress bar without re-announcing every step), a pause or a refused adoption in words — its code only as
- * `data-notice-code` — and Cancel replay / Replay again ({@link historyReprojectionControlV1}). */
-export function HistoryReprojectionStatus({ reprojection, locale, sessionOpen, controllerId, onAction }: { readonly reprojection: HistoryReprojection; readonly locale: ShellLocale; readonly sessionOpen: boolean; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
-  const status = historyReprojectionStatus(reprojection, "native", locale);
-  const kind = reprojection.kind ?? "remote";
-  const phase = status.fault !== null && status.total === 0 ? "refused" : status.paused ? "paused" : "progress";
-  const announced = useRef<{ readonly key: string; readonly text: string } | null>(null);
-  const key = `${kind}:${phase}:${locale}`;
-  if (announced.current?.key !== key) announced.current = { key, text: status.text };
-  const control = historyReprojectionControlV1(reprojection, sessionOpen);
-  return (
-    <Surface level="panel" data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal px-double py-single text-sm">
-      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-semio-history-reprojection-announcement="">
-        {`${status.title}: ${announced.current.text}`}
-      </span>
-      <Icon icon={phase === "refused" ? "triangle-alert" : kind === "load" ? "download" : "loader-2"} size="small" />
-      <strong aria-hidden="true">{status.title}</strong>
-      <span aria-hidden="true" data-semio-history-reprojection-text="">
-        {status.text}
-      </span>
-      {phase === "progress" && status.total > 0 ? <progress data-semio-history-reprojection-progress="" value={status.done} max={status.total} aria-label={status.title} aria-valuetext={status.text} /> : null}
-      {control === null ? null : (
-        <button type="button" className="inline-flex min-h-large min-w-large items-center justify-center px-tiny underline" data-semio-history-reprojection-control={control} onClick={() => onAction({ controllerId, action: TIME_TRAVEL_VERBS[control], args: {} })}>
-          {shellLabel(`ui.timeTravel.${control}`)}
-        </button>
-      )}
-    </Surface>
-  );
-}
-//#endregion ⏪️TimeTravelChrome
+//#endregion ShellHelpers

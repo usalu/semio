@@ -31,6 +31,7 @@ semio-framework-job-worker-authority = { path = "../../../../../../🔨️module
 # `TokioHostRuntime::block_on`'s own inherent bridge delegates to directly. Workspace-internal
 # feature flag on an already-present dependency, not a new third-party dependency.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-sync = { workspace = true }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (coordinator correction on packet R2): `PackageId`
 # (per-plugin quota identity) and `ActorId` (per-actor identity) are consumed from here rather than
 # reinvented locally — this crate is `os-services`, not domain-neutral, so unlike
@@ -67,6 +68,7 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 # single compilation), listed again here only so this crate's OWN test suite's need for `block_on` is
 # self-documenting from this line alone.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-sync = { workspace = true }
 tokio = { workspace = true, features = ["sync", "macros"] }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }

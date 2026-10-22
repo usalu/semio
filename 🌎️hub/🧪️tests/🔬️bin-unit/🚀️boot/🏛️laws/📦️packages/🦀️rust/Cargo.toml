@@ -64,4 +64,5 @@ semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️mo
 axum = { version = "0.8", features = ["ws"] }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

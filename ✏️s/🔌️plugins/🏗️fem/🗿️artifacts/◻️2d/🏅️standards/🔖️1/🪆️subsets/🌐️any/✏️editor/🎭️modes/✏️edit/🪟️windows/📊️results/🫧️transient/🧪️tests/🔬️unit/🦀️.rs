@@ -3,11 +3,11 @@ use semio_s_fem_app_surface::FemLoopMode;
 use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_fem_app_surface::FemWaveform;
 use semio_s_fem_app_surface::ANIMATION_TICK_SECONDS;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use protocol::MutationDiff;
 use protocol::OpBinary;
 use protocol::OpText;
-use protocol::ColdMutation;
+
 use protocol::ColdMutationDiff;
 use std::collections::BTreeMap;
 use store::pack::snapshot::ArtifactDsl;

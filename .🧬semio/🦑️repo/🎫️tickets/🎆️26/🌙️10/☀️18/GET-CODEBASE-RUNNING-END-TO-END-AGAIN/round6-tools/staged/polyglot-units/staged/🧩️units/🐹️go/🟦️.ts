@@ -52,7 +52,7 @@ export function parseGoWorkV1(text: string): {readonly go: string; readonly use:
 }
 
 /** 🔎️ Facts the scanner reads from the head of one Go file. */
-export type GoSourceFactsV1 = {readonly package: string; readonly imports: readonly string[]; readonly constraint: string | null; readonly legacyConstraints: readonly string[]; readonly embeds: readonly string[]};
+export type GoSourceFactsV1 = {readonly package: string; readonly imports: readonly string[]; readonly constraint: string | null; readonly embeds: readonly string[]};
 const isIdentifierStart = (character: string): boolean => /[\p{L}_]/u.test(character);
 const isIdentifierPart = (character: string): boolean => /[\p{L}\p{N}_]/u.test(character);
 const readGoString = (text: string, at: number): {value: string; end: number} | undefined => {
@@ -65,54 +65,49 @@ const readGoString = (text: string, at: number): {value: string; end: number} | 
   }
   return text[index] === '"' ? {value, end: index + 1} : undefined;
 };
-/** 🔎️ Scans the head of a Go file: leading build constraints, the package clause, the import declarations and `//go:embed` patterns. Stops at the first declaration that is not an import. */
+/** 🔎️ Scans the head of a Go file: the leading `//go:build` constraint (the only build constraint syntax: `// +build` lines are not read), the package clause, the import declarations and `//go:embed` patterns. Stops at the first declaration that is not an import. */
 export function scanGoSourceV1(text: string): GoSourceFactsV1 {
   let at = 0, constraint: string | null = null;
-  const legacy: string[] = [], lines: {text: string; blankAfter: boolean}[] = [];
-  const skipSpace = (comments: boolean): void => {
+  const skipSpace = (): void => {
     for (;;) {
       while (at < text.length && /\s/.test(text[at]!)) at++;
-      if (text.startsWith("//", at)) {const end = text.indexOf("\n", at), line = text.slice(at, end < 0 ? text.length : end); if (comments) lines.push({text: line, blankAfter: /^[ \t]*\r?\n[ \t]*\r?\n/.test(text.slice(end < 0 ? text.length : end, (end < 0 ? text.length : end) + 4) + "\n")}); at = end < 0 ? text.length : end + 1; continue;}
+      if (text.startsWith("//", at)) {const end = text.indexOf("\n", at); at = end < 0 ? text.length : end + 1; continue;}
       if (text.startsWith("/*", at)) {const end = text.indexOf("*/", at + 2); at = end < 0 ? text.length : end + 2; continue;}
       return;
     }
   };
-  skipSpace(true);
+  skipSpace();
   const header = text.slice(0, at);
-  const headerLines = header.split(/\r?\n/);
-  for (let index = 0; index < headerLines.length; index++) {
-    const line = headerLines[index]!.trim();
-    const built = /^\/\/go:build\s+(.+)$/.exec(line);
+  for (const raw of header.split(/\r?\n/)) {
+    const built = /^\/\/go:build\s+(.+)$/.exec(raw.trim());
     if (built && constraint === null) constraint = built[1]!.trim();
-    const old = /^\/\/\s*\+build\s+(.+)$/.exec(line);
-    if (old && headerLines.slice(index + 1).some(rest => rest.trim() === "")) legacy.push(old[1]!.trim());
   }
   let packageName = "";
   if (text.startsWith("package", at) && !isIdentifierPart(text[at + 7] ?? " ")) {
-    at += 7; skipSpace(false);
+    at += 7; skipSpace();
     const start = at;
     while (at < text.length && isIdentifierPart(text[at]!)) at++;
     packageName = text.slice(start, at);
   }
   const imports: string[] = [];
   const spec = (): boolean => {
-    skipSpace(false);
+    skipSpace();
     if (text[at] === "." || text[at] === "_") at++;
     else if (isIdentifierStart(text[at] ?? "")) while (at < text.length && isIdentifierPart(text[at]!)) at++;
-    skipSpace(false);
+    skipSpace();
     const literal = readGoString(text, at);
     if (!literal) return false;
     imports.push(literal.value); at = literal.end;
     return true;
   };
   for (;;) {
-    skipSpace(false);
-    while (text[at] === ";") {at++; skipSpace(false);}
+    skipSpace();
+    while (text[at] === ";") {at++; skipSpace();}
     if (!text.startsWith("import", at) || isIdentifierPart(text[at + 6] ?? " ")) break;
-    at += 6; skipSpace(false);
+    at += 6; skipSpace();
     if (text[at] === "(") {
       at++;
-      for (;;) {skipSpace(false); while (text[at] === ";") {at++; skipSpace(false);} if (text[at] === ")") {at++; break;} if (!spec()) {while (at < text.length && text[at] !== "\n" && text[at] !== ")") at++; if (at >= text.length) break;}}
+      for (;;) {skipSpace(); while (text[at] === ";") {at++; skipSpace();} if (text[at] === ")") {at++; break;} if (!spec()) {while (at < text.length && text[at] !== "\n" && text[at] !== ")") at++; if (at >= text.length) break;}}
     } else if (!spec()) break;
   }
   const embeds: string[] = [];
@@ -124,7 +119,7 @@ export function scanGoSourceV1(text: string): GoSourceFactsV1 {
       if (literal) {embeds.push(literal.value); index = literal.end;} else {let end = index; while (end < rest.length && !/\s/.test(rest[end]!)) end++; embeds.push(rest.slice(index, end)); index = end;}
     }
   }
-  return {package: packageName, imports: sortedCodePointsV1(new Set(imports)), constraint, legacyConstraints: legacy, embeds};
+  return {package: packageName, imports: sortedCodePointsV1(new Set(imports)), constraint, embeds};
 }
 
 /** 🧭️ The build context a package set is planned for. */
@@ -155,10 +150,6 @@ export function goConstraintHoldsV1(expression: string, context: GoBuildContextV
     return goTagHoldsV1(token, context, policy);
   };
   try {const value = or(); return at === tokens.length ? value : false;} catch {return false;}
-}
-/** 🧮️ Evaluates legacy `// +build` lines (lines are ANDed, space separated terms ORed, comma separated terms ANDed, `!` negates). */
-export function goLegacyConstraintHoldsV1(lines: readonly string[], context: GoBuildContextV1, policy: UnitsPolicyV1): boolean {
-  return lines.every(line => line.split(/\s+/).filter(Boolean).some(option => option.split(",").every(term => term.startsWith("!") ? !goTagHoldsV1(term.slice(1), context, policy) : goTagHoldsV1(term, context, policy))));
 }
 /** 🏷️ go/build `goodOSArchFile`: `name_GOOS.go`, `name_GOARCH.go`, `name_GOOS_GOARCH.go` (before an optional `_test`). */
 export function goFileNameHoldsV1(fileName: string, context: GoBuildContextV1, policy: UnitsPolicyV1): boolean {
@@ -248,7 +239,7 @@ export function planGoPackagesV1(snapshot: GoWorkspaceSnapshotV1, options: {read
       if (!base.endsWith(".go")) {if (goFileNameHoldsV1(base, context, policy)) auxiliary.push(path); continue;}
       if (!goFileNameHoldsV1(base, context, policy)) {ignored.push(path); continue;}
       const facts = scanGoSourceV1(snapshot.read(path));
-      const holds = facts.constraint !== null ? goConstraintHoldsV1(facts.constraint, context, policy) : facts.legacyConstraints.length ? goLegacyConstraintHoldsV1(facts.legacyConstraints, context, policy) : true;
+      const holds = facts.constraint === null || goConstraintHoldsV1(facts.constraint, context, policy);
       if (!holds || (facts.imports.includes("C") && !context.cgo)) {ignored.push(path); continue;}
       parsed.push({path, test: base.endsWith("_test.go"), facts});
     }
@@ -302,18 +293,36 @@ export function planGoUnitsV1(snapshot: GoWorkspaceSnapshotV1, options: {readonl
       externals.add(externalIdentity(module, item) ?? `go-unresolved:${item}`);
     }
   };
+  const compileMemo = new Map<string, boolean>();
+  const compiles = (importPath: string): boolean => {
+    const known = compileMemo.get(importPath);
+    if (known !== undefined) return known;
+    compileMemo.set(importPath, false);
+    const row = byImport.get(importPath);
+    let ok = row !== undefined && row.name !== "main" && row.goFiles.length > 0 && row.cgoFiles.length === 0 && row.auxiliaryFiles.length === 0 && row.embedPatterns.length === 0;
+    if (ok) for (const item of row!.imports) {
+      if (item === "unsafe" || item === importPath) continue;
+      if (byImport.has(item)) {if (!compiles(item)) {ok = false; break;}}
+      else if (!standard(item)) {ok = false; break;}
+    }
+    compileMemo.set(importPath, ok);
+    return ok;
+  };
+  const langOf = (module: string): string => { const parts = (planned.modules.find(row => row.path === module)?.go ?? "").split("."); return parts.length >= 2 ? `go${parts[0]}.${parts[1]}` : "go1.21"; };
+  const buildEnv = {...env, SEMIO_GO_MODE: "build", SEMIO_BAZEL_INPUTS: "sources"};
   for (const row of planned.packages) {
     const main = row.name === "main";
     if (row.goFiles.length || row.cgoFiles.length) {
       const dependencies = new Map<string, UnitDependencyV1>(), externals = new Set<string>();
       resolve(row.module, row.imports, "interface", dependencies, externals, row.importPath);
+      const libraryEnv = compiles(row.importPath) ? {...env, SEMIO_GO_MODE: "compile", SEMIO_GO_IMPORT_PATH: row.importPath, SEMIO_GO_LANG: langOf(row.module), SEMIO_GO_STD: sortedCodePointsV1(row.imports.filter(item => item !== "unsafe" && !byImport.has(item) && standard(item))).join(",")} : buildEnv;
       const embedded = embedFiles(row.embedPatterns, row.dir, files);
       units.push({
         id: "go:" + row.importPath, language: "go", kind: main ? "binary" : "library", label: row.importPath,
         sources: sortedCodePointsV1([...row.goFiles, ...row.cgoFiles, ...row.auxiliaryFiles].map(real)), inputs: embedded.filter(path => !row.goFiles.includes(path) && !row.cgoFiles.includes(path)).map(real),
         dependencies: [...dependencies.values()].sort((a, b) => compareCodePointsV1(a.unit, b.unit)), externals: sortedCodePointsV1(externals),
         interface: main ? null : {kind: "go-export-data"}, outputs: [main ? "bin" : "pkg.a"], toolchain: toolchain(row.module),
-        action: {argv: ["go", "-C", planned.modules.find(module => module.path === row.module)!.dir || ".", "build", "-trimpath", "-o", main ? "{out}/bin" : "{out}/pkg.a", row.importPath], env},
+        action: {argv: ["go", "-C", planned.modules.find(module => module.path === row.module)!.dir || ".", "build", "-trimpath", "-o", main ? "{out}/bin" : "{out}/pkg.a", row.importPath], env: libraryEnv},
       });
     }
     if (options.tests && (row.testGoFiles.length || row.xtestGoFiles.length)) {
@@ -326,7 +335,7 @@ export function planGoUnitsV1(snapshot: GoWorkspaceSnapshotV1, options: {readonl
         id: `go:${row.importPath}#test`, language: "go", kind: "test", label: row.importPath + " (test)",
         sources: sortedCodePointsV1([...row.testGoFiles, ...row.xtestGoFiles].map(real)), inputs: sortedCodePointsV1(new Set([...testdata, ...embedded].map(real))),
         dependencies: [...dependencies.values()].sort((a, b) => compareCodePointsV1(a.unit, b.unit)), externals: sortedCodePointsV1(externals), interface: null, outputs: [], toolchain: toolchain(row.module),
-        action: {argv: ["go", "-C", planned.modules.find(module => module.path === row.module)!.dir || ".", "test", "-trimpath", "-count=1", row.importPath], env},
+        action: {argv: ["go", "-C", planned.modules.find(module => module.path === row.module)!.dir || ".", "test", "-trimpath", "-count=1", row.importPath], env: buildEnv},
       });
     }
   }
@@ -366,15 +375,35 @@ export function goExportDigestV1(archive: Uint8Array): string {
 
 /** 🏭️ The process effect of the Go executor; the repository wires its owned child-process runner here. */
 export type GoRunnerV1 = (argv: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string>>; readonly signal: AbortSignal}) => Promise<{readonly code: number; readonly output: string}>;
-/** 🏭️ Executes a Go unit: the unit's own command with `{out}` filled in, then the digests of the archive and, for libraries, of its export data. A test unit passes when the command exits zero; its output digest is only the verdict so timing lines never move the output closure. */
+/** 🏭️ Executes a Go unit. A pure-Go library in `compile` mode (policy of the planner: no cgo, assembly, embed or outside module) is compiled directly with `go tool compile`: its interface artifact is the export-data archive of the package plus those of its workspace dependencies, which the dependents read from their interface files instead of the dependency sources (this is what gives Bazel an early cutoff for Go); the implementation is the link object. Everything else, and every unit when no dependency artifacts exist, runs the unit's own `go build`/`go test` command. A test unit passes when the command exits zero; its output digest is only the verdict so timing lines never move the output closure. */
 export function goUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly run: GoRunnerV1; readonly overlay?: string}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   return async request => {
     const {unit} = request, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24));
     rmSync(out, {recursive: true, force: true}); mkdirSync(out, {recursive: true});
+    const started = performance.now(), elapsed = (): number => Math.round(performance.now() - started);
+    const dependencies = request.dependencies.filter(row => row.use === "interface");
+    if (unit.action.env.SEMIO_GO_MODE === "compile" && unit.kind === "library" && dependencies.every(row => row.artifact)) {
+      const files: Record<string, string> = {}, std = new Set((unit.action.env.SEMIO_GO_STD ?? "").split(",").filter(Boolean));
+      for (const row of dependencies) {const artifact = JSON.parse(row.artifact!) as {files: Record<string, string>; std: string[]}; Object.assign(files, artifact.files); for (const item of artifact.std) std.add(item);}
+      const lines: string[] = [];
+      for (const [importPath, encoded] of Object.entries(files)) {const path = join(out, "dep-" + sha256V1(importPath).slice(0, 16) + ".x"); writeFileSync(path, Buffer.from(encoded, "base64")); lines.push(`packagefile ${importPath}=${path}`);}
+      if (std.size) {
+        const listed = await options.run(["go", "list", "-export", "-deps", "-f", "{{if .Export}}packagefile {{.ImportPath}}={{.Export}}{{end}}", ...sortedCodePointsV1(std)], {cwd: out, env: {GOFLAGS: "", GO111MODULE: "off", GOWORK: "off", ...unit.action.env}, signal: request.signal});
+        if (listed.code !== 0) return {ok: false, diagnostics: listed.output.trim(), outputs: sha256V1("failed:" + listed.output), interface: null, milliseconds: elapsed()};
+        for (const line of listed.output.split("\n")) if (line.startsWith("packagefile ")) lines.push(line.trim());
+      }
+      const config = join(out, "importcfg"), iface = join(out, "pkg.x"), object = join(out, "pkg.a");
+      writeFileSync(config, sortedCodePointsV1(new Set(lines)).join("\n") + "\n");
+      const sources = unit.sources.filter(path => path.endsWith(".go")), importPath = unit.action.env.SEMIO_GO_IMPORT_PATH!;
+      const compiled = await options.run(["go", "tool", "compile", "-p", importPath, "-importcfg", config, "-pack", `-lang=${unit.action.env.SEMIO_GO_LANG ?? "go1.21"}`, `-trimpath=${options.workspace}`, "-complete", "-o", iface, "-linkobj", object, ...sources], {cwd: options.workspace, env: unit.action.env, signal: request.signal});
+      if (compiled.code !== 0) return {ok: false, diagnostics: compiled.output.trim(), outputs: sha256V1("failed:" + compiled.output), interface: null, milliseconds: elapsed()};
+      const exported = readFileSync(iface);
+      files[importPath] = exported.toString("base64");
+      return {ok: true, diagnostics: compiled.output.trim(), outputs: sha256V1(readFileSync(object)), interface: goExportDigestV1(exported), artifact: JSON.stringify({files: Object.fromEntries(Object.entries(files).sort(([a], [b]) => compareCodePointsV1(a, b))), std: sortedCodePointsV1(std)}), milliseconds: elapsed()};
+    }
     const base = unit.action.argv.map(part => part.replace("{out}", out).replace("{unit}", unit.id)), verb = base.indexOf("build") >= 0 ? base.indexOf("build") : base.indexOf("test");
-    const argv = options.overlay && verb > 0 ? [...base.slice(0, verb + 1), `-overlay=${options.overlay}`, ...base.slice(verb + 1)] : base, started = performance.now();
-    const result = await options.run(argv, {cwd: options.workspace, env: unit.action.env, signal: request.signal});
-    const milliseconds = Math.round(performance.now() - started);
+    const argv = options.overlay && verb > 0 ? [...base.slice(0, verb + 1), `-overlay=${options.overlay}`, ...base.slice(verb + 1)] : base;
+    const result = await options.run(argv, {cwd: options.workspace, env: unit.action.env, signal: request.signal}), milliseconds = elapsed();
     if (unit.kind === "test") return {ok: result.code === 0, diagnostics: result.code === 0 ? "" : result.output.trim(), outputs: sha256V1(result.code === 0 ? "ok" : "fail"), interface: null, milliseconds};
     if (result.code !== 0) return {ok: false, diagnostics: result.output.trim(), outputs: sha256V1("failed:" + result.output), interface: null, milliseconds};
     const artifact = readFileSync(join(out, unit.outputs[0]!));

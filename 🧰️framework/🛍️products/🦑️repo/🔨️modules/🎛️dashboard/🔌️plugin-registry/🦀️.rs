@@ -33,7 +33,7 @@ fn check_generated_plugin_registry(publication:Option<&Path>) -> Vec<String> {
         .filter_map(|name| match std::fs::read_to_string(output.join(name)) {
             Ok(text) if serde_json::from_str::<serde_json::Value>(&text).is_ok() => None,
             Ok(_) => Some(format!("plugin registry catalog is invalid JSON: generated/{name}")),
-            Err(_) => Some(format!("plugin registry catalog is missing: generated/{name} (run `bun repo run @semio-tech/plugin-registry:generate`)")),
+            Err(_) => Some(format!("plugin registry catalog is missing: generated/{name} (run `repo run @semio-tech/plugin-registry:generate`)")),
         })
         .collect()
 }

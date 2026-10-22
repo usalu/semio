@@ -30,10 +30,9 @@ pub struct DrawingCanvasWindowConfigDiff {
 
 impl store::ConfigRecord for DrawingCanvasWindowConfig {}
 
-impl protocol::MutationDiff<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
-    fn apply(&self, base: &DrawingCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DrawingCanvasWindowConfig> {
-        Ok(DrawingCanvasWindowConfig { viewport: self.viewport.clone().unwrap_or_else(|| base.viewport.clone()), framed: self.framed.unwrap_or(base.framed) })
-    }
+impl protocol::MutationDiff<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.viewport.is_some() {
             self.viewport = other.viewport;
@@ -42,14 +41,23 @@ impl protocol::MutationDiff<DrawingCanvasWindowConfig> for DrawingCanvasWindowCo
             self.framed = other.framed;
         }
     }
+
+    fn apply(&self, unpublished: &mut DrawingCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = DrawingCanvasWindowConfig { viewport: self.viewport.clone().unwrap_or_else(|| base.viewport.clone()), framed: self.framed.unwrap_or(base.framed) };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
-    fn inverse(&self, base: &DrawingCanvasWindowConfig) -> Self {
-        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()), framed: self.framed.map(|_| base.framed) }
-    }
     fn is_empty(&self) -> bool {
         self.viewport.is_none() && self.framed.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
+    fn inverse(&self, base: &DrawingCanvasWindowConfig) -> Self {
+        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()), framed: self.framed.map(|_| base.framed) }
     }
 }
 
@@ -108,7 +116,11 @@ impl protocol::Mutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfig
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &DrawingCanvasWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigMutation {
+    type ReferenceDiff = DrawingCanvasWindowConfigDiff;
+    fn diff(&self, base: &DrawingCanvasWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         match self {
             Self::Set(DrawingCanvasWindowConfigSet { viewport, framed }) => protocol::MutationOutcome::new(DrawingCanvasWindowConfigDiff { viewport: (&base.viewport != viewport).then(|| viewport.clone()), framed: (base.framed != *framed).then_some(*framed) }),
         }

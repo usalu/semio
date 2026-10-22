@@ -52,22 +52,11 @@ pub(super) struct OwnedPollInput<'a> {
     pub(super) budget: Budget,
 }
 
-#[derive(serde::Serialize, ToValue)]
+/// 📥️ The mirror of the guest's `owned_abi::StartJobInput`: the prepared source copy and the original job budget.
+#[derive(serde::Serialize)]
 pub(super) struct OwnedStartJobInput<'a> {
-    pub(super) job: u64,
-    pub(super) kind: &'a str,
-    pub(super) input: Vec<u8>,
-}
-
-#[derive(serde::Serialize, ToValue)]
-pub(super) struct OwnedStepJobInput {
-    pub(super) job: u64,
-    pub(super) budget: JobBudget,
-}
-
-#[derive(serde::Serialize, ToValue)]
-pub(super) struct OwnedCancelJobInput {
-    pub(super) job: u64,
+    pub(super) source: &'a Option<semio_framework_actor::OriginalJobSource>,
+    pub(super) budget: semio_framework_actor::OriginalJobBudget,
 }
 
 #[derive(serde::Serialize, ToValue)]

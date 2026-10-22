@@ -454,6 +454,7 @@ dependencies = [
  "semio-framework-actor-pack",
  "semio-framework-actor-vocabulary",
  "semio-framework-async",
+ "semio-framework-async-slots",
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -519,6 +520,7 @@ name = "semio-framework-async"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-async-timer",
  "semio-framework-trace",
  "semio-framework-value",
  "wasm-bindgen",
@@ -532,6 +534,17 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "semio-framework-async-slots"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-async-timer"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-composition-admission"

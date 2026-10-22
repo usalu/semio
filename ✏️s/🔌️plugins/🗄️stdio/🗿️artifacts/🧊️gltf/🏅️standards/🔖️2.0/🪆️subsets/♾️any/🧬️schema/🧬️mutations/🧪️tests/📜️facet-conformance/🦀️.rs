@@ -8,7 +8,7 @@ use crate::standards::v2_0::subsets::any::io::text::mutations as text_mutations;
 use crate::standards::v2_0::subsets::any::io::binary::mutations as binary_mutations;
 use crate::standards::v2_0::subsets::any::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
 use crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
-use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
+use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, OpBinary, OpText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn alpha_mode_mutation() -> GltfMutation {

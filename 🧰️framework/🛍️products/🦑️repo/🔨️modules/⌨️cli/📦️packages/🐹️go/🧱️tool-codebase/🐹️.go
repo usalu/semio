@@ -30,7 +30,7 @@ import (
 // 🟫️ToolCodebase MUST complete the operation and return consistent results.
 func ToolCodebase() workspace.ToolResult {
 	output := workspace.NewOutput()
-	ctx := codebasepkg.NewCodebaseContext()
+	ctx := codebasepkg.NewCodebaseContext(workspace.GetRootDir())
 
 	ctx.LoadBundles()
 	if err := ctx.LoadFiles(); err != nil {
@@ -163,7 +163,7 @@ func ToolFolderList(path string) workspace.ToolResult {
 	for _, f := range folders {
 		relPaths = append(relPaths, workspace.NormalizePath(filepath.Join(path, f)))
 	}
-	ignored := workspace.GetGitIgnoredSet(relPaths)
+	ignored := workspace.GetGitIgnoredSet(workspace.GetRootDir(), relPaths)
 	var filtered []string
 	for _, f := range folders {
 		relPath := workspace.NormalizePath(filepath.Join(path, f))
@@ -195,7 +195,7 @@ func ToolFileList(scopeRaw string) workspace.ToolResult {
 	output := workspace.NewOutput()
 	scope := workspace.ParseScope(scopeRaw)
 	bundles := codebasepkg.GetTechnologies()
-	files, err := model.ScopeToFiles(scope, bundles)
+	files, err := model.ScopeToFiles(workspace.GetRootDir(), scope, bundles)
 	if err != nil {
 		return workspace.ToolErrorResult(err)
 	}

@@ -1,7 +1,8 @@
 import admissionSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { readdir } from "node:fs/promises";
-import { spawn } from "node:child_process";
+
 import { isAbsolute, join, resolve } from "node:path";
+import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧵️ Bounds concurrent original reads and drains every admitted reader before release. */
 export async function boundedAdmissionWalkV1<T>(initial:readonly T[],limit:number,visit:(item:T,enqueue:(next:T)=>void)=>Promise<void>):Promise<void>{
@@ -39,7 +40,7 @@ export function collectionManifestCandidate(path: string, policy: AdmissionPolic
 export async function gitCollectionManifests(root: string, policy: AdmissionPolicy, collections: CollectionPolicy, signal?: AbortSignal): Promise<string[] | undefined> {
   const read = (args: string[]): Promise<string | undefined> => new Promise((accept, reject) => {
     signal?.throwIfAborted();
-    const child = spawn("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: root, stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
+    const child = startToolV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: root, stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     const chunks: Buffer[] = []; let bytes = 0;
     const abort = (): void => { child.kill(); reject(signal?.reason ?? Error("Nx admission cancelled")); };
     signal?.addEventListener("abort", abort, { once: true });

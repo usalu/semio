@@ -2,14 +2,12 @@
 
 use std::sync::Arc;
 use pack::snapshot::ArtifactPack;
-use crate::lifted_store::ArtifactStore;
+use semio_framework_os_store_engine_live::lifted_store::StoreParts;
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
-use semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation;
 use semio_framework_os_store_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement};
 use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, CursorRevisionRecord};
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, LaneItemReceipt};
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
 use semio_framework_os_spr::{Edit, Mutation, OpBinary, OpText};
 use semio_framework_value::{ErasedSnapshotRetirement, FromValue, ToValue, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -19,12 +17,19 @@ fn retain_group_owner(retirements: &mut ArtifactStoreDisplacedRetirements, reser
     if let Err(owner) = retirements.push_owner_reserved(reservation, owner) { retirements.push_reserved(owner); }
 }
 
-impl<P, Mu> ArtifactStore<P, Mu>
+/// 🤝️ Publishes one store's member group under a common decision: stage while the decision is pending, adopt after it commits, abort after it refuses.
+pub trait ApplyBatchGroup<P, Mu> {
+    fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+}
+
+impl<P, Mu> ApplyBatchGroup<P, Mu> for StoreParts<'_, P, Mu>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mu: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let group = publication.group_preparation.as_mut().ok_or("member group lacks its retained preparation")?;
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.pending() { return Err("member group visibility authority does not match its pending decision".into()); }
         if self.cursor.generation != publication.expected_generation || self.cursor.content_revision != publication.expected_revision { return Err("member group became stale before its common decision".into()); }
@@ -38,7 +43,7 @@ where
         else if group.history.is_none(){
             group.demand=self.log.envelope.vcs.edits.next_reservation_allocation_bytes();
             if grant.maximum_capacity_bytes<group.demand{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-            ownership.retained_capacity_bytes=group.demand;group.history=Some(self.reserve_edit_history_slot().map_err(|error|error.to_string())?);
+            ownership.retained_capacity_bytes=group.demand;group.history=Some(self.owners.reserve_edit_history_slot(self.log).map_err(|error|error.to_string())?);
         }else{
             if group.revision.is_none(){group.revision=Some(CursorRevisionAccumulator{identity_digest:self.cursor.revision_accumulator.identity_digest,applied:semio_framework_os_vcs::HistoryPageStack::empty(),redo:semio_framework_os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});}
             if group.ordinal<self.log.applied_edit_ids.len(){
@@ -108,10 +113,10 @@ where
                     _=>{
                         let stage=publication.stage.as_mut().ok_or("member diagnostics lost staged original")?;
                         if stage.diagnostics.row_count()==0{if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let step=stage.diagnostics.close_step(grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),step.progress())});}}
-                        else{let identity=stage.edit.as_ref().ok_or("member diagnostic edit is absent")?.id.as_str();if !stage.diagnostics.prepared(){let step=stage.diagnostics.advance(identity,grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),step.progress())});}let bytes=stage.diagnostics.measured_bytes(identity).map_err(|error|error.to_string())?;if !self.envelope.edit_messages.admits_measured(identity,bytes){return Err("member diagnostic ledger lacks its measured fixed authority".into());}if self.envelope.edit_messages.get_by_id(identity).is_some()&&stage.diagnostics.displaced.is_none(){let receipt=stage.diagnostics.admit_displaced(grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if receipt==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),receipt)});}}
+                        else{let identity=stage.edit.as_ref().ok_or("member diagnostic edit is absent")?.id.as_str();if !stage.diagnostics.prepared(){let step=stage.diagnostics.advance(identity,grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),step.progress())});}let bytes=stage.diagnostics.measured_bytes(identity).map_err(|error|error.to_string())?;if !self.log.envelope.edit_messages.admits_measured(identity,bytes){return Err("member diagnostic ledger lacks its measured fixed authority".into());}if self.log.envelope.edit_messages.get_by_id(identity).is_some()&&stage.diagnostics.displaced.is_none(){let receipt=stage.diagnostics.admit_displaced(grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if receipt==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),receipt)});}}
                         let capacity=size_of::<semio_framework_os_store_durable_group_wire::lifted_durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();group.demand=capacity;
                         if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                        let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(&mut self.parts(),publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
+                        let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(self,publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
                         return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),ownership));
                     }
                 }
@@ -121,21 +126,21 @@ where
         Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),ownership))
     }
 
-    pub fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         if publication.published { return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),Default::default())); }
         let group = publication.group_preparation.as_ref().ok_or("member group lacks its retained adoption")?;
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.committed() || group.phase != 12 { return Err("member adoption requires its exact committed common decision".into()); }
         if !grant.permits_one() { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let checkpoint=publication.progress();
 
-        let(done,ownership)=semio_framework_os_store_engine_stage::lifted_durable_group::adopt_staged_store_member(&mut self.parts(),visibility,grant.retained_grant()).map_err(|error|error.to_string())?;
+        let(done,ownership)=semio_framework_os_store_engine_stage::lifted_durable_group::adopt_staged_store_member(self,visibility,grant.retained_grant()).map_err(|error|error.to_string())?;
         if !done{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         *self.wire.durable_group_root=None;publication.group_preparation=None;publication.retained_checkpoint=checkpoint;
         publication.receipt=Some(LaneItemReceipt{generation_before:publication.expected_generation,generation_after:self.cursor.generation});publication.expected_generation=self.cursor.generation;publication.expected_revision=self.cursor.content_revision;publication.published=true;publication.phase=ArtifactStoreOneItemPublicationPhase::AwaitingAck;
         Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),RetainedCloneProgress{copied_items:1,..ownership}))
     }
 
-    pub fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let error = |message: &'static str| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -143,7 +148,7 @@ where
         let Some(group) = publication.group_preparation.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if group.visibility.committed() || group.visibility.pending() { return Err(error("member abort requires its exact aborted common decision")); }
         if self.wire.durable_group_root.is_some() {
-            semio_framework_os_store_engine_stage::lifted_durable_group::abort_staged_store_member(&mut self.parts(), &group.visibility).map_err(|_| error("member abort lost its exact staged root"))?;
+            semio_framework_os_store_engine_stage::lifted_durable_group::abort_staged_store_member(self, &group.visibility).map_err(|_| error("member abort lost its exact staged root"))?;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(history) = group.history.take() {

@@ -16,20 +16,6 @@ pub struct SetBrushPreview {
 impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation> for SetBrushPreview {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "world-window-brush-preview", kind: "set-brush-preview", record: "SetBrushPreview" };
 
-    fn diff(&self, base: &Block3dWorldWindowTransient) -> protocol::MutationOutcome<Block3dWorldWindowTransientDiff> {
-        if base.brush_preview == self.preview {
-            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The brush preview already holds that value.");
-        }
-        protocol::MutationOutcome::new(Block3dWorldWindowTransientDiff { brush_preview: Some(Block3dBrushPreviewSet { value: self.preview.clone() }) })
-    }
-
-    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Result<Vec<Block3dWorldWindowTransientMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { preview: base.brush_preview.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set World Window Brush Preview", "Pinselvorschau im Weltfenster setzen")
     }
@@ -37,4 +23,19 @@ impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTrans
     fn target(&self) -> Vec<String> {
         vec!["brushPreview".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation> for SetBrushPreview {
+    fn diff(&self, base: &Block3dWorldWindowTransient) -> protocol::MutationOutcome<Block3dWorldWindowTransientDiff> {
+        if base.brush_preview == self.preview {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The brush preview already holds that value.");
+        }
+        protocol::MutationOutcome::new(Block3dWorldWindowTransientDiff { brush_preview: Some(Block3dBrushPreviewSet { value: self.preview.clone() }) })
+    }
+    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Result<Vec<Block3dWorldWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { preview: base.brush_preview.clone() }.into()]
+    
+    })())
+}
 }

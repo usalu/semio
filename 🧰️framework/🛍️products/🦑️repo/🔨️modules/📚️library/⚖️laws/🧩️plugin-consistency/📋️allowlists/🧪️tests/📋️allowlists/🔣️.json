@@ -1,0 +1,322 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "animate/presentation/spr",
+     "architect/spine",
+     "gis/artifact",
+     "lowpoly/spr",
+     "mathematical/equation/artifact",
+     "note/artifact",
+     "os/dsl",
+     "os/workflow",
+     "products/os",
+     "raster/artifact",
+     "reasoning/artifact",
+     "space/artifact",
+     "vcs/artifact"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_DECLARED_USE_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_DECLARED_USE_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_DIFF_COMPLETENESS_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_DIFF_COMPLETENESS_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "animate/presentation/op",
+     "architect/artifact",
+     "architect/spine",
+     "block/2d/op",
+     "block/3d/op",
+     "block/5d/op",
+     "cad/op",
+     "db/document",
+     "db/engine",
+     "directed/dag",
+     "draw/op",
+     "fem/2d/op",
+     "fem/3d/op",
+     "flow/core",
+     "gis/2d/op",
+     "gis/3d/op",
+     "imperative/op",
+     "layout/op",
+     "lowpoly/op",
+     "mathematical/equation/op",
+     "norm/artifact",
+     "norm/core",
+     "os/playbook",
+     "os/plugin",
+     "os/store",
+     "playbook/procedural",
+     "procedural/2d/op",
+     "procedural/3d/op",
+     "process/3d/op",
+     "products/os",
+     "protocol/causal",
+     "protocol/command",
+     "protocol/crdt",
+     "puzzle/2d/op",
+     "puzzle/3d/op",
+     "puzzle/5d/op",
+     "raster/op",
+     "reasoning/wires/op",
+     "remodel/op",
+     "sequence/op",
+     "shooting/op",
+     "sourcing/curate/op",
+     "space/home/op",
+     "stdio/avi/standards#1.0-subsets-any-schema-diff-component",
+     "stdio/mp4/standards#isobmff-subsets-any-schema-diff-component",
+     "store/sync",
+     "trinity/ram",
+     "trinity/rewriting/op",
+     "vcs/engine",
+     "vcs/op"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "SetDocumentMutation",
+     "Value"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_EMPTY_EXAMPLE_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_EMPTY_EXAMPLE_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_ENGINE_FACET",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_ENGINE_FACET"
+   ],
+   "expect": {
+    "kind": "string",
+    "values": [
+     "⚙️engine"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_GENERIC_SPEC_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_GENERIC_SPEC_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_GRAMMAR_FILE_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_GRAMMAR_FILE_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_JSON_FIXTURE_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_JSON_FIXTURE_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "array",
+    "values": [
+     "coda/"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_LABELS_TWO_AXIS_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_LABELS_TWO_AXIS_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "cad#CadLabels",
+     "puzzle#Puzzle2dLabels",
+     "puzzle#Puzzle3dLabels",
+     "puzzle#Puzzle5dLabels"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_OP_FACET",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_OP_FACET"
+   ],
+   "expect": {
+    "kind": "string",
+    "values": [
+     "🔧️op"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_PACK_COMPLETENESS_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_PACK_COMPLETENESS_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_PROTOCOL_FILE_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_PROTOCOL_FILE_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "flow",
+     "infinite_board_port_directed",
+     "infinite_board_port_directed_dag",
+     "mathematical_geometry",
+     "mathematical_graph_drawing",
+     "trinity_jack",
+     "trinity_ram"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_SPEC_DISTINCTNESS_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_SPEC_DISTINCTNESS_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": []
+   }
+  },
+  {
+   "id": "POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "puzzle#3d",
+     "puzzle#5d"
+    ]
+   }
+  },
+  {
+   "id": "POLICY_TS_FACADE_CONSTITUTIONAL_FACETS",
+   "rule": "allowlist",
+   "args": [
+    "POLICY_TS_FACADE_CONSTITUTIONAL_FACETS"
+   ],
+   "expect": {
+    "kind": "set",
+    "values": [
+     "⚙️engine",
+     "🎒️pack",
+     "📡️spr",
+     "🔧️op",
+     "🔺️diff",
+     "🗣️dsl"
+    ]
+   }
+  }
+ ]
+}

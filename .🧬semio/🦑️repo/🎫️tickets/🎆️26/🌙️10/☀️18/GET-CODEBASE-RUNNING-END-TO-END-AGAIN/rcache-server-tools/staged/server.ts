@@ -1,4 +1,5 @@
 import {createHash,timingSafeEqual} from "node:crypto";
+import {runtimeFileV1,runtimeServeV1} from "../../../../../../../🔨️modules/⚙️runtime/🌍️serve/🟦️.ts";
 import {mkdir,stat} from "node:fs/promises";
 import {join} from "node:path";
 import {parseRemoteCacheActionResultV1,validateRemoteCacheActionResultV1,type RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
@@ -25,7 +26,7 @@ const RESERVED=new Set(["ac","cas","v1","healthz","status"]),INSTANCE=/^[a-z0-9]
  digest=(value:string)=>createHash("sha256").update(value).digest(),
  row=()=>({hits:0,misses:0,puts:0,conflicts:0,rejected:0,stale:0});
 
-/** 🚰️ A request body read through its reader, because Bun's own stream iterator is not available for request bodies: `chunks` feeds the store and `drain` discards what is left, up to a bound, so a reply sent before the body was read is not lost to a connection reset. */
+/** 🚰️ A request body read through its reader, because the runtime's stream iterator is not available for request bodies: `chunks` feeds the store and `drain` discards what is left, up to a bound, so a reply sent before the body was read is not lost to a connection reset. */
 export type RemoteCacheBodyV1=Readonly<{chunks:AsyncGenerator<Uint8Array>;drain:(limit:number)=>Promise<void>}>;
 
 /** 🚰️ Wraps a request body stream. */
@@ -71,7 +72,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(validation!=="complete"){
    const entry=await options.store.read(namespace,"ac",key);
    if(!entry){counter.misses++;return text(404,"Not found");}
-   counter.hits++;return new Response(method==="GET"?entry.size===0?"":Bun.file(entry.path):null,{headers:{"content-type":"application/octet-stream","content-length":String(entry.size)}});
+   counter.hits++;return new Response(method==="GET"?entry.size===0?"":runtimeFileV1(entry.path).body():null,{headers:{"content-type":"application/octet-stream","content-length":String(entry.size)}});
   }
   const bytes=await options.store.readBytes(namespace,"ac",key,limit);
   if(bytes===undefined){counter.misses++;return text(404,"Not found");}
@@ -97,7 +98,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
    const entry=await options.store.read(address.namespace,address.kind,address.key),counter=counters[address.kind];
    if(!entry){counter.misses++;return text(404,"Not found");}
    counter.hits++;const headers={"content-type":"application/octet-stream","content-length":String(entry.size)};
-   return new Response(method==="GET"?entry.size===0?"":Bun.file(entry.path):null,{headers});
+   return new Response(method==="GET"?entry.size===0?"":runtimeFileV1(entry.path).body():null,{headers});
   }
   if(method!=="PUT")return text(405,"Method not allowed",{allow:"GET, HEAD, PUT"});
   const denied=authorize(request,true);if(denied)return denied;
@@ -150,7 +151,7 @@ export class RemoteCacheDirectoryBusyV1 extends Error{constructor(readonly direc
 
 const LOOPBACK=new Set(["127.0.0.1","localhost","::1","[::1]"]);
 
-/** 🚀️ Opens the store and serves the handler with Bun, over TLS when a certificate is given; refuses to listen beyond loopback without a token, refuses a directory another server owns, keeps the store in step with outside collectors, and stops when `signal` aborts. */
+/** 🚀️ Opens the store and serves the handler through the runtime interface, over TLS when a certificate is given; refuses to listen beyond loopback without a token, refuses a directory another server owns, keeps the store in step with outside collectors, and stops when `signal` aborts. */
 export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV1):Promise<RemoteCacheServerV1>{
  if(!LOOPBACK.has(options.host)&&options.tokens.read===undefined&&options.tokens.write===undefined)throw Error("A token is required to listen beyond loopback");
  if(!INSTANCE.test(options.defaultInstance)||RESERVED.has(options.defaultInstance))throw Error("Valid default instance required");
@@ -162,8 +163,8 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
  try{
   store=await RemoteCacheStoreV1.open({directory:options.directory,maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
   const opened=store,handler=createRemoteCacheHandlerV1({store:opened,tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
-  const server=Bun.serve({hostname:options.host,port:options.port,idleTimeout:60,maxRequestBodySize:options.maximumEntryBytes*2,...(options.tls?{tls:{cert:Bun.file(options.tls.certificate),key:Bun.file(options.tls.key)}}:{}),fetch:request=>handler(request)});
-  const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port??options.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
+  const server=await runtimeServeV1({hostname:options.host,port:options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:request=>handler(request)});
+  const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
   let finish!:()=>void;const stopped=new Promise<void>(resolve=>{finish=resolve;});let closing:Promise<void>|undefined;
   const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);await server.stop(true);await opened.close();await owner.release();options.onEvent?.({stage:"stopped"});finish();})();
   const maintenance=(options.maintenanceSeconds??0)*1000;

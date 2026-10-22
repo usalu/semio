@@ -1,0 +1,53 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "reference",
+     "candidate",
+     "missing",
+     "extra"
+    ],
+    "properties": {
+     "reference": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "candidate": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "missing": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "extra": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

@@ -60,7 +60,7 @@ fn fold(base: &semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSna
     for leaf in leaves {
         let outcome = semio_s_artifact_stdio_semio_flow::schema::mutations::diff_semio_flow_mutation(leaf, &state);
         assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-        state = semio_framework_os_kernel::apply_diff(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
+        state = semio_framework_os_kernel::apply_diff_cold(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
     }
     state
 }

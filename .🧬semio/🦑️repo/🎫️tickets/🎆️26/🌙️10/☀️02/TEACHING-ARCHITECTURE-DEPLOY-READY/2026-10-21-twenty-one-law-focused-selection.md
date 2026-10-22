@@ -1,0 +1,9 @@
+# Twenty-One-Law Focused Selection
+
+Prepared non-runnable selection DATA in `🗑️generated/2026-10-21-twenty-one-law-focused-selection.json`. It contains six entry files and 21 exact literal titles: the prior 14 and all seven main session phase titles. The main session entry statically imports both credit and controller files; their three titles are included without adding extra entry files. The isolated 45,000 ms helper title is excluded. Static TypeScript AST extraction found each selected literal title exactly once at its declared source ceiling, with zero parse diagnostics in the six entries and imported files.
+
+The focused CLI ceiling is 150,000 ms. The existing receipt sentinel retains an implicit Source ceiling, now effectively 150,000 ms for this selection. Aggregate effective ceilings are 1,340,000 ms: prior 800,000, plus the 30,000 sentinel change and 510,000 for seven session titles. This aggregate is selection accounting, not a launch timeout or release proof.
+
+The finite proposed fresh custody union contains 49 Source leaves: all prior 37, twelve added leaves, and one superseded shared schema pin. All 49 match current bounded nofollow ordinary single-link reads. Added leaves are the session runtime/helper/types/corpus/main test, own-input reader/schema, capture writer and channel policy, imported credit/controller tests, and generation producer. The prior shared GC schema 38,320/90b1998d is superseded by reviewed framing schema 39,693/be452215. Existing Node loader and worker pins were already members and remain unchanged. Full paths, exact pins and classification are in the DATA. The historical failure log is context, not a new Source leaf.
+
+No executable argv, Native invocation, Source evaluation, full transitive capture claim, or new runnable seal was produced. The executor must perform fresh custody/eligibility checks and Root must authorize any invocation separately.

@@ -113,7 +113,7 @@ pub mod set_viewpoint_snapshot;
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = BcfSnapshot, diff = BcfDiff, schema = "BcfMutation")]
+#[mutations(snapshot = BcfSnapshot, diff = BcfDiff, schema = "BcfMutation", reference = BcfSnapshot, reference_diff = BcfDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum BcfMutation {
     SetVersion(set_version::SetVersion),

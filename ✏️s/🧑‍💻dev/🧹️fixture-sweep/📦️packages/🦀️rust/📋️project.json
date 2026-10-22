@@ -19,7 +19,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -29,7 +29,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
@@ -39,7 +39,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts source-check",
+        "command": "repo ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },

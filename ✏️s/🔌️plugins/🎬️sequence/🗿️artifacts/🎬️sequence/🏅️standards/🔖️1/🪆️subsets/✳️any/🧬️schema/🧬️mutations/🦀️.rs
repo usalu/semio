@@ -26,6 +26,10 @@ impl protocol::Mutation<SequenceSnapshot> for SequenceMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match *self {}
     }
+}
+
+impl protocol::ColdMutation<SequenceSnapshot> for SequenceMutation {
+    type ReferenceDiff = SequenceDiff;
     fn diff(&self, _base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         match *self {}
     }

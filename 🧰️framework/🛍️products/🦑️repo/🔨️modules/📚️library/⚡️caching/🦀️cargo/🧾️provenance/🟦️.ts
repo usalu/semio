@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { join, posix, win32 } from "node:path";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cargoDirectories } from "../🗂️directories/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /**
  * 🧾️ One file a unit's encoded dep-info tracks for freshness. `base` says what a relative `path` is joined onto
@@ -171,7 +172,7 @@ export class CargoProvenanceScript extends BundleScript {
         perTarget = Object.fromEntries(Object.entries(report.scanned).map(([target, depInfos]) => [target, { depInfos, foreign: report.foreign.filter((unit) => unit.target === target).length }])),
         roots = [...new Set(report.foreign.flatMap((unit) => unit.foreign.map((path) => foreignRoot(path))))].sort(),
         removed = mode === "repair" ? invalidateForeignUnits(report.foreign, controller.signal) : 0;
-      if (json) console.log(JSON.stringify({ buildDir, perTarget, foreignRoots: roots, foreign: report.foreign, undecodable: report.undecodable, removed }));
+      if (json) writeResultLineV1(JSON.stringify({ buildDir, perTarget, foreignRoots: roots, foreign: report.foreign, undecodable: report.undecodable, removed }));
       else {
         for (const [target, counts] of Object.entries(perTarget)) console.log(`[cargo-provenance] ${target}: ${counts.depInfos} dep-info files, ${counts.foreign} foreign`);
         for (const root of roots) console.log(`[cargo-provenance] foreign source root: ${root}`);

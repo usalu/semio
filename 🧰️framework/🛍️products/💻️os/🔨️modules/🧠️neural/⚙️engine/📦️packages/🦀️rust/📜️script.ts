@@ -50,6 +50,6 @@ class OutputSourceTestScript extends BundleScript {
   await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📔️registry/✅️output/🧪️tests/🟦️.ts")], this.repoRoot, "neural:output:source", 15000);
  }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-topology-source", TopologySourceTestScript).register("test-input-source", InputSourceTestScript).register("test-evaluation-source", EvaluationSourceTestScript).register("test-output-source", OutputSourceTestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-source", SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-topology-source", TopologySourceTestScript).register("test-input-source", InputSourceTestScript).register("test-evaluation-source", EvaluationSourceTestScript).register("test-output-source", OutputSourceTestScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));
 //#endregion 🧪️Validation

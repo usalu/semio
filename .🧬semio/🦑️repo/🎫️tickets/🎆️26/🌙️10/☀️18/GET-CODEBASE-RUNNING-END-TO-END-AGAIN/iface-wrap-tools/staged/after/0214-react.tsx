@@ -1,689 +1,991 @@
-/** 🎛️ The OS command registry, command category tree and tabs, and the tool registry tree and tabs.
+/** 🛣️ Shell routes, app breadcrumbs, framework layout seeds, window engagement, plugin install bands, panel-tab nodes and history/command refusal notices.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHelpers}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
+import { TIME_TRAVEL_CODE_LABELS } from "@semio-tech/framework/time-travel";
 // #region 🔌️Adapters
 import {
-  type ActionArgDef,
+  type PluginModuleAcquisitionProgress,
   type ActionDescriptor,
-  actionSemanticsForKind,
   type AppDefinition,
-  type AppModeDefinition,
-  type ArtifactKindChoice,
-  type CommandAddress,
-  type CommandDefinition,
-  DockLayoutStore,
-  DockUiStateStore,
-  effectiveActionArgs,
-  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-  type Platform,
+  type AppPanelTabDefinition,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HISTORY_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+  type PanelTabKind,
+  panelTabKindId,
   type PluginAppLabelsOverlay,
+  type PluginCatalog,
+  type PluginUiRefreshRequest,
+  type UiRefreshSectionKey,
+  UI_REFRESH_SECTIONS,
+  resolvePluginHostConfig,
+  type Severity,
   SHELL_LOCALES,
-  unresolvedActionArgs,
-  type WindowMeasure
+  SHELL_TERMINOLOGIES,
+  isShellTerminology,
+  type UiPatch,
+  type WindowEngagement,
+  type WindowEngagementControl,
+  type WindowLayout,
+  type WindowLayoutAxisNode,
+  type WindowLayoutStackNode,
+  type WindowLayoutWindowNode,
+  type WindowMeasure,
+  type WindowStackCorner
 } from "@semio-tech/framework";
+import { type CommandRejectionCodeV1, type CommandRejectionV1 } from "@semio-tech/framework/wire-contracts";
+import { decodeWorldProjectionTemplateId } from "@semio-tech/framework/infinite/world/r3f";
 import {
-  builtinUiDrivers,
-  type ElementsSurfaceAppearance,
+  type Anchor,
+  createEvenWindowLayout,
+  type EngagementControl,
+  type EngagementSpec,
   Icon,
   type IconName,
   type PanelTabNode,
+  type SearchSpec,
   singleTreeLeaf,
-  type TreeDataItem,
-  type TreeDataSection,
-  type TreePanelConfig,
+  staticTreePanelDefinition,
   UI_TERMINOLOGY_NATIVE,
-  type UiChromeLayout,
-  type UiDriver,
-  type UiLocale,
-  type UiTheme
+  uiDataLabel,
+  type UiTranslationKey,
+  type WindowLayoutNode
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import * as React from "../../⚛️react-port/🟦️.ts";
+import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
+import { faultNotice, historyNotice } from "@semio-tech/framework";
+import { registerPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
+import { type InputDraftDispositionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import { type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
+import type { BrowserActorUiPatchVerdictV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
 import {
-  setAppearance,
-  setDriver,
-  setLayout,
-  setLocale,
-  setTerminology,
-  setTheme,
-  type UiPreferencesConfigMutation
-} from "@semio-tech/framework/config/mutations";
-import { EMPTY_SHELL_LOCKS, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
-import type { PluginManifest } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+  loadPluginModule,
+  pluginLoadProgressAt,
+  pluginLoadRemainingMs,
+  PLUGIN_LOAD_IDLE_TIMEOUT_MS,
+  retainedSectionValueV1,
+  type PluginWasmHandle
+} from "../../🔌️PluginRuntime/🟦️.tsx";
+import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import {
-  EMPTY_APP_LABELS_OVERLAY,
-  OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID,
-  OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID,
-  OPEN_HUB_COMMAND_ID,
-  OPEN_TASK_MANAGER_COMMAND_ID,
-  openArtifactWithText,
-  resolveActionArgDef,
-  type ResolvedActionArgDef,
-  type ResolvedToolDefinition,
+  currentShellLocaleV1,
+  type FrozenLabel,
+  frozenLabelText,
+  resolveAppLabel,
   resolveManifestLabel,
+  resolvePanelTabLabel,
   shellLabel,
-  shellTabIcon,
-  shellTerminologyLabel
+  shellTabIcon
 } from "../🏷️labels/🟦️.tsx";
-import { FRAMEWORK_CATEGORY_TOOL_ID } from "../🔩️plumbing/🟦️.ts";
-import { windowMeasuresToTreeItems } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
-import { renderStagedArgControl } from "../🪟️window-panes/📝️staged-args/🟦️.tsx";
+import { APP_BREADCRUMB_SEPARATOR } from "../🔩️plumbing/🟦️.ts";
+import {
+  type BrowserActorPanelHostV1,
+  cachedActorTreePanelConfigV1,
+  cachedBodyStoreTreePanelConfigV1,
+  type PanelTreeConfigCacheV1,
+  type TreeWindowHostV1
+} from "../🌳️tree-windows/🟦️.tsx";
+import { windowMeasuresChrome } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
 
 //#region ShellHelpers
-//#region 🎛️CommandRegistry
-/** 🎛️ One command definition paired with its shared, fully qualified address. */
-export type ResolvedCommand = {
-  readonly definition: Omit<CommandDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
-  readonly address: CommandAddress;
+function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {
+  return pluginFilter !== undefined && resolvePluginHostConfig(catalog, pluginFilter) !== undefined;
+}
+
+export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string } | { readonly kind: "notFound"; readonly path: string };
+
+/** 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
+export function parseShellRoute(path: string): ShellRoute {
+  const normalized = (path.split("?")[0] ?? "/").trim() || "/";
+  if (normalized === "/") return { kind: "landing" };
+  const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(normalized);
+  if (match) return { kind: "space", spaceId: match[1]!, instanceId: match[2] };
+  return { kind: "notFound", path: normalized };
+}
+
+/**
+ * 🗺️ Joins a breadcrumb for display.
+ *
+ * ⚠️ Accepts `undefined`: `AppDefinition.breadcrumb` is DECLARED OPTIONAL in the manifest, so every
+ * unguarded `breadcrumb.join(…)` was a latent crash — and not a cosmetic one. This runs inside
+ * `FrameworkOsShellInner`'s render, so a single app whose manifest omits the field took down the
+ * WHOLE shell, and in a multi-pane host (the demonstrator) every pane died with it. An app with no
+ * breadcrumb should render a nameless title, never destroy its host.
+ */
+export function appBreadcrumb(breadcrumb: readonly string[] | undefined): string {
+  return (breadcrumb ?? []).join(APP_BREADCRUMB_SEPARATOR);
+}
+
+/** 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to `app.breadcrumb`, and an app that declares none at all to the empty breadcrumb (the field is optional — see {@link appBreadcrumb}). */
+export function resolveAppBreadcrumb(app: Pick<AppDefinition, "breadcrumb" | "terminologyBreadcrumbs">, terminology: string): readonly string[] {
+  return app.terminologyBreadcrumbs?.[terminology] ?? app.breadcrumb ?? [];
+}
+
+/** 🗺️ Resolves the breadcrumb for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw breadcrumb when the app can't be found. */
+export function resolveArtifactByAppId(loadedPlugins: readonly LoadedProgramState[], appId: string, breadcrumb: readonly string[], terminology: string): readonly string[] {
+  for (const program of loadedPlugins) {
+    const app = program.manifest.apps.find((candidate) => candidate.id === appId);
+    if (app) return resolveAppBreadcrumb(app, terminology);
+  }
+  return breadcrumb;
+}
+
+export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" | "terminologyBreadcrumbs">, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
+  const trimmed = windowLabel.trim();
+  if (trimmed) return trimmed;
+  const override = app.terminologyBreadcrumbs?.[terminology];
+  return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
+}
+
+/** 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
+export function panelAnchorForGroup(group: string): Anchor {
+  if (group === "workbench" || group === "document") return "top-left";
+  if (group === "details") return "top-right";
+  if (group === "display") return "bottom-left";
+  if (group === "settings") return "bottom-right";
+  return "top-right";
+}
+
+const FRAMEWORK_SETTINGS_BRANCH_ID = "framework.settings";
+
+/** ⚙️ Nests every app-declared Settings-group panel tab under the framework Settings branch so the
+ * bottom-right anchor exposes one Settings toggle instead of a duplicate beside it. */
+export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettingsTab: PanelTabNode, appSettingsTabs: readonly PanelTabNode[]): PanelTabNode {
+  if (appSettingsTabs.length === 0) return frameworkSettingsTab;
+  if (frameworkSettingsTab.kind !== "branch" || frameworkSettingsTab.id !== FRAMEWORK_SETTINGS_BRANCH_ID) return frameworkSettingsTab;
+  const appChildren = appSettingsTabs.map((tab, index) => ({ ...tab, order: tab.order ?? index }));
+  const frameworkChildren = frameworkSettingsTab.children.map((tab, index) => ({ ...tab, order: (tab.order ?? index) + appSettingsTabs.length }));
+  return { ...frameworkSettingsTab, children: [...appChildren, ...frameworkChildren] };
+}
+
+/**
+ * 🕰️ Splits the framework History tab off a list of app panel tabs. `framework.panel.history` is injected into EVERY
+ * app in the Settings group (`🔌️plugin/🦀️.rs` `AppBuilder::build_definition`) and its body is the guest's own
+ * `framework.body.history`, rendered through the interpreter like every other panel body; the dock keeps it a
+ * bottom-right leaf beside Settings, Marketplace and the Task manager instead of nesting it inside the Settings branch,
+ * exactly as the wgpu shell's dock assembly partitions it.
+ */
+export function partitionFrameworkHistoryPanelTab<Tab extends { readonly kind: PanelTabKind }>(tabs: readonly Tab[]): { readonly history: Tab | undefined; readonly rest: readonly Tab[] } {
+  return { history: tabs.find((tab) => panelTabKindId(tab.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID), rest: tabs.filter((tab) => panelTabKindId(tab.kind) !== FRAMEWORK_PANEL_TAB_HISTORY_ID) };
+}
+
+/** 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
+type FrameworkLayoutWindowSeed = {
+  readonly windowId: string;
+  readonly windowKindId: string;
+  readonly title?: string;
+  readonly templateId?: string;
+  readonly size: number;
+  readonly corner?: WindowStackCorner;
 };
 
-/** 📍️ Stable key for maps whose command ids may overlap across owners. */
-export function commandAddressKey(address: CommandAddress): string {
-  const owner = address.owner;
-  if (owner === "os") return `os:${address.commandId}`;
-  if ("plugin" in owner) return `plugin:${owner.plugin.pluginId}:${address.commandId}`;
-  if ("app" in owner) return `app:${owner.app.pluginId}:${owner.app.appId}:${address.commandId}`;
-  return `mode:${owner.mode.pluginId}:${owner.mode.appId}:${owner.mode.modeId}:${address.commandId}`;
-}
-
-/** 🪪️ Element-id-safe projection of the complete command address. */
-function commandElementKey(address: CommandAddress): string {
-  return commandAddressKey(address).replaceAll(":", ".");
-}
-
-/** 📍️ Whether an addressed command belongs to the operating-system catalog. */
-export function isOsCommandAddress(address: CommandAddress): boolean {
-  return address.owner === "os";
-}
-
-/** 📍️ Plugin segment of a non-OS command owner. */
-export function commandOwnerPluginId(owner: CommandAddress["owner"]): string | null {
-  if (owner === "os") return null;
-  if ("plugin" in owner) return owner.plugin.pluginId;
-  if ("app" in owner) return owner.app.pluginId;
-  return owner.mode.pluginId;
-}
-
-/** ⌨️ Detects the command-keybinding platform from a browser/host platform description. */
-export function detectCommandPlatform(value: string): Platform | undefined {
-  if (/mac|iphone|ipad/i.test(value)) return "macOs";
-  if (/win/i.test(value)) return "windows";
-  if (/linux|x11/i.test(value)) return "linux";
-  return undefined;
-}
-
-/** ⌨️ Resolves a command's portable chords for one host platform. */
-export function commandKeybindingChords(definition: Pick<CommandDefinition, "keybindings">, platform?: Platform): string[] {
-  return definition.keybindings.filter((binding) => binding.platform === undefined || binding.platform === platform).map((binding) => binding.chord);
-}
-
-/**
- * 🎛️ Aggregates every command visible for the current session: os built-ins, the active session's
- * plugin-owned commands, app-owned commands, and commands owned by the active mode. Window-local
- * verbs are actions and therefore never enter this global command resolver — unlike
- * `resolveWindowActions`/`resolveUtilities`, this never takes a window kind.
- */
-export function resolveCommands(
-  osCommands: readonly CommandDefinition[],
-  activePluginManifest: Pick<PluginManifest, "pluginId" | "commands"> | null | undefined,
-  app: Pick<AppDefinition, "id" | "commands" | "modes"> | null | undefined,
-  activeModeId: string,
-  overlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
-  terminology: string = UI_TERMINOLOGY_NATIVE,
-  locale: string = SHELL_LOCALES[0],
-  manifests: readonly { readonly apps: readonly unknown[] }[] = [],
-  selectedArtifactKinds?: readonly ArtifactKindChoice[],
-): ResolvedCommand[] {
-  const resolveDefinition = (definition: CommandDefinition): ResolvedCommand["definition"] => ({
-    ...definition,
-    label: resolveManifestLabel(definition.label, terminology, locale),
-    args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
+/** 🪟️ Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
+function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, parentSize = 100): FrameworkLayoutWindowSeed[] {
+  if (node.kind === "window") {
+    return [
+      {
+        windowId: node.instanceId ?? node.windowKindId,
+        windowKindId: node.windowKindId,
+        title: node.title,
+        templateId: node.templateId,
+        size: parentSize,
+        corner: node.corner,
+      },
+    ];
+  }
+  if (node.kind === "stack") {
+    const size = node.size ?? parentSize;
+    return node.children.map((child) => ({
+      windowId: child.instanceId ?? child.windowKindId,
+      windowKindId: child.windowKindId,
+      title: child.title,
+      templateId: child.templateId,
+      size,
+      corner: child.corner,
+    }));
+  }
+  const childSizes = node.children.map((child) => ("size" in child ? child.size : undefined));
+  const explicitTotal = childSizes.reduce<number>((sum, size) => sum + (size ?? 0), 0);
+  const unsetCount = childSizes.filter((size) => size === undefined).length;
+  const defaultEach = unsetCount > 0 ? Math.max(0, 100 - explicitTotal) / unsetCount : 0;
+  return node.children.flatMap((child, index) => {
+    const fraction = childSizes[index] ?? defaultEach;
+    return collectFrameworkLayoutWindowSeeds(child, parentSize * (fraction / 100));
   });
-  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), address: { owner: "os", commandId: definition.id } }));
-  for (const definition of activePluginManifest?.commands ?? []) {
-    resolved.push({ definition: resolveDefinition(definition), address: { owner: { plugin: { pluginId: activePluginManifest!.pluginId } }, commandId: definition.id } });
-  }
-  if (!app) return resolved;
-  const pluginId = activePluginManifest?.pluginId ?? "";
-  for (const definition of app.commands ?? []) {
-    resolved.push({ definition: resolveDefinition(definition), address: { owner: { app: { pluginId, appId: app.id } }, commandId: definition.id } });
-  }
-  const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
-  for (const definition of activeMode?.commands ?? []) {
-    resolved.push({ definition: resolveDefinition(definition), address: { owner: { mode: { pluginId, appId: app.id, modeId: activeModeId } }, commandId: definition.id } });
-  }
-  return resolved;
 }
 
-/** 🎛️ Chrome-known command category ids that already have a `ui.settings.tab.*` translation key. */
-const CHROME_KNOWN_COMMAND_CATEGORIES = new Set(["general", "driver", "app", "appearance", "layout", "language", "terminology", "theme"]);
-
-/** 🎛️ Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). Falls back to this for app/plugin-invented categories that have no fixed framework vocabulary entry. */
-function titleizeCommandCategory(category: string): string {
-  return category.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+/** 🗣️ For a single, non-instanced window (`instanceId` unset — the common case, one window per kind),
+ * the `windowKind`'s own label is the single source of truth: a manifest-baked `WindowLayoutWindowNode.title`
+ * (from a plugin's `create_default_layout(..., titles)` call) is a plain, locale-invariant string that
+ * predates locale/terminology resolution entirely, so it must never win over a real `windowKinds` lookup —
+ * it only survives as a last-resort fallback for a window kind id that isn't declared in the manifest
+ * (mirrors {@link retitleWindowLayoutNode}'s already-correct precedence). For a multi-instance window
+ * (`instanceId` set — several views sharing one `windowKind`, e.g. "Top"/"Perspective" both backed by a
+ * single 3D-viewport kind), the shared kind label can't distinguish instances, so the baked per-instance
+ * title is the real title and must win instead. */
+function resolveFrameworkWindowTitle(
+  windowKindId: string,
+  instanceId: string | undefined,
+  bakedTitle: string | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
+  terminology: string,
+  locale: string,
+): string {
+  if (instanceId) return bakedTitle ?? windowKindId;
+  const kind = windowKinds.find((entry) => entry.id === windowKindId);
+  return kind ? resolveManifestLabel(kind.label, terminology, locale) : (bakedTitle ?? windowKindId);
 }
 
-/** 🎛️ Resolves a command category's display label, reusing the existing `ui.settings.tab.*` keys for chrome-known ids and falling back to a loose title-case for open-set app/plugin categories. */
-export function commandCategoryLabel(category: string): string {
-  return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "driver" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
-}
-
-/** 🎛️ Ordered, deduped category tabs for the footer command panel, derived from whatever commands actually resolved. */
-export function commandCategories(commands: readonly ResolvedCommand[]): { readonly id: string; readonly label: string }[] {
-  const seen = new Set<string>();
-  const categories: { readonly id: string; readonly label: string }[] = [];
-  for (const { definition } of commands) {
-    if (!definition.inPalette) continue;
-    if (seen.has(definition.category)) continue;
-    seen.add(definition.category);
-    categories.push({ id: definition.category, label: commandCategoryLabel(definition.category) });
-  }
-  return categories;
-}
-
-function selectCommandArg(id: string, label: string, options: readonly { readonly value: string; readonly label: string }[]): ActionArgDef {
-  return { id, label, schema: { kind: "string", options: options.map((option) => ({ ...option })) }, required: true };
-}
-
-/** 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
- * translation key, so its own {@link UiDriver.label} (genuine runtime data) is the correct fallback. */
-export function driverDisplayLabel(driver: UiDriver): string {
-  if (driver.id === "default") return shellLabel("settings.driver.default");
-  if (driver.id === "compact") return shellLabel("settings.driver.compact");
-  return driver.label || driver.id;
-}
-
-/**
- * 🎛️ Os-owned built-in commands — app introduction/theme/layout/locale/appearance/driver,
- * handled locally by the shell (never routed to a program). Rebuilt via `useMemo` since the theme and
- * terminology option lists are live state.
- *
- * 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —
- * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
- * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above.
- */
-export function buildOsCommands(
-  themeList: readonly UiTheme[],
-  terminologies: readonly string[],
-  hasIntroduction: boolean,
-  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
-  driverList: readonly UiDriver[] = builtinUiDrivers(),
-  tutorials: readonly { readonly id: string; readonly title: unknown }[] = [],
-  tutorialRecorderAvailable = false,
-  terminology: string = UI_TERMINOLOGY_NATIVE,
-  locale: string = SHELL_LOCALES[0],
-  hasOpenArtifactSurfaces = false,
-): CommandDefinition[] {
-  const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
-  const commands: CommandDefinition[] = [
-    {
-      id: "os.toggleFullscreen",
-      label: shellLabel("ui.fullscreen.toggle"),
-      category: "layout",
-      iconId: "maximize-2" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      inPalette: true,
-      args: [],
-      keybindings: [
-        { chord: "f11", platform: "windows" },
-        { chord: "f11", platform: "linux" },
-        { chord: "control+meta+f", platform: "macOs" },
-      ],
-    },
-    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
-    ...(tutorials.length > 0
-      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
-      : []),
-    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), category: "app", iconId: "circle" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
-    {
-      id: "os.setAppearance",
-      label: shellLabel("ui.command.setAppearance"),
-      category: "appearance",
-      iconId: "sun" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg("appearance", shellLabel("ui.settings.tab.appearance"), [
-          { value: "system", label: shellLabel("ui.settings.appearance.system") },
-          { value: "light", label: shellLabel("ui.settings.appearance.light") },
-          { value: "dark", label: shellLabel("ui.settings.appearance.dark") },
-        ]),
-      ],
-    },
-    {
-      id: "os.setThemeId",
-      label: shellLabel("ui.command.setTheme"),
-      category: "appearance",
-      iconId: "palette" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg(
-          "themeId",
-          shellLabel("ui.settings.tab.theme"),
-          themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })),
-        ),
-      ],
-    },
-    {
-      id: "os.setLayout",
-      label: shellLabel("ui.command.setLayout"),
-      category: "layout",
-      iconId: "layout" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg("layout", shellLabel("ui.settings.tab.layout"), [
-          { value: "desktop", label: shellLabel("settings.layout.desktop") },
-          { value: "tablet", label: shellLabel("settings.layout.tablet") },
-        ]),
-      ],
-    },
-    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), category: "layout", iconId: "undo" as const, semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette: true, args: [], keybindings: [] },
-    {
-      id: "os.setLocale",
-      label: shellLabel("ui.command.setLocale"),
-      category: "language",
-      iconId: "globe" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg("locale", shellLabel("ui.settings.tab.language"), [
-          { value: "en", label: shellLabel("ui.settings.language.en") },
-          { value: "de", label: shellLabel("ui.settings.language.de") },
-        ]),
-      ],
-    },
-    {
-      id: "os.setTerminology",
-      label: shellLabel("ui.command.setTerminology"),
-      category: "language",
-      iconId: "type" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg(
-          "terminology",
-          shellLabel("ui.settings.tab.terminology"),
-          terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })),
-        ),
-      ],
-    },
-    {
-      id: "os.setDriver",
-      label: shellLabel("ui.command.setDriver"),
-      category: "layout",
-      iconId: "settings" as const,
-      semantics: actionSemanticsForKind("shell"), kind: "shell",
-      keybindings: [],
-      inPalette: true,
-      args: [
-        selectCommandArg(
-          "driver",
-          shellLabel("ui.settings.tab.driver"),
-          driverList.map((driver) => ({ value: driver.id, label: driverDisplayLabel(driver) })),
-        ),
-      ],
-    },
-    {
-      id: OPEN_TASK_MANAGER_COMMAND_ID,
-      label: shellLabel("ui.command.openTaskManager"),
-      category: "general",
-      iconId: "cpu" as const,
-      semantics: actionSemanticsForKind("shell"),
-      kind: "shell",
-      inPalette: true,
-      args: [],
-      keybindings: [],
-    },
-    {
-      id: OPEN_HUB_COMMAND_ID,
-      label: shellLabel("ui.command.openHub"),
-      category: "general",
-      iconId: "users" as const,
-      semantics: actionSemanticsForKind("shell"),
-      kind: "shell",
-      inPalette: true,
-      args: [],
-      keybindings: [],
-    },
-    ...(hasOpenArtifactSurfaces
-      ? [
-          { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
-          { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
-        ]
-      : []),
-  ];
-  return commands.filter((command) => !lockedCommandIds.has(command.id));
-}
-
-/** 🎛️ Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}.
- * Answers whether `commandId` was actually routed, so a replayed chrome command that lands nowhere is
- * reported instead of silently vanishing (see {@link isShellOwnedCommandId}). */
-export function dispatchOsCommand(
-  commandId: string,
-  args: Record<string, unknown> | undefined,
-  commitUiPreference: (mutation: UiPreferencesConfigMutation) => void,
-  dispatch: (action: ShellAction) => void,
-  dockLayoutStore: DockLayoutStore,
-  dockUiStateStore: DockUiStateStore,
-  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
-): boolean {
-  switch (commandId) {
-    case "os.introduceApp":
-      dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-      return true;
-    case "os.setAppearance":
-      if (locks.appearance) return true;
-      commitUiPreference(setAppearance((args?.appearance as ElementsSurfaceAppearance) ?? "system"));
-      return true;
-    case "os.setThemeId":
-      if (locks.themeId) return true;
-      if (typeof args?.themeId === "string") commitUiPreference(setTheme(args.themeId));
-      return true;
-    case "os.setLayout":
-      commitUiPreference(setLayout((args?.layout as UiChromeLayout) ?? "desktop"));
-      return true;
-    case "os.resetDock":
-      dispatch({ type: "RESET_DOCK" });
-      dockLayoutStore.reset();
-      dockUiStateStore.reset();
-      return true;
-    case "os.setLocale":
-      if (locks.locale) return true;
-      if (typeof args?.locale === "string") commitUiPreference(setLocale(args.locale as UiLocale));
-      return true;
-    case "os.setTerminology":
-      if (locks.terminology) return true;
-      if (typeof args?.terminology === "string") commitUiPreference(setTerminology(args.terminology));
-      return true;
-    case "os.setDriver":
-      if (typeof args?.driver === "string") commitUiPreference(setDriver(args.driver));
-      return true;
-    case OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID:
-    case OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID:
-      dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: commandId === OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID ? "viewer" : "editor" });
-      dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
-      dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
-      return true;
-    default:
-      return false;
-  }
-}
-
-/** 🎛️ Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
-const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
-
-/**
- * 🎛️ One category's command list (and, if a command is expanded, its staged arg form) as a `TreePanelConfig`
- * — the content a category `PanelTabLeaf` resolves to. A zero-arg command's row fires immediately on click
- * (a plain fire-and-forget tree row, same pattern as {@link groupNamedLayoutsToTreeItems}'s layout rows —
- * no `selectedIds`/`onSelectionChange` override, so it takes `Tree`'s default single-select highlight after
- * firing, same as clicking a Display→Layout row does). An arg-carrying command's row toggles `expandedCommandId`
- * itself (kept as its own exclusive, bespoke state — not `Tree`'s per-row `openStates`, which isn't naturally
- * exclusive across sibling rows) and, when expanded, a synthetic form section (one row per arg, `control`
- * holding the staged input, replacing the old `Field` wrapper since `TreeDataItem` already renders label +
- * description + control in the same two-column layout) is prepended so it renders above the command list —
- * `Tree` reverses top-level `sections` for `direction="up"` (bottom anchors), threaded here via `flowFromAnchor`/
- * `FlowProvider`/`useFlow` down from the hosting `Panel`, not any manual reversal in this function.
- */
-export function buildCommandCategoryTree(
-  commands: readonly ResolvedCommand[],
-  expandedCommandId: string | null,
-  stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
-  onExecute: (entry: ResolvedCommand, executeArgs?: Record<string, unknown>) => void,
-  onToggleExpanded: (commandId: string | null) => void,
-  onStageArg: (commandId: string, argId: string, value: unknown) => void,
-  onResetArgs: (commandId: string) => void,
-): TreePanelConfig {
-  const argCarryingCommands = commands.filter((entry) => entry.definition.args.length > 0);
-  const autoExpandedSingleton = argCarryingCommands.length === 1 ? argCarryingCommands[0] : undefined;
-  const expanded = (expandedCommandId ? commands.find((entry) => commandAddressKey(entry.address) === expandedCommandId) : undefined) ?? autoExpandedSingleton;
-  const effectiveExpandedId = expanded ? commandAddressKey(expanded.address) : null;
-  const sections: TreeDataSection[] = [];
-  if (expanded && expanded.definition.args.length > 0) {
-    const expandedKey = commandAddressKey(expanded.address);
-    const expandedElementKey = commandElementKey(expanded.address);
-    const staged = stagedArgsByCommandId[expandedKey] ?? {};
-    const effective = effectiveActionArgs(expanded.definition.args, staged);
-    const missing = unresolvedActionArgs(expanded.definition.args, effective);
-    sections.push({
-      id: `command.category.${expanded.definition.category}.form`,
-      label: expanded.definition.label,
-      items: expanded.definition.args.map(
-        (def): TreeDataItem => ({
-          id: `command.${expandedElementKey}.arg.${def.id}`,
-          label: def.label,
-          description: def.description,
-          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value)),
-        }),
-      ),
-      actions: [
-        {
-          id: `command-${expandedElementKey}-execute`,
-          icon: <Icon icon="check" size="small" />,
-          text: shellLabel("ui.common.execute"),
-          disabled: missing.length > 0,
-          reason: missing.map((id) => expanded.definition.args.find((def) => def.id === id)!.label).join(", ") || undefined,
-          onClick: () => { if (missing.length === 0) onExecute(expanded, effective); },
-        },
-        {
-          id: `command-${expandedElementKey}-reset`,
-          icon: <Icon icon="undo" size="small" />,
-          text: shellLabel("ui.common.reset"),
-          onClick: () => onResetArgs(expandedKey),
-        },
-      ],
-    });
-  }
-  const listCommands = commands.filter((entry) => commandAddressKey(entry.address) !== effectiveExpandedId);
-  if (listCommands.length > 0) {
-    sections.push({
-      id: "command.category.list",
-      items: listCommands.map((entry): TreeDataItem => {
-        const argCarrying = entry.definition.args.length > 0;
-        const entryKey = commandAddressKey(entry.address);
-        const elementKey = commandElementKey(entry.address);
-        const icon = entry.definition.iconId ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
-        if (!argCarrying) return { id: `command.${elementKey}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
+function convertFrameworkLayoutNodeToModeLayout(
+  node: WindowLayoutAxisNode | WindowLayoutStackNode,
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
+  terminology: string,
+  locale: string,
+): Exclude<WindowLayoutNode, { kind: "window" }> {
+  if (node.kind === "stack") {
+    return {
+      kind: "stack",
+      size: node.size,
+      children: node.children.map((child) => {
+        const id = child.instanceId ?? child.windowKindId;
+        const title = resolveFrameworkWindowTitle(child.windowKindId, child.instanceId, child.title, windowKinds, terminology, locale);
         return {
-          id: `command.${elementKey}`,
-          label: `${entry.definition.label}…`,
-          icon: <Icon icon={expandedCommandId === entryKey ? "chevron-down" : "chevron-up"} size="small" />,
-          onClick: () => onToggleExpanded(expandedCommandId === entryKey ? null : entryKey),
+          kind: "window" as const,
+          id,
+          title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)),
+          corner: child.corner,
         };
       }),
-    });
+    };
   }
-  return { sections };
-}
-
-/**
- * 🎛️ One `PanelTabLeaf` per resolved command category — consumers wrap these under the Command branch
- * (`FRAMEWORK_CATEGORY_COMMAND_ID`) on `defaultDock.anchors["bottom-middle"]` so the folded chrome shows
- * a single expandable Command toggle. The command palette's fold/active-category/size/persistence is the
- * generic per-anchor `Panel` state (see `buildPanelProps`); this only builds the category tab leaves.
- * Content is a *lazy* `resolveTree` (mirrors {@link createFrameworkDisplayPanelTabs}'s windows tab) so
- * this array — and therefore `defaultDock`'s own memo — never depends on `expandedCommandId`/
- * `stagedArgsByCommandId`, which change on every keystroke while staging a command argument; `resolveTree`
- * reads those fresh off refs at render time instead.
- */
-export function buildCommandCategoryTabs(
-  resolvedCommands: readonly ResolvedCommand[],
-  categories: readonly { readonly id: string; readonly label: string }[],
-  expandedCommandIdRef: React.RefObject<string | null>,
-  stagedArgsByCommandIdRef: React.RefObject<Readonly<Record<string, Readonly<Record<string, unknown>>>>>,
-  onCommand: (address: CommandAddress, args?: Record<string, unknown>) => void,
-  dispatch: (action: ShellAction) => void,
-): PanelTabNode[] {
-  return categories.map((category) => {
-    const categoryCommands = resolvedCommands.filter((entry) => entry.definition.inPalette && entry.definition.category === category.id);
-    return singleTreeLeaf({
-      id: `command.category.${category.id}`,
-      icon: COMMAND_CATEGORY_ICON,
-      name: category.label,
-      tree: {
-        resolveTree: () =>
-          buildCommandCategoryTree(
-            categoryCommands,
-            expandedCommandIdRef.current,
-            stagedArgsByCommandIdRef.current,
-            (entry, executeArgs) => onCommand(entry.address, executeArgs),
-            (commandId) => dispatch({ type: "SET_COMMAND_EXPANDED", value: commandId }),
-            (commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value }),
-            (commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId }),
-          ),
-      },
-    });
-  });
-}
-//#endregion 🎛️CommandRegistry
-
-//#region 🛠️ToolRegistry
-/**
- * 🛠️ One tool's measure-tree content — a single headerless section mapped to native `TreeDataItem`s, so
- * Fill opens directly onto count + distribution with the same chrome as left-corner panel trees. The
- * `tool.<id>` leaf tab IS the activation control (see {@link reconcileToolTabSelection}): a selected tool
- * leaf always means that tool is active, so the tree never renders a second activation toggle of its own —
- * that toggle carried the leaf tab's own element id, so the tab and the toggle disagreed about the same
- * state and the first press on an already-selected leaf deactivated the tool instead of arming it. A tool
- * whose program publishes no measures yet resolves to an empty options section.
- */
-function buildToolTree(tool: ResolvedToolDefinition, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
   return {
-    sortableSections: false,
-    sections: [
-      {
-        id: `tool.${tool.id}.options`,
-        label: "",
-        defaultOpen: true,
-        items: measures && measures.length > 0 ? windowMeasuresToTreeItems(measures, onAction) : [],
-      },
-    ],
+    kind: node.kind,
+    size: node.size,
+    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child, appLabelsOverlay, windowKinds, terminology, locale)),
   };
 }
 
-/**
- * 🛠️ One `PanelTabLeaf` per resolved mode tool — consumers wrap these under the Tool branch
- * (`FRAMEWORK_CATEGORY_TOOL_ID`) on `defaultDock.anchors["bottom-middle"]`, ordered left of the Command
- * branch, so the folded chrome shows a single Tool toggle. Content is a *lazy* `resolveTree` (mirrors
- * `buildCommandCategoryTabs`'s windows tab) so this array — and therefore `defaultDock`'s own memo —
- * never depends on `toolMeasuresByToolId`, which changes on every activation/slider tick; `resolveTree`
- * reads those fresh off the ref at render time instead.
- */
-export function buildToolTabs(tools: readonly ResolvedToolDefinition[], toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>, onAction: (action: ActionDescriptor) => unknown): PanelTabNode[] {
-  return tools.map((tool) =>
-    singleTreeLeaf({
-      id: `tool.${tool.id}`,
-      icon: shellTabIcon(tool.iconId),
-      name: tool.label,
-      tree: {
-        resolveTree: () => {
-          const measures = toolMeasuresByToolIdRef.current[tool.id];
-          const tree = buildToolTree(tool, measures, onAction);
-          return { sections: tree.sections, sortableSections: tree.sortableSections };
-        },
-      },
-    }),
-  );
+/** 🏷️ Localizes singleton window titles while retaining authored instance names and the live layout. */
+export function retitleWindowLayoutNode(
+  node: WindowLayoutNode,
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
+  extraInstances: readonly ExtraWindowInstance[],
+  terminology: string,
+  locale: string,
+  titleOverrides: Readonly<Record<string, string>>,
+): WindowLayoutNode {
+  if (node.kind === "window") {
+    const extra = extraInstances.find((entry) => entry.id === node.id);
+    const kind = windowKinds.find((entry) => entry.id === node.id);
+    const override=titleOverrides[node.id];
+    const title = override !== undefined ? wireLabel(override) : extra ? wireLabel(extra.title) : kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
+    return { ...node, title };
+  }
+  return {
+    ...node,
+    children: node.children.map((child) => retitleWindowLayoutNode(child, windowKinds, extraInstances, terminology, locale, titleOverrides)),
+  } as WindowLayoutNode;
 }
 
-/** 🛠️ Which of the two halves of the one tool state changed since the last reconciliation, and therefore what the shell owes the other half (see {@link reconcileToolTabSelection}). */
-export type ToolTabSelectionEffect = { readonly kind: "idle" } | { readonly kind: "activate"; readonly toolId: string | null } | { readonly kind: "select"; readonly toolId: string | null };
-
-/** 🛠️ The pair reconciled by {@link reconcileToolTabSelection}: the mode's active tool and the `tool.<id>` leaf selected under the Tool category (`null` = no tool / the category collapsed to its branch). */
-export interface ToolTabSelection {
-  readonly toolId: string | null;
-  readonly selected: string | null;
+/** 🪟️ The window instances a framework layout DECLARES beyond one per kind — every leaf whose instance id differs
+ * from its window kind id, for a kind the app declares — as `{ id, windowKindId }`, in layout order, labels untouched.
+ * The identity half of {@link resolveFrameworkLayoutSeed}'s `extraInstances`, for a program whose windows the shell
+ * namespaces itself (a spawned program inside `s`). */
+export function frameworkLayoutDeclaredInstances(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): readonly { readonly id: string; readonly windowKindId: string }[] {
+  if (!layout?.root) return [];
+  const kindIds = new Set(windowKinds.map((kind) => kind.id));
+  return collectFrameworkLayoutWindowSeeds(layout.root)
+    .filter((seed) => seed.windowId !== seed.windowKindId && kindIds.has(seed.windowKindId))
+    .map((seed) => ({ id: seed.windowId, windowKindId: seed.windowKindId }));
 }
 
-/**
- * 🛠️ Tool activation and the selected `tool.<id>` leaf tab are ONE state with two representations, and this
- * is its single owner. Every route into the panel path — a user press, a restored `DockUiStateStore`
- * arrangement, an introduction step, a dock reset — has to end at the same place, so activation may not
- * hang off the press callback alone: a hydrated path that already selects `tool.fill` used to render a
- * selected tab over a tool that was never activated, after which the user's first press read as a re-press
- * and *collapsed* the leaf instead of arming the tool.
+/** 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
+export function resolveFrameworkLayoutSeed(
+  layout: WindowLayout | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string,
+  locale: string,
+): {
+  readonly modeLayout: WindowLayoutNode;
+  readonly extraInstances: readonly ExtraWindowInstance[];
+  readonly pendingProjections: readonly { readonly windowId: string; readonly templateId: string }[];
+} {
+  const windowIds = windowKinds.map((kind) => kind.id);
+  if (!layout?.root) {
+    return {
+      modeLayout: createEvenWindowLayout(windowIds.length ? windowIds : ["main"]),
+      extraInstances: [],
+      pendingProjections: [],
+    };
+  }
+  const seeds = collectFrameworkLayoutWindowSeeds(layout.root);
+  const kindById = new Map(windowKinds.map((kind) => [kind.id, kind] as const));
+  const extraInstances: ExtraWindowInstance[] = [];
+  const pendingProjections: { readonly windowId: string; readonly templateId: string }[] = [];
+  for (const seed of seeds) {
+    const kind = kindById.get(seed.windowKindId);
+    if (!kind) continue;
+    if (seed.windowId !== seed.windowKindId) {
+      extraInstances.push({
+        id: seed.windowId,
+        windowKindId: seed.windowKindId,
+        title: resolveAppLabel(appLabelsOverlay, "windowKind", seed.windowId, seed.title ?? resolveManifestLabel(kind.label, terminology, locale)),
+      });
+    }
+    if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
+  }
+  return {
+    modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay, windowKinds, terminology, locale),
+    extraInstances,
+    pendingProjections,
+  };
+}
+
+/** 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
+export function applyFrameworkLayoutSeed(
+  layout: WindowLayout | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string,
+  locale: string,
+): {
+  readonly modeLayout: WindowLayoutNode;
+  readonly extraInstances: readonly ExtraWindowInstance[];
+} {
+  const seed = resolveFrameworkLayoutSeed(layout, windowKinds, appLabelsOverlay, terminology, locale);
+  for (const pending of seed.pendingProjections) {
+    const projectionSpec = decodeWorldProjectionTemplateId(pending.templateId);
+    if (projectionSpec) registerPendingWorldProjection(pending.windowId, projectionSpec);
+  }
+  return { modeLayout: seed.modeLayout, extraInstances: seed.extraInstances };
+}
+
+function modeLayoutNodeToFramework(node: WindowLayoutNode, kindByInstanceId: ReadonlyMap<string, string>): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
+  if (node.kind === "window") {
+    const windowKindId = kindByInstanceId.get(node.id) ?? node.id;
+    const instanceId = kindByInstanceId.has(node.id) ? node.id : undefined;
+    return {
+      kind: "window",
+      windowKindId,
+      ...(node.title ? { title: node.title } : {}),
+      ...(instanceId ? { instanceId } : {}),
+    };
+  }
+  if (node.kind === "stack") {
+    return {
+      kind: "stack",
+      ...(node.size !== undefined ? { size: node.size } : {}),
+      children: node.children.map((child) => {
+        const windowKindId = kindByInstanceId.get(child.id) ?? child.id;
+        const instanceId = kindByInstanceId.has(child.id) ? child.id : undefined;
+        return {
+          kind: "window" as const,
+          windowKindId,
+          ...(child.title ? { title: child.title } : {}),
+          ...(instanceId ? { instanceId } : {}),
+        };
+      }),
+    };
+  }
+  return {
+    kind: node.kind,
+    ...(node.size !== undefined ? { size: node.size } : {}),
+    children: node.children.map((child) => modeLayoutNodeToFramework(child, kindByInstanceId) as WindowLayoutStackNode | WindowLayoutAxisNode),
+  };
+}
+
+export function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, extraWindowInstances: readonly ExtraWindowInstance[], fallback?: WindowLayout): WindowLayout | undefined {
+  if (!shellLayout) return fallback;
+  const kindByInstanceId = new Map(extraWindowInstances.map((entry) => [entry.id, entry.windowKindId] as const));
+  const root = modeLayoutNodeToFramework(shellLayout, kindByInstanceId);
+  if (root.kind === "window") return { root: { kind: "stack", children: [root] } };
+  return { root };
+}
+
+//#region WindowLayoutChangeClassify
+/** 🪟️ Trailing settle delay for `Mode.onLayoutChange` (fires continuously during a live drag/resize) before
+ * noting one `shell.windowResize`/`shell.windowMove` command for the whole gesture — matches Board2dHost's
+ * own camera-sync settle debounce (`beginCameraInteraction`), the only precedent for this kind of
+ * drag-settle pattern already in this file. */
+export const LAYOUT_CHANGE_SETTLE_MS = 350;
+
+/** 🪟️ Recursive skeleton of a {@link WindowLayoutNode} — kind/id/nesting only, stripping `size` (resize) and
+ * a stack's `activeId` (mere focus echo) — so two trees compare equal here iff neither differs. */
+type WindowLayoutSkeletonNode = { readonly kind: string; readonly id?: string; readonly corner?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
+function windowLayoutSkeleton(node: WindowLayoutNode): WindowLayoutSkeletonNode {
+  if (node.kind === "window") return { kind: node.kind, id: node.id, corner: node.corner };
+  return { kind: node.kind, children: node.children.map((child) => windowLayoutSkeleton(child as WindowLayoutNode)) };
+}
+
+/** 🪟️ Like {@link windowLayoutSkeleton} but keeps each node's `size` (still ignores a stack's `activeId`) —
+ * comparing two of these (after their plain skeletons already matched) is how {@link classifyWindowLayoutChange}
+ * tells a pure resize apart from no change at all. */
+type WindowLayoutSizedSkeletonNode = { readonly kind: string; readonly id?: string; readonly size?: number; readonly children?: readonly WindowLayoutSizedSkeletonNode[] };
+function windowLayoutSizedSkeleton(node: WindowLayoutNode): WindowLayoutSizedSkeletonNode {
+  if (node.kind === "window") return { kind: node.kind, id: node.id, size: node.size };
+  return { kind: node.kind, size: node.size, children: node.children.map((child) => windowLayoutSizedSkeleton(child as WindowLayoutNode)) };
+}
+
+/** 🪟️ Classifies a `Mode.onLayoutChange` delta by comparing the previous and next layout tree — `"rearrange"`
+ * when window ids/nesting structure differ (drag-to-new-position, split, close), `"resize"` when only pane
+ * sizes differ, `null` when neither differs (a pure active-window-flag echo, handled by the dedicated
+ * active-window seam instead — never worth its own shell command). */
+export function classifyWindowLayoutChange(previous: WindowLayoutNode | null, next: WindowLayoutNode | null): "resize" | "rearrange" | null {
+  if (previous === next) return null;
+  if (!previous || !next) return "rearrange";
+  if (JSON.stringify(windowLayoutSkeleton(previous)) !== JSON.stringify(windowLayoutSkeleton(next))) return "rearrange";
+  if (JSON.stringify(windowLayoutSizedSkeleton(previous)) !== JSON.stringify(windowLayoutSizedSkeleton(next))) return "resize";
+  return null;
+}
+//#endregion WindowLayoutChangeClassify
+
+function windowEngagementControlToSpec(control: WindowEngagementControl | undefined, onAction: (action: ActionDescriptor) => void): EngagementControl | undefined {
+  if (!control) return undefined;
+  if (control.kind === "ring" || control.kind === "toggleGroup") {
+    return {
+      kind: control.kind,
+      id: control.id,
+      label: control.label === undefined ? undefined : uiDataLabel(control.label),
+      value: control.value,
+      disabled: control.disabled,
+      options: control.options.map((row) => ({ id: row.id, label: row.label, disabled: row.disabled })),
+      onSelect: control.onSelect ? (id: string) => onAction({ ...control.onSelect!, args: { ...(control.onSelect!.args as object | undefined), id } }) : undefined,
+    };
+  }
+  if (control.kind === "select") {
+    return {
+      kind: "select",
+      id: control.id,
+      label: control.label === undefined ? undefined : uiDataLabel(control.label),
+      value: control.value,
+      placeholder: control.placeholder === undefined ? undefined : uiDataLabel(control.placeholder),
+      disabled: control.disabled,
+      items: control.items.map((row) => ({ id: row.id, value: row.value, label: row.label })),
+      onChange: control.onChange ? (value: string) => onAction({ ...control.onChange!, args: { ...(control.onChange!.args as object | undefined), value } }) : undefined,
+    };
+  }
+  const dispatchNumeric = (action: ActionDescriptor | undefined, value: number) => {
+    if (!action) return;
+    onAction({ ...action, args: { ...(action.args as object | undefined), value } });
+  };
+  const numeric = {
+    id: control.id,
+    label: control.label === undefined ? undefined : uiDataLabel(control.label),
+    value: control.value,
+    min: control.min,
+    max: control.max,
+    step: control.step,
+    unit: control.unit,
+    disabled: control.disabled,
+    onChange: control.onChange ? (value: number) => dispatchNumeric(control.onChange, value) : undefined,
+    onCommit: control.onCommit ? (value: number) => dispatchNumeric(control.onCommit, value) : undefined,
+  };
+  if (control.kind === "slider") {
+    if (control.min === undefined || control.max === undefined) throw new Error("engagement slider requires explicit minimum and maximum");
+    return { ...numeric, kind: "slider", min: control.min, max: control.max };
+  }
+  return { ...numeric, kind: "stepper" };
+}
+
+/** 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
+ * `loadedPluginsRef`, which only updates after the next React commit. */
+export type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
+
+/** 🔐️ Keeps app-session ownership deterministic while dependency plugins stream concurrently. */
+export function pluginShouldEstablishSession(pluginId: string, primaryPluginId: string | undefined, hasSession: boolean): boolean {
+  return !hasSession && pluginId === primaryPluginId;
+}
+
+/** 🔁️ What one `PluginSource` availability event is worth: a first `install`, a `hot-swap` of the
+ * artifact already loaded, or a `drop` because the event names nothing this shell does not already run. */
+export type PluginAvailabilityRouteV1 = "install" | "hot-swap" | "drop";
+
+/** 🔁️ The routing rule the availability pump obeys — the ONE place that decides whether an event may
+ * destroy a live instance.
  *
- * Last change wins: when the active tool moved (program `setActiveTool` effect, utility mutual exclusion,
- * introduction keep-alive) the selection follows it; otherwise a moved selection drives activation. Both
- * outcomes record the value they are about to establish, so the follow-up pass sees no change and cannot
- * bounce — and a refused activation self-heals on the next pass by deselecting the leaf. Callers must skip
- * reconciliation entirely (without updating `previous`) while the Tool category is not the active root, so
- * a tool stays live while the user browses another category and is re-reconciled on re-entry.
- */
-export function reconcileToolTabSelection(previous: ToolTabSelection | null, activeToolId: string | null, selectedToolId: string | null): { readonly next: ToolTabSelection; readonly effect: ToolTabSelectionEffect } {
-  const last = previous ?? { toolId: null, selected: null };
-  if (activeToolId !== last.toolId) return { next: { toolId: activeToolId, selected: activeToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "select", toolId: activeToolId } };
-  if (selectedToolId !== last.selected) return { next: { toolId: selectedToolId, selected: selectedToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "activate", toolId: selectedToolId } };
-  return { next: last, effect: { kind: "idle" } };
+ * A `PluginSource` streams AVAILABILITY, never commands: `subscribe` opens a fresh stream and the dev
+ * source's SSE endpoint answers every connect with a full `snapshot` of what is already built, so the
+ * same `rebuiltAt` arrives again on every reconnect. Routing a replay to `hot-swap` destroys the
+ * session-owning plugin's live instance and its document (`actor-activation.revoked`, then `no channel
+ * for instance N`) — measured in ticket 26/09/02 wave B38 §1.7 and diagnosed in wave B40, where a
+ * language switch was re-running the subscription effect and thereby replaying the whole snapshot.
+ *
+ * `loadedRebuiltAt === undefined` is the first load's unbusted artifact (see `PluginSource.moduleUrl`):
+ * it names no build, so any event that DOES name one is newer. An event carrying no `rebuiltAt` names no
+ * newer artifact than whatever is loaded, so it can only ever be a first `install`. */
+export function pluginAvailabilityRouteV1(alreadyLoaded: boolean, loadedRebuiltAt: number | undefined, eventRebuiltAt: number | undefined): PluginAvailabilityRouteV1 {
+  if (!alreadyLoaded) return "install";
+  if (eventRebuiltAt === undefined) return "drop";
+  return loadedRebuiltAt === undefined || eventRebuiltAt > loadedRebuiltAt ? "hot-swap" : "drop";
 }
 
-/**
- * 🛠️ Whether a tool the PROGRAM just armed has to reveal its own `tool.<id>` leaf. {@link
- * reconcileToolTabSelection} is skipped wholesale while the Tool category is not the active root — which
- * is right for a tool the user armed and then browsed away from, and wrong for one a program arms on its
- * own (typing `fill 3` on the window's engagement line answers `Effect::SetActiveTool { fill }`): the
- * tool went live with no leaf tab mounted anywhere, so its options were unreachable and nothing on screen
- * said it had armed. Only a MOVE to a real tool reveals — an idle category, a disarm and a re-render on
- * the same tool all owe nothing.
- */
-export function programArmedToolRevealV1(previousToolId: string | null, activeToolId: string | null, toolCategoryActive: boolean): boolean {
-  if (toolCategoryActive) return false;
-  return activeToolId !== null && activeToolId !== previousToolId;
+/** 🧭️ Studio configures its catalogue; a focused shell configures only its active aggregate. */
+export function pluginShouldReceiveContributions(pluginId: string, sessionPluginId: string, hostMode: boolean): boolean {
+  return hostMode || pluginId === sessionPluginId;
 }
 
-/** 🛠️ The mode tool a footer tab id (`tool.<id>`) names — the selected leaf and the active tool are reconciled by {@link reconcileToolTabSelection}. */
-export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
-  if (!tabId?.startsWith("tool.")) return null;
-  const toolId = tabId.slice("tool.".length);
-  return toolId.length > 0 ? toolId : null;
+/** 🔌️ Loads one plugin module under the idle-progress deadline, answering `null` for every refusal
+ * rather than throwing — the shell's own per-plugin isolation.
+ *
+ * 🛑️ `signal` is the shell's install-band cancel. It is raced explicitly rather than only handed to
+ * {@link loadPluginModule}, because the point of a cancel control is that the AWAIT settles now; the
+ * underlying fetch finishes into the loader's own cache, so a re-request finds it warm. A cancelled
+ * load is not a fault and is logged as such. */
+export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string, signal?: AbortSignal, manifestPluginId: string = pluginId): Promise<PluginWasmHandle | null> {
+  const startedAtMs = Date.now();
+  let timer = 0;
+  try {
+    if (signal?.aborted === true) throw new Error(`plugin-install.cancelled: ${pluginId}`);
+    return await Promise.race([
+      loadPluginModule(pluginId, moduleUrl, signal, manifestPluginId),
+      new Promise<never>((_, reject) => {
+        signal?.addEventListener("abort", () => reject(new Error(`plugin-install.cancelled: ${pluginId}`)), { once: true });
+      }),
+      new Promise<never>((_, reject) => {
+        const arm = () => {
+          const remaining = pluginLoadRemainingMs(startedAtMs, pluginLoadProgressAt(pluginId), Date.now());
+          if (remaining > 0) {
+            timer = window.setTimeout(arm, remaining);
+            return;
+          }
+          reject(new Error(`timeout loading ${pluginId} after ${Date.now() - startedAtMs} ms with no progress for ${PLUGIN_LOAD_IDLE_TIMEOUT_MS} ms`));
+        };
+        arm();
+      }),
+    ]);
+  } catch (error) {
+    if (signal?.aborted === true) console.debug(`plugin install cancelled ${pluginId}`);
+    else console.error("program load failed", pluginId, error);
+    return null;
+  } finally {
+    if (timer) window.clearTimeout(timer);
+  }
 }
 
-/**
- * ♻️ Identity the desktop and mobile Tool panels share so a late `framework.section.tools` admission
- * re-resolves lazy `resolveTree` sources. `buildToolTabs` keeps tab object identity across measure
- * ticks (the tree reads a ref); {@link PanelTreeUnitsPane} is memoized, so without this revision the
- * Fill body stays the empty section from the first resolve after the guest's packed tools carrier lands.
- */
-export function toolPanelTreeContentRevision<TStaged>(
-  activeToolId: string | null,
-  toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>,
-  actionPaneStagedArgsByKey: TStaged,
-): { readonly activeToolId: string | null; readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>; readonly actionPaneStagedArgsByKey: TStaged } {
-  return { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey };
+/** 🎬️ The install band's own copy — the React twin of the wgpu shell's `plugin.install.*` chrome
+ * strings. No `ui.common.*` chrome key covers "loading a plugin", so this follows the same
+ * local-resolution idiom as the rest of this region. */
+const PLUGIN_INSTALL_BAND_LABEL: FrozenLabel = { en: "Loading plugin", de: "Plugin wird geladen" };
+const PLUGIN_INSTALL_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
+const PLUGIN_INSTALL_PROGRESS_LABEL: FrozenLabel = { en: "{completed} of {total} MB verified", de: "{completed} von {total} MB geprüft" };
+const PLUGIN_INSTALL_RETRY_LABEL: FrozenLabel = { en: "the hub did not answer, trying again ({attempt} of {of})", de: "der Hub hat nicht geantwortet, neuer Versuch ({attempt} von {of})" };
+
+/** 📈️ Every byte the in-flight installs have verified, out of every byte they must verify — `null`
+ * while no install is downloading (a locally staged module has nothing to download). */
+export function pluginInstallProgressTotalV1(progressById: Readonly<Record<string, PluginModuleAcquisitionProgress>>, pluginIds: readonly string[]): PluginModuleAcquisitionProgress | null {
+  const rows = pluginIds.flatMap((pluginId) => (progressById[pluginId] ? [progressById[pluginId]!] : []));
+  if (rows.length === 0) return null;
+  const retry = rows.find((row) => row.retry !== undefined)?.retry;
+  return { completedBytes: rows.reduce((sum, row) => sum + row.completedBytes, 0), totalBytes: rows.reduce((sum, row) => sum + row.totalBytes, 0), ...(retry === undefined ? {} : { retry }) };
 }
 
-/**
- * 🛠️ One press that opens the Tool category must land on a tool leaf (remembered, else the first
- * declared tool). `progressPanelTabSelection` does not auto-descend a branch with no memory; the
- * closed-panel open path used to swallow that press entirely, so Fill never became the selected leaf.
- */
-export function toolCategoryOpenPath(path: readonly string[], memory: Readonly<Record<string, string>>, toolTabIds: readonly string[]): readonly string[] {
-  if (path.length !== 1 || path[0] !== FRAMEWORK_CATEGORY_TOOL_ID || toolTabIds.length === 0) return path;
-  const remembered = memory[FRAMEWORK_CATEGORY_TOOL_ID];
-  const child = remembered && toolTabIds.includes(remembered) ? remembered : toolTabIds[0]!;
-  return [...path, child];
+/** 🎬️ "Loading plugin cad, beta · 12.3 of 81.2 MB verified" — one band for however many installs are
+ * in flight, because they share one progress story and one cancel. */
+export function pluginInstallBandTextV1(pluginIds: readonly string[], locale: string, progress: PluginModuleAcquisitionProgress | null = null): string {
+  const band = `${frozenLabelText(PLUGIN_INSTALL_BAND_LABEL, locale)} ${[...pluginIds].sort().join(", ")}`;
+  if (!progress || progress.totalBytes <= 0) return band;
+  const megabytes = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const verified = frozenLabelText(PLUGIN_INSTALL_PROGRESS_LABEL, locale).replace("{completed}", megabytes.format(progress.completedBytes / 1_000_000)).replace("{total}", megabytes.format(progress.totalBytes / 1_000_000));
+  if (progress.retry === undefined) return `${band} · ${verified}`;
+  const retrying = frozenLabelText(PLUGIN_INSTALL_RETRY_LABEL, locale).replace("{attempt}", String(progress.retry.attempt)).replace("{of}", String(progress.retry.of));
+  return `${band} · ${verified} · ${retrying}`;
 }
 
-/**
- * 🛠️ A re-press of a selected `tool.<id>` leaf while that tool is inactive must arm it, not collapse
- * the leaf. `progressPanelTabSelection` treats the press as an active-segment re-press and walks up;
- * the host keeps the previous path and returns the tool id that `setActiveTool` must receive.
- */
-export function toolLeafInactiveRepress(previousPath: readonly string[], nextPath: readonly string[], activeToolId: string | null): { readonly path: readonly string[]; readonly toolId: string } | null {
-  const previousToolId = toolIdFromPanelTabId(previousPath[previousPath.length - 1]);
-  const nextToolId = toolIdFromPanelTabId(nextPath[nextPath.length - 1]);
-  if (!previousToolId || nextToolId || (activeToolId ?? null) === previousToolId) return null;
-  return { path: previousPath, toolId: previousToolId };
+/** 🔔️ The plugin module store's notices, in the person's language: a stored module that lost files is reinstalled; a full
+ * store refuses an install. */
+const PLUGIN_MODULE_STORE_NOTICE_LABEL: Readonly<Record<"reinstalling" | "quota-exceeded", FrozenLabel>> = {
+  reinstalling: { en: "Plugin {plugin} was incomplete on this device and is being reinstalled.", de: "Plugin {plugin} war auf diesem Gerät unvollständig und wird neu installiert." },
+  "quota-exceeded": { en: "Plugin {plugin} could not be installed: this device's storage is full.", de: "Plugin {plugin} konnte nicht installiert werden: Der Speicher dieses Geräts ist voll." },
+};
+
+export function pluginModuleStoreNoticeTextV1(notice: Readonly<{ kind: "reinstalling" | "quota-exceeded"; pluginId: string }>, locale: string): string {
+  return frozenLabelText(PLUGIN_MODULE_STORE_NOTICE_LABEL[notice.kind], locale).replace("{plugin}", notice.pluginId);
 }
-//#endregion 🛠️ToolRegistry
+
+export function pluginInstallCancelTextV1(locale: string): string {
+  return frozenLabelText(PLUGIN_INSTALL_CANCEL_LABEL, locale);
+}
+
+function isViewportSurface(surfaceKind: string | undefined): boolean {
+  return surfaceKind === "world-3d" || surfaceKind === "node-graph" || surfaceKind === "canvas-2d";
+}
+
+function defaultViewportEngagement(): WindowEngagement {
+  return {
+    sessionActive: true,
+    status: [{ id: "framework.viewport.status", text: shellLabel("ui.engagement.viewport") }],
+  };
+}
+
+export function resolveWindowEngagement(kind: Pick<AppDefinition["windowKinds"][number], "options">, windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
+  const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
+  const declaredEngagement = kind.options.engagement.kind === "some" ? kind.options.engagement.value : undefined;
+  return byWindowId[windowId] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
+}
+
+export function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
+  if (!engagement) return undefined;
+  const options = engagement.options?.map((option) => ({
+    id: option.id,
+    label: option.label === undefined ? undefined : uiDataLabel(option.label),
+    icon: option.iconId ? <Icon icon={option.iconId} size="small" /> : { kind: "text" as const, text: option.label ?? option.id },
+    pressed: option.pressed,
+    disabled: option.disabled,
+    onPress: option.action ? () => onAction(option.action!) : undefined,
+  }));
+  const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
+  const control = windowEngagementControlToSpec(engagement.control, onAction);
+  const controls = engagement.controls?.map((row) => windowEngagementControlToSpec(row, onAction)).filter((row): row is EngagementControl => row !== undefined);
+  const hasContent = (options?.length ?? 0) > 0 || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0;
+  if (!hasContent) return undefined;
+  return { sessionActive: engagement.sessionActive, options, control, controls, status };
+}
+
+/** 🔎️ Builds the top-middle window {@link SearchSpec} from the same Rust engagement payload: typed action input and autocomplete possibles. */
+export function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): SearchSpec | undefined {
+  if (!engagement) return undefined;
+  const input = engagement.input
+    ? {
+        id: engagement.input.id,
+        value: engagement.input.value,
+        placeholder: engagement.input.placeholder === undefined ? undefined : uiDataLabel(engagement.input.placeholder),
+        disabled: engagement.input.disabled,
+        onChange: engagement.input.onChange ? (value: string) => onAction({ ...engagement.input!.onChange!, args: { ...(engagement.input!.onChange!.args as object | undefined), value } }) : undefined,
+        onSubmit: engagement.input.onSubmit ? (value: string) => onAction({ ...engagement.input!.onSubmit!, args: { ...(engagement.input!.onSubmit!.args as object | undefined), value } }) : undefined,
+        onRepeatLast: engagement.input.onRepeatLast ? () => onAction(engagement.input!.onRepeatLast!) : undefined,
+        onAbort: engagement.input.onAbort ? () => onAction(engagement.input!.onAbort!) : undefined,
+      }
+    : undefined;
+  const possibles = engagement.possibleEngagements?.map((row) => ({
+    id: row.id,
+    label: row.label,
+    detail: row.detail,
+    onSelect: row.action ? () => onAction(row.action!) : undefined,
+  }));
+  const hasContent = Boolean(input) || (possibles?.length ?? 0) > 0;
+  if (!hasContent) return undefined;
+  return { sessionActive: engagement.sessionActive, input, possibles };
+}
+
+function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }> {
+  if (group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
+  if (tabId.includes("parameters")) return shellTabIcon(FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID);
+  if (tabId.includes("inspector")) return shellTabIcon(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);
+  if (tabId === FRAMEWORK_PANEL_TAB_HISTORY_ID) return shellTabIcon("undo");
+  return shellTabIcon(tabId);
+}
+
+/** 🌳️ Category-row icon: the first child's icon, or `fallback` when the category has no tabs yet. */
+export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): React.FC<{ size?: number }> {
+  const FirstIcon = tabs[0]?.icon;
+  return function CategoryTabIcon({ size = 16 }: { size?: number }) {
+    return FirstIcon ? <FirstIcon size={size} /> : <Icon icon={fallback} size="small" />;
+  };
+}
+
+/** 🌳️ Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey`
+ * to render. `PanelTabDefinition` (required `children: T[]`, no leaf variant) satisfies this
+ * constraint directly; `PanelTabNode` (`PanelTabLeaf | PanelTabBranch`, `PanelTabLeaf` carrying no
+ * `children` key at all) is a TS "weak type" mismatch against a constraint of only-optional
+ * properties — callers with that shape use `flattenPanelTabNodes` (`ShellHost`'s own, built on
+ * `panelTabChildren`'s union-aware accessor) instead of fighting the weak-type check here. */
+export function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
+  return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
+}
+
+/** 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}.
+ *
+ * 🪟️ `treeWindows`/`cache` are the windowed-tree plumbing: the tab's own `bodyKey` is what the guest
+ * and `UiDirtyScope.panelBodies` name, and `cache` keeps a tab whose body did not change on exactly the
+ * `TreePanelConfig` (and therefore the `UiDocumentStore` and the mounted `<Tree>`) it already had. */
+export function panelTabDefinitionToNode(
+  tab: AppPanelTabDefinition,
+  group: string,
+  panelBodyStoreByKey: Readonly<Record<string, UiDocumentStore>>,
+  onAction: (action: ActionDescriptor) => void,
+  order: number,
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
+  treeWindows: TreeWindowHostV1 | null = null,
+  cache?: PanelTreeConfigCacheV1,
+  actorPanels: BrowserActorPanelHostV1 | null = null,
+): PanelTabNode {
+  const tabId = panelTabKindId(tab.kind);
+  const label = resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, terminology, locale));
+  if (tab.children && tab.children.length > 0) {
+    return {
+      kind: "branch",
+      id: tabId,
+      icon: panelTabIcon(tabId, group),
+      name: label,
+      order,
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelBodyStoreByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache, actorPanels)),
+    };
+  }
+  return singleTreeLeaf({
+    id: tabId,
+    icon: panelTabIcon(tabId, group),
+    name: label,
+    order,
+    tree: staticTreePanelDefinition(
+      actorPanels === null
+        ? cachedBodyStoreTreePanelConfigV1(cache, tabId, panelBodyStoreByKey[tabId], tab.bodyKey ?? tabId, onAction, treeWindows)
+        : cachedActorTreePanelConfigV1(cache, tabId, actorPanels, tab.bodyKey ?? tabId, treeWindows),
+    ),
+  });
+}
+
+/** 🧯️ Every history-edit refusal code the shell names, with its label key: the event log's and the hub's `history.*`
+ * transition refusals (`🛢️db/🗿️artifact`, `🏪️store/🔄️sync`), a live session's `timeTravel.*` refusals
+ * (`⏪️time-travel`), the plugin runtime's own preconditions of a `historyEdit*` verb and the driver faults it records on
+ * the session (`🔌️plugin/⏪️time-travel`). Every text is byte-equal with the wgpu shell's (the shared band corpus).
+ * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs
+ * @see ../../../../🔌️plugin/⏪️time-travel/🦀️.rs
+ * @see ../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
+type RefusalLabelId<Code extends string> = Code extends `timeTravel.${infer Name}` ? RefusalCamelCase<Name> : never;
+type RefusalCamelCase<Name extends string> = Name extends `${infer Head}-${infer Tail}` ? `${Head}${Capitalize<RefusalCamelCase<Tail>>}` : Name;
+type TimeTravelCode = typeof TIME_TRAVEL_CODE_LABELS[number][0];
+
+const timeTravelRefusalLabelKeys = Object.fromEntries(TIME_TRAVEL_CODE_LABELS.map(([code]) => [code, `ui.timeTravel.refusal.${code.slice("timeTravel.".length).replace(/-([a-z])/gu, (_, letter: string) => letter.toUpperCase())}`])) as { readonly [Code in TimeTravelCode]: `ui.timeTravel.refusal.${RefusalLabelId<Code>}` };
+
+export const HISTORY_REFUSAL_LABEL_KEYS = {
+  "history.malformed-transition": "ui.history.refusal.malformedTransition",
+  "history.unknown-target": "ui.history.refusal.unknownTarget",
+  "history.transition-refused": "ui.history.refusal.transitionRefused",
+  ...timeTravelRefusalLabelKeys,
+} as const satisfies Readonly<Record<string, UiTranslationKey>>;
+
+/** 🛟️ One code of {@link HISTORY_REFUSAL_LABEL_KEYS}. */
+export type HistoryRefusalCodeV1 = keyof typeof HISTORY_REFUSAL_LABEL_KEYS;
+
+/** 🔎️ `code` when it is a history-edit refusal the shell names, else `null`. */
+export function historyRefusalCodeV1(code: unknown): HistoryRefusalCodeV1 | null {
+  return typeof code === "string" && Object.hasOwn(HISTORY_REFUSAL_LABEL_KEYS, code) ? (code as HistoryRefusalCodeV1) : null;
+}
+
+/** 🔎️ The history-edit refusal a dispatch fault carries, as its own code or its first cause naming one. */
+export function historyRefusalOfFaultV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): HistoryRefusalCodeV1 | null {
+  return historyRefusalCodeV1(fault.code) ?? fault.causes?.map((cause) => historyRefusalCodeV1(cause.code)).find((code) => code !== null) ?? null;
+}
+
+/** 🧽️ A history admission refusal discards its submitted field draft; other failures keep recovery available. */
+export function historyInputDraftDispositionV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): InputDraftDispositionV1 {
+  return historyRefusalOfFaultV1(fault) === null ? "retain" : "discard";
+}
+
+/** 🔎️ The history-edit refusal a reserved verb answered with its silent `{rejected: <code>}` result, else `null`. */
+export function historyRefusalOfOutputV1(output: unknown): HistoryRefusalCodeV1 | null {
+  return typeof output === "object" && output !== null ? historyRefusalCodeV1((output as { readonly rejected?: unknown }).rejected) : null;
+}
+
+/** 🤫️ The history-edit refusals no shell tells the human (the band corpus' `refusals[].silent`): an event that names an
+ * older session generation — a blur-commit arriving after Discard — is a silent no-op (design §4). Nothing the human did
+ * is wrong and nothing is asked of them, so it earns no notice; its code stays in the dispatch trace. */
+export const HISTORY_SILENT_REFUSALS_V1: ReadonlySet<HistoryRefusalCodeV1> = new Set<HistoryRefusalCodeV1>(["timeTravel.stale"]);
+
+/** 🔇️ The silent history-edit refusal a dispatch fault carries ({@link HISTORY_SILENT_REFUSALS_V1}), else `null`. */
+export function historySilentRefusalOfFaultV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): HistoryRefusalCodeV1 | null {
+  const refusal = historyRefusalOfFaultV1(fault);
+  return refusal !== null && HISTORY_SILENT_REFUSALS_V1.has(refusal) ? refusal : null;
+}
+
+/** 🔈️ The silent history-edit refusal a reserved verb's `{rejected: <code>}` result names, else `null`. */
+export function historySilentRefusalOfOutputV1(output: unknown): HistoryRefusalCodeV1 | null {
+  const refusal = historyRefusalOfOutputV1(output);
+  return refusal !== null && HISTORY_SILENT_REFUSALS_V1.has(refusal) ? refusal : null;
+}
+
+/** 📣️ One transient notice: its localized text, severity and the machine code `data-notice-code` publishes. */
+export type ShellNoticeV1 = { readonly text: string; readonly kind: Severity; readonly code: string };
+
+/** 🛟️ The notice for a history-edit refusal: a `history.*` transition refusal is an error, a session refusal keeps the
+ * severity its fault reported and is a warning when it arrives without one (a verb's silent `{rejected}` result). */
+export function historyRefusalNoticeV1(code: HistoryRefusalCodeV1, severity: Severity = "warning"): ShellNoticeV1 {
+  return { text: String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[code])), kind: code.startsWith("history.") ? "error" : severity, code };
+}
+
+/** 📢️ The notice of a history-lane refusal a fault carries — its own code or a cause's — in the shell's language: the kernel's
+ * own en/de text (`historyNotice`: an open tool transaction, an exhausted or still replaying history, a document still
+ * loading), `{n}` the program's `editCount` (`HistoryPatch.editCount`, carried as data — never read from a message). A
+ * warning: waiting, finishing or cancelling resolves it. `null` for any other fault. */
+export function historyLaneNoticeV1(fault: { readonly code?: string; readonly causes?: readonly { readonly code?: string }[] }, editCount: number): ShellNoticeV1 | null {
+  const code = [fault.code, ...(fault.causes ?? []).map((cause) => cause.code)].find((candidate): candidate is string => candidate !== undefined && historyNotice(candidate) !== undefined);
+  const notice = code === undefined ? undefined : historyNotice(code);
+  return code === undefined || notice === undefined ? null : { text: notice[currentShellLocaleV1()].replace("{n}", String(editCount)), kind: "warning", code };
+}
+
+/** 🔕️ The notice a refused dispatch earns: a history-edit refusal ({@link historyRefusalNoticeV1}, keeping the fault's
+ * severity) or a history-lane refusal ({@link historyLaneNoticeV1}); `null` for a silent refusal
+ * ({@link HISTORY_SILENT_REFUSALS_V1}) and for any other fault — never a raw code. */
+export function historyFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[] }, editCount: number): ShellNoticeV1 | null {
+  const refusal = historyRefusalOfFaultV1(fault);
+  if (refusal !== null) return HISTORY_SILENT_REFUSALS_V1.has(refusal) ? null : historyRefusalNoticeV1(refusal, fault.severity ?? "warning");
+  return historyLaneNoticeV1(fault, editCount);
+}
+
+/** 📣️ The notice of a refused dispatch an app declared (design §20.12): the kernel's `faultNotice` over the framework table and the
+ * refusing app's published `faultNotices`, in the shell's language and `terminology`, `{name}` filled from `fault.params` only, told
+ * with the fault's own severity. `null` for a code no table declares — the shell then shows its generic refusal, never a raw code. */
+export function appFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[]; readonly params?: Readonly<Record<string, string>> }, app: Pick<AppDefinition, "faultNotices"> | undefined, terminology: string): ShellNoticeV1 | null {
+  const notice = faultNotice(fault, app?.faultNotices ?? [], isShellTerminology(terminology) ? terminology : SHELL_TERMINOLOGIES[0], currentShellLocaleV1());
+  return notice === null ? null : { text: notice.text, kind: fault.severity ?? "error", code: notice.code };
+}
+
+/** 🔊️ The notice of a reserved verb's silent `{rejected: <code>}` result: a history-edit or a history-lane refusal, else `null` —
+ * and `null` for a silent refusal ({@link HISTORY_SILENT_REFUSALS_V1}). */
+export function historyOutputNoticeV1(output: unknown, editCount: number): ShellNoticeV1 | null {
+  const refusal = historyRefusalOfOutputV1(output);
+  if (refusal !== null) return HISTORY_SILENT_REFUSALS_V1.has(refusal) ? null : historyRefusalNoticeV1(refusal);
+  const rejected = typeof output === "object" && output !== null ? (output as { readonly rejected?: unknown }).rejected : undefined;
+  return typeof rejected === "string" ? historyLaneNoticeV1({ code: rejected }, editCount) : null;
+}
+
+/** 🚫️ The line and severity each local refusal (`CommandRejectionV1`'s `local.*` codes) is told with: a refusal the human
+ * can wait out or cannot act on here is a warning, one that means this device produced a change it cannot send is an error. */
+export const LOCAL_COMMAND_REJECTION_NOTICES_V1 = {
+  "local.read-only": { key: "ui.conflict.local.readOnly", kind: "warning" },
+  "local.queue-full": { key: "ui.conflict.local.queueFull", kind: "warning" },
+  "local.backbone-capacity": { key: "ui.conflict.local.queueFull", kind: "warning" },
+  "local.backbone-duplicate": { key: "ui.conflict.local.duplicate", kind: "warning" },
+  "local.backbone-pair-unavailable": { key: "ui.conflict.local.notReady", kind: "warning" },
+  "local.backbone-scope-mismatch": { key: "ui.conflict.local.foreignDocument", kind: "error" },
+  "local.backbone-malformed": { key: "ui.conflict.local.unreadable", kind: "error" },
+  "local.socket-frame-ceiling": { key: "ui.conflict.local.tooLarge", kind: "error" },
+} as const satisfies Readonly<Record<Exclude<CommandRejectionCodeV1, `hub.${string}`>, { readonly key: UiTranslationKey; readonly kind: Severity }>>;
+
+/** ⚔️ The notice for one refused command batch, read from the one typed rejection contract — total, whatever the producer.
+ * A local refusal is told by its code ({@link LOCAL_COMMAND_REJECTION_NOTICES_V1}) under that code. A hub refusal is read
+ * from the `MutationMessage` codes it was graded with: a batch refused for a history transition names that refusal
+ * ({@link historyRefusalNoticeV1}); otherwise the hub's outcome step graded a region another human's concurrent command
+ * also touched as `mutation.clamped` or a structural constraint that command now holds as `mutation.invariant`
+ * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set), named after `ui.conflict.hubRejected`; a refusal naming
+ * neither (admission, transport, unreadable diagnostics) says only that the hub refused the change. No producer's English
+ * `reason` ever reaches the human (ticket 26/09/23 C10, audit G-P2-3; 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3).
+ * @see ../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json
+ * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs */
+export function commandRejectionNoticeV1(rejection: CommandRejectionV1): ShellNoticeV1 {
+  if (rejection.code !== "hub.refused" && rejection.code !== "hub.unreadable") {
+    const notice = LOCAL_COMMAND_REJECTION_NOTICES_V1[rejection.code];
+    return { text: String(shellLabel(notice.key)), kind: notice.kind, code: rejection.code };
+  }
+  const codes = rejection.messages.map((message) => message.code);
+  const history = codes.map(historyRefusalCodeV1).find((code) => code !== null);
+  if (history !== undefined && history !== null) return historyRefusalNoticeV1(history);
+  const reason = codes.includes("mutation.invariant") ? "ui.conflict.hubConcurrentInvariant" : codes.includes("mutation.clamped") ? "ui.conflict.hubConcurrentEdit" : null;
+  const rejected = String(shellLabel("ui.conflict.hubRejected"));
+  return { text: reason === null ? rejected : `${rejected}: ${shellLabel(reason)}`, kind: "warning", code: "sync.command.rejected" };
+}
+
+export function browserActorPanelKeysV1(app: Pick<AppDefinition, "panelTabs">): ReadonlySet<string> {
+  return new Set(flattenPanelTabLeaves(app.panelTabs).flatMap((tab) => (tab.bodyKey ? [panelTabKindId(tab.kind)] : [])));
+}
+
+export type BrowserActorUiStoresV1 = Readonly<{ windows: Map<string, UiDocumentStore>; panels: Map<string, UiDocumentStore>; sections: Map<string, UiDocumentStore> }>;
+
+/** 🧩️ The reserved refresh-section surfaces an actor renders beside its windows and panels, each keyed by its reserved body
+ * key (`framework.section.*`) — the local refresh's own section binding (`UI_REFRESH_SECTIONS`). */
+export const BROWSER_ACTOR_SECTION_KEYS: ReadonlySet<string> = new Set(UI_REFRESH_SECTIONS.map(({ bodyKey }) => bodyKey));
+
+/** 🩹️ Applies one browser-actor patch offer surface by surface and answers one verdict per patch, in offer order
+ * — the guest acknowledges and resends per surface (`patch-ack` / `patch-rejected`), so one stale panel never
+ * costs a window its frame. Every window kind of the app, every bodied panel and every reserved refresh section is a
+ * surface: an actor-bound document renders all of its windows and their chrome from its one actor. A patch for a
+ * surface this app does not render is refused `unknown-surface`; a patch that does not apply resets its store to the
+ * empty document (see `UiDocumentStore.reset`), which is what the guest's full resend assumes. The FIRST offer of an
+ * opening must paint a window, or nothing is retained and every surface is refused `window-surface-unpainted` so the
+ * guest resends them all. `sectionsChanged` says an acknowledged patch moved a section the shell must re-dispatch. */
+export function applyBrowserActorUiPatchesV1(
+  patches: readonly UiPatch[],
+  windowKeys: ReadonlySet<string>,
+  panelKeys: ReadonlySet<string>,
+  retained: BrowserActorUiStoresV1 | null,
+): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; surfacesAdded: boolean; sectionsChanged: boolean }> {
+  const windows = retained?.windows ?? new Map<string, UiDocumentStore>(),
+    panels = retained?.panels ?? new Map<string, UiDocumentStore>(),
+    sections = retained?.sections ?? new Map<string, UiDocumentStore>();
+  let surfacesAdded = false;
+  const verdicts = patches.map((patch): BrowserActorUiPatchVerdictV1 => {
+    const owner = windowKeys.has(patch.surface) ? windows : panelKeys.has(patch.surface) ? panels : BROWSER_ACTOR_SECTION_KEYS.has(patch.surface) ? sections : null;
+    if (owner === null) return { surface: patch.surface, outcome: "rejected", revision: 0, reason: "unknown-surface" };
+    let store = owner.get(patch.surface);
+    if (store === undefined) {
+      store = new UiDocumentStore(patch.surface);
+      owner.set(patch.surface, store);
+      surfacesAdded = true;
+    }
+    const applied = store.applyPatch(patch);
+    if (applied.ok) return { surface: patch.surface, outcome: "acknowledged", revision: store.getRevisionSnapshot() };
+    store.reset();
+    return { surface: patch.surface, outcome: "rejected", revision: 0, reason: applied.rejection.type };
+  });
+  if (retained !== null || verdicts.some((verdict) => windowKeys.has(verdict.surface) && verdict.outcome === "acknowledged"))
+    return { verdicts, stores: { windows, panels, sections }, surfacesAdded, sectionsChanged: verdicts.some((verdict) => BROWSER_ACTOR_SECTION_KEYS.has(verdict.surface) && verdict.outcome === "acknowledged") };
+  return {
+    verdicts: verdicts.map((verdict): BrowserActorUiPatchVerdictV1 => (verdict.outcome === "acknowledged" ? { surface: verdict.surface, outcome: "rejected", revision: 0, reason: "window-surface-unpainted" } : verdict)),
+    stores: null,
+    surfacesAdded: false,
+    sectionsChanged: false,
+  };
+}
+
+/** 🧩️ The reserved refresh sections an actor-bound document's section stores hold now, keyed like the local refresh's
+ * cache (`engagements`/`measures`/`tools`/`catalogue`), each with the store revision it was read at; a section whose store
+ * has no root is absent. Decoded by the local refresh's own `retainedSectionValueV1`, so both paths read one carrier. */
+export function browserActorSectionValuesV1(sections: ReadonlyMap<string, UiDocumentStore>, producer: string): ReadonlyMap<UiRefreshSectionKey, Readonly<{ revision: number; value: unknown }>> {
+  const values = new Map<UiRefreshSectionKey, Readonly<{ revision: number; value: unknown }>>();
+  for (const section of UI_REFRESH_SECTIONS) {
+    const store = sections.get(section.bodyKey);
+    if (store === undefined) continue;
+    const value = retainedSectionValueV1(section.bodyKey, store.getState(), producer);
+    if (value !== undefined) values.set(section.key, { revision: store.getRevisionSnapshot(), value });
+  }
+  return values;
+}
+
+/** 🧩️ `request` without its reserved sections — for a session an actor serves, whose engagements, measures, tool measures
+ * and catalogue come from the actor's section surfaces (its local instance never sees the hub document); `null` when
+ * nothing is left to fetch. */
+export function withoutUiRefreshSectionsV1(request: PluginUiRefreshRequest | null): PluginUiRefreshRequest | null {
+  if (request === null) return null;
+  const stripped: PluginUiRefreshRequest = { ...request, engagements: undefined, measures: undefined, tools: undefined, catalogue: undefined };
+  return (stripped.windows ?? []).length === 0 && (stripped.panels ?? []).length === 0 && stripped.labels === undefined ? null : stripped;
+}
+
+export function resolveCanvasBodyKey(app: AppDefinition): string {
+  const windowKind = app.windowKinds[0];
+  if (!windowKind) return "main";
+  if (windowKind.bodyKey.includes("composite")) {
+    const workflow = app.windowKinds.find((kind) => kind.bodyKey.includes("workflow"));
+    return workflow?.bodyKey ?? windowKind.bodyKey;
+  }
+  return windowKind.bodyKey;
+}
+
+/** 💬️ Builds spawned-window engagement, search, measures, and utility-options chrome for one window instance. */
+export function spawnedWindowChromeForKind(
+  kind: Pick<AppDefinition["windowKinds"][number], "options">,
+  windowId: string,
+  engagementsByWindowId: Readonly<Record<string, WindowEngagement>>,
+  measuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>,
+  activeUtilityId: string | undefined,
+  onAction: (action: ActionDescriptor) => void,
+): { readonly engagement?: EngagementSpec; readonly search?: SearchSpec; readonly measures: ReactNode; readonly utilityOptions: ReactNode } {
+  const { measures, utilityOptions } = windowMeasuresChrome(measuresByWindowId[windowId] ?? kind.options.measures, activeUtilityId, windowId, onAction);
+  const resolvedEngagement = resolveWindowEngagement(kind, windowId, engagementsByWindowId);
+  return {
+    engagement: windowEngagementToSpec(resolvedEngagement, onAction),
+    search: windowEngagementToSearchSpec(resolvedEngagement, onAction),
+    measures,
+    utilityOptions,
+  };
+}
 //#endregion ShellHelpers

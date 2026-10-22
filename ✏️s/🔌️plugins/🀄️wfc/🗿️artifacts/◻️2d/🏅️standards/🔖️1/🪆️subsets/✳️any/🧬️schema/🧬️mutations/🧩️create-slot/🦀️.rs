@@ -30,6 +30,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slot", kind: "create-slot", record: "CreatedSlot" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Slot", "Slot erstellen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Wfc2dSnapshot, Op> for CreateSlot
+where
+    Op: protocol::ColdMutation<Wfc2dSnapshot, ReferenceDiff = Wfc2dDiff> + From<CreateSlot> + From<crate::standards::v1::subsets::any::schema::mutations::delete_slot::DeleteSlot>,
+{
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,8 +48,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Create Slot", "Slot erstellen")
-    }
 }
 //#endregion 🔖️CreateSlot

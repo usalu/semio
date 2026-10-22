@@ -49,7 +49,7 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
 pub async fn artifact_pair_snapshot<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<P, store::VcsError>
 where
     P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-    Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
+    Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(store::VcsError::Deserialize("artifact pair carries no pack+spr baseline".into()));

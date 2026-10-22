@@ -17,7 +17,7 @@ use crate::docs_components::EnvelopeJobs;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -26,7 +26,7 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_ui_contract::*;
 use semio_framework_plugin_instance_children::children_instance_root::genesis_member_schema;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// ♻️ One bounded unit of the fixed document/config/interaction/transient returned-read rotation: each
     /// pump either drains the disposer it owns or probes its Store for the next returned lease.
     pub fn snapshot_read_returns_demands(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>,body:usize)->Result<RetirementDemand,ValueError>{

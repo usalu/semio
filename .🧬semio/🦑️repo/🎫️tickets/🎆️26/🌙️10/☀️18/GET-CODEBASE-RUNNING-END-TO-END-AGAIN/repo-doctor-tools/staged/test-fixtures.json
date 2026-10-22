@@ -1,0 +1,3541 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "healthy machine reports nothing",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "dependencies",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 4294967296,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    },
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "ok",
+       "pin": "1.0.0",
+       "found": "1.0.0"
+      },
+      {
+       "id": "git",
+       "state": "ok",
+       "pin": null,
+       "found": "2.50.0"
+      }
+     ]
+    },
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": []
+    },
+    "sessions": {
+     "live": 1,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    },
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    },
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    },
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "processes": []
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "memory pressure warn and available just under the headroom",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 8191,
+     "floorMegabytes": 6553,
+     "pressure": "warn",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "host.memory-pressure",
+      "warn",
+      "memory"
+     ],
+     [
+      "host.low-memory",
+      "warn",
+      "memory"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "critical pressure and available at the floor",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 6553,
+     "floorMegabytes": 6553,
+     "pressure": "critical",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "host.memory-pressure",
+      "error",
+      "memory"
+     ],
+     [
+      "host.low-memory",
+      "error",
+      "memory"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "host values just below every threshold stay quiet",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 8192,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 4095,
+     "swapOutMegabytesPerSecond": 63.9,
+     "load": 19.99,
+     "openFiles": 196607,
+     "openFilesMaximum": 245760,
+     "attachedImages": 27,
+     "governor": "on"
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "host warnings at their thresholds",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 4096,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 20.0,
+     "openFiles": 196608,
+     "openFilesMaximum": 245760,
+     "attachedImages": 28,
+     "governor": "off"
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "host.swap-high",
+      "warn",
+      "swap"
+     ],
+     [
+      "host.load-high",
+      "warn",
+      "load"
+     ],
+     [
+      "host.open-files-high",
+      "warn",
+      "files"
+     ],
+     [
+      "host.images-many",
+      "warn",
+      "images"
+     ],
+     [
+      "capacity.governor-off",
+      "warn",
+      "SEMIO_HOST_CAPACITY"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 5,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "host errors and the swap rate",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 64,
+     "load": 40.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 32,
+     "governor": "on"
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "host.swap-high",
+      "warn",
+      "swap"
+     ],
+     [
+      "host.load-high",
+      "error",
+      "load"
+     ],
+     [
+      "host.images-many",
+      "error",
+      "images"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "unknown host counters never report",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": null,
+     "swapOutMegabytesPerSecond": null,
+     "load": null,
+     "openFiles": null,
+     "openFilesMaximum": null,
+     "attachedImages": null,
+     "governor": "on"
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "cache disk below the error threshold",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 5368709119,
+     "hostTotalBytes": 536870912000,
+     "partitions": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.host-free-low",
+      "error",
+      "cache-disk"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "cache disk exactly at the error threshold is a warning",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 5368709120,
+     "hostTotalBytes": 536870912000,
+     "partitions": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.host-free-low",
+      "warn",
+      "cache-disk"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "cache disk at the warning threshold is fine",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 21474836480,
+     "hostTotalBytes": 536870912000,
+     "partitions": []
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "image states, floors, percentages and publications",
+   "ordered": true,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 1073741823,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "dependencies",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 429496729,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "products",
+       "state": "mounted",
+       "capacityBytes": 25769803776,
+       "freeBytes": 2576980377,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "tools",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 1288490189,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "nx",
+       "state": "detached",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "leases",
+       "state": "absent",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "none",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "damaged"
+      },
+      {
+       "id": "rust",
+       "state": "absent",
+       "capacityBytes": null,
+       "freeBytes": null,
+       "imageBytes": 8589934592,
+       "backing": "missing",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "diagnostics",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 4294967296,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "intent",
+       "publicationAgeSeconds": 599,
+       "image": "ok"
+      },
+      {
+       "id": "scratch",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 4294967296,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "receipt",
+       "publicationAgeSeconds": 600,
+       "image": "ok"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.backing-missing",
+      "error",
+      "rust"
+     ],
+     [
+      "storage.image-below-floor",
+      "error",
+      "graph"
+     ],
+     [
+      "storage.image-damaged",
+      "error",
+      "leases"
+     ],
+     [
+      "storage.image-low",
+      "error",
+      "dependencies"
+     ],
+     [
+      "storage.publication-pending",
+      "error",
+      "scratch"
+     ],
+     [
+      "storage.image-low",
+      "warn",
+      "products"
+     ],
+     [
+      "storage.image-detached",
+      "info",
+      "nx"
+     ],
+     [
+      "storage.publication-pending",
+      "info",
+      "diagnostics"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 5,
+     "warn": 1,
+     "info": 2
+    }
+   }
+  },
+  {
+   "name": "graph image exactly at its floor is fine",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 1073741824,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "tools: essential missing, optional missing, drift, unprobed",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "missing",
+       "pin": null,
+       "found": null
+      },
+      {
+       "id": "git",
+       "state": "missing",
+       "pin": null,
+       "found": null
+      },
+      {
+       "id": "bazel",
+       "state": "missing",
+       "pin": "9.1.0",
+       "found": null
+      },
+      {
+       "id": "bun",
+       "state": "drift",
+       "pin": "1.4.2",
+       "found": "1.3.14"
+      },
+      {
+       "id": "node",
+       "state": "unprobed",
+       "pin": null,
+       "found": null
+      },
+      {
+       "id": "go",
+       "state": "ok",
+       "pin": "1.26.9",
+       "found": "1.26.9"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "tools.missing-essential",
+      "error",
+      "repo"
+     ],
+     [
+      "tools.missing-essential",
+      "error",
+      "git"
+     ],
+     [
+      "tools.missing",
+      "warn",
+      "bazel"
+     ],
+     [
+      "tools.pin-drift",
+      "warn",
+      "bun"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "deadlock cycle, order violations, registry noise and dead tickets",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [
+      {
+       "members": [
+        "100/0",
+        "200/0"
+       ],
+       "victim": "200/0"
+      }
+     ],
+     "violations": [
+      {
+       "kind": "out-of-order",
+       "held": "a",
+       "requested": "b"
+      },
+      {
+       "kind": "out-of-order",
+       "held": "c",
+       "requested": "d"
+      },
+      {
+       "kind": "hold-and-wait",
+       "held": "e",
+       "requested": "f"
+      }
+     ],
+     "registry": {
+      "folders": 60,
+      "orphanFolders": 49,
+      "deadEntries": 3,
+      "liveEntries": 0
+     },
+     "deadTickets": 2,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.cycle",
+      "error",
+      "100/0 → 200/0"
+     ],
+     [
+      "leases.order-violation",
+      "warn",
+      "hold-and-wait"
+     ],
+     [
+      "leases.order-violation",
+      "info",
+      "out-of-order"
+     ],
+     [
+      "leases.registry-stale",
+      "info",
+      "lease-registry"
+     ],
+     [
+      "leases.dead-ticket",
+      "info",
+      "queue"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 1,
+     "info": 3
+    }
+   }
+  },
+  {
+   "name": "registry noise at the warning count",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 60,
+      "orphanFolders": 50,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.registry-stale",
+      "warn",
+      "lease-registry"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "lease waits at their thresholds with one holder",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 10,
+       "heldSeconds": 100,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 20,
+       "waitedSeconds": 59,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        10
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 21,
+       "waitedSeconds": 60,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        10
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 22,
+       "waitedSeconds": 300,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        10
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "processes": [
+     {
+      "pid": 10,
+      "parent": 1000,
+      "ageSeconds": 100,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "bun /w/script.ts repo cargo test"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.wait-long",
+      "error",
+      "cargo:registry:/w/cargo/home"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "cargo:registry:/w/cargo/home"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      22,
+      10,
+      "running"
+     ],
+     [
+      "lease",
+      21,
+      10,
+      "running"
+     ],
+     [
+      "lease",
+      20,
+      10,
+      "running"
+     ]
+    ],
+    "processes": [
+     [
+      10,
+      "holding",
+      null
+     ]
+    ],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "long exclusive holds",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-a",
+       "hash": "2d2e36128193086cb4ea8080882e15ddce12276e5870f7a4900879b885e504cc",
+       "mode": "exclusive",
+       "pid": 31,
+       "heldSeconds": 900,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-a",
+       "hash": "2d2e36128193086cb4ea8080882e15ddce12276e5870f7a4900879b885e504cc",
+       "mode": "exclusive",
+       "pid": 31,
+       "heldSeconds": 900,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-b",
+       "hash": "9d0aef335ff514b77d62f503154652efa357cbef2e0d16370c063c287e499160",
+       "mode": "exclusive",
+       "pid": 32,
+       "heldSeconds": 1800,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-c",
+       "hash": "d5441a821b66598aca762506cb2f7cb718f41c679b0b1189e2823472282a1df8",
+       "mode": "exclusive",
+       "pid": 33,
+       "heldSeconds": 1800,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 34,
+       "heldSeconds": 1799,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-e",
+       "hash": "50d83365eb4b40cb3cf1f7428a78f9083f1e32755c5cb7b0eea30e0b6061afa0",
+       "mode": "shared",
+       "pid": 35,
+       "heldSeconds": 5000,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "res-a",
+       "hash": "2d2e36128193086cb4ea8080882e15ddce12276e5870f7a4900879b885e504cc",
+       "mode": "exclusive",
+       "pid": 41,
+       "waitedSeconds": 10,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        31
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "res-b",
+       "hash": "9d0aef335ff514b77d62f503154652efa357cbef2e0d16370c063c287e499160",
+       "mode": "exclusive",
+       "pid": 42,
+       "waitedSeconds": 10,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        32
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.hold-long",
+      "error",
+      "res-b"
+     ],
+     [
+      "leases.hold-long",
+      "warn",
+      "res-a"
+     ],
+     [
+      "leases.hold-long",
+      "warn",
+      "res-c"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      41,
+      31,
+      "unknown"
+     ],
+     [
+      "lease",
+      42,
+      32,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a deep queue on one lease",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 50,
+       "heldSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 60,
+       "waitedSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 61,
+       "waitedSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 62,
+       "waitedSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 63,
+       "waitedSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 64,
+       "waitedSeconds": 10,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.queue-deep",
+      "warn",
+      "nx:graph-pool:/w"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      60,
+      50,
+      "unknown"
+     ],
+     [
+      "lease",
+      61,
+      50,
+      "unknown"
+     ],
+     [
+      "lease",
+      62,
+      50,
+      "unknown"
+     ],
+     [
+      "lease",
+      63,
+      50,
+      "unknown"
+     ],
+     [
+      "lease",
+      64,
+      50,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a queue depth reported by one waiter counts",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 50,
+       "heldSeconds": 10,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 60,
+       "waitedSeconds": 10,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": 5,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "nx:graph-pool:/w",
+       "hash": "d7f97547d1ab334446dbb52aadf8a328d085412c631078b4f480d3e19409d6e9",
+       "mode": "exclusive",
+       "pid": 61,
+       "waitedSeconds": 10,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": 2,
+       "blockers": [
+        50
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.queue-deep",
+      "warn",
+      "nx:graph-pool:/w"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      60,
+      50,
+      "unknown"
+     ],
+     [
+      "lease",
+      61,
+      50,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a wait chain reaches the process that works",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-x",
+       "hash": "9b0d60d92f171b0bf2ebcd9ae2971868836dea5de3d7030d10bd4ddf3779a00e",
+       "mode": "exclusive",
+       "pid": 61,
+       "heldSeconds": 500,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-y",
+       "hash": "af8918ffa3a09d078dd248c1bd0345cf3e5c569df968b37c45b139714f554e52",
+       "mode": "exclusive",
+       "pid": 62,
+       "heldSeconds": 400,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "res-x",
+       "hash": "9b0d60d92f171b0bf2ebcd9ae2971868836dea5de3d7030d10bd4ddf3779a00e",
+       "mode": "exclusive",
+       "pid": 60,
+       "waitedSeconds": 100,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        61
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "res-y",
+       "hash": "af8918ffa3a09d078dd248c1bd0345cf3e5c569df968b37c45b139714f554e52",
+       "mode": "exclusive",
+       "pid": 61,
+       "waitedSeconds": 90,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        62
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "processes": [
+     {
+      "pid": 62,
+      "parent": 1000,
+      "ageSeconds": 100,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "cargo test -p x"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.wait-long",
+      "warn",
+      "res-x"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "res-y"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      60,
+      62,
+      "running"
+     ],
+     [
+      "lease",
+      61,
+      62,
+      "running"
+     ]
+    ],
+    "processes": [
+     [
+      62,
+      "holding",
+      null
+     ]
+    ],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a wait cycle is named and both chains end in a waiting process",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-x",
+       "hash": "9b0d60d92f171b0bf2ebcd9ae2971868836dea5de3d7030d10bd4ddf3779a00e",
+       "mode": "exclusive",
+       "pid": 71,
+       "heldSeconds": 500,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-y",
+       "hash": "af8918ffa3a09d078dd248c1bd0345cf3e5c569df968b37c45b139714f554e52",
+       "mode": "exclusive",
+       "pid": 70,
+       "heldSeconds": 500,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "res-x",
+       "hash": "9b0d60d92f171b0bf2ebcd9ae2971868836dea5de3d7030d10bd4ddf3779a00e",
+       "mode": "exclusive",
+       "pid": 70,
+       "waitedSeconds": 100,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        71
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "res-y",
+       "hash": "af8918ffa3a09d078dd248c1bd0345cf3e5c569df968b37c45b139714f554e52",
+       "mode": "exclusive",
+       "pid": 71,
+       "waitedSeconds": 100,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        70
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [
+      {
+       "members": [
+        "70/0",
+        "71/0"
+       ],
+       "victim": "71/0"
+      }
+     ],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.cycle",
+      "error",
+      "70/0 → 71/0"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "res-x"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "res-y"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      70,
+      71,
+      "waiting"
+     ],
+     [
+      "lease",
+      71,
+      70,
+      "waiting"
+     ]
+    ],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a queued waiter behind another waiter names the holder",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 81,
+       "heldSeconds": 700,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 82,
+       "waitedSeconds": 80,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        81
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "cargo:registry:/w/cargo/home",
+       "hash": "299264d9bfe8c64f7910e68691b10625167553c3a495bcfed7461249dc3831c5",
+       "mode": "exclusive",
+       "pid": 83,
+       "waitedSeconds": 70,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": 2,
+       "queued": 2,
+       "blockers": [
+        82,
+        81
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.wait-long",
+      "warn",
+      "cargo:registry:/w/cargo/home"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "cargo:registry:/w/cargo/home"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      82,
+      81,
+      "unknown"
+     ],
+     [
+      "lease",
+      83,
+      81,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a waiter queued behind the ticket of a dead process",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 31,
+       "heldSeconds": 400,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 41,
+       "waitedSeconds": 90,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": 2,
+       "blockers": [
+        99,
+        31
+       ],
+       "command": "bun /w/script.ts repo run b"
+      },
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 42,
+       "waitedSeconds": 30,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        99
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 1,
+     "deadHolders": [
+      99
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.wait-long",
+      "warn",
+      "res-d"
+     ],
+     [
+      "leases.dead-holder",
+      "warn",
+      "99"
+     ],
+     [
+      "leases.dead-ticket",
+      "info",
+      "queue"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      41,
+      31,
+      "unknown"
+     ],
+     [
+      "lease",
+      42,
+      99,
+      "gone"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "a wait of exactly the warning age behind a dead ticket is a warning",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [],
+     "waiters": [
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 42,
+       "waitedSeconds": 60,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        99
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": [
+      99
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.wait-long",
+      "warn",
+      "res-d"
+     ],
+     [
+      "leases.dead-holder",
+      "warn",
+      "99"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      42,
+      99,
+      "gone"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a young wait behind a dead ticket is only a note",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [],
+     "waiters": [
+      {
+       "resource": "res-d",
+       "hash": "84a37c373f3fd8e3c16df26857cb95236afe1138a23c08a4d0d993f67fee5c8e",
+       "mode": "exclusive",
+       "pid": 42,
+       "waitedSeconds": 59,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        99
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": [
+      99,
+      98
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "leases.dead-holder",
+      "info",
+      "99"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      42,
+      99,
+      "gone"
+     ]
+    ],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "capacity waits behind the biggest grant, one grant is mostly idle",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [
+      {
+       "operation": "run",
+       "pid": 80,
+       "jobs": 1,
+       "reservedMegabytes": 5632,
+       "observedMegabytes": 114,
+       "heldSeconds": 30004
+      },
+      {
+       "operation": "show",
+       "pid": 81,
+       "jobs": 1,
+       "reservedMegabytes": 5120,
+       "observedMegabytes": 3000,
+       "heldSeconds": 30
+      },
+      {
+       "operation": "cargo",
+       "pid": 82,
+       "jobs": 1,
+       "reservedMegabytes": 3584,
+       "observedMegabytes": 3000,
+       "heldSeconds": 474
+      }
+     ],
+     "waiters": [
+      {
+       "operation": "cargo",
+       "pid": 90,
+       "needMegabytes": 4000,
+       "waitedSeconds": 29,
+       "reason": "memory"
+      },
+      {
+       "operation": "test",
+       "pid": 91,
+       "needMegabytes": 4000,
+       "waitedSeconds": 30,
+       "reason": "memory"
+      },
+      {
+       "operation": "show",
+       "pid": 92,
+       "needMegabytes": 4000,
+       "waitedSeconds": 300,
+       "reason": "load"
+      }
+     ]
+    },
+    "processes": [
+     {
+      "pid": 80,
+      "parent": 1000,
+      "ageSeconds": 30004,
+      "rssMegabytes": 113,
+      "cpuPercent": 94.6,
+      "command": "bun /w/script.ts repo run a"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     [
+      "capacity.wait-long",
+      "error",
+      "show"
+     ],
+     [
+      "capacity.wait-long",
+      "warn",
+      "test"
+     ],
+     [
+      "capacity.grant-idle",
+      "warn",
+      "run"
+     ]
+    ],
+    "waits": [
+     [
+      "capacity",
+      92,
+      80,
+      "running"
+     ],
+     [
+      "capacity",
+      91,
+      80,
+      "running"
+     ],
+     [
+      "capacity",
+      90,
+      80,
+      "running"
+     ]
+    ],
+    "processes": [
+     [
+      80,
+      "admitted",
+      null
+     ]
+    ],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "idle grants at their boundaries",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [
+      {
+       "operation": "alpha",
+       "pid": 11,
+       "jobs": 1,
+       "reservedMegabytes": 1000,
+       "observedMegabytes": 249,
+       "heldSeconds": 600
+      },
+      {
+       "operation": "beta",
+       "pid": 12,
+       "jobs": 1,
+       "reservedMegabytes": 1000,
+       "observedMegabytes": 250,
+       "heldSeconds": 600
+      },
+      {
+       "operation": "gamma",
+       "pid": 13,
+       "jobs": 1,
+       "reservedMegabytes": 1000,
+       "observedMegabytes": 0,
+       "heldSeconds": 599
+      },
+      {
+       "operation": "delta",
+       "pid": 14,
+       "jobs": 1,
+       "reservedMegabytes": 1000,
+       "observedMegabytes": null,
+       "heldSeconds": 600
+      }
+     ],
+     "waiters": [
+      {
+       "operation": "w",
+       "pid": 15,
+       "needMegabytes": 4000,
+       "waitedSeconds": 5,
+       "reason": "memory"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "capacity.grant-idle",
+      "warn",
+      "alpha"
+     ]
+    ],
+    "waits": [
+     [
+      "capacity",
+      15,
+      11,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "idle grants are not reported while nobody waits",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [
+      {
+       "operation": "alpha",
+       "pid": 11,
+       "jobs": 1,
+       "reservedMegabytes": 1000,
+       "observedMegabytes": 0,
+       "heldSeconds": 6000
+      }
+     ],
+     "waiters": []
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "sessions: gone, crowded, damaged",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "sessions": {
+     "live": 8,
+     "idle": 2,
+     "gone": 2,
+     "damaged": 1
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "sessions.crowded",
+      "warn",
+      "agent-sessions"
+     ],
+     [
+      "sessions.damaged",
+      "warn",
+      "agent-sessions"
+     ],
+     [
+      "sessions.gone",
+      "info",
+      "agent-sessions"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "one gone session is a note",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "sessions": {
+     "live": 0,
+     "idle": 0,
+     "gone": 1,
+     "damaged": 0
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "sessions.gone",
+      "info",
+      "agent-sessions"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "sessions just below crowded",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "sessions": {
+     "live": 7,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "graph without a generation",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "absent",
+     "generation": null,
+     "manifest": "none",
+     "owners": null,
+     "publishedAgeSeconds": null,
+     "implementationNewerSeconds": null
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "graph.unpublished",
+      "warn",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "graph without a generation while a graph lease is awaited is an error",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "absent",
+     "generation": null,
+     "manifest": "none",
+     "owners": null,
+     "publishedAgeSeconds": null,
+     "implementationNewerSeconds": null
+    },
+    "leases": {
+     "holders": [
+      {
+       "resource": "repository-graph-facts:/w",
+       "hash": "af762f883b96e7ecfd01bfb8c48f75ace49a87fa98210bc41e3c545bb1706309",
+       "mode": "exclusive",
+       "pid": 91,
+       "heldSeconds": 400,
+       "class": "graph",
+       "owner": "graph",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "repository-graph-facts:/w",
+       "hash": "af762f883b96e7ecfd01bfb8c48f75ace49a87fa98210bc41e3c545bb1706309",
+       "mode": "exclusive",
+       "pid": 92,
+       "waitedSeconds": 60,
+       "class": "graph",
+       "owner": "graph",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        91
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "graph.unpublished",
+      "error",
+      "graph"
+     ],
+     [
+      "leases.wait-long",
+      "warn",
+      "repository-graph-facts:/w"
+     ]
+    ],
+    "waits": [
+     [
+      "lease",
+      92,
+      91,
+      "unknown"
+     ]
+    ],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "graph pointer damaged",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "damaged",
+     "generation": null,
+     "manifest": "none",
+     "owners": null,
+     "publishedAgeSeconds": 5,
+     "implementationNewerSeconds": null
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "graph.damaged",
+      "error",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "graph manifest missing",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "present",
+     "generation": 4,
+     "manifest": "missing",
+     "owners": null,
+     "publishedAgeSeconds": 5,
+     "implementationNewerSeconds": 0
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "graph.damaged",
+      "error",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "graph implementation newer by one second",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 1
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "graph.implementation-newer",
+      "info",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "graph implementation not newer",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "dependencies without a pointer",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "dependencies": {
+     "pointers": "absent",
+     "scopes": [],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "dependencies.unpublished",
+      "error",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "dependency scopes: missing, unready, inputs newer, orphans, unready dirs",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      },
+      {
+       "scope": "✏️s",
+       "generation": "a6555dd7239342012a1f4c74c6b28ac3ca5030eb74667e1715f8564d0d5786bb",
+       "directory": "unready",
+       "inputsNewer": null
+      },
+      {
+       "scope": "🎓️teaching",
+       "generation": "1a41d0c66f41652650baa9d14f99115176a2bb6ded4a080090d8a3448b6f251e",
+       "directory": "missing",
+       "inputsNewer": null
+      },
+      {
+       "scope": "🌎️hub",
+       "generation": "eebc46265979a619d0427ab7e47ada3b330d6335df9661452e98594c6f530713",
+       "directory": "ready",
+       "inputsNewer": "🌎️hub/bun.lock"
+      }
+     ],
+     "orphans": 11,
+     "orphanEstimatedBytes": 880000000,
+     "unready": 1,
+     "unreadyOldestSeconds": 3600
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "dependencies.generation-missing",
+      "error",
+      "✏️s"
+     ],
+     [
+      "dependencies.generation-missing",
+      "error",
+      "🎓️teaching"
+     ],
+     [
+      "dependencies.inputs-newer",
+      "warn",
+      "🌎️hub"
+     ],
+     [
+      "dependencies.unready-generation",
+      "warn",
+      "dependencies"
+     ],
+     [
+      "dependencies.orphans",
+      "info",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 2,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "many superseded generations warn; an unready directory under a running build is not reported",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 12,
+     "orphanEstimatedBytes": 960000000,
+     "unready": 2,
+     "unreadyOldestSeconds": 7200
+    },
+    "leases": {
+     "holders": [
+      {
+       "resource": "javascript-dependency-build:/w",
+       "hash": "edddcaccadb9cbd928b1d2e3c6d1900f283ec78e250c6e489102d88205edffe2",
+       "mode": "exclusive",
+       "pid": 95,
+       "heldSeconds": 100,
+       "class": "image",
+       "owner": "storage",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "dependencies.orphans",
+      "warn",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "an unready directory younger than the age is fine",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 1,
+     "unreadyOldestSeconds": 3599
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "dead publications below the byte threshold",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "caches": {
+     "deadPublications": 2,
+     "deadPublicationBytes": 104857599,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "caches.dead-publication",
+      "info",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "dead publications at the byte threshold",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "caches": {
+     "deadPublications": 2,
+     "deadPublicationBytes": 104857600,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "caches.dead-publication",
+      "warn",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "dead publications while the graph image is below its floor",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "caches": {
+     "deadPublications": 31,
+     "deadPublicationBytes": 581000000,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 990449664,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "caches.dead-publication",
+      "error",
+      "graph"
+     ],
+     [
+      "storage.image-below-floor",
+      "error",
+      "graph"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "retired and undeclared cache entries",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [
+      "repository:a",
+      "native:b"
+     ],
+     "undeclared": [
+      "repository:c"
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "caches.retired-roots",
+      "info",
+      "cache"
+     ],
+     [
+      "caches.undeclared",
+      "info",
+      "cache"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 2
+    }
+   }
+  },
+  {
+   "name": "process phases, orphans, idle holders and the relevance filter",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-1",
+       "hash": "7d3decde0c1e575f39de6e67f49c425ecb053e7d1645582c686867f23ce1ff31",
+       "mode": "exclusive",
+       "pid": 100,
+       "heldSeconds": 700,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-2",
+       "hash": "be6e83aeccbd089b4254451349fcd9fcc9749b99de3cc225bdf4c779afe6826b",
+       "mode": "exclusive",
+       "pid": 101,
+       "heldSeconds": 700,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "processes": [
+     {
+      "pid": 100,
+      "parent": 1,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.5,
+      "command": "bun /w/script.ts repo cargo test"
+     },
+     {
+      "pid": 102,
+      "parent": 100,
+      "ageSeconds": 650,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.4,
+      "command": "cargo test -p x"
+     },
+     {
+      "pid": 101,
+      "parent": 5000,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 1.0,
+      "command": "bun /w/script.ts repo run a"
+     },
+     {
+      "pid": 103,
+      "parent": 1,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "rustc --crate-name x"
+     },
+     {
+      "pid": 104,
+      "parent": 1,
+      "ageSeconds": 100,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "cargo build"
+     },
+     {
+      "pid": 105,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "/bin/zsh -c repo cargo test"
+     },
+     {
+      "pid": 106,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "repo mcp stdio"
+     },
+     {
+      "pid": 107,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "vim notes.txt"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     [
+      "processes.idle-holder",
+      "warn",
+      "100"
+     ],
+     [
+      "processes.orphan",
+      "warn",
+      "100"
+     ]
+    ],
+    "waits": [],
+    "processes": [
+     [
+      100,
+      "holding",
+      null
+     ],
+     [
+      101,
+      "holding",
+      null
+     ],
+     [
+      102,
+      "admitted",
+      100
+     ],
+     [
+      103,
+      "orphan",
+      null
+     ],
+     [
+      104,
+      "running",
+      null
+     ]
+    ],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "a process younger than the orphan age is no orphan",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-1",
+       "hash": "7d3decde0c1e575f39de6e67f49c425ecb053e7d1645582c686867f23ce1ff31",
+       "mode": "exclusive",
+       "pid": 100,
+       "heldSeconds": 100,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "processes": [
+     {
+      "pid": 100,
+      "parent": 1,
+      "ageSeconds": 599,
+      "rssMegabytes": 10,
+      "cpuPercent": 50,
+      "command": "bun /w/script.ts repo cargo test"
+     },
+     {
+      "pid": 103,
+      "parent": 1,
+      "ageSeconds": 599,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "rustc --crate-name x"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [
+     [
+      100,
+      "holding",
+      null
+     ],
+     [
+      103,
+      "running",
+      null
+     ]
+    ],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "waiting processes keep their phase and their children inherit it",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-1",
+       "hash": "7d3decde0c1e575f39de6e67f49c425ecb053e7d1645582c686867f23ce1ff31",
+       "mode": "exclusive",
+       "pid": 110,
+       "heldSeconds": 20,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [
+      {
+       "resource": "res-1",
+       "hash": "7d3decde0c1e575f39de6e67f49c425ecb053e7d1645582c686867f23ce1ff31",
+       "mode": "exclusive",
+       "pid": 111,
+       "waitedSeconds": 20,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "position": null,
+       "queued": null,
+       "blockers": [
+        110
+       ],
+       "command": "bun /w/script.ts repo run b"
+      }
+     ],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": [
+      {
+       "operation": "cargo",
+       "pid": 112,
+       "needMegabytes": 4000,
+       "waitedSeconds": 5,
+       "reason": "memory"
+      }
+     ]
+    },
+    "processes": [
+     {
+      "pid": 110,
+      "parent": 900,
+      "ageSeconds": 20,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "cargo check"
+     },
+     {
+      "pid": 111,
+      "parent": 900,
+      "ageSeconds": 20,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "bun /w/script.ts repo run b"
+     },
+     {
+      "pid": 112,
+      "parent": 900,
+      "ageSeconds": 5,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "bun /w/script.ts repo cargo test"
+     },
+     {
+      "pid": 113,
+      "parent": 111,
+      "ageSeconds": 19,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "tsc -b"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "waits": [
+     [
+      "lease",
+      111,
+      110,
+      "running"
+     ],
+     [
+      "capacity",
+      112,
+      null,
+      null
+     ]
+    ],
+    "processes": [
+     [
+      111,
+      "waiting-lease",
+      null
+     ],
+     [
+      112,
+      "waiting-capacity",
+      null
+     ],
+     [
+      110,
+      "holding",
+      null
+     ],
+     [
+      113,
+      "running",
+      111
+     ]
+    ],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
+   "name": "probe results become findings",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [
+     {
+      "area": "tools",
+      "status": "unavailable",
+      "durationMs": 3,
+      "reason": "The tool registry is not installed in this checkout"
+     },
+     {
+      "area": "storage",
+      "status": "failed",
+      "durationMs": 9,
+      "reason": "boom"
+     },
+     {
+      "area": "leases",
+      "status": "timeout",
+      "durationMs": 8000
+     },
+     {
+      "area": "graph",
+      "status": "ok",
+      "durationMs": 40
+     },
+     {
+      "area": "caches",
+      "status": "skipped",
+      "durationMs": 0
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     [
+      "doctor.probe-failed",
+      "warn",
+      "storage"
+     ],
+     [
+      "doctor.probe-timeout",
+      "warn",
+      "leases"
+     ],
+     [
+      "doctor.probe-unavailable",
+      "info",
+      "tools"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 2,
+     "info": 1
+    }
+   }
+  }
+ ]
+}

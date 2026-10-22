@@ -51,7 +51,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -71,7 +71,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-approval-request-fixture"
+        "command": "repo ./📜️script.ts test-approval-request-fixture"
       }
     },
     "test-native-staging": {
@@ -87,7 +87,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-native-staging"
+        "command": "repo ./📜️script.ts test-native-staging"
       },
       "metadata": {
         "semio": {
@@ -139,7 +139,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-canonical-stdio",
+        "command": "repo ./📜️script.ts test-canonical-stdio",
         "forwardAllArgs": false
       },
       "metadata": {

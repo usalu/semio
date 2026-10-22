@@ -32,7 +32,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -52,7 +52,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test retirement"
+        "command": "repo ./📜️script.ts test retirement"
       }
     }
   },

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 
 import { createIssuedResourceControlV1 } from "@semio-tech/framework/process/routing";
@@ -12,6 +12,7 @@ import { runCmd } from "@semio-tech/framework/process/execution";
 import { runVitest } from "@semio-tech/framework/process/vitest";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔮️ Runs one engine-owned oracle suite; the oracles live below the engine, not in this host package. */
 const runOracleSuite = (repoRoot: string, name: string, oracle?: string): void => runCmd(process.execPath, ["test", join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests", name, "🟦️.ts"), ...(oracle ? ["-t", oracle] : [])], { cwd: repoRoot });
@@ -322,4 +323,4 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

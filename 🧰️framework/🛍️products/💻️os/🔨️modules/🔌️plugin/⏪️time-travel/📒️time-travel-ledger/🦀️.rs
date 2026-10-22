@@ -39,7 +39,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
 #[doc(hidden)]
-pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>+Send+'static> {
+pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>+::protocol::ColdMutation<P>+Send+'static> {
     pub replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
     pub finalization: store::HistoryFinalization,
 }

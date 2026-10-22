@@ -1,5 +1,17 @@
 //! 🧱️ Boxed fixed-slot constructors, `FixedSlotTableBudget` and the bounded-stack runner.
 
+//#region 🗺️ShardedMap
+#[path = "../🗺️sharded-map/🦀️.rs"]
+mod sharded_map;
+pub use sharded_map::ShardedMap;
+//#endregion 🗺️ShardedMap
+
+//#region 🎰️FixedSlotPages
+#[path = "../🎰️slots/📄️pages/🦀️.rs"]
+mod original_fixed_slot_pages;
+pub use original_fixed_slot_pages::OriginalFixedSlotPages;
+//#endregion 🎰️FixedSlotPages
+
 //#region 🧱️BoxedSlots
 /// 🧱️ Fills `len` slots straight onto the heap, never through a stack temporary.
 ///
@@ -10,7 +22,7 @@
 /// `len * size_of::<T>()` of stack in the constructing frame, however large. Measured instances of
 /// exactly that defect: 5 670 928 B for `[Option<AdmittedSurfaceEntry<World3dState>>; 256]`,
 /// 16 779 328 B for `[EngineSurfaceSlot; 256]`, 11 929 152 B for `[Option<UiSurfaceSlot>; 64]` — on
-/// OS threads that own 2 MiB ([`WorkerPool`]'s workers take Rust's default) and on a wasm shadow
+/// OS threads that own 2 MiB (`WorkerPool`'s workers take Rust's default) and on a wasm shadow
 /// stack of 16 MiB.
 ///
 /// `Vec::with_capacity` takes the allocation first and `resize_with` writes each slot directly into
@@ -39,7 +51,7 @@ pub fn boxed_fixed_slots<T, const N: usize>(fill: impl FnMut() -> T) -> Box<[T; 
 /// `Builder::stack_size` **overrides** `RUST_MIN_STACK`, which is the whole point: the repo runner
 /// floors that variable at 128 MiB, so a constructor that re-materialises its slot table in the
 /// caller's frame stays green in every gate until a lane like this one pins the real budget. The
-/// budget to pin is the one [`WorkerPool`]'s workers actually get — `WORKER_STACK_BYTES`, which
+/// budget to pin is the one `WorkerPool`'s workers actually get — `WORKER_STACK_BYTES`, which
 /// `native_pool` now states explicitly instead of inheriting Rust's 2 MiB default.
 /// 🧱️ One row of the [fixed-slot fixture](🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json), measured or declared — see
 /// [`assert_fixed_slot_tables`].

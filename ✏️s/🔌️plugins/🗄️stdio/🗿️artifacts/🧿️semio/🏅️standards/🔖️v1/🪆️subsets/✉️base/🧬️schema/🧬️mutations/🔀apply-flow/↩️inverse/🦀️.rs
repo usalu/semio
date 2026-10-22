@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyFlow`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_flow::ApplyFlow>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Flow(b) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyFlow { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Flow(b) => <SemioFlowMutation as ColdMutation<SemioFlowSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyFlow { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

@@ -1,13 +1,15 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "@semio-tech/repo-lib/inventory";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🎯️native-selection/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
-import type { SemanticFacetPrimaryFileProjectionContract } from "@semio-tech/repo-lib/inventory";
+import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { ToolErrorV1, runToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 
 //#endregion 🎮️PlaygroundSession
@@ -133,8 +135,6 @@ export const PRESENCE_FACET_DIR = "👥️presence";
 
 export const IO_FACET_DIR = "🚪️io";
 
-export const LEGACY_CONFIG_FACET_DIR = "🧮️config";
-
 export const TAXONOMY_IO_DIRECTION_DIRS = TAXONOMY.ioDirectionDirs ?? [];
 
 export const TAXONOMY_IO_DIRECTION_CHILD_DIRS = TAXONOMY.ioDirectionChildDirs ?? {};
@@ -142,8 +142,6 @@ export const TAXONOMY_IO_DIRECTION_CHILD_DIRS = TAXONOMY.ioDirectionChildDirs ??
 export const BUILDER_FACET_DIR = "🏗️builder";
 
 export const DECOMPOSER_FACET_DIR = "🪓️decomposer";
-
-export const LEGACY_WASM_DIR = "🕸️wasm";
 
 export const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(requiredRegistryEntryV1(TAXONOMY.ecosystems, "🟦️typescript").componentFileKindId);
 
@@ -651,16 +649,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
     }
   };
   for (const { abs: surfaceAbs, label } of surfaceDirs) {
-    if (existsSync(join(surfaceAbs, LEGACY_CONFIG_FACET_DIR))) {
-      findings.push(`${pluginId}: surface "${label}" still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
-    }
-    if (existsSync(join(surfaceAbs, LEGACY_WASM_DIR))) {
-      findings.push(`${pluginId}: surface "${label}" still has ${LEGACY_WASM_DIR}/ — rename to 🌉️wasm/`);
-    }
     assertAppSchemaOwner(`surface "${label}"`, surfaceAbs);
-  }
-  if (existsSync(join(pluginRoot, LEGACY_CONFIG_FACET_DIR))) {
-    findings.push(`${pluginId}: plugin-root still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
   }
   assertAppSchemaOwner(`plugin-root`, pluginRoot);
   //#endregion SurfaceFacetWalk
@@ -673,7 +662,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
 /** 🧪️ Compares exact registry mounts with Rust compiler dependency membership over neutral trees. */
 export class RustTaxonomyMountsCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures/🕸️rust-taxonomy-mounts");
+    const fixtureRoot = join(import.meta.dirname, "..", "🧪️tests/🧫️fixtures/🕸️rust-taxonomy-mounts");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; neighbourFiles?: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
     
     
@@ -690,19 +679,15 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
       }
       const sourceFiles = Object.keys(row.files).filter((path) => path.endsWith(".rs"));
       const entry = [...RUST_ENTRY_DIR_FROM_OWNER, RUST_ENTRY_FILENAME].join("/");
-      const child = Bun.spawn(["rustc", "--crate-name", "taxonomy_mount_fixture", "--crate-type", "lib", "--edition", "2021", "--emit=metadata=fixture.rmeta,dep-info=fixture.d", entry], { cwd: pluginRoot, stdout: "pipe", stderr: "pipe", env: { ...process.env, RUST_BACKTRACE: "0" } });
-      let cancelled = false;
-      let timedOut = false;
-      const cancel = (): void => { cancelled = true; child.kill(); };
+      const controller = new AbortController();
+      const cancel = (): void => controller.abort();
       process.once("SIGINT", cancel);
       process.once("SIGTERM", cancel);
-      const timeout = setTimeout(() => { timedOut = true; child.kill(); }, 30_000);
-      const [status, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]).finally(() => {
-        clearTimeout(timeout);
+      const { status, stdout, stderr } = await runToolV1("cargo", ["--crate-name", "taxonomy_mount_fixture", "--crate-type", "lib", "--edition", "2021", "--emit=metadata=fixture.rmeta,dep-info=fixture.d", entry], { command: "rustc", cwd: pluginRoot, capture: true, check: false, timeout: 30_000, signal: controller.signal, env: { ...process.env, RUST_BACKTRACE: "0" } }).catch((error: unknown) => { throw new Error(row.id + (error instanceof ToolErrorV1 && error.code === "cancelled" ? ": compiler cancelled" : ": compiler failed to run: " + String(error))); }).finally(() => {
         process.off("SIGINT", cancel);
         process.off("SIGTERM", cancel);
       });
-      if (cancelled || timedOut) throw new Error(row.id + (cancelled ? ": compiler cancelled" : ": compiler exceeded 30s budget"));
+      if (status === null) throw new Error(row.id + ": compiler exceeded 30s budget");
       writeFileSync(join(pluginRoot, "compiler.log"), stdout + stderr);
       if ((status === 0) !== row.rustcSuccess) failures.push(row.id + ": compiler status differs: " + status);
       const referenceCodes: string[] = [];
@@ -736,14 +721,14 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
 /** 🪴️ Checks required root ownership with neutral trees and an independent SQLite relation. */
 export class PluginRootOwnershipCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures/🌳️plugin-root-ownership");
+    const fixtureRoot = join(import.meta.dirname, "..", "🧪️tests/🧫️fixtures/🌳️plugin-root-ownership");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
     
     
     const capture = join(this.root, "dist/plugin-root-ownership-check");
     rmSync(capture, { recursive: true, force: true });
     mkdirSync(capture, { recursive: true });
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const oracle = new Database(":memory:");
     const failures: string[] = [];
     try {

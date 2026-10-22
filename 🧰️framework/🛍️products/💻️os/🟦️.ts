@@ -448,7 +448,7 @@ export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from
 //#region 🔖️MeshPackCodec
 if (import.meta.vitest) {
   const { registerTests5 } = await import("./🧪️tests/🧊️mesh-pack-decode/🟦️.ts");
-  await registerTests5(import.meta.vitest, { decodeMeshPackBody, decodeMeshPackChunks }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests5(import.meta.vitest, { decodeMeshPackBody, decodeMeshPackChunks }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🔖️MeshPackCodec
 

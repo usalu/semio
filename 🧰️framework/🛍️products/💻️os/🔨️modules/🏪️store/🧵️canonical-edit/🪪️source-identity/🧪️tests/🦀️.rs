@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_store::ArtifactCanonicalTreeSource;
+use crate::ArtifactCanonicalTreeSource;
 use semio_framework_value::DslValue;
 fn field<'a>(root:&'a DslValue,key:&str)->&'a DslValue{let DslValue::Object(fields)=root else{panic!("authored fixture object")};&fields.iter().find(|(name,_)|name==key).unwrap().1}
 fn array(root:&DslValue)->&[DslValue]{let DslValue::Array(rows)=root else{panic!("authored fixture array")};rows}

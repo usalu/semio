@@ -15,7 +15,7 @@
         "^production"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "cwd": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },

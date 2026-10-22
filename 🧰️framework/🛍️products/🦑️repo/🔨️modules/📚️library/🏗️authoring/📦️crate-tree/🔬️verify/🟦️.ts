@@ -1,8 +1,10 @@
-import { spawnSync } from "node:child_process";
+
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🌳️ One resolved module of a crate: its path, owning file and cfg. */
 export type ResolvedModule = Readonly<{ path: string; file: string | null; inline: boolean; cfgTest: boolean; visibility: string }>;
@@ -61,7 +63,7 @@ export function compareModuleTrees(original: readonly ResolvedModule[], carved: 
 
 /** 🔭️ Unresolved external crate names that rustc reports for one crate root (analysis only, output discarded). */
 export function rustcUnresolvedCrates(rootFile: string, crateName: string, flags: readonly string[] = []): { unresolved: string[]; otherErrors: string[]; exit: number | null } {
-  const result = spawnSync("rustc", ["+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", crateName.replaceAll("-", "_"), "--emit=metadata", "-o", "/dev/null", ...flags, rootFile], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, timeout: 120_000 });
+  const result = runToolSyncV1("cargo", ["+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", crateName.replaceAll("-", "_"), "--emit=metadata", "-o", "/dev/null", ...flags, rootFile], { command: "rustc", encoding: "utf8", maxBuffer: 256 * 1024 * 1024, timeout: 120_000 });
   const text = `${result.stderr ?? ""}`;
   const unresolved = new Set<string>();
   const others: string[] = [];
@@ -137,7 +139,7 @@ export function unlinkedGlobModules(sandboxRoot: string, rootFile: string, entri
 
 /** 🔬️ Runs the full-resolution oracle on one crate root and returns normalised diagnostics. */
 export function runResolutionOracle(sandboxRoot: string, rootFile: string, crateName: string, flags: readonly string[]): { diagnostics: OracleDiagnostic[]; locations: string[]; exit: number | null } {
-  const result = spawnSync("rustc", ["+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", crateName.replaceAll("-", "_"), "--emit=metadata", "--error-format=json", "-o", resolve(sandboxRoot, ".oracle.rmeta"), ...flags, rootFile], { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 300_000, env: { ...process.env, CARGO_MANIFEST_DIR: sandboxRoot } });
+  const result = runToolSyncV1("cargo", ["+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", crateName.replaceAll("-", "_"), "--emit=metadata", "--error-format=json", "-o", resolve(sandboxRoot, ".oracle.rmeta"), ...flags, rootFile], { command: "rustc", encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 300_000, env: { ...process.env, CARGO_MANIFEST_DIR: sandboxRoot } });
   const entries: OracleEntry[] = [];
   for (const line of (result.stderr ?? "").split("\n")) {
     if (!line.startsWith("{")) continue;
@@ -252,7 +254,7 @@ export function sharedMountFiles(repoRoot: string, manifests: readonly string[],
     const absolute = resolve(repoRoot, manifest);
     if (!existsSync(absolute)) continue;
     let parsed: { package?: unknown; lib?: { path?: string }; test?: { path?: string; name?: string }[]; bin?: { path?: string; name?: string }[] };
-    try { parsed = Bun.TOML.parse(readFileSync(absolute, "utf8")) as typeof parsed; } catch { continue; }
+    try { parsed = runtimeParseTomlV1(readFileSync(absolute, "utf8")) as typeof parsed; } catch { continue; }
     if (!parsed.package) continue;
     const directory = dirname(absolute);
     const roots = [parsed.lib?.path ?? "src/lib.rs", ...(parsed.test ?? []).map((entry) => entry.path ?? `tests/${entry.name}.rs`), ...(parsed.bin ?? []).map((entry) => entry.path ?? `src/bin/${entry.name}.rs`)].map((path) => resolve(directory, path)).filter((path) => existsSync(path));

@@ -20,7 +20,7 @@ export const artifactBudgets = { "task-results": 8 * 1024 ** 3, "compiler-state"
 const cache = ".🧬semio/🦑️repo/⚡️cache";
 const stores: readonly [string, string, ArtifactCategory][] = [
   ["nx", `${cache}/nx`, "task-results"], ["nx-graph", ".nx/workspace-data", "service-state"],
-  ["cargo", "target", "compiler-state"], ["bun", "node_modules", "dependency-store"], ["uv", ".venv", "dependency-store"],
+  ["cargo", "target", "compiler-state"], ["node-modules", "node_modules", "dependency-store"], ["uv", ".venv", "dependency-store"],
   ["repo-cache", cache, "unclassified"], ["cargo-target", `${cache}/cargo/target`, "compiler-state"], ["cargo-build", `${cache}/cargo/build`, "compiler-state"],
   ["cmake", `${cache}/cmake`, "compiler-state"], ["dotnet", `${cache}/dotnet`, "compiler-state"],
   ["tools", `${cache}/tools`, "downloaded-asset"], ["tectonic", `${cache}/tectonic`, "compiler-state"],

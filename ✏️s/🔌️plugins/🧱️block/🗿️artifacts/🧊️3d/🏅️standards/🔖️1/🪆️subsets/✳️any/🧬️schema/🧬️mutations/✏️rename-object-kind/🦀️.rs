@@ -24,6 +24,12 @@ pub fn rename_object_kind<Op: From<crate::rename_object_kind::RenameObjectKind>>
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameObjectKind where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_object_kind::RenameObjectKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "object-kind", kind: "rename-object-kind", record: "RenamedObjectKind" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename object kind to \"{}\"", self.new_name), &format!("Objektart in \"{}\" umbenennen", self.new_name))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for RenameObjectKind where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_object_kind::RenameObjectKind> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::rename_object_kind::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameObjectKind where 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename object kind to \"{}\"", self.new_name), &format!("Objektart in \"{}\" umbenennen", self.new_name))
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment } from "../⚛️react-port/🟦️.ts";
 import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
 import type { NavbarItem } from "@semio-tech/ui-react";
 

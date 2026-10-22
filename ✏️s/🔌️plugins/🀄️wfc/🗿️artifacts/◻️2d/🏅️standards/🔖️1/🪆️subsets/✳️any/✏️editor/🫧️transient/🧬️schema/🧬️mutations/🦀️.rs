@@ -9,7 +9,7 @@ pub use set_solve::SetSolve;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Wfc2dTransient, diff = Wfc2dTransientDiff, schema = "wfc.wfc2d.transient")]
+#[mutations(snapshot = Wfc2dTransient, diff = Wfc2dTransientDiff, schema = "wfc.wfc2d.transient", reference = Wfc2dTransient, reference_diff = Wfc2dTransientDiff)]
 pub enum Wfc2dTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
@@ -29,28 +29,23 @@ pub struct Wfc2dTransientDiff {
 }
 
 impl protocol::DiffAlgebra<Wfc2dTransient> for Wfc2dTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.assignments.is_none() && self.contradiction.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Wfc2dTransient> for Wfc2dTransientDiff {
     fn inverse(&self, base: &Wfc2dTransient) -> Self {
         Self {
             assignments: self.assignments.as_ref().map(|_| base.assignments.clone()),
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.assignments.is_none() && self.contradiction.is_none()
-    }
 }
 
-impl protocol::MutationDiff<Wfc2dTransient> for Wfc2dTransientDiff {
-    fn apply(&self, base: &Wfc2dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc2dTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.assignments {
-            next.assignments.clone_from(value);
-        }
-        if let Some(value) = &self.contradiction {
-            next.contradiction.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<Wfc2dTransient> for Wfc2dTransientDiff {}
+
+impl protocol::ColdMutationDiff<Wfc2dTransient> for Wfc2dTransientDiff {
     fn absorb(&mut self, later: Self) {
         if later.assignments.is_some() {
             self.assignments = later.assignments;
@@ -58,6 +53,19 @@ impl protocol::MutationDiff<Wfc2dTransient> for Wfc2dTransientDiff {
         if later.contradiction.is_some() {
             self.contradiction = later.contradiction;
         }
+    }
+
+    fn apply(&self, unpublished: &mut Wfc2dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.assignments {
+            next.assignments.clone_from(value);
+        }
+        if let Some(value) = &self.contradiction {
+            next.contradiction.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 //#region 🌉️TestBridge

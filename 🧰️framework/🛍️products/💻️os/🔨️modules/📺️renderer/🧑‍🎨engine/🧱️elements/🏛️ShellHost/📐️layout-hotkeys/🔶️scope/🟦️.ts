@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useDirectoryLaneAndLayout. */
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { latestWins } from "@semio-tech/framework";
 import { type BackboneWorkerRequest, encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { type DirectoryEvent } from "@semio-tech/framework/directory/schema";

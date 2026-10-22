@@ -14,7 +14,7 @@ pub struct BoardEventQueue {
 
 impl Default for BoardEventQueue {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), head: 0, len: 0, bytes: 0, claimed_items: 0, claimed_bytes: 0, closing: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), head: 0, len: 0, bytes: 0, claimed_items: 0, claimed_bytes: 0, closing: false }
     }
 }
 

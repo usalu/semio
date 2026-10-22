@@ -29,6 +29,7 @@ type Ticket = {
   plan: { client: string; id: string; source: string; local: string } | null;
   sessions: string[];
   interactions: Record<string, unknown>[];
+  agents: Record<string, unknown>[];
 };
 
 const VECTORS = "shared://📄️ticket-document-codec/📄️documents.json";
@@ -69,13 +70,14 @@ function decode(source: string): Ticket {
     title: text(members, "title"),
     emoji: text(members, "emoji"),
     status,
-    description: text(members, "description") === "" ? text(members, "prompt") : text(members, "description"),
+    description: text(members, "description"),
     summary: text(members, "summary"),
     issue: github === null ? "" : text(github, "issue"),
     goal: text(members, "goal"),
     parent: text(members, "parent"),
     plan: rawPlan === null ? null : { client: text(rawPlan, "client"), id: text(rawPlan, "id"), source: text(rawPlan, "source"), local: text(rawPlan, "local") },
     sessions: [],
+    agents: Array.isArray(members.agents) ? members.agents.filter((entry): entry is Record<string, unknown> => entry !== null && typeof entry === "object" && !Array.isArray(entry)).map(agentRecord) : [],
     interactions: interactions.filter((entry) => entry !== null && typeof entry === "object").map((entry) => {
       const result: Record<string, unknown> = {};
       for (const name of ["kind", "date", "author", "system", "client", "checkpoint"]) result[name] = text(entry, name);
@@ -90,7 +92,7 @@ function decode(source: string): Ticket {
   };
   const sessions = members.sessions;
   if (Array.isArray(sessions)) {
-    for (const entry of sessions) append(typeof entry === "string" ? entry : ((entry as Record<string, unknown> | null)?.session ?? ""));
+    for (const entry of sessions) append(entry);
   }
   if (ticket.summary === "") {
     for (let index = interactions.length - 1; index >= 0; index -= 1) {
@@ -105,6 +107,22 @@ function decode(source: string): Ticket {
   const agents = members.agents;
   if (Array.isArray(agents)) for (const entry of agents) append((entry as Record<string, unknown> | null)?.session ?? "");
   return ticket;
+}
+
+/** 🤖️ Projects durable agent records in schema order with canonical omission rules. */
+function agentRecord(agent: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = { session: text(agent, "session") };
+  for (const name of ["contributor", "system", "client", "llm", "effort", "transcript"]) if (text(agent, name) !== "") result[name] = text(agent, name);
+  if (agent.plan !== null && typeof agent.plan === "object" && !Array.isArray(agent.plan)) {
+    const plan = agent.plan as Record<string, unknown>, projected: Record<string, unknown> = {};
+    if (Array.isArray(plan.steps) && plan.steps.length > 0) projected.steps = plan.steps.map((step: Record<string, unknown>) => {
+      const value: Record<string, unknown> = {id: text(step, "id"), name: text(step, "name")};
+      for (const name of ["description", "status", "ideated", "started", "completed", "abandoned"]) if (text(step, name) !== "") value[name] = text(step, name);
+      return value;
+    });
+    result.plan = projected;
+  }
+  return result;
 }
 
 /** 🔤️ Escapes one string the way Go's `encoding/json` does, `SetEscapeHTML(true)` included. */
@@ -153,12 +171,14 @@ function encode(ticket: Ticket): string {
   if (ticket.summary !== "") members.push({ name: "summary", kind: "text", value: ticket.summary });
   if (ticket.issue !== "") members.push({ name: "github", kind: "object", value: [{ name: "issue", value: ticket.issue }] });
   if (ticket.goal !== "") members.push({ name: "goal", kind: "text", value: ticket.goal });
+  if (ticket.parent !== "") members.push({ name: "parent", kind: "text", value: ticket.parent });
   if (ticket.plan !== null) {
     const nested = (["client", "id", "source", "local"] as const).filter((name) => ticket.plan![name] !== "").map((name) => ({ name, value: ticket.plan![name] }));
     members.push({ name: "plan", kind: "object", value: nested });
   }
   if (ticket.sessions.length > 0) members.push({ name: "sessions", kind: "strings", value: ticket.sessions });
   if (ticket.interactions.length > 0) members.push({ name: "interactions", kind: "json", value: ticket.interactions });
+  if (ticket.agents.length > 0) members.push({ name: "agents", kind: "json", value: ticket.agents });
   return render(members);
 }
 //#endregion 📄️Codec

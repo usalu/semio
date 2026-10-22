@@ -3,7 +3,8 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}; the mesh style palette, the instance celebration store, the mesh parsing and residency, the mesh geometry and appearance and the GLB bounds and styling live in its child folders, and every importer names the owner of the item it uses.
  */
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type ComponentProps } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type ComponentProps } from "../../⚛️react-port/🟦️.ts";
 import { clearColorResolveCache, resolveColorHex, tokenVar } from "@semio-tech/ui-styling";
 
 // #region 🔌️Adapters

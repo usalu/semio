@@ -25,17 +25,20 @@ pub fn set_layer_opacity<Op: From<SetLayerOpacity>>(layer_id: semio_framework_va
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerOpacity where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerOpacity> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-opacity", record: "SetLayerOpacity" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity), &format!("Deckkraft von Ebene \"{}\" auf {} setzen", self.layer_id, self.opacity))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for SetLayerOpacity where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerOpacity> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

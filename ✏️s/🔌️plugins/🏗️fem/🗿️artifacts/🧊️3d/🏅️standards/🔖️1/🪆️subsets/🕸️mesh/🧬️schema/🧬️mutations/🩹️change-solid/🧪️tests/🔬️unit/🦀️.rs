@@ -1,8 +1,8 @@
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 
 /// 🧫️ Every solid field-intent fixture preserves its authored forward result and exact inverse.
 #[test]

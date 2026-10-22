@@ -383,36 +383,9 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 //#endregion 🔖️PerEntityAbsorb
 
 //#region 🔖️Apply
-impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
-    fn apply(&self, base: &SemioBrepSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
-        let mut next = base.clone();
-        if let Some(d) = &self.vertices {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |added| added.item.id.clone(), ["vertices"])?;
-            apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex);
-        }
-        if let Some(d) = &self.edges {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
-            apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge);
-        }
-        if let Some(d) = &self.loops {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.loops, d, |item| item.id.clone(), |added| added.item.id.clone(), ["loops"])?;
-            apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop);
-        }
-        if let Some(d) = &self.faces {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.faces, d, |item| item.id.clone(), |added| added.item.id.clone(), ["faces"])?;
-            apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face);
-        }
-        if let Some(d) = &self.shells {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.shells, d, |item| item.id.clone(), |added| added.item.id.clone(), ["shells"])?;
-            apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell);
-        }
-        if let Some(d) = &self.solids {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.solids, d, |item| item.id.clone(), |added| added.item.id.clone(), ["solids"])?;
-            apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {}
 
+impl protocol::ColdMutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
     fn absorb(&mut self, other: Self) {
         self.vertices = match (self.vertices.take(), other.vertices) {
             (None, b) => b,
@@ -445,11 +418,48 @@ impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
             (Some(a), Some(b)) => Some(absorb_named(a, &b, |s: &BrepSolid| s.id.clone(), absorb_solid_diff, apply_solid)),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioBrepSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(d) = &self.vertices {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |added| added.item.id.clone(), ["vertices"])?;
+            apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex);
+        }
+        if let Some(d) = &self.edges {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
+            apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge);
+        }
+        if let Some(d) = &self.loops {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.loops, d, |item| item.id.clone(), |added| added.item.id.clone(), ["loops"])?;
+            apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop);
+        }
+        if let Some(d) = &self.faces {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.faces, d, |item| item.id.clone(), |added| added.item.id.clone(), ["faces"])?;
+            apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face);
+        }
+        if let Some(d) = &self.shells {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.shells, d, |item| item.id.clone(), |added| added.item.id.clone(), ["shells"])?;
+            apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell);
+        }
+        if let Some(d) = &self.solids {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.solids, d, |item| item.id.clone(), |added| added.item.id.clone(), ["solids"])?;
+            apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
+    fn is_empty(&self) -> bool {
+        self.vertices.is_none() && self.edges.is_none() && self.loops.is_none() && self.faces.is_none() && self.shells.is_none() && self.solids.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
     fn inverse(&self, base: &SemioBrepSnapshot) -> Self {
         Self {
             vertices: self.vertices.as_ref().map(|d| inverse_named(&base.vertices, d, |v: &BrepVertex| v.id.clone(), inverse_vertex)),
@@ -459,10 +469,6 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
             shells: self.shells.as_ref().map(|d| inverse_named(&base.shells, d, |s: &BrepShell| s.id.clone(), inverse_shell)),
             solids: self.solids.as_ref().map(|d| inverse_named(&base.solids, d, |s: &BrepSolid| s.id.clone(), inverse_solid)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.vertices.is_none() && self.edges.is_none() && self.loops.is_none() && self.faces.is_none() && self.shells.is_none() && self.solids.is_none()
     }
 }
 //#region 🔖️Demo

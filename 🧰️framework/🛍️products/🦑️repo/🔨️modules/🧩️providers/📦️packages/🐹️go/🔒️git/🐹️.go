@@ -10,7 +10,6 @@ package providers
 
 import (
 	fmt "fmt"
-	exec "os/exec"
 	regexp "regexp"
 	strconv "strconv"
 	strings "strings"
@@ -30,7 +29,7 @@ func (p *GitVersionControlProvider) Kind() string { return "git" }
 
 // 🌐️RepoURL holds the data fields for a RepoURL record.
 func (p *GitVersionControlProvider) RepoURL() (string, error) {
-	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	out, err := workspace.ToolCommand("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
 		return "", err
 	}

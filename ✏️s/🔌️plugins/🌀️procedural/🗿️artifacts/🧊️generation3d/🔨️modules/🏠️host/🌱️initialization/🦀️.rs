@@ -369,7 +369,7 @@ impl Generation3dStoreInitializationAuthority {
             rejected: std::mem::ManuallyDrop::new(None),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
             closer: std::mem::ManuallyDrop::new(None),
-            snapshot_factory: std::mem::ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()))),
+            snapshot_factory: std::mem::ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()))),
             factory_close: std::mem::ManuallyDrop::new(None),
             publication: semio_framework_job_publication::RetainedJobPublication::new(),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),

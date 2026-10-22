@@ -25,13 +25,25 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "object", kind: "insert-object", record: "Insert" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} einfügen", self.id.num, self.id.gen))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("{} {}", self.id.num, self.id.gen)]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for InsertObject
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<InsertObject> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_object::RemoveObject>,
+{
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if base.objects.iter().any(|object| object.id == self.id) {
             return MutationOutcome::fatal("mutation.duplicate-id", format!("Object {} {} already exists.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
         }
         MutationOutcome::new(diff::graph_edit_with_roles(diff::diff_insert_object(self.id, self.index.map_or(base.objects.len(), |at| at.min(base.objects.len())), self.value.clone()), self.admitted_stream_roles.as_ref()))
     }
-
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.objects.iter().any(|object| object.id == self.id) {
@@ -42,14 +54,6 @@ where
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} einfügen", self.id.num, self.id.gen))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("{} {}", self.id.num, self.id.gen)]
-    }
 }
 
 //#endregion 🔖️Mutation

@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioObjectDiff;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn rotate_object() -> SemioObjectMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_rotation_and_keeps_translation_and_scale() {
     let base = before();
-    let produced = protocol::apply_diff(rotate_object().diff(&base).diff(), &base).expect("rotate-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(rotate_object().diff(&base).diff(), &base).expect("rotate-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-object/rotates-the-object-a-half-turn-about-z: applied state differs from the committed after-snapshot");
     assert_eq!((produced.transform.rotation.x, produced.transform.rotation.y), (0.0, 0.0), "a Z-axis rotation leaves the X/Y quaternion components at zero");
     assert_eq!((produced.transform.rotation.z, produced.transform.rotation.w), (1.0, 0.0), "the half turn about Z is the quaternion (0, 0, 1, 0)");
@@ -48,9 +48,9 @@ async fn the_undo_rotate_object_restores_the_identity_rotation() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "rotate-object undoes as exactly one rotate-object");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rotate-object applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward rotate-object applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rotate-object applies to the rotated object");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo rotate-object applies to the rotated object");
     }
     assert_eq!(current, base, "rotate-object/rotates-the-object-a-half-turn-about-z: the undo did not restore the before-snapshot");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_with_neither_invariant_nor_no_op() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&rotate_object(), &base);
+    let outcome = <SemioObjectMutation as ColdMutation<SemioObjectSnapshot>>::diff(&rotate_object(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-object/rotates-the-object-a-half-turn-about-z: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -106,6 +106,6 @@ async fn committed_diff_is_canonical_and_carries_the_whole_transform() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rotate-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed rotate-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-object/rotates-the-object-a-half-turn-about-z: committed diff did not carry before to after");
 }

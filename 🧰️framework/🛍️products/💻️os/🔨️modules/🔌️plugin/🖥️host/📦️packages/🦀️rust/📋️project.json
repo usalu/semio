@@ -47,7 +47,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -65,7 +65,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -90,7 +90,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun 📜️script.ts service-operation-conversion-check",
+        "command": "repo 📜️script.ts service-operation-conversion-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -105,7 +105,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun 📜️script.ts lifecycle-check",
+        "command": "repo 📜️script.ts lifecycle-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -120,7 +120,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun 📜️script.ts guest-fault-check",
+        "command": "repo 📜️script.ts guest-fault-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -136,7 +136,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts ui-patch-marshalling-check",
+        "command": "repo 📜️script.ts ui-patch-marshalling-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -152,7 +152,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts ui-patch-marshalling-check --native",
+        "command": "repo 📜️script.ts ui-patch-marshalling-check --native",
         "cwd": "{projectRoot}"
       },
       "dependsOn": [
@@ -171,7 +171,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts owned-instance-check",
+        "command": "repo ./📜️script.ts owned-instance-check",
         "cwd": "{projectRoot}"
       },
       "metadata": {
@@ -200,7 +200,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts count-component-check",
+        "command": "repo ./📜️script.ts count-component-check",
         "cwd": "{projectRoot}"
       },
       "dependsOn": [
@@ -224,7 +224,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts sqlite-observation-check",
+        "command": "repo 📜️script.ts sqlite-observation-check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -245,7 +245,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun 📜️script.ts router-effect-source-custody",
+        "command": "repo 📜️script.ts router-effect-source-custody",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -261,7 +261,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun 📜️script.ts runtime-ports-check",
+        "command": "repo 📜️script.ts runtime-ports-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -276,7 +276,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-original-driver-policy-native",
+        "command": "repo ./📜️script.ts test-original-driver-policy-native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -296,7 +296,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-actor-boundary-source",
+        "command": "repo ./📜️script.ts test-original-actor-boundary-source",
         "forwardAllArgs": true
       },
       "metadata": {

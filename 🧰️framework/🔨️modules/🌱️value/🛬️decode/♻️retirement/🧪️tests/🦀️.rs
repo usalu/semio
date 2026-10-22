@@ -1,6 +1,5 @@
-use semio_framework_test_fixtures::fixture_text;
 use crate::{ErasedSnapshotRetirement,NativeDecodeControl,NativeDecodeProgress,NativeDecodeRetirementRecipient,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{controlled::ControlledRetirement,RetirementCursor}};
-fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn observe<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){crate::observe_retirement_allocations(operation)}
 

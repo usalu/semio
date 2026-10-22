@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-txt-examples = { path = "../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-txt-schema = { path = "../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-txt-inferences = { path = "../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }

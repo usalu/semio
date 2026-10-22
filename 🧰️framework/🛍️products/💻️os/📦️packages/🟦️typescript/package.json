@@ -240,11 +240,11 @@
     "@semio-tech/value-ts": "workspace:*"
   },
   "scripts": {
-    "generate-wgpu": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os:generate-wgpu",
-    "check-wgpu": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os:check-wgpu",
-    "preview-generated": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os:preview-generated",
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os:test",
-    "installed-service-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os:installed-service-source"
+    "generate-wgpu": "repo run @semio-tech/framework-os:generate-wgpu",
+    "check-wgpu": "repo run @semio-tech/framework-os:check-wgpu",
+    "preview-generated": "repo run @semio-tech/framework-os:preview-generated",
+    "test": "repo run @semio-tech/framework-os:test",
+    "installed-service-source": "repo run @semio-tech/framework-os:installed-service-source"
   },
   "devDependencies": {
     "dom-accessibility-api": "0.5.16",

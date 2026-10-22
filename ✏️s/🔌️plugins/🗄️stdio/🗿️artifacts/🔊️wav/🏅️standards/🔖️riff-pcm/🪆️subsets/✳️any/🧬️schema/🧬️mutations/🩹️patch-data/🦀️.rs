@@ -49,7 +49,16 @@ impl PatchData {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "data", kind: "patch-data", record: "PatchData" };
 
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["data".into(), "value".into(), self.index.to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<WavSnapshot, WavMutation> for PatchData {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as protocol::ColdMutation<WavSnapshot>>::ReferenceDiff> {
         match self.splices(base) {
             Ok(data_splices) => protocol::MutationOutcome::new(WavDiff { data_splices, ..WavDiff::default() }),
             Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["data".into(), "value".into(), self.index.to_string()]),
@@ -66,11 +75,5 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
                 vec![WavMutation::PatchData(PatchData { index: self.index, remove_count: data_len(&self.data) as u64, data: data_slice(lane, start, start + self.remove_count as usize), move_to: None })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["data".into(), "value".into(), self.index.to_string()]
     }
 }

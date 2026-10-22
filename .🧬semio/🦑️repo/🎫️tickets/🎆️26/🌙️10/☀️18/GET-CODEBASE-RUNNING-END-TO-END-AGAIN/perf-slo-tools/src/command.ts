@@ -9,15 +9,15 @@ import {benchCliPortsV1,benchRunV1,type BenchHostPortsV1} from "../@@RUNNER@@/@@
 
 const policy=schema.definitions.Policy.const,tools:readonly BenchToolV1[]=["nx","bazel"],operations=["list","run","compare"] as const,script="@@BUILDSCRIPT@@",catalog="@@BUILDDIR@@/@@OPERATIONS@@/@@CATALOG@@";
 
-/** 🧱 The closed arguments of `repo bench`. */
+/** 🍘 The closed arguments of `repo bench`. */
 export type BenchArgumentsV1=Readonly<{operation:typeof operations[number];slo:readonly string[]|"all";runs:number|undefined;baseline:string|undefined;saveBaseline:string|undefined;current:string|undefined;markdown:string|undefined;maxLoad:number|undefined;tools:readonly BenchToolV1[];root:string|undefined;file:string|undefined;json:boolean;prepare:boolean;language:"en"|"de"|undefined}>;
 
 const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--slo","--runs","--baseline","--save-baseline","--current","--markdown","--max-load","--implementations","--root","--file","--lang"]),plainOptions=Object.freeze(["--json","--prepare"]);
 
-/** 🧲 The option names `repo bench` accepts, so the operations catalogue can be checked against the parser. */
+/** 🍙 The option names `repo bench` accepts, so the operations catalogue can be checked against the parser. */
 export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
 
-/** 🧶 Reads `bench list|run|compare` with its options; every unknown or repeated option is refused in both languages. */
+/** 🍚 Reads `bench list|run|compare` with its options; every unknown or repeated option is refused in both languages. */
 export function benchArgumentsV1(args:readonly string[]):BenchArgumentsV1{
  const operation=args[0] as typeof operations[number];
  if(!operations.includes(operation)||args.length>1&&args[1]!.startsWith("-")===false)throw Error(both("Expected repo bench list|run|compare [options]","Erwartet: repo bench list|run|compare [Optionen]"));
@@ -52,7 +52,7 @@ const readReport=async(ports:BenchCommandPortsV1,path:string):Promise<BenchRepor
  return benchBaselineV1(value);
 };
 
-/** 🚦 Runs `repo bench`: lists the objectives, measures them in the prepared checkout copy with the chosen implementations and judges them, or compares two stored reports. Reports go to the screen as text or JSON and optionally to a JSON file, a markdown file and a baseline file; the exit code fails only for blocking objectives that failed or regressed. */
+/** 🍛 Runs `repo bench`: lists the objectives, measures them in the prepared checkout copy with the chosen implementations and judges them, or compares two stored reports. Reports go to the screen as text or JSON and optionally to a JSON file, a markdown file and a baseline file; the exit code fails only for blocking objectives that failed or regressed. */
 export async function runBenchCommandV1(live:string,args:readonly string[],ports:BenchCommandPortsV1):Promise<void>{
  const parsed=benchArgumentsV1(args.slice(args[0]==="bench"?1:0)),set=slo as unknown as BenchSloSetV1,issues=benchSloIssuesV1(set);
  if(issues.length)throw Error(`Closed SLO table required: ${issues.join("; ")}`);
@@ -92,10 +92,10 @@ export async function runBenchCommandV1(live:string,args:readonly string[],ports
 /** 🔩 Binds the command to the running build CLI: the incremental harness's ports with progress published under `bench:`, a high resolution clock and plain file access for baselines and reports. */
 export async function benchCommandPortsV1(root:string,invocation:import("@@EIGHT@@/@@MODULES@@/@@PROCESS@@/@@PACKAGES@@/@@TYPESCRIPT@@/@@ROUTING@@/@@TS@@").ScriptInvocation):Promise<BenchCommandPortsV1>{
  const base=await incrementalCommandPortsV1(root,invocation),routing=await import("@@EIGHT@@/@@MODULES@@/@@PROCESS@@/@@PACKAGES@@/@@TYPESCRIPT@@/@@ROUTING@@/@@TS@@");
- return Object.freeze({...base,now:()=>performance.now(),progress:stage=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:path=>readFile(resolve(path),"utf8"),writeText:async(path,text)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
+ return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
 }
 
-/** 🛎️ The entry the build CLI calls for `repo bench`. */
+/** 🍜 The entry the build CLI calls for `repo bench`. */
 export async function runBenchV1(root:string,args:readonly string[],invocation:import("@@EIGHT@@/@@MODULES@@/@@PROCESS@@/@@PACKAGES@@/@@TYPESCRIPT@@/@@ROUTING@@/@@TS@@").ScriptInvocation):Promise<void>{
  await runBenchCommandV1(root,args,await benchCommandPortsV1(root,invocation));
 }

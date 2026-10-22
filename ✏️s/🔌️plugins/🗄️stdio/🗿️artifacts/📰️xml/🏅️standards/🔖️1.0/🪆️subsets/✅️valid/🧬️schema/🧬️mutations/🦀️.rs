@@ -86,7 +86,7 @@ pub mod set_text;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "XmlValidMutation")]
+#[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "XmlValidMutation", reference = XmlSnapshot, reference_diff = XmlDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XmlValidMutation {
     /// 📜️ Installs (or replaces) the document type declaration, its Name taken from the actual

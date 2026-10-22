@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().load_cases.is_some(), "create-load-case/appends-a-live-case-59118a: the coined case must surface in the loadCases delta");
     assert!(outcome.diff().nodes.is_none(), "create-load-case/appends-a-live-case-59118a: the node the seeded load validates against is read-only");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

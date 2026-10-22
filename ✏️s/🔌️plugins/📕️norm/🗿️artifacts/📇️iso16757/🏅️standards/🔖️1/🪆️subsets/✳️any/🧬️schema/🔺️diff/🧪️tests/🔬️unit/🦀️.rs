@@ -19,7 +19,7 @@ fn diff_of(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Iso16757Diff
 
 async fn law(base: &Iso16757Snapshot, first: &Iso16757Mutation, second: impl Fn(&Iso16757Snapshot) -> Iso16757Mutation) -> Iso16757Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -52,7 +52,7 @@ async fn introduce_then_retire_cancels_and_retire_then_introduce_replaces() {
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");
     let existing = base.catalogue.product_groups[0].clone();
     let sum = law(&base, &Iso16757Mutation::RetireProductGroup(RetireProductGroup { id: existing.id.clone() }), |_| Iso16757Mutation::IntroduceProductGroup(IntroduceProductGroup { product_group: existing.clone(), index: Some(0) })).await;
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("replace"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("replace"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,6 +79,6 @@ async fn part_number_inputs_are_added_then_changed_in_place() {
 async fn inverse_follows_the_state() {
     let base = Iso16757Snapshot::default();
     let inserted = diff_of(&Iso16757Mutation::IntroduceProductGroup(IntroduceProductGroup { product_group: group(&base), index: Some(0) }), &base);
-    let after = protocol::apply_diff(&inserted, &base).expect("insert");
-    assert_eq!(protocol::apply_diff(&inserted.inverse(&base), &after).expect("inverse"), base);
+    let after = protocol::apply_diff_cold(&inserted, &base).expect("insert");
+    assert_eq!(protocol::apply_diff_cold(&inserted.inverse(&base), &after).expect("inverse"), base);
 }

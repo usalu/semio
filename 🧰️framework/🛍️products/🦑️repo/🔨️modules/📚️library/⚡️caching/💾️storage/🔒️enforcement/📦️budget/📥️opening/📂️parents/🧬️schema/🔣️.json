@@ -80,7 +80,7 @@
           ".cache/b"
         ],
         "maximumPathCharacters": 256,
-        "leaseRetirementIntervalMilliseconds": 15000,
+        "leaseRetirementIntervalMilliseconds": 300000,
         "leaseRetirementStamp": ".retired"
       }
     }

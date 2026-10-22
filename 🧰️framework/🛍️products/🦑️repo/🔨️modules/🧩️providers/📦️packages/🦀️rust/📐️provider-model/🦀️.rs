@@ -262,8 +262,8 @@ impl<'de> Deserialize<'de> for HookResult {
 // #endregion 📐️ModelPending
 
 // #region 🪪️McpClientKind
-/// 🪪️ Which IDE-native MCP surface is talking. Fix 7 of `📓️go-region-dependency-graph.md`: the enum is
-/// editor identity, not MCP protocol, so it sits beside the editor providers that enumerate the same
+/// 🪪️ Which agent-client MCP surface is talking. Fix 7 of `📓️go-region-dependency-graph.md`: the enum is
+/// agent-client identity, not MCP protocol, so it sits beside the agent-client providers that enumerate the same
 /// IDE set and `🎫️tickets`/`🪝️hooks` reach it downward instead of importing `🔌️mcp`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

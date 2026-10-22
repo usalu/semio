@@ -11,10 +11,10 @@
  "graph": {
   "version": 1,
   "projects": {
-   "gen": {"name": "gen", "root": "gen", "targets": {"generate": {"execution": {"kind": "command", "command": "bun ./script.ts generate"}, "outputs": ["{projectRoot}/out"], "inputs": ["{projectRoot}/src/**/*"], "cache": true}}},
+   "gen": {"name": "gen", "root": "gen", "targets": {"generate": {"execution": {"kind": "command", "command": "repo ./script.ts generate"}, "outputs": ["{projectRoot}/out"], "inputs": ["{projectRoot}/src/**/*"], "cache": true}}},
    "course": {"name": "course", "root": "course", "namedInputs": {"default": ["{projectRoot}/**/*", "!{projectRoot}/dist/**"]}, "targets": {
-    "test": {"execution": {"kind": "command", "command": "bun ./script.ts test"}, "inputs": ["default"], "cache": true, "outputs": []},
-    "typecheck": {"execution": {"kind": "command", "command": "bun ./script.ts typecheck"}, "dependsOn": ["gen:generate"], "inputs": ["default", {"dependentTasksOutputFiles": "**/*", "transitive": false}], "cache": true, "outputs": []}
+    "test": {"execution": {"kind": "command", "command": "repo ./script.ts test"}, "inputs": ["default"], "cache": true, "outputs": []},
+    "typecheck": {"execution": {"kind": "command", "command": "repo ./script.ts typecheck"}, "dependsOn": ["gen:generate"], "inputs": ["default", {"dependentTasksOutputFiles": "**/*", "transitive": false}], "cache": true, "outputs": []}
    }}
   },
   "dependencies": [{"source": "course", "target": "gen", "type": "static"}]
@@ -24,7 +24,7 @@
   {"name": "short deadline", "maximumElapsedMilliseconds": 30000, "ambient": {}},
   {"name": "long deadline, foreign cwd and ambient noise", "maximumElapsedMilliseconds": 5400000, "ambient": {"SEMIO_NOISE": "7f3a", "HOME": "/nonexistent-home"}}
  ],
- "onlyRuntimeMayDiffer": ["runtime.json"],
+ "onlyRuntimeMayDiffer": ["runtime.json", "snapshot.json"],
  "snapshot": {
   "outputs": ["{projectRoot}/README.md", "{projectRoot}/out"],
   "files": {"gen/README.md": "# generated\n", "gen/out/palette.css": "a{color:red}\n"},

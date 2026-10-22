@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "leaf-supported",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": []
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "leaf-unsupported",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": false,
+          "children": []
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "self-cycle",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            0
+          ]
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "unsupported-after-self-cycle",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            0,
+            1
+          ]
+        },
+        {
+          "supported": false,
+          "children": []
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "mutual-cycle",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            1
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            0
+          ]
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "unsupported-after-mutual-cycle",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            1
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            0,
+            2
+          ]
+        },
+        {
+          "supported": false,
+          "children": []
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "shared-diamond",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            1,
+            2
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            3
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            3
+          ]
+        },
+        {
+          "supported": true,
+          "children": []
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "unsupported-shared-leaf",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            1,
+            2
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            3
+          ]
+        },
+        {
+          "supported": true,
+          "children": [
+            3
+          ]
+        },
+        {
+          "supported": false,
+          "children": []
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "unreachable-unsupported-leaf",
+      "root": 0,
+      "nodes": [
+        {
+          "supported": true,
+          "children": [
+            0
+          ]
+        },
+        {
+          "supported": false,
+          "children": []
+        }
+      ],
+      "expected": true
+    }
+  ]
+}

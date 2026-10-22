@@ -1,0 +1,584 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "no-plugins-root",
+   "rule": "policyApaBreaches",
+   "files": {
+    "README.md": [
+     "# empty"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "clean-plugin",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/AGENTS.md": [
+     "a"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/README.md": [
+     "r"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/LICENSE.md": [
+     "l"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/🦀️.rs": [
+     "pub fn plugin() {}"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/📦️packages/🦀️rust/Cargo.toml": [
+     "[package]",
+     "name = \"probe\"",
+     "",
+     "[dependencies]",
+     "semio-framework-plugin = { path = \"../../../../🧰️framework/plugin\" }"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs": [
+     "pub fn run() -> u8 { 1 }"
+    ],
+    "✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts": [
+     "export const value = 1;"
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "closed-shape-entries",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️shape/AGENTS.md": [
+     "a"
+    ],
+    "✏️s/🔌️plugins/🔭️shape/README.md": [
+     "r"
+    ],
+    "✏️s/🔌️plugins/🔭️shape/LICENSE.md": [
+     "l"
+    ],
+    "✏️s/🔌️plugins/🔭️shape/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️shape/🧫️fixtures/a.json": [],
+    "✏️s/🔌️plugins/🔭️shape/🔨️modules/m.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/🎮️commands/c.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/🧬️schema/s.json": [],
+    "✏️s/🔌️plugins/🔭️shape/📦️packages/p.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/🗿️artifacts/a.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/📇️registry/r.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/🎛️apps/a.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/🔧️setup/a.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/node_modules/x.js": [],
+    "✏️s/🔌️plugins/🔭️shape/.DS_Store": [],
+    "✏️s/🔌️plugins/🔭️shape/notes.txt": [],
+    "✏️s/🔌️plugins/🔭️shape/Cargo.toml": []
+   },
+   "expect": [
+    [
+     "plugin-closed-shape-dir-✏️s/🔌️plugins/🔭️shape/🎛️apps",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ],
+    [
+     "plugin-closed-shape-dir-✏️s/🔌️plugins/🔭️shape/🔧️setup",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ],
+    [
+     "plugin-closed-shape-junk-✏️s/🔌️plugins/🔭️shape/node_modules",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ],
+    [
+     "plugin-closed-shape-file-✏️s/🔌️plugins/🔭️shape/.DS_Store",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ],
+    [
+     "plugin-closed-shape-file-✏️s/🔌️plugins/🔭️shape/notes.txt",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ],
+    [
+     "plugin-closed-shape-file-✏️s/🔌️plugins/🔭️shape/Cargo.toml",
+     "taxonomy/plugin-closed-shape",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "rust-purity-lines",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs": [
+     "use std::fs;",
+     "pub fn load() -> String {",
+     "    fs::read_to_string(\"a.txt\").unwrap()",
+     "}",
+     "pub fn env() {",
+     "    let v = std::env::var(\"HOME\");",
+     "}",
+     "pub fn net() { let _ = std::net::TcpStream::connect(\"x\"); }",
+     "thread_local! { static X: u8 = 0; }",
+     "static mut COUNTER: u32 = 0;",
+     "lazy_static! {",
+     "    static ref M: Mutex<u8> = Mutex::new(0);",
+     "}",
+     "static HITS: AtomicU64 = AtomicU64::new(0);",
+     "pub fn counter() -> u64 {",
+     "    static NEXT: AtomicU64 = AtomicU64::new(0);",
+     "    let local: Mutex<u8> = Mutex::new(0);",
+     "    NEXT.fetch_add(1, Ordering::SeqCst)",
+     "}",
+     "let s = \"std::fs::read\";",
+     "// std::env::var(\"X\")",
+     "#[cfg(test)]",
+     "mod tests {",
+     "    fn t() { std::fs::read(\"x\"); }",
+     "}",
+     "#[test]",
+     "fn quick() {",
+     "    let _ = File::open(\"y\");",
+     "}",
+     "pub fn after() { let _ = File::open(\"z\"); }"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-purity-filesystem-io-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-3",
+     "taxonomy/plugin-purity-filesystem-io",
+     "medium",
+     3
+    ],
+    [
+     "plugin-purity-env-process-io-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-6",
+     "taxonomy/plugin-purity-env-process-io",
+     "medium",
+     6
+    ],
+    [
+     "plugin-purity-network-io-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-8",
+     "taxonomy/plugin-purity-network-io",
+     "medium",
+     8
+    ],
+    [
+     "plugin-purity-thread-local-state-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-9",
+     "taxonomy/plugin-purity-thread-local-state",
+     "medium",
+     9
+    ],
+    [
+     "plugin-purity-static-mut-state-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-10",
+     "taxonomy/plugin-purity-static-mut-state",
+     "medium",
+     10
+    ],
+    [
+     "plugin-purity-lazy-static-state-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-11",
+     "taxonomy/plugin-purity-lazy-static-state",
+     "medium",
+     11
+    ],
+    [
+     "plugin-purity-interior-mutability-mutex-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-12",
+     "taxonomy/plugin-purity-interior-mutability-mutex",
+     "medium",
+     12
+    ],
+    [
+     "plugin-purity-interior-mutability-atomicu64-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-14",
+     "taxonomy/plugin-purity-interior-mutability-atomicu64",
+     "medium",
+     14
+    ],
+    [
+     "plugin-purity-interior-mutability-atomicu64-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-16",
+     "taxonomy/plugin-purity-interior-mutability-atomicu64",
+     "medium",
+     16
+    ],
+    [
+     "plugin-purity-filesystem-io-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/🦀️.rs-30",
+     "taxonomy/plugin-purity-filesystem-io",
+     "medium",
+     30
+    ]
+   ]
+  },
+  {
+   "id": "ts-purity-and-state-lane",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts": [
+     "export const a = await fetch(\"/api\");",
+     "const ws = new WebSocket(\"ws://x\");",
+     "// fetch(\"/commented\")",
+     "const keep = 1; // localStorage",
+     "indexedDB.open(\"db\");",
+     "ephemeralBox(\"k\");"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-purity-ts-side-effect-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts-1",
+     "taxonomy/plugin-purity-ts-side-effect",
+     "medium",
+     1
+    ],
+    [
+     "plugin-purity-ts-side-effect-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts-2",
+     "taxonomy/plugin-purity-ts-side-effect",
+     "medium",
+     2
+    ],
+    [
+     "plugin-purity-ts-side-effect-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts-5",
+     "taxonomy/plugin-purity-ts-side-effect",
+     "medium",
+     5
+    ],
+    [
+     "state-lane-storage-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts-5",
+     "taxonomy/state-lane-storage-outside-config-lane",
+     "medium",
+     5
+    ],
+    [
+     "state-lane-ephemeral-box-✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/ui.ts-6",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     6
+    ]
+   ]
+  },
+  {
+   "id": "state-lane-exhaustiveness-direct",
+   "rule": "policyStateLaneExhaustivenessBreaches",
+   "files": {
+    "🧰️framework/🔨️modules/🔭️probe/ui.ts": [
+     "localStorage.setItem(\"a\", \"b\");",
+     "// localStorage.removeItem(\"a\");",
+     " * indexedDB in docblock",
+     "const t = \"sessionStorage\";",
+     "const u = 1; /* localStorage */",
+     "ephemeralMap<string>(\"x\");",
+     "const v = ephemeralSet(\"y\"); localStorage.clear();"
+    ],
+    "🧰️framework/🔨️modules/🖥️platform/store.ts": [
+     "localStorage.setItem(\"a\", \"b\");",
+     "ephemeralBox(\"k\");"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/x.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/ui.test.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🟦️.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🧪️tests/a.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🧪️fixtures/a.ts": [
+     "localStorage.x;"
+    ],
+    "🌎️hub/x.ts": [
+     "localStorage.x;"
+    ]
+   },
+   "expect": [
+    [
+     "state-lane-storage-🧰️framework/🔨️modules/🔭️probe/ui.ts-1",
+     "taxonomy/state-lane-storage-outside-config-lane",
+     "medium",
+     1
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🔭️probe/ui.ts-6",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     6
+    ],
+    [
+     "state-lane-storage-🧰️framework/🔨️modules/🔭️probe/ui.ts-7",
+     "taxonomy/state-lane-storage-outside-config-lane",
+     "medium",
+     7
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🔭️probe/ui.ts-7",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     7
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🖥️platform/store.ts-2",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "state-lane-exhaustiveness-in-aggregate",
+   "rule": "policyApaBreaches",
+   "files": {
+    "🧰️framework/🔨️modules/🔭️probe/ui.ts": [
+     "localStorage.setItem(\"a\", \"b\");",
+     "// localStorage.removeItem(\"a\");",
+     " * indexedDB in docblock",
+     "const t = \"sessionStorage\";",
+     "const u = 1; /* localStorage */",
+     "ephemeralMap<string>(\"x\");",
+     "const v = ephemeralSet(\"y\"); localStorage.clear();"
+    ],
+    "🧰️framework/🔨️modules/🖥️platform/store.ts": [
+     "localStorage.setItem(\"a\", \"b\");",
+     "ephemeralBox(\"k\");"
+    ],
+    "🧰️framework/🛍️products/🦑️repo/x.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/ui.test.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🟦️.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🧪️tests/a.ts": [
+     "localStorage.x;"
+    ],
+    "🧰️framework/🔨️modules/🔭️probe/🧪️fixtures/a.ts": [
+     "localStorage.x;"
+    ],
+    "🌎️hub/x.ts": [
+     "localStorage.x;"
+    ]
+   },
+   "expect": [
+    [
+     "state-lane-storage-🧰️framework/🔨️modules/🔭️probe/ui.ts-1",
+     "taxonomy/state-lane-storage-outside-config-lane",
+     "medium",
+     1
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🔭️probe/ui.ts-6",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     6
+    ],
+    [
+     "state-lane-storage-🧰️framework/🔨️modules/🔭️probe/ui.ts-7",
+     "taxonomy/state-lane-storage-outside-config-lane",
+     "medium",
+     7
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🔭️probe/ui.ts-7",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     7
+    ],
+    [
+     "state-lane-ephemeral-box-🧰️framework/🔨️modules/🖥️platform/store.ts-2",
+     "taxonomy/state-lane-ephemeral-box",
+     "medium",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "declarative-registration",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs": [
+     "pub fn init() {",
+     "    register_app_io(spec);",
+     "    use semio_framework_os::host;",
+     "    register_language(\"x\"); // register_app_io(commented)",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🎛️apps/🦀️.rs": [
+     "fn a() { register_mesh_exporter(x); }",
+     "let s = \"register_app_io\";",
+     "// register_app_io(x)",
+     "use semio_framework_os::Foo;",
+     "fn b() { register_app_io(x); let _ = semio_framework_os::y; }"
+    ],
+    "✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🦀️.rs": [
+     "pub fn plugin() -> Plugin {",
+     "    Plugin::builder(\"x\")",
+     "        .setup(|| {})",
+     "        .build()",
+     "}",
+     "pub fn clean() -> Plugin { Plugin::builder(\"y\").artifact(a).build() }"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-registration-engine-backlog-family-call-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs-2",
+     "taxonomy/plugin-registration-engine-backlog",
+     "medium",
+     2
+    ],
+    [
+     "plugin-registration-engine-backlog-os-host-path-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs-3",
+     "taxonomy/plugin-registration-engine-backlog",
+     "medium",
+     3
+    ],
+    [
+     "plugin-registration-engine-backlog-family-call-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs-4",
+     "taxonomy/plugin-registration-engine-backlog",
+     "medium",
+     4
+    ],
+    [
+     "plugin-registration-violation-family-call-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🎛️apps/🦀️.rs-1",
+     "taxonomy/plugin-registration-violation",
+     "medium",
+     1
+    ],
+    [
+     "plugin-registration-violation-os-host-path-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🎛️apps/🦀️.rs-4",
+     "taxonomy/plugin-registration-violation",
+     "medium",
+     4
+    ],
+    [
+     "plugin-registration-violation-family-call-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🎛️apps/🦀️.rs-5",
+     "taxonomy/plugin-registration-violation",
+     "medium",
+     5
+    ],
+    [
+     "plugin-registration-violation-os-host-path-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🎛️apps/🦀️.rs-5",
+     "taxonomy/plugin-registration-violation",
+     "medium",
+     5
+    ],
+    [
+     "plugin-registration-setup-callback-✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🦀️.rs-3",
+     "taxonomy/plugin-registration-setup-callback",
+     "medium",
+     3
+    ]
+   ]
+  },
+  {
+   "id": "plugin-dependency-allowlist",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml": [
+     "[package]",
+     "name = \"dep\"",
+     "",
+     "[dependencies]",
+     "serde = { version = \"1\" }",
+     "semio-framework-plugin = { path = \"../../../../🧰️framework/plugin\" }",
+     "semio-framework-fem = { path = \"../../../../🧰️framework/fem\" }",
+     "renamed = { path = \"../../../../🧰️framework/3d\", package = \"semio-framework-3d\" }",
+     "semio-framework-os = { path = \"../../../../🧰️framework/os\" }",
+     "serde_json = { path = \"../../../../🧰️framework/json\" }",
+     "local = { path = \"../local\" }",
+     "",
+     "[dev-dependencies]",
+     "semio-framework-testkit = { path = \"../../../../🧰️framework/testkit\" }",
+     "",
+     "[target.'cfg(unix)'.dependencies]",
+     "semio-framework-unix = { path = \"../../../../🧰️framework/unix\" }"
+    ],
+    "✏️s/🔌️plugins/🔭️dep/🗿️artifacts/🔸️kind/Cargo.toml": [
+     "[dependencies]",
+     "semio-framework-fem = { path = \"../../../../🧰️framework/fem\" }"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-dependency-allowlist-✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml-semio-framework-fem",
+     "taxonomy/plugin-dependency-allowlist",
+     "medium",
+     7
+    ],
+    [
+     "plugin-dependency-allowlist-✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml-semio-framework-os",
+     "taxonomy/plugin-dependency-os-host",
+     "medium",
+     9
+    ],
+    [
+     "plugin-dependency-allowlist-✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml-semio-framework-unix",
+     "taxonomy/plugin-dependency-allowlist",
+     "medium",
+     17
+    ]
+   ]
+  },
+  {
+   "id": "effect-capability-parity",
+   "rule": "policyApaBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️eff/🦀️.rs": [
+     "pub fn plugin() -> Plugin {",
+     "    Plugin::builder(\"e\").capability(ArtifactKind::Window).build()",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️eff/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs": [
+     "fn a() { let _ = Effect::OpenWindow; }",
+     "fn b() { let _ = Effect::ClipboardWrite(x); }",
+     "fn c() { let _ = Effect::ClipboardWrite(y); }",
+     "fn d() { let _ = Effect::OpenExternalUrl(u); }",
+     "fn e() { let _ = Effect::NotARealEffect; }",
+     "let s = \"Effect::RequestSync\";",
+     "#[cfg(test)]",
+     "mod tests {",
+     "    fn t() { let _ = Effect::LoadDocument; }",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️bb/🦀️.rs": [
+     "pub fn plugin() -> Plugin { Plugin::builder(\"b\").local_backbone_storage(x).build() }"
+    ],
+    "✏️s/🔌️plugins/🔭️bb/🗿️artifacts/🔸️kind/🦀️.rs": [
+     "fn a() { let _ = Effect::RequestSync; }"
+    ]
+   },
+   "expect": [
+    [
+     "effect-capability-parity-✏️s/🔌️plugins/🔭️eff-ClipboardWrite",
+     "taxonomy/effect-capability-parity",
+     "medium",
+     2
+    ],
+    [
+     "effect-capability-parity-✏️s/🔌️plugins/🔭️eff-OpenExternalUrl",
+     "taxonomy/effect-capability-parity",
+     "medium",
+     4
+    ]
+   ]
+  },
+  {
+   "id": "closed-shape-ratchet-ceiling",
+   "rule": "policyApaBreaches",
+   "files": {},
+   "generate": [
+    {
+     "path": "✏️s/🔌️plugins/🔭️o{i}/stray.txt",
+     "lines": [],
+     "count": 42
+    }
+   ],
+   "expectCounts": {
+    "medium": 41,
+    "high": 1
+   }
+  }
+ ]
+}

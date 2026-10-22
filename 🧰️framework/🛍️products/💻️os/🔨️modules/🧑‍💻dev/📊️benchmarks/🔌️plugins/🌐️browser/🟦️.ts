@@ -15,6 +15,7 @@ import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦�
 import { benchWebMeasuredRow } from "../📏️measured-row/🟦️.ts";
 
 import { ScaleFixtureRegistry } from "@semio-tech/framework-os/testing/scale/projection";
+import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 
 
@@ -33,7 +34,7 @@ import { ScaleFixtureRegistry } from "@semio-tech/framework-os/testing/scale/pro
  * here rather than silently implied by a `react`/`wgpu`-labelled row. */
 async function buildBenchWebHarnessBundle(): Promise<string> {
   const entry = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️bench-web-harness/🟦️.ts");
-  const result = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm" });
+  const result = await runtimeBundleV1({ entrypoints: [entry], target: "browser", format: "esm" });
   if (!result.success) throw new Error(`bench-web harness bundle failed: ${result.logs.map((log) => log.message).join("; ")}`);
   const output = result.outputs[0];
   if (!output) throw new Error("bench-web harness bundle produced no output file");

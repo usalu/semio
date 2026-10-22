@@ -10,6 +10,7 @@ pub struct WindowConfigPack {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 #[doc(hidden)]
 pub struct WindowConfigAuthority {
     pub window_id: String,

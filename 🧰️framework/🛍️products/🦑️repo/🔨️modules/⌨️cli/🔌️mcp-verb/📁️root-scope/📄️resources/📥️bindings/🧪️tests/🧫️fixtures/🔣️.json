@@ -1,0 +1,42 @@
+{
+  "contexts": [
+    {
+      "id": "first",
+      "root": "first-root",
+      "endpoint": "first-endpoint",
+      "token": "first-token"
+    },
+    {
+      "id": "second",
+      "root": "second-root",
+      "endpoint": "second-endpoint",
+      "token": "second-token"
+    }
+  ],
+  "operations": [
+    {
+      "context": "first",
+      "kind": "process",
+      "ambient": "second-root",
+      "expected": "first-root"
+    },
+    {
+      "context": "second",
+      "kind": "process",
+      "ambient": "first-root",
+      "expected": "second-root"
+    },
+    {
+      "context": "first",
+      "kind": "event",
+      "ambient": "second-endpoint",
+      "expected": "first-endpoint"
+    },
+    {
+      "context": "second",
+      "kind": "event",
+      "ambient": "first-endpoint",
+      "expected": "second-endpoint"
+    }
+  ]
+}

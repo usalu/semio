@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio_base::schema::triples;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexTransport
@@ -291,26 +291,9 @@ impl SemioAudioDiff {
     }
 }
 
-impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
-    fn apply(&self, base: &SemioAudioSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
-        let mut next = base.clone();
-        if let Some(v) = self.sample_rate {
-            next.sample_rate = v;
-        }
-        if let Some(v) = self.format {
-            next.format = v;
-        }
-        if let Some(d) = &self.channels {
-            triples::validate_indexed_triple(d, next.channels.len(), ["channels"])?;
-            next.channels = channels_apply(d, &next.channels);
-        }
-        if let Some(d) = &self.tags {
-            triples::validate_indexed_triple(d, next.tags.len(), ["tags"])?;
-            next.tags = tags_apply(d, &next.tags);
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {}
 
+impl protocol::ColdMutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
     fn absorb(&mut self, other: Self) {
         if other.sample_rate.is_some() {
             self.sample_rate = other.sample_rate;
@@ -329,9 +312,36 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut SemioAudioSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(v) = self.sample_rate {
+            next.sample_rate = v;
+        }
+        if let Some(v) = self.format {
+            next.format = v;
+        }
+        if let Some(d) = &self.channels {
+            triples::validate_indexed_triple(d, next.channels.len(), ["channels"])?;
+            next.channels = channels_apply(d, &next.channels);
+        }
+        if let Some(d) = &self.tags {
+            triples::validate_indexed_triple(d, next.tags.len(), ["tags"])?;
+            next.tags = tags_apply(d, &next.tags);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
     fn inverse(&self, base: &SemioAudioSnapshot) -> Self {
         Self {
             sample_rate: self.sample_rate.map(|_| base.sample_rate),
@@ -339,10 +349,6 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
             channels: self.channels.as_ref().map(|d| channels_inverse(d, &base.channels)),
             tags: self.tags.as_ref().map(|d| tags_inverse(d, &base.tags)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 

@@ -27,7 +27,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source"
+        "command": "repo ./📜️script.ts test-source"
       }
     },
     "test": {
@@ -42,7 +42,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-original-entities": {
@@ -57,7 +57,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-entities"
+        "command": "repo ./📜️script.ts test-original-entities"
       }
     },
     "test-original-payload": {
@@ -72,7 +72,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-payload"
+        "command": "repo ./📜️script.ts test-original-payload"
       }
     },
     "test-original-progress": {
@@ -87,7 +87,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-progress"
+        "command": "repo ./📜️script.ts test-original-progress"
       }
     },
     "check": {
@@ -101,7 +101,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     },
     "test-original-progress-receiving": {
@@ -116,7 +116,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-progress-receiving"
+        "command": "repo ./📜️script.ts test-original-progress-receiving"
       }
     },
     "test-original-receiving-limits": {
@@ -131,7 +131,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving-limits"
+        "command": "repo ./📜️script.ts test-original-receiving-limits"
       }
     },
     "test-original-identity-receiving": {
@@ -146,7 +146,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-identity-receiving"
+        "command": "repo ./📜️script.ts test-original-identity-receiving"
       }
     },
     "test-original-step-receiving": {
@@ -161,7 +161,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-step-receiving"
+        "command": "repo ./📜️script.ts test-original-step-receiving"
       }
     },
     "test-original-native-tick": {
@@ -176,7 +176,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-native-tick"
+        "command": "repo ./📜️script.ts test-original-native-tick"
       }
     },
     "test-original-entity-column": {
@@ -191,7 +191,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-entity-column"
+        "command": "repo ./📜️script.ts test-original-entity-column"
       }
     }
   }

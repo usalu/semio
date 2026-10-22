@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "add-load/appends-a-member-udl-to-the-dead-case: the owning case must be patched exactly once");
     assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").inserted.is_empty(), "add-load/appends-a-member-udl-to-the-dead-case: attaching a load must never add a case");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

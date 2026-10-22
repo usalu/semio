@@ -1,0 +1,324 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "self-test-lane-signatures",
+   "rule": "lanes",
+   "expect": [
+    {
+     "name": "toolJobArtifactEnvelopeRejectionTransferSelfTests",
+     "params": [
+      [
+       "store",
+       "PolicyRustSourceEvidence"
+      ]
+     ],
+     "returns": "number"
+    },
+    {
+     "name": "toolJobLiveFixedReplaySelfTests",
+     "params": [
+      [
+       "actor",
+       "string"
+      ],
+      [
+       "shard",
+       "string"
+      ],
+      [
+       "executor",
+       "string"
+      ],
+      [
+       "wgpu",
+       "string"
+      ],
+      [
+       "actionBus",
+       "string"
+      ],
+      [
+       "pluginApp",
+       "string"
+      ],
+      [
+       "pluginHost",
+       "string"
+      ],
+      [
+       "programBridge",
+       "string"
+      ]
+     ],
+     "returns": "number"
+    },
+    {
+     "name": "toolJobFixedOperationRegistrySelfTests",
+     "params": [
+      [
+       "source",
+       "string"
+      ]
+     ],
+     "returns": "number"
+    },
+    {
+     "name": "toolJobDrawingGestureOperationOwnerSelfTests",
+     "params": [],
+     "returns": "number"
+    },
+    {
+     "name": "toolJobArtifactRetainedCommandSelfTests",
+     "params": [
+      [
+       "source",
+       "string"
+      ],
+      [
+       "runtimeLawSource",
+       "string"
+      ]
+     ],
+     "returns": "number"
+    },
+    {
+     "name": "interactivityAllAppDiscoverySelfTests",
+     "params": [],
+     "returns": "Promise<number>"
+    },
+    {
+     "name": "interactivityRuntimeSourceSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityToolRunPolicySelfTests",
+     "params": [],
+     "returns": "number"
+    },
+    {
+     "name": "historyClosurePolicySelfTests",
+     "params": [],
+     "returns": "number"
+    },
+    {
+     "name": "interactivityLiveReconcileSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMountedLayoutTextSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMountedFrameTransactionSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMountedEngineSurfaceLifetimeSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMountedPreparedRenderSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMountedSurfaceLaneSelfTests",
+     "params": [
+      [
+       "repoRoot",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityPreparedRasterProducerSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityShardExecutorSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityStoreSyncSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDbIoB1B6SelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityP1qR4SelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDbIoCallerMigrationSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDbIoDirectWriterSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDbIoSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityArtifactSubmitSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseCapabilityOpenSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseCatalogReadSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseCatalogBootstrapSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseCreateCatalogSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseCompactionSelfTests",
+     "params": [
+      [
+       "compact",
+       "string"
+      ],
+      [
+       "engine",
+       "string"
+      ],
+      [
+       "snapshot",
+       "string"
+      ],
+      [
+       "index",
+       "string"
+      ],
+      [
+       "contract",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDatabaseSyncHelloSelfTests",
+     "params": [
+      [
+       "sync",
+       "string"
+      ],
+      [
+       "engine",
+       "string"
+      ],
+      [
+       "hub",
+       "string"
+      ],
+      [
+       "wal",
+       "string"
+      ],
+      [
+       "protocol",
+       "string"
+      ],
+      [
+       "contract",
+       "string"
+      ]
+     ],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityArtifactHistorySelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityDbCliSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "interactivityMcpHttpTransportSelfTests",
+     "params": [],
+     "returns": "void"
+    },
+    {
+     "name": "dependencyJsLockParitySelfTests",
+     "params": [],
+     "returns": "number"
+    },
+    {
+     "name": "dependencyTruthSelfTests",
+     "params": [],
+     "returns": "number"
+    },
+    {
+     "name": "toolJobCoverageSelfTests",
+     "params": [],
+     "returns": "Promise<number>"
+    },
+    {
+     "name": "toolJobLatestWinsSelfTests",
+     "params": [],
+     "returns": "Promise<number>"
+    }
+   ]
+  }
+ ]
+}

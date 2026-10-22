@@ -12,7 +12,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/➡️after/🔣️.json"));
@@ -37,7 +37,7 @@ async fn restores_the_nested_structure_from_the_captured_node() {
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: before_inner, .. } = &base_children[2] else { panic!("child #2 is the flat group") };
     assert!(!before_inner.iter().any(|node| matches!(node, DrawNode::Group { .. })), "the fixture starts from a genuinely FLAT group");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("unflatten applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("unflatten applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "unflatten/restores-the-captured-hierarchy-over-the-flat-group: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: inner, .. } = &children[2] else { panic!("child #2 is still a group") };
@@ -57,9 +57,9 @@ async fn the_undo_restores_the_overwritten_node() {
     let DrawNode::Group { children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
     assert_eq!(restore.at.path, vec![2usize], "the undo addresses the very same node path");
     assert_eq!(restore.original, children[2], "the undo carries the node the restore overwrites");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward unflatten applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward unflatten applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo applies");
     }
     assert_eq!(current, base, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: the undo did not restore the before-snapshot");
 }
@@ -72,10 +72,10 @@ async fn the_undo_restores_a_node_that_was_not_the_flattening() {
     let replacement = DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }] };
     let SemioDrawingMutation::UnflattenNode(payload) = mutation() else { panic!("the committed payload is an unflatten") };
     let mutation = SemioDrawingMutation::UnflattenNode(crate::schema::mutations::unflatten_node::UnflattenNode { at: payload.at, original: replacement });
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward unflatten applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward unflatten applies");
     assert_ne!(current, base, "the replacement moves the drawing");
     for step in &mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo applies");
     }
     assert_eq!(current, base, "undoing a restore over a nested hierarchy puts that hierarchy back");
 }
@@ -107,7 +107,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -140,6 +140,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unflatten diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed unflatten diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed unflatten diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "unflatten/restores-the-captured-hierarchy-over-the-flat-group: committed diff did not carry before to after");
 }

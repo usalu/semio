@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:unit-cache-store-corpus:v1",
+  "title": "Unit Cache Store Corpus",
+  "description": "Language-agnostic scenarios for the content-addressed unit cache of Rust compilations: steps on a cache root and two lanes (publish, lookup, restore, mutate, remove, prune, audit) with the observations each must make, and directory trees with the digest rules for build script facts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "lanes", "scenarios", "runs", "tree"],
+  "definitions": {
+    "step": { "type": "object", "required": ["op"], "properties": { "op": { "enum": ["publish", "lookup", "restore", "mutate", "remove", "removeObject", "removeDigests", "prune", "audit", "plant", "exists", "objects", "sleep", "runPublish", "runLookup", "runRestore"] } } }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "lanes": { "type": "array", "items": { "enum": ["laneA", "laneB"] }, "minItems": 2, "maxItems": 2 },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "tree", "steps"], "properties": { "name": { "type": "string", "minLength": 1 }, "tree": { "type": "object", "additionalProperties": { "type": "string" } }, "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } } } }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "tree", "steps"], "properties": { "name": { "type": "string", "minLength": 1 }, "tree": { "type": "object", "additionalProperties": { "type": "string" } }, "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } } } }
+    },
+    "tree": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "files", "options"], "properties": { "name": { "type": "string", "minLength": 1 }, "files": { "type": "object", "additionalProperties": { "type": "string" } }, "directories": { "type": "array", "items": { "type": "string" } }, "links": { "type": "object", "additionalProperties": { "type": "string" } }, "options": { "type": "object", "additionalProperties": false, "required": ["ignoredDirectories", "ignoredExtensions", "maximumFiles"], "properties": { "ignoredDirectories": { "type": "array", "items": { "type": "string" } }, "ignoredExtensions": { "type": "array", "items": { "type": "string" } }, "maximumFiles": { "type": "integer", "minimum": 0 } } }, "overflow": { "const": true }, "touch": { "const": true } } }
+    }
+  }
+}

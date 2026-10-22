@@ -34,7 +34,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -51,7 +51,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }

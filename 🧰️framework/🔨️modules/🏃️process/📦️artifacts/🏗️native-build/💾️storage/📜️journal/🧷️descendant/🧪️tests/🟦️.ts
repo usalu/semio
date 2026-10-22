@@ -26,7 +26,7 @@ test("a journal replayed by the law classifies the half-born persistent child, a
     else db.query("UPDATE alloc SET phase=? WHERE id=?").run(event.type,event.id!);
    }
    const namespace=corpus.parentRoot+"/persistent",oracle=db.query("SELECT CASE WHEN EXISTS(SELECT 1 FROM alloc WHERE child_dir=?1) THEN 'funded' WHEN ?1 LIKE ?2||'/%' AND instr(substr(?1,length(?2)+2),'/')=0 AND EXISTS(SELECT 1 FROM alloc WHERE kind='persistent-state' AND child_dir IS NULL AND phase<>'retiring') THEN 'persistent-state' ELSE 'unfunded' END AS kind").get(row.directory,namespace)as{kind:string};
-   expect(classifyNativeStorageDescendantV1(state,corpus.parentRoot,row.directory),row.name).toBe(row.expected);
+   expect<string>(classifyNativeStorageDescendantV1(state,corpus.parentRoot,row.directory),row.name).toBe(row.expected);
    expect(oracle.kind,row.name).toBe(row.expected);
   }
  }finally{db.close();}

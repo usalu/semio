@@ -1,0 +1,299 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "region-markers-format-labels-and-pairs",
+   "rule": "policyRegionFormatBreaches",
+   "source": [
+    "//#region 🔧️Foo",
+    "// #region Spaced",
+    "//#endregion 🔧️Foo",
+    "//#endregion",
+    "//#region",
+    "//#region Tests",
+    "//#endregion Tests",
+    "//#region 🧪️Tests",
+    "//#endregion 🧪️Tests"
+   ],
+   "expect": [
+    [
+     "region-format-space-crate/a-2",
+     "app-plugin/region-marker-format",
+     "medium",
+     2
+    ],
+    [
+     "region-label-mismatch-crate/a-2",
+     "app-plugin/region-marker-format",
+     "medium",
+     3
+    ],
+    [
+     "region-format-missing-label-crate/a-4",
+     "app-plugin/region-marker-format",
+     "medium",
+     4
+    ],
+    [
+     "region-format-missing-label-crate/a-5",
+     "app-plugin/region-marker-format",
+     "medium",
+     5
+    ],
+    [
+     "region-tests-label-crate/a-6",
+     "app-plugin/region-tests-label",
+     "medium",
+     6
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "region-markers-clean-source",
+   "rule": "policyRegionFormatBreaches",
+   "source": [
+    "//#region 🔧️Foo",
+    "fn a() {}",
+    "//#endregion 🔧️Foo"
+   ],
+   "expect": [],
+   "scope": "crate/a"
+  },
+  {
+   "id": "app-builders-live-in-the-manifest-region",
+   "rule": "policyManifestRegionBreaches",
+   "source": [
+    "//#region 🔖️Manifest",
+    "let a = App::builder(\"x\");",
+    "//#endregion 🔖️Manifest",
+    "let b = App::builder(\"y\");",
+    "#[cfg(test)]",
+    "mod tests {",
+    "    let c = App::builder(\"z\");",
+    "}"
+   ],
+   "expect": [
+    [
+     "manifest-region-crate/a-4",
+     "app-plugin/manifest-region",
+     "medium",
+     4
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "document-app-structs-are-named-after-their-id",
+   "rule": "policyStructNamingBreaches",
+   "source": [
+    "const A_APP_ID: &str = \"my-app\";",
+    "const B_APP_ID: &str = \"other\";",
+    "impl DocumentApp for Wrong {",
+    "    const ID: &str = A_APP_ID;",
+    "}",
+    "impl DocumentApp for OtherApp {",
+    "    const ID: &str = B_APP_ID;",
+    "}",
+    "impl DocumentApp for Mystery {",
+    "    const ID: &str = C_APP_ID;",
+    "}"
+   ],
+   "expect": [
+    [
+     "struct-naming-crate/a-Wrong",
+     "app-plugin/struct-naming",
+     "medium",
+     3
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "several-document-apps-need-their-own-modules",
+   "rule": "policyModLayoutBreaches",
+   "source": [
+    "pub mod one {",
+    "impl DocumentApp for A {",
+    "}",
+    "}",
+    "impl DocumentApp for B {",
+    "}"
+   ],
+   "expect": [
+    [
+     "mod-layout-crate/a-5",
+     "app-plugin/mod-layout",
+     "high",
+     5
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "a-single-document-app-needs-no-module",
+   "rule": "policyModLayoutBreaches",
+   "source": [
+    "impl DocumentApp for A {",
+    "}"
+   ],
+   "expect": [],
+   "scope": "crate/a"
+  },
+  {
+   "id": "selection-ids-must-delegate-to-the-sdk",
+   "rule": "policySelectionIdsBreaches",
+   "source": [
+    "fn selection_ids(a: u8) -> u8 { 1 }",
+    "fn selection_ids(b: u8) -> u8 { semio_framework_plugin::selection_ids(b) }"
+   ],
+   "expect": [
+    [
+     "sdk-selection-ids-crate/a-1",
+     "app-plugin/sdk-selection-ids",
+     "medium",
+     1
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "selection-ids-delegating-through-an-import-alias",
+   "rule": "policySelectionIdsBreaches",
+   "source": [
+    "use semio_framework_plugin::selection_ids as sel;",
+    "fn selection_ids(x: u8) -> u8 { sel(x) }"
+   ],
+   "expect": [],
+   "scope": "crate/a"
+  },
+  {
+   "id": "artifact-app-laws-delegates",
+   "rule": "policyArtifactAppLawDelegateBreaches",
+   "source": [
+    "fn new_app_with_registry<T>() -> X { artifact_app_laws::new_app_with_registry::<T>(a) }",
+    "fn new_app() -> X { build() }",
+    "fn meta() -> M { artifact_app_laws::meta() }",
+    "fn meta2() -> M { 1 }",
+    "fn meta () -> M { 2 }"
+   ],
+   "expect": [
+    [
+     "sdk-artifact-app-laws-delegate-crate/a-2",
+     "app-plugin/sdk-artifact-app-laws-delegate",
+     "medium",
+     2
+    ],
+    [
+     "sdk-artifact-app-laws-delegate-crate/a-5",
+     "app-plugin/sdk-artifact-app-laws-delegate",
+     "medium",
+     5
+    ]
+   ],
+   "scope": "crate/a"
+  },
+  {
+   "id": "tree-item-redefinitions-and-wrappers",
+   "rule": "policyTreeItemBreaches",
+   "source": [
+    "fn tree_item_with_action(a: u8) {}",
+    "fn tree_item_plain(a: &ActionDescriptor) -> T { build(a) }",
+    "fn tree_item_ok(a: &ActionDescriptor) -> T { tree_item_with_action(a) }",
+    "fn tree_item_noaction(a: u8) {}"
+   ],
+   "expect": [
+    [
+     "sdk-tree-item-redefinition-x/🎛️apps/🔭️demo/🦀️rust-1",
+     "app-plugin/sdk-tree-item",
+     "medium",
+     1
+    ],
+    [
+     "sdk-tree-item-wrapper-x/🎛️apps/🔭️demo/🦀️rust-2",
+     "app-plugin/sdk-tree-item",
+     "medium",
+     2
+    ]
+   ],
+   "crate": {
+    "dir": "x/🎛️apps/🔭️demo/🦀️rust",
+    "pluginId": "puzzle"
+   }
+  },
+  {
+   "id": "tree-item-redefinition-allowlisted-by-module",
+   "rule": "policyTreeItemBreaches",
+   "source": [
+    "pub mod 3d {",
+    "fn tree_item_with_action() {}",
+    "}"
+   ],
+   "expect": [],
+   "crate": {
+    "dir": "x/🎛️apps/🔭️demo/🦀️rust",
+    "pluginId": "puzzle"
+   }
+  },
+  {
+   "id": "labels-structs-use-the-sdk-macro",
+   "rule": "policyLabelsStructBreaches",
+   "source": [
+    "struct DemoLabels {",
+    "}",
+    "app_labels!(Foo);",
+    "/// doc",
+    "/// doc",
+    "struct FooLabels {",
+    "}",
+    "//",
+    "//",
+    "//",
+    "//",
+    "//",
+    "//",
+    "//",
+    "struct FarLabels {",
+    "}"
+   ],
+   "expect": [
+    [
+     "sdk-labels-struct-crate/l-DemoLabels",
+     "app-plugin/sdk-labels-struct",
+     "medium",
+     1
+    ],
+    [
+     "sdk-labels-struct-crate/l-FarLabels",
+     "app-plugin/sdk-labels-struct",
+     "medium",
+     15
+    ]
+   ],
+   "crate": {
+    "dir": "crate/l",
+    "pluginId": "demo"
+   }
+  },
+  {
+   "id": "labels-struct-in-the-two-axis-allowlist-is-low",
+   "rule": "policyLabelsStructBreaches",
+   "source": [
+    "struct CadLabels {",
+    "}"
+   ],
+   "expect": [
+    [
+     "sdk-labels-struct-crate/c-CadLabels",
+     "app-plugin/sdk-labels-struct",
+     "low",
+     1
+    ]
+   ],
+   "crate": {
+    "dir": "crate/c",
+    "pluginId": "cad"
+   }
+  }
+ ]
+}

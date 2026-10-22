@@ -426,7 +426,7 @@ pub fn render_world_3d(
 
 pub fn step_component_face_overlay_build(state: &mut World3dState) {
     let Some(mut cursor) = state.overlay.face_overlay_build.take() else { return };
-    match cursor.step(&state.selection, &state.gumball, &state.scene) {
+    match cursor.step(&state.session, &state.selection, &state.gumball, &state.scene, &state.overlay) {
         WorldFaceOverlayMeshStep::Pending => state.overlay.face_overlay_build = Some(cursor),
         WorldFaceOverlayMeshStep::Ready { index, color, key, lease } => match publish_world3d_mesh_lease(&mut state.interaction, &mut state.scene, key, lease) {
             Ok(()) => {

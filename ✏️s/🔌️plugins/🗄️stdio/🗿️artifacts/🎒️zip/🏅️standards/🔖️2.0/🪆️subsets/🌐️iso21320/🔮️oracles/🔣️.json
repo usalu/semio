@@ -304,7 +304,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -354,7 +354,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -404,7 +404,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -454,7 +454,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -504,7 +504,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -554,7 +554,7 @@
         "packageVersion": "2.5.1",
         "engineFamily": "yazl",
         "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "command": "repo tools exec bun -- 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
         "platform": "darwin-arm64"
       },
       "provenance": {

@@ -1,0 +1,641 @@
+{
+ "version": 1,
+ "rootFile": "/w/src/lib.rs",
+ "rootText": "#[path = \"a/m.rs\"] mod a;\n#[cfg(test)] #[path = \"t.rs\"] mod t;\nmod inline { #[path = \"deep.rs\"] mod d; mod plain; }\nmod plain;\n#[path = \"comp.rs\"] mod component;\npub use component::*;\n",
+ "files": {
+  "/w/src/a/m.rs": "#[path = \"n.rs\"] mod nested;\n",
+  "/w/src/a/n.rs": "fn n() {}\n",
+  "/w/src/t.rs": "fn t() {}\n",
+  "/w/src/inline/deep.rs": "fn d() {}\n",
+  "/w/src/comp.rs": "fn c() {}\n"
+ },
+ "decls": [
+  {
+   "id": "a",
+   "raw": [
+    "a"
+   ],
+   "eff": [
+    "a"
+   ],
+   "file": "/w/src/a/m.rs",
+   "scope": "/w/src",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": null,
+   "depthInFile": 0,
+   "children": [
+    "a::nested"
+   ],
+   "inline": false
+  },
+  {
+   "id": "a::nested",
+   "raw": [
+    "a",
+    "nested"
+   ],
+   "eff": [
+    "a",
+    "nested"
+   ],
+   "file": "/w/src/a/n.rs",
+   "scope": "/w/src/a",
+   "inlineRoot": false,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": "a",
+   "depthInFile": 0,
+   "children": [],
+   "inline": false
+  },
+  {
+   "id": "t",
+   "raw": [
+    "t"
+   ],
+   "eff": [
+    "t"
+   ],
+   "file": "/w/src/t.rs",
+   "scope": "/w/src",
+   "inlineRoot": true,
+   "testOnly": true,
+   "isComponent": false,
+   "parentId": null,
+   "depthInFile": 0,
+   "children": [],
+   "inline": false
+  },
+  {
+   "id": "inline",
+   "raw": [
+    "inline"
+   ],
+   "eff": [
+    "inline"
+   ],
+   "file": null,
+   "scope": "/w/src",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": null,
+   "depthInFile": 0,
+   "children": [
+    "inline::d",
+    "inline::plain"
+   ],
+   "inline": true
+  },
+  {
+   "id": "inline::d",
+   "raw": [
+    "inline",
+    "d"
+   ],
+   "eff": [
+    "inline",
+    "d"
+   ],
+   "file": "/w/src/inline/deep.rs",
+   "scope": "/w/src/inline",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": "inline",
+   "depthInFile": 1,
+   "children": [],
+   "inline": false
+  },
+  {
+   "id": "inline::plain",
+   "raw": [
+    "inline",
+    "plain"
+   ],
+   "eff": [
+    "inline",
+    "plain"
+   ],
+   "file": null,
+   "scope": "/w/src/inline",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": "inline",
+   "depthInFile": 1,
+   "children": [],
+   "inline": false
+  },
+  {
+   "id": "plain",
+   "raw": [
+    "plain"
+   ],
+   "eff": [
+    "plain"
+   ],
+   "file": null,
+   "scope": "/w/src",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": false,
+   "parentId": null,
+   "depthInFile": 0,
+   "children": [],
+   "inline": false
+  },
+  {
+   "id": "component",
+   "raw": [
+    "component"
+   ],
+   "eff": [],
+   "file": "/w/src/comp.rs",
+   "scope": "/w/src",
+   "inlineRoot": true,
+   "testOnly": false,
+   "isComponent": true,
+   "parentId": null,
+   "depthInFile": 0,
+   "children": [],
+   "inline": false
+  }
+ ],
+ "reach": [
+  {
+   "text": "fn f() { super::a(); }",
+   "expected": 1
+  },
+  {
+   "text": "mod m { fn f() { super::super::x(); } }",
+   "expected": 1
+  },
+  {
+   "text": "mod m { mod n { super::super::super::x; } }",
+   "expected": 1
+  },
+  {
+   "text": "super::super::x",
+   "expected": 2
+  },
+  {
+   "text": "fn f() {}",
+   "expected": 0
+  },
+  {
+   "text": "super::a; mod m { super::b; }",
+   "expected": 1
+  },
+  {
+   "text": "mod m { super::a; }",
+   "expected": 0
+  },
+  {
+   "text": "x::super::y",
+   "expected": 1
+  },
+  {
+   "text": "",
+   "expected": 0
+  }
+ ],
+ "unionFind": [
+  {
+   "name": "chains merge",
+   "ops": [
+    [
+     "union",
+     "a",
+     "b"
+    ],
+    [
+     "union",
+     "c",
+     "d"
+    ],
+    [
+     "union",
+     "b",
+     "c"
+    ]
+   ],
+   "groups": [
+    [
+     "a",
+     "b",
+     "c",
+     "d"
+    ]
+   ],
+   "separate": []
+  },
+  {
+   "name": "unrelated sets stay apart",
+   "ops": [
+    [
+     "union",
+     "a",
+     "b"
+    ],
+    [
+     "union",
+     "c",
+     "d"
+    ],
+    [
+     "find",
+     "e"
+    ]
+   ],
+   "groups": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "c",
+     "d"
+    ],
+    [
+     "e"
+    ]
+   ],
+   "separate": [
+    [
+     "a",
+     "c"
+    ],
+    [
+     "a",
+     "e"
+    ]
+   ]
+  },
+  {
+   "name": "a repeated union is a no-op",
+   "ops": [
+    [
+     "union",
+     "a",
+     "b"
+    ],
+    [
+     "union",
+     "b",
+     "a"
+    ],
+    [
+     "union",
+     "a",
+     "a"
+    ]
+   ],
+   "groups": [
+    [
+     "a",
+     "b"
+    ]
+   ],
+   "separate": []
+  },
+  {
+   "name": "a long chain compresses",
+   "ops": [
+    [
+     "union",
+     "n0",
+     "n1"
+    ],
+    [
+     "union",
+     "n1",
+     "n2"
+    ],
+    [
+     "union",
+     "n2",
+     "n3"
+    ],
+    [
+     "union",
+     "n3",
+     "n4"
+    ],
+    [
+     "union",
+     "n4",
+     "n5"
+    ],
+    [
+     "union",
+     "n5",
+     "n6"
+    ],
+    [
+     "union",
+     "n6",
+     "n7"
+    ],
+    [
+     "union",
+     "n7",
+     "n8"
+    ],
+    [
+     "union",
+     "n8",
+     "n9"
+    ],
+    [
+     "union",
+     "n9",
+     "n10"
+    ],
+    [
+     "union",
+     "n10",
+     "n11"
+    ],
+    [
+     "union",
+     "n11",
+     "n12"
+    ],
+    [
+     "union",
+     "n12",
+     "n13"
+    ],
+    [
+     "union",
+     "n13",
+     "n14"
+    ],
+    [
+     "union",
+     "n14",
+     "n15"
+    ],
+    [
+     "union",
+     "n15",
+     "n16"
+    ],
+    [
+     "union",
+     "n16",
+     "n17"
+    ],
+    [
+     "union",
+     "n17",
+     "n18"
+    ],
+    [
+     "union",
+     "n18",
+     "n19"
+    ],
+    [
+     "union",
+     "n19",
+     "n20"
+    ],
+    [
+     "union",
+     "n20",
+     "n21"
+    ],
+    [
+     "union",
+     "n21",
+     "n22"
+    ],
+    [
+     "union",
+     "n22",
+     "n23"
+    ],
+    [
+     "union",
+     "n23",
+     "n24"
+    ],
+    [
+     "union",
+     "n24",
+     "n25"
+    ],
+    [
+     "union",
+     "n25",
+     "n26"
+    ],
+    [
+     "union",
+     "n26",
+     "n27"
+    ],
+    [
+     "union",
+     "n27",
+     "n28"
+    ],
+    [
+     "union",
+     "n28",
+     "n29"
+    ],
+    [
+     "union",
+     "n29",
+     "n30"
+    ],
+    [
+     "union",
+     "n30",
+     "n31"
+    ],
+    [
+     "union",
+     "n31",
+     "n32"
+    ],
+    [
+     "union",
+     "n32",
+     "n33"
+    ],
+    [
+     "union",
+     "n33",
+     "n34"
+    ],
+    [
+     "union",
+     "n34",
+     "n35"
+    ],
+    [
+     "union",
+     "n35",
+     "n36"
+    ],
+    [
+     "union",
+     "n36",
+     "n37"
+    ],
+    [
+     "union",
+     "n37",
+     "n38"
+    ],
+    [
+     "union",
+     "n38",
+     "n39"
+    ],
+    [
+     "union",
+     "n39",
+     "n40"
+    ]
+   ],
+   "groups": [
+    [
+     "n0",
+     "n1",
+     "n2",
+     "n3",
+     "n4",
+     "n5",
+     "n6",
+     "n7",
+     "n8",
+     "n9",
+     "n10",
+     "n11",
+     "n12",
+     "n13",
+     "n14",
+     "n15",
+     "n16",
+     "n17",
+     "n18",
+     "n19",
+     "n20",
+     "n21",
+     "n22",
+     "n23",
+     "n24",
+     "n25",
+     "n26",
+     "n27",
+     "n28",
+     "n29",
+     "n30",
+     "n31",
+     "n32",
+     "n33",
+     "n34",
+     "n35",
+     "n36",
+     "n37",
+     "n38",
+     "n39",
+     "n40"
+    ]
+   ],
+   "separate": []
+  },
+  {
+   "name": "a star",
+   "ops": [
+    [
+     "union",
+     "hub",
+     "s0"
+    ],
+    [
+     "union",
+     "hub",
+     "s1"
+    ],
+    [
+     "union",
+     "hub",
+     "s2"
+    ],
+    [
+     "union",
+     "hub",
+     "s3"
+    ],
+    [
+     "union",
+     "hub",
+     "s4"
+    ],
+    [
+     "union",
+     "hub",
+     "s5"
+    ]
+   ],
+   "groups": [
+    [
+     "hub",
+     "s0",
+     "s1",
+     "s2",
+     "s3",
+     "s4",
+     "s5"
+    ]
+   ],
+   "separate": []
+  }
+ ],
+ "slices": {
+  "root": "#[path = \"a.rs\"] mod a;\n#[path = \"b.rs\"] mod b;\n#[path = \"c.rs\"] mod c;\n",
+  "files": {
+   "/w/src/a.rs": "#[path = \"a1.rs\"] mod a1;\n",
+   "/w/src/a1.rs": "use super::x;\n",
+   "/w/src/b.rs": "fn f() {}\n",
+   "/w/src/c.rs": "#[cfg(test)] #[path = \"ct.rs\"] mod tests;\n",
+   "/w/src/ct.rs": "fn t() {}\n"
+  },
+  "expected": [
+   {
+    "members": [
+     "a",
+     "a::a1"
+    ],
+    "attach": [
+     "a"
+    ]
+   },
+   {
+    "members": [
+     "b"
+    ],
+    "attach": [
+     "b"
+    ]
+   },
+   {
+    "members": [
+     "c",
+     "c::tests"
+    ],
+    "attach": [
+     "c"
+    ]
+   }
+  ]
+ }
+}

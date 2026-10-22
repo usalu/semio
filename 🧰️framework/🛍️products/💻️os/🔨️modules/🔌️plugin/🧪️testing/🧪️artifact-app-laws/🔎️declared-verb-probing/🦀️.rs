@@ -75,7 +75,7 @@ fn declared_verb_boot_args(action: &semio_framework::ActionDefinition, staged: s
 async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> VcsArtifactApp<A, M>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
     app.bind_instance_id(meta("local").instance_id).await;
@@ -98,7 +98,7 @@ where
 async fn declared_verb_state<A, M>(app: &mut VcsArtifactApp<A, M>) -> (Vec<u8>, Vec<u8>)
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let mut document = app.snapshot().map(|snapshot| pack::snapshot::ArtifactPack::encode_pack(&snapshot)).unwrap_or_default();
     for child in PluginApp::child_packs(app).await.unwrap_or_default() {
@@ -117,7 +117,7 @@ where
 async fn declared_verb_unheld_children<A, M>(app: &VcsArtifactApp<A, M>) -> Vec<String>
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let Ok(snapshot) = app.snapshot() else { return Vec::new() };
     let declared: Vec<(String, String)> = match semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot) {
@@ -137,7 +137,7 @@ where
 async fn declared_verb_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, body_key: &str, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
     let mut original_context=original_caller.context();let cx=&mut original_context;
@@ -198,14 +198,14 @@ where
 /// 🎬️ Projects the same stationary render source without donating its native resources to the fixture.
 #[doc(hidden)]
 pub async fn render_registered_fixture_app<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
+where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
     render_registered_fixture_app_over(app,body_key,None,view,cx).await
 }
 
 /// 🎬️ [`render_registered_fixture_app`] over an explicit snapshot override document, the way the host renders an embedded payload.
 #[doc(hidden)]
 pub async fn render_registered_fixture_app_over<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
+where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if app.render(body_key,snapshot_override_json,view,cx).await?.is_some(){
@@ -221,7 +221,7 @@ where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'stat
 /// 🔭️ Observes the stationary rendered tree of `body_key` in place: the same bounded render loop as [`render_registered_fixture_app`], handing the built root to `observe` while the app keeps owning the tree.
 #[doc(hidden)]
 pub async fn observe_registered_fixture_app<A,M,R>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>,observe:impl FnOnce(&semio_framework_ui_contract::BuiltNode)->R)->Result<R,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
+where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if app.render(body_key,None,view,cx).await?.is_some(){
@@ -246,7 +246,7 @@ pub async fn dispatch_addressed_fixture_on_original<PA:semio_framework_plugin_re
 
 /// 🪜️ Keeps one admitted preview source under its initiating fixture context through pending phases.
 async fn preview_fixture_on_original<A,M>(app:&mut VcsArtifactApp<A,M>,invocation:&semio_framework::manifest::ActionInvocation,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>
-where A:ArtifactApp,M:store::SpaceMember+store::MemberFactory+Send+'static{
+where A:ArtifactApp,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if let Some(result)=app.command_ctx().preview_addressed_action(invocation,meta,cx).await?{return Ok(result)}
@@ -260,7 +260,7 @@ where A:ArtifactApp,M:store::SpaceMember+store::MemberFactory+Send+'static{
 pub async fn agent_preview<A, M>(app: &mut VcsArtifactApp<A, M>, definition: &semio_framework::AppDefinition, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<usize, semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let window_kind_id = definition.window_kinds.iter().find(|window| semio_framework::window_kind_actions(definition, window).iter().any(|action| action.id == verb)).map_or_else(|| "*".to_string(), |window| window.id.clone());
     let window_instance_id = view.window_instances.iter().find(|window| window.window_kind_id == window_kind_id).ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("fixture.agent-window"), "agent fixture requires its caller's declared window instance"))?.id.clone();
@@ -290,7 +290,7 @@ where
 async fn declared_verb_agent_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, window_kind_id: &str, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
     let mut original_context=original_caller.context();let cx=&mut original_context;
@@ -343,7 +343,7 @@ where
 pub async fn probe_declared_verbs<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     probe_declared_verbs_where::<A, M>(definition, examples, None, mounted_policy, identity).await
 }
@@ -356,7 +356,7 @@ where
 pub async fn probe_agent_lane<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, verbs: &[&str], mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let probes = probe_declared_verbs_where::<A, M>(definition, examples, Some(verbs), mounted_policy, identity).await;
     let missing = verbs.iter().filter(|verb| !probes.iter().any(|probe| probe.verb == **verb)).collect::<Vec<_>>();
@@ -368,7 +368,7 @@ where
 async fn probe_declared_verbs_where<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, only: Option<&[&str]>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     use semio_framework::{effective_action_args, resolve_audience, window_kind_actions, DslValue};
     let definition = definition();
@@ -454,7 +454,7 @@ where
 pub async fn assert_declared_verbs_honour_their_declarations<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let probes = probe_declared_verbs::<A, M>(definition, examples, mounted_policy, identity).await;
     let findings = probes.iter().flat_map(declared_verb_findings).filter(|finding| !matches!(finding, DeclaredVerbFinding::AgentLaneDiverges { .. })).map(|finding| finding.to_string()).collect::<Vec<_>>();

@@ -4,7 +4,8 @@ import {nativeStatfsV1} from "../../../../../../../../../🔨️modules/🏃️p
 import {dirname,join,resolve,sep} from "node:path";
 import {setTimeout as delay} from "node:timers/promises";
 import {acquireResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {concurrentEventV1,concurrentLanguageV1,concurrentLeaseResourceV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
+import {concurrentEventV1,concurrentLeaseResourceV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 
 /** 🔌️ Are the effects of a politely waiting acquisition, replaceable by a law that must neither sleep nor touch a lease. */
 export type ConcurrentLeasePortsV1=Readonly<{
@@ -112,7 +113,7 @@ export async function concurrentFreeFractionV1(path:string,read:ConcurrentVolume
 export type ConcurrentVolumeReaderV1=(path:string)=>Promise<Readonly<{blocks:number;bavail:number;bsize:number}>>;
 const readConcurrentVolumeV1:ConcurrentVolumeReaderV1=path=>nativeStatfsV1(path,{fresh:true});
 async function measureConcurrentVolumeV1(path:string,read:ConcurrentVolumeReaderV1){
- try{return await read(path);}catch(error){throw Error(concurrentTextV1(concurrentLanguageV1(process.env),"freeSpaceUnreadable",{path,reason:(error as Error).message}),{cause:error});}
+ try{return await read(path);}catch(error){throw Error(concurrentTextV1(resolveLanguageV1(protocol.languages,[],process.env).language,"freeSpaceUnreadable",{path,reason:(error as Error).message}),{cause:error});}
 }
 /** 🌡️ Reports the bytes a writer can still use on that volume, measured now, so a before-and-after difference is the size of what an install built; an unreadable volume is refused, never reported as unlimited. */
 export async function concurrentFreeBytesV1(path:string,read:ConcurrentVolumeReaderV1=readConcurrentVolumeV1):Promise<number>{

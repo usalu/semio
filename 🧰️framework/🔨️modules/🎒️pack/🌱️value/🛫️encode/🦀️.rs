@@ -241,14 +241,3 @@ fn document_source(source:DocumentSource<'_>,options:&EncodeOptions,control:&mut
 #[path="../🧪️tests/🚦️refusals/🦀️.rs"]
 mod refusal_tests;
 
-#[path="🫳️borrowed/⏳️cursor/🦀️.rs"]
-mod borrowed_cursor;
-pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure,BorrowedPackSection};
-#[cfg(feature="deflate")]
-#[path="🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs"]
-mod borrowed_document;
-#[cfg(feature="deflate")]
-pub use borrowed_document::{BorrowedPackDocumentCursor,BorrowedPackDocumentProgress,BorrowedPackDocumentFailure};
-#[path="🫳️borrowed/📨️wire/🦀️.rs"]
-mod owned_wire;
-pub use owned_wire::{OwnedProjectedPackWireCursor,OwnedProjectedPackWireReady,OwnedProjectedPackWireStep};

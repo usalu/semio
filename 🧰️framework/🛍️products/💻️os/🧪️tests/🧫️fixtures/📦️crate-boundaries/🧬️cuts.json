@@ -17,6 +17,12 @@
       "producer": "semio-framework-os-store-ephemeral",
       "consumer": "🔨️modules/🏪️store/🦀️.rs",
       "canonical": "pub use semio_framework_os_store_ephemeral::*;",
+      "definition": "pub struct TransientStore<"
+    },
+    {
+      "producer": "semio-framework-os-store-presence",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_presence::*;",
       "definition": "pub struct PresenceStore<"
     },
     {
@@ -27,7 +33,7 @@
     },
     {
       "producer": "semio-framework-os-presence-native-snapshot",
-      "consumer": "🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs",
+      "consumer": "🔨️modules/🏪️store/👥️presence/🦀️.rs",
       "canonical": "pub use semio_framework_os_presence_native_snapshot::ArtifactPresenceSnapshot;",
       "definition": "pub trait ArtifactPresenceSnapshot"
     },
@@ -123,14 +129,14 @@
     },
     {
       "producer": "semio-framework-value-retirement-queue",
-      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
-      "canonical": "pub use semio_framework_value_retirement_queue as retirement_queue;",
+      "consumer": "../../🔨️modules/⏪️time-travel/🎮️decision/📨️command/🦀️.rs",
+      "canonical": "use semio_framework_value_retirement_queue::RetirementQueue;",
       "definition": "pub struct RetirementQueue"
     },
     {
       "producer": "semio-framework-value-original-aliases",
-      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
-      "canonical": "pub use semio_framework_value_original_aliases::OriginalAliasBatch;",
+      "consumer": "🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs",
+      "canonical": "use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;",
       "definition": "pub struct OriginalAliasBatch<P>"
     },
     {
@@ -141,13 +147,13 @@
     },
     {
       "producer": "semio-framework-value-paged-text",
-      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
-      "canonical": "pub use semio_framework_value_paged_text::paged_text;",
+      "consumer": "../../🔨️modules/🎒️pack/🌱️value/🛫️encode/🧮️expression/🦀️.rs",
+      "canonical": "use semio_framework_value_paged_text::paged_text::TextReadView;",
       "definition": "pub mod paged_text;"
     },
     {
       "producer": "semio-framework-value-ordered",
-      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "consumer": "../../🔨️modules/🌱️value/🧪️tests/🥣️companion/🦀️.rs",
       "canonical": "pub use semio_framework_value_ordered::ordered;",
       "definition": "pub mod ordered;"
     },
@@ -338,9 +344,9 @@
       "definition": "pub fn create_document_envelope"
     },
     {
-      "producer": "semio-framework-os-store-durable-group",
+      "producer": "semio-framework-os-store-durable-group-wire",
       "consumer": "🔨️modules/🏪️store/🦀️.rs",
-      "canonical": "pub use semio_framework_os_store_durable_group::*;",
+      "canonical": "pub use semio_framework_os_store_durable_group_wire::lifted_durable_group::*;",
       "definition": "pub struct DurableOwnedThreeMemberDecisionV1"
     },
     {

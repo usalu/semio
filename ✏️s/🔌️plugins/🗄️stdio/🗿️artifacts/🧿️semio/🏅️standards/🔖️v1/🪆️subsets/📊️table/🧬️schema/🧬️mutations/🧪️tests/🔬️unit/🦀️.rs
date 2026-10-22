@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioTableSnapshot {
@@ -21,11 +21,11 @@ fn fixture() -> SemioTableSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
-    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff_cold(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in backwards.iter().rev() {
-        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward
@@ -75,7 +75,7 @@ async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioTableMutation::DeleteColumn(delete_column::DeleteColumn { name: "missing".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
+    assert_eq!(protocol::apply_diff_cold(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -126,7 +126,7 @@ async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 99 });
     assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "removing an absent index has nothing to undo");
-    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+    assert_eq!(protocol::apply_diff_cold(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]

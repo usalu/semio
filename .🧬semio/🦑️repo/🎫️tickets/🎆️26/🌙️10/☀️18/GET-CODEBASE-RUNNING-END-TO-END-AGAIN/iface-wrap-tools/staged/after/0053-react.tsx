@@ -1,437 +1,233 @@
-// #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/UtilityTree/component.tsx
-/** 🌳️ `UtilityTree` — the ribbon/tree renderer for an app's `utilities` taxonomy
- * (`groupUtilityNodesByCategory` groups+sorts `UtilityNode`s by `UtilityCategory`, `UtilityTree`
- * renders the grouped result as a `Ribbon`). Used by the framework chrome's utility panel and by
- * `ShellSync`'s sync-scoped variant.
- */
-// #endregion 🧲️Header
+import type { BackboneWorkerResponse, SpaceArtifactCreationCatalogStatusV1, SpaceArtifactCreationPhaseV1 } from "@semio-tech/framework/backbone";
+import * as React from "../../⚛️react-port/🟦️.ts";
 
-// #region 🔌️Adapters
-import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "../⚛️react-port/🟦️.ts";
-import {
-  ButtonGroup,
-  ButtonGroupItem,
-  Icon,
-  type IconName,
-  Ribbon,
-  type RibbonDirection,
-  RibbonDivider,
-  RibbonGroup,
-  RibbonItem,
-  type RibbonRow,
-  RibbonZone,
-  ToggleGroup,
-} from "@semio-tech/ui-react";
-import { type ActionDescriptor, SET_ACTIVE_UTILITY_ACTION_ID, type UtilityCategory, type UtilityLeaf, type UtilityNode } from "@semio-tech/framework";
-// #endregion 🔌️Adapters
+export const ARTIFACT_CREATION_PROGRESS_CAPACITY = 8;
 
-//#region 🔖️utility-tree
+export type ArtifactCreationProgressOwnerV1 = Readonly<{
+  requestId: string;
+  spaceId: string;
+  expectedCatalogGenerationId: string;
+  kindId: string;
+  name: string;
+  runtimeKey: string;
+  clientInstanceId: string;
+  sessionInstanceId: number;
+}>;
 
-/** 🔢️ The pressed selection utility a host row renders its options for: its id, the owning window, and the register generation its press is stamped with. */
-export type UtilityTreeSelection = Readonly<{ activeUtilityId: string; windowId: string; generation: number | undefined }>;
+export type ArtifactCreationProgressStateV1 = ArtifactCreationProgressOwnerV1 & Readonly<{
+  issuedAtMs: number;
+  phase: SpaceArtifactCreationPhaseV1;
+  cancelRequested: boolean;
+  openingDisposition: "idle" | "opening" | "failed";
+}>;
 
-type UtilityTreeProps = {
-  readonly utilities: readonly UtilityNode[];
-  readonly onAction: (action: ActionDescriptor) => void;
-  readonly id?: string;
-  /** 🎀️ `up` stacks a new ribbon line above the base row per pressed collection (window utility bar); `inline` keeps the horizontal drill-down (footer). */
-  readonly direction?: RibbonDirection;
-  /** 🎓️ A utility id the introduction walkthrough is anchored on — when it names a leaf nested inside
-   * a collapsed group picker, the picker auto-drills into that group so the leaf actually mounts (see
-   * {@link findUtilityGroupPath}). `null`/not-found leaves `activePath` alone. */
-  readonly revealUtilityId?: string | null;
-  /** 🎯️ Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the utilities. */
-  readonly utilityOptions?: ReactNode;
-  /** 🧭️ Host-owned row for the pressed selection utility, rendered under the ribbon in the stacked directions; the tree itself stays free of shell rows. */
-  readonly renderSelectionOptions?: (selection: UtilityTreeSelection) => ReactNode;
-};
+export type ArtifactCreationProgressUiStateV1 = Readonly<Record<string, ArtifactCreationProgressStateV1>>;
 
-function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
-  if ("onPress" in node && node.onPress) return node.onPress;
-  if ("onChange" in node && node.onChange) return node.onChange;
-  if ((node.kind === "button" || node.kind === "toggle") && "action" in node) {
-    if (!node.action || !node.controllerId) return null;
-    return { controllerId: node.controllerId, action: node.action, args: node.args as Record<string, unknown> | undefined };
+export type ArtifactCreationProgressActionV1 =
+  | { readonly kind: "issued"; readonly owner: ArtifactCreationProgressOwnerV1; readonly atMs: number }
+  | { readonly kind: "status"; readonly message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> }
+  | { readonly kind: "cancel-requested"; readonly requestId: string; readonly spaceId: string }
+  | { readonly kind: "opening"; readonly requestId: string; readonly spaceId: string }
+  | { readonly kind: "open-failed"; readonly requestId: string; readonly spaceId: string }
+  | { readonly kind: "cleared"; readonly requestId: string };
+
+export const ARTIFACT_CREATION_PROGRESS_TEXT_V1 = {
+  en: {
+    heading: "Creating artifact",
+    phases: {
+      accepted: "The creation request was accepted.",
+      preparing: "The artifact is being created…",
+      ready: "The artifact is ready.",
+      indeterminate: "The creation outcome is unknown. Refresh the space before trying again.",
+      failed: "Artifact creation failed.",
+      cancelled: "Artifact creation was cancelled.",
+    },
+    waiting: "The hub has been working on it for {elapsed}. You can keep waiting or cancel.",
+    cancel: "Cancel creation",
+    cancelling: "Cancellation requested…",
+    opening: {
+      active: "Opening the artifact…",
+      failed: "The artifact was created, but it could not be opened. You can safely try opening it again.",
+      retry: "Open artifact",
+    },
+    catalog: {
+      loading: "Loading the available artifact kinds…",
+      ready: "The available artifact kinds are current.",
+      unavailable: "Artifact kinds are unavailable. Reopen the space before creating an artifact.",
+    },
+  },
+  de: {
+    heading: "Artefakt wird erstellt",
+    phases: {
+      accepted: "Die Erstellungsanfrage wurde angenommen.",
+      preparing: "Das Artefakt wird erstellt…",
+      ready: "Das Artefakt ist bereit.",
+      indeterminate: "Das Ergebnis der Erstellung ist unbekannt. Aktualisiere den Space vor einem neuen Versuch.",
+      failed: "Die Artefakterstellung ist fehlgeschlagen.",
+      cancelled: "Die Artefakterstellung wurde abgebrochen.",
+    },
+    waiting: "Der Hub arbeitet seit {elapsed} daran. Du kannst weiter warten oder abbrechen.",
+    cancel: "Erstellung abbrechen",
+    cancelling: "Abbruch angefordert…",
+    opening: {
+      active: "Artefakt wird geöffnet…",
+      failed: "Das Artefakt wurde erstellt, konnte aber nicht geöffnet werden. Du kannst das Öffnen sicher erneut versuchen.",
+      retry: "Artefakt öffnen",
+    },
+    catalog: {
+      loading: "Verfügbare Artefaktarten werden geladen…",
+      ready: "Die verfügbaren Artefaktarten sind aktuell.",
+      unavailable: "Artefaktarten sind nicht verfügbar. Öffne den Space erneut, bevor du ein Artefakt erstellst.",
+    },
+  },
+} as const;
+
+export function artifactCreationProgressLocaleV1(locale: string): keyof typeof ARTIFACT_CREATION_PROGRESS_TEXT_V1 | null {
+  const language = locale.toLowerCase().split("-")[0];
+  return language === "en" || language === "de" ? language : null;
+}
+
+export function artifactCreationProgressTerminalV1(phase: SpaceArtifactCreationPhaseV1): boolean {
+  return phase === "ready" || phase === "indeterminate" || phase === "failed" || phase === "cancelled";
+}
+
+export function artifactCreationProgressRoleV1(phase: SpaceArtifactCreationPhaseV1, openingDisposition: ArtifactCreationProgressStateV1["openingDisposition"] = "idle"): "status" | "alert" {
+  return openingDisposition === "failed" || phase === "indeterminate" || phase === "failed" || phase === "cancelled" ? "alert" : "status";
+}
+
+function retainArtifactCreationProgressV1(
+  current: ArtifactCreationProgressUiStateV1,
+  state: ArtifactCreationProgressStateV1,
+): ArtifactCreationProgressUiStateV1 {
+  const next = { ...current };
+  delete next[state.requestId];
+  while (Object.keys(next).length >= ARTIFACT_CREATION_PROGRESS_CAPACITY) {
+    const ids = Object.keys(next);
+    const terminal = ids.find((requestId) => next[requestId]!.phase !== "ready" && artifactCreationProgressTerminalV1(next[requestId]!.phase));
+    if (terminal === undefined) return current;
+    delete next[terminal];
   }
-  return null;
+  next[state.requestId] = state;
+  return next;
 }
 
-/** 🔢️ Sorts utility nodes by `order`. */
-export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
-  return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
-}
-
-//#region 🗂️UtilityCategoryGrouping
-
-const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "utilities", "history", "sync"];
-
-/** 🪟️ Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
-export const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "utilities"];
-
-export const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, IconName>> = {
-  selection: "mouse-pointer",
-  utilities: "wrench",
-  history: "undo",
-  sync: "cloud",
-};
-
-function utilityNodeCategory(node: UtilityNode): UtilityCategory {
-  if (node.kind === "separator") return "utilities";
-  if (node.category) return node.category;
-  return "utilities";
-}
-
-/** 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildUtilityRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
-export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
-  const buckets = new Map<UtilityCategory, UtilityNode[]>();
-  for (const node of nodes) {
-    const category = utilityNodeCategory(node);
-    if (!categories.includes(category)) continue;
-    const bucket = buckets.get(category) ?? [];
-    bucket.push(node);
-    buckets.set(category, bucket);
+/** 🌱️ Reduces only exact request/space/catalog/kind status into bounded ephemeral Shell UI state. */
+export function reduceArtifactCreationProgressUiV1(
+  current: ArtifactCreationProgressUiStateV1,
+  action: ArtifactCreationProgressActionV1,
+): ArtifactCreationProgressUiStateV1 {
+  if (action.kind === "issued") return retainArtifactCreationProgressV1(current, { ...action.owner, issuedAtMs: action.atMs, phase: "accepted", cancelRequested: false, openingDisposition: "idle" });
+  const requestId = action.kind === "status" ? action.message.requestId : action.requestId;
+  const state = current[requestId];
+  if (state === undefined) return current;
+  if (action.kind === "cleared") {
+    const next = { ...current };
+    delete next[action.requestId];
+    return next;
   }
-  return categories
-    .filter((category) => hasInteractiveUtilityNodes(buckets.get(category)))
-    .map((category, order) => {
-      const bucket=buckets.get(category);if(!bucket)throw Error("Actual interactive utility bucket required");const first=bucket[0];
-      if(bucket.length===1&&first?.kind==="collection")return{...first,order};
-      return { id: category, kind: "collection" as const, iconId: UTILITY_CATEGORY_ICON_ID[category], text: category, order, category, children: bucket };
-    });
-}
-
-/** 🦶️ Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per utility. */
-export function dedupeUtilityNodesById(nodeLists: readonly (readonly UtilityNode[])[]): UtilityNode[] {
-  const seen = new Map<string, UtilityNode>();
-  for (const nodes of nodeLists) {
-    for (const node of nodes) {
-      if (!seen.has(node.id)) seen.set(node.id, node);
-    }
+  if (action.kind === "cancel-requested") {
+    if (state.spaceId !== action.spaceId || state.cancelRequested || artifactCreationProgressTerminalV1(state.phase)) return current;
+    return { ...current, [state.requestId]: { ...state, cancelRequested: true } };
   }
-  return [...seen.values()];
-}
-
-//#endregion 🗂️UtilityCategoryGrouping
-
-function isInteractiveUtilityNode(node: UtilityNode): boolean {
-  if (node.kind === "separator") return false;
-  if (node.kind === "collection") return hasInteractiveUtilityNodes(node.children);
-  return true;
-}
-
-function hasInteractiveUtilityNodes(nodes?: readonly UtilityNode[]): boolean {
-  return Boolean(nodes?.some((node) => isInteractiveUtilityNode(node)));
-}
-
-function hasInteractiveUtilityLeaves(items: readonly UtilityLeaf[]): boolean {
-  return items.some((node) => node.kind !== "separator");
-}
-
-type UtilityCollectionNode = Extract<UtilityNode, { readonly kind: "collection" }>;
-
-export type UtilityRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "utilities"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
-
-/** 🎀️ Builds drill-down ribbon segments from a utility tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
-export function buildUtilityRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): UtilityRibbonSegment[] {
-  const sorted = sortUtilityNodes(nodes);
-  const collections = sorted.filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
-  const looseLeaves = sorted.filter((node): node is UtilityLeaf => node.kind !== "collection");
-  const segments: UtilityRibbonSegment[] = [];
-
-  if (collections.length > 0) segments.push({ kind: "picker", collections, depth });
-  if (hasInteractiveUtilityLeaves(looseLeaves)) segments.push({ kind: "utilities", items: looseLeaves, depth });
-  if (collections.length === 0) return segments;
-
-  const activeId = path[depth];
-  const active = activeId ? collections.find((node) => node.id === activeId) : undefined;
-  if (!active) return segments;
-  return [...segments, ...buildUtilityRibbonSegments(active.children, path, depth + 1)];
-}
-
-/** 🎀️ Validates an active-group path against the current utility tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
-export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readonly string[]): readonly string[] {
-  let current = nodes;
-  const reconciled: string[] = [];
-
-  for (const collectionId of path) {
-    const collections = sortUtilityNodes(current).filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
-    const active = collections.find((node) => node.id === collectionId);
-    if (!active) break;
-    reconciled.push(collectionId);
-    current = active.children;
+  if (action.kind === "opening" || action.kind === "open-failed") {
+    if (state.spaceId !== action.spaceId || state.phase !== "ready") return current;
+    return { ...current, [state.requestId]: { ...state, openingDisposition: action.kind === "opening" ? "opening" : "failed" } };
   }
-
-  return reconciled;
+  if (state.spaceId !== action.message.spaceId || state.expectedCatalogGenerationId !== action.message.catalogGenerationId || (action.message.ready !== undefined && action.message.ready.kindId !== state.kindId)) return current;
+  return { ...current, [state.requestId]: { ...state, phase: action.message.phase, openingDisposition: action.message.phase === "ready" && state.phase === "ready" ? state.openingDisposition : "idle" } };
 }
 
-/** 🎛️ Id of the pressed utility leaf in a derived utility tree, if any. */
-export function findPressedUtilityLeafId(nodes: readonly UtilityNode[]): string | undefined {
-  for (const node of nodes) {
-    if (node.kind === "collection") {
-      const nested = findPressedUtilityLeafId(node.children);
-      if (nested) return nested;
-    } else if (node.kind === "toggle" && node.pressed) {
-      return node.id;
-    }
-  }
-  return undefined;
+/** ⏱️ How long a creation must run before its notice says how long the hub has been working on it. */
+export const ARTIFACT_CREATION_WAITING_AFTER_MS = 10_000;
+
+/** ⏱️ The elapsed time of a running creation in the person's language (`2 min 5 s` / `2 Min. 5 s`). */
+export function artifactCreationElapsedTextV1(elapsedMs: number, language: keyof typeof ARTIFACT_CREATION_PROGRESS_TEXT_V1): string {
+  const seconds = Math.max(0, Math.floor(elapsedMs / 1_000));
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes === 0) return `${rest} s`;
+  return language === "de" ? `${minutes} Min. ${rest} s` : `${minutes} min ${rest} s`;
 }
 
-/** 🧰️ First `setActiveUtility` descriptor in a utility tree — used to deactivate when a collection that owns the pressed leaf is collapsed. */
-/** 🔢️ The register generation the tree's own `setActiveUtility` descriptors were stamped with (`expectedGeneration`), so the method picker presses against the same register the chips rendered. */
-function expectedGenerationOf(template: ActionDescriptor | undefined): number | undefined {
-  const args = template?.args;
-  const raw = typeof args === "object" && args !== null ? (args as { readonly expectedGeneration?: unknown }).expectedGeneration : undefined;
-  return typeof raw === "number" && Number.isSafeInteger(raw) && raw >= 0 ? raw : undefined;
+/** ♿ Exact-locale creation status: the hub's own phase, and — once a creation runs longer than
+ * {@link ARTIFACT_CREATION_WAITING_AFTER_MS} — how long the hub has been working on it, with the Cancel kept. Server status
+ * has no numeric counters, so this component never invents a percentage or renders a misleading progress meter. */
+export function ArtifactCreationProgressNotice({
+  state,
+  locale,
+  onCancel,
+  onOpen,
+}: Readonly<{
+  state: ArtifactCreationProgressStateV1;
+  locale: string;
+  onCancel(requestId: string, spaceId: string): void;
+  onOpen(requestId: string): void;
+}>): React.ReactElement | null {
+  const [nowMs, setNowMs] = React.useState(() => Date.now());
+  const running = !artifactCreationProgressTerminalV1(state.phase);
+  React.useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 1_000);
+    return () => clearInterval(timer);
+  }, [running]);
+  const language = artifactCreationProgressLocaleV1(locale);
+  if (language === null) return null;
+  const copy = ARTIFACT_CREATION_PROGRESS_TEXT_V1[language];
+  const role = artifactCreationProgressRoleV1(state.phase, state.openingDisposition);
+  const terminal = artifactCreationProgressTerminalV1(state.phase);
+  const busy = !terminal || state.phase === "ready" && state.openingDisposition === "opening";
+  const status = state.phase === "ready" && state.openingDisposition === "opening"
+    ? copy.opening.active
+    : state.phase === "ready" && state.openingDisposition === "failed"
+      ? copy.opening.failed
+      : state.cancelRequested && !terminal ? copy.cancelling : copy.phases[state.phase];
+  return (
+    <section
+      aria-label={`${copy.heading}: ${state.name}`}
+      aria-busy={busy || undefined}
+      aria-live={role === "alert" ? "assertive" : "polite"}
+      data-semio-artifact-creation={state.phase}
+      data-semio-artifact-creation-opening={state.phase === "ready" ? state.openingDisposition : undefined}
+      role={role}
+    >
+      <h2>{copy.heading}</h2>
+      <p>{state.name}</p>
+      <p>{status}</p>
+      {running && nowMs - state.issuedAtMs >= ARTIFACT_CREATION_WAITING_AFTER_MS ? <p data-semio-artifact-creation-elapsed="">{copy.waiting.replace("{elapsed}", artifactCreationElapsedTextV1(nowMs - state.issuedAtMs, language))}</p> : null}
+      {state.phase === "ready" && state.openingDisposition === "failed" ? (
+        <button aria-label={`${copy.opening.retry}: ${state.name}`} onClick={() => onOpen(state.requestId)} type="button">
+          {copy.opening.retry}
+        </button>
+      ) : !terminal ? (
+        <button
+          aria-label={`${copy.cancel}: ${state.name}`}
+          disabled={state.cancelRequested}
+          onClick={() => onCancel(state.requestId, state.spaceId)}
+          type="button"
+        >
+          {state.cancelRequested ? copy.cancelling : copy.cancel}
+        </button>
+      ) : null}
+    </section>
+  );
 }
 
-function findSetActiveUtilityDescriptor(nodes: readonly UtilityNode[]): ActionDescriptor | undefined {
-  for (const node of nodes) {
-    if (node.kind === "collection") {
-      const nested = findSetActiveUtilityDescriptor(node.children);
-      if (nested) return nested;
-    } else if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_UTILITY_ACTION_ID) {
-      return node.onChange;
-    }
-  }
-  return undefined;
+/** ♿ Treats an impossible Ready-without-members presentation as unavailable authority. */
+export function ArtifactCreationCatalogNotice({ status, locale, hasChoices }: Readonly<{ status: Pick<SpaceArtifactCreationCatalogStatusV1, "phase">; locale: string; hasChoices?: boolean }>): React.ReactElement | null {
+  const language = artifactCreationProgressLocaleV1(locale);
+  if (language === null) return null;
+  const phase = status.phase === "ready" && hasChoices === false ? "unavailable" : status.phase;
+  const text = ARTIFACT_CREATION_PROGRESS_TEXT_V1[language].catalog[phase];
+  const unavailable = phase === "unavailable";
+  return (
+    <section
+      aria-busy={phase === "loading" || undefined}
+      aria-label={text}
+      aria-live={unavailable ? "assertive" : "polite"}
+      data-semio-artifact-creation-catalog={phase}
+      role={unavailable ? "alert" : "status"}
+    >
+      {text}
+    </section>
+  );
 }
-
-/** 🎓️ Finds the group-id path (in {@link reconcileUtilityPath} shape) leading down to a utility leaf,
- * so a folded picker can drill straight to it. Returns `[]` when the id is a top-level (ungrouped) node,
- * `null` when the tree has no node with that id at all. */
-export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: string, prefix: readonly string[] = []): readonly string[] | null {
-  for (const node of nodes) {
-    if (node.id === targetId) return prefix;
-    if (node.kind === "collection") {
-      const nested = findUtilityGroupPath(node.children, targetId, [...prefix, node.id]);
-      if (nested) return nested;
-    }
-  }
-  return null;
-}
-
-function UtilityRibbonItems({ items, onAction, stacked }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void; readonly stacked: boolean }): ReactElement {
-  const sorted = useMemo(() => [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0)), [items]);
-  const pressedToggleRef = useRef<string | null>(null);
-  const nodes = useMemo(() => {
-    const rendered: ReactElement[] = [];
-    let buttonRun: Extract<UtilityLeaf, { kind: "button" }>[] = [];
-    let toggleRun: Extract<UtilityLeaf, { kind: "toggle" }>[] = [];
-
-    const flushButtons = () => {
-      if (buttonRun.length === 0) return;
-      const run = buttonRun;
-      buttonRun = [];
-      rendered.push(
-        <RibbonItem key={`buttons-${run.map((entry) => entry.id).join("-")}`} className={stacked ? "h-auto w-full max-w-full" : undefined}>
-          <ButtonGroup className={stacked ? "h-auto w-full max-w-full flex-wrap" : undefined}>
-            {run.map((entry) => {
-              const action = resolveLeafAction(entry);
-              if (!action) return null;
-              return (
-                <ButtonGroupItem
-                  key={entry.id}
-                  id={entry.id}
-                  aria-label={entry.title ?? entry.label ?? entry.id}
-                  title={entry.title ?? entry.label}
-                  disabled={entry.disabled}
-                  onClick={() => onAction(action)}
-                  icon={<Icon icon={entry.iconId as IconName} size="small" />}
-                  text={entry.text ?? entry.label}
-                />
-              );
-            })}
-          </ButtonGroup>
-        </RibbonItem>,
-      );
-    };
-
-    const flushToggles = () => {
-      if (toggleRun.length === 0) return;
-      const run = toggleRun;
-      toggleRun = [];
-      rendered.push(
-        <RibbonItem key={`toggles-${run.map((entry) => entry.id).join("-")}`} className={stacked ? "h-auto w-full max-w-full" : undefined}>
-          <ToggleGroup
-            className={stacked ? "h-auto w-full max-w-full flex-wrap" : undefined}
-            kind="multiple"
-            value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
-            onValueChange={(values) => {
-              const pressedId = pressedToggleRef.current;
-              pressedToggleRef.current = null;
-              if (pressedId === null) return;
-              const entry = run.find((candidate) => candidate.id === pressedId);
-              const action = entry ? resolveLeafAction(entry) : null;
-              if (!entry || !action) return;
-              if ((entry.pressed ?? false) !== values.includes(entry.id)) onAction(action);
-            }}
-            items={run.map((entry) => ({
-              value: entry.id,
-              id: entry.id,
-              disabled: entry.disabled,
-              icon: <Icon icon={entry.iconId as IconName} size="small" />,
-              text: entry.text ?? entry.label,
-              onClick: () => {
-                pressedToggleRef.current = entry.id;
-              },
-            }))}
-          />
-        </RibbonItem>,
-      );
-    };
-
-    const flushRuns = () => {
-      flushButtons();
-      flushToggles();
-    };
-
-    for (const item of sorted) {
-      if (item.kind === "separator") {
-        flushRuns();
-        rendered.push(<RibbonDivider key={item.id} />);
-        continue;
-      }
-      if (item.kind === "toggle") {
-        flushButtons();
-        toggleRun.push(item);
-        continue;
-      }
-      flushToggles();
-      buttonRun.push(item);
-    }
-    flushRuns();
-    return rendered;
-  }, [onAction, sorted, stacked]);
-
-  return <RibbonGroup className={stacked ? "h-auto w-full max-w-full flex-wrap items-start" : undefined}>{nodes}</RibbonGroup>;
-}
-
-function utilityRibbonSegmentKey(segment: UtilityRibbonSegment, index: number): string {
-  return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `utilities-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
-}
-
-export function UtilityTree({ utilities, onAction, id = "ui.utilities", direction = "inline", revealUtilityId = null, utilityOptions, renderSelectionOptions }: UtilityTreeProps): ReactElement | null {
-  const [activePath, setActivePath] = useState<readonly string[]>([]);
-
-  useEffect(() => {
-    setActivePath((previousPath) => {
-      const next = reconcileUtilityPath(utilities, previousPath);
-      return previousPath.length === next.length && previousPath.every((entry, index) => entry === next[index]) ? previousPath : next;
-    });
-  }, [utilities]);
-
-  useEffect(() => {
-    const pressedId = revealUtilityId ?? findPressedUtilityLeafId(utilities);
-    if (!pressedId) return;
-    const path = findUtilityGroupPath(utilities, pressedId);
-    if (!path) return;
-    setActivePath((previousPath) => (previousPath.length === path.length && previousPath.every((entry, index) => entry === path[index]) ? previousPath : path));
-  }, [revealUtilityId, utilities]);
-
-  const segments = useMemo(() => buildUtilityRibbonSegments(utilities, activePath), [utilities, activePath]);
-
-  if (!hasInteractiveUtilityNodes(utilities) && !utilityOptions) return null;
-
-  /** 🎯️ Collapses the picker at `depth` on an EXPLICIT press of its pressed chip `collectionId`. When the
-   * pressed utility leaf lives under THAT chip the guest's utility is deactivated too — one
-   * `setActiveUtility { utilityId: "" }` built from the tree's own descriptor template, whose `args` are
-   * spread through so the `windowId` and the `expectedGeneration` the shell stamped into it travel with
-   * the deactivation (the shell's versioned-register CAS refuses a stale one instead of the old 8 s
-   * echo-off swallowing it). Collapsing a sibling chip the pressed leaf does not live under only folds
-   * the ribbon. */
-  const collapsePicker = (depth: number, collectionId: string): void => {
-    const pressedId = findPressedUtilityLeafId(utilities);
-    const pressedPath = pressedId ? findUtilityGroupPath(utilities, pressedId) : null;
-    if (pressedPath && pressedPath.length > depth && pressedPath[depth] === collectionId) {
-      const template = findSetActiveUtilityDescriptor(utilities);
-      if (template) onAction({ ...template, args: { ...(template.args as object | undefined), utilityId: "" } });
-    }
-    setActivePath(activePath.slice(0, depth));
-  };
-
-  const renderSegment = (segment: UtilityRibbonSegment): ReactNode =>
-    segment.kind === "picker" ? (
-      <RibbonItem className={direction !== "inline" ? "h-auto w-full max-w-full" : undefined}>
-        <ToggleGroup
-          className={direction !== "inline" ? "h-auto w-full max-w-full flex-wrap" : undefined}
-          kind="single"
-          value={activePath[segment.depth] ?? ""}
-          onValueChange={(value) => {
-            if (!value) return;
-            setActivePath(reconcileUtilityPath(utilities, [...activePath.slice(0, segment.depth), value]));
-          }}
-          items={segment.collections.map((entry) => ({
-            value: entry.id,
-            id: `${id}.group.${entry.id}`,
-            icon: <Icon icon={entry.iconId as IconName} size="small" />,
-            text: entry.text ?? entry.label,
-            onClick: (event) => {
-              if (entry.id !== activePath[segment.depth]) return;
-              event.preventDefault();
-              collapsePicker(segment.depth, entry.id);
-            },
-          }))}
-        />
-      </RibbonItem>
-    ) : (
-      <UtilityRibbonItems items={segment.items} onAction={onAction} stacked={direction !== "inline"} />
-    );
-
-  const windowId = id.startsWith("ui.utilities.") ? id.slice("ui.utilities.".length) : "";
-
-  const findPressedSelectionUtility = (nodes: readonly UtilityNode[]): UtilityNode | undefined => {
-    for (const node of nodes) {
-      if (node.kind === "collection") {
-        const found = findPressedSelectionUtility(node.children);
-        if (found) return found;
-      } else if (node.kind === "toggle" && node.pressed && node.id.startsWith("select")) {
-        return node;
-      }
-    }
-    return undefined;
-  };
-
-  const activeSelectionUtility = findPressedSelectionUtility(utilities);
-  const hasActiveSelection = activeSelectionUtility != null;
-
-  const rows: RibbonRow[] =
-    direction === "inline"
-      ? segments.map((segment, index) => ({ key: utilityRibbonSegmentKey(segment, index), content: renderSegment(segment) }))
-      : Array.from(
-          segments.reduce((byDepth, segment, index) => {
-            const zones = byDepth.get(segment.depth) ?? [];
-            zones.push(<RibbonZone key={utilityRibbonSegmentKey(segment, index)} variableHeight className="w-full max-w-full items-start">{renderSegment(segment)}</RibbonZone>);
-            byDepth.set(segment.depth, zones);
-            return byDepth;
-          }, new Map<number, ReactElement[]>()),
-        )
-          .sort(([left], [right]) => left - right)
-          .map(([depth, content]) => ({ key: `row-${depth}`, content }));
-
-  if (utilityOptions && direction !== "inline") {
-    rows.push({
-      key: "row-utility-options",
-      content: (
-        <RibbonZone variableHeight className="w-full max-w-full items-start">
-          <RibbonItem className="h-auto w-full max-w-full items-start">{utilityOptions}</RibbonItem>
-        </RibbonZone>
-      ),
-    });
-  } else if (hasActiveSelection && renderSelectionOptions && direction !== "inline") {
-    rows.push({
-      key: "row-selection-options",
-      content: (
-        <RibbonZone variableHeight className="w-full max-w-full items-start">
-          <RibbonItem className="h-auto w-full max-w-full items-start">
-            {renderSelectionOptions({ activeUtilityId: activeSelectionUtility.id, windowId, generation: expectedGenerationOf(findSetActiveUtilityDescriptor(utilities)) })}
-          </RibbonItem>
-        </RibbonZone>
-      ),
-    });
-  }
-
-  return <Ribbon id={id} direction={direction} rows={rows} className={direction !== "inline" ? "w-full items-stretch [&>[data-slot=ribbon-row]]:flex-wrap" : undefined} />;
-}
-//#endregion 🔖️utility-tree

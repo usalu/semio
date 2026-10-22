@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 25165824
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "descriptor": 3,
+        "maximumBytes": 25165824,
+        "encoding": "utf8",
+        "stdin": "preserved",
+        "terminal": "await-publication-and-child-close"
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "scalar",
+        "count",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "scalar": {
+          "type": "string",
+          "maxLength": 2
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25165825
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ChildProcess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceEntry",
+        "ingress",
+        "birthMilliseconds"
+      ],
+      "properties": {
+        "sourceEntry": {
+          "const": "./📜️script.ts"
+        },
+        "ingress": {
+          "const": "birth-owning-program"
+        },
+        "birthMilliseconds": {
+          "const": 20000
+        }
+      }
+    }
+  }
+}

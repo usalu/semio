@@ -1,7 +1,7 @@
 use crate::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use crate::standards::v1::subsets::any::schema::operations::*;

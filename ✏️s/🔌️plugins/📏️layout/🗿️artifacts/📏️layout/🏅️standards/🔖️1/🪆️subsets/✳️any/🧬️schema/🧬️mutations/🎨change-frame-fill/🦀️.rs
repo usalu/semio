@@ -25,6 +25,16 @@ pub struct ChangeFrameFill {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameFill where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_fill::ChangeFrameFill> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-fill", kind: "change-frame-fill", record: "ChangedFrameFill" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" fill", self.frame_id), &format!("Füllung von Rahmen \"{}\" ändern", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for ChangeFrameFill where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_fill::ChangeFrameFill> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_fill(self, base)
     }
@@ -34,12 +44,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameFill where Op: protocol
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" fill", self.frame_id), &format!("Füllung von Rahmen \"{}\" ändern", self.frame_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page_id.clone(), self.frame_id.clone()]
-    }
 }
 //#endregion 🎨ChangeFrameFill
 

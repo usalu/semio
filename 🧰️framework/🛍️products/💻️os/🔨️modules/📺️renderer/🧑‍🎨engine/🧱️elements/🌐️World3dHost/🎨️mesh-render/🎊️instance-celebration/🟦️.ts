@@ -1,5 +1,5 @@
 /** 🎊️ Instance celebration: the transient celebrating-instance store with its prune timer and subscription, the conic spin angle, the conic shaders and the celebrating conic material factory. */
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
 import { clearColorResolveCache, resolveColorHex, tokenVar } from "@semio-tech/ui-styling";
 import { CELEBRATE_STAMP_DURATION_MS, Color, DoubleSide, ShaderMaterial } from "@semio-tech/ui-react";
 

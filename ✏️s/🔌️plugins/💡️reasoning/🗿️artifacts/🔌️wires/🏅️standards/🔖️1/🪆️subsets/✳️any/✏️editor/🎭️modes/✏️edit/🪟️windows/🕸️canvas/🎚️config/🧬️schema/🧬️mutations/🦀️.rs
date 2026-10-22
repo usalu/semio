@@ -9,7 +9,7 @@ pub use set_camera::SetCamera;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = WiresCanvasWindowConfig, diff = WiresCanvasWindowConfigDiff, schema = "reasoning.wirescanvaswindowconfig")]
+#[mutations(snapshot = WiresCanvasWindowConfig, diff = WiresCanvasWindowConfigDiff, schema = "reasoning.wirescanvaswindowconfig", reference = WiresCanvasWindowConfig, reference_diff = WiresCanvasWindowConfigDiff)]
 pub enum WiresCanvasWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

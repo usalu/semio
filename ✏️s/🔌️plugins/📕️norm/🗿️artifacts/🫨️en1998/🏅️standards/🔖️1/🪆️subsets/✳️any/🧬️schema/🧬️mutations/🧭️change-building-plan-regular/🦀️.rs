@@ -21,7 +21,16 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingPlanRegula
         record: "ChangeBuildingPlanRegular",
     };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1998Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change regularity in plan", "Regelmäßigkeit im Grundriss ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["change-building-plan-regular".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1998Snapshot, Op> for ChangeBuildingPlanRegular where Op: protocol::ColdMutation<En1998Snapshot, ReferenceDiff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_building_plan_regular::ChangeBuildingPlanRegular> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1998Snapshot>>::ReferenceDiff> {
         crate::change_building_plan_regular::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -30,12 +39,6 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingPlanRegula
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change regularity in plan", "Regelmäßigkeit im Grundriss ändern")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["change-building-plan-regular".into()]
-    }
 }
 
 //#region 🪢️Mounts

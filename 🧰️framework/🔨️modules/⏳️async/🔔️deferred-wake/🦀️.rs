@@ -64,7 +64,7 @@ struct State {
     cursor: usize,
 }
 
-pub(super) struct WorkerDeferredWakeInvocation {
+#[doc(hidden)] pub struct WorkerDeferredWakeInvocation {
     waker: Waker,
 }
 
@@ -76,7 +76,7 @@ impl WorkerDeferredWakeInvocation {
 
 /// 📨️ `occupied` counts the wakers held across every partition: written under the state lock,
 /// read without it, so an idle worker learns there is nothing to wake without contending.
-pub(super) struct WorkerDeferredWakeRegistry {
+#[doc(hidden)] pub struct WorkerDeferredWakeRegistry {
     identity: u64,
     pub state: Mutex<State>,
     occupied: AtomicUsize,

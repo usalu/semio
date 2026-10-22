@@ -19,7 +19,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff"
       }
     }

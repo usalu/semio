@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -50,29 +50,10 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { Family, Recipe } from "./📇️recipe-contract/🟦️.ts";
+import { installOffBrowserGlobals } from "../../../../../../../🔮️oracles/🧊️mesh/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-// 🩹️ three's exporters assume a browser: `PLYExporter`/`GLTFExporter` deliver their result via
-// `requestAnimationFrame`, `GLTFExporter`'s embedded-buffer path reads it back through `FileReader`, and
-// its progress reporting constructs a `ProgressEvent`. None of the three exist off-browser; each shim
-// is the minimal synchronous stand-in the spike proved sufficient — no timers, no real async I/O.
-(globalThis as { requestAnimationFrame?: (cb: () => void) => number }).requestAnimationFrame ??= (cb) => { cb(); return 0; };
-class ShimFileReader {
-  result: string | ArrayBuffer | null = null;
-  onloadend: (() => void) | null = null;
-  onerror: ((error: unknown) => void) | null = null;
-  readAsArrayBuffer(blob: Blob): void { blob.arrayBuffer().then((buf) => { this.result = buf; this.onloadend?.(); }).catch((error) => this.onerror?.(error)); }
-  readAsDataURL(blob: Blob): void {
-    blob.arrayBuffer().then((buf) => { this.result = `data:${blob.type || "application/octet-stream"};base64,${Buffer.from(buf).toString("base64")}`; this.onloadend?.(); }).catch((error) => this.onerror?.(error));
-  }
-}
-(globalThis as { FileReader?: unknown }).FileReader ??= ShimFileReader;
-class ShimProgressEvent {
-  type: string; loaded: number; total: number; lengthComputable: boolean;
-  constructor(type: string, init: { loaded?: number; total?: number; lengthComputable?: boolean } = {}) {
-    this.type = type; this.loaded = init.loaded ?? 0; this.total = init.total ?? 0; this.lengthComputable = init.lengthComputable ?? false;
-  }
-}
-(globalThis as { ProgressEvent?: unknown }).ProgressEvent ??= ShimProgressEvent;
+installOffBrowserGlobals();
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -432,7 +413,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
       exportEngine: { family: EXPORT_ENGINE_FAMILY, implementation: "three.js exporters + loaders", version: EXPORT_ENGINE_VERSION },
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       seed: SEED,
       platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
     },
@@ -449,7 +430,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 //#region 🧩️Carrier
 /** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
 function carrier(): number {
-  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  const build = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
   return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }

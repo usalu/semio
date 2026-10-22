@@ -63,7 +63,7 @@ export function trustedBootstrapSelectionFindingsV1(profileId: string, packages:
  * finding at once. First step of `trusted-catalog-preflight` and `trusted-catalog-bootstrap`. */
 export function trustedBootstrapPreflightSelectionV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
   const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
   const packages = selection.map((spec) => {
     const row = registry.find((entry) => entry.pluginId === spec.pluginId);
@@ -82,7 +82,7 @@ export function trustedBootstrapPreflightSelectionV1(repoRoot: string, selection
  * declaration therefore surfaces before an hour of fresh release builds, and `describe` is the fix it names. */
 export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
   const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
   const claims = selection.map((spec) => {
     const row = registry.find((entry) => entry.pluginId === spec.pluginId);
@@ -91,7 +91,7 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
     try {
       return { spec, claims: trustedBootstrapDescriptorClaims(bytes) };
     } catch (error) {
-      throw new Error(`trusted catalog preflight: committed ${spec.pluginId} descriptor refused (${error instanceof Error ? error.message : String(error)}); fix the declaration, then bun repo run @semio-tech/${spec.pluginId}-plugin:describe`);
+      throw new Error(`trusted catalog preflight: committed ${spec.pluginId} descriptor refused (${error instanceof Error ? error.message : String(error)}); fix the declaration, then repo run @semio-tech/${spec.pluginId}-plugin:describe`);
     } finally {
       bytes.fill(0);
     }
@@ -112,7 +112,7 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
  * component is reported at once, with the fix it needs. */
 export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
   const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; packageId?: unknown; packageName?: unknown; cratePath?: unknown; role?: unknown; extends?: unknown }[];
   const selected = new Set(selection.map((spec) => spec.pluginId));
   const rows = registry.filter((row) => (row.role === "plugin" && selected.has(String(row.pluginId))) || (row.role === "extension" && selected.has(String(row.extends))));
@@ -121,7 +121,7 @@ export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selectio
   const findings: string[] = [];
   for (const row of rows) {
     if (typeof row.cratePath !== "string" || typeof row.packageName !== "string" || typeof row.packageId !== "string") { findings.push(`${String(row.pluginId)}: registry row carries no crate path, package name or package id`); continue; }
-    const pluginId = String(row.pluginId), fix = `run bun repo run workspace:release, then the crate's describe target`;
+    const pluginId = String(row.pluginId), fix = `run repo run workspace:release, then the crate's describe target`;
     const deliverable = componentDeliverableV1(join(repoRoot, row.cratePath), row.packageName, SHIPPED_COMPONENT_PROFILE);
     if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) { findings.push(`${pluginId}: no shipped component with its receipt under ${relative(repoRoot, deliverable.directory)}; ${fix}`); continue; }
     const descriptor = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${pluginId} descriptor`, () => {});

@@ -1,6 +1,7 @@
 import { ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { closeSync, constants, openSync, readSync } from "node:fs";
+import { runtimeNativeSystemV1 } from "../../../../../🔨️modules/⚙️runtime/🧲️native/🟦️.ts";
 
 export type TransactionProcessBirth = Readonly<{ platform: "darwin"; seconds: string; microseconds: string } | { platform: "linux"; bootId: string; startTicks: string } | { platform: "win32"; filetime: string }>;
 export type TransactionProcessObservation = Readonly<{ pid: number; parentPid: number; groupId: number | null; sessionId: number | null; state: "live" | "zombie"; birth: TransactionProcessBirth }>;
@@ -147,8 +148,7 @@ function createTransactionProcessObserver(runId: string, reader: TransactionProc
 }
 
 async function processNativeApi(): Promise<TransactionNativeApi> {
-  const moduleName = "bun:ffi";
-  return await import(moduleName) as TransactionNativeApi;
+  return runtimeNativeSystemV1() as unknown as TransactionNativeApi;
 }
 
 async function darwinProcessReader(layout: TransactionProcessLayout): Promise<TransactionProcessReader> {

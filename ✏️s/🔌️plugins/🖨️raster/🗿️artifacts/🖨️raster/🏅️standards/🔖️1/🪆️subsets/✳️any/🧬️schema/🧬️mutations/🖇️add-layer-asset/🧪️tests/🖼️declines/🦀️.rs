@@ -101,7 +101,7 @@ async fn declared_outcome_holds() {
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("no-op"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document declares a no-op outcome");
     let base = before();
     assert!(base.assets.contains_key("cover-art"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the before-snapshot must already carry the key, or the no-op guard would not fire");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &base);
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: an already-attached asset is reported as a no-op");
@@ -120,7 +120,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    let produced = <RasterMutation as protocol::ColdMutation<RasterSnapshot>>::diff(&mutation(), &base);
     retire(base);
     let encoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(produced.diff()));
     let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -145,7 +145,7 @@ async fn committed_diff_is_canonical() {
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let base = before();
-    let produced = protocol::apply_diff(&decoded, &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &base).expect("committed diff applies to the before-snapshot");
     let after = expected_after();
     assert_eq!(produced, after, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff did not carry before to after");
     assert_eq!(produced.assets, base.assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applying the committed diff must not mint a handle either");

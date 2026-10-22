@@ -5,7 +5,7 @@ use crate::schema::diff::PngDiff;
 use crate::standards::v1_2::subsets::any::schema::mutations::top_level::canonical::*;
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
-use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+use semio_framework_value::{FromValue,ToValue,retirement::RetireOwned,SharedValueRetirementFactory,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
 fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
@@ -47,7 +47,7 @@ fn schema_owned_png_canonical_sealing_preserves_neutral_snapshot_and_diff() {
 }
 #[test]
 fn schema_owned_png_replacement_diff_and_inverse_preserve_neutral_native_words(){
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let base=PngSnapshot::default();
     for case in fixture["cases"].as_array().unwrap().iter(){
@@ -56,8 +56,8 @@ fn schema_owned_png_replacement_diff_and_inverse_preserve_neutral_native_words()
         let text=protocol::OpText::print_op(&mutation);assert_eq!(<PngMutation as protocol::OpText>::parse_op(&text).unwrap(),mutation);
         let binary=protocol::OpBinary::encode_op(&mutation).unwrap();assert_eq!(<PngMutation as protocol::OpBinary>::decode_op(&binary).unwrap(),mutation);
         verify(mutation.clone(),serde_json::json!({"mutation":"replace-image","payload":{"image":case["snapshot"]["image"]}}));
-        let actual=protocol::apply_diff(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
-        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
+        let actual=protocol::apply_diff_cold(mutation.diff(&base).diff(),&base).unwrap();assert_eq!(actual,target);
+        let mut restored=actual.clone();for inverse in mutation.inverse(&base).unwrap().into_iter().rev(){restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,base);
         let bytes=crate::standards::v1_2::subsets::any::io::encode_png(&actual).unwrap();assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&bytes).unwrap(),actual);
         let mut independent=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut samples=vec![0;independent.output_buffer_size().unwrap()];let frame=independent.next_frame(&mut samples).unwrap();assert_eq!((frame.width,frame.height),(actual.image.width,actual.image.height));
         if actual.image.bit_depth==16{let words:Vec<u16>=samples[..frame.buffer_size()].chunks_exact(2).map(|word|u16::from_be_bytes([word[0],word[1]])).collect();assert_eq!(words,actual.image.samples);}

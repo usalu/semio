@@ -43,6 +43,15 @@ impl RemoveLineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "line", kind: "remove-line", record: "RemovedLine" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["remove-line".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutation {
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
@@ -50,19 +59,11 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutat
             Ok(Some(index)) => protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }),
         }
     }
-
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
         Ok(match self.plan(base) {
             Ok(Some(index)) => vec![super::TxtMutation::InsertLine(super::InsertLineMutation { index: self.index, text: base.lines[index].clone() })],
             _ => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["remove-line".to_string()]
     }
 }
 //#endregion ⚙️Semantics

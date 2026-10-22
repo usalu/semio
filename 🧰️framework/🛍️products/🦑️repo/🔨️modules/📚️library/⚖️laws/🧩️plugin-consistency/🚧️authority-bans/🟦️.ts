@@ -10,6 +10,7 @@ import { existsSync, readdirSync, type Dirent } from "node:fs";
 import { join } from "node:path";
 import { policyDocumentAppUsages } from "../🧮️completeness/🟦️.ts";
 import { policyAllRustFiles, policyExtractFnBody, policyPackageScriptModulePaths, policyRootScriptModulePaths } from "../🏛️foundation/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔧️PolicyRuleDbServerOnly
 /** 🔎️Repo-wide `Cargo.toml` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as the other policy file discoverers. */
@@ -493,11 +494,11 @@ export function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
 /** 🔎️True when an MCP server starts through the cross-platform Bun bootstrap that builds the native binary on demand. */
 function policyMcpServerUsesBootstrap(server: McpServer): boolean {
   const args = server.args;
-  return server.command === "bun" && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
+  return isRuntimeExecutableV1(server.command) && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
 }
 
 /**
- * 📏️MCP-config rule: every client file is derived from the root dashboard declaration (`bun ./📜️script.ts agents write`),
+ * 📏️MCP-config rule: every client file is derived from the root dashboard declaration (`repo ./📜️script.ts agents write`),
  * and every declared server launches through the Bun bootstrap so missing platform-specific binaries
  * are built before stdio is handed to the native MCP server.
  * @see ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts
@@ -510,7 +511,7 @@ export function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
     scope: drift.path,
     priority: "high",
     reason: "Every headless agent client file is derived from `metadata.semio.dashboard.tools[].mcp` of the root 📋️project.json; a hand edit or a stale copy makes the clients disagree.",
-    solution: "Run `bun ./📜️script.ts agents write`.",
+    solution: "Run `repo ./📜️script.ts agents write`.",
   }));
   for (const [client, servers] of Object.entries(mcpServersOf(readDeclaredTools(repoRoot)))) {
     for (const server of servers.filter((entry) => !policyMcpServerUsesBootstrap(entry))) {

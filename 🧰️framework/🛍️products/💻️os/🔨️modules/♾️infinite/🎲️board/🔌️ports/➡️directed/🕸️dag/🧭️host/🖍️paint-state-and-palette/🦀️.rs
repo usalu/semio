@@ -18,7 +18,7 @@ impl DagPaintState {
         let center = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
         let w = (x1 - x0).max(1.0);
         let h = (y1 - y0).max(1.0);
-        self.icon_paint_cache.append_icon_at_screen_rect(scene, src, graph::IconScreenRect { center, width: w, height: h }, label_fill, bg, true);
+        self.icon_paint_cache.append_icon_at_screen_rect(scene, src, semio_framework_os_infinite_board_engine::IconScreenRect { center, width: w, height: h }, label_fill, bg, true);
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
@@ -87,7 +87,7 @@ impl DagPaintState {
         }
         let screen_w = node.width * zoom.max(0.05);
         let screen_h = node.height * zoom.max(0.05);
-        self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, graph::IconScreenRect { center: center_screen, width: screen_w, height: screen_h }, fg, bg, false);
+        self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, semio_framework_os_infinite_board_engine::IconScreenRect { center: center_screen, width: screen_w, height: screen_h }, fg, bg, false);
     }
 
     pub(super) fn paint_computing_active_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, color: canvas::Color) {

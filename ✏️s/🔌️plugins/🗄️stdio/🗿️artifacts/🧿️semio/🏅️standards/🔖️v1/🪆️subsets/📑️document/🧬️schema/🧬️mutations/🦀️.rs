@@ -38,7 +38,7 @@ use crate::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocImageBloc
 
 
 use crate::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioDocumentMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
@@ -81,7 +81,7 @@ pub mod set_style_name;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioDocumentSnapshot, diff = SemioDocumentDiff, schema = "SemioDocumentMutation")]
+#[mutations(snapshot = SemioDocumentSnapshot, diff = SemioDocumentDiff, schema = "SemioDocumentMutation", reference = SemioDocumentSnapshot, reference_diff = SemioDocumentDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioDocumentMutation {
     /// ➕️ Inserts `block` at `path` (`path.index` = insertion index, FINAL state).
@@ -146,7 +146,7 @@ pub const KINDS: &[&str] = &[
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
-    <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(mutation, base)
+    <SemioDocumentMutation as ColdMutation<SemioDocumentSnapshot>>::diff(mutation, base)
 }
 
 

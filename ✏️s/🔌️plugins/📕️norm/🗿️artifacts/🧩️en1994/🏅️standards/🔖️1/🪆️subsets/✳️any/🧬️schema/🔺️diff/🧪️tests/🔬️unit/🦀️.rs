@@ -35,7 +35,7 @@ fn fresh(base: &En1994Snapshot) -> semio_s_artifact_norm_en1994_model::Composite
 
 async fn law(base: &En1994Snapshot, first: &En1994Mutation, second: impl Fn(&En1994Snapshot) -> En1994Mutation) -> En1994Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -90,9 +90,9 @@ async fn action_patches_coalesce_by_position() {
 async fn inverse_follows_the_state() {
     let base = base();
     let inserted = diff_of(&En1994Mutation::InsertBeam(InsertBeam { index: 0, beam: fresh(&base) }), &base);
-    let after = protocol::apply_diff(&inserted, &base).expect("insert");
-    assert_eq!(protocol::apply_diff(&inserted.inverse(&base), &after).expect("inverse"), base);
+    let after = protocol::apply_diff_cold(&inserted, &base).expect("insert");
+    assert_eq!(protocol::apply_diff_cold(&inserted.inverse(&base), &after).expect("inverse"), base);
     let removed = diff_of(&En1994Mutation::RemoveBeam(RemoveBeam { index: 0 }), &base);
-    let after = protocol::apply_diff(&removed, &base).expect("remove");
-    assert_eq!(protocol::apply_diff(&removed.inverse(&base), &after).expect("inverse"), base);
+    let after = protocol::apply_diff_cold(&removed, &base).expect("remove");
+    assert_eq!(protocol::apply_diff_cold(&removed.inverse(&base), &after).expect("inverse"), base);
 }

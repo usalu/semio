@@ -133,9 +133,9 @@ pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snaps
             strings.write_tu(&value.font_file);
             strings.write_tu(&value.big_font_file);
         }
-        DwgTableRecordBody::Layer(value) => write_layer_record(value, object, &mut data, &mut strings),
-        DwgTableRecordBody::Linetype(value) => write_linetype_record(value, object, &mut data, &mut strings),
-        DwgTableRecordBody::BlockHeader(value) => write_block_header_record(value, object, &mut data, &mut strings),
+        DwgTableRecordBody::Layer(value) => write_layer_record(value, object, &mut data, &mut strings)?,
+        DwgTableRecordBody::Linetype(value) => write_linetype_record(value, object, &mut data, &mut strings)?,
+        DwgTableRecordBody::BlockHeader(value) => write_block_header_record(value, object, &mut data, &mut strings)?,
         DwgTableRecordBody::Viewport(value) => write_viewport_record(value, &mut data, &mut strings),
         DwgTableRecordBody::DimensionStyle(value) => write_dimension_style_record(value, &mut data, &mut strings),
     }
@@ -203,7 +203,7 @@ fn write_layer_record(
     object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
-) -> () {
+) -> Result<(), String> {
     if value.lineweight > 31 {
         return Err(format!("layer {:#x} lineweight {} exceeds five bits", object.handle, value.lineweight));
     }
@@ -219,6 +219,7 @@ fn write_layer_record(
     if let Some(book_name) = &value.color.book_name {
         strings.write_tu(book_name);
     }
+    Ok(())
 }
 
 /// 🪵️ Writes the main stream fields of a linetype table record.
@@ -227,7 +228,7 @@ fn write_linetype_record(
     object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
-) -> () {
+) -> Result<(), String> {
     if value.dashes.len() > usize::from(u8::MAX) {
         return Err(format!("linetype {:#x} has too many dashes", object.handle));
     }
@@ -247,6 +248,7 @@ fn write_linetype_record(
         data.write_bd(dash.rotation);
         data.write_bs(dash.shape_flags);
     }
+    Ok(())
 }
 
 /// 🔩️ Writes the main stream fields of a block header table record.
@@ -255,7 +257,7 @@ fn write_block_header_record(
     object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
-) -> () {
+) -> Result<(), String> {
     if (value.is_xref || value.xref_overlaid) && !value.owned_entity_handles.is_empty() {
         return Err(format!("block header {:#x} xref cannot own entities", object.handle));
     }
@@ -281,6 +283,7 @@ fn write_block_header_record(
     data.write_bs(value.insert_units);
     data.write_b(value.explodable);
     data.write_rc(value.block_scaling);
+    Ok(())
 }
 
 /// ⚙️ Writes the main stream fields of a viewport table record.
@@ -373,7 +376,7 @@ fn write_dimension_style_record(
     data.write_bd(g.fixed_extension_length);
     data.write_bd(g.jog_angle);
     data.write_bs(value.fill_mode);
-    write_color(&mut data, &mut strings, &value.fill_color);
+    write_color(data, strings, &value.fill_color);
     let b = &value.behavior;
     data.write_b(b.tolerance);
     data.write_b(b.limits);
@@ -401,9 +404,9 @@ fn write_dimension_style_record(
     data.write_b(t.separate_arrowheads);
     data.write_b(t.force_text_inside);
     data.write_b(t.suppress_outside_extensions);
-    write_color(&mut data, &mut strings, &t.dimension_line_color);
-    write_color(&mut data, &mut strings, &t.extension_line_color);
-    write_color(&mut data, &mut strings, &t.text_color);
+    write_color(data, strings, &t.dimension_line_color);
+    write_color(data, strings, &t.extension_line_color);
+    write_color(data, strings, &t.text_color);
     let u = &value.units;
     data.write_bs(u.alternate_decimal_places);
     data.write_bs(u.decimal_places);

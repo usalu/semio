@@ -29,7 +29,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -44,7 +44,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck",
+        "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       }
     }

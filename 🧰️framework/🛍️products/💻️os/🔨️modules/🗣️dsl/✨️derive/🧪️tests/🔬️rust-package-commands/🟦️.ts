@@ -74,7 +74,7 @@ export class PreviewGeneratedScript extends BundleScript {
 /** ✅️ Fails when the committed projection is not the projection of the current taxonomy. */
 export class CheckGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    if (readFileSync(MUTATION_AUTHORITY_PATH, "utf8") !== mutationAuthorityProjection(this.repoRoot)) throw new Error("mutation-authority projection is stale; run bun repo run @semio-tech/dsl-derive-rs:generate");
+    if (readFileSync(MUTATION_AUTHORITY_PATH, "utf8") !== mutationAuthorityProjection(this.repoRoot)) throw new Error("mutation-authority projection is stale; run repo run @semio-tech/dsl-derive-rs:generate");
     console.log("mutation-authority: fresh");
   }
 }

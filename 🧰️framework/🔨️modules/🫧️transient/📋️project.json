@@ -22,7 +22,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🫧️transient",
-        "command": "bun ./📜️script.ts test contract",
+        "command": "repo ./📜️script.ts test contract",
         "forwardAllArgs": true
       }
     },
@@ -40,7 +40,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🫧️transient",
-        "command": "bun ./📜️script.ts test retained",
+        "command": "repo ./📜️script.ts test retained",
         "forwardAllArgs": true
       }
     }

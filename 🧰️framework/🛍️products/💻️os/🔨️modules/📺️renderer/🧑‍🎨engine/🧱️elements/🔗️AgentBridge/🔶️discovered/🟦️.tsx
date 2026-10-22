@@ -1,5 +1,5 @@
 /** 🔶️ The discovered phase of useAgentBridge. */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "@semio-tech/framework/shell";
 import { NO_BRIDGE_FLAGS, encodeShellToGateway, type ApprovalDecision, type BridgeFlags, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
 import { EMPTY_INSTANCES, IDLE_PRESENCE, appendConversationEntry, buildShellStateFrame, updateConversationEntry, useDiscoveredAgentBridgeConfig } from "../🟢️shared/🟦️.tsx";

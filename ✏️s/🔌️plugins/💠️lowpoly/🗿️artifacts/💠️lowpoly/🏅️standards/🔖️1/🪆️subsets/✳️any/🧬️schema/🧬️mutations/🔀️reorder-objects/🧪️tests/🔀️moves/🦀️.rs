@@ -51,7 +51,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
     for step in &inverse {
         snapshot = protocol::apply_mutation(&snapshot, step).expect("inverse step applies").0;
@@ -81,7 +81,7 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
-    let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation(), &before());
+    let raised = <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -116,7 +116,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation(), &base);
+    let raised = <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(&mutation(), &base);
     let produced = to_json(raised.diff());
     let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-objects/moves-obj-fin-in-front-of-obj-hull: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -136,7 +136,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: LowpolyDiff = from_json(*DIFF);
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-objects/moves-obj-fin-in-front-of-obj-hull: committed diff did not carry before to after");
 }
 

@@ -23,5 +23,5 @@ class RefusalScript extends BundleScript {
   }
 }
 
-const router=new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript).register("test-native",NativeScript).register("test-refusal",RefusalScript);
+const router=new ScriptRouter(import.meta.dirname).register("test-ownership",OwnershipScript).register("test-native",NativeScript).register("test-refusal",RefusalScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"test-ownership"}) }));

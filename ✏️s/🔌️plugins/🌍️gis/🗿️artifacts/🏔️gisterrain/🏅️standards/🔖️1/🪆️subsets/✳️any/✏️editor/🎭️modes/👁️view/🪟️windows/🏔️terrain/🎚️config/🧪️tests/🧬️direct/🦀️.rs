@@ -3,7 +3,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::gis3d::modes::view::windows::terrain::config::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindowConfigMutation};
-use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 use serde_json::Value;
 use std::fmt::Debug;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
@@ -55,9 +55,9 @@ fn sparse_diff_vectors_and_ordered_absorption() {
         let before: GisTerrainWindowConfig = decode(&law["before"]);
         let diff: GisTerrainWindowConfigDiff = decode(&law["diff"]);
         let after: GisTerrainWindowConfig = decode(&law["after"]);
-        assert_eq!(protocol::apply_diff(&diff, &before), Ok(after), "{}", law["id"]);
+        assert_eq!(protocol::apply_diff_cold(&diff, &before), Ok(after), "{}", law["id"]);
         assert_eq!(before, decode::<GisTerrainWindowConfig>(&law["before"]));
-        assert_eq!(protocol::apply_diff(&GisTerrainWindowConfigDiff::default(), &before), Ok(before));
+        assert_eq!(protocol::apply_diff_cold(&GisTerrainWindowConfigDiff::default(), &before), Ok(before));
     }
     for law in fixture["diff"]["absorption"].as_array().expect("absorption laws") {
         let before: GisTerrainWindowConfig = decode(&law["before"]);
@@ -65,12 +65,12 @@ fn sparse_diff_vectors_and_ordered_absorption() {
         let right: GisTerrainWindowConfigDiff = decode(&law["right"]);
         let expected: GisTerrainWindowConfigDiff = decode(&law["expected"]);
         let after: GisTerrainWindowConfig = decode(&law["after"]);
-        let sequential = protocol::apply_diff(&left, &before).and_then(|mid| protocol::apply_diff(&right, &mid));
+        let sequential = protocol::apply_diff_cold(&left, &before).and_then(|mid| protocol::apply_diff_cold(&right, &mid));
         let mut combined = left.clone();
         combined.absorb(right.clone());
         assert_eq!(combined, expected, "{}", law["id"]);
-        assert_eq!(protocol::apply_diff(&combined, &before), sequential, "{}", law["id"]);
-        assert_eq!(protocol::apply_diff(&combined, &before), Ok(after), "{}", law["id"]);
+        assert_eq!(protocol::apply_diff_cold(&combined, &before), sequential, "{}", law["id"]);
+        assert_eq!(protocol::apply_diff_cold(&combined, &before), Ok(after), "{}", law["id"]);
         let mut with_identity = GisTerrainWindowConfigDiff::default();
         with_identity.absorb(combined.clone());
         with_identity.absorb(GisTerrainWindowConfigDiff::default());
@@ -180,7 +180,7 @@ where
         assert_eq!(&T::DESCRIPTOR, operation.descriptor());
         assert_eq!(outcome.diff(), &expected_diff, "{}", law["id"]);
         assert_eq!(operation.diff(&before), outcome, "{}", law["id"]);
-        assert_eq!(protocol::apply_diff(outcome.diff(), &before), Ok(after.clone()), "{}", law["id"]);
+        assert_eq!(protocol::apply_diff_cold(outcome.diff(), &before), Ok(after.clone()), "{}", law["id"]);
         assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::target(&leaf), vec![row["target"].as_str().expect("target").to_owned()]);
         if let Some(code) = law["warning"].as_str() {
             assert_eq!(outcome.messages().len(), 1, "{}", law["id"]);
@@ -195,7 +195,7 @@ where
         assert_eq!(stored, expected_inverse, "{}", law["id"]);
         assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::inverse(&leaf, &before).expect("valid retained mutation inverse fixture"), stored, "{}", law["id"]);
         assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&stored)).expect("stored inverse JSON"), law["inverse"]);
-        let restored = stored.iter().rev().try_fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state)).expect("stored inverse application");
+        let restored = stored.iter().rev().try_fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state)).expect("stored inverse application");
         assert_eq!(restored, before, "{}", law["id"]);
         let mut envelope = law["payload"].as_object().expect("payload object").clone();
         envelope.insert("operation".into(), law["inverse"][0]["operation"].clone());

@@ -96,6 +96,6 @@
   "liveRegression": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
   "execution": {
     "target": "test-registry-import-language",
-    "command": "bun ./📜️script.ts test registry-import-language"
+    "command": "repo ./📜️script.ts test registry-import-language"
   }
 }

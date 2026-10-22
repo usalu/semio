@@ -6,7 +6,7 @@ export type GitHubOptionsV1 = Omit<ToolRunOptionsV1, "capture" | "check">;
 /** 🔎️ Runs the GitHub command line and answers the trimmed standard output, or undefined when it fails or is missing. */
 export function ghOutputSyncV1(args: readonly string[], options: GitHubOptionsV1 = {}): string | undefined {
   try {
-    const result = runToolSyncV1("gh", args, options);
+    const result = runToolSyncV1("gh", args, { ...options, encoding: "utf8" });
     return result.status === 0 ? result.stdout.trim() : undefined;
   } catch { return undefined; }
 }

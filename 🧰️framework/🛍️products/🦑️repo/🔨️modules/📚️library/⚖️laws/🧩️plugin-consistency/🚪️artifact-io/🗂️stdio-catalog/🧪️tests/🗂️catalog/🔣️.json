@@ -1,0 +1,213 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "artifact-with-a-standards-directory-is-migrated",
+   "rule": "policyArtifactIsMigrated",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/⚙️engine/x": []
+   },
+   "expect": true,
+   "args": [
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a"
+   ]
+  },
+  {
+   "id": "artifact-without-a-standards-directory-is-not-migrated",
+   "rule": "policyArtifactIsMigrated",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/⚙️engine/x": []
+   },
+   "expect": false,
+   "args": [
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b"
+   ]
+  },
+  {
+   "id": "builders-are-derived-for-migrated-artifacts-only",
+   "rule": "policyArtifactBuilderBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏗️builder/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏗️builder/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️c/⚙️engine/x": []
+   },
+   "expect": [
+    [
+     "artifact-derived-builder-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "decomposers-need-a-trait-impl-and-a-ts-twin",
+   "rule": "policyArtifactDecomposerBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a1/⚙️engine/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a2/🪓️decomposer/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a3/🪓️decomposer/🦀️.rs": [
+     "pub struct D;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a3/🪓️decomposer/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a4/🪓️decomposer/🦀️.rs": [
+     "impl ArtifactDecomposer for D {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a4/🪓️decomposer/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a5/🪓️decomposer/🦀️.rs": [
+     "// impl ArtifactDecomposer for D {}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a5/🪓️decomposer/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a6/🏅️standards/x": []
+   },
+   "expect": [
+    [
+     "stdio-artifacts/decomposer-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a1/🪓️decomposer",
+     "stdio-artifacts/decomposer",
+     "high",
+     0
+    ],
+    [
+     "stdio-artifacts/decomposer-rs-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a2/🪓️decomposer",
+     "stdio-artifacts/decomposer",
+     "high",
+     0
+    ],
+    [
+     "stdio-artifacts/decomposer-trait-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a3/🪓️decomposer",
+     "stdio-artifacts/decomposer",
+     "high",
+     0
+    ],
+    [
+     "stdio-artifacts/decomposer-trait-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a5/🪓️decomposer",
+     "stdio-artifacts/decomposer",
+     "high",
+     0
+    ],
+    [
+     "stdio-artifacts/decomposer-ts-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a2/🪓️decomposer",
+     "stdio-artifacts/decomposer",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "builders-derive-from-the-schema-macro",
+   "rule": "policyArtifactBuilderMigratedBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! {",
+     "    construction: a,",
+     "    analysis: b,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏗️builder/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! { construction: a, analysis: b, composition: c }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/x": []
+   },
+   "expect": [
+    [
+     "artifact-derived-builder-explicit-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ],
+    [
+     "artifact-derived-builder-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "analyzers-derive-from-the-schema-macro",
+   "rule": "policyArtifactAnalyzerBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! {",
+     "    construction: a,",
+     "    analysis: b,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏗️builder/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! { construction: a, analysis: b, composition: c }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/x": []
+   },
+   "expect": [
+    [
+     "artifact-derived-analyzer-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "composers-derive-from-the-schema-macro",
+   "rule": "policyArtifactComposerBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! {",
+     "    construction: a,",
+     "    analysis: b,",
+     "}"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏗️builder/x": [],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": [
+     "derive_artifact_facets! { construction: a, analysis: b, composition: c }"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any/🎹️composer/x": []
+   },
+   "expect": [
+    [
+     "artifact-derived-composer-explicit-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️explicit/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ],
+    [
+     "artifact-derived-composer-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️bare/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ],
+    [
+     "artifact-derived-composer-missing-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any",
+     "stdio-artifacts/derived-facets",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "the-catalog-needs-an-owner-table",
+   "rule": "policyStdioCatalogBreaches",
+   "files": {
+    "README.md": [
+     "x"
+    ]
+   },
+   "expect": [
+    [
+     "stdio-catalog-owner-table-missing",
+     "stdio-artifacts/catalog",
+     "high",
+     0
+    ]
+   ]
+  }
+ ]
+}

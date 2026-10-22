@@ -32,7 +32,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -60,7 +60,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts stage-runtime-assets"
+        "command": "repo ./📜️script.ts stage-runtime-assets"
       },
       "metadata": {
         "semio": {

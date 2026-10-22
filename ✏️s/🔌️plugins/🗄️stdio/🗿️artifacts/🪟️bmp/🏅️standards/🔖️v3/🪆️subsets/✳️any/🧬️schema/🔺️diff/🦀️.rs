@@ -18,15 +18,9 @@ pub struct BmpDiff {
     pub rects: Vec<BmpSampleRect>,
 }
 
-impl MutationDiff<BmpSnapshot> for BmpDiff {
-    fn apply(&self, base: &BmpSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<BmpSnapshot> {
-        let mut image = self.image.clone().unwrap_or_else(|| base.image.clone());
-        self.rects.iter().try_for_each(|rect| image.write_rect(rect)).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["rects"]))?;
-        let next = BmpSnapshot { schema: base.schema.clone(), image };
-        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
-        Ok(next)
-    }
+impl MutationDiff<BmpSnapshot> for BmpDiff {}
 
+impl protocol::ColdMutationDiff<BmpSnapshot> for BmpDiff {
     fn absorb(&mut self, other: Self) {
         if other.image.is_some() {
             *self = other;
@@ -34,9 +28,25 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         }
         self.rects.extend(other.rects);
     }
+
+    fn apply(&self, unpublished: &mut BmpSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut image = self.image.clone().unwrap_or_else(|| base.image.clone());
+        self.rects.iter().try_for_each(|rect| image.write_rect(rect)).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["rects"]))?;
+        let next = BmpSnapshot { schema: base.schema.clone(), image };
+        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<BmpSnapshot> for BmpDiff {
+    fn is_empty(&self) -> bool {
+        self.image.is_none() && self.rects.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BmpSnapshot> for BmpDiff {
     /// 🔁️ Concrete diff-level undo: a replaced image comes back whole and the rectangles restore the pixels they overwrote, last rectangle
     /// first, each read from the image as the earlier rectangles left it.
     fn inverse(&self, base: &BmpSnapshot) -> Self {
@@ -59,10 +69,6 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
             .collect();
         restores.reverse();
         Self { image: None, rects: restores }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.image.is_none() && self.rects.is_empty()
     }
 }
 

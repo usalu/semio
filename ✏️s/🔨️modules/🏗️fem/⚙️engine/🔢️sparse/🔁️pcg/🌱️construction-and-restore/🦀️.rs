@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_value::value::ValueRefusalKind;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum PcgConstructionStage {
+pub(super) enum PcgConstructionStage {
     ReserveB,
     InitializeB,
     RetireMountedB,
@@ -237,7 +237,10 @@ impl PcgJobConstruction {
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         self.closing = true;
         if let Some(complete) = self.complete.as_mut() {
-            if !complete.terminal_is_empty() { return InteractiveJob::close_step(complete, cx); }
+            if !complete.terminal_is_empty() {
+                let step = InteractiveJob::close_step(complete, cx)?;
+                return Ok(numerical_child_close(step, complete.terminal_is_empty()));
+            }
         }
         let demand = self.close_demand()?;
         numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
@@ -463,7 +466,10 @@ impl PcgRestoreCursor {
         self.closing = true;
         if self.payload.is_none() {
             if let Some(job) = self.job.as_mut() {
-                if !job.terminal_is_empty() { return InteractiveJob::close_step(job, cx); }
+                if !job.terminal_is_empty() {
+                    let step = InteractiveJob::close_step(job, cx)?;
+                    return Ok(numerical_child_close(step, job.terminal_is_empty()));
+                }
             }
         }
         let demand = self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.terminal_is_empty()));

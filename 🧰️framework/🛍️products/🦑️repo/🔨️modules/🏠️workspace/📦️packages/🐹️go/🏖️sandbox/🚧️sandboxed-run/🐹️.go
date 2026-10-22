@@ -11,7 +11,6 @@ package sandbox
 import (
 	fmt "fmt"
 	os "os"
-	exec "os/exec"
 	filepath "path/filepath"
 	strings "strings"
 
@@ -53,7 +52,7 @@ func Run(name string, held func() map[string]string, run func() int) int {
 		return 2
 	}
 	defer os.RemoveAll(repository)
-	if output, err := exec.Command("git", "-C", repository, "init", "-q").CombinedOutput(); err != nil {
+	if output, err := workspace.ToolCommand("git", "-C", repository, "init", "-q").CombinedOutput(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialise the sandbox repository: %v\n%s", err, output)
 		return 2
 	}

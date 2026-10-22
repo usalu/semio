@@ -169,6 +169,6 @@ export function createBoundedMailbox<T>(capacity: number): BoundedMailbox<T> {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️createboundedmailbox/🟦️.ts");
-  await registerTests1(import.meta.vitest, { createBoundedMailbox }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { createBoundedMailbox }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️Tests

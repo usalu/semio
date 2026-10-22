@@ -28,17 +28,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "nodes", kind: "move-nodes", record: "MovedNodes" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::move_nodes::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::move_nodes::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(generation3d_label_number);
         let (en, de) = generation3d_label_items(self.ids.len(), "node(s)", "Knoten");
@@ -48,5 +37,20 @@ where
     fn target(&self) -> Vec<String> {
         self.ids.clone()
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for MoveNodes
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<crate::move_widget::MoveWidget>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::move_nodes::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::move_nodes::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️MoveNodes

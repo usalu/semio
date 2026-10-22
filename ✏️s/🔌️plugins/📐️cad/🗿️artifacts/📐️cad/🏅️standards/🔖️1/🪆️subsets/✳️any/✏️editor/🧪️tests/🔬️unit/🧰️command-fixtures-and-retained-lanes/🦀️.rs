@@ -271,7 +271,7 @@ fn every_cad_mutation_inverse_fits_the_one_invertible_item_footprint() {
         let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
         let Ok(emit) = command.dispatch(&doc, &cfg, &mut ctx) else { continue };
         for mutation in &emit.artifact_mutations {
-            let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture");
+            let inverse = <CadMutation as protocol::ColdMutation<CadSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture");
             assert!(inverse.len() <= 1, "{} inverts to {} rows; the artifact lane declares one invertible item", command.command_id(), inverse.len());
         }
     }
@@ -290,8 +290,8 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
     assert_eq!(footprint, store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
     let mut restored = post;
     for operation in inverse {
-        let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&operation, &restored);
-        restored = protocol::apply_diff(outcome.diff(), &restored).expect("exact inverse");
+        let outcome = <CadMutation as protocol::ColdMutation<CadSnapshot>>::diff(&operation, &restored);
+        restored = protocol::apply_diff_cold(outcome.diff(), &restored).expect("exact inverse");
     }
     assert_eq!(restored, base);
 }

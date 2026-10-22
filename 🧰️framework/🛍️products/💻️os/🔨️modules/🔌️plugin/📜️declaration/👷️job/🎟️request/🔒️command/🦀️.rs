@@ -12,7 +12,7 @@ pub struct ArtifactOriginalToolCommand<C>{
  source_binding:OriginalToolSourceBinding,
 }
 impl<C> ArtifactOriginalToolCommand<C>{
- pub(crate) fn from_admitted_op_binary(command:Box<C>,input:&RetainedToolWireInput,source_binding:OriginalToolSourceBinding)->Self{
+ pub fn from_admitted_op_binary(command:Box<C>,input:&RetainedToolWireInput,source_binding:OriginalToolSourceBinding)->Self{
   Self{command,encoded_bytes:input.declared_bytes(),page_count:input.page_count(),first_page:input.page(0).map(|page|page.as_ptr()as usize),source_binding}
  }
  /// 📏️ Borrows the exact original encoding extent after validating retained source and native turn authority.
@@ -22,7 +22,7 @@ impl<C> ArtifactOriginalToolCommand<C>{
   }
   Ok(self.encoded_bytes)
  }
- pub(crate) fn into_box(self)->Box<C>{self.command}
+ pub fn into_box(self)->Box<C>{self.command}
 }
 impl<C> std::ops::Deref for ArtifactOriginalToolCommand<C>{
  type Target=C;

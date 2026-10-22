@@ -20,7 +20,6 @@ export function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonl
   const lineBudget = loadTaxonomy().libWiringLineBudget;
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     const abs = join(repoRoot, crate.libRelPath);
     if (!existsSync(abs)) continue;
     const content = readFileSync(abs, "utf8");

@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "precision",
+    "cargo",
+    "cases",
+    "memberAdmission",
+    "coordinates",
+    "snapshotGraph",
+    "snapshots"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "precision": {
+      "type": "object"
+    },
+    "cargo": {
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "scope",
+          "directory",
+          "format",
+          "kind",
+          "fault",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "enum": [
+              "canonical",
+              "selection",
+              "dataset"
+            ]
+          },
+          "directory": {
+            "enum": [
+              "np",
+              "ip",
+              "rr",
+              "top"
+            ]
+          },
+          "format": {
+            "enum": [
+              "precision",
+              "cargo",
+              "inference"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "precision",
+              "cargo-receipt",
+              "inference"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "extra",
+              "seal",
+              "filename",
+              "body-hash",
+              "kind"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "memberAdmission": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "group",
+          "leaf",
+          "accepted"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "group": {
+            "enum": [
+              "np",
+              "ip",
+              "rr",
+              "mr"
+            ]
+          },
+          "leaf": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "coordinates": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "result"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "candidate",
+              "none",
+              "refused"
+            ]
+          }
+        }
+      }
+    },
+    "snapshotGraph": {
+      "type": "object",
+      "required": [
+        "version",
+        "projects",
+        "dependencies"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "projects": {
+          "type": "object"
+        },
+        "dependencies": {
+          "type": "array"
+        },
+        "namedInputs": {
+          "type": "object"
+        },
+        "externalNodes": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "snapshots": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "empty",
+              "external-absent",
+              "external-empty",
+              "shared-record",
+              "manifest-extra",
+              "old-whole-graph",
+              "manifest-digest",
+              "invalid-digest",
+              "traversal-digest",
+              "duplicate-project",
+              "missing-record",
+              "record-digest",
+              "gzip-corrupt",
+              "record-json",
+              "record-scalar",
+              "expanded-budget",
+              "expanded-exact",
+              "reference-invalid",
+              "unreferenced-record",
+              "project-name-type",
+              "project-digest-type",
+              "project-short",
+              "project-extra"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

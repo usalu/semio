@@ -35,9 +35,9 @@ pub fn encode_rewriting_mutation_json(mutation:&RewriteRuleMutation)->Result<Str
 
 /// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.
 pub fn apply_rewriting_mutation_reporting(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> Vec<(String, String)> {
-    let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(mutation, snapshot);
+    let outcome = <RewriteRuleMutation as protocol::ColdMutation<RewritingSnapshot>>::diff(mutation, snapshot);
     let mut reported: Vec<(String, String)> = outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => *snapshot = next,
         Err(error) => reported.push((error.code, format!("{:?}", semio_framework_diagnostic::Severity::Fatal))),
     }
@@ -47,7 +47,7 @@ pub fn apply_rewriting_mutation_reporting(snapshot: &mut RewritingSnapshot, muta
 /// ↩️ Computes the mutation's own undo steps.
 pub fn inverse_rewriting_mutation_steps(mutation: &RewriteRuleMutation, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
     Ok({
-    <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::inverse(mutation, base)?
+    <RewriteRuleMutation as protocol::ColdMutation<RewritingSnapshot>>::inverse(mutation, base)?
 
     })
 }

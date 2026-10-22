@@ -1,0 +1,2 @@
+const m = await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs");
+for (const c of ['repo ./📜️script.ts test x','bun ./📜️script.ts test x']) { try { const r = m.bindBuildCommandV1(c, "/Users/ueli/Documents/semio", "🧰️framework/🔨️modules/🏃️process", "🧰️framework/🔨️modules/🏃️process", []); console.log(c, "=>", r.program, r.script); } catch (e) { console.log(c, "ERR", e.message.slice(0,200)); } }

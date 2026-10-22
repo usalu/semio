@@ -2,22 +2,22 @@
   "version": 1,
   "operations": [
     {
-      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
+      "command": { "program": "repo", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
       "continuation": null,
       "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "packages": ["semio-framework-actor"], "arguments": [] }
     },
     {
-      "command": { "program": "bun", "cwd": "🧰️framework", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", "🔨️modules/🎭️actor/📦️packages/🦀️rust", "--manifest", "🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "--", "bun", "./📜️script.ts", "test"], "tail": "test-arguments" },
-      "continuation": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["./📜️script.ts", "test"], "tail": "test-arguments" },
+      "command": { "program": "repo", "cwd": "🧰️framework", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", "🔨️modules/🎭️actor/📦️packages/🦀️rust", "--manifest", "🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "--", "repo", "./📜️script.ts", "test"], "tail": "test-arguments" },
+      "continuation": { "program": "repo", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["./📜️script.ts", "test"], "tail": "test-arguments" },
       "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "packages": ["semio-framework-actor"], "arguments": [] }
     },
     {
-      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test-original-owned-async", "native"], "tail": "none" },
+      "command": { "program": "repo", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test-original-owned-async", "native"], "tail": "none" },
       "continuation": null,
       "request": { "version": 1, "kind": "exact-laws", "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "cwd": ".", "groups": [{ "package": "semio-framework-actor", "target": { "kind": "test", "name": "original-owned-async-turn" }, "laws": ["original_owned_async_actor_turn_keeps_exact_wallet_recipient_and_epoch", "original_owned_async_actor_turn_refuses_fresh_polling_wallet_without_losing_loan", "original_owned_async_actor_turn_preserves_full_failure_and_raw_overspent_work", "original_owned_async_actor_issuer_moves_and_rejoins_before_polling", "original_source_loan_cancellation_witness_borrows_exact_parent_without_alias_birth", "original_native_decode_source_receives_actual_physical_producer_and_preserves_denial", "original_native_decode_source_preserves_outcome_on_raw_work_receiving_refusal"] }] }
     },
     {
-      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test-original-context-native"], "tail": "none" },
+      "command": { "program": "repo", "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "test-original-context-native"], "tail": "none" },
       "continuation": null,
       "request": { "version": 1, "kind": "exact-laws", "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "cwd": ".", "groups": [
         { "package": "semio-framework-actor", "target": { "kind": "lib" }, "laws": ["component::retained_turn::original_loan_tests::original_actor_semantic_loan_preserves_exact_source_total_and_cutoff", "component::retained_turn::context::tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "component::retained_turn::context::tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "component::retained_turn::context::tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },

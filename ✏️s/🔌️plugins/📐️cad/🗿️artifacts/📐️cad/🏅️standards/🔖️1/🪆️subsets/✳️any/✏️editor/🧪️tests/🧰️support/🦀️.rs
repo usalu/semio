@@ -86,7 +86,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
 
 pub fn meta(actor: &str) -> ActionMeta {
@@ -265,7 +265,7 @@ pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot
 pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
     let mut next = scene.clone();
     for operation in operations {
-        next = protocol::apply_diff(operation.diff(&next).diff(), &next).expect("valid mutation diff");
+        next = protocol::apply_diff_cold(operation.diff(&next).diff(), &next).expect("valid mutation diff");
     }
     next
 }

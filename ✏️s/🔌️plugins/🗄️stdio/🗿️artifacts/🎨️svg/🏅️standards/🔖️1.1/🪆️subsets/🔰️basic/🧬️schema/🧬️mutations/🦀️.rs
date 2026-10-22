@@ -58,7 +58,7 @@ pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schem
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgBasicMutation")]
+#[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgBasicMutation", reference = SvgSnapshot, reference_diff = SvgDiff)]
 pub enum SvgBasicMutation {
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration.
     StampBaseProfile(stamp_base_profile::StampBaseProfile),
@@ -116,7 +116,7 @@ pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

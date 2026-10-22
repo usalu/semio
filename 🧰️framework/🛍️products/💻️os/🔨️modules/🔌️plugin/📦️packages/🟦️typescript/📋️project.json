@@ -12,7 +12,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-tick-payload"
+        "command": "repo ./📜️script.ts test-tick-payload"
       }
     },
     "support": {
@@ -27,7 +27,7 @@
         "{projectRoot}/.🧾️store/support.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts support"
+        "command": "repo ./📜️script.ts support"
       },
       "metadata": {
         "semio": {
@@ -47,7 +47,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test catalog-composition"
+        "command": "repo ./📜️script.ts test catalog-composition"
       }
     },
     "test-catalog-receivers": {
@@ -61,7 +61,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test catalog-receivers"
+        "command": "repo ./📜️script.ts test catalog-receivers"
       }
     },
     "test-mounted-owner": {
@@ -75,7 +75,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test mounted-owner"
+        "command": "repo ./📜️script.ts test mounted-owner"
       }
     },
     "test-lifecycle": {
@@ -89,7 +89,7 @@
         "reads"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test lifecycle"
+        "command": "repo ./📜️script.ts test lifecycle"
       }
     },
     "test-package-receipt": {
@@ -103,7 +103,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️receipt"
       },
       "outputs": [],
@@ -127,7 +127,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-guest-loan"
+        "command": "repo ./📜️script.ts test-original-guest-loan"
       },
       "metadata": {
         "semio": {
@@ -149,7 +149,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-original-inference-wire-source"
+        "command": "repo ./📜️script.ts test-original-inference-wire-source"
       },
       "metadata": {
         "semio": {

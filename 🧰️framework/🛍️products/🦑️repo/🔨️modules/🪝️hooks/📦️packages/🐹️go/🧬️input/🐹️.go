@@ -237,7 +237,7 @@ func extractCheckpointSHAFromInput(input json.RawMessage) string {
 			}
 		}
 	}
-	return workspace.GetGitCheckpoint()
+	return workspace.GetGitCheckpoint(workspace.GetRootDir())
 }
 
 // 🪪️normalizeParentSessionID holds the data fields for a normalizeParentSessionID record.

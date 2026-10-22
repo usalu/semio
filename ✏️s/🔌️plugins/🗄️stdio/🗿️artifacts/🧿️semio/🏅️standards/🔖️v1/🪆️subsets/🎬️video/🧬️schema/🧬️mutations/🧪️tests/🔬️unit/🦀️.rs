@@ -101,7 +101,7 @@ fn sample_mutations() -> Vec<SemioVideoMutation> {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
-    protocol::apply_diff(diff, base).expect("valid Semio video diff fixture")
+    protocol::apply_diff_cold(diff, base).expect("valid Semio video diff fixture")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -129,7 +129,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
-        for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        for inverse_mutation in <SemioVideoMutation as ColdMutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

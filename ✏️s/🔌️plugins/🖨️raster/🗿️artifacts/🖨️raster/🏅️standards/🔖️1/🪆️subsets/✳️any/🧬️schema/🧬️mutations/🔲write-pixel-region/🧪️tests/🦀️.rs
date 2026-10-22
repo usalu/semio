@@ -7,7 +7,7 @@ use semio_s_artifact_raster_raster_mutations_pixels::write_pixel_region::*;
 use semio_s_artifact_raster_raster_model::flatten_raster_layers;
 use semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot;
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn shown_pixels(snapshot: &RasterSnapshot) -> (String, String, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot) {
     let layer = flatten_raster_layers(&snapshot.layers).into_iter().find_map(|layer| match layer {
@@ -38,7 +38,7 @@ async fn it_writes_exactly_its_rectangle_and_inverts_with_the_base_samples() {
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
     assert_eq!(outcome.diff().pixels.len(), 1, "one pixel region and nothing else");
     assert!(outcome.diff().layers.is_none() && outcome.diff().assets.is_none(), "the handle is derived by the applier, never carried");
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("the region applies");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("the region applies");
     let (_, _, written) = shown_pixels(&applied);
     assert_eq!(&written.frames[0].rgba8[..4], write.samples.as_slice());
     let (_, _, original) = shown_pixels(&base);

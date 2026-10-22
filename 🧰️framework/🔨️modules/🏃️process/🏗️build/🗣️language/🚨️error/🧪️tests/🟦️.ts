@@ -1,0 +1,75 @@
+import { expect, test } from "bun:test";
+import Ajv from "ajv";
+import { LanguageTextErrorV1, bindCatalogV1 } from "../../📖️catalog/🟦️.ts";
+import { reportRepoErrorV1 } from "../../📣️progress/🟦️.ts";
+import { REPO_ERROR_CODES_V1, RepoErrorV1, isRepoErrorV1, readRepoErrorDataV1, renderRepoErrorV1, repoErrorDataV1, repoErrorExitCodeV1, repoErrorV1, type RepoErrorCodeV1 } from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+import corpus from "./🔣️.json" with { type: "json" };
+
+type ErrorRow = Readonly<{ name: string; code: RepoErrorCodeV1; key: string; values: Readonly<Record<string, string | number>>; exitCode: number; en: string; de: string }>;
+
+const faults = bindCatalogV1("faults", corpus.catalog);
+const errors = corpus.errors as unknown as readonly ErrorRow[];
+
+test("the corpus wire forms agree with the strict schema validator and with the reader", () => {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  for (const row of corpus.wire) {
+    expect(ajv.validate(schema, row.data), `${row.name} ${JSON.stringify(ajv.errors)}`).toBe(row.valid);
+    if (row.valid) expect(readRepoErrorDataV1(row.data)).toEqual(row.data as never);
+    else expect(() => readRepoErrorDataV1(row.data), row.name).toThrow();
+  }
+  expect([...REPO_ERROR_CODES_V1]).toEqual(schema.properties.code.enum);
+});
+
+for (const row of errors) {
+  test(`error: ${row.name}`, () => {
+    const error = repoErrorV1(faults, row.code, row.key, row.values);
+    expect(error).toBeInstanceOf(Error);
+    expect([error.code, error.key, error.values]).toEqual([row.code, `faults.${row.key}`, row.values]);
+    expect(renderRepoErrorV1(error, "en")).toBe(row.en);
+    expect(renderRepoErrorV1(error, "de")).toBe(row.de);
+    expect(repoErrorExitCodeV1(error.code)).toBe(row.exitCode);
+    expect(repoErrorDataV1(error)).toEqual({ version: 1, code: row.code, key: `faults.${row.key}`, values: row.values } as never);
+    expect(isRepoErrorV1(error)).toBe(true);
+  });
+}
+
+test("a refusal is checked when it is built and holds no prose", () => {
+  expect(() => repoErrorV1(faults, "usage", "usage.verb", {})).toThrow(LanguageTextErrorV1);
+  expect(() => repoErrorV1(faults, "usage", "absent", {})).toThrow(LanguageTextErrorV1);
+  expect(() => repoErrorV1(faults, "usage", "stale", { extra: 1 })).toThrow(LanguageTextErrorV1);
+  const error = repoErrorV1(faults, "breach", "breach.count", { count: 1, scope: "x" });
+  expect(error.message).toBe('breach faults.breach.count {"count":1,"scope":"x"}');
+  expect(Object.isFrozen(error.values)).toBe(true);
+});
+
+test("a refusal is recognised across module instances and plain errors are not", () => {
+  expect(isRepoErrorV1({ name: "RepoError", code: "usage", key: "faults.stale", values: {} })).toBe(true);
+  for (const value of [new Error("x"), null, undefined, "usage", { name: "RepoError" }]) expect(isRepoErrorV1(value)).toBe(false);
+});
+
+test("the CLI boundary renders a refusal in the resolved language and sets the exit status of its class", () => {
+  const lines: string[] = [];
+  let status = 0;
+  const error = repoErrorV1(faults, "usage", "usage.verb", { verb: "agnostic" });
+  expect(reportRepoErrorV1(error, { environment: { SEMIO_LANGUAGE: "de" }, osLanguages: () => [], write: (line) => lines.push(line), setExitCode: (code) => { status = code; } })).toBe(true);
+  expect(lines).toEqual(["Aufruf: verify agnostic <Pfad>"]);
+  expect(status).toBe(2);
+  expect(reportRepoErrorV1(new Error("plain"), { environment: { SEMIO_LANGUAGE: "de" }, write: () => { throw new Error("must not write"); } })).toBe(false);
+});
+
+test("a refusal cannot be rendered without a language: the boundary refuses in both languages and names how to choose one", () => {
+  let message = "";
+  try { reportRepoErrorV1(repoErrorV1(faults, "stale", "stale"), { environment: {}, osLanguages: () => [], write: () => undefined }); } catch (caught) { message = (caught as Error).message; }
+  const lines = message.split("\n");
+  expect(lines).toHaveLength(2);
+  for (const line of lines) for (const choice of ["--lang=en|de", "SEMIO_LANGUAGE=en|de"]) expect(line).toContain(choice);
+  expect(lines[0]).toContain("No language selected");
+  expect(lines[1]).toContain("Keine Sprache");
+});
+
+test("the refusal class is a real error with a stack", () => {
+  const error = new RepoErrorV1("failed", "faults.stale");
+  expect(error.stack).toBeDefined();
+  expect(error.name).toBe("RepoError");
+});

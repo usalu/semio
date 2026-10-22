@@ -137,16 +137,21 @@ fn assembly_triplet_pages_mounted_model_partial_admission_and_fault_retain_every
 }
 
 #[test]
-fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
-    let mut rejected = Vec::<f64>::new();
-    assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
-    let observed = rejected.capacity() * size_of::<f64>();
-    let pointer = rejected.as_ptr();
-    assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
-    assert_eq!(close_vec_owner_step(&mut rejected, observed - 1), Err(()));
-    assert_eq!(rejected.as_ptr(), pointer, "an interrupted close preserves the exact rejected backing");
-    assert_eq!(close_vec_owner_step(&mut rejected, observed), Ok(Some((1, observed))), "the exact rejected allocation retires through the retained close helper");
-    assert_eq!(rejected.capacity(), 0);
+fn mounted_element_stiffness_refuses_oversized_pages_before_allocating_and_retires_admitted_backing() {
+    let mut oversized = Vec::<f64>::new();
+    assert!(!reserve_exact_owner_page(&mut oversized, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
+    assert_eq!(oversized.capacity(), 0, "a refused oversized page never allocates its backing");
+    assert_eq!(close_vec_owner_step(&mut oversized, MOUNTED_OWNER_PAGE_BYTES), Ok(None));
+
+    let mut admitted = Vec::<f64>::new();
+    assert!(reserve_exact_owner_page(&mut admitted, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>()));
+    let observed = admitted.capacity() * size_of::<f64>();
+    let pointer = admitted.as_ptr();
+    assert!(observed > 0 && observed <= MOUNTED_OWNER_PAGE_BYTES);
+    assert_eq!(close_vec_owner_step(&mut admitted, observed - 1), Err(()));
+    assert_eq!(admitted.as_ptr(), pointer, "an interrupted close preserves the exact admitted backing");
+    assert_eq!(close_vec_owner_step(&mut admitted, observed), Ok(Some((1, observed))), "the exact admitted allocation retires through the retained close helper");
+    assert_eq!(admitted.capacity(), 0);
 }
 
 // #region 🔖️DofMapLaws

@@ -38,6 +38,10 @@ type IssueTracker interface {
 	CreateIssue(title, body string, milestone *int) (string, error)
 	// 📪️CloseIssue closes an issue.
 	CloseIssue(issueURL string) error
+	// 📝️UpdateIssueTitle updates the selected ticket issue title.
+	UpdateIssueTitle(issueURL, title string) error
+	// 🗑️DeleteIssue deletes the selected ticket issue.
+	DeleteIssue(issueURL string) error
 	// 🔓️ReopenIssue reopens an issue.
 	ReopenIssue(issueURL string) error
 	// 🔎️GetIssueDetails reads an issue, or nothing when it cannot be read.
@@ -282,6 +286,7 @@ func (layout TicketLayout) ImportantPath(id TicketID) string {
 // ➗️NormalizeSeparators replaces every backslash with a forward slash and collapses repeats.
 func NormalizeSeparators(path string) string {
 	replaced := strings.ReplaceAll(path, "\\", "/")
+ unc:=strings.HasPrefix(replaced,"//")&&!strings.HasPrefix(replaced,"///")&&len(replaced)>2
 	var builder strings.Builder
 	previousSeparator := false
 	for _, character := range replaced {
@@ -296,7 +301,8 @@ func NormalizeSeparators(path string) string {
 		builder.WriteRune(character)
 	}
 	normalized := builder.String()
-	if len(normalized) > 1 && strings.HasSuffix(normalized, "/") {
+ if unc {normalized="/"+normalized}
+	if len(normalized) > 1 && strings.HasSuffix(normalized, "/") && !ticketDriveRoot(normalized) {
 		normalized = normalized[:len(normalized)-1]
 	}
 	return normalized
@@ -327,6 +333,7 @@ func BaseName(path string) string {
 // 🗂️DirName returns everything before the last segment of a path.
 func DirName(path string) string {
 	normalized := NormalizeSeparators(path)
+ if ticketDriveRoot(normalized)||(strings.HasPrefix(normalized,"//")&&strings.Count(normalized[2:],"/")<=1) {return normalized}
 	index := strings.LastIndex(normalized, "/")
 	if index < 0 {
 		return "."
@@ -334,6 +341,7 @@ func DirName(path string) string {
 	if index == 0 {
 		return "/"
 	}
+ if index==2&&ticketDriveRoot(normalized[:3]) {return normalized[:3]}
 	return normalized[:index]
 }
 
@@ -400,3 +408,8 @@ func GoJSONString(value string) string {
 }
 
 // #endregion 🪪️Contracts
+
+// 💽️ticketDriveRoot recognizes a rooted drive without changing its namespace.
+func ticketDriveRoot(value string) bool {
+ return len(value)==3&&((value[0]>='A'&&value[0]<='Z')||(value[0]>='a'&&value[0]<='z'))&&value[1]==':'&&value[2]=='/'
+}

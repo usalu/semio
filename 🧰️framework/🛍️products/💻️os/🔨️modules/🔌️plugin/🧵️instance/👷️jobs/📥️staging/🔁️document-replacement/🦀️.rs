@@ -8,7 +8,6 @@ use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use std::mem::ManuallyDrop;
-use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use crate::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
@@ -23,13 +22,13 @@ use semio_framework_ui_contract::*;
 pub struct DocumentWindowResetAdmission{pub source:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub generation:Option<u64>,pub committed:bool,pub returning:bool}
 
 impl DocumentWindowResetAdmission{
- pub fn validate<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(&self,app:&VcsArtifactApp<A,M>,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if !self.returning{self.source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original window renewal loan is absent"))?.validate_context(cx)?;}if self.generation.is_some_and(|generation|generation!=app.tools.tool_cancellations.scope_generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original ready window renewal changed its exact generation").into())}Ok(())}
+ pub fn validate(&self,scope_generation:u64,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if !self.returning{self.source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original window renewal loan is absent"))?.validate_context(cx)?;}if self.generation.is_some_and(|generation|generation!=scope_generation){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original ready window renewal changed its exact generation").into())}Ok(())}
 }
 
 /// 🔁️ Shared document replacement invalidates concrete window transients and retains displaced owners.
 impl<A: ArtifactApp> PendingReserved<A> {
-    pub fn commit_document_window_reset(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>,replacement:&mut Option<WindowTransientOwnerRegistry>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-        let admission=self.pending_document_window_admission.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication has no original renewal admission"))?;admission.validate(self,cx)?;if admission.generation.is_none()||admission.committed{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication requires one ready unused original renewal" ).into())}
+    pub fn commit_document_window_reset(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>,replacement:&mut Option<WindowTransientOwnerRegistry>,scope_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        let admission=self.pending_document_window_admission.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication has no original renewal admission"))?;admission.validate(scope_generation,cx)?;if admission.generation.is_none()||admission.committed{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication requires one ready unused original renewal" ).into())}
         let replacement=replacement.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"document reset lost its retained replacement"))?;
         let generation=replacement.document_generation();let displaced=std::mem::replace(&mut stores.window_transient_store,replacement);if !displaced.terminal_is_empty(){stores.retired_window_transient_stores.insert_admitted(generation,displaced)}self.pending_document_window_admission.as_mut().unwrap().committed=true;history.cache=None;Ok(())
     }
@@ -47,7 +46,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 impl<A: ArtifactApp> ToolOperations<A> {
     pub fn admit_document_window_reset(&mut self, pending: &mut PendingReserved<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if pending.pending_document_window_admission.is_none(){let Some(source)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(false)};*pending.pending_document_window_admission=Some(DocumentWindowResetAdmission{source:std::mem::ManuallyDrop::new(Some(source)),generation:None,committed:false,returning:false});return Ok(false)}
-        let admission=pending.pending_document_window_admission.as_ref().unwrap();admission.validate(self,cx)?;if admission.committed{return Ok(false)}if admission.generation.is_some(){return Ok(true)}
+        let admission=pending.pending_document_window_admission.as_ref().unwrap();admission.validate(self.tool_cancellations.scope_generation(),cx)?;if admission.committed{return Ok(false)}if admission.generation.is_some(){return Ok(true)}
         if !self.tool_cancellations.renew_scope_generation(cx)?{return Ok(false)}pending.pending_document_window_admission.as_mut().unwrap().generation=Some(self.tool_cancellations.scope_generation());Ok(false)
     }
 }

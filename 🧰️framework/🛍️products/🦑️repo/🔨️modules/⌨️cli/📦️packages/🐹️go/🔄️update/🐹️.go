@@ -11,7 +11,6 @@ package cli
 import (
 	fmt "fmt"
 	os "os"
-	exec "os/exec"
 	filepath "path/filepath"
 	regexp "regexp"
 	strconv "strconv"
@@ -252,7 +251,7 @@ func findCsprojFiles(rootDir, dir string) []string {
 
 // 🟧️runCommand holds the data fields for a runCommand record.
 func runCommand(dir, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
+	cmd := workspace.ToolCommand(name, args...)
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -261,7 +260,7 @@ func runCommand(dir, name string, args ...string) error {
 }
 
 func runCommandQuiet(dir, name string, args ...string) (string, error) {
-	cmd := exec.Command(name, args...)
+	cmd := workspace.ToolCommand(name, args...)
 	cmd.Dir = dir
 	output, err := cmd.Output()
 	return string(output), err

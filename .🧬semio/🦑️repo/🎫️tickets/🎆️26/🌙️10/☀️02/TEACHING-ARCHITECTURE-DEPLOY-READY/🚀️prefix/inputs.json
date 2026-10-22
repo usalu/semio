@@ -3,8 +3,8 @@
   "kind": "fresh-capture-prefix-inputs",
   "files": {
     "schema.json": {
-      "bytes": 64231,
-      "sha256": "86f973f54ad93114e09bede0237b99d561c9f6196f646a2a7869e2a8007fa8a8"
+      "bytes": 93435,
+      "sha256": "d7cfc3a6d966272a7a9c42d838974f49600a73aa4362b1d3d1b95e3010d11597"
     },
     "cases.json": {
       "bytes": 11831,
@@ -12,7 +12,7 @@
     },
     "core.ts": {
       "bytes": 14728,
-      "sha256": "70cc8e2dbf86df1b763f2a8d8e39dddfa119ebbf6b9938c5e062be938141c22d"
+      "sha256": "1229008ed7cf4bb550dea71910cdd220cf6f7482b102e0d98ad7aed69d171396"
     },
     "entry.ts": {
       "bytes": 15469,
@@ -137,12 +137,12 @@
       "sha256": "af9e6305693dab66022acc2c7e423af66ec1b5d6fd53289ce5881d3e9c3f1e37"
     },
     "📦️fresh/combined.schema.json": {
-      "bytes": 127515,
-      "sha256": "3e451ddb34795bf5d910cbb21236cee204d5daf927ac0cb0ee98cfac26e3b18e"
+      "bytes": 302265,
+      "sha256": "6ec7b25b583c33ccb253bdcc67769bb021e6cfe8025b7c407225c77a063b80e0"
     },
     "📦️fresh/combined.cases.json": {
-      "bytes": 31299,
-      "sha256": "97e740a59d299dce1e3e177005e6d8e4a253ac9c7f63457852a6d08dd6d63fb7"
+      "bytes": 106277,
+      "sha256": "aaa5be99f744aa921d7fcc47f4e0d14e9e93cd942621576d41dc2215fc28b542"
     },
     "📦️fresh/combined.ts": {
       "bytes": 12591,
@@ -333,12 +333,12 @@
       "sha256": "d5049446fb6525b7ab2d9554131168e92a9617ef4dc31e7edc01baa348abbbfb"
     },
     "🚀️fresh/derive.schema.json": {
-      "bytes": 49568,
-      "sha256": "6bb069c003f3efaeb281e7df68a34cba6721beced77b27c768331ab949429420"
+      "bytes": 78433,
+      "sha256": "6b45b9cd3e94b4ddba40e3144013c763cc943ae9a8be384fe021b69a50e27f12"
     },
     "🚀️fresh/derive.cases.json": {
       "bytes": 5158,
-      "sha256": "3f655a96a79eac8b52724afec55ed47924ac51e641c96d5f5c0d847b03a23adb"
+      "sha256": "65ce78cfa4f10b713dd0afe2680bf3999fa9cd32772210cf74fdacbded656a6e"
     },
     "🚀️fresh/derive.ts": {
       "bytes": 24009,
@@ -346,7 +346,7 @@
     },
     "🚀️fresh/derive.tests.ts": {
       "bytes": 19029,
-      "sha256": "925ddc8eddaddefdcd37b8527d6e94aec9f6290d41796e196346e30fd657817e"
+      "sha256": "0b4297eee5096903cfeff40e0c0c6e7b80ff5dcede622cfa71b07f3449154c15"
     },
     "🚀️fresh/physical.schema.json": {
       "bytes": 3412,
@@ -363,8 +363,8 @@
   },
   "guest": {
     "schema.json": {
-      "bytes": 20930,
-      "sha256": "84e5360e82955fa29d6d995dbb3bc53ca7dd7cb7cdc445082fdf6f3c04eb19ec"
+      "bytes": 51161,
+      "sha256": "840c9c2a40f0d86449770cae9b45774ac021de5a1a931f7d7225c6f93ee9da1d"
     },
     "cases.json": {
       "bytes": 7297,
@@ -392,11 +392,11 @@
     },
     "inputs.json": {
       "bytes": 995,
-      "sha256": "f37e0661c26a14d6be01b35e4ff75fca517e86d7548ddc8f63b480b6cc353c12"
+      "sha256": "d44c9e8f0bc023687ade1e091a4c346c73185cdc23bba9cd04d7b70bfda2603b"
     }
   },
   "template": {
-    "bytes": 32766,
-    "sha256": "cdd957b0395cbc601da75500975bc233d351381ded8dd1bdb050ae5efe2cf5b2"
+    "bytes": 80575,
+    "sha256": "8f3840c878c375687c16e3908a277e71ad66db847f0db6628cc78e44dab1cad1"
   }
 }

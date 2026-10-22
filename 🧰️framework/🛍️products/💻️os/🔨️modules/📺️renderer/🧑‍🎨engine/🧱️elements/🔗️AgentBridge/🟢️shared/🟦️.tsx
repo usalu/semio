@@ -1,7 +1,7 @@
 /** 🟢️ The shared declarations of useAgentBridge. */
 import { readPublishedPageOrigins } from "@semio-tech/framework/assets/published-page";
 import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferScopeV1, type BridgeOfferFetch } from "../🛰️offer/🟦️.ts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { reduce, type ReduceResult, type ShellCommand, type ShellState } from "@semio-tech/framework/shell";
 import { type ApprovalDecision, type ApprovalWithdrawal, type BridgeFlags, type BridgeInstanceRef, type ShellKind, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
 import { encodeShellAppFrame, shellAppFault, type ShellAppCommandV1, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";

@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::graph::{EntityRef, GraphEffect, 
 use crate::standards::v1::subsets::any::schema::memory::Graph;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -260,7 +260,7 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &semio_framew
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `protocol::apply_diff` delegate through the central applier.
 pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
-    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
+    let next = protocol::apply_diff_cold(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }

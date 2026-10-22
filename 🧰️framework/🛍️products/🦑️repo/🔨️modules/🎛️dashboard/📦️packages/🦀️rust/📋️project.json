@@ -25,7 +25,50 @@
     ]
   },
   "targets": {
-    "test-ci-source": {"executor":"repo:script","cache":false,"dependsOn":[],"inputs":["{workspaceRoot}/package.json","{workspaceRoot}/bun.lock","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json","{workspaceRoot}/.github/actions/native-repo/action.yml","{workspaceRoot}/.github/actions/devcontainer-repo/action.yml","{workspaceRoot}/.github/workflows/dashboard.yml","{workspaceRoot}/.github/workflows/build-system.yml"],"outputs":[],"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust","command":"bun ./📜️script.ts test ci-source","forwardAllArgs":false},"metadata":{"semio":{"execution":{"version":1,"kind":"source"},"sourceInputObservation":"freshness","runtimeSourceEntries":["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts"],"dashboard":{"title":{"en":"Verify Dashboard Automation","de":"Dashboard-Automatisierung Prüfen"},"description":{"en":"Verify native workflow and owned container bootstrap declarations.","de":"Native Arbeitsabläufe und verwaltete Container-Startdeklarationen prüfen."}}}}},
+    "test-ci-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json",
+        "{workspaceRoot}/.github/actions/native-repo/action.yml",
+        "{workspaceRoot}/.github/actions/devcontainer-repo/action.yml",
+        "{workspaceRoot}/.github/workflows/dashboard.yml",
+        "{workspaceRoot}/.github/workflows/build-system.yml"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test ci-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Verify Dashboard Automation",
+              "de": "Dashboard-Automatisierung Prüfen"
+            },
+            "description": {
+              "en": "Verify native workflow and owned container bootstrap declarations.",
+              "de": "Native Arbeitsabläufe und verwaltete Container-Startdeklarationen prüfen."
+            }
+          }
+        }
+      }
+    },
     "test-dispatch": {
       "executor": "repo:script",
       "inputs": [
@@ -39,7 +82,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test dispatch"
+        "command": "repo ./📜️script.ts test dispatch"
       },
       "metadata": {
         "semio": {
@@ -79,7 +122,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test language",
+        "command": "repo ./📜️script.ts test language",
         "forwardAllArgs": false
       },
       "metadata": {
@@ -118,7 +161,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test source-freshness"
+        "command": "repo ./📜️script.ts test source-freshness"
       },
       "metadata": {
         "semio": {
@@ -147,7 +190,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "cache": false,
       "outputs": [],
@@ -176,7 +219,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "metadata": {
         "semio": {
@@ -202,7 +245,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test authority"
+        "command": "repo ./📜️script.ts test authority"
       },
       "cache": false,
       "metadata": {
@@ -229,7 +272,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test execution"
+        "command": "repo ./📜️script.ts test execution"
       },
       "cache": false,
       "metadata": {
@@ -265,7 +308,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test process-deadline"
+        "command": "repo ./📜️script.ts test process-deadline"
       },
       "metadata": {
         "semio": {
@@ -299,7 +342,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test unit"
+        "command": "repo ./📜️script.ts test unit"
       },
       "cache": true
     },
@@ -308,7 +351,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick"
+        "command": "repo ./📜️script.ts test quick"
       },
       "metadata": {
         "semio": {
@@ -335,7 +378,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long"
+        "command": "repo ./📜️script.ts test long"
       },
       "metadata": {
         "semio": {
@@ -362,7 +405,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive"
+        "command": "repo ./📜️script.ts test exhaustive"
       },
       "metadata": {
         "semio": {
@@ -388,7 +431,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test coverage"
+        "command": "repo ./📜️script.ts test coverage"
       },
       "cache": false,
       "metadata": {
@@ -415,7 +458,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test journeys",
+        "command": "repo ./📜️script.ts test journeys",
         "forwardAllArgs": false
       },
       "cache": false,
@@ -459,12 +502,15 @@
         "^default",
         "testEnv",
         "reads",
-        "cargoToolchain"
+        "cargoToolchain",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🪟️windows/🎟️coverage/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🪟️windows/🎟️coverage/🔣️.json"
       ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test windows"
+        "command": "repo ./📜️script.ts test windows"
       },
       "cache": true
     },
@@ -472,7 +518,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test load",
+        "command": "repo ./📜️script.ts test load",
         "forwardAllArgs": false
       },
       "cache": false,
@@ -513,7 +559,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test smoke"
+        "command": "repo ./📜️script.ts test smoke"
       },
       "cache": false,
       "metadata": {
@@ -582,7 +628,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts run",
+        "command": "repo ./📜️script.ts run",
         "forwardAllArgs": true,
         "env": {
           "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
@@ -644,7 +690,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts daemon",
+        "command": "repo ./📜️script.ts daemon",
         "forwardAllArgs": true
       },
       "cache": false
@@ -653,7 +699,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts install"
+        "command": "repo ./📜️script.ts install"
       },
       "cache": false,
       "dependsOn": [
@@ -725,7 +771,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preferences",
+        "command": "repo ./📜️script.ts preferences",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -743,7 +789,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts compile"
+        "command": "repo ./📜️script.ts compile"
       },
       "metadata": {
         "semio": {
@@ -784,7 +830,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test cold-start",
+        "command": "repo ./📜️script.ts test cold-start",
         "forwardAllArgs": false
       },
       "metadata": {

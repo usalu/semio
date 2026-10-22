@@ -29,6 +29,6 @@
   ],
   "execution": {
     "target": "test-cargo-target-discovery-skip",
-    "command": "bun ./📜️script.ts test cargo-target-discovery-skip"
+    "command": "repo ./📜️script.ts test cargo-target-discovery-skip"
   }
 }

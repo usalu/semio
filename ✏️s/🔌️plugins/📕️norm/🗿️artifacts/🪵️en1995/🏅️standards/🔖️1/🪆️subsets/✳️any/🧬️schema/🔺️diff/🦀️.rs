@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
@@ -89,15 +89,9 @@ pub struct En1995Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<En1995Snapshot> for En1995Diff {
-    fn apply(&self, base: &En1995Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1995Snapshot> {
-        Ok(En1995Snapshot {
-            annex: self.annex.unwrap_or(base.annex),
-            members: self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?,
-            connections: self.connections.commit_onto(&base.connections, capability).map_err(|error| error.under(["connections"]))?,
-        })
-    }
+impl MutationDiff<En1995Snapshot> for En1995Diff {}
 
+impl protocol::ColdMutationDiff<En1995Snapshot> for En1995Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -105,21 +99,33 @@ impl MutationDiff<En1995Snapshot> for En1995Diff {
         self.members.absorb(other.members);
         self.connections.absorb(other.connections);
     }
+
+    fn apply(&self, unpublished: &mut En1995Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = En1995Snapshot {
+            annex: self.annex.unwrap_or(base.annex),
+            members: self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?,
+            connections: self.connections.commit_onto(&base.connections, capability).map_err(|error| error.under(["connections"]))?,
+        };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<En1995Snapshot> for En1995Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.members.is_empty()
+            && self.connections.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<En1995Snapshot> for En1995Diff {
     fn inverse(&self, base: &En1995Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex),
             members: self.members.inverse(&base.members),
             connections: self.connections.inverse(&base.connections),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.members.is_empty()
-            && self.connections.is_empty()
     }
 }
 

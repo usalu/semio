@@ -44,7 +44,7 @@ pub struct SceneIntentQueue {
 
 impl Default for SceneIntentQueue {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), head: 0, len: 0, next_generation: 1, retiring: None }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), head: 0, len: 0, next_generation: 1, retiring: None }
     }
 }
 

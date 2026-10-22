@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:custody-pool-corpus:v1",
+  "title": "Custody Pool Corpus",
+  "description": "Language-agnostic scenarios for the custody session pool: scripted steps (a request starts, is released or fails, time advances, the pool closes, the next open fails) and the counters the pool must show at the end; an independent model replays every step.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "scenarios", "invalid", "valid"],
+  "properties": {
+    "version": { "const": 1 },
+    "scenarios": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/scenario" } },
+    "invalid": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/lifetimes" } },
+    "valid": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/lifetimes" } }
+  },
+  "definitions": {
+    "lifetimes": { "type": "object", "additionalProperties": false, "required": ["idle", "maximum"], "properties": { "idle": {}, "maximum": {} } },
+    "step": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["op", "id"], "properties": { "op": { "enum": ["with", "release", "fail"] }, "id": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "ms"], "properties": { "op": { "const": "advance" }, "ms": { "type": "integer", "minimum": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op"], "properties": { "op": { "enum": ["close", "failNextOpen"] } } }
+      ]
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "idleMilliseconds", "maximumLifetimeMilliseconds", "steps", "final"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "idleMilliseconds": { "type": "integer", "minimum": 1 },
+        "maximumLifetimeMilliseconds": { "type": "integer", "minimum": 1 },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } },
+        "final": { "type": "object", "additionalProperties": false, "required": ["opens", "closes", "live"], "properties": { "opens": { "type": "integer", "minimum": 0 }, "closes": { "type": "integer", "minimum": 0 }, "live": { "type": "boolean" } } }
+      }
+    }
+  }
+}

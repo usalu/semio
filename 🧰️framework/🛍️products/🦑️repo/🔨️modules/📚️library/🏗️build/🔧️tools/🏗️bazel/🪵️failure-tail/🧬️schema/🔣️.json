@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bazel failed action output tail",
+  "description": "Schema-first contract of the output tail a failed Bazel action leaves behind. Bazel's own console echo of an action's output is capped (`--experimental_ui_max_stdouterr_bytes`, 1 MiB by default) and skips a larger output entirely, so the repo adapter never relies on it: the action keeps the last `maximumTailBytes` bytes of its combined stdout and stderr (never cut inside a UTF-8 sequence) and, when it fails, writes them into the run's `directory` as one file per task; the invoking process reads those files after the build failed and prints them in the authored language.",
+  "definitions": {
+    "Policy": {
+      "description": "Authored numbers. `maximumTailBytes`: the bounded tail kept per task. `directory`: the failure directory inside the generated package of the selection. `fileSuffix`: every tail file ends with it. `maximumFiles`: the most tail files one failure report reads. `maximumHeaderBytes`: the bound of the one JSON header line that starts a tail file.",
+      "const": {
+        "version": 1,
+        "maximumTailBytes": 65536,
+        "directory": "failures",
+        "fileSuffix": ".tail.log",
+        "maximumFiles": 64,
+        "maximumHeaderBytes": 4096
+      }
+    },
+    "Header": {
+      "description": "The first line of a tail file: the task id, the kept tail size and the number of earlier bytes that were dropped. The remaining bytes of the file are the tail itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "task", "bytes", "droppedBytes"],
+      "properties": {
+        "version": {"const": 1},
+        "task": {"type": "string", "minLength": 1, "maxLength": 512},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 65536},
+        "droppedBytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Messages": {
+      "description": "Failure report lines in English and German; `{name}` placeholders are replaced by the reported values.",
+      "const": {
+        "en": {
+          "failed": "[bazel] task {task} failed; last {bytes} bytes of its output ({dropped} earlier bytes omitted), saved to {file}:",
+          "complete": "[bazel] task {task} failed; its complete output ({bytes} bytes), saved to {file}:"
+        },
+        "de": {
+          "failed": "[bazel] Aufgabe {task} fehlgeschlagen; letzte {bytes} Bytes ihrer Ausgabe ({dropped} frühere Bytes ausgelassen), gesichert in {file}:",
+          "complete": "[bazel] Aufgabe {task} fehlgeschlagen; ihre vollständige Ausgabe ({bytes} Bytes), gesichert in {file}:"
+        }
+      }
+    }
+  }
+}

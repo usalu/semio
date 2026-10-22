@@ -1,6 +1,9 @@
 import { existsSync } from "node:fs";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import { dirname, join, relative, resolve } from "node:path";
 import { DEPENDENCY_BASELINE_REL_PATH, DEPENDENCY_ECOSYSTEMS, DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS, dependencyCollectGo, dependencyDiscoverScriptTsFiles, dependencyFreezeCheck, dependencyFreezeCurrentThirdParty, dependencyFreezeWriteBaseline, dependencyJsParity, dependencyReadFileSafe, type DependencyBaselineEntry, type DependencyDeclaration, type DependencyEcosystem, type DependencyJsParityReport, type DependencyKind } from "../📇️inventory/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 export type DependencyTruthDisposition = "literal-external" | "first-party" | "composition-scoped" | "mandated-toolchain";
 export type DependencyTruthEntry = DependencyBaselineEntry & { disposition: DependencyTruthDisposition; rationale: string; literalExternalUsers?: string[]; mandatedToolchainUsers?: string[] };
@@ -97,7 +100,7 @@ function dependencyToolchainLockVersions(content: string, recipeLocks: Readonly<
   const versions = new Map<string, string>();
   const read = (text: string, userOf: (workspace: string) => string | null, sections: readonly ("dependencies" | "devDependencies")[]): void => {
     try {
-      const workspaces = (Bun.JSONC.parse(text) as { workspaces?: Record<string, Partial<Record<"dependencies" | "devDependencies", Record<string, string>>>> }).workspaces ?? {};
+      const workspaces = (runtimeParseJsoncV1(text) as { workspaces?: Record<string, Partial<Record<"dependencies" | "devDependencies", Record<string, string>>>> }).workspaces ?? {};
       for (const [workspace, snapshot] of Object.entries(workspaces)) {
         const user = userOf(workspace);
         if (user) for (const section of sections) for (const [name, version] of Object.entries(snapshot[section] ?? {})) versions.set(`${user}\0${name}`, version);
@@ -163,7 +166,7 @@ export function dependencyTruthReportFromEntries(thirdParty: readonly Dependency
   const oracleConflicts = classifiedThirdParty.filter((entry) => (entry.oracleConflictUsers?.length ?? 0) > 0).map((entry) => ({ ecosystem: entry.ecosystem, name: entry.name, users: entry.oracleConflictUsers! }));
   authorizedRows.sort((left, right) => left.name.localeCompare(right.name) || left.user.localeCompare(right.user));
   unauthorizedRows.sort((left, right) => left.name.localeCompare(right.name) || left.user.localeCompare(right.user));
-  if (lockContent !== "") for (const row of authorizedRows) if (!row.lockOwned) toolchain.failures.push(`authorized ${row.user} ${row.name}@${row.version} is not owned by the same bun.lock workspace snapshot`);
+  if (lockContent !== "") for (const row of authorizedRows) if (!row.lockOwned) toolchain.failures.push(`authorized ${row.user} ${row.name}@${row.version} is not owned by the same ${javascriptLockV1} workspace snapshot`);
   return {
     zeroTarget: 0,
     meetsTarget: totals.literalExternal === 0 && oracleConflicts.length === 0 && unauthorizedRows.length === 0 && toolchain.failures.length === 0,
@@ -188,7 +191,7 @@ function dependencyTruthReport(repoRoot: string, thirdParty = dependencyFreezeCu
       existing.productionReachable ||= entry.productionReachable;
     }
   });
-  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], dependencyReadFileSafe(repoRoot, "package.json"), dependencyReadFileSafe(repoRoot, "bun.lock"), Object.fromEntries([...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS].map(([manifest, lock]) => [manifest, dependencyReadFileSafe(repoRoot, lock)])));
+  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], dependencyReadFileSafe(repoRoot, "package.json"), dependencyReadFileSafe(repoRoot, javascriptLockV1), Object.fromEntries([...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS].map(([manifest, lock]) => [manifest, dependencyReadFileSafe(repoRoot, lock)])));
 }
 
 function dependencyTruthSummaryText(report: DependencyTruthReport): string {
@@ -230,7 +233,7 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
     }
     if (report.lockMismatches.length > 0) {
       if (format === "text") for (const finding of report.lockMismatches.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.kind}${finding.dependency ? ` ${finding.section}:${finding.dependency}` : ""}${finding.manifestVersion !== undefined || finding.lockVersion !== undefined ? ` (manifest=${JSON.stringify(finding.manifestVersion)}, lock=${JSON.stringify(finding.lockVersion)})` : ""}`);
-      throw new Error(`[verify dependencies parity js] ${report.lockMismatches.length} package manifest / bun.lock workspace snapshot mismatch(es).`);
+      throw new Error(`[verify dependencies parity js] ${report.lockMismatches.length} package manifest / ${javascriptLockV1} workspace snapshot mismatch(es).`);
     }
     if (args.includes("--no-unowned-rows") && report.unownedRows.length > 0) {
       if (format === "text") for (const finding of report.unownedRows.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.dependency} has no owned-scope source/config/script evidence`);
@@ -278,7 +281,7 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
   if (result.newDeps.length > 0) {
     console.error(`[verify dependencies] ${result.newDeps.length} NEW dependenc(y/ies) not in ${DEPENDENCY_BASELINE_REL_PATH}:`);
     for (const dependency of result.newDeps) console.error(`  ${dependency.ecosystem}:${dependency.name}@${dependency.version} (kinds: ${dependency.kinds.join(",")}; used by: ${dependency.users.slice(0, 3).join(", ")}${dependency.users.length > 3 ? `, +${dependency.users.length - 3} more` : ""})`);
-    throw new Error(`[verify dependencies] ${result.newDeps.length} new third-party dependenc(y/ies) — approve deliberately with 'bun ./📜️script.ts verify dependencies write-baseline', or remove the dependency.`);
+    throw new Error(`[verify dependencies] ${result.newDeps.length} new third-party dependenc(y/ies) — approve deliberately with 'repo ./📜️script.ts verify dependencies write-baseline', or remove the dependency.`);
   }
   console.log("[verify dependencies] clean — no new third-party dependencies.");
 }

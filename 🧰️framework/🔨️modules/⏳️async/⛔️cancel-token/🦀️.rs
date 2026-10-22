@@ -42,7 +42,7 @@ impl CancelState {
 }
 
 
-pub(super) struct CancelNode {
+#[doc(hidden)] pub struct CancelNode {
     pub local: AtomicU8,
     pub parent: Option<CancelToken>,
     pub waiters:CancelWaiters,

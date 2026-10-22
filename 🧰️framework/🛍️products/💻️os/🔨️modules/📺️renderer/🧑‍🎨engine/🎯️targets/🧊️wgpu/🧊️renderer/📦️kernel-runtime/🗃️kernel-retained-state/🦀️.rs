@@ -344,7 +344,7 @@ pub struct RetainedSurfaceRegistry {
 
 impl RetainedSurfaceRegistry {
     pub fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
     }
 
     pub fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
@@ -422,7 +422,7 @@ pub struct PendingSurfaceRejectionRegistry {
 
 impl PendingSurfaceRejectionRegistry {
     pub fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), close_cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), close_cursor: 0 }
     }
 
     pub fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
@@ -604,7 +604,7 @@ pub struct MountedReplayRecoveryRegistry {
 
 impl MountedReplayRecoveryRegistry {
     pub fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: semio_framework_async_slots::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
     }
 
     pub fn reserve(&mut self) -> Option<MountedReplayRecoveryToken> {
@@ -771,7 +771,7 @@ pub struct CommandDocumentRetirementRegistry {
 
 impl CommandDocumentRetirementRegistry {
     pub fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
     }
 
     pub fn try_reserve_page(&mut self, batch: u64, generation: u64) -> Result<CommandDocumentPageReservation, ()> {

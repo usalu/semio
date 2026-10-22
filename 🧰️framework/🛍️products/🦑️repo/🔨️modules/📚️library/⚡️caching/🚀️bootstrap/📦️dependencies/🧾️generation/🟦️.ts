@@ -1,23 +1,21 @@
 import {createHash} from "node:crypto";
-import {lstatSync,readFileSync,readlinkSync,type BigIntStats} from "node:fs";
+import {closeSync,fstatSync,lstatSync,openSync,readSync,readlinkSync,type BigIntStats} from "node:fs";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {javascriptGenerationSchemaV1 as schema} from "../💾️storage/🧱️schemas/🟦️.ts";
 
 const protocol=schema.$defs.Protocol.const,receiptSchema=compileJsonSchemaSubset(schema.$defs.Receipt,schema);
 
 /** 🧾️ Names the closed neutral contract (the schema) every generation receipt, evidence file and verifier follows. */
 export const generationProtocolV1=protocol;
 /** 🚦️ Closes every reason an ordinary command must fall back to the complete ownership and provider walk. */
-export type GenerationMismatchClassV1="receipt-invalid"|"evidence-invalid"|"implementation-changed"|"runtime-changed"|"configuration-changed"|"conditions-open"|"binding-changed"|"ready-changed"|"input-changed"|"manifest-changed"|"membership-changed"|"membership-churn"|"provider-changed"|"unreadable"|"sha-changed";
+export type GenerationMismatchClassV1="receipt-invalid"|"evidence-invalid"|"protocol-changed"|"runtime-changed"|"configuration-changed"|"conditions-open"|"binding-changed"|"ready-changed"|"input-changed"|"manifest-changed"|"membership-changed"|"membership-churn"|"provider-changed"|"unreadable"|"sha-changed";
 /** 🧰️ Carries cancellation and bounded progress for every long verification and capture loop. */
 export interface GenerationControlV1{readonly signal:AbortSignal;check():void;tick(work:number):Promise<void>}
 /** 🏷️ Pins the tool identity that defines which generation a Source can select. */
-export interface GenerationRuntimeV1{readonly bun:string;readonly revision:string;readonly node:string;readonly platform:string;readonly arch:string;readonly sha256:string}
+export interface GenerationRuntimeV1{readonly manager:string;readonly revision:string;readonly node:string;readonly platform:string;readonly arch:string;readonly sha256:string}
 /** 🔖️ Points at one immutable content-addressed evidence file next to the receipt. */
 export interface GenerationEvidenceV1{readonly name:string;readonly sha256:string;readonly bytes:number;readonly rows:number}
-/** 🗃️ Seals the runtime import closure of the walk and fence entries: the sorted entry list and the content-addressed per-file digest rows. */
-export interface GenerationImplementationV1{readonly entries:readonly string[];readonly evidence:GenerationEvidenceV1}
 /** 🗝️ Names one installer configuration file as every installer level could read it; a missing file is part of the proof. */
 export interface GenerationProducerFileV1{readonly path:string;readonly kind:"missing"|"file"|"other";readonly bytes:number;readonly sha256:string|null}
 /** 🌍️ Names one ambient variable that selects registries, caches or transport, by the digest of its value so credentials never enter a receipt. */
@@ -26,7 +24,7 @@ export interface GenerationProducerVariableV1{readonly name:string;readonly sha2
 export interface GenerationProducerV1{readonly files:readonly GenerationProducerFileV1[];readonly environment:readonly GenerationProducerVariableV1[]}
 /** 📑️ Is the sealed, schema-defined proof that a complete walk accepted exactly these observations. */
 export interface GenerationReceiptV1{
- readonly version:1;readonly purpose:"dependency-generation-receipt";readonly scope:string;readonly implementation:GenerationImplementationV1;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
+ readonly version:1;readonly purpose:"dependency-generation-receipt";readonly scope:string;readonly walkStamp:string;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
  readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;sha256:string|null}>[]}>[];
  readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;sha256:string}>[]}>;
  readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{source:string;target:string}>[];observationSha256:string}>[];
@@ -40,7 +38,7 @@ export interface GenerationMembershipV1{readonly root:string;readonly paths:read
 export interface GenerationObservationV1{readonly path:string;readonly stamp:string|null;readonly anchor:string|null;readonly kind:string;readonly target:string|null;readonly full:boolean}
 /** 📥️ Collects everything a completed walk produced; nothing else may enter a receipt. */
 export interface GenerationCaptureInputV1{
- readonly workspace:string;readonly storeRoot:string;readonly scope:string;readonly startedAtMs:number;readonly implementation:Readonly<{entries:readonly string[];loadedAtMs:number;files:readonly Readonly<{path:string;sha256:string;bytes:number;mtimeNs:string;ctimeNs:string}>[]}>;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
+ readonly workspace:string;readonly storeRoot:string;readonly scope:string;readonly startedAtMs:number;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
  readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;bytes:Uint8Array}>[]}>[];
  readonly membership:GenerationMembershipV1;
  readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[];observation:string}>[];
@@ -53,7 +51,7 @@ export type GenerationCaptureResultV1=Readonly<{status:"captured";receipt:Genera
 /** 🔎️ Is the complete input to one verification; every store specific operation arrives as a port. */
 export interface GenerationVerifyInputV1{
  readonly workspace:string;readonly storeRoot:string;readonly receipt:GenerationReceiptV1;readonly readEvidence:(name:string,maximumBytes:number)=>Uint8Array;readonly runtime:()=>GenerationRuntimeV1;readonly conditionsClosed:()=>boolean;
- readonly implementationEntries:readonly string[];readonly implementationFile:(path:string)=>Readonly<{sha256:string;bytes:number}>|undefined;readonly producer:()=>GenerationProducerV1;
+ readonly producer:()=>GenerationProducerV1;
  readonly project:(path:string)=>readonly Readonly<{name:string;kind:string}>[];
  readonly observeBindings:(scope:string,pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[])=>string;
  readonly readReady:(path:string)=>Promise<string>|string;readonly control:GenerationControlV1;
@@ -95,6 +93,16 @@ export const generationStampV1=(facts:BigIntStats):string=>fields(facts,protocol
 /** ⚓️ Renders the stable identity anchor exactly as the provider walk compares it. */
 export const generationAnchorV1=(facts:BigIntStats):string=>fields(facts,protocol.anchorFields);
 const lstatBig=(path:string):BigIntStats|undefined=>lstatSync(path,{bigint:true,throwIfNoEntry:false});
+/** 📖️ Reads one repository DATA file through a descriptor, so a manifest that lives in a schema directory is data and never an implementation read of the loader's captured file path. */
+function readGenerationData(path:string,maximumBytes:number):Buffer{
+ const descriptor=openSync(path,"r");
+ try{
+  const size=fstatSync(descriptor).size;if(size>maximumBytes)throw Error("Bounded generation data required");
+  const bytes=Buffer.allocUnsafe(size);let offset=0;
+  while(offset<size){const count=readSync(descriptor,bytes,offset,size-offset,offset);if(!count)break;offset+=count;}
+  return offset===size?bytes:bytes.subarray(0,offset);
+ }finally{closeSync(descriptor);}
+}
 const kindLetter=(kind:string):string=>kind==="link"?"l":kind==="directory"?"d":kind==="file"?"f":kind==="missing"?"m":"x";
 const stateKind=(facts:BigIntStats):string=>facts.isSymbolicLink()?"symlink":facts.isDirectory()?"directory":facts.isFile()?"file":"other";
 const stateTuple=(facts:BigIntStats|undefined):string=>JSON.stringify(facts?[stateKind(facts),String(facts.dev),String(facts.ino),Number(facts.mode)]:["missing"]);
@@ -111,20 +119,26 @@ const evidenceOf=(rows:readonly (readonly unknown[])[],suffix:string):Readonly<{
  if(rows.length>protocol.maximumRows||bytes.length>protocol.maximumEvidenceBytes)throw Error("Generation evidence capacity exceeded");
  return Object.freeze({evidence:Object.freeze({name:sha256+suffix,sha256,bytes:bytes.length,rows:rows.length}),file:Object.freeze({name:sha256+suffix,bytes})});
 };
-const compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const deferred=(reason:string,path?:string):GenerationCaptureResultV1=>Object.freeze({status:"deferred",reason,...(path===undefined?{}:{path})});
 
 /** 📸️ Freezes a completed walk into a sealed receipt, or defers whenever a timestamp is too young to prove stability. */
 export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1):Promise<GenerationCaptureResultV1>{
  const{workspace,storeRoot,control,membership}=input,threshold=BigInt(Math.trunc(input.startedAtMs)-protocol.settleMilliseconds)*1000000n;let work=0;
  const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
- const frontier:(readonly unknown[])[]=[];
+ const frontier:(readonly unknown[])[]=[],listed=new Map<string,readonly Readonly<{name:string;kind:string}>[]>(),memo=new Map<string,boolean>();
+ for(const row of membership.paths)if(row.list)listed.set(row.path,row.list);
+ const relevant=(path:string):boolean=>{
+  const known=memo.get(path);if(known!==undefined)return known;
+  const list=listed.get(path);memo.set(path,true);
+  const value=list===undefined||list.some(entry=>entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&relevant(join(path,entry.name)));
+  memo.set(path,value);return value;
+ };
  for(const row of membership.paths){
   await advance();const path=posixRelative(workspace,row.path);
   if(!row.list){frontier.push(["s",path,...row.state]);continue;}
   const facts=lstatBig(row.path);
   if(!facts||!facts.isDirectory()||stateTuple(facts)!==JSON.stringify(row.state))return deferred("membership-directory-moved",path);
-  frontier.push(["d",path,String(facts.dev),String(facts.ino),Number(facts.mode),String(facts.mtimeNs),String(facts.ctimeNs),facts.mtimeNs<threshold&&facts.ctimeNs<threshold?1:0,generationProjectionDigestV1(row.list)]);
+  frontier.push(["d",path,String(facts.dev),String(facts.ino),Number(facts.mode),String(facts.mtimeNs),String(facts.ctimeNs),facts.mtimeNs<threshold&&facts.ctimeNs<threshold?1:0,generationProjectionDigestV1(row.list),generationProjectionDigestV1(row.list.filter(entry=>entry.kind!=="directory"||relevant(join(row.path,entry.name)))),relevant(row.path)?1:0]);
  }
  const observations:(readonly unknown[])[]=[];
  for(const row of input.execution.observations){
@@ -133,24 +147,31 @@ export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1)
   observations.push(["o",generationLocationV1(row.path,workspace,storeRoot),kindLetter(row.kind),row.anchor,row.stamp,row.target,row.full?1:0]);
  }
  const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null})))}));
- const loaded=BigInt(Math.trunc(input.implementation.loadedAtMs)-protocol.settleMilliseconds)*1000000n,unsettled=input.implementation.files.find(file=>BigInt(file.mtimeNs)>=loaded||BigInt(file.ctimeNs)>=loaded);
- if(unsettled)return deferred("implementation-unsettled",unsettled.path);
- const closure=[...input.implementation.files].sort((left,right)=>compareBytes(left.path,right.path)).map(file=>["f",file.path,file.sha256,file.bytes]as const);
- if(closure.length>protocol.implementation.maximumFiles||new Set(closure.map(row=>row[1])).size!==closure.length)throw Error("Bounded unique implementation closure required");
- const frontierFile=evidenceOf(frontier,protocol.frontierSuffix),executionFile=evidenceOf(observations,protocol.executionSuffix),closureFile=evidenceOf(closure,protocol.implementation.closureSuffix),sha=(text:string)=>generationSha256V1(text);
+ const frontierFile=evidenceOf(frontier,protocol.frontierSuffix),executionFile=evidenceOf(observations,protocol.executionSuffix),sha=(text:string)=>generationSha256V1(text);
  const receipt=sealGenerationReceiptV1({
-  version:1,purpose:"dependency-generation-receipt",scope:input.scope,implementation:{entries:[...input.implementation.entries].sort(compareBytes),evidence:closureFile.evidence},runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
+  version:1,purpose:"dependency-generation-receipt",scope:input.scope,walkStamp:protocol.walkStamp,runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
   membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256}))},
   bindings:input.bindings.map(row=>({scope:row.scope,pairs:row.pairs.map(pair=>({source:generationLocationV1(pair.sourceDirectory,workspace,storeRoot),target:generationLocationV1(pair.targetDirectory,workspace,storeRoot)})),observationSha256:sha(row.observation)})),
   ready:input.ready.map(row=>({scope:row.scope,generation:row.generation,location:generationLocationV1(row.path,workspace,storeRoot),fingerprint:row.fingerprint})),
   execution:{evidence:executionFile.evidence,scopes:input.execution.scopes.map(row=>({scope:row.scope,sha256:row.sha256})),runtimeSha256:input.execution.runtimeSha256},scopeReadSha256:input.scopeReadSha256,
  });
  const errors=receiptSchema.validate(receipt);if(errors.length)throw Error("Closed dependency generation receipt required",{cause:errors.slice(0,4)});
- return Object.freeze({status:"captured",receipt,files:Object.freeze([frontierFile.file,executionFile.file,closureFile.file])});
+ return Object.freeze({status:"captured",receipt,files:Object.freeze([frontierFile.file,executionFile.file])});
 }
 
 const mismatch=(cls:GenerationMismatchClassV1,path?:string,detail?:string):GenerationVerifyResultV1=>Object.freeze({status:"mismatch",class:cls,...(path===undefined?{}:{path}),...(detail===undefined?{}:{detail})});
-const sameRuntime=(left:GenerationRuntimeV1,right:GenerationRuntimeV1)=>left.bun===right.bun&&left.revision===right.revision&&left.node===right.node&&left.platform===right.platform&&left.arch===right.arch&&left.sha256===right.sha256;
+const runtimeFields=["manager","revision","node","platform","arch","sha256"]as const,movedRuntime=(left:GenerationRuntimeV1,right:GenerationRuntimeV1):string|undefined=>runtimeFields.find(field=>left[field]!==right[field]);
+/** 🩺️ Reduces any verification answer to the language-neutral cause a report names. */
+export function generationCauseV1(result:GenerationVerifyResultV1|Readonly<{status:"absent"}>,scope:string):Readonly<{class:string;path?:string;detail?:string}>{
+ if(result.status==="mismatch")return Object.freeze({class:result.class,...(result.path===undefined?{}:{path:result.path}),...(result.detail===undefined?{}:{detail:result.detail})});
+ return Object.freeze(result.status==="absent"?{class:"absent",path:scope}:{class:"sha-changed"});
+}
+/** 🗣️ Renders the exact input a mismatch names in one declared language; there is no hidden default language. */
+export function describeGenerationMismatchV1(language:string,result:Readonly<{class:string;path?:string;detail?:string}>,values:Readonly<Record<string,string|number>>={}):string{
+ const table=(protocol.texts as Readonly<Record<string,Readonly<Record<string,string>>>>)[language],template=table?.[result.class+"."+(result.detail??"")]??table?.[result.class];
+ if(!table||typeof template!=="string")throw Error("Declared language and message required");
+ return Object.entries({path:result.path??"",detail:result.detail??"",expected:protocol.walkStamp,limit:protocol.maximumRelist,...values}).reduce((text,[key,value])=>text.replaceAll("{"+key+"}",String(value)),template);
+}
 
 /** 🔬️ Replays a receipt against the live tree in cheapest-first tiers; never throws except on cancellation and never accepts a doubt. */
 export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):Promise<GenerationVerifyResultV1>{
@@ -158,12 +179,8 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
  const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
  try{
   control.check();
-  if(generationCanonicalJsonV1([...input.implementationEntries].sort(compareBytes))!==generationCanonicalJsonV1(receipt.implementation.entries))return mismatch("implementation-changed",undefined,"entries");
-  for(const row of decodeRows(input.readEvidence(receipt.implementation.evidence.name,protocol.maximumEvidenceBytes),receipt.implementation.evidence)){
-   await advance();const live=input.implementationFile(row[1]as string);
-   if(row[0]!=="f"||!live||live.sha256!==row[2]||live.bytes!==row[3])return mismatch("implementation-changed",row[1]as string,live?"bytes":"missing");
-  }
-  if(!sameRuntime(input.runtime(),receipt.runtime))return mismatch("runtime-changed");
+  if(receipt.walkStamp!==protocol.walkStamp)return mismatch("protocol-changed",undefined,receipt.walkStamp);
+  const movedField=movedRuntime(input.runtime(),receipt.runtime);if(movedField!==undefined)return mismatch("runtime-changed",undefined,movedField);
   const producer=input.producer(),sealed=generationCanonicalJsonV1(receipt.producer);
   if(generationCanonicalJsonV1(producer)!==sealed){
    const known=new Set([...receipt.producer.files.map(row=>generationCanonicalJsonV1(row)),...receipt.producer.environment.map(row=>generationCanonicalJsonV1(row))]),moved=[...producer.files,...producer.environment].find(row=>!known.has(generationCanonicalJsonV1(row)))??[...receipt.producer.files,...receipt.producer.environment][0];
@@ -182,21 +199,30 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
    await advance();const path=generationResolveV1(source.path,workspace,storeRoot),facts=lstatBig(path);
    if(source.kind==="missing"){if(facts)return mismatch("input-changed",source.path,"appeared");continue;}
    if(!facts||facts.isSymbolicLink()||(source.kind==="file"?!facts.isFile():!facts.isDirectory())||String(facts.dev)!==source.dev||String(facts.ino)!==source.ino||Number(facts.mode)!==source.mode)return mismatch("input-changed",source.path,"identity");
-   if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes)||generationSha256V1(readFileSync(path))!==source.sha256)return mismatch("input-changed",source.path,"bytes");}
+   if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes)||generationSha256V1(readGenerationData(path,protocol.maximumSourceFileBytes))!==source.sha256)return mismatch("input-changed",source.path,"bytes");}
   }
   for(const row of receipt.membership.texts){
    await advance();let text:string;
-   try{text=new TextDecoder("utf-8",{fatal:true}).decode(readFileSync(resolve(workspace,row.path)));}catch(error){if(control.signal.aborted)throw error;return mismatch("manifest-changed",row.path,"unreadable");}
+   try{text=new TextDecoder("utf-8",{fatal:true}).decode(readGenerationData(resolve(workspace,row.path),protocol.maximumSourceFileBytes));}catch(error){if(control.signal.aborted)throw error;return mismatch("manifest-changed",row.path,"unreadable");}
    if(generationSha256V1(text)!==row.sha256)return mismatch("manifest-changed",row.path,"bytes");
   }
-  let relisted=0;
-  for(const row of decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier)){
+  let relisted=0,scanned=0;
+  const rows=decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier),flags=new Map<string,number>(),child=(parent:string,name:string)=>parent==="."?name:parent+"/"+name;
+  for(const row of rows)if(row[0]==="d")flags.set(row[1]as string,row[10]as number);
+  const scan=(path:string):boolean=>{
+   if(++scanned>protocol.maximumScan)return true;
+   let list:readonly Readonly<{name:string;kind:string}>[];try{list=input.project(path);}catch{return true;}
+   return list.some(entry=>entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&scan(join(path,entry.name)));
+  };
+  for(const row of rows){
    await advance();const path=resolve(workspace,row[1]as string),facts=lstatBig(path);
    if(row[0]==="s"){if(stateTuple(facts)!==JSON.stringify(row.slice(2)))return mismatch("membership-changed",row[1]as string,"state");continue;}
-   if(!facts||!facts.isDirectory())return mismatch("membership-changed",row[1]as string,"directory");
+   if(!facts||!facts.isDirectory()){if(row[10]===0&&!facts?.isSymbolicLink())continue;return mismatch("membership-changed",row[1]as string,"directory");}
    if(row[7]===1&&String(facts.dev)===row[2]&&String(facts.ino)===row[3]&&Number(facts.mode)===row[4]&&String(facts.mtimeNs)===row[5]&&String(facts.ctimeNs)===row[6])continue;
    if(++relisted>protocol.maximumRelist)return mismatch("membership-churn",row[1]as string);
-   if(generationProjectionDigestV1(input.project(path))!==row[8])return mismatch("membership-changed",row[1]as string,"listing");
+   const live=input.project(path);if(generationProjectionDigestV1(live)===row[8])continue;
+   const pruned=live.filter(entry=>entry.kind!=="directory"||(flags.get(child(row[1]as string,entry.name))??(scan(join(path,entry.name))?1:0))===1);
+   if(generationProjectionDigestV1(pruned)!==row[9])return mismatch("membership-changed",row[1]as string,"listing");
   }
   for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){
    await advance();const path=generationResolveV1(row[1]as string,workspace,storeRoot),facts=lstatBig(path),full=row[6]===1,expected=full?row[4]:row[3];

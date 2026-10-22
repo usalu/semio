@@ -222,6 +222,6 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../🧪️tests/🧪️turnscheduler-lane-priority/🟦️.ts");
-  await registerTests1(import.meta.vitest, { TurnScheduler }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { TurnScheduler }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️Tests

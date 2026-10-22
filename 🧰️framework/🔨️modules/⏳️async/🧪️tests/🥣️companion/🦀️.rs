@@ -7,6 +7,9 @@
 use semio_framework_test_fixtures::fixture_path;
 
 pub use semio_framework_async::*;
+pub use semio_framework_async_slots::*;
+pub use semio_framework_async_sync::*;
+pub use semio_framework_async_timer::*;
 pub use semio_framework_async::internals::LANE_COUNT;
 pub use semio_framework_async::internals::CancelNode;
 use std::collections::VecDeque;

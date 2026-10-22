@@ -14,7 +14,16 @@ pub struct SetSafeNumber {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetSafeNumber {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "safe-number", kind: "set-safe-number", record: "SetSafeNumber" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set safe number", "Sichere Zahl setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<JsonSnapshot, JsonIJsonMutation> for SetSafeNumber {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::ReferenceDiff> {
         let Self { path, lexeme } = self;
         if !matches!(resolve(&base.value, path), Some(JsonValue::Number { .. })) {
             return protocol::MutationOutcome::error(CODE_TARGET_MISSING, "set-safe-number: the addressed path does not hold a number, and this verb writes a number over a number so that its own inverse is always another set-safe-number", target_of(path));
@@ -34,12 +43,6 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetSafeNumber {
             Some(JsonValue::Number { lexeme }) => vec![JsonIJsonMutation::SetSafeNumber(Self { path: path.clone(), lexeme: lexeme.clone() })],
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set safe number", "Sichere Zahl setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

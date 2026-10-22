@@ -23,7 +23,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "metadata-entry", kind: "remove-metadata-entry", record: "RemoveMetadataEntry" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioImageSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove metadata entry", "Metadateneintrag entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioImageSnapshot, Op> for RemoveMetadataEntry
+where
+    Op: protocol::ColdMutation<SemioImageSnapshot, ReferenceDiff = crate::schema::diff::SemioImageDiff> + From<RemoveMetadataEntry> + From<crate::schema::mutations::set_metadata_entry::SetMetadataEntry>,
+{
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioImageSnapshot>>::ReferenceDiff> {
         diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -32,12 +44,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove metadata entry", "Metadateneintrag entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

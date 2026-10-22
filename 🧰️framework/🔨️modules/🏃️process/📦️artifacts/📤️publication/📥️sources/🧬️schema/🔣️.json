@@ -8,8 +8,11 @@
     "auxiliaryDescriptors",
     "maximumFiles",
     "maximumBytes",
+    "maximumPublicationBytes",
     "chunkBytes",
     "maximumManifestBytes",
+    "maximumRetainedIndexBytes",
+    "maximumRetainedCompilationBytes",
     "maximumOwnerCharacters",
     "maximumPendingOperations",
     "maximumPendingReads",
@@ -32,11 +35,20 @@
     "maximumBytes": {
       "const": 536870912
     },
+    "maximumPublicationBytes": {
+      "const": 2147483648
+    },
     "chunkBytes": {
       "const": 65536
     },
     "maximumManifestBytes": {
       "const": 1048576
+    },
+    "maximumRetainedIndexBytes": {
+      "const": 16777216
+    },
+    "maximumRetainedCompilationBytes": {
+      "const": 1610612736
     },
     "maximumOwnerCharacters": {
       "const": 4096

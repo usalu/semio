@@ -68,6 +68,7 @@ semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️m
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-slots = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-framework-os-kernel" }
 semio-framework-os-services = { workspace = true }
 semio-framework-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
@@ -76,6 +77,7 @@ tokio = { version = "1", default-features = false, features = ["sync", "rt", "ne
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-framework-os-kernel" }
 tokio = { version = "1", default-features = false, features = ["sync"] }
 wasm-bindgen = "0.2.106"

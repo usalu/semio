@@ -21,9 +21,9 @@
     "@semio-tech/ui-react": "workspace:*"
   },
   "scripts": {
-    "build": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:build",
-    "test": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:test",
-    "test:e2e": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
+    "build": "repo run @semio-tech/mit-bestand-demonstrator:build",
+    "test": "repo run @semio-tech/mit-bestand-demonstrator:test",
+    "test:e2e": "repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
   },
   "devDependencies": {
     "@iarna/toml": "2.2.5",

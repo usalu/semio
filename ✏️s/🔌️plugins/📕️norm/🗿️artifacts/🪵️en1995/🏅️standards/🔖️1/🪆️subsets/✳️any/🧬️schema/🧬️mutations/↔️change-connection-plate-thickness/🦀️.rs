@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 pub struct ChangeConnectionPlateThickness { pub connection_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionPlateThickness where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_plate_thickness::ChangeConnectionPlateThickness> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-steelPlateThicknessM", kind: "change-connection-plate-thickness", record: "ChangedConnectionPlateThickness" };
-    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1995Snapshot>>::Diff> { crate::change_connection_plate_thickness::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Steel plate thickness of connection {}", self.connection_id), &format!("Stahlblechdicke von Verbindung {} ändern", self.connection_id)) }
+    fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeConnectionPlateThickness where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_plate_thickness::ChangeConnectionPlateThickness> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_connection_plate_thickness::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::change_connection_plate_thickness::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Steel plate thickness of connection {}", self.connection_id), &format!("Stahlblechdicke von Verbindung {} ändern", self.connection_id)) }
-    fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 
 //#region 🪢️Mounts

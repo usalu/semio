@@ -1,1 +1,1 @@
-{"version": 1, "maximumSnapshotBytes": 536870912, "maximumRetainedBytes": 1073741824, "maximumAdmissionAttempts": 9}
+{"version": 1, "maximumSnapshotBytes": 536870912, "maximumRetainedBytes": 1073741824, "maximumAdmissionAttempts": 9, "records": {"version": 2, "projectsPerYield": 16, "edgesPerRecord": 4096, "externalNodesPerRecord": 512, "maximumRecordBytes": 268435456, "compressionLevel": 4, "internMinimumItems": 16}}

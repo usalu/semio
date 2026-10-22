@@ -188,7 +188,7 @@ use semio_framework_diagnostic::Severity;
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {

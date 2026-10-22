@@ -1,5 +1,6 @@
 //#region Constants
-const METRICS_LOCK_FILES = new Set(["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "go.sum", "uv.lock", "bun.lockb", "cargo.lock"]);
+import {packageManagerRegistryV1} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+const METRICS_LOCK_FILES = new Set(["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "go.sum", "uv.lock", "cargo.lock", ...packageManagerRegistryV1.all().flatMap(manager => manager.descriptor.locks.filter(lock => lock.format.endsWith("-lockb")).map(lock => lock.name))]);
 
 const METRICS_LICENSE_TEMPLATE_BASENAMES = new Set(["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING", "COPYING.md", "NOTICE", "NOTICE.md", "UNLICENSE", "UNLICENSE.md"]);
 

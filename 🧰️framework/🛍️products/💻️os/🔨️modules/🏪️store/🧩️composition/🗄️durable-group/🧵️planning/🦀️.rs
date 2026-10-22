@@ -6,20 +6,11 @@ use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedClo
 mod borrowed_source;
 pub use borrowed_source::DurableBorrowedValue;
 #[path = "🎒️pack/🦀️.rs"]
-#[cfg(feature = "deflate")]
 mod pack;
-#[cfg(feature = "deflate")]
 pub use pack::DurablePackOutputV1;
 #[path = "🧷️member/🦀️.rs"]
-#[cfg(feature = "deflate")]
 mod member;
-#[cfg(feature = "deflate")]
 pub use member::DurableUnboundPlanningV1;
-#[path = "🔗️bound/🦀️.rs"]
-#[cfg(feature = "deflate")]
-mod bound;
-#[cfg(feature = "deflate")]
-pub use bound::DurableBoundPlanningV1;
 #[path = "🪪️decision/🦀️.rs"]
 mod decision;
 pub use decision::DurableDecisionIdentityV1;
@@ -36,8 +27,8 @@ pub struct DurableCanonicalOutputV1 {
     budget:DurableJsonBudgetV1,
 }
 
-fn permit(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool { grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth }
-fn copy(bytes: usize) -> RetirementDemand { RetirementDemand { copy_bytes: bytes, depth: 1, ..Default::default() } }
+pub fn permit(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool { grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth }
+pub fn copy(bytes: usize) -> RetirementDemand { RetirementDemand { copy_bytes: bytes, depth: 1, ..Default::default() } }
 
 impl DurableCanonicalOutputV1 {
     pub fn phase(&self) -> &'static str { match self.phase { 0 => "admit", 1 => "measure", 2 => "allocate", 3 => "write", 4 => "ready", _ => "closed" } }

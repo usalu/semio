@@ -271,8 +271,8 @@ test("artifact IO contracts and command registration parse independently", () =>
   const scripts = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).scripts;
   for (const verb of ["test", "lint"]) {
     const id = `${verb}-artifact-io-ownership`;
-    expect(targets[id].options.command).toBe(`bun ./📜️script.ts ${verb} artifact-io-ownership`);
-    expect(scripts[id]).toBe(`bun --cwd "${relative(packageRoot, resolve(library, "../../../../.."))}" repo run @semio-tech/repo-lib:${id}`);
+    expect(targets[id].options.command).toBe(`repo ./📜️script.ts ${verb} artifact-io-ownership`);
+    expect(scripts[id]).toBe(`repo --cwd "${relative(packageRoot, resolve(library, "../../../../.."))}" repo run @semio-tech/repo-lib:${id}`);
   }
 },{timeout:60000});
 

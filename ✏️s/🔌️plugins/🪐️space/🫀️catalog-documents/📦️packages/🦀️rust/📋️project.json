@@ -22,7 +22,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": false
       }
     },
@@ -31,7 +31,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": false
       }
     },
@@ -41,7 +41,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": false
       }
     }

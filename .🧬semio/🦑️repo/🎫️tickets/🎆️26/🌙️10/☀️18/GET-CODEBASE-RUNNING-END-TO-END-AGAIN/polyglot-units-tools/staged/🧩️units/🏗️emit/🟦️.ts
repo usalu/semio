@@ -32,8 +32,8 @@ export function nxUnitTargetsV1(plan: UnitPlanV1, options: {readonly outputRoot:
   return plan.order.map(id => {
     const unit = plan.byId.get(id)!, consumed = new Set(unit.dependencies.map(dependency => dependency.use));
     const inputs: NxUnitTargetV1["inputs"][number][] = [...[...unit.sources, ...unit.inputs, unitSpecPathV1(options.specRoot, id)].map(path => `{workspaceRoot}/${path}`)];
-    if (consumed.has("interface")) inputs.push({dependentTasksOutputFiles: "**/iface.json", transitive: false});
-    if (consumed.has("implementation")) inputs.push({dependentTasksOutputFiles: "**/out.json", transitive: false});
+    if (consumed.has("interface") || consumed.has("both")) inputs.push({dependentTasksOutputFiles: "**/iface.json", transitive: false});
+    if (consumed.has("implementation") || consumed.has("both")) inputs.push({dependentTasksOutputFiles: "**/out.json", transitive: false});
     return {
       name: unitTargetNameV1(id), unit: id, executor: "nx:run-commands", command: [...options.command, "exec", "--spec", unitSpecPathV1(options.specRoot, id), "--out-root", options.outputRoot], cache: true, inputs,
       outputs: [`{workspaceRoot}/${unitOutputPathV1(options.outputRoot, id)}`, ...(unit.interface ? [`{workspaceRoot}/${unitInterfacePathV1(options.outputRoot, id)}`] : [])],
@@ -106,7 +106,7 @@ export function bazelUnitsV1(plan: UnitPlanV1, options: {readonly runner: string
     return found;
   };
   for (const id of plan.order) {
-    const unit: UnitV1 = plan.byId.get(id)!, iface = unit.dependencies.filter(dependency => dependency.use === "interface").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort(), impl = unit.dependencies.filter(dependency => dependency.use === "implementation").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort();
+    const unit: UnitV1 = plan.byId.get(id)!, iface = unit.dependencies.filter(dependency => dependency.use === "interface" || dependency.use === "both").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort(), impl = unit.dependencies.filter(dependency => dependency.use === "implementation" || dependency.use === "both").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort();
     const environment = options.environment ?? {}, env = sortedCodePointsV1(Object.keys(environment)).map(key => `${quote(key)}: ${quote(environment[key]!)}`).join(", ");
     const own = new Set([...unit.sources, ...unit.inputs, ...extra(unit)]);
     const readsSources = unit.action.env.SEMIO_BAZEL_INPUTS === "sources" || (unit.action.env.SEMIO_BAZEL_INPUTS === undefined && unit.dependencies.some(dependency => { const kind = plan.byId.get(dependency.unit)!.interface; return dependency.use !== "declared" && kind !== null && options.policy.interfaceKinds[kind.kind]?.bazel === "sources"; }));

@@ -10,7 +10,7 @@
     "test-carrier": {
       "executor": "repo:script",
       "cache": true,
-      "options": {"cwd":"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator","command": "bun ./📜️script.ts test-carrier", "forwardAllArgs": true},
+      "options": {"cwd":"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator","command": "repo ./📜️script.ts test-carrier", "forwardAllArgs": true},
       "outputs": []
     },
     "🏭️generator": {
@@ -18,7 +18,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -33,7 +33,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator",
-        "command": "bun ./📜️script.ts manifests",
+        "command": "repo ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -48,7 +48,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator",
-        "command": "bun ./📜️script.ts carrier",
+        "command": "repo ./📜️script.ts carrier",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -63,7 +63,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator",
-        "command": "bun ./📜️script.ts carrier-manifests",
+        "command": "repo ./📜️script.ts carrier-manifests",
         "forwardAllArgs": true
       },
       "metadata": {

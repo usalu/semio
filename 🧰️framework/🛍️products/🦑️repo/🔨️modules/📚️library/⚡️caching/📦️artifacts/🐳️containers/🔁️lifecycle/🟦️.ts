@@ -1,8 +1,8 @@
 /** 🔁️ The devcontainer's start and attach lifecycle (`.devcontainer/devcontainer.json` `postStartCommand` /
- * `postAttachCommand` → `bun ./📜️script.ts setup devcontainer start|attach`), replacing the retired Bash hooks with one
+ * `postAttachCommand` → `repo run workspace:setup-devcontainer-start|attach`), with one
  * owned, testable implementation. Start: emoji font fallback, ownership of the persisted home volumes and submodules,
  * Claude Code auth storage, git `safe.directory` for the bind-mounted checkout, the SSH commit-signing agent. Attach: the
- * optional F3D viewer and repository hooks. Every external program
+ * optional F3D viewer. Every external program
  * runs through an injected {@link LifecycleHost} (one argv, never a shell), so each step is exercised against recording
  * hosts on any machine; failures of optional steps are reported and never block the container.
  * https://containers.dev/implementors/json_reference/#lifecycle-scripts */
@@ -259,12 +259,6 @@ export async function installF3d(host: LifecycleHost, context: LifecycleContext)
 //#endregion 📦️Tools
 
 //#region 🔁️Lifecycle
-/** 🔧️ Reinstalls the git hooks (micro-commit hooks; blocking pre-commit hooks are dropped) through the workspace script, which needs no built binary. */
-export function configureRepoHooks(host: LifecycleHost, context: LifecycleContext): void {
-  const installed = host.run("bun", ["./📜️script.ts", "micro-commit", "install-hooks"], { cwd: context.workspace });
-  host.log(installed.status === 0 ? "✅️ Git hooks installed." : "⚠️  Git hook installation failed, continuing without blocking attach.");
-}
-
 /** 🔁️ `setup devcontainer start`: fonts, ownership, Claude auth storage, git trust, commit signing. */
 export function devcontainerStart(host: LifecycleHost, context: LifecycleContext): void {
   ownPersistedState(host, context);
@@ -276,12 +270,11 @@ export function devcontainerStart(host: LifecycleHost, context: LifecycleContext
   host.log("✅️ Environment ready.");
 }
 
-/** 🔁️ Prepares the optional F3D viewer and repository hooks; developer control remains in the dashboard. */
+/** 🔁️ Prepares the optional F3D viewer while developer control remains in the dashboard. */
 export async function devcontainerAttach(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   const skipTools = Boolean(context.env.SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL);
   if (skipTools) host.log("ℹ  Tool installation skipped.");
   if (!skipTools) await installF3d(host, context).catch((error: unknown) => host.log(`⚠️  ${String(error)}`));
-  configureRepoHooks(host, context);
   host.log("✅️ Post-attach setup complete.");
 }
 //#endregion 🔁️Lifecycle

@@ -1,6 +1,7 @@
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {resolveBuildHelpLanguageV1} from "../../⚙️operations/📖️help/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🧾️ The closed derivation document: named glob profiles and the rules that select targets and name what they read. */
 export type InputPrecisionDocumentV1 = {readonly version: 1; readonly exclusions: readonly string[]; readonly retained: readonly string[]; readonly profiles: Readonly<Record<string, {readonly description: string; readonly reads: readonly InputPrecisionReadV1[]}>>; readonly rules: readonly InputPrecisionRuleV1[]; readonly routes: readonly InputPrecisionRouteV1[]; readonly messages: InputPrecisionMessagesV1};
@@ -78,7 +79,7 @@ export function inputGlobRegExpV1(pattern: string): RegExp {
     } else if (character === "," && depth) source += "|";
     else source += character.replace(/[.+^$()|\\[\]{}]/u, "\\$&");
   }
-  const expression = new RegExp("^" + source + "$", "u");
+  const expression = new RegExp("^" + source + "$", "su");
   compiledGlobs.set(pattern, expression);
   return expression;
 }
@@ -142,7 +143,7 @@ export function commandTokensV1(command: string): string[] {
 /** 🧭️ The words a `bun <script> <words…>` command passes to its script; `undefined` for anything else. */
 export function commandWordsV1(command: string): {readonly script: string; readonly words: readonly string[]} | undefined {
   const tokens = commandTokensV1(command);
-  if (tokens[0] !== "bun") return undefined;
+  if (!isRuntimeExecutableV1(tokens[0] ?? "")) return undefined;
   const index = tokens.findIndex((token, position) => position > 0 && /script\.ts$/u.test(token));
   return index < 0 ? undefined : {script: tokens[index]!, words: tokens.slice(index + 1)};
 }

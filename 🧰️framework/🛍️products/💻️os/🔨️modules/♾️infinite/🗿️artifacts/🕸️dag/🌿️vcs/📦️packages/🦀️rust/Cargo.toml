@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -37,3 +38,7 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-graph-manifest = { path = "../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-framework-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }

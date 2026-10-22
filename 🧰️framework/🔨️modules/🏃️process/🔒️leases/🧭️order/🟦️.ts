@@ -12,7 +12,7 @@ export type LeaseOrderRuleV1="enforce"|"observe"|"off";
 /** 🏷️ One lock class: a rank in the declared order and the resource names that belong to it. */
 export type LeaseClassV1=Readonly<{id:string;rank:number;scope:"machine"|"checkout"|"project"|"crate"|"generation"|"path"|"session";owner:string;title:Readonly<{en:string;de:string}>;match:readonly Readonly<{kind:"prefix"|"exact";value:string}>[]}>;
 /** 📜️ The authored lock order policy (`Policy` of the schema). */
-export type LeaseOrderPolicyV1=Readonly<{version:1;rules:Readonly<{outOfOrder:LeaseOrderRuleV1;holdAndWait:LeaseOrderRuleV1;selfDeadlock:LeaseOrderRuleV1;cycle:LeaseOrderRuleV1}>;holdAndWait:Readonly<{graceMilliseconds:number;pollMilliseconds:number}>;cycle:Readonly<{intervalMilliseconds:number}>;registry:Readonly<{flushMilliseconds:number;maximumEntryBytes:number;maximumViolations:number}>;fairness:Readonly<{queuedWithResourceLeases:boolean;reentrantShared?:boolean}>;media:readonly Readonly<{prefix:string}>[];gate:Readonly<{releaseWhileWaiting:boolean;pollInitialMilliseconds:number;pollMaximumMilliseconds:number}>;classes:readonly LeaseClassV1[];allowed:readonly Readonly<{from:string;to:string;reason:Readonly<{en:string;de:string}>}>[]}>;
+export type LeaseOrderPolicyV1=Readonly<{version:1;rules:Readonly<{outOfOrder:LeaseOrderRuleV1;holdAndWait:LeaseOrderRuleV1;selfDeadlock:LeaseOrderRuleV1;cycle:LeaseOrderRuleV1}>;holdAndWait:Readonly<{graceMilliseconds:number;pollMilliseconds:number}>;cycle:Readonly<{intervalMilliseconds:number}>;registry:Readonly<{flushMilliseconds:number;maximumEntryBytes:number;maximumViolations:number}>;fairness:Readonly<{queuedWithResourceLeases:boolean;reentrantShared?:boolean}>;media:readonly Readonly<{prefix:string}>[];gate:Readonly<{releaseWhileWaiting:boolean;pollInitialMilliseconds:number;pollMaximumMilliseconds:number;admissionPatienceMilliseconds:number;claimSweepIntervalMilliseconds:number;claimSweepPressureFreeRatio:number;claimSweepPressureIntervalMilliseconds:number}>;classes:readonly LeaseClassV1[];allowed:readonly Readonly<{from:string;to:string;binding?:Readonly<{kind:"same-directory-suffix";fromPrefix:string;toPrefix:string}>;reason:Readonly<{en:string;de:string}>}>[]}>;
 /** 🧾️ One violation (`Violation` of the schema), in data form so tools can render it in any language. */
 export type LeaseViolationV1=Readonly<{version:1;kind:"out-of-order"|"hold-and-wait"|"self-deadlock"|"cycle";held:string;heldMode:LeaseModeV1;heldRank:number;heldClass:string;requested:string;requestedMode:LeaseModeV1;requestedRank:number;requestedClass:string;waitedMilliseconds?:number;blockerPid?:number;blockerHeldSeconds?:number;cycle?:readonly string[];atMs:number;pid:number;enforced?:boolean}>;
 /** 🎒️ One lease a task currently holds. */
@@ -89,7 +89,7 @@ export function isLeaseMediumV1(policy:LeaseOrderPolicyV1,held:HeldLeaseV1,reque
  return policy.media.some(medium=>held.resource.startsWith(medium.prefix)&&(slash(request.directory)+"/").startsWith(slash(held.resource.slice(medium.prefix.length))+"/"));
 }
 
-const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string):boolean=>policy.allowed.some(edge=>edge.from===from&&edge.to===to);
+const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string,held:HeldLeaseV1,request:Request):boolean=>policy.allowed.some(edge=>{if(edge.from!==from||edge.to!==to)return false;const binding=edge.binding;if(!binding)return true;return held.directory===request.directory&&held.resource.startsWith(binding.fromPrefix)&&request.resource.startsWith(binding.toPrefix)&&held.resource.length>binding.fromPrefix.length&&held.resource.slice(binding.fromPrefix.length)===request.resource.slice(binding.toPrefix.length);});
 
 type Request=Readonly<{directory:string;resource:string;mode:LeaseModeV1;nonblocking:boolean;bounded?:boolean}>;
 const violation=(kind:LeaseViolationV1["kind"],policy:LeaseOrderPolicyV1,held:HeldLeaseV1,request:Request,extra:Partial<LeaseViolationV1>={}):LeaseViolationV1=>{
@@ -110,7 +110,7 @@ export function checkLeaseOrderV1(policy:LeaseOrderPolicyV1,held:readonly HeldLe
  if(policy.rules.outOfOrder!=="off"){
   const wanted=classifyLeaseResourceV1(policy,request.resource);
   if(wanted.rank>0){
-   const later=held.filter(row=>!isLeaseMediumV1(policy,row,request)).filter(row=>{const now=classifyLeaseResourceV1(policy,row.resource);return now.rank>wanted.rank&&!edgeAllowed(policy,now.id,wanted.id);}).sort((left,right)=>left.atMs-right.atMs)[0];
+   const later=held.filter(row=>!isLeaseMediumV1(policy,row,request)).filter(row=>{const now=classifyLeaseResourceV1(policy,row.resource);return now.rank>wanted.rank&&!edgeAllowed(policy,now.id,wanted.id,row,request);}).sort((left,right)=>left.atMs-right.atMs)[0];
    if(later)return violation("out-of-order",policy,later,request);
   }
  }
@@ -121,7 +121,7 @@ export function checkLeaseOrderV1(policy:LeaseOrderPolicyV1,held:readonly HeldLe
 export function checkHoldAndWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Readonly<{pid:number;heldSeconds:number}>):LeaseViolationV1|undefined{
  if(request.nonblocking||policy.rules.holdAndWait==="off"||waitedMilliseconds<policy.holdAndWait.graceMilliseconds)return undefined;
  const wanted=classifyLeaseResourceV1(policy,request.resource);
- const hold=held.filter(row=>row.mode==="exclusive"&&!(row.directory===request.directory&&row.resource===request.resource)&&!edgeAllowed(policy,classifyLeaseResourceV1(policy,row.resource).id,wanted.id)).sort((left,right)=>left.atMs-right.atMs)[0];
+ const hold=held.filter(row=>row.mode==="exclusive"&&!(row.directory===request.directory&&row.resource===request.resource)&&!edgeAllowed(policy,classifyLeaseResourceV1(policy,row.resource).id,wanted.id,row,request)).sort((left,right)=>left.atMs-right.atMs)[0];
  return hold?violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,...blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds}:{}}):undefined;
 }
 

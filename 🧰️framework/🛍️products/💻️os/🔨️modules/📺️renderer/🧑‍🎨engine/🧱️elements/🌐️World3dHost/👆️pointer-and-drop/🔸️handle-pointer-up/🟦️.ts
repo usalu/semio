@@ -1,5 +1,6 @@
 /** 🔸️ The handle pointer up phase of useWorldPointerAndDrop. */
-import React, { useCallback, useEffect } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
 import { celebrateWorldInstances } from "../../🎨️mesh-render/🎊️instance-celebration/🟦️.ts";
 import { clientPointOverHost, hoveredInteractionTargetV1, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";

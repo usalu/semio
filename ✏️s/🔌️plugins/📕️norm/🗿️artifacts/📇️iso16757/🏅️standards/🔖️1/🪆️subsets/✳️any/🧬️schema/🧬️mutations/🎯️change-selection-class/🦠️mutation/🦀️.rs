@@ -16,7 +16,13 @@ pub struct ChangeSelectionClass {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeSelectionClass where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_selection_class::mutation::ChangeSelectionClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selection-class", kind: "change-selection-class", record: "ChangedSelectionClass" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change selection class to \"{}\"", self.new_class_id), &format!("Auswahlklasse auf \"{}\" ändern", self.new_class_id))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for ChangeSelectionClass where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_selection_class::mutation::ChangeSelectionClass> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::change_selection_class::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,8 +31,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeSelectionClass w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change selection class to \"{}\"", self.new_class_id), &format!("Auswahlklasse auf \"{}\" ändern", self.new_class_id))
-    }
 }
 //#endregion 🔖️Payload

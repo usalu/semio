@@ -381,10 +381,9 @@ function policyCollectGluePathTargets(glueAbs: string): Set<string> {
 export function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const reachable = new Set<string>();
-  const owners = [...new Set(crates.filter((crate) => crate.shape === "taxonomy").map((crate) => crate.ownerRel).filter(Boolean))];
+  const owners = [...new Set(crates.map((crate) => crate.ownerRel).filter(Boolean))];
   const glueRoots = owners.length > 0 ? owners : ["✏️s/🔌️plugins"];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
     for (const target of policyCollectGluePathTargets(join(repoRoot, crate.libRelPath))) reachable.add(target);
   }
   for (const glueRel of policyWalkRelFiles(repoRoot, glueRoots, (_p, name) => name === "🦀️.rs")) {

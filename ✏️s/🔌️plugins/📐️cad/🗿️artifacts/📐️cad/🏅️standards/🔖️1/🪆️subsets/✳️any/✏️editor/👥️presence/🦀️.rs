@@ -60,17 +60,9 @@ pub struct CadPresenceDiff {
     pub engagement_pane: Option<semio_s_artifact_cad_cad_config::CadTextSet>,
 }
 
-impl protocol::MutationDiff<CadPresence> for CadPresenceDiff {
-    fn apply(&self, base: &CadPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadPresence> {
-        Ok(CadPresence {
-            camera_position: self.camera_position.unwrap_or(base.camera_position),
-            camera_target: self.camera_target.unwrap_or(base.camera_target),
-            camera_zoom: self.camera_zoom.unwrap_or(base.camera_zoom),
-            camera_fov: self.camera_fov.unwrap_or(base.camera_fov),
-            engagement_step: self.engagement_step.clone().unwrap_or_else(|| base.engagement_step.clone()),
-            engagement_pane: self.engagement_pane.as_ref().map_or_else(|| base.engagement_pane.clone(), |set| set.value.clone()),
-        })
-    }
+impl protocol::MutationDiff<CadPresence> for CadPresenceDiff {}
+
+impl protocol::ColdMutationDiff<CadPresence> for CadPresenceDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -86,9 +78,28 @@ impl protocol::MutationDiff<CadPresence> for CadPresenceDiff {
         take!(engagement_step);
         take!(engagement_pane);
     }
+
+    fn apply(&self, unpublished: &mut CadPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = CadPresence {
+            camera_position: self.camera_position.unwrap_or(base.camera_position),
+            camera_target: self.camera_target.unwrap_or(base.camera_target),
+            camera_zoom: self.camera_zoom.unwrap_or(base.camera_zoom),
+            camera_fov: self.camera_fov.unwrap_or(base.camera_fov),
+            engagement_step: self.engagement_step.clone().unwrap_or_else(|| base.engagement_step.clone()),
+            engagement_pane: self.engagement_pane.as_ref().map_or_else(|| base.engagement_pane.clone(), |set| set.value.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CadPresence> for CadPresenceDiff {
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CadPresence> for CadPresenceDiff {
     fn inverse(&self, base: &CadPresence) -> Self {
         Self {
             camera_position: self.camera_position.map(|_| base.camera_position),
@@ -98,9 +109,6 @@ impl protocol::DiffAlgebra<CadPresence> for CadPresenceDiff {
             engagement_step: self.engagement_step.as_ref().map(|_| base.engagement_step.clone()),
             engagement_pane: self.engagement_pane.as_ref().map(|_| semio_s_artifact_cad_cad_config::CadTextSet { value: base.engagement_pane.clone() }),
         }
-    }
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
     }
 }
 
@@ -189,7 +197,10 @@ impl Mutation<CadPresence> for CadPresenceMutation {
             Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<CadPresence> for CadPresenceMutation {
+    type ReferenceDiff = CadPresenceDiff;
     fn diff(&self, base: &CadPresence) -> protocol::MutationOutcome<CadPresenceDiff> {
         let Self::Set { presence } = self;
         let diff = CadPresenceDiff {
@@ -205,7 +216,6 @@ impl Mutation<CadPresence> for CadPresenceMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &CadPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::Set { presence: base.clone() }])
     }

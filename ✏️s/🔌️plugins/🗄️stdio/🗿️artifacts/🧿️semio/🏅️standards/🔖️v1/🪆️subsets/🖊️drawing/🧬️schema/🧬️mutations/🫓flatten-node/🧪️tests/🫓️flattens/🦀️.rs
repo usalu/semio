@@ -10,7 +10,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫓flatten-node/🫓️flattens/📸️snapshot/⬅️before/🔣️.json"));
@@ -36,7 +36,7 @@ async fn hoists_the_nested_identity_groups_leaves() {
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: before_inner, .. } = &base_children[2] else { panic!("child #2 is the group being flattened") };
     assert!(matches!(before_inner[0], DrawNode::Group { .. }), "the fixture needs a nested group for flattening to have anything to do");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("flatten applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("flatten applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "flatten/flattens-an-identity-nested-group-into-its-leaves: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: inner, transform } = &children[2] else { panic!("child #2 is still a group") };
@@ -57,9 +57,9 @@ async fn the_undo_unflatten_carries_the_captured_hierarchy() {
     let SemioDrawingMutation::UnflattenNode(restore) = &undo[0] else { panic!("flatten must undo as unflatten") };
     let DrawNode::Group { children: original_children, .. } = &restore.original else { panic!("the captured original is the group itself") };
     assert!(matches!(original_children[0], DrawNode::Group { .. }), "the captured original still carries the nested group the flatten dissolved");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward flatten applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward flatten applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo unflatten applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo unflatten applies");
     }
     assert_eq!(current, base, "flatten/flattens-an-identity-nested-group-into-its-leaves: the undo did not restore the before-snapshot");
 }
@@ -91,7 +91,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "flatten/flattens-an-identity-nested-group-into-its-leaves: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -124,6 +124,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed flatten diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed flatten diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed flatten diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "flatten/flattens-an-identity-nested-group-into-its-leaves: committed diff did not carry before to after");
 }

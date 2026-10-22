@@ -4,7 +4,7 @@
  */
 
 import { decodeDagHoverJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
-import { useCallback, useEffect, type DragEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, type DragEvent, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
 import {
   CATALOGUE_DRAG_MIME,
   getActiveCatalogueDragPayload,

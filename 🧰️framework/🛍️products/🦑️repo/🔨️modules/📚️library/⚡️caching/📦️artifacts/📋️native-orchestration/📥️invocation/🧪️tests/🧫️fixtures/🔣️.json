@@ -11,7 +11,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -40,7 +40,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -69,7 +69,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -97,7 +97,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -146,7 +146,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -172,7 +172,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -199,7 +199,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -226,7 +226,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -256,7 +256,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -286,7 +286,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -317,7 +317,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -347,7 +347,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -376,7 +376,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"
@@ -592,7 +592,7 @@
           "kind": "native-owner-command",
           "manifest": "owner/Cargo.toml",
           "workingDirectory": "owner",
-          "program": "bun",
+          "program": "repo",
           "arguments": [
             "owner/📜️script.ts",
             "portable"

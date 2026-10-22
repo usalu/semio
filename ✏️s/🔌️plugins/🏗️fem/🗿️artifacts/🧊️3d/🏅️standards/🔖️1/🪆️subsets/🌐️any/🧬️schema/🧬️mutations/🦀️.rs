@@ -18,8 +18,8 @@ use semio_s_fem_material::volumetric::FemMaterialValue;
 use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
-use protocol::Mutation;
-use protocol::ColdMutation;
+use protocol::{ColdMutation, Mutation};
+
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use store::os_store::store_schema::ArtifactEnvelope;

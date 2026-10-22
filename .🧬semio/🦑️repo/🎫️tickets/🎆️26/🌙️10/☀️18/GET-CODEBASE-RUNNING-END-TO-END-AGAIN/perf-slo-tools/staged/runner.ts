@@ -206,6 +206,7 @@ export type BenchHostPortsV1=IncrementalHostV1&Readonly<{
  spawn?:BenchPortsV1["spawn"];
  cache?:BenchPortsV1["cache"];
  concurrency?:BenchPortsV1["concurrency"];
+ concurrencyCommand?:typeof runConcurrencyCommandV1;
  service?:BenchServicePortV1;
  sample?:()=>BenchHostV1;
  clock?:()=>string;
@@ -225,7 +226,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
   stop:async()=>{const call=cli("neutral",[policy.serviceOperation,"stop"]);await host.run(call.command,call.args,host.root,call.env,host.signal);}
  });
  return Object.freeze({
-  read:path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
+  read:async path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
   write:async(path,text)=>{await writeFile(incrementalInsideV1(host.root,path),text);},
   spawn:host.spawn??((spec,stop)=>{const call=cli(spec.tool,spec.args);return benchSpawnV1(call.command,call.args,host.root,call.env,benchMarkersV1(spec.tool),spec.memory,stop,host.now);}),
   cache:host.cache??(async(tool,target)=>{
@@ -237,7 +238,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
   concurrency:host.concurrency??(async(tool,workload,sessions)=>{
    if(!host.commandPorts)throw Error(both("The command ports are required for concurrency runs","Für Gleichzeitigkeitsläufe werden die Befehlsanschlüsse benötigt"));
    const out:string[]=[];
-   try{await runConcurrencyCommandV1(host.live,["concurrency","run",`--workloads=${workload}`,`--sessions=${sessions}`,`--implementations=${tool}`,"--json",`--root=${host.root}`],{...host.commandPorts,write:line=>{out.push(line);}});}
+   try{await (host.concurrencyCommand??runConcurrencyCommandV1)(host.live,["concurrency","run",`--workloads=${workload}`,`--sessions=${sessions}`,`--implementations=${tool}`,"--json",`--root=${host.root}`],{...host.commandPorts,write:line=>{out.push(line);}});}
    catch(error){if(!out.length)throw error;}
    return benchConcurrencyFromReportV1(JSON.parse(out.join("\n")) as ConcurrentReportV1);
   }),

@@ -97,7 +97,7 @@ async fn pending_guest_releases_the_only_worker_and_admits_no_duplicate_step() {
     assert_eq!(mock.start_admissions(), 1);
     assert_eq!(mock.step_admissions(), 1, "pending caller turns must only try-receive the admitted guest future");
 
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit(
         Lane::UserVisible,
         Box::new(move || {
@@ -170,7 +170,7 @@ async fn a_callers_cancel_stops_a_mounted_infer_blocked_in_a_pending_guest_step(
     let _gate = mock.script_pending_job_step(actor, JobStep::Done { output: b"never-delivered".to_vec() }).await;
     let pool = plugin_host_worker_pool();
     let caller = semio_framework_async::CancelToken::root_now();
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     let (route_handle, route_cancel) = (Arc::clone(&handle), caller.clone());
     GuestRelayPoolFuture::spawn_recoverable(
         pool.clone(),

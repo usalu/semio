@@ -1,5 +1,5 @@
 use crate::NoteSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::ToValue;
 #[allow(unused_imports)]
 use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
@@ -94,7 +94,7 @@ async fn root_scalar_inverse_and_absorb_laws() {
         laws(&base, &mutation).await;
     }
     let d1 = change_grid_spacing(Some(10.0)).diff(&base).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = change_grid_spacing(Some(20.0)).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

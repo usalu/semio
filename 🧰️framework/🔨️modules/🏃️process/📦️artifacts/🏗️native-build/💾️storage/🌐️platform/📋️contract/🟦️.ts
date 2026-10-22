@@ -1,7 +1,6 @@
 import {lstatSync,opendirSync,statfsSync} from "node:fs";
 import {dirname,join,resolve,relative,isAbsolute,sep} from "node:path";
-import {nativeDirectoryProtocolV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1} from "../../📁️directory/🟦️.ts";
-import {nativeDirectoryUsedBytesSyncV1} from "./📐️statfs/🟦️.ts";
+import {nativeStorageAttachedV1,nativeStorageBackingFilenameV1,nativeStorageFilesystemBytesV1,nativeStorageSpaceV1,nativeStorageUsedBytesV1} from "../../🔌️backends/📋️contract/🟦️.ts";
 export {nativeDirectoryUsedBytesSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";
 import {requireMaterializedPathV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import type {NativeStoragePortV1} from "../../🔌️port/🟦️.ts";
@@ -51,23 +50,23 @@ export interface NativeImageStorageV1{
 /** 🧭️ Resolves the compact canonical mount namespace without a path alias. */
 export function nativeImageRootV1(directory:string):string{return requireMaterializedPathV1(join(directory,protocol.mountDirectory));}
 
-/** 🏷️ Names the physical backing file of one platform's native storage image. */
-export function nativeImageBackingFilenameV1(platform:string=process.platform):string{return platform==="darwin"?"fixed.dmg":nativeDirectoryProtocolV1().anchor;}
-/** 📁️ Tells whether the host stores its native partitions as directories instead of mounted images. */
-export const nativeImageDirectoryHostV1=(platform:string=process.platform):boolean=>platform==="linux"||platform==="win32";
-/** 🔗️ Tells whether the image root shows its attached volume instead of the empty underlying placeholder. */
-export function nativeImageAttachedV1(image:string,root:string):boolean{if(nativeImageDirectoryHostV1())return observeNativeDirectoryStateV1(dirname(image))==="attached";return lstatSync(root).dev!==lstatSync(image).dev;}
+/** 🏷️ Names the physical backing file of one declared backend (default: the selected one). */
+export const nativeImageBackingFilenameV1=nativeStorageBackingFilenameV1;
+export {nativeStorageBackendOfDirectoryV1,type NativeStorageBackendDeclarationV1} from "../../🔌️backends/📋️contract/🟦️.ts";
+/** 🔗️ Tells whether the image root shows its attached volume instead of the empty underlying placeholder, by the backend that owns the backing file. */
+export const nativeImageAttachedV1=nativeStorageAttachedV1;
 /** 📐️ Reports the whole-volume capacity: the declared envelope for directory partitions, the mounted filesystem otherwise. */
-export function nativeImageFilesystemBytesV1(root:string,declared:number):number{if(nativeImageDirectoryHostV1())return declared;const filesystem=statfsSync(root);return filesystem.blocks*filesystem.bsize;}
+export const nativeImageFilesystemBytesV1=nativeStorageFilesystemBytesV1;
 /** 🧮️ Reports the physical bytes in use below the root: a bounded tree measurement for directory partitions, the mounted filesystem otherwise. */
-export function nativeImageUsedBytesV1(root:string):number{if(nativeImageDirectoryHostV1())return nativeDirectoryUsedBytesSyncV1(root,readNativeDirectoryAnchorFileV1(dirname(root)).maximumPhysicalBytes);const filesystem=statfsSync(root,{bigint:true});if(filesystem.bsize<1n||filesystem.blocks<filesystem.bfree||filesystem.bfree<filesystem.bavail||filesystem.bavail<0n)throw Error("Coherent filesystem statistics required");return Number((filesystem.blocks-filesystem.bfree)*filesystem.bsize);}
-
+export const nativeImageUsedBytesV1=nativeStorageUsedBytesV1;
 /** 🪣️ Reports the allocation unit and the unused units of the enforcing volume, bounded by the declared envelope for directory partitions. */
-export function nativeImageSpaceV1(root:string,declared:number):Readonly<{bsize:number;bavail:number}>{const bsize=process.platform==="win32"?nativeDirectoryProtocolV1().exchange.windows.blockBytes:statfsSync(root).bsize;if(nativeImageDirectoryHostV1())return Object.freeze({bsize,bavail:Math.max(0,Math.floor((declared-nativeDirectoryUsedBytesSyncV1(root,declared))/bsize))});return Object.freeze({bsize,bavail:statfsSync(root).bavail});}
+export const nativeImageSpaceV1=nativeStorageSpaceV1;
+/** 🛎️ Classifies only provider-owned root service names from the enforcing platform contract. */
+export function nativeImageServiceEntryV1(name:unknown):boolean{return typeof name==="string"&&(protocol.reservedApplicationEntries as readonly string[]).includes(name.toLowerCase());}
 /** 📂️ Rejects symlinks and paths escaping the enforced filesystem before materialization. */
 export function requireNativeStoragePathV1(root:string,path:string):string{
  root=resolve(root);path=requireMaterializedPathV1(path);const suffix=relative(root,path);if(suffix===".."||suffix.startsWith(".."+sep)||isAbsolute(suffix))throw Error("Native storage path escapes enforcing boundary");
- const owner=lstatSync(root);if(!owner.isDirectory()||owner.isSymbolicLink())throw Error("Native storage root identity changed");const device=owner.dev,parts=suffix.split(/[\\/]/u).filter(Boolean);if(parts.length&&(protocol.reservedApplicationEntries as readonly string[]).includes(parts[0]!.toLowerCase()))throw Error("Native application path enters reserved platform service domain");
+ const owner=lstatSync(root);if(!owner.isDirectory()||owner.isSymbolicLink())throw Error("Native storage root identity changed");const device=owner.dev,parts=suffix.split(/[\\/]/u).filter(Boolean);if(parts.length&&nativeImageServiceEntryV1(parts[0]))throw Error("Native application path enters reserved platform service domain");
  let current=root;for(const[index,part]of parts.entries()){current=join(current,part);let status;try{status=lstatSync(current);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(status.isSymbolicLink())throw Error("Native storage symlink escapes enforcing boundary");if(status.dev!==device)throw Error("Native storage path crosses filesystem boundary");if(index<parts.length-1&&!status.isDirectory())throw Error("Native storage ancestor must be an original directory");}return path;
 }
 

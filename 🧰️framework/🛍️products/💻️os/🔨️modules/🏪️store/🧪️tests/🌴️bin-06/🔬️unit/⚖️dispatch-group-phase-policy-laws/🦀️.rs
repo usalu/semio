@@ -62,7 +62,7 @@ async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() 
 /// `ArtifactStore::set_merge_policy` (§C6, landed) end to end — no test-only policy fixture
 /// needed now that it exists.
 ///
-/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: ReferenceSpaceMember + MemberFactory>`: `MemberFactory` is
 /// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
 /// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
 /// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
@@ -119,7 +119,7 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
 /// member's own `merge_policy()` — a child left at the Normal default would still reject its own
 /// Error-level op right here, even though the coordinator's gate already accepted the group.
 ///
-/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: ReferenceSpaceMember + MemberFactory>`: `MemberFactory` is
 /// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
 /// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
 /// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
@@ -161,7 +161,7 @@ async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_fai
 /// 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
 /// one level `Normal` (the OTHER two policy tests above/below use) would have accepted.
 ///
-/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: ReferenceSpaceMember + MemberFactory>`: `MemberFactory` is
 /// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
 /// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
 /// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/
@@ -207,7 +207,7 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
 /// to_uri()` — the discipline that lets a caller with several members in flight tell messages
 /// apart. Parent-first ordering matches phase 1's own collection order.
 ///
-/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`: `MemberFactory` is
+/// 🎯️ `dispatch_group<Mp: SpaceMember, Mc: ReferenceSpaceMember + MemberFactory>`: `MemberFactory` is
 /// only required on the CHILDREN type (`Mc`) now — the parent/`Mp` bound dropped it (see
 /// `dispatch_group`'s own doc comment for why: only children are ever genesis-constructed).
 /// `parent_store` still uses this module's test wrapper regardless: `set_merge_policy`/

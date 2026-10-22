@@ -1,0 +1,304 @@
+{
+ "version": 1,
+ "flatten": [
+  {
+   "name": "a plain path",
+   "statement": "use a::b;",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    }
+   ]
+  },
+  {
+   "name": "a group with alias and nesting",
+   "statement": "use a::{b, c as d, e::f};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    },
+    {
+     "path": [
+      "a",
+      "c"
+     ],
+     "leaf": "d"
+    },
+    {
+     "path": [
+      "a",
+      "e",
+      "f"
+     ],
+     "leaf": "f"
+    }
+   ]
+  },
+  {
+   "name": "self names the parent",
+   "statement": "use a::{self, b};",
+   "expected": [
+    {
+     "path": [
+      "a"
+     ],
+     "leaf": "a"
+    },
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    }
+   ]
+  },
+  {
+   "name": "a glob is skipped",
+   "statement": "pub use crate::x::*;",
+   "expected": []
+  },
+  {
+   "name": "a nested glob is skipped",
+   "statement": "use a::{b::*, c};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "c"
+     ],
+     "leaf": "c"
+    }
+   ]
+  },
+  {
+   "name": "a leading group",
+   "statement": "use {a::b, c::d};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    },
+    {
+     "path": [
+      "c",
+      "d"
+     ],
+     "leaf": "d"
+    }
+   ]
+  },
+  {
+   "name": "a leading colon",
+   "statement": "use ::a::b;",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    }
+   ]
+  },
+  {
+   "name": "not a use",
+   "statement": "fn f() {}",
+   "expected": []
+  },
+  {
+   "name": "a dangling separator",
+   "statement": "use a::;",
+   "expected": []
+  },
+  {
+   "name": "a renamed self",
+   "statement": "use a::b::{self as s};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "s"
+    }
+   ]
+  },
+  {
+   "name": "visibility is ignored",
+   "statement": "pub(crate) use a::{b, c};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b"
+     ],
+     "leaf": "b"
+    },
+    {
+     "path": [
+      "a",
+      "c"
+     ],
+     "leaf": "c"
+    }
+   ]
+  },
+  {
+   "name": "deep nesting",
+   "statement": "use a::{b::{c::d, e}, f};",
+   "expected": [
+    {
+     "path": [
+      "a",
+      "b",
+      "c",
+      "d"
+     ],
+     "leaf": "d"
+    },
+    {
+     "path": [
+      "a",
+      "b",
+      "e"
+     ],
+     "leaf": "e"
+    },
+    {
+     "path": [
+      "a",
+      "f"
+     ],
+     "leaf": "f"
+    }
+   ]
+  }
+ ],
+ "prune": [
+  {
+   "name": "a two-leaf group loses one and flattens",
+   "statement": "use a::{b, c};",
+   "drop": [
+    "b"
+   ],
+   "expected": "use a::c;"
+  },
+  {
+   "name": "every leaf dropped",
+   "statement": "use a::{b, c};",
+   "drop": [
+    "b",
+    "c"
+   ],
+   "expected": null
+  },
+  {
+   "name": "nothing dropped re-renders",
+   "statement": "use a::{b, c};",
+   "drop": [
+    "z"
+   ],
+   "expected": "use a::{b, c};"
+  },
+  {
+   "name": "an alias is dropped by its alias name",
+   "statement": "use a::{b as x, c};",
+   "drop": [
+    "x"
+   ],
+   "expected": "use a::c;"
+  },
+  {
+   "name": "a lone self keeps its group",
+   "statement": "use a::{self, b};",
+   "drop": [
+    "b"
+   ],
+   "expected": "use a::{self};"
+  },
+  {
+   "name": "a plain use dropped",
+   "statement": "use a::b;",
+   "drop": [
+    "b"
+   ],
+   "expected": null
+  },
+  {
+   "name": "a plain use kept",
+   "statement": "use a::b;",
+   "drop": [
+    "x"
+   ],
+   "expected": "use a::b;"
+  },
+  {
+   "name": "nested groups collapse",
+   "statement": "use a::{b::{c, d}, e};",
+   "drop": [
+    "c"
+   ],
+   "expected": "use a::{b::d, e};"
+  },
+  {
+   "name": "the visibility prefix survives",
+   "statement": "pub(crate) use a::{b, c};",
+   "drop": [
+    "b"
+   ],
+   "expected": "pub(crate) use a::c;"
+  },
+  {
+   "name": "a glob left alone merges",
+   "statement": "use a::{b, *};",
+   "drop": [
+    "b"
+   ],
+   "expected": "use a::*;"
+  },
+  {
+   "name": "not a use statement",
+   "statement": "fn f() {}",
+   "drop": [
+    "f"
+   ],
+   "expected": "fn f() {}"
+  },
+  {
+   "name": "a missing semicolon is returned as is",
+   "statement": "use a::{b, c}",
+   "drop": [
+    "b"
+   ],
+   "expected": "use a::{b, c}"
+  },
+  {
+   "name": "an alias kept by its original name stays",
+   "statement": "use a::{b as x, c};",
+   "drop": [
+    "b"
+   ],
+   "expected": "use a::{b as x, c};"
+  },
+  {
+   "name": "a three-leaf group keeps the group",
+   "statement": "use a::{b, c, d};",
+   "drop": [
+    "c"
+   ],
+   "expected": "use a::{b, d};"
+  }
+ ]
+}

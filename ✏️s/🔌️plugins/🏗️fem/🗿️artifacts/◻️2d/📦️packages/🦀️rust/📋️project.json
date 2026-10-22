@@ -26,7 +26,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem2d-invariants numerical"
+        "command": "repo ./📜️script.ts verify fem2d-invariants numerical"
       },
       "metadata": {
         "semio": {
@@ -44,7 +44,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem2d-invariants mounted"
+        "command": "repo ./📜️script.ts verify fem2d-invariants mounted"
       },
       "metadata": {
         "semio": {
@@ -62,7 +62,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem2d-invariants native"
+        "command": "repo ./📜️script.ts verify fem2d-invariants native"
       },
       "metadata": {
         "semio": {
@@ -80,7 +80,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem2d-invariants source"
+        "command": "repo ./📜️script.ts verify fem2d-invariants source"
       },
       "metadata": {
         "semio": {
@@ -104,7 +104,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -112,7 +112,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -121,7 +121,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -130,7 +130,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       }
     },
@@ -139,7 +139,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       }
     },
@@ -148,7 +148,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     },
@@ -158,7 +158,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify fem2d-invariants presence"
+        "command": "repo ./📜️script.ts verify fem2d-invariants presence"
       },
       "metadata": {
         "semio": {
@@ -182,7 +182,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-material source"
+        "command": "repo ./📜️script.ts test-material source"
       },
       "cache": true,
       "outputs": [],
@@ -200,7 +200,7 @@
       },
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-material native"
+        "command": "repo ./📜️script.ts test-material native"
       },
       "cache": true,
       "outputs": [],
@@ -212,7 +212,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-fixed-dofs source"
+        "command": "repo ./📜️script.ts test-fixed-dofs source"
       },
       "metadata": {
         "semio": {
@@ -229,7 +229,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-fixed-dofs native"
+        "command": "repo ./📜️script.ts test-fixed-dofs native"
       },
       "metadata": {
         "semio": {

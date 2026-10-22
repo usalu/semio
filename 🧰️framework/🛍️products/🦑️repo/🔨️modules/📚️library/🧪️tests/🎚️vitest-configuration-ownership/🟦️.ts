@@ -192,8 +192,8 @@ describe("Vitest configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);
     
-    expect(fixture.owners).toHaveLength(53);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(53);
+    expect(fixture.owners).toHaveLength(52);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(52);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   }, 30_000);
@@ -290,8 +290,8 @@ describe("Vitest configuration ownership", () => {
   test("registers the gate through package and Nx", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
-    expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test vitest-configuration-ownership");
+    expect(project.targets[fixture.registration.target]?.options?.command).toBe("repo ./📜️script.ts test vitest-configuration-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

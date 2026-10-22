@@ -36,6 +36,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "input-pixels", kind: "set-input-pixels", record: "SetInputPixels" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y), &format!("{}×{} an ({}, {}) malen", self.width, self.height, self.x, self.y))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapSnapshot, Op> for SetInputPixels
+where
+    Op: protocol::ColdMutation<BitmapSnapshot, ReferenceDiff = BitmapDiff> + From<SetInputPixels>,
+{
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
@@ -45,8 +54,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y), &format!("{}×{} an ({}, {}) malen", self.width, self.height, self.x, self.y))
-    }
 }
 //#endregion 🔖️SetInputPixels

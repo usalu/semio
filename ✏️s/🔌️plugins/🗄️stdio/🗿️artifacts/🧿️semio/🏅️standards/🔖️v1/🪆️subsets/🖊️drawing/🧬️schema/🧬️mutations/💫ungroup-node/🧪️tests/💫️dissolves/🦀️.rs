@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💫ungroup-node/💫️dissolves/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn splices_the_groups_children_into_the_parent_in_order() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("ungroup applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("ungroup applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "ungroup/dissolves-the-nested-group-into-its-parent: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
@@ -53,9 +53,9 @@ async fn the_undo_group_recaptures_the_range_and_the_transform() {
     let SemioDrawingMutation::GroupNodes(regroup) = &undo[0] else { panic!("ungroup must undo as group") };
     assert_eq!(regroup.indices, vec![2usize, 3], "the undo re-groups exactly the contiguous range the children were spliced into");
     assert_eq!(regroup.transform.scale.x, 1.0, "and carries the dissolved group's own transform, which the forward diff discarded");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward ungroup applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward ungroup applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo group applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo group applies");
     }
     assert_eq!(current, base, "ungroup/dissolves-the-nested-group-into-its-parent: the undo did not restore the before-snapshot");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "ungroup/dissolves-the-nested-group-into-its-parent: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -121,6 +121,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed ungroup diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed ungroup diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed ungroup diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "ungroup/dissolves-the-nested-group-into-its-parent: committed diff did not carry before to after");
 }

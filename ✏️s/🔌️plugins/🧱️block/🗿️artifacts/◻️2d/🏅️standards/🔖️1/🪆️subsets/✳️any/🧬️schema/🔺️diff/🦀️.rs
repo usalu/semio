@@ -74,23 +74,9 @@ fn lift(error: BlockPatchError) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new(error.code, error.message).at(error.target)
 }
 
-impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {
-    fn apply(&self, base: &Block2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block2dSnapshot> {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema.clone_from(schema);
-        }
-        next.node_kind = block_patch_apply(&self.node_kind, &base.node_kind, "nodeKind").map_err(lift)?;
-        next.presentation = block_patch_apply(&self.presentation, &base.presentation, "presentation").map_err(lift)?;
-        next.camera2d = block_patch_apply(&self.camera2d, &base.camera2d, "camera2d").map_err(lift)?;
-        next.meta = block_patch_apply(&self.meta, &base.meta, "meta").map_err(lift)?;
-        next.handle_kinds = self.handle_kinds.commit_onto(&base.handle_kinds, capability).map_err(|error| error.under(["handleKinds"]))?;
-        next.handles = self.handles.commit_onto(&base.handles, capability).map_err(|error| error.under(["handles"]))?;
-        next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
-        next.attributes = self.attributes.commit_onto(&base.attributes, capability).map_err(|error| error.under(["attributes"]))?;
-        next.authors = self.authors.commit_onto(&base.authors, capability).map_err(|error| error.under(["authors"]))?;
-        Ok(next)
-    }
+impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {}
+
+impl protocol::ColdMutationDiff<Block2dSnapshot> for Block2dDiff {
     fn absorb(&mut self, later: Self) {
         if later.schema.is_some() {
             self.schema = later.schema;
@@ -105,9 +91,43 @@ impl protocol::MutationDiff<Block2dSnapshot> for Block2dDiff {
         self.attributes.absorb(later.attributes);
         self.authors.absorb(later.authors);
     }
+
+    fn apply(&self, unpublished: &mut Block2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema.clone_from(schema);
+        }
+        next.node_kind = block_patch_apply(&self.node_kind, &base.node_kind, "nodeKind").map_err(lift)?;
+        next.presentation = block_patch_apply(&self.presentation, &base.presentation, "presentation").map_err(lift)?;
+        next.camera2d = block_patch_apply(&self.camera2d, &base.camera2d, "camera2d").map_err(lift)?;
+        next.meta = block_patch_apply(&self.meta, &base.meta, "meta").map_err(lift)?;
+        next.handle_kinds = self.handle_kinds.commit_onto(&base.handle_kinds, capability).map_err(|error| error.under(["handleKinds"]))?;
+        next.handles = self.handles.commit_onto(&base.handles, capability).map_err(|error| error.under(["handles"]))?;
+        next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
+        next.attributes = self.attributes.commit_onto(&base.attributes, capability).map_err(|error| error.under(["attributes"]))?;
+        next.authors = self.authors.commit_onto(&base.authors, capability).map_err(|error| error.under(["authors"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Block2dSnapshot> for Block2dDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && block_patch_is_empty(&self.node_kind)
+            && block_patch_is_empty(&self.presentation)
+            && block_patch_is_empty(&self.camera2d)
+            && block_patch_is_empty(&self.meta)
+            && self.handle_kinds.is_empty()
+            && self.handles.is_empty()
+            && self.compatibility.is_empty()
+            && self.attributes.is_empty()
+            && self.authors.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Block2dSnapshot> for Block2dDiff {
     fn inverse(&self, base: &Block2dSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -121,18 +141,6 @@ impl protocol::DiffAlgebra<Block2dSnapshot> for Block2dDiff {
             attributes: self.attributes.inverse(&base.attributes),
             authors: self.authors.inverse(&base.authors),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && block_patch_is_empty(&self.node_kind)
-            && block_patch_is_empty(&self.presentation)
-            && block_patch_is_empty(&self.camera2d)
-            && block_patch_is_empty(&self.meta)
-            && self.handle_kinds.is_empty()
-            && self.handles.is_empty()
-            && self.compatibility.is_empty()
-            && self.attributes.is_empty()
-            && self.authors.is_empty()
     }
 }
 //#endregion 🔖️Apply

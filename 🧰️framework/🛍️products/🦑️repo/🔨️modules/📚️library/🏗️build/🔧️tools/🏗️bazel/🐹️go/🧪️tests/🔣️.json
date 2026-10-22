@@ -6,7 +6,7 @@
    "target": "test",
    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
    "kind": "command",
-   "command": "bun ./📜️script.ts test",
+   "command": "repo ./📜️script.ts test",
    "expected": true
   },
   {
@@ -15,7 +15,7 @@
    "target": "build",
    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
    "kind": "command",
-   "command": "bun ./📜️script.ts build",
+   "command": "repo ./📜️script.ts build",
    "expected": true
   },
   {
@@ -24,7 +24,7 @@
    "target": "test",
    "root": "🌎️hub/📦️packages/🦀️rust",
    "kind": "command",
-   "command": "bun ./📜️script.ts test",
+   "command": "repo ./📜️script.ts test",
    "expected": false
   },
   {
@@ -33,7 +33,7 @@
    "target": "typecheck",
    "root": "🌎️hub/📦️packages/🟦️typescript",
    "kind": "command",
-   "command": "bun ./📜️script.ts typecheck",
+   "command": "repo ./📜️script.ts typecheck",
    "expected": false
   },
   {

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useEffect, useRef, type ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 import { Icon, type IconName } from "@semio-tech/ui-react";
 import { type ContinuousGestureLane, continuousPressIdentity, createContinuousGestureLane } from "@semio-tech/framework";
 import { emitIntent } from "../../📃️UiDocumentStore/🟦️.tsx";

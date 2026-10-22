@@ -15,6 +15,7 @@ use std::cell::{Cell, RefCell};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use graph::{HandleId, NodeId};
 use semio_framework_os_kernel::os_spr::causal::transition::{HistoryFoldIndex, HistoryFoldSet};
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use web_sys::HtmlCanvasElement;
 use semio_framework_pack_json::{JsonMemberPolicy, Value};
 use semio_framework_value::ValueError;
@@ -29,6 +30,7 @@ use ::{graph, semio_framework_canvas as canvas};
 use semio_framework_async::browser::future_to_promise;
 use semio_framework_graph_drawing::routing::handle_outward_at_node_rim;
 use semio_framework_os_infinite_directed_presentation::*;
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
 use semio_framework_value::retirement::*;
 

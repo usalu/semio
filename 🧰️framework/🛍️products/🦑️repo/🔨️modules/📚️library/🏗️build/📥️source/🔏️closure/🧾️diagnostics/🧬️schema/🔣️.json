@@ -1,0 +1,142 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumCharacters": 256,
+        "maximumJsonBytes": 4096
+      }
+    },
+    "Kind": {
+      "enum": [
+        "import",
+        "require",
+        "declaring-module"
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "kind",
+        "importer",
+        "specifier",
+        "declaringImage",
+        "declared",
+        "targetImage"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "captured-source-import-refusal"
+        },
+        "kind": {
+          "$ref": "#/definitions/Kind"
+        },
+        "importer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "specifier": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "declaringImage": {
+          "type": "boolean"
+        },
+        "declared": {
+          "type": "boolean"
+        },
+        "targetImage": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "case": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "importer",
+            "specifier",
+            "declaringImage",
+            "declared",
+            "targetImage"
+          ],
+          "properties": {
+            "kind": {
+              "$ref": "#/definitions/Kind"
+            },
+            "importer": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 4096
+            },
+            "specifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 4096
+            },
+            "declaringImage": {
+              "type": "boolean"
+            },
+            "declared": {
+              "type": "boolean"
+            },
+            "targetImage": {
+              "type": "boolean"
+            }
+          }
+        },
+        "expected": {
+          "$ref": "#/definitions/Diagnostic"
+        }
+      }
+    }
+  }
+}

@@ -14,7 +14,10 @@ import (
 	fmt "fmt"
 	os "os"
 	time "time"
+ strings "strings"
 
+	graphqlpkg "github.com/usalu/semio/repo/graphql"
+ model "github.com/usalu/semio/repo/model"
 	hooks "github.com/usalu/semio/repo/hooks"
 	providers "github.com/usalu/semio/repo/providers"
 	workspace "github.com/usalu/semio/repo/workspace"
@@ -51,7 +54,10 @@ func wrapMcpToolHandler(timeout time.Duration, handler func(context.Context, Cal
 }
 
 // 🦀️CreateMcpServer builds the MCP server for the given IDE kind (stdio).
-func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *MCPServer {
+func CreateMcpServer(rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) (*MCPServer,error) {
+ executor,err:=graphqlpkg.NewExecutor(rootDir)
+ if err!=nil { return nil,err }
+ repository:=&mcpRepository{root:executor.Repository().GetRootDir(),executor:executor,repo:executor.Repository()}
 	if kind == "" {
 		kind = providers.McpClientGeneric
 	}
@@ -66,112 +72,112 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 			WithPromptDescription(mcpDesc(kind, "prompt_enhance")),
 			WithArgument("prompt", ArgumentDescription("Context the agent must honor while enhancing."), RequiredArgument()),
 		),
-		handleEnhancePrompt,
+		repository.handleEnhancePrompt,
 	)
 	s.AddPrompt(
 		NewPrompt("refactor",
 			WithPromptDescription(mcpDesc(kind, "prompt_refactor")),
 			WithArgument("prompt", ArgumentDescription("Refactor constraints the agent must honor."), RequiredArgument()),
 		),
-		handleRefactorPrompt,
+		repository.handleRefactorPrompt,
 	)
 	s.AddPrompt(
 		NewPrompt("test",
 			WithPromptDescription(mcpDesc(kind, "prompt_test")),
 			WithArgument("prompt", ArgumentDescription("Coverage targets the agent must honor."), RequiredArgument()),
 		),
-		handleTestPrompt,
+		repository.handleTestPrompt,
 	)
 	s.AddPrompt(
 		NewPrompt("comply",
 			WithPromptDescription(mcpDesc(kind, "prompt_comply")),
 			WithArgument("prompt", ArgumentDescription("Compliance constraints the agent must honor."), RequiredArgument()),
 		),
-		handleComplyPrompt,
+		repository.handleComplyPrompt,
 	)
 	s.AddResource(
 		NewResource("repo://", mcpDesc(kind, "res_root"), WithMIMEType("text/plain")),
-		handleRepoResource,
+		repository.handleRepoResource,
 	)
 	s.AddResource(
 		NewResource("repo://bundles", mcpDesc(kind, "res_bundles"), WithMIMEType("text/plain")),
-		handleBundlesResource,
+		repository.handleBundlesResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://bundle/{id}", mcpDesc(kind, "res_bundle_one")),
-		handleBundleResource,
+		repository.handleBundleResource,
 	)
 	s.AddResource(
-		NewResource("repo://folders", mcpDesc(kind, "res_folders"), WithMIMEType("text/plain")),
-		handleFoldersResource,
+		NewResource("repo://folders", mcpDesc(kind, "res_folders"), WithMIMEType("application/json")),
+		repository.handleFoldersResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://folder/{id}", mcpDesc(kind, "res_folder_one")),
-		handleFolderResource,
+		repository.handleFolderResource,
 	)
 	s.AddResource(
-		NewResource("repo://files", mcpDesc(kind, "res_files"), WithMIMEType("text/plain")),
-		handleFilesResource,
+		NewResource("repo://files", mcpDesc(kind, "res_files"), WithMIMEType("application/json")),
+		repository.handleFilesResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://file/{id}", mcpDesc(kind, "res_file_one")),
-		handleFileResource,
+		repository.handleFileResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://sections/{id}", mcpDesc(kind, "res_sections")),
-		handleSectionsResource,
+		repository.handleSectionsResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://section/{id}", mcpDesc(kind, "res_section_one")),
-		handleSectionResource,
+		repository.handleSectionResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://definitions/{id}", mcpDesc(kind, "res_definitions")),
-		handleDefinitionsResource,
+		repository.handleDefinitionsResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://definition/{id}", mcpDesc(kind, "res_definition_one")),
-		handleDefinitionResource,
+		repository.handleDefinitionResource,
 	)
 	s.AddResource(
 		NewResource("repo://tickets", mcpDesc(kind, "res_tickets"), WithMIMEType("text/plain")),
-		handleTicketsResource,
+		repository.handleTicketsResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://ticket/{id}", mcpDesc(kind, "res_ticket_one")),
-		handleTicketResource,
+		repository.handleTicketResource,
 	)
 	s.AddResource(
 		NewResource("repo://goals", mcpDesc(kind, "res_goals"), WithMIMEType("text/plain")),
-		handleGoalsResource,
+		repository.handleGoalsResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://goal/{id}", mcpDesc(kind, "res_goal_one")),
-		handleGoalResource,
+		repository.handleGoalResource,
 	)
 	s.AddResource(
 		NewResource("repo://policies", mcpDesc(kind, "res_policies"), WithMIMEType("text/plain")),
-		handlePoliciesResource,
+		repository.handlePoliciesResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://policy/{id}", mcpDesc(kind, "res_policy_one")),
-		handlePolicyResource,
+		repository.handlePolicyResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://statute/{id}", mcpDesc(kind, "res_statute_one")),
-		handleStatuteResource,
+		repository.handleStatuteResource,
 	)
 	s.AddResource(
 		NewResource("repo://contributors", mcpDesc(kind, "res_contributors"), WithMIMEType("text/plain")),
-		handleContributorsResource,
+		repository.handleContributorsResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://contributor/{id}", mcpDesc(kind, "res_contributor_one")),
-		handleContributorResource,
+		repository.handleContributorResource,
 	)
 	s.AddResourceTemplate(
 		NewResourceTemplate("repo://checkpoint/{id}", mcpDesc(kind, "res_checkpoint_one")),
-		handleCheckpointResource,
+		repository.handleCheckpointResource,
 	)
 
 	openOpts := []ToolOption{
@@ -186,14 +192,16 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 		WithString("draft", Description("Draft slug to seed the ticket workspace.")),
 		WithString("parent", Description("Parent ticket slug for nested tickets.")),
 		WithString("issue", Description("Existing GitHub issue URL to link instead of creating a new one.")),
+ WithBoolean("no_issue",Description("Keep the ticket local without creating an issue.")),
+ WithBoolean("no_management",Description("Skip management integration.")),
 	}
 	switch kind {
-	case providers.McpClientCursor, providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
+	case providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
 		openOpts = append(openOpts, WithString("plan_id", Description(mcpDesc(kind, "arg_plan_id"))))
 	case providers.McpClientKiro:
 		openOpts = append(openOpts, WithString("spec_id", Description(mcpDesc(kind, "arg_spec_id"))))
 	}
-	s.AddTool(NewTool("ticket_open", openOpts...), wrapMcpToolHandler(toolTimeout, newTicketOpenHandler(kind)))
+	s.AddTool(NewTool("ticket_open", openOpts...), wrapMcpToolHandler(toolTimeout, repository.newTicketOpenHandler(kind)))
 
 	closeOpts := []ToolOption{
 		WithDescription(mcpDesc(kind, "tool_ticket_close")),
@@ -203,7 +211,7 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 		WithString("title", Description("Updated title for the ticket.")),
 		WithBoolean("no_management", Description("Skip updating the GitHub issue.")),
 	}
-	s.AddTool(NewTool("ticket_close", closeOpts...), wrapMcpToolHandler(toolTimeout, newTicketCloseHandler(kind)))
+	s.AddTool(NewTool("ticket_close", closeOpts...), wrapMcpToolHandler(toolTimeout, repository.newTicketCloseHandler(kind)))
 
 	reopenOpts := []ToolOption{
 		WithDescription(mcpDesc(kind, "tool_ticket_reopen")),
@@ -217,12 +225,12 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 		WithBoolean("no_management", Description("Skip updating the GitHub issue.")),
 	}
 	switch kind {
-	case providers.McpClientCursor, providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
+	case providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
 		reopenOpts = append(reopenOpts, WithString("plan_id", Description(mcpDesc(kind, "arg_plan_id"))))
 	case providers.McpClientKiro:
 		reopenOpts = append(reopenOpts, WithString("spec_id", Description(mcpDesc(kind, "arg_spec_id"))))
 	}
-	s.AddTool(NewTool("ticket_reopen", reopenOpts...), wrapMcpToolHandler(toolTimeout, newTicketReopenHandler(kind)))
+	s.AddTool(NewTool("ticket_reopen", reopenOpts...), wrapMcpToolHandler(toolTimeout, repository.newTicketReopenHandler(kind)))
 
 	s.AddTool(
 		NewTool("goal_open",
@@ -237,7 +245,7 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 			WithString("milestone", Description("Management milestone.")),
 			WithBoolean("no_management", Description("Skip management integration.")),
 		),
-		wrapMcpToolHandler(toolTimeout, goalOpen),
+		wrapMcpToolHandler(toolTimeout, repository.goalOpen),
 	)
 	s.AddTool(
 		NewTool("goal_close",
@@ -246,7 +254,7 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 			WithString("summary", Required(), Description("Completion summary.")),
 			WithBoolean("no_management", Description("Skip management integration.")),
 		),
-		wrapMcpToolHandler(toolTimeout, goalClose),
+		wrapMcpToolHandler(toolTimeout, repository.goalClose),
 	)
 	s.AddTool(
 		NewTool("goal_reopen",
@@ -260,39 +268,37 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 			WithString("due_date", Description("YYYY-MM-DD due date.")),
 			WithBoolean("no_management", Description("Skip management integration.")),
 		),
-		wrapMcpToolHandler(toolTimeout, goalReopen),
+		wrapMcpToolHandler(toolTimeout, repository.goalReopen),
 	)
-	return s
+	return s,nil
 }
 
 // 🏃️RunMcpServerFor starts the MCP stdio server for the given kind.
-func RunMcpServerFor(kind providers.McpClientKind, toolTimeout time.Duration) error {
-	if err := workspace.BindWorkingDirectory(); err != nil {
-		return err
-	}
-	s := CreateMcpServer(kind, toolTimeout)
-	return ServeStdio(s)
+func RunMcpServerFor(ctx context.Context, rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) error {
+ server,err:=CreateMcpServer(rootDir,kind,toolTimeout)
+ if err!=nil { return err }
+ return ServeStdio(ctx,server)
 }
 
 // #endregion 🦀️McpServerFactory
 
 // #region 🪝️TicketMcpHandlers
-func newTicketOpenHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
+func (repository *mcpRepository) newTicketOpenHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
 	return func(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-		return ticketOpenWithKind(ctx, request, kind)
+		return repository.ticketOpenWithKind(ctx, request, kind)
 	}
 }
 
-func newTicketCloseHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
+func (repository *mcpRepository) newTicketCloseHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
 	return func(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
 		_ = kind
-		return ticketClose(ctx, request)
+		return repository.ticketClose(ctx, request)
 	}
 }
 
-func newTicketReopenHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
+func (repository *mcpRepository) newTicketReopenHandler(kind providers.McpClientKind) func(context.Context, CallToolRequest) (*CallToolResult, error) {
 	return func(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-		return ticketReopenWithKind(ctx, request, kind)
+		return repository.ticketReopenWithKind(ctx, request, kind)
 	}
 }
 
@@ -316,10 +322,28 @@ func RunHookFor(kind providers.McpClientKind, eventStr string, stdin []byte) err
 }
 
 // 🚀️RunMCPFor starts the MCP stdio server for the given IDE kind.
-func RunMCPFor(kind providers.McpClientKind) error {
-	return RunMcpServerFor(kind, DefaultCommandTimeout)
+func RunMCPFor(ctx context.Context, rootDir string, kind providers.McpClientKind) error {
+	return RunMcpServerFor(ctx,rootDir,kind,DefaultCommandTimeout)
 }
 
 // #endregion 🪝️TicketMcpHandlers
 
 // #endregion 🔌️Mcp Surface
+
+// 🧭️mcpRepository owns the immutable repository binding of one server.
+type mcpRepository struct { root string; executor *graphqlpkg.Executor; repo model.RepoContext }
+
+// 📨️query executes only against this server's repository context.
+func (repository *mcpRepository) query(ctx context.Context, query string, variables map[string]interface{}) (string,error) { return repository.executor.ExecuteJSON(ctx,query,variables) }
+
+// 🪪️artifactPath resolves only identities present in this repository.
+func (repository *mcpRepository) artifactPath(id string) string {
+ normalize:=func(value string) string { return strings.NewReplacer("\uFE0E","","\uFE0F","").Replace(value) }
+ wanted:=normalize(id)
+ for _, file:=range repository.repo.GetFiles() {
+  candidate:=normalize(file.ID)
+  if wanted==candidate || strings.HasPrefix(wanted,candidate+normalize(model.EmojiSection)) || strings.HasPrefix(wanted,candidate+normalize(model.EmojiDefinitionImpl)) || strings.HasPrefix(wanted,candidate+normalize(model.EmojiDefinitionInterface)) || strings.HasPrefix(wanted,candidate+normalize(model.EmojiDefinitionConstant)) || strings.HasPrefix(wanted,candidate+normalize(model.EmojiDefinitionTest)) { return file.Path }
+ }
+ for _, folder:=range repository.repo.GetFolders() { if wanted==normalize(folder.ID) { return folder.Path } }
+ return ""
+}

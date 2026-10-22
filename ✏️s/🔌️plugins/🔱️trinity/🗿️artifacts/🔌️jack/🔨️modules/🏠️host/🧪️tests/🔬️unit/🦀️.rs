@@ -17,7 +17,8 @@ use semio_framework_diagnostic::TextError;
 #[allow(unused_imports)]
 use semio_framework_value::retained_clone::admit_retained_clone_close;
 #[allow(unused_imports)]
-use semio_framework_value::retirement::{controlled::ControlledRetirement, OwnedValueRetirementFactory, SharedValueRetirementFactory};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::host::initialization_authority::*;
 use crate::standards::v1::subsets::any::schema::host::*;

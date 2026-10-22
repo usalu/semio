@@ -5,14 +5,14 @@ import {runResidentCommandV1,RESIDENT_EXCLUDES_V1} from "../command/index.mjs";
 import {createResidentServiceV1} from "../service/index.mjs";
 import {endpointsV1} from "../protocol/endpoint.mjs";
 import {POLICY_V1} from "../protocol/policy.mjs";
-import {cleanup,sleep,tempRoot,waitFor} from "./common.ts";
+import {cleanup,shortTempDirectory,sleep,tempRoot,waitFor} from "./common.ts";
 
 const cleanups:(()=>Promise<void>|void)[]=[];afterAll(async()=>{for(const fn of cleanups.reverse())await fn();});
 const sink=()=>{const parts:string[]=[];return{parts,write:(t:string)=>{parts.push(String(t));return true;},text:()=>parts.join("")};};
 
 async function serviceFor(){
  const root=tempRoot("cmd-");cleanups.push(()=>cleanup(root));mkdirSync(root+"/pkgs/a",{recursive:true});writeFileSync(root+"/pkgs/a/x","x");
- const base=mkdtempSync("/tmp/sr-");cleanups.push(()=>cleanup(base));
+ const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
  const environment={...process.env,XDG_RUNTIME_DIR:base};
  const runtime=endpointsV1(root,environment);
  const service=createResidentServiceV1({root,runtime,implementation:"2".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1,
@@ -39,7 +39,7 @@ describe("repo service",()=>{
 
  test("start detaches a child and waits until it answers; an exiting child is reported",async()=>{
   const root=tempRoot("cmd-start-");cleanups.push(()=>cleanup(root));
-  const base=mkdtempSync("/tmp/sr-");cleanups.push(()=>cleanup(base));
+  const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
   const environment={...process.env,XDG_RUNTIME_DIR:base};
   const out=sink(),err=sink();
   const exit=await runResidentCommandV1({root,args:["start"],languages:["en"],environment,stdout:out,stderr:err,execPath:process.execPath,scriptArguments:["-e","process.exit(3)","--"],startTimeoutMilliseconds:5000});

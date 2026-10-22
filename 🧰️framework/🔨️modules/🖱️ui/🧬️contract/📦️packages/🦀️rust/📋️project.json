@@ -13,7 +13,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts built-tree-retirement-check",
+        "command": "repo ./📜️script.ts built-tree-retirement-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -24,7 +24,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -51,7 +51,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts conformance",
+        "command": "repo ./📜️script.ts conformance",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -68,7 +68,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-wasm"
+        "command": "repo ./📜️script.ts check-wasm"
       }
     },
     "generate": {
@@ -81,7 +81,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate"
+        "command": "repo ./📜️script.ts generate"
       }
     },
     "preview-generated": {
@@ -95,7 +95,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -104,7 +104,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       },
       "inputs": [
         "production",
@@ -126,7 +126,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership",
+        "command": "repo ./📜️script.ts test-ownership",
         "forwardAllArgs": false
       },
       "outputs": [],

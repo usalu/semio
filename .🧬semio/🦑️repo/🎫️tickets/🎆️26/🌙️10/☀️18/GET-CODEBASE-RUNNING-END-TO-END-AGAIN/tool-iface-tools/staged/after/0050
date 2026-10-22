@@ -31,7 +31,8 @@ import { trustedBootstrapCurrent } from "../../🏗️bootstrap/🧾️provenanc
 import { trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { buildAdminSpa, nativeWgpuExecutable, openExternalBrowser, startMcpWorkspaceChild, waitForUiReadiness } from "../../🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts";
 import { type LocalAdminRelay, type LocalBrowserRelay, startLocalAdminRelay, startLocalBrowserRelay } from "../../🚀️local-relay/🛰️servers/🟦️.ts";
-import { spawnToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { startToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** ⏳️ Proves the two launch-route boundaries a fresh `OS_HUB_DATA` boot depends on: an unset
  * `SEMIO_BUILD_BUDGET_MS` (the repository's unlimited budget, `0`) never presents as an already expired
@@ -281,7 +282,7 @@ export class DevScript extends BundleScript {
         const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
         relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
         const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-        ui = spawnToolV1(process.execPath, [uiScript, "serve", "s", "react", "dev"], {
+        ui = startToolV1(runtimeCommandNameV1(), [uiScript, "serve", "s", "react", "dev"], {
           cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
           env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
           shell: false,

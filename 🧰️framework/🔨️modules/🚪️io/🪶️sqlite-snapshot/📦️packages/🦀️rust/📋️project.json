@@ -28,7 +28,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-refusal"
+        "command": "repo ./📜️script.ts test-refusal"
       }
     },
     "test-receiving-schema-native": {
@@ -43,7 +43,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-receiving-schema"
+        "command": "repo ./📜️script.ts test-receiving-schema"
       }
     },
     "test-native": {
@@ -58,7 +58,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-operation": {
@@ -73,7 +73,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-operation"
+        "command": "repo ./📜️script.ts test-operation"
       }
     },
     "test-ownership": {
@@ -88,7 +88,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership"
+        "command": "repo ./📜️script.ts test-ownership"
       }
     },
     "test-original-fixed-limits-source": {
@@ -103,7 +103,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-fixed-limits source"
+        "command": "repo ./📜️script.ts test-original-fixed-limits source"
       }
     },
     "test-original-fixed-limits-native": {
@@ -118,7 +118,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-fixed-limits native"
+        "command": "repo ./📜️script.ts test-original-fixed-limits native"
       }
     },
     "test-original-physical-source": {
@@ -134,7 +134,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-physical source"
+        "command": "repo ./📜️script.ts test-original-physical source"
       }
     },
     "test-original-physical-native": {
@@ -150,7 +150,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-physical native"
+        "command": "repo ./📜️script.ts test-original-physical native"
       }
     }
   }

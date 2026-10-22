@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks the oracle against the hand-written expectations of the fixture (no TypeScript involved): the oracle and the fixture must agree before the TypeScript implementation is judged."""
+"""🧰️ Checks the oracle against the hand-written expectations of the fixture (no TypeScript involved): the oracle and the fixture must agree before the TypeScript implementation is judged."""
 import importlib.util, json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); S = os.path.join(HERE, "staged", "🧩️units", "🧪️tests")
 spec = importlib.util.spec_from_file_location("oracle", os.path.join(S, "🐍️oracle", "🐍️.py")); o = importlib.util.module_from_spec(spec); spec.loader.exec_module(o)

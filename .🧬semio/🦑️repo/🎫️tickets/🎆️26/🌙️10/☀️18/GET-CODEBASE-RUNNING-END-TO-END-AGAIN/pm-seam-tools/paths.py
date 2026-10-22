@@ -7,7 +7,12 @@ LIBRARY = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️li
 BUILD = LIBRARY + "/🏗️build"
 DEPENDENCIES = LIBRARY + "/⚡️caching/🚀️bootstrap/📦️dependencies"
 MANAGERS = DEPENDENCIES + "/🔌️managers"
-ROUND = int(os.environ.get("PM_ROUND", "1"))
+import sys
+def _round():
+    if "--round" in sys.argv:
+        return int(sys.argv[sys.argv.index("--round") + 1])
+    return int(os.environ.get("PM_ROUND", "1"))
+ROUND = _round()
 STAGE = os.path.join(HERE, "staged" if ROUND == 1 else "staged%d" % ROUND)
 NEW = os.path.join(STAGE, "new")
 

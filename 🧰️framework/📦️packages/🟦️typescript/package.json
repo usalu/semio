@@ -268,15 +268,15 @@
     "./dsl/record/testing/variant-field": "./🗣️dsl/🧪️testing/🌿️variant-field/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../..\" repo run @semio-tech/framework:test",
-    "test-artifact-reference": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-artifact-reference",
-    "test-io-ports": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-io-ports",
-    "test-script-boundary": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-script-boundary",
-    "test-polygon-mesh": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-polygon-mesh",
-    "test-sdk-surface": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-sdk-surface",
-    "test-module-package-surface": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-module-package-surface",
-    "test-document-scope": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-document-scope",
-    "test-source-text": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-source-text"
+    "test": "repo run @semio-tech/framework:test",
+    "test-artifact-reference": "repo run @semio-tech/framework:test-artifact-reference",
+    "test-io-ports": "repo run @semio-tech/framework:test-io-ports",
+    "test-script-boundary": "repo run @semio-tech/framework:test-script-boundary",
+    "test-polygon-mesh": "repo run @semio-tech/framework:test-polygon-mesh",
+    "test-sdk-surface": "repo run @semio-tech/framework:test-sdk-surface",
+    "test-module-package-surface": "repo run @semio-tech/framework:test-module-package-surface",
+    "test-document-scope": "repo run @semio-tech/framework:test-document-scope",
+    "test-source-text": "repo run @semio-tech/framework:test-source-text"
   },
   "devDependencies": {
     "@types/d3-scale": "4.0.9",

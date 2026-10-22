@@ -15,18 +15,21 @@ pub struct SetFileSchema {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-schema", kind: "set-file-schema", record: "SetFileSchema" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set file schema", "Dateischema setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<StepSnapshot, StepMutation> for SetFileSchema {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { file_schema } = self;
         protocol::MutationOutcome::new(StepDiff { file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         Ok(vec![StepMutation::SetFileSchema(SetFileSchema { file_schema: base.header.file_schema.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set file schema", "Dateischema setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

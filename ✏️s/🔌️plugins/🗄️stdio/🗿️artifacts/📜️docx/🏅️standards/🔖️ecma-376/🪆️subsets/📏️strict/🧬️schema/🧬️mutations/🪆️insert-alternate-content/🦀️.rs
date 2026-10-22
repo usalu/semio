@@ -17,19 +17,20 @@ pub struct InsertAlternateContent {
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "alternate-content", kind: "insert-alternate-content", record: "InsertAlternateContent" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        protocol::MutationOutcome::new(diff_insert_alternate_content(base, &self.path, self.node.as_ref(), self.index))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-        Ok(insert_alternate_content_inverse(base, &self.path, self.index))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxStrictMutation> for InsertAlternateContent {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_insert_alternate_content(base, &self.path, self.node.as_ref(), self.index))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+        Ok(insert_alternate_content_inverse(base, &self.path, self.index))
     }
 }
 //#endregion 🔖️Payload

@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { gitCachedNames, gitDir } from "../🌳️git/🟦️.ts";
+import {sayCommitV1} from "../📖️texts/🟦️.ts";
 
 const TICKET_JSON_RE = /^\.🧬semio\/🦑️repo\/🎫️tickets\/.+\/🎫️ticket\.json$/;
 
@@ -52,7 +53,7 @@ export function normalizeBulletLines(text: string): string[] {
 export function validateBulletSpacing(bullets: string[]): void {
   for (const b of bullets) {
     if (MICRO_COMMIT_BULLET_RE.test(b)) continue;
-    console.error(`micro-commit: bullet must start with {emoji} then description (no '-' prefix, no space after emoji): ${b}`);
+    sayCommitV1("bullets.bullet-must-start-with-then",{bullet:String(b)},"error");
     process.exit(1);
   }
 }
@@ -90,7 +91,7 @@ export function readPreparedBullets(root: string): string[] {
 }
 
 const STAGED_CHANGE_AREAS = [
-  { id: ".cursor/plans", match: (p: string) => p.includes(".cursor/plans"), keywords: ["plan"] },
+  { id: "ticket plans", match: (p: string) => p.includes("🎫️tickets/") && p.endsWith(".plan.md"), keywords: ["plan"] },
   { id: ".agents", match: (p: string) => p.includes(".agents") && !p.endsWith("SKILL.md"), keywords: ["skill", "agent"] },
   { id: "repo", match: (p: string) => p.includes("repo/"), keywords: ["hook", "micro-commit"] },
   { id: ".devcontainer", match: (p: string) => p.includes(".devcontainer"), keywords: ["devcontainer"] },
@@ -151,8 +152,8 @@ export function uncoveredStagedAreas(bullets: string[], staged: string[]): strin
 export function validateBulletsAgainstStaged(bullets: string[], staged: string[]): void {
   const missed = uncoveredStagedAreas(bullets, staged);
   if (missed.length === 0) return;
-  console.error(`micro-commit: bullets must cover every staged area — missing: ${missed.join(", ")}`);
-  console.error("micro-commit: read `micro-commit diff` again (include .cursor/plans, product code, repo, …)");
+  sayCommitV1("bullets.must-cover-every-staged-area",{missing:missed.join(", ")},"error");
+  sayCommitV1("bullets.read-diff-again",{},"error");
   for (const p of staged) console.error(`  ${p}`);
   process.exit(1);
 }

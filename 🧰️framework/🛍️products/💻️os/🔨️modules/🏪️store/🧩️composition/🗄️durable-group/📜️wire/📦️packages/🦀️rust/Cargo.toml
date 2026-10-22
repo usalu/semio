@@ -29,6 +29,7 @@ semio-framework-os-dsl = { path = "../../../../../../🗣️dsl/📦️packages/
 semio-framework-os-semio = { path = "../../../../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-canonical-json = { path = "../../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../../📬️one-item-owners/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-publication = { path = "../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
@@ -47,6 +48,7 @@ semio-framework-os-store-one-item = { path = "../../../../../🎮️one-item/�
 semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication-edit = { path = "../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 

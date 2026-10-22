@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_draw_drawing_model::{create_drawing_group_layer, create_drawing_shape_layer_rect, default_drawing_document};
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 fn id_of(node: &DrawingLayerNode) -> String {
     layer_id(node).to_string_owner()
@@ -27,7 +27,7 @@ fn ids(layers: &PagedList<DrawingLayerNode, {usize::MAX}>) -> Vec<String> {
 }
 
 fn apply(diff: &DrawingDiff, base: &DrawingSnapshot) -> DrawingSnapshot {
-    protocol::apply_diff(diff, base).expect("diff applies")
+    protocol::apply_diff_cold(diff, base).expect("diff applies")
 }
 
 fn sum(first: &DrawingDiff, later: &DrawingDiff) -> DrawingDiff {
@@ -183,7 +183,7 @@ async fn a_stale_base_address_is_refused() {
     let base = tree();
     let a = named(&base, "A");
     let stale = DrawingDiff { layers: Some(DrawingLayersDelta { moved: vec![DrawingLayerRelocation { id: a, from: DrawingLayerAddress { parent_id: None, index: 2 }, to: DrawingLayerAddress { parent_id: None, index: 0 } }], ..Default::default() }), ..Default::default() };
-    assert!(protocol::apply_diff(&stale, &base).is_err(), "a move whose layer is not at its base address does not apply");
+    assert!(protocol::apply_diff_cold(&stale, &base).is_err(), "a move whose layer is not at its base address does not apply");
     assert_eq!(address(&base, "A"), (None, 0));
 }
 

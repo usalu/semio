@@ -116,7 +116,7 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     const project = Object.values(graph.projects)[0] as { targets: Record<string, { cache?: boolean; outputs?: readonly string[]; options: { command: string; forwardAllArgs: boolean } }> };
     expect(Object.keys(project.targets).sort()).toEqual(["lint", "test"]);
     expect(project.targets.test.options.forwardAllArgs).toBe(true);
-    expect(project.targets.test.options.command).toBe('bun ./📜️script.ts cases "🧰️framework/🔨️modules/🎠️kernel"');
+    expect(project.targets.test.options.command).toBe('repo ./📜️script.ts cases "🧰️framework/🔨️modules/🎠️kernel"');
     expect(project.targets.lint.options.forwardAllArgs).toBe(false);
     for (const name of ["lint", "test"]) {
       expect(project.targets[name].cache, name).toBe(true);

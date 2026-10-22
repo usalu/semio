@@ -19,8 +19,8 @@ fn derivation() -> serde_json::Value {
 fn cold_document() -> Din18599Snapshot {
     let potsdam = Din18599Snapshot::default();
     let new_climate = MonthlyClimate { theta_e_c: potsdam.climate.theta_e_c.map(|theta| theta - 6.0), g_h_w_m2: potsdam.climate.g_h_w_m2.map(|g| g * 0.8) };
-    let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate }), &potsdam);
-    protocol::apply_diff(raised.diff(), &potsdam).expect("update-climate applies")
+    let raised = <Din18599Mutation as protocol::ColdMutation<Din18599Snapshot>>::diff(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate }), &potsdam);
+    protocol::apply_diff_cold(raised.diff(), &potsdam).expect("update-climate applies")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,7 +52,7 @@ fn update_climate_writes_the_parent_climate_and_re_derives_its_table() {
     let edited = cold_document();
     assert_ne!(edited.climate, MonthlyClimate::potsdam_reference());
     assert_eq!(edited.climate_table, din18599_climate_table_child(&edited.climate));
-    let inverse = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: edited.climate.clone() }), &Din18599Snapshot::default()).expect("inverse");
+    let inverse = <Din18599Mutation as protocol::ColdMutation<Din18599Snapshot>>::inverse(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: edited.climate.clone() }), &Din18599Snapshot::default()).expect("inverse");
     assert_eq!(inverse, vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: MonthlyClimate::potsdam_reference() })]);
 }
 

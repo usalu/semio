@@ -21,6 +21,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetRenderMode>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "render-mode", kind: "set-render-mode", record: "SetRenderMode" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set render mode", "Darstellungsmodus setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["renderMode".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetRenderMode
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetRenderMode>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.render_mode == self.value {
             return MutationOutcome::empty().warning("mutation.no-op", format!("Render mode is already \"{}\".", self.value));
@@ -33,12 +46,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set render mode", "Darstellungsmodus setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["renderMode".into()]
-    }
 }
 //#endregion ⚙️Behavior
 

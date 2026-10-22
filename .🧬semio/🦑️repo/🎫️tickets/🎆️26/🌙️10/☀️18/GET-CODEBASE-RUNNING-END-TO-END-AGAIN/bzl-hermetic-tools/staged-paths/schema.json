@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel Path Plan",
+  "description": "📐️ Declares where the repository Bazel adapter places the paths a host cannot lengthen: a short fixed output root per checkout on hosts with a small path limit, the short private root a hermetic action builds its isolated workspace in, and the closed shape of the worst-case path law that fails a declared target whose longest path exceeds the host's budget.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "$ref": "#/definitions/Policy"
+    }
+  },
+  "definitions": {
+    "Template": {
+      "description": "A path template: `{drive}` is the drive root of the checkout and `{checkout}` the first hex digits of the SHA-256 of the checkout's real path.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "unit": "utf16",
+        "outputRoot": {
+          "darwin": null,
+          "linux": null,
+          "win32": {
+            "template": "{drive}\\b\\{checkout}",
+            "checkoutDigits": 8
+          }
+        },
+        "hermeticRoot": {
+          "darwin": {
+            "base": "/tmp",
+            "workDigits": 12,
+            "workspace": "r",
+            "separator": "/"
+          },
+          "linux": {
+            "base": "/tmp",
+            "workDigits": 12,
+            "workspace": "r",
+            "separator": "/"
+          },
+          "win32": {
+            "base": "{drive}\\b\\w",
+            "workDigits": 6,
+            "workspace": "r",
+            "separator": "\\"
+          }
+        },
+        "fillers": {
+          "drive": "C:",
+          "execroot": "execroot/_main/",
+          "tree": "m_0000000000000000",
+          "stash": "RepoHermetic"
+        }
+      }
+    },
+    "PolicyShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "unit",
+        "outputRoot",
+        "hermeticRoot",
+        "fillers"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "unit": {
+          "const": "utf16"
+        },
+        "outputRoot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "properties": {
+            "darwin": {
+              "$ref": "#/definitions/OutputRoot"
+            },
+            "linux": {
+              "$ref": "#/definitions/OutputRoot"
+            },
+            "win32": {
+              "$ref": "#/definitions/OutputRoot"
+            }
+          }
+        },
+        "hermeticRoot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "properties": {
+            "darwin": {
+              "$ref": "#/definitions/HermeticRoot"
+            },
+            "linux": {
+              "$ref": "#/definitions/HermeticRoot"
+            },
+            "win32": {
+              "$ref": "#/definitions/HermeticRoot"
+            }
+          }
+        },
+        "fillers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "drive",
+            "execroot",
+            "tree",
+            "stash"
+          ],
+          "properties": {
+            "drive": {
+              "type": "string",
+              "minLength": 1
+            },
+            "execroot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tree": {
+              "type": "string",
+              "pattern": "^m_0+$"
+            },
+            "stash": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*$"
+            }
+          }
+        }
+      }
+    },
+    "OutputRoot": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "template",
+            "checkoutDigits"
+          ],
+          "properties": {
+            "template": {
+              "$ref": "#/definitions/Template"
+            },
+            "checkoutDigits": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 16
+            }
+          }
+        }
+      ]
+    },
+    "HermeticRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base",
+        "workDigits",
+        "workspace",
+        "separator"
+      ],
+      "properties": {
+        "base": {
+          "$ref": "#/definitions/Template"
+        },
+        "workDigits": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 32
+        },
+        "workspace": {
+          "type": "string",
+          "pattern": "^[a-z]$"
+        },
+        "separator": {
+          "enum": [
+            "/",
+            "\\"
+          ]
+        }
+      }
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "sources"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "kind": {
+          "enum": [
+            "hermetic",
+            "host"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "tree": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    }
+  }
+}

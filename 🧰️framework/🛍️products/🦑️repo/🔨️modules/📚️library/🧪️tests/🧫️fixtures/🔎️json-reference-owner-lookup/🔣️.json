@@ -122,7 +122,7 @@
       "id": "embedded-command-and-glob",
       "path": "config/project.json",
       "adapter": "json",
-      "source": "{\"command\":\"bun ./📜️script.ts --file=./🟦️.ts\",\"inputs\":[\"{workspaceRoot}/src/**/*\"]}",
+      "source": "{\"command\":\"repo ./📜️script.ts --file=./🟦️.ts\",\"inputs\":[\"{workspaceRoot}/src/**/*\"]}",
       "owner": null,
       "lookups": 1,
       "oracle": true
@@ -161,6 +161,6 @@
   ],
   "execution": {
     "target": "test-json-reference-owner-lookup",
-    "command": "bun ./📜️script.ts test json-reference-owner-lookup"
+    "command": "repo ./📜️script.ts test json-reference-owner-lookup"
   }
 }

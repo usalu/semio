@@ -19,13 +19,13 @@ for(const row of corpus.cases)test(`Bazel plans ${row.id} with the mode as a glo
  const graph=corpus.graphs[row.graph as "declared"|"undeclared"|"pinned"|"partial"] as any;
  if("refused" in row.expected){
   expect(()=>api.planBazelTasksV1(graph,row.request as any)).toThrow(row.expected.refused);
-  const german=(corpus.refusals as Record<string,string>)[row.expected.refused]??corpus.refusals["Conflicting build modes"];
+  const german=(corpus.refusals as Record<string,string>)[String(row.expected.refused)]??corpus.refusals["Conflicting build modes"];
   expect(()=>api.planBazelTasksV1(graph,row.request as any)).toThrow(german);
   return;
  }
  const plan=api.planBazelTasksV1(graph,row.request as any);
  expect(plan.selected).toEqual(row.expected.selected);
- expect(Object.fromEntries(Object.entries(plan.tasks).map(([id,task])=>[id,modeOf(task as any)]))).toEqual(row.expected.tasks);
+ expect<unknown>(Object.fromEntries(Object.entries(plan.tasks).map(([id,task])=>[id,modeOf(task as any)]))).toEqual(row.expected.tasks);
  for(const [id,task] of Object.entries(plan.tasks)){expect(task.id).toBe(id);expect(task.label).toMatch(/^t_[a-f0-9]{16}$/u);}
  const database=new Database(":memory:");
  try{
@@ -50,7 +50,7 @@ for(const row of corpus.authorized)test(`Bazel request ${row.id} takes the origi
  const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:publish"],"bazel",{SEMIO_BUILD_MODE:row.caller}),graph=corpus.graphs[row.graph as "declared"|"undeclared"] as any;
  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:mode-authority",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async invocation=>{
   const request=api.bazelAuthorizedRequestV1({tasks:row.tasks},invocation);
-  expect(request.authority).toBe(row.caller);expect(request.tasks).toEqual(row.tasks);
+  expect<unknown>(request.authority).toBe(row.caller);expect(request.tasks).toEqual(row.tasks);
   expect(api.planBazelTasksV1(graph,request).selected).toEqual(row.selected);
  });
 });
@@ -64,7 +64,7 @@ test("Bazel plans of the two modes never share a task identity or label",()=>{
 });
 
 for(const row of corpus.authority)test(`Bazel task environment ${row.id}: the caller's mode is the authority and a task of another mode is refused`,async()=>{
- const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:publish"],"bazel",{SEMIO_BUILD_MODE:row.caller}),task={id:"fixture:publish",project:"fixture",target:"publish",root:"fixture",label:"t_0000000000000000",dependencies:[],args:[],...(row.configuration===null?{}:{configuration:row.configuration}),definition:{execution:{kind:"command",command:"bun ./📜️script.ts publish"}}} as any;
+ const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:publish"],"bazel",{SEMIO_BUILD_MODE:row.caller}),task={id:"fixture:publish",project:"fixture",target:"publish",root:"fixture",label:"t_0000000000000000",dependencies:[],args:[],...(row.configuration===null?{}:{configuration:row.configuration}),definition:{execution:{kind:"command",command:"repo ./📜️script.ts publish"}}} as any;
  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:mode-axis",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async invocation=>{
   if(row.refused){
    expect(()=>api.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow("Conflicting build modes");

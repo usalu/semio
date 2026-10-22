@@ -1,0 +1,2757 @@
+{
+ "version": 1,
+ "names": [
+  {
+   "name": "build",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "build"
+  },
+  {
+   "name": "clean",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "clean"
+  },
+  {
+   "name": "deep-clean-all",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "deep-clean-all"
+  },
+  {
+   "name": "cleanup",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "cleanup"
+  },
+  {
+   "name": "setup",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "setup"
+  },
+  {
+   "name": "setup-tools",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "setup-tools"
+  },
+  {
+   "name": "tool-setup",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "tool-setup"
+  },
+  {
+   "name": "resetup",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "resetup"
+  },
+  {
+   "name": "gc",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "gc"
+  },
+  {
+   "name": "gcc",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "gcc"
+  },
+  {
+   "name": "prune-cache",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "prune-cache"
+  },
+  {
+   "name": "fuzz",
+   "mutating": true,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "fuzz"
+  },
+  {
+   "name": "fuzzy",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "fuzzy"
+  },
+  {
+   "name": "e2e",
+   "mutating": false,
+   "live": true,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "e2e"
+  },
+  {
+   "name": "test-e2e",
+   "mutating": false,
+   "live": true,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "test-e2e"
+  },
+  {
+   "name": "e2e-run",
+   "mutating": false,
+   "live": true,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "e2e-run"
+  },
+  {
+   "name": "e2e2",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "e2e2"
+  },
+  {
+   "name": "live",
+   "mutating": false,
+   "live": true,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "live"
+  },
+  {
+   "name": "go-live-now",
+   "mutating": false,
+   "live": true,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "go-live-now"
+  },
+  {
+   "name": "olive",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "olive"
+  },
+  {
+   "name": "os",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "os"
+  },
+  {
+   "name": "semio",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "live",
+    "drives-running-process"
+   ],
+   "normalized": "semio"
+  },
+  {
+   "name": "os-extra",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "os-extra"
+  },
+  {
+   "name": "audit",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "audit"
+  },
+  {
+   "name": "audit-all",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "audit-all"
+  },
+  {
+   "name": "auditor",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "auditor"
+  },
+  {
+   "name": "parity",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "parity"
+  },
+  {
+   "name": "parity-check",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "parity-check"
+  },
+  {
+   "name": "doctor",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "doctor"
+  },
+  {
+   "name": "test-doctor",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "test-doctor"
+  },
+  {
+   "name": "bench-x",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "bench-x"
+  },
+  {
+   "name": "benchmark",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "benchmark"
+  },
+  {
+   "name": "cache-report",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "cache-report"
+  },
+  {
+   "name": "disk-report",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "disk-report"
+  },
+  {
+   "name": "ci-baseline",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "ci-baseline"
+  },
+  {
+   "name": "perf-baseline-x",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "diagnostic",
+    "measures-environment"
+   ],
+   "normalized": "perf-baseline-x"
+  },
+  {
+   "name": "publish",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "publishes-remote"
+   ],
+   "normalized": "publish"
+  },
+  {
+   "name": "deploy-prod",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "publishes-remote"
+   ],
+   "normalized": "deploy-prod"
+  },
+  {
+   "name": "publisher",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "publisher"
+  },
+  {
+   "name": "redeploy",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "redeploy"
+  },
+  {
+   "name": "Clean",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": "Clean"
+  },
+  {
+   "name": "",
+   "mutating": false,
+   "live": false,
+   "uncached": [
+    "side-effecting",
+    "mutates-workspace"
+   ],
+   "normalized": ""
+  }
+ ],
+ "normalize": [
+  {
+   "name": "🏭️generator-build",
+   "bare": "generator-build"
+  },
+  {
+   "name": "🧪️test",
+   "bare": "test"
+  },
+  {
+   "name": "plain",
+   "bare": "plain"
+  },
+  {
+   "name": "---x",
+   "bare": "x"
+  },
+  {
+   "name": "9lives",
+   "bare": "9lives"
+  },
+  {
+   "name": "",
+   "bare": ""
+  },
+  {
+   "name": "🎯️",
+   "bare": ""
+  },
+  {
+   "name": "é-x",
+   "bare": "x"
+  },
+  {
+   "name": "a🏭b",
+   "bare": "a🏭b"
+  },
+  {
+   "name": "_dev",
+   "bare": "dev"
+  }
+ ],
+ "uncachedPolicy": {
+  "uncached": [
+   "audit",
+   "clean"
+  ],
+  "uncachedExact": [
+   "os"
+  ]
+ },
+ "matches": [
+  {
+   "name": "audit",
+   "matches": true
+  },
+  {
+   "name": "audit-x",
+   "matches": true
+  },
+  {
+   "name": "auditx",
+   "matches": false
+  },
+  {
+   "name": "x-audit",
+   "matches": false
+  },
+  {
+   "name": "os",
+   "matches": true
+  },
+  {
+   "name": "os-x",
+   "matches": false
+  },
+  {
+   "name": "clean",
+   "matches": true
+  },
+  {
+   "name": "clean-all",
+   "matches": true
+  },
+  {
+   "name": "cleaner",
+   "matches": false
+  },
+  {
+   "name": "",
+   "matches": false
+  }
+ ],
+ "verify": [
+  {
+   "target": {
+    "options": {
+     "command": "repo verify"
+    }
+   },
+   "verify": true
+  },
+  {
+   "target": {
+    "options": {
+     "command": "verify"
+    }
+   },
+   "verify": true
+  },
+  {
+   "target": {
+    "options": {
+     "command": "'verify'"
+    }
+   },
+   "verify": true
+  },
+  {
+   "target": {
+    "options": {
+     "command": "repo verify-all"
+    }
+   },
+   "verify": false
+  },
+  {
+   "target": {
+    "options": {
+     "command": "reverify"
+    }
+   },
+   "verify": false
+  },
+  {
+   "target": {
+    "options": {
+     "command": "bun run --verify"
+    }
+   },
+   "verify": false
+  },
+  {
+   "target": {
+    "options": {}
+   },
+   "verify": false
+  },
+  {
+   "target": {},
+   "verify": false
+  },
+  {
+   "target": {
+    "options": {
+     "command": "repo verify --fix"
+    }
+   },
+   "verify": true
+  },
+  {
+   "target": {
+    "options": {
+     "command": "a \"verify\" b"
+    }
+   },
+   "verify": true
+  }
+ ],
+ "classRows": [
+  {
+   "decision": {
+    "class": "live",
+    "reason": "drives-running-process"
+   },
+   "exact": [
+    "acceptance"
+   ]
+  },
+  {
+   "decision": {
+    "class": "deterministic",
+    "reason": "pure-function-of-inputs"
+   },
+   "exact": [
+    "wasm",
+    "generator-inputs"
+   ],
+   "heads": [
+    "gen"
+   ]
+  },
+  {
+   "decision": {
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   },
+   "heads": [
+    "test",
+    "check"
+   ],
+   "tails": [
+    "check"
+   ],
+   "tokens": [
+    "lint"
+   ]
+  },
+  {
+   "decision": {
+    "class": "side-effecting",
+    "reason": "mutates-workspace"
+   },
+   "heads": [
+    "generator"
+   ]
+  }
+ ],
+ "classes": [
+  {
+   "name": "acceptance",
+   "decision": {
+    "version": 1,
+    "class": "live",
+    "reason": "drives-running-process"
+   }
+  },
+  {
+   "name": "wasm",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "pure-function-of-inputs"
+   }
+  },
+  {
+   "name": "gen-x",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "pure-function-of-inputs"
+   }
+  },
+  {
+   "name": "gen",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "pure-function-of-inputs"
+   }
+  },
+  {
+   "name": "generator-x",
+   "decision": {
+    "version": 1,
+    "class": "side-effecting",
+    "reason": "mutates-workspace"
+   }
+  },
+  {
+   "name": "generator-inputs",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "pure-function-of-inputs"
+   }
+  },
+  {
+   "name": "test",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "test-all",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "x-check",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "check",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "a-lint-b",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "lint",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "x-lint",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "lint-x",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "mylint",
+   "decision": null
+  },
+  {
+   "name": "tester",
+   "decision": null
+  },
+  {
+   "name": "unknown",
+   "decision": null
+  },
+  {
+   "name": "🏭️generator-x",
+   "decision": {
+    "version": 1,
+    "class": "side-effecting",
+    "reason": "mutates-workspace"
+   }
+  },
+  {
+   "name": "🧪️test",
+   "decision": {
+    "version": 1,
+    "class": "deterministic",
+    "reason": "check-without-outputs"
+   }
+  },
+  {
+   "name": "generatorx",
+   "decision": null
+  },
+  {
+   "name": "acceptance-x",
+   "decision": null
+  }
+ ],
+ "classRefusals": [
+  {
+   "name": "a row with a reason of another class",
+   "rows": [
+    {
+     "decision": {
+      "class": "live",
+      "reason": "serves-until-stopped"
+     },
+     "exact": [
+      "bad"
+     ]
+    }
+   ],
+   "target": "bad",
+   "error": "Repository target cache decision refused: live/serves-until-stopped"
+  },
+  {
+   "name": "a row with an unknown class",
+   "rows": [
+    {
+     "decision": {
+      "class": "martian",
+      "reason": "x"
+     },
+     "heads": [
+      "bad"
+     ]
+    }
+   ],
+   "target": "bad-x",
+   "error": "Repository target cache decision refused: martian/x"
+  }
+ ],
+ "policy": {
+  "continuous": [
+   "dev",
+   "serve"
+  ],
+  "uncached": [
+   "audit",
+   "clean",
+   "publish"
+  ],
+  "uncachedExact": [
+   "os",
+   "commit"
+  ],
+  "cachedExact": [
+   "hub-live-check",
+   "setup-verify"
+  ],
+  "targetClasses": [
+   {
+    "decision": {
+     "class": "live",
+     "reason": "drives-running-process"
+    },
+    "exact": [
+     "acceptance"
+    ]
+   },
+   {
+    "decision": {
+     "class": "deterministic",
+     "reason": "pure-function-of-inputs"
+    },
+    "exact": [
+     "wasm",
+     "generator-inputs"
+    ],
+    "heads": [
+     "gen"
+    ]
+   },
+   {
+    "decision": {
+     "class": "deterministic",
+     "reason": "check-without-outputs"
+    },
+    "heads": [
+     "test",
+     "check"
+    ],
+    "tails": [
+     "check"
+    ],
+    "tokens": [
+     "lint"
+    ]
+   },
+   {
+    "decision": {
+     "class": "side-effecting",
+     "reason": "mutates-workspace"
+    },
+    "heads": [
+     "generator"
+    ]
+   }
+  ]
+ },
+ "policies": [
+  {
+   "name": "a continuous command",
+   "target": "dev",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "continuous",
+       "reason": "serves-until-stopped"
+      }
+     }
+    },
+    "cache": false,
+    "continuous": true
+   }
+  },
+  {
+   "name": "a continuous command prefix",
+   "target": "dev-ui",
+   "input": {
+    "options": {
+     "cwd": "x"
+    }
+   },
+   "expected": {
+    "options": {
+     "cwd": "x"
+    },
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "continuous",
+       "reason": "serves-until-stopped"
+      }
+     }
+    },
+    "cache": false,
+    "continuous": true
+   }
+  },
+  {
+   "name": "an emoji prefix is stripped before the continuous rule",
+   "target": "🧪️dev",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "continuous",
+       "reason": "serves-until-stopped"
+      }
+     }
+    },
+    "cache": false,
+    "continuous": true
+   }
+  },
+  {
+   "name": "a name that only starts with a continuous word is unclassified",
+   "target": "development",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "unclassified",
+       "reason": "no-cache-classification"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "an explicit cache false keeps its inputs and gains no decision",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "inputs": [
+     "x"
+    ]
+   },
+   "expected": {
+    "cache": false,
+    "inputs": [
+     "x"
+    ],
+    "outputs": []
+   }
+  },
+  {
+   "name": "an explicit cache false gets default inputs and outputs",
+   "target": "test",
+   "input": {
+    "cache": false
+   },
+   "expected": {
+    "cache": false,
+    "inputs": [
+     "default"
+    ],
+    "outputs": []
+   }
+  },
+  {
+   "name": "an explicit cache false keeps its declared decision",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    }
+   },
+   "expected": {
+    "cache": false,
+    "inputs": [
+     "default"
+    ],
+    "outputs": [],
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a declared decision without a reason is refused",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "class": "deterministic"
+      }
+     }
+    }
+   },
+   "error": "Repository target cache decision refused: deterministic/undefined"
+  },
+  {
+   "name": "a declared decision with an extra key is refused",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process",
+       "extra": 1
+      }
+     }
+    }
+   },
+   "error": "Repository target cache decision refused: live/drives-running-process"
+  },
+  {
+   "name": "a declared decision of another version is refused",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 2,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    }
+   },
+   "error": "Repository target cache decision refused: live/drives-running-process"
+  },
+  {
+   "name": "a declared decision with a reason of another class is refused",
+   "target": "test",
+   "input": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "serves-until-stopped"
+      }
+     }
+    }
+   },
+   "error": "Repository target cache decision refused: live/serves-until-stopped"
+  },
+  {
+   "name": "the workspace policy refuses to replay audit",
+   "target": "audit",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "diagnostic",
+       "reason": "measures-environment"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the workspace policy refuses to replay audit-deep",
+   "target": "audit-deep",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "diagnostic",
+       "reason": "measures-environment"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the workspace policy refuses to replay os",
+   "target": "os",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the workspace policy refuses to replay publish",
+   "target": "publish",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "publishes-remote"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the workspace policy refuses to replay clean-cache",
+   "target": "clean-cache",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the workspace policy refuses to replay commit",
+   "target": "commit",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "an exactly cached live-named check still replays",
+   "target": "hub-live-check",
+   "input": {},
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "check-without-outputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "an exactly cached mutating-named check still replays",
+   "target": "setup-verify",
+   "input": {},
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "check-without-outputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a live name never replays",
+   "target": "foo-e2e",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "a mutating name never replays",
+   "target": "setup-docs",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "a class deterministic target replays with default inputs",
+   "target": "wasm",
+   "input": {},
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "the target's own inputs and outputs win over the defaults",
+   "target": "wasm",
+   "input": {
+    "inputs": [
+     "a"
+    ],
+    "outputs": [
+     "o"
+    ]
+   },
+   "expected": {
+    "inputs": [
+     "a"
+    ],
+    "outputs": [
+     "o"
+    ],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a non deterministic class never replays",
+   "target": "acceptance",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "live",
+       "reason": "drives-running-process"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "a head class applies",
+   "target": "generator-x",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "an emoji prefix is stripped before the class lookup",
+   "target": "🏭️generator-x",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "a verify command replays as a check",
+   "target": "other",
+   "input": {
+    "options": {
+     "command": "repo verify"
+    }
+   },
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "options": {
+     "command": "repo verify"
+    },
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "check-without-outputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a target nothing classifies never replays",
+   "target": "other",
+   "input": {},
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "unclassified",
+       "reason": "no-cache-classification"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "a declared decision wins over the policy class",
+   "target": "acceptance",
+   "input": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   },
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a declared decision classifies an unclassified name and keeps sibling metadata",
+   "target": "other",
+   "input": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "k": 1
+     },
+     "z": 2
+    }
+   },
+   "expected": {
+    "inputs": [
+     "default",
+     "^default"
+    ],
+    "outputs": [],
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "k": 1
+     },
+     "z": 2
+    }
+   }
+  },
+  {
+   "name": "a declared non deterministic decision never replays",
+   "target": "other",
+   "input": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "aggregate",
+       "reason": "orders-prerequisites"
+      }
+     }
+    }
+   },
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "aggregate",
+       "reason": "orders-prerequisites"
+      }
+     }
+    },
+    "cache": false
+   }
+  },
+  {
+   "name": "the policy overrides a target that asks to be cached",
+   "target": "audit",
+   "input": {
+    "cache": true,
+    "continuous": false
+   },
+   "expected": {
+    "cache": false,
+    "continuous": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "diagnostic",
+       "reason": "measures-environment"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a continuous command ignores the cache flag",
+   "target": "dev",
+   "input": {
+    "cache": true
+   },
+   "expected": {
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "continuous",
+       "reason": "serves-until-stopped"
+      }
+     }
+    },
+    "cache": false,
+    "continuous": true
+   }
+  }
+ ],
+ "outputs": [
+  {
+   "name": "no declared output demotes the target",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   },
+   "expected": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a declared output keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "outputs": [
+     "o"
+    ]
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "outputs": [
+     "o"
+    ]
+   }
+  },
+  {
+   "name": "an empty output list demotes",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "outputs": []
+   },
+   "expected": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "outputs": []
+   }
+  },
+  {
+   "name": "a non list output demotes",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "outputs": "o"
+   },
+   "expected": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "outputs": "o"
+   }
+  },
+  {
+   "name": "a Rust build intent keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustBuildIntent": {
+       "a": 1
+      }
+     }
+    }
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustBuildIntent": {
+       "a": 1
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a null Rust build intent still counts as declared",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustBuildIntent": null
+     }
+    }
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustBuildIntent": null
+     }
+    }
+   }
+  },
+  {
+   "name": "a Rust unit aggregate keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustUnitAggregate": true
+     }
+    }
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "rustUnitAggregate": true
+     }
+    }
+   }
+  },
+  {
+   "name": "a host platform output declaration keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "hostPlatformOutputsV1": []
+     }
+    }
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      },
+      "hostPlatformOutputsV1": []
+     }
+    }
+   }
+  },
+  {
+   "name": "a pure ordering task keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "executor": "repo:noop"
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "executor": "repo:noop"
+   }
+  },
+  {
+   "name": "another executor demotes",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    },
+    "executor": "repo:script"
+   },
+   "expected": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "side-effecting",
+       "reason": "mutates-workspace"
+      }
+     }
+    },
+    "executor": "repo:script"
+   }
+  },
+  {
+   "name": "a check without outputs keeps it",
+   "target": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "check-without-outputs"
+      }
+     }
+    }
+   },
+   "expected": {
+    "cache": true,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "check-without-outputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a target that does not replay is unchanged",
+   "target": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   },
+   "expected": {
+    "cache": false,
+    "metadata": {
+     "semio": {
+      "cache": {
+       "version": 1,
+       "class": "deterministic",
+       "reason": "pure-function-of-inputs"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "a target without a decision is unchanged",
+   "target": {
+    "cache": true
+   },
+   "expected": {
+    "cache": true
+   }
+  }
+ ],
+ "executions": [
+  {
+   "name": "no declaration",
+   "target": {},
+   "kind": null
+  },
+  {
+   "name": "a source owner",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "source"
+      }
+     }
+    }
+   },
+   "kind": "source"
+  },
+  {
+   "name": "a native owner in the test scope",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "native",
+       "scope": "test"
+      }
+     }
+    }
+   },
+   "kind": "native"
+  },
+  {
+   "name": "a native owner in the production scope",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "native",
+       "scope": "production"
+      }
+     }
+    }
+   },
+   "kind": "native"
+  },
+  {
+   "name": "a native owner without scope is refused and named",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "native"
+      }
+     }
+    }
+   },
+   "identity": "p:build",
+   "error": "Repository target execution contract refused: p:build"
+  },
+  {
+   "name": "a native owner with an unknown scope is refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "native",
+       "scope": "all"
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "an unknown kind is refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "shell"
+      }
+     }
+    }
+   },
+   "identity": "p:x",
+   "error": "Repository target execution contract refused: p:x"
+  },
+  {
+   "name": "an unversioned source is refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "kind": "source"
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "an extra key is refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "source",
+       "scope": "test"
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "an orchestration of one child",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a",
+         "target": "build"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "kind": "orchestration"
+  },
+  {
+   "name": "an orchestration child with a configuration",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a/b",
+         "target": "build-x",
+         "configuration": "release_1"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "kind": "orchestration"
+  },
+  {
+   "name": "an orchestration without children",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration"
+      }
+     }
+    }
+   },
+   "kind": "orchestration"
+  },
+  {
+   "name": "an orchestration with empty children is refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": []
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "duplicate children are refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a",
+         "target": "t"
+        },
+        {
+         "project": "a",
+         "target": "t"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "a child target must start with a lowercase letter",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a",
+         "target": "Build"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "a child project may not contain a colon",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a:b",
+         "target": "t"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "a child project may not contain a space",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "a b",
+         "target": "t"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "65 children are refused",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "p0",
+         "target": "t"
+        },
+        {
+         "project": "p1",
+         "target": "t"
+        },
+        {
+         "project": "p2",
+         "target": "t"
+        },
+        {
+         "project": "p3",
+         "target": "t"
+        },
+        {
+         "project": "p4",
+         "target": "t"
+        },
+        {
+         "project": "p5",
+         "target": "t"
+        },
+        {
+         "project": "p6",
+         "target": "t"
+        },
+        {
+         "project": "p7",
+         "target": "t"
+        },
+        {
+         "project": "p8",
+         "target": "t"
+        },
+        {
+         "project": "p9",
+         "target": "t"
+        },
+        {
+         "project": "p10",
+         "target": "t"
+        },
+        {
+         "project": "p11",
+         "target": "t"
+        },
+        {
+         "project": "p12",
+         "target": "t"
+        },
+        {
+         "project": "p13",
+         "target": "t"
+        },
+        {
+         "project": "p14",
+         "target": "t"
+        },
+        {
+         "project": "p15",
+         "target": "t"
+        },
+        {
+         "project": "p16",
+         "target": "t"
+        },
+        {
+         "project": "p17",
+         "target": "t"
+        },
+        {
+         "project": "p18",
+         "target": "t"
+        },
+        {
+         "project": "p19",
+         "target": "t"
+        },
+        {
+         "project": "p20",
+         "target": "t"
+        },
+        {
+         "project": "p21",
+         "target": "t"
+        },
+        {
+         "project": "p22",
+         "target": "t"
+        },
+        {
+         "project": "p23",
+         "target": "t"
+        },
+        {
+         "project": "p24",
+         "target": "t"
+        },
+        {
+         "project": "p25",
+         "target": "t"
+        },
+        {
+         "project": "p26",
+         "target": "t"
+        },
+        {
+         "project": "p27",
+         "target": "t"
+        },
+        {
+         "project": "p28",
+         "target": "t"
+        },
+        {
+         "project": "p29",
+         "target": "t"
+        },
+        {
+         "project": "p30",
+         "target": "t"
+        },
+        {
+         "project": "p31",
+         "target": "t"
+        },
+        {
+         "project": "p32",
+         "target": "t"
+        },
+        {
+         "project": "p33",
+         "target": "t"
+        },
+        {
+         "project": "p34",
+         "target": "t"
+        },
+        {
+         "project": "p35",
+         "target": "t"
+        },
+        {
+         "project": "p36",
+         "target": "t"
+        },
+        {
+         "project": "p37",
+         "target": "t"
+        },
+        {
+         "project": "p38",
+         "target": "t"
+        },
+        {
+         "project": "p39",
+         "target": "t"
+        },
+        {
+         "project": "p40",
+         "target": "t"
+        },
+        {
+         "project": "p41",
+         "target": "t"
+        },
+        {
+         "project": "p42",
+         "target": "t"
+        },
+        {
+         "project": "p43",
+         "target": "t"
+        },
+        {
+         "project": "p44",
+         "target": "t"
+        },
+        {
+         "project": "p45",
+         "target": "t"
+        },
+        {
+         "project": "p46",
+         "target": "t"
+        },
+        {
+         "project": "p47",
+         "target": "t"
+        },
+        {
+         "project": "p48",
+         "target": "t"
+        },
+        {
+         "project": "p49",
+         "target": "t"
+        },
+        {
+         "project": "p50",
+         "target": "t"
+        },
+        {
+         "project": "p51",
+         "target": "t"
+        },
+        {
+         "project": "p52",
+         "target": "t"
+        },
+        {
+         "project": "p53",
+         "target": "t"
+        },
+        {
+         "project": "p54",
+         "target": "t"
+        },
+        {
+         "project": "p55",
+         "target": "t"
+        },
+        {
+         "project": "p56",
+         "target": "t"
+        },
+        {
+         "project": "p57",
+         "target": "t"
+        },
+        {
+         "project": "p58",
+         "target": "t"
+        },
+        {
+         "project": "p59",
+         "target": "t"
+        },
+        {
+         "project": "p60",
+         "target": "t"
+        },
+        {
+         "project": "p61",
+         "target": "t"
+        },
+        {
+         "project": "p62",
+         "target": "t"
+        },
+        {
+         "project": "p63",
+         "target": "t"
+        },
+        {
+         "project": "p64",
+         "target": "t"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "error": "Repository target execution contract refused"
+  },
+  {
+   "name": "64 children are accepted",
+   "target": {
+    "metadata": {
+     "semio": {
+      "execution": {
+       "version": 1,
+       "kind": "orchestration",
+       "children": [
+        {
+         "project": "p0",
+         "target": "t"
+        },
+        {
+         "project": "p1",
+         "target": "t"
+        },
+        {
+         "project": "p2",
+         "target": "t"
+        },
+        {
+         "project": "p3",
+         "target": "t"
+        },
+        {
+         "project": "p4",
+         "target": "t"
+        },
+        {
+         "project": "p5",
+         "target": "t"
+        },
+        {
+         "project": "p6",
+         "target": "t"
+        },
+        {
+         "project": "p7",
+         "target": "t"
+        },
+        {
+         "project": "p8",
+         "target": "t"
+        },
+        {
+         "project": "p9",
+         "target": "t"
+        },
+        {
+         "project": "p10",
+         "target": "t"
+        },
+        {
+         "project": "p11",
+         "target": "t"
+        },
+        {
+         "project": "p12",
+         "target": "t"
+        },
+        {
+         "project": "p13",
+         "target": "t"
+        },
+        {
+         "project": "p14",
+         "target": "t"
+        },
+        {
+         "project": "p15",
+         "target": "t"
+        },
+        {
+         "project": "p16",
+         "target": "t"
+        },
+        {
+         "project": "p17",
+         "target": "t"
+        },
+        {
+         "project": "p18",
+         "target": "t"
+        },
+        {
+         "project": "p19",
+         "target": "t"
+        },
+        {
+         "project": "p20",
+         "target": "t"
+        },
+        {
+         "project": "p21",
+         "target": "t"
+        },
+        {
+         "project": "p22",
+         "target": "t"
+        },
+        {
+         "project": "p23",
+         "target": "t"
+        },
+        {
+         "project": "p24",
+         "target": "t"
+        },
+        {
+         "project": "p25",
+         "target": "t"
+        },
+        {
+         "project": "p26",
+         "target": "t"
+        },
+        {
+         "project": "p27",
+         "target": "t"
+        },
+        {
+         "project": "p28",
+         "target": "t"
+        },
+        {
+         "project": "p29",
+         "target": "t"
+        },
+        {
+         "project": "p30",
+         "target": "t"
+        },
+        {
+         "project": "p31",
+         "target": "t"
+        },
+        {
+         "project": "p32",
+         "target": "t"
+        },
+        {
+         "project": "p33",
+         "target": "t"
+        },
+        {
+         "project": "p34",
+         "target": "t"
+        },
+        {
+         "project": "p35",
+         "target": "t"
+        },
+        {
+         "project": "p36",
+         "target": "t"
+        },
+        {
+         "project": "p37",
+         "target": "t"
+        },
+        {
+         "project": "p38",
+         "target": "t"
+        },
+        {
+         "project": "p39",
+         "target": "t"
+        },
+        {
+         "project": "p40",
+         "target": "t"
+        },
+        {
+         "project": "p41",
+         "target": "t"
+        },
+        {
+         "project": "p42",
+         "target": "t"
+        },
+        {
+         "project": "p43",
+         "target": "t"
+        },
+        {
+         "project": "p44",
+         "target": "t"
+        },
+        {
+         "project": "p45",
+         "target": "t"
+        },
+        {
+         "project": "p46",
+         "target": "t"
+        },
+        {
+         "project": "p47",
+         "target": "t"
+        },
+        {
+         "project": "p48",
+         "target": "t"
+        },
+        {
+         "project": "p49",
+         "target": "t"
+        },
+        {
+         "project": "p50",
+         "target": "t"
+        },
+        {
+         "project": "p51",
+         "target": "t"
+        },
+        {
+         "project": "p52",
+         "target": "t"
+        },
+        {
+         "project": "p53",
+         "target": "t"
+        },
+        {
+         "project": "p54",
+         "target": "t"
+        },
+        {
+         "project": "p55",
+         "target": "t"
+        },
+        {
+         "project": "p56",
+         "target": "t"
+        },
+        {
+         "project": "p57",
+         "target": "t"
+        },
+        {
+         "project": "p58",
+         "target": "t"
+        },
+        {
+         "project": "p59",
+         "target": "t"
+        },
+        {
+         "project": "p60",
+         "target": "t"
+        },
+        {
+         "project": "p61",
+         "target": "t"
+        },
+        {
+         "project": "p62",
+         "target": "t"
+        },
+        {
+         "project": "p63",
+         "target": "t"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "kind": "orchestration"
+  }
+ ]
+}

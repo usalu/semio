@@ -1433,19 +1433,97 @@
     ]
   },
   "frontierStates": [
-    {"dev":"1","ino":"9007199254740992","mode":33188,"expected":["file","1","9007199254740992",33188]},
-    {"dev":"1","ino":"9007199254740993","mode":33188,"expected":["file","1","9007199254740993",33188]},
-    {"dev":"9007199254740993","ino":"18446744073709551615","mode":33188,"expected":["file","9007199254740993","18446744073709551615",33188]}
+    {
+      "dev": "1",
+      "ino": "9007199254740992",
+      "mode": 33188,
+      "expected": [
+        "file",
+        "1",
+        "9007199254740992",
+        33188
+      ]
+    },
+    {
+      "dev": "1",
+      "ino": "9007199254740993",
+      "mode": 33188,
+      "expected": [
+        "file",
+        "1",
+        "9007199254740993",
+        33188
+      ]
+    },
+    {
+      "dev": "9007199254740993",
+      "ino": "18446744073709551615",
+      "mode": 33188,
+      "expected": [
+        "file",
+        "9007199254740993",
+        "18446744073709551615",
+        33188
+      ]
+    }
   ],
   "frontierReplay": [
-    {"name":"exact-settled-directory","before":"1:2:3:1000000001:1000000002","after":"1:2:3:1000000001:1000000002","settled":true,"expected":"reuse"},
-    {"name":"nanosecond-membership-churn","before":"1:2:3:1000000001:1000000002","after":"1:2:3:1000000002:1000000002","settled":true,"expected":"relist"},
-    {"name":"replacement-inode","before":"1:2:3:1:1","after":"1:4:3:1:1","settled":true,"expected":"relist"},
-    {"name":"changed-ctime","before":"1:2:3:1:1","after":"1:2:3:1:2","settled":true,"expected":"relist"},
-    {"name":"missing-baseline","before":null,"after":"1:2:3:1:1","settled":true,"expected":"derive"},
-    {"name":"missing-current","before":"1:2:3:1:1","after":null,"settled":true,"expected":"derive"},
-    {"name":"unsettled-exact-stamp","before":"1:2:3:1:1","after":"1:2:3:1:1","settled":false,"expected":"relist"},
-    {"name":"unsettled-changed-stamp","before":"1:2:3:1:1","after":"1:2:3:1:2","settled":false,"expected":"relist"}
+    {
+      "name": "exact-settled-directory",
+      "before": "1:2:3:1000000001:1000000002",
+      "after": "1:2:3:1000000001:1000000002",
+      "settled": true,
+      "expected": "reuse"
+    },
+    {
+      "name": "nanosecond-membership-churn",
+      "before": "1:2:3:1000000001:1000000002",
+      "after": "1:2:3:1000000002:1000000002",
+      "settled": true,
+      "expected": "relist"
+    },
+    {
+      "name": "replacement-inode",
+      "before": "1:2:3:1:1",
+      "after": "1:4:3:1:1",
+      "settled": true,
+      "expected": "relist"
+    },
+    {
+      "name": "changed-ctime",
+      "before": "1:2:3:1:1",
+      "after": "1:2:3:1:2",
+      "settled": true,
+      "expected": "relist"
+    },
+    {
+      "name": "missing-baseline",
+      "before": null,
+      "after": "1:2:3:1:1",
+      "settled": true,
+      "expected": "derive"
+    },
+    {
+      "name": "missing-current",
+      "before": "1:2:3:1:1",
+      "after": null,
+      "settled": true,
+      "expected": "derive"
+    },
+    {
+      "name": "unsettled-exact-stamp",
+      "before": "1:2:3:1:1",
+      "after": "1:2:3:1:1",
+      "settled": false,
+      "expected": "relist"
+    },
+    {
+      "name": "unsettled-changed-stamp",
+      "before": "1:2:3:1:1",
+      "after": "1:2:3:1:2",
+      "settled": false,
+      "expected": "relist"
+    }
   ],
   "physicalPolicies": [
     {
@@ -1463,6 +1541,134 @@
     {
       "fault": "extra",
       "accepted": false
+    }
+  ],
+  "frontierRefresh": [
+    {
+      "name": "equivalent-empty-directory-is-adopted-once",
+      "action": "empty-directory",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "accepted",
+      "later": true,
+      "adopted": true
+    },
+    {
+      "name": "new-nonmember-decision-is-adopted-once",
+      "action": "nonmember-decision",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "accepted",
+      "later": true,
+      "adopted": true
+    },
+    {
+      "name": "new-decision-raw-bytes-remain-required",
+      "action": "nonmember-decision",
+      "finalMutation": "none",
+      "laterMutation": "decision-bytes",
+      "first": "accepted",
+      "later": false,
+      "adopted": true
+    },
+    {
+      "name": "new-decision-disappearance-remains-required",
+      "action": "nonmember-decision",
+      "finalMutation": "none",
+      "laterMutation": "decision-removal",
+      "first": "accepted",
+      "later": false,
+      "adopted": true
+    },
+    {
+      "name": "last-fresh-continuation-directory-change-refuses",
+      "action": "empty-directory",
+      "finalMutation": "directory",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "last-fresh-continuation-manifest-change-refuses",
+      "action": "nonmember-decision",
+      "finalMutation": "manifest",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "last-fresh-continuation-cancellation-retains-reason",
+      "action": "empty-directory",
+      "finalMutation": "cancel",
+      "laterMutation": "none",
+      "first": "canceled",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "last-fresh-continuation-undefined-error-retains-primary",
+      "action": "empty-directory",
+      "finalMutation": "undefined",
+      "laterMutation": "none",
+      "first": "failed",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "membership-change-remains-refused",
+      "action": "member",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "required-manifest-removal-remains-refused",
+      "action": "remove-required",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "required-raw-manifest-rewrite-remains-refused",
+      "action": "manifest-bytes",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "authored-pattern-change-remains-refused",
+      "action": "patterns",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "authored-owner-change-remains-refused",
+      "action": "owner",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "rejected",
+      "later": null,
+      "adopted": false
+    },
+    {
+      "name": "unrelated-source-change-still-uses-current-frontier",
+      "action": "source",
+      "finalMutation": "none",
+      "laterMutation": "none",
+      "first": "accepted",
+      "later": true,
+      "adopted": false
     }
   ]
 }

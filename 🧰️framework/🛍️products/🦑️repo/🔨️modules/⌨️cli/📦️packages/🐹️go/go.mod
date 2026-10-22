@@ -10,6 +10,7 @@ require (
 	github.com/usalu/semio/repo/graphql v0.0.0
 	github.com/usalu/semio/repo/hooks v0.0.0
 	github.com/usalu/semio/repo/languages v0.0.0
+	github.com/usalu/semio/repo/launcher v0.0.0
 	github.com/usalu/semio/repo/model v0.0.0
 	github.com/usalu/semio/repo/metrics v0.0.0
 	github.com/usalu/semio/repo/move v0.0.0
@@ -38,6 +39,8 @@ replace github.com/usalu/semio/repo/graphql => ../../../🔗️graphql/📦️pa
 replace github.com/usalu/semio/repo/hooks => ../../../🪝️hooks/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦️packages/🐹️go
+
+replace github.com/usalu/semio/repo/launcher => ../../../🚀️launcher/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/model => ../../../📐️model/📦️packages/🐹️go
 

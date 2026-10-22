@@ -20,6 +20,18 @@ patch(H, '("invocation-capacity"," const{withBuildCapacityV1}=await import(\\"./
 patch(H, '" const{withBuildCapacityV1}=await profilePhaseV1(\\"invocation.gate-load\\",()=>import(\\"./🌡️host-capacity/🟦️.ts\\"));\\n await profilePhaseV1(\\"invocation.gate\\",()=>withBuildCapacityV1(args,process.env,granted=>profilePhaseV1(\\"invocation.admitted\\",()=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl)),{control:phaseControl}));"',
       '",{withBuildCapacityV1}=await profilePhaseV1(\\"invocation.gate-load\\",()=>import(\\"./🌡️host-capacity/🟦️.ts\\"));\\n const{withImplementationPinV1}=await import(\\"./📥️inputs/🔏️revision/🟨️.mjs\\");\\n await profilePhaseV1(\\"invocation.gate\\",()=>withBuildCapacityV1(args,process.env,granted=>profilePhaseV1(\\"invocation.admitted\\",()=>withImplementationPinV1(()=>runAdmittedBuildInvocationV1(root,granted.args,parent,phaseControl))),{control:phaseControl}));"')
 
+_main = open(H, encoding="utf8").read()
+assert _main.count("runBuildCliV1(findWorkspaceRoot") == 2
+open(H, "w", encoding="utf8").write(_main.replace("runBuildCliV1(findWorkspaceRoot", "runBuildMainV1(findWorkspaceRoot"))
+text = open(H, encoding="utf8").read()
+bare = 'SEMIO_BUILD_REUSE_GRAPH===\\"true\\")'
+if text.count(bare) == 2 and "selected.graphPolicy" not in text:
+    open(H, "w", encoding="utf8").write(text.replace(bare, 'SEMIO_BUILD_REUSE_GRAPH===\\"true\\",undefined,selected.graphPolicy)'))
+_h = open(H, encoding="utf8").read()
+_h = _h.replace('import { join, resolve, dirname } from \\"node:path\\";', 'import { join, resolve, dirname,relative } from \\"node:path\\";')
+open(H, "w", encoding="utf8").write(_h)
+n = drop_named_tuples(H, {"invocation-capacity", "body"})
+print("cli-latency hooks: dropped", n, "edits of the pre-kernel invocation path (re-profile the runtime kernel: owner)")
 A = T + "/staged/apply.py"
 patch(A, ":undefined;\\nfunction current(){if(',\n 'const ownSourceURL=", ":undefined;',\n 'const ownSourceURL=")
 patch(A, " 'function current(){if(ownUnchanged())return;if('),\n", " ''),\n(\"revision-stamp\",REVISION+\"/🟨️.mjs\",'function current(){if(implementationPinnedV1())return;','function current(){if(implementationPinnedV1())return;if(ownUnchanged())return;'),\n")

@@ -23,7 +23,6 @@ export async function withPreparedCargoDependencyPairV1(storage:CargoPreparation
  try {
  mkdirSync(directory,{recursive:true});const sources=[...new Set([fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),fileURLToPath(new URL("../🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./📜️script.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️custody/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️custody/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️synchronization/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🔁️replan/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🔁️replan/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("../🧬️schema/🏃️invocation/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("../🧬️schema/🛠️preparation/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),...sourcePaths])].map(path=>({path,sha256:sha(path)}));
  for(let attempt=1;;attempt++){
- let dependenciesStarted=false;
  try{
  check();for(const source of sources)if(sha(source.path)!==source.sha256)throw Error(`Prepared source changed: ${source.path}`);
  const scope=cargoWorkspaceForManifest(root,manifest);
@@ -42,11 +41,11 @@ export async function withPreparedCargoDependencyPairV1(storage:CargoPreparation
   const row=receipt as Record<string,unknown>|undefined,hash=synchronizationSchema.properties.inputsSha256.pattern;
   if(row&&Object.keys(row).sort().join(",")==="inputsSha256,lockSha256,version"&&row.version===1&&typeof row.inputsSha256==="string"&&typeof row.lockSha256==="string"&&new RegExp(hash).test(row.inputsSha256)&&new RegExp(hash).test(row.lockSha256)&&row.inputsSha256===inputsSha256&&row.lockSha256===lockBefore.sha256){if(process.env.SEMIO_CARGO_PREPARATION_TIMING==="1"){}return;}
  }
- dependenciesStarted=true;await runner(["update","--workspace","--manifest-path",manifest],root,signal);await current();const lock=cargoPreparationInputV1(root,resolve(root,scope.lock),"file");if(!lock.sha256)throw Error("Prepared update did not publish a lock");await runner(["fetch","--locked","--manifest-path",manifest],root,signal);await current();if(cargoPreparationInputV1(root,lock.path,"file").sha256!==lock.sha256)throw Error("Locked fetch changed its prepared lock");
+ await runner(["update","--workspace","--manifest-path",manifest],root,signal);await current();const lock=cargoPreparationInputV1(root,resolve(root,scope.lock),"file");if(!lock.sha256)throw Error("Prepared update did not publish a lock");await runner(["fetch","--locked","--manifest-path",manifest],root,signal);await current();if(cargoPreparationInputV1(root,lock.path,"file").sha256!==lock.sha256)throw Error("Locked fetch changed its prepared lock");
  const temporary=join(directory,"synchronization.json");writeFileSync(temporary,JSON.stringify({version:1,inputsSha256,lockSha256:lock.sha256}));renameSync(temporary,receiptPath);
  return;
  }catch(error){
- if(!(error instanceof CargoPreparationManifestChangedV1)||dependenciesStarted||attempt>=cargoPreparationReplanPolicyV1.maximumAttempts)throw error;
+ if(!(error instanceof CargoPreparationManifestChangedV1)||attempt>=cargoPreparationReplanPolicyV1.maximumAttempts)throw error;
  check();await control.publish({resource:`cargo-preparation-replan:${root}:${attempt}`,mode:"exclusive",elapsedMs:performance.now()-started});check();await control.yieldContinuation();check();
  }
  }

@@ -42,7 +42,7 @@ async fn malformed_nested_parent_rejects_without_changing_the_base() {
     let base = NoteSnapshot::default();
     let block = text(&mut NoteIdOwner::new("diff-hostile-test", 0));
     let diff = NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id: Some("missing-group".into()), index: 0, block }]);
-    let error = protocol::apply_diff(&diff, &base).expect_err("missing nested parent must reject");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing nested parent must reject");
     assert_eq!(error.code, "mutation.apply.missing-target");
     assert_eq!(error.target, ["blocks", "rows", "0", "parentId"]);
     assert!(base.blocks.is_empty());
@@ -66,7 +66,7 @@ async fn malformed_rows_are_rejected() {
         rename("ghost", "x"),
         NoteDiff::block_patches([(block_id(&a).to_string(), NoteBlockPatch { tex: Some("x".into()), ..Default::default() })]),
     ] {
-        assert!(protocol::apply_diff(&diff, &base).is_err(), "{diff:?} must be rejected");
+        assert!(protocol::apply_diff_cold(&diff, &base).is_err(), "{diff:?} must be rejected");
     }
 }
 
@@ -128,9 +128,9 @@ async fn absorb_equals_sequential_application() {
     ];
     let seconds = [rename(&a_id, "Again"), rename(&fresh_id, "Fresh"), NoteDiff::block_rows(vec![NoteBlockRow::Move { id: a_id.clone(), from_parent_id: None, from_index: 0, parent_id: None, index: 0 }]), NoteDiff::block_rows(vec![NoteBlockRow::Remove { id: b_id.clone(), parent_id: None, index: 1 }])];
     for d1 in &firsts {
-        let mid = protocol::apply_diff(d1, &base).expect("first diff applies");
+        let mid = protocol::apply_diff_cold(d1, &base).expect("first diff applies");
         for d2 in &seconds {
-            if protocol::apply_diff(d2, &mid).is_ok() {
+            if protocol::apply_diff_cold(d2, &mid).is_ok() {
                 assert_mutation_diff_absorb_law(&base, d1.clone(), d2.clone()).await;
             }
         }
@@ -154,6 +154,6 @@ async fn the_negative_delta_restores_the_base() {
     diff.absorb(NoteDiff::block_patches([(table_id, NoteBlockPatch { table: Some(vec![NoteTableEdit::RemoveRow { index: 1, cells: removed_row }, NoteTableEdit::InsertColumn { index: 0, name: "Z".into(), cells: vec![NoteTableCell { content: "q".into() }] }]), x: Some(9.0), ..Default::default() })]));
     diff.absorb(NoteDiff { title: Some(NoteAssigned::new(Some("Titled".into()))), grid_opacity: Some(NoteAssigned::new(None)), ..Default::default() });
     assert_diff_algebra_inverse_law::<NoteSnapshot, NoteDiff>(&base, &diff).await;
-    assert_eq!(ids(&protocol::apply_diff(&diff, &base).expect("diff applies")).len(), 4);
+    assert_eq!(ids(&protocol::apply_diff_cold(&diff, &base).expect("diff applies")).len(), 4);
 }
 

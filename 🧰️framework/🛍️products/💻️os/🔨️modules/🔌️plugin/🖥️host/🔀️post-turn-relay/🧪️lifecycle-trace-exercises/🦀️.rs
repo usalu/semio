@@ -25,7 +25,7 @@ struct GuestRelayLifecycleProjection {
 }
 
 fn guest_relay_lifecycle_barrier(pool: &WorkerPool) -> Result<(), String> {
-    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
     pool.submit_at(
         pool.now_ms().saturating_add(1),
         Lane::Maintenance,

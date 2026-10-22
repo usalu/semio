@@ -1,3 +1,4 @@
+import {buildBackendIdsV1,buildBackendRowV1} from "../🔌️backends/🟦️.ts";
 import catalogue from "./🔣️catalog.json" with {type:"json"};
 import {advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -8,11 +9,11 @@ export function buildOperationRequiresV1(name:string):"none"|"dependencies"{retu
 /** 🧭️ A dependency-free neutral operation owns its bootstrap and never needs another build tool's task graph. */
 export function buildOperationHasNeutralBootstrapV1(name:string):boolean{
  const operation=catalogue.operations.find(row=>row.name===name);
- return operation?.requires==="none"&&operation.implementations.nx==="neutral"&&operation.implementations.bazel==="neutral";
+ return operation?.requires==="none"&&buildBackendIdsV1().every(id=>(buildBackendRowV1(id).operations[name]??"neutral")==="neutral");
 }
 
 /** 🛠️ Names the build tools that implement the neutral operations. */
-export type BuildToolNameV1="nx"|"bazel";
+export type BuildToolNameV1=string;
 
 /** 📈️ Counts what a tool's builds did since its cache was last cleared: builds, scheduled actions, actions that ran, and actions restored from a cache. */
 export type BuildCacheActivityV1=Readonly<{builds:number;actions:number;executed:number;cacheHits:number}>;

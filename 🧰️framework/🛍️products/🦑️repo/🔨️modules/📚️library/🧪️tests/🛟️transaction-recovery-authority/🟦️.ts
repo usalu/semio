@@ -91,7 +91,7 @@ test("WAL and selected-resume snapshots use owned proof while forward execution 
 test("recovery authority is mounted through its exact Nx registration", () => {
   const row = vector.registration, packagePath = join(library, "📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packagePath, "📋️project.json"), "utf8"));
-  expect(project.targets["test-" + row.id]).toMatchObject({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
+  expect(project.targets["test-" + row.id]).toMatchObject({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "repo ./📜️script.ts test " + row.id } });
   const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
   expect(router).toContain('segments[0] === "' + row.id + '"');
   expect(router).toContain('🧪️tests/🛟️' + row.id + '/🟦️.ts');

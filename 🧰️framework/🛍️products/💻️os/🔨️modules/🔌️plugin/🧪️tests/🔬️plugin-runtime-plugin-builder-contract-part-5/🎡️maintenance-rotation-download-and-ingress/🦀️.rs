@@ -6,7 +6,7 @@
     /// authority that was LOST instead of blocked never reports a block at all, so waiting for it
     /// weakens nothing — it is the same assertion, made where the rotation can actually answer it.
     #[doc(hidden)]
-pub fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, stage: u8, what: &str,cx:&mut semio_framework_job::StepContext<'_>) {
+pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, stage: u8, what: &str,cx:&mut semio_framework_job::StepContext<'_>) {
         for _ in 0..MAINTENANCE_STAGES {
             app.maintenance.maintenance_stage = stage;
             match app_maintenance_turn(app,cx) {

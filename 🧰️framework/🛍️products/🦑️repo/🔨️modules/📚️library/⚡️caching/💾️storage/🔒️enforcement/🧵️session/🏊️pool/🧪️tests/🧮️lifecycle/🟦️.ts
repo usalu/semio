@@ -1,0 +1,67 @@
+/** 🏊️ Contract: the custody pool shares one lazily opened session between concurrent requests, closes it when idle, replaces it when old and idle, drops it when a request fails and reopens after an open failure or a close, exactly like an independent Python model replaying the scripted scenarios of `./🔣️.json`, with the counters the corpus states at the end. */
+import {expect,test,setDefaultTimeout} from "bun:test";
+import {spawnSync} from "node:child_process";
+import {join} from "node:path";
+import Ajv from "ajv";
+import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {createCustodyPoolV1} from "../../🟦️.ts";
+import corpus from "./🔣️.json";
+import corpusSchema from "./🧬️schema/🔣️.json";
+
+setDefaultTimeout(60000);
+
+const python=requireTestToolV1("python"),oracleFile=join(import.meta.dir,"./🐍️oracle/🐍️.py");
+const ask=(scenarios:unknown[]):any[]=>{const run=spawnSync(python,["-I",oracleFile],{input:JSON.stringify({scenarios}),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
+const flush=async():Promise<void>=>{for(let round=0;round<3;round++)await new Promise(accept=>setImmediate(accept));};
+type Scenario=(typeof corpus.scenarios)[number];
+
+async function play(scenario:Scenario){
+ let now=0,sequence=0,failNext=false;const timers:{at:number;run:()=>void;live:boolean}[]=[],closed:number[]=[],gates=new Map<string,{finish:(error?:Error)=>void}>(),entered:Record<string,number>={},outcomes:Record<string,string>={},series:[number,number,boolean][]=[];
+ const timer={now:()=>now,set:(milliseconds:number,run:()=>void)=>{const handle={at:now+milliseconds,run,live:true};timers.push(handle);return handle;},clear:(handle:unknown)=>{(handle as {live:boolean}).live=false;}};
+ const pool=createCustodyPoolV1<number>({idleMilliseconds:scenario.idleMilliseconds,maximumLifetimeMilliseconds:scenario.maximumLifetimeMilliseconds,timer,open:async()=>{if(failNext){failNext=false;throw Error("open failed");}const session=++sequence;return{session,close:async()=>{closed.push(session);}};}});
+ for(const step of scenario.steps){
+  if(step.op==="failNextOpen")failNext=true;
+  else if(step.op==="with"){
+   const id=step.id!;let finish!:(error?:Error)=>void;const gate=new Promise<void>((accept,reject)=>{finish=error=>error?reject(error):accept();});gate.catch(()=>undefined);gates.set(id,{finish});
+   void pool.with(async session=>{entered[id]=session;await gate;}).then(()=>{outcomes[id]="ok";},error=>{outcomes[id]=(error as Error).message==="open failed"?"open-error":"error";});
+  }
+  else if(step.op==="release"||step.op==="fail")gates.get(step.id!)!.finish(step.op==="fail"?Error("request failed"):undefined);
+  else if(step.op==="advance"){
+   const target=now+step.ms!;
+   for(;;){const due=timers.filter(item=>item.live&&item.at<=target).sort((left,right)=>left.at-right.at)[0];if(!due)break;due.live=false;now=due.at;due.run();await flush();}
+   now=target;
+  }
+  else if(step.op==="close")await pool.close();
+  await flush();series.push([pool.opens(),pool.closes(),pool.live()]);
+ }
+ return{series,entered,outcomes,closed,pool};
+}
+
+test("the corpus is closed by its schema",()=>{
+ const ajv=new Ajv({strict:false});
+ expect(ajv.validate(corpusSchema,corpus),JSON.stringify(ajv.errors)).toBe(true);
+ expect(ajv.validate(corpusSchema,{...corpus,scenarios:[{...corpus.scenarios[0],steps:[{op:"explode"}]}]})).toBe(false);
+ expect(ajv.validate(corpusSchema,{...corpus,scenarios:[{...corpus.scenarios[0],idleMilliseconds:0}]})).toBe(false);
+});
+
+test("every scenario shows the counters of the corpus and of the Python model after every step, with the same session per request",async()=>{
+ const models=ask(corpus.scenarios);
+ for(const[index,scenario]of corpus.scenarios.entries()){
+  const run=await play(scenario),model=models[index];
+  expect(run.series,scenario.name).toEqual(model.series);expect(run.entered,scenario.name).toEqual(model.entered);expect(run.outcomes,scenario.name).toEqual(model.outcomes);
+  const last=run.series.at(-1)!;expect({opens:last[0],closes:last[1],live:last[2]},scenario.name).toEqual(scenario.final);
+  expect(run.closed.length,scenario.name).toBe(last[1]);expect(new Set(run.closed).size,scenario.name+" closes each session once").toBe(run.closed.length);expect(run.pool.live(),scenario.name).toBe(scenario.final.live);
+ }
+});
+
+test("lifetimes must be bounded and ordered",()=>{
+ const make=(row:{idle:unknown;maximum:unknown})=>()=>createCustodyPoolV1<number>({idleMilliseconds:row.idle as number,maximumLifetimeMilliseconds:row.maximum as number,timer:{now:()=>0,set:()=>0,clear:()=>undefined},open:async()=>({session:1,close:async()=>undefined})});
+ for(const row of corpus.invalid)expect(make(row),JSON.stringify(row)).toThrow("Bounded custody pool lifetimes required");
+ for(const row of corpus.valid)expect(make(row),JSON.stringify(row)).not.toThrow();
+});
+
+test("a failing request that shares its session with other requests is the only one that fails",async()=>{
+ const run=await play(corpus.scenarios.find(scenario=>scenario.name.startsWith("a failure among concurrent"))!);
+ expect(run.outcomes).toEqual({a:"error",b:"ok",c:"ok"});expect(run.entered.a).toBe(run.entered.b);expect(run.entered.c).not.toBe(run.entered.a);
+});
+

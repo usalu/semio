@@ -1,0 +1,255 @@
+{
+ "version": 1,
+ "types": [
+  {
+   "text": "string",
+   "optional": false,
+   "repeated": false,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string",
+   "optional": true,
+   "repeated": false,
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "text": "string",
+   "optional": false,
+   "repeated": true,
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "text": "map<string, int32>",
+   "optional": false,
+   "repeated": false,
+   "cardinality": "map",
+   "scalar": "int32"
+  },
+  {
+   "text": "map < string , bytes >",
+   "optional": true,
+   "repeated": false,
+   "cardinality": "map",
+   "scalar": "bytes"
+  },
+  {
+   "text": "map<int32, string>",
+   "optional": false,
+   "repeated": false,
+   "cardinality": "scalar",
+   "scalar": "map<int32,string>"
+  },
+  {
+   "text": "  uint64 ",
+   "optional": false,
+   "repeated": false,
+   "cardinality": "scalar",
+   "scalar": "uint64"
+  },
+  {
+   "text": "bytes",
+   "optional": false,
+   "repeated": true,
+   "cardinality": "list",
+   "scalar": "bytes"
+  }
+ ],
+ "extract": [
+  {
+   "name": "the named message with every field shape",
+   "text": "syntax = \"proto3\";\npackage demo;\n\nmessage Widget {\n  string id = 1;\n  optional string display_name = 2;\n  int32 count = 3;\n  optional uint64 big = 4;\n  double ratio = 5;\n  bool enabled = 6;\n  repeated string tags = 7;\n  map<string, string> labels = 8;\n  bytes blob = 9;\n  // @state persisted_shared\n  string status = 10;\n  nested.Type ref = 11;\n  repeated bytes chunks = 12;\n  // plain comment\n  optional bool flag = 13;\n}\n\nmessage Other { string zzz = 1; }\n",
+   "type": "Widget",
+   "expected": {
+    "typeName": "Widget",
+    "fields": [
+     {
+      "name": "id",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "displayName",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "count",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     },
+     {
+      "name": "big",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "uint64",
+      "state": ""
+     },
+     {
+      "name": "ratio",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "double",
+      "state": ""
+     },
+     {
+      "name": "enabled",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     },
+     {
+      "name": "tags",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "labels",
+      "optional": false,
+      "cardinality": "map",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "blob",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "bytes",
+      "state": ""
+     },
+     {
+      "name": "status",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": "persisted-shared"
+     },
+     {
+      "name": "ref",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "nested.Type",
+      "state": ""
+     },
+     {
+      "name": "chunks",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "bytes",
+      "state": ""
+     },
+     {
+      "name": "flag",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "bool",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "a second message",
+   "text": "syntax = \"proto3\";\npackage demo;\n\nmessage Widget {\n  string id = 1;\n  optional string display_name = 2;\n  int32 count = 3;\n  optional uint64 big = 4;\n  double ratio = 5;\n  bool enabled = 6;\n  repeated string tags = 7;\n  map<string, string> labels = 8;\n  bytes blob = 9;\n  // @state persisted_shared\n  string status = 10;\n  nested.Type ref = 11;\n  repeated bytes chunks = 12;\n  // plain comment\n  optional bool flag = 13;\n}\n\nmessage Other { string zzz = 1; }\n",
+   "type": "Other",
+   "expected": {
+    "typeName": "Other",
+    "fields": [
+     {
+      "name": "zzz",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": true
+  },
+  {
+   "name": "an unknown message",
+   "text": "syntax = \"proto3\";\npackage demo;\n\nmessage Widget {\n  string id = 1;\n  optional string display_name = 2;\n  int32 count = 3;\n  optional uint64 big = 4;\n  double ratio = 5;\n  bool enabled = 6;\n  repeated string tags = 7;\n  map<string, string> labels = 8;\n  bytes blob = 9;\n  // @state persisted_shared\n  string status = 10;\n  nested.Type ref = 11;\n  repeated bytes chunks = 12;\n  // plain comment\n  optional bool flag = 13;\n}\n\nmessage Other { string zzz = 1; }\n",
+   "type": "Nope",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "no expected name",
+   "text": "syntax = \"proto3\";\npackage demo;\n\nmessage Widget {\n  string id = 1;\n  optional string display_name = 2;\n  int32 count = 3;\n  optional uint64 big = 4;\n  double ratio = 5;\n  bool enabled = 6;\n  repeated string tags = 7;\n  map<string, string> labels = 8;\n  bytes blob = 9;\n  // @state persisted_shared\n  string status = 10;\n  nested.Type ref = 11;\n  repeated bytes chunks = 12;\n  // plain comment\n  optional bool flag = 13;\n}\n\nmessage Other { string zzz = 1; }\n",
+   "type": null,
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "oracle": false
+  },
+  {
+   "name": "a oneof group contributes its fields",
+   "text": "syntax = \"proto3\";\npackage demo;\nmessage M { oneof choice { string a = 1; int32 b = 2; } string c = 3; }\n",
+   "type": "M",
+   "expected": {
+    "typeName": "M",
+    "fields": [
+     {
+      "name": "a",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "b",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     },
+     {
+      "name": "c",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "oracle": false
+  }
+ ],
+ "defects": [
+  {
+   "name": "the fields of a nested message are not fields of the outer message",
+   "text": "syntax = \"proto3\";\npackage demo;\nmessage Outer {\n  string a = 1;\n  message Inner { string inner_field = 1; }\n}\n",
+   "type": "Outer",
+   "expected": {
+    "typeName": "Outer",
+    "fields": [
+     {
+      "name": "a",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "defect": "🛰️protobuf/🟦️.ts:policyExtractProtobufSchemaFields scans the whole message body with one global regex, so the fields of a nested `message Inner` are reported as fields of the outer message"
+  }
+ ]
+}

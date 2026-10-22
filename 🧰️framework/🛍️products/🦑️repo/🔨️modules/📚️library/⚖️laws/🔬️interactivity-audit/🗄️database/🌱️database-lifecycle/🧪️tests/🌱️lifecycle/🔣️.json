@@ -1,0 +1,3912 @@
+{
+ "version": 1,
+ "sources": {
+  "mcpTransport": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "mcpBridge": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs"
+     ]
+    },
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🪢️session/🦀️.rs"
+     ]
+    }
+   ],
+   "join": ""
+  },
+  "mcpRoot": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbEngine": {
+   "parts": [
+    {
+     "reader": "rust-family",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️catalog-codec/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/📖️catalog-read/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🥾️catalog-bootstrap/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🏗️catalog-create/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbSync": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbArtifact": {
+   "parts": [
+    {
+     "reader": "rust-family",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/📜️history/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbWal": {
+   "parts": [
+    {
+     "reader": "rust-family",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbSnapshot": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbIndex": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbCompact": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "dbCli": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "hubBin": {
+   "parts": [
+    {
+     "reader": "rust-family",
+     "paths": [
+      "🌎️hub/🏗️bootstrap/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/⚙️runtime/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/📒️ledgers/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/🧱️models/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/🧠️state/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/🛰️session-routes/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/📨️document-routes/🦀️.rs",
+      "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "asyncRuntime": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🔨️modules/⏳️async/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "p1xContract": {
+   "parts": [
+    {
+     "reader": "file",
+     "paths": [
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1x-db-engine-create-document-catalog-cas-caller-census-2026-08-23.md"
+     ]
+    }
+   ]
+  },
+  "p1yContract": {
+   "parts": [
+    {
+     "reader": "file",
+     "paths": [
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1y-db-compaction-retained-job-caller-census-2026-08-23.md"
+     ]
+    }
+   ]
+  },
+  "p1zContract": {
+   "parts": [
+    {
+     "reader": "file",
+     "paths": [
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1z-db-sync-hello-retained-job-caller-census-2026-08-23.md"
+     ]
+    }
+   ]
+  },
+  "replicationWire": {
+   "parts": [
+    {
+     "reader": "rust-source",
+     "paths": [
+      "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs"
+     ]
+    }
+   ]
+  }
+ },
+ "cases": [
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-live",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-000",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "self.wake_requested.store(true"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w production region contains prohibited while ",
+     "P1w scheduling is not linearized by Idle-to-Queued driver authority before its observation mirror"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-001",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "🔖️CatalogBootstrapCas"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w Pending/Ready/panic polling does not publish exact owners before releasing the polling gate",
+     "P1w atomic driver authority missing Driving",
+     "P1w atomic driver authority missing Idle",
+     "P1w atomic driver authority missing Queued",
+     "P1w atomic driver authority missing Retry",
+     "P1w backend poll is not linearized before cancellation recheck with exact work republished before gate release",
+     "P1w callback does not bind exact generation, phase, freshness, and close authority",
+     "P1w cancel/Drop does not publish cancellation and wake to the unified driver authority in exact order",
+     "P1w driver claim/release order leaves a scheduled-false or wake-consumption concurrency window",
+     "P1w exact take/resume/close/witness authority missing DatabaseCatalogBootstrapRejectedClose::prepare",
+     "P1w exact take/resume/close/witness authority missing impl Drop for DatabaseCatalogBootstrapRejected",
+     "P1w exact take/resume/close/witness authority missing impl Drop for DatabaseCatalogBootstrapResult",
+     "P1w exact take/resume/close/witness authority missing pub fn resume",
+     "P1w exact take/resume/close/witness authority missing pub fn take_database_catalog_bootstrap_terminal",
+     "P1w exact take/resume/close/witness authority missing pub fn take_result",
+     "P1w exact take/resume/close/witness authority missing pub fn witness",
+     "P1w exact take/resume/close/witness authority missing pub struct DatabaseCatalogBootstrapRejected",
+     "P1w exact take/resume/close/witness authority missing pub struct DatabaseCatalogBootstrapTerminalHandle",
+     "P1w exact take/resume/close/witness authority missing pub struct DatabaseCatalogBootstrapTerminalResult",
+     "P1w exact take/resume/close/witness authority missing retained_owner_count",
+     "P1w exact take/resume/close/witness authority missing roots_are_empty",
+     "P1w exact take/resume/close/witness authority missing state.closing.store(true",
+     "P1w exact take/resume/close/witness authority missing state.release_success()",
+     "P1w exact take/resume/close/witness authority missing state.terminal_completion.lock()",
+     "P1w expected/actual revision validation is wrapping, lossy, or retries a CAS mismatch",
+     "P1w fixed credited authority missing DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES",
+     "P1w fixed credited authority missing DATABASE_CATALOG_BOOTSTRAP_TOTAL_ITEMS",
+     "P1w fixed credited authority missing DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count())",
+     "P1w fixed credited authority missing actual: Option<Result<EpochFence, DbError>>",
+     "P1w fixed credited authority missing bytes.checked_add(DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES)",
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_ITEMS: u64 = 8",
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8",
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES: u64 = 16 * 1024",
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64",
+     "P1w fixed credited authority missing driver_authority: std::sync::atomic::AtomicU8",
+     "P1w fixed credited authority missing enum DatabaseCatalogBootstrapDriverAuthority",
+     "P1w fixed credited authority missing expected: EpochFence",
+     "P1w fixed credited authority missing generation.checked_add(1)",
+     "P1w fixed credited authority missing pages: Option<db_io_core::DbIoPages>",
+     "P1w fixed credited authority missing pub struct DatabaseCatalogBootstrapKey(pub [u8; 16])",
+     "P1w fixed credited authority missing pub struct DatabaseCatalogBootstrapResult",
+     "P1w fixed credited authority missing self.bytes.checked_add(bytes)",
+     "P1w fixed credited authority missing self.items.checked_add(DATABASE_CATALOG_BOOTSTRAP_ITEMS)",
+     "P1w freshness/lost-handle checks do not precede result exposure",
+     "P1w handoff is not one guarded pages transfer distinct from backend polling",
+     "P1w polling release consumes a wake or schedules outside the unique Driving authority",
+     "P1w pre-admission/registry guard ordering can expose or destructure owners before durable authority installation",
+     "P1w public close bypasses atomic driver authority or executes retirement on the facade caller",
+     "P1w public future lacks check-register-recheck lost-wakeup closure",
+     "P1w queue pressure does not retain and retry the exact Lane::Io job under a fixed pressure witness",
+     "P1w queue refusal does not publish the exact job before Queued-to-Retry authority release",
+     "P1w refusal destructures or allocates its retirement authority during Drop instead of preserving its prepared owner ledger",
+     "P1w result Drop allocates post-admission retirement state or bypasses its generation registry handback",
+     "P1w retained phase missing CloseWork",
+     "P1w retained phase missing Handoff",
+     "P1w retained phase missing Poll",
+     "P1w retained phase missing Publish",
+     "P1w retained phase missing RetainWork",
+     "P1w retained phase missing RetireInput",
+     "P1w retained phase missing Terminal",
+     "P1w retained phase missing Validate",
+     "P1w retirement does not advance one page/future/result/control owner per opportunity",
+     "P1w retry callback can submit without first claiming Retry-to-Queued authority",
+     "P1w scheduling is not linearized by Idle-to-Queued driver authority before its observation mirror",
+     "P1w unpolled backend work can own/drop raw pages before its first Lane::Io poll or close more than one page per opportunity"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-002",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "async fn open_with"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w caller census lost pub async fn open_with_emit",
+     "fresh Database::open_with does not consume the retained P1w result and exact storage handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-003",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "pub async fn create_document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "fresh Database::open_with does not consume the retained P1w result and exact storage handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-004",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DatabaseSyncHelloFuture::try_submit"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w retained bootstrap does not preserve the exact post-P1y production-wait/direct-CAS cut"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-005",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "pub async fn open("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w caller census lost pub async fn open("
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-006",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "pub async fn open_at("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w caller census lost pub async fn open_at("
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-007",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "pub async fn open_with_emit"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w caller census lost pub async fn open_with_emit"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-008",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-009",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "const DATABASE_CATALOG_BOOTSTRAP_ITEMS: u64 = 8"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_ITEMS: u64 = 8"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-010",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-011",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "const DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES: u64 = 16 * 1024"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing const DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES: u64 = 16 * 1024"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-012",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DATABASE_CATALOG_BOOTSTRAP_TOTAL_ITEMS"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing DATABASE_CATALOG_BOOTSTRAP_TOTAL_ITEMS"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-013",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w fixed credited authority missing DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-014",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_catalog_bootstrap_registry"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pending_ready_panic_and_retirement_races"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-015",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Poll"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w Pending/Ready/panic polling does not publish exact owners before releasing the polling gate",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pending_ready_panic_and_retirement_races",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_backend_no_service_close_retires_only_on_io_lane",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_one_lane_opportunity_at_a_time",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_publication_race_and_queue_pressure_keep_exact_successor",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_ready_and_pending_interruption_publish_once_and_retain_owner",
+     "P1w retained phase missing Poll"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-016",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "loop {"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_ready_and_pending_interruption_publish_once_and_retain_owner",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-017",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "terminal_completion"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w exact take/resume/close/witness authority missing state.terminal_completion.lock()",
+     "P1w freshness/lost-handle checks do not precede result exposure",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pending_ready_panic_and_retirement_races",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_without_post_admission_allocation",
+     "P1w result Drop allocates post-admission retirement state or bypasses its generation registry handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-018",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-019",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-020",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-021",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Arc::as_ptr(&storage)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pending_ready_panic_and_retirement_races",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_cas_mismatch_returns_identical_storage_and_exact_fenced_error_without_retry",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_stale_generation_fault_preserves_storage_pages_and_current_slot",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-022",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "EpochFence::INITIAL.next()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_replay_is_deterministic_and_never_reuses_initial_after_a_winner",
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCatalogBootstrapFailures-remove-dbEngine-023",
+   "fn": "interactivityDatabaseCatalogBootstrapFailures",
+   "args": [
+    "dbEngine"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "P1w hostile law body is missing production-path evidence: database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-live",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   },
+   "defect": "the law rejects the live production source: P1x liveness contract is missing narrowed shared-pool truth: cancellation/deadline/exhaustion latency guarantee is conditional on shared-pool service; P1x liveness contract is missing narrowed shared-pool truth: at least one native worker must return to the head of `WorkerPool::worker_loop`; P1x liveness contract is missing narrowed shared-pool truth: sole OS worker that permanently never returns; P1x liveness contract is missing narrowed shared-pool truth: outside P1x's cancellation-latency guarantee; P1x liveness contract is missing narrowed shared-pool truth: exact refused job, storage, doc"
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-000",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "while"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-001",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DatabaseSyncHelloFuture::try_submit"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x does not preserve the exact post-P1y native/Wasm caller cut"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-002",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "state.schedule()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_publication_check_register_recheck_has_no_lost_wake"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-003",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Poll"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_pending_ready_and_panic_publish_work_before_driver_release"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-004",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Driving"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_handoff_cancel_claim_prevents_backend_poll_and_retires_exact_pages"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-005",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Retry"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-006",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "loop {"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_saturation_retains_exact_job_and_recovers"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-007",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "drop("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-008",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Vec<"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x catalog base lacks immutable Arc identity, revision, or pending CAS token"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-009",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "terminal_is_empty"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-010",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Arc::as_ptr(&storage)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_cancel_deadline_and_generation_aba_preserve_exact_identity",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_max_plus_one_document_and_entry_caps_return_exact_owners"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-011",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "probe.cancel()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_cancel_deadline_and_generation_aba_preserve_exact_identity",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_handoff_cancel_claim_prevents_backend_poll_and_retires_exact_pages",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-012",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "state.admission"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-013",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "terminal.close_step()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-014",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DbError::StaleGeneration"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_cancel_deadline_and_generation_aba_preserve_exact_identity"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-015",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "retry_job"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_saturation_retains_exact_job_and_recovers",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-016",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "pub async fn catalog(&self)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "Database::catalog still deep-clones the dynamic catalog while holding the transaction mutex"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-asyncRuntime-017",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "asyncRuntime",
+    "text": "fn worker_loop("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x liveness evidence is not bound to real WorkerPool worker-loop timer service"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-018",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "}));"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_cancel_deadline_and_generation_aba_preserve_exact_identity",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_handoff_cancel_claim_prevents_backend_poll_and_retires_exact_pages",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_max_plus_one_document_and_entry_caps_return_exact_owners",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_publication_check_register_recheck_has_no_lost_wake"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-019",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "Arc::clone(&catalog.entries)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "Database::catalog still deep-clones the dynamic catalog while holding the transaction mutex",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_clone_never_hold_worker"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-020",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "clone_text"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_observed_vec_and_string_overallocation_faults_retire_exact_backings"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-021",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_create_catalog_large_tree_yields_scan_copy_encode_seal_and_publishes_exact_epoch"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_large_tree_yields_scan_copy_encode_seal_and_publishes_exact_epoch"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-022",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "database_create_catalog_duplicate_and_concurrent_same_base_are_deterministic"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_duplicate_and_concurrent_same_base_are_deterministic"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCreateCatalogFailures-remove-dbEngine-023",
+   "fn": "interactivityDatabaseCreateCatalogFailures",
+   "args": [
+    "dbEngine",
+    "asyncRuntime",
+    "p1xContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "actual.is_ok()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_durable_publication_precedes_authority_spawn_emit_and_registration",
+     "P1x hostile law body is missing production-path evidence: database_create_catalog_saturation_retains_exact_job_and_recovers"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-live",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   },
+   "defect": "the law rejects the live production source: P1y facade compacts through the document actor (`retained_compaction_with_wal`): a lease release error there completes publicly and consumes the fence, with no retained release witness, while the retained `DatabaseCompactionFuture` that carries the witness has no production caller; P1y fixed retained authority missing index_document.0.capacity(); P1y fixed retained authority missing DatabaseCompactionAdmission::try_claim(&document); P1y fixed retained authority missing database_compaction_registry(); P1y fixed retained authority missing CompactionRetainedPages; P1y fixed retained authority mis"
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-000",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "generation.checked_add(1)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y admission and atomic snapshot publication generations are not both overflow-checked",
+     "P1y fixed retained authority missing generation.checked_add(1)"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbSnapshot-001",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSnapshot",
+    "text": "generation.checked_add(1)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y admission and atomic snapshot publication generations are not both overflow-checked"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-002",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "Terminal"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-003",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "Idle"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_release_lease_once is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-004",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "Queued"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_releases_exact_owners_under_eight_ms is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-005",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "state.admission"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_release_lease_once is missing production-path evidence",
+     "P1y hostile law retained_compaction_panic_after_lease_acquire_releases_once_before_public_fault_and_registry_drain is missing production-path evidence",
+     "P1y hostile law retained_compaction_perpetual_release_error_keeps_fence_fault_admission_and_registry_discoverable is missing production-path evidence",
+     "P1y hostile law retained_compaction_release_error_retries_through_real_worker_loop_until_success_before_public_fault is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-006",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "DbError::StaleGeneration"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_expected_snapshot_publication_never_persists_stale_baseline is missing production-path evidence",
+     "P1y hostile law retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-007",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "DbIoText::maximum_capacity()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y fixed retained authority missing document.0.capacity() > db_io_core::DbIoText::maximum_capacity()",
+     "P1y hostile law retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-008",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "Snapshot"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: SnapshotConsolidator",
+     "P1y hostile law retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbSnapshot-009",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSnapshot",
+    "text": "Snapshot"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y expected snapshot publication lacks one nonblocking atomic claim, pre-write stale refusal, exact body recovery or allocation-free retained hash path"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-010",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y fixed retained authority missing document.0.capacity() > db_io_core::DbIoText::maximum_capacity()",
+     "P1y hostile law retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_releases_exact_owners_under_eight_ms is missing production-path evidence",
+     "P1y hostile law retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority is missing production-path evidence",
+     "P1y production compaction retains a payload-hash working set instead of deferring payload reclamation to the global reference authority"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbEngine-011",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y selected facade wait was not cut over to the retained terminal witness with the exact post-P1z wait census and admitted epoch"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-012",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "//#region 🧵️RetainedCompactionJob"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y admission and atomic snapshot publication generations are not both overflow-checked",
+     "P1y descriptor close does not retire the exact owner before returning its cumulative backing credit",
+     "P1y fixed retained authority missing DATABASE_COMPACTION_OPERATION_BYTES",
+     "P1y fixed retained authority missing DATABASE_COMPACTION_OPERATION_ITEMS",
+     "P1y fixed retained authority missing DATABASE_COMPACTION_TOTAL_BYTES",
+     "P1y fixed retained authority missing DATABASE_COMPACTION_TOTAL_ITEMS",
+     "P1y fixed retained authority missing async fn close_compaction_descriptor",
+     "P1y fixed retained authority missing const DATABASE_COMPACTION_MAX_SEGMENTS: usize = 64",
+     "P1y fixed retained authority missing const DATABASE_COMPACTION_SLOTS: usize = 32",
+     "P1y fixed retained authority missing database_compaction_admit_descriptor",
+     "P1y fixed retained authority missing descriptor.new_pages.capacity()",
+     "P1y fixed retained authority missing descriptor.roots.capacity()",
+     "P1y fixed retained authority missing document.0.capacity() > db_io_core::DbIoText::maximum_capacity()",
+     "P1y fixed retained authority missing fn database_compaction_observe_backing",
+     "P1y fixed retained authority missing generation.checked_add(1)",
+     "P1y fixed retained authority missing struct DatabaseCompactionBackingLedger",
+     "P1y fixed retained authority missing struct DatabaseCompactionSegmentOwners"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-013",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "DATABASE_COMPACTION_OPERATION_BYTES"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y fixed retained authority missing DATABASE_COMPACTION_OPERATION_BYTES",
+     "P1y hostile law retained_compaction_cumulative_observed_backing_rejects_individually_valid_combined_max_plus_one is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-014",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "pub struct CompactionIndexReports"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y fixed index report authority is missing"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-015",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y hostile law retained_compaction_index_child_uses_exact_parent_cancel_and_eight_ms_control is missing production-path evidence"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-016",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "segment_horizons"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: segment_horizons"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-017",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "plan_wal_retention"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: plan_wal_retention"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-018",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "apply_wal_retention"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: apply_wal_retention"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-019",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "sweep_payloads"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: sweep_payloads"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-020",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "compact_all_indexes"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: compact_all_indexes"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-021",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "collect_chain_pages"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: collect_chain_pages"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-022",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "build_cold_archive"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: build_cold_archive"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseCompactionFailures-remove-dbCompact-023",
+   "fn": "interactivityDatabaseCompactionFailures",
+   "args": [
+    "dbCompact",
+    "dbEngine",
+    "dbSnapshot",
+    "dbIndex",
+    "p1yContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCompact",
+    "text": "Compactor<'storage>"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1y eager compatibility path remains live: Compactor<'storage>"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-live",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   },
+   "defect": "the law rejects the live production source: P1z hub caller is not an explicit post-send returned-frame acknowledgement consumer; P1z WAL envelope backings are not cumulatively debited before every allocation: the tail reader decodes each command (decode_wal_command) into an unaccounted envelope and Vec; P1z eager batch hello path remains production reachable; P1z hostile law retained_sync_hello_handoff_first_poll_cancel_preserves_exact_owner_and_io_lane is missing production-path evidence; P1z hostile law retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity is missing production-path evidence;"
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbEngine-000",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "DatabaseSyncHelloFuture::try_submit"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z final selected engine wait is not the retained terminal witness"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-001",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "generation.checked_add(1)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z generation admission/publication is not checked end to end",
+     "P1z returned output credit can escape its generation-qualified acknowledgement close"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-002",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "self.bytes.checked_add(bytes)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z cumulative observed backing ledger is incomplete or lacks bounded byte/item retirement"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-003",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "state.schedule()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z frame stream lacks lost-wake closure or deterministic repeat polling",
+     "P1z public future lacks check-register-recheck or typed repeat poll"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-004",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "Idle"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z driver releases authority before exact owner and wake publication",
+     "P1z schedule lacks the unique driver authority claim"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-005",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "Driving"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z driver releases authority before exact owner and wake publication"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-006",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "fn submit_exact"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z saturated I/O submission loses its exact job or retry registration"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-007",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "fn close_one"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit",
+     "P1z terminal close can suppress page-close faults or release before follow-up, quarantine, owner, item, and byte ledgers are empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-008",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "pages.close_step()?"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z terminal close can suppress page-close faults or release before follow-up, quarantine, owner, item, and byte ledgers are empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-009",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "std::panic::catch_unwind"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z Pending Ready panic or cancel-before-stream owners are not retained by the typed I/O driver"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-010",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "self.schedule()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z deadline callback does not publish both controlling state and real-loop wake",
+     "P1z driver releases authority before exact owner and wake publication"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-011",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "error.into_job()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z refusal close lacks bounded no-ninth-submit recovery with generation-qualified discoverable exact job/input ownership",
+     "P1z saturated I/O submission loses its exact job or retry registration"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-012",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "close_one("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z refusal close lacks bounded no-ninth-submit recovery with generation-qualified discoverable exact job/input ownership",
+     "P1z returned output credit can escape its generation-qualified acknowledgement close",
+     "P1z snapshot backing is not exact-unit pre-debited, observed, retained on refusal, and held through transfer",
+     "P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit",
+     "P1z terminal close can suppress page-close faults or release before follow-up, quarantine, owner, item, and byte ledgers are empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-013",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": ".to_string()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z independently expired deadline does not control every operation"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-014",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "fn drive_one"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z driver releases authority before exact owner and wake publication",
+     "P1z snapshot allocation, copy, or publication is not immediately deadline/cancel gated",
+     "P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-replicationWire-015",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "replicationWire",
+    "text": " as u64"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z protocol snapshot owner or decoder can exceed the fixed 4 KiB backing"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-016",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "Snapshot"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z snapshot backing is not exact-unit pre-debited, observed, retained on refusal, and held through transfer",
+     "P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit",
+     "P1z snapshot read-generation pages lack exact fixed predebit, observed backing settlement, or close/error credit return"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-017",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z admitted input or tail identity is cloned additively or instead of moved"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-018",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "fn retry("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z retry exhaustion/deadline cannot hand off to retained cancellation close"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-019",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "semio_framework_async::yield_once().await"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z cancellation or deadline is not rechecked after yield and before the next backend operation"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-020",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "pub fn "
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z admitted owners are not debited against the cumulative ledger before they allocate",
+     "P1z cancellation or deadline is not rechecked after yield and before the next backend operation",
+     "P1z deadline callback does not publish both controlling state and real-loop wake",
+     "P1z independently expired deadline does not control every operation",
+     "P1z refusal close lacks bounded no-ninth-submit recovery with generation-qualified discoverable exact job/input ownership",
+     "P1z returned output credit can escape its generation-qualified acknowledgement close",
+     "P1z snapshot backing is not exact-unit pre-debited, observed, retained on refusal, and held through transfer",
+     "P1z terminal close can suppress page-close faults or release before follow-up, quarantine, owner, item, and byte ledgers are empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbWal-021",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbWal",
+    "text": "pub fn "
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z WAL cursor cannot preserve identity across bounded opportunities"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-022",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "65_536"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_MAX_ITEMS: usize = 65_536"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDatabaseSyncHelloFailures-remove-dbSync-023",
+   "fn": "interactivityDatabaseSyncHelloFailures",
+   "args": [
+    "dbSync",
+    "dbEngine",
+    "hubBin",
+    "dbWal",
+    "replicationWire",
+    "p1zContract"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbSync",
+    "text": "👋️RetainedHello"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "P1z Pending Ready panic or cancel-before-stream owners are not retained by the typed I/O driver",
+     "P1z admitted input or tail identity is cloned additively or instead of moved",
+     "P1z admitted owners are not debited against the cumulative ledger before they allocate",
+     "P1z cancellation or deadline is not rechecked after yield and before the next backend operation",
+     "P1z cumulative observed backing ledger is incomplete or lacks bounded byte/item retirement",
+     "P1z deadline callback does not publish both controlling state and real-loop wake",
+     "P1z driver releases authority before exact owner and wake publication",
+     "P1z fixed retained authority missing DatabaseSyncHelloAdmission::try_claim",
+     "P1z fixed retained authority missing DatabaseSyncHelloBackingLedger",
+     "P1z fixed retained authority missing DatabaseSyncHelloExecutionFuture",
+     "P1z fixed retained authority missing DatabaseSyncHelloFollowUp",
+     "P1z fixed retained authority missing DatabaseSyncHelloRejectedClose",
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024",
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_MAX_BYTES: usize = 256 * 1024 * 1024",
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_MAX_ITEMS: usize = 65_536",
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_SLOTS: usize = 8",
+     "P1z fixed retained authority missing const DATABASE_SYNC_HELLO_TURN_MS: u64 = 8",
+     "P1z fixed retained authority missing database_sync_hello_envelope_credit",
+     "P1z fixed retained authority missing database_sync_hello_input_credit",
+     "P1z fixed retained authority missing database_sync_hello_registry",
+     "P1z frame stream lacks lost-wake closure or deterministic repeat polling",
+     "P1z generation admission/publication is not checked end to end",
+     "P1z independently expired deadline does not control every operation",
+     "P1z public future lacks check-register-recheck or typed repeat poll",
+     "P1z refusal close lacks bounded no-ninth-submit recovery with generation-qualified discoverable exact job/input ownership",
+     "P1z retry exhaustion/deadline cannot hand off to retained cancellation close",
+     "P1z returned output credit can escape its generation-qualified acknowledgement close",
+     "P1z saturated I/O submission loses its exact job or retry registration",
+     "P1z schedule lacks the unique driver authority claim",
+     "P1z snapshot allocation, copy, or publication is not immediately deadline/cancel gated",
+     "P1z snapshot backing is not exact-unit pre-debited, observed, retained on refusal, and held through transfer",
+     "P1z snapshot or tail output lacks a fresh real 8 ms grant and fixed one-page allocation/copy/publication unit",
+     "P1z snapshot read-generation pages lack exact fixed predebit, observed backing settlement, or close/error credit return",
+     "P1z terminal close can suppress page-close faults or release before follow-up, quarantine, owner, item, and byte ledgers are empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-live",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   },
+   "defect": "the law rejects the live production source: history operation lacks fixed item/page/operation/process admission; history source and derived byte/item owners are not jointly credited before publication; history frame CRC/tokenization is not retained to one admitted page; history command token duplicates raw pages or revives whole-frame WAL decoding; history pre-handoff reservation lacks public retained retirement and exact admission handback; history reservation construction fault can escape or bulk-drop partial fixed owners before registered public retirement; history public terminal witness can release or report empty before admission "
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-000",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": ".poll("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history replay is not polled through the retained artifact actor turn"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-001",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "self.schedule()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history runner panic does not retain and reschedule fault cleanup"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-002",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "roots_are_empty"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-003",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "terminal_is_empty"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history normal/cancel close does not retire one exact page or nested owner per actor grant",
+     "history replay is not polled through the retained artifact actor turn"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-004",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "terminal_empty"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-005",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": " as u64"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history backend read is not retained to one admitted 16KiB page"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-006",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "Retire"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history normal/cancel close does not retire one exact page or nested owner per actor grant",
+     "history phase transition can publish Complete before panic-safe retained retirement"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-007",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "terminal_job"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_terminal_job_work_result_take_resume_and_close_one_owner"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-008",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "admission"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant",
+     "retained history fixture missing: artifact_history_empty_one_cap_plus_one_admission_returns_exact_request",
+     "retained history fixture missing: artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-009",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "lease"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release",
+     "retained history fixture missing: artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant",
+     "retained history fixture missing: artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-010",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "lease"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history construction handback is not a checked linear ABA-safe compare that leaves registry owners resident"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-011",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "🔖️HistoryReplay"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "history backend read is not retained to one admitted 16KiB page",
+     "history construction handback is not a checked linear ABA-safe compare that leaves registry owners resident",
+     "history construction token is copyable or partial owners are not registry-resident before allocation",
+     "history envelope cursor is not retained one field/item with exact range validation",
+     "history fixed owner accounting lacks retained O(1) counters",
+     "history normal/cancel close does not retire one exact page or nested owner per actor grant",
+     "history phase transition can publish Complete before panic-safe retained retirement"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-012",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_empty_and_two_batch_replay_are_deterministic"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_empty_and_two_batch_replay_are_deterministic"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-013",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_nested_derived_item_and_byte_caps_precede_materialization"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_nested_derived_item_and_byte_caps_precede_materialization"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-014",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_segment_cap_plus_one_reads_only_one_admitted_page"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_segment_cap_plus_one_reads_only_one_admitted_page"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-015",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-016",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-017",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_quiet_late_wake_and_retry_are_generation_coalesced"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_quiet_late_wake_and_retry_are_generation_coalesced"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-018",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_cancel_before_during_after_retains_actor_and_result_owners"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_cancel_before_during_after_retains_actor_and_result_owners"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-019",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-020",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_replay_ordering_is_segment_frame_then_result_fifo"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_replay_ordering_is_segment_frame_then_result_fifo"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-021",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_one_grant_advances_one_retained_phase_without_blocking"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_one_grant_advances_one_retained_phase_without_blocking"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbEngine-022",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbEngine",
+    "text": "artifact_history_drop_after_complete_moves_result_to_public_terminal_registry"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_drop_after_complete_moves_result_to_public_terminal_registry"
+    ]
+   }
+  },
+  {
+   "id": "interactivityArtifactHistoryFailures-remove-dbArtifact-023",
+   "fn": "interactivityArtifactHistoryFailures",
+   "args": [
+    "dbEngine",
+    "dbArtifact",
+    "dbWal"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbArtifact",
+    "text": "artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "retained history fixture missing: artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-live",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-000",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "db_actor::block_on"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-001",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-002",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "block_on("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-append-dbCli-003",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "dbCli",
+    "text": "db_actor::block_on(db_sync::handle_hello"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-004",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "fn seed_document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-005",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "db_actor::block_on("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityDbCliFailures-remove-dbCli-006",
+   "fn": "interactivityDbCliFailures",
+   "args": [
+    "dbCli"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "dbCli",
+    "text": "seed_document"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": false,
+    "added": [
+     "DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-live",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "none"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": true,
+    "mutatedAccepted": true,
+    "added": []
+   },
+   "defect": "the law rejects the live production source: MCP authentication/origin checks can follow bridge or protocol mutation; ShellToGateway untrusted counts/ranges/UTF-8 or retained owner construction are not completely bounded; MCP owned-transport fixture missing: connection_cap_plus_one_returns_the_exact_owner_without_mutating_fifo; MCP owned-transport fixture missing: request_and_response_byte_cap_plus_one_return_the_exact_owner; MCP owned-transport fixture missing: stale_readiness_and_retry_generations_cannot_rearm_an_aba_run; MCP owned-transport fixture missing: websocket_rejects_unmasked_fragmented_and_oversize_frames_before_consumption; "
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpBridge-000",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpBridge",
+    "text": "Publish"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "broadcast close race lacks deterministic one-recipient results, exact completion, or retained shared-page retirement"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-001",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "Terminal"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP WebSocket handshake key/frame limits or client-mask validation are incomplete",
+     "MCP connection/request/response ownership lacks fixed item and byte preflight",
+     "opened bridge bypasses retained validation/materialization or consumes exact raw ingress early",
+     "terminal connection FIFO handback can race close or leave stale readiness armed"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-002",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "self.pool.try_submit(Lane::Io, job)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP HTTP is not one retained process-pool I/O-lane turn"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-003",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "error.into_job()"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP rejected jobs or terminal connections lack exact retrieval and close"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-004",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "self.pool.callback_at"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP retry/readiness ownership lacks coalesced generation-keyed re-arm"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-005",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "fn drive_one"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "terminal connection FIFO handback can race close or leave stale readiness armed"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpBridge-006",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpBridge",
+    "text": "Encode"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "broadcast close race lacks deterministic one-recipient results, exact completion, or retained shared-page retirement",
+     "live bridge outbox lacks preflight-first fixed-page encoding and exact handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-007",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "block_on("
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains block_on("
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpRoot-008",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpRoot",
+    "text": "block_on("
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP process entry does not own the retained HTTP completion boundary"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-009",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "pub fn "
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP rejected jobs or terminal connections lack exact retrieval and close",
+     "terminal connection FIFO handback can race close or leave stale readiness armed"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpBridge-010",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpBridge",
+    "text": "pub fn "
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "bridge broadcast clones, reorders, or encodes before atomic aggregate recipient admission",
+     "broadcast close race lacks deterministic one-recipient results, exact completion, or retained shared-page retirement",
+     "live bridge outbox lacks preflight-first fixed-page encoding and exact handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-011",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "tokio::runtime::Runtime"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains tokio::runtime::Runtime"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-012",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "tokio::runtime::Builder"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains tokio::runtime::Builder"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-013",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "tokio::spawn"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains tokio::spawn"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-014",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "tokio::sync"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains tokio::sync"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpBridge-015",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpBridge",
+    "text": "tokio::sync"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains tokio::sync",
+     "live bridge outbox lacks preflight-first fixed-page encoding and exact handback"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-append-mcpTransport-016",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "append",
+    "target": "mcpTransport",
+    "text": "axum::serve"
+   },
+   "expect": {
+    "present": false,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "live MCP transport retains axum::serve"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-017",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "listener.set_nonblocking(true)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP accept/read/parse/write authorities are not retained nonblocking steps"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-018",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "HTTP_CONNECTION_CAPACITY"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP connection/request/response ownership lacks fixed item and byte preflight"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-019",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "HTTP_IO_PAGE_BYTES"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP socket I/O is not bounded to one page per grant"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-020",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "find_crlf_bounded(&connection.ingress, connection.parser.cursor, search_end)"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP HTTP parsing lacks bounded one-token request-line/header and slowloris limits"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-021",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "websocket_accept("
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "MCP WebSocket handshake key/frame limits or client-mask validation are incomplete"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-022",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "fn parse_one_websocket_frame"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "opened bridge bypasses retained validation/materialization or consumes exact raw ingress early"
+    ]
+   }
+  },
+  {
+   "id": "interactivityMcpHttpTransportFailures-remove-mcpTransport-023",
+   "fn": "interactivityMcpHttpTransportFailures",
+   "args": [
+    "mcpTransport",
+    "mcpBridge",
+    "mcpRoot"
+   ],
+   "mutation": {
+    "op": "remove",
+    "target": "mcpTransport",
+    "text": "payload_start: usize"
+   },
+   "expect": {
+    "present": true,
+    "baseAccepted": false,
+    "mutatedAccepted": false,
+    "added": [
+     "untrusted WebSocket ingress is allocated before bounded bridge validation"
+    ]
+   }
+  }
+ ]
+}

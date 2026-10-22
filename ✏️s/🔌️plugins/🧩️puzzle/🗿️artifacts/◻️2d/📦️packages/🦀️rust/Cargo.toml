@@ -16,12 +16,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-engine = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-retained-panels = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../🤖️generated/📇️registry/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../🛂️manifest/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-board-host = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust" }

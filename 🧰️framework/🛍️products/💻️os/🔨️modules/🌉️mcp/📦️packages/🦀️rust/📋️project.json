@@ -38,7 +38,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "inputs": [
         "production",
@@ -53,7 +53,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build-release"
+        "command": "repo ./📜️script.ts build-release"
       },
       "inputs": [
         "production",
@@ -71,7 +71,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts publish"
+        "command": "repo ./📜️script.ts publish"
       },
       "outputs": [
         "{projectRoot}/dist/publish"
@@ -94,7 +94,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       }
     },
     "test": {
@@ -110,7 +110,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "probe-sqlite-source": {
@@ -125,7 +125,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts probe-sqlite-source"
+        "command": "repo ./📜️script.ts probe-sqlite-source"
       }
     },
     "probe-sqlite-native": {
@@ -140,7 +140,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts probe-sqlite-native"
+        "command": "repo ./📜️script.ts probe-sqlite-native"
       }
     },
     "canonical-pair-check": {
@@ -154,7 +154,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-pair-check"
+        "command": "repo ./📜️script.ts canonical-pair-check"
       },
       "outputs": []
     },
@@ -163,7 +163,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-live-catalog-oracle"
+        "command": "repo ./📜️script.ts hub-live-catalog-oracle"
       },
       "outputs": []
     },
@@ -172,7 +172,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-live-catalog-check"
+        "command": "repo ./📜️script.ts hub-live-catalog-check"
       },
       "outputs": []
     },
@@ -181,7 +181,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-live-catalog-native-check"
+        "command": "repo ./📜️script.ts hub-live-catalog-native-check"
       },
       "outputs": []
     },
@@ -196,7 +196,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-checkpoint-resource-oracle"
+        "command": "repo ./📜️script.ts canonical-checkpoint-resource-oracle"
       },
       "outputs": []
     },
@@ -211,7 +211,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-checkpoint-resource-check"
+        "command": "repo ./📜️script.ts canonical-checkpoint-resource-check"
       },
       "outputs": []
     },
@@ -226,7 +226,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
+        "command": "repo ./📜️script.ts canonical-checkpoint-resource-native-check"
       },
       "outputs": []
     },
@@ -245,7 +245,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts capability-audit-check"
+        "command": "repo ./📜️script.ts capability-audit-check"
       },
       "outputs": []
     },
@@ -264,7 +264,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts schema-mirror"
+        "command": "repo ./📜️script.ts schema-mirror"
       },
       "metadata": {
         "semio": {
@@ -288,7 +288,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts schema-mirror --check"
+        "command": "repo ./📜️script.ts schema-mirror --check"
       },
       "outputs": []
     },
@@ -296,7 +296,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts dev"
+        "command": "repo ./📜️script.ts dev"
       },
       "cache": false,
       "continuous": true,
@@ -317,7 +317,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts installed-service-check",
+        "command": "repo ./📜️script.ts installed-service-check",
         "forwardAllArgs": true
       }
     }

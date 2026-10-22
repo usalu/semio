@@ -30,7 +30,7 @@ fn one(width: f64, height: f64, text: &str) -> PdfSnapshot {
 async fn a_removal_of_a_page_the_base_does_not_have_is_refused() {
     let base = one(612.0, 792.0, "a");
     let diff = PdfDiff { pages: Some(PdfPagesDiff { removed: vec![7], ..Default::default() }) };
-    assert!(protocol::apply_diff(&diff, &base).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
 }
 //#endregion validation
 

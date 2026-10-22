@@ -15,30 +15,22 @@ import (
 	"testing"
 )
 
-func TestResolvePlanSourceCursorPlanID(t *testing.T) {
+func TestResolvePlanSourceRefusesCursorPlanID(t *testing.T) {
 	tmp := t.TempDir()
 	planDir := filepath.Join(tmp, ".cursor", "plans")
 	if err := os.MkdirAll(planDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	id := "fe75d494"
-	planFile := filepath.Join(planDir, "kit_store_"+id+".plan.md")
-	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(planDir, "kit_store_"+id+".plan.md"), []byte("plan"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	oldRoot := rootDir
 	rootDir = tmp
 	defer func() { rootDir = oldRoot }()
 
-	got, isDir, err := ResolvePlanSource(McpClientCursor, id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if isDir {
-		t.Fatal("expected file")
-	}
-	if filepath.Clean(got) != filepath.Clean(planFile) {
-		t.Fatalf("got %q want %q", got, planFile)
+	if got, _, err := ResolvePlanSource(McpClientCursor, id); err == nil {
+		t.Fatalf("a client directory of the repository must not resolve a plan, got %q", got)
 	}
 }
 
@@ -131,30 +123,18 @@ func TestMoveTicketPlanIntoFolderSpecDir(t *testing.T) {
 	}
 }
 
-func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
+func TestApplyTicketPlanFromIDsRefusesCursor(t *testing.T) {
 	tmp := t.TempDir()
-	planDir := filepath.Join(tmp, ".cursor", "plans")
-	if err := os.MkdirAll(planDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	id := "fe75d494"
-	planFile := filepath.Join(planDir, "kit_store_backbone_generalization_"+id+".plan.md")
-	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	oldRoot := rootDir
 	rootDir = tmp
 	defer func() { rootDir = oldRoot }()
 
 	ticket := &Ticket{}
-	if err := ApplyTicketPlanFromIDs(ticket, McpClientCursor, id, ""); err != nil {
-		t.Fatal(err)
+	if err := ApplyTicketPlanFromIDs(ticket, McpClientCursor, "fe75d494", ""); err == nil {
+		t.Fatal("cursor carries no plan attachment")
 	}
-	if ticket.Plan == nil || ticket.Plan.ID != id || ticket.Plan.Client != "cursor" {
+	if ticket.Plan != nil {
 		t.Fatalf("plan: %+v", ticket.Plan)
-	}
-	if filepath.Clean(ticket.Plan.Source) != filepath.Clean(planFile) {
-		t.Fatalf("source %q want %q", ticket.Plan.Source, planFile)
 	}
 }
 
@@ -267,7 +247,7 @@ func TestPostTicketPlanCommentLive(t *testing.T) {
 	if os.Getenv("REPO_LIVE_GH") != "1" {
 		t.Skip("set REPO_LIVE_GH=1 to run live GitHub plan comment test")
 	}
-	planFile := filepath.Join(rootDir, ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")
+	planFile := filepath.Join(rootDir, filepath.FromSlash(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️22/ARCHIVED-CURSOR-PLANS-WITHOUT-TICKET/post_plan_to_issue_c256e28e.plan.md"))
 	if _, err := os.Stat(planFile); err != nil {
 		t.Skip("plan file missing")
 	}

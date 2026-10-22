@@ -1,0 +1,55 @@
+{
+ "catalog": "8085b594c3aab1fed38b57a13894a002ac9a02b2064f2e844762feeaf348162c",
+ "closures-schema": "1768c23bd80513440830b8dca631384b83f92fabb3d97e72a75f4e32816f9b70",
+ "closures-ts": "cbd97bd82f52646563ccd0e6e368dec3fc03432dc1766e7919ffd000e42a2543",
+ "file:gc-command.ts": [
+  "24a962a812fb6d6aa1cc1419a4a4765bb88e179e338a4c87c568ae63df944ad5",
+  "0c17eed22aa13d35974414479299e22b164f94e87b0afc5453575fd9d2b29e63",
+  "24a962a812fb6d6aa1cc1419a4a4765bb88e179e338a4c87c568ae63df944ad5"
+ ],
+ "file:gc-reclaim.ts": [
+  "f4d1bb8c7f39028226033ce1d7eea7fc5836d21d077cc34e655b835b7238d76b",
+  "f4d1bb8c7f39028226033ce1d7eea7fc5836d21d077cc34e655b835b7238d76b"
+ ],
+ "file:gc-verify-test.ts": [
+  "4b98ce0abfd76c5f39069d0b9dea4f0b47667dd9157f7edbbc27db2cea43ce72"
+ ],
+ "file:ledger-texts.json": [
+  "c53107c78c6e86cbaa08b5c7b26c45c17e9ec18e12b6de50847e3d3e7a97bd2f",
+  "266735812f2da4a2e56210947ef4469b60353b7d0d4fecc02910869b9b4f769b",
+  "c53107c78c6e86cbaa08b5c7b26c45c17e9ec18e12b6de50847e3d3e7a97bd2f"
+ ],
+ "file:members-cases.json": [
+  "40461c6ba37dc298d1a45cab62ae1d8fdd5c78d7017b6578894c49c402b78446"
+ ],
+ "file:members-child-test.ts": [
+  "7b1430167582a26272041a9144d7ee765074e87bc3ee9f0019396c0d5d7a87c0"
+ ],
+ "file:members-engine.d.mts": [
+  "e5ed239ecf7ac73a4a38d2313260fc74779fc4e37020862904a25c60d4128eaa"
+ ],
+ "file:members-engine.mjs": [
+  "7e50e40f8ff68bbca639f2e6673c6dc34c8674dd5e24aae3c9730ce9c2106a7e"
+ ],
+ "file:members-resolve-test.ts": [
+  "6c682a2702d5b7ac9b6d0dc03fc46616e9d08cbb8e314a09387df70385298172"
+ ],
+ "file:members-scan-test.ts": [
+  "b5308e5276b08cfb2d460835b7c75d724d3f6bbf25c96f1516c2818fb437af6a"
+ ],
+ "file:members-scan.ts": [
+  "953458aa0bea615288a921d8a229e4666ffc6fb34c14791de5147bf9ededbf84"
+ ],
+ "file:members-schema.json": [
+  "2eee22348ad4efc74f764bb94288d26d204a9274217fcabe3d44c41a326150ae"
+ ],
+ "file:members-test.ts": [
+  "6d63197d617a0a9f90a13c925b7aeadb5513d69b169c7893d8a2c10b5de2c96e"
+ ],
+ "graph-storage": "3a8eaed585137b4edd8cc04f34da898a3a79454c7e119a73e1bf066317889051",
+ "kernel-cache": "0f9a5e4bf766f598c3ec8ca72dd9fac1db12f74200c4cd72ba8010095354f994",
+ "kernel-ledger": "84003c603a916f225bfcfe1c9dbdf8e5b15757c1b787d18786440944c3554687",
+ "kernel-selection": "186da3511cc91cb5b4bb3d639bdf643f6911edc3953d3ab75a4e75cae6b20991",
+ "selection-fixture": "b7f10d6b38216fb95a1398d9f84acbfaf20c13f78cd0f023b6dac5d54e7f3ab8",
+ "selection-test": "6b5631ce34ff48cd1e0a4e301b468e5e60d2ddc17f059bad52c076a2ac0b6039"
+}

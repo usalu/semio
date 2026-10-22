@@ -1,5 +1,5 @@
 /** 🟠️ The context menu phase of Canvas2dHost. */
-import { useCallback, useEffect, type MouseEvent } from "react";
+import { useCallback, useEffect, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
 import { openSurfaceContextMenu } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import type { useSceneState } from "../🔶️scene/🟦️.tsx";
 

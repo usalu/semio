@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "german environment writes the german line only",
+      "environment": { "LANG": "de_CH.UTF-8" },
+      "first": "Funded Nx graph cache capacity required",
+      "masked": "Original process admission closed",
+      "languages": ["de"]
+    },
+    {
+      "name": "explicit english choice wins over the system language",
+      "environment": { "SEMIO_LANGUAGE": "en", "LANG": "de_CH.UTF-8" },
+      "first": "Funded Nx graph cache capacity required",
+      "masked": "Original process admission closed",
+      "languages": ["en"]
+    },
+    {
+      "name": "no language named writes every declared language, none assumed",
+      "environment": {},
+      "first": "Original native caller capabilities required",
+      "masked": "Original process admission closed",
+      "languages": ["en", "de"]
+    },
+    {
+      "name": "an undeclared language falls back to every declared language",
+      "environment": { "LANG": "fr_FR.UTF-8" },
+      "first": "Original native caller capabilities required",
+      "masked": "Original resource admission closed",
+      "languages": ["en", "de"]
+    },
+    {
+      "name": "only the first line of a multi-line failure is named",
+      "environment": { "LC_ALL": "en_US.UTF-8" },
+      "first": "Original daemon child exited before acquisition\nstack line one\nstack line two",
+      "masked": "Original operation admission closed",
+      "languages": ["en"],
+      "reason": "Original daemon child exited before acquisition"
+    }
+  ]
+}

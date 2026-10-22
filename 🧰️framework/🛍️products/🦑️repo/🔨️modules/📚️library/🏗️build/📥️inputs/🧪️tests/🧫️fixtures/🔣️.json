@@ -605,7 +605,7 @@
         "accepted": true
       },
       {
-        "id": "prior-missing-owner-refused",
+        "id": "prior-missing-owner-withheld",
         "membership": "missing",
         "accepted": false
       },

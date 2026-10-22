@@ -7,7 +7,7 @@
   },
   "execution": {
     "target": "test-readme-current-source-revision",
-    "command": "bun ./📜️script.ts test readme-current-source-revision",
+    "command": "repo ./📜️script.ts test readme-current-source-revision",
     "route": "readme-current-source-revision",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts"
   },

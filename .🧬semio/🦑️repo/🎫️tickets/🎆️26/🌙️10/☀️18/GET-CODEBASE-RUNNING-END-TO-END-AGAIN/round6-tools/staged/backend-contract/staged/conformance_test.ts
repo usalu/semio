@@ -7,12 +7,13 @@ import {fileURLToPath} from "node:url";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
-import {buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
+import {buildBackendIdsV1,buildBackendRowV1,buildBackendDriverUrlV1} from "../../🔌️backends/🟦️.ts";
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {conformanceArgumentsV1,conformanceOptionNamesV1,renderConformanceListV1} from "../⌨️command/🟦️.ts";
+import {conformanceArgumentsV1,conformanceOptionNamesV1,conformanceRequestV1,renderConformanceListV1} from "../⌨️command/🟦️.ts";
 import {conformanceClosureV1,conformanceConcurrencyV1,conformanceEvaluateRunV1,conformanceIssuesV1,conformanceMarkersV1,conformanceReferenceOutputsV1,conformanceReportV1,conformanceSpecV1,conformanceTaskIdsV1,conformanceVerdictV1,renderConformanceReportV1,type ConformanceMarkerV1,type ConformanceSetV1} from "../🟦️.ts";
 import {runConformanceV1,type ConformanceDriverV1,type ConformanceHostV1,type ConformanceSessionV1} from "../🏃️runner/🟦️.ts";
 import {stubOutputsV1} from "../🎭️stub/🟦️.ts";
@@ -23,8 +24,8 @@ import {startRemoteCacheServerV1} from "../../🌐️remote-cache/🖥️server/
 const set=scenarios as unknown as ConformanceSetV1,oracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),stubFile=join(import.meta.dir,"../🎭️stub/🟦️.ts");
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
 const python=(input:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
-const spec=conformanceSpecV1(set.workspace,"/tmp/markers.log"),sources=Object.keys(set.workspace.files),files=set.workspace.files as Record<string,string>;
-const scratchRoot=mkdtempSync(join(tmpdir(),"conf-test-"));
+const spec=conformanceSpecV1(set.workspace,join(testScratchRootV1("backend-conformance-spec"),"markers.log")),sources=Object.keys(set.workspace.files),files=set.workspace.files as Record<string,string>;
+const scratchRoot=testScratchRootV1("backend-conformance");
 const marker=(kind:ConformanceMarkerV1["kind"],task:string,at:number):ConformanceMarkerV1=>({kind,task,at});
 
 test("the schema is valid and validates the scenario set and every shape the way the repository validator does",()=>{
@@ -184,6 +185,8 @@ test("verdicts and reports combine a backend's claim with what was measured",()=
 });
 
 test("the command arguments are closed, bilingual and match the operations catalogue",()=>{
+ expect(conformanceRequestV1(["conformance","run","--json"])).toEqual(conformanceArgumentsV1(["run","--json"]));
+ expect(()=>conformanceRequestV1(["run","--json"])).toThrow("Erwartet");
  expect(conformanceArgumentsV1(["list"])).toMatchObject({operation:"list",backends:"all",scenarios:"all",json:false});
  expect(conformanceArgumentsV1(["run","--implementations=semio","--scenario=run-cold,cache-restore","--json","--keep","--lang=de"])).toMatchObject({operation:"run",backends:["semio"],scenarios:["run-cold","cache-restore"],json:true,keep:true,language:"de"});
  for(const bad of [[],["go"],["run","--nope"],["run","--json","--json"],["run","--implementations"],["run","--implementations=nobody"],["run","--scenario=nope"],["run","--lang=fr"],["run","--json=1"]])expect(()=>conformanceArgumentsV1(bad),JSON.stringify(bad)).toThrow();
@@ -197,7 +200,7 @@ test("the command arguments are closed, bilingual and match the operations catal
 });
 
 const host=(directory:string,extra:Partial<ConformanceHostV1>={}):ConformanceHostV1=>({scratch:directory,runtime:process.execPath,stubSource:readFileSync(stubFile,"utf8"),signal:new AbortController().signal,
- loadDriver:async id=>(await import(new URL(buildBackendRowV1(id).driver,new URL("../../🔌️backends/🟦️.ts",import.meta.url)).href)).driver as ConformanceDriverV1,
+ loadDriver:async id=>(await import(buildBackendDriverUrlV1(id).href)).driver as ConformanceDriverV1,
  startRemote:async()=>{const server=await startRemoteCacheServerV1({directory:join(directory,"remote-"+Math.random().toString(36).slice(2)),host:"127.0.0.1",port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:1,defaultInstance:"main",tokens:{}});return {url:server.url+"/main",stop:()=>server.stop()};},
  now:Date.now,progress:async()=>{},...extra});
 

@@ -2,7 +2,7 @@
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::sequence::modes::edit::windows::script::transient::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
-use protocol::{DiffAlgebra, Mutation, OpBinary, OpText};
+use protocol::{DiffAlgebra, ColdMutation, Mutation, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn ran() -> SequenceScriptWindowTransient {

@@ -41,8 +41,10 @@ semio-framework-ui-contract = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-slots = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 
 [dev-dependencies]

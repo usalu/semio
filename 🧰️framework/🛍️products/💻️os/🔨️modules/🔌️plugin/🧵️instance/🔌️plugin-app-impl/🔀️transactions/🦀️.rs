@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🔀️ Decodes EITHER wire form (contract §2/§5.3): pre-planned (`prepared_ops`
     /// non-empty) carries its own `origin`; owner-mutation (`prepared_ops` empty)
     /// decodes the single `payload` op and has no origin on the wire — see the 🚧️ note below.
@@ -62,7 +62,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let foreign = Vec::new();
         for op in &ops {
             match op.foreign_step_source(&running, 0) { Ok(None) => {}, Ok(Some(_)) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")) }, Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(error.into_fault()) } }
-            let outcome = op.diff(&running);
+            let outcome = store::ColdMutation::diff(op, &running);
             if !outcome.is_applicable(protocol::MergePolicy::default()) {
                 return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
             }

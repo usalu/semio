@@ -230,7 +230,7 @@ export class FixturesScript extends BundleScript {
   run(segments: string[]): void {
     const sub = segments[0] ?? "lint";
     if (sub !== "lint") {
-      console.error("usage: bun ./📜️script.ts fixtures lint [--full]");
+      console.error("usage: repo ./📜️script.ts fixtures lint [--full]");
       process.exit(1);
     }
     const full = segments.includes("--full");

@@ -1,0 +1,22 @@
+// Ticket input script: headless boot check of the play shell (pinned chromium 1248, metal ANGLE). Usage: bun boot-check.mjs <url> <out-dir>
+import { chromium } from "playwright";
+import { mkdirSync, writeFileSync } from "node:fs";
+const [url = "http://127.0.0.1:6033", out = "."] = process.argv.slice(2);
+mkdirSync(out, { recursive: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--enable-unsafe-swiftshader"] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const log = [];
+page.on("console", m => { if (["error", "warning"].includes(m.type())) log.push(`${m.type()}: ${m.text().slice(0, 400)}`); });
+page.on("pageerror", e => log.push(`pageerror: ${String(e).slice(0, 400)}`));
+page.on("requestfailed", r => log.push(`requestfailed: ${r.url().slice(0, 200)} ${r.failure()?.errorText}`));
+page.on("response", r => { if (r.status() >= 400) log.push(`http ${r.status()}: ${r.url().slice(0, 200)}`); });
+const started = Date.now();
+await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
+const ready = await page.waitForSelector("[data-shell-ready]", { timeout: 240000 }).then(() => true, () => false);
+await page.waitForTimeout(4000);
+await page.screenshot({ path: `${out}/boot.png` });
+const title = await page.title();
+const text = (await page.innerText("body").catch(() => "")).slice(0, 600);
+writeFileSync(`${out}/boot.json`, JSON.stringify({ url, ready, title, elapsedMs: Date.now() - started, text, log }, null, 2));
+console.log(JSON.stringify({ ready, title, elapsedMs: Date.now() - started, logLines: log.length }));
+await browser.close();

@@ -6,6 +6,8 @@ import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import type { PixelOracleFixture } from "../🧾️pixel-oracle-fixture/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -327,10 +329,10 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
-  const threePath = Bun.resolveSync("three", repoRoot);
+  const threePath = runtimeResolveV1("three", repoRoot);
   const program = webgpu ? renderReferenceVisualWgpu : renderReferenceVisual;
   const source = 'import * as THREE from "three";\nglobalThis.renderReferenceVisual = ' + program.toString();
-  const build = await Bun.build({
+  const build = await runtimeBundleV1({
     entrypoints: ["semio-reference-visual-oracle"],
     target: "browser",
     format: "iife",

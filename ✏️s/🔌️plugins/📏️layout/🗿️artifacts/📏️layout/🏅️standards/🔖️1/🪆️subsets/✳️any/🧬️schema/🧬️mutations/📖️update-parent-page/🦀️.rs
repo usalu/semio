@@ -23,13 +23,17 @@ pub struct UpdateParentPage {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParentPage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_parent_page::UpdateParentPage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "parent-page", kind: "update-parent-page", record: "UpdatedParentPage" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update parent page \"{}\"", self.name), &format!("Mustervorlage \"{}\" aktualisieren", self.name)) }
+    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdateParentPage where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_parent_page::UpdateParentPage> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_parent_page(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_update_parent_page(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update parent page \"{}\"", self.name), &format!("Mustervorlage \"{}\" aktualisieren", self.name)) }
-    fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 
 pub fn diff_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {

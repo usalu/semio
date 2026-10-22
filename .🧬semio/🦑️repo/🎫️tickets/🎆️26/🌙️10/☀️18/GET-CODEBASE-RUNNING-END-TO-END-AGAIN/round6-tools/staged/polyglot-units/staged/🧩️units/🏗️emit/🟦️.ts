@@ -32,8 +32,8 @@ export function nxUnitTargetsV1(plan: UnitPlanV1, options: {readonly outputRoot:
   return plan.order.map(id => {
     const unit = plan.byId.get(id)!, consumed = new Set(unit.dependencies.map(dependency => dependency.use));
     const inputs: NxUnitTargetV1["inputs"][number][] = [...[...unit.sources, ...unit.inputs, unitSpecPathV1(options.specRoot, id)].map(path => `{workspaceRoot}/${path}`)];
-    if (consumed.has("interface")) inputs.push({dependentTasksOutputFiles: "**/iface.json", transitive: false});
-    if (consumed.has("implementation")) inputs.push({dependentTasksOutputFiles: "**/out.json", transitive: false});
+    if (consumed.has("interface") || consumed.has("both")) inputs.push({dependentTasksOutputFiles: "**/iface.json", transitive: false});
+    if (consumed.has("implementation") || consumed.has("both")) inputs.push({dependentTasksOutputFiles: "**/out.json", transitive: false});
     return {
       name: unitTargetNameV1(id), unit: id, executor: "nx:run-commands", command: [...options.command, "exec", "--spec", unitSpecPathV1(options.specRoot, id), "--out-root", options.outputRoot], cache: true, inputs,
       outputs: [`{workspaceRoot}/${unitOutputPathV1(options.outputRoot, id)}`, ...(unit.interface ? [`{workspaceRoot}/${unitInterfacePathV1(options.outputRoot, id)}`] : [])],
@@ -91,7 +91,7 @@ repo_unit = rule(
     },
 )
 `;
-/** 🏗️ Emits a BUILD file text with one `repo_unit` per unit, in dependency order. Sources and inputs are file labels relative to the package (the BUILD file sits at the workspace root). `declared` edges order and select in this model but add no Bazel dependency: they never enter the inputs. A unit whose dependencies have an interface kind with `bazel: sources` also lists the sources of its whole dependency closure; `extraInputs` adds files a tool needs without keying them (Go: go.mod); `environment` is the process environment of every action (the language of the texts); the unit's own environment travels in its spec. */
+/** 🏗️ Emits a BUILD file text with one `repo_unit` per unit, in dependency order. Sources and inputs are file labels relative to the package (the BUILD file sits at the workspace root). `declared` edges order and select in this model but add no Bazel dependency: they never enter the inputs. A unit marked `SEMIO_BAZEL_INPUTS=sources` in its environment (or, unmarked, whose dependencies have an interface kind with `bazel: sources`) also lists the sources of its whole dependency closure; `extraInputs` adds files a tool needs without keying them (Go: go.mod); `environment` is the process environment of every action (the language of the texts); the unit's own environment travels in its spec. */
 export function bazelUnitsV1(plan: UnitPlanV1, options: {readonly runner: string; readonly load: string; readonly specRoot: string; readonly policy: UnitsPolicyV1; readonly environment?: Readonly<Record<string, string>>; readonly extraInputs?: (unit: UnitV1) => readonly string[]}): string {
   const lines = [`load(${quote(options.load)}, "repo_unit")`, ""], extra = options.extraInputs ?? (() => []);
   const closure = new Map<string, Set<string>>();
@@ -106,10 +106,10 @@ export function bazelUnitsV1(plan: UnitPlanV1, options: {readonly runner: string
     return found;
   };
   for (const id of plan.order) {
-    const unit: UnitV1 = plan.byId.get(id)!, iface = unit.dependencies.filter(dependency => dependency.use === "interface").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort(), impl = unit.dependencies.filter(dependency => dependency.use === "implementation").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort();
+    const unit: UnitV1 = plan.byId.get(id)!, iface = unit.dependencies.filter(dependency => dependency.use === "interface" || dependency.use === "both").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort(), impl = unit.dependencies.filter(dependency => dependency.use === "implementation" || dependency.use === "both").map(dependency => ":" + unitTargetNameV1(dependency.unit)).sort();
     const environment = options.environment ?? {}, env = sortedCodePointsV1(Object.keys(environment)).map(key => `${quote(key)}: ${quote(environment[key]!)}`).join(", ");
     const own = new Set([...unit.sources, ...unit.inputs, ...extra(unit)]);
-    const readsSources = unit.dependencies.some(dependency => { const kind = plan.byId.get(dependency.unit)!.interface; return dependency.use !== "declared" && kind !== null && options.policy.interfaceKinds[kind.kind]?.bazel === "sources"; });
+    const readsSources = unit.action.env.SEMIO_BAZEL_INPUTS === "sources" || (unit.action.env.SEMIO_BAZEL_INPUTS === undefined && unit.dependencies.some(dependency => { const kind = plan.byId.get(dependency.unit)!.interface; return dependency.use !== "declared" && kind !== null && options.policy.interfaceKinds[kind.kind]?.bazel === "sources"; }));
     const depSources = readsSources ? sortedCodePointsV1([...files(id)].filter(path => !own.has(path))) : [];
     lines.push("repo_unit(", `    name = ${quote(unitTargetNameV1(id))},`, `    unit = ${quote(id)},`, `    spec = ${quote(`${options.specRoot}/${unitTargetNameV1(id)}.json`)},`, `    srcs = ${list(sortedCodePointsV1(own))},`);
     if (depSources.length) lines.push(`    dep_srcs = ${list(depSources)},`);

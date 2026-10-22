@@ -101,20 +101,9 @@ pub struct DagConfigDiff {
     pub camera_zoom: Option<f64>,
 }
 
-impl protocol::MutationDiff<DagConfig> for DagConfigDiff {
-    fn apply(&self, base: &DagConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DagConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera_x {
-            next.camera_x = value.clone();
-        }
-        if let Some(value) = &self.camera_y {
-            next.camera_y = value.clone();
-        }
-        if let Some(value) = &self.camera_zoom {
-            next.camera_zoom = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<DagConfig> for DagConfigDiff {}
+
+impl protocol::ColdMutationDiff<DagConfig> for DagConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera_x.is_some() {
             self.camera_x = other.camera_x;
@@ -126,18 +115,37 @@ impl protocol::MutationDiff<DagConfig> for DagConfigDiff {
             self.camera_zoom = other.camera_zoom;
         }
     }
+
+    fn apply(&self, unpublished: &mut DagConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x = value.clone();
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y = value.clone();
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<DagConfig> for DagConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DagConfig> for DagConfigDiff {
     fn inverse(&self, base: &DagConfig) -> Self {
         Self {
             camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
             camera_y: self.camera_y.as_ref().map(|_| base.camera_y.clone()),
             camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none()
     }
 }
 

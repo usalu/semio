@@ -88,9 +88,9 @@ fn an_applied_change_set_is_exactly_the_corpus_byte_ranges() {
         assert_eq!(&summary, expected, "{id}: the byte ranges");
         let mut next = source.clone();
         for leaf in &emit.artifact_mutations {
-            let outcome = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(leaf, &next);
-            next = protocol::apply_diff(outcome.diff(), &next).expect("the range applies");
-            let inverse = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::inverse(leaf, &source).unwrap_or_default();
+            let outcome = <BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::diff(leaf, &next);
+            next = protocol::apply_diff_cold(outcome.diff(), &next).expect("the range applies");
+            let inverse = <BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::inverse(leaf, &source).unwrap_or_default();
             assert!(inverse.len() <= 1, "{id}: one splice, one inverse");
         }
     }

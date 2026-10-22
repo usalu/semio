@@ -21,7 +21,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts add-widget-retained-check",
+        "command": "repo ./📜️script.ts add-widget-retained-check",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -31,7 +31,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts child-edit-check",
+        "command": "repo ./📜️script.ts child-edit-check",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -41,7 +41,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts child-identity-check",
+        "command": "repo ./📜️script.ts child-identity-check",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -51,7 +51,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -61,7 +61,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -74,7 +74,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -88,7 +88,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-generate"
+        "command": "repo ./📜️script.ts graph-generate"
       },
       "inputs": [
         "graphGenerateSources"
@@ -102,7 +102,7 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": [],
       "inputs": [
@@ -118,7 +118,7 @@
       ],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts graph-wire-check"
+        "command": "repo ./📜️script.ts graph-wire-check"
       },
       "outputs": [],
       "inputs": [

@@ -80,7 +80,7 @@ pub async fn fresh_demo_store() -> ArtifactStore<DemoSnapshot, DemoMutation> {
 pub async fn owned_test_envelope<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> ArtifactEnvelope<P, Mutation>
 where
     P: Clone + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + OpText + OpBinary + semio_framework_os_spr::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
+    Mutation: Clone + OpText + OpBinary + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
 {
     let files = print_document_pack(store.envelope()).await.expect("print owned test envelope");
     parse_document_pack::<P, Mutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse owned test envelope").envelope

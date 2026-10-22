@@ -1,0 +1,25 @@
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkAgentClients, writeAgentClients } from "../🟦️.ts";
+import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+
+/** 🤖️ `agents write|check`: derives the MCP configuration of each headless agent client from the root dashboard declaration, or fails on drift.
+ * @see ../🟦️.ts */
+export class AgentsScript extends Script {
+  run(segments: string[]): void {
+    const verb = segments[0];
+    if (verb === "write") {
+      const changed = writeAgentClients(this.root);
+      console.log(changed.length === 0 ? "[agents write] every client file is current" : changed.map((path) => `[agents write] wrote ${path}`).join("\n"));
+      return;
+    }
+    if (verb === "check") {
+      const drift = checkAgentClients(this.root);
+      for (const entry of drift) sayDiscoveryV1("command.agents-check-is-run-repo",{path:String(entry.path),client:String(entry.client),state:String(entry.reason === "missing" ? "missing" : "out of date")},"error");
+      if (drift.length > 0) process.exit(1);
+      sayDiscoveryV1("command.agents-check-every-client-file");
+      return;
+    }
+    console.error("[agents] usage: repo ./📜️script.ts agents <write|check>");
+    process.exit(1);
+  }
+}

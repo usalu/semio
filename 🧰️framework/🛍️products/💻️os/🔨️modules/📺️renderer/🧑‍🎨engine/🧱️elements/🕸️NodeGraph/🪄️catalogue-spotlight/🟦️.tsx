@@ -3,7 +3,8 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import {
   borderNormalBottomClass,
   cn,

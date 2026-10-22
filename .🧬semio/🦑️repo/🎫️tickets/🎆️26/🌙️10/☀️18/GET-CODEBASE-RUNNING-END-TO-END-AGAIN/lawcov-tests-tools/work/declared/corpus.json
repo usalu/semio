@@ -1,0 +1,385 @@
+{
+ "version": 1,
+ "patterns": [
+  {
+   "input": "{projectRoot}/a/b",
+   "projectRoot": "pkg",
+   "expected": "pkg/a/b"
+  },
+  {
+   "input": "{projectRoot}/a/b",
+   "projectRoot": ".",
+   "expected": "a/b"
+  },
+  {
+   "input": "{workspaceRoot}/x/y",
+   "projectRoot": "pkg",
+   "expected": "x/y"
+  },
+  {
+   "input": "{workspaceRoot}/./x//y/",
+   "projectRoot": "pkg",
+   "expected": "x/y"
+  },
+  {
+   "input": "{projectRoot}/../sib/x",
+   "projectRoot": "pkg",
+   "expected": "sib/x"
+  },
+  {
+   "input": "{projectRoot}/../../out",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{workspaceRoot}/../x",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{workspaceRoot}/",
+   "projectRoot": "pkg",
+   "expected": ""
+  },
+  {
+   "input": "{projectRoot}/",
+   "projectRoot": ".",
+   "expected": ""
+  },
+  {
+   "input": "plain/path",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": 5,
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": null,
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": {
+    "runtime": "x"
+   },
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{projectRoot}",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{workspaceRoot}",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "!{projectRoot}/x",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{projectRoot}/a/../b",
+   "projectRoot": "pkg",
+   "expected": "pkg/b"
+  },
+  {
+   "input": "{projectRoot}/a/**/*.ts",
+   "projectRoot": "pkg",
+   "expected": "pkg/a/**/*.ts"
+  },
+  {
+   "input": "{workspaceRoot}/a/..",
+   "projectRoot": "pkg",
+   "expected": ""
+  },
+  {
+   "input": "{workspaceRoot}/a/../..",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{projectRoot}/é/📜️script.ts",
+   "projectRoot": "pkg/é",
+   "expected": "pkg/é/é/📜️script.ts"
+  },
+  {
+   "input": "{projectRoot}/a\\b",
+   "projectRoot": "pkg",
+   "expected": "pkg/a\\b"
+  },
+  {
+   "input": "{projectRoot}/.hidden/x",
+   "projectRoot": "pkg",
+   "expected": "pkg/.hidden/x"
+  },
+  {
+   "input": "{projectRoot}/./",
+   "projectRoot": "pkg",
+   "expected": "pkg"
+  },
+  {
+   "input": "{projectRoot}/../x",
+   "projectRoot": ".",
+   "expected": null
+  },
+  {
+   "input": "{projectRoot}/a/../../x",
+   "projectRoot": "p/q",
+   "expected": "p/x"
+  },
+  {
+   "input": "{unknown}/x",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{projectRoot}x/y",
+   "projectRoot": "pkg",
+   "expected": null
+  },
+  {
+   "input": "{workspaceRoot}x/y",
+   "projectRoot": "pkg",
+   "expected": null
+  }
+ ],
+ "tree": {
+  "pkg/test/a.test.ts": "",
+  "pkg/test/b.test.ts": "",
+  "pkg/test/sub/c.test.ts": "",
+  "pkg/test/sub/deep/d.test.mjs": "",
+  "pkg/test/data.json": "{}",
+  "pkg/test/node_modules/x/e.test.ts": "",
+  "pkg/src/m.ts": "",
+  "pkg/src/.hidden.ts": "",
+  "pkg/target/t.ts": "",
+  "pkg/.git/g.ts": "",
+  "pkg/test/sub/f.test.cjs": "",
+  "pkg/test/sub/g.test.tsx": "",
+  "root.test.ts": "",
+  "other/z.test.ts": "",
+  "other/sub/y.js": ""
+ },
+ "globs": [
+  {
+   "name": "a test directory glob finds the modules below it",
+   "inputs": [
+    "{projectRoot}/test/**/*.test.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts",
+    "pkg/test/sub/c.test.ts"
+   ]
+  },
+  {
+   "name": "a module suffix of any flavour is admitted",
+   "inputs": [
+    "{projectRoot}/test/**/*.test.{ts,mjs}"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "module flavours by their own extension patterns",
+   "inputs": [
+    "{projectRoot}/test/**/*.mjs",
+    "{projectRoot}/test/**/*.cjs"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/sub/deep/d.test.mjs",
+    "pkg/test/sub/f.test.cjs"
+   ]
+  },
+  {
+   "name": "an extension pattern that does not end in a literal suffix is ignored",
+   "inputs": [
+    "{projectRoot}/test/**/*.*js"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "a tsx pattern",
+   "inputs": [
+    "{projectRoot}/test/**/*.tsx"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/sub/g.test.tsx"
+   ]
+  },
+  {
+   "name": "an explicit file is not a glob",
+   "inputs": [
+    "{projectRoot}/src/m.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "a glob that does not end in a module suffix is ignored",
+   "inputs": [
+    "{projectRoot}/test/**"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "a json glob is ignored",
+   "inputs": [
+    "{projectRoot}/test/**/*.json"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "an exclusion removes the files it matches",
+   "inputs": [
+    "{projectRoot}/test/**/*.test.ts",
+    "!{projectRoot}/test/sub/**"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts"
+   ]
+  },
+  {
+   "name": "an exclusion for a single name",
+   "inputs": [
+    "{projectRoot}/test/**/*.test.ts",
+    "!{projectRoot}/test/a.test.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/b.test.ts",
+    "pkg/test/sub/c.test.ts"
+   ]
+  },
+  {
+   "name": "an exclusion that names nothing inside the workspace is ignored",
+   "inputs": [
+    "{projectRoot}/test/*.test.ts",
+    "!/etc/**",
+    "!plain/**"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts"
+   ]
+  },
+  {
+   "name": "node_modules, .git and target are never entered",
+   "inputs": [
+    "{projectRoot}/**/*.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/src/.hidden.ts",
+    "pkg/src/m.ts",
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts",
+    "pkg/test/sub/c.test.ts"
+   ]
+  },
+  {
+   "name": "the whole workspace from the workspace root",
+   "inputs": [
+    "{workspaceRoot}/**/*.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "other/z.test.ts",
+    "pkg/src/.hidden.ts",
+    "pkg/src/m.ts",
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts",
+    "pkg/test/sub/c.test.ts",
+    "root.test.ts"
+   ]
+  },
+  {
+   "name": "the walk starts at the literal directory prefix",
+   "inputs": [
+    "{workspaceRoot}/other/*.test.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "other/z.test.ts"
+   ]
+  },
+  {
+   "name": "a glob under a missing directory finds nothing",
+   "inputs": [
+    "{projectRoot}/nowhere/**/*.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "two overlapping globs list a file once, sorted",
+   "inputs": [
+    "{projectRoot}/test/**/*.test.ts",
+    "{projectRoot}/test/*.test.ts",
+    "{workspaceRoot}/pkg/test/sub/*.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts",
+    "pkg/test/sub/c.test.ts"
+   ]
+  },
+  {
+   "name": "inputs that are not strings are ignored",
+   "inputs": [
+    5,
+    null,
+    {
+     "runtime": "x"
+    },
+    "{projectRoot}/test/*.test.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts"
+   ]
+  },
+  {
+   "name": "a glob with a question mark",
+   "inputs": [
+    "{projectRoot}/test/?.test.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": [
+    "pkg/test/a.test.ts",
+    "pkg/test/b.test.ts"
+   ]
+  },
+  {
+   "name": "a glob that escapes the workspace is ignored",
+   "inputs": [
+    "{projectRoot}/../../x/*.ts"
+   ],
+   "projectRoot": "pkg",
+   "expected": []
+  },
+  {
+   "name": "no inputs",
+   "inputs": [],
+   "projectRoot": "pkg",
+   "expected": []
+  }
+ ]
+}

@@ -72,7 +72,6 @@ impl<M: Send> UnsupportedMemberFactoryOpen<M> {
 
 impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
     type Member = M;
-    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.snapshot.terminal_is_empty(){return Ok(Default::default());}let mut demand=ErasedSnapshotRetirement::next_demand(&self.snapshot,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"unsupported factory original child quote depth overflow"))?;Ok(demand)}
 
     fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> Result<MemberOpenStep<M>,OriginalTurnFailure> {
         self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;

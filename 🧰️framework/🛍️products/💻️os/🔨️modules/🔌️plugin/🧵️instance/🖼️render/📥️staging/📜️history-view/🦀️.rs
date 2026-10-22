@@ -30,7 +30,7 @@ use semio_framework_plugin_command::CommandLogAppend;
 use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
 use semio_framework::ActionKind;
 use store::MemberFactory;
-use store::SpaceMember;
+use store::ReferenceSpaceMember;
 use semio_framework_plugin_time_travel as time_travel;
 
 /// 🖋️ Decodes `args.authors` (`[{id, name, avatar?}]`, both shells' wire shape for a
@@ -68,7 +68,7 @@ pub(crate) fn verb_dirties_history_panel<A: ArtifactApp>(kind: Option<ActionKind
     !matches!(kind, Some(ActionKind::View | ActionKind::Interaction))
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     /// 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
     /// the merged command+operation timeline test harness accessor.
     #[cfg(test)]
@@ -115,7 +115,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             fresh
         };
         let parent_transactions: HashMap<String, String> = fresh_edits.iter().filter_map(|edit| edit.mutation_meta.first().and_then(|meta| meta.transaction.as_ref()).map(|transaction| (transaction.id.clone(), edit.id.clone()))).collect();
-        let histories = self.child_composition.member_edit_histories(&HashMap::new(), wanted_members.as_ref());
+        let histories = self.child_composition.member_edit_histories::<A>(&HashMap::new(), wanted_members.as_ref());
         let time_travel::MemberBackfill { mut attached, groups } = time_travel::member_backfill(histories.into_values(), &logged_children, &parent_transactions);
         let mut members = groups.into_iter().peekable();
         let mut missing: Vec<(CommandLogAppendKey, LocalizedLabel, String)> = Vec::new();
@@ -330,7 +330,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderRef<'v, A, M, X> {
     /// 🧾️ Projects the whole command log into its host view, reusing the op text a PREVIOUS view
     /// already printed for every edit that did not grow.
     ///
@@ -388,7 +388,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         let envelope = self.stores.store.envelope();
         let labelled: HashMap<&str, &MutationView> =
             previous.map_or_else(HashMap::new, |previous| previous.commands.iter().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect());
-        let members = if self.history.command_log.iter().any(|entry| !entry.child_edit_ids.is_empty()) { self.child_composition.member_edit_histories(&labelled, None) } else { HashMap::new() };
+        let members = if self.history.command_log.iter().any(|entry| !entry.child_edit_ids.is_empty()) { self.child_composition.member_edit_histories::<A>(&labelled, None) } else { HashMap::new() };
         let (child_applied_tails, child_has_redo_tail) = self.child_composition.child_history_tails().await;
         let reads = HistoryRowReads {
             full: true,
@@ -429,7 +429,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
             let rebuilt: Vec<&CommandLogEntry> = patch.rebuild.iter().filter_map(logged).collect();
             let fresh = || self.history.command_log.iter().rev().take(self.history.command_log.len() - patch.fresh_from).rev();
             let wanted: HashSet<&str> = rebuilt.iter().copied().chain(fresh()).flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
-            let members = self.child_composition.member_edit_histories(&labelled, Some(&wanted));
+            let members = self.child_composition.member_edit_histories::<A>(&labelled, Some(&wanted));
             let reads = HistoryRowReads {
                 full: false,
                 positions: patch.positions.iter().map(|(edit_id, position)| (edit_id.as_str(), *position)).collect(),

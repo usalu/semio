@@ -1,0 +1,29 @@
+# Inference Inventory Presence Prewrite Plan
+
+Prepared 2026-10-21T07:53:45.976Z. Source-only audit; no runtime function or test has been evaluated. Approved recovery contract SHA256 is 6390432b6941c728b7ac86f3b521436b1f6516e1cd034adee391b1fa895dadde. Cargo confirms disjoint ownership of reuse runtime/schema/corpus/tests; Cargo owns graph recovery/headroom.
+
+## Findings
+
+`observation/📥️reuse/🟨️.mjs` (11017 bytes, f86640b45d7f27f945aae3454bf6ec66dfe673a2c0d76838112438f0d66df2ab) returns true before entering any managed consumer whenever all names are in the ten-minute map. Its prefetch also swallows every failure and enumerates both namespace directories with broad catches. The later lean reader remembers leaf identity but its absence catch conflates missing ancestry and exact leaf absence. Existing observation/reuse descriptor tests call an ordinary fixture predicate, not production `inferenceInventoryReferencesHoldV1`, so they do not cover this managed-cache gap.
+
+## Proposed Runtime Change
+
+Remove the redundant ten-minute/prefetch cache path entirely. Every nonempty captured reference roster enters `withRepositoryBuildGraphConsumerV1` under the genuine issued Original/control and validates only requested records. Keep the lean record identity memo for unchanged immutable bytes, after no-follow ancestry capture/recheck. Within the managed callback capture bounded absolute ancestry through each required namespace, require ordinary no-symlink directories and the image device from image root down, then recheck exact dev/ino/mode identities before and after each leaf/identity operation and immediately before delivery. Missing ancestors, replacement/symlink/device/permissions, hash/closed-contract errors, cancellation and deadline propagate. Only ENOENT from lstat of the exact immutable leaf is a miss, and only after a second absence probe under unchanged ancestors and final managed/control recheck. ENOENT from opening/reading an already observed leaf is a race refusal. Do not broaden any exact-task read path. No new runtime dependency or public authority/port.
+
+## Schema and Tests Before Runtime
+
+Own existing reuse schema `observation/📥️reuse/🧬️schema/🔣️.json`; add a closed presence outcome case. Add dedicated owner-local `observation/🧪️tests/🪪️presence/🧫️cases.json` and `🟦️.ts`. Proposed exact titles: `inference reuse revalidates physical inventories inside the prior ten minute window` and `inference reuse refuses every nonleaf absence and unsafe inventory under managed custody`. Both use registerBuildTestLawV1 with sdk-fence and actual production imports, independent SQLite result/event oracle plus real filesystem/hash facts and Ajv contract validation. No fabricated ports for the actual reuse flow.
+
+The actual memory flow will run observeProjectInferenceV1 with the production reusable predicate, compute a real unique Source and lock inventory, warm it twice immediately (elapsed less than 600000), prove unchanged identities preserve generation, decline optional persistence, prove process-local project image survives with absent disk record, remove only owned exact leaf, and prove recompute republishes it. Repeat for Source and lock. Strict cases include missing/replaced ancestors, corrupt/hash/contract-invalid leaf, symlink/hardlink, I/O permission failure, cancellation/deadline, and racing disappearance; exact required inventory reading must still fail on missing leaf.
+
+## Genuine Fixture Decision Needed for Root Review
+
+A new ordinary temporary workspace through the existing production graph writer is the least invasive genuine path, but its closed policy declares a 4 GiB graph backing plus 64 MiB lease backing. The normal ticket artifact sink may itself be in a diagnostic image, so nested funding may refuse this fixture. Canonical shared graph tests would avoid extra backing but cannot safely rename/remove namespace ancestors while peers run. A proper fixed diagnostic graph fixture requires a narrow owner-issued graph reader/writer fixture route (no caller path or quota selector) retaining real Native child image and ledger, with fixed low optional quota to decline persistence. Existing cache-store fixture only issues diagnostics consumer stores, so it cannot currently reach genuine graph consumer or graph optional writer. Root should select the accepted fixture construction before Source writes; no attempt or effects have been made. A real SQLite optional ledger gate lock can force genuine optional publication decline without filling storage, if full standard temporary workspace is accepted.
+
+## Integration and Status
+
+New path has 134 UTF-16 units / 124 Unicode code points before filenames; stays below 256. Root owns explicit neutral phase and final budget after fixture choice; suggest 180000 ms for two actual tests, revise if full backing startup requires longer. No Native RED/GREEN is claimed: startup cannot currently fund headroom. Current audit read inventory: reuse runtime/declaration/schema; observation runtime and existing reuse/projects tests/corpus; lean-inventory; exact reader; graph storage runtime/schema/ledger; cache-store runtime/schema; cache budget runtime/policy; strict-storage runtime; applicable root/product/repo AGENTS and build skill; the three approved ticket contracts. No Source changes yet.
+
+## Independent Plan Review
+
+Lowcourse found no static blocker in removing the early ten-minute/prefetch path and requires the actual predicate false to invoke observeProjectInference’s real producer and republish the exact record. Declined persistence must occur on actual optional publication while process-local hit survives. Add both observed-leaf disappearance before open and exact missing leaf reappearance between second probe/final delivery race vectors; repeated warm hit preserves generation. Cancellation and falsy primary preservation remain strict. Shared namespace ancestry will not be touched.

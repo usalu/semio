@@ -41,3 +41,14 @@ After exact owned Source74500 cancellation settled whole1 with Original Script p
 The genuine Original publisher, cancellation/guard calls, yield continuations, child stdout/stderr, errors and semantic receipts are unchanged. Existing14format/6clock/3actual runtime laws were authored before production; none reached an actual red body in prior requests. No new Source producer was launched. Independent final source review and consolidated runtime acceptance remain pending.
 
 Independent fresh helper/writer/formatter/policy review accepted this production slice with no concrete source blocker. No runtime body has run; the consolidated owned Source request remains to be coordinated by Root. No own Native or Source process is active.
+
+
+## October 21: Bounded Selection Stage Presentation and Startup Export Regression
+
+Source19378 ended before bodies with the resource-directory-admission timeout. Its 7,472 parsed progress events included 6,555 exact plain selection-stage frames. The actual invocation publisher supplies exactly owner/command/stage; no bypass or 250ms violation is established by aggregate counts without clocks. The prior policy itself permitted repeated low-information output during long rotations.
+
+The closed presentation policy now emits each of the 14 distinct authored stages once per contiguous run, retains one latest observation, and emits one latest heartbeat after 15 seconds. Settlement flushes only a latest slot different from the last delivered slot. Clock refusal/reversal resets the finite presentation state. Other activity, foreign/extra-field frames, actual Original callbacks, checkpoints, cancellation and primary errors remain in the existing paths. Sixteen portable clock vectors are checked by an independent SQLite state oracle and the actual extracted writer; the genuine Original regression rotates its clock in 300ms steps and preserves its primary despite final presentation rejection. These bodies remain unrun.
+
+The current admission module exports buildSourceDemandV1. A real named import is now part of its nearest test suite, with fourteen portable priority/refusal cases and an independent SQLite oracle. The base workspace-build Source suite imports that suite, so a missing named export fails genuine module loading. No speculative admission production change was made. Source0 also calls the actual lease-admission contention callable through existing issued test invocation and artifact custody, without a new target. Its existing process resource-leases route remains mounted.
+
+Low accepted the noise/export source slice. Changed TypeScript parses as DATA with zero syntax diagnostics; this is not typecheck, Source admission, runtime, throughput or installed-binary acceptance. Runtime acceptance remains pending the single owned Source lane and ordinary source guards.

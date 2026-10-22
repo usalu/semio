@@ -1,0 +1,164 @@
+{
+ "version": 1,
+ "directories": [
+  {
+   "name": "not set",
+   "env": {
+    "kind": "unset"
+   },
+   "expected": "none",
+   "error": ""
+  },
+  {
+   "name": "empty is the same as not set",
+   "env": {
+    "kind": "empty"
+   },
+   "expected": "none",
+   "error": ""
+  },
+  {
+   "name": "an absolute directory",
+   "env": {
+    "kind": "absolute",
+    "name": "evidence"
+   },
+   "expected": "same",
+   "error": ""
+  },
+  {
+   "name": "a relative directory is refused",
+   "env": {
+    "kind": "relative",
+    "name": "evidence"
+   },
+   "expected": "none",
+   "error": "SEMIO_BUILD_EVIDENCE_DIR must be an absolute path of at most 200 characters"
+  },
+  {
+   "name": "exactly 200 characters are accepted",
+   "env": {
+    "kind": "absolute",
+    "name": "e",
+    "padTo": 200
+   },
+   "expected": "same",
+   "error": ""
+  },
+  {
+   "name": "201 characters are refused",
+   "env": {
+    "kind": "absolute",
+    "name": "e",
+    "padTo": 201
+   },
+   "expected": "none",
+   "error": "SEMIO_BUILD_EVIDENCE_DIR must be an absolute path of at most 200 characters"
+  },
+  {
+   "name": "a dot directory is relative",
+   "env": {
+    "kind": "relative",
+    "name": "."
+   },
+   "expected": "none",
+   "error": "SEMIO_BUILD_EVIDENCE_DIR must be an absolute path of at most 200 characters"
+  }
+ ],
+ "closures": [
+  {
+   "name": "the closure query, the label map and the declared environments",
+   "plan": {
+    "tasks": {
+     "build": {
+      "label": "repo_build",
+      "env": [
+       "B",
+       "A"
+      ]
+     },
+     "test": {
+      "label": "repo_test",
+      "env": []
+     }
+    },
+    "selected": [
+     "build",
+     "test"
+    ]
+   },
+   "answer": "//:repo_build (abc123)\n//:repo_test\n//:repo_helper   (def456)  \n",
+   "expression": "kind(\"repo_\", deps(set(//:repo_build //:repo_test)))"
+  },
+  {
+   "name": "duplicates and non-label lines are dropped and the rest is sorted",
+   "plan": {
+    "tasks": {
+     "a": {
+      "label": "repo_a",
+      "env": null
+     }
+    },
+    "selected": [
+     "a"
+    ]
+   },
+   "answer": "INFO: noise\n//:z\n//:a\n//:z\n\n  //:m (x)  \nWARNING: other\n",
+   "expression": "kind(\"repo_\", deps(set(//:repo_a)))"
+  },
+  {
+   "name": "an empty answer yields an empty closure",
+   "plan": {
+    "tasks": {
+     "a": {
+      "label": "repo_a",
+      "env": null
+     }
+    },
+    "selected": [
+     "a"
+    ]
+   },
+   "answer": "",
+   "expression": "kind(\"repo_\", deps(set(//:repo_a)))"
+  },
+  {
+   "name": "tasks without environment declare none",
+   "plan": {
+    "tasks": {
+     "a": {
+      "label": "repo_a",
+      "env": null
+     },
+     "b": {
+      "label": "repo_b",
+      "env": [
+       "X"
+      ]
+     }
+    },
+    "selected": [
+     "b"
+    ]
+   },
+   "answer": "//:repo_b\n",
+   "expression": "kind(\"repo_\", deps(set(//:repo_b)))"
+  },
+  {
+   "name": "unicode labels survive sorting",
+   "plan": {
+    "tasks": {
+     "é": {
+      "label": "repo_é",
+      "env": null
+     }
+    },
+    "selected": [
+     "é"
+    ]
+   },
+   "answer": "//:repo_é (1)\n//:repo_a\n",
+   "expression": "kind(\"repo_\", deps(set(//:repo_é)))"
+  }
+ ]
+}

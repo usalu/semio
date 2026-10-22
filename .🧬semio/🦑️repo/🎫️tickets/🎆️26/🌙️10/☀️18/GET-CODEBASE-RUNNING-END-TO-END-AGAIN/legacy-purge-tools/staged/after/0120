@@ -1,0 +1,54 @@
+{
+  "title": "Restore Sketchpad Workbench Functionalities",
+  "status": "closed",
+  "description": "Restore all missing sketchpad workbench functionalities including leftSidePanel visibility, workbench panel toggle, panel sizes, and all panel features that were removed during the migration from direct panels to tabbed side panels",
+  "summary": "Restored all missing sketchpad workbench functionalities by enabling side panel visibility flags across all 7 apps. Fixed leftSidePanel/rightSidePanel defaults, restored PanelKind.WORKBENCH to Type app, fixed Kit Y.js panelVisibility getter. Build compiles cleanly, all tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/775"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-04T15:39:30.312164467Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Restore all missing sketchpad workbench functionalities including leftSidePanel visibility, workbench panel toggle, panel sizes, and all panel features that were removed during the migration from direct panels to tabbed side panels",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-04T16:05:05.204437655Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Restored all missing sketchpad workbench functionalities by enabling side panel visibility flags across all 7 apps. Fixed leftSidePanel/rightSidePanel defaults, restored PanelKind.WORKBENCH to Type app, fixed Kit Y.js panelVisibility getter. Build compiles cleanly, all tests pass.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Docs.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Quality.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/shared.ts"
+        }
+      ]
+    }
+  ]
+}

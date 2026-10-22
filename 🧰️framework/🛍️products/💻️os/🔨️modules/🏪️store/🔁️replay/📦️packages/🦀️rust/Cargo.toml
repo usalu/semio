@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 hot-path-census = ["semio-framework-os-store-ledger/hot-path-census"]
 
 [dependencies]
+semio-framework-os-store-replay-operation = { path = "../../🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
@@ -47,6 +48,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-value-factory = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"
 semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }

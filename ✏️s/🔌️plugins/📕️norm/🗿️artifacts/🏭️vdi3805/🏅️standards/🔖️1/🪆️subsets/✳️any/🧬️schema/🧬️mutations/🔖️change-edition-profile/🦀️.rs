@@ -19,7 +19,16 @@ pub struct ChangeEditionProfile {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeEditionProfile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> + From<crate::remove_edition_profile::RemoveEditionProfile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "edition-profile", kind: "change-edition-profile", record: "ChangedEditionProfile" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.sheet.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for ChangeEditionProfile where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> + From<crate::remove_edition_profile::RemoveEditionProfile> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::change_edition_profile::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,12 +37,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeEditionProfile wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.sheet.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

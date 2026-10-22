@@ -317,8 +317,13 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert!(matches!(input.uploads.get(0), Some(PreparedRenderUpload::SceneRaster { lease, .. }) if lease.identity() == identity));
-    while !input.close_step() {}
-    assert!(input.close_step());
+    for _ in 0..4096 {
+        let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..input.next_close_demands(16 * 1024).expect("prepared input close demand") };
+        if matches!(input.close_step(grant).expect("prepared input close step"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
+            break;
+        }
+    }
+    assert!(input.terminal_is_empty());
 
     let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
     let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
@@ -501,13 +506,13 @@ fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypas
 #[test]
 fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
-    let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
+    let declared: Vec<semio_framework_async_slots::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "infinite::world")
         .map(|table| {
-            semio_framework_async::FixedSlotTableBudget::new(
+            semio_framework_async_slots::FixedSlotTableBudget::new(
                 table["owner"].as_str().expect("owner"),
                 table["capacity"].as_u64().expect("capacity") as usize,
                 table["elementSizeBytes"].as_u64().expect("element bytes") as usize,
@@ -515,8 +520,8 @@ fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_s
             )
         })
         .collect();
-    let measured = vec![semio_framework_async::FixedSlotTableBudget::new("world::WorldInteractionObjectRegistry", WORLD_INTERACTION_OBJECT_CAPACITY, size_of::<Option<WorldInteractionObjectSlot>>(), size_of::<WorldInteractionObjectRegistry>())];
-    semio_framework_async::assert_fixed_slot_tables(
+    let measured = vec![semio_framework_async_slots::FixedSlotTableBudget::new("world::WorldInteractionObjectRegistry", WORLD_INTERACTION_OBJECT_CAPACITY, size_of::<Option<WorldInteractionObjectSlot>>(), size_of::<WorldInteractionObjectRegistry>())];
+    semio_framework_async_slots::assert_fixed_slot_tables(
         "infinite::world",
         fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
         fixture["conversionThresholdBytes"].as_u64().expect("conversion threshold") as usize,

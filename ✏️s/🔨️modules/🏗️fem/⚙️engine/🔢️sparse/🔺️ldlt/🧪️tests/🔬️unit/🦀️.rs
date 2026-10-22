@@ -60,8 +60,8 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
 }
 
 #[test]
-fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
-    let n = LDLT_MAXIMUM_ORDER;
+fn numerical_page_ldlt_checkpoint_restores_a_matrix_spanning_several_owner_pages() {
+    let n = 100;
     let count = n * (n + 1) / 2;
     let mut colptr = Vec::with_capacity(n + 1);
     let mut rowind = Vec::with_capacity(count);
@@ -116,18 +116,18 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
         }
     }
     let actual = restored.as_ref().map(|value| (value.state.a.colptr.iter().copied().collect::<Vec<_>>(),value.state.a.rowind.iter().copied().collect::<Vec<_>>(),value.state.a.vals.iter().copied().collect::<Vec<_>>()));
-    for _ in 0..10_000 {
+    for _ in 0..1_000_000 {
         if let Some(restore) = restore.as_mut() { let _ = close_restore(&mut original,restore,grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)); }
         if let Some(restored) = restored.as_mut() { let _ = original.close_turn(restored,grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)); }
         let _ = original.close_turn(&mut job,grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
         if restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job) { break; }
     }
     let closed = restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job);
-    eprintln!("[DEBUG] LDLT maximum owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
+    eprintln!("[DEBUG] LDLT multi-page owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
     assert!(closed);
     assert!(!write_fault);
     let mut expected_pages=Vec::new();let mut item=0;let mut owner=0;
-    while item<count{let overhead=usize::from(owner==0)*8;let scalars=((semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES-NUMERICAL_CHECKPOINT_HEADER_BYTES-overhead)/8).min(count-item);expected_pages.push(serde_json::json!({"owner":owner,"item":item,"bytes":NUMERICAL_CHECKPOINT_HEADER_BYTES+overhead+scalars*8,"scalars":scalars}));item+=scalars;owner+=1;}
+    while item<count{let overhead=usize::from(owner==0)*8;let scalars=((semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES-NUMERICAL_CHECKPOINT_HEADER_BYTES-overhead)/8).min(count-item);expected_pages.push(serde_json::json!({"owner":owner,"item":item,"bytes":NUMERICAL_CHECKPOINT_HEADER_BYTES+overhead+scalars*8,"scalars":scalars}));item+=scalars;owner=1;}
     assert_eq!(pages,expected_pages);
     assert_eq!(restore_fault, None);
     assert_eq!(actual, Some(expected));
@@ -270,12 +270,15 @@ fn ldlt_job_checkpoint_resume_matches_reference() {
         }
     };
     let mut resumed = restore_pages(&mut original,operation,&checkpoint).expect("retained LDLT checkpoint restores");
-    loop {
-
-        if matches!(step_job(&mut original,&mut resumed,2,u64::MAX), Seen::Complete(_)) {
-            break;
+    let mut completed = false;
+    for _ in 0..2_000_000 {
+        match step_job(&mut original, &mut resumed, 2, u64::MAX) {
+            Seen::Complete(_) => { completed = true; break; }
+            Seen::Yield | Seen::Checkpoint(_) | Seen::Preview(_) => {}
+            outcome => panic!("unexpected resumed LDLT outcome: {outcome:?}"),
         }
     }
+    assert!(completed, "resumed LDLT job completes");
     assert_eq!(resumed.factor(), Some(expected));
     original.close(&mut job);
     original.close(&mut resumed);

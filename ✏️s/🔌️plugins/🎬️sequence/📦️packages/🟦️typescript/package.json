@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/sequence-tests:test"
+    "test": "repo run @semio-tech/sequence-tests:test"
   },
   "dependencies": {},
   "devDependencies": {

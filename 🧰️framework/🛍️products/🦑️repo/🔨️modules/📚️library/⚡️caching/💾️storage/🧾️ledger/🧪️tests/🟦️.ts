@@ -6,7 +6,9 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheLedgerV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReportV1,planCacheCollectionV1,readCacheLedgerV1,requireDeclaredCacheSegmentsV1,resolveCacheLanguageV1,type CacheLanguageV1,type CacheReportV1,type CacheTargetV1} from "../🟦️.ts";
+import {cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheLedgerV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReportV1,planCacheCollectionV1,readCacheLedgerV1,requireDeclaredCacheSegmentsV1,type CacheLanguageV1,type CacheReportV1,type CacheTargetV1} from "../🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 const ledger=readCacheLedgerV1(policy);
@@ -61,7 +63,7 @@ test("budgets resolve exactly: explicit bytes, a share of the partition, and the
  const bytes=(id:string)=>cacheAreaBudgetBytesV1(ledger,ledger.areas.find(area=>area.id===id)!);
  expect(bytes("nx-artifacts")).toBe(3*1024**3);
  expect(bytes("bazel-actions")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*4000/10000));
- expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-3*1024**3);
+ expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-30*1024**3);
  expect(bytes("rust")).toBe(Math.min(budgetPolicy.partitions.rust.capacityBytes,budgetPolicy.partitions.rust.maximumLogicalBytes));
  expect(bytes("control")).toBeNull();
  const loose=ledger.areas.filter(area=>area.root==="repository"&&area.kind==="tree").reduce((sum,area)=>sum+(bytes(area.id)??0),0);
@@ -117,14 +119,15 @@ test("every message exists in English and German with the same placeholders, and
  expect(used.size).toBe(ledger.areas.length);
 });
 
-test("the language is the explicit request, then the environment, then the first catalogue language",()=>{
- expect(resolveCacheLanguageV1("de",{LANG:"en_US.UTF-8"})).toBe("de");
- expect(resolveCacheLanguageV1(undefined,{SEMIO_LANGUAGE:"de",LANG:"en_US.UTF-8"})).toBe("de");
- expect(resolveCacheLanguageV1(undefined,{LC_ALL:"de_DE.UTF-8"})).toBe("de");
- expect(resolveCacheLanguageV1(undefined,{LANG:"en_GB.UTF-8"})).toBe("en");
- expect(resolveCacheLanguageV1(undefined,{LANG:"fr_FR.UTF-8"})).toBe("en");
- expect(resolveCacheLanguageV1(undefined,{})).toBe("en");
- expect(()=>resolveCacheLanguageV1("fr",{})).toThrow("Unknown language: fr (en|de)");
+test("the language is the flag, then the environment, and nothing is assumed",()=>{
+ const pick=(args:string[],environment:Record<string,string>)=>resolveLanguageV1(CATALOG_LANGUAGES_V1,args,environment,()=>[]).language;
+ expect(pick(["--lang","de"],{LANG:"en_US.UTF-8"})).toBe("de");
+ expect(pick([],{SEMIO_LANGUAGE:"de",LANG:"en_US.UTF-8"})).toBe("de");
+ expect(pick([],{LC_ALL:"de_DE.UTF-8"})).toBe("de");
+ expect(pick([],{LANG:"en_GB.UTF-8"})).toBe("en");
+ expect(()=>pick([],{LANG:"fr_FR.UTF-8"})).toThrow("--lang=en|de");
+ expect(()=>pick([],{})).toThrow("SEMIO_LANGUAGE=en|de");
+ expect(()=>pick(["--lang","fr"],{})).toThrow("Unknown language: fr (en|de)");
 });
 
 test("the status report renders the same in both languages from the same data",()=>{

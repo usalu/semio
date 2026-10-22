@@ -26,3 +26,4 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-os-playbook-contract = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
+semio-framework-value-ordered = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }

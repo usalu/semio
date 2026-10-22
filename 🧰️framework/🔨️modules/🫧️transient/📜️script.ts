@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,4 +13,4 @@ class TestScript extends BundleScript {
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "🧪️tests/🟦️.ts"), ...(suite === "retained" ? ["--test-name-pattern", "ephemeralBox"] : []), ...rest], this.root, "transient:contract", 15_000);
   }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

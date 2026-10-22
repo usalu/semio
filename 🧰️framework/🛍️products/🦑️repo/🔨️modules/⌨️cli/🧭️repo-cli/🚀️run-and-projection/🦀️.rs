@@ -222,7 +222,10 @@ pub fn run_with(argv: &[String], out: &mut dyn Write, err: &mut dyn Write, is_tt
         let _ = out.write_all(selected.help().as_bytes());
         return EXIT_OK;
     };
-    let mut invocation = Invocation { parsed, config, out, err, is_tty };
+    let current = match std::env::current_dir() { Ok(path) => path, Err(error) => { let _ = writeln!(err, "{error}"); return EXIT_ERROR; } };
+    let explicit = (parsed.flags.get("repo").is_some_and(|(_, changed)| *changed) || !config.repo.is_empty()).then(|| std::path::Path::new(&config.repo));
+    let repo_root = match semio_framework_repo_workspace::select_repo_root(&current, explicit) { Ok(path) => path, Err(error) => { let _ = writeln!(err, "{error}"); return EXIT_ERROR; } };
+    let mut invocation = Invocation::new(parsed, config, out, err, is_tty, repo_root);
     match action(&mut invocation) {
         Ok(()) => EXIT_OK,
         Err(CliError::Exit(code)) => code,

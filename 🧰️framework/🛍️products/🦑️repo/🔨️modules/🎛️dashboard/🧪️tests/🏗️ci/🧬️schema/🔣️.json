@@ -7,7 +7,8 @@
     "hosts",
     "gates",
     "devcontainer",
-    "sourceGate"
+    "sourceGate",
+    "windowGate"
   ],
   "properties": {
     "version": {
@@ -165,7 +166,7 @@
           "const": "ci-source"
         },
         "command": {
-          "const": "bun ./📜️script.ts test ci-source"
+          "const": "repo ./📜️script.ts test ci-source"
         },
         "entry": {
           "type": "string",
@@ -183,6 +184,12 @@
             "maxLength": 256
           }
         }
+      }
+    },
+    "windowGate": {
+      "const": {
+        "id": "terminal-editor-controller",
+        "command": "repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream"
       }
     }
   }

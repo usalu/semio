@@ -17,6 +17,15 @@ pub struct SetFrameUserInput {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-user-input", kind: "set-frame-user-input", record: "SetFrameUserInput" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame user input", "Benutzereingabe-Kennung des Einzelbilds setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, user_input } = self;
         protocol::MutationOutcome::new({
@@ -30,12 +39,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
             Some(f) => vec![GifMutation::SetFrameUserInput(SetFrameUserInput { index: *index, user_input: f.user_input })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame user input", "Benutzereingabe-Kennung des Einzelbilds setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -1,5 +1,5 @@
 //! 🧩️ Composable provider integrations for the semio repository domain: issue/milestone management
-//! (GitHub through the `gh` CLI), version control (git), sandbox (devcontainer), the eight editor
+//! (GitHub through the `gh` CLI), version control (git), sandbox (devcontainer), the eight agent-client
 //! providers and the registry that hands them out.
 //!
 //! Every external process goes through [`ProcessRunner`], so each provider is exercised end to end
@@ -37,9 +37,9 @@ pub use github_management::*;
 mod version_control_and_sandbox;
 pub use version_control_and_sandbox::*;
 
-#[path = "🎆️editor-providers/🦀️.rs"]
-mod editor_providers;
-pub use editor_providers::*;
+#[path = "🎆️agent-client-providers/🦀️.rs"]
+mod agent_client_providers;
+pub use agent_client_providers::*;
 
 #[path = "🎖️registry-and-git-hooks/🦀️.rs"]
 mod registry_and_git_hooks;

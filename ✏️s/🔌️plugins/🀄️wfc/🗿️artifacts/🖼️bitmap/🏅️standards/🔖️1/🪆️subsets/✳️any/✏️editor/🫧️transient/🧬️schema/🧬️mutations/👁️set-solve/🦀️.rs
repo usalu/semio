@@ -19,6 +19,19 @@ where
     Op: protocol::Mutation<BitmapTransient, Diff = BitmapTransientDiff> + From<SetSolve>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solve", kind: "set-solve", record: "SetSolve" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["outputPixels".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<BitmapTransient, Op> for SetSolve
+where
+    Op: protocol::ColdMutation<BitmapTransient, ReferenceDiff = BitmapTransientDiff> + From<SetSolve>,
+{
     fn diff(&self, base: &BitmapTransient) -> protocol::MutationOutcome<BitmapTransientDiff> {
         let diff = BitmapTransientDiff {
             output_pixels: (base.output_pixels != self.output_pixels).then(|| BitmapTransientText { value: self.output_pixels.clone() }),
@@ -37,10 +50,4 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["outputPixels".into()]
-    }
 }

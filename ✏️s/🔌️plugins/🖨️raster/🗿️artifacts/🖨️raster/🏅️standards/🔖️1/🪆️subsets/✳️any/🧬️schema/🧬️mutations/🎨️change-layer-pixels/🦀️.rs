@@ -31,11 +31,15 @@ pub fn validate(payload: &ChangeLayerPixels, base: &RasterSnapshot) -> Result<()
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerPixels where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_pixels::ChangeLayerPixels> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-pixels", kind: "change-layer-pixels", record: "ChangedLayerPixels" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit layer pixels", "Ebenenpixel bearbeiten") }
+    fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ChangeLayerPixels where Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_pixels::ChangeLayerPixels> {
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         if let Err(code) = validate(self, base) { return protocol::MutationOutcome::refuse(code, "Pixel content cannot be applied to this image revision.", [self.layer_id.clone()]); }
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { pixel_content: Some(self.content.clone()), transform: self.transform.clone(), ..Default::default() }))
     }
-
     fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let Some(RasterLayerNode::Pixel { image_key, width, height, transform, .. }) = find_layer(&base.layers, &self.layer_id) else { return Vec::new(); };
@@ -43,8 +47,5 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerPixels where 
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit layer pixels", "Ebenenpixel bearbeiten") }
-    fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }
 

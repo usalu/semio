@@ -87,7 +87,7 @@ use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_action_fk;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1995Snapshot, diff = En1995Diff, schema = "s.norm.en1995")]
+#[mutations(snapshot = En1995Snapshot, diff = En1995Diff, schema = "s.norm.en1995", reference = En1995Snapshot, reference_diff = En1995Diff)]
 pub enum En1995Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     InsertMember(insert_member::InsertMember),
@@ -244,15 +244,15 @@ pub mod mutation_bridge {
 
 /// 🧮️ Applies `mutation` to `base`, returning the next snapshot and every diagnostic the mutation raised.
 pub fn apply_en1995_mutation(base: &En1995Snapshot, mutation: &En1995Mutation) -> Result<(En1995Snapshot, Vec<String>), String> {
-    let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(mutation, base);
+    let outcome = <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::diff(mutation, base);
     let messages = outcome.messages().iter().map(|message| format!("{message:?}")).collect();
-    let next = protocol::apply_diff(outcome.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let next = protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((next, messages))
 }
 /// ↩️ The mutation list that undoes `mutation` applied to `base`.
 pub fn inverse_en1995_mutation(mutation: &En1995Mutation, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
     Ok({
-    <En1995Mutation as protocol::Mutation<En1995Snapshot>>::inverse(mutation, base)?
+    <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::inverse(mutation, base)?
 
     })
 }

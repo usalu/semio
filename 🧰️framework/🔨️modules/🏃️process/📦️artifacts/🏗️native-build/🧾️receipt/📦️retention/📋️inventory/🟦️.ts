@@ -7,9 +7,9 @@ const schema=JSON.parse(JSON.stringify(schemaDocument)) as typeof schemaDocument
 
 export interface CompletedCargoOriginV1{readonly version:1;readonly workspace:string;readonly mode:"prototype"|"release";readonly manifest:string;readonly cwd:string;readonly buildDirectory:string;readonly targetDirectory:string;readonly cargoHome:string}
 export interface CompletedCargoClosureRowV1{readonly path:string;readonly kind:"file"|"directory"|"absent";readonly custody:"current"|"retained";readonly sha256:string|null}
-const maximumRows=sourceSchema.properties.maximumEntries.const,maximumIndexBytes=sourceSchema.properties.maximumManifestBytes.const;
+const maximumRows=sourceSchema.properties.maximumEntries.const,maximumIndexBytes=sourceSchema.properties.maximumRetainedIndexBytes.const;
 const inside=(root:string,path:string):boolean=>{const tail=relative(root,path);return tail===""||(!isAbsolute(tail)&&tail.split(/[\\/]/u)[0]!=="..");};
-function canonical(value:unknown):string{if(typeof value!=="string"||!isAbsolute(value)||resolve(value)!==value||value.includes("\0")||value.length>schema.definitions.Path.maxLength)throw Error("Canonical finite compilation path required");return value;}
+function canonical(value:unknown):string{if(typeof value!=="string"||!isAbsolute(value)||resolve(value)!==value||value.includes("\0")||value.length>schema.definitions.Path.maxLength)throw Error("Canonical finite compilation path required"+(typeof value==="string"?`: ${value.length} units, ${value.slice(0,320)}`:""));return value;}
 
 /** 🧭️ Validates origin DATA; this operation cannot issue any compiler, storage or retained reader authority. */
 export function readCompletedCargoOriginV1(value:unknown):CompletedCargoOriginV1{
@@ -25,7 +25,7 @@ export function completedCargoClosureRosterV1(observation:CargoProvenanceV1,valu
  for(const row of observation.invocationInputs)add(row.path,row.sha256===null?"absent":"file",row.sha256);
  for(const unit of observation.units){for(const row of unit.inputs)add(row.path,row.kind??"absent",row.sha256,generated(row.path));for(const row of unit.artifacts)add(row.path,"file",row.sha256,owned(row.path));for(const dep of unit.depInfo){add(dep.path,"file",dep.sha256,owned(dep.path));for(const file of cargoDepInfoResolvedSourcesV1(dep))if(!rows.has(file)&&!unit.inputs.some(input=>input.path===file))throw Error("Retained dep-info source has no actual input digest");}}
  for(const unit of observation.units){const target=unit.message.target;if(target!==null&&typeof target==="object"&&!Array.isArray(target)){const path=Reflect.get(target,"src_path");if(typeof path==="string"){const row=rows.get(resolve(path));if(row?.kind==="file")add(row.path,"file",row.sha256);}}}
- const tracked=(value:unknown)=>{const path=canonical(value),row=rows.get(path);if(!row||row.kind!=="file")throw Error("Resource source lacks its actual tracked compiler input");add(path,"file",row.sha256);};
+ const tracked=(value:unknown)=>{const path=canonical(typeof value==="string"&&isAbsolute(value)&&!value.includes("\0")?resolve(value):value),row=rows.get(path);if(!row||row.kind!=="file")throw Error("Resource source lacks its actual tracked compiler input");add(path,"file",row.sha256);};
  for(const resource of[...observation.buildResources,...observation.compilerResources]){add(resource.path,"file",resource.sha256,generated(resource.path));for(const row of resource.resources){const input=row.input;if(input.kind==="failed")throw Error("Failed compiler resource cannot become completed evidence");add(input.path,input.kind==="directory"?"directory":"file",row.sha256);if(input.kind==="copy")add(input.output,"file",row.outputSha256,generated(canonical(input.output)));const operation=input.operation;if(operation&&typeof operation==="object"&&!Array.isArray(operation))tracked(Reflect.get(operation,"source"));const callsite=input.callsite;if(callsite&&typeof callsite==="object"&&!Array.isArray(callsite))tracked(Reflect.get(callsite,"source"));}}
 
  return Object.freeze([...rows.values()].sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0));

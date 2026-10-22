@@ -152,21 +152,9 @@ pub struct RasterConfigDiff {
     pub camera: Option<RasterCamera>,
 }
 
-impl protocol::MutationDiff<RasterConfig> for RasterConfigDiff {
-    fn apply(&self, base: &RasterConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterConfig> {
-        Ok(RasterConfig {
-            brush_size: self.brush_size.unwrap_or(base.brush_size),
-            brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity),
-            brush_color: self.brush_color.clone().unwrap_or_else(|| base.brush_color.clone()),
-            brush_hardness: self.brush_hardness.unwrap_or(base.brush_hardness),
-            paint_target: self.paint_target.clone().unwrap_or_else(|| base.paint_target.clone()),
-            mask_value: self.mask_value.unwrap_or(base.mask_value),
-            fill_tolerance: self.fill_tolerance.unwrap_or(base.fill_tolerance),
-            pixel_selection: self.pixel_selection.as_ref().map_or_else(|| base.pixel_selection.clone(), |set| set.value.clone()),
-            composite_viewport: self.composite_viewport.as_ref().map_or_else(|| base.composite_viewport.clone(), |set| set.value.clone()),
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-        })
-    }
+impl protocol::MutationDiff<RasterConfig> for RasterConfigDiff {}
+
+impl protocol::ColdMutationDiff<RasterConfig> for RasterConfigDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -186,9 +174,32 @@ impl protocol::MutationDiff<RasterConfig> for RasterConfigDiff {
         take!(composite_viewport);
         take!(camera);
     }
+
+    fn apply(&self, unpublished: &mut RasterConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = RasterConfig {
+            brush_size: self.brush_size.unwrap_or(base.brush_size),
+            brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity),
+            brush_color: self.brush_color.clone().unwrap_or_else(|| base.brush_color.clone()),
+            brush_hardness: self.brush_hardness.unwrap_or(base.brush_hardness),
+            paint_target: self.paint_target.clone().unwrap_or_else(|| base.paint_target.clone()),
+            mask_value: self.mask_value.unwrap_or(base.mask_value),
+            fill_tolerance: self.fill_tolerance.unwrap_or(base.fill_tolerance),
+            pixel_selection: self.pixel_selection.as_ref().map_or_else(|| base.pixel_selection.clone(), |set| set.value.clone()),
+            composite_viewport: self.composite_viewport.as_ref().map_or_else(|| base.composite_viewport.clone(), |set| set.value.clone()),
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+        };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RasterConfig> for RasterConfigDiff {
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RasterConfig> for RasterConfigDiff {
     fn inverse(&self, base: &RasterConfig) -> Self {
         Self {
             brush_size: self.brush_size.map(|_| base.brush_size),
@@ -202,9 +213,6 @@ impl protocol::DiffAlgebra<RasterConfig> for RasterConfigDiff {
             composite_viewport: self.composite_viewport.as_ref().map(|_| RasterViewportSet { value: base.composite_viewport.clone() }),
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
     }
 }
 //#endregion 🔖️Config
@@ -547,6 +555,16 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         }
     }
 
+    fn inverse_rows(&self) -> usize {
+        match self {
+            RasterConfigMutation::SetPaintTarget(_) => 2,
+            _ => 1,
+        }
+    }
+}
+
+impl protocol::ColdMutation<RasterConfig> for RasterConfigMutation {
+    type ReferenceDiff = RasterConfigDiff;
     fn diff(&self, base: &RasterConfig) -> protocol::MutationOutcome<RasterConfigDiff> {
         let mut diff = RasterConfigDiff::default();
         match self {
@@ -606,7 +624,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &RasterConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(match self {
             RasterConfigMutation::SetBrushSize(_) => vec![RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: base.brush_size })],
@@ -620,13 +637,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetCompositeViewport(_) => vec![RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: base.composite_viewport.clone() })],
             RasterConfigMutation::SetCamera(_) => vec![RasterConfigMutation::SetCamera(SetCameraEdit { camera: base.camera.clone() })],
         })
-    }
-
-    fn inverse_rows(&self) -> usize {
-        match self {
-            RasterConfigMutation::SetPaintTarget(_) => 2,
-            _ => 1,
-        }
     }
 }
 //#endregion 🔖️ConfigMutations

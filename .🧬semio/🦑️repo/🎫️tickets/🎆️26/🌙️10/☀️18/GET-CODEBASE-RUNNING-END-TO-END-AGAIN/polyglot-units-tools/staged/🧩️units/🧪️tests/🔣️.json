@@ -560,6 +560,79 @@
    }
   },
   {
+   "name": "both-of-binary",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:m",
+      "language": "go",
+      "kind": "binary",
+      "label": "m",
+      "sources": [
+       "m.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:a",
+      "language": "go",
+      "kind": "library",
+      "label": "a",
+      "sources": [
+       "a.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:m",
+        "use": "both"
+       }
+      ],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "expect": {
+    "valid": false,
+    "kinds": [
+     "no-interface"
+    ]
+   }
+  },
+  {
    "name": "interface-of-binary",
    "graph": {
     "version": 1,
@@ -1080,6 +1153,56 @@
     "key": "08e6873849a5e5fb7fe6b21c84096f91adb680cc0b18f82af5cddf7c2cbc053d",
     "interfaceClosure": "123a95fe893fb7b96d84eb90ae097d2a61fb25a6fe7a2f184ca8d06aa7a4a17f",
     "outputClosure": "dd2317afa6105e8f7b9fd524e7b786c6cf0300d4e62401a8a55140ebf55dddeb"
+   }
+  },
+  {
+   "name": "both-edge-folds-interface-and-output-closure",
+   "unit": {
+    "id": "go:exe",
+    "language": "go",
+    "kind": "binary",
+    "label": "exe",
+    "sources": [
+     "exe.go"
+    ],
+    "inputs": [],
+    "dependencies": [
+     {
+      "unit": "go:lib",
+      "use": "both"
+     }
+    ],
+    "externals": [],
+    "interface": null,
+    "outputs": [
+     "bin"
+    ],
+    "toolchain": {
+     "id": "tool 1",
+     "parts": []
+    },
+    "action": {
+     "argv": [
+      "build"
+     ],
+     "env": {}
+    }
+   },
+   "digests": {
+    "exe.go": "a5fe435d332742e0be9cdee290ebaf60bae17618d02ad96f1d3e23204ae0ac97"
+   },
+   "dependencies": {
+    "go:lib": {
+     "interfaceClosure": "f9eaea6ef12132b22f7528008e6c70ddf491b75d7c8dfa48954199d2eb1aeebe",
+     "outputClosure": "5cafeba9c45f36681af0ecba57fe5ef107735b008e0680dcb280306b89912707"
+    }
+   },
+   "interface": null,
+   "outputs": "af53e45d8dc8dbd7b3a35cab479d7cb84daf21396d84036a010263c282ca2827",
+   "expect": {
+    "key": "51d64438c145b29d56414611bc0c0c0ce26e60133ce68cdb30afe7e01052e4eb",
+    "interfaceClosure": null,
+    "outputClosure": "f6c49a19ac0995e8c8c5a12f37abc8551dd2b38f6b51a1eb61a29cb92abee4c2"
    }
   },
   {
@@ -1979,6 +2102,167 @@
       ],
       "failed": [],
       "blocked": [],
+      "cutoff": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "both-edge",
+   "graph": {
+    "version": 1,
+    "units": [
+     {
+      "id": "go:lib",
+      "language": "go",
+      "kind": "library",
+      "label": "lib",
+      "sources": [
+       "lib.src"
+      ],
+      "inputs": [],
+      "dependencies": [],
+      "externals": [],
+      "interface": {
+       "kind": "go-export-data"
+      },
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     },
+     {
+      "id": "go:exe",
+      "language": "go",
+      "kind": "binary",
+      "label": "exe",
+      "sources": [
+       "exe.src"
+      ],
+      "inputs": [],
+      "dependencies": [
+       {
+        "unit": "go:lib",
+        "use": "both"
+       }
+      ],
+      "externals": [],
+      "interface": null,
+      "outputs": [
+       "out"
+      ],
+      "toolchain": {
+       "id": "tool 1",
+       "parts": []
+      },
+      "action": {
+       "argv": [
+        "build"
+       ],
+       "env": {}
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "edits": [],
+     "expect": {
+      "ran": [
+       "go:exe",
+       "go:lib"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:lib",
+       "effect": "body"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:exe",
+       "go:lib"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": [
+       "go:lib"
+      ]
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:lib",
+       "effect": "interface"
+      }
+     ],
+     "expect": {
+      "ran": [
+       "go:exe",
+       "go:lib"
+      ],
+      "hit": [],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:lib",
+       "effect": "revert"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [
+       "go:exe",
+       "go:lib"
+      ],
+      "failed": [],
+      "blocked": [],
+      "cutoff": []
+     }
+    },
+    {
+     "edits": [
+      {
+       "unit": "go:lib",
+       "effect": "body"
+      },
+      {
+       "unit": "go:lib",
+       "effect": "fail-hard"
+      }
+     ],
+     "expect": {
+      "ran": [],
+      "hit": [],
+      "failed": [
+       "go:lib"
+      ],
+      "blocked": [
+       "go:exe"
+      ],
       "cutoff": []
      }
     }

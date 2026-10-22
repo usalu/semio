@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "windowMilliseconds": 15000,
+  "window": [
+    {
+      "id": "first step always runs",
+      "startedMs": 0,
+      "nowMs": 99999,
+      "iterations": 0,
+      "due": false
+    },
+    {
+      "id": "inside the window",
+      "startedMs": 1000,
+      "nowMs": 15999,
+      "iterations": 1,
+      "due": false
+    },
+    {
+      "id": "exactly at the window",
+      "startedMs": 1000,
+      "nowMs": 16000,
+      "iterations": 1,
+      "due": true
+    },
+    {
+      "id": "long after",
+      "startedMs": 0,
+      "nowMs": 600000,
+      "iterations": 7,
+      "due": true
+    },
+    {
+      "id": "clock not moved",
+      "startedMs": 5,
+      "nowMs": 5,
+      "iterations": 4,
+      "due": false
+    }
+  ],
+  "budget": {
+    "maximumProofBytes": 17179869184,
+    "captures": [
+      {
+        "id": "one capture of ten GiB",
+        "bytes": [
+          10737418240
+        ],
+        "cumulativeFails": false,
+        "perCaptureFails": false
+      },
+      {
+        "id": "three captures of ten GiB",
+        "bytes": [
+          10737418240,
+          10737418240,
+          10737418240
+        ],
+        "cumulativeFails": true,
+        "perCaptureFails": false
+      },
+      {
+        "id": "a hundred small captures",
+        "bytes": [
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456,
+          268435456
+        ],
+        "cumulativeFails": true,
+        "perCaptureFails": false
+      },
+      {
+        "id": "one capture beyond the cap",
+        "bytes": [
+          17179869185
+        ],
+        "cumulativeFails": true,
+        "perCaptureFails": true
+      },
+      {
+        "id": "empty capture",
+        "bytes": [
+          0,
+          0
+        ],
+        "cumulativeFails": false,
+        "perCaptureFails": false
+      },
+      {
+        "id": "negative bytes are refused",
+        "bytes": [
+          -1
+        ],
+        "cumulativeFails": true,
+        "perCaptureFails": true
+      }
+    ]
+  },
+  "primary": [
+    {
+      "id": "error",
+      "kind": "error",
+      "attached": true
+    },
+    {
+      "id": "frozen",
+      "kind": "frozen",
+      "attached": false
+    },
+    {
+      "id": "sealed",
+      "kind": "sealed",
+      "attached": false
+    },
+    {
+      "id": "getter",
+      "kind": "getter",
+      "attached": false
+    },
+    {
+      "id": "proxy",
+      "kind": "proxy",
+      "attached": false
+    },
+    {
+      "id": "existing",
+      "kind": "existing",
+      "attached": false
+    },
+    {
+      "id": "undefined",
+      "kind": "undefined",
+      "attached": false
+    },
+    {
+      "id": "false",
+      "kind": "false",
+      "attached": false
+    },
+    {
+      "id": "null",
+      "kind": "null",
+      "attached": false
+    },
+    {
+      "id": "zero",
+      "kind": "zero",
+      "attached": false
+    },
+    {
+      "id": "empty",
+      "kind": "empty",
+      "attached": false
+    }
+  ],
+  "boundary": [
+    {
+      "id": "live boundary",
+      "kind": "error",
+      "liveControl": true,
+      "partial": true
+    },
+    {
+      "id": "failed boundary error",
+      "kind": "error",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary frozen",
+      "kind": "frozen",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary sealed",
+      "kind": "sealed",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary getter",
+      "kind": "getter",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary proxy",
+      "kind": "proxy",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary existing",
+      "kind": "existing",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary undefined",
+      "kind": "undefined",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary false",
+      "kind": "false",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary null",
+      "kind": "null",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary zero",
+      "kind": "zero",
+      "liveControl": false,
+      "partial": false
+    },
+    {
+      "id": "failed boundary empty",
+      "kind": "empty",
+      "liveControl": false,
+      "partial": false
+    }
+  ]
+}

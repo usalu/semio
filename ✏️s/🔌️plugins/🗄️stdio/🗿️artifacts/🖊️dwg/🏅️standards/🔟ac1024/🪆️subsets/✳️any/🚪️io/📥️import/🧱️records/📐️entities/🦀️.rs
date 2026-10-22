@@ -656,10 +656,10 @@ pub fn viewport_status_flags(mask: u32) -> Result<Vec<semio_s_artifact_stdio_dwg
     ];
     Ok(all.into_iter().enumerate().filter_map(|(bit, flag)| (mask & (1 << bit) != 0).then_some(flag)).collect())
 }
-struct DwgDecodedEntityCommon {
+pub struct DwgDecodedEntityCommon {
     pub logical: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon,
-    reactor_count: usize,
-    extension_dictionary_missing: bool,
+    pub reactor_count: usize,
+    pub extension_dictionary_missing: bool,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode {

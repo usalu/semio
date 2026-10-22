@@ -1,3 +1,4 @@
+import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "../../🧭️selection/📥️options/🟦️.ts";
 import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import selectionSchema from "../../🧬️schema/🚪️selection.json" with {type:"json"};
@@ -6,7 +7,7 @@ import admissionSchema from "../../🧬️schema/🚪️admission.json" with {ty
 import projectSchema from "../../🧬️schema/📋️project/🔣️.json" with {type:"json"};
 
 /** 🎯️ Declares exact task admission or intentional complete workspace ownership. */
-export type BuildGraphSelectionV1={kind:"all"}|{kind:"tasks";tasks:{project:string;target:string;configuration?:string}[]};
+export type BuildGraphSelectionV1={kind:"all"}|{kind:"owners";projects:string[];exclude:string[]}|{kind:"tasks";tasks:{project:string;target:string;configuration?:string}[]};
 /** 🪪️ Resolves authored task and package names without evaluating independent owners. */
 export interface BuildOwnerRegistryV1{version:1;owners:{name:string;root:string;manifest:string;packages:string[];nativeRoots?:string[]}[];catalogProviders:{ownerRoot:string;sourcePath:string;consumerRoots:string[]}[]}
 /** 📥️ Carries exact original owner observations and source-owned dependency identities. */
@@ -19,7 +20,7 @@ const sourceOwners=(registry:BuildOwnerRegistryV1)=>registry.owners.flatMap(owne
 /** ✅️ Rejects open selections and canonicalizes the finite task order. */
 export function readBuildGraphSelectionV1(value:unknown):BuildGraphSelectionV1{
  if(validateJsonSchemaSubset(selectionSchema,value).length)throw Error("Closed build graph selection required");
- const selection=value as BuildGraphSelectionV1;return selection.kind==="all"?{kind:"all"}:{kind:"tasks",tasks:selection.tasks.map(task=>({...task})).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))};
+ const selection=value as BuildGraphSelectionV1;return selection.kind==="all"?{kind:"all"}:selection.kind==="owners"?{kind:"owners",projects:[...selection.projects].sort(),exclude:[...selection.exclude].sort()}:{kind:"tasks",tasks:selection.tasks.map(task=>({...task})).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))};
 }
 
 /** 📋️ Validates only declarations and identity collisions, never independent physical inputs. */
@@ -87,7 +88,7 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
  const byName=new Map(registry.owners.map(owner=>[owner.name,owner])),ownerIndex=sourceOwners(registry),sourceOwner=(path:string)=>ownerIndex.find(owner=>contains(owner.root,path))?.name,admitted=new Set<string>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>();
  const observe=async(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>{const value=await inspect(owner,targets,inputs);if(validateJsonSchemaSubset({$defs:admissionSchema.$defs,$ref:"#/$defs/ownerFacts"},value).length)throw Error("Closed build owner observations required");return value;};
  const admit=(name:string)=>{if(!byName.has(name))throw Error("Unknown canonical build owner: "+name);admitted.add(name);},task=(name:string,target:string,optional=false)=>{admit(name);const selected=targets.get(name)??new Set<string>(),key=name+"\0"+target;if(optional&&!selected.has(target))optionalTasks.add(key);else if(!optional)optionalTasks.delete(key);selected.add(target);targets.set(name,selected);};
- if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else for(const value of selection.tasks)task(value.project,value.target);
+ if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else if(selection.kind==="owners")for(const name of selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude))admit(name);else for(const value of selection.tasks)task(value.project,value.target);
  for(let pass=0;pass<=registry.owners.length+65536;pass++){
   let changed=false;
   for(const name of [...admitted].sort()){
@@ -121,6 +122,7 @@ export function applyBuildGeneratedTaskDependenciesV1<T extends {name:string;tar
 
 /** 🏁️ Makes complete workspace admission explicit for roster-dependent commands. */
 export function buildInvocationGraphSelectionV1(args:readonly string[]):BuildGraphSelectionV1{
+ if(args[0]==="exec"){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean));if(literalBuildProjectSelectorsV1(projects,exclude))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)]});}
  if(args[0]!=="run")return {kind:"all"};
  const identity=args[1]?.split(":");if(!identity||identity.length<2||identity.length>3||identity.some(part=>!part))throw Error("Canonical build task identity required");
  let configuration=identity[2];for(let index=2;index<args.length&&args[index]!=="--";index++){const value=args[index]!;if(value==="--configuration"||value==="-c"||value.startsWith("--configuration=")||value.startsWith("-c=")){const selected=value.includes("=")?value.slice(value.indexOf("=")+1):args[++index];if(!selected||selected.startsWith("-")||configuration&&configuration!==selected)throw Error("Conflicting task configurations");configuration=selected;}}

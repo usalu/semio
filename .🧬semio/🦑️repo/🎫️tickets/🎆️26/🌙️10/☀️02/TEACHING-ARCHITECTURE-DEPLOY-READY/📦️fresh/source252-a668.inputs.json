@@ -1,0 +1,1348 @@
+{
+  "version": 1,
+  "kind": "architecture-combined-neutral",
+  "files": {
+    "📦️fresh/schema.json": {
+      "bytes": 11890,
+      "sha256": "ac6b9d06a066dbbc0f262b48bc3caf6041e265b919be906e0912f367d990d7c9"
+    },
+    "📦️fresh/cases.json": {
+      "bytes": 6027,
+      "sha256": "b3889ce52f0968bd845832c5a402aae8c14dbf51e764b2c5f4625c10c1f7ee05"
+    },
+    "📦️fresh/contract.ts": {
+      "bytes": 2210,
+      "sha256": "c2baab37853b53ad8b104c391c9b1ee6f372c5e17c548fba2ad69f7194308aa1"
+    },
+    "📦️fresh/core.ts": {
+      "bytes": 15565,
+      "sha256": "2c940c5e5d795116f56acf65dccbb1d8ffc6f81cf62d7783e37b435f0107e3a2"
+    },
+    "📦️fresh/host.ts": {
+      "bytes": 10167,
+      "sha256": "7d13d183efdf86e7a68099c71735871855a0d381c520a3a2807b4a06abaa67ab"
+    },
+    "📦️fresh/script.ts": {
+      "bytes": 7302,
+      "sha256": "414b3e918a7502d7bf0bf81dffb2d172834fa5018262887df8dc207fdd8a196e"
+    },
+    "📦️fresh/tests.ts": {
+      "bytes": 15549,
+      "sha256": "a0b7d0de7bdb7900b14d5ac1daefa5471990b5982825ab02151a3d969946e9ab"
+    },
+    "📦️fresh/critical-paths.json": {
+      "bytes": 3733,
+      "sha256": "05e77cf1372de74feb97e3e7e9e04cb01844ed1fb5cd0633c744ea6d66e31b82"
+    },
+    "📦️fresh/git.schema.json": {
+      "bytes": 6004,
+      "sha256": "5ca60d42f50c962ebf5b48cb15b5e4982f7ff7c8963619559124846a98763bb3"
+    },
+    "📦️fresh/git.cases.json": {
+      "bytes": 1268,
+      "sha256": "afa66e39e5d0ebbdd8b97a09ca29ab8b2bf4494966776dfdb9cad3af0b699353"
+    },
+    "📦️fresh/git.ts": {
+      "bytes": 5247,
+      "sha256": "76465f03746fa595413fcfa8ab7fe29d25df7c1b468673604254f88accd9ade5"
+    },
+    "📦️fresh/git.tests.ts": {
+      "bytes": 7705,
+      "sha256": "976f59c85978aade39beea9127163c23951e232b46b98502970cd204d4504371"
+    },
+    "📦️fresh/git-entry.ts": {
+      "bytes": 4343,
+      "sha256": "cb53603605bf3130b32a2dcf62f53cc23377ee9d2e4249a04429877d99a3dbdd"
+    },
+    "📦️fresh/fresh-git.py": {
+      "bytes": 10705,
+      "sha256": "ee06f129471657d15774ed6c580211dcb9fadcb1c2428b8d93a9c3a3c2121f4b"
+    },
+    "📦️fresh/capture-git.ts": {
+      "bytes": 6849,
+      "sha256": "b32659ed00681822756cd71cbe4a205c4219e805fbdb7cb519de0bbf04b23bdc"
+    },
+    "📦️fresh/git-archive.schema.json": {
+      "bytes": 1987,
+      "sha256": "6da6c381097c763f9719127b07b7a99e1975098e75483dcae9ef1ecf8c3baebb"
+    },
+    "📦️fresh/git-archive.ts": {
+      "bytes": 2142,
+      "sha256": "0f6fea9d529fe2e6f55a1f17c238f04f82f9bbdf35cb3d3f1920ab7a34f03b3c"
+    },
+    "📦️fresh/git-transfer.ts": {
+      "bytes": 8161,
+      "sha256": "c258313ed5861553df44767e78d4f6de2b7d170a7e0e91225013d8c78491452e"
+    },
+    "🌱️linux/git.schema.json": {
+      "bytes": 11684,
+      "sha256": "7afc00cc84a49d1eb3ac6c8e80f0ec7f0ed53e134ce37b3e97683676c43743dd"
+    },
+    "🌱️linux/git.cases.json": {
+      "bytes": 2360,
+      "sha256": "e3e701d3d9bc247b208593e51400a44fecf8c674d921a507010f210b968c95aa"
+    },
+    "🌱️linux/git.ts": {
+      "bytes": 11001,
+      "sha256": "e5b888a348c90dd052268355f24d0bceb19100b953ee6ce2f60d81673ad7d515"
+    },
+    "🌱️linux/git.tests.ts": {
+      "bytes": 7361,
+      "sha256": "a1cb22a32aa3abdf3a473c350a171fbb17c5c5cf10958aa3802e0d2bef09e958"
+    },
+    "🌱️linux/git-receiver.py": {
+      "bytes": 9376,
+      "sha256": "e07952ee2995029db779f4128ef209fba26ecc628ef8f93c035b07b24a468efa"
+    },
+    "🌱️linux/receiver.py": {
+      "bytes": 7387,
+      "sha256": "465e81461cf145092a45479a02e49abd94c4f42776877cad7b6c25af2fea6a27"
+    },
+    "🌱️linux/script.ts": {
+      "bytes": 22123,
+      "sha256": "a8026f146b7f1d786e7dfee42da0e7e38dbd611878452c26ce12b06d9aab6f1d"
+    },
+    "🌱️linux/schema.json": {
+      "bytes": 16112,
+      "sha256": "13ee7028e2d212d4ab6c7348dd5c3a592f930f38cf8560f1e881aac03eacff55"
+    },
+    "🧰️native/script.ts": {
+      "bytes": 17639,
+      "sha256": "af9e6305693dab66022acc2c7e423af66ec1b5d6fd53289ce5881d3e9c3f1e37"
+    },
+    "📦️fresh/combined.schema.json": {
+      "bytes": 302265,
+      "sha256": "6ec7b25b583c33ccb253bdcc67769bb021e6cfe8025b7c407225c77a063b80e0"
+    },
+    "📦️fresh/combined.cases.json": {
+      "bytes": 106277,
+      "sha256": "aaa5be99f744aa921d7fcc47f4e0d14e9e93cd942621576d41dc2215fc28b542"
+    },
+    "📦️fresh/combined.ts": {
+      "bytes": 12591,
+      "sha256": "e5c07ef6fb78fdc761bfa6a3e84a62d9d93a19f4a2ea75152ada1219b056d0cf"
+    },
+    "📦️fresh/git-format.schema.json": {
+      "bytes": 1459,
+      "sha256": "5381f2341c7f671392bf1abd7ac8514ea481f8f321bcb58dbd95c0a0fced0225"
+    },
+    "📦️fresh/git-format.cases.json": {
+      "bytes": 6430,
+      "sha256": "c62f109db6ad0099ae2b41e5bd514f298b7b19a6237d4506f4179b7d4a5056a6"
+    },
+    "📦️fresh/git-format.tests.ts": {
+      "bytes": 6125,
+      "sha256": "aa250821f9a9f174bd60b15aeaa1c0f0dd6e24b7f6d0500138c48051fce1f627"
+    },
+    "🧰️native/schema.json": {
+      "bytes": 7573,
+      "sha256": "10867b93fba2d5eace0b5cfe1c52088dea17248dc3393ffd4698e5d82fc9dbf9"
+    },
+    "🧰️native/cases.json": {
+      "bytes": 5730,
+      "sha256": "c6444e2d379897171f34ce805c10ffc4ae78d67ddaa9c193c653c586f0f08509"
+    },
+    "🧰️native/tests.ts": {
+      "bytes": 14760,
+      "sha256": "5be156e455dafcd5aad9171a7f69f4e425c23164103130a3755ef45eddaaa054"
+    },
+    "🌱️linux/cases.json": {
+      "bytes": 3124,
+      "sha256": "9068def925368369583dc1c277e98dd2f05dc75088911b2d4eab3ecd6b14412f"
+    },
+    "🌱️linux/plan.json": {
+      "bytes": 916,
+      "sha256": "f0cd8d7ff2ff6083c9318a3948b9d5d831faf4ca9f3d7e78ed765cda504af271"
+    },
+    "🌱️linux/tests.ts": {
+      "bytes": 13775,
+      "sha256": "e33db8ddfad486ea290071005d58d518d410fb4d48ea372eac0b0c333d68578f"
+    },
+    "🌱️linux/entry.schema.json": {
+      "bytes": 8433,
+      "sha256": "f749cfe730c295d177e43f5c2e491e8fa72f723331546f30710e0f8bf547524b"
+    },
+    "🌱️linux/entry.cases.json": {
+      "bytes": 2313,
+      "sha256": "3972f949fe7d037cb6c580e9d0e7bff7bd61f109d8be3f1d53d32ba8d2abe46f"
+    },
+    "🌱️linux/entry.ts": {
+      "bytes": 25837,
+      "sha256": "7d56cc717ff38539411124e55579064d56fa96d3ecaf8d9ff04a36442350909c"
+    },
+    "🌱️linux/entry.tests.ts": {
+      "bytes": 16880,
+      "sha256": "dd302e82c43bb8f92088e43e21ddec75ee571570ca1d71de371d919748e46c70"
+    },
+    "🌱️linux/receiver.cases.json": {
+      "bytes": 1415,
+      "sha256": "49ce0bc0dd513e0086e4c024838e7a488c79779bb7c852400acf9faf2e275c56"
+    },
+    "🌱️linux/verify.ts": {
+      "bytes": 62,
+      "sha256": "dbdd37cd036f38c6e64112dca70335fb7dcbe648a88f7025ff519e5562746aea"
+    },
+    "📤️fresh/modes.ts": {
+      "bytes": 1134,
+      "sha256": "1547371845a33902b20d0b09d67a721a53ef8bff7cda35e5bd1eb3f83d47e163"
+    },
+    "🔬️final/archive.py": {
+      "bytes": 11749,
+      "sha256": "223a01f98e325159dab4d9b0cd4d73d9c841362065e036e9378a8dd2e6ad1a31"
+    },
+    "🔬️final/boundary-entry.ts": {
+      "bytes": 2934,
+      "sha256": "df2cc6b4338f6d316edb78cc2e46c5856b54219a9e3498f9ca6dab40be39d7a9"
+    },
+    "🔬️final/boundary.cases.json": {
+      "bytes": 648,
+      "sha256": "fdee9ba9badabf59101e8dc1d3a1f55e59c96f6bcf3f3a533b089420fa0b0508"
+    },
+    "🔬️final/boundary.schema.json": {
+      "bytes": 2419,
+      "sha256": "b003632fc8b8090d549e5b6461199550d9d0365f7e4e269a712848fbbbb3e8a4"
+    },
+    "🔬️final/boundary.ts": {
+      "bytes": 2010,
+      "sha256": "a770e4a182d0d9e55163dbbd6f9524664e4cab31ebeb194d29336416f4ed5fcc"
+    },
+    "🔬️final/cases.json": {
+      "bytes": 5733,
+      "sha256": "efe526a29e9c7d7cf4bd014aea26b43ac847af47d1ade43aaae99771f06888a6"
+    },
+    "🔬️final/core.ts": {
+      "bytes": 19438,
+      "sha256": "90f985142c9aad45ce64d22191935562187df0340da8e3fd22081992c37effc5"
+    },
+    "🔬️final/entry.ts": {
+      "bytes": 5674,
+      "sha256": "9708cf215755b7ef5978ace942950b3e23c3dfd41662856083c3521b1fdb0e85"
+    },
+    "🔬️final/integration.ts": {
+      "bytes": 9104,
+      "sha256": "f66a8333701caf49e4c69ca1e6cd29320061482e0e24aa36819500efaa1bdd25"
+    },
+    "🔬️final/oracle.py": {
+      "bytes": 7863,
+      "sha256": "da0b38abf53c6ae0c5f1cb511f0a4eae4a50a3abb44a68208fc81161c2601bcd"
+    },
+    "🔬️final/schema.json": {
+      "bytes": 16300,
+      "sha256": "a03c634ca158dd45f9a60d31d7a12c3a81191336763d47283a224d74af134c75"
+    },
+    "🔬️final/tests.ts": {
+      "bytes": 10566,
+      "sha256": "95f657b7a85f71c84fc887db2c5ef5b9b2a44f145d80bf47f11423fee64edbfb"
+    },
+    "📤️fresh/cases.json": {
+      "bytes": 4833,
+      "sha256": "d0778a558594d7574130eda94cfbb417acfcf25bbbb8da18bd4b773b06fcae7e"
+    },
+    "📤️fresh/core.ts": {
+      "bytes": 6591,
+      "sha256": "eb740d8cbcf8d76713ca9083e61fb2e45e444a0d34596368d40632a8e835d48a"
+    },
+    "📤️fresh/entry.ts": {
+      "bytes": 16902,
+      "sha256": "985c505ca5b34f5d12b711123b93f6f5871eb474c27417bb079bb76651173061"
+    },
+    "📤️fresh/oracle.py": {
+      "bytes": 1572,
+      "sha256": "f9191846ab7b80ec3be01ad2900694470c8c067218a70055619ddf15d55b9bc5"
+    },
+    "📤️fresh/promotion.ts": {
+      "bytes": 3967,
+      "sha256": "37df5b90be796e092212d0b94b443091cf66af58f7d8fa77642dc66013e618ee"
+    },
+    "📤️fresh/schema.json": {
+      "bytes": 6228,
+      "sha256": "cb7101668d5b5688f9d52c42e76a3644ce0e2fd570a9eaed773cdc0a30fa7398"
+    },
+    "📤️fresh/tests.ts": {
+      "bytes": 17477,
+      "sha256": "55e8ca1dd970ad108261a3822eea023fa09d3de40dae8d0d3b2192f97f5dbaf3"
+    },
+    "🚀️run/📜️script.ts": {
+      "bytes": 51934,
+      "sha256": "70b595102d215379bccbd23877a49e52b95ca88957fa739ec7f6b183bbc7bc98"
+    },
+    "👁️facts/cases.json": {
+      "bytes": 3331,
+      "sha256": "5d8b3581ed5dd826a81d38ff1acb06bef0c677cc99434a22722dfc569b699880"
+    },
+    "👁️facts/core.ts": {
+      "bytes": 4818,
+      "sha256": "634deb6e44eaec08e1f0db8c7cb9a0a596724bcb01753d7fe8b8cd1a13de5bf1"
+    },
+    "👁️facts/entry.ts": {
+      "bytes": 12082,
+      "sha256": "35ed9803d0deb5a4dab5004d23976a1310010e08195d1151bef18c7fb486b14a"
+    },
+    "👁️facts/oracle.py": {
+      "bytes": 1211,
+      "sha256": "9f401fd60861dcbc45f027843a4978ec1e17f8b9bc83955adbe1259c4a26f533"
+    },
+    "👁️facts/schema.json": {
+      "bytes": 4724,
+      "sha256": "e4169c72ea82dd818ef3e33f3566cb5af11ad6054685c2f4e00b5478d58206c0"
+    },
+    "👁️facts/tests.ts": {
+      "bytes": 11723,
+      "sha256": "d0577330a5b4dde3d447275ff89ad038f4b906314408e95f86f8265db4ea17fb"
+    },
+    "🚀️fresh/schema.json": {
+      "bytes": 5771,
+      "sha256": "e509edf9c64a0f724e31d967aca9ebec03903e3665bbfd1db8f4f57a23fa360e"
+    },
+    "🚀️fresh/cases.json": {
+      "bytes": 3396,
+      "sha256": "b858c81f60323cd0f9c3605d4031fbe0d66980dbc3e0493d257640e2872bf516"
+    },
+    "🚀️fresh/parent.ts": {
+      "bytes": 14863,
+      "sha256": "99fd2920619072c8351b27e684c855ba2ce041d1f76aadec22a8838b75c77549"
+    },
+    "🚀️fresh/tests.ts": {
+      "bytes": 7091,
+      "sha256": "d5049446fb6525b7ab2d9554131168e92a9617ef4dc31e7edc01baa348abbbfb"
+    },
+    "🚀️fresh/derive.schema.json": {
+      "bytes": 78433,
+      "sha256": "6b45b9cd3e94b4ddba40e3144013c763cc943ae9a8be384fe021b69a50e27f12"
+    },
+    "🚀️fresh/derive.cases.json": {
+      "bytes": 5158,
+      "sha256": "65ce78cfa4f10b713dd0afe2680bf3999fa9cd32772210cf74fdacbded656a6e"
+    },
+    "🚀️fresh/derive.ts": {
+      "bytes": 24009,
+      "sha256": "0e9a6f708ffdd4e10c53b412a7f83954d1831e18fcc794fab58302ccea11190d"
+    },
+    "🚀️fresh/derive.tests.ts": {
+      "bytes": 19029,
+      "sha256": "0b4297eee5096903cfeff40e0c0c6e7b80ff5dcede622cfa71b07f3449154c15"
+    },
+    "🚀️fresh/physical.schema.json": {
+      "bytes": 3412,
+      "sha256": "9eaf7a51a1dbb9c83251b3fd0143fcd6dae6e7400f3351629a9d33e2a5bd7eb4"
+    },
+    "🚀️fresh/physical.cases.json": {
+      "bytes": 3249,
+      "sha256": "041ffccd083c9faae72d8b4f432f920d50477365b155de32cd7f9b8c9cedbcee"
+    },
+    "🚀️fresh/physical.tests.ts": {
+      "bytes": 9637,
+      "sha256": "fc611e2f1d941b4c88243ec53f8be0d5222de5c84f40c883fd3b0402ee534c1a"
+    }
+  },
+  "sourceFiles": {
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/compose.yaml": {
+      "bytes": 5288,
+      "sha256": "ffa4c35e4b6c946f07b7ed94273a7ec5da7af47d3d4568d17323d17618109150"
+    },
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Caddyfile": {
+      "bytes": 3655,
+      "sha256": "7225cc84f2335124fbe2ebc0ae097f6825a24ab53419994c953cb9f8fbe2c420"
+    },
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts": {
+      "bytes": 25343,
+      "sha256": "5e2609c9ade77ea8c039be6feb3605814389e8074697c8beae9b485ef8628ef4"
+    },
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/Dockerfile": {
+      "bytes": 2080,
+      "sha256": "773285a39492865f7d1e4fefba4b0089a24e02368a374bf661b647e34f479e80"
+    },
+    "🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json": {
+      "bytes": 263,
+      "sha256": "d6e65008db3924a1d576345275aefb2c71036a24fab9ba462fbccf5ee86017fc"
+    },
+    "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json": {
+      "bytes": 3930,
+      "sha256": "bd9a1d551fad271d5317ec28162db59303c8bb9e425e92d789118e2b980b59cb"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts": {
+      "bytes": 17963,
+      "sha256": "f3bb37acc90e7f0adb00125677bfac1569d3c0c4509e4655b6bfbd6a8613fdb6"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json": {
+      "bytes": 42840,
+      "sha256": "68496c2436f65afdd348b71010ed7017fcfaad9bfc16f92228610d6aae98b3e3"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json": {
+      "bytes": 115584,
+      "sha256": "9514444037792a02618aad26c896faa78fe34cd7dc0416355a51eb9e665d145f"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts": {
+      "bytes": 243274,
+      "sha256": "502e72c29a864ff62e0147191d445b5dcf74ef6b46e52cc488bb543b8a00c297"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": {
+      "bytes": 27637,
+      "sha256": "3430da766c59cd88375ba654e977b504806c8b042478794170c52f534bc9a8f9"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json": {
+      "bytes": 8454,
+      "sha256": "1c7eeb331c7f1ae9588cb5bee4499af3834445333c9d56a6536a77041c372b57"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🔣️.json": {
+      "bytes": 15507,
+      "sha256": "54f589f8e69268eb66514612539b8bac069a2ddc6fbe80e9abe1279a9b144c44"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts": {
+      "bytes": 26808,
+      "sha256": "2d2d2ce7a38a4211db8e59bdc48c2fb4b0c4f0162a5afff3f114eb472a60dc12"
+    },
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts": {
+      "bytes": 170465,
+      "sha256": "0e1ec1d4e7fddd9d69672fccc10cf7f4cf08861a8edc31765c9387e7090cd008"
+    },
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json": {
+      "bytes": 107892,
+      "sha256": "439a17d0bd96fa9dfb6d2b0e8a192c0838d277bbb3a064a8b72d4884a0158f5c"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts": {
+      "bytes": 9963,
+      "sha256": "73f34962339f7c2f358d84aa61e84134685ded6134e27d17cb723c36bbebc4c0"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧬️schema/📐️law.json": {
+      "bytes": 1144,
+      "sha256": "6b201858a9672051ffce1f46188f96d3be2cd1b9330d09906cfa9ac24abe663a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json": {
+      "bytes": 1645,
+      "sha256": "5d19c5d1de3ab23ab65012793cf763a082ea22f9cd3e89be59488e48bfd4df46"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🔣️.json": {
+      "bytes": 927,
+      "sha256": "d1bd91f210b58be7b33da0899a251026475450d33f086f12f381db373ebe5df9"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts": {
+      "bytes": 9989,
+      "sha256": "4eb8645a785f78b15d6898986d3ce133fa4f5b917447f004c7222929e7bdd791"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts": {
+      "bytes": 37183,
+      "sha256": "efb030704537ded7f7ff690f3ab4bdb6fb406a5e9e29c08f6be3a42d389febec"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts": {
+      "bytes": 4780,
+      "sha256": "a1239a4af09b9e01c145a8615bb96cb2b3ef7259a841246ffdd81380851223c7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts": {
+      "bytes": 45557,
+      "sha256": "a6b4256b7bd2442c8ce22f42e34b5a90e7b0f6d9a4bd48d9303cad51682a3a80"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts": {
+      "bytes": 10537,
+      "sha256": "08a4e9a5742c41ac7c0122414461942da5a13bf89754ad757af6cbc8bab493f3"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json": {
+      "bytes": 55489,
+      "sha256": "d63832c7174619078c65178f66ece55f67b25bab7199baa1cc81d02610a760ee"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json": {
+      "bytes": 5114,
+      "sha256": "4b77099f177e62330edf11165fd8a6aa609bf0eda22174a1cf703a758de3bdf1"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts": {
+      "bytes": 18697,
+      "sha256": "3e0918a94d1ff8c6e4fd46d18231f0eb13868efc4729eb8c4fee723287cb6f87"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧬️schema/🔣️.json": {
+      "bytes": 2878,
+      "sha256": "fbb023b90e06ca409ce838d89b7cc5c76240af986ea32745bf358b407417861c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🔣️.json": {
+      "bytes": 2883,
+      "sha256": "039d655e3320e72da480309df89ad53c65f9514240410bb997444f54c1eb831b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🟦️.ts": {
+      "bytes": 992,
+      "sha256": "603c98af79aff6877d10e2c55783744612abc7918722b1759f450559d25fe362"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts": {
+      "bytes": 7166,
+      "sha256": "833f1ec33e7ecb411d20a718ae520e00ca1cbd7b6c82eb641333c3875276dbc0"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts": {
+      "bytes": 22492,
+      "sha256": "a8b1e4e53d370a4bea1b81f814f99f6dcabacb3f10c5121a8a13f763d59a9b45"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": {
+      "bytes": 22388,
+      "sha256": "adffaa5c3804d1f692005281df13ff50f27c08901ffe4a69b8313d46c0fea3a1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.d.mts": {
+      "bytes": 1826,
+      "sha256": "ab9ef277673305dfb175b8867e1876f49d69cb93857ea729f6fe453a313ea5bc"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs": {
+      "bytes": 38001,
+      "sha256": "d877ec2614292beaafce64629da43dfc534bcc87b64cb0ef3f7bf7279f07f4ff"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧫️fixtures/🔣️.json": {
+      "bytes": 14501,
+      "sha256": "9b1d52c35e0dc6cd922aa4cc32eb695f99a6d3252f0bdba28f160f668efd206d"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts": {
+      "bytes": 21187,
+      "sha256": "969c75fe7b85ec42213f1b3ac705d41705641b8dfc3190f081779e7678963de1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs": {
+      "bytes": 5487,
+      "sha256": "eae3a09980709780b7b235fcd0c33632663b23064b01e7ef538da712d50f13d1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json": {
+      "bytes": 2782,
+      "sha256": "3786475f9195c84370f69a123ba15b0fdac6889a49b0bf34ed0c145386f1bdb8"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs": {
+      "bytes": 3858,
+      "sha256": "1b5d361493190e3521269ecdb5f172ea32a47c8d8464b022f994428f128bc152"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs": {
+      "bytes": 9719,
+      "sha256": "5a595f9ad49861580ded1e8a4f5ee30d3459c7579cfea3a789eef4edb8c15c5b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json": {
+      "bytes": 6707,
+      "sha256": "a01f271e9c76a46fce157bbab55619e0dfe0f1bf549945a8e6fca7a65f03e63c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs": {
+      "bytes": 8369,
+      "sha256": "d9aebb8d8e6e0025f1d44e2af7ecd2108fbf1e8051a04fa88fc3cb0203ea49a3"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧬️schema/🔣️.json": {
+      "bytes": 1047,
+      "sha256": "a4b4e9c5e2041f06d0dd035228acddb7d783f8cec9034ac126c1ac492a05b51e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🧫️fixtures/🔣️.json": {
+      "bytes": 417,
+      "sha256": "6211ec8dfa15768c1b91beb6054c778b6e3bc8c241cca031f6dac9017800a6a4"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+      "bytes": 34926,
+      "sha256": "8e5d4fe12e38b5948ed58283b179fdd041d6c43e742e6f58da742418ea06a5fa"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+      "bytes": 122119,
+      "sha256": "ab9175774d3d2dfbb7139037c1bdafd6e98d5eb442a754fba354a205f51ef9ba"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json": {
+      "bytes": 200902,
+      "sha256": "1dd3231718f3ac0e8d3f61668e02d34aa228fb65807974e30fee3f9af873d3c7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts": {
+      "bytes": 1926,
+      "sha256": "e51c7a1b19c5a77277db382e6ab287e597db4a73e395f5c7ff6d19d9aa445af2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🗂️components/🔣️.json": {
+      "bytes": 4082,
+      "sha256": "1b46c120aa5415118a1527c5c4255d383f8bf95f16f243a587b9253a5c81aeaf"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs": {
+      "bytes": 7688,
+      "sha256": "e5eb2c22bf22ce707fb195a97567d07e49d660462b1c31298260267c2baebba6"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json": {
+      "bytes": 28903,
+      "sha256": "3c4270dcf7119b901e733d0e1b9db281e46e67a9ae20e9149865880bf6678d69"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🔣️.json": {
+      "bytes": 180804,
+      "sha256": "8ebce51f7ca1a4fab9b7aa01bfdf0e4ea579ccb1844d8ab5b42587bb4d8ef8db"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🥒️.feature": {
+      "bytes": 4754,
+      "sha256": "06a43316e03b9195c19fab06f4c77974c5a766fae55d2cbecc837d14779a68dd"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts": {
+      "bytes": 61234,
+      "sha256": "8c105256d27a6c7ac4fde93f069c3db61529041228b30505a3d01214b5d9aff3"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts": {
+      "bytes": 54061,
+      "sha256": "fd6dd30152a2edc0c1378cd4b0cc73bf22550963b490938dbc63e1e4c13e78bd"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts": {
+      "bytes": 17829,
+      "sha256": "01d89a91692b1606045fc00a7405a69fe3f90d36fd37574187fe17b58374467b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🔣️.json": {
+      "bytes": 5995,
+      "sha256": "5c8608c02d4acf78dd21ccc039014bfaf7273599353832fb001a3aed1d66184b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json": {
+      "bytes": 11844,
+      "sha256": "982e1850c684e69b288702ab24f6ae9328f16a0dc3ee86e62b9a63568b914803"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts": {
+      "bytes": 20511,
+      "sha256": "25f6aff89e29ae2745a1567c6ebd6d9b7070270ca989672a21d74aff6df58624"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json": {
+      "bytes": 27384,
+      "sha256": "4b5b97bf3a3ffc8504281c55d372f76ae70d2938f7686f68d64457ae9ebe8f7f"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/📜️script.ts": {
+      "bytes": 1892,
+      "sha256": "301c1344caa9fe444430d42528bffc3e589d00c52234cce6a65b9e7f1685898c"
+    },
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts": {
+      "bytes": 382,
+      "sha256": "ad6964d30840a941b9f84ceb98fe916054fcb1c31d200d59dbc74b7d128f8626"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts": {
+      "bytes": 7939,
+      "sha256": "cec00bdadabfda4ac55db6242d2410050108cfbbba106bf501cb71eecac3ccd6"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js": {
+      "bytes": 7015,
+      "sha256": "730c377e3c2f5ad49021f38f0e2488ea7be7879391395f532a3ab1397c46aade"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js": {
+      "bytes": 44302,
+      "sha256": "2e9a3360ed4cc2b2e61e755bb424f76bf382ad2a3eceeb400358b79996fbb14b"
+    },
+    "♻️mit-bestand/🧺️demonstrator/📋️project.json": {
+      "bytes": 17221,
+      "sha256": "cd5a2ef542b86d98e5f8e58229db7b805f0e03e5ccb0006eddd4b969b4fec0f0"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts": {
+      "bytes": 9583,
+      "sha256": "4a56adea66f075aff0fca135e9e80d05c36890ac56b48f6a184c565498c1d3b1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json": {
+      "bytes": 3632,
+      "sha256": "95595ae12498ad369561f158ac8f0fe0abc7075ea1e87e7f716f65ff86e25aec"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json": {
+      "bytes": 2258,
+      "sha256": "7c6c1606f577abbe46758967d8b9131bb48a650c9633aa8fcb080d8e94732d1c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs": {
+      "bytes": 9843,
+      "sha256": "be7e9c292b44ae6d15b3d761848be3d3d77a87ef49babe1f712f32df4cacd293"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": {
+      "bytes": 8139,
+      "sha256": "9bbbdbeff3708a16ee01e793b002e0f782be7ca36ae0213a23b91d2f449a4971"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs": {
+      "bytes": 10272,
+      "sha256": "af8815c39b60054862ffa9c93eaa8b8c0fd4b2d709f6ec7385c83063b34fc6ac"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/📥️preparation/🧬️schema/🔣️.json": {
+      "bytes": 377,
+      "sha256": "0a0ac9ff5094c18d01d189759085f17868b24bcdc44fb5ead02dd2907748262e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts": {
+      "bytes": 7129,
+      "sha256": "b1a67412dd2776996568cd92e401da8329468ed0a62ef3be8c9ece2f69f7e329"
+    },
+    "📋️build-owners.json": {
+      "bytes": 1630724,
+      "sha256": "eac18dff84c9529c498fbcef41d789257f236ef61e9c3508786e1e4eb8250ad1"
+    },
+    "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml": {
+      "bytes": 1563,
+      "sha256": "aa15ff49692c8ef46120586e559a11bdc6eaeef2b9cb48f4f6bd4474c9595904"
+    },
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust/Cargo.toml": {
+      "bytes": 837,
+      "sha256": "d349da85618dd842c4c4d8386dabb2c20ecca77e0a29b026f45c507a298abc3c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs": {
+      "bytes": 26513,
+      "sha256": "f4a1692237bbacd1625f45e70dca920eca7e53d004191c0474ef5e853ca32f27"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs": {
+      "bytes": 2816,
+      "sha256": "41dac8314e175ef1d9e64be910c7858a337a872ffe1a47f9dcdfca60ed3a16f3"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs": {
+      "bytes": 12658,
+      "sha256": "6f5e0aa621e32c1fc79b3eecde61698b527659de9df24e5b7d48064b5543a9d0"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.d.mts": {
+      "bytes": 1373,
+      "sha256": "402631220d0d661b8d32ff486b241e4e25e1cb457d4a4bd6cf6352870150107c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json": {
+      "bytes": 7139,
+      "sha256": "17df0dfe783659e70fc99d6bee316f7b2cd5c708259d54d495c237a21507d066"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/🟦️.ts": {
+      "bytes": 14753,
+      "sha256": "0edf76305762affc333436df0831df4617854d42e2d6938171c4e994185f4731"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/👷️child/🟦️.ts": {
+      "bytes": 11622,
+      "sha256": "5fb19295bfd7357703dbcbd1d69326cb6bf0f21a6680bb4c2d57c09538879f55"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/👷️child/📜️script.ts": {
+      "bytes": 90,
+      "sha256": "9b6f9570c0a59cd675d3f014ac0fcdc478d2e53c7cd23a4eb6710f2cf085c079"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/🧫️cases.json": {
+      "bytes": 2171,
+      "sha256": "12a243c6fd3e4195f0926febf7140da37c76c5663da96f9d4772ee96e498c51c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": {
+      "bytes": 45154,
+      "sha256": "94fcdb240798a7723c7a250c68b6e69e43a1bfd7f9dafa2c01ab898e06b96e4e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.d.mts": {
+      "bytes": 10144,
+      "sha256": "e0a208983d02e0d781b2d5c335535d6f9176baecc9d30de4d1a447ed3d0d6137"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json": {
+      "bytes": 38322,
+      "sha256": "0d2811f1018518cd965bbfd80180e309997059aee2c73038e41f925c57f6479b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️fixture/🧬️schema/🔣️.json": {
+      "bytes": 3006,
+      "sha256": "4dbfad286c99c732c0c3a785df3d5005dc62b2b8289b586fc6dcd5db2f83332e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️fixture/🧫️cases.json": {
+      "bytes": 1497,
+      "sha256": "1bf2ef4b73f677e9724ec77664f86b4e3003923193e2ede303046927e3f74e33"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": {
+      "bytes": 45008,
+      "sha256": "fe2c317614fdf168109669ed069d0c00b86614b1275ede9ed3d4b1b6985f17d2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧬️schema/🔣️.json": {
+      "bytes": 3445,
+      "sha256": "71a7e86359576ff2d9f19d6c8882fa091ab9e2549a9846098b25bb6d4ff10f78"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+      "bytes": 76241,
+      "sha256": "9dd9d0ec87a435322339578d6bb5dbf21dd133d9dcc0c90e3d97a15676c92320"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts": {
+      "bytes": 9274,
+      "sha256": "1e6e8199bcf59119e95e794c40dfbee8cc34f6050454ed0015ceb8bc4934b92c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json": {
+      "bytes": 10831,
+      "sha256": "373d9fa4f4849762f0e72a851db541b043acde63a74e47d10b53b9d326fe8e90"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/🟦️.ts": {
+      "bytes": 11128,
+      "sha256": "c4c051e1795ce46117f288850c66d6f441b10d53669835baa1516910fe3ebd5e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/👷️child/🟦️.ts": {
+      "bytes": 6584,
+      "sha256": "6986a4a0d2750e2e0403d448b71b69426991429a84fc068c195ede78afbb26cd"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/👷️child/📜️script.ts": {
+      "bytes": 90,
+      "sha256": "9b6f9570c0a59cd675d3f014ac0fcdc478d2e53c7cd23a4eb6710f2cf085c079"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/🧫️cases.json": {
+      "bytes": 3962,
+      "sha256": "def7ca3c881ac93acc4fcede864e73c9e129bd5a935c0fc47bf9b2c1931d1935"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts": {
+      "bytes": 7769,
+      "sha256": "4513750f634c966bb092688206f0a62d3a8ba4bf2673225bb980dfc537a6d3ea"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/⚠️.ts": {
+      "bytes": 8963,
+      "sha256": "7e9a7a05ea2289c12d766e8ff013b504b103dffc9786a08c5796e4225913f0df"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🧫️cases.json": {
+      "bytes": 3238,
+      "sha256": "3ab7152643483087fe6ac339c4a27477eece94b27631c493f0d6da1bdb1a565b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs": {
+      "bytes": 3388,
+      "sha256": "c4caf7a56155e598a8bb1408253532f0826f0328804d739b5a0aa17fb92161ab"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/💧️headroom/🟦️.ts": {
+      "bytes": 8159,
+      "sha256": "a9e3e355bea50a8844243c613f49c81a9b9fcf1e7616c541ae1d1978800be6b7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts": {
+      "bytes": 57042,
+      "sha256": "07e0018216a8801479412d58575f49c46d106f26da3c55515d2b30b87304b312"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️retirement/🟦️.ts": {
+      "bytes": 7579,
+      "sha256": "f88f8c02f00412895ba41191444c18d07df7699b820ca493774b817344b57d46"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🪟️retirement-window/🟦️.ts": {
+      "bytes": 4861,
+      "sha256": "749f5ff8ce9c9fce07c1af94728d417aea062a12842bba2cf37e826a866e04a1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs": {
+      "bytes": 15328,
+      "sha256": "3f6f90a74436fba352612b4c260c52d9f92389fcc455e1fb8cdb35f689322531"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json": {
+      "bytes": 1236,
+      "sha256": "799af43627ccb92abcf3a7cad60c21c0784284ea987731a310a289877154939a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts": {
+      "bytes": 5774,
+      "sha256": "0b2c2d69f5eb8ee2f04ee080963bc80e3f1ae83ee879b32eaa9308ba784368bf"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+      "bytes": 38191,
+      "sha256": "b6ca0377518e8d8db8c056274fcbf32e7cfc0db5d6c23548cd6729fbc18effc4"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🔒️writer/🟨️.mjs": {
+      "bytes": 1149,
+      "sha256": "e14cef434f5a57f0bf535957789e8ad5b86b0b3611e59e304f3ab18dbc4f339b"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts": {
+      "bytes": 20435,
+      "sha256": "a99c9a2d63a6c2f85aa40436da924a5aabad4296af039df759435fbd15e9ab57"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🧬️schema/🔣️.json": {
+      "bytes": 11994,
+      "sha256": "16041e67cc528e54b7eca91db92a20ec8fa8909d1696ee37581388e034205e99"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts": {
+      "bytes": 50580,
+      "sha256": "ddd9e8909cc4f052d017b44950b4b72ec68381b9a745292cd4ea59064c666bac"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs": {
+      "bytes": 29006,
+      "sha256": "37a28e404c0c25dabcbf54239b7763aacd87f8654aa95ee8bcd592299cf94247"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json": {
+      "bytes": 36813,
+      "sha256": "a0c80905f5788e36d873206b8abc5efd8233c656de879d69af4296dc402e776a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🧫️cases.json": {
+      "bytes": 9439,
+      "sha256": "798e82e0cb6db4d6a8a27d4386e6900631b7c540837c6913d928b657a6327b5a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts": {
+      "bytes": 25461,
+      "sha256": "218f66a4f0143bfa3f9f6572fc68aa9558f54c9ec4a76d682185b8dac76182ee"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/♻️groups.ts": {
+      "bytes": 9102,
+      "sha256": "2e46f56f0fc010782a652e6a465e869710da880a5d2877ec87f6524178dd792b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts": {
+      "bytes": 20351,
+      "sha256": "9e9c318ae1be64c6959ad99de178df200c907370f2aea40a1a9e0d05aa1993a7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧬️schema/🔣️.json": {
+      "bytes": 6720,
+      "sha256": "c768314cd08b2b362fba008897acd2a596f9732a81d5744ca7ce197ceeb189cb"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts": {
+      "bytes": 46715,
+      "sha256": "981d570d1f959766651220356d1498b009c5231e599a4ac0e0e6d9a01651a9eb"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🟦️.ts": {
+      "bytes": 6013,
+      "sha256": "efad498a05435ffd9c101292ee1362a39b233a550ca41a8f747c57b2824b9d39"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🍎️.ts": {
+      "bytes": 8110,
+      "sha256": "6123fe86f608c21b3f13eeb94812ab500ad44de4c97a8201cf2786d947490079"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts": {
+      "bytes": 23996,
+      "sha256": "d3790efec7c0b16829562e9cef152ea41222c4d3329d75b6a6a66be3c8961de6"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts": {
+      "bytes": 129948,
+      "sha256": "9e9edf3d619232d52b95486fed0b7761112f57bdb0a901e75900e79347aba04c"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts": {
+      "bytes": 1981,
+      "sha256": "c96b98b763e4c440bfd6d85868734011650d0d0547c647335ed6f2aff35ebcde"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts": {
+      "bytes": 1262,
+      "sha256": "dd4593cac6fa2300a3b7381196229451fd0959a3d8cb2ea8c56601ae59d41a61"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts": {
+      "bytes": 1800,
+      "sha256": "d01d6c865739a40118fed59459651255a1e22c14ae85d8ec429d9825eef4731c"
+    },
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts": {
+      "bytes": 300,
+      "sha256": "4284f145cda25bfdaefe509632a645ced550c55e94d4bcecb8acff8b089b4eef"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts": {
+      "bytes": 1029,
+      "sha256": "c03a8ffa0891d4f6c527527d00b484fb5b63f18a0dee8cc5ab88011f9e97a510"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts": {
+      "bytes": 23010,
+      "sha256": "3e87504405199c325b6115021e58a33aef54f28dc4176547d2016e95b2b7ddeb"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts": {
+      "bytes": 14579,
+      "sha256": "978ba3f83d1017ee78bdeed17515417319cee7b9e9f448e0ff1647b4b1b42e42"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs": {
+      "bytes": 3638,
+      "sha256": "26df89337032312a6ae48765cb8d9153a29093480247359669f361428ff78fc7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+      "bytes": 47794,
+      "sha256": "74e917c7530f019e4a49a22f610989a8c341e4e78e996970b0e65c3fe2ee0d1b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️authority.json": {
+      "bytes": 1571,
+      "sha256": "f358179e49ed9b6affab3b67e1caa5c0db9a5b55972eab222185be4f51153ad9"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧭️file-owner/🟨️.mjs": {
+      "bytes": 904,
+      "sha256": "3bb9984791ce7bac1c0f6ceebaf9ee999b82e7cd45bce8ffacbf0fb9bb026ed0"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🔣️.json": {
+      "bytes": 45115,
+      "sha256": "41401c345ff98e265eb02fbc441df8fe415bafad76334a9271c4436b46a4112b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️retirement/🧫️cases.json": {
+      "bytes": 6789,
+      "sha256": "8bc6d8dd1bc020b63176b66e87fc210a1a91c47a7c8499a925effa2b73db6bae"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/💧️headroom/🔣️.json": {
+      "bytes": 3516,
+      "sha256": "4e6fafbb43684f2eb1e95a3ca7da94929bf5027bea474a2f0f17d89013e49650"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/💧️headroom/🧬️schema/🔣️.json": {
+      "bytes": 1372,
+      "sha256": "761a60e6fa993f116c314669fb5e3673a34e8e9f8a0da2539d862000d1684599"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": {
+      "bytes": 97789,
+      "sha256": "498a7014e9b13fd3b789593d6032e84bd5e08942d4033ec336df441981fd32cd"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": {
+      "bytes": 128564,
+      "sha256": "fb94efef6385b63474cefa7e4d56998a4fae67d41121a96493029cdcd16679ed"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts": {
+      "bytes": 95,
+      "sha256": "749bb3b2a11751faea01721c3ee8ea10c9cc6a4278c5bcaf0469bf3ad60a3bf4"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts": {
+      "bytes": 69837,
+      "sha256": "5d1c923be08656709c699115d051e95f83b9f32f1164b0c704a6e8be51d53d17"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json": {
+      "bytes": 10874,
+      "sha256": "4ef878e54e5eeb15c67c3c4f825b76d38eea678085fb0d033859589fbd112d53"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧬️schema/🔣️.json": {
+      "bytes": 2216,
+      "sha256": "00aae5d7e70fd4a72004511e1544204c7f329140d1d732ad9033dcf817196177"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧬️schema/🔣️.json": {
+      "bytes": 2861,
+      "sha256": "7a0b033a67b8a32eba6f791405090198e1c04c2067e55e616694006ce431df05"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/⚠️cases.json": {
+      "bytes": 5347,
+      "sha256": "9272cbff1733492ed972655661b1ad16035de28ad0ea0473c0e2da5b465a0cd7"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+      "bytes": 90098,
+      "sha256": "ee387b378991c03df0e95ba22c31af0ea84683c648699cbbf72569ab47130ddf"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📏️cardinality/🟦️.ts": {
+      "bytes": 4209,
+      "sha256": "1188260876b001775af0ba573536db1114814907387538a84b309714f952c505"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📏️cardinality/🧫️cases.json": {
+      "bytes": 725,
+      "sha256": "0312a2afa25d52991e92d8e1c6546b5dfab154cc3ea507d979eb688edb43d066"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📏️cardinality/🧬️schema/🔣️.json": {
+      "bytes": 1046,
+      "sha256": "8cd2fae3b0f99890681083666d466481a6eb1381906e81750e4fd4ee35402aaf"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🟦️.ts": {
+      "bytes": 4962,
+      "sha256": "3e70698dc86986e6e5e84f0abac753576cf40a47f0caeb303e25dec763611781"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🧫️cases.json": {
+      "bytes": 1629,
+      "sha256": "13b634eaa4fc61a086da5fe22ab75bfd5cda979c3692137984772e562e40b2fa"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🧬️schema/🔣️.json": {
+      "bytes": 1035,
+      "sha256": "f5ce10135fbd7c2904b62e03ee4b93b734aa909bac15237d791a8ee36c232d49"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts": {
+      "bytes": 11890,
+      "sha256": "033f0dda41238f080d0dfbaf9aae6a54cd325c1f080a37427407f9161b6dfc2f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🧫️cases.json": {
+      "bytes": 5737,
+      "sha256": "0bd472dfd5b5e12065a03e04f724ace4ebd6ab5b994e556f293189dd5bb62557"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🧬️schema/🔣️.json": {
+      "bytes": 3370,
+      "sha256": "af268c3d49cabeec986cd15dc1fbd86e59a63650234e655689bee87ea5d47644"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+      "bytes": 2501,
+      "sha256": "ef7ef53adcd0e641e97c4ef4eb4c33a95306f5f512f738896e3be5e0edd2b4da"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🟦️.ts": {
+      "bytes": 5492,
+      "sha256": "363c520e45ae8518ac33a9e2f4b734351cb74aef15e594d766153cea4b0a2fbc"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🧫️cases.json": {
+      "bytes": 1230,
+      "sha256": "6625de2a4944420fd3ef164296fbe56b74fe7f6c6f1ff31e21d1b5e61a7d368b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🧬️schema/🔣️.json": {
+      "bytes": 1257,
+      "sha256": "2aff23467a63ebf724a988ad3f332d8e1a7175040877cf19645dd72640256af3"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts": {
+      "bytes": 21527,
+      "sha256": "04fcb49dcb6bc4b5b8869df9f450f2faae19e9fd1a420e05d9d3174ccc68abd8"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🧪️tests/🔣️.json": {
+      "bytes": 16145,
+      "sha256": "bac21d9238072669a26c75b967df8185c3dcee8e6dff403ef556cb1203602d37"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🧪️tests/🟦️.ts": {
+      "bytes": 19969,
+      "sha256": "cec29d17ca3894741a122735757115f3f80b8a43788b4cd45a95bbc82fb9c3de"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🟦️.ts": {
+      "bytes": 3047,
+      "sha256": "4a52f66d88cbcb443d5ac1818cdbb5554224cc5b38830481c077c2433e0f537a"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": {
+      "bytes": 75284,
+      "sha256": "03f0c550dff79a518cd0ed8225f0f6da1bd54a89fd848494763a9ff532600673"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts": {
+      "bytes": 2518,
+      "sha256": "d137fe01bef35c9b6ba5db4b9f12bdc9bc4183af856553978ed18d4f7342bc5d"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/📤️portable/🟦️.ts": {
+      "bytes": 10646,
+      "sha256": "70d0b1f0fa7e2aed4d2cb4626dc8bb8ecf790b2d240a0deed91fac492bc253d3"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/📤️portable/🔣️.json": {
+      "bytes": 10402,
+      "sha256": "3fe84f8fc5354258a7bdb58392b4a877f233ea02c8db4b28a1cdb61a48f56d5c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/📤️portable/🧬️schema/🔣️.json": {
+      "bytes": 3323,
+      "sha256": "767e06954eece4167a6b878a93ff06179c07235941674d4749e550b3bbe5807f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧹️retire/🟦️.ts": {
+      "bytes": 6640,
+      "sha256": "9cc77806a1f451a0c35df02d4b9322ce1129593cbf8c6eeb1383903d135fbb22"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧹️retire/🔣️.json": {
+      "bytes": 1939,
+      "sha256": "dfa977300587f770e80c5439385c0719d0e7d5fbf696520e251aabfe6e2dd02d"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧹️retire/🧬️schema/🔣️.json": {
+      "bytes": 1398,
+      "sha256": "989204e5b1ec8eb13d156e0601b29929f0ce30c9b61d6e3c398d361f81fbc821"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛑️primary/🟦️.ts": {
+      "bytes": 9437,
+      "sha256": "4dc9b3601936b86981b514770a2079d89223d07e05ebd8bf6c7c41d5f91dfdd5"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛑️primary/🔣️.json": {
+      "bytes": 5938,
+      "sha256": "1d5a70dc51f8d3497301683c6f695e0b4606ba3d48b4c5442dde6a99fdc24b2e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🛑️primary/🧬️schema/🔣️.json": {
+      "bytes": 3281,
+      "sha256": "667e32ffd98696077903b03bc79fd3931c435766c3a3e689db226544552308b9"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs": {
+      "bytes": 16279,
+      "sha256": "cbce9b113bb6c517a0f42d6ac3820a4b2c1d2a8e556725e12aa84633de5a322f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️options/🟦️.ts": {
+      "bytes": 2021,
+      "sha256": "b30c65782d891fea26d89281a9054f051baadbb02a829df90bde8dd94d35150f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️selection.json": {
+      "bytes": 2129,
+      "sha256": "c191c050cfaa01f50a16c82a97a3e117e2fcc9c505ebc8055fdd82988af12951"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️owners.json": {
+      "bytes": 2262,
+      "sha256": "0db5c2d6f2c2c3f3777fb081cefa15bb1e29cdf1085b852f7020fbb0c04611ff"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🚪️admission.json": {
+      "bytes": 18320,
+      "sha256": "c914931a45fa05d05bffb0a631a2b23b7b2b86e86cf4725b9917a63b1a3c2140"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json": {
+      "bytes": 9636,
+      "sha256": "cc5d059714e6e172714daf3f517d60193310d05a4bc2c15abc6f125001190f63"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🗂️generation-files/🟦️.ts": {
+      "bytes": 1781,
+      "sha256": "615688799b5326c153d76fc5a2885b345e20075d1513b919c3601d1f959ee7fe"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts": {
+      "bytes": 14283,
+      "sha256": "494142a3e84fe9c416f6b711afc206f2b208ee8e96878a5488e8636abb97b04a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts": {
+      "bytes": 25257,
+      "sha256": "72ccfe7aa7a0800caf31c8bbbc009074c9d703057822fad47efcdc8d280638e3"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs": {
+      "bytes": 2464,
+      "sha256": "abe39312ce8cf00f7cf662a28576448b50f0c0950627f7f2d1aa54fb1489805b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json": {
+      "bytes": 17756,
+      "sha256": "315b9d360d0156762b6414bb1634541cff4d2157d83e2d35903b6ef15cecb9ec"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🧬️schema/🔣️.json": {
+      "bytes": 14270,
+      "sha256": "74fec4d4a73deae3d04f67d8777ce8a3c8f1accedbdc9d46c54332fb3e53f90a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🧬️schema/🔣️.json": {
+      "bytes": 2957,
+      "sha256": "00cf718a9299933f554cc52b8a1b3606e934d4c71c45bc6ddf3237c93822fb75"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🧫️cases.json": {
+      "bytes": 6083,
+      "sha256": "b435a9a78619b49037905d4df0f2946f95fbba049864e267bd8ce43e33c373d2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🪟️window/🟦️.ts": {
+      "bytes": 7339,
+      "sha256": "c291e7907e93a588f78209280cdde34cf4665a89b6eb6f4153515c481ef9f1dc"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🪟️window/🧫️cases.json": {
+      "bytes": 5726,
+      "sha256": "5287fca79cebc62c7fe2a0d308908dbc605e97b2a67c48ea32da40cc9564a13f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🪟️window/🧬️schema/🔣️.json": {
+      "bytes": 4304,
+      "sha256": "bbb9ecc44fe17204504bba72d36e709c1e91ecd6ef264c7dda690ab9fb862205"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📥️inference/🟦️.ts": {
+      "bytes": 11135,
+      "sha256": "6ff9396525d2d513de6e60cb868a3442352849dec6d58c0e15b11084586392d4"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📥️inference/🔣️.json": {
+      "bytes": 2969,
+      "sha256": "aa968a856754173d3b0c28bab9bda6d526fc27e55303618d6defd9d9c22cd993"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🕰️generation/🟦️.ts": {
+      "bytes": 7720,
+      "sha256": "f8f46364331cdf254781ff099e5ab7d1a050d8268a7e93512e7a32fa2243015f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🕰️generation/🧫️cases.json": {
+      "bytes": 11863,
+      "sha256": "610b5ecd20dadfa27048f9d3eb299d84ff8a78317d17cd8d72e5106eface3c2f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🕰️generation/🧬️schema/🔣️.json": {
+      "bytes": 1097,
+      "sha256": "ea71dae90627c3b87fca1d8c1016db75443ab00090bf6a937d3bcb6386d4ec33"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/👷️child/📜️script.ts": {
+      "bytes": 1299,
+      "sha256": "65e0d0317728bf264b540eb94c1bf7b2d3141d7bb35376e33eced6ad5f449bcf"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/🔣️.json": {
+      "bytes": 1102,
+      "sha256": "85d5e617c53969aefb968ffc73e5eb15369db9a15e83c93ca9ff471ea103181d"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/🟦️.ts": {
+      "bytes": 9731,
+      "sha256": "c6965b578594840358837d79340fee29c2dcb8647f3671a41b955f186ecfd2e5"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧬️schema/🔣️.json": {
+      "bytes": 1801,
+      "sha256": "fbadb7fdd6194bb851bd58c6c3870fa287cae04165452be836ed411487c5bfb9"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts": {
+      "bytes": 16377,
+      "sha256": "0455563d375770f72fc07a81ccda7c4d2df8f7543e04f629404aed68f6dc4833"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts": {
+      "bytes": 12329,
+      "sha256": "600a21163fb7230749f27816eb7f1d93b22df42564d8e0819854cd23639edb9d"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📪️exit.json": {
+      "bytes": 701,
+      "sha256": "ca243d09bb7d1160ca9d54bcd6fa8a8038b6ce52626b5f316cfe310f28b182cf"
+    },
+    "🧰️framework/🔨️modules/🏃️process/📋️project.json": {
+      "bytes": 34794,
+      "sha256": "52f0acd2e9a071249fde922de9ccaad3b04ee2577b4f7548582e21621f0560d2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts": {
+      "bytes": 9548,
+      "sha256": "3f3a3cead092b02484e6e2e6f01b61de1d531e91123e80e01521bad6da496159"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.d.mts": {
+      "bytes": 1340,
+      "sha256": "1ca5739bb887d1d9f528dc588c47d6f7f7f7cf917ec62a1598bda01446d152ec"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs": {
+      "bytes": 5868,
+      "sha256": "78dc09e44dbeebfd4a0fedd15eb9684606df261109359cfc5a3c6276bc564840"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🔣️.json": {
+      "bytes": 10522,
+      "sha256": "259fdc59a5c614d404a49cc6250ca853cfab5c6b367d02956b75639777458757"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🟦️.ts": {
+      "bytes": 9939,
+      "sha256": "18d4407ed5e513bebcc9991de4353f01ba07aa5e164d2ce6e02021ca6de49e04"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs": {
+      "bytes": 8617,
+      "sha256": "571c1d5d0b9b040158a4c7c5fd3185d15408e1970fd29cda04cc1eba9ac49db2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts": {
+      "bytes": 27258,
+      "sha256": "c796b9210f10e9084fd6098c766dd498f3949bd84a73c55f04fca53fc4b7dd85"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json": {
+      "bytes": 9459,
+      "sha256": "c85b2f40203e8dac7afbe83367b322be6801c8c63e624c3e9d8611e8e8f0f448"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/🪶️lean.json": {
+      "bytes": 1355,
+      "sha256": "ab93dd787355eccf68032ec2727962a81c8ddd99fb64d608b378104d8daa739d"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.d.mts": {
+      "bytes": 440,
+      "sha256": "9934e6e028e3a355f017716105b5a7bfd5884315d6ad838d498b454301420f66"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🏗️compiler/🟦️.ts": {
+      "bytes": 2951,
+      "sha256": "e9ba26884ccfd1c4fc8144fb1a67fcddbbaba0a1c7d7510da83e60526100d07c"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔣️.json": {
+      "bytes": 2028,
+      "sha256": "936bc88555d843debcea91978236f95d85e843a7a5fae41554846d2c1179e873"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": {
+      "bytes": 3665,
+      "sha256": "b44cbd25c91aabd702048460dd73a5a4b3577703c688afe26045d23ac7c630f1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🟦️.ts": {
+      "bytes": 5981,
+      "sha256": "294f6b6a54146b9a6ef849b05d116e7701d947f6750e3e2e09b9cfed99f66dbd"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts": {
+      "bytes": 6866,
+      "sha256": "d0b5c085ec2af847b1234467944a8775ab625e650bcab9c6891fcf6fb228567b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/💳️.ts": {
+      "bytes": 5461,
+      "sha256": "97cec33795af0aa1b857905e7ccb76373c57bd853a108bf2dbc9fbfc5e36cbff"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🔄️.ts": {
+      "bytes": 6377,
+      "sha256": "7f647634cde8d62df30b8ef2d384c60d46d83bd5303b71f5146b386bf1a56b5a"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🟦️.ts": {
+      "bytes": 2449,
+      "sha256": "8006bf42dc10c033aaa6a3bf2fa32e06a8e9d4dbe43f7978ebc4be0fa9231329"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json": {
+      "bytes": 1517,
+      "sha256": "9c28f33c9a2ad8d421146e587fbb86523fdb9c8a798d4a7a3bada72f1ffaf5fa"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🟦️.ts": {
+      "bytes": 5626,
+      "sha256": "68ac10eebff7e764ebe12e35646c871311361ff1fa9e4813119acff9e5b9f117"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🔣️.json": {
+      "bytes": 850,
+      "sha256": "d9503e4f2b9a3b62518a15538e2ddf0d04b911a197b46d136fcdbc0d4d3e380a"
+    },
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts": {
+      "bytes": 3528,
+      "sha256": "45a75f137198398f451d923f02c65da8d150d63d22a8901e6cff8d818c8ec02a"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🟦️.ts": {
+      "bytes": 5981,
+      "sha256": "12721091691c7dd212fbdadcbdffdc45145eadff90a5e0e97ae1e595a8b5b9e6"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🔣️.json": {
+      "bytes": 6572,
+      "sha256": "3085c1c718972688122e5fcf6d1d5d6eee8a3a9a9d11f63a78e6925068a9d3d0"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧫️.json": {
+      "bytes": 1245,
+      "sha256": "74973d237d1ac35e439350e027dd8684d1897d8c01bc62a0dfd71f84ff3992b1"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧪️.ts": {
+      "bytes": 13601,
+      "sha256": "3be6add6e1547829d700224dffac37cdb44132441661c6e201a7d8094691c58e"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/👷️.ts": {
+      "bytes": 19288,
+      "sha256": "1e8209697b28165940aaec0d86ffc7f72cdf948a587f8597e376e89499c0bb5b"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts": {
+      "bytes": 10404,
+      "sha256": "6a17ab4a8c46e02fb360d859573637e116dd9541d1acc1202b1cbc7764e42ff2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts": {
+      "bytes": 17393,
+      "sha256": "0b1c9ac19ececbc1a89f863e264889d3bf6d33c579ffffe0ebc556708596280f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json": {
+      "bytes": 1125,
+      "sha256": "7b1c0202c478b0542e2a87d6bfc1987e7b7e98ed1d6cb079a8ed5484f4a046c2"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🧬️schema/🔣️.json": {
+      "bytes": 3246,
+      "sha256": "c64e3fc992e27516f986a9dc3bed938dd900b5db6104ba93af2a0bf9c3bf13bd"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🟦️.ts": {
+      "bytes": 8004,
+      "sha256": "0b3c81f80f4a2dd302c9c34c4be49142b2eeb5ec41f3d2dd79390617ecd34e9f"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🔣️.json": {
+      "bytes": 1945,
+      "sha256": "b980968ac3532ffd1b536a9a70e0f435960aefd26ba378cd898bb4dd9a6ca4b5"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🧬️schema/🔣️.json": {
+      "bytes": 2876,
+      "sha256": "d4d27a88521850eb942c37bf341d7166e308d8b91ce46915e5e5209c43494556"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧬️schema/🔣️.json": {
+      "bytes": 23644,
+      "sha256": "6c26e69cba2caa70c88e6c78fcad68cbd7f538b2e559789d2d6513a4a7cd3887"
+    },
+    "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts": {
+      "bytes": 2430,
+      "sha256": "f6a52432a1371a268f1916458ad3351c53c5898d2c334afe0ec87574e40b310f"
+    },
+    "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json": {
+      "bytes": 249,
+      "sha256": "aa630655bcbbe20475246e5329d2a787a14edc1e5bb05a78b5da2c6bd88b6feb"
+    },
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🎚️ui-axes/🟦️.ts": {
+      "bytes": 1149,
+      "sha256": "f97bbae08bddb4d50dc277c66193b192ec1d358adfd3c5f7ee77cbdc48d73d98"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts": {
+      "bytes": 2063,
+      "sha256": "3a1077c4ae6f91d5760282482964e705cadd96035b9ddb432964dbbe31530306"
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🧬️schema/🔣️.json": {
+      "bytes": 2226,
+      "sha256": "2d32f629492579745b370dc7b54aa0f42f77f0adf7f56e84f55891541a8695b2"
+    }
+  }
+}

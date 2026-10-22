@@ -17,6 +17,12 @@ pub fn validate(payload:&ChangeLayerTransform,base:&RasterSnapshot)->Result<(),p
 }
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerTransform where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_transform::ChangeLayerTransform> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-transform",kind:"change-layer-transform",record:"ChangedLayerTransform"};
+
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
+    fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
+}
+
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ChangeLayerTransform where Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_transform::ChangeLayerTransform> {
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff>{
         if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Transform cannot be applied to this layer revision.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {transform:Some(self.transform.clone()),..Default::default()}))
@@ -28,6 +34,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerTransform whe
     
     })())
 }
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
-    fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }

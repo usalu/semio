@@ -26,7 +26,7 @@ pub use self::splice_text::{SpliceTextMutation, SpliceTextPayload, TextSplice};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
-#[mutations(snapshot = TxtSnapshot, diff = TxtDiff, schema = "s.stdio.txt")]
+#[mutations(snapshot = TxtSnapshot, diff = TxtDiff, schema = "s.stdio.txt", reference = TxtSnapshot, reference_diff = TxtDiff)]
 pub enum TxtMutation {
     SetTrailingNewline(SetTrailingNewlineMutation),
     SetLineEnding(SetLineEndingMutation),

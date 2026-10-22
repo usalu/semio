@@ -14,7 +14,7 @@ async fn applies_and_rejects_identity() {
     let mut snapshot = GltfSnapshot::default();
     snapshot.document.materials.push(Default::default());
     let payload = GltfChangeMaterialDoubleSidedPayload { material: 0, double_sided: true };
-    snapshot = protocol::apply_diff(&plan(&payload, &snapshot).unwrap(), &snapshot).unwrap();
+    snapshot = protocol::apply_diff_cold(&plan(&payload, &snapshot).unwrap(), &snapshot).unwrap();
     assert!(snapshot.document.materials[0].double_sided);
     assert!(plan(&payload, &snapshot).is_err());
 }

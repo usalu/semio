@@ -1,5 +1,5 @@
 use crate::schema::snapshot::SemioAnimationSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::schema::mutations::{fixture};
 use crate::io::binary::mutations::wire_tag;
 use crate::schema::mutations::*;
@@ -31,8 +31,8 @@ fn kinds_match_the_enum_and_the_catalog() {
 async fn mutation_diff_law_covers_every_variant() {
     let base = fixture();
     for m in demo_mutation_cases() {
-        let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
-        let via_diff = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let diff = <SemioAnimationMutation as ColdMutation<SemioAnimationSnapshot>>::diff(&m, &base);
+        let via_diff = protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut applied = base.clone();
         let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
@@ -51,7 +51,7 @@ async fn inverse_law_covers_every_variant() {
         let mut mutated = base.clone();
         let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&mutated, &m);
         mutated = __next;
-        let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+        let inv = <SemioAnimationMutation as ColdMutation<SemioAnimationSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = mutated.clone();
         for step in inv.iter().rev() {
             let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, step);

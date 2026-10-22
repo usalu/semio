@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { typecheckAdmittedProjectV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -11,10 +11,11 @@ import { resolveTestLevel } from "../../../../../🏃️process/📦️packages/
 import { runVitestV1, readVitestPolicyV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runtimePackageCommandV1 } from "../../../../../⚙️runtime/🏷️identity/🟦️.ts";
 
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runOwnedCommand("bun", ["x", "eslint", "--max-warnings", "0", "--config", "../../🧹️lint/🟦️.ts", ".", ...segments], this.root, "ui-react-lint", cmdBudgetMs(), { env: process.env });
+    await runOwnedCommand(...runtimePackageCommandV1("exec", ["eslint", "--max-warnings", "0", "--config", "../../🧹️lint/🟦️.ts", ".", ...segments]), this.root, "ui-react-lint", cmdBudgetMs(), { env: process.env });
   }
 }
 
@@ -39,7 +40,7 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir ?? dirname(fileURLToPath(import.meta.url)))
+const router = new ScriptRouter(import.meta.dirname ?? dirname(fileURLToPath(import.meta.url)))
   .register("lint", LintScript)
   .register("test", TestScript)
   .register("canonical-architecture", CanonicalArchitectureScript)

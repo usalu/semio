@@ -137,75 +137,75 @@
       "target": "catalog-smoke",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify catalog",
+      "command": "repo ./📜️script.ts verify catalog",
       "disabledCache": false
     },
     {
       "target": "collab-e2e",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify collab",
+      "command": "repo ./📜️script.ts verify collab",
       "disabledCache": false
     },
     {
       "target": "artifact-field-parity-report",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify artifact-field-parity report",
+      "command": "repo ./📜️script.ts verify artifact-field-parity report",
       "disabledCache": false
     },
     {
       "target": "verify-taxonomy-report",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify taxonomy report",
+      "command": "repo ./📜️script.ts verify taxonomy report",
       "disabledCache": false
     },
     {
       "target": "build-report",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts build report",
+      "command": "repo ./📜️script.ts build report",
       "disabledCache": false
     },
     {
       "target": "reset-document-ownership",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify reset-document-ownership",
+      "command": "repo ./📜️script.ts verify reset-document-ownership",
       "disabledCache": false
     },
     {
       "target": "verify-dependencies-freeze-write-baseline",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify dependencies write-baseline",
+      "command": "repo ./📜️script.ts verify dependencies write-baseline",
       "disabledCache": false
     },
     {
       "target": "hub-live-catalog-check",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts hub-live-catalog-check",
+      "command": "repo ./📜️script.ts hub-live-catalog-check",
       "disabledCache": false
     },
     {
       "target": "admin-live-journey-check",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts admin-live-journey-check",
+      "command": "repo ./📜️script.ts admin-live-journey-check",
       "disabledCache": false
     },
     {
       "target": "cache-report",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts cache-report",
+      "command": "repo ./📜️script.ts cache-report",
       "disabledCache": false
     },
     {
       "target": "portable-inspection",
-      "command": "bun ./📜️script.ts verify portable",
+      "command": "repo ./📜️script.ts verify portable",
       "cache": true,
       "disabledCache": false,
       "continuous": false
@@ -252,7 +252,7 @@
       "directory": "leaf",
       "name": "leaf",
       "script": "export {};\n",
-      "testCommand": "bun ./📜️script.ts test",
+      "testCommand": "repo ./📜️script.ts test",
       "cachedTarget": "test"
     },
     "workspaceRoot": {
@@ -290,10 +290,6 @@
     },
     {
       "project": "@semio-tech/framework-os-host-rs",
-      "output": "{projectRoot}/pkg"
-    },
-    {
-      "project": "@semio-tech/trinity-jack-lsp",
       "output": "{projectRoot}/pkg"
     },
     {

@@ -14,7 +14,7 @@ pub use crate::contributed_mutation_wire::mutations::add_value::AddValue;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = WireTestSnapshot, diff = WireTestDiff, schema = "wiretest.contributed.document")]
+#[mutations(snapshot = WireTestSnapshot, diff = WireTestDiff, schema = "wiretest.contributed.document", reference = WireTestSnapshot, reference_diff = WireTestDiff)]
 pub enum WireTestMutation {
     AddValue(AddValue),
 }

@@ -6,7 +6,7 @@
 import { type ActionDefinition, type ActionDescriptor, type AppDefinition, type AppWindowKindDefinition, type ArtifactKindChoice, effectiveActionArgs, type PluginAppLabelsOverlay, resolveWindowActions, SHELL_LOCALES, unresolvedActionArgs } from "@semio-tech/framework";
 import { childElementId, Icon, type IconName, Tree, type TreeDataItem, type TreeDataSection, UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import { type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { type ActionPaneState, actionStageKey } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
 import { EMPTY_APP_LABELS_OVERLAY, resolveActionArgDef, resolveAppLabel, type ResolvedActionDefinition, resolveManifestLabel, ribbonParentLabel, shellLabel } from "../🏷️labels/🟦️.tsx";

@@ -19,22 +19,26 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dpart-metadata", kind: "remove-dpart-metadata", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, None, None)))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        Ok({
-            support::dpart_job(base).map(|job| Op::from(SetDpartMetadata { job, entry_index: support::dpart_root_node(base).and_then(|node| support::entry_position(base, node, "DPM")) })).into_iter().collect()
-        })
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/VT partition metadata", "PDF/VT-Partitionsmetadaten entfernen")
     }
 
     fn target(&self) -> Vec<String> {
         vec!["DPartRoot.DPartRootNode.DPM".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveDpartMetadata
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveDpartMetadata> + From<crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::SetDpartMetadata>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, None, None)))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok({
+            support::dpart_job(base).map(|job| Op::from(SetDpartMetadata { job, entry_index: support::dpart_root_node(base).and_then(|node| support::entry_position(base, node, "DPM")) })).into_iter().collect()
+        })
     }
 }
 //#endregion 🔖️Mutation

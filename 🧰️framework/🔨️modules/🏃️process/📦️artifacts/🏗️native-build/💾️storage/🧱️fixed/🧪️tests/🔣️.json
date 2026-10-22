@@ -3,15 +3,15 @@
   "platforms": [
     {
       "platform": "darwin",
-      "backend": "macos"
+      "backend": "mounted-image"
     },
     {
       "platform": "linux",
-      "backend": "linux"
+      "backend": "directory-partition"
     },
     {
       "platform": "win32",
-      "backend": "windows"
+      "backend": "directory-partition"
     },
     {
       "platform": "freebsd",

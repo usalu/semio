@@ -81,7 +81,7 @@ func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, paren
 		Input:      input,
 	}
 	result := RunHook(hctx)
-	provider := GetEditorProvider(client)
+	provider := GetAgentClientProvider(client)
 	if provider != nil && provider.Kind() == "copilot-chat" {
 		hookEventName := extractHookEventNameFromStdin(input)
 		if hookEventName == "" {
@@ -215,7 +215,7 @@ func ResolveHookEvent(name string, client string, toolName string, input json.Ra
 	if toolName == "Glob" && len(input) > 0 {
 		kind = ToolKindGeneric
 	}
-	provider := GetEditorProvider(client)
+	provider := GetAgentClientProvider(client)
 	if provider != nil {
 		return provider.ResolveNativeEvent(name, kind)
 	}

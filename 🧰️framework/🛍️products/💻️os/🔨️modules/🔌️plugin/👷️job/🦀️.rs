@@ -2,25 +2,25 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as pack;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::artifact_owned_tool_job_context_identity_digest;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
@@ -86,11 +86,11 @@ use semio_framework_plugin_decl_views::history_view::HistoryView;
 use semio_framework_plugin_interaction::interaction_topology::is_inline_interaction_verb;
 use semio_framework_plugin_decl_views::PeerPresenceRoot;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_kits::AppActionRegistry;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 
 

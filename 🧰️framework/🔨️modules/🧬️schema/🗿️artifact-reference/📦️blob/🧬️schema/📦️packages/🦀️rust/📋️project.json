@@ -32,7 +32,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-contract",
+        "command": "repo ./📜️script.ts test-contract",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",
@@ -62,7 +62,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {scriptCompilerAdmissionControlV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -19,8 +19,9 @@ import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️pa
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { surfaceOwnershipSelfTests } from "../../🧪️tests/🔬️surface-ownership/🟦️.ts";
 import { runTreeRetirementScript, runNativeMeshReceivingSourceScript, runNativeResourceScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
-const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 /** 🧠️ The headless runtime crates, bottom up: exchange and presentation, the reconcile primitives, the cursor, the reconcile authority, then the facade. */
 const UI_RUNTIME_PACKAGES = ["semio-framework-ui-runtime-exchange", "semio-framework-ui-runtime-presentation", "semio-framework-ui-runtime-reconcile-primitives", "semio-framework-ui-runtime-reconcile-cursor", "semio-framework-ui-runtime-reconcile", "semio-framework-ui-runtime"];
 
@@ -65,7 +66,7 @@ class CheckWasmScript extends BundleScript {
 }
 //#endregion 🔖️check-wasm
 
-if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript).register("test-native-resource-custody", NativeResourceScript).register("test-native-mesh-receiving-source",NativeMeshReceivingSourceScript);
+if (isMainModuleV1(import.meta.url)) {
+  const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript).register("test-native-resource-custody", NativeResourceScript).register("test-native-mesh-receiving-source",NativeMeshReceivingSourceScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

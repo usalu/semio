@@ -7,8 +7,8 @@
   "properties": {
     "assets": {
       "type": "array",
-      "minItems": 25,
-      "maxItems": 25,
+      "minItems": 27,
+      "maxItems": 27,
       "uniqueItems": true,
       "items": {
         "$ref": "#/definitions/Asset"
@@ -34,7 +34,8 @@
             "go",
             "rustup",
             "uv",
-            "dotnet-install"
+            "dotnet-install",
+            "dotnet-install-powershell"
           ]
         },
         "version": {
@@ -93,7 +94,9 @@
           {"tool":"uv","version":"0.11.6","platform":"linux","arch":"arm64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-aarch64-unknown-linux-gnu.tar.gz","sha256":"d5be4bf7015ea000378cb3c3aba53ba81a8673458ace9c7fa25a0be005b74802"},
           {"tool":"uv","version":"0.11.6","platform":"win32","arch":"x64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-x86_64-pc-windows-msvc.zip","sha256":"99aa60edd017a256dbf378f372d1cff3292dbc6696e0ea01716d9158d773ab77"},
           {"tool":"uv","version":"0.11.6","platform":"win32","arch":"arm64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-aarch64-pc-windows-msvc.zip","sha256":"bee7b25a7a999f17291810242b47565c3ef2b9205651a0fd02a086f261a7e167"},
-          {"tool":"dotnet-install","version":"5147e32300a8e908f5d737c8cff63a76b4b63531","platform":"any","arch":"any","url":"https://raw.githubusercontent.com/dotnet/install-scripts/5147e32300a8e908f5d737c8cff63a76b4b63531/src/dotnet-install.sh","sha256":"082f7685e156738a1b2e2ed8381a621870d4ce8e8c59278034556f05c186eb2e"}
+          {"tool":"dotnet-install","version":"5147e32300a8e908f5d737c8cff63a76b4b63531","platform":"any","arch":"any","url":"https://raw.githubusercontent.com/dotnet/install-scripts/5147e32300a8e908f5d737c8cff63a76b4b63531/src/dotnet-install.sh","sha256":"082f7685e156738a1b2e2ed8381a621870d4ce8e8c59278034556f05c186eb2e"},
+          {"tool":"dotnet-install-powershell","version":"5147e32300a8e908f5d737c8cff63a76b4b63531","platform":"win32","arch":"x64","url":"https://raw.githubusercontent.com/dotnet/install-scripts/5147e32300a8e908f5d737c8cff63a76b4b63531/src/dotnet-install.ps1","sha256":"bb1ce92f4397e24d4736a4658b9728fb8f9db64a0d3f8e636ba408a866a6661d"},
+          {"tool":"dotnet-install-powershell","version":"5147e32300a8e908f5d737c8cff63a76b4b63531","platform":"win32","arch":"arm64","url":"https://raw.githubusercontent.com/dotnet/install-scripts/5147e32300a8e908f5d737c8cff63a76b4b63531/src/dotnet-install.ps1","sha256":"bb1ce92f4397e24d4736a4658b9728fb8f9db64a0d3f8e636ba408a866a6661d"}
         ]
       }
     }

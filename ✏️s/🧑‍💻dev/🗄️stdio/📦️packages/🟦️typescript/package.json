@@ -12,14 +12,14 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:build",
-    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:check",
-    "package-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:package-contract",
-    "package-graph": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:package-graph",
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:test",
-    "test:quick": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:test -- quick",
-    "test:long": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:test -- long",
-    "test:exhaustive": "bun --cwd \"../../../../..\" repo run @semio-tech/stdio-js:test -- exhaustive"
+    "build": "repo run @semio-tech/stdio-js:build",
+    "check": "repo run @semio-tech/stdio-js:check",
+    "package-contract": "repo run @semio-tech/stdio-js:package-contract",
+    "package-graph": "repo run @semio-tech/stdio-js:package-graph",
+    "test": "repo run @semio-tech/stdio-js:test",
+    "test:quick": "repo run @semio-tech/stdio-js:test -- quick",
+    "test:long": "repo run @semio-tech/stdio-js:test -- long",
+    "test:exhaustive": "repo run @semio-tech/stdio-js:test -- exhaustive"
   },
   "exports": {
     ".": {

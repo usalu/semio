@@ -16,6 +16,9 @@ export function storePathsV1(root:string){return Object.freeze({root,objects:joi
 
 function ensure(path:string):string{mkdirSync(path,{recursive:true});return path;}
 const objectPath=(root:string,sha:string)=>join(root,layout.objects,sha.slice(0,2),sha);
+
+/** 🕳️ Whether a recorded entry lost an object it replays: an output or, for a build script run, one of its two streams. */
+const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):boolean=>[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!existsSync(objectPath(root,sha)));
 const entryDirectory=(root:string,key:string)=>join(root,layout.entries,key.slice(0,2),key);
 
 /** 🔏️ Content digest of a file, memoised per lane by (size, mtime, inode) so unchanged dependency artifacts are hashed once. */
@@ -52,7 +55,7 @@ export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string
   if(entry.version!==1||entry.key!==key)continue;
   if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,laneRestoreV1(row.path,context.laneRoot)),context.stampDirectory)!==row.sha256))continue;
   if(entry.environment.some(row=>{const value=context.environment[row.name];return(value===undefined?null:laneNeutralV1(value,context.laneRoot))!==row.value;}))continue;
-  if(entry.outputs.some(row=>!existsSync(objectPath(root,row.sha256))))continue;
+  if(lostObjectV1(root,entry))continue;
   return entry;
  }
  return undefined;
@@ -110,7 +113,7 @@ export function listObjectsV1(root:string):{digest:string;bytes:number;lastUsedM
 }
 
 /** 🗑️ Removes objects by digest; entries that lose an object become misses and are dropped lazily. */
-export function removeObjectsV1(root:string,digests:readonly string[]):number{let removed=0;for(const digest of digests){if(!/^[a-f0-9]{64}$/u.test(digest))continue;try{rmSync(objectPath(root,digest),{force:true});removed++;}catch{}}return removed;}
+export function removeObjectsV1(root:string,digests:readonly string[]):number{let removed=0;for(const digest of digests){if(!/^[a-f0-9]{64}$/u.test(digest))continue;try{const path=objectPath(root,digest);if(existsSync(path)){rmSync(path,{force:true});removed++;}}catch{}}return removed;}
 
 /** 🧽️ Drops entries that lost an object, empty entry directories, and temporary files of writers that died an hour ago. */
 export function pruneEntriesV1(root:string,nowMs:number):{entries:number;temporary:number}{
@@ -119,7 +122,7 @@ export function pruneEntriesV1(root:string,nowMs:number):{entries:number;tempora
   const base=join(root,kind);let shards:string[];try{shards=readdirSync(base);}catch{shards=[];}
   for(const shard of shards)for(const key of readdirSync(join(base,shard))){
    const directory=join(base,shard,key);let files:string[];try{files=readdirSync(directory);}catch{continue;}
-   for(const file of files){try{const entry=JSON.parse(readFileSync(join(directory,file),"utf8")) as {outputs:{sha256:string}[]};if(entry.outputs.some(row=>!existsSync(objectPath(root,row.sha256)))){rmSync(join(directory,file),{force:true});entries++;}}catch{rmSync(join(directory,file),{force:true});entries++;}}
+   for(const file of files){try{const entry=JSON.parse(readFileSync(join(directory,file),"utf8")) as {outputs:{sha256:string}[];stdout?:string|null;stderr?:string|null};if(lostObjectV1(root,entry)){rmSync(join(directory,file),{force:true});entries++;}}catch{rmSync(join(directory,file),{force:true});entries++;}}
    try{if(readdirSync(directory).length===0)rmSync(directory,{recursive:true,force:true});}catch{}
   }
  }
@@ -173,7 +176,7 @@ export function lookupBuildRunV1(root:string,key:string,context:Readonly<{cwd:st
  for(const name of names.slice(0,policy.key.maximumVariants)){
   let entry:BuildEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
   if(entry.version!==1||entry.key!==key)continue;
-  if(entry.outputs.some(row=>!existsSync(objectPath(root,row.sha256))))continue;
+  if(lostObjectV1(root,entry))continue;
   const directives={files:entry.facts.filter(row=>row.kind!=="package").map(row=>laneRestoreV1(row.path,context.laneRoot)),variables:entry.environment.map(row=>row.name)};
   const now=buildFactsV1({cwd:context.cwd,directives,laneRoot:context.laneRoot,environment:context.environment,stampDirectory:context.stampDirectory});
   if(!now)continue;

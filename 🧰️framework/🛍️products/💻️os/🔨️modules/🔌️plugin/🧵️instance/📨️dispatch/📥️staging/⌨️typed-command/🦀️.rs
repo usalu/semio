@@ -21,7 +21,7 @@ use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use std::mem::ManuallyDrop;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
 use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
@@ -38,7 +38,7 @@ use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of
 use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 use semio_framework_plugin_instance_docs::docs_maintenance_ladder::removed;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     pub async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         if self.tools.live_runtime_instance_id != Some(meta.instance_id) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
@@ -315,6 +315,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 captured_child_content: Some(std::sync::Arc::clone(&children)),
                 captured_child_content_generation: self.child_composition.child_content_generation,
                 result_page: None,
+                diagnostics: None,
                 result_page_presented: false,
                 result_sequence: 0,
                 publication_progress: 0,
@@ -346,7 +347,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
     /// 🧪️ Test-only typed-value helper. Production callers must enter with an exact
     /// owner-qualified retained raw-page admission and cannot infer identity from a bare command.
-    pub fn dispatch_typed<'b, 'context>(mut self, command: A::Command, meta: &'ctx ActionMeta, identity: &'ctx mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,cx:&'ctx mut semio_framework_job::StepContext<'context>) -> impl Future<Output = Result<InvocationResult, Fault>> + 'ctx + use<'ctx, 'b, 'context, A, M, X> {
+    pub fn dispatch_typed<'b, 'context>(mut self, command: A::Command, meta: &'ctx ActionMeta, identity: &'ctx mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,cx:&'ctx mut semio_framework_job::StepContext<'context>) -> impl Future<Output = Result<InvocationResult, Fault>> + 'ctx + use<'ctx, 'b, 'context, A, M, X> where X: 'ctx {
         let command = Box::new(command);
         async move {
             let log_generation_before = self.history.log_generation;

@@ -6,6 +6,7 @@ import { runCmd } from "../🏃️process/🟦️.ts";
 import { defineLint, type BundleLinter } from "../🚨️policy/🧩️linters/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../🚨️policy/🛡️dependency-boundary/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 const join = (...parts: string[]): string => systemJoin(...parts).replaceAll("\\", "/");
 export const policy = defineLint("@semio-tech/repo-ui", (_l: BundleLinter) => dependencyBoundaryBreachesForBundleDir(getWorkspaceRoot(), "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript"));
@@ -216,12 +217,12 @@ function collectChromeI18nHits(repoRootPath: string): Map<string, ChromeI18nHit[
 
 /** 🏃️ Runs the `DevScript` command under the caller's roots and invocation. */
 export async function runDevScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
-  runCmd("bun", ["./📜️script.ts", "dev", "storybook", "ui", ...segments], { cwd: context.repoRoot, env: storybookEnv() });
+  runCmd(runtimeExecutableV1(), ["./📜️script.ts", "dev", "storybook", "ui", ...segments], { cwd: context.repoRoot, env: storybookEnv() });
 }
 
 /** 🏃️ Runs the `BuildScript` command under the caller's roots and invocation. */
 export async function runBuildScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
-  runCmd("bun", ["./📜️script.ts", "build", "storybook", ...segments], { cwd: context.repoRoot, env: storybookEnv({ STORYBOOK_SCOPE: "ui" }) });
+  runCmd(runtimeExecutableV1(), ["./📜️script.ts", "build", "storybook", ...segments], { cwd: context.repoRoot, env: storybookEnv({ STORYBOOK_SCOPE: "ui" }) });
 }
 
 /** 🏃️ Runs the `CheckUiPrimitivesScript` command under the caller's roots and invocation. */

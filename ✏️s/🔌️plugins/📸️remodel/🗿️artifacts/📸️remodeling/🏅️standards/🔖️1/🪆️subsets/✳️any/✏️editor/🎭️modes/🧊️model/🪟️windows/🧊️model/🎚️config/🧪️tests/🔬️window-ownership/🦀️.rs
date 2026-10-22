@@ -7,7 +7,7 @@ use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::captur
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfig;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigMutation;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigOwner;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
@@ -28,8 +28,8 @@ where
     M: Mutation<S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
     M::Diff: MutationDiff<S>,
 {
-    let after = protocol::apply_diff(mutation.diff(base).diff(), base).unwrap();
-    let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+    let after = protocol::apply_diff_cold(mutation.diff(base).diff(), base).unwrap();
+    let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, *base);
     assert_eq!(M::parse_op(&mutation.print_op()).unwrap(), *mutation);
     assert_eq!(M::decode_op(&mutation.encode_op().unwrap()).unwrap(), *mutation);

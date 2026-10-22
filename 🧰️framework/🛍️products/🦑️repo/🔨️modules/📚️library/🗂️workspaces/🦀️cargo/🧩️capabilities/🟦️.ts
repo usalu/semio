@@ -2,6 +2,7 @@ import {fileURLToPath} from "node:url";
 import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../🛠️preparation/🧾️custody/🟦️.ts";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 type TargetV1 = { package: string; owner: string; manifest: string; feature: string };
 type GroupV1 = { feature: string; requires: string[]; targets: TargetV1[] };
@@ -94,7 +95,7 @@ export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: strin
     presence.set(owner, available);
     if (!available) continue;
     if (!lstatSync(owner).isDirectory()) throw new Error("Capability target owner is not a directory");
-    const source = read(repoRoot, manifest), document = Bun.TOML.parse(source) as any;
+    const source = read(repoRoot, manifest), document = runtimeParseTomlV1(source) as any;
     if (document.package?.name !== target.package) throw new Error("Capability target differs from its actual native owner");
     observed.set(manifest, source); present.add(target.package);
   }

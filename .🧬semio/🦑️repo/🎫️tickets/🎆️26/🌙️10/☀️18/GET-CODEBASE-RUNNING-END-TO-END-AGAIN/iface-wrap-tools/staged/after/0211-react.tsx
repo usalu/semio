@@ -1,460 +1,689 @@
-// #region 🧲️Header
-/** 🛂️ `🛂️SpaceAdministration` — the Shell-owned administration pane for exactly one space
- * (ticket `26/09/02/COMPLETE-SEMIO-END-TO-END`, packet §4). It renders SOLELY from the hub's own
- * canonical `DirectorySpaceAdministrationPageV1`: the member roster, the author-only invite roster,
- * and the receipt/status region. Authority is never derived from a locally stored role — every
- * affordance is gated on the page's own server-filled `capabilities`, and a `member`/`public` page
- * structurally has neither invites nor capabilities, so there is nothing to mis-gate.
+/** 🎛️ The OS command registry, command category tree and tabs, and the tool registry tree and tabs.
  *
- * The receipt/status region changes only after an accepted server receipt has been followed by a
- * page refresh (the worker's `receipt → refreshing → ready` turn). Nothing here dispatches an
- * optimistic mutation, retries a mutation, or holds an invite capability: the one-shot invite token
- * lives in the browser worker until an exact operation-bound clipboard success result.
+ * 🧱️ Child module of {@link ../🟦️.tsx | ShellHelpers}, which re-exports every public name below so import specifiers stay unchanged.
  */
-// #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useId, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, registerUiTranslationBundles, useLabel } from "@semio-tech/ui-react";
-import type { DirectoryAdministrationInviteCapabilityStatusV1, DirectoryAdministrationPhaseV1 } from "@semio-tech/framework/backbone";
-import type { DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
+import {
+  type ActionArgDef,
+  type ActionDescriptor,
+  actionSemanticsForKind,
+  type AppDefinition,
+  type AppModeDefinition,
+  type ArtifactKindChoice,
+  type CommandAddress,
+  type CommandDefinition,
+  DockLayoutStore,
+  DockUiStateStore,
+  effectiveActionArgs,
+  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+  type Platform,
+  type PluginAppLabelsOverlay,
+  SHELL_LOCALES,
+  unresolvedActionArgs,
+  type WindowMeasure
+} from "@semio-tech/framework";
+import {
+  builtinUiDrivers,
+  type ElementsSurfaceAppearance,
+  Icon,
+  type IconName,
+  type PanelTabNode,
+  singleTreeLeaf,
+  type TreeDataItem,
+  type TreeDataSection,
+  type TreePanelConfig,
+  UI_TERMINOLOGY_NATIVE,
+  type UiChromeLayout,
+  type UiDriver,
+  type UiLocale,
+  type UiTheme
+} from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
+import * as React from "../../⚛️react-port/🟦️.ts";
+import {
+  setAppearance,
+  setDriver,
+  setLayout,
+  setLocale,
+  setTerminology,
+  setTheme,
+  type UiPreferencesConfigMutation
+} from "@semio-tech/framework/config/mutations";
+import { EMPTY_SHELL_LOCKS, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
+import type { PluginManifest } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+import {
+  EMPTY_APP_LABELS_OVERLAY,
+  OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID,
+  OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID,
+  OPEN_HUB_COMMAND_ID,
+  OPEN_TASK_MANAGER_COMMAND_ID,
+  openArtifactWithText,
+  resolveActionArgDef,
+  type ResolvedActionArgDef,
+  type ResolvedToolDefinition,
+  resolveManifestLabel,
+  shellLabel,
+  shellTabIcon,
+  shellTerminologyLabel
+} from "../🏷️labels/🟦️.tsx";
+import { FRAMEWORK_CATEGORY_TOOL_ID } from "../🔩️plumbing/🟦️.ts";
+import { windowMeasuresToTreeItems } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
+import { renderStagedArgControl } from "../🪟️window-panes/📝️staged-args/🟦️.tsx";
 
-//#region 🔖️Types
-/** 🎬️ Every administration intent this pane can raise. The pane never builds a command itself —
- * `ShellHost` maps these onto the closed `DirectoryCommand` vocabulary and the retained operation. */
-export type SpaceAdministrationIntentV1 =
-  | { readonly kind: "delete-space" }
-  | { readonly kind: "rename-space"; readonly name: string }
-  | { readonly kind: "set-visibility"; readonly visibility: DirectorySpaceVisibility }
-  | { readonly kind: "set-role"; readonly userId: string; readonly role: DirectorySpaceRole }
-  | { readonly kind: "remove-member"; readonly userId: string }
-  | { readonly kind: "create-invite"; readonly role: DirectorySpaceRole }
-  | { readonly kind: "revoke-invite"; readonly inviteId: string }
-  | { readonly kind: "page"; readonly cursor: string }
-  | { readonly kind: "copy-invite-capability" }
-  | { readonly kind: "close" };
+//#region ShellHelpers
+//#region 🎛️CommandRegistry
+/** 🎛️ One command definition paired with its shared, fully qualified address. */
+export type ResolvedCommand = {
+  readonly definition: Omit<CommandDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
+  readonly address: CommandAddress;
+};
 
-export interface SpaceAdministrationPaneProps {
-  readonly spaceId: string;
-  readonly phase: DirectoryAdministrationPhaseV1;
-  readonly page: DirectorySpaceAdministrationPageV1 | null;
-  readonly receiptSha256?: string;
-  readonly code?: string;
-  readonly inviteCapabilityPending?: boolean;
-  readonly inviteCapabilityStatus?: DirectoryAdministrationInviteCapabilityStatusV1;
-  readonly onIntent: (intent: SpaceAdministrationIntentV1) => void;
-}
-//#endregion 🔖️Types
-
-//#region 🌐️Labels
-export const spaceAdministrationUiLabel = registerUiTranslationBundles({
-  en: {
-    translation: {
-      os: {
-        spaceAdministration: {
-          title: { label: { normal: "Space administration", beginner: "Manage this space" } },
-          close: { label: { normal: "Close administration", beginner: "Close" } },
-          members: { label: { normal: "Members", beginner: "People" } },
-          properties: { label: { normal: "Space properties", beginner: "Space settings" } },
-          name: { label: { normal: "Space name", beginner: "Name" } },
-          rename: { label: { normal: "Rename space", beginner: "Save name" } },
-          invalidName: { label: { normal: "Enter a name without control characters.", beginner: "Enter a name on one line." } },
-          visibility: { label: { normal: "Visibility", beginner: "Who can see this space" } },
-          public: { label: { normal: "Public", beginner: "Everyone can see it" } },
-          private: { label: { normal: "Private", beginner: "Only members can see it" } },
-          applyVisibility: { label: { normal: "Change visibility", beginner: "Save visibility" } },
-          delete: { label: { normal: "Delete space", beginner: "Delete space" } },
-          deleteWarning: { label: { normal: "Deleting this space permanently removes it for every member.", beginner: "This permanently deletes the space for everyone." } },
-          deleteConfirm: { label: { normal: "Delete space permanently", beginner: "Delete permanently" } },
-          deleteCancel: { label: { normal: "Keep space", beginner: "Keep space" } },
-          invites: { label: { normal: "Invitations", beginner: "Invitations" } },
-          role: { label: { normal: "Role", beginner: "Role" } },
-          author: { label: { normal: "Author", beginner: "Can edit" } },
-          spectator: { label: { normal: "Spectator", beginner: "Can view" } },
-          owner: { label: { normal: "Owner", beginner: "Owner" } },
-          remove: { label: { normal: "Remove member", beginner: "Remove" } },
-          issue: { label: { normal: "Issue invitation", beginner: "Invite someone" } },
-          revoke: { label: { normal: "Revoke invitation", beginner: "Cancel invitation" } },
-          copy: { label: { normal: "Copy invitation link", beginner: "Copy link" } },
-          copyAvailable: { label: { normal: "The invitation link is ready to copy.", beginner: "The link is ready." } },
-          copyCopying: { label: { normal: "Copying the invitation link…", beginner: "Copying…" } },
-          copyFailed: { label: { normal: "Clipboard unavailable or denied. Try copying again.", beginner: "Could not copy. Try again." } },
-          more: { label: { normal: "Show more", beginner: "Show more" } },
-          revoked: { label: { normal: "Revoked", beginner: "Cancelled" } },
-          accepted: { label: { normal: "Accepted", beginner: "Accepted" } },
-          pending: { label: { normal: "Pending", beginner: "Waiting" } },
-          statusLoading: { label: { normal: "Loading the administration page…", beginner: "Loading…" } },
-          statusReady: { label: { normal: "Administration page is current.", beginner: "Up to date." } },
-          statusSubmitting: { label: { normal: "Waiting for the server receipt…", beginner: "Working…" } },
-          statusReceipt: { label: { normal: "Server receipt accepted.", beginner: "Done." } },
-          statusRefreshing: { label: { normal: "Refreshing after the receipt…", beginner: "Refreshing…" } },
-          statusDeleted: { label: { normal: "Space deletion was accepted by the server.", beginner: "Space deleted." } },
-          statusCancelled: { label: { normal: "Administration was cancelled.", beginner: "Cancelled." } },
-          statusDenied: { label: { normal: "Access to this space was withdrawn.", beginner: "No longer allowed." } },
-          statusStale: { label: { normal: "This session changed; reopen administration.", beginner: "Please reopen." } },
-          statusFailed: { label: { normal: "Unknown outcome — refresh required before retrying.", beginner: "Unknown result. Refresh first." } },
-          spectatorNotice: { label: { normal: "You can view this space but not administer it.", beginner: "You can only look." } },
-          publicNotice: { label: { normal: "This is a public space you are not a member of.", beginner: "You are not a member." } },
-        },
-      },
-    },
-  },
-  de: {
-    translation: {
-      os: {
-        spaceAdministration: {
-          title: { label: { normal: "Space-Verwaltung", beginner: "Diesen Space verwalten" } },
-          close: { label: { normal: "Verwaltung schließen", beginner: "Schließen" } },
-          members: { label: { normal: "Mitglieder", beginner: "Personen" } },
-          properties: { label: { normal: "Space-Eigenschaften", beginner: "Space-Einstellungen" } },
-          name: { label: { normal: "Space-Name", beginner: "Name" } },
-          rename: { label: { normal: "Space umbenennen", beginner: "Namen speichern" } },
-          invalidName: { label: { normal: "Gib einen Namen ohne Steuerzeichen ein.", beginner: "Gib einen einzeiligen Namen ein." } },
-          visibility: { label: { normal: "Sichtbarkeit", beginner: "Wer diesen Space sehen kann" } },
-          public: { label: { normal: "Öffentlich", beginner: "Alle können ihn sehen" } },
-          private: { label: { normal: "Privat", beginner: "Nur Mitglieder können ihn sehen" } },
-          applyVisibility: { label: { normal: "Sichtbarkeit ändern", beginner: "Sichtbarkeit speichern" } },
-          delete: { label: { normal: "Space löschen", beginner: "Space löschen" } },
-          deleteWarning: { label: { normal: "Wenn du diesen Space dauerhaft löschst, wird er für alle Mitglieder entfernt.", beginner: "Dadurch wird der Space für alle dauerhaft gelöscht." } },
-          deleteConfirm: { label: { normal: "Space dauerhaft löschen", beginner: "Dauerhaft löschen" } },
-          deleteCancel: { label: { normal: "Space behalten", beginner: "Space behalten" } },
-          invites: { label: { normal: "Einladungen", beginner: "Einladungen" } },
-          role: { label: { normal: "Rolle", beginner: "Rolle" } },
-          author: { label: { normal: "Autor", beginner: "Darf bearbeiten" } },
-          spectator: { label: { normal: "Betrachter", beginner: "Darf ansehen" } },
-          owner: { label: { normal: "Eigentümer", beginner: "Eigentümer" } },
-          remove: { label: { normal: "Mitglied entfernen", beginner: "Entfernen" } },
-          issue: { label: { normal: "Einladung ausstellen", beginner: "Jemanden einladen" } },
-          revoke: { label: { normal: "Einladung widerrufen", beginner: "Einladung abbrechen" } },
-          copy: { label: { normal: "Einladungslink kopieren", beginner: "Link kopieren" } },
-          copyAvailable: { label: { normal: "Der Einladungslink kann kopiert werden.", beginner: "Der Link ist bereit." } },
-          copyCopying: { label: { normal: "Einladungslink wird kopiert…", beginner: "Wird kopiert…" } },
-          copyFailed: { label: { normal: "Zwischenablage nicht verfügbar oder abgelehnt. Erneut versuchen.", beginner: "Kopieren fehlgeschlagen. Erneut versuchen." } },
-          more: { label: { normal: "Mehr anzeigen", beginner: "Mehr anzeigen" } },
-          revoked: { label: { normal: "Widerrufen", beginner: "Abgebrochen" } },
-          accepted: { label: { normal: "Angenommen", beginner: "Angenommen" } },
-          pending: { label: { normal: "Ausstehend", beginner: "Wartet" } },
-          statusLoading: { label: { normal: "Verwaltungsseite wird geladen…", beginner: "Lädt…" } },
-          statusReady: { label: { normal: "Verwaltungsseite ist aktuell.", beginner: "Aktuell." } },
-          statusSubmitting: { label: { normal: "Warte auf die Serverquittung…", beginner: "Arbeitet…" } },
-          statusReceipt: { label: { normal: "Serverquittung angenommen.", beginner: "Fertig." } },
-          statusRefreshing: { label: { normal: "Aktualisierung nach der Quittung…", beginner: "Aktualisiert…" } },
-          statusDeleted: { label: { normal: "Die Löschung des Space wurde vom Server angenommen.", beginner: "Space gelöscht." } },
-          statusCancelled: { label: { normal: "Verwaltung wurde abgebrochen.", beginner: "Abgebrochen." } },
-          statusDenied: { label: { normal: "Der Zugriff auf diesen Space wurde entzogen.", beginner: "Nicht mehr erlaubt." } },
-          statusStale: { label: { normal: "Diese Sitzung hat sich geändert; Verwaltung erneut öffnen.", beginner: "Bitte erneut öffnen." } },
-          statusFailed: { label: { normal: "Unbekanntes Ergebnis — vor einem erneuten Versuch aktualisieren.", beginner: "Unbekannt. Zuerst aktualisieren." } },
-          spectatorNotice: { label: { normal: "Du kannst diesen Space ansehen, aber nicht verwalten.", beginner: "Du kannst nur zusehen." } },
-          publicNotice: { label: { normal: "Dies ist ein öffentlicher Space, in dem du kein Mitglied bist.", beginner: "Du bist kein Mitglied." } },
-        },
-      },
-    },
-  },
-});
-
-/** 🌐️ Every user-facing string this pane needs, pre-resolved for the pure builders below. */
-export interface SpaceAdministrationLabels {
-  readonly title: string;
-  readonly close: string;
-  readonly members: string;
-  readonly properties: string;
-  readonly name: string;
-  readonly rename: string;
-  readonly invalidName: string;
-  readonly visibility: string;
-  readonly public: string;
-  readonly private: string;
-  readonly applyVisibility: string;
-  readonly delete: string;
-  readonly deleteWarning: string;
-  readonly deleteConfirm: string;
-  readonly deleteCancel: string;
-  readonly invites: string;
-  readonly role: string;
-  readonly author: string;
-  readonly spectator: string;
-  readonly owner: string;
-  readonly remove: string;
-  readonly issue: string;
-  readonly revoke: string;
-  readonly copy: string;
-  readonly copyStatus: Record<DirectoryAdministrationInviteCapabilityStatusV1, string>;
-  readonly more: string;
-  readonly revoked: string;
-  readonly accepted: string;
-  readonly pending: string;
-  readonly status: Record<DirectoryAdministrationPhaseV1, string>;
-  readonly spectatorNotice: string;
-  readonly publicNotice: string;
+/** 📍️ Stable key for maps whose command ids may overlap across owners. */
+export function commandAddressKey(address: CommandAddress): string {
+  const owner = address.owner;
+  if (owner === "os") return `os:${address.commandId}`;
+  if ("plugin" in owner) return `plugin:${owner.plugin.pluginId}:${address.commandId}`;
+  if ("app" in owner) return `app:${owner.app.pluginId}:${owner.app.appId}:${address.commandId}`;
+  return `mode:${owner.mode.pluginId}:${owner.mode.appId}:${owner.mode.modeId}:${address.commandId}`;
 }
 
-export function useSpaceAdministrationLabels(): SpaceAdministrationLabels {
+/** 🪪️ Element-id-safe projection of the complete command address. */
+function commandElementKey(address: CommandAddress): string {
+  return commandAddressKey(address).replaceAll(":", ".");
+}
+
+/** 📍️ Whether an addressed command belongs to the operating-system catalog. */
+export function isOsCommandAddress(address: CommandAddress): boolean {
+  return address.owner === "os";
+}
+
+/** 📍️ Plugin segment of a non-OS command owner. */
+export function commandOwnerPluginId(owner: CommandAddress["owner"]): string | null {
+  if (owner === "os") return null;
+  if ("plugin" in owner) return owner.plugin.pluginId;
+  if ("app" in owner) return owner.app.pluginId;
+  return owner.mode.pluginId;
+}
+
+/** ⌨️ Detects the command-keybinding platform from a browser/host platform description. */
+export function detectCommandPlatform(value: string): Platform | undefined {
+  if (/mac|iphone|ipad/i.test(value)) return "macOs";
+  if (/win/i.test(value)) return "windows";
+  if (/linux|x11/i.test(value)) return "linux";
+  return undefined;
+}
+
+/** ⌨️ Resolves a command's portable chords for one host platform. */
+export function commandKeybindingChords(definition: Pick<CommandDefinition, "keybindings">, platform?: Platform): string[] {
+  return definition.keybindings.filter((binding) => binding.platform === undefined || binding.platform === platform).map((binding) => binding.chord);
+}
+
+/**
+ * 🎛️ Aggregates every command visible for the current session: os built-ins, the active session's
+ * plugin-owned commands, app-owned commands, and commands owned by the active mode. Window-local
+ * verbs are actions and therefore never enter this global command resolver — unlike
+ * `resolveWindowActions`/`resolveUtilities`, this never takes a window kind.
+ */
+export function resolveCommands(
+  osCommands: readonly CommandDefinition[],
+  activePluginManifest: Pick<PluginManifest, "pluginId" | "commands"> | null | undefined,
+  app: Pick<AppDefinition, "id" | "commands" | "modes"> | null | undefined,
+  activeModeId: string,
+  overlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
+  manifests: readonly { readonly apps: readonly unknown[] }[] = [],
+  selectedArtifactKinds?: readonly ArtifactKindChoice[],
+): ResolvedCommand[] {
+  const resolveDefinition = (definition: CommandDefinition): ResolvedCommand["definition"] => ({
+    ...definition,
+    label: resolveManifestLabel(definition.label, terminology, locale),
+    args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
+  });
+  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), address: { owner: "os", commandId: definition.id } }));
+  for (const definition of activePluginManifest?.commands ?? []) {
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { plugin: { pluginId: activePluginManifest!.pluginId } }, commandId: definition.id } });
+  }
+  if (!app) return resolved;
+  const pluginId = activePluginManifest?.pluginId ?? "";
+  for (const definition of app.commands ?? []) {
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { app: { pluginId, appId: app.id } }, commandId: definition.id } });
+  }
+  const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
+  for (const definition of activeMode?.commands ?? []) {
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { mode: { pluginId, appId: app.id, modeId: activeModeId } }, commandId: definition.id } });
+  }
+  return resolved;
+}
+
+/** 🎛️ Chrome-known command category ids that already have a `ui.settings.tab.*` translation key. */
+const CHROME_KNOWN_COMMAND_CATEGORIES = new Set(["general", "driver", "app", "appearance", "layout", "language", "terminology", "theme"]);
+
+/** 🎛️ Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). Falls back to this for app/plugin-invented categories that have no fixed framework vocabulary entry. */
+function titleizeCommandCategory(category: string): string {
+  return category.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** 🎛️ Resolves a command category's display label, reusing the existing `ui.settings.tab.*` keys for chrome-known ids and falling back to a loose title-case for open-set app/plugin categories. */
+export function commandCategoryLabel(category: string): string {
+  return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "driver" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
+}
+
+/** 🎛️ Ordered, deduped category tabs for the footer command panel, derived from whatever commands actually resolved. */
+export function commandCategories(commands: readonly ResolvedCommand[]): { readonly id: string; readonly label: string }[] {
+  const seen = new Set<string>();
+  const categories: { readonly id: string; readonly label: string }[] = [];
+  for (const { definition } of commands) {
+    if (!definition.inPalette) continue;
+    if (seen.has(definition.category)) continue;
+    seen.add(definition.category);
+    categories.push({ id: definition.category, label: commandCategoryLabel(definition.category) });
+  }
+  return categories;
+}
+
+function selectCommandArg(id: string, label: string, options: readonly { readonly value: string; readonly label: string }[]): ActionArgDef {
+  return { id, label, schema: { kind: "string", options: options.map((option) => ({ ...option })) }, required: true };
+}
+
+/** 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
+ * translation key, so its own {@link UiDriver.label} (genuine runtime data) is the correct fallback. */
+export function driverDisplayLabel(driver: UiDriver): string {
+  if (driver.id === "default") return shellLabel("settings.driver.default");
+  if (driver.id === "compact") return shellLabel("settings.driver.compact");
+  return driver.label || driver.id;
+}
+
+/**
+ * 🎛️ Os-owned built-in commands — app introduction/theme/layout/locale/appearance/driver,
+ * handled locally by the shell (never routed to a program). Rebuilt via `useMemo` since the theme and
+ * terminology option lists are live state.
+ *
+ * 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —
+ * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
+ * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above.
+ */
+export function buildOsCommands(
+  themeList: readonly UiTheme[],
+  terminologies: readonly string[],
+  hasIntroduction: boolean,
+  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
+  driverList: readonly UiDriver[] = builtinUiDrivers(),
+  tutorials: readonly { readonly id: string; readonly title: unknown }[] = [],
+  tutorialRecorderAvailable = false,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
+  hasOpenArtifactSurfaces = false,
+): CommandDefinition[] {
+  const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
+  const commands: CommandDefinition[] = [
+    {
+      id: "os.toggleFullscreen",
+      label: shellLabel("ui.fullscreen.toggle"),
+      category: "layout",
+      iconId: "maximize-2" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [
+        { chord: "f11", platform: "windows" },
+        { chord: "f11", platform: "linux" },
+        { chord: "control+meta+f", platform: "macOs" },
+      ],
+    },
+    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
+    ...(tutorials.length > 0
+      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
+      : []),
+    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), category: "app", iconId: "circle" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
+    {
+      id: "os.setAppearance",
+      label: shellLabel("ui.command.setAppearance"),
+      category: "appearance",
+      iconId: "sun" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg("appearance", shellLabel("ui.settings.tab.appearance"), [
+          { value: "system", label: shellLabel("ui.settings.appearance.system") },
+          { value: "light", label: shellLabel("ui.settings.appearance.light") },
+          { value: "dark", label: shellLabel("ui.settings.appearance.dark") },
+        ]),
+      ],
+    },
+    {
+      id: "os.setThemeId",
+      label: shellLabel("ui.command.setTheme"),
+      category: "appearance",
+      iconId: "palette" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg(
+          "themeId",
+          shellLabel("ui.settings.tab.theme"),
+          themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })),
+        ),
+      ],
+    },
+    {
+      id: "os.setLayout",
+      label: shellLabel("ui.command.setLayout"),
+      category: "layout",
+      iconId: "layout" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg("layout", shellLabel("ui.settings.tab.layout"), [
+          { value: "desktop", label: shellLabel("settings.layout.desktop") },
+          { value: "tablet", label: shellLabel("settings.layout.tablet") },
+        ]),
+      ],
+    },
+    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), category: "layout", iconId: "undo" as const, semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette: true, args: [], keybindings: [] },
+    {
+      id: "os.setLocale",
+      label: shellLabel("ui.command.setLocale"),
+      category: "language",
+      iconId: "globe" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg("locale", shellLabel("ui.settings.tab.language"), [
+          { value: "en", label: shellLabel("ui.settings.language.en") },
+          { value: "de", label: shellLabel("ui.settings.language.de") },
+        ]),
+      ],
+    },
+    {
+      id: "os.setTerminology",
+      label: shellLabel("ui.command.setTerminology"),
+      category: "language",
+      iconId: "type" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg(
+          "terminology",
+          shellLabel("ui.settings.tab.terminology"),
+          terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })),
+        ),
+      ],
+    },
+    {
+      id: "os.setDriver",
+      label: shellLabel("ui.command.setDriver"),
+      category: "layout",
+      iconId: "settings" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
+      keybindings: [],
+      inPalette: true,
+      args: [
+        selectCommandArg(
+          "driver",
+          shellLabel("ui.settings.tab.driver"),
+          driverList.map((driver) => ({ value: driver.id, label: driverDisplayLabel(driver) })),
+        ),
+      ],
+    },
+    {
+      id: OPEN_TASK_MANAGER_COMMAND_ID,
+      label: shellLabel("ui.command.openTaskManager"),
+      category: "general",
+      iconId: "cpu" as const,
+      semantics: actionSemanticsForKind("shell"),
+      kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [],
+    },
+    {
+      id: OPEN_HUB_COMMAND_ID,
+      label: shellLabel("ui.command.openHub"),
+      category: "general",
+      iconId: "users" as const,
+      semantics: actionSemanticsForKind("shell"),
+      kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [],
+    },
+    ...(hasOpenArtifactSurfaces
+      ? [
+          { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+          { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+        ]
+      : []),
+  ];
+  return commands.filter((command) => !lockedCommandIds.has(command.id));
+}
+
+/** 🎛️ Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}.
+ * Answers whether `commandId` was actually routed, so a replayed chrome command that lands nowhere is
+ * reported instead of silently vanishing (see {@link isShellOwnedCommandId}). */
+export function dispatchOsCommand(
+  commandId: string,
+  args: Record<string, unknown> | undefined,
+  commitUiPreference: (mutation: UiPreferencesConfigMutation) => void,
+  dispatch: (action: ShellAction) => void,
+  dockLayoutStore: DockLayoutStore,
+  dockUiStateStore: DockUiStateStore,
+  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
+): boolean {
+  switch (commandId) {
+    case "os.introduceApp":
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+      return true;
+    case "os.setAppearance":
+      if (locks.appearance) return true;
+      commitUiPreference(setAppearance((args?.appearance as ElementsSurfaceAppearance) ?? "system"));
+      return true;
+    case "os.setThemeId":
+      if (locks.themeId) return true;
+      if (typeof args?.themeId === "string") commitUiPreference(setTheme(args.themeId));
+      return true;
+    case "os.setLayout":
+      commitUiPreference(setLayout((args?.layout as UiChromeLayout) ?? "desktop"));
+      return true;
+    case "os.resetDock":
+      dispatch({ type: "RESET_DOCK" });
+      dockLayoutStore.reset();
+      dockUiStateStore.reset();
+      return true;
+    case "os.setLocale":
+      if (locks.locale) return true;
+      if (typeof args?.locale === "string") commitUiPreference(setLocale(args.locale as UiLocale));
+      return true;
+    case "os.setTerminology":
+      if (locks.terminology) return true;
+      if (typeof args?.terminology === "string") commitUiPreference(setTerminology(args.terminology));
+      return true;
+    case "os.setDriver":
+      if (typeof args?.driver === "string") commitUiPreference(setDriver(args.driver));
+      return true;
+    case OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID:
+    case OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID:
+      dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: commandId === OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID ? "viewer" : "editor" });
+      dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
+      return true;
+    default:
+      return false;
+  }
+}
+
+/** 🎛️ Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
+const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
+
+/**
+ * 🎛️ One category's command list (and, if a command is expanded, its staged arg form) as a `TreePanelConfig`
+ * — the content a category `PanelTabLeaf` resolves to. A zero-arg command's row fires immediately on click
+ * (a plain fire-and-forget tree row, same pattern as {@link groupNamedLayoutsToTreeItems}'s layout rows —
+ * no `selectedIds`/`onSelectionChange` override, so it takes `Tree`'s default single-select highlight after
+ * firing, same as clicking a Display→Layout row does). An arg-carrying command's row toggles `expandedCommandId`
+ * itself (kept as its own exclusive, bespoke state — not `Tree`'s per-row `openStates`, which isn't naturally
+ * exclusive across sibling rows) and, when expanded, a synthetic form section (one row per arg, `control`
+ * holding the staged input, replacing the old `Field` wrapper since `TreeDataItem` already renders label +
+ * description + control in the same two-column layout) is prepended so it renders above the command list —
+ * `Tree` reverses top-level `sections` for `direction="up"` (bottom anchors), threaded here via `flowFromAnchor`/
+ * `FlowProvider`/`useFlow` down from the hosting `Panel`, not any manual reversal in this function.
+ */
+export function buildCommandCategoryTree(
+  commands: readonly ResolvedCommand[],
+  expandedCommandId: string | null,
+  stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  onExecute: (entry: ResolvedCommand, executeArgs?: Record<string, unknown>) => void,
+  onToggleExpanded: (commandId: string | null) => void,
+  onStageArg: (commandId: string, argId: string, value: unknown) => void,
+  onResetArgs: (commandId: string) => void,
+): TreePanelConfig {
+  const argCarryingCommands = commands.filter((entry) => entry.definition.args.length > 0);
+  const autoExpandedSingleton = argCarryingCommands.length === 1 ? argCarryingCommands[0] : undefined;
+  const expanded = (expandedCommandId ? commands.find((entry) => commandAddressKey(entry.address) === expandedCommandId) : undefined) ?? autoExpandedSingleton;
+  const effectiveExpandedId = expanded ? commandAddressKey(expanded.address) : null;
+  const sections: TreeDataSection[] = [];
+  if (expanded && expanded.definition.args.length > 0) {
+    const expandedKey = commandAddressKey(expanded.address);
+    const expandedElementKey = commandElementKey(expanded.address);
+    const staged = stagedArgsByCommandId[expandedKey] ?? {};
+    const effective = effectiveActionArgs(expanded.definition.args, staged);
+    const missing = unresolvedActionArgs(expanded.definition.args, effective);
+    sections.push({
+      id: `command.category.${expanded.definition.category}.form`,
+      label: expanded.definition.label,
+      items: expanded.definition.args.map(
+        (def): TreeDataItem => ({
+          id: `command.${expandedElementKey}.arg.${def.id}`,
+          label: def.label,
+          description: def.description,
+          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value)),
+        }),
+      ),
+      actions: [
+        {
+          id: `command-${expandedElementKey}-execute`,
+          icon: <Icon icon="check" size="small" />,
+          text: shellLabel("ui.common.execute"),
+          disabled: missing.length > 0,
+          reason: missing.map((id) => expanded.definition.args.find((def) => def.id === id)!.label).join(", ") || undefined,
+          onClick: () => { if (missing.length === 0) onExecute(expanded, effective); },
+        },
+        {
+          id: `command-${expandedElementKey}-reset`,
+          icon: <Icon icon="undo" size="small" />,
+          text: shellLabel("ui.common.reset"),
+          onClick: () => onResetArgs(expandedKey),
+        },
+      ],
+    });
+  }
+  const listCommands = commands.filter((entry) => commandAddressKey(entry.address) !== effectiveExpandedId);
+  if (listCommands.length > 0) {
+    sections.push({
+      id: "command.category.list",
+      items: listCommands.map((entry): TreeDataItem => {
+        const argCarrying = entry.definition.args.length > 0;
+        const entryKey = commandAddressKey(entry.address);
+        const elementKey = commandElementKey(entry.address);
+        const icon = entry.definition.iconId ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
+        if (!argCarrying) return { id: `command.${elementKey}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
+        return {
+          id: `command.${elementKey}`,
+          label: `${entry.definition.label}…`,
+          icon: <Icon icon={expandedCommandId === entryKey ? "chevron-down" : "chevron-up"} size="small" />,
+          onClick: () => onToggleExpanded(expandedCommandId === entryKey ? null : entryKey),
+        };
+      }),
+    });
+  }
+  return { sections };
+}
+
+/**
+ * 🎛️ One `PanelTabLeaf` per resolved command category — consumers wrap these under the Command branch
+ * (`FRAMEWORK_CATEGORY_COMMAND_ID`) on `defaultDock.anchors["bottom-middle"]` so the folded chrome shows
+ * a single expandable Command toggle. The command palette's fold/active-category/size/persistence is the
+ * generic per-anchor `Panel` state (see `buildPanelProps`); this only builds the category tab leaves.
+ * Content is a *lazy* `resolveTree` (mirrors {@link createFrameworkDisplayPanelTabs}'s windows tab) so
+ * this array — and therefore `defaultDock`'s own memo — never depends on `expandedCommandId`/
+ * `stagedArgsByCommandId`, which change on every keystroke while staging a command argument; `resolveTree`
+ * reads those fresh off refs at render time instead.
+ */
+export function buildCommandCategoryTabs(
+  resolvedCommands: readonly ResolvedCommand[],
+  categories: readonly { readonly id: string; readonly label: string }[],
+  expandedCommandIdRef: React.RefObject<string | null>,
+  stagedArgsByCommandIdRef: React.RefObject<Readonly<Record<string, Readonly<Record<string, unknown>>>>>,
+  onCommand: (address: CommandAddress, args?: Record<string, unknown>) => void,
+  dispatch: (action: ShellAction) => void,
+): PanelTabNode[] {
+  return categories.map((category) => {
+    const categoryCommands = resolvedCommands.filter((entry) => entry.definition.inPalette && entry.definition.category === category.id);
+    return singleTreeLeaf({
+      id: `command.category.${category.id}`,
+      icon: COMMAND_CATEGORY_ICON,
+      name: category.label,
+      tree: {
+        resolveTree: () =>
+          buildCommandCategoryTree(
+            categoryCommands,
+            expandedCommandIdRef.current,
+            stagedArgsByCommandIdRef.current,
+            (entry, executeArgs) => onCommand(entry.address, executeArgs),
+            (commandId) => dispatch({ type: "SET_COMMAND_EXPANDED", value: commandId }),
+            (commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value }),
+            (commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId }),
+          ),
+      },
+    });
+  });
+}
+//#endregion 🎛️CommandRegistry
+
+//#region 🛠️ToolRegistry
+/**
+ * 🛠️ One tool's measure-tree content — a single headerless section mapped to native `TreeDataItem`s, so
+ * Fill opens directly onto count + distribution with the same chrome as left-corner panel trees. The
+ * `tool.<id>` leaf tab IS the activation control (see {@link reconcileToolTabSelection}): a selected tool
+ * leaf always means that tool is active, so the tree never renders a second activation toggle of its own —
+ * that toggle carried the leaf tab's own element id, so the tab and the toggle disagreed about the same
+ * state and the first press on an already-selected leaf deactivated the tool instead of arming it. A tool
+ * whose program publishes no measures yet resolves to an empty options section.
+ */
+function buildToolTree(tool: ResolvedToolDefinition, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
   return {
-    title: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.title")),
-    close: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.close")),
-    members: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.members")),
-    properties: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.properties")),
-    name: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.name")),
-    rename: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.rename")),
-    invalidName: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.invalidName")),
-    visibility: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.visibility")),
-    public: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.public")),
-    private: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.private")),
-    applyVisibility: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.applyVisibility")),
-    delete: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.delete")),
-    deleteWarning: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.deleteWarning")),
-    deleteConfirm: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.deleteConfirm")),
-    deleteCancel: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.deleteCancel")),
-    invites: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.invites")),
-    role: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.role")),
-    author: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.author")),
-    spectator: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.spectator")),
-    owner: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.owner")),
-    remove: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.remove")),
-    issue: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.issue")),
-    revoke: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.revoke")),
-    copy: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.copy")),
-    copyStatus: {
-      available: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.copyAvailable")),
-      copying: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.copyCopying")),
-      failed: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.copyFailed")),
-    },
-    more: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.more")),
-    revoked: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.revoked")),
-    accepted: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.accepted")),
-    pending: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.pending")),
-    status: {
-      loading: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusLoading")),
-      ready: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusReady")),
-      submitting: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusSubmitting")),
-      receipt: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusReceipt")),
-      refreshing: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusRefreshing")),
-      deleted: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusDeleted")),
-      cancelled: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusCancelled")),
-      denied: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusDenied")),
-      stale: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusStale")),
-      failed: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.statusFailed")),
-    },
-    spectatorNotice: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.spectatorNotice")),
-    publicNotice: useLabel(spaceAdministrationUiLabel("os.spaceAdministration.publicNotice")),
+    sortableSections: false,
+    sections: [
+      {
+        id: `tool.${tool.id}.options`,
+        label: "",
+        defaultOpen: true,
+        items: measures && measures.length > 0 ? windowMeasuresToTreeItems(measures, onAction) : [],
+      },
+    ],
   };
 }
-//#endregion 🌐️Labels
 
-//#region 🔖️Capability
-/** 🛂️ The pane's ONLY authority source: the page's own server-filled capability flags. A
- * `member`/`public` page carries none, so every administration affordance is structurally absent
- * rather than merely hidden. A phase that is not `ready` disables dispatch without changing which
- * affordances exist, so a control never silently changes meaning mid-turn. */
-export function spaceAdministrationCapabilities(page: DirectorySpaceAdministrationPageV1 | null): DirectorySpaceAdministrationCapabilitiesV1 | null {
-  return page !== null && page.access === "author" ? page.capabilities : null;
-}
-
-/** 🔒️ An owner row can never be removed: the server rejects it, so the control is disabled before
- * dispatch rather than offered and then refused. */
-export function spaceAdministrationMemberRemovable(row: DirectorySpaceAdministrationMemberRowV1, capabilities: DirectorySpaceAdministrationCapabilitiesV1 | null): boolean {
-  return capabilities !== null && capabilities.removeMember && !row.owner;
-}
-
-/** 🎟️ A revoked or accepted invitation is terminal; only a live one may be revoked. */
-export function spaceAdministrationInviteRevocable(row: DirectorySpaceAdministrationInviteRowV1, capabilities: DirectorySpaceAdministrationCapabilitiesV1 | null): boolean {
-  return capabilities !== null && capabilities.revokeInvite && !row.revoked && !row.accepted;
-}
-
-/** 🚦️ Dispatch is admitted only from a settled `ready` page — never while a receipt is pending. */
-export function spaceAdministrationDispatchable(phase: DirectoryAdministrationPhaseV1): boolean {
-  return phase === "ready";
-}
-
-/** 📝️ Rejects empty and control-bearing drafts before constructing a directory command. */
-export function spaceAdministrationNameValid(name: string): boolean {
-  return typeof name === "string" && name.trim().length > 0 && !/\p{Cc}/u.test(name);
-}
-//#endregion 🔖️Capability
-
-/** ⚙️ Ephemeral drafts reset only when the canonical page receipt or its space changes. */
-function SpaceAdministrationProperties({ page, phase, labels, onIntent }: { readonly page: Extract<DirectorySpaceAdministrationPageV1, { access: "author" }>; readonly phase: DirectoryAdministrationPhaseV1; readonly labels: SpaceAdministrationLabels; readonly onIntent: SpaceAdministrationPaneProps["onIntent"] }): ReactElement {
-  const id = useId();
-  const [name, setName] = useState(page.space.name);
-  const [visibility, setVisibility] = useState(page.space.visibility);
-  const nameValid = spaceAdministrationNameValid(name);
-  const ready = spaceAdministrationDispatchable(phase);
-  const canRename = ready && page.capabilities.renameSpace && nameValid && name !== page.space.name;
-  const canSetVisibility = ready && page.capabilities.setVisibility && visibility !== page.space.visibility;
-  return (
-    <section aria-label={labels.properties} className="flex flex-col gap-2">
-      <h3>{labels.properties}</h3>
-      {page.capabilities.renameSpace ? (
-        <form onSubmit={(event) => { event.preventDefault(); if (canRename) onIntent({ kind: "rename-space", name }); }} className="flex flex-col gap-2">
-          <label htmlFor={`${id}-name`}>{labels.name}</label>
-          <input id={`${id}-name`} value={name} disabled={!ready} required aria-invalid={!nameValid} aria-describedby={!nameValid ? `${id}-name-error` : undefined} onChange={(event) => setName(event.target.value)} />
-          {!nameValid ? <p id={`${id}-name-error`}>{labels.invalidName}</p> : null}
-          <Button icon="check" type="submit" variant="outline" disabled={!canRename}>{labels.rename}</Button>
-        </form>
-      ) : null}
-      {page.capabilities.setVisibility ? (
-        <form onSubmit={(event) => { event.preventDefault(); if (canSetVisibility) onIntent({ kind: "set-visibility", visibility }); }} className="flex flex-col gap-2">
-          <label htmlFor={`${id}-visibility`}>{labels.visibility}</label>
-          <select id={`${id}-visibility`} value={visibility} disabled={!ready} onChange={(event) => { if (event.target.value === "public" || event.target.value === "private") setVisibility(event.target.value); }}>
-            <option value="private">{labels.private}</option>
-            <option value="public">{labels.public}</option>
-          </select>
-          <Button icon="check" type="submit" variant="outline" disabled={!canSetVisibility}>{labels.applyVisibility}</Button>
-        </form>
-      ) : null}
-    </section>
+/**
+ * 🛠️ One `PanelTabLeaf` per resolved mode tool — consumers wrap these under the Tool branch
+ * (`FRAMEWORK_CATEGORY_TOOL_ID`) on `defaultDock.anchors["bottom-middle"]`, ordered left of the Command
+ * branch, so the folded chrome shows a single Tool toggle. Content is a *lazy* `resolveTree` (mirrors
+ * `buildCommandCategoryTabs`'s windows tab) so this array — and therefore `defaultDock`'s own memo —
+ * never depends on `toolMeasuresByToolId`, which changes on every activation/slider tick; `resolveTree`
+ * reads those fresh off the ref at render time instead.
+ */
+export function buildToolTabs(tools: readonly ResolvedToolDefinition[], toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>, onAction: (action: ActionDescriptor) => unknown): PanelTabNode[] {
+  return tools.map((tool) =>
+    singleTreeLeaf({
+      id: `tool.${tool.id}`,
+      icon: shellTabIcon(tool.iconId),
+      name: tool.label,
+      tree: {
+        resolveTree: () => {
+          const measures = toolMeasuresByToolIdRef.current[tool.id];
+          const tree = buildToolTree(tool, measures, onAction);
+          return { sections: tree.sections, sortableSections: tree.sortableSections };
+        },
+      },
+    }),
   );
 }
 
-//#region 🔖️Pane
-/** 🏛️ The pane. Semantic buttons and a labelled select per row, one `role="status"` live region for
- * the receipt/status text, and focus restored to the pane heading whenever the phase settles, so a
- * keyboard operator is never stranded on a control that has just been removed. */
-export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, code, inviteCapabilityPending, inviteCapabilityStatus, onIntent }: SpaceAdministrationPaneProps): ReactElement {
-  const labels = useSpaceAdministrationLabels();
-  const headingRef = useRef<HTMLHeadingElement | null>(null);
-  const restoreDeleteFocus = useRef(false);
-  const deleteId = useId();
-  const deleteButtonId = `${deleteId}-trigger`;
-  const [inviteRole, setInviteRole] = useState<DirectorySpaceRole>("spectator");
-  const [deleteConfirmation, setDeleteConfirmation] = useState(false);
-  const capabilities = useMemo(() => spaceAdministrationCapabilities(page), [page]);
-  const dispatchable = spaceAdministrationDispatchable(phase);
-  const canDelete = dispatchable && page?.access === "author" && page.spaceId === spaceId && page.space.id === spaceId && capabilities?.deleteSpace === true;
-  const members = page !== null && page.access !== "public" ? page.members : null;
-  const invites = page !== null && page.access === "author" ? page.invites : null;
+/** 🛠️ Which of the two halves of the one tool state changed since the last reconciliation, and therefore what the shell owes the other half (see {@link reconcileToolTabSelection}). */
+export type ToolTabSelectionEffect = { readonly kind: "idle" } | { readonly kind: "activate"; readonly toolId: string | null } | { readonly kind: "select"; readonly toolId: string | null };
 
-  useEffect(() => {
-    if (phase === "ready" || phase === "deleted" || phase === "denied" || phase === "stale" || phase === "failed" || phase === "cancelled") headingRef.current?.focus();
-  }, [phase]);
-
-  useEffect(() => {
-    if (!canDelete) setDeleteConfirmation(false);
-  }, [canDelete]);
-
-  useEffect(() => {
-    if (!deleteConfirmation && restoreDeleteFocus.current) {
-      restoreDeleteFocus.current = false;
-      document.getElementById(deleteButtonId)?.focus();
-    }
-  }, [deleteButtonId, deleteConfirmation]);
-
-  const roleLabel = (role: DirectorySpaceRole): string => (role === "author" ? labels.author : labels.spectator);
-  const status = `${labels.status[phase]}${code === undefined ? "" : ` (${code})`}${inviteCapabilityStatus === undefined ? "" : ` ${labels.copyStatus[inviteCapabilityStatus]}`}`;
-
-  return (
-    <section aria-labelledby="os-space-administration-title" data-space-id={spaceId} data-phase={phase} className="flex flex-col gap-4 p-4">
-      <header className="flex items-center justify-between gap-2">
-        <h2 id="os-space-administration-title" ref={headingRef} tabIndex={-1}>{`${labels.title} — ${spaceId}`}</h2>
-        <Button icon="x" type="button" variant="outline" aria-label={labels.close} onClick={() => onIntent({ kind: "close" })}>{labels.close}</Button>
-      </header>
-
-      <p role="status" aria-live="polite" data-testid="os-space-administration-status" data-receipt={receiptSha256 ?? ""}>{status}</p>
-
-      {page !== null && page.access === "public" ? <p data-testid="os-space-administration-notice">{labels.publicNotice}</p> : null}
-      {page !== null && page.access === "member" ? <p data-testid="os-space-administration-notice">{labels.spectatorNotice}</p> : null}
-
-      {page?.access === "author" && page.spaceId === spaceId && page.space.id === spaceId && (page.capabilities.renameSpace || page.capabilities.setVisibility) ? <SpaceAdministrationProperties key={`${page.spaceId}:${page.receiptSha256}`} page={page} phase={phase} labels={labels} onIntent={onIntent} /> : null}
-
-      {page?.access === "author" && page.spaceId === spaceId && page.space.id === spaceId && page.capabilities.deleteSpace ? (
-        <section className="flex flex-col gap-2">
-          <Button id={deleteButtonId} icon="trash-2" type="button" variant="outline" disabled={!canDelete || deleteConfirmation} aria-expanded={deleteConfirmation} onClick={() => { if (canDelete) setDeleteConfirmation(true); }}>
-            {labels.delete}
-          </Button>
-          {deleteConfirmation && canDelete ? (
-            <div role="alertdialog" aria-labelledby={`${deleteId}-title`} aria-describedby={`${deleteId}-description`} className="flex flex-col gap-2 border p-2">
-              <h3 id={`${deleteId}-title`}>{labels.delete}</h3>
-              <p id={`${deleteId}-description`}>{labels.deleteWarning}</p>
-              <div className="flex gap-2">
-                <Button icon="trash-2" type="button" variant="outline" onClick={() => { setDeleteConfirmation(false); onIntent({ kind: "delete-space" }); }}>{labels.deleteConfirm}</Button>
-                <Button icon="x" type="button" variant="outline" onClick={() => { restoreDeleteFocus.current = true; setDeleteConfirmation(false); }}>{labels.deleteCancel}</Button>
-              </div>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {members === null ? null : (
-        <section aria-label={labels.members}>
-          <h3>{labels.members}</h3>
-          <ul>
-            {members.rows.map((row) => (
-              <li key={row.userId} data-user-id={row.userId} className="flex items-center gap-2">
-                <span>{row.displayName.length > 0 ? row.displayName : row.email}</span>
-                {row.owner ? <span data-testid={`os-space-administration-owner-${row.userId}`}>{labels.owner}</span> : null}
-                <label htmlFor={`os-space-administration-role-${row.userId}`}>{labels.role}</label>
-                <select
-                  id={`os-space-administration-role-${row.userId}`}
-                  value={row.role}
-                  disabled={capabilities === null || !capabilities.upsertMember || !dispatchable}
-                  onChange={(event) => onIntent({ kind: "set-role", userId: row.userId, role: event.target.value === "author" ? "author" : "spectator" })}
-                >
-                  <option value="author">{labels.author}</option>
-                  <option value="spectator">{labels.spectator}</option>
-                </select>
-                <Button
-                  icon="trash-2"
-                  type="button"
-                  variant="outline"
-                  aria-label={`${labels.remove}: ${row.userId}`}
-                  disabled={!spaceAdministrationMemberRemovable(row, capabilities) || !dispatchable}
-                  onClick={() => onIntent({ kind: "remove-member", userId: row.userId })}
-                >
-                  {labels.remove}
-                </Button>
-              </li>
-            ))}
-          </ul>
-          {members.nextCursor === undefined ? null : (
-            <Button icon="plus" type="button" variant="outline" aria-label={`${labels.more}: ${labels.members}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: members.nextCursor as string })}>
-              {labels.more}
-            </Button>
-          )}
-        </section>
-      )}
-
-      {invites === null || capabilities === null ? null : (
-        <section aria-label={labels.invites}>
-          <h3>{labels.invites}</h3>
-          <label htmlFor="os-space-administration-invite-role">{labels.role}</label>
-          <select id="os-space-administration-invite-role" value={inviteRole} disabled={!capabilities.createInvite || !dispatchable} onChange={(event) => setInviteRole(event.target.value === "author" ? "author" : "spectator")}>
-            <option value="author">{labels.author}</option>
-            <option value="spectator">{labels.spectator}</option>
-          </select>
-          <Button icon="plus" type="button" variant="outline" aria-label={labels.issue} disabled={!capabilities.createInvite || !dispatchable} onClick={() => onIntent({ kind: "create-invite", role: inviteRole })}>
-            {labels.issue}
-          </Button>
-          {inviteCapabilityPending === true ? (
-            <Button icon="link" type="button" variant="outline" aria-label={labels.copy} disabled={!dispatchable || inviteCapabilityStatus === "copying"} onClick={() => onIntent({ kind: "copy-invite-capability" })}>
-              {labels.copy}
-            </Button>
-          ) : null}
-          <ul>
-            {invites.rows.map((row) => (
-              <li key={row.inviteId} data-invite-id={row.inviteId} className="flex items-center gap-2">
-                <span>{`${row.inviteId} · ${roleLabel(row.role)} · ${row.revoked ? labels.revoked : row.accepted ? labels.accepted : labels.pending}`}</span>
-                <Button
-                  icon="x"
-                  type="button"
-                  variant="outline"
-                  aria-label={`${labels.revoke}: ${row.inviteId}`}
-                  disabled={!spaceAdministrationInviteRevocable(row, capabilities) || !dispatchable}
-                  onClick={() => onIntent({ kind: "revoke-invite", inviteId: row.inviteId })}
-                >
-                  {labels.revoke}
-                </Button>
-              </li>
-            ))}
-          </ul>
-          {invites.nextCursor === undefined ? null : (
-            <Button icon="plus" type="button" variant="outline" aria-label={`${labels.more}: ${labels.invites}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: invites.nextCursor as string })}>
-              {labels.more}
-            </Button>
-          )}
-        </section>
-      )}
-    </section>
-  );
+/** 🛠️ The pair reconciled by {@link reconcileToolTabSelection}: the mode's active tool and the `tool.<id>` leaf selected under the Tool category (`null` = no tool / the category collapsed to its branch). */
+export interface ToolTabSelection {
+  readonly toolId: string | null;
+  readonly selected: string | null;
 }
-//#endregion 🔖️Pane
+
+/**
+ * 🛠️ Tool activation and the selected `tool.<id>` leaf tab are ONE state with two representations, and this
+ * is its single owner. Every route into the panel path — a user press, a restored `DockUiStateStore`
+ * arrangement, an introduction step, a dock reset — has to end at the same place, so activation may not
+ * hang off the press callback alone: a hydrated path that already selects `tool.fill` used to render a
+ * selected tab over a tool that was never activated, after which the user's first press read as a re-press
+ * and *collapsed* the leaf instead of arming the tool.
+ *
+ * Last change wins: when the active tool moved (program `setActiveTool` effect, utility mutual exclusion,
+ * introduction keep-alive) the selection follows it; otherwise a moved selection drives activation. Both
+ * outcomes record the value they are about to establish, so the follow-up pass sees no change and cannot
+ * bounce — and a refused activation self-heals on the next pass by deselecting the leaf. Callers must skip
+ * reconciliation entirely (without updating `previous`) while the Tool category is not the active root, so
+ * a tool stays live while the user browses another category and is re-reconciled on re-entry.
+ */
+export function reconcileToolTabSelection(previous: ToolTabSelection | null, activeToolId: string | null, selectedToolId: string | null): { readonly next: ToolTabSelection; readonly effect: ToolTabSelectionEffect } {
+  const last = previous ?? { toolId: null, selected: null };
+  if (activeToolId !== last.toolId) return { next: { toolId: activeToolId, selected: activeToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "select", toolId: activeToolId } };
+  if (selectedToolId !== last.selected) return { next: { toolId: selectedToolId, selected: selectedToolId }, effect: selectedToolId === activeToolId ? { kind: "idle" } : { kind: "activate", toolId: selectedToolId } };
+  return { next: last, effect: { kind: "idle" } };
+}
+
+/**
+ * 🛠️ Whether a tool the PROGRAM just armed has to reveal its own `tool.<id>` leaf. {@link
+ * reconcileToolTabSelection} is skipped wholesale while the Tool category is not the active root — which
+ * is right for a tool the user armed and then browsed away from, and wrong for one a program arms on its
+ * own (typing `fill 3` on the window's engagement line answers `Effect::SetActiveTool { fill }`): the
+ * tool went live with no leaf tab mounted anywhere, so its options were unreachable and nothing on screen
+ * said it had armed. Only a MOVE to a real tool reveals — an idle category, a disarm and a re-render on
+ * the same tool all owe nothing.
+ */
+export function programArmedToolRevealV1(previousToolId: string | null, activeToolId: string | null, toolCategoryActive: boolean): boolean {
+  if (toolCategoryActive) return false;
+  return activeToolId !== null && activeToolId !== previousToolId;
+}
+
+/** 🛠️ The mode tool a footer tab id (`tool.<id>`) names — the selected leaf and the active tool are reconciled by {@link reconcileToolTabSelection}. */
+export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
+  if (!tabId?.startsWith("tool.")) return null;
+  const toolId = tabId.slice("tool.".length);
+  return toolId.length > 0 ? toolId : null;
+}
+
+/**
+ * ♻️ Identity the desktop and mobile Tool panels share so a late `framework.section.tools` admission
+ * re-resolves lazy `resolveTree` sources. `buildToolTabs` keeps tab object identity across measure
+ * ticks (the tree reads a ref); {@link PanelTreeUnitsPane} is memoized, so without this revision the
+ * Fill body stays the empty section from the first resolve after the guest's packed tools carrier lands.
+ */
+export function toolPanelTreeContentRevision<TStaged>(
+  activeToolId: string | null,
+  toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>,
+  actionPaneStagedArgsByKey: TStaged,
+): { readonly activeToolId: string | null; readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>; readonly actionPaneStagedArgsByKey: TStaged } {
+  return { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey };
+}
+
+/**
+ * 🛠️ One press that opens the Tool category must land on a tool leaf (remembered, else the first
+ * declared tool). `progressPanelTabSelection` does not auto-descend a branch with no memory; the
+ * closed-panel open path used to swallow that press entirely, so Fill never became the selected leaf.
+ */
+export function toolCategoryOpenPath(path: readonly string[], memory: Readonly<Record<string, string>>, toolTabIds: readonly string[]): readonly string[] {
+  if (path.length !== 1 || path[0] !== FRAMEWORK_CATEGORY_TOOL_ID || toolTabIds.length === 0) return path;
+  const remembered = memory[FRAMEWORK_CATEGORY_TOOL_ID];
+  const child = remembered && toolTabIds.includes(remembered) ? remembered : toolTabIds[0]!;
+  return [...path, child];
+}
+
+/**
+ * 🛠️ A re-press of a selected `tool.<id>` leaf while that tool is inactive must arm it, not collapse
+ * the leaf. `progressPanelTabSelection` treats the press as an active-segment re-press and walks up;
+ * the host keeps the previous path and returns the tool id that `setActiveTool` must receive.
+ */
+export function toolLeafInactiveRepress(previousPath: readonly string[], nextPath: readonly string[], activeToolId: string | null): { readonly path: readonly string[]; readonly toolId: string } | null {
+  const previousToolId = toolIdFromPanelTabId(previousPath[previousPath.length - 1]);
+  const nextToolId = toolIdFromPanelTabId(nextPath[nextPath.length - 1]);
+  if (!previousToolId || nextToolId || (activeToolId ?? null) === previousToolId) return null;
+  return { path: previousPath, toolId: previousToolId };
+}
+//#endregion 🛠️ToolRegistry
+//#endregion ShellHelpers

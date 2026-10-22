@@ -2867,7 +2867,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📜️script.ts",
         "gltf-import"
       ],
@@ -2911,7 +2911,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📜️script.ts",
         "gltf-project"
       ],
@@ -2955,7 +2955,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📜️script.ts",
         "gltf-compare"
       ],
@@ -3197,7 +3197,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only add-required-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only add-required-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3247,7 +3247,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only add-used-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only add-used-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3297,7 +3297,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-default-scene-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-default-scene-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3347,7 +3347,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-morph-target-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-morph-target-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3397,7 +3397,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3447,7 +3447,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-child-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-child-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3497,7 +3497,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-mesh-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-mesh-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3547,7 +3547,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-skin-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-skin-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3597,7 +3597,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3647,7 +3647,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-indices-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-indices-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3697,7 +3697,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-material-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-primitive-material-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3747,7 +3747,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-scene-root-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-scene-root-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3797,7 +3797,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-descriptive-metadata-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-descriptive-metadata-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3847,7 +3847,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3897,7 +3897,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3947,7 +3947,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-version-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-asset-version-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3997,7 +3997,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-document-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-document-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4047,7 +4047,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-document-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-document-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4097,7 +4097,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-alpha-mode-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-alpha-mode-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4147,7 +4147,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-double-sided-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-double-sided-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4197,7 +4197,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4247,7 +4247,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4297,7 +4297,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-morph-weights-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-morph-weights-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4347,7 +4347,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-name-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-mesh-name-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4397,7 +4397,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4447,7 +4447,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4497,7 +4497,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-morph-weights-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-morph-weights-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4547,7 +4547,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-name-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-name-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4597,7 +4597,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-transform-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-node-transform-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4647,7 +4647,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4697,7 +4697,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4747,7 +4747,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-topology-mode-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-primitive-topology-mode-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4797,7 +4797,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-extension-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-extension-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4847,7 +4847,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-extra-data-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-extra-data-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4897,7 +4897,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-name-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-scene-name-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4947,7 +4947,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-animation-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-animation-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -4997,7 +4997,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5047,7 +5047,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-material-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-material-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5097,7 +5097,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-mesh-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-mesh-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5147,7 +5147,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-morph-target-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-morph-target-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5197,7 +5197,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5247,7 +5247,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-primitive-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-primitive-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5297,7 +5297,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-scene-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-scene-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5347,7 +5347,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-skin-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-skin-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5397,7 +5397,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-animation-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-animation-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5447,7 +5447,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5497,7 +5497,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-material-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-material-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5547,7 +5547,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-mesh-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-mesh-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5597,7 +5597,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-morph-target-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-morph-target-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5647,7 +5647,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5697,7 +5697,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-primitive-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-primitive-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5747,7 +5747,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-scene-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-scene-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5797,7 +5797,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-skin-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-skin-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5847,7 +5847,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-animation-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-animation-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5897,7 +5897,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5947,7 +5947,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-material-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-material-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -5997,7 +5997,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-mesh-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-mesh-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6047,7 +6047,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-morph-target-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-morph-target-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6097,7 +6097,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-morph-target-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-morph-target-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6147,7 +6147,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6197,7 +6197,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-child-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-child-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6247,7 +6247,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-parent-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-node-parent-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6297,7 +6297,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-primitive-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-primitive-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6347,7 +6347,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-primitive-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-primitive-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6397,7 +6397,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-required-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-required-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6447,7 +6447,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-scene-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-scene-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6497,7 +6497,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-scene-root-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-scene-root-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6547,7 +6547,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-skin-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-skin-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6597,7 +6597,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-used-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-used-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6647,7 +6647,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only remove-required-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only remove-required-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6697,7 +6697,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only remove-used-extension-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only remove-used-extension-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6747,7 +6747,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-animations-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-animations-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6797,7 +6797,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-cameras-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-cameras-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6847,7 +6847,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-materials-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-materials-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6897,7 +6897,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-meshs-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-meshs-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6947,7 +6947,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-morph-target-attributes-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-morph-target-attributes-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -6997,7 +6997,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-morph-targets-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-morph-targets-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7047,7 +7047,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-node-children-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-node-children-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7097,7 +7097,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-nodes-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-nodes-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7147,7 +7147,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-primitive-attributes-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-primitive-attributes-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7197,7 +7197,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-primitives-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-primitives-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7247,7 +7247,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-required-extensions-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-required-extensions-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7297,7 +7297,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-scene-root-nodes-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-scene-root-nodes-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7347,7 +7347,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-scenes-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-scenes-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7397,7 +7397,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-skins-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-skins-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7447,7 +7447,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-used-extensions-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-used-extensions-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7497,7 +7497,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-default-scene-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-default-scene-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7547,7 +7547,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-morph-target-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-morph-target-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7597,7 +7597,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7647,7 +7647,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-child-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-child-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7697,7 +7697,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-mesh-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-mesh-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7747,7 +7747,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-skin-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-skin-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7797,7 +7797,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-attribute-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-attribute-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7847,7 +7847,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-indices-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-indices-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7897,7 +7897,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-material-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-primitive-material-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -7947,7 +7947,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-scene-root-node-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-scene-root-node-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -8001,7 +8001,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-accessor-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-accessor-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8047,7 +8047,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-buffer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-buffer-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8093,7 +8093,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-buffer-view-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-buffer-view-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8139,7 +8139,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-image-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-image-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8185,7 +8185,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-sampler-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-sampler-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8231,7 +8231,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-texture-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-texture-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8277,7 +8277,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-accessor-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-accessor-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8323,7 +8323,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-buffer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-buffer-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8369,7 +8369,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-buffer-view-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-buffer-view-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8415,7 +8415,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-image-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-image-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8461,7 +8461,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-sampler-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-sampler-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8507,7 +8507,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-texture-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only delete-texture-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8553,7 +8553,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-accessor-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-accessor-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8599,7 +8599,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-buffer-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-buffer-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8645,7 +8645,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-buffer-view-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-buffer-view-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8691,7 +8691,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-image-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-image-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8737,7 +8737,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-sampler-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-sampler-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8783,7 +8783,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-texture-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only move-texture-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8829,7 +8829,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-accessors-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-accessors-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8875,7 +8875,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-buffers-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-buffers-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8921,7 +8921,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-buffer-views-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-buffer-views-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -8967,7 +8967,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-images-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-images-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -9013,7 +9013,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-samplers-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-samplers-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -9059,7 +9059,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-textures-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only reorder-textures-applied",
         "platform": "darwin-arm64"
       },
       "comparisonPipeline": "gltf-2-0-resource-compare-v1",
@@ -9099,7 +9099,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-child-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-node-child-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9141,7 +9141,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-child-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-node-child-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9183,7 +9183,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-scene-root-node-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only bind-scene-root-node-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9225,7 +9225,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-scene-root-node-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only unbind-scene-root-node-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9267,7 +9267,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-alpha-mode-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-alpha-mode-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9309,7 +9309,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-double-sided-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only change-material-double-sided-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9351,7 +9351,7 @@
       "provenance": {
         "source": "authored",
         "license": "n/a (structural JSON-chunk patch of the repository's own metabolism example export)",
-        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-scene-metabolism-applied`",
+        "attribution": "The artifact-root case's committed real GLB export with this row's edit applied to its JSON chunk by the subset generator's generic structural operations, the BIN chunk carried byte for byte; reproduced by `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts generate --only create-scene-metabolism-applied`",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },

@@ -1,0 +1,238 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "owner-directory-vocabulary",
+   "rule": "policyTaxonomyDirsBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🔸️junk/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema/🔸️odd/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🔨️modules/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/🔸️weird/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📥️import/🔸️wrongcodec/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📥️import/🧩️deserializers/🔸️notartifacts/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📤️export/🧵️serializers/🗿️artifacts/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📝️text/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🔸️x/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🔨️modules/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🔸️y/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔸️odd2/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔸️weird2/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🔸️z/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/x": []
+   },
+   "expect": [
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a-🔸️junk",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🧬️schema-🔸️odd",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io-🔸️weird",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📥️import-🔸️wrongcodec",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🚪️io/📥️import/🧩️deserializers-🔸️notartifacts",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-standard-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1-🔸️x",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-subset-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any-🔸️y",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema-🔸️odd2",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-artifact-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io-🔸️weird2",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ],
+    [
+     "taxonomy-dirs-surface-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer-🔸️z",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "non-plugin-owners-report-at-low-priority",
+   "rule": "policyTaxonomyDirsBreaches",
+   "files": {
+    "🧰️framework/🔨️modules/🔸️owner/🗿️artifacts/🔸️a/🔸️junk/x": []
+   },
+   "expect": [
+    [
+     "taxonomy-dirs-artifact-🧰️framework/🔨️modules/🔸️owner/🗿️artifacts/🔸️a-🔸️junk",
+     "taxonomy/dirs",
+     "low",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "🧰️framework/🔨️modules/🔸️owner",
+     "pluginId": ""
+    }
+   ]
+  },
+  {
+   "id": "window-children-use-the-window-vocabulary",
+   "rule": "policyTaxonomyDirsBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🍱️panes/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🔸️bad/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🧪️tests/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🧫️fixtures/x": []
+   },
+   "expect": [
+    [
+     "taxonomy-dirs-window-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w-🔸️bad",
+     "taxonomy/dirs",
+     "medium",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "window-capabilities-are-complete",
+   "rule": "policyWindowCompletenessBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🎬️actions/📝️.md": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/☑️options/x.txt": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🎚️config/🔸️m1/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/👥️presence/🔸️m2/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/👥️presence/📝️.md": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/👥️presence/🔸️m2/🟦️.ts": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🫧️transient/🦀️.rs": []
+   },
+   "expect": [
+    [
+     "taxonomy-window-completeness-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w-🪛️utilities",
+     "taxonomy/window-completeness",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-window-empty-facet-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/☑️options",
+     "taxonomy/window-empty-facet",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-window-component-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🎚️config/🔸️m1-🟦️typescript",
+     "taxonomy/window-component",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-window-populated-facet-marker-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/👥️presence",
+     "taxonomy/window-empty-facet",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-window-facet-component-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🫧️transient-🦀️.rs",
+     "taxonomy/window-facet-component",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-window-empty-facet-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/🫧️transient",
+     "taxonomy/window-empty-facet",
+     "high",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  },
+  {
+   "id": "mode-children-are-complete",
+   "rule": "policyModeCompletenessBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🪟️windows/🔸️w/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🎮️commands/x.txt": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🎚️config/📝️.md": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🎚️config/🔸️c1/x": [],
+    "✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/👥️presence/📝️.md": []
+   },
+   "expect": [
+    [
+     "taxonomy-mode-empty-child-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🎮️commands",
+     "taxonomy/mode-empty-child",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-mode-populated-child-marker-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m/🎚️config",
+     "taxonomy/mode-empty-child",
+     "high",
+     0
+    ],
+    [
+     "taxonomy-mode-completeness-✏️s/🔌️plugins/🔭️alpha/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🔸️m-🫧️transient",
+     "taxonomy/mode-completeness",
+     "high",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "ownerRel": "✏️s/🔌️plugins/🔭️alpha",
+     "pluginId": "alpha"
+    }
+   ]
+  }
+ ]
+}

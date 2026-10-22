@@ -154,8 +154,22 @@ pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
 //#endregion 🔖️DiffAtPath
 
 //#region 🔖️Apply
-impl MutationDiff<HtmlSnapshot> for HtmlDiff {
-    fn apply(&self, base: &HtmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<HtmlSnapshot> {
+impl MutationDiff<HtmlSnapshot> for HtmlDiff {}
+
+impl protocol::ColdMutationDiff<HtmlSnapshot> for HtmlDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.doctype.is_some() {
+            self.doctype = other.doctype;
+        }
+        self.root = match (self.root.take(), other.root) {
+            (None, b) => b,
+            (a, None) => a,
+            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
+        };
+    }
+
+    fn apply(&self, unpublished: &mut HtmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(root) = &self.root {
             validate_html_node(&base.root, root)?;
         }
@@ -166,18 +180,8 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
         if let Some(node_diff) = &self.root {
             next.root = apply_node_diff(&base.root, node_diff);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.doctype.is_some() {
-            self.doctype = other.doctype;
-        }
-        self.root = match (self.root.take(), other.root) {
-            (None, b) => b,
-            (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_rows(a, b)),
-        };
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -333,12 +337,14 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<HtmlSnapshot> for HtmlDiff {
-    fn inverse(&self, base: &HtmlSnapshot) -> Self {
-        HtmlDiff { doctype: self.doctype.as_ref().map(|_| base.doctype.clone()), root: self.root.as_ref().map(|d| inverse_node_diff(&base.root, d)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.doctype.is_none() && self.root.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<HtmlSnapshot> for HtmlDiff {
+    fn inverse(&self, base: &HtmlSnapshot) -> Self {
+        HtmlDiff { doctype: self.doctype.as_ref().map(|_| base.doctype.clone()), root: self.root.as_ref().map(|d| inverse_node_diff(&base.root, d)) }
     }
 }
 

@@ -53,10 +53,11 @@
       ]
     },
     "Use": {
-      "description": "What a dependent consumes of a dependency. `interface`: only the interface closure (compilers, type checkers). `implementation`: the output closure (linkers, test runners, interpreters). `declared`: nothing; the edge orders and selects but never keys.",
+      "description": "What a dependent consumes of a dependency. `interface`: only the interface closure (compilers, type checkers). `implementation`: the output closure (linkers, test runners, interpreters). `both`: the interface closure to compile against and the output closure to link (a native executable). `declared`: nothing; the edge orders and selects but never keys.",
       "enum": [
         "interface",
         "implementation",
+        "both",
         "declared"
       ]
     },

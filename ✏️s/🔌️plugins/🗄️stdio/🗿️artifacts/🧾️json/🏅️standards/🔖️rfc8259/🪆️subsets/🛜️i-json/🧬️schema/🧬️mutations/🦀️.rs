@@ -30,7 +30,7 @@ use crate::standards::v_rfc8259::subsets::base::schema::diff::{JsonDiff, JsonObj
 use crate::standards::v_rfc8259::subsets::base::schema::mutation_support::diff_at_path;
 use crate::standards::v_rfc8259::subsets::base::schema::mutations::{InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementPayload, RemoveMemberPayload, SetMemberPayload, SetScalarPayload};
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Root
 /// 🌳️ RFC 7493 §2.1 made structural: the top-level value of an I-JSON text is an object or an array,
@@ -91,7 +91,7 @@ pub mod upsert_member;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "JsonIJsonMutation")]
+#[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "JsonIJsonMutation", reference = JsonSnapshot, reference_diff = JsonDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum JsonIJsonMutation {
     /// 🌳️ §2.1 — replaces the whole document root with an object or an array.
@@ -198,7 +198,7 @@ type Refusal = (&'static str, String, Vec<String>);
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn delegated(step: Result<JsonMutation, Refusal>, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
     match step {
-        Ok(step) => <JsonMutation as Mutation<JsonSnapshot>>::diff(&step, base),
+        Ok(step) => <JsonMutation as ColdMutation<JsonSnapshot>>::diff(&step, base),
         Err((CODE_TARGET_MISSING, message, target)) => protocol::MutationOutcome::error(CODE_TARGET_MISSING, message, target),
         Err((code, message, target)) => protocol::MutationOutcome::fatal(code, message, target),
     }

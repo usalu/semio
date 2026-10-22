@@ -1,25 +1,21 @@
 name: Native Repository Command
 description: Recover the owned native frontend, then expose its published directory to CI.
 inputs:
-  bun-version:
-    description: Repository Bun pin.
-    required: true
   node-version:
     description: Repository Node pin.
     required: true
 runs:
   using: composite
   steps:
-    - uses: ./.github/actions/bun-repo
+    - uses: ./.github/actions/repo-launcher
       with:
-        bun-version: ${{ inputs.bun-version }}
         node-version: ${{ inputs.node-version }}
     - name: Publish the Native Command on Unix
       if: ${{ runner.os != 'Windows' }}
       shell: bash
       run: |
         case "$SEMIO_BUILD_MODE" in prototype|release) ;; *) exit 1 ;; esac
-        bun repo run repo-mcp:build --skip-cache
+        repo run repo-mcp:build --skip-cache
         native_repo_dir="$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/$SEMIO_BUILD_MODE/repo"
         "$native_repo_dir/repo" --help
         printf '%s\n' "$native_repo_dir" >> "$GITHUB_PATH"
@@ -29,7 +25,7 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
         if (@('prototype', 'release') -notcontains $env:SEMIO_BUILD_MODE) { throw 'Declared native configuration required.' }
-        bun repo run repo-mcp:build --skip-cache
+        repo run repo-mcp:build --skip-cache
         if ($LASTEXITCODE -ne 0) { throw 'Native repository publication failed.' }
         $nativeRepoDir = Join-Path $env:GITHUB_WORKSPACE ".🧬semio/🦑️repo/⚡️cache/🗃️bin/$env:SEMIO_BUILD_MODE/repo"
         $nativeRepoPath = Join-Path $nativeRepoDir 'repo.exe'

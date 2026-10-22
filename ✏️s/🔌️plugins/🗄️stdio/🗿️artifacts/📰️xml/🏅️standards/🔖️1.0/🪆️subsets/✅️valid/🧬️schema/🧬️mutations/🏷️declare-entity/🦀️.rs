@@ -16,7 +16,16 @@ pub struct DeclareEntity {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entity", kind: "declare-entity", record: "DeclareEntity" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Declare entity", "Entität deklarieren")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::ColdMutation<XmlSnapshot>>::ReferenceDiff> {
         let Self { index, parameter, name, value } = self;
         match base.doc.doctype.as_ref() {
             None => rejected("declare-entity: the document has no DOCTYPE, so there is no internal subset to declare an entity in".to_string()),
@@ -34,12 +43,6 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
             Some(doctype) => vec![XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: doctype.declarations.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Declare entity", "Entität deklarieren")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

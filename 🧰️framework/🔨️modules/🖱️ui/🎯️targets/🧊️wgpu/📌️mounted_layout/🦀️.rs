@@ -40,7 +40,7 @@ pub use layout_input_and_text_measurement::RetainedGlyphPreview;
 #[path = "🧱️job-state-and-admission/🦀️.rs"]
 mod job_state_and_admission;
 pub use job_state_and_admission::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult};
-use job_state_and_admission::AdmissionPhase;
+use job_state_and_admission::{AdmissionPhase, WalkFrame};
 
 #[path = "📐️text-admission-and-measure-steps/🦀️.rs"]
 mod text_admission_and_measure_steps;

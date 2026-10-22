@@ -37,7 +37,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The label-addressed replace carries `before` to exactly the committed `after`: the label-2
@@ -47,7 +47,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert_eq!(base.equation.find(COEFFICIENT).map(|node| node.kind.clone()), Some(EquationNodeKind::Integer { lexeme: "2".to_string() }), "raises-the-leading-coefficient-to-three-halves' base equation must carry the integer 2 at label 2");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("change-coefficient applies to its committed before-snapshot");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("change-coefficient applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: applied state differs from committed after-snapshot");
     assert_eq!(applied.equation.find(COEFFICIENT).map(|node| node.kind.clone()), Some(EquationNodeKind::Rational { numer: "3".to_string(), denom: "2".to_string() }), "a denominator other than 1 lands as the Rational variant, not Integer");
     assert_eq!(applied.equation.next_label, base.equation.next_label, "a replace-in-place must not advance the label allocator");
@@ -73,12 +73,12 @@ async fn the_composed_child_triple_is_never_re_minted() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "2".to_string(), denom: "1".to_string() })], "change-coefficient inverts to BASE's own numer/denom at the same label, got {inverse:?}");
-    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff_cold(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
-        let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
+        let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-coefficient/raises-the-leading-coefficient-to-three-halves: inverse did not restore the before-snapshot");
 }
@@ -135,7 +135,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff did not carry before to after");
 }
 
@@ -146,16 +146,16 @@ async fn committed_diff_applies_to_after() {
 async fn a_non_numeric_target_and_a_zero_denominator_are_refused() {
     let base = before();
     let on_the_sum = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(0), numer: "1".to_string(), denom: "1".to_string() });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&on_the_sum, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&on_the_sum, &base);
     assert_eq!(outcome.messages()[0].code.0, "mutation.target-missing", "label 0 is the Add root — a coefficient change cannot address a non-numeric node");
     assert_eq!(outcome.messages()[0].level, semio_framework_diagnostic::Severity::Error, "a non-numeric target is an Error, not a Fatal");
 
     let absent = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(999), numer: "1".to_string(), denom: "1".to_string() });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&absent, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&absent, &base);
     assert_eq!(outcome.messages()[0].target, vec!["999".to_string()], "the diagnostic names the unresolved LABEL, rendered decimal");
 
     let zero_denominator = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "1".to_string(), denom: "0".to_string() });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&zero_denominator, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&zero_denominator, &base);
     assert_eq!(outcome.messages()[0].code.0, "mutation.invariant", "a zero denominator breaches an invariant rather than missing a target");
     assert_eq!(outcome.messages()[0].level, semio_framework_diagnostic::Severity::Fatal, "a zero denominator is Fatal — no merge policy may absorb it");
     assert_eq!(outcome.diff(), &EquationDiff::default(), "every refused change-coefficient carries the empty diff");

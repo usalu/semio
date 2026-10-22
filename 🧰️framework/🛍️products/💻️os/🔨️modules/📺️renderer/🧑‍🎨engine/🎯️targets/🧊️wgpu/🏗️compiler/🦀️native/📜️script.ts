@@ -7,6 +7,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨�
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 📂️ Gives the native producer and its runner one profile-specific artifact directory. */
 export function nativeRendererDirectory(rustPackageRoot: string, profile: string): string {
@@ -34,4 +35,4 @@ class BuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🦀️rust")).register("build", BuildScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dirname, "../../📦️packages/🦀️rust")).register("build", BuildScript)).run(process.argv.slice(2), original));

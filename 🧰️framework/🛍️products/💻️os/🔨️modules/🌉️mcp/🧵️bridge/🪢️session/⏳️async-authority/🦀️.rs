@@ -23,16 +23,16 @@ pub(crate) struct BridgeAsyncState {
 impl BridgeAsyncState {
     pub(crate) fn new() -> Self {
         Self {
-            broadcasts: semio_framework_async::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
+            broadcasts: semio_framework_async_slots::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
             broadcast_head: 0,
             broadcast_len: 0,
             broadcast_reserved: 0,
             broadcast_driving: false,
-            completions: semio_framework_async::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
+            completions: semio_framework_async_slots::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
             completion_head: 0,
             completion_len: 0,
             completion_reserved: 0,
-            retirements: semio_framework_async::boxed_slots(BRIDGE_RETIREMENT_MAX_PENDING, || None),
+            retirements: semio_framework_async_slots::boxed_slots(BRIDGE_RETIREMENT_MAX_PENDING, || None),
             retirement_head: 0,
             retirement_len: 0,
             retirement_reserved: 0,

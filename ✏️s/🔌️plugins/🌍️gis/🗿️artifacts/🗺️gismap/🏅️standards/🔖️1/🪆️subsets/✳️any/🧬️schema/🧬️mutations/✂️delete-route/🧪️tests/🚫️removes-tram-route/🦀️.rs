@@ -83,7 +83,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "delete-route/removes-tram-route: this fixture pins an applied outcome");
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "delete-route/removes-tram-route: an applied outcome with no declared messages must emit none, got {:?}", produced.messages());
     let mut snapshot = before();
     apply_gis_map_mutation(&mut snapshot, &mutation()).expect("delete-route/removes-tram-route: declared applied but the mutation was rejected");
@@ -95,7 +95,7 @@ async fn declared_outcome_holds() {
 /// mutation is allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
+    let outcome = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-route/removes-tram-route: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisMapDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-route/removes-tram-route: committed diff did not carry before to after");
 }
 
@@ -127,7 +127,7 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn removes_exactly_one_route_without_cascading_and_inverts_from_base() {
     let base = before();
-    let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
+    let produced = <GisMapMutation as protocol::ColdMutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "delete-route/removes-tram-route: deleting a present id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().routes.as_ref().expect("delete-route writes a routes delta");
     assert_eq!(delta.removed.iter().map(|removal| removal.id.as_str()).collect::<Vec<_>>(), vec!["route-tram"], "delete-route/removes-tram-route: exactly the payload's own id is removed");

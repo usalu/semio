@@ -193,6 +193,6 @@
   ],
   "route": {
     "target": "test-root-inference-law-source",
-    "command": "bun ./📜️script.ts test root-inference-law-source"
+    "command": "repo ./📜️script.ts test root-inference-law-source"
   }
 }

@@ -95,14 +95,14 @@ describe("generator preview protocol", () => {
         writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
         writeFileSync(join(repoRoot, ".gitignore"), `${outputRoot}\n`);
         writeFileSync(join(repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
-        writeFileSync(join(repoRoot, "package.json"), "{\"name\":\"generator-preview-fixture\",\"private\":true,\"scripts\":{\"nx\":\"bun ./node_modules/nx/dist/bin/nx.js\"}}\n");
+        writeFileSync(join(repoRoot, "package.json"), "{\"name\":\"generator-preview-fixture\",\"private\":true,\"scripts\":{\"nx\":\"repo ./node_modules/nx/dist/bin/nx.js\"}}\n");
         const projectManifest = `${JSON.stringify({
           name: "@fixture/generator",
           root: owner,
           targets: {
-            generate: { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts generate" } },
-            "preview-generated": { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } },
-            check: { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts check" } },
+            generate: { executor: "repo:script", options: { cwd: owner, command: "repo ./📜️script.ts generate" } },
+            "preview-generated": { executor: "repo:script", options: { cwd: owner, command: "repo ./📜️script.ts preview-generated" } },
+            check: { executor: "repo:script", options: { cwd: owner, command: "repo ./📜️script.ts check" } },
           },
         }, null, 2)}\n`;
         writeFileSync(join(repoRoot, "project.json"), projectManifest);

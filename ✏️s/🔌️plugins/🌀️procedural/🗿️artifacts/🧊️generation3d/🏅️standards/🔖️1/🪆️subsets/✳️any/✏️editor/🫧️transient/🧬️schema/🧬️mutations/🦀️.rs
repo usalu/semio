@@ -8,7 +8,7 @@ pub use set_generation_preview::SetGenerationPreview;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Generation3dTransient, diff = Generation3dTransientPatch, schema = "generation.3dtransient")]
+#[mutations(snapshot = Generation3dTransient, diff = Generation3dTransientPatch, schema = "generation.3dtransient", reference = Generation3dTransient, reference_diff = Generation3dTransientPatch)]
 pub enum Generation3dTransientMutation {
     #[dsl(key = "set-generation-preview")]
     SetGenerationPreview(SetGenerationPreview),

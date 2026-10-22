@@ -1,5 +1,5 @@
 /** 🟢️ The effective mode layout phase of usePanelHosting. */
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { windowLayoutWindowIdsV1 } from "@semio-tech/framework";
 import { type WindowLayoutNode } from "@semio-tech/ui-react";
 import { LAYOUT_CHANGE_SETTLE_MS, classifyWindowLayoutChange, resolveFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";

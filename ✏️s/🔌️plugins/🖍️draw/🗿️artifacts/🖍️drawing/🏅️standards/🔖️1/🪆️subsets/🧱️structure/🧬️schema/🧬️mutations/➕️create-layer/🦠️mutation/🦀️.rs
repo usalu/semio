@@ -33,17 +33,20 @@ pub fn create_layer<Op: From<CreateLayer>>(parent_id: Option<semio_framework_val
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for CreateLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", semio_s_artifact_draw_drawing_model::layer_id(&self.layer)), &format!("Ebene \"{}\" erstellen", semio_s_artifact_draw_drawing_model::layer_id(&self.layer)))
     }
     fn target(&self) -> Vec<String> {
         vec![semio_s_artifact_draw_drawing_model::layer_id(&self.layer).to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for CreateLayer where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️Mutation

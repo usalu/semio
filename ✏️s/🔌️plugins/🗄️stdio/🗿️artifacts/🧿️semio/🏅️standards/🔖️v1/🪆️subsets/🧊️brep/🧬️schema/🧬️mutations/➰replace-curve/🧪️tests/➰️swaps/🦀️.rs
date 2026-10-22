@@ -11,7 +11,7 @@ use crate::io::text::mutations::decode_semio_brep_mutation_json;
 use crate::schema::snapshot::SemioBrepSnapshot;
 use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/📸️snapshot/⬅️before/🔣️.json"));
@@ -34,7 +34,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_geometry_without_moving_the_topology() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-curve applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("replace-curve applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: applied state differs from the committed after-snapshot");
     let edited = produced.edges.iter().find(|edge| edge.id == "e1").expect("the edge is still there — a replace is not a delete");
     assert_ne!(edited.curve, base.edges[0].curve, "the curve really must have changed");
@@ -53,9 +53,9 @@ async fn the_undo_replace_curve_restores_the_original_line() {
     assert_eq!(undo.len(), 1, "replace-curve of an existing edge undoes as exactly one replace-curve");
     let SemioBrepMutation::ReplaceCurve(restore) = &undo[0] else { panic!("replace-curve must undo as replace-curve") };
     assert_eq!(restore.new_curve, base.edges[0].curve, "the undo must recapture BASE's own curve");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-curve applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward replace-curve applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-curve applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo replace-curve applies");
     }
     assert_eq!(current, base, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: the undo did not restore the before-snapshot");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioBrepMutation as ColdMutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
     let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -113,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed replace-curve diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-curve diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed replace-curve diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: committed diff did not carry before to after");
 }

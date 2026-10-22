@@ -31,7 +31,7 @@ use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapsh
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -41,7 +41,7 @@ use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::{insert_ch
 /// 📐️ Typed content mutation for `s.stdio.semio.audio`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation")]
+#[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation", reference = SemioAudioSnapshot, reference_diff = SemioAudioDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAudioMutation {
     SetSampleRate(set_sample_rate::SetSampleRate),
@@ -65,7 +65,7 @@ pub const KINDS: &[&str] = &["set-sample-rate", "set-format", "insert-channel", 
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
-    <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, base)
+    <SemioAudioMutation as ColdMutation<SemioAudioSnapshot>>::diff(mutation, base)
 }
 
 
@@ -77,7 +77,7 @@ pub fn diff_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, base)?
+    <SemioAudioMutation as ColdMutation<SemioAudioSnapshot>>::inverse(mutation, base)?
 
     })
 }

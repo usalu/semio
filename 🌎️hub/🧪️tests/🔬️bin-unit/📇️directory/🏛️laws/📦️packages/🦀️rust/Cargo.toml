@@ -49,3 +49,4 @@ protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡�
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 axum = { version = "0.8", features = ["ws"] }
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }

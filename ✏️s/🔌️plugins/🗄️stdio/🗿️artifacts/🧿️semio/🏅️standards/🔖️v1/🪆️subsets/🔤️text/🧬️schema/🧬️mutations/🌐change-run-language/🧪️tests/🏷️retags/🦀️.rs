@@ -9,7 +9,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/➡️after/🔣️.json"));
@@ -31,7 +31,7 @@ fn change_run_language() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn retags_run_one_without_rewriting_its_body() {
     let base = before();
-    let produced = protocol::apply_diff(change_run_language().diff(&base).diff(), &base).expect("change-run-language applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(change_run_language().diff(&base).diff(), &base).expect("change-run-language applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-run-language/retags-the-second-run-as-german: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs[1].language, "de", "run #1's BCP-47 tag must become the payload's new_language");
     assert_eq!(produced.runs[1].content, base.runs[1].content, "change-run-language must never rewrite the authored content");
@@ -46,9 +46,9 @@ async fn the_undo_change_run_language_restores_the_english_tag() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-run-language of an existing run undoes as exactly one change-run-language");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-run-language applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward change-run-language applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-run-language applies to the retagged state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo change-run-language applies to the retagged state");
     }
     assert_eq!(current, base, "change-run-language/retags-the-second-run-as-german: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_without_a_no_op_warning() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&change_run_language(), &base);
+    let outcome = <SemioTextMutation as ColdMutation<SemioTextSnapshot>>::diff(&change_run_language(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-run-language/retags-the-second-run-as-german: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -102,6 +102,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-run-language diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed change-run-language diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-run-language/retags-the-second-run-as-german: committed diff did not carry before to after");
 }

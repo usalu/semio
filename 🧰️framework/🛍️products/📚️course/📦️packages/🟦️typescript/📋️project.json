@@ -30,7 +30,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

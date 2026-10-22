@@ -31,6 +31,15 @@ pub fn create_vortex_at<Op: From<crate::create_vortex::CreateVortex>>(vortex: Bl
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for CreateVortex where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::delete_vortex::DeleteVortex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "vortex", kind: "create-vortex", record: "CreatedVortex" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create vortex \"{}\"", self.vortex.id), &format!("Wirbel \"{}\" erstellen", self.vortex.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.vortex.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for CreateVortex where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::delete_vortex::DeleteVortex> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::create_vortex::diff::diff(self, base)
     }
@@ -40,12 +49,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for CreateVortex where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create vortex \"{}\"", self.vortex.id), &format!("Wirbel \"{}\" erstellen", self.vortex.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.vortex.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

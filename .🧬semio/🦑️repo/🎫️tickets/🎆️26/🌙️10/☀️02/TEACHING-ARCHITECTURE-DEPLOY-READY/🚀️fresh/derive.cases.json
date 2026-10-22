@@ -234,19 +234,19 @@
     "accepted": true
   },
   {
-    "id": "critical116-missing-current-input",
+    "id": "critical341-missing-current-input",
     "stage": "create",
     "change": "critical-missing",
     "accepted": false
   },
   {
-    "id": "critical116-extra-input",
+    "id": "critical341-extra-input",
     "stage": "create",
     "change": "critical-extra",
     "accepted": false
   },
   {
-    "id": "critical116-reject-old-roster",
+    "id": "critical341-reject-old-roster",
     "stage": "create",
     "change": "critical-old-roster",
     "accepted": false

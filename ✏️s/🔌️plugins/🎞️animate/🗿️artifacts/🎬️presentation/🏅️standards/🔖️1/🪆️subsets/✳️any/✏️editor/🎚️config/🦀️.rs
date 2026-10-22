@@ -83,29 +83,37 @@ pub struct PresentationConfigDiff {
     pub engagement_input: Option<String>,
 }
 
-impl protocol::MutationDiff<PresentationConfig> for PresentationConfigDiff {
-    fn apply(&self, base: &PresentationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PresentationConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<PresentationConfig> for PresentationConfigDiff {}
+
+impl protocol::ColdMutationDiff<PresentationConfig> for PresentationConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.engagement_input.is_some() {
             self.engagement_input = other.engagement_input;
         }
     }
+
+    fn apply(&self, unpublished: &mut PresentationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<PresentationConfig> for PresentationConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PresentationConfig> for PresentationConfigDiff {
     fn inverse(&self, base: &PresentationConfig) -> Self {
         Self {
             engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.engagement_input.is_none()
     }
 }
 

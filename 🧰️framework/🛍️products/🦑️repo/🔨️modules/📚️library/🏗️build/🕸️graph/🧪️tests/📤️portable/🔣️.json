@@ -1,0 +1,583 @@
+{
+  "version": 1,
+  "policy": {
+    "maximumProjects": 32,
+    "maximumBytes": 16777216,
+    "retryCaughtFailures": false
+  },
+  "batches": [
+    {
+      "id": "empty",
+      "lengths": [],
+      "groups": [],
+      "glyph": "x"
+    },
+    {
+      "id": "one",
+      "lengths": [
+        14
+      ],
+      "groups": [
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "count-boundary",
+      "lengths": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "groups": [
+        32
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "count-over",
+      "lengths": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "groups": [
+        32,
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "count-multiple",
+      "lengths": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "groups": [
+        32,
+        32,
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "string-boundary",
+      "lengths": [
+        8388608,
+        8388608,
+        14
+      ],
+      "groups": [
+        2,
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "string-over",
+      "lengths": [
+        8388609,
+        8388608
+      ],
+      "groups": [
+        1,
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "indivisible-project",
+      "lengths": [
+        16777217,
+        14
+      ],
+      "groups": [
+        1,
+        1
+      ],
+      "glyph": "x"
+    },
+    {
+      "id": "utf8-byte-boundary",
+      "lengths": [
+        8388622,
+        8388622
+      ],
+      "groups": [
+        1,
+        1
+      ],
+      "glyph": "é"
+    }
+  ],
+  "failures": [
+    {
+      "id": "undefined-chunk-0",
+      "kind": "undefined",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "undefined-chunk-1",
+      "kind": "undefined",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "null-chunk-0",
+      "kind": "null",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "null-chunk-1",
+      "kind": "null",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "false-chunk-0",
+      "kind": "false",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "false-chunk-1",
+      "kind": "false",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "zero-chunk-0",
+      "kind": "zero",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "zero-chunk-1",
+      "kind": "zero",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "empty-chunk-0",
+      "kind": "empty",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "empty-chunk-1",
+      "kind": "empty",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "error-chunk-0",
+      "kind": "error",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "error-chunk-1",
+      "kind": "error",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "capacity-chunk-0",
+      "kind": "capacity",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "capacity-chunk-1",
+      "kind": "capacity",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "message-getter-chunk-0",
+      "kind": "message-getter",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "message-getter-chunk-1",
+      "kind": "message-getter",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "code-getter-chunk-0",
+      "kind": "code-getter",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "code-getter-chunk-1",
+      "kind": "code-getter",
+      "atChunk": 1,
+      "projects": 65
+    },
+    {
+      "id": "proxy-chunk-0",
+      "kind": "proxy",
+      "atChunk": 0,
+      "projects": 2
+    },
+    {
+      "id": "proxy-chunk-1",
+      "kind": "proxy",
+      "atChunk": 1,
+      "projects": 65
+    }
+  ],
+  "sliceFailures": [
+    {
+      "id": "tasks-undefined",
+      "kind": "undefined",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-undefined",
+      "kind": "undefined",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-null",
+      "kind": "null",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-null",
+      "kind": "null",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-false",
+      "kind": "false",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-false",
+      "kind": "false",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-zero",
+      "kind": "zero",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-zero",
+      "kind": "zero",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-empty",
+      "kind": "empty",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-empty",
+      "kind": "empty",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-error",
+      "kind": "error",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-error",
+      "kind": "error",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-unknown",
+      "kind": "unknown",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-unknown",
+      "kind": "unknown",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-empty-generation",
+      "kind": "empty-generation",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-empty-generation",
+      "kind": "empty-generation",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-unknown-owner",
+      "kind": "unknown-owner",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-unknown-owner",
+      "kind": "unknown-owner",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-inherited-code",
+      "kind": "inherited-code",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-inherited-code",
+      "kind": "inherited-code",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-code-getter",
+      "kind": "code-getter",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-code-getter",
+      "kind": "code-getter",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-proxy",
+      "kind": "proxy",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-proxy",
+      "kind": "proxy",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-message-getter",
+      "kind": "message-getter",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-message-getter",
+      "kind": "message-getter",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "tasks-capacity",
+      "kind": "capacity",
+      "selection": "tasks",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    },
+    {
+      "id": "projects-capacity",
+      "kind": "capacity",
+      "selection": "projects",
+      "expected": "primary",
+      "generationCalls": 1,
+      "fallbackCalls": 0
+    }
+  ]
+}

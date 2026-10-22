@@ -281,23 +281,23 @@
   "routes": {
     "source": {
       "target": "test-cargo-transaction-command-source",
-      "command": "bun ./📜️script.ts test cargo-transaction-command-source"
+      "command": "repo ./📜️script.ts test cargo-transaction-command-source"
     },
     "go": {
       "target": "go-test",
-      "command": "bun ./📜️script.ts go-test"
+      "command": "repo ./📜️script.ts go-test"
     },
     "goProjection": {
       "target": "test-go-input-projection",
-      "command": "bun ./📜️script.ts test go-input-projection"
+      "command": "repo ./📜️script.ts test go-input-projection"
     },
     "goDispatch": {
       "target": "test-go-dispatch",
-      "command": "bun ./📜️script.ts test go-test-dispatch"
+      "command": "repo ./📜️script.ts test go-test-dispatch"
     },
     "transaction": {
       "target": "test-transaction-v2",
-      "command": "bun ./📜️script.ts test transaction-v2"
+      "command": "repo ./📜️script.ts test transaction-v2"
     }
   },
   "nativeArguments": [

@@ -36,7 +36,7 @@ export async function executeLiteralBuildArgumentsV1(options,context,delegate){
   const source={version:1,invocation,command:command+(forward!==false&&args.length?" "+args.map(quote).join(" "):""),...(ready===undefined?{}:{ready})};
   if(!conforms(sourceSchema,source))throw Error("Private Nx command source refused");
   const image=JSON.stringify(source),digest=createHash("sha256").update(image).digest("hex");try{await writeFile(resolve(directory,digest+".json"),image,{flag:"wx",mode:0o600});}catch(error){if(error.code!=="EEXIST")throw error;}
-  const bridge=(process.platform==="win32"?'bun "%SEMIO_NX_COMMAND_RUNNER%"':'bun "$SEMIO_NX_COMMAND_RUNNER"')+" "+digest;
+  const bridge=(process.platform==="win32"?'repo "%SEMIO_NX_COMMAND_RUNNER%"':'repo "$SEMIO_NX_COMMAND_RUNNER"')+" "+digest;
   return typeof operation==="string"?bridge:{...operation,command:bridge,forwardAllArgs:false};
  };
  const plan={...options,...(ready===undefined?{}:{readyWhen:readinessMarker}),args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...storeReceiptEnvironmentV1(context),...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url)),...(orchestration?{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(orchestration),SEMIO_SCRIPT_CAPABILITIES:undefined}:{})}};

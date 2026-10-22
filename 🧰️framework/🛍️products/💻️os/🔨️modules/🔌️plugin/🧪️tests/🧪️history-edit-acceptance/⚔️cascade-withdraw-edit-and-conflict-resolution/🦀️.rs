@@ -8,7 +8,7 @@ use super::*;
 async fn acceptance_cascade_withdraw<A, M>(app: &mut VcsArtifactApp<A, M>, manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, seed: &[&A::Mutation],cx:&mut semio_framework_job::StepContext<'_>) -> Result<String, AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let ids = acceptance_applied_ids(app)?;
     let root = ids.first().cloned().ok_or_else(|| AcceptanceVerdict::Fail("the seeded history left no applied operation".into()))?;
@@ -74,7 +74,7 @@ where
 async fn acceptance_cascade_edit<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>, seed: &[&A::Mutation],cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<String>, AcceptanceVerdict>
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut app = acceptance_seeded::<A, M>(manifest, &case.base, seed, true,cx).await.map_err(|fault| AcceptanceVerdict::Fail(fault.into_error().context("the history that seeded once does not seed again".into())))?;
     let outcome = async {
@@ -147,7 +147,7 @@ where
 async fn acceptance_cascade<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>) -> AcceptanceVerdict
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut probe = match acceptance_seeded::<A, M>(manifest, &case.base, &[], true,cx).await {
         Ok(app) => app,
@@ -202,7 +202,7 @@ where
 pub async fn assert_history_conflicts_resolve<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource]) -> String
 where
     A: ArtifactApp + Default,
-    M: SpaceMember + MemberFactory + Send + 'static,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     if <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS.is_empty() {

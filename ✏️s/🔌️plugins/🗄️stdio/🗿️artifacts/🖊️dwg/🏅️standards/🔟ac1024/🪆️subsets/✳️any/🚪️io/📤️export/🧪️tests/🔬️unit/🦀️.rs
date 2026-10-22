@@ -361,8 +361,8 @@ async fn well_known_fixture_lossless_system_roundtrip() {
     use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::set_version_info;
     use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
     use crate::standards::v_ac1024::subsets::any::io::export::encode_dwg;
-    use protocol::command::DiffAlgebra;
-    use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+    use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
     assert_eq!(ARCHITECTURAL_FIXTURE.len(), 148_638);
@@ -389,7 +389,7 @@ async fn well_known_fixture_lossless_system_roundtrip() {
 
     let self_diff = DwgDiff::default();
     assert!(self_diff.is_empty());
-    assert_eq!(encode_dwg(&protocol::apply_diff(&self_diff, &snapshot).expect("self-diff must apply")).expect("self-diff export"), &ARCHITECTURAL_FIXTURE[..]);
+    assert_eq!(encode_dwg(&protocol::apply_diff_cold(&self_diff, &snapshot).expect("self-diff must apply")).expect("self-diff export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let same_version_info = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage });
     let mut no_op_snapshot = snapshot.clone();

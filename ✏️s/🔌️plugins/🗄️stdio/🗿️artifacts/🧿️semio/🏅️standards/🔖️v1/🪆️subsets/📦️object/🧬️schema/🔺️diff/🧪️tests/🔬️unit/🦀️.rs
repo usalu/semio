@@ -20,7 +20,7 @@ use protocol::{DiffBinary,DiffText};
 async fn apply_replaces_touched_fields_only() {
     let base = demo_object_snapshot();
     let diff = SemioObjectDiff { brep: Some(None), ..Default::default() };
-    let next = protocol::apply_diff(&diff, &base).expect("apply must succeed for a well-formed fixture");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("apply must succeed for a well-formed fixture");
     assert!(next.brep.is_none());
     assert_eq!(next.mesh, base.mesh, "untouched fields must be preserved");
 }

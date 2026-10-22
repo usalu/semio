@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Mode": {
+      "enum": [
+        "publication",
+        "cancel",
+        "deadline",
+        "overflow",
+        "malformed",
+        "missing-end"
+      ]
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "cachePath",
+            "imageRoot",
+            "expected"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "const": "publication"
+            },
+            "cachePath": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "imageRoot": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "hash",
+                "references"
+              ],
+              "properties": {
+                "hash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "references": {
+                  "type": "array",
+                  "maxItems": 262144,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(source|lock):[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "cancel",
+                "deadline",
+                "overflow",
+                "malformed",
+                "missing-end"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "authority",
+        "workerCompanions",
+        "entry",
+        "birth"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Mode"
+          }
+        },
+        "authority": {
+          "const": [
+            "actual-compiler-capture",
+            "private-byte-snapshot",
+            "captured-program",
+            "same-original-control",
+            "owned-child",
+            "closed-dto"
+          ]
+        },
+        "workerCompanions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/WorkerCompanion"
+          }
+        },
+        "entry": {
+          "$ref": "#/definitions/Entry"
+        },
+        "birth": {
+          "$ref": "#/definitions/BirthWitness"
+        }
+      }
+    },
+    "Response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "completed"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "publication",
+                "cancel",
+                "deadline",
+                "overflow"
+              ]
+            },
+            "completed": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "completed",
+            "wire",
+            "digest"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "missing-end",
+                "malformed"
+              ]
+            },
+            "completed": {
+              "const": true
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "wire": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "status",
+                "signal",
+                "stdout",
+                "stderr"
+              ],
+              "properties": {
+                "status": {
+                  "const": 1
+                },
+                "signal": {
+                  "type": "null"
+                },
+                "stdout": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "stderr": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "WorkerCompanion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "schema"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Entry": {
+      "const": {
+        "version": 1,
+        "function": "runScriptProgram",
+        "ingress": "birth-owning-program",
+        "witnessPrefix": "closure-admitted-birth:"
+      }
+    },
+    "BirthWitness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "ingress",
+        "owner",
+        "maximumElapsedMilliseconds",
+        "deadlineEpochMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "ingress": {
+          "const": "birth-owning-program"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/Request"
+}

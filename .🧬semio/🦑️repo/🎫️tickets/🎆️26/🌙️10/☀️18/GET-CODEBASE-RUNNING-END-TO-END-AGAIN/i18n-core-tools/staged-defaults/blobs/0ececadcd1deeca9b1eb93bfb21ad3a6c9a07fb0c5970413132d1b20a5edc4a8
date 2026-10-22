@@ -1,0 +1,157 @@
+import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {mkdtempSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import catalog from "../../../⚙️operations/🔣️catalog.json" with {type:"json"};
+import operationsSchema from "../../../⚙️operations/🧬️schema/🔣️.json" with {type:"json"};
+import {readBuildHelpRequestV1,renderBuildHelpV1} from "../../../⚙️operations/📖️help/🟦️.ts";
+import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import {DOCTOR_PROTOCOL_V1,type DoctorFactsV1} from "../../🟦️.ts";
+import {doctorArgumentsV1,runDoctorCommandV1} from "../../⌨️command/🟦️.ts";
+import {doctorPortsV1} from "../../🔌️ports/🟦️.ts";
+import type {DoctorProbeV1} from "../../🔎️probes/🟦️.ts";
+
+const ajv=new Ajv({strict:true,allowUnionTypes:true}),compile=(definition:string)=>ajv.compile({definitions:schema.definitions,$ref:`#/definitions/${definition}`});
+const roots:string[]=[];
+const fresh=():string=>{const root=mkdtempSync(join(tmpdir(),"drc-"));roots.push(root);return root;};
+process.on("exit",()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
+const probe=(area:DoctorProbeV1["area"],sections:Record<string,unknown>,delay=0):DoctorProbeV1=>({area,phase:1,read:async()=>{if(delay)await new Promise(done=>setTimeout(done,delay));return {sections:sections as never};}});
+const hostSection={cores:10,totalMegabytes:32768,availableMegabytes:20000,floorMegabytes:6553,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:1,openFilesMaximum:1000,attachedImages:1,governor:"on"};
+const leasesWith=(over:Record<string,unknown>)=>({holders:[],waiters:[],cycles:[],violations:[],registry:{folders:0,orphanFolders:0,deadEntries:0,liveEntries:0},deadTickets:0,deadHolders:[],...over});
+const run=async(args:string[],probes:DoctorProbeV1[],environment:Record<string,string>={SEMIO_LANGUAGE:"en"},extra:{signal?:AbortSignal}={})=>{
+ const out:string[]=[],progress:string[]=[],code=await runDoctorCommandV1(args,{root:fresh(),environment:environment as never,write:line=>out.push(line),progress:line=>progress.push(line),osLanguages:()=>[],ports:{now:()=>1000000000000},options:{probes},...extra});
+ return {code,out,progress,text:out.join("\n")};
+};
+
+test("the arguments are closed: unknown, repeated and valueless options and unknown areas are refused in both languages",()=>{
+ expect(doctorArgumentsV1([])).toMatchObject({json:false,fix:false,dryRun:false,strict:false,facts:false,only:undefined,language:undefined});
+ expect(doctorArgumentsV1(["--json","--fix","--dry-run","--strict","--only=leases,capacity","--lang=de"])).toMatchObject({json:true,fix:true,dryRun:true,strict:true,language:"de"});
+ expect([...doctorArgumentsV1(["--only","host,graph"]).only!]).toEqual(["host","graph"]);
+ expect(doctorArgumentsV1(["--facts"]).facts).toBe(true);
+ const refusals:[string[],RegExp][]=[
+  [["--bogus"],/Unknown doctor option: --bogus[\s\S]*Unbekannte doctor-Option: --bogus/u],
+  [["--json","--json"],/given twice[\s\S]*zweimal/u],
+  [["--only"],/needs a value[\s\S]*braucht einen Wert/u],
+  [["--only="],/needs a value[\s\S]*braucht einen Wert/u],
+  [["--only=nonsense"],/Unknown doctor area: nonsense[\s\S]*Unbekannter doctor-Bereich: nonsense/u],
+  [["--only=doctor"],/Unknown doctor area: doctor/u],
+  [["--dry-run"],/only applies together with --fix[\s\S]*nur zusammen mit --fix/u],
+  [["--json=1"],/Unknown doctor option/u],
+  [["--lang"],/needs a value/u],
+ ];
+ for(const [args,pattern] of refusals)expect(()=>doctorArgumentsV1(args),args.join(" ")).toThrow(pattern);
+ expect(DOCTOR_PROTOCOL_V1.areas).toContain("doctor");
+});
+
+test("exit status: 0 for a healthy machine and notes, 1 for an error, 1 for a warning only under --strict",async()=>{
+ const healthy=[probe("capacity",{host:hostSection,capacity:{headroomMegabytes:1,grants:[],waiters:[]}})];
+ const noted=[probe("sessions",{sessions:{live:1,idle:0,gone:3,damaged:0}})];
+ const warned=[probe("sessions",{sessions:{live:9,idle:0,gone:0,damaged:0}})];
+ const failed=[probe("leases",{leases:leasesWith({cycles:[{members:["1/0","2/0"],victim:"2/0"}]})})];
+ expect((await run([],healthy)).code).toBe(0);
+ expect((await run([],noted)).code).toBe(0);
+ expect((await run([],warned)).code).toBe(0);
+ expect((await run(["--strict"],warned)).code).toBe(1);
+ expect((await run(["--strict"],noted)).code).toBe(0);
+ expect((await run([],failed)).code).toBe(1);
+});
+
+test("--json prints exactly one valid report, --facts one valid facts document, and neither prints progress",async()=>{
+ const probes=[probe("leases",{leases:leasesWith({cycles:[{members:["1/0","2/0"],victim:"2/0"}]})}),probe("capacity",{host:hostSection})];
+ const json=await run(["--json"],probes);
+ expect(json.out.length).toBe(1);
+ const report=JSON.parse(json.out[0]!);
+ expect(compile("Report")(report)).toBe(true);
+ expect(report.verdict).toBe("blocked");
+ expect(report.findings.map((row:{id:string})=>row.id)).toEqual(["leases.cycle"]);
+ expect(json.progress).toEqual([]);
+ const facts=await run(["--facts"],probes);
+ expect(facts.out.length).toBe(1);
+ const document=JSON.parse(facts.out[0]!) as DoctorFactsV1;
+ expect(compile("Facts")(document)).toBe(true);
+ expect(document.probes.map(row=>row.area)).toEqual(["leases","capacity"]);
+ expect(facts.progress).toEqual([]);
+});
+
+test("the human report reads in the requested language, in the locale's, or in both when none resolves",async()=>{
+ const probes=[probe("leases",{leases:leasesWith({cycles:[{members:["1/0","2/0"],victim:"2/0"}]})})];
+ const en=await run([],probes,{SEMIO_LANGUAGE:"en"}),de=await run([],probes,{SEMIO_LANGUAGE:"de"}),flag=await run(["--lang=de"],probes,{SEMIO_LANGUAGE:"en"}),both=await run([],probes,{});
+ expect(en.text).toContain("repo doctor: blocked: something stops or stalls work");
+ expect(en.text).toContain("Deadlock between 1/0, 2/0");
+ expect(de.text).toContain("repo doctor: blockiert: etwas hält die Arbeit an oder lässt sie stocken");
+ expect(de.text).toContain("Verklemmung zwischen 1/0, 2/0");
+ expect(flag.text).toBe(de.text);
+ expect(both.text).toContain("blocked: something stops");
+ expect(both.text).toContain("blockiert: etwas hält");
+ expect(both.out.length).toBe(en.out.length+de.out.length+2);
+ expect(en.text).toContain("repo leases status");
+});
+
+test("progress names each probe on its own line before the report",async()=>{
+ const probes=[probe("tools",{}),probe("storage",{}),probe("graph",{})];
+ const english=await run([],probes,{SEMIO_LANGUAGE:"en"}),german=await run([],probes,{SEMIO_LANGUAGE:"de"});
+ expect(english.progress.filter(line=>line.startsWith("doctor: reading")).length).toBe(3);
+ expect(english.progress.some(line=>/reading tools \(1\/3\)/u.test(line))).toBe(true);
+ expect(german.progress.some(line=>/lese tools \(1\/3\)/u.test(line))).toBe(true);
+});
+
+test("a cancelled run exits with 130 and says so in the chosen language without printing a report",async()=>{
+ const controller=new AbortController();
+ const stalled:DoctorProbeV1={area:"tools",phase:1,read:()=>{setTimeout(()=>controller.abort(),20);return new Promise(()=>{});}};
+ const result=await run([],[stalled],{SEMIO_LANGUAGE:"de"},{signal:controller.signal});
+ expect(result.code).toBe(130);
+ expect(result.out).toEqual([]);
+ expect(result.progress.join("\n")).toContain("doctor abgebrochen");
+});
+
+test("--fix with --dry-run lists repairs and --fix without findings repairs nothing",async()=>{
+ const results:string[]=[];
+ const repairable:DoctorProbeV1={area:"sessions",phase:1,read:async()=>({sections:{sessions:{live:0,idle:0,gone:2,damaged:0}}}),repairs:[{id:"agent-sessions",area:"sessions",run:async(_ports,_context,dryRun)=>{results.push(dryRun?"dry":"real");return {removed:2,bytes:0};}}]};
+ const repairs=new Map([["agent-sessions",repairable.repairs![0]!]]);
+ const out:string[]=[];
+ const code=await runDoctorCommandV1(["--fix","--dry-run","--json"],{root:fresh(),environment:{SEMIO_LANGUAGE:"en"},write:line=>out.push(line),progress:()=>{},options:{probes:[repairable],repairs}});
+ expect(code).toBe(0);
+ const report=JSON.parse(out[0]!);
+ expect(report.repairs).toEqual([{id:"agent-sessions",area:"sessions",dryRun:true,status:"done",removed:2,bytes:0}]);
+ expect(results).toEqual(["dry"]);
+ const quiet=await run(["--fix"],[probe("capacity",{host:hostSection})]);
+ expect(quiet.code).toBe(0);
+});
+
+test("the operations catalogue declares doctor with consistent flags, valid examples and help in both languages",()=>{
+ const operation=catalog.operations.find(row=>row.name==="doctor")!;
+ expect(operation).toBeDefined();
+ expect(operationsSchema.definitions.OperationName.enum).toContain("doctor");
+ const validOperation=ajv.compile({definitions:operationsSchema.definitions,$ref:"#/definitions/Operation"}),validFlag=ajv.compile({definitions:operationsSchema.definitions,$ref:"#/definitions/Flag"});
+ expect(validOperation(operation),JSON.stringify(validOperation.errors?.slice(0,2))).toBe(true);
+ for(const flag of catalog.flags)if((flag as {operations?:string[]}).operations?.includes("doctor"))expect(validFlag(flag),flag.name+JSON.stringify(validFlag.errors?.slice(0,2))).toBe(true);
+ expect([...operation.flags].sort()).toEqual(["--dry-run","--facts","--fix","--json","--only","--strict"]);
+ for(const name of operation.flags){
+  const flag=catalog.flags.find(row=>row.name===name);
+  expect(flag,name).toBeDefined();
+  expect((flag as {operations?:string[]}).operations?.includes("doctor")??true,name).toBe(true);
+ }
+ for(const flag of catalog.flags)if((flag as {operations?:string[]}).operations?.includes("doctor"))expect(operation.flags,flag.name).toContain(flag.name);
+ for(const example of operation.examples)expect(example.command.startsWith("repo doctor"),example.command).toBe(true);
+ const exampleFlags=operation.examples.flatMap(row=>row.command.split(" ").filter(word=>word.startsWith("--")).map(word=>word.split("=")[0]));
+ for(const name of exampleFlags)expect(operation.flags,name).toContain(name!);
+ for(const language of ["en","de"] as const){
+  const page=renderBuildHelpV1(catalog as never,readBuildHelpRequestV1(catalog as never,["doctor"]),language);
+  expect(page).toContain("repo doctor");
+  expect(page).toContain("--fix");
+  expect(page).toContain("--only");
+ }
+ expect(renderBuildHelpV1(catalog as never,readBuildHelpRequestV1(catalog as never,["doctor"]),"de")).toContain("Eigentümer");
+});
+
+test("the doctor never takes a lease or a capacity grant: no probe or command source mentions an acquisition",async()=>{
+ const root=join(import.meta.dir,"..","..");
+ const sources=[...new Bun.Glob("**/🟦️.ts").scanSync({cwd:root})].filter(file=>!file.includes("🧪️tests"));
+ expect(sources.length).toBeGreaterThan(10);
+ for(const file of sources){
+  const text=await Bun.file(join(root,file)).text();
+  expect(text,file).not.toMatch(/acquireResourceLease|acquireQueuedResourceLease|withResourceLeases|withHostCapacityV1|withBuildCapacityV1/u);
+ }
+ expect(doctorPortsV1(fresh(),{signal:new AbortController().signal}).platform).toMatch(/^(darwin|linux|win32)$/u);
+});

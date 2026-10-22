@@ -57,6 +57,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/�
 semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -65,6 +66,7 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️m
 semio-framework-os-command = { path = "../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 
 [features]
 artifact-app-testing = []

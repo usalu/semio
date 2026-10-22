@@ -24,6 +24,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "synapse", kind: "replace-synapse", record: "ReplacedSynapse" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" ersetzen", self.synapse.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.synapse.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for ReplaceSynapse
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<ReplaceSynapse>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::replace_synapse::diff::diff(self, base)
     }
@@ -33,11 +45,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" ersetzen", self.synapse.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.synapse.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

@@ -47,7 +47,7 @@ pub fn probe() -> ProbeTransient {
 /// its root over any base, and its inverse restores that base; a wire naming one member twice is refused.
 #[test]
 fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     let mutation = ProbeTransientMutation::Snapshot { transient: probe() };
     let text = mutation.print_op();
     assert_eq!(text, r#"{"kind":"snapshot","transient":{"label":"drag","count":3}}"#, "the wire of the one mutation");
@@ -64,7 +64,7 @@ fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
 /// identical root, and its inverse diff restores exactly those slots.
 #[test]
 fn the_snapshot_diff_sets_only_the_differing_fields() {
-    use protocol::{DiffAlgebra, Mutation};
+    use protocol::{ColdDiffAlgebra, DiffAlgebra, ColdMutation, Mutation};
     let base = ProbeTransient { label: "drag".into(), count: 1 };
     let mutation = ProbeTransientMutation::Snapshot { transient: probe() };
     let diff = mutation.diff(&base).diff().clone();

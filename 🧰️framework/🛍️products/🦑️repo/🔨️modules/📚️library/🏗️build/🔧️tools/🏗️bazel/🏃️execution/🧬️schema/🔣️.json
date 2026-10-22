@@ -352,7 +352,7 @@
       }
     },
     "Environment": {
-      "description": "Environment switch for optional remote execution of hermetic actions. Unset or empty keeps every action local. The endpoint is a grpc, grpcs or unix URI. Properties are comma separated name=value pairs added to every selected remote execution platform; the platform names the execution platform id that hermetic actions are routed to; jobs bounds concurrent actions while the executor is on. The cache endpoint, instance name, upload, compression, download mode and credentials stay with the remote cache contract.",
+      "description": "Environment switch for optional remote execution of hermetic actions. Unset or empty keeps every action local. The endpoint is a grpc, grpcs or unix URI. Properties are comma separated name=value pairs added to every selected remote execution platform; the platform names the execution platform id that hermetic actions are routed to; jobs bounds concurrent actions while the executor is on. The instance name selects the namespace of the executor's store; the cache endpoint, upload, download mode and credentials stay with the remote cache contract, except that an HTTP cache cannot be combined with a gRPC executor, so the in-house executor serves the cache itself.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -532,7 +532,8 @@
         "tool": "The declaration names a tool this contract does not provision.",
         "host-inputs": "An input is read from the host, as a runtime command or an environment variable, and cannot be a declared file.",
         "excepted": "A declared exception removes this proven-unfit target from its hermetic class, with a closed reason the class table records.",
-        "dependencies": "The installed dependency generation cannot be declared as a content-addressed tree: it is absent or an entry leaves its layout."
+        "dependencies": "The installed dependency generation cannot be declared as a content-addressed tree: it is absent or an entry leaves its layout.",
+        "toolchain": "The class runs on a toolchain the class table has not provisioned as a declared tree of the action yet, so the target keeps host state, keyed by the pin of that toolchain."
       }
     },
     "Manifest": {
@@ -676,6 +677,122 @@
           "maxItems": 4096,
           "items": {
             "$ref": "#/definitions/ModulesRow"
+          }
+        },
+        "aliases": {
+          "description": "Repository directory to the alias `a/<hex>` its declared inputs are staged under; present when the runner builds its own private root.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^a/[a-f0-9]{1,64}$"
+          }
+        },
+        "scratch": {
+          "description": "The private root policy by platform: base, work name width, workspace directory and separator.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "properties": {
+            "darwin": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "base",
+                "workDigits",
+                "workspace",
+                "separator"
+              ],
+              "properties": {
+                "base": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "workDigits": {
+                  "type": "integer",
+                  "minimum": 4,
+                  "maximum": 32
+                },
+                "workspace": {
+                  "type": "string",
+                  "pattern": "^[a-z]$"
+                },
+                "separator": {
+                  "enum": [
+                    "/",
+                    "\\"
+                  ]
+                }
+              }
+            },
+            "linux": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "base",
+                "workDigits",
+                "workspace",
+                "separator"
+              ],
+              "properties": {
+                "base": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "workDigits": {
+                  "type": "integer",
+                  "minimum": 4,
+                  "maximum": 32
+                },
+                "workspace": {
+                  "type": "string",
+                  "pattern": "^[a-z]$"
+                },
+                "separator": {
+                  "enum": [
+                    "/",
+                    "\\"
+                  ]
+                }
+              }
+            },
+            "win32": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "base",
+                "workDigits",
+                "workspace",
+                "separator"
+              ],
+              "properties": {
+                "base": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "workDigits": {
+                  "type": "integer",
+                  "minimum": 4,
+                  "maximum": 32
+                },
+                "workspace": {
+                  "type": "string",
+                  "pattern": "^[a-z]$"
+                },
+                "separator": {
+                  "enum": [
+                    "/",
+                    "\\"
+                  ]
+                }
+              }
+            }
           }
         }
       }

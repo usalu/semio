@@ -12,5 +12,5 @@ async fn update_site_diff_updates_zone() {
     let outcome = mutation.diff(&base);
     let mut expected = base.clone();
     expected.site = site;
-    assert_eq!(protocol::apply_diff(outcome.diff(), &base).expect("valid mutation diff"), expected);
+    assert_eq!(protocol::apply_diff_cold(outcome.diff(), &base).expect("valid mutation diff"), expected);
 }

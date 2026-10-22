@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "subject": "../../🟦️.ts",
+  "routes": [
+    {
+      "symbol": "collectGarbage",
+      "owner": "../../../../🧪️test/🗑️retention/🟦️.ts"
+    },
+    {
+      "symbol": "formatGcReport",
+      "owner": "../../../../🧪️test/🗑️retention/🟦️.ts"
+    },
+    {
+      "symbol": "loadOracleRegistry",
+      "owner": "../../../../🧪️test/🤝️contributions/🟦️.ts"
+    }
+  ],
+  "forbidden": "../../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts"
+}

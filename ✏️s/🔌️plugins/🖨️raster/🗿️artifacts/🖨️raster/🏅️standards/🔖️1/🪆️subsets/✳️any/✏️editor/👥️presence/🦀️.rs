@@ -37,10 +37,9 @@ pub struct RasterPresenceDiff {
     pub camera: Option<RasterCamera>,
 }
 
-impl protocol::MutationDiff<RasterPresence> for RasterPresenceDiff {
-    fn apply(&self, base: &RasterPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterPresence> {
-        Ok(RasterPresence { brush_size: self.brush_size.unwrap_or(base.brush_size), brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) })
-    }
+impl protocol::MutationDiff<RasterPresence> for RasterPresenceDiff {}
+
+impl protocol::ColdMutationDiff<RasterPresence> for RasterPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.brush_size.is_some() {
             self.brush_size = other.brush_size;
@@ -52,14 +51,23 @@ impl protocol::MutationDiff<RasterPresence> for RasterPresenceDiff {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut RasterPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        *unpublished = RasterPresence { brush_size: self.brush_size.unwrap_or(base.brush_size), brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) };
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RasterPresence> for RasterPresenceDiff {
-    fn inverse(&self, base: &RasterPresence) -> Self {
-        Self { brush_size: self.brush_size.map(|_| base.brush_size), brush_opacity: self.brush_opacity.map(|_| base.brush_opacity), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
-    }
     fn is_empty(&self) -> bool {
         *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RasterPresence> for RasterPresenceDiff {
+    fn inverse(&self, base: &RasterPresence) -> Self {
+        Self { brush_size: self.brush_size.map(|_| base.brush_size), brush_opacity: self.brush_opacity.map(|_| base.brush_opacity), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }
 
@@ -159,7 +167,10 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
             Self::Set(_) => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<RasterPresence> for RasterPresenceMutation {
+    type ReferenceDiff = RasterPresenceDiff;
     fn diff(&self, base: &RasterPresence) -> protocol::MutationOutcome<RasterPresenceDiff> {
         let Self::Set(SetPresenceEdit { presence }) = self;
         let diff = RasterPresenceDiff {
@@ -172,7 +183,6 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &RasterPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::Set(SetPresenceEdit { presence: base.clone() })])
     }

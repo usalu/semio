@@ -4,7 +4,6 @@ use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use neural_engine as neural;
 
 use neural::{Neuron, Synapse};
-use semio_framework_value_ordered::ordered::UpdateCursor as LayoutUpdate;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
 use semio_framework_artifact_flow_flow::*;

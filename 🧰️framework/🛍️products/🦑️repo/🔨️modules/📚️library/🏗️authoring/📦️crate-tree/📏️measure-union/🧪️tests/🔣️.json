@@ -1,0 +1,225 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "parts add new paths",
+   "floor": {
+    "files": 1,
+    "bytes": 0,
+    "lines": 0
+   },
+   "excluded": [
+    "mirror"
+   ],
+   "parts": [
+    [
+     [
+      "a",
+      10,
+      2
+     ],
+     [
+      "b",
+      5,
+      1
+     ]
+    ],
+    [
+     [
+      "c",
+      7,
+      3
+     ]
+    ]
+   ],
+   "totals": {
+    "files": 4,
+    "bytes": 22,
+    "lines": 6
+   }
+  },
+  {
+   "name": "the largest size per path wins independently for bytes and lines",
+   "floor": {
+    "files": 0,
+    "bytes": 0,
+    "lines": 0
+   },
+   "excluded": [],
+   "parts": [
+    [
+     [
+      "a",
+      10,
+      2
+     ]
+    ],
+    [
+     [
+      "a",
+      4,
+      9
+     ]
+    ],
+    [
+     [
+      "a",
+      12,
+      1
+     ]
+    ]
+   ],
+   "totals": {
+    "files": 1,
+    "bytes": 12,
+    "lines": 9
+   }
+  },
+  {
+   "name": "excluded paths never count",
+   "floor": {
+    "files": 1,
+    "bytes": 3,
+    "lines": 4
+   },
+   "excluded": [
+    "mirror"
+   ],
+   "parts": [
+    [
+     [
+      "mirror",
+      999,
+      999
+     ],
+     [
+      "a",
+      1,
+      1
+     ]
+    ]
+   ],
+   "totals": {
+    "files": 2,
+    "bytes": 4,
+    "lines": 5
+   }
+  },
+  {
+   "name": "an empty union is its floor",
+   "floor": {
+    "files": 2,
+    "bytes": 5,
+    "lines": 6
+   },
+   "excluded": [],
+   "parts": [],
+   "totals": {
+    "files": 2,
+    "bytes": 5,
+    "lines": 6
+   }
+  },
+  {
+   "name": "a smaller repeat changes nothing",
+   "floor": {
+    "files": 0,
+    "bytes": 0,
+    "lines": 0
+   },
+   "excluded": [],
+   "parts": [
+    [
+     [
+      "a",
+      10,
+      10
+     ]
+    ],
+    [
+     [
+      "a",
+      1,
+      1
+     ]
+    ]
+   ],
+   "totals": {
+    "files": 1,
+    "bytes": 10,
+    "lines": 10
+   }
+  }
+ ],
+ "fits": [
+  {
+   "totals": {
+    "files": 1,
+    "bytes": 1,
+    "lines": 1
+   },
+   "budget": {
+    "files": 1,
+    "bytes": 1,
+    "lines": 1
+   },
+   "expected": true
+  },
+  {
+   "totals": {
+    "files": 2,
+    "bytes": 1,
+    "lines": 1
+   },
+   "budget": {
+    "files": 1,
+    "bytes": 9,
+    "lines": 9
+   },
+   "expected": false
+  },
+  {
+   "totals": {
+    "files": 1,
+    "bytes": 10,
+    "lines": 1
+   },
+   "budget": {
+    "files": 5,
+    "bytes": 9,
+    "lines": 9
+   },
+   "expected": false
+  },
+  {
+   "totals": {
+    "files": 0,
+    "bytes": 0,
+    "lines": 0
+   },
+   "budget": {
+    "files": 0,
+    "bytes": 0,
+    "lines": 0
+   },
+   "expected": true
+  },
+  {
+   "totals": {
+    "files": 1,
+    "bytes": 1,
+    "lines": 10
+   },
+   "budget": {
+    "files": 5,
+    "bytes": 5,
+    "lines": 9
+   },
+   "expected": false
+  }
+ ],
+ "property": {
+  "runs": 200,
+  "seed": 20261021
+ }
+}

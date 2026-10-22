@@ -1,0 +1,90 @@
+import os, json
+ROOT = "/Users/ueli/Documents/semio"
+TICKET = os.path.join(ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN")
+GEN = os.path.join(TICKET, "🗑️generated")
+st = json.load(open(os.path.join(GEN, "close-prep-stats.json"), encoding="utf-8"))
+files = json.load(open(os.path.join(GEN, "close-prep-files.json"), encoding="utf-8"))
+inv = [l.rstrip("\n") for l in open(os.path.join(GEN, "close-prep-generated-inventory.txt"), encoding="utf-8") if l.strip()]
+staged = [l.strip() for l in open(os.path.join(GEN, "close-prep-staged-entries.txt")) if l.strip()]
+staged_rows = []
+for e in staged:
+    kb = os.popen(f'du -sk "{os.path.join(TICKET, e)}"').read().split()[0]
+    staged_rows.append((int(kb), e))
+staged_rows.sort(reverse=True)
+agg = st["agg"]
+def gib(kb): return kb / 1024 / 1024
+live_gib = gib(agg["KEEP (live or touched after 19:00)"][0]); live_n = agg["KEEP (live or touched after 19:00)"][1]
+own_gib = gib(agg["CANDIDATE, owner check (framework cache, not live)"][0])
+cand_gib = gib(agg["CANDIDATE"][0]); cand_n = agg["CANDIDATE"][1]
+loose = st["loose_kb"]; loosen = st["loose_n"]
+total_gib = live_gib + own_gib + cand_gib + gib(sum(loose.values()))
+out = []
+w = out.append
+w("# Close-prep 1022 (auditor `close-prep`)")
+w("")
+w("Ticket `GET-CODEBASE-RUNNING-END-TO-END-AGAIN`, prepared 2026-10-22 about 20:15 local. Read-only audit: nothing was deleted or edited except this report and my own outputs in `close-prep-tools/` and `🗑️generated/close-prep-*`.")
+w("")
+w("Method: the 50 `result-*.md` files modified on 2026-10-22 (list in `🗑️generated/close-prep-results-1022.txt`) were scanned for repo path mentions. A mention counts as an edit when its line or nearest heading reads as a change (LIVE, fixed, changed, applied, patched, and so on). Mentions were resolved against `git ls-files -co --exclude-standard` (tracked plus untracked, not gitignored), first exact, then by suffix, because results use abbreviated roots (`L/`, `G/`, `L2/`, ...). Scripts: `close-prep-tools/resolve.py`, `build-report.py`, `write-report.py`, `staged-dupes.py`.")
+w("")
+w("## 1. Repo files changed today (for `ticket_close` `files`)")
+w("")
+w(f"- {len(files)} repo paths, all present on disk, none gitignored. No listed path is missing, so none is marked as gone.")
+w("- `package.json` is first as an ASCII anchor (memory `feedback-ticket-close-emoji-only-files-array-fails`). It is tracked and was not necessarily edited.")
+w("- Ticket-folder and other-ticket paths are excluded. `ticket_close` handles its own files.")
+w(f"- Not in the list, to resolve before closing: {st['ambiguous']} edit mentions match several repo files (ambiguous; candidates in `close-prep-resolved.json`), and {st['unresolved']} are bare short forms such as `🟦️.ts` or `T/anchored.py` that cannot be matched. Mention-only references (no change wording) are also left out.")
+w("- Gitignored paths are dropped silently by `ticket_close` (memory `feedback-ticket-close-needs-trackable-files`). Every path here came from `git ls-files -co --exclude-standard`, so none is ignored.")
+w("")
+w("Plain list, one path per line (copy into the `files` array as is, paths are repo-relative):")
+w("")
+w("```")
+for f in files:
+    w(f)
+w("```")
+w("")
+w("## 2. Inventory of `🗑️generated/`")
+w("")
+w(f"Total {total_gib:.1f} GiB (`du`): {len(inv)} subfolders plus {sum(loosen.values())} loose files ({sum(loose.values())/1024/1024:.2f} GiB).")
+w("")
+w(f"- KEEP, live or touched after 19:00: {live_n} subfolders, {live_gib:.2f} GiB. Live processes at 20:13: the course3 orchestrator (pid 6342, `e2e-orch`), slice-play3 loop (pid 6995), demo-verify wrapper (pid 10738), and the rust-health, apps-a2, apps-b, ts-verify, plugin-chain2 and rust-reds jobs. Loose files touched after 19:00: {loosen['KEEP (live or touched after 19:00)']}.")
+w(f"- CANDIDATE, owner check: `course-rest-stale-framework-cache2`, `course-rest-new-framework-cache`, `course-rest-stale-framework-cache3`, {own_gib:.2f} GiB. These are framework caches (`boot-recovery/`, `b/`, `framework/leases`), not live, and referenced by `result-course-rest.md` and `result-boot-rebind2.md`. Confirm with the owner before deleting, since they hold boot state.")
+w(f"- CANDIDATE: {cand_n} subfolders, {cand_gib:.2f} GiB, plus {loosen['CANDIDATE']} loose files ({loose['CANDIDATE']/1024/1024:.2f} GiB). Delete at close per AGENTS.md (tool output), after the owners confirm.")
+w("- `report-e2e-orch-*.md` cite `e2e-orch/` run folders, so keep `e2e-orch/` until the course3 report is final.")
+w("")
+w("| size (MiB) | status | subfolder |")
+w("|---:|---|---|")
+for line in inv:
+    size, status, name = line.split("\t")
+    w(f"| {size.strip().replace(' MiB','')} | {status} | `{name}` |")
+w("")
+w("## 3. Staged source copies under `*-tools/staged*` (forbidden in the ticket)")
+w("")
+w(f"- {st['staged_entries']} directories, {st['staged_files']} files, {st['staged_mib']:.1f} MiB (apparent size).")
+w("- 4,780 of 4,966 files (96%) are byte-identical to a tracked git blob (`git hash-object` against `git ls-files -s`). These are plain copies of checked-in source, which AGENTS.md forbids. The other 186 are edited or untracked copies, also forbidden.")
+w("- Largest entries:")
+for kb, e in staged_rows[:8]:
+    w(f"  - `{e}`: {kb/1024:.1f} MiB")
+w("- Delete candidates at close: all 167 entries (list in `🗑️generated/close-prep-staged-entries.txt`). They sit under the `-tools` folders, so keep the scripts beside them and remove only `staged*`.")
+w("")
+w("## 4. Draft completion summary (course, play, demo)")
+w("")
+w("Course (`@teaching/architecture-course`)")
+w("- GREEN on Bazel (`result-course-rest2.md`): `:check`, `:typecheck`, `:test`, `@teaching/proctor:test`, `:build` and `repo:test-compiler-headroom` all rc 0.")
+w("- Vitest quick run 695/695 (`result-course-rest.md`, 16:05).")
+w("- OPEN: E2E `e2e-1022-course3` started 20:03:50 (pid 6342). Cold `proctor-build` was RUNNING at 20:13. No warm or E2E verdict yet.")
+w("- `e2e-1022-course2` (15:46, FAIL typecheck) is superseded by the course-rest2 fixes.")
+w("Play (Semio Tech Play, :6033)")
+w("- RED: activation 200 of 201 Bazel actions green (coordinator, 20:07). Only `os-plugin-describe-rs:build` fails, with SQLITE_CANTOPEN in the lease layer while the leases volume had 21 MiB free (`result-slice-play3.md`, 20:06). Loop retries.")
+w("- Not reached: serve on :6033, boot check, E2E. No `e2e-1022` play report exists.")
+w("Demo (mit-bestand demonstrator)")
+w("- Print steps GREEN on Bazel (`result-slice-demo.md`, 16:37): Kompaktbericht PDF, the three reports, and the Projektetage deck. Activate dry-run rc 0.")
+w("- RED: real activation hit ENOSPC, then the rust image was grown to 48 GiB (17:38). Attempt act3 failed on the describe-rs compile budget (fixed 19:21). act4 (pid 58110) is no longer running and has no recorded outcome (`result-slice-demo2.md`).")
+w("- demo-verify (20:08): demonstrator `test` via nx RUNNING (pid 10738). Bericht and Projektetage not yet run.")
+w("- Not reached: serve, E2E. No `e2e-1022` demo report exists.")
+w("Caveats")
+w("- `result-course-rest2.md` has a heading at 20:20, later than its file mtime of 20:03. Check the clock or the CEST label before quoting times.")
+w("")
+w("## Open items for the closer")
+w("- Decide the owner check for the three `course-rest-*-framework-cache` folders (16.2 GiB) and the ambiguous or unresolved refs before `ticket_close`.")
+w("- Do not run `ticket_close` while course3, play loop and demo-verify are still running. They write into this folder.")
+open(os.path.join(TICKET, "close-prep-1022.md"), "w", encoding="utf-8").write("\n".join(out) + "\n")
+print("written", len(out), "lines")

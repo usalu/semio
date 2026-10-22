@@ -39,7 +39,7 @@
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
    "anchor": "  const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:\"project\"},()=>inferProject(job));else await inferProject(job);}await phases?.advance(\"inference\",++finished);}});",
-   "replacement": "  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+\"\\n\"),environment:process.env}):undefined;\n  const workers=Array.from({length:limit},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];if(collector)await collector.guard({project:job.name,root:job.json.root,phase:\"project\"},()=>governor.run(()=>inferProject(job)));else await governor.run(()=>inferProject(job));}await phases?.advance(\"inference\",++finished);}});"
+   "replacement": "  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+\"\\n\"),environment:process.env}):undefined;\n  const workers=Array.from({length:limit},async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];await governor.run(async()=>{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:\"project\"},()=>inferProject(job));else await inferProject(job);});}await phases?.advance(\"inference\",++finished);}});"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
@@ -53,8 +53,8 @@
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
-   "anchor": "new URL(\"./🧭️file-owner/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1]",
-   "replacement": "new URL(\"./🧭️file-owner/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL(\"../🧠️memory/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1]"
+   "anchor": ",graphSnapshotPolicyURLV1]",
+   "replacement": ",new URL(\"../🧠️memory/🟨️.mjs\",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1]"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
@@ -93,7 +93,7 @@
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧬️schema/🔣️.json",
-   "from": "staged/new/memory/module/schema.json"
+   "from": "staged/new/memory/module/🧬️schema/🔣️.json"
   },
   {
    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🟦️.ts",

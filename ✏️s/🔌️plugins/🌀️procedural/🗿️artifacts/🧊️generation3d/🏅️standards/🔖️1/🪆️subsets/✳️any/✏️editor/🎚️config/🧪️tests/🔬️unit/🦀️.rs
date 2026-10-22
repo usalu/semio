@@ -1,5 +1,5 @@
 use super::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[test]
 fn generation3d_config_default_matches_the_former_runtime_defaults() {

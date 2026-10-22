@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { resolveBuildInputsV1, type BuildGraphV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
 import { storeReceiptOutputV1 } from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { CACHE_POLICY, slash } from "../../🔍️discovery/📂️source/🟦️.ts";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
 
 export type ArtifactPackageRecord = {
   root: string;
@@ -44,7 +45,7 @@ export function artifactPackageInventory(root: string, graph: BuildGraphV1): { s
       assert.ok(rustProject, `Build graph omitted ${rustRoot}`);
       assert.ok(rustProject.tags?.includes("role:artifact"), `${rustProject.name} must declare role:artifact`);
       const nativeSources = resolveBuildInputsV1(graph, rustProject, rustProject.namedInputs?.nativeSources ?? []);
-      const ownsSource = nativeSources.some((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !input.startsWith("!") && new (globalThis as any).Bun.Glob(input.slice("{workspaceRoot}/".length)).match(source));
+      const ownsSource = nativeSources.some((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !input.startsWith("!") && new GlobV1(input.slice("{workspaceRoot}/".length)).match(source));
       assert.ok(ownsSource, `${rustProject.name} does not hash its taxonomy source`);
       assert.ok(rustProject.targets?.build?.outputs?.includes(storeReceiptOutputV1("build")), `${rustProject.name} omits its store receipt output`);
       const record: ArtifactPackageRecord = { root: owner, source, rust: { cargoName: cargo.package.name, projectName: rustProject.name, manifest: rustManifest } };

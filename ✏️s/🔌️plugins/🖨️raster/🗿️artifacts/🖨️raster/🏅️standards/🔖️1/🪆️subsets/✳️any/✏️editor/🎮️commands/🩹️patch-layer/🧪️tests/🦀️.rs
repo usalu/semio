@@ -5,7 +5,7 @@ use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pack_json::Value;
 use semio_s_artifact_raster_raster_editor::commands::patch_layer::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -24,12 +24,12 @@ fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
         };
         let before=render(&document);assert!(before.1.pixels.chunks_exact(4).any(|pixel|pixel[3]>0));
         let operation=raster_patch_layer_operations(&document,&[owner.into()],"maskLinked",&Value::Bool(false)).unwrap().remove(0);
-        let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let unlinked=protocol::apply_diff(&diff, &document).unwrap();
+        let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let unlinked=protocol::apply_diff_cold(&diff, &document).unwrap();
         assert_eq!(render(&unlinked),before);
         let packed=unlinked.encode_pack();let restored=RasterSnapshot::decode_pack(&packed).unwrap();assert_eq!(restored,unlinked);
-        let (undo,_)=inverse.diff(&unlinked).into_parts();let undone=protocol::apply_diff(&undo, &unlinked).unwrap();assert_eq!(undone,document);
+        let (undo,_)=inverse.diff(&unlinked).into_parts();let undone=protocol::apply_diff_cold(&undo, &unlinked).unwrap();assert_eq!(undone,document);
         let relink=raster_patch_layer_operations(&unlinked,&[owner.into()],"maskLinked",&Value::Bool(true)).unwrap().remove(0);
-        let (redo,_)=relink.diff(&unlinked).into_parts();let linked=protocol::apply_diff(&redo, &unlinked).unwrap();assert_eq!(render(&linked),before);
+        let (redo,_)=relink.diff(&unlinked).into_parts();let linked=protocol::apply_diff_cold(&redo, &unlinked).unwrap();assert_eq!(render(&linked),before);
         for value in [operation,inverse,relink] {value.retire_cold();}
         for value in [diff,undo,redo] {value.retire_cold();}
         for value in [document,unlinked,restored,undone,linked] {retire_raster_snapshot(value);}
@@ -57,7 +57,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
             assert!(matches!(operation, RasterMutation::ChangeLayerMask(_)));
             let inverse = operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);
             let (diff, _) = operation.diff(&document).into_parts();
-            let next = protocol::apply_diff(&diff, &document).unwrap();
+            let next = protocol::apply_diff_cold(&diff, &document).unwrap();
             if let Some(mask) = step.get("mask") { expected["layers"][0]["mask"] = mask.clone(); }
             if let Some(changes) = step["change"].as_object() { for (key,value) in changes { expected["layers"][0]["mask"][key] = value.clone(); } }
             let mut reference: RasterSnapshot = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -69,7 +69,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
             }
             assert_eq!(next, reference);
             let (undo, _) = inverse.diff(&next).into_parts();
-            let restored = protocol::apply_diff(&undo, &next).unwrap();
+            let restored = protocol::apply_diff_cold(&undo, &next).unwrap();
             assert_eq!(restored, document);
             for diff in [diff, undo] { protocol::MutationDiff::retire_cold(diff); }
             for snapshot in [reference, restored, std::mem::replace(&mut document, next)] { semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot); }
@@ -112,9 +112,9 @@ fn layer_transform_controls_apply_neutral_vectors_and_restore_exact_history(){
         for row in fixture["controls"].as_array().unwrap(){
             let field=row["field"].as_str().unwrap();let operation=raster_patch_layer_operations(&document,&[id.clone()],field,&patch_value_json(field,&row["value"].to_string())).unwrap().remove(0);
             assert!(matches!(operation,RasterMutation::ChangeLayerTransform(_)));
-            let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let next=protocol::apply_diff(&diff, &document).unwrap();
+            let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let next=protocol::apply_diff_cold(&diff, &document).unwrap();
             for (actual,expected) in layer_transform(&next.layers[0]).as_affine().into_iter().zip(row["matrix"].as_array().unwrap()){assert!((actual-expected.as_f64().unwrap()).abs()<1e-12);}
-            let (undo,_)=inverse.diff(&next).into_parts();let restored=protocol::apply_diff(&undo, &next).unwrap();assert_eq!(restored,document);retire_raster_snapshot(restored);retire_raster_snapshot(std::mem::replace(&mut document,next));
+            let (undo,_)=inverse.diff(&next).into_parts();let restored=protocol::apply_diff_cold(&undo, &next).unwrap();assert_eq!(restored,document);retire_raster_snapshot(restored);retire_raster_snapshot(std::mem::replace(&mut document,next));
             for value in [operation,inverse]{value.retire_cold();}for value in [diff,undo]{value.retire_cold();}
         }
         for (field,value) in [("transformScaleX","0"),("transformScaleY","1e-20"),("transformShearX","true"),("transformRotation","\"90\"")]{assert!(raster_patch_layer_operations(&document,&[id.clone()],field,&patch_value_json(field,value)).is_err());}

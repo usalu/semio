@@ -3,7 +3,7 @@ use semio_framework_artifact_flow_flow::CameraJson;
 use pack::snapshot::ArtifactPack;
 use crate::editor::flow::presence::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
-use protocol::{DiffAlgebra, Mutation};
+use protocol::{DiffAlgebra, ColdMutation, Mutation};
 
 fn busy() -> FlowPresence {
     FlowPresence { preview_off_node_ids: vec!["a".into(), "b".into(), "c".into()], camera: CameraJson { x: 3.0, y: -2.0, zoom: 2.0 } }

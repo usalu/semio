@@ -80,6 +80,7 @@ impl RetireOwned for BudgetedInputMerge {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct OwnedEntryFields{base:Option<Dictionary>,key:Option<String>,value:Option<Value>,shared_key:Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,shared_value:Option<semio_framework_value_ordered::ordered::SharedOwner<Value>>,update:Option<UpdateCursor<Value>>,child:Option<ControlledRetirement<InputClose>>}
 /// 📝️ Admits one new original dictionary entry before its existing ordered update frontier.
 pub struct BudgetedOwnedEntry{fields:ManuallyDrop<Option<OwnedEntryFields>>,retirement:Option<ControlledRetirement<OwnedEntryFields>>,phase:u8,closing:bool,progress:RetainedCloneProgress}

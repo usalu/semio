@@ -15,20 +15,6 @@ pub struct SetCamera {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
-        if base.camera == self.camera {
-            return protocol::MutationOutcome::new(Generation3dConfigPatch::default()).warning("mutation.no-op", "Flow graph camera is already in the requested state.");
-        }
-        protocol::MutationOutcome::new(Generation3dConfigPatch { camera: Some(self.camera.clone()), ..Default::default() })
-    }
-
-    fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { camera: base.camera.clone() }.into()]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
     }
@@ -36,4 +22,19 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]
     }
+}
+
+impl protocol::ColdMutationKind<Generation3dConfig, Generation3dConfigMutation> for SetCamera {
+    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+        if base.camera == self.camera {
+            return protocol::MutationOutcome::new(Generation3dConfigPatch::default()).warning("mutation.no-op", "Flow graph camera is already in the requested state.");
+        }
+        protocol::MutationOutcome::new(Generation3dConfigPatch { camera: Some(self.camera.clone()), ..Default::default() })
+    }
+    fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { camera: base.camera.clone() }.into()]
+    
+    })())
+}
 }

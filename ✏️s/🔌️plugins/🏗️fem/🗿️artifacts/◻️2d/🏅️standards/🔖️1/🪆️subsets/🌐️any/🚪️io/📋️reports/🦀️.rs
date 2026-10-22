@@ -2,7 +2,7 @@
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// 🗂️ The three projection axes of an analysis report, computed from the document so that two
 /// implementations order the same values the same way: every node a `bar`/`beam` element references
@@ -146,7 +146,7 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
 pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
     let base: Fem2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let (applied, outcome) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base));
+    let (applied, outcome) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as ColdMutation<Fem2dSnapshot>>::diff(&mutation, &base));
     let faults: Vec<String> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{:?}", message.code)).collect();
     if !faults.is_empty() {
         return Err(format!("the mutation was rejected with {faults:?}"));

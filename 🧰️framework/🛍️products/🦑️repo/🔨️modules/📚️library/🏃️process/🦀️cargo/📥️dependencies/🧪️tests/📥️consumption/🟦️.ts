@@ -32,3 +32,9 @@ test("repository compiler callers consume complete command continuations under t
 test("Cargo relay consumption classifies only declared compiler and resolution commands",async()=>{
  expect(new Ajv({strict:false}).validate(schema.definitions.Arguments,argumentsCorpus)).toBe(true);const api=await import("../../🟦️.ts"),database=new Database(":memory:");expect("repositoryCargoConsumptionV1"in api).toBe(true);try{database.exec("create table cases(id integer primary key,kind text,operation text)");for(const[index,row]of argumentsCorpus.entries()){database.query("insert into cases values(?,?,?)").run(index,row.kind,row.operation);const oracle=database.query("select kind,operation from cases where id=?").get(index)as{kind:string|null;operation:string|null};if(oracle.kind===null)expect(()=>api.repositoryCargoConsumptionV1(row.args,"artifact")).toThrow();else expect(JSON.stringify(api.repositoryCargoConsumptionV1(row.args,"artifact"))).toBe(JSON.stringify(oracle.kind==="resolution"?{kind:"resolution"}:{kind:"compiler",producer:"artifact",operation:oracle.operation}));}}finally{database.close();}
 });
+
+test("a nested offline registry read is covered by an online declaration and never the converse",async()=>{
+ const source=await readFile(new URL("../../🟢️ready/💾️storage/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("ready.ts",source,ts.ScriptTarget.Latest,true);let text="";
+ tree.forEachChild(node=>{if(ts.isVariableStatement(node)&&node.getText(tree).includes("registryCoveredV1"))text=node.getText(tree);});
+ expect(text).toContain('row.args.includes("--offline")&&scope.selections.has(');expect(text).toContain("offline:false");expect(source).toContain("options.requests.some(row=>!registryCoveredV1(scope,row))");expect(source).not.toContain("[DEBUG]");
+});

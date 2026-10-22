@@ -7,7 +7,7 @@ pub use replace_presence::ReplacePresence;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = PresentationPresence, diff = PresentationPresenceDiff, schema = "presentation.presence")]
+#[mutations(snapshot = PresentationPresence, diff = PresentationPresenceDiff, schema = "presentation.presence", reference = PresentationPresence, reference_diff = PresentationPresenceDiff)]
 pub enum PresentationPresenceMutation {
     #[dsl(key = "replace-presence")]
     ReplacePresence(ReplacePresence),

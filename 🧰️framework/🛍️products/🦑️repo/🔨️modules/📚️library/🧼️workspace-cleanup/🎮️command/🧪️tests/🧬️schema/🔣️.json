@@ -1,0 +1,80 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "accepted",
+  "rejected",
+  "nonArrays"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "accepted": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments",
+     "mode",
+     "dry",
+     "arguments"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "mode": {
+      "enum": [
+       "workspace",
+       "coverage",
+       "empty-folders",
+       "marker-only-folders",
+       "taxonomy",
+       "test"
+      ]
+     },
+     "dry": {
+      "type": "boolean"
+     },
+     "arguments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "rejected": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segments"
+    ],
+    "properties": {
+     "segments": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "nonArrays": {
+   "type": "array",
+   "items": {},
+   "minItems": 1
+  }
+ }
+}

@@ -1,6 +1,6 @@
 use semio_framework_os_infinite_directed_presentation::DagCamera;
 use crate::editor::dag::config::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn dag_config_default_matches_dag_camera_implicit_default() {

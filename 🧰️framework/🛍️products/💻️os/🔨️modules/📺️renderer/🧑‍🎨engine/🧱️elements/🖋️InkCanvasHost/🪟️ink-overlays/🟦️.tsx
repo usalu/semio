@@ -1,5 +1,5 @@
 /** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 import { useLabel } from "@semio-tech/ui-react";
 import type { InkBounds, InkTableItem, InkTextItem, InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
 import { inkHtmlToParagraphs, inkParagraphsToHtml } from "../🌳️ink-document-ops/🟦️.ts";

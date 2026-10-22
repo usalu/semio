@@ -527,8 +527,8 @@ func AnalyzeFile(filePath string, bundles []model.Bundle) ([]model.Breach, error
 		Kind:     workspace.ScopeFile,
 		FilePath: filePath,
 	}
-	files := model.FilterConsideredFiles([]string{filePath})
-	files = model.FilterGitIgnored(files)
+	files := model.FilterConsideredFiles(workspace.GetRootDir(), []string{filePath})
+	files = model.FilterGitIgnored(workspace.GetRootDir(), files)
 	ctx := NewPolicyContextWithFiles(scope, bundles, files)
 	return CheckPoliciesWithContext(ctx, nil)
 }

@@ -49,7 +49,7 @@ fn session(setting: &IdentitySetting) -> Identity {
 #[test]
 fn replaces_the_whole_active_session() {
     let base = before();
-    let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
+    let outcome = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::diff(&mutation(), &base);
     let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: the replaced session differs from the committed after-snapshot");
     assert_eq!(session(&applied).user_id, "grace", "sign-in/replaces-the-active-session-with-a-second-account: the payload's account must land verbatim on the setting");
@@ -63,16 +63,16 @@ fn replaces_the_whole_active_session() {
 #[test]
 fn restoring_the_prior_session_restores_before() {
     let base = before();
-    let inverse = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let inverse = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "sign-in/replaces-the-active-session-with-a-second-account: exactly one undo step");
     let IdentityConfigMutation::SignIn(undo) = &inverse[0] else {
         panic!("sign-in/replaces-the-active-session-with-a-second-account: undoing a replacement must be a sign-in, never a sign-out");
     };
     assert_eq!(undo.user_id, "ada", "sign-in/replaces-the-active-session-with-a-second-account: the undo must carry BASE's own prior account");
-    let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
+    let forward = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::diff(&mutation(), &base);
     let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward sign-in applies");
     for step in &inverse {
-        let redo = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(step, &snapshot);
+        let redo = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::diff(step, &snapshot);
         snapshot = protocol::apply_diff_cold(redo.diff(), &snapshot).expect("the sign-in inverse step applies");
     }
     assert_eq!(snapshot, base, "sign-in/replaces-the-active-session-with-a-second-account: restoring the prior account did not restore the before-setting");
@@ -101,7 +101,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "sign-in/replaces-the-active-session-with-a-second-account: this fixture declares an applied outcome");
-    let produced = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
+    let produced = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "sign-in/replaces-the-active-session-with-a-second-account: establishing a different session must not raise a diagnostic");
     assert!(produced.messages().is_empty(), "sign-in/replaces-the-active-session-with-a-second-account: an accepted sign-in emits no diagnostics");
 }
@@ -109,7 +109,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
+    let outcome = <IdentityConfigMutation as protocol::ColdMutation<IdentitySetting>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "sign-in/replaces-the-active-session-with-a-second-account: produced diff differs from the committed 🔺️diff/🔣️.json");

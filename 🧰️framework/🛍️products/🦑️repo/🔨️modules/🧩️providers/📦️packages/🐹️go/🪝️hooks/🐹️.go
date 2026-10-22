@@ -182,8 +182,8 @@ func resolveKiroEvent(nativeEvent string, kind model.ToolKind) (model.HookEvent,
 	}
 }
 
-// 💻️formatVSCodeHookOutput formats a hook output for VS Code.
-func FormatVSCodeHookOutput(hookEventName string, result model.HookResult) string {
+// 💻️formatCopilotHookOutput formats a hook output for VS Code.
+func FormatCopilotHookOutput(hookEventName string, result model.HookResult) string {
 	payload := map[string]interface{}{}
 	out, _ := json.Marshal(result)
 	_ = json.Unmarshal(out, &payload)
@@ -210,8 +210,8 @@ func FormatVSCodeHookOutput(hookEventName string, result model.HookResult) strin
 	return string(finalOut)
 }
 
-// 🔤️vsCodeEventFromHookEvent converts a HookEvent to a VS Code event string.
-func vsCodeEventFromHookEvent(event model.HookEvent, parentInfo string) string {
+// 🔤️copilotEventFromHookEvent converts a HookEvent to a VS Code event string.
+func copilotEventFromHookEvent(event model.HookEvent, parentInfo string) string {
 	switch event {
 	case model.HookAgentStarted:
 		if parentInfo == "subagent" {

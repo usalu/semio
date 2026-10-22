@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/async-timer-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

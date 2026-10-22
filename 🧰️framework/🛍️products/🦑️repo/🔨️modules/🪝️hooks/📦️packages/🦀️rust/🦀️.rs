@@ -13,7 +13,7 @@
 //!
 //! Layering (`📓️go-region-dependency-graph.md`, fixes 5 and 7): the per-IDE native event tables and
 //! the output formatting live in `🧩️providers`; this module reaches DOWN into them through
-//! [`HookFormatter`] and [`EditorProvider`] and providers never reaches back. `McpClientKind` is
+//! [`HookFormatter`] and [`AgentClientProvider`] and providers never reaches back. `McpClientKind` is
 //! taken from `🧩️providers` too, so nothing here imports `🔌️mcp` at L5.
 //!
 //! Everything that would otherwise touch a clock, a process or the filesystem is a port with an
@@ -36,11 +36,11 @@ use std::path::{Path, PathBuf};
 pub use serde_json;
 /// 🔁️ The recorded plan shapes this module folds an incoming plan into, declared by `📐️model`.
 pub use semio_framework_repo_model::{TicketAgentPlan, TicketAgentPlanStep};
-/// 🔁️ The event vocabulary, the result shape, the editor providers that format it and the process
+/// 🔁️ The event vocabulary, the result shape, the agent-client providers that format it and the process
 /// runner micro-commit is delegated through — all declared by `🧩️providers`, re-exported so no
 /// consumer has to name a module one level down to speak about a hook. `📋️plan.md` §3: an exported
 /// api never forces a client to reach past the module it is talking to.
-pub use semio_framework_repo_providers::{format_plain_hook_output, get_editor_provider, resolve_claude_compatible_event, EditorProvider, EditorProviders, HookEvent, HookFormatter, HookResult, McpClientKind, ProcessExchange, ProcessOutcome, ProcessRequest, ProcessRunner, ProcessTranscript, RecordedProcessRunner, SystemProcessRunner, ToolKind, ALL_HOOK_EVENTS};
+pub use semio_framework_repo_providers::{format_plain_hook_output, get_agent_client_provider, resolve_claude_compatible_event, AgentClientProvider, AgentClientProviders, HookEvent, HookFormatter, HookResult, McpClientKind, ProcessExchange, ProcessOutcome, ProcessRequest, ProcessRunner, ProcessTranscript, RecordedProcessRunner, SystemProcessRunner, ToolKind, ALL_HOOK_EVENTS};
 /// 🔁️ The logging switches this module obeys, declared by `🏠️workspace` which owns `📋️config.toml`.
 pub use semio_framework_repo_workspace::{load_repo_config, parse_repo_config, repo_meta_dir_for_root, LoggingConfig, RepoConfig};
 //#endregion 🔁️Reexports

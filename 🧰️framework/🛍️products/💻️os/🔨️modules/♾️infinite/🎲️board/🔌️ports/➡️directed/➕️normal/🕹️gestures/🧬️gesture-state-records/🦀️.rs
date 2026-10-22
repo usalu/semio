@@ -90,7 +90,7 @@ pub enum BoardHostClosePhase {
     Done,
 }
 
-pub(crate) struct BoardDeleteOperation {
+pub struct BoardDeleteOperation {
     pub plan: BoardDeletePlan,
     pub select_event: Option<BoardOwnedEvent>,
     pub mutation_cursor: u16,

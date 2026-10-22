@@ -1,0 +1,13 @@
+{
+  "contract": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/🔣️.json",
+  "excludedGeneratedOutputs": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🤖️generated/🔗️graphql-types/🟦️.ts"
+  ],
+  "expectedModules": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📥️source/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📋️plan/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📽️projection/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/📖️parse/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/⌛️queries/🟦️.ts"
+  ]
+}

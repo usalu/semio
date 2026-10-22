@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_framework_os_spr::ColdMutation;
+use semio_framework_os_store_engine_close::StoreCloseWitness as _;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -18,7 +19,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
         let mut unique = HashSet::new();
@@ -381,7 +382,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactRe
     }
 
     fn close_resident_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if !self.close_structural_owners_terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Store resident backing still holds structural payload owners")); }
+        if !self.parts_ref().close_structural_owners_terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Store resident backing still holds structural payload owners")); }
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "resident backing requires owner depth")); }

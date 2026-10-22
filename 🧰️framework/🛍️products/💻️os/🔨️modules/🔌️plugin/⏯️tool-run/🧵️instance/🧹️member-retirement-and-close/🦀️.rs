@@ -2,9 +2,10 @@
 
 use super::*;
 use semio_framework::Fault;
+use semio_framework_plugin_decl_emission::ChildEmit;
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// ♻️ One bounded unit of member-run retirement: one alias of a member run's typed owners handed to its member store's
     /// alias retirement (displaced aliases of live runs, every alias of a run that left its slot), else the composed reads of
     /// a fully retired member run. `None` when nothing member-owned is retiring or an alias retirement is still stepping.

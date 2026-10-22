@@ -1,0 +1,53 @@
+== message
+micro-commit: Mindestens ein Beschreibungs-Bullet ist erforderlich
+micro-commit: Die erforderliche 📊️Metrik-Fußzeile konnte nicht gebaut werden, weil keine Sprachmetriken erhoben wurden
+== attribution
+commit: Der geänderte Pfad ist keinem Bundle zugeordnet — {path}; Bundle-Scope ergänzen oder Labels korrigieren
+commit: Der geänderte Pfad passt zu mehreren Bundles ({names}) — {path}
+commit: {label} hat Micro-Commit-Änderungen am {dateLine} ({delta}), dieser Tag fehlt aber in deinem Bundle-Text — 🎆️-Abschnitt ergänzen oder Zuordnung korrigieren ¦ label,dateLine,delta
+commit: Die tageweise 📊️Metrik{kindToken} von {label} ergibt nicht die Bundle-Summe — Tage {daySum} gegen Bundle {total}; Log und Diff erneut lesen und die Zuordnung zu Bundle und Datum korrigieren
+== metrics
+commit: Die {kindToken}-Deltas je Sprache ergeben nicht die Summe der Fußzeile — Sprachen ➕️{added}✏️{edited}➖️{removed}🟰️{sum} gegen Fußzeile ➕️{footerAdded}✏️{footerEdited}➖️{footerRemoved}🟰️{footerSum} ¦ kindToken,added,edited,removed,sum,footerAdded,footerEdited,footerRemoved,footerSum
+== body
+commit: Ein Bullet muss mit {{emoji}} beginnen, gefolgt von der Beschreibung (kein Leerzeichen nach dem Emoji): {bullet} ¦ bullet
+commit: Eine Datumszeile `🎆️YY🌙️MM☀️DD` gehört allein in eine Zeile und nicht in ein Bullet
+commit: Datumsabschnitt vor dem Bundle-Scope: {line}
+commit: Erwartet wurde ein Emoji-Bundle-Scope (zwei oder mehr Emojis, keine Pfade), erhalten: {line}
+commit: Erwartet wurde ein Datumsabschnitt 🎆️YY🌙️MM☀️DD vor dem Bullet: {line}
+commit: Mindestens ein Emoji-Bundle-Scope ist erforderlich
+commit: Das Bundle {label} braucht mindestens einen Datumsabschnitt
+commit: {dateLine} in {label} braucht mindestens ein Bullet
+== emit
+commit: Das Bullet kopiert eine Zeile einer früheren Commit-Nachricht — nur aus dem git diff neu formulieren: {bullet} ¦ bullet
+commit: Bundles und die Zuordnung Datei→Bundle sind NICHT automatisch — Ordnerstruktur und Bundle-Grenzen ändern sich zwischen WIPs
+commit: Du musst (1) das Log für den letzten Bundle-/WIP-Stand lesen, (2) diff --stat und den vollständigen Diff jedes Pfads lesen, (3) Scopes, Daten und Bullets festlegen und dann prepare über stdin aufrufen
+commit: Das Skript ergänzt nur Betreff, uloc-Suffixe, Sortierung, Fußzeile und Signed-off-by — es erfindet nie Bundles oder Bullets
+commit: prepare/check schlagen fehl, wenn Tage→Bundle, Bundles→Bereich und Sprachen→Bereich nicht aufgehen (jeweils ➕️✏️➖️🟰️); ausführen: repo ./📜️script.ts commit check
+commit: NEUE Bundle-Scopes, Daten und Bullets nach Log und Diff-Zuordnung über stdin an prepare übergeben
+commit: Im jüngsten Verlauf wurde kein früherer Bundle-WIP-Commit (Betreff …🔀️) gefunden
+Letzter Bundle-WIP: {subject} ({sha}) ¦ subject,sha
+\n=== frühere Commit-Nachrichten (nur Kontext — Bullets nicht kopieren; das alte Format kann falsch sein) ===\n
+\n=== git diff --stat (Überblick) ===\n
+=== git diff (Bullets daraus schreiben — nicht aus früheren Commit-Texten) ===\n
+\n[commit-Diff bei {maximumBytes} von {bytes} Bytes abgeschnitten — lokal prüfen: git diff {range}]\n ¦ maximumBytes,bytes,range
+== run
+commit: Der Arbeitsbaum muss vor Tag, Squash und Push sauber sein
+commit: Kein Contributor für git user.email {email} ¦ email
+commit check: Bundle-Text über stdin oder nach -- body.txt übergeben
+commit: Kein früherer Bundle-WIP-Commit (Betreff …🔀️) gefunden
+commit: Keine Commits nach dem letzten Bundle-WIP — nichts zu prüfen
+commit check: OK — {range}
+commit check: Tage je Bundle → Bundle-Kopfzeilen → Gesamtsumme des WIP-Bereichs; Fußzeile je Sprache → dieselbe Summe
+commit: Keine Commits nach dem letzten Bundle-WIP — nichts zu bündeln
+commit: compose-commit-message ist leer — zuerst prepare mit dem Bundle-Text ausführen
+== counter
+micro-commit: Der Zähler wird nicht auf 001 zurückgesetzt, weil der vorige Betreff nicht gelesen werden konnte: {subject} ¦ subject
+== bullets
+micro-commit: Ein Bullet muss mit {{emoji}} beginnen, gefolgt von der Beschreibung (kein Präfix '-', kein Leerzeichen nach dem Emoji): {bullet} ¦ bullet
+micro-commit: Die Bullets müssen jeden gestagten Bereich abdecken — es fehlt: {missing} ¦ missing
+micro-commit: `micro-commit diff` erneut lesen (Ticket-Pläne, Produktcode, Repo, … einbeziehen)
+== micro
+micro-commit: Kein Contributor für git user.email {email} ¦ email
+[micro-commit] Aufruf: repo ./📜️script.ts micro-commit <stage|diff|prepare> [Ebenen-Tokens…] [-- bullets.txt]
+micro-commit: Nichts ist gestaged; die gewünschten Änderungen vor prepare stagen
+\nmicro-commit: Die gestageten Pfade und den Diff oben analysieren; 1–8 Bullets über stdin übergeben (`{{emoji}}{{description}}` — das Emoji wählen, das zur jeweiligen Zeile passt, ohne führendes `-`, ohne Leerzeichen nach dem Emoji; nie 🎆️ 📊️ 🔢️ 🚩️)

@@ -12,7 +12,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
-        "command": "bun ./📜️script.ts deps"
+        "command": "repo ./📜️script.ts deps"
       },
       "metadata": {
         "semio": {
@@ -29,8 +29,7 @@
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs",
         { "dependentTasksOutputFiles": "**/*" },
-        { "runtime": "dotnet --version" },
-        { "runtime": "node -p \"process.platform.concat(process.arch)\"" }
+        { "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\"" }
       ],
       "dependsOn": [
         "deps",
@@ -38,7 +37,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       }
     }
   }

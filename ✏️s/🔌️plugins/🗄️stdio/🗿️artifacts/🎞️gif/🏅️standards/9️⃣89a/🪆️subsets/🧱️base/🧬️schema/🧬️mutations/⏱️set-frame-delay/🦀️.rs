@@ -17,6 +17,15 @@ pub struct SetFrameDelay {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-delay", kind: "set-frame-delay", record: "SetFrameDelay" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame delay", "Verzögerung des Einzelbilds setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, delay_cs } = self;
         protocol::MutationOutcome::new({
@@ -30,12 +39,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
             Some(f) => vec![GifMutation::SetFrameDelay(SetFrameDelay { index: *index, delay_cs: f.delay_cs })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame delay", "Verzögerung des Einzelbilds setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

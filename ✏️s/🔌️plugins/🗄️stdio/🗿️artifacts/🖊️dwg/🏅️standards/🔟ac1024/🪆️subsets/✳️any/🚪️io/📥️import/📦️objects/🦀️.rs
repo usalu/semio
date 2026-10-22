@@ -304,7 +304,7 @@ fn read_block_object_frame(
     block_names: &mut Vec<(u64, String)>,
 ) -> Result<(), String> {
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+    let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
     if data.bit_position() != class_main_end {
         return Err(format!("{} {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }, data.bit_position()));
     }
@@ -319,8 +319,8 @@ fn read_block_object_frame(
         return Err(format!("ENDBLK {handle:#x} unexpectedly declares a string stream"));
     }
     let (owner, reactors, extension_dictionary) =
-        decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" })?;
+        decode_r2010_entity_common_handles(&mut common, handle_reader, handle).map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+    validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" })?;
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
@@ -341,7 +341,7 @@ fn read_insert_object_frame(
     handle_reader: &mut DwgBitReader<'_>,
     object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
 ) -> Result<(), String> {
-    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
+    let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
     let insertion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
     let scale = match data.read_bb().map_err(|error| format!("INSERT {handle:#x} scale mode: {error}"))? {
         0 => {
@@ -363,17 +363,17 @@ fn read_insert_object_frame(
     if data.read_b().map_err(|error| format!("INSERT {handle:#x} string marker: {error}"))? || data.bit_position() != data_end_bit {
         return Err(format!("INSERT {handle:#x} main/string stream is not exactly consumed"));
     }
-    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
-    let block_header_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, handle_reader, handle)?;
+    let block_header_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
     let mut attribute_handles = Vec::with_capacity(attribute_count);
     for index in 0..attribute_count {
-        attribute_handles.push(read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
+        attribute_handles.push(read_object_handle(handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
     }
-    let sequence_end_handle = if has_attributes { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
+    let sequence_end_handle = if has_attributes { read_object_handle(handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
     if has_attributes && sequence_end_handle.is_none() {
         return Err(format!("INSERT {handle:#x} attributes have no SEQEND"));
     }
-    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "INSERT")?;
+    validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "INSERT")?;
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
@@ -401,7 +401,7 @@ fn read_dimension_object_frame(
     object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
 ) -> Result<(), String> {
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
-    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
+    let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
     let class_version = data.read_rc()?;
     if class_version != 0 {
         return Err(format!("DIMENSION_LINEAR {handle:#x} class version {class_version} is unsupported"));
@@ -443,10 +443,10 @@ fn read_dimension_object_frame(
     if strings.bit_position() != string_end {
         return Err(format!("DIMENSION_LINEAR {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
     }
-    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
-    let dimension_style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
-    let dimension_block_handle = read_object_handle(&mut handle_reader, handle)?;
-    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR")?;
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, handle_reader, handle)?;
+    let dimension_style_handle = read_object_handle(handle_reader, handle)?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
+    let dimension_block_handle = read_object_handle(handle_reader, handle)?;
+    validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR")?;
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
@@ -500,7 +500,7 @@ fn read_viewport_object_frame(
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
-    let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
+    let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
     let center = data.read_3bd()?;
     let width = data.read_bd()?;
     let height = data.read_bd()?;
@@ -577,19 +577,19 @@ fn read_viewport_object_frame(
     if strings.bit_position() != string_end {
         return Err(format!("VIEWPORT {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
     }
-    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+    let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, handle_reader, handle)?;
     let mut frozen_layer_handles = Vec::with_capacity(frozen_count);
     for index in 0..frozen_count {
-        frozen_layer_handles.push(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
+        frozen_layer_handles.push(read_object_handle(handle_reader, handle)?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
     }
-    let clip_boundary_handle = read_object_handle(&mut handle_reader, handle)?;
-    let named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
-    let base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
-    let background_handle = read_object_handle(&mut handle_reader, handle)?;
-    let visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
-    let shade_plot_handle = read_object_handle(&mut handle_reader, handle)?;
-    let sun_handle = read_object_handle(&mut handle_reader, handle)?;
-    validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VIEWPORT")?;
+    let clip_boundary_handle = read_object_handle(handle_reader, handle)?;
+    let named_ucs_handle = read_object_handle(handle_reader, handle)?;
+    let base_ucs_handle = read_object_handle(handle_reader, handle)?;
+    let background_handle = read_object_handle(handle_reader, handle)?;
+    let visual_style_handle = read_object_handle(handle_reader, handle)?;
+    let shade_plot_handle = read_object_handle(handle_reader, handle)?;
+    let sun_handle = read_object_handle(handle_reader, handle)?;
+    validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "VIEWPORT")?;
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
@@ -931,7 +931,7 @@ fn decode_xrecord_object(handle: u64, payload_size: usize, main_end_bit: usize, 
             Ok(Some(reference)) => object_id_handles.push(reference),
             Ok(None) => break,
             Err(_) => {
-                handle_reader = checkpoint;
+                *handle_reader = checkpoint;
                 break;
             }
         }

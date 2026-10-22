@@ -1,0 +1,217 @@
+{
+ "version": 1,
+ "document": {
+  "a": {
+   "b/c": 1,
+   "~": 2,
+   "": 3,
+   "x": [
+    10,
+    {
+     "y": 20
+    }
+   ]
+  },
+  "t": true,
+  "n": null,
+  "f": 1.5
+ },
+ "pointerOk": [
+  {
+   "pointer": "/a/b~1c",
+   "expected": 1
+  },
+  {
+   "pointer": "/a/~0",
+   "expected": 2
+  },
+  {
+   "pointer": "/a/",
+   "expected": 3
+  },
+  {
+   "pointer": "/a/x/1/y",
+   "expected": 20
+  },
+  {
+   "pointer": "/t",
+   "expected": true
+  },
+  {
+   "pointer": "/n",
+   "expected": null
+  },
+  {
+   "pointer": "/a/x/0",
+   "expected": 10
+  },
+  {
+   "pointer": "/f",
+   "expected": 1.5
+  },
+  {
+   "pointer": "/a/x",
+   "expected": [
+    10,
+    {
+     "y": 20
+    }
+   ]
+  }
+ ],
+ "pointerMissing": [
+  "/a/missing",
+  "/a/x/5",
+  "/t/x",
+  "/n/x",
+  "/toString",
+  "/__proto__",
+  "/constructor",
+  "/a/x/01",
+  "/a/x/y",
+  "/f/g"
+ ],
+ "pointerInvalid": [
+  "",
+  "a",
+  "/a~",
+  "/a~2",
+  "~0",
+  "/a/~"
+ ],
+ "tomlOk": [
+  {
+   "name": "a manifest path",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"pub.json\"\n",
+   "expected": "pub.json"
+  },
+  {
+   "name": "a trailing comment",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"p.json\" # note\n",
+   "expected": "p.json"
+  },
+  {
+   "name": "comments and blank lines inside",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\n# c\n\nmanifest = \"a/b.json\"\n",
+   "expected": "a/b.json"
+  },
+  {
+   "name": "later tables are ignored",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"m.json\"\n[dependencies]\nserde = \"1\"\n",
+   "expected": "m.json"
+  },
+  {
+   "name": "CRLF line endings",
+   "text": "[package]\r\nname = \"x\"\r\n\r\n[package.metadata.semio.publications]\r\nmanifest = \"w.json\"\r\n",
+   "expected": "w.json"
+  },
+  {
+   "name": "no publications table",
+   "text": "[package]\nname = \"x\"\n\n[dependencies]\n",
+   "expected": null
+  },
+  {
+   "name": "a sibling table is not the subtable",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications.extra]\nmanifest = \"no.json\"\n",
+   "expected": null
+  },
+  {
+   "name": "another table before and after",
+   "text": "[lib]\nname = \"l\"\n[package.metadata.semio.publications]\nmanifest = \"z.json\"\n[features]\n",
+   "expected": "z.json"
+  }
+ ],
+ "tomlErrors": [
+  {
+   "name": "a repeated subtable",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"a.json\"\n[package.metadata.semio.publications]\nmanifest = \"b.json\"\n",
+   "message": "Repeated owner publication subtable"
+  },
+  {
+   "name": "an empty subtable",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\n",
+   "message": "Missing owner publication manifest path"
+  },
+  {
+   "name": "two manifest lines",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"a.json\"\nmanifest = \"b.json\"\n",
+   "message": "requires exactly one manifest path"
+  },
+  {
+   "name": "another key",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nother = \"a.json\"\n",
+   "message": "requires exactly one manifest path"
+  },
+  {
+   "name": "an escaped path",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"a\\\\b.json\"\n",
+   "message": "requires exactly one manifest path"
+  },
+  {
+   "name": "single quotes",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = 'a.json'\n",
+   "message": "requires exactly one manifest path"
+  },
+  {
+   "name": "an empty path",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = \"\"\n",
+   "message": "requires exactly one manifest path"
+  },
+  {
+   "name": "a non-string value",
+   "text": "[package]\nname = \"x\"\n\n[package.metadata.semio.publications]\nmanifest = 3\n",
+   "message": "requires exactly one manifest path"
+  }
+ ],
+ "admission": {
+  "files": {
+   "comp/ok.wasm": "12345",
+   "comp/dir/inner.txt": "x",
+   "afile": "x"
+  },
+  "cases": [
+   {
+    "target": "comp/ok.wasm",
+    "expected": {
+     "status": "admitted",
+     "limitBytes": 67108864,
+     "byteLength": 5,
+     "path": "comp/ok.wasm"
+    }
+   },
+   {
+    "target": "comp/missing.wasm",
+    "expected": {
+     "status": "absent",
+     "limitBytes": 67108864
+    }
+   },
+   {
+    "target": "nodir/missing.wasm",
+    "expected": {
+     "status": "absent",
+     "limitBytes": 67108864
+    }
+   }
+  ],
+  "errors": [
+   {
+    "target": "../escape.wasm",
+    "message": "Publication component escapes workspace"
+   },
+   {
+    "target": "comp/dir",
+    "message": "no-follow regular ancestry"
+   },
+   {
+    "target": "afile/inner",
+    "message": "no-follow regular ancestry"
+   },
+   {
+    "target": "comp",
+    "message": "no-follow regular ancestry"
+   }
+  ],
+  "exceedsBytes": 67108865
+ }
+}

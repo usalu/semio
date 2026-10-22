@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const moduleRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+const moduleRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 const stylingOwnerRoot = resolve(moduleRoot, "..");
 const tokensPath = join(stylingOwnerRoot, "🔣️.json");
 export const ELEMENTS_ASSETS_ROOT = resolve(stylingOwnerRoot, "../../🖼️assets");

@@ -1,0 +1,73 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "tags",
+  "cases",
+  "reply"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "tags": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  },
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "tagName",
+     "wipSha",
+     "expected"
+    ],
+    "properties": {
+     "tagName": {
+      "type": "string"
+     },
+     "wipSha": {
+      "type": "string"
+     },
+     "messageFile": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "reply": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "tagName",
+    "wipSha",
+    "commitMessage",
+    "messageFile"
+   ],
+   "properties": {
+    "tagName": {
+     "type": "string"
+    },
+    "wipSha": {
+     "type": "string"
+    },
+    "commitMessage": {
+     "type": "string"
+    },
+    "messageFile": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

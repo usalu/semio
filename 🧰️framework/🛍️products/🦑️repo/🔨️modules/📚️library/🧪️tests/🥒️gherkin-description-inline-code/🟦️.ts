@@ -125,7 +125,7 @@ test("gherkinTokens wires the description scanner into a plain gherkin reference
 
 test("registers the gherkin description inline-code gate through Nx and the package router", () => {
   const project = JSON.parse(readFileSync(join(library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-  expect(project.targets["test-gherkin-description-inline-code"]?.options.command).toBe("bun ./📜️script.ts test gherkin-description-inline-code");
+  expect(project.targets["test-gherkin-description-inline-code"]?.options.command).toBe("repo ./📜️script.ts test gherkin-description-inline-code");
   const router = readRegisteredTestRoute(resolve(library, "../../../../.."), "gherkin-description-inline-code").text;
   expect(router.match(/segments\[0\] === "gherkin-description-inline-code"/gu)).toHaveLength(1);
   expect(router).toContain("🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts");

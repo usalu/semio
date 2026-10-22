@@ -21,18 +21,9 @@ pub struct PngDiff {
     pub rects: Vec<PngSampleRect>,
 }
 
-impl MutationDiff<PngSnapshot> for PngDiff {
-    fn apply(&self, base: &PngSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PngSnapshot> {
-        let mut image = self.image.clone().unwrap_or_else(|| base.image.clone());
-        if let Some(gamma) = self.gamma {
-            image.gamma = gamma.gama;
-        }
-        self.rects.iter().try_for_each(|rect| image.write_rect(rect)).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["rects"]))?;
-        let next = PngSnapshot { schema: base.schema.clone(), image };
-        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
-        Ok(next)
-    }
+impl MutationDiff<PngSnapshot> for PngDiff {}
 
+impl protocol::ColdMutationDiff<PngSnapshot> for PngDiff {
     fn absorb(&mut self, other: Self) {
         if other.image.is_some() {
             *self = other;
@@ -43,9 +34,28 @@ impl MutationDiff<PngSnapshot> for PngDiff {
         }
         self.rects.extend(other.rects);
     }
+
+    fn apply(&self, unpublished: &mut PngSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut image = self.image.clone().unwrap_or_else(|| base.image.clone());
+        if let Some(gamma) = self.gamma {
+            image.gamma = gamma.gama;
+        }
+        self.rects.iter().try_for_each(|rect| image.write_rect(rect)).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["rects"]))?;
+        let next = PngSnapshot { schema: base.schema.clone(), image };
+        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<PngSnapshot> for PngDiff {
+    fn is_empty(&self) -> bool {
+        self.image.is_none() && self.gamma.is_none() && self.rects.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<PngSnapshot> for PngDiff {
     /// 🔁️ Concrete diff-level undo: a replaced image comes back whole, a set gamma returns to the base value and the rectangles restore
     /// the samples they overwrote, last rectangle first, each read from the image as the earlier rectangles left it.
     fn inverse(&self, base: &PngSnapshot) -> Self {
@@ -68,10 +78,6 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
             .collect();
         restores.reverse();
         Self { image: None, gamma: self.gamma.filter(|gamma| gamma.gama != base.image.gamma).map(|_| PngGammaValue { gama: base.image.gamma }), rects: restores }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.image.is_none() && self.gamma.is_none() && self.rects.is_empty()
     }
 }
 

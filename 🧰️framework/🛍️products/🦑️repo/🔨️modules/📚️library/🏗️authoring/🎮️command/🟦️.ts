@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+
 import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
@@ -7,6 +7,9 @@ import { Script } from "../../../../../../🔨️modules/🏃️process/📦️p
 import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
 import { assessMutationCrateBudget, newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
 import { parseCrateBudget, type CrateBudget } from "../📦️crate-tree/🗺️plan/💰️budget/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 📐️ Reads the crate budgets of `new crates`: `--target=<files>/<bytes>/<lines>` is what every crate aims for, `--hard=<files>/<bytes>/<lines>` is the limit the planner refuses to pack beyond. */
 export function crateBudgetFlags(flags: ReadonlySet<string>): { target: CrateBudget | undefined; hard: CrateBudget | undefined } {
@@ -42,12 +45,12 @@ export class CleanMechanismNewScript extends Script {
   async run(segments: string[]): Promise<void> {
     const kind = segments[0];
     if (kind !== "subset" && kind !== "standard" && kind !== "artifact" && kind !== "mutation" && kind !== "crates" && kind !== "leaves") {
-      console.error("usage: bun ./📜️script.ts new artifact <owner-root> <new-artifact-dir>");
-      console.error("   or: bun ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
-      console.error("   or: bun ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--hard=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
-      console.error("   or: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)");
+      console.error("usage: repo ./📜️script.ts new artifact <owner-root> <new-artifact-dir>");
+      console.error("   or: repo ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
+      console.error("   or: repo ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
+      console.error("   or: repo ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]");
+      console.error("   or: repo ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--hard=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
+      console.error("   or: repo ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)");
       process.exit(1);
       return;
     }
@@ -61,11 +64,11 @@ export class CleanMechanismNewScript extends Script {
     const repoRoot = this.root;
     try {
       if (kind === "mutation") {
-        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
+        if (positional.length !== 2) throw new Error("usage: repo ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
         const [owner, name] = positional as [string, string];
         const budget = await assessMutationCrateBudget(repoRoot, owner);
-        if (budget?.verdict === "refused") throw new Error(`new mutation: ${budget.crate} would leave the source gate (lib ${budget.lib.files} files / ${budget.lib.bytes} bytes / ${budget.lib.lines} lines, test ${budget.test.files} / ${budget.test.bytes} / ${budget.test.lines}); put the leaf in a family crate or run \`bun ./📜️script.ts new crates <artifact-package-dir>\` first`);
-        if (budget?.verdict === "near-limit" || budget?.verdict === "already-over") console.warn(`new mutation: ${budget.crate} is ${budget.verdict === "already-over" ? "already over" : "next to"} the source gate (lib ${budget.lib.files} files / ${budget.lib.lines} lines, test ${budget.test.files} files); plan a carve with \`bun ./📜️script.ts new crates\``);
+        if (budget?.verdict === "refused") throw new Error(`new mutation: ${budget.crate} would leave the source gate (lib ${budget.lib.files} files / ${budget.lib.bytes} bytes / ${budget.lib.lines} lines, test ${budget.test.files} / ${budget.test.bytes} / ${budget.test.lines}); put the leaf in a family crate or run \`repo ./📜️script.ts new crates <artifact-package-dir>\` first`);
+        if (budget?.verdict === "near-limit" || budget?.verdict === "already-over") console.warn(`new mutation: ${budget.crate} is ${budget.verdict === "already-over" ? "already over" : "next to"} the source gate (lib ${budget.lib.files} files / ${budget.lib.lines} lines, test ${budget.test.files} files); plan a carve with \`repo ./📜️script.ts new crates\``);
         const result = newScaffoldMutationTree(
           repoRoot,
           owner,
@@ -87,7 +90,7 @@ export class CleanMechanismNewScript extends Script {
         return;
       }
       if (kind === "leaves") {
-        if (positional.length !== 1) throw new Error("usage: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema] [--rust]");
+        if (positional.length !== 1) throw new Error("usage: repo ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema] [--rust]");
         const { externalizeFacetLeaves } = await import("../📦️crate-tree/🧾️facet-leaves/🟦️.ts");
         const absolute = join(repoRoot, positional[0]!);
         const result = externalizeFacetLeaves(readFileSync(absolute, "utf8"), absolute, repoRoot, { json: flags.has("--json-schema"), rust: flags.has("--rust") });
@@ -98,7 +101,7 @@ export class CleanMechanismNewScript extends Script {
         return;
       }
       if (kind === "crates") {
-        if (positional.length !== 1) throw new Error("usage: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--no-test-rewrites] [--backup=<dir>]");
+        if (positional.length !== 1) throw new Error("usage: repo ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--no-test-rewrites] [--backup=<dir>]");
         await this.crates(positional[0]!, flags, dryRun);
         return;
       }
@@ -126,14 +129,14 @@ export class CleanMechanismNewScript extends Script {
       const samples = Number([...flags].find((flag) => flag.startsWith("--samples="))?.slice("--samples=".length) ?? 12);
       if (!Number.isInteger(samples) || samples < 1) throw new Error("new crates --samples expects a positive integer");
       const report = await verifyAppliedLayout(this.root, artifactDir, resolve(sandbox), base, flags.has("--keep"), samples);
-      const packageManifest = Bun.TOML.parse(readFileSync(join(this.root, packageDir, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } };
+      const packageManifest = runtimeParseTomlV1(readFileSync(join(this.root, packageDir, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } };
       const admission = workspaceAdmissionProblems(readFileSync(join(this.root, packageDir, packageManifest.package?.workspace ?? "../..", "Cargo.toml"), "utf8"));
       const pluginDir = artifactDir.split("/").slice(0, 3).join("/");
-      const manifests = execFileSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-files", "-co", "--exclude-standard", "-z", "--", pluginDir], { cwd: this.root, maxBuffer: 1 << 28 }).toString("utf8").split("\0").filter((path) => path.endsWith("/Cargo.toml"));
+      const manifests = runToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-files", "-co", "--exclude-standard", "-z", "--", pluginDir], { check: true, cwd: this.root, maxBuffer: 1 << 28 }).stdout.toString("utf8").split("\0").filter((path) => path.endsWith("/Cargo.toml"));
       const reached = sharedMountFiles(this.root, manifests, (manifest) => manifest.startsWith(`${artifactDir}/`));
       const shared = reached.filter((entry) => entry.file.startsWith(`${pluginDir}/`));
       const sharedForeign = reached.filter((entry) => !entry.file.startsWith(`${pluginDir}/`)).map((entry) => entry.file);
-      console.log(JSON.stringify({ base, ...report, admission, shared, sharedForeign }, null, 2));
+      writeResultLineV1(JSON.stringify({ base, ...report, admission, shared, sharedForeign }, null, 2));
       if (admission.length || shared.length || Object.values(report.layout).some((row) => row.onlyCombined > 0)) { process.exit(1); return; }
       return;
     }
@@ -158,7 +161,7 @@ export class CleanMechanismNewScript extends Script {
       if (!sandbox) throw new Error("new crates --verify needs --sandbox=<dir> (a directory outside the repository)");
       const { verifyCarveInSandbox } = await import("../📦️crate-tree/🧫️sandbox/🟦️.ts");
       const report = await verifyCarveInSandbox(plan, resolve(sandbox), { oracle: flags.has("--oracle"), keep: flags.has("--keep") });
-      console.log(JSON.stringify(report, null, 2));
+      writeResultLineV1(JSON.stringify(report, null, 2));
       const failed = report.census.some((row) => !row.withinHardBudget) || report.moduleTreeProblems.length > 0 || report.visibility.length > 0 || report.orphan.length > 0 || report.glue.length > 0 || Object.values(report.unresolvedCrates).some((list) => list.length > 0) || Object.values(report.oracle ?? {}).some((row) => row.onlyCandidate > 0) || Object.values(report.layout ?? {}).some((row) => row.onlyCombined > 0);
       if (failed) { process.exit(1); return; }
       return;

@@ -67,8 +67,8 @@ export async function testInferredNativeInputs(workspace: string, output: string
   put(".gitignore", "node_modules\n.nx\n.compiler\n.results\n.generated\n.invocations\n");
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const subjectTarget = project.targets["test-subject"];
-  project.targets = { "test-subject": { ...subjectTarget, outputs: ["{workspaceRoot}/.results/test.txt"], options: { command: "bun ./📜️script.ts subject", cwd: ".", forwardAllArgs: false } } };
-  projects.shared.targets.generate = { cache: true, executor: "nx:run-commands", inputs: ["{workspaceRoot}/value.json", "{workspaceRoot}/📜️script.ts"], outputs: ["{workspaceRoot}/.generated/shared"], options: { command: "bun ./📜️script.ts generate", cwd: "." } };
+  project.targets = { "test-subject": { ...subjectTarget, outputs: ["{workspaceRoot}/.results/test.txt"], options: { command: "repo ./📜️script.ts subject", cwd: ".", forwardAllArgs: false } } };
+  projects.shared.targets.generate = { cache: true, executor: "nx:run-commands", inputs: ["{workspaceRoot}/value.json", "{workspaceRoot}/📜️script.ts"], outputs: ["{workspaceRoot}/.generated/shared"], options: { command: "repo ./📜️script.ts generate", cwd: "." } };
   for (const entry of Object.values(projects)) put(`${entry.root}/project.json`, JSON.stringify(entry));
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {

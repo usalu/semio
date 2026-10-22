@@ -16,7 +16,7 @@ use protocol::LOCAL_ACTOR_ID;
 use store::Mutation;
 use semio_framework_plugin_decl_views::NoTransientMutation;
 use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 use semio_framework_ui_contract::*;
 use std::future::Future;
 use store::MemberFactory;

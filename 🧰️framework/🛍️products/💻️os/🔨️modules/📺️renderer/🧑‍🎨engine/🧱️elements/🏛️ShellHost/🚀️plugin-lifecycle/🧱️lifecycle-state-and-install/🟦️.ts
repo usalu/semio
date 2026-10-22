@@ -1,5 +1,5 @@
 /** 🧱️ The plugin lifecycle state, refs and effects and the plugin and hub document program install callbacks. */
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
 import { createBundledPluginSource, createDevPluginSource, createExtensionSource, extensionRegistryFromCatalog, multiplexPluginSources, type PluginModuleAcquired, type PluginSource, resolvePlaygroundDefaultAppId, resolvePluginRegistryId } from "@semio-tech/framework";
 import { DEV_STREAM_ROUTES } from "@semio-tech/framework/backbone";
 import { resolveBootPrimaryAppV1 } from "../../🔀️surface-switch/🟦️.ts";

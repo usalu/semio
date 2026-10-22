@@ -166,8 +166,8 @@ fn regen_mutation_vectors() {
     let base = En1995Snapshot::compliant_building_beam();
     let _ = std::fs::remove_dir_all(fixtures_root());
     for (mutation, (_, dir)) in every_mutation().into_iter().zip(catalog_vector_dirs()) {
-        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
-        let after = protocol::apply_diff(outcome.diff(), &base).expect("applies");
+        let outcome = <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::diff(&mutation, &base);
+        let after = protocol::apply_diff_cold(outcome.diff(), &base).expect("applies");
         let facets = [
             ("📸️snapshot/⬅️before", semio_framework_pack_json::to_json_string(&base)),
             ("📸️snapshot/➡️after", semio_framework_pack_json::to_json_string(&after)),
@@ -194,10 +194,10 @@ fn committed_mutation_vectors_replay_for_every_kind() {
         let mutation = decoded!(En1995Mutation, &dir, "🦠️mutation", kind);
         assert_eq!(mutation, expected, "{kind} mutation");
         assert_eq!(<En1995Mutation as SemanticMutation<En1995Snapshot>>::semantics(&mutation).kind, kind);
-        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &before);
+        let outcome = <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::diff(&mutation, &before);
         assert!(outcome.worst_level().is_none(), "{kind}: {:?}", outcome.messages());
         assert_eq!(outcome.diff(), &decoded!(En1995Diff, &dir, "🔺️diff", kind), "{kind} diff");
-        let after = protocol::apply_diff(outcome.diff(), &before).expect("applies");
+        let after = protocol::apply_diff_cold(outcome.diff(), &before).expect("applies");
         assert_eq!(after, decoded!(En1995Snapshot, &dir, "📸️snapshot/➡️after", kind), "{kind} after");
         assert!(text_at(&dir, "🎯️outcome").contains("\"applied\""), "{kind} outcome");
     }

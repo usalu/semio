@@ -6,7 +6,7 @@
  * the public names from the module that owns each of them.
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { hopTrace } from "@semio-tech/framework-trace";
 
 // #region 🔌️Adapters

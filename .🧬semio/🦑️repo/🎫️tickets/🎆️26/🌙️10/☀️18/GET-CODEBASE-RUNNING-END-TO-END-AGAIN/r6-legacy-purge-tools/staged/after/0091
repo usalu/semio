@@ -1,0 +1,42 @@
+{
+  "title": "Fix Connection Delete in Design App",
+  "status": "closed",
+  "description": "Fix the dual-state desync between XState machine and DesignStore that prevents connection deletion after selection. The selection state set via actor.send is never synced back to DesignStore local state, so deleteSelected reads empty selection. Fix executeCommand to read from machine state and add e2e test coverage.",
+  "summary": "Fixed connection deletion by resolving dual-state desync between XState machine and DesignStore. executeCommand now reads selection from machine state and syncs back. Added e2e test coverage for Delete and Backspace key deletion.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/766"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-02T21:51:05.704708586Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix the dual-state desync between XState machine and DesignStore that prevents connection deletion after selection. The selection state set via actor.send is never synced back to DesignStore local state, so deleteSelected reads empty selection. Fix executeCommand to read from machine state and add e2e test coverage.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-02T22:33:12.438895475Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Fixed connection deletion by resolving dual-state desync between XState machine and DesignStore. executeCommand now reads selection from machine state and syncs back. Added e2e test coverage for Delete and Backspace key deletion.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    }
+  ]
+}

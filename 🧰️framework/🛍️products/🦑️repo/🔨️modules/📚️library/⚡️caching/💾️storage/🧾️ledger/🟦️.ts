@@ -11,20 +11,26 @@ export type CacheLanguageV1="en"|"de";
 /** 🏠️ The two declared loose roots: the repository cache root and the native cache root. */
 export type CacheRootIdV1="repository"|"native";
 /** 🧑‍🔧️ Names who keeps an area within its budget when the generic collector must not. */
-export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"bazel"|"test-evidence"|"dashboard";
+export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"bazel"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
 type Bilingual=Readonly<Record<CacheLanguageV1,string>>;
 /** 💰️ One declared budget: explicit bytes, a share of the partition, or whatever its siblings leave. */
 export type CacheBudgetV1=Readonly<{bytes:number}>|Readonly<{basisPoints:number}>|Readonly<{remainder:true}>;
 /** 🧹️ How an area is collected: how long it may stay unused, how long a unit must be quiet, and what proves a unit is in use. */
 export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease";lease?:string}>;
+/** 🚰️ The free space below which an owner is asked to reclaim in the background, and the free space it reclaims up to. */
+export type CacheReclaimV1=Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>;
+/** 📏️ One part of a partition's measured need: its cap (an area's budget or explicit bytes) and what was measured. */
+export type CacheNeedComponentV1=Readonly<{id:string;area?:string;bytes?:number;measuredBytes:number}>;
+/** 🧪️ A partition's need derived from measurement: the caps of its parts plus headroom plus the floor that must stay free. */
+export type CacheNeedV1=Readonly<{partition:string;measuredOn:string;headroomPercent:number;floorBytes:number;components:readonly CacheNeedComponentV1[]}>;
 /** 📍️ One declared home of cached bytes. */
-export type CacheAreaV1=Readonly<{id:string;root:CacheRootIdV1;kind:"partition"|"control"|"nested"|"tree";directory?:string;pattern?:string;partition?:string;budget?:CacheBudgetV1;managed?:Readonly<{owner:CacheOwnerV1}>;collect?:CacheCollectV1;writers:readonly string[];purpose:Bilingual}>;
+export type CacheAreaV1=Readonly<{id:string;root:CacheRootIdV1;kind:"partition"|"control"|"nested"|"tree";directory?:string;pattern?:string;partition?:string;budget?:CacheBudgetV1;managed?:Readonly<{owner:CacheOwnerV1}>;recreate?:"derived"|"carried";carry?:readonly string[];reclaim?:CacheReclaimV1;collect?:CacheCollectV1;writers:readonly string[];purpose:Bilingual}>;
 /** 🪦️ One root that no writer feeds any more and the collector removes once it has been quiet. */
 export type CacheRetirementV1=Readonly<{root:CacheRootIdV1;directory:string;quietMs:number;reason:Bilingual}>;
 /** 🗃️ One loose root with the budget of all its areas and the rule for entries nobody declared. */
 export type CacheRootV1=Readonly<{directory:string;maximumBytes:number;undeclaredUnusedAgeMs:number;undeclaredQuietMs:number;ignored:readonly string[]}>;
 /** 🧾️ The whole closed ledger of cache homes. */
-export type CacheLedgerV1=Readonly<{version:1;roots:Readonly<Record<CacheRootIdV1,CacheRootV1>>;areas:readonly CacheAreaV1[];retirements:readonly CacheRetirementV1[]}>;
+export type CacheLedgerV1=Readonly<{version:1;roots:Readonly<Record<CacheRootIdV1,CacheRootV1>>;areas:readonly CacheAreaV1[];retirements:readonly CacheRetirementV1[];needs?:readonly CacheNeedV1[]}>;
 /** 🔢️ The partition facts the ledger needs from the authored budget; tests replace them. */
 export type CachePartitionBudgetsV1=Readonly<Record<string,Readonly<{directory:string;capacityBytes:number;maximumLogicalBytes:number}>>>;
 
@@ -43,10 +49,14 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
  const ledger=value as CacheLedgerV1,ids=new Set<string>(),claimed=new Map<CacheRootIdV1,string[][]>([["repository",[]],["native",[]]]),nested=new Map<string,{paths:string[][];explicit:number;remainders:number}>();
  for(const area of ledger.areas){
   if(ids.has(area.id))refuse("duplicate area "+area.id);ids.add(area.id);
+  if(area.recreate!==undefined&&area.kind!=="partition")refuse("only a partition may declare how it is recreated: "+area.id);
+  if((area.recreate==="carried")!==(area.carry!==undefined))refuse("exactly a carried partition names what it carries: "+area.id);
+  if(area.carry?.some(path=>segments(path).some(part=>part==="."||part===".."||part==="")))refuse("canonical carried directories required for "+area.id);
   if(area.directory!==undefined&&segments(area.directory).some(part=>part==="."||part===".."))refuse("canonical directory required for "+area.id);
   if(area.pattern!==undefined)try{new RegExp(area.pattern,"u");}catch{refuse("valid pattern required for "+area.id);}
   const remainder=area.budget!==undefined&&"remainder" in area.budget;
   if(area.kind==="nested"){
+   if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and a target within the headroom schema: "+area.id);
    if(!area.partition||!Object.hasOwn(partitions,area.partition)||area.pattern!==undefined||area.collect!==undefined||!area.managed||!area.budget||remainder===(area.directory!==undefined))refuse("nested area "+area.id+" needs a declared partition, a manager and a budget");
    const row=nested.get(area.partition!)??{paths:[],explicit:0,remainders:0};nested.set(area.partition!,row);
    if(remainder)row.remainders++;else{const own=segments(area.directory!);if(row.paths.some(other=>inside(other,own)||inside(own,other)))refuse("overlapping nested areas in "+area.partition);row.paths.push(own);}
@@ -73,6 +83,15 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   const folded=paths.map(path=>path.map(portable));
   for(let first=0;first<folded.length;first++)for(let second=first+1;second<folded.length;second++)if(inside(folded[first]!,folded[second]!)||inside(folded[second]!,folded[first]!))refuse("overlapping homes in "+root+": "+paths[first]!.join("/")+" and "+paths[second]!.join("/"));
   for(const area of ledger.areas)if(area.root===root&&area.pattern!==undefined){const matcher=new RegExp(area.pattern,"u");if(paths.some(path=>matcher.test(path[0]!)))refuse("pattern of "+area.id+" matches a declared home");}
+ }
+ for(const area of ledger.areas)if(area.reclaim){const row=nested.get(area.partition!)!,room=partitions[area.partition!]!.capacityBytes-schema.$defs.runtime.const.imageOverheadBytes-row.explicit;if(room<area.reclaim.softAvailableBytes)refuse("area caps leave less free space than the soft reclaim threshold of "+area.id);}
+ for(const area of ledger.areas)if(area.carry)for(const path of area.carry){
+  const own=segments(path);
+  if(!ledger.areas.some(other=>other.kind==="nested"&&other.partition===area.partition&&other.directory!==undefined&&inside(segments(other.directory),own)))refuse("carried directory "+path+" of "+area.id+" lies in no declared nested area");
+ }
+ for(const need of ledger.needs??[]){
+  if(!Object.hasOwn(partitions,need.partition))refuse("need names an unknown partition "+need.partition);
+  const required=cacheNeedRequiredBytesV1(ledger,need,partitions);if(partitions[need.partition]!.capacityBytes<required)refuse("partition "+need.partition+" is smaller than its measured need of "+required+" bytes");
  }
  for(const[partition,row]of nested){
   const limit=partitions[partition]!.maximumLogicalBytes;if(row.remainders>1||row.explicit>=limit||row.remainders===1&&limit-row.explicit<1048576)refuse("nested budgets exceed partition "+partition);
@@ -132,14 +151,6 @@ export function classifyCachePathV1(ledger:CacheLedgerV1,root:CacheRootIdV1,path
  return homes.some(home=>inside(parts,home))?{kind:"container"}:{kind:"undeclared"};
 }
 
-/** 🗣️ Picks the output language: an explicit valid request, then the environment, then the first catalogue language. */
-export function resolveCacheLanguageV1(requested:string|undefined,environment:Readonly<Record<string,string|undefined>>):CacheLanguageV1{
- const languages=texts.languages as readonly CacheLanguageV1[];
- if(requested!==undefined){if(!languages.includes(requested as CacheLanguageV1))throw Error(cacheTextV1("en","error.language",{language:requested})+"\n"+cacheTextV1("de","error.language",{language:requested}));return requested as CacheLanguageV1;}
- for(const value of[environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const head=value?.slice(0,2).toLowerCase();if(head&&languages.includes(head as CacheLanguageV1))return head as CacheLanguageV1;}
- return languages[0]!;
-}
-
 /** 💬️ Renders one catalogue message with its placeholders. */
 export function cacheTextV1(language:CacheLanguageV1,key:string,variables:Readonly<Record<string,string|number>>={}):string{
  const row=(texts.messages as Readonly<Record<string,Bilingual>>)[key];if(!row)throw Error("Declared cache message required: "+key);
@@ -186,12 +197,14 @@ export function planCacheCollectionV1(targets:readonly CacheTargetV1[],nowMs:num
  });
 }
 
+/** 🔬️ Where a size came from: the filesystem's own (virtual) statfs, the size ledger written by a collection or a deep status, a walk of this very call, or nowhere. */
+export type CacheSourceV1="statfs"|"recorded"|"walked"|"unknown";
 /** 🏛️ One partition or control row of a status report. */
-export type CachePartitionRowV1=Readonly<{id:string;kind:"partition"|"control";directory:string;state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;budgetBytes:number|null;capacityBytes:number|null;partial:boolean;owner:CacheOwnerV1}>;
+export type CachePartitionRowV1=Readonly<{id:string;kind:"partition"|"control";directory:string;state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;budgetBytes:number|null;capacityBytes:number|null;partial:boolean;owner:CacheOwnerV1;source:CacheSourceV1;recordedAtMs:number|null;envelopeBytes:number|null;declaredBytes:number|null;recreate:boolean}>;
 /** 🧩️ One area row of a status report. */
-export type CacheAreaRowV1=Readonly<{id:string;root:CacheRootIdV1;partition:string|null;directory:string|null;present:boolean;measurable:boolean;usedBytes:number|null;budgetBytes:number|null;entries:number;partial:boolean;over:boolean;owner:CacheOwnerV1|null}>;
+export type CacheAreaRowV1=Readonly<{id:string;root:CacheRootIdV1;partition:string|null;directory:string|null;present:boolean;measurable:boolean;usedBytes:number|null;budgetBytes:number|null;entries:number;partial:boolean;over:boolean;owner:CacheOwnerV1|null;source:CacheSourceV1;recordedAtMs:number|null}>;
 /** 🏚️ One retired or undeclared entry still on disk. */
-export type CacheEntryRowV1=Readonly<{root:CacheRootIdV1;path:string;kind:"retired"|"undeclared";usedBytes:number;entries:number;partial:boolean}>;
+export type CacheEntryRowV1=Readonly<{root:CacheRootIdV1;path:string;kind:"retired"|"undeclared";usedBytes:number|null;entries:number;partial:boolean;source:CacheSourceV1;recordedAtMs:number|null}>;
 /** 🌍️ One loose root's use against its declared maximum. */
 export type CacheRootRowV1=Readonly<{id:CacheRootIdV1;directory:string;usedBytes:number;budgetBytes:number;partial:boolean}>;
 /** 📈️ The status of the whole ledger, serializable as JSON. */
@@ -201,10 +214,10 @@ const percent=(used:number,budget:number):number=>budget<=0?0:Math.round(used*10
 /** 🖨️ Renders a status report as lines in one language. */
 export function formatCacheReportV1(language:CacheLanguageV1,report:CacheReportV1,ledger:CacheLedgerV1=cacheLedgerV1()):readonly string[]{
  const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(language,key,variables),lines=[text("status.title",{root:report.workspace}),"",text("status.partitions")];
- const unit=(row:{usedBytes:number|null;partial:boolean})=>row.usedBytes===null?"?":formatCacheBytesV1(row.usedBytes)+(row.partial?text("note.partial"):"");
+ const unit=(row:Measured,plain=false)=>(row.usedBytes===null?"?":formatCacheBytesV1(row.usedBytes)+(row.partial?text("note.partial"):""))+(plain?"":provenance(text,row,report.generatedAtMs));
  for(const row of report.partitions){
-  const note=row.kind==="control"||row.owner==="image"?"":text("note.managed",{owner:row.owner});
-  lines.push("  "+(row.budgetBytes===null?text("row.unbudgeted",{id:row.id,used:unit(row),note}):text("row.partition",{id:row.id,state:text("state."+row.state),used:unit(row),budget:formatCacheBytesV1(row.budgetBytes),percent:row.usedBytes===null?0:percent(row.usedBytes,row.budgetBytes),note})));
+  const note=(row.kind==="control"||row.owner==="image"?"":text("note.managed",{owner:row.owner}))+(row.recreate&&row.envelopeBytes!==null&&row.declaredBytes!==null&&row.envelopeBytes!==row.declaredBytes?text("note.recreate",{actual:formatCacheBytesV1(row.envelopeBytes),declared:formatCacheBytesV1(row.declaredBytes)}):"");
+  lines.push("  "+(row.budgetBytes===null?text("row.unbudgeted",{id:row.id,used:unit(row),note}):row.usedBytes===null?text("row.partitionUnmeasured",{id:row.id,state:text("state."+row.state),used:unit(row,row.state==="detached"||row.state==="absent"),budget:formatCacheBytesV1(row.budgetBytes),note}):text("row.partition",{id:row.id,state:text("state."+row.state),used:unit(row),budget:formatCacheBytesV1(row.budgetBytes),percent:percent(row.usedBytes,row.budgetBytes),note})));
  }
  const nested=report.areas.filter(row=>row.partition!==null);
  if(nested.length){lines.push("",text("status.nested"));for(const row of nested)lines.push("  "+areaLine(text,row,unit));}
@@ -214,18 +227,51 @@ export function formatCacheReportV1(language:CacheLanguageV1,report:CacheReportV
   for(const row of rows)lines.push("  "+areaLine(text,row,unit));
  }
  lines.push("");
+ if([...report.partitions,...report.areas,...report.retired,...report.undeclared].some(row=>row.source==="recorded"||row.source==="unknown"))lines.push(text("status.deepHint"),"");
  if(report.retired.length){lines.push(text("status.retired"));for(const row of report.retired)lines.push("  "+text("row.entry",{path:row.path,used:unit(row),note:""}));}
  if(report.undeclared.length){lines.push(text("status.undeclared",{days:Math.round(ledger.roots.repository.undeclaredUnusedAgeMs/86400000)}));for(const row of report.undeclared)lines.push("  "+text("row.entry",{path:row.path,used:unit(row),note:""}));}
  if(!report.retired.length&&!report.undeclared.length)lines.push(text("status.clean"));
  return lines;
 }
 
-function areaLine(text:(key:string,variables?:Readonly<Record<string,string|number>>)=>string,row:CacheAreaRowV1,unit:(row:{usedBytes:number|null;partial:boolean})=>string):string{
+type Measured=Readonly<{usedBytes:number|null;partial:boolean;source:CacheSourceV1;recordedAtMs:number|null}>;
+type Text=(key:string,variables?:Readonly<Record<string,string|number>>)=>string;
+function provenance(text:Text,row:Measured,nowMs:number):string{
+ if(row.source==="unknown")return row.usedBytes===null?text("note.unrecorded"):"";
+ if(row.source!=="recorded"||row.recordedAtMs===null)return "";
+ const minutes=Math.max(0,Math.round((nowMs-row.recordedAtMs)/60000)),age=minutes<60?text("age.minutes",{count:minutes}):minutes<2880?text("age.hours",{count:Math.round(minutes/60)}):text("age.days",{count:Math.round(minutes/1440)});
+ return text("note.recorded",{age});
+}
+
+function areaLine(text:Text,row:CacheAreaRowV1,unit:(row:Measured,plain?:boolean)=>string):string{
  const id=row.partition?row.id+" ("+row.partition+")":row.id,note=(row.over?text("note.over"):"")+(row.owner&&row.owner!=="image"?text("note.managed",{owner:row.owner}):"")+(row.measurable?"":text("note.unknown"));
- return row.budgetBytes===null?text("row.unbudgeted",{id,used:unit(row),note}):text("row.area",{id,used:unit(row),budget:formatCacheBytesV1(row.budgetBytes),percent:row.usedBytes===null?0:percent(row.usedBytes,row.budgetBytes),note});
+ return row.budgetBytes===null?text("row.unbudgeted",{id,used:unit(row),note}):row.usedBytes===null?text("row.areaUnmeasured",{id,used:unit(row,!row.measurable||!row.present),budget:formatCacheBytesV1(row.budgetBytes),note}):text("row.area",{id,used:unit(row),budget:formatCacheBytesV1(row.budgetBytes),percent:percent(row.usedBytes,row.budgetBytes),note});
 }
 
 /** 🏷️ Renders a removal reason in one language. */
 export function formatCacheReasonV1(language:CacheLanguageV1,reason:CacheRemovalV1["reason"],unusedAgeMs:number|null):string{
  return cacheTextV1(language,"reason."+reason,{days:Math.round((unusedAgeMs??0)/86400000)});
+}
+
+/** 🧮️ One recorded size: bytes, whether the walk that produced it was cut short, and when. */
+export type CacheSizeRecordV1=Readonly<{usedBytes:number;partial:boolean;atMs:number}>;
+/** 📒️ The recorded sizes of areas, retired roots and undeclared entries, keyed `area`, `retired:<root>:<dir>`, `undeclared:<root>:<path>`. */
+export type CacheSizeLedgerV1=Readonly<{version:1;records:Readonly<Record<string,CacheSizeRecordV1>>}>;
+/** 📛️ The file name of the size ledger inside the repository cache root. */
+export const CACHE_SIZE_FILE_V1=schema.$defs.runtime.const.sizeLedgerFile;
+
+/** 📖️ Reads a size ledger; anything that is not a closed ledger is an empty one, because sizes are only a remembered measurement. */
+export function readCacheSizeLedgerV1(value:unknown):CacheSizeLedgerV1{
+ if(validateJsonSchemaSubset({$defs:schema.$defs,$ref:"#/$defs/sizeLedger"},value).length)return{version:1,records:{}};
+ return value as CacheSizeLedgerV1;
+}
+
+/** 🧮️ The capacity a measured need demands: every part at its cap, plus headroom, plus the floor that must stay free. */
+export function cacheNeedRequiredBytesV1(ledger:CacheLedgerV1,need:CacheNeedV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):number{
+ const caps=need.components.reduce((sum,part)=>{
+  if(part.area===undefined)return sum+(part.bytes??0);
+  const area=ledger.areas.find(row=>row.id===part.area);if(!area)refuse("need names an unknown area "+part.area);
+  return sum+(cacheAreaBudgetBytesV1(ledger,area!,partitions)??0);
+ },0);
+ return Math.ceil(caps*(100+need.headroomPercent)/100)+need.floorBytes;
 }

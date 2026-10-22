@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation, withIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
+/** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]`.
  * The repository build tool restores Rust outputs before these process consumers run. An explicit binary override
  * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
 import { join } from "node:path";
@@ -19,7 +19,7 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript);
 
 /** 🧱️ Runs the retained owned fixture law against its independent oracle. */
 class ApprovalRequestFixtureScript extends BundleScript {

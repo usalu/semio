@@ -939,5 +939,5 @@ fn close_stalls_at_reader_boundary(store: &mut ArtifactStore<DemoSnapshot, DemoM
 
 
 fn original_snapshot_ports_without_representation_bounds<P,M>(store:&semio_framework_os_store_engine::lifted_store::ArtifactStore<P,M>)->(Arc<P>,Result<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,ValueError>)
-where P:Clone+ToValue+FromValue+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static,
+where P:Clone+ToValue+FromValue+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
 {(store.snapshot_owner(),store.owned_snapshot_retirement_factory())}

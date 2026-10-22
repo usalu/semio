@@ -4,11 +4,13 @@ fn main() {
  let plan = semio_framework_repo_cli::repo_cli::entrypoint::plan_native_entrypoint(&argv);
  let code = match plan.kind {
   "mcp" => {
-   let root = semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
-   semio_framework_repo_mcp::run_with(&plan.arguments, semio_framework_repo_cli::mcp_verb::real_repository(root))
+   let root = match std::env::current_dir().map_err(|error| error.to_string()).and_then(|current| semio_framework_repo_cli::repo_cli::entrypoint::resolve_native_mcp_root(&plan.arguments, &current)) { Ok(root) => root, Err(error) => { eprintln!("{error}"); std::process::exit(1); } };
+   semio_framework_repo_mcp::run_with(&[], semio_framework_repo_cli::mcp_verb::real_repository(root))
   },
-  "workspace" => semio_framework_repo_cli::repo_cli::entrypoint::run_native_workspace(&plan.arguments),
-  "build" => semio_framework_repo_cli::repo_cli::entrypoint::run_native_build(&plan.arguments),
+  "workspace" | "build" | "script" => {
+   eprintln!("{}", semio_framework_repo_cli::repo_cli::entrypoint::LAUNCHER_REFUSAL);
+   2
+  },
   _ => semio_framework_repo_cli::repo_cli::run(&argv),
  };
  std::process::exit(code);

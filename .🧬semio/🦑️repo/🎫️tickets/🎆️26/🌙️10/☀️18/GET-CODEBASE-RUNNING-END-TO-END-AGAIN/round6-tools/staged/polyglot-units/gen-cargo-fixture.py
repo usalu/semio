@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds a four-crate path-only workspace under /private/tmp/polyglot-units/lab/cargo-ws, runs `cargo metadata --offline` and `cargo tree` on it (third-party oracles) and writes the fixture staged/🧩️units/🧪️tests/🧫️fixtures/cargo-metadata.json (metadata + `_files` + `_tree`). One cargo process at a time, nice 10."""
+"""🧰️ Builds a four-crate path-only workspace under /private/tmp/polyglot-units/lab/cargo-ws, runs `cargo metadata --offline` and `cargo tree` on it (third-party oracles) and writes the fixture staged/🧩️units/🧪️tests/🧫️fixtures/cargo-metadata.json (metadata + `_files` + `_tree`). One cargo process at a time, nice 10."""
 import json, os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 WS = "/private/tmp/polyglot-units/lab/cargo-ws"
@@ -36,6 +36,7 @@ for line in tree.splitlines():
         edges.add("%s->%s" % (current, name))
 metadata["_files"] = sorted(FILES)
 metadata["_tree"] = sorted(edges)
+text = json.dumps(metadata, ensure_ascii=False, indent=1).replace(os.path.realpath(WS), "/workspace").replace(WS, "/workspace")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-json.dump(metadata, open(OUT, "w"), ensure_ascii=False, indent=1)
+open(OUT, "w", encoding="utf8").write(text)
 print("wrote", OUT, "packages", len(metadata["packages"]), "edges", sorted(edges))

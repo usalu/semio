@@ -1,10 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 
 import {verifyCapturedCargoArtifactsV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** ❓️ `semio-framework-course` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]` and `bun ./📜️script.ts build [args…]`. */
+/** ❓️ `semio-framework-course` task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]` and `repo ./📜️script.ts build [args…]`. */
 import { runAdmittedCargoPackageTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -26,6 +26,6 @@ class BuildScript extends BundleScript {
 }
 
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("build", BuildScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

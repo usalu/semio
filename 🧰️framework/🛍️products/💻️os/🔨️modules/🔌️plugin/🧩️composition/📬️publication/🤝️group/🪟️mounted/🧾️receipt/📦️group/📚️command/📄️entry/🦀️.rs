@@ -28,7 +28,7 @@ pub struct MountedCommandEntrySource<'a> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
+pub enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
 
 impl<'a> MountedCommandEntrySource<'a> {
     pub fn text(&self, index: usize) -> &'a str {

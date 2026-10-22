@@ -5,7 +5,7 @@
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "target": "test-build-source-demand",
       "cache": true,
-      "command": "bun ./📜️script.ts test build-source-demand",
+      "command": "repo ./📜️script.ts test build-source-demand",
       "inputs": [
         "default",
         "^default",
@@ -99,7 +99,7 @@
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "target": "test-build-caller-birth",
       "cache": false,
-      "command": "bun ./📜️script.ts test build-caller-birth",
+      "command": "repo ./📜️script.ts test build-caller-birth",
       "inputs": [
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
         "{projectRoot}/../../🏗️build/**/*",
@@ -133,7 +133,7 @@
       "manifest": "✏️s/🧑‍💻dev/📋️project.json",
       "target": "test-catalog-publication",
       "cache": true,
-      "command": "bun ./📜️script.ts catalog-publication-test",
+      "command": "repo ./📜️script.ts catalog-publication-test",
       "inputs": [
         "default",
         "^default",

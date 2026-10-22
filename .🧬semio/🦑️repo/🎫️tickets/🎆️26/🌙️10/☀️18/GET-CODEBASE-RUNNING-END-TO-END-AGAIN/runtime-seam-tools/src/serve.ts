@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeServeOptionsV1, RuntimeServerV1 } from "../../📋️contract/🟦️.ts";
 
 function requestOf(incoming: IncomingMessage, hostname: string, port: number, limit: number | undefined): Request {
@@ -10,7 +11,7 @@ function requestOf(incoming: IncomingMessage, hostname: string, port: number, li
   let received = 0;
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
-      incoming.on("data", (chunk: Buffer) => { received += chunk.length; if (limit !== undefined && received > limit) { controller.error(new Error("Request body too large")); incoming.destroy(); return; } controller.enqueue(new Uint8Array(chunk)); });
+      incoming.on("data", (chunk: Buffer) => { received += chunk.length; if (limit !== undefined && received > limit) { controller.error(new Error(runtimeMessageV1("bodyTooLarge", {}))); incoming.destroy(); return; } controller.enqueue(new Uint8Array(chunk)); });
       incoming.on("end", () => controller.close());
       incoming.on("error", error => controller.error(error));
     },

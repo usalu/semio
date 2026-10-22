@@ -15,6 +15,8 @@ use semio_framework_async::{
     WorkerPool,
     WorkerPoolConfig,
     block_on,
+};
+use semio_framework_async_sync::{
     oneshot,
 };
 use std::collections::HashMap;

@@ -48,6 +48,7 @@ semio-framework-actor = { workspace = true }
 # the same shape `ComputePool`/`TokioHostRuntime` bridges use, per `semio-framework-async`'s own
 # `block_on` gate doc.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-sync = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 # 🐕️ P1c (one-pool-worker-runtime): `ShardLoop::execute_turn_for`/its job-step counterpart wrap each
@@ -73,3 +74,4 @@ semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/
 # ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
 # same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
 semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-async-sync = { workspace = true }

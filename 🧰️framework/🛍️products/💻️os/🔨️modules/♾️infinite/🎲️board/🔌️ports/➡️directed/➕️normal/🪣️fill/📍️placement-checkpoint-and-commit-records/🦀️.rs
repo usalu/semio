@@ -57,7 +57,7 @@ impl Drop for BoardFillPlacement {
 
 /// 💾 Exact typed checkpoint root moved out of the job until the mounted caller adopts it.
 pub struct BoardFillCheckpoint {
-        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+        pub(super) original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
 pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
     pub state: Option<BoardFillJobState>,

@@ -10,7 +10,7 @@ impl OriginalRouterFixture{
 
 
 fn fixture_router_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛎️services/🧪️tests/🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
-use semio_framework_async::testkit::ManualRuntime;
+use semio_framework_async_testkit::ManualRuntime;
 use std::sync::atomic::AtomicUsize;
 
 async fn services<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> AsyncServices<R> {
@@ -350,9 +350,17 @@ async fn router_effect_runs_through_the_retained_compute_session() {
     executor.router_handler = recording_handler.clone();
     let dispatch = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
     executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;
-    runtime.drive().await;
+    let mut recorded = Vec::new();
+    for tick in 1..=5_000u64 {
+        runtime.drive().await;
+        recorded = injector.recorded().await;
+        if !recorded.is_empty() {
+            break;
+        }
+        runtime.set_now_ms(tick).await;
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
     assert_eq!(recording_handler.0.load(Ordering::SeqCst), 1);
-    let recorded = injector.recorded().await;
     assert_eq!(recorded.len(), 1);
     assert!(matches!(&recorded[0].payload, Payload::Event { bytes } if matches!(serde_json::from_slice::<Event>(bytes), Ok(Event::Completed { req: RequestId(5), result: RequestOutcome::Ok(output) }) if output == b"ok")));
 }
@@ -364,7 +372,7 @@ async fn router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_str
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     pool.shutdown();
     let compute = ComputePool::with_pool(1, pool);
-    let ctx = OperationContext { actor: 1, generation: 0, trace: TraceId(91), lane: 0, deadline_ms: None, cancel: CancelToken::root().await, capability: None };
+    let ctx = OperationContext { actor: 1, generation: 0, trace: TraceId(91), lane: 2, deadline_ms: None, cancel: CancelToken::root().await, capability: None };
     let handler: Arc<dyn RouterEffectHandler> = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
     let outcome = run_router_effect_job(&compute, &runtime, &scope, ctx, fixture_router_grant(), &handler, RouterEffect::CacheRead { engine_id: "e".to_string(), key: "k".to_string() }).await;
     assert!(matches!(outcome, RouterEffectJobOutcome::WorkerLost));
@@ -497,7 +505,7 @@ fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
         assert_eq!(owner.calls.as_ref().unwrap().load(Ordering::SeqCst),serde_json::from_str::<usize>("7").unwrap());
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut owner,grant));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
         if let Some(alias)=alias.as_mut(){assert_eq!(released,0);alias.begin_close();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(alias,grant));assert!(alias.terminal_is_empty());assert_eq!(step.progress().released_bytes,heap.released_bytes);released+=heap.released_bytes;}
-        assert_eq!(released,bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(owner);drop(alias);});assert_eq!(heap.released_bytes,0);
+        assert_eq!(released,bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(owner);drop(alias);});assert_eq!(heap.released_bytes,0);original.finish();
     }
 }
 

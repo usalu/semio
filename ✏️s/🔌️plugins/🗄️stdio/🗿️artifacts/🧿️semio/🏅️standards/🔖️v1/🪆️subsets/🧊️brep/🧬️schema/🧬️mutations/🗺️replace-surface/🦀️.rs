@@ -19,7 +19,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "surface", kind: "replace-surface", record: "ReplacedSurface" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.face_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioBrepSnapshot, Op> for ReplaceSurface
+where
+    Op: protocol::ColdMutation<SemioBrepSnapshot, ReferenceDiff = crate::schema::diff::SemioBrepDiff> + From<ReplaceSurface>,
+{
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioBrepSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,11 +40,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.face_id.clone()]
-    }
 }
 //#endregion 🔖️Payload

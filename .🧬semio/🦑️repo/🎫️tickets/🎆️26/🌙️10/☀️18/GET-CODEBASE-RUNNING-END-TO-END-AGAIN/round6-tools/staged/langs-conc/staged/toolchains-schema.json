@@ -1,0 +1,614 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pinned Native Toolchains",
+  "description": "🧰️ Declares the native toolchains every build agent shares in one checkout: the pinned uv and its managed interpreters with one isolated environment per Python project, the .NET SDK, the checksum-pinned CMake and Ninja distributions and the Go version. The identity of a toolchain is the pin itself, never the state of one machine, so every agent, tool adapter and operating system keys the same work the same way.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "hosts",
+    "roots",
+    "python",
+    "dotnet",
+    "cmake",
+    "go",
+    "extract",
+    "messages"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/Host"
+      }
+    },
+    "roots": {
+      "$ref": "#/definitions/Roots"
+    },
+    "python": {
+      "$ref": "#/definitions/Python"
+    },
+    "dotnet": {
+      "$ref": "#/definitions/Dotnet"
+    },
+    "cmake": {
+      "$ref": "#/definitions/Cmake"
+    },
+    "go": {
+      "$ref": "#/definitions/Go"
+    },
+    "extract": {
+      "$ref": "#/definitions/Extract"
+    },
+    "messages": {
+      "$ref": "#/definitions/Messages"
+    }
+  },
+  "definitions": {
+    "Host": {
+      "enum": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-arm64",
+        "linux-x64",
+        "win32-arm64",
+        "win32-x64"
+      ]
+    },
+    "Version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "Series": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "RelativePath": {
+      "description": "A forward-slash path below a partition root: no absolute path, no parent segment, no backslash.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+    },
+    "Roots": {
+      "description": "The partition roots below the checkout that hold dependency state and pinned tools; a law keeps them equal to the roots of the cache storage policy.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependencies",
+        "tools"
+      ],
+      "properties": {
+        "dependencies": {
+          "$ref": "#/definitions/RelativePath"
+        },
+        "tools": {
+          "$ref": "#/definitions/RelativePath"
+        }
+      }
+    },
+    "Text": {
+      "description": "One text in every language of the document.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Names": {
+      "description": "Environment variables whose values change what the toolchain produces, sorted.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      }
+    },
+    "Variables": {
+      "description": "Variables the repository sets itself on every run of the toolchain.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "Interpreter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "series"
+      ],
+      "properties": {
+        "series": {
+          "$ref": "#/definitions/Series"
+        },
+        "reason": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "PythonProject": {
+      "description": "One uv project: its root, its interpreter and the dependency groups its environment holds. The environment is never inside the checkout and never shared with another project.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "interpreter",
+        "groups"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "interpreter": {
+          "$ref": "#/definitions/Id"
+        },
+        "groups": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        }
+      }
+    },
+    "Python": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uv",
+        "interpreters",
+        "projects",
+        "layout",
+        "variables",
+        "environment"
+      ],
+      "properties": {
+        "uv": {
+          "$ref": "#/definitions/Version"
+        },
+        "interpreters": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/definitions/Id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/Interpreter"
+          }
+        },
+        "projects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/PythonProject"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "environments",
+            "interpreters",
+            "cache"
+          ],
+          "properties": {
+            "environments": {
+              "$ref": "#/definitions/RelativePath"
+            },
+            "interpreters": {
+              "$ref": "#/definitions/RelativePath"
+            },
+            "cache": {
+              "$ref": "#/definitions/RelativePath"
+            }
+          }
+        },
+        "variables": {
+          "$ref": "#/definitions/Variables"
+        },
+        "environment": {
+          "$ref": "#/definitions/Names"
+        }
+      }
+    },
+    "Dotnet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sdk",
+        "rollForward",
+        "file",
+        "artifacts",
+        "variables",
+        "environment"
+      ],
+      "properties": {
+        "sdk": {
+          "$ref": "#/definitions/Version"
+        },
+        "rollForward": {
+          "enum": [
+            "disable",
+            "latestPatch"
+          ]
+        },
+        "file": {
+          "$ref": "#/definitions/RelativePath"
+        },
+        "artifacts": {
+          "$ref": "#/definitions/RelativePath"
+        },
+        "variables": {
+          "$ref": "#/definitions/Variables"
+        },
+        "environment": {
+          "$ref": "#/definitions/Names"
+        }
+      }
+    },
+    "Distribution": {
+      "description": "One checksum-pinned archive of one tool for one host: its size, SHA-256, the top-level directory to strip, the directory of the executables below it and their names.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "archive",
+        "format",
+        "bytes",
+        "sha256",
+        "prefix",
+        "binaryDirectory",
+        "binaries"
+      ],
+      "properties": {
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "archive": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+\\.(?:tar\\.gz|zip)$",
+          "maxLength": 128
+        },
+        "format": {
+          "enum": [
+            "tar.gz",
+            "zip"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "sha256": {
+          "$ref": "#/definitions/Sha256"
+        },
+        "prefix": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^(?:[A-Za-z0-9._-]+)?$"
+        },
+        "binaryDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?:\\.|[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)$"
+        },
+        "binaries": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$"
+          }
+        }
+      }
+    },
+    "Tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "release",
+        "versionArguments",
+        "distributions"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/Version"
+        },
+        "release": {
+          "type": "string",
+          "pattern": "^https://(?:github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+|dl\\.google\\.com/go)$"
+        },
+        "versionArguments": {
+          "description": "The arguments that make the executable print its version.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "distributions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Distribution"
+          }
+        }
+      }
+    },
+    "Cmake": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cmake",
+        "ninja",
+        "environment"
+      ],
+      "properties": {
+        "cmake": {
+          "$ref": "#/definitions/Tool"
+        },
+        "ninja": {
+          "$ref": "#/definitions/Tool"
+        },
+        "environment": {
+          "$ref": "#/definitions/Names"
+        }
+      }
+    },
+    "Go": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "work",
+        "tool",
+        "variables",
+        "environment"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/Version"
+        },
+        "tool": {
+          "$ref": "#/definitions/Tool"
+        },
+        "work": {
+          "$ref": "#/definitions/RelativePath"
+        },
+        "variables": {
+          "$ref": "#/definitions/Variables"
+        },
+        "environment": {
+          "$ref": "#/definitions/Names"
+        }
+      }
+    },
+    "Command": {
+      "description": "An argument vector; `{archive}` and `{destination}` are the only placeholders.",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "Extract": {
+      "description": "How each archive format is unpacked by a program every supported operating system ships.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tar.gz",
+        "zip"
+      ],
+      "properties": {
+        "tar.gz": {
+          "$ref": "#/definitions/ExtractHosts"
+        },
+        "zip": {
+          "$ref": "#/definitions/ExtractHosts"
+        }
+      }
+    },
+    "ExtractHosts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "properties": {
+        "darwin": {
+          "$ref": "#/definitions/Command"
+        },
+        "linux": {
+          "$ref": "#/definitions/Command"
+        },
+        "win32": {
+          "$ref": "#/definitions/Command"
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "languages",
+        "texts"
+      ],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          }
+        },
+        "texts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "host",
+            "missing",
+            "offline",
+            "download",
+            "checksum",
+            "member",
+            "binary",
+            "receipt",
+            "python",
+            "pin",
+            "usage",
+            "project",
+            "digests",
+            "file",
+            "directory",
+            "http",
+            "depth",
+            "size",
+            "link",
+            "special"
+          ],
+          "properties": {
+            "host": {
+              "$ref": "#/definitions/Text"
+            },
+            "missing": {
+              "$ref": "#/definitions/Text"
+            },
+            "offline": {
+              "$ref": "#/definitions/Text"
+            },
+            "download": {
+              "$ref": "#/definitions/Text"
+            },
+            "checksum": {
+              "$ref": "#/definitions/Text"
+            },
+            "member": {
+              "$ref": "#/definitions/Text"
+            },
+            "binary": {
+              "$ref": "#/definitions/Text"
+            },
+            "receipt": {
+              "$ref": "#/definitions/Text"
+            },
+            "python": {
+              "$ref": "#/definitions/Text"
+            },
+            "pin": {
+              "$ref": "#/definitions/Text"
+            },
+            "usage": {
+              "$ref": "#/definitions/Text"
+            },
+            "project": {
+              "$ref": "#/definitions/Text"
+            },
+            "digests": {
+              "$ref": "#/definitions/Text"
+            },
+            "file": {
+              "$ref": "#/definitions/Text"
+            },
+            "directory": {
+              "$ref": "#/definitions/Text"
+            },
+            "http": {
+              "$ref": "#/definitions/Text"
+            },
+            "depth": {
+              "$ref": "#/definitions/Text"
+            },
+            "size": {
+              "$ref": "#/definitions/Text"
+            },
+            "link": {
+              "$ref": "#/definitions/Text"
+            },
+            "special": {
+              "$ref": "#/definitions/Text"
+            }
+          }
+        }
+      }
+    },
+    "Identity": {
+      "description": "What a toolchain identity digests: the pin, the host and the values of the declared variables that are set; nothing about where the toolchain happens to be installed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "host",
+        "pins",
+        "environment"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "python",
+            "dotnet",
+            "cmake",
+            "go"
+          ]
+        },
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "pins": {
+          "type": "object"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

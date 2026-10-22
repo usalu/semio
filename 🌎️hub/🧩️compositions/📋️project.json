@@ -6,7 +6,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions",
-        "command": "bun ./📜️script.ts ownership"
+        "command": "repo ./📜️script.ts ownership"
       },
       "cache": true,
       "outputs": []
@@ -15,7 +15,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions",
-        "command": "bun ./📜️script.ts native",
+        "command": "repo ./📜️script.ts native",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -29,7 +29,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions",
-        "command": "bun ./📜️script.ts typescript"
+        "command": "repo ./📜️script.ts typescript"
       },
       "cache": true,
       "outputs": []

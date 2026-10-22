@@ -48,11 +48,11 @@ impl BoardSceneState {
     }
 
     pub fn world_to_screen(&self, p: Point) -> Point {
-        semio_framework_canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
+        semio_framework_canvas::camera::world_to_screen(&self.camera.into(), &self.viewport(), p)
     }
 
     pub fn screen_to_world(&self, p: Point) -> Point {
-        semio_framework_canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
+        semio_framework_canvas::camera::screen_to_world(&self.camera.into(), &self.viewport(), p)
     }
 
     pub fn eligible_indirect_handle_count_on_node(&self, node_id: &str) -> usize {

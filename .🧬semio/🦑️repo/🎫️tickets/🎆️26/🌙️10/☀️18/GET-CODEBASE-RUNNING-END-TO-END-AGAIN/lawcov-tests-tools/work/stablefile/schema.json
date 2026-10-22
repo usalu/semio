@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:stable-build-file-corpus:v1",
+  "title": "Stable Build File Corpus",
+  "description": "Language-agnostic cases for capturing one build input: the kind and size of the path, the per-file maximum and the aggregate budget in, the bytes captured or the refusal, the budget left and the number of cancellation checkpoints out.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "chunk", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "chunk": { "const": 65536 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "size", "maximum", "remaining", "remainingAfter", "checks"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["file", "symlink", "directory", "missing"] },
+          "size": { "type": "integer", "minimum": 0 },
+          "maximum": { "type": "integer", "minimum": 1 },
+          "remaining": { "type": "integer", "minimum": 0 },
+          "remainingAfter": { "type": "integer", "minimum": 0 },
+          "checks": { "type": "integer", "minimum": 1 },
+          "ok": { "const": true },
+          "error": { "type": "string", "minLength": 1 },
+          "errorAny": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "errorCode": { "type": "string", "minLength": 1 },
+          "cancelAt": { "type": "integer", "minimum": 1 },
+          "mutateAt": { "type": "integer", "minimum": 1 },
+          "mutation": { "enum": ["append", "touch", "truncate"] }
+        }
+      }
+    }
+  }
+}

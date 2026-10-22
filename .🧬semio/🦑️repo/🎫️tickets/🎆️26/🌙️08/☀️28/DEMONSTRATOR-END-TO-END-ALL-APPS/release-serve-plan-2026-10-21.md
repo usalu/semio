@@ -90,3 +90,82 @@ Acceptance added two literal TEXT reads to the already configured console-unit e
 ## Receipt Recording Trace — 2026-10-21T06:20:47.514Z
 
 The current site helper publishes the managed release output through buildViteArtifact, withRepositoryArtifactDestinationV1 and stageRepositoryArtifacts. The destination owner records the completed output directory via recordStoreContentV1. The task issuance protocol sets its declared .🧾️store/build.json destination and SEMIO_TASK_PROJECT/TARGET environment; recordStoreContentV1 observes sorted path/size/content hashes and writes the exact version1 project/target receipt. Thus the site helper does not need a separate manual receipt write. Final proof must read the actual build receipt and check current entries/digests, plus the managed .semio-artifact.json owner demonstrator:site and nonempty site files. No release execution or artifact authentication has yet occurred.
+
+## Final Continuous Output And Cleanup
+
+2026-10-21T11:46:32.061Z: Root prepared serveFinalCmd from the existing authored serve command by removing only its exact ticket serve.log redirection. All command arguments, Original control and environment remain the same. This command has NOT been launched. Final service output/readiness will be observed through the retained native executor session. This avoids keeping a Windows-locked ticket log open when generated-only verification cleanup runs; it does not stop/restart a server or invent a release route. Verify no live provider fixture or required serve input lives under generated before cleanup.
+
+
+## Deferred Release Dispatch And Proof Checklist
+
+Parent assigned acceptance-hardening the later plain release build and owned output validation, only after the required fast checks pass and an explicit release dispatch. No release job is launched by this preparation. The current exact target remains uncached, fixed/default release, with script environment SEMIO_BUILD_MODE=release and forwardAllArgs=false. Current prerequisites include prepare-release, surface/editor/node-graph/puzzle/flow-browser WASM and framework-canvas:stage-runtime-assets; all remain required.
+
+Prepared workspace-root command (ticket/artifact paths expanded at actual dispatch):
+
+```sh
+SEMIO_BUILD_MODE=release SEMIO_BUILD_TRACE_AUTHORITY=true SEMIO_TICKET_DIR="<ticket>" SEMIO_TEST_ARTIFACT_DIR="<ticket>/🗑️generated/release-build" repo --tool=nx run @semio-tech/mit-bestand-demonstrator:build --parallel=1 --workers=off --output=stream > "<ticket>/🗑️generated/release-build.log" 2>&1
+```
+
+Proof checklist, in order:
+
+1. Retain the one actual Native session through normal host/image admission and all declared producers; preserve the complete direct log and exact terminal exit. Only exit 0 permits publication validation.
+2. Read the actual owned receipt at `♻️mit-bestand/🧺️demonstrator/.🧾️store/build.json` using its current first-party receipt schema. Require exact version/project/target ownership and completed nonempty recorded content, rather than treating file existence as success.
+3. Resolve the managed output through that owned receipt/destination contract. Validate its `.semio-artifact.json` against the current managed-artifact schema and owner demonstrator:site; check the release mode recorded by the actual contract and the nonempty site entry/assets. Do not invent a private artifact path.
+4. Recompute the receipt-declared sorted content sizes/hashes through the same first-party algorithm, with an independent existing hash implementation where applicable. Require current output bytes to match the receipt, and retain a bounded validation record under generated. Read current schemas/implementation at dispatch before choosing exact fields.
+5. Report terminal status, authenticated output identity and any unresolved limitation separately from browser results. Prototype E2E or final serve does not prove release output. Runtime owns the eventual twenty-case E2E; root owns the final authored prototype serve and browser inspection.
+
+Source-only manifest readback performed without heavy analyzers, dry runs, producer imports or Native launch. Actual release proof remains pending.
+
+## Prepared Twenty-Case Acceptance Dispatch
+
+Prepared only; coordinator dispatch is required after all required fast checks pass. No E2E invocation or listener was started by this preparation.
+
+```sh
+SEMIO_BUILD_MODE=prototype SEMIO_BUILD_TRACE_AUTHORITY=true SEMIO_TICKET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/🗑️generated/e-a' repo --tool=nx --lang=en run @semio-tech/mit-bestand-demonstrator:test-e2e --parallel=1 --workers=off --output=stream >'/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/🗑️generated/e-a.log' 2>&1
+```
+
+The declared dependency chain remains test-e2e → serve-e2e → prepare-e2e. Runtime prepare-test creates the invocation-specific service generation; serve-test binds loopback port0 and publishes that generation. The consumer reads the matching owner/invocation session and validated readiness before deriving the Playwright base URL. The command supplies no external base URL, server/compiler arguments or fixed port. Playwright remains one Chromium worker using the authored hardware GPU selection.
+
+Current Source declares twelve direct cases plus one eight-pane boot matrix, twenty expanded cases: roster, overview, generator/koordinator/aggregator/energie/aussuchen/bearbeiten/verfolgen/statik boot, Aussuchen preview and curation undo/redo, Energy run/cancel, Statik/Generator/Koordinator/Aggregator/Bearbeiten/Verfolgen undo/redo, and funding logos. This is a Source count, not an executed test result.
+
+Completion evidence must include:
+
+- Actual owning repo invocation exit0 and twenty executed passing browser cases, with no skipped pane standing in for a pass.
+- The fresh invocation service generation reaching readiness at its allocated loopback port; preparation/build failures remain distinct from browser results.
+- All eight shells ready with expected windows and substantive world meshes/instances, graph widgets, rows/tree items or composited painted map content as authored by each case.
+- Real selection, curation/remove/count restoration, run/cancel and keyboard undo/redo effects, including observed forward change and authored restoration.
+- The universal page/console health fixture and strict resource failure assertions passing, plus funding/overview checks.
+- Eight boot screenshots and available failure diagnostics retained at the actual generated artifact location for visual inspection.
+
+The existing short artifact owner writes Playwright results beneath ticket/🗑️generated/e/<32hex full service UUID>. On this workspace that root is153 UTF16 units, and the owned102-unit suffix reserve totals255, within the existing256-unit cap. The command-level artifact directory is the short e-a directory; full stdout/stderr goes directly to e-a.log. Existing UUID identity and path guards remain unchanged.
+
+Plain release and final continuous serve/browser verification remain separate completion requirements; E2E is not yet dispatched.
+
+
+## Retained Release Proof Input Prepared
+
+`release-proof.ts` is an authored ticket input, not generated output and not executed yet. It receives the actual process envelope through the public routing facade, registers verify on BundleScript, derives a120000ms phase from Original, and calls existing withViteArtifactV1 for release/demonstrator:site. The accepted callback checks nonempty HTML/JS/WASM inventory and current authored runtime asset destinations, then validates the bounded ordinary build receipt with parseStoreReceiptV1. It requires exact project/target and the one directory entry matching artifact.path, checks file count and actual storeTreeDigestV1 inside live custody, ensures receipt bytes stayed unchanged, and rechecks the artifact before returning. It never invokes whole-receipt verification over unrelated managed entries. Detached proof JSON is written under generated only after the reader drains.
+
+Prepared later command (not launched):
+
+```sh
+SEMIO_BUILD_MODE=release repo --tool=nx exec --projects=@semio-tech/mit-bestand-demonstrator -- bun <absolute-ticket>/release-proof.ts verify
+```
+
+Normal exec provisions and prepends the owned pinned Bun, per independent source trace. The actual release build must succeed before this proof is dispatched. Low review of this retained input is pending; no output or passing result is claimed.
+
+
+Independent release-proof readback is clean: index.html is explicitly emitted by the installed emoji-index Vite plugin (static aliases index.html/404.html); artifact.files excludes only .semio-artifact.json, so the full-tree receipt count is declared files+1; runtime destinations are relative directory prefixes as checked. Actual receiver/issued phase/reader drainage and detached proof write align with existing ownership. This is source review only; release compilation/proof execution remain pending parent dispatch.
+
+
+## Pending App SDK Loading Boundaries After Current Sync
+
+Finite read-only source audit traced the exact app targets, process Vitest owner, catalog helper, E2E runner/config, Vite parent and Nx private command runner. No app command, SDK import or producer was executed. No concrete additional immutable-capture/provider mismatch was established for these task bodies; the separate Source0 captured-require refusal remains an upstream launch failure and is not attributed to app tests.
+
+Unit and canonical architecture dispatch through the same demonstrator TestScript → repository runVitest → process runVitestV1 → runBudgetedTestCommand. The policy selects root node_modules/vitest/vitest.mjs under Node, native config loading and one configured worker. The test config loads vitest/config before registering tests. Console/router neutral tests load Vitest, Ajv, TypeScript and d3-geo; long architecture additionally loads React, react-dom/server and UI renderer dependencies before its assertions. These are actual dependency-generation SDK requirements, not modules to append to the worker immutable Source map.
+
+Runtime catalog dispatches an owned Bun test child at the one declared helper. Its static workspace runtime/catalog/assets imports occur before body; the body then uses createRequire(import.meta.url) for Ajv, TypeScript, esbuild and @iarna/toml, alongside builtin Bun.TOML. The prerequisite s-dev-composition:generate supplies generated catalog modules. These package resolutions happen in that physical Bun test child, not the captured Node worker. Missing SDK or generated export bytes would fail registration/body setup and must remain distinct from a passed catalog assertion.
+
+Twenty-case acceptance first requires the declared activation and browser producers. serveVite dynamically imports vite in the serving parent; Vite native config imports the owned UI build-tooling facade whose implementation eagerly imports @tailwindcss/vite, @vitejs/plugin-react and vitest/config. Release Vite helpers also createRequire(workspace/package.json) and resolve vite/package.json before launching its CLI. The browser test runner separately spawns the workspace node_modules/playwright/cli.js with Bun; its config and spec import @playwright/test before registering all20 cases. Only the validated service URL becomes child PLAYWRIGHT_BASE_URL. These are concrete pre-ready/pre-case SDK load sites requiring the synchronized dependency provider, even though the caller APIs expose owned types.
+
+Current Nx repo:script execution does not place these app task entries inside the CLI immutable Source loader: the private executor delegates Nx run-commands, writes a closed digest-bound command DTO, and starts its owned Bun command runner. runNxCommandSourceV1 validates DTO/digest/Original, removes only private runner variables, then uses runOwnedCommand(process.execPath,[exec,source.command],cwd,...) with the retained environment. The literal manifest command therefore starts the physical Bun script and its actual SDK child. Consequently the neutral capture refusal of external node_modules/.cache modules, and the authorizer narrow Nx external list, do not by themselves prove an app SDK admission defect. No extra Source-copy, external allowlist, fallback loader or provider rewrite is proposed. Actual Source0, app registration, Vitest/catalog/browser assertions and release/runtime evidence remain pending.

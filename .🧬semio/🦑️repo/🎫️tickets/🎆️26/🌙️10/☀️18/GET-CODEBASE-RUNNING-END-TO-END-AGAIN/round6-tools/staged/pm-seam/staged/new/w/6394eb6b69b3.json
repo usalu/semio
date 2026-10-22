@@ -1,0 +1,748 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Closed ecosystem-neutral package manager seam: a descriptor declares everything one manager contributes (lock names, configuration, install key recipe, linking backends, operations, installed layout); neutral code only renders, keys, seals and walks through it.",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "package-manager-seam",
+        "operations": [
+          "lock",
+          "sync",
+          "verify"
+        ],
+        "backendKinds": [
+          "clone",
+          "copy",
+          "alias"
+        ],
+        "refusedBackendKinds": [
+          "alias"
+        ],
+        "nameTransforms": [
+          "identity",
+          "lowercase",
+          "go-escape",
+          "pep-escape"
+        ],
+        "matches": [
+          "exact",
+          "listed"
+        ],
+        "lockRoles": [
+          "primary",
+          "secondary"
+        ],
+        "configurationRoles": [
+          "scope",
+          "home",
+          "config"
+        ],
+        "keyShape": [
+          "recipe",
+          "root",
+          "runtime",
+          "platform",
+          "arch",
+          "mode",
+          "members",
+          "material"
+        ],
+        "bootstrapKeyShape": [
+          "fields",
+          "runtime",
+          "platform",
+          "arch",
+          "lock"
+        ],
+        "receiptPurpose": "dependency-generation-receipt",
+        "generationNameUnits": 20,
+        "selectionEnvironment": "SEMIO_PACKAGE_MANAGER_{ECOSYSTEM}",
+        "maximumLockBytes": 67108864,
+        "maximumProviders": 1048576,
+        "maximumMissingReported": 64,
+        "progressInterval": 256
+      }
+    },
+    "Identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "Template": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "Recipe": {
+      "type": "object",
+      "required": [
+        "version",
+        "kind",
+        "backends",
+        "clearEnvironmentPrefixes",
+        "clearEnvironmentKeys",
+        "cache",
+        "global",
+        "bin",
+        "temporary",
+        "home",
+        "config"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "backends": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "clearEnvironmentPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "clearEnvironmentKeys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "cache": {
+          "$ref": "#/$defs/Name"
+        },
+        "global": {
+          "$ref": "#/$defs/Name"
+        },
+        "bin": {
+          "$ref": "#/$defs/Name"
+        },
+        "temporary": {
+          "$ref": "#/$defs/Name"
+        },
+        "home": {
+          "$ref": "#/$defs/Name"
+        },
+        "config": {
+          "$ref": "#/$defs/Name"
+        }
+      }
+    },
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arguments"
+      ],
+      "properties": {
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Template"
+          }
+        }
+      }
+    },
+    "Descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "ecosystem",
+        "toolchain",
+        "executable",
+        "runtime",
+        "manifests",
+        "manifestIdentity",
+        "locks",
+        "configurations",
+        "environment",
+        "recipe",
+        "backendKinds",
+        "operations",
+        "installed",
+        "resolution",
+        "generationDirectory",
+        "graphComponent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "ecosystem": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "toolchain": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "executable": {
+          "$ref": "#/$defs/Name"
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hostVersionKey",
+            "probe"
+          ],
+          "properties": {
+            "hostVersionKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "probe": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "arguments",
+                "pattern"
+              ],
+              "properties": {
+                "arguments": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "pattern": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "manifests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Name"
+          }
+        },
+        "manifestIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "excludedTopLevelFields",
+            "bootstrapFields"
+          ],
+          "properties": {
+            "excludedTopLevelFields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "bootstrapFields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        },
+        "locks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "role",
+              "format"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/Name"
+              },
+              "role": {
+                "enum": [
+                  "primary",
+                  "secondary"
+                ]
+              },
+              "format": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,31}$"
+              }
+            }
+          }
+        },
+        "configurations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "home",
+            "config"
+          ],
+          "properties": {
+            "scope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "home": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "config": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "set"
+          ],
+          "properties": {
+            "set": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^(role|literal):.+$"
+              }
+            }
+          }
+        },
+        "recipe": {
+          "$ref": "#/$defs/Recipe"
+        },
+        "backendKinds": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "clone",
+              "copy",
+              "alias"
+            ]
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lock",
+            "sync"
+          ],
+          "properties": {
+            "lock": {
+              "$ref": "#/$defs/Operation"
+            },
+            "sync": {
+              "$ref": "#/$defs/Operation"
+            },
+            "verify": {
+              "$ref": "#/$defs/Operation"
+            }
+          }
+        },
+        "installed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "containers",
+            "entry",
+            "match",
+            "nameTransform",
+            "nameEscape",
+            "fold",
+            "suffix",
+            "sourcePrefix"
+          ],
+          "properties": {
+            "containers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/Name"
+              }
+            },
+            "entry": {
+              "$ref": "#/$defs/Template"
+            },
+            "match": {
+              "enum": [
+                "exact",
+                "listed"
+              ]
+            },
+            "nameTransform": {
+              "enum": [
+                "identity",
+                "lowercase",
+                "go-escape",
+                "pep-escape"
+              ]
+            },
+            "nameEscape": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "fold": {
+              "enum": [
+                "identity",
+                "lowercase",
+                "go-escape",
+                "pep-escape"
+              ]
+            },
+            "suffix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sourcePrefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "resolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profiles",
+            "strictPrefix"
+          ],
+          "properties": {
+            "profiles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "strictPrefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "generationDirectory": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "graphComponent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "selection"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,31}$"
+          }
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform"
+      ],
+      "properties": {
+        "platform": {
+          "$ref": "#/$defs/Name"
+        },
+        "cache": {
+          "$ref": "#/$defs/Name"
+        },
+        "directory": {
+          "$ref": "#/$defs/Name"
+        },
+        "manifest": {
+          "$ref": "#/$defs/Name"
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executable",
+        "arguments",
+        "directory"
+      ],
+      "properties": {
+        "executable": {
+          "$ref": "#/$defs/Name"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "directory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "LockPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "key",
+        "source",
+        "integrity"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "version": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "integrity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "LockMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "LockGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "format",
+        "packages",
+        "members"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "format": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LockPackage"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LockMember"
+          }
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "ecosystem",
+        "manager",
+        "scope",
+        "generation",
+        "lock",
+        "providers",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "dependency-generation-receipt"
+        },
+        "ecosystem": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "manager": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "runtime"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,31}$"
+            },
+            "runtime": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "scope": {
+          "$ref": "#/$defs/Name"
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "location"
+          ],
+          "properties": {
+            "key": {
+              "$ref": "#/$defs/Sha256"
+            },
+            "location": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,31}/[a-f0-9]{20}$"
+            }
+          }
+        },
+        "lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "sha256"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/$defs/Name"
+            },
+            "sha256": {
+              "$ref": "#/$defs/Sha256"
+            }
+          }
+        },
+        "providers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "examined"
+          ],
+          "properties": {
+            "examined": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
+      }
+    }
+  }
+}

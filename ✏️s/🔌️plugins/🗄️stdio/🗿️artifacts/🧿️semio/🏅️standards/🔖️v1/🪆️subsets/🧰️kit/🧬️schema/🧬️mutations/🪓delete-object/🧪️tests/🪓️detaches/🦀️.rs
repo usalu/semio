@@ -8,7 +8,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 async fn detaches_the_object_handle_and_leaves_the_model_handle() {
     let base = before();
     assert!(!base.models.is_empty(), "the fixture needs a sibling model child for the claim to mean anything");
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("delete-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: applied state differs from the committed after-snapshot");
     assert!(produced.objects.is_empty(), "the only object handle must be gone");
     assert_eq!(produced.models, base.models, "the parallel model-child collection must survive untouched");
@@ -48,9 +48,9 @@ async fn the_undo_create_object_reattaches_the_captured_handle() {
     assert_eq!(undo.len(), 1, "delete-object of an existing handle undoes as exactly one create-object");
     let SemioKitMutation::CreateObject(recreate) = &undo[0] else { panic!("delete-object must undo as create-object") };
     assert_eq!(recreate.target, base.objects[0].target, "the undo must recapture the detached handle's own target ref");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-object applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward delete-object applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-object applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo create-object applies");
     }
     assert_eq!(current, base, "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-object diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed delete-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: committed diff did not carry before to after");
 }

@@ -16,7 +16,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts runtime-check"
+        "command": "repo ./📜️script.ts runtime-check"
       },
       "cache": true,
       "outputs": [
@@ -32,7 +32,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts pending-host-close-check"
+        "command": "repo ./📜️script.ts pending-host-close-check"
       },
       "cache": true,
       "outputs": [
@@ -43,7 +43,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test descriptor-contract"
+        "command": "repo ./📜️script.ts test descriptor-contract"
       },
       "cache": true,
       "inputs": [

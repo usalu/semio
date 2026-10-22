@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { scriptCompilerAdmissionControlV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -12,6 +12,7 @@ import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../�
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { advanceScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TestScript, SourceScript, COMPANION, PRESENTATION, ENTITIES } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
 
 
 const PACKAGE = "semio-framework-tool-run";
@@ -22,7 +23,7 @@ class OriginalProgressTestScript extends BundleScript {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   if(args.length>1||(args.length===1&&args[0]!=="source"))throw new Error("Expected test-original-progress [source]");
   await runOwnedCommand(process.execPath,["test","--test-name-pattern","schema oracle|tick codec and step ring",join(this.root,"../../🧪️tests/🧪️conformance/🟦️.ts")],this.repoRoot,"tool-run:original-source",scriptInvocationBudget(this.invocation,testLevelBudgetMs()),{signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"original-source","running")});
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",join(this.root,"../../📊️progress/📸️clone/🟦️.ts"),join(this.root,"../../📊️progress/💍️steps/➕️insert/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🧬️update/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🌱️seed/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🗃️slot/🟦️.ts"),join(this.root,"../../📽️tick/🔐️source/🟦️.ts")],this.repoRoot,"tool-run:original-progress-clone:types",120000);
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),join(this.root,"../../📊️progress/📸️clone/🟦️.ts"),join(this.root,"../../📊️progress/💍️steps/➕️insert/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🧬️update/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🌱️seed/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🗃️slot/🟦️.ts"),join(this.root,"../../📽️tick/🔐️source/🟦️.ts")],this.repoRoot,"tool-run:original-progress-clone:types",120000);
   if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[COMPANION,PRESENTATION],cwd:this.root,extraArgs:["--lib","original_tool_run_progress_metadata","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
@@ -33,7 +34,7 @@ class OriginalEntitiesTestScript extends BundleScript {
   if(args.length>1||(args.length===1&&args[0]!=="source"))throw new Error("Expected test-original-entities [source]");
   const file=join(this.root,"../../👥️entities/🧪️tests/🟦️.ts");
   await runOwnedCommand(process.execPath,["test",file],this.repoRoot,"tool-run:original-source",scriptInvocationBudget(this.invocation,testLevelBudgetMs()),{signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"original-source","running")});
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"tool-run:entity-edit:types",120000);
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file],this.repoRoot,"tool-run:entity-edit:types",120000);
   if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[ENTITIES],cwd:this.root,extraArgs:["--lib","original_tool_run_entity_edit","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
@@ -101,11 +102,11 @@ class OriginalPayloadTestScript extends BundleScript {
   if(args.length>1||(args.length===1&&args[0]!=="source"))throw new Error("Expected test-original-payload [source]");
   const files=[join(this.root,"../../📨️payload/🌊️stream/🧪️tests/🟦️.ts"),join(this.root,"../../📨️payload/🌊️stream/📡️wire/🧪️tests/🟦️.ts"),join(this.root,"../../🎞️tick/🛬️receive/🧪️tests/🟦️.ts")];
   const options={signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"test-original-payload","running")};
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...files],this.repoRoot,"tool-run:original-payload:types",scriptInvocationBudget(this.invocation,120000),options);
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),...files],this.repoRoot,"tool-run:original-payload:types",scriptInvocationBudget(this.invocation,120000),options);
   await runOwnedCommand(process.execPath,["test",...files],this.repoRoot,"tool-run:original-payload:source",scriptInvocationBudget(this.invocation,30000),options);
   if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_payload_stream","--","--nocapture"]},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));
  }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-original-receiving-limits",OriginalReceivingLimitsTestScript).register("test-original-identity-receiving",OriginalIdentityReceivingTestScript).register("test-original-step-receiving",OriginalStepReceivingTestScript).register("test-original-native-tick",OriginalNativeTickTestScript).register("test-original-entity-column",OriginalEntityColumnTestScript).register("test-original-progress-receiving",OriginalProgressReceivingTestScript).register("test-source", SourceScript).register("check", CheckScript).register("test-original-payload",OriginalPayloadTestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-original-receiving-limits",OriginalReceivingLimitsTestScript).register("test-original-identity-receiving",OriginalIdentityReceivingTestScript).register("test-original-step-receiving",OriginalStepReceivingTestScript).register("test-original-native-tick",OriginalNativeTickTestScript).register("test-original-entity-column",OriginalEntityColumnTestScript).register("test-original-progress-receiving",OriginalProgressReceivingTestScript).register("test-source", SourceScript).register("check", CheckScript).register("test-original-payload",OriginalPayloadTestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

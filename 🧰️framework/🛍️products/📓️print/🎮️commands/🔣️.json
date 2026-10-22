@@ -4,14 +4,14 @@
     "members": [
       {
         "directory": "🎨latex-token-stylesheet-generation",
-        "generator": "bun repo run @semio-tech/print:generate",
+        "generator": "repo run @semio-tech/print:generate",
         "id": "framework.print.command.latex-token-stylesheet-generation",
         "kind": "command",
         "responsibility": "Writes the canonical LaTeX stylesheet from the framework design-token document."
       },
       {
         "directory": "📊️viz-catalog-generation",
-        "generator": "bun repo run @semio-tech/print:generate-viz",
+        "generator": "repo run @semio-tech/print:generate-viz",
         "id": "framework.print.command.viz-catalog-generation",
         "kind": "command",
         "responsibility": "Emits the generated visualization catalogue packages and the per-section gallery documents from the chart-kind catalogue."

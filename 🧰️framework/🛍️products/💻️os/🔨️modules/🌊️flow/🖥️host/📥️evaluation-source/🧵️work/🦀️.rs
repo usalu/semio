@@ -8,6 +8,7 @@ use semio_framework_value::retirement::arc_custody::{SharedControlledRetirement,
 struct WorkLease<T:RetireOwned+Sync>(Arc<T>);
 impl<T:RetireOwned+Sync> RetireOwned for WorkLease<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<T>())}fn controlled_retirement_supported()->bool{true}}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct WorkSources{source:Option<FlowEvaluationSource>,seeds_source:Option<FlowEvaluationSeeds>,tree:Option<Tree>,shared_tree:Option<WorkLease<Tree>>,seeds:Option<HistoryFoldIndex<String,Dictionary>>,shared_seeds:Option<WorkLease<HistoryFoldIndex<String,Dictionary>>>,infos:Option<WorkLease<HistoryFoldIndex<String,OperatorInfo>>>,registry:Option<neural::SharedRegistry>,previous:Option<WorkLease<EvalChannels>>,snapshot:Option<TreeSnapshot>,evaluation:Option<neural::BudgetedEvalState>,channels:Option<EvalChannels>,remaining:Vec<String>,pending:Vec<neural::PendingExtensionEval>,fault:Option<OperatorWorkFailure>}
 pub struct FlowEvaluationCompletion{pub snapshot:TreeSnapshot,pub channels:EvalChannels,pub remaining:Vec<String>,pub pending_extensions:Vec<neural::PendingExtensionEval>,pub generation:u64}
 /// 🧵️ Owns the original source continuation through every accepted normal and closing event.

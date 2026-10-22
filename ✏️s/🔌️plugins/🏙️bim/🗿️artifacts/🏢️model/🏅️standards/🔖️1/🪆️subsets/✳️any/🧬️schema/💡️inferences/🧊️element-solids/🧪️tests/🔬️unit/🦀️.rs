@@ -242,7 +242,7 @@ async fn a_material_edit_leaves_the_solids_alone_and_a_storey_edit_re_infers_the
     assert_eq!(first, untouched, "a material edit never reaches a solid");
     assert_eq!(session.report().computed_by_kind.get("solid"), None);
     let height = ModelDiff::storeys("st-1", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).element_solids.clone();
     assert_ne!(first, recomputed);
     assert!((recomputed["w-layered"].bounds.max.z - first["w-layered"].bounds.max.z - 0.4).abs() < 1e-12);
@@ -267,13 +267,13 @@ async fn an_opening_edit_re_infers_its_host_and_its_filler_but_a_door_type_edit_
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).element_solids.clone();
     let moved = ModelDiff::openings("o-win-1", Entry::Patched(OpeningPatch { offset: Some(3.0), ..Default::default() }));
-    let edited = protocol::apply_diff(&moved, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&moved, &snapshot).expect("applies");
     let after = session.update(&edited, &moved).element_solids.clone();
     let same = |id: &str| first[id] == after[id];
     assert!(!same("w-window") && !same("o-win-1"), "the host and the filler of the moved opening change");
     assert!(same("w-door") && same("o-win-2") && same("w-plain"), "everything else is untouched");
     let wider = ModelDiff::door_types("dr-1", Entry::Patched(DoorTypePatch { width: Some(1.0), ..Default::default() }));
-    let widened = protocol::apply_diff(&wider, &snapshot).expect("applies");
+    let widened = protocol::apply_diff_cold(&wider, &snapshot).expect("applies");
     let third = ModelInferenceSession::new().update(&widened, &wider).element_solids.clone();
     let same_in = |id: &str| first[id] == third[id];
     assert!(!same_in("o-door-1") && !same_in("w-door"), "a door type edit re-infers its fillers and the walls that host them");

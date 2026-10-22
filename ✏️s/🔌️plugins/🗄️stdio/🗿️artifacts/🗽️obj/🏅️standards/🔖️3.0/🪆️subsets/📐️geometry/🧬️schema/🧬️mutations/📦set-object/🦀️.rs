@@ -22,7 +22,16 @@ pub struct SetObject {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "object", kind: "set-object", record: "SetObject" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set object", "Objekt setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ObjSnapshot, ObjMutation> for SetObject {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::ColdMutation<ObjSnapshot>>::ReferenceDiff> {
         let Self { name, faces, index } = self;
         protocol::MutationOutcome::new({
             let current = base.objects.iter().find(|entry| &entry.name == name);
@@ -41,12 +50,6 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
                 None => vec![ObjMutation::RemoveObject(remove_object::RemoveObject { name: name.clone() })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set object", "Objekt setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

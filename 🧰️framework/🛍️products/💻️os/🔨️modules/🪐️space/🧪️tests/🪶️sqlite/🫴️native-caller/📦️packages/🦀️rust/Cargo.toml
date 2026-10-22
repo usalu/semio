@@ -23,6 +23,8 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 

@@ -4,9 +4,9 @@
  * language-neutral contracts and boots the real binary for strict rejection checks against the
  * removed bearer-in-URL WebSocket admission surface.
  *
- * Gated behind `HUB_E2E=1` — it compiles/boots a real server, so the default `bun repo run
+ * Gated behind `HUB_E2E=1` — it compiles/boots a real server, so the default `repo run
  * os-hub-ts:test` must stay fast; without the env var this test reports as skipped in well under
- * a second. Run it for real: `HUB_E2E=1 bun repo run os-hub-ts:test` (`📜️script.ts`'s `TestScript`
+ * a second. Run it for real: `HUB_E2E=1 repo run os-hub-ts:test` (`📜️script.ts`'s `TestScript`
  * builds the binary first, default cargo features only — contract-freeze Amendment 2, never
  * `--all-features`).
  */

@@ -1,5 +1,5 @@
 //! 🖼️ Described and decorative images can both be built.
-use semio_framework_ui_contract::*;
+use semio_framework_ui_contract_builder::*;
 
 fn main() {
     assert!(image(UiText::try_from_str("atlas://logo").expect("valid image source"))

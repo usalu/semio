@@ -12,7 +12,7 @@ import { SNOW_TEXT, SPACING, gridStrip, gridVeil, layerRules, moveMouseOver, pee
 
 /** 🟡 Registers the zooms hovered topic pans tests of the 🏠️ home overview suite. */
 export function registerZoomsHoveredTopicPansTests(): void {
-  it("zooms a hovered topic and pans the quizzes behind its cards without zooming those quizzes", () => {
+  it("zooms a topic whose explore control is hovered and pans the quizzes behind its cards without zooming those quizzes", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"] });
     const topics = fixture.hierarchy.topics!.map((topic) => ({ ...topic, quizzes: topic.id === "energy" ? ["physics", "heating", "cooling", "demand", "storage", "network"] : [] }));
     render(<Home session={stubSession()} course={{ ...COURSE, topics }} initial={{ screen: "home", page: "quizzes" }} />);
@@ -20,7 +20,7 @@ export function registerZoomsHoveredTopicPansTests(): void {
     expect(gridStrip("quizzes").style.transform).toBe("translate3d(-50%, 0%, 0)");
     expect(gridStrip("energy").style.transform).toBe("translate3d(-66.6667%, -50%, 0)");
     expect(gridVeil("energy").dataset.veil).toBe("whole");
-    fireEvent.pointerOver(screen.getByRole("region", { name: "Energy" }), { pointerType: "mouse" });
+    fireEvent.pointerOver(within(screen.getByRole("region", { name: "Energy" })).getByRole("button", { name: "Explore" }), { pointerType: "mouse" });
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(gridStrip("quizzes").style.transform).toBe("translate3d(0%, 0%, 0)");
     expect(gridVeil("quizzes").dataset.veil).toBe("clear");
@@ -36,7 +36,7 @@ export function registerZoomsHoveredTopicPansTests(): void {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"] });
     const topics = fixture.hierarchy.topics!.map((topic) => ({ ...topic, quizzes: topic.id === "energy" ? ["physics", "heating", "cooling", "demand", "storage", "network"] : [] }));
     render(<Home session={stubSession()} course={{ ...COURSE, topics }} />);
-    fireEvent.pointerOver(screen.getByRole("region", { name: "Quizzes" }), { pointerType: "mouse" });
+    fireEvent.pointerOver(within(screen.getByRole("region", { name: "Quizzes" })).getByRole("button", { name: "Explore" }), { pointerType: "mouse" });
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(gridStrip("root").style.transform).toBe("translate3d(-33.3333%, 0%, 0)");
     expect(gridVeil("root").dataset.veil).toBe("clear");
@@ -59,7 +59,7 @@ export function registerZoomsHoveredTopicPansTests(): void {
     const veil = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-veil]')!;
     moveMouseOver(1, 1);
     expect(strip.style.transform).toBe("translate3d(-33.3333%, -50%, 0)");
-    fireEvent.pointerOver(screen.getByRole("region", { name: "Badges" }), { pointerType: "mouse" });
+    fireEvent.pointerOver(within(screen.getByRole("region", { name: "Badges" })).getByRole("button", { name: "All badges" }), { pointerType: "mouse" });
     expect(strip.style.transform, "the glide starts where the pan stood").toBe("translate3d(-33.3333%, -50%, 0)");
     for (let spent = 0; spent < 250; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(veil.dataset.veil, "under way the glass has a hole over the page").toBe("hole");

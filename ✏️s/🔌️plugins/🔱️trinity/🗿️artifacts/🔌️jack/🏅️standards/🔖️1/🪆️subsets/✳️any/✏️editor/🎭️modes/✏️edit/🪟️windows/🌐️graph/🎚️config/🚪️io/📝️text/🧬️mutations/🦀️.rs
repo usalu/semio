@@ -34,7 +34,7 @@ use crate::editor::jack::window_config::mutations::*;
 use crate::editor::jack::window_config::JackGraphWindowConfig;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
-/// crate: production dispatch (`protocol::apply_diff(Mutation::diff(..).diff(), ..)`) and the mutation's own inverse over `JackGraphWindowConfig`.
+/// crate: production dispatch (`protocol::apply_diff_cold(Mutation::diff(..).diff(), ..)`) and the mutation's own inverse over `JackGraphWindowConfig`.
 ///
 /// @see store::os_store::test_support::mutation_report_json
 pub fn jack_graph_window_config_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {

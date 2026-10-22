@@ -15,7 +15,16 @@ pub struct ReplaceBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplaceBlock" };
 
-    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
+    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::ColdMutation<MdSnapshot>>::ReferenceDiff> {
         let Self { path, index, block } = self;
         protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })))
     }
@@ -25,12 +34,6 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
             Some(block) => vec![MdMutation::ReplaceBlock(ReplaceBlock { path: path.clone(), index: *index, block })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

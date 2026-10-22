@@ -1,0 +1,115 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🔣️.json",
+   "after": "e6d88cb627f8ad456fe8f482e38293c9fd85888ed689e700c790174d955e4c2f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts",
+   "after": "91bc655c98a87eabeef2419535694cbed802261b6a47f659e36221f096088fe4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🧪️tests/🟦️.ts",
+   "after": "9528ce756dcb7a17c289c82dc684db0286342b095b93cabecc1b47e790cecd74"
+  }
+ ],
+ "edited": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "decbb0bb31b83cd701082cc65078e39a74f093c06dfa673a25ceba15f9f7ff0e",
+   "base": "b2d3688b194f997d90a1379dc38058e021625047ec1b33edb26b072472fd3dd7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "after": "620f23a04c1d42b5093d8bee8683228504f6db44ba3c6f99925727e442c9e6f2",
+   "base": "997a1f97234dc8f8fc4e61aafa722cb069b25a0a36f73f43d53a1adc0b01f22a"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "after": "66daebf37195072ce2df5c6129753e4dedc6024c5796fd74c141e5f8d562ed30",
+   "base": "808899c8933bb2bc5a1b09928afedb8cae83245adc37959db4eb417e7b2b66cc"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/📊️report/🟦️.ts",
+   "after": "d1e80cc8ae3503e8f133b6f0e72f4f0208f22ec6a596dfb0475bd331432920a5",
+   "base": "16724bc303176282846b9c267951333f6ca407928efd6ac902846670c4be1438"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/📋️orchestration/🟦️.ts",
+   "after": "df67646c02c11e9da7300d2da4565554d7997b436f3e6787498ca9bcc204f961",
+   "base": "1177cbe28e0ac19bf90281e75888d750b826910703d2a69b1a9b60b4e85a3164"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏃️contract-capture/🟦️.ts",
+   "after": "fad252dc281f0278298dc8d9399fd1899ff95b28473e1874fd4c0f0379548759",
+   "base": "89321b6f31cb086945ba4bacfb5c7354f5eb827a3417f894fb1f094ceb525b34"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "after": "c4fec5a2736bddf065565da40f6f13010914655f2c173582fc7da067d439a5a9",
+   "base": "e4a97aac5579cb3f948e9acbf2a840eede6517b3034fb1d8ee9435cec2dacf4d"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+   "after": "8f1d6a2cc3640f14be9805920d64a16db3515447909e7dd80f050b17eb60c08f",
+   "base": "c54f6163c605516c521cf0f3d523214794ee5728e907c1dc9be1217e40432582"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/🟦️.ts",
+   "after": "0f5f7e2cf62c061911529febe4b74d45fdcafb541c0a0fe35b4fc73a1e0af231",
+   "base": "72e0b8561218dbbb6a1f9964ae86da254d35e0f422a93b1e2e6fd9948a509a1f"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🟦️.ts",
+   "after": "9829a39dcd55071b5e8cd66c6acf6df84c1b6c329db47213035fac4985257ea7",
+   "base": "7438dcc4be131e43ce7c685a2182b67a92ec6a93da416244ec4f4294e6f02487"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/🟦️.ts",
+   "after": "4611e69830240a9617110a456b3d6ea063bc581e154585cc7d9048230e7d7278",
+   "base": "b2131760acc63e4b9850c1f8a5049f980698b4ace7dfe4191ecdbfa70c9d647b"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+   "after": "93b08bf4e74c3a56a10bd1da3c51b608c59b33d0b0aa8f594b0e2333f3e8eca4",
+   "base": "b32fae7acd5906ad5f4aeec3b00bdc63eca009befb5807590d81065d920426c6"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+   "after": "236a256f21f43af9f6ec1696f51c1a7746ab315a37372f5c9dfd4b41ad7784b1",
+   "base": "4fa565cec51cc2962b2a5ee08ab6797b66540e655730422217512efacf0c93b9"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts",
+   "after": "ab0d919bd155e27de02e14add8ec3bd034c603313b9f443c706f08ea0bc052cf",
+   "base": "fc25780559485f8a21783b3622943982e495bde1ed00069e3fefe50d97f7bd32"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+   "after": "5646173a112efe4a471b3e6319462e742e930892ac402fdb0005f0bf160f0b7b",
+   "base": "b60316eeb4543fafc2e6051c3be242df606d461fb85f049562e8a1ed63cb8ca5"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts",
+   "after": "692f1fbcbd1f012fb8e5c7c536b0e5e0c3ad693b5513741241ac8f33cf8df90f",
+   "base": "04f408d434bef4107acdaf9377067c2e3acc4817604c86fcea887103fa38ece9"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🟦️.ts",
+   "after": "1e401be5a62774b1a6e05b8b8c03e20b5624696fbadcc3e91be5824c457cf55f",
+   "base": "db90abd44291bd6252281fce1dbc0bdea4ba5c8a86d9468e90f25fb0246ae84e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🧾️provenance/🟦️.ts",
+   "after": "d24f1448fb02acdc23ec8cd1923fc5784ea64f6a427e380c0f631ec66676a0ec",
+   "base": "325939ff89add82acd851a269fa93a75ec057ee8b77809b7751dc419189eda79"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts",
+   "after": "6cf6c141d9dd77e36e0aee5ba6fcda85943a06911fb57b8e05f0fbc03a723c10",
+   "base": "9c2b4256390e98ec14292201a65ef4cfaa6a18af8a7bd283bbdc62346d7b2d66"
+  }
+ ]
+}

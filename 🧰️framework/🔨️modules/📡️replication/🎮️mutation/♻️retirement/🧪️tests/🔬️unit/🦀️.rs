@@ -1,7 +1,8 @@
 //! 🎟️ Original native scaffolds and pending replay frames close under distinct actual grants.
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory,controlled::ControlledRetirement};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::OwnedValueRetirementFactory;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 fn grant(owner:&dyn ErasedSnapshotRetirement)->RetainedCloneGrant{let copy=owner.next_copy_byte_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}

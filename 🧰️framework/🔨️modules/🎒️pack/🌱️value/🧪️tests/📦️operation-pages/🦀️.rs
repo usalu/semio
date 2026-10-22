@@ -265,7 +265,7 @@ fn borrowed_operation_symbols_preserve_first_source_and_all_paid_pages(){
  });result.unwrap();assert_eq!(released,0);assert_eq!(requested,scratch.allocated_bytes());assert_eq!(control.owned_bytes(),requested);
  let expected=fixture["expectedSourceOrder"].as_array().unwrap();assert_eq!(scratch.len().unwrap(),expected.len());
  for(index,ordinal)in expected.iter().enumerate(){let original=&source.texts[ordinal.as_u64().unwrap()as usize];let text=scratch.locator(index).unwrap().resolve(&source).unwrap();assert_eq!(text.contiguous(),Some(original.as_str()));assert_eq!(text.contiguous().unwrap().as_ptr(),original.as_ptr());assert_eq!(scratch.index(&source,text,&mut control).unwrap(),Some(index as u64));}
- assert_eq!(scratch.index(&source,semio_framework_value::paged_text::TextReadView::from_str(&source.texts[6]),&mut control).unwrap(),None);
+ assert_eq!(scratch.index(&source,semio_framework_value_paged_text::paged_text::TextReadView::from_str(&source.texts[6]),&mut control).unwrap(),None);
  let backing=scratch.allocated_bytes();for(items,bytes)in[(0,4096),(1,0)]{let(step,requested,released)=crate::test_allocation::observe_backing(||scratch.retire_one(items,bytes).unwrap());assert_eq!(step,(false,0,0));assert_eq!((requested,released),(0,0));assert_eq!(scratch.len().unwrap(),expected.len());assert_eq!(scratch.allocated_bytes(),backing);}
  let mut retired=0;for _ in 0..1000{let((progress,items,bytes),requested,released)=crate::test_allocation::observe_backing(||scratch.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,bytes);assert!(items<=1&&released<=4096);assert!(scratch.len().is_err());retired+=bytes;if !progress{break;}}
  assert_eq!(retired,backing);assert_eq!(scratch.allocated_bytes(),0);
@@ -395,7 +395,7 @@ fn borrowed_static_projected_pack_owned_variant_retains_source_until_scratch_set
 
 #[test]
 fn borrowed_static_paged_origin_source8194_exact_body_and_physical4096(){
- use semio_framework_value::{NativeEncodeControl,paged_text::{PagedText,TextReadSource},ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+ use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}}; use semio_framework_value_paged_text::paged_text::{PagedText,TextReadSource};
  use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as S,BorrowedShape as B,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};
  struct Original;impl TextReadSource for Original{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{(index<8194).then_some(b'x')}}
  struct Label{value:PagedText<8194>}
@@ -446,7 +446,7 @@ fn owned_operation_source_retirement_preserves_independent_currencies(){
 
 #[test]
 fn borrowed_variant_retains_original_paged_source_without_dynamic_mirror(){
- use semio_framework_value::{ErasedSnapshotRetirement,NativeEncodeControl,paged_text::{PagedText,TextReadSource},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+ use semio_framework_value::{ErasedSnapshotRetirement,NativeEncodeControl,retained_clone::{RetainedCloneGrant,RetainedCloneStep}}; use semio_framework_value_paged_text::paged_text::{PagedText,TextReadSource};
  use semio_framework_dsl_record::{BorrowedDslVariants,BorrowedFieldSpec as F,BorrowedRecordSpec as S,BorrowedShape as B,native_encoding::FieldProjectionView as V};
  struct Original;impl TextReadSource for Original{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{(index<8194).then_some(b'x')}}
  struct Variant{value:PagedText<8194>}
@@ -463,7 +463,7 @@ fn borrowed_variant_retains_original_paged_source_without_dynamic_mirror(){
 
 #[test]
 fn paged_semantic_source_admits_original_owned_custody_and_settles_every_allocation(){
- use semio_framework_value::{NativeEncodeControl,paged_text::{PagedText,TextReadSource},retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneStep}};
+ use semio_framework_value::{NativeEncodeControl,retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneStep}}; use semio_framework_value_paged_text::paged_text::{PagedText,TextReadSource};
  use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as S,BorrowedShape as B,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};
  type Owner=PagedText<8194>;type Source=RetainedCloneSource<Owner>;
  struct Original;impl TextReadSource for Original{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{(index<8194).then_some(b'x')}}

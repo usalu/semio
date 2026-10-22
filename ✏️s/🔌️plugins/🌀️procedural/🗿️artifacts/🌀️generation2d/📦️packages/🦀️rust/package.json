@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-generation2d-window-camera-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/procedural-generation2d-rs:verify-generation2d-window-camera-ownership"
+    "verify-generation2d-window-camera-ownership": "repo run @semio-tech/procedural-generation2d-rs:verify-generation2d-window-camera-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

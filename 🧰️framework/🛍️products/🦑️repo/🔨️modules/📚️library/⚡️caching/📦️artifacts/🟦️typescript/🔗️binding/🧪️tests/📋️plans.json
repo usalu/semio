@@ -1,0 +1,312 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "a package below the workspace in prototype mode",
+   "workspace": "/repo",
+   "package": "/repo/owners/example/📦️packages/🟦️typescript",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "",
+   "posixOnly": false
+  },
+  {
+   "name": "the same package in release mode",
+   "workspace": "/repo",
+   "package": "/repo/owners/example/📦️packages/🟦️typescript",
+   "packageName": "@semio-tech/fixture",
+   "mode": "release",
+   "products": "/generated/products",
+   "error": "",
+   "posixOnly": false
+  },
+  {
+   "name": "a package one level below the workspace",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "",
+   "posixOnly": false
+  },
+  {
+   "name": "a unicode package path",
+   "workspace": "/repo",
+   "package": "/repo/é/🧪️x",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "",
+   "posixOnly": false
+  },
+  {
+   "name": "the workspace itself is not a package",
+   "workspace": "/repo",
+   "package": "/repo",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Actual repository package owner required",
+   "posixOnly": false
+  },
+  {
+   "name": "a package outside the workspace is refused",
+   "workspace": "/repo",
+   "package": "/foreign/📦️packages/🟦️typescript",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Actual repository package owner required",
+   "posixOnly": false
+  },
+  {
+   "name": "a sibling with the workspace name as prefix is outside",
+   "workspace": "/repo",
+   "package": "/repository/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Actual repository package owner required",
+   "posixOnly": false
+  },
+  {
+   "name": "a package path that is not canonical is refused",
+   "workspace": "/repo",
+   "package": "/repo/./pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a package path with a parent segment is refused",
+   "workspace": "/repo",
+   "package": "/repo/a/../pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a trailing slash is not canonical",
+   "workspace": "/repo",
+   "package": "/repo/pkg/",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a relative package path is refused",
+   "workspace": "/repo",
+   "package": "repo/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a relative products directory is refused",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a relative workspace is refused",
+   "workspace": "repo",
+   "package": "/repo/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "an unknown mode is refused",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "@semio-tech/fixture",
+   "mode": "debug",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "an empty package name is refused",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "a package name of 256 characters is kept",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "",
+   "posixOnly": false
+  },
+  {
+   "name": "a package name of 257 characters is refused",
+   "workspace": "/repo",
+   "package": "/repo/pkg",
+   "packageName": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical package binding data required",
+   "posixOnly": false
+  },
+  {
+   "name": "an owner with a colon is not portable",
+   "workspace": "/repo",
+   "package": "/repo/a:b",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical portable artifact source owner required",
+   "posixOnly": true
+  },
+  {
+   "name": "an owner with a backslash is not portable",
+   "workspace": "/repo",
+   "package": "/repo/a\\b",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical portable artifact source owner required",
+   "posixOnly": true
+  },
+  {
+   "name": "an owner with a control character is not portable",
+   "workspace": "/repo",
+   "package": "/repo/a\u0001b",
+   "packageName": "@semio-tech/fixture",
+   "mode": "prototype",
+   "products": "/generated/products",
+   "error": "Canonical portable artifact source owner required",
+   "posixOnly": true
+  }
+ ],
+ "receipts": [
+  {
+   "name": "a receipt of one mode",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "owners/example",
+    "packageName": "@semio-tech/fixture",
+    "activeMode": "prototype",
+    "modes": [
+     "prototype"
+    ]
+   },
+   "valid": true
+  },
+  {
+   "name": "a receipt of both modes",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "owners/example",
+    "packageName": "@semio-tech/fixture",
+    "activeMode": "release",
+    "modes": [
+     "prototype",
+     "release"
+    ]
+   },
+   "valid": true
+  },
+  {
+   "name": "a repeated mode is refused",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "a",
+    "packageName": "n",
+    "activeMode": "release",
+    "modes": [
+     "release",
+     "release"
+    ]
+   },
+   "valid": false
+  },
+  {
+   "name": "no mode is refused",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "a",
+    "packageName": "n",
+    "activeMode": "release",
+    "modes": []
+   },
+   "valid": false
+  },
+  {
+   "name": "another protocol is refused",
+   "value": {
+    "version": 1,
+    "protocol": "other",
+    "package": "a",
+    "packageName": "n",
+    "activeMode": "release",
+    "modes": [
+     "release"
+    ]
+   },
+   "valid": false
+  },
+  {
+   "name": "an extra field is refused",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "a",
+    "packageName": "n",
+    "activeMode": "release",
+    "modes": [
+     "release"
+    ],
+    "extra": 1
+   },
+   "valid": false
+  },
+  {
+   "name": "an owner of 257 characters is refused",
+   "value": {
+    "version": 1,
+    "protocol": "typescript-package-bindings",
+    "package": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "packageName": "n",
+    "activeMode": "release",
+    "modes": [
+     "release"
+    ]
+   },
+   "valid": false
+  }
+ ],
+ "capacity": {
+  "workspace": "/repo",
+  "products": "/generated/products",
+  "from": 150,
+  "to": 260
+ }
+}

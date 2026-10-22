@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem};
 
 use crate::CuratedItem;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
 /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
@@ -83,7 +83,7 @@ async fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

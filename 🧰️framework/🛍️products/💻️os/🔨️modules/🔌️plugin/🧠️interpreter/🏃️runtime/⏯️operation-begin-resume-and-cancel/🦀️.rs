@@ -3,21 +3,35 @@
 use super::*;
 
 //#region 🧠️OwnedRuntime
-pub(super) fn begin_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, input: Option<Vec<u8>>) -> Result<(), TurnFault> {
+fn owned_operation_resumes(state: &OwnedGuestInstance, operation: OwnedOperation) -> Result<bool, TurnFault> {
     if state.original_core.is_some(){return Err(identity_turn_fault(operation_authority::refusal(4)))}
     if state.poisoned {
         return Err(TurnFault::Trapped("owned actor instance is poisoned by an earlier guest trap and must be re-instantiated".to_string()));
     }
-    if let Some(pending) = &state.pending {
-        return if pending.operation == operation { Ok(()) } else { Err(TurnFault::Trapped(format!("owned operation {:?} is still active", pending.operation))) };
+    match &state.pending {
+        Some(pending) if pending.operation == operation => Ok(true),
+        Some(pending) => Err(TurnFault::Trapped(format!("owned operation {:?} is still active", pending.operation))),
+        None => Ok(false),
     }
+}
+
+/// 🧮️ Starts an owned export whose arguments are fixed scalars and whose result is a resident fixed receipt or a borrowed view.
+pub(super) fn begin_owned_scalar_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, arguments: Vec<Value>) -> Result<(), TurnFault> {
+    if owned_operation_resumes(state, operation)? {return Ok(())}
+    state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(), arguments).map_err(core_fault)?;
+    state.pending = Some(OwnedPending { retained_input:None, operation, stage: OwnedStage::Call, fuel_used: 0 });
+    Ok(())
+}
+
+pub(super) fn begin_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, input: Option<Vec<u8>>) -> Result<(), TurnFault> {
+    if owned_operation_resumes(state, operation)? {return Ok(())}
     let stage = match input {
         Some(input) => {
-            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(i32::try_from(input.len()).map_err(|_| TurnFault::Trapped("owned input exceeds wasm32 address space".to_string()))?)])?;
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(i32::try_from(input.len()).map_err(|_| TurnFault::Trapped("owned input exceeds wasm32 address space".to_string()))?)]).map_err(core_fault)?;
             OwnedStage::Allocate { input }
         }
         None => {
-            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(), Vec::new())?;
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(), Vec::new()).map_err(core_fault)?;
             OwnedStage::Call
         }
     };
@@ -91,7 +105,7 @@ pub(super) fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, opera
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
                 completed_fuel = pending.fuel_used;
-                let result=reply_owned_host(state,&call,receiver.as_deref_mut()).map_err(|error|TurnFault::Trapped(error.to_string())).and_then(|results|state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id,Ok(results)).map_err(TurnFault::from));
+                let result=reply_owned_host(state,&call,receiver.as_deref_mut()).map_err(|error|TurnFault::Trapped(error.to_string())).and_then(|results|state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id,Ok(results)).map_err(core_fault));
                 state.pending=Some(pending);
                 result?;
             }
@@ -105,7 +119,7 @@ pub(super) fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, opera
                         write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?,*pointer,input)?;
                         let length=input.len()as i32;
                         if matches!(operation,OwnedOperation::SqliteExport|OwnedOperation::SqliteImport|OwnedOperation::SqliteRetirement|OwnedOperation::SqliteClose|OwnedOperation::SqliteTakeFile|OwnedOperation::SqliteTakePayload){pending.retained_input=Some(std::mem::take(input));}
-                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(),vec![Value::I32(*pointer),Value::I32(length)])?;
+                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(),vec![Value::I32(*pointer),Value::I32(length)]).map_err(core_fault)?;
                         pending.stage=OwnedStage::Call;
                         Ok(None)
                     }
@@ -114,9 +128,10 @@ pub(super) fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, opera
                         let pair=*pair as u64;
                         match operation_authority::owned_result::decode(pair).map_err(identity_turn_fault)?{operation_authority::owned_result::OwnedReturn::Bytes{..}=>{},operation_authority::owned_result::OwnedReturn::Refusal(kind)=>return Err(identity_turn_fault(semio_framework_value::ValueError::literal(kind,"original guest operation returned scalar refusal"))),}
                         if let Some(receiver)=receiver.as_deref_mut(){receiver.receive_output((pair>>32)as u32 as usize).map_err(identity_turn_fault)?;}
-                        let output=state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.read_bytes_result(&values,OWNED_RESULT_LIMIT)?;
+                        let output=state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.read_bytes_result(&values,OWNED_RESULT_LIMIT).map_err(core_fault)?;
+                        if operation==OwnedOperation::BorrowJobOutput{return Ok(Some(OwnedInvocation{retained_input:pending.retained_input.take(),output,fuel_used:pending.fuel_used}))}
                         pending.stage=OwnedStage::Deallocate{output};
-                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Deallocate,vec![Value::I32(pair as u32 as i32),Value::I32((pair>>32)as u32 as i32)])?;
+                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Deallocate,vec![Value::I32(pair as u32 as i32),Value::I32((pair>>32)as u32 as i32)]).map_err(core_fault)?;
                         Ok(None)
                     }
                     OwnedStage::Deallocate { output } => Ok(Some(OwnedInvocation{retained_input:pending.retained_input.take(),output:std::mem::take(output),fuel_used:pending.fuel_used})),
@@ -167,7 +182,7 @@ const OWNED_FAULT_DIAGNOSTICS_TAIL_CHARS: usize = 4_000;
 pub(super) fn cancel_owned_operation(state: &mut OwnedGuestInstance) -> Result<(), TurnFault> {
     match state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.step(1, StepControl { cancelled: true }) {
         CoreStepOutcome::HostCall { call, .. } => {
-            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id, Err("owned operation cancelled".to_string()))?;
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id, Err("owned operation cancelled".to_string())).map_err(core_fault)?;
             if !matches!(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.step(1, StepControl { cancelled: true }), CoreStepOutcome::Cancelled { .. }) {
                 return Err(TurnFault::Trapped("owned interpreter did not acknowledge cancellation".to_string()));
             }

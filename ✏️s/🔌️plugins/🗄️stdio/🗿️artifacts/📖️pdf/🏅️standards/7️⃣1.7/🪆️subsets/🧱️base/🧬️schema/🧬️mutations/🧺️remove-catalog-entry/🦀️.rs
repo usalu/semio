@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "catalog-entry", kind: "remove-catalog-entry", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_catalog_entry(base, &self.key))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.catalog_extra.iter().position(|entry| entry.key == self.key).map(|position| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: base.catalog_extra[position].value.clone(), index: Some(position) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove catalog entry {}", self.key), &format!("Katalogeintrag {} entfernen", self.key))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveCatalogEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveCatalogEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_remove_catalog_entry(base, &self.key))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.catalog_extra.iter().position(|entry| entry.key == self.key).map(|position| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: base.catalog_extra[position].value.clone(), index: Some(position) })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

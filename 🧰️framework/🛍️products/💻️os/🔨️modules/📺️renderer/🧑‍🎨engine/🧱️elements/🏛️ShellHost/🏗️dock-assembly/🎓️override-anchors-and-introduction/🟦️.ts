@@ -1,5 +1,5 @@
 /** 🎓️ The host, studio and details override anchors and the introduction step derived ids with their reveal effects. */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_CATALOGUE_ID, type IntroductionInteraction, SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
 import { findPanelTabInDock, findPanelTabPath } from "@semio-tech/ui-react";
 import { FRAMEWORK_CATEGORY_TOOL_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";

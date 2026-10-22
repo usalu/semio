@@ -1,39 +1,5 @@
-import { spawnSync } from "node:child_process";
-import { describeDevPortOccupant } from "../../🌐️network/🔌️ports/🟦️.ts";
-
-/** 🧊️ Legacy trunk entry paths still seen on long-running dev servers. */
-export const WGPU_DEV_LEGACY_ENTRY_PATH = "/renderer-modules/wgpu/";
-
-/** 🧊️ Play URL for a wgpu trunk entry path and plugin filter. */
-export function wgpuDevPlayUrl(host: string, port: number, plugin: string, entryPath = "/"): string {
+/** 🧊️ Play URL of the wgpu dev server on `port` for a plugin filter. */
+export function wgpuDevPlayUrl(host: string, port: number, plugin: string): string {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  const base = entryPath.endsWith("/") ? entryPath : `${entryPath}/`;
-  return `http://${probeHost}:${port}${base}?plugin=${encodeURIComponent(plugin)}`;
-}
-
-/** 🧊️ Probes which wgpu trunk entry path responds on `port`, if any. */
-export function probeWgpuDevPort(host: string, port: number): { entryPath: string } | null {
-  const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  for (const entryPath of ["/", WGPU_DEV_LEGACY_ENTRY_PATH] as const) {
-    const url = `http://${probeHost}:${port}${entryPath}`;
-    const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
-process.exit(res.ok ? 0 : 1);`;
-    const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
-    if (result.status === 0) return { entryPath };
-  }
-  return null;
-}
-
-/** 🛑️ Stops a trunk listener on `port` when it is the sole occupant. */
-export function stopTrunkDevPort(port: number): boolean {
-  const occupant = describeDevPortOccupant(port);
-  if (!occupant?.startsWith("trunk")) return false;
-  const pid = Number(occupant.match(/PID (\d+)/)?.[1]);
-  if (!Number.isFinite(pid)) return false;
-  try {
-    process.kill(pid, "SIGTERM");
-    return true;
-  } catch {
-    return false;
-  }
+  return `http://${probeHost}:${port}/?plugin=${encodeURIComponent(plugin)}`;
 }

@@ -2,13 +2,13 @@
 export type RuntimeIdV1 = "bun" | "node";
 
 /** 📚️ Names one runtime-dependent capability family; neutral code asks for a family, never for a runtime. */
-export type RuntimeFamilyV1 = "glob" | "toml" | "jsonc" | "yaml" | "which" | "resolve" | "sleep" | "spawn" | "stdin" | "file" | "serve" | "sqlite" | "ffi" | "transpile" | "bundle" | "semver" | "identity" | "main" | "gc" | "plugin" | "test";
+export type RuntimeFamilyV1 = "glob" | "toml" | "jsonc" | "yaml" | "which" | "resolve" | "sleep" | "spawn" | "stdin" | "file" | "serve" | "sqlite" | "ffi" | "transpile" | "bundle" | "semver" | "identity" | "gc" | "plugin" | "test";
 
 /** 🧭️ States how an adapter provides a family: its own native API, a standard API, our portable code, or not at all. */
 export type RuntimeSupportV1 = "native" | "standard" | "portable" | "provider" | "missing";
 
 /** 🪪️ Identifies the hosting runtime; `key` is stable text for cache keys and receipts, `executable` is what a parent spawns. */
-export interface RuntimeIdentityV1 { readonly id: RuntimeIdV1; readonly version: string; readonly revision: string; readonly key: string; readonly executable: string }
+export interface RuntimeIdentityV1 { readonly id: RuntimeIdV1; readonly product: string; readonly version: string; readonly revision: string; readonly key: string; readonly executable: string }
 
 /** 🌐️ Options of one glob scan. */
 export interface RuntimeGlobScanOptionsV1 { readonly cwd?: string; readonly dot?: boolean; readonly onlyFiles?: boolean; readonly absolute?: boolean; readonly followSymlinks?: boolean }
@@ -46,7 +46,7 @@ export interface RuntimeSqliteOptionsV1 { readonly readonly?: boolean; readonly 
 /** 🗃️ The effect of one write statement. */
 export interface RuntimeSqliteChangesV1 { readonly changes: number; readonly lastInsertRowid: number | bigint }
 /** 🗃️ One prepared statement; rows are plain objects or arrays and a missing row is `null`. */
-export interface RuntimeSqliteStatementV1<Row = any, Params extends any[] = any[]> { all(...parameters: Params): Row[]; get(...parameters: Params): Row | null; run(...parameters: Params): RuntimeSqliteChangesV1; values(...parameters: Params): any[][]; finalize(): void }
+export interface RuntimeSqliteStatementV1<Row = any, Params extends any[] = any[]> { all(...parameters: Params): Row[]; get(...parameters: Params): Row | null; run(...parameters: Params): RuntimeSqliteChangesV1; values(...parameters: Params): any[][]; safeIntegers(enabled?: boolean): this; finalize(): void }
 /** 🗃️ One SQLite connection with the closed method set every framework caller uses. */
 export interface RuntimeSqliteDatabaseV1 { query<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params>; prepare<Row = any, Params extends any[] = any[]>(sql: string): RuntimeSqliteStatementV1<Row, Params>; run(sql: string, ...parameters: any[]): RuntimeSqliteChangesV1; exec(sql: string): unknown; transaction<T extends (...arguments_: any[]) => any>(body: T): T; close(throwOnError?: boolean): void }
 /** 🗃️ Constructor shape of the connection class a caller may instantiate. */
@@ -106,17 +106,19 @@ export interface RuntimeMatchersV1 {
   toContain(expected: unknown): void; toContainEqual(expected: unknown): void; toHaveLength(expected: number): void; toHaveProperty(path: string, value?: unknown): void; toMatch(expected: RegExp | string): void; toBeInstanceOf(expected: Function): void;
   toThrow(expected?: RegExp | string | Function): void;
 }
-/** 🧪️ One test body. */
-export type RuntimeTestBodyV1 = () => void | Promise<void>;
+/** 🧪️ The completion callback of a test body that reports through it instead of returning. */
+export type RuntimeTestDoneV1 = (error?: unknown) => void;
+/** 🧪️ One test body: it returns, returns a promise, or reports through a completion callback. */
+export type RuntimeTestBodyV1 = (done: RuntimeTestDoneV1) => unknown;
 /** 🧪️ Options of one test; a plain number is a timeout in milliseconds. */
 export type RuntimeTestOptionsV1 = number | { readonly timeout?: number };
-/** 🧪️ Declares tests; `skip`, `only` and `todo` are the closed variants. */
-export interface RuntimeTestFunctionV1 { (name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; skip(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; only(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; todo(name: string, body?: RuntimeTestBodyV1): void }
+/** 🧪️ Declares tests; `skip`, `only`, `todo`, `skipIf` are the closed variants. */
+export interface RuntimeTestFunctionV1 { (name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; skip(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; only(name: string, body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1): void; todo(name: string, body?: RuntimeTestBodyV1): void; skipIf(condition: unknown): RuntimeTestFunctionV1 }
 /** 🧪️ The thin test API every runtime's test runner is projected onto. */
 export interface RuntimeTestApiV1 {
   readonly test: RuntimeTestFunctionV1;
   readonly describe: (name: string, body: () => void) => void;
-  readonly beforeAll: (body: RuntimeTestBodyV1) => void; readonly afterAll: (body: RuntimeTestBodyV1) => void; readonly beforeEach: (body: RuntimeTestBodyV1) => void; readonly afterEach: (body: RuntimeTestBodyV1) => void;
+  readonly beforeAll: (body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1) => void; readonly afterAll: (body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1) => void; readonly beforeEach: (body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1) => void; readonly afterEach: (body: RuntimeTestBodyV1, options?: RuntimeTestOptionsV1) => void;
   readonly expect: (actual: unknown, message?: string) => RuntimeMatchersV1;
 }
 /** 🧪️ Options of one test-runner invocation. */
@@ -150,8 +152,8 @@ export interface RuntimeAdapterV1 {
   loaderPlugin?(plugin: RuntimeBundlePluginV1): void;
   testApi?(): RuntimeTestApiV1;
   testCommand?(files: readonly string[], options?: RuntimeTestCommandOptionsV1): readonly string[];
+  testPreload?(args: readonly string[], preload: string): readonly string[] | undefined;
   semverSatisfies?(version: string, range: string): boolean;
   semverOrder?(left: string, right: string): -1 | 0 | 1;
-  main?(metaUrl: string): boolean;
   gc?(synchronous?: boolean): void;
 }

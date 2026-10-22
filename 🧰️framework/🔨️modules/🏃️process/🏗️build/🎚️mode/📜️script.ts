@@ -1,9 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain, scriptInvocationBudget } from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "../../📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🎚️ Runs every owned build-mode law under the original process authority. */
 class TestScript extends BundleScript {
@@ -16,4 +17,4 @@ class TestScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir, resolve(import.meta.dir, "../../../..")).register("test", TestScript), { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname, resolve(import.meta.dirname, "../../../..")).register("test", TestScript), { invocation: original }));

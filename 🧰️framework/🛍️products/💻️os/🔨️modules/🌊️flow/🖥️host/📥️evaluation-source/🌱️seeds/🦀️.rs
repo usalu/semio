@@ -5,6 +5,7 @@ use semio_framework_value_ordered::ordered::SharedOwner;
 #[derive(semio_framework_value::RetireOwned)]
 enum SeedDisplaced{Dictionary(Dictionary)}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct SeedOwners{output:Option<HistoryFoldIndex<String,Dictionary>>,inner:Option<Dictionary>,outer:Option<Dictionary>,key:Option<String>,value:Option<NeuralValue>,shared:Option<SharedOwner<NeuralValue>>,entry:Option<BudgetedOwnedEntry>,buffer:Vec<u8>,displaced:Option<ControlledRetirement<SeedDisplaced>>}
 /// 🌱️ Advances the original projected tree's builtin values under each incoming full grant.
 pub struct FlowEvaluationSeeds{owners:ManuallyDrop<Option<SeedOwners>>,retirement:Option<ControlledRetirement<SeedOwners>>,source:usize,node:usize,param:usize,offset:usize,kind:u8,pub(super) phase:u8,closing:bool,progress:RetainedCloneProgress}

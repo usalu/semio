@@ -4,7 +4,7 @@ import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts
 import { type GeneratorContractSpec, type PackageBoundaryRule } from "../🔣️taxonomy/🏭️generators-packages/🟦️.ts";
 import { normalizeRelative, sourceRelative, emojiFold, inScope } from "../🛣️path/🟦️.ts";
 import { sha256, lstatOrNull } from "../📁️input/🟦️.ts";
-import { execFileSync, spawnSync } from "node:child_process";
+
 import { existsSync, lstatSync, readdirSync, readlinkSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { basename, isAbsolute, relative, resolve } from "node:path";
@@ -12,6 +12,7 @@ import { recordKey, type RecordStore } from "../../⚡️caching/🗃️records/
 import { type TaxonomyCapturedSourceRead, type TaxonomyPackageRole, type TaxonomyViolation, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { absolutePath, checkCancellation, directoryKindIndex, isExcluded, splitLeadingEmojiIdentity, violation } from "../🏷️file-kind-matching/🟦️.ts";
 import { LEAF_STAMP_RACY_MS } from "../🧱️inventory-leaf-stamps/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export interface CandidatePath {
   readonly path: string;
@@ -48,7 +49,7 @@ export function scopedGitPathspec(repoRoot: string, scope: string | undefined, t
     const ancestor = segments.slice(0, index).join("/");
     const stat = lstatOrNull(absolutePath(repoRoot, ancestor));
     if (stat && (stat.isSymbolicLink() || !stat.isDirectory())) return taxonomyScopedGitPathspec(undefined, exclusions);
-    const indexed = spawnSync("git", ["rev-parse", "--verify", "--quiet", "--end-of-options", `:${ancestor}`], { cwd: repoRoot, encoding: "utf8" });
+    const indexed = runToolSyncV1("git", ["rev-parse", "--verify", "--quiet", "--end-of-options", `:${ancestor}`], { cwd: repoRoot, encoding: "utf8" });
     if (indexed.status === 0) return taxonomyScopedGitPathspec(undefined, exclusions);
     if (indexed.status !== 1) throw new Error(`Git index ancestor probe failed for ${ancestor}: ${indexed.stderr.trim() || `exit ${indexed.status ?? "unknown"}`}`);
   }
@@ -56,7 +57,7 @@ export function scopedGitPathspec(repoRoot: string, scope: string | undefined, t
 }
 
 export function gitRows(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec = taxonomyScopedGitPathspec(undefined, taxonomy.exclusions.map((entry) => entry.path))): readonly CandidatePath[] {
-  const stdout = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...pathspec.exclusionPathspecs], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  const stdout = runToolSyncV1("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...pathspec.exclusionPathspecs], { check: true, cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 }).stdout;
   return stdout
     .toString("utf8")
     .split("\u0000")
@@ -72,7 +73,7 @@ export function gitRows(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec = t
 }
 
 export function untrackedGitPaths(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec = taxonomyScopedGitPathspec(undefined, taxonomy.exclusions.map((entry) => entry.path))): readonly string[] {
-  const stdout = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z", "--", pathspec.positivePathspec, ...pathspec.exclusionPathspecs], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  const stdout = runToolSyncV1("git", ["ls-files", "--others", "--exclude-standard", "-z", "--", pathspec.positivePathspec, ...pathspec.exclusionPathspecs], { check: true, cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 }).stdout;
   return stdout.toString("utf8").split("\u0000").filter(Boolean).map(sourceRelative).sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 }
 

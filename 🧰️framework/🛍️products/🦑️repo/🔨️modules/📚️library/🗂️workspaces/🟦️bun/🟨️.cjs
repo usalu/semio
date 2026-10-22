@@ -350,15 +350,46 @@ async function replayCurrentMembershipV1(owner, control, progress) {
     return true;
   } catch (error) { control.signal.throwIfAborted(); if (continuationFailed) throw error; return false; }
 }
+/** 🧷️ Authenticates the complete candidate after the caller continuation without another await. */
+function authenticateCurrentMembershipV1(owner, control) {
+  const observations = owner.observations, operations = nativeOperations(undefined, owner.root, owner.physical), proof = new Map(), read = path => {
+    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
+  };
+  if (!observations?.paths.size || !observations.frontier) return false;
+  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+  for (const record of observations.paths.values()) {
+    control.signal.throwIfAborted();
+    const facts = read(record.path);
+    if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+    if (record.list) {
+      if (!facts?.isDirectory()) return false;
+      const before = observations.frontier.get(record.path), stamp = directoryStamp(facts), decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && settledDirectory(facts, Date.now()));
+      if (decision === "derive") return false;
+      if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+      proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
+    }
+  }
+  for (const [path, text] of owner.texts) {
+    control.signal.throwIfAborted();
+    if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return false;
+  }
+  control.signal.throwIfAborted();
+  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+  for (const [path, observation] of proof) observations.frontier.set(path, observation);
+  return true;
+}
 /** 🧮️ Rederives the selected membership and refuses only when scopes, packages or manifests drift, so unrelated concurrent Source edits stay admissible. */
 async function requireCurrentMembershipV1(owner, control, progress) {
   if (await replayCurrentMembershipV1(owner, control, progress)) return;
-  const fresh = context(owner.root), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
+  const fresh = Object.assign(context(owner.root), { ownership: owner.ownership, physical: owner.physical }), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
   const shape = value => JSON.stringify(Array.isArray(value) ? value.map(scope => scope.manifest) : { scopes: value.scopes.map(({ manifest, patterns, packages }) => ({ manifest, patterns, packages })), packages: value.packages });
   if (shape(report) !== shape(owner.report)) throw Error("Bun current workspace membership changed during verification");
   for (const [path, text] of fresh.texts) if (owner.texts.has(path) && owner.texts.get(path) !== text) throw Error("Bun current manifest changed during verification: " + path);
   if ([...owner.texts.keys()].some(path => !fresh.texts.has(path) && path !== "package.json")) throw Error("Bun current workspace manifests changed during verification");
-  if (owner.observations.paths.size === fresh.observations.paths.size && [...owner.observations.paths].every(([path, record]) => JSON.stringify(record) === JSON.stringify(fresh.observations.paths.get(path)))) owner.observations.frontier = fresh.observations.frontier;
+  fresh.texts = new Map([...owner.texts, ...fresh.texts]);
+  if (!await replayCurrentMembershipV1(fresh, control, progress) || !authenticateCurrentMembershipV1(fresh, control)) throw Error("Bun current ownership changed after refreshed continuation");
+  Object.assign(owner.observations, fresh.observations);
+  owner.texts = fresh.texts;
 }
 /** 🛡️ Fences the last caller continuation before native publication or a completed report. */
 async function currentFence(owner, operations, control, progress) {

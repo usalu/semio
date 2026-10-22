@@ -82,18 +82,24 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "non-tiny-content", kind: "strip-non-tiny", record: "StripNonTiny" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SvgSnapshot, Op> for StripNonTiny
+where
+    Op: protocol::ColdMutation<SvgSnapshot, ReferenceDiff = SvgDiff> + From<StripNonTiny> + From<crate::standards::v1_1::subsets::tiny::schema::mutations::restore_non_tiny::RestoreNonTiny>,
+{
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         protocol::MutationOutcome::new(SvgDiff { root: base.doc.root.as_ref().and_then(strip_node_diff), ..Default::default() })
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let (elements, attributes) = base.doc.root.as_ref().map_or_else(|| (Vec::new(), Vec::new()), |root| stripped_rows(root, &Vec::new()));
         Ok(if elements.is_empty() && attributes.is_empty() { Vec::new() } else { vec![Op::from(restore_non_tiny::RestoreNonTiny { elements, attributes })] })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

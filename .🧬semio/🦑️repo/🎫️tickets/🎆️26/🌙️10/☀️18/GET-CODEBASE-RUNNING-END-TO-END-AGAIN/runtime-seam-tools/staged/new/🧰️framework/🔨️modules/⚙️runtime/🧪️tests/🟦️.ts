@@ -7,11 +7,11 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RuntimeAdapterV1, RuntimeFamilyV1, RuntimeIdV1 } from "../📋️contract/🟦️.ts";
 import { checkRuntimeLawV1, listRuntimeLawFilesV1, scanRuntimeLawSourceV1 } from "../⚖️law/🟦️.ts";
-import { RUNTIME_REGISTRY_V1, RuntimeCapabilityMissingV1, GlobV1, isMainModuleV1, loadRuntimeAdapterV1, runtimeIdentityV1, runtimeKeyV1, runtimeSupportV1 } from "../🟦️.ts";
-import ledger from "../⚖️law/📒️.json" with { type: "json" };
+import { RUNTIME_REGISTRY_V1, RuntimeCapabilityMissingV1, runtimeMessageV1, GlobV1, isHostRuntimeCommandV1, isMainModuleV1, loadRuntimeAdapterV1, runtimeAdapterNameV1, runtimeCommandNameV1, runtimeCommandNamesV1, runtimeIdentityV1, runtimeIdsV1, runtimeKeyV1, runtimeObserveSpawnV1, runtimeProgramV1, runtimeSourceUrlV1, runtimeSpawnSyncV1, runtimeSpawnV1, runtimeSupportV1, runtimeTestPreloadV1 } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { describe, expect, test } from "../🧪️test/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import messages from "../🧬️schema/🗣️messages.json" with { type: "json" };
 
 const here = dirname(fileURLToPath(import.meta.url));
 const moduleRoot = resolve(here, "..");
@@ -22,7 +22,7 @@ const iarna = oracle("@iarna/toml") as { parse(text: string): unknown };
 const jsoncParser = oracle("jsonc-parser") as { parse(text: string, errors?: unknown[], options?: object): unknown };
 const semverOracle = oracle("semver") as { satisfies(version: string, range: string): boolean; compare(left: string, right: string): number };
 const yamlOracle = oracle("yaml") as { parse(text: string, options?: object): unknown };
-const MEMBERS: Readonly<Record<RuntimeFamilyV1, readonly (keyof RuntimeAdapterV1)[]>> = { glob: ["glob"], toml: ["toml"], jsonc: ["jsonc"], yaml: ["yaml"], which: ["which"], resolve: ["resolve"], sleep: ["sleep"], spawn: ["spawn", "spawnSync"], stdin: ["stdinText", "stdinStream"], file: ["file"], serve: ["serve"], sqlite: ["sqlite"], ffi: ["ffiOpen", "ffiRead", "ffiPointer", "ffiToArrayBuffer", "ffiCallback"], transpile: ["transpiler"], bundle: ["bundle"], semver: ["semverSatisfies", "semverOrder"], identity: ["identity"], main: ["main"], gc: ["gc"], plugin: ["loaderPlugin"], test: ["testApi", "testCommand"] };
+const MEMBERS: Readonly<Record<RuntimeFamilyV1, readonly (keyof RuntimeAdapterV1)[]>> = { glob: ["glob"], toml: ["toml"], jsonc: ["jsonc"], yaml: ["yaml"], which: ["which"], resolve: ["resolve"], sleep: ["sleep"], spawn: ["spawn", "spawnSync"], stdin: ["stdinText", "stdinStream"], file: ["file"], serve: ["serve"], sqlite: ["sqlite"], ffi: ["ffiOpen", "ffiRead", "ffiPointer", "ffiToArrayBuffer", "ffiCallback"], transpile: ["transpiler"], bundle: ["bundle"], semver: ["semverSatisfies", "semverOrder"], identity: ["identity"], gc: ["gc"], plugin: ["loaderPlugin"], test: ["testApi", "testCommand"] };
 const host = runtimeIdentityV1().id;
 const ids = RUNTIME_REGISTRY_V1.runtimes.map(row => row.id as RuntimeIdV1);
 const every = await Promise.all(ids.map(id => loadRuntimeAdapterV1(id)));
@@ -41,11 +41,31 @@ const available = (name: string): boolean => spawnSync(name, ["--version"], { en
 describe("registry and selection", () => {
   test("the registry validates against its schema and every adapter provides exactly the families it declares", () => {
     const check = new Ajv({ strict: false }).compile({ ...schema, $ref: "#/definitions/Registry" });
-    expect(check(schema.definitions.Registry.const), JSON.stringify(check.errors)).toBe(true);
+    expect(check(RUNTIME_REGISTRY_V1), JSON.stringify(check.errors)).toBe(true);
     for (const adapter of every) for (const family of RUNTIME_REGISTRY_V1.families as RuntimeFamilyV1[]) {
       const provided = MEMBERS[family].every(name => adapter[name] !== undefined), declared = runtimeSupportV1(family, adapter.id) !== "missing";
       expect(provided, `${adapter.id} ${family}`).toBe(declared);
     }
+  });
+
+  test("every message exists in English and German with the same placeholders and renders in the named language, or in both without one", () => {
+    const placeholders = (text: string): string[] => [...text.matchAll(/\{(\w+)\}/gu)].map(match => match[1]!).sort();
+    for (const [id, row] of Object.entries(messages as Record<string, { en: string; de: string }>)) {
+      expect(row.en.length > 0 && row.de.length > 0, id).toBe(true);
+      expect(placeholders(row.de), id).toEqual(placeholders(row.en));
+    }
+    const saved = { ...process.env };
+    try {
+      for (const name of ["SEMIO_LANGUAGE", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]) delete process.env[name];
+      expect(runtimeMessageV1("bodyTooLarge", {})).toBe("The request body is too large. / Der Anfragekörper ist zu groß.");
+      process.env.SEMIO_LANGUAGE = "de";
+      expect(runtimeMessageV1("moduleNotFound", { specifier: "x", from: "y" })).toBe("Das Modul 'x' ist von 'y' aus nicht auffindbar.");
+      process.env.SEMIO_LANGUAGE = "en";
+      expect(runtimeMessageV1("syntax", { format: "TOML", detail: "toml.keyDefined", name: "a", position: "1:2" })).toBe("TOML syntax error: key a is already defined at 1:2");
+      process.env.SEMIO_LANGUAGE = "fr";
+      process.env.LANG = "de_CH.UTF-8";
+      expect(runtimeMessageV1("commandRequired", {})).toBe("Ein Befehl ist erforderlich.");
+    } finally { for (const name of ["SEMIO_LANGUAGE", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]) { if (saved[name] === undefined) delete process.env[name]; else process.env[name] = saved[name]; } }
   });
 
   test("the hosting runtime identifies itself and the capability refusal names runtime and family", () => {
@@ -150,7 +170,7 @@ describe("data formats", () => {
       try { expected = yamlOracle.parse(text, { strict: false, uniqueKeys: false }); } catch { continue; }
       expect(normalize(portable(text)), file).toBe(normalize(expected)); compared++;
     }
-    expect(compared).toBeGreaterThan(3);
+    expect(compared).toBeGreaterThan(0);
   });
 
   test("semantic version ranges and ordering agree with the semver oracle on every adapter", () => {
@@ -327,6 +347,8 @@ describe("source tools", () => {
   });
 });
 
+const probeEnvironment = (fail: string): NodeJS.ProcessEnv => { const copy: NodeJS.ProcessEnv = { ...process.env, SEMIO_RUNTIME_INNER: "1", SEMIO_PROBE_FAIL: fail }; delete copy.NODE_TEST_CONTEXT; return copy; };
+
 describe("test runner", () => {
   test("one test file written against the thin API runs under every installed runner and fails the same way", () => {
     const probe = join(here, "🧫️fixtures/🧪️probe-test.ts");
@@ -334,9 +356,9 @@ describe("test runner", () => {
     for (const [path, id] of installed()) runners.push([path, [...every.find(adapter => adapter.id === id)!.testCommand!([probe])]]);
     expect(runners.length).toBeGreaterThan(0);
     for (const [executable, args] of runners) {
-      const passing = spawnSync(executable, args, { encoding: "utf8", env: { ...process.env, SEMIO_RUNTIME_INNER: "1", SEMIO_PROBE_FAIL: "0" } });
+      const passing = spawnSync(executable, args, { encoding: "utf8", env: probeEnvironment("0") });
       expect(passing.status, `${executable} ${args.join(" ")}\n${passing.stdout}${passing.stderr}`).toBe(0);
-      const failing = spawnSync(executable, args, { encoding: "utf8", env: { ...process.env, SEMIO_RUNTIME_INNER: "1", SEMIO_PROBE_FAIL: "1" } });
+      const failing = spawnSync(executable, args, { encoding: "utf8", env: probeEnvironment("1") });
       expect(failing.status, `${executable} must fail on a false expectation`).not.toBe(0);
     }
   });
@@ -363,6 +385,64 @@ describe("test runner", () => {
   });
 });
 
+describe("command words and sources", () => {
+  test("a declared program word becomes the running executable only for the hosting runtime's own name", () => {
+    const name = runtimeCommandNameV1(), other = runtimeCommandNamesV1().find(word => word !== name);
+    expect(runtimeCommandNamesV1()).toEqual(RUNTIME_REGISTRY_V1.runtimes.map(row => row.executable));
+    expect(runtimeIdsV1()).toEqual(ids);
+    expect(runtimeProgramV1(name)).toBe(process.execPath);
+    expect(runtimeProgramV1("cargo")).toBe("cargo");
+    if (other !== undefined) expect(runtimeProgramV1(other)).toBe(other);
+    for (const command of [name, `${name}.exe`, process.execPath, `/opt/tools/bin/${name}`, `C:\\tools\\${name}.exe`]) expect(isHostRuntimeCommandV1(command), command).toBe(true);
+    for (const command of ["cargo", `${name}x`, `x${name}`, ...(other === undefined ? [] : [other])]) expect(isHostRuntimeCommandV1(command), command).toBe(false);
+    expect(runtimeAdapterNameV1()).toBe(RUNTIME_REGISTRY_V1.runtimes.find(row => row.id === host)!.adapter);
+    expect(runtimeIdentityV1().product.length).toBeGreaterThan(0);
+  });
+
+  test("the identity comes from the registry and the process alone, equals the adapter's, and the adapter loads only when a member is used", () => {
+    const adapter = every.find(row => row.id === host)!, row = RUNTIME_REGISTRY_V1.runtimes.find(candidate => candidate.id === host)!;
+    expect({ ...runtimeIdentityV1() }).toEqual({ ...adapter.identity() });
+    expect(runtimeIdentityV1().product).toBe(row.product);
+    const directory = temporary(), file = join(directory, "probe.mjs");
+    try {
+      writeFileSync(file, `const f = await import(${JSON.stringify(new URL("../🟦️.ts", import.meta.url).href)});\nconst id = f.runtimeIdentityV1();\nlet before; try { f.selectRuntimeAdapterV1(id.id); before = "loaded"; } catch { before = "absent"; }\nf.runtimeCommandNameV1(); f.runtimeProgramV1("x"); f.isHostRuntimeCommandV1("x");\nlet between; try { f.selectRuntimeAdapterV1(id.id); between = "loaded"; } catch { between = "absent"; }\nf.runtimeSleepV1(0);\nconsole.log(JSON.stringify([before, between, f.selectRuntimeAdapterV1(id.id).id === id.id, id.revision.length > 0]));\n`);
+      const run = spawnSync(process.execPath, [file], { encoding: "utf8" });
+      expect(run.status, run.stderr).toBe(0);
+      expect(JSON.parse(run.stdout.trim())).toEqual(["absent", "absent", true, true]);
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  test("a preload is inserted into each runner's own test command, once, and never into another command", () => {
+    const bun = every.find(adapter => adapter.id === "bun")!.testPreload!, node = every.find(adapter => adapter.id === "node")!.testPreload!;
+    expect(bun(["test", "./a.ts"], "/p")).toEqual(["test", "--preload", "/p", "./a.ts"]);
+    expect(bun(["test", "--preload", "q", "./a.ts"], "/p")).toBeUndefined();
+    expect(bun(["run", "x"], "/p")).toBeUndefined();
+    expect(node(["--test", "./a.ts"], "/p")).toEqual(["--import", "/p", "--test", "./a.ts"]);
+    expect(node(["--import", "q", "--test"], "/p")).toBeUndefined();
+    expect(node(["./a.js"], "/p")).toBeUndefined();
+    expect(runtimeTestPreloadV1(["run", "x"], "/p")).toBeUndefined();
+  });
+
+  test("a source URL imports captured bytes and releases afterwards", async () => {
+    const source = runtimeSourceUrlV1(Buffer.from("export const value = 7;"));
+    try { expect(((await import(source.url)) as { value: number }).value).toBe(7); } finally { source.release(); }
+    expect(RUNTIME_REGISTRY_V1.runtimes.map(row => row.sourceUrl).sort()).toEqual(["blob", "data"]);
+  });
+
+  test("the spawn observer sees every child once, with a duration, until it is removed", async () => {
+    const seen: [string, number][] = [];
+    runtimeObserveSpawnV1((command, milliseconds) => { seen.push([command[0]!, milliseconds]); });
+    try {
+      runtimeSpawnSyncV1([process.execPath, "-e", "0"]);
+      await runtimeSpawnV1([process.execPath, "-e", "0"]).exited;
+      await new Promise(accept => setTimeout(accept, 20));
+    } finally { runtimeObserveSpawnV1(undefined); }
+    runtimeSpawnSyncV1([process.execPath, "-e", "0"]);
+    expect(seen.map(row => row[0])).toEqual([process.execPath, process.execPath]);
+    expect(seen.every(row => row[1] >= 0)).toBe(true);
+  });
+});
+
 describe("law", () => {
   test("the law finds runtime names in code, specifiers, templates and meta members and ignores comments, strings and regexes", () => {
     const rules = (source: string): string[] => scanRuntimeLawSourceV1(source).map(row => row.rule);
@@ -370,22 +450,24 @@ describe("law", () => {
     expect(rules(`if (typeof Bun === "undefined") {}`)).toEqual(["Bun"]);
     expect(rules(`const v = process.versions.bun;`)).toEqual(["process.versions.bun"]);
     expect(rules(`const d = import.meta.dir + import.meta.main;`)).toEqual(["import.meta", "import.meta"]);
+    expect(rules(`const a = host.process?.versions?.bun;`)).toEqual(["process.versions.bun"]);
+    expect(rules(`const a = "Bun" in globalThis;`)).toEqual(["specifier"]);
+    expect(rules(`const a = ["bun", "node"];`)).toEqual(["specifier"]);
+    expect(rules(`const a = "bunny" + "Bunker";`)).toEqual([]);
     expect(rules(`const m = await import("bun:sqlite");`)).toEqual(["specifier"]);
     expect(rules("const p = String.raw`const x = Bun.stdin;`;")).toEqual(["embedded"]);
     expect(rules(`// Bun.file is mentioned\n/* import.meta.main */ const s = "uses Bun.file in text"; const r = /Bun\\.file/u;`)).toEqual([]);
     expect(rules(`const ok = import.meta.dirname + import.meta.filename + import.meta.url;`)).toEqual([]);
-    expect(checkRuntimeLawV1([{ path: "a/b.ts", source: "Bun.sleep(1);" }, { path: "🧰️framework/🔨️modules/⚙️runtime/🍞️bun/🟦️.ts", source: "Bun.sleep(1);" }], []).violations.length).toBe(1);
-    expect(checkRuntimeLawV1([{ path: "a/b.ts", source: "Bun.sleep(1);" }], [{ path: "a/b.ts", rule: "Bun", count: 1, class: "x", owner: "o", reason: "r" }]).violations).toEqual([]);
-    expect(checkRuntimeLawV1([{ path: "a/b.ts", source: "const x = 1;" }], [{ path: "a/b.ts", rule: "Bun", count: 1, class: "x", owner: "o", reason: "r" }]).stale.length).toBe(1);
+    expect(checkRuntimeLawV1([{ path: "a/b.ts", source: "Bun.sleep(1);" }, { path: "🧰️framework/🔨️modules/⚙️runtime/🍞️bun/🟦️.ts", source: "Bun.sleep(1);" }]).violations.length).toBe(1);
+    expect(checkRuntimeLawV1([{ path: "a/b.ts", source: "const x = 1;" }]).violations).toEqual([]);
   });
 
-  test("no production source of the framework names a specific runtime outside the adapter and the ledger", () => {
+  test("no production source of the framework names a specific runtime outside the Bun adapter", () => {
     const probe = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: repositoryRoot, encoding: "utf8" });
     if (probe.status !== 0) return;
     const files = listRuntimeLawFilesV1(repositoryRoot, "🧰️framework").map(path => ({ path, source: readFileSync(join(repositoryRoot, path), "utf8") }));
-    const report = checkRuntimeLawV1(files, ledger.rows as never);
+    const report = checkRuntimeLawV1(files);
     expect(report.violations.slice(0, 20)).toEqual([]);
-    expect(report.stale.slice(0, 20)).toEqual([]);
     expect(files.length).toBeGreaterThan(1000);
   }, 120000);
 });

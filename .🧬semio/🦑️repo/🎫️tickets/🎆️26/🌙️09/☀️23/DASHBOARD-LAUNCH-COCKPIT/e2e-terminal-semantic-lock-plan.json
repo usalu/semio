@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "status": "prepared-not-dispatched",
+  "executable": "repo",
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_BUILD_BUDGET_MS": "21600000",
+    "RUST_MIN_STACK": "134217728"
+  },
+  "commands": [
+    {
+      "scope": "root",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "update",
+        "--workspace",
+        "--offline",
+        "--manifest-path",
+        "Cargo.toml"
+      ],
+      "condition": "Only after all three new Root member manifests and consuming edges are frozen and independently source-accepted."
+    },
+    {
+      "scope": "framework",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "update",
+        "--workspace",
+        "--offline",
+        "--manifest-path",
+        "🧰️framework/Cargo.toml"
+      ],
+      "condition": "Only if a physically declared Framework member/dependency edge changes; current Controls report says none planned."
+    }
+  ],
+  "newRootPackages": [
+    "semio-framework-repo-dashboard-feedback",
+    "semio-framework-repo-dashboard-keymap-editor",
+    "semio-framework-repo-dashboard-source-view"
+  ],
+  "observed": [
+    {
+      "scope": "root",
+      "manifest": "Cargo.toml",
+      "manifestSha256": "b88e78561533118b3f11ba0b3b6cdd1f2c8a5f18299f4be9ece39f35f09fc0e1",
+      "lock": "Cargo.lock",
+      "lockSha256": "f56f6d50eeb5e31f76360131da45ab7738fdfd89d04d6e5b86da552d6f01d932",
+      "members": 566,
+      "packages": 1565,
+      "registry": 706,
+      "newRootMembership": [
+        {
+          "name": "semio-framework-repo-dashboard-feedback",
+          "inLock": false
+        },
+        {
+          "name": "semio-framework-repo-dashboard-keymap-editor",
+          "inLock": false
+        },
+        {
+          "name": "semio-framework-repo-dashboard-source-view",
+          "inLock": false
+        }
+      ]
+    },
+    {
+      "scope": "framework",
+      "manifest": "🧰️framework/Cargo.toml",
+      "manifestSha256": "d952514cf1b261a0bc0cb063bc2bdea692118a1fd21c0002cf5ed234c77653ac",
+      "lock": "🧰️framework/Cargo.lock",
+      "lockSha256": "52ca1c326cfc9eee546851b229aa455069c72ca5a0e8d4f02aed11a318ec81dc",
+      "members": 411,
+      "packages": 1068,
+      "registry": 612,
+      "newRootMembership": [
+        {
+          "name": "semio-framework-repo-dashboard-feedback",
+          "inLock": false
+        },
+        {
+          "name": "semio-framework-repo-dashboard-keymap-editor",
+          "inLock": false
+        },
+        {
+          "name": "semio-framework-repo-dashboard-source-view",
+          "inLock": false
+        }
+      ]
+    }
+  ],
+  "comparison": [
+    "Fresh before/post SHA+identity for both workspace manifests/locks and every changed/new package manifest.",
+    "Full package tuples name/version/source/checksum; registry identity/checksum set must stay exact.",
+    "All pre-existing local package tuples retained, except only actually declared owner-edge changes.",
+    "New local names and dependency arrays must equal the frozen real manifests; no hand lock edits.",
+    "Actual whole status/log precedes any next resolver/test; no frontend build, install or receipt publication."
+  ]
+}

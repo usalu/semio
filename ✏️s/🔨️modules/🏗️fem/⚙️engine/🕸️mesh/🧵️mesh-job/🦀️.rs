@@ -120,7 +120,7 @@ pub(super) enum MeshPayloadStage {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct MeshPayloadCursor {
+pub(super) struct MeshPayloadCursor {
     pub(super) stage: MeshPayloadStage,
     pub(super) point: usize,
     pub(super) coordinate: usize,
@@ -194,12 +194,12 @@ pub(super) enum MeshRun {
 }
 
 /// 🎁️ One finished publication payload, owned by the job until the caller acknowledged the outcome that lent it.
-struct MeshLent {
+pub(super) struct MeshLent {
     pub(super) payload: RetainedJobPayload,
 }
 
 /// 🏷️ Empty payloads lent where an outcome carries no mesh bytes.
-struct MeshOutcomeMarkers {
+pub(super) struct MeshOutcomeMarkers {
     pub(super) state: RetainedJobPayload,
     pub(super) output: RetainedJobPayload,
     pub(super) fault: RetainedJobPayload,

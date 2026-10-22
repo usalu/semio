@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyImage`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_image::ApplyImage>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Image(b) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyImage { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Image(b) => <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyImage { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

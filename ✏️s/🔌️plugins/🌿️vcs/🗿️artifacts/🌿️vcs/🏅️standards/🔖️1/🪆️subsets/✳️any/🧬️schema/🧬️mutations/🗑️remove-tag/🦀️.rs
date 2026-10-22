@@ -23,6 +23,15 @@ pub fn remove_tag(tag: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RemoveTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "tag", kind: "remove-tag", record: "RemovedTag" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\"", self.tag), &format!("Tag \"{}\" entfernen", self.tag))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.tag.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<VcsSnapshot, VcsDemoMutation> for RemoveTag {
     fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
@@ -32,11 +41,5 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RemoveTag {
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\"", self.tag), &format!("Tag \"{}\" entfernen", self.tag))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.tag.clone()]
-    }
 }
 //#endregion 🔖️Mutation

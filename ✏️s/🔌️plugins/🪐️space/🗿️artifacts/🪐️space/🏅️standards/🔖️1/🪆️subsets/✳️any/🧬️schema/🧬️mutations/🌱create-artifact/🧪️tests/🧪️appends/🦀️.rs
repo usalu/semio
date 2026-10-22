@@ -32,13 +32,13 @@ fn mutation() -> SSpaceMutation {
     decode_value((*MUTATION))
 }
 fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
-    <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &before())
+    <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Creating `artifact-3` appends exactly one row and leaves `artifact-1`/`artifact-2` untouched.
 #[semio_framework_async_macros::async_test]
 async fn appends_the_new_row_to_the_committed_after() {
-    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("create-artifact applies to its committed before-index");
+    let applied = protocol::apply_diff_cold(built_outcome().diff(), &before()).expect("create-artifact applies to its committed before-index");
     assert_eq!(applied, expected_after(), "create-artifact/appends-artifact-3-to-the-index: the appended index differs from the committed after-snapshot");
 }
 
@@ -47,13 +47,13 @@ async fn appends_the_new_row_to_the_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_created_row_restores_before() {
     let base = before();
-    let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward create-artifact applies");
-    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    let forward = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(&mutation(), &base);
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward create-artifact applies");
+    let inverse = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-artifact/appends-artifact-3-to-the-index: the inverse of one create is exactly one delete");
     for step in &inverse {
-        let undo = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the delete-artifact inverse step applies");
+        let undo = <SSpaceMutation as protocol::ColdMutation<SSpaceSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the delete-artifact inverse step applies");
     }
     assert_eq!(snapshot, base, "create-artifact/appends-artifact-3-to-the-index: deleting artifact-3 back out did not restore the before-index");
 }
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_value::<SSpaceDiff>((*DIFF));
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-index");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-index");
     assert_eq!(produced, expected_after(), "create-artifact/appends-artifact-3-to-the-index: committed diff did not carry before to after");
 }
 

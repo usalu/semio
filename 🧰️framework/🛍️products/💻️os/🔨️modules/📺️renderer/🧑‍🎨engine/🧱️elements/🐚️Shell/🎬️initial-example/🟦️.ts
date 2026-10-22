@@ -1,5 +1,5 @@
 /** 🚦️ Defers a session's first view until its initial example and view publication settle. */
-import { useEffect,useRef,useState } from "react";
+import { useEffect,useRef,useState } from "../../⚛️react-port/🟦️.ts";
 export function useInitialExampleReadiness(instanceId: string | null, enabled: boolean, start: () => Promise<unknown> | undefined, publish: () => Promise<unknown>): boolean {
   const owner = useRef<{ instance: string } | null>(null);
   const mounted = useRef(false);

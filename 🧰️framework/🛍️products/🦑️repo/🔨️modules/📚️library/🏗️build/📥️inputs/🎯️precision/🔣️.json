@@ -3103,7 +3103,7 @@
   {
    "id": "workspace-reentrant",
    "evidence": "assumed",
-   "description": "These root commands re-enter the build tool (`bun repo run` or `run-many`) and their result is a function of the inputs of the targets they launch, which no static read of this command bounds; the owner decision is an uncached aggregate or explicit dependsOn.",
+   "description": "These root commands re-enter the build tool (`repo run` or `run-many`) and their result is a function of the inputs of the targets they launch, which no static read of this command bounds; the owner decision is an uncached aggregate or explicit dependsOn.",
    "select": {
     "project": "workspace",
     "targets": [

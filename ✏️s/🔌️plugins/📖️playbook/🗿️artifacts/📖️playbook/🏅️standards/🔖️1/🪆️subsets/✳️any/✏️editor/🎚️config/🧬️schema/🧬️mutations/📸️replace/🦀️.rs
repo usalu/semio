@@ -20,6 +20,16 @@ impl ReplaceConfig {
 
 impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<PlaybookConfig, PlaybookConfigMutation> for ReplaceConfig {
     fn diff(&self, base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfigDiff> {
         protocol::MutationOutcome::new(PlaybookConfigDiff { contributions_json: (base.contributions_json != self.config.contributions_json).then(|| self.config.contributions_json.clone()) })
     }
@@ -29,12 +39,6 @@ impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for ReplaceC
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["config".into()]
-    }
 }
 
 #[cfg(test)]

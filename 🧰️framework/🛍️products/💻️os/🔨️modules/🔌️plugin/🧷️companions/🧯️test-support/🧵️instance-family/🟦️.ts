@@ -2,7 +2,7 @@
 import { resolve } from "node:path";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
-const plugin = resolve(import.meta.dir, "../../..");
+const plugin = resolve(import.meta.dirname, "../../..");
 const INSTANCE_ROOTS = ["🧵️instance/🦀️.rs", ...["🏪️stores", "📜️history", "🪆️children", "👷️jobs", "📄️docs", "🧩️extensions", "🖼️render", "📨️dispatch", "🧾️typed-operations", "🧷️command-routes"].map(name => `🧵️instance/${name}/🦀️.rs`)].map(path => resolve(plugin, path));
 const LADDERS = resolve(plugin, "🪜️maintenance-ladder/🦀️.rs");
 const TURNS = [resolve(plugin, "⏪️time-travel/🧵️instance/🦀️.rs"), resolve(plugin, "⏯️tool-run/🧵️instance/🦀️.rs")];

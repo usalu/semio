@@ -1,5 +1,6 @@
 /** 🔶️ The active utility phase of useWorldPointerAndDrop. */
-import React, { useCallback } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, raycastGroundPoint, world3dMarqueePointerCaptureArmed } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dVolumeBrushCommits } from "../../🗂️catalogue-drop/🟦️.tsx";

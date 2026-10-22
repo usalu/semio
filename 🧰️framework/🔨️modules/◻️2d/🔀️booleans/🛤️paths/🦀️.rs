@@ -22,6 +22,7 @@ fn flatten_error(error:PathFlattenError)->BooleanError{match error{PathFlattenEr
 fn config(input:&PathBooleanInput,operands:Vec<BooleanOperand>)->BooleanInput{BooleanInput{operation:input.operation,operands,epsilon:input.epsilon,max_edges:input.max_edges,max_parameters:input.max_parameters,max_atomic_edges:input.max_atomic_edges,max_segments:input.max_segments,max_work:input.max_work}}
 /// ⏱️ Admits paths, flattens in world tolerance and transforms one point per grant.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct PathBooleanJob{
  input:PathBooleanInput,source:VecDeque<PathBooleanOperand>,phase:PathBooleanPhase,work:u64,operands:usize,source_segments:usize,points:usize,
  current:Option<Current>,admitted:Vec<PathSegment>,local:VecDeque<FlatContour>,contour:Option<VecDeque<Vec2>>,world:Vec<Vec<Vec2>>,prepared:Vec<BooleanOperand>,

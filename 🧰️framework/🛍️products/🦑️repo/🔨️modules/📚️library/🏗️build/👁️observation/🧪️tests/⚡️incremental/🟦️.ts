@@ -1,5 +1,6 @@
 import {withRepositoryBuildInferenceDatasetV1,buildGraphOptionalRetirementDueV1} from "../../../📥️inputs/💾️storage/🟨️.mjs";
 import {buildGraphMembersV1} from "../../../🕸️graph/🟦️.ts";
+import {selectPackageManagerV1} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 import {test,expect} from "bun:test";
 import {mkdirSync,mkdtempSync,writeFileSync,rmSync,existsSync} from "node:fs";
 import {join,dirname,resolve,relative} from "node:path";
@@ -90,7 +91,7 @@ test("optional graph cache retirement opens every writer session below the low-w
 });
 
 test("graph membership keeps exactly the declared consumed files",()=>{
- const members=(policy as {graphMembers:{basenames:string[];suffixes:string[]}}).graphMembers,oracle=picomatch([`**/{${members.basenames.join(",")}}`,...members.suffixes.map(suffix=>`**/*${suffix}`)],{dot:true}),files=fixture.members.files;
+ const members=(policy as {graphMembers:{basenames:string[];suffixes:string[];lockEcosystems:string[]}}).graphMembers,oracle=picomatch([`**/{${[...members.basenames,...members.lockEcosystems.flatMap(ecosystem=>selectPackageManagerV1(ecosystem).lockFileNames())].join(",")}}`,...members.suffixes.map(suffix=>`**/*${suffix}`)],{dot:true}),files=fixture.members.files;
  expect(files.filter(file=>oracle(file))).toEqual(fixture.members.expected);
  expect(buildGraphMembersV1(files)).toEqual(fixture.members.expected);
 });

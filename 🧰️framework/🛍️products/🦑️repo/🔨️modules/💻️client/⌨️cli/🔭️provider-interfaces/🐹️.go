@@ -8,8 +8,6 @@
 
 package client
 
-
-
 // 🔌️VersionControlProvider defines the interface for version control operations (Git, ...).
 type VersionControlProvider interface {
 	Kind() string
@@ -102,8 +100,8 @@ type SandboxProvider interface {
 	Kind() string
 }
 
-// 📝️EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
-type EditorProvider interface {
+// 📝️AgentClientProvider defines the interface for agent-client operations (VS Code/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
+type AgentClientProvider interface {
 	Kind() string
 	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result HookResult) string

@@ -1,0 +1,92 @@
+import {cacheLedgerV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,resolveCacheLanguageV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
+import {cacheRunnerPortsV1,collectCacheV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+
+/** 📝️ The closed arguments of `repo cache status|gc|verify`. */
+export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined}>;
+const both=(key:string,variables:Readonly<Record<string,string|number>>={}):string=>cacheTextV1("en",key,variables)+"\n"+cacheTextV1("de",key,variables);
+const valued=Object.freeze(["--area","--lang"]),plain=Object.freeze(["--json","--dry-run","--deep"]);
+
+/** 🧷️ Reads `status|gc|verify` with its options; every unknown or repeated option is refused in both languages. */
+export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1()):CacheArgumentsV1{
+ const operation=args[0];if(operation!=="status"&&operation!=="gc"&&operation!=="verify")throw Error(both("error.syntax"));
+ const seen=new Set<string>(),values:Record<string,string>={};let json=false,dryRun=false,deep=false;
+ for(let index=1;index<args.length;index++){
+  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
+  if(seen.has(name))throw Error(both("error.repeated",{option:name}));
+  seen.add(name);
+  if(valued.includes(name)&&!(operation==="verify"&&name==="--area")){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both("error.value",{option:name}));values[name]=value;}
+  else if(plain.includes(name)&&cut<0&&(name!=="--dry-run"||operation==="gc")&&(name!=="--deep"||operation!=="gc")){if(name==="--json")json=true;else if(name==="--deep")deep=true;else dryRun=true;}
+  else throw Error(both("error.option",{option:argument}));
+ }
+ if(operation==="verify"&&!deep)throw Error(both("error.verify"));
+ const ids=new Set([...ledger.areas.map(area=>area.id),"retired","undeclared"]),only=values["--area"]?new Set(values["--area"].split(",")):undefined;
+ for(const id of only??[]){if(!id)throw Error(both("error.areaEmpty"));if(!ids.has(id))throw Error(both("error.area",{id}));}
+ return Object.freeze({operation,json,deep,dryRun,only,language:values["--lang"]});
+}
+
+/** 🎛️ What the command needs besides the runner ports: the workspace, the environment, the output and the ledger. */
+export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>}>;
+
+/** 🚀️ Runs `repo cache status|gc|verify`: status reads the ledger without any lease and without walking a tree (statfs of the partitions plus the size ledger; `--deep` walks everything with progress and cancellation and records the sizes); gc collects retired roots, undeclared entries and over-budget areas under the lease-aware runner; `verify --deep` reads every indexed optional graph leaf and every content-addressed closure inventory again and reports what disagrees with its recorded hash or name, with progress and cancellation. Returns the process exit code. */
+export async function runCacheLedgerCommandV1(args:readonly string[],context:CacheCommandContextV1,ports:CacheRunnerPortsV1):Promise<number>{
+ const ledger=context.ledger??cacheLedgerV1(),parsed=cacheArgumentsV1(args,ledger),language:CacheLanguageV1=resolveCacheLanguageV1(parsed.language,context.environment);
+ try{
+  if(parsed.operation==="status"){
+   const report=await reportCacheLedgerV1(context.workspace,ledger,ports,context.partitions,parsed.only,{deep:parsed.deep});
+   if(parsed.json)context.write(JSON.stringify(report,null,2));else for(const line of formatCacheReportV1(language,report,ledger))context.write(line);
+   return 0;
+  }
+  if(parsed.operation==="verify"){
+   if(!context.verify){context.write(cacheTextV1(language,"verify.unavailable"));return 1;}
+   let announced=false;
+   const report=await context.verify({cancelled:()=>ports.signal.aborted,progress:(label,done,total)=>{if(!announced&&!parsed.json){announced=true;context.write(cacheTextV1(language,"verify.start",{groups:total}));}return ports.progress(cacheTextV1(language,"verify.group",{id:label,done,total}));}});
+   if(report.cancelled){context.write(cacheTextV1(language,"error.cancelled"));return 130;}
+   if(parsed.json)context.write(JSON.stringify({version:1,...report},null,2));
+   else{for(const path of report.mismatched)context.write(cacheTextV1(language,"verify.mismatch",{path}));for(const path of report.closureMismatched)context.write(cacheTextV1(language,"verify.closureMismatch",{path}));context.write(cacheTextV1(language,"verify.summary",{verified:report.verified,bytes:formatCacheBytesV1(report.bytes),groups:report.groups,closures:report.closures,mismatches:report.mismatches,inventorymismatches:report.closureMismatches,stale:report.stale,unindexed:report.unindexed,vanished:report.vanished}));}
+   return report.mismatches||report.closureMismatches?1:0;
+  }
+  const result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
+  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,plans:result.plans},null,2));
+  else for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);
+  return result.failed.length?1:0;
+ }catch(error){
+  if(ports.signal.aborted){context.write(cacheTextV1(language,"error.cancelled"));return 130;}
+  throw error;
+ }
+}
+
+/** 🚰️ Binds the graph reclaim to the real retained graph partition, its free space and the two shared scoped recoveries. */
+async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,leases:typeof import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts")):Promise<string>{
+ const{reclaimGraphOptionalV1}=await import("../🚰️reclaim/🟦️.ts"),{nativeImageSpaceV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
+ type Image=Awaited<ReturnType<typeof opening.openRepositoryCachePartitionV1>>;
+ const exclusive=async(resource:string)=>{try{return await leases.acquireResourceLease({directory,resource,mode:"exclusive",signal:phaseControl.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}};
+ return reclaimGraphOptionalV1(root,cacheLedgerV1(),dryRun,language,{
+  exclusive,
+  open:()=>opening.openRepositoryCachePartitionV1(root,"graph",phaseControl),
+  index:async image=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path"),imageRoot=(image as Image).root;return scan.indexBuildGraphMembersV1(imageRoot,{lease:(kind,identity)=>exclusive(kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity)),read:scan.closureReadChildPortV1(imageRoot,phaseControl)},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}});},
+  free:async image=>{const space=nativeImageSpaceV1((image as Image).root,(image as Image).filesystemBytes);return space.bavail*space.bsize;},
+  selected:(image,request)=>opening.recoverRepositoryCachePartitionSelectedHeadroomV1(root,image as Image,phaseControl,request),
+  optional:(image,request)=>opening.recoverRepositoryCachePartitionOptionalHeadroomV1(root,image as Image,phaseControl,request)
+ });
+}
+
+/** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, and the lease directory of the leases partition for the area leases. */
+export async function runCacheLedgerV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
+ const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
+ const ports=cacheRunnerPortsV1({
+  signal:invocation.control.signal,
+  progress:stage=>routing.advanceScriptInvocation(invocation,"cache:"+stage,"running"),
+  exclusive:async resource=>{
+   try{return await leases.acquireResourceLease({directory,resource,mode:"exclusive",signal:phaseControl.signal,control:phaseControl,timeoutMs:0});}
+   catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}
+  },
+  delegate:(owner,id,dryRun,language)=>{
+   if(owner==="graph"&&id==="graph-inference")return graphReclaim(root,dryRun,language,phaseControl,leases,opening);
+   return Promise.resolve(undefined);
+  }
+ });
+ const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await opening.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
+ const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:line=>console.log(line),verify},ports);
+ if(code!==0)process.exitCode=code;
+}

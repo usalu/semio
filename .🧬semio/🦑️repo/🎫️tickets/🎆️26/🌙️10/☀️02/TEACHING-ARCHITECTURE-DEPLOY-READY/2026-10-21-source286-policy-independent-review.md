@@ -1,0 +1,9 @@
+# Prospective Source286 Policy Review
+
+The proposal is clear as non-runnable DATA. Four strict Ajv schema compilations pass; correctly wrapped combined/derive case DATA validate and proposed derive tests parse without diagnostics. Source286 and critical319 are unique; Source required/properties and derive criticalPaths exactly match their proposed rosters, all Source is critical, and all six explicit new witnesses occur in both. Actual metadata remains historical Source280; no metadata or Source was written here.
+
+The six witnesses add the actual first-party validator owner, portable corpus, pending tuple registration/schema and the peer failure test/corpus. The tuple entry was not yet present at observation; this is explicitly pending work, not a defect in the prospective proposal. Before runnable publication, its literal registration must match `first-party tuple schemas match portable cases and Ajv` at60,000 ms.
+
+The existing session phase becomes ten titles:670,000 ms total source ceilings plus60,000 margin =730,000; CLI150,000 unchanged. The new tuple phase reserves60,000 ceiling plus60,000 margin =120,000; CLI60,000. Proposed45 phases sum14,575,000, with157 Source titles and156 collection vectors. Parent14,665,000 retains90,000 reserve, worker15,475,000 adds810,000 and host minimum15,595,000 adds120,000. Prefix5,610,000/public21,600,000/historical285 negative remain unchanged. Public headroom is6,005,000; actual nested issuance remains bounded by the genuine remaining Original.
+
+These checks establish prospective roster/case/budget coherence only. Actual tuple Source eligibility remains a required final observation when written; no capture manifest, full Source freeze, Native pass or release readiness is claimed. Exact audit facts are in `🗑️generated/2026-10-21-source286-policy-independent-review.json`.

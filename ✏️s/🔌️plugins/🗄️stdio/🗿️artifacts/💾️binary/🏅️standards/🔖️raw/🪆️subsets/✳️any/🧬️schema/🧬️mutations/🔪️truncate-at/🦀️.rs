@@ -19,7 +19,16 @@ pub struct TruncateAt {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "trailing-bytes", kind: "truncate-at", record: "TruncateAt" };
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Truncate at position", "An Position kürzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::ReferenceDiff> {
         let Self { offset } = self;
         protocol::MutationOutcome::new({
             if *offset >= base.bytes.len() {
@@ -40,12 +49,6 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
                 }
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Truncate at position", "An Position kürzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

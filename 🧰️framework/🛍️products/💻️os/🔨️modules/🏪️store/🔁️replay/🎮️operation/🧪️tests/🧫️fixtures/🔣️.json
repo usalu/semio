@@ -89,7 +89,6 @@
     "minimumBackingReleases": 2
   },
   "turnReceipts": {
-    "maximumBodyCapacityBytes": 4096,
     "cases": [
       {
         "copy": 37,
@@ -159,7 +158,7 @@
         "copyGrant": 4096,
         "capacityGrant": 4096,
         "releaseGrant": 0,
-        "accepted": false
+        "accepted": true
       },
       {
         "copy": 0,

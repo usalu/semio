@@ -4,9 +4,9 @@
   "scope": "isolated-retained-loader-and-planner",
   "execution": {
     "packageName": "@semio-tech/repo-lib",
-    "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-readme-current-source-activation",
+    "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-readme-current-source-activation",
     "target": "test-readme-current-source-activation",
-    "command": "bun ./📜️script.ts test readme-current-source-activation",
+    "command": "repo ./📜️script.ts test readme-current-source-activation",
     "cache": true,
     "route": "readme-current-source-activation",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts"

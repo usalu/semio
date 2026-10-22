@@ -9,14 +9,18 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 pub struct InsertSeismic { pub index: Option<usize>, pub item: semio_s_artifact_norm_en1990_model::SeismicAction, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertSeismic where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_seismic::RemoveSeismic> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "seismic", kind: "insert-seismic", record: "InsertedSeismic" };
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> { crate::insert_seismic::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert seismic action", "Erdbebeneinwirkung einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1990Snapshot, Op> for InsertSeismic where Op: protocol::ColdMutation<En1990Snapshot, ReferenceDiff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_seismic::RemoveSeismic> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1990Snapshot>>::ReferenceDiff> { crate::insert_seismic::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::insert_seismic::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert seismic action", "Erdbebeneinwirkung einfügen")
-    }
 }
 
 //#region 🪢️Mounts

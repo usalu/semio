@@ -4,8 +4,8 @@ import schema from "../🧬️schema/🔣️.json" with {type: "json"};
 /** 🧩️ Closed registry of unit languages (schema `definitions.Language`). */
 export type UnitLanguageV1 = "typescript" | "rust" | "go" | "python" | "dotnet" | "cpp" | "wit" | "tex";
 export type UnitKindV1 = "library" | "binary" | "test" | "generated" | "document";
-/** 🔗️ What a dependent consumes of a dependency: `interface` (compilers, checkers), `implementation` (linkers, runners) or `declared` (ordering and selection only, never keyed). */
-export type UnitUseV1 = "interface" | "implementation" | "declared";
+/** 🔗️ What a dependent consumes of a dependency: `interface` (compilers, checkers), `implementation` (linkers, runners), `both` (compiles against the interface and links the implementation) or `declared` (ordering and selection only, never keyed). */
+export type UnitUseV1 = "interface" | "implementation" | "both" | "declared";
 export type UnitDependencyV1 = {readonly unit: string; readonly use: UnitUseV1};
 /** 📦️ One compilation unit: sources, declared dependencies, an interface artifact for early cutoff, outputs and a toolchain identity. */
 export type UnitV1 = {
@@ -127,7 +127,7 @@ export function unitGraphFailuresV1(graph: UnitGraphV1, policy?: UnitsPolicyV1):
       if (dependency.unit === unit.id) failures.push(`unit ${unit.id} depends on itself`);
       if (seen.has(dependency.unit)) failures.push(`unit ${unit.id} lists dependency ${dependency.unit} twice`);
       seen.add(dependency.unit);
-      if (dependency.use === "interface" && !target.interface) failures.push(`unit ${unit.id} consumes the interface of ${dependency.unit}, which has none`);
+      if ((dependency.use === "interface" || dependency.use === "both") && !target.interface) failures.push(`unit ${unit.id} consumes the interface of ${dependency.unit}, which has none`);
     }
   }
   if (failures.length) return failures;

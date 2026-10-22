@@ -23,10 +23,9 @@ pub struct SequenceDiff {
 use crate::SequenceSnapshot;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
 
-impl MutationDiff<SequenceSnapshot> for SequenceDiff {
-    fn apply(&self, snapshot: &SequenceSnapshot, _capability: ApplyCapability) -> MutationApplyResult<SequenceSnapshot> {
-        Ok(SequenceSnapshot { schema: self.schema.clone().unwrap_or_else(|| snapshot.schema.clone()), content: self.content.clone().unwrap_or_else(|| snapshot.content.clone()) })
-    }
+impl MutationDiff<SequenceSnapshot> for SequenceDiff {}
+
+impl protocol::ColdMutationDiff<SequenceSnapshot> for SequenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -35,14 +34,23 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
             self.content = other.content;
         }
     }
+
+    fn apply(&self, unpublished: &mut SequenceSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        *unpublished = SequenceSnapshot { schema: self.schema.clone().unwrap_or_else(|| snapshot.schema.clone()), content: self.content.clone().unwrap_or_else(|| snapshot.content.clone()) };
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SequenceSnapshot> for SequenceDiff {
-    fn inverse(&self, base: &SequenceSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.content.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SequenceSnapshot> for SequenceDiff {
+    fn inverse(&self, base: &SequenceSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
     }
 }
 

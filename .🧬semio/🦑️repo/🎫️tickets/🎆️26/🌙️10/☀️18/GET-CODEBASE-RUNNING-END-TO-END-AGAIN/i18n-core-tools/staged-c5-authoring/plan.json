@@ -1,0 +1,35 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📖️texts/🔣️.json",
+   "after": "273491dbd5ead1c9d7b7843ab5e05380e549cd55e945e1e08778ca2ca0ced59e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📖️texts/🟦️.ts",
+   "after": "750caada0a450d9176f16c33cb5a44c8a1878e46a0388eab779ae953693da5e5"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📖️texts/🧪️tests/🟦️.ts",
+   "after": "09ad8ef81761dbb394a15c15b95d30d744af8c4cc5cd2a8b469f77ae148fd5b5"
+  }
+ ],
+ "edited": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "484735a49c6a247d76b1113fde6486b995c93f2e3f271246c397d5a5e4574d62",
+   "base": "78a3a64043f2bed35daae7cea9fc71a56a118087bdcbd0cd2fc9dce4da4f52e1"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts",
+   "after": "aa6f5cfafeb2e232f8562fd07a6b6f49f7bb5e37f2dea1a6659537c7da87814e",
+   "base": "5395602abf4be65d05fa6a6afbfc979721e9203f2a6eeeae96b52f48c6541a00"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗿️artifact-tree/🟦️.ts",
+   "after": "887379aa4db44ca15234335398d99a59d9ec7ea7f7960c83332da888c6d5b41f",
+   "base": "f4ad535136c46caad9e5fbc3da3a132d9b602838d9e738cc70a9285b48c48266"
+  }
+ ]
+}

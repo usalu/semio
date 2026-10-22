@@ -93,7 +93,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   for(const identity of pipeline.site.artifactTargets){const separator=identity.lastIndexOf(":"),owner=owners.find((row:any)=>row.name===identity.slice(0,separator));assert.ok(owner,identity);const producer=JSON.parse(readFileSync(join(workspace,owner.manifest),"utf8"));assert.ok(producer.targets[identity.slice(separator+1)],identity);assert.equal(typeof producer.targets[identity.slice(separator+1)].options.command,"string");}
   assert.equal(project.targets.prepare, undefined, "Only profile-qualified preparation targets exist");
   assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/.🧾️store/build.json"]);
-  assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
+  assert.equal(project.targets.build.options.command, `repo ./${pipeline.site.command} build`);
   assert.equal(project.targets.build.options.env?.SEMIO_BUILD_MODE, pipeline.site.profile, "Site publication consumes its declared profile, independent of the caller environment");
   assert.equal(project.targets.build.defaultConfiguration, pipeline.site.profile);
   assert.equal(project.targets.build.metadata.semio.buildMode.fixed, pipeline.site.profile);
@@ -106,7 +106,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
     assert.equal(project.targets[name]?.continuous, true);
     assert.equal(project.targets[name]?.cache, false);
     assert.deepEqual(project.targets[name]?.dependsOn, ["activate-prototype"]);
-    assert.equal(project.targets[name]?.options.command, `bun ./${pipeline.command} serve`);
+    assert.equal(project.targets[name]?.options.command, `repo ./${pipeline.command} serve`);
   }
   assert.deepEqual(project.targets["prepare-e2e"]?.dependsOn, ["activate-prototype", pipeline.e2e.browserTarget]);
   assert.deepEqual(project.targets["serve-e2e"]?.dependsOn, ["prepare-e2e"]);
@@ -114,7 +114,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.equal(project.targets["serve-e2e"]?.metadata.semio.continuousSharing, false);
   assert.deepEqual(project.targets["test-e2e"]?.dependsOn, ["serve-e2e"]);
   assert.equal(project.targets["test-e2e"]?.cache, false);
-  assert.equal(project.targets["test-e2e"]?.options.command, `bun ./${pipeline.e2e.testCommand} test`);
+  assert.equal(project.targets["test-e2e"]?.options.command, `repo ./${pipeline.e2e.testCommand} test`);
   const testCommand = readFileSync(join(directory, "../..", pipeline.e2e.testCommand), "utf8");
   for (const forbidden of pipeline.forbiddenOrchestration) assert.equal(testCommand.includes(forbidden), false, `E2E hides ${forbidden}`);
   const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8"));

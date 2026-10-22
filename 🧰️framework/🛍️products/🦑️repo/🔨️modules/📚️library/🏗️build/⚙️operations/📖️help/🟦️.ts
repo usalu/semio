@@ -1,3 +1,4 @@
+import {buildBackendAlternationV1} from "../../🔌️backends/🟦️.ts";
 import catalogue from "../🔣️catalog.json" with { type: "json" };
 import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import { normalizeBuildOptionsV1 } from "../🔤️options/🟦️.ts";
@@ -22,7 +23,8 @@ export type BuildHelpCatalogV1=Readonly<{languages:readonly string[];labels:Read
 /** 🎯️ Names what a help request asks for: the whole CLI, one operation or one subcommand. */
 export type BuildHelpRequestV1=Readonly<{operation?:string;subcommand?:string}>;
 
-const root="repo [--tool=nx|bazel]",columnLimit=46;
+const root="repo [--tool={backends}]",columnLimit=46;
+const expandBackends=(value:string)=>value.replaceAll("{backends}",buildBackendAlternationV1());
 
 /** 🗣️ Picks the help language by the shared rule (`--lang`, `SEMIO_LANGUAGE`, `LANGUAGE`, the locale variables, the operating system language list) and never assumes one: when nothing names an offered language the bilingual refusal is thrown. */
 export function resolveBuildHelpLanguageV1(languages:readonly string[],args:readonly string[],environment:LanguageEnvironmentV1,osLanguages?:OsLanguageListV1):string{
@@ -63,7 +65,8 @@ function scopedExamples(examples:readonly BuildHelpExampleV1[],synopsis:string):
 }
 
 /** 🖨️ Renders the usage of the whole CLI, one operation or one subcommand from the catalogue in the chosen language. */
-export function renderBuildHelpV1(catalog:BuildHelpCatalogV1,request:BuildHelpRequestV1,language:string):string{
+export function renderBuildHelpV1(catalogSource:BuildHelpCatalogV1,request:BuildHelpRequestV1,language:string):string{
+ const catalog=JSON.parse(expandBackends(JSON.stringify(catalogSource))) as BuildHelpCatalogV1;
  const label=(name:string)=>catalog.labels[name]![language]!,text=(value:BuildHelpTextV1)=>value[language]!,flag=(name:string)=>catalog.flags.find(row=>row.name===name)!;
  const global=catalog.flags.filter(row=>row.operations===undefined),lines:string[]=[];
  const globals=()=>["",`${label("globalOptions")}:`,...table(global.map(row=>[spelling(row),text(row.description)] as const))];
@@ -73,7 +76,7 @@ export function renderBuildHelpV1(catalog:BuildHelpCatalogV1,request:BuildHelpRe
   const scoped=catalog.flags.filter(row=>row.operations!==undefined);
   lines.push("",`${label("options")}:`,...table(scoped.map(row=>[spelling(row),`${text(row.description)} (${label("usedBy")}: ${row.operations!.join(", ")})`] as const)),...globals(),"",`${label("examples")}:`);
   for(const row of catalog.operations)lines.push(`  ${row.examples[0]!.command}`,`      ${text(row.examples[0]!.description)}`);
-  return lines.join("\n");
+  return expandBackends(lines.join("\n"));
  }
  const operation=catalog.operations.find(row=>row.name===request.operation)!,subcommand=operation.subcommands?.find(row=>row.name===request.subcommand),flagNames=subcommand?.flags??operation.flags,examples=subcommand?(subcommand.examples??scopedExamples(operation.examples,subcommand.synopsis)):operation.examples;
  lines.push(`repo ${subcommand?.synopsis.split(/\s/u).slice(0,2).join(" ")??operation.name} - ${text((subcommand??operation).summary)}`,"",`${label("usage")}:`,`  ${root} ${(subcommand??operation).synopsis}${flagNames.length?` [${label("options").toLowerCase()}]`:""}`);
@@ -82,7 +85,7 @@ export function renderBuildHelpV1(catalog:BuildHelpCatalogV1,request:BuildHelpRe
  lines.push(...globals(),"",`${label("examples")}:`);
  for(const example of examples)lines.push(`  ${example.command}`,`      ${text(example.description)}`);
  if(operation.notes?.length)lines.push("",`${label("notes")}:`,...operation.notes.map(note=>`  - ${text(note)}`));
- return lines.join("\n");
+ return expandBackends(lines.join("\n"));
 }
 
 /** 📖️ Renders the help for the CLI arguments as they were typed, using the locale of the environment. */

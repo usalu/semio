@@ -8,7 +8,7 @@ import type { Liveness as GeneratedLiveness, AccessibilitySpec as GeneratedAcces
 // #region 🧬️GeneratedUiContract
 /** 🧬️ The semantic UI contract (`🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️.rs`) — flat,
  * id-keyed replacement for the hand-written `UiNode` recursive-union mirror this file used to
- * carry, generated via the owned schema exporter (`bun repo run @semio-tech/ui-contract-rs:generate`). Five names
+ * carry, generated via the owned schema exporter (`repo run @semio-tech/ui-contract-rs:generate`). Five names
  * collide with an unrelated existing export from a different module aggregated into this same
  * barrel (artifact-editor `SurfaceKind`; OS-shell `WindowLayout`/`WindowStackCorner`; the state
  * machine module's own `ActionId`/`Trigger`) and are re-exported `Ui`-prefixed instead of

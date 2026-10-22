@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
@@ -74,38 +74,9 @@ pub struct Din16798Diff {
 }
 //#endregion 🔖️Diff
 
-impl MutationDiff<Din16798Snapshot> for Din16798Diff {
-    fn apply(&self, base: &Din16798Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Din16798Snapshot> {
-        let mut next = base.clone();
-        if let Some(value) = self.annex {
-            next.annex = value;
-        }
-        if let Some(value) = self.theta_rm_c {
-            next.theta_rm_c = value;
-        }
-        if let Some(value) = self.outdoor_co2_ppm {
-            next.outdoor_co2_ppm = value;
-        }
-        if let Some(value) = self.envelope_n50_h_inv {
-            next.envelope_n50_h_inv = value;
-        }
-        if let Some(value) = self.envelope_volume_m3 {
-            next.envelope_volume_m3 = value;
-        }
-        if let Some(value) = self.cellar_area_m2 {
-            next.cellar_area_m2 = value;
-        }
-        if let Some(value) = self.cellar_ventilation_m3_h {
-            next.cellar_ventilation_m3_h = value;
-        }
-        if let Some(value) = self.night_setback_k {
-            next.night_setback_k = value;
-        }
-        next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
-        next.vent_systems = self.vent_systems.commit_onto(&base.vent_systems, capability).map_err(|error| error.under(["ventSystems"]))?;
-        Ok(next)
-    }
+impl MutationDiff<Din16798Snapshot> for Din16798Diff {}
 
+impl protocol::ColdMutationDiff<Din16798Snapshot> for Din16798Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
@@ -134,9 +105,57 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
         self.zones.absorb(other.zones);
         self.vent_systems.absorb(other.vent_systems);
     }
+
+    fn apply(&self, unpublished: &mut Din16798Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = self.annex {
+            next.annex = value;
+        }
+        if let Some(value) = self.theta_rm_c {
+            next.theta_rm_c = value;
+        }
+        if let Some(value) = self.outdoor_co2_ppm {
+            next.outdoor_co2_ppm = value;
+        }
+        if let Some(value) = self.envelope_n50_h_inv {
+            next.envelope_n50_h_inv = value;
+        }
+        if let Some(value) = self.envelope_volume_m3 {
+            next.envelope_volume_m3 = value;
+        }
+        if let Some(value) = self.cellar_area_m2 {
+            next.cellar_area_m2 = value;
+        }
+        if let Some(value) = self.cellar_ventilation_m3_h {
+            next.cellar_ventilation_m3_h = value;
+        }
+        if let Some(value) = self.night_setback_k {
+            next.night_setback_k = value;
+        }
+        next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
+        next.vent_systems = self.vent_systems.commit_onto(&base.vent_systems, capability).map_err(|error| error.under(["ventSystems"]))?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Din16798Snapshot> for Din16798Diff {
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.theta_rm_c.is_none()
+            && self.outdoor_co2_ppm.is_none()
+            && self.envelope_n50_h_inv.is_none()
+            && self.envelope_volume_m3.is_none()
+            && self.cellar_area_m2.is_none()
+            && self.cellar_ventilation_m3_h.is_none()
+            && self.night_setback_k.is_none()
+            && self.zones.is_empty()
+            && self.vent_systems.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Din16798Snapshot> for Din16798Diff {
     fn inverse(&self, base: &Din16798Snapshot) -> Self {
         Self {
             annex: self.annex.map(|_| base.annex),
@@ -150,19 +169,6 @@ impl DiffAlgebra<Din16798Snapshot> for Din16798Diff {
             zones: self.zones.inverse(&base.zones),
             vent_systems: self.vent_systems.inverse(&base.vent_systems),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.annex.is_none()
-            && self.theta_rm_c.is_none()
-            && self.outdoor_co2_ppm.is_none()
-            && self.envelope_n50_h_inv.is_none()
-            && self.envelope_volume_m3.is_none()
-            && self.cellar_area_m2.is_none()
-            && self.cellar_ventilation_m3_h.is_none()
-            && self.night_setback_k.is_none()
-            && self.zones.is_empty()
-            && self.vent_systems.is_empty()
     }
 }
 

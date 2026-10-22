@@ -14,7 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useId, useMemo, useRef, useState, type ReactElement } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, registerUiTranslationBundles, useLabel } from "@semio-tech/ui-react";
 import type { DirectoryAdministrationInviteCapabilityStatusV1, DirectoryAdministrationPhaseV1 } from "@semio-tech/framework/backbone";
 import type { DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";

@@ -10,7 +10,7 @@ pub use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::A
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-#[mutations(snapshot=JobTestSnapshot,diff=JobTestDiff,schema="jobtest.mutation-plan.document")]
+#[mutations(snapshot=JobTestSnapshot,diff=JobTestDiff,schema="jobtest.mutation-plan.document", reference = JobTestSnapshot, reference_diff = JobTestDiff)]
 pub(crate) enum JobTestOp {
     AddValue(AddValue),
 }

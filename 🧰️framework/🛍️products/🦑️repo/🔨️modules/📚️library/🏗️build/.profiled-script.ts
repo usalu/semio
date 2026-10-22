@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -15,6 +15,7 @@ import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦
 
 import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json" with { type: "json" };
 import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 const bazelTestContract=compileJsonSchemaSubset(bazelTestSchema);
 profileMarkV1("boot.loaded");
 
@@ -47,7 +48,7 @@ export class BuildScript extends Script {
     if (slice === "storybook") {
       if(segments.length!==1)throw new Error("Storybook build accepts only its declared intent");const {buildRepositoryStorybookV1}=await import("./📖️storybook/🏃️execution/🟦️.ts");await buildRepositoryStorybookV1(this.repoRoot,mode,this.invocation);return;
     }
-    const targets: Readonly<Record<string, string>> = { assets: "@semio-tech/assets:build", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
+    const targets: Readonly<Record<string, string>> = { assets: "@semio-tech/assets:build", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build" };
     const target = targets[slice];
     if (!target) throw new Error(`Unknown workspace build selection: ${slice}`);
     await runOwnedBuildInvocationV1(this.repoRoot, ["run", target, `--configuration=${mode}`, ...(segments.length > 1 ? ["--", ...segments.slice(1)] : [])], this.invocation,createIssuedResourceControlV1(this.invocation,"build:command",0));
@@ -58,7 +59,7 @@ export class BuildScript extends Script {
 class TestScript extends Script {
   async run(args: string[]): Promise<void> {
     if(args[0]==="bazel"){
-      const original=this.invocation,root=this.repoRoot,environment=Object.freeze({...process.env}),initial=createIssuedResourceControlV1(original,"build:bazel",0),commands=bazelTestCommandsV1(args.slice(1)),{repoTestArtifactEnvironment}=await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),source=resolve(import.meta.dir,"🔧️tools/🏗️bazel/🧪️tests/🟦️.ts");
+      const original=this.invocation,root=this.repoRoot,environment=Object.freeze({...process.env}),initial=createIssuedResourceControlV1(original,"build:bazel",0),commands=bazelTestCommandsV1(args.slice(1)),{repoTestArtifactEnvironment}=await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),source=resolve(import.meta.dirname,"🔧️tools/🏗️bazel/🧪️tests/🟦️.ts");
       for(const command of commands){
         const label="build:bazel:"+(command.phase??"source-parity");await advanceScriptInvocation(original,label,"running");
         await withRequestedIssuedResourceControlV1(initial,command.maximumMilliseconds,async phase=>{const progress=async()=>{checkResourceLeaseControl(phase);await advanceScriptInvocation(original,label,"running");checkResourceLeaseControl(phase);};checkResourceLeaseControl(phase);await runOwnedCommand(process.execPath,["test",source,"--test-name-pattern",command.pattern],root,label,compilerAdmissionBudgetV1(phase),{env:scriptResourceProcessEnvironmentV1(phase,{...environment,...repoTestArtifactEnvironment(root,"build-bazel"),SEMIO_WORKSPACE_ROOT:root,SEMIO_BAZEL_INTEGRATION:"1",SEMIO_BAZEL_FIXTURE_PHASE:command.phase??undefined}),signal:phase.signal,onProgress:progress});checkResourceLeaseControl(phase);});
@@ -68,13 +69,13 @@ class TestScript extends Script {
     }
     if (args.length === 1 && ["bazel-bootstrap", "runtime-build-producer"].includes(args[0]!)) {
       const { repoTestArtifactEnvironment } = await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
-      const source = args[0] === "runtime-build-producer" ? resolve(import.meta.dir, "../🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts") : resolve(import.meta.dir, "../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts");
+      const source = args[0] === "runtime-build-producer" ? resolve(import.meta.dirname, "../🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts") : resolve(import.meta.dirname, "../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts");
       const env = { ...process.env, ...repoTestArtifactEnvironment(this.repoRoot, `build-${args[0]}`) };
       await runOwnedCommand(process.execPath, ["test", source], this.repoRoot, `build:${args[0]}:contract`, scriptInvocationBudget(this.invocation, 300_000), { env, signal: this.invocation.control.signal });
       return;
     }
     if (args.length) throw new Error("Workspace build tests accept no arguments");
-    await runOwnedCommand(process.execPath, ["test", resolve(import.meta.dir, "🧪️tests/🟦️.ts"), resolve(import.meta.dir,"🧪️tests/🕸️graph/🟦️.ts"),resolve(import.meta.dir,"👁️observation/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"🩺️preflight/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"../⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts")], this.repoRoot, "workspace-build:contract", scriptInvocationBudget(this.invocation, 300_000), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", resolve(import.meta.dirname, "🧪️tests/🟦️.ts"), resolve(import.meta.dirname,"🧪️tests/🕸️graph/🟦️.ts"),resolve(import.meta.dirname,"👁️observation/🧪️tests/🟦️.ts"),resolve(import.meta.dirname,"🩺️preflight/🧪️tests/🟦️.ts"),resolve(import.meta.dirname,"../⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts")], this.repoRoot, "workspace-build:contract", scriptInvocationBudget(this.invocation, 300_000), { signal: this.invocation.control.signal });
   }
 }
 
@@ -282,4 +283,4 @@ async function runAdmittedBuildCliV1(root:string,args:readonly string[],environm
   await withScriptProcessEnvelope(envelope,original=>profilePhaseV1("door.script",()=>runScriptMain(new ScriptRouter(root,root).register("repo",RepoScript).register("build",BuildScript).register("test",TestScript),{invocation:original,argv:[...args]})));
 }
 
-if(import.meta.main){profileMarkV1("boot.main");await profilePhaseV1("cli.run",()=>runBuildCliV1(findWorkspaceRoot(import.meta.dir),process.argv.slice(2)));}
+if(isMainModuleV1(import.meta.url)){profileMarkV1("boot.main");await profilePhaseV1("cli.run",()=>runBuildCliV1(findWorkspaceRoot(import.meta.dirname),process.argv.slice(2)));}

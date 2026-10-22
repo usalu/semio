@@ -6,7 +6,7 @@ use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingM
 use semio_s_artifact_draw_drawing_transform::scale_layers::mutation::scale_layers;
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/➡️after/🔣️.json"));

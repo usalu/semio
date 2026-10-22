@@ -1,0 +1,19 @@
+# Result rust-reds-b (executor rust-reds-b, wave 1022a) - STOPPED AT WIND-DOWN
+
+Tools: `C/rust-reds-b-tools/{r.sh,t.sh,sum.sh}` (`r.sh <log> <cargo args>` = one `bun repo cargo --store=shared --configuration=prototype -- <args>`, retried on lease/capacity refusals; `sum.sh <log>` = errors/panics only). Logs: `C/🗑️generated/rust-reds-b-logs/`.
+
+## Table
+| target | verdict | fix | status |
+|---|---|---|---|
+| os-store-space-schema `every_leaf_shape_has_a_canonical_tree...` | the hand-written `record_tree!` generator was wrong, not the schema: `commit-space-checkpoint` schema has optional `index` (integer >= 0, not required) and the value document serializes it when `Some` | `os-store/🧬️schema/📥️lifted/🧬️mutations/🦀️.rs`: explicit `Tree` impl for `CommitSpaceCheckpoint` (object length `1 + index.is_some()`, ordinal 1 = `index` only when present) | GREEN: t7 `test -p os-store-space-schema` 16 passed, 0 failed |
+| pack-record-encode-cursor lib `borrowed_projected_pack_original_expression_ast...` | printer bug in `print_expr_prec` (`🗣️dsl/🧬️schema/🖨️printing/🦀️.rs`): `Num(-2)` had precedence 255, so `Neg(Num(-2))` printed `--2`; the cursor and the controlled printer already give a negative number precedence 3 | same rule in the plain printer; corpus kept; independent oracle = TS test in the same crate (Buffer UTF8 bytes + mathjs evaluation of every `text`/`value`) | WRITTEN, NOT RUN |
+| os-store-tests-02 | 3 x E0599 root causes: (a) `derive_reference_provisional_snapshot` / `derive_reference_history_snapshot` were `#[cfg(test)]` in the engine crate, invisible to the external test crate; (b) helper `original_snapshot_ports_without_representation_bounds` lacked `ColdMutation<P>` in its bounds | engine `⚙️engine/📥️lifted/🏪️store/🦀️.rs`: both fns public (cfg removed, `MutationDiff` import unconditional); test helper bound gains `semio_framework_os_spr::ColdMutation<P>` | COMPILES (t7). Runtime: 1 pass cluster only; 15 tests FAIL (not a port problem): (i) 13 `store_unit_tests`/`hot_path_tests`: test-store close stalls in phase `ReturnedReads` (frontier demand all-zero except depth 2, 4096 no-progress turns, `🎭️doubles/🗄️store/🦀️.rs:132`), i.e. the engine close machine does not advance returned reads under a fully funded grant; (ii) 2 `edit_message_clamp_tests`: `InverseRefused(UnsupportedOwner, "native replay requires its retained original preparation issuer")` (test store lacks the retained preparation issuer). `history_transition_unit` not evaluated | OPEN (runtime, needs engine close-machine investigation) |
+| os-store-tests-01,03..09, sync-tests-1/2, companions, world_model_unit | NOT EVALUATED (cargo was blocked ~1.5 h by the lock hook, then 30+ min capacity queue at load 30-80) | - | OPEN |
+
+Commands: c1-c5 died on the lock hook (`Uncaptured implementation import refused`, reported to lock-auto, fixed by it); c6 = `check --tests --keep-going -p os-store-tests-02 -p os-store-space-schema` (rc 101 with exactly the 3 E0599 of tests-02, space-schema clean); t7 = `test -p os-store-tests-02 -p os-store-space-schema` detached, log `C/🗑️generated/rust-reds-b-logs/t7.log(.status)`.
+
+## Final state (wind-down)
+- Edited files: os-store `🧬️schema/📥️lifted/🧬️mutations/🦀️.rs`; dsl `🗣️dsl/🧬️schema/🖨️printing/🦀️.rs`; os-store engine `⚙️engine/📥️lifted/🏪️store/🦀️.rs` (two `derive_reference_*` fns public, unconditional `MutationDiff` import); os-store `🧪️tests/🌆️bin-02/🔬️unit/🦀️.rs` (helper bound). Tree is compile-consistent for these crates (t7 compiled space-schema + tests-02).
+- Not run: pack-record-encode-cursor lib test (needs framework workspace run `-p semio-framework-pack-record-encode-cursor --lib`), tests-01/03..09, sync-tests, companions, world_model_unit.
+- No process of mine is left running (t7 finished, rc=1 from the tests-02 failures).
+- Infra note: the lock-hook regression (provider import in the captured closure) cost ~1.5 h; fixed by lock-auto at ~21:35.

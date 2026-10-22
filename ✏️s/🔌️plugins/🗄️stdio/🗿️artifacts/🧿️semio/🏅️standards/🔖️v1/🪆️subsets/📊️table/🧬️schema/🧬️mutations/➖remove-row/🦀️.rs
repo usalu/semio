@@ -15,6 +15,15 @@ pub struct RemoveRow {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for RemoveRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "row", kind: "remove-row", record: "RemovedRow" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove row #{}", self.index), &format!("Zeile #{} entfernen", self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.index.to_string()]
+    }
+}
+
+impl<Op: SemioTableOp> protocol::ColdMutationKind<SemioTableSnapshot, Op> for RemoveRow {
     fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
@@ -24,11 +33,5 @@ impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for Remove
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove row #{}", self.index), &format!("Zeile #{} entfernen", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

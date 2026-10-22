@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/📸️snapshot/⬅️before/🔣️.json"));
@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn drags_every_target_by_the_offset() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("drag-nodes applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("drag-nodes applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "drag-nodes/drags: applied state differs from the committed after-snapshot");
     assert_eq!(produced.edges, base.edges, "dragging nodes must not disturb their edges");
 }
@@ -44,9 +44,9 @@ async fn the_undo_moves_every_node_back_to_its_base_position() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 2, "two dragged nodes undo as two move-node rows");
     assert!(undo.iter().all(|step| matches!(step, SemioGraphMutation::MoveNode(_))));
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward drag-nodes applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward drag-nodes applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo move-node applies to the dragged graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo move-node applies to the dragged graph");
     }
     assert_eq!(current, base, "drag-nodes/drags: the undo did not restore the before-snapshot");
 }
@@ -75,12 +75,12 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_and_applies_the_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     assert_eq!(produced, serde_json::from_str::<serde_json::Value>((*DIFF)).expect("committed diff decodes"), "drag-nodes/drags: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed drag-nodes diff decodes");
     assert!(decoded.edges.is_none(), "drag-nodes must leave the edges slot untouched");
-    assert_eq!(protocol::apply_diff(&decoded, &base).expect("committed drag-nodes diff applies"), expected_after(), "drag-nodes/drags: committed diff did not carry before to after");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &base).expect("committed drag-nodes diff applies"), expected_after(), "drag-nodes/drags: committed diff did not carry before to after");
 }
 
 /// 🚧️ The guard branches: repeated targets and a non-finite offset are Fatal `mutation.invariant`, a target-less drag is

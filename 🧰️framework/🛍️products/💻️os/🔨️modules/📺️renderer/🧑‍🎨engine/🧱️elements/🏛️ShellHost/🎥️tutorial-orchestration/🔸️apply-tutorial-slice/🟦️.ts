@@ -1,7 +1,7 @@
 /** 🔸️ The apply tutorial slice phase of useTutorialOrchestration. */
 import { shellDialogOriginIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { OwnedTutorialRunV1, runPausedTutorialSeekV1, tutorialHistoryStepInverseV1, type TutorialInverseV1 } from "../../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type TutorialDocumentEventKind } from "@semio-tech/framework";
 import { encodeMutationEnvelopesPack } from "@semio-tech/framework/packs";
 import { type MutationEnvelope } from "@semio-tech/framework/replication";

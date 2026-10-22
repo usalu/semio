@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-saved-camera/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -26,7 +26,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("delete-saved-camera diff applies")
+    protocol::apply_diff_cold(&step.diff(base).into_parts().0, base).expect("delete-saved-camera diff applies")
 }
 
 /// ▶️ `delete-saved-camera` drops the camera record only — the shot→camera reference is one-way and
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_second_delete_is_target_missing() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Error), "delete-saved-camera/removes-trailing-cam-close: deleting an absent camera is an Error");
     assert_eq!(second.messages()[0].code.0, "mutation.target-missing", "delete-saved-camera/removes-trailing-cam-close: the absence guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["cam-close".to_string()], "delete-saved-camera/removes-trailing-cam-close: the missing target is named");
-    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("an Error outcome carries the default diff");
+    let unchanged = protocol::apply_diff_cold(&second.into_parts().0, &expected_after()).expect("an Error outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "delete-saved-camera/removes-trailing-cam-close: a rejected delete must leave the snapshot untouched");
 }
 
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-saved-camera/removes-trailing-cam-close: committed diff did not carry before to after");
 }
 

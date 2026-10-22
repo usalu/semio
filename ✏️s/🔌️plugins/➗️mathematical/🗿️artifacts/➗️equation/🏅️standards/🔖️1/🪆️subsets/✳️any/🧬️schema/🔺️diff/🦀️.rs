@@ -317,43 +317,9 @@ impl EquationExprDiff {
     }
 }
 
-impl MutationDiff<EquationSnapshot> for EquationDiff {
-    fn apply(&self, snapshot: &EquationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<EquationSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(directed) = self.directed {
-            next.graph.directed = directed;
-        }
-        if let Some(algorithm) = &self.algorithm {
-            next.graph.algorithm = algorithm.clone();
-        }
-        if let Some(seed) = &self.algorithm_seed {
-            next.graph.algorithm_seed = seed.value.clone();
-        }
-        if let Some(delta) = &self.nodes {
-            next.graph.nodes = delta.commit_onto(&next.graph.nodes, capability).map_err(|error| error.under(["nodes"]))?;
-        }
-        if let Some(delta) = &self.edges {
-            next.graph.edges = delta.commit_onto(&next.graph.edges, capability).map_err(|error| error.under(["edges"]))?;
-        }
-        if let Some(delta) = &self.points {
-            next.geometry = EquationGeometry { points: points_after(&snapshot.geometry.points, &delta.edits).map_err(|error| error.under(["points"]))? };
-        }
-        if self.directed.is_some() || self.algorithm.is_some() || self.algorithm_seed.is_some() || self.nodes.is_some() || self.edges.is_some() || self.points.is_some() {
-            (next.notation, next.results, next.computed) = crate::equation_children(&next.graph, &next.geometry);
-        }
-        if let Some(expr) = &self.equation {
-            for (index, patch) in expr.kinds.iter().enumerate() {
-                if !next.equation.replace(patch.label, &patch.kind) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched expression node does not exist").at(["equation".to_string(), "kinds".to_string(), index.to_string()]));
-                }
-            }
-            if let Some(next_label) = expr.next_label {
-                next.equation.next_label = next_label;
-            }
-        }
-        Ok(next)
-    }
+impl MutationDiff<EquationSnapshot> for EquationDiff {}
 
+impl protocol::ColdMutationDiff<EquationSnapshot> for EquationDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -396,9 +362,62 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut EquationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let applied = (|snapshot: &EquationSnapshot| -> protocol::MutationApplyResult<EquationSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(directed) = self.directed {
+            next.graph.directed = directed;
+        }
+        if let Some(algorithm) = &self.algorithm {
+            next.graph.algorithm = algorithm.clone();
+        }
+        if let Some(seed) = &self.algorithm_seed {
+            next.graph.algorithm_seed = seed.value.clone();
+        }
+        if let Some(delta) = &self.nodes {
+            next.graph.nodes = delta.commit_onto(&next.graph.nodes, capability).map_err(|error| error.under(["nodes"]))?;
+        }
+        if let Some(delta) = &self.edges {
+            next.graph.edges = delta.commit_onto(&next.graph.edges, capability).map_err(|error| error.under(["edges"]))?;
+        }
+        if let Some(delta) = &self.points {
+            next.geometry = EquationGeometry { points: points_after(&snapshot.geometry.points, &delta.edits).map_err(|error| error.under(["points"]))? };
+        }
+        if self.directed.is_some() || self.algorithm.is_some() || self.algorithm_seed.is_some() || self.nodes.is_some() || self.edges.is_some() || self.points.is_some() {
+            (next.notation, next.results, next.computed) = crate::equation_children(&next.graph, &next.geometry);
+        }
+        if let Some(expr) = &self.equation {
+            for (index, patch) in expr.kinds.iter().enumerate() {
+                if !next.equation.replace(patch.label, &patch.kind) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched expression node does not exist").at(["equation".to_string(), "kinds".to_string(), index.to_string()]));
+                }
+            }
+            if let Some(next_label) = expr.next_label {
+                next.equation.next_label = next_label;
+            }
+        }
+        Ok(next)
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<EquationSnapshot> for EquationDiff {
+    fn is_empty(&self) -> bool {
+        self.directed.is_none()
+            && self.algorithm.is_none()
+            && self.algorithm_seed.is_none()
+            && self.nodes.as_ref().is_none_or(EquationNodesDelta::is_empty)
+            && self.edges.as_ref().is_none_or(EquationEdgesDelta::is_empty)
+            && self.points.as_ref().is_none_or(|delta| delta.edits.is_empty())
+            && self.equation.as_ref().is_none_or(EquationExprDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<EquationSnapshot> for EquationDiff {
     fn inverse(&self, base: &EquationSnapshot) -> Self {
         Self {
             directed: self.directed.map(|_| base.graph.directed),
@@ -415,16 +434,6 @@ impl protocol::DiffAlgebra<EquationSnapshot> for EquationDiff {
                 .canonical()
             }),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.directed.is_none()
-            && self.algorithm.is_none()
-            && self.algorithm_seed.is_none()
-            && self.nodes.as_ref().is_none_or(EquationNodesDelta::is_empty)
-            && self.edges.as_ref().is_none_or(EquationEdgesDelta::is_empty)
-            && self.points.as_ref().is_none_or(|delta| delta.edits.is_empty())
-            && self.equation.as_ref().is_none_or(EquationExprDiff::is_empty)
     }
 }
 //#endregion 🔖️Apply

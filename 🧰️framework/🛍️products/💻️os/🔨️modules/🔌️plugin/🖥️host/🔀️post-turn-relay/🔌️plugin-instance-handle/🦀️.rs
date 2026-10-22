@@ -17,7 +17,7 @@ pub struct PluginInstanceHandle {
     original_input:semio_framework_actor::RetainedTurnInput,
     pub runtime: Arc<GuestRuntimes>,
     pub instance: Arc<Mutex<GuestInstanceSlot>>,
-    pub(super) instance_gate: Arc<semio_framework_async::Semaphore>,
+    pub(super) instance_gate: Arc<semio_framework_async_sync::Semaphore>,
     relay_registry: Arc<GuestRelayMountedRegistry>,
     next_job_id: std::sync::atomic::AtomicU64,
 }
@@ -29,7 +29,7 @@ impl PluginInstanceHandle {
             original_input,
             runtime,
             instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))),
-            instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)),
+            instance_gate: Arc::new(semio_framework_async_sync::Semaphore::new(1)),
             relay_registry: Arc::new(GuestRelayMountedRegistry::new(wake_authority)),
             next_job_id: std::sync::atomic::AtomicU64::new(1),
         }

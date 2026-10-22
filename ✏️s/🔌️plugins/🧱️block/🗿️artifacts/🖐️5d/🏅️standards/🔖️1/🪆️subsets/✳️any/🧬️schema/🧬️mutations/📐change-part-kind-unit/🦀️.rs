@@ -24,6 +24,12 @@ pub fn change_part_kind_unit<Op: From<crate::change_part_kind_unit::ChangePartKi
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangePartKindUnit where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_part_kind_unit::ChangePartKindUnit> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part-kind", kind: "change-part-kind-unit", record: "ChangedPartKindUnit" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change part kind unit to {:?}", self.new_unit), &format!("Bauteilarteinheit auf {:?} ändern", self.new_unit))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ChangePartKindUnit where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_part_kind_unit::ChangePartKindUnit> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::change_part_kind_unit::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangePartKindUnit wher
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change part kind unit to {:?}", self.new_unit), &format!("Bauteilarteinheit auf {:?} ändern", self.new_unit))
-    }
 }
 //#endregion 🔖️Mutation
 

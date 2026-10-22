@@ -405,7 +405,7 @@ What the shape of a reaction cannot say, and what stands in for it:
 4. **Ensemble.** In `🔣️.json` add the path to `species`, the bonds of the pet (each with a physical reason, recorded in
    the table above) and the pet to the rotation of `home` and to the casts of the quizzes it belongs to.
 5. **Module.** In `🟦️.ts` add the import and the species to the list, in the order of the ensemble.
-6. **Check.** `bun repo run @teaching/architecture-course:test` (suite `🐾️pet-cast`: schema with ajv, the product's own
+6. **Check.** `repo run @teaching/architecture-course:test` (suite `🐾️pet-cast`: schema with ajv, the product's own
    validators, grounds, casts, bonds, states, tricks, gear and chemistry, the module against the documents) and look at
    the pet in the gallery.
 
@@ -427,7 +427,7 @@ What the shape of a reaction cannot say, and what stands in for it:
   no smaller than the `reach` of both species together (else they never react, not even when they meet), an `every` of
   at least a second, and effects that each do something and play only tricks the species offers in the state the side
   asks for. Record it with its physical reason in the table above. Then look at it on the stage:
-  `bun <ticket>/stage_storyboard.ts --menagerie 🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --scene <scene> --mode lively`
+  `repo <ticket>/stage_storyboard.ts --menagerie 🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --scene <scene> --mode lively`
   prints how often every reaction acted.
 
 ## Looking at them
@@ -437,10 +437,10 @@ ground — and a sandbox with mock cards on which a chosen cast lives (scene, mo
 
 | Where | Entry | Address |
 |---|---|---|
-| Dashboard (`bun run dashboard`, `Ctrl+B n`) | `@semio-tech/pets-react:dev` with parameters `stories-port=6074` and `menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts` | http://127.0.0.1:6074/ |
-| Agents and scripts | `bun repo run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready` (prints the URL) | http://127.0.0.1:6074/ |
+| Dashboard (`repo dashboard`, `Ctrl+B n`) | `@semio-tech/pets-react:dev` with parameters `stories-port=6074` and `menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts` | http://127.0.0.1:6074/ |
+| Agents and scripts | `repo run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready` (prints the URL) | http://127.0.0.1:6074/ |
 
-Both run `bun repo run @semio-tech/pets-react:dev` with `PETS_STORIES_PORT=6074` and
+Both run `repo run @semio-tech/pets-react:dev` with `PETS_STORIES_PORT=6074` and
 `PETS_MENAGERIE=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts`. In the real site the pets are on by default (`calm`); the
 preferences offer `off`, `still`, `calm` and `lively`, the footer of every screen carries a "Show pets" switch that
 turns them off and back to the last other choice, and a device that asks for reduced motion decides the default only:

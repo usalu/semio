@@ -180,6 +180,8 @@ impl SnapshotReadLeaseRegistry {
     }
 
     pub fn returned_count(&self) -> usize { self.returned.load(std::sync::atomic::Ordering::Acquire) }
+    /// 🔒️ Observes the registry state lock so a caller can prove returned reads wait for it without blocking.
+    pub fn try_lock_state(&self) -> std::sync::TryLockResult<SnapshotReadLeaseStateGuard<'_>> { self.state.try_lock() }
 
     pub fn new() -> Self {
         let mut free = [0; SNAPSHOT_READ_LEASE_CAPACITY];
@@ -515,6 +517,8 @@ impl SnapshotReadReturn {
 }
 
 impl<T: ?Sized> SnapshotRead<T> {
+    /// 📏️ The inline bytes one Store read occupies while an owner captures it by move.
+    pub const fn capture_copy_byte_demand() -> usize { size_of::<Self>() }
     pub fn release_original_alias(&mut self) -> bool { self.owner.take().is_some() }
     pub fn return_original_lease(&mut self) -> Option<SnapshotReadRegistryAliasRetirement> { let mut lease = self.lease.take()?; lease.return_now(); Some(SnapshotReadRegistryAliasRetirement::new(lease.registry)) }
 

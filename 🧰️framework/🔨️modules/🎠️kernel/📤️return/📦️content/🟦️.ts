@@ -241,13 +241,13 @@ export class KernelReturnUiOperationHeader {
 //#region 🧪️ContentFramingLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️kernelreturncontentframing-matches-the-shared-stream-and-independent-fra/🟦️.ts");
-  await registerTests1(import.meta.vitest, { KernelReturnContentFraming }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { KernelReturnContentFraming }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️ContentFramingLaws
 
 //#region 🧪️OperationHeaderLaws
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️kernelreturncontentframing-matches-the-shared-stream-and-independent-fra/🟦️.ts");
-  await registerTests2(import.meta.vitest, { KernelReturnUiOperationHeader }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { KernelReturnUiOperationHeader }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️OperationHeaderLaws

@@ -10,7 +10,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/➡️after/🔣️.json"));
@@ -32,7 +32,7 @@ fn rename_column() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn renames_the_column_key_and_leaves_the_rows_alone() {
     let base = before();
-    let produced = protocol::apply_diff(rename_column().diff(&base).diff(), &base).expect("rename-column applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(rename_column().diff(&base).diff(), &base).expect("rename-column applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rename-column/renames-city-to-town-without-touching-any-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.columns[0].name, "town", "the column's native key must become new_name");
     assert_eq!(produced.columns[0].kind, base.columns[0].kind, "a rename must never change the declared cell kind");
@@ -51,9 +51,9 @@ async fn the_undo_rename_column_swaps_the_two_names_back() {
         vec![SemioTableMutation::RenameColumn(semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::rename_column::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
         "the undo must address the NEW name and rename it back to the old one"
     );
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rename-column applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward rename-column applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rename-column applies to the renamed table");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo rename-column applies to the renamed table");
     }
     assert_eq!(current, base, "rename-column/renames-city-to-town-without-touching-any-row: the undo did not restore the before-snapshot");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds_with_no_no_op_and_no_duplicate_id() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&rename_column(), &base);
+    let outcome = <SemioTableMutation as ColdMutation<SemioTableSnapshot>>::diff(&rename_column(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-column/renames-city-to-town-without-touching-any-row: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -109,6 +109,6 @@ async fn committed_diff_is_canonical_and_omits_rows_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rename-column diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed rename-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-column/renames-city-to-town-without-touching-any-row: committed diff did not carry before to after");
 }

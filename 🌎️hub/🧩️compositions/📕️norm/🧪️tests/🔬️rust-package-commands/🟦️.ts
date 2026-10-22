@@ -307,7 +307,7 @@ export function runSurfaceRenderSourceScript(context: Readonly<{ root: string; r
 /** 🏃️ Runs the `ComponentBudgetScript` command under the caller's roots and invocation. */
 export function runComponentBudgetScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   const component = componentDeliverableV1(join(context.root, "../../🧩️component/📦️packages/🦀️rust"), "semio-hub-norm-component", SHIPPED_COMPONENT_PROFILE).wasm;
-  if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`bun repo run semio-hub-norm-component:component\` (${component})`);
+  if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`repo run semio-hub-norm-component:component\` (${component})`);
   const census = componentCoreCensus(readFileSync(component));
   for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
     let refused = false;

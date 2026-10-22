@@ -1,13 +1,14 @@
 import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
 import { declaredPlaygroundCompositionPathV1 } from "../🧩️composition/🟦️.ts";
-import { parseTileProxyAssetSpecV1 } from "@semio-tech/assets/tile-proxy";
-import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostFilesystemViewV1, nativeHostTextSourceViewV1, type PlaygroundNativeHostV1 } from "@semio-tech/repo-lib/dev";
+import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🗺️tile-proxy/🟦️.ts";
+import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostFilesystemViewV1, nativeHostTextSourceViewV1, type PlaygroundNativeHostV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { registryCatalogInputView, registryExampleCatalog } from "@semio-tech/repo-lib/inventory";
+import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type RegistryChannelDiagnosticV1 } from "../../🔎️discovery/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 
 
@@ -118,7 +119,7 @@ export function parseAssetsForCrate(manifestPath: string, repoRoot: string, view
     const kind = block.match(/^kind\s*=\s*"([^"]+)"/m)?.[1] as AssetSpecRow["kind"] | undefined;
     const route = block.match(/^route\s*=\s*"([^"]+)"/m)?.[1];
     if (kind === "tile-proxy") {
-      const authored = Bun.TOML.parse(block) as Record<string, unknown>;
+      const authored = runtimeParseTomlV1(block) as Record<string, unknown>;
       const { app, ...transport } = authored;
       const spec = parseTileProxyAssetSpecV1(transport);
       if (app !== undefined && (typeof app !== "string" || app.length === 0)) throw Error(`Invalid tile asset app in ${path}`);

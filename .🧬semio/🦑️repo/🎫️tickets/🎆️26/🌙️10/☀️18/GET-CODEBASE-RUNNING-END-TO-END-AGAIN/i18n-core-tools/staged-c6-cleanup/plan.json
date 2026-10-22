@@ -1,0 +1,45 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/📖️texts/🔣️.json",
+   "after": "84620caa1e760a2de641ff966fa72e0507b0dd249095ab8f5b7eea846cdbed9e"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/📖️texts/🟦️.ts",
+   "after": "f5dd8eaf32b03029c303711b945780162656565a0a967c121db7ed3bc5a37b08"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/📖️texts/🧪️tests/🟦️.ts",
+   "after": "5b84e2c88213b55667fbc638675b534d2c06965b298279d6aa98f1e0b8d79524"
+  }
+ ],
+ "edited": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "0502b3bfb1839d477cef4a1349234b6a70f6bf5fcef1722af2f5b1883602fceb",
+   "base": "484735a49c6a247d76b1113fde6486b995c93f2e3f271246c397d5a5e4574d62"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
+   "after": "ef27e1b82e13052897a864dfe20f7107ecadd3e99dc1d7e3aa18aa270bcc319c",
+   "base": "41056713fc1882c30b1f111e679a8452aa5889a84f829805c5c00592e79d3bed"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts",
+   "after": "66bdc746f3fc29e0c4b95d6fdb68cd8c40c66a2699eae888177735cc53901f9f",
+   "base": "e9b68c3e4b0f987ee42259672405d835dce09c8f4d2140fc3b5ede9061060592"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
+   "after": "8f12081956a6990757078019137b8611f79c660ba869240adf5251aff53e948b",
+   "base": "094a149fef8aa8bee089bab32b8fb6be00efae5e6daefba7f58f0f760fb01499"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
+   "after": "18ac2db24e5a6aad0ea4aac17170778897a5310c1a8d9d575250b85f7d048d50",
+   "base": "9de1839bffe86218089afff6a7a4e1305f7103889db9b9695bc974f3a831392d"
+  }
+ ]
+}

@@ -11,7 +11,7 @@
       },
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate",
+        "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "cache": true
@@ -26,7 +26,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -36,7 +36,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-generated"
+        "command": "repo ./📜️script.ts check-generated"
       }
     },
     "fonts": {
@@ -44,7 +44,7 @@
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts fonts",
+        "command": "repo ./📜️script.ts fonts",
         "forwardAllArgs": true
       },
       "outputs": [],
@@ -66,7 +66,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -82,7 +82,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-py": {
@@ -97,7 +97,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "test-relative-sizing": {
@@ -115,7 +115,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-relative-sizing"
+        "command": "repo ./📜️script.ts test-relative-sizing"
       }
     },
     "test-verification-contract": {
@@ -131,7 +131,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-verification-contract"
+        "command": "repo ./📜️script.ts test-verification-contract"
       }
     },
     "test-color-primitives": {
@@ -149,7 +149,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-color-primitives"
+        "command": "repo ./📜️script.ts test-color-primitives"
       }
     }
   },

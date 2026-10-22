@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:nx-operations-corpus:v1",
+  "title": "Nx Operations Corpus",
+  "description": "Language-agnostic argument vectors for the Nx operation translation: the portable changed-file rule of `affected`, refusals, cache and inputs operations and the exec environment wrapper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "affected", "refused", "operations", "exec", "authored"],
+  "properties": {
+    "version": { "const": 1 },
+    "affected": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/arguments" } },
+    "refused": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/arguments" } },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["args"],
+        "properties": { "args": { "$ref": "#/definitions/arguments" }, "expected": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/arguments" }] }, "error": { "type": "string", "minLength": 1 } },
+        "oneOf": [{ "required": ["expected"] }, { "required": ["error"] }]
+      }
+    },
+    "exec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "mapping", "exitCodes"],
+      "properties": { "environment": { "type": "object", "additionalProperties": { "type": "string" } }, "mapping": { "type": "object", "additionalProperties": { "type": "string" } }, "exitCodes": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
+    },
+    "authored": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["args", "expected"], "properties": { "args": { "$ref": "#/definitions/arguments" }, "expected": { "$ref": "#/definitions/arguments" } } } }
+  },
+  "definitions": { "arguments": { "type": "array", "items": { "type": "string" } } }
+}

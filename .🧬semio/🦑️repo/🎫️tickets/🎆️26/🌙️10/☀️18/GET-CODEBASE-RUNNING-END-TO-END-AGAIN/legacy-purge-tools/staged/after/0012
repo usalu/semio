@@ -1,0 +1,36 @@
+{
+  "title": "Fix Type Editor Toolbar Labels and Naming",
+  "status": "closed",
+  "description": "Fix the Sketchpad Type Editor toolbar to follow the same naming conventions as Design and Kit apps. Currently uses incorrect label IDs like 'compose.sketchpad.toolbar.seelction' which should use proper app-specific naming and correct subtool labels.",
+  "summary": "Fixed Type Editor toolbar labels to match Design and Kit app patterns. Updated subtool label from 'selection' to 'select' and added missing 'connector' subtool translations in both English and German locale files. Also completed German locale with all missing subtool entries.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/508"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-11T19:58:57.10914073Z",
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix the Sketchpad Type Editor toolbar to follow the same naming conventions as Design and Kit apps. Currently uses incorrect label IDs like 'compose.sketchpad.toolbar.seelction' which should use proper app-specific naming and correct subtool labels.",
+      "llm": "sonnet-4-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-11T20:01:40.56702034Z",
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "d8f7005b643fe6f393319430779ae99b90c01d46",
+      "summary": "Fixed Type Editor toolbar labels to match Design and Kit app patterns. Updated subtool label from 'selection' to 'select' and added missing 'connector' subtool translations in both English and German locale files. Also completed German locale with all missing subtool entries.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        }
+      ]
+    }
+  ]
+}

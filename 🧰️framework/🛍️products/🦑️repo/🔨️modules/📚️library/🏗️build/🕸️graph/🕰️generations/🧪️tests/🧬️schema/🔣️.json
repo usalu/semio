@@ -3,7 +3,8 @@
  "additionalProperties": false,
  "required": [
   "version",
-  "scenarios"
+  "scenarios",
+  "documentSizes"
  ],
  "properties": {
   "version": {
@@ -179,6 +180,46 @@
         }
        }
       }
+     }
+    }
+   }
+  },
+  "documentSizes": {
+   "type": "array",
+   "minItems": 10,
+   "maxItems": 32,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "value",
+     "maximumBytes",
+     "expandedBytes",
+     "refusal"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "value": {},
+     "maximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 536870912
+     },
+     "expandedBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+     },
+     "refusal": {
+      "enum": [
+       null,
+       "expanded",
+       "packed"
+      ]
      }
     }
    }

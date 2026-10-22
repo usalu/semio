@@ -1,0 +1,186 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "stray-lockfiles-in-crate-directories",
+   "rule": "policyCargoArtifactBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust/Cargo.lock": [],
+    "✏️s/🔌️plugins/🔭️beta/📦️packages/🦀️rust/Cargo.toml": [],
+    "tools/x/Cargo.lock": []
+   },
+   "expect": [
+    [
+     "stray-cargo-artifact-✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust-Cargo.lock",
+     "app-plugin/stray-cargo-artifact",
+     "high",
+     0
+    ],
+    [
+     "stray-cargo-artifact-tools/x-Cargo.lock",
+     "app-plugin/stray-cargo-artifact",
+     "low",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "dir": "✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust",
+     "pluginId": "alpha"
+    },
+    {
+     "dir": "✏️s/🔌️plugins/🔭️beta/📦️packages/🦀️rust",
+     "pluginId": "beta"
+    },
+    {
+     "dir": "tools/x",
+     "pluginId": ""
+    }
+   ]
+  },
+  {
+   "id": "plugin-crates-do-not-depend-on-each-other",
+   "rule": "policyAppCouplingBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust/Cargo.toml": [
+     "[package]",
+     "name = \"x\"",
+     "[package.metadata.semio]",
+     "role = \"plugin\"",
+     "[dependencies]",
+     "beta_crate = { path = \"../../../🔭️beta/📦️packages/🦀️rust\" }",
+     "flow = { path = \"../../../🔭️beta/🧱️lib\" }",
+     "odd = { path = \"../../../🔭️beta/🧱️other\" }",
+     "self_dep = { path = \"../../🧱️x\" }",
+     "ext = { path = \"../../../../../🧰️framework/x\" }",
+     "v = \"1\""
+    ],
+    "✏️s/🔌️plugins/🔭️beta/📦️packages/🦀️rust/Cargo.toml": [
+     "[package]",
+     "name = \"x\"",
+     "[package.metadata.semio]",
+     "role = \"plugin\""
+    ],
+    "tools/x/Cargo.toml": [
+     "[dependencies]",
+     "tool_dep = { path = \"../../✏️s/🔌️plugins/🔭️beta/📦️packages/🦀️rust\" }"
+    ]
+   },
+   "expect": [
+    [
+     "app-coupling-plugin-✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust-beta_crate",
+     "app-plugin/app-coupling",
+     "medium",
+     0
+    ],
+    [
+     "app-coupling-domain-✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust-odd",
+     "app-plugin/app-coupling",
+     "low",
+     0
+    ],
+    [
+     "app-coupling-plugin-tools/x-tool_dep",
+     "app-plugin/app-coupling",
+     "low",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "dir": "✏️s/🔌️plugins/🔭️alpha/📦️packages/🦀️rust",
+     "pluginId": "alpha"
+    },
+    {
+     "dir": "✏️s/🔌️plugins/🔭️beta/📦️packages/🦀️rust",
+     "pluginId": "beta"
+    },
+    {
+     "dir": "tools/x",
+     "pluginId": ""
+    }
+   ]
+  },
+  {
+   "id": "json-example-fixtures-are-forbidden",
+   "rule": "policyJsonFixtureBreaches",
+   "files": {
+    "a/example/one.json": [],
+    "a/example/two.txt": [],
+    "a/b/example/deep.json": [],
+    "coda/x/example/ok.json": [],
+    "a/examples/other.json": [],
+    "node_modules/example/n.json": []
+   },
+   "expect": [
+    [
+     "no-json-fixture-a/example/one.json",
+     "dsl-migration/no-json-fixture",
+     "high",
+     0
+    ],
+    [
+     "no-json-fixture-a/b/example/deep.json",
+     "dsl-migration/no-json-fixture",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "ops-files-follow-the-op-log-grammar",
+   "rule": "policyOpsGrammarBreaches",
+   "files": {
+    "a/good.ops": [
+     "@doc d",
+     "@edit e",
+     "  set x 1",
+     "@checkpoint c",
+     "@alternative a",
+     "@active z"
+    ],
+    "a/bad.ops": [
+     "@doc d",
+     "",
+     "stray text",
+     " one-space",
+     "@unknown",
+     "  ok",
+     "   "
+    ]
+   },
+   "expect": [
+    [
+     "ops-grammar-blank-a/bad.ops-2",
+     "dsl-migration/ops-grammar",
+     "medium",
+     2
+    ],
+    [
+     "ops-grammar-line-a/bad.ops-3",
+     "dsl-migration/ops-grammar",
+     "medium",
+     3
+    ],
+    [
+     "ops-grammar-line-a/bad.ops-4",
+     "dsl-migration/ops-grammar",
+     "medium",
+     4
+    ],
+    [
+     "ops-grammar-line-a/bad.ops-5",
+     "dsl-migration/ops-grammar",
+     "medium",
+     5
+    ],
+    [
+     "ops-grammar-blank-a/bad.ops-7",
+     "dsl-migration/ops-grammar",
+     "medium",
+     7
+    ]
+   ]
+  }
+ ]
+}

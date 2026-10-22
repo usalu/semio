@@ -8,7 +8,7 @@ import (
 	testing "testing"
 )
 
-func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
+func TestInteractionUnmarshalReadsTheTextAuthor(t *testing.T) {
 	cases := []struct {
 		name         string
 		authorJSON   string
@@ -17,11 +17,6 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 		{
 			name:         "string author",
 			authorJSON:   `"Ueli Saluz <ueli@semio-tech.com>"`,
-			expectedAuth: "Ueli Saluz <ueli@semio-tech.com>",
-		},
-		{
-			name:         "object author",
-			authorJSON:   `{"name":"Ueli Saluz","email":"ueli@semio-tech.com","github":"usalu"}`,
 			expectedAuth: "Ueli Saluz <ueli@semio-tech.com>",
 		},
 	}
@@ -46,6 +41,13 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 				t.Fatalf("expected author %q, got %q", tc.expectedAuth, interaction.Author)
 			}
 		})
+	}
+}
+
+func TestInteractionUnmarshalRefusesAnObjectAuthor(t *testing.T) {
+	var interaction Interaction
+	if err := json.Unmarshal([]byte(`{"date":"2026-02-06 22:03:11","author":{"name":"Ueli Saluz","email":"ueli@semio-tech.com"}}`), &interaction); err == nil {
+		t.Fatalf("an object author is not part of the interaction schema, got %+v", interaction)
 	}
 }
 
@@ -256,5 +258,29 @@ func TestTicketDateStartedFallsBackToTheTicketDay(t *testing.T) {
 	started := ticket.GetDateStarted()
 	if started.Year() != 2026 || int(started.Month()) != 10 || started.Day() != 18 {
 		t.Fatalf("a ticket without interactions must start on its own day (two-digit year 26 is 2026), got %s", started)
+	}
+}
+
+func TestArtifactUriExtractionReadsOnlyTheEntityKindFormat(t *testing.T) {
+	fileID := BuildFileID("compose/js/src/design.tsx", nil)
+	sectionID := BuildSectionID(fileID, []string{"state managment", "store"})
+	definitionID := BuildDefinitionID(fileID, nil, "myclass", DefinitionKindImplementation)
+	for _, uri := range []string{"repo://section/" + sectionID, "section/" + sectionID} {
+		if path, parts := extractFileAndSectionsFromUri(uri); path != IdToPath(sectionID) || len(parts) != 2 {
+			t.Errorf("extractFileAndSectionsFromUri(%q) = %q %v", uri, path, parts)
+		}
+	}
+	for _, uri := range []string{"repo://definition/" + definitionID, "definition/" + definitionID} {
+		if path, name := extractFileAndDefinitionFromUri(uri); path != IdToPath(definitionID) || name != "myclass" {
+			t.Errorf("extractFileAndDefinitionFromUri(%q) = %q %q", uri, path, name)
+		}
+	}
+	for _, retired := range []string{"repo://p/f/docs/guide.md/s/intro", "f/docs/guide.md/s/intro", "repo://p/f/docs/guide.md/d/x/y"} {
+		if path, parts := extractFileAndSectionsFromUri(retired); path != "" || parts != nil {
+			t.Errorf("extractFileAndSectionsFromUri(%q) = %q %v, want nothing", retired, path, parts)
+		}
+		if path, name := extractFileAndDefinitionFromUri(retired); path != "" || name != "" {
+			t.Errorf("extractFileAndDefinitionFromUri(%q) = %q %q, want nothing", retired, path, name)
+		}
 	}
 }

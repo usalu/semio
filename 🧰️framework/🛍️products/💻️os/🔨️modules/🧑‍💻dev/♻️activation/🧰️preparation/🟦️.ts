@@ -73,7 +73,7 @@ class PreparationScript extends BundleScript {
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
     const healthy = healthyPreparedComponents(verdicts, playground.pluginId);
-    for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
+    for (const line of preparedComponentReportLines(healthy.excluded, `repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
     if (healthy.refusal) throw new Error(healthy.refusal);
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".semio-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"activation:font-validation",60000),async artifact=>validateFontAsset(readFileSync(join(artifact.path,FONT_ASSET))));

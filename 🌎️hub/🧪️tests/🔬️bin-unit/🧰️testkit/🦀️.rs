@@ -34,7 +34,7 @@ use semio_hub_ledgers::socket_grants::{SESSION_PROTOCOL_V1, SOCKET_PROTOCOL_V1, 
 use server::gateway::ServerState;
 use semio_hub_directory_contract::{SessionCapability, identity_subject_digest};
 use semio_framework_hash::Sha256;
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use std::net::SocketAddr;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreateV1;
 use semio_hub_directory_sqlite::SqliteDirectory;

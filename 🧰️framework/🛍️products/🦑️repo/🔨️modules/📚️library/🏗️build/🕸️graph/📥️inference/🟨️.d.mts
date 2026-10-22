@@ -1,3 +1,4 @@
+import type{ImplementationRowV1,InferenceProtocolV1}from"./🔖️stamps/🟨️.mjs";
 import type{ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🕸️ Declares the actual JavaScript inference API while leaving dynamic result DATA untrusted. */
@@ -54,9 +55,12 @@ export interface BuildModuleGraphV1{readonly version:number;readonly files:{file
 /** 🗒️ Names the metadata one project contributes to the graph. */
 export interface BuildMetadataEntryV1{readonly metadata:Readonly<{semio:Readonly<Record<string,unknown>>&Readonly<{moduleGraph:BuildModuleGraphV1}>}>}
 /** 🧰️ Names real owned callable members while leaving unrelated dynamic DATA untrusted. */
+/** 🧩️ The serial, cached `component` task of a plugin or extension crate: one store receipt over its exact inputs. */
+export interface ComponentBuildTargetV1{readonly cache:boolean;readonly parallelism:boolean;readonly dependsOn:readonly string[];readonly inputs:readonly unknown[];readonly outputs:readonly string[];readonly options:Readonly<{command:string}>;readonly metadata:Readonly<{semio:Readonly<{execution:unknown;cache:Readonly<{class:string;reason:string}>}>}>}
 export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknown>>{
  targetPolicy<T extends object>(name:string,target:T,policy?:InferencePolicyV1):T&{cache:boolean;continuous?:boolean};
  withWasmTooling<T extends Readonly<Record<string,GeneratedTargetV1>>>(targets:T,required:boolean):T;
+ componentBuildTargets(root:string,workspaceRoot:string):Readonly<Record<string,ComponentBuildTargetV1>>;
  relativeScriptInputs(entries:readonly string[],workspaceRoot:string,cache?:ScriptInputCacheV1,requiredSources?:boolean):Promise<string[]>;
  projectInputs(json:Readonly<Record<string,unknown>>,root:string,workspaceRoot:string,facts:Map<string,unknown>,cache?:ScriptInputCacheV1,representation?:"source"|"hash",sourceGroups?:unknown,inputNames?:readonly string[],commandGroups?:Readonly<Record<string,unknown[]>>):Promise<Record<string,unknown[]>>;
  declaredSourceInputs(json:Readonly<Record<string,unknown>>,workspaceRoot:string,context?:ScriptInputContextV1,inputNames?:readonly string[]):Promise<Record<string,unknown[]>>;
@@ -96,4 +100,10 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  validateGeneratorOutputProducersV1(contracts:Readonly<Record<string,unknown>>,projects:Readonly<Record<string,unknown>>,workspaceRoot:string,selection:import("../🚪️admission/🟦️.ts").BuildGraphSelectionV1,registry:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1|undefined,context:BuildInferenceContextV1):Promise<void>;
 }
 /** 📋️ The authored files of the implementation this module loaded with the bytes they had at load. */
+/** 🧱️ Classifies the loaded implementation rows by the declared stamp of every inferrer: data no inferrer covers stays a content fact, the code of an inferrer is named by its stamp. */
+export function classifyImplementationRowsV1(rows:readonly ImplementationRowV1[],document?:InferenceProtocolV1):ImplementationRowV1[];
+/** 🚧️ Names the executable files of the loaded implementation that no inferrer and no infrastructure fragment of the protocol claims. */
+export function unclassifiedImplementationCodeV1(rows:readonly ImplementationRowV1[],document?:InferenceProtocolV1):string[];
+/** 📜️ The declared inference protocol of the loaded revision. */
+export function inferenceProtocolV1():InferenceProtocolV1;
 export const loadedImplementationRowsV1:readonly {readonly kind:"digest";readonly path:string;readonly fact:{readonly sha256:string;readonly size:number;readonly mtimeMs:number}}[];

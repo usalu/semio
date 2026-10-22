@@ -23,7 +23,7 @@ use crate::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, 
 
 
 use crate::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioFlowMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
@@ -61,7 +61,7 @@ pub mod drag_nodes;
 /// payloads keep decoding byte-for-byte unchanged after this migration.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation")]
+#[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation", reference = SemioFlowSnapshot, reference_diff = SemioFlowDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioFlowMutation {
     /// ➕️ Inserts `node` (whole payload, already carries its own `id`).
@@ -103,7 +103,7 @@ pub const KINDS: &[&str] = &["insert-node", "remove-node", "set-node-kind", "set
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
-    <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(mutation, base)
+    <SemioFlowMutation as ColdMutation<SemioFlowSnapshot>>::diff(mutation, base)
 }
 
 

@@ -1,0 +1,521 @@
+{
+ "version": 1,
+ "snapshots": [
+  {
+   "name": "three files in byte order",
+   "sources": [
+    {
+     "path": "A.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "import './b.ts'\n"
+     }
+    },
+    {
+     "path": "é.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": ""
+  },
+  {
+   "name": "a single entry file",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": ""
+  },
+  {
+   "name": "a file of three megabytes",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1500000
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": ""
+  },
+  {
+   "name": "a manifest that is not in byte order is refused",
+   "sources": [
+    {
+     "path": "b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": "Canonical captured authorizer order required"
+  },
+  {
+   "name": "a repeated path is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "a path leaving the workspace is refused",
+   "sources": [
+    {
+     "path": "../x.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "an absolute path is refused",
+   "sources": [
+    {
+     "path": "/etc/x",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "a backslash is refused",
+   "sources": [
+    {
+     "path": "a\\b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "a colon is refused",
+   "sources": [
+    {
+     "path": "a:b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "an empty segment is refused",
+   "sources": [
+    {
+     "path": "a//b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "a dot segment is refused",
+   "sources": [
+    {
+     "path": "a/./b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "z.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "z.ts",
+   "patch": {},
+   "error": "Original captured authorizer path required"
+  },
+  {
+   "name": "bytes that do not match their digest are refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     },
+     "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": "Original captured authorizer byte identity required"
+  },
+  {
+   "name": "five files of three and a half megabytes exceed the source maximum",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    },
+    {
+     "path": "b.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    },
+    {
+     "path": "c.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    },
+    {
+     "path": "d.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    },
+    {
+     "path": "e.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": "Captured authorizer byte capacity exceeded"
+  },
+  {
+   "name": "base64 that is not canonical is not closed",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "a"
+     },
+     "base64": "YQ"
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": "Closed captured authorizer bytes required"
+  },
+  {
+   "name": "an entry that is not captured is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "nope.ts",
+   "patch": {},
+   "error": "Captured authorizer snapshot capacity exceeded"
+  },
+  {
+   "name": "a wrong digest is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {
+    "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+   },
+   "error": "Original captured authorizer manifest required"
+  },
+  {
+   "name": "an additional field is not closed",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {
+    "extra": 1
+   },
+   "error": "Closed captured authorizer bytes required"
+  },
+  {
+   "name": "another version is not closed",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {
+    "version": 2
+   },
+   "error": "Closed captured authorizer bytes required"
+  },
+  {
+   "name": "a missing file is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "b.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {
+    "dropFile": 1
+   },
+   "error": "Original captured authorizer manifest required"
+  },
+  {
+   "name": "an extra file is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {
+    "addFile": "b.ts"
+   },
+   "error": "Original captured authorizer manifest required"
+  },
+  {
+   "name": "a manifest that is not for release is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "manifest": {
+    "mode": "debug"
+   },
+   "patch": {},
+   "error": "Original captured authorizer manifest required"
+  },
+  {
+   "name": "a resolution without a captured workspace manifest is refused",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "text": "x\n"
+     }
+    },
+    {
+     "path": "y.ts",
+     "content": {
+      "text": "x\n"
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "manifest": {
+    "resolutions": [
+     {
+      "specifier": "@semio-tech/y",
+      "path": "y.ts"
+     }
+    ]
+   },
+   "patch": {},
+   "error": "Captured root workspace manifest required"
+  }
+ ],
+ "knownDefects": [
+  {
+   "name": "a file of exactly the 4 MiB file maximum is carried",
+   "sources": [
+    {
+     "path": "a.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 2097152
+     }
+    }
+   ],
+   "entry": "a.ts",
+   "patch": {},
+   "error": ""
+  }
+ ],
+ "workspace": {
+  "files": [
+   {
+    "path": "a.ts",
+    "content": {
+     "text": "import fs from 'node:fs';\nimport {b} from './b.ts';\nimport data from './c.json';\nexport const a=[fs,b,data];\n"
+    }
+   },
+   {
+    "path": "b.ts",
+    "content": {
+     "text": "import {d} from './sub/d.ts';\nexport const b=d;\n"
+    }
+   },
+   {
+    "path": "c.json",
+    "content": {
+     "text": "{\"k\":1}\n"
+    }
+   },
+   {
+    "path": "sub/d.ts",
+    "content": {
+     "text": "export const d=1;\n"
+    }
+   },
+   {
+    "path": "unused.ts",
+    "content": {
+     "text": "export const u=2;\n"
+    }
+   }
+  ],
+  "entry": "a.ts",
+  "closure": [
+   "a.ts",
+   "b.ts",
+   "c.json",
+   "sub/d.ts"
+  ]
+ },
+ "roles": {
+  "valid": [
+   "module",
+   "program"
+  ],
+  "refused": [
+   null,
+   "auto",
+   "bun",
+   true,
+   {},
+   0
+  ],
+  "targets": {
+   "valid": [
+    "node",
+    "bun"
+   ],
+   "refused": [
+    "deno",
+    "",
+    null
+   ]
+  }
+ }
+}

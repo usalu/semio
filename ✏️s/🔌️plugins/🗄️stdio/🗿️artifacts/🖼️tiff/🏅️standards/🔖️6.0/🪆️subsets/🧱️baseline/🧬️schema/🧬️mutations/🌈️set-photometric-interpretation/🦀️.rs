@@ -13,7 +13,16 @@ pub struct SetPhotometricInterpretation {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometricInterpretation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "photometric-interpretation", kind: "set-photometric-interpretation", record: "SetPhotometricInterpretation" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometricInterpretation {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::ColdMutation<TiffSnapshot>>::ReferenceDiff> {
         set_first_page_shorts(base, TAG_PHOTOMETRIC, vec![self.photometric])
     }
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffBaselineMutation>, semio_framework_value::ValueError> {
@@ -21,12 +30,6 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometr
             Some([old]) if *old != self.photometric => vec![TiffBaselineMutation::SetPhotometricInterpretation(Self { photometric: *old })],
             _ => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

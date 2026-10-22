@@ -65,6 +65,9 @@ path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀�
 
 [dependencies]
 semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-mesh-elements = { workspace = true }
 semio-s-artifact-fem-3d-mesh-sections = { workspace = true }
 semio-s-artifact-fem-3d-mesh-solids = { workspace = true }

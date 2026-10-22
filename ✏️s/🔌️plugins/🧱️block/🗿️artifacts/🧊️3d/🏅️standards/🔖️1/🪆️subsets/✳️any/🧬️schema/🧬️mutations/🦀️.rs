@@ -15,7 +15,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_block_3d_diff::Block3dDiff;
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_block_3d_mut_object_kind::{rename_object_kind::RenameObjectKind, change_object_kind_label::ChangeObjectKindLabel, change_object_kind_variant::ChangeObjectKindVariant, change_object_kind_description::ChangeObjectKindDescription, change_object_kind_icon::ChangeObjectKindIcon, change_object_kind_unit::ChangeObjectKindUnit};
 use semio_s_artifact_block_3d_mut_representations::{create_representation::CreateRepresentation, delete_representation::DeleteRepresentation, change_representation_mesh_url::ChangeRepresentationMeshUrl, add_representation_attribute::AddRepresentationAttribute, remove_representation_attribute::RemoveRepresentationAttribute};
 use semio_s_artifact_block_3d_mut_vortex_kinds::{create_vortex_kind::CreateVortexKind, delete_vortex_kind::DeleteVortexKind, rename_vortex_kind::RenameVortexKind, change_vortex_kind_label::ChangeVortexKindLabel, change_vortex_kind_color::ChangeVortexKindColor, change_vortex_kind_default_cable_kind::ChangeVortexKindDefaultCableKind};
@@ -40,7 +40,7 @@ pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Block3dSnapshot, diff = Block3dDiff, schema = "block.block3d")]
+#[mutations(snapshot = Block3dSnapshot, diff = Block3dDiff, schema = "block.block3d", reference = Block3dSnapshot, reference_diff = Block3dDiff)]
 pub enum Block3dMutation {
     RenameObjectKind(RenameObjectKind),
     ChangeObjectKindLabel(ChangeObjectKindLabel),

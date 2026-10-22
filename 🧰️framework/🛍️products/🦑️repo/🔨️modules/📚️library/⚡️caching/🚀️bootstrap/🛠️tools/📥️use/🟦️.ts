@@ -2,7 +2,7 @@ import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}fr
 import{withNxSdkDerivativeReaderV1}from"../📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {callerRepositoryRootV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {join,resolve,isAbsolute,basename,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {mkdirSync,readFileSync,writeFileSync,rmSync,lstatSync,realpathSync} from "node:fs";
@@ -26,7 +26,7 @@ export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,author
  const {identity,invocation}=authority,toolkitRoot=resolve(authority.toolkitRoot),control=phaseControl;requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);
  if(!/^[a-f0-9]{64}$/u.test(identity)||!isAbsolute(authority.toolkitRoot)||basename(toolkitRoot)!==identity||realpathSync(toolkitRoot)!==toolkitRoot||JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest!==identity)throw Error("Exact loaded immutable toolkit receipt required");
  const directory=requireMaterializedPathV1(storage.witnessDirectory),nonce=randomUUID(),path=requireMaterializedPathV1(join(directory,nonce+".json"));
- return withResourceLeases({directory:storage.directory,signal:control.signal,control,resources:[{resource:"nx-tooling:"+identity,mode:"shared"}]},async()=>{const root=readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot;return withRepositoryToolingStoreV1(root,invocation,control,(store,actualPhase)=>withNxSdkDerivativeReaderV1(root,store,toolkitRoot,identity,actualPhase,async()=>{
+ return withResourceLeases({directory:storage.directory,signal:control.signal,control,resources:[{resource:"nx-tooling:"+identity,mode:"shared"}]},async()=>{const root=callerRepositoryRootV1(invocation.capabilities);return withRepositoryToolingStoreV1(root,invocation,control,(store,actualPhase)=>withNxSdkDerivativeReaderV1(root,store,toolkitRoot,identity,actualPhase,async()=>{
   const sockets=new Set<Socket>();let witness:NxToolingUseWitnessV1|undefined,active=false;
   const server=createServer({allowHalfOpen:true},socket=>{
    sockets.add(socket);socket.once("close",()=>sockets.delete(socket));socket.on("error",()=>{});socket.setTimeout(10000,()=>socket.destroy());let input="";
@@ -49,7 +49,7 @@ export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,author
 /** 🧷️ The actual immutable module owns its independent process use until the original task body closes. */
 export async function withNxLoadedToolingUseV1<T>(environment:Readonly<Record<string,string|undefined>>,run:()=>Promise<T>):Promise<T>{
  const toolkitRoot=dirname(fileURLToPath(import.meta.url)),identity=basename(toolkitRoot);
- return receiveScriptProcessInvocation(environment,original=>{const root=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryToolingStoreV1(root,original,createIssuedResourceControlV1(original,"cache:entry",0),(_store,actualPhase)=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,invocation:original},actualPhase,async()=>{
+ return receiveScriptProcessInvocation(environment,original=>{const root=callerRepositoryRootV1(original.capabilities);return withRepositoryToolingStoreV1(root,original,createIssuedResourceControlV1(original,"cache:entry",0),(_store,actualPhase)=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,invocation:original},actualPhase,async()=>{
   const key="SEMIO_NX_TASK_USE_OWNER_PID",previous=process.env[key];process.env[key]=String(process.pid);
   try{return await run()}finally{if(previous===undefined)delete process.env[key];else process.env[key]=previous;}
  }));});

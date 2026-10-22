@@ -24,6 +24,12 @@ pub fn scale_camera3d<Op: From<crate::scale_camera3d::ScaleCamera3d>>(new_zoom: 
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ScaleCamera3d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::scale_camera3d::ScaleCamera3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "camera3d", kind: "scale-camera3d", record: "ScaledCamera3d" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale 3D camera to {}", self.new_zoom), &format!("3D-Kamerazoom auf {} setzen", self.new_zoom))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ScaleCamera3d where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::scale_camera3d::ScaleCamera3d> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::scale_camera3d::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ScaleCamera3d where Op:
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale 3D camera to {}", self.new_zoom), &format!("3D-Kamerazoom auf {} setzen", self.new_zoom))
-    }
 }
 //#endregion 🔖️Mutation
 

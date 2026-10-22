@@ -53,7 +53,7 @@ semio-framework-value-persistent = { path = "../../../../../../../../../../../..
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-2d-engine = { path = "../../../../../✏️editor/⚙️engine/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../../🤖️generated/📇️registry/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../../🛂️manifest/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-inferences = { path = "../../../../💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../🔌️handle/🪢️connect-handles/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mutations = { path = "../../../../📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust" }

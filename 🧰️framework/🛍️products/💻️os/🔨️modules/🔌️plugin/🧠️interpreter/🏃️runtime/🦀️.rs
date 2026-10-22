@@ -64,19 +64,19 @@ use owned_operation_and_guest_instance::{OwnedCheckpointMetadata, OwnedCheckpoin
 #[path = "📥️snapshot-operation-and-input-records/🦀️.rs"]
 mod snapshot_operation_and_input_records;
 pub use snapshot_operation_and_input_records::{OwnedInvocation, OwnedRuntime, OwnedSnapshotInput, OwnedSnapshotOperation, owned_engine_identity};
-use snapshot_operation_and_input_records::{OwnedCancelJobInput, OwnedCodecInput, OwnedPollInput, OwnedRestoreInput, OwnedStartJobInput, OwnedStepJobInput};
+use snapshot_operation_and_input_records::{OwnedCodecInput, OwnedPollInput, OwnedRestoreInput, OwnedStartJobInput};
 
 #[path = "🔄️owned-runtime/🦀️.rs"]
 mod owned_runtime;
 
 #[path = "⏯️operation-begin-resume-and-cancel/🦀️.rs"]
 mod operation_begin_resume_and_cancel;
-use operation_begin_resume_and_cancel::{OwnedDeadline, begin_owned_operation, cancel_owned_operation, original_deadline_at, resume_owned_operation, resume_owned_operation_authored, resume_owned_operation_bound, resume_owned_operation_observed};
+use operation_begin_resume_and_cancel::{OwnedDeadline, begin_owned_operation, begin_owned_scalar_operation, cancel_owned_operation, original_deadline_at, resume_owned_operation, resume_owned_operation_authored, resume_owned_operation_bound, resume_owned_operation_observed};
 
 #[path = "📣️host-replies-wasi-and-channel-faults/🦀️.rs"]
 mod host_replies_wasi_and_channel_faults;
 pub use host_replies_wasi_and_channel_faults::decode_owned_result;
-use host_replies_wasi_and_channel_faults::{admit_owned_channel, reply_owned_host, turn_fault_host, write_owned_memory};
+use host_replies_wasi_and_channel_faults::{admit_owned_channel, core_fault, reply_owned_host, turn_fault_host, write_owned_memory};
 #[cfg(test)]
 use host_replies_wasi_and_channel_faults::{owned_wasi_monotonic_clock, owned_wasi_nanoseconds};
 

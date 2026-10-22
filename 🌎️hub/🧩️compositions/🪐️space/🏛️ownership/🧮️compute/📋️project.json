@@ -17,7 +17,7 @@
       ],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

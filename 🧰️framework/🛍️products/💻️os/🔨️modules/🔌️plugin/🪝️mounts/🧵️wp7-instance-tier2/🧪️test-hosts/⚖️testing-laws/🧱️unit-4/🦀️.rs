@@ -23,7 +23,7 @@ use store::Mutation;
 use semio_framework::NOTE_SHELL_COMMAND_ACTION_ID;
 use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
 use semio_framework::SET_HISTORY_COMMAND_FILTER_ACTION_ID;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 use semio_framework_ui_locale::Terminology;
 #[cfg(test)]
 use semio_framework_plugin_command::lifted_command::TimeTravelEditorPanel;

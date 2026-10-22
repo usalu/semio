@@ -1,98 +1,105 @@
-// #region 🧲️Header
-// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/📖️stories/🧪️.story.tsx
-// Specs: Host the framework renderer's `Canvas2dHost` with zero WASM engine — its `sessionFactory` builds a
-// `JsonLayersCanvasSession`, a pure-`CanvasRenderingContext2D` implementation of `WasmCanvasSession`
-// (`@semio-tech/canvas-react-renderer`'s generic canvas host), so no `cdylib` session is involved.
-// Summary: `layersJson` drives real drawing (bounds-based node boxes, a dashed "wire" line) with zero fixture
-// setup; wheel-zoom/middle-drag-pan already round-trip for real inside `JsonLayersCanvasSession` itself, so the
-// story-local reducer only needs to fold the debounced `setCamera` dispatch back into `cameraX`/`cameraY`/`zoom`.
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲️Header
+/** 🔶️ The discovered phase of useAgentBridge. */
+import { useCallback, useRef, useState } from "../../⚛️react-port/🟦️.ts";
+import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "@semio-tech/framework/shell";
+import { NO_BRIDGE_FLAGS, encodeShellToGateway, type ApprovalDecision, type BridgeFlags, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
+import { EMPTY_INSTANCES, IDLE_PRESENCE, appendConversationEntry, buildShellStateFrame, updateConversationEntry, useDiscoveredAgentBridgeConfig } from "../🟢️shared/🟦️.tsx";
+import type { AgentBridgePresence, AgentBridgeStatus, AgentBridgeVersionMismatch, AgentConversationEntry, PendingAgentApproval, UseAgentBridgeOptions } from "../🟢️shared/🟦️.tsx";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
+/** 🔷 Builds discovered, config, shellKind, generatedShellSessionIdRef of useAgentBridge. */
+export function useDiscoveredState({ options }: { readonly options: UseAgentBridgeOptions }) {
+  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch, offerScope: options.offerScope });
+  const config = options.config === undefined ? discovered : options.config;
+  const shellKind = options.shellKind ?? "react";
+  const generatedShellSessionIdRef = useRef(`shell-${Math.random().toString(36).slice(2)}`);
+  const shellSessionId = options.shellSessionId ?? generatedShellSessionIdRef.current;
+  const principalActor = options.principalActor ?? "agent:unknown";
+  const declaredFlags = options.flags ?? NO_BRIDGE_FLAGS;
+  const relayAppCommands = options.flags ? declaredFlags.relayAppCommands : options.onAppCommand !== undefined;
+  const flagsIdentityRef = useRef<BridgeFlags>({ ...declaredFlags, relayAppCommands });
+  if (flagsIdentityRef.current.relayAppCommands !== relayAppCommands || flagsIdentityRef.current.sharedBackbone !== declaredFlags.sharedBackbone || flagsIdentityRef.current.elicit !== declaredFlags.elicit) {
+    flagsIdentityRef.current = { ...declaredFlags, relayAppCommands };
+  }
+  const flags = flagsIdentityRef.current;
 
-import { Canvas2dHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, Canvas2dScene, UiComponentSceneNode } from "@semio-tech/framework";
+  const [status, setStatus] = useState<AgentBridgeStatus>(config ? "connecting" : "disabled");
+  const [shellState, setShellState] = useState<ShellState>(() => options.initialState ?? defaultShellState());
+  const [presence, setPresence] = useState<AgentBridgePresence>(IDLE_PRESENCE);
+  const [pendingApprovals, setPendingApprovals] = useState<readonly PendingAgentApproval[]>([]);
+  const [conversation, setConversation] = useState<readonly AgentConversationEntry[]>([]);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [versionMismatch, setVersionMismatch] = useState<AgentBridgeVersionMismatch | null>(null);
+  const nextMessageOrdinalRef = useRef(1);
 
-//#region StoryTypes
-type StoryCamera = { readonly x: number; readonly y: number; readonly zoom: number };
-type StoryLayer = Record<string, unknown>;
-type StoryCanvas2dState = { readonly camera: StoryCamera; readonly layers: readonly StoryLayer[] };
-//#endregion StoryTypes
+  const socketRef = useRef<WebSocket | null>(null);
+  const shellStateRef = useRef(shellState);
+  shellStateRef.current = shellState;
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onCommandAppliedRef = useRef(options.onCommandApplied);
+  onCommandAppliedRef.current = options.onCommandApplied;
+  const onAppCommandRef = useRef(options.onAppCommand);
+  onAppCommandRef.current = options.onAppCommand;
+  const instances = options.instances ?? EMPTY_INSTANCES;
+  const instancesRef = useRef(instances);
+  instancesRef.current = instances;
 
-//#region Fixtures
-/** 🟦️🟠️ Two bounds-based node boxes (rect + circle) plus a dashed "wire" line — exercises `drawBoundsLayer`'s rect/circle branches and the `x0`/`y0`/`x1`/`y1` line branch in `JsonLayersCanvasSession.renderFrame`. */
-const STORY_LAYERS: readonly StoryLayer[] = [
-  { id: "node-alpha", kind: "box", role: "node", name: "Alpha", x: -140, y: -50, width: 140, height: 70, color: "#38bdf8", selected: false },
-  { id: "node-beta", kind: "circle", role: "node", name: "Beta", x: 40, y: 30, width: 96, height: 96, color: "#f97316", selected: true },
-  { id: "wire-alpha-beta", role: "wire", x0: 0, y0: -15, x1: 88, y1: 78, color: "#94a3b8" },
-];
-//#endregion Fixtures
-
-//#region Reducer
-/** 🎥️ Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/os/renderer/js/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
-function reduceStoryCanvas2dAction(state: StoryCanvas2dState, descriptor: ActionDescriptor): StoryCanvas2dState {
-  if (descriptor.action !== "setCamera") return state;
-  const camera = (descriptor.args as { readonly camera?: StoryCamera } | undefined)?.camera;
-  return camera ? { ...state, camera } : state;
-}
-//#endregion Reducer
-
-//#region SceneNode
-const STORY_CANVAS_2D_CONTROLLER_ID = "canvas-2d-story";
-
-function buildStoryCanvas2dScene(state: StoryCanvas2dState): Canvas2dScene {
-  return { cameraX: state.camera.x, cameraY: state.camera.y, zoom: state.camera.zoom, layersJson: JSON.stringify(state.layers) };
-}
-//#endregion SceneNode
-
-//#region StoryHost
-function Canvas2dStoryHost({ initialLayers }: { readonly initialLayers: readonly StoryLayer[] }): ReactElement {
-  const [state, setState] = useState<StoryCanvas2dState>({ camera: { x: 0, y: 0, zoom: 1 }, layers: initialLayers });
-  const [lastAction, setLastAction] = useState<ActionDescriptor | null>(null);
-
-  const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setLastAction(descriptor);
-    setState((current) => reduceStoryCanvas2dAction(current, descriptor));
+  const send = useCallback((frame: ShellToGateway) => {
+    const socket = socketRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    try {
+      socket.send(encodeShellToGateway(frame));
+    } catch (error) {
+      setLastError(error instanceof Error ? error.message : "failed to send bridge frame");
+    }
   }, []);
 
-  const node: UiComponentSceneNode = useMemo(
-    () => ({ type: "componentScene", surfaceId: "canvas-2d.story.overview", controllerId: STORY_CANVAS_2D_CONTROLLER_ID, componentKind: "canvas-2d", canvas2d: buildStoryCanvas2dScene(state) }),
-    [state],
+  const dispatch = useCallback(
+    (command: ShellCommand): ReduceResult => {
+      const result = reduce(shellStateRef.current, command, Date.now());
+      if (result.ok) {
+        shellStateRef.current = result.state;
+        setShellState(result.state);
+        send(buildShellStateFrame(result.state));
+      }
+      onCommandAppliedRef.current?.(command, result);
+      return result;
+    },
+    [send],
   );
-  const debug = useMemo(() => JSON.stringify({ camera: state.camera, layerCount: state.layers.length, lastAction }), [state, lastAction]);
 
-  return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <Canvas2dHost node={node} onAction={onAction} />
-      </div>
-      <pre data-testid="canvas-2d-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
-        {debug}
-      </pre>
-    </div>
+  const resolveApproval = useCallback(
+    (approvalId: string, decision: ApprovalDecision, note?: string) => {
+      send({ variant: "approval", approvalId, decision, note: note ?? null });
+      setPendingApprovals((current) => current.filter((approval) => approval.approvalId !== approvalId));
+      setConversation((current) => updateConversationEntry(current, approvalId, (entry) => (entry.kind === "approval" ? { ...entry, state: "resolved", decision } : entry)));
+    },
+    [send],
   );
+
+  const sendAgentMessage = useCallback(
+    (text: string): boolean => {
+      const trimmed = text.trim();
+      const socket = socketRef.current;
+      if (!trimmed || !socket || socket.readyState !== WebSocket.OPEN) return false;
+      const messageId = `msg_${shellSessionId}_${nextMessageOrdinalRef.current}`;
+      nextMessageOrdinalRef.current += 1;
+      send({ variant: "agentMessage", messageId, text: trimmed });
+      setConversation((current) => appendConversationEntry(current, { kind: "userMessage", id: messageId, text: trimmed, atMs: Date.now() }));
+      return true;
+    },
+    [send, shellSessionId],
+  );
+
+  const cancelToolCall = useCallback(
+    (invocationId: string): boolean => {
+      const socket = socketRef.current;
+      if (!invocationId || !socket || socket.readyState !== WebSocket.OPEN) return false;
+      send({ variant: "agentCancel", invocationId });
+      setConversation((current) => updateConversationEntry(current, invocationId, (entry) => (entry.kind === "toolCall" && entry.state === "running" ? { ...entry, state: "cancelling" } : entry)));
+      return true;
+    },
+    [send],
+  );
+  return { setVersionMismatch, reconnectAttemptRef, config, setStatus, socketRef, reconnectTimerRef, pingTimerRef, setLastError, send, shellStateRef, instancesRef, setShellState, onCommandAppliedRef, setPendingApprovals, setConversation, setPresence, onAppCommandRef, shellKind, shellSessionId, principalActor, flags, status, instances, shellState, presence, pendingApprovals, conversation, lastError, versionMismatch, dispatch, resolveApproval, sendAgentMessage, cancelToolCall };
 }
-//#endregion StoryHost
-
-const meta = {
-  title: "🛠️framework🔌️hosts/Canvas2dHost",
-  component: Canvas2dStoryHost,
-  parameters: { layout: "fullscreen" },
-  tags: ["autodocs"],
-} satisfies Meta<typeof Canvas2dStoryHost>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-/** 🖼️ Two node boxes and a wire — mouse-wheel to zoom, middle-drag (or `transformMove` utility) to pan; the camera round-trips back through `setCamera` into the debug readout. */
-export const Scene: Story = {
-  args: { initialLayers: STORY_LAYERS },
-};
-
-/** 🕳️ `layersJson: "[]"` — `JsonLayersCanvasSession.renderFrame` draws its own "Empty canvas" placeholder text. */
-export const EmptyCanvas: Story = {
-  args: { initialLayers: [] },
-};

@@ -21,7 +21,7 @@
       ],
       "options": {
         "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/📜️script.ts test"
+        "command": "repo ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/📜️script.ts test"
       }
     }
   }

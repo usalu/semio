@@ -161,7 +161,8 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     /// 🧾️ The physical receipt of the last original turn, including a retained allocation on failure.
     pub fn step_progress(&self) -> RetainedCloneProgress { self.step_progress }
 
-    fn reserve_cursor_slot(&mut self, grant: usize, reserve: impl FnOnce(&mut PagedList<Box<dyn RetirementCursor>, {usize::MAX}>, usize) -> Result<crate::list::PagedListProgress, crate::list::PagedListAllocationError>) -> Result<RetainedCloneStep, ValueError> {
+    /// 🎰️ Reserves one frontier cursor slot through the caller's reservation strategy, recording the physical receipt of the turn.
+    pub fn reserve_cursor_slot(&mut self, grant: usize, reserve: impl FnOnce(&mut PagedList<Box<dyn RetirementCursor>, {usize::MAX}>, usize) -> Result<crate::list::PagedListProgress, crate::list::PagedListAllocationError>) -> Result<RetainedCloneStep, ValueError> {
         match reserve(&mut self.cursors, grant) {
             Ok(step) => {
                 self.step_progress = RetainedCloneProgress { copied_items: usize::from(step.progressed), retained_capacity_bytes: step.allocated_bytes, ..Default::default() };

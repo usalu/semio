@@ -1,0 +1,305 @@
+{
+  "sources": [
+    {
+      "role": "owner",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "schema",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "worker",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "precision-schema",
+      "path": "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+      "storage": "../🎯️precision/🧬️schema/🔣️.json",
+      "graph": "../📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "resolution-owner",
+      "path": "🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
+      "storage": "../🦀️resolution/🟦️.ts",
+      "graph": "../📥️inputs/🦀️resolution/🟦️.ts",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "resolution-schema",
+      "path": "🏗️build/📥️inputs/🦀️resolution/🧬️schema/🔣️.json",
+      "storage": "../🦀️resolution/🧬️schema/🔣️.json",
+      "graph": "../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "cargo-receipt",
+      "path": "🏗️build/📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",
+      "storage": "../🦀️resolution/💾️receipt/🟨️.mjs",
+      "graph": "../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "generation-owner",
+      "path": "🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+      "storage": "../../🕸️graph/🕰️generations/🟨️.mjs",
+      "graph": "./🕰️generations/🟨️.mjs",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "generation-schema",
+      "path": "🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+      "storage": "../../🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+      "graph": "./🕰️generations/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "session-owner",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "session-protocol",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "immutable-node-loader",
+      "path": "🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs",
+      "storage": "../../📥️source/🔏️closure/🟢️node/🟨️.mjs",
+      "graph": "../📥️source/🔏️closure/🟢️node/🟨️.mjs",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "source-capture-owner",
+      "path": "🏗️build/📥️source/🔏️closure/🟦️.ts",
+      "storage": "../../📥️source/🔏️closure/🟦️.ts",
+      "graph": "../📥️source/🔏️closure/🟦️.ts",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "source-capture-schema",
+      "path": "🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
+      "storage": "../../📥️source/🔏️closure/🧬️schema/🔣️.json",
+      "graph": "../📥️source/🔏️closure/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    },
+    {
+      "role": "store-format-schema",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
+      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
+      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
+      "maximumBytes": 65536
+    }
+  ],
+  "fixtureIndex": 5,
+  "physicalEntries": [
+    "captureBuildGraphClosureProofV1",
+    "retireBuildGraphClosureProofV1",
+    "retireBuildGraphClosureHeadroomV1",
+    "invalidateBuildGraphOptionalGroupV1",
+    "retireBuildGraphOptionalGroupsHeadroomV1"
+  ],
+  "states": [
+    {
+      "id": "fresh",
+      "pinned": false,
+      "changed": null,
+      "accepted": true
+    },
+    {
+      "id": "owner-changed",
+      "pinned": false,
+      "changed": "owner",
+      "accepted": false
+    },
+    {
+      "id": "schema-changed",
+      "pinned": false,
+      "changed": "schema",
+      "accepted": false
+    },
+    {
+      "id": "worker-changed",
+      "pinned": false,
+      "changed": "worker",
+      "accepted": false
+    },
+    {
+      "id": "pinned-owner",
+      "pinned": true,
+      "changed": "owner",
+      "accepted": true
+    },
+    {
+      "id": "pinned-schema",
+      "pinned": true,
+      "changed": "schema",
+      "accepted": true
+    },
+    {
+      "id": "pinned-worker",
+      "pinned": true,
+      "changed": "worker",
+      "accepted": true
+    },
+    {
+      "id": "precision-schema-changed",
+      "pinned": false,
+      "changed": "precision-schema",
+      "accepted": false
+    },
+    {
+      "id": "pinned-precision-schema",
+      "pinned": true,
+      "changed": "precision-schema",
+      "accepted": true
+    },
+    {
+      "id": "resolution-owner-changed",
+      "pinned": false,
+      "changed": "resolution-owner",
+      "accepted": false
+    },
+    {
+      "id": "pinned-resolution-owner",
+      "pinned": true,
+      "changed": "resolution-owner",
+      "accepted": true
+    },
+    {
+      "id": "resolution-schema-changed",
+      "pinned": false,
+      "changed": "resolution-schema",
+      "accepted": false
+    },
+    {
+      "id": "pinned-resolution-schema",
+      "pinned": true,
+      "changed": "resolution-schema",
+      "accepted": true
+    },
+    {
+      "id": "cargo-receipt-changed",
+      "pinned": false,
+      "changed": "cargo-receipt",
+      "accepted": false
+    },
+    {
+      "id": "pinned-cargo-receipt",
+      "pinned": true,
+      "changed": "cargo-receipt",
+      "accepted": true
+    },
+    {
+      "id": "generation-owner-changed",
+      "pinned": false,
+      "changed": "generation-owner",
+      "accepted": false
+    },
+    {
+      "id": "pinned-generation-owner",
+      "pinned": true,
+      "changed": "generation-owner",
+      "accepted": true
+    },
+    {
+      "id": "generation-schema-changed",
+      "pinned": false,
+      "changed": "generation-schema",
+      "accepted": false
+    },
+    {
+      "id": "pinned-generation-schema",
+      "pinned": true,
+      "changed": "generation-schema",
+      "accepted": true
+    },
+    {
+      "id": "session-owner-changed",
+      "pinned": false,
+      "changed": "session-owner",
+      "accepted": false
+    },
+    {
+      "id": "pinned-session-owner",
+      "pinned": true,
+      "changed": "session-owner",
+      "accepted": true
+    },
+    {
+      "id": "session-protocol-changed",
+      "pinned": false,
+      "changed": "session-protocol",
+      "accepted": false
+    },
+    {
+      "id": "pinned-session-protocol",
+      "pinned": true,
+      "changed": "session-protocol",
+      "accepted": true
+    },
+    {
+      "id": "immutable-node-loader-changed",
+      "pinned": false,
+      "changed": "immutable-node-loader",
+      "accepted": false
+    },
+    {
+      "id": "pinned-immutable-node-loader",
+      "pinned": true,
+      "changed": "immutable-node-loader",
+      "accepted": true
+    },
+    {
+      "id": "source-capture-owner-changed",
+      "pinned": false,
+      "changed": "source-capture-owner",
+      "accepted": false
+    },
+    {
+      "id": "pinned-source-capture-owner",
+      "pinned": true,
+      "changed": "source-capture-owner",
+      "accepted": true
+    },
+    {
+      "id": "source-capture-schema-changed",
+      "pinned": false,
+      "changed": "source-capture-schema",
+      "accepted": false
+    },
+    {
+      "id": "pinned-source-capture-schema",
+      "pinned": true,
+      "changed": "source-capture-schema",
+      "accepted": true
+    },
+    {
+      "id": "store-format-schema-changed",
+      "pinned": false,
+      "changed": "store-format-schema",
+      "accepted": false
+    },
+    {
+      "id": "pinned-store-format-schema",
+      "pinned": true,
+      "changed": "store-format-schema",
+      "accepted": true
+    }
+  ]
+}

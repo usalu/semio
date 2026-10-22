@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent oracle for the polyglot unit model, written from the schema texts (policy `key.text`, `python.api`) with the standard library only (json, hashlib, ast, tokenize).
+"""🔬️ Independent oracle for the polyglot unit model, written from the schema texts (policy `key.text`, `python.api`) with the standard library only (json, hashlib, ast, tokenize).
 usage: 🐍️.py graph|keys|scenarios   < fixture.json     -> JSON answers per case
        🐍️.py python < fixture.json                      -> ast answers for the python analysis cases
        🐍️.py lexer FILE...                              -> tokenize answers (token texts) per file
@@ -62,7 +62,7 @@ def graph_failures(graph, kinds):
             if d["unit"] in seen:
                 failures.append("duplicate-dependency")
             seen.add(d["unit"])
-            if d["use"] == "interface" and not t["interface"]:
+            if d["use"] in ("interface", "both") and not t["interface"]:
                 failures.append("no-interface")
     if not failures:
         state = {}
@@ -112,8 +112,10 @@ def unit_key(u, digests, deps):
             digest = ""
         elif d["use"] == "interface":
             digest = deps[d["unit"]]["interfaceClosure"]
-        else:
+        elif d["use"] == "implementation":
             digest = deps[d["unit"]]["outputClosure"]
+        else:
+            digest = "%s|%s" % (deps[d["unit"]]["interfaceClosure"], deps[d["unit"]]["outputClosure"])
         dependencies.append([d["unit"], d["use"], digest])
     material = {
         "v": 1, "id": u["id"], "language": u["language"], "kind": u["kind"],
@@ -133,7 +135,7 @@ def interface_closure(u, own, deps, kinds, exposes=None):
     if own is None:
         return None
     direct = kinds is not None and u["interface"] and kinds[u["interface"]["kind"]]["closure"] == "direct"
-    rows = [] if direct else sorted(([d["unit"], deps[d["unit"]]["interfaceClosure"]] for d in u["dependencies"] if d["use"] == "interface" and (exposes is None or d["unit"] in exposes)), key=lambda r: order_key(r[0]))
+    rows = [] if direct else sorted(([d["unit"], deps[d["unit"]]["interfaceClosure"]] for d in u["dependencies"] if d["use"] in ("interface", "both") and (exposes is None or d["unit"] in exposes)), key=lambda r: order_key(r[0]))
     return sha(canon({"i": own, "d": rows}))
 
 
@@ -197,7 +199,7 @@ def run_scenarios(case, kinds):
                 if d["use"] == "declared":
                     continue
                 f = facts.get(d["unit"])
-                if f is None or (not f["ok"] and (d["use"] == "implementation" or f["interfaceClosure"] is None)):
+                if f is None or (not f["ok"] and (d["use"] in ("implementation", "both") or f["interfaceClosure"] is None)):
                     blocked = True
             if blocked:
                 result["blocked"].append(i)
@@ -262,7 +264,7 @@ def imports_of(tree):
 
 
 def children(stmt):
-    """Statements nested directly under a compound statement, with the header entry."""
+    """🪜️ Statements nested directly under a compound statement, with the header entry."""
     if isinstance(stmt, ast.If):
         return [("if", [stmt.test], stmt.body), ("else", [], stmt.orelse)]
     if isinstance(stmt, (ast.For, ast.AsyncFor)):
@@ -397,7 +399,6 @@ def analyze_ast(text, init, unannotated="ignore"):
                             bound.add(sub.target.id)
     walk(tree.body, 0, False, True)
     bound.update(function_bodies_with_global(tree))
-    # walrus in module-level compound headers and simple statements counts as bound as well (TS: any `NAME :=` in a module-level statement)
     for tok in tokenize.generate_tokens(io.StringIO(text).readline):
         if tok.type == tokenize.NAME and tok.string in KEYWORD_DYNAMIC:
             dynamic = True
@@ -407,7 +408,7 @@ def analyze_ast(text, init, unannotated="ignore"):
 # ---------------------------------------------------------------- corpus mutations
 
 def mutate(text):
-    """A: a statement inserted into the first function body (API unchanged). B: trailing comments and blank lines (API unchanged). C: first parameter of the first public top-level function renamed (API changed)."""
+    """🧬️ A: a statement inserted into the first function body (API unchanged). B: trailing comments and blank lines (API unchanged). C: first parameter of the first public top-level function renamed (API changed)."""
     tree = ast.parse(text)
     lines = text.split("\n")
     a = None

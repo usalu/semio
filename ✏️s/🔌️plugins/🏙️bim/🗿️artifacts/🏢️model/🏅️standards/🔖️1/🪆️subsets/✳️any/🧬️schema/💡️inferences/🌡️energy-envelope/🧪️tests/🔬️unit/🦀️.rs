@@ -315,7 +315,7 @@ fn editing_the_conditions_recomputes_the_envelope_and_the_totals_only() {
     let before = session.inference().energy_totals["project"].clone();
     let patch = SpaceConditionsPatch { heating_setpoint: Some(Assigned::new(Some(21.0))), ..Default::default() };
     let diff = ModelDiff::space_conditions("sp", Entry::Patched(patch));
-    snapshot = protocol::apply_diff(&diff, &snapshot).expect("the diff applies");
+    snapshot = protocol::apply_diff_cold(&diff, &snapshot).expect("the diff applies");
     let after = session.update(&snapshot, &diff).clone();
     let report = session.report();
     assert!(!report.gated && report.computed <= 4, "{report:?}");

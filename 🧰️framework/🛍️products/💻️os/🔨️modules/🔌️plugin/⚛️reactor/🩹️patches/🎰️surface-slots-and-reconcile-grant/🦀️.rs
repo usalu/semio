@@ -18,7 +18,7 @@ pub(super) struct SurfaceSlot {
     pub job: Option<SurfaceReconcileJob>,
 }
 
-struct MountedTreeProducer {
+pub(super) struct MountedTreeProducer {
     pub(super) reconciler: Option<SurfaceReconciler>,
     pub reservation: Option<SurfaceReconcileReservation>,
     pub(super) rejected_index: usize,

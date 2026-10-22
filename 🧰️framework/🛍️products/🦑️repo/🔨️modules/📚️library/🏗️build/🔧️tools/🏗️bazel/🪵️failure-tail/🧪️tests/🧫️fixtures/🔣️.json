@@ -1,0 +1,22 @@
+{
+  "tails": [
+    {"name": "everything under the limit is kept", "maximumBytes": 64, "lines": ["a", "b"], "expect": {"text": "a\nb\n", "bytes": 4, "droppedBytes": 0}},
+    {"name": "no lines leave an empty tail", "maximumBytes": 8, "lines": [], "expect": {"text": "", "bytes": 0, "droppedBytes": 0}},
+    {"name": "the oldest whole lines drop first", "maximumBytes": 6, "lines": ["aa", "bb", "cc"], "expect": {"text": "bb\ncc\n", "bytes": 6, "droppedBytes": 3}},
+    {"name": "one oversized line is cut at the front", "maximumBytes": 5, "lines": ["abcdef"], "expect": {"text": "cdef\n", "bytes": 5, "droppedBytes": 2}},
+    {"name": "a cut never splits a two-byte sequence", "maximumBytes": 5, "lines": ["aäöb"], "expect": {"text": "öb\n", "bytes": 4, "droppedBytes": 3}},
+    {"name": "a cut never splits a four-byte sequence", "maximumBytes": 4, "lines": ["😀x"], "expect": {"text": "x\n", "bytes": 2, "droppedBytes": 4}},
+    {"name": "a cut inside an older line keeps the later lines whole", "maximumBytes": 7, "lines": ["abcdef", "gh"], "expect": {"text": "def\ngh\n", "bytes": 7, "droppedBytes": 3}},
+    {"name": "twenty thousand lines keep the last 64 KiB", "maximumBytes": 65536, "generate": {"lines": 20000, "template": "line {n} on stderr é"}}
+  ],
+  "rendering": [
+    {"language": "en", "row": {"task": "@teaching/proctor:build:release", "bytes": 12, "droppedBytes": 1583191, "file": "/w/failures/t.tail.log", "text": "error: boom\n"}, "expect": "[bazel] task @teaching/proctor:build:release failed; last 12 bytes of its output (1583191 earlier bytes omitted), saved to /w/failures/t.tail.log:\nerror: boom\n"},
+    {"language": "de", "row": {"task": "@teaching/proctor:build:release", "bytes": 12, "droppedBytes": 1583191, "file": "/w/failures/t.tail.log", "text": "error: boom\n"}, "expect": "[bazel] Aufgabe @teaching/proctor:build:release fehlgeschlagen; letzte 12 Bytes ihrer Ausgabe (1583191 frühere Bytes ausgelassen), gesichert in /w/failures/t.tail.log:\nerror: boom\n"},
+    {"language": "en", "row": {"task": "@a:b", "bytes": 3, "droppedBytes": 0, "file": "/w/f.tail.log", "text": "x\n\n"}, "expect": "[bazel] task @a:b failed; its complete output (3 bytes), saved to /w/f.tail.log:\nx\n\n"},
+    {"language": "de", "row": {"task": "@a:b", "bytes": 2, "droppedBytes": 0, "file": "/w/f.tail.log", "text": "ä"}, "expect": "[bazel] Aufgabe @a:b fehlgeschlagen; ihre vollständige Ausgabe (2 Bytes), gesichert in /w/f.tail.log:\nä\n"}
+  ],
+  "files": {
+    "tasks": ["@b:two", "@a:one/with space", "@c:../escape"],
+    "names": ["@a:one/with space", "@c:../escape"]
+  }
+}

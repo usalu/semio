@@ -42,7 +42,7 @@ test("default task preserves exact neutral compiler and runtime argv", async () 
 test("registered neutral Nx inputs match the language neutral task descriptor", () => {
   const project = JSON.parse(readFileSync(join(pixelRoot, "📋️project.json"), "utf8"));
   expect(project.targets["test-typescript"].inputs).toEqual(descriptor.inputs);
-  expect(project.targets["test-typescript"].options.command).toBe("bun ./📜️script.ts test typescript");
+  expect(project.targets["test-typescript"].options.command).toBe("repo ./📜️script.ts test typescript");
 });
 
 test("the neutral source owner has no Cargo registration or runtime imports", () => {

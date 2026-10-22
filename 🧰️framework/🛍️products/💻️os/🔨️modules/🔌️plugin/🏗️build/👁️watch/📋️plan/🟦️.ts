@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { watch, lstatSync, existsSync, realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
 
 /** 👁️ The admitted native source and generator inputs projected by the actual build producer. */
 export type NativeSourceWatchPlanV1 = Readonly<{ schema: "semio.framework.os.plugin.source-watch-plan/v1"; includes: readonly string[]; excludes: readonly string[]; files: readonly string[] }>;
@@ -20,7 +21,7 @@ export function parseNativeSourceWatchPlanV1(value: unknown): NativeSourceWatchP
 
 /** 🔎️ Selects an exact source coordinate using the first-party runtime glob implementation. */
 export function nativeSourceWatchSelectedV1(plan: NativeSourceWatchPlanV1, path: string): boolean {
-  return plan.files.includes(path) || plan.includes.some(glob => new Bun.Glob(glob).match(path)) && !plan.excludes.some(glob => new Bun.Glob(glob).match(path));
+  return plan.files.includes(path) || plan.includes.some(glob => new GlobV1(glob).match(path)) && !plan.excludes.some(glob => new GlobV1(glob).match(path));
 }
 
 /** 👀️ Observes admitted owner files, collapsing unchanged writes and retiring all watchers on cancellation. */
@@ -48,7 +49,7 @@ export async function startNativeSourceWatchV1(workspace: string, authored: Nati
   };
   const scan = async (initial: boolean): Promise<void> => {
     const files = new Set<string>();
-    for (const pattern of [...plan.includes, ...plan.files]) for await (const path of new Bun.Glob(pattern).scan({ cwd: root, dot: true, onlyFiles: true, followSymlinks: false })) { cancelled(); if (selected(path)) files.add(path); }
+    for (const pattern of [...plan.includes, ...plan.files]) for await (const path of new GlobV1(pattern).scan({ cwd: root, dot: true, onlyFiles: true, followSymlinks: false })) { cancelled(); if (selected(path)) files.add(path); }
     if (files.size > 32768) throw Error("Native watch source count exceeds its boundary");
     for (const [directory, watcher] of watchers) if (!existsSync(directory)) { watcher.close(); watchers.delete(directory); }
     if (!initial) for (const path of hashes.keys()) if (!files.has(path)) await observe(path);

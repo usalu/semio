@@ -24,6 +24,12 @@ pub fn change_node_kind_description<Op: From<crate::change_node_kind_description
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeNodeKindDescription where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_node_kind_description::ChangeNodeKindDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind-description", record: "ChangedNodeKindDescription" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change node kind description", "Knotenartbeschreibung ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block2dSnapshot, Op> for ChangeNodeKindDescription where Op: protocol::ColdMutation<Block2dSnapshot, ReferenceDiff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_node_kind_description::ChangeNodeKindDescription> {
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         crate::change_node_kind_description::diff::diff(self, base)
     }
@@ -33,9 +39,6 @@ impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeNodeKindDescripti
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change node kind description", "Knotenartbeschreibung ändern")
-    }
 }
 //#endregion 🔖️Mutation
 

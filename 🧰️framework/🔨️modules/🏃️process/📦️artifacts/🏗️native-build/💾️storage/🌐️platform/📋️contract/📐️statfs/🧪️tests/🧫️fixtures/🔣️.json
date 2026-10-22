@@ -22,12 +22,23 @@
       1048576
     ]
   ],
-  "hostPlatforms": [
+  "directoryPlatforms": [
     {
       "platform": "darwin"
     },
     {
+      "platform": "linux"
+    },
+    {
+      "platform": "win32"
+    }
+  ],
+  "foreignPlatforms": [
+    {
       "platform": "freebsd"
+    },
+    {
+      "platform": "aix"
     }
   ]
 }

@@ -86,7 +86,7 @@ impl ArtifactActor {
             last_written_hash: None,
             folder_held_hash: None,
             folder_bootstrapped: false,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testing"))]
             folder_writes: 0,
             remote_state: RemoteState::Detached,
             last_status: None,
@@ -99,7 +99,7 @@ impl ArtifactActor {
             close_drain_deadline: None,
             readiness: None,
             readiness_requested: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testing"))]
             fail_bootstrap_local_replay_once: false,
         }
     }

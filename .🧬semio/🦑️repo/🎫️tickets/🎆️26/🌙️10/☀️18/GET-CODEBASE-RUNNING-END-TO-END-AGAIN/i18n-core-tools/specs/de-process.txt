@@ -1,0 +1,18 @@
+== artifacts fixed
+[native] Freigabe des festen Probe-Wächters nach dem primären Fehler abgelehnt
+== artifacts cleanup
+[native] Freigabe des Wächters nach dem primären Fehler abgelehnt
+== artifacts native-build
+[nx-native] {count} Lieferobjekte nach {directory} bereitgestellt ¦ count,directory
+== artifacts wasm
+[{logPrefix}] {buildLabel} {packProfileArgs} --target web --out-dir {pkgDir} --out-name {wasmBaseName} --no-pack
+[{logPrefix}] wasm-Build in {seconds} s abgeschlossen ¦ logPrefix,seconds
+[{logPrefix}] Eigene Datei {mode}/{wasmBaseName}_bg.wasm übernommen ({sz} MiB)
+== leases
+Warte auf {mode}-Zugriff auf {resource}
+== testing execution
+[leak] Scratch-Wurzel {path} nicht freigegeben: {error}
+== testing sandbox
+[leak] Test-Sandbox {value} nicht freigegeben: {error}
+== testing cargo
+[TRACE] Nextest-Artefakte aufbewahrt unter {directory}

@@ -7,15 +7,15 @@
     "./stories/coordination": "./📖️stories/🧭️coordination/🟦️.ts"
   },
   "scripts": {
-    "verify-fem-pcg-publication-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-pcg-publication-owners",
-    "verify-fem-assembly-physical-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-assembly-physical-owners",
-    "verify-fem-numerical-page-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-numerical-page-owners",
-    "verify-fem-mesh-preparation-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-mesh-preparation-owners",
-    "verify-fem-scalar-owners-native": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-scalar-owners-native",
-    "verify-fem2d-window-config-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem2d-window-config-contract",
-    "verify-fem3d-window-config-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem3d-window-config-contract",
-    "verify-fem-live-visual-publication": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-live-visual-publication",
-    "verify-fem-numerical-microcursor": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-numerical-microcursor"
+    "verify-fem-pcg-publication-owners": "repo run @semio-tech/s-fem-composition-tests:verify-fem-pcg-publication-owners",
+    "verify-fem-assembly-physical-owners": "repo run @semio-tech/s-fem-composition-tests:verify-fem-assembly-physical-owners",
+    "verify-fem-numerical-page-owners": "repo run @semio-tech/s-fem-composition-tests:verify-fem-numerical-page-owners",
+    "verify-fem-mesh-preparation-owners": "repo run @semio-tech/s-fem-composition-tests:verify-fem-mesh-preparation-owners",
+    "verify-fem-scalar-owners-native": "repo run @semio-tech/s-fem-composition-tests:verify-fem-scalar-owners-native",
+    "verify-fem2d-window-config-contract": "repo run @semio-tech/s-fem-composition-tests:verify-fem2d-window-config-contract",
+    "verify-fem3d-window-config-contract": "repo run @semio-tech/s-fem-composition-tests:verify-fem3d-window-config-contract",
+    "verify-fem-live-visual-publication": "repo run @semio-tech/s-fem-composition-tests:verify-fem-live-visual-publication",
+    "verify-fem-numerical-microcursor": "repo run @semio-tech/s-fem-composition-tests:verify-fem-numerical-microcursor"
   },
   "semio": {
     "role": "test",

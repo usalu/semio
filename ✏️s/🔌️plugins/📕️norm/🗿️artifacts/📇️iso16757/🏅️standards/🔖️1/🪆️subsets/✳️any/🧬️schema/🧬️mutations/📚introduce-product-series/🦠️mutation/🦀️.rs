@@ -18,15 +18,6 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductSeries
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "insert", entity: "productSeries", kind: "introduce-product-series", record: "IntroducedProductSeries" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        crate::introduce_product_series::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::introduce_product_series::inverse::inverse(self, base)?
-    
-    })
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Introduce product series \"{}\"", self.product_series.id),
@@ -36,4 +27,16 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductSeries
     fn target(&self) -> Vec<String> {
         vec![self.product_series.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for IntroduceProductSeries where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_product_series::mutation::RetireProductSeries> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
+        crate::introduce_product_series::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        crate::introduce_product_series::inverse::inverse(self, base)?
+    
+    })
+}
 }

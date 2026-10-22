@@ -26,7 +26,7 @@ export function bazelCargoClassV1(task:{definition:{execution:{command?:string};
  return match?{subcommand:match[1] as BazelCargoClassV1["subcommand"],manifest:match[2]!.replace(/^"|"$/gu,"")}:undefined;
 }
 
-/** 🚪️ Renders the exact argument vector after `bun repo`: launcher options first, the Cargo subcommand next, the machine-readable message format last, so Bazel keys what the ingress receives. */
+/** 🚪️ Renders the exact argument vector after `repo`: launcher options first, the Cargo subcommand next, the machine-readable message format last, so Bazel keys what the ingress receives. */
 export function bazelCargoArgumentsV1(action:BazelCargoActionV1):string[]{
  if(validateJsonSchemaSubset(actionSchema,action,componentSchema).length)throw new Error(`Closed Bazel Cargo action required: ${action.id}`);
  return[policy.launcher.command,"--store="+policy.launcher.store,"--configuration="+action.configuration,"--parallelism="+policy.launcher.parallelism,policy.launcher.delimiter,action.subcommand,"--manifest-path",action.manifest,"-p",action.package,action.selection,...(action.target?["--target",action.target]:[]),...(action.features?.length?["--features",[...action.features].sort().join(",")]:[]),policy.messageFormat];

@@ -20,7 +20,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "curve", kind: "replace-curve", record: "ReplacedCurve" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace curve on edge \"{}\"", self.edge_id), &format!("Kurve auf Kante \"{}\" ersetzen", self.edge_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.edge_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioBrepSnapshot, Op> for ReplaceCurve
+where
+    Op: protocol::ColdMutation<SemioBrepSnapshot, ReferenceDiff = crate::schema::diff::SemioBrepDiff> + From<ReplaceCurve>,
+{
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioBrepSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,11 +41,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace curve on edge \"{}\"", self.edge_id), &format!("Kurve auf Kante \"{}\" ersetzen", self.edge_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.edge_id.clone()]
-    }
 }
 //#endregion 🔖️Payload

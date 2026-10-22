@@ -4,7 +4,7 @@
 # project after the checkout folder, so two checkouts (or a fresh clone beside the daily one) run side by side.
 # Unprivileged: the native cache partitions are directories swapped with renameat2(RENAME_EXCHANGE), so the container needs no
 # capability, loop device or mount. They must sit on a case-sensitive filesystem with atomic exchange: the `.cache` named volume of
-# devcontainer.json, never the bind-mounted checkout (`bun repo preflight` refuses a case-insensitive host mount).
+# devcontainer.json, never the bind-mounted checkout (`repo preflight` refuses a case-insensitive host mount).
 services:
   semio:
     build:

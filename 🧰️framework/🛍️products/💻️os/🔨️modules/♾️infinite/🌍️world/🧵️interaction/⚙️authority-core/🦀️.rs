@@ -89,7 +89,7 @@ impl WorldInteractionAuthority {
         }
         if interaction_state.interaction_objects.revision != session_state.interaction_revision || self.registry.is_some() {
             let mut registry = self.registry.take().unwrap_or_else(|| WorldInteractionRegistryBuildCursor::new(session_state.interaction_revision));
-            match registry.step(selection_state, gumball_state, scene_state, context) {
+            match registry.step(session_state, interaction_state, scene_state, context) {
                 WorldInteractionStep::Pending => {
                     self.registry = Some(registry);
                     return WorldInteractionAuthorityStep::Pending;
@@ -515,7 +515,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match cursor.step(selection_state, gumball_state, scene_state, generation, context) {
+                match cursor.step(session_state, selection_state, interaction_state, scene_state, generation, context) {
                     WorldInteractionStep::Pending => {
                         self.active = Some(WorldInteractionActive::Pick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -573,12 +573,12 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match cursor.step(selection_state, gumball_state, scene_state, generation, context) {
+                match cursor.step(session_state, interaction_state, generation, context) {
                     WorldInteractionStep::Pending => {
                         self.active = Some(WorldInteractionActive::ObjectPick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
                     }
-                    WorldInteractionStep::Complete => match cursor.finish_plan(session_state, selection_state, interaction_state, scene_state, generation) {
+                    WorldInteractionStep::Complete => match cursor.finish_plan(session_state, selection_state, interaction_state, generation) {
                         Ok(Some(plan)) => {
                             self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
                             WorldInteractionAuthorityStep::Pending
@@ -614,7 +614,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match cursor.step(selection_state, gumball_state, scene_state, generation, context) {
+                match cursor.step(session_state, selection_state, interaction_state, scene_state, generation, context) {
                     WorldInteractionStep::Pending => {
                         self.active = Some(WorldInteractionActive::ComponentPick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -656,7 +656,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match cursor.step(selection_state, gumball_state, scene_state, generation, context) {
+                match cursor.step(session_state, selection_state, interaction_state, scene_state, generation, context) {
                     WorldInteractionStep::Pending => {
                         self.active = Some(WorldInteractionActive::MarqueePick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -664,7 +664,7 @@ impl WorldInteractionAuthority {
                     WorldInteractionStep::Complete => {
                         let cursor_generation = cursor.generation;
                         let component_kind = cursor.component_kind;
-                        match cursor.finish(session_state, gumball_state, generation) {
+                        match cursor.finish(session_state, generation) {
                             Ok((gesture, results)) => {
                                 let Some(intent) = self.queue.front().copied().filter(|intent| intent.generation == cursor_generation) else {
                                     self.faulted = true;
@@ -706,7 +706,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match job.step(selection_state, gumball_state, scene_state, generation, input, context) {
+                match job.step(session_state, interaction_state, generation, input, context) {
                     Ok(WorldInteractionStep::Pending) => {
                         self.active = Some(WorldInteractionActive::MarqueePublish { job, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -745,7 +745,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match job.step(selection_state, gumball_state, scene_state, generation, input, context) {
+                match job.step(session_state, interaction_state, scene_state, generation, input, context) {
                     Ok(WorldInteractionStep::Pending) => {
                         self.active = Some(WorldInteractionActive::ComponentMarqueePublish { job, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -784,7 +784,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match cursor.step(selection_state, gumball_state, scene_state, generation, context) {
+                match cursor.step(session_state, camera_state, gumball_state, interaction_state, scene_state, generation, context) {
                     WorldInteractionStep::Pending => {
                         self.active = Some(WorldInteractionActive::GumballPick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -832,7 +832,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match job.step(selection_state, gumball_state, scene_state, generation, input, context) {
+                match job.step(session_state, gumball_state, interaction_state, scene_state, generation, input, context) {
                     Ok(WorldInteractionStep::Pending) => {
                         self.active = Some(WorldInteractionActive::GumballCommit { job, retirement: None });
                         WorldInteractionAuthorityStep::Pending
@@ -875,7 +875,7 @@ impl WorldInteractionAuthority {
                     context.consume_fuel(1);
                     return WorldInteractionAuthorityStep::Pending;
                 }
-                match job.step(selection_state, gumball_state, scene_state, generation, input, context) {
+                match job.step(session_state, gumball_state, generation, input, context) {
                     Ok(WorldInteractionStep::Pending) => {
                         self.active = Some(WorldInteractionActive::BrushCommit { job, retirement: None });
                         WorldInteractionAuthorityStep::Pending

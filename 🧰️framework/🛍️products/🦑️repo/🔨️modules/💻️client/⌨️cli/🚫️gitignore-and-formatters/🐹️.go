@@ -14,7 +14,6 @@ import (
 	"github.com/usalu/semio/repo/client/internal/glob"
 	"github.com/usalu/semio/repo/client/internal/ignore"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -146,7 +145,7 @@ func runFormatterCommand(binary string, args []string, workDir string) error {
 	if strings.Contains(binary, "/") || strings.Contains(binary, "\\") {
 		commandPath = filepath.Join(workDir, binary)
 	}
-	cmd := exec.Command(commandPath, args...)
+	cmd := workspace.ToolCommand(commandPath, args...)
 	cmd.Dir = workDir
 	return cmd.Run()
 }

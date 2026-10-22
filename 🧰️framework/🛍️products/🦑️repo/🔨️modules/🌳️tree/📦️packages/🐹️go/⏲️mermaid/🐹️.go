@@ -233,7 +233,7 @@ func MermaidLocByTechnologiesBundlesFoldersFiles() string {
 
 func MermaidLocByContributors() string {
 	bundles := codebase.GetTechnologies()
-	files, _ := model.ScopeToFiles(workspace.Scope{Kind: workspace.ScopeRepo}, bundles)
+	files, _ := model.ScopeToFiles(workspace.GetRootDir(), workspace.Scope{Kind: workspace.ScopeRepo}, bundles)
 	authorLines := make(map[string]int)
 	for _, file := range files {
 		absPath := filepath.Join(workspace.GetRootDir(), file)

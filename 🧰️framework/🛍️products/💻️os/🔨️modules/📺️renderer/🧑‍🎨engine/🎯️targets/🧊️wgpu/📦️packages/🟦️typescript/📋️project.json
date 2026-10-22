@@ -51,10 +51,10 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/*/🟦️.ts",
       {
-        "runtime": "bun --version"
+        "runtime": "repo tools exec --light bun -- --version"
       },
       {
-        "runtime": "node -p \"process.platform.concat(process.arch)\""
+        "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
       },
       {
         "env": "NODE_ENV"
@@ -540,7 +540,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -562,7 +562,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-socket-snapshot-sqlite source",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -582,7 +582,7 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-socket-snapshot-sqlite native",
         "cwd": "{projectRoot}"
       },
       "inputs": [
@@ -601,7 +601,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -623,7 +623,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-wgpu-unit",
+        "command": "repo ./📜️script.ts test-wgpu-unit",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -644,7 +644,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts canonical-architecture",
+        "command": "repo ./📜️script.ts canonical-architecture",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": [],
@@ -666,7 +666,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-media-slots",
+        "command": "repo ./📜️script.ts test-media-slots",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -692,7 +692,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-source-check",
+        "command": "repo ./📜️script.ts directory-retained-home-bootstrap-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -707,7 +707,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-native-check",
+        "command": "repo ./📜️script.ts directory-retained-home-bootstrap-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -722,7 +722,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts normalized-presence-rows-source-check",
+        "command": "repo ./📜️script.ts normalized-presence-rows-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -737,7 +737,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts normalized-presence-rows-native-check",
+        "command": "repo ./📜️script.ts normalized-presence-rows-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -759,7 +759,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts browser-dock-acceptance",
+        "command": "repo ./📜️script.ts browser-dock-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -876,7 +876,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts browser-media-acceptance",
+        "command": "repo ./📜️script.ts browser-media-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -975,7 +975,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-browser",
+        "command": "repo ./📜️script.ts test-browser",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
     },
@@ -984,7 +984,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-browser-worker",
+        "command": "repo ./📜️script.ts test-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -1005,7 +1005,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-preview-generated",
+        "command": "repo ./📜️script.ts test-preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -1024,7 +1024,7 @@
     "check-browser-worker": {
       "executor": "repo:script",
       "options": {
-        "command": "bun ./📜️script.ts check-browser-worker",
+        "command": "repo ./📜️script.ts check-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "cache": true,
@@ -1049,10 +1049,10 @@
         "{workspaceRoot}/tsconfig.json",
         "{workspaceRoot}/package.json",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         {
           "env": "NODE_ENV"
@@ -1073,7 +1073,7 @@
         "@semio-tech/plugin-registry:generate"
       ],
       "options": {
-        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-browser-boot",
+        "command": "repo \"../../⚙️browser-build/📜️script.ts\" generate-browser-boot",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": false
       }
@@ -1107,7 +1107,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js"
       ],
       "options": {
-        "command": "bun ./📜️script.ts generate-frame-worker",
+        "command": "repo ./📜️script.ts generate-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "dependsOn": [
@@ -1125,7 +1125,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts preview-generated",
+        "command": "repo ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -1141,7 +1141,7 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "command": "bun \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo metadata --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml\"",
+        "command": "repo \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo metadata --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml\"",
         "cwd": ".",
         "forwardAllArgs": false
       }
@@ -1157,7 +1157,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts check-frame-worker",
+        "command": "repo ./📜️script.ts check-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
     },
@@ -1176,7 +1176,7 @@
         "@semio-tech/framework-graph:generate"
       ],
       "options": {
-        "command": "bun ./📜️script.ts check-wasm",
+        "command": "repo ./📜️script.ts check-wasm",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       }
@@ -1196,7 +1196,7 @@
         "workspace:deps-wasm-opt"
       ],
       "options": {
-        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build",
+        "command": "repo ../../🏗️compiler/🌐️wasm/📜️script.ts build",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true,
         "args": [
@@ -1233,7 +1233,7 @@
         "cargoToolchain"
       ],
       "options": {
-        "command": "bun ./📜️script.ts native-environment-check",
+        "command": "repo ./📜️script.ts native-environment-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -1249,7 +1249,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-{options.env.SEMIO_BUILD_MODE}"
       ],
       "options": {
-        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build",
+        "command": "repo \"../../🏗️compiler/🦀️native/📜️script.ts\" build",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true,
         "args": [
@@ -1287,7 +1287,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts lint",
+        "command": "repo ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
     },
@@ -1302,7 +1302,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale",
+        "command": "repo ../../⌨️native-entrypoint/📜️script.ts scale",
         "forwardAllArgs": true,
         "args": [
           "prototype"
@@ -1342,10 +1342,10 @@
         "{workspaceRoot}/tsconfig.json",
         "{workspaceRoot}/package.json",
         {
-          "runtime": "bun --version"
+          "runtime": "repo tools exec --light bun -- --version"
         },
         {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
+          "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
         },
         {
           "env": "NODE_ENV"
@@ -1366,7 +1366,7 @@
         "@semio-tech/plugin-registry:generate"
       ],
       "options": {
-        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-renderer-boot",
+        "command": "repo \"../../⚙️browser-build/📜️script.ts\" generate-renderer-boot",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": false
       }
@@ -1383,7 +1383,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/**/*"
       ],
       "options": {
-        "command": "bun ./📜️script.ts browser-embedded-acceptance",
+        "command": "repo ./📜️script.ts browser-embedded-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },
@@ -1447,7 +1447,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check-boot-cache-inputs"
+        "command": "repo ./📜️script.ts check-boot-cache-inputs"
       }
     },
     "test-worker-cell": {
@@ -1467,7 +1467,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test worker-cell",
+        "command": "repo ./📜️script.ts test worker-cell",
         "env": {
           "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated"
         }
@@ -1477,7 +1477,7 @@
       "executor": "repo:script",
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-worker-receiving-source",
+        "command": "repo ./📜️script.ts test-worker-receiving-source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "inputs": [
@@ -1505,7 +1505,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-original-frame-source",
+        "command": "repo ./📜️script.ts test-original-frame-source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "cache": true
@@ -1521,7 +1521,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test-original-io-invocation-native",
+        "command": "repo ./📜️script.ts test-original-io-invocation-native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "cache": true
@@ -1539,7 +1539,7 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test-native-entrypoint-catalog"
+        "command": "repo ./📜️script.ts test-native-entrypoint-catalog"
       },
       "metadata": {
         "semio": {
@@ -1563,7 +1563,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-original-browser-output-source"
+        "command": "repo ./📜️script.ts test-original-browser-output-source"
       }
     },
     "test-original-browser-output-native": {
@@ -1579,7 +1579,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-original-browser-output-native"
+        "command": "repo ./📜️script.ts test-original-browser-output-native"
       }
     }
   },

@@ -108,7 +108,7 @@ describe("Norm oracle source ownership", () => {
     expect(project.namedInputs.normOracleSources?.slice().sort()).toEqual(normSources);
     for (const target of ["test-oracle", "test-parity", "test"]) expect(project.targets[target].inputs).toContain("normOracleSources");
     expect(project.targets["test-oracle-source-ownership"].inputs).toContain("normOracleSources");
-    expect(project.targets["test-oracle-source-ownership"].options.command).toBe("bun ./📜️script.ts test oracle-source-ownership");
+    expect(project.targets["test-oracle-source-ownership"].options.command).toBe("repo ./📜️script.ts test oracle-source-ownership");
     const local = JSON.parse(read(`${control.plugin}/📦️packages/🟦️typescript/📋️project.json`));
     expect(local.namedInputs?.normOracleSources).toBeUndefined();
     expect(local.targets["test-oracle-source"]).toBeUndefined();

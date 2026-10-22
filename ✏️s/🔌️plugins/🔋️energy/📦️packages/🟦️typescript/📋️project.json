@@ -7,7 +7,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test toolchain-authority"
+        "command": "repo ./📜️script.ts test toolchain-authority"
       }
     },
     "test": {
@@ -15,7 +15,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     }

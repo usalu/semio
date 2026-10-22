@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🗂️ Runs the complete native ownership law through the General command owner. */
 import { join, resolve } from "node:path";
 import { executeCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts";

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -10,6 +10,8 @@ import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runServiceOperationConversionCheckScript, runLifecycleCheckScript, runGuestFaultCheckScript, runUiPatchMarshallingCheckScript, runRouterEffectSourceCustodyScript, runOriginalDriverPolicyScript, familyPackages } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { runtimeExecutableV1, runtimeTypeEnvironmentV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeTestArgumentsV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -26,7 +28,7 @@ class TestScript extends BundleScript {
 class RuntimePortsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert.equal(segments.length, 0, "runtime-ports-check takes no arguments");
-    runCmd("bun", ["test", join(import.meta.dir, "../..", "🧪️tests", "🧱️ports", "🟦️.ts")], { cwd: this.root });
+    runCmd(runtimeExecutableV1(), runtimeTestArgumentsV1([join(import.meta.dirname, "../..", "🧪️tests", "🧱️ports", "🟦️.ts")]), { cwd: this.root });
   }
 }
 
@@ -35,7 +37,7 @@ class OriginalActorBoundarySourceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Expected test-original-actor-boundary-source");
     const tests = [join(this.root, "../../../⚛️reactor/🎟️context/🧪️tests/🟦️.ts"), join(this.root, "../../../⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🏃️dispatch/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts"), join(this.root, "../../../🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts"), join(this.root, "../../../🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts")];
-    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "plugin-host:original-actor-boundary:types", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", runtimeTypeEnvironmentV1(), ...tests], this.repoRoot, "plugin-host:original-actor-boundary:types", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", ...tests], this.repoRoot, "plugin-host:original-actor-boundary:source", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
   }
 }
@@ -108,7 +110,7 @@ class OriginalDriverPolicyScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("test-original-actor-boundary-source", OriginalActorBoundarySourceScript)

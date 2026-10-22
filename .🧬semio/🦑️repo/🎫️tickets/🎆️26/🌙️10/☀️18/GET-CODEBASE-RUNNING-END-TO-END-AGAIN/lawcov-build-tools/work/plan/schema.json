@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:pristine-disposition-corpus:v1",
+  "title": "Pristine Disposition Corpus",
+  "description": "Language-agnostic cases for the pristine file disposition: an observation of one private-clone file in, nested, replace, preserve, remove or a refusal message out. The truth table names the axes of an exhaustive sweep.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases", "truthTable"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "observation", "expected", "error"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "observation": { "type": "object" },
+          "expected": { "anyOf": [{ "type": "null" }, { "enum": ["nested", "replace", "preserve", "remove"] }] },
+          "error": { "type": "string" }
+        }
+      }
+    },
+    "truthTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paths", "present", "links", "flags"],
+      "properties": {
+        "paths": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "present": { "type": "array", "items": { "type": "boolean" } },
+        "links": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "flags": { "type": "array", "items": { "type": "boolean" } }
+      }
+    }
+  }
+}

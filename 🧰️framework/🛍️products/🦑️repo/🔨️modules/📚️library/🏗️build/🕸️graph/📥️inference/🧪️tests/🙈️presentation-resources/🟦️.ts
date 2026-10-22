@@ -21,7 +21,7 @@ test("the fixture is closed under its schema and the policy declares exactly the
 test("the command closure of the entry omits presentation resources and keeps the other imported resources",async()=>{
  const inference=await import("../../🟨️.mjs");await inference.libraryBootstrap;
  const scripts=await import("../../🧭️script-inputs/🟨️.mjs"),cache=inference.createScriptInputCache({workspaceRoot:root});
- const closure=await scripts.relativeScriptInputs([resolve(root,fixture.entry)],root,cache,false);
+ const closure=await scripts.relativeScriptInputs([resolve(root,fixture.entry)],root,cache as never,false);
  for(const file of names(fixture.excluded))expect(closure).not.toContain(file);
  for(const file of names(fixture.included))expect(closure).toContain(file);
  expect(closure).toContain("{workspaceRoot}/"+fixture.entry);

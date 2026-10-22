@@ -12,8 +12,9 @@ pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
 
 /// ⏱️ Finite host-enforced inference work limits — field-for-field the guest's own
 /// `artifact-inference-budget`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactInferenceBudgetV1 {
     pub allocation_bytes: u64,
     pub work_units: u64,
@@ -25,8 +26,9 @@ fn retained_clone_grant_schema(_: &mut schemars::gen::SchemaGenerator) -> schema
 }
 
 /// 🗃️ Requested or actual inference cache behaviour — the guest's own closed vocabulary.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ArtifactInferenceCacheModeV1 {
     Cold,
     Incremental,
@@ -39,8 +41,9 @@ pub enum ArtifactInferenceCacheModeV1 {
 /// re-checks every identity field against its registered route and against the guest's echo before
 /// any result is publishable, so a drift between this mirror and the router is a decode failure at
 /// the first call, not a silently wrong answer.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactInferenceRequestV1 {
     pub wire_version: u32,
     pub owner: String,
@@ -70,8 +73,9 @@ pub struct ArtifactInferenceRequestV1 {
 /// domain contract and the router has ALREADY asserted that every identity field echoes the request
 /// exactly before this decode runs, so mirroring them here would duplicate an authority this scope
 /// does not own. Unknown fields are therefore accepted and ignored — deliberately, not by oversight.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactInferenceResultV1 {
     pub wire_version: u32,
     pub owner: String,
@@ -81,6 +85,7 @@ pub struct ArtifactInferenceResultV1 {
     pub generation: u64,
     pub complete: bool,
     pub actual_cache_mode: ArtifactInferenceCacheModeV1,
+    #[value(default)]
     pub canonical_payload: Option<Vec<u8>>,
 }
 //#endregion 🔖️ArtifactInferenceWire

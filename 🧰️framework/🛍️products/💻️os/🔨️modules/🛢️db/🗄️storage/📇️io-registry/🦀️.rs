@@ -1,7 +1,7 @@
 //! 📇️ Db I/O kernel backend registry, close and retirement turns.
 #![allow(async_fn_in_trait)]
 
-use db_io_core::{DbIoFaultCustody, db_io_fault_custody_reserve};
+use db_io_core::{DbIoFaultCustody, db_io_fault_custody_reserve, db_io_fault_custody_take, DB_IO_FAULT_CUSTODY, DB_IO_FAULT_CUSTODY_SLOTS, DB_IO_LOST_OWNER_OVERFLOW_SLOTS};
 
 use db_ids::{ArtifactId, DbError, GenerationId};
 use db_io_core::{BLOCKING_QUEUE, DB_IO_BACKEND_CONTROLS, DB_IO_LOST_OWNERS, DB_IO_LOST_OWNER_OVERFLOW, DB_IO_LOST_OWNER_QUARANTINE, DB_IO_LOST_OWNER_SLOTS, DB_IO_LOST_OWNER_WAKE_REQUESTED, DB_IO_MAX_READ_BYTES, DB_IO_OPERATION_ITEMS, DB_IO_OPERATION_PAGES, DB_IO_PAGE_BYTES, DB_IO_PAGE_RETIREMENT_SLOTS, DB_IO_RETIREMENT_PRESSURE_FAULT, DB_IO_TASK_SLOTS, DB_IO_TOTAL_PAGES, DbIoBackendControl, DbIoCredit, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoFault, DbIoFaultCause, DbIoFaultKind, DbIoLostOwner, DbIoPagePhase, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoTaskHandle, DbIoTaskKind, DbIoTaskPhase, DbIoTaskSlot, DbIoTerminal, DbIoText, DbIoU64List, DbIoWriterReleaseStep, EMPTY_DB_IO_PAGE_SLOT, PayloadStorage as _, WAL_WRITER_CONTROLLERS, WAL_WRITER_SIGNALS, WalWriterController, cell, db_io_admission_released, db_io_backend_owner_reserve, db_io_backend_parts, db_io_error_text, db_io_operation_detach_task, db_io_operation_return, db_io_page_arena, db_io_page_credit, db_io_result_handback, db_io_slot_matches, db_io_task_arena, db_io_text_literal, defer_fault_waiters, fault_all_requested, request, request_controller};

@@ -158,7 +158,7 @@ fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, semio_s_artifact_bim
 
 /// 🛡️ The step writing `created` after the style it may need: the model must accept the style, and the annotation on top of it.
 fn write(ctx: &ToolContext<'_>, style: Option<(String, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, created: ModelMutation) -> Step {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let mut base: ModelSnapshot = ctx.snapshot.clone();
     let mut mutations = Vec::new();
     if let Some((id, annotation_style)) = style {

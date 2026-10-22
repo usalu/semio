@@ -32,11 +32,11 @@ export function registerOpensPageStepFrontTests(): void {
     expect(session.startRun).not.toHaveBeenCalled();
     expect(session.resumeRun).not.toHaveBeenCalled();
   });
-  it("shows a quiz's page clear behind its hovered or focused card and never starts or resumes a run for it", () => {
+  it("shows a quiz's page clear behind its card when its explore control is hovered or the card is focused, and never starts or resumes a run for it", () => {
     const session = stubSession();
     render(<Home initial={{ screen: "home", page: "quizzes" }} session={session} />);
     const card = screen.getByRole("region", { name: "Quiz heating" });
-    fireEvent.pointerOver(card, { pointerType: "mouse" });
+    fireEvent.pointerOver(card.querySelector("[data-layered-zoom]")!, { pointerType: "mouse" });
     expect(cardHost("heating").hasAttribute("data-revealed")).toBe(true);
     expect(card.hasAttribute("data-revealed")).toBe(true);
     expect(pane("heating").querySelector('[data-page="quiz:heating"]')).not.toBeNull();
@@ -66,7 +66,7 @@ export function registerOpensPageStepFrontTests(): void {
     expect(session.refreshCrowd.mock.calls.map(([quiz]) => quiz)).toEqual([...QUIZZES]);
     await vi.advanceTimersByTimeAsync(LEADERBOARD_POLL_MS);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(2);
-    fireEvent.pointerOver(screen.getByRole("region", { name: "Quiz heating" }), { pointerType: "mouse" });
+    fireEvent.pointerOver(screen.getByRole("region", { name: "Quiz heating" }).querySelector("[data-layered-zoom]")!, { pointerType: "mouse" });
     await vi.advanceTimersByTimeAsync(LEADERBOARD_POLL_MS);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(3);
     fireEvent.keyDown(window, { key: "Escape" });
@@ -117,7 +117,7 @@ export function registerOpensPageStepFrontTests(): void {
     expect(homeTrackTemplate([1, 1.5, 1], 3)).toBe("minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr)");
     expect(homeTrackTemplate(undefined, 2)).toBe("minmax(0, 1fr) minmax(0, 1fr)");
   });
-  it("pans the pages under the glass while the mouse is between the cards, glides to the page of a hovered card and shows it clear, as on play", () => {
+  it("pans the pages under the glass while the mouse is between the cards, glides to the page of a hovered explore control and shows it clear, as on play", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"] });
     const session = stubSession();
     render(<Home session={session} />);
@@ -131,7 +131,7 @@ export function registerOpensPageStepFrontTests(): void {
     expect(veil.dataset.veil).toBe("whole");
     expect(cards().map((card) => card.outerHTML)).toEqual(resting);
     const card = screen.getByRole("region", { name: "Leaderboard" });
-    fireEvent.pointerOver(card, { pointerType: "mouse" });
+    fireEvent.pointerOver(card.querySelector("[data-layered-zoom]")!, { pointerType: "mouse" });
     expect(veil.dataset.veil).toBe("whole");
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");

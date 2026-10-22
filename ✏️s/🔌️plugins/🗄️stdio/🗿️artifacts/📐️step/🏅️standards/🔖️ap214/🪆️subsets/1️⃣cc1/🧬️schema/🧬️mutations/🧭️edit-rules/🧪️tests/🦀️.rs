@@ -24,8 +24,8 @@ fn resolve(event: SnapshotEditEvent) -> Vec<StepCc1Mutation> {
 fn replay(mutations: &[StepCc1Mutation]) -> StepSnapshot {
     let mut snapshot = base();
     for mutation in mutations {
-        assert!(<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::diff(mutation, &snapshot).messages().is_empty());
-        snapshot = protocol::apply_diff(<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("the mutation applies");
+        assert!(<StepCc1Mutation as protocol::ColdMutation<StepSnapshot>>::diff(mutation, &snapshot).messages().is_empty());
+        snapshot = protocol::apply_diff_cold(<StepCc1Mutation as protocol::ColdMutation<StepSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("the mutation applies");
     }
     snapshot
 }

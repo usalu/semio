@@ -2,7 +2,7 @@
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Editor hook event resolvers.
+// Agent-client hook event resolvers.
 
 // #endregion 🧲️Header
 
@@ -224,8 +224,8 @@ func resolveKiroEvent(nativeEvent string, kind ToolKind) (HookEvent, string, err
 	}
 }
 
-// 💻️formatVSCodeHookOutput formats a hook output for VS Code.
-func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
+// 💻️formatCopilotHookOutput formats a hook output for VS Code.
+func formatCopilotHookOutput(hookEventName string, result HookResult) string {
 	payload := map[string]interface{}{}
 	out, _ := json.Marshal(result)
 	_ = json.Unmarshal(out, &payload)
@@ -252,8 +252,8 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	return string(finalOut)
 }
 
-// 🔤️vsCodeEventFromHookEvent converts a HookEvent to a VS Code event string.
-func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
+// 🔤️copilotEventFromHookEvent converts a HookEvent to a VS Code event string.
+func copilotEventFromHookEvent(event HookEvent, parentInfo string) string {
 	switch event {
 	case HookAgentStarted:
 		if parentInfo == "subagent" {

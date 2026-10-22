@@ -177,17 +177,17 @@ impl protocol::OpBinary for GisTerrainWindowConfigMutation {
 /// production behavior those unit tests already assert, through a route this crate's own default
 /// build always compiles.
 pub fn gis_terrain_window_config_mutation_report_json(camera_json: &str, kind: &str, value: &str) -> Result<String, String> {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let base = GisTerrainWindowConfig { camera_json: camera_json.to_string() };
     let mutation: GisTerrainWindowConfigMutation = match kind {
         "set-camera" => GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: value.to_string() }),
         other => return Err(format!("gis_terrain_window_config_mutation_report_json: unknown kind {other:?}")),
     };
-    let applied = protocol::apply_diff(mutation.diff(&base).diff(), &base).map_err(|error| error.to_string())?;
+    let applied = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).map_err(|error| error.to_string())?;
     let inverse_steps = mutation.inverse(&base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     for step in &inverse_steps {
-        undone = protocol::apply_diff(step.diff(&undone).diff(), &undone).map_err(|error| error.to_string())?;
+        undone = protocol::apply_diff_cold(step.diff(&undone).diff(), &undone).map_err(|error| error.to_string())?;
     }
     let report = serde_json::json!({
         "base": {"cameraJson": base.camera_json},

@@ -19,25 +19,26 @@ pub type InsertElementPayload = InsertElementMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertedElement" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert Element", "Element einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["insert-element".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMutation {
     fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         protocol::MutationOutcome::new(diff_at_path(
             &self.path.0,
             XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlChildAdded { index: self.index, item: self.node.clone() }] }) }),
         ))
     }
-
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
         Ok(match self.path.resolve(base.doc.root.as_ref()) {
             Some(XmlNode::Element { children, .. }) if self.index <= children.len() => vec![super::XmlMutation::RemoveElement(super::RemoveElementMutation { path: self.path.clone(), index: self.index })],
             _ => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert Element", "Element einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["insert-element".to_string()]
     }
 }
 

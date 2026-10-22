@@ -39,7 +39,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership"
+        "command": "repo ./📜️script.ts test-ownership"
       }
     },
     "test-native": {
@@ -55,7 +55,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-reference": {
@@ -71,7 +71,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-reference"
+        "command": "repo ./📜️script.ts test-reference"
       }
     }
   }

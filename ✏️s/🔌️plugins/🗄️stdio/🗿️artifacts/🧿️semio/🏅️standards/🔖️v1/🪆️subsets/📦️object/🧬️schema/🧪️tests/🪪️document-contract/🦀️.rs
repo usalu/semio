@@ -34,7 +34,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
             let diff = diff.expect("valid diff");
             assert_eq!(SemioObjectDiff::parse_diff(&diff.print_diff()).expect("diff text"), diff);
             assert_eq!(SemioObjectDiff::decode_diff(&diff.encode_diff().expect("diff Pack")).expect("diff Pack decode"), diff);
-            let next = protocol::apply_diff(&diff, &rich).expect("valid diff applies");
+            let next = protocol::apply_diff_cold(&diff, &rich).expect("valid diff applies");
             if diff.mesh.is_none() { assert_eq!(next.mesh, rich.mesh); }
             if diff.brep.is_none() { assert_eq!(next.brep, rich.brep); }
             if diff.properties.is_none() { assert_eq!(next.properties, rich.properties); }
@@ -44,7 +44,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
         let before: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit before");
         let diff: SemioObjectDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit diff");
         let expected: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(&case["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("independent expected edit");
-        assert_eq!(protocol::apply_diff(&diff, &before).expect("edit applies"), expected);
+        assert_eq!(protocol::apply_diff_cold(&diff, &before).expect("edit applies"), expected);
     }
     let text = fixture_text!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
     let pack = fixture_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
@@ -53,7 +53,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     use {crate::schema::mutations::SemioObjectMutation, crate::schema::mutations::create_mesh::CreateMesh};
     let mut snapshot = SemioObjectSnapshot::default();
     let before = snapshot.clone();

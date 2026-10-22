@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_both_nested_collections_and_keeps_the_designs_identity() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("edit-design applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("edit-design applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: applied state differs from the committed after-snapshot");
     assert_eq!(produced.designs[0].pieces.len(), 2, "the payload's piece list replaces the design's own wholesale");
     assert_eq!(produced.designs[0].connections.len(), 1, "the payload's connection list lands in the same step");
@@ -52,9 +52,9 @@ async fn the_undo_edit_design_restores_the_captured_content() {
     let SemioKitMutation::EditDesign(restore) = &undo[0] else { panic!("edit-design must undo as edit-design") };
     assert_eq!(restore.pieces, base.designs[0].pieces, "the undo must recapture BASE's own pieces");
     assert_eq!(restore.connections, base.designs[0].connections, "the undo must recapture BASE's own connections");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward edit-design applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward edit-design applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo edit-design applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo edit-design applies");
     }
     assert_eq!(current, base, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: the undo did not restore the before-snapshot");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -108,6 +108,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-design diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed edit-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed diff did not carry before to after");
 }

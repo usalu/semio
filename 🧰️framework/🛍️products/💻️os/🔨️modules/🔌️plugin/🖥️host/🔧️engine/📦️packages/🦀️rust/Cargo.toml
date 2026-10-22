@@ -44,6 +44,8 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 # `*_async`/concurrent call shapes of every `bindgen!` export are all `#[cfg(feature = ...)]`-gated
 # on it, and the collapsed `world actor` cannot be linked or called without them.
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
+# 🔌️ The only crate of the plugin host that declares `wasmtime` and `wasmtime-wasi`: every other host layer reaches them through the explicit re-exports of `wasm` (`🔌️wasm-port/🦀️.rs`).
+wasmtime-wasi = "47.0.3"
 # 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `HostTransactionCoordinator`
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
 # exact algorithm `📡️spr/🎮️command/🦀️.rs`'s own `Planner` cycle-guard already uses.

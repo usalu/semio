@@ -24,29 +24,35 @@ pub struct ArchitectRegisterWindowConfigDiff {
     pub active_register: Option<String>,
 }
 
-impl protocol::MutationDiff<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
-    fn apply(&self, base: &ArchitectRegisterWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectRegisterWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.active_register {
-            next.active_register = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.active_register.is_some() {
             self.active_register = other.active_register;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectRegisterWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.active_register {
+            next.active_register = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
-    fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Self {
-        Self { active_register: self.active_register.as_ref().map(|_| base.active_register.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self.active_register.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Self {
+        Self { active_register: self.active_register.as_ref().map(|_| base.active_register.clone()) }
     }
 }
 
@@ -96,15 +102,17 @@ impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWind
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
+}
 
-    fn diff(&self, base: &ArchitectRegisterWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+impl protocol::ColdMutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigMutation {
+    type ReferenceDiff = ArchitectRegisterWindowConfigDiff;
+    fn diff(&self, base: &ArchitectRegisterWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SetActiveRegister(SetActiveRegister { active_register }) = self;
         if base.active_register == *active_register {
             return protocol::MutationOutcome::new(ArchitectRegisterWindowConfigDiff::default()).warning("mutation.no-op", "Register selection is unchanged.");
         }
         protocol::MutationOutcome::new(ArchitectRegisterWindowConfigDiff { active_register: Some(active_register.clone()) })
     }
-
     fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         let Self::SetActiveRegister(SetActiveRegister { active_register }) = self;

@@ -1,7 +1,7 @@
 //! 🧪️ Prepared native publication, inverse and refusal backing remains original through exact admitted custody.
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
-use semio_framework_value::{FactoryAuthority,FactoryRetirement,close_factory_ticket,factory_ticket_demands,retirement::OwnedValueRetirementFactory};
+use semio_framework_value::{FactoryAuthority,FactoryRetirement,close_factory_ticket,factory_ticket_demands,OwnedValueRetirementFactory};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use std::sync::Arc;
 fn text(value:&str)->String{let mut original=String::with_capacity(65536);original.push_str(value);original}

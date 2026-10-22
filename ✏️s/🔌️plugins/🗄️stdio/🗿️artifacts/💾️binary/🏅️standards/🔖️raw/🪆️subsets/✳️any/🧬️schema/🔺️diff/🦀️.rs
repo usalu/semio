@@ -52,15 +52,19 @@ pub struct BinaryDiff {
     pub splices: Vec<ByteSplice>,
 }
 
-impl MutationDiff<BinarySnapshot> for BinaryDiff {
-    fn apply(&self, base: &BinarySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BinarySnapshot> {
-        validate_binary_diff(self, base)?;
-        Ok(apply_binary_diff_unchecked(self, base))
-    }
+impl MutationDiff<BinarySnapshot> for BinaryDiff {}
 
+impl protocol::ColdMutationDiff<BinarySnapshot> for BinaryDiff {
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
     fn absorb(&mut self, other: Self) {
         self.splices = absorb_splices(&self.splices, &other.splices);
+    }
+
+    fn apply(&self, unpublished: &mut BinarySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_binary_diff(self, base)?;
+        *unpublished = apply_binary_diff_unchecked(self, base);
+        Ok(())
     }
 }
 
@@ -96,6 +100,12 @@ fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> Bina
 }
 
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
+    fn is_empty(&self) -> bool {
+        self.splices.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BinarySnapshot> for BinaryDiff {
     /// 🔁️ The negative diff: every splice becomes the splice at its shifted position in the after-buffer that removes the inserted
     /// bytes and puts the base bytes back.
     fn inverse(&self, base: &BinarySnapshot) -> Self {
@@ -112,10 +122,6 @@ impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
             })
             .collect();
         Self { splices }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.splices.is_empty()
     }
 }
 

@@ -35,12 +35,7 @@ impl DragFrames {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for DragFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "frames", kind: "drag-frames", record: "DraggedFrames" };
-    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
-        diff_drag_frames(self, base)
-    }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        inverse_drag_frames(self, base)
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (layout_label_number(self.dx), layout_label_number(self.dy));
         let (en, de) = layout_label_frames(self.targets.len());
@@ -48,6 +43,15 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for DragFrames where Op: protocol::Mut
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for DragFrames where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_drag_frames(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        inverse_drag_frames(self, base)
     }
 }
 //#endregion ✋️DragFrames

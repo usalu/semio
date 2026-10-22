@@ -25,6 +25,10 @@ def collect(plans, only):
     """{path: [entry, ...]} in plan order; several plans may touch one file or manifest and are applied one after the other."""
     files, manifests = {}, {}
     for p in plans:
+        for c in p.get("deletes", []):
+            files.setdefault(c["path"], []).append(dict(c, delete=True, crates=[]))
+        for c in p.get("creates", []):
+            files.setdefault(c["path"], []).append(dict(c, create=True, crates=[]))
         for f in p["files"]:
             if only and not (set(f["crates"]) & only):
                 continue
@@ -47,13 +51,20 @@ def occurrences(text, sub):
 def new_text_of_file(old, f, pristine):
     """Applies the planned edits. `pristine` is True when the file still has the planned digest (offsets are exact); otherwise every edit is rebased onto the n-th occurrence of its old text, which must exist as often as when the plan was made."""
     spans = []
-    for a, b, o, n, k, total in f["edits"]:
+    for e in f["edits"]:
+        a, b, o, n, k, total = e[:6]
+        ctx = e[6] if len(e) > 6 else None
         if pristine:
             if old[a:b] != o:
                 raise ValueError(f"span {a}:{b} differs from the planned text")
             spans.append((a, b, n))
         else:
             occ = occurrences(old, o)
+            if ctx:
+                hit = [p for p in occ if old[max(0, p - len(ctx[0])):p] == ctx[0] and old[p + len(o):p + len(o) + len(ctx[1])] == ctx[1]]
+                if len(hit) == 1:
+                    spans.append((hit[0], hit[0] + len(o), n))
+                    continue
             if len(occ) != total:
                 raise ValueError(f"{o[:50]!r} occurs {len(occ)} times, planned {total}")
             spans.append((occ[k], occ[k] + len(o), n))
@@ -80,6 +91,25 @@ def validate(root, files, manifests):
     problems, applied, results, rebased = [], 0, {}, []
     for kind, table in (("file", files), ("manifest", manifests)):
         for rel, entries in table.items():
+            if entries and entries[0].get("delete"):
+                p = os.path.join(root, rel)
+                if not os.path.exists(p):
+                    applied += 1
+                elif sha(open(p, "rb").read()) != entries[0]["sha256"]:
+                    problems.append(f"{rel}: drift before delete")
+                else:
+                    results[rel] = None
+                continue
+            if entries and entries[0].get("create"):
+                p = os.path.join(root, rel)
+                if os.path.exists(p):
+                    if open(p, "rb").read().decode("utf-8") == entries[0]["content"]:
+                        applied += 1
+                    else:
+                        problems.append(f"{rel}: exists with other content")
+                else:
+                    results[rel] = entries[0]["content"]
+                continue
             try:
                 raw = open(os.path.join(root, rel), "rb").read()
             except OSError as e:
@@ -121,27 +151,41 @@ def validate(root, files, manifests):
 
 def write_all(root, results, ledger):
     os.makedirs(ledger, exist_ok=True)
-    backups = {}
+    backups, created = {}, []
     try:
         for rel, new in results.items():
             p = os.path.join(root, rel)
             b = os.path.join(ledger, "backup", rel)
             os.makedirs(os.path.dirname(b), exist_ok=True)
-            if not os.path.exists(b):
+            if not os.path.exists(p):
+                created.append(p)
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+            elif not os.path.exists(b):
                 with open(p, "rb") as s, open(b, "wb") as d:
                     d.write(s.read())
-            backups[rel] = b
+                backups[rel] = b
         for rel, new in results.items():
             p = os.path.join(root, rel)
+            if new is None:
+                os.remove(p)
+                continue
             fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=".gh-")
             with os.fdopen(fd, "wb") as w:
                 w.write(new.encode("utf-8"))
             os.chmod(tmp, os.stat(p).st_mode & 0o7777 if os.path.exists(p) else 0o644)
             os.replace(tmp, p)
         for rel, new in results.items():
-            if open(os.path.join(root, rel), "rb").read() != new.encode("utf-8"):
+            if new is None:
+                if os.path.exists(os.path.join(root, rel)):
+                    raise RuntimeError(rel + ": still exists")
+            elif open(os.path.join(root, rel), "rb").read() != new.encode("utf-8"):
                 raise RuntimeError(rel + ": read-back mismatch")
     except Exception:
+        for p in created:
+            try:
+                os.remove(p)
+            except OSError:
+                pass
         for rel, b in backups.items():
             try:
                 with open(b, "rb") as s, open(os.path.join(root, rel), "wb") as d:
@@ -178,11 +222,8 @@ def main():
     if problems:
         print("refused: nothing written")
         return 1
-    if applied and applied != total:
-        print("refused: the tree is partly applied")
-        return 1
-    if applied == total:
-        print("refused: already applied")
+    if not results:
+        print("refused: nothing to write (already applied)")
         return 1
     if not a.write:
         print("dry run valid (use --write)")

@@ -1,6 +1,6 @@
 /** 🔶️ The catalog phase of useArtifactOpening. */
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, AppRouter, type AppRouterManifest, type ArtifactDialect, artifactKindActivationOwner, dialectCoordinate, parseDialectCoordinate, parseSurfaceAppId, EMPTY_OPENING_PREFERENCES, foldOpeningPreferences, type OpeningConfigMutation, type OpeningPreferences, type ConflictResolution, type MergePolicy } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
 import { localProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";

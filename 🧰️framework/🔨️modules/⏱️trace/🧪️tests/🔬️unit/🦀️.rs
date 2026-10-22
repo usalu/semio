@@ -41,6 +41,7 @@ fn percentile_ring_empty_reads_as_zero() {
 //#region 🐕️Watchdog
 #[test]
 fn watchdog_reports_contract_violation_on_overrun() {
+    let _gate = crate::telemetry_test_gate();
     let before = Watchdog::violation_count();
     let operation = allocate_operation_id();
     let generation = Generation(1);
@@ -57,6 +58,7 @@ fn watchdog_reports_contract_violation_on_overrun() {
 
 #[test]
 fn watchdog_stays_silent_under_ceiling() {
+    let _gate = crate::telemetry_test_gate();
     let before = Watchdog::violation_count();
     let operation = allocate_operation_id();
     {

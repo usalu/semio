@@ -14,26 +14,12 @@ import (
 	os "os"
 	strings "strings"
 
-	providers "github.com/usalu/semio/repo/providers"
 	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🔌️Mcp Surface
 
 // #region 🦀️Mcp
-
-// 💿️runMcpServer is kept for command wiring compatibility.
-func runMcpServer(cmd *Command, args []string) error {
-	kind := providers.McpClientGeneric
-	if len(args) > 0 {
-		parsed, err := providers.ParseMcpClientKind(args[0])
-		if err != nil {
-			return err
-		}
-		kind = parsed
-	}
-	return serveMcp(cmd.Context(), kind, DefaultCommandTimeout)
-}
 
 // 📝️textResult holds the data fields for a textResult record.
 func textResult(text string) *CallToolResult {

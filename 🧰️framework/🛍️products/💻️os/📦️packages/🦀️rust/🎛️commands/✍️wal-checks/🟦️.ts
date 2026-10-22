@@ -15,6 +15,7 @@ import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { blake3Hex } from "@semio-tech/framework-hash";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 /** 🔐️ Checks fixed writer capabilities and retained local backend integration. */
 export class WalWriterAuthorityCheckScript extends BundleScript {
@@ -111,7 +112,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
         "prepared-post-transfer-refusal-returns-close-owner",
       ],
     );
-    const { Database } = await import("bun:sqlite");
+    const { Database } = { Database: SqliteDatabaseV1 };
     const openingOracle = new Database(":memory:");
     try {
       openingOracle.run("CREATE TABLE opening_owner (backend TEXT PRIMARY KEY, retained INTEGER NOT NULL, close_requested INTEGER NOT NULL)");

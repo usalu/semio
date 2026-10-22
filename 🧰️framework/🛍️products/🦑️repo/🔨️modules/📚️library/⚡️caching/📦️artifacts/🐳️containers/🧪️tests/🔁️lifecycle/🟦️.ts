@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, configureRepoHooks, devcontainerAttach, devcontainerStart, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, devcontainerAttach, devcontainerStart, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
 function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
@@ -71,13 +71,6 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   assert.deepEqual(flat.filter((call) => call.startsWith("git config --global --add safe.directory")), [`git config --global --add safe.directory ${join(checkout, "♻️mit-bestand/🔎️recherche")}`]);
   assert.deepEqual(flat.filter((call) => fixture.forbiddenCommands.some((forbidden: string) => call.includes(forbidden))), [], "a container start never discards source-control or database state");
 
-  for (const [status, message] of [[0, "✅️ Git hooks installed."], [1, "⚠️  Git hook installation failed, continuing without blocking attach."]] as const) {
-    const hooks = recordingHost(() => ({ status }));
-    configureRepoHooks(hooks, context);
-    assert.deepEqual(hooks.calls, [["bun", "./📜️script.ts", "micro-commit", "install-hooks"]], "hooks are installed by the workspace script, never by an unbuilt binary");
-    assert.deepEqual(hooks.lines, [message]);
-  }
-
   console.log("✅️ Devcontainer lifecycle: fontconfig (jsdom XML), tool selection (lodash), dashboard-only attach, safe.directory, Claude auth storage, start without destructive commands, IDE controls retired PASS");
 }
 
@@ -99,13 +92,21 @@ export async function testDevcontainerDashboardOwnership(workspace: string): Pro
     assert.equal(container.mounts.some((mount: string) => mount.includes(state)), false, state);
   }
   assert.equal("SEMIO_GITKRAKEN_WORKSPACE_NAME" in container.containerEnv, false);
+  const policy=fixture.dashboardOnly.automaticHooks,require=createRequire(import.meta.url),validate=new(require("ajv/dist/2020").default)({strict:true}).compile(JSON.parse(readFileSync(join(import.meta.dir,"../../🔁️lifecycle/🧬️schema/🔣️.json"),"utf8")));
+  assert.equal(validate(policy),true,JSON.stringify(validate.errors));
+  const {Database}=await import("bun:sqlite"),database=new Database(":memory:");
+  try{
+  const rejected=(calls:readonly (readonly string[])[])=>Number((database.query("SELECT count(*) AS rejected FROM json_each(?1) AS call WHERE EXISTS (SELECT 1 FROM json_each(call.value) AS arg JOIN json_each(?2) AS denied ON arg.value=denied.value)").get(JSON.stringify(calls),JSON.stringify(policy.forbiddenArguments)) as {rejected:number}).rejected);
+  for(const row of policy.cases){assert.equal(rejected([row.argv])===0,row.allowed,row.id);assert.equal(!lodash.some(row.argv,(argument:string)=>lodash.includes(policy.forbiddenArguments,argument)),row.allowed,row.id);}
   for (const mode of fixture.dashboardOnly.attachModes) for (const cli of fixture.dashboardOnly.forbiddenPrograms) {
     const attach = recordingHost((command) => command === "which" ? { stdout: `/usr/bin/${cli}\n` } : {});
     await devcontainerAttach(attach, { workspace, home: workspace, user: "vscode", env: { ...(mode.skipTools ? { SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL: "1" } : {}), TERM_PROGRAM: cli, VSCODE_IPC_HOOK_CLI: "/tmp/editor.sock" }, arch: "x64" });
     const forbidden = (call: string[]) => fixture.dashboardOnly.forbiddenPrograms.includes(call[0]) || call.some((argument) => fixture.dashboardOnly.forbiddenArgs.includes(argument));
     assert.deepEqual(attach.calls.filter(forbidden), []);
+    assert.equal(rejected(attach.calls),0,"attach never installs automatic Git hooks");
     assert.deepEqual(lodash.filter(attach.calls, (call: string[]) => lodash.includes(fixture.dashboardOnly.forbiddenPrograms, call[0]) || lodash.some(call, (argument: string) => lodash.includes(fixture.dashboardOnly.forbiddenArgs, argument))), []);
     assert.ok(attach.lines.includes("✅️ Post-attach setup complete."));
   }
-  console.log("✅️ Devcontainer dashboard ownership: retired controls absent; attach runs repository hooks without editor commands (lodash oracle) PASS");
+  }finally{database.close();}
+  console.log("✅️ Devcontainer dashboard ownership: retired controls absent; attach installs no automatic Git hooks or editor controls (lodash/SQLite oracles) PASS");
 }

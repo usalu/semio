@@ -7,6 +7,13 @@ touched = []
 for line in diff:
     m = re.match(r"Files (.+) and (.+) differ$", line)
     if m: touched.append(os.path.relpath(m.group(2), changed))
+for line in subprocess.run(["diff", "-rq", os.path.join(base, "🧰️framework"), os.path.join(changed, "🧰️framework")], capture_output=True, text=True).stdout.splitlines():
+    m = re.match(r"Only in (.+): (.+)$", line)
+    full = os.path.join(m.group(1), m.group(2)) if m else ""
+    if not m or not os.path.realpath(m.group(1)).startswith(os.path.realpath(changed)) or "⚙️runtime" in full: continue
+    if os.path.isfile(full): touched.append(os.path.relpath(full, changed))
+    elif os.path.isdir(full):
+        for dp, dn, fn in os.walk(full): touched += [os.path.relpath(os.path.join(dp, f), changed) for f in fn]
 ts = sorted(t for t in touched if t.endswith((".ts", ".tsx", ".mts")))
 nm = "/Users/ueli/Documents/semio/node_modules"
 dts = []

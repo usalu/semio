@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type ReactElement } from "react";
+import { type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { useLabel } from "@semio-tech/ui-react";
 import { agentUiLabel } from "../🔗️AgentBridge/🟦️.tsx";
 import { type AgentBridgePresence, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";

@@ -2,8 +2,8 @@
 
 use super::*;
 
-pub(super) /// 📥️ Load normalization of a freshly decoded document: the first widget of every identity stays and each later duplicate is retired cold.
-fn deduplicated_loaded_widgets(mut loaded: FlowHostSnapshot) -> FlowHostSnapshot {
+/// 📥️ Load normalization of a freshly decoded document: the first widget of every identity stays and each later duplicate is retired cold.
+pub(super) fn deduplicated_loaded_widgets(mut loaded: FlowHostSnapshot) -> FlowHostSnapshot {
     let mut seen = BTreeSet::new();
     let (kept, duplicates): (Vec<_>, Vec<_>) = loaded.widgets.into_iter().partition(|widget| seen.insert(widget_id_for(widget).to_string()));
     loaded.widgets = kept;
@@ -56,7 +56,7 @@ pub(super) fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &
 }
 
 /// 🔌️ Maps a synapse endpoint onto the `IoPortSpec.id` the board keys its handles with.
-/// An exact id is kept. Legacy `out` / `in` and an empty id select the first port on that side.
+/// An exact id is kept. An empty id selects the first port on that side.
 /// A missing widget or an unknown port stays unresolved so the canvas draws no wire.
 pub(super) fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Option<String> {
     let widget = widgets.iter().find(|widget| widget_id_for(widget) == widget_id)?;
@@ -69,8 +69,7 @@ pub(super) fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSid
     if ports.iter().any(|id| id == port_id) {
         return Some(port_id.to_string());
     }
-    let legacy = matches!((side, port_id), (PortSide::Output, "" | "out") | (PortSide::Input, "" | "in"));
-    if legacy { ports.first().cloned() } else { None }
+    if port_id.is_empty() { ports.first().cloned() } else { None }
 }
 
 pub(super) fn first_output_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {

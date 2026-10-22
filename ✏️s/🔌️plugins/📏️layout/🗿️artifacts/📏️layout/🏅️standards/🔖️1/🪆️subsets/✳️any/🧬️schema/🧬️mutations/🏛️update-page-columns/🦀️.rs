@@ -23,6 +23,16 @@ pub struct UpdatePageColumns {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageColumns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_columns::UpdatePageColumns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-columns", kind: "update-page-columns", record: "UpdatedPageColumns" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Spalten von Seite \"{}\" aktualisieren", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for UpdatePageColumns where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_columns::UpdatePageColumns> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_columns(self, base)
     }
@@ -32,12 +42,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageColumns where Op: protoc
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Spalten von Seite \"{}\" aktualisieren", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🏛️UpdatePageColumns
 

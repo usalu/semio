@@ -481,7 +481,7 @@ async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_t
     let mut inverses = Vec::new();
     let mut current = (*document).clone();
     for op in &mirror.ops {
-        let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(op, &current);
+        let outcome = <RemodelingMutation as protocol::ColdMutation<RemodelingSnapshot>>::diff(op, &current);
         assert!(outcome.messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Error), "every provisional op applies onto the overlay it was planned against: {:?}", outcome.messages());
         inverses.push(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::inverse_remodeling_mutation(&current, op).expect("valid retained mutation inverse fixture"));
         current = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&current, op).expect("provisional op applies");

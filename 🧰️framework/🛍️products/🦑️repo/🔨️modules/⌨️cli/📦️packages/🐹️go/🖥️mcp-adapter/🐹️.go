@@ -16,6 +16,7 @@ import (
 	io "io"
 	os "os"
 	sort "sort"
+ strings "strings"
 )
 
 // #region 🔌️Mcp Surface
@@ -75,6 +76,17 @@ func (server *MCPServer) AddResource(resource Resource, handler ResourceHandler)
 func (server *MCPServer) AddResourceTemplate(resource ResourceTemplate, handler ResourceHandler) {
 	server.resources[resource.URI] = handler
 	server.templateCards[resource.URI] = resource
+}
+
+// 🧩️matchResourceTemplate requires one nonempty identity between the authored URI parts.
+func matchResourceTemplate(template,uri string) bool {
+ prefix,rest,found:=strings.Cut(template,"{");if !found { return false };name,suffix,closed:=strings.Cut(rest,"}");if !closed || name=="" || strings.ContainsAny(name,"{}") || strings.ContainsAny(suffix,"{}") { return false };return strings.HasPrefix(uri,prefix)&&strings.HasSuffix(uri,suffix)&&len(uri)>len(prefix)+len(suffix)
+}
+
+// 🧭️resourceHandler resolves a concrete URI before registered templates.
+func (server *MCPServer) resourceHandler(uri string) (ResourceHandler,bool) {
+ if handler,found:=server.resources[uri];found { return handler,true }
+ for _,card:=range server.ListResourceTemplates() { if matchResourceTemplate(card.URI,uri) { return server.resources[card.URI],true } };return nil,false
 }
 
 // 📃️ListResources returns every declared concrete resource, ordered by URI so two runs of the same
@@ -159,17 +171,19 @@ type rpcError struct {
 }
 
 // 📡️ServeStdio serves the session on the process standard input and output.
-func ServeStdio(server *MCPServer) error {
-	return Serve(server, os.Stdin, os.Stdout)
+func ServeStdio(ctx context.Context, server *MCPServer) error {
+	return Serve(ctx,server,os.Stdin,os.Stdout)
 }
 
 // 📡️Serve reads one JSON-RPC message per line and writes one response per request. A notification
 // — a message carrying no identifier — is answered with nothing, as the protocol requires.
-func Serve(server *MCPServer, in io.Reader, out io.Writer) error {
+func Serve(ctx context.Context, server *MCPServer, in io.ReadCloser, out io.Writer) error {
+ stop:=context.AfterFunc(ctx,func(){ _=in.Close() });defer stop()
 	scanner := bufio.NewScanner(in)
 	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
 	encoder := json.NewEncoder(out)
 	for scanner.Scan() {
+ if err:=ctx.Err();err!=nil { return err }
 		var incoming request
 		if err := json.Unmarshal(scanner.Bytes(), &incoming); err != nil {
 			if err := encoder.Encode(response{JSONRPC: "2.0", Error: &rpcError{Code: -32700, Message: "parse error"}}); err != nil {
@@ -188,6 +202,11 @@ func Serve(server *MCPServer, in io.Reader, out io.Writer) error {
 			outgoing.Result = map[string]interface{}{"tools": server.ListToolCards()}
 		case "prompts/list":
 			outgoing.Result = map[string]interface{}{"prompts": server.ListPrompts()}
+  case "prompts/get":
+   var get GetPromptRequest
+   if err:=json.Unmarshal(incoming.Params,&get.Params);err!=nil { outgoing.Error=&rpcError{Code:-32602,Message:"invalid params"};break }
+   handler,found:=server.prompts[get.Params.Name];if !found { outgoing.Error=&rpcError{Code:-32601,Message:"unknown prompt"};break }
+   result,err:=handler(ctx,get);if err!=nil { outgoing.Error=&rpcError{Code:-32000,Message:err.Error()} } else { outgoing.Result=result }
 		case "resources/list":
 			outgoing.Result = map[string]interface{}{"resources": server.ListResources()}
 		case "resources/templates/list":
@@ -198,12 +217,12 @@ func Serve(server *MCPServer, in io.Reader, out io.Writer) error {
 				outgoing.Error = &rpcError{Code: -32602, Message: "invalid params"}
 				break
 			}
-			handler, ok := server.resources[read.Params.URI]
+			handler, ok := server.resourceHandler(read.Params.URI)
 			if !ok {
 				outgoing.Error = &rpcError{Code: -32601, Message: "unknown resource"}
 				break
 			}
-			contents, err := handler(context.Background(), read)
+			contents, err := handler(ctx, read)
 			if err != nil {
 				outgoing.Error = &rpcError{Code: -32000, Message: err.Error()}
 			} else {
@@ -220,7 +239,7 @@ func Serve(server *MCPServer, in io.Reader, out io.Writer) error {
 				outgoing.Error = &rpcError{Code: -32601, Message: "unknown tool"}
 				break
 			}
-			result, err := registered.Handler(context.Background(), call)
+			result, err := registered.Handler(ctx, call)
 			if err != nil {
 				outgoing.Error = &rpcError{Code: -32000, Message: err.Error()}
 			} else {
@@ -233,7 +252,7 @@ func Serve(server *MCPServer, in io.Reader, out io.Writer) error {
 			return err
 		}
 	}
-	return scanner.Err()
+	if err:=ctx.Err();err!=nil { return err };return scanner.Err()
 }
 
 // #endregion 🖥️Mcp Server Adapter

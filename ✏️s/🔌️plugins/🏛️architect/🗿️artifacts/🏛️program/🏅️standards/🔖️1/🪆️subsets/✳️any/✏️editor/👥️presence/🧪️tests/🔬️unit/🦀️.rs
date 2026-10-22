@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
 #[allow(unused_imports)]
 use pack::snapshot::ArtifactPack;
 use crate::editor::architect::presence::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn replace_presence_diffs_only_the_fields_that_differ_and_inverts_to_the_base() {
@@ -10,7 +10,7 @@ async fn replace_presence_diffs_only_the_fields_that_differ_and_inverts_to_the_b
     let next = ArchitectPresence { active_register: "risks".into(), adjacency_kind_filter: Some(AdjacencyKind::Preferred), ..ArchitectPresence::default() };
     let operation = ArchitectPresenceMutation::ReplacePresence(ReplacePresence { presence: next.clone() });
     assert_eq!(operation.diff(&base).diff(), &ArchitectPresenceDiff { active_register: Some("risks".into()), adjacency_kind_filter: Some(AdjacencyKindFilterSet { value: Some(AdjacencyKind::Preferred) }), ..Default::default() });
-    assert_eq!(protocol::apply_diff(operation.diff(&base).diff(), &base).expect("valid diff"), next);
+    assert_eq!(protocol::apply_diff_cold(operation.diff(&base).diff(), &base).expect("valid diff"), next);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base).await;
     let clearing = ArchitectPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&clearing, &next).await;

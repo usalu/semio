@@ -55,7 +55,8 @@ import {
   type WindowLayoutNode
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import React, { type ReactNode } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { faultNotice, historyNotice } from "@semio-tech/framework";
 import { registerPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { type InputDraftDispositionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";

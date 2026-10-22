@@ -177,14 +177,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SemioTableSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            let outcome = <SemioTableMutation as protocol::ColdMutation<SemioTableSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => (Self { snapshot, ..self }, outcome),
                 Err(error) => (self, protocol::MutationOutcome::fatal(error.code, error.message, error.target)),
             }
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {

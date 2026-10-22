@@ -7,7 +7,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use crate::standards::v1_4::subsets::a::schema::mutations::set_page_text::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 #[test]
 fn language_neutral_forward_and_concrete_inverse() {

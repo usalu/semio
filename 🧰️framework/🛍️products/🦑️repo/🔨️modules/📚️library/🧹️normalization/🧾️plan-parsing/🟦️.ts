@@ -4,6 +4,7 @@ import { sha256 } from "../📁️input/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { posix } from "node:path";
 import { type OpaqueTreeDigest, PLAN_HASH, PLAN_OPERATION_ID, type ReferenceEdit, type TaxonomyEvidenceMember, type TaxonomyGeneratorNodeRecord, type TaxonomyGeneratorPreviewManifest, type TaxonomyGeneratorPreviewNode, type TaxonomyLeafPreimage, type TaxonomyMove, type TaxonomyMoveSourceAuthority, type TaxonomyNoFollowTreeDigest, type TaxonomyPathPreimage, type TaxonomyReferenceAdapter, type TaxonomyRegeneration, type TaxonomyRemovalAuthority, type TaxonomyViolation, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 export function planRecord(value: unknown, name: string, requiredKeys: readonly string[], optionalKeys: readonly string[] = []): UnknownRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
@@ -197,9 +198,9 @@ function parseGeneratorNodeRecord(value: unknown, name: string): TaxonomyGenerat
 export function parseRegeneration(value: unknown, name: string): TaxonomyRegeneration {
   const row = planRecord(value, name, ["id", "contractId", "cwd", "command", "outputRoots", "inputs", "preOutputs", "outputs", "preview", "previewManifestDigest", "staleRemovals"], ["verifyCommand"]);
   const command = row.command;
-  if (!Array.isArray(command) || command.length !== 4 || command[0] !== "bun" || command[1] !== "repo" || command[2] !== "run" || typeof command[3] !== "string") throw new Error(`${name}.command is invalid`);
+  if (!Array.isArray(command) || command.length !== 4 || !isRuntimeExecutableV1(command[0]) || command[1] !== "repo" || command[2] !== "run" || typeof command[3] !== "string") throw new Error(`${name}.command is invalid`);
   const verifyCommand = row.verifyCommand;
-  if (verifyCommand !== undefined && (!Array.isArray(verifyCommand) || verifyCommand.length !== 4 || verifyCommand[0] !== "bun" || verifyCommand[1] !== "repo" || verifyCommand[2] !== "run" || typeof verifyCommand[3] !== "string")) throw new Error(`${name}.verifyCommand is invalid`);
+  if (verifyCommand !== undefined && (!Array.isArray(verifyCommand) || verifyCommand.length !== 4 || !isRuntimeExecutableV1(verifyCommand[0]) || verifyCommand[1] !== "repo" || verifyCommand[2] !== "run" || typeof verifyCommand[3] !== "string")) throw new Error(`${name}.verifyCommand is invalid`);
   if (!["outputRoots", "inputs", "preOutputs", "outputs", "staleRemovals"].every((key) => Array.isArray(row[key]))) throw new Error(`${name} array fields are invalid`);
   const preview = planRecord(row.preview, `${name}.preview`, ["contractId", "nodes", "schemaVersion", "staleRemovals"]);
   if (preview.schemaVersion !== 1 || preview.contractId !== row.contractId || !Array.isArray(preview.nodes) || !Array.isArray(preview.staleRemovals)) throw new Error(`${name}.preview is invalid`);

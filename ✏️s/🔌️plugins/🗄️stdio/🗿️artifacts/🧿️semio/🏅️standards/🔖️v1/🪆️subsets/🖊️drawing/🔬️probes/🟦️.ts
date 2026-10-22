@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
+
 import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -66,7 +67,7 @@ function main(argv: readonly string[]): number {
     return emit(envelope("failed", {}, [{ severity: "error", message: `unknown probe ${probe || "(none)"}`, detail: `known: ${Object.keys(PROBE_ENGINES).join(", ")}` }]));
   }
 
-  const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...rest], {
+  const run = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...rest], {
     cwd: join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust"),
     encoding: "utf8",
   });

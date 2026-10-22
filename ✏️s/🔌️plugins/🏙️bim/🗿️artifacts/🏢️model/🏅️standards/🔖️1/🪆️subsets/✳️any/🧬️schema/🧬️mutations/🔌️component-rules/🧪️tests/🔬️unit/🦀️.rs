@@ -20,7 +20,7 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::m
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ComponentOverride, Family, FamilyParameter, Storey, Wall};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepSystem, ParameterKind, Point2};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use protocol::{Mutation, OutcomeCode};
+use protocol::{ColdMutation, Mutation, OutcomeCode};
 use semio_framework_diagnostic::Severity;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -90,7 +90,7 @@ fn refusal(mutation: &ModelMutation, base: &ModelSnapshot) -> (String, Vec<Strin
 fn applied(mutation: &ModelMutation, base: &ModelSnapshot) -> ModelSnapshot {
     let (diff, messages) = messages(mutation, base);
     assert!(!messages.iter().any(|message| matches!(message.level, Severity::Error | Severity::Fatal)), "{messages:?}");
-    protocol::apply_diff(&diff, base).expect("the diff applies")
+    protocol::apply_diff_cold(&diff, base).expect("the diff applies")
 }
 
 fn undone(mutation: &ModelMutation, base: &ModelSnapshot) -> ModelSnapshot {

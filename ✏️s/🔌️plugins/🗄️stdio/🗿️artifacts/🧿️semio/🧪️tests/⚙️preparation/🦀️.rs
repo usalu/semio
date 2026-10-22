@@ -31,15 +31,15 @@ where
     E::Mutation: Clone + PartialEq + Debug + store::ArtifactCanonicalJsonTree,
 {
     let factory = <E as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the semio document lane declares a preparation factory");
-    let apply = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant());
+    let apply = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), 1 << 16, grant());
     assert_ne!(base, expected, "{label}: the mutation must change the snapshot");
     assert_eq!(*apply.post, expected, "{label}: Apply publishes the exact post snapshot");
     let mut current = (*apply.post).clone();
     for row in apply.inverse.iter().cloned() {
-        current = (*store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, current, row, grant()).post).clone();
+        current = (*store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, current, row, 1 << 16, grant()).post).clone();
     }
     assert_eq!(current, base, "{label}: Undo restores the base");
-    let redo = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, current, mutation, grant());
+    let redo = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, current, mutation, 1 << 16, grant());
     assert_eq!(*redo.post, expected, "{label}: Redo publishes the same post snapshot");
     assert_eq!(redo.inverse, apply.inverse, "{label}: Redo derives the same inverse rows");
 }

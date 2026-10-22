@@ -17,7 +17,16 @@ pub struct SetField {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "field", kind: "set-field", record: "SetField" };
 
-    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set field", "Feld setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<CsvSnapshot, CsvMutation> for SetField {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::ColdMutation<CsvSnapshot>>::ReferenceDiff> {
         let Self { record_index, field_index, value, quoted } = self;
         protocol::MutationOutcome::new({
             let mut fields = vec![None; field_index + 1];
@@ -33,12 +42,6 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set field", "Feld setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

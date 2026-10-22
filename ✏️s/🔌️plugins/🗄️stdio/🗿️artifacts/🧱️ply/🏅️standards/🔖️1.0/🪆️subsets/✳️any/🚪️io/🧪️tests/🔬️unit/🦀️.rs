@@ -7,14 +7,14 @@ use crate::schema::diff::PlyElementsDiff;
 use crate::schema::mutations::{add_element, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property};
 use crate::schema::{demo_ply_snapshot, empty_ply_snapshot};
 use crate::{PlyDiff, PlyMutation};
-use protocol::command::DiffAlgebra;
-use protocol::{Mutation, MutationDiff};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutation, Mutation, ColdMutationDiff, MutationDiff};
 
 #[semio_framework_async_macros::async_test]
 async fn missing_element_target_is_rejected_before_mutation() {
     let base = PlySnapshot::default();
     let diff = PlyDiff { elements: Some(PlyElementsDiff { removed: vec!["missing".into()], ..Default::default() }), ..Default::default() };
-    let error = protocol::apply_diff(&diff, &base).expect_err("missing element target must be rejected");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing element target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["elements", "missing"]);
     assert_eq!(base, PlySnapshot::default());
@@ -158,7 +158,7 @@ async fn mutation_diff_law() {
         let returned = apply_mutation(&mut snapshot, &m);
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-        assert_eq!(snapshot, protocol::apply_diff(expected_diff.diff(), &base).expect("valid mutation diff"), "apply_mutation result must equal diff.diff().apply(base) for {m:?}");
+        assert_eq!(snapshot, protocol::apply_diff_cold(expected_diff.diff(), &base).expect("valid mutation diff"), "apply_mutation result must equal diff.diff().apply(base) for {m:?}");
     }
 }
 //#endregion
@@ -181,14 +181,14 @@ async fn inverse_law() {
     for m in variants {
         let mut snapshot = base.clone();
         let d = apply_mutation(&mut snapshot, &m);
-        for inv in <PlyMutation as Mutation<PlySnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture") {
+        for inv in <PlyMutation as ColdMutation<PlySnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture") {
             let mut undone = snapshot.clone();
             apply_mutation(&mut undone, &inv);
             assert_eq!(undone, base, "mutation-level inverse must restore base for {m:?}");
         }
         let d_inv = d.diff().inverse(&base);
-        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
-        assert_eq!(protocol::apply_diff(&d_inv, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        let mutated = protocol::apply_diff_cold(d.diff(), &base).expect("valid forward diff");
+        assert_eq!(protocol::apply_diff_cold(&d_inv, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion
@@ -207,7 +207,7 @@ async fn absorb_law_insert_then_remove_before() {
     let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after, "absorb(d1,d2).apply(base) == d2.diff().apply(d1.diff().apply(base))");
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), after, "absorb(d1,d2).apply(base) == d2.diff().apply(d1.diff().apply(base))");
     let rows_diff = merged.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
     assert_eq!(rows_diff.removed, vec![0], "base index 0 removed");
     assert_eq!(rows_diff.added.len(), 1, "the surviving insert, shifted to final index 1");
@@ -225,7 +225,7 @@ async fn absorb_law_insert_insert_same_index_both_survive() {
     let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after, "both inserts must survive absorb");
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), after, "both inserts must survive absorb");
     let rows_diff = merged.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
     assert_eq!(rows_diff.added.len(), 2, "both inserts survive (fixes the op-slot LWW bug the recipe bans)");
 }
@@ -242,7 +242,7 @@ async fn absorb_law_add_element_then_set_row_property_patches_into_added() {
     let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), after);
     let ed = merged.elements.as_ref().unwrap();
     assert!(ed.modified.iter().all(|m| m.name != "material"), "no separate modified entry for the added element");
     let added = ed.added.iter().find(|a| a.element.name == "material").expect("material still in added[]");
@@ -260,7 +260,7 @@ async fn absorb_law_modify_then_remove_name_keyed() {
     let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), after);
     let ed = merged.elements.as_ref().unwrap();
     assert!(ed.modified.iter().all(|m| m.name != "face"), "modified-of-removed collapses away");
     assert!(ed.removed.contains(&"face".to_string()));
@@ -277,7 +277,7 @@ async fn absorb_law_modify_then_remove_index_keyed() {
     let d2 = apply_mutation(&mut after, &m2);
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), after);
     let rows_diff = merged.elements.as_ref().unwrap().modified.iter().find(|m| m.name == "vertex").unwrap().diff.rows.as_ref().unwrap();
     assert!(rows_diff.modified.iter().all(|m| m.index != 1), "modified-of-removed row collapses away");
     assert!(rows_diff.removed.contains(&1));
@@ -305,8 +305,8 @@ async fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(right_inner);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "associativity: (d1∘d2)∘d3 == d1∘(d2∘d3) applied");
-    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), s3, "both associations must equal sequential application");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid left diff"), protocol::apply_diff_cold(&right, &base).expect("valid right diff"), "associativity: (d1∘d2)∘d3 == d1∘(d2∘d3) applied");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("valid associated diff"), s3, "both associations must equal sequential application");
 }
 //#endregion
 

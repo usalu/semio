@@ -41,7 +41,7 @@
             "{projectRoot}/dist"
           ],
           "options": {
-            "command": "bun ./📜️script.ts build"
+            "command": "repo ./📜️script.ts build"
           }
         },
         "test": {
@@ -52,7 +52,7 @@
           ],
           "outputs": [],
           "options": {
-            "command": "bun ./📜️script.ts test"
+            "command": "repo ./📜️script.ts test"
           }
         },
         "validate": {
@@ -60,7 +60,7 @@
           "cache": false,
           "outputs": [],
           "options": {
-            "command": "bun ./📜️script.ts validate"
+            "command": "repo ./📜️script.ts validate"
           }
         },
         "guarded": {
@@ -74,7 +74,7 @@
           ],
           "outputs": [],
           "options": {
-            "command": "bun ./📜️script.ts guarded"
+            "command": "repo ./📜️script.ts guarded"
           }
         }
       }

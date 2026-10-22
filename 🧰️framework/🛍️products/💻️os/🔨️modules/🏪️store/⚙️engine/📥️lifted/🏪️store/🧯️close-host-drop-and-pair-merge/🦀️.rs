@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_framework_os_spr::ColdMutation;
+use semio_framework_os_store_engine_close::{StoreCloseAdmission as _, StoreCloseWitness as _};
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -18,7 +19,7 @@ use semio_framework_os_spr::ColdMutation;
 impl<P, Mutation> ArtifactStoreCloseHost<P, Mutation> for ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_host_member_inbox_capacity(&self) -> usize { self.wire.member_inbox.capacity() }
     fn close_host_backbone_attached(&self) -> bool { self.wire.backbone.is_some() }
@@ -29,9 +30,9 @@ where
     fn maintenance_retirements_terminal_is_empty(&self) -> bool { ArtifactStore::maintenance_retirements_terminal_is_empty(self) }
     fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { ArtifactStore::maintenance_retirements_step(self, grant) }
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> { ArtifactStore::close_take_backbone_retirement(self, grant) }
-    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> { ArtifactStore::close_cursor_admit(self, phase, grant) }
+    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> { self.parts().close_cursor_admit(phase, grant) }
     fn close_cursor_demands(&self, phase: ArtifactStoreCursorDisposerPhase, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { ArtifactStore::close_cursor_demands(self, phase, body) }
-    fn owned_roots_terminal_is_empty(&self) -> bool { ArtifactStore::owned_roots_terminal_is_empty(self) }
+    fn owned_roots_terminal_is_empty(&self) -> bool { self.parts_ref().owned_roots_terminal_is_empty() }
 }
 //#endregion 🔖️ArtifactStore
 //#endregion 🔖️ArtifactStore
@@ -55,7 +56,7 @@ where
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🪞️ Delegates to [`StoreLive::enable_convergence_early_exit`].
     #[inline] pub fn enable_convergence_early_exit(&mut self) { self.live.enable_convergence_early_exit() }
@@ -261,7 +262,7 @@ pub async fn retract_history_transitions_from_spr(spr: &[u8], refused: &[String]
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🫸️ [`Self::merge_persisted_history`] over the pair's undecoded `.spr` bytes.
     pub async fn merge_persisted_pair(&mut self, pack: &[u8], spr: &[u8]) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {

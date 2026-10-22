@@ -1,0 +1,90 @@
+{
+  "cases": [
+    {
+      "id": "authenticated-captured-entry",
+      "identity": "same",
+      "loader": "same",
+      "accepted": true
+    },
+    {
+      "id": "raw-entry",
+      "identity": "absent",
+      "loader": "absent",
+      "accepted": false
+    },
+    {
+      "id": "changed-source",
+      "identity": "different",
+      "loader": "same",
+      "accepted": false
+    },
+    {
+      "id": "changed-loader",
+      "identity": "same",
+      "loader": "different",
+      "accepted": false
+    }
+  ],
+  "reply": {
+    "version": 1,
+    "answer": 42
+  },
+  "publication": {
+    "args": [
+      "--flag",
+      "😀"
+    ],
+    "environment": {
+      "SEMIO_LANGUAGE": "en"
+    },
+    "label": "repository:command",
+    "outputStyle": "stream-without-prefixes",
+    "progressStream": "stderr"
+  },
+  "projection": {
+    "parentMilliseconds": 10000,
+    "marker": "actual-command-α🙂",
+    "cases": [
+      {
+        "id": "narrowed-phase",
+        "kind": "narrowed",
+        "childMilliseconds": 5000,
+        "delayMilliseconds": 0,
+        "captureCalls": 1,
+        "launchCalls": 1,
+        "policyMilliseconds": 5000,
+        "refusal": null
+      },
+      {
+        "id": "inherited-parent",
+        "kind": "inherit",
+        "childMilliseconds": 0,
+        "delayMilliseconds": 0,
+        "captureCalls": 1,
+        "launchCalls": 1,
+        "policyMilliseconds": 10000,
+        "refusal": null
+      },
+      {
+        "id": "copied-control",
+        "kind": "copied",
+        "childMilliseconds": 5000,
+        "delayMilliseconds": 0,
+        "captureCalls": 0,
+        "launchCalls": 0,
+        "policyMilliseconds": null,
+        "refusal": "Live Original resource control issuance required"
+      },
+      {
+        "id": "expired-phase",
+        "kind": "expired",
+        "childMilliseconds": 10,
+        "delayMilliseconds": 25,
+        "captureCalls": 0,
+        "launchCalls": 0,
+        "policyMilliseconds": null,
+        "refusal": "Original resource loan deadline exhausted"
+      }
+    ]
+  }
+}

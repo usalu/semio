@@ -42,7 +42,8 @@ print/asset/font/
 .🧬semio/🎓️teaching/
 .🧬semio/🔗space/
 .🧬semio/🗺️map/
-.🧬semio/🦑️repo/⚡️cache/
+**/.🧬semio/🦑️repo/⚡️cache/
+.🧬semio/🦑️repo/🏡️resident-fence/
 .🧬semio/🦑️repo/compose-micro-commit-bun
 # Ticket worktree snapshots. Staging one makes GitKraken unstage walk gigabytes and restart macOS.
 **/w3-backup/
@@ -79,10 +80,6 @@ dist
 dist-ssr
 out
 *.local
-.idea
-*.suo
-*.ntvs*
-*.njsproj
 *.sw?
 *storybook.log
 .playwright-mcp
@@ -377,13 +374,7 @@ cython_debug/
 **.vscode-test
 *.vsix
 # *.code-workspace
-#--------------------------------------VISUALSTUDIO--------------------------------------
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-*.userprefs
+#--------------------------------------NATIVE-BUILD-OUTPUT--------------------------------------
 mono_crash.*
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -399,7 +390,6 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-.vs/
 Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
@@ -437,8 +427,6 @@ StyleCopReport.xml
 *_wpftmp.csproj
 *.log
 *.tlog
-*.vspscc
-*.vssscc
 .builds
 *.pidb
 *.svclog
@@ -454,8 +442,6 @@ ipch/
 *.VC.db
 *.VC.VC.opendb
 *.psess
-*.vsp
-*.vspx
 *.sap
 *.e2e
 $tf/
@@ -569,12 +555,8 @@ OpenCover/
 ASALocalRun/
 *.binlog
 *.nvuser
-.mfractor/
-.localhistory/
-.vshistory/
 healthchecksdb
 MigrationBackup/
-.ionide/
 FodyWeavers.xsd
 .history/
 *.cab
@@ -631,6 +613,9 @@ nul
 # fixtures tree explicitly, the same way the taxonomy dirs above are rescued.
 !**/🧫️fixtures/
 !**/🧫️fixtures/**
+
+# 🗺️ A ticket owns its plans: *.plan.md files in a ticket folder are evidence, even when a generic rule above (for example `target*`) matches the name.
+!.🧬semio/🦑️repo/🎫️tickets/**/*.plan.md
 **/🌐️browser-bundles/**
 **/🧫️fixtures/**/🤖️generated/**
 

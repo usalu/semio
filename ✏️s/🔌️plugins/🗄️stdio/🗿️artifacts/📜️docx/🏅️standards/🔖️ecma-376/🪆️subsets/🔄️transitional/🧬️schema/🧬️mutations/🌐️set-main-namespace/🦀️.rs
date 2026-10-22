@@ -13,19 +13,20 @@ pub struct SetMainNamespace {
 impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetMainNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-namespace", kind: "set-main-namespace", record: "SetMainNamespace" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        protocol::MutationOutcome::new(diff_retarget_namespace(base, MAIN_NAMESPACES, &self.namespace))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxTransitionalMutation>, semio_framework_value::ValueError> {
-        Ok(namespace_inverse(base))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set main namespace", "Hauptnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxTransitionalMutation> for SetMainNamespace {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_namespace(base, MAIN_NAMESPACES, &self.namespace))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxTransitionalMutation>, semio_framework_value::ValueError> {
+        Ok(namespace_inverse(base))
     }
 }
 //#endregion 🔖️Payload

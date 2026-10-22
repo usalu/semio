@@ -210,7 +210,7 @@ func PrintTree(output *workspace.CommandOutput, dir, prefix string) {
 	for _, e := range items {
 		relPaths = append(relPaths, workspace.GetRelativePath(filepath.Join(dir, e.Name())))
 	}
-	ignored := workspace.GetGitIgnoredSet(relPaths)
+	ignored := workspace.GetGitIgnoredSet(workspace.GetRootDir(), relPaths)
 	var filtered []os.DirEntry
 	for _, e := range items {
 		relPath := workspace.GetRelativePath(filepath.Join(dir, e.Name()))

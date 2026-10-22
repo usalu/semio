@@ -1,0 +1,9 @@
+# Inference Generation Basename Delta Review
+
+Exact bounded current three-leaf static clearance. Pins match supplied candidate: schema21327/bbfd2a96bc7605c2448f7ad5ec9742a9a017c4af0da65984fdd6f9949a36ce04; inference12313/6424efc128c95eca4fef914a6afd4352da536064d8b62e24f2b21739e2b9dba3; cases2969/aa968a856754173d3b0c28bab9bda6d526fc27e55303618d6defd9d9c22cd993.
+
+Retained schema21219/e227 structural comparison confirms only required generationBasename and const packed-sha256 property. Retained test12074/f37 exact line comparison confirms only derived generation selectedPath and matching context/SQL path assertions, plus explicit fixture marker assertion. No imports or runtime bindings change. Current closed fixture strictAjv valid; TS syntax0.
+
+Actual worker index/frontier payload authenticates compressed digest against basename before inflating. Replacing only generation-* fixture basename with actual packed SHA-256 is therefore necessary for intended inflation refusal reachability. The unchanged exact primary identity, ERR_BUFFER_TOO_LARGE code and closed check=inflation context now prove the intended cause rather than a filename authentication failure. Other role paths stay unchanged; generation-fragment also receives authentic basename consistently. Partial FD2 transport assertions and bounded context remain.
+
+Both exact inference literals remain unchanged with explicit60000ms each and existing180000ms phase. Corpus retains11decoder+7compressed rows. No new title, phase, policy count or Source dependency is introduced. Native/production function/test execution remains unrun; no Source/control edits or ledger effects.

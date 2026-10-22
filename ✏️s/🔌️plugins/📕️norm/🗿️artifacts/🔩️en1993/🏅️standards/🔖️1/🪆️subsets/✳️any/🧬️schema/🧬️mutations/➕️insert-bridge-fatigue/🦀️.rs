@@ -9,13 +9,17 @@ use semio_s_artifact_norm_en1993_model::{BridgeFatigue, En1993Snapshot};
 pub struct InsertBridgeFatigue { pub index: Option<usize>, pub bridge_fatigue_item: BridgeFatigue }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertBridgeFatigue where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_bridge_fatigue::RemoveBridgeFatigue> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "bridge-fatigue", kind: "insert-bridge-fatigue", record: "InsertedBridgeFatigue" };
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> { crate::insert_bridge_fatigue::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bridge fatigue verification at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Ermüdungsnachweis der Brücke an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
+}
+
+impl<Op> protocol::ColdMutationKind<En1993Snapshot, Op> for InsertBridgeFatigue where Op: protocol::ColdMutation<En1993Snapshot, ReferenceDiff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_bridge_fatigue::RemoveBridgeFatigue> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1993Snapshot>>::ReferenceDiff> { crate::insert_bridge_fatigue::diff::diff(self, base) }
     fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::insert_bridge_fatigue::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bridge fatigue verification at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Ermüdungsnachweis der Brücke an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
-    fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 
 //#region 🪢️Mounts

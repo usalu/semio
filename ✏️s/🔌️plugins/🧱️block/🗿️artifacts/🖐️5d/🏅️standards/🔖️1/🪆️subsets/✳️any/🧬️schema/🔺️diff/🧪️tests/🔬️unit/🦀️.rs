@@ -32,9 +32,9 @@ fn absorbed(first: Block5dDiff, second: Block5dDiff) -> Block5dDiff {
 
 fn assert_absorb_law(base: &Block5dSnapshot, first: &Block5dDiff, second: &Block5dDiff) -> Block5dDiff {
     let sigma = absorbed(first.clone(), second.clone());
-    let mid = protocol::apply_diff(first, base).expect("first applies");
-    let sequential = protocol::apply_diff(second, &mid).expect("second applies");
-    assert_eq!(protocol::apply_diff(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
+    let mid = protocol::apply_diff_cold(first, base).expect("first applies");
+    let sequential = protocol::apply_diff_cold(second, &mid).expect("second applies");
+    assert_eq!(protocol::apply_diff_cold(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
     sigma
 }
 
@@ -42,7 +42,7 @@ fn assert_absorb_law(base: &Block5dSnapshot, first: &Block5dDiff, second: &Block
 #[test]
 fn empty_diff_is_the_identity() {
     let base = base();
-    assert_eq!(protocol::apply_diff(&Block5dDiff::default(), &base).expect("identity applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&Block5dDiff::default(), &base).expect("identity applies"), base);
     assert!(DiffAlgebra::<Block5dSnapshot>::is_empty(&Block5dDiff::default()));
 }
 
@@ -126,9 +126,9 @@ fn inverse_restores_the_base() {
         },
         ..Default::default()
     };
-    let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
     let inverse = DiffAlgebra::<Block5dSnapshot>::inverse(&diff, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
 /// 🎯️ Removing, inserting and moving a MIDDLE row are each undone by the inverse at the row's original position.
@@ -141,9 +141,9 @@ fn inverse_restores_middle_rows() {
         BlockAttributesDelta { moved: vec![BlockAttributesRelocation { id: "b".into(), from: 1, to: 3 }], ..Default::default() },
     ] {
         let diff = rows(delta);
-        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
         let inverse = DiffAlgebra::<Block5dSnapshot>::inverse(&diff, &base);
-        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+        assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }
 
@@ -151,5 +151,5 @@ fn inverse_restores_middle_rows() {
 #[test]
 fn apply_refuses_a_missing_removal() {
     let diff = rows(BlockAttributesDelta { removed: vec![BlockAttributesRemoval { id: "ghost".into(), index: 0 }], ..Default::default() });
-    assert!(protocol::apply_diff(&diff, &base()).is_err());
+    assert!(protocol::apply_diff_cold(&diff, &base()).is_err());
 }

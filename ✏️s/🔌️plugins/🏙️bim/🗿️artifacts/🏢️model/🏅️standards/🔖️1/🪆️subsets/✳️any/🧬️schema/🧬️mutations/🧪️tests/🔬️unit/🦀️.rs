@@ -4,7 +4,7 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::{elements, placement};
 use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
-use protocol::{Mutation, OpText};
+use protocol::{ColdMutation, Mutation, OpText};
 use semio_framework_test_fixtures::fixture_text;
 
 fn descriptors() -> Vec<(&'static str, u32)> {

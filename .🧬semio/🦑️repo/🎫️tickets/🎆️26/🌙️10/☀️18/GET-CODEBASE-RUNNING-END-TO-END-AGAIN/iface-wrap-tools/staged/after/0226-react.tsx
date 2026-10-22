@@ -1,295 +1,80 @@
 // #region 🧲️Header
-// 🎨️ framework/products/os/modules/renderer/engine/elements/🧩️BlockListHost/component.tsx
-/** 🧱️ `🧩️BlockListHost` — the step/block-list scene host: dnd-kit sortable steps and blocks,
- * a drag-and-drop block palette (native-drag and driver-arm-drag), and step/block add/remove/move
- * action dispatch. */
+// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/📖️stories/🧪️.story.tsx
+// Specs: Host the framework renderer's `TiledMapHost` against the real prebuilt `framework/surface/tiled-map/rs`
+// `MapSession` WASM engine.
+// Summary: A debug-readout host mounts `TiledMapHost` against a `TiledMapScene`; tile URLs point at a
+// storybook-relative, intentionally-missing path — the 404s they produce are inert (caught and recorded as
+// `tileMiss`, never thrown) and filtered by the accompanying playwright spec, so no real network dependency
+// is introduced. `parameters.wasm: ["tiled-map"]` gates first paint on `WASM_LOADERS["tiled-map"]` resolving.
+// 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-// #region 🔌️Adapters
-import * as React from "../⚛️react-port/🟦️.ts";
-import { useCallback, useContext, useMemo, useState, type MouseEvent } from "../⚛️react-port/🟦️.ts";
-import { blockListPaletteTargetStepIdV1, type BlockListSelectionTarget, type BlockListBlock, type BlockListStep, type BlockListPaletteEntry, type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
-import {
-  Button,
-  cn,
-  closestCenter,
-  ContextMenuController,
-  DndContext,
-  DndCSS,
-  DragHandle,
-  Icon,
-  SortableContext,
-  useLabel,
-  useNativeDragArm,
-  useSortable,
-  useUiDriverDragSurface,
-  verticalListSortingStrategy,
-  type ContextMenuItem,
-  type DragEndEvent,
-  type IconName,
-} from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-// #endregion 🔌️Adapters
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useCallback, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
 
-//#region 🔖️BlockListHost
-//#region BlockListHost
-//#region Types
-type SelectionContext = { readonly domainId?: string; readonly selectedId?: string };
-const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
-//#endregion Types
+import { TiledMapHost } from "@semio-tech/framework-renderer-react";
+import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@semio-tech/framework";
+import overlayFixture from "../🧪️tests/🧫️fixtures/🗺️overlay-descriptor/🔣️.json" with { type: "json" };
 
-//#region Helpers
-function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, controllerId: string, action: string, args: Record<string, unknown>): void {
-  onAction({ controllerId, action, args });
-}
+//#region SceneFixtures
+/** 🗺️ The shared neutral descriptor: the neutral bands plus a small test policy declaring pickable `paths` and `pins` overlays, which the wgpu surface tests sync too. */
+const VECTOR_SCENE: TiledMapScene = {
+  mapDescriptorJson: JSON.stringify(overlayFixture.mapDescriptor),
+  cameraJson: '{"x":0,"y":0,"zoom":1}',
+  renderMode: "vector",
+  vectorStyle: "default",
+  lodMode: "automatic",
+  tileUrlTemplate: "/storybook-missing-tiles/{z}/{x}/{y}.png",
+  vectorTileUrlTemplate: "/storybook-missing-tiles/vector/{z}/{x}/{y}.pbf",
+  layerVisibilityJson: "{}",
+  layerStrokeScaleJson: "{}",
+  selectionJson: JSON.stringify(overlayFixture.selection),
+  hoverJson: JSON.stringify(overlayFixture.hover),
+  selectionMethod: "rectangle",
+  selectionMode: "feature",
+};
 
-//#endregion Helpers
+const IMAGE_SCENE: TiledMapScene = { ...VECTOR_SCENE, renderMode: "image" };
+//#endregion SceneFixtures
 
-//#region SortableRow
-/** 🧩️ Wraps a row in dnd-kit's sortable machinery so it can be reordered within its enclosing `SortableContext`. */
-function SortableRow({ id, children }: { readonly id: string; readonly children: (dragHandleProps: { readonly attributes: React.HTMLAttributes<HTMLElement>; readonly listeners: Record<string, unknown> | undefined; readonly style: React.CSSProperties }) => React.ReactNode }) {
-  const surfaceDrag = useUiDriverDragSurface();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style: React.CSSProperties = { transform: DndCSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  return (
-    <div ref={setNodeRef} style={style} {...(surfaceDrag ? { ...attributes, ...listeners } : {})}>
-      {children({ attributes, listeners: surfaceDrag ? undefined : listeners, style })}
-    </div>
-  );
-}
-//#endregion SortableRow
+//#region StoryHost
+function TiledMapStoryHost({ scene, controllerId, surfaceId }: { readonly scene: TiledMapScene; readonly controllerId: string; readonly surfaceId: string }): ReactElement {
+  const [lastAction, setLastAction] = useState<ActionDescriptor | null>(null);
 
-//#region Block
-function SelectionLabel({ id, target, selection, controllerId, onAction, children }: { readonly id: string; readonly target?: BlockListSelectionTarget; readonly selection: SelectionContext; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly children: React.ReactNode }) {
-  if (!selection.domainId || !target) return <div className="min-w-0 flex-1">{children}</div>;
-  return <button
-    type="button"
-    aria-pressed={selection.selectedId === id}
-    className="min-w-0 flex-1 rounded text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-    onClick={(event) => {
-      event.stopPropagation();
-      dispatchBlockListAction(onAction, controllerId, "interactionSelect", { domainId: selection.domainId, targets: JSON.stringify([target]), merge: "replace", method: "pick" });
-    }}
-  >{children}</button>;
-}
+  const onAction = useCallback((action: ActionDescriptor): void => {
+    setLastAction(action);
+  }, []);
 
-function BlockCard({ block, stepId, controllerId, onAction, selection }: { readonly block: BlockListBlock; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
-  const surfaceDrag = useUiDriverDragSurface();
-  const deleteLabel = useLabel("ui.common.delete");
-  return (
-    <SortableRow id={block.id}>
-      {({ attributes, listeners }) => (
-        <div className={cn("semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single", selection.selectedId === block.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
-          {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-          <SelectionLabel id={block.id} target={block.target} selection={selection} controllerId={controllerId} onAction={onAction}>
-            <span className="block truncate text-xs font-medium">{block.label}</span>
-            <span aria-hidden="true" className="block truncate text-xs text-muted-foreground">{block.kind}</span>
-          </SelectionLabel>
-          <Button aria-label={`${deleteLabel}: ${block.label}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
-        </div>
-      )}
-    </SortableRow>
-  );
-}
-//#endregion Block
-
-//#region Step
-function StepCard({ step, palette, controllerId, onAction, selection }: { readonly step: BlockListStep; readonly palette: readonly BlockListPaletteEntry[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void; readonly selection: SelectionContext }) {
-  const surfaceDrag = useUiDriverDragSurface();
-  const deleteLabel = useLabel("ui.common.delete");
-  const blockIds = useMemo(() => step.blocks.map((block) => block.id), [step.blocks]);
-
-  function handleBlockDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const index = step.blocks.findIndex((block) => block.id === over.id);
-    if (index === -1) return;
-    dispatchBlockListAction(onAction, controllerId, "moveBlock", { blockId: active.id, fromStepId: step.id, toStepId: step.id, index });
-  }
+  const node: UiComponentSceneNode = { type: "componentScene", surfaceId, controllerId, componentKind: "tiled-map", tiledMap: scene };
 
   return (
-    <SortableRow id={step.id}>
-      {({ attributes, listeners }) => (
-        <div
-          className={cn("semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single", selection.selectedId === step.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")}
-          data-step-id={step.id}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "copy";
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            const kind = event.dataTransfer.getData(PALETTE_DRAG_MIME);
-            if (!kind) return;
-            dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: step.id, kind });
-          }}
-        >
-          <div className="flex items-center gap-2">
-            {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-            <SelectionLabel id={step.id} target={step.target} selection={selection} controllerId={controllerId} onAction={onAction}>
-              <span className="block truncate text-sm font-medium">{step.title}</span>
-            </SelectionLabel>
-            <Button aria-label={`${deleteLabel}: ${step.title}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
-          </div>
-          {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
-            <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-1">
-                {step.blocks.map((block) => (
-                  <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} selection={selection} />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </div>
-      )}
-    </SortableRow>
-  );
-}
-//#endregion Step
-
-//#region Palette
-function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { readonly entry: BlockListPaletteEntry; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
-  const surfaceDrag = useUiDriverDragSurface();
-  const { armed, arm } = useNativeDragArm();
-  const enabled = targetStepId !== undefined;
-  return (
-    <div
-      draggable={enabled && (surfaceDrag || armed)}
-      onDragStart={(event) => {
-        if (!enabled) {
-          event.preventDefault();
-          return;
-        }
-        event.dataTransfer.setData(PALETTE_DRAG_MIME, entry.blockKind);
-        event.dataTransfer.effectAllowed = "copy";
-      }}
-      className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", enabled && surfaceDrag && "cursor-grab active:cursor-grabbing")}
-    >
-      {!surfaceDrag && enabled ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
-      <button
-        type="button"
-        disabled={!enabled}
-        className="flex min-w-0 flex-1 items-center gap-1 text-left"
-        data-block-kind={entry.blockKind}
-        aria-label={entry.label}
-        onClick={() => {
-          if (targetStepId) dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: targetStepId, kind: entry.blockKind });
-        }}
-        onKeyDown={(event) => {
-          if (!targetStepId || (event.key !== "Enter" && event.key !== " ")) return;
-          event.preventDefault();
-          dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: targetStepId, kind: entry.blockKind });
-        }}
-      >
-        <Icon icon={entry.iconId as IconName} size="small" />
-        {entry.label}
-      </button>
-    </div>
-  );
-}
-
-function PalettePanel({ palette, targetStepId, controllerId, onAction }: { readonly palette: readonly BlockListPaletteEntry[]; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
-  return (
-    <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
-      {palette.map((entry) => (
-        <PaletteEntryRow key={entry.blockKind} entry={entry} targetStepId={targetStepId} controllerId={controllerId} onAction={onAction} />
-      ))}
-    </div>
-  );
-}
-//#endregion Palette
-
-//#region Component
-export function BlockListHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
-  const scene = node.blockList;
-  const windowInstanceId = useContext(WindowInstanceIdContext);
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
-  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.step");
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
-    },
-    [node.controllerId, node.surfaceId, onAction],
-  );
-  const mapContextMenu = useMapContextMenuSpecs(dispatch);
-  const shellContextMenuFallback = useShellContextMenuFallback();
-  const steps = scene?.steps ?? [];
-  const palette = scene?.palette ?? [];
-  const stepIds = useMemo(() => steps.map((step) => step.id), [steps]);
-  const paletteTargetStepId = useMemo(() => blockListPaletteTargetStepIdV1(steps, scene?.selectedId), [scene?.selectedId, steps]);
-  const stepsLabel = useLabel("ui.blockList.steps");
-  const addStepLabel = useLabel("ui.blockList.addStep");
-  const emptyLabel = useLabel("ui.host.emptyScene");
-
-  //#region ContextMenu
-  /** 🖱️ `BlockListScene` carries only typed sections and palette records — no per-step pick/selection state reaches this
-   * host — so `hits`/`selection` stay empty per surface convention (see `🌳️GraphTimelineHost`). */
-  const onContextMenu = useCallback(
-    (event: MouseEvent<HTMLDivElement>): void => {
-      if (!requestContextMenu) return;
-      event.preventDefault();
-      event.stopPropagation();
-      void (async () => {
-        const menu = await openSurfaceContextMenu(
-          requestContextMenu,
-          {
-            menu: { id: "blockList", args: null },
-            surface: { surfaceId: node.surfaceId, kind: "blockList", hits: [], selection: [] },
-            windowInstanceId: windowInstanceId ?? undefined,
-            point: { x: event.clientX, y: event.clientY },
-          },
-          mapContextMenu,
-          shellContextMenuFallback,
-        );
-        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
-      })();
-    },
-    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
-  );
-  //#endregion ContextMenu
-
-  if (!scene) return <div className="semio-block-list-empty">{emptyLabel}</div>;
-
-  function handleStepDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const index = steps.findIndex((step) => step.id === over.id);
-    if (index === -1) return;
-    dispatchBlockListAction(onAction, node.controllerId, "moveStep", { stepId: active.id, index });
-  }
-
-  return (
-    <div className="semio-block-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId} onContextMenu={onContextMenu}>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">{stepsLabel}</span>
-          <Button className="h-medium shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, node.controllerId, "addStep", {})} />
-        </div>
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
-          <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-2">
-              {steps.map((step) => (
-                <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} selection={{ domainId: scene.domainId, selectedId: scene.selectedId }} />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+        <TiledMapHost node={node} onAction={onAction} />
       </div>
-      <PalettePanel palette={palette} targetStepId={paletteTargetStepId} controllerId={node.controllerId} onAction={onAction} />
-      <ContextMenuController
-        title={contextMenuTitleLabel}
-        open={contextMenu != null}
-        position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenu?.items ?? []}
-        onOpenChange={(open) => {
-          if (!open) setContextMenu(null);
-        }}
-      />
+      <pre data-testid="tiled-map-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
+        {JSON.stringify({ lastAction })}
+      </pre>
     </div>
   );
 }
-//#endregion Component
-//#endregion BlockListHost
-//#endregion 🔖️BlockListHost
+//#endregion StoryHost
+
+const meta = {
+  title: "🛠️framework🔌️hosts/TiledMapHost",
+  component: TiledMapStoryHost,
+  parameters: { layout: "fullscreen", wasm: ["tiled-map"] },
+  tags: ["autodocs"],
+} satisfies Meta<typeof TiledMapStoryHost>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const VectorRender: Story = {
+  args: { scene: VECTOR_SCENE, controllerId: "map-story", surfaceId: "map-story.map" },
+};
+
+export const ImageRender: Story = {
+  args: { scene: IMAGE_SCENE, controllerId: "map-story", surfaceId: "map-story.map-image" },
+};

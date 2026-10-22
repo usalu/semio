@@ -12,6 +12,9 @@ import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeTestArgumentsV1 } from "../../../⚙️runtime/🚀️process/🟦️.ts";
 
 export class GenerateScript extends BundleScript {
   async run(): Promise<void> {
@@ -55,7 +58,7 @@ export class CheckGeneratedScript extends BundleScript {
     const actual = graphOutputInventory(outDir);
     const stale = rendered.artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => basename(artifact.path));
     if (JSON.stringify(actual) !== JSON.stringify(expected) || stale.length > 0) throw new Error(`framework-graph generated catalog is stale: membership=${JSON.stringify(actual) !== JSON.stringify(expected)}, files=${JSON.stringify(stale)}`);
-    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", 60_000, {env: process.env});
+    await runOwnedCommand(runtimeExecutableV1(), runtimeTestArgumentsV1([resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")]), this.repoRoot, "tool:owner", 60_000, {env: process.env});
     console.log(`[framework-graph] ${rendered.manifestCount} generated manifests are fresh`);
   }
 }
@@ -70,7 +73,7 @@ export class TestScript extends BundleScript {
     checkResourceLeaseControl(phaseControl);
     const { rest } = resolveTestLevel(segments);
     const sourcePhase=createRequestedIssuedResourceControlV1(phaseControl,cmdBudgetMs());
-    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", compilerAdmissionBudgetV1(sourcePhase), {env:scriptInvocationEnvironment(this.invocation,process.env),signal:sourcePhase.signal});
+    await runOwnedCommand(runtimeExecutableV1(), runtimeTestArgumentsV1([resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")]), this.repoRoot, "tool:owner", compilerAdmissionBudgetV1(sourcePhase), {env:scriptInvocationEnvironment(this.invocation,process.env),signal:sourcePhase.signal});
     checkResourceLeaseControl(sourcePhase);
     await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: GRAPH_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,phaseControl);
   }
@@ -91,7 +94,7 @@ export class LintScript extends BundleScript {
 export class OwnerGraphWireCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void> {
     if(segments.length) throw new Error("Owned graph wire law has no arguments");
-    const manifest=Bun.TOML.parse(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package?:{name?:string}};
+    const manifest=runtimeParseTomlV1(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package?:{name?:string}};
     const name=manifest.package?.name;
     if(typeof name!=="string" || !/^[a-z][a-z0-9-]+$/u.test(name)) throw new Error("Owned graph wire law requires an actual Cargo package identity");
     await runOwnedCommand("cargo",["test","--manifest-path",join(this.root,"Cargo.toml"),"-p",name,"--lib","owner_wire_law","--","--nocapture"],this.root,"cargo:owner-wire",buildBudgetMs(),{env:process.env});
@@ -102,6 +105,6 @@ export class OwnerGraphWireCheckScript extends BundleScript {
 export class ManifestContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Graph manifest contract accepts no arguments");
-    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "graph:manifest-contract", scriptInvocationBudget(this.invocation,cmdBudgetMs()), { env: process.env,signal:this.invocation.control.signal });
+    await runOwnedCommand(runtimeExecutableV1(), runtimeTestArgumentsV1([resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")]), this.repoRoot, "graph:manifest-contract", scriptInvocationBudget(this.invocation,cmdBudgetMs()), { env: process.env,signal:this.invocation.control.signal });
   }
 }

@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
 import { resolveColorHex } from "@semio-tech/ui-styling";
 import {
   TOOL_RUN_TRACE_HIGHLIGHT_PAINT,

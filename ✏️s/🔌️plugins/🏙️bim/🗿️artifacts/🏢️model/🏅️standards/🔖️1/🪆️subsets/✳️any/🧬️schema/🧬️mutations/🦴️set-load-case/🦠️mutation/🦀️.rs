@@ -13,8 +13,14 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetLoadCase>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "load-case", kind: "set-load-case", record: "SetLoadCase" };
-fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_load_case::diff::diff(self, base) }
-fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_load_case::inverse::inverse(self, base)) }
 fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("set load-case", "Ändern Lastfall") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<ModelSnapshot, Op> for SetLoadCase
+where
+    Op: protocol::ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff> + From<SetLoadCase>,
+{
+fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_load_case::diff::diff(self, base) }
+fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_load_case::inverse::inverse(self, base)) }
 }

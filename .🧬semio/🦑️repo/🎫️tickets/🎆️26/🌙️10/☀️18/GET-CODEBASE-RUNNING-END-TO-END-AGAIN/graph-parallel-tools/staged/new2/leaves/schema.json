@@ -1,0 +1,72 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "semio:build/storage/leaves",
+ "title": "Graph Optional Leaves: deferred accounting and worker writers",
+ "$defs": {
+  "Policy": {
+   "const": {
+    "flushBytes": 262144,
+    "flushLeaves": 64,
+    "flushMilliseconds": 250,
+    "finalFlushAttempts": 20,
+    "flushRetryMilliseconds": 10,
+    "grantBytes": 8388608,
+    "maximumLeafBytes": 67108864
+   }
+  },
+  "Leaf": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "bytes"],
+   "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 }
+   }
+  },
+  "Step": {
+   "oneOf": [
+    { "type": "object", "additionalProperties": false, "required": ["op", "bytes"], "properties": { "op": { "const": "publish" }, "bytes": { "type": "integer", "minimum": 0 }, "deferred": { "type": "boolean" }, "ledgerAccepts": { "type": "boolean" } } },
+    { "type": "object", "additionalProperties": false, "required": ["op", "leaves"], "properties": { "op": { "const": "adopt" }, "leaves": { "type": "array", "items": { "$ref": "#/$defs/Leaf" } } } },
+    { "type": "object", "additionalProperties": false, "required": ["op", "milliseconds"], "properties": { "op": { "const": "clock" }, "milliseconds": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["op"], "properties": { "op": { "const": "flush" }, "final": { "type": "boolean" }, "ledgerAccepts": { "type": "boolean" } } },
+    { "type": "object", "additionalProperties": false, "required": ["op", "bytes"], "properties": { "op": { "const": "grant" }, "bytes": { "type": "integer", "minimum": 0 } } },
+    { "type": "object", "additionalProperties": false, "required": ["op"], "properties": { "op": { "const": "release" } } }
+   ]
+  },
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "quota", "policy", "steps", "expect"],
+   "properties": {
+    "name": { "type": "string" },
+    "quota": { "type": "object", "additionalProperties": false, "required": ["maximumBytes", "usedBytes", "availableBytes", "minimumAvailableBytes"], "properties": { "maximumBytes": { "type": "integer" }, "usedBytes": { "type": "integer" }, "availableBytes": { "type": "integer" }, "minimumAvailableBytes": { "type": "integer" } } },
+    "policy": { "type": "object", "additionalProperties": false, "required": ["flushBytes", "flushLeaves", "flushMilliseconds", "finalFlushAttempts"], "properties": { "flushBytes": { "type": "integer" }, "flushLeaves": { "type": "integer" }, "flushMilliseconds": { "type": "integer" }, "finalFlushAttempts": { "type": "integer" } } },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["results", "ledger", "used", "owedBytes", "owedLeaves", "removed", "refused"],
+     "properties": {
+      "results": { "type": "array" },
+      "ledger": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["peakBytes", "retainedDeltaBytes", "accepted"], "properties": { "peakBytes": { "type": "integer" }, "retainedDeltaBytes": { "type": "integer" }, "accepted": { "type": "boolean" } } } },
+      "used": { "type": "integer" },
+      "owedBytes": { "type": "integer" },
+      "owedLeaves": { "type": "integer" },
+      "removed": { "type": "array", "items": { "type": "string" } },
+      "refused": { "type": "array", "items": { "type": "string" } }
+     }
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "cases", "workerCases"],
+   "properties": {
+    "version": { "const": 1 },
+    "cases": { "type": "array", "items": { "$ref": "#/$defs/Case" } },
+    "workerCases": { "type": "array" }
+   }
+  }
+ }
+}

@@ -166,17 +166,6 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ApplyFilter where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::apply_filter::ApplyFilter> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "filter", kind: "apply-filter", record: "FilteredImage" };
 
-    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        diff(self, base)
-    }
-
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = filter_name(&self.filter);
         let (en, de) = match RASTER_FILTERS.iter().find(|(filter, _)| *filter == self.filter).and_then(|(_, range)| *range) {
@@ -190,6 +179,18 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ApplyFilter where Op: pr
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ApplyFilter where Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::apply_filter::ApplyFilter> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+        diff(self, base)
+    }
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Kind
 

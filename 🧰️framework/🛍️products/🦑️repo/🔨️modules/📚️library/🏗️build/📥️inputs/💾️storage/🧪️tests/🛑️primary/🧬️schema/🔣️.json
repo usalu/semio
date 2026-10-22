@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "refusals",
+    "admission",
+    "issuer",
+    "preparation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "retiredBytes",
+          "retiredFiles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "worker",
+              "error",
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "message-getter"
+            ]
+          },
+          "retiredBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "retiredFiles": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "admission": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "expired",
+          "deferred"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "timeout",
+              "worker",
+              "undefined",
+              "null",
+              "false",
+              "zero",
+              "empty",
+              "message-getter",
+              "proxy"
+            ]
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "deferred": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "issuer": {
+      "const": {
+        "forbiddenExports": [
+          "withBuildGraphDiagnosticBackingV1",
+          "currentBuildGraphDiagnosticBackingV1",
+          "withBuildGraphWriterScopeV1"
+        ],
+        "constructors": [
+          "withRepositoryBuildGraphFixtureV1",
+          "withRepositoryBuildGraphPublicationFixtureV1"
+        ],
+        "nativeFactory": "withRepositoryCacheGraphFixtureV1"
+      }
+    },
+    "preparation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "acquired",
+          "partial",
+          "files",
+          "available",
+          "failure",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "acquired": {
+            "type": "boolean"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failure": {
+            "enum": [
+              null,
+              "undefined",
+              "null",
+              "false",
+              "zero"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "deferred",
+              "retired",
+              "floor",
+              "primary"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

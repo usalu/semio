@@ -28,6 +28,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLayerVisibility>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-visibility", kind: "set-layer-visibility", record: "SetLayerVisibility" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["layerVisibility".into(), self.layer_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetLayerVisibility
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetLayerVisibility>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.layer_visibility.get(&self.layer_id).copied() == self.visible {
             return MutationOutcome::empty().warning("mutation.no-op", "Layer visibility override is already at the requested value.");
@@ -40,12 +53,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["layerVisibility".into(), self.layer_id.clone()]
-    }
 }
 //#endregion ⚙️Behavior
 

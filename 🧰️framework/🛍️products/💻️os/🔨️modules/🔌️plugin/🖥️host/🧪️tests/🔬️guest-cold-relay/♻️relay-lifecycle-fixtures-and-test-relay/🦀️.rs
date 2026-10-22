@@ -29,7 +29,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
         pool.submit(Lane::UserVisible, Box::new(|| {}));
     }
-    let (completion_sender, completion_receiver) = semio_framework_async::oneshot::channel();
+    let (completion_sender, completion_receiver) = semio_framework_async_sync::oneshot::channel();
     let failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let failure_count = Arc::clone(&failures);
     GuestRelayPoolFuture::spawn_recoverable(
@@ -49,7 +49,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
 
     let ran = Arc::new(AtomicBool::new(false));
     let future_ran = Arc::clone(&ran);
-    let (failure_sender, failure_receiver) = semio_framework_async::oneshot::channel();
+    let (failure_sender, failure_receiver) = semio_framework_async_sync::oneshot::channel();
     GuestRelayPoolFuture::spawn_recoverable(
         pool.clone(),
         Lane::UserVisible,

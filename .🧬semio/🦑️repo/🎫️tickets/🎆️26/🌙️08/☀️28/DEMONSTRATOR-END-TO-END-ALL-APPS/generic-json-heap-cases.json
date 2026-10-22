@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "purpose": "generic-json-tree-memory-corroboration",
+  "limits": {
+    "expandedBytes": 268435456,
+    "heapMiB": 1536,
+    "maximumNodes": 4194304,
+    "maximumReferences": 262144,
+    "maximumDepth": 64
+  },
+  "cases": [
+    {
+      "id": "ascii-padding",
+      "shape": "one-string",
+      "wireBytes": 268435456,
+      "encoding": "ascii",
+      "expected": "accepted"
+    },
+    {
+      "id": "unicode-padding",
+      "shape": "one-string",
+      "wireBytes": 268435456,
+      "encoding": "ascii-with-one-literal-non-latin-codepoint",
+      "expected": "accepted"
+    },
+    {
+      "id": "wide-node-boundary",
+      "shape": "wide-array-with-padding-string",
+      "wireBytes": 268435456,
+      "nodes": 4194303,
+      "encoding": "ascii",
+      "expected": "accepted"
+    },
+    {
+      "id": "wide-keys-boundary",
+      "shape": "wide-object-with-padding-string",
+      "wireBytes": 268435456,
+      "nodes": 4194303,
+      "encoding": "ascii",
+      "expected": "accepted"
+    },
+    {
+      "id": "reference-boundary",
+      "shape": "distinct-source-markers-with-padding-string",
+      "wireBytes": 268435456,
+      "references": 262144,
+      "encoding": "ascii",
+      "expected": "accepted"
+    },
+    {
+      "id": "node-overflow",
+      "shape": "wide-array",
+      "nodes": 4194305,
+      "encoding": "ascii",
+      "expected": "bounded-node-refusal"
+    }
+  ]
+}

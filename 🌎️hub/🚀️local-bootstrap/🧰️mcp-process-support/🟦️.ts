@@ -154,7 +154,7 @@ export async function waitForJsonRpcResponse(child: ChildProcess, chunks: readon
 /** 🛡️ `os-hub-admin`'s build MUST land before cargo ever runs `main()` for real — `HubState.
  * admin_dir` (§C0 `OS_HUB_ADMIN_DIR`, else the compile-time default) is read at hub STARTUP, not
  * build time, so this is a runtime prerequisite, not a Cargo `build.rs` concern. Zero-touch/
- * cross-platform: `bun repo run os-hub-admin:build` is the same command every OS/devcontainer already
+ * cross-platform: `repo run os-hub-admin:build` is the same command every OS/devcontainer already
  * runs for every other build target here. */
 export function buildAdminSpa(repoRoot: string): void {
   runCmd("bun", ["repo", "run", "os-hub-admin:build"], { cwd: repoRoot, ...orchestratorBudgetOpts() });

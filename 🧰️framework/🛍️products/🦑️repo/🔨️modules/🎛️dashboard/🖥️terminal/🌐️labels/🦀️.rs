@@ -20,6 +20,42 @@ macro_rules! dashboard_labels {
 }
 
 dashboard_labels! {
+    local_enter: "Enter terminal", "Terminal öffnen";
+    local_present: "Draw terminal", "Terminal zeichnen";
+    local_wait: "Read terminal input", "Terminaleingabe lesen";
+    local_copy: "Copy to clipboard", "In Zwischenablage kopieren";
+    local_detach: "Detach view", "Ansicht trennen";
+    local_leave: "Restore terminal", "Terminal wiederherstellen";
+    local_restart: "Restart task", "Aufgabe neu starten";
+    local_stop: "Stop task", "Aufgabe stoppen";
+    local_kill: "Kill task", "Aufgabe beenden";
+    local_input: "Send input", "Eingabe senden";
+    local_attach: "Attach task", "Aufgabe verbinden";
+    local_shutdown: "Stop daemon", "Hintergrunddienst stoppen";
+    local_start: "Start task", "Aufgabe starten";
+    local_preferences: "Save preferences", "Einstellungen speichern";
+    local_discovery: "Discover commands", "Befehle ermitteln";
+    local_source: "Source operation", "Dateioperation";
+    local_disconnected: "The local daemon is disconnected. Reconnect before retrying.", "Der lokale Hintergrunddienst ist getrennt. Vor einem erneuten Versuch wieder verbinden.";
+    local_failure: "{operation}: {detail}", "{operation}: {detail}";
+    local_cleanup: "Cleanup also failed: {detail}", "Auch das Aufräumen ist fehlgeschlagen: {detail}";
+    diagnostics_title: "Local diagnostics", "Lokale Diagnose";
+    diagnostics_empty: "No local failures in this view.", "Keine lokalen Fehler in dieser Ansicht.";
+    diagnostics_hint: "Select a record and press Enter to copy it. History lasts only for this view.", "Eintrag auswählen und mit Eingabetaste kopieren. Der Verlauf gilt nur für diese Ansicht.";
+    keymap_title: "Keyboard settings", "Tastatureinstellungen";
+    keymap_editing: "Editing key", "Taste bearbeiten";
+    keymap_edit_hint: "Enter applies this key; Esc cancels this edit; Ctrl+U clears", "Eingabetaste übernimmt diese Taste; Esc verwirft die Eingabe; Strg+U leert";
+    keymap_invalid: "Cannot save: {detail}", "Speichern nicht möglich: {detail}";
+    keymap_add: "Add key alias", "Weitere Taste hinzufügen";
+    keymap_remove: "Remove alias", "Taste entfernen";
+    keymap_reset: "Restore action defaults", "Standardtasten dieser Aktion";
+    keymap_reset_all: "Restore all keyboard defaults", "Alle Standardtasten wiederherstellen";
+    keymap_save: "Save keyboard settings", "Tastatureinstellungen speichern";
+    keymap_cancel: "Cancel / back to Settings", "Abbrechen / zurück zu Einstellungen";
+    keymap_bindings: "Edit key bindings", "Tastenbelegungen bearbeiten";
+    keymap_cancel_save: "Cancel pending preference save", "Ausstehendes Speichern abbrechen";
+    prefs_cancel_requested: "Cancellation requested; waiting for the durable result.", "Abbruch angefordert; das endgültige Speicherergebnis wird abgewartet.";
+    prefs_cancelled: "Preference save cancelled.", "Speichern der Einstellungen abgebrochen.";
     nav_brand: "semio", "semio";
     nav_mode: "dashboard", "Übersicht";
     source_history: "retained history", "aufbewahrter Verlauf";
@@ -178,7 +214,7 @@ dashboard_labels! {
     help_window: "Windows and tabs", "Fenster und Tabs";
     help_view: "Lists, launcher and forms", "Listen, Starter und Formulare";
     help_terminal: "While a terminal has the keyboard only the prefix key is reserved; every other key reaches the program.", "Hat ein Terminal die Tastatur, ist nur die Präfixtaste reserviert; jede andere Taste erreicht das Programm.";
-    help_customize: "Customize with: repo dashboard preferences set --prefix KEY --bindings JSON", "Anpassen mit: repo dashboard preferences set --prefix TASTE --bindings JSON";
+    help_customize: "Open Settings → Keyboard settings to edit the prefix and individual key aliases, then Save.", "Einstellungen → Tastatureinstellungen öffnen, Präfix und einzelne Tasten ändern und speichern.";
     chrome_close: "Close tab", "Tab schließen";
     chrome_drag: "Drag window", "Fenster ziehen";
     chrome_maximize: "Maximize window", "Fenster maximieren";
@@ -318,7 +354,8 @@ impl DashboardLabels {
             "inspect-history"=>self.action_inspect_history,"reconcile-history"=>self.action_reconcile_history,"archive-history"=>self.action_archive_history,"next-history-page"=>self.action_next_history_page,
             "create-file"=>self.action_create_file,"create-directory"=>self.action_create_directory,"rename-entry"=>self.action_rename_entry,"retain-entry"=>self.action_retain_entry,
             "show-files" => self.action_show_files, "save-document" => self.action_save_document, "reload-document" => self.action_reload_document, "discard-document" => self.action_discard_document, "cancel-source" => self.action_cancel_source,
-            "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
+            "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-diagnostics" => self.diagnostics_title,
+            "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
             "show-hidden-tasks" => self.action_show_hidden_tasks, "refresh-commands" => self.action_refresh_commands, "cancel-discovery" => self.action_cancel_discovery,
             "search-output" => self.action_search_output, "restart-task" => self.action_restart_task, "stop-task" => self.action_stop_task, "kill-task" => self.action_kill_task, "copy-selection" => self.action_copy_selection,
             "open-ready" => self.action_open_ready, "cancel-open-ready" => self.action_cancel_open_ready,

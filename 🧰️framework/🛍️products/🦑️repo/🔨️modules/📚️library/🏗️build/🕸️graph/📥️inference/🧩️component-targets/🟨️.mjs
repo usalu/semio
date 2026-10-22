@@ -1,5 +1,7 @@
 /** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */
-import { createRequire } from "node:module";
+import {createRequire} from "node:module";
+const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, join, relative } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { printArtifactNxOutputV1 } from "../../../../../../../📓️print/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
@@ -32,7 +34,7 @@ export async function printDocumentTargets(project, root, workspaceRoot, scripts
     const absolute = `${product}/${source}`;
     return `{workspaceRoot}/${absolute}${statSync(join(workspaceRoot, absolute)).isDirectory() ? "/**/*" : ""}`;
   });
-  const inputs = [...commandInputs, ...project.targets.fonts.inputs, `{workspaceRoot}/${path}`, `{workspaceRoot}/${compiler}/🔧️toolchain/**/*`, `{workspaceRoot}/${compiler}/📚️bundle/🔒️dependencies.json`, ...libraryInputs, `{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json`, "{workspaceRoot}/bunfig.toml", { externalDependencies: ["pdfjs-dist", "sharp"] }, { runtime: "bun --version" }, { runtime: 'node -p "process.platform.concat(process.arch)"' }];
+  const inputs = [...commandInputs, ...project.targets.fonts.inputs, `{workspaceRoot}/${path}`, `{workspaceRoot}/${compiler}/🔧️toolchain/**/*`, `{workspaceRoot}/${compiler}/📚️bundle/🔒️dependencies.json`, ...libraryInputs, `{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json`, `{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`, { externalDependencies: ["pdfjs-dist", "sharp"] }, { runtime: "bun --version" }, { runtime: 'node -p "process.platform.concat(process.arch)"' }];
   for (const document of catalog.documents) {
     if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id) || ids.has(document.id) || sources.has(document.texPath) || !["templates", "visualizations"].includes(document.collection)) throw new Error(`Invalid Print document owner: ${document.id}`);
     ids.add(document.id); sources.add(document.texPath);
@@ -41,8 +43,8 @@ export async function printDocumentTargets(project, root, workspaceRoot, scripts
       const source = `${product}/${path}`;
       return `{workspaceRoot}/${source}${statSync(join(workspaceRoot, source)).isDirectory() ? "/**/*" : ""}`;
     });
-    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [printArtifactNxOutputV1(workspaceRoot,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})], inputs: [...inputs, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `bun ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
-    targets[`watch-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: false, continuous: true, outputs: [], dependsOn: [`build-${document.id}`], options: { cwd: root, command: `bun ${buildPath(relative(root, script))} watch`, forwardAllArgs: false } });
+    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [printArtifactNxOutputV1(workspaceRoot,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})], inputs: [...inputs, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `repo ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
+    targets[`watch-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: false, continuous: true, outputs: [], dependsOn: [`build-${document.id}`], options: { cwd: root, command: `repo ${buildPath(relative(root, script))} watch`, forwardAllArgs: false } });
   }
   for (const [name, collection] of [["build", "templates"], ["build-viz", "visualizations"]]) targets[name] = executionTargetV1("source", { ...project.targets[name], cache: false, outputs: [], dependsOn: catalog.documents.filter(document => document.collection === collection).map(document => `build-${document.id}`) });
   return targets;
@@ -60,7 +62,7 @@ export async function cargoTargets(root, workspaceRoot, commandInputs,scripts) {
     ...(target === "build" ? {} : { parallelism: false }),
     outputs: target === "build" ? ["{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"] : [],
     inputs: [target === "test" ? "nativeTestSources" : "nativeSources", target === "test" ? "^nativeTestSources" : "^nativeSources", ...commandInputs],
-    options: { cwd: ".", command: `bun ${JSON.stringify(script)} native cargo ${target} --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, manifest)))}` },
+    options: { cwd: ".", command: `repo ${JSON.stringify(script)} native cargo ${target} --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, manifest)))}` },
   }, target === "test" ? "test" : "production"))]));
 }
 
@@ -88,7 +90,7 @@ export function componentBuildTargets(root, workspaceRoot) {
     dependsOn: ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
     inputs: ["nativeSources", "^nativeSources", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${owner}/🛂️.descriptor.semio`, `{workspaceRoot}/${owner}/🔣️.json`, `{workspaceRoot}/${binaryen}`, ...toolchain.files.map((file) => `{workspaceRoot}/${file}`), ...toolchain.environment.map((env) => ({ env })), ...toolchain.commands.map((runtime) => ({ runtime })), { externalDependencies: ["@bytecodealliance/jco", "@bytecodealliance/preview2-shim"] }, { runtime: 'node -p "process.platform.concat(process.arch)"' }],
     outputs: [storeReceiptOutputV1("component")],
-    options: { cwd: ".", command: `bun ${JSON.stringify(script)} component --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, path)))}`, forwardAllArgs: false },
+    options: { cwd: ".", command: `repo ${JSON.stringify(script)} component --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, path)))}`, forwardAllArgs: false },
   }), "deterministic", "pure-function-of-inputs") };
 }
 
@@ -116,16 +118,18 @@ export function withReleasePipelinePreparation(project, workspaceRoot, contracts
   return project;
 }
 
+const nativeNamespaces = JSON.parse(readFileSync(new URL("../../../🔌️backends/📋️registry/🔣️.json", import.meta.url), "utf8")).backends.flatMap((row) => (row.nativeCaller ? [row.nativeCaller.namespace] : []));
+
 /** 🚪️ Exposes registered workspace command coordinators without inferring forwarding package scripts.
  * @returns {import("../🟨️.d.mts").GeneratedProjectV1["targets"]} */
 export function rootCommandTargets(script) {
-  const ts = createRequire(import.meta.url)("typescript");
+  const ts = parserTypescriptV1();
   const source = ts.createSourceFile(script, readFileSync(script, "utf8"), ts.ScriptTarget.Latest, true);
   const targets = {};
   const inspect = (node) => {
     if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && ts.isStringLiteral(node.arguments[0])) {
       const name = node.arguments[0].text;
-      if (!["nx", "repo"].includes(name)) targets[name] = executionTargetV1("orchestration", { executor: DEFAULT_EXECUTOR, outputs: [], options: { command: `bun ./📜️script.ts ${name}`, forwardAllArgs: true } });
+      if (!["repo", ...nativeNamespaces].includes(name)) targets[name] = executionTargetV1("orchestration", { executor: DEFAULT_EXECUTOR, outputs: [], options: { command: `repo ./📜️script.ts ${name}`, forwardAllArgs: true } });
       inspect(node.expression.expression);
     }
   };

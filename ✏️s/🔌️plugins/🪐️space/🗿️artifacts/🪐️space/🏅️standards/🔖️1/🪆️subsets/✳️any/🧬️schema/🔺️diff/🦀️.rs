@@ -104,17 +104,9 @@ impl protocol::list_delta::RowPatch<SpaceArtifactRow> for SSpaceArtifactPatch {
 }
 
 //#region 🔖️Apply
-impl protocol::MutationDiff<SSpaceSnapshot> for SSpaceDiff {
-    fn apply(&self, snapshot: &SSpaceSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SSpaceSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.artifacts {
-            next.artifacts = delta.commit_onto(&next.artifacts, capability).map_err(|error| error.under(["artifacts"]))?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<SSpaceSnapshot> for SSpaceDiff {}
+
+impl protocol::ColdMutationDiff<SSpaceSnapshot> for SSpaceDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -127,14 +119,30 @@ impl protocol::MutationDiff<SSpaceSnapshot> for SSpaceDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut SSpaceSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.artifacts {
+            next.artifacts = delta.commit_onto(&next.artifacts, capability).map_err(|error| error.under(["artifacts"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SSpaceSnapshot> for SSpaceDiff {
-    fn inverse(&self, base: &SSpaceSnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), artifacts: self.artifacts.as_ref().map(|delta| delta.inverse(&base.artifacts)) }
-    }
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.artifacts.as_ref().is_none_or(SSpaceArtifactsDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SSpaceSnapshot> for SSpaceDiff {
+    fn inverse(&self, base: &SSpaceSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), artifacts: self.artifacts.as_ref().map(|delta| delta.inverse(&base.artifacts)) }
     }
 }
 //#endregion 🔖️Apply

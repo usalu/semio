@@ -34,12 +34,12 @@ pub fn drain_channel_for_test(remote: &ChannelBackboneRemote) -> Result<Vec<Back
 pub struct ArtifactStore<P, Mutation>(pub semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>, pub Option<fn(&mut semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)>)
 where
     P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P>;
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub async fn new<C:MemberStoreProducer<P,Mutation>>(envelope: ArtifactEnvelope<P, Mutation>,producer:&C) -> Self
     {
@@ -76,7 +76,7 @@ where
 impl<P, Mutation> std::ops::Deref for ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P>,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
 {
     type Target = semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>;
 
@@ -88,7 +88,7 @@ where
 impl<P, Mutation> std::ops::DerefMut for ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P>,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
@@ -96,7 +96,7 @@ where
 }
 
 pub fn complete_test_catalog<P, M>(admitted: Result<(DocumentStoreOwners<P, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, M>>) -> DocumentStoreOwners<P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P>,
+where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
 {
     let grant=physical_test_close_grant();
     let (mut owners,progress)=admitted.unwrap_or_else(|error|panic!("test catalog ingress refused while retaining original custody: {}",error.error));
@@ -115,7 +115,7 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_fra
 pub fn close_test_store<P, Mutation>(store: &mut semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     if store.close_owned_terminal_is_empty() { return; }
     if store.close_owned_phase_witness().contains("started=false") { drop(store.detach_backbone().expect("a closing test store releases its backbone handle")); }
@@ -139,7 +139,7 @@ where
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P>,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
 {
     fn drop(&mut self) {
         if let Some(close) = self.1.take() {
@@ -153,7 +153,7 @@ where
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn local_actor_id(&self) -> &ActorId {
         SpaceMember::local_actor_id(&self.0)
@@ -295,7 +295,7 @@ where
 }
 
 impl<P,Mutation> ReferenceSpaceMember for ArtifactStore<P,Mutation>
-where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mutation:Clone+ToValue+FromValue+semio_framework_os_spr::Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
+where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_os_store_text_io::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mutation:Clone+ToValue+FromValue+semio_framework_os_spr::Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
 {
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
         ReferenceSpaceMember::begin_one_item_wire_publication(&self.0, request)
@@ -460,7 +460,7 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
 
 /// 🌱️ Quotes the original catalog source tree: the three issuer Arcs, the inline disposer and the authoring factory Arc.
 pub fn fixture_authoring_birth_demand<M>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>
-where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
+where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
     let base = DocumentStoreOwners::<DemoSnapshot, M>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<DemoSnapshot, M>>()?;
     let capacity_bytes = base.checked_add(semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture authoring catalog extent overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
@@ -468,7 +468,7 @@ where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapsh
 
 /// 🗃️ Admits the demo member catalog together with its authoring-only semantic authority.
 pub fn fixture_authoring_member_owners<M>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<DemoSnapshot, M>>
-where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
+where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
     let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>(), depth: 1 };
     DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, M>::new(), Arc::new(FixtureAuthoringFactory::<M>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, M>>))
 }
@@ -772,7 +772,7 @@ pub fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMut
 
 /// 🔁️ Settles every physical replay owner before exposing a report to the fixture.
 pub fn drive_test_report_replay<P, M>(replay: &mut EditReplay<P, M>, edits: &impl ReplayEdits<M>)
-where P: Clone, M: semio_framework_os_spr::Mutation<P> + OpBinary,
+where P: Clone, M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
 {
     for _ in 0..10_000 {
         if matches!(replay.step(edits, &mut || false).expect("bounded report replay advances"), ReplayStep::Finished(_)) {

@@ -18,7 +18,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "ungroup", entity: "node", kind: "ungroup-node", record: "UngroupedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Ungroup node in layer #{}", self.at.layer), &format!("Gruppierung von Knoten in Ebene #{} aufheben", self.at.layer))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.at.layer.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for UngroupNode
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<UngroupNode> + From<crate::schema::mutations::group_nodes::GroupNodes>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,11 +39,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Ungroup node in layer #{}", self.at.layer), &format!("Gruppierung von Knoten in Ebene #{} aufheben", self.at.layer))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.at.layer.to_string()]
-    }
 }
 //#endregion 🔖️Payload

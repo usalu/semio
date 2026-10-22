@@ -1,5 +1,6 @@
 //! 🧪️ Typed optional fields preserve three-way authored delta intent.
 use semio_framework_dsl_record::*;
+use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
 use semio_framework_test_fixtures::fixture_text;
 #[derive(Debug,PartialEq,semio_framework_dsl_record_derive::DslRecord)]
 struct OptionalDelta { label:Option<Option<String>> }

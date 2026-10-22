@@ -647,6 +647,218 @@
           }
         }
       ]
+    },
+    {
+      "name": "read-only server: every write is refused, reads still work",
+      "server": {
+        "tokens": {},
+        "readOnly": true
+      },
+      "steps": [
+        {
+          "name": "a blob cannot be written",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 403,
+            "body": "Forbidden: this cache is read-only\n"
+          }
+        },
+        {
+          "name": "an Nx archive cannot be written",
+          "request": {
+            "method": "PUT",
+            "path": "/v1/cache/1",
+            "body": "x"
+          },
+          "response": {
+            "status": 403
+          }
+        },
+        {
+          "name": "nothing was stored",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "health still answers",
+          "request": {
+            "method": "GET",
+            "path": "/healthz"
+          },
+          "response": {
+            "status": 200
+          }
+        }
+      ]
+    },
+    {
+      "name": "read-only server with tokens: a write token does not lift read-only, a missing token is still 401",
+      "server": {
+        "tokens": {
+          "write": "writer-token"
+        },
+        "readOnly": true
+      },
+      "steps": [
+        {
+          "name": "no token",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 401
+          }
+        },
+        {
+          "name": "write token",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello",
+            "headers": {
+              "authorization": "Bearer writer-token"
+            }
+          },
+          "response": {
+            "status": 403,
+            "body": "Forbidden: this cache is read-only\n"
+          }
+        },
+        {
+          "name": "read with the token",
+          "request": {
+            "method": "GET",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "headers": {
+              "authorization": "Bearer writer-token"
+            }
+          },
+          "response": {
+            "status": 404
+          }
+        }
+      ]
+    },
+    {
+      "name": "structure validation: a body that is no ActionResult is refused, an empty result is stored and read back",
+      "server": {
+        "tokens": {},
+        "validation": "structure"
+      },
+      "steps": [
+        {
+          "name": "text is not a protobuf message",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 400,
+            "body": "Invalid action result: wire type 4 is not allowed\n"
+          }
+        },
+        {
+          "name": "the refused result was not stored",
+          "request": {
+            "method": "GET",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 404
+          }
+        },
+        {
+          "name": "the empty message is a valid result",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": ""
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "it reads back empty",
+          "request": {
+            "method": "GET",
+            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-length": "0"
+            },
+            "body": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "complete validation: a result is accepted only after the blob it names is stored",
+      "server": {
+        "tokens": {},
+        "validation": "complete"
+      },
+      "steps": [
+        {
+          "name": "the result names a blob that is not stored yet",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+          },
+          "response": {
+            "status": 400,
+            "body": "Invalid action result: blob 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824 is not in the content store\n"
+          }
+        },
+        {
+          "name": "the blob is stored",
+          "request": {
+            "method": "PUT",
+            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "body": "hello"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "now the result is accepted",
+          "request": {
+            "method": "PUT",
+            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+          },
+          "response": {
+            "status": 200
+          }
+        },
+        {
+          "name": "and read back byte for byte",
+          "request": {
+            "method": "GET",
+            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7"
+          },
+          "response": {
+            "status": 200,
+            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+          }
+        }
+      ]
     }
   ]
 }

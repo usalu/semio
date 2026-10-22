@@ -58,6 +58,6 @@
   "artifactRejections": ["missing-payload", "extra-payload", "changed-entry", "changed-metadata", "duplicate-source", "duplicate-descriptor", "wrong-count", "wrong-ledger", "noncanonical-manifest"],
   "execution": {
     "target": "test-inventory-artifact-shards",
-    "command": "bun ./📜️script.ts test inventory-artifact-shards"
+    "command": "repo ./📜️script.ts test inventory-artifact-shards"
   }
 }

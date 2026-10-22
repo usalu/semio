@@ -7,12 +7,12 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn applied(base: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
     let (diff, messages) = mutation.diff(base).into_parts();
     assert!(!messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "{messages:?}");
-    protocol::apply_diff(&diff, base).expect("the diff applies")
+    protocol::apply_diff_cold(&diff, base).expect("the diff applies")
 }
 
 #[test]

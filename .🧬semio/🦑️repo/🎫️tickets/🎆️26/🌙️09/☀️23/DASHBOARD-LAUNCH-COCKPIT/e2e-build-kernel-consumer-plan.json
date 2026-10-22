@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "state": "source-frozen-runtime-unrun",
+  "changedSources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🟦️.ts",
+      "bytes": 26515,
+      "sha256": "db19ce8e656a2c007b29082355f3f6079d82c172046a3b31afa3049b2d6ad400",
+      "absoluteUtf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🔣️.json",
+      "bytes": 16474,
+      "sha256": "437591048a85d8a868854a9eb7d5697733de7cdc85138c2f81fbf12d721e8127",
+      "absoluteUtf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts",
+      "bytes": 32365,
+      "sha256": "f0f5656d66eeca19320543b6c1003b6517b5e92223790a46fa913666622ecf78",
+      "absoluteUtf16": 138
+    }
+  ],
+  "existingLawNames": [
+    "Build graph APIs carry the exact active issued phase before inference and reads",
+    "Build entry lease close preserves arbitrary primary and refuses cleanup failure after success",
+    "Build entry prepares dependency writers before retaining task readers",
+    "nested graph handoff validates ancestor pins before fresh source admission under original control"
+  ],
+  "preservedNames": {
+    "phase": [
+      "Build graph APIs carry the exact active issued phase before inference and reads",
+      "Nested Bazel stores pass each actual restricted phase and refuse ancestor siblings",
+      "Bazel executable admission and hashing retain the incoming restricted phase",
+      "Build entry lease close preserves arbitrary primary and refuses cleanup failure after success",
+      "Dashboard package build forwards one genuine entry phase to the neutral child",
+      "Cargo package scripts retain mandatory phases across lexical imported aliases",
+      "Cargo package scripts reuse the genuine receiver phase across accepted commands",
+      "Build entry prepares dependency writers before retaining task readers"
+    ],
+    "pinned": [
+      "private Nx source bridge binds complete literals to immutable bytes and original control",
+      "nested consumers reuse the exact pinned authority and reject a changed publication",
+      "a pinned Nx publication is the only plugin authority",
+      "private Nx nodes and dependencies require exact immutable publication pins",
+      "loaded graph implementation and publication source changes refuse current authority",
+      "each pinned publication receives a distinct Nx cache and never forces an older graph",
+      "public pinned graph reuse preserves ordinary nested metadata and execution arrays",
+      "public pinned graph expands only compact tokens with shared bounded content reads",
+      "neutral graph reset selects owned publication files and preserves storage receipts and pinned facts",
+      "public pinned graph reuse requires the exact closed all or task admission",
+      "nested graph handoff validates ancestor pins before fresh source admission under original control",
+      "graph registry authority refuses a stale caller before provider consumption"
+    ]
+  },
+  "fixtureCaseCounts": {
+    "phase": 5,
+    "cleanup": 5,
+    "dependencyBootstrap": 6
+  },
+  "scope": {
+    "curatedAndBuildTestCandidates": 639,
+    "actualRead": 639,
+    "notWholeWorkspace": true
+  },
+  "source0Observation": {
+    "inputs": 21,
+    "runtimeEntries": 6,
+    "auxiliaryEntry": "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts",
+    "auxiliaryRetained": true,
+    "cache": false,
+    "cachePolicy": {
+      "version": 1,
+      "class": "live",
+      "reason": "exercises-host-resources"
+    }
+  },
+  "runtime": "No producer, compiler, Source body or pass inferred."
+}

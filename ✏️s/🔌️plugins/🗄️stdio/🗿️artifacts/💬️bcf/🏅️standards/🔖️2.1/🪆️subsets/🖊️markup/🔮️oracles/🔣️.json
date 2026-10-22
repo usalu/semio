@@ -173,7 +173,7 @@
         "bcf.zip.import"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
         "bcf-import"
       ],
@@ -217,7 +217,7 @@
         "bcf.zip.project"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
         "bcf-project"
       ],
@@ -256,7 +256,7 @@
         "bcf.zip.compare"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
         "bcf-compare"
       ],
@@ -628,7 +628,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-version-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-version-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -678,7 +678,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -721,7 +721,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-rejected-duplicate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-rejected-duplicate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -771,7 +771,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -814,7 +814,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -864,7 +864,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-topic-markup-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-topic-markup-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -914,7 +914,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-comment-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-comment-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -964,7 +964,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-comment-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-comment-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1014,7 +1014,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-comment-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-comment-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

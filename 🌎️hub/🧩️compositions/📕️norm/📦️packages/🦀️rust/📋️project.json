@@ -16,28 +16,28 @@
   "targets": {
     "surface-render-source": {
       "executor": "repo:script",
-      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-source", "forwardAllArgs": true },
+      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "repo ./📜️script.ts surface-render-source", "forwardAllArgs": true },
       "inputs": ["default", "^default", "normTree"],
       "outputs": [],
       "cache": true
     },
     "surface-render-test": {
       "executor": "repo:script",
-      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true },
+      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "repo ./📜️script.ts surface-render-test", "forwardAllArgs": true },
       "inputs": ["default", "^default", "normTree"],
       "outputs": [],
       "cache": true
     },
     "results-window-config-source": {
       "executor": "repo:script",
-      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-source", "forwardAllArgs": true },
+      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "repo ./📜️script.ts results-window-config-source", "forwardAllArgs": true },
       "inputs": ["default", "^default", "normTree"],
       "outputs": [],
       "cache": true
     },
     "results-window-config-test": {
       "executor": "repo:script",
-      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-test", "forwardAllArgs": true },
+      "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "repo ./📜️script.ts results-window-config-test", "forwardAllArgs": true },
       "inputs": ["default", "^default", "normTree"],
       "outputs": [],
       "cache": true
@@ -46,7 +46,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "normTree"],
@@ -57,7 +57,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "normTree"],
@@ -68,7 +68,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts component-budget-check",
+        "command": "repo ./📜️script.ts component-budget-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "normTree"],
@@ -79,7 +79,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts mutation-leaf-taxonomy-generate",
+        "command": "repo ./📜️script.ts mutation-leaf-taxonomy-generate",
         "forwardAllArgs": true
       },
       "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/🗿️artifacts/**/*", "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/target/**/*", "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/node_modules/**/*"],
@@ -92,7 +92,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts mutation-leaf-taxonomy-check",
+        "command": "repo ./📜️script.ts mutation-leaf-taxonomy-check",
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "normTree"],

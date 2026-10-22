@@ -1,0 +1,499 @@
+/** 🏡 The resident repo service: one process per worktree and user that keeps graph, digests, memo and the file journal warm and answers many clients over one local socket. */
+import {createServer,connect} from "node:net";
+import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
+import {randomBytes} from "node:crypto";
+import {dirname} from "node:path";
+import {ProtocolErrorV1,createFrameDecoderV1,encodeFrameV1} from "../protocol/frames.mjs";
+import {POLICY_V1,SUPPORTED_LANGUAGES_V1,renderBothV1,renderTextV1,validatorV1} from "../protocol/policy.mjs";
+import {attenuateCapabilityV1,authorizeCapabilityV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,mintCapabilityV1,verifyCapabilityV1} from "../protocol/capability.mjs";
+import {canonicalRootV1,worktreeIdV1} from "../protocol/endpoint.mjs";
+import {appendAuditV1} from "../../core/session.mjs";
+import coreSchema from "../../core/service.schema.json" with {type:"json"};
+import {createFilterV1,createWorkspaceStateV1,outputSignatureV1} from "../state/index.mjs";
+import {createWatchSupervisorV1} from "../watch/index.mjs";
+import {BusyErrorV1,createGovernorV1} from "./governor.mjs";
+
+const validateClient=validatorV1("ClientFrame");
+
+const CORE_POLICY=coreSchema.definitions.Policy.const;
+
+function renderCoreRefusal(code,fields){
+ const message={};
+ for(const language of SUPPORTED_LANGUAGES_V1)message[language]=CORE_POLICY.messages[language][code].replace(/\{([A-Za-z]+)\}/gu,(_,key)=>String(fields?.[key]??"?"));
+ return message;
+}
+
+/** 🚨 The authority core refused a command the service tried to run for a client. */
+export class ServiceRefusedErrorV1 extends Error{constructor(code,fields){super("Service invocation refused ("+code+")");this.name="ServiceRefusedErrorV1";this.code=code;this.fields=fields??{};}}
+
+/** 🚨 Another live service already owns the endpoint. */
+export class ServiceRunningErrorV1 extends Error{constructor(endpoint){super("A resident service already listens on "+endpoint);this.name="ServiceRunningErrorV1";this.code="running";}}
+
+const OUTPUT_CHUNK=65536;
+
+function hangUp(socket){socket.end();setTimeout(()=>socket.destroy(),100).unref?.();}
+
+function probe(endpoint,timeout=500){
+ return new Promise(resolve=>{
+  const socket=connect(endpoint);
+  const done=value=>{socket.destroy();resolve(value);};
+  socket.setTimeout(timeout,()=>done(false));
+  socket.once("connect",()=>done(true));
+  socket.once("error",()=>done(false));
+ });
+}
+
+function atomicWrite(path,text,mode=0o600){
+ const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";
+ writeFileSync(temporary,text,{mode});
+ renameSync(temporary,path);
+}
+
+function secureDirectory(path,posix){
+ mkdirSync(path,{recursive:true,mode:0o700});
+ if(!posix)return;
+ const status=lstatSync(path);
+ if(!status.isDirectory()||status.uid!==process.getuid?.()||(status.mode&0o077)!==0)throw new Error("Runtime directory "+path+" must be a private directory owned by the current user (mode 0700)");
+}
+
+/** 🏡 Creates the service; call `start()` then `closed`. */
+export function createResidentServiceV1(options){
+ const{root,runtime,ports,log=()=>{},now=()=>Date.now(),environment=process.env,implementation,implementationPaths=[],requireCapability=true,backend="auto",watcherBinary,exclude={rooted:[],names:[]},fenceDirectory,onExit=()=>{}}=options;
+ const policy=Object.freeze({...POLICY_V1,...(options.policy??{})});
+ const posix=process.platform!=="win32",instance=randomBytes(8).toString("hex"),startedAt=now();
+ const filter=createFilterV1({rooted:[...exclude.rooted,fenceDirectory],names:exclude.names});
+ const state=createWorkspaceStateV1({root,instance,policy,filter,fence:fenceDirectory,now});
+ const governor=createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
+ const connections=new Set(),implementationSet=new Set(implementationPaths);
+ const frontiers=new Map(),counters={requests:0,memoServed:0,executed:0,refused:0,queries:0,connections:0,staleRefusals:0};
+ let graphDirty=false,graphReload,rootKey,revocations,server,watcher,closeResolve,closing=false,stale=false,gateOpen,gate=new Promise(resolve=>{gateOpen=resolve;}),idleTimer,pinTimer,residentTimer,lastActivity=now(),stateTimer,pinned=false,activeWatches=0,graphInfo;
+ const closed=new Promise(resolve=>{closeResolve=resolve;});
+
+ const touch=()=>{lastActivity=now();};
+ const send=(connection,frame)=>{
+  const socket=connection.socket;
+  if(socket.destroyed||!socket.writable)return Promise.resolve();
+  if(socket.write(encodeFrameV1(frame)))return Promise.resolve();
+  return new Promise(resolve=>{const done=()=>{socket.off("drain",done);socket.off("close",done);resolve();};socket.once("drain",done);socket.once("close",done);});
+ };
+ const refuse=(connection,id,code,key,fields,retry)=>{
+  counters.refused++;
+  return send(connection,{t:"refused",...(id!==undefined?{id}:{}),code,message:typeof key==="string"?renderBothV1(key,fields):key,retry});
+ };
+ const worktree=worktreeIdV1(canonicalRootV1(root));
+ const text=(connection,key,fields)=>renderTextV1(key,fields,connection.languages??SUPPORTED_LANGUAGES_V1)??renderBothV1(key,fields);
+
+ const savedState=()=>{
+  try{const saved=JSON.parse(readFileSync(runtime.state,"utf8"));return saved?.v===1?saved:undefined;}catch{return undefined;}
+ };
+ const saveState=()=>{
+  if(!watcher)return;
+  const w=watcher.state();
+  try{atomicWrite(runtime.state,JSON.stringify({v:1,cursor:w.cursor,uuid:w.uuid,generation:state.generation,savedAt:now()}));}catch(error){log("state-save-failed",String(error));}
+ };
+ const scheduleSave=()=>{stateTimer??=setTimeout(()=>{stateTimer=undefined;saveState();},1000).unref?.();};
+
+ const graphInputs=new Set(policy.graphInputNames);
+ const touchesGraph=path=>{const cut=path.lastIndexOf("/");return graphInputs.has(cut<0?path:path.slice(cut+1))||state.classifyEnvironment(path);};
+ const reloadGraph=()=>{
+  graphReload??=(async()=>{
+   graphDirty=false;
+   graphInfo=await ports.graph.load({reason:"changed"});
+   state.reconfigure(graphInfo);state.setGeneration(graphInfo.generation??null);
+  })().finally(()=>{graphReload=undefined;});
+  return graphReload;
+ };
+ const onBatch=async(rows,at)=>{
+  await gate;
+  for(const row of rows)if(touchesGraph(row[2]))graphDirty=true;
+  for(const row of rows)if(implementationSet.has(row[2])){stale=true;log("stale-implementation",row[2]);}
+  await state.apply(rows,at);
+  if(stale)void drainAndExit("stale");
+  scheduleSave();
+  for(const listener of[...batchListeners])listener(rows);
+ };
+ const batchListeners=new Set();
+ const onLost=async(scope,reason)=>{await gate;state.lost(scope,reason);try{await state.reconcile(scope);}catch(error){log("reconcile-failed",String(error));}};
+
+ const projectsOf=args=>args.filter(arg=>!arg.startsWith("-")).map(arg=>arg.split(":")[0]);
+
+ const mustPin=async(connection,id,signal)=>{
+  if(pinned||!ports.custody)return;
+  const started=performance.now();
+  await ports.custody.acquire(signal);pinned=true;
+  return performance.now()-started;
+ };
+
+ const makeContext=(connection,frame,controller,timing,client)=>{
+  let lastProgress=0,lastPhase="";
+  const context={
+   id:frame.id,args:frame.args,cwd:frame.cwd,env:frame.env??{},signal:controller.signal,connection,timing,state,ports,policy,root,client,
+   progress:(phase,done,total,key,fields)=>{
+    const at=performance.now();
+    if(phase===lastPhase&&at-lastProgress<50&&done<total)return Promise.resolve();
+    lastProgress=at;lastPhase=phase;
+    return send(connection,{t:"progress",id:frame.id,phase,done,total,message:text(connection,key,fields)});
+   },
+   output:async(stream,data)=>{
+    if(data.length===0)return;
+    let at=0;
+    while(at<data.length){let end=Math.min(data.length,at+OUTPUT_CHUNK);if(end<data.length){const unit=data.charCodeAt(end-1);if(unit>=0xd800&&unit<0xdc00)end--;}await send(connection,{t:"output",id:frame.id,stream,text:data.slice(at,end)});at=end;}
+   },
+   languages:connection.languages,
+  };
+  return context;
+ };
+
+ async function runRequest(connection,frame){
+  counters.requests++;touch();
+  const received=performance.now(),timing={};
+  const command=policy.commands[frame.command];
+  if(!command)return refuse(connection,frame.id,"unknown-command","unknown-command",{command:frame.command},"fallback");
+  if(closing)return refuse(connection,frame.id,"shutdown","shutdown",{},"fallback");
+  if(command.class==="run"||command.class==="watch"){
+   for(const key of policy.bindEnvironment){
+    const requested=frame.env?.[key]??undefined,actual=environment[key]??undefined;
+    if(requested!==actual&&(requested!==undefined||actual!==undefined))return refuse(connection,frame.id,"environment","environment",{key,value:requested??"(unset)",actual:actual??"(unset)"},"fallback");
+   }
+  }
+  if(stale&&command.tier==="service")return refuse(connection,frame.id,"stale","stale-implementation",{},"fallback").then(()=>{counters.staleRefusals++;});
+  const token=frame.cap??connection.cap,client={token,agent:connection.lane,named:projectsOf(frame.args)},session=token?capabilityIdV1(token):undefined;
+  if(requireCapability){
+   const caveats=token?verifyCapabilityV1(rootKey,token):undefined;
+   if(!caveats)return refuse(connection,frame.id,"capability","capability",{},"never");
+   const denial=authorizeCapabilityV1(caveats,{commandClass:command.class,command:frame.command,cwd:frame.cwd,now:now(),projects:client.named,worktree,agent:connection.lane});
+   if(denial)return refuse(connection,frame.id,denial.code,denial.code==="scope"?"scope":"capability",{class:command.class},"never");
+   if(revocations.has(session)||revocations.hasAgent(connection.lane))return refuse(connection,frame.id,"capability","revoked",{},"never");
+  }
+  const controller=new AbortController();controller.session=session;controller.agent=connection.lane;
+  connection.requests.set(frame.id,controller);
+  const deadline=frame.deadlineMs?setTimeout(()=>controller.abort(Object.assign(new Error("deadline"),{code:"deadline"})),frame.deadlineMs):undefined;
+  let release;
+  try{
+   const handler=handlers[frame.command];
+   const watchLike=command.class==="watch";
+   if(watchLike){if(activeWatches>=policy.maximumInFlight)return refuse(connection,frame.id,"busy","busy",{inFlight:governor.inFlight,queued:governor.queued},"later");activeWatches++;}
+   try{
+    await send(connection,{t:"accepted",id:frame.id,queue:governor.queued});
+    if(!watchLike){
+     const entered=performance.now();
+     release=await governor.enter(connection.lane,controller.signal,position=>{void send(connection,{t:"progress",id:frame.id,phase:"queued",done:0,total:0,message:text(connection,"queued",{position}),queue:position});});
+     timing.queueMs=performance.now()-entered;
+    }
+    const context=makeContext(connection,frame,controller,timing,client);
+    const pinMs=command.class==="run"||command.class==="watch"?await mustPin(connection,frame.id,controller.signal):undefined;
+    if(pinMs!==undefined)timing.admitMs=pinMs;
+    const outcome=await handler(context);
+    timing.totalMs=performance.now()-received;
+    await send(connection,{t:"result",id:frame.id,exit:outcome.exit??0,signal:outcome.signal??null,served:outcome.served??"query",timing:roundTiming(timing),...(outcome.summary?{summary:outcome.summary}:{})});
+   }finally{if(watchLike)activeWatches--;}
+  }catch(error){
+   if(error instanceof BusyErrorV1)await refuse(connection,frame.id,"busy","busy",{inFlight:error.inFlight,queued:error.queued},"later");
+   else if(error instanceof ServiceRefusedErrorV1)await refuse(connection,frame.id,CORE_POLICY.wire[error.code],renderCoreRefusal(error.code,error.fields),undefined,error.code==="busy"?"later":"never");
+   else if(controller.signal.aborted||error?.name==="AbortError"){
+    const reason=controller.signal.reason;
+    if(reason?.code==="deadline")await refuse(connection,frame.id,"deadline","deadline",{milliseconds:frame.deadlineMs},"never");
+    else if(reason?.code==="revoked")await refuse(connection,frame.id,"capability","revoked",{},"never");
+    else await send(connection,{t:"result",id:frame.id,exit:130,signal:"SIGINT",served:"query",timing:roundTiming({...timing,totalMs:performance.now()-received})});
+   }else{
+    log("request-failed",String(error?.stack??error));
+    await refuse(connection,frame.id,"internal","internal",{reason:String(error?.message??error).slice(0,200)},"never");
+   }
+  }finally{
+   clearTimeout(deadline);release?.();connection.requests.delete(frame.id);touch();
+  }
+ }
+
+ const roundTiming=timing=>Object.fromEntries(Object.entries(timing).filter(([,v])=>typeof v==="number").map(([k,v])=>[k,Math.round(v*1000)/1000]));
+
+ const parseTaskIds=(args,defaultTarget)=>args.filter(arg=>!arg.startsWith("-")).map(arg=>arg.includes(":")?arg:arg+":"+defaultTarget);
+
+ const outputsValid=async entry=>{
+  if(state.trust==="exact"&&!state.outputsInvalid(entry.id))return true;
+  if(entry.outputSignature===undefined)return state.trust==="exact"?false:entry.outputs.length===0;
+  const current=await outputSignatureV1(root,entry.outputs,policy.outputSignatureMaximumEntries);
+  if(current===entry.outputSignature){state.clearOutputsInvalid(entry.id);return true;}
+  return false;
+ };
+
+ async function ensureFresh(context){
+  const started=performance.now();
+  const trust=watcher.state().trust;
+  if(trust==="exact"){
+   await context.progress("fence",0,1,"fence",{});
+   const result=await watcher.fence();
+   await watcher.drained();
+   if(!result.ok){state.setTrust("verify");void watcher.recheck().then(ok=>{if(ok&&watcher.state().trust==="exact")state.setTrust("exact");});}
+  }else state.setTrust("verify");
+  if(graphDirty||graphReload){await context.progress("plan",0,1,"graph",{});await reloadGraph();}
+  context.timing.fenceMs=performance.now()-started;
+ }
+
+ async function executeTask(context,id,parallelSignal){
+  const task=state.tasks.get(id),keyBefore=await state.taskKey(id);
+  state.beginTask(id);
+  const spawnStart=performance.now();
+  await context.progress("execute",0,1,"execute",{task:id});
+  let stdout="",stderr="";const partial={stdout:"",stderr:""};
+  const forward=(stream,data,final=false)=>{
+   partial[stream]+=data;
+   const cut=final?partial[stream].length:Math.max(partial[stream].lastIndexOf("\n"),partial[stream].lastIndexOf("\r"))+1;
+   if(cut===0)return undefined;
+   const chunk=partial[stream].slice(0,cut);partial[stream]=partial[stream].slice(cut);
+   return context.output(stream,chunk);
+  };
+  const result=await ports.execution.run({id,command:task.command,owner:task.owner,cwd:root,env:context.env,client:context.client,signal:parallelSignal,onSpawn:()=>{context.timing.spawnMs??=performance.now()-spawnStart;},onOutput:(stream,data)=>{if(stream==="stdout")stdout+=data;else stderr+=data;return forward(stream,data);}});
+  await forward("stdout","",true);await forward("stderr","",true);
+  counters.executed++;
+  try{if(watcher.state().trust==="exact")await watcher.fence();await watcher.drained();}finally{state.endTask(id);}
+  if(result.refusal)throw new ServiceRefusedErrorV1(result.refusal.code,result.refusal.fields);
+  if(result.exit===0&&task.cacheable&&stdout.length+stderr.length<=policy.replayMaximumBytes){
+   const keyAfter=await state.taskKey(id);
+   if(keyAfter===keyBefore){
+    const outputs=task.outputs,outputSignature=outputs.length?await outputSignatureV1(root,outputs,policy.outputSignatureMaximumEntries):undefined;
+    state.memo.set(id,{id,key:keyBefore,exit:0,finishedAt:now(),replay:{stdout,stderr},outputs,outputSignature});
+   }
+  }
+  return result;
+ }
+
+ const handlers={
+  async ping(context){await context.output("stdout","pong\n");return{exit:0,served:"query"};},
+  async status(context){
+   const memory=process.memoryUsage();
+   const info={pid:process.pid,instance,startedAt,uptimeMs:now()-startedAt,implementation,generation:state.generation,watcher:watcher.state(),watcherStats:watcher.stats,state:{seq:state.seq,files:state.members.size,owners:state.owners.size,tasks:state.tasks.size,memo:state.memo.size(),stats:state.stats},governor:{inFlight:governor.inFlight,queued:governor.queued},connections:connections.size,counters,rssBytes:memory.rss,heapBytes:memory.heapUsed,pinned,stale,graph:{generation:graphInfo?.generation??null,owners:graphInfo?.owners?.length??0}};
+   await context.output("stdout",JSON.stringify(info)+"\n");counters.queries++;
+   return{exit:0,served:"query"};
+  },
+  async cursor(context){await ensureFresh(context);await context.output("stdout",JSON.stringify(state.cursor())+"\n");return{exit:0,served:"query"};},
+  async dirty(context){
+   await ensureFresh(context);
+   const at=context.args.indexOf("--since"),value=at>=0?context.args[at+1]:undefined,by=context.args.indexOf("--digest"),digest=by>=0?context.args[by+1]:undefined;
+   const cursor=digest!==undefined?frontiers.get(digest):value?{instance:value.split(":")[0],seq:Number(value.split(":")[1])}:{instance,seq:0};
+   const answer=cursor===undefined?{complete:false,reason:"digest"}:state.since(cursor);
+   await context.output("stdout",JSON.stringify({...answer,cursor:state.cursor()})+"\n");counters.queries++;
+   return{exit:0,served:"query"};
+  },
+  async affected(context){
+   await ensureFresh(context);
+   const ids=context.args.length?parseTaskIds(context.args,"build"):[...state.tasks.keys()];
+   const outdated=[];
+   for(const id of ids)if(state.memo.get(id)===undefined||!(await state.memoCurrent(id)))outdated.push(id);
+   await context.output("stdout",JSON.stringify({stale:outdated})+"\n");counters.queries++;
+   return{exit:0,served:"query"};
+  },
+  async "adopt-frontier"(context){
+   const[digest,cursor]=context.args,[owner,sequence]=String(cursor).split(":"),seq=Number(sequence);
+   if(!/^[0-9a-f]{64}$/u.test(String(digest))||owner!==instance||!Number.isInteger(seq)||seq<0||seq>state.seq){await context.output("stdout","ignored\n");return{exit:0,served:"query"};}
+   frontiers.delete(digest);frontiers.set(digest,{instance,seq});
+   while(frontiers.size>policy.frontierMaximumEntries)frontiers.delete(frontiers.keys().next().value);
+   await context.output("stdout","adopted\n");return{exit:0,served:"query"};
+  },
+  async adopt(context){
+   const generation=Number(context.args[0]);
+   if(!Number.isInteger(generation)||generation<0){await context.output("stderr","adopt needs a generation number\n");return{exit:1,served:"query"};}
+   state.setGeneration(generation);await context.output("stdout","adopted\n");return{exit:0,served:"query"};
+  },
+  async run(context){return runTasks(context,parseTaskIds(context.args,"build"));},
+  async test(context){return runTasks(context,parseTaskIds(context.args,"test"));},
+  async "run-many"(context){
+   const targets=(context.args.find(arg=>arg.startsWith("--targets="))??"--targets=build").slice(10).split(",");
+   const projects=context.args.filter(arg=>!arg.startsWith("-"));
+   return runTasks(context,projects.flatMap(project=>targets.map(target=>project+":"+target)));
+  },
+  async watch(context){
+   const ids=parseTaskIds(context.args,"build");
+   let wake;const listener=()=>wake?.();batchListeners.add(listener);
+   try{
+    for(;;){
+     const outcome=await runTasks(context,ids,true);
+     if(outcome.exit!==0)await context.progress("idle",0,0,"fence",{});
+     await new Promise(resolve=>{wake=resolve;context.signal.addEventListener("abort",resolve,{once:true});});
+     context.signal.throwIfAborted();
+    }
+   }finally{batchListeners.delete(listener);}
+  },
+  async "drop-caches"(context){state.dropCaches();await context.output("stdout","dropped\n");return{exit:0,served:"query"};},
+  async issue(context){
+   const caveats=[];
+   const take=name=>{const at=context.args.indexOf(name);return at>=0?context.args[at+1]:undefined;};
+   const scope=take("--classes")??"status,query,run,watch",projects=take("--for"),ttl=take("--ttl"),agent=take("--agent"),seconds=ttl===undefined?CORE_POLICY.defaultTtlSeconds:Number(ttl);
+   const language=context.languages[0],say=key=>(renderTextV1(key,{maximum:CORE_POLICY.maximumLifetimeMilliseconds/1000},[language])??renderBothV1(key,{maximum:CORE_POLICY.maximumLifetimeMilliseconds/1000}))[language]??"";
+   if(!/^[A-Za-z0-9._:-]{1,64}$/u.test(agent??"")){await context.output("stderr",say("issue-agent")+"\n");return{exit:1,served:"query"};}
+   if(!Number.isInteger(seconds)||seconds<1||seconds*1000>CORE_POLICY.maximumLifetimeMilliseconds){await context.output("stderr",say("issue-ttl")+"\n");return{exit:1,served:"query"};}
+   caveats.push({k:"worktree",v:worktree},{k:"agent",v:agent},{k:"scope",v:scope.split(",")},{k:"notAfter",v:now()+seconds*1000});
+   if(projects)caveats.push({k:"projects",v:projects.split(",")});
+   await context.output("stdout",mintCapabilityV1(rootKey,caveats)+"\n");
+   return{exit:0,served:"query"};
+  },
+  async revoke(context){
+   const at=context.args.indexOf("--agent"),agent=at>=0?context.args[at+1]:undefined,value=context.args.find(argument=>!argument.startsWith("-")&&argument!==agent);
+   const session=agent===undefined?(/^[0-9a-f]{16}$/u.test(value??"")?value:capabilityIdV1(value??"")):undefined;
+   if(agent===undefined&&session===undefined||at>=0&&agent===undefined){await context.output("stderr","revoke needs a session id, a token or --agent <id>\n");return{exit:1,served:"query"};}
+   if(agent!==undefined)revocations.revokeAgent(agent);else revocations.revoke(session);
+   appendAuditV1(runtime.audit,{v:1,at:now(),event:"revoke",session:session??"-",agent:agent??"-",worktree,operation:"revoke",args:[]});
+   let aborted=0;
+   for(const connection of connections)for(const[id,controller]of connection.requests)if(!(connection===context.connection&&id===context.id)&&(agent!==undefined?controller.agent===agent:controller.session===session)){controller.abort(Object.assign(new Error("revoked"),{code:"revoked"}));aborted++;}
+   await context.output("stdout","revoked "+(agent!==undefined?"agent "+agent:"session "+session)+", "+aborted+" running\n");
+   return{exit:0,served:"query"};
+  },
+  async stop(context){await context.output("stdout","stopping\n");setTimeout(()=>void drainAndExit("requested"),20);return{exit:0,served:"query"};},
+ };
+
+ async function runTasks(context,ids,quiet=false){
+  await ensureFresh(context);
+  const unknown=ids.find(id=>!state.tasks.has(id));
+  if(unknown){await context.output("stderr","unknown task "+unknown+"\n");return{exit:1,served:"query"};}
+  const planStart=performance.now();
+  const order=state.topological(ids);
+  const stalePlan=[];
+  const verdicts=await Promise.all(order.map(async id=>{
+   const entry=state.memo.get(id);
+   if(!entry||state.tasks.get(id).cacheable===false)return false;
+   if(entry.key!==await state.taskKey(id))return false;
+   return outputsValid(entry);
+  }));
+  order.forEach((id,at)=>{if(!verdicts[at])stalePlan.push(id);});
+  context.timing.planMs=performance.now()-planStart;
+  if(stalePlan.length===0){
+   counters.memoServed++;
+   const first=context.languages[0];
+   const since=new Date(Math.max(...ids.map(id=>state.memo.get(id).finishedAt))).toISOString();
+   const line=(renderTextV1("replay",{since},[first])??renderBothV1("replay",{since}))[first]??"";
+   if(!quiet)await context.output("stdout","> "+ids.join(", ")+"  "+line+"\n");
+   return{exit:0,served:"memo"};
+  }
+  await context.progress("plan",stalePlan.length,order.length,"plan",{tasks:stalePlan.length});
+  const inPlan=new Set(stalePlan),done=new Set(),running=new Map(),failed=[];
+  const parallel=Math.max(1,Math.min(4,policy.maximumInFlight));
+  let exit=0;
+  const ready=()=>stalePlan.filter(id=>!done.has(id)&&!running.has(id)&&state.tasks.get(id).dependsOn.every(dep=>!inPlan.has(dep)||done.has(dep)));
+  const runStart=performance.now();
+  while(done.size<stalePlan.length&&exit===0){
+   context.signal.throwIfAborted();
+   for(const id of ready()){
+    if(running.size>=parallel)break;
+    const promise=(async()=>{
+     const admit=ports.capacity?await ports.capacity.admit({id,signal:context.signal}):undefined;
+     try{return await executeTask(context,id,context.signal);}finally{admit?.();}
+    })().then(result=>{running.delete(id);if(result.exit!==0){exit=result.exit||1;failed.push(id);}else done.add(id);},error=>{running.delete(id);exit=1;failed.push(id);throw error;});
+    running.set(id,promise);
+   }
+   if(running.size===0)break;
+   await Promise.race(running.values());
+  }
+  await Promise.allSettled(running.values());
+  context.timing.runMs=performance.now()-runStart;
+  return{exit,served:"executed"};
+ }
+
+ function handleConnection(socket){
+  if(connections.size>=policy.maximumClients){socket.end(encodeFrameV1({t:"refused",code:"busy",message:renderBothV1("busy",{inFlight:governor.inFlight,queued:governor.queued}),retry:"later"}));return;}
+  counters.connections++;touch();
+  const connection={socket,languages:undefined,lane:"anonymous",cap:undefined,requests:new Map(),helloDone:false,client:undefined};
+  connections.add(connection);
+  const decoder=createFrameDecoderV1({maximumFrameBytes:policy.maximumFrameBytes,
+   onFrame:frame=>{
+    const errors=validateClient(frame);
+    if(errors.length){void refuse(connection,typeof frame?.id==="number"?frame.id:undefined,"invalid","invalid",{reason:errors[0]},"never").then(()=>hangUp(socket));return;}
+    if(frame.t==="hello"){
+     if(connection.helloDone){void refuse(connection,undefined,"invalid","invalid",{reason:"hello twice"},"never");return;}
+     const rendered=renderTextV1("queued",{position:0},frame.languages);
+     if(!rendered){void refuse(connection,undefined,"language","language",{},"never").then(()=>hangUp(socket));return;}
+     connection.helloDone=true;connection.languages=frame.languages;connection.lane=frame.client.lane;connection.cap=frame.cap;connection.client=frame.client;
+     void send(connection,{t:"welcome",v:1,service:{pid:process.pid,instance,startedAt,implementation,generation:state.generation,watcher:{backend:watcher.state().backend,trust:watcher.state().trust,cursor:watcher.state().cursor}},limits:{maximumFrameBytes:policy.maximumFrameBytes,maximumInFlight:policy.maximumInFlight}});
+     return;
+    }
+    if(!connection.helloDone){void refuse(connection,undefined,"invalid","invalid",{reason:"hello first"},"never").then(()=>hangUp(socket));return;}
+    if(frame.t==="ping"){void send(connection,{t:"pong",n:frame.n});return;}
+    if(frame.t==="cancel"){connection.requests.get(frame.id)?.abort(Object.assign(new Error("cancelled"),{code:"cancelled"}));return;}
+    if(connection.requests.has(frame.id)){void refuse(connection,frame.id,"invalid","invalid",{reason:"request id in use"},"never");return;}
+    void runRequest(connection,frame);
+   },
+   onError:error=>{void refuse(connection,undefined,"invalid","invalid",{reason:error.message},"never").then(()=>hangUp(socket));},
+  });
+  socket.on("data",chunk=>decoder.push(chunk));
+  socket.on("end",()=>{if(connection.requests.size===0)socket.end();});
+  socket.on("error",()=>{});
+  socket.on("close",()=>{
+   connections.delete(connection);
+   for(const controller of connection.requests.values())controller.abort(Object.assign(new Error("disconnected"),{code:"disconnected"}));
+   touch();
+  });
+ }
+
+ async function listen(){
+  secureDirectory(dirname(runtime.directory),posix);
+  secureDirectory(runtime.directory,posix);
+  const tryListen=()=>new Promise((resolve,reject)=>{
+   server=createServer({allowHalfOpen:false},handleConnection);
+   server.once("error",reject);
+   server.listen(runtime.endpoint,()=>{server.off("error",reject);resolve();});
+  });
+  try{await tryListen();}
+  catch(error){
+   if(error?.code!=="EADDRINUSE")throw error;
+   if(await probe(runtime.endpoint))throw new ServiceRunningErrorV1(runtime.endpoint);
+   if(posix)rmSync(runtime.endpoint,{force:true});
+   await tryListen();
+  }
+  if(posix)try{chmodSync(runtime.endpoint,0o600);}catch{}
+ }
+
+ const writeDescriptor=(stopping=false)=>{
+  try{atomicWrite(runtime.descriptor,JSON.stringify({v:1,pid:process.pid,instance,startedAt,endpoint:runtime.endpoint,protocol:1,implementation,root,...(stopping?{stopping:true}:{})}),0o600);}catch(error){log("descriptor-failed",String(error));}
+ };
+
+ async function drainAndExit(reason){
+  if(closing)return;
+  closing=true;log("shutdown",reason);
+  clearInterval(idleTimer);clearInterval(residentTimer);clearTimeout(pinTimer);
+  writeDescriptor(true);
+  for(const connection of connections)void send(connection,{t:"notice",kind:"draining",message:text(connection,"shutdown",{})});
+  server?.close();
+  const deadline=now()+5000;
+  while((governor.inFlight>0||[...connections].some(c=>c.requests.size>0))&&now()<deadline)await new Promise(resolve=>setTimeout(resolve,20));
+  for(const connection of connections){for(const controller of connection.requests.values())controller.abort(new Error("shutdown"));connection.socket.destroy();}
+  if(stateTimer){clearTimeout(stateTimer);}
+  saveState();
+  await watcher?.stop();
+  if(pinned){try{await ports.custody?.release();}catch(error){log("release-failed",String(error));}pinned=false;}
+  if(posix){rmSync(runtime.endpoint,{force:true});}
+  rmSync(runtime.descriptor,{force:true});
+  closeResolve(reason);onExit(reason);
+ }
+
+ return{
+  instance,state,governor,counters,closed,
+  async start(){
+   const phases={};let mark=performance.now();
+   const lap=name=>{const at=performance.now();phases[name]=Math.round((at-mark)*1000)/1000;mark=at;};
+   secureDirectory(dirname(runtime.directory),posix);secureDirectory(runtime.directory,posix);
+   if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
+   else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
+   revocations=createRevocationRegistryV1(runtime.revoked,now);
+   await listen();lap("listen");
+   graphInfo=await ports.graph.load();state.configure(graphInfo);state.setEnvironmentSalt(await ports.graph.environmentDigest());state.setGeneration(graphInfo.generation??null);lap("graph");
+   const restore=savedState();
+   watcher=createWatchSupervisorV1({root,policy,filter,rooted:[...exclude.rooted],names:exclude.names,binary:watcherBinary,backend,fenceDirectory,instance,onBatch,onLost,onTrust:trust=>{state.setTrust(trust.trust==="exact"?"exact":"verify");log("trust",JSON.stringify(trust));},log,restore});
+   const started=watcher.start();
+   const listing=await ports.graph.listing({root,exclude,filter});lap("scan");
+   state.load(listing);gateOpen();lap("load");
+   const watchState=await started;lap("watcher");
+   state.setTrust(watchState.trust==="exact"?"exact":"verify");
+   writeDescriptor();
+   idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void drainAndExit("idle");},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
+   residentTimer=setInterval(()=>{
+    const rss=process.memoryUsage().rss;
+    if(rss>policy.maximumResidentBytes){state.dropCaches();globalThis.Bun?.gc?.(true);if(process.memoryUsage().rss>policy.maximumResidentBytes*1.25)void drainAndExit("memory");}
+    if(pinned&&governor.inFlight===0&&activeWatches===0&&now()-lastActivity>policy.pinReleaseMilliseconds){pinned=false;void Promise.resolve(ports.custody?.release()).catch(error=>log("release-failed",String(error)));}
+   },Math.min(policy.residentCheckMilliseconds,Math.max(100,policy.pinReleaseMilliseconds/4)));residentTimer.unref?.();
+   return{instance,phases,watcher:watchState,files:state.members.size,owners:state.owners.size};
+  },
+  stop:reason=>drainAndExit(reason??"stop"),
+  watcher:()=>watcher,
+  mint:caveats=>mintCapabilityV1(rootKey,caveats),
+  attenuate:attenuateCapabilityV1,
+  rootKey:()=>rootKey,
+ };
+}

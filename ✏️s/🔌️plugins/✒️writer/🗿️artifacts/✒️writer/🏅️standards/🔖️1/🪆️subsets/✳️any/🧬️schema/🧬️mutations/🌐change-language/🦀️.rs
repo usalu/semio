@@ -31,17 +31,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "language", kind: "change-language", record: "ChangedLanguage" };
 
-    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     /// 🎯️ The writer's language. Concurrent writers of the same field conflict; writers of different fields never do.
     fn target(&self) -> Vec<String> {
         vec!["language_id".to_string()]
@@ -50,5 +39,20 @@ where
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change document language to \"{}\"", self.new_language_id), &format!("Dokumentsprache auf \"{}\" ändern", self.new_language_id))
     }
+}
+
+impl<Op> protocol::ColdMutationKind<WriterSnapshot, Op> for ChangeLanguage
+where
+    Op: protocol::ColdMutation<WriterSnapshot, ReferenceDiff = WriterDiff> + From<ChangeLanguage>,
+{
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

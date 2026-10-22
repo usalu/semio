@@ -34,17 +34,9 @@ pub struct JackGraphWindowConfigDiff {
     pub lod_mode: Option<String>,
 }
 
-impl protocol::MutationDiff<JackGraphWindowConfig> for JackGraphWindowConfigDiff {
-    fn apply(&self, base: &JackGraphWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JackGraphWindowConfig> {
-        let mut next = base.clone();
-        if let Some(camera) = &self.camera {
-            next.camera.clone_from(camera);
-        }
-        if let Some(lod_mode) = &self.lod_mode {
-            next.lod_mode.clone_from(lod_mode);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<JackGraphWindowConfig> for JackGraphWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<JackGraphWindowConfig> for JackGraphWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
@@ -53,13 +45,29 @@ impl protocol::MutationDiff<JackGraphWindowConfig> for JackGraphWindowConfigDiff
             self.lod_mode = other.lod_mode;
         }
     }
+
+    fn apply(&self, unpublished: &mut JackGraphWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(camera) = &self.camera {
+            next.camera.clone_from(camera);
+        }
+        if let Some(lod_mode) = &self.lod_mode {
+            next.lod_mode.clone_from(lod_mode);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<JackGraphWindowConfig> for JackGraphWindowConfigDiff {
-    fn inverse(&self, base: &JackGraphWindowConfig) -> Self {
-        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()) }
-    }
     fn is_empty(&self) -> bool {
         self.camera.is_none() && self.lod_mode.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JackGraphWindowConfig> for JackGraphWindowConfigDiff {
+    fn inverse(&self, base: &JackGraphWindowConfig) -> Self {
+        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()) }
     }
 }

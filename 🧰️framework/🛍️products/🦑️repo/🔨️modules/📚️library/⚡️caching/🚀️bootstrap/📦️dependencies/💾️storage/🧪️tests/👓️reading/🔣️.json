@@ -11,7 +11,7 @@
     "release-shared-bindings"
   ],
   "expected": {
-  "version": 2,
+  "version": 3,
   "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "bindings": [
     {
@@ -24,7 +24,6 @@
   "ownerRelationSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "groupSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "recipeSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-  "executionSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "members": [],
   "ownerReferences": []
 },

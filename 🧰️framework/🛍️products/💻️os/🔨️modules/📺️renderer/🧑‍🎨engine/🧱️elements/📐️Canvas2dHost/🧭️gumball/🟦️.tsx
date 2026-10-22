@@ -4,7 +4,7 @@
  * (`🎯️targets/🧊️wgpu`) through the corpus `🧫️fixtures/🧫️gumball-dispatch`: a live gumball streams its gesture
  * (`phase` stream/commit/abort) into the app's ONE open tool transaction, a non-live one previews locally and dispatches
  * ONE one-shot pose delta on release (design §5, decision 2026-09-30 21:36). */
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "../../⚛️react-port/🟦️.ts";
 import { SPATIAL_AXIS_COLOR_REFS } from "@semio-tech/ui-styling";
 import type { CanvasCamera } from "../📷️camera-math/🟦️.ts";
 

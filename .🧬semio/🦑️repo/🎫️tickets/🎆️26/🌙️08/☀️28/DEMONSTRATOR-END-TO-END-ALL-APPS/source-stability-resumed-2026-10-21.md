@@ -553,3 +553,93 @@ Root confirms24207naturalterminalstartupfailure, archived quota-source-reader-ch
 At07:23:35Z all66baselinefiles remain byte-stable; freshquota/unit remain hostcapacityqueued (negative/smallfloor spare andhighload samples), SourceDemand logsource-withdrawal-scoped now joins sparsemonitor. No NativeGraph/imagegate/assertion claim.
 
 At07:29:34Z freshquota48971/unit55974 normalRAMadmitted1job with15845/16604MiBavailable; actualnewscopedinventoryprogress1104/961markers, zero scoped/selectedretirementmarkers and no assertions/errors. Quota laterSHqueue3of3, unitEXqueue3of3 behindshared12066; SourceDemand remains hostmemoryqueued.66definingfiles byte-stable. This is actualscopedcode/inventory execution, not capacityreclamation/testsuccess. No foreign action.
+
+### Fresh mixed/batch phase 2026-10-21T07:49:19.897Z
+
+Parent reports old quota48971 intentionally interrupted through its own handle after the concrete Source correction; its archive ends `Original Script process interrupted`. Fresh quota22680 owns `🗑️generated/quota-mixed-batch.log`. First bounded read (738 bytes, mtime07:49:09Z) shows normal host admission waiting on load24.48–26.32 with >5GiB spare above unchanged6553MiB floor, two running and two ahead. No graph admission, reclamation or assertions yet. Source-only combined patch review is clean; execution proof remains pending.
+
+### Refreshed live phase 08:59 UTC
+
+After transient model capacity interruption, fresh physical log reads show quota22680 (2,551,771 bytes), unit41186 (2,274,566 bytes), and SourceDemand75559 (2,121,990 bytes) advancing through selected Source/compile/native declaration preparation. Earlier 07:50 load-admission observations were historical, not current state. No test header or pass claim is established by these preparation tails. Monitor uses fresh mixed-batch paths; old unit55974 is archived and is not the current execution.
+
+### Defining module admission retries 2026-10-21T09:29:15.881Z
+
+Fresh quota and Source logs show repeated admission retries for `🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs`: captured c0f311b224663f8a96acd4b88d586766305a6df04ac3411b54861e883b149420 versus after f9ad54fdf1bc49e510e03235eb52ec98d30f01ae2e6ddaa31e047570f0a51cbf. Physical current metadata: {"path":"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs","sha256":"f9ad54fdf1bc49e510e03235eb52ec98d30f01ae2e6ddaa31e047570f0a51cbf","bytes":16316,"mtime":"2026-10-21T08:07:04.194Z"}. This is an actual guard diagnostic; no test header or terminal failure was observed. Authorship is unknown and no Source/process mutation was performed.
+
+### Loader distinction for repeated admission mismatch 2026-10-21T09:32:13.977Z
+
+Source inspection separates reloadable execution from fixed loaded-fact identity. Inference entry exports `loadedImplementationRowsV1` once from its initial static `current` registry; Graph generation port `implementationRows()` always merges that fixed export. Component invocation can load a query-keyed new registry only when current implementationRevision differs from revisionIdentity. Revision component explicitly returns its initial loadedRevision under `implementationPinnedV1()`. Thus a queried reload path exists for unpinned execution, while fixed initial implementation facts remain captured. The peer retry rows alone do not prove the unit process pin state or authorize cancellation; unit log still had no retry at the bounded read. No action performed.
+
+### Admission capture boundary follow-up 2026-10-21T09:34:38.134Z
+
+Graph selected inventory uses captureObservedSourceInputsV1 with default authority inclusion. That helper appends sealed global loadObservations to every capture; final graph observations merge initial admission observations before physical revalidation. Initial inference revision implementationRows reads component physical sources through coordinates observedFs.readFileSync, so an old component file fact can persist through this load-authority path independently of generation implementationRows. Observation source explicitly identifies sealed module-load contradictions as unrecoverable by reinference in that process. Exact selected-run outer pin state was not independently proven; no process action is authorized by this audit alone. Runtime owner received these exact boundaries for its own run review.
+
+### Owning finite retry policy and convergence 2026-10-21T09:48:02.400Z
+
+Current selected graph loader has `for (attempt=0;attempt<=8;attempt++)`: at most nine attempts, advancing build:refresh after invalidation and finally throwing `Build source authority keeps changing during inference`. The repeated exact c0f→f9ad dependency-edge fact is not a growing sequence of physical revisions: present file remains f9ad with mtime08:07:04.194Z. Every default capture retains sealed loadObservations; inferenceAuthorityDigestV1 seals/caches that authority and no reset/replacement path was found. Component query reload does not replace this module-global captured authority or initial exported implementation rows. Therefore the repeated stale load fact cannot converge merely because the foreign Source stops changing; the owning finite retry eventually refuses. This is Source lifetime evidence, not an infinite-loop claim, and does not establish a mismatch in the unit log (which still has zero retry markers). No guard/source/process action performed.
+
+### Fresh-load physical metadata baseline 2026-10-21T09:48:44.636Z
+
+Captured 68 current defining paths in generated/fresh-load-baseline-2026-10-21.json, including actual dependency-edges, inference entry/revision, graph, storage schema/owner, Native lifecycle and headroom roster. This is a fresh physical content/metadata baseline, not proof of process-loaded bytes. Parent directs only the proven stale quota/Source invocations to settle and restart; unit remains retained without its own mismatch evidence. Nine-attempt finite refusal is recorded above.
+
+### Unit-specific pre-change timing limit 2026-10-21T09:55:25.581Z
+
+Unit log birthtime07:49:05.118Z and its175-second capacity wait locate admission near07:52; they do not locate dependency import. Source ordering requires inference static imports and initial implementationRows before selected-source-input preparation, but no absolute timestamp for this unit’s first such marker was retained in the current log. Execution report’s early selected-stage note lacks a timestamp; first independently reliable later audit snapshot is08:59. No unit retry fact exists at this read. Therefore evidence does not yet prove unit loaded the pre08:07 dependency bytes; retaining it avoids an age-only cancellation inference.
+
+### New current Source-demand lifetime failure 2026-10-21T09:57:24.263Z
+
+Fresh Source22867 log source-current-dependency.log ends `Native persistent receiver operation is not ready`, cleanup createPersistentImage operation142:594 → recoverBuildGraphOptionalScopesHeadroomV1 storage219:901, before assertions. Current physical storage SHA8d24cd75ee043abb26d1ecacdc19e618619f7c5e33e6da4f1dac5f4313b79d40 (41920bytes,09:29:09.861Z) externally rewrites scoped recovery to withExclusiveMaintenance(wait:false), immediately followed by image.recheck at the failure column. Actual Native maintenance consumes that receiver whether acquired/deferred. Nx still expects a live facade for physical recheck/optional preparation after scoped recovery. Thus current Source reintroduces the concrete consuming-handle lifetime failure, independently of old dependency authority. Unknown author changes preserved; no source/process action by this audit. Parent and both Highs notified.
+
+### Current graph-reader queue evidence 2026-10-21T11:12:29.185Z
+
+Parent supported-status read identifies graph-image shared holders81882/87073/87765/88254, earlier EX waiter89033, ownquota92541 SHposition6 and unit92776 SHposition7, with zero cycles. Current own logs agree on fair SH wait behind an older request; age alone is not deadlock evidence. Existing ticket leases JSON snapshots are historical (freshest04:02), so they cannot establish present holder activity or Native kernel proof. No current holder progress receipt was available to this reviewer at this read; requested parent’s existing compact status persistence rather than launching another diagnostic. Host-admitted quota/unit retain their resources while graph-image queued; Source remains normal host capacity gated, but no wait-cycle or double-accounting defect is thereby proven.
+
+### Supported current lease correlation 11:11:40 UTC
+
+Read parent-persisted generated/leases-wire-current.json at11:11:40.888Z. Four foreign graph SH holders own distinct fact/state EX shards7/4/30/5 respectively; none is a recorded waiter in this snapshot. Commands are Bazel proctor show, SemioTech activation, MitBestand activation, and proctor release build. Earlier EX89033 is blocked by those four; ownquota92541/unit92776 SH wait only behind89033, preserving fair ordering. Wait-for graph cycles=[]; this supports competing active graph ownership rather than a demonstrated deadlock. Registry rows are diagnostic evidence, not independent kernel proof or forward-progress measurement. Existing snapshot contains no actual inference counters or completion receipts for those holders, so their progress rate cannot be established from it. Own admitted jobs retain ordinary host grants while image-queued, which can reduce host admission room for Source, but no cyclic dependency/self-wait defect is evidenced. No foreign action or additional Native diagnostic launched.
+
+### Actual queue movement 11:14:33 UTC
+
+Parent current supported snapshot confirms foreign88254 naturally released its graph-image SH and requeued behind our three requests atposition8; three earlier readers remain and no cycles. Fresh own logs show quota/unit/Source SHpositions5/6/7 of8; Source has now cleared host admission. This is actual queue/lifetime movement, not evidence of completed physical recovery or assertions. All processes preserved.
+
+### Actual recovery queue transition 11:23:25 UTC
+
+Parent supported leases confirm earlier EX89033 naturally gone. Own quota/unit/Source advanced through initial SH admission into ordinary underfunded headroom recovery EX queue, Sourceposition4/unit5/root6 behind three earlier shared readers. Fresh logs11:23:42 independently show matching exclusive modes/positions. Root48592 remains live; no worker execution, recovery funding or tests yet. No Source/process mutation performed.
+
+### Bounded peer course progress evidence 2026-10-21T11:30:08.016Z
+
+Read authorized course chat01a153c4-4ebb-7942-a6fd-ecdfa4235111 with compact wait snapshot and locally filtered one current turn (raw161099characters not printed). Current peer attempt46021 launched11:02:15Z, log2026-10-21-native-prefix-1fa3.log, recorded normal capacity queue movement5→4→3→2→1ahead, no unit/prefix/test/build result. The retrieved turn contains no81882/89033/proctor-command identity, so it cannot establish graph-holder81882 progress. Parent separately confirms priorEX89033 disappeared by its own queue expiry, not success. No peer message/process action performed.
+
+### Reviewer REPL reset preflight 2026-10-21T11:32:54.645Z
+
+Parent explicitly authorized supported kernel reset after measured host admission gap413MiB. This reviewer owns only read-only fs/path/crypto imports, strings/maps/AST snapshots and monitoring helpers; no live control client, Native handle, watcher or child process. All research evidence is saved in ticket Markdown/generated artifacts. V8 before reset: {"used":500675408,"total":505577472,"external":4785631}. Supported reset will clear analysis state only and rebuild minimal log reader. No agent/build/process action.
+
+Supported reviewer js_reset completed; minimal fs/path/V8 and bounded logTail helper rebuilt, no Native/control handle existed. After reset V8 {"used":8709448,"total":10567680,"external":4331660}. Before used500675408bytes; after8709448bytes, reduction491965960bytes. Reports/logs unchanged; continuing the same three owned logs.
+
+### Admission correlation after analysis cleanup 11:36:39 UTC
+
+Parent reports fleet analysis heap cleanup total about1.45GiB, with separate Native handles preserved. Supported host capacity then10144MiB available, normal pressure, zero swap-out and earlier Cargo2654 normally admitted. This temporal correlation does not prove exclusive causation; other work also changes host resources. Reviewer remains minimal read-only fs/path/logTail state and current three Native checks unchanged.
+
+### Actual worker-wire deadline boundary 11:52:25 UTC
+
+All three current logs end `Original resource loan deadline exhausted`: quota220883bytes (remaining→arm), unit202174bytes and Source192114bytes (remaining→checkResourceLeaseControl→Native maintenance142:5706). Last preceding stage remained imageEX queue behind earlier graph SH readers; no worker/reference-proof/retirement/test execution was observed. Log terminal output is concrete failure evidence; execution owners confirm handle status. No process action, Source edit or foreign interference by reviewer. This finite monitor phase ends on actual failure.
+
+### Bounded Dashboard attribution search 2026-10-21T12:10:49.508Z
+
+At parent request inspected Dashboard chat01a153e7-b27d-7600-82ea-35931d01f14b, at most two existing-history reads. Newest turn395385characters filtered locally for exact holder PIDs81882/87073/87765 and requested show/activation commands yielded no matches or associated log paths. Second older-page tool result was non-JSON failure, so no usable additional evidence; stopped at two-call bound without retry. No peer messaging/probes or age-based progress attribution. Source9977 remains the only owned focused check under monitoring.
+
+### Sole focused Source admission 12:23:47 UTC
+
+Source9977 source-focused-recovery.log cleared host capacity and reached graph-image SHposition6/6 behind original81882 at57621bytes. This proves host admission/Native queue progression only; no worker/reference-proof/physical funding or test output yet. Root/unit remain deferred under single-focused-run dispatch.
+
+### Focused queue ownership transition 12:43:29 UTC
+
+Fresh focused log now graph-image SHposition2/3 behind EX54449, replacing prior position6/7 behind81882. Resource-directory admission also advances. This is actual queued-owner movement, without independent cause/holder success attribution, worker execution or assertion proof. No process action by reviewer.
+
+### Fresh linear-work execution phase 2026-10-21T13:36:55.094Z
+
+Parent/Acceptance report soleSource4598 normally admitted14216MiB available against unchanged6553floor; dependencyverification completed and initialgraphSHposition4/4 behindEX41162, earlier45042 no longer reportedholder. This is normal FIFO movement, no worker/assertion proof. Factual externalpartial trace finalized in optional-worker-format-audit without Source modifications. Reviewer follows source-linear-work.log only; no Native extra job.
+
+### Focused Generation Check Observation
+
+Fresh `source-generation-typed.log` read at its 2026-10-21T14:37:28.923Z mtime (68,629 bytes) has advanced from parser-source listing into `repository:graph-closure-proof` exclusive activity. This is actual proof preparation, not completion of the worker, snapshot admission, or a test result. No process or Source action was taken.

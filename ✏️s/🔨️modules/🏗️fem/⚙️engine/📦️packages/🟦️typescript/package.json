@@ -19,6 +19,7 @@
     "./sparse/testing/publication-grant": "./🔢️sparse/🧪️testing/⛽️publication-grant/🟦️.ts",
     "./sparse/testing/restore-funding": "./🔢️sparse/🧪️testing/⛽️restore-funding/🟦️.ts",
     "./sparse/testing/scalar-owners": "./🔢️sparse/🧪️testing/🔢️scalar-owners/🟦️.ts",
-    "./sparse/testing/shape": "./🔢️sparse/🧪️testing/🎼️shape/🟦️.ts"
+    "./sparse/testing/shape": "./🔢️sparse/🧪️testing/🎼️shape/🟦️.ts",
+    "./sparse/testing/shift-operator": "./🔢️sparse/🧪️testing/🔄️shift-operator/🟦️.ts"
   }
 }

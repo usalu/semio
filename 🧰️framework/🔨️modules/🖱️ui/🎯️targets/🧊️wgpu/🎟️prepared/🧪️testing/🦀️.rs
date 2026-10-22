@@ -5,7 +5,7 @@ use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOu
 pub fn close_packet_step(packet: &mut PreparedRenderPacket) -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..packet.next_close_demands(16 * 1024).unwrap() };
-    match packet.close_step(grant) {
+    match packet.close_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(packet.retirement_is_empty()); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -14,7 +14,7 @@ pub fn close_packet_step(packet: &mut PreparedRenderPacket) -> bool {
 pub fn close_abandoned_packet_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = PreparedRenderPacket::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderPacket::close_abandoned_step(grant) {
+    match PreparedRenderPacket::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -23,7 +23,7 @@ pub fn close_abandoned_packet_step() -> bool {
 pub fn close_abandoned_mailbox_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = PreparedRenderReceiver::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderReceiver::close_abandoned_step(grant) {
+    match PreparedRenderReceiver::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -44,7 +44,7 @@ pub fn close_job_step(job: &mut PreparedRenderJob) -> bool {
 pub fn close_abandoned_job_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = PreparedRenderJob::next_abandoned_close_demands(1).unwrap();
-    match PreparedRenderJob::close_abandoned_step(grant) {
+    match PreparedRenderJob::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -54,7 +54,7 @@ pub fn close_abandoned_job_step() -> bool {
 pub fn close_abandoned_input_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = PreparedRenderInput::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderInput::close_abandoned_step(grant) {
+    match PreparedRenderInput::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -85,7 +85,7 @@ pub fn atlas_fixture_page(owner: &mut PreparedAtlasPages, source: &[u8], row: u3
 pub fn close_abandoned_atlas_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = atlas_fixture_authority().retirement;
-    match PreparedAtlasPages::close_abandoned_step(grant) {
+    match PreparedAtlasPages::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,

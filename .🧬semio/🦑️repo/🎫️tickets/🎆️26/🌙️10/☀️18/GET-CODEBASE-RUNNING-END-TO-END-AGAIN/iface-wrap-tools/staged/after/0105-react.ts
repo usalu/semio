@@ -1,159 +1,130 @@
-/** 🔸️ The open document phase of useShellUriAndDocuments. */
-import { FolderArchivePersistenceV1, FolderReadBackRouteV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { createArtifactCreationCatalogMountV1 } from "../../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
-import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
-import { type DocumentScope } from "@semio-tech/framework/document/scope";
-import { encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
-import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
-import { SpaceDirectoryHistoryV1 } from "../../📇️space-directory/🟦️.ts";
-import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference } from "../../🧭️opening/🟦️.ts";
-import { documentOpeningDeadlineMs } from "@semio-tech/framework/browser-bundle/child/schema";
-import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
-import { SPACE_INDEX_DOCUMENT_ID } from "../../🧾️space-artifact-creation/🟦️.ts";
-import type { OpenDocumentSessionTarget, OpenDocumentSession } from "../../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
-import type { useScopeState } from "../🔶️scope/🟦️.ts";
+/** 🔸️ The update space panel phase of useSpawnedSession. */
+import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
+import { shellHumanChangeRecoveryV1, type ShellHumanV1 } from "../../🔀️surface-switch/🟦️.ts";
+import { renameLayoutWindowIdsV1, spawnedLayoutRenameV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { type WindowLayoutNode } from "@semio-tech/ui-react";
+import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { resolveFrameworkLayoutSeed, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { panelJsonFromState, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { windowFaultFromError } from "../../🩺️fault/🟦️.ts";
+import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
+import { SPAWNED_FOCUS_FRAME_BUDGET, withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
+import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 
-/** 🔹 Builds openDocument of useShellUriAndDocuments. */
-export function useOpenDocument({ resolveSyncTargetSession, loadedPlugins, ensureBackboneWorker, identityRef, hubEnv, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, retireBrowserActorUi, shellActorIdRef, socketActorReadyRef, postBrowserActorViewState, retireDocumentAttachment, spaceDirectoryHistoriesRef, directoryScopedOwnersRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, documentAttachmentLane, bindDocumentBackbone, dispatch, backboneWorkerRef, closeDocumentRef, openDocumentRef, sessionRef, activeToolId, activeUtilityByWindowId, extraWindowInstances, session }: Pick<ReturnType<typeof useScopeState>, "resolveSyncTargetSession" | "loadedPlugins" | "ensureBackboneWorker" | "identityRef" | "hubEnv" | "openDocumentSessionsRef" | "browserActorUiByRuntimeKeyRef" | "retireBrowserActorUi" | "shellActorIdRef" | "socketActorReadyRef" | "postBrowserActorViewState" | "retireDocumentAttachment" | "spaceDirectoryHistoriesRef" | "directoryScopedOwnersRef" | "setSpaceArtifactCreationCatalog" | "setSpaceArtifactCreationCatalogUi" | "documentAttachmentLane" | "bindDocumentBackbone" | "dispatch" | "backboneWorkerRef" | "closeDocumentRef" | "openDocumentRef" | "sessionRef" | "activeToolId" | "activeUtilityByWindowId" | "extraWindowInstances" | "session">) {
-  /** 🧵️ Opens this exact document and optional shared space in its captured plugin session.
-   * Shared requests require a signed-in identity and carry only a requested surface; the worker
-   * verifies the Hub plan and catalog assets before acquiring socket authority. Explicit bindings
-   * are used by the manual persistence picker. Local documents never inherit the current route. */
-  const openDocument = useCallback(
-    async (ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget): Promise<DocumentOpeningReceiptV1 | null> => {
-      const documentTarget = resolveDocumentOpeningTarget(target, resolveSyncTargetSession(), loadedPlugins);
-      if (!documentTarget) return null;
-      const { session: targetSession, plugin } = documentTarget;
-      const worker = ensureBackboneWorker();
-      const resolvedBindings = bindings ?? resolveDocumentOpeningBindings(ref, {
-        identity: identityRef.current,
-        dataDir: hubEnv?.dataDir,
-        surface: targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined,
-      });
-      const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> => binding.kind === "hub");
-      if (target?.expectedCatalogGenerationId !== undefined && hubBinding === undefined) return null;
-      const creationMount = target?.expectedCatalogGenerationId === undefined ? null : createArtifactCreationCatalogMountV1(target.expectedCatalogGenerationId);
-      const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
-      const spaceIndexDocument = ref.documentId === SPACE_INDEX_DOCUMENT_ID;
-      const workerBindings = spaceIndexDocument ? resolvedBindings.filter((binding) => binding.kind !== "hub") : resolvedBindings;
-      const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
-      const openingAttempt = { clientInstanceId: crypto.randomUUID() };
-      const { clientInstanceId } = openingAttempt;
-      let resolveReady!: () => void, rejectReady!: (error: Error) => void;
-      const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
-      void ready.catch(() => {});
-      const persistToFolder = resolvedBindings.some((binding) => binding.kind === "folder");
-      const persistence = new FolderArchivePersistenceV1(async () => {
-        if (!persistToFolder || openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
-        if (!plugin.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
-        const archive = await plugin.readAppDocumentArchive(targetSession.instanceId);
-        if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
-        const archiveBytes = encodeDocumentArchiveBytes(archive);
-        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(archiveBytes) } }) });
-      });
-      const entry: OpenDocumentSession = { openingReference: { ...ref }, persistenceBindings: [...resolvedBindings], session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), persistence, readBack: new FolderReadBackRouteV1<DocumentArchivePack>(persistence), creationMount, ready, resolveReady, rejectReady };
-      const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, entry);
-      if (parked === null) return null;
-      const predecessorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-      if (predecessorActor !== undefined && predecessorActor.clientInstanceId !== clientInstanceId) {
-        retireBrowserActorUi(runtimeKey, "browser-actor-action: opening parked");
-      }
-      const request: BackboneWorkerRequest = {
-        kind: "open",
-        actorIdentityGrant: {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64},
-        clientInstanceId,
-        documentId: ref.documentId,
-        schema: ref.schema,
-        bindings: workerBindings,
-        watchExternal: true,
-        actor: shellActorIdRef.current,
-      };
-      const expectsSocketActor = workerBindings.some((binding) => binding.kind === "hub");
-      const socketActor = expectsSocketActor
-        ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(runtimeKey, { clientInstanceId, resolve, reject }))
-        : null;
-      void socketActor?.catch(() => {});
-      const uri = `actor://${runtimeKey}`;
-      const committed = await runDocumentOpeningAttemptV1({
-        deadlineMs: documentOpeningDeadlineMs(),
-        current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry && entry.creationMount?.current() !== false,
-        socket: async () => {
-          worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-          postBrowserActorViewState(worker, entry, targetSession);
-          await socketActor;
-        },
-        retire: () => {
-          const waiter = socketActorReadyRef.current.get(runtimeKey);
-          if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
-        },
-        close: () => {
-          entry.creationMount?.close(new Error("document opening aborted"));
-          entry.rejectReady(new Error("document opening aborted"));
-          entry.replacements.invalidate();
-          void entry.port?.retire().catch(() => {});
-          const restored = settleDocumentOpeningReplacementV1(openDocumentSessionsRef.current, parked, false);
-          const successorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-          if (successorActor?.clientInstanceId === clientInstanceId) {
-            retireBrowserActorUi(runtimeKey, "browser-actor-action: opening aborted");
-          }
-        },
-        detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
-        attach: async () => {
-          if (hubBinding && scope) {
-            if (scope.documentId === SPACE_INDEX_DOCUMENT_ID) {
-              spaceDirectoryHistoriesRef.current.set(runtimeKey, new SpaceDirectoryHistoryV1(scope.spaceId));
-              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-space-open", baseUrl: hubBinding.baseUrl, spaceId: scope.spaceId }) });
-            } else {
-              directoryScopedOwnersRef.current.set(runtimeKey, scope);
-              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
-            }
-            if (scope.documentId === SPACE_INDEX_DOCUMENT_ID && !target?.background) {
-              setSpaceArtifactCreationCatalog(null);
-              setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
-              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
-            }
-          }
-          if (hubBinding || entry.replacements.pending) {
-            if (entry.creationMount === null) await entry.ready;
-            else await entry.creationMount.attach(entry.ready);
-          }
-          else await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey) === entry, async () => {
-            if (entry.port === null || entry.port.closing) await bindDocumentBackbone(runtimeKey, entry);
-          });
-        },
-        commit: () => {
-          entry.creationMount = null;
-          if (target?.background) return;
-          dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
-          dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-        },
-      });
-      if (committed) {
-        for (const [key, owner] of settleDocumentOpeningReplacementV1(openDocumentSessionsRef.current, parked, true)) {
-          if (key === runtimeKey) {
-            void owner.port?.retire().catch(() => {});
-            void retireDocumentAttachment(owner.plugin, owner.session.instanceId, owner.clientInstanceId).catch((error) => undefined);
-            backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: owner.documentId, clientInstanceId: owner.clientInstanceId, ...(owner.scope === undefined ? {} : { spaceId: owner.scope.spaceId }) }) });
-            continue;
-          }
-          closeDocumentRef.current(key, owner.clientInstanceId);
-        }
-      }
-      return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
-    },
-    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, postBrowserActorViewState, resolveSyncTargetSession, hubEnv, retireDocumentAttachment, retireBrowserActorUi],
-  );
-  openDocumentRef.current = openDocument;
+/** 🔹 Builds updateSpacePanel, retireSessionInstance, sessionHumanRef of useSpawnedSession. */
+export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, focusedProgramKey, activeToolIdRef, writeToolRegister, focusedSpawnedId, focusedApp, sessionLayoutBeforeSpawnRef, shellLayout, activeWindowIdRef, appLabelsOverlay, uiTerminology, uiLocale, dispatch, scope, loadedPluginsRef, openDocumentSessionsRef, closeDocumentRef, documentAttachmentLanesRef, identity, sessionRef, shellSessionLaneRef, refreshUi, reportRefreshFault, establishPrimaryWithShardRetry, pluginSupervisorByIdRef, sessionHumanKey }: Pick<ReturnType<typeof useDocumentServicesState>, "session" | "seededFocusedProgramKeyRef" | "focusedProgramKey" | "activeToolIdRef" | "writeToolRegister" | "focusedSpawnedId" | "focusedApp" | "sessionLayoutBeforeSpawnRef" | "shellLayout" | "activeWindowIdRef" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "dispatch" | "scope" | "loadedPluginsRef" | "openDocumentSessionsRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "identity" | "sessionRef" | "shellSessionLaneRef" | "refreshUi" | "reportRefreshFault" | "establishPrimaryWithShardRetry" | "pluginSupervisorByIdRef" | "sessionHumanKey">) {
+  useEffect(() => {
+    if (!session) return;
+    if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;
+    const previous = seededFocusedProgramKeyRef.current;
+    seededFocusedProgramKeyRef.current = focusedProgramKey;
+    if (previous !== "" && activeToolIdRef.current) writeToolRegister(null, null);
+    if (focusedSpawnedId !== null && focusedApp !== null) {
+      if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
+      const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
+      dispatch({ type: "SET_SHELL_LAYOUT", value: modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(modeLayout) });
+      return;
+    }
+    const restored = sessionLayoutBeforeSpawnRef.current;
+    sessionLayoutBeforeSpawnRef.current = null;
+    if (restored?.layout) {
+      dispatch({ type: "SET_SHELL_LAYOUT", value: restored.layout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: restored.activeWindowId ?? seededActiveWindowId(restored.layout) });
+      return;
+    }
+    if (previous === "") return;
+    const seed = resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+    dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
+    dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seed.modeLayout) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale, writeToolRegister]);
 
   useEffect(() => {
-    const worker = backboneWorkerRef.current;
-    if (worker === null) return;
-    for (const entry of openDocumentSessionsRef.current.values()) {
-      if (entry.scope === undefined) continue;
-      const current = sessionRef.current;
-      const targetSession = current?.pluginId === entry.session.pluginId && current.instanceId === entry.session.instanceId ? current : entry.session;
-      postBrowserActorViewState(worker, entry, targetSession);
+    if (focusedSpawnedId === null) return;
+    let frames = 0;
+    let handle = 0;
+    const attempt = (): void => {
+      const holder = document.activeElement;
+      if (holder instanceof HTMLElement && holder !== document.body) return;
+      const windowId = activeWindowIdRef.current;
+      const panel = windowId === null ? null : scope.rootRef.current?.querySelector<HTMLElement>(`[data-slot="window"][id="${CSS.escape(windowId)}"]`)?.closest<HTMLElement>('[role="tabpanel"]');
+      if (panel) panel.focus({ preventScroll: true });
+      else if (++frames < SPAWNED_FOCUS_FRAME_BUDGET) handle = requestAnimationFrame(attempt);
+    };
+    handle = requestAnimationFrame(attempt);
+    return () => cancelAnimationFrame(handle);
+  }, [focusedProgramKey, focusedSpawnedId]);
+
+  const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) => {
+        if (!current) return current;
+        return { ...current, viewState: { ...current.viewState, panelJson: panelJsonFromState(panelState) } };
+      },
+    });
+  }, []);
+
+  /** 🪦️ The session-instance close ladder, lifted out of the shell-unmount teardown effect so an
+   * in-place app switch retires its predecessor the same way unmounting does: every document session
+   * still bound to that instance is closed (which retires its attachment), then the attachment lane is
+   * drained, then the instance is destroyed. Without it every `switchToPluginApp` leaked one live
+   * `createApp` — tolerable while only two host apps ever swapped, not for a user-facing toggle
+   * (`📓️viewer-eval-chain-2026-09-12.md` §6 item 2). Never throws: a predecessor that refuses to
+   * retire is a leak to report, never a reason to block the successor. */
+  const retireSessionInstance = useCallback(async (retired: ActiveSession): Promise<void> => {
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === retired.pluginId)?.handle;
+    if (!plugin) return;
+    for (const [runtimeKey, entry] of [...openDocumentSessionsRef.current]) {
+      if (entry.plugin !== plugin || entry.session.instanceId !== retired.instanceId) continue;
+      closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
     }
-  }, [activeToolId, activeUtilityByWindowId, extraWindowInstances, postBrowserActorViewState, session?.viewState]);
-  return { openDocument };
+    await documentAttachmentLanesRef.current.get(plugin)?.get(retired.instanceId)?.drain();
+    await plugin.destroyApp(retired.instanceId);
+  }, []);
+
+  /** 🪪️ A change of the signed-in human is recovered by what it invalidates ({@link shellHumanChangeRecoveryV1}): a first
+   * human for a session assembled signed-out, or a new display name, only re-renders it — signed out is a state every
+   * surface renders, and the directory owner binds the visible Home as soon as the hub confirms the human, so Home fills in
+   * place and whatever the human opened on it (a dialog) stays. Before, every sign-in re-established Home 5–8 s later and
+   * closed that dialog (C11 run b3-3: `event-page?after=0` for instance 2 behind a socket closed on instance 1). A session
+   * assembled for ANOTHER human — a switch of accounts, or a sign-out — is established again with the same
+   * `establishPrimaryWithShardRetry` the killed-boot and worker-loss paths use, and the superseded instance is retired once
+   * the new one is mounted.
+   *
+   * The first run only records the human: mounting is not a change. Both recoveries run on the shell session lane, after
+   * whatever route application is in flight; after a re-establishment the route effect re-applies the session route behind
+   * it — the new session is the landing app. A space route is held until the identity it is opened for resolves
+   * ({@link shellRouteAdmissionV1}), so a hard load of `/spaces/<id>` mounts the space once, and a sign-in under the hub
+   * overlay returns to the space the overlay sits over (ticket 26/09/23 U5; C10 and G10 S4 relays). */
+  const sessionHumanRef = useRef<ShellHumanV1 | null | undefined>(undefined);
+  useEffect(() => {
+    const previous = sessionHumanRef.current;
+    const current: ShellHumanV1 | null = identity ? { userId: identity.userId, displayName: identity.displayName } : null;
+    sessionHumanRef.current = current;
+    if (!sessionRef.current || previous === undefined) return;
+    const recovery = shellHumanChangeRecoveryV1(previous, current);
+    if (recovery === "keep") return;
+    void shellSessionLaneRef.current.run(async () => {
+      const active = sessionRef.current;
+      if (!active) return;
+      if (recovery === "refresh") {
+        await refreshUi(active).catch((renderError) => reportRefreshFault(active.pluginId, renderError));
+        return;
+      }
+      const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active.pluginId)?.handle;
+      if (!handle) return;
+      try {
+        await establishPrimaryWithShardRetry(handle);
+      } catch (error) {
+        const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[active.pluginId]);
+        dispatch({ type: "SET_ERROR", value: fault.message, fault });
+        return;
+      }
+      await retireSessionInstance(active).catch(() => undefined);
+    });
+  }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance, refreshUi, reportRefreshFault]);
+  return { retireSessionInstance, updateSpacePanel };
 }

@@ -15,19 +15,22 @@ pub struct AddStoredEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddStoredEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "stored-entry", kind: "add-stored-entry", record: "AddStoredEntry" };
 
-    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add stored entry", "Unkomprimierten Eintrag hinzufügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<ZipSnapshot, ZipIso21320Mutation> for AddStoredEntry {
+    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::ColdMutation<ZipSnapshot>>::ReferenceDiff> {
         let Self { entry, before } = self;
         added_entry_diff(base, entry, before.as_deref(), ZipIso21320Method::Stored)
     }
     fn inverse(&self, _base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
         let Self { entry, .. } = self;
         Ok(vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add stored entry", "Unkomprimierten Eintrag hinzufügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -1,6 +1,6 @@
 /** 🌲️ Home groups general pages, quiz topics and individual quizzes into nested layered overviews. Each card opens its
  * full page or another grid using the same glass, pointer parallax, hover reveal and zoom. A single page address derives
- * every opened ancestor. Hovering a card zooms the grid immediately behind it. Every grid behind that follows the pointer without zooming. Hovering a card zooms the grid immediately behind it. Every grid behind that follows the pointer without zooming. Only the deepest active grid handles input; background previews remain live and inert.
+ * every opened ancestor. Hovering a card's explore control zooms the grid immediately behind it. Every grid behind that follows the pointer without zooming. Only the deepest active grid handles input; background previews remain live and inert.
  * @see ./🗺️pages/🟦️.ts — course-derived page hierarchy
  * @see ../🚏️navigation/🟦️.tsx — history and parent navigation
  */

@@ -1,6 +1,6 @@
 import {isAbsolute,relative,resolve,sep} from "node:path";
 import {repositoryCachePartitionRootDataV1} from "../../💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import modes from "@semio-tech/process/build/mode/schema.json";
+import modes from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🧬️schema/🔣️json/🟦️.ts";
 
 /** 🗂️ Validates an explicitly supplied compiler cache path as DATA inside the authored products namespace. */
 export function viteCacheDirectory(workspace:string,environment:Readonly<Record<string,string|undefined>>=process.env):string{

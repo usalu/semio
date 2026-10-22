@@ -173,6 +173,7 @@ func (p *Technology) GetURI() string {
 
 // 🔵️Bundle holds the data fields for a bundle record.
 type Bundle struct {
+ technologyID string
 	Name           string     `json:"name"`
 	Root           string     `json:"root"`
 	SourceRoot     string     `json:"sourceRoot,omitempty"`
@@ -225,8 +226,9 @@ func (b *Bundle) GetID() string {
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	techEmoji := resolveTechnologyEmoji(technologyCode)
-	return EmojiText(techEmoji) + workspace.Flat(technologyCode) + EmojiText(emoji) + workspace.Flat(bundleCode)
+	technologyID:=b.technologyID
+ if technologyID=="" { technologyID=EmojiText(resolveTechnologyEmoji(technologyCode))+workspace.Flat(technologyCode) }
+	return technologyID + EmojiText(emoji) + workspace.Flat(bundleCode)
 }
 
 // 🟢️GetURI MUST return the stored value without modification.
@@ -272,3 +274,6 @@ func bundlePathPrefix(name string) string {
 }
 
 // #endregion 🏗️Technology Bundle
+
+// 🧬️WithTechnology binds the bundle to an immutable parent identity.
+func (b Bundle) WithTechnology(technology Technology) Bundle { b.technologyID=technology.GetID();return b }

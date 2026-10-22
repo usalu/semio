@@ -90,18 +90,18 @@ async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
         emissive_texture: Some(Some(fixture["bindings"]["emissiveTexture"].as_str().unwrap().into())),
         ..Default::default()
     });
-    assert_eq!(protocol::apply_diff(&diff, &before).unwrap(), set);
-    assert_eq!(protocol::apply_diff(&diff.inverse(&before), &set).unwrap(), before);
+    assert_eq!(protocol::apply_diff_cold(&diff, &before).unwrap(), set);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&before), &set).unwrap(), before);
     let mut cleared = set.clone();
     cleared.materials[0].normal_texture = None;
     let clear = textures(SemioMaterialDiff { normal_texture: Some(None), ..Default::default() });
     assert_eq!(clear.materials.as_ref().unwrap().modified[0].diff.normal_texture, Some(None));
-    assert_eq!(protocol::apply_diff(&clear.inverse(&set), &cleared).unwrap(), set);
+    assert_eq!(protocol::apply_diff_cold(&clear.inverse(&set), &cleared).unwrap(), set);
     for value in [&diff, &clear] {
         assert_eq!(SemioMeshDiff::parse_diff(&value.print_diff()).unwrap(), *value);
         assert_eq!(SemioMeshDiff::decode_diff(&value.encode_diff().unwrap()).unwrap(), *value);
     }
     let mut combined = diff;
     combined.absorb(clear);
-    assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared);
+    assert_eq!(protocol::apply_diff_cold(&combined, &before).unwrap(), cleared);
 }

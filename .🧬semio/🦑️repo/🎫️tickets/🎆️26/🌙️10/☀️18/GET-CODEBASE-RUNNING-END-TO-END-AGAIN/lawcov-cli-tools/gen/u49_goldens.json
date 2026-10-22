@@ -1,0 +1,264 @@
+{
+ "a glob mirror module is removed and consumers are re-pointed": {
+  "edits": {
+   "b/lib.rs": "\nuse a_crate::schema::Item;\npub fn f() -> Item { a_crate::schema::make(); a_crate::schema::inner::deep(); Item }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 1,
+   "repointedChains": 2,
+   "addedImports": 0,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "an explicit re-export is removed and kept private when used locally": {
+  "edits": {
+   "b/lib.rs": "use a_crate::schema::Item;\nuse a_crate::schema::make;\npub fn f() -> Item { make(); Item }\n"
+  },
+  "report": {
+   "removedLeaves": 2,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "api roots keep their root-level explicit re-exports": {
+  "edits": {},
+  "report": {
+   "removedLeaves": 0,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "a consumer crate re-points paths that start in a target": {
+  "edits": {
+   "b/lib.rs": "\n",
+   "c/lib.rs": "use a_crate::schema::Item;\npub fn g() -> Item { a_crate::schema::make(); Item }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 1,
+   "repointedChains": 1,
+   "addedImports": 0,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "multi-mounted files are reported with every mounting module and left alone": {
+  "edits": {},
+  "report": {
+   "removedLeaves": 0,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [
+    "b/shared.rs <- b_crate:, b_crate:/two"
+   ],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "files that are not editable stay untouched": {
+  "edits": {},
+  "report": {
+   "removedLeaves": 0,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "an unresolvable foreign re-export is reported": {
+  "edits": {},
+  "report": {
+   "removedLeaves": 0,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [
+    "b/lib.rs: a_crate::missing::Item"
+   ],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {
+   "b/lib.rs": [
+    "use a_crate::missing::Item"
+   ]
+  }
+ },
+ "a renamed re-export keeps its alias": {
+  "edits": {
+   "b/lib.rs": "use a_crate::schema::Item as Thing;\npub fn f() -> Thing { Thing }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "glob imports of a mirror gain the names they used": {
+  "edits": {
+   "b/lib.rs": "\nmod user {\n    use a_crate::schema::{Item, make};\n    pub fn f() -> Item { make(); Item }\n}\n"
+  },
+  "report": {
+   "removedLeaves": 2,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 2,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "a mirror module with its own items stays": {
+  "edits": {
+   "b/lib.rs": "pub mod schema { pub fn own() {} }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "names that are not visible are reported": {
+  "edits": {
+   "b/lib.rs": "\nmod user {\n    use a_crate::schema::Item;\n    fn f(_: Hidden, _: Item) {}\n}\n"
+  },
+  "report": {
+   "removedLeaves": 2,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 1,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": [
+    "b/lib.rs: Hidden is not visible from b_crate (defined in a_crate a/lib.rs)"
+   ]
+  },
+  "audit": {}
+ },
+ "unresolved leaves and paths are audited": {
+  "edits": {},
+  "report": {
+   "removedLeaves": 0,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {
+   "b/lib.rs": [
+    "use crate::gone::X",
+    "path crate::nope::f"
+   ]
+  }
+ },
+ "a mirror in a nested inline module is removed with its emptied parents": {
+  "edits": {
+   "b/lib.rs": "\npub fn f() -> a_crate::schema::Item { a_crate::schema::Item }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "paths inside macro arguments are re-pointed like any other": {
+  "edits": {
+   "b/lib.rs": "\npub fn f() { println!(\"{}\", a_crate::schema::make()); let _ = a_crate::schema::inner::deep(); }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 2,
+   "addedImports": 0,
+   "removedModules": 1,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "a public glob re-export of a foreign module keeps the names the file itself uses (mounted file)": {
+  "edits": {
+   "b/m/mod.rs": "pub fn f() -> Item { Item }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ },
+ "a public glob re-export of a foreign module keeps the names the file itself uses (crate root)": {
+  "edits": {
+   "b/lib.rs": "pub fn f() -> Item { make(); Item }\n"
+  },
+  "report": {
+   "removedLeaves": 1,
+   "repointedLeaves": 0,
+   "repointedChains": 0,
+   "addedImports": 0,
+   "removedModules": 0,
+   "unresolvedMirrors": [],
+   "multiMounted": [],
+   "invisible": []
+  },
+  "audit": {}
+ }
+}

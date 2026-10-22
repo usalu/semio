@@ -464,24 +464,9 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
     }
 }
 
-impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
-    fn apply(&self, base: &SemioDocumentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
-        let mut out = base.clone();
-        if let Some(sd) = &self.styles {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |added| added.item.id.clone(), ["styles"])?;
-            apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
-        }
-        if let Some(id) = &self.images {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |added| added.item.id.clone(), ["images"])?;
-            apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
-        }
-        if let Some(bd) = &self.blocks {
-            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
-            apply_indexed(&mut out.blocks, bd, apply_block);
-        }
-        Ok(out)
-    }
+impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {}
 
+impl protocol::ColdMutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
     fn absorb(&mut self, other: Self) {
         let styles = std::mem::take(&mut self.styles);
         self.styles = match (styles, other.styles) {
@@ -502,18 +487,40 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
             (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, apply_block_to_copy)),
         };
     }
+
+    fn apply(&self, unpublished: &mut SemioDocumentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut out = base.clone();
+        if let Some(sd) = &self.styles {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |added| added.item.id.clone(), ["styles"])?;
+            apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
+        }
+        if let Some(id) = &self.images {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |added| added.item.id.clone(), ["images"])?;
+            apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
+        }
+        if let Some(bd) = &self.blocks {
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
+            apply_indexed(&mut out.blocks, bd, apply_block);
+        }
+        *unpublished = out;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
+    fn is_empty(&self) -> bool {
+        self.styles.is_none() && self.images.is_none() && self.blocks.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Self {
         SemioDocumentDiff {
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
             images: self.images.as_ref().map(|id| inverse_named(&base.images, id, |i| i.id.clone(), inverse_image)),
             blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.styles.is_none() && self.images.is_none() && self.blocks.is_none()
     }
 }
 //#endregion 🔖️DocumentDiffLogic

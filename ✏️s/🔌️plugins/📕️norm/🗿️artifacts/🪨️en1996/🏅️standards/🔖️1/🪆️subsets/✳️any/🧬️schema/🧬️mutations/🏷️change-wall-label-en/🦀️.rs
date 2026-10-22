@@ -18,7 +18,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeWallLabelEn where 
         kind: "change-wall-label-en",
         record: "ChangedWallLabelEn",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change wall label (EN)", "Wandbezeichnung (EN) ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for ChangeWallLabelEn where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::change_wall_label_en::ChangeWallLabelEn> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::change_wall_label_en::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,9 +34,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeWallLabelEn where 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change wall label (EN)", "Wandbezeichnung (EN) ändern")
-    }
 }
 
 //#region 🪢️Mounts

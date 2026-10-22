@@ -122,18 +122,9 @@ pub struct JsonDiff {
     pub value: Option<JsonValueDiff>,
 }
 
-impl MutationDiff<JsonSnapshot> for JsonDiff {
-    fn apply(&self, base: &JsonSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<JsonSnapshot> {
-        if let Some(diff) = &self.value {
-            validate_value_diff(diff, &base.value)?;
-        }
-        let mut next = base.clone();
-        if let Some(diff) = &self.value {
-            next.value = apply_value_diff(diff, &base.value);
-        }
-        Ok(next)
-    }
+impl MutationDiff<JsonSnapshot> for JsonDiff {}
 
+impl protocol::ColdMutationDiff<JsonSnapshot> for JsonDiff {
     /// ➕️ Structural, total, base-free, sequential-coalesce absorb (see the module-level `Absorb`
     /// helpers below for the array/object transport algorithm). A composed collection diff that
     /// ends up structurally empty (e.g. an `Insert` immediately cancelled by a matching `Remove`)
@@ -153,16 +144,31 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
             }
         };
     }
+
+    fn apply(&self, unpublished: &mut JsonSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.value {
+            validate_value_diff(diff, &base.value)?;
+        }
+        let mut next = base.clone();
+        if let Some(diff) = &self.value {
+            next.value = apply_value_diff(diff, &base.value);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<JsonSnapshot> for JsonDiff {
+    fn is_empty(&self) -> bool {
+        self.value.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JsonSnapshot> for JsonDiff {
     /// 🔁️ The negative diff: walked structurally against the base value, never by applying the diff and differencing the result.
     fn inverse(&self, base: &JsonSnapshot) -> Self {
         JsonDiff { value: self.value.as_ref().map(|diff| inverse_value_diff(diff, &base.value)) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.value.is_none()
     }
 }
 

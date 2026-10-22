@@ -19,7 +19,7 @@ use crate::standards::v1_4::subsets::base::schema::diff::PdfPagesDiff;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use crate::standards::v1_4::subsets::base::schema::mutations::remove_page::*;
 use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-page/🔄️round/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-page/🔄️round/📸️snapshot/➡️after/🔣️.json"));
@@ -104,7 +104,7 @@ fn produces_committed_diff() {
 fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: PdfDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-page/round-trips-the-concrete-inverse: committed diff did not carry before to after");
 }
 

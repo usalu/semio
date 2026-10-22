@@ -1,13 +1,13 @@
 name: cache proof
 description: >-
   Proves that the selected build implementation caches: empty the local cache, run one target (the store must grow), run
-  it again (the store must not grow and the run must be served from the cache). Only `bun repo` commands run the build;
+  it again (the store must not grow and the run must be served from the cache). Only `repo` commands run the build;
   the capture files are judged by the CI report (its `proof` command), which holds every implementation-specific rule.
   The remote cache is skipped on purpose, so the proof measures the local cache and cannot be satisfied by a peer.
 
 inputs:
   tool:
-    description: Build implementation to prove (nx or bazel); passed to `bun repo --tool`.
+    description: Build implementation to prove (nx or bazel); passed to `repo --tool`.
     required: true
   target:
     description: Cacheable `project:target` that depends on nothing else.
@@ -25,11 +25,11 @@ runs:
         logs="$RUNNER_TEMP/cache-proof-$TOOL"
         mkdir -p "$logs"
         echo "::group::cache proof under $TOOL"
-        bun repo --tool="$TOOL" cache clear
-        bun repo --tool="$TOOL" cache status > "$logs/status0.out"
-        bun repo --tool="$TOOL" run "$TARGET" --skip-remote-cache 2>&1 | tee "$logs/run1.log"
-        bun repo --tool="$TOOL" cache status > "$logs/status1.out"
-        bun repo --tool="$TOOL" run "$TARGET" --skip-remote-cache 2>&1 | tee "$logs/run2.log"
-        bun repo --tool="$TOOL" cache status > "$logs/status2.out"
+        repo --tool="$TOOL" cache clear
+        repo --tool="$TOOL" cache status > "$logs/status0.out"
+        repo --tool="$TOOL" run "$TARGET" --skip-remote-cache 2>&1 | tee "$logs/run1.log"
+        repo --tool="$TOOL" cache status > "$logs/status1.out"
+        repo --tool="$TOOL" run "$TARGET" --skip-remote-cache 2>&1 | tee "$logs/run2.log"
+        repo --tool="$TOOL" cache status > "$logs/status2.out"
         echo "::endgroup::"
-        bun "$CI_REPORT" proof --tool "$TOOL" --status0 "$logs/status0.out" --status1 "$logs/status1.out" --status2 "$logs/status2.out" --log1 "$logs/run1.log" --log2 "$logs/run2.log" | tee -a "$GITHUB_STEP_SUMMARY"
+        repo "$CI_REPORT" proof --tool "$TOOL" --status0 "$logs/status0.out" --status1 "$logs/status1.out" --status2 "$logs/status2.out" --log1 "$logs/run1.log" --log2 "$logs/run2.log" | tee -a "$GITHUB_STEP_SUMMARY"

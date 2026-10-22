@@ -242,7 +242,7 @@ pub mod sqlite {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 
 pub use semio_s_artifact_animate_presentation_inferences::diff;
 pub use semio_s_artifact_animate_presentation_mutations::mutations;

@@ -33,9 +33,9 @@ runs:
           }
           run_gate preflight repo preflight
           run_gate filesystem-command-laws repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-filesystem-workspace --lib -- --nocapture --test-threads=1
-          run_gate terminal-editor-controller repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-terminal --lib source_ -- --nocapture --test-threads=1
           run_gate explicit-language-choice repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-terminal --lib language -- --nocapture --test-threads=1
           run_gate canonical-cold-lazy-launch repo run @semio-tech/repo-dashboard-rs:test-cold-start --skip-cache --output=stream
+          run_gate terminal-editor-controller repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream
           run_gate installed-journeys repo run @semio-tech/repo-dashboard-rs:test-journeys --skip-cache --output=stream
           run_gate installed-load repo run @semio-tech/repo-dashboard-rs:test-load --skip-cache --output=stream
           run_gate process-deadline repo run @semio-tech/repo-dashboard-rs:test-process-deadline --skip-cache --output=stream

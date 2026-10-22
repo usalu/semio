@@ -30,20 +30,9 @@ pub struct JackResultsWindowTransientDiff {
     pub query_error: Option<Option<String>>,
 }
 
-impl protocol::MutationDiff<JackResultsWindowTransient> for JackResultsWindowTransientDiff {
-    fn apply(&self, base: &JackResultsWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JackResultsWindowTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.query_execution_id {
-            next.query_execution_id.clone_from(value);
-        }
-        if let Some(value) = &self.result {
-            next.result.clone_from(value);
-        }
-        if let Some(value) = &self.query_error {
-            next.query_error.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<JackResultsWindowTransient> for JackResultsWindowTransientDiff {}
+
+impl protocol::ColdMutationDiff<JackResultsWindowTransient> for JackResultsWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.query_execution_id.is_some() {
             self.query_execution_id = other.query_execution_id;
@@ -55,17 +44,36 @@ impl protocol::MutationDiff<JackResultsWindowTransient> for JackResultsWindowTra
             self.query_error = other.query_error;
         }
     }
+
+    fn apply(&self, unpublished: &mut JackResultsWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.query_execution_id {
+            next.query_execution_id.clone_from(value);
+        }
+        if let Some(value) = &self.result {
+            next.result.clone_from(value);
+        }
+        if let Some(value) = &self.query_error {
+            next.query_error.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<JackResultsWindowTransient> for JackResultsWindowTransientDiff {
+    fn is_empty(&self) -> bool {
+        self.query_execution_id.is_none() && self.result.is_none() && self.query_error.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<JackResultsWindowTransient> for JackResultsWindowTransientDiff {
     fn inverse(&self, base: &JackResultsWindowTransient) -> Self {
         Self {
             query_execution_id: self.query_execution_id.as_ref().map(|_| base.query_execution_id.clone()),
             result: self.result.as_ref().map(|_| base.result.clone()),
             query_error: self.query_error.as_ref().map(|_| base.query_error.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.query_execution_id.is_none() && self.result.is_none() && self.query_error.is_none()
     }
 }

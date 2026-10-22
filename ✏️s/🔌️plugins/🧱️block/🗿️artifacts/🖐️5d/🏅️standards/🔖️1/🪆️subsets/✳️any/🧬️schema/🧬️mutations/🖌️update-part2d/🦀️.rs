@@ -29,6 +29,12 @@ pub fn update_part_2d<Op: From<crate::update_part_2d::UpdatePart2d>>(new_shape: 
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart2d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_2d::UpdatePart2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-2d", kind: "update-part2d", record: "UpdatedPart2d" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update part 2D presentation", "2D-Darstellung des Bauteils aktualisieren")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for UpdatePart2d where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_2d::UpdatePart2d> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::update_part_2d::diff::diff(self, base)
     }
@@ -38,9 +44,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart2d where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update part 2D presentation", "2D-Darstellung des Bauteils aktualisieren")
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -42,7 +42,7 @@ test("the repository contract admits exactly the decisions the independent schem
 
 test("workspace policy refusals carry the physical reason and replayable names carry none", () => {
   for (const row of corpus.policy) {
-    const target: any = api.targetPolicy(row.name, { cache: row.authored === false ? false : undefined, ...structuredClone(row.target ?? {}), options: { command: "bun ./📜️script.ts " + row.name, ...(row.target as any)?.options } });
+    const target: any = api.targetPolicy(row.name, { cache: row.authored === false ? false : undefined, ...structuredClone(row.target ?? {}), options: { command: "repo ./📜️script.ts " + row.name, ...(row.target as any)?.options } });
     expect(target.cache, row.name).toBe(row.cache);
     expect(target.continuous === true, row.name).toBe(row.continuous === true);
     expect(decisionOf(target), row.name).toEqual(row.decision);
@@ -70,6 +70,11 @@ test("the emoji prefix of a target name never hides it from its class", () => {
 
 test("native targets run tests by contract, by name or through the Cargo test driver", () => {
   for (const row of corpus.nativeRunsTests) expect(api.nativeTargetRunsTestsV1(row.name, row.execution ?? undefined, row.commandSources), row.id).toBe(row.expect);
+});
+
+test("a command closure is native only when it reaches a declared native driver", async () => {
+  const assembly = await import("../../🧱️project-assembly/🟨️.mjs");
+  for (const row of corpus.nativeDrivers) expect(assembly.reachesNativeCommandDriverV1(row.sources), row.id).toBe(row.expect);
 });
 
 test("generated shared command inputs never count as authored native inputs", () => {

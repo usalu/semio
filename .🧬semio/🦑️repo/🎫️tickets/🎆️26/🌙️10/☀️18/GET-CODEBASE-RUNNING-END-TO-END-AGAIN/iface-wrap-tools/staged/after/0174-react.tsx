@@ -1,225 +1,137 @@
-// #region 🧲️Header
-// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/📖️stories/🧪️.story.tsx
-// Specs: Host the framework renderer's `InkCanvasHost` with zero WASM engine — the whiteboard-style ink
-// surface (pointer gestures, hit-testing, resize handles) is implemented entirely in React/DOM (`framework/
-// renderer/react/index.tsx`), so a story-local reducer over `InkCanvasEvent`s is enough for real interaction.
-// Summary: `applyStoryInkEvents` mirrors `applyEventsLocal`'s operation vocabulary (`addBlock`/`updateBlock`/
-// `removeBlock`/`putAsset`/`setCamera`) that a real plugin's `inkApplyEvents` handler would apply; the reducer
-// also handles the framework `interactionSelect`/`interactionHover` actions the host publishes.
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲️Header
+/** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */
+import { useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
+import { useLabel } from "@semio-tech/ui-react";
+import type { InkBounds, InkTableItem, InkTextItem, InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
+import { inkHtmlToParagraphs, inkParagraphsToHtml } from "../🌳️ink-document-ops/🟦️.ts";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useMemo, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
-
-import { InkCanvasHost } from "@semio-tech/framework-renderer-react";
-import type { InkCanvasEvent, InkDocument, InkItem } from "@semio-tech/framework-renderer-react";
-import { inkCanvasActions } from "@semio-tech/framework";
-import type { ActionDescriptor, InkCanvasScene, UiComponentSceneNode } from "@semio-tech/framework";
-
-//#region Fixtures
-const STORY_INK_DOCUMENT: InkDocument = {
-  schema: "ink.document",
-  id: "story-ink-doc",
-  camera: { x: 0, y: 0, zoom: 1 },
-  gridVisible: true,
-  gridSpacing: 24,
-  blocks: [
-    {
-      id: "text-1",
-      interactionId: "ink-story-block:text-1",
-      kind: "text",
-      name: "Heading",
-      x: 40,
-      y: 40,
-      width: 220,
-      height: 48,
-      visible: true,
-      locked: false,
-      paragraphs: [{ runs: [{ text: "Design notes", bold: true }] }],
-      fontSize: 20,
-      fontWeight: "bold",
-      align: "left",
-    },
-    {
-      id: "stroke-1",
-      interactionId: "ink-story-block:stroke-1",
-      kind: "stroke",
-      name: "Sketch",
-      x: 0,
-      y: 0,
-      width: 240,
-      height: 160,
-      visible: true,
-      locked: false,
-      points: [
-        [60, 140],
-        [120, 180],
-        [180, 140],
-        [220, 200],
-      ],
-      strokeWidth: 3,
-      color: [0.4, 0.7, 1, 1],
-    },
-    {
-      id: "table-1",
-      interactionId: "ink-story-block:table-1",
-      kind: "table",
-      name: "Parts",
-      x: 60,
-      y: 240,
-      width: 240,
-      height: 100,
-      visible: true,
-      locked: false,
-      columns: ["Item", "Qty"],
-      rows: [
-        [{ content: "Bolt" }, { content: "12" }],
-        [{ content: "Nut" }, { content: "12" }],
-      ],
-    },
-  ] satisfies readonly InkItem[],
-};
-//#endregion Fixtures
-
-//#region Reducer
-type StoryInkState = { readonly document: InkDocument; readonly selection: readonly string[]; readonly hoveredId: string | null };
-
-function storyInteractionItem(block: InkItem): InkItem {
-  const interactionId = `ink-story-block:${block.id}`;
-  return block.kind === "group" ? { ...block, interactionId, children: block.children.map(storyInteractionItem) } : { ...block, interactionId };
-}
-
-/** ✍️ Story-local mirror of `applyEventsLocal` (`framework/os/renderer/js/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
-function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
-  let blocks = document.blocks;
-  let next = document;
-  for (const event of events) {
-    switch (event.operation) {
-      case "addBlock":
-        blocks = [...blocks, storyInteractionItem(event.block)];
-        break;
-      case "updateBlock":
-        blocks = blocks.map((block) => (block.id === event.blockId ? storyInteractionItem(event.block) : block));
-        break;
-      case "removeBlock":
-        blocks = blocks.filter((block) => block.id !== event.blockId);
-        break;
-      case "putAsset":
-        next = { ...next, assets: { ...(next.assets ?? {}), [event.key]: event.asset } };
-        break;
-      case "setCamera":
-        next = { ...next, camera: event.camera };
-        break;
-    }
-  }
-  return { ...next, blocks };
-}
-
-/** 🤏️ Story-local mirror of the plugin's `drag-blocks` leaf: every named block and its whole subtree offset by the drag. */
-function dragStoryBlocks(blocks: readonly InkItem[], ids: readonly string[], dx: number, dy: number, inside = false): InkItem[] {
-  return blocks.map((block) => {
-    const moved = inside || ids.includes(block.id);
-    const children = block.kind === "group" ? { children: dragStoryBlocks(block.children, ids, dx, dy, moved) } : {};
-    return moved ? { ...block, ...children, x: block.x + dx, y: block.y + dy } : { ...block, ...children };
-  });
-}
-
-/** ✍️ Story-local mirror of the app event reducer plus framework interaction projection: a drag record lands at its
- * commit (or as a one-shot), the way the plugin's ink tool publishes it. */
-function reduceStoryInkAction(state: StoryInkState, descriptor: ActionDescriptor): StoryInkState {
-  const args = (descriptor.args ?? {}) as Record<string, unknown>;
-  switch (descriptor.action) {
-    case inkCanvasActions.applyEvents: {
-      const events = typeof args.eventsJson === "string" ? (JSON.parse(args.eventsJson) as readonly InkCanvasEvent[]) : [];
-      const gesture = typeof args.gestureJson === "string" && args.phase !== "stream" ? (JSON.parse(args.gestureJson) as { readonly kind: string; readonly ids: readonly string[]; readonly dx: number; readonly dy: number }) : null;
-      const applied = applyStoryInkEvents(state.document, events);
-      const document = gesture?.kind === "drag" ? { ...applied, blocks: dragStoryBlocks(applied.blocks, gesture.ids, gesture.dx, gesture.dy) } : applied;
-      const selectIds = args.selectIds;
-      const selection = Array.isArray(selectIds) ? selectIds.filter((id): id is string => typeof id === "string") : state.selection;
-      return { ...state, document, selection };
-    }
-    case "interactionSelect": {
-      const targets = typeof args.targets === "string" ? (JSON.parse(args.targets) as readonly { readonly id?: unknown }[]) : [];
-      const ids = targets.flatMap((target) => (typeof target.id === "string" && target.id.startsWith("ink-story-block:") ? [target.id.slice("ink-story-block:".length)] : []));
-      const selection = args.merge === "additive" ? [...new Set([...state.selection, ...ids])] : ids;
-      return { ...state, selection };
-    }
-    case inkCanvasActions.setCamera: {
-      const camera = args.camera as InkDocument["camera"] | undefined;
-      return camera ? { ...state, document: { ...state.document, camera } } : state;
-    }
-    case "interactionHover": {
-      const targets = typeof args.targets === "string" ? (JSON.parse(args.targets) as readonly { readonly id?: unknown }[]) : [];
-      const id = targets[0]?.id;
-      return { ...state, hoveredId: typeof id === "string" && id.startsWith("ink-story-block:") ? id.slice("ink-story-block:".length) : null };
-    }
-    default:
-      return state;
-  }
-}
-//#endregion Reducer
-
-//#region SceneNode
-const STORY_INK_CONTROLLER_ID = "ink-canvas-story";
-
-function buildStoryInkScene(state: StoryInkState, interactive: boolean, viewMode: string): InkCanvasScene {
-  return {
-    documentJson: JSON.stringify(state.document),
-    selectionJson: JSON.stringify(state.selection),
-    hoveredId: state.hoveredId ?? undefined,
-    activeUtility: "selectDirect",
-    viewMode,
-    interactive,
-    interactionDomain: { id: "ink-story-blocks", granularityId: "block" },
+//#region 🔖️InkCanvasHost
+//#region Overlays
+export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { readonly block: InkTextItem; readonly screenBounds: InkBounds; readonly onCommit: (paragraphs: readonly InkTextParagraph[]) => void; readonly onCancel: () => void }) {
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  const linkLabel = useLabel("ui.ink.link");
+  const linkUrlPromptLabel = useLabel("ui.ink.linkUrlPrompt");
+  const applyCommand = (command: string, value?: string) => {
+    editorRef.current?.focus();
+    document.execCommand(command, false, value);
   };
-}
-//#endregion SceneNode
-
-//#region StoryHost
-function InkCanvasStoryHost({ interactive, viewMode }: { readonly interactive: boolean; readonly viewMode: string }): ReactElement {
-  const [state, setState] = useState<StoryInkState>({ document: STORY_INK_DOCUMENT, selection: [], hoveredId: null });
-
-  const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => reduceStoryInkAction(current, descriptor));
-  }, []);
-
-  const node: UiComponentSceneNode = useMemo(
-    () => ({ type: "componentScene", surfaceId: "ink-canvas.story.overview", controllerId: STORY_INK_CONTROLLER_ID, componentKind: "ink-canvas", inkCanvas: buildStoryInkScene(state, interactive, viewMode) }),
-    [state, interactive, viewMode],
-  );
-  const debug = useMemo(() => JSON.stringify({ blockCount: state.document.blocks.length, selection: state.selection, hoveredId: state.hoveredId, camera: state.document.camera }), [state]);
-
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+    };
+    editor.addEventListener("keydown", onKeyDown);
+    return () => editor.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <InkCanvasHost node={node} onAction={onAction} />
+    <div className="absolute z-30" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+      <div className="bg-background/95 mb-1 flex gap-1 rounded border p-1 shadow-sm">
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("bold");
+          }}
+        >
+          B
+        </button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs italic"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("italic");
+          }}
+        >
+          I
+        </button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs underline"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("underline");
+          }}
+        >
+          U
+        </button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            const url = window.prompt(linkUrlPromptLabel);
+            if (url) applyCommand("createLink", url);
+          }}
+        >
+          {linkLabel}
+        </button>
       </div>
-      <pre data-testid="ink-canvas-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
-        {debug}
-      </pre>
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        className="text-foreground bg-background h-[calc(100%-2rem)] w-full overflow-auto rounded border p-2 outline-none"
+        style={{ fontSize: block.fontSize, fontWeight: block.fontWeight, textAlign: block.align }}
+        dangerouslySetInnerHTML={{ __html: inkParagraphsToHtml(block.paragraphs) }}
+        onBlur={() => {
+          if (!editorRef.current) return;
+          onCommit(inkHtmlToParagraphs(editorRef.current));
+        }}
+      />
     </div>
   );
 }
-//#endregion StoryHost
 
-const meta = {
-  title: "🛠️framework🔌️hosts/InkCanvasHost",
-  component: InkCanvasStoryHost,
-  parameters: { layout: "fullscreen" },
-  tags: ["autodocs"],
-} satisfies Meta<typeof InkCanvasStoryHost>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-/** ✍️ A text heading, a sketch stroke, and a table block — direct-select, drag, pan (middle-drag or alt-drag), and pencil/eraser utilities all round-trip through `inkApplyEvents`. */
-export const Editable: Story = {
-  args: { interactive: true, viewMode: "edit" },
-};
-
-/** 🔒️ `interactive: false` + `viewMode: "navigator"` — the read-only preview path (pointer gestures are gated off, resize handles never show). */
-export const NavigatorPreview: Story = {
-  args: { interactive: false, viewMode: "navigator" },
-};
+export function InkTableCellEditorOverlay({
+  block,
+  row,
+  col,
+  screenBounds,
+  onCommit,
+  onCancel,
+}: {
+  readonly block: InkTableItem;
+  readonly row: number;
+  readonly col: number;
+  readonly screenBounds: InkBounds;
+  readonly onCommit: (content: string, advance?: boolean) => void;
+  readonly onCancel: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+  return (
+    <input
+      ref={inputRef}
+      className="bg-background ring-primary absolute z-30 rounded border px-2 py-1 text-sm ring-2 outline-none"
+      style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}
+      defaultValue={block.rows[row]?.[col]?.content ?? ""}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onCancel();
+        }
+        if (event.key === "Enter" || event.key === "Tab") {
+          event.preventDefault();
+          onCommit(event.currentTarget.value, true);
+        }
+      }}
+      onBlur={(event) => onCommit(event.currentTarget.value)}
+    />
+  );
+}
+//#endregion Overlays
+//#endregion 🔖️InkCanvasHost

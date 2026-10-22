@@ -78,7 +78,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_value::DslValue::as_str).expect("outcome carries a status");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let refused = produced.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
@@ -97,7 +97,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().materials.is_some(), "create-material/appends-an-9fdced: the created alloy must surface in the materials delta");
     assert!(outcome.diff().solids.is_none() && outcome.diff().elements.is_none(), "create-material/appends-an-9fdced: no consumer collection may be touched when a material is coined");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

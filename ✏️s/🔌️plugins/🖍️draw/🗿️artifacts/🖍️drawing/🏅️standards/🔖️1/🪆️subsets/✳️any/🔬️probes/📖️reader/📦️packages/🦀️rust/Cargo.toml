@@ -1,3 +1,4 @@
+cargo-features = [ "trim-paths" ]
 # 🧭️ Own workspace root. The repository's root Cargo.toml is a shared, leased manifest that concurrent
 # sessions edit, and this crate must also stay OUT of the plugin's dependency graph: it links no
 # repository crate at all, only the one approved third-party reader. That isolation is deliberate — it

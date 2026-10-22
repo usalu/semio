@@ -847,7 +847,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -892,7 +892,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -939,7 +939,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-vertex-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-vertex-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -979,7 +979,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-vertex-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-vertex-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1026,7 +1026,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1066,7 +1066,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-texcoord-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1113,7 +1113,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-normal-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-normal-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1153,7 +1153,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-normal-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-normal-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1200,7 +1200,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only insert-face-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only insert-face-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1240,7 +1240,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only insert-face-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only insert-face-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1287,7 +1287,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-face-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-face-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1327,7 +1327,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-face-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-face-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1374,7 +1374,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-face-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-face-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1414,7 +1414,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-face-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-face-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1461,7 +1461,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-group-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-group-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1508,7 +1508,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-group-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-group-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1548,7 +1548,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-group-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-group-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1595,7 +1595,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-object-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-object-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1642,7 +1642,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-object-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-object-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1682,7 +1682,7 @@
         "packageVersion": "4",
         "engineFamily": "tobj",
         "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-object-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only remove-object-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1733,7 +1733,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -1781,7 +1781,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -1829,7 +1829,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -1877,7 +1877,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -1925,7 +1925,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -1973,7 +1973,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -2021,7 +2021,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -2069,7 +2069,7 @@
         "packageVersion": "0.182.0",
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
@@ -2101,7 +2101,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-import"
       ],
@@ -2155,7 +2155,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-project"
       ],
@@ -2209,7 +2209,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-compare"
       ],
@@ -2263,7 +2263,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-document-import"
       ],
@@ -2293,7 +2293,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-document-project"
       ],
@@ -2361,7 +2361,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts",
         "obj-document-compare"
       ],

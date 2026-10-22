@@ -1,3 +1,4 @@
+import "./📦️document-size/🟦️.ts";
 /** 🕰️ Contract: many agents edit different projects of one folder while the graph is read, verified and published without any of them waiting for a whole-workspace rebuild. An edit in one project refreshes exactly its owners, never yields a stale graph for that project, a reader never sees a torn generation, concurrent writers coalesce under one builder, the exclusive hold of the facts resource is bounded to the pointer swap, and a graph policy decides who may wait. Every expectation is produced by the independent Python model in `🐍️oracle.py`. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -75,7 +76,7 @@ test("an edit outside a closure neither blocks nor is refreshed for it; an edit 
   expect(rows.some(path=>/^pkg\/[def]\/src/u.test(path))).toBe(false);expect(rows.some(path=>/^pkg\/[abc]\/src/u.test(path))).toBe(true);expect(world.log.length).toBe(1);
   await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:'import "@syn/c";\nimport "@syn/f";\nexport const v=3;\n'}]);
   const dirty=await world.refreshClosure(["a"]);
-  expect(dirty.built).toBe(true);expect(world.log.at(-1)!.full).toEqual(["b","e"]);expect([...dirty.names].sort()).toEqual(["a","b","c","f"]);
+  expect(dirty.built).toBe(true);expect(world.log.at(-1)!.full).toEqual(["b"]);expect([...dirty.names].sort()).toEqual(["a","b","c","f"]);
   const graph:any=await world.graph(dirty.current,[...dirty.names]);expect(graph.dependencies.map((edge:any)=>edge.source+">"+edge.target).sort()).toEqual(["a>b","b>c","b>f"]);
  }finally{clean(dir);}
 },30000);
@@ -464,3 +465,27 @@ test("the manifest stamps the implementation of its builder, a generation of ano
  expect(reborn.built).toBe(true);expect(state.log).toEqual(["cold","cold"]);expect(reborn.current.manifest!.implementation).toBe(sha("impl-b"));
  await expect(createGenerationStoreV1({root:"/memory/other",fs:createMemoryFilePort().port,resources:{facts:"f"},holds:async()=>true}).refresh(options("not-a-digest"))).rejects.toThrow();
 });
+
+test("a star neighbor admits every owner of the generation and an unknown root is refused",async()=>{
+ const memory=createMemoryFilePort(),membership=async()=>({digest:sha("m"),frontier:createFrontierV1({directories:[],members:[],capturedAt:1}),changes:[] as never[]});
+ const compute=async()=>({owners:["a","b","c","d"].map(name=>({name,root:name,kind:"project" as const,node:{name,root:name,targets:{}},edges:name==="d"?[{source:"d",target:"a"}]:[],targets:[],rows:[]})),env:{digest:sha("env"),rows:[]},global:{},replaceTags:[]});
+ const store=createGenerationStoreV1({root:"/memory/gen",fs:memory.port,resources:{facts:"f"},holds:async()=>true}),built=await store.refresh({identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute:compute as never});
+ const neighbors=(fragment:{name?:string})=>fragment.name==="b"?["*"]:[];
+ expect([...await store.closureOf(built.current,["b"],{neighbors:(fragment:any)=>neighbors({name:fragment.name})})].sort()).toEqual(["a","b","c","d"]);
+ expect([...await store.closureOf(built.current,["a"],{neighbors:(fragment:any)=>neighbors({name:fragment.name})})].sort()).toEqual(["a"]);
+ expect([...await store.closureOf(built.current,["d"])].sort()).toEqual(["a","d"]);
+ await expect(store.closureOf(built.current,["zz"])).rejects.toMatchObject({code:"GENERATION_UNKNOWN_OWNER"});
+});
+
+test("a project that enters the closure through a build is verified in the same call",async()=>{
+ const dir=scratch();
+ try{
+  const files:Record<string,string>={};
+  for(const[name,imports]of[["a",["@syn/b"]],["b",[]],["f",[]],["g",[]]] as [string,string[]][])files[`pkg/${name}/project.json`]=JSON.stringify({name,package:`@syn/${name}`,uses:[]}),files[`pkg/${name}/src/index.ts`]=imports.map(spec=>`import "${spec}";`).join("\n")+"\nexport const v=1;\n";
+  await seed(dir,files);const world=createWorld(dir);await world.refresh();
+  await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:'import "@syn/f";\nexport const v=2;\n'},{op:"write",path:"pkg/f/src/index.ts",content:"export const v=9;\n"},{op:"write",path:"pkg/g/src/index.ts",content:"export const v=7;\n"}]);
+  const result=await world.refreshClosure(["a"]);
+  expect(result.built).toBe(true);expect([...result.names].sort()).toEqual(["a","b","f"]);expect(world.log.map(row=>row.full)).toEqual([["a","b","f","g"],["b"],["f"]]);
+  const graph:any=await world.graph(result.current,[...result.names]);expect(graph.projects.f.sources[0].sha256).toBe(sha("export const v=9;\n"));
+ }finally{clean(dir);}
+},30000);

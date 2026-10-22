@@ -1,0 +1,870 @@
+{
+ "version": 1,
+ "chains": [
+  {
+   "name": "a plain use",
+   "source": "use crate::a::b;",
+   "expected": [
+    [
+     "a",
+     "b"
+    ]
+   ]
+  },
+  {
+   "name": "a group with a nested path",
+   "source": "use crate::a::{b, c::d};",
+   "expected": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "a",
+     "c",
+     "d"
+    ]
+   ]
+  },
+  {
+   "name": "a group right after crate",
+   "source": "use crate::{a, b::c};",
+   "expected": [
+    [
+     "a"
+    ],
+    [
+     "b",
+     "c"
+    ]
+   ]
+  },
+  {
+   "name": "nested groups",
+   "source": "use crate::a::{b::{c, d}, e};",
+   "expected": [
+    [
+     "a",
+     "b",
+     "c"
+    ],
+    [
+     "a",
+     "b",
+     "d"
+    ],
+    [
+     "a",
+     "e"
+    ]
+   ]
+  },
+  {
+   "name": "expression paths",
+   "source": "fn f() { crate::a::g(); let _ = crate::h; }",
+   "expected": [
+    [
+     "a",
+     "g"
+    ],
+    [
+     "h"
+    ]
+   ]
+  },
+  {
+   "name": "extern crate is not a path",
+   "source": "extern crate alloc;\nuse foo::crate::x;",
+   "expected": []
+  },
+  {
+   "name": "a glob keeps its parent chain",
+   "source": "use crate::a::*;",
+   "expected": [
+    [
+     "a"
+    ]
+   ]
+  },
+  {
+   "name": "an alias keeps the path",
+   "source": "use crate::a::b as c;",
+   "expected": [
+    [
+     "a",
+     "b"
+    ]
+   ]
+  },
+  {
+   "name": "comments and strings are not paths",
+   "source": "// crate::a::b\nlet s = \"crate::x::y\";",
+   "expected": []
+  },
+  {
+   "name": "two paths in one call",
+   "source": "crate::a::b::c(crate::d::e)",
+   "expected": [
+    [
+     "a",
+     "b",
+     "c"
+    ],
+    [
+     "d",
+     "e"
+    ]
+   ]
+  },
+  {
+   "name": "a path inside a type",
+   "source": "fn f(x: crate::m::T) -> crate::n::U {}",
+   "expected": [
+    [
+     "m",
+     "T"
+    ],
+    [
+     "n",
+     "U"
+    ]
+   ]
+  },
+  {
+   "name": "a bare crate",
+   "source": "let c = crate;",
+   "expected": []
+  }
+ ],
+ "aliases": [
+  {
+   "name": "a used alias",
+   "source": "use crate::a::b;\nfn f() { b::c::d(); }",
+   "expected": [
+    [
+     "a",
+     "b",
+     "c",
+     "d"
+    ]
+   ]
+  },
+  {
+   "name": "a renamed alias",
+   "source": "use crate::a::b as bb;\nfn f() { bb::x(); }",
+   "expected": [
+    [
+     "a",
+     "b",
+     "x"
+    ]
+   ]
+  },
+  {
+   "name": "a glob is no alias",
+   "source": "use crate::*;\nfn f() { x::y(); }",
+   "expected": []
+  },
+  {
+   "name": "grouped aliases",
+   "source": "use crate::a::{b, c as d};\nfn f() { b::x(); d::y::z(); }",
+   "expected": [
+    [
+     "a",
+     "b",
+     "x"
+    ],
+    [
+     "a",
+     "c",
+     "y",
+     "z"
+    ]
+   ]
+  },
+  {
+   "name": "a super use is no crate alias",
+   "source": "use super::a::b;\nb::c();",
+   "expected": []
+  },
+  {
+   "name": "a one-segment target",
+   "source": "use crate::b;\nfn f() { b::c(); }",
+   "expected": [
+    [
+     "b",
+     "c"
+    ]
+   ]
+  },
+  {
+   "name": "method-like and use positions are skipped",
+   "source": "use crate::a::b;\nfn f() { x.b::c(); }\nuse b::d;",
+   "expected": []
+  },
+  {
+   "name": "no use at all",
+   "source": "fn f() { a::b(); }",
+   "expected": []
+  }
+ ],
+ "rootAlias": {
+  "source": "pub mod schema { pub use super::a::b::*; }\npub mod other { pub use crate::x::y; pub use crate::x::y; }\nmod mixed { pub use super::q; fn f() {} }\nmod withpath;\n#[path = \"p.rs\"] mod pathed { pub use super::z; }\nmod empty {}\nmod nest { pub use super::a::b; mod inner { pub use super::a::b; } }\nmod badnest { pub use super::a::b; mod inner { pub use super::a::c; } }\n",
+  "expected": [
+   {
+    "name": "schema",
+    "targets": [
+     [
+      "a",
+      "b"
+     ]
+    ],
+    "text": "pub mod schema { pub use super::a::b::*; }",
+    "nested": []
+   },
+   {
+    "name": "other",
+    "targets": [
+     [
+      "x",
+      "y"
+     ],
+     [
+      "x",
+      "y"
+     ]
+    ],
+    "text": "pub mod other { pub use crate::x::y; pub use crate::x::y; }",
+    "nested": []
+   },
+   {
+    "name": "nest",
+    "targets": [
+     [
+      "a",
+      "b"
+     ]
+    ],
+    "text": "mod nest { pub use super::a::b; mod inner { pub use super::a::b; } }",
+    "nested": [
+     "inner"
+    ]
+   }
+  ]
+ },
+ "graphs": [
+  {
+   "name": "a chain lists dependencies first",
+   "nodes": [
+    "a",
+    "b",
+    "c"
+   ],
+   "edges": {
+    "a": [
+     "b"
+    ],
+    "b": [
+     "c"
+    ]
+   },
+   "components": [
+    [
+     "c"
+    ],
+    [
+     "b"
+    ],
+    [
+     "a"
+    ]
+   ]
+  },
+  {
+   "name": "a cycle forms one component",
+   "nodes": [
+    "a",
+    "b",
+    "c"
+   ],
+   "edges": {
+    "a": [
+     "b"
+    ],
+    "b": [
+     "a"
+    ],
+    "c": [
+     "a"
+    ]
+   },
+   "components": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "c"
+    ]
+   ]
+  },
+  {
+   "name": "a self loop is one component",
+   "nodes": [
+    "a"
+   ],
+   "edges": {
+    "a": [
+     "a"
+    ]
+   },
+   "components": [
+    [
+     "a"
+    ]
+   ]
+  },
+  {
+   "name": "disconnected nodes",
+   "nodes": [
+    "x",
+    "y"
+   ],
+   "edges": {},
+   "components": [
+    [
+     "x"
+    ],
+    [
+     "y"
+    ]
+   ]
+  },
+  {
+   "name": "nodes known only from edges are visited",
+   "nodes": [
+    "a"
+   ],
+   "edges": {
+    "a": [
+     "z"
+    ]
+   },
+   "components": [
+    [
+     "a"
+    ],
+    [
+     "z"
+    ]
+   ]
+  },
+  {
+   "name": "an empty graph",
+   "nodes": [],
+   "edges": {},
+   "components": []
+  },
+  {
+   "name": "two cycles joined by a one-way edge",
+   "nodes": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ],
+   "edges": {
+    "a": [
+     "b",
+     "c"
+    ],
+    "b": [
+     "a"
+    ],
+    "c": [
+     "d"
+    ],
+    "d": [
+     "c"
+    ]
+   },
+   "components": [
+    [
+     "a",
+     "b"
+    ],
+    [
+     "c",
+     "d"
+    ]
+   ]
+  }
+ ],
+ "qualify": [
+  {
+   "name": "a head used in a use and a call",
+   "text": "use a::b;\nfn f() { a::g(); b::h(); }",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "use crate::a::b;\nfn f() { crate::a::g(); b::h(); }"
+  },
+  {
+   "name": "an excluded head",
+   "text": "use a::b;\nfn f() { a::g(); }",
+   "modules": [
+    "a"
+   ],
+   "exclude": [
+    "a"
+   ],
+   "expected": "use a::b;\nfn f() { a::g(); }"
+  },
+  {
+   "name": "a group that follows a path continues it",
+   "text": "use std::{a::x, b};",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "use std::{a::x, b};"
+  },
+  {
+   "name": "a leading group does not",
+   "text": "use {a::x, b::y};",
+   "modules": [
+    "a",
+    "b"
+   ],
+   "exclude": [],
+   "expected": "use {crate::a::x, crate::b::y};"
+  },
+  {
+   "name": "field, macro and nested paths are not heads",
+   "text": "x.a::y();\n$a::z;\nfoo::a::w;",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "x.a::y();\n$a::z;\nfoo::a::w;"
+  },
+  {
+   "name": "only the first segment of a path",
+   "text": "a::b::c",
+   "modules": [
+    "a",
+    "b"
+   ],
+   "exclude": [],
+   "expected": "crate::a::b::c"
+  },
+  {
+   "name": "self and super paths",
+   "text": "self::a::b; super::a::c;",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "self::a::b; super::a::c;"
+  },
+  {
+   "name": "a variable named like a module",
+   "text": "let a = 1; a::f();",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "let a = 1; crate::a::f();"
+  },
+  {
+   "name": "a group inside a path group",
+   "text": "use b::{a::x};",
+   "modules": [
+    "a",
+    "b"
+   ],
+   "exclude": [],
+   "expected": "use crate::b::{a::x};"
+  },
+  {
+   "name": "mixed groups",
+   "text": "use {b::{a::x}, a::y};",
+   "modules": [
+    "a",
+    "b"
+   ],
+   "exclude": [],
+   "expected": "use {crate::b::{a::x}, crate::a::y};"
+  },
+  {
+   "name": "no modules",
+   "text": "use a::b;",
+   "modules": [],
+   "exclude": [],
+   "expected": "use a::b;"
+  },
+  {
+   "name": "an unlisted head",
+   "text": "use z::b;",
+   "modules": [
+    "a"
+   ],
+   "exclude": [],
+   "expected": "use z::b;"
+  }
+ ],
+ "super": [
+  {
+   "name": "super paths resolve against the module chain",
+   "text": "fn f() { super::a::b(); super::super::c(); }",
+   "from": 0,
+   "to": 999,
+   "excluded": [],
+   "base": [
+    "m",
+    "n"
+   ],
+   "expected": [
+    [
+     "m",
+     "a",
+     "b"
+    ],
+    [
+     "c"
+    ]
+   ]
+  },
+  {
+   "name": "more supers than modules are ignored",
+   "text": "fn f() { super::super::super::c(); }",
+   "from": 0,
+   "to": 999,
+   "excluded": [],
+   "base": [
+    "m"
+   ],
+   "expected": []
+  },
+  {
+   "name": "excluded ranges are skipped",
+   "text": "fn f() { super::a(); }",
+   "from": 0,
+   "to": 999,
+   "excluded": [
+    [
+     9,
+     20
+    ]
+   ],
+   "base": [
+    "m"
+   ],
+   "expected": []
+  },
+  {
+   "name": "a group continues the resolved chain",
+   "text": "use super::{a, b::c};",
+   "from": 0,
+   "to": 999,
+   "excluded": [],
+   "base": [
+    "m",
+    "n"
+   ],
+   "expected": [
+    [
+     "m",
+     "a"
+    ],
+    [
+     "m",
+     "b",
+     "c"
+    ]
+   ]
+  },
+  {
+   "name": "a super that follows a path is not a head",
+   "text": "x::super::a;",
+   "from": 0,
+   "to": 999,
+   "excluded": [],
+   "base": [
+    "m"
+   ],
+   "expected": []
+  },
+  {
+   "name": "the range limits the scan",
+   "text": "super::a; super::b;",
+   "from": 10,
+   "to": 999,
+   "excluded": [],
+   "base": [
+    "m",
+    "n"
+   ],
+   "expected": [
+    [
+     "m",
+     "b"
+    ]
+   ]
+  }
+ ],
+ "relative": [
+  {
+   "name": "a mixed text",
+   "text": "fn f() { a::b::c(); self::d::e(); x.y::z::w(); $m::n::o; q::r; }",
+   "expected": [
+    [
+     "a",
+     "b",
+     "c"
+    ],
+    [
+     "q",
+     "r"
+    ]
+   ]
+  },
+  {
+   "name": "a type path",
+   "text": "let v = Vec::new();",
+   "expected": [
+    [
+     "Vec",
+     "new"
+    ]
+   ]
+  },
+  {
+   "name": "keywords are not heads",
+   "text": "crate::a::b; super::c::d;",
+   "expected": []
+  },
+  {
+   "name": "one segment",
+   "text": "fn f() { a(); }",
+   "expected": []
+  },
+  {
+   "name": "an empty text",
+   "text": "",
+   "expected": []
+  }
+ ],
+ "heads": [
+  {
+   "name": "a use and calls",
+   "text": "use a::b; use c; use d as e; use {f, g::h, i as j}; k::l(); self::m(); super::n(); x.o::p(); crate::q::r();",
+   "expected": [
+    "a",
+    "c",
+    "crate",
+    "d",
+    "f",
+    "g",
+    "k",
+    "self",
+    "super"
+   ]
+  },
+  {
+   "name": "no paths",
+   "text": "let x = 1;",
+   "expected": []
+  },
+  {
+   "name": "a path with a call",
+   "text": "a::b::c();",
+   "expected": [
+    "a"
+   ]
+  },
+  {
+   "name": "self paths",
+   "text": "self::x; super::y;",
+   "expected": [
+    "self",
+    "super"
+   ]
+  },
+  {
+   "name": "a name after self that is itself a head",
+   "text": "self::x::y(); super::z::w();",
+   "expected": [
+    "self",
+    "super",
+    "x",
+    "z"
+   ]
+  }
+ ],
+ "impls": [
+  {
+   "name": "an inherent impl",
+   "text": "impl Foo {}",
+   "expected": {
+    "trait": null,
+    "self": "Foo",
+    "traitArgs": []
+   }
+  },
+  {
+   "name": "a trait impl",
+   "text": "impl Display for Foo {}",
+   "expected": {
+    "trait": "Display",
+    "self": "Foo",
+    "traitArgs": []
+   }
+  },
+  {
+   "name": "generics and where",
+   "text": "impl<T: Clone> From<Bar<T>> for Baz<T> where T: Debug {}",
+   "expected": {
+    "trait": "From",
+    "self": "Baz",
+    "traitArgs": [
+     "Bar",
+     "T"
+    ]
+   }
+  },
+  {
+   "name": "qualified paths",
+   "text": "impl fmt::Display for crate::m::Foo {}",
+   "expected": {
+    "trait": "Display",
+    "self": "Foo",
+    "traitArgs": []
+   }
+  },
+  {
+   "name": "a dyn self type",
+   "text": "impl Tr for dyn Other {}",
+   "expected": {
+    "trait": "Tr",
+    "self": "Other",
+    "traitArgs": []
+   }
+  },
+  {
+   "name": "an unsafe impl",
+   "text": "unsafe impl Send for X {}",
+   "expected": {
+    "trait": "Send",
+    "self": "X",
+    "traitArgs": []
+   }
+  },
+  {
+   "name": "a local type in the trait arguments",
+   "text": "impl<T> Trait<Local<T>> for Vec<T> {}",
+   "expected": {
+    "trait": "Trait",
+    "self": "Vec",
+    "traitArgs": [
+     "Local",
+     "T"
+    ]
+   }
+  },
+  {
+   "name": "no impl",
+   "text": "fn f() {}",
+   "expected": null
+  },
+  {
+   "name": "a closing double angle",
+   "text": "impl<T> Tr<Vec<T>> for X<Y<T>> {}",
+   "expected": {
+    "trait": "Tr",
+    "self": "X",
+    "traitArgs": [
+     "Vec",
+     "T"
+    ]
+   }
+  }
+ ],
+ "bases": [
+  {
+   "parent": "/w/crate/src",
+   "node": {
+    "name": "m",
+    "pathAttribute": null
+   },
+   "expected": "/w/crate/src/m"
+  },
+  {
+   "parent": "/w/crate/src",
+   "node": {
+    "name": "m",
+    "pathAttribute": "other"
+   },
+   "expected": "/w/crate/src/other"
+  },
+  {
+   "parent": "/w/crate/src",
+   "node": {
+    "name": "m",
+    "pathAttribute": "../up"
+   },
+   "expected": "/w/crate/up"
+  },
+  {
+   "parent": "/w",
+   "node": {
+    "name": "m",
+    "pathAttribute": "/abs"
+   },
+   "expected": "/abs"
+  }
+ ],
+ "files": [
+  {
+   "fileDir": "/w/src",
+   "inline": "/w/src/m",
+   "inFile": true,
+   "node": {
+    "name": "x",
+    "pathAttribute": "a/b.rs"
+   },
+   "expected": "/w/src/a/b.rs"
+  },
+  {
+   "fileDir": "/w/src",
+   "inline": "/w/src/m",
+   "inFile": false,
+   "node": {
+    "name": "x",
+    "pathAttribute": "a/b.rs"
+   },
+   "expected": "/w/src/m/a/b.rs"
+  },
+  {
+   "fileDir": "/w/src",
+   "inline": "/w/src/m",
+   "inFile": true,
+   "node": {
+    "name": "x",
+    "pathAttribute": null
+   },
+   "expected": null
+  },
+  {
+   "fileDir": "/w/src",
+   "inline": "/w/src/m",
+   "inFile": false,
+   "node": {
+    "name": "x",
+    "pathAttribute": null
+   },
+   "expected": null
+  }
+ ]
+}

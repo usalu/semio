@@ -21,7 +21,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🪪️identity",
-        "command": "bun ./📜️script.ts test grapheme"
+        "command": "repo ./📜️script.ts test grapheme"
       }
     }
   },

@@ -45,7 +45,7 @@ pub mod set_has_header;
 /// variant to wrap exactly one leaf payload, and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = CsvSnapshot, diff = CsvDiff, schema = "s.stdio.csv")]
+#[mutations(snapshot = CsvSnapshot, diff = CsvDiff, schema = "s.stdio.csv", reference = CsvSnapshot, reference_diff = CsvDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum CsvMutation {
     SetHasHeader(set_has_header::SetHasHeader),

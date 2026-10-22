@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyKit`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_kit::ApplyKit>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Kit(b) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyKit { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Kit(b) => <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyKit { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

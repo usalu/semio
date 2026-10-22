@@ -5,8 +5,8 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-terrain-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gisterrain-rs:verify-terrain-document-contract",
-    "verify-gis-terrain-window-config": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gisterrain-rs:verify-gis-terrain-window-config"
+    "verify-terrain-document-contract": "repo run @semio-tech/gis-gisterrain-rs:verify-terrain-document-contract",
+    "verify-gis-terrain-window-config": "repo run @semio-tech/gis-gisterrain-rs:verify-gis-terrain-window-config"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

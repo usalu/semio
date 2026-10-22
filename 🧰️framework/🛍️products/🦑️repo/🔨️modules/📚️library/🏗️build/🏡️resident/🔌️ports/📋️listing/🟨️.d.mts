@@ -1,0 +1,1 @@
+export function scanListingV1(options:{root:string;binary?:string;exclude:{rooted:readonly string[];names:readonly string[]};filter:{excluded(path:string):boolean};threads?:number}):Promise<{directories:[string,number,number][];members:[string,number][]}>;

@@ -45,7 +45,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun 📜️script.ts test-poll-input-source",
+        "command": "repo 📜️script.ts test-poll-input-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -71,7 +71,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun 📜️script.ts test-poll-input-native",
+        "command": "repo 📜️script.ts test-poll-input-native",
         "cwd": "{projectRoot}"
       }
     },
@@ -96,7 +96,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-job-exports-native",
+        "command": "repo 📜️script.ts test-job-exports-native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -121,7 +121,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test-job-exports",
+        "command": "repo 📜️script.ts test-job-exports",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -137,7 +137,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
@@ -154,7 +154,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -188,7 +188,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun 📜️script.ts test-completed-source",
+        "command": "repo 📜️script.ts test-completed-source",
         "cwd": "{projectRoot}"
       }
     },
@@ -214,7 +214,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun 📜️script.ts test-completed-native",
+        "command": "repo 📜️script.ts test-completed-native",
         "cwd": "{projectRoot}"
       }
     }

@@ -10,6 +10,7 @@ import {createNativeBuildCallerCapabilitiesV1} from "../../../../../📥️calle
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as execution from "../../🟦️.ts";
 
+const adapter=await import("../../../📜️script.ts");
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY,contract=schema.definitions.Contract.const,host=execution.bazelExecutionPlatformV1(process.platform,process.arch),here=process.cwd();
 const framework="🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",routing=framework+"/🧭️routing/🟦️.ts",typecheckPort=framework+"/🏗️build/🟦️typescript/🟦️.ts";
 const library="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",hermetic=library+"/🏗️build/🏃️execution/🔒️hermetic";
@@ -73,7 +74,7 @@ test.skipIf(!binary)("law: hermetic class members read only declared inputs and 
   install(checkout,generation);
 
   const inputs=["{projectRoot}/**/*","{workspaceRoot}/lib/**/*","{workspaceRoot}/package.json","{workspaceRoot}/🧰️framework/**/*",{env:"SEMIO_TEST_LEVEL"},{runtime:"bun --version"},{externalDependencies:["leftpad-fx","typescript"]}];
-  const target=(verb:string,outputs:string[])=>({execution:{kind:"command",command:`bun ./📜️script.ts ${verb}`,cwd:"proj"},outputs,inputs,cache:true});
+  const target=(verb:string,outputs:string[])=>({execution:{kind:"command",command:`repo ./📜️script.ts ${verb}`,cwd:"proj"},outputs,inputs,cache:true});
   const graph={version:1 as const,projects:{"@teaching/architecture-course":{name:"@teaching/architecture-course",root:"proj",targets:{test:target("test",[]),build:target("build",["{projectRoot}/dist"]),typecheck:target("typecheck",[]),"typecheck-bad":target("typecheck-bad",[]),"check-leak":target("check-leak",[]),"check-stray":target("check-stray",[]),"check-import":target("check-import",[]),"check-authority":target("check-authority",["{projectRoot}/authority.json"])}}},dependencies:[]} as any;
   process.env.SEMIO_TEST_LEVEL="quick";
   const generate=async(name:string,root:string,plan:execution.BazelExecutionPlanV1)=>{
@@ -103,7 +104,7 @@ test.skipIf(!binary)("law: hermetic class members read only declared inputs and 
    const spawn=spawns.find(row=>row.targetLabel==="//:"+label(verb))!,manifest=manifests[verb],tool=`tools/bun/${host.id}/${execution.bazelBunExecutableNameV1(host)}`,trees=[...new Set(spawn.inputs.map(input=>/^(bazel-out\/[^/]+\/bin\/m_[a-f0-9]{16})\//u.exec(input.path)?.[1]).filter((value):value is string=>value!==undefined))].map(prefix=>prefix+"/");
    expect(manifest.class,verb).toBe(verb==="typecheck"?"ts-typecheck":verb==="build"?"ts-build":"ts-test");expect(manifest.inputEnv).toEqual({SEMIO_TEST_LEVEL:"quick"});
    expect(trees.length===(verb==="typecheck"||verb==="test"||verb==="build"?1:0),`${verb} takes exactly one dependency tree`).toBe(true);
-   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...manifest.inputs.map((path:string)=>"s/"+path),"hermetic-runner.mjs",label(verb)+".json"],tool,properties:host.properties,trees}),`hermetic violations of ${verb}`).toEqual([]);
+   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...manifest.inputs.map((path:string)=>adapter.bazelSourceAliasLabelV1(path)),"hermetic-runner.mjs",label(verb)+".json"],tool,properties:host.properties,trees}),`hermetic violations of ${verb}`).toEqual([]);
    expect(manifest.inputs).toContain("proj/data/in.txt");expect(manifest.inputs).not.toContain("secret.txt");expect(manifest.inputs).toContain(hermetic+"/🚪️entry/🟦️.ts");
   }
   expect(Object.keys(manifests.test.nodeModules.find((row:any)=>row.path==="node_modules").workspace)).toEqual(["@fx/lib","@fx/proj"]);

@@ -1,7 +1,6 @@
 import { acquireCompilerCapacityLeaseV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { createHash } from "node:crypto";
-import { spawnSync } from "node:child_process";
+import { toolchainIdentityV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, type ScriptInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -12,7 +11,7 @@ import { collectArtifactFiles } from "../../../../🏃️process/📦️packages
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { acquireResourceLease } from "../../../../🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
-const dotnetState = (root: string): string => process.env.SEMIO_STYLING_DOTNET_ARTIFACTS_ROOT ?? processCacheDirectoryV1(readProcessOwnerContextV1(process.env,root),"dotnet","ui-styling",`${process.platform}-${process.arch}-${createHash("sha256").update(spawnSync("dotnet",["--version"],{encoding:"utf8"}).stdout??"").digest("hex").slice(0,12)}`,readBuildMode(process.env.SEMIO_BUILD_MODE));
+const dotnetState = (root: string): string => process.env.SEMIO_STYLING_DOTNET_ARTIFACTS_ROOT ?? processCacheDirectoryV1(readProcessOwnerContextV1(process.env,root),"dotnet","ui-styling",`${process.platform}-${process.arch}-${toolchainIdentityV1("dotnet").digest.slice(0,12)}`,readBuildMode(process.env.SEMIO_BUILD_MODE));
 
 /** 🔐️ Serializes access to the shared .NET compiler store across build processes. */
 async function withDotnetState(root: string, invocation: ScriptInvocation, action: (state: string, signal: AbortSignal, parallelism: number, control:CompilerAdmissionControl) => Promise<void>): Promise<void> {

@@ -32,6 +32,15 @@ pub fn create_representation_at<Op: From<crate::create_representation::CreateRep
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateRepresentation where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_representation::DeleteRepresentation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "representation", kind: "create-representation", record: "CreatedRepresentation" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create representation \"{}\"", self.representation.id), &format!("Repräsentation \"{}\" erstellen", self.representation.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.representation.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for CreateRepresentation where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_representation::DeleteRepresentation> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::create_representation::diff::diff(self, base)
     }
@@ -41,12 +50,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateRepresentation wh
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create representation \"{}\"", self.representation.id), &format!("Repräsentation \"{}\" erstellen", self.representation.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.representation.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

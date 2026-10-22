@@ -41,7 +41,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-viewpoint-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-viewpoint-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -91,7 +91,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-viewpoint-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-viewpoint-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -134,7 +134,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-viewpoint-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-viewpoint-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -184,7 +184,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-viewpoint-camera-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-viewpoint-camera-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -234,7 +234,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-viewpoint-components-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-viewpoint-components-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {

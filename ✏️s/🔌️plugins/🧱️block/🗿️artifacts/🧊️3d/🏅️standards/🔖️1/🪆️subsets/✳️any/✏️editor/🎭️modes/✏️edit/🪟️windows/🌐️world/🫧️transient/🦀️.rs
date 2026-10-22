@@ -85,28 +85,36 @@ pub struct Block3dWorldWindowTransientDiff {
 }
 
 impl protocol::DiffAlgebra<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
-    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Self {
-        Self {
-            brush_preview: self.brush_preview.as_ref().map(|_| Block3dBrushPreviewSet { value: base.brush_preview.clone() }),
-        }
-    }
     fn is_empty(&self) -> bool {
         self.brush_preview.is_none()
     }
 }
 
-impl protocol::MutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
-    fn apply(&self, base: &Block3dWorldWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dWorldWindowTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.brush_preview {
-            next.brush_preview.clone_from(&value.value);
+impl protocol::ColdDiffAlgebra<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
+    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Self {
+        Self {
+            brush_preview: self.brush_preview.as_ref().map(|_| Block3dBrushPreviewSet { value: base.brush_preview.clone() }),
         }
-        Ok(next)
     }
+}
+
+impl protocol::MutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {}
+
+impl protocol::ColdMutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
     fn absorb(&mut self, later: Self) {
         if later.brush_preview.is_some() {
             self.brush_preview = later.brush_preview;
         }
+    }
+
+    fn apply(&self, unpublished: &mut Block3dWorldWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.brush_preview {
+            next.brush_preview.clone_from(&value.value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
@@ -131,8 +139,8 @@ impl semio_framework_plugin::WindowTransientOwner for Block3dWorldWindowTransien
     type Mutation = Block3dWorldWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preview_footprint, preview_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

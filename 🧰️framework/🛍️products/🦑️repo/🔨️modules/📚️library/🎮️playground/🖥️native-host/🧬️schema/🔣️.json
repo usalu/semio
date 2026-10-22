@@ -170,6 +170,43 @@
           "type": "boolean"
         }
       }
+    },
+    "NativeHostMessagesV1": {
+      "description": "The refusal of an executable host that disagrees with its authored producer, per language; {placeholders} are filled by the admission.",
+      "const": {
+        "languages": [
+          "en",
+          "de"
+        ],
+        "fields": {
+          "en": {
+            "package": "package",
+            "project": "project",
+            "binary": "binary",
+            "target": "target",
+            "modes": "modes"
+          },
+          "de": {
+            "package": "Paket",
+            "project": "Projekt",
+            "binary": "Programm",
+            "target": "Ziel",
+            "modes": "Modi"
+          }
+        },
+        "texts": {
+          "en": {
+            "mismatch": "Native host does not match its authored producer{context}: declared project {project} at {cratePath}; {differences}.",
+            "difference": "{field}: declared \"{declared}\", authored {authored}",
+            "none": "none"
+          },
+          "de": {
+            "mismatch": "Der native Host passt nicht zu seinem verfassten Erzeuger{context}: deklariertes Projekt {project} unter {cratePath}; {differences}.",
+            "difference": "{field}: deklariert \"{declared}\", verfasst {authored}",
+            "none": "keine"
+          }
+        }
+      }
     }
   },
   "$ref": "#/$defs/NativeHostV1"

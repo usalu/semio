@@ -30,7 +30,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "paint-layer", kind: "edit-paint-layer", record: "EditedPaintLayer" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id), &format!("Auf Ebene {} von Objekt \"{}\" malen", self.layer_index, self.object_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.object_id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LowpolySnapshot, Op> for EditPaintLayer
+where
+    Op: protocol::ColdMutation<LowpolySnapshot, ReferenceDiff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::edit_paint_layer::EditPaintLayer>,
+{
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<LowpolySnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id), &format!("Auf Ebene {} von Objekt \"{}\" malen", self.layer_index, self.object_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.object_id.clone()]
-    }
 }
 //#endregion 🔖️Payload

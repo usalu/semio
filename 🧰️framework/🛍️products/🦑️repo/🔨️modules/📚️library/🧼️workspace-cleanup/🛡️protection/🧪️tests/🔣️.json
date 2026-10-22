@@ -1,0 +1,1389 @@
+{
+ "version": 1,
+ "constants": {
+  "repoDir": "🦑️repo",
+  "ticketsDir": "🎫️tickets",
+  "buildNames": [
+   "build",
+   "dist",
+   "out",
+   "target"
+  ],
+  "cacheDir": "⚡️cache",
+  "generated": [
+   "🗑️generated",
+   "🗑️temp",
+   "🧾️runs",
+   "🧪️runs",
+   "🧾️taxonomy-transaction"
+  ],
+  "probePrefixes": [
+   "🧪️purity-",
+   "🧪️cli-",
+   "🧪️inventory-"
+  ],
+  "incrementalMaxBytes": 1073741824,
+  "nativeBacking": [
+   "fixed.dir",
+   "fixed.dmg"
+  ],
+  "manifest": "🎫️ticket.json"
+ },
+ "nodes": [
+  {
+   "path": "src",
+   "kind": "directory"
+  },
+  {
+   "path": "src/sub",
+   "kind": "directory"
+  },
+  {
+   "path": "src/other",
+   "kind": "directory"
+  },
+  {
+   "path": "src/other/c.txt",
+   "kind": "file",
+   "text": "c"
+  },
+  {
+   "path": "src/a.txt",
+   "kind": "file",
+   "text": "a"
+  },
+  {
+   "path": "src/sub/b.txt",
+   "kind": "file",
+   "text": "b"
+  },
+  {
+   "path": "tickets",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"open\"}"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/notes.md",
+   "kind": "file",
+   "text": "n"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🗑️generated",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🗑️generated/x.txt",
+   "kind": "file",
+   "text": "x"
+  },
+  {
+   "path": "tickets/26/10/21/DONE",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"closed\",\"title\":\"t\"}"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/out.md",
+   "kind": "file",
+   "text": "o"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/🗑️generated",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/🗑️generated/y.txt",
+   "kind": "file",
+   "text": "y"
+  },
+  {
+   "path": "tickets/26/10/21/NOMANIFEST",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/NOMANIFEST/f.md",
+   "kind": "file",
+   "text": "f"
+  },
+  {
+   "path": "tickets/26/10/21/BADJSON",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/BADJSON/🎫️ticket.json",
+   "kind": "file",
+   "text": "{"
+  },
+  {
+   "path": "tickets/26/10/21/ARRAY",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/ARRAY/🎫️ticket.json",
+   "kind": "file",
+   "text": "[\"closed\"]"
+  },
+  {
+   "path": "tickets/26/10/21/NOSTATUS",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/NOSTATUS/🎫️ticket.json",
+   "kind": "file",
+   "text": "{}"
+  },
+  {
+   "path": "tickets/26/10/21/DIRMANIFEST",
+   "kind": "directory"
+  },
+  {
+   "path": "tickets/26/10/21/DIRMANIFEST/🎫️ticket.json",
+   "kind": "directory"
+  },
+  {
+   "path": "src2",
+   "kind": "directory"
+  },
+  {
+   "path": "src2/ln",
+   "kind": "symlink"
+  },
+  {
+   "path": "linkdir",
+   "kind": "symlink"
+  },
+  {
+   "path": "src3",
+   "kind": "directory",
+   "childrenUnreadable": true
+  },
+  {
+   "path": "src3/inner.txt",
+   "kind": "file",
+   "text": ""
+  },
+  {
+   "path": "imgs",
+   "kind": "directory"
+  },
+  {
+   "path": "imgs/vm",
+   "kind": "directory"
+  },
+  {
+   "path": "imgs/vm/image.json",
+   "kind": "file",
+   "text": "{}"
+  },
+  {
+   "path": "imgs/vm/fixed.dmg",
+   "kind": "file",
+   "text": "dmg"
+  },
+  {
+   "path": ".cache",
+   "kind": "directory"
+  },
+  {
+   "path": ".cache/b",
+   "kind": "directory"
+  },
+  {
+   "path": ".cache/b/t",
+   "kind": "directory"
+  },
+  {
+   "path": ".cache/b/t/x",
+   "kind": "file",
+   "text": "x"
+  }
+ ],
+ "protection": [
+  {
+   "name": "a plain source directory is removable",
+   "candidate": "src",
+   "allowed": null,
+   "expected": [],
+   "environment": false
+  },
+  {
+   "name": "a plain file is removable",
+   "candidate": "src/a.txt",
+   "allowed": null,
+   "expected": [],
+   "environment": false
+  },
+  {
+   "name": "the workspace root itself is refused",
+   "candidate": ".",
+   "allowed": null,
+   "expected": [
+    "."
+   ],
+   "environment": false
+  },
+  {
+   "name": "a path outside the workspace is refused",
+   "candidate": "../outside",
+   "allowed": null,
+   "expected": [
+    "../outside"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a symlink target is refused",
+   "candidate": "linkdir",
+   "allowed": null,
+   "expected": [
+    "linkdir"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a missing path is refused",
+   "candidate": "nothing",
+   "allowed": null,
+   "expected": [
+    "nothing"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a file used as a directory ancestor is refused",
+   "candidate": "src/a.txt/zzz",
+   "allowed": null,
+   "expected": [
+    "src/a.txt"
+   ],
+   "environment": false
+  },
+  {
+   "name": "an open ticket folder is protected",
+   "candidate": "tickets/26/10/21/OPEN",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/OPEN"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a file inside an open ticket protects the ticket",
+   "candidate": "tickets/26/10/21/OPEN/notes.md",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/OPEN"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a closed ticket is removable as a whole",
+   "candidate": "tickets/26/10/21/DONE",
+   "allowed": null,
+   "expected": [],
+   "environment": false
+  },
+  {
+   "name": "a file of a closed ticket is removable",
+   "candidate": "tickets/26/10/21/DONE/out.md",
+   "allowed": null,
+   "expected": [],
+   "environment": false
+  },
+  {
+   "name": "a day folder reports every non-closed ticket below it",
+   "candidate": "tickets/26/10/21",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/ARRAY",
+    "tickets/26/10/21/BADJSON",
+    "tickets/26/10/21/DIRMANIFEST",
+    "tickets/26/10/21/NOMANIFEST",
+    "tickets/26/10/21/NOSTATUS",
+    "tickets/26/10/21/OPEN"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a ticket folder without manifest is protected",
+   "candidate": "tickets/26/10/21/NOMANIFEST",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/NOMANIFEST"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a ticket manifest that is not valid JSON protects the ticket",
+   "candidate": "tickets/26/10/21/BADJSON",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/BADJSON"
+   ],
+   "environment": false
+  },
+  {
+   "name": "an array manifest is not a closed ticket",
+   "candidate": "tickets/26/10/21/ARRAY",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/ARRAY"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a manifest without status is not closed",
+   "candidate": "tickets/26/10/21/NOSTATUS",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/NOSTATUS"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a manifest that is a directory is not closed",
+   "candidate": "tickets/26/10/21/DIRMANIFEST",
+   "allowed": null,
+   "expected": [
+    "tickets/26/10/21/DIRMANIFEST"
+   ],
+   "environment": false
+  },
+  {
+   "name": "the allowed open ticket may be cleaned inside",
+   "candidate": "tickets/26/10/21/OPEN/notes.md",
+   "allowed": "tickets/26/10/21/OPEN",
+   "expected": [],
+   "environment": false
+  },
+  {
+   "name": "a symlink inside the candidate is refused",
+   "candidate": "src2",
+   "allowed": null,
+   "expected": [
+    "src2/ln"
+   ],
+   "environment": false
+  },
+  {
+   "name": "an unreadable directory is refused",
+   "candidate": "src3",
+   "allowed": null,
+   "expected": [
+    "src3"
+   ],
+   "environment": false
+  },
+  {
+   "name": "a managed storage subtree is refused",
+   "candidate": ".cache/b/t/x",
+   "allowed": null,
+   "expected": [
+    ".cache/b/t/x"
+   ],
+   "environment": true
+  },
+  {
+   "name": "an ancestor of a managed storage directory is refused",
+   "candidate": ".cache",
+   "allowed": null,
+   "expected": [
+    ".cache"
+   ],
+   "environment": true
+  },
+  {
+   "name": "a native image directory is refused",
+   "candidate": "imgs/vm",
+   "allowed": null,
+   "expected": [
+    "imgs/vm"
+   ],
+   "environment": true
+  },
+  {
+   "name": "a native image backing file is refused",
+   "candidate": "imgs/vm/fixed.dmg",
+   "allowed": null,
+   "expected": [
+    "imgs/vm/fixed.dmg"
+   ],
+   "environment": true
+  },
+  {
+   "name": "the receipt inside a native image directory is refused",
+   "candidate": "imgs/vm/image.json",
+   "allowed": null,
+   "expected": [
+    "imgs/vm/image.json"
+   ],
+   "environment": true
+  }
+ ],
+ "protectionDefects": [
+  {
+   "name": "an ancestor holding a native image directory is refused",
+   "candidate": "imgs",
+   "allowed": null,
+   "expected": [
+    "imgs"
+   ],
+   "environment": true,
+   "defect": "🛡️protection/🟦️.ts:cleanIsNativeImagePath tests only the path itself and its direct parent, so removing an ancestor of a native image directory (`imgs` above `imgs/vm`) passes the gate although it deletes the image pair"
+  }
+ ],
+ "generated": [
+  {
+   "name": "the generated directory of an open ticket",
+   "candidate": "tickets/26/10/21/OPEN/🗑️generated",
+   "expected": [
+    "tickets/26/10/21/OPEN/🗑️generated"
+   ]
+  },
+  {
+   "name": "a file inside the generated directory of an open ticket",
+   "candidate": "tickets/26/10/21/OPEN/🗑️generated/x.txt",
+   "expected": [
+    "tickets/26/10/21/OPEN/🗑️generated/x.txt"
+   ]
+  },
+  {
+   "name": "an ordinary file of an open ticket",
+   "candidate": "tickets/26/10/21/OPEN/notes.md",
+   "expected": []
+  },
+  {
+   "name": "the generated directory of a closed ticket",
+   "candidate": "tickets/26/10/21/DONE/🗑️generated",
+   "expected": []
+  },
+  {
+   "name": "a day folder containing an open ticket's generated directory",
+   "candidate": "tickets/26/10/21",
+   "expected": [
+    "tickets/26/10/21/OPEN/🗑️generated"
+   ]
+  },
+  {
+   "name": "a plain source directory",
+   "candidate": "src",
+   "expected": []
+  },
+  {
+   "name": "an unreadable directory",
+   "candidate": "src3",
+   "expected": [
+    "src3"
+   ]
+  },
+  {
+   "name": "a missing path",
+   "candidate": "nothing",
+   "expected": []
+  }
+ ],
+ "boundary": [
+  {
+   "path": "tickets/26/10/21/OPEN",
+   "expected": true
+  },
+  {
+   "path": "tickets/26/10/21",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🗑️generated",
+   "expected": false
+  },
+  {
+   "path": "src",
+   "expected": false
+  },
+  {
+   "path": "x/mytickets/a/b/c/d",
+   "expected": true
+  },
+  {
+   "path": "tickets/a/b/c/d/e",
+   "expected": false
+  },
+  {
+   "path": ".",
+   "expected": false
+  }
+ ],
+ "folderFor": [
+  {
+   "path": "tickets/26/10/21/OPEN/notes.md",
+   "expected": "tickets/26/10/21/OPEN"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🗑️generated/x.txt",
+   "expected": "tickets/26/10/21/OPEN"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/🗑️generated",
+   "expected": "tickets/26/10/21/DONE"
+  },
+  {
+   "path": "tickets/26/10/21",
+   "expected": null
+  },
+  {
+   "path": "src/a.txt",
+   "expected": null
+  },
+  {
+   "path": "../out",
+   "expected": null
+  }
+ ],
+ "generatedRoot": [
+  {
+   "path": "tickets/26/10/21/OPEN/🗑️generated",
+   "expected": "tickets/26/10/21/OPEN"
+  },
+  {
+   "path": "tickets/26/10/21/DONE/🗑️temp",
+   "expected": "tickets/26/10/21/DONE"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/🧪️purity-1",
+   "expected": "tickets/26/10/21/OPEN"
+  },
+  {
+   "path": "tickets/26/10/21/OPEN/notes.md",
+   "expected": null
+  },
+  {
+   "path": "src/🗑️generated",
+   "expected": null
+  }
+ ],
+ "closed": [
+  {
+   "path": "tickets/26/10/21/OPEN",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/DONE",
+   "expected": true
+  },
+  {
+   "path": "tickets/26/10/21/NOMANIFEST",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/BADJSON",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/ARRAY",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/NOSTATUS",
+   "expected": false
+  },
+  {
+   "path": "tickets/26/10/21/DIRMANIFEST",
+   "expected": false
+  },
+  {
+   "path": "src",
+   "expected": false
+  }
+ ],
+ "projection": {
+  "rows": [
+   {
+    "kind": "misplaced",
+    "path": "src",
+    "bytes": 1
+   },
+   {
+    "kind": "ticket-generated",
+    "path": "tickets/26/10/21/OPEN/🗑️generated",
+    "bytes": 1
+   },
+   {
+    "kind": "ticket-generated",
+    "path": "tickets/26/10/21/DONE/🗑️generated",
+    "bytes": 1
+   },
+   {
+    "kind": "misplaced",
+    "path": "tickets/26/10/21/OPEN",
+    "bytes": 1
+   },
+   {
+    "kind": "build-artifact",
+    "path": "src/sub",
+    "bytes": 1
+   },
+   {
+    "kind": "cargo-incremental",
+    "path": "src2/incremental",
+    "bytes": 1
+   },
+   {
+    "kind": "build-artifact",
+    "path": "src2",
+    "bytes": 1
+   },
+   {
+    "kind": "misplaced",
+    "path": "src/other",
+    "bytes": 1
+   }
+  ],
+  "protectedPrefixes": [
+   "src/sub"
+  ],
+  "expectedKept": [
+   "tickets/26/10/21/DONE/🗑️generated",
+   "src/other"
+  ],
+  "expectedProtected": [
+   "tickets/26/10/21/OPEN/🗑️generated",
+   "src",
+   "src/sub",
+   "src2/incremental",
+   "src2/ln"
+  ]
+ },
+ "dedupe": [
+  {
+   "rows": [
+    {
+     "kind": "misplaced",
+     "path": "a/b/c",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "a/b",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "a",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "a2",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "a/bc",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "a/b",
+     "bytes": 1
+    }
+   ],
+   "expected": [
+    "a",
+    "a2"
+   ]
+  },
+  {
+   "rows": [
+    {
+     "kind": "misplaced",
+     "path": "x/y",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "x/yz",
+     "bytes": 1
+    },
+    {
+     "kind": "misplaced",
+     "path": "x/y/z",
+     "bytes": 1
+    }
+   ],
+   "expected": [
+    "x/y",
+    "x/yz"
+   ]
+  },
+  {
+   "rows": [],
+   "expected": []
+  }
+ ],
+ "huge": [
+  {
+   "name": "under the limit nothing is removed",
+   "dir": {
+    "path": "c/debug/incremental",
+    "crates": [
+     {
+      "name": "a-1",
+      "bytes": 10,
+      "working": false
+     }
+    ]
+   },
+   "max": 100,
+   "expected": []
+  },
+  {
+   "name": "at the limit nothing is removed",
+   "dir": {
+    "path": "c/debug/incremental",
+    "crates": [
+     {
+      "name": "a-1",
+      "bytes": 60,
+      "working": false
+     },
+     {
+      "name": "b-2",
+      "bytes": 40,
+      "working": false
+     }
+    ]
+   },
+   "max": 100,
+   "expected": []
+  },
+  {
+   "name": "over the limit with only idle crates removes the whole directory",
+   "dir": {
+    "path": "c/debug/incremental",
+    "crates": [
+     {
+      "name": "a-1",
+      "bytes": 60,
+      "working": false
+     },
+     {
+      "name": "b-2",
+      "bytes": 41,
+      "working": false
+     }
+    ]
+   },
+   "max": 100,
+   "expected": [
+    "c/debug/incremental"
+   ]
+  },
+  {
+   "name": "a working crate stays while idle crates go, sorted",
+   "dir": {
+    "path": "c/debug/incremental",
+    "crates": [
+     {
+      "name": "z-1",
+      "bytes": 60,
+      "working": false
+     },
+     {
+      "name": "w-2",
+      "bytes": 41,
+      "working": true
+     },
+     {
+      "name": "b-3",
+      "bytes": 1,
+      "working": false
+     }
+    ]
+   },
+   "max": 100,
+   "expected": [
+    "c/debug/incremental/b-3",
+    "c/debug/incremental/z-1"
+   ]
+  },
+  {
+   "name": "only working crates leave everything",
+   "dir": {
+    "path": "c/debug/incremental",
+    "crates": [
+     {
+      "name": "a-1",
+      "bytes": 500,
+      "working": true
+     }
+    ]
+   },
+   "max": 100,
+   "expected": []
+  },
+  {
+   "name": "backslashes and trailing slashes normalize",
+   "dir": {
+    "path": "c\\debug\\incremental\\\\",
+    "crates": [
+     {
+      "name": "a-1",
+      "bytes": 500,
+      "working": false
+     }
+    ]
+   },
+   "max": 100,
+   "expected": [
+    "c/debug/incremental"
+   ]
+  },
+  {
+   "name": "an empty directory is never over the limit",
+   "dir": {
+    "path": "c/incremental",
+    "crates": []
+   },
+   "max": 0,
+   "expected": []
+  }
+ ],
+ "hugeErrors": [
+  {
+   "name": "a negative limit",
+   "dir": {
+    "path": "c/incremental",
+    "crates": []
+   },
+   "max": -1,
+   "message": "non-negative safe integer"
+  },
+  {
+   "name": "a fractional limit",
+   "dir": {
+    "path": "c/incremental",
+    "crates": []
+   },
+   "max": 1.5,
+   "message": "non-negative safe integer"
+  },
+  {
+   "name": "a parent segment in the path",
+   "dir": {
+    "path": "c/../incremental",
+    "crates": []
+   },
+   "max": 1,
+   "message": "inside the workspace"
+  },
+  {
+   "name": "an empty path",
+   "dir": {
+    "path": "",
+    "crates": []
+   },
+   "max": 1,
+   "message": "inside the workspace"
+  },
+  {
+   "name": "a crate name with a slash",
+   "dir": {
+    "path": "c/incremental",
+    "crates": [
+     {
+      "name": "a/b",
+      "bytes": 1,
+      "working": false
+     }
+    ]
+   },
+   "max": 1,
+   "message": "one path segment"
+  },
+  {
+   "name": "a crate name that is dot-dot",
+   "dir": {
+    "path": "c/incremental",
+    "crates": [
+     {
+      "name": "..",
+      "bytes": 1,
+      "working": false
+     }
+    ]
+   },
+   "max": 1,
+   "message": "one path segment"
+  },
+  {
+   "name": "a negative crate size",
+   "dir": {
+    "path": "c/incremental",
+    "crates": [
+     {
+      "name": "a",
+      "bytes": -1,
+      "working": false
+     }
+    ]
+   },
+   "max": 1,
+   "message": "non-negative safe integer"
+  },
+  {
+   "name": "a sum beyond the safe integer range",
+   "dir": {
+    "path": "c/incremental",
+    "crates": [
+     {
+      "name": "a",
+      "bytes": 9007199254740991,
+      "working": false
+     },
+     {
+      "name": "b",
+      "bytes": 9007199254740991,
+      "working": false
+     }
+    ]
+   },
+   "max": 1,
+   "message": "non-negative safe integer"
+  }
+ ],
+ "incrementalPaths": [
+  {
+   "path": "c/debug/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": true
+  },
+  {
+   "path": "c/debug/incremental/crate-abc",
+   "roots": [
+    "c"
+   ],
+   "expected": true
+  },
+  {
+   "path": "c/debug/incremental/crate/x",
+   "roots": [
+    "c"
+   ],
+   "expected": false
+  },
+  {
+   "path": "c/debug",
+   "roots": [
+    "c"
+   ],
+   "expected": false
+  },
+  {
+   "path": "d/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": false
+  },
+  {
+   "path": "c/incremental/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": true
+  },
+  {
+   "path": "../c/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": false
+  },
+  {
+   "path": "c/debug/incremental",
+   "roots": [],
+   "expected": false
+  },
+  {
+   "path": "c/incremental",
+   "roots": [
+    "c/incremental"
+   ],
+   "expected": true
+  },
+  {
+   "path": "c/x/../debug/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": true
+  },
+  {
+   "path": "cc/incremental",
+   "roots": [
+    "c"
+   ],
+   "expected": false
+  }
+ ],
+ "names": {
+  "misplacedRepo": [
+   {
+    "name": "repo",
+    "expected": true
+   },
+   {
+    "name": "🦑repo",
+    "expected": true
+   },
+   {
+    "name": "🦑️repo",
+    "expected": false
+   },
+   {
+    "name": "repository",
+    "expected": false
+   },
+   {
+    "name": "my-repo",
+    "expected": true
+   },
+   {
+    "name": "",
+    "expected": false
+   }
+  ],
+  "misplacedTickets": [
+   {
+    "name": "tickets",
+    "expected": true
+   },
+   {
+    "name": "🎫tickets",
+    "expected": true
+   },
+   {
+    "name": "🎫️tickets",
+    "expected": false
+   },
+   {
+    "name": "ticketsx",
+    "expected": false
+   }
+  ],
+  "buildArtifact": [
+   {
+    "name": "target",
+    "expected": true
+   },
+   {
+    "name": "dist",
+    "expected": true
+   },
+   {
+    "name": "build",
+    "expected": true
+   },
+   {
+    "name": "out",
+    "expected": true
+   },
+   {
+    "name": "target-x86",
+    "expected": true
+   },
+   {
+    "name": "targets",
+    "expected": false
+   },
+   {
+    "name": "Target",
+    "expected": false
+   },
+   {
+    "name": "distro",
+    "expected": false
+   },
+   {
+    "name": "target-",
+    "expected": true
+   }
+  ],
+  "cargoTargetName": [
+   {
+    "name": "target",
+    "expected": true
+   },
+   {
+    "name": "target-wasm",
+    "expected": true
+   },
+   {
+    "name": "targetx",
+    "expected": false
+   },
+   {
+    "name": "build",
+    "expected": false
+   }
+  ],
+  "semioRoot": [
+   {
+    "name": ".🧬semio",
+    "expected": true
+   },
+   {
+    "name": ".🧬️semio",
+    "expected": true
+   },
+   {
+    "name": ".semio",
+    "expected": false
+   },
+   {
+    "name": ".🧬semio2",
+    "expected": false
+   },
+   {
+    "name": ".🧬x",
+    "expected": false
+   },
+   {
+    "name": "semio",
+    "expected": false
+   }
+  ],
+  "rootTransient": [
+   {
+    "name": ".generation3d-foo-link",
+    "expected": true
+   },
+   {
+    "name": ".generation3d--link",
+    "expected": false
+   },
+   {
+    "name": ".w-g3-ticket",
+    "expected": true
+   },
+   {
+    "name": "generation3d-foo-link",
+    "expected": false
+   },
+   {
+    "name": ".generation3d-foo-link2",
+    "expected": false
+   }
+  ],
+  "windowsIllegal": [
+   {
+    "name": "",
+    "expected": true
+   },
+   {
+    "name": ".",
+    "expected": false
+   },
+   {
+    "name": "..",
+    "expected": false
+   },
+   {
+    "name": "a ",
+    "expected": true
+   },
+   {
+    "name": "a.",
+    "expected": true
+   },
+   {
+    "name": " a",
+    "expected": true
+   },
+   {
+    "name": "a<b",
+    "expected": true
+   },
+   {
+    "name": "a:b",
+    "expected": true
+   },
+   {
+    "name": "a\"b",
+    "expected": true
+   },
+   {
+    "name": "a|b",
+    "expected": true
+   },
+   {
+    "name": "a?b",
+    "expected": true
+   },
+   {
+    "name": "a*b",
+    "expected": true
+   },
+   {
+    "name": "a\u0001b",
+    "expected": true
+   },
+   {
+    "name": "CON",
+    "expected": true
+   },
+   {
+    "name": "con.txt",
+    "expected": true
+   },
+   {
+    "name": "Com1",
+    "expected": true
+   },
+   {
+    "name": "com¹",
+    "expected": true
+   },
+   {
+    "name": "LPT9.log",
+    "expected": true
+   },
+   {
+    "name": "nul",
+    "expected": true
+   },
+   {
+    "name": "aux",
+    "expected": true
+   },
+   {
+    "name": "COM0",
+    "expected": false
+   },
+   {
+    "name": "console",
+    "expected": false
+   },
+   {
+    "name": "normal.txt",
+    "expected": false
+   },
+   {
+    "name": "   ",
+    "expected": true
+   },
+   {
+    "name": "a>b",
+    "expected": true
+   },
+   {
+    "name": "a\u001fb",
+    "expected": true
+   },
+   {
+    "name": "🧪️tests",
+    "expected": false
+   },
+   {
+    "name": "prn.tar.gz",
+    "expected": true
+   }
+  ],
+  "generatedDir": [
+   {
+    "name": "🗑️generated",
+    "expected": true
+   },
+   {
+    "name": "🗑️temp",
+    "expected": true
+   },
+   {
+    "name": "🧾️runs",
+    "expected": true
+   },
+   {
+    "name": "🧪️runs",
+    "expected": true
+   },
+   {
+    "name": "🧾️taxonomy-transaction",
+    "expected": true
+   },
+   {
+    "name": "🧪️purity-a",
+    "expected": true
+   },
+   {
+    "name": "🧪️cli-b",
+    "expected": true
+   },
+   {
+    "name": "🧪️inventory-1",
+    "expected": true
+   },
+   {
+    "name": "runs",
+    "expected": false
+   },
+   {
+    "name": "generated",
+    "expected": false
+   },
+   {
+    "name": "🧪️other",
+    "expected": false
+   }
+  ],
+  "endsWithAscii": [
+   {
+    "name": "a-repo",
+    "suffix": "repo",
+    "expected": true
+   },
+   {
+    "name": "repo",
+    "suffix": "repo",
+    "expected": true
+   },
+   {
+    "name": "repos",
+    "suffix": "repo",
+    "expected": false
+   },
+   {
+    "name": "",
+    "suffix": "x",
+    "expected": false
+   }
+  ]
+ }
+}

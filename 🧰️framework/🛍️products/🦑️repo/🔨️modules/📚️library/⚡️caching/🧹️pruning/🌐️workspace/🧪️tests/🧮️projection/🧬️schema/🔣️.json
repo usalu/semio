@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:cache-area-projection-corpus:v1",
+  "title": "Cache Area Projection Corpus",
+  "description": "Language-agnostic layouts for projecting the shared cache root into bounded areas: the build and target directories, what each scanner finds, and where a unit of each area lives.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "repoRoot", "layouts", "roots"],
+  "properties": {
+    "version": { "const": 1 },
+    "repoRoot": { "type": "string", "minLength": 1 },
+    "layouts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "build", "target", "scans"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "build": { "type": "string" },
+          "target": { "type": "string" },
+          "scans": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["build", "target", "incremental", "vite", "agents"],
+            "properties": {
+              "build": { "$ref": "#/definitions/units" },
+              "target": { "$ref": "#/definitions/units" },
+              "incremental": { "type": "object", "additionalProperties": false, "required": ["units", "staleSessions"], "properties": { "units": { "$ref": "#/definitions/units" }, "staleSessions": { "$ref": "#/definitions/units" } } },
+              "vite": { "$ref": "#/definitions/units" },
+              "agents": { "$ref": "#/definitions/units" }
+            }
+          }
+        }
+      }
+    },
+    "roots": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["area", "kind", "expected"], "properties": { "area": { "type": "string" }, "kind": { "enum": ["cargo-build", "cargo-incremental", "cargo-incremental-session", "cargo-target-file", "directory"] }, "expected": { "type": "string" } } } }
+  },
+  "definitions": { "units": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "recencyMs", "lockHeld", "kind"], "properties": { "path": { "type": "string" }, "bytes": { "type": "integer" }, "recencyMs": { "type": "integer" }, "lockHeld": { "type": "boolean" }, "kind": { "type": "string" } } } } }
+}

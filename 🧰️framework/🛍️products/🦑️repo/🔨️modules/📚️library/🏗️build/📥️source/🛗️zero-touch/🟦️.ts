@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isBuiltin } from "node:module";
 import { join, posix, resolve } from "node:path";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🛗️ One entry whose relative import closure must run on a checkout without installed dependencies; `static` follows only static imports, `full` also dynamic imports and requires. */
 export type ZeroTouchClosureV1 = Readonly<{ id: string; entry: string; mode: "full" | "static"; reason: string }>;
@@ -41,7 +43,7 @@ const decode = (specifier: string): string => {
 
 /** 🔬️ Lists the runtime module specifiers of one source text through the system compiler: type-only imports carry no runtime and stay out. */
 export function scanModuleSpecifiersV1(path: string, text: string): readonly Readonly<{ specifier: string; kind: ZeroTouchImportKindV1 }>[] {
-  const source = text.replace(/^#![^\r\n]*/u, ""), transpiler = new Bun.Transpiler({ loader: /\.[cm]?tsx?$/u.test(path) ? "ts" : "js", target: "bun", define: { "import.meta.vitest": "undefined" } });
+  const source = text.replace(/^#![^\r\n]*/u, ""), transpiler = new TranspilerV1({ loader: /\.[cm]?tsx?$/u.test(path) ? "ts" : "js", target: "runtime", define: { "import.meta.vitest": "undefined" } });
   const rows = new Map<string, Readonly<{ specifier: string; kind: ZeroTouchImportKindV1 }>>();
   for (const row of [...transpiler.scan(source).imports, ...transpiler.scanImports(source)]) {
     const kind = KINDS[row.kind];
@@ -94,7 +96,7 @@ export function zeroTouchClosureFindingsV1(roster: ZeroTouchRosterV1, tree: Zero
           if (target === undefined) continue;
           if (!seams.has(target)) pending.push(target);
           else if (kind === "static") findings.push({ closure: closure.id, kind: "seam-static", file, specifier, detail: `The post-install module ${target} may only be loaded by a dynamic import.` });
-        } else if (specifier.startsWith("node:") || specifier.startsWith("bun:") || specifier === "bun" || isBuiltin(specifier)) continue;
+        } else if (specifier.startsWith("node:") || isRuntimeBuiltinSpecifierV1(specifier) || isBuiltin(specifier)) continue;
         else if (Object.keys(tree.packages).some((name) => specifier === name || specifier.startsWith(`${name}/`))) {
           const target = workspaceSpecifierTargetV1(tree.packages, specifier);
           findings.push({ closure: closure.id, kind: "workspace-specifier", file, specifier, detail: target === undefined ? "Import the owner module by a relative path; no export of the package resolves this specifier." : `Import the owner module by the relative path to ${target}.` });
@@ -168,7 +170,7 @@ export function zeroTouchCommandFindingsV1(commands: readonly ZeroTouchCommandV1
           if (target === undefined) continue;
           if (command.requires === "dependencies" || !seamModules.has(target)) pending.push(target);
           else if (kind === "static") findings.push({ closure, kind: "seam-static", file, specifier, detail: `The post-install module ${target} may only be loaded by a dynamic import.` });
-        } else if (specifier.startsWith("node:") || specifier.startsWith("bun:") || specifier === "bun" || isBuiltin(specifier)) continue;
+        } else if (specifier.startsWith("node:") || isRuntimeBuiltinSpecifierV1(specifier) || isBuiltin(specifier)) continue;
         else if (Object.keys(tree.packages).some((name) => specifier === name || specifier.startsWith(`${name}/`))) {
           const target = workspaceSpecifierTargetV1(tree.packages, specifier);
           findings.push({ closure, kind: "workspace-specifier", file, specifier, detail: target === undefined ? "Import the owner module by a relative path; no export of the package resolves this specifier." : `Import the owner module by the relative path to ${target}.` });

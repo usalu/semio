@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🧩️ The composed lane is PUBLISHED, not discarded: `dispatch_emit_group` has just
     /// built the parent's mutations, one per touched child under the child's own
     /// content-addressed handle, and the single `UndoGroup` that names them all. The

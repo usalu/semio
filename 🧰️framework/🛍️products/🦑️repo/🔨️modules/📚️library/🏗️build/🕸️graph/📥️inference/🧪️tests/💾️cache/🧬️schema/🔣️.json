@@ -9,12 +9,27 @@
     "policy",
     "outputsGate",
     "nativeRunsTests",
+    "nativeDrivers",
     "nativeInputs",
     "playground",
     "artifact",
     "nativeAuthored"
   ],
   "properties": {
+    "nativeDrivers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "sources", "expect"],
+        "properties": {
+          "id": { "type": "string" },
+          "sources": { "type": "array", "items": { "type": "string" } },
+          "expect": { "type": "boolean" }
+        }
+      }
+    },
     "version": {
       "const": 1
     },

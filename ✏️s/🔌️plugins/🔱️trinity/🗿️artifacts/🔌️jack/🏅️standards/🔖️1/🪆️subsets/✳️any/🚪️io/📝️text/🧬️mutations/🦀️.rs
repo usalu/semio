@@ -17,9 +17,9 @@ pub fn decode_trinity_graph_mutation_json(text: &str) -> Result<TrinityGraphMuta
 
 /// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.
 pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<(String, String)> {
-    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(mutation, snapshot);
+    let outcome = <TrinityGraphMutation as protocol::ColdMutation<JackSnapshot>>::diff(mutation, snapshot);
     let mut reported: Vec<(String, String)> = outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect();
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => *snapshot = next,
         Err(error) => reported.push((error.code, format!("{:?}", semio_framework_diagnostic::Severity::Fatal))),
     }
@@ -29,7 +29,7 @@ pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutat
 /// ↩️ Computes the mutation's own undo steps.
 pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, base: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, semio_framework_value::ValueError> {
     Ok({
-    <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::inverse(mutation, base)?
+    <TrinityGraphMutation as protocol::ColdMutation<JackSnapshot>>::inverse(mutation, base)?
 
     })
 }
@@ -51,7 +51,7 @@ use crate::standards::v1::subsets::any::schema::graph::GraphEffect;
 use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, Node, Port};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PropertyBag, PropertyDef, PropertyValue};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_diagnostic::TextError;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 /// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary`: each variant name IS its wire keyword

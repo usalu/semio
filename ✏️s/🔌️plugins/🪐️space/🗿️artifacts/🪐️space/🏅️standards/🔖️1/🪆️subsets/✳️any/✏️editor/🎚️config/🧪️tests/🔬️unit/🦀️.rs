@@ -34,11 +34,11 @@ async fn directory_projection_replaces_only_the_directory_slice_and_inverse_rest
     let mutation = SpaceIndexConfigMutation::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection { visibility: "public".into(), ..Default::default() } });
     let outcome = mutation.diff(&base);
     assert_eq!(outcome.diff(), &SpaceIndexConfigDiff { visibility: Some("public".into()), ..Default::default() });
-    let forward = protocol::apply_diff(outcome.diff(), &base).expect("the projection applies");
+    let forward = protocol::apply_diff_cold(outcome.diff(), &base).expect("the projection applies");
     assert_eq!(forward.presence, base.presence, "the directory fold never touches the live presence rows");
     let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![SpaceIndexConfigMutation::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection { visibility: "private".into(), ..Default::default() } })]);
-    assert_eq!(protocol::apply_diff(backwards[0].diff(&forward).diff(), &forward).expect("the inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(backwards[0].diff(&forward).diff(), &forward).expect("the inverse applies"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 
@@ -59,7 +59,7 @@ async fn artifact_presence_sets_and_clears_at_the_sorted_middle_slot() {
     let row = |id: &str| SpaceIndexArtifactPresence { artifact_id: id.into(), actors_csv: "user:1".into() };
     let base = SpaceIndexConfig { presence: vec![row("artifact-1"), row("artifact-3")], ..Default::default() };
     let set = SpaceIndexConfigMutation::SetArtifactPresence(ArtifactPresenceSetting { artifact_id: "artifact-2".into(), actors_csv: "user:1".into() });
-    let diff = <SpaceIndexConfigMutation as protocol::Mutation<SpaceIndexConfig>>::diff(&set, &base).into_parts().0;
+    let diff = <SpaceIndexConfigMutation as protocol::ColdMutation<SpaceIndexConfig>>::diff(&set, &base).into_parts().0;
     let inserted = diff.presence.as_ref().expect("a new presence row").inserted.iter().map(|entry| (entry.index, entry.row.artifact_id.as_str())).collect::<Vec<_>>();
     assert_eq!(inserted, vec![(1, "artifact-2")]);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&set, &base).await;

@@ -73,7 +73,7 @@ test("portable UI ownership schema keeps exact generic and workspace routes at t
   const repo = JSON.parse(read(corpus.repoProject));
   for (const row of corpus.movedRoutes) {
     expect(general.targets[row.command]).toBeUndefined();
-    expect(repo.targets[row.target].options.command).toBe("bun ./📜️script.ts ui " + row.command);
+    expect(repo.targets[row.target].options.command).toBe("repo ./📜️script.ts ui " + row.command);
     expect(routes(parse(corpus.repoScript))).toContain(row.command);
     if (row.command.startsWith("check-")) expect(repo.targets[row.target].cache === false || repo.targets[row.target].inputs?.includes("reads"), row.target).toBe(true);
   }
@@ -89,10 +89,10 @@ test("all original workspace census declarations retain their exact TypeScript A
     const owner = sources.find(source => declared(source, row.name));
     expect(owner, row.name).toBeDefined();
     expect(createHash("sha256").update(declared(owner!, row.name)!.getText(owner!)).digest("hex"), row.name).toBe(row.sha256);
-    if (!("runner" in row)) continue;
+    if (row.runner === undefined) continue;
     const runner = declared(sources[1]!, row.runner) as ts.FunctionDeclaration | undefined;
     expect(runner?.body, row.runner).toBeDefined();
-    expect(createHash("sha256").update(lines(runner!.body!.getText(sources[1]!).replaceAll("context.", "this."))).digest("hex"), row.runner).toBe(row.runnerBodySha256);
+    expect<unknown>(createHash("sha256").update(lines(runner!.body!.getText(sources[1]!).replaceAll("context.", "this."))).digest("hex"), row.runner).toBe(row.runnerBodySha256);
   }
 });
 

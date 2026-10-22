@@ -30,7 +30,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `delete-node` leaves the document byte-identical to the committed `after`.
@@ -38,7 +38,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.nodes.is_empty(), "rejects-deleting-a-node-that-is-not-in-the-graph's before-snapshot must hold a node-less graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "delete-node/rejects-deleting-a-node-that-is-not-in-the-graph: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected delete must not mint a fresh notation/results/computed triple");
 }
@@ -64,7 +64,7 @@ async fn a_missing_node_is_reported_alone_with_no_cascade_notice() {
 /// captured from BASE. With no such node the inverse is empty — never a speculative create.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_node_to_recreate() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "delete-node/rejects-deleting-a-node-that-is-not-in-the-graph: a rejected delete must have no inverse steps, got {inverse:?}");
 }
 
@@ -138,7 +138,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `delete-nodes` leaves the document byte-identical to the committed `after`.
@@ -146,7 +146,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.nodes.is_empty(), "rejects-a-bulk-delete-where-every-id-is-absent's before-snapshot must hold a node-less graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "delete-nodes/rejects-a-bulk-delete-where-every-id-is-absent: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected bulk delete must not mint a fresh notation/results/computed triple");
 }
@@ -177,7 +177,7 @@ async fn every_requested_id_travels_in_one_all_missing_diagnostic() {
 /// edge, all captured from BASE. With no matching node the inverse is empty.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_nodes_to_recreate() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "delete-nodes/rejects-a-bulk-delete-where-every-id-is-absent: a rejected bulk delete must have no inverse steps, got {inverse:?}");
 }
 
@@ -252,7 +252,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `change-node-label` leaves the document byte-identical to the committed `after`.
@@ -260,7 +260,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.nodes.is_empty(), "rejects-relabelling-a-node-that-is-not-in-the-graph's before-snapshot must hold a node-less graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "change-node-label/rejects-relabelling-a-node-that-is-not-in-the-graph: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected relabel must not mint a fresh notation/results/computed triple");
 }
@@ -287,7 +287,7 @@ async fn the_diagnostic_addresses_the_stable_id_never_the_new_label() {
 /// refused relabel can never be replayed as an accidental label wipe.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_prior_label_to_restore() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "change-node-label/rejects-relabelling-a-node-that-is-not-in-the-graph: a rejected relabel must have no inverse steps, got {inverse:?}");
 }
 
@@ -364,7 +364,7 @@ fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
-    <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
+    <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ A rejected `move-node` leaves the document byte-identical to the committed `after`.
@@ -372,7 +372,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.graph.nodes.is_empty(), "rejects-moving-a-node-that-is-not-in-the-graph's before-snapshot must hold a node-less graph");
-    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff_cold(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "move-node/rejects-moving-a-node-that-is-not-in-the-graph: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected move must not mint a fresh notation/results/computed triple");
 }
@@ -393,7 +393,7 @@ async fn the_id_lookup_precedes_the_finiteness_invariant() {
     assert_eq!(messages[0].target, vec!["n-alpha".to_string()], "the diagnostic names the node id, never its requested coordinates");
 
     let non_finite = EquationMutation::MoveNode(MoveNode { id: "n-alpha".to_string(), x: f64::NAN, y: 0.0 });
-    let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&non_finite, &base);
+    let outcome = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::diff(&non_finite, &base);
     assert_eq!(outcome.messages()[0].code.0, "mutation.target-missing", "with no node under that id, even a NaN destination is refused as target-missing — the lookup guard wins");
 
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
@@ -404,7 +404,7 @@ async fn the_id_lookup_precedes_the_finiteness_invariant() {
 /// With no such node the inverse is empty — base-derived, never payload-derived.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_prior_position_to_restore() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
+    let inverse = <EquationMutation as protocol::ColdMutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "move-node/rejects-moving-a-node-that-is-not-in-the-graph: a rejected move must have no inverse steps, got {inverse:?}");
 }
 

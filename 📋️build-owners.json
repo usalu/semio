@@ -210,6 +210,30 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/async-slots-rs",
+      "root": "🧰️framework/🔨️modules/⏳️async/🧱️boxed-slots/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/⏳️async/🧱️boxed-slots/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/async-sync-rs",
+      "root": "🧰️framework/🔨️modules/⏳️async/🚦️sync-primitives/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/⏳️async/🚦️sync-primitives/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/async-testkit-rs",
+      "root": "🧰️framework/🔨️modules/⏳️async/🎭️testkit/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/⏳️async/🎭️testkit/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/async-timer-rs",
+      "root": "🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/bim-model-rs",
       "root": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📋️project.json",
@@ -4858,6 +4882,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/os-store-engine-close-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧯️close/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧯️close/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/os-store-engine-core-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust/📋️project.json",
@@ -4867,6 +4897,12 @@
       "name": "@semio-tech/os-store-engine-live-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/os-store-engine-member-group-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -4984,6 +5020,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/os-store-presence-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/os-store-projection-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust/📋️project.json",
@@ -4993,6 +5035,12 @@
       "name": "@semio-tech/os-store-read-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/os-store-replay-operation-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -5223,6 +5271,12 @@
       "name": "@semio-tech/pack-json-retained-schema-rs",
       "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pack-record-encode-cursor-rs",
+      "root": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -8107,8 +8161,8 @@
     },
     {
       "name": "semio-s-artifact-puzzle-2d-graph-manifest",
-      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🤖️generated/📇️registry/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🤖️generated/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8904,14 +8958,6 @@
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust/📋️project.json",
       "packages": []
-    },
-    {
-      "name": "@semio-tech/repo-vscode",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
-      "packages": [
-        "repo-vscode"
-      ]
     },
     {
       "name": "@semio-tech/repo-workspace-go",
@@ -10003,14 +10049,6 @@
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📋️project.json",
       "packages": [
         "@semio-tech/trinity-jack"
-      ]
-    },
-    {
-      "name": "@semio-tech/trinity-jack-lsp-worker",
-      "root": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
-      "manifest": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/📋️project.json",
-      "packages": [
-        "@semio-tech/trinity-jack-lsp-worker"
       ]
     },
     {

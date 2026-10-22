@@ -17,7 +17,6 @@ import { runInNewContext } from "node:vm";
 import { availableParallelism } from "node:os";
 import { buildModePolicy } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { coordinatorBuildPolicy } from "@semio-tech/repo-coordinator/builder/mode";
-import { extensionBuildConfig } from "repo-vscode/builder";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
@@ -40,9 +39,8 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️cases.json"), "utf8"));
   const { semioViteBuild } = await import("@semio-tech/ui-styling/builder/vite");
   for (const row of fixture.modes) {
-    const policy = semioViteBuild(undefined, buildModePolicy(row.mode)), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
-    assert.equal(extension.build.minify, row.minify); assert.equal(extension.build.sourcemap, row.sourcemap);
-    assert.equal(policy.rollupOptions.treeshake, row.mode === "release"); assert.equal(extension.build.rollupOptions.treeshake, row.mode === "release");
+    const policy = semioViteBuild(undefined, buildModePolicy(row.mode)), coordinator = coordinatorBuildPolicy(row.mode, 2);
+    assert.equal(policy.rollupOptions.treeshake, row.mode === "release");
     assert.equal(coordinator.output, `.cache/b/p/m/next/${row.mode}/out`); assert.equal(coordinator.optimization.minimize, row.mode === "release"); assert.equal(coordinator.workers, 2);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(policy[key], row[key]);
   }
@@ -68,12 +66,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const oracle = await resolveConfig({ configFile: false, build: semioViteBuild(undefined, buildModePolicy(row.mode)) }, "build", row.mode);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(oracle.build[key], row[key]);
     assert.equal(oracle.build.rollupOptions.treeshake, row.mode === "release");
-  }
-  for (const row of fixture.modes) {
-    const extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode),plugin=extension.plugins[0];if(!plugin)throw Error("Actual extension Source transform required");const transformed = await plugin.transform(fixture.extensionSource, "fixture.ts");
-    assert.ok(transformed); assert.ok(transformed.code.includes("retainedPrototypeDeclaration")); assert.equal(transformed.code.includes("test-only"), false);
-    const oracle = await require("esbuild").transform(transformed.code, { loader: "ts", format: "cjs", minify: row.mode === "release" });
-    assert.ok(oracle.code.includes("retained"));
   }
   await mkdir(output, { recursive: true });
   const temporary = await mkdtemp(join(output, "web-")), app = join(temporary, "app"), stateRoot = join(stateStore.root,"web-build/compiler-state");
@@ -112,7 +104,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   await writeFile(largeEntry, 'export const payload = "' + "q".repeat(fixture.largePrototype.characters) + '"; export const payloadLength = payload.length;');
   await withWebCompilerFixtureV1(workspace,invocation,phaseControl,"prototype",async(destination,sink)=>withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(sink.control,600_000), async environment => {
     const largeOutput=sink.output;
-    await bundleJavaScript({ workspace, source: largeEntry, destination, mode: "prototype", platform: "node", runtime: "bun", environment, invocation, signal: sink.control.signal });
+    await bundleJavaScript({ workspace, source: largeEntry, destination, mode: "prototype", platform: "node", runtime: "runtime", environment, invocation, signal: sink.control.signal });
     await require("esbuild").build({ entryPoints: [largeEntry], outfile: largeOracle, bundle: true, format: "esm", treeShaking: false, minify: false });
     assert.ok(readFileSync(largeOutput).byteLength > fixture.largePrototype.minimumOutputBytes);
     assert.equal((await import(largeOutput)).payloadLength, (await import(largeOracle)).payloadLength); assert.equal((await import(largeOutput)).payloadLength, fixture.largePrototype.characters);
@@ -219,28 +211,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     await assert.rejects(acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory: leaseDirectory, control: cancelledControl }), /abort/i);
     assert.equal(invocation.control.signal.aborted, false);
     await assert.rejects(async () => withCompilerState({capacity:{kind:"whole-host"}, ...state, control: createRequestedIssuedResourceControlV1(phaseControl,10_000,cancelled.signal), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] }, async () => assert.fail("Cancelled compiler admitted")));
-    const watchedSource = join(temporary, "watch.ts"), watchedOutput = join(temporary, "watch-output"), watchStop = new AbortController();
-    await writeFile(watchedSource, fixture.watch.source);
-    let published = 0, requested = 0, initialReady!: () => void, updatedReady!: () => void, queuedReady!: () => void, failureReady!: () => void, recoveryReady!: () => void;
-    const initial = new Promise<void>(accept => { initialReady = accept; }), updated = new Promise<void>(accept => { updatedReady = accept; }), queued = new Promise<void>(accept => { queuedReady = accept; }), failed = new Promise<void>(accept => { failureReady = accept; }), recovered = new Promise<void>(accept => { recoveryReady = accept; });
-    const watchWorker = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts");
-    const watching = runOwnedCommand(process.execPath, [watchWorker, "watch-extension", watchedSource, watchedOutput], workspace, "extension:watch-regression", 600_000, { env: scriptInvocationEnvironment(invocation, { ...process.env, SEMIO_BUILD_MODE: "prototype", SEMIO_TEST_ARTIFACT_DIR: output, GOMAXPROCS: String(availableParallelism()) }), signal: AbortSignal.any([invocation.control.signal, watchStop.signal]), onLine: line => { if (line.includes("[extension-watch] failed")) failureReady(); if (line.includes("[extension-watch] waiting") && ++requested === 2) queuedReady(); if (line.includes("[extension-watch] published")) { published++; if (published === 1) initialReady(); else if (published === 2) updatedReady(); else recoveryReady(); } } });
-    watching.catch(() => {});
-    try {
-      await Promise.race([initial, watching]);
-      await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {
-        await writeFile(watchedSource, fixture.watch.updatedSource); await Promise.race([queued, watching]); assert.equal(published, 1);
-      });
-      await Promise.race([updated, watching]);
-      const observed = { exports: {} }, oracle = { exports: {} }, compiled = await require("esbuild").transform(fixture.watch.updatedSource, { loader: "ts", format: "cjs" });
-      runInNewContext(readFileSync(join(watchedOutput, "extension.js"), "utf8"), { module: observed, exports: observed.exports }); runInNewContext(compiled.code, { module: oracle, exports: oracle.exports });
-      assert.equal((observed.exports as { watchedValue: number }).watchedValue, (oracle.exports as { watchedValue: number }).watchedValue); assert.equal((observed.exports as { watchedValue: number }).watchedValue, fixture.watch.expected);
-      await writeFile(watchedSource, fixture.watch.invalidSource); await Promise.race([failed, watching]);
-      await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {});
-      assert.equal(published, 2); await assert.rejects(require("esbuild").transform(fixture.watch.invalidSource, { loader: "ts" }));
-      await writeFile(watchedSource, fixture.watch.updatedSource); await Promise.race([recovered, watching]);
-    } finally { watchStop.abort(); await assert.rejects(watching); }
-    await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {});
     const project = join(app, "tsconfig.json");
     await writeFile(project, JSON.stringify({ compilerOptions: { target: "ES2022", module: "ESNext", types: [], noEmit: true, strict: true, skipLibCheck: true }, files: ["value.ts"] }));
     await writeFile(join(app, "value.ts"), 'export const value: number = 42;');

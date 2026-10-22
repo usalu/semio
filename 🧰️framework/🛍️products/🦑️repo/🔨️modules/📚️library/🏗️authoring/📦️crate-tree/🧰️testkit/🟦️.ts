@@ -1,5 +1,6 @@
 import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { useLeafNames } from "../🌳️module-tree/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧰️ A feature of a carved crate with the entries it enables. */
 export type TestkitFeature = Readonly<{ name: string; entries: readonly string[] }>;
@@ -230,7 +231,7 @@ export type ExternalGateReader = (external: ExternalDependency, feature: string)
 
 /** 📦️ Reads the external dependencies of a package manifest: which are normal dependencies, which exist only as dev-dependencies, and the features a dev-dependency row adds. */
 export function externalDependencies(manifestText: string, rows: Readonly<{ dependencies?: readonly string[]; devDependencies: readonly string[] }>): ExternalDependency[] {
-  const parsed = Bun.TOML.parse(manifestText) as { dependencies?: Record<string, unknown>; "dev-dependencies"?: Record<string, unknown> };
+  const parsed = runtimeParseTomlV1(manifestText) as { dependencies?: Record<string, unknown>; "dev-dependencies"?: Record<string, unknown> };
   const normal = parsed.dependencies ?? {};
   const dev = parsed["dev-dependencies"] ?? {};
   const featuresOf = (spec: unknown): string[] => (typeof spec === "object" && spec !== null && Array.isArray((spec as { features?: unknown }).features) ? (spec as { features: unknown[] }).features.map(String) : []);

@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "color-space", kind: "remove-color-space", record: "Remove" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_color_space(base, &self.name))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        base.color_spaces.iter().position(|item| item.name == self.name).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_color_space::SetColorSpace { color_space: base.color_spaces[index].clone(), index: Some(index) })).into_iter().collect()
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemoveColorSpace
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveColorSpace> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_color_space::SetColorSpace>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_remove_color_space(base, &self.name))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        base.color_spaces.iter().position(|item| item.name == self.name).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_color_space::SetColorSpace { color_space: base.color_spaces[index].clone(), index: Some(index) })).into_iter().collect()
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

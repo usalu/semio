@@ -220,8 +220,8 @@ macro_rules! framework_reserved_job {
                 semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1)
             }
 
-            fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
-fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+            fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework::action_bus::RetainedToolWireInput>,checkpoint:Option<&semio_framework::action_bus::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
         }
 
         impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for $factory<A> {
@@ -909,6 +909,19 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-incomplete"), "a migrated generated command lacks its exact owner-local bounded reducer proof"));
     }
     Ok((controller_id, proofs))
+}
+
+/// 🏭️ Moves a born reserved producer, bound to its operation, into the erased job its worker session admits; a refused bind returns the producer to its owner.
+pub fn admit_original_reserved_producer(source: &mut Option<ArtifactReservedToolJob>, output: &mut Option<semio_framework::ErasedToolJob>, operation: &semio_framework_job::Operation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: size_of::<ArtifactReservedToolJob>(), release_bytes: 0, depth: 1 };
+    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+        let mut job = source.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original reserved producer is absent"))?;
+        if let Err(error) = job.bind_operation(*operation) {
+            *source = Some(job);
+            return Err(error);
+        }
+        Ok((semio_framework::ErasedToolJob::from_owned(Box::new(job)), semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: size_of::<ArtifactReservedToolJob>(), ..Default::default() }))
+    })
 }
 
 #[path="⚙️worker/🦀️.rs"]

@@ -23,14 +23,14 @@
       "target": "test",
       "executionKind": "source",
       "observation": "freshness",
-      "command": "bun ./📜️script.ts test",
+      "command": "repo ./📜️script.ts test",
       "executionVersion": 1
     },
     {
       "target": "canonical-architecture",
       "executionKind": "source",
       "observation": "freshness",
-      "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
+      "command": "repo ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
       "executionVersion": 1
     }
   ],

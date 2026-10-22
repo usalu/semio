@@ -1,0 +1,231 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "every-document-app-snapshot-and-mutation-has-a-dsl",
+   "rule": "policyDslCompletenessBreaches",
+   "files": {
+    "a/model.rs": [
+     "#[derive(Debug, dsl::DslDocument)]",
+     "pub struct GoodSnap {}",
+     "#[derive(dsl::DslOps)]",
+     "pub enum GoodMut {}",
+     "impl DocumentApp for GoodApp {",
+     "    type Snapshot = crate::GoodSnap;",
+     "    type Mutation = GoodMut;",
+     "}",
+     "impl DocumentApp for BadApp {",
+     "    type Snapshot = BadSnap;",
+     "    type Mutation = Value;",
+     "}",
+     "impl DocumentApp for AliasApp {",
+     "    type Snapshot = AliasedSnap<T>;",
+     "    type Mutation = M2;",
+     "}",
+     "impl DocumentApp for HandApp {",
+     "    type Snapshot = Handmade;",
+     "    type Mutation = Handmade;",
+     "}"
+    ],
+    "a/alias.rs": [
+     "use crate::GoodSnap as AliasedSnap;"
+    ],
+    "b/hand.rs": [
+     "impl DocumentDsl for Handmade {}",
+     "impl<T> vcs::OpText for Handmade {}"
+    ]
+   },
+   "expect": [
+    [
+     "dsl-completeness-a/model.rs-9-Snapshot",
+     "dsl-migration/completeness",
+     "high",
+     9
+    ],
+    [
+     "dsl-completeness-a/model.rs-13-Mutation",
+     "dsl-migration/completeness",
+     "high",
+     13
+    ]
+   ]
+  },
+  {
+   "id": "pack-round-trips-accompany-dsl-round-trips",
+   "rule": "policyPackCompletenessBreaches",
+   "files": {
+    "p/one.rs": [
+     "assert_dsl_round_trip(x);"
+    ],
+    "p/two.rs": [
+     "assert_dsl_round_trip(x);",
+     "assert_dsl_pack_equivalence(x);"
+    ],
+    "p/three.rs": [
+     "assert_document_text_round_trip(x);",
+     "assert_document_pack_round_trip(x);"
+    ],
+    "p/four.rs": [
+     "fn nothing() {}"
+    ]
+   },
+   "expect": [
+    [
+     "pack-completeness-p/one.rs",
+     "pack-migration/completeness",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "command-envelopes-accompany-pack-checks",
+   "rule": "policyCommandEnvelopeCompletenessBreaches",
+   "files": {
+    "e/one.rs": [
+     "assert_dsl_pack_equivalence(x);"
+    ],
+    "e/two.rs": [
+     "assert_document_pack_round_trip(x);",
+     "assert_command_envelope_round_trip(x);"
+    ],
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🌍️gis/🗿️artifact/🦀️.rs": [
+     "assert_dsl_pack_equivalence(x);"
+    ],
+    "e/three.rs": [
+     "fn nothing() {}"
+    ]
+   },
+   "expect": [
+    [
+     "command-envelope-completeness-e/one.rs",
+     "protocol-migration/command-envelope-completeness",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "scaffold-stubs-belong-to-constitutional-facets",
+   "rule": "policyTsFacadeBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️misc/🟦️.ts": [
+     "throw new Error(\"not wired to WASM yet\");"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/⚙️engine/🟦️.ts": [
+     "throw new Error(\"not wired to WASM yet\");"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🗣️dsl/🟦️.ts": [
+     "// wire the parser to plugin WASM"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🎒️pack/🟦️.ts": [
+     "export const ok = 1;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔸️other/🟦️.ts": [
+     "// wire the codec to plugin WASM"
+    ],
+    "✏️s/🔌️plugins/🔭️p/other/🟦️.ts": [
+     "throw new Error(\"WASM\");"
+    ]
+   },
+   "expect": [
+    [
+     "ts-facade-misplaced-stub-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/📚️misc/🟦️.ts",
+     "dsl-migration/ts-facade-completeness",
+     "medium",
+     0
+    ],
+    [
+     "ts-facade-misplaced-stub-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🔸️other/🟦️.ts",
+     "dsl-migration/ts-facade-completeness",
+     "medium",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "the-vcs-shim-must-not-come-back",
+   "rule": "policyProtocolMigrationBreaches",
+   "files": {
+    "m/shim.rs": [
+     "use vcs::Mutation;",
+     "// vcs::MutationDiff",
+     "let a = crate::vcs::Edit::new();",
+     "use vcs::{Foo, OpText, Bar};",
+     "use vcs::{Foo, Bar};",
+     " * vcs::Edit",
+     "use vcs::{",
+     "    HubClientFrame,",
+     "};",
+     "vcs::Mutation and vcs::Edit",
+     "vcs::Other::x();"
+    ]
+   },
+   "expect": [
+    [
+     "protocol-migration-m/shim.rs-1",
+     "protocol-migration/vcs-shim-regression",
+     "high",
+     1
+    ],
+    [
+     "protocol-migration-use-m/shim.rs-4",
+     "protocol-migration/vcs-shim-regression",
+     "high",
+     4
+    ],
+    [
+     "protocol-migration-use-m/shim.rs-7",
+     "protocol-migration/vcs-shim-regression",
+     "high",
+     7
+    ],
+    [
+     "protocol-migration-m/shim.rs-10",
+     "protocol-migration/vcs-shim-regression",
+     "high",
+     10
+    ]
+   ]
+  },
+  {
+   "id": "grammar-and-protocol-file-allowlists-are-empty",
+   "rule": "policyGrammarFileBreaches",
+   "files": {
+    "x.txt": []
+   },
+   "expect": []
+  },
+  {
+   "id": "protocol-file-allowlist-is-empty",
+   "rule": "policyProtocolFileBreaches",
+   "files": {
+    "x.txt": []
+   },
+   "expect": []
+  },
+  {
+   "id": "document-app-usages-are-extracted-from-source",
+   "rule": "policyDocumentAppUsages",
+   "files": {},
+   "scope": "scope/x",
+   "source": [
+    "impl DocumentApp for One {",
+    "    type Snapshot = crate::a::Snap<T>;",
+    "    type Mutation = Mut;",
+    "}",
+    "impl DocumentApp for Half {",
+    "    type Snapshot = S;",
+    "}",
+    "impl DocumentApp for Two {",
+    "    type Mutation = m::M;",
+    "    type Snapshot = S2;",
+    "}"
+   ],
+   "expectList": [
+    "scope/x|1|One|Snap|Mut",
+    "scope/x|8|Two|S2|M"
+   ]
+  }
+ ]
+}

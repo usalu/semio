@@ -62,7 +62,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check commands"
+        "command": "repo ./📜️script.ts check commands"
       }
     },
     "test-command-dispatch": {
@@ -89,7 +89,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test commands"
+        "command": "repo ./📜️script.ts test commands"
       }
     },
     "test": {
@@ -98,7 +98,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "inputs": [
         "default",
@@ -119,7 +119,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test wgpu-engine"
+        "command": "repo ./📜️script.ts test wgpu-engine"
       },
       "inputs": [
         "default",
@@ -146,7 +146,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check wgpu-engine wasm"
+        "command": "repo ./📜️script.ts check wgpu-engine wasm"
       }
     },
     "check-wasm": {
@@ -161,7 +161,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check wasm"
+        "command": "repo ./📜️script.ts check wasm"
       }
     },
     "generate": {
@@ -174,7 +174,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate"
+        "command": "repo ./📜️script.ts generate"
       }
     },
     "preview-generated": {
@@ -188,7 +188,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -197,7 +197,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
+        "command": "repo ./📜️script.ts check"
       },
       "inputs": [
         "production",
@@ -229,7 +229,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test control-commit"
+        "command": "repo ./📜️script.ts test control-commit"
       }
     },
     "test-physical-close": {
@@ -250,7 +250,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test physical-close"
+        "command": "repo ./📜️script.ts test physical-close"
       }
     },
     "test-physical-close-native": {
@@ -270,7 +270,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test physical-close-native"
+        "command": "repo ./📜️script.ts test physical-close-native"
       }
     },
     "test-mounted-admission": {
@@ -289,7 +289,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test mounted-admission"
+        "command": "repo ./📜️script.ts test mounted-admission"
       }
     },
     "test-mounted-admission-native": {
@@ -308,7 +308,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test mounted-admission-native"
+        "command": "repo ./📜️script.ts test mounted-admission-native"
       }
     },
     "test-original-presented-source-native": {
@@ -317,7 +317,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test original-presented-source-native"
+        "command": "repo ./📜️script.ts test original-presented-source-native"
       },
       "inputs": [
         "default",
@@ -367,7 +367,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test crate-boundaries"
+        "command": "repo ./📜️script.ts test crate-boundaries"
       },
       "metadata": {
         "semio": {
@@ -398,7 +398,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test tui"
+        "command": "repo ./📜️script.ts test tui"
       },
       "inputs": [
         "default",
@@ -424,7 +424,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test text-editor"
+        "command": "repo ./📜️script.ts test text-editor"
       },
       "metadata": {
         "semio": {

@@ -29,6 +29,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "cell-size", kind: "change-cell-size", record: "ChangedCellSize" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cell size to {} × {}", self.cell_width, self.cell_height), &format!("Zellengröße auf {} × {} ändern", self.cell_width, self.cell_height))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Grid2dSnapshot, Op> for ChangeCellSize
+where
+    Op: protocol::ColdMutation<Grid2dSnapshot, ReferenceDiff = Grid2dDiff> + From<ChangeCellSize>,
+{
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
@@ -38,8 +47,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cell size to {} × {}", self.cell_width, self.cell_height), &format!("Zellengröße auf {} × {} ändern", self.cell_width, self.cell_height))
-    }
 }
 //#endregion 🔖️ChangeCellSize

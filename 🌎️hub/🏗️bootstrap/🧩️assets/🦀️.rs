@@ -90,7 +90,7 @@ pub async fn get_trusted_plugin_module_file(Path((bundle_sha256, path)): Path<(S
 async fn admin_page(state: &HubState, rest: &str) -> Response {
     let root = &state.admin_dir;
     if !root.is_dir() {
-        return (StatusCode::SERVICE_UNAVAILABLE, "admin SPA not built — run: bun repo run os-hub-admin:build").into_response();
+        return (StatusCode::SERVICE_UNAVAILABLE, "admin SPA not built — run: repo run os-hub-admin:build").into_response();
     }
     let Some(requested) = admin_asset_path(root, rest) else {
         return StatusCode::BAD_REQUEST.into_response();

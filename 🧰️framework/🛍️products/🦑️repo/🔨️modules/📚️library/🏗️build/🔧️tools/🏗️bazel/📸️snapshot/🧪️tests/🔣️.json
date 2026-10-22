@@ -1,0 +1,301 @@
+{
+ "version": 1,
+ "alias": {
+  "hexLength": 10
+ },
+ "files": [
+  {
+   "path": "lib/src/a.txt",
+   "text": "alpha\n",
+   "executable": false,
+   "sha256": "b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060"
+  },
+  {
+   "path": "lib/src/🟦️.ts",
+   "text": "export {};\n",
+   "executable": false,
+   "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+  },
+  {
+   "path": "lib/bin/run.sh",
+   "text": "#!/bin/sh\nexit 0\n",
+   "executable": true,
+   "sha256": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb"
+  },
+  {
+   "path": "lib/data/blob.bin",
+   "base64": "AAECA//+Cg0A",
+   "executable": false,
+   "sha256": "172052f555eb54778cb6be0a65be68931c41f943e7a12cb213acb1ad2ca2df52"
+  },
+  {
+   "path": "lib/empty.txt",
+   "text": "",
+   "executable": false,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "path": "top.txt",
+   "text": "root level\n",
+   "executable": false,
+   "sha256": "b3a8c88f1e8e77e7583564a41e7896662acd4d4c191ed8dce525303261cdd6a0"
+  },
+  {
+   "path": "deep/x/y/z/ü-w.txt",
+   "text": "deep\n",
+   "executable": false,
+   "sha256": "64896f89fd11190013b70103e603a1c5826e56b7fb7d2197ab279b0690043599"
+  }
+ ],
+ "real": [
+  "lib/src/a.txt",
+  "lib/bin/run.sh",
+  "deep/x/y/z/ü-w.txt"
+ ],
+ "scenarios": [
+  {
+   "name": "an edit after capture leaves the planned bytes in both views",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "write",
+     "path": "lib/src/a.txt",
+     "text": "CHANGED\n"
+    },
+    {
+     "op": "expect",
+     "path": "lib/src/a.txt",
+     "text": "alpha\n"
+    }
+   ]
+  },
+  {
+   "name": "a removal after capture leaves the planned file",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "remove",
+     "path": "lib/src/a.txt"
+    },
+    {
+     "op": "remove",
+     "path": "deep/x/y/z/ü-w.txt"
+    },
+    {
+     "op": "expect",
+     "path": "lib/src/a.txt",
+     "text": "alpha\n"
+    },
+    {
+     "op": "expect",
+     "path": "deep/x/y/z/ü-w.txt",
+     "text": "deep\n"
+    }
+   ]
+  },
+  {
+   "name": "an unchanged tree is reused and keeps its copies",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "identities"
+    },
+    {
+     "op": "capture"
+    },
+    {
+     "op": "expect-counts",
+     "captured": 0,
+     "reused": 7
+    },
+    {
+     "op": "expect-identities"
+    }
+   ]
+  },
+  {
+   "name": "a changed file is captured again and only that file",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "write",
+     "path": "lib/src/a.txt",
+     "text": "bravo!\n",
+     "settle": true
+    },
+    {
+     "op": "capture"
+    },
+    {
+     "op": "expect-counts",
+     "captured": 1,
+     "reused": 6
+    },
+    {
+     "op": "expect",
+     "path": "lib/src/a.txt",
+     "text": "bravo!\n"
+    }
+   ]
+  },
+  {
+   "name": "a removed file is reported vanished, pruned from both views and never declared",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "remove",
+     "path": "lib/src/a.txt"
+    },
+    {
+     "op": "capture"
+    },
+    {
+     "op": "expect-vanished",
+     "paths": [
+      "lib/src/a.txt"
+     ]
+    },
+    {
+     "op": "expect-absent",
+     "path": "lib/src/a.txt"
+    },
+    {
+     "op": "expect-counts",
+     "captured": 0,
+     "reused": 6
+    }
+   ]
+  },
+  {
+   "name": "a file that never existed is reported vanished",
+   "steps": [
+    {
+     "op": "capture",
+     "extra": [
+      "lib/src/never.txt"
+     ]
+    },
+    {
+     "op": "expect-vanished",
+     "paths": [
+      "lib/src/never.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a view that stops naming a file loses its repository copy",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "capture",
+     "real": []
+    },
+    {
+     "op": "expect-absent-real",
+     "path": "lib/src/a.txt"
+    },
+    {
+     "op": "expect",
+     "path": "lib/src/a.txt",
+     "text": "alpha\n",
+     "view": "alias"
+    }
+   ]
+  },
+  {
+   "name": "legacy links into the live tree are replaced without writing through them",
+   "steps": [
+    {
+     "op": "legacy-links"
+    },
+    {
+     "op": "capture"
+    },
+    {
+     "op": "expect-real-views"
+    },
+    {
+     "op": "expect-live-untouched"
+    }
+   ]
+  },
+  {
+   "name": "files that are no longer requested are pruned from both views together with their emptied directories",
+   "steps": [
+    {
+     "op": "capture"
+    },
+    {
+     "op": "capture",
+     "only": [
+      "top.txt",
+      "lib/src/a.txt"
+     ]
+    },
+    {
+     "op": "expect-absent",
+     "path": "lib/bin/run.sh"
+    },
+    {
+     "op": "expect-absent",
+     "path": "deep/x/y/z/ü-w.txt"
+    },
+    {
+     "op": "expect-aliases",
+     "directories": [
+      "",
+      "lib/src"
+     ]
+    },
+    {
+     "op": "expect-counts",
+     "captured": 0,
+     "reused": 2
+    },
+    {
+     "op": "expect-real-tree",
+     "paths": [
+      "lib/src/a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a legacy alias link whose files all vanished is unlinked too",
+   "steps": [
+    {
+     "op": "legacy-links"
+    },
+    {
+     "op": "remove",
+     "path": "top.txt"
+    },
+    {
+     "op": "capture"
+    },
+    {
+     "op": "expect-vanished",
+     "paths": [
+      "top.txt"
+     ]
+    },
+    {
+     "op": "expect-real-views"
+    }
+   ]
+  }
+ ]
+}

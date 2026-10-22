@@ -1,12 +1,13 @@
 import {readViteRuntimeChannelsV1,type ViteRuntimeChannelV1} from "../📥️environment/🏃️runtime/🟦️.ts";
 import type {CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
 import {checkScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readBuildMode} from "@semio-tech/process/build-mode";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import type {RepositoryArtifactRequestV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import {playPollingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
 import {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort} from "../../../🌐️network/🔌️ports/🟦️.ts";
 import type {ViteConfigLoaderV1} from "../🎛️loader/🟦️.ts";
 import {resolve} from "node:path";
+import type { RuntimeIdV1 } from "../../../../../../../🔨️modules/⚙️runtime/📋️contract/🟦️.ts";
 /** ▶️Vite dev via `bunx` with an explicitly owned configuration source. */
 export async function runViteBunxDev(
   invocation: ScriptInvocation,
@@ -17,7 +18,7 @@ export async function runViteBunxDev(
     runtimeChannels:readonly ViteRuntimeChannelV1[];
     config: string;
     configLoader?: ViteConfigLoaderV1;
-    runtime?: "bun" | "node";
+    runtime?: RuntimeIdV1;
     artifactInputs?: readonly RepositoryArtifactRequestV1[];
     portEnv?: string;
     defaultPort?: string;

@@ -15,8 +15,8 @@
     ]
   },
   "targets": {
-    "verify-rank-source":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"bun ./📜️script.ts verify-rank source","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
-    "verify-rank-native":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"bun ./📜️script.ts verify-rank","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
+    "verify-rank-source":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"repo ./📜️script.ts verify-rank source","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
+    "verify-rank-native":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"repo ./📜️script.ts verify-rank","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
     "test": {
       "executor": "repo:script",
       "cache": true,
@@ -28,7 +28,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -42,7 +42,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts lint"
+        "command": "repo ./📜️script.ts lint"
       }
     },
     "verify-dense-source": {
@@ -55,7 +55,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-dense-source"
+        "command": "repo ./📜️script.ts verify-dense-source"
       }
     },
     "verify-dense-native": {
@@ -68,7 +68,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify-dense-native retained_dense",
+        "command": "repo ./📜️script.ts verify-dense-native retained_dense",
         "forwardAllArgs": true
       }
     },
@@ -81,7 +81,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify-inverse-source",
+        "command": "repo ./📜️script.ts verify-inverse-source",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"
       }
@@ -95,7 +95,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts verify-inverse-native retained_inverse",
+        "command": "repo ./📜️script.ts verify-inverse-native retained_inverse",
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"
       }

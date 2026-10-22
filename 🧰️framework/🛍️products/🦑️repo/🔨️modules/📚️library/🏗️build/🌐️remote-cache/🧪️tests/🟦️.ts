@@ -3,7 +3,7 @@ import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/�
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
@@ -16,7 +16,8 @@ import {bazelRemoteCacheV1} from "../../🔧️tools/🏗️bazel/🌐️remote-
 import {nxRemoteCacheV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
 import {RemoteCacheStoreV1,type RemoteCacheStoreEventV1} from "../💾️store/🟦️.ts";
 import {startRemoteCacheServerV1,parseRemoteCachePathV1,type RemoteCacheServerV1} from "../🖥️server/🟦️.ts";
-import {parseRemoteCacheFlagsV1,remoteCacheStatusV1,runRemoteCacheCommandV1,serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../⌨️command/🟦️.ts";
+import {collectRemoteCacheV1,parseRemoteCacheArgumentsV1,remoteCacheLanguagesV1,remoteCacheStatusV1,remoteCacheTextV1,runRemoteCacheCommandV1,serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../⌨️command/🟦️.ts";
+import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import {bazelRemoteCacheToolV1} from "../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts";
 import {nxRemoteCacheToolV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
 
@@ -25,7 +26,7 @@ const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-${
 const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
 
 type Step={name:string;request:{method:string;path:string;headers?:Record<string,string>;body?:string};response:{status:number;body?:string;headers?:Record<string,string>}};
-type Scenario={name:string;server:{tokens:{read?:string;write?:string};maximumBytes?:number;maximumEntryBytes?:number};steps:Step[]};
+type Scenario={name:string;server:{tokens:{read?:string;write?:string};maximumBytes?:number;maximumEntryBytes?:number;readOnly?:boolean;validation?:"off"|"structure"|"complete"};steps:Step[]};
 type Answer={status:number;body:string;headers:Record<string,string>};
 
 /** 🏃️ Runs a client process without blocking the event loop that serves it. */
@@ -39,7 +40,7 @@ function client(command:string,args:string[],options:{cwd?:string;env?:Record<st
 }
 
 async function serve(options:Partial<Parameters<typeof startRemoteCacheServerV1>[0]>={}):Promise<RemoteCacheServerV1>{
- return startRemoteCacheServerV1({directory:directory("store"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"default",tokens:{},...options});
+ return startRemoteCacheServerV1({directory:directory("store"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"default",tokens:{},validation:"off",...options});
 }
 
 test("the policy, the fixtures and the contract schema agree against an independent JSON-schema implementation",()=>{
@@ -132,7 +133,7 @@ async function pythonClient(url:string,scenario:Scenario):Promise<Answer[]>{
 test("the wire fixture holds against the TypeScript client and against Python's http.client, both bit for bit",async()=>{
  expect(wire.digests.hello).toBe(digest("hello"));expect(wire.digests.world).toBe(digest("world"));expect(wire.digests.empty).toBe(digest(""));
  for(const scenario of wire.scenarios as unknown as Scenario[])for(const who of python?["typescript","python"]:["typescript"]){
-  const server=await serve({tokens:scenario.server.tokens,...(scenario.server.maximumBytes?{maximumBytes:scenario.server.maximumBytes}:{}),...(scenario.server.maximumEntryBytes?{maximumEntryBytes:scenario.server.maximumEntryBytes}:{})});
+  const server=await serve({tokens:scenario.server.tokens,...(scenario.server.maximumBytes?{maximumBytes:scenario.server.maximumBytes}:{}),...(scenario.server.maximumEntryBytes?{maximumEntryBytes:scenario.server.maximumEntryBytes}:{}),...(scenario.server.readOnly?{readOnly:true}:{}),...(scenario.server.validation?{validation:scenario.server.validation}:{})});
   try{
    const rows=who==="typescript"?await typescriptClient(server.url,scenario):await pythonClient(server.url,scenario);
    scenario.steps.forEach((step,index)=>{
@@ -179,7 +180,7 @@ test("the bounded store evicts least recently used values exactly like an indepe
  for(const row of bounds.cases){
   const store=await RemoteCacheStoreV1.open({directory:directory("bound"),maximumBytes:row.maximumBytes,maximumEntryBytes:row.maximumEntryBytes,maximumAgeMilliseconds:0}),keys=bounds.keys as Record<string,string>;
   for(const op of row.ops as {put?:string;size?:number;read?:string}[]){
-   if(op.read!==undefined){store.read("default","ac",keys[op.read]!);continue;}
+   if(op.read!==undefined){await store.read("default","ac",keys[op.read]!);continue;}
    const body=new Uint8Array(op.size!).fill(97);
    expect(await store.put("default","ac",keys[op.put!]!,(async function*(){yield body;})(),{mode:"replace",declaredLength:op.size}),row.name).toMatch(/created|replaced/u);
    expect(store.usage().bytes,row.name).toBeLessThanOrEqual(row.maximumBytes);
@@ -239,59 +240,140 @@ test("idle entries older than the maximum age are dropped when the store collect
  await store.collect();expect(store.has("default","nx","old")).toBe(false);expect(store.has("default","nx","new")).toBe(true);await store.close();
 });
 
-test("the command words parse like the catalogue says and refuse everything else",()=>{
- expect(parseRemoteCacheFlagsV1(["--port","0","--host=127.0.0.1","--directory","cache","--max-bytes=1048576"])).toEqual({"--port":"0","--host":"127.0.0.1","--directory":"cache","--max-bytes":"1048576"});
- for(const bad of [["--port"],["--port","--host"],["--unknown","1"],["--port="],["serve"]])expect(()=>parseRemoteCacheFlagsV1(bad),bad.join(" ")).toThrow();
+test("the command words parse like the catalogue says and refuse everything else, in both languages",()=>{
+ expect(parseRemoteCacheArgumentsV1(["serve","--port","0","--host=127.0.0.1","--directory","cache","--max-bytes=1048576","--read-only","--tls-certificate","c.pem","--tls-key=k.pem"])).toMatchObject({operation:"serve",values:{"--port":"0","--host":"127.0.0.1","--directory":"cache","--max-bytes":"1048576","--tls-certificate":"c.pem","--tls-key":"k.pem"}});
+ expect(parseRemoteCacheArgumentsV1(["gc","--dry-run","--json"]).flags).toEqual(new Set(["--dry-run","--json"]));
+ for(const bad of [[],["clear"],["remote","status"],["serve","--port"],["serve","--port","--host"],["serve","--unknown","1"],["serve","--port="],["serve","--dry-run"],["gc","--read-only"],["status","--max-bytes","1"],["gc","--dry-run","--dry-run"],["serve","--read-only=true"]])expect(()=>parseRemoteCacheArgumentsV1(bad),bad.join(" ")).toThrow();
+ let message="";try{parseRemoteCacheArgumentsV1(["serve","--bogus"]);}catch(error){message=(error as Error).message;}
+ expect(message).toContain("Unknown option for remote-cache serve: --bogus");expect(message).toContain("Unbekannte Option für remote-cache serve: --bogus");
+ expect(remoteCacheLanguagesV1("de",{})).toEqual(["de"]);expect(remoteCacheLanguagesV1(undefined,{SEMIO_LANGUAGE:"en"})).toEqual(["en"]);expect(remoteCacheLanguagesV1(undefined,{LANG:"de_DE.UTF-8"})).toEqual(["de"]);
+ expect(remoteCacheLanguagesV1(undefined,{LANG:"C"}),"no default language: both are printed").toEqual(["en","de"]);
+ expect(()=>remoteCacheLanguagesV1("fr",{})).toThrow("Unbekannte Sprache");
+ expect(remoteCacheTextV1("de","serve.stopped")).toBe("Der Remote-Cache wurde beendet.");
 });
 
-test("cache remote status reports the contract, both renderings and a read-only probe, redacts the token, and obeys the contract's token and cancellation",async()=>{
- const server=await serve({tokens:{read:"read-only-token-9",write:"write-token-7"}}),written:string[]=[];
- const context=(environment:Record<string,string>,tool:()=>Promise<ReturnType<typeof bazelRemoteCacheToolV1>>,signal:AbortSignal=new AbortController().signal):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal,progress:async()=>{},write:line=>written.push(line),tool});
+test("every message exists in English and German with the same placeholders",()=>{
+ const names=(value:string)=>[...value.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
+ for(const [key,row] of Object.entries(texts.messages as Record<string,{en:string;de:string}>)){
+  expect(Object.keys(row).sort(),key).toEqual(["de","en"]);expect(names(row.de),key).toEqual(names(row.en));
+  if(key!=="gc.mode.apply")expect(row.en.length>0&&row.de.length>0&&row.en!==row.de||key.startsWith("serve.transport"),key).toBe(true);
+ }
+});
+
+const toolsFor=async()=>[nxRemoteCacheToolV1(),bazelRemoteCacheToolV1()];
+
+test("remote-cache status reports the contract, both renderings, a probe per protocol, the server and the store, redacts the token, and obeys the contract's token and cancellation",async()=>{
+ const folder=directory("status-store"),server=await serve({directory:folder,tokens:{read:"read-only-token-9",write:"write-token-7"}}),written:string[]=[];
+ const context=(environment:Record<string,string>,signal:AbortSignal=new AbortController().signal):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal,progress:async()=>{},write:line=>written.push(line),tools:toolsFor});
  try{
-  const bazel=async()=>bazelRemoteCacheToolV1(),nx=async()=>nxRemoteCacheToolV1(),on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
-  const off=await remoteCacheStatusV1(context({},bazel));
-  expect(off).toEqual({version:1,tool:"bazel",configured:false,contract:null,effectiveUpload:false,token:null,rendering:null,probe:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
-  for(const [name,tool,mechanism,route] of [["bazel",bazel,"bazel-flags","bazel-http"],["nx",nx,"nx-environment","nx-self-hosted"]] as const){
-   const status=await remoteCacheStatusV1(context(on,tool)) as {tool:string;configured:boolean;effectiveUpload:boolean;token:{present:boolean};rendering:{mechanism:string};probe:{protocol:string;reachable:boolean;authorized:boolean;status:number}};
-   expect(validator("Status")(status),name+JSON.stringify(validator("Status").errors)).toBe(true);
-   expect(status).toMatchObject({tool:name,configured:true,effectiveUpload:true,token:{present:true},rendering:{mechanism},probe:{protocol:route,reachable:true,authorized:true,status:404}});
-   expect(JSON.stringify(status),name+" never prints the token").not.toContain("write-token-7");
-   const denied=await remoteCacheStatusV1(context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"},tool)) as {probe:{authorized:boolean;status:number}};expect(denied.probe).toMatchObject({authorized:false,status:401});
-   const custom=await remoteCacheStatusV1(context({...on,SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT:"CI_CACHE_TOKEN",CI_CACHE_TOKEN:"read-only-token-9"},tool)) as {token:{environment:string};probe:{authorized:boolean}};expect(custom.token.environment).toBe("CI_CACHE_TOKEN");expect(custom.probe.authorized).toBe(true);
-  }
-  const unreachable=await remoteCacheStatusV1(context({SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"},bazel)) as {probe:{reachable:boolean;status:null}};expect(unreachable.probe).toMatchObject({reachable:false,status:null});
-  const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1(context(on,bazel,cancelled.signal))).rejects.toThrow();
-  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on,bazel))).rejects.toThrow("Expected repo cache serve");
+  expect((await fetch(server.url+"/v1/cache/777",{method:"PUT",body:"payload",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
+  const on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
+  const off=await remoteCacheStatusV1([],context({}));
+  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
+  const status=await remoteCacheStatusV1(["--directory",folder],context(on)) as {configured:boolean;probes:{protocol:string;reachable:boolean;authorized:boolean;status:number}[];server:{readOnly:boolean;validation:string;entries:number};store:{entries:number;bytes:number}};
+  expect(validator("Status")(status),JSON.stringify(validator("Status").errors)).toBe(true);
+  expect(status).toMatchObject({configured:true,effectiveUpload:true,token:{present:true},renderings:{nx:{mechanism:"nx-environment"},bazel:{mechanism:"bazel-flags"}},server:{readOnly:false,validation:"off",entries:1},store:{entries:1,bytes:7}});
+  expect(status.probes.map(probe=>probe.protocol)).toEqual(["nx-self-hosted","bazel-http"]);for(const probe of status.probes)expect(probe).toMatchObject({reachable:true,authorized:true,status:404});
+  expect(JSON.stringify(status),"never prints the token").not.toContain("write-token-7");
+  const denied=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"})) as {probes:{authorized:boolean;status:number}[];server:null};
+  for(const probe of denied.probes)expect(probe).toMatchObject({authorized:false,status:401});expect(denied.server).toBeNull();
+  const custom=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT:"CI_CACHE_TOKEN",CI_CACHE_TOKEN:"read-only-token-9"})) as {token:{environment:string};probes:{authorized:boolean}[];server:{entries:number}};
+  expect(custom.token.environment).toBe("CI_CACHE_TOKEN");for(const probe of custom.probes)expect(probe.authorized).toBe(true);expect(custom.server.entries).toBe(1);
+  const unreachable=await remoteCacheStatusV1([],context({SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"})) as {probes:{reachable:boolean;status:null}[]};
+  for(const probe of unreachable.probes)expect(probe).toMatchObject({reachable:false,status:null});
+  const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1([],context(on,cancelled.signal))).rejects.toThrow();
+  expect(await runRemoteCacheCommandV1(["status"],context({}))).toEqual({exitCode:0,result:expect.objectContaining({configured:false})});
+  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc.");
  }finally{await server.stop();}
 },60000);
 
-test("cache serve opens the store, announces its address, publishes progress and stops when cancelled",async()=>{
+async function listening(lines:string[]):Promise<string>{
+ return new Promise<string>((resolve,reject)=>{const started=Date.now(),timer=setInterval(()=>{const line=lines.find(candidate=>candidate.startsWith("[remote-cache] listening "));if(line){clearInterval(timer);resolve(line.slice(25));}else if(Date.now()-started>20000){clearInterval(timer);reject(Error("no listening line"));}},20);});
+}
+
+test("remote-cache serve opens the store, announces its address in the chosen language, publishes progress and stops when cancelled",async()=>{
  const stages:string[]=[],lines:string[]=[],controller=new AbortController(),folder=directory("serve");
- const context:RemoteCacheCommandContextV1={root:folder,environment:{SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN:"write-token-7"},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>lines.push(line),tool:async()=>bazelRemoteCacheToolV1()};
- const running=serveRemoteCacheV1(["--port","0","--directory","store","--max-bytes","1048576"],context);
- const address=await new Promise<string>((resolve,reject)=>{const started=Date.now(),timer=setInterval(()=>{const line=lines.find(candidate=>candidate.startsWith("[cache] listening "));if(line){clearInterval(timer);resolve(line.slice(18));}else if(Date.now()-started>20000){clearInterval(timer);reject(Error("no listening line"));}},20);});
+ const context:RemoteCacheCommandContextV1={root:folder,environment:{SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN:"write-token-7"},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>lines.push(line),tools:toolsFor};
+ const running=serveRemoteCacheV1(["--port","0","--directory","store","--max-bytes","1048576","--lang","en"],context);
+ const address=await listening(lines);
  expect(address).toMatch(/^http:\/\/127\.0\.0\.1:[0-9]+$/u);
  expect((await fetch(address+"/healthz")).status).toBe(200);expect((await fetch(address+"/status")).status).toBe(401);
  expect((await fetch(address+"/v1/cache/abc",{method:"PUT",body:"x",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
- controller.abort();await running;
- expect(stages).toEqual(expect.arrayContaining(["remote-cache:open","remote-cache:scan","remote-cache:ready","remote-cache:serving"]));expect(lines.at(-1)).toBe("[cache] stopped");
+ controller.abort();expect(await running).toEqual({exitCode:0});
+ expect(stages).toEqual(expect.arrayContaining(["remote-cache:open","remote-cache:scan","remote-cache:ready","remote-cache:serving"]));
+ expect(lines.some(line=>line.startsWith("Serving the remote cache on "+address+" (read-write, plain HTTP, result validation complete)"))).toBe(true);
+ expect(lines.some(line=>line.includes("Clients set SEMIO_REMOTE_CACHE_ENDPOINT="+address))).toBe(true);expect(lines.some(line=>line.includes("No token is set"))).toBe(false);
+ expect(lines.slice(-2)).toEqual(["[remote-cache] stopped","The remote cache stopped."]);
  await expect(fetch(address+"/healthz")).rejects.toThrow();
+ const german:string[]=[],second=new AbortController(),again=serveRemoteCacheV1(["--port","0","--directory","store","--lang","de","--read-only"],{...context,environment:{},signal:second.signal,write:line=>german.push(line)});
+ await listening(german);second.abort();await again;
+ expect(german.some(line=>line.startsWith("Der Remote-Cache läuft auf ")&&line.includes("nur lesend")&&line.includes("einfaches HTTP"))).toBe(true);expect(german.some(line=>line.includes("Kein Token gesetzt"))).toBe(true);expect(german.at(-1)).toBe("Der Remote-Cache wurde beendet.");
+ const both:string[]=[],third=new AbortController(),neutral=serveRemoteCacheV1(["--port","0","--directory","store"],{...context,environment:{LANG:"C"},signal:third.signal,write:line=>both.push(line)});
+ await listening(both);third.abort();await neutral;
+ expect(both.filter(line=>line==="The remote cache stopped."||line==="Der Remote-Cache wurde beendet.").length,"without a language both are printed").toBe(2);
+ expect(both.some(line=>line.includes("result validation complete"))&&both.some(line=>line.includes("Ergebnisprüfung vollständig")),"every part of a line follows its language").toBe(true);
+ const quiet=new AbortController();
  await expect(serveRemoteCacheV1(["--port","70000"],context)).rejects.toThrow("--port must be a whole number from 0 to 65535");
- await expect(serveRemoteCacheV1(["--host","0.0.0.0","--port","0"],{...context,environment:{},signal:new AbortController().signal})).rejects.toThrow("A token is required to listen beyond loopback");
-},60000);
+ await expect(serveRemoteCacheV1(["--host","0.0.0.0","--port","0"],{...context,environment:{},signal:quiet.signal})).rejects.toThrow("A token is required to listen beyond loopback.");
+ await expect(serveRemoteCacheV1(["--tls-certificate","only.pem"],context)).rejects.toThrow("TLS needs both a certificate and a key.");
+ await expect(serveRemoteCacheV1(["--tls-certificate","missing.pem","--tls-key","missing.key"],context)).rejects.toThrow("TLS file required");
+ const holder=new AbortController(),held:string[]=[],first=serveRemoteCacheV1(["--port","0","--directory","busy"],{...context,signal:holder.signal,write:line=>held.push(line)});
+ await listening(held);await expect(serveRemoteCacheV1(["--port","0","--directory","busy"],context)).rejects.toThrow("Ein anderer Remote-Cache-Server benutzt");
+ holder.abort();await first;
+},90000);
 
+test("remote-cache gc plans first, then removes exactly the planned entries, in the chosen language, and reports JSON",async()=>{
+ const folder=directory("gc"),store=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**22,maximumEntryBytes:2**20,maximumAgeMilliseconds:0}),lines:string[]=[];
+ for(let index=0;index<12;index++){await store.put("main","nx",`key${index}`,(async function*(){yield new Uint8Array(100_000).fill(index);})(),{mode:"keep",declaredLength:100_000});}
+ await store.close();
+ const context=(write:(line:string)=>void,environment:Record<string,string>={}):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal:new AbortController().signal,progress:async()=>{},write,tools:toolsFor});
+ expect(await collectRemoteCacheV1(["--directory",join(folder,"missing")],context(line=>lines.push(line),{SEMIO_LANGUAGE:"en"}))).toEqual({exitCode:0});expect(lines.at(-1)).toContain("does not exist; nothing to collect.");
+ const plan=await collectRemoteCacheV1(["--directory",folder,"--max-bytes","1048576","--dry-run","--json"],context(()=>{})) as {exitCode:number;result:{dryRun:boolean;scanned:{entries:number};removed:{entries:number;budget:number;bytes:number};remaining:{entries:number}}};
+ expect(plan.result).toMatchObject({dryRun:true,scanned:{entries:12},removed:{budget:plan.result.removed.entries},remaining:{entries:12-plan.result.removed.entries}});expect(plan.result.removed.entries).toBeGreaterThan(0);
+ const mixed:string[]=[];await collectRemoteCacheV1(["--directory",folder,"--dry-run"],context(line=>mixed.push(line),{LANG:"C"}));
+ expect(mixed.some(line=>line.includes("(plan only)"))&&mixed.some(line=>line.includes("(nur Plan)"))).toBe(true);
+ const store2=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});expect(store2.usage().entries,"a plan removes nothing").toBe(12);await store2.close();
+ const german:string[]=[],applied=await collectRemoteCacheV1(["--directory",folder,"--max-bytes","1048576","--lang","de"],context(line=>german.push(line)));
+ expect(applied).toEqual({exitCode:0});expect(german.at(-1)).toContain(`${plan.result.removed.entries} von 12 Einträgen entfernt`);expect(german[0]).toContain("Sammle");
+ const store3=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});expect(store3.usage().entries).toBe(plan.result.remaining.entries);expect(store3.usage().bytes).toBeLessThanOrEqual(1048576*0.9);
+ expect(store3.has("main","nx","key11"),"the newest entry survives").toBe(true);expect(store3.has("main","nx","key0"),"the oldest entry goes first").toBe(false);await store3.close();
+ const cancelling=new AbortController();cancelling.abort();
+ expect(await collectRemoteCacheV1(["--directory",folder,"--dry-run"],{...context(()=>{},{SEMIO_LANGUAGE:"en"}),signal:cancelling.signal})).toEqual({exitCode:130});
+});
+
+test("the public JSON of the remote cache is schema-first: status, gc results and the message catalogue validate against the contract schema, and drifted documents are refused",async()=>{
+ const server=await serve({tokens:{}}),status=await (await fetch(server.url+"/status")).json() as Record<string,any>;
+ try{
+  expect(validator("ServerStatus")(status),JSON.stringify(validator("ServerStatus").errors)).toBe(true);requireRemoteCacheShapeV1("ServerStatus",status,"x");
+  const drifted:[string,(value:Record<string,any>)=>void][]=[["extra key",value=>{value.extra=1;}],["missing counter",value=>{delete value.counters.nx;}],["negative count",value=>{value.counters.ac.hits=-1;}],["extra counter field",value=>{value.counters.cas.errors=0;}],["unknown validation",value=>{value.validation="weird";}],["protocol order",value=>{value.protocols.reverse();}],["start time",value=>{value.startedAt="yesterday";}],["version",value=>{value.version=2;}]];
+  for(const [name,mutate] of drifted){const copy=structuredClone(status);mutate(copy);expect(validator("ServerStatus")(copy),name).toBe(false);expect(()=>requireRemoteCacheShapeV1("ServerStatus",copy,"x"),name).toThrow();}
+  expect(validator("TextCatalogue")(texts),JSON.stringify(validator("TextCatalogue").errors)).toBe(true);
+  for(const bad of [{...texts,languages:["de","en"]},{...texts,messages:{...texts.messages,"x.y":{en:"only"}}},{...texts,messages:{...texts.messages,"Bad Key":{en:"a",de:"b"}}},{...texts,extra:true}])expect(validator("TextCatalogue")(bad)).toBe(false);
+  const folder=directory("json"),store=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**22,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});
+  for(let index=0;index<6;index++)await store.put("main","nx",`k${index}`,(async function*(){yield new Uint8Array(1000);})(),{mode:"keep",declaredLength:1000});await store.close();
+  const context:RemoteCacheCommandContextV1={root:directory("root"),environment:{},signal:new AbortController().signal,progress:async()=>{},write:()=>{},tools:toolsFor};
+  const results:unknown[]=[];
+  for(const args of [["--directory",join(folder,"none"),"--json"],["--directory",folder,"--json","--dry-run"],["--directory",folder,"--json","--max-bytes","1048576"]]){const outcome=await collectRemoteCacheV1(args,context) as {result:unknown};results.push(outcome.result);expect(validator("GcResult")(outcome.result),JSON.stringify(validator("GcResult").errors)).toBe(true);}
+  expect(results[0]).toMatchObject({present:false});expect(results[1]).toMatchObject({dryRun:true,scanned:{entries:6}});
+  for(const bad of [{...(results[0] as object),present:true},{...(results[1] as object),extra:1},{version:1,dryRun:true,directory:"x"}])expect(validator("GcResult")(bad)).toBe(false);
+ }finally{await server.stop();}
+ for(const bad of [{maximumBytes:0,maximumEntryBytes:1,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1.5,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:-1},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:0,extra:1},{maximumBytes:10,maximumEntryBytes:1}]){
+  expect(validator("StoreBounds")(bad)).toBe(false);if(!("extra" in bad))await expect(RemoteCacheStoreV1.open({directory:directory("bounds"),...bad} as never)).rejects.toThrow("Finite remote cache bounds required");
+ }
+ expect(validator("StoreBounds")({maximumBytes:10,maximumEntryBytes:10,maximumAgeMilliseconds:0})).toBe(true);
+});
 const bazelBinary=process.env.SEMIO_TEST_BAZEL_BINARY;
 
 test.skipIf(!bazelBinary)("a real Bazel client builds against the server, hits the remote cache after bazel clean, honours read-only and authenticates through the credential helper without writing the token to disk",async()=>{
- const token="rcache-sentinel-4711-token",base=directory("bazel"),workspace=join(base,"ws"),output=join(base,"ob"),events:{method:string;path:string;status:number}[]=[];
+ const token="rcache-sentinel-4711-token",base=directory("bazel"),workspace=join(base,"ws"),output=join(base,"ob"),second=join(base,"ws2"),outputTwo=join(base,"ob2"),events:{method:string;path:string;status:number}[]=[];
  mkdirSync(workspace,{recursive:true});
  writeFileSync(join(workspace,"MODULE.bazel"),'module(name="scratch",version="0.0.0")\n');writeFileSync(join(workspace,"in.txt"),"hello\n");
  writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="a",srcs=["in.txt"],outs=["a.txt"],cmd="cat $(SRCS) > $@ && echo a >> $@")\ngenrule(name="b",srcs=[":a"],outs=["b.txt"],cmd="cat $(SRCS) > $@ && echo b >> $@")\n');
  const server=await serve({tokens:{read:"read-only-token-9",write:token},onEvent:event=>{if(event.stage==="request")events.push(event);}});
- const run=async(environment:Record<string,string>,command:string[],extra:string[]=[])=>{
+ const run=async(environment:Record<string,string>,command:string[],extra:string[]=[],place:{cwd:string;output:string}={cwd:workspace,output})=>{
   const contract=resolveRemoteCacheContractV1(environment)!,rendering=bazelRemoteCacheV1(contract,environment,{helperDirectory:base});
   if(rendering.helper)writeFileSync(rendering.helper.path,rendering.helper.content,{mode:rendering.helper.mode});
-  return client(bazelBinary!,[`--output_user_root=${join(base,"root")}`,`--output_base=${output}`,`--install_base=${join(base,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?[...rendering.flags,...extra]:[])],{cwd:workspace,timeout:300000,env:{PATH:process.env.PATH!,HOME:process.env.HOME!,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8",...rendering.environment}});
+  return client(bazelBinary!,[`--output_user_root=${join(base,"root")}`,`--output_base=${place.output}`,`--install_base=${join(base,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?[...rendering.flags,...extra]:[])],{cwd:place.cwd,timeout:300000,env:{PATH:process.env.PATH!,HOME:process.env.HOME!,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8",...rendering.environment}});
  };
  const rw={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:token};
  try{
@@ -302,6 +384,14 @@ test.skipIf(!bazelBinary)("a real Bazel client builds against the server, hits t
   const produced=/Target \/\/:b up-to-date:\s+(\S+)/u.exec(warm.stderr)?.[1];expect(produced).toBeDefined();expect(readFileSync(join(workspace,produced!),"utf8")).toBe("hello\na\nb\n");
   const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer "+token}})).json() as {counters:{ac:{hits:number};cas:{hits:number}}};
   expect(status.counters.ac.hits).toBeGreaterThanOrEqual(2);
+  expect((await run(rw,["shutdown"])).status).toBe(0);
+  cpSync(workspace,second,{recursive:true});
+  const fresh=await run(rw,["build","//:b"],[],{cwd:second,output:outputTwo});expect(fresh.status,fresh.stderr).toBe(0);
+  const summary=/INFO: [0-9]+ processes?: ([^\n]*?)\./u.exec(fresh.stderr);expect(summary,fresh.stderr).not.toBeNull();
+  const kinds=summary![1]!.split(", ").map(part=>/^([0-9]+) (.+)$/u.exec(part.trim())!).filter(part=>part[2]!=="internal");
+  expect(kinds.map(part=>part[2]),"a second output base in another directory runs nothing: every process is a remote cache hit").toEqual(["remote cache hit"]);expect(Number(kinds[0]![1])).toBe(2);
+  expect(readFileSync(join(second,/Target \/\/:b up-to-date:\s+(\S+)/u.exec(fresh.stderr)![1]!),"utf8")).toBe("hello\na\nb\n");
+  expect((await run(rw,["shutdown"],[],{cwd:second,output:outputTwo})).status).toBe(0);
   expect((await run(rw,["clean"])).status).toBe(0);
   const anonymous=await run({SEMIO_REMOTE_CACHE_ENDPOINT:server.url},["build","//:b"]);expect(anonymous.status,anonymous.stderr).toBe(0);expect(anonymous.stderr).not.toMatch(/remote cache hit/u);
   expect(events.some(event=>event.status===401)).toBe(true);

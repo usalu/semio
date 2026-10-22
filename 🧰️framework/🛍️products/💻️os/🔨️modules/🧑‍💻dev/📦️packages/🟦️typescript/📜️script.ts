@@ -1,9 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧭️ Routes OS development commands to their semantic owners. */
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔬️ Checks neutral development process and local-session contracts against independent oracles. */
 class CanonicalArchitectureScript extends BundleScript {
@@ -67,7 +68,7 @@ class TicketProbeScript extends BundleScript {
 }
 
 
-const router = new ScriptRouter(import.meta.dir)
+const router = new ScriptRouter(import.meta.dirname)
   .registerLazy("verify-staged", async () => (await import("../../🔎️verification/🧾️convergence/🟦️.ts")).VerifyStagedScript)
   .register("ticket-probe", TicketProbeScript)
   .register("playground-session", PlaygroundSessionScript)
@@ -163,7 +164,7 @@ const router = new ScriptRouter(import.meta.dir)
     }
   });
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => {
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => {
   const argv=process.argv.slice(2),at=argv.indexOf("--catalog");
   if(at>=0){const path=argv[at+1];if(!path||argv.indexOf("--catalog",at+1)>=0)throw new Error("One explicit catalog root required");process.env.SEMIO_PLUGIN_CATALOG=path;argv.splice(at,2);}
   return runScriptMain(router,{invocation:original,argv,defaultCommand:"dev"});

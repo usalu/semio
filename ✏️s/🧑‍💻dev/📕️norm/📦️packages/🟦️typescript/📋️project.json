@@ -16,7 +16,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify norm-document-contract",
+        "command": "repo ./📜️script.ts verify norm-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -34,7 +34,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify norm-results-window-ownership",
+        "command": "repo ./📜️script.ts verify norm-results-window-ownership",
         "forwardAllArgs": true
       },
       "metadata": {

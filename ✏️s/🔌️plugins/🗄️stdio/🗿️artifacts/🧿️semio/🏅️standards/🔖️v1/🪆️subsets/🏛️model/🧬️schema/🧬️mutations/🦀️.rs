@@ -37,7 +37,7 @@ use crate::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDi
 
 
 use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.flow`'s own
@@ -72,7 +72,7 @@ pub mod scale_elements;
 /// `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioModelSnapshot, diff = SemioModelDiff, schema = "SemioModelMutation")]
+#[mutations(snapshot = SemioModelSnapshot, diff = SemioModelDiff, schema = "SemioModelMutation", reference = SemioModelSnapshot, reference_diff = SemioModelDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioModelMutation {
     InsertSpatialNode(insert_spatial_node::InsertSpatialNode),
@@ -100,7 +100,7 @@ pub const KINDS: &[&str] = &["insert-spatial-node", "remove-spatial-node", "set-
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_model_mutation(mutation: &SemioModelMutation, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
-    <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, base)
+    <SemioModelMutation as ColdMutation<SemioModelSnapshot>>::diff(mutation, base)
 }
 
 
@@ -112,7 +112,7 @@ pub fn diff_semio_model_mutation(mutation: &SemioModelMutation, base: &SemioMode
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
     Ok({
-    <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, base)?
+    <SemioModelMutation as ColdMutation<SemioModelSnapshot>>::inverse(mutation, base)?
 
     })
 }

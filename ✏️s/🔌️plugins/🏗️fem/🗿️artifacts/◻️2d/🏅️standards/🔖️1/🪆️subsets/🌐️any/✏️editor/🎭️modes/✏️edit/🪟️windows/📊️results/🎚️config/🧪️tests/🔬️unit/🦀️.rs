@@ -1,8 +1,8 @@
 use super::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use protocol::OpBinary;
 use protocol::OpText;
-use protocol::ColdMutation;
+
 
 #[test]
 fn fem2d_window_config_results_matches_neutral_fixture_and_codecs() {

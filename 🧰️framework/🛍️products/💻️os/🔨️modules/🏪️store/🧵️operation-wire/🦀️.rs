@@ -8,14 +8,12 @@ use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjec
 
 #[path = "📝️text/🦀️.rs"]
 mod text;
-pub use text::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor};
+pub use text::{ArtifactOperationImage, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor};
 
 #[path = "📦️output/🦀️.rs"]
 mod output;
 pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,ArtifactPreparedOperationsOwner};
 pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
-
-
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -27,12 +25,6 @@ pub struct ArtifactPreparedOperationProgress {
     pub released_bytes: usize,
     pub complete: bool,
 }
-
-
-
-
-
-
 
 fn text_failure(error:ArtifactPreparedOperationError,header_bytes:usize)->ArtifactPreparedOperationError {
     let child=error.reason.retained_progress();
@@ -53,6 +45,7 @@ pub struct ArtifactPreparedOperationCursor {
     json: ArtifactCanonicalJsonCursor,
     pub text: ArtifactOperationTextCursor,
     pub pack: BorrowedProjectedPackCursor,
+    pack_started: bool,
     pub closed: bool,
 }
 
@@ -132,6 +125,7 @@ impl ArtifactPreparedOperationCursor {
     }
 
     fn advance_pack(&mut self,tag:u64,body:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],grant:RetainedCloneGrant)->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
+        self.pack_started=true;
         if grant.maximum_items==0 { return Ok(Default::default()); }
         let identity=(body as*const dyn FieldProjectionSource as*const() as usize,tag as u32 as usize,(tag>>32) as usize,0,0,3);
         if self.source_identity.is_some_and(|original|original!=identity) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"prepared Pack original source/tag changed").into()); }
@@ -150,8 +144,10 @@ impl ArtifactPreparedOperationCursor {
     }
 
     /// 🪙️ The same retained phase exposes whole symbol backing before physical allocation/release.
-    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { self.pack.next_capacity_byte_demand() }
-    pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { self.pack.next_close_byte_demand() }
+    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if self.pack_idle() { Ok(0) } else { self.pack.next_capacity_byte_demand() } }
+    pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { if self.pack_idle() { Ok(0) } else { self.pack.next_close_byte_demand() } }
+    /// 🛌️ Only a Pack source ever births symbol or frame scaffolds, so every other source leaves its pack cursor unstarted.
+    fn pack_idle(&self) -> bool { !self.pack_started }
     pub fn next_minimum_copy_bytes(&self) -> usize {
         if self.closed || self.complete { return 0; }
         if self.source_identity.is_some_and(|identity|identity.5==3) && self.header_offset==self.pack_header_length { self.pack.next_minimum_copy_bytes() } else { 1 }
@@ -159,7 +155,7 @@ impl ArtifactPreparedOperationCursor {
 
     /// 📏️ Prices only the retained codec frontier, keeping payload encoding separate.
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        if self.closed { return Ok(Default::default()); }
+        if self.closed || self.pack_idle() { return Ok(Default::default()); }
         let mut demand = self.pack.retirement_demands()?;
         demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "operation codec retirement depth overflow"))?;
         Ok(demand)
@@ -168,6 +164,7 @@ impl ArtifactPreparedOperationCursor {
     /// 🍂️ Retires exact funded symbol scaffolds; the original operation stays in its publication.
     pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
         if self.closed { return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
+        if self.pack_idle() { self.source_identity = None; self.closed = true; return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
         let demand = self.retirement_demands()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(ArtifactPreparedOperationProgress::default()); }
         let step=self.pack.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
@@ -208,46 +205,16 @@ impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::Arti
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
     fn preflight(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
     fn begin_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
+    fn begin_copy_byte_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<usize, ValueError> { self.factory.begin_copy_byte_demand(mutation, lane) }
     fn begin(&self, request: semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
     fn stamped_clock(&self) -> Option<semio_framework_os_spr::HybridLogicalTimestamp> { self.factory.stamped_clock() }
     fn stamped_mutation_id(&self) -> Option<&semio_framework_os_spr::MutationId> { self.factory.stamped_mutation_id() }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-impl<M:ArtifactCanonicalJsonTree+semio_framework_value_native_owned::native_decoding::NativeReceive<semio_framework_value::DslValue>+Sync> ArtifactOperationWire<M>{
-    /// 📏️ Quotes original canonical operation ingress before any bytes are parsed or typed owners are created.
-    pub fn original_receiving_birth_demand(&self)->semio_framework_value::RetirementDemand{semio_framework_pack_json::OriginalJsonReceiving::<M>::constructor_demand()}
-    /// 🧳️ Receives this installed canonical vocabulary through its original wire projection and mutation issuer.
-    pub fn begin_original_receiving(&self,wire:semio_framework_value::RetainedOwnedProjection<Vec<u8>>,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>,control:&semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<(semio_framework_pack_json::OriginalJsonReceiving<M>,semio_framework_value::RetainedCloneProgress),(ValueError,semio_framework_value::RetainedOwnedProjection<Vec<u8>>)>{semio_framework_pack_json::OriginalJsonReceiving::admit(wire,factory,b"op",|mutation|mutation,control,grant)}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

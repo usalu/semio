@@ -34,6 +34,14 @@
     }
   ],
   "terminalDrop": 0,
+  "rootRetirement": {
+    "clockFree": true,
+    "allocationHeaderBytes": 16,
+    "aliasCounterBytes": 8,
+    "rootsBytes": 16,
+    "releasedBytes": 40,
+    "copiedItems": 1
+  },
   "clockRegression": [
     1000,
     999,

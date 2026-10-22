@@ -54,10 +54,10 @@ fn sweep_b() -> SemioFlowSnapshot {
 //#region 🔖️AbsorbLaw
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff, d2: &SemioFlowDiff) -> SemioFlowDiff {
-    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff_cold(d2, &protocol::apply_diff_cold(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(protocol::apply_diff(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff_cold(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -66,7 +66,7 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
-        let _mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let _mid = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_remove_node("n2");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
@@ -78,7 +78,7 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
-        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_insert_node(&empty_base(), node("g", "new", "G", vec![], 2.0, 2.0), None);
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
@@ -89,7 +89,7 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
-        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_set_node_kind("f", "patched");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
@@ -102,7 +102,7 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_set_node_kind("n2", "patched");
-        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_remove_node("n2");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
@@ -114,11 +114,11 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
-        let mid1 = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let mid1 = protocol::apply_diff_cold(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_insert_node(&empty_base(), node("g", "new", "G", vec![], 2.0, 2.0), None);
-        let mid2 = protocol::apply_diff(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
+        let mid2 = protocol::apply_diff_cold(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
         let d3 = diff_remove_node("n2");
-        let sequential = protocol::apply_diff(&d3, &mid2).expect("apply must succeed for a well-formed fixture");
+        let sequential = protocol::apply_diff_cold(&d3, &mid2).expect("apply must succeed for a well-formed fixture");
 
         let mut left = d1.clone();
         MutationDiff::absorb(&mut left, d2.clone());
@@ -129,8 +129,8 @@ async fn absorb_law() {
         let mut right = d1.clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(protocol::apply_diff(&left, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (left) failed");
-        assert_eq!(protocol::apply_diff(&right, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff_cold(&left, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff_cold(&right, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (right) failed");
     }
 }
 //#endregion 🔖️AbsorbLaw

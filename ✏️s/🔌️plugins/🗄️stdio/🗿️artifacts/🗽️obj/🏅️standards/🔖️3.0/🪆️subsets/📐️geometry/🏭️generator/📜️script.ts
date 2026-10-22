@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -10,10 +10,10 @@
 // Two independent recipe FAMILIES, each mirroring the sibling `📼️avi/🏅️standards/🔖️1.0` generator's
 // shape (`generate [--only <id>]`, `SEMIO_FIXTURE_OUT` read as a fixtures ROOT — every generator in
 // the repository writes `<root>/<recipe>/<file>`):
-//   * `pattern-shell` — the ORIGINAL single-fixture recipe (unchanged since it was first committed),
-//     built by `../🦀️engine` and admitted through `tobj` 4. Its own `testEvidence` entry's
-//     `generator.command` still reads plain `generate` with no `--only`, so that exact invocation
-//     must keep producing exactly this one file — this script preserves that path byte-for-byte.
+//   * `pattern-shell` — the single-fixture recipe, built by the reference engine crate in
+//     `🧪️tests/🧰️support` and admitted through `tobj` 4. Its `testEvidence` entry's
+//     `generator.command` reads plain `generate` with no `--only`, so that invocation produces
+//     exactly this one file.
 //   * the 20 reader-oracle corpus recipes (`no-mutation-no-op`, `set-vertex-applied`, …) — built by
 //     `../📖️tobj-obj-reader`'s `build <recipe-id> <out-dir>`, one dedicated before/after (or
 //     before-only, for `-rejected-`) pair per WITNESSABLE mutation kind. See that crate's module

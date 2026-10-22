@@ -13,10 +13,10 @@ import (
 	"encoding/json"
 	"fmt"
 	command "github.com/usalu/semio/repo/client/internal/command"
+	workspace "github.com/usalu/semio/repo/workspace"
 	yaml "github.com/usalu/semio/repo/yaml"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -272,7 +272,7 @@ func LoadCheckpoints(limit *int) []Checkpoint {
 		args = append(args, fmt.Sprintf("-n%d", *limit))
 	}
 
-	cmd := exec.Command("git", args...)
+	cmd := workspace.ToolCommand("git", args...)
 	cmd.Dir = rootDir
 	out, err := cmd.Output()
 	if err != nil {

@@ -1,5 +1,5 @@
 import {afterAll,beforeAll,expect,test} from "bun:test";
-import {existsSync,mkdtempSync,rmSync,statSync} from "node:fs";
+import {existsSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {cacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
@@ -34,24 +34,30 @@ test("the detached collector starts with a clean environment, never inherits the
  expect(env).toEqual({SEMIO_CACHE_BACKGROUND:"1",PATH:"/bin",HOME:"/h",LANG:"de_DE.UTF-8"});
 });
 
-function ports(state:{now:number;stamp:number|null;started:Array<{command:string;args:readonly string[];cwd:string;env:Readonly<Record<string,string>>}>;fail?:boolean}):Partial<GraphCollectorPortsV1>{
- return{now:()=>state.now,readStamp:async()=>state.stamp,writeStamp:async()=>{if(state.fail)throw Error("disk full");state.stamp=state.now;},start:(command,args,options)=>{if(state.fail)throw Error("no process");state.started.push({command,args:[...args],...options});},environment:{PATH:"/bin",SEMIO_SCRIPT_PROCESS_INVOCATION:"{}"},execPath:"/bun",script:"/s/script.ts"};
+type Started=Array<{command:string;args:readonly string[];cwd:string;env:Readonly<Record<string,string>>;log:string}>;
+function ports(state:{now:number;stamp:number|null;started:Started;fail?:boolean;statuses?:string[];reports?:string[];failStatus?:boolean}):Partial<GraphCollectorPortsV1>{
+ return{now:()=>state.now,readStamp:async()=>state.stamp,writeStamp:async()=>{if(state.fail)throw Error("disk full");state.stamp=state.now;},start:(command,args,options)=>{if(state.fail)throw Error("no process");state.started.push({command,args:[...args],...options});},writeStatus:async(_path,text)=>{if(state.failStatus)throw Error("status volume gone");state.statuses?.push(text);},report:line=>{state.reports?.push(line);},environment:{PATH:"/bin",SEMIO_SCRIPT_PROCESS_INVOCATION:"{}"},execPath:"/bun",script:"/s/script.ts"};
 }
 
 test("a writer below the soft threshold launches the collector once per interval, a writer above it or below the floor launches nothing, and a failing launch never fails the writer",async()=>{
- const state={now:50_000_000,stamp:null as number|null,started:[] as Array<{command:string;args:readonly string[];cwd:string;env:Readonly<Record<string,string>>}>};
+ const state={now:50_000_000,stamp:null as number|null,started:[] as Started};
  expect(await launchGraphOptionalCollectorV1(workspace,3*GIB,ports(state),ledger)).toBe("enough");
  expect(await launchGraphOptionalCollectorV1(workspace,GIB/2,ports(state),ledger)).toBe("inline-floor");
  expect(state.started).toEqual([]);
  expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(state),ledger)).toBe("launch");
- expect(state.started).toEqual([{command:"/bun",args:["/s/script.ts","repo","cache","gc","--area=graph-inference"],cwd:workspace,env:{SEMIO_CACHE_BACKGROUND:"1",PATH:"/bin"}}]);
+ expect(state.started).toEqual([{command:"/bun",args:["/s/script.ts","repo","cache","gc","--area=graph-inference"],cwd:workspace,env:{SEMIO_CACHE_BACKGROUND:"1",PATH:"/bin"},log:join(workspace,".🧬semio","🦑️repo","⚡️cache","build","graph-collector.log")}]);
  expect(state.stamp).toBe(state.now);
  expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(state),ledger)).toBe("throttled");
  state.now+=GRAPH_COLLECTOR_INTERVAL_MS_V1;
  expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(state),ledger)).toBe("launch");
  expect(state.started.length).toBe(2);
- const broken={now:1,stamp:null as number|null,started:[],fail:true};
- expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(broken),ledger)).toBe("launch");
+ const broken={now:1,stamp:null as number|null,started:[] as Started,fail:true,statuses:[] as string[],reports:[] as string[]};
+ expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(broken),ledger)).toBe("failed");
+ expect(JSON.parse(broken.statuses[0]!)).toEqual({version:1,atMs:1,state:"failed",message:"disk full"});
+ expect(broken.reports).toEqual(["The graph cache collector could not be started: disk full\nDer Graph-Cache-Sammler konnte nicht gestartet werden: disk full"]);
+ const blind={now:1,stamp:null as number|null,started:[] as Started,fail:true,failStatus:true,statuses:[] as string[],reports:[] as string[]};
+ expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(blind),ledger)).toBe("failed");
+ expect(blind.reports[0]).toBe("status: status volume gone");expect(blind.reports.length).toBe(2);
  const withoutArea={...ledger,areas:ledger.areas.filter(area=>area.id!=="graph-inference")};
  expect(await launchGraphOptionalCollectorV1(workspace,GIB,ports(state),withoutArea)).toBe("enough");
 });
@@ -66,6 +72,16 @@ test("the stamp lives in the declared build area and is a real file after a real
  expect(Date.now()-statSync(stamp).mtimeMs).toBeLessThan(60000);
  expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,{start:()=>{started++;},execPath:"/bun",script:"/s",environment:{}},ledger)).toBe("throttled");
  expect(started).toBe(1);
+});
+
+test("the real detached start writes the collector's output to the declared log and records a program that cannot start there",async()=>{
+ const script=join(workspace,"collector.js"),build=join(workspace,".🧬semio","🦑️repo","⚡️cache","build","graph-collector.log"),wait=async(text:string)=>{for(let tries=0;tries<100&&!(existsSync(build)&&readFileSync(build,"utf8").includes(text));tries++)await new Promise(resolve=>setTimeout(resolve,100));return readFileSync(build,"utf8");};
+ writeFileSync(script,'console.log("collected "+process.argv.slice(2).join(" "));');
+ const ports={now:()=>1,readStamp:async()=>null,writeStamp:async()=>{},environment:{PATH:process.env.PATH},report:()=>{},writeStatus:async()=>{}};
+ expect(await launchGraphOptionalCollectorV1(workspace,1.2*GIB,{...ports,execPath:process.execPath,script},ledger)).toBe("launch");
+ expect(await wait("collected")).toContain("collected repo cache gc --area=graph-inference");
+ expect(await launchGraphOptionalCollectorV1(workspace,1.2*GIB,{...ports,execPath:join(workspace,"no-such-program"),script},ledger)).toBe("launch");
+ expect(await wait("launch failed")).toContain("launch failed: ");
 });
 
 function fake(free:number[],log:string[],options:{lease?:boolean;failOptional?:boolean}={}):GraphReclaimPortsV1{

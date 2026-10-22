@@ -27,7 +27,7 @@
       "enum": ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"]
     },
     "Profile": {
-      "description": "🪪️ Per-IDE surface selected by the `SEMIO_REPO_MCP_CLIENT` environment variable.",
+      "description": "🪪️ Per-agent-client surface selected by the `SEMIO_REPO_MCP_CLIENT` environment variable.",
       "type": "object",
       "unevaluatedProperties": false,
       "required": ["slug", "kind", "serverName"],
@@ -150,7 +150,7 @@
       "properties": { "result": { "description": "Array or scalar data of the tool." } }
     },
     "TicketOpenArguments": {
-      "description": "🎫️ CLOSED. `plan_id` exists only in the cursor, copilot, claude and codex profiles; `spec_id` only in the kiro profile.",
+      "description": "🎫️ CLOSED. `plan_id` exists only in the copilot, claude and codex profiles; `spec_id` only in the kiro profile.",
       "type": "object",
       "additionalProperties": false,
       "required": ["emoji", "title", "prompt", "goal"],

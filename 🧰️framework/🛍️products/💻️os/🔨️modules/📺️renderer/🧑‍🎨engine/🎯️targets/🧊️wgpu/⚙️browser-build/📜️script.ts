@@ -1,17 +1,18 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { assertGeneratedSources, readSourceInputContract } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.mjs";
 import { renderBrowserBoot } from "./🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🚀️ Materializes the browser boot bundle after the build tool prepares its generated data inputs. */
 class GenerateBrowserBootScript extends BundleScript {
   protected readonly entry: "browser-boot" | "renderer-boot" = "browser-boot";
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Browser boot generation accepts no arguments");
-    assertGeneratedSources(readSourceInputContract(join(import.meta.dir, "🔣️.json")), this.repoRoot);
+    assertGeneratedSources(readSourceInputContract(join(import.meta.dirname, "🔣️.json")), this.repoRoot);
     const artifact = await renderBrowserBoot(this.root, this.repoRoot, this.entry);
     mkdirSync(dirname(artifact.path), { recursive: true });
     writeFileSync(artifact.path, artifact.content, "utf8");
@@ -24,7 +25,7 @@ class GenerateRendererBootScript extends GenerateBrowserBootScript {
   protected readonly entry = "renderer-boot" as const;
 }
 
-const router = new ScriptRouter(resolve(import.meta.dir, "../📦️packages/🦀️rust"))
+const router = new ScriptRouter(resolve(import.meta.dirname, "../📦️packages/🦀️rust"))
   .register("generate-browser-boot", GenerateBrowserBootScript)
   .register("generate-renderer-boot", GenerateRendererBootScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

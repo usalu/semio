@@ -4,7 +4,8 @@ use semio_framework_value::{ValueError,ValueRefusalKind,retirement::{RetireOwned
 thread_local!{static ISSUER:Cell<Option<std::thread::ThreadId>>=const{Cell::new(None)};}
 pub struct OriginalThreadWake{thread:std::thread::Thread,id:std::thread::ThreadId}
 impl std::task::Wake for OriginalThreadWake{fn wake(self:Arc<Self>){self.thread.unpark();}fn wake_by_ref(self:&Arc<Self>){self.thread.unpark();}}
-struct ThreadWakeRetirement{thread:ManuallyDrop<Option<std::thread::Thread>>,id:Option<std::thread::ThreadId>}
+#[doc(hidden)]
+pub struct ThreadWakeRetirement{thread:ManuallyDrop<Option<std::thread::Thread>>,id:Option<std::thread::ThreadId>}
 impl RetireOwned for OriginalThreadWake{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ThreadWakeRetirement{thread:ManuallyDrop::new(Some(self.thread)),id:Some(self.id)})}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ThreadWakeRetirement>())}
@@ -51,5 +52,5 @@ pub fn admit_original_thread_wake(original:&Waker,grant:RetainedCloneGrant)->Res
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod internals {
-    pub type ThreadWakeRetirement = super::ThreadWakeRetirement;
+    pub use super::ThreadWakeRetirement;
 }

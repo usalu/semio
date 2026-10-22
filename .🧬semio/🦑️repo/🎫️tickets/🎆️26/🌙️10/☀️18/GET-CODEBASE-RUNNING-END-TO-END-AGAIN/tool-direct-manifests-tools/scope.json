@@ -1,0 +1,412 @@
+{
+  "version": 1,
+  "summary": {
+    "en": "Rewrites every declarative direct tool invocation to the matching `repo` command. Only the roots listed here are read and written; an empty root or a rule that matches nothing stops the build.",
+    "de": "Schreibt jeden deklarativen direkten Werkzeugaufruf auf den passenden `repo`-Befehl um. Nur die hier genannten Wurzeln werden gelesen und geschrieben; eine leere Wurzel oder eine Regel ohne Treffer stoppt den Bau."
+  },
+  "roots": [
+    "nx.json",
+    "README.md",
+    "📋️project.json",
+    ".github",
+    ".agents",
+    ".devcontainer",
+    "✏️s",
+    "♻️mit-bestand",
+    "🎓️teaching",
+    "🌎️hub",
+    "🏢️semio-tech",
+    "🧰️framework"
+  ],
+  "groups": [
+    "repair",
+    "json-commands",
+    "payloads",
+    "docs",
+    "ci",
+    "catalogue-tools-exec",
+    "law"
+  ],
+  "rules": [
+    {
+      "id": "repo-repo",
+      "group": "repair",
+      "optional": true,
+      "files": [
+        "**/*.md",
+        "**/*.json",
+        "**/*.yml",
+        "**/*.yaml"
+      ],
+      "pattern": "(?<![\\w/.-])repo repo(?= (?:run|run-many|affected|exec|watch|graph|show|inputs|reset|tools|preflight|incremental|concurrency|dependencies|cargo|cache|capacity|leases|remote-execution|remote-cache|doctor|bench|service|session|units|conformance|verify|dashboard|--tool|--help|--lang|--version)(?![\\w-]))",
+      "repl": "repo",
+      "note": {
+        "en": "Repairs `repo repo <verb>` that the command-form codemod writes for a quoted `bun repo <verb>`; matches nothing once the codemod is fixed.",
+        "de": "Repariert `repo repo <Verb>`, das der Command-Form-Codemod für ein angeführtes `bun repo <Verb>` schreibt; trifft nichts mehr, sobald der Codemod korrigiert ist."
+      }
+    },
+    {
+      "id": "repo-repo-closed",
+      "group": "repair",
+      "optional": true,
+      "files": [
+        "**/*.md",
+        "**/*.json",
+        "**/*.yml",
+        "**/*.yaml"
+      ],
+      "pattern": "(?<=[`\"'])repo repo(?=[`\"'])",
+      "repl": "repo",
+      "note": {
+        "en": "Repairs a closed `repo repo` span or string.",
+        "de": "Repariert einen geschlossenen `repo repo`-Span oder -String."
+      }
+    },
+    {
+      "id": "argv-script",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\\[\\s*)\"bun\"(\\s*,\\s*\"[^\"\\n]+\\.(?:ts|mjs|js)\")",
+      "repl": "\\1\"repo\"\\2",
+      "note": {
+        "en": "argv `[\"bun\", \"<script>\", ...]` becomes `[\"repo\", \"<script>\", ...]` (the launcher's script route).",
+        "de": "argv `[\"bun\", \"<Skript>\", ...]` wird zu `[\"repo\", \"<Skript>\", ...]` (die Skript-Route des Launchers)."
+      }
+    },
+    {
+      "id": "argv-inspector",
+      "group": "json-commands",
+      "files": [
+        "📋️project.json"
+      ],
+      "pattern": "\"bun\",(\\s*)\"x\",",
+      "repl": "\"repo\",\\1\"tools\",\\1\"exec\",\\1\"bun\",\\1\"--\",\\1\"x\",",
+      "note": {
+        "en": "`bun x <package>` runs through `repo tools exec bun`.",
+        "de": "`bun x <Paket>` läuft über `repo tools exec bun`."
+      }
+    },
+    {
+      "id": "program-script",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"program\"\\s*:\\s*)\"bun\"(?=[^{}\\[\\]]*?\"arguments\"\\s*:\\s*\\[\\s*\"[^\"]*\\.(?:ts|mjs|js)\")",
+      "repl": "\\1\"repo\"",
+      "note": {
+        "en": "A process record `program: bun` that runs a script becomes `program: repo`.",
+        "de": "Ein Prozess-Eintrag `program: bun`, der ein Skript startet, wird zu `program: repo`."
+      }
+    },
+    {
+      "id": "program-repo-args",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"program\"\\s*:\\s*)\"bun\"(\\s*,\\s*\"args\"\\s*:\\s*\\[\\s*)\"repo\"\\s*,\\s*",
+      "repl": "\\1\"repo\"\\2",
+      "note": {
+        "en": "`program: bun, args: [repo, ...]` becomes `program: repo, args: [...]`.",
+        "de": "`program: bun, args: [repo, ...]` wird zu `program: repo, args: [...]`."
+      }
+    },
+    {
+      "id": "string-script",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun (?=[^\"\\n]*?\\.(?:ts|mjs|js)(?![\\w.]))",
+      "repl": "repo ",
+      "note": {
+        "en": "A command string `bun <script> ...` becomes `repo <script> ...`.",
+        "de": "Ein Befehlsstring `bun <Skript> ...` wird zu `repo <Skript> ...`."
+      }
+    },
+    {
+      "id": "string-script-quoted",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun (?=\\\\\")",
+      "repl": "repo ",
+      "note": {
+        "en": "A command string whose script path is quoted starts with `repo` too.",
+        "de": "Ein Befehlsstring mit angeführtem Skriptpfad beginnt ebenfalls mit `repo`."
+      }
+    },
+    {
+      "id": "string-cjs",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun (?=[^\"\\n]*\\.cjs)",
+      "repl": "repo tools exec bun -- ",
+      "note": {
+        "en": "CommonJS generator scripts are not a launcher script route; they run through the tool registry.",
+        "de": "CommonJS-Generatorskripte sind keine Skript-Route des Launchers; sie laufen über die Werkzeugregistratur."
+      }
+    },
+    {
+      "id": "string-nx-run",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun run nx run ",
+      "repl": "repo run ",
+      "note": {
+        "en": "`bun run nx run <target>` is `repo run <target>`.",
+        "de": "`bun run nx run <Ziel>` ist `repo run <Ziel>`."
+      }
+    },
+    {
+      "id": "string-bun-test",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun test ",
+      "repl": "repo tools exec bun -- test ",
+      "note": {
+        "en": "A Bun test file runs through the tool registry.",
+        "de": "Eine Bun-Testdatei läuft über die Werkzeugregistratur."
+      }
+    },
+    {
+      "id": "string-uv",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")uv (?=run )",
+      "repl": "repo tools exec uv -- ",
+      "note": {
+        "en": "`uv run ...` runs through the tool registry (`repo tools exec uv -- run ...`).",
+        "de": "`uv run ...` läuft über die Werkzeugregistratur (`repo tools exec uv -- run ...`)."
+      }
+    },
+    {
+      "id": "runtime-probes",
+      "group": "json-commands",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"runtime\"\\s*:\\s*\")(node|bun|dotnet|go|uv|cmake)(?=\\s)",
+      "repl": "\\1repo tools exec --light \\2 --",
+      "note": {
+        "en": "A runtime input (a command whose output is hashed) asks the registry's tool instead of calling it.",
+        "de": "Eine Laufzeit-Eingabe (ein Befehl, dessen Ausgabe gehasht wird) fragt das Werkzeug der Registratur statt es aufzurufen."
+      }
+    },
+    {
+      "id": "policy-probes",
+      "group": "json-commands",
+      "files": [
+        "**/⚡️caching/🔣️policy.json"
+      ],
+      "pattern": "(?<=\")(bun|node|cargo|uv|python|dotnet|cmake) (--version)(?=\")",
+      "repl": "repo tools exec --light \\1 -- \\2",
+      "note": {
+        "en": "Toolchain probes of the cache policy go through the registry.",
+        "de": "Werkzeugketten-Sonden der Cache-Policy laufen über die Registratur."
+      }
+    },
+    {
+      "id": "policy-probe-go",
+      "group": "json-commands",
+      "files": [
+        "**/⚡️caching/🔣️policy.json"
+      ],
+      "pattern": "(?<=\")go version(?=\")",
+      "repl": "repo tools exec --light go -- version",
+      "note": {
+        "en": "The Go probe goes through the registry.",
+        "de": "Die Go-Sonde läuft über die Registratur."
+      },
+      "optional": true
+    },
+    {
+      "id": "policy-probe-rustc",
+      "group": "json-commands",
+      "files": [
+        "**/⚡️caching/🔣️policy.json"
+      ],
+      "pattern": "(?<=\")rustc -vV(?=\")",
+      "repl": "repo tools exec --light rustc -- -vV",
+      "note": {
+        "en": "The rustc probe uses the executable name the Cargo tool owns (needs `tools exec <command>`).",
+        "de": "Die rustc-Sonde nutzt den Programmnamen, den das Cargo-Werkzeug besitzt (braucht `tools exec <Befehl>`)."
+      }
+    },
+    {
+      "id": "payload-bun-repo",
+      "group": "payloads",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"--\",\\s*)\"bun\",\\s*\"repo\",(\\s*)",
+      "repl": "\\1\"repo\",\\2",
+      "note": {
+        "en": "A payload `-- bun repo run X` is `-- repo run X`.",
+        "de": "Eine Nutzlast `-- bun repo run X` ist `-- repo run X`."
+      }
+    },
+    {
+      "id": "payload-bun-test-argv",
+      "group": "payloads",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"--\",\\s*)\"bun\",(\\s*)\"test\"",
+      "repl": "\\1\"repo\",\\2\"tools\",\\2\"exec\",\\2\"bun\",\\2\"--\",\\2\"test\"",
+      "note": {
+        "en": "A payload `-- bun test` runs through the tool registry.",
+        "de": "Eine Nutzlast `-- bun test` läuft über die Werkzeugregistratur."
+      }
+    },
+    {
+      "id": "payload-bun-script-argv",
+      "group": "payloads",
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(\"--\",\\s*)\"bun\",(\\s*\"(?:[^\"\\n]*\\.(?:ts|mjs|js)|\\{workspace\\}/\\{script\\})\")",
+      "repl": "\\1\"repo\",\\2",
+      "note": {
+        "en": "A payload `-- bun <script>` is `-- repo <script>`.",
+        "de": "Eine Nutzlast `-- bun <Skript>` ist `-- repo <Skript>`."
+      }
+    },
+    {
+      "id": "payload-bun-test-text",
+      "group": "payloads",
+      "files": [
+        "**/*.json",
+        "**/*.md"
+      ],
+      "pattern": "(?<=-- )bun test",
+      "repl": "repo tools exec bun -- test",
+      "note": {
+        "en": "A documented payload `-- bun test` runs through the tool registry.",
+        "de": "Eine dokumentierte Nutzlast `-- bun test` läuft über die Werkzeugregistratur."
+      }
+    },
+    {
+      "id": "payload-bun-install-text",
+      "group": "payloads",
+      "files": [
+        "**/*.json",
+        "**/*.md"
+      ],
+      "pattern": "(?<=-- )bun install",
+      "repl": "repo dependencies sync --all",
+      "note": {
+        "en": "A documented payload `-- bun install` is `repo dependencies sync --all`.",
+        "de": "Eine dokumentierte Nutzlast `-- bun install` ist `repo dependencies sync --all`."
+      }
+    },
+    {
+      "id": "dashboard-run",
+      "group": "docs",
+      "files": [
+        "**/*.md"
+      ],
+      "pattern": "\\bbun run dashboard run ",
+      "repl": "repo run ",
+      "note": {
+        "en": "The documented `bun run dashboard run <task>` is `repo run <task>`.",
+        "de": "Das dokumentierte `bun run dashboard run <Aufgabe>` ist `repo run <Aufgabe>`."
+      }
+    },
+    {
+      "id": "dashboard-open",
+      "group": "docs",
+      "files": [
+        "**/*.md"
+      ],
+      "pattern": "\\bbun run dashboard(?![:\\w-])",
+      "repl": "repo dashboard",
+      "note": {
+        "en": "`bun run dashboard` opens the human control plane: `repo dashboard`.",
+        "de": "`bun run dashboard` öffnet die menschliche Steuerzentrale: `repo dashboard`."
+      }
+    },
+    {
+      "id": "doc-script",
+      "group": "docs",
+      "files": [
+        "**/*.md"
+      ],
+      "pattern": "(?<![\\w/.-])bun (?=\\S*\\.ts\\b)",
+      "repl": "repo ",
+      "note": {
+        "en": "A documented script call `bun <script>.ts` is `repo <script>.ts`.",
+        "de": "Ein dokumentierter Skriptaufruf `bun <Skript>.ts` ist `repo <Skript>.ts`."
+      }
+    },
+    {
+      "id": "ci-report",
+      "group": "ci",
+      "files": [
+        "**/*.yml",
+        "**/*.yaml"
+      ],
+      "pattern": "(?m)^(\\s*)bun \"\\$CI_REPORT\"",
+      "repl": "\\1repo \"$CI_REPORT\"",
+      "note": {
+        "en": "The CI report is a script: `repo \"$CI_REPORT\" ...`.",
+        "de": "Der CI-Bericht ist ein Skript: `repo \"$CI_REPORT\" ...`."
+      }
+    },
+    {
+      "id": "doc-bun-repo",
+      "group": "docs",
+      "optional": true,
+      "files": [
+        "**/*.md"
+      ],
+      "pattern": "(?<![\\w/.-])bun repo(?![\\w-])",
+      "repl": "repo",
+      "note": {
+        "en": "Text staged after the command-form codemod still says `bun repo`.",
+        "de": "Nach dem Command-Form-Codemod bereitgestellter Text sagt noch `bun repo`."
+      }
+    },
+    {
+      "id": "ci-bun-repo",
+      "group": "ci",
+      "optional": true,
+      "files": [
+        "**/*.yml",
+        "**/*.yaml"
+      ],
+      "pattern": "(?<![\\w/.-])bun repo(?![\\w-])",
+      "repl": "repo",
+      "note": {
+        "en": "Workflow steps staged after the command-form codemod still say `bun repo`.",
+        "de": "Nach dem Command-Form-Codemod bereitgestellte Workflow-Schritte sagen noch `bun repo`."
+      }
+    },
+    {
+      "id": "json-bun-repo",
+      "group": "json-commands",
+      "optional": true,
+      "files": [
+        "**/*.json"
+      ],
+      "pattern": "(?<=\")bun repo(?![\\w-])",
+      "repl": "repo",
+      "note": {
+        "en": "JSON command strings staged after the command-form codemod still say `bun repo`.",
+        "de": "Nach dem Command-Form-Codemod bereitgestellte JSON-Befehlsstrings sagen noch `bun repo`."
+      }
+    }
+  ]
+}

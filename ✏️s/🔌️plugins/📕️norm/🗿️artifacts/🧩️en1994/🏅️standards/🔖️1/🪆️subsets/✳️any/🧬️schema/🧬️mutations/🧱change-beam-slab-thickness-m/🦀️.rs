@@ -17,7 +17,13 @@ pub struct ChangeBeamSlabThicknessM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSlabThicknessM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_slab_thickness_m::ChangeBeamSlabThicknessM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-slab-thickness-m", kind: "change-beam-slab-thickness-m", record: "ChangedBeamSlabThicknessM" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change concrete slab thickness of the beam", "Betongurtdicke des Trägers ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for ChangeBeamSlabThicknessM where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_slab_thickness_m::ChangeBeamSlabThicknessM> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::change_beam_slab_thickness_m::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -26,9 +32,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSlabThicknessM
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change concrete slab thickness of the beam", "Betongurtdicke des Trägers ändern")
-    }
 }
 //#endregion 🔖️Payload
 

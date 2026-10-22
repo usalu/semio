@@ -509,7 +509,10 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
             LowpolyConfigMutation::SetSun(_) => &Self::DESCRIPTORS[8],
         }
     }
+}
 
+impl protocol::ColdMutation<LowpolyConfig> for LowpolyConfigMutation {
+    type ReferenceDiff = LowpolyConfigDiff;
     /// 📦️ Each variant sets only the slots of the fields it owns.
     fn diff(&self, _base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfigDiff> {
         protocol::MutationOutcome::new(match self {
@@ -531,7 +534,6 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
             },
         })
     }
-
     fn inverse(&self, base: &LowpolyConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             LowpolyConfigMutation::SetActiveObject(_) => LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: base.active_object_id.clone() }),

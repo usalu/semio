@@ -21,6 +21,19 @@ where
     Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLodMode>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set LOD mode", "Detailstufenmodus setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["lodMode".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<MapWindowConfig, Op> for SetLodMode
+where
+    Op: protocol::ColdMutation<MapWindowConfig, ReferenceDiff = MapWindowConfigDiff> + From<SetLodMode>,
+{
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.lod_mode == self.value {
             return MutationOutcome::empty().warning("mutation.no-op", format!("LOD mode is already \"{}\".", self.value));
@@ -33,12 +46,6 @@ where
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set LOD mode", "Detailstufenmodus setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["lodMode".into()]
-    }
 }
 //#endregion ⚙️Behavior
 

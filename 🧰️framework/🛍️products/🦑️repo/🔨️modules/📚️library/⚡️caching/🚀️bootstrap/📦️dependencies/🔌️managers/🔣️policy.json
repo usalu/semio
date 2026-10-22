@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "selection": {
+    "javascript": "bun",
+    "rust": "cargo",
+    "go": "go",
+    "python": "uv",
+    "dotnet": "dotnet"
+  }
+}

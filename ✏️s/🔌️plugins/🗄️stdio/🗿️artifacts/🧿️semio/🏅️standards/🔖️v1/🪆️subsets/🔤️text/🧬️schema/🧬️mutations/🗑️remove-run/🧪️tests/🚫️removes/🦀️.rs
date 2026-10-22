@@ -9,7 +9,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
@@ -31,7 +31,7 @@ fn remove_run() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_german_run_at_base_index_one() {
     let base = before();
-    let produced = protocol::apply_diff(remove_run().diff(&base).diff(), &base).expect("remove-run applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(remove_run().diff(&base).diff(), &base).expect("remove-run applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-run/removes-the-middle-run: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len() - 1, "remove-run must shorten the run sequence by exactly one");
     assert!(!produced.runs.iter().any(|run| run.language == "de"), "the German run addressed by BASE index #1 must be gone");
@@ -46,9 +46,9 @@ async fn the_undo_insert_run_puts_the_german_run_back_in_the_middle() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "remove-run of an existing run undoes as exactly one insert-run");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-run applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward remove-run applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo insert-run applies to the post-remove state");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo insert-run applies to the post-remove state");
     }
     assert_eq!(current, base, "remove-run/removes-the-middle-run: the undo did not restore the before-snapshot");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_without_a_target_missing_rejection() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&remove_run(), &base);
+    let outcome = <SemioTextMutation as ColdMutation<SemioTextSnapshot>>::diff(&remove_run(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-run/removes-the-middle-run: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -101,6 +101,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-run diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed remove-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-run/removes-the-middle-run: committed diff did not carry before to after");
 }

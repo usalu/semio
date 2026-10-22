@@ -25,7 +25,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp",
-        "command": "bun ./📜️script.ts build"
+        "command": "repo ./📜️script.ts build"
       },
       "outputs": [
         "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
@@ -37,7 +37,7 @@
       "inputs": ["default", "^default"],
       "outputs": [],
       "dependsOn": ["build"],
-      "options": { "command": "bun ./📜️script.ts install" },
+      "options": { "command": "repo ./📜️script.ts install" },
       "metadata": { "semio": { "dashboard": {
         "verb": "setup",
         "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl Installieren" },
@@ -50,7 +50,7 @@
       "cache": false,
       "inputs": ["default", "^default"],
       "outputs": [],
-      "options": { "command": "bun ./📜️script.ts test-install" },
+      "options": { "command": "repo ./📜️script.ts test-install" },
       "metadata": {
         "semio": {
           "execution": {
@@ -92,7 +92,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     }
   }

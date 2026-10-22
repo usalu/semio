@@ -38,6 +38,7 @@ semio-framework-value-retirement = { path="../../♻️retirement/📦️package
 semio-framework-value-control-contract = { path="../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-projection = { path = "../../📽️projection/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

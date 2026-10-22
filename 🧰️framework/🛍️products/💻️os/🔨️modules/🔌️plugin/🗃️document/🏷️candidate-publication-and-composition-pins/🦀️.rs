@@ -11,7 +11,7 @@ pub fn publish_document_store_candidate_if_authoritative<P, Mutation>(
 ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     if let Err(fault) = validate() {
         return Err((fault, candidate));
@@ -29,7 +29,7 @@ pub fn publish_boxed_document_store_candidate_if_authoritative<P, Mutation>(
 ) -> Result<Box<ArtifactStore<P, Mutation>>, (Fault, Box<ArtifactStore<P, Mutation>>)>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     if let Err(fault) = validate() {
         return Err((fault, candidate));

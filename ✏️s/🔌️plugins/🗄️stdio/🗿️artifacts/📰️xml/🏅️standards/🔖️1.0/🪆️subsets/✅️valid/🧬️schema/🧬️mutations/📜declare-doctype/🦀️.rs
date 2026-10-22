@@ -14,7 +14,16 @@ pub struct DeclareDoctype {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "doctype", kind: "declare-doctype", record: "DeclareDoctype" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::ColdMutation<XmlSnapshot>>::ReferenceDiff> {
         let Self { external_id } = self;
         match document_element_name(base) {
             None => rejected("declare-doctype: the document has no document element, so §2.8 gives the DOCTYPE no Name to carry".to_string()),
@@ -31,12 +40,6 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
             Some(doctype) => vec![XmlValidMutation::DeclareDoctype(DeclareDoctype { external_id: doctype.external_id.clone() })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

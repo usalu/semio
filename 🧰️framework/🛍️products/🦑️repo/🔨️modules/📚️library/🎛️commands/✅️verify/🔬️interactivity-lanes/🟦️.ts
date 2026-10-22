@@ -9,6 +9,8 @@ import { interactivityDatabaseCatalogBootstrapFailures, interactivityDatabaseCom
 import { interactivityMountedEngineSurfaceLifetimeFailures, interactivityMountedPreparedRenderFailures, interactivityMountedSurfaceLaneFailures } from "../../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🟦️.ts";
 import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { VerifyTaxonomyLanes } from "../🧾️taxonomy-lanes/🟦️.ts";
+import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 🔬️ Interactivity audit verification lanes. */
 export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
@@ -24,66 +26,66 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
     await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", "puzzle-fill-policy-self-tests"]);
     const apps = interactivityAllAppDiscovery(this.root);
     const appSelfTests = await this.lanes.interactivityAllAppDiscoverySelfTests();
-    console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.playgrounds} dashboard playground command(s), ${apps.surfaceCount} dev surface(s) over ${apps.renderers.join("/")}, ${apps.actionCount} action row(s), ${apps.surfaceCoveredAppCount} surface-covered app context(s), ${apps.surfaceMissingAppCount} missing surface context(s), ${apps.gates} dashboard-startable gate(s), ${appSelfTests} hostile/oracle self-test(s).`);
+    sayVerifyV1("interactivity.apps-descriptor-app-declaration-dashboard",{descriptors:apps.descriptors.length,appCount:String(apps.appCount),playgrounds:String(apps.playgrounds),surfaceCount:String(apps.surfaceCount),renderers:apps.renderers.join("/"),actionCount:String(apps.actionCount),surfaceCoveredAppCount:String(apps.surfaceCoveredAppCount),surfaceMissingAppCount:String(apps.surfaceMissingAppCount),gates:String(apps.gates),appSelfTests:String(appSelfTests)});
     for (const failure of apps.failures.slice(0, 25)) console.log(`  ${failure}`);
-    if (apps.failures.length > 25) console.log(`  ${apps.failures.length - 25} additional all-app discovery failure(s) omitted.`);
+    if (apps.failures.length > 25) sayVerifyV1("interactivity.additional-all-app-discovery-failure",{failures:String(apps.failures.length - 25)});
     const report = interactivityAuditRun(this.root, this.lanes);
-    console.log(`[verify interactivity] severity=${INTERACTIVITY_AUDIT_SEVERITY} scope: ${INTERACTIVITY_AUDIT_UI_ROOTS.length} UI root(s), ${INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.length} runtime-sanctioned root(s) exempt from the thread-pool rule.`);
-    console.log(`[verify interactivity] ${report.findings.length} finding(s) total:`);
+    sayVerifyV1("interactivity.severity-scope-ui-root-runtime",{severity:String(INTERACTIVITY_AUDIT_SEVERITY),uiRoots:INTERACTIVITY_AUDIT_UI_ROOTS.length,sanctionedRoots:INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.length});
+    sayVerifyV1("interactivity.finding-total",{findings:report.findings.length});
     for (const category of Object.keys(report.byCategory).sort()) console.log(`  ${category}: ${report.byCategory[category]}`);
     if (report.blockingBridgeUnlisted.length > 0) {
-      console.log(`[verify interactivity] ${report.blockingBridgeUnlisted.length} block_on/run_blocking finding(s) NOT covered by the allowlist:`);
+      sayVerifyV1("interactivity.block-on-run-blocking-finding",{unlisted:report.blockingBridgeUnlisted.length});
       for (const f of report.blockingBridgeUnlisted) console.log(`  ${f.file}:${f.line}: ${f.text}`);
     }
     for (const category of Object.keys(report.byCategory).sort()) {
       if (category === "blocking-bridge") continue; // already printed above (allowlist-reconciled).
       const inCategory = report.findings.filter((f) => f.category === category);
-      console.log(`[verify interactivity] ${inCategory.length} "${category}" finding(s):`);
+      sayVerifyV1("interactivity.finding",{count:inCategory.length,category:String(category)});
       for (const f of inCategory) console.log(`  ${f.file}:${f.line}: ${f.text}`);
     }
     if (report.staleAllowlistEntries.length > 0) {
-      console.log(`[verify interactivity] ${report.staleAllowlistEntries.length} allowlist entr(y/ies) no longer match any finding (stale — shrink the list):`);
+      sayVerifyV1("interactivity.allowlist-entr-no-longer-match",{stale:report.staleAllowlistEntries.length});
       for (const e of report.staleAllowlistEntries) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
     }
     if (report.expectedNeverToMatchEntries.length > 0) {
-      console.log(`[verify interactivity] ${report.expectedNeverToMatchEntries.length} allowlist entr(y/ies) kept for the record but structurally invisible to this scanner (e.g. test-mod-only — never counted as stale):`);
+      sayVerifyV1("interactivity.allowlist-entr-kept-for-the",{invisible:report.expectedNeverToMatchEntries.length});
       for (const e of report.expectedNeverToMatchEntries) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
     }
     if (report.preDeclaredOutOfScope.length > 0) {
-      console.log(`[verify interactivity] ${report.preDeclaredOutOfScope.length} allowlist entr(y/ies) pre-declared for future scope widening (not scanned today, not counted as stale):`);
+      sayVerifyV1("interactivity.allowlist-entr-pre-declared-for",{predeclared:report.preDeclaredOutOfScope.length});
       for (const e of report.preDeclaredOutOfScope) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
     }
     const otherCategoryFindings = report.findings.filter((f) => f.category !== "blocking-bridge").length;
     if (INTERACTIVITY_AUDIT_SEVERITY === "warn") {
-      console.log("[verify interactivity] WARN mode — reporting only, exit 0.");
+      sayVerifyV1("interactivity.warn-mode-reporting-only-exit");
       return;
     }
     const failures = apps.failures.length + report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
-    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (all-app discovery/dashboard surface coverage, unlisted blocking bridges, stale allowlist entries, or sync-fs/net/clipboard/process/db/thread-pool findings).`);
-    console.log("[verify interactivity] DENY mode — clean.");
+    if (failures > 0) throw refuseVerifyV1("breach","interactivity.deny-mode-failure",{failures:String(failures)});
+    sayVerifyV1("interactivity.deny-mode-clean");
   }
 
   /** 🧭️Prints the metadata-derived all-app ledger and enforces its bounded discovery contract. */
   protected async runInteractivityApps(args: string[]): Promise<void> {
     const report = interactivityAllAppDiscovery(this.root);
     const selfTests = await this.lanes.interactivityAllAppDiscoverySelfTests();
-    if (args.includes("--json")) console.log(JSON.stringify({ ...report, selfTests }, null, 2));
-    else console.log(`[verify interactivity apps] descriptors=${report.descriptors.length} extensions=${report.descriptors.filter((descriptor) => descriptor.kind === "extension").length} apps=${report.appCount} playgrounds=${report.playgrounds} renderers=${report.renderers.join("/")} surfaces=${report.surfaceCount} actions=${report.actionCount} migratedActions=${report.migratedActionCount} missingActions=${report.missingActionCount} surfaceCoveredApps=${report.surfaceCoveredAppCount} surfaceMissingApps=${report.surfaceMissingAppCount} gates=${report.gates} failures=${report.failures.length} selfTests=${selfTests}`);
-    for (const failure of report.failures.slice(0, 25)) console.error(`[verify interactivity apps] ${failure}`);
-    if (report.failures.length > 25) console.error(`[verify interactivity apps] ${report.failures.length - 25} additional discovery or dashboard-surface failure(s) omitted.`);
-    if (report.failures.length > 0) throw new Error(`[verify interactivity apps] ${report.failures.length} discovery or dashboard-surface failure(s).`);
+    if (args.includes("--json")) writeResultLineV1(JSON.stringify({ ...report, selfTests }, null, 2));
+    else sayVerifyV1("interactivity.apps-descriptors-extensions-apps-playgrounds",{descriptors:report.descriptors.length,extension:report.descriptors.filter((descriptor) => descriptor.kind === "extension").length,appCount:String(report.appCount),playgrounds:String(report.playgrounds),renderers:report.renderers.join("/"),surfaceCount:String(report.surfaceCount),actionCount:String(report.actionCount),migratedActionCount:String(report.migratedActionCount),missingActionCount:String(report.missingActionCount),surfaceCoveredAppCount:String(report.surfaceCoveredAppCount),surfaceMissingAppCount:String(report.surfaceMissingAppCount),gates:String(report.gates),failures:report.failures.length,selfTests:String(selfTests)});
+    for (const failure of report.failures.slice(0, 25)) sayVerifyV1("interactivity.apps",{failure:String(failure)},"error");
+    if (report.failures.length > 25) sayVerifyV1("interactivity.apps-additional-discovery-or-dashboard",{failures:String(report.failures.length - 25)},"error");
+    if (report.failures.length > 0) throw refuseVerifyV1("failed","interactivity.apps-discovery-or-dashboard-surface",{failures:report.failures.length});
     if (args.includes("--actions")) {
       const toolJobs = await toolJobCoverageRun(this.root, this.lanes);
       const dispositionFailures = interactivityAllAppActionDispositionFailures(report.descriptors);
       const productionFailures = interactivityAllAppActionProductionFailures(report.descriptors, toolJobs.acceptedCommandRows, toolJobs.acceptedReservedRoutes);
       const actionFailures = [...dispositionFailures, ...productionFailures];
-      console.error(`[verify interactivity apps actions] dispositionFailures=${dispositionFailures.length} productionJoinFailures=${productionFailures.length} acceptedCommands=${toolJobs.acceptedCommandRows.length} acceptedSharedRoutes=${toolJobs.acceptedReservedRoutes.length}`);
-      for (const failure of dispositionFailures.slice(0, 12)) console.error(`[verify interactivity apps actions] ${failure}`);
-      for (const failure of productionFailures.slice(0, 12)) console.error(`[verify interactivity apps actions] ${failure}`);
+      sayVerifyV1("interactivity.apps-actions-dispositionfailures-productionjoinfailures-acceptedcommands",{dispositionFailures:dispositionFailures.length,productionFailures:productionFailures.length,acceptedCommandRows:toolJobs.acceptedCommandRows.length,acceptedReservedRoutes:toolJobs.acceptedReservedRoutes.length},"error");
+      for (const failure of dispositionFailures.slice(0, 12)) sayVerifyV1("interactivity.apps-actions",{failure:String(failure)},"error");
+      for (const failure of productionFailures.slice(0, 12)) sayVerifyV1("interactivity.apps-actions",{failure:String(failure)},"error");
       const printedFailures = Math.min(dispositionFailures.length, 12) + Math.min(productionFailures.length, 12);
-      if (actionFailures.length > printedFailures) console.error(`[verify interactivity apps actions] ${actionFailures.length - printedFailures} additional action failure(s) omitted from console output.`);
-      if (actionFailures.length > 0) throw new Error(`[verify interactivity apps actions] ${actionFailures.length} descriptor action disposition or production-reachability join failure(s).`);
-      console.log(`[verify interactivity apps actions] ${report.actionCount} descriptor action row(s) joined to ${toolJobs.acceptedCommandRows.length} accepted production command row(s) and ${toolJobs.acceptedReservedRoutes.length} shared reserved route(s).`);
+      if (actionFailures.length > printedFailures) sayVerifyV1("interactivity.apps-actions-additional-action-failure",{omitted:String(actionFailures.length - printedFailures)},"error");
+      if (actionFailures.length > 0) throw refuseVerifyV1("failed","interactivity.apps-actions-descriptor-action-disposition",{actionFailures:actionFailures.length});
+      sayVerifyV1("interactivity.apps-actions-descriptor-action-row",{actionCount:String(report.actionCount),acceptedCommandRows:toolJobs.acceptedCommandRows.length,acceptedReservedRoutes:toolJobs.acceptedReservedRoutes.length});
     }
   }
 
@@ -112,16 +114,16 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_STATE_FILE),
       ),
     );
-    if (failures.length > 0) throw new Error(`[verify interactivity p1q-b1-b6] ${failures.join("; ")}`);
-    console.log("[verify interactivity p1q-b1-b6] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p1q-b1-b6",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p1q-b1-b6-live-source");
   }
 
   /** 🌱️ Runs the isolated P1w retained initial-catalog CAS source and hostile-mutation gate. */
   protected runInteractivityP1w(): void {
     this.lanes.interactivityDatabaseCatalogBootstrapSelfTests();
     const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY));
-    if (failures.length > 0) throw new Error(`[verify interactivity p1w] ${failures.join("; ")}`);
-    console.log("[verify interactivity p1w] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p1w",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p1w-live-source-and-hostile");
   }
 
   /** 🌱️ Runs the isolated P1x retained create-document catalog CAS source and hostile-mutation gate. */
@@ -132,8 +134,8 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
       policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_ASYNC_FILE),
       policyReadRustPolicySource(this.root, INTERACTIVITY_P1X_CONTRACT_FILE),
     );
-    if (failures.length > 0) throw new Error(`[verify interactivity p1x] ${failures.join("; ")}`);
-    console.log("[verify interactivity p1x] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p1x",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p1x-live-source-and-hostile");
   }
 
   /** 🧹 Runs the isolated P1y retained database-compaction source and hostile-mutation gate. */
@@ -145,8 +147,8 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
     const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Y_CONTRACT_FILE);
     this.lanes.interactivityDatabaseCompactionSelfTests(compact, engine, snapshot, index, contract);
     const failures = interactivityDatabaseCompactionFailures(compact, engine, snapshot, index, contract);
-    if (failures.length > 0) throw new Error(`[verify interactivity p1y] ${failures.join("; ")}`);
-    console.log("[verify interactivity p1y] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p1y",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p1y-live-source-and-hostile");
   }
 
   /** 👋️ Runs the isolated P1z retained sync-hello source and hostile-mutation gate. */
@@ -159,8 +161,8 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
     const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Z_CONTRACT_FILE);
     this.lanes.interactivityDatabaseSyncHelloSelfTests(sync, engine, hub, wal, protocol, contract);
     const failures = interactivityDatabaseSyncHelloFailures(sync, engine, hub, wal, protocol, contract);
-    if (failures.length > 0) throw new Error(`[verify interactivity p1z] ${failures.join("; ")}`);
-    console.log("[verify interactivity p1z] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p1z",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p1z-live-source-and-hostile");
   }
 
   /** 🎨️ Runs the isolated P5d mounted prepared-render source and hostile-mutation gate. */
@@ -174,8 +176,8 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
       policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs"),
       policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs"),
     );
-    if (failures.length > 0) throw new Error(`[verify interactivity p5d] ${failures.join("; ")}`);
-    console.log("[verify interactivity p5d] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p5d",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p5d-live-source-and-hostile");
   }
 
   /** 📐️ Runs the isolated P5e mounted multi-window resize/surface lane source and mutation gate. */
@@ -192,8 +194,8 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
       policyReadModuleTreeSource(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
     );
-    if (failures.length > 0) throw new Error(`[verify interactivity p5e] ${failures.join("; ")}`);
-    console.log("[verify interactivity p5e] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p5e",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p5e-live-source-and-hostile");
   }
 
   /** 🖥️ Runs the isolated P3mn paired engine-surface lifetime source and hostile-mutation gate. */
@@ -211,7 +213,7 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
       policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
       ["🗃️model", "🕸️graph", "🧭️host"].map((node) => policyReadModuleTreeSource(this.root, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`)).join("\n"),
     );
-    if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
-    console.log("[verify interactivity p3mn] live-source and hostile mutations clean.");
+    if (failures.length > 0) throw refuseVerifyV1("failed","interactivity.p3mn",{failures:failures.join("; ")});
+    sayVerifyV1("interactivity.p3mn-live-source-and-hostile");
   }
 }

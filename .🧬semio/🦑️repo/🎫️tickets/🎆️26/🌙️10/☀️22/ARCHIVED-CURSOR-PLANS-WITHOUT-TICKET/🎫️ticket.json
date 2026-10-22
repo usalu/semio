@@ -1,0 +1,8 @@
+{
+  "title": "Archived Cursor Plans Without Ticket",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "The 338 Cursor plans that sat in the retired .cursor/plans directory without any ticket evidence (no ticket.json plan reference, no ticket named in the plan). Each stays a ticket-owned file of this folder under its original name, <name>_<id>.plan.md.",
+  "summary": "Archived 338 plans out of the retired .cursor/plans source into this ticket when the directory was removed from the repository.",
+  "goal": "AI-OPTIMIZED-REPO"
+}

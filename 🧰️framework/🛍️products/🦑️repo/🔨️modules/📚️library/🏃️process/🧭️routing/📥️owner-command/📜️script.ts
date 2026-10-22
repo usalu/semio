@@ -1,8 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnerCommandScript } from "./🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 📥️ Executes the literal discovered command within its genuine original process owner authority. */
 class OwnerCommandScript extends BundleScript {
@@ -12,4 +13,4 @@ class OwnerCommandScript extends BundleScript {
 }
 
 const router=new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("owner-command",OwnerCommandScript);
-if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original}));
+if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original}));

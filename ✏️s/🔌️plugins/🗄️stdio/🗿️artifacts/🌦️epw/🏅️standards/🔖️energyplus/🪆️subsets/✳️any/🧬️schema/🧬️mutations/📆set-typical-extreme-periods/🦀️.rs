@@ -14,18 +14,21 @@ pub struct SetTypicalExtremePeriods {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePeriods {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "typical-extreme-periods", kind: "set-typical-extreme-periods", record: "SetTypicalExtremePeriods" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        let Self { value } = self;
-        protocol::MutationOutcome::new(EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() })
-    }
-    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetTypicalExtremePeriods(SetTypicalExtremePeriods { value: base.typical_extreme_periods.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set typical extreme periods", "Typische und extreme Perioden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePeriods {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() })
+    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+        Ok(vec![EpwMutation::SetTypicalExtremePeriods(SetTypicalExtremePeriods { value: base.typical_extreme_periods.clone() })])
     }
 }
 //#endregion 🔖️Payload

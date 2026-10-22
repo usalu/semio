@@ -103,7 +103,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Bitm
                 return Err(error);
             }
         };
-        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+        let post = match protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()) {
             Ok(post) => post,
             Err(_) => {
                 *self.owners.mutation = Some(mutation);

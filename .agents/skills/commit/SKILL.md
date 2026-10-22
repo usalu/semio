@@ -8,7 +8,7 @@ description: >-
 
 # Commit (bundle)
 
-**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️metric` block at the end of each message. Per-bundle and per-day inline `📊️metric📃uloc…📊️metric💾size…` apply only here (`bun ./📜️script.ts commit prepare`).
+**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️metric` block at the end of each message. Per-bundle and per-day inline `📊️metric📃uloc…📊️metric💾size…` apply only here (`repo ./📜️script.ts commit prepare`).
 
 ## Rule (always)
 
@@ -61,7 +61,7 @@ Every changed path must belong to **exactly one** bundle. If days, bundles, or l
 ### 1. Prior commits (context only)
 
 ```bash
-bun ./📜️script.ts commit log
+repo ./📜️script.ts commit log
 ```
 
 Read **stderr**: every micro-commit since the last `…🔀️` WIP. Use only to see **what happened when** (dates, rough themes). **Do not** reuse bullet wording — messages may be mistaken or obsolete.
@@ -69,17 +69,17 @@ Read **stderr**: every micro-commit since the last `…🔀️` WIP. Use only to
 ### 2. Git diff (source of truth)
 
 ```bash
-bun ./📜️script.ts commit diff
+repo ./📜️script.ts commit diff
 ```
 
 Read **stderr**: `git diff --stat` and full `git diff` for `lastWIP..HEAD`. **All bundle bullets must come from this patch** — what files and behavior actually changed.
 
-Optional single command: `bun ./📜️script.ts commit analyze` (= log + diff).
+Optional single command: `repo ./📜️script.ts commit analyze` (= log + diff).
 
 ### 3. Check (validate attribution)
 
 ```bash
-bun ./📜️script.ts commit check <<'EOF'
+repo ./📜️script.ts commit check <<'EOF'
 …bundle body…
 EOF
 ```
@@ -89,7 +89,7 @@ Exit **0** on stderr: `commit check: OK`. Exit **1** with which constraint faile
 ### 4. Prepare (your new summary)
 
 ```bash
-bun ./📜️script.ts commit prepare <<'EOF'
+repo ./📜️script.ts commit prepare <<'EOF'
 🏘️compose✍️sketchpad
 🎆️26🌙️06☀️04
 🗺️Summarize highest-impact change you see in the diff that day

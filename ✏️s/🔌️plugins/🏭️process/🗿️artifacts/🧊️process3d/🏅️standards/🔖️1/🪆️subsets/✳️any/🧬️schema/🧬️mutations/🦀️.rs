@@ -118,7 +118,7 @@ use semio_s_artifact_process_process3d_mut_stock::replace_stock_solid;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d")]
+#[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d", reference = Process3dSnapshot, reference_diff = Process3dDiff)]
 pub enum Process3dMutation {
     CreateStep(create_step::CreateStep),
     DeleteStep(delete_step::DeleteStep),

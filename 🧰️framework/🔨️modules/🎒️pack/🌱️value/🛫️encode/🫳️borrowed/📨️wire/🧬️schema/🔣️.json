@@ -9,6 +9,7 @@
     "fieldId",
     "sourceReturned",
     "headerCopyBytes",
+    "leaseElection",
     "terminalDrop",
     "stock",
     "fuel",
@@ -38,6 +39,30 @@
         },
         "nodeHashLiteral": {
           "const": "18446744073709551613"
+        }
+      }
+    },
+    "leaseElection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handleBytes",
+        "optionalPayloadBytes",
+        "payloadMoves",
+        "copyBytes"
+      ],
+      "properties": {
+        "handleBytes": {
+          "const": 16
+        },
+        "optionalPayloadBytes": {
+          "const": 32
+        },
+        "payloadMoves": {
+          "const": 2
+        },
+        "copyBytes": {
+          "const": 80
         }
       }
     },

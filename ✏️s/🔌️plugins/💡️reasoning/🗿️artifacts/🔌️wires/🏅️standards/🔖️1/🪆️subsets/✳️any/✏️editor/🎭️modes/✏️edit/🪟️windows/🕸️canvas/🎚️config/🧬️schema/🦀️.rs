@@ -35,28 +35,36 @@ pub struct WiresCanvasWindowConfigDiff {
     pub camera: Option<WiresCanvasCamera>,
 }
 
-impl protocol::MutationDiff<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
-    fn apply(&self, base: &WiresCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WiresCanvasWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut WiresCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.camera {
+            next.camera = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
     fn inverse(&self, base: &WiresCanvasWindowConfig) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none()
     }
 }

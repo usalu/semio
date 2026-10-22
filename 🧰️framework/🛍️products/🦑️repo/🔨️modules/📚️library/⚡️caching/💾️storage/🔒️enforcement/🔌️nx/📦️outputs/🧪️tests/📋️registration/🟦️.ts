@@ -19,7 +19,7 @@ test("toolkit output laws have a neutral permanent owner and bilingual dashboard
     expect(script).toContain('"toolkit-outputs":"' + fixture.source + '"');
     expect(script).toContain('selected==="toolkit-outputs"');
     const dashboard = JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")).metadata.semio.dashboard, control = dashboard.tools.find((row: any) => row.id === "build-task");
-    expect(control.command).toEqual(["bun", "repo", "run", "{task}", "--output=stream"]);
+    expect(control.command).toEqual(["repo", "run", "{task}", "--output=stream"]);
     const labels = fixture.languages.map(language => ({ language, title: control.title[language.toLowerCase()] }));
     for (const label of labels) expect(label.title.length).toBeGreaterThan(0);
     expect(db.query("select count(*) count,count(distinct json_extract(value,'$.title')) names from json_each(?)").get(JSON.stringify(labels))).toEqual({ count: 2, names: 2 });

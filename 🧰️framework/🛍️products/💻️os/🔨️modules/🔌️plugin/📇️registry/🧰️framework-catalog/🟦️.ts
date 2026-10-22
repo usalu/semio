@@ -1,6 +1,6 @@
-import type { DiscoveredPackage } from "@semio-tech/repo-lib/inventory";
-import { discoverCatalogPackages } from "@semio-tech/repo-lib/inventory";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import type { DiscoveredPackage } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { discoverCatalogPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TAXONOMY } from "../🔎️discovery/🟦️.ts";
 
 

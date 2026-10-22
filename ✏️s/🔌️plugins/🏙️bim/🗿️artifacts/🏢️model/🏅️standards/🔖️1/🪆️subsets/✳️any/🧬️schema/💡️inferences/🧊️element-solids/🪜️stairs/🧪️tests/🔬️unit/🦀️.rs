@@ -267,7 +267,7 @@ fn editing_the_construction_or_the_landing_of_a_stair_recomputes_it_and_equals_a
     ];
     let mut current = snapshot;
     for edit in edits {
-        current = protocol::apply_diff(&edit, &current).expect("applies");
+        current = protocol::apply_diff_cold(&edit, &current).expect("applies");
         let incremental = session.update(&current, &edit).clone();
         let report = session.report().clone();
         assert!(!report.gated && report.computed_by_kind.get("solid").copied().unwrap_or(0) >= 1, "the solid of the stair is recomputed: {report:?}");

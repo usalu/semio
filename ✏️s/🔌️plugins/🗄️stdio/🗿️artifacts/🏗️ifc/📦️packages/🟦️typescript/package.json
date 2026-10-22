@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-ifc:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-ifc:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-ifc:test"
+    "build": "repo run @semio-tech/stdio-ifc:build",
+    "check": "repo run @semio-tech/stdio-ifc:check",
+    "test": "repo run @semio-tech/stdio-ifc:test"
   },
   "exports": {
     ".": {

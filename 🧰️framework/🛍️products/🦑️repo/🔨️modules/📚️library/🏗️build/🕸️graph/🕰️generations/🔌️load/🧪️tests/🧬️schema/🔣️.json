@@ -4,10 +4,10 @@
  "required": [
   "version",
   "policy",
-  "language",
   "shape",
   "shapeImplementation",
-  "implementation"
+  "implementation",
+  "closures"
  ],
  "properties": {
   "version": {
@@ -38,31 +38,6 @@
      },
      "expected": {
       "type": "object"
-     }
-    }
-   }
-  },
-  "language": {
-   "type": "array",
-   "items": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-     "env",
-     "expected"
-    ],
-    "properties": {
-     "env": {
-      "type": "object",
-      "additionalProperties": {
-       "type": "string"
-      }
-     },
-     "expected": {
-      "enum": [
-       "en",
-       "de"
-      ]
      }
     }
    }
@@ -148,6 +123,45 @@
         "fact": {}
        }
       }
+     },
+     "expected": {
+      "type": "object"
+     }
+    }
+   }
+  },
+  "closures": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "owners",
+     "selection",
+     "roots",
+     "expected"
+    ],
+    "properties": {
+     "owners": {
+      "type": "object"
+     },
+     "external": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "selection": {
+      "type": "object"
+     },
+     "roots": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "providers": {
+      "type": "array"
      },
      "expected": {
       "type": "object"

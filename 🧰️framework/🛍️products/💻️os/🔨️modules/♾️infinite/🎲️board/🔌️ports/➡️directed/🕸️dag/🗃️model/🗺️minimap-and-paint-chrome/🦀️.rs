@@ -59,12 +59,12 @@ impl DagNodePaintChrome {
 
 /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::screen_to_world` — see `minimap_camera_fully_shows_content` above.
 pub fn minimap_widget_screen_to_world(layout: &MinimapWidgetLayout, sx: f64, sy: f64) -> (f64, f64) {
-    ui_wgpu::wgpu::minimap::screen_to_world(layout.map_origin_x, layout.map_origin_y, layout.world_min_x, layout.world_min_y, layout.scale, sx, sy)
+    semio_framework_ui_wgpu_light::minimap::screen_to_world(layout.map_origin_x, layout.map_origin_y, layout.world_min_x, layout.world_min_y, layout.scale, sx, sy)
 }
 
 /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::point_in_rect` — see `minimap_camera_fully_shows_content` above.
 pub fn minimap_widget_point_in_rect(rect: (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
-    ui_wgpu::wgpu::minimap::point_in_rect(rect, sx, sy)
+    semio_framework_ui_wgpu_light::minimap::point_in_rect(rect, sx, sy)
 }
 
 // #region 🔖️SelectionAlign

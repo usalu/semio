@@ -8,7 +8,7 @@ use semio_framework_value::RetainedCloneProgress;
 use semio_framework_value::ValueRefusalKind;
 use std::cell::Cell;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
-use store::pack::snapshot::ArtifactDsl as _;
+use pack::snapshot::ArtifactDsl as _;
 use store::sqlite_snapshot::SnapshotEncoding;
 use store::sqlite_snapshot::SqliteSnapshotControl;
 use crate::probe_document::ProbeSnapshot;

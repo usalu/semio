@@ -7,7 +7,7 @@
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/📸️snapshot/⬅️before/🔣️.json"));
@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn relabels_the_node_without_touching_its_kind() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-node-label applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("change-node-label applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-label/relabels-the-source-node-without-retyping-it: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes[0].label, "Sensor", "the node's label must become new_label");
     assert_eq!(produced.nodes[0].kind, base.nodes[0].kind, "change-node-label must NOT touch the separate kind field");
@@ -46,9 +46,9 @@ async fn the_undo_change_node_label_restores_the_original_label() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-node-label of an existing node undoes as exactly one change-node-label");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-node-label applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward change-node-label applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-node-label applies to the relabelled graph");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo change-node-label applies to the relabelled graph");
     }
     assert_eq!(current, base, "change-node-label/relabels-the-source-node-without-retyping-it: the undo did not restore the before-snapshot");
 }
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioGraphMutation as ColdMutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-node-label/relabels-the-source-node-without-retyping-it: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-node-label diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-node-label diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed change-node-label diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-label/relabels-the-source-node-without-retyping-it: committed diff did not carry before to after");
 }

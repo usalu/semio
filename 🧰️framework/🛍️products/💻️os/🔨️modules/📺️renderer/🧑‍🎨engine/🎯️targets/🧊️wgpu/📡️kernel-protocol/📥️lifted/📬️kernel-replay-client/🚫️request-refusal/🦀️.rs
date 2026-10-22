@@ -202,8 +202,8 @@ struct MountedProductReplayRefusalStep {
 impl MountedProductReplayRefusalRegistry {
     pub(super) fn new() -> Self {
         Self {
-            slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }),
-            abandoned: semio_framework_async::boxed_fixed_slots(|| None),
+            slots: semio_framework_async_slots::boxed_fixed_slots(|| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }),
+            abandoned: semio_framework_async_slots::boxed_fixed_slots(|| None),
             cursor: 0,
             abandoned_cursor: 0,
         }

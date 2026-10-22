@@ -14,7 +14,16 @@ pub struct SetEntity {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity", kind: "set-entity", record: "SetEntity" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entity", "Entität setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetEntity {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
         let Self { index, entity } = self;
         protocol::MutationOutcome::new(match base.entities.get(*index) {
             Some(old) => diff_set_entity(*index, entity_field_changes(old, entity)),
@@ -29,12 +38,6 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
                 None => vec![DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: *index })],
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entity", "Entität setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

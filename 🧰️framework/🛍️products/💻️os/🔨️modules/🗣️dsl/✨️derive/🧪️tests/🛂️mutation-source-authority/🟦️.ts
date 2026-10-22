@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🧬️ Independent language-neutral mutation payload placement oracle. */
 import Ajv from "ajv";
 import { strict as assert } from "node:assert";

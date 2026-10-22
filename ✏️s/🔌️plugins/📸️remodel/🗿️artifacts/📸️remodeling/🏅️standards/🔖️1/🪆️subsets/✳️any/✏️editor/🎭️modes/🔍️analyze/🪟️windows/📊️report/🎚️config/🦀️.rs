@@ -19,7 +19,11 @@ impl protocol::Mutation<RemodelingReportWindowConfig> for RemodelingReportWindow
     type Diff = RemodelingReportWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config", semantic_kind: "set-report-table", display_name: "Set Remodeling Report Window Table", emoji: "🎚️", aggregate_variant: "SetReportTable", payload_schema: "remodeling.reportwindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &RemodelingReportWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+}
+
+impl protocol::ColdMutation<RemodelingReportWindowConfig> for RemodelingReportWindowConfigMutation {
+    type ReferenceDiff = RemodelingReportWindowConfigDiff;
+    fn diff(&self, base: &RemodelingReportWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         match self {
             Self::SetReportTable { report_table } => {
                 let diff = RemodelingReportWindowConfigDiff { report_table: (&base.report_table != report_table).then(|| report_table.clone()), ..Default::default() };
@@ -93,7 +97,8 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingReportWindowConfigO
     type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RemodelingReportWindowConfig, RemodelingReportWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
@@ -109,31 +114,37 @@ pub struct RemodelingReportWindowConfigDiff {
     pub report_table: Option<String>,
 }
 
-impl protocol::MutationDiff<RemodelingReportWindowConfig> for RemodelingReportWindowConfigDiff {
-    fn apply(&self, base: &RemodelingReportWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RemodelingReportWindowConfig> {
-        let mut next = base.clone();
-        if let Some(report_table) = &self.report_table {
-            next.report_table = report_table.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<RemodelingReportWindowConfig> for RemodelingReportWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<RemodelingReportWindowConfig> for RemodelingReportWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.report_table.is_some() {
             self.report_table = other.report_table;
         }
     }
+
+    fn apply(&self, unpublished: &mut RemodelingReportWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(report_table) = &self.report_table {
+            next.report_table = report_table.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RemodelingReportWindowConfig> for RemodelingReportWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RemodelingReportWindowConfig> for RemodelingReportWindowConfigDiff {
     fn inverse(&self, base: &RemodelingReportWindowConfig) -> Self {
         Self {
             report_table: self.report_table.as_ref().map(|_| base.report_table.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }
 //#endregion 🔺️Diff

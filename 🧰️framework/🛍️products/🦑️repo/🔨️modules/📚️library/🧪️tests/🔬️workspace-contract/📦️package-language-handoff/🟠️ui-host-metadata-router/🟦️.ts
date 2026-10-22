@@ -77,7 +77,7 @@ export function registerUiHostMetadataRouterTests(): void {
         };
         await new AsyncFunction(...Object.keys(dependencies), javascript.replace(/^#!\/usr\/bin\/env bun\r?\n/u, ""))(...Object.values(dependencies));
         expect(router).toBeInstanceOf(ScriptRouter);
-        expect(router!.usage()).toBe("bun ./📜️script.ts <test|check|check-wasm> [args…]");
+        expect(router!.usage()).toBe("repo ./📜️script.ts <test|check|check-wasm> [args…]");
         expect(imported).toEqual([]);
         for (const row of expected.nativeCases) {
           process.env.SEMIO_TEST_LEVEL = "fundamental"; delete process.env.SEMIO_COVERAGE;

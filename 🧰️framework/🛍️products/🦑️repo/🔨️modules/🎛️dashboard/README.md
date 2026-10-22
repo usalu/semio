@@ -75,8 +75,11 @@ an owner target or typed dashboard declaration.
 | Start developer tools | `tool` plus `mcp`, `storybook`, or the tool name | Select the registered tool; readiness and process controls appear in its task. |
 | Run several targets | `tool:workspace/run-targets` | Select target names, project names or patterns, concurrency, cache and optional execution-plan preview. |
 | Run a command in projects | `tool:workspace/build-exec` | Select projects and the backend, enter the command words in **Arguments**; **Preview execution plan** prints the per-project plan and runs nothing. `bun-test`, `run-script` and `native-cargo` offer the same choice. |
+| Recover an inactive Graph or Nx cache | **Reset Inactive Graph Cache**, **Reset Inactive Nx Cache** | Choose the fixed profile in New Task, inspect progress or its exact refusal, and cancel through the task. No cache path or manual cleanup is required. |
 | Show or clear the build cache | `tool:workspace/build-cache-status`, `tool:workspace/build-cache-clear` | The backend axis selects Nx or Bazel; status reports directory, files and size, clear removes only that backend's task results. |
 | Run a scoped authored operation | `tool:workspace/run-script` | Search canonical script suggestions and inspect the selected owner and working directory; override the directory when the operation requires it. Put command words in **Arguments**. |
+
+**Cache-Wiederherstellung:** Wähle in **New Task** die Aktion **Inaktiven Graph-Cache Zurücksetzen** oder **Inaktiven Nx-Cache Zurücksetzen**. Das feste Profil läuft vor der Graph-Zulassung unter derselben Task-Berechtigung. Fortschritt, Abbruch und genaue Ablehnungen bleiben in der Task; Cache-Pfade, manuelle Löschung und Belegänderungen sind nicht erforderlich. Aktive oder unvollständig beobachtete Eigentümerschaft wird abgewiesen.
 
 Native documents support multiline Unicode text, combining clusters, emoji, tab indentation,
 keyboard or mouse selection, `Ctrl+A` select all, `Ctrl+C` copy, `Ctrl+Z` undo and `Ctrl+Y` redo.
@@ -103,8 +106,9 @@ customizable through the same keymap and use the selected English or German labe
 Initial host provisioning installs the fixed native debugger packages. A healthy macOS LLDB needs no additional installation. Later Linux repair requires root or noninteractive `sudo`; machine-wide LLVM on Windows uses the elevated host bootstrap. Setup and debugging retain the dashboard task's output, cancellation and process time limit.
 
 The task overview and context menus offer these controls without memorizing keys.
-Settings (`Ctrl+B p`) changes language, appearance and bindings. English and
-German labels are available throughout. A detached view reconnects to the same
+Settings (`Ctrl+B p`) changes language, appearance and keyboard bindings directly in the dashboard. Open the prefix row or **Edit key bindings**, choose an action or individual alias, enter its canonical key spelling, and press Enter. Save publishes one validated preference event; Cancel leaves the current keyboard unchanged. Restore one action or all keyboard defaults from the same view. A pending save exposes cancellation and reports the actual durable result. English and German labels are available throughout.
+
+**Local diagnostics** in the task overview or `Ctrl+B !` retains the latest64 local failures for this view, with details bounded to8192 UTF-8 bytes per record. Select a wrapped record and press Enter to copy it. Clipboard failures remain visible without ending the view; terminal draw/read failures restore the terminal and report the primary failure together with any cleanup failure. Before language selection, terminal failures are bilingual. Diagnostics are ephemeral local evidence and are discarded when the view exits. A detached view reconnects to the same
 running tasks on the next dashboard start. For automation, `repo dashboard tasks`,
 `repo dashboard logs <task> --follow`, `repo dashboard restart <task>` and `repo dashboard stop <task>` use
 the same handles and output as those controls.
@@ -264,7 +268,7 @@ pending until their visible Start action is activated.
 
 The keyboard is data: a prefix key and bindings in three scopes (`prefix`, `window`, `view`), each binding an
 action id and its keys, defaults in `⚙️preferences/⌨️keymap/🔣️.json`. Preference events override single
-bindings (`--prefix`, `--bindings`); a collision, an unknown action or a typing key is ignored and named,
+bindings through the Settings keyboard editor; a collision, an unknown action or an unsupported direct typing key is refused before saving. Automation may supply `--prefix` and `--bindings`; invalid imported overrides are ignored and named,
 never silent. The footer, the help window (`Ctrl+B ?`) and `repo dashboard --help` are generated from the keymap and
 the label catalogue (English and German), so this table is only the default state:
 
@@ -279,7 +283,8 @@ the label catalogue (English and German), so this table is only the default stat
 | `A` / `P` | Confirm archive of a history segment / load the next history page |
 | `n` | Search and start a task |
 | `h` | Task overview, including statuses and exit codes |
-| `p` | Optional settings |
+| `p` | Settings, including prefix and key aliases |
+| `!` | Inspect and copy local diagnostics |
 | `?` | Keyboard help |
 | `s` | Restore hidden task views |
 | `f` / `e` | Refresh / cancel command discovery |
@@ -312,9 +317,7 @@ view can select workspace-shared changes. Startup precedence is defaults → wor
 it starts, and restart preserves that task's environment. Interactive changes take effect in the
 current view; subsequent launches resolve stored events with their own environment and arguments.
 
-Query with `repo dashboard preferences show`. Customize with
-`repo dashboard preferences set --language de --appearance light --terminology reuse`.
-Add `--workspace` to record a shared change; `--prefix` and `--bindings '{…}'` record keymap changes. Native
+Choose the save scope in Settings before saving: local-only or shared workspace. Edit language, appearance, terminology, prefix and individual key aliases there; deliberate saves use the same preference event journal. The preferences command remains available to automation. Native
 launch accepts `--language`, `--appearance`, `--terminology`, `--renderer`, `--layout`, `--prefix`, `--root` and
 `--config`; `--help` lists their values.
 

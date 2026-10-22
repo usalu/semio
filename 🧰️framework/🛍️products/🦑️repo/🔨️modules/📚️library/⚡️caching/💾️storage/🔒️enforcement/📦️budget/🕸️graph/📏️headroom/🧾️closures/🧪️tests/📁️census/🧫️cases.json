@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": ".fseventsd",
+      "root": true,
+      "kind": "directory",
+      "service": true,
+      "omitted": true,
+      "accepted": true
+    },
+    {
+      "name": ".FSEVENTSD",
+      "root": true,
+      "kind": "directory",
+      "service": true,
+      "omitted": true,
+      "accepted": true
+    },
+    {
+      "name": ".metadata_never_index",
+      "root": true,
+      "kind": "file",
+      "service": true,
+      "omitted": true,
+      "accepted": true
+    },
+    {
+      "name": ".fseventsd",
+      "root": true,
+      "kind": "symlink",
+      "service": true,
+      "omitted": true,
+      "accepted": true
+    },
+    {
+      "name": ".fseventsd",
+      "root": false,
+      "kind": "directory",
+      "service": true,
+      "omitted": false,
+      "accepted": true
+    },
+    {
+      "name": ".metadata_never_index",
+      "root": false,
+      "kind": "file",
+      "service": true,
+      "omitted": false,
+      "accepted": true
+    },
+    {
+      "name": ".fseventsd-other",
+      "root": true,
+      "kind": "file",
+      "service": false,
+      "omitted": false,
+      "accepted": true
+    },
+    {
+      "name": "optional.sqlite",
+      "root": true,
+      "kind": "file",
+      "service": false,
+      "omitted": false,
+      "accepted": true
+    },
+    {
+      "name": "optional.sqlite",
+      "root": true,
+      "kind": "symlink",
+      "service": false,
+      "omitted": false,
+      "accepted": false
+    },
+    {
+      "name": "unknown",
+      "root": true,
+      "kind": "symlink",
+      "service": false,
+      "omitted": false,
+      "accepted": false
+    }
+  ]
+}

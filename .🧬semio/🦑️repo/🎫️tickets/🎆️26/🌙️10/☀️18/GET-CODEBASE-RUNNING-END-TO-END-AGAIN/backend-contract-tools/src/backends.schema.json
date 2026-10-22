@@ -46,6 +46,26 @@
           "required": ["variable", "environment"],
           "properties": { "variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } }
         },
+        "nativeCaller": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["namespace", "schema"],
+          "properties": { "namespace": { "$ref": "#/definitions/Id" }, "schema": { "type": "string", "pattern": "^\\.\\./.+\\.json$" } }
+        },
+        "cacheProof": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "logMarker": { "type": "string", "minLength": 1 },
+            "activity": { "type": "boolean" },
+            "spawnMarker": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["executed", "completed"],
+              "properties": { "executed": { "type": "string", "minLength": 1 }, "completed": { "type": "string", "minLength": 1 } }
+            }
+          }
+        },
         "operations": { "type": "object", "propertyNames": { "type": "string", "pattern": "^[a-z][a-z-]*$" }, "additionalProperties": { "$ref": "#/definitions/Support" } },
         "capabilities": { "type": "object", "propertyNames": { "$ref": "#/definitions/Capability" }, "additionalProperties": { "$ref": "#/definitions/Claim" } }
       }

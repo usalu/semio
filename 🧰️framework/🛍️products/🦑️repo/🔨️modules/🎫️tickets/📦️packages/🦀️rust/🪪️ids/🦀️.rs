@@ -181,24 +181,19 @@ impl TicketLayout {
 /// ➗️ Replaces every backslash with a forward slash and collapses repeated separators.
 pub fn normalize_separators(path: &str) -> String {
     let replaced = path.replace('\\', "/");
+    let unc = replaced.starts_with("//") && !replaced.starts_with("///");
     let mut normalized = String::with_capacity(replaced.len());
     let mut previous_separator = false;
     for character in replaced.chars() {
-        if character == '/' {
-            if previous_separator {
-                continue;
-            }
-            previous_separator = true;
-        } else {
-            previous_separator = false;
-        }
+        if character == '/' { if previous_separator { continue; } previous_separator = true; } else { previous_separator = false; }
         normalized.push(character);
     }
-    if normalized.len() > 1 && normalized.ends_with('/') {
-        normalized.pop();
-    }
+    if unc { normalized.insert(0, '/'); }
+    if normalized.len() > 1 && normalized.ends_with('/') && normalized != "//" && !drive_root(&normalized) { normalized.pop(); }
     normalized
 }
+
+fn drive_root(path: &str) -> bool { let bytes = path.as_bytes(); bytes.len() == 3 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && bytes[2] == b'/' }
 
 /// 🔗️ Joins two path fragments with a single forward slash.
 pub fn join_path(base: &str, child: &str) -> String {
@@ -222,8 +217,10 @@ pub fn base_name(path: &str) -> String {
 /// 🗂️ Everything before the last segment of a path.
 pub fn dir_name(path: &str) -> String {
     let normalized = normalize_separators(path);
+    if drive_root(&normalized) || normalized == "/" || normalized.strip_prefix("//").is_some_and(|value| value.split('/').count() <= 2) { return normalized; }
     match normalized.rsplit_once('/') {
         Some(("", _)) => "/".to_string(),
+        Some((parent, _)) if parent.len() == 2 && parent.as_bytes()[0].is_ascii_alphabetic() && parent.ends_with(':') => format!("{parent}/"),
         Some((parent, _)) => parent.to_string(),
         None => ".".to_string(),
     }

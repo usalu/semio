@@ -62,7 +62,7 @@ test("The table output has one tab separated row per phase, a comment header and
 });
 
 test("A real process prints a schema valid JSON profile on exit and counts the child processes it starts",()=>{
- const module=new URL("../🟨️.mjs",import.meta.url).href,program=`const m=await import(${JSON.stringify(module)});await m.profilePhaseV1("test.outer",async()=>{Bun.spawnSync([process.execPath,"-e","0"]);await Bun.sleep(5);});`;
+ const module=new URL("../🟨️.mjs",import.meta.url).href,runtime=new URL("../../../../../../../🔨️modules/⚙️runtime/🟦️.ts",import.meta.url).href,program=`const m=await import(${JSON.stringify(module)}),r=await import(${JSON.stringify(runtime)});await m.profilePhaseV1("test.outer",async()=>{r.runtimeSpawnSyncV1([process.execPath,"-e","0"]);await r.runtimeSleepV1(5);});`;
  const run=spawnSync(process.execPath,["-e",program],{encoding:"utf8",env:{...process.env,SEMIO_REPO_PROFILE:"json"}});
  expect(run.status,run.stderr).toBe(0);
  const profile=JSON.parse(run.stderr.trim().split("\n").at(-1)!);

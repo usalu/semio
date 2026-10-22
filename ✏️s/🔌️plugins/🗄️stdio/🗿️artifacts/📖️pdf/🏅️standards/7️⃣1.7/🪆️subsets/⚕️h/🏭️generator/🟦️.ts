@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -44,7 +45,7 @@ const AFTER_FILENAME = "➡️after.pdf";
 //#region 🔨️Build
 /** ⚙️ Builds the reference-crate-backed generator binary if it is missing or stale. */
 function ensureBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
 
@@ -95,7 +96,7 @@ async function manifests(): Promise<void> {
         packageVersion: "0.44",
         engineFamily: "lopdf",
         engineVersion: "0.44",
-        command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts generate",
+        command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts generate",
         platform: currentPlatform(),
       },
       comparisonPipeline: "pdf-1-7-h-lopdf-compare-v1",

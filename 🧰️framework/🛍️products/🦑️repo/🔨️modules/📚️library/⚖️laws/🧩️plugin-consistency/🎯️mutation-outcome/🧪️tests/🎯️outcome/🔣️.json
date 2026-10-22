@@ -1,0 +1,389 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "rust-leaf-sources-use-the-frozen-vocabulary",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs",
+   "source": [
+    "fn build() -> MutationOutcome<D> {",
+    "    let ok = MutationOutcome::error(\"mutation.target-missing\");",
+    "    let bad_level = MutationOutcome::fatal(\"mutation.target-missing\");",
+    "    let unknown = MutationMessage::info(\"mutation.not-a-code\");",
+    "    out.warning(\"mutation.clamped\");",
+    "    out.info(\"mutation.target-missing\");",
+    "    let l = \"mutation.leaf-literal\";",
+    "    MutationMessage::warn(\"x\");",
+    "}",
+    "fn other() { let c = x.warning(\"mutation.zzz\"); y.warn(1); }",
+    "let e = MutationApplyError::new(\"mutation.apply.bad-thing\");",
+    "let f = MutationApplyError { code: \"nope\" };",
+    "    \"warn\" => Severity::Warning,"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-3-mutation.target-missing",
+     "mutation-migration/message-code",
+     "high",
+     3
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-4-mutation.not-a-code",
+     "mutation-migration/message-code",
+     "high",
+     4
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-6-mutation.target-missing",
+     "mutation-migration/message-code",
+     "high",
+     6
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-7-mutation.leaf-literal",
+     "mutation-migration/message-code",
+     "high",
+     7
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-10-mutation.zzz",
+     "mutation-migration/message-code",
+     "high",
+     10
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-12-nope",
+     "mutation-migration/message-code",
+     "high",
+     12
+    ],
+    [
+     "mutation-message-retired-builder-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-8-353",
+     "mutation-migration/message-code",
+     "high",
+     8
+    ],
+    [
+     "mutation-message-level-alias-a/🧬️mutations/🔹️m/🔺️diff/🦀️.rs-13",
+     "mutation-migration/message-code",
+     "high",
+     13
+    ]
+   ]
+  },
+  {
+   "id": "rust-outside-leaf-folders-skips-namespace-literals",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/b/x.rs",
+   "source": [
+    "let l = \"mutation.leaf-literal\";",
+    "let b = MutationMessage::error(\"mutation.nope\");"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/b/x.rs-2-mutation.nope",
+     "mutation-migration/message-code",
+     "high",
+     2
+    ]
+   ]
+  },
+  {
+   "id": "typescript-sources-use-the-frozen-vocabulary",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/🧬️mutations/🔹️m/🟦️.ts",
+   "source": [
+    "refuse(\"warn\", \"mutation.no-op\");",
+    "refuse(\"warning\", \"mutation.no-op\");",
+    "const a = { level: \"error\", code: \"mutation.target-missing\" };",
+    "const b = { code: \"mutation.zzz\", level: \"info\" };",
+    "const c = \"mutation.leaf-ts\";"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🟦️.ts-1-mutation.no-op",
+     "mutation-migration/message-code",
+     "high",
+     1
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🟦️.ts-4-mutation.zzz",
+     "mutation-migration/message-code",
+     "high",
+     4
+    ],
+    [
+     "mutation-message-code-a/🧬️mutations/🔹️m/🟦️.ts-5-mutation.leaf-ts",
+     "mutation-migration/message-code",
+     "high",
+     5
+    ]
+   ]
+  },
+  {
+   "id": "python-tests-use-the-frozen-vocabulary",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/🧪️tests/t.py",
+   "source": [
+    "t1 = (\"error\", \"mutation.target-missing\")",
+    "t2 = (\"warn\", \"mutation.no-op\")",
+    "x = \"mutation.bogus-py\""
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/🧪️tests/t.py-2-mutation.no-op",
+     "mutation-migration/message-code",
+     "high",
+     2
+    ],
+    [
+     "mutation-message-code-a/🧪️tests/t.py-3-mutation.bogus-py",
+     "mutation-migration/message-code",
+     "high",
+     3
+    ]
+   ]
+  },
+  {
+   "id": "python-outside-tests-is-not-scanned",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/b.py",
+   "source": [
+    "x = \"mutation.bogus-py\""
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": []
+  },
+  {
+   "id": "feature-files-use-the-frozen-vocabulary",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/x.feature",
+   "source": [
+    "Then outcome has mutation.target-missing",
+    "And mutation.unknown-token appears",
+    "See mutation.fixture.json for details",
+    "level: warning, code: mutation.target-missing"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/x.feature-2-mutation.unknown-token",
+     "mutation-migration/message-code",
+     "high",
+     2
+    ],
+    [
+     "mutation-message-code-a/x.feature-4-mutation.target-missing",
+     "mutation-migration/message-code",
+     "high",
+     4
+    ]
+   ]
+  },
+  {
+   "id": "outcome-json-documents-use-the-frozen-vocabulary",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/🎯️outcome/🔣️.json",
+   "source": [
+    "{",
+    "  \"code\": \"mutation.target-missing\",",
+    "  \"level\": \"warning\",",
+    "  \"messages\": [",
+    "    { \"code\": \"mutation.zzz\", \"level\": \"error\" },",
+    "    { \"code\": \"mutation.no-op\", \"level\": \"warning\" }",
+    "  ]",
+    "}"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": [
+    [
+     "mutation-message-code-a/🎯️outcome/🔣️.json-2-mutation.target-missing",
+     "mutation-migration/message-code",
+     "high",
+     2
+    ],
+    [
+     "mutation-message-code-a/🎯️outcome/🔣️.json-5-mutation.zzz",
+     "mutation-migration/message-code",
+     "high",
+     5
+    ]
+   ]
+  },
+  {
+   "id": "unparseable-json-is-ignored",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/🎯️outcome/🔣️.json",
+   "source": [
+    "{broken"
+   ],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": []
+  },
+  {
+   "id": "empty-sources-are-clean",
+   "rule": "policyOutcomeCodeFileBreaches",
+   "path": "a/x.rs",
+   "source": [],
+   "vocabulary": {
+    "codes": [
+     {
+      "code": "mutation.target-missing",
+      "level": "error"
+     },
+     {
+      "code": "mutation.no-op",
+      "level": "warning"
+     },
+     {
+      "code": "mutation.clamped",
+      "level": "warning"
+     }
+    ],
+    "applyPattern": "^mutation\\.apply\\.[a-z-]+$",
+    "applyLevel": "error"
+   },
+   "expect": []
+  }
+ ]
+}

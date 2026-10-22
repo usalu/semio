@@ -7,7 +7,7 @@ const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
 
 const WORLD3D_RESOURCE_PAGE: usize = 16;
 
-type WorldSlots<T> = semio_framework_async::OriginalFixedSlotPages<T,WORLD3D_RESOURCE_PAGE,{WORLD3D_FRAME_RESOURCE_CAPACITY/WORLD3D_RESOURCE_PAGE}>;
+pub type WorldSlots<T> = semio_framework_async_slots::OriginalFixedSlotPages<T,WORLD3D_RESOURCE_PAGE,{WORLD3D_FRAME_RESOURCE_CAPACITY/WORLD3D_RESOURCE_PAGE}>;
 
 /// 🧯️ Retirement steps a refused raster admission is given to reach terminal — one page of its source
 /// per step, so a 16 MiB item needs 1 024 of them. The bound exists only so a poisoned ledger lock
@@ -89,7 +89,7 @@ pub enum WorldCursorWakeFault {
 }
 
 #[derive(Clone,Copy,Default)]
-struct WorldCursorWakeState {
+pub struct WorldCursorWakeState {
     pub generation: u64,
     acknowledged_generation: u64,
     pub pending_generation: Option<u64>,

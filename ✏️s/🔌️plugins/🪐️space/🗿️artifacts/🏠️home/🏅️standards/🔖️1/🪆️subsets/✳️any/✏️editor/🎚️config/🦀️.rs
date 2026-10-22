@@ -125,8 +125,18 @@ impl HomeTombstoneDelta {
     }
 }
 
-impl protocol::MutationDiff<HomeConfig> for HomeConfigDiff {
-    fn apply(&self, base: &HomeConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomeConfig> {
+impl protocol::MutationDiff<HomeConfig> for HomeConfigDiff {}
+
+impl protocol::ColdMutationDiff<HomeConfig> for HomeConfigDiff {
+    fn absorb(&mut self, other: Self) {
+        self.retired_local_studio_ids = match (self.retired_local_studio_ids.take(), other.retired_local_studio_ids) {
+            (Some(first), Some(later)) => Some(first.absorb(&later)).filter(|delta| !delta.is_empty()),
+            (first, later) => later.or(first),
+        };
+    }
+
+    fn apply(&self, unpublished: &mut HomeConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let applied = (|base: &HomeConfig| -> protocol::MutationApplyResult<HomeConfig> {
         let mut next = base.clone();
         if let Some(delta) = &self.retired_local_studio_ids {
             if let Some(missing) = delta.removed.iter().find(|id| !base.is_local_studio_retired(id)) {
@@ -141,23 +151,24 @@ impl protocol::MutationDiff<HomeConfig> for HomeConfigDiff {
             next.retired_local_studio_ids.dedup();
         }
         Ok(next)
-    }
-    fn absorb(&mut self, other: Self) {
-        self.retired_local_studio_ids = match (self.retired_local_studio_ids.take(), other.retired_local_studio_ids) {
-            (Some(first), Some(later)) => Some(first.absorb(&later)).filter(|delta| !delta.is_empty()),
-            (first, later) => later.or(first),
-        };
+    
+        })(&*unpublished)?;
+        *unpublished = applied;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<HomeConfig> for HomeConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.retired_local_studio_ids.as_ref().is_none_or(HomeTombstoneDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<HomeConfig> for HomeConfigDiff {
     fn inverse(&self, base: &HomeConfig) -> Self {
         Self {
             retired_local_studio_ids: self.retired_local_studio_ids.as_ref().map(|delta| HomeTombstoneDelta { added: delta.removed.iter().filter(|id| base.is_local_studio_retired(id)).cloned().collect(), removed: delta.added.clone() }.canonical()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.retired_local_studio_ids.as_ref().is_none_or(HomeTombstoneDelta::is_empty)
     }
 }
 //#endregion 🔖️Config
@@ -265,7 +276,10 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     }
 
     type Diff = HomeConfigDiff;
+}
 
+impl protocol::ColdMutation<HomeConfig> for HomeConfigMutation {
+    type ReferenceDiff = HomeConfigDiff;
     fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfigDiff> {
         let (HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id }) | HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id })) = self;
         let retired = matches!(self, HomeConfigMutation::RetireLocalStudio(_));
@@ -281,7 +295,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         let delta = if retired { HomeTombstoneDelta { added: vec![space_id.clone()], removed: Vec::new() } } else { HomeTombstoneDelta { added: Vec::new(), removed: vec![space_id.clone()] } };
         protocol::MutationOutcome::new(HomeConfigDiff { retired_local_studio_ids: Some(delta) })
     }
-
     fn inverse(&self, base: &HomeConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         match self {
@@ -444,13 +457,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Home
             let mutation = self.owners.mutation.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its mutation owner"))?;
             let (post, inverse) = match mutation {
                 HomeConfigMutation::RetireLocalStudio(_) | HomeConfigMutation::ListLocalStudio(_) => {
-                    let outcome = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::diff(mutation, base);
+                    let outcome = <HomeConfigMutation as protocol::ColdMutation<HomeConfig>>::diff(mutation, base);
                     let post = (!protocol::DiffAlgebra::<HomeConfig>::is_empty(outcome.diff()))
-                        .then(|| protocol::apply_diff(outcome.diff(), base).ok())
+                        .then(|| protocol::apply_diff_cold(outcome.diff(), base).ok())
                         .flatten()
                         .filter(local_studio_tombstones_are_admissible)
                         .ok_or_else(|| home_config_refusal(InvalidValue, "Space Home config preparation refuses a tombstone that changes nothing or exceeds its ceiling"))?;
-                    let inverse = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::inverse(mutation, base)?.into_iter().next().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its tombstone inverse"))?;
+                    let inverse = <HomeConfigMutation as protocol::ColdMutation<HomeConfig>>::inverse(mutation, base)?.into_iter().next().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its tombstone inverse"))?;
                     (post, inverse)
                 }
             };

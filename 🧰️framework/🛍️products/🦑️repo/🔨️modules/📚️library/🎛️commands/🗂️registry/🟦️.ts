@@ -25,7 +25,7 @@ export type RootCommandLoaderV1 = () => Promise<ScriptCommand>;
 /** 🎯️ What a help request names: the whole router, or one command. */
 export type RootCommandHelpRequestV1 = Readonly<{ command?: string }>;
 
-const contract = compileJsonSchemaSubset(registrySchema), frontend = "bun ./📜️script.ts";
+const contract = compileJsonSchemaSubset(registrySchema), frontend = "repo ./📜️script.ts";
 let cached: RootCommandRegistryV1 | undefined;
 
 /** 📋️ Admits a registry that satisfies its schema, with unique command ids and the provisioning owner `repo`. */

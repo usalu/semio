@@ -88,7 +88,7 @@
         "identity": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["argument", "pattern", "description", "environment", "connectionSources"],
+          "required": ["argument", "pattern", "description", "environment"],
           "properties": {
             "argument": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
             "pattern": { "type": "string", "minLength": 1 },
@@ -96,10 +96,9 @@
             "environment": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["agent", "session", "lane"],
-              "properties": { "agent": { "type": "string" }, "session": { "type": "string" }, "lane": { "type": "string" } }
-            },
-            "connectionSources": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+              "required": ["session"],
+              "properties": { "session": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+            }
           }
         },
         "globals": {

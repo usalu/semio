@@ -46,11 +46,11 @@ pub fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: Vec<Semio
 /// 🛂️ Applies `leaf` to the running working child when the graph vocabulary admits it there; a refused leaf leaves it untouched.
 pub fn admit(work: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> bool {
     let refused = |messages: &[protocol::MutationMessage]| messages.iter().any(|message| matches!(message.level, Severity::Error | Severity::Fatal));
-    let outcome = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(leaf, work);
+    let outcome = <SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(leaf, work);
     if refused(outcome.messages()) {
         return false;
     }
-    match protocol::apply_diff(outcome.diff(), work) {
+    match protocol::apply_diff_cold(outcome.diff(), work) {
         Ok(next) => {
             *work = next;
             true

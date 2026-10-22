@@ -71,12 +71,12 @@ fn invocation(argv: &[String]) -> ParsedArgs {
 
 // #region 🔖️Proc
 pub mod proc {
+    use semio_framework_repo_workspace::spawn_command;
     use std::path::Path;
-    use std::process::Command;
 
     /// 🏃️ Spawns `cmd` with inherited stdio, extending (not replacing) the current environment.
     pub fn spawn_inherit(cmd: &str, args: &[&str], cwd: &Path, env: &[(String, String)]) -> i32 {
-        let status = Command::new(cmd).args(args).current_dir(cwd).envs(env.iter().cloned()).status();
+        let status = spawn_command(cmd).args(args).current_dir(cwd).envs(env.iter().cloned()).status();
         match status {
             Ok(s) => s.code().unwrap_or(1),
             Err(e) => {

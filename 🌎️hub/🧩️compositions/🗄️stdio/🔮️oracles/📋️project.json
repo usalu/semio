@@ -12,7 +12,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts test-drawing-reader",
+        "command": "repo 📜️script.ts test-drawing-reader",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -25,7 +25,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts test-composition",
+        "command": "repo 📜️script.ts test-composition",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -38,7 +38,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts test-native-oracles",
+        "command": "repo 📜️script.ts test-native-oracles",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -52,7 +52,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts test-private-reader",
+        "command": "repo 📜️script.ts test-private-reader",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -65,7 +65,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun 📜️script.ts test-native-drawing-reader",
+        "command": "repo 📜️script.ts test-native-drawing-reader",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -82,7 +82,7 @@
       "outputs": [],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
-        "command": "bun ./📜️script.ts test-type-ownership"
+        "command": "repo ./📜️script.ts test-type-ownership"
       },
       "inputs": [
         "stdioSources"
@@ -95,7 +95,7 @@
       "outputs": [],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
-        "command": "bun ./📜️script.ts test-production-preparation",
+        "command": "repo ./📜️script.ts test-production-preparation",
         "forwardAllArgs": false
       },
       "inputs": [

@@ -1,0 +1,4 @@
+const base=process.argv[2]!,v=await import(base+"/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts");
+const B=base+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const schemas:[string,any][]=[["caller",(await import(B+"/🧬️schema/📥️caller.json",{with:{type:"json"}})).default],["authoring",(await import(B+"/🧬️schema/📥️authoring.json",{with:{type:"json"}})).default],["host-capacity policy",(await import(base+"/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",{with:{type:"json"}}).catch(()=>({default:null}))).default]].filter(([,s])=>s) as any;
+for(const [name,schema] of schemas){const bytes=JSON.stringify(schema).length;const n=2000;const value={};const s=Bun.nanoseconds();for(let i=0;i<n;i++)v.validateJsonSchemaSubset(schema,value);console.log(`${name.padEnd(22)} ${String(bytes).padStart(6)} B  ${(((Bun.nanoseconds()-s)/1e6)/n*1000).toFixed(1).padStart(8)} us/validate`);}

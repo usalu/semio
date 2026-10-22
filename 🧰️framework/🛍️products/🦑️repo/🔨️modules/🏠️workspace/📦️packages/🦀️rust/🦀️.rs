@@ -10,6 +10,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 //#region 🖍️Pattern
 
@@ -567,23 +568,30 @@ pub fn files_index_for_root(repo_root: &Path) -> PathBuf {
 
 //#region 🧭️Discovery
 
-/// 🧭️ Walks upwards from `start_dir` and returns the first monorepo root recognised, in the
-/// order legacy CLI entry point, git checkout, Go module.
+/// 🧭️ Selects the nearest actual Git checkout or the canonical starting directory.
 pub fn find_repo_root(start_dir: &Path) -> PathBuf {
     let dir = match fs::canonicalize(start_dir) {
         Ok(resolved) => strip_verbatim(&resolved),
         Err(_) => start_dir.to_path_buf(),
     };
-    if let Some(found) = ascend(&dir, |candidate| candidate.join("repo").join("cli").join("main.go").is_file()) {
-        return found;
-    }
-    if let Some(found) = ascend(&dir, |candidate| candidate.join(".git").exists()) {
-        return found;
-    }
-    if let Some(found) = ascend(&dir, |candidate| candidate.join("go.mod").exists()) {
+    if let Some(found) = ascend(&dir, |candidate| { let marker = candidate.join(".git"); marker.is_file() || marker.is_dir() }) {
         return found;
     }
     dir
+}
+
+/// 🎯️ Uses an explicit directory without ancestor discovery and validates the selected physical root.
+pub fn select_repo_root(start: &Path, explicit: Option<&Path>) -> Result<PathBuf, String> {
+    let selected = match explicit {
+        Some(path) if path.as_os_str().is_empty() => return Err("Repository directory required / Repository-Verzeichnis erforderlich".into()),
+        Some(path) if path.is_absolute() => path.to_path_buf(),
+        Some(path) => start.join(path),
+        None => find_repo_root(start),
+    };
+    if selected.to_string_lossy().encode_utf16().count() > 256 { return Err("Repository path exceeds 256 units / Repository-Pfad ueberschreitet 256 Einheiten".into()); }
+    let selected = strip_verbatim(&fs::canonicalize(&selected).map_err(|error| format!("Repository directory unavailable / Repository-Verzeichnis nicht verfuegbar: {error}"))?);
+    if !selected.is_dir() || selected.to_string_lossy().encode_utf16().count() > 256 { return Err("Bounded repository directory required / Begrenztes Repository-Verzeichnis erforderlich".into()); }
+    Ok(selected)
 }
 
 /// ⬆️ Walks from `dir` to the filesystem root and returns the first accepted directory.
@@ -603,7 +611,7 @@ fn ascend(dir: &Path, matcher: impl Fn(&Path) -> bool) -> Option<PathBuf> {
 /// 🪟️ Drops the Windows verbatim prefix that canonicalisation adds.
 fn strip_verbatim(path: &Path) -> PathBuf {
     let text = path.to_string_lossy().to_string();
-    PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text).to_string())
+    if let Some(unc) = text.strip_prefix(r"\\?\UNC\") { PathBuf::from(format!(r"\\{unc}")) } else { PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text).to_string()) }
 }
 
 //#endregion 🧭️Discovery
@@ -782,14 +790,175 @@ fn first_executable(candidate: &Path) -> Option<PathBuf> {
 /// other program is spawned by the path `PATH` resolved it to, or by its bare name so an
 /// unresolvable program fails where the caller expects it to.
 pub fn spawn_command(program: &str) -> std::process::Command {
-    let Some(target) = look_path(program) else { return std::process::Command::new(program) };
+    let routed = route_registered_tool(program);
+    let Some(target) = routed.as_ref().map(|(path, _)| path.clone()).or_else(|| look_path(program)) else { return std::process::Command::new(program) };
     let batch = target.extension().and_then(|value| value.to_str()).is_some_and(|value| value.eq_ignore_ascii_case("cmd") || value.eq_ignore_ascii_case("bat"));
-    if !batch {
-        return std::process::Command::new(target);
+    let mut command = if batch {
+        let mut shell = std::process::Command::new(std::env::var_os("COMSPEC").unwrap_or_else(|| "cmd.exe".into()));
+        shell.arg("/c").arg(target);
+        shell
+    } else {
+        std::process::Command::new(target)
+    };
+    if let Some((_, environment)) = routed {
+        command.env_clear().envs(environment);
     }
-    let mut command = std::process::Command::new(std::env::var_os("COMSPEC").unwrap_or_else(|| "cmd.exe".into()));
-    command.arg("/c").arg(target);
     command
+}
+
+/// 🪪️ One tool of the registry as the Rust side reads it: the id, the executable names it owns, the extra directories to look in and the environment it gets.
+struct RegisteredTool {
+    id: String,
+    commands: Vec<String>,
+    directories: Vec<String>,
+    deny: Vec<String>,
+    set: Vec<(String, String)>,
+}
+
+/// 📖️ The tool registry (`🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json`), the schema-first contract the TypeScript, Go and Rust adapters share.
+struct ToolRegistry {
+    deny: Vec<String>,
+    tools: Vec<RegisteredTool>,
+}
+
+/// 🧷️ The strings of a JSON array, empty when the value is absent or not an array.
+fn json_strings(value: Option<&serde_json::Value>) -> Vec<String> {
+    value.and_then(serde_json::Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default()
+}
+
+/// 🪢️ Reads the registry rows the adapter needs from the registry document.
+fn parse_tool_registry(text: &str) -> Option<ToolRegistry> {
+    let document: serde_json::Value = serde_json::from_str(text).ok()?;
+    let tools = document.get("tools")?.as_array()?.iter().filter_map(|row| {
+        let locate = row.get("locate").and_then(serde_json::Value::as_array);
+        let directories = locate.map(|locators| locators.iter().flat_map(|locator| json_strings(locator.get("directories"))).collect()).unwrap_or_default();
+        let environment = row.get("environment");
+        let set = environment.and_then(|value| value.get("set")).and_then(serde_json::Value::as_object).map(|values| values.iter().filter_map(|(name, value)| value.as_str().map(|text| (name.clone(), text.to_string()))).collect()).unwrap_or_default();
+        Some(RegisteredTool { id: row.get("id")?.as_str()?.to_string(), commands: json_strings(row.get("commands")), directories, deny: json_strings(environment.and_then(|value| value.get("deny"))), set })
+    });
+    Some(ToolRegistry { deny: json_strings(document.get("environment").and_then(|value| value.get("deny"))), tools: tools.collect() })
+}
+
+/// 📚️ The registry of the repository this process runs in, read once; `None` when no checkout is found or the document does not parse, which leaves every command unchanged.
+fn tool_registry() -> Option<&'static ToolRegistry> {
+    static REGISTRY: OnceLock<Option<ToolRegistry>> = OnceLock::new();
+    REGISTRY
+        .get_or_init(|| {
+            let start = std::env::var_os("SEMIO_WORKSPACE_ROOT").or_else(|| std::env::var_os("REPO_ROOT")).map(PathBuf::from).or_else(|| std::env::current_dir().ok())?;
+            let root = start.ancestors().find(|directory| directory.join("MODULE.bazel").is_file())?;
+            parse_tool_registry(&fs::read_to_string(root.join("🧰️framework").join("🔨️modules").join("🏃️process").join("🧰️tools").join("🔣️.json")).ok()?)
+        })
+        .as_ref()
+}
+
+/// 🧵️ Whether an environment variable name matches a registry pattern whose `*` stands for any characters; Windows names ignore case.
+fn tool_name_matches(pattern: &str, name: &str) -> bool {
+    let (pattern, name) = if cfg!(windows) { (pattern.to_uppercase(), name.to_uppercase()) } else { (pattern.to_string(), name.to_string()) };
+    let parts: Vec<&str> = pattern.split('*').collect();
+    if parts.len() == 1 {
+        return pattern == name;
+    }
+    let (first, last) = (parts[0], parts[parts.len() - 1]);
+    if !name.starts_with(first) || name.len() < first.len() + last.len() || !name.ends_with(last) {
+        return false;
+    }
+    let mut rest = &name[first.len()..name.len() - last.len()];
+    for middle in &parts[1..parts.len() - 1] {
+        match rest.find(middle) {
+            Some(index) => rest = &rest[index + middle.len()..],
+            None => return false,
+        }
+    }
+    true
+}
+
+/// 🪛️ The executable of a registered tool: the `SEMIO_TOOL_<ID>` override, then `PATH`, then the directories of the tool's path locator; `None` when the host does not have it.
+fn resolve_registered_tool(tool: &RegisteredTool, command: &str) -> Option<PathBuf> {
+    let variable = format!("SEMIO_TOOL_{}", tool.id.to_uppercase().replace('-', "_"));
+    if let Some(path) = std::env::var_os(variable).map(PathBuf::from).filter(|path| path.exists()) {
+        return Some(path);
+    }
+    if let Some(found) = look_path(command) {
+        return Some(found);
+    }
+    let home = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")).map(PathBuf::from);
+    tool.directories.iter().find_map(|directory| {
+        let base = match (directory.strip_prefix("~/"), &home) {
+            (Some(rest), Some(home)) => home.join(rest),
+            _ => PathBuf::from(directory),
+        };
+        first_executable(&base.join(command))
+    })
+}
+
+/// 🌿️ The process environment minus the variables the registry denies, plus the tool's fixed values and the run marker.
+fn registered_environment(registry: &ToolRegistry, tool: &RegisteredTool) -> Vec<(String, String)> {
+    let mut environment: Vec<(String, String)> = std::env::vars_os()
+        .filter_map(|(name, value)| Some((name.into_string().ok()?, value.into_string().ok()?)))
+        .filter(|(name, _)| name != "SEMIO_TOOL_RUN" && !tool.set.iter().any(|(fixed, _)| fixed == name) && !registry.deny.iter().chain(&tool.deny).any(|pattern| tool_name_matches(pattern, name)))
+        .collect();
+    environment.extend(tool.set.iter().cloned());
+    environment.push(("SEMIO_TOOL_RUN".to_string(), tool.id.clone()));
+    environment
+}
+
+/// 🧱️ Resolves a bare command name that belongs to a registered tool to its executable and the registry's sanitized environment. Explicit paths, unknown commands, a host without the tool, an unreadable registry and `SEMIO_TOOL_GUARD=off` answer `None`, so the caller spawns the command as written.
+fn route_registered_tool(command: &str) -> Option<(PathBuf, Vec<(String, String)>)> {
+    if command.contains('/') || command.contains('\\') || std::env::var("SEMIO_TOOL_GUARD").is_ok_and(|value| value == "off") {
+        return None;
+    }
+    let registry = tool_registry()?;
+    let tool = registry.tools.iter().find(|tool| tool.commands.iter().any(|name| name == command))?;
+    Some((resolve_registered_tool(tool, command)?, registered_environment(registry, tool)))
+}
+
+/// 🛑️ Why a registered tool could not be run at all; a tool that ran and failed answers its status in the result instead.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ToolError {
+    /// 🙈️ The registry names no tool with this id.
+    Unknown(String),
+    /// 💥️ The process could not be started or its output not collected.
+    Spawn(String),
+}
+
+/// 🧶️ What one registered tool run is told: where to start, what to add to its environment (explicit values win over the registry's) and what to feed it.
+#[derive(Debug, Clone, Default)]
+pub struct ToolRunOptions {
+    pub cwd: Option<PathBuf>,
+    pub env: Vec<(String, String)>,
+    pub input: Option<Vec<u8>>,
+}
+
+/// 🏁️ What a finished tool run left behind: the exit status (`None` when a signal ended it) and both output streams.
+#[derive(Debug, Clone)]
+pub struct ToolRunResult {
+    pub status: Option<i32>,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
+}
+
+/// 🏃️ Runs a registered tool by its registry id with the registry's executable and sanitized environment and answers its status and output. Twin of `runToolV1` in the TypeScript tools module and of `RunTool` in the Go workspace package.
+pub fn run_tool(tool_id: &str, args: &[String], options: &ToolRunOptions) -> Result<ToolRunResult, ToolError> {
+    let command = match tool_registry() {
+        Some(registry) => registry.tools.iter().find(|tool| tool.id == tool_id).and_then(|tool| tool.commands.first().cloned()).ok_or_else(|| ToolError::Unknown(tool_id.to_string()))?,
+        None => tool_id.to_string(),
+    };
+    let mut process = spawn_command(&command);
+    process.args(args).envs(options.env.iter().map(|(name, value)| (name, value)));
+    if let Some(cwd) = &options.cwd {
+        process.current_dir(cwd);
+    }
+    let output = match &options.input {
+        Some(input) => {
+            use std::io::Write;
+            let mut child = process.stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn().map_err(|error| ToolError::Spawn(error.to_string()))?;
+            child.stdin.take().ok_or_else(|| ToolError::Spawn("standard input is not available".to_string()))?.write_all(input).map_err(|error| ToolError::Spawn(error.to_string()))?;
+            child.wait_with_output()
+        }
+        None => process.output(),
+    }
+    .map_err(|error| ToolError::Spawn(error.to_string()))?;
+    Ok(ToolRunResult { status: output.status.code(), stdout: output.stdout, stderr: output.stderr })
 }
 
 //#endregion 🔎️ProgramLookup
@@ -813,7 +982,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.";
 /// ✍️ The `name <email>` line the invoking git identity carries, twin of `GetGitAuthor`.
 pub fn git_author(repo_root: &Path) -> String {
     let read = |key: &str| -> String {
-        std::process::Command::new("git").args(["config", "--get", key]).current_dir(repo_root).output().map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string()).unwrap_or_default()
+        spawn_command("git").args(["config", "--get", key]).current_dir(repo_root).output().map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string()).unwrap_or_default()
     };
     let name = read("user.name");
     let email = read("user.email");
@@ -834,3 +1003,7 @@ mod tests;
 
 //#endregion 🧪️Tests
 
+
+#[cfg(test)]
+#[path = "../../🧭️root-selection/🧪️tests/🦀️.rs"]
+mod root_selection_tests;

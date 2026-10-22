@@ -1,177 +1,316 @@
-
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
-import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
-import { globSelectsRepositoryV1, inputPrecisionDecisionV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionDocumentV1 } from "../../🏗️build/📥️inputs/🎯️precision/🟦️.ts";
-import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../🏗️build/📥️inputs/🦀️resolution/🟦️.ts";
-import { execToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import resolutionDocument from "../../🏗️build/📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { policyReaddirSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { POLICY_RS_COMPONENT_LEAF_NAME, policyLeadingEmojiPrefix, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { createFixedContractResolver, fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { type PathEmojiEntry, pathEmojiStatuteFindings } from "../../../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
+import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-const RESOLUTION = readCargoResolutionPolicyV1(resolutionDocument);
+const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
 
-/** 🔒️ The closed set of cache-correctness rules; every finding names exactly one. */
-export const CACHE_RULES_V1 = ["unclassified-target", "authored-cache-overridden", "empty-inputs", "producer-without-outputs", "env-unhashed", "named-input-undeclared", "output-escapes", "output-overlap", "command-mutating", "command-network", "uncached-without-reason", "whole-repository-input", "whole-workspace-rust-key"] as const;
-export type CacheRuleV1 = (typeof CACHE_RULES_V1)[number];
+const POLICY_BANNED_STEM_SCAN_ROOTS = ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"] as const;
 
-/** 🎯️ The resolved target facts a rule reads: the shape the inference gives a target after its cache policy. */
-export interface CacheTargetV1 {
-  cache?: boolean;
-  executor?: string;
-  inputs?: unknown[];
-  outputs?: string[];
-  options?: { command?: string; commands?: unknown[]; env?: Record<string, string> };
-  configurations?: Record<string, { env?: Record<string, string>; command?: string }>;
-  metadata?: { semio?: Record<string, any> };
+const POLICY_VS16 = "\uFE0F";
+
+/**
+ * 🚫️ Bans emoji-stripped directory/file stems listed in `taxonomy.bannedNameStems` (e.g. `core`, `shared`).
+ * Medium during migration; Wave 4 flips to high once cores are dissolved.
+ * Stems in `taxonomy.bannedNameStemExemptions.subsetDirectories` stay legal as a direct child directory of a `subsetsDirName` owner; the files in `taxonomy.bannedNameStemExemptions.vendoredFiles` are installed third-party modules and never count.
+ */
+export function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const stems = new Set((taxonomy.bannedNameStems ?? []).map((s) => s.toLowerCase()));
+  if (stems.size === 0) return [];
+  const subsetExempt = new Set(taxonomy.bannedNameStemExemptions.subsetDirectories.map((s) => s.toLowerCase()));
+  const vendored = new Set(taxonomy.bannedNameStemExemptions.vendoredFiles);
+  const breaches: BreachRecord[] = [];
+  const walk = (relDir: string): void => {
+    const subsetOwner = relDir.split("/").at(-1) === taxonomy.subsetsDirName;
+    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
+      const childRel = `${relDir}/${entry.name}`;
+      const stem = policyStripEmoji(entry.name.replace(/\.(rs|ts|tsx|js|mjs|cjs|go|py|cs)$/, "")).toLowerCase();
+      if (stems.has(stem) && !(subsetOwner && entry.isDirectory && subsetExempt.has(stem)) && !vendored.has(childRel)) {
+        breaches.push({
+          id: `banned-name-stem-${childRel}`,
+          summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,
+          kind: "taxonomy/banned-name-stem",
+          scope: childRel,
+          priority: "high",
+          reason: "Clean mechanism: bannedNameStems forbids vague grab-bag folders (core/shared/util/…).",
+          solution: `Rename "${entry.name}" to a domain-specific concept folder and update #[path]/imports.`,
+        });
+      }
+      if (entry.isDirectory) walk(childRel);
+    }
+  };
+  for (const root of POLICY_BANNED_STEM_SCAN_ROOTS) walk(root);
+  return breaches;
 }
 
-/** 🧾️ One resolved target together with the names its inputs may reference. */
-export interface CacheRecordV1 { id: string; root: string; authoredCache: boolean | null; target: CacheTargetV1; namedInputs: Record<string, unknown[]> }
-
-/** 🚩️ One violated rule on one target (or, for overlaps, on one pair). */
-export interface CacheFindingV1 { id: string; rule: CacheRuleV1; detail: string }
-
-const MANIFEST = "📋️project.json";
-const MUTATING = /(?:--fix(?![\w-])|--write(?![\w-])|\bpublish\b|\bdeploy\b|\bgit\s+(?:commit|push|add|checkout|stash|reset)\b)/u;
-const MUTATING_EXEMPT = /(?:--check\b|--dry-run\b|\bverify\b)/u;
-const NETWORK = /\b(?:curl|wget|git clone|git fetch|npm install|bun install|bun add|bunx|npx|cargo fetch|cargo install|pip install|uv sync|uv pip|apt-get|brew install|go get|go mod download)(?![-\w])/u;
-
-/** 🧷️ Matches a workspace-relative path against one input glob (`*`, `**`, `?`, `{a,b}`); the independent `minimatch` oracle checks it. */
-export function globMatchesV1(pattern: string, path: string): boolean {
-  const source = pattern.replace(/[.+^$()|\\[\]]/gu, "\\$&").replace(/\{([^{}]*)\}/gu, (_, alternatives: string) => `(?:${alternatives.split(",").join("|")})`).replace(/\*\*\/|\*\*|\*|\?/gu, (token) => token === "**/" ? "(?:.*/)?" : token === "**" ? ".*" : token === "*" ? "[^/]*" : "[^/]");
-  return new RegExp(`^${source}$`, "u").test(path);
-}
-
-const ALWAYS_HASHED_ENV = new Set(["SEMIO_BUILD_MODE"]);
-const WORD = /^[A-Za-z][A-Za-z0-9_-]*$/u;
-const expandInputs = (inputs: readonly unknown[], names: Record<string, unknown[]>, seen: ReadonlySet<string> = new Set()): unknown[] => inputs.flatMap((input) => {
-  if (typeof input !== "string") return [input];
-  const word = input.startsWith("^") ? input.slice(1) : input;
-  if (!WORD.test(word)) return [input];
-  if (input.startsWith("^") || seen.has(word) || !Object.hasOwn(names, word)) return [];
-  return expandInputs(names[word]!, names, new Set([...seen, word]));
-});
-
-const projectPath = (pattern: string, root: string): string => pattern.replace(/^\{workspaceRoot\}\//u, "").replaceAll("{projectRoot}/", root === "." ? "" : `${root}/`).replaceAll("{projectRoot}", root);
-const coversManifest = (leaves: readonly unknown[], root: string): boolean => {
-  const path = root === "." ? MANIFEST : `${root}/${MANIFEST}`, patterns = leaves.filter((leaf): leaf is string => typeof leaf === "string");
-  return patterns.some((pattern) => !pattern.startsWith("!") && globMatchesV1(projectPath(pattern, root), path)) && !patterns.some((pattern) => pattern.startsWith("!") && globMatchesV1(projectPath(pattern.slice(1), root), path));
-};
-
-const commandOf = (target: CacheTargetV1): string => target.options?.command ?? (Array.isArray(target.options?.commands) ? target.options.commands.map((operation) => typeof operation === "string" ? operation : (operation as { command?: string })?.command ?? "").join(" && ") : "");
-const outputPath = (output: string, root: string): string | undefined => {
-  const tokens = output.replaceAll(/\{options\.env\.(\w+)\}/gu, "<$1>");
-  if (tokens.includes("{options.")) return undefined;
-  return tokens.startsWith("/") ? tokens : posix.normalize(projectPath(tokens, root) || ".");
-};
-
-/** 🔎️ Runs every per-target rule (the inference appends `{ env: SEMIO_BUILD_MODE }` to every replayed target, so the build mode is always hashed) on one resolved target; a target that never replays only answers for its classification and its authored cache. */
-export function cacheCorrectnessFindingsV1(record: CacheRecordV1): CacheFindingV1[] {
-  const { id, root, target } = record, findings: CacheFindingV1[] = [], found = (rule: CacheRuleV1, detail: string) => findings.push({ id, rule, detail });
-  const decision = target.metadata?.semio?.cache, semio = target.metadata?.semio ?? {};
-  if (decision?.class === "unclassified") found("unclassified-target", "no policy row, declaration or verifying command classifies this target");
-  if (target.cache === false && decision === undefined) found("uncached-without-reason", "cache false records no decision: declare metadata.semio.cache with the class and reason that forbid replay");
-  if (record.authoredCache === true && target.cache === false && decision?.class !== "continuous") found("authored-cache-overridden", `authored cache true, resolved ${decision ? `${decision.class}/${decision.reason}` : "uncached"}`);
-  if (target.cache !== true) return findings;
-  const leaves = expandInputs(target.inputs ?? ["default", "^default"], record.namedInputs);
-  if (leaves.some((leaf) => typeof leaf === "string" && !leaf.startsWith("!") && globSelectsRepositoryV1(projectPath(leaf, root))) && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-repository-input", "declares the whole repository as input and no input precision rule bounds it: add a rule to the input precision document that names what the task reads (traced, static or bound), or record why every file is read (whole, assumed)");
-  const wholeKeys = workspaceKeyViolationsV1(RESOLUTION, leaves, commandOf(target), id);
-  if (wholeKeys.length && !BROAD_EVIDENCE.has(semio.inputPrecision?.evidence)) found("whole-workspace-rust-key", cargoResolutionTextV1(RESOLUTION, "workspaceKey", cargoResolutionLanguageV1(RESOLUTION, process.env), { subject: id, keys: wholeKeys.join(", ") }));
-  if (Array.isArray(target.inputs) && target.inputs.length === 0 && target.executor !== "repo:noop") found("empty-inputs", "inputs [] hashes nothing but the results of dependencies");
-  const declaredOutputs = Array.isArray(target.outputs) && target.outputs.length > 0;
-  if (decision?.class === "deterministic" && decision.reason === "pure-function-of-inputs" && !declaredOutputs && semio.rustBuildIntent === undefined && semio.rustUnitAggregate === undefined && semio.hostPlatformOutputsV1 === undefined && target.executor !== "repo:noop") found("producer-without-outputs", "a replayed producer declares no output, so a hit restores nothing");
-  const environment = new Set([...Object.keys(target.options?.env ?? {}), ...Object.values(target.configurations ?? {}).flatMap((configuration) => Object.keys(configuration.env ?? {}))]), hashed = new Set(leaves.flatMap((leaf) => typeof leaf === "object" && leaf !== null && typeof (leaf as { env?: unknown }).env === "string" ? [(leaf as { env: string }).env] : []));
-  if (environment.size && !coversManifest(leaves, root)) for (const key of [...environment].sort()) if (!hashed.has(key) && !ALWAYS_HASHED_ENV.has(key)) found("env-unhashed", `options.env.${key} is neither an {env} input nor covered by hashing the declaring manifest`);
-  for (const input of target.inputs ?? []) if (typeof input === "string") { const word = input.startsWith("^") ? input.slice(1) : input; if (WORD.test(word) && !Object.hasOwn(record.namedInputs, word)) found("named-input-undeclared", `input ${input} names no declared named input`); }
-  for (const output of target.outputs ?? []) { const path = outputPath(output, root); if (path !== undefined && (path.startsWith("/") || path === ".." || path.startsWith("../"))) found("output-escapes", `${output} resolves outside the workspace (${path})`); }
-  const command = commandOf(target);
-  if (MUTATING.test(command) && !MUTATING_EXEMPT.test(command)) found("command-mutating", command.slice(0, 160));
-  if (NETWORK.test(command)) found("command-network", command.slice(0, 160));
-  return findings;
-}
-
-const segments = (path: string) => path.replace(/\/(?:\*\*(?:\/\*)?)?$/u, "").split("/").filter(Boolean);
-const nests = (left: string[], right: string[]) => left.length <= right.length ? left.every((part, index) => part === right[index]) : right.every((part, index) => part === left[index]);
-
-/** 🧱️ Two replayed targets that declare the same output tree (or one inside the other) overwrite each other's restore. */
-export function cacheOutputOverlapFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
-  const owners: { id: string; path: string; parts: string[] }[] = [], findings: CacheFindingV1[] = [];
-  for (const record of records) if (record.target.cache === true) for (const output of new Set(record.target.outputs ?? [])) { const path = outputPath(output, record.root); if (path !== undefined && !path.startsWith("/") && !path.startsWith("..")) owners.push({ id: record.id, path, parts: segments(path) }); }
-  const byHead = new Map<string, typeof owners>();
-  for (const owner of owners) { const head = owner.parts[0] ?? ""; (byHead.get(head) ?? byHead.set(head, []).get(head)!).push(owner); }
-  for (const group of byHead.values()) for (let left = 0; left < group.length; left++) for (let right = left + 1; right < group.length; right++) {
-    const a = group[left]!, b = group[right]!;
-    if (a.id !== b.id && a.parts.length && b.parts.length && nests(a.parts, b.parts)) findings.push({ id: a.id, rule: "output-overlap", detail: `${a.path} overlaps ${b.id}: ${b.path}` });
-  }
-  return findings;
-}
-
-/** 🪜️ The exempt targets that no longer declare a whole-workspace Rust key (or no longer exist): the exemption list is a ratchet, so an owner who derives a narrower key must delete the entry. */
-export function staleRustKeyExemptionsV1(records: readonly CacheRecordV1[]): string[] {
-  const open = { ...RESOLUTION, workspaceKeys: { ...RESOLUTION.workspaceKeys, exemptTargets: [] } }, byId = new Map(records.map((record) => [record.id, record]));
-  return RESOLUTION.workspaceKeys.exemptTargets.flatMap((row) => row.targets).filter((id) => {
-    const record = byId.get(id);
-    return !record || record.target.cache !== true || workspaceKeyViolationsV1(open, expandInputs(record.target.inputs ?? ["default", "^default"], record.namedInputs), commandOf(record.target)).length === 0;
-  }).sort();
-}
-
-/** 🧮️ Every finding of every rule over a set of resolved targets. */
-export function cacheCorrectnessRepositoryFindingsV1(records: readonly CacheRecordV1[]): CacheFindingV1[] {
-  return [...records.flatMap(cacheCorrectnessFindingsV1), ...cacheOutputOverlapFindingsV1(records)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : a.detail < b.detail ? -1 : 1);
-}
-
-type PolicyV1 = { targetDefaults?: Record<string, Record<string, unknown>> };
-export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any, policy?: any): any }
-
-/** 📚️ Resolves every authored target of the tracked manifests through the production cache policy (targetDefaults, generator-contract outputs, classification) into the records the rules read. Inference-only projects have no manifest target and are covered by the production outputs gate. */
-const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
-const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
-
-/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
-function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
-  const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
-  if (!rule) return target;
-  const metadata = { ...target.metadata, semio: { ...target.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
-  if (BROAD_EVIDENCE.has(rule.evidence)) return { ...target, metadata };
-  return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
-}
-
-/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
-export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
-  const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
-  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;
-  const document = precision ?? (existsSync(join(repoRoot, library, PRECISION_FILE)) ? readInputPrecisionV1(read(`${library}/${PRECISION_FILE}`)) : undefined);
-  const injected = new Map<string, string[]>();
-  for (const contract of Object.values(contracts)) {
-    if (contract.ownership !== "owned") continue;
-    if (!injected.has(contract.target)) injected.set(contract.target, []);
-    for (const output of contract.outputRoots) { const target = output.producer?.target ?? contract.target; (injected.get(target) ?? injected.set(target, []).get(target)!).push(`{workspaceRoot}/${output.path}`); }
-  }
-  const manifests = (tracked ?? execToolSyncV1("git", ["-c", "core.quotepath=false", "ls-files", "-z", `*${MANIFEST}`], { cwd: repoRoot, maxBuffer: 1 << 28 }).toString("utf8").split("\0")).filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
-  const records: CacheRecordV1[] = [];
-  for (const manifest of manifests.sort()) {
-    let json: any;
-    try { json = read(manifest); } catch { continue; }
-    const root = posix.dirname(manifest), names: Record<string, unknown[]> = { ...nx, ...json.namedInputs, ...Object.fromEntries(Object.keys(json.metadata?.sourceInputs ?? {}).map((key) => [key, []])) };
-    for (const [name, authored] of Object.entries<any>(json.targets ?? {})) {
-      const id = `${json.name ?? root}:${name}`, base = { ...(policy.targetDefaults?.[name] ?? {}), ...authored, ...(authored.cache === false && authored.inputs === undefined ? { inputs: ["default"] } : {}), options: { ...authored.options, ...(typeof authored.command === "string" && authored.options?.command === undefined ? { command: authored.command } : {}) } } as any;
-      const outputs = injected.get(id);
-      if (outputs?.length) base.outputs = outputs;
-      records.push({ id, root, authoredCache: typeof authored.cache === "boolean" ? authored.cache : null, target: narrowedTargetV1(document, json.name ?? root, name, internals.targetPolicy(name, structuredClone(base))), namedInputs: names });
+/** 🧷️Whether an exact filename contract applies at this precise scope. */
+function policyFilenameContractApplies(repoRoot: string, relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>, resolver?: ReturnType<typeof createFixedContractResolver>): boolean {
+  const segments = relDir.split("/").filter(Boolean);
+  let packagesIndex = -1;
+  for (let index = segments.length - 1; index >= 0; index--) {
+    if (semanticDirectoryKindId(segments[index]!, taxonomy) === "packages") {
+      packagesIndex = index;
+      break;
     }
   }
-  return records;
+  const adjacentEcosystem = ([
+    ["Cargo.toml", "🦀️rust"],
+    ["go.mod", "🐹️go"],
+    ["package.json", "🟦️typescript"],
+  ] as const).find(([manifest]) => name === manifest || existsSync(join(repoRoot, relDir, manifest)))?.[1];
+  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : adjacentEcosystem;
+  const packageRoot = packagesIndex === segments.length - 2 || adjacentEcosystem !== undefined;
+  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["build-project-manifest"] : undefined;
+  for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
+    if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
+  }
+  const path = relDir ? `${relDir}/${name}` : name;
+  return (resolver?.filenameIdsForPath(path, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  }) ?? fixedFilenameContractIdsForPath(path, taxonomy, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  })).length > 0;
 }
 
-/** 🚨️ Turns the findings into policy breaches the verification lanes print. */
-export function policyCacheCorrectnessBreaches(findings: readonly CacheFindingV1[]): BreachRecord[] {
-  return findings.map((finding) => ({
-    id: `cache-correctness-${finding.rule}-${finding.id}`,
-    summary: `${finding.rule} ${finding.id}: ${finding.detail}`,
-    kind: "repo/cache-correctness",
-    scope: finding.id,
-    priority: "high",
-    autofixable: false,
-    reason: "A replayed task whose key omits an input, an environment value or an output restores a stale or empty result for every later build, and a shared remote cache would spread it to every machine.",
-    solution: "Declare the missing inputs or outputs on the target, classify it in `⚡️caching/🔣️policy.json` `targetClasses`, or set `cache: false` with the decision that names why it cannot replay.",
-  }));
+/** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
+function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: string): boolean {
+  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__";
+}
+
+/** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
+function policyEmojiEntryIsRenamable(repoRoot: string, relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
+  if (isDirectory) return true;
+  return !policyFilenameContractApplies(repoRoot, relDir, name, taxonomy);
+}
+
+/** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
+function policyHasLeadingEmoji(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  return prefix.length > 0 && /[^\x00-\x7f]/u.test(prefix);
+}
+
+/** 🎨️Whether a Latin-stemmed emoji identity is missing the required emoji presentation selector. */
+function policyEmojiPrefixNeedsVs16(name: string): boolean {
+  const prefix = policyLeadingEmojiPrefix(name);
+  const first = [...prefix][0] ?? "";
+  return policyHasLeadingEmoji(name) && /^[A-Za-z]/.test(name.slice(prefix.length)) && !/\p{Emoji_Presentation}/u.test(first) && !prefix.includes(POLICY_VS16);
+}
+
+/** ✅️Every Git-visible, non-reserved entry has a semantic canonical emoji identity unique among all siblings. */
+export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const result = runToolSyncV1("git", ["ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
+  if (result.status !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
+  const inventory = result.stdout.toString().split("\0").filter(Boolean)
+    .map((path) => path.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC"))
+    .flatMap((path) => {
+      try { return [{ path, directory: lstatSync(join(repoRoot, path)).isDirectory() }]; } catch { return []; }
+    });
+  const files = inventory.filter((entry) => !entry.directory).map((entry) => entry.path);
+  const directories = new Set<string>();
+  for (const entry of inventory) {
+    if (entry.directory) directories.add(entry.path);
+    for (let parent = posix.dirname(entry.path); parent !== "." && parent !== ""; parent = posix.dirname(parent)) directories.add(parent);
+  }
+  const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => name.normalize("NFC").replaceAll(POLICY_VS16, "")));
+  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(policyStripEmoji(name));
+  const resolver = createFixedContractResolver(taxonomy);
+  const fixedDirectoryIds = new Map([...directories].map((path) => [path, resolver.directoryIdsForPath(path, {
+    parentDirectoryKindId: semanticDirectoryKindId(posix.basename(posix.dirname(path)), taxonomy) ?? undefined,
+  })] as const));
+  const fixedReservedSubtreeRoots = [...fixedDirectoryIds].filter(([, ids]) => ids.some((id) => taxonomy.fixedDirectoryContracts[id]?.descendants === "reserved")).map(([path]) => path);
+  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName) || fixedReservedSubtreeRoots.some((reservedRoot) => path.startsWith(`${reservedRoot}/`));
+  const directoryReserved = (path: string): boolean => (fixedDirectoryIds.get(path) ?? []).length > 0;
+  const entries: PathEmojiEntry[] = [
+    ...[...directories].map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(name) || directoryReserved(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, true, taxonomy) };
+    }),
+    ...files.map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "file", reserved: underReservedSubtree(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, false, taxonomy) || policyFilenameContractApplies(repoRoot, relDir, name, taxonomy, resolver) };
+    }),
+  ].filter((entry) => !taxonomyRelativePathIsExcluded(entry.path, taxonomy));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return pathEmojiStatuteFindings(entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities).map((finding): BreachRecord => {
+    const entity = byPath.get(finding.path)?.nodeKind === "directory" ? "folder" : "file";
+    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique", multiple: "multiple-emojis", "reserved-emoji": "reserved-name-has-emoji" }[finding.kind];
+    const detail = finding.kind === "duplicate" ? ` duplicates sibling "${finding.sibling}"` : finding.emoji ? ` uses "${finding.emoji}"` : "";
+    return {
+      id: `path-emoji-${finding.kind}-${finding.path}`,
+      summary: `"${finding.path}" breaches ${label}${detail}`,
+      kind: `${entity}/name/${label}`,
+      scope: finding.path,
+      priority: "high",
+      reason: "Every non-reserved file and folder has exactly one handpicked, meaningful emoji, unique among siblings. Reserved filenames remain literal and unprefixed.",
+      solution: finding.kind === "reserved-emoji" ? `Restore the literal reserved basename of "${posix.basename(finding.path)}" and update its exact references.` : `Handpick one meaningful sibling-unique emoji for "${posix.basename(finding.path)}" and update only resolved path references.`,
+    };
+  });
+}
+
+/**
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and every REQUIRED facet directly
+ * at its root. `pluginChildDirs` is the ADMITTED set (`policyPluginClosedShapeBreaches` reads it, and it now
+ * admits the plugin-root `🧬️schema` scope); `pluginRequiredChildDirs` is the set every plugin owes.
+ */
+export function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const children = taxonomy.pluginRequiredChildDirs;
+  const pluginsRoot = "✏️s/🔌️plugins";
+  const breaches: BreachRecord[] = [];
+  for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!entry.isDirectory) continue;
+    const ownerRel = `${pluginsRoot}/${entry.name}`;
+    const nestedContractRel = `${ownerRel}/🔌️plugin`;
+    if (existsSync(join(repoRoot, nestedContractRel))) {
+      breaches.push({
+        id: `plugin-root-nested-${ownerRel}`,
+        summary: `"${ownerRel}" contains a redundant 🔌️plugin/ directory`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "Plugin contracts and facets are direct children of the plugin root.",
+        solution: `Move ${nestedContractRel}/${POLICY_RS_COMPONENT_LEAF_NAME} and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
+      });
+    }
+    if (!existsSync(join(repoRoot, ownerRel, (POLICY_RS_COMPONENT_LEAF_NAME)))) {
+      breaches.push({
+        id: `plugin-root-leaf-${ownerRel}`,
+        summary: `"${ownerRel}" is missing root ${POLICY_RS_COMPONENT_LEAF_NAME}`,
+        kind: "taxonomy/plugin-root-shape",
+        scope: ownerRel,
+        priority: "high",
+        reason: "The plugin root must have a leaf component that returns Plugin via Plugin::builder.",
+        solution: `Add ${ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME} exporting pub fn plugin() -> Plugin.`,
+      });
+    }
+    for (const child of children) {
+      const childLeaf = join(repoRoot, ownerRel, child, (POLICY_RS_COMPONENT_LEAF_NAME));
+      if (!existsSync(childLeaf)) {
+        breaches.push({
+          id: `plugin-root-child-${ownerRel}/${child}`,
+          summary: `"${ownerRel}" is missing direct facet ${child}/${POLICY_RS_COMPONENT_LEAF_NAME}`,
+          kind: "taxonomy/plugin-root-shape",
+          scope: ownerRel,
+          priority: "high",
+          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginRequiredChildDirs).`,
+          solution: `Add ${ownerRel}/${child}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🏗️ Bans `semio_plugin!` and `PluginBundle::new` outside the SDK; prefers `Plugin::builder(`.
+ * Medium until Wave 3 finishes migrating all plugins.
+ */
+export function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const sdkRel = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/";
+  for (const crate of crates) {
+    if (crate.role !== "plugin" && crate.role !== "extension") continue;
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    if (crate.libRelPath.replaceAll("\\", "/").startsWith(sdkRel)) continue;
+    const content = readFileSync(abs, "utf8");
+    if (content.includes("semio_plugin!")) {
+      breaches.push({
+        id: `plugin-builder-macro-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still uses semio_plugin! — migrate to Plugin::builder at the plugin root`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: ("semio_plugin! is retired; plugin identity lives in the root " + POLICY_RS_COMPONENT_LEAF_NAME + " via typestate PluginBuilder."),
+        solution: ("Move registration into the plugin-root " + POLICY_RS_COMPONENT_LEAF_NAME + " using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin)."),
+      });
+    }
+    if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {
+      breaches.push({
+        id: `plugin-builder-bundle-${crate.libRelPath}`,
+        summary: `"${crate.libRelPath}" still references PluginBundle — use Plugin::builder / Plugin::new`,
+        kind: "taxonomy/plugin-builder",
+        scope: crate.pluginId || crate.ownerRel,
+        priority: "high",
+        reason: "PluginBundle was renamed to Plugin; registration goes through Plugin::builder.",
+        solution: "Replace PluginBundle with Plugin::builder(...).",
+      });
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type`
+ * identifier fragment named "protocol" may exist under a migrated plugin — `📡️spr` is the only accepted
+ * name for that concept going forward. Scoped to `role = "plugin"` owners on purpose: the rename is a
+ * plugin-tree contract today, while the framework's own `📡️protocol` kernel module is renamed by the
+ * os-kernel merge (plan wave W8c) — flagging it here would report a rename that is scheduled, not late.
+ */
+export function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const crate of crates) {
+    if (crate.shape !== "taxonomy" || crate.role !== "plugin") continue;
+    const ownerRoot = crate.ownerRel;
+    const pluginId = crate.pluginId;
+
+    const walk = (relDir: string): void => {
+      for (const entry of policyReaddirSafe(repoRoot, relDir)) {
+        const childRel = `${relDir}/${entry.name}`;
+        const stem = policyStripEmoji(entry.name.replace(/\.rs$/, ""));
+        if (POLICY_PROTOCOL_SEGMENT_RE.test(stem)) {
+          breaches.push({
+            id: `spr-naming-path-${childRel}`,
+            summary: `"${childRel}" uses the retired "protocol" name — the taxonomy concept is "spr" (state patch representation)`,
+            kind: "taxonomy/spr-naming",
+            scope: pluginId,
+            priority: "medium",
+            reason: "Discovery contract: no 📡️protocol path segment may remain under a migrated plugin; 📡️spr is the only accepted name.",
+            solution: `Rename "${entry.name}" to its 📡️spr equivalent.`,
+          });
+        }
+        if (entry.isDirectory) walk(childRel);
+      }
+    };
+    walk(ownerRoot);
+
+    const abs = join(repoRoot, crate.libRelPath);
+    if (!existsSync(abs)) continue;
+    const content = readFileSync(abs, "utf8");
+    const identRe = /\b(?:mod|struct|enum|type)\s+(\w*[Pp]rotocol\w*)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = identRe.exec(content))) {
+      breaches.push({
+        id: `spr-naming-ident-${crate.libRelPath}-${m.index}`,
+        summary: `"${crate.libRelPath}" declares "${m[1]}" — identifiers naming the protocol concept must say "Spr"/"spr" instead`,
+        kind: "taxonomy/spr-naming",
+        scope: pluginId,
+        line: policyLineOfIndex(content, m.index),
+        priority: "medium",
+        reason: "Discovery contract: no protocol-named identifier fragment tied to the app protocol module may remain under a migrated plugin.",
+        solution: `Rename "${m[1]}" to its 📡️spr equivalent.`,
+      });
+    }
+  }
+  return breaches;
 }

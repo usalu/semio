@@ -6,7 +6,7 @@
 import { type DagTextDecodeControl } from "@semio-tech/framework/infinite/board/io/text/dag-input";
 import type { DagWireTypeRefusal } from "@semio-tech/framework/infinite/board/schema/dag-input";
 import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
-import { useMemo, type KeyboardEvent } from "react";
+import { useMemo, type KeyboardEvent } from "../../⚛️react-port/🟦️.ts";
 import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {

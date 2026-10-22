@@ -17,7 +17,16 @@ pub struct InsertViewpoint {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "viewpoint", kind: "insert-viewpoint", record: "InsertViewpoint" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert viewpoint", "Blickpunkt einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         let Self { topic_guid, viewpoint, index } = self;
         let at = index.unwrap_or_else(|| find_topic(base, topic_guid).map_or(0, |topic| topic.viewpoints.len()));
         protocol::MutationOutcome::new(wrap_topic_diff(base, topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexedAdded { index: at, item: viewpoint.clone() }] }), ..Default::default() }))
@@ -29,12 +38,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {
                 vec![BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: topic_guid.clone(), guid: viewpoint.guid.clone() })]
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert viewpoint", "Blickpunkt einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

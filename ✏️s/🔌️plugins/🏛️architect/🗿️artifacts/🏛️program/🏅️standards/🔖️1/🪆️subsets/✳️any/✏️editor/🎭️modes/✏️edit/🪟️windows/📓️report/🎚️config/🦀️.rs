@@ -27,29 +27,35 @@ pub struct ArchitectReportWindowConfigDiff {
     pub selected_report_id: Option<ReportSelectionSet>,
 }
 
-impl protocol::MutationDiff<ArchitectReportWindowConfig> for ArchitectReportWindowConfigDiff {
-    fn apply(&self, base: &ArchitectReportWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectReportWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.selected_report_id {
-            next.selected_report_id = value.value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ArchitectReportWindowConfig> for ArchitectReportWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectReportWindowConfig> for ArchitectReportWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.selected_report_id.is_some() {
             self.selected_report_id = other.selected_report_id;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectReportWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.selected_report_id {
+            next.selected_report_id = value.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectReportWindowConfig> for ArchitectReportWindowConfigDiff {
-    fn inverse(&self, base: &ArchitectReportWindowConfig) -> Self {
-        Self { selected_report_id: self.selected_report_id.as_ref().map(|_| ReportSelectionSet { value: base.selected_report_id.clone() }) }
-    }
-
     fn is_empty(&self) -> bool {
         self.selected_report_id.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectReportWindowConfig> for ArchitectReportWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectReportWindowConfig) -> Self {
+        Self { selected_report_id: self.selected_report_id.as_ref().map(|_| ReportSelectionSet { value: base.selected_report_id.clone() }) }
     }
 }
 
@@ -97,15 +103,17 @@ impl protocol::Mutation<ArchitectReportWindowConfig> for ArchitectReportWindowCo
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
+}
 
-    fn diff(&self, base: &ArchitectReportWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+impl protocol::ColdMutation<ArchitectReportWindowConfig> for ArchitectReportWindowConfigMutation {
+    type ReferenceDiff = ArchitectReportWindowConfigDiff;
+    fn diff(&self, base: &ArchitectReportWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::SelectReport(SelectReport { selected_report_id }) = self;
         if base.selected_report_id == *selected_report_id {
             return protocol::MutationOutcome::new(ArchitectReportWindowConfigDiff::default()).warning("mutation.no-op", "Report selection is unchanged.");
         }
         protocol::MutationOutcome::new(ArchitectReportWindowConfigDiff { selected_report_id: Some(ReportSelectionSet { value: selected_report_id.clone() }) })
     }
-
     fn inverse(&self, base: &ArchitectReportWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         let Self::SelectReport(SelectReport { selected_report_id }) = self;

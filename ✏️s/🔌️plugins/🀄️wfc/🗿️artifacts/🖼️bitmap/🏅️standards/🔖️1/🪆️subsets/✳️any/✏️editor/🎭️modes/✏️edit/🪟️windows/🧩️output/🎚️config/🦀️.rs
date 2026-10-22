@@ -28,28 +28,23 @@ pub struct BitmapOutputWindowConfigDiff {
 }
 
 impl protocol::DiffAlgebra<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.show_pins.is_none() && self.zoom.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
     fn inverse(&self, base: &BitmapOutputWindowConfig) -> Self {
         Self {
             show_pins: self.show_pins.as_ref().map(|_| base.show_pins.clone()),
             zoom: self.zoom.as_ref().map(|_| base.zoom.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.show_pins.is_none() && self.zoom.is_none()
-    }
 }
 
-impl protocol::MutationDiff<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
-    fn apply(&self, base: &BitmapOutputWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapOutputWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.show_pins {
-            next.show_pins.clone_from(value);
-        }
-        if let Some(value) = &self.zoom {
-            next.zoom.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
     fn absorb(&mut self, later: Self) {
         if later.show_pins.is_some() {
             self.show_pins = later.show_pins;
@@ -57,6 +52,19 @@ impl protocol::MutationDiff<BitmapOutputWindowConfig> for BitmapOutputWindowConf
         if later.zoom.is_some() {
             self.zoom = later.zoom;
         }
+    }
+
+    fn apply(&self, unpublished: &mut BitmapOutputWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.show_pins {
+            next.show_pins.clone_from(value);
+        }
+        if let Some(value) = &self.zoom {
+            next.zoom.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -111,6 +119,10 @@ impl protocol::Mutation<BitmapOutputWindowConfig> for BitmapOutputWindowConfigMu
             Self::SetZoom { .. } => &Self::DESCRIPTORS[1],
         }
     }
+}
+
+impl protocol::ColdMutation<BitmapOutputWindowConfig> for BitmapOutputWindowConfigMutation {
+    type ReferenceDiff = BitmapOutputWindowConfigDiff;
     fn diff(&self, base: &BitmapOutputWindowConfig) -> protocol::MutationOutcome<BitmapOutputWindowConfigDiff> {
         let diff = match self {
             Self::SetShowPins { show_pins } => BitmapOutputWindowConfigDiff { show_pins: (base.show_pins != *show_pins).then(|| show_pins.clone()), ..Default::default() },
@@ -216,9 +228,8 @@ impl semio_framework_plugin::WindowConfigOwner for BitmapOutputWindowConfigOwner
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
     }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-        semio_framework_plugin::bounded_window_config_store_owners::<Self>()
-    }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
     }

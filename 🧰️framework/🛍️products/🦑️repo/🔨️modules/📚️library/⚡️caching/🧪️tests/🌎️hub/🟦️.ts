@@ -15,7 +15,7 @@ export async function testHubBuild(workspace: string): Promise<void> {
   const admin = fixture.prerequisite.split(":")[0];
   const graph = { nodes: {
     [project.name]: { name: project.name, type: "app", data: { ...project, root: fixture.projectRoot } },
-    [admin]: { name: admin, type: "app", data: { name: admin, root: fixture.prerequisiteRoot, targets: { build: { executor: "nx:run-commands", options: { command: "bun ./📜️script.ts build" } } } } },
+    [admin]: { name: admin, type: "app", data: { name: admin, root: fixture.prerequisiteRoot, targets: { build: { executor: "nx:run-commands", options: { command: "repo ./📜️script.ts build" } } } } },
   }, dependencies: { [project.name]: [], [admin]: [] } };
   const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, [project.name], ["build"], undefined, {});
   assert.deepEqual(Object.keys(tasks.tasks).sort(), [`${project.name}:build`, fixture.prerequisite].sort());

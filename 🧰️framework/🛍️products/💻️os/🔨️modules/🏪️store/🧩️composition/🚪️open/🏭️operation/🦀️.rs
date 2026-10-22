@@ -18,7 +18,7 @@ use semio_framework_os_store_engine::lifted_store::ArtifactStore;
 use semio_framework_os_store_space_member::lifted_store::MemberFactory;
 use semio_framework_os_store_engine_owners::member_producer::MemberStoreProducer;
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_os_spr::Mutation;
+use semio_framework_os_spr::{ColdMutation, Mutation};
 use semio_framework_os_pack::{OpBinary, OpText};
 use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure, OriginalCallerSourceParent, OriginalCallerSourceLoan};
 use std::{marker::PhantomData, mem::ManuallyDrop};
@@ -238,7 +238,7 @@ where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
 {
     pub producer:C,
     pub source_loan: ManuallyDrop<Option<OriginalCallerSourceLoan>>,
@@ -276,7 +276,7 @@ where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
 {
     fn history_page_due(&self) -> bool { self.history_page.is_some() }
     pub fn payload_terminal_is_empty(&self)->bool{self.ownership_is_empty()&&!self.history_page_due()}
@@ -309,7 +309,7 @@ where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_owned_field(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
@@ -770,10 +770,9 @@ where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     type Member = Box<ArtifactStore<P, M>>;
-    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.retirement_demands(body)}
 
     fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<MemberOpenStep<Self::Member>,OriginalTurnFailure> {
         self.step_store(cx, grant)
@@ -810,7 +809,7 @@ where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
 {
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
     /// whole process; the drop bomb still fires for every non-unwinding drop.

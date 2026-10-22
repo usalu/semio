@@ -9,10 +9,12 @@ use crate::owner_only::{verify_owner_only, write_owner_only};
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 
 
-const FIXTURE: &str = fixture_text!("../../../../../../🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
+fn fixture_source() -> &'static str {
+    fixture_text!("../../../../../../🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json")
+}
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(FIXTURE).expect("owner-only fixture parses")
+    serde_json::from_str(fixture_source()).expect("owner-only fixture parses")
 }
 
 fn text(row: &serde_json::Value, key: &str) -> String {

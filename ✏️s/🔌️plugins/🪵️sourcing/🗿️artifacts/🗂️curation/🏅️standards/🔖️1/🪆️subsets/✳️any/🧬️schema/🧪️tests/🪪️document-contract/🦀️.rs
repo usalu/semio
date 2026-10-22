@@ -41,9 +41,9 @@ fn curation_document_contract_exact_children_and_native_transports() {
     let mut catalog = snapshot.catalog.clone();
     catalog.child_id = "foreign-child".into();
     let expected = catalog.clone();
-    assert_eq!(protocol::apply_diff(&CurationDiff { catalog: Some(catalog.clone()), ..Default::default() }, &snapshot).unwrap().catalog, expected);
+    assert_eq!(protocol::apply_diff_cold(&CurationDiff { catalog: Some(catalog.clone()), ..Default::default() }, &snapshot).unwrap().catalog, expected);
     catalog.target.dialect.subset = "mesh".into();
-    assert!(protocol::apply_diff(&CurationDiff { catalog: Some(catalog), ..Default::default() }, &snapshot).is_err());
+    assert!(protocol::apply_diff_cold(&CurationDiff { catalog: Some(catalog), ..Default::default() }, &snapshot).is_err());
     let text = snapshot.print_dsl();
     let (_, body) = text.split_once('\n').unwrap();
     for header in ["semio forms.form.dsl v1", "semio curation.curation.dsl v2", "semio curation.curation.pack v1"] { assert!(CurationSnapshot::parse_dsl(&format!("{header}\n{body}")).is_err(), "{header}"); }

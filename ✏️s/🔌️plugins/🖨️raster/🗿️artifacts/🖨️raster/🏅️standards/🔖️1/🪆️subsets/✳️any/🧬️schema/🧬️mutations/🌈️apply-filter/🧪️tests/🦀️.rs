@@ -15,7 +15,7 @@ use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_model::find_layer;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode, RASTER_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 //#region 🧫️Cases
 fn base(locked: bool) -> RasterSnapshot {
@@ -84,7 +84,7 @@ fn outcome_json(outcome: &protocol::MutationOutcome<RasterDiff>) -> serde_json::
 /// 🖨️ The five files of one scenario as this leaf computes them: before, after, mutation, diff, outcome.
 fn quintet(before: &RasterSnapshot, mutation: &RasterMutation) -> [(&'static str, serde_json::Value); 5] {
     let outcome = mutation.diff(before);
-    let after = protocol::apply_diff(outcome.diff(), before).expect("every committed filter diff applies");
+    let after = protocol::apply_diff_cold(outcome.diff(), before).expect("every committed filter diff applies");
     let files = [
         ("📸️snapshot/⬅️before/🔣️.json", json(before)),
         ("📸️snapshot/➡️after/🔣️.json", json(&after)),

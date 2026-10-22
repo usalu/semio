@@ -15,7 +15,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "mesh", kind: "delete-mesh", record: "DeletedMesh" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Delete mesh child", "Netzkind löschen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["mesh".to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioObjectSnapshot, Op> for DeleteMesh
+where
+    Op: protocol::ColdMutation<SemioObjectSnapshot, ReferenceDiff = crate::schema::diff::SemioObjectDiff> + From<DeleteMesh> + From<crate::schema::mutations::create_mesh::CreateMesh>,
+{
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioObjectSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -24,11 +36,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete mesh child", "Netzkind löschen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["mesh".to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -235,8 +235,19 @@ pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Opt
 //#endregion 🔖️Navigate
 
 //#region 🔖️Apply
-impl MutationDiff<MdSnapshot> for MdDiff {
-    fn apply(&self, base: &MdSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<MdSnapshot> {
+impl MutationDiff<MdSnapshot> for MdDiff {}
+
+impl protocol::ColdMutationDiff<MdSnapshot> for MdDiff {
+    fn absorb(&mut self, other: Self) {
+        self.blocks = match (self.blocks.take(), other.blocks) {
+            (None, b) => b,
+            (a, None) => a,
+            (Some(a), Some(b)) => Some(absorb_blocks_rows(a, &b)),
+        };
+    }
+
+    fn apply(&self, unpublished: &mut MdSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(blocks) = &self.blocks {
             validate_md_blocks(&base.blocks, blocks)?;
         }
@@ -244,15 +255,8 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         if let Some(bd) = &self.blocks {
             next.blocks = apply_blocks_diff(&next.blocks, bd);
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        self.blocks = match (self.blocks.take(), other.blocks) {
-            (None, b) => b,
-            (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_blocks_rows(a, &b)),
-        };
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -421,12 +425,14 @@ fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<MdSnapshot> for MdDiff {
-    fn inverse(&self, base: &MdSnapshot) -> Self {
-        MdDiff { blocks: self.blocks.as_ref().map(|d| inverse_blocks_diff(&base.blocks, d)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.blocks.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<MdSnapshot> for MdDiff {
+    fn inverse(&self, base: &MdSnapshot) -> Self {
+        MdDiff { blocks: self.blocks.as_ref().map(|d| inverse_blocks_diff(&base.blocks, d)) }
     }
 }
 

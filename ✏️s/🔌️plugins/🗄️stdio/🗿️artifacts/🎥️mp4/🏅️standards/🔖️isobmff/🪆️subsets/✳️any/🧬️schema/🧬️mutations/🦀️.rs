@@ -37,7 +37,7 @@ pub mod set_track_dimensions;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = Mp4Snapshot, diff = Mp4Diff, schema = "Mp4Mutation")]
+#[mutations(snapshot = Mp4Snapshot, diff = Mp4Diff, schema = "Mp4Mutation", reference = Mp4Snapshot, reference_diff = Mp4Diff)]
 pub enum Mp4Mutation {
     SetFtyp(set_ftyp::SetFtyp),
     SetMovie(set_movie::SetMovie),

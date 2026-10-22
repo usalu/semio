@@ -1,4 +1,5 @@
 import { pathToFileURL, fileURLToPath } from "node:url";
+import { runtimeMessageV1 } from "../../🗣️messages/🟦️.ts";
 import type { RuntimeBundleBuilderV1, RuntimeBundlePluginV1 } from "../../📋️contract/🟦️.ts";
 
 type ResolveRowV1 = { filter: RegExp; namespace: string | undefined; callback: (arguments_: { path: string; importer: string; namespace: string }) => any };
@@ -34,7 +35,7 @@ export function registerLoaderPluginV1(plugin: RuntimeBundlePluginV1): void {
     onLoad: (constraints, callback) => { loaders.push({ filter: constraints.filter, namespace: constraints.namespace, callback: callback as LoadRowV1["callback"] }); },
   };
   const outcome = plugin.setup(builder);
-  if (outcome !== undefined) throw new Error("A loader plugin must set up synchronously");
+  if (outcome !== undefined) throw new Error(runtimeMessageV1("pluginAsync", {}));
   const module = process.getBuiltinModule("node:module") as unknown as ModuleHooksV1;
   module.registerHooks({
     resolve(specifier, context, next) {

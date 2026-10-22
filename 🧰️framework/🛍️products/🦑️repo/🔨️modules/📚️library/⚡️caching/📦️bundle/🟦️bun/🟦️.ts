@@ -8,6 +8,7 @@ import { isAbsolute, relative, resolve, sep } from "node:path";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 
 
 /** 🧬️ An immutable compiler request whose captured source bytes are delivered through an owned pipe. */
@@ -23,7 +24,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
   if (request.kind === "snapshot") {
     const roots = request.roots.map(root => ({ ...root, path: realpathSync(root.path) })), snapshots = new Map<string, { bytes: Buffer; logicalPath: string; sha256: string; byteLength: number }>();
     let remaining = 8 * 1024 * 1024;
-    const result = await Bun.build({ entrypoints: [request.entrypoint], root: roots[0]!.path, target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
+    const result = await runtimeBundleV1({ entrypoints: [request.entrypoint], root: roots[0]!.path, target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
       build.onLoad({ filter: /.*/, namespace: "file" }, args => {
         const path = realpathSync(args.path), root = roots.find(root => path.startsWith(root.path + sep));
         if (!root || !path.endsWith(".js")) throw new Error("Browser compiler source root or type refused");
@@ -46,8 +47,8 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
     return { source: await result.outputs[0]!.text(), physicalInputs, inputs: physicalInputs.map(({ path, ...value }) => value), loadedRuntime: 0 };
   }
   if (request.kind === "bun-package") {
-    const workspace = findWorkspaceRoot(import.meta.dir), physicalInputs = new Map<string, BunBundleResult["physicalInputs"][number]>();
-    const result = await Bun.build({ entrypoints: [request.entrypoint], target: "bun", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, naming: "🟦️.js", minify: buildModePolicy(request.mode).optimize, sourcemap: buildModePolicy(request.mode).sourceMap ? "external" : "none", metafile: true, plugins: [{ name: "semio-package-source-custody", setup(build) {
+    const workspace = findWorkspaceRoot(import.meta.dirname), physicalInputs = new Map<string, BunBundleResult["physicalInputs"][number]>();
+    const result = await runtimeBundleV1({ entrypoints: [request.entrypoint], target: "runtime", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, naming: "🟦️.js", minify: buildModePolicy(request.mode).optimize, sourcemap: buildModePolicy(request.mode).sourceMap ? "external" : "none", metafile: true, plugins: [{ name: "semio-package-source-custody", setup(build) {
       build.onLoad({ filter: /.*/, namespace: "file" }, args => {
         const path = realpathSync(args.path), before = lstatSync(path), bytes = readFileSync(path), after = lstatSync(path);
         if (!before.isFile() || bytes.byteLength !== before.size || ["dev", "ino", "size", "mtimeMs", "ctimeMs"].some(key => before[key as keyof typeof before] !== after[key as keyof typeof after])) throw new Error("Bun package source changed during capture");
@@ -64,7 +65,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
     return { source: await source.text(), ...(sourceMap ? { sourceMap: await sourceMap.text() } : {}), inputs: captured.map(({ path, ...value }) => value), physicalInputs: captured, loadedRuntime: 0 };
   }
   if (request.kind === "module") {
-    const result = await Bun.build({ entrypoints: [request.entrypoint], target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, minify: buildModePolicy(request.mode).optimize, sourcemap: buildModePolicy(request.mode).sourceMap ? "inline" : "none", plugins: [{ name: "semio-browser-module", setup(build) {
+    const result = await runtimeBundleV1({ entrypoints: [request.entrypoint], target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, minify: buildModePolicy(request.mode).optimize, sourcemap: buildModePolicy(request.mode).sourceMap ? "inline" : "none", plugins: [{ name: "semio-browser-module", setup(build) {
       build.onLoad({ filter: /.*/ }, args => args.path === request.entrypoint ? { contents: request.contents, loader: "js" } : undefined);
       build.onResolve({ filter: /.*/ }, args => request.external.includes(args.path) ? { path: args.path, external: true } : undefined);
     } }] });
@@ -72,7 +73,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
     return { source: await result.outputs[0]!.text(), inputs: [], physicalInputs: [], loadedRuntime: 0 };
   }
   const loaded = new Set<string>();
-  const result = await Bun.build({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: buildModePolicy(request.mode).optimize, plugins: [{ name: "semio-closed-browser-actor", setup(build) {
+  const result = await runtimeBundleV1({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: buildModePolicy(request.mode).optimize, plugins: [{ name: "semio-closed-browser-actor", setup(build) {
     build.onResolve({ filter: /^semio:closed-browser-actor$/ }, () => ({ path: "actor.ts", namespace: "semio-actor" }));
     build.onResolve({ filter: /^semio:actor-(host|wasi)$/ }, args => ({ path: args.path.slice("semio:actor-".length), namespace: "semio-runtime" }));
     build.onResolve({ filter: /.*/, namespace: "semio-runtime" }, () => { throw new Error("Browser runtime import refused"); });
@@ -92,7 +93,7 @@ export async function runScriptProgram(): Promise<void> {
   if(true){
    if(process.argv.length!==3||process.argv[2]!=="compile")throw new Error("Usage: compile (bounded request stdin; output data stdout)");
    await receiveScriptProcessInvocation(process.env,async invocation=>{
-   const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=findWorkspaceRoot(import.meta.dir),control=scriptCompilerAdmissionControlV1(invocation,"bun:compile-leaf",120000);if(workspace!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==authority.original.buildMode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw new Error("Exact unmarked compiler leaf Original required");
+   const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=findWorkspaceRoot(import.meta.dirname),control=scriptCompilerAdmissionControlV1(invocation,"bun:compile-leaf",120000);if(workspace!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==authority.original.buildMode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw new Error("Exact unmarked compiler leaf Original required");
    let size=0;const chunks:Buffer[]=[];for await(const chunk of process.stdin){control.signal.throwIfAborted();size+=chunk.byteLength;if(size>16*1024*1024)throw new Error("Bun compiler request bytes refused");chunks.push(chunk);}const request=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)))as BunBundleRequest;if(readBuildMode(authority.original.buildMode)!==request.mode)throw new Error("Bun compiler request contradicts the selected build mode");
    const result=await compileBunBundle(request),{bunBundleStreamFramesV1}=await import("./📤️stream/🟦️.ts"),{writeOwnedCommandOutputV1}=await import("@semio-tech/process/execution"),files=[{name:"source.js",bytes:Buffer.from(result.source)},...(result.sourceMap!==undefined?[{name:"source.js.map",bytes:Buffer.from(result.sourceMap)}]:[]),{name:"metadata.json",bytes:Buffer.from(JSON.stringify({inputs:result.inputs,physicalInputs:result.physicalInputs,loadedRuntime:result.loadedRuntime}))}];for(const frame of bunBundleStreamFramesV1(createHash("sha256").update(JSON.stringify(request)).digest("hex"),files))await writeOwnedCommandOutputV1(process.stdout,frame,control);
    });

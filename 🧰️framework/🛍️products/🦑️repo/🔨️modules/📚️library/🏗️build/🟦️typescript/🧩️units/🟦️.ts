@@ -4,6 +4,7 @@ import {cpSync,existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,rename
 import {dirname,join,relative,sep} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
+import {stronglyConnectedV1 as sharedStronglyConnectedV1} from "../../🧩️units/🕸️graph/🟦️.ts";
 
 /** 🧾️ The closed unit document: how a TypeScript program is cut into acyclic check units and how a unit is checked. */
 export type TypeScriptUnitsDocumentV1 = {
@@ -32,36 +33,8 @@ export function readTypeScriptUnitsDocumentV1(value: unknown): TypeScriptUnitsDo
   return value as TypeScriptUnitsDocumentV1;
 }
 
-/** 🔁️ Tarjan strongly connected components of a graph given as adjacency sets, iterative so deep import chains cannot overflow the stack. */
-export function stronglyConnectedV1(nodes: readonly string[], adjacent: ReadonlyMap<string, ReadonlySet<string>>): string[][] {
-  const index = new Map<string, number>(), low = new Map<string, number>(), onStack = new Set<string>(), stack: string[] = [], out: string[][] = [];
-  let counter = 0;
-  for (const start of nodes) {
-    if (index.has(start)) continue;
-    const work: {node: string; next: Iterator<string>}[] = [];
-    const enter = (node: string): void => {index.set(node, counter); low.set(node, counter++); stack.push(node); onStack.add(node); work.push({node, next: (adjacent.get(node) ?? new Set<string>())[Symbol.iterator]()});};
-    enter(start);
-    while (work.length) {
-      const frame = work[work.length - 1]!;
-      const step = frame.next.next();
-      if (!step.done) {
-        const target = step.value;
-        if (!index.has(target)) enter(target);
-        else if (onStack.has(target)) low.set(frame.node, Math.min(low.get(frame.node)!, index.get(target)!));
-        continue;
-      }
-      work.pop();
-      if (work.length) {const parent = work[work.length - 1]!.node; low.set(parent, Math.min(low.get(parent)!, low.get(frame.node)!));}
-      if (low.get(frame.node) === index.get(frame.node)) {
-        const component: string[] = [];
-        let member: string;
-        do {member = stack.pop()!; onStack.delete(member); component.push(member);} while (member !== frame.node);
-        out.push(component.sort());
-      }
-    }
-  }
-  return out;
-}
+/** 🔁️ Tarjan strongly connected components: the one implementation lives in the neutral unit graph (`🏗️build/🧩️units/🕸️graph`); this wrapper keeps the UTF-16 member order the TypeScript plans were built with. */
+export const stronglyConnectedV1 = (nodes: readonly string[], adjacent: ReadonlyMap<string, ReadonlySet<string>>): string[][] => sharedStronglyConnectedV1(nodes, adjacent, (a, b) => a < b ? -1 : a > b ? 1 : 0);
 
 /** 🧷️ Compiles a workspace glob (`*`, `**`) to the expression of the paths it selects. */
 export function workspaceGlobRegExpV1(glob: string): RegExp {
@@ -73,7 +46,7 @@ export function workspaceGlobRegExpV1(glob: string): RegExp {
     else if (glob[i] === "*") out += "[^/]*";
     else out += glob[i]!.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
   }
-  return new RegExp("^" + out + "$");
+  return new RegExp("^" + out + "$", "s");
 }
 
 const globSegmentsMatch = (glob: readonly string[], segments: readonly string[]): boolean => glob.length === segments.length && glob.every((part, i) => part === "*" || part === segments[i]);
@@ -291,7 +264,7 @@ export async function checkTypeScriptUnitsV1(plan: TypeScriptUnitPlanV1, documen
     finished++; if (receipt.errors || receipt.boundary) diagnostics.push(receipt.diagnostics);
     results.push({id, key, status, errors: receipt.errors, boundary: receipt.boundary, milliseconds: status === "hit" ? 0 : receipt.milliseconds});
     options.onProgress?.({unit: id, status, done: finished, total: order.length, milliseconds: receipt.milliseconds, errors: receipt.errors});
-    return {key, declarations: receipt.declarations, view: viewPath};
+    return {key, declarations: sha("closure", receipt.declarations, ...dependencies.map(row => row.declarations)), view: viewPath};
   })()).get(id)!;
   await Promise.all(order.map(run));
   const rows = results.sort((a, b) => a.id < b.id ? -1 : 1);

@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import {appendFileSync,chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmSync,symlinkSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
-import installSchema from "../../🧬️schema/📥️install.json";
+import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
 import corpus from "./🔣️.json";
 
 type Scan=(root:string,control:unknown,check:()=>void)=>Promise<{version:1;entries:number;directories:number;files:number;links:number;maximumPathUnits:number;sha256:string}>;

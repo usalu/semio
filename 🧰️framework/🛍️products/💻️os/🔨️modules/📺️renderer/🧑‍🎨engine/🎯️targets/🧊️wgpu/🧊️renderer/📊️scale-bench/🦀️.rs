@@ -8,7 +8,7 @@
 //! built for) through `crate::parallel_runtime::ParallelRuntime` (terra-kernel-loop) — the same engine `//#region 🎠️KernelRuntime`
 //! above already wires for the winit renderer, reused here without the winit/GPU half. terra-kernel-loop
 //! upgraded this from a single physical `ShardLoop` behind all K shard labels to K real `ShardExecutor`
-//! OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`
+//! OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`
 //! (`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`'s `//#region 🔖️Bench`) drives this via
 //! `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};

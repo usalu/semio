@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🫥️ A pure command's head is the HEAD snapshot without history (design §20.8, `📓️api-stepped-document-load.md` §4):
     /// it hydrates in O(snapshot) — no history fold — and marks the document head-only, so history verbs and queries answer
     /// `pure.history-unavailable`. An empty head keeps the live document.
@@ -18,7 +18,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let mut window_reset=Some(self.ladder_ref().prepare_document_window_reset()?);
         let actor = self.stores.store.local_actor_id().clone();
         self.stores.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
-        self.pending.commit_document_window_reset(&mut self.stores, &mut self.history, &mut window_reset, cx)?;
+        self.pending.commit_document_window_reset(&mut self.stores, &mut self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
         assert_eq!(self.stores.store.local_actor_id(), &actor, "pure head retains its opened actor");
         self.history.cache = None;
         self.history.retire_displaced_document_rows();

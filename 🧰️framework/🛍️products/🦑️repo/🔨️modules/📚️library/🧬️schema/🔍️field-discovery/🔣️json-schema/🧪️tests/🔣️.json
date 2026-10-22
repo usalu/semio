@@ -1,0 +1,444 @@
+{
+ "version": 1,
+ "scalar": [
+  {
+   "schema": {
+    "contentEncoding": "base64",
+    "type": "string"
+   },
+   "expected": "bytes"
+  },
+  {
+   "schema": {
+    "contentMediaType": "application/json",
+    "type": "string"
+   },
+   "expected": "string"
+  },
+  {
+   "schema": {
+    "type": "string"
+   },
+   "expected": "string"
+  },
+  {
+   "schema": {
+    "type": "boolean"
+   },
+   "expected": "bool"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "format": "int32"
+   },
+   "expected": "int32"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "format": "uint32"
+   },
+   "expected": "uint32"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "format": "int64"
+   },
+   "expected": "int64"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "format": "uint64"
+   },
+   "expected": "uint64"
+  },
+  {
+   "schema": {
+    "type": "integer"
+   },
+   "expected": "int32"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "format": "weird"
+   },
+   "expected": "int32"
+  },
+  {
+   "schema": {
+    "type": "number",
+    "format": "float"
+   },
+   "expected": "float32"
+  },
+  {
+   "schema": {
+    "type": "number",
+    "format": "double"
+   },
+   "expected": "float64"
+  },
+  {
+   "schema": {
+    "type": "number"
+   },
+   "expected": "float64"
+  },
+  {
+   "schema": {
+    "$ref": "#/$defs/Foo"
+   },
+   "expected": "Foo"
+  },
+  {
+   "schema": {
+    "$ref": "plain"
+   },
+   "expected": "plain"
+  },
+  {
+   "schema": {
+    "title": "Thing"
+   },
+   "expected": "Thing"
+  },
+  {
+   "schema": {
+    "type": "null"
+   },
+   "expected": "null"
+  },
+  {
+   "schema": {},
+   "expected": "unknown"
+  },
+  {
+   "schema": {
+    "type": [
+     "string",
+     "null"
+    ]
+   },
+   "expected": "unknown"
+  },
+  {
+   "schema": {
+    "type": "integer",
+    "$ref": "x"
+   },
+   "expected": "int32"
+  },
+  {
+   "schema": {
+    "$ref": "x",
+    "title": "T"
+   },
+   "expected": "x"
+  },
+  {
+   "schema": {
+    "type": "object"
+   },
+   "expected": "object"
+  },
+  {
+   "schema": {
+    "type": "array"
+   },
+   "expected": "array"
+  }
+ ],
+ "property": [
+  {
+   "schema": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "schema": {
+    "type": "array",
+    "items": {
+     "type": "number"
+    },
+    "minItems": 2,
+    "maxItems": 2
+   },
+   "cardinality": "fixedList",
+   "scalar": "float64"
+  },
+  {
+   "schema": {
+    "type": "array"
+   },
+   "cardinality": "list",
+   "scalar": "unknown"
+  },
+  {
+   "schema": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    },
+    "minItems": 2,
+    "maxItems": 3
+   },
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "schema": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    },
+    "minItems": 2
+   },
+   "cardinality": "list",
+   "scalar": "string"
+  },
+  {
+   "schema": {
+    "type": "array",
+    "items": {
+     "$ref": "#/$defs/Item"
+    },
+    "minItems": 1,
+    "maxItems": 1
+   },
+   "cardinality": "fixedList",
+   "scalar": "Item"
+  },
+  {
+   "schema": {
+    "type": "object",
+    "additionalProperties": {
+     "type": "string"
+    }
+   },
+   "cardinality": "map",
+   "scalar": "string"
+  },
+  {
+   "schema": {
+    "type": "object",
+    "additionalProperties": true
+   },
+   "cardinality": "map",
+   "scalar": "unknown"
+  },
+  {
+   "schema": {
+    "type": "object",
+    "additionalProperties": false
+   },
+   "cardinality": "scalar",
+   "scalar": "object"
+  },
+  {
+   "schema": {
+    "type": "object",
+    "additionalProperties": {}
+   },
+   "cardinality": "map",
+   "scalar": "unknown"
+  },
+  {
+   "schema": {
+    "type": "object",
+    "additionalProperties": null
+   },
+   "cardinality": "scalar",
+   "scalar": "object"
+  },
+  {
+   "schema": {
+    "type": "string"
+   },
+   "cardinality": "scalar",
+   "scalar": "string"
+  },
+  {
+   "schema": {
+    "$ref": "#/$defs/Foo"
+   },
+   "cardinality": "scalar",
+   "scalar": "Foo"
+  }
+ ],
+ "extract": [
+  {
+   "name": "a full document",
+   "text": "{\"title\": \"Widget\", \"type\": \"object\", \"required\": [\"id\", \"count\", \"tags\"], \"properties\": {\"id\": {\"type\": \"string\"}, \"displayName\": {\"type\": \"string\"}, \"count\": {\"type\": \"integer\", \"format\": \"int32\"}, \"big\": {\"type\": \"integer\", \"format\": \"uint64\"}, \"tags\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}, \"pair\": {\"type\": \"array\", \"items\": {\"type\": \"number\"}, \"minItems\": 2, \"maxItems\": 2}, \"labels\": {\"type\": \"object\", \"additionalProperties\": {\"type\": \"string\"}}, \"blob\": {\"type\": \"string\", \"contentEncoding\": \"base64\"}, \"status\": {\"type\": \"string\", \"x-semio-state\": \"PERSISTED_SHARED\"}, \"mode\": {\"type\": \"string\", \"x-semio-state\": 7}, \"emptyState\": {\"type\": \"string\", \"x-semio-state\": \"\"}}}",
+   "expected": {
+    "typeName": "Widget",
+    "fields": [
+     {
+      "name": "id",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "displayName",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "count",
+      "optional": false,
+      "cardinality": "scalar",
+      "scalar": "int32",
+      "state": ""
+     },
+     {
+      "name": "big",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "uint64",
+      "state": ""
+     },
+     {
+      "name": "tags",
+      "optional": false,
+      "cardinality": "list",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "pair",
+      "optional": true,
+      "cardinality": "fixedList",
+      "scalar": "float64",
+      "state": ""
+     },
+     {
+      "name": "labels",
+      "optional": true,
+      "cardinality": "map",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "blob",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "bytes",
+      "state": ""
+     },
+     {
+      "name": "status",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": "persisted-shared"
+     },
+     {
+      "name": "mode",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     },
+     {
+      "name": "emptyState",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "ajv": true
+  },
+  {
+   "name": "invalid JSON yields nothing",
+   "text": "{not json",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "ajv": false
+  },
+  {
+   "name": "a document without properties",
+   "text": "{\"title\": \"Empty\"}",
+   "expected": {
+    "typeName": "Empty",
+    "fields": []
+   },
+   "ajv": true
+  },
+  {
+   "name": "a title that is not a string",
+   "text": "{\"title\": 3, \"properties\": {\"a\": {\"type\": \"string\"}}}",
+   "expected": {
+    "typeName": "",
+    "fields": [
+     {
+      "name": "a",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "ajv": false
+  },
+  {
+   "name": "required that is not an array makes everything optional",
+   "text": "{\"title\": \"T\", \"required\": \"a\", \"properties\": {\"a\": {\"type\": \"string\"}}}",
+   "expected": {
+    "typeName": "T",
+    "fields": [
+     {
+      "name": "a",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "string",
+      "state": ""
+     }
+    ]
+   },
+   "ajv": false
+  },
+  {
+   "name": "a null property is treated as an empty schema",
+   "text": "{\"title\": \"T\", \"properties\": {\"a\": null}}",
+   "expected": {
+    "typeName": "T",
+    "fields": [
+     {
+      "name": "a",
+      "optional": true,
+      "cardinality": "scalar",
+      "scalar": "unknown",
+      "state": ""
+     }
+    ]
+   },
+   "ajv": false
+  },
+  {
+   "name": "the empty array is not an object document",
+   "text": "[]",
+   "expected": {
+    "typeName": "",
+    "fields": []
+   },
+   "ajv": false
+  }
+ ]
+}

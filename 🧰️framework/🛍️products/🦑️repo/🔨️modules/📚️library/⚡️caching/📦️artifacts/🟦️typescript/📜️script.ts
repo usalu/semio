@@ -1,12 +1,13 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation, BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "./🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 /** 🚪️ `emit-declarations` — runs the program of this script. */
 class EmitDeclarationsScript extends BundleScript {
   async run(): Promise<void> {
     await runScriptProgram();
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("emit-declarations", EmitDeclarationsScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["emit-declarations"] }));
+const router = new ScriptRouter(import.meta.dirname).register("emit-declarations", EmitDeclarationsScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["emit-declarations"] }));

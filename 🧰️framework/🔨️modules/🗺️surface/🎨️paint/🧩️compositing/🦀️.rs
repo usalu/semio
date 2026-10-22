@@ -79,7 +79,7 @@ impl RetainedComposite {
                 match &mut layer.content{
                     RasterStackContent::Pixel {image_key,..}=>{
                         if image_key.is_none(){let key=RasterHost::layer_pixel_buffer_key(&layer.id);if buffers.contains_key(&key){*image_key=Some(key);}}
-                        if let Some(key)=image_key{if let Some(image)=buffers.get(key){images.insert(key.clone(),Arc::clone(image));}}
+                        if let Some(key)=image_key{if let Some(image)=buffers.get(key){images.insert(key.clone(),semio_framework_pixels::retirement::RasterLease(Arc::clone(image)));}}
                     }
                     RasterStackContent::Group(children)=>collect(children,buffers,images),
                     RasterStackContent::BrightnessContrast {..}=>{}

@@ -697,7 +697,7 @@
   ],
   "schemaOwnershipHashes": {
     "Namespace": "17b8534c734b5849c45e792a252eec6bf5df83d79105473928b9eb647282a1f9",
-    "OptionalQuota": "75b1a197dc67cf6a5ea991f7e4be694c0d6a9a8738760b09df0e595e918c0fcd",
+    "OptionalQuota": "d59d92ae6ecb68b2f69c1aa9308b582b253ae446d39e3026012fb18986377092",
     "OptionalLedger": "c51f4436ba05952d4db3a3380c38b42706911ea8bd3265005caeac3575f54557",
     "InferenceDataset": "477f73f937aed0f6a951b14f1ea96502f1f5fba50c4de983b830a71c118bb0e1"
   },
@@ -1585,8 +1585,7 @@
       "retiredFiles": 1,
       "phases": [
         "selected-underfloor",
-        "scoped-underfloor",
-        "optional-deferred",
+        "scoped-consumed",
         "reader-close",
         "coarse-fresh-image",
         "optional-original-writer",
@@ -1601,8 +1600,7 @@
       "retiredFiles": 2,
       "phases": [
         "selected-underfloor",
-        "scoped-underfloor",
-        "optional-deferred",
+        "scoped-consumed",
         "reader-close",
         "coarse-fresh-image",
         "optional-original-writer",
@@ -1617,8 +1615,7 @@
       "retiredFiles": 0,
       "phases": [
         "selected-underfloor",
-        "scoped-underfloor",
-        "optional-deferred",
+        "scoped-consumed",
         "reader-close",
         "coarse-fresh-image",
         "optional-original-writer"
@@ -1632,8 +1629,7 @@
       "retiredFiles": 0,
       "phases": [
         "selected-underfloor",
-        "scoped-underfloor",
-        "optional-deferred",
+        "scoped-consumed",
         "reader-close",
         "coarse-fresh-image",
         "optional-original-writer"
@@ -1768,10 +1764,11 @@
       "runtimeSourceEntries": [
         "{projectRoot}/🧪️tests/🟦️.ts",
         "{projectRoot}/🧪️tests/📒️ledger/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts"
       ]
     },
-    "command": "bun ./📜️script.ts test",
+    "command": "repo ./📜️script.ts test",
     "forwardAllArgs": false,
     "roles": [
       {

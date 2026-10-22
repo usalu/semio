@@ -243,7 +243,7 @@
         "docx.zip.import"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "docx-import"
       ],
@@ -287,7 +287,7 @@
         "docx.zip.project"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "docx-project"
       ],
@@ -331,7 +331,7 @@
         "docx.zip.compare"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "docx-compare"
       ],
@@ -375,7 +375,7 @@
         "docx.zip.compare-opc"
       ],
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
         "docx-compare-opc"
       ],
@@ -763,7 +763,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -813,7 +813,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only bolds-the-tower-run-of-the-opening-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only bolds-the-tower-run-of-the-opening-paragraph",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -863,7 +863,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-appends-a-pricing-table",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-appends-a-pricing-table",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -906,7 +906,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-rejected-invalid-index",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-rejected-invalid-index",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -956,7 +956,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-drops-the-closing-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-drops-the-closing-paragraph",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -999,7 +999,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing-index",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing-index",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1049,7 +1049,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-replaces-the-closing-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-replaces-the-closing-paragraph",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1099,7 +1099,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-no-op-unchanged-content",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-no-op-unchanged-content",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1149,7 +1149,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-closing-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-closing-paragraph",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1199,7 +1199,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-no-op-identical-text",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-no-op-identical-text",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1249,7 +1249,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-italicizes-the-closing-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-italicizes-the-closing-paragraph",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1299,7 +1299,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-no-op-identical-flags",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-no-op-identical-flags",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1349,7 +1349,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-adds-a-quote-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-adds-a-quote-style",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1392,7 +1392,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-rejected-duplicate-id",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-rejected-duplicate-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1442,7 +1442,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-drops-the-quote-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-drops-the-quote-style",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1485,7 +1485,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-rejected-missing-id",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-rejected-missing-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1535,7 +1535,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-renames-the-body-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-renames-the-body-style",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1578,7 +1578,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-rejected-missing-id",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-rejected-missing-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1628,7 +1628,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-reparents-the-quote-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-reparents-the-quote-style",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1671,7 +1671,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-rejected-missing-id",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-rejected-missing-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1721,7 +1721,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-adds-core-properties",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-adds-core-properties",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1771,7 +1771,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-no-op-identical-content",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-no-op-identical-content",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1821,7 +1821,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-drops-core-properties",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-drops-core-properties",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1864,7 +1864,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-rejected-missing-path",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-rejected-missing-path",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1914,7 +1914,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-block-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-block-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -1964,7 +1964,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-block-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-block-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2014,7 +2014,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-block-content-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-block-content-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2064,7 +2064,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-text-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-text-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2114,7 +2114,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-formatting-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-run-formatting-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2164,7 +2164,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-style-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only insert-style-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2214,7 +2214,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-style-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-style-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2264,7 +2264,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-name-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-name-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2314,7 +2314,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-based-on-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-style-based-on-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2364,7 +2364,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-part-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only set-part-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2414,7 +2414,7 @@
         "packageVersion": "python-docx 1.2.0",
         "engineFamily": "python-docx",
         "engineVersion": "1.2.0",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-part-readme-applied",
+        "command": "repo tools exec uv -- run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/END-TO-END-OS-HUB-COLLABORATION-MCP/wp-en2/en2-docx-readme-afters.py --only remove-part-readme-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2464,7 +2464,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-inserts-an-external-hyperlink-first",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-inserts-an-external-hyperlink-first",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2514,7 +2514,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-appends-an-external-hyperlink",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-appends-an-external-hyperlink",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2564,7 +2564,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-retypes-the-last-root-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-retypes-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2614,7 +2614,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-no-op-identical-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-relationship-no-op-identical-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2664,7 +2664,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-the-last-root-relationship",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2714,7 +2714,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-an-added-hyperlink",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-drops-an-added-hyperlink",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2757,7 +2757,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-rejected-missing-id",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-relationship-rejected-missing-id",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2807,7 +2807,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-inserts-a-default-first",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-inserts-a-default-first",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2857,7 +2857,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-retypes-an-existing-default",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-retypes-an-existing-default",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2907,7 +2907,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-no-op-identical-entry",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-no-op-identical-entry",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -2950,7 +2950,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-rejected-default-in-another-case",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only set-content-type-rejected-default-in-another-case",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3000,7 +3000,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-drops-an-added-default",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-drops-an-added-default",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3043,7 +3043,7 @@
         "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
         "engineFamily": "zip-xml",
         "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-rejected-missing-entry",
+        "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact docx --only remove-content-type-rejected-missing-entry",
         "platform": "darwin-arm64"
       },
       "provenance": {

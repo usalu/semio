@@ -1,0 +1,18 @@
+{
+ "extends": "../../../../../../../../tsconfig.json",
+ "compilerOptions": {
+  "allowJs": true,
+  "noEmit": true,
+  "types": [
+   "bun",
+   "node"
+  ],
+  "incremental": false,
+  "skipLibCheck": true
+ },
+ "files": [
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts"
+ ]
+}

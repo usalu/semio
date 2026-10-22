@@ -155,6 +155,40 @@
         "platform": "darwin"
       },
       "reset": true
+    },
+    {
+      "id": "legacy-before-boot-session-and-ancestry",
+      "publication": {
+        "version": 1,
+        "mountDirectory": {
+          "dev": "16777232",
+          "ino": "426471837",
+          "mode": 16877
+        },
+        "dev": 16777232,
+        "ino": 426471838,
+        "size": 8588886016,
+        "filesystemBytes": 8588886016,
+        "maximumPhysicalBytes": 8589934592
+      },
+      "reset": true
+    },
+    {
+      "id": "legacy-device-pinned-receipt-of-the-lease-image",
+      "publication": {
+        "version": 1,
+        "mountDirectory": {
+          "dev": "16777232",
+          "ino": "426471794",
+          "mode": 16877
+        },
+        "dev": 16777232,
+        "ino": 426471795,
+        "size": 66060288,
+        "filesystemBytes": 66060288,
+        "maximumPhysicalBytes": 67108864
+      },
+      "reset": true
     }
   ]
 }

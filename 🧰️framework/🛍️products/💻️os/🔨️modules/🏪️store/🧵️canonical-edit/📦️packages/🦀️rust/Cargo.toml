@@ -33,6 +33,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-hash = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde_json = "1.0.140"

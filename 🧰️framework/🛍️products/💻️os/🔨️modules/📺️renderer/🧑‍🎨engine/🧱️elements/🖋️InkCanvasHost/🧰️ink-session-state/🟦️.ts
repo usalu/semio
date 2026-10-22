@@ -1,5 +1,5 @@
 /** 🧰️ InkCanvasHost session state: the scene and window instance, the refs, the draft document and the drag, marquee, text edit, table edit and context menu state, the labels, the selection, hover and interaction lanes and the local presence publishing. */
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer, type ComponentSceneHostProps, windowElementId } from "@semio-tech/framework";
 import { registerIntroductionSurfaceResolver, useLabel, type IntroductionResolvedGeometry, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";

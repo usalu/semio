@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "year": 26,
+      "month": 10,
+      "day": 21,
+      "slug": "SCOPED-TICKET",
+      "ticket": {
+        "title": "Scoped Ticket",
+        "status": "open"
+      },
+      "expected": {
+        "path": "26/10/21/SCOPED-TICKET",
+        "ticket": {
+          "title": "Scoped Ticket",
+          "status": "open"
+        }
+      }
+    },
+    {
+      "year": 27,
+      "month": 1,
+      "day": 2,
+      "slug": "RENAMED-TICKET",
+      "ticket": {
+        "title": "Renamed Ticket",
+        "status": "closed"
+      },
+      "expected": {
+        "path": "27/01/02/RENAMED-TICKET",
+        "ticket": {
+          "title": "Renamed Ticket",
+          "status": "closed"
+        }
+      }
+    }
+  ],
+  "argumentCases": [
+    {
+      "arguments": {},
+      "accepted": true
+    },
+    {
+      "arguments": {
+        "no_issue": true,
+        "no_management": false
+      },
+      "accepted": true
+    },
+    {
+      "arguments": {
+        "no_issue": "true",
+        "no_management": true
+      },
+      "accepted": false
+    },
+    {
+      "arguments": {
+        "no_issue": true,
+        "no_management": "true"
+      },
+      "accepted": false
+    }
+  ]
+}

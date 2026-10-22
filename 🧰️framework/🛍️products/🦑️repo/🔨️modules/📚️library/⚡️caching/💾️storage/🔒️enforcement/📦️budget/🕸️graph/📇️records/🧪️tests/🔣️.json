@@ -1,0 +1,135 @@
+{
+ "version": 1,
+ "policy": {
+  "version": 2,
+  "projectsPerYield": 2,
+  "edgesPerRecord": 3,
+  "externalNodesPerRecord": 2,
+  "maximumRecordBytes": 1048576,
+  "compressionLevel": 4,
+  "internMinimumItems": 3
+ },
+ "graph": {
+  "version": 1,
+  "namedInputs": {
+   "default": [
+    "{projectRoot}/**/*"
+   ]
+  },
+  "projects": {
+   "alpha": {
+    "name": "alpha",
+    "root": "pkg/alpha",
+    "targets": {
+     "build": {
+      "inputs": [
+       "{workspaceRoot}/a",
+       "{workspaceRoot}/b",
+       "{workspaceRoot}/c"
+      ]
+     }
+    }
+   },
+   "beta": {
+    "name": "beta",
+    "root": "pkg/beta",
+    "targets": {
+     "build": {
+      "inputs": [
+       "{workspaceRoot}/a",
+       "{workspaceRoot}/b",
+       "{workspaceRoot}/c"
+      ],
+      "dependsOn": [
+       "^build"
+      ]
+     }
+    }
+   },
+   "gamma": {
+    "name": "gamma",
+    "root": "pkg/gamma",
+    "targets": {},
+    "tags": [
+     "ünï😀"
+    ]
+   },
+   "delta": {
+    "name": "delta",
+    "root": "pkg/delta",
+    "targets": {}
+   },
+   "twin": {
+    "name": "twin",
+    "root": "pkg/delta",
+    "targets": {}
+   }
+  },
+  "dependencies": [
+   {
+    "source": "beta",
+    "target": "alpha",
+    "type": "static"
+   },
+   {
+    "source": "gamma",
+    "target": "alpha"
+   },
+   {
+    "source": "delta",
+    "target": "beta"
+   },
+   {
+    "source": "twin",
+    "target": "npm:left-pad"
+   },
+   {
+    "source": "gamma",
+    "target": "beta"
+   },
+   {
+    "source": "delta",
+    "target": "alpha"
+   },
+   {
+    "source": "alpha",
+    "target": "npm:left-pad"
+   }
+  ],
+  "externalNodes": {
+   "npm:left-pad": {
+    "name": "left-pad",
+    "type": "npm"
+   },
+   "npm:other": {
+    "name": "other",
+    "type": "npm"
+   },
+   "npm:third": {
+    "name": "third",
+    "type": "npm"
+   }
+  },
+  "unavailable": [
+   {
+    "root": "pkg/z",
+    "source": "pkg/z/project.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "reason": "bad"
+   }
+  ],
+  "admission": {
+   "selection": {
+    "kind": "all"
+   },
+   "registry": "1111111111111111111111111111111111111111111111111111111111111111",
+   "closure": "2222222222222222222222222222222222222222222222222222222222222222"
+  }
+ },
+ "expected": {
+  "projectRecords": 5,
+  "dependencyRecords": 3,
+  "externalRecords": 2,
+  "recordsTotal": 10
+ }
+}

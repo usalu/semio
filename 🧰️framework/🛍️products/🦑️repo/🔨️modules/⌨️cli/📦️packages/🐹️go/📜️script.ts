@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -15,7 +15,7 @@ class BuildScript extends BundleScript {
   async run(): Promise<void> {
     const binary = resolveCliBin(this.repoRoot);
     mkdirSync(dirname(binary), { recursive: true });
-    await runCanonicalGoBuild(resolve(import.meta.dir, "../../../💻️client/🔌️mcp"), ["-trimpath", "-o", binary, "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
+    await runCanonicalGoBuild(resolve(import.meta.dirname, "../../../💻️client/🔌️mcp"), ["-trimpath", "-o", binary, "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
   }
 }
 
@@ -23,14 +23,14 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
     const tags = level === "exhaustive" ? ["-tags", "exhaustive"] : [];
-    await runCanonicalGoTests(import.meta.dir, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dir), ...rest]);
+    await runCanonicalGoTests(import.meta.dirname, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dirname), ...rest], this.invocation);
   }
 }
 
 class EntrypointSourceScript extends BundleScript {
- async run(): Promise<void> { await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dir,"../../🧪️tests/🚪️entrypoint/🟦️.ts")],{cwd:this.repoRoot}); }
+ async run(): Promise<void> { await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dirname,"../../🧪️tests/🚪️entrypoint/🟦️.ts")],{cwd:this.repoRoot}); }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("test-entrypoint-source", EntrypointSourceScript);
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript).register("test-entrypoint-source", EntrypointSourceScript);
 
 await runRepoScriptMain(router, import.meta.url);

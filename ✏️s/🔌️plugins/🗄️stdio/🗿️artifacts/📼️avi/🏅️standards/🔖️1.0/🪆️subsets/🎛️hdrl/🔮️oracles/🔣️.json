@@ -109,7 +109,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts",
         "avi-import"
       ],
@@ -153,7 +153,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts",
         "avi-project"
       ],
@@ -197,7 +197,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts",
         "avi-compare"
       ],
@@ -549,7 +549,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only no-mutation-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only no-mutation-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -599,7 +599,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-main-header-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-main-header-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -649,7 +649,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-stream-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-stream-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -692,7 +692,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-stream-rejected-out-of-bounds",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-stream-rejected-out-of-bounds",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -742,7 +742,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-stream-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-stream-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -785,7 +785,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-stream-rejected-missing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-stream-rejected-missing",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -835,7 +835,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-header-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-header-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -878,7 +878,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-header-rejected-missing-stream",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-header-rejected-missing-stream",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -928,7 +928,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-format-applied",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-format-applied",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -971,7 +971,7 @@
         "packageVersion": "2.0.0",
         "engineFamily": "riff",
         "engineVersion": "2.0.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-format-rejected-missing-stream",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-stream-format-rejected-missing-stream",
         "platform": "darwin-arm64"
       },
       "provenance": {

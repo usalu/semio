@@ -42,7 +42,7 @@
     "./wire-turn/turn-result": "./🖼️wire-turn/🔖️turn-result/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor:test"
+    "test": "repo run @semio-tech/framework-actor:test"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

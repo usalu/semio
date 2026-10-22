@@ -18,7 +18,13 @@ pub struct ChangeSlabActionQAreaPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabActionQAreaPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-action-q-area-pa", kind: "change-slab-action-q-area-pa", record: "ChangedSlabActionQAreaPa" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change imposed area load on the slab", "Flächenlast auf der Verbunddecke ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for ChangeSlabActionQAreaPa where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::change_slab_action_q_area_pa::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -27,9 +33,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabActionQAreaPa 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change imposed area load on the slab", "Flächenlast auf der Verbunddecke ändern")
-    }
 }
 //#endregion 🔖️Payload
 

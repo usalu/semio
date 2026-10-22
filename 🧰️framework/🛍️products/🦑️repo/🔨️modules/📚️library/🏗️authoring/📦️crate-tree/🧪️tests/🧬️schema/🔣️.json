@@ -1,0 +1,188 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "features",
+  "dev",
+  "insert",
+  "fixture"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "features": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "manifest",
+    "expected",
+    "rows",
+    "forwardTo",
+    "forwarded"
+   ],
+   "properties": {
+    "manifest": {
+     "type": "string"
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "entries"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "entries": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "feature",
+       "forward",
+       "expected"
+      ],
+      "properties": {
+       "feature": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "name",
+         "entries"
+        ],
+        "properties": {
+         "name": {
+          "type": "string"
+         },
+         "entries": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       "forward": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "expected": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "forwardTo": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "forwarded": {
+     "type": "string"
+    }
+   }
+  },
+  "dev": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "manifest",
+     "rows",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "manifest": {
+      "type": "string"
+     },
+     "rows": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "insert": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "manifest",
+     "row",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "manifest": {
+      "type": "string"
+     },
+     "row": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "manifest",
+    "directory",
+    "root",
+    "keyContains"
+   ],
+   "properties": {
+    "manifest": {
+     "type": "string"
+    },
+    "directory": {
+     "type": "string"
+    },
+    "root": {
+     "type": "string"
+    },
+    "keyContains": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

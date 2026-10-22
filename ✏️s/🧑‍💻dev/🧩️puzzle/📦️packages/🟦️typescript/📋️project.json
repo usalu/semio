@@ -9,7 +9,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify puzzle-fill-policy-self-tests",
+        "command": "repo ./📜️script.ts verify puzzle-fill-policy-self-tests",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts verify browser-contribution",
+        "command": "repo ./📜️script.ts verify browser-contribution",
         "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
         "forwardAllArgs": true
       },

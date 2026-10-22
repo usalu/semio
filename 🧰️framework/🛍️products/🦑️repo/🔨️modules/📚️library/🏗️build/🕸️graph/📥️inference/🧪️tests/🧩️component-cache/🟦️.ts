@@ -42,14 +42,14 @@ test("a component crate replays from one store receipt over its exact inputs, on
       const strings = target.inputs.filter((input: unknown) => typeof input === "string") as string[], objects = target.inputs.filter((input: unknown) => typeof input === "object") as Record<string, unknown>[];
       expect(strings.filter((input) => !input.startsWith("{workspaceRoot}/")), row.id).toEqual(corpus.named);
       const files = new Set(strings.filter((input) => input.startsWith("{workspaceRoot}/")).map((input) => input.slice("{workspaceRoot}/".length)));
-      for (const name of row.expect.descriptorFiles) expect(files.has(`${row.expect.descriptorOwner}/${name}`), `${row.id}: ${name}`).toBe(true);
+      for (const name of (row.expect as {descriptorOwner: string; descriptorFiles: string[]}).descriptorFiles) expect(files.has(`${(row.expect as {descriptorOwner: string}).descriptorOwner}/${name}`), `${row.id}: ${name}`).toBe(true);
       expect(files.has(posixPath(relative(root, join(library, corpus.binaryenManifest)))), `${row.id}: pinned Binaryen manifest`).toBe(true);
       for (const file of policy.toolchains.cargo.files) expect(files.has(file), `${row.id}: ${file}`).toBe(true);
       expect(objects.filter((input) => "env" in input).map((input) => input.env), row.id).toEqual(policy.toolchains.cargo.environment);
       expect(objects.filter((input) => "runtime" in input).map((input) => input.runtime).filter((command) => policy.toolchains.cargo.commands.includes(command)), row.id).toEqual(policy.toolchains.cargo.commands);
       expect(objects, row.id).toContainEqual({ externalDependencies: corpus.externalDependencies });
       expect(objects, row.id).toContainEqual({ dependentTasksOutputFiles: "**/*" });
-      expect(target.options.command, row.id).toBe(`bun ${JSON.stringify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts")} component --manifest ${JSON.stringify(posixPath(relative(root, join(root, row.root, "Cargo.toml"))))}`);
+      expect(target.options.command, row.id).toBe(`repo ${JSON.stringify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts")} component --manifest ${JSON.stringify(posixPath(relative(root, join(root, row.root, "Cargo.toml"))))}`);
     }
   } finally { await rm(root, { recursive: true, force: true }); }
 }, 30000);

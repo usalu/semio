@@ -65,25 +65,9 @@ impl SemioObjectDiff {
     }
 }
 
-impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
-    fn apply(&self, base: &SemioObjectSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
-        let mut next = base.clone();
-        if let Some(t) = &self.transform {
-            next.transform = *t;
-        }
-        if let Some(b) = &self.brep {
-            next.brep = b.clone();
-        }
-        if let Some(m) = &self.mesh {
-            next.mesh = m.clone();
-        }
-        if let Some(p) = &self.properties {
-            next.properties = p.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {}
 
+impl protocol::ColdMutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     fn absorb(&mut self, other: Self) {
         if other.transform.is_some() {
             self.transform = other.transform;
@@ -98,10 +82,36 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
             self.properties = other.properties;
         }
     }
+
+    fn apply(&self, unpublished: &mut SemioObjectSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
+        let mut next = base.clone();
+        if let Some(t) = &self.transform {
+            next.transform = *t;
+        }
+        if let Some(b) = &self.brep {
+            next.brep = b.clone();
+        }
+        if let Some(m) = &self.mesh {
+            next.mesh = m.clone();
+        }
+        if let Some(p) = &self.properties {
+            next.properties = p.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 /// 🧮️ `object`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
+    fn is_empty(&self) -> bool {
+        self.is_empty_diff()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
     fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: self.transform.as_ref().map(|_| base.transform),
@@ -109,9 +119,6 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             mesh: self.mesh.as_ref().map(|_| base.mesh.clone()),
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.is_empty_diff()
     }
 }
 //#endregion 🔖️Diff

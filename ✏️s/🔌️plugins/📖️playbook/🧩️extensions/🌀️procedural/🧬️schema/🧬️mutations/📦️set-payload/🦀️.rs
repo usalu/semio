@@ -13,6 +13,16 @@ pub struct SetPayload {
 
 impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "payload", kind: "set-payload", record: "SetPayload" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["payload".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetPayload {
     fn diff(&self, base: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> {
         protocol::MutationOutcome::new(ModulePayloadDiff {
             example_id: (base.example_id != self.payload.example_id).then(|| self.payload.example_id.clone()),
@@ -29,12 +39,6 @@ impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetP
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["payload".into()]
-    }
 }
 
 #[cfg(test)]

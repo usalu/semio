@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "error.syntax": {
+      "en": "Expected repo remote-execution serve|status|workers.",
+      "de": "Erwartet wird repo remote-execution serve|status|workers."
+    },
+    "error.option": {
+      "en": "Unknown option for remote-execution {operation}: {option}",
+      "de": "Unbekannte Option für remote-execution {operation}: {option}"
+    },
+    "error.value": {
+      "en": "A value is required for {option}.",
+      "de": "Für {option} ist ein Wert nötig."
+    },
+    "error.repeated": {
+      "en": "{option} was given more than once.",
+      "de": "{option} wurde mehrfach angegeben."
+    },
+    "error.number": {
+      "en": "{option} must be a whole number from {minimum} to {maximum}.",
+      "de": "{option} muss eine ganze Zahl von {minimum} bis {maximum} sein."
+    },
+    "error.tls": {
+      "en": "TLS needs both a certificate and a key.",
+      "de": "TLS braucht ein Zertifikat und einen Schlüssel."
+    },
+    "error.token": {
+      "en": "Tokens are required to listen beyond loopback: set the read or write token of the cache server and the worker token.",
+      "de": "Außerhalb von Loopback sind Tokens nötig: das Lese- oder Schreib-Token des Cache-Servers und das Worker-Token setzen."
+    },
+    "error.join": {
+      "en": "The scheduler URL is required: pass --join or set {variable}.",
+      "de": "Die Scheduler-URL fehlt: --join angeben oder {variable} setzen."
+    },
+    "error.cache": {
+      "en": "The shared store could not be started: {reason}. Pass --cache <url> to use a running remote cache server.",
+      "de": "Der gemeinsame Speicher konnte nicht gestartet werden: {reason}. Mit --cache <url> lässt sich ein laufender Remote-Cache-Server verwenden."
+    },
+    "error.properties": {
+      "en": "Properties must look like name=value,name=value: {value}",
+      "de": "Eigenschaften müssen wie name=wert,name=wert aussehen: {value}"
+    },
+    "error.sandbox": {
+      "en": "Sandbox strategy {sandbox} is not available on this machine.",
+      "de": "Die Sandbox-Strategie {sandbox} ist auf diesem Rechner nicht verfügbar."
+    },
+    "serve.open": {
+      "en": "Starting the remote execution service on {host}.",
+      "de": "Der Remote-Execution-Dienst wird auf {host} gestartet."
+    },
+    "serve.cache.embedded": {
+      "en": "Shared store: {url} (started here, directory {directory}).",
+      "de": "Gemeinsamer Speicher: {url} (hier gestartet, Verzeichnis {directory})."
+    },
+    "serve.cache.external": {
+      "en": "Shared store: {url} (running elsewhere).",
+      "de": "Gemeinsamer Speicher: {url} (läuft anderswo)."
+    },
+    "serve.listening": {
+      "en": "Execution service ready: gRPC {grpc}, worker API {workers}. Access: {access}.",
+      "de": "Ausführungsdienst bereit: gRPC {grpc}, Worker-API {workers}. Zugriff: {access}."
+    },
+    "serve.access.open": {
+      "en": "open (loopback only)",
+      "de": "offen (nur Loopback)"
+    },
+    "serve.access.token": {
+      "en": "bearer tokens",
+      "de": "Bearer-Tokens"
+    },
+    "serve.workers": {
+      "en": "{count} local worker process(es) started.",
+      "de": "{count} lokale(r) Worker-Prozess(e) gestartet."
+    },
+    "serve.workers.none": {
+      "en": "No local worker: start workers with repo remote-execution workers --join {url}.",
+      "de": "Kein lokaler Worker: Worker mit repo remote-execution workers --join {url} starten."
+    },
+    "serve.client": {
+      "en": "Clients set this environment:",
+      "de": "Clients setzen diese Umgebung:"
+    },
+    "serve.join": {
+      "en": "Another machine joins with: repo remote-execution workers --join {url}",
+      "de": "Ein anderer Rechner tritt bei mit: repo remote-execution workers --join {url}"
+    },
+    "serve.stopping": {
+      "en": "Stopping the remote execution service.",
+      "de": "Der Remote-Execution-Dienst wird beendet."
+    },
+    "serve.stopped": {
+      "en": "Remote execution service stopped.",
+      "de": "Remote-Execution-Dienst beendet."
+    },
+    "serve.event": {
+      "en": "{event}: {detail}",
+      "de": "{event}: {detail}"
+    },
+    "workers.sandbox": {
+      "en": "Worker sandbox: {sandbox}.",
+      "de": "Worker-Sandbox: {sandbox}."
+    },
+    "workers.registered": {
+      "en": "Worker registered: {detail}.",
+      "de": "Worker angemeldet: {detail}."
+    },
+    "workers.started": {
+      "en": "Started {detail}.",
+      "de": "Gestartet: {detail}."
+    },
+    "workers.finished": {
+      "en": "Finished {detail}.",
+      "de": "Beendet: {detail}."
+    },
+    "workers.cancelled": {
+      "en": "Cancelled {detail}.",
+      "de": "Abgebrochen: {detail}."
+    },
+    "workers.reconnecting": {
+      "en": "Waiting for the scheduler: {detail}",
+      "de": "Warte auf den Scheduler: {detail}"
+    },
+    "workers.stopped": {
+      "en": "Worker {detail} stopped.",
+      "de": "Worker {detail} beendet."
+    },
+    "workers.start": {
+      "en": "Worker {name} joins {url} with {concurrency} slot(s) on {platform}.",
+      "de": "Worker {name} tritt {url} bei mit {concurrency} Slot(s) auf {platform}."
+    }
+  }
+}

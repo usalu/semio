@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "languages": ["en", "de"],
+  "messages": {
+    "error.syntax": {
+      "en": "Expected repo remote-cache serve|status|gc.",
+      "de": "Erwartet wird repo remote-cache serve|status|gc."
+    },
+    "error.option": {
+      "en": "Unknown option for remote-cache {operation}: {option}",
+      "de": "Unbekannte Option für remote-cache {operation}: {option}"
+    },
+    "error.value": {
+      "en": "A value is required for {option}.",
+      "de": "Für {option} ist ein Wert nötig."
+    },
+    "error.repeated": {
+      "en": "{option} was given more than once.",
+      "de": "{option} wurde mehrfach angegeben."
+    },
+    "error.number": {
+      "en": "{option} must be a whole number from {minimum} to {maximum}.",
+      "de": "{option} muss eine ganze Zahl von {minimum} bis {maximum} sein."
+    },
+    "error.language": {
+      "en": "Unknown language {language}; use en or de.",
+      "de": "Unbekannte Sprache {language}; verwende en oder de."
+    },
+    "error.tls": {
+      "en": "TLS needs both a certificate and a key.",
+      "de": "TLS braucht ein Zertifikat und einen Schlüssel."
+    },
+    "error.token": {
+      "en": "A token is required to listen beyond loopback.",
+      "de": "Außerhalb von Loopback ist ein Token nötig."
+    },
+    "error.busy": {
+      "en": "Another remote cache server already uses {directory}.",
+      "de": "Ein anderer Remote-Cache-Server benutzt {directory} bereits."
+    },
+    "serve.open": {
+      "en": "Opening the cache store {directory}",
+      "de": "Öffne den Cache-Speicher {directory}"
+    },
+    "serve.ready": {
+      "en": "Store ready: {entries} entries, {bytes}",
+      "de": "Speicher bereit: {entries} Einträge, {bytes}"
+    },
+    "serve.listening": {
+      "en": "Serving the remote cache on {url} ({access}, {transport}, result validation {validation}); stop with Ctrl+C.",
+      "de": "Der Remote-Cache läuft auf {url} ({access}, {transport}, Ergebnisprüfung {validation}); beenden mit Strg+C."
+    },
+    "serve.access.read-write": {
+      "en": "read-write",
+      "de": "lesend und schreibend"
+    },
+    "serve.access.read-only": {
+      "en": "read-only",
+      "de": "nur lesend"
+    },
+    "serve.transport.http": {
+      "en": "plain HTTP",
+      "de": "einfaches HTTP"
+    },
+    "serve.transport.https": {
+      "en": "TLS",
+      "de": "TLS"
+    },
+    "serve.validation.off": {
+      "en": "off",
+      "de": "aus"
+    },
+    "serve.validation.structure": {
+      "en": "structure",
+      "de": "Struktur"
+    },
+    "serve.validation.complete": {
+      "en": "complete",
+      "de": "vollständig"
+    },
+    "serve.open-access": {
+      "en": "No token is set: everyone who can reach this address may read and write.",
+      "de": "Kein Token gesetzt: Jeder, der diese Adresse erreicht, darf lesen und schreiben."
+    },
+    "serve.client": {
+      "en": "Clients set SEMIO_REMOTE_CACHE_ENDPOINT={url}, SEMIO_REMOTE_CACHE_ACCESS=read-write and SEMIO_REMOTE_CACHE_TOKEN.",
+      "de": "Clients setzen SEMIO_REMOTE_CACHE_ENDPOINT={url}, SEMIO_REMOTE_CACHE_ACCESS=read-write und SEMIO_REMOTE_CACHE_TOKEN."
+    },
+    "serve.evicted": {
+      "en": "Evicted {entries} entries ({bytes}).",
+      "de": "{entries} Einträge verdrängt ({bytes})."
+    },
+    "serve.stopped": {
+      "en": "The remote cache stopped.",
+      "de": "Der Remote-Cache wurde beendet."
+    },
+    "gc.start": {
+      "en": "Collecting {directory}: bound {bytes}, idle limit {days} days{mode}",
+      "de": "Sammle {directory} ein: Grenze {bytes}, Leerlaufgrenze {days} Tage{mode}"
+    },
+    "gc.mode.plan": {
+      "en": " (plan only)",
+      "de": " (nur Plan)"
+    },
+    "gc.mode.apply": {
+      "en": "",
+      "de": ""
+    },
+    "gc.absent": {
+      "en": "{directory} does not exist; nothing to collect.",
+      "de": "{directory} existiert nicht; nichts einzusammeln."
+    },
+    "gc.locked": {
+      "en": "Another collector holds {lock}; nothing was removed.",
+      "de": "Ein anderer Einsammler hält {lock}; nichts wurde entfernt."
+    },
+    "gc.summary.plan": {
+      "en": "Would remove {entries} of {total} entries ({bytes}): {age} idle too long, {budget} over the bound, {dangling} dangling; {remaining} entries ({left}) would remain.",
+      "de": "Würde {entries} von {total} Einträgen entfernen ({bytes}): {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist; {remaining} Einträge ({left}) blieben."
+    },
+    "gc.summary.apply": {
+      "en": "Removed {entries} of {total} entries ({bytes}): {age} idle too long, {budget} over the bound, {dangling} dangling; {remaining} entries ({left}) remain.",
+      "de": "{entries} von {total} Einträgen entfernt ({bytes}): {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist; {remaining} Einträge ({left}) bleiben."
+    },
+    "gc.cancelled": {
+      "en": "Cancelled; entries removed so far stay removed.",
+      "de": "Abgebrochen; bisher entfernte Einträge bleiben entfernt."
+    },
+    "status.off": {
+      "en": "The remote cache is off: set SEMIO_REMOTE_CACHE_ENDPOINT to an http or https origin.",
+      "de": "Der Remote-Cache ist aus: Setze SEMIO_REMOTE_CACHE_ENDPOINT auf einen http- oder https-Ursprung."
+    }
+  }
+}

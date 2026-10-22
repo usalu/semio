@@ -1,0 +1,139 @@
+{
+ "version": 1,
+ "features": {
+  "manifest": "[package]\nname = \"art\"\n\n[features]\ntestkit = [\"dep:serde_json\"]\ndefault = []\nmulti = [\n  \"a\",\n  \"b\",\n]\nnot_array = \"x\"\n\n[dependencies]\nserde_json = { version = \"1\", optional = true }\n",
+  "expected": [
+   {
+    "name": "testkit",
+    "entries": [
+     "dep:serde_json"
+    ]
+   },
+   {
+    "name": "default",
+    "entries": []
+   },
+   {
+    "name": "multi",
+    "entries": [
+     "a",
+     "b"
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "feature": {
+     "name": "testkit",
+     "entries": [
+      "dep:serde_json"
+     ]
+    },
+    "forward": [
+     "art-a",
+     "art-b"
+    ],
+    "expected": "testkit = [\"dep:serde_json\", \"art-a/testkit\", \"art-b/testkit\"]"
+   },
+   {
+    "feature": {
+     "name": "default",
+     "entries": []
+    },
+    "forward": [],
+    "expected": "default = []"
+   },
+   {
+    "feature": {
+     "name": "d",
+     "entries": [
+      "x\"y"
+     ]
+    },
+    "forward": [
+     "c"
+    ],
+    "expected": "d = [\"x\\\"y\", \"c/d\"]"
+   }
+  ],
+  "forwardTo": [
+   "art-a"
+  ],
+  "forwarded": "[package]\nname = \"art\"\n\n[features]\ntestkit = [\"dep:serde_json\", \"art-a/testkit\"]\ndefault = [\"art-a/default\"]\nmulti = [\"a\", \"b\", \"art-a/multi\"]\nnot_array = \"x\"\n\n[dependencies]\nserde_json = { version = \"1\", optional = true }\n"
+ },
+ "dev": [
+  {
+   "name": "rows are added right after an existing section header",
+   "manifest": "[package]\nname = \"x\"\n\n[dev-dependencies]\nold = \"1\"\n",
+   "rows": [
+    "new = \"2\"",
+    "z = \"3\""
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[dev-dependencies]\nnew = \"2\"\nz = \"3\"\nold = \"1\"\n"
+  },
+  {
+   "name": "a missing section is created",
+   "manifest": "[package]\nname = \"x\"\n\n\n",
+   "rows": [
+    "new = \"2\""
+   ],
+   "expected": "[package]\nname = \"x\"\n\n[dev-dependencies]\nnew = \"2\"\n"
+  },
+  {
+   "name": "no rows change nothing",
+   "manifest": "x\n",
+   "rows": [],
+   "expected": "x\n"
+  }
+ ],
+ "insert": [
+  {
+   "name": "a row sorts between neighbours",
+   "manifest": "[dev-dependencies]\nb = \"1\"\nd = \"1\"\n",
+   "row": "c = \"2\"",
+   "expected": "[dev-dependencies]\nb = \"1\"\nc = \"2\"\nd = \"1\"\n"
+  },
+  {
+   "name": "a row sorts first",
+   "manifest": "[dev-dependencies]\nb = \"1\"\n",
+   "row": "a = \"2\"",
+   "expected": "[dev-dependencies]\na = \"2\"\nb = \"1\"\n"
+  },
+  {
+   "name": "a row sorts last, before the next section",
+   "manifest": "[dev-dependencies]\nb = \"1\"\n\n[features]\nf = []\n",
+   "row": "z = \"2\"",
+   "expected": "[dev-dependencies]\nb = \"1\"\nz = \"2\"\n\n[features]\nf = []\n"
+  },
+  {
+   "name": "a known dependency is not duplicated",
+   "manifest": "[dev-dependencies]\nb = \"1\"\n",
+   "row": "b = \"9\"",
+   "expected": "[dev-dependencies]\nb = \"1\"\n"
+  },
+  {
+   "name": "an empty section takes the row",
+   "manifest": "[dev-dependencies]\n\n[features]\n",
+   "row": "a = \"1\"",
+   "expected": "[dev-dependencies]\na = \"1\"\n\n[features]\n"
+  },
+  {
+   "name": "a missing section is created",
+   "manifest": "[package]\nname = \"x\"\n",
+   "row": "a = \"1\"",
+   "expected": "[package]\nname = \"x\"\n\n[dev-dependencies]\na = \"1\"\n"
+  },
+  {
+   "name": "comments are skipped while looking for the place",
+   "manifest": "[dev-dependencies]\n# note\nb = \"1\"\n# tail\n",
+   "row": "c = \"2\"",
+   "expected": "[dev-dependencies]\n# note\nb = \"1\"\nc = \"2\"\n# tail\n"
+  }
+ ],
+ "fixture": {
+  "manifest": "[package]\nname = \"x\"\n",
+  "directory": "/w/crates/x",
+  "root": "/w",
+  "keyContains": "fixtures"
+ }
+}

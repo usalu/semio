@@ -62,7 +62,7 @@ pub struct ToolRunLedger<A: ArtifactApp> {
 }
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
-pub(crate) struct ToolRunTraceWindow {
+pub struct ToolRunTraceWindow {
     pub body_key: String,
     pub echoed: Option<ToolRunTraceCursor>,
     pub answered: bool,
@@ -130,7 +130,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
     }
 
-    pub(crate) fn poll_view_for(&self,window_id:Option<&str>)->Option<semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
+    pub fn poll_view_for(&self,window_id:Option<&str>)->Option<semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
 
     fn window_index(&self, window_id: Option<&str>) -> Option<usize> {
         let window_id = window_id?;

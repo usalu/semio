@@ -1,4 +1,4 @@
-/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */
+/* Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`. */
 @font-face {
   font-family: "Anta";
   src: url("/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2") format("woff2");
@@ -167,7 +167,7 @@
   font-display: swap;
 }
 
-/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */
+/* Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`. */
 @theme {
   /* Primary brand colors */
   --color-primary: #ff344f;
@@ -241,7 +241,7 @@
   --text-base: 14.4px;
 }
 
-/* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */
+/* Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`. */
 :root {
   --presence-0: hsl(0deg 68% 32%);
   --presence-1: hsl(210deg 68% 32%);

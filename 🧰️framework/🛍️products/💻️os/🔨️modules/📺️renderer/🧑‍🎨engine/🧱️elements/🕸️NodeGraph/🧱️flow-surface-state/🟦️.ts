@@ -4,13 +4,14 @@
  */
 
 import type { DagWireTypeRefusal } from "@semio-tech/framework/infinite/board/schema/dag-input";
-import React, {
+import * as React from "../../⚛️react-port/🟦️.ts";
+import {
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import { registerIntroductionSurfaceResolver, useLabel, type CanvasPickTarget } from "@semio-tech/ui-react";
 import {

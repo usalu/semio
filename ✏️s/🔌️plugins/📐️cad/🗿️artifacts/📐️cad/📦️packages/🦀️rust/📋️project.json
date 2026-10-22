@@ -26,7 +26,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify reference-owner-syntax",
+        "command": "repo ./📜️script.ts verify reference-owner-syntax",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -44,7 +44,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify owned-target",
+        "command": "repo ./📜️script.ts verify owned-target",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -62,7 +62,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -80,7 +80,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -98,7 +98,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -116,7 +116,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -140,7 +140,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -148,7 +148,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -157,7 +157,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -166,7 +166,7 @@
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts canonical-architecture"
+        "command": "repo ./📜️script.ts canonical-architecture"
       },
       "outputs": [],
       "inputs": [
@@ -183,7 +183,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify cad-document-contract",
+        "command": "repo ./📜️script.ts verify cad-document-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -201,7 +201,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify activation-source",
+        "command": "repo ./📜️script.ts verify activation-source",
         "forwardAllArgs": true
       },
       "metadata": {

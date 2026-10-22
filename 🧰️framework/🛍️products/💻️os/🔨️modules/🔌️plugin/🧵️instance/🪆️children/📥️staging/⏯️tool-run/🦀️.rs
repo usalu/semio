@@ -21,10 +21,10 @@ use std::future::Future;
 use semio_framework_ui_contract::*;
 use semio_framework_plugin_tool_run::*;
 use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_value::RetainedCloneGrant;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ The member a run declaring `ToolRunDefinition::member` edits: the one live owned child composed under `slot`, with
     /// the member store generation the run rests on. No such child, or several, refuse the start by name.
     pub fn tool_run_member_target(&self, slot: &str) -> Result<ToolRunMemberRun, Fault> {
@@ -49,8 +49,8 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// 🔁️ [`Self::refresh_tool_run_member`] on a member taken out of its entry: `(fold pending, conflicts, rebased)`, or
-    /// `None` when the overlay already shows every op.
-    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<(bool, u32, bool)>, Fault> {
+    /// `None` when the overlay already shows every op; `receipt` carries the retained progress the fold paid for, to be retained on the run ledger.
+    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>,receipt:&mut semio_framework_value::RetainedCloneProgress) -> Result<Option<(bool, u32, bool)>, Fault> {
         let stale = std::mem::take(&mut member.stale);
         self.retire_tool_run_views(stale, &mut member.stale)?;
         if !member.rebase && member.shown == member.ops.len() {
@@ -58,8 +58,8 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         }
         let child = self.children.get(&(member.slot.clone(), member.child_id.clone())).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.member-gone"), format!("the member {}/{} a tool run edits is gone", member.slot, member.child_id)))?;
         let rebased = member.rebase;
-        let folded = match child.member.visit_member(ToolRunMemberFold { owners: &mut member.owners, ops: &member.ops, shown: member.shown, rebase: member.rebase, deadline_us: deadline,grant,receiving }){Ok(folded)=>folded,Err(ToolRunMemberFoldRefusal::Native(error))=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault())},Err(ToolRunMemberFoldRefusal::Semantic(error))=>return Err(error)};
-        self.tool_runs.retain_original_receipt(grant,folded.progress)?;
+        let folded = match child.member.visit_member(ToolRunMemberFold { owners: &mut member.owners, ops: &member.ops, shown: member.shown, rebase: member.rebase, deadline_us: deadline,grant,receiving }){Ok(folded)=>folded,Err(ToolRunMemberFoldRefusal::Native(error))=>{*receipt=error.retained_progress();return Err(error.into_fault())},Err(ToolRunMemberFoldRefusal::Semantic(error))=>return Err(error)};
+        *receipt=folded.progress;
         member.rebase = false;
         member.shown = folded.shown;
         let pending = folded.pending;

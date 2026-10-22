@@ -24,7 +24,7 @@ impl KernelHost {
     }
 
     /// ▶️ `activation_bytes` is a pack-encoded `(PackageId, u16 plugin_ordinal, ActorKind, Lane,
-    /// Option<WindowId>, ActivationEvent)` tuple; returns the pack-encoded fresh `ActorId`.
+    /// Option<WindowId>, RetainedTurnInput, OriginalActorTurnLoan)` tuple; returns the pack-encoded fresh `ActorId`.
     #[wasm_bindgen]
     pub async fn activate(&mut self, activation_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
         let mut pos = 0usize;
@@ -35,7 +35,8 @@ impl KernelHost {
         let window = if pack::read_bool(activation_bytes, &mut pos, "activate::window").await.map_err(to_js_error)? { Some(crate::component::WindowId::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?) } else { None };
         let event = ActivationEvent::Manual;
         let retained = crate::component::RetainedTurnInput::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?;
-        let id = self.inner.activate(package, plugin_ordinal, kind, lane, window, event, retained).await;
+        let loan = crate::component::OriginalActorTurnLoan::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?;
+        let id = self.inner.activate(package, plugin_ordinal, kind, lane, window, event, retained, loan).await;
         let mut out = Vec::new();
         id.pack_encode(&mut out).await;
         Ok(out)

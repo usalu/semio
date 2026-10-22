@@ -9,7 +9,7 @@ use semio_framework_os_kernel::DslValue;
 use semio_framework::InvocationResult;
 use semio_framework_plugin_interaction::UiAssemblyResult;
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunRef<'v, A, M, X> {
     /// 🏃️ Ledger work plus an unobserved store or settings generation change the watch still owes.
     pub fn tool_run_has_pending_work(&self) -> bool {
         self.tool_runs.has_pending_work()
@@ -71,7 +71,7 @@ impl InstanceExtension for ToolRunExtension {
         is_tool_run_action_id(action)
     }
 
-    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    async fn dispatch_action<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         ToolRunCtx::of_extension(ctx).dispatch_tool_run_action(action, args, meta).await
     }
 
@@ -83,7 +83,7 @@ impl InstanceExtension for ToolRunExtension {
         tool_runs.note_window_config_published();
     }
 
-    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
+    fn has_pending_work<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
         ToolRunRef::of_extension_ref(ctx).tool_run_has_pending_work()
     }
 
@@ -95,7 +95,7 @@ impl InstanceExtension for ToolRunExtension {
         tool_runs.terminal_is_empty()
     }
 
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut ctx = ToolRunCtx::of_extension(ctx);
         if !ctx.shared().tool_run_has_pending_work() {
             return Ok(false);
@@ -112,7 +112,7 @@ impl InstanceExtension for ToolRunExtension {
         Ok(ctx.tool_runs.has_original_receipt())
     }
 
-    fn render_body<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
+    fn render_body<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Option<UiAssemblyResult<BuiltNode>> {
         if body_key != FRAMEWORK_TOOL_RUN_BODY_KEY {
             return None;
         }
@@ -121,7 +121,7 @@ impl InstanceExtension for ToolRunExtension {
         Some(ctx.tool_runs.panel(&registry.controller_id, locale, ready_tool, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())))
     }
 
-    fn after_app_render<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
+    fn after_app_render<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
         ToolRunCtx::of_extension(ctx).inject_tool_run_trace_lane(body_key, view_state)
     }
 }

@@ -94,7 +94,7 @@
     },
     {
       "slug": "cursor",
-      "extraTicketArgument": "plan_id"
+      "extraTicketArgument": null
     },
     {
       "slug": "kiro",

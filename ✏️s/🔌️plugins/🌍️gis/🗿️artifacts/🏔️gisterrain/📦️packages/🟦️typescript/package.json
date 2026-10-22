@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gisterrain:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gisterrain:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gisterrain:test"
+    "build": "repo run @semio-tech/gis-gisterrain:build",
+    "check": "repo run @semio-tech/gis-gisterrain:check",
+    "test": "repo run @semio-tech/gis-gisterrain:test"
   },
   "exports": {
     ".": {

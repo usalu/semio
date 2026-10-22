@@ -25,6 +25,15 @@ pub fn resize_grip_3d<Op: From<crate::resize_grip_3d::ResizeGrip3d>>(id: String,
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ResizeGrip3d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::resize_grip_3d::ResizeGrip3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "grip", kind: "resize-grip3d", record: "ResizedGrip3d" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Größe von Griff \"{}\" (3D) ändern", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for ResizeGrip3d where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::resize_grip_3d::ResizeGrip3d> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::resize_grip_3d::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ResizeGrip3d where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Größe von Griff \"{}\" (3D) ändern", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

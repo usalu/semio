@@ -27,6 +27,16 @@ impl PaintIndexedRegion {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintIndexedRegion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "indexed-region", kind: "paint-indexed-region", record: "PaintIndexedRegion" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Paint indexed region", "Indizierten Bereich malen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![format!("region:{},{},{},{}", self.x, self.y, self.width, self.height)]
+    }
+}
+
+impl protocol::ColdMutationKind<BmpSnapshot, BmpMutation> for PaintIndexedRegion {
     fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let region = self.region();
         match crate::schema::operations::paint_indexed_rect(base, &self.revision, region, self.palette_index) {
@@ -38,12 +48,5 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintIndexedRegion {
         let region = self.region();
         let changed = crate::schema::operations::checked_region(&base.image, region).ok().and_then(|()| crate::schema::operations::indexed_rect(base, region, self.palette_index));
         Ok(changed.and_then(|rect| base.image.region_rect(rect.region)).map(|rect| BmpMutation::ReplaceSamples(ReplaceSamples { region: rect.region, indices: rect.indices, samples: rect.samples })).into_iter().collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint indexed region", "Indizierten Bereich malen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![format!("region:{},{},{},{}", self.x, self.y, self.width, self.height)]
     }
 }

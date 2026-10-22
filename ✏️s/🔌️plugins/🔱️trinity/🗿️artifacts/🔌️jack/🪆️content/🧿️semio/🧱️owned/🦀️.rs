@@ -88,8 +88,8 @@ pub fn graph_leaves(base: &SemioGraphSnapshot, effects: &[jack::standards::v1::s
     let mut work = base.clone();
     let mut leaves = Vec::with_capacity(effects.len());
     let push = |work: &mut SemioGraphSnapshot, leaf: SemioGraphMutation, leaves: &mut Vec<SemioGraphMutation>| {
-        let outcome = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&leaf, work);
-        if let Ok(next) = protocol::apply_diff(outcome.diff(), work) {
+        let outcome = <SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(&leaf, work);
+        if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), work) {
             *work = next;
         }
         leaves.push(leaf);

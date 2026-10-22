@@ -23,7 +23,7 @@ use semio_framework_test_fixtures::fixture_text;
 use crate::schema::mutations::TiffMutation;
 use super::super::insert_ifd::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::insert_ifd::BINARY_TAG;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json"));
@@ -46,7 +46,7 @@ fn mutation() -> TiffMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("insert-ifd applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("insert-ifd applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "insert-ifd/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -56,9 +56,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(payload.diff(&base).diff(), &base).expect("forward insert-ifd applies");
+    let mut current = protocol::apply_diff_cold(payload.diff(&base).diff(), &base).expect("forward insert-ifd applies");
     for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the insert-ifd inverse step applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the insert-ifd inverse step applies");
     }
     assert_eq!(current, base, "insert-ifd/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-ifd/direct-behavior: committed diff did not carry before to after");
 }
 
@@ -145,7 +145,7 @@ mod remove_ifd {
 use crate::schema::mutations::TiffMutation;
 use super::super::remove_ifd::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::remove_ifd::BINARY_TAG;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json"));
@@ -168,7 +168,7 @@ fn mutation() -> TiffMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-ifd applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("remove-ifd applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-ifd/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -178,9 +178,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(payload.diff(&base).diff(), &base).expect("forward remove-ifd applies");
+    let mut current = protocol::apply_diff_cold(payload.diff(&base).diff(), &base).expect("forward remove-ifd applies");
     for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the remove-ifd inverse step applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the remove-ifd inverse step applies");
     }
     assert_eq!(current, base, "remove-ifd/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -228,7 +228,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-ifd/direct-behavior: committed diff did not carry before to after");
 }
 
@@ -267,7 +267,7 @@ mod remove_tag {
 use crate::schema::mutations::TiffMutation;
 use super::super::remove_tag::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::remove_tag::BINARY_TAG;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json"));
@@ -290,7 +290,7 @@ fn mutation() -> TiffMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-tag applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("remove-tag applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-tag/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -300,9 +300,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(payload.diff(&base).diff(), &base).expect("forward remove-tag applies");
+    let mut current = protocol::apply_diff_cold(payload.diff(&base).diff(), &base).expect("forward remove-tag applies");
     for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the remove-tag inverse step applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the remove-tag inverse step applies");
     }
     assert_eq!(current, base, "remove-tag/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -350,7 +350,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-tag/direct-behavior: committed diff did not carry before to after");
 }
 
@@ -389,7 +389,7 @@ mod replace_tag {
 use crate::schema::mutations::TiffMutation;
 use super::super::replace_tag::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::replace_tag::BINARY_TAG;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️replace-tag/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json"));
 static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️replace-tag/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json"));
@@ -412,7 +412,7 @@ fn mutation() -> TiffMutation {
 #[test]
 fn applies_to_committed_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-tag applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("replace-tag applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-tag/direct-behavior: applied state differs from the committed after-snapshot");
 }
 
@@ -422,9 +422,9 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
-    let mut current = protocol::apply_diff(payload.diff(&base).diff(), &base).expect("forward replace-tag applies");
+    let mut current = protocol::apply_diff_cold(payload.diff(&base).diff(), &base).expect("forward replace-tag applies");
     for step in payload.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the replace-tag inverse step applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the replace-tag inverse step applies");
     }
     assert_eq!(current, base, "replace-tag/direct-behavior: the undo did not restore the committed before-snapshot");
 }
@@ -472,7 +472,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-tag/direct-behavior: committed diff did not carry before to after");
 }
 

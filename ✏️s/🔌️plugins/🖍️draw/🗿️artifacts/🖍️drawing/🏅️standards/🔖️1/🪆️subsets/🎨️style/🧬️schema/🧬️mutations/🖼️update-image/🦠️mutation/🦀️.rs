@@ -18,10 +18,14 @@ pub fn update_image<Op: From<UpdateImage>>(layer_id: semio_framework_value::page
 }
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateImage where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateImage> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "image", kind: "update-image", record: "UpdatedImage" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit image", "Bild bearbeiten") }
+    fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
+}
+
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot, Op> for UpdateImage where Op: protocol::ColdMutation<DrawingSnapshot, ReferenceDiff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateImage> {
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit image", "Bild bearbeiten") }
-    fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
 }

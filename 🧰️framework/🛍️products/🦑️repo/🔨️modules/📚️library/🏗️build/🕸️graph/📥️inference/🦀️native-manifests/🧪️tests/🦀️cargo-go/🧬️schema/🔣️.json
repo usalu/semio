@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:native-manifests-corpus:v1",
+  "title": "Native Manifests Corpus",
+  "description": "Language-agnostic cases for the native manifests of the build graph: Cargo path dependencies from a manifest and its workspace table, Cargo workspace discovery on a file tree, and Go module files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "workspaceRoot", "dependencies", "workspaces", "go"],
+  "definitions": {
+    "name": { "type": "string", "minLength": 1 },
+    "strings": { "type": "array", "items": { "type": "string" } }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "workspaceRoot": { "type": "string", "minLength": 1 },
+    "dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "toml", "workspace", "expected"],
+        "properties": {
+          "name": { "$ref": "#/definitions/name" },
+          "toml": { "type": "string" },
+          "workspace": { "type": "object" },
+          "expected": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "path", "workspace", "kind"], "properties": { "name": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 }, "workspace": { "type": "boolean" }, "kind": { "enum": ["dependencies", "build-dependencies", "dev-dependencies"] } } } }
+        }
+      }
+    },
+    "workspaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "files", "directory"],
+        "oneOf": [{ "required": ["root", "declaration"] }, { "required": ["error"] }],
+        "additionalProperties": false,
+        "properties": { "name": { "$ref": "#/definitions/name" }, "files": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }, "directory": { "type": "string", "minLength": 1 }, "root": { "type": "string", "minLength": 1 }, "declaration": { "type": "object" }, "error": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "go": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "text", "module", "requires", "replacements"],
+        "properties": {
+          "name": { "$ref": "#/definitions/name" },
+          "text": { "type": "string" },
+          "module": { "type": "string" },
+          "requires": { "$ref": "#/definitions/strings" },
+          "replacements": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["module", "path"], "properties": { "module": { "type": "string" }, "path": { "type": "string" } } } },
+          "noGo": { "const": true }
+        }
+      }
+    }
+  }
+}

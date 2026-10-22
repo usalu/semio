@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-form-title/titles-an-untitled-survey declares an applied outcome");
     assert!(outcome.get("messages").is_none(), "change-form-title/titles-an-untitled-survey declares no diagnostics");
-    let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
+    let produced = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "a real title change must raise no diagnostic, got {:?}", produced.messages());
     assert!(apply_form_edit_mutation(&before(), &mutation()).is_ok(), "change-form-title/titles-an-untitled-survey: declared applied but the mutation was rejected");
 }
@@ -100,7 +100,7 @@ async fn declared_outcome_holds() {
 /// composed `structure`/`results` slots alone.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
+    let outcome = <FormMutation as protocol::ColdMutation<FormsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-form-title/titles-an-untitled-survey: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -124,7 +124,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: FormsDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-form-title/titles-an-untitled-survey: committed diff did not carry before to after");
 }
 

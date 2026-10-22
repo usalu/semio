@@ -1,0 +1,56 @@
+{
+ "version": 1,
+ "hub": [
+  {
+   "root": "/repo",
+   "expected": "/repo/.🧬semio/🌐hub"
+  },
+  {
+   "root": "/a b/c",
+   "expected": "/a b/c/.🧬semio/🌐hub"
+  },
+  {
+   "root": "rel/root",
+   "expected": "rel/root/.🧬semio/🌐hub"
+  }
+ ],
+ "space": [
+  {
+   "root": "/repo",
+   "instance": null,
+   "expected": "/repo/.🧬semio/🔗space"
+  },
+  {
+   "root": "/a b/c",
+   "instance": null,
+   "expected": "/a b/c/.🧬semio/🔗space"
+  },
+  {
+   "root": "rel/root",
+   "instance": null,
+   "expected": "rel/root/.🧬semio/🔗space"
+  },
+  {
+   "root": "/r",
+   "instance": "main",
+   "expected": "/r/.🧬semio/🔗space/main"
+  },
+  {
+   "root": "/r",
+   "instance": "",
+   "expected": "/r/.🧬semio/🔗space"
+  }
+ ],
+ "map": [
+  {
+   "root": "/r",
+   "provider": "osm",
+   "expected": "/r/.🧬semio/🗺️map/osm"
+  },
+  {
+   "root": "/r",
+   "provider": "a/b",
+   "expected": "/r/.🧬semio/🗺️map/a/b"
+  }
+ ]
+}

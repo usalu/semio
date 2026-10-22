@@ -323,7 +323,7 @@ pub(crate) async fn stale_ports_snapshot() -> WorkflowSnapshot {
 /// middle node first, then the last); the negative diff reads the same rows from the base, and a synced document has nothing to restore.
 #[semio_framework_async_macros::async_test]
 async fn update_node_ports_inverts_to_the_base_ports_per_stale_node() {
-    use protocol::{DiffAlgebra, Mutation};
+    use protocol::{ColdDiffAlgebra, DiffAlgebra, ColdMutation, Mutation};
     let stale = stale_ports_snapshot().await;
     let mutation = WorkflowMutation::UpdateNodePorts(UpdateNodePorts {});
     let (diff, messages) = mutation.diff(&stale).into_parts();
@@ -410,7 +410,7 @@ async fn independent_package_fixture_matches_json_oracle() {
 /// and a malformed target list is a Fatal invariant.
 #[semio_framework_async_macros::async_test]
 async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
-    use protocol::{Mutation, SemanticMutation};
+    use protocol::{ColdMutation, Mutation, SemanticMutation};
     let document = sample_workflow_snapshot().await;
     let mutation = WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
     let outcome = mutation.diff(&document);

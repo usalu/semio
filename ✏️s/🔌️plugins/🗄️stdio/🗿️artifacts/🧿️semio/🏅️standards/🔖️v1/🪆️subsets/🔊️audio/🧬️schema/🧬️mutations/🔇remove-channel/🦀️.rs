@@ -14,6 +14,15 @@ pub struct RemoveChannel {
 impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for RemoveChannel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "channel", kind: "remove-channel", record: "RemoveChannel" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove channel", "Kanal entfernen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl<Op: SemioAudioOp> protocol::ColdMutationKind<SemioAudioSnapshot, Op> for RemoveChannel {
     fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
@@ -23,12 +32,6 @@ impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for Remove
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove channel", "Kanal entfernen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
-    }
 }
 //#endregion 🔖️Payload
 

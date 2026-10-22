@@ -1,0 +1,7 @@
+# Tuple Registration Integration
+
+Root completed explicit Bun registration `validator/🧪️tests/📇️tuple/🟦️.ts`:996bytes/SHA-256`6923d0a7d3216517a747bb0e8f7b4183ae3ad7b7ef729ed96f1bfc5e1ed02f71`. One60k law selects the22portable tuple/homogeneous cases by the closed projection enum, proves exactunique IDcoverage, compares actualfour-argument firstparty validation with Ajv and portable expected validity. The existing exported proof function is not imported and no rawNode/esbuild probe is added.
+
+Low identified strictAjv rejecting object/boolean `type` union in the newly authored projection. Root guarded the narrow schema change to equivalent `anyOf` and retained strictness:2134bytes/SHA-256`1e8754e473ca8d377d88f67c1450e34dddd14ac25483ed12fa8cd9f176618b70`. Strictprojection compilation/22rowvalidation/exactunique22IDs and all22thirdpartyexpected results pass in tooling DATA-only checks. OwnerSource and testSource were never imported/evaluated by tooling. Static registrationAST haszero parse diagnostics; actualfirstparty behavior still needs Native.
+
+Source286 policyDATA and25law selection remain pendingfinalformat additions/reviews/metadatawrites/freshphysicaldispatch. After the tuple authoring turn stayed pending, Root handed only the remaining small24formatcase additions to Highcargo, interrupted Highaux own turn, and requested an exact Source handoff. ConcurrentSource is preserved; no Native is active or authorized.

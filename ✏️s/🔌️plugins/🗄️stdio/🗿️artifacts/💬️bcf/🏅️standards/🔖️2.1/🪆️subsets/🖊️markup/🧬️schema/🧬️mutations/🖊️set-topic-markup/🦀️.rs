@@ -28,7 +28,16 @@ pub struct SetTopicMarkup {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "topic-markup", kind: "set-topic-markup", record: "SetTopicMarkup" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set topic markup", "Themen-Markup setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::ColdMutation<BcfSnapshot>>::ReferenceDiff> {
         let Self { guid, title, description, status, priority, labels, creation_date, creation_author } = self;
         protocol::MutationOutcome::new(wrap_topic_diff(
             base,
@@ -63,12 +72,6 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
                 None => Vec::new(),
             }
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set topic markup", "Themen-Markup setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

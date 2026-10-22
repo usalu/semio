@@ -1,0 +1,155 @@
+/** 🎚️ The local config is an append-only event log: its fold agrees with the language-agnostic corpus, the strict schema validator and an independent Python oracle, the command writes events and never rewrites, and the CLI door reads the language only when nothing explicit decides first. */
+import { expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import Ajv from "ajv";
+import { testPythonV1 } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { CATALOG_LANGUAGES_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+import { appendLocalConfigEventV1, foldLocalConfigV1, localConfigDirectoryV1, localConfigEventV1, parseLocalConfigLogV1, readConfiguredLanguageV1, readLocalConfigV1 } from "../🟦️.ts";
+import { configuredLanguageForDoorV1, runConfigCliV1 } from "../⌨️command/🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+import corpus from "./🔣️.json" with { type: "json" };
+import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+
+type Expected = Readonly<{ events?: number; language?: string; refusal?: { line: number } }>;
+const temporary = (): string => mkdtempSync(join(tmpdir(), "config-"));
+const ids = (): (() => string) => { let n = 0; return () => `0a1b2c3d-0000-4000-8000-${String(++n).padStart(12, "0")}`; };
+const clock = (): Date => new Date("2026-10-21T17:00:00.000Z");
+const refusalLine = (run: () => unknown): number | undefined => {
+  try { run(); } catch (error) { const row = error as { values?: { line?: number } }; return row.values?.line; }
+  return undefined;
+};
+const oracle = (): readonly Readonly<{ name: string; result: Expected }>[] => {
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", fileURLToPath(new URL("./🐍️oracle.py", import.meta.url))], { encoding: "utf8", input: JSON.stringify(corpus), maxBuffer: 1 << 24 });
+  if (run.status !== 0) throw new Error(`oracle failed: ${run.stderr}`);
+  return JSON.parse(run.stdout);
+};
+const run = async (directory: string, argv: string[], environment: Record<string, string> = {}): Promise<{ code: number; out: string[]; err: string[] }> => {
+  const out: string[] = [], err: string[] = [];
+  const code = await runConfigCliV1(directory, argv, { environment: { SEMIO_CONFIG_DIRECTORY: directory, ...environment }, osLanguages: () => [], write: (line) => out.push(line), writeError: (line) => err.push(line), help: (language) => `help ${language}`, clock, id: ids() });
+  return { code, out, err };
+};
+
+test("the schema and the corpus satisfy the strict independent validator", () => {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  expect(ajv.validate(corpusSchema, corpus), JSON.stringify(ajv.errors)).toBe(true);
+  expect(schema.definitions.LanguageChosen.properties.language.enum).toEqual([...CATALOG_LANGUAGES_V1]);
+});
+
+for (const row of corpus.logs as readonly Readonly<{ name: string; text: string; expected: Expected }>[]) {
+  test(`fold: ${row.name}`, () => {
+    if (row.expected.refusal !== undefined) return void expect(refusalLine(() => parseLocalConfigLogV1(row.text, "log"))).toBe(row.expected.refusal.line);
+    const config = foldLocalConfigV1(parseLocalConfigLogV1(row.text, "log"));
+    expect(config.events).toBe(row.expected.events!);
+    expect(config.language).toBe(row.expected.language);
+  });
+}
+
+test("every accepted line satisfies the strict schema validator and every refused line fails it or is not JSON", () => {
+  const ajv = new Ajv({ strict: true, allErrors: true }), validate = ajv.compile(schema);
+  for (const row of corpus.logs as readonly Readonly<{ name: string; text: string; expected: Expected }>[]) {
+    const lines = row.text.split("\n").filter((line) => line.trim() !== "");
+    const verdicts = lines.map((line) => { try { return validate(JSON.parse(line)) as boolean; } catch { return false; } });
+    if (row.expected.refusal === undefined) expect(verdicts.filter((verdict) => !verdict).length, row.name).toBeLessThanOrEqual(row.text.endsWith("\n") ? 0 : 1);
+    else expect(verdicts.some((verdict) => !verdict), row.name).toBe(true);
+  }
+});
+
+test("the independent oracle folds exactly like the implementation", () => {
+  oracle().forEach((row, index) => {
+    const expected = (corpus.logs as readonly { name: string; expected: Expected }[])[index]!;
+    expect(row.name).toBe(expected.name);
+    expect(row.result, row.name).toEqual(expected.expected as never);
+  });
+});
+
+test("the location is the named directory, else semio/config inside the git directory, a worktree pointer is followed, else none", () => {
+  const root = temporary();
+  expect(localConfigDirectoryV1(root, {})).toBeUndefined();
+  expect(localConfigDirectoryV1(root, { SEMIO_CONFIG_DIRECTORY: "named" })).toBe(join(root, "named"));
+  mkdirSync(join(root, ".git"));
+  expect(localConfigDirectoryV1(root, {})).toBe(join(root, ".git", "semio", "config"));
+  rmSync(join(root, ".git"), { recursive: true });
+  writeFileSync(join(root, ".git"), "gitdir: elsewhere/.git/worktrees/w\n");
+  expect(localConfigDirectoryV1(root, {})).toBe(join(root, "elsewhere", ".git", "worktrees", "w", "semio", "config"));
+  rmSync(root, { recursive: true });
+});
+
+test("events are appended as lines and never rewritten, and a torn last line is cut away before the next event", () => {
+  const directory = temporary(), next = ids();
+  const first = appendLocalConfigEventV1(directory, localConfigEventV1("language-chosen", "de", clock, next)), before = readFileSync(first, "utf8");
+  appendLocalConfigEventV1(directory, localConfigEventV1("language-chosen", "en", clock, next));
+  const after = readFileSync(first, "utf8");
+  expect(after.startsWith(before)).toBe(true);
+  expect(after.trimEnd().split("\n")).toHaveLength(2);
+  expect(readLocalConfigV1(directory).config).toEqual({ version: 1, language: "en", events: 2 });
+  appendFileSync(first, '{"version":1,"id":"0a1b');
+  expect(readLocalConfigV1(directory).config.events).toBe(2);
+  appendLocalConfigEventV1(directory, localConfigEventV1("language-cleared", undefined, clock, next));
+  expect(readLocalConfigV1(directory).config).toEqual({ version: 1, language: undefined, events: 3 });
+  expect(readFileSync(first, "utf8").trimEnd().split("\n")).toHaveLength(3);
+  expect(readConfiguredLanguageV1(directory, { SEMIO_CONFIG_DIRECTORY: directory })).toBeUndefined();
+  rmSync(directory, { recursive: true });
+});
+
+test("repo config set language writes one event and answers in the language it set", async () => {
+  const directory = temporary();
+  const set = await run(directory, ["set", "language", "de"], { SEMIO_LANGUAGE: "en" });
+  expect(set.code).toBe(0);
+  expect(set.out).toEqual([`Sprache auf de gesetzt (Ereignis 0a1b2c3d-0000-4000-8000-000000000001 in ${join(directory, "events.jsonl")}).`]);
+  expect(readLocalConfigV1(directory).config.language).toBe("de");
+  const shown = await run(directory, ["show"], {});
+  expect(shown.out[0]).toBe("Konfigurierte Sprache: de");
+  expect(shown.out[2]).toBe("Wirksame Sprache: de (aus config)");
+  const json = JSON.parse((await run(directory, ["show", "--json"], { SEMIO_LANGUAGE: "en" })).out.join("\n"));
+  expect(json).toMatchObject({ version: 1, language: "de", events: 1, effective: { language: "en", source: "SEMIO_LANGUAGE" } });
+  const unset = await run(directory, ["unset", "language"], { SEMIO_LANGUAGE: "en" });
+  expect(unset.out[0]).toContain("Language setting removed");
+  expect((await run(directory, ["show"], { LANG: "en_US.UTF-8" })).out).toEqual(["No language is configured.", `Event log: ${join(directory, "events.jsonl")} (2 event(s))`, "Effective language: en (from LANG)"]);
+  rmSync(directory, { recursive: true });
+});
+
+test("refusals are printed in every language when none is chosen, with the exit status of their class", async () => {
+  const directory = temporary();
+  const bad = await run(directory, ["set", "language", "fr"], {});
+  expect(bad.code).toBe(2);
+  expect(bad.err.join("\n")).toContain("Language fr is not offered (en|de).");
+  expect(bad.err.join("\n")).toContain("Die Sprache fr wird nicht angeboten (en|de).");
+  expect(readLocalConfigV1(directory).config.events).toBe(0);
+  for (const argv of [["set", "theme", "dark"], ["set", "language"], ["bogus"], ["show", "--nope"], ["unset", "language", "de"]]) expect((await run(directory, argv, {})).code, argv.join(" ")).toBe(2);
+  expect((await run(directory, ["set", "theme", "dark"], {})).err.join("\n")).toContain("Unbekannte Einstellung theme");
+  const none = await run(directory, [], {});
+  expect(none.out).toEqual(["help en\n\nhelp de"]);
+  const chosen = await run(directory, ["--help"], { SEMIO_LANGUAGE: "de" });
+  expect(chosen.out).toEqual(["help de"]);
+  writeFileSync(join(directory, "events.jsonl"), "garbage\n");
+  const broken = await run(directory, ["show"], { SEMIO_LANGUAGE: "en" });
+  expect(broken.code).toBe(1);
+  expect(broken.err.join("\n")).toContain("holds an invalid event on line 1");
+  rmSync(directory, { recursive: true });
+});
+
+test("without any git directory the command says where to keep the config", async () => {
+  const root = temporary(), err: string[] = [];
+  const code = await runConfigCliV1(root, ["set", "language", "en"], { environment: {}, osLanguages: () => [], write: () => undefined, writeError: (line) => err.push(line), help: () => "" });
+  expect(code).toBe(1);
+  expect(err.join("\n")).toContain("set SEMIO_CONFIG_DIRECTORY");
+  rmSync(root, { recursive: true });
+});
+
+test("the CLI door reads the config only when no flag and no SEMIO_LANGUAGE decide first and survives a broken log", async () => {
+  const directory = temporary(), environment = { SEMIO_CONFIG_DIRECTORY: directory };
+  await run(directory, ["set", "language", "de"], {});
+  expect(configuredLanguageForDoorV1(directory, [], environment)).toBe("de");
+  expect(configuredLanguageForDoorV1(directory, ["--lang=en"], environment)).toBeUndefined();
+  expect(configuredLanguageForDoorV1(directory, [], { ...environment, SEMIO_LANGUAGE: "en" })).toBeUndefined();
+  writeFileSync(join(directory, "events.jsonl"), "garbage\n");
+  const warnings: string[] = [];
+  expect(configuredLanguageForDoorV1(directory, [], environment, (line) => warnings.push(line))).toBeUndefined();
+  expect(warnings.join("\n")).toContain("Das Konfigurationsprotokoll");
+  expect(warnings.join("\n")).toContain("The config log");
+  rmSync(directory, { recursive: true });
+});

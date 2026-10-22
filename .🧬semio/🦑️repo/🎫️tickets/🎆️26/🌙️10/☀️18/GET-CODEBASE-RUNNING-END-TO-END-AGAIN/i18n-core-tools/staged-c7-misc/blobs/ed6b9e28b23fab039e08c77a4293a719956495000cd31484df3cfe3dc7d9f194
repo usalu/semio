@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "id": "misc",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "ports.dev-no-free-port-found": {
+      "en": "[dev] No free port found in range {preferredPort}-{maxAttempts}.",
+      "de": "[dev] Im Bereich {preferredPort}-{maxAttempts} wurde kein freier Port gefunden."
+    },
+    "example-argv.play-unknown": {
+      "en": "[play] unknown example {segments}",
+      "de": "[play] Unbekanntes Beispiel {segments}"
+    },
+    "abstraction.ownership-ownership-vectors-agree-with": {
+      "en": "[verify abstraction-ownership] {cases} ownership vectors agree with Ajv.",
+      "de": "[verify abstraction-ownership] {cases} Eigentümerschaftsvektoren stimmen mit Ajv überein."
+    },
+    "abstraction.ownership-nested-schema-ownership-vectors": {
+      "en": "[verify abstraction-ownership] {schemaCases} nested schema ownership vectors agree with Ajv.",
+      "de": "[verify abstraction-ownership] {schemaCases} Vektoren zur verschachtelten Schema-Eigentümerschaft stimmen mit Ajv überein."
+    },
+    "abstraction.ownership-command-source-ownership-vectors": {
+      "en": "[verify abstraction-ownership] {sourceCases} command source ownership vectors agree with Ajv.",
+      "de": "[verify abstraction-ownership] {sourceCases} Vektoren zur Befehlsquellen-Eigentümerschaft stimmen mit Ajv überein."
+    },
+    "abstraction.ownership-artifact-contracts-expose-document": {
+      "en": "[verify abstraction-ownership] {artifactSchemas} artifact contracts expose document state only across five schema formats.",
+      "de": "[verify abstraction-ownership] {artifactSchemas} Artefaktverträge legen nur den Dokumentzustand über fünf Schema-Formate offen."
+    },
+    "verification.trace-transaction-v2-shard-finished": {
+      "en": "[TRACE] Transaction v2 shard {ordinal} finished in {seconds}s",
+      "de": "[TRACE] Transaktion v2, Shard {ordinal} in {seconds} s beendet"
+    },
+    "verification.trace-transaction-v2-run-owner": {
+      "en": "[TRACE] Transaction v2 run owner {runRoot}",
+      "de": "[TRACE] Transaktion v2, Lauf-Eigentümer {runRoot}"
+    },
+    "runtime.graph-physical-file": {
+      "en": "[runtime graph] physical file {phase} {bytes}/{totalBytes}",
+      "de": "[runtime graph] Physische Datei {phase} {bytes}/{totalBytes}"
+    },
+    "runtime.graph-physical-cargo": {
+      "en": "[runtime graph] physical cargo {phase} {bytes}/{totalBytes}",
+      "de": "[runtime graph] Physisches Cargo {phase} {bytes}/{totalBytes}"
+    },
+    "runtime.graph-acquiring-current-exact-guest": {
+      "en": "[runtime graph] acquiring current exact guest compiler/resource witnesses through {command}",
+      "de": "[runtime graph] Aktuelle exakte Gast-Compiler-/Ressourcen-Zeugen werden über {command} beschafft"
+    },
+    "runtime.graph-acquiring-actual-native-browser": {
+      "en": "[runtime graph] acquiring actual native browser mount through {nativeBrowserProject}:wasm:{completedProfile}",
+      "de": "[runtime graph] Die tatsächliche native Browser-Einbindung wird über {nativeBrowserProject}:wasm:{completedProfile} beschafft"
+    },
+    "runtime.graph-acquiring-current-browser-mount": {
+      "en": "[runtime graph] acquiring current browser mount through {nativeBrowserProject}:generate-frame-worker",
+      "de": "[runtime graph] Die aktuelle Browser-Einbindung wird über {nativeBrowserProject}:generate-frame-worker beschafft"
+    },
+    "runtime.graph-actual-cargo-metadata": {
+      "en": "[runtime graph] actual Cargo metadata {index}/{checks} {target}: {packages}",
+      "de": "[runtime graph] Tatsächliche Cargo-Metadaten {index}/{checks} {target}: {packages}"
+    },
+    "runtime.graph-graphs-sources-resources-findings": {
+      "en": "[runtime graph] graphs={graphs} sources/resources={size} findings={findings} report={value}",
+      "de": "[runtime graph] graphs={graphs} sources/resources={size} findings={findings} report={value}"
+    },
+    "ui.framework-js-react-no-primitive": {
+      "en": "framework/ui/js/react: no UI primitive violations ({files} allowlisted files)",
+      "de": "framework/ui/js/react: keine Verstöße gegen UI-Primitive ({files} Dateien auf der Allowlist)"
+    },
+    "ui.framework-js-react-found-primitive": {
+      "en": "framework/ui/js/react: found {failures} UI primitive violation(s):",
+      "de": "framework/ui/js/react: {failures} Verstoß/Verstöße gegen UI-Primitive gefunden:"
+    },
+    "ui.and-more": {
+      "en": "  … and {failures} more",
+      "de": "  … und {failures} weitere"
+    },
+    "ui.framework-js-react-no-chrome": {
+      "en": "framework/ui/js/react: no chrome i18n violations ({files} allowlisted files)",
+      "de": "framework/ui/js/react: keine i18n-Verstöße im Chrome ({files} Dateien auf der Allowlist)"
+    },
+    "runner.policy-no-high-priority-breaches": {
+      "en": "policy: no high-priority breaches ({total} total recorded at {cachePath})",
+      "de": "policy: keine Verstöße mit hoher Priorität ({total} insgesamt, erfasst in {cachePath})"
+    },
+    "command.agents-check-is-run-repo": {
+      "en": "[agents check] {path} ({client}) is {state}; run: repo ./📜️script.ts agents write",
+      "de": "[agents check] {path} ({client}) ist {state}; ausführen: repo ./📜️script.ts agents write"
+    },
+    "command.agents-check-every-client-file": {
+      "en": "[agents check] every client file matches the root declaration",
+      "de": "[agents check] Jede Client-Datei entspricht der Wurzeldeklaration"
+    },
+    "coverage.exhaustive-gate-failed": {
+      "en": "[coverage] {pct}% < {thresholdPct}% — exhaustive gate failed.",
+      "de": "[coverage] {pct} % < {thresholdPct} % — das erschöpfende Gate ist fehlgeschlagen."
+    },
+    "workspace-exports.test-resolution-source-operations": {
+      "en": "[test-resolution] {stage}: {completedOperations} source operations",
+      "de": "[test-resolution] {stage}: {completedOperations} Quelloperationen"
+    }
+  }
+}

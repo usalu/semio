@@ -11,7 +11,7 @@ use semio_framework_plugin_document_media::{ActiveArtifactEnvelopeIngress, Activ
 use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
 use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_framework_plugin_instance_children::children_components::ChildComposition;
 use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
 use semio_framework_plugin_decl_views::child_view::{ChildContentView, child_content_arc_bytes};
@@ -106,7 +106,7 @@ impl MaintenanceUnit {
     }
 }
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     pub fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         match unit{
             MaintenanceUnit::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant),
@@ -155,30 +155,30 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
             if self.media.snapshot_retirements.get(operation_id).is_none(){return Err(maintenance_fault("interactive-job.maintenance-snapshot-quarantine","media export lost its original snapshot retirement owner").into())}
             drop(self.media.media_closures.remove(operation_id).ok_or_else(authority)?);return Ok(removed(progress))
         }
-        let result=(||->Result<PluginLifecycleStep,Fault>{
-        let value_fault = plugin_retirement_fault;
-        match stage {
-            2=>{
+        if stage==2{
                 let Some((index,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(idle())};self.maintenance.maintenance_segment_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
                 if let Some(source)=self.media.snapshot_retirements.get(operation_id){source.validate_retirement(cx)?}
                 let original=self.media.segmented_closures.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-close","original segmented close owner changed"))?;
-                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),..Default::default()}))}original.close_step(cx,grant)
-            },
-            3 => {
+                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),..Default::default()}))}return original.close_step(cx,grant)
+        }
+        if stage==3{
                 let Some((index, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(idle()) };
                 self.maintenance.maintenance_snapshot_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.contains(operation_id) || self.media.segmented_closures.contains(operation_id) || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
+                if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.get(operation_id).is_some() || self.media.segmented_closures.get(operation_id).is_some() || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
                     return Ok(PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
                 }
                 let authority = || maintenance_fault("interactive-job.maintenance-snapshot-authority", "live snapshot retirement authority changed during one fixed step");
                 let step = self.media.snapshot_retirements.get_mut(operation_id).ok_or_else(authority)?.close_step(cx,grant)?;
                 let PluginLifecycleStep::Complete(final_progress) = step else { return Ok(step) };
                 if !self.media.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
-                    return Err(maintenance_fault("interactive-job.maintenance-snapshot-terminal-not-empty", "live snapshot retirement reported Complete without its exact terminal-empty witness"));
+                    return Err(maintenance_fault("interactive-job.maintenance-snapshot-terminal-not-empty", "live snapshot retirement reported Complete without its exact terminal-empty witness").into());
                 }
                 drop(self.media.snapshot_retirements.remove(operation_id).ok_or_else(authority)?);
-                Ok(removed(final_progress))
-            }
+                return Ok(removed(final_progress))
+        }
+        let result=(||->Result<PluginLifecycleStep,Fault>{
+        let value_fault = plugin_retirement_fault;
+        match stage {
             MAINTENANCE_CHILD_ROOT_STAGE => self.child_root_retirement_step(grant).map(PluginLifecycleStep::Progress),
             5 => {
                 let Some((index, generation)) = self.roster.peer_presence_retirements.next_id_from(self.maintenance.maintenance_peer_presence_cursor) else { return Ok(idle()) };
@@ -523,7 +523,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
         active.committed = true;
         active.state = State::RetiringCommittedMembers;
         self.child_composition.child_content_generation = next_content_generation.expect("candidate generation exhaustion was rejected before commit");
-        self.pending.commit_document_window_reset(&mut *self.stores, &mut *self.history, &mut window_reset, cx)?;
+        self.pending.commit_document_window_reset(&mut *self.stores, &mut *self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
         self.history.cache = None;
         self.history.retire_displaced_document_rows();
         self.time_travel.set_history_unavailable(false);
@@ -563,7 +563,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
     }
 }
 
-impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🌡️ Pressure beats fairness: a displaced-owner or child retirement queue a quarter full is drained out of turn.
     pub fn maintenance_ladder_under_pressure(&self) -> bool {
         self.history.command_prune_requested() || self.history.pending_command_prune.is_some() || !self.history.command_log.pruned_terminal_is_empty() || self.tools.next_closing_private_child_group(&*self.child_composition).is_some() || self.stores.store.maintenance_retirements_under_pressure() || self.stores.config_lane_under_pressure() || self.child_composition.child_retirements_under_pressure()
@@ -692,10 +692,10 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
                 if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(Some(RetirementDemand::default()))}
                 self.media.media_closures.get(operation_id).map(|active| active.retirement_demands(body,&self.tools.tool_cancellations)).transpose()?
             }
-            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-quote","original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
+            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
             3 => {
                 let Some((_, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(None) };
-                if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.contains(operation_id) || self.media.segmented_closures.contains(operation_id) || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
+                if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.get(operation_id).is_some() || self.media.segmented_closures.get(operation_id).is_some() || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
                     return Ok(Some(RetirementDemand::default()));
                 }
                 self.media.snapshot_retirements.get(operation_id).map(|retention| retention.retirement_demands(body)).transpose()?
@@ -812,7 +812,7 @@ pub(crate) fn store_replacement_commit_capacity() -> usize {
     ARTIFACT_LIVE_OUTPUT_SLOTS * size_of::<(u64, ChildContentRetirement)>()
 }
 
-pub(crate) fn store_replacement_unit_demands<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(active: &ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+pub(crate) fn store_replacement_unit_demands<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static>(active: &ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
     use ActiveArtifactStoreReplacementState as State;
     let live = matches!(active.state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews);
     Ok(match active.state {

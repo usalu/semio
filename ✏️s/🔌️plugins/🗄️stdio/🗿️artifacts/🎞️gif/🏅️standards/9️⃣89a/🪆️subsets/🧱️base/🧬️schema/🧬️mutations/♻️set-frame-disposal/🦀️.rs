@@ -16,6 +16,15 @@ pub struct SetFrameDisposal {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-disposal", kind: "set-frame-disposal", record: "SetFrameDisposal" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame disposal", "Entsorgungsmethode des Einzelbilds setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
     fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, disposal } = self;
         protocol::MutationOutcome::new({
@@ -29,12 +38,6 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
             Some(f) => vec![GifMutation::SetFrameDisposal(SetFrameDisposal { index: *index, disposal: f.disposal })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame disposal", "Entsorgungsmethode des Einzelbilds setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

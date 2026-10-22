@@ -22,7 +22,7 @@ fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
     let sum = Generation3dDiffRead::new(sum);
     assert_eq!(sum.camera.as_ref(), Some(&incoming));
     assert_eq!(sum.selected_generation, Some(Generation3dSelectionChange { id: None }));
-    let next = Generation3dSnapshotRead::new(protocol::apply_diff(&*sum, &base).expect("absorbed diff applies"));
+    let next = Generation3dSnapshotRead::new(protocol::apply_diff_cold(&*sum, &base).expect("absorbed diff applies"));
     assert_eq!(next.host_snapshot.camera, incoming);
     assert_eq!(next.generation.selected_generation_id, None);
     let camera: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next.host_snapshot.camera)).unwrap();
@@ -43,8 +43,8 @@ fn row_deltas_coalesce_and_invert() {
     let delta = replaced.widgets.as_ref().expect("widgets");
     assert_eq!((delta.removed.iter().map(|entry| entry.id.clone()).collect::<Vec<_>>(), delta.inserted.len()), (vec![id.clone()], 1));
     let inverse = Generation3dDiffRead::new(protocol::DiffAlgebra::inverse(&removed, &*base));
-    let after = Generation3dSnapshotRead::new(protocol::apply_diff(&removed, &base).expect("removal applies"));
-    assert_eq!(protocol::apply_diff(&*inverse, &after).expect("inverse applies").host_snapshot.widgets.len(), base.host_snapshot.widgets.len());
+    let after = Generation3dSnapshotRead::new(protocol::apply_diff_cold(&removed, &base).expect("removal applies"));
+    assert_eq!(protocol::apply_diff_cold(&*inverse, &after).expect("inverse applies").host_snapshot.widgets.len(), base.host_snapshot.widgets.len());
     removed.retire_cold();
 }
 

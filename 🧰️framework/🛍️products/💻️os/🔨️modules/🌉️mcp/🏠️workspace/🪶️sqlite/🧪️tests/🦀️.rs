@@ -6,7 +6,7 @@ use semio_framework_value::FromValue as _;
 use semio_framework_value::ToValue as _;
 use semio_framework_value::retirement::RetireOwned as _;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
-use store::pack::snapshot::ArtifactDsl as _;
+use pack::snapshot::ArtifactDsl as _;
 use store::sqlite_snapshot::SqliteSnapshotControl;
 use store::sqlite_snapshot::SqliteValue;
 use crate::probe_document::ProbeSnapshot;

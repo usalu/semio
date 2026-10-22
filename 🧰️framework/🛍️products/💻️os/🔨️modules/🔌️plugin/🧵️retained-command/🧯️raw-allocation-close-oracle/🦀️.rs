@@ -21,6 +21,7 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
             context: None,
             operation: None,
             completion: None,
+            source_binding: None,
             command_id: |_| "fixture",
             maximum_raw_bytes: raw.capacity(),
             maximum_work_items: 1,

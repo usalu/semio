@@ -196,3 +196,9 @@ fn stepper_accessible_values_match_the_shared_display_and_mixed_contract() {
         assert!(mixed.now.is_none() && mixed.text.is_none());
     }
 }
+
+#[test]
+fn number_input_speaks_its_value_at_its_precision() {
+    let node = crate::input(crate::InputKind::Number).precision(2).number(2.5).try_build().unwrap_or_else(|_| panic!("input build"));
+    assert_eq!(accessibility_value(&node.component).text.as_deref(), Some("2.50"));
+}

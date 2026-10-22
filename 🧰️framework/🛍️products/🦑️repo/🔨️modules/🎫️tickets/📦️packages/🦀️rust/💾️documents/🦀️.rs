@@ -176,11 +176,12 @@ pub fn plan_client_tag(kind: McpClientKind) -> &'static str {
     }
 }
 
-/// 🗺️ Resolves a plan or spec id to a store path, per IDE.
+/// 🗺️ Resolves a plan or spec id to a store path, per agent client.
 ///
-/// Cursor globs `<root>/.cursor/plans/*_<id>.plan.md` and refuses an ambiguous match; Kiro requires
-/// the directory `<root>/.kiro/specs/<id>`; Copilot, Claude and Codex each name one file under the
-/// contributor's home directory. The generic surface carries no plan attachment at all.
+/// Kiro requires the directory `<root>/.kiro/specs/<id>`; Copilot, Claude and Codex each name one
+/// file under the contributor's home directory. Cursor and the generic surface carry no plan
+/// attachment: a ticket owns the `*.plan.md` files of its own folder and no plan is read from a
+/// client directory inside the repository.
 pub fn resolve_plan_source<S: TicketStore>(store: &S, roots: &PlanRoots, kind: McpClientKind, id: &str) -> TicketResult<PlanSource> {
     let id = id.trim();
     if id.is_empty() {
@@ -191,22 +192,6 @@ pub fn resolve_plan_source<S: TicketStore>(store: &S, roots: &PlanRoots, kind: M
         return Err(TicketError::invalid("repository root is not set"));
     }
     match kind {
-        McpClientKind::Cursor => {
-            let directory = join_path(root, ".cursor/plans");
-            let suffix = format!("_{id}.plan.md");
-            let matches: Vec<String> = store
-                .entries(&directory)
-                .unwrap_or_default()
-                .into_iter()
-                .filter(|entry| entry.kind == NodeKind::File && entry.name.ends_with(&suffix))
-                .map(|entry| join_path(&directory, &entry.name))
-                .collect();
-            match matches.len() {
-                0 => Err(TicketError::not_found(format!("no Cursor plan matches id {id:?} (glob {directory}/*{suffix})"))),
-                1 => Ok(PlanSource { path: matches[0].clone(), is_directory: false }),
-                count => Err(TicketError::conflict(format!("ambiguous Cursor plan id {id:?}: {count} matches"))),
-            }
-        }
         McpClientKind::Kiro => {
             let directory = join_path(root, &format!(".kiro/specs/{id}"));
             match store.metadata(&directory) {
@@ -232,7 +217,7 @@ pub fn resolve_plan_source<S: TicketStore>(store: &S, roots: &PlanRoots, kind: M
                 None => Err(TicketError::not_found(format!("plan file for id {id:?}: no such file"))),
             }
         }
-        McpClientKind::Generic => Err(TicketError::invalid(format!("plan or spec attachment is not supported for mcp kind {:?}", kind.as_str()))),
+        McpClientKind::Cursor | McpClientKind::Generic => Err(TicketError::invalid(format!("plan or spec attachment is not supported for mcp kind {:?}", kind.as_str()))),
     }
 }
 

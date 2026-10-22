@@ -148,7 +148,7 @@ const WORLD_REFERENCE_SELECTED_CONTENT_OPACITY_SCALE: f32 = 0.5;
 const WORLD_REFERENCE_OUTLINE_SCALE: f32 = 1.002;
 
 #[derive(Clone, Copy)]
-struct WorldReferenceVisual {
+pub struct WorldReferenceVisual {
     pub background: [f32; 4],
     pub content_opacity: f32,
     pub outline: Option<[f32; 4]>,

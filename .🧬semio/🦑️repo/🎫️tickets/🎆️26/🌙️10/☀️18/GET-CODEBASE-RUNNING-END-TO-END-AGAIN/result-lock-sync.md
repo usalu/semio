@@ -76,3 +76,6 @@ Lock: 30-40 min (manifest-batch2: 33 min at load 45-66, 13.4 M ownership operati
 
 ## Files
 `C/lock-sync-tools/`: `apply.py` (batch apply/undo), `build-plan.py` (regenerates `staged/plan.json` from the bzl-default plan + new edits, live read only), `staged/plan.json`, `staged/new/**` (4 files), `staged/predicted-lock-delta.json`, `lockdelta.py` (oracle), `lockdiff.py`, `lockio.py`, `probe-readers.py`, `run.py`, `selftest.py`. Generated outputs of my rehearsals were deleted.
+
+## Round 6 re-stage by integrate2 (script.ts split)
+closure-14 (`createRequire(join(root,"package.json")),parsers=` -> `join(base,...)`) dropped: the parser witness of 🚀️bootstrap/🟦️.ts no longer has that loader (it reads installed package directories of the root scope only), so the scoped-root intent is moot. round6-tools/staged/make-lock-sync.py.

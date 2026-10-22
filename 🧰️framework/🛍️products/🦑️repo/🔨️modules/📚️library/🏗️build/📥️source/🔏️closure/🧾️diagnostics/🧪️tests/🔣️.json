@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "case": "unknown-importer",
+      "input": {
+        "kind": "import",
+        "importer": null,
+        "specifier": "./routing.ts",
+        "declaringImage": false,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "import",
+        "importer": null,
+        "specifier": "./routing.ts",
+        "declaringImage": false,
+        "declared": false,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "known-image-missing-map",
+      "input": {
+        "kind": "import",
+        "importer": "generation/storage.ts",
+        "specifier": "./routing.ts",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": true
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "import",
+        "importer": "generation/storage.ts",
+        "specifier": "./routing.ts",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": true
+      }
+    },
+    {
+      "case": "declared-target-missing",
+      "input": {
+        "kind": "import",
+        "importer": "entry.ts",
+        "specifier": "./missing.ts",
+        "declaringImage": true,
+        "declared": true,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "import",
+        "importer": "entry.ts",
+        "specifier": "./missing.ts",
+        "declaringImage": true,
+        "declared": true,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "closed-require-refusal",
+      "input": {
+        "kind": "require",
+        "importer": "entry.ts",
+        "specifier": "unknown",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "require",
+        "importer": "entry.ts",
+        "specifier": "unknown",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "data-base-is-not-code",
+      "input": {
+        "kind": "declaring-module",
+        "importer": "package.json",
+        "specifier": null,
+        "declaringImage": false,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "declaring-module",
+        "importer": "package.json",
+        "specifier": null,
+        "declaringImage": false,
+        "declared": false,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "escaped-context",
+      "input": {
+        "kind": "import",
+        "importer": "a\nb.ts",
+        "specifier": "./a\tb.ts",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "import",
+        "importer": "a\nb.ts",
+        "specifier": "./a\tb.ts",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "ascii-boundary",
+      "input": {
+        "kind": "require",
+        "importer": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "specifier": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "require",
+        "importer": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "specifier": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      }
+    },
+    {
+      "case": "unicode-boundary",
+      "input": {
+        "kind": "import",
+        "importer": "雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪🧬",
+        "specifier": "🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      },
+      "expected": {
+        "version": 1,
+        "purpose": "captured-source-import-refusal",
+        "kind": "import",
+        "importer": "雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪",
+        "specifier": "🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬",
+        "declaringImage": true,
+        "declared": false,
+        "targetImage": false
+      }
+    }
+  ]
+}

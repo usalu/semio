@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().materials.as_ref().expect("materials delta").modified.len(), 1, "replace-material/restates-steel-7c22bc: exactly one material may be patched");
     assert!(outcome.diff().materials.as_ref().expect("materials delta").inserted.is_empty(), "replace-material/restates-steel-7c22bc: a replacement is never an addition");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

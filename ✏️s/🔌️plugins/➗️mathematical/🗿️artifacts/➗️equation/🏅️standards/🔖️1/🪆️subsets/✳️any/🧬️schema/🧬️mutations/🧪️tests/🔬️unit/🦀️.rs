@@ -1,7 +1,7 @@
 use crate::EquationSnapshot;
 use crate::{standards::v1::subsets::equation::schema::mutations::change_coefficient, standards::v1::subsets::geometry::schema::mutations::insert_point, standards::v1::subsets::geometry::schema::mutations::move_points, standards::v1::subsets::geometry::schema::mutations::remove_point, standards::v1::subsets::geometry::schema::mutations::set_point_positions, standards::v1::subsets::graph::schema::mutations::change_graph_directed, standards::v1::subsets::graph::schema::mutations::change_node_label, standards::v1::subsets::graph::schema::mutations::connect_nodes, standards::v1::subsets::graph::schema::mutations::create_node, standards::v1::subsets::graph::schema::mutations::delete_node, standards::v1::subsets::graph::schema::mutations::delete_nodes, standards::v1::subsets::graph::schema::mutations::disconnect_nodes, standards::v1::subsets::graph::schema::mutations::move_node, standards::v1::subsets::graph::schema::mutations::move_nodes, standards::v1::subsets::graph::schema::mutations::set_node_positions, standards::v1::subsets::graph::schema::mutations::update_graph_algorithm};
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 
 /// ↩️ Applies an operation's inverse the way the store does: TAIL-first (`replay_mutations` reverses
 /// one operation's inverse), each step diffed against the CURRENT state. The composed children are
@@ -9,7 +9,7 @@ use protocol::{Mutation, SemanticMutation};
 /// scene, not undo anything.
 fn undo_tail_first(mut state: EquationSnapshot, undo: &[EquationMutation]) -> EquationSnapshot {
     for step in undo.iter().rev() {
-        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("valid inverse step");
+        state = protocol::apply_diff_cold(step.diff(&state).diff(), &state).expect("valid inverse step");
     }
     state
 }
@@ -21,7 +21,7 @@ async fn a_graph_diff_carries_sparse_slots_and_apply_re_derives_the_triple() {
     let outcome = Mutation::diff(&mutation, &base);
     let diff = outcome.diff();
     assert_eq!(diff.algorithm.as_deref(), Some("bfs"));
-    let applied = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
+    let applied = protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff");
     assert_eq!(applied.graph.algorithm, "bfs");
     assert_eq!((applied.notation.clone(), applied.results.clone(), applied.computed.clone()), crate::equation_children(&applied.graph, &applied.geometry));
 }
@@ -30,7 +30,7 @@ async fn a_graph_diff_carries_sparse_slots_and_apply_re_derives_the_triple() {
 async fn create_then_delete_node_round_trips() {
     let base = EquationSnapshot::default();
     let create = EquationMutation::CreateNode(create_node::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0, index: None });
-    let after_create = protocol::apply_diff(create.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after_create = protocol::apply_diff_cold(create.diff(&base).diff(), &base).expect("valid mutation diff");
     assert!(after_create.graph.nodes.iter().any(|node| node.id == "z"));
 
     let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
@@ -44,7 +44,7 @@ async fn create_then_delete_node_round_trips() {
 async fn delete_node_inverse_recreates_node_and_severed_edges() {
     let base = EquationSnapshot::default();
     let delete = EquationMutation::DeleteNode(delete_node::DeleteNode { id: "a".into() });
-    let after_delete = protocol::apply_diff(delete.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after_delete = protocol::apply_diff_cold(delete.diff(&base).diff(), &base).expect("valid mutation diff");
     assert!(!after_delete.graph.nodes.iter().any(|node| node.id == "a"));
     assert!(!after_delete.graph.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
 
@@ -81,7 +81,7 @@ async fn delete_node_inverse_recreates_node_and_severed_edges() {
 async fn move_points_is_relative_and_inverts_to_one_absolute_row() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::MovePoints(move_points::MovePoints { indices: vec![0, 2], dx: 10.0, dy: -2.5 });
-    let moved = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid drag");
+    let moved = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid drag");
     for index in [0, 2] {
         let (was, is) = (&base.geometry.points[index], &moved.geometry.points[index]);
         assert_eq!((is.x, is.y), (was.x + 10.0, was.y - 2.5));
@@ -125,7 +125,7 @@ async fn point_gesture_leaves_follow_the_outcome_vocabulary() {
 async fn insert_point_inverse_is_remove_point_at_same_index() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::InsertPoint(insert_point::InsertPoint { index: 1, x: 5.0, y: 6.0 });
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.geometry.points.len(), base.geometry.points.len() + 1);
 
     let state = undo_tail_first(after, &mutation.inverse(&base).expect("valid retained mutation inverse fixture"));
@@ -137,7 +137,7 @@ async fn delete_nodes_plural_cascades_like_the_singular_form() {
     let base = EquationSnapshot::default();
     let ids = vec!["a".to_string(), "b".to_string()];
     let mutation = EquationMutation::DeleteNodes(delete_nodes::DeleteNodes { ids: ids.clone() });
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert!(after.graph.nodes.iter().all(|node| !ids.contains(&node.id)));
     assert!(after.graph.edges.iter().all(|edge| !ids.contains(&edge.source) && !ids.contains(&edge.target)));
 
@@ -157,7 +157,7 @@ async fn semantic_kinds_cover_every_variant() {
 async fn connect_then_disconnect_nodes_round_trips() {
     let base = EquationSnapshot::default();
     let connect = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into(), index: None });
-    let after_connect = protocol::apply_diff(connect.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after_connect = protocol::apply_diff_cold(connect.diff(&base).diff(), &base).expect("valid mutation diff");
     assert!(after_connect.graph.edges.iter().any(|edge| edge.id == "e-new"));
 
     let state = undo_tail_first(after_connect, &connect.inverse(&base).expect("valid retained mutation inverse fixture"));
@@ -215,7 +215,7 @@ async fn change_coefficient_sets_the_targeted_numeric_leaf() {
     let base = EquationSnapshot::default();
     let label = base.equation.expr.label;
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.equation.find(label).map(|node| node.kind.clone()), Some(crate::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() }));
 }
 
@@ -224,7 +224,7 @@ async fn change_coefficient_at_an_unknown_label_is_a_no_op() {
     let base = EquationSnapshot::default();
     let unknown_label = crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.equation, base.equation);
     assert_eq!(mutation.inverse(&base).expect("valid retained mutation inverse fixture"), Vec::new(), "no target ⇒ nothing to undo");
 }
@@ -327,7 +327,7 @@ async fn change_coefficient_zero_denominator_fatal_never_applies() {
 async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::MoveNodes(move_nodes::MoveNodes { ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
-    let moved = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid drag");
+    let moved = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid drag");
     for id in ["a", "b"] {
         let (was, is) = (base.graph.nodes.iter().find(|node| node.id == id).expect("base"), moved.graph.nodes.iter().find(|node| node.id == id).expect("moved"));
         assert_eq!((is.x, is.y), (was.x + 40.0, was.y - 12.5));

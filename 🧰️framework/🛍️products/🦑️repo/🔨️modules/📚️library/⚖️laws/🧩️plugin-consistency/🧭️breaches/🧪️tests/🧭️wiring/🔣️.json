@@ -1,0 +1,400 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "policy-breaches-wiring",
+   "rule": "wiring",
+   "expect": [
+    {
+     "name": "policyRegionFormatBreaches",
+     "args": "crate.dir, lines",
+     "loop": true
+    },
+    {
+     "name": "policyManifestRegionBreaches",
+     "args": "crate.dir, lines",
+     "loop": true
+    },
+    {
+     "name": "policyStructNamingBreaches",
+     "args": "crate.dir, content",
+     "loop": true
+    },
+    {
+     "name": "policyModLayoutBreaches",
+     "args": "crate.dir, lines",
+     "loop": true
+    },
+    {
+     "name": "policySelectionIdsBreaches",
+     "args": "crate.dir, content",
+     "loop": true
+    },
+    {
+     "name": "policyArtifactAppLawDelegateBreaches",
+     "args": "crate.dir, content",
+     "loop": true
+    },
+    {
+     "name": "policyTreeItemBreaches",
+     "args": "crate, content, lines",
+     "loop": true
+    },
+    {
+     "name": "policyLabelsStructBreaches",
+     "args": "crate, content",
+     "loop": true
+    },
+    {
+     "name": "policyCargoArtifactBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyAppCouplingBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyTaxonomyDirsBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyWindowCompletenessBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyModeCompletenessBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policySemioArtifactExamplesBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyDeadExampleLeafBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyComponentFileBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyTaxonomyLibShapeBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyTaxonomyBarrelShapeBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySprNamingBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyBannedNameStemBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyEmojiPrefixBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyPluginRootShapeBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyPluginBuilderBreaches",
+     "args": "repoRoot, crateDirs",
+     "loop": false
+    },
+    {
+     "name": "policyApaBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyJsonFixtureBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyOpsGrammarBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDslCompletenessBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyPackCompletenessBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyCommandEnvelopeCompletenessBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDiffCompletenessBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyGrammarFileBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyProtocolFileBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyTsFacadeBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyMutationArtifactEngineBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyMutationOutcomeMergePolicyBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyPluginDependencyParityBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyContributionTargetBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyInferenceFamilyBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySchemaOverhaulS2Breaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySchemaOverhaulPCBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDissolvedKernelsBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyCompositionBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyHandcraftedSpecP3Breaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyArtifactSchemaBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyAppSchemaBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyStdioArtifactsBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyProtocolMigrationBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDbServerOnlyBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyOsStateAuthorityBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDocumentAppShapeBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyNoPackFilesBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyRawSpawnBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyBudgetNullBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyMcpConfigBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyDerivedConfigBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySniffRealityBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySubsetConformanceBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policySubsetSurfaceCompletenessBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyViewerPurityBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyContributedSurfaceTargetBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyOsConfigShapeBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyCleanArtifactStandardSubsetMechanismBreaches",
+     "args": "repoRoot",
+     "loop": false
+    },
+    {
+     "name": "policyPackageLanguagePurityBreaches",
+     "args": "repoRoot",
+     "loop": false
+    }
+   ]
+  },
+  {
+   "id": "policy-breaches-import-sources",
+   "rule": "imports",
+   "expect": {
+    "getWorkspaceRoot": "../../../🗂️workspaces/🟦️.ts",
+    "policyArtifactSchemaBreaches": "../../../🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts",
+    "policyAppSchemaBreaches": "../../../🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts",
+    "policyInferenceFamilyBreaches": "../../../🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts",
+    "existsSync": "node:fs",
+    "readFileSync": "node:fs",
+    "join": "node:path",
+    "policyAppCouplingBreaches": "../🧱️app-coupling/🟦️.ts",
+    "policyCargoArtifactBreaches": "../🧱️app-coupling/🟦️.ts",
+    "policyJsonFixtureBreaches": "../🧱️app-coupling/🟦️.ts",
+    "policyOpsGrammarBreaches": "../🧱️app-coupling/🟦️.ts",
+    "policyStdioArtifactsBreaches": "../🚪️artifact-io/🟦️.ts",
+    "policyBudgetNullBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyDbServerOnlyBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyDocumentAppShapeBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyMcpConfigBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyNoPackFilesBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyOsStateAuthorityBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyRawSpawnBreaches": "../🚧️authority-bans/🟦️.ts",
+    "policyCleanArtifactStandardSubsetMechanismBreaches": "../🧼️clean-mechanism/🟦️.ts",
+    "policyDerivedConfigBreaches": "../🧼️clean-mechanism/🟦️.ts",
+    "policyPackageLanguagePurityBreaches": "../🧼️clean-mechanism/🟦️.ts",
+    "policyCommandEnvelopeCompletenessBreaches": "../🧮️completeness/🟦️.ts",
+    "policyDiffCompletenessBreaches": "../🧮️completeness/🟦️.ts",
+    "policyDslCompletenessBreaches": "../🧮️completeness/🟦️.ts",
+    "policyGrammarFileBreaches": "../🧮️completeness/🟦️.ts",
+    "policyPackCompletenessBreaches": "../🧮️completeness/🟦️.ts",
+    "policyProtocolFileBreaches": "../🧮️completeness/🟦️.ts",
+    "policyProtocolMigrationBreaches": "../🧮️completeness/🟦️.ts",
+    "policyTsFacadeBreaches": "../🧮️completeness/🟦️.ts",
+    "policyArtifactAppLawDelegateBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyLabelsStructBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyManifestRegionBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyModLayoutBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyRegionFormatBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policySelectionIdsBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyStructNamingBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyTreeItemBreaches": "../🏗️crate-shape/🟦️.ts",
+    "policyCompositionBreaches": "../🧊️dissolved-kernels/🟦️.ts",
+    "policyDissolvedKernelsBreaches": "../🧊️dissolved-kernels/🟦️.ts",
+    "policyDiscoverCrateDirs": "../🏛️foundation/🟦️.ts",
+    "policyContributionTargetBreaches": "../✍️handcrafted-mutation/🟦️.ts",
+    "policyDeadExampleLeafBreaches": "../✍️handcrafted-mutation/🟦️.ts",
+    "policyHandcraftedSpecP3Breaches": "../✍️handcrafted-mutation/🟦️.ts",
+    "policyMutationArtifactEngineBreaches": "../✍️handcrafted-mutation/🟦️.ts",
+    "policyPluginDependencyParityBreaches": "../✍️handcrafted-mutation/🟦️.ts",
+    "policyMutationOutcomeMergePolicyBreaches": "../🎯️mutation-outcome/📐️merge-policy-law/🟦️.ts",
+    "policyApaBreaches": "../🔌️plugin-architecture/🟦️.ts",
+    "policySchemaOverhaulPCBreaches": "../📐️schema-overhaul-pc/🟦️.ts",
+    "policySchemaOverhaulS2Breaches": "../🧬️schema-overhaul-s2/🟦️.ts",
+    "policySniffRealityBreaches": "../🧬️schema-overhaul-s2/🟦️.ts",
+    "policyContributedSurfaceTargetBreaches": "../🪆️subset-conformance/🟦️.ts",
+    "policyOsConfigShapeBreaches": "../🪆️subset-conformance/🟦️.ts",
+    "policySubsetConformanceBreaches": "../🪆️subset-conformance/🟦️.ts",
+    "policySubsetSurfaceCompletenessBreaches": "../🪆️subset-conformance/🟦️.ts",
+    "policyViewerPurityBreaches": "../🪆️subset-conformance/🟦️.ts",
+    "policyBannedNameStemBreaches": "../🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+    "policyEmojiPrefixBreaches": "../🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+    "policyPluginBuilderBreaches": "../🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+    "policyPluginRootShapeBreaches": "../🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+    "policySprNamingBreaches": "../🗺️taxonomy-shape/🏷️naming/🟦️.ts",
+    "policyComponentFileBreaches": "../🗺️taxonomy-shape/📚️examples/🟦️.ts",
+    "policySemioArtifactExamplesBreaches": "../🗺️taxonomy-shape/📚️examples/🟦️.ts",
+    "policyModeCompletenessBreaches": "../🗺️taxonomy-shape/🟦️.ts",
+    "policyTaxonomyDirsBreaches": "../🗺️taxonomy-shape/🟦️.ts",
+    "policyWindowCompletenessBreaches": "../🗺️taxonomy-shape/🟦️.ts",
+    "policyTaxonomyBarrelShapeBreaches": "../🗺️taxonomy-shape/🧱️lib-and-barrel-shape/🟦️.ts",
+    "policyTaxonomyLibShapeBreaches": "../🗺️taxonomy-shape/🧱️lib-and-barrel-shape/🟦️.ts"
+   }
+  }
+ ]
+}

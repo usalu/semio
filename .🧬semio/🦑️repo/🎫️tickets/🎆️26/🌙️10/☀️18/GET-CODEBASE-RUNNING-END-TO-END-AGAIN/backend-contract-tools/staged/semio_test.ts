@@ -4,28 +4,35 @@ import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";
 import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync,appendFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {dirname,join} from "node:path";
+import {rm} from "node:fs/promises";
+import {dirname,join,resolve} from "node:path";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {SEMIO_POLICY_V1 as policy,semioActionKeyV1,semioCanonicalV1,semioHashV1,semioLowerBoundV1,semioOutputsDigestV1,semioPatternPrefixV1,semioSelectFilesV1,type SemioEntryV1,type SemioEventV1} from "../🟦️.ts";
 import {SemioStoreV1,semioFileDigestV1,semioInsideV1} from "../🗄️store/🟦️.ts";
 import {packSemioEntryV1,semioHttpRemoteV1,unpackSemioEntryV1,type SemioRemoteV1} from "../🌐️remote/🟦️.ts";
-import {semioCommandsV1,semioInterpolateV1,semioLocalExecutorV1,type SemioExecutorV1} from "../🚀️exec/🟦️.ts";
+import {semioCommandsV1,semioInterpolateV1,semioLocalExecutorV1,semioRuntimeOutputV1,type SemioExecutorV1} from "../🚀️exec/🟦️.ts";
+import {semioAuthorizedRequestV1,semioBudgetBytesV1,semioCargoDirectoriesV1,semioStoreDirectoryV1,semioTaskBaseEnvironmentV1} from "../🔌️backend/🟦️.ts";
+import ledger from "../../../../⚡️caching/💾️storage/🧾️ledger/🔣️policy.json" with {type:"json"};
+import ledgerSchema from "../../../../⚡️caching/💾️storage/🧾️ledger/🧬️schema/🔣️.json" with {type:"json"};
+import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {runSemioTasksV1,semioInventoryV1,type SemioPortsV1} from "../🏁️scheduler/🟦️.ts";
 import {buildCacheDecisionV1,buildDryRunPlanV1,buildTaskInputsV1,planBuildTasksV1,type BuildTaskV1} from "../../../🧮️task-model/🟦️.ts";
 import {startRemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import type {BuildGraphV1} from "../../../🕸️graph/🟦️.ts";
+import {stubGlobV1,stubSelectV1} from "../../../📐️conformance/🎭️stub/🟦️.ts";
 
-const oracle=join(import.meta.dir,"../../../📐️conformance/🧪️tests/🐍️oracle/🐍️.py");
+const repositoryRoot=join(import.meta.dir,"../../../../../../../../../"),oracle=join(import.meta.dir,"../../../📐️conformance/🧪️tests/🐍️oracle/🐍️.py");
 const python=(input:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
-const root=mkdtempSync(join(tmpdir(),"semio-test-")),fresh=(name:string)=>{const directory=join(root,name+"-"+Math.random().toString(36).slice(2,8));mkdirSync(directory,{recursive:true});return directory;};
+const root=testScratchRootV1("semio-engine"),fresh=(name:string)=>{const directory=join(root,name+"-"+Math.random().toString(36).slice(2,8));mkdirSync(directory,{recursive:true});return directory;};
 const sha=(text:string)=>semioHashV1(text);
 
 test("the schema is valid, the policy is closed, and entries and records validate the way the repository validator does",()=>{
  expect(ajv.validateSchema(schema)).toBe(true);
- expect(Object.keys(policy).sort()).toEqual(["archiveMagic","directory","killGraceMilliseconds","lockHeartbeatMilliseconds","lockPollMilliseconds","lockStaleMilliseconds","maximumEntryBytes","maximumOutputFiles","remoteKeyPrefix","remotePath","remoteTimeoutMilliseconds","version"]);
+ expect(Object.keys(policy).sort()).toEqual(["archiveMagic","collectGraceMilliseconds","directory","killGraceMilliseconds","ledgerArea","ledgerDirectory","lockHeartbeatMilliseconds","lockPollMilliseconds","lockStaleMilliseconds","maximumEntryBytes","maximumOutputFiles","remoteKeyPrefix","remotePath","remoteTimeoutMilliseconds","touchIntervalMilliseconds","version"]);
  const entry={version:1,key:"a".repeat(64),task:"a:b",files:[{path:"a/out.txt",kind:"file",mode:0o644,sha256:"b".repeat(64),size:3}],digest:"c".repeat(64)};
  const record={version:1,exitCode:0,cancelled:false,tasks:[{id:"a:b",status:"restored",source:"remote",key:"a".repeat(64),startedMs:1,endedMs:2}]};
  for(const[name,value,ok]of [["Entry",entry,true],["Entry",{...entry,key:"short"},false],["Entry",{...entry,files:[{...entry.files[0]!,mode:512}]},false],["Entry",{...entry,extra:1},false],["Record",record,true],["Record",{...record,tasks:[{id:"a:b",status:"weird",startedMs:1,endedMs:2}]},false],["Record",{...record,exitCode:"0"},false],["File",{path:"d",kind:"directory",mode:0o755},true],["File",{path:"d",kind:"socket",mode:0o755},false]] as const){
@@ -113,6 +120,73 @@ test("the single-flight lock gives one owner, hands waiters the published entry,
  await expect(store.withFlight(sha("held2"),AbortSignal.abort(Error("already")),async()=>1)).rejects.toThrow("already");
 });
 
+test("a failed heartbeat aborts the holder with an English and a German reason instead of being swallowed",async()=>{
+ const directory=fresh("beat"),key=sha("beat"),lock=join(directory,"locks",key+".lock");
+ const store=new SemioStoreV1(directory,{touch:async()=>{throw Error("disk gone");},timing:{lockHeartbeatMilliseconds:20}});
+ let aborted=false;
+ const run=store.withFlight(key,new AbortController().signal,async(_owner,held)=>{await new Promise<void>(accept=>{held.addEventListener("abort",()=>{aborted=true;accept();});setTimeout(accept,5000);});return 1;});
+ const error=await run.then(()=>undefined,reason=>reason as Error);
+ expect(error?.message).toContain("could not be refreshed (disk gone)");
+ expect(error?.message).toContain("Die Build-Sperre");
+ expect(aborted).toBe(true);
+ expect(existsSync(lock)).toBe(false);
+});
+
+test("a holder whose lock was taken over fails and its release never removes the successor's lock",async()=>{
+ const directory=fresh("takeover"),key=sha("takeover"),lock=join(directory,"locks",key+".lock"),signal=new AbortController().signal;
+ const timing={lockHeartbeatMilliseconds:60000,lockStaleMilliseconds:100,lockPollMilliseconds:10};
+ const first=new SemioStoreV1(directory,{timing}),second=new SemioStoreV1(directory,{timing});
+ let finishFirst=()=>{},finishSecond=()=>{},firstRuns=()=>{},secondRuns=()=>{};
+ const firstStarted=new Promise<void>(accept=>{firstRuns=accept;}),secondStarted=new Promise<void>(accept=>{secondRuns=accept;});
+ const runFirst=first.withFlight(key,signal,async()=>{firstRuns();await new Promise<void>(accept=>{finishFirst=accept;});return "first";});
+ await firstStarted;
+ const old=new Date(Date.now()-10000);utimesSync(lock,old,old);
+ const runSecond=second.withFlight(key,signal,async owner=>{secondRuns();await new Promise<void>(accept=>{finishSecond=accept;});return owner;});
+ await secondStarted;
+ const successor=readFileSync(lock,"utf8");
+ expect(successor).not.toBe("");
+ finishFirst();
+ const error=await runFirst.then(()=>undefined,reason=>reason as Error);
+ expect(error?.message).toContain("taken over");
+ expect(error?.message).toContain("übernommen");
+ expect(readFileSync(lock,"utf8")).toBe(successor);
+ expect(readdirSync(dirname(lock)).filter(name=>/\.(release|stale)$/u.test(name))).toEqual([]);
+ finishSecond();
+ expect(await runSecond).toBe(true);
+ expect(existsSync(lock)).toBe(false);
+});
+
+test("a heartbeat that finds another owner's token aborts the holder",async()=>{
+ const directory=fresh("stolen"),key=sha("stolen"),lock=join(directory,"locks",key+".lock");
+ const store=new SemioStoreV1(directory,{timing:{lockHeartbeatMilliseconds:20}});
+ const run=store.withFlight(key,new AbortController().signal,async(_owner,held)=>{writeFileSync(lock,JSON.stringify({pid:process.pid,nonce:"someone-else",at:Date.now()}));await new Promise<void>(accept=>{held.addEventListener("abort",()=>accept());setTimeout(accept,5000);});return 1;});
+ const error=await run.then(()=>undefined,reason=>reason as Error);
+ expect(error?.message).toContain("taken over");
+ expect(JSON.parse(readFileSync(lock,"utf8")).nonce).toBe("someone-else");
+});
+
+test("the stub's own glob and file walk agree with picomatch on the syntax the scenarios use",()=>{
+ const picomatch=require("picomatch") as (pattern:string)=>(path:string)=>boolean,directory=fresh("globs");
+ const paths=["a/src/x.ts","a/src/deep/y.ts","a/srcx/z.ts","a/test/t.ts","b.txt","a/b.txt","a/.hidden/h.ts"];
+ for(const path of paths){mkdirSync(join(directory,dirname(path)),{recursive:true});writeFileSync(join(directory,path),path);}
+ for(const pattern of ["a/src/**","a/**","**/*.ts","a/*.txt","*.txt","a/{src,test}/**","a/?rc/**","a/src/x.ts","a/src/*"]){
+  const expected=paths.filter(path=>!path.split("/").some(part=>part.startsWith("."))&&picomatch(pattern)(path)).sort();
+  expect(paths.filter(path=>!path.split("/").some(part=>part.startsWith("."))&&stubGlobV1(pattern).test(path)).sort(),pattern).toEqual(expected);
+  expect(stubSelectV1(pattern,directory),pattern).toEqual(expected);
+ }
+ expect(()=>stubGlobV1("a/{b")).toThrow("Unclosed");
+});
+
+test("the inventory fails with the reason when Git cannot list a work tree and walks only where Git cannot be asked",async()=>{
+ const plain=fresh("inventory-plain");mkdirSync(join(plain,"src"),{recursive:true});mkdirSync(join(plain,"node_modules/x"),{recursive:true});
+ writeFileSync(join(plain,"src/a.ts"),"a");writeFileSync(join(plain,"node_modules/x/b.ts"),"b");
+ expect(await semioInventoryV1(plain)).toEqual(["src/a.ts"]);
+ const broken=fresh("inventory-broken");mkdirSync(join(broken,".git"),{recursive:true});writeFileSync(join(broken,"a.ts"),"a");
+ const error=await semioInventoryV1(broken).then(()=>undefined,reason=>reason as Error);
+ expect(error?.message).toContain("Git could not list");
+ expect(error?.message).toContain("Git konnte die Dateien");
+});
+
 test("three real processes racing for one action key execute its body exactly once",async()=>{
  const directory=fresh("race"),script=join(directory,"child.ts"),counter=join(directory,"count.log"),storeModule=join(import.meta.dir,"../🗄️store/🟦️.ts");
  writeFileSync(script,`import {SemioStoreV1} from ${JSON.stringify(storeModule)};import {appendFileSync} from "node:fs";
@@ -196,7 +270,7 @@ test("the planner resolves dependency patterns, configurations and cycles, and e
 
 test("input expansion handles named groups, dependency groups, exclusions, environment, outputs of dependencies and refuses what it cannot read",()=>{
  const graph=graphOf({
-  app:{build:{execution:{kind:"command",command:"x"},inputs:["default","^production",{env:"MODE"},"!{projectRoot}/**/*.spec.ts",{dependentTasksOutputFiles:"**/*"},{externalDependencies:["x"]},{input:"production",projects:["lib"]}]},raw:{execution:{kind:"command",command:"x"},inputs:[{runtime:"node -v"}]},odd:{execution:{kind:"command",command:"x"},inputs:[42]},plain:{execution:{kind:"command",command:"x"}}},
+  app:{build:{execution:{kind:"command",command:"x"},inputs:["default","^production",{env:"MODE"},"!{projectRoot}/**/*.spec.ts",{dependentTasksOutputFiles:"**/*"},{externalDependencies:["x"]},{input:"production",projects:["lib"]}]},raw:{execution:{kind:"command",command:"x"},inputs:[{runtime:"node -v"}]},weird:{execution:{kind:"command",command:"x"},inputs:[{surprise:true}]},odd:{execution:{kind:"command",command:"x"},inputs:[42]},plain:{execution:{kind:"command",command:"x"}}},
   lib:{build:{execution:{kind:"command",command:"y"}}}
  },[["app","lib"]],{production:["{projectRoot}/src/**","!{projectRoot}/**/*.md"],default:["{projectRoot}/**/*"]});
  const inputs=(id:string)=>buildTaskInputsV1(graph,planBuildTasksV1(graph,{tasks:[id],excludeDependencies:true}).tasks[id]!);
@@ -206,9 +280,11 @@ test("input expansion handles named groups, dependency groups, exclusions, envir
   {kind:"environment",name:"MODE"},
   {kind:"file",exclude:true,pattern:"app/**/*.spec.ts"},
   {kind:"dependency-outputs"},
+  {kind:"external",names:["x"]},
   {kind:"file",exclude:false,pattern:"lib/src/**"},{kind:"file",exclude:true,pattern:"lib/**/*.md"}
  ]);
- expect(inputs("app:raw")).toEqual([{kind:"unsupported",description:"runtime"}]);
+ expect(inputs("app:raw")).toEqual([{kind:"runtime",command:"node -v"}]);
+ expect(inputs("app:weird")).toEqual([{kind:"unsupported",description:"surprise"}]);
  expect(inputs("app:odd")).toEqual([{kind:"unsupported",description:"number"}]);
  expect(inputs("app:plain")).toEqual([{kind:"file",exclude:false,pattern:"app/**/*"}]);
  expect(()=>buildTaskInputsV1(graphOf({a:{t:{execution:{kind:"command",command:"x"},inputs:["loop"]}}},[],{loop:["loop"]}),{project:"a",definition:{execution:{kind:"command",command:"x"},inputs:["loop"]}})).toThrow("cycle");
@@ -230,14 +306,14 @@ test("the cache decision fails closed",()=>{
 });
 
 const workspace=(name:string,files:Record<string,string>)=>{const directory=fresh(name);for(const[path,body]of Object.entries(files)){mkdirSync(dirname(join(directory,path)),{recursive:true});writeFileSync(join(directory,path),body);}return directory;};
-type Behaviour=(task:BuildTaskV1,signal:AbortSignal,directory:string)=>Promise<number>|number;
+type Behaviour=(task:BuildTaskV1,signal:AbortSignal,directory:string,write:(chunk:string)=>void,started:(()=>void)|undefined)=>Promise<number>|number;
 const harness=(directory:string,behaviour:Behaviour,extra:Partial<SemioPortsV1>={})=>{
  const executed:string[]=[],events:SemioEventV1[]=[],store=new SemioStoreV1(fresh("harness-store"));let running=0,peak=0;
- const execute:SemioExecutorV1=async(task,signal)=>{executed.push(task.id);running++;peak=Math.max(peak,running);try{return {exitCode:await behaviour(task,signal,directory)};}finally{running--;}};
+ const execute:SemioExecutorV1=async(task,signal,write,started)=>{executed.push(task.id);running++;peak=Math.max(peak,running);try{return {exitCode:await behaviour(task,signal,directory,write,started)};}finally{running--;}};
  const ports:SemioPortsV1={workspace:directory,store,inventory:()=>semioInventoryV1(directory),execute,environment:{},now:Date.now,write:()=>{},...extra};
- return {executed,events,store,ports,peak:()=>peak,run:(graph:BuildGraphV1,request:Parameters<typeof runSemioTasksV1>[1],signal=new AbortController().signal)=>runSemioTasksV1(graph,request,ports,{signal,onEvent:event=>{events.push(event);}})};
+ return {executed,events,store,ports,peak:()=>peak,run:(graph:BuildGraphV1,request:Parameters<typeof runSemioTasksV1>[1],signal=new AbortController().signal,onSettled?:()=>void|Promise<void>)=>runSemioTasksV1(graph,request,ports,{signal,onEvent:event=>{events.push(event);},...(onSettled?{onSettled}:{})})};
 };
-const writes=(path:string,body:string)=>(task:BuildTaskV1,_signal:AbortSignal,directory:string)=>{mkdirSync(dirname(join(directory,path)),{recursive:true});writeFileSync(join(directory,path),body);return 0;};
+const writes=(path:string,body:string)=>(task:BuildTaskV1,_signal:AbortSignal,directory:string,..._rest:unknown[])=>{mkdirSync(dirname(join(directory,path)),{recursive:true});writeFileSync(join(directory,path),body);return 0;};
 const chain=():BuildGraphV1=>graphOf({a:{build:{execution:{kind:"command",command:"a"},cache:true,inputs:["{projectRoot}/src/**"],outputs:["{projectRoot}/out.txt"]}},b:{build:{execution:{kind:"command",command:"b"},cache:true,inputs:["{projectRoot}/src/**",{dependentTasksOutputFiles:"**/*"}],outputs:["{projectRoot}/out.txt"],dependsOn:["a:build"]}},c:{build:{execution:{kind:"command",command:"c"},cache:true,inputs:["{projectRoot}/src/**"],outputs:["{projectRoot}/out.txt"],dependsOn:["b:build"]}}},[["b","a"],["c","b"]]);
 const body=(task:BuildTaskV1,directory:string)=>readFileSync(join(directory,task.root,"src/s.txt"),"utf8").split("\n").filter(line=>!line.startsWith("#")).join("\n");
 
@@ -298,7 +374,7 @@ test("failures skip dependents, are never stored, and a bail stops the rest; und
  const keepGoing=harness(directory,async(task,signal,dir)=>task.id==="x:build"?3:writes(task.root+"/out.txt","ok")(task,signal,dir));
  record=await keepGoing.run(parallel,{tasks:["x:build","y:build"],parallel:2});
  expect(record.tasks.map(task=>task.status).sort()).toEqual(["executed","failed"]);
- const odd=graphOf({a:{build:{execution:{kind:"command",command:"o"},cache:true,outputs:[],inputs:[{runtime:"date"}]}}});
+ const odd=graphOf({a:{build:{execution:{kind:"command",command:"o"},cache:true,outputs:[],inputs:[{surprise:"date"}]}}});
  const two=harness(directory,()=>0);await two.run(odd,{tasks:["a:build"]});await two.run(odd,{tasks:["a:build"]});expect(two.executed).toEqual(["a:build","a:build"]);
  const undeclared=graphOf({a:{build:{execution:{kind:"command",command:"u"},outputs:[]}}});
  const three=harness(directory,()=>0);await three.run(undeclared,{tasks:["a:build"]});await three.run(undeclared,{tasks:["a:build"]});expect(three.executed.length).toBe(2);
@@ -399,6 +475,131 @@ test("the inventory lists workspace files without ignored directories, with and 
   spawnSync("git",["init","-q"],{cwd:directory});writeFileSync(join(directory,".gitignore"),"b/\n");appendFileSync(join(directory,"a/x.ts"),"2");
   expect(await semioInventoryV1(directory)).toEqual([".gitignore","a/x.ts"]);
  }
+});
+
+test("runtime and external inputs enter the key; a runtime input without a runner keeps the task uncached",async()=>{
+ const directory=workspace("runtime",{"a/src/s.txt":"1"});
+ const graph=(nodes?:Record<string,unknown>)=>({...graphOf({a:{build:{execution:{kind:"command",command:"a"},cache:true,inputs:["{projectRoot}/src/**",{runtime:"toolchain-version"},{externalDependencies:["left-pad"]}],outputs:["{projectRoot}/out.txt"]}}}),...(nodes?{externalNodes:nodes}:{})}) as BuildGraphV1;
+ const keyWith=async(answer:string,nodes?:Record<string,unknown>)=>{const h=harness(directory,writes("a/out.txt","x"),{runtime:async()=>answer});return (await h.run(graph(nodes),{tasks:["a:build"]})).tasks[0]!.key!;};
+ const base=await keyWith("v1",{"npm:left-pad":{version:"1.0.0"}});
+ expect(await keyWith("v1",{"npm:left-pad":{version:"1.0.0"}})).toBe(base);
+ expect(await keyWith("v2",{"npm:left-pad":{version:"1.0.0"}})).not.toBe(base);
+ expect(await keyWith("v1",{"npm:left-pad":{version:"1.0.1"}})).not.toBe(base);
+ const bare=harness(directory,writes("a/out.txt","x"));
+ await bare.run(graph(),{tasks:["a:build"]});await bare.run(graph(),{tasks:["a:build"]});expect(bare.executed).toEqual(["a:build","a:build"]);
+ const runner=semioRuntimeOutputV1(directory,{...process.env});
+ expect(await runner("echo hello",new AbortController().signal)).toBe("hello");
+ await expect(runner("exit 3",new AbortController().signal)).rejects.toThrow("Runtime input command failed");
+});
+
+const serviceGraph=():BuildGraphV1=>graphOf({
+ srv:{serve:{execution:{kind:"command",command:"serve",readyWhen:"listening"},continuous:true,cache:false}},
+ web:{build:{execution:{kind:"command",command:"w"},cache:true,inputs:["{projectRoot}/src/**"],outputs:["{projectRoot}/out.txt"],dependsOn:["srv:serve"]}}
+},[["web","srv"]]);
+const serving=(delay:number):Behaviour=>(task,signal,dir,write,started)=>{
+ if(task.id!=="srv:serve")return writes(task.root+"/out.txt","ok")(task,signal,dir,write,started);
+ started?.();setTimeout(()=>write("hello\nlistening on 8080\n"),delay);
+ return new Promise<number>(accept=>signal.addEventListener("abort",()=>accept(0),{once:true}));
+};
+
+test("a continuous task is ready by its printed marker, holds no slot, outlives the regular tasks and is stopped with the closure",async()=>{
+ const directory=workspace("service",{"web/src/s.txt":"1","srv/src/s.txt":"2"});
+ const order:string[]=[],h=harness(directory,async(task,signal,dir,write,started)=>{order.push("run "+task.id);return serving(80)(task,signal,dir,write,started);});
+ let settled=0;
+ const record=await h.run(serviceGraph(),{tasks:["web:build"],parallel:1},new AbortController().signal,()=>{settled++;});
+ expect(record).toMatchObject({exitCode:0,cancelled:false});
+ expect(order).toEqual(["run srv:serve","run web:build"]);
+ expect(settled).toBe(1);
+ expect(record.tasks.map(task=>[task.id,task.status]).sort()).toEqual([["srv:serve","executed"],["web:build","executed"]]);
+ expect(record.tasks.find(task=>task.id==="srv:serve")!.reason).toBe("stopped");
+ expect(existsSync(join(directory,"web/out.txt"))).toBe(true);
+ expect(define("Record")(record)).toBe(true);
+});
+
+test("a selected continuous task runs until the run is cancelled; a service that exits before it is ready fails the run",async()=>{
+ const directory=workspace("service-run",{"web/src/s.txt":"1","srv/src/s.txt":"2"});
+ const stopper=new AbortController(),h=harness(directory,serving(20));
+ setTimeout(()=>stopper.abort(Error("stop")),400);
+ const record=await h.run(serviceGraph(),{tasks:["srv:serve"]},stopper.signal);
+ expect(record).toMatchObject({exitCode:130,cancelled:true});
+ expect(record.tasks[0]).toMatchObject({id:"srv:serve",status:"cancelled"});
+ const early=harness(directory,(task,signal,dir,write,started)=>task.id==="srv:serve"?0:writes(task.root+"/out.txt","ok")(task,signal,dir,write,started));
+ const failed=await early.run(serviceGraph(),{tasks:["web:build"]});
+ expect(failed.exitCode).toBe(1);
+ expect(failed.tasks.find(task=>task.id==="srv:serve")).toMatchObject({status:"failed"});
+ expect(failed.tasks.find(task=>task.id==="srv:serve")!.reason).toContain("before readiness");
+ expect(failed.tasks.find(task=>task.id==="web:build")!.status).toBe("skipped");
+});
+
+test("a service that dies while a task needs it fails the run and a failed run never starts the watcher",async()=>{
+ const directory=workspace("service-die",{"web/src/s.txt":"1","srv/src/s.txt":"2"});
+ const dying:Behaviour=(task,signal,dir,write,started)=>{
+  if(task.id==="srv:serve"){started?.();write("listening\n");return new Promise<number>(accept=>setTimeout(()=>accept(2),60));}
+  return new Promise<number>(accept=>{const timer=setTimeout(()=>accept(writes(task.root+"/out.txt","ok")(task,signal,dir,write,started) as number),500);signal.addEventListener("abort",()=>{clearTimeout(timer);accept(1);},{once:true});});
+ };
+ let settled=0;
+ const record=await harness(directory,dying).run(serviceGraph(),{tasks:["web:build"]},new AbortController().signal,()=>{settled++;});
+ expect(record.exitCode).toBe(1);expect(settled).toBe(0);
+ expect(record.tasks.find(task=>task.id==="srv:serve")!.reason).toContain("while required");
+});
+
+test("the environment scope issues authority around a task body and its cancellation reaches the process",async()=>{
+ const directory=fresh("scope"),seen:string[]=[],stopper=new AbortController();
+ const task:BuildTaskV1={id:"p:t",project:"p",target:"t",label:"t",dependencies:[],args:[],root:".",definition:{execution:{kind:"command",program:process.execPath,args:["-e","setTimeout(()=>{},4000)"]}} as never};
+ const run=semioLocalExecutorV1(directory,()=>({...process.env}),process.execPath,async(_task,body)=>{seen.push("open");try{return await body({...process.env,ISSUED:"yes"},stopper.signal);}finally{seen.push("close");}});
+ setTimeout(()=>stopper.abort(Error("revoked")),200);
+ await expect(run(task,new AbortController().signal,()=>{})).rejects.toThrow("revoked");
+ expect(seen).toEqual(["open","close"]);
+ const started:string[]=[];
+ const plain=semioLocalExecutorV1(directory,()=>({...process.env}));
+ await plain({...task,definition:{execution:{kind:"command",program:process.execPath,args:["-e","0"]}} as never},new AbortController().signal,()=>{},()=>started.push("started"));
+ expect(started).toEqual(["started"]);
+});
+
+test("collection keeps the store within its bound by least recent use, keeps young blobs, and a dry run changes nothing",async()=>{
+ const store=new SemioStoreV1(fresh("collect")),work=fresh("collect-work");
+ const publish=async(name:string,size:number,age:number)=>{
+  mkdirSync(join(work,name),{recursive:true});writeFileSync(join(work,name,"f"),"x".repeat(size)+name);
+  const key=sha(name),{entry}=await store.capture(work,name+":t",key,[name],true);await store.publish(entry);
+  const old=new Date(Date.now()-age),blob=store.blob(entry.files.find(file=>file.kind==="file")!.sha256!);utimesSync(store.entry(key),old,old);utimesSync(blob,old,old);
+  return {key,blob};
+ };
+ const a=await publish("a",4000,3_000_000),b=await publish("b",4000,2_000_000),c=await publish("c",4000,1_000_000);
+ const before=(await store.status()).bytes;
+ const dry=await store.collect({maximumBytes:before-3000,dryRun:true});
+ expect(dry.removedEntries).toBe(1);expect((await store.status()).bytes).toBe(before);
+ const real=await store.collect({maximumBytes:before-3000,dryRun:false});
+ expect(real).toMatchObject({removedEntries:1});expect(real.freedBytes).toBeGreaterThan(3000);
+ expect(await store.lookup(a.key)).toBeUndefined();expect(await store.lookup(b.key)).toBeDefined();expect(await store.lookup(c.key)).toBeDefined();
+ expect(existsSync(a.blob)).toBe(false);expect(existsSync(b.blob)).toBe(true);
+ expect((await store.collect({maximumBytes:1<<30,dryRun:false})).removedEntries).toBe(0);
+ const keep=await publish("d",4000,0);
+ await rm(store.entry(keep.key),{force:true});
+ const young=await store.collect({maximumBytes:1,dryRun:false});
+ expect(young.removedBlobs).toBeGreaterThanOrEqual(0);expect(existsSync(keep.blob)).toBe(true);
+});
+
+test("the engine's task environment pins Cargo directories, adds the identity of the task, the tool and the project environment of repo-exec, and binds the caller's mode",async()=>{
+ const task=(over:Record<string,unknown>={}):BuildTaskV1=>({id:"p:t:release",project:"p",target:"t",configuration:"release",label:"t",dependencies:[],args:[],root:"pkg",definition:{execution:{kind:"command",command:"c",env:{CARGO_TARGET_DIR:"target/p",KEEP:"1"}}} as never,...over});
+ const root="/work/space",base=semioTaskBaseEnvironmentV1(root,task(),{PATH:"/bin"});
+ expect(base).toMatchObject({PATH:"/bin",KEEP:"1",SEMIO_BUILD_TOOL:"semio",SEMIO_WORKSPACE_ROOT:root,SEMIO_TASK_PROJECT:"p",SEMIO_TASK_TARGET:"t",SEMIO_TASK_CONFIGURATION:"release"});
+ expect(base.CARGO_TARGET_DIR).toBeUndefined();
+ expect(semioCargoDirectoriesV1(root,task())).toEqual({CARGO_TARGET_DIR:resolve(root,"target/p")});
+ expect(semioTaskBaseEnvironmentV1(root,task({target:"repo-exec"}),{}).SEMIO_PROJECT_NAME).toBeDefined();
+ expect(semioAuthorizedRequestV1({tasks:["a:b"]},"release")).toEqual({tasks:["a:b"],authority:"release"});
+ expect(semioAuthorizedRequestV1({tasks:["a:b"]},undefined)).toEqual({tasks:["a:b"]});
+ expect(semioAuthorizedRequestV1({tasks:["a:b"]},"weird")).toEqual({tasks:["a:b"]});
+});
+
+test("the cache ledger declares the engine's area, sized as a share of the products partition, with a writer that exists and a collector the backend provides",()=>{
+ const area=(ledger as {areas:{id:string;kind:string;partition?:string;directory?:string;budget?:{basisPoints?:number};managed?:{owner:string};writers:string[]}[]}).areas.find(row=>row.id===policy.ledgerArea)!;
+ expect(area).toMatchObject({kind:"nested",partition:"products",directory:policy.ledgerDirectory,managed:{owner:"semio"}});
+ for(const writer of area.writers)expect(existsSync(join(repositoryRoot,writer)),writer).toBe(true);
+ const shares=(ledger as {areas:{partition?:string;kind:string;budget?:{basisPoints?:number}}[]}).areas.filter(row=>row.partition==="products"&&row.kind==="nested").reduce((sum,row)=>sum+(row.budget?.basisPoints??0),0);
+ expect(shares).toBeLessThanOrEqual(10000);
+ expect(semioBudgetBytesV1()).toBe(Math.floor((budget as {partitions:{products:{maximumLogicalBytes:number}}}).partitions.products.maximumLogicalBytes*area.budget!.basisPoints!/10000));
+ expect(semioStoreDirectoryV1("/products/m")).toBe(join("/products/m",policy.ledgerDirectory));
+ expect(ledgerSchema.$defs.managed.properties.owner.enum).toContain("semio");
 });
 
 test("the root of every temporary workspace is cleaned up",()=>{rmSync(root,{recursive:true,force:true});expect(existsSync(root)).toBe(false);});

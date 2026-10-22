@@ -6,6 +6,7 @@
 use semio_framework_test_fixtures::fixture_path;
 
 pub use semio_framework_value::*;
+pub use semio_framework_value_ordered::ordered;
 use semio_framework_value_testing_allocator as allocation_testing;
 pub(crate) use allocation_testing::observe_retirement_allocations;
 

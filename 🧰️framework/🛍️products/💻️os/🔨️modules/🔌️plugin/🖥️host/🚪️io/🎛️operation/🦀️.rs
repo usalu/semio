@@ -16,6 +16,6 @@ mod tests;
 mod return_types{pub use semio_framework_plugin_host_wit::actor_bindings::semio::framework::{effects,ui,types,pure};pub use semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::{reactor,codec};}
 pub(crate) mod return_walk{semio_framework_plugin_guest_contract::return_walk_template!();}
 
-pub use wasmtime::{OperationHostStore, ReceiveError, allocation_kind, receive, receive_retained, register, request, return_bytes};
+pub use wasmtime::{OperationHostStore, ReceiveError, Received, allocation_kind, receive, receive_retained, register, request, return_bytes};
 pub use slot::{OperationReply, OperationRequest, OperationSlot};
 pub use return_walk::{walk_snapshot_file_result, walk_snapshot_payload_result};

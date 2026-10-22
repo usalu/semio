@@ -119,7 +119,7 @@ pub mod text {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 pub mod schema {
     pub use super::standards::v2_0::subsets::base::schema::*;
 }

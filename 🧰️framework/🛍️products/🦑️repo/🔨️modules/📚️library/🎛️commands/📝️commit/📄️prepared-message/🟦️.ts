@@ -3,11 +3,12 @@ import { join } from "node:path";
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { git, gitDir, gitRepoRoot } from "../🌳️git/🟦️.ts";
 import { branchAllowed, type Contributor, findContributor } from "../👤️contributor/🟦️.ts";
-import type { MetricsRunner, UlocRunner } from "../📊️metrics/🏷️types/🟦️.ts";
+import type { MetricsRunner } from "../📊️metrics/🏷️types/🟦️.ts";
 import { formatSecond, nextCounter } from "../🔢️counter/🟦️.ts";
 import { listAddedTicketPaths, normalizeBulletLines, readPreparedBullets, ticketBullets } from "../🔸️bullets/🟦️.ts";
-import { metricsRunnerFromUloc } from "../📊️metrics/💾️scan/🟦️.ts";
+import { createDefaultMetricsRunner } from "../📊️metrics/💾️scan/🟦️.ts";
 import { buildCommitMetrics, formatCommitMetricsLines, validateCommitMetricsDeltaSum } from "../📊️metrics/🧮️summary/🟦️.ts";
+import {refuseCommitV1} from "../📖️texts/🟦️.ts";
 
 export function digestMicroCommitMessage(message: string): string {
   return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
@@ -35,7 +36,7 @@ export const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
 
 const GIT_COMMIT_DRAFT_FILES = ["COMMIT_EDITMSG", "MERGE_MSG", "SQUASH_MSG"] as const;
 
-export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = [], metricsRunner?: MetricsRunner | UlocRunner): string {
+export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = [], metricsRunner?: MetricsRunner): string {
   root = gitRepoRoot(root);
   const { line1Base, nnn } = nextCounter(root, contributor);
   const now = new Date();
@@ -44,12 +45,12 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
   const authoredLower = new Set(authored.map((b) => b.toLowerCase()));
   const bullets = [...authored, ...tickets.filter((t) => !authoredLower.has(t.toLowerCase()))].slice(0, 8);
   if (bullets.length === 0) {
-    throw new Error("micro-commit: at least one description bullet is required");
+    throw refuseCommitV1("missing","message.at-least-one-description-bullet");
   }
-  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner ?? createDefaultMetricsRunner();
   const metricBundle = buildCommitMetrics(root, runner);
   if (metricBundle.uloc.length === 0 && metricBundle.size.length === 0) {
-    throw new Error("micro-commit: required 📊️metric footer could not be built because no language metrics were collected");
+    throw refuseCommitV1("missing","message.required-metric-footer-could-not");
   }
   validateCommitMetricsDeltaSum(metricBundle);
   const metrics = formatCommitMetricsLines(metricBundle);

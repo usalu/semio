@@ -37,6 +37,20 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "elements", kind: "scale-elements", record: "ScaledElements" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (items_en, items_de) = element_count_label(self.targets.len());
+        let (factors_en, factors_de) = vector_label(self.factors);
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.clone()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioModelSnapshot, Op> for ScaleElements
+where
+    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<ScaleElements>,
+{
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
         if !self.admissible() {
             return protocol::MutationOutcome::fatal("mutation.invariant", "scale factors must be finite and greater than 0", self.targets.clone());
@@ -46,14 +60,6 @@ where
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.identity() || !self.admissible(), base))
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let (items_en, items_de) = element_count_label(self.targets.len());
-        let (factors_en, factors_de) = vector_label(self.factors);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
-    }
-    fn target(&self) -> Vec<String> {
-        self.targets.clone()
     }
 }
 //#endregion 🔖️Payload

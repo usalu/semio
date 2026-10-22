@@ -2,7 +2,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::create_artifact_at;
 use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn sample_row(id: &str) -> SpaceArtifactRow {
@@ -85,7 +85,7 @@ async fn touch_artifact_inverse_law() {
 async fn create_artifact_diff_absorb_law() {
     let base = empty_space_index_snapshot("space-1");
     let d1 = create_artifact(sample_row("artifact-1")).diff(&base).diff().clone();
-    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
     let d2 = touch_artifact("artifact-1".into(), 55, "user:4".into()).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

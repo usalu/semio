@@ -1,0 +1,160 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "tree",
+  "expected",
+  "errors",
+  "membership",
+  "env",
+  "progressDirs",
+  "workspaceMarker"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "tree": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "expected": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "errors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "extra",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "extra": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "membership": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "current",
+     "missing",
+     "stale",
+     "fresh",
+     "orderChanged"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "current": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "missing": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "stale": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "fresh": {
+      "type": "boolean"
+     },
+     "orderChanged": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "env": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "env",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "env": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "progressDirs": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1
+  },
+  "workspaceMarker": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "nested"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "nested": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

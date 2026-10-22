@@ -202,38 +202,9 @@ impl protocol::list_delta::RowPatch<FormStep> for FormsStepPatch {
 
 
 //#region 🔖️Apply
-impl MutationDiff<FormsSnapshot> for FormsDiff {
-    fn apply(&self, snapshot: &FormsSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<FormsSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(version) = &self.version {
-            next.version = version.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.value.clone();
-        }
-        if let Some(delta) = &self.steps {
-            next.definition.steps = delta.commit_onto(&next.definition.steps, capability).map_err(|error| error.under(["steps"]))?;
-        }
-        if let Some(delta) = &self.responses {
-            next.responses = delta.commit_onto(&next.responses, capability).map_err(|error| error.under(["responses"]))?;
-        }
-        if self.steps.is_some() {
-            (next.structure, _) = forms_children_from_steps(&next.definition.steps);
-        }
-        if self.responses.is_some() {
-            next.results = crate::forms_results_child(&next.responses);
-        }
-        next.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.invariant".into(), message, target: Vec::new() })?;
-        Ok(next)
-    }
+impl MutationDiff<FormsSnapshot> for FormsDiff {}
 
+impl protocol::ColdMutationDiff<FormsSnapshot> for FormsDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -261,9 +232,48 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut FormsSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(version) = &self.version {
+            next.version = version.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.value.clone();
+        }
+        if let Some(delta) = &self.steps {
+            next.definition.steps = delta.commit_onto(&next.definition.steps, capability).map_err(|error| error.under(["steps"]))?;
+        }
+        if let Some(delta) = &self.responses {
+            next.responses = delta.commit_onto(&next.responses, capability).map_err(|error| error.under(["responses"]))?;
+        }
+        if self.steps.is_some() {
+            (next.structure, _) = forms_children_from_steps(&next.definition.steps);
+        }
+        if self.responses.is_some() {
+            next.results = crate::forms_results_child(&next.responses);
+        }
+        next.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.invariant".into(), message, target: Vec::new() })?;
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<FormsSnapshot> for FormsDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.steps.as_ref().is_none_or(FormsStepsDelta::is_empty) && self.responses.as_ref().is_none_or(FormsResponsesDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<FormsSnapshot> for FormsDiff {
     fn inverse(&self, base: &FormsSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -273,10 +283,6 @@ impl protocol::DiffAlgebra<FormsSnapshot> for FormsDiff {
             steps: self.steps.as_ref().map(|delta| delta.inverse(&base.definition.steps)),
             responses: self.responses.as_ref().map(|delta| delta.inverse(&base.responses)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.steps.as_ref().is_none_or(FormsStepsDelta::is_empty) && self.responses.as_ref().is_none_or(FormsResponsesDelta::is_empty)
     }
 }
 //#endregion 🔖️Apply

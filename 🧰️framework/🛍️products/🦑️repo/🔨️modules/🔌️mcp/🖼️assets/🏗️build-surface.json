@@ -10,8 +10,7 @@
       "en": "Agent that owns this call. Leases, capacity grants, cache lanes and compiler sessions of the run are attributed to it. Default: the agent of this MCP connection. Pass your own name when several agents share one connection.",
       "de": "Agent, dem dieser Aufruf gehört. Leases, Kapazitätszusagen, Cache-Bahnen und Compiler-Sitzungen des Laufs werden ihm zugeordnet. Standard: der Agent dieser MCP-Verbindung. Eigenen Namen angeben, wenn mehrere Agenten eine Verbindung teilen."
     },
-    "environment": { "agent": "SEMIO_AGENT_ID", "session": "SEMIO_SESSION", "lane": "SEMIO_CARGO_LANE" },
-    "connectionSources": ["SEMIO_AGENT_ID", "CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID"]
+    "environment": { "session": "SEMIO_AGENT_SESSION" }
   },
   "globals": [
     { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
@@ -40,7 +39,8 @@
     "--memory": { "type": "integer", "minimum": 1, "maximum": 1048576 },
     "--cpu": { "type": "integer", "minimum": 1, "maximum": 256 },
     "--jobs": { "type": "integer", "minimum": 1, "maximum": 256 },
-    "--violations": { "type": "integer", "minimum": 0, "maximum": 100000 }
+    "--violations": { "type": "integer", "minimum": 0, "maximum": 100000 },
+    "--weight": { "type": "integer", "minimum": 1, "maximum": 16 }
   },
   "environment": {
     "test_level": {
@@ -144,6 +144,7 @@
     { "operation": "leases", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
+    { "operation": "cache", "subcommand": "verify", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "remote", "kind": "query", "flags": [] },
     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
     { "operation": "incremental", "subcommand": "list", "kind": "query" },
@@ -155,13 +156,24 @@
       "subcommand": "setup",
       "kind": "maintain",
       "flags": [],
-      "positional": [{ "name": "which", "optional": true, "enum": ["nx", "bazel", "all"], "description": { "en": "Build tool to provision: nx, bazel or all (default: the selected tool).", "de": "Zu installierendes Build-Werkzeug: nx, bazel oder all (Standard: das gewählte Werkzeug)." } }]
+      "positional": [{ "name": "which", "optional": true, "enum": ["nx", "bazel", "toolchains", "all"], "description": { "en": "Tools to provision: nx, bazel, the native toolchains or all (default: the selected tool).", "de": "Zu installierende Werkzeuge: nx, bazel, die nativen Toolchains oder all (Standard: das gewählte Werkzeug)." } }]
+    },
+    {
+      "operation": "tools",
+      "subcommand": "verify",
+      "kind": "query",
+      "flags": [],
+      "positional": [{ "name": "pinned", "optional": true, "pattern": "^[a-z][a-z0-9-]*$", "description": { "en": "Pinned tool to compare with its pin, for example go (default: every pinned tool).", "de": "Gepinntes Werkzeug, das mit seinem Pin verglichen wird, zum Beispiel go (Standard: jedes gepinnte Werkzeug)." } }]
     },
     { "operation": "dependencies", "subcommand": "ensure", "kind": "maintain" },
     { "operation": "dependencies", "subcommand": "sync", "kind": "maintain", "anyOf": [["--all"], ["--scope"]] },
     { "operation": "dependencies", "subcommand": "lock", "kind": "maintain", "anyOf": [["--all"], ["--scope"]] },
     { "operation": "incremental", "subcommand": "prepare", "kind": "maintain" },
-    { "operation": "incremental", "subcommand": "discard", "kind": "maintain" }
+    { "operation": "incremental", "subcommand": "discard", "kind": "maintain" },
+    { "operation": "session", "subcommand": "open", "kind": "maintain", "flags": ["--weight", "--json"], "bind": { "--json": true } },
+    { "operation": "session", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier (default: the session of this call).", "de": "Kennung der Agent-Sitzung (Standard: die Sitzung dieses Aufrufs)." } }] },
+    { "operation": "session", "subcommand": "list", "kind": "query", "flags": ["--all", "--json"], "bind": { "--json": true } },
+    { "operation": "session", "subcommand": "close", "kind": "maintain", "flags": ["--dead", "--force", "--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier to close; leave empty together with dead=true.", "de": "Kennung der zu schließenden Agent-Sitzung; zusammen mit dead=true leer lassen." } }] }
   ],
   "excluded": [
     { "operation": "watch", "reason": { "en": "Never ends by itself; an agent starts reruns with run.", "de": "Endet nie von selbst; ein Agent startet Wiederholungen mit run." } },

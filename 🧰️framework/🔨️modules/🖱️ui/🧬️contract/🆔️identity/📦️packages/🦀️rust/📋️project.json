@@ -24,7 +24,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native",
+        "command": "repo ./📜️script.ts test-native",
         "forwardAllArgs": false
       },
       "defaultConfiguration": "prototype",

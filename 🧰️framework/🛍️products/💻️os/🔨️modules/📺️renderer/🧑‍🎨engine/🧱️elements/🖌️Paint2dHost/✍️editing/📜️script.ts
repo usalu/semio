@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🖌️ The OS-owned complete Paint2dHost editing source gate. */
 import { access } from "node:fs/promises";
@@ -18,4 +18,4 @@ class TestScript extends BundleScript {
   }
 }
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript), { invocation: original, defaultCommand: "test" }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dirname).register("test",TestScript), { invocation: original, defaultCommand: "test" }));

@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/reasoning-wires:build",
-    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/reasoning-wires:check",
-    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/reasoning-wires:test"
+    "build": "repo run @semio-tech/reasoning-wires:build",
+    "check": "repo run @semio-tech/reasoning-wires:check",
+    "test": "repo run @semio-tech/reasoning-wires:test"
   },
   "exports": {
     ".": {

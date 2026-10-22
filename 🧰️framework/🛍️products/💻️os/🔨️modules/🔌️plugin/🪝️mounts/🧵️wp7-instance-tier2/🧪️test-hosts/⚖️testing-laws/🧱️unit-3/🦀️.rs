@@ -27,7 +27,7 @@ use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
 #[cfg(test)]
 use semio_framework_plugin_command::PURE_HISTORY_UNAVAILABLE_CODE;
 use semio_framework::SET_HISTORY_COMMAND_FILTER_ACTION_ID;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 #[cfg(test)]
 use semio_framework_plugin_time_travel::TIME_TRAVEL_TURN_WALL_US;
 use semio_framework_ui_locale::Terminology;

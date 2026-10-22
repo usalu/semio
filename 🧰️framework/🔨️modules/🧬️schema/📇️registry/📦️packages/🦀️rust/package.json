@@ -2,11 +2,11 @@
   "name": "@semio-tech/schema-registry-rs",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-registry-rs:test",
-    "test-quick": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-registry-rs:test -- quick",
-    "test-long": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-registry-rs:test -- long",
-    "test-exhaustive": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-registry-rs:test -- exhaustive",
-    "test-neutrality": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-registry-rs:test-neutrality"
+    "test": "repo run @semio-tech/schema-registry-rs:test",
+    "test-quick": "repo run @semio-tech/schema-registry-rs:test -- quick",
+    "test-long": "repo run @semio-tech/schema-registry-rs:test -- long",
+    "test-exhaustive": "repo run @semio-tech/schema-registry-rs:test -- exhaustive",
+    "test-neutrality": "repo run @semio-tech/schema-registry-rs:test-neutrality"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

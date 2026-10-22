@@ -3,7 +3,7 @@
 
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 static CASE: std::sync::LazyLock<Case> = std::sync::LazyLock::new(|| Case::load("🏗️set-building/✅️raises-the-datum"));
 
@@ -15,7 +15,7 @@ fn close(left: f64, right: f64) -> bool {
 async fn the_building_elevation_moves_every_absolute_storey_elevation() {
     let before = kit::before(&CASE);
     let (diff, _) = kit::mutation(&CASE).diff(&before).into_parts();
-    let after = protocol::apply_diff(&diff, &before).expect("the diff applies");
+    let after = protocol::apply_diff_cold(&diff, &before).expect("the diff applies");
     let raised = after.buildings["bldg-1"].elevation - before.buildings["bldg-1"].elevation;
     assert!(raised.abs() > 0.0, "the case changes the building elevation");
     let (low, high) = (compute_storey_levels(&before), compute_storey_levels(&after));

@@ -27,7 +27,6 @@
         "bundle",
         "semver",
         "identity",
-        "main",
         "gc",
         "plugin",
         "test"
@@ -53,7 +52,10 @@
         "adapter",
         "support",
         "builtins",
-        "typeEnvironment"
+        "typeEnvironment",
+        "sourceUrl",
+        "product",
+        "packageManager"
       ],
       "properties": {
         "id": {
@@ -95,7 +97,6 @@
             "bundle",
             "semver",
             "identity",
-            "main",
             "gc",
             "plugin",
             "test"
@@ -152,9 +153,6 @@
             "identity": {
               "$ref": "#/definitions/Support"
             },
-            "main": {
-              "$ref": "#/definitions/Support"
-            },
             "gc": {
               "$ref": "#/definitions/Support"
             },
@@ -195,6 +193,43 @@
         "typeEnvironment": {
           "type": "string",
           "minLength": 1
+        },
+        "sourceUrl": {
+          "enum": [
+            "blob",
+            "data"
+          ]
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageManager": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "executable",
+            "add",
+            "exec"
+          ],
+          "properties": {
+            "executable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "add": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exec": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },
@@ -224,110 +259,6 @@
             "$ref": "#/definitions/Runtime"
           }
         }
-      },
-      "const": {
-        "version": 1,
-        "families": [
-          "glob",
-          "toml",
-          "jsonc",
-          "yaml",
-          "which",
-          "resolve",
-          "sleep",
-          "spawn",
-          "stdin",
-          "file",
-          "serve",
-          "sqlite",
-          "ffi",
-          "transpile",
-          "bundle",
-          "semver",
-          "identity",
-          "main",
-          "gc",
-          "plugin",
-          "test"
-        ],
-        "runtimes": [
-          {
-            "id": "bun",
-            "detect": "bun",
-            "executable": "bun",
-            "minimumVersion": "1.3.14",
-            "adapter": "🍞️bun",
-            "support": {
-              "glob": "native",
-              "toml": "native",
-              "jsonc": "native",
-              "yaml": "native",
-              "which": "native",
-              "resolve": "native",
-              "sleep": "native",
-              "spawn": "standard",
-              "stdin": "native",
-              "file": "native",
-              "serve": "native",
-              "sqlite": "native",
-              "ffi": "native",
-              "transpile": "native",
-              "bundle": "native",
-              "semver": "native",
-              "identity": "native",
-              "main": "portable",
-              "gc": "native",
-              "plugin": "native",
-              "test": "native"
-            },
-            "builtins": {
-              "prefixes": [
-                "bun:"
-              ],
-              "names": [
-                "bun"
-              ]
-            },
-            "typeEnvironment": "bun"
-          },
-          {
-            "id": "node",
-            "detect": "node",
-            "executable": "node",
-            "minimumVersion": "24.2.0",
-            "adapter": "🟢️node",
-            "support": {
-              "glob": "portable",
-              "toml": "portable",
-              "jsonc": "portable",
-              "yaml": "portable",
-              "which": "portable",
-              "resolve": "portable",
-              "sleep": "standard",
-              "spawn": "standard",
-              "stdin": "standard",
-              "file": "standard",
-              "serve": "standard",
-              "sqlite": "standard",
-              "ffi": "provider",
-              "transpile": "portable",
-              "bundle": "provider",
-              "semver": "portable",
-              "identity": "native",
-              "main": "portable",
-              "gc": "standard",
-              "plugin": "standard",
-              "test": "portable"
-            },
-            "builtins": {
-              "prefixes": [
-                "node:"
-              ],
-              "names": []
-            },
-            "typeEnvironment": "node"
-          }
-        ]
       }
     }
   }

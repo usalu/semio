@@ -6,11 +6,11 @@ async fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
     let operation = RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: 40.0 });
     let forward = operation.diff(&base).diff().clone();
     assert_eq!(forward, RasterConfigDiff { brush_size: Some(40.0), ..Default::default() });
-    let after = protocol::apply_diff(&forward, &base).unwrap();
+    let after = protocol::apply_diff_cold(&forward, &base).unwrap();
     assert_eq!(after.brush_size, 40.0);
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: 24.0 })]);
-    assert_eq!(protocol::apply_diff(backwards[0].diff(&after).diff(), &after).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(backwards[0].diff(&after).diff(), &after).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]

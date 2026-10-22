@@ -25,7 +25,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "flatten", entity: "node", kind: "flatten-node", record: "FlattenedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} reduzieren", self.at.layer))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.at.layer.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioDrawingSnapshot, Op> for FlattenNode
+where
+    Op: protocol::ColdMutation<SemioDrawingSnapshot, ReferenceDiff = crate::schema::diff::SemioDrawingDiff> + From<FlattenNode> + From<crate::schema::mutations::unflatten_node::UnflattenNode>,
+{
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioDrawingSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -34,12 +46,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} reduzieren", self.at.layer))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.at.layer.to_string()]
-    }
 }
 //#endregion 🔖️Payload
 

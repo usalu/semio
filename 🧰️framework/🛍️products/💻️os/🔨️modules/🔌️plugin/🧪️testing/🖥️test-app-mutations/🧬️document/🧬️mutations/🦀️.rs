@@ -14,7 +14,7 @@ pub use crate::test_app_mutation_fixture::document::mutations::set_slot_children
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot=crate::test_app_mutation_fixture::document::TestSnapshot,diff=crate::test_app_mutation_fixture::document::TestDiff,schema="plugin.testkit.document")]
+#[mutations(snapshot=crate::test_app_mutation_fixture::document::TestSnapshot,diff=crate::test_app_mutation_fixture::document::TestDiff,schema="plugin.testkit.document", reference = crate::test_app_mutation_fixture::document::TestSnapshot, reference_diff = crate::test_app_mutation_fixture::document::TestDiff)]
 pub enum TestMutation {
     SetCount(SetCount),
     SetLabel(SetLabel),

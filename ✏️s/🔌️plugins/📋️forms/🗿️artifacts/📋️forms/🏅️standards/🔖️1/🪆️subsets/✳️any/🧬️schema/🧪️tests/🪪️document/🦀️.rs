@@ -31,7 +31,7 @@ fn forms_document_contract_exact_json_and_sparse_edits() {
         let before: FormsSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff: FormsDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), case["diff"]);
-        let after = protocol::apply_diff(&diff, &before).expect("valid sparse change");
+        let after = protocol::apply_diff_cold(&diff, &before).expect("valid sparse change");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
 }
@@ -53,7 +53,7 @@ fn forms_document_contract_distinct_child_owners_and_typed_refusal() {
     assert_ne!(before.structure.child_id, before.results.child_id);
     let step = crate::FormStep { id: "added".into(), title: "Added".into(), description: None, blocks: Vec::new() };
     let diff = FormsDiff { steps: Some(crate::schema::diff::FormsStepsDelta::insertion(before.definition.steps.len(), step)), ..Default::default() };
-    let after = protocol::apply_diff(&diff, &before).unwrap();
+    let after = protocol::apply_diff_cold(&diff, &before).unwrap();
     assert_ne!(after.structure, before.structure, "apply re-derives the structure handle from the steps it leaves behind");
     assert_eq!(after.results, before.results, "the results handle follows the responses alone");
     assert_eq!(before, FormsSnapshot::default());

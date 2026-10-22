@@ -28,7 +28,7 @@ pub use semio_framework_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor
 #[cfg(test)]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use std::collections::BTreeSet;
 use semio_framework_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID;
 use semio_framework_value::{DslValue, ValueError};

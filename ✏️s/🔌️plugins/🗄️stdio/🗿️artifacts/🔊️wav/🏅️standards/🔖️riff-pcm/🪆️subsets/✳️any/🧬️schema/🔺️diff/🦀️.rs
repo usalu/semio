@@ -104,30 +104,9 @@ pub struct WavDiff {
     pub chunk_order: Option<Vec<WavChunkRef>>,
 }
 
-impl MutationDiff<WavSnapshot> for WavDiff {
-    fn apply(&self, base: &WavSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WavSnapshot> {
-        let mut next = base.clone();
-        if let Some(v) = &self.fmt {
-            next.fmt = v.clone();
-        }
-        if let Some(v) = &self.data {
-            next.data = v.clone();
-        }
-        apply_splices(&mut next.data, &self.data_splices).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-splice", message).at(["data"]))?;
-        if let Some(v) = self.fmt_pad_byte {
-            next.fmt_pad_byte = v;
-        }
-        if let Some(v) = self.data_pad_byte {
-            next.data_pad_byte = v;
-        }
-        if let Some(v) = &self.other_chunks {
-            next.other_chunks = v.clone();
-        }
-        if let Some(v) = &self.chunk_order {
-            next.chunk_order = v.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<WavSnapshot> for WavDiff {}
+
+impl protocol::ColdMutationDiff<WavSnapshot> for WavDiff {
     fn absorb(&mut self, other: Self) {
         if other.fmt.is_some() {
             self.fmt = other.fmt;
@@ -155,9 +134,41 @@ impl MutationDiff<WavSnapshot> for WavDiff {
             self.chunk_order = other.chunk_order;
         }
     }
+
+    fn apply(&self, unpublished: &mut WavSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(v) = &self.fmt {
+            next.fmt = v.clone();
+        }
+        if let Some(v) = &self.data {
+            next.data = v.clone();
+        }
+        apply_splices(&mut next.data, &self.data_splices).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-splice", message).at(["data"]))?;
+        if let Some(v) = self.fmt_pad_byte {
+            next.fmt_pad_byte = v;
+        }
+        if let Some(v) = self.data_pad_byte {
+            next.data_pad_byte = v;
+        }
+        if let Some(v) = &self.other_chunks {
+            next.other_chunks = v.clone();
+        }
+        if let Some(v) = &self.chunk_order {
+            next.chunk_order = v.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<WavSnapshot> for WavDiff {
+    fn is_empty(&self) -> bool {
+        self.fmt.is_none() && self.data.is_none() && self.data_splices.is_empty() && self.fmt_pad_byte.is_none() && self.data_pad_byte.is_none() && self.other_chunks.is_none() && self.chunk_order.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<WavSnapshot> for WavDiff {
     /// 🔁️ Concrete diff-level undo: every replaced field takes the value `base` carries, and a spliced lane puts back what its splices removed, last splice first.
     fn inverse(&self, base: &WavSnapshot) -> Self {
         let lane_replaced = self.data.as_ref().is_some_and(|data| *data != base.data);
@@ -170,9 +181,6 @@ impl DiffAlgebra<WavSnapshot> for WavDiff {
             other_chunks: self.other_chunks.as_ref().filter(|chunks| **chunks != base.other_chunks).map(|_| base.other_chunks.clone()),
             chunk_order: self.chunk_order.as_ref().filter(|order| **order != base.chunk_order).map(|_| base.chunk_order.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.fmt.is_none() && self.data.is_none() && self.data_splices.is_empty() && self.fmt_pad_byte.is_none() && self.data_pad_byte.is_none() && self.other_chunks.is_none() && self.chunk_order.is_none()
     }
 }
 

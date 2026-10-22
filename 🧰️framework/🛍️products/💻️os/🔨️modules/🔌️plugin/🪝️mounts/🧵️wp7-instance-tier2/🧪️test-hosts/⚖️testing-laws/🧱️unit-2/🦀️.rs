@@ -31,7 +31,7 @@ use semio_framework_plugin_decl_views::NoTransientMutation;
 #[cfg(test)]
 use semio_framework_plugin_window_kits::NodeGraphDeleteDispatch;
 use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 #[cfg(test)]
 use semio_framework_plugin_time_travel::SupersedeLedger;
 #[cfg(test)]

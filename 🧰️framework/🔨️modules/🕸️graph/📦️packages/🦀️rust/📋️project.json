@@ -60,7 +60,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts generate"
+        "command": "repo ./📜️script.ts generate"
       },
       "cache": true,
       "inputs": [
@@ -72,7 +72,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": [],
       "inputs": [
@@ -87,7 +87,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-generated"
+        "command": "repo ./📜️script.ts check-generated"
       }
     },
     "test": {
@@ -105,7 +105,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -123,7 +123,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts lint"
+        "command": "repo ./📜️script.ts lint"
       }
     },
     "test-manifest-contract": {
@@ -139,7 +139,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-manifest-contract"
+        "command": "repo ./📜️script.ts test-manifest-contract"
       }
     },
     "test-native": {
@@ -157,7 +157,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     }
   }

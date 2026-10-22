@@ -2,20 +2,21 @@
 use super::{OriginalOperationReceiving,slot::{OperationSlot,OperationRequest,OperationReply,OperationReturnAllocation}};
 use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeAllocation}};
 use std::{future::{Future,poll_fn},task::{Context,Poll}};
-use wasmtime::component::{Accessor,Linker};
+use semio_framework_plugin_host_engine::wasm;
+use wasm::component::{Accessor,Linker};
 /// 🪟️ Native host state owns only the inline request slot and its existing diagnostic surface.
 pub trait OperationHostStore:Send+'static{
  fn operation_slot(&mut self)->&mut OperationSlot;
  fn operation_log(&mut self,level:String,message:String);
  fn operation_now_ms(&mut self)->i64;
- fn operation_clock_us(&mut self)->Option<u64>;
+ fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>;
  fn operation_trace_span(&mut self,name:String);
 }
 /// 🚨️ Preserves the original refusal domain without formatting native diagnostic storage.
 #[derive(Debug)]
-pub enum ReceiveError { Refused(ValueError), Runtime(wasmtime::Error) }
+pub enum ReceiveError { Refused(ValueError), Runtime(wasm::Error) }
 /// 🫴️ Keeps an actual lifted DTO even when finishing its original receiving phase refuses.
-pub(crate) struct Received<R>{pub output:R,pub refusal:Option<ValueError>}
+pub struct Received<R>{pub output:R,pub refusal:Option<ValueError>}
 fn code(result:Result<(),ValueError>)->OperationReply{OperationReply::Code(result.err().map_or(0,|error|semio_framework_plugin_guest_contract::operation_authority::refusal_code(error.kind)))}
 fn count(value:u64)->Result<usize,ValueError>{usize::try_from(value).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign native request exceeds receiving address space"))}
 fn resolve(receiver:&mut dyn OriginalOperationReceiving,request:OperationRequest)->OperationReply{
@@ -37,14 +38,14 @@ pub fn return_bytes(walk:impl FnOnce(&mut dyn FnMut(super::return_types::pure::O
 pub async fn request<T:OperationHostStore>(accessor:&Accessor<T>,request:OperationRequest)->OperationReply{let mut posted=None;poll_fn(|context|accessor.with(|mut access|access.data_mut().operation_slot().poll_request(request,&mut posted,context))).await}
 fn drain<T:OperationHostStore>(accessor:&Accessor<T>,receiver:&mut dyn OriginalOperationReceiving)->Result<(),ValueError>{if let Some(request)=accessor.with(|mut access|access.data_mut().operation_slot().take_request()){let reply=resolve(receiver,request);accessor.with(|mut access|access.data_mut().operation_slot().reply(reply)).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original operation reply lost its receiving request"))?;}Ok(())}
 /// 🔌️ Registers every pure import and suspends only original operation admission requests.
-pub fn register<T:OperationHostStore>(linker:&mut Linker<T>)->wasmtime::Result<()>{
+pub fn register<T:OperationHostStore>(linker:&mut Linker<T>)->wasm::Result<()>{
  linker.allow_shadowing(true);
  let result=(||{
   let mut interface=linker.instance("semio:framework/pure@1.0.0")?;
-  interface.func_wrap("log",|mut store:wasmtime::StoreContextMut<'_,T>,(level,message):(String,String)|{store.data_mut().operation_log(level,message);Ok(())})?;
-  interface.func_wrap("operation-clock-us",|mut store:wasmtime::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_clock_us(),)))?;
-  interface.func_wrap("now-ms",|mut store:wasmtime::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_now_ms(),)))?;
-  interface.func_wrap("trace-span",|mut store:wasmtime::StoreContextMut<'_,T>,(name,):(String,)|{store.data_mut().operation_trace_span(name);Ok(())})?;
+  interface.func_wrap("log",|mut store:wasm::StoreContextMut<'_,T>,(level,message):(String,String)|{store.data_mut().operation_log(level,message);Ok(())})?;
+  interface.func_wrap("operation-clock-us",|mut store:wasm::StoreContextMut<'_,T>,(clock_binding,):(u64,)|Ok((store.data_mut().operation_clock_us(clock_binding),)))?;
+  interface.func_wrap("now-ms",|mut store:wasm::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_now_ms(),)))?;
+  interface.func_wrap("trace-span",|mut store:wasm::StoreContextMut<'_,T>,(name,):(String,)|{store.data_mut().operation_trace_span(name);Ok(())})?;
   interface.func_wrap_concurrent("operation-begin",|accessor,():()|Box::pin(async move{Ok((match request(accessor,OperationRequest::Begin).await{OperationReply::Begin(value)=>value,_=>Err(4)},))}))?;
   interface.func_wrap_concurrent("operation-progress",|accessor,(completed,total,owned):(u64,u64,u64)|Box::pin(async move{Ok((match request(accessor,OperationRequest::Progress{completed,total,owned}).await{OperationReply::Code(value)=>value,_=>4},))}))?;
   interface.func_wrap_concurrent("operation-allocation",|accessor,(bytes,owned,next,maximum):(u64,u64,u64,u64)|Box::pin(async move{Ok((match request(accessor,OperationRequest::Allocation{bytes,owned,next,maximum}).await{OperationReply::Code(value)=>value,_=>4},))}))?;
@@ -54,7 +55,7 @@ pub fn register<T:OperationHostStore>(linker:&mut Linker<T>)->wasmtime::Result<(
  })();linker.allow_shadowing(false);result
 }
 /// 🛂️ Pumps exact requests with the original borrowed caller before resuming the guest or publishing.
-pub async fn receive<T:OperationHostStore,R,F:Future<Output=wasmtime::Result<R>>>(accessor:&Accessor<T>,receiver:&mut dyn OriginalOperationReceiving,operation:F)->Result<R,ReceiveError>{
+pub async fn receive<T:OperationHostStore,R,F:Future<Output=wasm::Result<R>>>(accessor:&Accessor<T>,receiver:&mut dyn OriginalOperationReceiving,operation:F)->Result<R,ReceiveError>{
  accessor.with(|mut access|access.data_mut().operation_slot().arm()).map_err(|_|ReceiveError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"original operation receiving slot is occupied")))?;
  let mut operation=std::pin::pin!(operation);
  let result=poll_fn(|context:&mut Context<'_>|{
@@ -67,7 +68,7 @@ pub async fn receive<T:OperationHostStore,R,F:Future<Output=wasmtime::Result<R>>
  accessor.with(|mut access|access.data_mut().operation_slot().disarm(1));result
 }
 /// 🧳️ Snapshot owners retain both the same instance and returned DTO on a finish denial.
-pub async fn receive_retained<T:OperationHostStore,R,F:Future<Output=wasmtime::Result<R>>>(accessor:&Accessor<T>,receiver:&mut dyn OriginalOperationReceiving,operation:F)->Result<Received<R>,ReceiveError>{
+pub async fn receive_retained<T:OperationHostStore,R,F:Future<Output=wasm::Result<R>>>(accessor:&Accessor<T>,receiver:&mut dyn OriginalOperationReceiving,operation:F)->Result<Received<R>,ReceiveError>{
  accessor.with(|mut access|access.data_mut().operation_slot().arm()).map_err(|_|ReceiveError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot receiving slot is occupied")))?;
  let mut operation=std::pin::pin!(operation);
  let result=poll_fn(|context:&mut Context<'_>|{

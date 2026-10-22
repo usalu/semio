@@ -111,21 +111,9 @@ impl protocol::list_delta::RowPatch<CuratedItem> for CurationCuratedPatchEntry {
     }
 }
 
-impl MutationDiff<CurationSnapshot> for CurationDiff {
-    fn apply(&self, snapshot: &CurationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CurationSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.child-identity", message))?;
-        let mut next = snapshot.clone();
-        if let Some(handle) = &self.catalog {
-            next.catalog = handle.clone();
-        }
-        if let Some(delta) = &self.stock_extra {
-            next.stock_extra = delta.commit_onto(&next.stock_extra, capability).map_err(|error| error.under(["stockExtra"]))?;
-        }
-        if let Some(delta) = &self.curated {
-            next.curated = delta.commit_onto(&next.curated, capability).map_err(|error| error.under(["curated"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<CurationSnapshot> for CurationDiff {}
+
+impl protocol::ColdMutationDiff<CurationSnapshot> for CurationDiff {
     fn absorb(&mut self, other: Self) {
         if other.catalog.is_some() {
             self.catalog = other.catalog;
@@ -145,18 +133,38 @@ impl MutationDiff<CurationSnapshot> for CurationDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut CurationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.child-identity", message))?;
+        let mut next = snapshot.clone();
+        if let Some(handle) = &self.catalog {
+            next.catalog = handle.clone();
+        }
+        if let Some(delta) = &self.stock_extra {
+            next.stock_extra = delta.commit_onto(&next.stock_extra, capability).map_err(|error| error.under(["stockExtra"]))?;
+        }
+        if let Some(delta) = &self.curated {
+            next.curated = delta.commit_onto(&next.curated, capability).map_err(|error| error.under(["curated"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CurationSnapshot> for CurationDiff {
+    fn is_empty(&self) -> bool {
+        self.catalog.is_none() && self.stock_extra.as_ref().is_none_or(CurationStockExtraDelta::is_empty) && self.curated.as_ref().is_none_or(CurationCuratedDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CurationSnapshot> for CurationDiff {
     fn inverse(&self, base: &CurationSnapshot) -> Self {
         Self {
             catalog: self.catalog.as_ref().map(|_| base.catalog.clone()),
             stock_extra: self.stock_extra.as_ref().map(|delta| delta.inverse(&base.stock_extra)),
             curated: self.curated.as_ref().map(|delta| delta.inverse(&base.curated)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.catalog.is_none() && self.stock_extra.as_ref().is_none_or(CurationStockExtraDelta::is_empty) && self.curated.as_ref().is_none_or(CurationCuratedDelta::is_empty)
     }
 }
 //#endregion 🔖️Apply

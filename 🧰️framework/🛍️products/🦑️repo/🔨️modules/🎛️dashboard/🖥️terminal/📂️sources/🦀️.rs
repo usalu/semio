@@ -1,205 +1,100 @@
-//! 📂️ Native workspace browsing and document requests kept outside the terminal event loop.
-
-use super::windows::{Body, Dashboard, Kind, Place};
-use semio_framework_filesystem_workspace::{Document, Entry, EntryRevision, Error, Progress, Workspace, Stage, ErrorKind};
-#[path = "🎮️management/🦀️.rs"]
-pub(super) mod management;
-#[path="🕰️history/🦀️.rs"]
-pub(super) mod history;
-use semio_framework_filesystem_workspace::commands::{self, DocumentBuffer, EntryForm, HistoryForm, HistoryAction, Response, Message};
-pub(super) use semio_framework_filesystem_workspace::commands::Request;
-use management::EntryAction;
-use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, Event};
+//! 📂️ Binds app windows to the canonical workspace interaction owner.
+use super::windows::{Body,Dashboard,DashboardWindow,Kind,Place};
+use dashboard_source_view::{Context,SourceWindowPort,WindowRef,WindowMut,Body as ViewBody,OwnedBody,Effect as SourceEffect,Request,EntryAction};
+use semio_framework_filesystem_workspace::{Entry,Error,Progress,Workspace,Stage,ErrorKind};
+use semio_framework_filesystem_workspace::commands::{self,DocumentBuffer,HistoryAction,Response,Message};
+use semio_framework_ui_tui_core::event::{KeyEvent,Key,Event};
 use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_frame::scene::NodeContent;
-use semio_framework_ui_tui_widgets::widget::{EditorState, WidgetState};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc::{self, Receiver}};
+use semio_framework_ui_tui_frame::scene::{Node,NodeContent};
+use semio_framework_ui_tui_widgets::widget::{WidgetState,EditorState};
+use std::sync::{Arc,atomic::{AtomicBool,Ordering},mpsc};
 
-const SOURCE_MESSAGE_LIMIT: usize = commands::MESSAGE_CAPACITY;
-
-pub(super) struct Job { window: String, operation: u64, generation: u64, cancelled: Arc<AtomicBool>, receive: Receiver<Message>, protected: Vec<String> }
-impl Drop for Job { fn drop(&mut self) { self.cancelled.store(true, Ordering::Release); } }
-
-fn parent(path: &str) -> String { path.rsplit_once('/').map_or_else(String::new, |(parent, _)| parent.into()) }
-
-impl Dashboard {
-    pub fn open_files(&mut self, tui: &mut Tui) {
-        let index = self.windows.iter().position(|window| matches!(window.body, Body::Files(_))).unwrap_or_else(|| self.create_window(tui, Kind::Files, Place::Preference));
-        self.focus_window(tui, index);
+struct Windows<'a>{windows:&'a mut [DashboardWindow],input_mode:&'a mut bool}
+fn read(window:&DashboardWindow)->WindowRef<'_>{WindowRef{id:&window.id,list:window.list,caption:window.caption,body:match &window.body{Body::Files(value)=>ViewBody::Files(value),Body::Document(value)=>ViewBody::Document(value.as_deref()),_=>ViewBody::Other}}}
+fn write(window:&mut DashboardWindow)->WindowMut<'_>{WindowMut{id:&window.id,list:window.list,body:match &mut window.body{Body::Files(value)=>ViewBody::Files(value),Body::Document(value)=>ViewBody::Document(value.as_deref_mut()),_=>ViewBody::Other}}}
+impl SourceWindowPort for Windows<'_>{
+    type Windows<'a>=std::iter::Map<std::slice::Iter<'a,DashboardWindow>,fn(&'a DashboardWindow)->WindowRef<'a>> where Self:'a;
+    type WindowsMut<'a>=std::iter::Map<std::slice::IterMut<'a,DashboardWindow>,fn(&'a mut DashboardWindow)->WindowMut<'a>> where Self:'a;
+    fn windows(&self)->Self::Windows<'_>{self.windows.iter().map(read)}
+    fn windows_mut(&mut self)->Self::WindowsMut<'_>{self.windows.iter_mut().map(write)}
+    fn window(&self,index:usize)->WindowRef<'_>{read(&self.windows[index])}
+    fn window_mut(&mut self,index:usize)->WindowMut<'_>{write(&mut self.windows[index])}
+    fn len(&self)->usize{self.windows.len()}
+    fn set_model(&mut self,index:usize,body:OwnedBody){self.windows[index].body=match body{OwnedBody::Files(value)=>Body::Files(value),OwnedBody::Document(value)=>Body::Document(value)};}
+    fn replace(&mut self,tui:&mut Tui,index:usize,kind:dashboard_source_view::Kind){
+        let window=&mut self.windows[index];
+        let mut focus=tui.focus();let mut focused=false;
+        while let Some(node)=focus{if node==window.chrome{focused=true;break;}focus=tui.scene.try_node(node).and_then(|node|node.parent());}
+        tui.scene.remove(window.root);
+        let root=tui.scene.add(window.chrome,Node::new(NodeContent::Box));
+        tui.scene.node_mut(root).set_constraint(super::windows::node_constraint());
+        let(list,caption)=dashboard_source_view::mount(tui,root,kind);
+        window.root=root;window.list=list;window.caption=Some(caption);window.input=None;window.tree=None;window.editor_slot=None;window.pane=Default::default();
+        window.body=match kind{dashboard_source_view::Kind::Files=>Body::Files(Default::default()),dashboard_source_view::Kind::Document=>Body::Document(None)};
+        *self.input_mode=false;
+        if focused||tui.focus().is_none_or(|node|!tui.scene.contains(node)){tui.set_focus(Some(list));}
+    }
+}
+impl Dashboard{
+    fn with_sources<R>(&mut self,action:impl FnOnce(&mut dashboard_source_view::View<'_,Windows<'_>>)->R)->R{
+        let context=Context{root:&self.root,keymap:&self.keymap,locale:self.locale,waker:self.waker.clone()};
+        let mut port=Windows{windows:&mut self.windows,input_mode:&mut self.input_mode};
+        let(result,effects)=self.source.interact(&mut port,context,action);
+        self.source_effects.extend(effects);self.apply_local_source_effects();result
+    }
+    fn apply_local_source_effects(&mut self){
+        while matches!(self.source_effects.first(),Some(SourceEffect::Notice(_)|SourceEffect::Failure(_)|SourceEffect::Request(..))){
+            match self.source_effects.remove(0){
+                SourceEffect::Notice(value)=>self.notice=value,
+                SourceEffect::Failure(value)=>self.record_failure(value),
+                SourceEffect::Request(window,request)=>if let Some(index)=self.window_index(&window){self.request_source(index,request);},
+                _=>unreachable!()
+            }
+        }
+    }
+    pub fn flush_source_effects(&mut self,tui:&mut Tui){
+        while !self.source_effects.is_empty(){
+            match self.source_effects.remove(0){
+                SourceEffect::Notice(value)=>self.notice=value,
+                SourceEffect::Failure(value)=>self.record_failure(value),
+                SourceEffect::Focus(window)=>if let Some(index)=self.window_index(&window){self.focus_window(tui,index);},
+                SourceEffect::Close(window)=>if let Some(index)=self.window_index(&window){self.close_window(tui,index);},
+                SourceEffect::Remount=>self.remount(tui),
+                SourceEffect::Signals(signals)=>self.on_signals(tui,signals),
+                SourceEffect::Request(window,request)=>if let Some(index)=self.window_index(&window){self.request_source(index,request);}
+            }
+        }
+    }
+    pub fn open_files(&mut self,tui:&mut Tui){
+        let index=self.windows.iter().position(|window|matches!(window.body,Body::Files(_))).unwrap_or_else(||self.create_window(tui,Kind::Files,Place::Preference));
+        self.focus_window(tui,index);
         let request=match &self.windows[index].body{Body::Files(files)=>files.browse(files.directory.clone()),_=>Request::List(String::new())};
         self.request_source(index,request);
     }
-
-    fn request_source(&mut self, index: usize, request: Request) {
-        if let Some(dirty)=self.windows.iter().position(|window|matches!(&window.body,Body::Document(Some(document))if document.dirty&&request.management_paths().into_iter().flatten().any(|path|commands::path_contains(path,&document.document.path)))){self.dirty_close(dirty);return;}
-        if let Some(job) = &self.source_job {
-            job.cancelled.store(true, Ordering::Release);
-            self.source_pending = Some((self.windows[index].id.clone(), request));
-            self.notice = Some(self.text().source_busy.as_str().into());
-            return;
-        }
-        let Some(operation) = self.source_operation.checked_add(1) else { return }; self.source_operation = operation;
-        self.notice = Some(self.text().source_starting.fill(&[("cancel", &self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, "cancel-source").unwrap_or_default())]).into_string());
-        let protected=request.management_paths().into_iter().flatten().map(str::to_owned).collect();
-        let root = self.root.clone();
-        let generation = match &self.windows[index].body { Body::Document(Some(document)) => document.generation, _ => 0 };
-        let cancelled = Arc::new(AtomicBool::new(false)); let signal = cancelled.clone(); let waker = self.waker.clone();
-        let wake=waker.map(|waker|Arc::new(move||{waker.wake();}) as Arc<dyn Fn()+Send+Sync>);
-        let spawn=commands::spawn(root,request,signal,wake);
-        self.adopt_source_worker(index,operation,generation,cancelled,protected,spawn);
+    fn request_source(&mut self,index:usize,request:Request){self.with_sources(|view|view.request_source(index,request));}
+    pub fn cancel_source(&mut self){self.with_sources(|view|view.cancel_source());}
+    pub fn poll_documents(&mut self,tui:&mut Tui)->bool{let value=self.with_sources(|view|view.poll_documents(tui));self.flush_source_effects(tui);value}
+    pub fn paint_files(&mut self,tui:&mut Tui,index:usize){self.with_sources(|view|view.paint_files(tui,index));self.flush_source_effects(tui);}
+    pub fn files_key(&mut self,tui:&mut Tui,index:usize,key:&KeyEvent){self.with_sources(|view|view.files_key(tui,index,key));self.flush_source_effects(tui);}
+    pub fn activate_file(&mut self,tui:&Tui,index:usize,selected:usize){self.with_sources(|view|view.activate_file(tui,index,selected));}
+    pub fn save_document(&mut self,tui:&Tui,index:usize){self.with_sources(|view|view.save_document(tui,index));}
+    pub fn dirty_close(&mut self,index:usize)->bool{self.with_sources(|view|view.dirty_close(index))}
+    pub fn reload_document(&mut self,index:usize){self.with_sources(|view|view.reload_document(index));}
+    pub fn discard_document(&mut self,tui:&mut Tui,index:usize){self.with_sources(|view|view.discard_document(tui,index));self.flush_source_effects(tui);}
+    pub fn refresh_documents(&mut self,tui:&mut Tui){self.with_sources(|view|view.refresh_documents(tui));self.flush_source_effects(tui);}
+    pub fn begin_management(&mut self,tui:&mut Tui,index:usize,kind:EntryAction){self.with_sources(|view|view.begin_management(tui,index,kind));self.flush_source_effects(tui);}
+    pub fn management_paste(&mut self,tui:&mut Tui,index:usize,text:&str)->bool{let value=self.with_sources(|view|view.management_paste(tui,index,text));self.flush_source_effects(tui);value}
+    pub fn management_blocks_edit(&self,index:usize)->bool{match &self.windows[index].body{Body::Document(Some(document))=>self.source.blocks_path(&document.document.path),_=>false}}
+    pub fn begin_history(&mut self,tui:&mut Tui,index:usize,action:Option<HistoryAction>){
+        if self.source.active(){self.notice=Some(self.text().source_busy.as_str().into());return;}
+        let index=if matches!(self.windows[index].body,Body::Files(_)){index}else{self.create_window(tui,Kind::Files,Place::Preference)};
+        self.focus_window(tui,index);self.request_source(index,Request::InspectHistory(action));
     }
-
-    fn adopt_source_worker(&mut self,index:usize,operation:u64,generation:u64,cancelled:Arc<AtomicBool>,protected:Vec<String>,result:std::io::Result<Receiver<Message>>){match result{Ok(receive)=>self.source_job=Some(Job{window:self.windows[index].id.clone(),operation,generation,cancelled,receive,protected}),Err(error)=>{self.unlock_management(index);self.notice=Some(self.text().source_failed.fill(&[("problem",&error.to_string())]).into_string());}}}
-
-    pub fn cancel_source(&mut self) { self.source_pending = None; if let Some(job) = &self.source_job { job.cancelled.store(true, Ordering::Release); } self.notice = Some(self.text().source_document_cancelled.as_str().into()); }
-
-    pub fn poll_documents(&mut self, tui: &mut Tui) -> bool {
-        let mut changed = false;
-        let mut remaining = SOURCE_MESSAGE_LIMIT;
-        while remaining > 0 {
-            let Some(job) = &self.source_job else { break };
-            let message = match job.receive.try_recv() {
-                Ok(message) => message,
-                Err(mpsc::TryRecvError::Empty) => break,
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    let window=job.window.clone();self.source_job.take();if let Some(index)=self.window_index(&window){self.unlock_management(index);} self.notice = Some(self.text().source_worker_failed.as_str().into());
-                    if let Some((window, request)) = self.source_pending.take() { if let Some(index) = self.window_index(&window) { self.request_source(index, request); } }
-                    changed = true; break;
-                }
-            };
-            remaining -= 1;
-            let (window, operation, generation) = (job.window.clone(), job.operation, job.generation);
-            let cancelled = job.cancelled.load(Ordering::Acquire);
-            let protected=job.protected.clone();
-            let mutation = !protected.is_empty();
-            if cancelled && matches!(message, Message::Progress(_)) { continue; }
-            let committed_save = message.authoritative();
-            if matches!(message, Message::Finished(_)) && ((cancelled && !committed_save) || operation != self.source_operation || self.window_index(&window).is_none()) {
-                self.source_job.take();if let Some(index)=self.window_index(&window){self.unlock_management(index);}
-                if let Some((window, request)) = self.source_pending.take() { if let Some(index) = self.window_index(&window) { self.request_source(index, request); } }
-                changed = true;
-                break;
-            }
-            let Some(index) = self.window_index(&window) else { continue };
-            changed = true;
-            match message {
-                Message::Progress(progress)=>self.notice=Some(self.text().source_progress(&progress,&self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix,"cancel-source").unwrap_or_default())),
-                Message::Finished(result) => {
-                    self.source_job.take();
-                    match result {
-                        Ok(Response::Inspected(path,kind,revision)) => self.show_management_form(tui,index,kind,path,Some(revision)),
-                        Ok(Response::CreatedFile(document)) => { self.finish_management_form(tui,index); self.adopt_created_document(tui,index,document); }
-                        Ok(Response::CreatedDirectory(entry)) => self.management_completed(tui,index,&entry.path,None),
-                        Ok(Response::Renamed(previous,entry,document)) => { self.reconcile_renamed_documents(tui,&previous,&entry.path,document); self.management_completed(tui,index,&entry.path,None); }
-                        Ok(Response::Retained(retained)) => { self.reconcile_retained_documents(tui,&retained.path); self.management_completed(tui,index,&retained.path,Some(retained.recovery_path)); }
-                        Ok(response @ (Response::HistoryPage(_) | Response::HistoryInspected(..) | Response::HistoryChanged(..)))=>self.adopt_history_result(tui,index,response),
-                        Ok(Response::RecoveryList(directory,entries))=>{if self.dirty_close(index){continue;}if !matches!(self.windows[index].body,Body::Files(_)){self.set_body(tui,index,Kind::Files,None);}if let Body::Files(files)=&mut self.windows[index].body{files.adopt_recovery_list(directory,entries);}self.paint_files(tui,index);self.notice=Some(self.text().source_read_only.as_str().into());}
-                        Ok(Response::List(directory,entries))=>{if self.dirty_close(index){continue;}if !matches!(self.windows[index].body,Body::Files(_)){self.set_body(tui,index,Kind::Files,None);}if let Body::Files(files)=&mut self.windows[index].body{files.adopt_list(directory,entries);}self.paint_files(tui,index);self.notice=match &self.windows[index].body{Body::Files(files)=>files.recovery.as_ref().map(|path|self.text().source_retained.fill(&[("path",path),("inspect",&self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix,"inspect-recovery").unwrap_or_default())]).into_string()),_=>None};}
-                        Ok(response @ (Response::Load(_) | Response::Recovery(_))) => {
-                            let (document, read_only) = match response { Response::Load(document) => (document, false), Response::Recovery(document) => (document, true), _ => unreachable!() };
-                            if matches!(&self.windows[index].body, Body::Document(Some(current)) if current.generation != generation || current.dirty) { continue; }
-                            self.set_body(tui, index, Kind::Document, None);
-                            let mut editor = EditorState::new(document.text.clone(), 1_048_576); editor.cursor = 0; editor.read_only = read_only;
-                            if let Some(widget) = tui.scene.node_mut(self.windows[index].list).widget() { *widget = WidgetState::Editor(editor); }
-                            self.windows[index].body = Body::Document(Some(Box::new(DocumentBuffer::new(document,read_only))));
-                            self.notice = Some(self.text().source_reloaded.as_str().into());
-                        }
-                        Ok(Response::Save(document)) => {
-                            let node = self.windows[index].list;
-                            if let (Body::Document(Some(current)),NodeContent::Widget(WidgetState::Editor(editor)))=(&mut self.windows[index].body,&tui.scene.node(node).content){current.saved(document,&editor.value);}
-                            self.notice = Some(self.text().source_saved.as_str().into());
-                        }
-                        Err(error) => {
-                            if mutation{self.mark_uncertain_documents(tui,&protected,error.recovery_path.as_deref());}
-                            self.unlock_management(index);if let Body::Files(files)=&mut self.windows[index].body { if error.recovery_path.is_some(){files.recovery=error.recovery_path.clone();} }
-                            if let Body::Document(Some(current)) = &mut self.windows[index].body { current.record_failure(&error); }
-                            self.notice = Some(self.text().source_failure(&error,mutation));
-                        }
-                    }
-                    self.remount(tui);
-                    if let Some((window, request)) = self.source_pending.take() { if let Some(index) = self.window_index(&window) { self.request_source(index, request); } }
-                    break;
-                }
-            }
-        }
-        if remaining == 0 && self.source_job.is_some() { if let Some(waker) = &self.waker { waker.wake(); } }
-        changed
-    }
-
-    pub fn paint_files(&mut self, tui: &mut Tui, index: usize) {
-        let node = self.windows[index].list;
-        let Body::Files(files) = &mut self.windows[index].body else { return };
-        if files.form.is_some() || files.history_form.is_some() { return; }
-        if let Some(widget)=tui.scene.node_mut(node).widget() { if !matches!(widget,WidgetState::List(_)){*widget=WidgetState::List(semio_framework_ui_tui_widgets::widget::ListState::new(Vec::new()));} }
-        let items=files.rows();
-        if let Some(WidgetState::List(list)) = tui.scene.node_mut(node).widget() { list.selected = list.selected.min(items.len().saturating_sub(1)); list.marks = vec![false; items.len()]; list.items = items; }
-    }
-
-    pub fn files_key(&mut self, tui: &mut Tui, index: usize, key: &KeyEvent) {
-        if self.history_key(tui,index,key)||self.management_key(tui,index,key) { return; }
-        let mut request = None;
-        if let Body::Files(files) = &mut self.windows[index].body {
-            match key.key {
-                Key::Char(c) if key.mods & (mods::CTRL | mods::ALT) == 0 && !c.is_control() && files.query.len() + c.len_utf8() <= 256 => files.query.push(c),
-                Key::Backspace if !files.query.is_empty() => { files.query.truncate(semio_framework_ui_tui_core::text::previous_boundary(&files.query, files.query.len())); }
-                Key::Backspace | Key::Esc => request = Some(files.browse_parent()),
-                _ => { let signals = tui.dispatch(&Event::Key(*key)); self.on_signals(tui, signals); return; }
-            }
-        }
-        if let Some(request) = request { self.request_source(index,request); } else { self.paint_files(tui, index); }
-    }
-
-    pub fn activate_file(&mut self,_tui:&Tui,index:usize,selected:usize){let request=match &self.windows[index].body{Body::Files(files)=>files.activate(selected),_=>None};if let Some(request)=request{self.request_source(index,request);}}
-
-    pub fn save_document(&mut self, tui: &Tui, index: usize) {
-        if self.management_blocks_edit(index){self.notice=Some(self.text().source_busy.as_str().into());return;}
-        let Body::Document(Some(current)) = &self.windows[index].body else { return };
-        if current.read_only { self.notice = Some(self.text().source_read_only.as_str().into()); return; }
-        let NodeContent::Widget(WidgetState::Editor(editor)) = &tui.scene.node(self.windows[index].list).content else { return };
-        let request = current.save_request(editor.value.clone());
-        self.request_source(index, request);
-    }
-
-    pub fn inspect_recovery(&mut self,tui:&mut Tui,index:usize){let path=match &self.windows[index].body{Body::Document(Some(document))=>document.recovery.clone(),Body::Files(files)=>Some(files.recovery.clone().unwrap_or_default()),_=>None};let Some(path)=path else{return;};let request=if path.is_empty(){Request::HistoryPage(None)}else{Request::Recovery(path)};let target=self.create_window(tui,Kind::Files,Place::Preference);self.focus_window(tui,target);self.request_source(target,request);}
-
-    pub fn dirty_close(&mut self, index: usize) -> bool {
-        if matches!(&self.windows[index].body,Body::Files(files)if files.history_form.as_ref().is_some_and(|form|form.busy))||self.management_blocks_edit(index)||self.source_job.as_ref().is_some_and(|job|job.window==self.windows[index].id&&!job.protected.is_empty())||self.source_pending.as_ref().is_some_and(|(window,request)|window==&self.windows[index].id&&request.management_paths().into_iter().any(|path|path.is_some())){self.notice=Some(self.text().source_busy.as_str().into());return true;}
-        let dirty = matches!(&self.windows[index].body, Body::Document(Some(document)) if document.dirty);
-        if dirty {
-            if let Body::Document(Some(document)) = &mut self.windows[index].body { document.discard_confirmation = true; }
-            let save = self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, "save-document").unwrap_or_default();
-            let discard = self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, "discard-document").unwrap_or_default();
-            self.notice = Some(self.text().source_confirm_discard.fill(&[("save", &save), ("discard", &discard)]).into_string());
-        }
-        dirty
-    }
-
-    pub fn reload_document(&mut self, index: usize) {
-        if self.dirty_close(index) { return; }
-        if let Body::Document(Some(current)) = &self.windows[index].body { self.request_source(index, current.reload_request()); }
-    }
-
-    pub fn discard_document(&mut self, tui: &mut Tui, index: usize) {
-        let Body::Document(Some(current)) = &self.windows[index].body else { return };
-        if current.read_only { self.close_window(tui, index); return; }
-        if current.dirty && !current.discard_confirmation { self.dirty_close(index); return; }
-        let directory = parent(&current.document.path);
-        self.cancel_source(); self.set_body(tui, index, Kind::Files, None);
-        self.request_source(index, Request::List(directory));
-    }
-
-    pub fn refresh_documents(&mut self, tui: &mut Tui) {
-        for index in 0..self.windows.len() {
-            let caption = match &self.windows[index].body {
-                Body::Files(files) => self.text().source_browser_caption(files),
-                Body::Document(Some(current)) => {
-                    let position = match &tui.scene.node(self.windows[index].list).content { NodeContent::Widget(WidgetState::Editor(editor)) => { let (line, column) = editor.position(); self.text().source_position.fill(&[("line", &line.to_string()), ("column", &column.to_string())]).into_string() }, _ => String::new() };
-                    self.text().source_document_caption(current,&position)
-                }
-                _ => continue,
-            };
-            if let Some(node) = self.windows[index].caption { if let Some(WidgetState::Label(label)) = tui.scene.node_mut(node).widget() { if label.text != caption { label.text = caption; } } }
-        }
+    pub fn next_history_page(&mut self,index:usize){self.with_sources(|view|view.next_history_page(index));}
+    pub fn inspect_recovery(&mut self,tui:&mut Tui,index:usize){
+        let path=match &self.windows[index].body{Body::Document(Some(document))=>document.recovery.clone(),Body::Files(files)=>Some(files.recovery.clone().unwrap_or_default()),_=>None};
+        let Some(path)=path else{return;};let request=if path.is_empty(){Request::HistoryPage(None)}else{Request::Recovery(path)};
+        let target=self.create_window(tui,Kind::Files,Place::Preference);self.focus_window(tui,target);self.request_source(target,request);
     }
 }
 
@@ -224,7 +119,7 @@ mod tests {
 
     fn settle(dashboard: &mut Dashboard, tui: &mut Tui) {
         let until = Instant::now() + Duration::from_secs(10);
-        while dashboard.source_job.is_some() {
+        while dashboard.source.active() {
             dashboard.poll_documents(tui); dashboard.frame(tui);
             assert!(Instant::now() < until, "source worker did not settle: {:?}", dashboard.notice);
             std::thread::sleep(Duration::from_millis(1));
@@ -266,9 +161,9 @@ mod tests {
     fn source_worker_disconnect_retires_without_losing_a_document() {
         let (mut dashboard, mut tui, root) = view();
         let (send, receive) = mpsc::sync_channel(1); drop(send);
-        dashboard.source_operation = 1;
-        dashboard.source_job = Some(Job { window: dashboard.windows[0].id.clone(), operation: 1, generation: 0, cancelled: Arc::new(AtomicBool::new(false)), receive, protected:Vec::new() });
-        assert!(dashboard.poll_documents(&mut tui)); assert!(dashboard.source_job.is_none());
+        
+        dashboard_source_view::testing::observe(&mut dashboard.source,dashboard_source_view::testing::Worker{ window: dashboard.windows[0].id.clone(), operation: 1, generation: 0, cancelled: Arc::new(AtomicBool::new(false)), receive, protected:Vec::new() });
+        assert!(dashboard.poll_documents(&mut tui)); assert!(!dashboard.source.active());
         assert!(dashboard.notice.as_deref().unwrap().contains("ended unexpectedly"));
         std::fs::remove_dir_all(root).unwrap();
     }
@@ -283,8 +178,8 @@ mod tests {
         dashboard.windows[0].body = Body::Document(Some(Box::new(DocumentBuffer { document: before, read_only: false, recovery: None, dirty: true, generation: 1, discard_confirmation: false })));
         if let Some(widget) = tui.scene.node_mut(dashboard.windows[0].list).widget() { *widget = WidgetState::Editor(EditorState::new("new", 1_048_576)); }
         let (send, receive) = mpsc::sync_channel(1); send.send(Message::Finished(Ok(Response::Save(committed)))).unwrap();
-        dashboard.source_operation = 1;
-        dashboard.source_job = Some(Job { window: dashboard.windows[0].id.clone(), operation: 1, generation: 1, cancelled: Arc::new(AtomicBool::new(true)), receive, protected:Vec::new() });
+        
+        dashboard_source_view::testing::observe(&mut dashboard.source,dashboard_source_view::testing::Worker{ window: dashboard.windows[0].id.clone(), operation: 1, generation: 1, cancelled: Arc::new(AtomicBool::new(true)), receive, protected:Vec::new() });
         assert!(dashboard.poll_documents(&mut tui));
         assert!(matches!(&dashboard.windows[0].body, Body::Document(Some(current)) if !current.dirty && current.document.text == "new"));
         assert!(matches!(&tui.scene.node(dashboard.windows[0].list).content, NodeContent::Widget(WidgetState::Editor(editor)) if editor.value == "new"));
@@ -295,7 +190,7 @@ mod tests {
     #[test]
     fn source_worker_yields_at_each_shared_message_quantum_without_losing_settlement() {
         let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../📂️sources/🧪️tests/🔣️.json")).unwrap();
-        assert_eq!(SOURCE_MESSAGE_LIMIT, fixture["limit"].as_u64().unwrap() as usize);
+        assert_eq!(commands::MESSAGE_CAPACITY, fixture["limit"].as_u64().unwrap() as usize);
         for row in fixture["cases"].as_array().unwrap() {
             let (mut dashboard, mut tui, root) = view();
             let index = dashboard.focused_index(&tui);
@@ -305,11 +200,11 @@ mod tests {
             let (send, receive) = mpsc::channel();
             for completed in 0..progress { send.send(Message::Progress(Progress { stage: Stage::Reading, completed, total: Some(progress) })).unwrap(); }
             send.send(Message::Finished(Ok(Response::List(String::new(), Vec::new())))).unwrap();
-            dashboard.source_operation = 1;
-            dashboard.source_job = Some(Job { window: dashboard.windows[index].id.clone(), operation: 1, generation: 0, cancelled, receive, protected:Vec::new() });
+            
+            dashboard_source_view::testing::observe(&mut dashboard.source,dashboard_source_view::testing::Worker{ window: dashboard.windows[index].id.clone(), operation: 1, generation: 0, cancelled, receive, protected:Vec::new() });
             let expected = row["polls"].as_u64().unwrap();
             let mut polls = 0;
-            while dashboard.source_job.is_some() {
+            while dashboard.source.active() {
                 polls += 1;
                 assert!(polls <= expected, "{} exceeded finite poll plan", row["name"]);
                 dashboard.poll_documents(&mut tui);
@@ -335,28 +230,28 @@ mod tests {
     #[test]
     fn source_management_blocks_dirty_documents_and_supports_nonempty_directories() {
         let (mut dashboard,mut tui,root)=view();std::fs::write(root.join("a.txt"),"original").unwrap();std::fs::create_dir(root.join("folder")).unwrap();std::fs::write(root.join("folder/child"),"foreign").unwrap();dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let files=dashboard.focused_index(&tui);
-        dashboard.request_source(files,Request::Load("a.txt".into()));settle(&mut dashboard,&mut tui);type_key(&mut dashboard,&mut tui,Key::Char('x'),0);dashboard.begin_management(&mut tui,files,EntryAction::Rename);assert!(dashboard.source_job.is_none());assert_eq!(std::fs::read_to_string(root.join("a.txt")).unwrap(),"original");
+        dashboard.request_source(files,Request::Load("a.txt".into()));settle(&mut dashboard,&mut tui);type_key(&mut dashboard,&mut tui,Key::Char('x'),0);dashboard.begin_management(&mut tui,files,EntryAction::Rename);assert!(!dashboard.source.active());assert_eq!(std::fs::read_to_string(root.join("a.txt")).unwrap(),"original");
         dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let index=dashboard.focused_index(&tui);dashboard.begin_management(&mut tui,index,EntryAction::Retain);settle(&mut dashboard,&mut tui);submit(&mut dashboard,&mut tui,"folder");assert!(!root.join("folder").exists());let recovery=match &dashboard.windows[index].body{Body::Files(files)=>files.recovery.clone().unwrap(),_=>panic!("retained tree outcome")};assert_eq!(std::fs::read_to_string(std::path::Path::new(&recovery).join("child")).unwrap(),"foreign");
     }
 
     #[test]
     fn source_management_adopts_committed_rename_after_cancellation_and_blocks_edits_until_settled() {
         let(mut dashboard,mut tui,root)=view();std::fs::write(root.join("a.txt"),"original").unwrap();dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let document_window=dashboard.focused_index(&tui);dashboard.request_source(document_window,Request::Load("a.txt".into()));settle(&mut dashboard,&mut tui);dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let files_window=dashboard.focused_index(&tui);
-        let(send,receive)=mpsc::sync_channel(2);dashboard.source_operation=10;dashboard.source_job=Some(Job{window:dashboard.windows[files_window].id.clone(),operation:10,generation:0,cancelled:Arc::new(AtomicBool::new(true)),receive,protected:vec!["a.txt".into(),"b.txt".into()]});assert!(dashboard.management_blocks_edit(document_window));assert!(dashboard.dirty_close(files_window));std::fs::rename(root.join("a.txt"),root.join("b.txt")).unwrap();let document=Workspace::new(&root).unwrap().load("b.txt",&AtomicBool::new(false),&mut |_|{}).unwrap();send.send(Message::Finished(Ok(Response::Renamed("a.txt".into(),Entry{path:"b.txt".into(),name:"b.txt".into(),directory:false},Some(document))))).unwrap();dashboard.poll_documents(&mut tui);settle(&mut dashboard,&mut tui);
+        let(send,receive)=mpsc::sync_channel(2);dashboard_source_view::testing::observe(&mut dashboard.source,dashboard_source_view::testing::Worker{window:dashboard.windows[files_window].id.clone(),operation:10,generation:0,cancelled:Arc::new(AtomicBool::new(true)),receive,protected:vec!["a.txt".into(),"b.txt".into()]});assert!(dashboard.management_blocks_edit(document_window));assert!(dashboard.dirty_close(files_window));std::fs::rename(root.join("a.txt"),root.join("b.txt")).unwrap();let document=Workspace::new(&root).unwrap().load("b.txt",&AtomicBool::new(false),&mut |_|{}).unwrap();send.send(Message::Finished(Ok(Response::Renamed("a.txt".into(),Entry{path:"b.txt".into(),name:"b.txt".into(),directory:false},Some(document))))).unwrap();dashboard.poll_documents(&mut tui);settle(&mut dashboard,&mut tui);
         assert!(matches!(&dashboard.windows[document_window].body,Body::Document(Some(current))if current.document.path=="b.txt"&&!current.read_only&&!current.dirty));assert!(!dashboard.management_blocks_edit(document_window));
-        let cases:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📬️commands/📝️buffer/🧫️fixtures/🔣️.json")).unwrap();for row in cases["cases"].as_array().unwrap().iter().filter(|row|row["path"]=="b.txt"){if !root.join("b.txt").exists(){std::fs::write(root.join("b.txt"),"original").unwrap();}dashboard.request_source(document_window,Request::Load("b.txt".into()));settle(&mut dashboard,&mut tui);let recovery=row["recovery"].as_str().map(str::to_owned);let(send,receive)=mpsc::sync_channel(1);dashboard.source_operation=11;dashboard.source_job=Some(Job{window:dashboard.windows[files_window].id.clone(),operation:11,generation:0,cancelled:Arc::new(AtomicBool::new(recovery.is_some())),receive,protected:vec!["b.txt".into()]});send.send(Message::Finished(Err(Error{kind:ErrorKind::Io,path:"b.txt".into(),detail:"uncertain".into(),recovery_path:recovery.clone()}))).unwrap();dashboard.poll_documents(&mut tui);assert!(matches!(&dashboard.windows[document_window].body,Body::Document(Some(current))if current.document.path=="b.txt"&&current.document.text=="original"&&current.read_only==row["readOnly"].as_bool().unwrap()&&current.recovery==recovery));assert!(matches!(&tui.scene.node(dashboard.windows[document_window].list).content,NodeContent::Widget(WidgetState::Editor(editor))if editor.read_only==row["readOnly"].as_bool().unwrap()));if row["reloadRefused"].as_bool().unwrap(){std::fs::remove_file(root.join("b.txt")).unwrap();dashboard.reload_document(document_window);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document_window].body,Body::Document(Some(current))if current.recovery==recovery&&current.read_only));}}
+        let cases:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📬️commands/📝️buffer/🧫️fixtures/🔣️.json")).unwrap();for row in cases["cases"].as_array().unwrap().iter().filter(|row|row["path"]=="b.txt"){if !root.join("b.txt").exists(){std::fs::write(root.join("b.txt"),"original").unwrap();}dashboard.request_source(document_window,Request::Load("b.txt".into()));settle(&mut dashboard,&mut tui);let recovery=row["recovery"].as_str().map(str::to_owned);let(send,receive)=mpsc::sync_channel(1);dashboard_source_view::testing::observe(&mut dashboard.source,dashboard_source_view::testing::Worker{window:dashboard.windows[files_window].id.clone(),operation:11,generation:0,cancelled:Arc::new(AtomicBool::new(recovery.is_some())),receive,protected:vec!["b.txt".into()]});send.send(Message::Finished(Err(Error{kind:ErrorKind::Io,path:"b.txt".into(),detail:"uncertain".into(),recovery_path:recovery.clone()}))).unwrap();dashboard.poll_documents(&mut tui);assert!(matches!(&dashboard.windows[document_window].body,Body::Document(Some(current))if current.document.path=="b.txt"&&current.document.text=="original"&&current.read_only==row["readOnly"].as_bool().unwrap()&&current.recovery==recovery));assert!(matches!(&tui.scene.node(dashboard.windows[document_window].list).content,NodeContent::Widget(WidgetState::Editor(editor))if editor.read_only==row["readOnly"].as_bool().unwrap()));if row["reloadRefused"].as_bool().unwrap(){std::fs::remove_file(root.join("b.txt")).unwrap();dashboard.reload_document(document_window);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document_window].body,Body::Document(Some(current))if current.recovery==recovery&&current.read_only));}}
         println!("[DEBUG] late rename and uncertain outcomes preserve protected buffers");
     }
 
     #[test]
     fn source_directory_commands_protect_descendants_and_browse_retained_history(){
         let(mut dashboard,mut tui,root)=view();std::fs::create_dir(root.join("folder")).unwrap();std::fs::write(root.join("folder/a.txt"),"kept").unwrap();dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let files=dashboard.focused_index(&tui);let document=dashboard.create_window(&mut tui,Kind::Document,Place::Preference);dashboard.request_source(document,Request::Load("folder/a.txt".into()));settle(&mut dashboard,&mut tui);
-        if let Body::Document(Some(current))=&mut dashboard.windows[document].body{current.dirty=true;}let revision=Workspace::new(&root).unwrap().inspect_entry("folder",&AtomicBool::new(false),&mut |_|{}).unwrap();dashboard.request_source(files,Request::Rename{path:"folder".into(),revision:revision.clone(),destination:"moved".into()});assert!(dashboard.source_job.is_none());if let Body::Document(Some(current))=&mut dashboard.windows[document].body{current.dirty=false;}
-        dashboard.source_pending=Some((dashboard.windows[files].id.clone(),Request::Rename{path:"folder".into(),revision:revision.clone(),destination:"moved".into()}));assert!(dashboard.management_blocks_edit(document));dashboard.source_pending=None;dashboard.request_source(files,Request::Rename{path:"folder".into(),revision,destination:"moved".into()});assert!(dashboard.management_blocks_edit(document));settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document].body,Body::Document(Some(current))if current.document.path=="moved/a.txt"&&current.read_only));dashboard.reload_document(document);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document].body,Body::Document(Some(current))if !current.read_only&&current.document.text=="kept"));
-        let revision=Workspace::new(&root).unwrap().inspect_entry("moved",&AtomicBool::new(false),&mut |_|{}).unwrap();dashboard.request_source(files,Request::Retain{path:"moved".into(),revision});settle(&mut dashboard,&mut tui);assert!(matches!(dashboard.windows[document].body,Body::Files(_)));dashboard.inspect_recovery(&mut tui,files);settle(&mut dashboard,&mut tui);let history=dashboard.focused_index(&tui);assert!(matches!(&dashboard.windows[history].body,Body::Files(files)if files.history&&files.entries.len()==1));let (retained,child)=match &dashboard.windows[history].body{Body::Files(files)=>(files.history_root.clone().unwrap(),files.entries[0].path.clone()),_=>unreachable!()};dashboard.begin_history(&mut tui,history,Some(HistoryAction::Archive));settle(&mut dashboard,&mut tui);dashboard.history_key(&mut tui,history,&KeyEvent{key:Key::Enter,mods:0});assert!(dashboard.source_job.is_none());let selection=match &dashboard.windows[history].body{Body::Files(files)=>files.history_form.as_ref().unwrap().confirmation().unwrap().to_owned(),_=>unreachable!()};dashboard.history_paste(&mut tui,history,&selection);dashboard.history_key(&mut tui,history,&KeyEvent{key:Key::Esc,mods:0});assert!(matches!(&dashboard.windows[history].body,Body::Files(files)if files.history_form.is_none()));dashboard.begin_history(&mut tui,history,Some(HistoryAction::Archive));settle(&mut dashboard,&mut tui);dashboard.history_paste(&mut tui,history,&selection);dashboard.history_key(&mut tui,history,&KeyEvent{key:Key::Enter,mods:0});assert!(dashboard.source_job.is_some(),"archive not submitted: {:?}",dashboard.notice);settle(&mut dashboard,&mut tui);let archived=Workspace::new(&root).unwrap().inspect_history(&AtomicBool::new(false),&mut |_|{}).unwrap();assert_ne!(archived.active,selection,"archive refused: {:?}",dashboard.notice);let page=Workspace::new(&root).unwrap().history_page(None,&AtomicBool::new(false),&mut |_|{}).unwrap();let retained_row=match &dashboard.windows[history].body{Body::Files(files)=>{assert!(files.history);assert_eq!(files.inspection.as_ref().map(|value|&value.active),Some(&archived.active));assert_eq!(files.entries.iter().map(|entry|&entry.path).collect::<Vec<_>>(),page.entries.iter().map(|entry|&entry.path).collect::<Vec<_>>());assert!(files.entries.windows(2).all(|pair|pair[0].path<pair[1].path));files.entries.iter().position(|entry|entry.path==retained).expect("archive must preserve the authenticated retained path")},_=>panic!("history browser was replaced")};dashboard.next_history_page(history);assert!(dashboard.source_job.is_none());dashboard.activate_file(&tui,history,retained_row);settle(&mut dashboard,&mut tui);let row=match &dashboard.windows[history].body{Body::Files(files)=>1+files.visible.iter().position(|index|files.entries[*index].path==child).unwrap(),_=>unreachable!()};dashboard.activate_file(&tui,history,row);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[history].body,Body::Document(Some(current))if current.read_only&&current.document.text=="kept"));std::fs::remove_dir_all(root).unwrap();
+        if let Body::Document(Some(current))=&mut dashboard.windows[document].body{current.dirty=true;}let revision=Workspace::new(&root).unwrap().inspect_entry("folder",&AtomicBool::new(false),&mut |_|{}).unwrap();dashboard.request_source(files,Request::Rename{path:"folder".into(),revision:revision.clone(),destination:"moved".into()});assert!(!dashboard.source.active());if let Body::Document(Some(current))=&mut dashboard.windows[document].body{current.dirty=false;}
+        dashboard_source_view::testing::pending(&mut dashboard.source,Some((dashboard.windows[files].id.clone(),Request::Rename{path:"folder".into(),revision:revision.clone(),destination:"moved".into()})));assert!(dashboard.management_blocks_edit(document));dashboard_source_view::testing::pending(&mut dashboard.source,None);dashboard.request_source(files,Request::Rename{path:"folder".into(),revision,destination:"moved".into()});assert!(dashboard.management_blocks_edit(document));settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document].body,Body::Document(Some(current))if current.document.path=="moved/a.txt"&&current.read_only));dashboard.reload_document(document);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[document].body,Body::Document(Some(current))if !current.read_only&&current.document.text=="kept"));
+        let revision=Workspace::new(&root).unwrap().inspect_entry("moved",&AtomicBool::new(false),&mut |_|{}).unwrap();dashboard.request_source(files,Request::Retain{path:"moved".into(),revision});settle(&mut dashboard,&mut tui);assert!(matches!(dashboard.windows[document].body,Body::Files(_)));dashboard.inspect_recovery(&mut tui,files);settle(&mut dashboard,&mut tui);let history=dashboard.focused_index(&tui);assert!(matches!(&dashboard.windows[history].body,Body::Files(files)if files.history&&files.entries.len()==1));let (retained,child)=match &dashboard.windows[history].body{Body::Files(files)=>(files.history_root.clone().unwrap(),files.entries[0].path.clone()),_=>unreachable!()};dashboard.begin_history(&mut tui,history,Some(HistoryAction::Archive));settle(&mut dashboard,&mut tui);dashboard.files_key(&mut tui,history,&KeyEvent{key:Key::Enter,mods:0});assert!(!dashboard.source.active());let selection=match &dashboard.windows[history].body{Body::Files(files)=>files.history_form.as_ref().unwrap().confirmation().unwrap().to_owned(),_=>unreachable!()};dashboard.management_paste(&mut tui,history,&selection);dashboard.files_key(&mut tui,history,&KeyEvent{key:Key::Esc,mods:0});assert!(matches!(&dashboard.windows[history].body,Body::Files(files)if files.history_form.is_none()));dashboard.begin_history(&mut tui,history,Some(HistoryAction::Archive));settle(&mut dashboard,&mut tui);dashboard.management_paste(&mut tui,history,&selection);dashboard.files_key(&mut tui,history,&KeyEvent{key:Key::Enter,mods:0});assert!(dashboard.source.active(),"archive not submitted: {:?}",dashboard.notice);settle(&mut dashboard,&mut tui);let archived=Workspace::new(&root).unwrap().inspect_history(&AtomicBool::new(false),&mut |_|{}).unwrap();assert_ne!(archived.active,selection,"archive refused: {:?}",dashboard.notice);let page=Workspace::new(&root).unwrap().history_page(None,&AtomicBool::new(false),&mut |_|{}).unwrap();let retained_row=match &dashboard.windows[history].body{Body::Files(files)=>{assert!(files.history);assert_eq!(files.inspection.as_ref().map(|value|&value.active),Some(&archived.active));assert_eq!(files.entries.iter().map(|entry|&entry.path).collect::<Vec<_>>(),page.entries.iter().map(|entry|&entry.path).collect::<Vec<_>>());assert!(files.entries.windows(2).all(|pair|pair[0].path<pair[1].path));files.entries.iter().position(|entry|entry.path==retained).expect("archive must preserve the authenticated retained path")},_=>panic!("history browser was replaced")};dashboard.next_history_page(history);assert!(!dashboard.source.active());dashboard.activate_file(&tui,history,retained_row);settle(&mut dashboard,&mut tui);let row=match &dashboard.windows[history].body{Body::Files(files)=>1+files.visible.iter().position(|index|files.entries[*index].path==child).unwrap(),_=>unreachable!()};dashboard.activate_file(&tui,history,row);settle(&mut dashboard,&mut tui);assert!(matches!(&dashboard.windows[history].body,Body::Document(Some(current))if current.read_only&&current.document.text=="kept"));std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
-    fn source_worker_spawn_refusal_unlocks_and_retains_the_guided_form(){let(mut dashboard,mut tui,root)=view();dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let index=dashboard.focused_index(&tui);dashboard.show_management_form(&mut tui,index,EntryAction::CreateFile,String::new(),None);dashboard.management_paste(&mut tui,index,"keep.txt");if let Body::Files(files)=&mut dashboard.windows[index].body{files.form.as_mut().unwrap().busy=true;}dashboard.management_key(&mut tui,index,&KeyEvent{key:Key::Esc,mods:0});assert!(matches!(&dashboard.windows[index].body,Body::Files(files)if files.form.as_ref().unwrap().busy));dashboard.adopt_source_worker(index,10,0,Arc::new(AtomicBool::new(false)),vec!["keep.txt".into()],Err(std::io::Error::from(std::io::ErrorKind::WouldBlock)));assert!(dashboard.source_job.is_none());assert!(matches!(&dashboard.windows[index].body,Body::Files(files)if !files.form.as_ref().unwrap().busy));assert!(matches!(&tui.scene.node(dashboard.windows[index].list).content,NodeContent::Widget(WidgetState::Input(input))if input.value=="keep.txt"));std::fs::remove_dir_all(root).unwrap();}
+    fn source_worker_spawn_refusal_unlocks_and_retains_the_guided_form(){let(mut dashboard,mut tui,root)=view();dashboard.open_files(&mut tui);settle(&mut dashboard,&mut tui);let index=dashboard.focused_index(&tui);dashboard.begin_management(&mut tui,index,EntryAction::CreateFile);dashboard.management_paste(&mut tui,index,"keep.txt");if let Body::Files(files)=&mut dashboard.windows[index].body{files.form.as_mut().unwrap().busy=true;}dashboard.files_key(&mut tui,index,&KeyEvent{key:Key::Esc,mods:0});assert!(matches!(&dashboard.windows[index].body,Body::Files(files)if files.form.as_ref().unwrap().busy));dashboard.with_sources(|view|view.adopt_source_worker(index,10,0,Arc::new(AtomicBool::new(false)),vec!["keep.txt".into()],Err(std::io::Error::from(std::io::ErrorKind::WouldBlock))));assert!(!dashboard.source.active());assert!(matches!(&dashboard.windows[index].body,Body::Files(files)if !files.form.as_ref().unwrap().busy));assert!(matches!(&tui.scene.node(dashboard.windows[index].list).content,NodeContent::Widget(WidgetState::Input(input))if input.value=="keep.txt"));std::fs::remove_dir_all(root).unwrap();}
 
 }

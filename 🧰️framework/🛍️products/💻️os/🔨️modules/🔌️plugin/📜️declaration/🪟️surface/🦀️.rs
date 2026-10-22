@@ -28,8 +28,6 @@ use semio_framework::{kernel::{ActorId, ClipboardError, ClipboardFragment, Effec
 use semio_framework::onboarding::{IntroductionDefinition, TutorialDefinition};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{kernel::{AppEvent, HistoryPatch, InvocationResult}};
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_tool_run::ToolRunTraceCursor;
 use semio_framework_2d_compute::EngineHandles;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
@@ -122,6 +120,7 @@ use semio_framework_plugin_decl_app::NaturalFileDecodeOwner;
 use semio_framework_plugin_decl_app::document_load_emit;
 use semio_framework_plugin_decl_app::natural_file_input_bytes;
 use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
 use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
 use semio_framework_plugin_decl_emission::HostEvent;
 use semio_framework_plugin_decl_views::AppRenderOperationContext;

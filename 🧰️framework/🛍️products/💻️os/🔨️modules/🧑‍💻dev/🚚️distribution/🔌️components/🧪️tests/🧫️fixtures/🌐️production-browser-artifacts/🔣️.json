@@ -2,7 +2,7 @@
   "completion": {
     "project": "@semio-tech/framework-os-dev",
     "prerequisite": "build-s-react-release",
-    "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
+    "command": "repo ../../🚚️distribution/🏁completion/📜️script.ts complete",
     "targets": [
       "build",
       "build-cad-react-release",

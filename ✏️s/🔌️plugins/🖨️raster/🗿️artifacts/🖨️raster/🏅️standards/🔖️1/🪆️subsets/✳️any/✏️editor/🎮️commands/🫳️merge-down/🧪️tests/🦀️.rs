@@ -3,7 +3,7 @@ use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_editor::commands::merge_down::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::find_layer;
 use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};

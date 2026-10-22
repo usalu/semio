@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().combinations.is_some(), "create-combination/appends-an-uls-0c18bb: the coined combination must surface in the combinations delta");
     assert!(outcome.diff().load_cases.is_none(), "create-combination/appends-an-uls-0c18bb: the referenced cases are read-only");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

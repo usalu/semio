@@ -71,7 +71,7 @@ pub fn semio_written(table: &'static [semio_framework_plugin::io::ComposerEntry]
 /// 🧪️ Diff then central apply: the next snapshot (the base when the diff is refused) and the mutation's own outcome.
 pub fn applied<P: Clone, M: protocol::Mutation<P>>(base: &P, mutation: &M) -> (P, protocol::MutationOutcome<M::Diff>) {
     let outcome = mutation.diff(base);
-    let next = protocol::apply_diff(outcome.diff(), base).unwrap_or_else(|_| base.clone());
+    let next = protocol::apply_diff_cold(outcome.diff(), base).unwrap_or_else(|_| base.clone());
     (next, outcome)
 }
 

@@ -5,14 +5,15 @@ import { BLOB_ENDPOINT_PATH } from "@semio-tech/framework-os";
 import { blake3Hex } from "@semio-tech/framework-hash";
 import { REPO_ROOT } from "../🧭️repo-root/🟦️.ts";
 import { backboneDatabaseCtorLazy } from "../🗃️sqlite-constructor/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 //#region BlobVitePlugin
-let blobDatabaseSingleton: InstanceType<typeof import("bun:sqlite").Database> | undefined;
+let blobDatabaseSingleton: InstanceType<typeof SqliteDatabaseV1> | undefined;
 
 /** 🗄️ Lazily opens the dev-session-wide content-addressed blob store at `<repoRoot>/.🧬semio/🔗space/blobs.db` —
  * unlike backbone documents, blobs aren't scoped to a per-uri folder (there's no folder in the
  * `write-blob`/`read-blob` WIT signature), so this is one shared table for the whole dev server. */
-async function blobDatabase(): Promise<InstanceType<typeof import("bun:sqlite").Database>> {
+async function blobDatabase(): Promise<InstanceType<typeof SqliteDatabaseV1>> {
   if (!blobDatabaseSingleton) {
     const Database = await backboneDatabaseCtorLazy();
     const dbPath = join(REPO_ROOT, ".🧬semio", "🔗space", "blobs.db");

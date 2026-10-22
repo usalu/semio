@@ -1,6 +1,10 @@
 import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {generationCanonicalJsonV1,generationSha256V1} from "../🧾️generation/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import generationSchema from "../🧾️generation/🧬️schema/🔣️.json" with {type:"json"};
+import {declareFormatStampV1} from "../../../../🏗️build/🧷️format-stamps/🟨️.mjs";
+
+declareFormatStampV1("dependency.walk",generationSchema);
 
 const protocol=schema.$defs.Protocol.const,texts=schema.$defs.Texts.const as Readonly<Record<string,Readonly<Record<string,string>>>>,schemaOf=(name:string)=>compileJsonSchemaSubset((schema.$defs as Record<string,unknown>)[name] as never,schema as never);
 const pointerSchema=schemaOf("Pointer"),eventSchema=schemaOf("Event");
@@ -100,12 +104,6 @@ export function concurrentEventV1(body:Omit<ConcurrentEventV1,"version"|"purpose
  if(errors.length)throw Error("Closed dependency concurrency event required",{cause:errors.slice(0,4)});
  return Object.freeze(value);
 }
-/** 🗣️ Picks the message language like the help does: SEMIO_LANGUAGE, then the locale, then the first language the contract declares. */
-export function concurrentLanguageV1(environment:Readonly<Record<string,string|undefined>>):string{
- for(const value of [environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const tag=value?.toLowerCase().split(/[._@-]/u)[0];if(tag&&(protocol.languages as readonly string[]).includes(tag))return tag;}
- return protocol.languages[0]!;
-}
-
 /** 🧮️ Is the admission verdict for building one more generation: how many bytes it needs and whether the free space holds them. */
 export type ConcurrentAdmissionV1=Readonly<{neededBytes:number;requiredBytes:number;freeBytes:number;admitted:boolean}>;
 /** 🛂️ Admits one more generation of `scope` only when the free bytes hold its expected size plus the declared margin; the expectation is the size recorded when the scope was last published, else the largest recorded size, else the declared default. */

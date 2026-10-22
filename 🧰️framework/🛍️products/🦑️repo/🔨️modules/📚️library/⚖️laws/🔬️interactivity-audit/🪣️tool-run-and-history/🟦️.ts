@@ -10,6 +10,8 @@ import { join } from "node:path";
 import { interactivityIsRuntimeSource } from "../🔎️scan/🟦️.ts";
 import { POLICY_RUST_TEST_EVIDENCE_BOUNDARY, policyReadRustPolicySource } from "../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 //#region 🪣️PuzzleFillToolRun
 /** 🪣️ Puzzle fill sources the run-job, trace and P4e predicates read, keyed by role (`📋️tool-run-contract.md` §5 wave 1). */
 export const INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES = {
@@ -433,8 +435,8 @@ export function historyClosureFindings(sources: readonly { readonly path: string
 
 /** 🗂️ The git-visible (tracked + unignored) source files of the closure roots, read once. */
 export function historyClosureSources(repoRoot: string): { readonly path: string; readonly text: string }[] {
-  const listed = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...HISTORY_CLOSURE_ROOTS], { cwd: repoRoot });
-  if (listed.exitCode !== 0) throw new Error(`[verify history-closure] git-visible inventory failed: ${listed.stderr.toString()}`);
+  const listed = runToolSyncV1("git", ["ls-files", "-co", "--exclude-standard", "-z", "--", ...HISTORY_CLOSURE_ROOTS], { cwd: repoRoot });
+  if (listed.status !== 0) throw new Error(`[verify history-closure] git-visible inventory failed: ${listed.stderr.toString()}`);
   const paths = [...new Set(listed.stdout.toString().split("\0").map((path) => path.normalize("NFC")))].filter((path) => HISTORY_CLOSURE_SOURCE.test(path) && path !== HISTORY_CLOSURE_RULE_SOURCE && !path.split("/").some((segment) => POLICY_SKIP_DIRS.has(segment)));
   return paths.flatMap((path) => {
     try {

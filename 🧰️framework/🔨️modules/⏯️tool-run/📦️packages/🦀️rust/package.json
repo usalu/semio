@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-run-rs:test-source",
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-run-rs:test",
-    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-run-rs:check"
+    "test-source": "repo run @semio-tech/framework-tool-run-rs:test-source",
+    "test": "repo run @semio-tech/framework-tool-run-rs:test",
+    "check": "repo run @semio-tech/framework-tool-run-rs:check"
   },
   "bundleKind": "library",
   "devDependencies": {

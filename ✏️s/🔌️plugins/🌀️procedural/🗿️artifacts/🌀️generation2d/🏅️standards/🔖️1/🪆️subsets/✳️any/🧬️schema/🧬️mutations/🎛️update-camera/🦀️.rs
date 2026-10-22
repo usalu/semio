@@ -28,6 +28,15 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for UpdateCamera
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<UpdateCamera>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::update_camera::diff::diff(self, base)
     }
@@ -37,8 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
-    }
 }
 //#endregion 🔖️UpdateCamera

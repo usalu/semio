@@ -1,5 +1,5 @@
 /** 🔸️ The document transfer ref phase of useDocumentTransferAndTabs. */
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
 import { KEYBINDING_UNOWNED_CODE, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
 import { SHELL_KEYBINDINGS, formatKeybindingShortcut, useShellKeydown } from "@semio-tech/ui-react";

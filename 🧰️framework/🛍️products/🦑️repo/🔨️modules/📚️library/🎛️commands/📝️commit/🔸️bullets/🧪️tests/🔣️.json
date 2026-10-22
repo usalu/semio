@@ -1,0 +1,425 @@
+{
+ "version": 1,
+ "lead": [
+  {
+   "line": "🧪️tests",
+   "expected": "🧪️"
+  },
+  {
+   "line": "  🚀 deploy",
+   "expected": "🚀"
+  },
+  {
+   "line": "plain",
+   "expected": ""
+  },
+  {
+   "line": "👩‍💻x",
+   "expected": "👩‍💻"
+  },
+  {
+   "line": "🧪️🔥x",
+   "expected": "🧪️🔥"
+  },
+  {
+   "line": "✅️ok",
+   "expected": "✅️"
+  },
+  {
+   "line": "-🧪️x",
+   "expected": ""
+  },
+  {
+   "line": "",
+   "expected": ""
+  },
+  {
+   "line": "1️⃣x",
+   "expected": ""
+  }
+ ],
+ "format": [
+  {
+   "line": "- 🧪️ add tests",
+   "expected": "🧪️add tests"
+  },
+  {
+   "line": "--🚀  x",
+   "expected": "🚀x"
+  },
+  {
+   "line": "🚀x",
+   "expected": "🚀x"
+  },
+  {
+   "line": "plain text",
+   "expected": "plain text"
+  },
+  {
+   "line": "🚀",
+   "expected": "🚀"
+  },
+  {
+   "line": "   ",
+   "expected": ""
+  },
+  {
+   "line": "-  - 🚀 y",
+   "expected": "- 🚀 y"
+  },
+  {
+   "line": "🧪️\tz",
+   "expected": "🧪️z"
+  }
+ ],
+ "normalize": {
+  "text": "# heading\n\n- 🧪️ add tests\n📊️metric📃uloc💯️1k\n x \n🚀 ship\n   \n✅️ok\n",
+  "expected": [
+   "🧪️add tests",
+   "🚀ship",
+   "✅️ok"
+  ],
+  "capText": "🚀item0\n🚀item1\n🚀item2\n🚀item3\n🚀item4\n🚀item5\n🚀item6\n🚀item7\n🚀item8\n🚀item9\n🚀item10",
+  "capExpected": [
+   "🚀item0",
+   "🚀item1",
+   "🚀item2",
+   "🚀item3",
+   "🚀item4",
+   "🚀item5",
+   "🚀item6",
+   "🚀item7"
+  ]
+ },
+ "reserved": [
+  {
+   "lead": "🎆️",
+   "bullet": "🎆️x"
+  },
+  {
+   "lead": "📊️",
+   "bullet": "📊️x"
+  },
+  {
+   "lead": "🔢️",
+   "bullet": "🔢️x"
+  },
+  {
+   "lead": "🚩️",
+   "bullet": "🚩️x"
+  }
+ ],
+ "validate": [
+  {
+   "bullets": [
+    "🧪️ok",
+    "🚀fine"
+   ],
+   "reserved": false
+  },
+  {
+   "bullets": [],
+   "reserved": false
+  },
+  {
+   "bullets": [
+    "🎆️26🌙️10☀️21"
+   ],
+   "reserved": true
+  },
+  {
+   "bullets": [
+    "🧪️ok",
+    "📊️metric"
+   ],
+   "reserved": true
+  },
+  {
+   "bullets": [
+    "🔢️total"
+   ],
+   "reserved": true
+  },
+  {
+   "bullets": [
+    "🚩️x"
+   ],
+   "reserved": true
+  }
+ ],
+ "tokens": [
+  {
+   "path": "src/Some_File-name.test.ts",
+   "expected": [
+    "some",
+    "file",
+    "name",
+    "test"
+   ]
+  },
+  {
+   "path": "a/b.c",
+   "expected": []
+  },
+  {
+   "path": "framework/ui/index.ts",
+   "expected": [
+    "framework",
+    "index"
+   ]
+  },
+  {
+   "path": "UPPER/lower.ts",
+   "expected": [
+    "upper",
+    "lower"
+   ]
+  },
+  {
+   "path": "dup/dups.dups",
+   "expected": [
+    "dups"
+   ]
+  }
+ ],
+ "staged": [
+  {
+   "bullets": [],
+   "staged": [
+    "x"
+   ],
+   "expected": [
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀a"
+   ],
+   "staged": [],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀a"
+   ],
+   "staged": [
+    "x/micro-commit.ts",
+    "y/index.test.ts",
+    "z/SKILL.md"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 plan updated"
+   ],
+   "staged": [
+    ".cursor/plans/foo.md"
+   ],
+   "expected": [
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    ".cursor/plans/foo.md"
+   ],
+   "expected": [
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 CURSOR changed"
+   ],
+   "staged": [
+    ".cursor/plans/foo-bar-baz.md"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 skill docs"
+   ],
+   "staged": [
+    ".agents/skills/a.md"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    ".agents/skills/a.md"
+   ],
+   "expected": [
+    ".agents"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 hook fix"
+   ],
+   "staged": [
+    "tools/repo/x.ts"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 nothing"
+   ],
+   "staged": [
+    "tools/repo/x.ts"
+   ],
+   "expected": [
+    "repo"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 devcontainer tweak"
+   ],
+   "staged": [
+    ".devcontainer/a.json"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    ".devcontainer/a.json"
+   ],
+   "expected": [
+    ".devcontainer"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 framework work"
+   ],
+   "staged": [
+    "framework/x/y.ts"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    "framework/x/y.ts"
+   ],
+   "expected": [
+    "product"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 readme edit"
+   ],
+   "staged": [
+    "docs/readme.md"
+   ],
+   "expected": []
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    "docs/readme.md"
+   ],
+   "expected": [
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 plan"
+   ],
+   "staged": [
+    ".cursor/plans/a.md",
+    "docs/readme.md"
+   ],
+   "expected": [
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    ".cursor/plans/a.md",
+    ".agents/x.md",
+    "docs/readme.md"
+   ],
+   "expected": [
+    ".agents",
+    "other staged paths"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 ui work"
+   ],
+   "staged": [
+    "x/ui/y.ts"
+   ],
+   "expected": [
+    "product"
+   ]
+  },
+  {
+   "bullets": [
+    "🚀 other"
+   ],
+   "staged": [
+    "s/y.ts"
+   ],
+   "expected": [
+    "product"
+   ]
+  }
+ ],
+ "stagedDefects": [
+  {
+   "bullets": [
+    "🛠️framework tweak"
+   ],
+   "staged": [
+    "🧰️framework/x/y.ts"
+   ],
+   "expected": [],
+   "defect": "🔸️bullets/🟦️.ts:pathTokensForBulletCoverage keeps the leading emoji of an emoji-named directory in the token (`🧰️framework`), so a bullet that names the area in words never covers the product area in this repository"
+  }
+ ],
+ "tickets": {
+  "staged": {
+   ".🧬semio/🦑️repo/🎫️tickets/a/🎫️ticket.json": "{\"emoji\":\"🧪️\",\"title\":\"First\"}",
+   ".🧬semio/🦑️repo/🎫️tickets/b/🎫️ticket.json": "{\"emoji\":\"🚀\",\"title\":\"Second\"}",
+   ".🧬semio/🦑️repo/🎫️tickets/c/🎫️ticket.json": "{broken",
+   ".🧬semio/🦑️repo/🎫️tickets/d/🎫️ticket.json": "{\"title\":\"NoEmoji\"}",
+   ".🧬semio/🦑️repo/🎫️tickets/e/other.json": "{\"emoji\":\"🧪️\",\"title\":\"Other\"}"
+  },
+  "expected": [
+   "🧪️First",
+   "🚀Second"
+  ]
+ },
+ "prepared": [
+  [
+   "🧪️a",
+   "🚀b"
+  ],
+  []
+ ]
+}

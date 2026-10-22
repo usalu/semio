@@ -1,5 +1,5 @@
 use crate::{standards::v1_0::subsets::any::schema::snapshot::AviChunk, standards::v1_0::subsets::any::schema::snapshot::AviMainHeader, standards::v1_0::subsets::any::schema::snapshot::AviSnapshot, standards::v1_0::subsets::any::schema::snapshot::AviStream, standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat, standards::v1_0::subsets::any::schema::snapshot::AviStreamHeader, standards::v1_0::subsets::any::schema::snapshot::RiffChunk};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::apply_mutation;
 use crate::standards::v1_0::subsets::any::schema::mutations::*;
 use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
@@ -73,13 +73,13 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
     ];
     for m in variants {
         let mut snap = base.clone();
-        let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&m, &snap);
-        let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
+        let diff = <AviMutation as ColdMutation<AviSnapshot>>::diff(&m, &snap);
+        let expected = protocol::apply_diff_cold(diff.diff(), &snap).unwrap();
         let returned = apply_mutation(&mut snap, &m);
         assert_eq!(returned, diff, "apply_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
-        let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+        let inv = <AviMutation as ColdMutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
         apply_mutation(&mut round, &inv[0]);
@@ -95,7 +95,7 @@ async fn remove_stream_then_insert_stream_round_trips() {
     let mut snap = base.clone();
     apply_mutation(&mut snap, &m);
     assert_eq!(snap.streams.len(), 1);
-    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <AviMutation as ColdMutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);

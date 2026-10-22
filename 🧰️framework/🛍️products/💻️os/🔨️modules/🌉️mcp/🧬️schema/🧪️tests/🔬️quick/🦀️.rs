@@ -145,8 +145,8 @@ fn the_json_mirror_publishes_exactly_the_registry_exports() {
     published.sort_unstable();
     let mut registered: Vec<&str> = schemas().into_iter().map(|(name, _)| name).collect();
     registered.sort_unstable();
-    assert_eq!(published, registered, "🔣️.json is stale — regenerate it with `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`");
-    assert_eq!(mirror, schema_mirror_document(), "🔣️.json's CONTENT drifted from the registry — regenerate it with `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`");
+    assert_eq!(published, registered, "🔣️.json is stale — regenerate it with `repo run @semio-tech/framework-os-mcp-rs:schema-mirror`");
+    assert_eq!(mirror, schema_mirror_document(), "🔣️.json's CONTENT drifted from the registry — regenerate it with `repo run @semio-tech/framework-os-mcp-rs:schema-mirror`");
     for value in mirror["$defs"].as_object().expect("$defs object").values() {
         assert!(value.get("$schema").is_none(), "a $defs entry must not redeclare the dialect");
         assert!(value.get("$id").is_none(), "a $defs entry must not carry a wire $id");

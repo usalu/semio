@@ -13,7 +13,7 @@ use semio_hub_lag_rebootstrap::{RebootstrapProgress, RebootstrapTransferControl}
 use axum::response::Response;
 use protocol::ServerFrame;
 use semio_framework_hash::Sha256;
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use axum::http::StatusCode;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;

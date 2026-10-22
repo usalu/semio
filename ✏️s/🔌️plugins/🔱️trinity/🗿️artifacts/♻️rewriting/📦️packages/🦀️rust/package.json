@@ -5,9 +5,9 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-rewriting-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
-    "verify-rewriting-map-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",
-    "verify-rewriting-window-config": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-window-config"
+    "verify-rewriting-document-contract": "repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
+    "verify-rewriting-map-ownership": "repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",
+    "verify-rewriting-window-config": "repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-window-config"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

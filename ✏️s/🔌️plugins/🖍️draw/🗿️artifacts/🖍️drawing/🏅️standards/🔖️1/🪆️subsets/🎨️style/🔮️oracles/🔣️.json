@@ -555,7 +555,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -607,7 +607,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -659,7 +659,7 @@
         "packageVersion": "0.42.0",
         "engineFamily": "quick-xml",
         "engineVersion": "0.42.0",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "command": "repo ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -715,7 +715,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-drawing-carrier-v1",

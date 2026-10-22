@@ -2,7 +2,6 @@ import type { RuntimeAdapterV1 } from "../📋️contract/🟦️.ts";
 import { openFileV1 } from "../🪶️portable/📂️file/🟦️.ts";
 import { compileGlobV1 } from "../🪶️portable/🌐️glob/🟦️.ts";
 import { parseJsoncV1 } from "../🪶️portable/📝️jsonc/🟦️.ts";
-import { isMainModuleV1 } from "../🪶️portable/🏁️main/🟦️.ts";
 import { resolveModuleV1 } from "../🪶️portable/🧭️resolve/🟦️.ts";
 import { semverOrderV1, semverSatisfiesV1 } from "../🪶️portable/🔢️semver/🟦️.ts";
 import { serveHttpV1 } from "../🪶️portable/🌍️serve/🟦️.ts";
@@ -16,12 +15,12 @@ import { createPortableTranspilerV1 } from "../🪶️portable/🔬️source/�
 import { bundleWithEsbuildV1 } from "./📦️esbuild/🟦️.ts";
 import { nativeSystemFromProviderV1 } from "./🧲️native/🟦️.ts";
 import { registerLoaderPluginV1 } from "./🔌️plugin/🟦️.ts";
-import { nodeTestApiV1, nodeTestCommandV1 } from "./🧪️test/🟦️.ts";
+import { nodeTestApiV1, nodeTestCommandV1, nodeTestPreloadV1 } from "./🧪️test/🟦️.ts";
 
 /** 🟢️ The Node adapter: standard APIs and our portable code only; families without a standard equivalent stay absent and are reported as missing. */
 export const nodeRuntimeAdapterV1: RuntimeAdapterV1 = {
   id: "node",
-  identity: () => ({ id: "node", version: process.versions.node, revision: "", key: `node:${process.versions.node}`, executable: process.execPath }),
+  identity: () => ({ id: "node", product: "Node.js", version: process.versions.node, revision: process.versions.v8, key: `node:${process.versions.node}`, executable: process.execPath }),
   glob: compileGlobV1,
   toml: parseTomlV1,
   jsonc: parseJsoncV1,
@@ -46,8 +45,8 @@ export const nodeRuntimeAdapterV1: RuntimeAdapterV1 = {
   loaderPlugin: registerLoaderPluginV1,
   testApi: nodeTestApiV1,
   testCommand: nodeTestCommandV1,
+  testPreload: nodeTestPreloadV1,
   semverSatisfies: semverSatisfiesV1,
   semverOrder: semverOrderV1,
-  main: isMainModuleV1,
   gc: synchronous => { (globalThis as { gc?: () => void }).gc?.(); void synchronous; },
 };

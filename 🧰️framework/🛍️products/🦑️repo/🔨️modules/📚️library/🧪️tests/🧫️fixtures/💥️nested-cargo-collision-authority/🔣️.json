@@ -41,6 +41,6 @@
   "performance": { "noisePaths": 128, "timingRounds": 4, "timingNoisePaths": 512 },
   "execution": {
     "target": "test-nested-cargo-collision-authority",
-    "command": "bun ./📜️script.ts test nested-cargo-collision-authority"
+    "command": "repo ./📜️script.ts test nested-cargo-collision-authority"
   }
 }

@@ -10,7 +10,7 @@ impl DagMinimapState {
     }
 }
 
-/// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::layout` — see `minimap_camera_fully_shows_content` above.
+/// 🗺️ Thin wrapper over `semio_framework_ui_wgpu_light::minimap::layout` — see `minimap_camera_fully_shows_content` above.
 pub fn minimap_widget_layout(graph: &DagGraphState, minimap_state: &DagMinimapState, viewport_w: u32, viewport_h: u32) -> Option<MinimapWidgetLayout> {
     if !minimap_state.minimap_widget_visible {
         return None;
@@ -25,7 +25,7 @@ pub fn minimap_widget_layout(graph: &DagGraphState, minimap_state: &DagMinimapSt
     let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO;
     let cam = &graph.host_snapshot.camera;
     let layout =
-        ui_wgpu::wgpu::minimap::layout(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, w, h, margin, ratio);
+        semio_framework_ui_wgpu_light::minimap::layout(&semio_framework_ui_wgpu_light::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, w, h, margin, ratio);
     Some(MinimapWidgetLayout { panel: layout.panel, world_min_x: layout.world_min_x, world_min_y: layout.world_min_y, scale: layout.scale, map_origin_x: layout.map_origin_x, map_origin_y: layout.map_origin_y, viewport: layout.viewport })
 }
 

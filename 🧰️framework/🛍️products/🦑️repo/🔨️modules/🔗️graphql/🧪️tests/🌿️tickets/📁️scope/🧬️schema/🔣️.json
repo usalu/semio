@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repository Ticket Scope Vectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "clock",
+    "roots",
+    "open",
+    "change",
+    "close",
+    "reopen",
+    "expected",
+    "invalidSegments",
+    "validSegments",
+    "projectedPathSegment",
+    "separatorCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "stamp"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "stamp": {
+          "type": "string"
+        }
+      }
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "draft"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "a",
+              "b"
+            ]
+          },
+          "draft": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "open": {
+      "$ref": "#/$defs/open"
+    },
+    "change": {
+      "$ref": "#/$defs/change"
+    },
+    "close": {
+      "$ref": "#/$defs/close"
+    },
+    "reopen": {
+      "$ref": "#/$defs/reopen"
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slug",
+        "status",
+        "prompt",
+        "kinds",
+        "originalSlug",
+        "otherStatus",
+        "otherPrompt",
+        "otherKinds",
+        "draftFiles"
+      ],
+      "properties": {
+        "slug": {
+          "type": "string"
+        },
+        "status": {
+          "const": "open"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "originalSlug": {
+          "type": "string"
+        },
+        "otherStatus": {
+          "const": "open"
+        },
+        "otherPrompt": {
+          "type": "string"
+        },
+        "otherKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "draftFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "invalidSegments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "validSegments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "projectedPathSegment": {
+      "type": "string",
+      "minLength": 210,
+      "maxLength": 210
+    },
+    "separatorCases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "input",
+          "normalized",
+          "parent"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "parent": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "open": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "emoji",
+        "title",
+        "prompt",
+        "client",
+        "goal",
+        "draft",
+        "noIssue",
+        "noManagement"
+      ],
+      "properties": {
+        "emoji": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "client": {
+          "const": "codex"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "string"
+        },
+        "noIssue": {
+          "const": true
+        },
+        "noManagement": {
+          "const": true
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "description",
+        "llm",
+        "effort",
+        "client",
+        "noManagement"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "const": "codex"
+        },
+        "noManagement": {
+          "const": true
+        }
+      }
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "files",
+        "noManagement"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "noManagement": {
+          "const": true
+        }
+      }
+    },
+    "reopen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt",
+        "client",
+        "draft",
+        "noManagement"
+      ],
+      "properties": {
+        "prompt": {
+          "type": "string"
+        },
+        "client": {
+          "const": "codex"
+        },
+        "draft": {
+          "type": "string"
+        },
+        "noManagement": {
+          "const": true
+        }
+      }
+    }
+  }
+}

@@ -21,6 +21,16 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<RenameGovernance>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "governance", kind: "rename-governance", record: "RenamedGovernance" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename governance framework to \"{}\"", self.new_framework), &format!("Governance-Rahmen in \"{}\" umbenennen", self.new_framework))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for RenameGovernance
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<RenameGovernance>,
+{
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
@@ -30,7 +40,4 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename governance framework to \"{}\"", self.new_framework), &format!("Governance-Rahmen in \"{}\" umbenennen", self.new_framework))
-    }
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:declared-inputs-corpus:v1",
+  "title": "Declared Target Inputs Corpus",
+  "description": "Language-agnostic cases for the inputs a target declares: how one input string becomes a workspace-relative pattern, and which existing module files a set of declared globs expands to on a file tree.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "patterns", "tree", "globs"],
+  "properties": {
+    "version": { "const": 1 },
+    "patterns": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["input", "projectRoot", "expected"], "properties": { "input": {}, "projectRoot": { "type": "string", "minLength": 1 }, "expected": { "type": ["string", "null"] } } } },
+    "tree": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+    "globs": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "inputs", "projectRoot", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "inputs": { "type": "array" }, "projectRoot": { "type": "string", "minLength": 1 }, "expected": { "type": "array", "items": { "type": "string" } } } } }
+  }
+}

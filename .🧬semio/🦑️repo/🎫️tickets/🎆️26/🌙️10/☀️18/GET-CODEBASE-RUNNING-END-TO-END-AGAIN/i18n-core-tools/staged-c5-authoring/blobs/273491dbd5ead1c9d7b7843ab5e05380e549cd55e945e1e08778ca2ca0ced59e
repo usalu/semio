@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "id": "authoring",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "command.usage-repo-script-ts-new": {
+      "en": "usage: repo ./📜️script.ts new artifact <owner-root> <new-artifact-dir>",
+      "de": "Aufruf: repo ./📜️script.ts new artifact <Eigentümerwurzel> <neues-Artefaktverzeichnis>"
+    },
+    "command.or-repo-script-ts-new": {
+      "en": "   or: repo ./📜️script.ts new standard <artifact-root> <new-standard-dir>",
+      "de": "   oder: repo ./📜️script.ts new standard <Artefaktwurzel> <neues-Standardverzeichnis>"
+    },
+    "command.or-repo-script-ts-new-2": {
+      "en": "   or: repo ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]",
+      "de": "   oder: repo ./📜️script.ts new subset <Standardwurzel> <neues-Subsetverzeichnis> [--dry-run]"
+    },
+    "command.or-repo-script-ts-new-3": {
+      "en": "   or: repo ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]",
+      "de": "   oder: repo ./📜️script.ts new mutation <Mutationswurzel-des-Eigentümers> <Emoji-semantischer-Name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]"
+    },
+    "command.or-repo-script-ts-new-4": {
+      "en": "   or: repo ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--hard=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>",
+      "de": "   oder: repo ./📜️script.ts new crates <Artefaktpaket-Verzeichnis> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<Modulpfad>,...] [--target=<Dateien>/<Bytes>/<Zeilen>] [--hard=<Dateien>/<Bytes>/<Zeilen>] [--backup=<Verzeichnis>] [--verify [--oracle] [--keep] --sandbox=<Verzeichnis>] | --check-applied [--base=<Git-Referenz>] [--samples=<Anzahl>] [--keep] --sandbox=<Verzeichnis>"
+    },
+    "command.or-repo-script-ts-new-5": {
+      "en": "   or: repo ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)",
+      "de": "   oder: repo ./📜️script.ts new leaves <Rust-Datei> [--dry-run] [--json-schema]   (liefert TypeScript-/GraphQL-/Proto-Facet-Begleiter und mit --json-schema die JSON-Schema-Blätter aus ihren Dokumenten)"
+    },
+    "command.new-mutation-is-already-over": {
+      "en": "new mutation: {crate} is already over the source gate (lib {files} files / {lines} lines, test {files2} files); plan a carve with `repo ./📜️script.ts new crates`",
+      "de": "new mutation: {crate} liegt schon über dem Quell-Gate (lib {files} Dateien / {lines} Zeilen, Test {files2} Dateien); plane einen Zuschnitt mit `repo ./📜️script.ts new crates`"
+    },
+    "command.new-mutation-is-next-to": {
+      "en": "new mutation: {crate} is next to the source gate (lib {files} files / {lines} lines, test {files2} files); plan a carve with `repo ./📜️script.ts new crates`",
+      "de": "new mutation: {crate} liegt kurz vor dem Quell-Gate (lib {files} Dateien / {lines} Zeilen, Test {files2} Dateien); plane einen Zuschnitt mit `repo ./📜️script.ts new crates`"
+    },
+    "command.new-leaves-has-no-artifactschemadescriptor": {
+      "en": "new leaves: {positional} has no ArtifactSchemaDescriptor companion to serve.",
+      "de": "new leaves: {positional} hat keinen ArtifactSchemaDescriptor-Begleiter, den es zu liefern gäbe."
+    },
+    "command.new-leaves-companion-from-their": {
+      "en": "new leaves: {positional} — {serving} {leaves} companion(s) from their documents; install a SchemaLeafReader (FileSystemSchemaLeaves) in every host that resolves them.",
+      "de": "new leaves: {positional} — {serving} {leaves} Begleiter aus ihren Dokumenten; installiere in jedem Host, der sie auflöst, einen SchemaLeafReader (FileSystemSchemaLeaves)."
+    },
+    "command.line": {
+      "en": "  {run}{delete} {path}",
+      "de": "  {run}{delete} {path}"
+    },
+    "command.owner-rows": {
+      "en": "owner rows: {added}",
+      "de": "Eigentümerzeilen: {added}"
+    },
+    "command.new-crates-wrote-file-for": {
+      "en": "new crates: {artifactCrate} — wrote {writes} file(s) for {crates} crate(s).",
+      "de": "new crates: {artifactCrate} — {writes} Datei(en) für {crates} Crate(s) geschrieben."
+    },
+    "command.new-crates-unmirror-file-manifest": {
+      "en": "new crates --unmirror: {size} file(s), {size2} manifest(s), {removedLeaves} mirror re-export(s) removed, {repointedChains} path(s) re-pointed, {addedImports} import(s) added, {removedModules} module(s) removed{run}.",
+      "de": "new crates --unmirror: {size} Datei(en), {size2} Manifest(e), {removedLeaves} Spiegel-Re-Export(e) entfernt, {repointedChains} Pfad(e) umgelenkt, {addedImports} Import(e) hinzugefügt, {removedModules} Modul(e) entfernt{run}."
+    },
+    "command.new-file-already-present": {
+      "en": "new: {rel} — {verb} {created} file(s), {skipped} already present.",
+      "de": "new: {rel} — {verb} {created} Datei(en), {skipped} bereits vorhanden."
+    },
+    "artifact-tree.new-subset": {
+      "en": "new subset: {note}",
+      "de": "new subset: {note}"
+    }
+  }
+}

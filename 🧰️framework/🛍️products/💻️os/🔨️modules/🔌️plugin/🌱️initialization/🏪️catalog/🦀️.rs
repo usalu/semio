@@ -22,7 +22,7 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
 }
 impl<P,Mu> OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
+Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+protocol::ColdMutation<P>+OpBinary+OpText+Send+'static{
  #[doc(hidden)]
  pub fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
  fn refusal_demands(&self,body:usize)->Option<Result<RetirementDemand,ValueError>>{

@@ -27,7 +27,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check",
+        "command": "repo 📜️script.ts check",
         "cwd": "{projectRoot}"
       }
     },
@@ -41,14 +41,14 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts check-wasm",
+        "command": "repo 📜️script.ts check-wasm",
         "cwd": "{projectRoot}"
       }
     },
     "build-wasm": {
       "executor": "repo:script",
       "options": {
-        "command": "bun 📜️script.ts build-wasm",
+        "command": "repo 📜️script.ts build-wasm",
         "cwd": "{projectRoot}"
       },
       "cache": true,
@@ -71,7 +71,7 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun 📜️script.ts test",
+        "command": "repo 📜️script.ts test",
         "cwd": "{projectRoot}"
       }
     }

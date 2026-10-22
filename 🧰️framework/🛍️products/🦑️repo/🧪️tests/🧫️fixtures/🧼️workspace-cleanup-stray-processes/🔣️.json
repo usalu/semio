@@ -124,7 +124,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 510,
@@ -198,14 +198,14 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 800,
             "ppid": 799,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts serve puzzle2d react dev"
+            "command": "repo ./📜️script.ts serve puzzle2d react dev"
           },
           {
             "pid": 801,
@@ -232,7 +232,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 900,
@@ -252,7 +252,7 @@
             "ppid": 480,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 480,
@@ -279,7 +279,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 950,
@@ -306,7 +306,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 1100,
@@ -320,7 +320,7 @@
             "ppid": 1100,
             "stat": "S",
             "name": "bun",
-            "command": "bun repo run os-hub:dev"
+            "command": "repo run os-hub:dev"
           },
           {
             "pid": 1102,
@@ -354,7 +354,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 1300,
@@ -368,7 +368,7 @@
             "ppid": 1300,
             "stat": "S",
             "name": "bun",
-            "command": "bun /home/dev/semio/📜️script.ts dev storybook"
+            "command": "repo /home/dev/semio/📜️script.ts dev storybook"
           },
           {
             "pid": 1302,
@@ -409,7 +409,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 1500,
@@ -436,7 +436,7 @@
             "ppid": 1,
             "stat": "S",
             "name": "bun",
-            "command": "bun ./📜️script.ts clean"
+            "command": "repo ./📜️script.ts clean"
           },
           {
             "pid": 1500,

@@ -2,7 +2,7 @@
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::layer_transform;
 use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::*;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_raster_raster_model::RasterTransform;
 #[semio_framework_async_macros::async_test]
 async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
@@ -15,14 +15,14 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
         let transform:RasterTransform=semio_framework_pack_json::from_json_str(&row["transform"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let payload=ChangeLayerTransform {layer_id:id.clone(),expected:RasterTransform::default(),transform:transform.clone()};
         let mutation=RasterMutation::ChangeLayerTransform(payload.clone());
-        let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
+        let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=protocol::apply_diff_cold(&diff, &base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
         for horizontal in [false,true] {
             let mut ambiguous=diff.clone();let patch=&mut ambiguous.layers.as_mut().unwrap().modified[0].patch;
             if horizontal {patch.transform_x=Some(0.0);}else{patch.transform_y=Some(0.0);}
-            assert!(protocol::apply_diff(&ambiguous, &base).is_err());ambiguous.retire_cold();
+            assert!(protocol::apply_diff_cold(&ambiguous, &base).is_err());ambiguous.retire_cold();
         }
         assert_eq!(validate(&payload,&after),Err(protocol::OutcomeCode::TargetMismatch));
-        let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=protocol::apply_diff(&undo, &after).unwrap();assert_eq!(restored,base);
+        let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=protocol::apply_diff_cold(&undo, &after).unwrap();assert_eq!(restored,base);
         let movement=RasterMutation::MoveLayer(semio_s_artifact_raster_raster_mutations_layers::move_layer::mutation::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
         for full_first in [false,true] {
             let full=mutation.diff(&base).diff().clone();let partial=movement.diff(&base).diff().clone();

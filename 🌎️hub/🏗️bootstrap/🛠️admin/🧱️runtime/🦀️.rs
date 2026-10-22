@@ -13,7 +13,7 @@ use semio_hub_runtime::readiness::HUB_PROCESS_START;
 use semio_hub_observability::{HubObservabilityV1, HubRouteMetricsV1};
 use semio_hub_directory::{ProjectionRebuildControl, ProjectionRebuildProgress};
 use semio_framework_hash::Sha256;
-use semio_framework_async::ShardedMap;
+use semio_framework_async_slots::ShardedMap;
 use semio_hub_ledgers::socket_grants::SocketBindingKeyV1;
 use axum::http::StatusCode;
 use semio_framework_trace::record::Tracer;

@@ -29,7 +29,7 @@ description: >-
 Run **`diff` then `prepare`**. Do not stage. Do not run `micro-commit stage`, `git add`, or `git add -A`.
 
 ```bash
-bun ./📜️script.ts micro-commit diff
+repo ./📜️script.ts micro-commit diff
 ```
 
 Read the diff **silently** (do not paste it to the user). That diff is **only the index**. Unstaged and untracked paths are not part of this commit. If stdout is empty, do not invent bullets and do not stage anything to create a diff — run `prepare` with empty stdin and reply with its error fence.
@@ -37,7 +37,7 @@ Read the diff **silently** (do not paste it to the user). That diff is **only th
 When the diff is non-empty, write 1–8 bullets from **this** diff only — not chat memory. **Cover every staged area** that matters (see below)—the script rejects commits that skip an entire area. **Sort by impact**: highest-impact bullet first, then descending (never alphabetical or file-path order). For each line, choose **whatever single emoji best fits that specific change** (no fixed palette).
 
 ```bash
-bun ./📜️script.ts micro-commit prepare [gc|gp|g.] <<'EOF'
+repo ./📜️script.ts micro-commit prepare [gc|gp|g.] <<'EOF'
 {emoji}{highest-impact change from the diff}
 {emoji}{next change}
 EOF
@@ -98,13 +98,13 @@ Signed-off-by: Name <email@example.com>
 
 - From **current** `diff` output only; precise; not path-only (`Update foo.ts` forbidden).
 - **Cover every staged area (required):** one bullet minimum per area present in the diff. Areas the script checks:
-  - **`.cursor/plans/`** — Cursor plans are **high impact**; summarize what the plan decides or enables (read the diff, not the filename alone).
+  - **ticket `*.plan.md` files** — plans are **high impact**; summarize what the plan decides or enables (read the diff, not the filename alone).
   - **`framework/` / `puzzle/` / `compose/` / `cad/` / `ui/` / …** — product/runtime behavior.
   - **`repo/`** — hooks, CLI, MCP, micro-commit, tooling.
   - **`.agents/`** — skills/rules (except pure `SKILL.md` tweaks bundled with larger work—still mention the skill change if it is part of the story).
   - **`.devcontainer/`** — environment/bootstrap.
   - **Anything else staged** — include it; do not cherry-pick only “code” and drop plans, config, or infra.
-- **Order by impact (required):** line 1 = biggest user or system effect; each next line = strictly lower impact. A new **`.cursor/plans/*.plan.md`** often belongs in the top 1–2 bullets when it defines the approach for the rest of the diff.
+- **Order by impact (required):** line 1 = biggest user or system effect; each next line = strictly lower impact. A new **ticket `*.plan.md`** often belongs in the top 1–2 bullets when it defines the approach for the rest of the diff.
 - New tickets: script adds `{emoji}{title}` from `ticket.json` — do not duplicate.
 - Format: `{emoji}{summary}` — each line **starts with the emoji** (no leading `-`), **no space** after the emoji (words inside the summary may use spaces). Example: `🗺️Fix north-up tile affine`, not `- 🗺️ Fix …` or `🗺️ Fix …`.
 - **Emoji choice:** one leading emoji per bullet — the **most accurate** for _that_ description (read the diff; vary emojis across lines). There is **no** approved list.
@@ -114,7 +114,7 @@ Signed-off-by: Name <email@example.com>
 
 Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️metric** metrics (repo totals `📊️metric📃uloc…` then `📊️metric💾size…`, then per-language pairs `📊️metric{emoji}{slug}📃uloc…` / `📊️metric{emoji}{slug}💾size…` — optional `📈️`/`📉️` net (`➕️−➖️`), `➗️` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages sorted by uloc bloc), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
-After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `bun ./📜️script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
+After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `repo ./📜️script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
 
 ## GitKraken (do not mention unless commit fails)
 
@@ -126,6 +126,6 @@ Only `⛳️wip` or `🏗️dev`.
 
 ## Forbidden
 
-Reasoning in the open, codebase search, tickets MCP, goals, `gh pr create`, `micro-commit stage`, `git add`, staging unstaged or untracked paths, hand-editing counter/timestamp/Signed-off-by, inventing bullets without reading this turn's diff, bullets sorted by file name or diff hunk order instead of impact, **omitting whole staged areas** (especially `.cursor/plans/` or repo infra) while only describing unrelated tweaks, leading `-` on bullets, a space after the emoji (`🗺️ Fix …`), reusing one emoji for every bullet when the changes differ, **reserved lead emojis** (`🎆️` `📊️` `🔢️` `🚩️`) or copying the `🎆️YY🌙️MM☀️DD` date pattern into bullets, **stripping or merging newlines** in the fenced commit message reply.
+Reasoning in the open, codebase search, tickets MCP, goals, `gh pr create`, `micro-commit stage`, `git add`, staging unstaged or untracked paths, hand-editing counter/timestamp/Signed-off-by, inventing bullets without reading this turn's diff, bullets sorted by file name or diff hunk order instead of impact, **omitting whole staged areas** (especially ticket plans or repo infra) while only describing unrelated tweaks, leading `-` on bullets, a space after the emoji (`🗺️ Fix …`), reusing one emoji for every bullet when the changes differ, **reserved lead emojis** (`🎆️` `📊️` `🔢️` `🚩️`) or copying the `🎆️YY🌙️MM☀️DD` date pattern into bullets, **stripping or merging newlines** in the fenced commit message reply.
 
 Related: `.agents/skills/merging/SKILL.md`, `.agents/skills/commit/SKILL.md`.

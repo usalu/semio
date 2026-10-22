@@ -4,7 +4,7 @@ import {completedCargoClosureRosterV1,readCompletedCargoOriginV1,type CompletedC
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schemaDocument from "../🧬️schema/🔣️.json" with { type: "json" };
 import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
-const schema=structuredClone(schemaDocument),maximumBytes=sourceSchema.properties.maximumBytes.const,maximumFiles=sourceSchema.properties.maximumFiles.const,maximumIndexBytes=sourceSchema.properties.maximumManifestBytes.const;
+const schema=structuredClone(schemaDocument),maximumBytes=sourceSchema.properties.maximumRetainedCompilationBytes.const,maximumFiles=sourceSchema.properties.maximumFiles.const,maximumIndexBytes=sourceSchema.properties.maximumRetainedIndexBytes.const;
 export interface CompletedCargoRetainedIndexV1{readonly version:1;readonly origin:CompletedCargoOriginV1;readonly receipt:Readonly<{path:"receipt.json";sha256:string;bytes:number}>;readonly rows:readonly CompletedCargoClosureRowV1[];readonly files:readonly Readonly<{source:string;path:string;sha256:string;bytes:number}>[]}
 
 /** 📋️ Validates complete retained compilation DATA; the caller must separately retain its genuine artifact reader. */

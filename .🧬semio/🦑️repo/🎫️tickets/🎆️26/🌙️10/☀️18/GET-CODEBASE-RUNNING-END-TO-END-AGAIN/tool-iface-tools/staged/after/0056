@@ -13,7 +13,8 @@ import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../🔨️modul
 import { cmdBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { spawnToolSyncV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
@@ -345,7 +346,7 @@ function retainedUiNativeStripOnly(): void {
   `;
   const environment = { ...process.env };
   delete environment.NO_COLOR;
-  const child = spawnToolSyncV1("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
+  const child = runToolSyncV1("node", ["--experimental-strip-types", "--input-type=module", "--eval", program], { encoding: "utf8", env: environment });
   assert.equal(child.status, 0, child.stderr);
   assert.equal(child.signal, null);
   const result = JSON.parse(child.stdout) as { laws: number; grants: number; tableCloseTurns: number; retired: number; cancellationCloseTurns: number; cancellations: number; siblingInsertions: number; validationTurns: number; validationCloseTurns: number; validationCancellations: number; validationCases: number; hashBytes: number; hashCalls: number; hashChunks: number; hashCloseTurns: number; hashCancellations: number; hashCases: number; readCancelTurns: number; readRetirementTurns: number; readCloseTurns: number; independentReadCloseTurns: number; readCancellations: number; readCaptures: number; readCloses: number; readCases: number };
@@ -454,7 +455,7 @@ class TypecheckScript extends BundleScript {
 class InstallationIdentityScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("Installation identity check accepts no arguments");
-    const child = spawnToolSyncV1(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", import.meta.url))], { cwd: this.root, env: process.env, stdio: "inherit" });
+    const child = runToolSyncV1(runtimeCommandNameV1(), ["test", fileURLToPath(new URL("../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", import.meta.url))], { cwd: this.root, env: process.env, stdio: "inherit" });
     if (child.status !== 0) throw new Error("Installation identity contract failed");
   }
 }

@@ -20,18 +20,22 @@ pub struct InsertOtherSegmentMutation {
 //#region Semantics
 impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "other-segment", kind: "insert-other-segment", record: "InsertOtherSegment" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["insert-other-segment".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMutation {
     fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
         let Self { index, segment } = self;
         protocol::MutationOutcome::new(contribute(base, *index, segment.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
         Ok(vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: self.index.min(base.image.other_segments.len()) })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["insert-other-segment".into()]
     }
 }
 pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgDiff {

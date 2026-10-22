@@ -132,7 +132,7 @@ pub struct LocalHubCredential {
     pub(super) capability: Box<[u8]>,
 }
 
-pub(super) struct WipeBytes<'a> {
+pub struct WipeBytes<'a> {
     #[doc(hidden)] pub bytes: Vec<u8>,
     pub(super) observer: Option<&'a std::sync::atomic::AtomicUsize>,
 }

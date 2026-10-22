@@ -10,7 +10,7 @@ import {
   useRef,
   type MouseEvent as ReactMouseEvent,
   type RefObject
-} from "react";
+} from "../../⚛️react-port/🟦️.ts";
 import {
   TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,

@@ -347,7 +347,8 @@
           "maximumBytes": 128,
           "maximumAncestors": 64
         },
-        "persistentNamespace": "persistent"
+        "persistentNamespace": "persistent",
+        "publicationFormat": "ancestry-bound-v1"
       }
     },
     "ImageReceipt": {
@@ -2311,6 +2312,98 @@
             "actual",
             "maintenanceControl"
           ]
+        }
+      }
+    },
+    "ImageMaintenanceFailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "first",
+        "late",
+        "expected",
+        "origin",
+        "releaseFailure"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "first": {
+          "enum": [
+            "error",
+            "undefined",
+            "null",
+            "false",
+            "zero",
+            "empty",
+            "none",
+            "timeout"
+          ]
+        },
+        "late": {
+          "enum": [
+            "deadline",
+            "abort",
+            "none"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "primary",
+            "late",
+            "deferred",
+            "aggregate"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "acquire",
+            "observe",
+            "pending-observe",
+            "acquire-pending"
+          ]
+        },
+        "releaseFailure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LeaseContinuationDrainCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "stop",
+        "lateFailure",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stop": {
+          "enum": [
+            "deadline",
+            "abort"
+          ]
+        },
+        "lateFailure": {
+          "enum": [
+            "none",
+            "error",
+            "undefined",
+            "null",
+            "false",
+            "zero",
+            "empty"
+          ]
+        },
+        "expected": {
+          "const": "first-stop-after-drain"
         }
       }
     }

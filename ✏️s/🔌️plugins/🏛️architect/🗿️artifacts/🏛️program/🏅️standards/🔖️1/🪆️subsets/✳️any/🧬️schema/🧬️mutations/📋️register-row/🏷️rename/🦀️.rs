@@ -24,17 +24,24 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<RenameRegisterRow>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "register-row", kind: "rename-register-row", record: "RenamedRegisterRow" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let label = self.register.label();
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename {} to \"{}\"", label.en, self.new_name), &format!("{} in \"{}\" umbenennen", label.de, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for RenameRegisterRow
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<RenameRegisterRow>,
+{
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }

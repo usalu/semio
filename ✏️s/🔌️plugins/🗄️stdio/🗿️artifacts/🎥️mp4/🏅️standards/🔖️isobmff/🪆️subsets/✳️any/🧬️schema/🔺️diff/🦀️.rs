@@ -457,19 +457,9 @@ pub struct Mp4Diff {
     pub tracks: Option<Mp4TracksDiff>,
 }
 
-impl MutationDiff<Mp4Snapshot> for Mp4Diff {
-    fn apply(&self, base: &Mp4Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Mp4Snapshot> {
-        if let Some(diff) = &self.tracks {
-            validate_indexed(&base.tracks, diff, validate_track_diff)?;
-        }
-        Ok(Mp4Snapshot {
-            schema: base.schema.clone(),
-            ftyp: self.ftyp.clone().unwrap_or_else(|| base.ftyp.clone()),
-            movie: self.movie.clone().unwrap_or_else(|| base.movie.clone()),
-            tracks: self.tracks.as_ref().map_or_else(|| base.tracks.clone(), |td| apply_indexed(&base.tracks, td, apply_track_diff)),
-        })
-    }
+impl MutationDiff<Mp4Snapshot> for Mp4Diff {}
 
+impl protocol::ColdMutationDiff<Mp4Snapshot> for Mp4Diff {
     fn absorb(&mut self, other: Self) {
         if other.ftyp.is_some() {
             self.ftyp = other.ftyp;
@@ -483,6 +473,20 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut Mp4Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        if let Some(diff) = &self.tracks {
+            validate_indexed(&base.tracks, diff, validate_track_diff)?;
+        }
+        *unpublished = Mp4Snapshot {
+            schema: base.schema.clone(),
+            ftyp: self.ftyp.clone().unwrap_or_else(|| base.ftyp.clone()),
+            movie: self.movie.clone().unwrap_or_else(|| base.movie.clone()),
+            tracks: self.tracks.as_ref().map_or_else(|| base.tracks.clone(), |td| apply_indexed(&base.tracks, td, apply_track_diff)),
+        };
+        Ok(())
+    }
 }
 
 fn validate_track_diff(base: &Mp4Track, diff: &Mp4TrackDiff) -> MutationApplyResult<()> {
@@ -493,16 +497,18 @@ fn validate_track_diff(base: &Mp4Track, diff: &Mp4TrackDiff) -> MutationApplyRes
 }
 
 impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
+    fn is_empty(&self) -> bool {
+        self.ftyp.is_none() && self.movie.is_none() && self.tracks.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Mp4Snapshot> for Mp4Diff {
     fn inverse(&self, base: &Mp4Snapshot) -> Self {
         Self {
             ftyp: self.ftyp.as_ref().map(|_| base.ftyp.clone()),
             movie: self.movie.as_ref().map(|_| base.movie.clone()),
             tracks: self.tracks.as_ref().map(|tracks| inverse_indexed(tracks, &base.tracks, inverse_track_diff)).filter(|tracks| !tracks.is_empty()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.ftyp.is_none() && self.movie.is_none() && self.tracks.is_none()
     }
 }
 

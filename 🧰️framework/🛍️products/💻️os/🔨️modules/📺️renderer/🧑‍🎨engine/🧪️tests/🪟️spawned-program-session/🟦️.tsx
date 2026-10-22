@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   contributionsReceiverSessionV1,
@@ -56,7 +56,6 @@ import { historyPatchShouldApplyV1 } from "../../🧱️elements/🛠️ShellHel
 import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪟️declared-instances.json";
 import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧩️contributions-receiver.json";
 import { resolveAppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 afterEach(cleanup);
@@ -67,7 +66,21 @@ const DRAW_KINDS = [
 ];
 const SPAWNED_ID = "draw-7";
 
-const shellHostSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
+/** 🧩️ Reads the authored source of the whole ShellHost component family as one text, its root first and every other module below it in path order: the host was split into one directory per concern, so a source-text law must read the family, not only the files the root imports (the module-tree reader follows imports below the importer only). */
+const readShellHostFamilySourceV1 = (directory: string): string => {
+  const files: string[] = [];
+  const walk = (current: string): void => {
+    for (const entry of readdirSync(current, { withFileTypes: true }).sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))) {
+      const path = join(current, entry.name);
+      if (entry.isDirectory()) { if (entry.name !== "🧪️tests" && entry.name !== "node_modules") walk(path); }
+      else if (/\.tsx?$/u.test(entry.name) && path !== join(directory, "🟦️.tsx")) files.push(path);
+    }
+  };
+  walk(directory);
+  return [join(directory, "🟦️.tsx"), ...files].map((path) => { const text = readFileSync(path, "utf8"); return text.endsWith("\n") ? text : text + "\n"; }).join("");
+};
+
+const shellHostSource = readShellHostFamilySourceV1(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost"));
 
 const windowDescriptor = (id: string, label: string): ModeWindowDescriptor =>
   ({ id, title: label as unknown as ModeWindowDescriptor["title"], iconId: "app-window", fill: true, children: <div data-testid={`body-${id}`}>{label}</div> }) as unknown as ModeWindowDescriptor;

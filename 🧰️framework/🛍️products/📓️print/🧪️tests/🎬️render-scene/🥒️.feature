@@ -11,7 +11,7 @@ Feature: A chart specification renders into the scene graph and into TikZ
   Nothing in d3 adjudicates that stage. d3 has no scene graph, no TikZ emitter and no notion of a
   chart specification — its shape generators stop at a path string. The arithmetic underneath the
   renderer is separately adjudicated against the registered d3 oracles by the kernel's own
-  differential harness (`bun ./📜️script.ts test` in `🧬️schema/💡️inferences/📦️packages/🟦️typescript`,
+  differential harness (`repo ./📜️script.ts test` in `🧬️schema/💡️inferences/📦️packages/🟦️typescript`,
   registered numerical checks), so this case covers only what that harness cannot: that the
   specification is turned into the primitives it names, that both emitters agree on the same item
   list, and that changing an option changes the projection.

@@ -40,7 +40,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
     for step in &inverse {
         snapshot = protocol::apply_mutation(&snapshot, step).expect("inverse step applies").0;
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
                 .collect()
         })
         .unwrap_or_default();
-    let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &before());
+    let raised = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
@@ -112,7 +112,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &base);
+    let raised = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(raised.diff()));
     let committed = semio_framework_pack_json::parse(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced, &committed), "delete-machine/empties-the-workshop-of-the-saw: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -132,7 +132,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Process3dDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-machine/empties-the-workshop-of-the-saw: committed diff did not carry before to after");
 }
 

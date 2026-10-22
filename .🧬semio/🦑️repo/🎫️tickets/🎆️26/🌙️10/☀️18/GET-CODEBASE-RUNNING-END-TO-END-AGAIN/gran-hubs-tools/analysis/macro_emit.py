@@ -16,7 +16,14 @@ for n,d in enumerate(cands):
         if 'macro_rules!' not in t: continue
         if not any(i in t for i in IDENTS.values()): continue
         for m in re.finditer(r'macro_rules!\s+(\w+)\s*\{',t):
-            seg=t[m.end():m.end()+30000];nxt=seg.find('macro_rules!');seg=seg if nxt<0 else seg[:nxt]
+            if 'macro_export' not in t[max(0,m.start()-160):m.start()]: continue
+            d_=1;j_=m.end()
+            while j_<len(t) and d_:
+                ch=t[j_]
+                if ch=='{': d_+=1
+                elif ch=='}': d_-=1
+                j_+=1
+            seg=t[m.end():j_]
             for h,i in IDENTS.items():
                 if re.search(r'(?<![A-Za-z0-9_])'+i+r'(?![A-Za-z0-9_])',seg): out[h].append([C[d]['name'],m.group(1),os.path.relpath(f,ROOT)[-60:]])
     if n%600==0: print(n,round(time.time()-t0),flush=True)

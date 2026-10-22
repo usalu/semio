@@ -24,6 +24,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplacedBlock" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace block \"{}\"", self.block.id), &format!("Block \"{}\" ersetzen", self.block.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.step_id.clone(), self.block.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<FormsSnapshot, Op> for ReplaceBlock
+where
+    Op: protocol::ColdMutation<FormsSnapshot, ReferenceDiff = FormsDiff> + From<ReplaceBlock>,
+{
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         crate::standards::v1::subsets::any::schema::mutations::replace_block::diff::diff_replace_block(self, base)
     }
@@ -33,11 +45,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace block \"{}\"", self.block.id), &format!("Block \"{}\" ersetzen", self.block.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.step_id.clone(), self.block.id.clone()]
-    }
 }
 //#endregion 🔁️ReplaceBlock

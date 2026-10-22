@@ -17,6 +17,18 @@ impl Default for Camera {
     }
 }
 
+impl From<Camera> for semio_framework_canvas::camera::Camera {
+    fn from(camera: Camera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
+}
+
+impl From<semio_framework_canvas::camera::Camera> for Camera {
+    fn from(camera: semio_framework_canvas::camera::Camera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
+}
+
 /// 🎯️ Semantic board event emitted after interaction or selection changes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BoardEvent {

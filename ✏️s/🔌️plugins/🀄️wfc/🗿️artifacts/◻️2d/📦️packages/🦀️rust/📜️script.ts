@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 📦️ wfc-2d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-wfc-2d", { packages: ["semio-s-artifact-wfc-2d", "semio-s-artifact-wfc-2d-config", "semio-s-artifact-wfc-2d-diff", "semio-s-artifact-wfc-2d-inferences", "semio-s-artifact-wfc-2d-mut-any", "semio-s-artifact-wfc-2d-mutations", "semio-s-artifact-wfc-2d-pin-slot", "semio-s-artifact-wfc-2d-schema", "semio-s-artifact-wfc-2d-tests", "semio-s-artifact-wfc-2d-transient", "semio-s-artifact-wfc-2d-v1"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000 });

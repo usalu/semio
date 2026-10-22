@@ -30,6 +30,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect synapse \"{}\" ({} → {})", self.synapse.id, self.synapse.from, self.synapse.to), &format!("Synapse \"{}\" ({} → {}) verbinden", self.synapse.id, self.synapse.from, self.synapse.to))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.synapse.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for ConnectSynapse
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<crate::disconnect_synapse::DisconnectSynapse>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::connect_synapse::diff::diff(self, base)
     }
@@ -39,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect synapse \"{}\" ({} → {})", self.synapse.id, self.synapse.from, self.synapse.to), &format!("Synapse \"{}\" ({} → {}) verbinden", self.synapse.id, self.synapse.from, self.synapse.to))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.synapse.id.clone()]
-    }
 }
 //#endregion 🔖️ConnectSynapse

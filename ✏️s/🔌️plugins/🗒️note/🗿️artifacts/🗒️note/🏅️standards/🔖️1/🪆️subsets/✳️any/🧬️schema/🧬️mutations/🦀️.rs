@@ -9,7 +9,7 @@
 
 use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::NoteDiff;
 use crate::NoteSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
@@ -24,7 +24,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note")]
+#[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note", reference = NoteSnapshot, reference_diff = NoteDiff)]
 pub enum NoteMutation {
     RenameNote(RenameNote),
     ChangeGridVisible(ChangeGridVisible),
@@ -160,7 +160,7 @@ pub const KINDS: &[&str] = &[
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
     Ok({
-    <NoteMutation as Mutation<NoteSnapshot>>::inverse(mutation, base)?
+    <NoteMutation as ColdMutation<NoteSnapshot>>::inverse(mutation, base)?
 
     })
 }

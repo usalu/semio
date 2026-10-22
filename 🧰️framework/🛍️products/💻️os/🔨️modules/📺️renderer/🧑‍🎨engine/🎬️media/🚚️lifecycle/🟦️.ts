@@ -15,6 +15,14 @@ export type MediaTransportPort = {
   readonly takeMediaExportChunk: (instanceId: number, handle: MediaExportHandle) => Promise<MediaExportChunk>;
 };
 
+/** 🪟️ The owner a media host renders for: the app instance and controller that own the window, the window itself and the port its exports travel through. */
+export type MediaTransportOwnerV1 = {
+  readonly instanceId: number;
+  readonly controllerId: string;
+  readonly windowId: string;
+  readonly port: MediaTransportPort;
+};
+
 export type MediaTransportOperation = {
   readonly instanceId: number;
   readonly parentDocumentId: string;

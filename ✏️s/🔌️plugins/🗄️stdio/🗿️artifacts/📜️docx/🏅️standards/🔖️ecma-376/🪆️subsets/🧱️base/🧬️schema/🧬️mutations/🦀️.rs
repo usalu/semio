@@ -30,7 +30,7 @@ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
@@ -109,7 +109,7 @@ pub mod set_style_name;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxMutation")]
+#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxMutation", reference = DocxSnapshot, reference_diff = DocxDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DocxMutation {
     /// ➕️ Inserts `block` at `path` (`path.index` = insertion index, FINAL state).
@@ -196,7 +196,7 @@ pub const KINDS: &[&str] = &[
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

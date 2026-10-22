@@ -26,7 +26,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -34,7 +34,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -43,7 +43,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -61,7 +61,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify note-empty-config-ownership",
+        "command": "repo ./📜️script.ts verify note-empty-config-ownership",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -79,7 +79,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify sqlite-snapshot-guest",
+        "command": "repo ./📜️script.ts verify sqlite-snapshot-guest",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -105,7 +105,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-guest",
+        "command": "repo ./📜️script.ts verify snapshot-guest",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -131,7 +131,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify sqlite-snapshot-native",
+        "command": "repo ./📜️script.ts verify sqlite-snapshot-native",
         "forwardAllArgs": true
       },
       "metadata": {

@@ -1,0 +1,39 @@
+{
+  "title": "Move Apps Pack Windows to Tools Tab",
+  "status": "closed",
+  "description": "Move sketchpad all apps pack windows section from workbench into tools tab in left toggle panel.",
+  "summary": "Moved Design windows section from workbench to tools tab and extended existing Design Playwright assertions for tab-specific section placement; validated behavior via runtime logs with running dev server.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/842"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-11T14:09:16.063100239Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Move sketchpad all apps pack windows section from workbench into tools tab in left toggle panel.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-11T14:19:09.223125666Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "summary": "Moved Design windows section from workbench to tools tab and extended existing Design Playwright assertions for tab-specific section placement; validated behavior via runtime logs with running dev server.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    }
+  ]
+}

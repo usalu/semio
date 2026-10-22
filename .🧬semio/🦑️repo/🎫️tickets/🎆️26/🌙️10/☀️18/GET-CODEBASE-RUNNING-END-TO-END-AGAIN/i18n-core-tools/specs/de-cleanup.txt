@@ -1,0 +1,26 @@
+== normalization workflow
+[clean taxonomy progress] Inventar {phase} {current}/{total}{path}
+[clean taxonomy inventory] entries={entries} source={sourceTreeDigest}{value}
+[clean taxonomy plan] {counts} unresolved={unresolved} digest={planDigest} -> {planPath}
+[clean taxonomy apply] state={state} moves={appliedMoves} relocations={appliedEmbeddedTicketRootRelocations} symlinks={appliedSymlinkTargetEdits} removals={appliedEvidenceRemovals} edits={appliedEdits} regenerations={appliedRegenerations} journal={journalPath}
+[clean taxonomy apply] build owners removed={removed} added={added} renamed={renamed} relocated={relocated} repackaged={repackaged}
+[clean taxonomy apply] Build-Eigentümer {kind} {owner} {path} {detail}
+[clean taxonomy verify] clean={clean} errors={errors} warnings={warnings}{value}
+== normalization command
+[clean taxonomy progress] {operation} {phase} {current}/{total}{path}
+== normalization mutation
+[clean taxonomy inventory --kind mutation] roots={roots} records={records} violations={violations}
+[clean taxonomy plan --kind mutation] moves={moves} unresolved={unresolved} digest={planDigest} -> {path}
+[clean taxonomy apply --kind mutation] state=committed moves=0 digest={planDigest}
+[clean taxonomy verify --kind mutation] clean={clean} errors={violations}
+== workspace cleanup
+[clean marker-only-folders] {applied} removals={removals} bytes={bytes}
+[clean marker-only-folders] {removed} {path} ({bytes})
+[clean marker-only-folders] geschützt {path}
+[clean empty-folders] {removed} {path} ({bytes})
+[clean empty-folders] {applied} removals={totalRemovals} bytes={totalBytes}
+[clean empty-folders] geschützt {path}
+[clean coverage] {applied} removals={removed}
+[clean coverage] {removed} {path}
+[clean] cache-prune übersprungen: Die Prozesstabelle ist nicht lesbar, daher lässt sich ein aktiver Semio-Tech-Build nicht ausschließen
+[clean] cache-prune übersprungen: aktiver Semio-Tech-Build

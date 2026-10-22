@@ -9,7 +9,7 @@ Feature: The 🎫️ticket.json document reads and writes exactly the way it is 
   reader of the same bytes. Three behaviours are pinned that a naive port would get wrong: the status
   member is mandatory and closed, the encoder HTML-escapes `<`, `>` and `&` because Go's does, and
   every member the shape does not declare is read and then dropped. Human interaction records,
-  including exact reopen prompts, remain durable across encoding and subsequent decoding.
+  including exact reopen prompts, parent identities, agent metadata and nested agent plans, remain durable across encoding and subsequent decoding.
 
   @id-real-documents-decode-to-the-same-ticket
   @level-fundamental

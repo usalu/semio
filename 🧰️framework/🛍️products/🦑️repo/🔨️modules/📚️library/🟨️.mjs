@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
 import {nxBuildDependencySourceIdentityV1,nxEngineNamedInputV1 as engineNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
 export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();return nxBuildDependencySourceIdentityV1();}
@@ -37,7 +38,7 @@ export function nxBuildEngineInputsV1(){
   const admit=(owner,specifier)=>{
    if(specifier.startsWith(".")){
     const candidate=nxBuildEngineSourceFileV1(owner,specifier);if(relative(root,candidate).startsWith(".."))throw Error("Private Nx engine source outside workspace");pending.push(candidate);
-   }else if(!specifier.includes(":")&&specifier!=="bun")packages.add(specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0]);
+   }else if(!specifier.includes(":")&&!isRuntimeBuiltinSpecifierV1(specifier))packages.add(specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0]);
   };
   while(pending.length){
    const reference=pending.pop(),path=reference.startsWith("file:")?fileURLToPath(reference):reference;if(files.has(path))continue;files.add(path);let phase=performance.now();const source=readFileSync(path,"utf8");loadMilliseconds+=performance.now()-phase;if(path.endsWith(".json"))continue;

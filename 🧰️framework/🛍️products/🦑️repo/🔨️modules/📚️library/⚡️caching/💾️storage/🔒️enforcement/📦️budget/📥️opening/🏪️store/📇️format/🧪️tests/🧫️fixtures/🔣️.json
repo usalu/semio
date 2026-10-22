@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "fresh-empty",
+      "marker": "missing",
+      "allocationCount": 0,
+      "entries": [],
+      "accepted": true,
+      "initialize": true
+    },
+    {
+      "id": "fresh-services",
+      "marker": "missing",
+      "allocationCount": 0,
+      "entries": [
+        "storage-events.jsonl",
+        "storage-checkpoint.jsonl",
+        ".fseventsd",
+        ".metadata_never_index"
+      ],
+      "accepted": true,
+      "initialize": true
+    },
+    {
+      "id": "current-populated",
+      "marker": "current",
+      "allocationCount": 1,
+      "entries": [
+        "graph.json",
+        "snapshots",
+        "format.json"
+      ],
+      "accepted": true,
+      "initialize": false
+    },
+    {
+      "id": "unmarked-allocation",
+      "marker": "missing",
+      "allocationCount": 1,
+      "entries": [
+        "storage-events.jsonl"
+      ],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "unmarked-snapshots",
+      "marker": "missing",
+      "allocationCount": 0,
+      "entries": [
+        "snapshots"
+      ],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "unmarked-receipt",
+      "marker": "missing",
+      "allocationCount": 0,
+      "entries": [
+        "graph.json"
+      ],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "unknown-file",
+      "marker": "missing",
+      "allocationCount": 0,
+      "entries": [
+        "unknown"
+      ],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "old-format",
+      "marker": "old",
+      "allocationCount": 0,
+      "entries": [],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "foreign-format",
+      "marker": "foreign-format",
+      "allocationCount": 1,
+      "entries": [],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "foreign-backing",
+      "marker": "foreign-backing",
+      "allocationCount": 1,
+      "entries": [],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "marker-extra",
+      "marker": "extra",
+      "allocationCount": 1,
+      "entries": [],
+      "accepted": false,
+      "initialize": false
+    },
+    {
+      "id": "reboot-device-rebound",
+      "marker": "reboot",
+      "allocationCount": 1,
+      "entries": [
+        "format.json",
+        "graph.json",
+        "snapshots"
+      ],
+      "accepted": true,
+      "initialize": false
+    }
+  ],
+  "physicalCases": [
+    {
+      "id": "ordinary",
+      "scenario": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": "wrong-kind",
+      "scenario": "wrong-kind",
+      "accepted": false
+    },
+    {
+      "id": "symlink",
+      "scenario": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "scenario": "hardlink",
+      "accepted": false
+    },
+    {
+      "id": "foreign-device",
+      "scenario": "foreign-device",
+      "accepted": false
+    },
+    {
+      "id": "long-name",
+      "scenario": "long-name",
+      "accepted": false
+    },
+    {
+      "id": "overflow",
+      "scenario": "overflow",
+      "accepted": false
+    },
+    {
+      "id": "close-mutation",
+      "scenario": "close-mutation",
+      "accepted": false
+    },
+    {
+      "id": "first-undefined",
+      "scenario": "first-undefined",
+      "accepted": false
+    }
+  ],
+  "workerCases": [
+    {
+      "id": "current-marker",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "extra-reference",
+      "mutation": "extra-reference",
+      "accepted": false
+    },
+    {
+      "id": "old-marker",
+      "mutation": "version",
+      "accepted": false
+    },
+    {
+      "id": "oversize-marker",
+      "mutation": "oversize",
+      "accepted": false
+    }
+  ],
+  "lifetimeCases": [
+    {
+      "id": "current",
+      "accepted": true,
+      "opens": 1,
+      "closes": 0
+    },
+    {
+      "id": "initialize",
+      "accepted": true,
+      "opens": 2,
+      "closes": 1
+    },
+    {
+      "id": "second-consumed",
+      "accepted": false,
+      "opens": 2,
+      "closes": 2
+    },
+    {
+      "id": "first-refusal",
+      "accepted": false,
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "id": "second-refusal",
+      "accepted": false,
+      "opens": 2,
+      "closes": 2
+    },
+    {
+      "id": "close-refusal",
+      "accepted": false,
+      "opens": 1,
+      "closes": 2
+    }
+  ]
+}

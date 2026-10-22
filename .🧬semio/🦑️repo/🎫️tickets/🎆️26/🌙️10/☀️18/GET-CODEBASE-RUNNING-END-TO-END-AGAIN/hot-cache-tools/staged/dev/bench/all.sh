@@ -1,18 +1,19 @@
 #!/bin/sh
 # runs every prototype measurement against a running service; appends JSON lines to $OUT
-R=/private/tmp/hot-cache/ws1; OUT=${1:-/private/tmp/hot-cache/results.jsonl}; : > $OUT
-cd /private/tmp/hot-cache/ov
-echo "{\"mode\":\"env\",\"load\":\"$(sysctl -n vm.loadavg)\",\"cores\":$(sysctl -n hw.ncpu)}" >> $OUT
-nice -n 10 bun bench/bench.mjs direct $R --n 500 >> $OUT
-nice -n 10 bun bench/bench.mjs noop $R --n 60 >> $OUT
-nice -n 10 bun bench/bench.mjs noop $R --n 100 --client rust >> $OUT
-nice -n 10 bun bench/bench.mjs edit $R --n 40 --client rust >> $OUT
-nice -n 10 bun bench/bench.mjs edit $R --n 40 --client rust --delay 150 >> $OUT
-nice -n 10 bun bench/bench.mjs edit $R --n 20 >> $OUT
-nice -n 10 bun bench/bench.mjs watch $R --n 20 >> $OUT
-nice -n 10 bun bench/bench.mjs concurrency $R --clients 16 --per 40 >> $OUT
-for i in 1 2 3 4 5; do nice -n 10 bun bench/legacy.mjs $R p1499:build >> $OUT; done
-nice -n 10 bun bench/events.mjs native 200 20000 >> $OUT
-nice -n 10 bun bench/events.mjs portable 200 20000 >> $OUT
-nice -n 10 bun bench/replay.mjs >> $OUT
-echo done >> $OUT
+# usage: all.sh WORKSPACE NATIVE_DIR OUT LANGUAGES TARGET   (for example: all.sh ws bin results.jsonl en,de p1499:build)
+set -e
+R=${1:?workspace}; BIN=${2:?native directory}; OUT=${3:?output file}; LANGUAGES=${4:?languages}; TARGET=${5:?project:target}
+cd "$(dirname "$0")"
+: > "$OUT"
+echo "{\"mode\":\"env\",\"load\":\"$(sysctl -n vm.loadavg 2>/dev/null || cut -d' ' -f1-3 /proc/loadavg)\"}" >> "$OUT"
+nice -n 10 bun bench.mjs direct "$R" --n 500 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+nice -n 10 bun bench.mjs noop "$R" --n 60 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+nice -n 10 bun bench.mjs edit "$R" --n 40 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+nice -n 10 bun bench.mjs edit "$R" --n 40 --delay 150 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+nice -n 10 bun bench.mjs watch "$R" --n 20 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+nice -n 10 bun bench.mjs concurrency "$R" --clients 16 --per 40 --languages "$LANGUAGES" --target "$TARGET" >> "$OUT"
+for i in 1 2 3 4 5; do nice -n 10 bun stateless.mjs "$R" "$TARGET" "$BIN" >> "$OUT"; done
+nice -n 10 bun events.mjs native 200 20000 "$BIN" >> "$OUT"
+nice -n 10 bun events.mjs portable 200 20000 "$BIN" >> "$OUT"
+nice -n 10 bun replay.mjs "$BIN" >> "$OUT"
+echo done >> "$OUT"

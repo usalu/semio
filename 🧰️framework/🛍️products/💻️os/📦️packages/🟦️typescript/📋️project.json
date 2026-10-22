@@ -42,7 +42,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate-wgpu"
+        "command": "repo ./📜️script.ts generate-wgpu"
       }
     },
     "preview-generated": {
@@ -55,13 +55,16 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
     "typecheck": {
       "executor": "repo:script",
       "cache": true,
+      "dependsOn": [
+        "semio-framework-os-flow-browser-package:wasm"
+      ],
       "inputs": [
         "default",
         "^default",
@@ -69,7 +72,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts typecheck"
+        "command": "repo ./📜️script.ts typecheck"
       },
       "outputs": []
     },
@@ -83,7 +86,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check-wgpu"
+        "command": "repo ./📜️script.ts check-wgpu"
       }
     },
     "document-opening-attempt-check": {
@@ -96,7 +99,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts document-opening-attempt-check"
+        "command": "repo ./📜️script.ts document-opening-attempt-check"
       },
       "outputs": []
     },
@@ -113,7 +116,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -121,7 +124,7 @@
       "executor": "repo:script",
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test quick \"--testNamePattern=plugin module|hub program resolution|shared directory access policy\"",
+        "command": "repo ./📜️script.ts test quick \"--testNamePattern=plugin module|hub program resolution|shared directory access policy\"",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"
       },
       "outputs": [],
@@ -142,7 +145,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts installed-service-check"
+        "command": "repo ./📜️script.ts installed-service-check"
       },
       "outputs": []
     },
@@ -156,7 +159,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts mutation-verb-vocabulary-check",
+        "command": "repo ./📜️script.ts mutation-verb-vocabulary-check",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -176,7 +179,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick actor-transport"
+        "command": "repo ./📜️script.ts test quick actor-transport"
       }
     },
     "test-media-transport": {
@@ -194,7 +197,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-media-transport"
+        "command": "repo ./📜️script.ts test-media-transport"
       }
     },
     "test-store-oracles": {
@@ -225,7 +228,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-store-oracles"
+        "command": "repo ./📜️script.ts test-store-oracles"
       }
     },
     "test-channel-oracles": {
@@ -250,7 +253,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-channel-oracles"
+        "command": "repo ./📜️script.ts test-channel-oracles"
       }
     },
     "test-scene-wire-source": {
@@ -265,7 +268,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-scene-wire-source"
+        "command": "repo ./📜️script.ts test-scene-wire-source"
       },
       "outputs": []
     },
@@ -280,7 +283,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts installed-service-source"
+        "command": "repo ./📜️script.ts installed-service-source"
       }
     },
     "test-pack-wire-materialization-source": {
@@ -298,7 +301,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-pack-wire-materialization-source"
+        "command": "repo ./📜️script.ts test-pack-wire-materialization-source"
       }
     }
   }

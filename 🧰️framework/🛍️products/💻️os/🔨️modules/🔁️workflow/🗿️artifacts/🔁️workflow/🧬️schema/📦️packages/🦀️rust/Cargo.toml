@@ -22,6 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-schema-state = { path = "../../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-graph = { path = "../../../🕸️graph/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -34,5 +36,7 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-manifest-media = { path = "../../../../../../../../../🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }

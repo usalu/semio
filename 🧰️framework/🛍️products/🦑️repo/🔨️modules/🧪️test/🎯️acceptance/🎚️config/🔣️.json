@@ -1620,7 +1620,6 @@
           "args": [
             "postgres",
             "--",
-            "bun",
             "repo",
             "run",
             "@semio-tech/framework-os-kernel:reopen-storm-check",
@@ -1647,7 +1646,6 @@
           "args": [
             "neo4j",
             "--",
-            "bun",
             "repo",
             "run",
             "@semio-tech/framework-os-kernel:reopen-storm-check",

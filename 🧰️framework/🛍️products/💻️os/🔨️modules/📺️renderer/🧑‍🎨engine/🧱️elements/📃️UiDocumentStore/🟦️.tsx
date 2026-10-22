@@ -18,7 +18,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "../⚛️react-port/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "@semio-tech/ui-contract/limits";
 export { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/ui-contract/limits";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
@@ -688,6 +688,6 @@ export function useUiDocumentRevision(store: UiDocumentStore): UiRevision {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTypedWireTests } = await import("./🧪️tests/🧪️typedwire/🟦️.tsx");
-  await registerTypedWireTests(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTypedWireTests(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore }, { directory: import.meta.dirname, url: import.meta.url });
 }
 //#endregion 🧪️Tests

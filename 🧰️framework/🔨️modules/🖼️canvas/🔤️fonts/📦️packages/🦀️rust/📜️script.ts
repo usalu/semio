@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {verifyCapturedCargoArtifactsV1} from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildAdmittedCargoArtifactsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { buildBudgetMs } from '../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
@@ -6,6 +6,7 @@ import { scriptCompilerAdmissionControlV1 } from '../../../../🏃️process/�
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -14,4 +15,4 @@ class BuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("build", BuildScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("build", BuildScript)).run(process.argv.slice(2), original));

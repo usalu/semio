@@ -67,3 +67,6 @@ If round 5 changes its plan, `python3 build-plan.py` re-proves every anchor agai
 
 ## Files
 `C/pm-seam-tools/`: `apply.py`, `build-plan.py`, `overlay.py`, `paths.py`, `rebuild.sh`, `check.sh`, `test.sh`, `regress.sh`, `regress-all.sh`, `gen-fixtures.sh`, `mkdescriptors.py`, `mkschema.py`, `mkfixtures.py`, `mkratchet.py`, `mint.ts`, `real-locks.json`, `staged/plan.json`, `staged/new/w/*` (22 aliased new files + `map.json`). Generated outputs and both mirrors were deleted.
+
+## Round 6 re-stage by integrate2 (script.ts split)
+pm-seam-2: the edit of the removed closure test (🚀️bootstrap/🧪️tests/🎯️closure) is dropped (it only swapped the install-schema import for the facade). round6-tools/staged/make-pm-seam.py.

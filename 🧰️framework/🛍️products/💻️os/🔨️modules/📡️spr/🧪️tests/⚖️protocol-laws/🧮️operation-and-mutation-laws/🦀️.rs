@@ -58,7 +58,7 @@ where
     P: Clone + PartialEq + std::fmt::Debug,
     Op: crate::Mutation<P> + crate::ColdMutation<P>,
 {
-    use crate::MutationDiff;
+    use crate::{ColdMutationDiff, MutationDiff};
     let (forward, messages) = mutation.diff(base).into_parts();
     let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     let applied = (!rejected).then(|| protocol::apply_diff_cold(&forward, base));
@@ -100,9 +100,9 @@ where
     Op: crate::Mutation<P> + crate::ColdMutation<P>,
     Op::ReferenceDiff: crate::ColdDiffAlgebra<P>,
 {
-    use crate::{ColdDiffAlgebra, MutationDiff};
+    use crate::{ColdDiffAlgebra, ColdMutationDiff, MutationDiff};
     use semio_framework_value::ToValue;
-    fn canon<P, D: MutationDiff<P>>(diff: D) -> D {
+    fn canon<P, D: ColdMutationDiff<P>>(diff: D) -> D {
         let mut canonical = D::default();
         canonical.absorb(diff);
         canonical

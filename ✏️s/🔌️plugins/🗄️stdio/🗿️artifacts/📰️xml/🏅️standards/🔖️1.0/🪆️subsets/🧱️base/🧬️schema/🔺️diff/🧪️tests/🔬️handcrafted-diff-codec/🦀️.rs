@@ -43,8 +43,8 @@ fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_field
             after.doc.doctype = None;
         }
         for replay in [diff.clone(), XmlDiff::parse_diff(&diff.print_diff()).unwrap(), XmlDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
-            assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after, "case={}", case["name"]);
-            assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).unwrap(), before);
+            assert_eq!(protocol::apply_diff_cold(&replay, &before).unwrap(), after, "case={}", case["name"]);
+            assert_eq!(protocol::apply_diff_cold(&replay.inverse(&before), &after).unwrap(), before);
         }
     }
 }

@@ -1,0 +1,70 @@
+import {DOCTOR_PROTOCOL_V1,doctorTextV1,resolveDoctorLanguagesV1,type DoctorAreaV1,type DoctorLanguageV1} from "../🟦️.ts";
+import {doctorPortsV1,type DoctorPortsV1} from "../🔌️ports/🟦️.ts";
+import {formatDoctorReportV1} from "../🖨️report/🟦️.ts";
+import {DoctorCancelledV1,runDoctorV1,type DoctorRunOptionsV1} from "../🏃️runner/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+
+/** 📝️ The closed arguments of `repo doctor`. */
+export type DoctorArgumentsV1=Readonly<{json:boolean;fix:boolean;dryRun:boolean;strict:boolean;facts:boolean;only:ReadonlySet<DoctorAreaV1>|undefined;language:string|undefined}>;
+const both=(key:string,values:Readonly<Record<string,string|number>>={}):string=>doctorTextV1("en",key,values)+"\n"+doctorTextV1("de",key,values);
+const valued=new Set(["--only","--lang"]),plain=new Set(["--json","--fix","--dry-run","--strict","--facts"]);
+
+/** 🧷️ Reads the options of `repo doctor`; every unknown or repeated option and every unknown area is refused in both languages. */
+export function doctorArgumentsV1(args:readonly string[]):DoctorArgumentsV1{
+ const seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>();
+ for(let index=0;index<args.length;index++){
+  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
+  if(seen.has(name))throw Error(both("errorRepeated",{option:name}));
+  seen.add(name);
+  if(valued.has(name)){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both("errorValue",{option:name}));values[name]=value;}
+  else if(plain.has(name)&&cut<0)flags.add(name);
+  else throw Error(both("errorOption",{option:argument}));
+ }
+ if(flags.has("--dry-run")&&!flags.has("--fix"))throw Error(both("errorDryRun"));
+ let only:Set<DoctorAreaV1>|undefined;
+ if(values["--only"]!==undefined){
+  only=new Set();
+  for(const area of values["--only"].split(",").filter(Boolean)){
+   if(!(DOCTOR_PROTOCOL_V1.areas as readonly string[]).includes(area)||area==="doctor")throw Error(both("errorArea",{area,known:DOCTOR_PROTOCOL_V1.areas.filter(row=>row!=="doctor").join(", ")}));
+   only.add(area as DoctorAreaV1);
+  }
+ }
+ return Object.freeze({json:flags.has("--json"),fix:flags.has("--fix"),dryRun:flags.has("--dry-run"),strict:flags.has("--strict"),facts:flags.has("--facts"),only,language:values["--lang"]});
+}
+
+/** 🎛️ What the command touches: output, environment, checkout and the ports of the probes; tests replace them. */
+export type DoctorCommandContextV1=Readonly<{root:string;environment:NodeJS.ProcessEnv;write:(line:string)=>void;progress?:(line:string)=>void;signal?:AbortSignal;ports?:Partial<DoctorPortsV1>;options?:Partial<DoctorRunOptionsV1>}>;
+
+/** 💬️ Words a progress stage of the runner as one line in the first language. */
+function progressLine(language:DoctorLanguageV1,stage:string):string|undefined{
+ const [kind,first,second]=stage.split(":");
+ if(kind==="probe"){const [done,total]=(second??"0/0").split("/");return doctorTextV1(language,"progressProbe",{area:first,done:Number(done)+1,total});}
+ if(kind==="repair")return doctorTextV1(language,"progressRepair",{id:first});
+ return undefined;
+}
+
+/** 🩺️ Runs `repo doctor [--json] [--fix [--dry-run]] [--only=<area>,…] [--strict] [--facts] [--lang=<en|de>]`: exit 0 when nothing blocks, 1 when an error remains (or a warning with --strict), 130 when cancelled. */
+export async function runDoctorCommandV1(args:readonly string[],context:DoctorCommandContextV1):Promise<number>{
+ const parsed=doctorArgumentsV1(args),languages=resolveDoctorLanguagesV1(parsed.language,context.environment),controller=new AbortController();
+ const stop=():void=>controller.abort(new DoctorCancelledV1()),outer=context.signal;
+ outer?.addEventListener("abort",stop,{once:true});process.once("SIGINT",stop);process.once("SIGTERM",stop);
+ const quiet=parsed.json||parsed.facts,say=context.progress??((line:string)=>process.stderr.write(line+"\n"));
+ try{
+  const ports=doctorPortsV1(context.root,{environment:context.environment,signal:controller.signal,progress:stage=>{const line=quiet?undefined:progressLine(languages[0]!,stage);if(line)say(line);},...context.ports});
+  const {facts,report}=await runDoctorV1(ports,{...parsed.only?{only:parsed.only}:{},fix:parsed.fix,dryRun:parsed.dryRun,...context.options});
+  if(parsed.facts)context.write(JSON.stringify(facts,null,2));
+  else if(parsed.json)context.write(JSON.stringify(report,null,2));
+  else for(const line of formatDoctorReportV1(report,languages))context.write(line);
+  return report.counts.error>0||(parsed.strict&&report.counts.warn>0)?1:0;
+ }catch(error){
+  if(controller.signal.aborted||error instanceof DoctorCancelledV1){say(languages.map(language=>doctorTextV1(language,"errorCancelled")).join("\n"));return 130;}
+  throw error;
+ }finally{
+  outer?.removeEventListener("abort",stop);process.removeListener("SIGINT",stop);process.removeListener("SIGTERM",stop);
+ }
+}
+
+/** 🚪️ Binds the command to the running build CLI: its checkout, environment and standard output. */
+export function runDoctorCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv,write:(line:string)=>void=writeResultLineV1):Promise<number>{
+ return runDoctorCommandV1(args,{root,environment,write});
+}

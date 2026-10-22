@@ -1,14 +1,15 @@
+import "../../🧹️whole/🧪️tests/🟦️.ts";
 import "./🌱️birth/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};
-import {nativeStoragePlatformV1} from "../../🌐️platform/🟦️.ts";
+import {selectNativeStorageBackendV1} from "../../🔌️backends/🧭️selection/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../🌐️platform/📋️contract/🟦️.ts";
 import {mkdtempSync,mkdirSync,symlinkSync,lstatSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
 
 test("native fixed storage selects every declared desktop platform and refuses foreign hosts",()=>{
- const database=new Database(":memory:");try{for(const row of fixture.platforms){const expected=database.query("SELECT CASE ? WHEN 'darwin' THEN 'macos' WHEN 'linux' THEN 'linux' WHEN 'win32' THEN 'windows' ELSE NULL END AS backend").get(row.platform) as {backend:"macos"|"linux"|"windows"|null};expect(row.backend).toBe(expected.backend);if(expected.backend===null)expect(()=>nativeStoragePlatformV1(row.platform)).toThrow();else expect(nativeStoragePlatformV1(row.platform)).toBe(expected.backend);}}finally{database.close();}
+ const database=new Database(":memory:");try{for(const row of fixture.platforms){const expected=database.query("SELECT CASE ? WHEN 'darwin' THEN 'mounted-image' WHEN 'linux' THEN 'directory-partition' WHEN 'win32' THEN 'directory-partition' ELSE NULL END AS backend").get(row.platform) as {backend:string|null};expect(row.backend).toBe(expected.backend);if(expected.backend===null)expect(()=>selectNativeStorageBackendV1({platform:row.platform})).toThrow();else expect(selectNativeStorageBackendV1({platform:row.platform}).id).toBe(expected.backend);}}finally{database.close();}
 });
 
 test("native output path admission rejects dangling symlinks before any materialization",()=>{

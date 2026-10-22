@@ -48,7 +48,9 @@
           "recallAttempts": 20, "recallPauseMilliseconds": 50, "timeoutMilliseconds": 5000
         },
         "gc": {
-          "casShare": 0.25, "laneShare": 0.2, "incrementalShare": 0.1, "minimumFreeShare": 0.1,
+          "casShare": 0.25, "laneShare": 0.2, "incrementalShare": 0.1,
+          "highWaterShare": 0.8, "lowWaterShare": 0.6, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
+          "outOfSpacePatterns": ["\\(os error (28|112)\\)", "No space left on device", "ENOSPC", "There is not enough space on the disk"], "outOfSpaceRetries": 1,
           "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304
         }
       }
@@ -62,6 +64,22 @@
         "collected": {
           "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s) and {objects} object(s)",
           "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze und {objects} Objekt(e)"
+        },
+        "collector": {
+          "en": "[repo cargo] the compiler image is {usedPercent} % full (high-water mark {highPercent} %); a low-priority unit cache collector was started in the background",
+          "de": "[repo cargo] Das Compiler-Image ist zu {usedPercent} % belegt (Hochwassermarke {highPercent} %); ein Unit-Cache-Collector mit niedriger Priorität wurde im Hintergrund gestartet"
+        },
+        "collectorFailed": {
+          "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
+          "de": "[repo cargo] Der Unit-Cache-Collector im Hintergrund konnte nicht gestartet werden: {reason}"
+        },
+        "outOfSpace": {
+          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s) and {objects} object(s) and retrying the command once",
+          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+        },
+        "stillFull": {
+          "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
+          "de": "[repo cargo] Das Compiler-Image ist nach der Bereinigung weiterhin voll ({freeGib} GiB frei von {volumeGib} GiB): die laufenden Lanes anderer Befehle belegen den Platz; auf deren Ende warten oder die Rust-Partition in der Budget-Richtlinie vergrößern"
         }
       }
     },
@@ -242,14 +260,42 @@
     "GcInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["capacityBytes", "freeBytes", "nowMs", "lanes", "objects"],
+      "required": ["capacityBytes", "volumeBytes", "freeBytes", "nowMs", "lanes", "objects"],
       "properties": {
         "capacityBytes": { "type": "integer", "minimum": 1 },
+        "volumeBytes": { "type": "integer", "minimum": 1 },
         "freeBytes": { "type": "integer", "minimum": 0 },
         "nowMs": { "type": "integer", "minimum": 0 },
         "lanes": { "type": "array", "items": { "$ref": "#/definitions/GcLane" } },
         "objects": { "type": "array", "items": { "$ref": "#/definitions/GcObject" } }
       }
+    },
+    "PressureVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "input", "decision"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["volumeBytes", "freeBytes", "emergencyBytes", "nowMs", "lastLaunchMs"],
+          "properties": {
+            "volumeBytes": { "type": "integer", "minimum": 1 },
+            "freeBytes": { "type": "integer", "minimum": 0 },
+            "emergencyBytes": { "type": "integer", "minimum": 0 },
+            "nowMs": { "type": "integer", "minimum": 0 },
+            "lastLaunchMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+          }
+        },
+        "decision": { "enum": ["enough", "maintain", "launch", "throttled", "collect-now"] }
+      }
+    },
+    "OutOfSpaceVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "outOfSpace"],
+      "properties": { "text": { "type": "string" }, "outOfSpace": { "type": "boolean" } }
     },
     "GcPlan": {
       "type": "object",

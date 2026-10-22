@@ -22,7 +22,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧪️test",
-        "command": "bun ./📜️script.ts test adapter-ownership"
+        "command": "repo ./📜️script.ts test adapter-ownership"
       }
     }
   },

@@ -1,9 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
-/** 🧭️ `@semio-tech/ui-styling` task router: `bun ./📜️script.ts <generate|fonts>`. */
+/** 🧭️ `@semio-tech/ui-styling` task router: `repo ./📜️script.ts <generate|fonts>`. */
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -52,6 +52,6 @@ class AssetTransportTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript).register("test-geometry", ThemeGeometryTestScript).register("test-asset-transport", AssetTransportTestScript).register("twin", TwinScript);
+const router = new ScriptRouter(import.meta.dirname).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript).register("test-geometry", ThemeGeometryTestScript).register("test-asset-transport", AssetTransportTestScript).register("twin", TwinScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

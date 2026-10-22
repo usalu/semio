@@ -21,7 +21,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
-        "command": "bun ./📜️script.ts verify source"
+        "command": "repo ./📜️script.ts verify source"
       }
     },
     "verify-native": {
@@ -35,7 +35,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
-        "command": "bun ./📜️script.ts verify native"
+        "command": "repo ./📜️script.ts verify native"
       }
     }
   }

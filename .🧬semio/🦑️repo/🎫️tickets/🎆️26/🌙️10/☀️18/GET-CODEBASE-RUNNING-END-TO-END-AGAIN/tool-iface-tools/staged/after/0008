@@ -4,7 +4,8 @@ import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
 import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
-import { spawnToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -132,7 +133,6 @@ def pair(kind):
     if kind == 'set-image-pixels':
         return single(4, 3, FA), single(4, 3, FC)
     if kind == 'set-image-interlace':
-        # 📐️16x16 is the smallest canvas Pillow will interlace: below it, get_interlace() forces 0.
         big = [(x + y) % 4 for y in range(16) for x in range(16)]
         return single(16, 16, big, interlace=False), single(16, 16, big, interlace=True)
     raise SystemExit('unknown kind ' + kind)
@@ -151,7 +151,7 @@ print('%s: before=%dB after=%dB' % (kind, len(before), len(after)))
 const READER = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
 
 function readerBinary(): string {
-  const result = spawnToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(READER, "Cargo.toml")], { stdio: "inherit" });
+  const result = runToolSyncV1("cargo", ["build", "--release", "--offline", "--manifest-path", join(READER, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
   return join(cargoTargetDirectory(findWorkspaceRoot()), "release", "reader");
 }
@@ -174,7 +174,7 @@ function generate(outRoot: string): number {
   const failures: string[] = [];
   for (const kind of KINDS) {
     const directory = FIXTURE_DIRECTORIES[kind]!;
-    const written = spawnToolSyncV1("python3", ["-c", WRITER, outRoot, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
+    const written = runToolSyncV1("python", ["-c", WRITER, outRoot, kind, directory, BEFORE_FILE, AFTER_FILE], { stdio: "inherit" });
     if (written.status !== 0) {
       failures.push(`${kind}: writer failed`);
       continue;
@@ -244,7 +244,7 @@ async function aspectMode(command: string): Promise<number> {
         if (built.status !== 0) throw new Error(`gifbuild failed for ${name}`);
         writeFileSync(join(dir, name), built.stdout);
       }
-      const cmp = spawnToolSyncV1("bun", [probes, "gif-screen-compare", "--input", join(dir, BEFORE_FILE), "--input", join(dir, AFTER_FILE)], { encoding: "utf8" });
+      const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "gif-screen-compare", "--input", join(dir, BEFORE_FILE), "--input", join(dir, AFTER_FILE)], { encoding: "utf8" });
       if (cmp.status !== 0) throw new Error(`reader refused the pair: ${cmp.stdout}${cmp.stderr}`);
       const m = JSON.parse(cmp.stdout).measurements;
       if (m.equal === true) { console.error(`[generator] ${kind}: not observable in the screen projection`); return 1; }

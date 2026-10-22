@@ -1,5 +1,5 @@
 /** 🟠️ The catalogue drag enter phase of useWorldPointerAndDrop. */
-import { useCallback, useEffect, type DragEvent } from "react";
+import { useCallback, useEffect, type DragEvent } from "../../../⚛️react-port/🟦️.ts";
 import { CATALOGUE_DRAG_MIME, getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
 import { clientPointOverHost } from "../../🔗️instance-selection/🟦️.ts";
 import { clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, parsePuzzle3dCatalogueDragPayload, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";

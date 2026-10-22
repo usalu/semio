@@ -19,7 +19,14 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for RemoveOpening where Op: 
         kind: "remove-opening",
         record: "RemovedOpening",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove opening", "Öffnung entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1996Snapshot, Op> for RemoveOpening where Op: protocol::ColdMutation<En1996Snapshot, ReferenceDiff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::insert_opening::InsertOpening> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1996Snapshot>>::ReferenceDiff> {
         crate::remove_opening::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for RemoveOpening where Op: 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove opening", "Öffnung entfernen")
-    }
 }
 
 //#region 🪢️Mounts

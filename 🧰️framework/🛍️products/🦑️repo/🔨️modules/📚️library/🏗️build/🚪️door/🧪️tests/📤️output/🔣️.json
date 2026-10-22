@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "door": [
+    { "name": "capacity status keeps the result stream pure JSON while other writers are noisy", "args": ["repo", "capacity", "status", "--json"], "machine": true },
+    { "name": "leases status keeps the result stream pure JSON while other writers are noisy", "args": ["repo", "leases", "status", "--json"], "machine": true },
+    { "name": "capacity status without the flag still reports on the result stream", "args": ["repo", "capacity", "status"], "machine": false }
+  ],
+  "wait": {
+    "name": "a show command that waits for capacity keeps the result stream pure JSON and reports the wait on the diagnostic stream",
+    "args": ["show", "projects", "--json"],
+    "stdout": ["[\"a\",\"b\"]"],
+    "stderr": ["[capacity] waiting", "[capacity] admitted show", "[noise] console.log while admitted", "[noise] process.stdout.write while admitted"]
+  }
+}

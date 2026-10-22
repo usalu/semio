@@ -1,0 +1,129 @@
+{
+  "title": "Implement Drag Feature in Design App",
+  "status": "closed",
+  "description": "Fix drag feature: resolve Map JSON.stringify bug in DerivedNode and useDerived, fix createPathObserver stale reference comparison",
+  "summary": "Fixed native Design drag-drop payload resolution and validated in existing Design Playwright test",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/630"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18T21:06:48.617479256Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix drag feature: resolve Map JSON.stringify bug in DerivedNode and useDerived, fix createPathObserver stale reference comparison",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 21:29:27",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "b02e5676a32481161a859ed23cd52fb810c779ea",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Sketchpad.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/shared.ts"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-23 17:31:55",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Analyze old sketchpad build and implement workbench-to-diagram type drag-and-drop parity",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23 17:57:33",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-23 18:05:11",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Native workbench-to-diagram drag still not creating pieces; implement runtime fix and strengthen existing test",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23 18:34:44",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/elements.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-23 20:01:32",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "User-reported native drag still failing; fix drag payload resolution and validate in existing Design test",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23T20:02:02.454203432Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "summary": "Fixed native Design drag-drop payload resolution and validated in existing Design Playwright test",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/elements.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    }
+  ]
+}

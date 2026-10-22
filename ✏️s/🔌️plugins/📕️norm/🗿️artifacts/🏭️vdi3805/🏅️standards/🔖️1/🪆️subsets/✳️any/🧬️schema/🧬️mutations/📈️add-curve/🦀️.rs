@@ -16,7 +16,16 @@ pub struct AddCurve {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddCurve where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_curve::RemoveCurve> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "curve", kind: "add-curve", record: "AddedCurve" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create curve \"{}\"", self.curve.id), &format!("Kurve \"{}\" erstellen", self.curve.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.curve.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Vdi3805Snapshot, Op> for AddCurve where Op: protocol::ColdMutation<Vdi3805Snapshot, ReferenceDiff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_curve::RemoveCurve> {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Vdi3805Snapshot>>::ReferenceDiff> {
         crate::add_curve::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,12 +34,6 @@ impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddCurve where Op: prot
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create curve \"{}\"", self.curve.id), &format!("Kurve \"{}\" erstellen", self.curve.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.curve.id.clone()]
-    }
 }
 //#endregion 🔖️Payload
 

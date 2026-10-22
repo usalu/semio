@@ -90,7 +90,7 @@ pub enum BoardPointerPlanFault {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardPointerDelta {
+pub struct BoardPointerDelta {
     pub id: BoardPointerSpan,
     pub x: f64,
     pub y: f64,
@@ -105,7 +105,7 @@ pub enum BoardDeleteKind {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct BoardDeleteEntry {
+pub struct BoardDeleteEntry {
     pub kind: BoardDeleteKind,
     pub id: BoardPointerSpan,
 }
@@ -151,12 +151,12 @@ pub struct BoardDeletePlanningOperation {
     pub cancelling: bool,
 }
 
-pub(super) enum BoardPropertyAuditFrame {
+pub enum BoardPropertyAuditFrame {
     Array { values: Vec<semio_framework_graph_manifest::PropertyValue>, index: usize, pending: Option<usize> },
     Object { values: semio_framework_graph_manifest::PropertyBag, after: Option<String>, pending: Option<String> },
 }
 
-pub(crate) struct BoardPropertyAudit {
+pub struct BoardPropertyAudit {
     pub kind: BoardDeleteKind,
     pub id: String,
     pub current: Option<semio_framework_graph_manifest::PropertyValue>,

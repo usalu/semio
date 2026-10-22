@@ -14,7 +14,7 @@ use crate::snapshot::*;
 use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff};
+use crate::os_spr::{ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, store_schema::HistoryLane, document_store_owners::MemberStoreProducer, document_store_owners::DocumentStoreOwners, SnapshotRetirementFactory};
 
 

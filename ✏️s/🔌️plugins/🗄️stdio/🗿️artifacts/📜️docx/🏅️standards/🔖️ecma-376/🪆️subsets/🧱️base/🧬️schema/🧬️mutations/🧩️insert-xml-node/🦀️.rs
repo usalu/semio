@@ -14,17 +14,6 @@ pub struct InsertXmlNode {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "xml-node", kind: "insert-xml-node", record: "InsertXmlNode" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        addressed_outcome(&DocxMutation::InsertXmlNode(self.clone()), base)
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-    Ok({
-        addressed_inverse(&DocxMutation::InsertXmlNode(self.clone()), base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert XML node", "XML-Knoten einfügen")
     }
@@ -32,4 +21,16 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
     fn target(&self) -> Vec<String> {
         std::iter::once(self.parent.part_path.clone()).chain(self.parent.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.index.to_string())).collect()
     }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::ColdMutation<DocxSnapshot>>::ReferenceDiff> {
+        addressed_outcome(&DocxMutation::InsertXmlNode(self.clone()), base)
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+    Ok({
+        addressed_inverse(&DocxMutation::InsertXmlNode(self.clone()), base)?
+    
+    })
+}
 }

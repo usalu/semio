@@ -8,8 +8,7 @@
       "dependencies": [
         "semio-framework-diagnostic",
         "semio-framework-os-kernel",
-        "semio-framework-replication",
-        "semio-framework-value"
+        "semio-framework-replication"
       ],
       "forbiddenDependencies": [
         "semio-framework-os-kernel-db",
@@ -614,6 +613,7 @@
       "entry": "🗄️storage/🐘️postgres/🦀️.rs",
       "dependencies": [
         "semio-framework-async",
+        "semio-framework-async-sync",
         "semio-framework-hash",
         "semio-framework-os-kernel",
         "semio-framework-os-kernel-db-durability",
@@ -693,6 +693,7 @@
       "entry": "🗄️storage/🧵️driver-runtime/🦀️.rs",
       "dependencies": [
         "semio-framework-async",
+        "semio-framework-async-sync",
         "semio-framework-os-kernel-db-io-core",
         "tokio"
       ],
@@ -953,6 +954,7 @@
         "semio-framework-os-kernel-db-io-core",
         "semio-framework-os-kernel-db-observe",
         "semio-framework-os-kernel-db-query",
+        "semio-framework-pack",
         "semio-framework-replication",
         "serde",
         "serde_json"
@@ -1129,11 +1131,14 @@
       "entry": "🗄️storage/🧱️io-core/🦀️.rs",
       "dependencies": [
         "semio-framework-async",
+        "semio-framework-async-sync",
         "semio-framework-os-kernel",
         "semio-framework-os-kernel-db-durability",
         "semio-framework-os-kernel-db-ids",
         "semio-framework-os-kernel-db-policy",
+        "semio-framework-replication",
         "semio-framework-trace",
+        "semio-framework-value",
         "serde_json"
       ],
       "forbiddenDependencies": [
@@ -1234,6 +1239,7 @@
       "entry": "🗄️storage/🚦️io-driver/🦀️.rs",
       "dependencies": [
         "semio-framework-async",
+        "semio-framework-async-testkit",
         "semio-framework-os-kernel",
         "semio-framework-os-kernel-db-durability",
         "semio-framework-os-kernel-db-ids",

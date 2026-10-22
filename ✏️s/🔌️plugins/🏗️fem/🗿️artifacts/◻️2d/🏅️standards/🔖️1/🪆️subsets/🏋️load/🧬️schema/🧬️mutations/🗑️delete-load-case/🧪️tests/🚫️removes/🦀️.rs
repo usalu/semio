@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed.iter().map(|entry| entry.id.clone()).collect::<Vec<_>>(), vec!["live".to_string()], "delete-load-case/removes-the-live-06415d: exactly the live case may be removed");
     assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.is_empty(), "delete-load-case/removes-the-live-06415d: member loads are never itemised as patches");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

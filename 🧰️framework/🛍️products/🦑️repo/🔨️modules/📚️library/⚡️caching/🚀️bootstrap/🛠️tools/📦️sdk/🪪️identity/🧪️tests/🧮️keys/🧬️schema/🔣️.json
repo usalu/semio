@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:nx-install-identity-corpus:v1",
+  "title": "Nx Install Identity Corpus",
+  "description": "Language-agnostic cases for the install identity: a platform, architecture, libc and ordered files in, a sha256 key out; boundaries that must never collide and the environment axes of a sweep.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases", "boundaries", "environments"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "environment", "files", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "environment": { "$ref": "#/definitions/environment" }, "files": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "text"], "properties": { "name": { "type": "string" }, "text": { "type": "string" } } } }, "expected": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } },
+    "boundaries": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "left", "right", "environment"], "properties": { "name": { "type": "string" }, "left": { "$ref": "#/definitions/pairs" }, "right": { "$ref": "#/definitions/pairs" }, "environment": { "$ref": "#/definitions/environment" } } } },
+    "environments": { "type": "object", "additionalProperties": false, "required": ["platforms", "architectures", "libcs"], "properties": { "platforms": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "architectures": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "libcs": { "type": "array", "minItems": 1, "items": { "type": "string" } } } }
+  },
+  "definitions": {
+    "environment": { "type": "object", "additionalProperties": false, "required": ["platform", "architecture", "libc"], "properties": { "platform": { "type": "string" }, "architecture": { "type": "string" }, "libc": { "type": "string" } } },
+    "pairs": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } }
+  }
+}

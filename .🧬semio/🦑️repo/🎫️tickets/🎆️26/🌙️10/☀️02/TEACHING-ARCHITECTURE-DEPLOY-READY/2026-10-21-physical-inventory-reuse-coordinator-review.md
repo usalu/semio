@@ -1,0 +1,7 @@
+# Physical Inventory Reuse Coordinator Review
+
+Observed 2026-10-21T08:56:27.996Z. Static Source inspection only, no Source function/test/Native execution.
+
+Read the complete current reuse.mjs physical reference path and the lean-inventory memo call sites. Nonempty captured references enter actual withRepositoryBuildGraphConsumer; no ten-minute process memo/prefetch returns before physical custody. Only initial exact immutable-leaf lstat ENOENT enters the double absence path beneath retained nofollow ancestor identities. A previously observed leaf disappearing during open/read/final checks propagates failure. Every present leaf retains its named epoch for final delivery after later yields; every missing leaf and ancestor is checked again. Memo hits still open an O_RDONLY nofollow descriptor, authenticate the admitted leaf epoch and perform the final named/ancestry checks. A lean memo lstat catch only discards the memo and sends the caller through the strict physical reader; it does not itself return successful reuse or an inference miss.
+
+No concrete static blocker found in this bounded path. This does not cover upcoming observation block/checker edits, every imported implementation, actual role emission, typed compilation or runtime race execution. Changed present-leaf epochs and exact primary settlement still require actual Native laws. Final direct-read inventory must include lean-inventory if absent from the explicit Source witness roster; the current review inspected it rather than assuming memo semantics.

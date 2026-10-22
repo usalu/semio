@@ -25,6 +25,15 @@ pub fn remove_representation_tag<Op: From<crate::remove_representation_tag::Remo
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RemoveRepresentationTag where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::add_representation_tag::AddRepresentationTag> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-tag", kind: "remove-representation-tag", record: "RemovedRepresentationTag" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\" from representation \"{}\"", self.tag, self.id), &format!("Tag \"{}\" aus Repräsentation \"{}\" entfernen", self.tag, self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block5dSnapshot, Op> for RemoveRepresentationTag where Op: protocol::ColdMutation<Block5dSnapshot, ReferenceDiff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::add_representation_tag::AddRepresentationTag> {
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         crate::remove_representation_tag::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RemoveRepresentationTag
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\" from representation \"{}\"", self.tag, self.id), &format!("Tag \"{}\" aus Repräsentation \"{}\" entfernen", self.tag, self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

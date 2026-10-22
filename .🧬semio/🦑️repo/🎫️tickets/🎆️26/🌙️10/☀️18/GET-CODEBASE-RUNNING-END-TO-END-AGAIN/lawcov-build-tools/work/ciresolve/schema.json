@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:ci-resolution-corpus:v1",
+  "title": "CI Validation Resolution Corpus",
+  "description": "Language-agnostic scenarios for resolving the CI validation boundary: a GitHub environment and event, the answers of the history API, the ancestry of candidate commits, and for the key scenarios the authored result (mode, base, run, reason, history issue, request counts or refusal).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "head", "scenarios"],
+  "properties": {
+    "version": { "const": 1 },
+    "head": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "environment", "event", "head", "full", "run", "pages", "ancestors", "expect"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+          "event": {},
+          "head": { "type": "string" },
+          "full": { "type": "boolean" },
+          "run": { "$ref": "#/definitions/response" },
+          "pages": { "type": "array", "items": { "$ref": "#/definitions/response" } },
+          "ancestors": { "type": "object", "additionalProperties": { "type": "boolean" } },
+          "expect": {
+            "anyOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["mode", "base", "runId", "reason", "issue", "error", "requests", "ancestorCalls"],
+                "properties": {
+                  "mode": { "enum": ["affected", "all", null] },
+                  "base": { "anyOf": [{ "type": "null" }, { "type": "string" }] },
+                  "runId": { "anyOf": [{ "type": "null" }, { "type": "integer" }] },
+                  "reason": { "type": "string" },
+                  "issue": { "enum": ["history-limit", "history-unavailable", null] },
+                  "error": { "type": "string" },
+                  "requests": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }] },
+                  "ancestorCalls": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }] }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "definitions": { "response": { "type": "object", "additionalProperties": false, "required": ["status", "body"], "properties": { "status": { "type": "integer" }, "body": {} } } }
+}

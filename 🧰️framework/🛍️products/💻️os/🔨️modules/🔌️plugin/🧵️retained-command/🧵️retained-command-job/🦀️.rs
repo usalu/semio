@@ -66,19 +66,19 @@ pub(super) enum ArtifactRetainedCommandPhase {
 }
 
 #[derive(Clone,Copy)]
-enum ArtifactCommandPublication {
+pub(super) enum ArtifactCommandPublication {
     Static { kind: JobPublicationKind, bytes: &'static [u8] },
     Checkpoint,
 }
 
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     pub(super) producer_window_config:Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
-    pub(super) producer_instance_operation_owner:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub(super) producer_instance_operation_owner:Option<semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle>,
     pub(super) producer_output_chunks:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOutputChunks>,
     pub(super) producer_controller_id:Option<String>,
     pub(super) producer_tool_id:Option<String>,
     pub(super) producer_payload_schema_id:Option<String>,
-    source_binding:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
+    pub(crate) source_binding:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
     pub command: Option<A::Command>,
     pub(super) command_received:bool,
     pub snapshot: Option<Arc<A::Snapshot>>,
@@ -550,7 +550,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
                 let fuel = cx.fuel_remaining();
-                let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:Some(&self.snapshot_read),operation,source:self.source_binding}, config, history, interaction, hover, context: self.context.as_deref(), operation };
+                let input = ArtifactCommandInputs { command, snapshot: snapshot.as_ref(), snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:Some(&self.snapshot_read),operation,source:self.source_binding}, config: config.as_ref(), history, interaction, hover, context: self.context.as_deref(), operation };
                 let demand = work.work_demands(&input, cx.retained_grant().maximum_copy_bytes)?;
                 if !cx.retained_work_can_enter(demand) {
                     if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand) { self.fault(b"retained command normal-work demand exceeds its original funding"); return Ok(None); }

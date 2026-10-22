@@ -263,7 +263,7 @@ struct MountedProductReplayRecoveryRegistry {
 
 impl MountedProductReplayRecoveryRegistry {
     pub(super) fn new() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRecoverySlot { generation: 0, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| MountedProductReplayRecoverySlot { generation: 0, reserved: false, owner: None }), abandoned: semio_framework_async_slots::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
     }
 
     pub fn reserve(&mut self) -> Option<MountedProductReplayRecoveryToken> {

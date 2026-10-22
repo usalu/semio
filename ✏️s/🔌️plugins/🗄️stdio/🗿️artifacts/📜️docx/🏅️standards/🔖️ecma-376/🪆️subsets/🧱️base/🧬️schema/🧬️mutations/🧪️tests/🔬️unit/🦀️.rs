@@ -1,6 +1,6 @@
 use protocol::{OpText,OpBinary};
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 #[cfg(test)] use semio_framework_replication_mutation::Mutation;
 #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
@@ -178,13 +178,13 @@ async fn every_mutation_has_exact_diff_inverse_and_text_binary_replay() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
         let direct = Mutation::diff(&mutation, &base);
-        let via_diff = protocol::apply_diff(direct.diff(), &base).expect("diff applies");
+        let via_diff = protocol::apply_diff_cold(direct.diff(), &base).expect("diff applies");
         let mut via_mutation = base.clone();
         apply(&mut via_mutation, &mutation);
         assert_eq!(via_diff, via_mutation, "mutation and diff disagree for {mutation:?}");
 
         let inverse = DiffAlgebra::inverse(direct.diff(), &base);
-        assert_eq!(protocol::apply_diff(&inverse, &via_diff).expect("inverse applies"), base);
+        assert_eq!(protocol::apply_diff_cold(&inverse, &via_diff).expect("inverse applies"), base);
 
         let text = mutation.print_op();
         assert_eq!(DocxMutation::parse_op(&text).expect("text replay"), mutation);
@@ -210,8 +210,8 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     assert!(second.opc.is_some(), "binary part edit must be an OPC diff");
     let mut absorbed = first;
     absorbed.absorb(second);
-    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("absorbed diff applies"), final_snapshot);
-    assert_eq!(protocol::apply_diff(&absorbed.inverse(&base), &final_snapshot).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &base).expect("absorbed diff applies"), final_snapshot);
+    assert_eq!(protocol::apply_diff_cold(&absorbed.inverse(&base), &final_snapshot).expect("inverse applies"), base);
 
     let text = absorbed.print_diff();
     assert_eq!(DocxDiff::parse_diff(&text).expect("text diff replay"), absorbed);
@@ -550,6 +550,6 @@ async fn removing_a_middle_member_is_restored_at_its_original_position() {
 
 fn apply_addressed(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, semio_framework_value::ValueError> {
     let prepared = prepare_addressed_xml_mutation(snapshot, mutation)?;
-    *snapshot = protocol::apply_diff(&prepared.diff, snapshot).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.message))?;
+    *snapshot = protocol::apply_diff_cold(&prepared.diff, snapshot).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.message))?;
     Ok(prepared)
 }

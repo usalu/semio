@@ -15,17 +15,20 @@ pub struct SetOtherTables {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetOtherTables {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "other-tables", kind: "set-other-tables", record: "SetOtherTables" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        protocol::MutationOutcome::new(DxfDiff { other_tables: (base.other_tables != self.other_tables).then(|| self.other_tables.clone()), ..DxfDiff::default() })
-    }
-    fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-        Ok((base.other_tables != self.other_tables).then(|| DxfMutation::SetOtherTables(SetOtherTables { other_tables: base.other_tables.clone() })).into_iter().collect())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set other tables", "Weitere Tabellen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DxfSnapshot, DxfMutation> for SetOtherTables {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::ColdMutation<DxfSnapshot>>::ReferenceDiff> {
+        protocol::MutationOutcome::new(DxfDiff { other_tables: (base.other_tables != self.other_tables).then(|| self.other_tables.clone()), ..DxfDiff::default() })
+    }
+    fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
+        Ok((base.other_tables != self.other_tables).then(|| DxfMutation::SetOtherTables(SetOtherTables { other_tables: base.other_tables.clone() })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

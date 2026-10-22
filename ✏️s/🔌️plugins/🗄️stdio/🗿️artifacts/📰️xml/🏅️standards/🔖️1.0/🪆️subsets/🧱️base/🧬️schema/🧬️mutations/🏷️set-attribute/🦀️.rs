@@ -22,6 +22,15 @@ pub type SetAttributePayload = SetAttributeMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Attribute", "Attribut setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["set-attribute".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMutation {
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         let target = self.path.resolve(base.doc.root.as_ref());
         let existing = target.and_then(|node| match node {
@@ -45,7 +54,6 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMut
         };
         protocol::MutationOutcome::new(diff_at_path(&self.path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attributes), children: None })))
     }
-
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
         let Some(XmlNode::Element { attrs, .. }) = self.path.resolve(base.doc.root.as_ref()) else { return Ok(Vec::new()) };
         let position = attrs.iter().position(|attribute| attribute.name == self.name);
@@ -55,13 +63,6 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMut
         } else {
             vec![super::XmlMutation::SetAttribute(Self { path: self.path.clone(), name: self.name.clone(), value: previous, index: position })]
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Attribute", "Attribut setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["set-attribute".to_string()]
     }
 }
 

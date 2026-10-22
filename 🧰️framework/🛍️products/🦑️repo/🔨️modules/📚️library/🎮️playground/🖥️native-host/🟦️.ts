@@ -7,8 +7,8 @@ import type { PlaygroundNativeHostV1, NativeHostSourceViewV1 } from "./🟨️.m
 export type { PlaygroundNativeHostV1, NativeHostSourceViewV1, NativeHostScriptAdmissionV1 } from "./🟨️.mjs";
 
 /** 🖥 Binds an optional owner executable to authored Cargo and portable project source identities. */
-export function admitPlaygroundNativeHostV1(value:unknown,view:NativeHostSourceViewV1):PlaygroundNativeHostV1|undefined {
-  return admit(value,(cratePath:string)=>facts(cratePath,view));
+export function admitPlaygroundNativeHostV1(value:unknown,view:NativeHostSourceViewV1,context?:string):PlaygroundNativeHostV1|undefined {
+  return admit(value,(cratePath:string)=>facts(cratePath,view),context);
 }
 
 /** 📜 Decodes the exact authored native producer table. */

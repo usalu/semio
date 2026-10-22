@@ -2,7 +2,7 @@
 
 use crate::editor::rewriting::window_config::{schema};
 use crate::editor::rewriting::window_config::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
 /// 🧾️ The committed wire witnesses a fixture case names by its leaf folder (`"witness"`).
@@ -163,8 +163,8 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         let id = row["windowId"].as_str().unwrap();
         let (_, mutation) = witness(row);
         let before = windows[id].clone();
-        let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
-        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap();
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(RewritingWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let wire = mutation.encode_op().unwrap();
@@ -220,7 +220,7 @@ async fn rewriting_window_config_inverses_sum_to_the_negative_diff() {
         let (_, mutation) = witness(row);
         let before = windows[id].clone();
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
-        windows.insert(id.into(), protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap());
+        windows.insert(id.into(), protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap());
     }
 }
 

@@ -1,3 +1,4 @@
+import {buildBackendIdsV1,buildBackendRowV1} from "../../../🔌️backends/🟦️.ts";
 import {expect,spyOn,test} from "bun:test";
 import {join,resolve} from "node:path";
 import {mkdtemp,readFile,rm} from "node:fs/promises";
@@ -18,7 +19,7 @@ import {runOwnedCommand} from "@semio-tech/process/execution";
 
 test("neutral bootstrap classification follows the authored operation catalogue and SQLite oracle",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");
- try{for(const row of fixture.controlCases){const oracle=db.query("select coalesce((select json_extract(value,'$.requires')='none' and json_extract(value,'$.implementations.nx')='neutral' and json_extract(value,'$.implementations.bazel')='neutral' from json_each(?1,'$.operations') where json_extract(value,'$.name')=?2),0) value").get(JSON.stringify(operations),row.operation)as{value:number};expect(Boolean(oracle.value),row.operation).toBe(row.neutralBootstrap);expect(buildOperationHasNeutralBootstrapV1(row.operation),row.operation).toBe(row.neutralBootstrap);}}finally{db.close();}
+ try{for(const row of fixture.controlCases){const oracle=db.query("select coalesce((select json_extract(o.value,'$.requires')='none' and not exists (select 1 from json_each(json_extract(o.value,'$.implementations')) i where i.value!='neutral') from json_each(?1,'$.operations') o where json_extract(o.value,'$.name')=?2),0) value").get(JSON.stringify({...operations,operations:operations.operations.map((operation:{name:string})=>({...operation,implementations:Object.fromEntries(buildBackendIdsV1().map((id:string)=>[id,buildBackendRowV1(id).operations[operation.name]??"neutral"]))}))}),row.operation)as{value:number};expect(Boolean(oracle.value),row.operation).toBe(row.neutralBootstrap);expect(buildOperationHasNeutralBootstrapV1(row.operation),row.operation).toBe(row.neutralBootstrap);}}finally{db.close();}
 });
 
 test("neutral control bootstrap never prepares Nx graph launches",async()=>{

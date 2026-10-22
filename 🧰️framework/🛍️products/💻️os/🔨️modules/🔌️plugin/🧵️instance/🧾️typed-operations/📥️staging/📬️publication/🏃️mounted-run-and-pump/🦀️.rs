@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🏃️ Drives ONE mounted operation's publication ladder for a bounded slice of this continuation
     /// unit — the exact twin of the slice [`Self::drive_typed_operation_worker`] gives a Worker-stage
     /// operation and [`Self::retire_typed_operation_run`] gives a retiring one, for the publication
@@ -50,7 +50,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let outcome = self.publish_mounted_typed_operation_pump(mounted, identity, retained, &mut spent,cx).await;
         if spent != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "typed preparation cannot overwrite an unreturned original receipt");
-            mounted.publication_ownership_progress = Some((semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation, retained), spent));
+            mounted.publication_ownership_progress = Some((semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation, retained), spent));
         }
         outcome
     }
@@ -58,7 +58,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🏃️ Spends ONE host turn's grant on consecutive publication units: each unit receives what the turn still owns, its receipt is summed into `spent`, and the pump hands the turn back as soon as the grant is exhausted — so a grant of one item still publishes one unit per turn, and a larger grant batches exactly as many units as it pays for.
     async fn publish_mounted_typed_operation_pump(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, retained:RetainedCloneGrant, spent: &mut RetainedCloneProgress,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let started_us=cx.now_us();
-        let turn = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
+        let turn = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
             if cx.should_yield(){return Ok(())}
             let before=cx.retained_progress();let fuel=cx.fuel_remaining();
@@ -76,10 +76,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await?;
             } else {
                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
-                self.publish_mounted_typed_operation_unit(mounted,semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent))))?;
+                let unit_grant=semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent)));
+                cx.with_native_receiving::<_,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>(|receiving|Ok(self.publish_mounted_typed_operation_unit(mounted,unit_grant,receiving)))??;
                 let receipt = mounted.publication_ownership_progress.take();
+                if receipt.is_none() { cx.settle_receiving_scope()?; }
                 if let Some((_, unit)) = receipt {
-                    cx.consume_retained(unit)?;
+                    match cx.receiving_issued_grant() { Some(issued) => cx.consume_receiving_retained(issued, unit)?, None => cx.consume_retained(unit)? }
                     *spent = spent.checked_add(unit).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
                     if unit.copied_items == 0 || semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items == 0 { return Ok(()); }

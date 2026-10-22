@@ -24,17 +24,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "tiles", kind: "reorder-tiles", record: "ReorderedTiles" };
 
-    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
@@ -42,5 +31,20 @@ where
     fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PresentationSnapshot, Op> for ReorderTiles
+where
+    Op: protocol::ColdMutation<PresentationSnapshot, ReferenceDiff = PresentationDiff> + From<ReorderTiles>,
+{
+    fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔹Payload

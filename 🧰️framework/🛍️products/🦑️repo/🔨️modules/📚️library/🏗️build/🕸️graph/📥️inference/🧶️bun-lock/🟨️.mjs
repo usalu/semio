@@ -1,6 +1,6 @@
 /** 🧶️ Models Bun's locked package locations and authored patch bytes without inspecting installed packages. */
 import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 const { readFileSync, realpathSync, statSync } = observedFs;
@@ -84,7 +84,7 @@ export let BUN_LOCK_CACHE;
 /** 🔐️ Reads locked identities and authored patch bytes without inspecting installed packages. */
 export function readBunLockGraph(workspaceRoot) {
   const source = readFileSync(join(workspaceRoot, "bun.lock"), "utf8"), root = realpathSync(workspaceRoot);
-  const parsed = BUN_LOCK_CACHE?.root === root && BUN_LOCK_CACHE.source === source ? BUN_LOCK_CACHE.parsed : createRequire(import.meta.url)("typescript").parseConfigFileTextToJson("bun.lock", source);
+  const parsed = BUN_LOCK_CACHE?.root === root && BUN_LOCK_CACHE.source === source ? BUN_LOCK_CACHE.parsed : parserTypescriptV1().parseConfigFileTextToJson("bun.lock", source);
   if (parsed.error) throw new Error("Invalid Bun lockfile JSON");
   const patches = {}, digest = createHash("sha256").update(source);
   for (const path of [...new Set(Object.values(parsed.config.patchedDependencies ?? {}))].sort()) {

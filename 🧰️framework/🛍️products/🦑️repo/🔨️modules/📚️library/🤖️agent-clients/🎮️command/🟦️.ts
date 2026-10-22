@@ -13,12 +13,12 @@ export class AgentsScript extends Script {
     }
     if (verb === "check") {
       const drift = checkAgentClients(this.root);
-      for (const entry of drift) console.error(`[agents check] ${entry.path} (${entry.client}) is ${entry.reason === "missing" ? "missing" : "out of date"}; run: bun ./📜️script.ts agents write`);
+      for (const entry of drift) console.error(`[agents check] ${entry.path} (${entry.client}) is ${entry.reason === "missing" ? "missing" : "out of date"}; run: repo ./📜️script.ts agents write`);
       if (drift.length > 0) process.exit(1);
       console.log("[agents check] every client file matches the root declaration");
       return;
     }
-    console.error("[agents] usage: bun ./📜️script.ts agents <write|check>");
+    console.error("[agents] usage: repo ./📜️script.ts agents <write|check>");
     process.exit(1);
   }
 }

@@ -22,19 +22,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "catalog-entry", kind: "set-catalog-entry", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_catalog_entry(base, &self.key, self.value.clone(), self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.catalog_extra.iter().find(|entry| entry.key == self.key) { Some(entry) => vec![Op::from(SetCatalogEntry { key: self.key.clone(), value: entry.value.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::RemoveCatalogEntry { key: self.key.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set catalog entry {}", self.key), &format!("Katalogeintrag {} setzen", self.key))
     }
@@ -42,6 +29,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetCatalogEntry
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetCatalogEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::RemoveCatalogEntry>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_catalog_entry(base, &self.key, self.value.clone(), self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.catalog_extra.iter().find(|entry| entry.key == self.key) { Some(entry) => vec![Op::from(SetCatalogEntry { key: self.key.clone(), value: entry.value.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::RemoveCatalogEntry { key: self.key.clone() })] }
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

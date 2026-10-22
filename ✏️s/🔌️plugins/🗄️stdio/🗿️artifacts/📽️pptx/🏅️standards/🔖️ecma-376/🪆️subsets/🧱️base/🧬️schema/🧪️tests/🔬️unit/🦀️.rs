@@ -483,7 +483,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{set_shape_position, set_shape_text};
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::{PptxDiff};
     use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{PptxMutation};
-    use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{ColdDiffAlgebra, DiffAlgebra, DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let snapshot = decode_pptx(&exact_pptx_bytes().await).expect("import exact fixture");
@@ -543,7 +543,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 
     let self_diff = PptxDiff::default();
     assert!(self_diff.is_empty());
-    assert_exact_export(&protocol::apply_diff(&self_diff, &snapshot).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff_cold(&self_diff, &snapshot).unwrap(), &exact_bytes).await;
 
     let (address, position) = first_positioned_shape(&snapshot);
     let mut missing = address.clone();
@@ -567,15 +567,15 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(changed, snapshot);
     assert_exact_export(&changed, &exact_bytes).await;
 
-    let mid = protocol::apply_diff(forward.diff(), &snapshot).unwrap();
+    let mid = protocol::apply_diff_cold(forward.diff(), &snapshot).unwrap();
     let inverse = forward.diff().inverse(&snapshot);
     let mut absorbed = forward.diff().clone();
     absorbed.absorb(inverse.clone());
-    let restored = protocol::apply_diff(&inverse, &mid).unwrap();
+    let restored = protocol::apply_diff_cold(&inverse, &mid).unwrap();
     assert_eq!(restored, snapshot);
-    assert_eq!(protocol::apply_diff(&absorbed, &snapshot).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &snapshot).unwrap(), snapshot);
     assert_exact_export(&restored, &exact_bytes).await;
-    assert_exact_export(&protocol::apply_diff(&absorbed, &snapshot).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff_cold(&absorbed, &snapshot).unwrap(), &exact_bytes).await;
 
     let part = &snapshot.xml_parts[0];
     let replace = PptxMutation::ReplaceXmlNode(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::replace_xml_node::ReplaceXmlNode {

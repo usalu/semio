@@ -112,7 +112,7 @@ fn close_fixture_action_inputs(args:Option<semio_framework_value::DslValue>,faul
 pub async fn with_document_view<A, M, R>(app: &mut VcsArtifactApp<A, M>, inspect: impl for<'a> FnOnce(&semio_framework_plugin_decl_views::ArtifactView<'a, A::Snapshot>) -> R) -> Result<R, semio_framework::Fault>
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     app.render_ctx().refresh_cache().await?;
     let read = app.stores.store.snapshot_read().map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
@@ -221,7 +221,7 @@ pub const LAW_DOCUMENT_LOAD_OPERATION: u64 = 1 << 61;
 pub async fn load_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let archive = PluginApp::document_load_archive(app, files)?;
     PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive)?;
@@ -310,7 +310,7 @@ fn law_load_outcome(status: protocol::DocumentArchiveLoadStatus) -> Result<(), s
 pub async fn load_document_text<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp,
-    M: store::SpaceMember + store::MemberFactory + Send + 'static,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
     let envelope = parsed.into_envelope();
@@ -474,7 +474,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
     pub async fn dispatch_original_fixture_command<A,M>(app:&mut VcsArtifactApp<A,M>,command:&A::Command,meta:&ActionMeta,mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>
 
-    where A:ArtifactApp,A::Command:semio_framework_value::ToValue,M:store::SpaceMember+store::MemberFactory+Send+'static{
+    where A:ArtifactApp,A::Command:semio_framework_value::ToValue,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
 
         let action=A::command_id(command).await;
 

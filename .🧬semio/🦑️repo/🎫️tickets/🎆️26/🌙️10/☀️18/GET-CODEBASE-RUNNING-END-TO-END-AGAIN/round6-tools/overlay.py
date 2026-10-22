@@ -93,6 +93,8 @@ def main():
     print("shimmed", shim(), "tool files")
     env = {**os.environ, "GIT_DIR": os.path.join(OV, ".git"), "GIT_WORK_TREE": OV}
     subprocess.run(["git", "init", "-q"], env=env, cwd=OV)
+    for key, value in (("core.quotepath", "off"), ("core.longpaths", "true"), ("core.symlinks", "true")):
+        subprocess.run(["git", "config", key, value], env=env, cwd=OV)
     print(OV)
 
 

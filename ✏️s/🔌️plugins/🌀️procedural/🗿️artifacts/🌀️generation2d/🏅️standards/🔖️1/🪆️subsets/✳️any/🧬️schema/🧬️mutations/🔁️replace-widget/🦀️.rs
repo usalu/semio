@@ -25,6 +25,18 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "widget", kind: "replace-widget", record: "ReplacedWidget" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace widget \"{}\"", widget_id(&self.widget)), &format!("Widget \"{}\" ersetzen", widget_id(&self.widget)))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![widget_id(&self.widget).to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation2dSnapshot, Op> for ReplaceWidget
+where
+    Op: protocol::ColdMutation<Generation2dSnapshot, ReferenceDiff = Generation2dDiff> + From<ReplaceWidget>,
+{
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         crate::replace_widget::diff::diff(self, base)
     }
@@ -34,11 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace widget \"{}\"", widget_id(&self.widget)), &format!("Widget \"{}\" ersetzen", widget_id(&self.widget)))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![widget_id(&self.widget).to_string()]
-    }
 }
 //#endregion 🔖️Mutation

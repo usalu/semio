@@ -60,15 +60,6 @@ impl DragNodes {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for DragNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "nodes", kind: "drag-nodes", record: "DraggedNodes" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
-        self.outcome(base)
-    }
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        self.undo(base)
-    
-    })())
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let number = |value: f64| {
             let rounded = (value * 100.0).round() / 100.0;
@@ -87,5 +78,17 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for DragNodes 
     fn target(&self) -> Vec<String> {
         self.targets.clone()
     }
+}
+
+impl protocol::ColdMutationKind<SemioFlowSnapshot, SemioFlowMutation> for DragNodes {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::ColdMutation<SemioFlowSnapshot>>::ReferenceDiff> {
+        self.outcome(base)
+    }
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        self.undo(base)
+    
+    })())
+}
 }
 //#endregion 🔖️Payload

@@ -124,23 +124,33 @@ impl MapWindowConfigDiff {
     }
 }
 
-impl protocol::MutationDiff<MapWindowConfig> for MapWindowConfigDiff {
-    fn apply(&self, base: &MapWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<MapWindowConfig> {
-        let mut next = base.clone();
-        for step in &self.steps {
-            step.apply_into(&mut next)?;
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<MapWindowConfig> for MapWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<MapWindowConfig> for MapWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         let mut folded = self.folded();
         folded.absorb(&other.folded());
         *self = Self::from(folded);
     }
+
+    fn apply(&self, unpublished: &mut MapWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        for step in &self.steps {
+            step.apply_into(&mut next)?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<MapWindowConfig> for MapWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.steps.iter().all(|step| *step == MapWindowConfigDelta::default())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<MapWindowConfig> for MapWindowConfigDiff {
     fn inverse(&self, base: &MapWindowConfig) -> Self {
         let folded = self.folded();
         Self::from(MapWindowConfigDelta {
@@ -151,10 +161,6 @@ impl protocol::DiffAlgebra<MapWindowConfig> for MapWindowConfigDiff {
             lod_mode: folded.lod_mode.as_ref().map(|_| base.lod_mode.clone()),
             layer_stroke_scale: folded.layer_stroke_scale.keys().map(|id| (id.clone(), base.layer_stroke_scale.get(id).copied())).collect(),
         })
-    }
-
-    fn is_empty(&self) -> bool {
-        self.steps.iter().all(|step| *step == MapWindowConfigDelta::default())
     }
 }
 //#endregion ⚙️Application

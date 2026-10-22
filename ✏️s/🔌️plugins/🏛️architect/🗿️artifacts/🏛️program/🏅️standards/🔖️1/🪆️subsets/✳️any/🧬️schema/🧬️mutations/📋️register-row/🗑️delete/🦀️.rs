@@ -23,17 +23,24 @@ where
     Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<DeleteRegisterRow> + From<crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "register-row", kind: "delete-register-row", record: "DeletedRegisterRow" };
-    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let label = self.register.label();
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete {} \"{}\"", label.en, self.id.0), &format!("{} \"{}\" löschen", label.de, self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ProgramSnapshot, Op> for DeleteRegisterRow
+where
+    Op: protocol::ColdMutation<ProgramSnapshot, ReferenceDiff = ProgramDiff> + From<DeleteRegisterRow> + From<crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow>,
+{
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
     }
 }

@@ -17,7 +17,7 @@ impl BoardSceneState {
     }
 
     pub fn camera_content_affine(&self) -> Affine {
-        semio_framework_canvas::camera::camera_content_affine(&self.camera, &self.viewport())
+        semio_framework_canvas::camera::camera_content_affine(&self.camera.into(), &self.viewport())
     }
 }
 

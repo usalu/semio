@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "truthfulPartialAccounting",
+    "maximumFullProofChecks",
+    "maximumMetadataWorkPerPair",
+    "workBudgets"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "members",
+          "fault",
+          "at",
+          "retired",
+          "windows",
+          "failure",
+          "directories",
+          "fullChecks",
+          "budget",
+          "complete"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "members": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1024
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "cancel",
+              "undefined",
+              "leaf",
+              "ancestor",
+              "sibling",
+              "reference",
+              "undefined-close",
+              "close"
+            ]
+          },
+          "at": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "retired": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "windows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failure": {
+            "type": "boolean"
+          },
+          "directories": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1024
+          },
+          "fullChecks": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "budget": {
+            "enum": [
+              "full",
+              "one-mutation",
+              "insufficient"
+            ]
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "truthfulPartialAccounting": {
+      "const": true
+    },
+    "maximumFullProofChecks": {
+      "const": 4096
+    },
+    "maximumMetadataWorkPerPair": {
+      "const": 8
+    },
+    "workBudgets": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ancestors",
+          "directories",
+          "rows",
+          "missing",
+          "names",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ancestors": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "directories": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "missing": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "names": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 262144
+          },
+          "required": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -73,36 +73,40 @@
       "environment": [{"name": "X", "value": "1"}]
     }
   ],
-  "laneVectors": [
-    {"name": "flag wins", "flag": "abc", "environment": {"SEMIO_CARGO_LANE": "env"}, "ancestry": [], "lane": "abc"},
-    {"name": "environment next", "environment": {"SEMIO_CARGO_LANE": "env1"}, "ancestry": [{"pid": 10, "started": "Mon Oct 20 10:00:00 2026", "command": "/usr/bin/claude"}], "lane": "env1"},
-    {"name": "no client ancestor falls back to the default lane", "environment": {}, "ancestry": [{"pid": 10, "started": "Mon Oct 20 10:00:00 2026", "command": "zsh"}], "lane": "d"},
-    {"name": "no ancestry falls back to the default lane", "environment": {}, "ancestry": [], "lane": "d"}
-  ],
   "invalidLanes": ["", "UPPER", "with-dash", "thirteenchars1", "a/b"],
   "gcVectors": [
     {
       "name": "nothing to remove",
-      "input": {"capacityBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 10, "lastUsedMs": 999000, "live": false}], "objects": [{"digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 100, "lastUsedMs": 999000}]},
+      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 10, "lastUsedMs": 999000, "live": false}], "objects": [{"digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 100, "lastUsedMs": 999000}]},
       "plan": {"removeLanes": [], "removeIncremental": [], "removeObjects": []}
     },
     {
       "name": "an idle lane is removed, a live idle lane is not",
-      "input": {"capacityBytes": 1000000, "freeBytes": 900000, "nowMs": 100000000, "lanes": [{"id": "old", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": false}, {"id": "olive", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": true}], "objects": []},
+      "input": {"capacityBytes": 1000000, "volumeBytes": 1000000, "freeBytes": 900000, "nowMs": 100000000, "lanes": [{"id": "old", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": false}, {"id": "olive", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": true}], "objects": []},
       "plan": {"removeLanes": ["old"], "removeIncremental": [], "removeObjects": []}
     },
     {
       "name": "the object share keeps the newest objects",
-      "input": {"capacityBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [], "objects": [
+      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [], "objects": [
         {"digest": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 250, "lastUsedMs": 300},
         {"digest": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 250, "lastUsedMs": 200},
         {"digest": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 250, "lastUsedMs": 100}]},
       "plan": {"removeLanes": [], "removeIncremental": [], "removeObjects": ["2222222222222222222222222222222222222222222222222222222222222222", "3333333333333333333333333333333333333333333333333333333333333333"]}
     },
     {
-      "name": "free-space pressure removes incremental directories first, then lanes, then objects",
-      "input": {"capacityBytes": 1000, "freeBytes": 50, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 990000, "live": true}], "objects": [{"digest": "4444444444444444444444444444444444444444444444444444444444444444", "bytes": 200, "lastUsedMs": 10}]},
-      "plan": {"removeLanes": [], "removeIncremental": ["a", "b"], "removeObjects": []}
+      "name": "free-space pressure above the high-water mark frees down to the low-water mark, incremental directories first, then lanes, then objects",
+      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 50, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 60, "incrementalBytes": 40, "lastUsedMs": 990000, "live": true}], "objects": [{"digest": "4444444444444444444444444444444444444444444444444444444444444444", "bytes": 200, "lastUsedMs": 10}]},
+      "plan": {"removeLanes": ["a", "b"], "removeIncremental": [], "removeObjects": ["4444444444444444444444444444444444444444444444444444444444444444"]}
+    },
+    {
+      "name": "exactly at the high-water mark nothing is collected",
+      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 200, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 50, "lastUsedMs": 999000, "live": false}], "objects": [{"digest": "5555555555555555555555555555555555555555555555555555555555555555", "bytes": 100, "lastUsedMs": 999000}]},
+      "plan": {"removeLanes": [], "removeIncremental": [], "removeObjects": []}
+    },
+    {
+      "name": "one byte above the high-water mark the oldest idle incremental directory goes first",
+      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 199, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 990000, "live": true}], "objects": []},
+      "plan": {"removeLanes": ["a", "b"], "removeIncremental": [], "removeObjects": []}
     }
   ],
   "scenario": {

@@ -60,7 +60,7 @@ export function composeInventory(root: string, files: readonly string[], graph: 
         outputs: target.outputs ?? [],
         dependsOn: target.dependsOn ?? [],
       });
-      if (typeof target.options?.command === "string" && (!/^bun(?: --watch)? (?:"[^"\n]*📜️script\.ts"|[^\s]*📜️script\.ts) [^\n]+$/.test(target.options.command) || /(?:&&|\|\|)/.test(target.options.command)))
+      if (typeof target.options?.command === "string" && (!/^repo(?: --watch)? (?:"[^"\n]*📜️script\.ts"|[^\s]*📜️script\.ts) [^\n]+$/.test(target.options.command) || /(?:&&|\|\|)/.test(target.options.command)))
         report("ORCH-01", path, identity, target.options.command, "Invoke one script and declare prerequisite ordering in dependsOn");
       if ((target.cache || /^(build(?:-|$)|wasm$|native-build$|package$|extension-package$)/.test(name)) && !Object.hasOwn(target, "outputs"))
         report("CACHE-06", path, identity, "Target still needs an explicit output contract", "Declare complete owned deliverables, or outputs: [] for a verified read-only task");
@@ -83,7 +83,7 @@ export function composeInventory(root: string, files: readonly string[], graph: 
     for (const [name, command] of Object.entries(json.scripts ?? {})) {
       commands.push({ file, script: name, command, cwd: dirname(file) });
       const bootstrap = operations.bootstrapExecutable ?? CACHE_BOOTSTRAP_EXECUTABLE;
-      if (file === "package.json" && name === "nx" && command === `bun ./${slash(relative(root, bootstrap))} nx`) continue;
+      if (file === "package.json" && name === "nx" && command === `repo ./${slash(relative(root, bootstrap))} nx`) continue;
       if (!/^(?:bun )?nx\b/.test(String(command))) report("ORCH-01", file, name, String(command), "Forward the public command to an independently implemented Nx target");
     }
   }

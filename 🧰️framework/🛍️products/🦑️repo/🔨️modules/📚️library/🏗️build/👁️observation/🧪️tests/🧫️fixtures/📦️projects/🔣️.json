@@ -6,12 +6,12 @@
     "c"
   ],
   "files": {
-    "a/📋️project.json": "{\"name\":\"a\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"a\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "a/📋️project.json": "{\"name\":\"a\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"a\",\"command\":\"repo ./📜️script.ts check\"}}}}",
     "a/📜️script.ts": "import {value} from '../b/source.ts'; export {value};\n",
-    "b/📋️project.json": "{\"name\":\"b\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"b\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "b/📋️project.json": "{\"name\":\"b\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"b\",\"command\":\"repo ./📜️script.ts check\"}}}}",
     "b/📜️script.ts": "import {value} from './source.ts';export {value};\n",
     "b/source.ts": "export const value=1;\n",
-    "c/📋️project.json": "{\"name\":\"c\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"c\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "c/📋️project.json": "{\"name\":\"c\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"c\",\"command\":\"repo ./📜️script.ts check\"}}}}",
     "c/📜️script.ts": "export const independent=true;\n",
     "a/source.ts": "import {value} from '../b/source.ts';export {value};\n"
   },
@@ -58,7 +58,7 @@
     "root": "d",
     "rename": "renamed",
     "files": {
-      "d/📋️project.json": "{\"name\":\"d\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"d\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+      "d/📋️project.json": "{\"name\":\"d\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"d\",\"command\":\"repo ./📜️script.ts check\"}}}}",
       "d/📜️script.ts": "export const structural=true;\n"
     },
     "counts": {

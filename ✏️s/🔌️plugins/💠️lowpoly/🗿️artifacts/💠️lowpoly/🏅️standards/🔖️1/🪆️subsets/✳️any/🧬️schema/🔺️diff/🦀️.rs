@@ -363,18 +363,9 @@ fn paint_edits_inverse(base: &[LowpolyPaintLayer], edits: &[LowpolyPaintEdit]) -
 }
 //#endregion 🔖️PaintEdits
 
-impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
-    fn apply(&self, snapshot: &LowpolySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LowpolySnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.objects {
-            next.objects = delta.commit_onto(&next.objects, capability).map_err(|error| error.under(["objects"]))?;
-        }
-        Ok(next)
-    }
+impl MutationDiff<LowpolySnapshot> for LowpolyDiff {}
 
+impl protocol::ColdMutationDiff<LowpolySnapshot> for LowpolyDiff {
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -387,15 +378,30 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, unpublished: &mut LowpolySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(delta) = &self.objects {
+            next.objects = delta.commit_onto(&next.objects, capability).map_err(|error| error.under(["objects"]))?;
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<LowpolySnapshot> for LowpolyDiff {
-    fn inverse(&self, base: &LowpolySnapshot) -> Self {
-        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), objects: self.objects.as_ref().map(|delta| delta.inverse(&base.objects)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.objects.as_ref().is_none_or(LowpolyObjectsDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LowpolySnapshot> for LowpolyDiff {
+    fn inverse(&self, base: &LowpolySnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), objects: self.objects.as_ref().map(|delta| delta.inverse(&base.objects)) }
     }
 }
 

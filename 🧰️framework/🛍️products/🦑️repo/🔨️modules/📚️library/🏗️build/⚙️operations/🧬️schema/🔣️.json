@@ -13,26 +13,19 @@
     "operations": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Operation" } }
   },
   "definitions": {
-    "ToolName": { "enum": ["nx", "bazel"] },
-    "Implementation": { "enum": ["native", "adapter", "neutral", "missing"] },
+    "ToolName": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "Requires": { "enum": ["none", "dependencies"] },
     "OperationName": {
-      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "reset", "tools", "preflight", "incremental", "concurrency", "dependencies", "cargo", "cache", "capacity", "leases", "remote-execution"]
+      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "reset", "tools", "preflight", "incremental", "concurrency", "bench", "conformance", "units", "dependencies", "cargo", "cache", "capacity", "leases", "remote-execution", "remote-cache", "doctor", "service", "session"]
     },
     "Operation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "requires", "synopsis", "summary", "implementations", "dryRun", "progress", "cancellable", "flags", "examples"],
+      "required": ["name", "requires", "synopsis", "summary", "dryRun", "progress", "cancellable", "flags", "examples"],
       "properties": {
         "name": { "$ref": "#/definitions/OperationName" },
         "requires": { "$ref": "#/definitions/Requires" },
         "synopsis": { "type": "string", "minLength": 1 },
-        "implementations": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["nx", "bazel"],
-          "properties": { "nx": { "$ref": "#/definitions/Implementation" }, "bazel": { "$ref": "#/definitions/Implementation" } }
-        },
         "dryRun": { "type": "boolean" },
         "progress": { "type": "boolean" },
         "cancellable": { "type": "boolean" },

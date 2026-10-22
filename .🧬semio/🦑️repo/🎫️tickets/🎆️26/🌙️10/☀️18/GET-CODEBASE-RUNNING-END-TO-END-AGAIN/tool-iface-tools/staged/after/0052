@@ -23,7 +23,8 @@ import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LocalFrameReader, writeLocalFrame } from "../📡️framing/🟦️.ts";
-import { spawnToolSyncV1, spawnToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runToolSyncV1, startToolV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** ⏳ The span of NO OBSERVABLE PROGRESS that ends a readiness wait. It is not a total budget and
  * never was a good one: a total wall budget charges a booting hub for every millisecond the machine
@@ -114,7 +115,7 @@ export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 export type HubDevBinaryStaging = Readonly<{ stage: () => number }>;
 
 const nativeHubDevBinaryStaging: HubDevBinaryStaging = {
-  stage: () => spawnToolSyncV1("bun", ["repo", "run", HUB_DEV_BINARY_TARGET], { cwd: findWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
+  stage: () => runToolSyncV1(runtimeCommandNameV1(), ["repo", "run", HUB_DEV_BINARY_TARGET], { cwd: findWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
 };
 
 /** 📦 Stages the development executable through its own build target on EVERY launch and returns its path. The build
@@ -228,7 +229,7 @@ type EngineResult = Readonly<{ status: number; stdout: string; stderr: string }>
 function engine(repoRoot: string, args: readonly string[], options: Readonly<{ inherit?: boolean; signal?: AbortSignal }> = {}): Promise<EngineResult> {
   return new Promise((resolveRun, rejectRun) => {
     if (options.signal?.aborted) return rejectRun(new Error("hub backend start cancelled"));
-    const child = spawnToolV1(HUB_BACKEND_ENGINE, [...args], { cwd: repoRoot, shell: false, stdio: ["ignore", options.inherit ? "inherit" : "pipe", options.inherit ? "inherit" : "pipe"] });
+    const child = startToolV1("docker", [...args], { cwd: repoRoot, shell: false, stdio: ["ignore", options.inherit ? "inherit" : "pipe", options.inherit ? "inherit" : "pipe"] });
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     child.stdout?.on("data", (chunk: Buffer) => out.push(chunk));
@@ -274,8 +275,8 @@ export async function hubBackendStatus(repoRoot: string, identity: HubBackendIde
 /** 🧹️ Removes the container and the compose project's volumes of `identity`; a missing server is not an error.
  * Synchronous, so a gate's `process.once("exit")` teardown can call it. */
 export function stopHubBackend(repoRoot: string, identity: HubBackendIdentity): void {
-  spawnToolSyncV1(HUB_BACKEND_ENGINE, ["rm", "--force", identity.container], { cwd: repoRoot, stdio: "ignore", shell: false });
-  spawnToolSyncV1(HUB_BACKEND_ENGINE, [...composeArgs(repoRoot, identity), "down", "--volumes", "--remove-orphans"], { cwd: repoRoot, stdio: "ignore", shell: false });
+  runToolSyncV1("docker", ["rm", "--force", identity.container], { cwd: repoRoot, stdio: "ignore", shell: false });
+  runToolSyncV1("docker", [...composeArgs(repoRoot, identity), "down", "--volumes", "--remove-orphans"], { cwd: repoRoot, stdio: "ignore", shell: false });
 }
 
 /** 🚀️ Returns the ready server of `identity`, starting it from its compose service when none runs. The image pull

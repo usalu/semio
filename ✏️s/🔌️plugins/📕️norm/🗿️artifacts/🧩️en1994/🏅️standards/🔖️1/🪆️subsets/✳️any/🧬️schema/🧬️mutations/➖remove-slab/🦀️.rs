@@ -16,7 +16,13 @@ pub struct RemoveSlab {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveSlab where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_slab::InsertSlab> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "slab", kind: "remove-slab", record: "RemovedSlab" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove composite slab", "Verbunddecke entfernen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1994Snapshot, Op> for RemoveSlab where Op: protocol::ColdMutation<En1994Snapshot, ReferenceDiff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_slab::InsertSlab> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1994Snapshot>>::ReferenceDiff> {
         crate::remove_slab::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,9 +31,6 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveSlab where Op: pro
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove composite slab", "Verbunddecke entfernen")
-    }
 }
 //#endregion 🔖️Payload
 

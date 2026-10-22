@@ -108,7 +108,7 @@ pub mod sqlite {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// ---- Crate-root module paths: the crate's public surface ----
 // 🔀️ S-6 (`.claude/plans/the-current-schemas-are-scalable-journal.md`): 89a is the richer
 // standard (frames/GCE/loop vs. 87a's single-image model) and is now canonical here; 87a
 // stays reachable under its own explicit `standards::v87a::` path for callers that need it.

@@ -45,7 +45,7 @@ import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
 import { runTopologySessionsV1 } from "./🔒️sessions/🟦️.ts";
-import { spawnToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🗺️Topologies
 /** 🗺️ The topologies the gate boots, in the order they are named. */
@@ -148,7 +148,7 @@ interface Stack {
 
 /** 🧯️ Ends a bounded Node port probe before its caller may bind the selected ports. */
 function probePorts(source: string, args: readonly string[], signal?: AbortSignal): Promise<string> {
-  const child = spawnToolV1("node", ["--input-type=module", "-e", source, ...args], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000) });
+  const child = startToolV1("node", ["--input-type=module", "-e", source, ...args], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000) });
   let output = "";
   let failure = "";
   child.stdout!.on("data", chunk => { output += chunk; });
@@ -310,7 +310,7 @@ async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, bro
 function runSpecs(stack: Stack, run: Run, browsers: string, output: string, forwarded: readonly string[]): Promise<number> {
   run.signal.throwIfAborted();
   const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers, PLAYWRIGHT_BASE_URL: stack.site, [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
-  const child = spawnToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", join(output, stack.topology), ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  const child = startToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", join(output, stack.topology), ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   const cancel = (): void => terminateOwnedChildTree(child);
   run.signal.addEventListener("abort", cancel, { once: true });
   for (const stream of [child.stdout!, child.stderr!]) {

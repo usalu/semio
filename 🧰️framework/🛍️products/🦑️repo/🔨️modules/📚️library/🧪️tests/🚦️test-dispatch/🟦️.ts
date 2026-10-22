@@ -1,11 +1,13 @@
+import {AsyncLocalStorage} from "node:async_hooks";
+import {withBuildTestInvocationV1,registerBuildTestFixtureV1,type BuildTestFixtureV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCanonicalGoTests } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
 import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot, createIssuedResourceControlV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const cli = join(import.meta.dir, "../../../💻️client/⌨️cli");
 const repo = findWorkspaceRoot(import.meta.dir);
@@ -16,29 +18,27 @@ let compiledRoot: string;
 let probeBinary: string;
 let probeRoot: string;
 const setupCancellation = new AbortController();
-beforeAll(async () => {
-  const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
-  mkdirSync(artifacts, { recursive: true });
-  compiledRoot = mkdtempSync(join(artifacts, "go-dispatch-compiled-"));
-  probeRoot = mkdtempSync(join(artifacts, "go-cancellation-"));
-  mkdirSync(join(probeRoot, "temporary"));
-  probeBinary = join(compiledRoot, process.platform === "win32" ? "dispatch.test.exe" : "dispatch.test");
-  try {
-    await runCanonicalGoTests(cli, ["-c", "-o", probeBinary], { env: { ...process.env, GOWORK: join(repo, "go.work"), SEMIO_GO_OVERLAY_OWNER: compiledRoot }, budgetMs: 60_000, packages: ["."], signal: setupCancellation.signal });
-
-  } catch (error) {
-    rmSync(compiledRoot, { recursive: true, force: true });
-    rmSync(probeRoot, { recursive: true, force: true });
-    throw error;
-  }
-  expect(existsSync(probeBinary)).toBe(true);
-}, 65_000);
+type FixtureAccess={run<T>(body:(original:ScriptInvocation)=>Promise<T>):Promise<T>};
+let ownedFixture:BuildTestFixtureV1<FixtureAccess>;
+beforeAll(async()=>{
+  await withBuildTestInvocationV1(async()=>{});
+  ownedFixture=registerBuildTestFixtureV1(async(original,retain)=>withRepositoryTestArtifactsV1(repo,original,createIssuedResourceControlV1(original,"go:dispatcher-fixture",0),async()=>{
+    const artifacts=repositoryTestArtifactRootV1(repo),snapshot=AsyncLocalStorage.snapshot();
+    for(const path of[join(artifacts,"go-dispatch-compiled-xxxxxx","run-xxxxxx","overlay.json"),join(artifacts,"go-cancellation-xxxxxx","cancellation",fixture.cancellation.marker)])if(path.length>256)throw Error("Bounded issued Go dispatcher fixture required");
+    let failed=false;
+    try{compiledRoot=mkdtempSync(join(artifacts,"go-dispatch-compiled-"));probeRoot=mkdtempSync(join(artifacts,"go-cancellation-"));mkdirSync(join(probeRoot,"temporary"));probeBinary=join(compiledRoot,process.platform==="win32"?"dispatch.test.exe":"dispatch.test");
+      await runCanonicalGoTests(cli,["-c","-o",probeBinary],original,{env:{...process.env,GOWORK:join(repo,"go.work"),SEMIO_GO_OVERLAY_OWNER:compiledRoot},budgetMs:60000,packages:["."],signal:setupCancellation.signal});
+      await retain({run:body=>snapshot(()=>body(original))});
+    }catch(error){failed=true;throw error;}finally{let cleanupFailed=false,cleanup:unknown;for(const path of[compiledRoot,probeRoot])if(path)try{rmSync(path,{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanup=error;}}if(!failed&&cleanupFailed)throw cleanup;}
+  }));
+  await ownedFixture.run(value=>value.run(async()=>{expect(existsSync(probeBinary)).toBe(true);}));
+},65000);
 beforeAll(async () => {
     await runRepositoryTestCommand(probeBinary, ["-test.v", "-test.count=1", "-test.run=^TestCanonicalGoTestDispatcherNestedBudgetPreparation$"], {
       cwd: cli, env: { ...process.env, GOWORK: join(repo, "go.work"), SEMIO_GO_CANCELLATION_ROOT: probeRoot, TMPDIR: join(probeRoot, "temporary"), TMP: join(probeRoot, "temporary"), TEMP: join(probeRoot, "temporary") }, budgetMs: 60_000, signal: setupCancellation.signal, throwOnFailure: true,
     });
 }, 65_000);
-afterAll(() => { setupCancellation.abort(); if (compiledRoot) rmSync(compiledRoot, { recursive: true, force: true }); if (probeRoot) rmSync(probeRoot, { recursive: true, force: true }); });
+afterAll(() => { setupCancellation.abort(); });
 
 type ProcessRow = { pid: number; parent: number; group: number };
 
@@ -99,21 +99,21 @@ async function expectProcessesGone(rows: readonly ProcessRow[]): Promise<void> {
 test("canonical Go preparation respects caller cancellation before compiler launch", async () => {
   const cancellation = new AbortController();
   cancellation.abort();
-  await expect(runCanonicalGoTests(cli, ["-c", "-o", join(compiledRoot, "cancelled.test")], { env: { ...process.env, SEMIO_GO_OVERLAY_OWNER: compiledRoot }, packages: ["."], budgetMs: 60_000, signal: cancellation.signal })).rejects.toThrow("cancelled");
+  await ownedFixture.run(value=>value.run(async original=>{await expect(runCanonicalGoTests(cli, ["-c", "-o", join(compiledRoot, "cancelled.test")], original, { env: { ...process.env, SEMIO_GO_OVERLAY_OWNER: compiledRoot }, packages: ["."], budgetMs: 60_000, signal: cancellation.signal })).rejects.toThrow("cancelled");}));
   expect(existsSync(join(compiledRoot, "cancelled.test"))).toBe(false);
 });
 
 test("public Go test dispatch uses canonical compiler inputs", async () => {
-  await runCanonicalGoTests(cli, ["-count=1", "-v", "-run", "^TestCanonicalGoTestDispatcher(?:Cancellation|SpawnError)?$"], {
+  await ownedFixture.run(value=>value.run(async original=>{
+  await runCanonicalGoTests(cli, ["-count=1", "-v", "-run", "^TestCanonicalGoTestDispatcher(?:Cancellation|SpawnError)?$"], original, {
     env: { ...process.env, GOWORK: join(repo, "go.work") },
     budgetMs: 60_000,
   });
+  }));
 }, 65_000);
 
 test("registered Go dispatch budget owns every nested process and overlay", async () => {
   if (process.platform === "win32") return;
-  const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
-  mkdirSync(artifactParent, { recursive: true });
   const root = probeRoot;
   const temporary = join(root, "temporary");
   const output = { stdout: "", stderr: "" };

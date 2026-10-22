@@ -41,7 +41,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
         }
     }
 
-    pub(crate) struct PrivateChildMemberMetadataParts {
+    pub struct PrivateChildMemberMetadataParts {
         pub expected: ArtifactRef,
         pub owner: store::OwnerRef,
         pub actor: ActorId,

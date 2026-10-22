@@ -14,7 +14,7 @@ async fn absorbing_coalesces_same_key_entries_and_later_scalars_win() {
     let mut diff = created;
     diff.absorb(deleted);
     assert!(diff.workshop.as_ref().is_none_or(Process3dMachinesDelta::is_empty), "create∘delete cancels");
-    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff").stock_label, "Beam");
+    assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff").stock_label, "Beam");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -23,7 +23,7 @@ async fn stock_solid_handle_swap_applies() {
     let new_content = semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Sphere { radius: 0.5 });
     let new_handle = semio_s_artifact_process_process3d_model::snapshot::brep_child_handle("stock", &new_content);
     let diff = Process3dDiff { stock_solid: Some(new_handle.clone()), ..Default::default() };
-    let next = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff");
     assert_eq!(next.stock_solid, new_handle);
 }
 
@@ -34,8 +34,8 @@ async fn positional_machine_delta_moves_and_inverts_row_by_row() {
     base.workshop.machines = ["a", "b", "c", "d"].iter().map(|id| WorkshopMachine { id: (*id).into(), ..machine.clone() }).collect();
     let diff = |delta: Process3dMachinesDelta| Process3dDiff { workshop: Some(delta), ..Default::default() };
     let relocate = diff(Process3dMachinesDelta::relocation(&base.workshop.machines, 3, 1));
-    let moved = protocol::apply_diff(&relocate, &base).expect("valid relocation");
+    let moved = protocol::apply_diff_cold(&relocate, &base).expect("valid relocation");
     assert_eq!(moved.workshop.machines.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), ["a", "d", "b", "c"]);
     let inverse = protocol::DiffAlgebra::inverse(&relocate, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &moved).expect("valid inverse"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &moved).expect("valid inverse"), base);
 }

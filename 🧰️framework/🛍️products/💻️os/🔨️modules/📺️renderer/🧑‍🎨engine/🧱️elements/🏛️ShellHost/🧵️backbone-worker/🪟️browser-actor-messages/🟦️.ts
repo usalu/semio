@@ -9,7 +9,7 @@ import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundl
 import { reduceBootstrapUiState, reduceExecutionTargetUiState, type BootstrapUiState, type ExecutionTargetUiState } from "../../🪪️host-bootstrap/🟦️.tsx";
 import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
 import type { ShellCoreAfterIdentityAndDocumentPorts } from "../../🔒️identity-document-ports/🟦️.ts";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "../../../⚛️react-port/🟦️.ts";
 
 /** 🩻️ Validates a browser actor ui patch offer against the open session and answers a verdict per surface. */
 export function handleBrowserActorUiPatchMessage({ openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, setBrowserActorUiVersion, publishUiRefreshSectionsV1, uiRefreshCacheRef, message, worker, core }: Pick<ShellCoreAfterIdentityAndDocumentPorts, "openDocumentSessionsRef" | "browserActorUiByRuntimeKeyRef" | "setBrowserActorUiVersion" | "publishUiRefreshSectionsV1" | "uiRefreshCacheRef"> & {

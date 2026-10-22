@@ -24,7 +24,7 @@ test("a Windows shim is a .cmd or .exe file, never a symbolic link or a hard lin
   run();
   if(hasReal(row)&&python){const walked=Bun.spawnSync([testPythonV1()??"python3","-c","import os,sys;print(os.path.normpath(os.path.join(os.path.dirname(sys.argv[1]),sys.argv[2])))",row.path,row.target],{stdout:"pipe"}).stdout.toString().trim();expect(walked,row.name).toBe(row.real);}
   if(row.kind==="cmd")expect(calls.filter(call=>call[0]==="write"),row.name).toEqual([["write",row.path+".cmd",'@"'+fixture.executable+'" "'+row.real+'" %*\r\n']]);
-  else expect(calls.filter(call=>call[0]==="copy"),row.name).toEqual([["copy",row.real,row.path+".exe"]]);
+  else expect<unknown>(calls.filter(call=>call[0]==="copy"),row.name).toEqual([["copy",row.real,row.path+".exe"]]);
   expect(calls.some(call=>call[0]==="symlink"),row.name+": no symbolic link on Windows").toBe(false);
  }
 });

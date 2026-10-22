@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | FlowGraphCanvasHost}: `useFlowSessionAttach` runs the original statements in order and returns the bindings later hooks and the render read; the component merges them into the shared core object.
  */
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "../../⚛️react-port/🟦️.ts";
 import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import { nodeGraphActions } from "@semio-tech/framework";
 import { createFlowSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";

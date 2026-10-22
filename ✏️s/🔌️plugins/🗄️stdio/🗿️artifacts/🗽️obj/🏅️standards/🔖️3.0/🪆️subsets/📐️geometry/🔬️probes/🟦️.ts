@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
 
 const objLoader = new OBJLoader();
 //#endregion 🔌️Adapters
@@ -30,7 +31,7 @@ type ObjDoc = { modelCount: number; totalTriangleCount: number; models: ObjModel
 
 /** 📥️ Runs the standalone reader's `project` subcommand — never computes OBJ semantics itself. */
 function readObj(path: string): ObjDoc {
-  const result = spawnSync("cargo", ["run", "--quiet", "--release", "--manifest-path", READER_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--release", "--manifest-path", READER_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`tobj-obj-reader project ${path} failed (exit ${result.status}): ${result.stderr}`);
   return JSON.parse(result.stdout) as ObjDoc;
 }

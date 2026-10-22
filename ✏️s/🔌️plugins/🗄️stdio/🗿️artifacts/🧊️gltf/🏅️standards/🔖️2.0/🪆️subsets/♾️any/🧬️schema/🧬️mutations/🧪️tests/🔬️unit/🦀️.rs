@@ -29,17 +29,17 @@ fn mutation_inverse_is_a_concrete_kind_on_the_language_neutral_wire() {
     let mut base = GltfSnapshot::default();
     base.document.scene = Some(0);
     base.document.scenes = vec![Default::default(), Default::default()];
-    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&mutation, &base);
+    let outcome = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::diff(&mutation, &base);
     assert!(outcome.messages().is_empty());
-    let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
+    let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
     assert_eq!(next.document.scene, Some(1));
-    let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&inverse[0])).unwrap();
     assert_eq!(encoded, fixture["inverse"]);
     let restored: GltfMutation = semio_framework_pack_json::from_json_str(&encoded.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&restored, &next);
+    let outcome = <GltfMutation as protocol::ColdMutation<GltfSnapshot>>::diff(&restored, &next);
     assert!(outcome.messages().is_empty());
-    assert_eq!(protocol::apply_diff(outcome.diff(), &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(outcome.diff(), &next).unwrap(), base);
     assert!(size_of::<GltfMutation>() <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize);
 }

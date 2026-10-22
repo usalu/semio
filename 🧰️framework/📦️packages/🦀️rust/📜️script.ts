@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import {scriptCompilerAdmissionControlV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
@@ -8,7 +8,7 @@ import {copyFileSync} from "node:fs";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
+/** 🦀️ `@semio-tech/framework` task router: `repo ./📜️script.ts test|generate|check|lint`. */
 import { readCargoTestPolicyV1, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoLintV1 as runCargoLintV1, withAdmittedCompilerStoreV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
@@ -19,6 +19,7 @@ import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packag
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { basename, join, relative, resolve, isAbsolute } from "node:path";
+import { runtimeTypeEnvironmentV1 } from "../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📦️ Every Rust package of the framework facade and its carved producer crates, in workspace order. */
 const FRAMEWORK_PACKAGES:string[]=["semio-framework-abi", "semio-framework-action-bus", "semio-framework-interaction", "semio-framework-kernel", "semio-framework-kernel-history", "semio-framework-kernel-identity", "semio-framework-kernel-media-jobs", "semio-framework-kernel-ui", "semio-framework-manifest-actions", "semio-framework-manifest-address", "semio-framework-manifest-app-surface", "semio-framework-manifest-arg-schema", "semio-framework-manifest-contribution", "semio-framework-manifest-media", "semio-framework-manifest-mutation-inputs", "semio-framework-manifest-plugin", "semio-framework-manifest-view-model", "semio-framework-onboarding", "semio-framework-source-projection", "semio-framework-time-travel-actions", "semio-framework-tool-run-actions", "semio-framework"];
@@ -42,7 +43,7 @@ async function captureCargo(original:ScriptInvocation,workspace:string,root:stri
  const policy=readCargoTestPolicyV1(environment),control=scriptCompilerAdmissionControlV1(original,"framework:cargo",policy.buildBudgetMs);
  return withAdmittedCompilerStoreV1(workspace,policy.mode,control,environment,async (store,control)=>{
   const boundary=args.indexOf("--"),arguments_=boundary<0?[...args,"--manifest-path",policy.manifestPath]:[...args.slice(0,boundary),"--manifest-path",policy.manifestPath,...args.slice(boundary)],generated=environment.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen.ts"):undefined,env={...store.environment,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})};
-  const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root,store.storage));await store.storage.recheck();
+  const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:134217728},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root,store.storage));await store.storage.recheck();
   const output=mkdtempSync(join(store.captureDirectory,"general-cargo-"));try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw new Error("Finite original compiler capture deadline required");const result=await captureOwnedProcess("cargo",arguments_,{invocation:original,cwd:root,env,budgetMs:Math.floor(remaining),maxOutputBytes:16777216,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt")});if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);if(result.reason!=="exit"||result.signal)throw new Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);if(result.status===0&&generated)copyFileSync(generated,environment.SEMIO_TYPEGEN_OUT!);return result.status??1;}finally{if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
  });
 }
@@ -203,7 +204,7 @@ class SnapshotReceivingSourceScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   if(args.length)throw new Error("Expected test-snapshot-receiving-source");
   const {runOwnedCommand}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");const tests=["🛫️snapshot/🧪️tests/🟦️.ts","🧪️tests/nested-io/🟦️.ts"].map(test=>resolve(this.root,"../../🔨️modules/🚪️io/⏱️control",test));
-  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...tests],this.repoRoot,"framework:snapshot:receiving:types",this.childBudget(),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),...tests],this.repoRoot,"framework:snapshot:receiving:types",this.childBudget(),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",...tests],this.repoRoot,"framework:snapshot:receiving:source",this.childBudget(),{signal:this.invocation.control.signal});
  }
 }
@@ -234,7 +235,7 @@ function generatedManifestPath(root: string): string {
 /** 🧬️ Runs the owned framework schema export test, optionally writing its stable projection. */
 async function runTypegenExportTest(original:ScriptInvocation,workspace:string,root: string, outPath?: string): Promise<void> {
   const env = outPath === undefined ? process.env : { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  const status = await captureCargo(original,workspace,root,["test","--features","typegen",TYPEGEN_TEST_FILTER],env);
+  const status = await captureCargo(original,workspace,root,["test",TYPEGEN_TEST_FILTER],env);
   if (status !== 0) {
     console.error("framework typegen: owned schema export failed — see output above.");
     process.exit(status);
@@ -259,7 +260,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      const policy=readCargoTestPolicyV1(process.env),status=await captureCargo(this.invocation,this.repoRoot,this.root,["test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...policy,targetDirectory:join(temp,"target")}),SEMIO_TYPEGEN_OUT:outPath},false);
+      const policy=readCargoTestPolicyV1(process.env),status=await captureCargo(this.invocation,this.repoRoot,this.root,["test","--locked",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...policy,targetDirectory:join(temp,"target")}),SEMIO_TYPEGEN_OUT:outPath},false);
       if(status!==0)throw new Error(`framework preview export failed: ${status}`);
       content = readFileSync(outPath);
     } finally {
@@ -284,7 +285,7 @@ class CommandIngressConsumerScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-command-ingress-consumer accepts no arguments");
   const {runBudgetedTestCommand}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
@@ -316,7 +317,7 @@ class ViewModelOriginalScript extends BundleScript {
   if(segments[0]==="source"){
    const source=resolve(this.root,"../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/♻️original/🟦️.ts");
    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
-   await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"../node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});return;
+   await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"../node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});return;
   }
   await testCargo(this.invocation,phaseControl,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework-action-bus"],["--lib","tests","--","--nocapture"]);
     await testCargo(this.invocation,phaseControl,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework-manifest-view-model"],["--lib","resolved_host_context_tests::view_model_original_retirement","--","--nocapture"]);
@@ -335,7 +336,7 @@ if(!workspace||!isAbsolute(workspace))throw new Error("Explicit General command 
 /** 🎟️ Exercises portable admission decisions and actual original-source factory capabilities. */
 class OriginalFactoryAdmissionScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length>1||(args.length===1&&args[0]!=="source"))throw new Error("test-original-factory-admission [source]");await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework"],cwd:this.root,extraArgs:["--lib","action_bus::","--","--nocapture"]},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));}}
 
-const router = new ScriptRouter(import.meta.dir,workspace).register("test-view-model-original",ViewModelOriginalScript).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-retained-pack-encoding",RetainedPackEncodingTestScript).register("test-staged-payload-funding",StagedPayloadFundingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dirname,workspace).register("test-view-model-original",ViewModelOriginalScript).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-retained-pack-encoding",RetainedPackEncodingTestScript).register("test-staged-payload-funding",StagedPayloadFundingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 router.register("test-snapshot-receiving-source",SnapshotReceivingSourceScript);
 router.register("test-window-utility-native",WindowUtilityNativeScript);

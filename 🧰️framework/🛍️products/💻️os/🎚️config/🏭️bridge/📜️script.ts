@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -22,6 +22,7 @@
 //#region 🔌️Adapters
 import { runRepositoryMutationBridgeScriptV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry
@@ -31,6 +32,6 @@ class ListMutationsScript extends BundleScript {
     await runRepositoryMutationBridgeScriptV1(this.root, "semio-config-mutation-bridge");
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("list-mutations", ListMutationsScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+const router = new ScriptRouter(import.meta.dirname).register("list-mutations", ListMutationsScript);
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 //#endregion 🚪️Entry

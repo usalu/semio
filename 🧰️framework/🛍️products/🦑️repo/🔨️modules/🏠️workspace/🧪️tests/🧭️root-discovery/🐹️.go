@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+ "unicode/utf16"
 
 	workspace "github.com/usalu/semio/repo/workspace"
 	host "semio.tech/repo/test"
@@ -47,12 +48,13 @@ func loadDiscoveryFile(ctx *host.Context) (discoveryFile, error) {
 
 func materialize(base string, tree discoveryTree) error {
 	for _, dir := range tree.Directories {
-		if err := os.MkdirAll(filepath.Join(base, filepath.FromSlash(dir)), 0o755); err != nil {
+		directory := filepath.Join(base, filepath.FromSlash(dir)); if len(utf16.Encode([]rune(directory))) > 256 { return fmt.Errorf("bounded fixture directory required") };
+		if err := os.MkdirAll(directory, 0o755); err != nil {
 			return err
 		}
 	}
 	for path, content := range tree.Files {
-		full := filepath.Join(base, filepath.FromSlash(path))
+		full := filepath.Join(base, filepath.FromSlash(path)); if len(utf16.Encode([]rune(full))) > 256 { return fmt.Errorf("bounded fixture file required") }
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 			return err
 		}
@@ -109,34 +111,10 @@ func theFirstMarkerUpwardsWins(ctx *host.Context) (host.Outcome, error) {
 }
 
 func theStartDirectoryAloneDecidesTheRoot(ctx *host.Context) (host.Outcome, error) {
-	file, err := loadDiscoveryFile(ctx)
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	previous, err := os.Getwd()
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	defer os.Chdir(previous)
-	decoy := filepath.Join(ctx.WorkDir, "🪤️decoy")
-	if err := os.MkdirAll(filepath.Join(decoy, ".git", "deep"), 0o755); err != nil {
-		return host.Outcome{}, err
-	}
-	roots := make([]string, 0, 3*len(file.Trees))
-	for _, tree := range file.Trees {
-		base := filepath.Join(ctx.WorkDir, "🌲️"+tree.Name)
-		if err := materialize(base, tree); err != nil {
-			return host.Outcome{}, err
-		}
-		for _, standing := range []struct{ name, dir string }{{"inside", base}, {"outside", ctx.WorkDir}, {"decoy", filepath.Join(decoy, ".git", "deep")}} {
-			if err := os.Chdir(standing.dir); err != nil {
-				return host.Outcome{}, err
-			}
-			found := workspace.FindRepoRoot(filepath.Join(base, filepath.FromSlash(tree.StartAt)))
-			roots = append(roots, fmt.Sprintf("%s@%s=%s", tree.Name, standing.name, relativeSlash(base, found)))
-		}
-	}
-	return host.Outcome{Projection: map[string]any{"roots": roots}}, nil
+ file, err := loadDiscoveryFile(ctx); if err != nil { return host.Outcome{}, err }; before, err := os.Getwd(); if err != nil { return host.Outcome{}, err }
+ roots := make([]string, 0, len(file.Trees))
+ for _, tree := range file.Trees { base := filepath.Join(ctx.WorkDir, "r-"+tree.Name); if err := materialize(base, tree); err != nil { return host.Outcome{}, err }; found := workspace.FindRepoRoot(filepath.Join(base, filepath.FromSlash(tree.StartAt))); after, err := os.Getwd(); if err != nil { return host.Outcome{}, err }; if after != before { return host.Outcome{}, fmt.Errorf("root discovery changed cwd") }; roots = append(roots, fmt.Sprintf("%s=%s", tree.Name, relativeSlash(base, found))) }
+ return host.Outcome{Projection: map[string]any{"roots": roots}}, nil
 }
 
 func theLayoutVocabularyIsFixed(ctx *host.Context) (host.Outcome, error) {

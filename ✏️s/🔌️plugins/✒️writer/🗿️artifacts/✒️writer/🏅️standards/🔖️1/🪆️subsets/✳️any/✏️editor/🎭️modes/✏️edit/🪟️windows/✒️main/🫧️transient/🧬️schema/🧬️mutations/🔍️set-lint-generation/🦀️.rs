@@ -10,22 +10,25 @@ pub struct SetLintGeneration {
 
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetLintGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-lint-generation", kind: "set-lint-generation", record: "SetLintGeneration" };
-    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransientDiff> {
-        protocol::MutationOutcome::new(WriterMainWindowTransientDiff { lint_generation: (base.lint_generation != self.value).then_some(self.value), ..Default::default() })
-    }
 
-    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { value: base.lint_generation }.into()]
-    
-    })())
-}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Lint Generation", "Prüfstand des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["lint_generation".into()]
     }
+}
+
+impl protocol::ColdMutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetLintGeneration {
+    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransientDiff> {
+        protocol::MutationOutcome::new(WriterMainWindowTransientDiff { lint_generation: (base.lint_generation != self.value).then_some(self.value), ..Default::default() })
+    }
+    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Self { value: base.lint_generation }.into()]
+    
+    })())
+}
 }
 
 #[cfg(test)]

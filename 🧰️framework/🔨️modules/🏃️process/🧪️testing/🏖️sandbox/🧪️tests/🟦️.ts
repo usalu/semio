@@ -12,10 +12,12 @@ import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import ledger from "./🧫️fixtures/📒️ledger.json" with { type: "json" };
 import {
   abandonedTestSandboxV1, adoptedTestSandboxRootV1, attachedDiskImagesV1, mayHoldDiskImageV1, guardArgumentsV1, testCheckoutRootV1, compileLawV1, createTestSandboxV1, decideListenV1, decideSpawnV1, decideWriteV1, liveTestSandboxesV1, readTestPortLeaseV1,
-  reclaimAbandonedTestSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,
+  reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,
   type GuardContextV1, type GuardViolationKindV1, type ScanLanguageV1, type TestSandboxProtocolV1,
 } from "../🟦️.ts";
 
+process.env.SEMIO_AGENT_SESSION_DIRECTORY = mkdtempSync(join(tmpdir(), "sb-sessions-"));
+delete process.env.SEMIO_AGENT_SESSION;
 const declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, "..");
 const names = declared.environment, python = spawnSync(testPythonV1()??"python3", ["--version"], { encoding: "utf8" }).status === 0, ripgrep = spawnSync(testRipgrepV1()??"rg", ["--version"], { encoding: "utf8" }).status === 0;
 
@@ -173,7 +175,7 @@ describe("per-run sandbox", () => {
     });
   });
   test("test commands receive the guard preload only for bun test with an active guard, and the checkout root is found", () => {
-    const preload = join(root, "🛡️guard/🔌️preload/🟦️.ts");
+    const preload = join(root, "🛡️guard/🍞️bun/🔌️preload/🟦️.ts");
     expect(guardArgumentsV1("bun", ["test", "./a.ts"], {})).toEqual(["test", "./a.ts"]);
     expect(guardArgumentsV1("bun", ["test", "./a.ts"], { [names.guard]: "report" })).toEqual(["test", "--preload", preload, "./a.ts"]);
     expect(guardArgumentsV1(process.execPath, ["test", "--timeout", "5"], { [names.guard]: "enforce" })).toEqual(["test", "--preload", preload, "--timeout", "5"]);
@@ -216,10 +218,28 @@ describe("per-run sandbox", () => {
       expect(readTestPortLeaseV1(second.shared, all[6]!)?.sandbox).toBe(second.id);
     } finally { first.dispose(); second.dispose(); }
   });
+  test("sandboxes live below the root of their agent session, the owner row names the session, and a gone session releases its root unless a live sandbox is left", () => {
+    const parent = mkdtempSync(join(tmpdir(), "sb-session-")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
+    const session = { id: "a1", worktree: "0123456789ab", resources: { tests: { root: "a1" } } }, other = { id: "b2", worktree: "0123456789ab", resources: { tests: { root: "b2" } } };
+    try {
+      const mine = createTestSandboxV1({ route: "s", parent, reclaim: false, session }), theirs = createTestSandboxV1({ route: "s", parent, reclaim: false, session: other });
+      expect(join(mine.root, "..")).toBe(realpathSync(join(base, "a1"))); expect(join(theirs.root, "..")).toBe(realpathSync(join(base, "b2")));
+      expect(JSON.parse(readFileSync(join(mine.root, declared.layout.owner), "utf8")).session).toBe("0123456789ab.a1");
+      expect(mine.shared).toBe(realpathSync(base));
+      expect(reclaimAgentSessionSandboxesV1(session, { parent })).toEqual({ released: 0, kept: 1 }); expect(existsSync(mine.root)).toBe(true);
+      expect(reclaimAgentSessionSandboxesV1(session, { parent, alive: () => false })).toEqual({ released: 2, kept: 0 });
+      expect(existsSync(join(base, "a1"))).toBe(false); expect(existsSync(theirs.root)).toBe(true);
+      mkdirSync(join(base, "c3", "dddddddd"), { recursive: true }); writeFileSync(join(base, "c3", "dddddddd", declared.layout.owner), JSON.stringify({ pid: dead }));
+      expect(reclaimAgentSessionSandboxesV1({ resources: { tests: { root: "nobody" } } }, { parent })).toEqual({ released: 0, kept: 0 });
+      expect(reclaimAbandonedTestSandboxesV1({ parent, force: true }).reclaimed.map(path => path.slice(-8))).toEqual(["dddddddd"]); expect(existsSync(theirs.root)).toBe(true);
+      theirs.dispose(); mine.dispose();
+      expect(existsSync(join(base, "b2"))).toBe(false);
+    } finally { rmSync(parent, { recursive: true, force: true }); }
+  });
   test("abandoned sandboxes, images and port leases of dead owners are reclaimed and live ones are kept", () => {
     const parent = mkdtempSync(join(tmpdir(), "sb-rc-")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
     const make = (id: string, row: object | undefined, age = 0): string => {
-      const directory = join(base, id);
+      const directory = join(base, "d", id);
       mkdirSync(join(directory, "images"), { recursive: true });
       if (row) writeFileSync(join(directory, declared.layout.owner), JSON.stringify(row));
       if (age) { const stamp = (Date.now() - age) / 1000; if (row) utimesSync(join(directory, declared.layout.owner), stamp, stamp); utimesSync(directory, stamp, stamp); }
@@ -251,7 +271,7 @@ describe("per-run sandbox", () => {
 });
 
 describe("runtime guard", () => {
-  const preload = join(root, "🛡️guard/🔌️preload/🟦️.ts");
+  const preload = join(root, "🛡️guard/🍞️bun/🔌️preload/🟦️.ts");
   const run = async (mode: string, body: string, expectFail: boolean): Promise<{ output: string; report: string; checkout: string }> => {
     const sandbox = createTestSandboxV1({ route: "guard", reclaim: false, guard: mode as "report" | "enforce" }), checkout = mkdtempSync(join(tmpdir(), "sb-co-"));
     try {
@@ -304,6 +324,6 @@ describe("runtime guard", () => {
     for (const name of ["writeFile", "appendFile", "mkdir", "rm", "rmdir", "unlink", "rename", "copyFile", "cp", "truncate", "symlink", "link"]) expect(fsp, name).toContain(`export const ${name} = writes("${name}"`);
     for (const name of declared.guard.openFunctions) expect(fs, name).toContain(`export const ${name} = opens("${name}"`);
     for (const name of ["spawn", "spawnSync", "execFile", "execFileSync", "exec", "execSync"]) expect(child, name).toContain(`export const ${name} =`);
-    for (const name of Object.keys(declared.guard.sqliteTargets)) expect(readFileSync(join(root, "🛡️guard/🩻️sqlite/🟦️.ts"), "utf8"), name).toContain(`class ${name} extends`);
+    for (const name of Object.keys(declared.guard.sqliteTargets)) expect(readFileSync(join(root, "🛡️guard/🍞️bun/🩻️sqlite/🟦️.ts"), "utf8"), name).toContain(`class ${name} extends`);
   });
 });

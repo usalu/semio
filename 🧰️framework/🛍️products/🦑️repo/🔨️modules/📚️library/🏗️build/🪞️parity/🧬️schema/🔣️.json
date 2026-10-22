@@ -28,12 +28,7 @@
         }
       }
     },
-    "Tool": {
-      "enum": [
-        "nx",
-        "bazel"
-      ]
-    },
+    "Tool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "Area": {
       "enum": [
         "framework",

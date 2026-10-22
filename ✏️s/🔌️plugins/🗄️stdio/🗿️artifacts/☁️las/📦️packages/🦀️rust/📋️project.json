@@ -15,8 +15,8 @@
     ]
   },
   "targets": {
-    "test-original-receiving-source":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
-    "test-original-receiving-native":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
+    "test-original-receiving-source":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
+    "test-original-receiving-native":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"repo ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"], "outputs": []},
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -34,7 +34,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -42,7 +42,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -59,7 +59,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -77,7 +77,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite"
       },
       "inputs": [
         "production",
@@ -95,7 +95,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native"
       },
       "inputs": [
         "production",
@@ -113,7 +113,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source"
       },
       "inputs": [
         "production",

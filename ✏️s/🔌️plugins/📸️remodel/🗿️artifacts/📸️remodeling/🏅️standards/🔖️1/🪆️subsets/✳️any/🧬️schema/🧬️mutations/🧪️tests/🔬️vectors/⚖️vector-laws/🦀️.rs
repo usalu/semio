@@ -20,7 +20,7 @@ fn applied_laws(vector: &Vector) {
     assert_eq!(json_of(outcome.diff()), committed, "{label}: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: RemodelingDiff = from_json_str(vector.diff.as_deref().expect("committed diff"), JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{label}: committed diff decodes into the diff type: {error:?}"));
     assert_eq!(json_of(&decoded), committed, "{label}: committed diff JSON is not canonical");
-    let carried = protocol::apply_diff(&decoded, &vector.before()).unwrap_or_else(|error| panic!("{label}: committed diff applies to the before-snapshot: {error:?}"));
+    let carried = protocol::apply_diff_cold(&decoded, &vector.before()).unwrap_or_else(|error| panic!("{label}: committed diff applies to the before-snapshot: {error:?}"));
     assert_eq!(carried, vector.expected_after(), "{label}: committed diff did not carry before to after");
     let declared_codes: Vec<String> = match vector.declared().get("messages") {
         Some(Value::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),

@@ -12,7 +12,7 @@ pub(crate) use crate::declaration_fixture_mutations::std1_any::set_value::SetVal
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-#[mutations(snapshot = Std1AnySnapshot, diff = Std1AnyDiff, schema = "semio.testkit.w1c-fixture.std1-any/v1")]
+#[mutations(snapshot = Std1AnySnapshot, diff = Std1AnyDiff, schema = "semio.testkit.w1c-fixture.std1-any/v1", reference = Std1AnySnapshot, reference_diff = Std1AnyDiff)]
 pub(crate) enum Std1AnyMutation {
     SetValue(SetValue),
 }

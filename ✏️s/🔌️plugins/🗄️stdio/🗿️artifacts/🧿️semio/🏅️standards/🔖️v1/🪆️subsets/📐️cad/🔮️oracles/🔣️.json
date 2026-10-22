@@ -155,7 +155,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "dxf-read"
       ],
@@ -209,7 +209,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "dxf-witness"
       ],
@@ -263,7 +263,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "dxf-compare"
       ],
@@ -317,7 +317,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "step-read"
       ],
@@ -371,7 +371,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "step-witness"
       ],
@@ -425,7 +425,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📜️script.ts",
         "step-compare"
       ],
@@ -1126,7 +1126,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-layer-hidden-services",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-layer-hidden-services",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1180,7 +1180,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-layer-scratch",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-layer-scratch",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1234,7 +1234,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-layer-walls-color",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-layer-walls-color",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1288,7 +1288,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-block-door",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-block-door",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1342,7 +1342,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-block-window",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-block-window",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1396,7 +1396,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-base-point-door",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-base-point-door",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1450,7 +1450,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-entity-arc-fillet",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-entity-arc-fillet",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1504,7 +1504,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-entity-middle-polyline",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-entity-middle-polyline",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1558,7 +1558,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-entity-layer-text-to-annotations",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-entity-layer-text-to-annotations",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1619,7 +1619,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-entity-geometry-circle-radius",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-entity-geometry-circle-radius",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1673,7 +1673,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-block-entity-door-swing",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only add-block-entity-door-swing",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1727,7 +1727,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-block-entity-window-mullion",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only remove-block-entity-window-mullion",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1781,7 +1781,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-entity-layer-door-leaf",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-entity-layer-door-leaf",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1835,7 +1835,7 @@
         "packageVersion": "0.6.1",
         "engineFamily": "dxf-rs",
         "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-entity-geometry-window-pane",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-block-entity-geometry-window-pane",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1889,7 +1889,7 @@
         "packageVersion": "0.4.0",
         "engineFamily": "ruststep",
         "engineVersion": "0.4.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-add-entity-circle",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-add-entity-circle",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -1943,7 +1943,7 @@
         "packageVersion": "0.4.0",
         "engineFamily": "ruststep",
         "engineVersion": "0.4.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-remove-entity-line",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-remove-entity-line",
         "seed": 0,
         "platform": "darwin-arm64"
       },
@@ -2004,7 +2004,7 @@
         "packageVersion": "0.4.0",
         "engineFamily": "ruststep",
         "engineVersion": "0.4.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-set-entity-geometry-circle-radius",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-set-entity-geometry-circle-radius",
         "seed": 0,
         "platform": "darwin-arm64"
       },

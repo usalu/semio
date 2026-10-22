@@ -483,7 +483,7 @@
     },
     {
       "name": "catalog-smoke",
-      "target": {"options":{"command":"bun ./📜️script.ts verify catalog"}},
+      "target": {"options":{"command":"repo ./📜️script.ts verify catalog"}},
       "decision": [
         "deterministic",
         "check-without-outputs"
@@ -687,6 +687,33 @@
       },
       "commandSources": [],
       "expect": true
+    }
+  ],
+  "nativeDrivers": [
+    {
+      "id": "cargo-test-driver",
+      "sources": ["{workspaceRoot}/lib/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"],
+      "expect": true
+    },
+    {
+      "id": "native-build-artifacts",
+      "sources": ["{workspaceRoot}/lib/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"],
+      "expect": true
+    },
+    {
+      "id": "wasm-build-artifacts",
+      "sources": ["{workspaceRoot}/lib/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts"],
+      "expect": true
+    },
+    {
+      "id": "plain-script-closure",
+      "sources": ["{workspaceRoot}/lib/📜️script.ts", "{workspaceRoot}/lib/🏃️process/🧭️routing/🟦️.ts"],
+      "expect": false
+    },
+    {
+      "id": "empty-closure-of-a-noop-aggregate",
+      "sources": [],
+      "expect": false
     }
   ],
   "nativeInputs": [
@@ -974,21 +1001,21 @@
         "cache": true,
         "options": {
           "cwd": "{projectRoot}",
-          "command": "bun ./📜️script.ts build"
+          "command": "repo ./📜️script.ts build"
         }
       },
       "check": {
         "executor": "repo:script",
         "options": {
           "cwd": "{projectRoot}",
-          "command": "bun ./📜️script.ts check"
+          "command": "repo ./📜️script.ts check"
         }
       },
       "test": {
         "executor": "repo:script",
         "options": {
           "cwd": "{projectRoot}",
-          "command": "bun ./📜️script.ts test"
+          "command": "repo ./📜️script.ts test"
         }
       },
       "test-pinned": {
@@ -996,7 +1023,7 @@
         "cache": false,
         "options": {
           "cwd": "{projectRoot}",
-          "command": "bun ./📜️script.ts test"
+          "command": "repo ./📜️script.ts test"
         }
       }
     },

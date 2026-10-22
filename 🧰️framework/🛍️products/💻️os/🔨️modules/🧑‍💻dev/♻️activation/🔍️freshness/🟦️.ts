@@ -96,7 +96,7 @@ export async function collectStagedModuleFacts(options: {
  * restage that lands while the server runs retires its own warning. */
 export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
   const verdicts = facts.map(stagedModuleVerdict);
-  const lines = stagedModuleReportLines(verdicts, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+  const lines = stagedModuleReportLines(verdicts, `repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
   for (const line of lines) console.warn(line);
   if (lines.length === 0) console.log(`[fresh] ${facts.length} staged components match their sources and the activation receipt`);
   return verdicts;

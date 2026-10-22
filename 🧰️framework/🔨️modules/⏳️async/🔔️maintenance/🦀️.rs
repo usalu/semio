@@ -47,7 +47,8 @@ pub enum WorkerMaintenanceRequest {
 pub type WorkerMaintenanceCallback = fn([u64; 2]) -> WorkerMaintenanceStep;
 
 #[derive(Clone, Copy)]
-struct Hook {
+#[doc(hidden)]
+pub struct Hook {
     pub generation: u64,
     lane: Lane,
     callback: WorkerMaintenanceCallback,
@@ -57,7 +58,8 @@ struct Hook {
     closing: bool,
 }
 
-struct State {
+#[doc(hidden)]
+pub struct State {
     pub next_generation: u64,
     closed: bool,
     pub entries: [Option<Hook>; WORKER_MAINTENANCE_CAPACITY],
@@ -68,19 +70,19 @@ struct State {
 /// 🔔️ Per lane, how many hooks are requested and neither running, closing nor closed: written
 /// under the state lock after every transition, read without it, so an idle worker's scan never
 /// contends for the registry.
-pub(super) struct WorkerMaintenanceRegistry {
+#[doc(hidden)] pub struct WorkerMaintenanceRegistry {
     identity: u64,
     pub state: Mutex<State>,
     pending: [AtomicU32; LANE_COUNT],
 }
 
-pub(super) struct Invocation {
+#[doc(hidden)] pub struct Invocation {
     pub ticket: WorkerMaintenanceTicket,
     callback: WorkerMaintenanceCallback,
     context: [u64; 2],
 }
 
-pub(super) enum PoolWork {
+#[doc(hidden)] pub enum PoolWork {
     Job(Job),
     Maintenance(Invocation),
     DeferredWake(super::deferred_wake::WorkerDeferredWakeInvocation),

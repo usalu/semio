@@ -1,0 +1,1427 @@
+{
+ "version": 1,
+ "contracts": [
+  {
+   "name": "a string constant",
+   "contract": {
+    "const": "a"
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "b",
+     "accepted": false
+    },
+    {
+     "value": 1,
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    },
+    {
+     "value": [
+      "a"
+     ],
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a numeric constant",
+   "contract": {
+    "const": 1
+   },
+   "values": [
+    {
+     "value": 1,
+     "accepted": true
+    },
+    {
+     "value": "1",
+     "accepted": false
+    },
+    {
+     "value": true,
+     "accepted": false
+    },
+    {
+     "value": 2,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a null constant",
+   "contract": {
+    "const": null
+   },
+   "values": [
+    {
+     "value": null,
+     "accepted": true
+    },
+    {
+     "value": 0,
+     "accepted": false
+    },
+    {
+     "value": "",
+     "accepted": false
+    },
+    {
+     "value": false,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an object constant matches by content",
+   "contract": {
+    "const": {
+     "a": 1,
+     "b": [
+      1,
+      2
+     ]
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": 1,
+      "b": [
+       1,
+       2
+      ]
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "b": [
+       1,
+       2
+      ],
+      "a": 1
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "a": 1
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 1,
+      "b": [
+       2,
+       1
+      ]
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "the null type",
+   "contract": {
+    "type": "null"
+   },
+   "values": [
+    {
+     "value": null,
+     "accepted": true
+    },
+    {
+     "value": 0,
+     "accepted": false
+    },
+    {
+     "value": "null",
+     "accepted": false
+    },
+    {
+     "value": {},
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a string enum",
+   "contract": {
+    "enum": [
+     "a",
+     "b"
+    ]
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "c",
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    },
+    {
+     "value": [
+      "a"
+     ],
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an enum with a null and a number",
+   "contract": {
+    "enum": [
+     1,
+     null
+    ]
+   },
+   "values": [
+    {
+     "value": null,
+     "accepted": true
+    },
+    {
+     "value": 1,
+     "accepted": true
+    },
+    {
+     "value": "1",
+     "accepted": false
+    },
+    {
+     "value": true,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an enum of objects matches by content",
+   "contract": {
+    "enum": [
+     {
+      "a": 1
+     },
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "values": [
+    {
+     "value": {
+      "a": 1
+     },
+     "accepted": true
+    },
+    {
+     "value": [
+      1,
+      2
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      2,
+      1
+     ],
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 2
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an enum decides before the type",
+   "contract": {
+    "type": "string",
+    "enum": [
+     "a"
+    ]
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": 1,
+     "accepted": false
+    },
+    {
+     "value": "b",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a constant decides before an enum",
+   "contract": {
+    "const": "a",
+    "enum": [
+     "a",
+     "b"
+    ]
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "b",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a constant and a type must both hold",
+   "contract": {
+    "type": "string",
+    "const": "5"
+   },
+   "values": [
+    {
+     "value": "5",
+     "accepted": true
+    },
+    {
+     "value": 5,
+     "accepted": false
+    },
+    {
+     "value": "6",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "the boolean type",
+   "contract": {
+    "type": "boolean"
+   },
+   "values": [
+    {
+     "value": true,
+     "accepted": true
+    },
+    {
+     "value": false,
+     "accepted": true
+    },
+    {
+     "value": 0,
+     "accepted": false
+    },
+    {
+     "value": "true",
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "the integer type",
+   "contract": {
+    "type": "integer"
+   },
+   "values": [
+    {
+     "value": 0,
+     "accepted": true
+    },
+    {
+     "value": -7,
+     "accepted": true
+    },
+    {
+     "value": 1.5,
+     "accepted": false
+    },
+    {
+     "value": "1",
+     "accepted": false
+    },
+    {
+     "value": true,
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    },
+    {
+     "value": 9007199254740991,
+     "accepted": true
+    },
+    {
+     "value": 9007199254740992,
+     "accepted": false,
+     "ajv": "differs"
+    }
+   ]
+  },
+  {
+   "name": "integer bounds are inclusive",
+   "contract": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 5
+   },
+   "values": [
+    {
+     "value": 0,
+     "accepted": true
+    },
+    {
+     "value": 5,
+     "accepted": true
+    },
+    {
+     "value": 6,
+     "accepted": false
+    },
+    {
+     "value": -1,
+     "accepted": false
+    },
+    {
+     "value": 3,
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "integer bounds are optional",
+   "contract": {
+    "type": "integer",
+    "minimum": 2
+   },
+   "values": [
+    {
+     "value": 2,
+     "accepted": true
+    },
+    {
+     "value": 1,
+     "accepted": false
+    },
+    {
+     "value": 1000000000000,
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "string length bounds",
+   "contract": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 3
+   },
+   "values": [
+    {
+     "value": "",
+     "accepted": false
+    },
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "abc",
+     "accepted": true
+    },
+    {
+     "value": "abcd",
+     "accepted": false
+    },
+    {
+     "value": 1,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "string length counts code points",
+   "contract": {
+    "type": "string",
+    "minLength": 2,
+    "maxLength": 3
+   },
+   "values": [
+    {
+     "value": "😀",
+     "accepted": false
+    },
+    {
+     "value": "😀😀",
+     "accepted": true
+    },
+    {
+     "value": "😀😀😀",
+     "accepted": true
+    },
+    {
+     "value": "😀😀😀😀",
+     "accepted": false
+    },
+    {
+     "value": "é",
+     "accepted": false
+    },
+    {
+     "value": "éé",
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "a pattern is searched, not anchored",
+   "contract": {
+    "type": "string",
+    "pattern": "a"
+   },
+   "values": [
+    {
+     "value": "bab",
+     "accepted": true
+    },
+    {
+     "value": "b",
+     "accepted": false
+    },
+    {
+     "value": "",
+     "accepted": false
+    },
+    {
+     "value": 1,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an anchored target name pattern",
+   "contract": {
+    "type": "string",
+    "pattern": "^[a-z][a-z0-9-]*$"
+   },
+   "values": [
+    {
+     "value": "build-x",
+     "accepted": true
+    },
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "Build",
+     "accepted": false
+    },
+    {
+     "value": "1a",
+     "accepted": false
+    },
+    {
+     "value": "",
+     "accepted": false
+    },
+    {
+     "value": "a b",
+     "accepted": false
+    },
+    {
+     "value": "a\n",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a pattern runs with the unicode flag",
+   "contract": {
+    "type": "string",
+    "pattern": "^.$"
+   },
+   "values": [
+    {
+     "value": "😀",
+     "accepted": true
+    },
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "ab",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a project pattern without colon, space or NUL",
+   "contract": {
+    "type": "string",
+    "pattern": "^[^:\\s\\u0000]+$"
+   },
+   "values": [
+    {
+     "value": "a/b",
+     "accepted": true
+    },
+    {
+     "value": "a:b",
+     "accepted": false
+    },
+    {
+     "value": "a b",
+     "accepted": false
+    },
+    {
+     "value": "a\u0000b",
+     "accepted": false
+    },
+    {
+     "value": "",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an array of strings",
+   "contract": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "values": [
+    {
+     "value": [],
+     "accepted": true
+    },
+    {
+     "value": [
+      "a",
+      "b"
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      1
+     ],
+     "accepted": false
+    },
+    {
+     "value": [
+      "a",
+      1
+     ],
+     "accepted": false
+    },
+    {
+     "value": "a",
+     "accepted": false
+    },
+    {
+     "value": {},
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "array length bounds",
+   "contract": {
+    "type": "array",
+    "minItems": 1,
+    "maxItems": 2,
+    "items": {
+     "type": "integer"
+    }
+   },
+   "values": [
+    {
+     "value": [],
+     "accepted": false
+    },
+    {
+     "value": [
+      1
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      1,
+      2
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      1,
+      2,
+      3
+     ],
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "uniqueness compares by value",
+   "contract": {
+    "type": "array",
+    "uniqueItems": true,
+    "items": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "integer"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       }
+      },
+      {
+       "type": "object"
+      }
+     ]
+    }
+   },
+   "values": [
+    {
+     "value": [
+      "a",
+      "a"
+     ],
+     "accepted": false
+    },
+    {
+     "value": [
+      1,
+      "1"
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      {
+       "a": 1
+      },
+      {
+       "a": 1
+      }
+     ],
+     "accepted": false
+    },
+    {
+     "value": [
+      null,
+      null
+     ],
+     "accepted": false
+    },
+    {
+     "value": [],
+     "accepted": true
+    },
+    {
+     "value": [
+      1,
+      2,
+      3
+     ],
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "uniqueness ignores the key order of objects",
+   "contract": {
+    "type": "array",
+    "uniqueItems": true,
+    "items": {
+     "type": "object"
+    }
+   },
+   "values": [
+    {
+     "value": [
+      {
+       "a": 1,
+       "b": 2
+      },
+      {
+       "b": 2,
+       "a": 1
+      }
+     ],
+     "accepted": false
+    },
+    {
+     "value": [
+      {
+       "a": 1,
+       "b": 2
+      },
+      {
+       "a": 1,
+       "b": 3
+      }
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      {
+       "a": [
+        1,
+        {
+         "x": 1,
+         "y": 2
+        }
+       ]
+      },
+      {
+       "a": [
+        1,
+        {
+         "y": 2,
+         "x": 1
+        }
+       ]
+      }
+     ],
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an array without an items rule accepts any items",
+   "contract": {
+    "type": "array",
+    "minItems": 1
+   },
+   "values": [
+    {
+     "value": [],
+     "accepted": false
+    },
+    {
+     "value": [
+      1
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      "a",
+      null,
+      {
+       "b": 1
+      }
+     ],
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "an array of arrays",
+   "contract": {
+    "type": "array",
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "boolean"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": [
+      [
+       true
+      ],
+      []
+     ],
+     "accepted": true
+    },
+    {
+     "value": [
+      [
+       1
+      ]
+     ],
+     "accepted": false
+    },
+    {
+     "value": [
+      true
+     ],
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a closed object",
+   "contract": {
+    "type": "object",
+    "required": [
+     "a"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "a": {
+      "type": "integer"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": 1
+     },
+     "accepted": true
+    },
+    {
+     "value": {},
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 1,
+      "b": 2
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": "x"
+     },
+     "accepted": false
+    },
+    {
+     "value": [],
+     "accepted": false
+    },
+    {
+     "value": null,
+     "accepted": false
+    },
+    {
+     "value": "a",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an open object",
+   "contract": {
+    "type": "object",
+    "properties": {
+     "a": {
+      "type": "integer"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": 1,
+      "b": 2
+     },
+     "accepted": true
+    },
+    {
+     "value": {},
+     "accepted": true
+    },
+    {
+     "value": {
+      "b": 2
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "a": 1.5
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "optional properties are checked when present",
+   "contract": {
+    "type": "object",
+    "required": [
+     "a"
+    ],
+    "properties": {
+     "a": {
+      "type": "string"
+     },
+     "b": {
+      "type": "integer"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": "x"
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "a": "x",
+      "b": 1
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "a": "x",
+      "b": "y"
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "b": 1
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a null property value counts as present",
+   "contract": {
+    "type": "object",
+    "required": [
+     "a"
+    ],
+    "properties": {
+     "a": {
+      "type": "null"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": null
+     },
+     "accepted": true
+    },
+    {
+     "value": {},
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 0
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "required names are own properties only",
+   "contract": {
+    "type": "object",
+    "required": [
+     "toString",
+     "constructor"
+    ]
+   },
+   "values": [
+    {
+     "value": {},
+     "accepted": false
+    },
+    {
+     "value": {
+      "toString": 1,
+      "constructor": 2
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "toString": 1
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a property named like a prototype member",
+   "contract": {
+    "type": "object",
+    "required": [
+     "a"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "a": {
+      "type": "integer"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "a": 1,
+      "constructor": 1
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 1,
+      "__proto__": 1
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "a": 1,
+      "toString": 1
+     },
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "nested objects and arrays",
+   "contract": {
+    "type": "object",
+    "required": [
+     "kids"
+    ],
+    "properties": {
+     "kids": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "name"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "name": {
+         "type": "string",
+         "minLength": 1
+        }
+       }
+      }
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {
+      "kids": [
+       {
+        "name": "a"
+       }
+      ]
+     },
+     "accepted": true
+    },
+    {
+     "value": {
+      "kids": [
+       {
+        "name": ""
+       }
+      ]
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "kids": [
+       {
+        "name": "a",
+        "x": 1
+       }
+      ]
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "kids": [
+       {}
+      ]
+     },
+     "accepted": false
+    },
+    {
+     "value": {
+      "kids": []
+     },
+     "accepted": true
+    }
+   ]
+  },
+  {
+   "name": "any of several rules",
+   "contract": {
+    "anyOf": [
+     {
+      "type": "null"
+     },
+     {
+      "type": "integer"
+     }
+    ]
+   },
+   "values": [
+    {
+     "value": null,
+     "accepted": true
+    },
+    {
+     "value": 1,
+     "accepted": true
+    },
+    {
+     "value": "x",
+     "accepted": false
+    },
+    {
+     "value": 1.5,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "any of decides before every sibling rule",
+   "contract": {
+    "anyOf": [
+     {
+      "const": "a"
+     }
+    ],
+    "type": "integer"
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true,
+     "ajv": "differs"
+    },
+    {
+     "value": 1,
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "any of with enumerations",
+   "contract": {
+    "anyOf": [
+     {
+      "enum": [
+       "a"
+      ]
+     },
+     {
+      "enum": [
+       "b"
+      ]
+     }
+    ]
+   },
+   "values": [
+    {
+     "value": "a",
+     "accepted": true
+    },
+    {
+     "value": "b",
+     "accepted": true
+    },
+    {
+     "value": "c",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "the null type decides before a constant",
+   "contract": {
+    "type": "null",
+    "const": "a"
+   },
+   "values": [
+    {
+     "value": null,
+     "accepted": true,
+     "ajv": "differs"
+    },
+    {
+     "value": "a",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a constant without a type is a literal",
+   "contract": {
+    "const": "kind"
+   },
+   "values": [
+    {
+     "value": "kind",
+     "accepted": true
+    },
+    {
+     "value": "other",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "a rule without type, constant or enumeration admits nothing",
+   "contract": {},
+   "values": [
+    {
+     "value": null,
+     "accepted": false,
+     "ajv": "differs"
+    },
+    {
+     "value": 1,
+     "accepted": false,
+     "ajv": "differs"
+    },
+    {
+     "value": {},
+     "accepted": false,
+     "ajv": "differs"
+    },
+    {
+     "value": "x",
+     "accepted": false,
+     "ajv": "differs"
+    }
+   ]
+  },
+  {
+   "name": "a description alone admits nothing",
+   "contract": {
+    "description": "x"
+   },
+   "values": [
+    {
+     "value": "x",
+     "accepted": false,
+     "ajv": "differs"
+    }
+   ]
+  },
+  {
+   "name": "an unsupported number type admits nothing",
+   "contract": {
+    "type": "number"
+   },
+   "values": [
+    {
+     "value": 1,
+     "accepted": false,
+     "ajv": "differs"
+    },
+    {
+     "value": 1.5,
+     "accepted": false,
+     "ajv": "differs"
+    },
+    {
+     "value": "1",
+     "accepted": false
+    }
+   ]
+  },
+  {
+   "name": "an unsupported property rule closes the object",
+   "contract": {
+    "type": "object",
+    "properties": {
+     "a": {
+      "type": "number"
+     }
+    }
+   },
+   "values": [
+    {
+     "value": {},
+     "accepted": true
+    },
+    {
+     "value": {
+      "a": 1
+     },
+     "accepted": false,
+     "ajv": "differs"
+    }
+   ]
+  }
+ ]
+}

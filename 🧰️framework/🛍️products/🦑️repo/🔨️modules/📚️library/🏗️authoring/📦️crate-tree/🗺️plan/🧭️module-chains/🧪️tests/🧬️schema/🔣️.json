@@ -1,0 +1,497 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "chains",
+  "aliases",
+  "rootAlias",
+  "graphs",
+  "qualify",
+  "super",
+  "relative",
+  "heads",
+  "impls",
+  "bases",
+  "files"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "chains": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "source",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "aliases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "source",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "rootAlias": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "source",
+    "expected"
+   ],
+   "properties": {
+    "source": {
+     "type": "string"
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "targets",
+       "text",
+       "nested"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "targets": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       },
+       "text": {
+        "type": "string"
+       },
+       "nested": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "graphs": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "nodes",
+     "edges",
+     "components"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "nodes": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "edges": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "components": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "qualify": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "modules",
+     "exclude",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "modules": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exclude": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "super": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "from",
+     "to",
+     "excluded",
+     "base",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "from": {
+      "type": "integer"
+     },
+     "to": {
+      "type": "integer"
+     },
+     "excluded": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       },
+       "minItems": 2
+      }
+     },
+     "base": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "skip": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "relative": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "heads": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "impls": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "text",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "trait",
+         "self",
+         "traitArgs"
+        ],
+        "properties": {
+         "trait": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "self": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "traitArgs": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
+        }
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "bases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "parent",
+     "node",
+     "expected"
+    ],
+    "properties": {
+     "parent": {
+      "type": "string"
+     },
+     "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "pathAttribute"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "pathAttribute": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     },
+     "expected": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "files": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "fileDir",
+     "inline",
+     "inFile",
+     "node",
+     "expected"
+    ],
+    "properties": {
+     "fileDir": {
+      "type": "string"
+     },
+     "inline": {
+      "type": "string"
+     },
+     "inFile": {
+      "type": "boolean"
+     },
+     "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "pathAttribute"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "pathAttribute": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

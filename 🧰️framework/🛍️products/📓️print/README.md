@@ -18,16 +18,16 @@ driven from the repository's design tokens and both built through `📜️script
 
 ## Commands
 
-Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`) and search `print`
+Start `repo dashboard`, choose **New Task** (`Ctrl+B n`) and search `print`
 plus the action. Each owner target routes to the product's authored scripts through Nx.
 
 ```bash
-bun run dashboard run @semio-tech/print:generate
-bun run dashboard run @semio-tech/print:generate-viz
-bun run dashboard run @semio-tech/print:fonts
-bun run dashboard run @semio-tech/print:build
-bun run dashboard run @semio-tech/print:watch
-bun run dashboard run @semio-tech/print:test -- quick
+repo run @semio-tech/print:generate
+repo run @semio-tech/print:generate-viz
+repo run @semio-tech/print:fonts
+repo run @semio-tech/print:build
+repo run @semio-tech/print:watch
+repo run @semio-tech/print:test -- quick
 ```
 
 For one template, choose **Run an authored script** (`tool:workspace/run-script`),

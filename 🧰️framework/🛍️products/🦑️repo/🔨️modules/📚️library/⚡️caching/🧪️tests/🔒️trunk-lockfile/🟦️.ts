@@ -81,7 +81,7 @@ export async function testTrunkLockfile(workspace: string,invocation:ScriptInvoc
     assert.deepEqual(testRecordV1(testRecordV1(prepared.targets)[fixture.target]).dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
     assert.equal(testRecordV1(cacheInternals.targetPolicy(fixture.target,target)).cache, true, "the lock guard replays once every manifest it validates is hashed");
     assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
-    assert.deepEqual(cacheInternals.nativeLockInputs('bun "script.ts" native cargo check --manifest "Cargo.toml"'), []);
+    assert.deepEqual(cacheInternals.nativeLockInputs('repo "script.ts" native cargo check --manifest "Cargo.toml"'), []);
     if (native) {
       const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
       const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "trunk-config-"));

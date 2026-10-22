@@ -14,17 +14,6 @@ pub struct ChangeSchema {
 impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
-    fn diff(&self, base: &PlaygroundSnapshot) -> protocol::MutationOutcome<PlaygroundDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &PlaygroundSnapshot) -> Result<Vec<PlaygroundMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
     }
@@ -32,6 +21,18 @@ impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSc
     fn target(&self) -> Vec<String> {
         vec!["schema".into()]
     }
+}
+
+impl protocol::ColdMutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSchema {
+    fn diff(&self, base: &PlaygroundSnapshot) -> protocol::MutationOutcome<PlaygroundDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &PlaygroundSnapshot) -> Result<Vec<PlaygroundMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 
 /// 🏷️ Direct semantic roster exported for the language-neutral test adapter.

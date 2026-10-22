@@ -32,7 +32,7 @@ pub use set_info_title::SetInfoTitle;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.h")]
+#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.h", reference = PdfSnapshot, reference_diff = PdfDiff)]
 pub enum PdfHMutation {
     SetInfoTitle(SetInfoTitle),
     SetInfoAuthor(SetInfoAuthor),

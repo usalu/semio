@@ -12,5 +12,5 @@ use store::MemberFactory;
 use store::Mutation;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
-use store::SpaceMember;
+use store::{ReferenceSpaceMember, SpaceMember};
 

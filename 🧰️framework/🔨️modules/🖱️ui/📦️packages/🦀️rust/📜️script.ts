@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -24,6 +24,7 @@ export const UI_WGPU_ENGINE_WASM_PACKAGES = ["semio-framework-ui-wgpu-engine"];
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../../🎚️axes/📜️script.ts";
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -157,8 +158,8 @@ class CheckScript extends BundleScript {
 }
 
 /** 🧭️ Supplies the native UI package's actual command owner tree. */
-export function createUiNativeRouter(root = import.meta.dir, repoRoot?: string): ScriptRouter {
+export function createUiNativeRouter(root = import.meta.dirname, repoRoot?: string): ScriptRouter {
   return new ScriptRouter(root, repoRoot).register("generate", GenerateAxesScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript);
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(createUiNativeRouter(), { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(createUiNativeRouter(), { invocation: original }));

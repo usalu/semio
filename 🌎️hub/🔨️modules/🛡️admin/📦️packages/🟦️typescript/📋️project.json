@@ -30,7 +30,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts dev",
+        "command": "repo ./📜️script.ts dev",
         "forwardAllArgs": true
       },
       "cache": false,
@@ -41,7 +41,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -54,7 +54,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],

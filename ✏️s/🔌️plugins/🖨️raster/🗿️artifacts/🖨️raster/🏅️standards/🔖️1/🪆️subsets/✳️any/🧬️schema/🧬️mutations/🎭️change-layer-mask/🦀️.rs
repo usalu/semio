@@ -31,11 +31,15 @@ pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), 
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerMask where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_mask::ChangeLayerMask> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-mask", kind: "change-layer-mask", record: "ChangedLayerMask" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
+    fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ChangeLayerMask where Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_mask::ChangeLayerMask> {
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         if let Err(code) = validate(self, base) { return protocol::MutationOutcome::refuse(code, "Mask cannot be applied to this layer revision.", [self.layer_id.clone()]); }
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { mask_content: Some(RasterMaskContent { mask: self.mask.clone() }), ..Default::default() }))
     }
-
     fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &self.layer_id) else { return Vec::new(); };
@@ -43,7 +47,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerMask where Op
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
-    fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }

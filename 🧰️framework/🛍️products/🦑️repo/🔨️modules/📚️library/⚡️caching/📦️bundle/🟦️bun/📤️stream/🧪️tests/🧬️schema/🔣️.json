@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:bun-stream-corpus:v1",
+  "title": "Bun Bundle Stream Corpus",
+  "description": "Language-agnostic cases for the Bun bundle data stream: canonical frames of file sets, arbitrary re-cutting of the wire, generator refusals and hostile streams built by editing the frame list.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "requestSha256", "otherSha256", "sets", "wire", "generator", "hostile"],
+  "properties": {
+    "version": { "const": 1 },
+    "requestSha256": { "$ref": "#/definitions/digest" },
+    "otherSha256": { "$ref": "#/definitions/digest" },
+    "sets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "files", "chunks", "frames"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "files": { "type": "array", "minItems": 2, "maxItems": 3, "items": { "$ref": "#/definitions/file" } },
+          "chunks": { "type": "integer", "minimum": 0 },
+          "frames": { "anyOf": [{ "type": "null" }, { "type": "array", "items": { "type": "string", "pattern": "\\n$" } }] }
+        }
+      }
+    },
+    "wire": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "sizes"], "properties": { "name": { "type": "string" }, "sizes": { "type": "array", "items": { "type": "integer", "minimum": 1 } } } } },
+    "generator": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "files", "error"], "properties": { "name": { "type": "string" }, "files": { "type": "array", "items": { "type": "string" } }, "error": { "type": "string", "minLength": 1 }, "requestSha256": { "type": "string" } } }
+    },
+    "hostile": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "set", "ops", "error"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "set": { "type": "string" },
+          "ops": { "type": "array", "items": { "$ref": "#/definitions/op" } },
+          "error": { "type": "string", "minLength": 1 },
+          "finish": { "const": true },
+          "sink": { "const": "async" },
+          "again": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "content"],
+      "properties": {
+        "name": { "enum": ["source.js", "source.js.map", "metadata.json"] },
+        "content": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["repeat", "times"], "properties": { "repeat": { "type": "string", "minLength": 1 }, "times": { "type": "integer", "minimum": 1, "maximum": 1000000 } } }
+          ]
+        }
+      }
+    },
+    "op": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["op", "at"], "properties": { "op": { "const": "drop" }, "at": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "at", "frame"], "properties": { "op": { "enum": ["insert", "replace"] }, "at": { "type": "integer", "minimum": 0 }, "frame": { "type": "object" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "at", "text"], "properties": { "op": { "const": "replace-text" }, "at": { "type": "integer", "minimum": 0 }, "text": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["op", "bytes"], "properties": { "op": { "const": "append-bytes" }, "bytes": { "type": "integer", "minimum": 1 } } }
+      ]
+    }
+  }
+}

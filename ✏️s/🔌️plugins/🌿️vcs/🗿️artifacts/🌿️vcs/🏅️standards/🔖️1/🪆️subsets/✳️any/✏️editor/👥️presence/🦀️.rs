@@ -20,19 +20,26 @@ impl store::ArtifactPresenceSnapshot for VcsDemoPresence {}
 #[value(rename_all = "camelCase", default)]
 pub struct VcsDemoPresenceDiff {}
 
-impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresenceDiff {
-    fn apply(&self, base: &VcsDemoPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<VcsDemoPresence> {
-        Ok(base.clone())
-    }
+impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresenceDiff {}
+
+impl protocol::ColdMutationDiff<VcsDemoPresence> for VcsDemoPresenceDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, unpublished: &mut VcsDemoPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<VcsDemoPresence> for VcsDemoPresenceDiff {
-    fn inverse(&self, _base: &VcsDemoPresence) -> Self {
-        Self {}
-    }
     fn is_empty(&self) -> bool {
         true
+    }
+}
+
+impl protocol::ColdDiffAlgebra<VcsDemoPresence> for VcsDemoPresenceDiff {
+    fn inverse(&self, _base: &VcsDemoPresence) -> Self {
+        Self {}
     }
 }
 
@@ -109,11 +116,13 @@ impl Mutation<VcsDemoPresence> for VcsDemoPresenceMutation {
             Self::Noop => &Self::DESCRIPTORS[0],
         }
     }
+}
 
+impl protocol::ColdMutation<VcsDemoPresence> for VcsDemoPresenceMutation {
+    type ReferenceDiff = VcsDemoPresenceDiff;
     fn diff(&self, _base: &VcsDemoPresence) -> protocol::MutationOutcome<VcsDemoPresenceDiff> {
         protocol::MutationOutcome::new(VcsDemoPresenceDiff {})
     }
-
     fn inverse(&self, _base: &VcsDemoPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![VcsDemoPresenceMutation::Noop]

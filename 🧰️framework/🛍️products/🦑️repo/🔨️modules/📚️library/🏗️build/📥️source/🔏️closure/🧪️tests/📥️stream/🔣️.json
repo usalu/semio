@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "name": "exact-snapshot-boundary",
+      "bytes": 25165824,
+      "digest": "same",
+      "eval": "single",
+      "accepted": true
+    },
+    {
+      "name": "one-byte-over-snapshot-boundary",
+      "bytes": 25165825,
+      "digest": "same",
+      "eval": "single",
+      "accepted": false
+    },
+    {
+      "name": "empty-snapshot-transport",
+      "bytes": 0,
+      "digest": "same",
+      "eval": "single",
+      "accepted": true
+    },
+    {
+      "name": "multibyte-utf8-snapshot",
+      "bytes": 8,
+      "digest": "same",
+      "eval": "single",
+      "accepted": true
+    },
+    {
+      "name": "changed-snapshot-digest",
+      "bytes": 8,
+      "digest": "changed",
+      "eval": "single",
+      "accepted": false
+    },
+    {
+      "name": "malformed-snapshot-digest",
+      "bytes": 8,
+      "digest": "invalid",
+      "eval": "single",
+      "accepted": false
+    },
+    {
+      "name": "missing-evaluated-loader",
+      "bytes": 8,
+      "digest": "same",
+      "eval": "missing",
+      "accepted": false
+    },
+    {
+      "name": "ambiguous-evaluated-loader",
+      "bytes": 8,
+      "digest": "same",
+      "eval": "duplicate",
+      "accepted": false
+    },
+    {
+      "name": "fragmented-snapshot-transport",
+      "bytes": 8,
+      "digest": "same",
+      "eval": "single",
+      "accepted": true
+    }
+  ],
+  "commonJsCases": [
+    {
+      "name": "workspace-ownership-factory",
+      "owner": "bun",
+      "member": "createBunWorkspaceOwnershipV1"
+    },
+    {
+      "name": "workspace-payload-membership",
+      "owner": "payload",
+      "member": "ownsPayload"
+    }
+  ],
+  "commonJsFacadeCases": [
+    {
+      "name": "declared-child-payload",
+      "declaration": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*"
+        ],
+        "owners": []
+      },
+      "ownerName": "fixture-owner",
+      "payloadName": "fixture-owner",
+      "target": "./payload/index.js",
+      "expectedOwns": true
+    },
+    {
+      "name": "foreign-payload-name",
+      "declaration": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*",
+          "!packages/excluded"
+        ],
+        "owners": [
+          "*/package.json"
+        ]
+      },
+      "ownerName": "fixture-owner",
+      "payloadName": "foreign-owner",
+      "target": "./payload/index.js",
+      "expectedOwns": false
+    },
+    {
+      "name": "outside-authored-subpath",
+      "declaration": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*"
+        ],
+        "owners": []
+      },
+      "ownerName": "fixture-owner",
+      "payloadName": "fixture-owner",
+      "target": "./other/index.js",
+      "expectedOwns": false
+    }
+  ]
+}

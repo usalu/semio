@@ -22,7 +22,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners",
+        "command": "repo ./📜️script.ts verify fem-pcg-publication-owners",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -40,7 +40,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners",
+        "command": "repo ./📜️script.ts verify fem-assembly-physical-owners",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -58,7 +58,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-numerical-page-owners",
+        "command": "repo ./📜️script.ts verify fem-numerical-page-owners",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -76,7 +76,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners",
+        "command": "repo ./📜️script.ts verify fem-mesh-preparation-owners",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -94,7 +94,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-scalar-owners-native",
+        "command": "repo ./📜️script.ts verify fem-scalar-owners-native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -112,7 +112,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem2d-window-config-contract",
+        "command": "repo ./📜️script.ts verify fem2d-window-config-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -130,7 +130,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem3d-window-config-contract",
+        "command": "repo ./📜️script.ts verify fem3d-window-config-contract",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -147,7 +147,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-live-visual-publication",
+        "command": "repo ./📜️script.ts verify fem-live-visual-publication",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -166,7 +166,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify fem-numerical-microcursor",
+        "command": "repo ./📜️script.ts verify fem-numerical-microcursor",
         "forwardAllArgs": true
       },
       "metadata": {

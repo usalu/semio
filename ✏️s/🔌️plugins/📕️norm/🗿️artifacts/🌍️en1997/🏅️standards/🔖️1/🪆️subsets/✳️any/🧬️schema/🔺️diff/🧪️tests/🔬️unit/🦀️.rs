@@ -31,7 +31,7 @@ fn fresh(base: &En1997Snapshot) -> semio_s_artifact_norm_en1997_model::SpreadFou
 
 async fn law(base: &En1997Snapshot, first: &En1997Mutation, second: impl Fn(&En1997Snapshot) -> En1997Mutation) -> En1997Diff {
     let d1 = diff_of(first, base);
-    let mid = protocol::apply_diff(&d1, base).expect("first");
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first");
     let d2 = diff_of(&second(&mid), &mid);
     let mut sum = d1.clone();
     sum.absorb(d2.clone());
@@ -68,16 +68,16 @@ async fn remove_then_insert_replaces_the_row_in_place() {
     let base = base();
     let removed = base.footings[0].clone();
     let sum = law(&base, &En1997Mutation::RemoveFooting(RemoveFooting { index: 0 }), |_| En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: removed.clone() })).await;
-    assert_eq!(protocol::apply_diff(&sum, &base).expect("replace"), base);
+    assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("replace"), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_follows_the_state() {
     let base = base();
     let inserted = diff_of(&En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: fresh(&base) }), &base);
-    let after = protocol::apply_diff(&inserted, &base).expect("insert");
-    assert_eq!(protocol::apply_diff(&inserted.inverse(&base), &after).expect("inverse"), base);
+    let after = protocol::apply_diff_cold(&inserted, &base).expect("insert");
+    assert_eq!(protocol::apply_diff_cold(&inserted.inverse(&base), &after).expect("inverse"), base);
     let removed = diff_of(&En1997Mutation::RemoveFooting(RemoveFooting { index: 0 }), &base);
-    let after = protocol::apply_diff(&removed, &base).expect("remove");
-    assert_eq!(protocol::apply_diff(&removed.inverse(&base), &after).expect("inverse"), base);
+    let after = protocol::apply_diff_cold(&removed, &base).expect("remove");
+    assert_eq!(protocol::apply_diff_cold(&removed.inverse(&base), &after).expect("inverse"), base);
 }

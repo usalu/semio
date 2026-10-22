@@ -21,19 +21,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "embedded-file", kind: "set-embedded-file", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_embedded_file(base, self.file.clone(), self.index))
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let _ = base;
-        match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![Op::from(SetEmbeddedFile { file: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set embedded-file {}", self.file.id), &format!("Eingebettete Datei {} setzen", self.file.id))
     }
@@ -41,6 +28,23 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.file.id.clone()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetEmbeddedFile
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetEmbeddedFile> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_embedded_file::RemoveEmbeddedFile>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_embedded_file(base, self.file.clone(), self.index))
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        let _ = base;
+        match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![Op::from(SetEmbeddedFile { file: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
+    
+    })())
+}
 }
 
 //#endregion 🔖️Mutation

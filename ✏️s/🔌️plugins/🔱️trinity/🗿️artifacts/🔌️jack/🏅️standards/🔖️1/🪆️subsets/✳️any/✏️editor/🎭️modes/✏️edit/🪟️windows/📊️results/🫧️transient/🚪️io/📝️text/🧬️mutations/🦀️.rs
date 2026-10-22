@@ -34,7 +34,7 @@ use crate::editor::jack::transient::results_window::mutations::*;
 use crate::editor::jack::transient::results_window::JackResultsWindowTransient;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
-/// crate: production dispatch (`protocol::apply_diff(Mutation::diff(..).diff(), ..)`) and the mutation's own inverse over `JackResultsWindowTransient`.
+/// crate: production dispatch (`protocol::apply_diff_cold(Mutation::diff(..).diff(), ..)`) and the mutation's own inverse over `JackResultsWindowTransient`.
 ///
 /// @see store::os_store::test_support::mutation_report_json
 pub fn jack_results_window_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {

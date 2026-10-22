@@ -71,8 +71,26 @@ fn lift(error: BlockPatchError) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new(error.code, error.message).at(error.target)
 }
 
-impl protocol::MutationDiff<Block3dSnapshot> for Block3dDiff {
-    fn apply(&self, base: &Block3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dSnapshot> {
+impl protocol::MutationDiff<Block3dSnapshot> for Block3dDiff {}
+
+impl protocol::ColdMutationDiff<Block3dSnapshot> for Block3dDiff {
+    fn absorb(&mut self, later: Self) {
+        if later.schema.is_some() {
+            self.schema = later.schema;
+        }
+        block_patch_absorb(&mut self.object_kind, later.object_kind);
+        block_patch_absorb(&mut self.camera3d, later.camera3d);
+        block_patch_absorb(&mut self.meta, later.meta);
+        self.representations.absorb(later.representations);
+        self.vortex_kinds.absorb(later.vortex_kinds);
+        self.vortices.absorb(later.vortices);
+        self.compatibility.absorb(later.compatibility);
+        self.attributes.absorb(later.attributes);
+        self.authors.absorb(later.authors);
+    }
+
+    fn apply(&self, unpublished: &mut Block3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema.clone_from(schema);
@@ -89,25 +107,27 @@ impl protocol::MutationDiff<Block3dSnapshot> for Block3dDiff {
         next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
         next.attributes = self.attributes.commit_onto(&base.attributes, capability).map_err(|error| error.under(["attributes"]))?;
         next.authors = self.authors.commit_onto(&base.authors, capability).map_err(|error| error.under(["authors"]))?;
-        Ok(next)
-    }
-    fn absorb(&mut self, later: Self) {
-        if later.schema.is_some() {
-            self.schema = later.schema;
-        }
-        block_patch_absorb(&mut self.object_kind, later.object_kind);
-        block_patch_absorb(&mut self.camera3d, later.camera3d);
-        block_patch_absorb(&mut self.meta, later.meta);
-        self.representations.absorb(later.representations);
-        self.vortex_kinds.absorb(later.vortex_kinds);
-        self.vortices.absorb(later.vortices);
-        self.compatibility.absorb(later.compatibility);
-        self.attributes.absorb(later.attributes);
-        self.authors.absorb(later.authors);
+        *unpublished = next;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<Block3dSnapshot> for Block3dDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+            && block_patch_is_empty(&self.object_kind)
+            && block_patch_is_empty(&self.camera3d)
+            && block_patch_is_empty(&self.meta)
+            && self.representations.is_empty()
+            && self.vortex_kinds.is_empty()
+            && self.vortices.is_empty()
+            && self.compatibility.is_empty()
+            && self.attributes.is_empty()
+            && self.authors.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Block3dSnapshot> for Block3dDiff {
     fn inverse(&self, base: &Block3dSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -121,18 +141,6 @@ impl protocol::DiffAlgebra<Block3dSnapshot> for Block3dDiff {
             attributes: self.attributes.inverse(&base.attributes),
             authors: self.authors.inverse(&base.authors),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.schema.is_none()
-            && block_patch_is_empty(&self.object_kind)
-            && block_patch_is_empty(&self.camera3d)
-            && block_patch_is_empty(&self.meta)
-            && self.representations.is_empty()
-            && self.vortex_kinds.is_empty()
-            && self.vortices.is_empty()
-            && self.compatibility.is_empty()
-            && self.attributes.is_empty()
-            && self.authors.is_empty()
     }
 }
 //#endregion 🔖️Apply

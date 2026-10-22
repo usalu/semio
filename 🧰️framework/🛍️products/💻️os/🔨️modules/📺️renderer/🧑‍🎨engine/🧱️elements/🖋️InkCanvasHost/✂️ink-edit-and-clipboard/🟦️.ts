@@ -1,5 +1,6 @@
 /** ✂️ InkCanvasHost editing and clipboard: the context menu, the text and table edit commits and the image paste, copy and paste handlers. */
-import React, { useCallback } from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
+import { useCallback } from "../../⚛️react-port/🟦️.ts";
 import { openSurfaceContextMenu } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { type InkItem, type InkTextItem, type InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
 import { createInkHostId, findInkItem, inkItemsAtPoint, inkMaybeSnapWorldPoint, screenToWorld } from "../📐️ink-geometry/🟦️.ts";

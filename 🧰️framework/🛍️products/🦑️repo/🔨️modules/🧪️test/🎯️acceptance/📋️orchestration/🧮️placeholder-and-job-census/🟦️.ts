@@ -1,7 +1,8 @@
 /** 🧮️ The source census of Rust production code: tracked sources, comment stripping, placeholder macros and interactive job declarations. */
-import { spawnSync } from "node:child_process";
+
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🧮️SourceCensus
 /** 🗂️ One tracked source file: repo-relative path and whether it is test-only by its path (a `🧪️tests`, `tests`,
@@ -12,7 +13,7 @@ export const TEST_SEGMENT = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|e
 
 /** 🗂️ Every git-tracked `*.rs` outside the ticket tree, classified. */
 export function trackedRustSources(repoRoot: string): CensusSource[] {
-  const listed = spawnSync("git", ["ls-files", "-z", "--", "*.rs", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const listed = runToolSyncV1("git", ["ls-files", "-z", "--", "*.rs", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
   return listed.stdout.split("\0").filter(Boolean).map((path) => ({ path, testOnly: TEST_SEGMENT.test(path) }));
 }
@@ -107,7 +108,7 @@ export function runSourceCensus(repoRoot: string, signal: AbortSignal, onProgres
       codeCallsPerFile.set(source.path, { calls: found.codeCalls, testOnly: source.testOnly });
     }
   }
-  const grep = (args: string[]): string => spawnSync("git", ["grep", ...args, "--", "*.rs", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout;
+  const grep = (args: string[]): string => runToolSyncV1("git", ["grep", ...args, "--", "*.rs", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout;
   const oraclePlaceholders = new Set(grep(["-n", "-E", "(unimplemented|todo)![[:space:]]*\\("]).split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":")));
   const scannerPlaceholders = new Set(placeholders.map((hit) => `${hit.path}:${hit.line}`));
   const oracleCalls = new Map(grep(["-c", "-F", ".action_interactive_job("]).split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));

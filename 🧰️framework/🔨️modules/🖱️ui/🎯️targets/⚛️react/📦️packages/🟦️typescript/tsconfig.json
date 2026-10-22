@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -22,6 +21,7 @@
       "@semio-tech/ui-react": ["./🟦️.tsx"],
       "@semio-tech/ui-react/runtime": ["./🟦️.tsx"],
       "@semio-tech/ui-react/test": ["./🟦️.ts"],
+      "vitest": ["./node_modules/vitest/dist/index.d.ts"],
       "dom-accessibility-api": ["../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"],
       "@semio-tech/ui-react/introduction": ["./👋️introduction.ts"]
     }

@@ -1,0 +1,5 @@
+03:22 landed authorizers/closure/node/compiler patches (installed packages, semio-root, resolve-only outside bases, owner-aware schema reads, EN/DE refusals)
+03:23 landed ComputedImportSites roots for bootstrap importRevision; removed capturedRevisionImportersV1
+03:31 loader: .resolve is data-only (never refuses, physical resolve), package.json exempt from schema-read guard
+03:33 ComputedImportSites regenerated from closure AST (16 rows)
+04:09 RuntimeDataCompanions reduced 24->2 rows (3 paths); 2 worker/entry roots moved to ComputedImportSites

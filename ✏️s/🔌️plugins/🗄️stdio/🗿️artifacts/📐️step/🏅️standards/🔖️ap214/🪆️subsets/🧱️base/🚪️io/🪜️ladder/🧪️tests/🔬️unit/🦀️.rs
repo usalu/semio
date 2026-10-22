@@ -83,7 +83,7 @@ fn snapshot_of(instances: Vec<Part21Instance>) -> StepSnapshot {
 }
 
 fn applied(base: &StepSnapshot, diff: &StepDiff) -> StepSnapshot {
-    protocol::apply_diff(diff, base).expect("the diff applies")
+    protocol::apply_diff_cold(diff, base).expect("the diff applies")
 }
 
 #[test]

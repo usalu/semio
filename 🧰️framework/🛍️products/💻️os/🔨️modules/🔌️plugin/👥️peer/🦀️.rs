@@ -364,7 +364,7 @@ pub struct PresenceRosterOutcome {
     pub fault: Option<Fault>,
 }
 
-pub(crate) struct PeerRosterFault {
+pub struct PeerRosterFault {
     pub original: ManuallyDrop<Option<Fault>>,
 }
 

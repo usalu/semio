@@ -682,30 +682,9 @@ impl DrawingAssetsDelta {
     }
 }
 
-impl MutationDiff<DrawingSnapshot> for DrawingDiff {
-    fn apply(&self, snapshot: &DrawingSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DrawingSnapshot> {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone().into();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone().into();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone().map(Into::into);
-        }
-        if let Some(delta) = &self.layers {
-            next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
-        }
-        if let Some(assets) = &self.assets {
-            apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
-        }
-        if let Some(artboard) = &self.artboard {
-            next.artboard = artboard.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<DrawingSnapshot> for DrawingDiff {}
 
+impl protocol::ColdMutationDiff<DrawingSnapshot> for DrawingDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -735,9 +714,40 @@ impl MutationDiff<DrawingSnapshot> for DrawingDiff {
             _ => {}
         }
     }
+
+    fn apply(&self, unpublished: &mut DrawingSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let snapshot = &*unpublished;
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone().into();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone().into();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone().map(Into::into);
+        }
+        if let Some(delta) = &self.layers {
+            next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+        }
+        if let Some(assets) = &self.assets {
+            apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
+        }
+        if let Some(artboard) = &self.artboard {
+            next.artboard = artboard.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<DrawingSnapshot> for DrawingDiff {
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.artboard.is_none() && self.layers.as_ref().is_none_or(DrawingLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty())
+    }
+}
+
+impl protocol::ColdDiffAlgebra<DrawingSnapshot> for DrawingDiff {
     fn inverse(&self, base: &DrawingSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.to_string_owner()),
@@ -747,10 +757,6 @@ impl protocol::DiffAlgebra<DrawingSnapshot> for DrawingDiff {
             assets: self.assets.as_ref().map(|delta| delta.inverse(&base.assets)),
             artboard: self.artboard.as_ref().map(|_| base.artboard.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.artboard.is_none() && self.layers.as_ref().is_none_or(DrawingLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty())
     }
 }
 //#endregion 🔖️Apply

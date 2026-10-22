@@ -9,8 +9,8 @@ use crate::schema::mutations::{
     BcfMutation,
 };
 use crate::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
-use protocol::command::DiffAlgebra;
-use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, ColdMutationDiff, MutationDiff, OpBinary, OpText};
 
 //#region Fixtures
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -212,7 +212,7 @@ async fn mutation_diff_law() {
         let returned = apply_mutation(&mut snap, &m);
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("diff must apply to base"), "apply mismatch for {m:?}");
+        assert_eq!(snap, protocol::apply_diff_cold(expected_diff.diff(), &base).expect("diff must apply to base"), "apply mismatch for {m:?}");
     }
 }
 //#endregion
@@ -247,9 +247,9 @@ async fn inverse_law() {
         }
 
         let d = m.diff(&base);
-        let after = protocol::apply_diff(d.diff(), &base).expect("diff must apply to base");
+        let after = protocol::apply_diff_cold(d.diff(), &base).expect("diff must apply to base");
         let d_inv = d.diff().inverse(&base);
-        assert_eq!(protocol::apply_diff(&d_inv, &after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff_cold(&d_inv, &after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
     }
 }
 //#endregion
@@ -264,13 +264,13 @@ async fn absorb_law() {
     let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
     let d1 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }).diff(&mid);
     assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
     let comment = sample_comment("c9", None);
     let d1 = BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: comment.clone(), index: None }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }).diff(&mid);
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -281,7 +281,7 @@ async fn absorb_law() {
     assert_eq!(added_comment.item.text, "edited after insert");
 
     let d1 = BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }).diff(&base);
-    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
+    let mid = protocol::apply_diff_cold(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }).diff(&mid);
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -291,9 +291,9 @@ async fn absorb_law() {
     assert!(viewpoints_diff.modified.is_empty());
 
     let d1 = BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }).diff(&base);
-    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
+    let mid1 = protocol::apply_diff_cold(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t3"), index: None }).diff(&mid1);
-    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("d2 must apply to mid1");
+    let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).expect("d2 must apply to mid1");
     let d3 = BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -305,16 +305,16 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     MutationDiff::absorb(&mut right, d2_d3);
 
-    assert_eq!(protocol::apply_diff(&left, &base).expect("left must apply to base"), protocol::apply_diff(&right, &base).expect("right must apply to base"), "absorb must be associative");
+    assert_eq!(protocol::apply_diff_cold(&left, &base).expect("left must apply to base"), protocol::apply_diff_cold(&right, &base).expect("right must apply to base"), "absorb must be associative");
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
-    let mid = protocol::apply_diff(d1.diff(), base).expect("d1 must apply to base");
-    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("d2 must apply to mid");
+    let mid = protocol::apply_diff_cold(d1.diff(), base).expect("d1 must apply to base");
+    let sequential = protocol::apply_diff_cold(d2.diff(), &mid).expect("d2 must apply to mid");
     let mut absorbed = d1.diff().clone();
     MutationDiff::absorb(&mut absorbed, d2.diff().clone());
-    assert_eq!(protocol::apply_diff(&absorbed, base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+    assert_eq!(protocol::apply_diff_cold(&absorbed, base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
     absorbed
 }
 //#endregion

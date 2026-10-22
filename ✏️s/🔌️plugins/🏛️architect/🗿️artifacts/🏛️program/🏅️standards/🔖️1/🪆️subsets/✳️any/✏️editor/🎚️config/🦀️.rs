@@ -104,24 +104,9 @@ pub struct ArchitectConfigDiff {
     pub last_analysis_json: Option<String>,
 }
 
-impl MutationDiff<ArchitectConfig> for ArchitectConfigDiff {
-    fn apply(&self, base: &ArchitectConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.search_query {
-            next.search_query = value.clone();
-        }
-        if let Some(value) = &self.search_history_json {
-            next.search_history_json = value.clone();
-        }
-        if let Some(value) = &self.last_result_json {
-            next.last_result_json = value.clone();
-        }
-        if let Some(value) = &self.last_analysis_json {
-            next.last_analysis_json = value.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<ArchitectConfig> for ArchitectConfigDiff {}
 
+impl protocol::ColdMutationDiff<ArchitectConfig> for ArchitectConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.search_query.is_some() {
             self.search_query = other.search_query;
@@ -136,9 +121,34 @@ impl MutationDiff<ArchitectConfig> for ArchitectConfigDiff {
             self.last_analysis_json = other.last_analysis_json;
         }
     }
+
+    fn apply(&self, unpublished: &mut ArchitectConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.search_query {
+            next.search_query = value.clone();
+        }
+        if let Some(value) = &self.search_history_json {
+            next.search_history_json = value.clone();
+        }
+        if let Some(value) = &self.last_result_json {
+            next.last_result_json = value.clone();
+        }
+        if let Some(value) = &self.last_analysis_json {
+            next.last_analysis_json = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
     fn inverse(&self, base: &ArchitectConfig) -> Self {
         Self {
             search_query: self.search_query.as_ref().map(|_| base.search_query.clone()),
@@ -146,10 +156,6 @@ impl protocol::DiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
             last_result_json: self.last_result_json.as_ref().map(|_| base.last_result_json.clone()),
             last_analysis_json: self.last_analysis_json.as_ref().map(|_| base.last_analysis_json.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
     }
 }
 

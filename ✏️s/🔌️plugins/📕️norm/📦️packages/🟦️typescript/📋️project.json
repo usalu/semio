@@ -7,7 +7,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -16,7 +16,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts wire-twins",
+        "command": "repo ./📜️script.ts wire-twins",
         "forwardAllArgs": true
       }
     }

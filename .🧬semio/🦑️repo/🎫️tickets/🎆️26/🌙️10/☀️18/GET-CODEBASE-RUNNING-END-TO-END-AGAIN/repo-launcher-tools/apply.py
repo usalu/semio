@@ -1,6 +1,6 @@
 """Applies the repo-launcher plan to a root: dry run unless --apply; content hashes and anchor counts are checked first, so any drift refuses everything; the apply is all-or-nothing with rollback.
 Usage: apply.py [--root DIR] [--group taxonomy,launcher,cargo,rust,bootstrap,docs|all] [--apply] [--ignore-running]
-Groups: taxonomy (register the Go member names of the launcher; verify the taxonomy after it), launcher (new module, go.work, cli integration, shared entrypoint vectors) must come first; bootstrap (shell and PowerShell bootstrap, devcontainer, CI) needs it; cargo (rustc wrapper through the launcher) needs it; rust (retire the Rust bun launcher); docs (sweeps of the bun repo spelling)."""
+Groups: taxonomy (register the Go member names of the launcher; verify the taxonomy after it), launcher (new module, go.work, cli integration, shared entrypoint vectors) must come first; bootstrap (shell and PowerShell bootstrap, devcontainer, CI) needs it; cargo (rustc wrapper through the launcher) needs it; rust (retire the Rust bun launcher); docs (sweeps of the bun repo spelling); consumers (parsers and generators of the command form in the build library: never part of `all`, apply it after chain18 in the same wave as manifest-neutral.py --apply and command-form-codemod.py --apply)."""
 import argparse, hashlib, json, os, re, subprocess, sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--root", default=os.getcwd())
@@ -12,7 +12,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.abspath(args.root)
 sha = lambda data: hashlib.sha256(data if isinstance(data, bytes) else data.encode("utf-8")).hexdigest()
 plan = json.load(open(os.path.join(here, "plan.json"), encoding="utf-8"))
-names = list(plan["groups"]) if args.group == "all" else args.group.split(",")
+names = [name for name in plan["groups"] if name != "consumers"] if args.group == "all" else args.group.split(",")
 for name in names:
     if name not in plan["groups"]: sys.exit(f"unknown group {name}")
 if args.apply and not args.ignore_running:

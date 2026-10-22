@@ -20,7 +20,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use semio_framework_os_spr::{ActorId, HybridLogicalTimestamp};
-use semio_framework_os_spr::{Mutation, OpBinary, OpText};
+use semio_framework_os_spr::{ColdMutation, Mutation, OpBinary, OpText};
 use std::sync::Arc;
 use semio_framework_os_store_read::ErasedSnapshotRead;
 use semio_framework_value_snapshot_read::SnapshotReadRegistryAliasRetirement;
@@ -76,6 +76,9 @@ mod space_member_for_artifact_store;
 
 #[path = "🏭️member-factory-visitors-and-no-members/🦀️.rs"]
 mod member_factory_visitors_and_no_members;
+#[path = "../../../🪪️member-facets/🧊️reference/🦀️.rs"]
+mod reference_space_member;
+pub use reference_space_member::ReferenceSpaceMember;
 pub use member_factory_visitors_and_no_members::{
     MemberFactory, MemberStoreVisitor, MemberStoreVisitorMut, MemberVisit, NoMembers,
 };

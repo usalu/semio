@@ -12,7 +12,7 @@ export function wire(registry) {
 
 /** 🧬️ A generator contract's own declared source inputs, plus the input-discovery fingerprint dependency it authors, if any. */
 export function generatorContractInputs(contract) {
-  const fingerprint = contract.inputDiscovery ? POLICY.generatorInputs[contract.inputDiscovery.kind] : undefined;
+  const fingerprint = contract.inputDiscovery && Object.hasOwn(POLICY.generatorInputs, contract.inputDiscovery.kind) ? POLICY.generatorInputs[contract.inputDiscovery.kind] : undefined;
   if (contract.inputDiscovery && !fingerprint) throw new Error(`Generator input discovery has no fingerprint owner: ${contract.inputDiscovery.kind}`);
   return {
     inputs: [...contract.inputPatterns.map((path) => `{workspaceRoot}/${path}`), ...(fingerprint ? [{ dependentTasksOutputFiles: fingerprint.output }] : [])],
@@ -54,7 +54,7 @@ export function outputRootInputs(output, workspaceRoot) {
 /** 📍️ Resolves a declared `{projectRoot}`/`{workspaceRoot}` output string to its absolute path, or `undefined` for an unrecognized shape. */
 export function resolveOutputPath(output, root, workspaceRoot) {
   if (!output.startsWith("{projectRoot}/") && !output.startsWith("{workspaceRoot}/")) return undefined;
-  return resolve(workspaceRoot, output.replace("{projectRoot}", root).replace("{workspaceRoot}", "."));
+  return resolve(workspaceRoot, output.replace("{projectRoot}", () => root).replace("{workspaceRoot}", () => "."));
 }
 
 /**
@@ -82,7 +82,7 @@ export function generatorOutputCouplingInputs(name, target, targets, root, works
       const absolute = resolveOutputPath(output, root, workspaceRoot);
       if (!absolute) continue;
       const runtime = `node -e ${JSON.stringify(OUTPUT_ROOT_DIGEST_SCRIPT)} ${JSON.stringify(absolute)}`;
-      if (!existing.has(runtime)) inputs.push({ runtime });
+      if (!existing.has(runtime)) { existing.add(runtime); inputs.push({ runtime }); }
     }
   }
   return inputs;

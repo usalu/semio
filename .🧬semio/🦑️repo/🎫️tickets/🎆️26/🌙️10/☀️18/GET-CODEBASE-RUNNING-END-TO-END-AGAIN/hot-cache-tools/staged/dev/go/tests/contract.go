@@ -141,13 +141,21 @@ type residentFake struct {
 	stderr   *bytes.Buffer
 }
 
+// 🧷shortTempBase is the platform's temporary directory, or the POSIX root /tmp where that one is too long for a unix socket beneath it.
+func shortTempBase() string {
+	if runtime.GOOS == "windows" || len(os.TempDir()) <= 40 {
+		return os.TempDir()
+	}
+	return "/tmp"
+}
+
 func residentSetup(t *testing.T, serve bool) *residentFake {
 	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("unix socket service")
 	}
 	real, _ := filepath.EvalSymlinks(testRoot(t))
-	base, err := os.MkdirTemp("/tmp", "sr-")
+	base, err := os.MkdirTemp(shortTempBase(), "sr-")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/🔢️doubles: the settings record must surface in the analysis field");
     assert!(outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().load_cases.is_none(), "update-analysis-settings/🔢️doubles: no collection delta may be opened by a settings edit");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());

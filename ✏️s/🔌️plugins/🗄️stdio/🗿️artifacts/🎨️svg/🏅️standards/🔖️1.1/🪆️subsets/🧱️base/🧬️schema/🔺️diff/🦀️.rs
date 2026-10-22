@@ -158,8 +158,31 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 //#endregion 🔖️DiffAtPath
 
 //#region 🔖️Apply
-impl MutationDiff<SvgSnapshot> for SvgDiff {
-    fn apply(&self, base: &SvgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<SvgSnapshot> {
+impl MutationDiff<SvgSnapshot> for SvgDiff {}
+
+impl protocol::ColdMutationDiff<SvgSnapshot> for SvgDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.prolog.is_some() {
+            self.prolog = other.prolog;
+        }
+        if other.epilog.is_some() {
+            self.epilog = other.epilog;
+        }
+        if other.declaration.is_some() {
+            self.declaration = other.declaration;
+        }
+        if other.doctype.is_some() {
+            self.doctype = other.doctype;
+        }
+        self.root = match (self.root.take(), other.root) {
+            (None, b) => b,
+            (a, None) => a,
+            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
+        };
+    }
+
+    fn apply(&self, unpublished: &mut SvgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(root) = &self.root {
             validate_svg_node(base.doc.root.as_ref(), root)?;
         }
@@ -181,27 +204,8 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         }
         next.doc.validate_attribute_owners().and_then(|_|next.doc.validate_boundaries())
             .map_err(|detail| MutationApplyError::new("mutation.apply.invalid-document-boundary", detail))?;
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.prolog.is_some() {
-            self.prolog = other.prolog;
-        }
-        if other.epilog.is_some() {
-            self.epilog = other.epilog;
-        }
-        if other.declaration.is_some() {
-            self.declaration = other.declaration;
-        }
-        if other.doctype.is_some() {
-            self.doctype = other.doctype;
-        }
-        self.root = match (self.root.take(), other.root) {
-            (None, b) => b,
-            (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
-        };
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -378,6 +382,12 @@ fn apply_children_diff(children: &[SvgNode], diff: &SvgChildrenDiff) -> Vec<SvgN
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SvgSnapshot> for SvgDiff {
+    fn is_empty(&self) -> bool {
+        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SvgSnapshot> for SvgDiff {
     fn inverse(&self, base: &SvgSnapshot) -> Self {
         SvgDiff {
             prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
@@ -386,10 +396,6 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| rewind_node_diff(base.doc.root.as_ref(), d)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.prolog.is_none() && self.epilog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 

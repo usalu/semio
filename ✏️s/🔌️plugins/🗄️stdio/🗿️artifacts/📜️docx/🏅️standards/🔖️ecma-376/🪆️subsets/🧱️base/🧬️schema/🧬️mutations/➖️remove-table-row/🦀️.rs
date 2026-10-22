@@ -13,17 +13,6 @@ pub struct RemoveTableRow {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveTableRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "table-row", kind: "remove-table-row", record: "RemoveTableRow" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        addressed_outcome(&DocxMutation::RemoveTableRow(self.clone()), base)
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-    Ok({
-        addressed_inverse(&DocxMutation::RemoveTableRow(self.clone()), base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove table row", "Tabellenzeile entfernen")
     }
@@ -31,4 +20,16 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveTableRow {
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.index.to_string())).collect()
     }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for RemoveTableRow {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::ColdMutation<DocxSnapshot>>::ReferenceDiff> {
+        addressed_outcome(&DocxMutation::RemoveTableRow(self.clone()), base)
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+    Ok({
+        addressed_inverse(&DocxMutation::RemoveTableRow(self.clone()), base)?
+    
+    })
+}
 }

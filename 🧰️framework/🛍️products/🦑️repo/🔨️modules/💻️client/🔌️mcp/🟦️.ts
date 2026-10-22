@@ -11,7 +11,7 @@ import { goLevelTestArgs } from "../../📚️library/🧪️testing/🎚️leve
 import { resolveMcpBin } from "../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
-const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "");
+const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dirname, "");
 
 const MODULE_DIR = SCRIPT_DIR;
 function goEnvironment(repoRoot: string): NodeJS.ProcessEnv {
@@ -29,5 +29,5 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const { level, rest } = resolveTestLevel(segments);
-  await runCanonicalGoTests(MODULE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, MODULE_DIR), ...rest], { env: goEnvironment(context.repoRoot) });
+  await runCanonicalGoTests(MODULE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, MODULE_DIR), ...rest], context.invocation, { env: goEnvironment(context.repoRoot) });
 }

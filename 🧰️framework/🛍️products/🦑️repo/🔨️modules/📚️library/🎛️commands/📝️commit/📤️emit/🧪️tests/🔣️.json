@@ -1,0 +1,97 @@
+{
+ "version": 1,
+ "commits": [
+  {
+   "subject": "start",
+   "body": ""
+  },
+  {
+   "subject": "🐙️ueli🎆️26🌙️10☀️21🔀️",
+   "body": ""
+  },
+  {
+   "subject": "work one",
+   "body": "🚀 shipped the first feature\n🎆️26🌙️10☀️21⏰️10\nshort\n📊️metric📃uloc\nSigned-off-by: a <a@b.c>\n  Mixed   CASE   Line Here  \n"
+  },
+  {
+   "subject": "work two",
+   "body": "🧪 tests for the parser module\n"
+  }
+ ],
+ "history": [
+  "🚀 shipped the first feature",
+  "mixed case line here",
+  "🧪 tests for the parser module"
+ ],
+ "excludedLines": [
+  "short",
+  "🎆️26🌙️10☀️21⏰️10",
+  "📊️metric📃uloc",
+  "Signed-off-by: a <a@b.c>",
+  "🐙️ueli🎆️26🌙️10☀️21🔀️"
+ ],
+ "bullets": [
+  {
+   "bullet": "🚀 shipped the first feature",
+   "expected": true
+  },
+  {
+   "bullet": "  🚀   SHIPPED the   first Feature ",
+   "expected": true
+  },
+  {
+   "bullet": "🚀 shipped the second feature",
+   "expected": false
+  },
+  {
+   "bullet": "short",
+   "expected": false
+  },
+  {
+   "bullet": "Signed-off-by: a <a@b.c>",
+   "expected": false
+  },
+  {
+   "bullet": "",
+   "expected": false
+  }
+ ],
+ "fresh": {
+  "ok": [
+   {
+    "label": "🏘️x✍️y",
+    "dates": [
+     {
+      "dateLine": "🎆️26🌙️10☀️21",
+      "bullets": [
+       "🔥 brand new bullet text"
+      ]
+     }
+    ]
+   }
+  ],
+  "copy": [
+   {
+    "label": "🏘️x✍️y",
+    "dates": [
+     {
+      "dateLine": "🎆️26🌙️10☀️21",
+      "bullets": [
+       "🔥 brand new bullet text",
+       "🧪 TESTS for the   parser module"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "expectedRange": {
+  "subject": "🐙️ueli🎆️26🌙️10☀️21🔀️",
+  "index": 1
+ },
+ "noWip": [
+  "a",
+  "b"
+ ],
+ "copyMessage": "commit.emit.bullet-copies-a-prior-message"
+}

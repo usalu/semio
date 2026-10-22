@@ -16,7 +16,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       },
       "metadata": {
         "semio": {

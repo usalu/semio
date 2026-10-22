@@ -464,7 +464,7 @@
   "fallbackTarget": {
     "execution": {
       "kind": "command",
-      "command": "bun leaf/📜️script.ts build",
+      "command": "repo leaf/📜️script.ts build",
       "env": {
         "BASE": "original"
       }

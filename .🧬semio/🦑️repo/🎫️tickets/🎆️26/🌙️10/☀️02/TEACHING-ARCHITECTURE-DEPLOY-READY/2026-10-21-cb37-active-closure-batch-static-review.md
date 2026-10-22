@@ -1,0 +1,17 @@
+# Active cb37 Host Closure and Batch Review
+
+These are current host snapshots, not proof of the implementation loaded by active Native97506. Seven scoped ordinary single-link nofollow FD/name observations match the text reviewed below; no Source function or test was evaluated.
+
+Closure facade now admits every executable captured file against import.meta.semioCapturedPhysicalSources captured at module evaluation. It requires issued Original before/after, canonical ordered unique relative paths, exact root and per-file SHA. Missing, changed or unadmitted children refuse. Node loader injects its exact captured module selection; its public declaration removes the former explicit selection helper. Both loaders retain bounded hash-checked module images and local import resolution; no new direct first-party import paths appear in these four files. Recursive sibling-schema capture now broadens admitted files and can conservatively refuse if parent metadata does not include them; that is an availability limit, not a bypass. The current schema contains new closed AdmissionCase and CompilerCaptureCase DATA, but these seven files alone do not establish actual compiler/admission regression execution. Session callers are reviewed separately by recovery_metadata_audit.
+
+Batch selected literal remains authenticated group windows preserve physical identities with bounded whole-proof work, explicit60000. Strict Ajv validates its18 physical cases and4 work-budget rows. Actual retirement helper extraction names remain explicit; production driver structure is checked before causal runs. Real unrelated reference/sibling writes after first unlink require stopping at1 with exact2/3 full checks; falsey/close/cancel cases compare exact primary identity and SQLite sums actual allocated member bytes. New sufficient/one-mutation/insufficient work rows model bounded prefix progress, including empty-directory cases. No new title, path or runtime import witness is introduced by these three batch files. These tests are authored and unrun.
+
+Pins:
+
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs: 8617/571c1d5d0b9b040158a4c7c5fd3185d15408e1970fd29cda04cc1eba9ac49db2; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts: 25445/7b71bc327e5c65846116ab76aec0dae53e0d4960932cb87da9db70dd7280efe4; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json: 3636/3c977e358897786613010c4a9e761cd0a21a458fbe5e7397f265f77988a2cd2c; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.d.mts: 440/9934e6e028e3a355f017716105b5a7bfd5884315d6ad838d498b454301420f66; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts: 11890/033f0dda41238f080d0dfbaf9aae6a54cd325c1f080a37427407f9161b6dfc2f; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🧫️cases.json: 5737/0bd472dfd5b5e12065a03e04f724ace4ebd6ab5b994e556f293189dd5bb62557; same reviewed text=true
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🧬️schema/🔣️.json: 3370/af268c3d49cabeec986cd15dc1fbd86e59a63650234e655689bee87ea5d47644; same reviewed text=true

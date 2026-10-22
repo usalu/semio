@@ -14,29 +14,35 @@ pub struct NoteCompositeWindowConfigDiff {
     pub camera: Option<NoteCamera>,
 }
 
-impl MutationDiff<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {
-    fn apply(&self, base: &NoteCompositeWindowConfig, _capability: ApplyCapability) -> MutationApplyResult<NoteCompositeWindowConfig> {
-        let mut next = base.clone();
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {}
 
+impl protocol::ColdMutationDiff<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, unpublished: &mut NoteCompositeWindowConfig, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {
-    fn inverse(&self, base: &NoteCompositeWindowConfig) -> Self {
-        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<NoteCompositeWindowConfig> for NoteCompositeWindowConfigDiff {
+    fn inverse(&self, base: &NoteCompositeWindowConfig) -> Self {
+        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }
 
@@ -48,18 +54,9 @@ pub struct NoteCompositeWindowTransientDiff {
     pub ink_tool: Option<NoteAssigned<Option<NoteInkToolState>>>,
 }
 
-impl MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {
-    fn apply(&self, base: &NoteCompositeWindowTransient, _capability: ApplyCapability) -> MutationApplyResult<NoteCompositeWindowTransient> {
-        let mut next = base.clone();
-        if let Some(engagement_input) = &self.engagement_input {
-            next.engagement_input = engagement_input.clone();
-        }
-        if let Some(ink_tool) = &self.ink_tool {
-            next.ink_tool = ink_tool.value.clone();
-        }
-        Ok(next)
-    }
+impl MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {}
 
+impl protocol::ColdMutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.engagement_input.is_some() {
             self.engagement_input = other.engagement_input;
@@ -68,14 +65,29 @@ impl MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransient
             self.ink_tool = other.ink_tool;
         }
     }
+
+    fn apply(&self, unpublished: &mut NoteCompositeWindowTransient, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(engagement_input) = &self.engagement_input {
+            next.engagement_input = engagement_input.clone();
+        }
+        if let Some(ink_tool) = &self.ink_tool {
+            next.ink_tool = ink_tool.value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {
-    fn inverse(&self, base: &NoteCompositeWindowTransient) -> Self {
-        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), ink_tool: self.ink_tool.as_ref().map(|_| NoteAssigned::new(base.ink_tool.clone())) }
-    }
-
     fn is_empty(&self) -> bool {
         self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<NoteCompositeWindowTransient> for NoteCompositeWindowTransientDiff {
+    fn inverse(&self, base: &NoteCompositeWindowTransient) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), ink_tool: self.ink_tool.as_ref().map(|_| NoteAssigned::new(base.ink_tool.clone())) }
     }
 }

@@ -26,7 +26,7 @@ pub mod original_latest_key;
 
 use crate::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
 
-pub(crate) struct ToolLatestWinsScope {
+pub struct ToolLatestWinsScope {
     pub key: semio_framework_value_ordered::ordered::SharedOwner<String>,
     pub operation: u64,
     pub token: semio_framework_job::CancelToken,

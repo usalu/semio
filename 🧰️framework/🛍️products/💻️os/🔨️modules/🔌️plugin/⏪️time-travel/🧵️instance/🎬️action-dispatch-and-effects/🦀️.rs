@@ -3,12 +3,13 @@
 use super::*;
 use semio_framework_ui_locale::Terminology;
 use semio_framework::Fault;
+use semio_framework::MutationId;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
 use semio_framework::Effect;
 use semio_framework::InvocationResult;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ⏪️ Host-driven routing of the reserved history-edit verbs (design §7): applied to the session now, never queued
     /// behind guest work. A refusal is a silent `{rejected}` result that still repaints the history body, so a stale
     /// button never keeps its stale identity. The reply carries the owed UI scope; the session status the verb moved to

@@ -14,7 +14,7 @@ fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
 }
 
 fn produced(mutation: &LowpolyMutation, before: &LowpolySnapshot) -> Vec<(String, String)> {
-    <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(mutation, before)
+    <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(mutation, before)
         .messages()
         .iter()
         .map(|message| (to_json(&message.level).as_str().unwrap_or_default().to_string(), message.code.0.clone()))
@@ -29,18 +29,18 @@ pub fn decode_case(before: &str, mutation: &str) -> (LowpolySnapshot, LowpolyMut
 /// ▶️ The leaf carries `before` to exactly the committed `after` and produces exactly the committed delta.
 pub fn forward(before: &str, mutation: &str, after: &str, diff: &str) {
     let (before, mutation, after): (LowpolySnapshot, LowpolyMutation, LowpolySnapshot) = (from_json(before), from_json(mutation), from_json(after));
-    let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &before);
+    let raised = <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::diff(&mutation, &before);
     assert_eq!(to_json(raised.diff()), serde_json::from_str::<serde_json::Value>(diff).expect("diff parses"), "the produced delta is the committed 🔺️diff");
     let (applied, _) = protocol::apply_mutation(&before, &mutation).expect("the leaf applies");
     assert_eq!(applied, after, "the applied layer is the committed after-snapshot");
     let committed: LowpolyDiff = from_json(diff);
-    assert_eq!(protocol::apply_diff(&committed, &before).expect("the committed diff applies"), after, "the committed diff alone carries before to after");
+    assert_eq!(protocol::apply_diff_cold(&committed, &before).expect("the committed diff applies"), after, "the committed diff alone carries before to after");
 }
 
 /// ↩️ The computed inverse — ONE row writing the overwritten state back — restores `before` exactly.
 pub fn inverse_restores(before: &str, mutation: &str) {
     let (base, mutation): (LowpolySnapshot, LowpolyMutation) = (from_json(before), from_json(mutation));
-    let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <LowpolyMutation as protocol::ColdMutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "the leaf inverts to ONE row: {inverse:?}");
     let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
     for step in &inverse {

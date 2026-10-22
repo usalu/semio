@@ -157,7 +157,7 @@
       "targets": {
         "verify": {
           "executor": "nx:run-commands",
-          "options": { "command": "bun ./📜️script.ts verify", "forwardAllArgs": true },
+          "options": { "command": "repo ./📜️script.ts verify", "forwardAllArgs": true },
           "metadata": {
             "semio": {
               "dashboard": {
@@ -254,7 +254,7 @@
         "law": "a verify target that swallows its arguments reaches no verb",
         "path": ["targets", "verify", "options", "forwardAllArgs"],
         "value": false,
-        "failure": "targets.verify.options must run `bun ./📜️script.ts verify` with `forwardAllArgs: true`",
+        "failure": "targets.verify.options must run `repo ./📜️script.ts verify` with `forwardAllArgs: true`",
         "declare": "📋️project.json",
         "schemaValid": true
       },

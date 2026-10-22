@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "stdin-round-trip", "script": "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>process.stdout.write(s.toUpperCase()))", "stdin": "hello\n", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 0, "stdout": "HELLO\n", "stderr": "" }, "oracle": true },
+    { "id": "stderr-progress-lines", "script": "console.error('a');console.error('b');console.error('c')", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 0, "stdout": "", "stderr": "a\nb\nc\n", "progress": ["a", "b", "c"] }, "oracle": true },
+    { "id": "nonzero-exit", "script": "process.stdout.write('x');process.exit(3)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 3, "stdout": "x", "stderr": "" }, "oracle": true },
+    { "id": "time-bound", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 300, "expect": { "outcome": "timeout" } },
+    { "id": "output-bound", "script": "process.stdout.write('x'.repeat(1048576));setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "output-limit", "stdoutAtMost": 1024 } },
+    { "id": "caller-cancels", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "cancelAfterMilliseconds": 200, "asynchronousOnly": true, "expect": { "outcome": "cancelled" } },
+    { "id": "caller-aborts", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "abortAfterMilliseconds": 200, "asynchronousOnly": true, "expect": { "outcome": "cancelled" } },
+    { "id": "cancelled-before-start", "script": "process.stdout.write('never')", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "cancelledBeforeStart": true, "expect": { "outcome": "cancelled", "stdout": "", "exitCode": null } }
+  ],
+  "refusals": [
+    { "id": "no-output-bound", "maxOutputBytes": 0, "timeoutMilliseconds": 1000 },
+    { "id": "no-time-bound", "maxOutputBytes": 1024, "timeoutMilliseconds": 0 }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "nodes",
+  "dryRun",
+  "applied",
+  "removePath",
+  "skipped"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "nodes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "kind"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "file"
+      ]
+     },
+     "text": {
+      "type": "string"
+     },
+     "size": {
+      "type": "integer"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "dryRun": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "removals",
+    "survivors"
+   ],
+   "properties": {
+    "removals": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kind",
+       "path"
+      ],
+      "properties": {
+       "kind": {
+        "type": "string"
+       },
+       "path": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "survivors": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "applied": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "gone",
+    "survivors"
+   ],
+   "properties": {
+    "gone": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "survivors": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "removePath": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "path",
+     "dry",
+     "ticket",
+     "illegal",
+     "cargo",
+     "expected",
+     "exists"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "path": {
+      "type": "string"
+     },
+     "dry": {
+      "type": "boolean"
+     },
+     "ticket": {
+      "type": "boolean"
+     },
+     "illegal": {
+      "type": "boolean"
+     },
+     "cargo": {
+      "type": "boolean"
+     },
+     "expected": {
+      "type": "boolean"
+     },
+     "exists": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "skipped": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "contains",
+    "protectedRows"
+   ],
+   "properties": {
+    "contains": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "protectedRows": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

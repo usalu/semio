@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Generates src/backends.registry.json: one row per backend. Capability claims are the registry's declared support; the conformance suite measures them."""
-import json,os
+import json,os,sys
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+import names
+NATIVE_CALLER="../../"+"/".join([names.n(0x26A1,"caching"),names.n(0x1F680,"bootstrap"),names.n(0x1F50C,"nx-plugin"),names.n(0x1F4E4,"arguments"),names.n(0x1F9EC,"schema"),names.f(0x1F4E5,"native-caller.json")])
 here=os.path.dirname(os.path.abspath(__file__))
 def tx(en,de): return {"en":en,"de":de}
 CAPS=["plan","run","cache-restore","invalidation","early-cutoff","uncached","outputs","failure-isolation","test-results","affected","cancellation","progress","parallelism","concurrent-invocations","single-flight","remote-cache","run-record"]
@@ -23,9 +26,9 @@ ops_bz={"run":"adapter","run-many":"adapter","affected":"adapter","exec":"adapte
 ops_sm={"run":"native","run-many":"native","affected":"native","exec":"native","inputs":"native","reset":"native","tools":"native","cache":"native"}
 doc={"version":1,"backends":[
  {"id":"nx","title":tx("Nx with Bun","Nx mit Bun"),"kind":"external","default":True,"module":"../@@TOOLS@@/@@NX@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@NX@@/@@CONF@@/@@TS@@","dependencyModel":"consumers",
-  "processEnvironment":{"NX_DAEMON":"false"},"nativeSnapshot":{"variable":"SEMIO_NX_NATIVE_SOURCE_SNAPSHOT","environment":{"NX_DAEMON":"false"}},"operations":ops_nx,"capabilities":nx_caps},
- {"id":"bazel","title":tx("Bazel","Bazel"),"kind":"external","module":"../@@TOOLS@@/@@BAZEL@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@BAZEL@@/@@CONF@@/@@TS@@","dependencyModel":"all","operations":ops_bz,"capabilities":bz_caps},
- {"id":"semio","title":tx("Semio build engine","Semio-Build-Engine"),"kind":"in-house","module":"../@@TOOLS@@/@@SEMIO@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@SEMIO@@/@@CONF@@/@@TS@@","dependencyModel":"all","operations":ops_sm,"capabilities":sm_caps},
+  "processEnvironment":{"NX_DAEMON":"false"},"nativeSnapshot":{"variable":"SEMIO_NX_NATIVE_SOURCE_SNAPSHOT","environment":{"NX_DAEMON":"false"}},"nativeCaller":{"namespace":"nx","schema":NATIVE_CALLER},"cacheProof":{"logMarker":"read the output from the cache|\\[local cache\\]|\\[existing outputs match the cache\\]"},"operations":ops_nx,"capabilities":nx_caps},
+ {"id":"bazel","title":tx("Bazel","Bazel"),"kind":"external","module":"../@@TOOLS@@/@@BAZEL@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@BAZEL@@/@@CONF@@/@@TS@@","dependencyModel":"all","cacheProof":{"logMarker":"(?:disk|remote) cache hit","activity":True,"spawnMarker":{"executed":"[0-9]+ (?:linux-sandbox|darwin-sandbox|processwrapper-sandbox|windows-sandbox|local|worker)","completed":"Build completed successfully"}},"operations":ops_bz,"capabilities":bz_caps},
+ {"id":"semio","title":tx("Semio build engine","Semio-Build-Engine"),"kind":"in-house","module":"../@@TOOLS@@/@@SEMIO@@/@@BACKEND@@/@@TS@@","driver":"../@@TOOLS@@/@@SEMIO@@/@@CONF@@/@@TS@@","dependencyModel":"all","cacheProof":{"activity":True},"operations":ops_sm,"capabilities":sm_caps},
 ]}
 json.dump(doc,open(os.path.join(here,"src","backends.registry.json"),"w",encoding="utf8"),ensure_ascii=False,indent=1)
 print("ok")

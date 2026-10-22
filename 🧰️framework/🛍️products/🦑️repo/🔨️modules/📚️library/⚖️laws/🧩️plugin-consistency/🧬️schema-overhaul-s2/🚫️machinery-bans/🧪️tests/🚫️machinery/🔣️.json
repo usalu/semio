@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "stdio-codecs-use-no-vcs-collection-machinery",
+   "rule": "policyStdioVcsMachineryBanBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/x.rs": [
+     "use vcs::CollectionDiff;"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/y.rs": [
+     "// Patchable is mentioned in a comment",
+     "let s = \"Identified\";"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/z.rs": [
+     "impl Identified for Z {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/w.rs": [
+     "struct MyIdentified;",
+     "type Patchables = u8;"
+    ],
+    "✏️s/🔌️plugins/🔭️p/o.rs": [
+     "use vcs::CollectionMutation;"
+    ]
+   },
+   "expect": [
+    [
+     "stdio-vcs-machinery-ban-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️a/x.rs",
+     "stdio-artifacts/vcs-machinery-ban",
+     "high",
+     0
+    ],
+    [
+     "stdio-vcs-machinery-ban-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️b/z.rs",
+     "stdio-artifacts/vcs-machinery-ban",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "snapshot-owning-diff-facets-implement-the-diff-algebra",
+   "rule": "policyDiffAlgebraBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": [
+     "pub struct D;"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️ok/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": [
+     "impl<T> DiffAlgebra for D<T> {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️cm/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️cm/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": [
+     "// impl DiffAlgebra for D {}"
+    ],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️nodiff/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/x": [],
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️ns/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": [
+     "pub struct D;"
+    ]
+   },
+   "expect": [
+    [
+     "diff-algebra-missing-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️foo/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+     "stdio-artifacts/diff-algebra",
+     "medium",
+     0
+    ],
+    [
+     "diff-algebra-missing-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔸️cm/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+     "stdio-artifacts/diff-algebra",
+     "medium",
+     0
+    ]
+   ]
+  }
+ ]
+}

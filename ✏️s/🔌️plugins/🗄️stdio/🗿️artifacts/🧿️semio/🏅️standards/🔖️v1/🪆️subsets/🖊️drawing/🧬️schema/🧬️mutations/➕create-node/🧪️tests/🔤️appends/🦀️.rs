@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-node/🔤️appends/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn appends_the_caption_as_the_fourth_child() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("create-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: applied state differs from the committed after-snapshot");
     let crate::schema::snapshot::DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     assert_eq!(children.len(), 4, "create-node adds exactly one child");
@@ -50,9 +50,9 @@ async fn the_undo_delete_node_addresses_the_path_the_node_landed_at() {
     assert_eq!(undo.len(), 1, "create-node undoes as exactly one delete-node");
     let SemioDrawingMutation::DeleteNode(remove) = &undo[0] else { panic!("create-node must undo as delete-node") };
     assert_eq!(remove.at.path, vec![3usize], "the undo path is the parent path plus the clamped landing index");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-node applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward create-node applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-node applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo delete-node applies");
     }
     assert_eq!(current, base, "create-node/appends-a-caption-text-node-to-the-layer-root: the undo did not restore the before-snapshot");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioDrawingMutation as ColdMutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-node/appends-a-caption-text-node-to-the-layer-root: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -117,6 +117,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-node diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed create-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: committed diff did not carry before to after");
 }

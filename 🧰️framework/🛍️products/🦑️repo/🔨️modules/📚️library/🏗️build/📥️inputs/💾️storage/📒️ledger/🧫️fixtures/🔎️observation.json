@@ -155,5 +155,49 @@
         "reason": "not-regular"
       }
     }
+  ],
+  "unlinkedLeaves": [
+    {
+      "id": "main-database",
+      "leaf": "optional.sqlite",
+      "links": 0,
+      "outcome": "refused"
+    },
+    {
+      "id": "main-gate",
+      "leaf": "optional-gate.sqlite",
+      "links": 0,
+      "outcome": "refused"
+    },
+    {
+      "id": "unlinked-journal",
+      "leaf": "optional.sqlite-journal",
+      "links": 0,
+      "outcome": "absent"
+    },
+    {
+      "id": "unlinked-wal",
+      "leaf": "optional.sqlite-wal",
+      "links": 0,
+      "outcome": "absent"
+    },
+    {
+      "id": "unlinked-shm",
+      "leaf": "optional.sqlite-shm",
+      "links": 0,
+      "outcome": "absent"
+    },
+    {
+      "id": "gate-unlinked-journal",
+      "leaf": "optional-gate.sqlite-journal",
+      "links": 0,
+      "outcome": "absent"
+    },
+    {
+      "id": "hardlinked-journal",
+      "leaf": "optional.sqlite-journal",
+      "links": 2,
+      "outcome": "refused"
+    }
   ]
 }

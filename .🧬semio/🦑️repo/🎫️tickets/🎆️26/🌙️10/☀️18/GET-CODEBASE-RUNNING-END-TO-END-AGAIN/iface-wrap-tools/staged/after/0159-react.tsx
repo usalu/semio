@@ -1,101 +1,166 @@
-// #region 🧲️Header
-// 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📖️stories/🧪️.story.tsx
-// Specs: Host the framework renderer's `NodeGraphHost` against real prebuilt WASM engines — the workflow
-// `GraphSession` (`framework/surface/node-graph/rs`) for the default DAG variant, and the `FlowSession`
-// (`flow/core/rs`) for the flow-graph variant `isFlowGraphScene`/`snapshotJson` routes to.
-// Summary: Two stories share one debug-readout host component; each sets `parameters.wasm` to the loader id
-// `NodeGraphHost`'s active branch needs so the `withWasm` decorator gates first paint until that engine's
-// wasm-bindgen module has booted.
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲️Header
+/** 🔶️ The window instance id phase of WasmGraphSurface. */
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
+import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
+import { registerIntroductionSurfaceResolver, useCanvasAppearanceSync, useLabel, useShellScopeOptional } from "@semio-tech/ui-react";
+import { GestureRecognizer, windowElementId, type ActionDescriptor, type NodeGraphScene } from "@semio-tech/framework";
+import { useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
+import { WindowInstanceIdContext } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { createGraphSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import { DEFAULT_NODE_GRAPH_VIEWPORT, type FrameworkGraphSession, publishNodeGraphHover, publishNodeGraphSelection, syncOptionalGraphCanvasTheme } from "../../🧰️graph-core/🟦️.ts";
+import { computeDagMarqueeOverlay, dagIntroductionResolver, paintDagLabelOverlays, parseDagNodeIdArray, parseDagSelectionUnionBoundsScreen, sceneToSyncPack, useGraphSliderLanes } from "../../🖼️dag-overlays/🟦️.tsx";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
+/** 🔷 Builds windowInstanceId, sessionRef, labelCanvasRef, containerRef of WasmGraphSurface. */
+export function useWindowInstanceIdState({ scene, onAction, controllerId, surfaceId }: { readonly scene: NodeGraphScene; readonly onAction: (action: ActionDescriptor) => void; readonly controllerId: string; readonly surfaceId: string }) {
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const sessionRef = useRef<FrameworkGraphSession | null>(null);
+  const labelCanvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.node");
+  const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
+  const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
+  const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
+  const [sliderStateJson, setSliderStateJson] = useState("{}");
+  const scenePack = useMemo(() => sceneToSyncPack(scene), [scene]);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
 
-import { NodeGraphHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, NodeGraphScene, UiComponentSceneNode } from "@semio-tech/framework";
+  const dispatch = useCallback((action: string, args?: Record<string, unknown>) => onAction({ controllerId, action, args: { surfaceId, ...args } }), [controllerId, onAction, surfaceId]);
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
+  const { sliderLane } = useGraphSliderLanes(surfaceId, dispatchRef);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const pinchLogScaleRef = useRef(0);
 
-//#region SceneFixtures
-/** 🕸️ Two connected workflow nodes, matching the shape `framework/os/renderer/js/react/index.test.ts` exercises for `NodeGraphHost`. */
-const WORKFLOW_SCENE: NodeGraphScene = {
-  nodes: [
-    { id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 180, height: 96, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [{ id: "out", resourceKind: "2d.drawing" }] },
-    { id: "node-b", instanceId: "app-b", label: "Composite", x: 260, y: 60, width: 180, height: 96, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [] },
-  ],
-  edges: [{ id: "edge-1", sourceNodeId: "node-a", sourcePortId: "out", targetNodeId: "node-b", targetPortId: "in" }],
-  viewport: { x: 0, y: 0, zoom: 1 },
-  editable: true,
-  findItems: [{ id: "app-a", label: "Draw", category: "Workflow" }],
-};
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
-/** 🌊️ A `FlowHostSnapshot`-shaped `hostSnapshotJson` — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
-const FLOW_HOST_DOCUMENT_JSON = JSON.stringify({
-  schema: "flow.host_snapshot",
-  camera: { x: 0, y: 0, zoom: 1 },
-  widgets: [
-    { kind: "inputSlider", id: "slider", value: 3, min: 0, max: 10, step: 0.1 },
-    { kind: "neuron", id: "add", neuronKind: "math.add", params: {}, inputPorts: [], outputPorts: [], preview: true },
-    { kind: "outputPreview", id: "preview", preview: {}, expanded: [] },
-  ],
-  synapses: [
-    { id: "s1", from: "slider", to: "add", fromPort: "number", toPort: "a" },
-    { id: "s2", from: "add", to: "preview", fromPort: "sum", toPort: "" },
-  ],
-  layout: {},
-});
-
-const FLOW_GRAPH_SCENE: NodeGraphScene = {
-  nodes: [],
-  edges: [],
-  viewport: { x: 0, y: 0, zoom: 1 },
-  editable: true,
-  capabilitiesJson: '{"engine":"flow"}',
-  hostSnapshotJson: FLOW_HOST_DOCUMENT_JSON,
-};
-//#endregion SceneFixtures
-
-//#region StoryHost
-function NodeGraphStoryHost({ scene, controllerId, surfaceId }: { readonly scene: NodeGraphScene; readonly controllerId: string; readonly surfaceId: string }): ReactElement {
-  const [lastAction, setLastAction] = useState<ActionDescriptor | null>(null);
-
-  const onAction = useCallback((action: ActionDescriptor): void => {
-    setLastAction(action);
+  const paintOverlays = useCallback(() => {
+    const session = sessionRef.current;
+    const labelCanvas = labelCanvasRef.current;
+    const container = containerRef.current;
+    if (!session || !labelCanvas || !container) return;
+    const rect = container.getBoundingClientRect();
+    const dpr = globalThis.devicePixelRatio || 1;
+    try {
+      paintDagLabelOverlays(session.labelOverlayPaintStateJson(), labelCanvas, rect.width, rect.height, dpr, {
+        hoveredId: session.hoveredNodeId() ?? null,
+        selectedIds: parseDagNodeIdArray(session.selectedNodeIdsJson()),
+        preselect: { ids: [], removedIds: [] },
+        dimmedIds: [],
+        highlightIds: sceneRef.current.highlighted ?? [],
+      });
+    } catch {}
+    setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
+    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.() ?? "rectangle"));
+    try {
+      const nextSliderJson = session.sliderOverlayStateJson();
+      setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
+    } catch {}
+    setOverlaySize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
+    try {
+      container.setAttribute("data-viewport-camera-json", JSON.stringify(session.viewport()));
+      container.setAttribute("data-session-selection-json", session.selectedNodeIdsJson());
+    } catch {}
   }, []);
 
-  const node: UiComponentSceneNode = { type: "componentScene", surfaceId, controllerId, componentKind: "node-graph", nodeGraph: scene };
+  useEffect(() => {
+    try {
+      sessionRef.current?.syncFromScenePack?.(scenePack);
+      paintOverlays();
+    } catch (error) {
+    }
+  }, [scenePack, paintOverlays]);
 
-  return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <NodeGraphHost node={node} onAction={onAction} />
-      </div>
-      <pre data-testid="node-graph-host-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
-        {JSON.stringify({ lastAction })}
-      </pre>
-    </div>
+  const onSessionReady = useCallback(
+    (session: WasmCanvasSession) => {
+      sessionRef.current = session as FrameworkGraphSession;
+      syncOptionalGraphCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current.syncFromScenePack?.(scenePack);
+        paintOverlays();
+      } catch (error) {
+      }
+    },
+    [scenePack, paintOverlays],
   );
+
+  const wasmGraphSurfaceShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      syncOptionalGraphCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {}
+      paintOverlays();
+    },
+    true,
+    wasmGraphSurfaceShellScope?.rootRef.current ?? undefined,
+  );
+
+  const [wasmSession, setWasmSession] = useState<FrameworkGraphSession | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void createGraphSession().then((session) => {
+      if (!cancelled) setWasmSession(session as FrameworkGraphSession);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
+  }, [windowInstanceId]);
+
+  const sessionFactory = useCallback(() => {
+    if (wasmSession) return wasmSession;
+    return {
+      attachCanvas: async () => undefined,
+      setSize: () => {},
+      renderFrame: () => {},
+      syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
+      setCanvasThemeJson: () => {},
+      pointerDownScreen: () => {},
+      pointerMoveScreen: () => {},
+      pointerUpScreen: () => {},
+      pointerCancelScreen: () => {},
+      wheelScreen: () => {},
+      labelOverlayPaintStateJson: () => '{"labels":[]}',
+      sliderOverlayStateJson: () => "{}",
+      selectionUnionBoundsScreenJson: () => "{}",
+      selectionPreviewPointsJson: () => "[]",
+      selectionPreviewCrossing: () => false,
+      selectionPreviewMethod: () => "rectangle",
+      selectedNodeIdsJson: () => "[]",
+      hoveredNodeId: () => null,
+      hoveredChannelJson: () => '{"channel":null,"refusal":null}',
+      syncInteraction: () => {},
+      viewport: () => scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT,
+      pickTargetsAtScreenJson: () => "[]",
+      setHover: () => {},
+      setHoverChannel: () => {},
+      alignSelection: () => {},
+      takeGraphEditsJson: () => '{"operations":[]}',
+      takePendingOpenInstanceId: () => null,
+    } satisfies FrameworkGraphSession;
+  }, [scene.viewport, wasmSession]);
+
+  const emitInteractionState = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    try {
+      const nodeIds = JSON.parse(session.selectedNodeIdsJson()) as string[];
+      publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, { nodeIds });
+      const hovered = session.hoveredNodeId();
+      publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered);
+      const openId = session.takePendingOpenInstanceId?.();
+      if (openId) dispatch("openInstance", { instanceId: openId });
+    } catch {}
+    paintOverlays();
+  }, [dispatch, paintOverlays]);
+  return { sessionRef, paintOverlays, emitInteractionState, dispatch, containerRef, sceneRef, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, sessionFactory, onSessionReady, labelCanvasRef, selectionBounds, marquee, gestureRecognizer, pinchLogScaleRef, sliderStateJson, overlaySize, sliderLane, contextMenuTitleLabel, contextMenu };
 }
-//#endregion StoryHost
-
-const meta = {
-  title: "🛠️framework🔌️hosts/NodeGraphHost",
-  component: NodeGraphStoryHost,
-  parameters: { layout: "fullscreen" },
-  tags: ["autodocs"],
-} satisfies Meta<typeof NodeGraphStoryHost>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-/** 🕸️ Default DAG engine composes the OS NodeGraph `GraphSession` through `WasmGraphSurface`. */
-export const Workflow: Story = {
-  args: { scene: WORKFLOW_SCENE, controllerId: "s-play", surfaceId: "s.play.workflow" },
-  parameters: { wasm: ["node-graph"] },
-};
-
-/** 🌊️ Flow engine — `FlowGraphCanvasHost` against the real `flow_core` `FlowSession`, routed by `capabilitiesJson.engine === "flow"` (`isFlowGraphScene`). */
-export const FlowGraph: Story = {
-  args: { scene: FLOW_GRAPH_SCENE, controllerId: "flow-play", surfaceId: "flow.play.canvas" },
-  parameters: { wasm: ["flow"] },
-};

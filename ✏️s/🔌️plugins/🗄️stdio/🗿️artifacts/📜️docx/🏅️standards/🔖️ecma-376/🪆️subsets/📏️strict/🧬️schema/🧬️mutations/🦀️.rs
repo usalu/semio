@@ -26,7 +26,7 @@ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base
 #[cfg(test)]use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypesDiff, OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcPartsDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
-use semio_framework_replication_mutation::Mutation;
+use semio_framework_replication_mutation::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlDocument;
 
@@ -83,7 +83,7 @@ pub mod set_relationship_base;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxStrictMutation")]
+#[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxStrictMutation", reference = DocxSnapshot, reference_diff = DocxDiff)]
 pub enum DocxStrictMutation {
     SetMainNamespace(set_main_namespace::SetMainNamespace),
     SetRelationshipBase(set_relationship_base::SetRelationshipBase),
@@ -108,7 +108,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::apply_diff(outcome.diff(), snapshot) {
+    match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome

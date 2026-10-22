@@ -3,7 +3,7 @@
 use crate::ZipSnapshot;
 use crate::schema::snapshot::ZipEntryMetadata;
 use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
+use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{HashMap, HashSet};
 
@@ -177,8 +177,21 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
 //#endregion 🔖️EntryLogic
 
 //#region 🔖️Algebra
-impl MutationDiff<ZipSnapshot> for ZipDiff {
-    fn apply(&self, base: &ZipSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ZipSnapshot> {
+impl MutationDiff<ZipSnapshot> for ZipDiff {}
+
+impl protocol::ColdMutationDiff<ZipSnapshot> for ZipDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.comment.is_some() {
+            self.comment = other.comment;
+        }
+        if other.comment_utf8.is_some() {
+            self.comment_utf8 = other.comment_utf8;
+        }
+        self.entries = absorb_entries(self.entries.take(), other.entries);
+    }
+
+    fn apply(&self, unpublished: &mut ZipSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
         if let Some(entries) = &self.entries {
             validate_zip_entries(&base.entries, entries)?;
         }
@@ -203,17 +216,8 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
                 next.entries = order.iter().map(|name| entries.remove(name).expect("validated ZIP order")).collect();
             }
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.comment.is_some() {
-            self.comment = other.comment;
-        }
-        if other.comment_utf8.is_some() {
-            self.comment_utf8 = other.comment_utf8;
-        }
-        self.entries = absorb_entries(self.entries.take(), other.entries);
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -259,12 +263,14 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
 }
 
 impl DiffAlgebra<ZipSnapshot> for ZipDiff {
-    fn inverse(&self, base: &ZipSnapshot) -> Self {
-        Self { comment: self.comment.as_ref().map(|_| base.comment.clone()), comment_utf8: self.comment_utf8.map(|_| base.comment_utf8), entries: self.entries.as_ref().map(|entries| entries.inverse(&base.entries)) }
-    }
-
     fn is_empty(&self) -> bool {
         self.comment.is_none() && self.comment_utf8.is_none() && self.entries.as_ref().is_none_or(ZipEntriesDiff::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ZipSnapshot> for ZipDiff {
+    fn inverse(&self, base: &ZipSnapshot) -> Self {
+        Self { comment: self.comment.as_ref().map(|_| base.comment.clone()), comment_utf8: self.comment_utf8.map(|_| base.comment_utf8), entries: self.entries.as_ref().map(|entries| entries.inverse(&base.entries)) }
     }
 }
 //#endregion 🔖️Algebra

@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-absolute-varint-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-absolute-varint-source",
-    "test-absolute-varint-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-absolute-varint-native",
-    "test-borrowed-preflight-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-borrowed-preflight-source",
-    "test-borrowed-preflight-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-borrowed-preflight-native",
-    "test-schema-hash-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-schema-hash-native",
-    "test-schema-storage-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-pack-rs:test-schema-storage-native"
+    "test-absolute-varint-source": "repo run @semio-tech/framework-pack-rs:test-absolute-varint-source",
+    "test-absolute-varint-native": "repo run @semio-tech/framework-pack-rs:test-absolute-varint-native",
+    "test-borrowed-preflight-source": "repo run @semio-tech/framework-pack-rs:test-borrowed-preflight-source",
+    "test-borrowed-preflight-native": "repo run @semio-tech/framework-pack-rs:test-borrowed-preflight-native",
+    "test-schema-hash-native": "repo run @semio-tech/framework-pack-rs:test-schema-hash-native",
+    "test-schema-storage-native": "repo run @semio-tech/framework-pack-rs:test-schema-storage-native"
   },
   "devDependencies": {
     "@webassemblyjs/leb128": "1.13.2",

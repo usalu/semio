@@ -8,7 +8,7 @@ use semio_framework_artifact_workflow_run::{RunArtifact, RunDiff, RunMutation};
 /// 🔒️ Admits one run operation: its own diff plus the messages it produced, or the messages when any of them is a refusal
 /// (codes and levels unchanged).
 pub fn admit_run_operation(document: &RunArtifact, operation: &RunMutation) -> Result<(RunDiff, Vec<protocol::MutationMessage>), Vec<protocol::MutationMessage>> {
-    let (diff, messages) = protocol::Mutation::diff(operation, document).into_parts();
+    let (diff, messages) = <RunMutation as protocol::ColdMutation<RunArtifact>>::diff(operation, document).into_parts();
     if messages.iter().any(|message| protocol::MergePolicy::default().rejects(message.level)) {
         return Err(messages);
     }

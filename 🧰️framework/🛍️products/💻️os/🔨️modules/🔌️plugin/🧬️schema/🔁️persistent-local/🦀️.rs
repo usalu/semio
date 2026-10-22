@@ -110,18 +110,6 @@ pub mod owned_abi {
     }
 
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct StepJobInput {
-        pub job: u64,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct CancelJobInput {
-        pub job: u64,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct RestoreInput {
         pub state: Vec<u8>,
     }
@@ -191,6 +179,9 @@ pub mod owned_abi {
 
     /// 🌱️ The owned actor admission port never creates dynamic diagnostic prose on malformed input.
     pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<(semio_framework::kernel::RetainedTurnInput,semio_framework_value::RetainedCloneGrant),semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
+
+    /// 📥️ Retains the original job source and budget without an error-text carrier.
+    pub unsafe fn take_actor_start_job_input(pointer:u32,length:u32)->Result<StartJobInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
 
     /// 📬️ Retains the original declared poll fields without an error-text carrier.
     pub unsafe fn take_actor_poll_input(pointer:u32,length:u32)->Result<PollInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}

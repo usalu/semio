@@ -5,6 +5,33 @@
   "rustMinStack": 134217728,
   "stages": [
     {
+      "id": "current-edit-receiver-recursive-support-four",
+      "kind": "native",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-value-edit",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-persistent",
+        "semio-framework-value-retirement"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
+      "id": "supplemental-allocator-physical-observers",
+      "kind": "whole-libraries",
+      "workspace": "🧰️framework/Cargo.toml",
+      "packages": [
+        "semio-framework-value-testing-allocator"
+      ],
+      "locked": true,
+      "noFailFast": true,
+      "library": true,
+      "filter": null
+    },
+    {
       "id": "affected-framework-eight",
       "kind": "whole-libraries",
       "packages": [
@@ -297,6 +324,12 @@
       "package": "semio-framework-value-clone-source",
       "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
       "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-testing-allocator",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs",
       "workspace": "🧰️framework/Cargo.toml"
     }
   ],
@@ -806,6 +839,16 @@
       "frameworkProjectionUnchanged": true,
       "addedLocalPackage": "semio-framework-value-testing-allocator",
       "addedDevEdge": "semio-framework-os-store-child -> semio-framework-value-testing-allocator"
+    },
+    "integrationPublicListOwner": {
+      "status": "actual direct dev edge and two references independently accepted; paired lock resolution zero; Native pending",
+      "dependency": "semio-framework-value-persistent",
+      "scope": "dev",
+      "path": "../../../../../📋️list/🔗️persistent/📦️packages/🦀️rust",
+      "references": 2,
+      "canonicalType": "semio_framework_value_persistent::list::PagedList",
+      "noCompatibilityAlias": true,
+      "requires": "real lock coherence and same15/69 retry"
     }
   },
   "requiredDispatchBodies": [
@@ -919,6 +962,12 @@
       "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
       "librarySource": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
       "workspace": "🧰️framework/Cargo.toml"
+    },
+    {
+      "package": "semio-framework-value-testing-allocator",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust/Cargo.toml",
+      "librarySource": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs",
+      "workspace": "🧰️framework/Cargo.toml"
     }
   ],
   "requiredAllocationPolicyBodies": [
@@ -1002,8 +1051,8 @@
     "dispatcher": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
     "typedCompiler": true
   },
-  "currentIndependentStages": [
-    {
+  "currentIndependentStages": {
+    "0": {
       "workspace": "🧰️framework/Cargo.toml",
       "packages": [
         "semio-framework-pack-record-retained",
@@ -1014,20 +1063,3615 @@
       "status": "actual whole0 46746;48 passed; catalog9/intrinsic18/record21",
       "session": 46746
     },
-    {
+    "1": {
       "workspace": "Cargo.toml",
       "packages": [
         "semio-framework-os-store-child"
       ],
       "selection": "whole library",
-      "status": "9284 whole101 before bodies; two test wiring corrections source-reviewed, dev-feature declaration awaiting concurrent Source boundary"
+      "status": "9284/89986 compiler-only and50549 precompiler locked refusal; genuineRoot offline resolver58137 currentlylive; lockedRootOS retry mandatory afterexacttupleaudit"
     },
-    {
+    "2": {
       "project": "@semio-tech/framework-replication-rs",
       "target": "test-retained-diff-sequence-native",
       "status": "blocked until original six-case corpus recovered and finite guards reviewed"
+    },
+    "rootArtifactChild": {
+      "session": 71129,
+      "exit": 0,
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "seconds": 0.74,
+      "log": "🗑️generated/e2e-root-artifact-child-observed.log",
+      "laws": [
+        "artifact_child_retained_clone::selected_close_tests::artifact_child_generic_close_dispatch_selects_one_body_correlated_event",
+        "receiving::tests::original_child_receive_same_caller_all_partial_prefixes_and_literal_target"
+      ],
+      "qualification": "Actual original child lifecycle passes with composed physical observers; full original matrix remains next.",
+      "status": "passed",
+      "compileSeconds": 37.98
+    },
+    "originalFramework15": {
+      "status": "actual-whole-passed",
+      "command": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "🧰️framework/Cargo.toml",
+        "--locked",
+        "--no-fail-fast",
+        "--lib",
+        "-p",
+        "semio-framework-value",
+        "-p",
+        "semio-framework-value-clone-source-testing",
+        "-p",
+        "semio-framework-value-derive",
+        "-p",
+        "semio-framework-value-edit",
+        "-p",
+        "semio-framework-value-native-decoding",
+        "-p",
+        "semio-framework-value-native-owned",
+        "-p",
+        "semio-framework-value-persistent",
+        "-p",
+        "semio-framework-value-registry",
+        "-p",
+        "semio-framework-value-retained-clone",
+        "-p",
+        "semio-framework-value-shared-issuance",
+        "-p",
+        "semio-framework-value-snapshot-projection",
+        "-p",
+        "semio-framework-value-tests",
+        "-p",
+        "semio-framework-value-retained-clone-integration",
+        "-p",
+        "semio-framework-value-retirement",
+        "-p",
+        "semio-framework-value-retained-map",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "packages": [
+        "semio-framework-value",
+        "semio-framework-value-clone-source-testing",
+        "semio-framework-value-derive",
+        "semio-framework-value-edit",
+        "semio-framework-value-native-decoding",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-persistent",
+        "semio-framework-value-registry",
+        "semio-framework-value-retained-clone",
+        "semio-framework-value-shared-issuance",
+        "semio-framework-value-snapshot-projection",
+        "semio-framework-value-tests",
+        "semio-framework-value-retained-clone-integration",
+        "semio-framework-value-retirement",
+        "semio-framework-value-retained-map"
+      ],
+      "artifactDirectory": "🗑️generated/v15e",
+      "log": "🗑️generated/e2e-value-original15-owner.log",
+      "qualification": "Original15 subset plus currentRootOS2 supports exact69; full26 remains separate.",
+      "session": 67678,
+      "previousSession": 62239,
+      "lastObserved": {
+        "whole": null,
+        "passedLibraries": [
+          {
+            "package": "semio-framework-value",
+            "passed": 4
+          },
+          {
+            "package": "semio-framework-value-clone-source-testing",
+            "passed": 1
+          },
+          {
+            "package": "semio-framework-value-derive",
+            "passed": 4
+          }
+        ],
+        "currentPackage": "semio-framework-value-edit",
+        "observedFailures": 2,
+        "primary": "denied step expected default receipt; actual items1/copy0/capacity24/release0 at indexed edit tests line10",
+        "roster": "🗑️generated/e2e-original15-67678-active.json"
+      },
+      "exit": 101,
+      "totals": {
+        "started": 230,
+        "passed": 226,
+        "failed": 3,
+        "aborted": 1,
+        "ignored": 0,
+        "filtered": 0
+      },
+      "advertisedCounts": {
+        "passed": 62,
+        "failed": 3,
+        "abortedStarted": 1,
+        "notReached": 3
+      },
+      "projection": "🗑️generated/e2e-original15-67678-projection.json",
+      "current": {
+        "session": 86546,
+        "status": "passed",
+        "whole": 0,
+        "log": "🗑️generated/e2e-value-original15-v15f.log",
+        "artifacts": "🗑️generated/v15f",
+        "packages": [
+          "semio-framework-value",
+          "semio-framework-value-clone-source-testing",
+          "semio-framework-value-derive",
+          "semio-framework-value-edit",
+          "semio-framework-value-native-decoding",
+          "semio-framework-value-native-owned",
+          "semio-framework-value-persistent",
+          "semio-framework-value-registry",
+          "semio-framework-value-retained-clone",
+          "semio-framework-value-shared-issuance",
+          "semio-framework-value-snapshot-projection",
+          "semio-framework-value-tests",
+          "semio-framework-value-retained-clone-integration",
+          "semio-framework-value-retirement",
+          "semio-framework-value-retained-map"
+        ],
+        "advertisedTriples": 69,
+        "bodyPassClaim": false,
+        "retainedUniqueLogAfterWhole": "🗑️generated/e2e-value-original15-v15f.log",
+        "command": [
+          "repo",
+          "cargo",
+          "--store=shared",
+          "--configuration=prototype",
+          "--",
+          "test",
+          "--manifest-path",
+          "🧰️framework/Cargo.toml",
+          "--locked",
+          "--no-fail-fast",
+          "--lib",
+          "-p",
+          "semio-framework-value",
+          "-p",
+          "semio-framework-value-clone-source-testing",
+          "-p",
+          "semio-framework-value-derive",
+          "-p",
+          "semio-framework-value-edit",
+          "-p",
+          "semio-framework-value-native-decoding",
+          "-p",
+          "semio-framework-value-native-owned",
+          "-p",
+          "semio-framework-value-persistent",
+          "-p",
+          "semio-framework-value-registry",
+          "-p",
+          "semio-framework-value-retained-clone",
+          "-p",
+          "semio-framework-value-shared-issuance",
+          "-p",
+          "semio-framework-value-snapshot-projection",
+          "-p",
+          "semio-framework-value-tests",
+          "-p",
+          "semio-framework-value-retained-clone-integration",
+          "-p",
+          "semio-framework-value-retirement",
+          "-p",
+          "semio-framework-value-retained-map",
+          "--",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "requestedEnvironment": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "SEMIO_BUILD_BUDGET_MS": "21600000",
+          "RUST_MIN_STACK": "134217728",
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/v15f"
+        },
+        "commandOutputPath": "🗑️generated/e2e-value-original15-current.log",
+        "compileElapsed": "3m27s",
+        "totals": {
+          "owners": 15,
+          "bodies": 238,
+          "passed": 238,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0
+        },
+        "owners": [
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "bodies": [
+              {
+                "law": "retained_utf8::tests::original_utf8_buffer_funds_transfer_and_every_cancellation_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "retained_utf8::tests::original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "value::scratch_hash::tests::original_scratch_hash_matches_neutral_dictionary",
+                "status": "ok"
+              },
+              {
+                "law": "value::scratch_hash::tests::scratch_hash_forced_collisions_preserve_deleted_probe_chains",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-clone-source-testing",
+            "library": "semio_framework_value_clone_source_testing",
+            "bodies": [
+              {
+                "law": "tests::source_close_funds_one_selected_event_without_independent_axes",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.00s"
+            }
+          },
+          {
+            "package": "semio-framework-value-derive",
+            "library": "semio_framework_value_derive",
+            "bodies": [
+              {
+                "law": "factory::namespace_tests::declared_clone_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "factory::namespace_tests::declared_factory_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "factory::namespace_tests::declared_retirement_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::snapshot_projection_expansion_uses_declared_owner_for_empty_and_field_records",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.11s"
+            }
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "bodies": [
+              {
+                "law": "indexed_collection_commit::tests::indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_collection_commit::tests::indexed_collection_commit_preserves_original_payloads_and_exact_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_edit::tests::indexed_edit_plan_matches_portable_coordinates_and_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_edit::tests::indexed_edit_plan_wide_order_and_cancellation_remain_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::admitted_named_index_preserves_original_opaque_keys_ranked_sources_and_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::admitted_named_index_reuses_persistent_originals_without_base_allocation_or_resorting",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_checks_complete_original_utf8_and_foreign_sources",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_transfers_original_directory_and_all_paid_cuts",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_checks_full_utf8_under_original_decoder_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_publishes_independent_roots_and_closes_every_paid_cut",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::tests::named_edit_plan_long_prefixes_and_cancellation_are_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::tests::named_edit_plan_matches_portable_keys_and_physical_custody",
+                "status": "ok"
+              },
+              {
+                "law": "sort::tests::retained_index_sort_matches_portable_order_and_bounds_every_action",
+                "status": "ok"
+              },
+              {
+                "law": "sort::tests::retained_index_sort_refuses_wrong_observation_without_changing_cursor",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "126.71s"
+            }
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "bodies": [
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_decode_recipient_survives_detachment",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_decode_refused_work_preserves_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_encode_recipient_survives_detachment",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_encode_refused_work_preserves_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_invalid_decode_receipt_is_not_consumed",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_loan::tests::native_retirement_loan_closes_original_returned_payload_after_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_loan::tests::native_retirement_loan_preserves_original_cancelled_ledger_and_grant",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "bodies": [
+              {
+                "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_later_row_refusal_retains_original_partial_owner",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_original_callback_refusal_preserves_partial_receiving",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_receives_original_rows_and_preserves_all_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_receiving_fits_original_interaction_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "owned::original::tests::native_receiving_original_keeps_cancellation_and_denied_transfers_owned",
+                "status": "ok"
+              },
+              {
+                "law": "owned::original::tests::native_receiving_original_shell_requires_funded_input_and_receiver_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::payload_enum_tests::native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "owned::record::receiver::tests::native_flat_record_receive_composes_original_fields_and_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "owned::record::tests::native_record_receive_borrows_original_named_members_without_payload_copy",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_declared_defaults_keep_missing_fields_original_and_heapless",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_constructor_and_output_denials_preserve_exact_owner",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_domain_and_original_callback_refusals_keep_all_partial_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_original_row_has_funded_fields_and_every_cancellation_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tree::tuple::tests::original_heterogeneous_tuple_receiving_preserves_every_paid_prefix_and_wire_kind",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 20,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "20.90s"
+            }
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "bodies": [
+              {
+                "law": "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_cancels_every_preparation_action_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_constructor_fits_authored_interaction_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_preserves_ranked_originals_and_every_receiving_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_refuses_missing_and_excess_without_consuming_input",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::retained_read::tests::persistent_retained_read_cancellation_closes_every_recorded_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::retained_read::tests::persistent_retained_read_matches_portable_ranked_rows_and_original_sources",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_cancels_split_and_ancestor_frontiers",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_matches_order_and_preserves_original_readers",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::borrowed_observations::borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::quick::persistent_shared_pages_cancel_every_changed_path_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::quick::persistent_shared_pages_preserve_readers_and_birth_only_changed_paths",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::traversal::persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::traversal::persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone",
+                "status": "ok"
+              },
+              {
+                "law": "original_vector_concat::tests::original_vector_concat_preserves_original_rows_and_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "original_vector_concat::tests::original_vector_concat_wide_payload_and_chunk_directory_remain_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "retained_equality::tests::retained_typed_equality_cancellation_keeps_original_leases_and_child_frontiers",
+                "status": "ok"
+              },
+              {
+                "law": "retained_equality::tests::retained_typed_equality_matches_portable_original_fields",
+                "status": "ok"
+              },
+              {
+                "law": "slice_equality::tests::retained_slice_equality_matches_portable_bytes_without_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "slice_equality::tests::retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 20,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "49.07s"
+            }
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "bodies": [
+              {
+                "law": "exact_key_lookup::tests::exact_key_lookup_long_prefixes_and_cancellation_preserve_originals",
+                "status": "ok"
+              },
+              {
+                "law": "exact_key_lookup::tests::exact_key_lookup_matches_portable_opaque_identity_without_heap_work",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_key_slots::tests::fixed_key_slots_match_portable_admission_and_stale_release",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::fixed_request_owners_match_portable_consumer_transitions",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::original_source_lookup_matches_portable_reordered_operands",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::provisional_request_consumers_match_portable_live_and_pending_outputs",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::request_selector_preserves_original_binding_until_verified_promotion",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::request_text_and_terminals_match_portable_boundaries",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "bodies": [
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_clone_logical_body_survives_expanded_physical_headers",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_run_elements_obeys_every_grant_axis",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_cancels_at_every_turn_and_releases_everything",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_capacity_accounting_is_exact",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_turn_count_is_bytes_over_page",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::derived_bitwise_structs_clone_in_pages_and_plain_structs_stay_elementwise",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::non_bitwise_vector_clones_keep_the_per_element_path",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::dynamic::selected_close_tests::dynamic_value_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::dynamic::tests::original_dynamic_value_clone_fullgrant_and_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::retained_clone_close_depth_observes_pending_birth_and_preserves_owner_on_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::retained_clone_terminal_ticket_quotes_and_funds_the_original_header",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::paged_native_typed_field_close_exposes_exact_scaffold_demand",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_derive_refuses_scaffold_grant_that_cannot_release_field",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_abandonment_panics_without_running_payload_destructors",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_cancellation_preserves_source_and_retires_partial_pages",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_funds_completed_owner_and_cursor_movement_before_adoption",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_over_budget_child_before_owner_placement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_over_budget_child_retirement_before_owner_placement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_physical_extent",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::scalar_authority_tests::original_scalar_clone_requires_original_authority",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::scalar_authority_tests::scalar_lifecycle_state_matrix_preserves_private_cursor_phase",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::std_collections::selected_close_tests::standard_entries_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::std_collections::tests::reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 28,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "20.39s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-clone-integration",
+            "library": "semio_framework_value_retained_clone_integration",
+            "bodies": [
+              {
+                "law": "normal_demand_tests::retained_clone_normal_demand_generic_compounds",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::borrow_authority_handback_selects_one_event_and_preserves_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::composite_close_quotes_its_own_child_start_before_the_child_close_protocol",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::scalar_compounds_preserve_selected_close_and_single_output_custody",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::scalar_output_and_selected_close_preserve_each_lifecycle",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_clones_cancel_at_every_turn_without_abandoning_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_clones_equal_clone_and_serde_oracles_per_fixture_row",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_option_and_nesting_clone_through_the_entry_cursor",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_scalar_clones_are_fully_quoted_turn_by_turn",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.20s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-map",
+            "library": "semio_framework_value_retained_map",
+            "bodies": [
+              {
+                "law": "ordered_map::clone_cursor::selected_close_tests::ordered_map_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_and_insertion_frames_close_original_edit_owners_under_controlled_retirement",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_matches_std_map_and_retires_original_pages_on_completion_and_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_string_keys_and_values_keep_exact_heap_custody",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::cancelled_partial_insertion_retires_candidate_and_shifted_workspace",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::fixed_page_clone_matches_btree_and_serde_oracles",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::insertion_next_action_quotes_every_page_directory_and_move_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::insertion_reports_comparison_movement_and_capacity_independently",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::long_string_comparison_is_byte_paged_and_shape_pinned",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original_aliases",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_wire_cold_context_map_matches_serde_and_bun",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.31s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "library": "semio_framework_value_retirement",
+            "bodies": [
+              {
+                "law": "retirement::arc_custody::original::tests::concurrent_alias_retirement_elects_one_original_without_moving_or_dropping_it",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::original::tests::delayed_physical_alias_drop_cannot_free_initialized_or_unfunded_storage",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::original::tests::selected_field_retirement_retains_untouched_originals_and_funds_final_storage_release",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::shared_unique_tests::shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_failed_reservation_retains_actual_receipt_and_same_owner",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_selected_array_leaf_preserves_future_atoms_and_exact_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_selected_child_quote_preserves_future_atom_and_exact_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::retained_unsupported_original_stays_inline_through_demand_and_step_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_bytes_tests::original_bytes_retirement_metadata_keeps_fixed_copy0_and_actual_physical_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_leaf_tests::original_scalar_leaf_native_zero_copy_close_keeps_original_value_until_admitted_metadata",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_result::tests::original_result_variants_preserve_native_payload_and_all_axis_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_vector::tests::original_vector_native_ordered_handoffs_cancel_every_original_frontier_and_pay_final_backing",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::owned_mutex::tests::original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::turn::tests::retirement_turn_rejects_false_completion_and_each_overspent_currency_without_changing_custody",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 21,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.06s"
+            }
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "bodies": [
+              {
+                "law": "frontier_tests::last_alias_election_requotes_original_work_after_a_peer_retires",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::original_native_child_admission_retains_unfunded_or_unsupported_originals",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::original_sealed_owned_payload_hands_native_child_to_caller_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::shared_original_constructor_error_and_unwind_preserve_the_initialized_allocation",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_original_issuer_quotes_metadata_transfer_separately_from_generic_inline_copy",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_borrowed_original_parent_receives_paid_nonlast_alias_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_original_aliases_preserve_exact_payload_and_funded_header",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_stale_slot_refuses_a_distinct_original_issuance_at_same_address",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.01s"
+            }
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "bodies": [
+              {
+                "law": "snapshot_projection::tests::owned::owned_projection_field_output_handoff_preserves_candidate_and_projected_custody",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::owned::zero_sized_projection_field_output_handoff_requires_only_its_real_axes",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_owner",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_composed_record_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_original_root_and_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::original_record_projection_stages_one_paid_field_and_preserves_all_cancellation_prefixes",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::shared_original_field_constructor_unwind_never_requeries_a_transferred_field",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::shared_original_refuses_an_unsupported_known_birth_before_extracting_the_field",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::stable_projection_output_preserves_ownership_on_every_denied_placement",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "4.75s"
+            }
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "bodies": [
+              {
+                "law": "bounded_clone::tests::original_dynamic_value_clone_cold_input_requires_original_authority",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_drop_rejects_live_recursive_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_grants_bound_utf8_progress_and_cancellation_returns_the_exact_source",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_intrinsic_octets_obey_copy_grants_and_exact_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_matches_neutral_vectors_and_serde_json",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_rejects_capacity_and_depth_without_losing_the_source",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_reservation_rejects_allocator_overcapacity_before_payload_admission",
+                "status": "ok"
+              },
+              {
+                "law": "original_demand_tests::original_retirement_combined_quote_visits_terminal_leaf_once_with_actual_body_hint",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::controlled_retirement_separates_logical_work_from_exact_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::controlled_retirement_separates_logical_work_from_exact_physical_release_cold_terminal_frame",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_capacity_closed_vectors_preserve_the_consumed_admission_owner",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_controls_resume_same_cumulative_admission_and_cancel_before_more_work",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_encoding_capacity_admission_consumes_the_same_counter_owner",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::original_heap_and_reverse_preserve_backing_and_full_retirement_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::owned_retirement_matches_neutral_exact_byte_grants",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::owned_retirement_rejects_false_terminal_and_preserves_shared_roots",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_append_close_exposes_exact_capacity_and_release_demand",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_clone_close_admits_actual_birth_release_and_zero_grants",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_controlled_retirement_admits_actual_birth_and_release_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_controlled_retirement_observes_copy_demand_without_releasing_backing",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::parent_return_fixture_demands_actual_full_allocation_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::retirement_forward_deque_keeps_original_source_and_exact_physical_backing",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::retirement_struct_macro_defers_exact_field_birth_and_release_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_source_leases_release_all_orders_with_one_bounded_owner",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_array_paths_and_structural_refusal_preserve_owner",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_map_preserves_insertion_order_and_refuses_duplicate_owners",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_native_serde_and_sequence_ownership_match_neutral_shapes",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::portable_paged_carriers_match_independent_serde",
+                "status": "ok"
+              },
+              {
+                "law": "paged_append::tests::paged_native_utf8_append_pure_advance_demands_admit_exact_original_work_and_cancel",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_authority_close_order_preserves_original_root_and_full_physical_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical_closure",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_source_retains_original_id_commit_authority_and_root_after_read_return",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_full_grants",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector",
+                "status": "ok"
+              },
+              {
+                "law": "refusal_tests::controlled_value_refusal_actual_kind_and_path_corpus",
+                "status": "ok"
+              },
+              {
+                "law": "refusal_tests::controlled_value_refusal_independent_ajv_sqlite_path_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::original_nested_close_preserves_paid_source_and_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::retained_clone_erased_copy_demand_propagates_original_owner_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_factory_source_tests::factory_authority_keeps_original_typed_source_until_admitted_close_and_reports_all_physical_frees",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_projection_tests::paged_native_owned_projection_retains_root_and_closes_one_actual_alias",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::handwritten_retained_clone_demands_close_every_original_prefix_with_funded_owner_movement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_combined_grants_and_identifier_order_follow_neutral_law",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_object_keys_clone_without_contiguous_key_capacity",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_text_and_map_copy_match_serde_oracles_and_close_terminal_empty",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::admitted_source_authority_preserves_original_owners_and_canceled_cursor_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::original_source_typed_payload_close_preserves_raw_atoms_and_selected_child_currency",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_array_clone_cancels_at_every_turn_without_abandoning_element_owners",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_array_clone_matches_the_clone_oracle_for_scalar_and_owned_elements",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_birth_is_funded_before_original_owner_transfer",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_closes_its_actual_shared_authority_lease",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_controlled_facade_retains_original_projection_in_both_close_orders",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_close_order",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_optional_clone_matches_the_clone_oracle_for_none_and_some",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::string_output_tests::string_clone_output_waits_for_complete_owned_payload_and_closes_each_cut",
+                "status": "ok"
+              },
+              {
+                "law": "shared_utf8::tests::shared_utf8_original_giant_actor_admission_and_all_lease_frontiers_pay_physical_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "shared_utf8::tests::shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_retirement_frames",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 69,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "1.57s"
+            }
+          }
+        ],
+        "advertised": [
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_receives_original_rows_and_preserves_all_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_later_row_refusal_retains_original_partial_owner",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_original_callback_refusal_preserves_partial_receiving",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_receiving_fits_original_interaction_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::original::tests::native_receiving_original_keeps_cancellation_and_denied_transfers_owned",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::original::tests::native_receiving_original_shell_requires_funded_input_and_receiver_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::payload_enum_tests::native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "law": "native_decoding::retirement_loan::tests::native_retirement_loan_preserves_original_cancelled_ledger_and_grant",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "law": "native_decoding::retirement_loan::tests::native_retirement_loan_closes_original_returned_payload_after_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_publishes_independent_roots_and_closes_every_paid_cut",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_checks_full_utf8_under_original_decoder_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_transfers_original_directory_and_all_paid_cuts",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_checks_complete_original_utf8_and_foreign_sources",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::admitted_named_index_preserves_original_opaque_keys_ranked_sources_and_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::admitted_named_index_reuses_persistent_originals_without_base_allocation_or_resorting",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::tests::named_edit_plan_matches_portable_keys_and_physical_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::tests::named_edit_plan_long_prefixes_and_cancellation_are_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_edit::tests::indexed_edit_plan_matches_portable_coordinates_and_original_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_edit::tests::indexed_edit_plan_wide_order_and_cancellation_remain_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_collection_commit::tests::indexed_collection_commit_preserves_original_payloads_and_exact_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_collection_commit::tests::indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_key_slots::tests::fixed_key_slots_match_portable_admission_and_stale_release",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::fixed_request_owners_match_portable_consumer_transitions",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::request_text_and_terminals_match_portable_boundaries",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::request_selector_preserves_original_binding_until_verified_promotion",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::original_source_lookup_matches_portable_reordered_operands",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::provisional_request_consumers_match_portable_live_and_pending_outputs",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "exact_key_lookup::tests::exact_key_lookup_matches_portable_opaque_identity_without_heap_work",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "exact_key_lookup::tests::exact_key_lookup_long_prefixes_and_cancellation_preserve_originals",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_preserves_ranked_originals_and_every_receiving_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_refuses_missing_and_excess_without_consuming_input",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_cancels_every_preparation_action_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_constructor_fits_authored_interaction_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::traversal::persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::traversal::persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "retained_equality::tests::retained_typed_equality_matches_portable_original_fields",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "retained_equality::tests::retained_typed_equality_cancellation_keeps_original_leases_and_child_frontiers",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "slice_equality::tests::retained_slice_equality_matches_portable_bytes_without_allocations",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "slice_equality::tests::retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "original_vector_concat::tests::original_vector_concat_preserves_original_rows_and_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "original_vector_concat::tests::original_vector_concat_wide_payload_and_chunk_directory_remain_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "frontier_tests::original_sealed_owned_payload_hands_native_child_to_caller_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_original_aliases_preserve_exact_payload_and_funded_header",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_heap",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_stale_slot_refuses_a_distinct_original_issuance_at_same_address",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::source_custody_tests::retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_close_order",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::close_demand_tests::original_nested_close_preserves_paid_source_and_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::close_demand_tests::derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "law": "retained_utf8::tests::original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "law": "retained_utf8::tests::original_utf8_buffer_funds_transfer_and_every_cancellation_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_turn_count_is_bytes_over_page",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_capacity_accounting_is_exact",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_cancels_at_every_turn_and_releases_everything",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_run_elements_obeys_every_grant_axis",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_clone_logical_body_survives_expanded_physical_headers",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "original_demand_tests::original_retirement_combined_quote_visits_terminal_leaf_once_with_actual_body_hint",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_original_root_and_every_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_owner",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_composed_record_every_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::borrowed_observations::borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap",
+            "status": "ok"
+          }
+        ],
+        "advertisedCounts": {
+          "ok": 69
+        },
+        "requiredNewBodies": [
+          {
+            "package": "semio-framework-value-native-owned",
+            "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+            "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent"
+          }
+        ],
+        "qualification": "Current complete original15 matrix and all69 advertised triples passed. This does not establish the corpus-blocked complete26, separate Source oracles, Go runtime, or installed Dashboard acceptance."
+      },
+      "actual": {
+        "session": 86546,
+        "whole": 0,
+        "status": "passed",
+        "log": "🗑️generated/e2e-value-original15-v15f.log",
+        "commandOutputPath": "🗑️generated/e2e-value-original15-current.log",
+        "artifacts": "🗑️generated/v15f",
+        "compileElapsed": "3m27s",
+        "totals": {
+          "owners": 15,
+          "bodies": 238,
+          "passed": 238,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0
+        },
+        "owners": [
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "bodies": [
+              {
+                "law": "retained_utf8::tests::original_utf8_buffer_funds_transfer_and_every_cancellation_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "retained_utf8::tests::original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "value::scratch_hash::tests::original_scratch_hash_matches_neutral_dictionary",
+                "status": "ok"
+              },
+              {
+                "law": "value::scratch_hash::tests::scratch_hash_forced_collisions_preserve_deleted_probe_chains",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-clone-source-testing",
+            "library": "semio_framework_value_clone_source_testing",
+            "bodies": [
+              {
+                "law": "tests::source_close_funds_one_selected_event_without_independent_axes",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.00s"
+            }
+          },
+          {
+            "package": "semio-framework-value-derive",
+            "library": "semio_framework_value_derive",
+            "bodies": [
+              {
+                "law": "factory::namespace_tests::declared_clone_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "factory::namespace_tests::declared_factory_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "factory::namespace_tests::declared_retirement_namespace_qualifies_actual_owner_with_independent_syn_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::snapshot_projection_expansion_uses_declared_owner_for_empty_and_field_records",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.11s"
+            }
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "bodies": [
+              {
+                "law": "indexed_collection_commit::tests::indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_collection_commit::tests::indexed_collection_commit_preserves_original_payloads_and_exact_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_edit::tests::indexed_edit_plan_matches_portable_coordinates_and_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "indexed_edit::tests::indexed_edit_plan_wide_order_and_cancellation_remain_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::admitted_named_index_preserves_original_opaque_keys_ranked_sources_and_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::admitted_named_index_reuses_persistent_originals_without_base_allocation_or_resorting",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_checks_complete_original_utf8_and_foreign_sources",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_transfers_original_directory_and_all_paid_cuts",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_checks_full_utf8_under_original_decoder_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_publishes_independent_roots_and_closes_every_paid_cut",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::tests::named_edit_plan_long_prefixes_and_cancellation_are_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "named_edit::tests::named_edit_plan_matches_portable_keys_and_physical_custody",
+                "status": "ok"
+              },
+              {
+                "law": "sort::tests::retained_index_sort_matches_portable_order_and_bounds_every_action",
+                "status": "ok"
+              },
+              {
+                "law": "sort::tests::retained_index_sort_refuses_wrong_observation_without_changing_cursor",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "126.71s"
+            }
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "bodies": [
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_decode_recipient_survives_detachment",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_decode_refused_work_preserves_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_encode_recipient_survives_detachment",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_encode_refused_work_preserves_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_continuation::tests::native_local_original_invalid_decode_receipt_is_not_consumed",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_loan::tests::native_retirement_loan_closes_original_returned_payload_after_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "native_decoding::retirement_loan::tests::native_retirement_loan_preserves_original_cancelled_ledger_and_grant",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "bodies": [
+              {
+                "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_later_row_refusal_retains_original_partial_owner",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_original_callback_refusal_preserves_partial_receiving",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_receives_original_rows_and_preserves_all_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::list_tests::native_persistent_list_receiving_fits_original_interaction_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "owned::original::tests::native_receiving_original_keeps_cancellation_and_denied_transfers_owned",
+                "status": "ok"
+              },
+              {
+                "law": "owned::original::tests::native_receiving_original_shell_requires_funded_input_and_receiver_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::payload_enum_tests::native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "owned::record::receiver::tests::native_flat_record_receive_composes_original_fields_and_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "owned::record::tests::native_record_receive_borrows_original_named_members_without_payload_copy",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_declared_defaults_keep_missing_fields_original_and_heapless",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority",
+                "status": "ok"
+              },
+              {
+                "law": "owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_constructor_and_output_denials_preserve_exact_owner",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_domain_and_original_callback_refusals_keep_all_partial_custody",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tests::native_receive_original_row_has_funded_fields_and_every_cancellation_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "owned::tree::tuple::tests::original_heterogeneous_tuple_receiving_preserves_every_paid_prefix_and_wire_kind",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 20,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "20.90s"
+            }
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "bodies": [
+              {
+                "law": "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_cancels_every_preparation_action_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_constructor_fits_authored_interaction_quantum",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_preserves_ranked_originals_and_every_receiving_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::build_tests::persistent_owned_builder_refuses_missing_and_excess_without_consuming_input",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::retained_read::tests::persistent_retained_read_cancellation_closes_every_recorded_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::retained_read::tests::persistent_retained_read_matches_portable_ranked_rows_and_original_sources",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_cancels_split_and_ancestor_frontiers",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_matches_order_and_preserves_original_readers",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::borrowed_observations::borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::quick::persistent_shared_pages_cancel_every_changed_path_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::quick::persistent_shared_pages_preserve_readers_and_birth_only_changed_paths",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::traversal::persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan",
+                "status": "ok"
+              },
+              {
+                "law": "list::persistent::tests::traversal::persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone",
+                "status": "ok"
+              },
+              {
+                "law": "original_vector_concat::tests::original_vector_concat_preserves_original_rows_and_cancelled_custody",
+                "status": "ok"
+              },
+              {
+                "law": "original_vector_concat::tests::original_vector_concat_wide_payload_and_chunk_directory_remain_bounded",
+                "status": "ok"
+              },
+              {
+                "law": "retained_equality::tests::retained_typed_equality_cancellation_keeps_original_leases_and_child_frontiers",
+                "status": "ok"
+              },
+              {
+                "law": "retained_equality::tests::retained_typed_equality_matches_portable_original_fields",
+                "status": "ok"
+              },
+              {
+                "law": "slice_equality::tests::retained_slice_equality_matches_portable_bytes_without_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "slice_equality::tests::retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 20,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "49.07s"
+            }
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "bodies": [
+              {
+                "law": "exact_key_lookup::tests::exact_key_lookup_long_prefixes_and_cancellation_preserve_originals",
+                "status": "ok"
+              },
+              {
+                "law": "exact_key_lookup::tests::exact_key_lookup_matches_portable_opaque_identity_without_heap_work",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_key_slots::tests::fixed_key_slots_match_portable_admission_and_stale_release",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::fixed_request_owners_match_portable_consumer_transitions",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::original_source_lookup_matches_portable_reordered_operands",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::provisional_request_consumers_match_portable_live_and_pending_outputs",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::request_selector_preserves_original_binding_until_verified_promotion",
+                "status": "ok"
+              },
+              {
+                "law": "fixed_request_owners::tests::request_text_and_terminals_match_portable_boundaries",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.02s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "bodies": [
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_clone_logical_body_survives_expanded_physical_headers",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_run_elements_obeys_every_grant_axis",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_cancels_at_every_turn_and_releases_everything",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_capacity_accounting_is_exact",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_turn_count_is_bytes_over_page",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::derived_bitwise_structs_clone_in_pages_and_plain_structs_stay_elementwise",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::bulk_vec_tests::non_bitwise_vector_clones_keep_the_per_element_path",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::dynamic::selected_close_tests::dynamic_value_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::dynamic::tests::original_dynamic_value_clone_fullgrant_and_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::retained_clone_close_depth_observes_pending_birth_and_preserves_owner_on_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_close_frame_tests::retained_clone_terminal_ticket_quotes_and_funds_the_original_header",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::paged_native_typed_field_close_exposes_exact_scaffold_demand",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_derive_refuses_scaffold_grant_that_cannot_release_field",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_abandonment_panics_without_running_payload_destructors",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_cancellation_preserves_source_and_retires_partial_pages",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_funds_completed_owner_and_cursor_movement_before_adoption",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_over_budget_child_before_owner_placement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_over_budget_child_retirement_before_owner_placement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged_list::tests::retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_physical_extent",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::scalar_authority_tests::original_scalar_clone_requires_original_authority",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::scalar_authority_tests::scalar_lifecycle_state_matrix_preserves_private_cursor_phase",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::std_collections::selected_close_tests::standard_entries_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::std_collections::tests::reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 28,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "20.39s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-clone-integration",
+            "library": "semio_framework_value_retained_clone_integration",
+            "bodies": [
+              {
+                "law": "normal_demand_tests::retained_clone_normal_demand_generic_compounds",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::borrow_authority_handback_selects_one_event_and_preserves_original_custody",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::composite_close_quotes_its_own_child_start_before_the_child_close_protocol",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::scalar_compounds_preserve_selected_close_and_single_output_custody",
+                "status": "ok"
+              },
+              {
+                "law": "scalar_lifecycle_tests::scalar_output_and_selected_close_preserve_each_lifecycle",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_clones_cancel_at_every_turn_without_abandoning_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_clones_equal_clone_and_serde_oracles_per_fixture_row",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_option_and_nesting_clone_through_the_entry_cursor",
+                "status": "ok"
+              },
+              {
+                "law": "standard_collection_tests::standard_collection_scalar_clones_are_fully_quoted_turn_by_turn",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.20s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retained-map",
+            "library": "semio_framework_value_retained_map",
+            "bodies": [
+              {
+                "law": "ordered_map::clone_cursor::selected_close_tests::ordered_map_generic_close_dispatch_selects_one_body_correlated_event",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_and_insertion_frames_close_original_edit_owners_under_controlled_retirement",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_matches_std_map_and_retires_original_pages_on_completion_and_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::removal_tests::owned_removal_string_keys_and_values_keep_exact_heap_custody",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::cancelled_partial_insertion_retires_candidate_and_shifted_workspace",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::fixed_page_clone_matches_btree_and_serde_oracles",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::insertion_next_action_quotes_every_page_directory_and_move_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::insertion_reports_comparison_movement_and_capacity_independently",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::long_string_comparison_is_byte_paged_and_shape_pinned",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original_aliases",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "ordered_map::tests::ordered_wire_cold_context_map_matches_serde_and_bun",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.31s"
+            }
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "library": "semio_framework_value_retirement",
+            "bodies": [
+              {
+                "law": "retirement::arc_custody::original::tests::concurrent_alias_retirement_elects_one_original_without_moving_or_dropping_it",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::original::tests::delayed_physical_alias_drop_cannot_free_initialized_or_unfunded_storage",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::original::tests::selected_field_retirement_retains_untouched_originals_and_funds_final_storage_release",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::arc_custody::shared_unique_tests::shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_failed_reservation_retains_actual_receipt_and_same_owner",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_selected_array_leaf_preserves_future_atoms_and_exact_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::original_controlled_selected_child_quote_preserves_future_atom_and_exact_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::controlled::tests::retained_unsupported_original_stays_inline_through_demand_and_step_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_bytes_tests::original_bytes_retirement_metadata_keeps_fixed_copy0_and_actual_physical_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_leaf_tests::original_scalar_leaf_native_zero_copy_close_keeps_original_value_until_admitted_metadata",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_result::tests::original_result_variants_preserve_native_payload_and_all_axis_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::original_vector::tests::original_vector_native_ordered_handoffs_cancel_every_original_frontier_and_pay_final_backing",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::owned_mutex::tests::original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component",
+                "status": "ok"
+              },
+              {
+                "law": "retirement::turn::tests::retirement_turn_rejects_false_completion_and_each_overspent_currency_without_changing_custody",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 21,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.06s"
+            }
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "bodies": [
+              {
+                "law": "frontier_tests::last_alias_election_requotes_original_work_after_a_peer_retires",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::original_native_child_admission_retains_unfunded_or_unsupported_originals",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::original_sealed_owned_payload_hands_native_child_to_caller_frontier",
+                "status": "ok"
+              },
+              {
+                "law": "frontier_tests::shared_original_constructor_error_and_unwind_preserve_the_initialized_allocation",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_original_issuer_quotes_metadata_transfer_separately_from_generic_inline_copy",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_borrowed_original_parent_receives_paid_nonlast_alias_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_heap",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_original_aliases_preserve_exact_payload_and_funded_header",
+                "status": "ok"
+              },
+              {
+                "law": "tests::sealed_shared_stale_slot_refuses_a_distinct_original_issuance_at_same_address",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "0.01s"
+            }
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "bodies": [
+              {
+                "law": "snapshot_projection::tests::owned::owned_projection_field_output_handoff_preserves_candidate_and_projected_custody",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::owned::zero_sized_projection_field_output_handoff_requires_only_its_real_axes",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_owner",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_composed_record_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_original_root_and_every_prefix",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::original_record_projection_stages_one_paid_field_and_preserves_all_cancellation_prefixes",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::shared_original_field_constructor_unwind_never_requeries_a_transferred_field",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::record::shared_original_refuses_an_unsupported_known_birth_before_extracting_the_field",
+                "status": "ok"
+              },
+              {
+                "law": "snapshot_projection::tests::stable_projection_output_preserves_ownership_on_every_denied_placement",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "4.75s"
+            }
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "bodies": [
+              {
+                "law": "bounded_clone::tests::original_dynamic_value_clone_cold_input_requires_original_authority",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_drop_rejects_live_recursive_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_grants_bound_utf8_progress_and_cancellation_returns_the_exact_source",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_intrinsic_octets_obey_copy_grants_and_exact_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_matches_neutral_vectors_and_serde_json",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_rejects_capacity_and_depth_without_losing_the_source",
+                "status": "ok"
+              },
+              {
+                "law": "bounded_clone::tests::shared_value_clone_reservation_rejects_allocator_overcapacity_before_payload_admission",
+                "status": "ok"
+              },
+              {
+                "law": "original_demand_tests::original_retirement_combined_quote_visits_terminal_leaf_once_with_actual_body_hint",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::controlled_retirement_separates_logical_work_from_exact_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::controlled_retirement_separates_logical_work_from_exact_physical_release_cold_terminal_frame",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_currencies",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_capacity_closed_vectors_preserve_the_consumed_admission_owner",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_controls_resume_same_cumulative_admission_and_cancel_before_more_work",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_encoding_capacity_admission_consumes_the_same_counter_owner",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::original_heap_and_reverse_preserve_backing_and_full_retirement_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::owned_retirement_matches_neutral_exact_byte_grants",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::owned_retirement_rejects_false_terminal_and_preserves_shared_roots",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_append_close_exposes_exact_capacity_and_release_demand",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_clone_close_admits_actual_birth_release_and_zero_grants",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_controlled_retirement_admits_actual_birth_and_release_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_controlled_retirement_observes_copy_demand_without_releasing_backing",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::parent_return_fixture_demands_actual_full_allocation_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::retirement_forward_deque_keeps_original_source_and_exact_physical_backing",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::retirement_struct_macro_defers_exact_field_birth_and_release_allocations",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_release",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames",
+                "status": "ok"
+              },
+              {
+                "law": "original_retirement_integration_tests::shared_source_leases_release_all_orders_with_one_bounded_owner",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_array_paths_and_structural_refusal_preserve_owner",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_map_preserves_insertion_order_and_refuses_duplicate_owners",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::paged_native_serde_and_sequence_ownership_match_neutral_shapes",
+                "status": "ok"
+              },
+              {
+                "law": "paged::tests::portable_paged_carriers_match_independent_serde",
+                "status": "ok"
+              },
+              {
+                "law": "paged_append::tests::paged_native_utf8_append_pure_advance_demands_admit_exact_original_work_and_cancel",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_authority_close_order_preserves_original_root_and_full_physical_receipts",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical_closure",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::erased_read_source_retains_original_id_commit_authority_and_root_after_read_return",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_full_grants",
+                "status": "ok"
+              },
+              {
+                "law": "read::tests::typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector",
+                "status": "ok"
+              },
+              {
+                "law": "refusal_tests::controlled_value_refusal_actual_kind_and_path_corpus",
+                "status": "ok"
+              },
+              {
+                "law": "refusal_tests::controlled_value_refusal_independent_ajv_sqlite_path_oracle",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::original_nested_close_preserves_paid_source_and_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::close_demand_tests::retained_clone_erased_copy_demand_propagates_original_owner_refusal",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_factory_source_tests::factory_authority_keeps_original_typed_source_until_admitted_close_and_reports_all_physical_frees",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::original_projection_tests::paged_native_owned_projection_retains_root_and_closes_one_actual_alias",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::handwritten_retained_clone_demands_close_every_original_prefix_with_funded_owner_movement",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_combined_grants_and_identifier_order_follow_neutral_law",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_object_keys_clone_without_contiguous_key_capacity",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::paged::tests::paged_text_and_map_copy_match_serde_oracles_and_close_terminal_empty",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::admitted_source_authority_preserves_original_owners_and_canceled_cursor_custody",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::original_source_typed_payload_close_preserves_raw_atoms_and_selected_child_currency",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_array_clone_cancels_at_every_turn_without_abandoning_element_owners",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_array_clone_matches_the_clone_oracle_for_scalar_and_owned_elements",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_birth_is_funded_before_original_owner_transfer",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_closes_its_actual_shared_authority_lease",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_controlled_facade_retains_original_projection_in_both_close_orders",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_close_order",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::source_custody_tests::retained_optional_clone_matches_the_clone_oracle_for_none_and_some",
+                "status": "ok"
+              },
+              {
+                "law": "retained_clone::string_output_tests::string_clone_output_waits_for_complete_owned_payload_and_closes_each_cut",
+                "status": "ok"
+              },
+              {
+                "law": "shared_utf8::tests::shared_utf8_original_giant_actor_admission_and_all_lease_frontiers_pay_physical_ownership",
+                "status": "ok"
+              },
+              {
+                "law": "shared_utf8::tests::shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_retirement_frames",
+                "status": "ok"
+              }
+            ],
+            "summary": {
+              "status": "ok",
+              "passed": 69,
+              "failed": 0,
+              "ignored": 0,
+              "measured": 0,
+              "filtered": 0,
+              "elapsed": "1.57s"
+            }
+          }
+        ],
+        "advertised": [
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_receives_original_rows_and_preserves_all_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_later_row_refusal_retains_original_partial_owner",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_original_callback_refusal_preserves_partial_receiving",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_receiving_fits_original_interaction_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::list_tests::native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::original::tests::native_receiving_original_keeps_cancellation_and_denied_transfers_owned",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::original::tests::native_receiving_original_shell_requires_funded_input_and_receiver_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-owned",
+            "library": "semio_framework_value_native_owned",
+            "law": "owned::payload_enum_tests::native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "law": "native_decoding::retirement_loan::tests::native_retirement_loan_preserves_original_cancelled_ledger_and_grant",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-native-decoding",
+            "library": "semio_framework_value_native_decoding",
+            "law": "native_decoding::retirement_loan::tests::native_retirement_loan_closes_original_returned_payload_after_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_publishes_independent_roots_and_closes_every_paid_cut",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_checks_full_utf8_under_original_decoder_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_transfers_original_directory_and_all_paid_cuts",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_checks_complete_original_utf8_and_foreign_sources",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::admitted_named_index_preserves_original_opaque_keys_ranked_sources_and_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::index::tests::admitted_named_index_reuses_persistent_originals_without_base_allocation_or_resorting",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::tests::named_edit_plan_matches_portable_keys_and_physical_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "named_edit::tests::named_edit_plan_long_prefixes_and_cancellation_are_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_edit::tests::indexed_edit_plan_matches_portable_coordinates_and_original_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_edit::tests::indexed_edit_plan_wide_order_and_cancellation_remain_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_collection_commit::tests::indexed_collection_commit_preserves_original_payloads_and_exact_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-edit",
+            "library": "semio_framework_value_edit",
+            "law": "indexed_collection_commit::tests::indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_key_slots::tests::fixed_key_slots_match_portable_admission_and_stale_release",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::fixed_request_owners_match_portable_consumer_transitions",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::request_text_and_terminals_match_portable_boundaries",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::request_selector_preserves_original_binding_until_verified_promotion",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::original_source_lookup_matches_portable_reordered_operands",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "fixed_request_owners::tests::provisional_request_consumers_match_portable_live_and_pending_outputs",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "exact_key_lookup::tests::exact_key_lookup_matches_portable_opaque_identity_without_heap_work",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-registry",
+            "library": "semio_framework_value_registry",
+            "law": "exact_key_lookup::tests::exact_key_lookup_long_prefixes_and_cancellation_preserve_originals",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_preserves_ranked_originals_and_every_receiving_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_refuses_missing_and_excess_without_consuming_input",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_cancels_every_preparation_action_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::build_tests::persistent_owned_builder_constructor_fits_authored_interaction_quantum",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::traversal::persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::traversal::persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "retained_equality::tests::retained_typed_equality_matches_portable_original_fields",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "retained_equality::tests::retained_typed_equality_cancellation_keeps_original_leases_and_child_frontiers",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "slice_equality::tests::retained_slice_equality_matches_portable_bytes_without_allocations",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "slice_equality::tests::retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "original_vector_concat::tests::original_vector_concat_preserves_original_rows_and_cancelled_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "original_vector_concat::tests::original_vector_concat_wide_payload_and_chunk_directory_remain_bounded",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "frontier_tests::original_sealed_owned_payload_hands_native_child_to_caller_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_original_aliases_preserve_exact_payload_and_funded_header",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_heap",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-shared-issuance",
+            "library": "semio_framework_value_shared_issuance",
+            "law": "tests::sealed_shared_stale_slot_refuses_a_distinct_original_issuance_at_same_address",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::source_custody_tests::retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_close_order",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::close_demand_tests::original_nested_close_preserves_paid_source_and_cancellation",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "retained_clone::close_demand_tests::derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::owned::owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "law": "retained_utf8::tests::original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value",
+            "library": "semio_framework_value",
+            "law": "retained_utf8::tests::original_utf8_buffer_funds_transfer_and_every_cancellation_frontier",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_turn_count_is_bytes_over_page",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_capacity_accounting_is_exact",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_vector_clone_cancels_at_every_turn_and_releases_everything",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_run_elements_obeys_every_grant_axis",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-retained-clone",
+            "library": "semio_framework_value_retained_clone",
+            "law": "retained_clone::bulk_vec_tests::bulk_clone_logical_body_survives_expanded_physical_headers",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-tests",
+            "library": "semio_framework_value_tests",
+            "law": "original_demand_tests::original_retirement_combined_quote_visits_terminal_leaf_once_with_actual_body_hint",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_original_root_and_every_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_owner",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-snapshot-projection",
+            "library": "semio_framework_value_snapshot_projection",
+            "law": "snapshot_projection::tests::quick_immutable_snapshot_projection_composed_record_every_prefix",
+            "status": "ok"
+          },
+          {
+            "package": "semio-framework-value-persistent",
+            "library": "semio_framework_value_persistent",
+            "law": "list::persistent::tests::borrowed_observations::borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap",
+            "status": "ok"
+          }
+        ],
+        "advertisedCounts": {
+          "ok": 69
+        },
+        "requiredNewBodies": [
+          {
+            "package": "semio-framework-value-native-owned",
+            "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+            "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind"
+          },
+          {
+            "package": "semio-framework-value-retirement",
+            "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent"
+          }
+        ],
+        "qualification": "Current complete original15 matrix and all69 advertised triples passed. This does not establish the corpus-blocked complete26, separate Source oracles, Go runtime, or installed Dashboard acceptance."
+      }
+    },
+    "rootedTicketRust7": {
+      "session": 49840,
+      "exit": 101,
+      "passed": 6,
+      "failed": 1,
+      "ignored": 0,
+      "filtered": 9,
+      "seconds": 0.01,
+      "log": "🗑️generated/e2e-rooted-ticket-service-rust.log",
+      "bodyProjection": [
+        {
+          "package": "semio-framework-repo-tickets",
+          "library": "semio_framework_repo_tickets",
+          "bodies": [
+            {
+              "law": "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+              "status": "FAILED"
+            }
+          ],
+          "summary": {
+            "status": "FAILED",
+            "passed": 6,
+            "failed": 1,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 9,
+            "elapsed": "0.01s"
+          }
+        }
+      ],
+      "primary": "Persisted interactions absent: rooted lifecycle assertion unwraps None at line33",
+      "owner": "Root ticket codec slice",
+      "qualification": "Seven filtered direct Native behavior bodies; registered owner dispatch and other nine tests remain distinct",
+      "status": "failed"
+    },
+    "rootedTicketRust8": {
+      "session": 91975,
+      "exit": 0,
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 9,
+      "seconds": 0.01,
+      "log": "🗑️generated/e2e-rooted-ticket-service-durable.log",
+      "owners": [
+        {
+          "package": "semio-framework-repo-tickets",
+          "library": "semio_framework_repo_tickets",
+          "bodies": [
+            {
+              "law": "rooted_lifecycle_tests::canonical_ticket_paths_preserve_shared_drive_and_unc_namespaces",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::draft_preflight_refuses_escapes_symlinks_and_preserves_partial_moves",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::projected_draft_descendants_are_bounded_before_any_move_or_ticket_creation",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::remote_title_failure_warns_and_remote_delete_failure_preserves_local_ticket",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::retitle_projected_descendants_are_bounded_before_renaming_the_ticket_tree",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::rooted_ticket_document_round_trip_preserves_all_declared_state",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::rooted_ticket_service_rejects_foreign_document_identity_and_invalid_ids_before_effects",
+              "status": "ok"
+            },
+            {
+              "law": "rooted_lifecycle_tests::rooted_ticket_services_preserve_independent_shared_lifecycles_and_drafts",
+              "status": "ok"
+            }
+          ],
+          "summary": {
+            "status": "ok",
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 9,
+            "elapsed": "0.01s"
+          }
+        }
+      ],
+      "qualification": "Filtered direct Native rooted behavior only; other nine unit bodies, registered owner command and installed MCP remain separate",
+      "status": "passed-behavior-only"
     }
-  ],
+  },
   "requiredOriginalSlotBodies": [
     "original_slot::tests::original_slot_preserves_native_payload_and_waits_for_every_projected_reader",
     "original_slot::tests::original_slot_generation_exhaustion_refuses_before_native_exchange",
@@ -1061,7 +4705,7 @@
   "threadContractSource": {
     "project": "@semio-tech/value-rs",
     "target": "test-exclusive-retirement-source",
-    "status": "physically registered awaiting review and actual Source body",
+    "status": "physically registered and independently source-accepted; actual Source body unrun",
     "testEntry": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
     "typedCompiler": false,
     "thirdPartyOracle": "SQLite conditional UPDATE changes",
@@ -1256,23 +4900,687 @@
     ]
   },
   "rootArtifactChildActual": {
-    "session": 9284,
-    "artifacts": "osf3",
-    "wholeExit": 101,
-    "bodies": 0,
-    "status": "test-compile-errors",
-    "errors": [
-      "Job fixture caller dev feature omitted",
-      "RetireOwned derive macro used as trait"
+    "session": 71129,
+    "exit": 0,
+    "passed": 2,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "seconds": 0.74,
+    "log": "🗑️generated/e2e-root-artifact-child-observed.log",
+    "laws": [
+      "artifact_child_retained_clone::selected_close_tests::artifact_child_generic_close_dispatch_selects_one_body_correlated_event",
+      "receiving::tests::original_child_receive_same_caller_all_partial_prefixes_and_literal_target"
     ],
-    "report": "oct21-root-artifact-child-gate.md",
-    "retry": {
-      "session": 89986,
-      "artifacts": "osf4",
-      "log": "e2e-root-artifact-child-testkit.log",
-      "status": "live; actual capacity-only at last read",
-      "wholeExit": null
-    }
+    "qualification": "Actual original child lifecycle passes with composed physical observers; full original matrix remains next.",
+    "compileSeconds": 37.98
   },
-  "acceptanceQualification": "Acceptance is required final criteria, not an actual result. Current full25/all69 and facade4 doctests remain pending."
+  "acceptanceQualification": "Actual facade4 and current filesystem53 passed; allocator2/RootOS and full26 physical owners/original69 pending. Sequence corpus remains unrecovered; no omitted required owner or advertised triple is accepted as complete.",
+  "currentFilesystemAcceptance": {
+    "session": 52569,
+    "exit": 0,
+    "passed": 53,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "seconds": 66.25,
+    "compileSeconds": 8.89,
+    "log": "🗑️generated/e2e-filesystem-current-fs53.log"
+  },
+  "nativeHandoff": {
+    "status": "released-after-original15-whole0",
+    "nativeIdle": true,
+    "recipient": "High",
+    "sourceCurrentlyOwnedByHigh": 29512,
+    "coldBeforeDashboardBuild": true
+  },
+  "registeredSourceRoster": {
+    "count": 42,
+    "original": 26,
+    "additional": 16,
+    "runtimeStatus": "pending; registration/source review is not runtime acceptance",
+    "separateRetainedSequence": true
+  },
+  "sequenceInputDependency": {
+    "fixture": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🧫️fixtures/🔣️.json",
+    "blockedUntil": "exact original six-case corpus/schema recovery and preserved outputHandoff extension validated",
+    "wholeLibraries": [
+      "semio-framework-replication-mutation-retained"
+    ],
+    "requiredLaw": "retained::diff::tests::ordered_retained_sequence_preserves_stable_outputs_and_closes_every_prefix",
+    "additionalControls": [
+      "test-retained-diff-sequence-source",
+      "test-retained-diff-sequence-native"
+    ],
+    "qualification": "The current physical new library law reads outputHandoff, which the replacement fixture lacks. No full25 completion is possible before repair. Disjoint RootOS/facade/other libraries may run; no test omission or substituted pass."
+  },
+  "nativeQueue": [
+    "current locked RootOS whole71129 after allocator observer2 actualpass",
+    "originalFramework15 wholelibraries, unfiltered, with exact original69 reconciliation using current RootOS result",
+    "explicit soleNative High handoff: canonical cold first, then build/install and installed acceptance",
+    "full26 and separate retained-sequence3/Source remain mandatory after exact corpus recovery"
+  ],
+  "requiredAllocatorObserverBodies": [
+    {
+      "package": "semio-framework-value-testing-allocator",
+      "law": "tests::canonical_allocator_records_same_physical_events_for_both_observers",
+      "source": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-value-testing-allocator",
+      "law": "tests::canonical_allocator_keeps_nested_trace_observations",
+      "source": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🦀️.rs"
+    }
+  ],
+  "facadeDoctestsActual": {
+    "session": 95693,
+    "exit": 0,
+    "passed": 4,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "seconds": 1.08,
+    "compileSeconds": 11.07,
+    "log": "🗑️generated/e2e-value-facade-doctests.log"
+  },
+  "allocatorObserverActual": {
+    "session": 24793,
+    "exit": 0,
+    "passed": 2,
+    "failed": 0,
+    "ignored": 0,
+    "filtered": 0,
+    "seconds": 0.01,
+    "compileSeconds": 3.83,
+    "log": "🗑️generated/e2e-allocator-physical-dual-observers.log"
+  },
+  "originalMatrixIndependence": {
+    "sourceReview": "independent bounded literal Rust mount audit",
+    "selectedFrameworkPackages": [
+      "semio-framework-value",
+      "semio-framework-value-clone-source-testing",
+      "semio-framework-value-derive",
+      "semio-framework-value-edit",
+      "semio-framework-value-native-decoding",
+      "semio-framework-value-native-owned",
+      "semio-framework-value-persistent",
+      "semio-framework-value-registry",
+      "semio-framework-value-retained-clone",
+      "semio-framework-value-shared-issuance",
+      "semio-framework-value-snapshot-projection",
+      "semio-framework-value-tests",
+      "semio-framework-value-retained-clone-integration",
+      "semio-framework-value-retirement",
+      "semio-framework-value-retained-map"
+    ],
+    "sourceMounts": 215,
+    "missingMounts": 0,
+    "unqualifiedExternalMods": 0,
+    "advertisedFunctions": 69,
+    "uniqueOccurrences": true,
+    "sequenceCorpusReferences": 0,
+    "qualification": "Supports original15 +RootOS exact69 run independently; full26 still waits supplemental mutation-retained and separate sequence integration3."
+  },
+  "originalMatrixActualHistory": [
+    {
+      "session": 12024,
+      "exit": 101,
+      "ownersWithBodies": 0,
+      "bodies": 0,
+      "advertisedPassed": 0,
+      "advertisedNotReached": 69,
+      "log": "🗑️generated/e2e-value-original15-current.log",
+      "primary": "3 E0599: RetirementCursor trait absent from retirement turn test scope",
+      "repair": "single canonical test import; no production/API/grant/assertion changes",
+      "logArtifactStatus": "Historical raw compiler log overwritten by current86546 redirect; exact prior error projection/MD retained, raw bytes unavailable. Do not attribute current log bytes to12024."
+    },
+    {
+      "session": 62239,
+      "exit": 101,
+      "ownersWithBodies": 0,
+      "bodies": 0,
+      "advertisedPassed": 0,
+      "advertisedNotReached": 69,
+      "log": "🗑️generated/e2e-value-original15-import.log",
+      "primary": "2 E0433: integration scalar lifecycle refers to absent facade retirement_queue namespace",
+      "previousScopeCorrection": "retirement trait-scope E0599 no longer reported",
+      "proposedRepair": "direct existing persistent dev dependency plus published list owner at both test references; Low source accepted, manifest boundary pending"
+    },
+    {
+      "session": 67678,
+      "exit": 101,
+      "totals": {
+        "started": 230,
+        "passed": 226,
+        "failed": 3,
+        "aborted": 1,
+        "ignored": 0,
+        "filtered": 0
+      },
+      "advertisedCounts": {
+        "passed": 62,
+        "failed": 3,
+        "abortedStarted": 1,
+        "notReached": 3
+      },
+      "projection": "🗑️generated/e2e-original15-67678-projection.json",
+      "log": "🗑️generated/e2e-value-original15-owner.log"
+    },
+    {
+      "session": 86546,
+      "exit": 0,
+      "totals": {
+        "owners": 15,
+        "bodies": 238,
+        "passed": 238,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 0
+      },
+      "advertisedCounts": {
+        "ok": 69
+      },
+      "projection": "🗑️generated/e2e-original15-86546-projection.json",
+      "log": "🗑️generated/e2e-value-original15-v15f.log",
+      "commandOutputPath": "🗑️generated/e2e-value-original15-current.log"
+    }
+  ],
+  "integrationListLockResolution": {
+    "status": "paired-actual-zero-independent-audit-accepted",
+    "session": 31543,
+    "before": "🗑️generated/e2e-integration-list-owner-lock-before.json",
+    "frameworkLog": "🗑️generated/e2e-integration-list-lock-framework.log",
+    "expected": "one Framework integration test dev edge only; Root no integration package currently",
+    "frameworkSession": 31543,
+    "frameworkExit": 0,
+    "rootSession": 31827,
+    "frameworkAfter": "🗑️generated/e2e-integration-list-owner-framework-after.json",
+    "frameworkDelta": "🗑️generated/e2e-integration-list-owner-framework-delta.json",
+    "rootLog": "🗑️generated/e2e-integration-list-lock-root.log",
+    "rootExit": 0,
+    "after": "🗑️generated/e2e-integration-list-owner-lock-after.json",
+    "delta": "🗑️generated/e2e-integration-list-owner-lock-delta.json",
+    "identitiesChecksumsUnchanged": true,
+    "registryTuplesUnchanged": true,
+    "frameworkPackages": 1068,
+    "frameworkRegistry": 612,
+    "rootPackages": 1565,
+    "rootRegistry": 706,
+    "onlyEdge": "Framework integration -> persistent"
+  },
+  "requiredCurrentFixBodies": [
+    {
+      "package": "semio-framework-value-native-owned",
+      "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+      "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release"
+    },
+    {
+      "package": "semio-framework-value-retirement",
+      "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap"
+    },
+    {
+      "package": "semio-framework-value-retirement",
+      "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component"
+    },
+    {
+      "package": "semio-framework-value-retirement",
+      "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind"
+    },
+    {
+      "package": "semio-framework-value-retirement",
+      "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent"
+    }
+  ],
+  "currentFixes": {
+    "status": "affected-four-actual-passed",
+    "report": "oct21-value-correlated-close-and-stable-child.md",
+    "preservesAdvertisedTriples": 69,
+    "actual": {
+      "session": 78703,
+      "whole": 0,
+      "status": "passed",
+      "log": "🗑️generated/e2e-value-correlated-stable-child-four-retry.log",
+      "artifacts": "🗑️generated/v4g",
+      "compileSeconds": 15.78,
+      "testsPassed": 75,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "owners": [
+        {
+          "package": "semio-framework-value-edit",
+          "library": "semio_framework_value_edit",
+          "bodies": [
+            {
+              "law": "indexed_collection_commit::tests::indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors",
+              "status": "ok"
+            },
+            {
+              "law": "indexed_collection_commit::tests::indexed_collection_commit_preserves_original_payloads_and_exact_cancellation",
+              "status": "ok"
+            },
+            {
+              "law": "indexed_edit::tests::indexed_edit_plan_matches_portable_coordinates_and_original_custody",
+              "status": "ok"
+            },
+            {
+              "law": "indexed_edit::tests::indexed_edit_plan_wide_order_and_cancellation_remain_bounded",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::admitted_named_index_preserves_original_opaque_keys_ranked_sources_and_cancelled_custody",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::admitted_named_index_reuses_persistent_originals_without_base_allocation_or_resorting",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_checks_complete_original_utf8_and_foreign_sources",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::transfer::key_preserving_persistent_producer_transfers_original_directory_and_all_paid_cuts",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_checks_full_utf8_under_original_decoder_quantum",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::index::tests::transfer::receiving::original_named_receiving_publishes_independent_roots_and_closes_every_paid_cut",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::tests::named_edit_plan_long_prefixes_and_cancellation_are_bounded",
+              "status": "ok"
+            },
+            {
+              "law": "named_edit::tests::named_edit_plan_matches_portable_keys_and_physical_custody",
+              "status": "ok"
+            },
+            {
+              "law": "sort::tests::retained_index_sort_matches_portable_order_and_bounds_every_action",
+              "status": "ok"
+            },
+            {
+              "law": "sort::tests::retained_index_sort_refuses_wrong_observation_without_changing_cursor",
+              "status": "ok"
+            }
+          ],
+          "summary": {
+            "status": "ok",
+            "passed": 14,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 0,
+            "elapsed": "135.08s"
+          }
+        },
+        {
+          "package": "semio-framework-value-native-owned",
+          "library": "semio_framework_value_native_owned",
+          "bodies": [
+            {
+              "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release",
+              "status": "ok"
+            },
+            {
+              "law": "owned::list_tests::native_persistent_list_later_row_refusal_retains_original_partial_owner",
+              "status": "ok"
+            },
+            {
+              "law": "owned::list_tests::native_persistent_list_original_callback_refusal_preserves_partial_receiving",
+              "status": "ok"
+            },
+            {
+              "law": "owned::list_tests::native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody",
+              "status": "ok"
+            },
+            {
+              "law": "owned::list_tests::native_persistent_list_receives_original_rows_and_preserves_all_cancelled_custody",
+              "status": "ok"
+            },
+            {
+              "law": "owned::list_tests::native_persistent_list_receiving_fits_original_interaction_quantum",
+              "status": "ok"
+            },
+            {
+              "law": "owned::original::tests::native_receiving_original_keeps_cancellation_and_denied_transfers_owned",
+              "status": "ok"
+            },
+            {
+              "law": "owned::original::tests::native_receiving_original_shell_requires_funded_input_and_receiver_custody",
+              "status": "ok"
+            },
+            {
+              "law": "owned::payload_enum_tests::native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "owned::record::receiver::tests::native_flat_record_receive_composes_original_fields_and_every_prefix",
+              "status": "ok"
+            },
+            {
+              "law": "owned::record::tests::native_record_receive_borrows_original_named_members_without_payload_copy",
+              "status": "ok"
+            },
+            {
+              "law": "owned::shared::tests::native_declared_defaults_keep_missing_fields_original_and_heapless",
+              "status": "ok"
+            },
+            {
+              "law": "owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+              "status": "ok"
+            },
+            {
+              "law": "owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+              "status": "ok"
+            },
+            {
+              "law": "owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority",
+              "status": "ok"
+            },
+            {
+              "law": "owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+              "status": "ok"
+            },
+            {
+              "law": "owned::tests::native_receive_constructor_and_output_denials_preserve_exact_owner",
+              "status": "ok"
+            },
+            {
+              "law": "owned::tests::native_receive_domain_and_original_callback_refusals_keep_all_partial_custody",
+              "status": "ok"
+            },
+            {
+              "law": "owned::tests::native_receive_original_row_has_funded_fields_and_every_cancellation_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "owned::tree::tuple::tests::original_heterogeneous_tuple_receiving_preserves_every_paid_prefix_and_wire_kind",
+              "status": "ok"
+            }
+          ],
+          "summary": {
+            "status": "ok",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 0,
+            "elapsed": "16.73s"
+          }
+        },
+        {
+          "package": "semio-framework-value-persistent",
+          "library": "semio_framework_value_persistent",
+          "bodies": [
+            {
+              "law": "immutable_clone::list_tests::persistent_list_retained_clone_preserves_original_root_without_payload_copy",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::build_tests::persistent_owned_builder_cancels_every_preparation_action_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::build_tests::persistent_owned_builder_constructor_fits_authored_interaction_quantum",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::build_tests::persistent_owned_builder_preserves_ranked_originals_and_every_receiving_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::build_tests::persistent_owned_builder_refuses_missing_and_excess_without_consuming_input",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::retained_read::tests::persistent_retained_read_cancellation_closes_every_recorded_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::retained_read::tests::persistent_retained_read_matches_portable_ranked_rows_and_original_sources",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_cancels_split_and_ancestor_frontiers",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::splice::tests::quick::persistent_ranked_splice_matches_order_and_preserves_original_readers",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::tests::borrowed_observations::borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::tests::quick::persistent_shared_pages_cancel_every_changed_path_frontier",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::tests::quick::persistent_shared_pages_preserve_readers_and_birth_only_changed_paths",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::tests::traversal::persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan",
+              "status": "ok"
+            },
+            {
+              "law": "list::persistent::tests::traversal::persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone",
+              "status": "ok"
+            },
+            {
+              "law": "original_vector_concat::tests::original_vector_concat_preserves_original_rows_and_cancelled_custody",
+              "status": "ok"
+            },
+            {
+              "law": "original_vector_concat::tests::original_vector_concat_wide_payload_and_chunk_directory_remain_bounded",
+              "status": "ok"
+            },
+            {
+              "law": "retained_equality::tests::retained_typed_equality_cancellation_keeps_original_leases_and_child_frontiers",
+              "status": "ok"
+            },
+            {
+              "law": "retained_equality::tests::retained_typed_equality_matches_portable_original_fields",
+              "status": "ok"
+            },
+            {
+              "law": "slice_equality::tests::retained_slice_equality_matches_portable_bytes_without_allocations",
+              "status": "ok"
+            },
+            {
+              "law": "slice_equality::tests::retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded",
+              "status": "ok"
+            }
+          ],
+          "summary": {
+            "status": "ok",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 0,
+            "elapsed": "48.39s"
+          }
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "library": "semio_framework_value_retirement",
+          "bodies": [
+            {
+              "law": "retirement::arc_custody::original::tests::concurrent_alias_retirement_elects_one_original_without_moving_or_dropping_it",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::arc_custody::original::tests::delayed_physical_alias_drop_cannot_free_initialized_or_unfunded_storage",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::arc_custody::original::tests::selected_field_retirement_retains_untouched_originals_and_funds_final_storage_release",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::arc_custody::shared_unique_tests::shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::original_controlled_failed_reservation_retains_actual_receipt_and_same_owner",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::original_controlled_selected_array_leaf_preserves_future_atoms_and_exact_currencies",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::original_controlled_selected_child_quote_preserves_future_atom_and_exact_currencies",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::controlled::tests::retained_unsupported_original_stays_inline_through_demand_and_step_refusal",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::original_bytes_tests::original_bytes_retirement_metadata_keeps_fixed_copy0_and_actual_physical_receipts",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::original_leaf_tests::original_scalar_leaf_native_zero_copy_close_keeps_original_value_until_admitted_metadata",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::original_result::tests::original_result_variants_preserve_native_payload_and_all_axis_receipts",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::original_vector::tests::original_vector_native_ordered_handoffs_cancel_every_original_frontier_and_pay_final_backing",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::owned_mutex::tests::original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::owned_mutex::tests::send_only_original_cursor_retires_through_exclusive_cross_thread_gate",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component",
+              "status": "ok"
+            },
+            {
+              "law": "retirement::turn::tests::retirement_turn_rejects_false_completion_and_each_overspent_currency_without_changing_custody",
+              "status": "ok"
+            }
+          ],
+          "summary": {
+            "status": "ok",
+            "passed": 21,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 0,
+            "elapsed": "0.16s"
+          }
+        }
+      ],
+      "newRequiredBodies": [
+        {
+          "package": "semio-framework-value-native-owned",
+          "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+          "law": "owned::list_tests::native_persistent_list_child_custody_prices_stable_birth_and_cancelled_release"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "law": "retirement::support::tests::conjunctive_support_matches_recursive_portable_graphs_without_heap"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "law": "retirement::support::tests::derived_recursive_retirement_support_checks_every_noncyclic_component"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "law": "retirement::support::tests::conjunctive_support_restores_exact_frontier_after_unwind"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "law": "retirement::support::tests::conjunctive_support_keeps_queries_current_and_threads_independent"
+        }
+      ],
+      "qualification": "Affected4 actual whole-library acceptance; full original15/69 current retry and separate Source oracles remain pending.",
+      "command": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--manifest-path",
+        "🧰️framework/Cargo.toml",
+        "--locked",
+        "--no-fail-fast",
+        "--lib",
+        "-p",
+        "semio-framework-value-edit",
+        "-p",
+        "semio-framework-value-native-owned",
+        "-p",
+        "semio-framework-value-persistent",
+        "-p",
+        "semio-framework-value-retirement",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "requestedEnvironment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_BUILD_BUDGET_MS": "21600000",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/v4g"
+      },
+      "environmentQualification": "These are actual command-envelope requests; no separate child stack/environment receipt is asserted."
+    },
+    "history": [
+      {
+        "session": 88885,
+        "log": "🗑️generated/e2e-value-correlated-stable-child-four.log",
+        "artifacts": "🗑️generated/v4f",
+        "status": "whole-compiler-refusal",
+        "packages": [
+          "semio-framework-value-edit",
+          "semio-framework-value-native-owned",
+          "semio-framework-value-persistent",
+          "semio-framework-value-retirement"
+        ],
+        "whole": 101,
+        "bodyPassClaim": false,
+        "bodies": 0,
+        "error": "E0599: new child-law calls nonexistent RetainedCloneSource.begin_close; remove only that call; canonical selected source cleanup retained"
+      }
+    ]
+  }
 }

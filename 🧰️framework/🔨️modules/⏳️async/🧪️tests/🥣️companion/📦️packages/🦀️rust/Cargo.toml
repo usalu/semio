@@ -23,7 +23,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-async = { path = "../../../../📦️packages/🦀️rust", features = ["testkit", "entrypoint"] }
+semio-framework-async = { path = "../../../../📦️packages/🦀️rust", features = ["testkit", "entrypoint", "wasm-pool-host"] }
+semio-framework-async-slots = { path = "../../../../🧱️boxed-slots/📦️packages/🦀️rust" }
+semio-framework-async-sync = { path = "../../../../🚦️sync-primitives/📦️packages/🦀️rust" }
+semio-framework-async-testkit = { path = "../../../../🎭️testkit/📦️packages/🦀️rust" }
+semio-framework-async-timer = { path = "../../../../⏰️timer-wheel/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]

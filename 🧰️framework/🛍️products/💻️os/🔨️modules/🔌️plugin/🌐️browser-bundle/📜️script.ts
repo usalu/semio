@@ -18,6 +18,9 @@ import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeCommandNameV1, runtimeDetectKeyV1, runtimeIdentityV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type BrowserComponentFactoryControl = Readonly<{ importInterfaces?: readonly string[]; cancelled?: () => boolean; progress?: (completedBytes: number, totalBytes: number) => void }>;
@@ -391,7 +394,7 @@ export async function buildBrowserCodegenModule(evidence: string, check: () => v
 export type BrowserActorProducerInputsV1 = Readonly<{policyCanonical:string;policySha256:string;runtime:Readonly<{path:string;sha256:string;byteLength:number}>;compiler:Readonly<{path:string;sha256:string;byteLength:number}>;inputs:readonly BrowserActorPhysicalInputV1[]}>;
 
 function observedBrowserCodegenPolicy(executable:{sha256:string;byteLength:number},compiler:Awaited<ReturnType<typeof buildBrowserCodegenModule>>,inputs:Omit<ReturnType<typeof captureBrowserCodegenPolicyInputs>,"physicalInputs">){
-  return sealBrowserCodegenPolicy({schema:"semio.os.browser-codegen-policy.v1",revision:1,runtime:{kind:"bun",version:"1.4.2",executable:{sha256:executable.sha256,byteLength:executable.byteLength}},compiler:{module:{sha256:compiler.sha256,byteLength:compiler.byteLength},inputs:compiler.inputs,cores:compiler.cores},...inputs,options:{jco:"1.34.0",entrypoint:"@bytecodealliance/jco/component",target:"browser",format:"esm",name:"browser-actor",instantiation:"async",asyncMode:"jspi",nodejsCompat:false,base64Cutoff:0,importInterfaces:browserActorInterfaces,asyncImports:browserActorAsyncImports}});
+  return sealBrowserCodegenPolicy({schema:"semio.os.browser-codegen-policy.v1",revision:1,runtime:{kind:runtimeIdentityV1().id,version:"1.4.2",executable:{sha256:executable.sha256,byteLength:executable.byteLength}},compiler:{module:{sha256:compiler.sha256,byteLength:compiler.byteLength},inputs:compiler.inputs,cores:compiler.cores},...inputs,options:{jco:"1.34.0",entrypoint:"@bytecodealliance/jco/component",target:"browser",format:"esm",name:"browser-actor",instantiation:"async",asyncMode:"jspi",nodejsCompat:false,base64Cutoff:0,importInterfaces:browserActorInterfaces,asyncImports:browserActorAsyncImports}});
 }
 
 /** 🔬️ Verifies surviving original compiler/policy evidence against the complete current factory-owned input roster. */
@@ -401,7 +404,7 @@ export async function verifyBrowserActorProducerInputsV1(observation:BrowserActo
   const originalPolicy=JSON.parse(observation.policyCanonical);if(!admitPolicy(originalPolicy)||canonicalJson(originalPolicy)!==observation.policyCanonical||createHash("sha256").update(observation.policyCanonical).digest("hex")!==observation.policySha256)denied();
   const executable=exactExecutableFingerprint(realpathSync(process.execPath),{cancelled:control.cancelled,progress:(completed,total)=>control.progress?.("policy",completed,total)});if(canonicalJson(executable)!==canonicalJson(observation.runtime))denied();
   const originalCompiler=readStableBuildFile(observation.compiler.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(originalCompiler.byteLength!==observation.compiler.byteLength||createHash("sha256").update(originalCompiler).digest("hex")!==observation.compiler.sha256)denied();
-  const managerPath=join(browserActorRepoRoot,"package.json"),manager=readStableBuildFile(managerPath,1024*1024,{remaining:1024*1024},check);if(Bun.version!=="1.4.2"||JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(manager)).packageManager!=="bun@1.4.2")denied();
+  const managerPath=join(browserActorRepoRoot,"package.json"),manager=readStableBuildFile(managerPath,1024*1024,{remaining:1024*1024},check);if(runtimeIdentityV1().version!=="1.4.2"||JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(manager)).packageManager!=="bun@1.4.2")denied();
   const runtime=captureBrowserActorRuntime(browserBundleDirectory,check),{physicalInputs,...policyInputs}=captureBrowserCodegenPolicyInputs(runtime,check),scratchRoot=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(scratchRoot,{recursive:true});const scratch=mkdtempSync(join(scratchRoot,"browser-producer-verification-"));
   try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check,invocation,phase),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
     const ordered=(rows:readonly BrowserActorPhysicalInputV1[])=>rows.map(row=>({...row,path:resolve(row.path)})).sort((a,b)=>a.logicalPath.localeCompare(b.logicalPath)),keys=new Set(observation.inputs.map(row=>row.logicalPath));if(keys.size!==observation.inputs.length||canonicalJson(ordered(inputs))!==canonicalJson(ordered(observation.inputs))||current.canonical!==observation.policyCanonical||compiler.sha256!==observation.compiler.sha256||compiler.byteLength!==observation.compiler.byteLength)denied();
@@ -427,7 +430,7 @@ export async function buildClosedBrowserActorArtifactOwned(component: Uint8Array
   let snapshot: Uint8Array | undefined, evidence: string | undefined;
   try {
     const packageManagerPath=join(browserActorRepoRoot,"package.json"),packageManagerBytes=readStableBuildFile(packageManagerPath,1024*1024,{remaining:1024*1024},check);
-    if (typeof Bun === "undefined" || Bun.version !== "1.4.2" || JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(packageManagerBytes)).packageManager !== "bun@1.4.2") throw new Error("browser actor artifact: unqualified build runtime");
+    if (runtimeIdentityV1().version !== "1.4.2" || JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(packageManagerBytes)).packageManager !== "bun@1.4.2") throw new Error("browser actor artifact: unqualified build runtime");
     if (!(component instanceof Uint8Array) || component.byteLength < 8 || component.byteLength > browserActorMaximumBytes || ![0, 97, 115, 109, 13, 0, 1, 0].every((value, index) => component[index] === value)) throw new Error("browser actor artifact: component header or byte bound");
     snapshot = Uint8Array.from(component);
     const componentByteLength=snapshot.byteLength;
@@ -460,7 +463,7 @@ export async function buildClosedBrowserActorArtifactOwned(component: Uint8Array
       import { closeSync, fstatSync, lstatSync, openSync, readSync, writeFileSync } from "node:fs";
       import { createHash } from "node:crypto";
       import { join } from "node:path";
-      assert.equal(globalThis.Bun?.version, "1.4.2", "browser actor artifact: unqualified codegen runtime");
+      assert.equal(process.versions[${JSON.stringify(runtimeDetectKeyV1())}], "1.4.2", "browser actor artifact: unqualified codegen runtime");
       assert(["NODE_OPTIONS", "NODE_PATH", "BUN_OPTIONS", "BUN_PRELOAD", "PATH"].every(name => process.env[name] === undefined), "browser actor artifact: ambient codegen environment");
       const [componentPath, outputRoot, importsJson, asyncJson, maximum, compilerPath, compilerHash, compilerLength, componentHash, componentLength] = process.argv.slice(1);
       const readCaptured = ${readStableBuildFile.toString()};
@@ -492,7 +495,7 @@ export async function buildClosedBrowserActorArtifactOwned(component: Uint8Array
         assert(total <= Number(maximum), "browser actor artifact: generated byte bound");
         writeFileSync(join(outputRoot, name), bytes, { mode: 0o600 });
       }
-      process.stdout.write(JSON.stringify({ version, runtime: "bun@" + Bun.version, importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
+      process.stdout.write(JSON.stringify({ version, runtime: ${JSON.stringify(runtimeIdentityV1().id)} + "@" + process.versions[${JSON.stringify(runtimeDetectKeyV1())}], importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
     `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(componentByteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: compilerAdmissionBudgetV1(phase), maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
     check();
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
@@ -897,10 +900,10 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-if (import.meta.main) {
+if (isMainModuleV1(import.meta.url)) {
   if (process.argv[2] === "test" && process.argv[3] === "descriptor-contract") {
-    const result = Bun.spawn([process.execPath, "test", join(browserBundleDirectory, "🛂️descriptor/🧪️tests/🟦️.ts")], { stdout: "inherit", stderr: "inherit" });
-    process.exit(await result.exited);
+    const result = startToolV1(runtimeCommandNameV1(), ["test", join(browserBundleDirectory, "🛂️descriptor/🧪️tests/🟦️.ts")], { stdio: ["ignore", "inherit", "inherit"] });
+    process.exit(await toolExitV1(result));
   }
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);

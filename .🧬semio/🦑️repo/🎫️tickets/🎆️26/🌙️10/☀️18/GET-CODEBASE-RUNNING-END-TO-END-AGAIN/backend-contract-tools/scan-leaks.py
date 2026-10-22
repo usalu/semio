@@ -20,6 +20,7 @@ for dp,dn,fn in os.walk(B):
     rel=dp[len(B)+1:]
     if '🧪️tests' in rel.split('/') or any(rel==o or rel.startswith(o+'/') for o in OWN):continue
     for f in fn:
+        if f.startswith('.'):continue
         if not f.endswith(('.ts','.mjs','.json','.rs','.py','.mts','.go')):continue
         p=os.path.join(dp,f)
         t=edited.get(p) or open(p,encoding='utf8',errors='ignore').read()

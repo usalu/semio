@@ -14,17 +14,6 @@ pub struct SetParagraphStyle {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "paragraph-style", kind: "set-paragraph-style", record: "SetParagraphStyle" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        addressed_outcome(&DocxMutation::SetParagraphStyle(self.clone()), base)
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-    Ok({
-        addressed_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)?
-    
-    })
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set paragraph style", "Absatzformat setzen")
     }
@@ -32,4 +21,16 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()
     }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::ColdMutation<DocxSnapshot>>::ReferenceDiff> {
+        addressed_outcome(&DocxMutation::SetParagraphStyle(self.clone()), base)
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+    Ok({
+        addressed_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)?
+    
+    })
+}
 }

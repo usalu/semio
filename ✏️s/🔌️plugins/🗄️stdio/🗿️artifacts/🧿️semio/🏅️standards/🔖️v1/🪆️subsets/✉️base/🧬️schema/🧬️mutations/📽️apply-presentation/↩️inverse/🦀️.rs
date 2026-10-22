@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ApplyPresentation`.
 
 #[allow(unused_imports)]
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ where
     Op: From<crate::schema::mutations::apply_presentation::ApplyPresentation>,
 {
     Ok(match &base.subset {
-        SemioSubsetSnapshot::Presentation(b) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyPresentation { mutation: inner })).collect(),
+        SemioSubsetSnapshot::Presentation(b) => <SemioPresentationMutation as ColdMutation<SemioPresentationSnapshot>>::inverse(&payload.mutation, b)?.into_iter().map(|inner| Op::from(super::ApplyPresentation { mutation: inner })).collect(),
         _ => Vec::new(),
     })
 }

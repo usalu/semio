@@ -1,5 +1,6 @@
 /** 🟠️ The handle wheel phase of useInkPointer. */
-import React, { useCallback } from "react";
+import * as React from "../../../⚛️react-port/🟦️.ts";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { inkCanvasActions } from "@semio-tech/framework";
 import { inkItemsAtPoint, inkMaybeSnapWorldPoint, inkTableCellAtPoint, screenToWorld } from "../../📐️ink-geometry/🟦️.ts";
 import { createInkItemByKind } from "../../🌳️ink-document-ops/🟦️.ts";

@@ -49,25 +49,26 @@ impl InsertLineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "line", kind: "insert-line", record: "InsertedLine" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert Line", "Zeile einfügen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["insert-line".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutation {
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {
             Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
             Ok(at) => protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: at, text: self.text.clone() }] }), ..Default::default() }),
         }
     }
-
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
         Ok(match self.plan(base) {
             Ok(at) => vec![super::TxtMutation::RemoveLine(super::RemoveLineMutation { index: txt_usize_to_u32(at).expect("line length is within the public uint32 domain after a successful insert") })],
             Err(_) => Vec::new(),
         })
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert Line", "Zeile einfügen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["insert-line".to_string()]
     }
 }
 //#endregion ⚙️Semantics

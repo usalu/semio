@@ -24,6 +24,16 @@ pub struct CreatePage {
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreatePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_page::DeletePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "page", kind: "create-page", record: "CreatedPage" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create page \"{}\"", self.page.name), &format!("Seite \"{}\" erstellen", self.page.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for CreatePage where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_page::DeletePage> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_page(self, base)
     }
@@ -33,12 +43,6 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for CreatePage where Op: protocol::Mut
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create page \"{}\"", self.page.name), &format!("Seite \"{}\" erstellen", self.page.name))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.page.id.clone()]
-    }
 }
 //#endregion 🌱️CreatePage
 

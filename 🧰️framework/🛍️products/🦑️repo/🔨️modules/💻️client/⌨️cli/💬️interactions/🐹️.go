@@ -10,7 +10,6 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -90,65 +89,6 @@ type TicketAgent struct {
 	Plan        *TicketAgentPlan `json:"plan,omitempty" yaml:"plan,omitempty"`
 }
 
-// 🔲️UnmarshalJSON MUST handle both legacy and current JSON layouts.
-func (i *Interaction) UnmarshalJSON(data []byte) error {
-	type Alias Interaction
-	raw := struct {
-		Alias
-		RawAuthor json.RawMessage `json:"author"`
-		RawSystem json.RawMessage `json:"system"`
-		RawDates  json.RawMessage `json:"dates"`
-	}{}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-	*i = Interaction(raw.Alias)
-	if i.Date == "" && len(raw.RawDates) > 0 {
-		var legacy struct {
-			Created string `json:"created"`
-		}
-		if err := json.Unmarshal(raw.RawDates, &legacy); err == nil && legacy.Created != "" {
-			i.Date = legacy.Created
-		}
-	}
-	if len(raw.RawAuthor) > 0 {
-		if raw.RawAuthor[0] == '"' {
-			json.Unmarshal(raw.RawAuthor, &i.Author)
-		} else if raw.RawAuthor[0] == '{' {
-			var obj struct {
-				Name   string `json:"name"`
-				Email  string `json:"email"`
-				Github string `json:"github"`
-			}
-			if err := json.Unmarshal(raw.RawAuthor, &obj); err == nil {
-				if obj.Name != "" && obj.Email != "" {
-					i.Author = fmt.Sprintf("%s <%s>", obj.Name, obj.Email)
-				} else if obj.Name != "" {
-					i.Author = obj.Name
-				} else if obj.Email != "" {
-					i.Author = obj.Email
-				}
-			}
-		}
-	}
-	if len(raw.RawSystem) > 0 {
-		if raw.RawSystem[0] == '"' {
-			json.Unmarshal(raw.RawSystem, &i.System)
-		} else if raw.RawSystem[0] == '{' {
-			var obj struct {
-				Version string `json:"version"`
-				Client  string `json:"client"`
-			}
-			if err := json.Unmarshal(raw.RawSystem, &obj); err == nil {
-				i.System = obj.Version
-				if obj.Client != "" && i.Client == "" {
-					i.Client = obj.Client
-				}
-			}
-		}
-	}
-	return nil
-}
 
 // 🔐️resolveAuthorToAlias holds the data fields for a resolveAuthorToAlias record.
 func resolveAuthorToAlias(name, email string) string {

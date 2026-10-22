@@ -25,7 +25,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-source"
       }
     },
     "test-snapshot-sqlite": {
@@ -34,7 +34,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -52,7 +52,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -70,7 +70,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -88,7 +88,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify video-container-providers"
+        "command": "repo ./📜️script.ts verify video-container-providers"
       }
     },
     "build": {
@@ -103,7 +103,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -111,7 +111,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -120,7 +120,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -130,7 +130,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify remodel-window-ownership",
+        "command": "repo ./📜️script.ts verify remodel-window-ownership",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -147,7 +147,7 @@
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts composition prepare"
+        "command": "repo ./📜️script.ts composition prepare"
       },
       "metadata": {
         "semio": {
@@ -161,7 +161,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify physical-codecs"
+        "command": "repo ./📜️script.ts verify physical-codecs"
       }
     },
     "verify-snapshot-sqlite-native-syntax": {
@@ -170,7 +170,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-native-syntax"
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-native-syntax"
       }
     }
   }

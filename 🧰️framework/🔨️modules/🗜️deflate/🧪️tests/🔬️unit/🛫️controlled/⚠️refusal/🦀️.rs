@@ -16,6 +16,7 @@ impl DeflateEncodeControl for RefusalControl{
 
 #[test]
 fn deflate_controlled_retains_every_refusal_kind_and_owns_internal_causes(){
+  let _gate=super::gate();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["callbacks"].as_array().unwrap(){
   let error=ValueError::new(refusal_kind(row["kind"].as_str().unwrap()),row["message"].as_str().unwrap().to_owned());let pointer=error.message.as_ptr();
@@ -39,6 +40,7 @@ fn deflate_controlled_retains_every_refusal_kind_and_owns_internal_causes(){
 
 #[test]
 fn deflate_controlled_retained_allocation_errors_retain_the_owned_kind(){
+  let _gate=super::gate();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["retained"].as_array().unwrap(){
   let requested=row["requestedBytes"].as_u64().unwrap() as usize;let mut history=RetainedInflateHistory::new(requested,requested).unwrap();

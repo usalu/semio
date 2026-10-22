@@ -38,9 +38,9 @@ pub trait ReferenceSpaceMember:SpaceMember {
     /// `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
     /// genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
     /// same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
-    /// `preview_wire` messages against one authority-chosen `crate::os_spr::MergePolicy` without
+    /// `preview_wire` messages against one authority-chosen `semio_framework_os_spr::MergePolicy` without
     /// downcasting.
-    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage>;
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage>;
     /// 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
     /// `dispatch_binary`. `CompositionCoordinator` builds `cmd_bytes` from a member's
     /// `ChildDispatch.ops`/`parent_ops` by replicating `write_command_ops`'s byte layout directly
@@ -51,7 +51,7 @@ pub trait ReferenceSpaceMember:SpaceMember {
     async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>;
     /// ⚖️ Applies a preflighted group command under the authority-selected policy without
     /// changing this member's local policy after dispatch.
-    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>;
+    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>;
     /// 📦️ This member's whole event log as ONE encoded envelope payload, for a composing
     /// parent to announce on the member's behalf: a composed child owns no transport of its own.
     async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError>;
@@ -72,13 +72,13 @@ pub trait ReferenceSpaceMember:SpaceMember {
     /// 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
     /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
-    /// `crate::os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
+    /// `semio_framework_os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
     /// initiator's OWN edit is left `Owner` — it is not foreign to itself). Never called on the
     /// `Owned` relation path, which keeps every member's origin at its ordinary `Apply`-assigned
     /// default (`Owner`) — this is precisely what keeps `Owned` byte-identical to its pre-`Peer`
     /// behaviour. Same `VcsError::UnknownEdit` failure mode as `stamp_tail_group_id` (never true on
     /// the path `dispatch_group` calls it from).
-    async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError>;
+    async fn stamp_tail_origin(&mut self, origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError>;
     /// 🏠️ Sets (or clears) this member's own envelope `owner` stamp — the mechanism
     /// `CompositionCoordinator::dispatch_group`'s phase 2 uses to record a freshly-`ChildGenesis`-
     /// created child's `OwnerRef` directly on the child's own envelope (see
@@ -121,7 +121,7 @@ pub trait ReferenceSpaceMember:SpaceMember {
 
 impl<P, Mutation> ReferenceSpaceMember for ArtifactStore<P, Mutation>
 where
- P:Clone+ToValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+ P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_os_store_text_io::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
  Mutation:Clone+ToValue+FromValue+self::Mutation<P>+ColdMutation<P>+OpBinary+OpText+Send+'static,
 {
 
@@ -169,24 +169,24 @@ where
 
     /// 🌀️ `MutationMessage::at_op` is async (📡️replication); `Iterator::map`'s closure is
     /// sync (R10 shape 1), so it's hoisted into an explicit loop.
-    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
         let mut running = match self.snapshot() {
             Ok(snapshot) => snapshot,
-            Err(error) => return vec![crate::os_spr::MutationMessage::fatal("mutation.invariant", error.to_string())],
+            Err(error) => return vec![semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.to_string())],
         };
         let mut all_messages = Vec::new();
         for (index, op) in ops.iter().enumerate() {
             let mutation = match <Mutation as OpBinary>::decode_op(op) {
                 Ok(mutation) => mutation,
                 Err(error) => {
-                    all_messages.push(crate::os_spr::MutationMessage::fatal("mutation.invariant", error.to_string()).at_op(index as u32));
+                    all_messages.push(semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.to_string()).at_op(index as u32));
                     break;
                 }
             };
             let (next, messages) = match apply_mutation(&running, &mutation) {
                 Ok(applied) => applied,
                 Err(error) => {
-                    all_messages.push(crate::os_spr::MutationMessage::fatal("mutation.invariant", error.message).at(error.target).at_op(index as u32));
+                    all_messages.push(semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", error.message).at(error.target).at_op(index as u32));
                     break;
                 }
             };
@@ -205,7 +205,7 @@ where
     /// 🌀️ The unawaited future holds `&mut self`, so `self.log.merge_policy` cannot be reassigned
     /// while it's still live (E0506) — awaited immediately instead of deferred, matching the
     /// original synchronous "restore after dispatch completes" intent.
-    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: crate::os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         let local_policy = self.log.merge_policy;
         self.log.merge_policy = policy;
         let result = self.dispatch_binary(cmd_bytes, identity).await;
@@ -235,7 +235,7 @@ where
         Ok(())
     }
 
-    async fn stamp_tail_origin(&mut self, origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+    async fn stamp_tail_origin(&mut self, origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError> {
         let edit_id = self.applied_edit_ids().last().cloned().ok_or(VcsError::NothingToUndo)?;
         let edit = self.log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for meta in edit.mutation_meta.iter_mut() {
@@ -297,7 +297,7 @@ impl ReferenceSpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn preview_wire(&self, _ops: &[Vec<u8>]) -> Vec<crate::os_spr::MutationMessage> {
+    async fn preview_wire(&self, _ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
         match *self {}
     }
 
@@ -305,7 +305,7 @@ impl ReferenceSpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn dispatch_wire_with_policy(&mut self, _cmd_bytes: &[u8], _policy: crate::os_spr::MergePolicy, _identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire_with_policy(&mut self, _cmd_bytes: &[u8], _policy: semio_framework_os_spr::MergePolicy, _identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         match *self {}
     }
 
@@ -325,7 +325,7 @@ impl ReferenceSpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn stamp_tail_origin(&mut self, _origin: crate::os_spr::MutationOrigin) -> Result<(), VcsError> {
+    async fn stamp_tail_origin(&mut self, _origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError> {
         match *self {}
     }
 
@@ -344,70 +344,4 @@ impl ReferenceSpaceMember for NoMembers {
     async fn pack_at_checkpoint(&self, _checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
         match *self {}
     }
-}
-
-/// 🪪️ Declares the separately selected reference facet only for explicitly cold member enums.
-#[macro_export]
-macro_rules! reference_space_members {
- ($enum_name:ident {$($variant:ident),+ $(,)?}) => {
-  impl $crate::os_store::ReferenceSpaceMember for $enum_name {
-            fn begin_one_item_wire_publication(&self, request: $crate::os_store::one_item_publication::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>, $crate::os_store::one_item_publication::ArtifactStoreBatchAdmissionRejected<$crate::os_store::one_item_publication::MemberStoreOneItemWire>> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::begin_one_item_wire_publication(m.as_ref(), request)),+ }
-            }
-            async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::commit_checkpoint(m.as_mut(), message, authors, identity).await),+ }
-            }
-            async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::checkout(m.as_mut(), checkpoint_id, alternative_id, identity).await),+ }
-            }
-            async fn create_alternative(&mut self, name: String, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::create_alternative(m.as_mut(), name, identity).await),+ }
-            }
-            async fn undo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::undo(m.as_mut(), identity).await),+ }
-            }
-            async fn redo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::redo(m.as_mut(), identity).await),+ }
-            }
-            async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::preview_wire(m.as_ref(), ops).await),+ }
-            }
-            async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::dispatch_wire(m.as_mut(), cmd_bytes, identity).await),+ }
-            }
-            async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::dispatch_wire_with_policy(m.as_mut(), cmd_bytes, policy, identity).await),+ }
-            }
-            async fn event_log_payload(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::event_log_payload(m.as_ref()).await),+ }
-            }
-            async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::announce_tail_edit_payload(m.as_mut()).await),+ }
-            }
-            async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::ingest_remote_payload(m.as_mut(), envelopes).await),+ }
-            }
-            async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::stamp_tail_group_id(m.as_mut(), group_id).await),+ }
-            }
-            async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::stamp_tail_origin(m.as_mut(), origin).await),+ }
-            }
-            async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::set_owner(m.as_mut(), owner).await),+ }
-            }
-            async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::document_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::envelope_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn merge_persisted_envelope(&mut self, envelope_pack: &[u8]) -> Result<$crate::os_store::replay::PairMerge, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::merge_persisted_envelope(m.as_mut(), envelope_pack).await),+ }
-            }
-            async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
-            }
-  }
- };
 }

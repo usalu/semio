@@ -1,0 +1,3 @@
+export type StaleReexecOutcomeV1=Readonly<{status:"completed"}|{status:"yielded"|"exhausted"|"reexecuted";code:number}>;
+export function launchReplacementProcessV1(options:{execPath:string;args:readonly string[];environment:Readonly<Record<string,string|undefined>>}):Promise<number>;
+export function runWithStaleReexecV1(run:()=>Promise<void>,options?:{environment?:Readonly<Record<string,string|undefined>>;outermost?:boolean;argv?:readonly string[];execPath?:string;execArgv?:readonly string[];launch?:typeof launchReplacementProcessV1;write?:(text:string)=>void}):Promise<StaleReexecOutcomeV1>;

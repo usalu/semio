@@ -1,6 +1,7 @@
 //! 🫂️ The ephemeral interaction hover map, the last-adopted presence slice of each peer, its bounded root, the mark a peer leaves on a target and the cancellation action. See [`super`].
 
 use super::*;
+use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
 
 /// 🐁️ The ephemeral, never-persisted half of the interaction mechanism — `VcsArtifactApp`'s hover
 /// map, one `DomainHover` per domain (mirrors `protocol::InteractionState.hover`'s own shape; see

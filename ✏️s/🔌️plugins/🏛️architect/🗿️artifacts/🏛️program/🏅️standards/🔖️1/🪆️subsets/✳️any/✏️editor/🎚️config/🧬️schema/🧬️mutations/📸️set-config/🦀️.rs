@@ -32,6 +32,19 @@ where
     Op: protocol::Mutation<ArchitectConfig, Diff = ArchitectConfigDiff> + From<SetConfig>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "config", kind: "set-config", record: "SetConfig" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Config", "Konfiguration setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["config".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<ArchitectConfig, Op> for SetConfig
+where
+    Op: protocol::ColdMutation<ArchitectConfig, ReferenceDiff = ArchitectConfigDiff> + From<SetConfig>,
+{
     fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfigDiff> {
         let changes = self.changes(base);
         if changes == ArchitectConfigDiff::default() {
@@ -47,11 +60,5 @@ where
             last_result_json: changes.last_result_json.map(|_| base.last_result_json.clone()),
             last_analysis_json: changes.last_analysis_json.map(|_| base.last_analysis_json.clone()),
         })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Config", "Konfiguration setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["config".into()]
     }
 }

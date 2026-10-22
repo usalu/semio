@@ -9,7 +9,8 @@ use std::time::{Duration, Instant};
 
 /// 🧺️ One worker's lane queues plus each queue's length as of its last unlock, so a scan (the
 /// owner's or a thief's) skips an empty lane without taking its lock.
-struct WorkerLocal {
+#[doc(hidden)]
+pub struct WorkerLocal {
     pub queues: [Mutex<VecDeque<Job>>; LANE_COUNT],
     queued: [AtomicUsize; LANE_COUNT],
 }
@@ -34,7 +35,7 @@ impl WorkerLocal {
     }
 }
 
-struct PoolInner {
+#[doc(hidden)] pub struct PoolInner {
     pub workers: Vec<WorkerLocal>,
     pub maintenance: WorkerMaintenanceRegistry,
     deferred_wakes: WorkerDeferredWakeRegistry,
@@ -88,7 +89,8 @@ impl PoolInner {
     }
 }
 
-struct LowPriorityPermit<'a> {
+#[doc(hidden)]
+pub struct LowPriorityPermit<'a> {
     pub inner: &'a PoolInner,
     claimed: bool,
 }

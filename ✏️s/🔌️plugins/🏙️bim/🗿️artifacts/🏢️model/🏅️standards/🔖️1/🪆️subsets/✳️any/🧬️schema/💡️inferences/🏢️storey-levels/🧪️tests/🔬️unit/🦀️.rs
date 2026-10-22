@@ -91,7 +91,7 @@ async fn a_height_edit_recomputes_the_storeys_above_and_nothing_else_and_a_mater
     assert_eq!(first, untouched);
     assert_eq!(session.report().computed_by_kind.get("storey"), None, "a material edit recomputes no storey");
     let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
-    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let edited = protocol::apply_diff_cold(&height, &snapshot).expect("applies");
     let recomputed = session.update(&edited, &height).storey_levels.clone();
     assert!(close(recomputed["st-first"].elevation - first["st-first"].elevation, 0.4) && close(recomputed["st-roof"].elevation - first["st-roof"].elevation, 0.4), "the storeys above are lifted");
     assert_eq!(recomputed["st-basement"], first["st-basement"], "the storey below is untouched");

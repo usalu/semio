@@ -40,7 +40,7 @@ import {
   type UiTheme
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import {
   setAppearance,
   setDriver,

@@ -18,7 +18,7 @@ fn modify_cell(row: usize, cell: usize, value: SemioValue) -> SemioTableDiff {
 async fn apply_touches_only_named_cells() {
     let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
     let diff = modify_cell(0, 0, SemioValue::Str { value: "y".into() });
-    let next = protocol::apply_diff(&diff, &base).expect("apply must succeed for a well-formed fixture");
+    let next = protocol::apply_diff_cold(&diff, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(next.rows[0].cells[0], SemioValue::Str { value: "y".into() });
     assert_eq!(next.columns, base.columns, "untouched columns must be preserved");
 }
@@ -30,17 +30,17 @@ async fn absorb_equals_sequential_apply() {
     let second = modify_cell(0, 0, SemioValue::Str { value: "z".into() });
     let mut absorbed = first.clone();
     absorbed.absorb(second.clone());
-    let sequential = protocol::apply_diff(&second, &protocol::apply_diff(&first, &base).unwrap()).unwrap();
-    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), sequential);
+    let sequential = protocol::apply_diff_cold(&second, &protocol::apply_diff_cold(&first, &base).unwrap()).unwrap();
+    assert_eq!(protocol::apply_diff_cold(&absorbed, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_base() {
     let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
     let diff = modify_cell(0, 0, SemioValue::Str { value: "y".into() });
-    let next = protocol::apply_diff(&diff, &base).unwrap();
+    let next = protocol::apply_diff_cold(&diff, &base).unwrap();
     let inverse = protocol::command::DiffAlgebra::inverse(&diff, &base);
-    assert_eq!(protocol::apply_diff(&inverse, &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &next).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]

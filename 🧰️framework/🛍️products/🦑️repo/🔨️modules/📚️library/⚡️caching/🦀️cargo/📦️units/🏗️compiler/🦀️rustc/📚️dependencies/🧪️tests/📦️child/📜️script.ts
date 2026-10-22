@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{Database}from"bun:sqlite";
 import{writeFile,mkdir}from"node:fs/promises";
 import{join,resolve}from"node:path";

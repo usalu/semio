@@ -9,7 +9,7 @@
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds/📸️snapshot/⬅️before/🔣️.json"));
@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn binds_the_second_representation_for_an_existing_type_role() {
     let base = before();
-    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("bind-representation applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(mutation().diff(&base).diff(), &base).expect("bind-representation applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "bind-representation/binds-a-second-representation-to-an-existing-type: applied state differs from the committed after-snapshot");
     assert_eq!(produced.representations.len(), base.representations.len() + 1, "bind-representation adds exactly one link");
     let bound = produced.representations.last().expect("the new link is pushed at the end");
@@ -51,9 +51,9 @@ async fn the_undo_unbind_representation_targets_the_appended_index() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let SemioKitMutation::UnbindRepresentation(unbind) = &undo[0] else { panic!("bind-representation must undo as unbind-representation") };
     assert_eq!(unbind.index, base.representations.len(), "the undo addresses the index the link was appended AT, not the base length minus one");
-    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward bind-representation applies");
+    let mut current = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward bind-representation applies");
     for step in undo.iter().rev() {
-        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo unbind-representation applies");
+        current = protocol::apply_diff_cold(step.diff(&current).diff(), &current).expect("the undo unbind-representation applies");
     }
     assert_eq!(current, base, "bind-representation/binds-a-second-representation-to-an-existing-type: the undo did not restore the before-snapshot");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds_as_committed() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let outcome = <SemioKitMutation as ColdMutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "bind-representation/binds-a-second-representation-to-an-existing-type: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -106,6 +106,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed bind-representation diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed bind-representation diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed bind-representation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "bind-representation/binds-a-second-representation-to-an-existing-type: committed diff did not carry before to after");
 }

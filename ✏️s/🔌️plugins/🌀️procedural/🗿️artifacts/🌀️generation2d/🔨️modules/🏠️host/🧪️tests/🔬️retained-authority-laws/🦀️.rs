@@ -201,8 +201,8 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     snapshot.state = Generation2dPackSnapshotState::Ingest;
     let vcs = store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
         Box::new(snapshot),
-        std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
-        std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
+        std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
+        std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
         store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
     )
     .unwrap_or_else(|_| panic!("outer retained Pack VCS admission"));
@@ -349,8 +349,8 @@ fn retained_pack_outer_oversized_nested_snapshot_is_returned_for_close_before_vc
         });
         let mut returned = store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             snapshot,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
             store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
         )
         .err()

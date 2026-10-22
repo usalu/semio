@@ -46,7 +46,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 /// empty diff, never a partially-built clone.
 #[semio_framework_async_macros::async_test]
 async fn missing_source_is_reported_as_target_missing() {
-    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let produced = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &DrawingDiff::default(), "a rejecting duplicate-layer must carry an empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
@@ -82,7 +82,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "duplicate-layer/rejects-a-missing-source-layer declares a rejected outcome");
-    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let produced = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

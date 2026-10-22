@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-flow-window-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/flow-flow-rs:verify-flow-window-ownership"
+    "verify-flow-window-ownership": "repo run @semio-tech/flow-flow-rs:verify-flow-window-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

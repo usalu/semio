@@ -46,14 +46,14 @@ func LoadTechnologies() []model.Technology {
 	if technologyCacheLoaded {
 		return technologyCache
 	}
-	technologyCache = loadTechnologiesInternal()
+	technologyCache = loadTechnologiesInternal(workspace.GetRootDir())
 	technologyCacheLoaded = true
 	return technologyCache
 }
 
 // ◽isTechnologyDir holds the data fields for a isTechnologyDir record.
-func isTechnologyDir(name string) bool {
-	readmePath := filepath.Join(workspace.GetRootDir(), name, "README.md")
+func isTechnologyDir(rootDir, name string) bool {
+	readmePath := filepath.Join(rootDir, name, "README.md")
 	content, err := workspace.ReadTextFile(readmePath)
 	if err != nil || !strings.HasPrefix(content, "---") {
 		return false
@@ -68,9 +68,9 @@ func isTechnologyDir(name string) bool {
 }
 
 // ◻loadTechnologiesInternal holds the data fields for a loadTechnologiesInternal record.
-func loadTechnologiesInternal() []model.Technology {
+func loadTechnologiesInternal(rootDir string) []model.Technology {
 	var technologies []model.Technology
-	technologiesDir := workspace.GetRootDir()
+	technologiesDir := rootDir
 	entries, err := os.ReadDir(technologiesDir)
 	if err != nil {
 		return nil
@@ -81,7 +81,7 @@ func loadTechnologiesInternal() []model.Technology {
 			continue
 		}
 		name := d.Name()
-		if !isTechnologyDir(name) {
+		if !isTechnologyDir(rootDir, name) {
 			continue
 		}
 
@@ -89,7 +89,7 @@ func loadTechnologiesInternal() []model.Technology {
 
 		technologyName := rawName
 		technologyKind := model.DeriveTechnologyKind(rawName)
-		readmePath := filepath.Join(workspace.GetRootDir(), name, "README.md")
+		readmePath := filepath.Join(rootDir, name, "README.md")
 		if content, err := workspace.ReadTextFile(readmePath); err == nil && strings.HasPrefix(content, "---") {
 			endIdx := strings.Index(content[3:], "---")
 			if endIdx > 0 {
@@ -124,7 +124,7 @@ func loadTechnologiesInternal() []model.Technology {
 		}
 
 		// Read technology emoji from AGENTS.md frontmatter
-		agentsPath := filepath.Join(workspace.GetRootDir(), name, "AGENTS.md")
+		agentsPath := filepath.Join(rootDir, name, "AGENTS.md")
 		if content, err := workspace.ReadTextFile(agentsPath); err == nil && strings.HasPrefix(content, "---") {
 			endIdx := strings.Index(content[3:], "---")
 			if endIdx > 0 {
@@ -170,7 +170,7 @@ func loadTechnologiesInternal() []model.Technology {
 						Kind:           model.BundleKindSite,
 					}
 					// Read site bundle emoji from AGENTS.md frontmatter
-					siteAgentsPath := filepath.Join(workspace.GetRootDir(), bundlePath, "AGENTS.md")
+					siteAgentsPath := filepath.Join(rootDir, bundlePath, "AGENTS.md")
 					if content, err := workspace.ReadTextFile(siteAgentsPath); err == nil && strings.HasPrefix(content, "---") {
 						endIdx := strings.Index(content[3:], "---")
 						if endIdx > 0 {
@@ -185,7 +185,7 @@ func loadTechnologiesInternal() []model.Technology {
 							}
 						}
 					}
-					bundle.Packages = loadPackages(filepath.Join(workspace.GetRootDir(), bundlePath))
+					bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 					configPath := filepath.Join(technologyPath, bunName, siteName, "project.json")
 					if !workspace.FileExists(configPath) {
 						configPath = filepath.Join(technologyPath, bunName, siteName, "package.json")
@@ -203,7 +203,7 @@ func loadTechnologiesInternal() []model.Technology {
 							}
 						}
 					}
-					technology.Bundles = append(technology.Bundles, bundle)
+					technology.Bundles = append(technology.Bundles, bundle.WithTechnology(technology))
 				}
 				continue
 			}
@@ -220,7 +220,7 @@ func loadTechnologiesInternal() []model.Technology {
 			}
 
 			// Read bundle emoji from AGENTS.md frontmatter
-			bundleAgentsPath := filepath.Join(workspace.GetRootDir(), bundlePath, "AGENTS.md")
+			bundleAgentsPath := filepath.Join(rootDir, bundlePath, "AGENTS.md")
 			if content, err := workspace.ReadTextFile(bundleAgentsPath); err == nil && strings.HasPrefix(content, "---") {
 				endIdx := strings.Index(content[3:], "---")
 				if endIdx > 0 {
@@ -236,7 +236,7 @@ func loadTechnologiesInternal() []model.Technology {
 				}
 			}
 
-			bundle.Packages = loadPackages(filepath.Join(workspace.GetRootDir(), bundlePath))
+			bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 
 			configPath := filepath.Join(technologyPath, bunName, "project.json")
 			if !workspace.FileExists(configPath) {
@@ -255,7 +255,7 @@ func loadTechnologiesInternal() []model.Technology {
 					}
 				}
 			}
-			technology.Bundles = append(technology.Bundles, bundle)
+			technology.Bundles = append(technology.Bundles, bundle.WithTechnology(technology))
 		}
 		technologies = append(technologies, technology)
 	}

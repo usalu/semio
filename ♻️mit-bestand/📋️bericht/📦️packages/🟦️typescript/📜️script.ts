@@ -1,11 +1,11 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🏚️ Validates report sources, build contracts and produced PDF documents. */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, createIssuedResourceControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ActorNetworkScript } from "../../🔨️modules/👥️actor-network/📜️script.ts";
 import { actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../../🔨️modules/👥️actor-network/🟦️.ts";
 const packageRoot = import.meta.dir, ownerRoot = join(packageRoot, "../..");
@@ -25,7 +25,7 @@ class TestScript extends BundleScript {
     const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
     for (const document of reportCatalog.documents) {
       const target = project.targets[`build-${document.id}`];
-      assert.deepEqual(target.outputs, [`{projectRoot}/dist/documents/${document.id}`]);
+      assert.deepEqual(target.outputs, [`{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/report/${document.id}`]);
       assert.equal(target.cache, true);
       assert.deepEqual(target.inputs.flatMap((input: any) => input.externalDependencies ?? []), ["pdfjs-dist", "sharp"]);
       assert.equal(target.inputs.includes("{workspaceRoot}/bun.lock"), false);
@@ -87,22 +87,29 @@ class TestScript extends BundleScript {
       (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
       const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
       const expected = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/📄️pdf.json"), "utf8"));
-      for (const vector of expected.documents) {
-        const path = join(packageRoot, "dist/documents", vector.id, `${basename(DOCUMENTS[vector.id]!, ".tex")}.pdf`);
-        const pdf = await getDocument({ data: new Uint8Array(readFileSync(path)) }).promise;
-        try {
-          assert.ok(pdf.numPages >= vector.minPages, `${vector.id} has ${pdf.numPages} pages`);
-          const text: string[] = [];
-          for (let index = 1; index <= pdf.numPages; index++) {
-            const page = await pdf.getPage(index);
-            text.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
-            page.cleanup();
-          }
-          const content = text.join(" ").replace(/\s+/g, " ");
-          for (const text of vector.text) assert.ok(content.includes(text), `${vector.id} is missing ${text}`);
-          console.log(`Report ${vector.id}: independent PDF.js read ${pdf.numPages} pages and expected content`);
-        } finally { await pdf.destroy(); }
-      }
+      const { withPrintExecutionV1 } = await import("@semio-tech/print/artifacts/operation");
+      const { withPublishedPrintDocumentV1 } = await import("@semio-tech/print/modules/tectonic-template-compilation");
+      const { readPrintMaterialFileV1 } = await import("@semio-tech/print/artifacts/material/producer");
+      const phaseControl = createIssuedResourceControlV1(this.invocation, "print:report:read", 0);
+      await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "document" }, async execution => {
+        for (const vector of expected.documents) await withPublishedPrintDocumentV1(execution, "report", vector.id, async artifact => {
+          const bytes = await readPrintMaterialFileV1(join(artifact.path, `${basename(DOCUMENTS[vector.id]!, ".tex")}.pdf`), 67108864, artifact.control);
+          const pdf = await getDocument({ data: new Uint8Array(bytes) }).promise;
+          try {
+            assert.ok(pdf.numPages >= vector.minPages, `${vector.id} has ${pdf.numPages} pages`);
+            const text: string[] = [];
+            for (let index = 1; index <= pdf.numPages; index++) {
+              const page = await pdf.getPage(index);
+              text.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
+              page.cleanup();
+            }
+            const content = text.join(" ").replace(/\s+/g, " ");
+            for (const text of vector.text) assert.ok(content.includes(text), `${vector.id} is missing ${text}`);
+            console.log(`Report ${vector.id}: independent PDF.js read ${pdf.numPages} pages and expected content`);
+          } finally { await pdf.destroy(); }
+          await artifact.recheck();
+        });
+      });
     }
   }
 }

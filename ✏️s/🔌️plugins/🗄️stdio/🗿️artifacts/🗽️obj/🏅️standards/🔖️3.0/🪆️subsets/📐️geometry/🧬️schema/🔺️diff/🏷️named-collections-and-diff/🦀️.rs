@@ -366,12 +366,9 @@ fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
     }
 }
 
-impl MutationDiff<ObjSnapshot> for ObjDiff {
-    fn apply(&self, base: &ObjSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ObjSnapshot> {
-        validate_obj_diff(self, base)?;
-        Ok(apply_obj_diff_unchecked(self, base))
-    }
+impl MutationDiff<ObjSnapshot> for ObjDiff {}
 
+impl protocol::ColdMutationDiff<ObjSnapshot> for ObjDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Index-keyed
     /// collections use the label-simulation transport (`generic_absorb_pair`); name-keyed
     /// collections use `absorb_named_membership`; every other field is LWW.
@@ -433,6 +430,13 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
             self.unknown_statements = other.unknown_statements;
         }
     }
+
+    fn apply(&self, unpublished: &mut ObjSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let base = &*unpublished;
+        validate_obj_diff(self, base)?;
+        *unpublished = apply_obj_diff_unchecked(self, base);
+        Ok(())
+    }
 }
 
 /// ↩️ Negative rows for the groups triple against its BASE groups; removed groups return at their base index.
@@ -460,6 +464,21 @@ fn inverse_objects(diff: &ObjObjectsDiff, base: &[ObjObject]) -> ObjObjectsDiff 
 }
 
 impl DiffAlgebra<ObjSnapshot> for ObjDiff {
+    fn is_empty(&self) -> bool {
+        self.vertices.as_ref().is_none_or(ObjVerticesDiff::is_empty)
+            && self.texcoords.as_ref().is_none_or(ObjTexCoordsDiff::is_empty)
+            && self.normals.as_ref().is_none_or(ObjNormalsDiff::is_empty)
+            && self.faces.as_ref().is_none_or(ObjFacesDiff::is_empty)
+            && self.groups.as_ref().is_none_or(ObjGroupsDiff::is_empty)
+            && self.objects.as_ref().is_none_or(ObjObjectsDiff::is_empty)
+            && self.mtllib.is_none()
+            && self.usemtl.is_none()
+            && self.smoothing_groups.is_none()
+            && self.unknown_statements.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ObjSnapshot> for ObjDiff {
     /// ↩️ Concrete diff-level undo: every index-keyed collection turns into its negative rows (removed rows return at their base
     /// index), the name-keyed groups and objects restore their base membership and return at their base index, and the replaced
     /// scalars return to their base values.
@@ -476,19 +495,6 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
             smoothing_groups: self.smoothing_groups.as_ref().map(|_| base.smoothing_groups.clone()),
             unknown_statements: self.unknown_statements.as_ref().map(|_| base.unknown_statements.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.vertices.as_ref().is_none_or(ObjVerticesDiff::is_empty)
-            && self.texcoords.as_ref().is_none_or(ObjTexCoordsDiff::is_empty)
-            && self.normals.as_ref().is_none_or(ObjNormalsDiff::is_empty)
-            && self.faces.as_ref().is_none_or(ObjFacesDiff::is_empty)
-            && self.groups.as_ref().is_none_or(ObjGroupsDiff::is_empty)
-            && self.objects.as_ref().is_none_or(ObjObjectsDiff::is_empty)
-            && self.mtllib.is_none()
-            && self.usemtl.is_none()
-            && self.smoothing_groups.is_none()
-            && self.unknown_statements.is_none()
     }
 }
 

@@ -195,5 +195,461 @@
       "facts": "captureFixedReceiverFacts",
       "control": "maintenanceControl"
     }
+  ],
+  "primaryFailures": [
+    {
+      "id": "error-before-deadline",
+      "first": "error",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "error-before-abort",
+      "first": "error",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "undefined-before-deadline",
+      "first": "undefined",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "undefined-before-abort",
+      "first": "undefined",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "null-before-deadline",
+      "first": "null",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "null-before-abort",
+      "first": "null",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "false-before-deadline",
+      "first": "false",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "false-before-abort",
+      "first": "false",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "zero-before-deadline",
+      "first": "zero",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "zero-before-abort",
+      "first": "zero",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "empty-before-deadline",
+      "first": "empty",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "empty-before-abort",
+      "first": "empty",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquired-before-deadline",
+      "first": "none",
+      "late": "deadline",
+      "expected": "late",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquired-before-abort",
+      "first": "none",
+      "late": "abort",
+      "expected": "late",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "nonwaiting-timeout-live",
+      "first": "timeout",
+      "late": "none",
+      "expected": "deferred",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "nonwaiting-timeout-expired",
+      "first": "timeout",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-error-before-deadline",
+      "first": "error",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-error-before-abort",
+      "first": "error",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-undefined-before-deadline",
+      "first": "undefined",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-undefined-before-abort",
+      "first": "undefined",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-null-before-deadline",
+      "first": "null",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-null-before-abort",
+      "first": "null",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-false-before-deadline",
+      "first": "false",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-false-before-abort",
+      "first": "false",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-zero-before-deadline",
+      "first": "zero",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-zero-before-abort",
+      "first": "zero",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-empty-before-deadline",
+      "first": "empty",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "observe-empty-before-abort",
+      "first": "empty",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-error-release-failure",
+      "first": "error",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-error-abort",
+      "first": "error",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-undefined-release-failure",
+      "first": "undefined",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-undefined-abort",
+      "first": "undefined",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-null-release-failure",
+      "first": "null",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-null-abort",
+      "first": "null",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-false-release-failure",
+      "first": "false",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-false-abort",
+      "first": "false",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-zero-release-failure",
+      "first": "zero",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-zero-abort",
+      "first": "zero",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "pending-observe-empty-release-failure",
+      "first": "empty",
+      "late": "deadline",
+      "expected": "aggregate",
+      "origin": "pending-observe",
+      "releaseFailure": true
+    },
+    {
+      "id": "pending-observe-empty-abort",
+      "first": "empty",
+      "late": "abort",
+      "expected": "primary",
+      "origin": "pending-observe",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-error-before-pending-deadline",
+      "first": "error",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-undefined-before-pending-deadline",
+      "first": "undefined",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-null-before-pending-deadline",
+      "first": "null",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-false-before-pending-deadline",
+      "first": "false",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-zero-before-pending-deadline",
+      "first": "zero",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    },
+    {
+      "id": "acquire-empty-before-pending-deadline",
+      "first": "empty",
+      "late": "deadline",
+      "expected": "primary",
+      "origin": "acquire-pending",
+      "releaseFailure": false
+    }
+  ],
+  "continuationDrains": [
+    {
+      "id": "deadline-then-none",
+      "stop": "deadline",
+      "lateFailure": "none",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-error",
+      "stop": "deadline",
+      "lateFailure": "error",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-undefined",
+      "stop": "deadline",
+      "lateFailure": "undefined",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-null",
+      "stop": "deadline",
+      "lateFailure": "null",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-false",
+      "stop": "deadline",
+      "lateFailure": "false",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-zero",
+      "stop": "deadline",
+      "lateFailure": "zero",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "deadline-then-empty",
+      "stop": "deadline",
+      "lateFailure": "empty",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-none",
+      "stop": "abort",
+      "lateFailure": "none",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-error",
+      "stop": "abort",
+      "lateFailure": "error",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-undefined",
+      "stop": "abort",
+      "lateFailure": "undefined",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-null",
+      "stop": "abort",
+      "lateFailure": "null",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-false",
+      "stop": "abort",
+      "lateFailure": "false",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-zero",
+      "stop": "abort",
+      "lateFailure": "zero",
+      "expected": "first-stop-after-drain"
+    },
+    {
+      "id": "abort-then-empty",
+      "stop": "abort",
+      "lateFailure": "empty",
+      "expected": "first-stop-after-drain"
+    }
   ]
 }

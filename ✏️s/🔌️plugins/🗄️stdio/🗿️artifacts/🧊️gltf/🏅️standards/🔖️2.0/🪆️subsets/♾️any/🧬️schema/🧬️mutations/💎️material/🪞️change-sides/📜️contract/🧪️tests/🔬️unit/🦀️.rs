@@ -20,7 +20,7 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let mut expected = base.clone();
         expected.document.materials[0].double_sided = decode(&vector["after"]["doubleSided"]);
         assert_eq!(base.document.materials[0].double_sided, decode::<bool>(&vector["undo"]["doubleSided"]));
-        let direct = protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap();
+        let direct = protocol::apply_diff_cold(&mutation::plan(&payload, &base).unwrap(), &base).unwrap();
         assert_eq!(direct, expected);
         assert_eq!(mutation::validate(&payload, &direct).unwrap_err().code, "gltf.mutation.no-observable-change");
         assert_laws(&mutation::ChangeMaterialDoubleSidedMutation::Apply(payload.clone()), &base, &expected);

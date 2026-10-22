@@ -83,7 +83,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-status/draft-to-review declares an applied outcome");
-    let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let produced = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-status/draft-to-review: review differs from draft, so no no-op warning is expected, got {:?}", produced.messages());
     assert_eq!(produced.diff().status.as_deref(), Some("review"), "change-status's sparse diff must pin exactly the status field");
 }
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// not drag the tag set along with it, and the committed `"tags": null` is what pins that.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
+    let outcome = <VcsDemoMutation as protocol::ColdMutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-status/draft-to-review: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-status/draft-to-review: committed diff did not carry before to after");
 }
 

@@ -43,7 +43,7 @@ test("the remote execution switch agrees with an independent Python parser and t
   expect(admit(selected),row.name).toBe(true);
   const actual=api.bazelRemoteExecutionV1(environment);expect((actual===undefined?null:{...actual}) as unknown,row.name).toEqual(row.expected);
   if(python&&actual){
-   const result=run("import json,sys\nenvironment,platforms,defaults=json.loads(sys.stdin.read())\nplatform=environment.get('SEMIO_REMOTE_EXECUTION_PLATFORM',defaults['platform'])\nproperties=dict(next(p for p in platforms if p['id']==platform)['properties'])\nfor pair in filter(None,environment.get('SEMIO_REMOTE_EXECUTION_PROPERTIES','').split(',')):\n    key,_,value=pair.partition('=')\n    properties[key]=value\njobs=min(defaults['maximum'],int(environment.get('SEMIO_REMOTE_EXECUTION_JOBS',defaults['jobs'])))\nprint(json.dumps({'endpoint':environment['SEMIO_REMOTE_EXECUTION_ENDPOINT'],'platform':platform,'properties':dict(sorted(properties.items())),'jobs':jobs}))",[environment,contract.platforms,{platform:contract.remote.defaultPlatform,maximum:contract.remote.maximumJobs,jobs:contract.remote.defaultJobs}]);
+   const result=run("import json,sys\nenvironment,platforms,defaults=json.loads(sys.stdin.read())\nplatform=environment.get('SEMIO_REMOTE_EXECUTION_PLATFORM',defaults['platform'])\nproperties=dict(next(p for p in platforms if p['id']==platform)['properties'])\nfor pair in filter(None,environment.get('SEMIO_REMOTE_EXECUTION_PROPERTIES','').split(',')):\n    key,_,value=pair.partition('=')\n    properties[key]=value\njobs=min(defaults['maximum'],int(environment.get('SEMIO_REMOTE_EXECUTION_JOBS',defaults['jobs'])))\nprint(json.dumps({'endpoint':environment['SEMIO_REMOTE_EXECUTION_ENDPOINT'],'instance':environment.get('SEMIO_REMOTE_EXECUTION_INSTANCE',defaults['instance']),'platform':platform,'properties':dict(sorted(properties.items())),'jobs':jobs}))",[environment,contract.platforms,{platform:contract.remote.defaultPlatform,instance:contract.remote.defaultInstance,maximum:contract.remote.maximumJobs,jobs:contract.remote.defaultJobs}]);
    expect(result.exitCode,result.stderr.toString()).toBe(0);expect(JSON.parse(result.stdout.toString()),row.name).toEqual({...actual});
   }
  }
@@ -55,7 +55,8 @@ test("execution flags register only what hermetic actions need, route them to th
   const options={host:row.host,hermetic:row.hermetic,jobs:row.jobs,environment:row.environment as Record<string,string>};
   if("error" in row.expected){expect(()=>api.bazelExecutionFlagsV1(options),row.name).toThrow(row.expected.error);continue;}
   const actual=api.bazelExecutionFlagsV1(options);expect({...actual,command:[...actual.command]},row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);
-  for(const flag of actual.command)expect(flag,row.name).not.toMatch(/remote_cache|disk_cache|remote_upload|remote_instance_name|credential_helper/u);
+  for(const flag of actual.command)expect(flag,row.name).not.toMatch(/(?<!no)remote_cache|disk_cache|remote_upload|credential_helper/u);
+  if(actual.remote)expect(actual.command.filter(flag=>flag.startsWith("--remote_instance_name=")),row.name).toEqual(["--remote_instance_name="+contract.remote.defaultInstance]);else expect(actual.command.some(flag=>/remote_instance_name/u.test(flag)),row.name).toBe(false);
  }
 });
 
@@ -241,7 +242,7 @@ test("hermetic actions disable Bun's content-keyed transpiler cache so identical
 });
 
 test("hermetic class membership is decided from the class table, admits only declared host inputs and yields closed, location-independent manifests",()=>{
- const member=(definition:Record<string,unknown>,target="test",project="@teaching/architecture-course")=>({...task(definition),project,target,id:project+":"+target,root:"proj"}) as any,base={execution:{kind:"command",command:"bun ./📜️script.ts test",cwd:"proj"},outputs:[]};
+ const member=(definition:Record<string,unknown>,target="test",project="@teaching/architecture-course")=>({...task(definition),project,target,id:project+":"+target,root:"proj"}) as any,base={execution:{kind:"command",command:"repo ./📜️script.ts test",cwd:"proj"},outputs:[]};
  const decide=(definition:Record<string,unknown>,inputs:unknown[],cache=true,target="test",project="@teaching/architecture-course")=>api.bazelHermeticDecisionV1(member(definition,target,project),{cache},inputs);
  expect(decide(base,["{projectRoot}/**/*",{env:"SEMIO_TEST_LEVEL"},{runtime:"bun --version"},{externalDependencies:["zod"]}])).toEqual({hermetic:true,class:"ts-test"});
  expect(decide(base,[{env:"HOME"}])).toEqual({hermetic:false,reason:"host-inputs"});

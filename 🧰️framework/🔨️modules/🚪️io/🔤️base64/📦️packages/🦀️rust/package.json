@@ -5,9 +5,9 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-base64-rs:test-native",
-    "test-source": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-base64-rs:test-source",
-    "test-strict": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-base64-rs:test-strict"
+    "test-native": "repo run @semio-tech/framework-io-base64-rs:test-native",
+    "test-source": "repo run @semio-tech/framework-io-base64-rs:test-source",
+    "test-strict": "repo run @semio-tech/framework-io-base64-rs:test-strict"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

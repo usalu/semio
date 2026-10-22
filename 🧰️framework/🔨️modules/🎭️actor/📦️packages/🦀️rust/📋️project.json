@@ -53,7 +53,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-receiving-source",
+        "command": "repo ./📜️script.ts test-original-receiving-source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -78,7 +78,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎭️actor/📦️packages/🦀️rust --manifest 🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long --lib original_actor_ --success-output immediate -- --nocapture",
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎭️actor/📦️packages/🦀️rust --manifest 🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml -- repo ./📜️script.ts test long --lib original_actor_ --success-output immediate -- --nocapture",
         "forwardAllArgs": true
       }
     },
@@ -95,7 +95,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test"
+        "command": "repo ./📜️script.ts test"
       }
     },
     "typegen": {
@@ -108,7 +108,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts typegen"
+        "command": "repo ./📜️script.ts typegen"
       },
       "outputs": [
         "{projectRoot}/../../🤖️generated/🎭️actor"
@@ -125,7 +125,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preview-generated"
+        "command": "repo ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
@@ -133,7 +133,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts wasm"
+        "command": "repo ./📜️script.ts wasm"
       },
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "cache": true,
@@ -159,7 +159,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-operation-diagnostics source"
+        "command": "repo ./📜️script.ts test-operation-diagnostics source"
       },
       "metadata": {
         "semio": {
@@ -184,7 +184,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-operation-diagnostics native"
+        "command": "repo ./📜️script.ts test-operation-diagnostics native"
       },
       "metadata": {
         "semio": {
@@ -208,7 +208,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-owned-async source",
+        "command": "repo ./📜️script.ts test-original-owned-async source",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -233,7 +233,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-owned-async native",
+        "command": "repo ./📜️script.ts test-original-owned-async native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -259,7 +259,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-context-native",
+        "command": "repo ./📜️script.ts test-original-context-native",
         "forwardAllArgs": true
       },
       "metadata": {
@@ -285,7 +285,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-ownership",
+        "command": "repo ./📜️script.ts test-ownership",
         "forwardAllArgs": false
       },
       "configurations": {

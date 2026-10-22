@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 📤️ ABI-level media delivery for ONE port — the route `AppCommand::MediaOut` reaches
     /// through `plugin_produce_media`.
     ///

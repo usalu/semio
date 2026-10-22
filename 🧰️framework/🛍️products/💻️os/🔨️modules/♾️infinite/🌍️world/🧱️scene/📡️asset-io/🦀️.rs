@@ -72,7 +72,7 @@ pub struct WorldAssetResponsePage {
 }
 
 #[derive(Debug)]
-enum WorldAssetResponseBacking{Owned(Box<[u8]>),Original(semio_framework_job::OriginalSuppliedJobPage)}
+pub enum WorldAssetResponseBacking{Owned(Box<[u8]>),Original(semio_framework_job::OriginalSuppliedJobPage)}
 
 impl WorldAssetResponsePage {
     /// 📮️ Native bytes keep their actual supplier return ticket without copying or rebinding authority.
@@ -258,7 +258,7 @@ impl Drop for WorldAssetFetchOwner {
     }
 }
 
-struct WorldAssetClaim {
+pub struct WorldAssetClaim {
     pub epoch: u64,
     pub generation: u64,
     pub revision: u64,
@@ -282,7 +282,7 @@ pub struct WorldAssetIoAuthority {
 
 impl Default for WorldAssetIoAuthority {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; WORLD_ASSET_REQUEST_CAPACITY], completed_cursor: 0, reserved_bytes: 0, closing: false }
+        Self { slots: semio_framework_async_slots::boxed_fixed_slots(|| None), epochs: [0; WORLD_ASSET_REQUEST_CAPACITY], completed_cursor: 0, reserved_bytes: 0, closing: false }
     }
 }
 
@@ -324,7 +324,7 @@ impl WorldAssetIoAuthority {
             url: url.to_owned(),
             reserved_bytes: byte_credits,
             received_bytes: 0,
-            pages: semio_framework_async::boxed_fixed_slots(|| None),
+            pages: semio_framework_async_slots::boxed_fixed_slots(|| None),
             page_len: 0,
                         received_pages: 0,
 page_read: 0,

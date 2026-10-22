@@ -9,6 +9,8 @@ import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍�
 import {withPublishedPlayPagesV1} from "../📦️site/📄pages/📦️publication/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {servePublishedPlay} from "./📦️release/🟦️.ts";
+import { startToolV1, toolExitV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 
 /** 🎭️ Runs acceptance tests only against the server generation prepared and owned by the build tool. */
@@ -27,12 +29,12 @@ export class TestScript extends BundleScript {
       const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
       console.log(`Testing play at ${baseURL}`);
-      const child = Bun.spawn([process.execPath, join(this.repoRoot, "node_modules/playwright/cli.js"), "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output,...this.selection], { cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdout: "inherit", stderr: "inherit", stdin: "ignore" });
+      const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
       const cancel = (): void => { child.kill("SIGTERM"); };
       controller.signal.addEventListener("abort", cancel, { once: true });
       if (controller.signal.aborted) cancel();
       let status: number;
-      try { status = await child.exited; }
+      try { status = await toolExitV1(child); }
       finally { controller.signal.removeEventListener("abort", cancel); }
       if (status !== 0 && !controller.signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
@@ -66,7 +68,7 @@ export class TestReleaseScript extends BundleScript {
 export class TestReleaseRoutingScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Release routing tests accept no arguments");
-    const child = Bun.spawn([process.execPath, "test", join(resolve(this.root, "../.."), "🧪️tests/🧪️playrelease/🟦️.ts")], { cwd: this.repoRoot, stdout: "inherit", stderr: "inherit" });
-    if (await child.exited !== 0) throw new Error("Play release routing contracts failed");
+    const child = startToolV1(runtimeCommandNameV1(), ["test", join(resolve(this.root, "../.."), "🧪️tests/🧪️playrelease/🟦️.ts")], { cwd: this.repoRoot, stdio: ["ignore", "inherit", "inherit"] });
+    if (await toolExitV1(child) !== 0) throw new Error("Play release routing contracts failed");
   }
 }

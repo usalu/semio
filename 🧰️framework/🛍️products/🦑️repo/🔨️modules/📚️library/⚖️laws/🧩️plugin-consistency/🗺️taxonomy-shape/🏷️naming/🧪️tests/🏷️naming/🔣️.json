@@ -1,0 +1,335 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "banned-name-stems-in-files-and-directories",
+   "rule": "policyBannedNameStemBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/core.rs": [],
+    "✏️s/🔌️plugins/🔭️p/🔸️utils/x": [],
+    "🧰️framework/🔨️modules/🔸️Helper.ts": [],
+    "🌎️hub/🔸️shared/x": [],
+    "♻️mit-bestand/lib.go": [],
+    "✏️s/🔌️plugins/🔭️p/🔸️ok/x": [],
+    "✏️s/🔌️plugins/🔭️p/🪆️subsets/🔸️base/x": [],
+    "✏️s/🔌️plugins/🔭️p/🔸️base/x": [],
+    "✏️s/🔌️plugins/🔭️p/node_modules/core.rs": [],
+    "other/core.rs": [],
+    "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/common.js": []
+   },
+   "expect": [
+    [
+     "banned-name-stem-✏️s/🔌️plugins/🔭️p/core.rs",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ],
+    [
+     "banned-name-stem-✏️s/🔌️plugins/🔭️p/🔸️utils",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ],
+    [
+     "banned-name-stem-🧰️framework/🔨️modules/🔸️Helper.ts",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ],
+    [
+     "banned-name-stem-🌎️hub/🔸️shared",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ],
+    [
+     "banned-name-stem-♻️mit-bestand/lib.go",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ],
+    [
+     "banned-name-stem-✏️s/🔌️plugins/🔭️p/🔸️base",
+     "taxonomy/banned-name-stem",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "plugin-roots-need-a-leaf-and-a-commands-leaf",
+   "rule": "policyPluginRootShapeBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️ok/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️ok/🎮️commands/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️bare/x.txt": [],
+    "✏️s/🔌️plugins/🔭️nested/🔌️plugin/x": [],
+    "✏️s/🔌️plugins/🔭️nested/🦀️.rs": [],
+    "✏️s/🔌️plugins/🔭️nested/🎮️commands/🦀️.rs": [],
+    "✏️s/🔌️plugins/loose.txt": []
+   },
+   "expect": [
+    [
+     "plugin-root-leaf-✏️s/🔌️plugins/🔭️bare",
+     "taxonomy/plugin-root-shape",
+     "high",
+     0
+    ],
+    [
+     "plugin-root-child-✏️s/🔌️plugins/🔭️bare/🎮️commands",
+     "taxonomy/plugin-root-shape",
+     "high",
+     0
+    ],
+    [
+     "plugin-root-nested-✏️s/🔌️plugins/🔭️nested",
+     "taxonomy/plugin-root-shape",
+     "high",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "plugin-builders-do-not-use-macros-or-bundles",
+   "rule": "policyPluginBuilderBreaches",
+   "files": {
+    "a/🦀️.rs": [
+     "semio_plugin! { x }"
+    ],
+    "b/🦀️.rs": [
+     "let p = PluginBundle::new();",
+     "let q = PluginBundle { a: 1 };"
+    ],
+    "c/🦀️.rs": [
+     "Plugin::builder(1)"
+    ],
+    "d/🦀️.rs": [
+     "semio_plugin! { x }"
+    ],
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs": [
+     "semio_plugin! { x }"
+    ]
+   },
+   "expect": [
+    [
+     "plugin-builder-macro-a/🦀️.rs",
+     "taxonomy/plugin-builder",
+     "high",
+     0
+    ],
+    [
+     "plugin-builder-bundle-b/🦀️.rs",
+     "taxonomy/plugin-builder",
+     "high",
+     0
+    ]
+   ],
+   "crates": [
+    {
+     "libRelPath": "a/🦀️.rs",
+     "role": "plugin",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    },
+    {
+     "libRelPath": "b/🦀️.rs",
+     "role": "extension",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    },
+    {
+     "libRelPath": "c/🦀️.rs",
+     "role": "plugin",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    },
+    {
+     "libRelPath": "d/🦀️.rs",
+     "role": "tool",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    },
+    {
+     "libRelPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+     "role": "plugin",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    },
+    {
+     "libRelPath": "missing/🦀️.rs",
+     "role": "plugin",
+     "pluginId": "p",
+     "ownerRel": "o",
+     "shape": "taxonomy",
+     "dir": "d"
+    }
+   ]
+  },
+  {
+   "id": "spr-naming-forbids-protocol-names",
+   "rule": "policySprNamingBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️p/🧩️protocol/x": [],
+    "✏️s/🔌️plugins/🔭️p/📡️Protocol.rs": [],
+    "✏️s/🔌️plugins/🔭️p/📡️spr/x": [],
+    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+     "mod protocol_spec;",
+     "pub struct SomeProtocolHandler;",
+     "enum Protocols {}",
+     "type X = u8;",
+     "fn protocol() {}",
+     "const Protocol: u8 = 1;"
+    ]
+   },
+   "expect": [
+    [
+     "spr-naming-path-✏️s/🔌️plugins/🔭️p/🧩️protocol",
+     "taxonomy/spr-naming",
+     "medium",
+     0
+    ],
+    [
+     "spr-naming-path-✏️s/🔌️plugins/🔭️p/📡️Protocol.rs",
+     "taxonomy/spr-naming",
+     "medium",
+     0
+    ],
+    [
+     "spr-naming-ident-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs-0",
+     "taxonomy/spr-naming",
+     "medium",
+     1
+    ],
+    [
+     "spr-naming-ident-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs-23",
+     "taxonomy/spr-naming",
+     "medium",
+     2
+    ],
+    [
+     "spr-naming-ident-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs-51",
+     "taxonomy/spr-naming",
+     "medium",
+     3
+    ]
+   ],
+   "crates": [
+    {
+     "libRelPath": "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs",
+     "role": "plugin",
+     "pluginId": "p",
+     "ownerRel": "✏️s/🔌️plugins/🔭️p",
+     "shape": "taxonomy",
+     "dir": "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust"
+    }
+   ]
+  },
+  {
+   "id": "emoji-prefix-directory-without-an-emoji-prefix",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/plain-dir/🧾️ok.txt": []
+   },
+   "expect": [
+    [
+     "path-emoji-missing-✏️s/🔌️plugins/🔭️probe/plain-dir",
+     "folder/name/missing-emoji",
+     "high",
+     0
+    ]
+   ],
+   "git": true,
+   "oracle": false
+  },
+  {
+   "id": "emoji-prefix-duplicate-sibling-emoji-identities",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🧭️first/🧾️a.txt": [],
+    "✏️s/🔌️plugins/🔭️probe/🧭️second/🧾️a.txt": []
+   },
+   "expect": [
+    [
+     "path-emoji-duplicate-✏️s/🔌️plugins/🔭️probe/🧭️second",
+     "folder/name/emoji-not-unique",
+     "high",
+     0
+    ]
+   ],
+   "git": true,
+   "oracle": false
+  },
+  {
+   "id": "emoji-prefix-generic-folder-emoji",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/📁️generic/🧾️a.txt": []
+   },
+   "expect": [
+    [
+     "path-emoji-generic-✏️s/🔌️plugins/🔭️probe/📁️generic",
+     "folder/name/generic-emoji",
+     "high",
+     0
+    ]
+   ],
+   "git": true,
+   "oracle": false
+  },
+  {
+   "id": "emoji-prefix-whitespace-after-the-emoji",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🧾️ spaced.ts": []
+   },
+   "expect": [
+    [
+     "path-emoji-spacing-✏️s/🔌️plugins/🔭️probe/🧾️ spaced.ts",
+     "file/name/whitespace-after-emoji",
+     "high",
+     0
+    ]
+   ],
+   "git": true,
+   "oracle": false
+  },
+  {
+   "id": "emoji-prefix-several-emojis-in-one-name",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🧾️🧭️double.ts": []
+   },
+   "expect": [
+    [
+     "path-emoji-multiple-✏️s/🔌️plugins/🔭️probe/🧾️🧭️double.ts",
+     "file/name/multiple-emojis",
+     "high",
+     0
+    ]
+   ],
+   "git": true,
+   "oracle": false
+  },
+  {
+   "id": "emoji-prefix-clean-emoji-names",
+   "rule": "policyEmojiPrefixBreaches",
+   "files": {
+    "✏️s/🔌️plugins/🔭️probe/🧾️ok.ts": [],
+    "✏️s/🔌️plugins/🔭️probe/🧭️dir/🧾️inner.txt": []
+   },
+   "expect": [],
+   "git": true,
+   "oracle": false
+  }
+ ]
+}

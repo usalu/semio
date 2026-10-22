@@ -12,7 +12,7 @@ pub(super) async fn arm_transaction_prepare<PA: PluginApp>(
     let protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops } = command else { unreachable!("arm_transaction_prepare is dispatched only for its own command") };
     let decoded_origin = if origin.is_empty() { Ok(None) } else { decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some) };
     match decoded_origin {
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
         Ok(decoded_origin) => {
             let outcome = with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
@@ -31,7 +31,7 @@ pub(super) async fn arm_transaction_prepare<PA: PluginApp>(
                     frames.push(protocol::AppFrame::TransactionPrepared { txn_id, foreign, rejection });
                     frames.push(protocol::AppFrame::Done { in_reply_to: seq });
                 }
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                Err(fault) => push_app_fault(frames, Some(seq), fault).await,
             }
         }
     }
@@ -59,7 +59,7 @@ pub(super) async fn arm_transaction_commit<PA: PluginApp>(
             frames.push(protocol::AppFrame::TransactionCommitted { txn_id, edit_id });
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -81,7 +81,7 @@ pub(super) async fn arm_transaction_rollback<PA: PluginApp>(
             frames.push(protocol::AppFrame::TransactionRolledBack { txn_id });
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -105,7 +105,7 @@ pub(super) async fn arm_transaction_undo<PA: PluginApp>(
             flags.mutated = true;
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }
@@ -129,7 +129,7 @@ pub(super) async fn arm_transaction_redo<PA: PluginApp>(
             flags.mutated = true;
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
         }
-        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }
     Ok(())
 }

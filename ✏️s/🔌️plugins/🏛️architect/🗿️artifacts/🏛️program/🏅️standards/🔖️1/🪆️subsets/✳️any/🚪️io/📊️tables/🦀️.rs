@@ -215,8 +215,8 @@ struct ImportRun {
 
 impl ImportRun {
     fn emit(&mut self, mutation: ProgramMutation) {
-        use protocol::Mutation;
-        if let Ok(next) = protocol::apply_diff(mutation.diff(&self.work).diff(), &self.work) {
+        use protocol::{ColdMutation, Mutation};
+        if let Ok(next) = protocol::apply_diff_cold(mutation.diff(&self.work).diff(), &self.work) {
             self.work = next;
             self.mutations.push(mutation);
         }

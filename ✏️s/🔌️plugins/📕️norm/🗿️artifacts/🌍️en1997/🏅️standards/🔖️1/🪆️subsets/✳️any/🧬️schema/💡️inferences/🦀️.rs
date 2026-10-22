@@ -83,10 +83,6 @@ pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
     check_project(document)
 }
 
-/// 📋️ Compatibility alias used by older call sites.
-pub fn check_full_geotechnical(document: &En1997Snapshot) -> CheckReport {
-    check_project(document)
-}
 //#endregion 🔖️ComplianceReport
 
 //#region 🧪️ComplianceReportTests

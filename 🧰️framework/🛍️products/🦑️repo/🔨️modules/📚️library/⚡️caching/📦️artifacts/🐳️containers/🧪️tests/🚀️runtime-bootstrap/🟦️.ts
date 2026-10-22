@@ -76,7 +76,7 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
     assert.deepEqual(row.expectedCalls, require("lodash").take(bootstrapStages, cutoff), row.id);
     assert.equal(row.expectedStatus, row.failAt === null ? 0 : 1, row.id);
     if (process.platform === "win32") continue;
-    const recording = [
+    const recording: string = [
       "set -eu", "exec 3>&1", "native_available=$NATIVE_INITIAL",
       "log() { :; }",
       "bun() { [ \"$*\" = \"repo run repo-mcp:install\" ] || return 92; printf 'installer\\n' >&3; [ \"$FAIL_AT\" != installer ] || return 9; native_available=1; }",

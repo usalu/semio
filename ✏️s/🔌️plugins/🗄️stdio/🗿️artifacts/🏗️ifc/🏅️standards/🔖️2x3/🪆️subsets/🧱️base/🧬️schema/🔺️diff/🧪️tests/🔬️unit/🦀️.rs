@@ -4,7 +4,7 @@ use super::*;
 async fn invalid_instance_order_is_rejected_before_mutation() {
     let base = Ifc2x3Snapshot::default();
     let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
-    let error = protocol::apply_diff(&diff, &base).expect_err("unknown instance order target must be rejected");
+    let error = protocol::apply_diff_cold(&diff, &base).expect_err("unknown instance order target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-instance-order");
     assert_eq!(error.target, vec!["instanceOrder", "1"]);
     assert_eq!(base, Ifc2x3Snapshot::default());
@@ -48,19 +48,19 @@ async fn absorb_matches_sequential_apply() {
     let mut merged = d1.clone();
     merged.absorb(d2.clone());
     let sequential = {
-        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
-        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+        let mid = protocol::apply_diff_cold(&d1, &base).expect("valid first diff");
+        protocol::apply_diff_cold(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff_cold(&merged, &base).expect("valid absorbed diff"), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diff_level_roundtrip() {
     let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
     let d = Ifc2x3Diff { removed_instances: vec![2], upserted_instances: vec![inst(1, "IFCWALLSTANDARDCASE"), inst(4, "IFCCOLUMN")], ..Default::default() };
-    let next = protocol::apply_diff(&d, &base).expect("valid forward diff");
+    let next = protocol::apply_diff_cold(&d, &base).expect("valid forward diff");
     let inv = d.inverse(&base);
-    assert_eq!(protocol::apply_diff(&inv, &next).expect("valid inverse diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&inv, &next).expect("valid inverse diff"), base);
 }
 
 //#region 🔖️diff_codec_text_binary_roundtrip_law

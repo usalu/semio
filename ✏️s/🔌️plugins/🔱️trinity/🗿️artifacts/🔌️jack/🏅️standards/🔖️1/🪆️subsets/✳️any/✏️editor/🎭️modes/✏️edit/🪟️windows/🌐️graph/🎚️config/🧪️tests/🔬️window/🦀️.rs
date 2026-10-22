@@ -1,7 +1,7 @@
 //! 🧪️ Neutral Jack graph-window configuration mutation and routing laws.
 
 use crate::editor::jack::window_config::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
 #[test]
@@ -13,8 +13,8 @@ fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
         let id = row["windowId"].as_str().unwrap();
         let mutation: JackGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let before = windows[id].clone();
-        let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
-        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+        let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap();
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(JackGraphWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(JackGraphWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
@@ -56,7 +56,7 @@ async fn jack_graph_window_config_inverses_sum_to_the_negative_diff() {
         let mutation: JackGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let before = windows[id].clone();
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
-        windows.insert(id.into(), protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap());
+        windows.insert(id.into(), protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap());
     }
 }
 

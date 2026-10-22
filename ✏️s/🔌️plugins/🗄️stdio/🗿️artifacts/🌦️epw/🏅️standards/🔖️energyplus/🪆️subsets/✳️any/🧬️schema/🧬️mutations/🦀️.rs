@@ -53,7 +53,7 @@ pub mod set_typical_extreme_periods;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = EpwSnapshot, diff = EpwDiff, schema = "EpwMutation")]
+#[mutations(snapshot = EpwSnapshot, diff = EpwDiff, schema = "EpwMutation", reference = EpwSnapshot, reference_diff = EpwDiff)]
 pub enum EpwMutation {
     /// 📍️ Replaces the LOCATION header line.
     SetLocation(set_location::SetLocation),

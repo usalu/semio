@@ -47,7 +47,7 @@ if(env.MICRO==="1"){
 }
 const frontier=generations.createFrontierV1({directories:[],members:[],capturedAt:0});
 const engine=generations.createGenerationStoreV1({root:join(SCRATCH,"generations"),holds:async()=>true,resources:{facts:"facts",builder:"builder"}});
-const result:any=await phase("refresh",()=>engine.refresh({identity:"a".repeat(64),policy:"fresh",membership:async()=>({digest:"b".repeat(64),frontier,changes:[]}),compute:async()=>shaped,signal:undefined,progress:undefined}));
+const result:any=await phase("refresh",()=>engine.refresh({identity:"a".repeat(64),implementation:"d".repeat(64),policy:"fresh",membership:async()=>({digest:"b".repeat(64),frontier,changes:[]}),compute:async()=>shaped,signal:undefined,progress:undefined}));
 const dirBytes=(d:string)=>{let n=0;try{for(const f of readdirSync(join(SCRATCH,"generations",d)))n+=statSync(join(SCRATCH,"generations",d,f)).size;}catch{}return n;};
 const assembled:any=await phase("assemble",()=>engine.assemble(result.current,{compare:(a:string,b:string)=>a<b?-1:a>b?1:0}));
 const projects=Object.keys(assembled.projects).length;

@@ -399,6 +399,17 @@ impl ArtifactEditMessageLedger {
         self.push_reserved(entry)
     }
 
+    /// 📏️ Whether a premeasured entry of this identity and extent can be admitted: it fits the fixed bounds and either replaces its edit's earlier entry or takes a free slot.
+    pub fn admits_measured(&self, id: &str, bytes: usize) -> bool {
+        id.len() <= ARTIFACT_EDIT_MESSAGE_ID_BYTES && bytes <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES && self.admission_is_complete() && (self.find_ticket(id).is_some() || self.free_len != 0)
+    }
+
+    /// 🔐️ Admits one entry the diagnostic stage measured and bounded before any ownership moved: an entry of the same edit replaces the earlier one in place and hands it back for its funded retirement.
+    pub fn admit_prepared(&mut self, entry: protocol::EditMessages) -> Result<Option<protocol::EditMessages>, protocol::EditMessages> {
+        if let Some(existing) = self.get_mut_by_id(&entry.edit_id) { return Ok(Some(std::mem::replace(existing, entry))); }
+        self.try_push(entry).map(|_| None)
+    }
+
     pub fn admit(&mut self, entry: protocol::EditMessages) -> Result<(), protocol::EditMessages> {
         self.try_push(entry).map(|_| ())
     }

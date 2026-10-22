@@ -1,0 +1,233 @@
+== storybook
+[verify] {offenders} Storybook-Bereich(e) / Tailwind-Einstiegspfad(e) sind veraltet:
+run-check: HAND_CURATED_SCOPES in `.storybook/📖️stories/🧭️coordination/🟦️.ts` (oder das eigene Manifest des teilnehmenden Pakets bzw. die globals.css der App) anpassen — siehe 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.
+== tool-jobs
+Erwartet: verify interactivity tool-jobs mounted-dispatch
+[verify interactivity tool-jobs mounted-dispatch] laws={laws} sauber. ¦ laws
+[verify interactivity tool-jobs fixed-operation-fixture] Das generierte Rust-Fixture ist veraltet.
+[verify interactivity tool-jobs fixed-operation-fixture] laws={laws} mutations={mutations} rustFixtureFresh=true. ¦ laws,mutations
+[verify interactivity tool-jobs p2c] Der Vertrag für die Live-Wiedergabe mit fester Operation ist fehlgeschlagen.
+[verify interactivity tool-jobs p2c] Live-Quelle sauber; hostile-mutations={mutations}.
+[verify interactivity tool-jobs p2a1] Der Rejection-Transfer-Vertrag des Stores ist fehlgeschlagen.
+[verify interactivity tool-jobs p2a1] Live-Quelle sauber; hostile-mutations={mutations}.
+[verify interactivity tool-jobs] Das generierte Rust-Fixture der festen Operation ist veraltet.
+[verify interactivity tool-jobs] Prüfung der Nachweise der App-Aktivierungsfabrik: {activation}
+[verify interactivity tool-jobs] exact-factory-proof-owners={owners} custom-rows={customRows} generic-rows={genericRows} sauber.
+[verify interactivity tool-jobs] self-tests={selfTests} sauber. ¦ selfTests
+[verify interactivity tool-jobs] Nicht unterstütztes Format {format}.
+[verify interactivity tool-jobs] --output muss eine Datei innerhalb des Repositorys nennen.
+[verify interactivity tool-jobs] {output} geschrieben
+[verify interactivity tool-jobs] production-hosts={macroHostFiles} production-invocations={macroInvocations} production-rows={commandRows} literal-registrations={literalRegistrations} fixture-hosts={fixtureMacroHostFiles} fixture-invocations={fixtureMacroInvocations} fixture-rows={fixtureCommandRows} admitted={boundedRows} batch-only={batchOnlyRows} forbidden={forbiddenRows} deleted={deletedRows} remaining={remainingCommands} unique={uniqueCommandRows} factories={productionFactories} registrations={productionRegistrations} dispatches={productionDispatches} aliases={aliases} self-tests={selfTests}
+[verify interactivity tool-jobs] {failures}
+== gates
+Erwartet: verify layering
+[verify canonical-architecture] Verträge der Eigentümer für Abhängigkeiten, Zustand und E/A werden geprüft…
+[verify] Modulgrenzen (dependency-cruiser)…
+[verify] Aktualität des generierten Katalogs…
+[verify] Skript-Lints für Region und Host-Vertrag…
+[verify] Aktualität der Bindung an das Framework-eigene Schema…
+[verify] Aktualität der Parser-Projektion des Schemas…
+[verify] Aktualität der UI-Achsen für Sprache und Terminologie…
+[verify] Suche nach fest eingetragenen i18n-Literalen im Chrome…
+[verify] Abhängigkeitsrichtung von TypeScript/JavaScript…
+[verify] Test-Taxonomie und Feature-Vertrag der Eigentümerwurzeln…
+[verify] Aktualität der Storybook-Bereiche…
+[verify] Indizierte generierte Ausgabe (wasm/jco/wasm-pack)…
+[verify] {breaches} Verstoß/Verstöße gegen die indizierte generierte Ausgabe ¦ breaches
+[verify] Richtlinien zur exklusiven Zustandshoheit des Betriebssystems…
+[verify] {breaches} Verstoß/Verstöße gegen die Richtlinien zur exklusiven Zustandshoheit des Betriebssystems ¦ breaches
+[verify] Vokabular von Standards und Subsets…
+[verify] {breaches} Verstoß/Verstöße gegen die Vokabular-Richtlinie für Standards und Subsets ¦ breaches
+[verify] Richtlinien P3/M4 für handgeschriebene Grammatiken…
+[verify] {breaches} Verstoß/Verstöße gegen die Richtlinien P3/M4 für handgeschriebene Grammatiken ¦ breaches
+[verify] Facet-Richtlinien der Artefakt-Schemas…
+[verify] {breaches} Verstoß/Verstöße gegen die Richtlinien der Artefakt-Schemas ¦ breaches
+[verify] Facet-Richtlinien der App-Schemas…
+[verify] {breaches} Verstoß/Verstöße gegen die Richtlinien der App-Schemas ¦ breaches
+[verify] Register der Build-Eigentümer…
+[verify] Zero-Touch-Hüllen…
+[verify] Sprachreinheit der Pakete…
+[verify] {breaches} Verstoß/Verstöße gegen die Sprachreinheit der Pakete ¦ breaches
+[verify] Richtlinien für Dissolve-Core und Plugin-Wurzeln…
+[verify] {breaches} Verstoß/Verstöße gegen die Richtlinien für Dissolve-Core und Plugin-Wurzeln ¦ breaches
+[verify] Taxonomie der Fensterfähigkeiten…
+[verify] {breaches} Verstoß/Verstöße gegen die Taxonomie der Fenster- und Modusfähigkeiten ¦ breaches
+[verify] Gesetz zu Mutationsergebnis und Merge-Richtlinie…
+[verify] {breaches} Verstoß/Verstöße gegen das Gesetz zu Mutationsergebnis und Merge-Richtlinie ¦ breaches
+[verify] Hülle der Historie…
+[verify] Der Selbsttest der Historien-Hülle hat keinen Fall ausgeführt
+[verify] {breaches} Verstoß/Verstöße gegen die Historien-Hülle ¦ breaches
+[verify] Gesetze der DSL-Fixtures…
+[verify] wasm32-Bindungen des Actor-Kernels…
+[verify] Gate bestanden.
+== interactivity
+[verify interactivity apps] {descriptors} Deskriptor(en), {appCount} App-Deklaration(en), {playgrounds} Dashboard-Playground-Befehl(e), {surfaceCount} Dev-Oberfläche(n) über {renderers}, {actionCount} Aktionszeile(n), {surfaceCoveredAppCount} App-Kontext(e) mit Oberflächenabdeckung, {surfaceMissingAppCount} App-Kontext(e) ohne Oberfläche, {gates} vom Dashboard startbare(s) Gate(s), {appSelfTests} feindliche(r)/Orakel-Selbsttest(s).
+  {failures} weitere Fehler der Gesamt-App-Erkennung ausgelassen.
+[verify interactivity] severity={severity} Umfang: {uiRoots} UI-Wurzel(n), {sanctionedRoots} laufzeitsanktionierte Wurzel(n) von der Thread-Pool-Regel ausgenommen. ¦ severity,uiRoots,sanctionedRoots
+[verify interactivity] {findings} Befund(e) insgesamt:
+[verify interactivity] {unlisted} block_on/run_blocking-Befund(e) NICHT durch die Allowlist abgedeckt: ¦ unlisted
+[verify interactivity] {count} Befund(e) der Kategorie "{category}": ¦ count,category
+[verify interactivity] {stale} Allowlist-Eintrag/Einträge passen auf keinen Befund mehr (veraltet — Liste verkleinern): ¦ stale
+[verify interactivity] {invisible} Allowlist-Eintrag/Einträge zur Dokumentation behalten, für diesen Scanner aber strukturell unsichtbar (z. B. nur in Test-Modulen — nie als veraltet gezählt): ¦ invisible
+[verify interactivity] {predeclared} Allowlist-Eintrag/Einträge für eine spätere Erweiterung des Umfangs vorab deklariert (heute nicht gescannt, nicht als veraltet gezählt): ¦ predeclared
+[verify interactivity] WARN-Modus — nur Bericht, Exit 0.
+[verify interactivity] DENY-Modus — {failures} Fehler (Gesamt-App-Erkennung und Dashboard-Oberflächenabdeckung, nicht gelistete blockierende Brücken, veraltete Allowlist-Einträge oder Befunde zu sync-fs/net/clipboard/process/db/thread-pool).
+[verify interactivity] DENY-Modus — sauber.
+[verify interactivity apps] descriptors={descriptors} extensions={extension} apps={appCount} playgrounds={playgrounds} renderers={renderers} surfaces={surfaceCount} actions={actionCount} migratedActions={migratedActionCount} missingActions={missingActionCount} surfaceCoveredApps={surfaceCoveredAppCount} surfaceMissingApps={surfaceMissingAppCount} gates={gates} failures={failures} selfTests={selfTests}
+[verify interactivity apps] {failure}
+[verify interactivity apps] {failures} weitere Fehler der Erkennung oder der Dashboard-Oberflächen ausgelassen.
+[verify interactivity apps] {failures} Fehler der Erkennung oder der Dashboard-Oberflächen.
+[verify interactivity apps actions] dispositionFailures={dispositionFailures} productionJoinFailures={productionFailures} acceptedCommands={acceptedCommandRows} acceptedSharedRoutes={acceptedReservedRoutes}
+[verify interactivity apps actions] {failure}
+[verify interactivity apps actions] {omitted} weitere Aktionsfehler in der Konsolenausgabe ausgelassen. ¦ omitted
+[verify interactivity apps actions] {actionFailures} Fehler bei der Disposition der Deskriptor-Aktionen oder beim Join mit der Produktiv-Erreichbarkeit.
+[verify interactivity apps actions] {actionCount} Deskriptor-Aktionszeile(n) mit {acceptedCommandRows} akzeptierten Produktiv-Befehlszeile(n) und {acceptedReservedRoutes} gemeinsamen reservierten Route(n) verknüpft.
+[verify interactivity p1q-b1-b6] {failures}
+[verify interactivity p1q-b1-b6] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p1w] {failures}
+[verify interactivity p1w] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p1x] {failures}
+[verify interactivity p1x] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p1y] {failures}
+[verify interactivity p1y] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p1z] {failures}
+[verify interactivity p1z] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p5d] {failures}
+[verify interactivity p5d] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p5e] {failures}
+[verify interactivity p5e] Live-Quelle und feindliche Mutationen sauber.
+[verify interactivity p3mn] {failures}
+[verify interactivity p3mn] Live-Quelle und feindliche Mutationen sauber.
+== typescript
+{tag} --scope muss ein repo-relativer Pfad innerhalb des Checkouts sein, erhalten: {value} ¦ tag,value
+{tag} {flag} braucht eine ganze Zahl von mindestens {minimum}, erhalten: {text} ¦ tag,flag,minimum,text
+{tag} Unbekanntes Flag {flag} (erwartet: --scope <Pfad>, --changed, --files-from <Liste>, --out <Datei>, --heap-mb <n>, --timeout-minutes <n>, --max-diagnostics <n>, --list) ¦ tag,flag
+{tag} git {command} ist fehlgeschlagen: {stderr} ¦ tag,command,stderr
+{tag} tsconfig.json muss eine exclude-Liste aus Zeichenketten deklarieren ¦ tag
+{tag} {path} ist vom Workspace-Programm ausgeschlossen, aber {project} existiert nicht, daher würde nichts die Anwendung typprüfen ¦ tag,path,project
+{tag} Die Auswahl trifft keine TypeScript-Quelle ¦ tag
+{tag} {projectPath} kann nicht gelesen werden ¦ tag,projectPath
+{tag} Das Paket typescript ist für {url} nicht installiert; zuerst die Workspace-Abhängigkeiten installieren ¦ tag,url
+{tag} Typprüfung läuft seit {seconds} s (Log {logPath}) ¦ tag,seconds,logPath
+{tag} Die Typprüfung wurde nach {seconds} s durch {signal} gestoppt ¦ tag,signal,seconds
+{tag} {files} Datei(en) lassen sich nicht parsen und wurden nicht typgeprüft (alle anderen schon; Log {syntaxPath}): ¦ tag,files,syntaxPath
+{tag}   … {files} weitere Datei(en) ¦ tag,files
+{tag} Aufruf: verify typescript <project|check> [--scope <Pfad>]… [--changed] [--files-from <Liste>] [--out <Datei>] [--heap-mb <n>] [--timeout-minutes <n>] [--max-diagnostics <n>] [--list] ¦ tag
+{tag} {count} gelistete Wurzel(n) verworfen, die fehlen, ausgeschlossen oder verdeckt sind: {list}{more} ¦ tag,count,list,more
+{tag} Die Typprüfung ist mit Status {status} abgestürzt; das Log {logPath} nennt die Ursache (Heap-Erschöpfung ist Status 134: --heap-mb erhöhen) ¦ tag,status,logPath
+{tag} Die Typprüfung ist mit Status {status} bei {project} abgestürzt; das Log {log} nennt die Ursache ¦ tag,status,project,log
+{tag} {total} Diagnose(n) überschreiten die erlaubten {allowed}; siehe {logPath} ¦ tag,total,allowed,logPath
+== census
+[verify source-census] {line}
+[verify production-placeholders] {production} {macro}! {path}:{line}
+[verify production-placeholders] Orakel widerspricht: {disagreement}
+[verify production-placeholders] files={files} production={production} test={test} commented={commented} oracle={oracle} ¦ files,production,test,commented,oracle
+| Eigentümer | migriert | nicht erreichbar (BatchOnlyPendingRewrite) | sonstige | nicht erreichbare Befehle |\n|---|---|---|---|---|
+[verify interactivity commands] Nicht-literale Deklaration {line}
+[verify interactivity commands] Orakel widerspricht: {disagreement}
+[verify interactivity commands] declarations={declarations} unreachable={unreachable} non-literal={nonLiteral} oracle={oracle} ¦ declarations,unreachable,nonLiteral,oracle
+Aufruf: verify docstrings <at-emoji|emoji-first>
+[verify docstrings] {line}
+[verify docstrings] {rule} {path}:{line} {text}
+[verify docstrings] Orakel widerspricht: {disagreement}
+[verify docstrings] rule={rule} files={files} at-emoji={atEmoji} no-emoji={noEmoji} oracle={oracle} ¦ rule,files,atEmoji,noEmoji,oracle
+Aufruf: verify docstrings emoji-unique [--files-from <Liste>]
+[verify docstrings] emoji-unique {path} repeats={repeats} {emojis}
+[verify docstrings] rule=emoji-unique files={files} reusing={reusing} repeats={repeats}{over} ¦ files,reusing,repeats,over
+Aufruf: verify agnostic <framework-names|utility-machines>
+[verify agnostic] {line}
+[verify agnostic] framework-names {path}:{line} {name} {text}
+[verify agnostic] Orakel widerspricht: {disagreement}
+[verify agnostic] rule=framework-names files={files} naming={naming} lines={lines} oracle={oracle} ¦ files,naming,lines,oracle
+[verify agnostic] utility-machines {role} {artifact} utilities={utilities} vocabulary={vocabulary} ¦ role,artifact,utilities,vocabulary
+[verify agnostic] rule=utility-machines files={files} artifacts={artifacts} offenders={offenders}
+Aufruf: verify mutation-caps [--under <repository-relativer Pfad>]
+verify mutation-caps: --under {path} enthält kein begrenztes Blatt ¦ path
+[verify mutation-caps] {plugin} bounded={bounded} missing={missing} ¦ plugin,bounded,missing
+[verify mutation-caps] {code} {directory} — {detail}
+[verify mutation-caps] bounded={bounded} capLawMissing={capLawMissing} ¦ bounded,capLawMissing
+[verify debug-tags] {line}
+[verify debug-tags] {path}:{line} {text}
+[verify debug-tags] Orakel widerspricht: {disagreement}
+[verify debug-tags] files={files} lines={lines} oracle={oracle} ¦ files,lines,oracle
+[verify interface-owners] {line}
+[verify interface-owners] {path}:{line} importiert {specifier} außerhalb von {owner}
+[verify interface-owners] Orakel widerspricht: {disagreement}
+[verify interface-owners] files={files} imports={imports} oracle={oracle} ¦ files,imports,oracle
+== run
+Erwartet: verify canonical-architecture
+Der Worker-Test des Browser-Actor-Host-Kontexts ist fehlgeschlagen
+Eigentümer des Artefakt-Schemas erforderlich
+artifact-contract-ownership: Prüfungen von Diff-Erzeugung, kanonischer Kodierung und Anwendung für {packages} ausgewählte Artefakt-Crates abgeschlossen.
+[verify artifact-contract-ownership] {packages} Artefakt-Crates und ihre Tests lassen sich kompilieren.
+window-config-provisioning-lifecycle nimmt keine Argumente an
+window-config-retained-pack-load erfordert native
+framework-viewport-projection akzeptiert nur die optionale Phase native
+node-graph-viewport-ownership akzeptiert native mit der optionalen Phase renderer-host oder consumers
+window-config-pack-identity akzeptiert nur das optionale native
+[verify artifact-field-parity] {path}: missing={missing} extra={extra}
+[verify artifact-field-parity] {breaches} Schema-Darstellungen weichen von den kanonischen Dokumentfeldmengen ab.
+Die Artefakt-Schema-Darstellungen stimmen bei den Dokumentfeldern nicht überein.
+[verify abstraction-ownership] {scope}: {summary}
+[verify abstraction-ownership] {breaches} falsch platzierte Deklarationen.
+Vom Betriebssystem verantwortete Einstellungen oder Host-Steuerungen werden von Plugin-Oberflächen deklariert.
+== rust-warnings
+[verify rust-warnings] Mitglieds-Manifest für {member} fehlt.
+[verify rust-warnings] Paketname fehlt in {path}.
+[verify rust-warnings] Unbekanntes Ziel {target} (erwartet: native | wasm32-wasip2 | wasm32-unknown-unknown).
+== lanes
+[verify taxonomy implementation] Erwartet: report oder enforce, erhalten: {args}. ¦ args
+[verify taxonomy implementation progress] phase={phase} visited={pathsVisited} classified={pathsClassified} findings={findings} vanished={vanishedDirectories}
+[verify taxonomy implementation {mode}] clean={clean} errors={errors} ¦ mode,clean,errors
+[verify taxonomy implementation {mode}] Fehler {breachId} {path}: {expected} ¦ mode,breachId,path,expected
+[verify taxonomy implementation enforce] {findings} Fehlerbefund(e).
+[verify taxonomy] Erwartet: report oder enforce, erhalten: {mode}.
+[verify taxonomy {mode}] clean={clean} errors={errors} warnings={warnings} scope={scope}{closure} ¦ mode,clean,errors,warnings,scope,closure
+[verify taxonomy {mode}] {severity} {code} {path}: {message}
+[verify taxonomy {mode}] scopes={scopes} dirty={dirty} from={from} ¦ mode,scopes,dirty,from
+[verify taxonomy enforce] {dirty} von {scopes} Bereich(en) nicht sauber. ¦ dirty,scopes
+[verify taxonomy progress] {operation}/{phase} {current}/{total}{path}
+[verify taxonomy {mode}] clean={clean} errors={errors} warnings={warnings}{scope}
+[verify taxonomy enforce] {errors} Fehlerbefund(e), {warnings} Warnungsbefund(e).
+[verify composed-child-refs] assets={assets} mismatched={mismatched} waived={waived} breaches={breaches} ¦ assets,mismatched,waived,breaches
+[verify composed-child-refs] Ausgenommen: {path} {slot}: {waiver}
+[verify composed-child-refs] {path} Slot {slot}: child_id {childId}, aber Ziel-artifact_id {targetArtifactId}
+[verify composed-child-refs] {breaches} Composed-Child-Zeile(n), deren Ziel-artifact_id nicht ihre eigene child_id ist
+[verify composed-child-refs] bestanden.
+[verify mutation-outcome-law] {kind}: {summary}
+[verify mutation-outcome-law] {breaches} Verstoß/Verstöße
+[verify mutation-outcome-law] bestanden.
+[verify history-closure] Selbsttest bestanden ({cases} Fälle).
+[verify history-closure] {file}:{line} {text}
+[verify history-closure] {census} ¦ census
+[verify history-closure] {findings} Hüllenverletzung(en)
+[verify history-closure] bestanden.
+[verify semantic-vocabulary] roots={roots} ¦ roots
+[verify semantic-vocabulary] scanned={scanned} breaches={breaches} high={high} advisory={advisory} ¦ scanned,breaches,high,advisory
+[verify semantic-vocabulary] {priority} {kind}: {summary}
+[verify semantic-vocabulary] {blocking} Verstoß/Verstöße gegen das verbotene Vokabular
+[verify semantic-vocabulary] bestanden.
+[verify package-purity] {kind}: {summary}
+[verify package-purity] {breaches} Verstoß/Verstöße gegen die Sprachreinheit der Pakete
+[verify package-purity] bestanden.
+Erwartet: verify build-owners [sync]
+[verify build-owners] sync removed={removed} added={added} renamed={renamed} relocated={relocated} repackaged={repackaged}
+[verify build-owners] {kind} {owner} {path} {detail}
+[verify build-owners] Nach dem Sync verbleiben {findings} Befund(e) (von Hand geschrieben oder Zeilen, deren Pfade git noch verfolgt, obwohl die Dateien fehlen)
+[verify build-owners] bestanden.
+[verify build-owners] {summary} ({solution})
+[verify build-owners] {breaches} Befund(e) im Register der Build-Eigentümer
+Erwartet: verify zero-touch
+[verify zero-touch] {summary} ({solution})
+[verify zero-touch] {breaches} Befund(e) bei Zero-Touch-Hüllen
+[verify zero-touch] bestanden.
+[verify generated-corruption] scanned={scanned} jco-bindings={jcoFilesScanned} jco-aliases-validated={jcoAliasesValidated} ¦ scanned,jcoFilesScanned,jcoAliasesValidated
+[verify generated-corruption] {kind} {file}:{line} {detail}
+[verify generated-corruption] {findings} Bezeichner mit eingespleißten Emojis in {files} Datei(en) ¦ findings,files
+[verify generated-corruption] bestanden.
+[verify policy-breach] Unbekannte Regel {rule}. Bekannt: {known} ¦ rule,known
+[verify policy-breach {rule}] {breaches} Verstoß/Verstöße
+[verify rust-warnings] --target braucht ein Triple (native | wasm32-wasip2 | wasm32-unknown-unknown).
+[verify rust-warnings] Für das Ziel {target} wurden keine Crates aufgelöst. ¦ target
+[verify rust-warnings] {target}: {packages} Crate(s)… ¦ target,packages
+[verify rust-warnings] {target} sauber. ¦ target

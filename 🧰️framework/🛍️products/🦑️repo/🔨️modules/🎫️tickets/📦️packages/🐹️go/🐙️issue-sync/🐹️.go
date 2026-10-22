@@ -154,6 +154,12 @@ func (tracker *RecordedIssueTracker) CreateIssue(title, body string, milestone *
 	return tracker.script.CreatedIssueURL, nil
 }
 
+// 📝️UpdateIssueTitle records the title effect.
+func (tracker *RecordedIssueTracker) UpdateIssueTitle(issueURL,title string) error {tracker.record("update_issue_title|"+issueURL+"|"+title);return tracker.fails("update_issue_title")}
+
+// 🗑️DeleteIssue records the deletion effect.
+func (tracker *RecordedIssueTracker) DeleteIssue(issueURL string) error {tracker.record("delete_issue|"+issueURL);return tracker.fails("delete_issue")}
+
 // 📪️CloseIssue records the call.
 func (tracker *RecordedIssueTracker) CloseIssue(issueURL string) error {
 	tracker.record("close_issue|" + issueURL)
@@ -222,6 +228,12 @@ type NullIssueTracker struct{}
 
 // 🆕️CreateIssue answers no URL.
 func (NullIssueTracker) CreateIssue(string, string, *int) (string, error) { return "", nil }
+
+// 📝️UpdateIssueTitle has no remote effect for the explicit null tracker.
+func (NullIssueTracker) UpdateIssueTitle(string,string) error {return nil}
+
+// 🗑️DeleteIssue has no remote effect for the explicit null tracker.
+func (NullIssueTracker) DeleteIssue(string) error {return nil}
 
 // 📪️CloseIssue does nothing.
 func (NullIssueTracker) CloseIssue(string) error { return nil }

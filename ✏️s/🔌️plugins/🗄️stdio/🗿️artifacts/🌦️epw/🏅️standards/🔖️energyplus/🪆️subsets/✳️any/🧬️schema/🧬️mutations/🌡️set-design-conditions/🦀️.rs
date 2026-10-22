@@ -14,18 +14,21 @@ pub struct SetDesignConditions {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDesignConditions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "design-conditions", kind: "set-design-conditions", record: "SetDesignConditions" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        let Self { value } = self;
-        protocol::MutationOutcome::new(EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() })
-    }
-    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetDesignConditions(SetDesignConditions { value: base.design_conditions.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set design conditions", "Auslegungsbedingungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetDesignConditions {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() })
+    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+        Ok(vec![EpwMutation::SetDesignConditions(SetDesignConditions { value: base.design_conditions.clone() })])
     }
 }
 //#endregion 🔖️Payload

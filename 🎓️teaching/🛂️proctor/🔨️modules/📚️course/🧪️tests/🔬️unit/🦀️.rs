@@ -8,7 +8,7 @@ fn quiz_document(id: &str) -> String {
 }
 
 fn course_document(entries: &[&str]) -> String {
-    let quizzes = entries.iter().map(|entry| format!("{entry:?}")).collect::<Vec<_>>().join(",");
+    let quizzes = entries.iter().map(|entry| serde_json::to_string(entry).expect("a JSON string")).collect::<Vec<_>>().join(",");
     format!(r#"{{"schema":"semio.course/v1","id":"scratch","title":{{"en":"T","de":"T"}},"introduction":{{"title":{{"en":"I","de":"I"}},"paragraphs":[{{"en":"P","de":"P"}}]}},"quizzes":[{quizzes}],"badges":[]}}"#)
 }
 

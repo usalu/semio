@@ -122,7 +122,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn run_activation_job<T: Send + 'static>(self: &Arc<Self>, scope: ActivationScope, work: impl FnOnce(&HeadlessWorkspace, &ActivationScope) -> Result<T, GatewayError> + Send + 'static) -> Result<T, GatewayError> {
         let cancel = scope.cancel().clone();
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let (sender, receiver) = semio_framework_async_sync::oneshot::channel();
         let workspace = Arc::clone(self);
         workspace_worker_pool().submit(
             semio_framework_async::Lane::Io,

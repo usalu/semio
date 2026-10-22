@@ -31,7 +31,7 @@ where
         prepared.bind_registry(self.snapshot_read_leases.identity());Ok(Some((prepared,receipt)))
     }
 
-    fn admit_history_owner_retirement<T>(&self,owner:&mut Option<T>,grant:RetainedCloneGrant,install:fn(&mut ArtifactHistoryReadRetirement<P,Mutation>,T))->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
+    pub fn admit_history_owner_retirement<T>(&self,owner:&mut Option<T>,grant:RetainedCloneGrant,install:fn(&mut ArtifactHistoryReadRetirement<P,Mutation>,T))->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
     where P:Sync {
         if owner.is_none(){return Ok(None);}
         let snapshots=self.initial_snapshot_retirement_factory.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history cancellation requires its exact snapshot issuer"))?;

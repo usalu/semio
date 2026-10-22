@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:tooling-install-images-corpus:v1",
+  "title": "Pinned Tooling Install Image Corpus",
+  "description": "Language-agnostic cases for the files the pinned tooling installer receives: a recipe, the captured lock and the bytes of every authored patch in, the package manifest, the lock with content-addressed patches and the patch files out, or a refusal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "recipe", "sources"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "recipe": { "type": "object", "required": ["name", "private", "packageManager", "dependencies", "semio"], "properties": { "semio": { "type": "object", "required": ["toolPatches"] } } },
+          "lock": {},
+          "lockRaw": { "type": "string" },
+          "sources": { "type": "object", "additionalProperties": { "type": "string" } },
+          "error": { "type": "string", "minLength": 1 },
+          "ok": { "const": true }
+        }
+      }
+    }
+  }
+}

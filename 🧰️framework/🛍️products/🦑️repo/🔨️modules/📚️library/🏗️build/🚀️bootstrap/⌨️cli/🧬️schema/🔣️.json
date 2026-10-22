@@ -40,6 +40,7 @@
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "targets": {
+            "cache-reset-graph": "graph",
             "cache-reset-nx": "nx"
           }
         }
@@ -80,7 +81,7 @@
                   ],
                   "properties": {
                     "command": {
-                      "const": "bun ./📜️script.ts build"
+                      "const": "repo ./📜️script.ts build"
                     },
                     "cwd": {
                       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
@@ -112,7 +113,7 @@
                   ],
                   "properties": {
                     "command": {
-                      "const": "bun ./📜️script.ts install"
+                      "const": "repo ./📜️script.ts install"
                     },
                     "cwd": {
                       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
@@ -225,7 +226,7 @@
                   ],
                   "properties": {
                     "command": {
-                      "const": "bun ./📜️script.ts cache-retire-inactive preview"
+                      "const": "repo ./📜️script.ts cache-retire-inactive preview"
                     },
                     "cwd": {
                       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
@@ -292,7 +293,7 @@
                   ],
                   "properties": {
                     "command": {
-                      "const": "bun ./📜️script.ts cache-retire-inactive retire"
+                      "const": "repo ./📜️script.ts cache-retire-inactive retire"
                     },
                     "cwd": {
                       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
@@ -387,6 +388,7 @@
         "targets": {
           "type": "object",
           "required": [
+            "cache-reset-graph",
             "cache-reset-nx"
           ],
           "properties": {
@@ -398,7 +400,8 @@
                 "dependsOn",
                 "outputs",
                 "options",
-                "metadata"
+                "metadata",
+                "inputs"
               ],
               "properties": {
                 "executor": {
@@ -423,7 +426,7 @@
                   ],
                   "properties": {
                     "command": {
-                      "const": "bun ./📜️script.ts reset"
+                      "const": "repo ./📜️script.ts reset nx"
                     },
                     "cwd": {
                       "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
@@ -442,7 +445,9 @@
                     "semio": {
                       "type": "object",
                       "required": [
-                        "execution"
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
                       ],
                       "properties": {
                         "execution": {
@@ -450,10 +455,110 @@
                             "version": 1,
                             "kind": "source"
                           }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
                         }
                       }
                     }
                   }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
+                  ]
+                }
+              }
+            },
+            "cache-reset-graph": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset graph"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
+                  ]
                 }
               }
             }
@@ -500,9 +605,160 @@
         },
         "target": {
           "enum": [
+            "graph",
             "nx",
             null
           ]
+        }
+      }
+    },
+    "ResetArgumentsCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "profile"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "profile": {
+          "enum": [
+            "graph",
+            "nx",
+            null
+          ]
+        }
+      }
+    },
+    "CapacityParallelJobs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "CapacityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "grant",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12
+        },
+        "grant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapacityParallelJobs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "enum": [
+            "build",
+            "install",
+            "preview",
+            "retire",
+            "graph",
+            "nx",
+            null
+          ]
+        }
+      }
+    },
+    "RecoveryCaptureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "owner",
+        "documents",
+        "foreign"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documents": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "request",
+              "kind",
+              "target"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "request": {
+                "enum": [
+                  "repo:cache-reset-graph",
+                  "repo-mcp:build"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "cache-reset",
+                  "frontend"
+                ]
+              },
+              "target": {
+                "enum": [
+                  "graph",
+                  "build"
+                ]
+              }
+            }
+          }
+        },
+        "foreign": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true
         }
       }
     }

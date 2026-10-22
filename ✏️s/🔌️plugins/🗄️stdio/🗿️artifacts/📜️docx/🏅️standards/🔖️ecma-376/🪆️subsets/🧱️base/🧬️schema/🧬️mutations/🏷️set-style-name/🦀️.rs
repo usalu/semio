@@ -14,19 +14,20 @@ pub struct SetStyleName {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style-name", kind: "set-style-name", record: "SetStyleName" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-        plan_outcome(style_name_plan(base, &self.id, &self.name))
-    }
-
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
-        Ok(plan_inverse(style_name_plan(base, &self.id, &self.name)))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set style name", "Name der Formatvorlage setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DocxSnapshot, DocxMutation> for SetStyleName {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        plan_outcome(style_name_plan(base, &self.id, &self.name))
+    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        Ok(plan_inverse(style_name_plan(base, &self.id, &self.name)))
     }
 }
 //#endregion 🔖️Payload

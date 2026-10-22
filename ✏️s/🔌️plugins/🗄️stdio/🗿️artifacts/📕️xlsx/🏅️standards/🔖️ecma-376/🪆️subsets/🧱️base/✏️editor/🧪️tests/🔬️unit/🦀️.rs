@@ -88,7 +88,7 @@ async fn blank_cell_command_inserts_canonical_xml_saves_for_calamine_and_inverts
     use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address;
     use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_cell;
     use calamine::{Data, Reader};
-    use protocol::Mutation;
+    use protocol::{ColdMutation, Mutation};
     let base = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
     let vacancy = xlsx_cell_vacancy_address(&base, "Blank", 1, 0).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Blank".into(), row: 1, column: 0, revision: vacancy.worksheet.revision.clone(), value: "42".into() };
@@ -100,7 +100,7 @@ async fn blank_cell_command_inserts_canonical_xml_saves_for_calamine_and_inverts
     assert_eq!(edited.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(42.0));
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(encode_xlsx(&edited).unwrap())).expect("Calamine opens canonical blank-cell save");
     assert!(matches!(reference.worksheet_range("Blank").unwrap().get_value((0, 0)), Some(Data::Float(value)) if *value == 42.0));
-    for inverse in <XlsxMutation as Mutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+    for inverse in <XlsxMutation as ColdMutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut edited, &inverse);
     }
     assert_eq!(edited, base, "vacancy insertion inverse restores every authoritative OPC and XML field");

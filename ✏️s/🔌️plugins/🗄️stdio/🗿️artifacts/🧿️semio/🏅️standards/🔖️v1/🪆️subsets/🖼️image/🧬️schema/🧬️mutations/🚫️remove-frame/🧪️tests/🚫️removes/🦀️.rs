@@ -8,7 +8,7 @@ use crate::schema::diff::SemioImageDiff;
 use crate::schema::mutations::insert_frame;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫️remove-frame/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
@@ -27,14 +27,14 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+    <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The leading frame goes and the second frame becomes index 0.
 #[semio_framework_async_macros::async_test]
 async fn removes_the_frame_at_index_zero() {
     let base = before();
-    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("remove-frame applies to its committed before-snapshot");
+    let produced = protocol::apply_diff_cold(leaf_outcome().diff(), &base).expect("remove-frame applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-frame/removes-the-leading-frame: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames.len(), base.frames.len() - 1, "remove-frame shortens the frame sequence by exactly one");
     assert_eq!(produced.frames[0], base.frames[1], "the frame that followed the removed head must take index 0");
@@ -50,7 +50,7 @@ async fn the_undo_insert_frame_restores_the_head_frame_from_base() {
     let base = before();
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = <SemioImageMutation as ColdMutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: base.frames[0].clone() })], "the undo must recapture the removed frame's full content from base");
     let mut current = before();
     current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
@@ -106,6 +106,6 @@ async fn committed_diff_is_canonical_and_touches_only_frames() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-frame diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-frame diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed remove-frame diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-frame/removes-the-leading-frame: committed diff did not carry before to after");
 }

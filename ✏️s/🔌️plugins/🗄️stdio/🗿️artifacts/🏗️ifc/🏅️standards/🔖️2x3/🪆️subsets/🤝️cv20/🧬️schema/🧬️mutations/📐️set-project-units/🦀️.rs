@@ -14,6 +14,16 @@ pub struct SetProjectUnits {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUnits {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "project-units", kind: "set-project-units", record: "SetProjectUnits" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
+    }
+
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUnits {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         let Self { project, units } = self;
         if let Some(id) = units {
@@ -26,21 +36,12 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUn
             Err(message) => rejected(message),
         }
     }
-
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Cv20Mutation>, semio_framework_value::ValueError> {
         let Self { project, .. } = self;
         if !matches!(mvd::standing(base, *project, &["IFCPROJECT"]), mvd::Standing::Present { .. }) {
             return Ok(Vec::new());
         }
         Ok(vec![Ifc2x3Cv20Mutation::SetProjectUnits(SetProjectUnits { project: *project, units: mvd::reference_argument(base, *project, PROJECT_UNITS_INDEX) })])
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
-    }
-
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

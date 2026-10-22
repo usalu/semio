@@ -8,14 +8,18 @@ use semio_s_artifact_norm_din16798_model::{Din16798Snapshot, VentSystemDocument}
 pub struct InsertVentSystem { pub index: Option<usize>, pub vent: VentSystemDocument }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for InsertVentSystem where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::remove_vent_system::RemoveVentSystem> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vent-system", kind: "insert-vent-system", record: "InsertVentSystem" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::insert_vent_system::diff::diff(self, base) }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert ventilation system", "Lüftungsanlage einfügen")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for InsertVentSystem where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::remove_vent_system::RemoveVentSystem> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::insert_vent_system::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ crate::insert_vent_system::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert ventilation system", "Lüftungsanlage einfügen")
-    }
 }
 
 //#region 🪢️Mounts

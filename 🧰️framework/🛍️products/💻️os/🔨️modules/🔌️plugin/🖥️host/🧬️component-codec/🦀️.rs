@@ -12,7 +12,7 @@ use std::sync::{Arc, OnceLock};
 /// between fuel observations, never the call's total (`OwnedDeadline::NoFuelProgress`) — the same
 /// shape and values the hub's trusted catalog arms for the same four exports. A codec export runs no retained actor turn, so it
 /// carries no retained authority.
-pub const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget = semio_framework::kernel::Budget { retained: semio_framework_actor::RetainedTurnInput { operation: 0, generation: 0, epoch: 0, grant: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 } }, fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+pub const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget = semio_framework::kernel::Budget { retained: semio_framework_actor::RetainedTurnInput { operation: 0, generation: 0, epoch: 0, work: semio_framework_actor::OriginalActorTurnWork { clock_binding: 0, absolute_deadline_us: 0, fuel: 0 }, grant: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 } }, retained_policy: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 }, work_fuel: 0, fuel: 4_000_000_000, deadline_us: 30_000_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
 /// 🧬️ A compiled component and the schema it owns. The fingerprint is asked of the component once
 /// and kept: it is a pure function of the component and the schema.

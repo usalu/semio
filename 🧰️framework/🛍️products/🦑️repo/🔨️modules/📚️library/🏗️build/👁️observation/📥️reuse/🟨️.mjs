@@ -1,7 +1,7 @@
 import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
-import{readdirSync,statSync}from"node:fs";
-import{resolve}from"node:path";
+import{lstatSync,openSync,fstatSync,closeSync,constants}from"node:fs";
+import{resolve,join,parse,relative,sep}from"node:path";
 import{withRepositoryBuildGraphConsumerV1}from"../../📥️inputs/💾️storage/🟨️.mjs";
 import{types}from"node:util";
 import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -41,53 +41,36 @@ export function planInferenceInventoryCohortsV1(extents){
 /** 📋️ Validates inert exact-record DATA independently of its descriptor or managed custody. */
 export function inferenceInventoryRecordHoldsV1(root,name,file){if(typeof name!=="string"||!reference.test(name))throw Error("Closed compact inventory name required");const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length);if(!file||file.sha256!==key)return false;if(source)captureSourceInputInventoryV1(file.value,root);else captureCargoLockInventoryV1(file.value,root);return true;}
 
-/** 🧊️ Compact records are content addressed, so one that held moments ago still holds unless its leaf was pruned; rechecking it for every project cost a store lease per project. */
-const validInventoryRecords=new Map(),inventoryPrefetch=new Map(),INVENTORY_RECORD_VALIDITY_MILLISECONDS=600000;
-
-/** 📥️ Rechecks compact records through fresh bounded descriptor batches; the first unverified record of a validity window verifies the whole inventory in one consumer, so projects do not each pay a storage consumer. */
-export async function inferenceInventoryReferencesHoldV1(root,value,control){
- requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();
- const captured=captureInferenceInventoryReferencesV1(value),unverified=()=>{const now=Date.now();return captured.filter(name=>!(now-(validInventoryRecords.get(root+"\0"+name)??-Infinity)<INVENTORY_RECORD_VALIDITY_MILLISECONDS));};
- let names=unverified();if(!names.length)return true;
- let prefetch=inventoryPrefetch.get(root);
- if(!prefetch||Date.now()-prefetch.at>=INVENTORY_RECORD_VALIDITY_MILLISECONDS){
-  prefetch={at:Date.now(),promise:withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
-   const all=[];for(const [directory,prefix] of [["build-input-closures","SEMIO_SOURCE_CLOSURE_"],["build-lock-closures","SEMIO_CARGO_LOCK_"]]){let entries=[];try{entries=readdirSync(resolve(store.root,directory));}catch{}for(const entry of entries)if(/^[a-f0-9]{64}\.json$/u.test(entry))all.push(prefix+entry.slice(0,-5));}
-   await verifyInventoryCohortsV1(root,actual,all,false,store.root,store);
-  })};
-  inventoryPrefetch.set(root,prefetch);prefetch.promise.catch(()=>{if(inventoryPrefetch.get(root)===prefetch)inventoryPrefetch.delete(root);});
- }
- try{await prefetch.promise;}catch{}
- names=unverified();if(!names.length)return true;
- return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>verifyInventoryCohortsV1(root,actual,names,true,store.root,store));
+/** 🧱️ Captures no-follow directory identities from the filesystem root through one actual image namespace. */
+function inventoryParentsV1(storeRoot,directory,control){
+ const base=parse(directory).root,parts=relative(base,directory).split(sep).filter(Boolean);if(parts.length>readPolicy.maximumAncestors)throw Error("Inference inventory ancestry capacity exceeded");const rows=[];let path=base,device;
+ for(const part of["",...parts]){checkResourceLeaseControl(control);if(part)path=join(path,part);const row=lstatSync(path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw Error("Original no-follow inventory ancestry required");if(path===storeRoot)device=row.dev;if(device!==undefined&&row.dev!==device)throw Error("Original inventory image device required");rows.push({path,dev:row.dev,ino:row.ino,mode:row.mode});}
+ if(device===undefined)throw Error("Exact managed inventory image ancestry required");return Object.freeze({rows:Object.freeze(rows),device});
 }
 
-/** 🔎️ Verifies compact records in cohorts bounded by their actual leaf sizes and remembers each held cohort; a strict caller refuses at the first record that fails, a tolerant caller skips that cohort. */
-async function verifyInventoryCohortsV1(root,control,names,strict,storeRoot,store){
- const budget=Math.floor(readPolicy.maximumMetadataBytes/2),cohorts=[];let cohort=[],total=0;
- for(const name of names){
-  const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),leaf=resolve(storeRoot,source?"build-input-closures":"build-lock-closures",name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length)+".json");
-  let size=readPolicy.maximumClosureBytes;try{size=Math.min(size,Math.max(1,statSync(leaf).size));}catch{}
-  if(cohort.length&&(cohort.length>=readPolicy.maximumInventories||total+size>budget)){cohorts.push(cohort);cohort=[];total=0;}
-  cohort.push(name);total+=size;
- }
- if(cohort.length)cohorts.push(cohort);
- let done=0;const phase=async()=>{if(++done%128===0){await store.recheck();await control.yieldContinuation();checkResourceLeaseControl(control);}};
- for(const members of cohorts){
-  checkResourceLeaseControl(control);await store.recheck();
-  for(const name of members){
-   const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),directory=resolve(storeRoot,source?"build-input-closures":"build-lock-closures"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length);
-   try{
-    if(!inventoryRecordStillHoldsV1(root,directory,key)){
-     const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);
-     if(!inferenceInventoryRecordHoldsV1(root,name,file)){if(strict)return false;continue;}
-     rememberInventoryRecordV1(root,directory,key,file.stamp);
-    }
-   }catch(error){if(strict)throw error;continue;}
-   if(validInventoryRecords.size>262144)validInventoryRecords.clear();validInventoryRecords.set(root+"\0"+name,Date.now());
-   await phase();
+/** 🪪️ Rechecks every admitted ancestor without treating missing or replaced directories as an inventory miss. */
+function recheckInventoryParentsV1(parents,control){for(const before of parents.rows){checkResourceLeaseControl(control);const row=lstatSync(before.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==before.dev||row.ino!==before.ino||row.mode!==before.mode)throw Error("Inference inventory ancestry changed");}}
+const inventoryStampV1=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
+
+/** 🕳️ Classifies only the exact leaf ENOENT spelling; ancestry and custody proofs remain mandatory at the caller. */
+export function inferenceInventoryLeafMissingV1(code){return code==="ENOENT";}
+
+/** ❓️ Refuses a changed absence observation and propagates every error except the exact immutable leaf's ENOENT. */
+function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryParentsV1(parents,control);try{lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;recheckInventoryParentsV1(parents,control);checkResourceLeaseControl(control);return;}throw Error("Inference inventory absence changed");}
+
+/** 📥️ Retains genuine image custody while revalidating physical identities before each immutable-record memo hit. */
+export async function inferenceInventoryReferencesHoldV1(root,value,control){
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();const names=captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
+ return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
+  const parents=new Map(),missing=[],present=[];let bytes=0,done=0;await store.recheck();
+  for(const name of names){
+   checkResourceLeaseControl(actual);const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),directory=resolve(store.root,source?"build-input-closures":"build-lock-closures"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length),path=join(directory,key+".json");if(path.length>policy.maximumPathUnits)throw Error("Inference inventory path exceeds256 units");let ancestry=parents.get(directory);if(!ancestry){ancestry=inventoryParentsV1(store.root,directory,actual);parents.set(directory,ancestry);}recheckInventoryParentsV1(ancestry,actual);
+   let before;try{before=lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;await actual.yieldContinuation();checkResourceLeaseControl(actual);await store.recheck();requireInventoryLeafAbsentV1(path,ancestry,actual);missing.push({path,ancestry});continue;}
+   if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.dev!==ancestry.device||before.size<1n||before.size>BigInt(readPolicy.maximumClosureBytes))throw Error("Single-link bounded original inventory record required");const size=Number(before.size);if(bytes>policy.maximumInventoryBytes-size)throw Error("Inference inventory aggregate bytes exceeded before read");bytes+=size;
+   if(!inventoryRecordStillHoldsV1(root,directory,key)){const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);if(!inferenceInventoryRecordHoldsV1(root,name,file))throw Error("Inference inventory record identity refused");rememberInventoryRecordV1(root,directory,key,file.stamp);}else{const descriptor=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));try{const opened=fstatSync(descriptor,{bigint:true});if(!opened.isFile()||inventoryStampV1(opened)!==inventoryStampV1(before))throw Error("Inference inventory descriptor changed");}finally{closeSync(descriptor);}}
+   recheckInventoryParentsV1(ancestry,actual);const after=lstatSync(path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==inventoryStampV1(before))throw Error("Inference inventory leaf changed");present.push({path,ancestry,stamp:inventoryStampV1(after)});
+   if(++done%128===0){await store.recheck();await actual.yieldContinuation();checkResourceLeaseControl(actual);}
   }
-  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();
- }
- checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return true;
+  checkResourceLeaseControl(actual);await store.recheck();for(const ancestry of parents.values())recheckInventoryParentsV1(ancestry,actual);for(const row of missing)requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw Error("Inference inventory leaf changed before delivery");}checkResourceLeaseControl(actual);requireCurrentInferenceInventoryReuseV1();return missing.length===0;
+ });
 }

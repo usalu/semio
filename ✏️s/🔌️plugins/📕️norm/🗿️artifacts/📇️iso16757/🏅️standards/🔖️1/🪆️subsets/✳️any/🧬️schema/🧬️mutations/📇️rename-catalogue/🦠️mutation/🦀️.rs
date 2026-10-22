@@ -16,7 +16,13 @@ pub struct RenameCatalogue {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RenameCatalogue where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::rename_catalogue::mutation::RenameCatalogue> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "catalogue", kind: "rename-catalogue", record: "RenamedCatalogue" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename catalogue to \"{}\"", self.new_name), &format!("Katalog in \"{}\" umbenennen", self.new_name))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Iso16757Snapshot, Op> for RenameCatalogue where Op: protocol::ColdMutation<Iso16757Snapshot, ReferenceDiff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::rename_catalogue::mutation::RenameCatalogue> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Iso16757Snapshot>>::ReferenceDiff> {
         crate::rename_catalogue::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -25,8 +31,5 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RenameCatalogue where 
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename catalogue to \"{}\"", self.new_name), &format!("Katalog in \"{}\" umbenennen", self.new_name))
-    }
 }
 //#endregion 🔖️Payload

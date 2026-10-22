@@ -233,7 +233,7 @@ def _resolve_prefix(resolve, allsegs, minlen):
     return last, 0
 
 
-def rewrite_file(text, idents, resolve):
+def rewrite_file(text, idents, resolve, alias_cfg_test=False, skip_spans=(), bare_ok=(), real_idents=None):
     sk = skeleton(text)
     res = Result(text)
     idents = set(idents)
@@ -256,7 +256,7 @@ def rewrite_file(text, idents, resolve):
         if kind == "extern":
             m = re.match(r"extern\s+crate\s+(%s)\s+as\s+(%s)\s*;" % (IDENT, IDENT), body.strip())
             if m and m.group(2) in idents and vis == "":
-                edits.append((k, end, ""))
+                edits.append((k, end, ("#[cfg(test)]\n" + text[k:end]) if alias_cfg_test else ""))
                 res.edits += 1
                 continue
             res.errors.append("extern crate form not supported: " + body.strip()[:60])
@@ -280,6 +280,15 @@ def rewrite_file(text, idents, resolve):
             if r[0] == "rewrite" and not r[2]:
                 crate_alias.append(f"use {r[1]} as {alias or rest[-1]};")
                 res.owners.add(r[1])
+                try:
+                    r2 = resolve(rest, macro_ns=True)
+                except TypeError:
+                    r2 = None
+                if r2 and r2[0] == "rewrite" and r2[2]:
+                    if r2[1] not in by_owner:
+                        by_owner[r2[1]] = []
+                        order.append(r2[1])
+                    by_owner[r2[1]].append((tuple(r2[2]), alias))
             elif r[0] == "rewrite":
                 _, owner, newsegs = r
                 if owner not in by_owner:
@@ -319,7 +328,7 @@ def rewrite_file(text, idents, resolve):
         base = list(mod_alias.get(nm, [])) if nm in mod_alias and nm not in idents else []
         for m in re.finditer(r"(?<![A-Za-z0-9_.])" + re.escape(nm) + r"(?![A-Za-z0-9_])", sk):
             pos = m.start()
-            if in_stmt(pos):
+            if in_stmt(pos) or any(a <= pos < b for a, b in skip_spans):
                 continue
             if sk[max(0, pos - 2):pos] == "::":
                 q = pos - 2
@@ -344,11 +353,28 @@ def rewrite_file(text, idents, resolve):
                         continue
                 break
             if not segs:
-                if nm in idents:
-                    res.errors.append("bare hub identifier at offset %d" % pos)
+                if nm in bare_ok:
+                    res.owners.add(nm)
+                elif nm in idents:
+                    after = sk[m.end():m.end() + 3].lstrip()
+                    before = sk[max(0, pos - 3):pos]
+                    is_alias = real_idents is not None and nm not in real_idents
+                    if is_alias and before.rstrip()[-2:] != "::" and not (before.rstrip().endswith("=") and "crate" in sk[max(0, pos - 12):pos]):
+                        pass
+                    else:
+                        res.errors.append("bare hub identifier at offset %d" % pos)
                 continue
             allsegs = base + [s for s, _ in segs]
-            r, cut = _resolve_prefix(resolve, allsegs, len(base) + 1)
+            after = sk[segs[-1][1]:segs[-1][1] + 3].lstrip()
+            if after.startswith("!") and not after.startswith("!="):
+                try:
+                    r, cut = resolve(allsegs, macro_ns=True), len(allsegs)
+                except TypeError:
+                    r, cut = _resolve_prefix(resolve, allsegs, len(base) + 1)
+                if r[0] == "fail":
+                    r, cut = _resolve_prefix(resolve, allsegs, len(base) + 1)
+            else:
+                r, cut = _resolve_prefix(resolve, allsegs, len(base) + 1)
             if r[0] == "fail":
                 res.errors.append(f"{nm}::{'::'.join(s for s, _ in segs)}: {r[1]}")
                 continue

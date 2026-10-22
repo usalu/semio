@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
+func TestInteractionUnmarshalReadsTheTextAuthor(t *testing.T) {
 	cases := []struct {
 		name         string
 		authorJSON   string
@@ -25,11 +25,6 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 		{
 			name:         "string author",
 			authorJSON:   `"Ueli Saluz <ueli@semio-tech.com>"`,
-			expectedAuth: "Ueli Saluz <ueli@semio-tech.com>",
-		},
-		{
-			name:         "object author",
-			authorJSON:   `{"name":"Ueli Saluz","email":"ueli@semio-tech.com","github":"usalu"}`,
 			expectedAuth: "Ueli Saluz <ueli@semio-tech.com>",
 		},
 	}
@@ -54,6 +49,13 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 				t.Fatalf("expected author %q, got %q", tc.expectedAuth, interaction.Author)
 			}
 		})
+	}
+}
+
+func TestInteractionUnmarshalRefusesAnObjectAuthor(t *testing.T) {
+	var interaction Interaction
+	if err := json.Unmarshal([]byte(`{"date":"2026-02-06 22:03:11","author":{"name":"Ueli Saluz","email":"ueli@semio-tech.com"}}`), &interaction); err == nil {
+		t.Fatalf("an object author is not part of the interaction schema, got %+v", interaction)
 	}
 }
 

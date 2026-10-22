@@ -13,7 +13,16 @@ pub struct SetStandalone {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "standalone", kind: "set-standalone", record: "SetStandalone" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::ColdMutation<XmlSnapshot>>::ReferenceDiff> {
         let Self { standalone } = self;
         {
             let next = match (&base.doc.declaration, standalone) {
@@ -29,12 +38,6 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
             Some(declaration) => vec![XmlValidMutation::SetStandalone(SetStandalone { standalone: declaration.standalone })],
             None => Vec::new(),
         })
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        Vec::new()
     }
 }
 //#endregion 🔖️Payload

@@ -22,7 +22,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "outputs": [
@@ -43,7 +43,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts check",
+        "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -64,7 +64,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -84,7 +84,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "command": "repo ./📜️script.ts verify snapshot-sqlite-source",
         "forwardAllArgs": true
       }
     }

@@ -118,29 +118,9 @@ pub struct ModulePayloadDiff {
     pub interactive: Option<bool>,
 }
 
-impl protocol::MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
-    fn apply(&self, base: &ModuleRenderPayload, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ModuleRenderPayload> {
-        let mut next = base.clone();
-        if let Some(value) = &self.example_id {
-            next.example_id = value.clone();
-        }
-        if let Some(value) = &self.params {
-            next.params = value.clone();
-        }
-        if let Some(value) = &self.question_id {
-            next.question_id = value.clone();
-        }
-        if let Some(value) = &self.controller_id {
-            next.controller_id = value.clone();
-        }
-        if let Some(value) = &self.surface {
-            next.surface = value.clone();
-        }
-        if let Some(value) = &self.interactive {
-            next.interactive = value.clone();
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {}
+
+impl protocol::ColdMutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     fn absorb(&mut self, other: Self) {
         if other.example_id.is_some() {
             self.example_id = other.example_id;
@@ -161,9 +141,40 @@ impl protocol::MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
             self.interactive = other.interactive;
         }
     }
+
+    fn apply(&self, unpublished: &mut ModuleRenderPayload, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.example_id {
+            next.example_id = value.clone();
+        }
+        if let Some(value) = &self.params {
+            next.params = value.clone();
+        }
+        if let Some(value) = &self.question_id {
+            next.question_id = value.clone();
+        }
+        if let Some(value) = &self.controller_id {
+            next.controller_id = value.clone();
+        }
+        if let Some(value) = &self.surface {
+            next.surface = value.clone();
+        }
+        if let Some(value) = &self.interactive {
+            next.interactive = value.clone();
+        }
+        *unpublished = next;
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
+    fn is_empty(&self) -> bool {
+        self.example_id.is_none() && self.params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
     fn inverse(&self, base: &ModuleRenderPayload) -> Self {
         Self {
             example_id: self.example_id.as_ref().map(|_| base.example_id.clone()),
@@ -173,9 +184,6 @@ impl protocol::DiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
             surface: self.surface.as_ref().map(|_| base.surface.clone()),
             interactive: self.interactive.as_ref().map(|_| base.interactive.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.example_id.is_none() && self.params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
     }
 }
 //#endregion 🔖️DocumentMutation

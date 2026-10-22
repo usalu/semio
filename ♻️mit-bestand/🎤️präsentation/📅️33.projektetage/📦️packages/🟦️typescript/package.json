@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun --cwd \"../../../../..\" repo run @semio-tech/mit-bestand-praesentation-projektetage:build",
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/mit-bestand-praesentation-projektetage:test"
+    "build": "repo run @semio-tech/mit-bestand-praesentation-projektetage:build",
+    "test": "repo run @semio-tech/mit-bestand-praesentation-projektetage:test"
   },
   "dependencies": {
     "@semio-tech/presentation": "workspace:*",

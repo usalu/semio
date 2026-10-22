@@ -8,5 +8,7 @@ export function runtimeModuleSourceImports(path: string, source: string): string
 export function moduleSourceImports(path: string, source: string): string[];
 /** 🏗️ Keeps typed and runtime production imports outside command and test ownership. */
 export function productionModuleSourceImports(path: string, source: string): string[];
+/** 🔗️ Retains the literal paths a script resolves against itself with `new URL("…", import.meta.url)`, which name the test files it runs and the data it reads. */
+export function commandUrlReferences(path: string, source: string): string[];
 /** 📊️ Reports bounded immutable parser fact storage without source authority. */
 export function commandSourceParseStats(): Readonly<{ hits: number; misses: number; bytes: number; limit: number }>;

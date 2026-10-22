@@ -213,7 +213,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/📜️script.ts",
         "document-read"
       ],
@@ -279,7 +279,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "command": [
-        "bun",
+        "repo",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/📜️script.ts",
         "document-property"
       ],
@@ -1078,7 +1078,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1130,7 +1130,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1182,7 +1182,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-style-adds-a-named-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only insert-style-adds-a-named-style",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1234,7 +1234,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1286,7 +1286,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1338,7 +1338,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-style-drops-a-named-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only remove-style-drops-a-named-style",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1390,7 +1390,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1442,7 +1442,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1494,7 +1494,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1546,7 +1546,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1598,7 +1598,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1650,7 +1650,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1702,7 +1702,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-list-ordered-numbers-the-list",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-list-ordered-numbers-the-list",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1754,7 +1754,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-paragraph-style-names-the-body-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-paragraph-style-names-the-body-style",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1806,7 +1806,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1858,7 +1858,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1917,7 +1917,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -1976,7 +1976,7 @@
         "packageVersion": "2.1.2",
         "engineFamily": "unified-mdast",
         "engineVersion": "2.1.2",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2028,7 +2028,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-style-based-on-reparents-a-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-style-based-on-reparents-a-style",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2080,7 +2080,7 @@
         "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
         "engineFamily": "jszip",
         "engineVersion": "3.10.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-style-name-renames-a-style",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts generate --only set-style-name-renames-a-style",
         "seed": 4815162342,
         "platform": "darwin-arm64"
       },
@@ -2136,7 +2136,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",
@@ -2184,7 +2184,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",
@@ -2232,7 +2232,7 @@
         "packageVersion": "0.12",
         "engineFamily": "json-rust",
         "engineVersion": "0.12",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
         "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",

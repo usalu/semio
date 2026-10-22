@@ -110,7 +110,7 @@ export async function testWgpuGeneratorPublication(workspace: string, output: st
     const rendered = await projection.renderWgpuPackageArtifacts(workspace, { producerTarget });
     for (const path of rendered.inputs) put(path, readFileSync(join(workspace, path), "utf8"));
     for (const node of rendered.nodes) expected.set(node.path, node.content);
-    targets[name] = { executor: "nx:run-commands", cache: true, inputs: [...rendered.inputs.map((path: string) => "{workspaceRoot}/" + path), "{workspaceRoot}/📜️script.ts", "{workspaceRoot}/📋️project.json", "{workspaceRoot}/" + taxonomyPath, ...(name === "package" ? [{ dependentTasksOutputFiles: "**/*" }] : [])], outputs: rendered.nodes.map((node: any) => "{workspaceRoot}/" + node.path), ...(name === "package" ? { dependsOn: ["worker", "boot", "library"] } : {}), options: { cwd: ".", command: "bun ./📜️script.ts " + name } };
+    targets[name] = { executor: "nx:run-commands", cache: true, inputs: [...rendered.inputs.map((path: string) => "{workspaceRoot}/" + path), "{workspaceRoot}/📜️script.ts", "{workspaceRoot}/📋️project.json", "{workspaceRoot}/" + taxonomyPath, ...(name === "package" ? [{ dependentTasksOutputFiles: "**/*" }] : [])], outputs: rendered.nodes.map((node: any) => "{workspaceRoot}/" + node.path), ...(name === "package" ? { dependsOn: ["worker", "boot", "library"] } : {}), options: { cwd: ".", command: "repo ./📜️script.ts " + name } };
   }
   put(taxonomyPath, JSON.stringify(taxonomy));
   put("📋️project.json", readFileSync(join(workspace, "📋️project.json"), "utf8"));

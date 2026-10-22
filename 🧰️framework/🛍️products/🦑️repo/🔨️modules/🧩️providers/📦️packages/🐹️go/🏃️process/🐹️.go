@@ -13,6 +13,9 @@ import (
 	fmt "fmt"
 	exec "os/exec"
 	strings "strings"
+ sync "sync"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🏃️ProcessRunner
@@ -53,6 +56,7 @@ type ProcessRunner interface {
 
 // 💻️SystemProcessRunner runs the real thing through os/exec.
 type SystemProcessRunner struct {
+ mu sync.Mutex
 	issued [][]string
 }
 
@@ -61,11 +65,13 @@ func NewSystemProcessRunner() *SystemProcessRunner { return &SystemProcessRunner
 
 // ▶️Run executes the request and reports what the process left behind.
 func (r *SystemProcessRunner) Run(request ProcessRequest) ProcessOutcome {
+ r.mu.Lock()
 	r.issued = append(r.issued, append([]string(nil), request.Argv...))
+ r.mu.Unlock()
 	if len(request.Argv) == 0 {
 		return ProcessOutcome{Stderr: "empty argv", Status: 127}
 	}
-	cmd := exec.Command(request.Argv[0], request.Argv[1:]...)
+	cmd := workspace.ToolCommand(request.Argv[0], request.Argv[1:]...)
 	if request.Cwd != "" {
 		cmd.Dir = request.Cwd
 	}
@@ -89,7 +95,7 @@ func (r *SystemProcessRunner) Run(request ProcessRequest) ProcessOutcome {
 }
 
 // 📜️Issued lists every argv this runner issued, in order.
-func (r *SystemProcessRunner) Issued() [][]string { return r.issued }
+func (r *SystemProcessRunner) Issued() [][]string { r.mu.Lock();defer r.mu.Unlock();result:=make([][]string,len(r.issued));for i,argv:=range r.issued { result[i]=append([]string{},argv...) };return result }
 
 func asExitError(err error, target **exec.ExitError) bool {
 	exitErr, ok := err.(*exec.ExitError)

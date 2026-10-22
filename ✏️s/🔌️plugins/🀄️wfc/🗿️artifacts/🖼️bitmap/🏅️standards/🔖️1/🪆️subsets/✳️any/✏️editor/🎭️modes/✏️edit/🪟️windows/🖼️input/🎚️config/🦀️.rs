@@ -29,28 +29,23 @@ pub struct BitmapInputWindowConfigDiff {
 }
 
 impl protocol::DiffAlgebra<BitmapInputWindowConfig> for BitmapInputWindowConfigDiff {
+    fn is_empty(&self) -> bool {
+        self.active_color.is_none() && self.zoom.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<BitmapInputWindowConfig> for BitmapInputWindowConfigDiff {
     fn inverse(&self, base: &BitmapInputWindowConfig) -> Self {
         Self {
             active_color: self.active_color.as_ref().map(|_| base.active_color.clone()),
             zoom: self.zoom.as_ref().map(|_| base.zoom.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        self.active_color.is_none() && self.zoom.is_none()
-    }
 }
 
-impl protocol::MutationDiff<BitmapInputWindowConfig> for BitmapInputWindowConfigDiff {
-    fn apply(&self, base: &BitmapInputWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapInputWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.active_color {
-            next.active_color.clone_from(value);
-        }
-        if let Some(value) = &self.zoom {
-            next.zoom.clone_from(value);
-        }
-        Ok(next)
-    }
+impl protocol::MutationDiff<BitmapInputWindowConfig> for BitmapInputWindowConfigDiff {}
+
+impl protocol::ColdMutationDiff<BitmapInputWindowConfig> for BitmapInputWindowConfigDiff {
     fn absorb(&mut self, later: Self) {
         if later.active_color.is_some() {
             self.active_color = later.active_color;
@@ -58,6 +53,19 @@ impl protocol::MutationDiff<BitmapInputWindowConfig> for BitmapInputWindowConfig
         if later.zoom.is_some() {
             self.zoom = later.zoom;
         }
+    }
+
+    fn apply(&self, unpublished: &mut BitmapInputWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let base = &*unpublished;
+        let mut next = base.clone();
+        if let Some(value) = &self.active_color {
+            next.active_color.clone_from(value);
+        }
+        if let Some(value) = &self.zoom {
+            next.zoom.clone_from(value);
+        }
+        *unpublished = next;
+        Ok(())
     }
 }
 
@@ -112,6 +120,10 @@ impl protocol::Mutation<BitmapInputWindowConfig> for BitmapInputWindowConfigMuta
             Self::SetZoom { .. } => &Self::DESCRIPTORS[1],
         }
     }
+}
+
+impl protocol::ColdMutation<BitmapInputWindowConfig> for BitmapInputWindowConfigMutation {
+    type ReferenceDiff = BitmapInputWindowConfigDiff;
     fn diff(&self, base: &BitmapInputWindowConfig) -> protocol::MutationOutcome<BitmapInputWindowConfigDiff> {
         let diff = match self {
             Self::SetActiveColor { color } => BitmapInputWindowConfigDiff { active_color: (base.active_color != *color).then(|| color.clone()), ..Default::default() },
@@ -217,9 +229,8 @@ impl semio_framework_plugin::WindowConfigOwner for BitmapInputWindowConfigOwner 
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
     }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-        semio_framework_plugin::bounded_window_config_store_owners::<Self>()
-    }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
     }

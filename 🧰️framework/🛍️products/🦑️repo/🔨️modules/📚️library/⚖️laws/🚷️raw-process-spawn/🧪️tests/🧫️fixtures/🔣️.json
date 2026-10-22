@@ -1,0 +1,917 @@
+{
+ "description": "Language-agnostic fixtures of the raw-process-spawn law. Both the TypeScript law and the Python oracle run every case; scanCases list the sites [line, callee, form, program, scope], lawCases the disposition of each production site, the findings and the stale allowlist rows.",
+ "registry": {
+  "scan": {
+   "callees": [
+    {
+     "name": "spawn",
+     "language": "ts",
+     "shape": "command"
+    },
+    {
+     "name": "spawnSync",
+     "language": "ts",
+     "shape": "command"
+    },
+    {
+     "name": "execFile",
+     "language": "ts",
+     "shape": "command"
+    },
+    {
+     "name": "execFileSync",
+     "language": "ts",
+     "shape": "command"
+    },
+    {
+     "name": "fork",
+     "language": "ts",
+     "shape": "command"
+    },
+    {
+     "name": "exec",
+     "language": "ts",
+     "shape": "shell-string"
+    },
+    {
+     "name": "execSync",
+     "language": "ts",
+     "shape": "shell-string"
+    },
+    {
+     "name": "Bun.spawn",
+     "language": "ts",
+     "shape": "array"
+    },
+    {
+     "name": "Bun.spawnSync",
+     "language": "ts",
+     "shape": "array"
+    },
+    {
+     "name": "$",
+     "language": "ts",
+     "shape": "template"
+    },
+    {
+     "name": "Command::new",
+     "language": "rust",
+     "shape": "command"
+    },
+    {
+     "name": "exec.Command",
+     "language": "go",
+     "shape": "command"
+    },
+    {
+     "name": "exec.CommandContext",
+     "language": "go",
+     "shape": "command"
+    },
+    {
+     "name": "subprocess.run",
+     "language": "python",
+     "shape": "array"
+    },
+    {
+     "name": "subprocess.Popen",
+     "language": "python",
+     "shape": "array"
+    },
+    {
+     "name": "subprocess.check_output",
+     "language": "python",
+     "shape": "array"
+    },
+    {
+     "name": "subprocess.check_call",
+     "language": "python",
+     "shape": "array"
+    },
+    {
+     "name": "subprocess.call",
+     "language": "python",
+     "shape": "array"
+    }
+   ],
+   "shellWrappers": [
+    "sh",
+    "bash",
+    "zsh",
+    "cmd",
+    "cmd.exe",
+    "powershell",
+    "pwsh"
+   ],
+   "selfExpressions": [
+    "process.execPath",
+    "process.argv0",
+    "Bun.argv0"
+   ],
+   "testSegments": [
+    "🧪️tests",
+    "🧫️fixtures",
+    "🧰️testing",
+    "tests",
+    "e2e"
+   ],
+   "ignoredSegments": [
+    "node_modules",
+    ".cache",
+    ".git",
+    ".🧬semio",
+    "target",
+    "dist",
+    "🗑️generated",
+    "bazel-out"
+   ],
+   "extensions": {
+    "ts": [
+     ".ts",
+     ".tsx",
+     ".mts",
+     ".cts",
+     ".js",
+     ".mjs",
+     ".cjs"
+    ],
+    "rust": [
+     ".rs"
+    ],
+    "go": [
+     ".go"
+    ],
+    "python": [
+     ".py"
+    ],
+    "shell": [
+     ".sh",
+     ".bash",
+     ".zsh",
+     ".ps1",
+     ".cmd",
+     ".bat"
+    ]
+   },
+   "declaredNames": [
+    "📋️project.json",
+    "package.json"
+   ]
+  },
+  "funnels": [
+   {
+    "path": "lib/funnel.ts",
+    "marker": "routeRegisteredCommandV1"
+   }
+  ],
+  "tools": [
+   {
+    "id": "git",
+    "commands": [
+     "git"
+    ],
+    "adapter": "src/adapters/git.ts",
+    "adapterScope": [
+     "src/adapters/git/**"
+    ],
+    "provision": {
+     "kind": "system",
+     "command": "repo tools verify"
+    }
+   },
+   {
+    "id": "cargo",
+    "commands": [
+     "cargo",
+     "rustc"
+    ],
+    "adapter": "src/adapters/cargo.ts",
+    "adapterScope": [
+     "src/adapters/cargo/**",
+     "**/cargo-host/*.rs"
+    ],
+    "provision": {
+     "kind": "system",
+     "command": "repo tools verify",
+     "installer": "install/cargo.ts"
+    }
+   },
+   {
+    "id": "tar",
+    "commands": [
+     "tar"
+    ],
+    "adapter": "src/adapters/tar.ts",
+    "adapterScope": [],
+    "provision": {
+     "kind": "system",
+     "command": "repo tools verify"
+    }
+   }
+  ]
+ },
+ "law": {
+  "version": 1,
+  "roots": [
+   "src"
+  ],
+  "processModules": [
+   "node:child_process",
+   "child_process"
+  ],
+  "extraCallees": [
+   {
+    "name": "runtimeSpawnV1",
+    "language": "ts",
+    "shape": "array",
+    "imported": false
+   },
+   {
+    "name": "runtimeSpawnSyncV1",
+    "language": "ts",
+    "shape": "array",
+    "imported": false
+   },
+   {
+    "name": "os.system",
+    "language": "python",
+    "shape": "shell-string"
+   },
+   {
+    "name": "syscall.Exec",
+    "language": "go",
+    "shape": "command"
+   }
+  ],
+  "commandFunnels": [
+   {
+    "name": "runCmd",
+    "language": "ts",
+    "argument": 0
+   },
+   {
+    "name": "runOwnedCommand",
+    "language": "ts",
+    "argument": 0
+   },
+   {
+    "name": "ExecCommandContext",
+    "language": "go",
+    "argument": 1
+   },
+   {
+    "name": "spawn_inherit",
+    "language": "rust",
+    "argument": 0
+   }
+  ],
+  "interfaces": [
+   {
+    "glob": "src/port/**",
+    "kind": "process-funnel",
+    "reason": {
+     "en": "The port.",
+     "de": "Der Port."
+    }
+   }
+  ]
+ },
+ "scanCases": [
+  {
+   "name": "ts named imports, literal, own executable and unknown program",
+   "path": "src/a/🟦️.ts",
+   "text": "import { spawnSync, execFileSync } from \"node:child_process\";\nspawnSync(\"git\", [\"status\"]);\nconst a = execFileSync(process.execPath, []);\nspawnSync(program, []);\n",
+   "expect": [
+    [
+     2,
+     "spawnSync",
+     "spawn",
+     "git",
+     "prod"
+    ],
+    [
+     3,
+     "execFileSync",
+     "spawn",
+     "<self>",
+     "prod"
+    ],
+    [
+     4,
+     "spawnSync",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts alias and namespace imports",
+   "path": "src/a/🟦️.ts",
+   "text": "import { spawn as launch } from \"child_process\";\nimport * as cp from \"node:child_process\";\nlaunch(\"cargo\", [\"build\"]);\ncp.execFileSync(\"tar\", [\"x\"]);\nconst child = cp.spawn(`git`, []);\n",
+   "expect": [
+    [
+     3,
+     "spawn",
+     "spawn",
+     "cargo",
+     "prod"
+    ],
+    [
+     4,
+     "execFileSync",
+     "spawn",
+     "tar",
+     "prod"
+    ],
+    [
+     5,
+     "spawn",
+     "spawn",
+     "git",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts comments, strings and regular expressions never count",
+   "path": "src/a/🟦️.ts",
+   "text": "import { spawnSync } from \"node:child_process\";\n// spawnSync(\"git\", [])\n/* spawnSync(\"cargo\", []) */\nconst text = \"spawnSync(\\\"tar\\\", [])\";\nconst re = /spawnSync\\(\"x\"\\)/u;\nspawnSync(\"git\", [`${text}`]);\n",
+   "expect": [
+    [
+     6,
+     "spawnSync",
+     "spawn",
+     "git",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts regular expression exec is not a process without the import",
+   "path": "src/a/🟦️.ts",
+   "text": "const match = /a/u.exec(\"a\");\nconst other = text.exec(\"b\");\n",
+   "expect": []
+  },
+  {
+   "name": "ts runtime port array and dynamic first argument",
+   "path": "src/a/🟦️.ts",
+   "text": "runtimeSpawnSyncV1([\"git\", \"ls-files\"], { cwd });\nrunToolV1(name);\nruntimeSpawnV1(command, []);\nruntimeSpawnV1([runtimeExecutableV1(), \"x\"]);\n",
+   "expect": [
+    [
+     1,
+     "runtimeSpawnSyncV1",
+     "spawn",
+     "git",
+     "prod"
+    ],
+    [
+     3,
+     "runtimeSpawnV1",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ],
+    [
+     4,
+     "runtimeSpawnV1",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts shell strings and shell wrappers",
+   "path": "src/a/🟦️.ts",
+   "text": "import { execSync, spawnSync } from \"node:child_process\";\nexecSync(\"cargo build && tar -x -f a\");\nspawnSync(\"sh\", [\"-c\", \"git status | tar c\"]);\nexecSync(command);\n",
+   "expect": [
+    [
+     2,
+     "execSync",
+     "shell",
+     "cargo",
+     "prod"
+    ],
+    [
+     2,
+     "execSync",
+     "shell",
+     "tar",
+     "prod"
+    ],
+    [
+     3,
+     "spawnSync",
+     "shell",
+     "git",
+     "prod"
+    ],
+    [
+     3,
+     "spawnSync",
+     "shell",
+     "tar",
+     "prod"
+    ],
+    [
+     4,
+     "execSync",
+     "shell",
+     "<dynamic>",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts const resolution accepts only a whole string literal",
+   "path": "src/a/🟦️.ts",
+   "text": "import { spawnSync } from \"node:child_process\";\nconst fixed = \"ffmpeg\";\nconst picked = platform === \"win32\" ? \"a.cmd\" : \"a\";\nspawnSync(fixed, []);\nspawnSync(picked, []);\n",
+   "expect": [
+    [
+     4,
+     "spawnSync",
+     "spawn",
+     "ffmpeg",
+     "prod"
+    ],
+    [
+     5,
+     "spawnSync",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts funnels with literal, self, dynamic and definition",
+   "path": "src/a/🟦️.ts",
+   "text": "runCmd(\"git\", [\"x\"]);\nrunOwnedCommand(process.execPath, [], cwd, \"l\", 0);\nrunCmd(program, []);\nexport function runCmd(cmd: string, args: string[]): void {}\nrunCmd(\"bash\", [\"s\"]);\n",
+   "expect": [
+    [
+     1,
+     "runCmd",
+     "funnel",
+     "git",
+     "prod"
+    ],
+    [
+     2,
+     "runOwnedCommand",
+     "funnel",
+     "<self>",
+     "prod"
+    ],
+    [
+     3,
+     "runCmd",
+     "funnel",
+     "<dynamic>",
+     "prod"
+    ],
+    [
+     5,
+     "runCmd",
+     "funnel",
+     "bash",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts bun shell template",
+   "path": "src/a/🟦️.ts",
+   "text": "import { $ } from \"bun\";\nawait $`cargo build`;\nawait Bun.$`git status && tar x`;\n",
+   "expect": [
+    [
+     2,
+     "$",
+     "shell",
+     "cargo",
+     "prod"
+    ],
+    [
+     3,
+     "$",
+     "shell",
+     "git",
+     "prod"
+    ],
+    [
+     3,
+     "$",
+     "shell",
+     "tar",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "ts spawn without process import is not a process",
+   "path": "src/a/🟦️.ts",
+   "text": "spawn(\"git\", []);\nspawnSync(\"cargo\", []);\n",
+   "expect": []
+  },
+  {
+   "name": "ts test file path has the test scope",
+   "path": "src/a/🧪️tests/🟦️.ts",
+   "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"git\", []);\n",
+   "expect": [
+    [
+     2,
+     "spawnSync",
+     "spawn",
+     "git",
+     "test"
+    ]
+   ]
+  },
+  {
+   "name": "rust process commands and clap builders",
+   "path": "src/a/🦀️.rs",
+   "text": "use std::process::Command;\nfn run() {\n    let a = Command::new(\"git\").args([\"x\"]).status();\n    let b = Command::new(program).spawn();\n    let c = Command::new(\"cargo\");\n}\n#[cfg(test)]\nmod tests {\n    fn t() { let _ = Command::new(\"tar\"); }\n}\n",
+   "expect": [
+    [
+     3,
+     "Command::new",
+     "spawn",
+     "git",
+     "prod"
+    ],
+    [
+     4,
+     "Command::new",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ],
+    [
+     5,
+     "Command::new",
+     "spawn",
+     "cargo",
+     "prod"
+    ],
+    [
+     9,
+     "Command::new",
+     "spawn",
+     "tar",
+     "test"
+    ]
+   ]
+  },
+  {
+   "name": "rust clap command builders are not processes",
+   "path": "src/a/🦀️.rs",
+   "text": "use clap::Command;\nfn cli() -> Command {\n    Command::new(\"repo\").subcommand(Command::new(\"run\"))\n}\n",
+   "expect": []
+  },
+  {
+   "name": "rust funnel and fully qualified command",
+   "path": "src/a/🦀️.rs",
+   "text": "fn go() {\n    spawn_inherit(\"bun\", &[\"x\"], cwd, &[]);\n    let _ = std::process::Command::new(\"whoami\").output();\n}\npub fn spawn_inherit(cmd: &str) {}\n",
+   "expect": [
+    [
+     2,
+     "spawn_inherit",
+     "funnel",
+     "bun",
+     "prod"
+    ],
+    [
+     3,
+     "Command::new",
+     "spawn",
+     "whoami",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "go exec commands and the context form",
+   "path": "src/a/🐹️.go",
+   "text": "package a\n\nfunc run(ctx context.Context) {\n\t_ = exec.Command(\"git\", \"status\")\n\t_ = exec.CommandContext(ctx, \"go\", \"build\")\n\t_ = exec.Command(name, args...)\n\tExecCommandContext(ctx, \"tar\", nil, \"\")\n\tsyscall.Exec(\"/bin/sh\", nil, nil)\n}\n",
+   "expect": [
+    [
+     4,
+     "exec.Command",
+     "spawn",
+     "git",
+     "prod"
+    ],
+    [
+     5,
+     "exec.CommandContext",
+     "spawn",
+     "go",
+     "prod"
+    ],
+    [
+     6,
+     "exec.Command",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ],
+    [
+     7,
+     "ExecCommandContext",
+     "funnel",
+     "tar",
+     "prod"
+    ],
+    [
+     8,
+     "syscall.Exec",
+     "spawn",
+     "/bin/sh",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "go comments and raw strings never count",
+   "path": "src/a/🐹️.go",
+   "text": "package a\n\n// exec.Command(\"git\")\nvar text = `exec.Command(\"cargo\")`\nfunc run() { _ = exec.Command(\"tar\") }\n",
+   "expect": [
+    [
+     5,
+     "exec.Command",
+     "spawn",
+     "tar",
+     "prod"
+    ]
+   ]
+  },
+  {
+   "name": "python subprocess forms and os.system",
+   "path": "src/a/🐍️.py",
+   "text": "import subprocess, os\nsubprocess.run([\"git\", \"status\"])\nsubprocess.check_output(cmd)\nos.system(\"cargo build && tar x\")\n# subprocess.run([\"x\"])\n",
+   "expect": [
+    [
+     2,
+     "subprocess.run",
+     "spawn",
+     "git",
+     "prod"
+    ],
+    [
+     3,
+     "subprocess.check_output",
+     "spawn",
+     "<dynamic>",
+     "prod"
+    ],
+    [
+     4,
+     "os.system",
+     "shell",
+     "cargo",
+     "prod"
+    ],
+    [
+     4,
+     "os.system",
+     "shell",
+     "tar",
+     "prod"
+    ]
+   ]
+  }
+ ],
+ "globCases": [
+  {
+   "pattern": "a/**",
+   "path": "a/b/c.ts",
+   "matches": true
+  },
+  {
+   "pattern": "a/**",
+   "path": "a",
+   "matches": false
+  },
+  {
+   "pattern": "a/**/c.ts",
+   "path": "a/c.ts",
+   "matches": true
+  },
+  {
+   "pattern": "a/**/c.ts",
+   "path": "a/b/d/c.ts",
+   "matches": true
+  },
+  {
+   "pattern": "a/*/c.ts",
+   "path": "a/b/d/c.ts",
+   "matches": false
+  },
+  {
+   "pattern": "a/*.ts",
+   "path": "a/b.ts",
+   "matches": true
+  },
+  {
+   "pattern": "a/*.ts",
+   "path": "a/x/b.ts",
+   "matches": false
+  },
+  {
+   "pattern": "**/🧪️tests/**",
+   "path": "p/q/🧪️tests/r.ts",
+   "matches": true
+  },
+  {
+   "pattern": "a.b",
+   "path": "aXb",
+   "matches": false
+  },
+  {
+   "pattern": "a(b)",
+   "path": "a(b)",
+   "matches": true
+  }
+ ],
+ "lawCases": [
+  {
+   "name": "registered tool: adapter scope, installer and the tools module may start it, other files are findings",
+   "files": [
+    {
+     "path": "src/adapters/git/a.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"git\", []);\n"
+    },
+    {
+     "path": "src/other/b.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"git\", []);\n"
+    },
+    {
+     "path": "install/cargo.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"cargo\", []);\n"
+    },
+    {
+     "path": "src/other/c.rs",
+     "text": "use std::process::Command;\nfn f() { Command::new(\"rustc\").status().ok(); }\n"
+    },
+    {
+     "path": "src/x/cargo-host/d.rs",
+     "text": "use std::process::Command;\nfn f() { Command::new(\"cargo\").status().ok(); }\n"
+    }
+   ],
+   "roots": [
+    "src",
+    "install"
+   ],
+   "expect": {
+    "dispositions": [
+     "adapter",
+     "FINDING:raw-spawn",
+     "adapter",
+     "FINDING:raw-spawn",
+     "adapter"
+    ],
+    "findings": [
+     "raw-spawn src/other/b.ts git",
+     "raw-spawn src/other/c.rs rustc"
+    ],
+    "stale": []
+   }
+  },
+  {
+   "name": "unregistered literal needs a row, rows are consumed once per site and unused budget is stale",
+   "files": [
+    {
+     "path": "src/x/a.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"ps\", []);\nspawnSync(\"ps\", []);\nspawnSync(\"kill\", []);\n"
+    }
+   ],
+   "exceptions": [
+    {
+     "path": "src/x/a.ts",
+     "program": "ps",
+     "count": 1,
+     "class": "os-primitive",
+     "reason": {
+      "en": "r",
+      "de": "r"
+     }
+    },
+    {
+     "path": "src/x/a.ts",
+     "program": "kill",
+     "count": 2,
+     "class": "os-primitive",
+     "reason": {
+      "en": "r",
+      "de": "r"
+     }
+    }
+   ],
+   "expect": {
+    "dispositions": [
+     "exception:os-primitive",
+     "FINDING:unregistered-command",
+     "exception:os-primitive"
+    ],
+    "findings": [
+     "unregistered-command src/x/a.ts ps"
+    ],
+    "stale": [
+     "src/x/a.ts kill 1/2"
+    ]
+   }
+  },
+  {
+   "name": "dynamic and own-executable starts: interface modules are free, other files need a dynamic row",
+   "files": [
+    {
+     "path": "src/port/a.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(program, []);\nspawnSync(\"zip\", []);\n"
+    },
+    {
+     "path": "src/x/b.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(program, []);\nspawnSync(process.execPath, []);\n"
+    },
+    {
+     "path": "src/y/c.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(program, []);\n"
+    }
+   ],
+   "exceptions": [
+    {
+     "path": "src/y/c.ts",
+     "program": "<dynamic>",
+     "count": 1,
+     "class": "generic-runner",
+     "reason": {
+      "en": "r",
+      "de": "r"
+     }
+    }
+   ],
+   "expect": {
+    "dispositions": [
+     "interface",
+     "FINDING:unregistered-command",
+     "FINDING:raw-spawn",
+     "FINDING:raw-spawn",
+     "exception:generic-runner"
+    ],
+    "findings": [
+     "raw-spawn src/x/b.ts <dynamic>",
+     "raw-spawn src/x/b.ts <self>",
+     "unregistered-command src/port/a.ts zip"
+    ],
+    "stale": []
+   }
+  },
+  {
+   "name": "funnel calls are the port at work unless the literal program is unknown",
+   "files": [
+    {
+     "path": "src/x/a.ts",
+     "text": "runCmd(\"git\", []);\nrunCmd(process.execPath, []);\nrunCmd(program, []);\nrunCmd(\"curl\", []);\nrunOwnedCommand(\"tar\", [], cwd, \"l\", 0);\n"
+    }
+   ],
+   "expect": {
+    "dispositions": [
+     "funnel",
+     "funnel",
+     "funnel",
+     "FINDING:unregistered-command",
+     "funnel"
+    ],
+    "findings": [
+     "unregistered-command src/x/a.ts curl"
+    ],
+    "stale": []
+   }
+  },
+  {
+   "name": "test code and files outside the roots are not judged",
+   "files": [
+    {
+     "path": "src/x/🧪️tests/a.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"curl\", []);\n"
+    },
+    {
+     "path": "other/a.ts",
+     "text": "import { spawnSync } from \"node:child_process\";\nspawnSync(\"curl\", []);\n"
+    },
+    {
+     "path": "src/x/b.rs",
+     "text": "use std::process::Command;\nfn f() { Command::new(\"git\").status().ok(); }\n#[cfg(test)]\nmod t { fn g() { Command::new(\"curl\"); } }\n"
+    }
+   ],
+   "expect": {
+    "dispositions": [
+     "FINDING:raw-spawn"
+    ],
+    "findings": [
+     "raw-spawn src/x/b.rs git"
+    ],
+    "stale": []
+   }
+  }
+ ]
+}

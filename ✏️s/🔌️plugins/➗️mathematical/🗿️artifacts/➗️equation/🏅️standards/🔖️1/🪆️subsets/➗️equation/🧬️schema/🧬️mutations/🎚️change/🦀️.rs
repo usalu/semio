@@ -28,7 +28,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "coefficient", kind: "change-coefficient", record: "ChangedCoefficient" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom), &format!("Koeffizient {} auf {}/{} ändern", self.label.0, self.numer, self.denom))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.label.0.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EquationSnapshot, Op> for ChangeCoefficient
+where
+    Op: protocol::ColdMutation<EquationSnapshot, ReferenceDiff = crate::EquationDiff> + From<ChangeCoefficient>,
+{
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<EquationSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -37,11 +49,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom), &format!("Koeffizient {} auf {}/{} ändern", self.label.0, self.numer, self.denom))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.label.0.to_string()]
-    }
 }
 //#endregion 🔖️Payload

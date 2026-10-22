@@ -169,7 +169,7 @@ mod subject {
     use semio_s_artifact_stdio_semio::io::text::snapshot::encode_semio_snapshot_json;
     use semio_s_artifact_stdio_semio::io::text::snapshot::print_semio_envelope_dsl;
     use semio_s_artifact_stdio_semio::io::text::snapshot::parse_semio_envelope_dsl;
-    use semio_framework_os_kernel::apply_diff;
+    use semio_framework_os_kernel::apply_diff_cold;
     use semio_repo_test_host::law::carrier_is_exact;
 
     fn text(ctx: &Context, uri: &str) -> Result<String, String> {
@@ -188,7 +188,7 @@ mod subject {
         let outcome = diff_semio_mutation(mutation, base);
         let refusals = semio_mutation_refusal_codes(&outcome);
         if refusals.is_empty() {
-            return (apply_diff(outcome.diff(), base).expect("a refusal-free envelope diff must apply to the envelope it was computed from"), refusals);
+            return (apply_diff_cold(outcome.diff(), base).expect("a refusal-free envelope diff must apply to the envelope it was computed from"), refusals);
         }
         (base.clone(), refusals)
     }

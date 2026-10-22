@@ -1,0 +1,11 @@
+import {lstatSync,readFileSync,readdirSync} from "node:fs";
+import {join,resolve} from "node:path";
+const root=process.cwd(),dir=join(root,".cache/b/d/m/generation");
+const receiptName=readdirSync(dir).filter(n=>n.endsWith(".receipt.json")).sort().pop();
+const receipt=JSON.parse(readFileSync(join(dir,receiptName),"utf8"));
+const rows=name=>readFileSync(join(dir,name),"utf8").split("\n").filter(Boolean).map(l=>JSON.parse(l));
+const time=(label,f)=>{const t=performance.now(),c=process.cpuUsage(),n=f(),u=process.cpuUsage(c);console.log(label.padEnd(26),String(Math.round(performance.now()-t)).padStart(6),"ms wall",String(Math.round((u.user+u.system)/1000)).padStart(6),"ms cpu",n);};
+console.log("receipt",receiptName.slice(0,24),"walkStamp",receipt.walkStamp,"bytes",readFileSync(join(dir,receiptName)).length);
+time("frontier lstat (membership)",()=>{const r=rows(receipt.membership.frontier.name);let n=0;for(const row of r){lstatSync(resolve(root,row[1]),{bigint:true,throwIfNoEntry:false});n++;}return n+" rows";});
+time("execution lstat (provider)",()=>{const r=rows(receipt.execution.evidence.name);let n=0;for(const row of r){lstatSync(row[1][1]===":"?resolve(row[1][0]==="w"?root:join(root,".cache/b/d/m"),row[1].slice(2)):row[1],{bigint:true,throwIfNoEntry:false});n++;}return n+" rows";});
+time("manifest texts (sha)",()=>{let n=0;for(const t of receipt.membership.texts){readFileSync(join(root,t.path));n++;}return n+" files";});

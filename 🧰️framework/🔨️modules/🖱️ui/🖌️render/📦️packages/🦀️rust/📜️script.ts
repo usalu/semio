@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -19,8 +19,10 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
 
-const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 
 /** 🚫️ Crates that must never appear in this crate's dependency tree, and why. */
 const FORBIDDEN_DEPENDENCIES: ReadonlyArray<readonly [string, string]> = [
@@ -39,7 +41,7 @@ class TestScript extends BundleScript {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: RENDER_PACKAGES, cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
-    await runOwnedCommand("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
+    await runOwnedCommand(runtimeExecutableV1(), ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }
 //#endregion 🔖️test
@@ -78,7 +80,7 @@ class BoundariesScript extends BundleScript {
 }
 //#endregion 🔖️boundaries
 
-if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("boundaries", BoundariesScript);
+if (isMainModuleV1(import.meta.url)) {
+  const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("check-wasm", CheckWasmScript).register("boundaries", BoundariesScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

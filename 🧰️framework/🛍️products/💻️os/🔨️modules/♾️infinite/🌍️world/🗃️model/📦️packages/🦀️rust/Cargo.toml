@@ -30,6 +30,7 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-async-slots = { workspace = true }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }

@@ -7,7 +7,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -15,7 +15,7 @@
       "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts publication-authority-audit",
+        "command": "repo ./📜️script.ts publication-authority-audit",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -26,7 +26,7 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts shared-schema",
+        "command": "repo ./📜️script.ts shared-schema",
         "forwardAllArgs": true
       }
     }

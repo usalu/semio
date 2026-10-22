@@ -55,8 +55,8 @@ pub enum PersistedDocumentHydrationTarget {
 
 pub enum PersistedDocumentHydrationOutput<P, M>
 where
-    P: ToValue,
-    M: ToValue + FromValue + Mutation<P>,
+    P: ToValue + Clone + FromValue,
+    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
 {
     Store(Box<ArtifactStore<P, M>>),
     Envelope(ArtifactEnvelope<P, M>),
@@ -70,8 +70,8 @@ pub struct PersistedDocumentHydrationProgress {
 
 pub enum PersistedDocumentHydrationStep<P, M>
 where
-    P: ToValue,
-    M: ToValue + FromValue + Mutation<P>,
+    P: ToValue + Clone + FromValue,
+    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(PersistedDocumentHydrationOutput<P, M>),
@@ -81,8 +81,8 @@ where
 /// 🏪️ A Store-only hydration handoff preserves its declared output authority.
 pub enum PersistedDocumentStoreHydrationStep<P, M>
 where
-    P: ToValue,
-    M: ToValue + FromValue + Mutation<P>,
+    P: ToValue + Clone + FromValue,
+    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -140,8 +140,8 @@ impl<M> semio_framework_os_store_replay::ReplayEdits<M> for HydratedReplayEdits<
 
 pub struct RetainedPersistedDocumentHydration<P, M>
 where
-    P: ToValue,
-    M: ToValue + FromValue + Mutation<P>,
+    P: ToValue + Clone + FromValue,
+    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
 {
     pub actor: ManuallyDrop<semio_framework_os_spr::ActorId>,
     pub pack: ManuallyDrop<Option<Vec<u8>>>,
@@ -195,7 +195,7 @@ where
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
 {
     pub fn from_decoded_pack(
         initial: P,

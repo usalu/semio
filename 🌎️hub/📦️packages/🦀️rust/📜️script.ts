@@ -1,5 +1,5 @@
-#!/usr/bin/env bun
-/** 🌎️ `os-hub` router: `bun ./📜️script.ts <command>`; parses the CLI and lazily dispatches each command to its hub module. */
+#!/usr/bin/env repo
+/** 🌎️ `os-hub` router: `repo ./📜️script.ts <command>`; parses the CLI and lazily dispatches each command to its hub module. */
 import { receiveScriptProcessInvocation, runScriptMain, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";

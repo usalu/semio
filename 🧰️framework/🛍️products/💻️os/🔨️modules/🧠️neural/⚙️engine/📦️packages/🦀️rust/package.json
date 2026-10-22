@@ -2,7 +2,7 @@
   "name": "@semio-tech/neural-engine-rs",
   "private": true,
   "scripts": {
-    "test-type-ownership": "bun --cwd \"../../../../../../../..\" repo run @semio-tech/neural-engine-rs:test-type-ownership"
+    "test-type-ownership": "repo run @semio-tech/neural-engine-rs:test-type-ownership"
   },
   "type": "module",
   "devDependencies": {

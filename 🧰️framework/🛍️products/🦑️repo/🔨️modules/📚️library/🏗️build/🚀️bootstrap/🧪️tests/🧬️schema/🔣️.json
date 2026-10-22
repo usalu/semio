@@ -4,16 +4,40 @@
   "title": "Bootstrap install de-duplication cases",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "adoption", "installs"],
+  "required": [
+    "schemaVersion",
+    "adoption",
+    "installs",
+    "publishers",
+    "catalog"
+  ],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": {
+      "const": 1
+    },
     "adoption": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["status", "adopted"],
-        "properties": { "status": { "enum": ["published", "present", "deferred", "stale", "failed"] }, "adopted": { "type": "boolean" } }
+        "required": [
+          "status",
+          "adopted"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "published",
+              "present",
+              "deferred",
+              "stale",
+              "failed"
+            ]
+          },
+          "adopted": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "installs": {
@@ -21,14 +45,85 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "runs", "recheck", "initiallyReady", "readyAfterInstall", "expectedPrepares"],
+        "required": [
+          "id",
+          "runs",
+          "recheck",
+          "initiallyReady",
+          "readyAfterInstall",
+          "expectedPrepares"
+        ],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "runs": { "type": "integer", "minimum": 1, "maximum": 16 },
-          "recheck": { "type": "boolean" },
-          "initiallyReady": { "type": "boolean" },
-          "readyAfterInstall": { "type": "boolean" },
-          "expectedPrepares": { "type": "integer", "minimum": 0 }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "recheck": {
+            "type": "boolean"
+          },
+          "initiallyReady": {
+            "type": "boolean"
+          },
+          "readyAfterInstall": {
+            "type": "boolean"
+          },
+          "expectedPrepares": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "publishers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "module",
+          "export"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "module": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "export": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "path"
+      ],
+      "properties": {
+        "owner": {
+          "const": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts"
+        },
+        "path": {
+          "const": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json"
         }
       }
     }

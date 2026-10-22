@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "languages": ["en", "de"],
+  "resolve": [
+    { "name": "flag wins over everything", "args": ["--lang", "de"], "environment": { "SEMIO_LANGUAGE": "en", "LANG": "en_US.UTF-8" }, "os": ["en-US"], "expected": { "language": "de", "source": "--lang" } },
+    { "name": "flag with equals sign", "args": ["show", "--lang=en"], "environment": { "SEMIO_LANGUAGE": "de" }, "os": [], "expected": { "language": "en", "source": "--lang" } },
+    { "name": "flag after the separator belongs to the child", "args": ["--", "--lang=fr"], "environment": { "SEMIO_LANGUAGE": "de" }, "os": [], "expected": { "language": "de", "source": "SEMIO_LANGUAGE" } },
+    { "name": "last flag wins", "args": ["--lang=en", "--lang=de"], "environment": {}, "os": [], "expected": { "language": "de", "source": "--lang" } },
+    { "name": "explicit variable with a locale spelling", "args": [], "environment": { "SEMIO_LANGUAGE": "de_CH.UTF-8", "LANG": "en_US.UTF-8" }, "os": [], "expected": { "language": "de", "source": "SEMIO_LANGUAGE" } },
+    { "name": "preference list skips unoffered entries", "args": [], "environment": { "LANGUAGE": "fr:de:en", "LANG": "en_US.UTF-8" }, "os": [], "expected": { "language": "de", "source": "LANGUAGE" } },
+    { "name": "neutral entries of the preference list carry no language", "args": [], "environment": { "LANGUAGE": "C:POSIX", "LC_MESSAGES": "de_DE" }, "os": [], "expected": { "language": "de", "source": "LC_MESSAGES" } },
+    { "name": "LC_ALL decides before LC_MESSAGES and LANG", "args": [], "environment": { "LC_ALL": "de_DE.UTF-8", "LC_MESSAGES": "en_US", "LANG": "en_US" }, "os": [], "expected": { "language": "de", "source": "LC_ALL" } },
+    { "name": "empty LC_ALL is unset", "args": [], "environment": { "LC_ALL": "", "LANG": "en_GB.UTF-8@euro" }, "os": [], "expected": { "language": "en", "source": "LANG" } },
+    { "name": "LC_ALL=C overrides LANG and falls through to the operating system", "args": [], "environment": { "LC_ALL": "C", "LANG": "de_DE.UTF-8" }, "os": ["de-DE"], "expected": { "language": "de", "source": "os" } },
+    { "name": "an unoffered locale falls through to the operating system", "args": [], "environment": { "LANG": "fr_FR.UTF-8" }, "os": ["fr-FR", "en-US"], "expected": { "language": "en", "source": "os" } },
+    { "name": "operating system list in preference order", "args": [], "environment": {}, "os": ["it-IT", "de-CH", "en-US"], "expected": { "language": "de", "source": "os" } },
+    { "name": "POSIX locale and an empty operating system list resolve nothing", "args": [], "environment": { "LANG": "POSIX" }, "os": [], "refusal": "none" },
+    { "name": "empty environment resolves nothing", "args": [], "environment": {}, "os": [], "refusal": "none" },
+    { "name": "the repo config beats the locale", "args": [], "environment": { "LANG": "en_US.UTF-8", "LANGUAGE": "en" }, "os": ["en-US"], "configured": "de", "expected": { "language": "de", "source": "config" } },
+    { "name": "the repo config resolves when nothing else does", "args": [], "environment": {}, "os": [], "configured": "en", "expected": { "language": "en", "source": "config" } },
+    { "name": "the explicit variable beats the repo config", "args": [], "environment": { "SEMIO_LANGUAGE": "en" }, "os": [], "configured": "de", "expected": { "language": "en", "source": "SEMIO_LANGUAGE" } },
+    { "name": "the flag beats the repo config", "args": ["--lang=en"], "environment": {}, "os": [], "configured": "de", "expected": { "language": "en", "source": "--lang" } },
+    { "name": "an unoffered repo config is refused", "args": [], "environment": { "LANG": "de_DE.UTF-8" }, "os": ["de-DE"], "configured": "fr", "refusal": "config" },
+    { "name": "unoffered flag is refused", "args": ["--lang=fr"], "environment": { "SEMIO_LANGUAGE": "de" }, "os": [], "refusal": "flag" },
+    { "name": "flag without a value is refused", "args": ["--lang"], "environment": {}, "os": ["en-US"], "refusal": "flag" },
+    { "name": "unoffered explicit variable is refused", "args": [], "environment": { "SEMIO_LANGUAGE": "fr" }, "os": ["en-US"], "refusal": "variable" }
+  ],
+  "tags": [
+    ["de_CH.UTF-8@euro", "de"],
+    ["en-US", "en"],
+    ["EN_gb", "en"],
+    ["zh-Hans-CN", "zh"],
+    ["pt_BR", "pt"]
+  ],
+  "neutral": ["C", "POSIX", "c", "", "  "]
+}

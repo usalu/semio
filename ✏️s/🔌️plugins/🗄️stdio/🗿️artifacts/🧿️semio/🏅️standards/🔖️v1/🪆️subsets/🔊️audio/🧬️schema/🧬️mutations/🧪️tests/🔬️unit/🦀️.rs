@@ -22,12 +22,12 @@ fn base_snapshot() -> SemioAudioSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
     let diff = mutation.diff(base);
-    let mutated = protocol::apply_diff(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+    let mutated = protocol::apply_diff_cold(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in inverses.iter().rev() {
         let inv_diff = inv.diff(&restored);
-        restored = protocol::apply_diff(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff_cold(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
 }
@@ -59,7 +59,7 @@ async fn mutation_diff_law() {
         assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
         assert_eq!(
             snap,
-            protocol::apply_diff(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff_cold(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
             "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}"
         );
     }

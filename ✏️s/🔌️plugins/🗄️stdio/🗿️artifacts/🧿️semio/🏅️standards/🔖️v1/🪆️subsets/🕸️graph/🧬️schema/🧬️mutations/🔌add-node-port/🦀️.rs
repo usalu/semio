@@ -20,7 +20,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-port", kind: "add-node-port", record: "AddedNodePort" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add port to node \"{}\" at #{}", self.node_id.value, self.index), &format!("Anschluss zu Knoten \"{}\" an #{} hinzufügen", self.node_id.value, self.index))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.node_id.value.clone(), self.index.to_string()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<SemioGraphSnapshot, Op> for AddNodePort
+where
+    Op: protocol::ColdMutation<SemioGraphSnapshot, ReferenceDiff = crate::schema::diff::SemioGraphDiff> + From<AddNodePort> + From<crate::schema::mutations::remove_node_port::RemoveNodePort>,
+{
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<SemioGraphSnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -29,11 +41,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add port to node \"{}\" at #{}", self.node_id.value, self.index), &format!("Anschluss zu Knoten \"{}\" an #{} hinzufügen", self.node_id.value, self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.node_id.value.clone(), self.index.to_string()]
-    }
 }
 //#endregion 🔖️Payload

@@ -3,7 +3,7 @@ import { DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/servi
 import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
-import { useCallback } from "react";
+import { useCallback } from "../../../⚛️react-port/🟦️.ts";
 import { type ActionInvocation, type CommandInvocation, type Effect, type HistoryPatch } from "@semio-tech/framework";
 import { decodePackWire } from "@semio-tech/framework/packs";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";

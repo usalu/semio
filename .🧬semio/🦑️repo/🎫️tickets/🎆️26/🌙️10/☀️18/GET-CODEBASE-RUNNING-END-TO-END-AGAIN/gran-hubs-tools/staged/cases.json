@@ -192,6 +192,30 @@
    },
    "input": "#![cfg(test)]\nuse hub::{a::X, b::Y};\n",
    "expected": "#![cfg(test)]\nuse own_a::X;\nuse own_b::Y;\n"
+  },
+  {
+   "name": "a name that is both a crate alias and a macro imports both and invokes the macro path",
+   "idents": [
+    "hub"
+   ],
+   "table": {
+    "ld": [
+     "rewrite",
+     "own_ld",
+     []
+    ]
+   },
+   "macro_table": {
+    "ld": [
+     "rewrite",
+     "own_ld",
+     [
+      "ld"
+     ]
+    ]
+   },
+   "input": "use hub::ld;\nfn f(){ hub::ld!(1); }\n",
+   "expected": "use own_ld as ld;\nuse own_ld::ld;\nfn f(){ own_ld::ld!(1); }\n"
   }
  ],
  "manifest": [
@@ -269,6 +293,88 @@
    ],
    "removed": [
     "hub"
+   ]
+  },
+  {
+   "name": "dev edge features expand through the hub feature map onto named producers",
+   "key": "hub",
+   "prod": [
+    "p-a"
+   ],
+   "test": [],
+   "declared": [
+    "p-a"
+   ],
+   "rel": "../x/",
+   "feat_map": {
+    "testing": {
+     "p-a": [
+      "t"
+     ],
+     "p-z": [
+      "t"
+     ]
+    }
+   },
+   "existing": [
+    "p-a"
+   ],
+   "input": "[dependencies]\nhub = { workspace = true }\n\n[dev-dependencies]\nhub = { workspace = true, features = [\"testing\"] }\n",
+   "expected": "[dependencies]\np-a = { workspace = true }\n\n[dev-dependencies]\np-a = { workspace = true, features = [\"t\"] }\n",
+   "added": [
+    "p-a"
+   ],
+   "removed": [
+    "hub"
+   ]
+  }
+ ],
+ "macro": [
+  {
+   "name": "crate paths and explicit crates become private paths",
+   "mode": "crate",
+   "table": {
+    "A::x": [
+     "rewrite",
+     "pa",
+     [
+      "x"
+     ]
+    ],
+    "own_fn": [
+     "own"
+    ]
+   },
+   "keep": [
+    "own_fn"
+   ],
+   "input": "#[macro_export]\nmacro_rules! m {\n    () => { $crate::A::x(); $crate::own_fn(); ::semio_framework_b::y(); };\n}\n",
+   "expected": "#[macro_export]\nmacro_rules! m {\n    () => { $crate::__private::pa::x(); $crate::own_fn(); $crate::__private::semio_framework_b::y(); };\n}\n",
+   "idents": [
+    "pa",
+    "semio_framework_b"
+   ]
+  },
+  {
+   "name": "ident mode rewrites hub paths in macro bodies only",
+   "mode": "ident",
+   "hub": [
+    "hub"
+   ],
+   "table": {
+    "k::Z": [
+     "rewrite",
+     "pk",
+     [
+      "Z"
+     ]
+    ]
+   },
+   "keep": [],
+   "input": "fn f() { hub::k::Z; }\nmacro_rules! m { () => { hub::k::Z } }\n",
+   "expected": "fn f() { hub::k::Z; }\nmacro_rules! m { () => { $crate::__private::pk::Z } }\n",
+   "idents": [
+    "pk"
    ]
   }
  ]

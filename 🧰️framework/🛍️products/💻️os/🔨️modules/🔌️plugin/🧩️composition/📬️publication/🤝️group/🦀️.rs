@@ -86,7 +86,9 @@ pub struct PrivateOwnedPublicationLane {
                     Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
-                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant)?;
+                    let mut proceed = |_| true;
+                    let mut receiving = semio_framework_value::NativeDecodeControl::new_retained(&mut proceed);
+                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant.maximum_copy_bytes, grant, &mut receiving)?;
                     if let store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, progress) = step { self.phase = PrivateOwnedPublicationPhase::Staging; return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, progress)); }
                     Ok(step)
                 }

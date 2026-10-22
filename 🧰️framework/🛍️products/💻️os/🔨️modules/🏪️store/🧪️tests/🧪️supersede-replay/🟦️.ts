@@ -99,8 +99,8 @@ test("🎟️ semantic preparation validates independent physical currencies", (
   const law = read("../../🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json").turnReceipts;
   const database = new Database(":memory:");
   try {
-    const query = database.query<{ accepted: number }, number[]>("SELECT (?1 <= 1 AND ?2 <= ?3 AND ?4 <= ?5 AND ?6 <= ?7 AND ?2 + ?4 <= ?8) AS accepted");
-    for (const row of law.cases) expect(Boolean(query.get(row.items, row.copy, row.copyGrant, row.capacity, row.capacityGrant, row.release, row.releaseGrant, law.maximumBodyCapacityBytes)?.accepted)).toBe(row.accepted);
+    const query = database.query<{ accepted: number }, number[]>("SELECT (?1 <= 1 AND ?2 <= ?3 AND ?4 <= ?5 AND ?6 <= ?7) AS accepted");
+    for (const row of law.cases) expect(Boolean(query.get(row.items, row.copy, row.copyGrant, row.capacity, row.capacityGrant, row.release, row.releaseGrant)?.accepted)).toBe(row.accepted);
   } finally { database.close(); }
   const source = readFileSync(new URL("../../🔁️replay/🎮️operation/🦀️.rs", import.meta.url), "utf8");
   expect(source).toContain("Pending(RetainedCloneProgress)");

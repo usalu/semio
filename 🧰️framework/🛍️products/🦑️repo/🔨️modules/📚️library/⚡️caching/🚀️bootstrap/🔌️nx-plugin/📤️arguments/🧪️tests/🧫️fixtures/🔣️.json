@@ -69,7 +69,7 @@
       "kind": "native-owner-command",
       "manifest": "owner/Cargo.toml",
       "workingDirectory": "owner",
-      "program": "bun",
+      "program": "repo",
       "arguments": [
         "./📜️script.ts",
         "test"

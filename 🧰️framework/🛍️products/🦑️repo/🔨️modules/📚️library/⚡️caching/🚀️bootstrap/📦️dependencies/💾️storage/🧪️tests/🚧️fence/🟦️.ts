@@ -8,7 +8,7 @@ import {type BigIntStats,lstatSync,lutimesSync,mkdirSync,mkdtempSync,readFileSyn
 import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import installSchema from "../../🧬️schema/📥️install.json";
+import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
 import {publishJavascriptDependencyPreservingSourceDescriptorV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,requireJavascriptDependencyPreservationSourceUnchangedV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 

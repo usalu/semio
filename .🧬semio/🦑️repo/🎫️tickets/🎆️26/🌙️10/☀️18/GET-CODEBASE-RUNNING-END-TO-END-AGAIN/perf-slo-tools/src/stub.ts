@@ -1,4 +1,4 @@
-/** 🎭 Stand-in for the build CLI that the bench tests run as a real process: it answers `--help`, `run <target>` and `service start|stop` with delays, marker lines, memory and failures taken from `BENCH_STUB_*` variables. */
+/** 🍝 Stand-in for the build CLI that the bench tests run as a real process: it answers `--help`, `run <target>` and `service start|stop` with delays, marker lines, memory and failures taken from `BENCH_STUB_*` variables. */
 import {appendFileSync,existsSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 
 const env=process.env,sleep=(milliseconds:number)=>new Promise<void>(accept=>setTimeout(accept,milliseconds)),number=(name:string,fallback:number)=>Number(env[name]??fallback);

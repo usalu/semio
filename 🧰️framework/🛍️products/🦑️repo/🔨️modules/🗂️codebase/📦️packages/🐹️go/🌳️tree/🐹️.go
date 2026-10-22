@@ -140,7 +140,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*model.Folder, er
 			relPaths = append(relPaths, relPath)
 		}
 	}
-	ignored := workspace.GetGitIgnoredSet(relPaths)
+	ignored := workspace.GetGitIgnoredSet(workspace.GetRootDir(), relPaths)
 	var children []*model.Folder
 	for _, c := range candidates {
 		if ignored[c.relPath] || ignored[c.relPath+"/"] {
@@ -176,8 +176,8 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*model.File, error) 
 			filePaths = append(filePaths, relPath)
 		}
 	}
-	filePaths = model.FilterConsideredFiles(filePaths)
-	filePaths = model.FilterGitIgnored(filePaths)
+	filePaths = model.FilterConsideredFiles(workspace.GetRootDir(), filePaths)
+	filePaths = model.FilterGitIgnored(workspace.GetRootDir(), filePaths)
 	var files []*model.File
 	var folderID *string
 	if folderPath != "." {

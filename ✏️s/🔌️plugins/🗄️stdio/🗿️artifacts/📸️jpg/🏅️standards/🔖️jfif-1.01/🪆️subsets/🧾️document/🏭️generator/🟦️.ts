@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -43,7 +45,7 @@ function platformId(): string {
 
 /** 🦀️ Shells out to the standalone `jpeg-jfif-codec` binary — the ONLY place this file touches it. */
 function codecBuild(recipe: Recipe, outDir: string): void {
-  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
+  const result = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "build", recipe.id, outDir, recipe.directoryName], { encoding: "utf8" });
   if (result.status !== 0) {
     throw new Error(`jpeg-jfif-codec build ${recipe.id} failed (exit ${result.status}): ${result.stderr}`);
   }
@@ -74,7 +76,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
       packageVersion: ENGINE_VERSION,
       engineFamily: ENGINE_FAMILY,
       engineVersion: ENGINE_VERSION,
-      command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       platform: platformId(),
     },
     provenance: { source: "generated", license: "MIT OR Apache-2.0 (image)", attribution: "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory", security: "scanned-clean", privacy: "no-personal-data" },
@@ -87,7 +89,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
 
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
-  if (command === "test") return spawnSync("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
+  if (command === "test") return runToolSyncV1("cargo", ["test", "--offline", "--manifest-path", CODEC_MANIFEST], { stdio: "inherit" }).status ?? 1;
   const value = (flag: string): string | null => {
     const index = rest.indexOf(flag);
     return index === -1 ? null : (rest[index + 1] ?? null);
@@ -105,9 +107,9 @@ async function main(argv: readonly string[]): Promise<number> {
     const dir = join(outDir, "🖼️replace-image-applied");
     const project = (filename: string) => {
       const input = join(dir, filename);
-      const image = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", input], { encoding: "utf8" });
+      const image = runToolSyncV1("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", input], { encoding: "utf8" });
       if (image.status !== 0) throw new Error(image.stderr);
-      const marker = spawnSync("bun", [join(import.meta.dir, "..", "🔬️probes", "📜️script.ts"), "jpg-marker-project", "--input", input], { encoding: "utf8" });
+      const marker = runToolSyncV1(runtimeCommandNameV1(), [join(import.meta.dir, "..", "🔬️probes", "📜️script.ts"), "jpg-marker-project", "--input", input], { encoding: "utf8" });
       if (marker.status !== 0) throw new Error(marker.stderr);
       return { image: JSON.parse(image.stdout), marker: JSON.parse(marker.stdout).measurements };
     };
@@ -147,9 +149,9 @@ print(kind + ': written')
       if (command === "markers") {
         const failures: string[] = [];
         for (const [kind, directoryName] of Object.entries(KINDS)) {
-          const written = spawnSync("python3", ["-c", WRITER, root, kind, directoryName], { stdio: "inherit" });
+          const written = runToolSyncV1("python", ["-c", WRITER, root, kind, directoryName], { stdio: "inherit" });
           if (written.status !== 0) { failures.push(`${kind}: writer failed`); continue; }
-          const cmp = spawnSync("bun", [probes, "jpg-marker-compare", "--input", join(root, directoryName, "⬅️before.jpg"), "--input", join(root, directoryName, "➡️after.jpg")], { encoding: "utf8" });
+          const cmp = runToolSyncV1(runtimeCommandNameV1(), [probes, "jpg-marker-compare", "--input", join(root, directoryName, "⬅️before.jpg"), "--input", join(root, directoryName, "➡️after.jpg")], { encoding: "utf8" });
           if (cmp.status !== 0) { failures.push(`${kind}: reader refused the pair`); continue; }
           if (JSON.parse(cmp.stdout).measurements.equal === true) failures.push(`${kind}: not observable in the marker projection`);
         }
@@ -172,7 +174,7 @@ print(kind + ': written')
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "pillow-jpg-jfif-1-01-marker-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers", platform: currentPlatform() },
+          generator: { oracle: "pillow-jpg-jfif-1-01-marker-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers", platform: currentPlatform() },
           comparisonProfile: "semantic-jpg-marker-v1",
           reproducible: true,
           family: "mechanical",

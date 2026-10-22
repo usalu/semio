@@ -194,7 +194,7 @@
         "packageVersion": "1",
         "engineFamily": "json-rs",
         "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -244,7 +244,7 @@
         "packageVersion": "1",
         "engineFamily": "json-rs",
         "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -294,7 +294,7 @@
         "packageVersion": "1",
         "engineFamily": "json-rs",
         "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -344,7 +344,7 @@
         "packageVersion": "1",
         "engineFamily": "json-rs",
         "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -394,7 +394,7 @@
         "packageVersion": "1",
         "engineFamily": "json-rs",
         "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
+        "command": "repo ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
       },
       "provenance": {

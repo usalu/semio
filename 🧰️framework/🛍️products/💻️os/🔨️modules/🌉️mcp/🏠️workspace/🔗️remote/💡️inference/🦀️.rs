@@ -1,7 +1,8 @@
 //! 💡️ Hub inference on the remote binding and the native driver.
 
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::{DocumentScope, hex_lower};
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
 use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_os_mcp_hub_pair::pair::CanonicalPairMountError;
 use semio_framework_os_mcp_inference_hub::hub_wire::HubInferenceSubjectV1;

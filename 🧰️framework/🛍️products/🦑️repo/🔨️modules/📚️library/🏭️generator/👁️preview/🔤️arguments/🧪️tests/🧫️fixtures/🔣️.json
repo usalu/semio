@@ -79,7 +79,7 @@
     }
   ],
   "receiving": {
-    "command": "bun ./📜️script.ts generate playground-session playground-session \"\" \"\" 🧰️framework/🤖️generated preview",
+    "command": "repo ./📜️script.ts generate playground-session playground-session \"\" \"\" 🧰️framework/🤖️generated preview",
     "arguments": [
       "./📜️script.ts",
       "generate",
@@ -94,7 +94,7 @@
   "literalCommands": [
     {
       "id": "empty",
-      "command": "bun ./📜️script.ts generate playground-session playground-session \"\" \"\" 🧰️framework/🤖️generated preview",
+      "command": "repo ./📜️script.ts generate playground-session playground-session \"\" \"\" 🧰️framework/🤖️generated preview",
       "arguments": [
         "bun",
         "./📜️script.ts",
@@ -110,7 +110,7 @@
     },
     {
       "id": "spaces",
-      "command": "bun ./📜️script.ts browser \"a b\" \"Grüße 🦑️\" preview",
+      "command": "repo ./📜️script.ts browser \"a b\" \"Grüße 🦑️\" preview",
       "arguments": [
         "bun",
         "./📜️script.ts",
@@ -123,62 +123,62 @@
     },
     {
       "id": "dollar",
-      "command": "bun ./📜️script.ts browser $(literal) preview",
+      "command": "repo ./📜️script.ts browser $(literal) preview",
       "valid": false
     },
     {
       "id": "backticks",
-      "command": "bun ./📜️script.ts browser `literal` preview",
+      "command": "repo ./📜️script.ts browser `literal` preview",
       "valid": false
     },
     {
       "id": "windows-percent",
-      "command": "bun ./📜️script.ts browser %literal% preview",
+      "command": "repo ./📜️script.ts browser %literal% preview",
       "valid": false
     },
     {
       "id": "windows-delayed",
-      "command": "bun ./📜️script.ts browser !literal! preview",
+      "command": "repo ./📜️script.ts browser !literal! preview",
       "valid": false
     },
     {
       "id": "operator",
-      "command": "bun ./📜️script.ts browser a;b preview",
+      "command": "repo ./📜️script.ts browser a;b preview",
       "valid": false
     },
     {
       "id": "pipe",
-      "command": "bun ./📜️script.ts browser a|b preview",
+      "command": "repo ./📜️script.ts browser a|b preview",
       "valid": false
     },
     {
       "id": "redirect",
-      "command": "bun ./📜️script.ts browser a>b preview",
+      "command": "repo ./📜️script.ts browser a>b preview",
       "valid": false
     },
     {
       "id": "single-quote",
-      "command": "bun ./📜️script.ts browser 'a b' preview",
+      "command": "repo ./📜️script.ts browser 'a b' preview",
       "valid": false
     },
     {
       "id": "backslash",
-      "command": "bun ./📜️script.ts browser a\\b preview",
+      "command": "repo ./📜️script.ts browser a\\b preview",
       "valid": false
     },
     {
       "id": "unterminated",
-      "command": "bun ./📜️script.ts browser \"a b preview",
+      "command": "repo ./📜️script.ts browser \"a b preview",
       "valid": false
     },
     {
       "id": "partial-quote",
-      "command": "bun ./📜️script.ts browser a\"b\" preview",
+      "command": "repo ./📜️script.ts browser a\"b\" preview",
       "valid": false
     },
     {
       "id": "control",
-      "command": "bun ./📜️script.ts browser a\nb preview",
+      "command": "repo ./📜️script.ts browser a\nb preview",
       "valid": false
     }
   ]

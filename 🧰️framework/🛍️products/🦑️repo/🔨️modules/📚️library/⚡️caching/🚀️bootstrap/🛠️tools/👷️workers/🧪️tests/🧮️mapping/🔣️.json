@@ -1,0 +1,1401 @@
+{
+ "version": 1,
+ "plans": [
+  {
+   "name": "no kind uses workers",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 8,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "workers disabled globally",
+   "plan": {
+    "version": 1,
+    "enabled": false,
+    "protocol": "json",
+    "localJobs": 2,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only test uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only test multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only test multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only check uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only check multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only check multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only generate uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only generate multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only generate multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only build uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only build multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only build multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only script uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": true
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only script multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only script multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only service uses a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only service multiplexes",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": true,
+      "maxInstances": 2,
+      "multiplex": true,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "only service multiplexes without a worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 3,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": true,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "every kind uses a multiplexing worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 16,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     },
+     "service": {
+      "workers": true,
+      "maxInstances": 4,
+      "multiplex": true,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "every kind uses a plain worker",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 1,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": true,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  },
+  {
+   "name": "the largest job count",
+   "plan": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": 1024,
+    "memory": {
+     "totalMegabytes": 1024,
+     "perWorkerMegabytes": 512,
+     "instances": 2
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "kinds": {
+     "test": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "check": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "generate": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "build": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "script": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     },
+     "service": {
+      "workers": false,
+      "maxInstances": 1,
+      "multiplex": false,
+      "inProcess": false
+     }
+    }
+   }
+  }
+ ],
+ "executors": [
+  {
+   "name": "no executors file",
+   "value": null,
+   "expected": false
+  },
+  {
+   "name": "not an object",
+   "value": "executors",
+   "expected": false
+  },
+  {
+   "name": "an array",
+   "value": [],
+   "expected": false
+  },
+  {
+   "name": "no executors section",
+   "value": {},
+   "expected": false
+  },
+  {
+   "name": "an executors section that is not an object",
+   "value": {
+    "executors": 5
+   },
+   "expected": false
+  },
+  {
+   "name": "an empty executors section",
+   "value": {
+    "executors": {}
+   },
+   "expected": false
+  },
+  {
+   "name": "executors without batch",
+   "value": {
+    "executors": {
+     "a": {
+      "implementation": "./a"
+     },
+     "b": {
+      "implementation": "./b"
+     }
+    }
+   },
+   "expected": false
+  },
+  {
+   "name": "one executor with a batch implementation",
+   "value": {
+    "executors": {
+     "a": {
+      "implementation": "./a"
+     },
+     "b": {
+      "batchImplementation": "./b"
+     }
+    }
+   },
+   "expected": true
+  },
+  {
+   "name": "a batch implementation that is not text",
+   "value": {
+    "executors": {
+     "a": {
+      "batchImplementation": 5
+     }
+    }
+   },
+   "expected": false
+  },
+  {
+   "name": "a null batch implementation",
+   "value": {
+    "executors": {
+     "a": {
+      "batchImplementation": null
+     }
+    }
+   },
+   "expected": false
+  },
+  {
+   "name": "a null executor",
+   "value": {
+    "executors": {
+     "a": null,
+     "b": {
+      "batchImplementation": "./b"
+     }
+    }
+   },
+   "expected": true
+  },
+  {
+   "name": "an executor that is a string",
+   "value": {
+    "executors": {
+     "a": "batchImplementation"
+    }
+   },
+   "expected": false
+  },
+  {
+   "name": "an empty batch implementation text still counts",
+   "value": {
+    "executors": {
+     "a": {
+      "batchImplementation": ""
+     }
+    }
+   },
+   "expected": true
+  },
+  {
+   "name": "a nested batch implementation does not count",
+   "value": {
+    "executors": {
+     "a": {
+      "x": {
+       "batchImplementation": "./b"
+      }
+     }
+    }
+   },
+   "expected": false
+  }
+ ]
+}

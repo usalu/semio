@@ -32,7 +32,7 @@
       "!{projectRoot}/tools/helper.ts",
       "{workspaceRoot}/tools/missing.test.ts"
     ],
-    "command": "bun ./tools/📜️script.ts check",
+    "command": "repo ./tools/📜️script.ts check",
     "projectRoot": ".",
     "closure": [
       "pkg/src/deep.ts",

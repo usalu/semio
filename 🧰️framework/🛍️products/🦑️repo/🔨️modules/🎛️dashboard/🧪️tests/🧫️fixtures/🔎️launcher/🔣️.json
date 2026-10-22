@@ -78,7 +78,7 @@
         "ids": [
           "@fx/quiz:test"
         ],
-        "caption": "1 of 24 commands · bun repo run @fx/quiz:test",
+        "caption": "1 of 24 commands · repo run @fx/quiz:test",
         "input": "quiz test",
         "outcome": null
       }
@@ -156,7 +156,7 @@
           "dependencies",
           "cargo-jobs",
           "[ Start ]",
-          "bun repo run @fx/quiz:test"
+          "repo run @fx/quiz:test"
         ]
       }
     },

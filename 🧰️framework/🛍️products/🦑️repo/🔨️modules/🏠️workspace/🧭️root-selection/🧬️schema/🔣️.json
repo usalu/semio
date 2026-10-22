@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit Repository Root Selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "optionCases",
+    "prefixCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "cwd",
+          "explicit",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "cwd": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "explicit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 256
+          },
+          "expected": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "optionCases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "root",
+          "accepted"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "root": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 256
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "prefixCases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "expected"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "flag": "--repo",
+        "maximumPathUnits": 256,
+        "explicit": "provided-directory",
+        "absent": "nearest-git-or-start-directory",
+        "directory": "canonical-existing",
+        "empty": "refused",
+        "duplicates": "refused",
+        "globalCwd": "unchanged",
+        "windowsCanonical": "verbatim-drive-prefix-removed-UNC-keeps-double-slash"
+      }
+    }
+  }
+}

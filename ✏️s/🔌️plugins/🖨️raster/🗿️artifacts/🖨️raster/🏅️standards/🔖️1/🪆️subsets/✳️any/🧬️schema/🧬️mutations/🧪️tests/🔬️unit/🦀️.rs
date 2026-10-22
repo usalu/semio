@@ -5,7 +5,7 @@ use semio_s_artifact_raster_raster_mutations::*;
 use semio_s_artifact_raster_raster_model::{layer_name, layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 use semio_framework_os_kernel as vcs;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};

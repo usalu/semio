@@ -1,6 +1,6 @@
 use crate::{standards::isobmff::subsets::any::schema::snapshot::Mp4Codec, standards::isobmff::subsets::any::schema::snapshot::Mp4Ftyp, standards::isobmff::subsets::any::schema::snapshot::Mp4Movie, standards::isobmff::subsets::any::schema::snapshot::Mp4Sample, standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot, standards::isobmff::subsets::any::schema::snapshot::Mp4Track};
 use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::schema::mutations::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
@@ -42,13 +42,13 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
     ];
     for m in variants {
         let mut snap = base.clone();
-        let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
-        let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
+        let diff = <Mp4Mutation as ColdMutation<Mp4Snapshot>>::diff(&m, &snap);
+        let expected = protocol::apply_diff_cold(diff.diff(), &snap).unwrap();
         let returned = apply_mutation(&mut snap, &m);
         assert_eq!(returned, diff, "apply_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
-        let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+        let inv = <Mp4Mutation as ColdMutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
         apply_mutation(&mut round, &inv[0]);
@@ -62,11 +62,11 @@ async fn remove_track_then_insert_track_round_trips() {
     base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
     let m = Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 0 });
     let mut snap = base.clone();
-    let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
+    let diff = <Mp4Mutation as ColdMutation<Mp4Snapshot>>::diff(&m, &snap);
     apply_mutation(&mut snap, &m);
-    assert_eq!(snap, protocol::apply_diff(diff.diff(), &base).unwrap());
+    assert_eq!(snap, protocol::apply_diff_cold(diff.diff(), &base).unwrap());
     assert_eq!(snap.tracks.len(), 1);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <Mp4Mutation as ColdMutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -81,7 +81,7 @@ async fn remove_sample_then_insert_sample_round_trips() {
     let mut snap = base.clone();
     apply_mutation(&mut snap, &m);
     assert_eq!(snap.tracks[0].samples.len(), 1);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
+    let inv = <Mp4Mutation as ColdMutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);

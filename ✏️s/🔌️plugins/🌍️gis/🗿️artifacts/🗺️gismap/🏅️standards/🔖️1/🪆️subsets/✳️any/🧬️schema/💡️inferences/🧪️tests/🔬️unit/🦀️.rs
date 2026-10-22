@@ -44,11 +44,11 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
     use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot as AppliedValueSnapshot};
         let apply_semio_drawing_mutation = |content: &mut AppliedDrawingSnapshot, mutation: &AppliedDrawingMutation| {
             let outcome = diff_semio_drawing_mutation(mutation, content);
-            *content = semio_framework_os_kernel::apply_diff(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");
+            *content = semio_framework_os_kernel::apply_diff_cold(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");
         };
         let apply_semio_value_mutation = |content: &mut AppliedValueSnapshot, mutation: &AppliedValueMutation| {
             let outcome = diff_semio_value_mutation(mutation, content);
-            *content = semio_framework_os_kernel::apply_diff(outcome.diff(), content).expect("a value diff applies to the snapshot it was computed from");
+            *content = semio_framework_os_kernel::apply_diff_cold(outcome.diff(), content).expect("a value diff applies to the snapshot it was computed from");
         };
 
     let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(data) };

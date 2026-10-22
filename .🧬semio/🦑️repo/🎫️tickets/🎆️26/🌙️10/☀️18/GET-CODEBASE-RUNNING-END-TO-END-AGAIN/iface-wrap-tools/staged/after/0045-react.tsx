@@ -1,56 +1,60 @@
-/** ☁️ World3d instance layers, point cloud: the point cloud layer visual and the layer that draws it. */
-import { useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
-import { BufferAttribute, BufferGeometry, PointsMaterial } from "@semio-tech/ui-react";
-import { base64ToBytes } from "../../../🖌️Paint2dHost/🟦️.tsx";
-import { type WorldPointCloudLayerRecord } from "../../🔭️scene-schema/🟦️.ts";
-import { parseJsonArray } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { mediaTransportLabels } from "@semio-tech/plugin-window-kits/media";
+import { MediaTransportHost, type MediaTransportPort } from "../../../🟦️.tsx";
+import { MediaTransportOwnerScope } from "../../../🔗️owner-scope/🟦️.tsx";
 
-//#region 🔖️World3dHost
-//#region WorldPointCloudLayer
-/** ☁️ Renders `World3dScene.pointsJson` layers as GPU point sprites — decodes each layer's base64
- * position/color buffers into a `BufferGeometry` and draws it with a `PointsMaterial`, mounted
- * alongside `🗺️WorldTerrainLayer` in the `World3dHost` scene tree. */
-type WorldPointCloudLayerVisual = { readonly geometry: BufferGeometry; readonly material: PointsMaterial };
+/** 🧫️ The lifecycle fixture fields the Chromium oracle mounts, as `🧬️schema/♻️lifecycle/🔣️.json` admits them. */
+export type BrowserInput = {
+  readonly identity: { readonly instanceId: number; readonly controllerId: string; readonly parentDocumentId: string; readonly windowId: string; readonly revision: string; readonly generation: string; readonly outputPort: "playback:out" };
+  readonly media: { readonly kind: "audio" | "video"; readonly mediaType: string; readonly durationMs: number; readonly positionMs: number; readonly selection: readonly [number, number] };
+  readonly running: { readonly progress: readonly number[]; readonly detail: readonly string[] };
+  readonly output: { readonly chunks: readonly (readonly number[])[]; readonly totalBytes: number };
+};
 
-function pointCloudLayerVisual(layer: WorldPointCloudLayerRecord): WorldPointCloudLayerVisual {
-  const geometry = new BufferGeometry();
-  const positionBytes = base64ToBytes(layer.positionsB64);
-  const positions = new Float32Array(positionBytes.buffer, positionBytes.byteOffset, positionBytes.byteLength / Float32Array.BYTES_PER_ELEMENT);
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  const hasColors = Boolean(layer.colorsB64);
-  if (layer.colorsB64) geometry.setAttribute("color", new BufferAttribute(base64ToBytes(layer.colorsB64), 3, true));
-  const material = new PointsMaterial({ size: layer.size, sizeAttenuation: layer.sizeAttenuation, vertexColors: hasColors });
-  return { geometry, material };
+declare global {
+  interface Window {
+    mountMediaTransportOracle(input: BrowserInput): Promise<void>;
+    mediaTransportCalls: readonly string[];
+  }
 }
 
-export function WorldPointCloudLayer({ pointsJson }: { readonly pointsJson: string | undefined }) {
-  const layers = useMemo(() => parseJsonArray<WorldPointCloudLayerRecord>(pointsJson), [pointsJson]);
-  const visuals = useMemo(() => {
-    const map = new Map<string, WorldPointCloudLayerVisual>();
-    for (const layer of layers) map.set(layer.id, pointCloudLayerVisual(layer));
-    return map;
-  }, [layers]);
-
-  useEffect(() => {
-    return () => {
-      for (const visual of visuals.values()) {
-        visual.geometry.dispose();
-        visual.material.dispose();
-      }
-    };
-  }, [visuals]);
-
-  if (layers.length === 0) return null;
-
-  return (
-    <group>
-      {layers.map((layer) => {
-        const visual = visuals.get(layer.id);
-        if (!visual) return null;
-        return <points key={layer.id} geometry={visual.geometry} material={visual.material} />;
-      })}
-    </group>
-  );
-}
-//#endregion WorldPointCloudLayer
-//#endregion 🔖️World3dHost
+window.mountMediaTransportOracle = async (input) => {
+  const calls: string[] = [];
+  const handle = { app_instance_id: input.identity.instanceId, parent_document_id: input.identity.parentDocumentId, operation_id: 9n, base_revision: BigInt(input.identity.revision), generation: BigInt(input.identity.generation) };
+  let poll = 0;
+  let chunk = 0;
+  const port: MediaTransportPort = {
+    submitMediaExport: async (instanceId, outputPort, parentDocumentId, revision) => {
+      calls.push(`submit:${instanceId}:${outputPort}:${parentDocumentId}:${revision}`);
+      return handle;
+    },
+    pollMediaExport: async () => {
+      const running = poll < input.running.progress.length;
+      const index = poll++;
+      calls.push(`poll:${index}`);
+      return { handle, state: running ? "running" : "complete", applied_progress: BigInt(input.running.progress[Math.min(index, input.running.progress.length - 1)] ?? 0), checkpoint_available: false, mime_type: input.media.mediaType, total_bytes: BigInt(input.output.totalBytes), detail: running ? input.running.detail[index] ?? "" : "complete" };
+    },
+    cancelMediaExport: async () => { calls.push("cancel"); },
+    takeMediaExportChunk: async () => {
+      const index = chunk++;
+      calls.push(`chunk:${index}`);
+      return { handle, data: Uint8Array.from(input.output.chunks[index] ?? []), terminal: index === input.output.chunks.length - 1 };
+    },
+  };
+  const labels = mediaTransportLabels("en");
+  const value = { schemaVersion: 1, kind: input.media.kind, mediaType: input.media.mediaType, revision: input.identity.revision, durationMs: input.media.durationMs, positionMs: input.media.positionMs, selectionStartMs: input.media.selection[0], selectionEndMs: input.media.selection[1], locale: "en", labels, resource: { kind: "artifact-media-export", controllerId: input.identity.controllerId, appInstanceId: input.identity.instanceId, parentDocumentId: input.identity.parentDocumentId, outputPort: input.identity.outputPort, revision: input.identity.revision, generation: input.identity.generation }, capability: { status: "ready", reason: null }, hostContentHeight: 240 };
+  const root = createRoot(document.getElementById("root")!);
+  root.render(createElement(MediaTransportOwnerScope, { owner: { instanceId: input.identity.instanceId, controllerId: input.identity.controllerId, windowId: input.identity.windowId, port } }, createElement(MediaTransportHost, { value, nodeId: 7, nodeKey: "media.transport" })));
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("media-browser-timeout")), 5_000);
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector('[data-media-state="ready"]')) return;
+      window.clearTimeout(timeout);
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(document.getElementById("root")!, { childList: true, subtree: true, attributes: true });
+  });
+  window.mediaTransportCalls = calls;
+};

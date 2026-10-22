@@ -11,8 +11,8 @@ package client
 import (
 	"encoding/json"
 	glob "github.com/usalu/semio/repo/client/internal/glob"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -223,7 +223,7 @@ func pathEmojiInventory(ctx *PolicyContext) ([]pathEmojiEntry, []string, error) 
 	if err := json.Unmarshal(data, &taxonomy); err != nil {
 		return nil, nil, err
 	}
-	output, err := exec.Command("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
+	output, err := workspace.ToolCommand("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
 	if err != nil {
 		return nil, nil, err
 	}

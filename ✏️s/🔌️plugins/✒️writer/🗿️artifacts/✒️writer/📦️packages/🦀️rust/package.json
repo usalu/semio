@@ -5,10 +5,10 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-writer-window-state": "bun --cwd \"../../../../../../..\" repo run @semio-tech/writer-writer-rs:verify-writer-window-state",
-    "test-snapshot-sqlite": "bun --cwd \"../../../../../../..\" repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite",
-    "test-snapshot-sqlite-native": "bun --cwd \"../../../../../../..\" repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
-    "test-snapshot-sqlite-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite-source"
+    "verify-writer-window-state": "repo run @semio-tech/writer-writer-rs:verify-writer-window-state",
+    "test-snapshot-sqlite": "repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite",
+    "test-snapshot-sqlite-native": "repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+    "test-snapshot-sqlite-source": "repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite-source"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

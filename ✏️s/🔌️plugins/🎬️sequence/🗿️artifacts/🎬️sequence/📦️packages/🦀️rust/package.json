@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-sequence-window-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/sequence-sequence-rs:verify-sequence-window-ownership"
+    "verify-sequence-window-ownership": "repo run @semio-tech/sequence-sequence-rs:verify-sequence-window-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

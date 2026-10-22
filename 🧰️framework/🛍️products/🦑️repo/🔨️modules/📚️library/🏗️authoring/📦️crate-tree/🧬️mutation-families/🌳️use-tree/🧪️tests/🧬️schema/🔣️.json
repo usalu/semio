@@ -1,0 +1,95 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "flatten",
+  "prune"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "flatten": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "statement",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "statement": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "path",
+        "leaf"
+       ],
+       "properties": {
+        "path": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "leaf": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "prune": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "statement",
+     "drop",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "statement": {
+      "type": "string"
+     },
+     "drop": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

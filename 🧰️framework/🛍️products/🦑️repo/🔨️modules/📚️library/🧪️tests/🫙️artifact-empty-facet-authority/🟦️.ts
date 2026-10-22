@@ -109,9 +109,9 @@ test("registers the empty-facet authority through its closed canonical route", a
   expect(join(repoRoot, vector.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
-  expect(project.targets[vector.target]).toMatchObject({ executor: "repo:script", cache: vector.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
+  expect(project.targets[vector.target]).toMatchObject({ executor: "repo:script", cache: vector.cache, options: { cwd: packageRelative, command: `repo ./📜️script.ts test ${vector.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[vector.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${vector.target}`);
+  expect(manifest.scripts[vector.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${vector.target}`);
   const path = join(packageRoot, "📜️script.ts"), source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
   expect(declarations.length).toBe(1);

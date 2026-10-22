@@ -1,7 +1,8 @@
 /** 📝️ The docstring censuses (openers, emoji reuse) and the debug-tag census of the tracked sources. */
-import { spawnSync } from "node:child_process";
+
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 //#region 🧮️SourceCensus
 /** 🏷️ One docstring line that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
@@ -100,7 +101,7 @@ export function docstringEmojiReuseOfText(path: string, text: string): Docstring
 
 /** 📚️ Every tracked Rust / TypeScript source the docstring censuses read: outside the ticket tree, generated trees and declaration files. */
 function docstringSources(repoRoot: string): string[] {
-  const listed = spawnSync("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const listed = runToolSyncV1("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
   return listed.stdout.split("\0").filter(Boolean);
 }
@@ -121,7 +122,7 @@ export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProg
     }
     hits.push(...docstringHitsOfText(path, text));
   }
-  const grep = (pattern: string): string[] => spawnSync("git", ["grep", "-n", "-E", pattern, "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":"));
+  const grep = (pattern: string): string[] => runToolSyncV1("git", ["grep", "-n", "-E", pattern, "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":"));
   const oracle = new Set([...grep("(///|//!|/\\*\\*)[[:space:]]*@emoji"), ...grep("^[[:space:]]*\\*[[:space:]]*@emoji")]);
   const scanned = new Set(hits.filter((hit) => hit.rule === "at-emoji").map((hit) => `${hit.path}:${hit.line}`));
   const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
@@ -164,7 +165,7 @@ export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/�
  * files; the signal stops the walk. */
 export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
   const scope = ["--", ":!.🧬semio", ":!*.md", ":!.cursor", ...DEBUG_TAG_CENSUS_EXEMPT.map((path) => `:!${path}`)];
-  const listed = spawnSync("git", ["grep", "-l", "-z", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const listed = runToolSyncV1("git", ["grep", "-l", "-z", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   const sources = listed.stdout.split("\0").filter(Boolean);
   const hits: DebugTagHit[] = [];
   for (const [index, path] of sources.entries()) {
@@ -178,7 +179,7 @@ export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgr
     }
     hits.push(...debugTagHitsOfText(path, text));
   }
-  const oracle = new Map(spawnSync("git", ["grep", "-c", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));
+  const oracle = new Map(runToolSyncV1("git", ["grep", "-c", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));
   const scanned = new Map<string, number>();
   for (const hit of hits) scanned.set(hit.path, (scanned.get(hit.path) ?? 0) + 1);
   const disagreements = [...new Set([...oracle.keys(), ...scanned.keys()])].filter((path) => (oracle.get(path) ?? 0) !== (scanned.get(path) ?? 0));

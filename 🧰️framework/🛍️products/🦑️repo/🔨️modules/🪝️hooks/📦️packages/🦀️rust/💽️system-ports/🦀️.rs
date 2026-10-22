@@ -70,7 +70,7 @@ impl SystemHookEnvironment {
 
 impl HookEnvironment for SystemHookEnvironment {
     fn current_checkpoint(&self) -> String {
-        let Ok(output) = std::process::Command::new("git").args(["rev-parse", "HEAD"]).current_dir(&self.repo_root).output() else { return String::new() };
+        let Ok(output) = semio_framework_repo_workspace::spawn_command("git").args(["rev-parse", "HEAD"]).current_dir(&self.repo_root).output() else { return String::new() };
         String::from_utf8_lossy(&output.stdout).trim().to_string()
     }
 

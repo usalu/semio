@@ -1,0 +1,635 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/process/agent-sessions/v1",
+ "title": "Agent sessions: one identity, resources, budget and capability per agent working in a worktree",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "environment": {
+     "session": "SEMIO_AGENT_SESSION",
+     "registry": "SEMIO_AGENT_SESSION_DIRECTORY"
+    },
+    "identity": {
+     "domain": "semio-agent-session/v1",
+     "agentPattern": "^[A-Za-z0-9._-]{1,64}$",
+     "sessionPattern": "^[a-z][a-z0-9]{0,11}$",
+     "defaultAgent": "default",
+     "defaultSession": "d",
+     "clientProcessPattern": "(claude|codex|cursor|windsurf|copilot|antigravity|droid|kiro)",
+     "interpreters": [
+      "node",
+      "bun",
+      "deno",
+      "python",
+      "python3"
+     ],
+     "ancestryDepth": 16,
+     "connectionNameCharacters": 40,
+     "digestCharacters": 8,
+     "clients": [
+      {
+       "id": "claude",
+       "environment": "CLAUDE_CODE_SESSION_ID"
+      },
+      {
+       "id": "codex",
+       "environment": "CODEX_THREAD_ID"
+      },
+      {
+       "id": "cursor"
+      },
+      {
+       "id": "windsurf"
+      },
+      {
+       "id": "copilot"
+      },
+      {
+       "id": "antigravity"
+      },
+      {
+       "id": "droid"
+      },
+      {
+       "id": "kiro"
+      }
+     ]
+    },
+    "resources": {
+     "bazelPreferenceModulus": 2147483647,
+     "nxNamespaceCharacters": 12,
+     "testsRootCharacters": 6,
+     "leaseOwnerAgentCharacters": 60,
+     "weight": {
+      "minimum": 1,
+      "maximum": 16,
+      "default": 1
+     },
+     "scopes": [
+      "status",
+      "query",
+      "run",
+      "watch",
+      "admin"
+     ],
+     "defaultScopes": [
+      "status",
+      "query",
+      "run",
+      "watch"
+     ],
+     "shareBasisPoints": 10000
+    },
+    "liveness": {
+     "anchorsMaximum": 8,
+     "touchSeconds": 30,
+     "idleSeconds": 600,
+     "collectSeconds": 3600,
+     "anchoredSeconds": 86400,
+     "collectIntervalSeconds": 60,
+     "lockStaleMilliseconds": 10000,
+     "ledgerMaximumBytes": 524288,
+     "ledgerKeepLines": 2000
+    },
+    "store": {
+     "folder": "agent-sessions",
+     "worktreeCharacters": 12,
+     "addressPattern": "^([0-9a-f]{12})\\.([a-z][a-z0-9]{0,11})$",
+     "testsFolder": "t"
+    }
+   }
+  },
+  "Messages": {
+   "const": {
+    "en": {
+     "opened": "Agent session {id} opened for agent {agent} ({client}, {origin}): cargo lane {lane}, test root {tests}.",
+     "attached": "Agent session {id} of agent {agent} ({client}) is in use.",
+     "closed": "Agent session {id} closed: {released} resource(s) released, {kept} kept.",
+     "closeLive": "Agent session {id} is still live ({state}, owner process {pid}); close it with --force or wait until its process tree is gone.",
+     "unknown": "No agent session {id} in this worktree.",
+     "none": "No agent sessions in this worktree.",
+     "collected": "Collected {count} gone agent session(s).",
+     "usage": "Expected: repo session open [--agent=<name>] [--client=<name>] [--owner-pid=<pid>] [--weight=<1-16>] [--export] [--json] | status [<id>] [--json] | close <id>|--dead [--force] [--json] | list [--all] [--json]",
+     "invalidAgent": "Agent names consist of 1 to 64 letters, digits, dots, underscores and dashes: {value}",
+     "invalidWeight": "The budget weight is a whole number from {minimum} to {maximum}: {value}",
+     "invalidPid": "A process id is a positive whole number: {value}",
+     "unknownOption": "Unknown session option: {value}",
+     "invalidSession": "Agent session identifiers are a lowercase letter followed by up to 11 lowercase letters or digits: {value}",
+     "field.session": "Session",
+     "field.agent": "Agent",
+     "field.client": "Client",
+     "field.origin": "Identified by",
+     "field.state": "State",
+     "field.owner": "Owner process",
+     "field.lane": "Cargo lane",
+     "field.bazel": "Bazel slot preference",
+     "field.nx": "Nx daemon namespace",
+     "field.tests": "Test sandbox root",
+     "field.temp": "Temp root",
+     "field.lease": "Lease owner tag",
+     "field.budget": "Budget share",
+     "field.capability": "Capability",
+     "field.token": "Service token",
+     "tokenIssued": "issued by the resident service (private file of the session)",
+     "tokenNone": "none (the resident service issues one with repo service issue)",
+     "field.seen": "Last seen",
+     "field.leases": "Leases held",
+     "field.grants": "Capacity grants",
+     "field.sandboxes": "Test sandboxes",
+     "budget": "{percent}% of {live} live session(s) (weight {weight})",
+     "capability": "{scopes}; projects: {projects}; expires: {expires}",
+     "everything": "all",
+     "never": "never",
+     "none.owner": "none (idle window)",
+     "listHeader": "SESSION      AGENT                 CLIENT       STATE  SHARE  LAST SEEN",
+     "state.live": "live",
+     "state.idle": "idle",
+     "state.gone": "gone",
+     "origin.explicit": "explicit name",
+     "origin.environment": "client environment",
+     "origin.process": "client process",
+     "origin.connection": "connection",
+     "origin.service": "resident service",
+     "origin.default": "default",
+     "ago": "{seconds} s ago",
+     "capacityHeader": "Agent sessions with capacity: {count}.",
+     "capacitySession": "SESSION {id}  agent {agent}  {grants} grant(s), {reserved} MB reserved, {waiters} waiting  budget {percent}% (weight {weight})"
+    },
+    "de": {
+     "opened": "Agent-Sitzung {id} für Agent {agent} ({client}, {origin}) geöffnet: Cargo-Bahn {lane}, Testwurzel {tests}.",
+     "attached": "Agent-Sitzung {id} von Agent {agent} ({client}) wird verwendet.",
+     "closed": "Agent-Sitzung {id} geschlossen: {released} Ressource(n) freigegeben, {kept} behalten.",
+     "closeLive": "Agent-Sitzung {id} ist noch aktiv ({state}, Eigentümerprozess {pid}); mit --force schließen oder warten, bis ihr Prozessbaum beendet ist.",
+     "unknown": "Keine Agent-Sitzung {id} in diesem Arbeitsbaum.",
+     "none": "Keine Agent-Sitzungen in diesem Arbeitsbaum.",
+     "collected": "{count} beendete Agent-Sitzung(en) aufgeräumt.",
+     "usage": "Erwartet: repo session open [--agent=<Name>] [--client=<Name>] [--owner-pid=<pid>] [--weight=<1-16>] [--export] [--json] | status [<id>] [--json] | close <id>|--dead [--force] [--json] | list [--all] [--json]",
+     "invalidAgent": "Agent-Namen bestehen aus 1 bis 64 Buchstaben, Ziffern, Punkten, Unterstrichen und Bindestrichen: {value}",
+     "invalidWeight": "Das Budgetgewicht ist eine ganze Zahl von {minimum} bis {maximum}: {value}",
+     "invalidPid": "Eine Prozess-ID ist eine positive ganze Zahl: {value}",
+     "unknownOption": "Unbekannte Sitzungsoption: {value}",
+     "invalidSession": "Agent-Sitzungskennungen sind ein Kleinbuchstabe gefolgt von bis zu 11 Kleinbuchstaben oder Ziffern: {value}",
+     "field.session": "Sitzung",
+     "field.agent": "Agent",
+     "field.client": "Client",
+     "field.origin": "Erkannt durch",
+     "field.state": "Zustand",
+     "field.owner": "Eigentümerprozess",
+     "field.lane": "Cargo-Bahn",
+     "field.bazel": "Bazel-Slot-Präferenz",
+     "field.nx": "Nx-Daemon-Namensraum",
+     "field.tests": "Test-Sandbox-Wurzel",
+     "field.temp": "Temp-Wurzel",
+     "field.lease": "Lease-Eigentümer-Marke",
+     "field.budget": "Budgetanteil",
+     "field.capability": "Berechtigung",
+     "field.token": "Dienst-Token",
+     "tokenIssued": "vom residenten Dienst ausgestellt (private Datei der Sitzung)",
+     "tokenNone": "keines (der residente Dienst stellt eines mit repo service issue aus)",
+     "field.seen": "Zuletzt gesehen",
+     "field.leases": "Gehaltene Leases",
+     "field.grants": "Kapazitätszusagen",
+     "field.sandboxes": "Test-Sandboxes",
+     "budget": "{percent}% von {live} aktiven Sitzung(en) (Gewicht {weight})",
+     "capability": "{scopes}; Projekte: {projects}; läuft ab: {expires}",
+     "everything": "alle",
+     "never": "nie",
+     "none.owner": "keiner (Leerlauffenster)",
+     "listHeader": "SITZUNG      AGENT                 CLIENT       ZUSTAND  ANTEIL  ZULETZT GESEHEN",
+     "state.live": "aktiv",
+     "state.idle": "ruhend",
+     "state.gone": "beendet",
+     "origin.explicit": "ausdrücklicher Name",
+     "origin.environment": "Client-Umgebung",
+     "origin.process": "Client-Prozess",
+     "origin.connection": "Verbindung",
+     "origin.service": "residenter Dienst",
+     "origin.default": "Standard",
+     "ago": "vor {seconds} s",
+     "capacityHeader": "Agent-Sitzungen mit Kapazität: {count}.",
+     "capacitySession": "SITZUNG {id}  Agent {agent}  {grants} Zusage(n), {reserved} MB reserviert, {waiters} wartend  Budget {percent}% (Gewicht {weight})"
+    }
+   }
+  },
+  "ClientId": {
+   "enum": [
+    "claude",
+    "codex",
+    "cursor",
+    "windsurf",
+    "copilot",
+    "antigravity",
+    "droid",
+    "kiro",
+    "mcp",
+    "service",
+    "human"
+   ]
+  },
+  "Origin": {
+   "enum": [
+    "explicit",
+    "environment",
+    "process",
+    "connection",
+    "service",
+    "default"
+   ]
+  },
+  "State": {
+   "enum": [
+    "live",
+    "idle",
+    "gone"
+   ]
+  },
+  "Language": {
+   "enum": [
+    "en",
+    "de"
+   ]
+  },
+  "Anchor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "pid",
+    "started"
+   ],
+   "properties": {
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "started": {
+     "type": "string",
+     "maxLength": 64
+    }
+   }
+  },
+  "Ancestor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "pid",
+    "started",
+    "command"
+   ],
+   "properties": {
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "started": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "command": {
+     "type": "string"
+    }
+   }
+  },
+  "Agent": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "client",
+    "origin"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    },
+    "client": {
+     "$ref": "#/definitions/ClientId"
+    },
+    "origin": {
+     "$ref": "#/definitions/Origin"
+    }
+   }
+  },
+  "AgentSession": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "id",
+    "worktree",
+    "agent",
+    "anchors",
+    "openedAtMs",
+    "resources",
+    "lease",
+    "budget",
+    "capability"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "id": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9]{0,11}$"
+    },
+    "worktree": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{12}$"
+    },
+    "agent": {
+     "$ref": "#/definitions/Agent"
+    },
+    "anchors": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "#/definitions/Anchor"
+     }
+    },
+    "openedAtMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "resources": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "cargo",
+      "bazel",
+      "nx",
+      "tests"
+     ],
+     "properties": {
+      "cargo": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "lane"
+       ],
+       "properties": {
+        "lane": {
+         "type": "string",
+         "pattern": "^[a-z][a-z0-9]{0,11}$"
+        }
+       }
+      },
+      "bazel": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "preference"
+       ],
+       "properties": {
+        "preference": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 2147483646
+        }
+       }
+      },
+      "nx": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "namespace"
+       ],
+       "properties": {
+        "namespace": {
+         "type": "string",
+         "pattern": "^[0-9a-f]{12}$"
+        }
+       }
+      },
+      "tests": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "root"
+       ],
+       "properties": {
+        "root": {
+         "type": "string",
+         "pattern": "^[a-z][a-z0-9]{0,11}$"
+        }
+       }
+      }
+     }
+    },
+    "lease": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "owner"
+     ],
+     "properties": {
+      "owner": {
+       "type": "string",
+       "minLength": 3,
+       "maxLength": 80
+      }
+     }
+    },
+    "budget": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "weight"
+     ],
+     "properties": {
+      "weight": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 16
+      }
+     }
+    },
+    "capability": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "scopes",
+      "projects"
+     ],
+     "properties": {
+      "scopes": {
+       "type": "array",
+       "uniqueItems": true,
+       "items": {
+        "enum": [
+         "status",
+         "query",
+         "run",
+         "watch",
+         "admin"
+        ]
+       }
+      },
+      "projects": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       }
+      },
+      "expiresAtMs": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    }
+   }
+  },
+  "Seed": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "environment",
+    "ancestry"
+   ],
+   "properties": {
+    "agent": {
+     "type": "string"
+    },
+    "client": {
+     "type": "string"
+    },
+    "origin": {
+     "enum": [
+      "service"
+     ]
+    },
+    "connection": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "client",
+      "clientProcess",
+      "process"
+     ],
+     "properties": {
+      "client": {
+       "type": "string"
+      },
+      "clientProcess": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "process": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "environment": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "ancestry": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Ancestor"
+     }
+    },
+    "ownerPid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "weight": {
+     "type": "integer"
+    }
+   }
+  },
+  "Facts": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ageSeconds",
+    "anchorAlive",
+    "isDefault"
+   ],
+   "properties": {
+    "ageSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "anchorAlive": {
+     "type": "boolean"
+    },
+    "isDefault": {
+     "type": "boolean"
+    }
+   }
+  },
+  "LedgerEvent": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "atMs",
+    "event",
+    "session",
+    "agent"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "atMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "event": {
+     "enum": [
+      "open",
+      "close",
+      "collect"
+     ]
+    },
+    "session": {
+     "type": "string"
+    },
+    "agent": {
+     "type": "string"
+    },
+    "pid": {
+     "type": "integer"
+    },
+    "reason": {
+     "type": "string"
+    }
+   }
+  },
+  "Row": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "session",
+    "state",
+    "lastSeenMs",
+    "shareBasisPoints"
+   ],
+   "properties": {
+    "session": {
+     "$ref": "#/definitions/AgentSession"
+    },
+    "state": {
+     "$ref": "#/definitions/State"
+    },
+    "lastSeenMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "shareBasisPoints": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10000
+    }
+   }
+  }
+ }
+}

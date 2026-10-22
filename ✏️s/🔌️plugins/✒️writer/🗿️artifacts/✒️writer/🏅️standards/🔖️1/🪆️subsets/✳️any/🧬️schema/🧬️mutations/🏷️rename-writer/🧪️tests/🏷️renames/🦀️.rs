@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-writer/renames-the-document-to-mission-brief: this fixture declares an applied outcome");
-    let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let produced = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "rename-writer/renames-the-document-to-mission-brief: a genuinely new id must not raise mutation.no-op");
     assert!(produced.messages().is_empty(), "rename-writer/renames-the-document-to-mission-brief: an accepted rename emits no diagnostics");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
 /// this mutation is allowed to set exactly one of them — `id`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
+    let outcome = <WriterMutation as protocol::ColdMutation<WriterSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced rename-writer diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-writer/renames-the-document-to-mission-brief: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: WriterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-writer diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "rename-writer/renames-the-document-to-mission-brief: committed diff did not carry before to after");
 }
 

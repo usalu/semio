@@ -5,20 +5,26 @@
 # Language: the entry has no default language and refuses to run when none resolves, so the workflow sets SEMIO_LANGUAGE=en for
 # every job (runners may have no locale) and one smoke step runs in German (de).
 #
-# Contract: every build step is `bun repo ...` (the neutral entry); the implementation is the single value BUILD_TOOL
+# Contract: every build step is `repo ...` (the neutral entry); the implementation is the single value BUILD_TOOL
 # (`--tool=$BUILD_TOOL`). Nothing here calls bazel, nx, cargo, sudo or an installer, and no step knows an implementation's
-# flags, logs or directories. The only other program is the CI report (`$CI_REPORT`), which reads what `bun repo` printed
+# flags, logs or directories. The only other program is the CI report (`$CI_REPORT`), which reads what `repo` printed
 # (CacheStatus, DryRunPlan, exported JUnit XML) and holds every implementation-specific judgement, with its own tests.
 #
 #   plan     - the revision range for `affected` (pull request: base..merge commit; push: before..sha; new branch: all).
-#   smoke    - per operating system: pinned Bun (SHA-256 verified), `--help`, `preflight`, `tools setup`, `dependencies
+#   smoke    - per operating system: the launcher built from the checkout (it provisions the pinned runtime), `--help`, `preflight`, `tools setup`, `dependencies
 #              sync --all`, then the cache proof: empty the local cache, run one target (store grows), run it again (store
 #              unchanged, served from the cache).
-#   affected - per operating system, after smoke: `bun repo affected` builds and tests only the projects changed in the
+#   affected - per operating system, after smoke: `repo affected` builds and tests only the projects changed in the
 #              range and their dependents (a dry run first prints the selection), reports the cache hit rate of the run
 #              and uploads the JUnit XML of every executed test.
 #   parity   - one runner, after smoke: Nx and the default implementation must select the same tasks for the same range,
 #              and the sample target must be green and cached under Nx.
+#   bench    - per operating system (linux, macos), after smoke, NOT blocking (continue-on-error): `repo bench run` measures the
+#              performance objectives (command line help, warm no-op, edit to rebuild per language, cache hit rate, graph,
+#              memory, concurrent agents) in a disposable copy with every implementation, prints percentiles with the host load,
+#              compares with the baseline of the last default-branch run on the same runner class and uploads the JSON and
+#              markdown report; only default-branch pushes store a new baseline. Objectives marked blocking in the table
+#              fail the step but never the workflow until the job loses continue-on-error.
 #
 # Caches. The shared remote cache is configured only by the repository variable SEMIO_REMOTE_CACHE_ENDPOINT (or a secret of
 # the same name) and the secrets SEMIO_REMOTE_CACHE_READ_TOKEN / SEMIO_REMOTE_CACHE_WRITE_TOKEN; with no endpoint it is off.
@@ -64,7 +70,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  BUN_VERSION: 1.4.2
   NODE_VERSION: 24.15.0
   BUILD_TOOL: ${{ inputs.tool || 'bazel' }}
   TARGETS: ${{ inputs.targets || 'build,test' }}
@@ -133,22 +138,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/bun-repo
+      - uses: ./.github/actions/repo-launcher
         with:
-          bun-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
       - name: Print the neutral build entry usage
-        run: bun repo --help
+        run: repo --help
       - name: Preflight
-        run: bun repo preflight
+        run: repo preflight
       - name: Print the usage and run the preflight in German (no default language, so the German paths are exercised)
         env:
           SEMIO_LANGUAGE: de
         run: |
-          bun repo --help
-          bun repo preflight
+          repo --help
+          repo preflight
       - name: Provision the build tool
-        run: bun repo tools setup "$BUILD_TOOL"
+        run: repo tools setup "$BUILD_TOOL"
       - name: Compute the lockfile cache keys
         id: keys
         run: |
@@ -161,10 +165,10 @@ jobs:
           key: ${{ steps.keys.outputs.bun }}
           restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
       - name: Install the authored dependency scopes
-        run: bun repo dependencies sync --all
+        run: repo dependencies sync --all
       - name: Report the remote cache contract and whether the endpoint answers
         continue-on-error: true
-        run: bun repo --tool="$BUILD_TOOL" cache remote status
+        run: repo --tool="$BUILD_TOOL" remote-cache status
       - name: Prove the local cache
         uses: ./.github/actions/cache-proof
         with:
@@ -207,14 +211,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
-      - uses: ./.github/actions/bun-repo
+      - uses: ./.github/actions/repo-launcher
         with:
-          bun-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
       - name: Preflight
-        run: bun repo preflight
+        run: repo preflight
       - name: Provision the build tool
-        run: bun repo tools setup "$BUILD_TOOL"
+        run: repo tools setup "$BUILD_TOOL"
       - name: Compute the cache keys and the report locations
         id: keys
         run: |
@@ -228,12 +231,12 @@ jobs:
           key: ${{ steps.keys.outputs.bun }}
           restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
       - name: Install the authored dependency scopes
-        run: bun repo dependencies sync --all
+        run: repo dependencies sync --all
       - name: Locate the local cache of the build tool
         id: cache-dir
         run: |
-          bun repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-location.out"
-          directory="$(bun "$CI_REPORT" cache-directory --status "$RUNNER_TEMP/cache-location.out")"
+          repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-location.out"
+          directory="$(repo "$CI_REPORT" cache-directory --status "$RUNNER_TEMP/cache-location.out")"
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
       - name: Restore the local cache (no remote cache configured)
         if: ${{ env.SEMIO_REMOTE_CACHE_ENDPOINT == '' && steps.cache-dir.outputs.directory != '' }}
@@ -254,20 +257,20 @@ jobs:
           echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
       - name: Select what is affected
         run: |
-          bun repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan.out"
-          bun "$CI_REPORT" plan --plan "$RUNNER_TEMP/plan.out" --targets "$TARGETS" --label "$BUILD_TOOL ${{ matrix.name }} $AFFECTED_RANGE" | tee -a "$GITHUB_STEP_SUMMARY"
+          repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan.out"
+          repo "$CI_REPORT" plan --plan "$RUNNER_TEMP/plan.out" --targets "$TARGETS" --label "$BUILD_TOOL ${{ matrix.name }} $AFFECTED_RANGE" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Record the cache before the run
-        run: bun repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-before.out"
+        run: repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-before.out"
       - name: Build and test what is affected
-        run: bun repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE
+        run: repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE
       - name: Report the cache hit rate
         if: ${{ !cancelled() }}
         run: |
-          bun repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-after.out"
-          bun "$CI_REPORT" cache-delta --tool "$BUILD_TOOL" --before "$RUNNER_TEMP/cache-before.out" --after "$RUNNER_TEMP/cache-after.out" --label "$BUILD_TOOL ${{ matrix.name }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-after.out"
+          repo "$CI_REPORT" cache-delta --tool "$BUILD_TOOL" --before "$RUNNER_TEMP/cache-before.out" --after "$RUNNER_TEMP/cache-after.out" --label "$BUILD_TOOL ${{ matrix.name }}" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Summarize the test results
         if: ${{ !cancelled() }}
-        run: bun "$CI_REPORT" tests --dir "$SEMIO_BUILD_TEST_RESULTS_DIR" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: repo "$CI_REPORT" tests --dir "$SEMIO_BUILD_TEST_RESULTS_DIR" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Upload the test results (JUnit XML)
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -296,14 +299,15 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
-      - uses: ./.github/actions/bun-repo
+      - uses: ./.github/actions/repo-launcher
         with:
-          bun-version: ${{ env.BUN_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
       - name: Preflight
-        run: bun repo preflight
+        run: repo preflight
       - name: Provision every build tool
-        run: bun repo tools setup all
+        run: repo tools setup all
+      - name: Verify every tool against its pin
+        run: repo tools verify
       - name: Compute the lockfile cache keys
         id: keys
         run: |
@@ -315,7 +319,7 @@ jobs:
           key: ${{ steps.keys.outputs.bun }}
           restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
       - name: Install the authored dependency scopes
-        run: bun repo dependencies sync --all
+        run: repo dependencies sync --all
       - name: Use the whole workspace when the base revision is not part of the clone
         run: |
           range="$PLAN_RANGE"
@@ -328,11 +332,99 @@ jobs:
           echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
       - name: Both implementations must select the same tasks
         run: |
-          bun repo --tool=nx affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-first.out"
-          bun repo --tool=bazel affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-second.out"
-          bun "$CI_REPORT" parity --first "$RUNNER_TEMP/plan-first.out" --second "$RUNNER_TEMP/plan-second.out" --targets "$TARGETS" | tee -a "$GITHUB_STEP_SUMMARY"
+          repo --tool=nx affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-first.out"
+          repo --tool=bazel affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-second.out"
+          repo "$CI_REPORT" parity --first "$RUNNER_TEMP/plan-first.out" --second "$RUNNER_TEMP/plan-second.out" --targets "$TARGETS" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Prove the local cache under nx on the sample target
         uses: ./.github/actions/cache-proof
         with:
           tool: nx
           target: ${{ env.PROOF_TARGET }}
+
+  bench:
+    name: bench (${{ matrix.name }})
+    needs: [smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+          - name: macos
+            os: macos-latest
+    env:
+      BENCH_BASELINE: ${{ runner.temp }}/bench-baseline.json
+      BENCH_REPORT: ${{ runner.temp }}/bench-report.json
+      BENCH_MARKDOWN: ${{ runner.temp }}/bench-report.md
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision every build tool
+        run: repo tools setup all
+      - name: Compute the cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+          echo "baseline=bench-baseline-${RUNNER_OS}-${RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+      - name: Restore the baseline of this runner class
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.BENCH_BASELINE }}
+          key: ${{ steps.keys.outputs.baseline }}-${{ github.sha }}
+          restore-keys: ${{ steps.keys.outputs.baseline }}-
+      - name: List the performance objectives
+        run: repo bench list
+      - name: Prepare the disposable copy
+        run: repo incremental prepare --fresh
+      - name: Measure the objectives and compare with the baseline
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          args=(--slo=all --file="$BENCH_REPORT" --markdown="$BENCH_MARKDOWN")
+          if [ -f "$BENCH_BASELINE" ]; then args+=(--baseline="$BENCH_BASELINE"); fi
+          if [ "$EVENT" = push ] && [ "$REF" = "$DEFAULT_REF" ]; then args+=(--save-baseline="$BENCH_BASELINE.next"); fi
+          repo bench run "${args[@]}"
+      - name: Show the report
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$BENCH_MARKDOWN" ]; then cat "$BENCH_MARKDOWN" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bench-${{ matrix.name }}
+          path: |
+            ${{ env.BENCH_REPORT }}
+            ${{ env.BENCH_MARKDOWN }}
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Promote the new baseline (default branch)
+        id: promote
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        run: |
+          if [ -f "$BENCH_BASELINE.next" ]; then mv "$BENCH_BASELINE.next" "$BENCH_BASELINE"; echo "promoted=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Save the baseline (default branch)
+        if: ${{ steps.promote.outputs.promoted == 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.BENCH_BASELINE }}
+          key: ${{ steps.keys.outputs.baseline }}-${{ github.sha }}

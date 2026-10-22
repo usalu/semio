@@ -16,17 +16,20 @@ pub struct SetApplicationHistory {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetApplicationHistory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "application-history", kind: "set-application-history", record: "SetApplicationHistory" };
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
-        protocol::MutationOutcome::new(DwgDiff { application_history: (base.application_history != self.application_history).then(|| self.application_history.clone()), ..DwgDiff::default() })
-    }
-    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.application_history != self.application_history).then(|| DwgMutation::SetApplicationHistory(SetApplicationHistory { application_history: base.application_history.clone() })).into_iter().collect())
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set application history", "Anwendungsverlauf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<DwgSnapshot, DwgMutation> for SetApplicationHistory {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as protocol::ColdMutation<DwgSnapshot>>::ReferenceDiff> {
+        protocol::MutationOutcome::new(DwgDiff { application_history: (base.application_history != self.application_history).then(|| self.application_history.clone()), ..DwgDiff::default() })
+    }
+    fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
+        Ok((base.application_history != self.application_history).then(|| DwgMutation::SetApplicationHistory(SetApplicationHistory { application_history: base.application_history.clone() })).into_iter().collect())
     }
 }
 //#endregion 🔖️Payload

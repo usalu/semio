@@ -28,7 +28,7 @@ use crate::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, Slid
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
-use protocol::{Mutation};
+use protocol::{ColdMutation, Mutation};
 
 //#region 🔖️Mutations
 pub use semio_s_artifact_stdio_semio_presentation_schema::schema::mutations::support;
@@ -67,7 +67,7 @@ pub mod set_textbox_blocks;
 /// decoding byte-for-byte unchanged after this migration.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
+#[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation", reference = SemioPresentationSnapshot, reference_diff = SemioPresentationDiff)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {
     /// ➕️ Inserts `🎞️slide` at `index` (FINAL-state index).
@@ -110,7 +110,7 @@ pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "set-slide-layout",
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_presentation_mutation(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
-    <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(mutation, base)
+    <SemioPresentationMutation as ColdMutation<SemioPresentationSnapshot>>::diff(mutation, base)
 }
 
 

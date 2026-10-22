@@ -1,7 +1,7 @@
 /** 👕️ In-canvas remote presence overlays — peer cursors, viewport rects, selection chips.
  * Domain-neutral; Board2d / World3d / TextEditor hosts mount this over their surface.
  */
-import { useCallback, useContext, useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
+import { useCallback, useContext, useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { LocalDocumentOwnerContext } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import {
   canvasPeerViewportRect,

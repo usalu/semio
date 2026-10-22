@@ -19,19 +19,6 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-title", kind: "set-info-title", record: "Set" };
 
-    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let wanted = (!self.title.is_empty()).then(|| self.title.clone());
-        let change = (base.info.title != wanted).then(|| PdfInfoDiff { title: Some(PdfSet::from_option(&wanted)), ..Default::default() });
-        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
-    }
-
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Op::from(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
-    
-    })())
-}
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/H title \"{}\"", self.title), &format!("PDF/H-Titel \"{}\" setzen", self.title))
     }
@@ -39,6 +26,23 @@ where
     fn target(&self) -> Vec<String> {
         vec!["Info.Title".to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetInfoTitle
+where
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetInfoTitle>,
+{
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let wanted = (!self.title.is_empty()).then(|| self.title.clone());
+        let change = (base.info.title != wanted).then(|| PdfInfoDiff { title: Some(PdfSet::from_option(&wanted)), ..Default::default() });
+        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
+    }
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![Op::from(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation
 

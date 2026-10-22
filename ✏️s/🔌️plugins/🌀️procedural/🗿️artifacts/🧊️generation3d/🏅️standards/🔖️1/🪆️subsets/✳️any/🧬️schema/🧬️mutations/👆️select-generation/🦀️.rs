@@ -19,14 +19,6 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "selection", kind: "select-generation", record: "SelectedGeneration" };
 
-    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::select_generation::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        crate::select_generation::inverse::inverse(self, base)
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match &self.generation_id {
             Some(id) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Select generation \"{id}\""), &format!("Generierung \"{id}\" auswählen")),
@@ -36,6 +28,18 @@ where
 
     fn target(&self) -> Vec<String> {
         self.generation_id.iter().cloned().collect()
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Generation3dSnapshot, Op> for SelectGeneration
+where
+    Op: protocol::ColdMutation<Generation3dSnapshot, ReferenceDiff = Generation3dDiff> + From<SelectGeneration>,
+{
+    fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
+        crate::select_generation::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        crate::select_generation::inverse::inverse(self, base)
     }
 }
 //#endregion 🔖️SelectGeneration

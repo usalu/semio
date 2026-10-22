@@ -16,7 +16,7 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -25,7 +25,7 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_ui_contract::*;
 use crate::children_instance_root::genesis_member_schema;
 
-impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🌱️ Opens every composed child the initial snapshot declares and the app derives
     /// (`ArtifactApp::genesis_child_pack`) through the ordinary restore path, so `children`, the
     /// composition graph and the child content root are complete from the first frame — a saved
@@ -375,7 +375,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         let lanes: Vec<MemberKey> = self.children.keyed_entries().map(|(key, _)| key.to_key()).collect();
         for lane in lanes {
             let Some(entry) = self.children.member_mut(lane.borrowed()) else { continue };
-            let payload = SpaceMember::event_log_payload(&entry.member).await.map_err(|error| error.into_fault())?;
+            let payload = ReferenceSpaceMember::event_log_payload(&entry.member).await.map_err(|error| error.into_fault())?;
             self.send_member_lane(stores, &lane, payload).await?;
         }
         Ok(())
@@ -390,7 +390,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         }
         for (slot, child_id) in lanes {
             let Some(entry) = self.children.get_mut(&(slot.clone(), child_id.clone())) else { continue };
-            let payload = SpaceMember::announce_tail_edit_payload(&mut entry.member).await.map_err(|error| error.into_fault())?;
+            let payload = ReferenceSpaceMember::announce_tail_edit_payload(&mut entry.member).await.map_err(|error| error.into_fault())?;
             stores.store.send_member_mutations("", slot, child_id, payload).await.map_err(|error| error.into_fault())?;
         }
         Ok(())
@@ -436,7 +436,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
                 }
                 continue;
             };
-            SpaceMember::ingest_remote_payload(&mut entry.member, &envelopes).await.map_err(|error| error.into_fault())?;
+            ReferenceSpaceMember::ingest_remote_payload(&mut entry.member, &envelopes).await.map_err(|error| error.into_fault())?;
             folded += 1;
         }
         history.cache = None;

@@ -11,7 +11,7 @@ const VORTEX_ARROW_SHAFT_MESH: &str = "cylinder";
 
 const VORTEX_ARROW_HEAD_MESH: &str = "cone";
 
-struct VortexArrowLayout {
+pub struct VortexArrowLayout {
     point_radius: f32,
     shaft_radius: f32,
     shaft_length: f32,

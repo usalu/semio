@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-use protocol::{Mutation, MutationDiff};
+use protocol::{ColdMutation, Mutation, MutationDiff};
 
 #[test]
 fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
@@ -12,7 +12,7 @@ fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
     base.pages[0].frames.insert(pos, extra);
     let ids: Vec<String> = base.pages[0].frames.iter().map(|frame| frame.id().to_string()).collect();
     let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-2".into(), forward: true });
-    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward");
+    let next = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("forward");
     let next_ids: Vec<String> = next.pages[0].frames.iter().map(|frame| frame.id().to_string()).collect();
     assert_eq!(next_ids[pos], "frame-1");
     assert_eq!(next_ids[pos + 1], "frame-2");
@@ -20,7 +20,7 @@ fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
     let list = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     let painted: Vec<&str> = list.rects.iter().map(|rect| rect.object_id.as_str()).filter(|id| *id == "frame-1" || *id == "frame-2").collect();
     assert_eq!(painted, vec!["frame-1", "frame-2"]);
-    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
+    let restored = protocol::apply_diff_cold(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
     let restored_ids: Vec<String> = restored.pages[0].frames.iter().map(|frame| frame.id().to_string()).collect();
     assert_eq!(restored_ids, ids);
 }
@@ -34,7 +34,7 @@ fn a_rect_brought_to_the_front_paints_after_the_image() {
         if outcome.diff().pages.is_none() {
             break;
         }
-        base = protocol::apply_diff(outcome.diff(), &base).expect("forward");
+        base = protocol::apply_diff_cold(outcome.diff(), &base).expect("forward");
     }
     assert_eq!(base.pages[0].frames.last().unwrap().id(), "frame-1");
     let mut engine = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::LayoutEngine::new();

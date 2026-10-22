@@ -63,7 +63,7 @@ fn p1_8_the_launcher_filter_pages_jumps_edits_and_previews() {
     press(&mut dashboard, &mut tui, &type_text("quiz test"));
     let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { NodeContent::Widget(WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
     let text = caption(&dashboard, &mut tui);
-    assert!(text.contains("1 of") && text.contains("bun repo run @fx/quiz:test"), "match count and preview: {text}");
+    assert!(text.contains("1 of") && text.contains("repo run @fx/quiz:test"), "match count and preview: {text}");
     press(&mut dashboard, &mut tui, &[Event::Key(KeyEvent { key: Key::Backspace, mods: mods::ALT })]);
     assert_eq!(query(&dashboard, &mut tui, 1), "quiz");
     press(&mut dashboard, &mut tui, &[ctrl('u')]);

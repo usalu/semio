@@ -164,7 +164,7 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
             }
             fn retirement_birth_bytes(&self) -> Option<usize> { #birth }
             #shared_methods
-            fn controlled_retirement_supported() -> bool { true #(&& <#components as #value_crate::retirement::RetireOwned>::controlled_retirement_supported())* }
+            fn controlled_retirement_supported() -> bool { #value_crate::retirement::conjunctive_retirement_support::<Self>(|| true #(&& <#components as #value_crate::retirement::RetireOwned>::controlled_retirement_supported())*) }
             fn retirement_element_copy_bytes() -> usize {
                 #value_crate::retirement::composite_copy_bytes::<Self>(&[#(<#components as #value_crate::retirement::RetireOwned>::retirement_element_copy_bytes()),*])
             }

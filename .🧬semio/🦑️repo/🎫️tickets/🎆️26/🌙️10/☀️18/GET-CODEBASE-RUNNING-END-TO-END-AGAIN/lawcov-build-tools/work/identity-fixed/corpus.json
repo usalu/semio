@@ -1,0 +1,302 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "an installation of two files",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    },
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "8568f64877bdd05bdb5cb80e26ef852918b0837fdff2d352db83f188c03c95fd"
+  },
+  {
+   "name": "no files",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [],
+   "expected": "7e16f9b2dbde19941b7a66ff9e621a21ed5917d0ca03e2025cd0622c4438996a"
+  },
+  {
+   "name": "macOS on arm64",
+   "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "libc": "none"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "c2fdef721027b167a39cf6121c25a169e7ee920bfd382ca94d28d1da09722a41"
+  },
+  {
+   "name": "windows",
+   "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "libc": "none"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "782ae894179ed97ff69c2d7b4912ad5723af60508251c46a2a129b4f7daece45"
+  },
+  {
+   "name": "musl is another key than glibc",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "musl"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "bfdd9a636b4ddb74baa1a70dfb91fd6eebb2d8ed8a57542c5b91f8856010ee3d"
+  },
+  {
+   "name": "an empty file",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "empty",
+     "text": ""
+    }
+   ],
+   "expected": "d05aaa69371dc72fe1ea9005ce22801dec1e835aa1a7951d78084f3241e4b93c"
+  },
+  {
+   "name": "unicode names and bytes",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "é/🧪.json",
+     "text": "é🧪\n"
+    }
+   ],
+   "expected": "b9a87732aa3f1d2c374bf73bca70fc0d1bf508ea700f3ca9c4223fd7193b7c69"
+  },
+  {
+   "name": "the order of files is part of the key",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    },
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    }
+   ],
+   "expected": "8ce22e2892dc289bc3387a3087f4208d30fd8aa1805461d7ebfc068c12c7e7d9"
+  },
+  {
+   "name": "a patch beside the dependencies",
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   },
+   "files": [
+    {
+     "name": "package.json",
+     "text": "{}\n"
+    },
+    {
+     "name": "bun.lock",
+     "text": "{}\n"
+    },
+    {
+     "name": "patches/current.patch",
+     "text": "diff\n"
+    }
+   ],
+   "expected": "57e0adfd138c5c99d4da563ceea90920a0a112025c16dbef4dd926fa4e5fbf7a"
+  }
+ ],
+ "boundaries": [
+  {
+   "name": "a byte moved from the name into the content",
+   "left": [
+    [
+     "ab",
+     "c"
+    ]
+   ],
+   "right": [
+    [
+     "a",
+     "bc"
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "an empty name is not no file",
+   "left": [
+    [
+     "",
+     ""
+    ]
+   ],
+   "right": [],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "a content holding NUL bytes cannot impersonate two files",
+   "left": [
+    [
+     "a",
+     "x"
+    ],
+    [
+     "b",
+     "y"
+    ]
+   ],
+   "right": [
+    [
+     "a",
+     "x\u0000b\u0000y"
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "a content holding a length prefix cannot impersonate two files",
+   "left": [
+    [
+     "a",
+     "x"
+    ],
+    [
+     "b",
+     "y"
+    ]
+   ],
+   "right": [
+    [
+     "a",
+     "x1:b1:y"
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "a name holding a length prefix cannot impersonate a file and its content",
+   "left": [
+    [
+     "a",
+     "xx"
+    ]
+   ],
+   "right": [
+    [
+     "a2:xx",
+     ""
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "a platform triple cannot be shifted into the first file",
+   "left": [],
+   "right": [
+    [
+     "linux",
+     ""
+    ]
+   ],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibc"
+   }
+  },
+  {
+   "name": "a libc of one character differs from a libc of nothing and a file named like it",
+   "left": [
+    [
+     "g",
+     ""
+    ]
+   ],
+   "right": [],
+   "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "libc": "glibcg"
+   }
+  }
+ ],
+ "environments": {
+  "platforms": [
+   "linux",
+   "darwin",
+   "win32"
+  ],
+  "architectures": [
+   "x64",
+   "arm64"
+  ],
+  "libcs": [
+   "glibc",
+   "musl",
+   "none"
+  ]
+ }
+}

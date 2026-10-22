@@ -159,7 +159,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +        let admitted = false;
 +        const acquired = new Promise((resolve, reject) => {
 +            backgroundProcess.on('message', message => { if (message?.type === 'SEMIO_NX_DAEMON_ACQUIRED' && message.generation === birth.generation && message.toolingIdentity === birth.toolingIdentity) { admitted = true; resolve(); } });
-+            backgroundProcess.once('exit', () => { if (!admitted) reject(Error('Original daemon child exited before acquisition')); });
++            backgroundProcess.once('exit', (code, signal) => { if (!admitted) reject(Error('Original daemon child exited before acquisition: code=' + code + ' signal=' + signal)); });
 +            backgroundProcess.once('error', reject);
 +        });
 +        void acquired.catch(() => {});
@@ -188,7 +188,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              return backgroundProcess.pid;
          }
          else {
-@@ -1159,22 +1223,31 @@
+@@ -1159,22 +1223,33 @@
                      ? (0, sandbox_socket_hint_1.sandboxSocketHint)({ certain: daemonRefusedSocket })
                      : []),
              ].join('\n'));
@@ -196,7 +196,9 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +        } catch (error) {
 +            cancel();
 +            await terminal;
-+            throw error;
++            let daemonLog = '';
++            try { daemonLog = (0, node_fs_1.readFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'utf8').slice(-4000); } catch (readError) { daemonLog = String(readError); }
++            throw Error(String(error && error.message || error) + '\n' + daemonLog);
 +        } finally {
 +            semioControl.signal.removeEventListener('abort', cancel);
          }
@@ -237,7 +239,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +            this.reset();
 +        });
 +    }
-@@ -1235,7 +1308,18 @@
+@@ -1235,7 +1310,18 @@
      // which is exactly when the daemon is most likely to fail to start.
      let body = message;
      try {
@@ -1998,7 +2000,7 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +                if (patch?.version !== 1 || !patch.files || !Object.keys(patch.files).length) throw Error('Actual loaded Nx patch receipt required');
 +                for (const [relative, expected] of Object.entries(patch.files)) if (!/^[a-f0-9]{64}$/u.test(expected) || digest(read(sdk, relative).bytes) !== expected) throw Error('Actual loaded Nx patch bytes changed');
 +                const source = read(directory, '.semio-authorizer-source.json'), manifest = JSON.parse(source.bytes);
-+                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,resolutions,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || typeof manifest.entry !== 'string' || !manifest.entry || !Array.isArray(manifest.sources) || !manifest.sources.length || manifest.sources.length > 1024 || !Array.isArray(manifest.resolutions) || manifest.resolutions.length > 256) throw Error('Immutable source authority receipt required');
++                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,resolutions,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || typeof manifest.entry !== 'string' || !manifest.entry || !Array.isArray(manifest.sources) || !manifest.sources.length || manifest.sources.length > 2048 || !Array.isArray(manifest.resolutions) || manifest.resolutions.length > 256) throw Error('Immutable source authority receipt required');
 +                let previous; const sourcePaths = new Set();
 +                for (const row of manifest.sources) { if (!row || Object.keys(row).sort().join(',') !== 'path,sha256' || typeof row.path !== 'string' || !row.path || row.path.length > 256 || path.isAbsolute(row.path) || /[:\\\0]/u.test(row.path) || row.path.split('/').some(part => !part || part === '.' || part === '..') || !/^[a-f0-9]{64}$/u.test(row.sha256) || previous && Buffer.compare(Buffer.from(previous), Buffer.from(row.path)) >= 0) throw Error('Closed original source authority required'); previous = row.path; sourcePaths.add(row.path); }
 +                if (!sourcePaths.has(manifest.entry)) throw Error('Original authorizer entry census required');
@@ -2052,7 +2054,7 @@ diff --git a/dist/src/daemon/server/start.js b/dist/src/daemon/server/start.js
          });
 -        process.exit(1);
 +    } catch (error) {
-+        console.error("[DEBUG] Original detached daemon refused:", String(error));
++        console.error("Original detached daemon refused:", process.env.NX_VERBOSE_LOGGING === 'true' ? error?.stack ?? String(error) : error?.message ?? String(error));
 +        process.exitCode = error?.semioExitCode || 1;
      }
  })();

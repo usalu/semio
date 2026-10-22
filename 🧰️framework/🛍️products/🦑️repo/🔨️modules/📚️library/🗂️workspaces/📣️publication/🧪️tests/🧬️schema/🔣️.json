@@ -1,0 +1,84 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "tree",
+  "expected",
+  "rootDocument",
+  "rendered",
+  "scenarios"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "tree": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "expected": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "rootDocument": {},
+  "rendered": {
+   "type": "string"
+  },
+  "scenarios": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "document",
+     "mode",
+     "throws",
+     "stderr",
+     "stdout"
+    ],
+    "properties": {
+     "document": {},
+     "mode": {
+      "enum": [
+       "check",
+       "write"
+      ]
+     },
+     "throws": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "stderr": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "stdout": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "written": {
+      "type": "boolean"
+     },
+     "fresh": {
+      "type": "boolean"
+     }
+    }
+   }
+  }
+ }
+}

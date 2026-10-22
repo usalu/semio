@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Repository MCP Root Scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "profiles",
+    "protocolVersion",
+    "cases",
+    "reads",
+    "mimeType",
+    "bridgeCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "profiles": {
+      "const": [
+        "generic",
+        "codex"
+      ]
+    },
+    "protocolVersion": {
+      "const": "2025-11-25"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "files",
+          "folders"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "first",
+              "second",
+              "empty"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "text"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "pattern": "^(?!\\.)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$"
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 256
+                }
+              }
+            }
+          },
+          "folders": {
+            "type": "array",
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^(?!\\.)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$"
+            }
+          }
+        }
+      }
+    },
+    "reads": {
+      "const": [
+        {
+          "id": 11,
+          "uri": "repo://files",
+          "field": "files"
+        },
+        {
+          "id": 12,
+          "uri": "repo://folders",
+          "field": "folders"
+        }
+      ]
+    },
+    "mimeType": {
+      "const": "application/json"
+    },
+    "bridgeCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mode",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "mode": {
+            "enum": [
+              "malformed",
+              "unsolicited",
+              "reader-undefined"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "syntax",
+              "unsolicited",
+              "undefined"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "const": {
+        "maximumRoots": 3,
+        "maximumFilesPerRoot": 4,
+        "maximumRelativePathUnits": 64,
+        "maximumTextBytes": 256,
+        "maximumWireBytes": 65536,
+        "maximumPhysicalPathUnits": 256,
+        "scope": "provided-root",
+        "cwd": "unchanged",
+        "transport": "actual-repository-server-serve",
+        "oracle": "serde-json-wire-parser"
+      }
+    },
+    "InstalledProtocol": {
+      "const": {
+        "maximumMilliseconds": 90000,
+        "maximumMessages": 128,
+        "maximumNotifications": 32,
+        "maximumServerRequests": 8,
+        "maximumPhysicalPathUnits": 256,
+        "maximumFixtureEntries": 32,
+        "output": {
+          "maximumBytes": 65536,
+          "maximumLines": 128
+        },
+        "args": [
+          "mcp",
+          "--repo"
+        ],
+        "client": {
+          "name": "repo-installed-root-scope",
+          "version": "1"
+        },
+        "oracle": "official-sdk-and-independent-filesystem",
+        "profileProof": "official-installed-receipt-and-native-artifact-before-after",
+        "maximumTestMilliseconds": 130000,
+        "maximumBunMilliseconds": 120000
+      }
+    }
+  }
+}

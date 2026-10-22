@@ -26,7 +26,7 @@ import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦�
 /** 🧭️ Reads only the canonical Cargo build owner or its current aggregate declaration. */
 export function selectedCargoBuildOwnerV1(target:BuildTargetV1,root:string):string|undefined{
  const declared=(target.metadata as any)?.semio?.rustBuildIntent;if(declared!==undefined)return resolve(root,readRustBuildIntentV1(declared).manifest);const aggregate=(target.metadata as any)?.semio?.rustUnitAggregate;if(aggregate?.version===1&&typeof aggregate.manifest==="string")return resolve(root,aggregate.manifest);
- if((target.metadata as any)?.semio?.execution?.kind!=="native"||target.execution.kind!=="command"||typeof target.execution.command!=="string")return;const match=/^bun ("(?:[^"\\]|\\.)+") native cargo build --manifest ("(?:[^"\\]|\\.)+")$/u.exec(target.execution.command);if(!match)return;const owner=JSON.parse(match[1]!);if(owner!=="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts")return;return resolve(root,JSON.parse(match[2]!));
+ if((target.metadata as any)?.semio?.execution?.kind!=="native"||target.execution.kind!=="command"||typeof target.execution.command!=="string")return;const match=/^repo ("(?:[^"\\]|\\.)+") native cargo build --manifest ("(?:[^"\\]|\\.)+")$/u.exec(target.execution.command);if(!match)return;const owner=JSON.parse(match[1]!);if(owner!=="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts")return;return resolve(root,JSON.parse(match[2]!));
 }
 /** 🧱️ Binds selected compiler roots to one aggregate with configuration-independent scheduling. */
 export function selectedRustAggregateTargetV1(original:BuildTargetV1,manifest:string,mode:string,roots:readonly string[]):BuildTargetV1{

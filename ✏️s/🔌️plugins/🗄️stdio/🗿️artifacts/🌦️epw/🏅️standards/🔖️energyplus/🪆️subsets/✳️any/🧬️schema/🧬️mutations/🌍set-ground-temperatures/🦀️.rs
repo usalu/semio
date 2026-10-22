@@ -14,18 +14,21 @@ pub struct SetGroundTemperatures {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ground-temperatures", kind: "set-ground-temperatures", record: "SetGroundTemperatures" };
 
-    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        let Self { value } = self;
-        protocol::MutationOutcome::new(EpwDiff { ground_temperatures: Some(value.clone()), ..EpwDiff::default() })
-    }
-    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetGroundTemperatures(SetGroundTemperatures { value: base.ground_temperatures.clone() })])
-    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
+    }
+}
+
+impl protocol::ColdMutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::ColdMutation<EpwSnapshot>>::ReferenceDiff> {
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { ground_temperatures: Some(value.clone()), ..EpwDiff::default() })
+    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+        Ok(vec![EpwMutation::SetGroundTemperatures(SetGroundTemperatures { value: base.ground_temperatures.clone() })])
     }
 }
 //#endregion 🔖️Payload

@@ -9,7 +9,7 @@ pub use set_camera::SetCamera;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = GisMapViewerWindowConfig, diff = GisMapViewerWindowConfigDiff, schema = "gis.mapviewerwindowcfg")]
+#[mutations(snapshot = GisMapViewerWindowConfig, diff = GisMapViewerWindowConfigDiff, schema = "gis.mapviewerwindowcfg", reference = GisMapViewerWindowConfig, reference_diff = GisMapViewerWindowConfigDiff)]
 pub enum GisMapViewerWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

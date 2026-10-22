@@ -34,7 +34,7 @@ Manim-class Rust animation compiler technology. Imperative `Scene` timelines ove
 - Use `mathematical_geometry` types (`Point`, `Vec2`, `Affine`, `BezPath`, …)
 - Docstrings start with a unique emoji; no comments inside definitions
 - Regions in `lib.rs` or `src/` modules; unit tests in each module
-- `bun ./script.ts test` via nx `@semio-tech/animate-core-rs`
+- `repo ./script.ts test` via nx `@semio-tech/animate-core-rs`
 
 ## Stack
 

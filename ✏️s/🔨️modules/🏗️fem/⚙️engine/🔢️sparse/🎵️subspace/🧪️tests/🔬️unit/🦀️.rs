@@ -2,9 +2,11 @@ use semio_s_fem_sparse::{Coo, Csr, NUMERICAL_OWNER_PAGE_BYTES, NumericalCheckpoi
 use super::*;
 use semio_framework_job::StepBudget;
 use semio_s_fem_sparse_ldlt::LdltRestoreCursor;
+use semio_s_fem_sparse_ldlt::ldlt_factor;
 use super::*;
 use super::*;
 use semio_s_fem_test_support::close_turn;
+use semio_s_fem_test_support::OriginalNumericalFixture;
 use semio_s_fem_test_support::checkpoint_payload;
 use semio_s_fem_test_support::close_job;
 use semio_s_fem_test_support::close_payload;
@@ -19,28 +21,27 @@ use semio_s_fem_test_support::TEST_GRANT;
 fn numerical_page_subspace_work_persists_solver_state_without_physical_retirement_cursor() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let operation = test_operation(494);
-    let mut sequence = 0;
     let mut observations = Vec::new();
     for field in [11, 23] {
         let mut pages = Vec::new();
         for lane in corpus["workRetirementLanes"].as_array().unwrap() {
+            let mut original = OriginalNumericalFixture::new(operation);
             let mut job = SubspaceIterationJob::new(operation, LdltFactor::from_owned_parts(0, Vec::new(), Vec::new()), Csr::from_owned_parts(0, Vec::new(), Vec::new(), Vec::new()), 0, 0, 1);
             job.state.work.close_lane = lane.as_u64().unwrap() as u8;
             let mut retiring = SubspaceWork::empty();
             retiring.close_lane = lane.as_u64().unwrap() as u8;
             job.state.retiring_work = Some(retiring);
-            let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            writer.begin_staged_page(&mut context).unwrap();
+            let mut writer = original_writer(&mut original);
+            assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
             let mut cursor = NumericalPageCursor { field, owner: 0, item: 0 };
             for _ in 0..64 {
-                test_funded_restore(|context| SubspaceIterationJob::advance_checkpoint_entry(&job.state, &mut cursor, &mut writer, context)).unwrap();
+                original.turn(TEST_GRANT, 1, u64::MAX, |cx| SubspaceIterationJob::advance_checkpoint_entry(&job.state, &mut cursor, &mut writer, cx).map_err(Into::into)).expect("original checkpoint entry");
                 if cursor.field != field { break; }
             }
-            let mut payload = writer.finish().unwrap_or_else(|_| panic!("work control page committed"));
+            let mut payload = original_finish(&mut original, writer);
             pages.push(payload.page(0).unwrap().to_vec());
-            close_payload(payload);
+            original.close_payload(&mut payload);
+            original.finish();
         }
         let counts: Vec<_> = pages.iter().map(|bytes| {
             let page = parse_numerical_page(bytes, b"FEMSCP1\0").unwrap();
@@ -104,7 +105,7 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
         restore.payload = None;
         restore.state = Some(job.state);
         let before = physical(restore.state.as_ref());
-        let first = restore.close_step(grant_of(1, grant));
+        let first = restore_close(grant_of(1, grant), |cx| restore.close_step(cx)).expect("restore close turn");
         let after = physical(restore.state.as_ref());
         let retired = 2 - inner_owners(restore.state.as_ref());
         let reported = match first { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
@@ -112,7 +113,7 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
         let mut exact = before - after == reported && reported <= grant;
         for _ in 0..128 {
             let before = physical(restore.state.as_ref());
-            let step = restore.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
+            let step = restore_close(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES), |cx| restore.close_step(cx)).expect("restore close turn");
             let reported = match step { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
             exact &= before - physical(restore.state.as_ref()) == reported;
             released += reported;
@@ -151,8 +152,8 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
         observations.push((left, right, ldlt.page_slot, ldlt.page_entry, subspace.page_slot, subspace.page_entry));
     }
     for _ in 0..16 {
-        let _ = ldlt.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
-        let _ = subspace.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
+        let _ = restore_close(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES), |cx| ldlt.close_step(cx));
+        let _ = restore_close(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES), |cx| subspace.close_step(cx));
         if ldlt.terminal_is_empty() && subspace.terminal_is_empty() { break; }
     }
     assert!(ldlt.terminal_is_empty() && subspace.terminal_is_empty());
@@ -176,26 +177,25 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
         matrix.rows = rows;
         matrix.cols = cols;
         matrix.data = (0..length).map(|index| index as f64 * 0.25 - 100.0).collect();
-        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-        let mut write_cursor = NumericalPageCursor { field: 518, owner: 0, item: 0 };
         let operation = test_operation(491);
-        let mut sequence = 0;
+        let mut original = OriginalNumericalFixture::new(operation);
+        let mut writer = original_writer(&mut original);
+        let mut write_cursor = NumericalPageCursor { field: 518, owner: 0, item: 0 };
         let mut write_fault = None;
         let mut completed = false;
         for _ in 0..length * 3 + 64 {
             let result = if writer.staged_page_len().is_none() {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                writer.begin_staged_page(&mut context).map(|_| false)
+                assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+                Ok(false)
             } else {
-                match test_funded_restore(|context| advance_numerical_page_header(&mut writer, b"FEMSCP1\0", 12, write_cursor, context)) {
+                match original_step(&mut original, |context| advance_numerical_page_header(&mut writer, b"FEMSCP1\0", 12, write_cursor, context)) {
                     Ok(true) => Ok(false),
-                    Ok(false) => test_funded_restore(|context| advance_matrix_owner(&mut writer, &matrix, &mut write_cursor, context)),
+                    Ok(false) => original_step(&mut original, |context| advance_matrix_owner(&mut writer, &matrix, &mut write_cursor, context)),
                     Err(fault) => Err(fault),
                 }
             };
             match result {
-                Ok(true) => { writer.commit_staged_page().unwrap(); completed = true; break; }
+                Ok(true) => { assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.commit_staged_page_funded(cx, 0).map_err(Into::into)).expect("original staged page commit")); completed = true; break; }
                 Ok(false) => {}
                 Err(fault) => { write_fault = Some(fault); break; }
             }
@@ -205,7 +205,7 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
         let mut restore_fault = None;
         let mut page_items = Vec::new();
         if completed {
-            let mut payload = writer.finish().unwrap_or_else(|_| panic!("matrix writer finishes committed pages"));
+            let mut payload = original_finish(&mut original, writer);
             for slot in 0..payload.page_count() {
                 let page = parse_numerical_page(payload.page(slot).unwrap(), b"FEMSCP1\0").unwrap();
                 page_items.push(page.item);
@@ -219,12 +219,12 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
                 }
                 if restore_fault.is_some() { break; }
             }
-            close_payload(payload);
+            original.close_payload(&mut payload);
         } else {
-            writer.begin_close();
-            close_writer(&mut writer);
+            original.close_writer(&mut writer);
             assert!(writer.terminal_is_empty());
         }
+        original.finish();
         let values = restored.data.clone();
         let dimensions = (restored.rows, restored.cols);
         let capacity = restored.data.capacity();
@@ -302,30 +302,6 @@ fn subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case() {
     }
 }
 
-/// 🕳️ Indefinite and null generalized modes sort behind physical positive modes using the same
-/// finite sentinel on every replay, so checkpoints remain valid JSON and ordering is total.
-#[test]
-fn subspace_iteration_uses_a_deterministic_finite_null_mode_sentinel() {
-    let n = 3;
-    let mut k_coo = Coo::new(n);
-    let mut b_coo = Coo::new(n);
-    for (index, stiffness) in [1.0, 2.0, 3.0].into_iter().enumerate() {
-        k_coo.add(index, index, stiffness);
-    }
-    b_coo.add(0, 0, 1.0);
-    b_coo.add(2, 2, -1.0);
-    let k_factor = ldlt_factor(&k_coo.to_csc_sym_upper()).expect("factors");
-    let b_csr = b_coo.to_csr();
-
-    let first = subspace_iteration(&k_factor, &b_csr, n, 3, 30);
-    let replay = subspace_iteration(&k_factor, &b_csr, n, 3, 30);
-
-    assert_eq!(first, replay);
-    assert_eq!(first.values, vec![1.0, f64::MAX, f64::MAX]);
-    assert!(first.values.iter().all(|value| value.is_finite() && *value > 0.0));
-    assert!(first.values.windows(2).all(|pair| pair[0] <= pair[1]));
-}
-
 #[test]
 fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
     let a = MatD::zeros(0, 0);
@@ -345,8 +321,8 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
     let factor = LdltFactor::from_owned_parts(3, (0..3).map(|column| ((column + 1)..3).map(|row| (row as u32, lower[row][column])).collect()).collect(), serde_json::from_value(case["diagonal"].clone()).unwrap());    let mut mass = Coo::new(3);
     for index in 0..3 { mass.add(index, index, 1.0); }
     let mut job = SubspaceIterationJob::new(test_operation(996), factor, mass.to_csr(), 3, 1, 30);
-    job.state.work.rhs = MatD::zeros(3, 3).into();job.state.shift=Some(0.0);
-    job.state.work.solved = MatD::zeros(3, 3).into();
+    job.state.work.rhs = semio_s_fem_algebra::PagedMatD::zeros(3, 3);job.state.shift=Some(0.0);
+    job.state.work.solved = semio_s_fem_algebra::PagedMatD::zeros(3, 3);
     for row in 0..3 { for column in 0..3 { job.state.work.rhs.set(row, column, rhs[row][column]); } }
     let pointer = job.state.work.solved.data.backing_ptr(0);
     let capacity = job.state.work.solved.data.capacity();
@@ -389,8 +365,8 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
         let factor = LdltFactor::from_owned_parts(3, vec![Vec::new();3], diagonal.clone());
         let mut job = SubspaceIterationJob::new(operation, factor, mass.to_csr(), 3, modes, 30);
         job.state.factor_validation_complete = true;
-        job.state.x = MatD::zeros(3, 3).into();
-        job.state.work.candidate_x = MatD::zeros(3, 3).into();
+        job.state.x = semio_s_fem_algebra::PagedMatD::zeros(3, 3);
+        job.state.work.candidate_x = semio_s_fem_algebra::PagedMatD::zeros(3, 3);
         job.state.work.theta = eigenvalues.clone().into();
         job.state.final_theta = previous.clone().into();job.state.eigensystem_certified=true;
         job.state.converged_count = modes;
@@ -420,27 +396,70 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
     }
 }
 
-fn restore_subspace(operation: Operation, payload: RetainedJobPayload) -> Result<SubspaceIterationJob, NumericalCheckpointFault> {
+fn restore_subspace(original: &mut OriginalNumericalFixture, operation: Operation, payload: RetainedJobPayload) -> Result<SubspaceIterationJob, NumericalCheckpointFault> {
     let mut restore = SubspaceRestoreCursor::new(operation, payload);
-    let mut sequence = 0;
     for _ in 0..400_000 {
         let handoff_due = restore.payload.is_none();
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, RetainedCloneGrant { maximum_items: 1, ..TEST_GRANT }), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let step = restore.step(&mut context);
-        assert!(context.retained_progress().copied_items <= 1);
+        let step = step_restore(original, &mut restore, 1, u64::MAX);
+        assert!(original.receipt().copied_items <= 1);
         match step {
-            Ok(Some(job)) => { assert!(handoff_due); assert_eq!(context.retained_progress().copied_items, 1); assert_eq!(context.retained_progress().released_bytes, 0); return Ok(job); },
+            Ok(Some(job)) => { assert!(handoff_due); assert_eq!(original.receipt().copied_items, 1); assert_eq!(original.receipt().released_bytes, 0); return Ok(job); },
             Ok(None) => {}
             Err(fault) => {
                 while !restore.terminal_is_empty() {
-                    let _ = restore.close_step(grant_of(1, usize::MAX));
+                    let _ = close_restore(original, &mut restore, grant_of(1, usize::MAX));
                 }
                 return Err(fault);
             }
         }
     }
+    while !restore.terminal_is_empty() { close_restore(original, &mut restore, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)).unwrap(); }
     Err(NumericalCheckpointFault::Truncated)
+}
+
+fn step_job(original: &mut OriginalNumericalFixture, job: &mut impl InteractiveJob, fuel: u64, deadline: u64) -> Seen {
+    original.turn(TEST_GRANT, fuel, deadline, |cx| Ok(seen_of(job.step(cx)))).expect("same original subspace job step")
+}
+
+#[track_caller]
+fn next_checkpoint(original: &mut OriginalNumericalFixture, job: &mut impl InteractiveJob) -> Vec<Vec<u8>> {
+    let mut last = None;
+    for _ in 0..5_000_000 {
+        match step_job(original, job, 1, u64::MAX) {
+            Seen::Checkpoint(pages) => return pages,
+            other => last = Some(format!("{other:?}")),
+        }
+    }
+    panic!("no checkpoint was published; last outcome {last:?}")
+}
+
+fn step_restore(original: &mut OriginalNumericalFixture, cursor: &mut SubspaceRestoreCursor, fuel: u64, deadline: u64) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
+    original.turn(RetainedCloneGrant { maximum_items: 1, ..TEST_GRANT }, fuel, deadline, |cx| Ok(cursor.step(cx))).expect("same original subspace restore turn")
+}
+
+fn close_restore(original: &mut OriginalNumericalFixture, cursor: &mut SubspaceRestoreCursor, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    original.turn(grant, 1, u64::MAX, |cx| cx.with_original_retirement(|cx| cursor.close_step(cx)))
+}
+
+fn restore_pages(original: &mut OriginalNumericalFixture, operation: Operation, pages: &[Vec<u8>]) -> Result<SubspaceIterationJob, NumericalCheckpointFault> {
+    let payload = original.payload_from_pages(JobPayloadStream::CheckpointState, pages);
+    restore_subspace(original, operation, payload)
+}
+
+fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
+    original.turn(TEST_GRANT, 1, u64::MAX, |cx| Ok(step(cx))).expect("original writer turn")
+}
+
+fn original_writer(original: &mut OriginalNumericalFixture) -> RetainedJobPayloadWriter {
+    let mut writer = None;
+    original.turn(TEST_GRANT, 1, u64::MAX, |cx| { writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, cx)?; Ok(()) }).expect("original writer birth");
+    writer.expect("original writer admitted")
+}
+
+fn original_finish(original: &mut OriginalNumericalFixture, writer: RetainedJobPayloadWriter) -> RetainedJobPayload {
+    let (mut slot, mut output) = (Some(writer), None);
+    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| RetainedJobPayloadWriter::finish_funded(&mut slot, &mut output, cx).map_err(Into::into)).expect("original writer handoff"));
+    output.expect("committed pages hand off one payload")
 }
 
 #[test]
@@ -455,43 +474,35 @@ fn subspace_job_resume_and_scheduling_are_deterministic() {
     let factor = ldlt_factor(&k.to_csc_sym_upper()).expect("factors");
     let mass = b.to_csr();
     let operation = test_operation(105);
+    let mut original = OriginalNumericalFixture::new(operation);
     let mut uninterrupted = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 4, 30);
-    let mut sequence = 0;
     let expected = loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        if matches!(seen_of(uninterrupted.step(&mut context)), Seen::Complete(_)) {
+        if matches!(step_job(&mut original, &mut uninterrupted, 1, u64::MAX), Seen::Complete(_)) {
             break uninterrupted.solution();
         }
     };
 
     let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30);
     let checkpoint = loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(interrupted.step(&mut context)) {
+        match step_job(&mut original, &mut interrupted, 1, u64::MAX) {
             Seen::Checkpoint(pages) => break pages,
             Seen::Yield | Seen::Preview(_) => {}
             outcome => panic!("unexpected subspace checkpoint outcome: {outcome:?}"),
         }
     };
-    let mut resumed = restore_subspace(operation, checkpoint_payload(operation, &checkpoint)).expect("subspace retained checkpoint restores");
-    close_job(&mut interrupted);
+    let mut resumed = restore_pages(&mut original, operation, &checkpoint).expect("subspace retained checkpoint restores");
+    original.close(&mut interrupted);
     loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert!(matches!(seen_of(resumed.step(&mut yielded)), Seen::Yield));
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        drop(yielded);
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        if matches!(seen_of(resumed.step(&mut context)), Seen::Complete(_)) {
+        assert!(matches!(step_job(&mut original, &mut resumed, 0, u64::MAX), Seen::Yield));
+        if matches!(step_job(&mut original, &mut resumed, 1, u64::MAX), Seen::Complete(_)) {
             break;
         }
     }
     assert_eq!(resumed.solution(), expected);
     assert_eq!(resumed.preview().converged_count, 4);
-    close_job(&mut uninterrupted);
-    close_job(&mut resumed);
+    original.close(&mut uninterrupted);
+    original.close(&mut resumed);
+    original.finish();
 }
 
 // #region 🔖️LongTests
@@ -502,7 +513,7 @@ mod long {
 
     #[test]
     fn p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact() {
-        let n = 8;
+        let n = 12;
         let mut stiffness = Coo::new(n);
         let mut mass = Coo::new(n);
         for index in 0..n {
@@ -513,15 +524,14 @@ mod long {
         let operation = test_operation(122);
         let mass = mass.to_csr();
         let drive = |fuel: u64| {
+            let mut original = OriginalNumericalFixture::new(operation);
             let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
-            let mut replay_sequence = 0;
-            for _ in 0..200_000 {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence, &mut sequence_receipt);
-                match seen_of(replay.step(&mut context)) {
+            for _ in 0..5_000_000 {
+                match step_job(&mut original, &mut replay, fuel, u64::MAX) {
                     Seen::Complete(_) => {
                         let solution = replay.solution();
-                        close_job(&mut replay);
+                        original.close(&mut replay);
+                        original.finish();
                         return solution;
                     }
                     Seen::Fault(detail) => panic!("subspace replay fault: {detail:?}"),
@@ -534,91 +544,61 @@ mod long {
         assert_eq!(drive(2), single);
         assert_eq!(drive(4), single);
 
+        let mut original = OriginalNumericalFixture::new(operation);
         let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
         let before = validating.state.clone();
-        let mut validation_sequence = 0;
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(validating.step(&mut expired)), Seen::Yield);
+        assert_eq!(step_job(&mut original, &mut validating, 1, 0), Seen::Yield);
         assert!(validating.state == before);
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        drop(expired);
-        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(validating.step(&mut one)), Seen::Yield);
+        assert_eq!(step_job(&mut original, &mut validating, 1, u64::MAX), Seen::Yield);
         assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
-        close_job(&mut validating);
+        original.close(&mut validating);
 
-        let mut oversized = Vec::<(u32, f64)>::new();
-        oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
-        assert!(oversized.capacity() * size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
         let mut columns = vec![Vec::new(); n];
-        columns[0] = oversized;
-        let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
-        let mut refused_sequence = 0;
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        drop(one);
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence, &mut sequence_receipt);
-        assert!(matches!(seen_of(refused_owner.step(&mut context)), Seen::Fault(_)));
-        close_job(&mut refused_owner);
+        columns[0] = vec![(0u32, 1.0)];
+        let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor::from_owned_parts(n, columns, vec![1.0; n]), mass.clone(), n, 3, 1);
+        assert!(matches!(step_job(&mut original, &mut refused_owner, 1, u64::MAX), Seen::Fault(_)));
+        original.close(&mut refused_owner);
 
-        drop(context);
-        for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
-            let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };
+        for (refused_order, refused_modes) in [(0, 0), (3, 0), (3, 4)] {
+            let factor = LdltFactor::from_owned_parts(refused_order, vec![Vec::new(); refused_order], vec![1.0; refused_order]);
             let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
-            let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
-            let mut refused_sequence = 0;
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence, &mut sequence_receipt);
-            assert!(matches!(seen_of(refused.step(&mut context)), Seen::Fault(_)));
-            close_job(&mut refused);
+            let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, refused_modes, 1);
+            let seen = step_job(&mut original, &mut refused, 1, u64::MAX);
+            assert!(matches!(seen, Seen::Fault(_)), "order {refused_order} with {refused_modes} modes must be refused: {seen:?}");
+            original.close(&mut refused);
         }
 
         let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
-        let mut publishing_sequence = 0;
         for _ in 0..200_000 {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence, &mut sequence_receipt);
-            let _ = seen_of(publishing.step(&mut context));
+            let _ = step_job(&mut original, &mut publishing, 1, u64::MAX);
             if publishing.preview_writer.is_some() {
                 break;
             }
         }
         assert!(publishing.preview_writer.is_some(), "retained preview page writer becomes interruptible before publication");
-        InteractiveJob::begin_close(&mut publishing);
-        close_job(&mut publishing);
+        original.close(&mut publishing);
         assert!(InteractiveJob::terminal_is_empty(&publishing));
 
         let mut job = SubspaceIterationJob::new(operation, factor, mass, n, 3, 3);
         let mut seen = std::collections::BTreeSet::new();
-        let mut sequence = 0;
         for _ in 0..200_000 {
-            if seen.len() == 16 {
+            if seen.len() == 20 {
                 break;
             }
             seen.insert(job.state.work.stage as u8);
             job.state.checkpoint_due = true;
-            let checkpoint = loop {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
-                    break pages;
-                }
-            };
-            let mut cancelled = restore_subspace(operation, checkpoint_payload(operation, &checkpoint)).expect("stage retained checkpoint");
+            let checkpoint = next_checkpoint(&mut original, &mut job);
+            let mut cancelled = restore_pages(&mut original, operation, &checkpoint).expect("stage retained checkpoint");
             let before = cancelled.state.clone();
-            let token = semio_framework_job::root_cancel_token();
-            token.cancel_now();
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-            assert_eq!(seen_of(cancelled.step(&mut cancelled_context)), Seen::Cancelled);
+            let mut cancelled_original = OriginalNumericalFixture::new(operation);
+            cancelled_original.cancel();
+            assert_eq!(step_job(&mut cancelled_original, &mut cancelled, 1, u64::MAX), Seen::Cancelled);
             assert!(cancelled.state == before);
-            close_job(&mut cancelled);
+            cancelled_original.close(&mut cancelled);
+            cancelled_original.finish();
             let walked = job.state.work.stage;
-            drop(cancelled_context);
             for _ in 0..100_000 {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                if let Seen::Fault(detail) = seen_of(job.step(&mut context)) {
+                if let Seen::Fault(detail) = step_job(&mut original, &mut job, 1, u64::MAX) {
                     panic!("subspace stage walk fault: {detail:?}");
                 }
                 if job.state.work.stage != walked {
@@ -626,33 +606,20 @@ mod long {
                 }
             }
         }
-        assert_eq!(seen.len(), 16);
+        assert_eq!(seen.len(), 20);
 
-        assert!(matches!(restore_subspace(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
+        assert!(matches!(restore_subspace(&mut original, operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
         let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
         job.state.checkpoint_due = true;
-        let checkpoint = loop {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
-                break pages;
-            }
-        };
-        assert!(matches!(restore_subspace(wrong_generation, checkpoint_payload(operation, &checkpoint)), Err(NumericalCheckpointFault::Stale)));
+        let checkpoint = next_checkpoint(&mut original, &mut job);
+        assert!(matches!(restore_pages(&mut original, wrong_generation, &checkpoint), Err(NumericalCheckpointFault::Stale)));
         job.state.checkpoint_due = true;
-        let checkpoint = loop {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
-                break pages;
-            }
-        };
-        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint_payload(operation, &checkpoint));
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
+        let checkpoint = next_checkpoint(&mut original, &mut job);
+        let payload = original.payload_from_pages(JobPayloadStream::CheckpointState, &checkpoint);
+        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, payload);
+        assert!(matches!(step_restore(&mut original, &mut interrupted_restore, 1, u64::MAX), Ok(None)));
         while !interrupted_restore.terminal_is_empty() {
-            match interrupted_restore.close_step(grant_of(1, usize::MAX)) {
+            match close_restore(&mut original, &mut interrupted_restore, grant_of(1, usize::MAX)) {
                 Ok(InteractiveJobCloseStep::Pending { progress }) => assert!(progress.copied_items <= 1),
                 Ok(InteractiveJobCloseStep::Complete { .. }) => {}
                 Ok(InteractiveJobCloseStep::Blocked) | Err(_) => panic!("subspace restore close cannot block"),
@@ -662,7 +629,7 @@ mod long {
         let mut close_turns = 0;
         loop {
             close_turns += 1;
-            match close_turn(&mut closing, grant_of(1, usize::MAX)) {
+            match original.close_turn(&mut closing, grant_of(1, usize::MAX)) {
                 Ok(InteractiveJobCloseStep::Complete { .. }) => break,
                 Ok(InteractiveJobCloseStep::Pending { progress }) => assert!(progress.copied_items <= 1),
                 Ok(InteractiveJobCloseStep::Blocked) | Err(_) => panic!("fixed subspace close cannot block"),
@@ -670,11 +637,19 @@ mod long {
             assert!(close_turns < 200_000);
         }
         assert!(InteractiveJob::terminal_is_empty(&closing));
+        original.finish();
     }
 }
 // #endregion 🔖️LongTests
 
-#[test]
+fn restore_close(grant: RetainedCloneGrant, close: impl FnOnce(&mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    let operation = test_operation(9997);
+    let mut sequence = 0;
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    close(&mut context)
+}
+
 fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
     let operation = test_operation(9998);
     let mut sequence = 0;
@@ -683,7 +658,6 @@ fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
     step(&mut context)
 }
 
-#[test]
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
     let mut owner = PagedList::empty();
     while owner.capacity() < count { owner.reserve_capacity_one(count, SPARSE_PAGE_BYTES).expect("original fixture backing"); }

@@ -40,7 +40,7 @@ class DistributionBundleScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const command = segments[0];
     if (segments.length !== 1 || !["generate", "preview", "check"].includes(command ?? "")) throw new Error("distribution expects exactly generate, preview or check");
-    const destination = resolve(import.meta.dir, "../..", DISTRIBUTION_LAYOUT.directory);
+    const destination = resolve(import.meta.dirname, "../..", DISTRIBUTION_LAYOUT.directory);
     distributionProgress("compiling bounded distribution through an owned carried child");
     return withDistributionPlanV1(this.repoRoot,this.invocation,async(plan,artifactRoot)=>{
     distributionProgress(`witnessed ${plan.manifest.inputs.length} compiler inputs and ${plan.manifest.outputs.length} outputs`);

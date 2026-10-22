@@ -21,14 +21,6 @@ pub struct ChangeSelectedCheckIndex {
 impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMutation> for ChangeSelectedCheckIndex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selected-check-index", kind: "change-selected-check-index", record: "ChangedSelectedCheckIndex" };
 
-    fn diff(&self, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfigDiff> {
-        diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &NormResultsWindowConfig) -> Result<Vec<NormResultsWindowConfigMutation>, semio_framework_value::ValueError> {
-        inverse::inverse(self, base)
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
         match self.index {
@@ -41,6 +33,15 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
             None => "Auswahl der Konformitätsprüfung aufheben".into(),
         }
         })
+    }
+}
+
+impl protocol::ColdMutationKind<NormResultsWindowConfig, NormResultsWindowConfigMutation> for ChangeSelectedCheckIndex {
+    fn diff(&self, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfigDiff> {
+        diff::diff(self, base)
+    }
+    fn inverse(&self, base: &NormResultsWindowConfig) -> Result<Vec<NormResultsWindowConfigMutation>, semio_framework_value::ValueError> {
+        inverse::inverse(self, base)
     }
 }
 

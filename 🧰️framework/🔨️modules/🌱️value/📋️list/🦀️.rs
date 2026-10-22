@@ -225,6 +225,11 @@ impl<T, const N: usize> PagedList<T, N> {
         }
         Ok(output)
     }
+    /// 📐️ The least capacity at or above `length` that ends on a whole payload page, so an owner can keep growing page by page.
+    pub fn whole_page_capacity(&self, length: usize) -> usize {
+        let items = self.page_items();
+        length.div_ceil(items).saturating_mul(items).min(N)
+    }
     fn page_items(&self) -> usize {
         if size_of::<T>() == 0 {
             N.max(1)

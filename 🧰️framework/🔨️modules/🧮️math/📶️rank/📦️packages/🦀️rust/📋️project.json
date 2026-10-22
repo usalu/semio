@@ -29,7 +29,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test-source",
+        "command": "repo ./📜️script.ts test-source",
         "cwd": "🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust"
       }
     },
@@ -45,7 +45,7 @@
       "outputs": [],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "cwd": "🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust"
       }
     }

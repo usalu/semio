@@ -175,6 +175,38 @@
             }
           }
         },
+        "OptionalQuotaPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "lowWaterBytes",
+            "minimumAvailableBytes",
+            "retirementWindowMilliseconds"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "lowWaterBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minimumAvailableBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2684354560
+            },
+            "retirementWindowMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            }
+          }
+        },
         "ReclamationResult": {
           "type": "object",
           "additionalProperties": false,
@@ -210,6 +242,9 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
+            },
+            "partial": {
+              "const": true
             }
           }
         },
@@ -242,6 +277,9 @@
             }
           }
         }
+      },
+      "protocol": {
+        "retirementBatchEntries": 64
       }
     },
     "OptionalLedger": {
@@ -788,17 +826,16 @@
         },
         "phases": {
           "type": "array",
-          "minItems": 6,
-          "maxItems": 7,
+          "minItems": 5,
+          "maxItems": 6,
           "items": {
             "enum": [
               "selected-underfloor",
-              "optional-deferred",
               "reader-close",
               "coarse-fresh-image",
               "optional-original-writer",
               "authenticated-recovery",
-              "scoped-underfloor"
+              "scoped-consumed"
             ]
           }
         }
@@ -942,8 +979,8 @@
             },
             "runtimeSourceEntries": {
               "type": "array",
-              "minItems": 3,
-              "maxItems": 3,
+              "minItems": 4,
+              "maxItems": 4,
               "uniqueItems": true,
               "items": {
                 "type": "string",
@@ -953,7 +990,7 @@
           }
         },
         "command": {
-          "const": "bun ./📜️script.ts test"
+          "const": "repo ./📜️script.ts test"
         },
         "forwardAllArgs": {
           "const": false
@@ -1063,38 +1100,84 @@
         "mutateTo": {
           "type": "integer",
           "minimum": 0
+        },
+        "unsafe": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "a",
+              "b"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "imageBusy": {
+          "type": "boolean"
         }
       }
     },
     "ScopedOptionalRecoveryResult": {
       "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "acquired",
-        "availableBytes",
-        "retiredBytes",
-        "retiredFiles"
-      ],
-      "properties": {
-        "acquired": {
-          "const": true
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consumed",
+            "acquired",
+            "availableBytes",
+            "retiredBytes",
+            "retiredFiles"
+          ],
+          "properties": {
+            "consumed": {
+              "const": true
+            },
+            "acquired": {
+              "const": true
+            },
+            "availableBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "retiredBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "retiredFiles": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
         },
-        "availableBytes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "retiredBytes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "retiredFiles": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 131072
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consumed",
+            "acquired",
+            "retiredBytes",
+            "retiredFiles"
+          ],
+          "properties": {
+            "consumed": {
+              "const": true
+            },
+            "acquired": {
+              "const": false
+            },
+            "retiredBytes": {
+              "const": 0
+            },
+            "retiredFiles": {
+              "const": 0
+            }
+          }
         }
-      }
+      ]
     },
     "ScopedOptionalNativeCase": {
       "type": "object",
@@ -1105,7 +1188,8 @@
         "leafBytes",
         "requiredRecoveryBytes",
         "requestMinimum",
-        "requestMaximum"
+        "requestMaximum",
+        "retainedSibling"
       ],
       "properties": {
         "filesystemBytes": {
@@ -1125,6 +1209,9 @@
         },
         "requestMaximum": {
           "const": 33554432
+        },
+        "retainedSibling": {
+          "const": "publication.json"
         }
       }
     },
@@ -1277,6 +1364,281 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 65
+        }
+      }
+    },
+    "OptionalRetirementBatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "leaves",
+        "lowWaterBytes",
+        "requiredAvailableBytes",
+        "fault",
+        "failAfter",
+        "retired",
+        "rechecks",
+        "error"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "leaves": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 129
+        },
+        "lowWaterBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 129
+        },
+        "requiredAvailableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "fault": {
+          "enum": [
+            null,
+            "cancel",
+            "undefined",
+            "identity",
+            "hardlink",
+            "blocks",
+            "native",
+            "final-undefined"
+          ]
+        },
+        "failAfter": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 129
+        },
+        "retired": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 129
+        },
+        "rechecks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "error": {
+          "enum": [
+            null,
+            "primary",
+            "undefined",
+            "identity",
+            "blocks"
+          ]
+        }
+      }
+    },
+    "OptionalRetirementLifecycleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "acquired",
+        "retiredFiles",
+        "retainedOptionalBytes",
+        "availableBytes",
+        "fault",
+        "value",
+        "error"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acquired": {
+          "type": "boolean"
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "retainedOptionalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 101
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "fault": {
+          "enum": [
+            null,
+            "undefined"
+          ]
+        },
+        "value": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "error": {
+          "enum": [
+            null,
+            "pressure",
+            "undefined"
+          ]
+        }
+      }
+    },
+    "MaintenanceCoordinate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "canonical"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "identity"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "selection",
+                "dataset"
+              ]
+            },
+            "identity": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
+    },
+    "ScopedOptionalGroupFailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "failure",
+        "effects"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "failure": {
+          "enum": [
+            "false",
+            "undefined",
+            "cancel",
+            "permission",
+            "identity",
+            "busy",
+            "close",
+            "release"
+          ]
+        },
+        "effects": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "OptionalRetirementDelegationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "retained",
+        "retiredBytes",
+        "retiredFiles",
+        "failure",
+        "mutateTo"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retained": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          }
+        },
+        "retiredBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "failure": {
+          "enum": [
+            null,
+            "false",
+            "undefined",
+            "cancel",
+            "identity"
+          ]
+        },
+        "mutateTo": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "ScopedOptionalOwnReaderCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "refusal",
+        "groupCalls"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "refusal": {
+          "const": "Cannot close Native image inside its cleanup reader"
+        },
+        "groupCalls": {
+          "const": 0
         }
       }
     }

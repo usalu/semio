@@ -40,7 +40,7 @@ it("matches the language-neutral dashboard contract through Ajv and direct compa
 
 it("routes every canonical target through its owner script and manifest readiness", () => {
   for (const [id, target] of targets) {
-    expect({ executor: target.executor, cwd: target.options.cwd, command: target.options.command }).toEqual({ executor: contract.const.executor, cwd: contract.const.cwd, command: `bun ./📜️script.ts ${id}` });
+    expect({ executor: target.executor, cwd: target.options.cwd, command: target.options.command }).toEqual({ executor: contract.const.executor, cwd: contract.const.cwd, command: `repo ./📜️script.ts ${id}` });
     const ready = target.metadata?.semio?.dashboard?.ready;
     if (ready) expect(ready).toEqual({ port: manifest.semio.app.port.dev, portEnv: manifest.semio.app.port.env });
   }

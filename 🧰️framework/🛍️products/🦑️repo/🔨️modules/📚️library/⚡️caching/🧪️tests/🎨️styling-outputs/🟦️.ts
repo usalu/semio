@@ -25,10 +25,10 @@ export async function testStylingOutputs(workspace: string, output: string): Pro
   put("Directory.Build.targets", "<Project />");
   put(".gitignore", "node_modules\n.nx\ndist\nstate\noracle\nconsumer\n.runs\n.deps\n.🧬semio\n");
   put(join(packagePath, "project.json"), JSON.stringify({ name: "styling", targets: {
-    deps: { executor: "nx:run-commands", cache: false, outputs: [], options: { command: "bun ./📜️script.ts deps", cwd: "." } },
-    generate: { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/🧫️palette.cs", "{workspaceRoot}/📜️script.ts"], outputs: [`{workspaceRoot}/${fixture.owner}/${fixture.source}`], options: { command: "bun ./📜️script.ts generate", cwd: "." } },
+    deps: { executor: "nx:run-commands", cache: false, outputs: [], options: { command: "repo ./📜️script.ts deps", cwd: "." } },
+    generate: { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/🧫️palette.cs", "{workspaceRoot}/📜️script.ts"], outputs: [`{workspaceRoot}/${fixture.owner}/${fixture.source}`], options: { command: "repo ./📜️script.ts generate", cwd: "." } },
     build: { executor: "nx:run-commands", cache: project.targets.build.cache, dependsOn: ["deps", "generate"], outputs: project.targets.build.outputs,
-      inputs: ["{projectRoot}/🔷️.csproj", { dependentTasksOutputFiles: "**/*" }, "{workspaceRoot}/📜️script.ts"], options: { command: "bun ./📜️script.ts build", cwd: "." } }
+      inputs: ["{projectRoot}/🔷️.csproj", { dependentTasksOutputFiles: "**/*" }, "{workspaceRoot}/📜️script.ts"], options: { command: "repo ./📜️script.ts build", cwd: "." } }
   } }));
   put("📜️script.ts", `import { appendFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";

@@ -519,7 +519,7 @@ where
     admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
     let inverse = ::protocol::Mutation::inverse(mutation, base)?;
     let diff = ::protocol::Mutation::diff(mutation, base).into_parts().0;
-    let post = ::protocol::apply_diff(&diff, base).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
+    let post = ::protocol::apply_diff_cold(&diff, base).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
     Ok((post, inverse))
 }
 

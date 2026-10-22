@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -32,8 +32,9 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+
 import { dirname, join } from "node:path";
+import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -87,7 +88,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 /** 🦀️ Shells `cargo run` in the crate directory — cargo needs to run FROM there, so every path this
  * file passes it (`--out`) is resolved to an absolute path first. */
 function runCodec(args: readonly string[]): { status: number | null; stderr: string } {
-  const run = spawnSync("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
+  const run = runToolSyncV1("cargo", ["run", "--quiet", "--bin", "note-oracle-codec", "--", ...args], { cwd: CRATE_DIR, encoding: "utf8" });
   return { status: run.status, stderr: (run.stderr ?? "").trim() };
 }
 
@@ -117,7 +118,7 @@ async function fixtureManifestFor(recipe: Recipe, outDir: string, committed: boo
       packageVersion: ENGINE_BY_CARRIER[primaryCarrier]!.packageVersion,
       engineFamily: ENGINE_BY_CARRIER[primaryCarrier]!.family,
       engineVersion: ENGINE_BY_CARRIER[primaryCarrier]!.version,
-      command: `bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
+      command: `repo ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only ${recipe.id}`,
       seed: 0,
       platform: `${process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux"}-${process.arch === "arm64" ? "arm64" : "x64"}`,
     },

@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/lease-admission/v1",
+  "title": "Directory admission corpus: sweep cadence and bounded admission wait",
+  "definitions": {
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sweep",
+        "pressure",
+        "gate"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sweep": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "intervalMilliseconds",
+              "calls"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "intervalMilliseconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "calls": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "atMs",
+                    "timeoutMs",
+                    "expect"
+                  ],
+                  "properties": {
+                    "atMs": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "timeoutMs": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "expect": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pressure": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "freeRatio", "gate", "expectIntervalMilliseconds"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "freeRatio": {"type": "number", "minimum": 0, "maximum": 1},
+              "gate": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["claimSweepIntervalMilliseconds", "claimSweepPressureFreeRatio", "claimSweepPressureIntervalMilliseconds"],
+                "properties": {
+                  "claimSweepIntervalMilliseconds": {"type": "integer", "minimum": 0},
+                  "claimSweepPressureFreeRatio": {"type": "number", "minimum": 0, "maximum": 1},
+                  "claimSweepPressureIntervalMilliseconds": {"type": "integer", "minimum": 0}
+                }
+              },
+              "expectIntervalMilliseconds": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "gate": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "api",
+              "patienceMilliseconds",
+              "gateHeldMilliseconds",
+              "expect"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "api": {
+                "enum": [
+                  "raw",
+                  "queued"
+                ]
+              },
+              "patienceMilliseconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "gateHeldMilliseconds": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "outcome",
+                  "minElapsedMilliseconds",
+                  "maxElapsedMilliseconds"
+                ],
+                "properties": {
+                  "outcome": {
+                    "enum": [
+                      "granted",
+                      "timed-out"
+                    ]
+                  },
+                  "minElapsedMilliseconds": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maxElapsedMilliseconds": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

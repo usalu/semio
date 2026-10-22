@@ -32,31 +32,12 @@ fn headless_codec_budget() -> semio_framework::kernel::Budget {
     semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
-/// 🌐️ The process's tokio I/O reactor, for the hub DOCUMENT SOCKET and nothing else.
+/// 🌐️ The process's document-socket I/O reactor, for the hub DOCUMENT SOCKET and nothing else: the one [`store::sync::DocumentSocketReactor`] the native artifact actors poll their own socket against, so this gateway owns no runtime of its own.
 ///
-/// 🐛️ `store::sync`'s native artifact actor dials its document socket with
-/// `tokio_tungstenite::connect_async` under a `tokio::time::timeout`
-/// (`🏪️store/🔄️sync/🦀️.rs`, `connect_hub`), and `spawn_actor` captures
-/// `tokio::runtime::Handle::try_current()` **at the moment `ArtifactHost::open` is awaited**, then
-/// `enter()`s it around every turn it polls. A shell binary is inside a tokio runtime when it opens
-/// a document; this gateway is not — `semio_framework_os_services::TokioHostRuntime` is the repo's
-/// own `WorkerPool`-backed host runtime and carries no tokio reactor despite the name. So the
-/// captured handle was `None` and the FIRST socket dial panicked the pool worker with "there is no
-/// reactor running, must be called from the context of a Tokio 1.x runtime" (measured live on hub
-/// 7681, 2026-09-22, `🗑️generated/m10-write-path-7681-note.txt`).
-///
-/// 🧭️ Multi-threaded on purpose, and tiny: a current-thread runtime would register the socket but
-/// park nobody on its I/O driver, so readiness would never be delivered to a future this crate polls
-/// on a worker thread. Two workers are enough for one websocket per open document, and the reactor
-/// is process-wide so it outlives any one workspace — a document actor must not lose its driver
-/// because the session that opened it went away mid-close.
+/// 🐛️ A hub document opened here dials its socket on a `WorkerPool` thread that no Tokio runtime owns (`semio_framework_os_services::TokioHostRuntime` carries no reactor despite the name), so the first dial panicked with "there is no reactor running" until the caller entered a reactor around `ArtifactHost::open` and the guest codec calls (measured live on hub 7681, 2026-09-22). The same reactor drives the event pump of [`store::sync::ArtifactHost::pump_events_key`].
 #[cfg(not(target_arch = "wasm32"))]
-pub fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, GatewayError> {
-    static REACTOR: std::sync::OnceLock<Result<tokio::runtime::Runtime, String>> = std::sync::OnceLock::new();
-    REACTOR
-        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_io().enable_time().thread_name("semio-mcp-document-socket").build().map_err(|error| error.to_string()))
-        .as_ref()
-        .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the hub document-socket reactor: {error}")))
+pub fn hub_socket_reactor() -> Result<&'static store::sync::DocumentSocketReactor, GatewayError> {
+    store::sync::DocumentSocketReactor::shared().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("starting the hub document-socket reactor: {error}")))
 }
 
 /// 💓️ Whether a hub document event is a moment an agent session owes the hub a presence beat: a

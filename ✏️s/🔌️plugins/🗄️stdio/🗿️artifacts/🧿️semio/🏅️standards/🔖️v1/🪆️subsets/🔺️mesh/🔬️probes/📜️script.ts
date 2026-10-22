@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -42,6 +42,7 @@ import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshBVH } from "three-mesh-bvh";
 import Module from "manifold-3d";
+import { installOffBrowserGlobals } from "../../../../../../../🔮️oracles/🧊️mesh/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -67,52 +68,7 @@ type IndexedMesh = { positions: number[]; triangles: number[] };
 //#endregion 🧬️Contract
 
 //#region 📥️Carrier
-/** 🩹️ three's loaders and exporters reach for browser globals. Each of these was found by a probe that
- *  FAILED WITHOUT THEM, and two of the three failed SILENTLY — `GLTFExporter` assigns `onloadend` rather
- *  than `onload`, and `GLTFLoader` dispatches a `ProgressEvent`; a shim missing either does not throw,
- *  the completion callback simply never fires and the run hangs. That is why `main` also carries a
- *  watchdog: in a test harness a hang is worse than a failure, because it reports nothing at all. */
-(globalThis as { requestAnimationFrame?: (cb: () => void) => number }).requestAnimationFrame ??= (cb) => {
-  cb();
-  return 0;
-};
-
-class ShimProgressEvent extends Event {
-  lengthComputable: boolean;
-  loaded: number;
-  total: number;
-  constructor(type: string, init?: { lengthComputable?: boolean; loaded?: number; total?: number }) {
-    super(type);
-    this.lengthComputable = init?.lengthComputable ?? false;
-    this.loaded = init?.loaded ?? 0;
-    this.total = init?.total ?? 0;
-  }
-}
-(globalThis as { ProgressEvent?: unknown }).ProgressEvent ??= ShimProgressEvent;
-
-class ShimFileReader {
-  result: unknown = null;
-  onload: (() => void) | null = null;
-  onloadend: (() => void) | null = null;
-  onerror: ((e: unknown) => void) | null = null;
-  private done(): void {
-    this.onloadend?.();
-    this.onload?.();
-  }
-  readAsArrayBuffer(blob: Blob): void {
-    blob.arrayBuffer().then((buffer) => {
-      this.result = buffer;
-      this.done();
-    }, (error) => this.onerror?.(error));
-  }
-  readAsDataURL(blob: Blob): void {
-    blob.arrayBuffer().then((buffer) => {
-      this.result = `data:${blob.type || "application/octet-stream"};base64,${Buffer.from(buffer).toString("base64")}`;
-      this.done();
-    }, (error) => this.onerror?.(error));
-  }
-}
-(globalThis as { FileReader?: unknown }).FileReader ??= ShimFileReader as unknown as typeof FileReader;
+installOffBrowserGlobals();
 
 function geometryOf(object: THREE.Object3D): THREE.BufferGeometry[] {
   const found: THREE.BufferGeometry[] = [];

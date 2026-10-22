@@ -13,7 +13,7 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let base = scene_snapshot(&vector["base"]);
         let expected = scene_snapshot(&vector["after"]);
         assert_eq!(scene_snapshot(&vector["undo"]), base);
-        assert_eq!(protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
+        assert_eq!(protocol::apply_diff_cold(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
         assert_laws(&mutation::CreateSceneMutation::Apply(payload.clone()), &base, &expected);
         if let Some(malformed) = vector.get("malformedPayload") {
             let text = malformed["encoded"].as_str().unwrap();

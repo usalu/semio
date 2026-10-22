@@ -4,7 +4,7 @@
 use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
 use semio_s_artifact_procedural_2d_model::widget_id;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 #[cfg(test)]
 use semio_framework_artifact_playbook_playbook::FormGeneration;
@@ -461,7 +461,7 @@ pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutati
         delta.retire_cold();
         return Err(messages);
     }
-    let applied = protocol::apply_diff(&delta, &*projection);
+    let applied = protocol::apply_diff_cold(&delta, &*projection);
     delta.retire_cold();
     match applied {
         Ok(next) => {

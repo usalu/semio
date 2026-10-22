@@ -7,7 +7,7 @@ use crate::standards::v2_0::subsets::any::io::binary::mutations::decode_gltf_cha
 use crate::standards::v2_0::subsets::any::io::text::mutations::{decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};
 use crate::standards::v2_0::subsets::any::schema::mutations::change_node_name::*;
 use semio_framework_value::DslValue;
-use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
 fn value(entries: impl IntoIterator<Item = (&'static str, DslValue)>) -> DslValue {
     DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)))
@@ -19,9 +19,9 @@ fn snapshot(name: Option<&str>) -> GltfSnapshot {
 }
 
 fn apply_mutation(base: &GltfSnapshot, mutation: &crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation) -> GltfSnapshot {
-    let outcome = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::diff(mutation, base);
+    let outcome = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::diff(mutation, base);
     assert!(outcome.messages().is_empty(), "mutation must apply: {:?}", outcome.messages());
-    protocol::apply_diff(outcome.diff(), base).expect("aggregate diff applies")
+    protocol::apply_diff_cold(outcome.diff(), base).expect("aggregate diff applies")
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn rename(value: Option<&str>) -> crate::standards::v2_0::subsets::any::schema::
 fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
     let base = snapshot(Some("Root"));
     let forward = rename(Some("Pivot"));
-    let inverse = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![rename(Some("Root"))]);
     let mut current = apply_mutation(&base, &forward);
     assert_eq!(current.document.nodes[0].name.as_deref(), Some("Pivot"));
@@ -53,12 +53,12 @@ fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
     assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::decode_op(&forward.encode_op().expect("binary codec encodes")).expect("binary codec decodes"), forward);
     assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::parse_op(&inverse[0].print_op()).expect("inverse text codec decodes"), inverse[0]);
     assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::decode_op(&inverse[0].encode_op().expect("inverse binary codec encodes")).expect("inverse binary codec decodes"), inverse[0]);
-    let redo = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&inverse[0], &current).expect("valid retained mutation inverse fixture");
+    let redo = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::inverse(&inverse[0], &current).expect("valid retained mutation inverse fixture");
     assert_eq!(redo, vec![rename(Some("Pivot"))]);
     current = apply_mutation(&current, &inverse[0]);
     assert_eq!(current, base);
     assert_eq!(apply_mutation(&current, &redo[0]), snapshot(Some("Pivot")));
-    let stale = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::diff(&redo[0], &snapshot(Some("Pivot")));
+    let stale = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::diff(&redo[0], &snapshot(Some("Pivot")));
     assert_eq!(stale.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.no-op"));
 }
 
@@ -68,8 +68,8 @@ fn none_normalization_and_noops_emit_no_inverse() {
     assert_eq!(absent.document.nodes[0].name, None);
     let restored = apply_mutation(&absent, &rename(Some("Root")));
     assert_eq!(restored.document.nodes[0].name.as_deref(), Some("Root"));
-    assert_eq!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(Some("Root")), &absent).expect("valid retained mutation inverse fixture"), vec![rename(None)]);
-    assert!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(None), &absent).expect("valid retained mutation inverse fixture").is_empty());
+    assert_eq!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::inverse(&rename(Some("Root")), &absent).expect("valid retained mutation inverse fixture"), vec![rename(None)]);
+    assert!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as ColdMutation<GltfSnapshot>>::inverse(&rename(None), &absent).expect("valid retained mutation inverse fixture").is_empty());
     let missing = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::diff(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 1, value: Some("Pivot".into()) }), &snapshot(Some("Root")));
     assert_eq!(missing.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.target-missing"));
 }

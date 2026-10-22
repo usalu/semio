@@ -10,7 +10,7 @@ use semio_framework_os_store_command::HistoryLane;
 
 pub struct PagedProjection<P:SnapshotProjection>{cursor:Option<P::Projection>,closing:bool}
 impl<P:SnapshotProjection> Default for PagedProjection<P>{fn default()->Self{Self{cursor:None,closing:false}}}
-impl<P:SnapshotProjection> SemanticProjection<P> for PagedProjection<P>{
+impl<P:SnapshotProjection<Output=P>> SemanticProjection<P> for PagedProjection<P>{
  fn birth_demand(&self)->RetirementDemand{P::projection_birth_demand()}
  fn begin(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let(c,p)=P::begin_projection(g)?;self.cursor=Some(c);Ok(p)}
  fn demands(&self,s:RetainedCloneRef<'_,P>,b:usize)->Result<RetirementDemand,ValueError>{self.cursor.as_ref().ok_or_else(||invalid("semantic projection cursor absent"))?.demands(s,b)}

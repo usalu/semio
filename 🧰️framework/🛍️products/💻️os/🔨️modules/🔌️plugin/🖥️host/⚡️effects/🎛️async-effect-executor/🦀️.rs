@@ -9,7 +9,7 @@ use super::*;
 // already generic (see `🛎️services`), so `Arc<StorageScheduler>` bare was already ill-typed before
 // this fix; `R` here makes both fields agree. `AsyncEffectExecutor::new` has zero production call
 // sites repo-wide today (see `#region 🎛️AsyncEffectExecutor`'s own header note) — every construction
-// is this module's own tests, all against `semio_framework_async::testkit::ManualRuntime` — so `R`
+// is this module's own tests, all against `semio_framework_async_testkit::ManualRuntime` — so `R`
 // stays a free type parameter here rather than defaulting to that test double.
 pub struct AsyncServices<R: HostAsyncRuntime> {
     pub runtime: Arc<R>,

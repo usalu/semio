@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env repo
 /** 🏘️ Runs every cross-plugin composition law; plugins may not meet anywhere else. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

@@ -1,0 +1,80 @@
+{
+ "version": 1,
+ "built-for": "/private/tmp/i18n-core/t6",
+ "created": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🔣️.json",
+   "after": "ed6b9e28b23fab039e08c77a4293a719956495000cd31484df3cfe3dc7d9f194"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🟦️.ts",
+   "after": "6a24d1847ae7e7937bb88dbf5694fc4bfe98bc9434b6743c3788bff5c9fd5c25"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🧪️tests/🟦️.ts",
+   "after": "f24b0c48bffe401c8428fee3b24fb8dec33178cab08d6fabd27ddb13b82dac3a"
+  }
+ ],
+ "edited": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+   "after": "93b662d7afa2e89a633b825c4ba52aa5fbed3c14710a400d44acb8814d512a35",
+   "base": "0502b3bfb1839d477cef4a1349234b6a70f6bf5fcef1722af2f5b1883602fceb"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
+   "after": "774c4370cdd38bed88c6eac6fc3a8f2251a1366172b78f99cf03345cf8828ea8",
+   "base": "3b10982e5dec48b0e125302ab423936eb3706cfab1a85a9afe41027d9ec6f23d"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/📋️example-argv/🟦️.ts",
+   "after": "32e035de874f5704b2502bed4430a05291d1812e1bb80ed4d5e1eeccbfba86d8",
+   "base": "74e43cbd0811a056073613b4539c9befb11db3fa2c4cfb89aa496a78463268de"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts",
+   "after": "67a12e757295a91146a28807e5cd1d695e51103deef33774f5f26f3d0c92f8a7",
+   "base": "f2ef47883e6743414600a0f92d225e17a9934b5c0ebaabf6a3422621e5ae1acd"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+   "after": "f98eb37482847c529ac873100dfc8896d954f0bd35a03679ec9ac1df0627fe14",
+   "base": "240e486fd4a2daadea0a3b2ea4fa19ba865ad3e17263699e6290a61c27587ad0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
+   "after": "c150491ad4520142a67b8dea961e150ec42f15f7b4539eec5da0006525a5ad5c",
+   "base": "3ee3d715837c351ecdcd39340420f7901dcf5451c613d60550ed27e193fa1dc0"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "after": "2d5598736b041e68a6e4534d1eefe18e6b5e52b306bc0335d9e9851c53a0ece6",
+   "base": "f68ed3e74254cf36b122d63c00ccddd50ed40f2d262c52ebf6b88254516bb423"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts",
+   "after": "0ba5b67b12e47d0bdd2c75cb390ce270a7fd8f6ba2b9bf669fb4853527b688be",
+   "base": "9af66209f89d0255792232a99ec77024290544ac18d42382f4d6921382e35ef7"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts",
+   "after": "b035ba5356779d689a24eff26fb0b2d381d50de70bdc012dacbdabfd9d6707f2",
+   "base": "a21b6fce9e130873dd7454a97aeeb299a1a8faaed1d37b0c9d5c4b69fef0ee13"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts",
+   "after": "5b5da4ae04f16110ba6905ae4330c06bc0dd5cdac84da9ef3d86fb332083b02f",
+   "base": "6db9f4b0638c530c077017e57cc18611aa9e532ad4ccd928fcd253f5ef98b8e4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts",
+   "after": "a57196f19d9473b57eaa1a991a50968d891f52f77d542e92a3c8b15a9520203d",
+   "base": "1cd86c79d79262c1b9ff2fd1f5c2944686c65776c40543a606f3a40694c16eb4"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts",
+   "after": "25ec0aaa1f0959df39744c2ea65cc47bb432f8f9424759e04457f8256e4bbd70",
+   "base": "40973b3acd442cebe2fe686c41654d81419d29f3e334ae491be774641936bbdc"
+  }
+ ]
+}

@@ -1,6 +1,9 @@
 //! 🔄️ Owned runtime: the operations of the owned interpreter runtime over its guest instances. See [`super`].
 
 use super::*;
+use original_actor_context::{OriginalOwnedJobCall, OriginalOwnedJobFixedReceipt, OriginalOwnedJobStatus};
+use semio_framework_actor::{OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobBudget, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobSource, OriginalJobStartReply, OriginalJobStepReply};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 //#region 🧠️OwnedRuntime
 impl OwnedRuntime {
@@ -75,7 +78,7 @@ impl OwnedRuntime {
     /// export first assembles the plugin bundle — and keeps the instance it completed on. Its answer, a refusal, is read only
     /// to know the export completed as the ABI says.
     fn assemble_codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOrigin, TurnFault> {
-        let actor = owned.artifact.instantiate()?;
+        let actor = owned.artifact.instantiate().map_err(core_fault)?;
         if actor.startup_active() {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
@@ -270,31 +273,96 @@ impl OwnedRuntime {
     /// ♻️ Runs one closing step of the original actor context of `state`.
     pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
 
-    /// 👷️ Starts guest job `job` of `kind` on `state`.
-    pub fn start_actor_job(&self, state: &mut OwnedGuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
-        let input = semio_framework_pack_json::to_json_string(&OwnedStartJobInput { job, kind, input }).into_bytes();
-        begin_owned_operation(state, OwnedOperation::StartJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000_000)?;
-        decode_owned_result(&invocation.output)
-    }
-
-    /// 🪜️ Steps guest job `job` of `state` once under `budget`.
-    pub fn step_actor_job(&self, state: &mut OwnedGuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        let input = semio_framework_pack_json::to_json_string(&OwnedStepJobInput { job, budget }).into_bytes();
-        begin_owned_operation(state, OwnedOperation::StepJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, u64::from(budget.deadline_ms)*1000)?;
-        decode_owned_result(&invocation.output)
-    }
-
-    /// 🛑️ Cancels guest job `job` of `state`, abandoning whatever owned operation is in flight first.
-    pub fn cancel_actor_job(&self, state: &mut OwnedGuestInstance, job: u64) -> Result<(), TurnFault> {
-        if state.pending.as_ref().is_some_and(|pending| pending.operation != OwnedOperation::CancelJob) {
-            cancel_owned_operation(state)?;
+    /// 🛰️ Drives one owned job export to its resident fixed receipt, reporting the instructions it spent even when it fails.
+    fn drive_job(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,fuel:u64,deadline_us:u64)->Result<(Vec<u8>,u64),OwnedJobFailure>{
+        let began=match json{Some(bytes)=>begin_owned_operation(state,operation,Some(bytes)),None=>begin_owned_scalar_operation(state,operation,arguments)};
+        if let Err(fault)=began{return Err(OwnedJobFailure{fault,submitted:false,spent:0})}
+        match resume_owned_operation_observed(state,operation,fuel,deadline_us,OwnedDeadline::Original,|_,_|{},None){
+            Ok(invocation)=>Ok((invocation.output,invocation.fuel_used)),
+            Err(fault)=>{let spent=state.pending.as_ref().map_or(0,|pending|pending.fuel_used);let _=cancel_owned_operation(state);Err(OwnedJobFailure{fault,submitted:true,spent})}
         }
-        let input = semio_framework_pack_json::to_json_string(&OwnedCancelJobInput { job }).into_bytes();
-        begin_owned_operation(state, OwnedOperation::CancelJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, u64::from(OWNED_SLICE_DEADLINE_MS)*1000)?;
-        decode_owned_result(&invocation.output)
+    }
+
+    /// 🧾️ One owned job crossing: validates its actual execution authorization, drives the export and reads its fixed receipt.
+    fn job_call<T>(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget,source:Option<OriginalJobSource>,reply:impl FnOnce(OriginalOwnedJobCall,Option<OriginalJobSource>)->Result<T,TurnFault>)->OriginalGuestJobCall<T>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(error))}
+        let receipt=|spent:u64|OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent.min(execution.fuel)),submitted:true};
+        match self.drive_job(state,operation,json,arguments,execution.fuel,execution.deadline_us){
+            Err(failure) if !failure.submitted=>OriginalGuestJobCall::unsubmitted(execution,source,failure.fault),
+            Err(failure)=>OriginalGuestJobCall{original:Err(failure.fault),execution:receipt(failure.spent),returned_unsubmitted_source:None},
+            Ok((bytes,spent))=>{
+                let original=OriginalOwnedJobFixedReceipt::read(&bytes).map_err(identity_turn_fault).and_then(|call|if call.input==budget.input{reply(call,source)}else{Err(identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"owned job receipt differs from its original crossing")))});
+                OriginalGuestJobCall{original,execution:receipt(spent),returned_unsubmitted_source:None}
+            }
+        }
+    }
+
+    /// 📥️ Starts the prepared original job source on `state`; a refused admission leaves the caller's source unconsumed.
+    pub fn start_actor_job(&self,state:&mut OwnedGuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
+        let json=match serde_json::to_vec(&OwnedStartJobInput{source:&source,budget}){Ok(json)=>json,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,source,TurnFault::Trapped(error.to_string()))};
+        self.job_call(state,OwnedOperation::StartJob,Some(json),Vec::new(),budget,execution,source,|call,source|match call.status{
+            OriginalOwnedJobStatus::Start{admitted,returned_source}=>Ok(OriginalJobStartReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,admitted,returned_source:if returned_source{source}else{None},refusal:call.refusal}),
+            _=>Err(job_status_fault()),
+        })
+    }
+
+    /// 🪜️ Steps guest job `job` of `state` once under its original budget.
+    pub fn step_actor_job(&self,state:&mut OwnedGuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
+        self.job_call(state,OwnedOperation::StepJob,None,job_arguments(Some(job),budget),budget,execution,None,|call,_|match call.status{
+            OriginalOwnedJobStatus::Step{outcome,source_closed}=>Ok(OriginalJobStepReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,outcome,source_closed,refusal:call.refusal}),
+            _=>Err(job_status_fault()),
+        })
+    }
+
+    /// 📦️ Reads one bounded output page: the page is borrowed from guest memory, copied, and handed back inside the same crossing.
+    pub fn read_actor_job_output(&self,state:&mut OwnedGuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        let Some(read_budget)=reserve_handback(budget)else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original output page read cannot fund its handback")))};
+        let read=self.job_call(state,OwnedOperation::ReadJobOutput,None,job_arguments(Some(job),read_budget),read_budget,execution,None,|call,_|Ok(call));
+        let page=match read.original{Ok(page)=>page,Err(fault)=>return OriginalGuestJobCall{original:Err(fault),execution:read.execution,returned_unsubmitted_source:None}};
+        let OriginalOwnedJobStatus::Output{chunk,source_closed}=page.status else{return OriginalGuestJobCall{original:Err(job_status_fault()),execution:read.execution,returned_unsubmitted_source:None}};
+        let spent_read=read.execution.spent_fuel.unwrap_or(0);
+        let finish=|bytes:Option<Vec<u8>>,spent:RetainedCloneProgress,work:u64|OriginalJobOutputReply{input:page.input,spent,work_units_spent:work,chunk:chunk.map(|chunk|OriginalJobOutputChunk{offset:chunk.offset,bytes,output_closed:chunk.output_closed}),source_closed,refusal:page.refusal};
+        let Some((offset,length))=chunk.and_then(|chunk|chunk.byte_length.map(|length|(chunk.offset,length)))else{return OriginalGuestJobCall{original:Ok(finish(None,page.spent,page.work_units_spent)),execution:read.execution,returned_unsubmitted_source:None}};
+        let remaining=execution.fuel.saturating_sub(spent_read);
+        let borrowed=self.drive_job(state,OwnedOperation::BorrowJobOutput,None,vec![Value::I64(job as i64),Value::I64(budget.input.operation as i64),Value::I64(budget.input.generation as i64),Value::I64(offset as i64),Value::I64(length as i64)],remaining,execution.deadline_us);
+        let (bytes,spent_borrow)=match borrowed{Ok(done)=>done,Err(failure)=>return OriginalGuestJobCall{original:Err(failure.fault),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent_read.saturating_add(failure.spent).min(execution.fuel)),submitted:true},returned_unsubmitted_source:None}};
+        let spent_so_far=spent_read.saturating_add(spent_borrow);
+        let Some(ack_budget)=remaining_job_budget(budget,page.spent,page.work_units_spent)else{return OriginalGuestJobCall{original:Err(job_status_fault()),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent_so_far.min(execution.fuel)),submitted:true},returned_unsubmitted_source:None}};
+        let mut arguments=vec![Value::I64(job as i64),Value::I64(offset as i64),Value::I64(length as i64)];
+        arguments.extend(ack_budget.scalar_arguments().into_iter().map(|value|Value::I64(value as i64)));
+        let acknowledged=self.drive_job(state,OwnedOperation::AcknowledgeJobOutputChunk,None,arguments,execution.fuel.saturating_sub(spent_so_far),execution.deadline_us);
+        let (receipt,spent_ack)=match acknowledged{Ok(done)=>done,Err(failure)=>return OriginalGuestJobCall{original:Err(failure.fault),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent_so_far.saturating_add(failure.spent).min(execution.fuel)),submitted:true},returned_unsubmitted_source:None}};
+        let total=spent_so_far.saturating_add(spent_ack).min(execution.fuel);
+        let original=OriginalOwnedJobFixedReceipt::read(&receipt).map_err(identity_turn_fault).and_then(|ack|match ack.status{
+            OriginalOwnedJobStatus::Acknowledge{acknowledged:true,..} if ack.refusal.is_none()&&ack.input==budget.input=>page.spent.checked_add(ack.spent).map(|spent|finish(Some(bytes),spent,page.work_units_spent.saturating_add(ack.work_units_spent))).map_err(identity_turn_fault),
+            _=>Err(job_status_fault()),
+        });
+        OriginalGuestJobCall{original,execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(total),submitted:true},returned_unsubmitted_source:None}
+    }
+
+    /// 🤝️ Acknowledges the fully read output of guest job `job`, which closes its guest source.
+    pub fn acknowledge_actor_job_output(&self,state:&mut OwnedGuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
+        self.job_call(state,OwnedOperation::AcknowledgeJobOutput,None,job_arguments(Some(job),budget),budget,execution,None,|call,_|match call.status{
+            OriginalOwnedJobStatus::Acknowledge{acknowledged,source_closed}=>Ok(OriginalJobOutputAckReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,acknowledged,source_closed,refusal:call.refusal}),
+            _=>Err(job_status_fault()),
+        })
+    }
+
+    /// 🛑️ Admits the cancellation of guest job `job` of `state`.
+    pub fn cancel_actor_job(&self,state:&mut OwnedGuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        self.job_call(state,OwnedOperation::CancelJob,None,job_arguments(Some(job),budget),budget,execution,None,|call,_|match call.status{
+            OriginalOwnedJobStatus::Cancel{admitted}=>Ok(OriginalJobCancelReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,admitted,refusal:call.refusal}),
+            _=>Err(job_status_fault()),
+        })
+    }
+
+    /// ♻️ Closes every guest job and retained output of `state` before its actor context closes.
+    pub fn close_actor_jobs(&self,state:&mut OwnedGuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        self.job_call(state,OwnedOperation::CloseJobs,None,job_arguments(None,budget),budget,execution,None,|call,_|match call.status{
+            OriginalOwnedJobStatus::Close{admitted}=>Ok(OriginalJobCancelReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,admitted,refusal:call.refusal}),
+            _=>Err(job_status_fault()),
+        })
     }
 
     /// 📸️ Frames `state` — its in-flight operation, original receipt, guest checkpoint and interpreter memory — as one owned
@@ -353,3 +421,24 @@ impl OwnedRuntime {
     }
 }
 //#endregion 🧠️OwnedRuntime
+
+/// 💥️ A failed owned job drive: whether the guest ever received the call, and the instructions it spent first.
+struct OwnedJobFailure{fault:TurnFault,submitted:bool,spent:u64}
+
+/// 🧮️ The fixed scalar arguments of an owned job export: the optional job, then the whole original budget.
+fn job_arguments(job:Option<u64>,budget:OriginalJobBudget)->Vec<Value>{job.into_iter().chain(budget.scalar_arguments()).map(|value|Value::I64(value as i64)).collect()}
+
+fn job_status_fault()->TurnFault{identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"owned job receipt carries another job status"))}
+
+/// 🪙️ Withholds the one item and instruction a page handback needs, so the read can never leave its page borrowed.
+fn reserve_handback(budget:OriginalJobBudget)->Option<OriginalJobBudget>{
+    let policy=budget.retained_policy;
+    if policy.maximum_items==0||policy.maximum_depth==0||budget.fuel==0{return None}
+    Some(OriginalJobBudget{retained_policy:RetainedCloneGrant{maximum_items:policy.maximum_items-1,..policy},fuel:budget.fuel-1,..budget})
+}
+
+/// 🪙️ What an original budget still funds after a call spent `spent` retained progress and `work` logical work units.
+fn remaining_job_budget(budget:OriginalJobBudget,spent:RetainedCloneProgress,work:u64)->Option<OriginalJobBudget>{
+    let policy=budget.retained_policy;
+    Some(OriginalJobBudget{retained_policy:RetainedCloneGrant{maximum_items:policy.maximum_items.checked_sub(spent.copied_items)?,maximum_copy_bytes:policy.maximum_copy_bytes.checked_sub(spent.copied_bytes)?,maximum_capacity_bytes:policy.maximum_capacity_bytes.checked_sub(spent.retained_capacity_bytes)?,maximum_release_bytes:policy.maximum_release_bytes.checked_sub(spent.released_bytes)?,maximum_depth:policy.maximum_depth},fuel:budget.fuel.checked_sub(work)?,..budget})
+}

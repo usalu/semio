@@ -2,10 +2,10 @@
   "name": "@semio-tech/schema-state-rs",
   "private": true,
   "scripts": {
-    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-state-rs:test --skip-cache",
-    "test-quick": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-state-rs:test --skip-cache -- quick",
-    "test-long": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-state-rs:test --skip-cache -- long",
-    "test-exhaustive": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-state-rs:test --skip-cache -- exhaustive"
+    "test": "repo run @semio-tech/schema-state-rs:test --skip-cache",
+    "test-quick": "repo run @semio-tech/schema-state-rs:test --skip-cache -- quick",
+    "test-long": "repo run @semio-tech/schema-state-rs:test --skip-cache -- long",
+    "test-exhaustive": "repo run @semio-tech/schema-state-rs:test --skip-cache -- exhaustive"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

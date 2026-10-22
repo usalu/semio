@@ -1,0 +1,199 @@
+{
+ "version": 1,
+ "subject": [
+  {
+   "subject": "🐙️ueli🎆️26🌙️10☀️21🚩️5",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "subject": "  🎆️26🌙️10☀️21  ",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "subject": "no date",
+   "expected": null
+  },
+  {
+   "subject": "🐙ueli🎆26🌙10☀21",
+   "expected": null
+  },
+  {
+   "subject": "x🎆️26🌙️10☀️21y🎆️26🌙️10☀️22",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "subject": "🎆️26🌙️1☀️21",
+   "expected": null
+  },
+  {
+   "subject": "",
+   "expected": null
+  }
+ ],
+ "body": [
+  {
+   "body": "line\n🎆️26🌙️10☀️21⏰️10⌚️00⏱️00\nmore",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "body": "🎆️26🌙️10☀️21\n🎆️26🌙️10☀️22⏰️1",
+   "expected": "🎆️26🌙️10☀️22"
+  },
+  {
+   "body": "  🎆️26🌙️10☀️22⏰️x  ",
+   "expected": "🎆️26🌙️10☀️22"
+  },
+  {
+   "body": "🐙ueli🎆️26🌙️10☀️21⏰️1",
+   "expected": null
+  },
+  {
+   "body": "",
+   "expected": null
+  },
+  {
+   "body": "a\nb",
+   "expected": null
+  },
+  {
+   "body": "🎆️26🌙️10☀️21⏰️1\n🎆️26🌙️10☀️22⏰️2",
+   "expected": "🎆️26🌙️10☀️21"
+  }
+ ],
+ "commit": [
+  {
+   "subject": "s 🎆️26🌙️10☀️21",
+   "body": "🎆️26🌙️10☀️22⏰️1",
+   "expected": "🎆️26🌙️10☀️22"
+  },
+  {
+   "subject": "s 🎆️26🌙️10☀️21",
+   "body": "none",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "subject": "none",
+   "body": "none",
+   "expected": null
+  },
+  {
+   "subject": "none",
+   "body": "🎆️26🌙️10☀️22⏰️1",
+   "expected": "🎆️26🌙️10☀️22"
+  }
+ ],
+ "normalize": [
+  {
+   "line": "🎆️26🌙️10☀️21📊️metric📃uloc💯️1k  ",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "line": "  🎆️26🌙️10☀️21  ",
+   "expected": "🎆️26🌙️10☀️21"
+  },
+  {
+   "line": "plain",
+   "expected": "plain"
+  },
+  {
+   "line": "🎆️26🌙️10☀️21x📊️metric",
+   "expected": "🎆️26🌙️10☀️21x"
+  }
+ ],
+ "format": [
+  {
+   "line": "🎆️26🌙️10☀️21",
+   "ulocDelta": {
+    "added": 10,
+    "removed": 1,
+    "edited": 2
+   },
+   "sizeDelta": {
+    "added": 4096,
+    "removed": 0,
+    "edited": 0
+   },
+   "ulocBloc": 800,
+   "sizeBloc": 120000,
+   "expected": "🎆️26🌙️10☀️21📊️metric📃uloc💯️800📈️9➗️1.14➕️10✏️2➖️1🟰️13📊️metric💾size💯️120KB📈️4.1KB➗️3.53➕️4.1KB🟰️4.1KB"
+  },
+  {
+   "line": "🎆️26🌙️10☀️21📊️metricold",
+   "ulocDelta": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   },
+   "sizeDelta": {
+    "added": 0,
+    "removed": 0,
+    "edited": 0
+   },
+   "ulocBloc": 0,
+   "sizeBloc": 0,
+   "expected": "🎆️26🌙️10☀️21📊️metric📃uloc📊️metric💾size"
+  },
+  {
+   "line": "🎆️26🌙️10☀️22",
+   "ulocDelta": {
+    "added": 0,
+    "removed": 5,
+    "edited": 0
+   },
+   "sizeDelta": {
+    "added": 0,
+    "removed": 100,
+    "edited": 0
+   },
+   "ulocBloc": 50,
+   "sizeBloc": 5000,
+   "expected": "🎆️26🌙️10☀️22📊️metric📃uloc💯️50📉️5➗️9.09➖️5🟰️5📊️metric💾size💯️5KB📉️100B➗️1.96➖️100B🟰️100B"
+  }
+ ],
+ "bundleModel": {
+  "wip": [
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️21🔀️",
+    "expected": "🐙️ueli🎆️26🌙️10☀️21"
+   },
+   {
+    "subject": "🎆️26🌙️10☀️21🔀️",
+    "expected": null
+   },
+   {
+    "subject": "🐙️ueli🎆️26🌙️10☀️21🚩️",
+    "expected": null
+   },
+   {
+    "subject": "x🎆️26🌙️10☀️21🔀️ ",
+    "expected": null
+   },
+   {
+    "subject": "a🎆️26🌙️10☀️21🔀️",
+    "expected": "a🎆️26🌙️10☀️21"
+   }
+  ],
+  "date": [
+   {
+    "line": "🎆️26🌙️10☀️21",
+    "expected": true
+   },
+   {
+    "line": "🎆️26🌙️10☀️21x",
+    "expected": false
+   },
+   {
+    "line": " 🎆️26🌙️10☀️21",
+    "expected": false
+   },
+   {
+    "line": "🎆26🌙10☀21",
+    "expected": false
+   },
+   {
+    "line": "🎆️26🌙️10☀️2",
+    "expected": false
+   }
+  ]
+ }
+}

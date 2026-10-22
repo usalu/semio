@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "items": [
+  {
+   "node": {
+    "items": [
+     1,
+     2
+    ]
+   },
+   "expected": [
+    1,
+    2
+   ]
+  },
+  {
+   "node": {
+    "items": []
+   },
+   "expected": []
+  },
+  {
+   "node": {
+    "items": "x"
+   },
+   "expected": []
+  },
+  {
+   "node": {},
+   "expected": []
+  },
+  {
+   "node": null,
+   "expected": []
+  },
+  {
+   "node": "s",
+   "expected": []
+  },
+  {
+   "node": [
+    1
+   ],
+   "expected": []
+  },
+  {
+   "node": 7,
+   "expected": []
+  }
+ ],
+ "bins": {
+  "envCli": "REPO_CLI_BIN",
+  "envMcp": "REPO_MCP_BIN"
+ },
+ "fake": {
+  "ok": {
+   "lines": [
+    "noise",
+    "{\"data\":{\"a\":1}}",
+    "{\"data\":{\"a\":2}}"
+   ],
+   "exit": 0,
+   "expected": {
+    "a": 2
+   }
+  },
+  "payloadWithoutData": {
+   "lines": [
+    "{\"x\":1}"
+   ],
+   "exit": 0,
+   "expected": {
+    "x": 1
+   }
+  },
+  "graphqlErrors": {
+   "lines": [
+    "{\"errors\":[{\"message\":\"boom\"},{\"message\":\"bang\"}]}"
+   ],
+   "exit": 0,
+   "message": "[repo/cli] graphql errors: boom; bang"
+  },
+  "noJson": {
+   "lines": [
+    "plain",
+    "text"
+   ],
+   "exit": 0,
+   "message": "[repo/cli] no JSON lines in stdout: plain"
+  },
+  "exitCode": {
+   "lines": [],
+   "exit": 3,
+   "stderr": "bad things",
+   "message": "[repo/cli] exit 3: bad things"
+  },
+  "arrayLast": {
+   "lines": [
+    "{\"data\":1}",
+    "[1,2]"
+   ],
+   "exit": 0,
+   "expected": [
+    1,
+    2
+   ]
+  }
+ },
+ "defaultSuffix": [
+  ".🧬semio",
+  "🦑️repo",
+  "⚡️cache",
+  "🗃️bin"
+ ],
+ "modes": [
+  "prototype",
+  "release"
+ ],
+ "badMode": "debug"
+}

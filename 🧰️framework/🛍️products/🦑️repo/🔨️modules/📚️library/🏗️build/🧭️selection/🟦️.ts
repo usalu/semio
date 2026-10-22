@@ -1,3 +1,5 @@
+import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
+export {buildOptionsV1} from "./📥️options/🟦️.ts";
 import type { BuildGraphV1 } from "../🕸️graph/🟦️.ts";
 import type { BuildWatchChildPortV1 } from "./👁️watch/🟦️.ts";
 import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -8,21 +10,11 @@ import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
 import ownership from "../../🗂️workspaces/🔣️policy.json" with { type: "json" };
 import { watch } from "node:fs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { GlobV1 } from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
 
 /** 🔎️ Reads portable options without crossing the task argument boundary. */
 export function buildOptionV1(args:readonly string[],name:string,short?:string):string|undefined {
   return buildOptionsV1(args,short?[name,short]:[name]).at(-1);
-}
-
-/** 🧺️ Retains repeatable option occurrences in order without reading literal task arguments. */
-export function buildOptionsV1(args:readonly string[],names:readonly string[]):string[] {
-  const selected:string[]=[];
-  for(let index=0;index<args.length&&args[index]!=="--";index++){
-    const argument=args[index]!;
-    if(names.some(name=>argument===`--${name}`||argument===`-${name}`)){const value=args[index+1];if(value!==undefined&&!value.startsWith("-")){selected.push(value);index++;}}
-    else if(names.some(name=>argument.startsWith(`--${name}=`)||argument.startsWith(`-${name}=`)))selected.push(argument.slice(argument.indexOf("=")+1));
-  }
-  return selected;
 }
 
 /** 🛑️ Reads the last explicit boolean value without consuming literal callback arguments. */
@@ -41,6 +33,7 @@ export function buildPatternV1(pattern:string,value:string):boolean { if(/[?\[\]
 
 /** 🎯️ Selects projects by identity, root or declared tag. */
 export function selectBuildProjectsV1(graph:BuildGraphV1,patterns:readonly string[]=[],exclude:readonly string[]=[]):string[] {
+  if(literalBuildProjectSelectorsV1(patterns,exclude))return selectLiteralBuildProjectsV1(Object.entries(graph.projects).map(([name,project])=>({name,root:project.root})),patterns,exclude);
   const match=(name:string,pattern:string)=>pattern.startsWith("tag:")?(graph.projects[name]!.tags as string[]??[]).some(tag=>buildPatternV1(pattern.slice(4),tag)):pattern.startsWith("name:")?buildPatternV1(pattern.slice(5),name):pattern.startsWith("directory:")?buildPatternV1(pattern.slice(10),graph.projects[name]!.root):buildPatternV1(pattern,name)||buildPatternV1(pattern,graph.projects[name]!.root);
   const names=Object.keys(graph.projects),selected=new Set<string>(),ordered=patterns.length?patterns:["*"];if(ordered[0]!.startsWith("!"))for(const name of names)selected.add(name);
   for(const value of ordered){const negative=value.startsWith("!"),pattern=negative?value.slice(1):value;buildPatternV1(pattern,"");for(const name of names)if(match(name,pattern)){if(negative)selected.delete(name);else selected.add(name);}}
@@ -66,7 +59,7 @@ export function affectedTouchesV1(graph:BuildGraphV1,files:readonly string[]):Ma
   else if(files.length){
     for(const file of files){const owner=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));if(owner)touch(owner,file);}
     const extract=(inputs:readonly unknown[],named:Record<string,readonly unknown[]>,seen:ReadonlySet<string>):string[]=>inputs.flatMap(input=>typeof input==="string"?Object.hasOwn(named,input)?seen.has(input)?[]:extract(named[input]!,named,new Set(seen).add(input)):input.startsWith(prefix)?[input.slice(prefix.length)]:[]:typeof input==="object"&&input!==null&&typeof (input as {fileset?:unknown}).fileset==="string"&&(input as {fileset:string}).fileset.startsWith(prefix)?[(input as {fileset:string}).fileset.slice(prefix.length)]:[]),matchers=new Map<string,(file:string)=>boolean>();
-    const matcher=(pattern:string)=>{let known=matchers.get(pattern);if(!known){if(/[?*+@!]\(/u.test(pattern))known=()=>true;else{const glob=new Bun.Glob(pattern);known=(file:string)=>glob.match(file);}matchers.set(pattern,known);}return known;};
+    const matcher=(pattern:string)=>{let known=matchers.get(pattern);if(!known){if(/[?*+@!]\(/u.test(pattern))known=()=>true;else{const glob=new GlobV1(pattern);known=(file:string)=>glob.match(file);}matchers.set(pattern,known);}return known;};
     for(const name of names){
       if(touches.has(name))continue;
       const named={...graph.namedInputs,...graph.projects[name]!.namedInputs} as Record<string,readonly unknown[]>,patterns=new Set(Object.values(graph.projects[name]!.targets).flatMap(target=>target.inputs?extract(target.inputs,named,new Set()):[]));

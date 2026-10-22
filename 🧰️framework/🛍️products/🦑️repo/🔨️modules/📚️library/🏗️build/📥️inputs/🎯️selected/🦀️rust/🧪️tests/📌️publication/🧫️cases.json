@@ -1,0 +1,22 @@
+{
+  "version":1,
+  "graph":{"version":1,"projects":{"fixture":{"name":"fixture","root":"crate","targets":{"compile":{"execution":{"kind":"noop"}}}}},"dependencies":[]},
+  "cases":[
+    {"id":"prototype-unit","change":"none","mode":"prototype","tasks":"unit","skip":"none","outcome":"selected"},
+    {"id":"release-unit","change":"none","mode":"release","tasks":"unit","skip":"none","outcome":"selected"},
+    {"id":"missing-path-falls-back","change":"missing-path","mode":"prototype","tasks":"unit","skip":"none","outcome":"fallback"},
+    {"id":"missing-digest-falls-back","change":"missing-digest","mode":"prototype","tasks":"unit","skip":"none","outcome":"fallback"},
+    {"id":"wrong-image-path-refuses","change":"wrong-path","mode":"prototype","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"wrong-digest-refuses","change":"wrong-digest","mode":"prototype","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"changed-record-refuses","change":"changed-record","mode":"prototype","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"missing-record-refuses","change":"missing-record","mode":"prototype","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"whole-graph-is-not-current-publication","change":"whole-graph","mode":"prototype","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"non-rust-task-falls-back","change":"none","mode":"prototype","tasks":"other","skip":"none","outcome":"fallback"},
+    {"id":"empty-selection-falls-back","change":"none","mode":"prototype","tasks":"none","skip":"none","outcome":"fallback"},
+    {"id":"invalid-mode-refuses","change":"none","mode":"invalid","tasks":"unit","skip":"none","outcome":"refused"},
+    {"id":"daemon-keeps-complete-route","change":"none","mode":"prototype","tasks":"unit","skip":"daemon","outcome":"fallback"},
+    {"id":"watch-keeps-complete-route","change":"none","mode":"prototype","tasks":"unit","skip":"watch","outcome":"fallback"},
+    {"id":"existing-snapshot-keeps-complete-route","change":"none","mode":"prototype","tasks":"unit","skip":"snapshot","outcome":"fallback"},
+    {"id":"non-run-keeps-complete-route","change":"none","mode":"prototype","tasks":"unit","skip":"non-run","outcome":"fallback"}
+  ]
+}

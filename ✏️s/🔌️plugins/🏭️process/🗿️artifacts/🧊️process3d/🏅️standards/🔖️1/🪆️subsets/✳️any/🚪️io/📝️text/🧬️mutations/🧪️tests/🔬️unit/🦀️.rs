@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::component::text::mutations::*;
 use crate::*;
 use semio_s_artifact_process_process3d_model::{snapshot::brep_child_handle, snapshot::brep_snapshot_for_working_solid, snapshot::empty_process3d_snapshot, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::WorkingSolid};
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 fn cut_step(id: &str) -> ProcessStep {
     ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }

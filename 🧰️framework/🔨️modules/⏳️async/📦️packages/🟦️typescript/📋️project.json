@@ -28,7 +28,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts info"
+        "command": "repo ./📜️script.ts info"
       },
       "outputs": []
     },
@@ -45,7 +45,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -60,7 +60,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test-publication-contract",
+        "command": "repo ./📜️script.ts test-publication-contract",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -71,7 +71,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts twin",
+        "command": "repo ./📜️script.ts twin",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -101,7 +101,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🤖️generated/⏳️async/🟦️.ts"
       ],
       "options": {
-        "command": "bun ./📜️script.ts test-api-contract",
+        "command": "repo ./📜️script.ts test-api-contract",
         "cwd": "{projectRoot}"
       }
     },
@@ -116,7 +116,7 @@
       "cache": true,
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts single-poll-check",
+        "command": "repo ./📜️script.ts single-poll-check",
         "cwd": "{projectRoot}"
       }
     }

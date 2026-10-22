@@ -1,0 +1,377 @@
+{
+ "version": 1,
+ "totalEmoji": "🔢️",
+ "sum": {
+  "rows": [
+   {
+    "lang": "Rust",
+    "emoji": "🦀️",
+    "code": 10,
+    "edited": 1,
+    "added": 2,
+    "removed": 3
+   },
+   {
+    "lang": "Go",
+    "emoji": "🔵️",
+    "code": 5,
+    "edited": 0,
+    "added": 4,
+    "removed": 0
+   }
+  ],
+  "expected": {
+   "lang": "Total",
+   "emoji": "🔢️",
+   "code": 15,
+   "edited": 1,
+   "added": 6,
+   "removed": 3
+  }
+ },
+ "linesCases": [
+  {
+   "name": "two languages ordered by code with size pairs",
+   "bundle": {
+    "uloc": [
+     {
+      "lang": "Rust",
+      "emoji": "🦀️",
+      "code": 1000,
+      "edited": 0,
+      "added": 10,
+      "removed": 0
+     },
+     {
+      "lang": "TypeScript",
+      "emoji": "🟦️",
+      "code": 3000,
+      "edited": 5,
+      "added": 20,
+      "removed": 2
+     }
+    ],
+    "size": [
+     {
+      "lang": "Rust",
+      "emoji": "🦀️",
+      "code": 40000,
+      "edited": 0,
+      "added": 500,
+      "removed": 0
+     },
+     {
+      "lang": "TypeScript",
+      "emoji": "🟦️",
+      "code": 90000,
+      "edited": 100,
+      "added": 800,
+      "removed": 50
+     }
+    ]
+   },
+   "expected": [
+    "📊️metric📃uloc💯️4k📈️28➗️0.705➕️30✏️5➖️2🟰️37",
+    "📊️metric💾size💯️130KB📈️1.25KB➗️0.971➕️1.3KB✏️100B➖️50B🟰️1.45KB",
+    "📊️metric🟦️typescript📃uloc💯️3k📈️18➗️0.604➕️20✏️5➖️2🟰️27",
+    "📊️metric🟦️typescript💾size💯️90KB📈️750B➗️0.84➕️800B✏️100B➖️50B🟰️950B",
+    "📊️metric🦀️rust📃uloc💯️1k📈️10➗️1.01➕️10🟰️10",
+    "📊️metric🦀️rust💾size💯️40KB📈️500B➗️1.27➕️500B🟰️500B"
+   ]
+  },
+  {
+   "name": "a size-only language is appended after the paired rows",
+   "bundle": {
+    "uloc": [
+     {
+      "lang": "TypeScript",
+      "emoji": "🟦️",
+      "code": 10,
+      "edited": 0,
+      "added": 1,
+      "removed": 0
+     }
+    ],
+    "size": [
+     {
+      "lang": "TypeScript",
+      "emoji": "🟦️",
+      "code": 400,
+      "edited": 0,
+      "added": 20,
+      "removed": 0
+     },
+     {
+      "lang": "Go",
+      "emoji": "🔵️",
+      "code": 900,
+      "edited": 0,
+      "added": 900,
+      "removed": 0
+     }
+    ]
+   },
+   "expected": [
+    "📊️metric📃uloc💯️10📈️1➗️11.1➕️1🟰️1",
+    "📊️metric💾size💯️1.3KB📈️920B➗️242➕️920B🟰️920B",
+    "📊️metric🟦️typescript📃uloc💯️10📈️1➗️11.1➕️1🟰️1",
+    "📊️metric🟦️typescript💾size💯️400B📈️20B➗️5.26➕️20B🟰️20B",
+    "📊️metric🔵️go💾size💯️900B📈️900B➕️900B🟰️900B"
+   ]
+  },
+  {
+   "name": "inactive rows are skipped and an inactive total is omitted",
+   "bundle": {
+    "uloc": [
+     {
+      "lang": "Rust",
+      "emoji": "🦀️",
+      "code": 0,
+      "edited": 0,
+      "added": 0,
+      "removed": 0
+     }
+    ],
+    "size": [
+     {
+      "lang": "Rust",
+      "emoji": "🦀️",
+      "code": 0,
+      "edited": 0,
+      "added": 0,
+      "removed": 0
+     }
+    ]
+   },
+   "expected": []
+  },
+  {
+   "name": "equal code orders languages by name",
+   "bundle": {
+    "uloc": [
+     {
+      "lang": "Python",
+      "emoji": "🐍️",
+      "code": 50,
+      "edited": 0,
+      "added": 1,
+      "removed": 0
+     },
+     {
+      "lang": "Go",
+      "emoji": "🔵️",
+      "code": 50,
+      "edited": 0,
+      "added": 2,
+      "removed": 0
+     }
+    ],
+    "size": []
+   },
+   "expected": [
+    "📊️metric📃uloc💯️100📈️3➗️3.09➕️3🟰️3",
+    "📊️metric🔵️go📃uloc💯️50📈️2➗️4.17➕️2🟰️2",
+    "📊️metric🐍️python📃uloc💯️50📈️1➗️2.04➕️1🟰️1"
+   ]
+  },
+  {
+   "name": "empty bundles render nothing",
+   "bundle": {
+    "uloc": [],
+    "size": []
+   },
+   "expected": []
+  }
+ ],
+ "lineFormat": [
+  {
+   "kind": "uloc",
+   "row": {
+    "lang": "Rust",
+    "emoji": "🦀️",
+    "code": 1000,
+    "edited": 5,
+    "added": 20,
+    "removed": 3
+   },
+   "expected": "📊️metric🦀️rust📃uloc💯️1k📈️17➗️1.73➕️20✏️5➖️3🟰️28"
+  },
+  {
+   "kind": "size",
+   "row": {
+    "lang": "Go",
+    "emoji": "🔵️",
+    "code": 2048,
+    "edited": 0,
+    "added": 512,
+    "removed": 0
+   },
+   "expected": "📊️metric🔵️go💾size💯️2.05KB📈️512B➗️33.3➕️512B🟰️512B"
+  },
+  {
+   "kind": "uloc",
+   "row": {
+    "lang": "Python",
+    "emoji": "🐍️",
+    "code": 0,
+    "edited": 0,
+    "added": 0,
+    "removed": 0
+   },
+   "expected": "📊️metric🐍️python📃uloc"
+  }
+ ],
+ "deltaSums": [
+  {
+   "a": {
+    "added": 1,
+    "edited": 2,
+    "removed": 3
+   },
+   "b": {
+    "added": 1,
+    "edited": 2,
+    "removed": 3
+   },
+   "expected": true
+  },
+  {
+   "a": {
+    "added": 1,
+    "edited": 2,
+    "removed": 3
+   },
+   "b": {
+    "added": 1,
+    "edited": 3,
+    "removed": 3
+   },
+   "expected": false
+  },
+  {
+   "a": {
+    "added": 0,
+    "edited": 0,
+    "removed": 0
+   },
+   "b": {
+    "added": 0,
+    "edited": 0,
+    "removed": 1
+   },
+   "expected": false
+  }
+ ],
+ "repo": {
+  "commits": [
+   {
+    "a.ts": "l1\nl2\nl3\n"
+   },
+   {
+    "a.ts": "l1\nL2\nl3\nl4\nl5\n",
+    "e.go": "package x\n"
+   }
+  ],
+  "ulocByLang": {
+   "TypeScript": 5,
+   "Go": 1,
+   "Rust": 9
+  },
+  "sizeByLang": {
+   "TypeScript": 15,
+   "Go": 10
+  },
+  "uloc": [
+   {
+    "lang": "Rust",
+    "emoji": "🦀️",
+    "code": 9,
+    "edited": 0,
+    "added": 0,
+    "removed": 0
+   },
+   {
+    "lang": "TypeScript",
+    "emoji": "🟦️",
+    "code": 5,
+    "edited": 1,
+    "added": 2,
+    "removed": 0
+   },
+   {
+    "lang": "Go",
+    "emoji": "🔵️",
+    "code": 1,
+    "edited": 0,
+    "added": 1,
+    "removed": 0
+   }
+  ],
+  "size": [
+   {
+    "lang": "TypeScript",
+    "emoji": "🟦️",
+    "code": 15,
+    "edited": 9,
+    "added": 6,
+    "removed": 0
+   },
+   {
+    "lang": "Go",
+    "emoji": "🔵️",
+    "code": 10,
+    "edited": 0,
+    "added": 10,
+    "removed": 0
+   }
+  ]
+ },
+ "count": {
+  "files": {
+   "a.ts": "l1\nl2\nl3",
+   "docs/readme.md": "x\ny",
+   "data.json": "{\"a\":1,\"b\":2}",
+   "dist/z.ts": "q",
+   "n.xyz": "unknown\nlanguage\nhere"
+  },
+  "untracked": {
+   "u.ts": "1\n2\n3\n4"
+  },
+  "cases": [
+   {
+    "prefixes": [],
+    "lines": 7,
+    "bytes": 24
+   },
+   {
+    "prefixes": [
+     "docs"
+    ],
+    "lines": 2,
+    "bytes": 3
+   },
+   {
+    "prefixes": [
+     "a.ts",
+     "data.json"
+    ],
+    "lines": 5,
+    "bytes": 21
+   },
+   {
+    "prefixes": [
+     "dist"
+    ],
+    "lines": 0,
+    "bytes": 0
+   },
+   {
+    "prefixes": [
+     "missing"
+    ],
+    "lines": 0,
+    "bytes": 0
+   }
+  ]
+ }
+}

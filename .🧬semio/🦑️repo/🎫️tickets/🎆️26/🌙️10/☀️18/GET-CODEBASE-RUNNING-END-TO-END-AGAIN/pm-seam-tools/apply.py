@@ -5,7 +5,7 @@
   apply.py apply [--group G]... [--write]    dry run unless --write; refuses on drift and while a dependency ensure|sync|lock or show projects runs
   apply.py undo [--group G]... [--write]     reverses the edits and removes the new files while they still hold our result
   apply.py mirror DIR [--lock-sync] [--apply] scratch tree: real copies of the library and framework modules, symlinks elsewhere, optionally with the round-5 closure batch and this set applied
-Groups: seam (new library), bootstrap, graph, storage, register (suite target and table row), ratchet (the allowlist cut from the mirror). --root R overrides the repository root.
+Groups of round 1: seam, bootstrap, graph, storage, register (suite target and table row), ratchet. Round 2 (--round 2, applies only on top of round 1): seam2, schemas, storage2, generation2, glue, graph2, tools2, ratchet2. --root R overrides the repository root.
 Phase 1 computes every new text in memory; any refusal prints REFUSED and writes nothing. Phase 2 writes through temp files and os.replace with rollback."""
 import argparse, hashlib, json, os, shutil, subprocess, sys
 
@@ -18,7 +18,8 @@ def known_groups():
     path = os.path.join(paths.STAGE, "plan.json")
     return json.load(open(path, encoding="utf-8")).get("groups", []) if os.path.exists(path) else []
 KNOWN = known_groups()
-FULL = [paths.LIBRARY, "🧰️framework/🔨️modules/🏃️process", "🧰️framework/🔨️modules/📁️filesystem", "🧰️framework/🔨️modules/🧬️schema", "🧰️framework/🔨️modules/📚️compiler"]
+FULL = [paths.LIBRARY, "🧰️framework/🔨️modules/🏃️process", "🧰️framework/🔨️modules/📁️filesystem", "🧰️framework/🔨️modules/🧬️schema", "🧰️framework/🔨️modules/📚️compiler", "🧰️framework/🔨️modules/🫧️transient"]
+REAL_DIRECTORIES = ["🧰️framework/🛍️products/💻️os", "🧰️framework/🛍️products/💻️os/🔨️modules"]
 u16 = lambda s: len(s.encode("utf-16-le")) // 2
 
 
@@ -32,6 +33,7 @@ def parse():
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--lock-sync", action="store_true")
     ap.add_argument("--ignore-running", action="store_true")
+    ap.add_argument("--round", default="1")
     return ap.parse_args()
 
 
@@ -53,10 +55,57 @@ def compute(root, groups, undo):
             drift.append(item["path"] + " (file missing)")
             continue
         text, changed = open(path, encoding="utf-8", newline="").read(), False
+        if undo and item.get("pre"):
+            current = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            snapshot = open(resolve(paths.NEW, item["pre"]), encoding="utf-8", newline="").read()
+            if current == item["postSha256"]:
+                outputs[item["path"]] = snapshot
+                results.append(("undo", "snapshot", item["path"]))
+            elif current == hashlib.sha256(snapshot.encode("utf-8")).hexdigest():
+                results.append(("not-applied", "snapshot", item["path"]))
+            else:
+                drift.append("%s cannot undo: the file differs from the result of the set (restore it from version control)" % item["path"])
+            continue
+        alts = {}
         for e in edits:
+            if e.get("alt"):
+                alts.setdefault(e["alt"], []).append(e)
+        skipped = set()
+        for name, variants in alts.items():
+            states = []
+            for e in variants:
+                old, new, counts = e["old"], e["new"], e["counts"]
+                n_old, n_new = text.count(old), text.count(new)
+                inserts = old in new
+                applied = (n_new in counts and n_new > 0 and n_new >= n_old) if inserts else (n_old == 0 and n_new > 0)
+                pending = (n_new == 0 and n_old in counts) if inserts else (n_old in counts and n_old > 0)
+                states.append("undo-able" if (undo and applied) else "applied" if applied else "pending" if pending else "drift")
+            chosen = None
+            if undo:
+                hits = [e for e, s in zip(variants, states) if s == "undo-able"]
+                chosen = hits[0] if len(hits) == 1 else None
+            elif "applied" in states:
+                results.append(("already", name, item["path"]))
+                skipped.update(id(e) for e in variants)
+                continue
+            else:
+                hits = [e for e, s in zip(variants, states) if s == "pending"]
+                chosen = hits[0] if len(hits) == 1 else None
+            if chosen is None:
+                if undo and not any(s in ("undo-able",) for s in states):
+                    results.append(("not-applied", name, item["path"]))
+                    skipped.update(id(e) for e in variants)
+                    continue
+                drift.append("%s [alt %s] needs exactly one matching variant, states %s" % (item["path"], name, states))
+                skipped.update(id(e) for e in variants)
+                continue
+            skipped.update(id(e) for e in variants if e is not chosen)
+        for e in (list(reversed(edits)) if undo else edits):
+            if id(e) in skipped:
+                continue
             old, new, counts = e["old"], e["new"], e["counts"]
-            n_old, n_new = text.count(old), text.count(new)
-            inserts = old in new
+            n_old, n_new = text.count(old), (text.count(new) if new else 0)
+            inserts = bool(new) and old in new
             if undo:
                 undoable = (n_new in counts and n_new > 0) if inserts else (n_old == 0 and n_new > 0)
                 untouched = (n_new == 0 and n_old > 0) if inserts else (n_old in counts and n_old > 0)
@@ -187,7 +236,11 @@ def run(root, groups, write, undo, guard):
 def mirror(destination, root, lock_sync, with_set):
     plan = json.load(open(os.path.join(paths.STAGE, "plan.json"), encoding="utf-8"))
     targets = {f["path"] for f in plan["files"]} | {n["path"] for n in plan["newFiles"]} | {r["path"] for r in plan.get("rewrites", [])}
-    chain = set()
+    chain = set(REAL_DIRECTORIES)
+    for relative in REAL_DIRECTORIES:
+        parts = relative.split("/")
+        for depth in range(1, len(parts)):
+            chain.add("/".join(parts[:depth]))
     for relative in targets:
         parts = relative.split("/")
         for depth in range(1, len(parts)):

@@ -186,6 +186,20 @@
         "/outside"
       ],
       "accepted": true
+    },
+    {
+      "name": "nextest-program-arguments",
+      "args": [
+        "nextest",
+        "run",
+        "--cargo-profile",
+        "prototype",
+        "--profile",
+        "fundamental",
+        "--",
+        "--nocapture"
+      ],
+      "accepted": true
     }
   ]
 }

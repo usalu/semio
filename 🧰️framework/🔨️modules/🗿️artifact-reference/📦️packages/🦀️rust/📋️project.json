@@ -37,7 +37,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-native"
+        "command": "repo ./📜️script.ts test-native"
       }
     },
     "test-binding": {
@@ -53,7 +53,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-binding"
+        "command": "repo ./📜️script.ts test-binding"
       }
     },
     "test-retained-equality-source": {
@@ -69,7 +69,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality source"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- repo ./📜️script.ts test-retained-equality source"
       },
       "metadata": {
         "semio": {
@@ -94,7 +94,7 @@
       "cache": true,
       "options": {
         "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality native"
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- repo ./📜️script.ts test-retained-equality native"
       },
       "metadata": {
         "semio": {

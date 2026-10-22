@@ -2,7 +2,7 @@
 use super::*;
 use crate::S_PLAY_PARAMETERS_TAB_ID;
 use crate::S_PLAY_WINDOW_WORKFLOW;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 
 async fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> SpaceConfig {
     let (forward, _messages) = store::apply_mutation(config, operation).expect("valid mutation");

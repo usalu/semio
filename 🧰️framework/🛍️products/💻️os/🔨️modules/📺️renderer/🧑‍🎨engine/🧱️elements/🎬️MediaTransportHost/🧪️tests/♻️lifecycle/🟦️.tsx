@@ -3,7 +3,7 @@ import type { BrowserInput } from "./🌐️browser/🟦️.tsx";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { MediaTransportHost, MediaTransportOwnerContext } = dependencies;
+  const { MediaTransportHost, MediaTransportOwnerScope } = dependencies;
   const { afterEach, describe, expect, it, vi } = vitest;
   const [React, testing, { chromium }, { dirname, resolve }, { fileURLToPath }, { mediaTransportLabels }, { collectMediaTransportBytes }, { SEGMENTED_DOWNLOAD_CONTRACT }] = await Promise.all([
     import("react"),
@@ -66,7 +66,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     };
   };
   const mount = (port: ReturnType<typeof makePort>, value: unknown = props()) => render(
-    createElement(MediaTransportOwnerContext.Provider, { value: { instanceId: fixture.identity.instanceId, controllerId: fixture.identity.controllerId, windowId: fixture.identity.windowId, port } },
+    createElement(MediaTransportOwnerScope, { owner: { instanceId: fixture.identity.instanceId, controllerId: fixture.identity.controllerId, windowId: fixture.identity.windowId, port } },
       createElement(MediaTransportHost, { value, nodeId: 7, nodeKey: "media.transport" })),
   );
 
@@ -140,7 +140,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const view = mount(port);
       await waitFor(() => expect(view.container.querySelector('[data-media-state="ready"]')).not.toBeNull());
       const replacement = { ...props("43"), resource: { ...props("43").resource, generation: "4" } };
-      view.rerender(createElement(MediaTransportOwnerContext.Provider, { value: { instanceId: fixture.identity.instanceId, controllerId: fixture.identity.controllerId, windowId: fixture.identity.windowId, port } }, createElement(MediaTransportHost, { value: replacement, nodeId: 7, nodeKey: "media.transport" })));
+      view.rerender(createElement(MediaTransportOwnerScope, { owner: { instanceId: fixture.identity.instanceId, controllerId: fixture.identity.controllerId, windowId: fixture.identity.windowId, port } }, createElement(MediaTransportHost, { value: replacement, nodeId: 7, nodeKey: "media.transport" })));
       await waitFor(() => expect(revoke).toHaveBeenCalledWith("blob:media-42"));
       expect(view.container.querySelector("audio")).toBeNull();
     });
@@ -209,6 +209,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 }
 
 if (import.meta.vitest) {
-  const dependencies = await import("../../🟦️.tsx");
+  const dependencies = { ...(await import("../../🟦️.tsx")), ...(await import("../../🔗️owner-scope/🟦️.tsx")) };
   await registerTests1(import.meta.vitest, dependencies, { directory: import.meta.dir, url: import.meta.url });
 }

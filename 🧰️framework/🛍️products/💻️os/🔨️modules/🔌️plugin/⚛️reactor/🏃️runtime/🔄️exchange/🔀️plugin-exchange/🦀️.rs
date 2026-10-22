@@ -115,7 +115,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     debug_runtime_line(format_args!("[TRACE] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
     let constructing = with_instances_mut(runtime, |list| { let instance = find_instance(list, instance_id)?; Ok(instance.app.store_constructor_is_pending()) }).await?;
     if constructing {
-        let mut output = with_instances_original_mut(runtime, |list| { let mut instance = find_instance(list, instance_id)?; advance_typed_operation_output(&mut instance.app, instance_id, identity,cx) }).await?;
+        let mut output = with_instances_original_mut(runtime, |list| { let mut instance = find_instance(list, instance_id)?; let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok(PluginExchangeOutput::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())}; advance_typed_operation_output(&mut instance.app, instance_id, &mut pages, identity,cx) }).await?;
         output.retry_command = command;
         return Ok(output);
     }

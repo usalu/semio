@@ -1,0 +1,45 @@
+{
+  "title": "Remove Intersect and Lasso from Sketchpad Tool Settings",
+  "status": "closed",
+  "description": "Remove intersect and lasso from the sketchpad tool settings bar across all apps for later implementation. Update tests accordingly.",
+  "summary": "Removed intersect and lasso controls from sketchpad tool settings across Design, Kit, Type, and Quality apps; removed Type lasso toolbar group; updated sketchpad Playwright expectations; verified sketchpad e2e suite passes (7/7).",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-17T10:26:22.721686393Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Remove intersect and lasso from the sketchpad tool settings bar across all apps for later implementation. Update tests accordingly.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17T10:48:17.805946832Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "summary": "Removed intersect and lasso controls from sketchpad tool settings across Design, Kit, Type, and Quality apps; removed Type lasso toolbar group; updated sketchpad Playwright expectations; verified sketchpad e2e suite passes (7/7).",
+      "files": [
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Quality.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        }
+      ]
+    }
+  ]
+}

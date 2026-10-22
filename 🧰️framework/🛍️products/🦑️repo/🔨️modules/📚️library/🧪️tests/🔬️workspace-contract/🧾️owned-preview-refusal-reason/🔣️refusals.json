@@ -1,0 +1,39 @@
+{
+  "refusals": [
+    {
+      "name": "preview target outside the owner project keeps its reason",
+      "contract": {
+        "ownership": "owned",
+        "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests",
+        "target": "@semio-tech/fixture-owner:build",
+        "previewTarget": "@semio-tech/other-owner:preview-generated"
+      },
+      "target": {
+        "executor": "repo:script",
+        "options": {
+          "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests",
+          "command": "repo ./📜️script.ts preview-generated"
+        }
+      },
+      "reason": "previewTarget must be the exact owner preview-generated target"
+    }
+  ],
+  "accepted": {
+    "name": "owner-cwd preview spawns the running bun by absolute path",
+    "contract": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests",
+      "target": "@semio-tech/fixture-owner:build",
+      "previewTarget": "@semio-tech/fixture-owner:preview-generated"
+    },
+    "target": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests",
+        "command": "repo ./📜️script.ts preview-generated"
+      }
+    },
+    "args": ["./📜️script.ts", "preview-generated"],
+    "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests"
+  }
+}

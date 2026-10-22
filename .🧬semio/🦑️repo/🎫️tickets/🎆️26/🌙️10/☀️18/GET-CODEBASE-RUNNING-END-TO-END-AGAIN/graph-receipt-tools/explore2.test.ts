@@ -1,0 +1,23 @@
+import {test} from "bun:test";
+import {mkdtempSync,writeFileSync,mkdirSync,realpathSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join,dirname} from "node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const plugin=await import(L+"/🏗️build/🕸️graph/📥️inference/🟨️.mjs");await plugin.libraryBootstrap;
+const api=plugin.cacheInternals;
+const tryit=async(label:string,fn:()=>unknown)=>{try{console.log("## "+label+" "+JSON.stringify(await fn())?.slice(0,900));}catch(error){console.log("## "+label+" THROWS "+String((error as Error).message).slice(0,200));}};
+test("explore",async()=>{
+ const ws=mkdtempSync(join(realpathSync(tmpdir()),"gr-ex-"));
+ const put=(p:string,c:string)=>{mkdirSync(dirname(join(ws,p)),{recursive:true});writeFileSync(join(ws,p),c);};
+ put("a/📋️project.json",'{"name":"a"}');put("a/Cargo.toml",'[package]\nname="a"\nversion="0.1.0"\n');put("b/package.json",'{"name":"b"}');put("📜️script.ts",'export const x=1;\n');
+ await tryit("bunLockGraph obj",()=>api.bunLockGraph({lockfileVersion:1,workspaces:{"":{name:"root",dependencies:{left:"^1"}}},packages:{left:["left@1.0.0","",{},"sha"]}}));
+ await tryit("inferenceCandidates",()=>api.inferenceCandidates(["a/📋️project.json","a/Cargo.toml","b/package.json"],ws));
+ await tryit("rootCommandTargets",()=>api.rootCommandTargets(join(ws,"📜️script.ts")));
+ await tryit("componentBuildTargets",()=>api.componentBuildTargets("a",ws));
+ await tryit("cargoTargets",()=>api.cargoTargets("a",ws,[],undefined));
+ await tryit("componentCrateRoots",()=>api.componentCrateRoots(["a/Cargo.toml"],ws));
+ await tryit("nativeDependencyRoots",()=>api.nativeDependencyRoots("a",ws,false,new Map(),new Map()));
+ await tryit("rustSourceFiles",()=>api.rustSourceFiles([join(ws,"a","src","lib.rs")],join(ws,"a")));
+ await tryit("printDocumentTargets",()=>api.printDocumentTargets({},"a",ws,undefined));
+ await tryit("projectInputs",()=>api.projectInputs({name:"a",targets:{}},"a",ws,{} ,undefined));
+});

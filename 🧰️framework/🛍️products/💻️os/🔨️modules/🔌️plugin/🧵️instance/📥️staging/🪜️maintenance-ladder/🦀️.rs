@@ -12,7 +12,7 @@ use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_reactor_app::{LAST_MAINTENANCE_STAGE, PluginApp};
-use store::{MemberFactory, Mutation, SpaceMember};
+use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_grant_funds};
 use crate::VcsArtifactApp;
@@ -21,7 +21,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
 use semio_framework_plugin_instance_ladders::{MAINTENANCE_POSITIONS, MaintenanceUnit};
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🎡️ Visits units in fair order and spends the grant on the first one that releases something. An empty or unfunded
     /// unit never consumes the call; a blocked or input-starved unit is remembered and reported only when nothing else moved.
     pub(crate) fn maintenance_ladder_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{

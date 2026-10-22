@@ -41,6 +41,79 @@ impl SubspaceCheckpoint {
         }
     }
 
+    /// 🧭️ Forms the shifted operator image `y = K⁻¹Bx + σx` and its stiffness image `Ky = Bx + σKx` for every column one cell per step.
+    /// On entry `solved` holds `K⁻¹Bx` and `rhs` holds `Bx`; a zero shift (the full-span subspace, a zero right matrix) leaves both
+    /// untouched. `Kx = L·D·Lᵀ·x` is formed in `b_basis` through the retained factor so no new owner is needed.
+    pub(super) fn advance_shift_operator(&mut self) {
+        let n = self.n;
+        let m = self.m;
+        let shift = self.shift.unwrap_or(0.0);
+        if self.work.first >= m || shift == 0.0 {
+            self.reset_cursor(SubspaceStage::OrthogonalizePairElement);
+            self.work.coefficient = 0.0;
+            return;
+        }
+        let work = &mut self.work;
+        let column = work.first;
+        match work.phase {
+            0 => {
+                work.b_basis.set(work.second, column, self.x.get(work.second, column));
+                work.second += 1;
+                if work.second == n {
+                    work.second = 0;
+                    work.third = 0;
+                    work.phase = 1;
+                }
+            }
+            1 => {
+                if work.second == n {
+                    work.second = 0;
+                    work.phase = 2;
+                } else if let Some((row, value)) = self.k_factor.column_entry(work.second, work.third) {
+                    work.b_basis.add_at(work.second, column, value * self.x.get(row as usize, column));
+                    work.third += 1;
+                } else {
+                    work.second += 1;
+                    work.third = 0;
+                }
+            }
+            2 => {
+                let value = work.b_basis.get(work.second, column) * self.k_factor.diagonal(work.second).expect("retained elastic diagonal");
+                work.b_basis.set(work.second, column, value);
+                work.second += 1;
+                if work.second == n {
+                    work.second = 0;
+                    work.third = 0;
+                    work.phase = 3;
+                }
+            }
+            3 => {
+                work.solved.add_at(work.second, column, shift * self.x.get(work.second, column));
+                work.rhs.add_at(work.second, column, shift * work.b_basis.get(work.second, column));
+                work.second += 1;
+                if work.second == n {
+                    work.second = 0;
+                    work.third = 0;
+                    work.phase = 4;
+                }
+            }
+            _ => {
+                if work.second == n {
+                    work.first += 1;
+                    work.second = 0;
+                    work.third = 0;
+                    work.phase = 0;
+                } else if let Some((row, value)) = self.k_factor.column_entry(work.second, work.third) {
+                    work.rhs.add_at(row as usize, column, shift * value * work.b_basis.get(work.second, column));
+                    work.third += 1;
+                } else {
+                    work.second += 1;
+                    work.third = 0;
+                }
+            }
+        }
+    }
+
     pub(super) fn advance_factor_forward(&mut self) {
         let n = self.n;
         let m = self.m;

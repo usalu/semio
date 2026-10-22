@@ -25,6 +25,15 @@ pub fn change_vortex_kind_color<Op: From<crate::change_vortex_kind_color::Change
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexKindColor where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_kind_color::ChangeVortexKindColor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex-kind", kind: "change-vortex-kind-color", record: "ChangedVortexKindColor" };
 
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change vortex kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Wirbelart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<Block3dSnapshot, Op> for ChangeVortexKindColor where Op: protocol::ColdMutation<Block3dSnapshot, ReferenceDiff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_kind_color::ChangeVortexKindColor> {
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         crate::change_vortex_kind_color::diff::diff(self, base)
     }
@@ -34,12 +43,6 @@ impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexKindColor w
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change vortex kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Wirbelart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

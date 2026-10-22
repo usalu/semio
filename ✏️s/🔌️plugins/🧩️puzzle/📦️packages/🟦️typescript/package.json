@@ -15,7 +15,7 @@
     "./testing/tool-job-puzzle-reserved-routes": "./🧪️testing/🔬️tool-job-puzzle-reserved-routes/🟦️.ts"
   },
   "scripts": {
-    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/puzzle-js:test"
+    "test": "repo run @semio-tech/puzzle-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-renderer-react": "workspace:*",

@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useCommandBar. */
-import { useCallback, useLayoutEffect, useMemo } from "react";
+import { useCallback, useLayoutEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, resolveWindowActions } from "@semio-tech/framework";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";

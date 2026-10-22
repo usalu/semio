@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "maximumWireBytes": 16777216,
+  "maximumLines": 128,
+  "cases": [
+    {
+      "id": "below-reply-bound",
+      "character": "a",
+      "characters": 16764798,
+      "wireBytes": 16764799,
+      "accepted": true
+    },
+    {
+      "id": "exact-reply-bound",
+      "character": "a",
+      "characters": 16764799,
+      "wireBytes": 16764800,
+      "accepted": true
+    },
+    {
+      "id": "newline-over-reply-bound",
+      "character": "a",
+      "characters": 16764800,
+      "wireBytes": 16764801,
+      "accepted": false
+    },
+    {
+      "id": "payload-over-reply-bound",
+      "character": "a",
+      "characters": 16764801,
+      "wireBytes": 16764802,
+      "accepted": false
+    },
+    {
+      "id": "utf8-below-reply-bound",
+      "character": "é",
+      "characters": 8382399,
+      "wireBytes": 16764799,
+      "accepted": true
+    },
+    {
+      "id": "utf8-over-reply-bound",
+      "character": "é",
+      "characters": 8382400,
+      "wireBytes": 16764801,
+      "accepted": false
+    },
+    {
+      "id": "capture-bound-is-not-reply-bound",
+      "character": "a",
+      "characters": 16777215,
+      "wireBytes": 16777216,
+      "accepted": false
+    }
+  ],
+  "maximumReplyBytes": 16764800
+}

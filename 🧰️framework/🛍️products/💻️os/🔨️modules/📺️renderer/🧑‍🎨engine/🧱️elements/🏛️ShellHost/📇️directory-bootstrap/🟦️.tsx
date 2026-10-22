@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 import { SemioFaultError, dialectCoordinate, resolveWindowActions, type AppDefinition } from "@semio-tech/framework";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework/backbone";
 import type { PluginOperationCompletion, PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";

@@ -9,13 +9,13 @@
 
 use crate::diff::Grid3dDiff;
 use crate::schema::snapshot::Grid3dSnapshot;
-use protocol::Mutation;
+use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Grid3dSnapshot, diff = Grid3dDiff, schema = "wfcgrid3d")]
+#[mutations(snapshot = Grid3dSnapshot, diff = Grid3dDiff, schema = "wfcgrid3d", reference = Grid3dSnapshot, reference_diff = Grid3dDiff)]
 pub enum Grid3dMutation {
     ChangeSeed(crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed),
     ResizeGrid(crate::standards::v1::subsets::any::schema::mutations::resize_grid::ResizeGrid),

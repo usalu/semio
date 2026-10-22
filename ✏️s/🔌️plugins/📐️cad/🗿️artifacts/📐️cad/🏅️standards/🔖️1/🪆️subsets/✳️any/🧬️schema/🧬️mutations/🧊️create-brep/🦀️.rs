@@ -19,6 +19,15 @@ where
     Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::delete_brep::DeleteBrep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create topology child", "Topologie-Kind erstellen") }
+    fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<CadSnapshot, Op> for CreateBrep
+where
+    Op: protocol::ColdMutation<CadSnapshot, ReferenceDiff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::delete_brep::DeleteBrep>,
+{
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
         let child = match semio_s_artifact_cad_cad_model::snapshot::cad_brep_child(&self.child_id, &self.target) {
             Ok(child) => child,
@@ -32,6 +41,4 @@ where
     fn inverse(&self, _base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(vec![Op::from(super::delete_brep::DeleteBrep { child_id: self.child_id.clone() })])
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create topology child", "Topologie-Kind erstellen") }
-    fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
 }

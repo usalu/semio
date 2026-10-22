@@ -173,7 +173,7 @@ fn chrome_compact_active_tab_owns_both_shared_border_cells() {
         let inactive = layout.groups[0].tabs.iter().find(|tab| tab.index != active).unwrap();
         let inactive_only = if inactive.x == tab.x + tab.interior_width + 1 { inactive.x + inactive.interior_width + 1 } else { inactive.x };
         assert_eq!(buf.get(inactive_only, 0).unwrap().fg, theme.role(Role::BorderNormal));
-        assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));
+        assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(semio_framework_ui_tui_core::theme::Surface::Window));
     }
 }
 
@@ -439,7 +439,7 @@ fn short_terminals_get_one_row_chrome_with_the_tabs_on_the_border() {
     assert_eq!(row(&buf, 5).chars().next(), Some('\u{2514}'), "no bottom chrome");
     let active = top.find("tasks").unwrap();
     let theme = Theme::new(AppearanceName::Dark);
-    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));
+    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(semio_framework_ui_tui_core::theme::Surface::Window));
     let dev_x = top.find("dev").unwrap() as u16;
     assert!(matches!(window.window_hit(Rect::new(0, 0, 50, 6), Pos { x: dev_x, y: 0 }), Some(WidgetSignal::WindowTabActivated(0))));
     let close = top.chars().position(|c| c == '\u{2715}').unwrap() as u16;

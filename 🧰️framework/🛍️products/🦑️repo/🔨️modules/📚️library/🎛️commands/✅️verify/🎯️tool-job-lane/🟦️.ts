@@ -9,14 +9,15 @@ import { dispatchOwnedScriptRoute } from "../../../🏃️process/🧭️routing
 import { toolJobFactoryProofActivationScan } from "../../../⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
 import { toolJobCoverageRun } from "../../../⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts";
 import { VerifyInteractivityLanes } from "../🔬️interactivity-lanes/🟦️.ts";
+import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 /** 🎯️ Tool-job coverage verification lane. */
 export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   protected async runToolJobCoverage(args: string[]): Promise<void> {
     if (args[0] === "mounted-dispatch") {
-      if (args.length !== 1) throw new Error("Expected verify interactivity tool-jobs mounted-dispatch");
-            console.log(`[verify interactivity tool-jobs mounted-dispatch] laws=${await this.lanes.toolJobLatestWinsSelfTests()} clean.`);
+      if (args.length !== 1) throw refuseVerifyV1("usage","tool-jobs.expected-interactivity-mounted-dispatch");
+            sayVerifyV1("tool-jobs.interactivity-mounted-dispatch-laws-clean",{laws:String(await this.lanes.toolJobLatestWinsSelfTests())});
       return;
     }
     if (args.includes("--shared-action-fixture-only")) {
@@ -30,10 +31,10 @@ export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
     if (args.includes("--fixed-operation-fixture-only")) {
       const fixture = toolJobFixedOperationFixtureRun(this.root);
       const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs");
-      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] generated Rust fixture is stale.");
+      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw refuseVerifyV1("failed","tool-jobs.interactivity-fixed-operation-fixture-generated");
       const source = `${policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs")}\n${policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs")}`;
       const mutations = this.lanes.toolJobFixedOperationRegistrySelfTests(source);
-      console.log(`[verify interactivity tool-jobs fixed-operation-fixture] laws=${fixture.results.length} mutations=${mutations} rustFixtureFresh=true.`);
+      sayVerifyV1("tool-jobs.interactivity-fixed-operation-fixture-laws",{laws:fixture.results.length,mutations:String(mutations)});
       console.log(JSON.stringify(fixture));
       return;
     }
@@ -47,15 +48,15 @@ export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
       const pluginHost = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
       const programBridge = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
       const mutations = args.includes("--self-test") ? this.lanes.toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
-      if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
-      console.log(`[verify interactivity tool-jobs p2c] live-source clean; hostile-mutations=${mutations}.`);
+      if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw refuseVerifyV1("failed","tool-jobs.interactivity-p2c-live-fixed-replay");
+      sayVerifyV1("tool-jobs.interactivity-p2c-live-source-clean",{mutations:String(mutations)});
       return;
     }
     if (args.includes("--p2a1-only")) {
       const store = policyReadOsStoreEvidence(this.root);
       const mutations = args.includes("--self-test") ? this.lanes.toolJobArtifactEnvelopeRejectionTransferSelfTests(store) : 0;
-      if (!toolJobArtifactEnvelopeRejectionTransferExact(store)) throw new Error("[verify interactivity tool-jobs p2a1] Store rejection-transfer contract failed.");
-      console.log(`[verify interactivity tool-jobs p2a1] live-source clean; hostile-mutations=${mutations}.`);
+      if (!toolJobArtifactEnvelopeRejectionTransferExact(store)) throw refuseVerifyV1("failed","tool-jobs.interactivity-p2a1-store-rejection-transfer");
+      sayVerifyV1("tool-jobs.interactivity-p2a1-live-source-clean",{mutations:String(mutations)});
       return;
     }
     if (args.includes("--p6i-only")) {
@@ -71,29 +72,29 @@ export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
       const artifactRetainedCommand = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
       const fixture = toolJobFixedOperationFixtureRun(this.root);
       const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs");
-      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
+      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw refuseVerifyV1("failed","tool-jobs.interactivity-generated-fixed-operation-rust");
       const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const activation = toolJobFactoryProofActivationScan(this.root);
-      if (activation.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] app activation factory proof scan: ${JSON.stringify(activation)}`);
-      console.log(`[verify interactivity tool-jobs] exact-factory-proof-owners=${activation.owners} custom-rows=${activation.customRows} generic-rows=${activation.genericRows} clean.`);
-      console.log(`[verify interactivity tool-jobs] self-tests=${(await this.lanes.toolJobCoverageSelfTests()) + this.lanes.toolJobFixedOperationRegistrySelfTests(jobRuntime) + this.lanes.toolJobDrawingGestureOperationOwnerSelfTests() + this.lanes.toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1} clean.`);
+      if (activation.failures.length > 0) throw refuseVerifyV1("failed","tool-jobs.interactivity-app-activation-factory-proof",{activation:String(JSON.stringify(activation))});
+      sayVerifyV1("tool-jobs.interactivity-exact-factory-proof-owners",{owners:String(activation.owners),customRows:String(activation.customRows),genericRows:String(activation.genericRows)});
+      sayVerifyV1("tool-jobs.interactivity-self-tests-clean",{selfTests:String((await this.lanes.toolJobCoverageSelfTests()) + this.lanes.toolJobFixedOperationRegistrySelfTests(jobRuntime) + this.lanes.toolJobDrawingGestureOperationOwnerSelfTests() + this.lanes.toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1)});
       return;
     }
     const formatIndex = args.indexOf("--format");
     const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
-    if (format !== "text" && format !== "json") throw new Error(`[verify interactivity tool-jobs] unsupported format ${JSON.stringify(format)}.`);
+    if (format !== "text" && format !== "json") throw refuseVerifyV1("failed","tool-jobs.interactivity-unsupported-format",{format:String(JSON.stringify(format))});
     const report = await toolJobCoverageRun(this.root, this.lanes);
     const outputIndex = args.indexOf("--output");
     const output = outputIndex >= 0 ? args[outputIndex + 1] : undefined;
     if (output) {
       const path = resolve(this.root, output);
       const relativePath = relative(this.root, path);
-      if (relativePath.startsWith("..") || relativePath === "") throw new Error("[verify interactivity tool-jobs] --output must name a file inside the repository.");
+      if (relativePath.startsWith("..") || relativePath === "") throw refuseVerifyV1("invalid","tool-jobs.interactivity-output-must-name-a");
       writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`, "utf8");
     }
     if (format === "json" && !output) console.log(JSON.stringify(report, null, 2));
-    else if (output) console.log(`[verify interactivity tool-jobs] wrote ${output}`);
-    else console.log(`[verify interactivity tool-jobs] production-hosts=${report.macroHostFiles} production-invocations=${report.macroInvocations} production-rows=${report.commandRows} literal-registrations=${report.literalRegistrations} fixture-hosts=${report.fixtureMacroHostFiles} fixture-invocations=${report.fixtureMacroInvocations} fixture-rows=${report.fixtureCommandRows} admitted=${report.boundedRows} batch-only=${report.batchOnlyRows} forbidden=${report.forbiddenRows} deleted=${report.deletedRows} remaining=${report.remainingCommands.length} unique=${report.uniqueCommandRows} factories=${report.productionFactories} registrations=${report.productionRegistrations} dispatches=${report.productionDispatches} aliases=${report.aliases} self-tests=${report.selfTests}`);
-    if (report.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] ${report.failures.join("; ")}`);
+    else if (output) sayVerifyV1("tool-jobs.interactivity-wrote",{output:String(output)});
+    else sayVerifyV1("tool-jobs.interactivity-production-hosts-production-invocations",{macroHostFiles:String(report.macroHostFiles),macroInvocations:String(report.macroInvocations),commandRows:String(report.commandRows),literalRegistrations:String(report.literalRegistrations),fixtureMacroHostFiles:String(report.fixtureMacroHostFiles),fixtureMacroInvocations:String(report.fixtureMacroInvocations),fixtureCommandRows:String(report.fixtureCommandRows),boundedRows:String(report.boundedRows),batchOnlyRows:String(report.batchOnlyRows),forbiddenRows:String(report.forbiddenRows),deletedRows:String(report.deletedRows),remainingCommands:report.remainingCommands.length,uniqueCommandRows:String(report.uniqueCommandRows),productionFactories:String(report.productionFactories),productionRegistrations:String(report.productionRegistrations),productionDispatches:String(report.productionDispatches),aliases:String(report.aliases),selfTests:String(report.selfTests)});
+    if (report.failures.length > 0) throw refuseVerifyV1("failed","tool-jobs.interactivity",{failures:report.failures.join("; ")});
   }
 }

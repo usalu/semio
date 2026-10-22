@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-curation-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/sourcing-curation-rs:verify-curation-document-contract"
+    "verify-curation-document-contract": "repo run @semio-tech/sourcing-curation-rs:verify-curation-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

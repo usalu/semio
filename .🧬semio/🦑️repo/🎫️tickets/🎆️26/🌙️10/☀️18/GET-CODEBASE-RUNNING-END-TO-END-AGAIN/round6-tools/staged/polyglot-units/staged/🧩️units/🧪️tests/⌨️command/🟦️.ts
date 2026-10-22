@@ -1,13 +1,13 @@
 import {describe, expect, test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname, join} from "node:path";
 import {applyGoOverlayV1, planGoPackagesV1, readUnitsPolicyV1, runUnitsCommandV1, sha256V1, unitsArgumentsV1, unitsOptionNamesV1, unitsSchemaFailuresV1, type UnitsCommandPortsV1} from "../../🟦️.ts";
 import policyDocument from "../../🔣️.json" with {type: "json"};
 
 const policy = readUnitsPolicyV1(policyDocument);
-const have = (command: string): boolean => spawnSync(command, ["--version"], {encoding: "utf8"}).status === 0;
+const have = (command: string): boolean => spawnSync(command, [command === "go" ? "version" : "--version"], {encoding: "utf8"}).status === 0;
 const temporary = (): string => mkdtempSync(join(tmpdir(), "units-command-"));
 const write = (root: string, files: Readonly<Record<string, string>>): void => {for (const [path, text] of Object.entries(files)) {mkdirSync(dirname(join(root, path)), {recursive: true}); writeFileSync(join(root, path), text);}};
 
@@ -149,7 +149,7 @@ describe("go compiler overlay", () => {
   const modulePath = "example.com/m";
   test("member directories merge into their parent package, unmapped cases are not packages, go list agrees", () => {
     if (!have("go")) return;
-    const directory = temporary();
+    const directory = realpathSync(temporary());
     try {
       const real: Record<string, string> = {
         "m/go.mod": `module ${modulePath}\n\ngo 1.25\n`,
@@ -175,4 +175,43 @@ describe("go compiler overlay", () => {
       void sha256V1;
     } finally {rmSync(directory, {recursive: true, force: true});}
   }, 60000);
+});
+
+describe("repo units exec with go: interface files instead of dependency sources", () => {
+  const files = {
+    "go.mod": "module example.com/lab\n\ngo 1.25\n",
+    "a/a.go": "package a\n\nimport \"strings\"\n\nfunc Big(s string) string {\n\tvar out []string\n\tfor i := 0; i < 10; i++ {\n\t\tout = append(out, strings.ToUpper(s))\n\t}\n\treturn strings.Join(out, \",\")\n}\n\nfunc Small(x int) int { return x + 1 }\n",
+    "b/b.go": "package b\n\nimport \"example.com/lab/a\"\n\nfunc Use() string { return a.Big(\"q\") }\n",
+    "c/c.go": "package main\n\nimport \"example.com/lab/b\"\n\nfunc main() { println(b.Use()) }\n",
+  };
+  test("pure-Go libraries compile with go tool compile against dependency export data; a body edit leaves iface.json unchanged, a signature edit moves it", async () => {
+    if (!have("go")) return;
+    const root = temporary();
+    try {
+      write(root, files);
+      const env = {GOFLAGS: "-mod=mod", GOPROXY: "off", GOCACHE: join(root, ".gocache"), GOPATH: join(root, ".gopath"), GOWORK: "off"};
+      const ports = {...portsFor(Object.keys(files)), run: async (argv: readonly string[], run: {cwd: string; env: Readonly<Record<string, string>>}) => {const result = spawnSync(argv[0]!, argv.slice(1), {cwd: run.cwd, env: {...process.env, ...env, ...run.env}, encoding: "utf8"}); return {code: result.status ?? 1, output: (result.stdout ?? "") + (result.stderr ?? "")};}};
+      await runUnitsCommandV1(root, ["emit", "bazel", "--for=go", "--out=bz"], ports);
+      const specs = Object.fromEntries((require("node:fs").readdirSync(join(root, "bz/specs")) as string[]).map(name => [(JSON.parse(readFileSync(join(root, "bz/specs", name), "utf8")) as {id: string}).id, join("bz/specs", name)]));
+      const spec = JSON.parse(readFileSync(join(root, specs["go:example.com/lab/b"]!), "utf8")) as {action: {env: Record<string, string>}};
+      expect(spec.action.env.SEMIO_GO_MODE).toBe("compile");
+      expect(JSON.parse(readFileSync(join(root, specs["go:example.com/lab/c"]!), "utf8")).action.env.SEMIO_BAZEL_INPUTS).toBe("sources");
+      const exec = (id: string, tag: string, extra: string[] = []): Promise<void> => runUnitsCommandV1(root, ["exec", `--spec=${specs[id]}`, `--out=r/${tag}/out.json`, `--iface=r/${tag}/iface.json`, ...extra], ports);
+      const read = (tag: string): {interface: string; closure: string; artifact: string} => JSON.parse(readFileSync(join(root, `r/${tag}/iface.json`), "utf8"));
+      await exec("go:example.com/lab/a", "a1");
+      await exec("go:example.com/lab/b", "b1", ["--iface-dep=r/a1/iface.json"]);
+      expect(Object.keys((JSON.parse(read("b1").artifact) as {files: Record<string, string>}).files)).toEqual(["example.com/lab/a", "example.com/lab/b"]);
+      writeFileSync(join(root, "a/a.go"), files["a/a.go"].replace("ToUpper", "ToLower"));
+      await exec("go:example.com/lab/a", "a2");
+      expect(read("a2").closure).toBe(read("a1").closure);
+      expect(read("a2").artifact).toBe(read("a1").artifact);
+      writeFileSync(join(root, "a/a.go"), files["a/a.go"].replace("func Small(x int) int", "func Small(x int64) int64"));
+      await exec("go:example.com/lab/a", "a3");
+      expect(read("a3").closure).not.toBe(read("a1").closure);
+      writeFileSync(join(root, "a/a.go"), "package a\n\nfunc Big(s string) string {\n");
+      let failure = "";
+      try {await exec("go:example.com/lab/a", "a4");} catch (error) {failure = String((error as Error).message);}
+      expect(failure).toBe("go:example.com/lab/a: failed");
+    } finally {rmSync(root, {recursive: true, force: true});}
+  }, 180000);
 });

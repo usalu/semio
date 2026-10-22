@@ -6,6 +6,7 @@ import { runReferenceVisualOracle } from "./🔭️reference-visual-oracle/🟦�
 import { runGridVisualOracle } from "./🕸️grid-visual-oracle/🟦️.ts";
 import { runSceneShadingOracle } from "./📐️scene-shading-oracle/🟦️.ts";
 import { runAuthoredSurfaceOracle } from "./🪟️authored-surface-oracle/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -73,6 +74,6 @@ export class SceneShadingPixelCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("scene-shading-pixel-check", SceneShadingPixelCheckScript);
+const router = new ScriptRouter(import.meta.dirname).register("scene-shading-pixel-check", SceneShadingPixelCheckScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

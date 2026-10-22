@@ -10,9 +10,8 @@
   ],
   "localHub": {
     "owner": {
-      "program": "bun",
+      "program": "repo",
       "args": [
-        "repo",
         "run",
         "os-hub:local-hub-owner",
         "--"

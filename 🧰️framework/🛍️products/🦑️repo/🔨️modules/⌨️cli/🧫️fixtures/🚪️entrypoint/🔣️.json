@@ -5,20 +5,27 @@
     "affected",
     "exec",
     "watch",
-    "dependencies",
-    "cargo",
-    "tools",
-    "reset",
-    "cache",
-    "preflight",
-    "show",
     "graph",
+    "show",
     "inputs",
+    "reset",
+    "tools",
+    "preflight",
     "incremental",
     "concurrency",
+    "conformance",
+    "units",
+    "bench",
+    "dependencies",
+    "cargo",
+    "cache",
+    "remote-cache",
     "capacity",
     "leases",
-    "remote-execution"
+    "service",
+    "remote-execution",
+    "doctor",
+    "session"
   ],
   "dashboardArguments": [
     "run",
@@ -256,9 +263,69 @@
       ]
     },
     {
+      "id": "session",
+      "argv": [
+        "session",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "session",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "conformance",
+      "argv": ["conformance", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["conformance", "--opaque=value"]
+    },
+    {
+      "id": "units",
+      "argv": ["units", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["units", "--opaque=value"]
+    },
+    {
+      "id": "bench",
+      "argv": ["bench", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["bench", "--opaque=value"]
+    },
+    {
+      "id": "remote-cache",
+      "argv": ["remote-cache", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["remote-cache", "--opaque=value"]
+    },
+    {
+      "id": "service",
+      "argv": ["service", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["service", "--opaque=value"]
+    },
+    {
+      "id": "doctor",
+      "argv": ["doctor", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["doctor", "--opaque=value"]
+    },
+    {
+      "id": "service-status",
+      "argv": ["service", "status"],
+      "kind": "build",
+      "arguments": ["service", "status"]
+    },
+    {
+      "id": "service-leading-option",
+      "argv": ["--service=off", "run", "a:b"],
+      "kind": "build",
+      "arguments": ["--service=off", "run", "a:b"]
+    },
+    {
       "id": "root",
       "argv": [],
-      "kind": "domain",
+      "kind": "build",
       "arguments": []
     },
     {
@@ -266,8 +333,42 @@
       "argv": [
         "--help"
       ],
+      "kind": "build",
+      "arguments": [
+        "--help"
+      ]
+    },
+    {
+      "id": "help-short",
+      "argv": [
+        "-h"
+      ],
+      "kind": "build",
+      "arguments": [
+        "-h"
+      ]
+    },
+    {
+      "id": "help-language",
+      "argv": [
+        "--help",
+        "--lang=de"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--help",
+        "--lang=de"
+      ]
+    },
+    {
+      "id": "domain-help",
+      "argv": [
+        "ticket",
+        "--help"
+      ],
       "kind": "domain",
       "arguments": [
+        "ticket",
         "--help"
       ]
     },
@@ -535,6 +636,137 @@
         "mcp",
         "stdio"
       ]
+    },
+    {
+      "id": "mcp-explicit-root",
+      "argv": [
+        "mcp",
+        "--repo",
+        "chosen"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo",
+        "chosen"
+      ]
+    },
+    {
+      "id": "mcp-prefix-root",
+      "argv": [
+        "--repo",
+        "chosen",
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo",
+        "chosen"
+      ]
+    },
+    {
+      "id": "mcp-prefix-root-equals",
+      "argv": [
+        "--repo=chosen",
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo=chosen"
+      ]
+    },
+    {
+      "id": "script-plain",
+      "argv": [
+        "./📜️script.ts",
+        "build"
+      ],
+      "kind": "script",
+      "arguments": [
+        "./📜️script.ts",
+        "build"
+      ]
+    },
+    {
+      "id": "script-watch",
+      "argv": [
+        "--watch",
+        "./x.ts",
+        "a"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--watch",
+        "./x.ts",
+        "a"
+      ]
+    },
+    {
+      "id": "script-cwd-equals",
+      "argv": [
+        "--cwd=sub",
+        "x.mjs"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--cwd=sub",
+        "x.mjs"
+      ]
+    },
+    {
+      "id": "script-cwd-separate",
+      "argv": [
+        "--cwd",
+        "sub dir",
+        "--watch",
+        "x.js",
+        "--",
+        "z"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--cwd",
+        "sub dir",
+        "--watch",
+        "x.js",
+        "--",
+        "z"
+      ]
+    },
+    {
+      "id": "script-after-tool-is-build",
+      "argv": [
+        "--tool=nx",
+        "x.ts"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=nx",
+        "x.ts"
+      ]
+    },
+    {
+      "id": "script-argument-is-not-a-script",
+      "argv": [
+        "ticket",
+        "x.ts"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "ticket",
+        "x.ts"
+      ]
+    },
+    {
+      "id": "script-option-without-script",
+      "argv": [
+        "--watch",
+        "run"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "--watch",
+        "run"
+      ]
     }
   ],
   "rootScriptPrefixes": [
@@ -544,5 +776,14 @@
       "stdio",
       "os"
     ]
+  ],
+  "scriptExtensions": [
+    ".ts",
+    ".mjs",
+    ".js"
+  ],
+  "scriptOptions": [
+    "watch",
+    "cwd"
   ]
 }

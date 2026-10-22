@@ -1,0 +1,76 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "graphs",
+  "property"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "graphs": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "edges",
+     "reach",
+     "orders"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "edges": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "reach": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "orders": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "property": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "runs",
+    "seed"
+   ],
+   "properties": {
+    "runs": {
+     "type": "integer"
+    },
+    "seed": {
+     "type": "integer"
+    }
+   }
+  }
+ }
+}

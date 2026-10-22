@@ -43,7 +43,7 @@ export type VizProbeDocumentSpec = Readonly<{
 
 // 📍 Resolved from THIS file rather than from the process cwd: an adapter is spawned by the test
 // platform in a work directory that has no relation to the repository tree.
-const productRoot = join(import.meta.dir, "..", "..");
+const productRoot = join(import.meta.dirname, "..", "..");
 const workspaceRoot = join(productRoot, "..", "..", "..");
 const schemaPath = join(productRoot, "🧬️schema", "🔣️.json");
 //#endregion 🧪️ProbeProtocol

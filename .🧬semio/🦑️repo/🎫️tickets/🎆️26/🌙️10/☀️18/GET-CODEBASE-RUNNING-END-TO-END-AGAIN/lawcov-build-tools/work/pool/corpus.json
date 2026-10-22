@@ -1,0 +1,589 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "name": "a warm request reuses the session",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 0,
+    "live": true
+   }
+  },
+  {
+   "name": "an idle session is closed after the idle time",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 99
+    },
+    {
+     "op": "advance",
+     "ms": 1
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 1,
+    "live": false
+   }
+  },
+  {
+   "name": "a request just before the idle time keeps the session",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 99
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "advance",
+     "ms": 99
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 0,
+    "live": true
+   }
+  },
+  {
+   "name": "concurrent requests share one session",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "with",
+     "id": "c"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "c"
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 0,
+    "live": true
+   }
+  },
+  {
+   "name": "the idle timer waits for the last request",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 500
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 1,
+    "live": false
+   }
+  },
+  {
+   "name": "an old idle session is replaced by the next request",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 150,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 99
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "advance",
+     "ms": 99
+    },
+    {
+     "op": "with",
+     "id": "c"
+    },
+    {
+     "op": "release",
+     "id": "c"
+    }
+   ],
+   "final": {
+    "opens": 2,
+    "closes": 1,
+    "live": true
+   }
+  },
+  {
+   "name": "a busy session is not replaced however old it is",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 5000
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 0,
+    "live": true
+   }
+  },
+  {
+   "name": "a failed request closes the session and the next one reopens",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "fail",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 2,
+    "closes": 1,
+    "live": true
+   }
+  },
+  {
+   "name": "a failure among concurrent requests lets the others finish on the old session",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "fail",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "with",
+     "id": "c"
+    },
+    {
+     "op": "release",
+     "id": "c"
+    }
+   ],
+   "final": {
+    "opens": 2,
+    "closes": 1,
+    "live": true
+   }
+  },
+  {
+   "name": "an open that fails leaves nothing behind and the next request reopens",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "failNextOpen"
+    },
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 2,
+    "closes": 0,
+    "live": true
+   }
+  },
+  {
+   "name": "closing the pool closes its session and a later request reopens",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "close"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 2,
+    "closes": 1,
+    "live": true
+   }
+  },
+  {
+   "name": "closing an idle pool twice closes once",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "close"
+    },
+    {
+     "op": "close"
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 1,
+    "live": false
+   }
+  },
+  {
+   "name": "closing an empty pool does nothing",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "close"
+    }
+   ],
+   "final": {
+    "opens": 0,
+    "closes": 0,
+    "live": false
+   }
+  },
+  {
+   "name": "the idle timer is cancelled by a close",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "close"
+    },
+    {
+     "op": "advance",
+     "ms": 1000
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 1,
+    "live": false
+   }
+  },
+  {
+   "name": "alternating requests and idle periods open each time",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "release",
+     "id": "b"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    },
+    {
+     "op": "with",
+     "id": "c"
+    },
+    {
+     "op": "release",
+     "id": "c"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    }
+   ],
+   "final": {
+    "opens": 3,
+    "closes": 3,
+    "live": false
+   }
+  },
+  {
+   "name": "a failed request after an idle close reopens once",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "release",
+     "id": "a"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "fail",
+     "id": "b"
+    },
+    {
+     "op": "with",
+     "id": "c"
+    },
+    {
+     "op": "release",
+     "id": "c"
+    }
+   ],
+   "final": {
+    "opens": 3,
+    "closes": 2,
+    "live": true
+   }
+  }
+ ],
+ "invalid": [
+  {
+   "idle": 0,
+   "maximum": 10
+  },
+  {
+   "idle": -1,
+   "maximum": 10
+  },
+  {
+   "idle": 10,
+   "maximum": 9
+  },
+  {
+   "idle": "x",
+   "maximum": 5
+  },
+  {
+   "idle": 5,
+   "maximum": "x"
+  }
+ ],
+ "valid": [
+  {
+   "idle": 1,
+   "maximum": 1
+  },
+  {
+   "idle": 0.5,
+   "maximum": 0.5
+  },
+  {
+   "idle": 1,
+   "maximum": 1000000
+  }
+ ],
+ "knownDefects": [
+  {
+   "name": "two concurrent failures close one session once",
+   "idleMilliseconds": 100,
+   "maximumLifetimeMilliseconds": 1000,
+   "steps": [
+    {
+     "op": "with",
+     "id": "a"
+    },
+    {
+     "op": "with",
+     "id": "b"
+    },
+    {
+     "op": "fail",
+     "id": "a"
+    },
+    {
+     "op": "fail",
+     "id": "b"
+    }
+   ],
+   "final": {
+    "opens": 1,
+    "closes": 1,
+    "live": false
+   }
+  }
+ ]
+}

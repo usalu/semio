@@ -1,0 +1,48 @@
+{
+  "title": "Fix Undo Redo Record Edit Pre Change State",
+  "status": "closed",
+  "description": "Fix the root cause bug where recordEdit computes inverseKitDiff using post-change kit state instead of pre-change state. Fix all executeCommand callers to record edit before applying kit changes. Add missing keyboard shortcuts for Kit and Type apps. Fix Quality recordEdit qualityDiff gap. Update and pass Design Undo Redo Playwright test.",
+  "summary": "Fixed root cause undo/redo bug: recordEdit was computing inverseKitDiff using post-change state instead of pre-change state. Moved recordEdit before kitStore.change in Design.tsx, Kit.tsx, Quality.tsx executeCommand. Fixed Quality qualityDiff recording gap. Added undo/redo hotkeys to Kit.tsx and Type.tsx. Cleaned up test debug artifacts. Playwright Design Undo Redo test passes: drag 72px, undo reverts to 0px, redo restores to 72px.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/773"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-03-04T12:35:40.858444795Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Fix the root cause bug where recordEdit computes inverseKitDiff using post-change kit state instead of pre-change state. Fix all executeCommand callers to record edit before applying kit changes. Add missing keyboard shortcuts for Kit and Type apps. Fix Quality recordEdit qualityDiff gap. Update and pass Design Undo Redo Playwright test.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-03-04T14:14:02.05932914Z",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "checkpoint": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "summary": "Fixed root cause undo/redo bug: recordEdit was computing inverseKitDiff using post-change state instead of pre-change state. Moved recordEdit before kitStore.change in Design.tsx, Kit.tsx, Quality.tsx executeCommand. Fixed Quality qualityDiff recording gap. Added undo/redo hotkeys to Kit.tsx and Type.tsx. Cleaned up test debug artifacts. Playwright Design Undo Redo test passes: drag 72px, undo reverts to 0px, redo restores to 72px.",
+      "files": [
+        {
+          "path": "💻️compose/js/sketchpad/Design.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Kit.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Quality.tsx"
+        },
+        {
+          "path": "💻️compose/js/sketchpad/Type.tsx"
+        },
+        {
+          "path": "🧪️compose/js/sketchpad.test.ts"
+        }
+      ]
+    }
+  ]
+}

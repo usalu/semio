@@ -3,7 +3,7 @@ import type { InferencePortUiAction, InstalledServicePresentationV1 } from "@sem
 import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse } from "@semio-tech/framework/backbone";
 import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1 } from "@semio-tech/framework/directory/schema";
 import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
-import React from "react";
+import * as React from "../../⚛️react-port/🟦️.ts";
 
 export interface HostAppIdentity {
   readonly id: string;

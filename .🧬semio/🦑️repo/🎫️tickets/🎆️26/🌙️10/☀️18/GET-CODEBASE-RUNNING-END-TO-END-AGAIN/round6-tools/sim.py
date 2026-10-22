@@ -3,7 +3,7 @@
 usage: sim.py [--tag a] [--from step] [--to step] [--only a,b] [--continue] [--check]
   --check   run each step's dry-run command (no writes) instead of its write command
 Result: C/🗑️generated/round6-apply/sim-<tag>/{result.json,<step>.log}; the overlay is built by overlay.py (clones of the checkout)."""
-import json, os, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = os.path.dirname(HERE)
@@ -34,6 +34,9 @@ def inventory():
                 continue
             rows[os.path.relpath(p, OV)] = (s.st_size, s.st_mtime_ns, s.st_ino, s.st_mode)
     return rows
+
+
+PY_ = sys.executable
 
 
 def sync_tools():
@@ -67,6 +70,7 @@ def trash(path):
 def fresh(source="/private/tmp/i6/base"):
     trash(OV)
     clone(source, OV)
+    open("/private/tmp/i6/ov-born", "w").close()
 
 
 def main():
@@ -77,6 +81,8 @@ def main():
     sync_tools()
     table = steps(OV, C.replace(LIVE, OV), LIVE)
     names = [s["id"] for s in table]
+    if opt("--skip"):
+        names = [n for n in names if n not in opt("--skip").split(",")]
     if opt("--only"):
         names = [n for n in names if n in opt("--only").split(",")]
     if opt("--from"):
@@ -91,11 +97,14 @@ def main():
         cmds = s["check"] if "--check" in args else s["write"]
         if cmds is None:
             continue
+        npre = len(s.get("prepare", [])) + len(s.get("sim_prepare", []))
         cmds = list(s.get("prepare", [])) + list(s.get("sim_prepare", [])) + list(cmds)
         before = inventory()
         t0 = time.time()
         log, rc = "", 0
-        for cmd in cmds:
+        if s.get("view"):
+            subprocess.run(["sandbox-exec", "-p", PROFILE, PY_, f"{OV}/{CREL}/round6-tools/view.py", "in", OV], capture_output=True)
+        for ci, cmd in enumerate(cmds):
             if isinstance(cmd, dict):
                 cmd, env_extra, cwd = cmd["cmd"], cmd.get("env", {}), cmd.get("cwd", OV)
             else:
@@ -104,15 +113,35 @@ def main():
             run = subprocess.run(["sandbox-exec", "-p", PROFILE, *cmd], capture_output=True, text=True, encoding="utf8", errors="replace", cwd=cwd, env=env, timeout=3600)
             log += "$ " + " ".join(cmd)[:300] + "\n" + run.stdout + "\n--- stderr ---\n" + run.stderr + "\n"
             rc = run.returncode
+            if ci < npre and rc != 0:
+                break
+            if rc in s.get("ok", (0,)) and s.get("refuse_if") and re.search(s["refuse_if"], run.stdout + run.stderr):
+                rc = 97
+            if ci >= npre and rc in s.get("ok", (0,)) and re.search(r"(?m)^\s*(REFUSED|DRIFT)\b|^Traceback \(most recent call last\)|^\s*refused:|^\w*Error: ", run.stdout + run.stderr):
+                rc = 96
             if rc not in s.get("ok", (0,)):
                 break
+        if s.get("view"):
+            subprocess.run(["sandbox-exec", "-p", PROFILE, PY_, f"{OV}/{CREL}/round6-tools/view.py", "out", OV], capture_output=True)
         after = inventory()
         changed = sorted(r for r in after if before.get(r) != after[r])
         gone = sorted(r for r in before if r not in after)
         row = {"step": s["id"], "rc": rc, "secs": round(time.time() - t0), "changed": changed, "new": [r for r in changed if r not in before], "removed": gone}
         open(f"{OUT}/{s['id']}.log", "w", encoding="utf8").write(log)
+        snapdir = f"/private/tmp/i6/snap/{TAG}/{s['id']}"
+        if rc in s.get("ok", (0,)):
+            import shutil
+            shutil.rmtree(snapdir, ignore_errors=True)
+            for r in changed:
+                if r.startswith(CREL + "/"):
+                    continue
+                os.makedirs(os.path.dirname(f"{snapdir}/{r}"), exist_ok=True)
+                shutil.copy2(f"{OV}/{r}", f"{snapdir}/{r}", follow_symlinks=False)
         result.append(row)
-        ok = rc in s.get("ok", (0,))
+        _prev = json.load(open(f"{OUT}/result.json", encoding="utf8"))["result"] if os.path.isfile(f"{OUT}/result.json") else []
+        json.dump({"result": [r for r in _prev if r["step"] != row["step"]] + [row]}, open(f"{OUT}/result.json", "w", encoding="utf8"), ensure_ascii=False, indent=1)
+        ok = rc in s.get("ok", (0,)) and not (ci < npre and rc != 0)
+        row["warnings"] = len(re.findall(r"(?m)^LAW-VIOLATION", log))
         print(f"{'ok  ' if ok else 'FAIL'} rc={rc} {s['id']:26} changed {len(changed):5} (new {len(row['new'])}, removed {len(gone)}) {row['secs']}s" + ("" if ok else "\n    " + log.strip()[-700:].replace("\n", "\n    ")), flush=True)
         if ok and s["id"] in (opt("--ckpt-after") or "").split(","):
             trash("/private/tmp/i6/ckpt-" + s["id"])

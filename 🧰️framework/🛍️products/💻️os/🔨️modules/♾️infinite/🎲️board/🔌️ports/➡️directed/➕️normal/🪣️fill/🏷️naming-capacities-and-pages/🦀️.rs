@@ -98,7 +98,7 @@ impl BoardFillText {
     }
 }
 
-struct BoardFillPage<T> {
+pub struct BoardFillPage<T> {
     pub items: Vec<T>,
     pub backing_bytes: usize,
 }
@@ -119,8 +119,8 @@ pub struct BoardFillFixedPages<T, const CAPACITY: usize> {
 }
 
 impl<T, const CAPACITY: usize> BoardFillFixedPages<T, CAPACITY> {
-        fn unallocated() -> Self { Self { pages: Box::new([]), len: 0, page_count: 0 } }
-    fn descriptor_bytes() -> usize { size_of::<Option<BoardFillPage<T>>>() * CAPACITY }
+        pub(super) fn unallocated() -> Self { Self { pages: Box::new([]), len: 0, page_count: 0 } }
+    pub(super) fn descriptor_bytes() -> usize { size_of::<Option<BoardFillPage<T>>>() * CAPACITY }
 
 pub fn new() -> Self {
         Self::try_new().expect("Board fill fixed descriptor backing allocation")
@@ -136,7 +136,7 @@ pub fn new() -> Self {
         Ok(Self { pages, len: 0, page_count: 0 })
     }
 
-    fn item_capacity() -> usize {
+    pub(super) fn item_capacity() -> usize {
         CAPACITY * BOARD_FILL_PAGE_ITEMS
     }
 

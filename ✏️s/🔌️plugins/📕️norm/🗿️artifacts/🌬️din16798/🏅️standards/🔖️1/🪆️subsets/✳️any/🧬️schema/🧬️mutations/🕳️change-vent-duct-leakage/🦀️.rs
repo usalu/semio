@@ -12,15 +12,19 @@ pub struct ChangeVentDuctLeakage {
 }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeVentDuctLeakage where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_duct_leakage::ChangeVentDuctLeakage> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-duct-leakage", kind: "change-vent-duct-leakage", record: "ChangeVentDuctLeakage" };
-    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din16798Snapshot>>::Diff> { crate::change_vent_duct_leakage::diff::diff(self, base) }
-    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({ crate::change_vent_duct_leakage::inverse::inverse(self, base)? 
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change duct leakage", "Leckluftstrom der Luftleitungen ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
+}
+
+impl<Op> protocol::ColdMutationKind<Din16798Snapshot, Op> for ChangeVentDuctLeakage where Op: protocol::ColdMutation<Din16798Snapshot, ReferenceDiff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_duct_leakage::ChangeVentDuctLeakage> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<Din16798Snapshot>>::ReferenceDiff> { crate::change_vent_duct_leakage::diff::diff(self, base) }
+    fn inverse(&self, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_vent_duct_leakage::inverse::inverse(self, base)? 
+    })
+}
 }
 
 //#region 🪢️Mounts

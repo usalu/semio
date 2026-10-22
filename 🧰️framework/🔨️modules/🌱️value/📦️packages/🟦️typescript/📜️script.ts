@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget, runScriptMain, receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { NumericApiScript, ScalarsApiScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 
 
 /** 🧾️ Verifies question dictionaries against their independent JSON Schema oracle and the native JSON limbs. */
@@ -23,4 +24,4 @@ class ScratchHashScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dir).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript).register("test-dictionary", DictionaryScript).register("test-scratch-hash", ScratchHashScript), { invocation }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dirname).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript).register("test-dictionary", DictionaryScript).register("test-scratch-hash", ScratchHashScript), { invocation }));

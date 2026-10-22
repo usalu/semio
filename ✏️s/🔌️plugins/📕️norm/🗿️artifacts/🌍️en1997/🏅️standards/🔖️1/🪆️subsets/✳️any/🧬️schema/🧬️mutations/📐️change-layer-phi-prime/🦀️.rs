@@ -19,6 +19,13 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerPhiPrime wher
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change", entity: "layer-phi-prime", kind: "change-layer-phi-prime", record: "ChangedLayerPhiPrime",
     };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1997Snapshot, Op> for ChangeLayerPhiPrime where Op: protocol::ColdMutation<En1997Snapshot, ReferenceDiff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::change_layer_phi_prime::ChangeLayerPhiPrime> {
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::change_layer_phi_prime::diff::diff(self, base)
     }
@@ -28,9 +35,6 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerPhiPrime wher
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
-    }
 }
 
 //#region 🪢️Mounts

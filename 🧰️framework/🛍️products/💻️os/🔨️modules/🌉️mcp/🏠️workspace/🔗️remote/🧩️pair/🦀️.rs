@@ -245,24 +245,24 @@ pub enum CanonicalPairActorState {
     Closed,
 }
 
-struct PairBytes {
+pub struct PairBytes {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
 }
 
-struct WipeVec(pub Vec<u8>);
+pub struct WipeVec(pub Vec<u8>);
 
 impl Drop for WipeVec {
     fn drop(&mut self) {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         let length = self.0.len();
         self.0.fill(0);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         TEST_WIPED_BYTES.fetch_add(length as u64, Ordering::SeqCst);
     }
 }
 
-struct WipeScratch(pub [u8; 16 * 1024]);
+pub struct WipeScratch(pub [u8; 16 * 1024]);
 
 impl Drop for WipeScratch {
     fn drop(&mut self) {
@@ -270,14 +270,14 @@ impl Drop for WipeScratch {
     }
 }
 
-struct PairReceipt {
+pub struct PairReceipt {
     pub id: u64,
     pub binding_generation: u64,
     pub scope: DocumentScope,
     pub cancel: CancelToken,
 }
 
-struct LoadingReceipt {
+pub struct LoadingReceipt {
     pub id: u64,
     pub binding_generation: u64,
     pub expected: Option<CanonicalPairMountIdentity>,
@@ -305,22 +305,22 @@ impl PairBytes {
 
 impl Drop for PairBytes {
     fn drop(&mut self) {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         let length = self.len();
         self.pack.fill(0);
         self.spr.fill(0);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         TEST_WIPED_BYTES.fetch_add(length as u64, Ordering::SeqCst);
     }
 }
 
-struct VerifiedCanonicalPair {
+pub struct VerifiedCanonicalPair {
     pub identity: CanonicalPairMountIdentity,
     pub baseline: ArtifactFrontier,
     pub bytes: PairBytes,
 }
 
-struct CacheEntry {
+pub struct CacheEntry {
     pub pair: VerifiedCanonicalPair,
     pub mount_id: u64,
 }
@@ -336,9 +336,9 @@ pub struct CanonicalPairActor {
     next_mount_id: u64,
     next_receipt_id: u64,
     pub progress: CanonicalPairMountProgress,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub cache_hits: u64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub cache_misses: u64,
 }
 
@@ -355,9 +355,9 @@ impl CanonicalPairActor {
             next_mount_id: 1,
             next_receipt_id: 1,
             progress: CanonicalPairMountProgress { stage: CanonicalPairMountStage::Refreshing, completed: 0, total: 0 },
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             cache_hits: 0,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             cache_misses: 0,
         }
     }
@@ -459,7 +459,7 @@ impl CanonicalPairActor {
             let entry = self.cache.remove(index).expect("located canonical pair cache entry");
             let mount = CanonicalPairMount { identity: entry.pair.identity.clone(), baseline: entry.pair.baseline.clone(), mount_id: entry.mount_id };
             self.cache.push_front(entry);
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             {
                 self.cache_hits += 1;
             }
@@ -475,7 +475,7 @@ impl CanonicalPairActor {
             let mount = CanonicalPairMount { identity: pair.identity.clone(), baseline: pair.baseline.clone(), mount_id };
             self.cached_bytes += length;
             self.cache.push_front(CacheEntry { pair, mount_id });
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             {
                 self.cache_misses += 1;
             }
@@ -503,7 +503,7 @@ impl CanonicalPairActor {
         self.mounted = Some(mount.clone());
         self.state = if self.loadings.is_empty() { CanonicalPairActorState::Mounted } else { CanonicalPairActorState::Loading };
         self.progress = CanonicalPairMountProgress { stage: CanonicalPairMountStage::Mounted, completed: 1, total: 1 };
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         {
             self.cache_hits += 1;
         }

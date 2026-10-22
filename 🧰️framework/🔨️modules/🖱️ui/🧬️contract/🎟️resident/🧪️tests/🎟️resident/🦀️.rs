@@ -4,6 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 //#region 🧪️ResidentPermits
 #[test]
 fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
+    let _gate = crate::arena_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🎟️resident/🗃️fixed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let actual = UiResidentPermit::snapshot().unwrap();
     assert_eq!(actual.bytes > 0, fixture["staticCountsAgainstAggregate"].as_bool().unwrap());
@@ -54,6 +55,7 @@ fn drain() {
 
 #[test]
 fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return() {
+    let _gate = crate::arena_test_gate();
     let data = fixture();
     assert_eq!(UI_RESIDENT_SLOTS, data["slots"].as_u64().unwrap() as usize);
     let mut owners = (0..data["smallReservations"].as_u64().unwrap()).map(|_| reserve(1, 65536)).collect::<Vec<_>>();
@@ -107,6 +109,7 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
 
 #[test]
 fn retained_resident_permit_contention_keeps_authority_and_deferred_return_does_not_wait() {
+    let _gate = crate::arena_test_gate();
     let mut root = reserve(17, 65536);
     let mut output = None;
     assert!(root.split_output_into(&mut output, 32768).unwrap());
@@ -136,6 +139,7 @@ fn retained_resident_permit_contention_keeps_authority_and_deferred_return_does_
 
 #[test]
 fn retained_resident_permit_cross_worker_returns_cannot_release_reused_epoch() {
+    let _gate = crate::arena_test_gate();
     for _ in 0..fixture()["crossWorkerRounds"].as_u64().unwrap() {
         let mut root = reserve(1, 4096);
         let old = root.key.unwrap();

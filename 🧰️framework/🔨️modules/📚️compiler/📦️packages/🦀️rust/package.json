@@ -8,7 +8,7 @@
     "./syntax/module-tree": "./📖️syntax/🌳️module-tree/🟦️.ts"
   },
   "scripts": {
-    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-compiler-rs:test-native"
+    "test-native": "repo run @semio-tech/framework-compiler-rs:test-native"
   },
   "bundleKind": "library",
   "devDependencies": {

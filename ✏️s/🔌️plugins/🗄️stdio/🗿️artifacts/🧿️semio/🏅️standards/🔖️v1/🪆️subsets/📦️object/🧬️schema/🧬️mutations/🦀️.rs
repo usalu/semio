@@ -28,7 +28,7 @@ use crate::schema::mutations::scale_object;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
+#[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object", reference = SemioObjectSnapshot, reference_diff = SemioObjectDiff)]
 pub enum SemioObjectMutation {
     MoveObject(move_object::MoveObject),
     RotateObject(rotate_object::RotateObject),
@@ -53,7 +53,7 @@ pub const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "cr
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
-    <SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::diff(mutation, base)
+    <SemioObjectMutation as protocol::ColdMutation<SemioObjectSnapshot>>::diff(mutation, base)
 }
 
 
@@ -65,8 +65,8 @@ pub fn diff_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioOb
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
     Ok({
-    use protocol::Mutation;
-    <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, base)?
+    use protocol::{ColdMutation, Mutation};
+    <SemioObjectMutation as ColdMutation<SemioObjectSnapshot>>::inverse(mutation, base)?
 
     })
 }

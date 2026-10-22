@@ -27,7 +27,7 @@ fn config_owned_customization_semantics_match_independent_json_without_projectio
         preferences.named_layouts.insert("app".into(),HashMap::from([("layout".into(),layout)]));
         assert_eq!(UiPreferences::from_value(preferences.to_value()).unwrap(),preferences);
         let edit=crate::opening_config::mutations::set_custom_driver(driver.driver_id.clone(),None);
-        use protocol::Mutation;
+        use protocol::{ColdMutation, Mutation};
         let inverse=edit.inverse(&preferences).unwrap();let base=preferences.clone();
         apply_ui_preferences_config_mutation(&mut preferences,&edit).unwrap();
         assert!(!preferences.custom_drivers.contains_key(&driver.driver_id));

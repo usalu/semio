@@ -90,8 +90,14 @@ pub use run_and_publish::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 #[cfg(test)]
+#[global_allocator]
+static ORIGINAL_SUBSPACE_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+#[cfg(test)]
 #[path="🧪️tests/🎯️positive-spectrum/🦀️.rs"]
 mod positive_spectrum_tests;
+#[cfg(test)]
+#[path="🧪️tests/🔄️shift-operator/🦀️.rs"]
+mod shift_operator_tests;
 // #endregion 🔖️Tests
 
 fn subspace_checkpoint_retirement_demands(state:&SubspaceCheckpoint)->Result<RetirementDemand,ValueError>{

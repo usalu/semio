@@ -91,7 +91,7 @@ export type SchemaValidator = ((value: unknown) => boolean) & { readonly errors?
 /** 🧬️ Compiles one named export of the registry schema module against the repository draft-07 dialect. */
 export async function registrySchemaValidator(exportId: string): Promise<SchemaValidator> {
   const { default: Ajv } = await import("ajv");
-  const document = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧬️schema/🔣️.json"), "utf8"));
+  const document = JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(document);
   const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
@@ -101,7 +101,7 @@ export async function registrySchemaValidator(exportId: string): Promise<SchemaV
 
 /** 🧫️ Independent AJV/Kahn closure oracle over neutral data; never reads a live factory or production descriptor. */
 export async function nativeCatalogSelectionOracleV1(): Promise<void> {
-  const fixtureRoot = join(import.meta.dir, "..", "..", "🧪️tests/🧫️fixtures/📦️native-catalog-selection");
+  const fixtureRoot = join(import.meta.dirname, "..", "..", "🧪️tests/🧫️fixtures/📦️native-catalog-selection");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const validateInput = await registrySchemaValidator("NativeCatalogSelectionInputV1");
   const validate = (value: any): boolean => validateInput({ packages: value.packages, profiles: value.profiles, availableProviders: value.availableProviders });

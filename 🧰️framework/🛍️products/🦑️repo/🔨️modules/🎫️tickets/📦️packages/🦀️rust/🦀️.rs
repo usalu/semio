@@ -104,6 +104,9 @@ pub use issue_sync::*;
 mod ports;
 pub use ports::*;
 
+#[path = "📝️drafts/🦀️.rs"]
+mod drafts;
+
 #[path = "🔓️lifecycle/🦀️.rs"]
 mod lifecycle;
 pub use lifecycle::*;
@@ -119,3 +122,7 @@ pub use search::*;
 mod tests;
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🦀️.rs"]
+mod rooted_lifecycle_tests;

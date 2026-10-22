@@ -1,7 +1,7 @@
 {
   "contractId": "schema-scope-catalog-v1",
   "catalogVersion": 1,
-  "generator": "bun ./📜️script.ts schema generate",
+  "generator": "repo ./📜️script.ts schema generate",
   "taxonomySchemaVersion": 7,
   "jsonSchemaDialect": "http://json-schema.org/draft-07/schema#",
   "scopes": {

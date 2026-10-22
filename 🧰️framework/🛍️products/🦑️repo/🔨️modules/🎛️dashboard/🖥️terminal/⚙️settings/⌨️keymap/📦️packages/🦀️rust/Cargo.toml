@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-repo-dashboard-keymap-editor"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-keymap-editor"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 16384
+maxSourceFiles = 4
+maxActiveLines = 256
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_labels = { path = "../../../../🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_preferences = { path = "../../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }

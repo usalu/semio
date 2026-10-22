@@ -34,6 +34,10 @@
 
 extern crate semio_framework_os_kernel as store;
 
+#[cfg(test)]
+#[global_allocator]
+static HOST_EFFECTS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};

@@ -11,7 +11,7 @@ DAY = 86_400_000
 HOUR = 3_600_000
 MINUTE = 60_000
 
-tracked = subprocess.run(["git", "-c", "core.quotepath=off", "ls-files", "-z", "--", "🧰️framework", "nx.json", ".cargo/config.toml"], cwd=ROOT, capture_output=True, text=True).stdout.split("\0")
+tracked = subprocess.run(["git", "-c", "core.quotepath=off", "ls-files", "-z", "--", "🧰️framework", "nx.json", ".cargo/config.toml", ".storybook", "🌎️hub", "👴️leutwiler"], cwd=ROOT, capture_output=True, text=True).stdout.split("\0")
 tracked = [row for row in tracked if row]
 problems = []
 
@@ -92,8 +92,11 @@ loose = (
     ("build", "build", ("Nx plugin command captures.", "Nx-Plugin-Befehlsmitschnitte."), ["/🔌️nx-plugin/📤️arguments/🟨️.mjs", "new:gc-launch.ts"], 128 * MIB, collect(7, HOUR)),
     ("stages", "stages", ("Native stage cache of warm builds.", "Nativer Stage-Cache warmer Builds."), ["/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts"], GIB, collect(14, HOUR)),
     ("generated", "🤖️generated", ("Agent session logs.", "Agenten-Sitzungsprotokolle."), ["/📦️packages/🐹️go/📓️session/🐹️.go"], GIB, collect(60, HOUR)),
+    ("renderer-modules", "📺️renderer-modules", ("Renderer modules served to the storybook.", "Dem Storybook bereitgestellte Renderer-Module."), [".storybook/📖️stories/🧭️coordination/🟦️.ts"], 256 * MIB, collect(30, HOUR)),
+    ("browser-actor-containment", "browser-actor-child-containment", ("Test artifacts of the browser actor child containment check.", "Testartefakte der Browser-Actor-Child-Isolationsprüfung."), ["🌎️hub/📦️packages/🦀️rust/📋️project.json"], 64 * MIB, collect(7, HOUR)),
+    ("elan", "tools/elan", ("Lean toolchains of the workspace-owned elan home, one per pinned elan version.", "Lean-Toolchains des arbeitsbereichseigenen elan-Verzeichnisses, eine je festgelegter elan-Version."), ["/💤️realparts-of-powers-z-n/🟦️.ts"], 3 * GIB, collect(90, HOUR)),
     ("diff", "🔀️diff", ("Checkpoint and hook diffs.", "Checkpoint- und Hook-Diffs."), ["/📦️packages/🐹️go/🎫️checkpoint/🐹️.go"], GIB, collect(60, HOUR)),
-    ("cargo-legacy", "cargo", ("Cargo directory kept visible to the workspace cleaner.", "Cargo-Verzeichnis, das für die Arbeitsbereichsbereinigung sichtbar bleibt."), ["/🧼️workspace-cleanup/🛡️protection/🟦️.ts"], GIB, collect(14, HOUR)),
+    ("cargo-protected", "cargo", ("Cargo directory kept visible to the workspace cleaner.", "Cargo-Verzeichnis, das für die Arbeitsbereichsbereinigung sichtbar bleibt."), ["/🧼️workspace-cleanup/🛡️protection/🟦️.ts"], GIB, collect(14, HOUR)),
 )
 for id, directory, purpose, writers, budget, rule in loose:
     areas.append(area(id, directory, purpose, writers, budget={"bytes": budget}, collect=rule))
@@ -125,7 +128,7 @@ for name, en, de in (
     ("leases", "Leases moved into the leases partition.", "Leases liegen jetzt in der Leases-Partition."),
 ):
     retire("repository", name, en, de)
-for name in ("nx-tooling", "nx", "sdk", "elan", "nx-downloads", "bazel", "bazel-modules", "native-executables", "binaryen", "dashboard-cli", "tectonic"):
+for name in ("nx-tooling", "nx", "sdk", "nx-downloads", "bazel", "bazel-modules", "native-executables", "binaryen", "dashboard-cli", "tectonic"):
     retire("repository", "tools/" + name, "Tool installs moved into the tools partition.", "Werkzeug-Installationen liegen jetzt in der Werkzeug-Partition.")
 for name in ("framework", "held-javascript", "bazel", "k0", "ldta"):
     retire("native", name, "Pre-partition root without a writer.", "Wurzel aus der Zeit vor den Partitionen ohne Schreiber.")

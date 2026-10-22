@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:nx-package-acquisition-corpus:v1",
+  "title": "Nx Package Acquisition Corpus",
+  "description": "Language-agnostic scenarios for acquiring the pinned Nx registry tarball through an injected host: a lock file, the caller's authority, the registry's answer (status, length header, body and chunking), a cancellation point and the authored outcome. `@integrity` in a lock stands for the real integrity of the archive.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "archives", "maximumCompressedBytes", "registry", "scenarios"],
+  "properties": {
+    "version": { "const": 1 },
+    "maximumCompressedBytes": { "type": "integer", "minimum": 1 },
+    "registry": { "type": "string", "pattern": "^https://" },
+    "archives": { "type": "object", "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["path", "text", "mode"], "properties": { "path": { "type": "string", "minLength": 1 }, "text": { "type": "string" }, "mode": { "type": "integer", "minimum": 0 } } } } },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "lock", "authority", "response", "abortAfterReads", "archive", "tamper", "expect"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "lock": {},
+          "authority": { "type": "object", "additionalProperties": false, "required": ["root", "offline", "elapsed"], "properties": { "root": { "enum": ["workspace", "other"] }, "offline": { "type": "boolean" }, "elapsed": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }] } } },
+          "response": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "contentLength", "body", "chunk"],
+            "properties": {
+              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+              "contentLength": { "anyOf": [{ "type": "null" }, { "type": "string" }] },
+              "body": { "oneOf": [{ "type": "object", "required": ["archive"], "properties": { "archive": { "const": true } }, "additionalProperties": false }, { "type": "object", "required": ["zeros"], "properties": { "zeros": { "type": "integer", "minimum": 1 } }, "additionalProperties": false }, { "type": "object", "required": ["none"], "properties": { "none": { "const": true } }, "additionalProperties": false }] },
+              "chunk": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "abortAfterReads": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }] },
+          "archive": { "enum": ["main", "other"] },
+          "tamper": { "type": "boolean" },
+          "expect": { "type": "object", "properties": { "ok": { "const": true }, "error": { "type": "string", "minLength": 1 } }, "oneOf": [{ "required": ["ok"] }, { "required": ["error"] }] }
+        }
+      }
+    }
+  }
+}

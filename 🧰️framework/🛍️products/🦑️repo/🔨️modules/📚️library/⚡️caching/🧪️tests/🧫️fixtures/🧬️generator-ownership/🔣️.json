@@ -36,7 +36,7 @@
       "targets": {
         "generate": {
           "options": {
-            "command": "bun ./📜️script.ts generate"
+            "command": "repo ./📜️script.ts generate"
           }
         }
       }
@@ -49,7 +49,7 @@
             "{workspaceRoot}/boot.ts"
           ],
           "options": {
-            "command": "bun ./📜️script.ts generate-boot"
+            "command": "repo ./📜️script.ts generate-boot"
           }
         },
         "generate-worker": {
@@ -57,7 +57,7 @@
             "{workspaceRoot}/worker.ts"
           ],
           "options": {
-            "command": "bun ./📜️script.ts generate-worker"
+            "command": "repo ./📜️script.ts generate-worker"
           }
         }
       }

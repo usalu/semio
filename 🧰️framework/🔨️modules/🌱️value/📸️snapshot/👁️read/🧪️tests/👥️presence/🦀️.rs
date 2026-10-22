@@ -1,6 +1,6 @@
 //! 👁️ Original cross-worker read return, alias barrier and registry contention laws.
 use crate::*;
-use crate::presence_test_retirement::{admit_returned_string,finish_box,finish_registry,finish};
+use crate::presence_test_retirement::{admit_returned_string,finish_box,finish_registry,finish,CLOSE_GRANT};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[test]
 fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation() {

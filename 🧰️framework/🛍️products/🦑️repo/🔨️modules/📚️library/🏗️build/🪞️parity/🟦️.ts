@@ -3,7 +3,7 @@ import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🛠️ The two build implementations behind the neutral interface. */
-export type ParityToolV1="nx"|"bazel";
+export type ParityToolV1=string;
 /** 🧪️ What a sample can be compared on. */
 export type ParityCheckV1="graph"|"closure"|"outputs"|"results"|"inputs"|"restore";
 /** 🧐️ A check or the observation itself when a tool could not be observed. */

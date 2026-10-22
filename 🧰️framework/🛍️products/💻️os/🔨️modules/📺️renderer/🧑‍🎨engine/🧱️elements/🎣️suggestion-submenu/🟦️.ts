@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "../⚛️react-port/🟦️.ts";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import type { ContextMenuItemSpec } from "@semio-tech/framework";
 // #endregion 🔌️Adapters

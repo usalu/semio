@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // 💿️benchmarkCmd holds the data fields for a benchmarkCmd record.
@@ -112,7 +114,7 @@ func runBenchmark(cmd *command.Command, args []string) error {
 				return
 			}
 
-			c := exec.Command(t.Cmd, t.Args...)
+			c := workspace.ToolCommand(t.Cmd, t.Args...)
 			c.Dir = t.Dir
 			output, err := c.Output()
 			if err != nil {

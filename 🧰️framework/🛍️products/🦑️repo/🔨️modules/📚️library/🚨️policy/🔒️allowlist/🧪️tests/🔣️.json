@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "filename": "🔒️policy-allowlist.json",
+ "skipped": [
+  "node_modules",
+  ".git",
+  ".nx",
+  ".venv",
+  "target",
+  "dist",
+  "build",
+  "out",
+  "__pycache__",
+  "obj",
+  "bin",
+  "storybook-static",
+  "🎫️tickets",
+  "⚡️cache",
+  "🤖️generated",
+  "🗑️generated"
+ ],
+ "files": {
+  "🔒️policy-allowlist.json": "{\"rule\": [\"root-a\", \"shared\"], \"other\": [\"o1\"]}",
+  "area/x/🔒️policy-allowlist.json": "{\"rule\": [\"x-b\", \"shared\"]}",
+  "area/y/🔒️policy-allowlist.json": "{\"other\": [\"o2\"]}",
+  "area/bad/🔒️policy-allowlist.json": "{not json",
+  "area/nested/deep/🔒️policy-allowlist.json": "{\"rule\": [\"deep\"]}",
+  "area/typed/🔒️policy-allowlist.json": "{\"rule\": 5}",
+  "area/empty/🔒️policy-allowlist.json": "{}",
+  "area/node_modules/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-node_modules\"]}",
+  "area/.git/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-.git\"]}",
+  "area/.nx/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-.nx\"]}",
+  "area/.venv/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-.venv\"]}",
+  "area/target/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-target\"]}",
+  "area/dist/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-dist\"]}",
+  "area/build/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-build\"]}",
+  "area/out/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-out\"]}",
+  "area/__pycache__/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-__pycache__\"]}",
+  "area/obj/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-obj\"]}",
+  "area/bin/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-bin\"]}",
+  "area/storybook-static/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-storybook-static\"]}",
+  "area/🎫️tickets/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-\\ud83c\\udfab\\ufe0ftickets\"]}",
+  "area/⚡️cache/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-\\u26a1\\ufe0fcache\"]}",
+  "area/🤖️generated/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-\\ud83e\\udd16\\ufe0fgenerated\"]}",
+  "area/🗑️generated/🔒️policy-allowlist.json": "{\"rule\": [\"skipped-\\ud83d\\uddd1\\ufe0fgenerated\"]}",
+  "area/other.json": "{\"rule\": [\"wrong-file-name\"]}"
+ },
+ "expected": {
+  "rule": [
+   "deep",
+   "root-a",
+   "shared",
+   "x-b"
+  ],
+  "other": [
+   "o1",
+   "o2"
+  ],
+  "absent": []
+ },
+ "defects": [
+  {
+   "name": "a string value is not a list of entries",
+   "files": {
+    "🔒️policy-allowlist.json": "{\"rule\": \"abc\"}"
+   },
+   "key": "rule",
+   "expected": [],
+   "defect": "🔒️allowlist/🟦️.ts:policyDiscoveredAllowlist iterates `parsed[key]` with for-of without checking for an array, so a string value contributes its characters (`abc` → a, b, c) instead of failing closed"
+  }
+ ]
+}

@@ -76,7 +76,7 @@ export class MetricsScript extends Script {
   run(segments: string[]): void {
     const metricsPath = join(reportsDir(this.repoRoot), "📈️metrics.json");
     if (!existsSync(metricsPath)) {
-      console.error(`[metrics] no run to report on — run \`bun ./📜️script.ts parity <level>\` first`);
+      console.error(`[metrics] no run to report on — run \`repo ./📜️script.ts parity <level>\` first`);
       {process.exitCode=1;return;}
     }
     const metrics = JSON.parse(readFileSync(metricsPath, "utf8")) as CoverageMetrics;
